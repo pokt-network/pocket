@@ -137,8 +137,8 @@ Because of the separation of concerns between middleware and database engine, an
 
 There are 3 main use cases of error handling when the database engine is the one at fault:
 
-1. **Configuration Errors**: In the case of configuration errors, the middleware must clearly return to the user any given errors by the database engine and surface them via logs or other system wide notifications. This is a **critical **error and must stop the execution of the system until resolved.
-2. **Read/Write Errors** or **Database Engine Unavailable**: In the case of any of these errors being returned from the database engine, the middleware can opt to provision an in-memory database, a secondary replica to point to or a queue of operations to be applied on top of the database once normal operations are restored. In addition to these fallback mechanisms, the middleware must surface the issue via logs or other system wide notifications. This is a **critical **error and must stop the execution of the system until resolved, unless a fallback mechanism is provided in which the continuation of operations can be prioritized.
+1. **Configuration Errors**: In the case of configuration errors, the middleware must clearly return to the user any given errors by the database engine and surface them via logs or other system wide notifications. This is a **critical** error and must stop the execution of the system until resolved.
+2. **Read/Write Errors** or **Database Engine Unavailable**: In the case of any of these errors being returned from the database engine, the middleware can opt to provision an in-memory database, a secondary replica to point to or a queue of operations to be applied on top of the database once normal operations are restored. In addition to these fallback mechanisms, the middleware must surface the issue via logs or other system wide notifications. This is a **critical** error and must stop the execution of the system until resolved, unless a fallback mechanism is provided in which the continuation of operations can be prioritized.
 
 #### 1.3.2 Middleware Error Handling
 
@@ -160,11 +160,11 @@ In the case of the persistence client middleware for the Pocket Network, we need
 
 ### 2.2. Persistence Datasets 
 
-A **dataset **is a group of collections that is logically related. For Pocket Network 1.0, we are proposing the following datasets:
+A **dataset** is a group of collections that is logically related. For Pocket Network 1.0, we are proposing the following datasets:
 
 1. **Consensus dataset**: Contains all the blocks, transactions and quorum certificates of the Pocket Network blockchain.
 2. **Mempool dataset**: Contains a list of all transactions submitted to the Pocket Network, but not yet finalized on the blockchain.
-3. **State dataset**: Contains the specific Pocket Network state (nodes, apps, params, accounts, etc). The state dataset has the particularity that each copy of the dataset is versioned at each **height **of the **Block store dataset. **The proof of the copy of each version of this dataset is what we will call from now on the **state hash**, in reference to a hashed version that’s included in each height of the **Block store dataset.**
+3. **State dataset**: Contains the specific Pocket Network state (nodes, apps, params, accounts, etc). The state dataset has the particularity that each copy of the dataset is versioned at each **height** of the **Block store dataset.** The proof of the copy of each version of this dataset is what we will call from now on the **state hash**, in reference to a hashed version that’s included in each height of the **Block store dataset.**
 4. **Local dataset**: Contains all the utility specific data needed for the different actors of the network to achieve their functions. This dataset is local and only affects an individual node operation.
 
 Each dataset can be individually accessed by a particular middleware instance, which allows re-usability of the data in multi-node and multi-process operations.
@@ -172,7 +172,7 @@ Each dataset can be individually accessed by a particular middleware instance, w
 
 ### 2.2.1. Schema Definition Mechanism
 
-Each of the aforementioned datasets contains 1 or many collections, a collection is a tabulated list defined in a **structure schema. **For Pocket Network 1.0, since we are choosing a SQL database engine, we can morph the schema using a **migrations architecture**. Migrations are a series of phases in a structure schema lifecycle, explained in the graph below:
+Each of the aforementioned datasets contains 1 or many collections, a collection is a tabulated list defined in a **structured schema.** For Pocket Network 1.0, since we are choosing a SQL database engine, we can morph the schema using a **migrations architecture**. Migrations are a series of phases in a structure schema lifecycle, explained in the graph below:
 
 ![alt_text](figure6.jpg "Figure 6")
 
@@ -183,27 +183,27 @@ The state dataset presents a unique challenge, given the fact that it requires a
 
 #### 2.2.1.3. State Versions Deduplication Strategy
 
-Given the fact that the selected database engine describes collections in a **tabular schema**, and that the **state dataset **has to be versioned every time it changes, a deduplication strategy is needed in order to avoid data redundancy and decrease lookup and scan overhead when operating against any given **state collection**. For this reason we are proposing the following fields in every state collection:
+Given the fact that the selected database engine describes collections in a **tabular schema**, and that the **state dataset** has to be versioned every time it changes, a deduplication strategy is needed in order to avoid data redundancy and decrease lookup and scan overhead when operating against any given **state collection**. For this reason we are proposing the following fields in every state collection:
 
 
 
-* **Created At (created_at): **Indicates the height at which the structure is **added to the dataset.**
-* **Deleted At (deleted_at): **Indicates the height at which the structure was **removed from the dataset.**
+* **Created At (created_at):** Indicates the height at which the structure is **added to the dataset.**
+* **Deleted At (deleted_at):** Indicates the height at which the structure was **removed from the dataset.**
 
-By leveraging these properties we can define the **Create, Update **and** Delete **operations of the [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) set:
+By leveraging these properties we can define the **Create, Update** and **Delete** operations of the [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) set:
 
 
 
-* **Create**: Insert a new structure into the collection with the given **Created At (created_at) **indicating at which height the structure is being inserted.
-* **Update: **Update the **Deleted At (deleted_at) **of the structure to the given update height at which the update is happening, and subsequently insert a new record of the updated structure with the given **Created At (created_at) **indicating at which height the structure is being updated.
-* **Delete**: Update the **Deleted At (deleted_at) **of the structure to the given update height at which the deletion is happening.
+* **Create**: Insert a new structure into the collection with the given **Created At (created_at)** indicating at which height the structure is being inserted.
+* **Update**: Update the **Deleted At (deleted_at)** of the structure to the given update height at which the update is happening, and subsequently insert a new record of the updated structure with the given **Created At (created_at)** indicating at which height the structure is being updated.
+* **Delete**: Update the **Deleted At (deleted_at)** of the structure to the given update height at which the deletion is happening.
 
 These attributes and operations allows us to fulfill the different requirements of a state dataset:
 
 
 
-* **Historical querying: **Query the same structure throughout any given height by filtering by the **Created At (created_at) **and** Deleted At (deleted_at).**
-* **Atomic state transitions: **Every state transition is logged atomically without impacting previous state versions.
+* **Historical querying**: Query the same structure throughout any given height by filtering by the **Created At (created_at) **and** Deleted At (deleted_at).**
+* **Atomic state transitions**: Every state transition is logged atomically without impacting previous state versions.
 
 
 #### 2.2.3. Idempotent Writes and Updates
@@ -213,15 +213,15 @@ In order to implement idempotency to our persistence layer, we need to define th
 
 
 * When inserting a brand new structure, the operation must include all the uniquely-identified fields of the structure. This will help avoid collisions between existing structures and brand new structures.
-* When performing an update operation, all uniquely-identified fields must be indicated in the operation with no room for inference, as well as any timestamp or indicator fields such as **Created At (created_at) **and **Deleted At (deleted_at). **This helps avoid collisions on updating the contents of a structure and not their associated **tracking** **metadata.**
-* When performing delete operations, all uniquely-identified fields must be indicated in the operation, and the use of deletion by filtering or by **“all” **will not be permitted on the system.
+* When performing an update operation, all uniquely-identified fields must be indicated in the operation with no room for inference, as well as any timestamp or indicator fields such as **Created At (created_at)** and **Deleted At (deleted_at).** This helps avoid collisions on updating the contents of a structure and not their associated **tracking** **metadata.**
+* When performing delete operations, all uniquely-identified fields must be indicated in the operation, and the use of deletion by filtering or by **“all”** will not be permitted on the system.
 
 
 ### 2.3. Deterministic Write mechanism
 
-Most modern SQL DBMS (database management system) implementations utilize the **Transaction model **to indicate a transaction as a group of operations to be performed sequentially and logically grouped. This is called [ACID](https://en.wikipedia.org/wiki/ACID) (atomicity, consistency, isolation, durability), which are the properties that allow the dataset to stay consistent across operations, by allowing capabilities such as the rollbacks in case one of the operations in the transaction fails or yields an inconsistent dataset state.
+Most modern SQL DBMS (database management system) implementations utilize the **Transaction model** to indicate a transaction as a group of operations to be performed sequentially and logically grouped. This is called [ACID](https://en.wikipedia.org/wiki/ACID) (atomicity, consistency, isolation, durability), which are the properties that allow the dataset to stay consistent across operations, by allowing capabilities such as the rollbacks in case one of the operations in the transaction fails or yields an inconsistent dataset state.
 
-Our chosen database engine, Postgresql, defines a transaction model in their official documentation [here](https://www.postgresql.org/docs/current/tutorial-transactions.html). On top of that the capacity to rollback transactions is described [here](https://www.postgresql.org/docs/current/sql-rollback-prepared.html). In combination these 2 mechanisms allow us to establish deterministic writes, which will allow the handling of datasets such as **state **in a fail-safe manner avoiding issues like data corruption and race conditions. 
+Our chosen database engine, Postgresql, defines a transaction model in their official documentation [here](https://www.postgresql.org/docs/current/tutorial-transactions.html). On top of that the capacity to rollback transactions is described [here](https://www.postgresql.org/docs/current/sql-rollback-prepared.html). In combination these 2 mechanisms allow us to establish deterministic writes, which will allow the handling of datasets such as **state** in a fail-safe manner avoiding issues like data corruption and race conditions. 
 
 
 ## 3. Blockchain State Validation Architecture
@@ -229,12 +229,12 @@ Our chosen database engine, Postgresql, defines a transaction model in their off
 
 ### 3.1. Overview
 
-The **state dataset **contains the result of each set of state transitions indicated by the transactions of any given height. This makes **immutability** of the **state dataset** a desired property, because the resulting state at any given height is one of the most important inputs of the consensus process of the Pocket Network. This specification contains a mechanism that leverages [Merkle Patricia Tries](https://eth.wiki/en/fundamentals/patricia-tree) as a data-structure that helps prove the integrity of the state dataset at any given height, sans 1 modification, the change of the RLP encoding scheme, for the [Protobuf](https://developers.google.com/protocol-buffers) encoding scheme. 
+The **state dataset** contains the result of each set of state transitions indicated by the transactions of any given height. This makes **immutability** of the **state dataset** a desired property, because the resulting state at any given height is one of the most important inputs of the consensus process of the Pocket Network. This specification contains a mechanism that leverages [Merkle Patricia Tries](https://eth.wiki/en/fundamentals/patricia-tree) as a data-structure that helps prove the integrity of the state dataset at any given height, sans 1 modification, the change of the RLP encoding scheme, for the [Protobuf](https://developers.google.com/protocol-buffers) encoding scheme. 
 
 
 ### 3.2. Immutable State Schema
 
-We will refer to the **state dataset** as a group of collections that will conform to the immutable state schema. Every structure in the collection will become a leaf in a Merkle Patricia Trie, yielding a Merkle Root. Every merkle root in the dataset will be concatenated in lexicographical order based on the collection identifier and hashed using **SHA256 **function to produce what we will refer to as the **state hash**.
+We will refer to the **state dataset** as a group of collections that will conform to the immutable state schema. Every structure in the collection will become a leaf in a Merkle Patricia Trie, yielding a Merkle Root. Every merkle root in the dataset will be concatenated in lexicographical order based on the collection identifier and hashed using **SHA256** function to produce what we will refer to as the **state hash**.
 
 Every computed state hash will be persisted, alongside a signature computed from a designated private key, which will serve as a local proof of state computation. This proof will be utilized to avoid recalculation of previous states, and will allow the system, provided the same private key, will have a high degree of confidence in their computed state. In the case of any proof of tampering, state can be recalculated using the state hash algorithm. This proof will be called a **state computation proof.**
 
@@ -251,17 +251,17 @@ As specified in the Merkle Patricia Tries, every subsequent operation for a give
 
 ### 3.2.3. State Structure Verification
 
-To verify any given structure state in a Merkle Patricia Trie, we just need to provide a merkle proof and the computed **leaf node **we are trying to prove. No necessary changes to the specification are needed other than the already mentioned replacement of [RLP](https://eth.wiki/fundamentals/rlp) for Protobuf. 
+To verify any given structure state in a Merkle Patricia Trie, we just need to provide a merkle proof and the computed **leaf node** we are trying to prove. No necessary changes to the specification are needed other than the already mentioned replacement of [RLP](https://eth.wiki/fundamentals/rlp) for Protobuf. 
 
 
 ### 3.2.4. Patricia Merkle Trie Persistence
 
-A key-value store schema will be required in order to persist the immutable state schema. We can persist this as part of the **state dataset. **
+A key-value store schema will be required in order to persist the immutable state schema. We can persist this as part of the **state dataset.**
 
 
 ### 3.2.4. Immutable State Transition Algorithm
 
-Now in order to be able to compute transitions of the** state dataset** to the ** immutable schema** we present an algorithm that given a series of **state transitions**, the **current immutable schema** and a **private key** is able to compute the new **state hash** and the **state computation proof**.
+Now in order to be able to compute transitions of the **state dataset** to the **immutable schema** we present an algorithm that given a series of **state transitions**, the **current immutable schema** and a **private key** is able to compute the new **state hash** and the **state computation proof**.
 
 
 ![alt_text](figure7.jpg "Figure 7")
