@@ -1,3 +1,42 @@
+# Pocket Network 1.0 Peer-To-Peer Module Pre-Planning Specification: Fast, Scalable, Highly Reliable and Optionaly Redundant Binary Tree Gossip
+
+<table>
+<tr style="border-width: 0px;">
+  <td style="border-width: 0px;">
+    <p align="center">
+        Hamza Ouaghad
+        @derrandz<br>
+        Version 1.0.1
+    </p>
+  </td>
+
+  <td style="border-width: 0px;">
+    <p align="center">
+        Andrew Nguyen 
+        @andrewnguyen22 <br>
+        Version 1.0.1
+    </p>
+  </td>
+
+
+  <td style="border-width: 0px;">
+    <p align="center">
+        Otto Vargas
+        @oten91<br>
+        Version 1.0.1
+    </p>
+  </td>
+
+  <td style="border-width: 0px;">
+    <p align="center">
+        Shawn Regan
+        @benvan<br>
+        Version 1.0.1
+    </p>
+  </td>
+</tr>
+</table>
+
 ## Overview
 Choosing the proper data structure to represent the structure of a network's overlay is the main and the crucial step to achieving a structured overlay, and a detrimental one for building an efficient and performant network.
 
