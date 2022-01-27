@@ -6,7 +6,6 @@
     <p align="center">
         Hamza Ouaghad
         @derrandz<br>
-        Version 1.0.1
     </p>
   </td>
 
@@ -14,7 +13,6 @@
     <p align="center">
         Andrew Nguyen 
         @andrewnguyen22 <br>
-        Version 1.0.1
     </p>
   </td>
 
@@ -23,7 +21,6 @@
     <p align="center">
         Otto Vargas
         @oten91<br>
-        Version 1.0.1
     </p>
   </td>
 
@@ -31,11 +28,18 @@
     <p align="center">
         Shawn Regan
         @benvan<br>
-        Version 1.0.1
     </p>
   </td>
 </tr>
 </table>
+
+<tr>
+<td style="border-width: 0px;">
+    <p align="center">
+        Version 1.0.1<br>
+    </p>
+</td>
+</tr>
 
 ## Overview
 Choosing the proper data structure to represent the structure of a network's overlay is the main and the crucial step to achieving a structured overlay, and a detrimental one for building an efficient and performant network.
@@ -235,17 +239,17 @@ For the time being, this is a work-in-progress.
 
 This will scale! If you tripple the node counts, the only increase is ticks=+2
 
-| Nodes             |  Comms  | ACKs     | Ticks  |
-|-------------------|---------|----------|--------|
-| 27                |   107   |   56     |   11   |
-| 81                |   323   |   164    |   13   |
-| 243               |   971   |   488    |   15   |
-| 729               |  2,915  |   1,460  |   17   |
-| 2,187             |  8,747  |   4,376  |   19   |
-| 6,561             | 26,243  |  13,124  |   21   |
-| 19,683            | 78,731  |  39,358  |   23   |
-| 59,049            | 236,195 |  118,100 |   25   |
-| 177,147           | 708,587 |  354,296 |   27   |
+| Nodes   | Comms   | ACKs    | Ticks |
+| ------- | ------- | ------- | ----- |
+| 27      | 107     | 56      | 11    |
+| 81      | 323     | 164     | 13    |
+| 243     | 971     | 488     | 15    |
+| 729     | 2,915   | 1,460   | 17    |
+| 2,187   | 8,747   | 4,376   | 19    |
+| 6,561   | 26,243  | 13,124  | 21    |
+| 19,683  | 78,731  | 39,358  | 23    |
+| 59,049  | 236,195 | 118,100 | 25    |
+| 177,147 | 708,587 | 354,296 | 27    |
 
 
 ##### Real life experimentation data
