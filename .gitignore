@@ -32,9 +32,6 @@ prototype/vendor/
 shared/modules/mocks/
 p2p/types/mocks/
 
-# Proto generated files
-*.pb.go
-
 # TODO(team): Does the `types` directory contain generated or raw type files?
 # types/
 
@@ -44,6 +41,3 @@ p2p/types/mocks/
 # Output binaries
 bin/
 build/dist/*
-
-# Local debugging
-temp_test.go
