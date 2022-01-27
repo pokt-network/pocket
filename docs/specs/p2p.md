@@ -44,15 +44,7 @@ We chose to go with a structured overlay approach for our p2p network to be able
 
 In this section, we will explain the structure that will power Pocket Network V1's P2P layer.
 
-**A reminder of our visual toolbox** (_while thanking devp2p spec for the inspiration_):
-
-💡: indicates an implementation avenue or suggestion
-
-✍🏻: A new term we chose to use for convenience purposes
-
-🗝: Key concept that should be paid attention to
-
-## I. Introduction 
+## Introduction 
 
 During our [research](#), we have been able to identify a few good candidate structures/algorithms for our overlay, out of which we thought Gemini (_previous version of spec is available in (add link))_ would be serve us best, however, having ran a few simulations and performed a few projections, we realized that as scalable as Gemini is, we could still face some challenges before we reach a relatively significant network size (_peer count > 10K_)
 
@@ -65,6 +57,22 @@ However we weren't particularly interested in giving ourselves further work to d
 After some thought, and after revisiting other candidates we have covered in our research, we took a special appeal to OneHop or Cosntant Hops algorithms (such as Kelips O(1)), but we hoped to extract the good parts only, so that we don't have to deal with the file-lookup-specific gymnastics and what not.
 
 Out of that thought process, we ended up picking what was first an optimization to our gossip algorithm for block proposal rounds, but later turned out to give us all the right answers with very intresting simplicity! It's called: Rain Tree.
+
+
+## I. Requirements
+
+Quoting from our research document, this list represents the requirements that the peer-to-peer layer of Pocket 1.0 should satisfy:
+
+ The network has to be able to scale to 100K-1M nodes
+ The peers should be able to communicate with each other and find each other in a deterministic and low-latency way 
+We should be able to reason about the network performance and capacity theoretically (There is no way you are going to simulate a load of 1 billion peers)
+The network should perform flawlessly regardless of the amount of data or type of communication that is taking place.
+By this we specifically mean that the peer-to-peer should act as substrate and allow the application layer to do whatever it needs in order to guarantee that Pocket is not restricted by the p2p layer.
+The network should be fault tolerant and self-healing (Self-explanatory)
+The network should be able to prioritize particular peers for some specific roles
+The substrate should allow for higher-order structures to be established on top of it, such that a specific set of peers is organized by role or rank or priority.
+The network should support segmented communication
+This is an outcome of the previous requirement where a set of peers might be interested in communicating only among themselves.
 
 ## II. Specification
 
@@ -89,7 +97,7 @@ In summary, RainTree is a very fast, scalable and highly reliable optionaly redu
 
 To gossip a message M, RainTree uses a distance-based metric to build a binary tree view of the network and propagates information down the tree. This traversal algorithm follows a tree reconstruction algorithm such that the resulting tree is one of three branches and not two.
 
-![](https://i.ibb.co/q1KLrCs/Screen-Shot-2022-01-27-at-18-41-20.png)
+![](./raintreediagram.png)
 
 RainTree requires that the peer list / neighbors list be sorted based on the distance metric.
 
@@ -108,7 +116,7 @@ To determine Node S' layer, we use the following formula:
 
 As mentioned before, `S` will follow a tree reconstruction algorithm to achieve full message propagation, such that when it has delivered message `M` to its left and right, `S` "demotes" itself one level down, and picks a new left and right using the same logic. This demotion goes on until the bottom-most layer (layer 0)
 
-![](https://i.ibb.co/PWqrhK3/Screen-Shot-2022-01-27-at-18-43-07.png)
+![](raintreedmotion.png)
 
 Each node receiving message `M` will follow the same logic..
 
@@ -130,17 +138,17 @@ Repeat 4 and 5 until current layer is 0
 Each peer receiving the message M at a given layer L will replay this procedure. We call the process of going to the next layer "demotion Logic" as the originator leaves his actual original layer and "demotes" himself to "lower" layers all the way to layer 0.
 ```
 
-![](https://i.ibb.co/pdkKLsM/Screen-Shot-2022-01-27-at-18-59-50.png)
+![](raintreealgorithm.png)
 
 ### 3. The Redundancy Layer
 
 An optional redudancy layer can be added to RainTree, such that the originator sends message M to the full list on level 0.
 
-![](https://i.ibb.co/6wj9RP5/Screen-Shot-2022-01-27-at-19-04-27.png)
+![](raintreeredundanctalgo.png)
 
 So, the algorithm becomes:
 
-![](https://i.ibb.co/1dsNzwC/Screen-Shot-2022-01-27-at-19-05-16.png)
+![](raintreeredundancyalgofull.png)
 
 This redundancy layer insures against non-participation and incomplete lists without the ACK/RESEND overhead, whereas the reliability layer (Daisy Chain clean-up layer) ensures 100% message propagation in all cases. (See next segment)
 
@@ -150,7 +158,7 @@ Networks are prone to failure and partitions, so RainTree offers a clean up laye
 
 The Daisy Chain Clean Up layer kicks in at level 0, such that nodes receiving messages from level 1 will go asking sequentially every other node of whether they have or want the just-received.
 
-![](https://i.ibb.co/NYGhrMg/Screen-Shot-2022-01-27-at-18-48-33.png)
+![](igyw.png)
 
 This message is denoted as a `IGYW` message, and it propagates following this algorithm:
 
@@ -169,11 +177,11 @@ If answer is No,
 If no answer, increment right counter and go to step 2.
 ```
 
-![](https://i.ibb.co/QJ19Rn5/Screen-Shot-2022-01-27-at-18-58-33.png)
+![](igywalgo.png)
 
 Thus, the full algorithm becomes as follows:
 
-![](https://i.ibb.co/6sbRy6K/Screen-Shot-2022-01-27-at-19-05-56.png)
+![](igywfullalgo.png)
 
 This process is an ACK/ADJUST/RESEND mechanism, for if no ACK was received, an ADJUST instruction takes place, which right after a RESEND instruction is initiated. 
 
