@@ -1,8 +1,8 @@
 # Pocket Network 1.0 Peer-To-Peer Module Pre-Planning Specification: Fast, Scalable, Highly Reliable and Optionaly Redundant Binary Tree Gossip
 
-<table>
-<tr style="border-width: 0px;">
-  <td style="border-width: 0px;">
+<table style="text-align: center;">
+<tr style="text-align: center;">
+  <td style="border-collapse: collapse;">
     <p align="center">
         Hamza Ouaghad
         @derrandz<br>
@@ -63,16 +63,15 @@ Out of that thought process, we ended up picking what was first an optimization 
 
 Quoting from our research document, this list represents the requirements that the peer-to-peer layer of Pocket 1.0 should satisfy:
 
- The network has to be able to scale to 100K-1M nodes
- The peers should be able to communicate with each other and find each other in a deterministic and low-latency way 
-We should be able to reason about the network performance and capacity theoretically (There is no way you are going to simulate a load of 1 billion peers)
-The network should perform flawlessly regardless of the amount of data or type of communication that is taking place.
-By this we specifically mean that the peer-to-peer should act as substrate and allow the application layer to do whatever it needs in order to guarantee that Pocket is not restricted by the p2p layer.
-The network should be fault tolerant and self-healing (Self-explanatory)
-The network should be able to prioritize particular peers for some specific roles
-The substrate should allow for higher-order structures to be established on top of it, such that a specific set of peers is organized by role or rank or priority.
-The network should support segmented communication
-This is an outcome of the previous requirement where a set of peers might be interested in communicating only among themselves.
+- The network has to be able to scale to 100K-1M nodes
+- The peers should be able to communicate with each other and find each other in a deterministic and low-latency way 
+- We should be able to reason about the network performance and capacity theoretically (_There is no way you are going to simulate a load of 1 billion peers_)
+- The network should perform flawlessly regardless of the amount of data or type of communication that is taking place. (_By this we specifically mean that the peer-to-peer should act as substrate and allow the application layer to do whatever it needs in order to guarantee that Pocket is not restricted by the p2p layer._)
+
+- The network should be fault tolerant and self-healing (Self-explanatory)
+- The network should be able to prioritize particular peers for some specific roles
+- The substrate should allow for higher-order structures to be established on top of it, such that a specific set of peers is organized by role or rank or priority.
+- The network should support segmented communication. (_This is an outcome of the previous requirement where a set of peers might be interested in communicating only among themselves._)
 
 ## II. Specification
 
@@ -83,7 +82,7 @@ The network structure in RainTree is a list of peers sorted by the numerical dis
 
 In such a tree/list, we make use of the concept of right and left branch targets, tree layers and max possible tree layers. We codify these concepts as follows:
 
-- Max possible Layers = logâ‚ƒ of List Size
+- Max possible Layers = log3 of List Size
 - Layer of a peer = Round up of the count of the exponents of 3 in the peers ID
 - Right branch target = Node position + targetListSize/3 (roll over if needed)
 - Left branch target = Node position + targetListSize/	1.5 (roll over if needed)
@@ -217,7 +216,7 @@ When a new peer X joins the network:
 It first contacts an existing bootstrap peer(s) E.
 Peer(s) E will answer with their peer lists.
 Peer X retrieves the lists and performs a raintree propagation of a Join Message with its Address in it denoted as the new joiner.
-ACKs can be enforced to keep peers from being filtered from peer XÕs peer list due to lack of response.
+ACKs can be enforced to keep peers from being filtered from peer XÃ•s peer list due to lack of response.
 
 This way, when a peer joins, it is immediately given at least one peer list it can start working with, and can by itself clean it up using ACKs and timeouts.
 
@@ -278,7 +277,7 @@ The connection uses a default timeout to ensure that if idle for x amount of tim
     1. Peer A constructs a message of bytes as follows: `[peer.persistentPubkey..., sharedKey...]`
     2. Peer A signs it with its persistent private key and sends it to be
     3. Peer B decrypts and the messages and sends back the same format: `[peer.persistentPubkey..., sharedKey...]`
-    4. Peer A upon receiving the response reconstructs the message with peer BÕs publickey and the shared secret it produced earlier and verifies it using BÕs persistent Publickey
+    4. Peer A upon receiving the response reconstructs the message with peer BÃ•s publickey and the shared secret it produced earlier and verifies it using BÃ•s persistent Publickey
 6. Peers use the shared secret as a symmetric key and communicate from then on with messages encrypted/decrypted via. AES 256-bit GCM with a randomly generated 12-byte nonce.
 
 ##### 6.3 Connections Pooling
