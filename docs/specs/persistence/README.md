@@ -271,17 +271,17 @@ Now in order to be able to compute transitions of the** state dataset** to the *
 # Dissenting Opinions / Attack Vectors / FAQ
 
 
-## <span style="text-decoration:underline;">1. Why not just store the state in a tree like every other blockchain?</span>
+### <span style="text-decoration:underline;">1. Why not just store the state in a tree like every other blockchain?</span>
 
 Pocket Network has one main difference with most blockchains in the market right now, and it’s the fact that it’s an **application specific blockchain**. No set of arbitrary data can be uploaded by the users, as that would break the immutable state schema based on predefined collections of structures. Having said this, this specification provides a Blockchain State Validation architecture, which leverages Patricia Merkle Trees to create a tamper proof representation of the blockchain state at any version, getting the best of both worlds (mutable and immutable database schemas), with the tradeoff of the data replication of the immutable database schema, which can be solved by a combination of hashing the data using 1-way functions and pruning.
 
 
-## <span style="text-decoration:underline;">2. Can an attacker just modify the mutable database and make a node commit to an invalid state?</span>
+### <span style="text-decoration:underline;">2. Can an attacker just modify the mutable database and make a node commit to an invalid state?</span>
 
 This attack vector can exist even if we were to persist all datasets using trees, however this would break functionality as at the moment of provisioning proof of computation, this data would vary yielding an invalid subsequent state version. 
 
 
-## <span style="text-decoration:underline;">3. Isn’t this approach more susceptible to errors as there are more moving parts?</span>
+### <span style="text-decoration:underline;">3. Isn’t this approach more susceptible to errors as there are more moving parts?</span>
 
 The only additional step this architecture includes is computing the leaf nodes as a result of the operations that happen on the mutable database. We believe that this is a valid trade-off as it can be easily managed as a separate sub-module of the persistence layer. 
 
@@ -289,7 +289,7 @@ The only additional step this architecture includes is computing the leaf nodes 
 # Candidate Features / Would Like to Haves / Open Questions
 
 
-## <span style="text-decoration:underline;">1. Have a key/value store for caching data that won’t make sense in a relational database due to performance or data replication.</span>
+#### <span style="text-decoration:underline;">1. Have a key/value store for caching data that won’t make sense in a relational database due to performance or data replication.</span>
 
 An interface to implementations such as [Redis](https://redis.io/) and [ElasticSearch](https://www.elastic.co/) as a cache layer which can store specific, optimized schemas or views to the persistent mutable and immutable schemas of the persistence layer. This is an optimization that can be tackled in future versions of this specification. 
 
