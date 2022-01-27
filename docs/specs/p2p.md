@@ -109,7 +109,7 @@ To determine Node S' layer, we use the following formula:
 ```
  Count the exponents of 3 in the list and then round up:
 
-       Toplayer = Round(Logâ‚ƒ(fullListSize))
+       Toplayer = Round(Log3(fullListSize))
   
 * fullListSize: the size of the peer list of Node S
 ```
@@ -124,19 +124,27 @@ Each node receiving message `M` will follow the same logic..
 ### 2. Algorithm (Gossip) 
 
 The originator of the message propagates the message as follows:
-```
 
 Let S be the source node of message M, whose peer list is of size N. To propagate a message, S does the following:
 
-Determine max possible layers of the network (using current peer list size)
-Determine own layer (top layer)
-Determine current layer (top layer - 1)
-Pick Right and Left branch targets belonging to current layer and send message to them and to self
-Go to next layer (decrement current layer)
-Repeat 4 and 5 until current layer is 0
+1. Determine max possible layers of the network (using current peer list size)
+2. Determine own layer (top layer)
+3. Determine current layer (top layer - 1)
+4. Pick Right and Left branch targets belonging to current layer and send message to them and to self
+5. Go to next layer (decrement current layer)
+6. Repeat 4 and 5 until current layer is 0
 
-Each peer receiving the message M at a given layer L will replay this procedure. We call the process of going to the next layer "demotion Logic" as the originator leaves his actual original layer and "demotes" himself to "lower" layers all the way to layer 0.
-```
+Each peer receiving the message M at a given layer L will replay this procedure.
+
+Origin nodes expect ACKs to be sent back from their lefts and right. Failure to receive an ACK within time-out causes the sender to select next 2 nodes (+1 & -1) in list and resend with decremented level number.
+
+Due to the tricky nature of time-outs, Adjust/Resend only happens once per target. Replacement nodes do not ACK.
+
+![](./sendackreadjust.png)
+
+We call the process of going to the next layer "demotion Logic" as the originator leaves his actual original layer and "demotes" himself to "lower" layers all the way to layer 0.
+
+The algorithm in pseudo-code:
 
 ![](raintreealgorithm.png)
 
@@ -162,20 +170,20 @@ The Daisy Chain Clean Up layer kicks in at level 0, such that nodes receiving me
 
 This message is denoted as a `IGYW` message, and it propagates following this algorithm:
 
-```
 a IGYW ( I GOT, YOU WANT?) mechanism is put in use such that a given peer does not fully send a message until the receiving part signals that it did not receive it before.
 
 This is achieved by level 1 nodes, such that once they have received a message, they do the following:
 
-Send IGYW to immediate left neighbor:
-If answer is Yes, send full message and go to step 2
-If answer is No, go to step 2
-If no answer, increment left counter and go to step 1
-Send IGYW to immediate right neighbour:
-If answer is Yes, send full message
-If answer is No, 
-If no answer, increment right counter and go to step 2.
-```
+- Send IGYW to immediate left neighbor:
+  - If answer is Yes, send full message and go to step 2
+  - If answer is No, go to step 2
+  - If no answer, increment left counter and go to step 1
+- Send IGYW to immediate right neighbour:
+  - If answer is Yes, send full message
+  - If answer is No, 
+  - If no answer, increment right counter and go to step 2.
+
+In pseudo-code:
 
 ![](igywalgo.png)
 
@@ -192,7 +200,7 @@ As with any DHT-like network, some level of network maintenance (also known as m
 RainTree is different in that it's similar to Constant Hop networks, in that its churn management process is minimal to non-existent. RainTree requires every member to have a close-to-full view of the network.
 
 
-##### 2.1 Join/Discovery
+##### 5.1 Join/Discovery
 
 Any new peer should be able to join the network and participate in it seamlessly. To ensure that our Join/Discovery process achieves this, we would like to answer the following requirements:
 
@@ -202,7 +210,7 @@ Any given peer can perform basic discovery and can safely fallback to such a pro
 To answer these requirements efficiently, we baked the discovery process into the join process.
 
 
-##### 2.2 Join
+##### 5.2 Join
 
 When a new peer X joins the network:
 
@@ -213,9 +221,15 @@ ACKs can be enforced to keep peers from being filtered from peer XÕs peer list d
 
 This way, when a peer joins, it is immediately given at least one peer list it can start working with, and can by itself clean it up using ACKs and timeouts.
 
-##### 2.3 Leave
+##### 5.3 Leave
 
 A peer that wants to leave the network basically just disconnects and relies on the maintenance routine to "discover" and broadcast its unavailability.
+
+##### Membership Pings
+
+RainTree per design can perform flawlessly without a periodic pings protocol, as the Gossip algorithm comes with enough to inform it about the recipients state, however we are interested in implementing a churn management protocol in separation of raintree that further enhances failure detection.
+
+For the time being, this is a work-in-progress.
 
 #### 3.5 Network Parameters and Scalability
 
