@@ -17,3 +17,5 @@
 .DS_Store
 .idea/
 
+build/
+
