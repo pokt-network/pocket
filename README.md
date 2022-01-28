@@ -14,12 +14,16 @@ The next iteration of the Pocket Network protocol.
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](https://github.com/pokt-network/repo-template/blob/master/CONTRIBUTING.md) for details on contributions and the process of submitting pull requests.
+Please read [CONTRIBUTING.md](docs/contributing/CONTRIBUTING.md) for details on contributions and the process of submitting pull requests.
+
+## Building
+
+We use [mage](https://magefile.org/) to build the project. Once you get `mage`, you can run it in the root of the repository to see the available targets.
 
 ## Support & Contact
 
 <div>
-  <a  href="https://twitter.com/poktnetwork" ><img src="https://img.shields.io/twitter/url/http/shields.io.svg?style=social"></a>
+  <a href="https://twitter.com/poktnetwork"><img src="https://img.shields.io/twitter/url/http/shields.io.svg?style=social"></a>
   <a href="https://t.me/POKTnetwork"><img src="https://img.shields.io/badge/Telegram-blue.svg"></a>
   <a href="https://www.facebook.com/POKTnetwork" ><img src="https://img.shields.io/badge/Facebook-red.svg"></a>
   <a href="https://research.pokt.network"><img src="https://img.shields.io/discourse/https/research.pokt.network/posts.svg"></a>
