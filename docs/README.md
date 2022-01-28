@@ -4,17 +4,9 @@
   </a>
 </div>
 
-# Pocket V1
+# Pocket V1 Documentation
 
-The next iteration of the Pocket Network protocol.
-
-## Documentation
-
-[Project Documentation](docs)
-
-## Contributing
-
-Please read [CONTRIBUTING.md](https://github.com/pokt-network/repo-template/blob/master/CONTRIBUTING.md) for details on contributions and the process of submitting pull requests.
+## Sections
 
 ## Support & Contact
 
