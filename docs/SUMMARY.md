@@ -5,7 +5,7 @@
 
 ## Specs
 
-* [Utility](docs/specs/utility/README.md)
-* [Consensus](docs/specs/consensus/README.md)
-* [P2P](docs/specs/p2p/README.md)
-* [Persistence](docs/specs/persistence/README.md)
+* [Utility](specs/utility/README.md)
+* [Consensus](specs/consensus/README.md)
+* [P2P](specs/p2p/README.md)
+* [Persistence](specs/persistence/README.md)
