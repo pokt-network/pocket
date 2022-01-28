@@ -25,7 +25,7 @@ func init() {
 		branch = "-" + branch
 		hash = "/" + hash
 	}
-	if dirty.Error() == "running \"git diff --quiet\" failed with exit code 1" {
+	if dirty != nil && dirty.Error() == "running \"git diff --quiet\" failed with exit code 1" {
 		hash += "+dirty"
 	}
 	env[versionStringEnvVarName] = "0.0.0" + branch + hash
