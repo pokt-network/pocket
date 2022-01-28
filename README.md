@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://www.pokt.network">
-    <img src="https://assets.website-files.com/609e7a6f2ec5c05d866ed6d3/609e7a6f2ec5c0a2836ed6e1_Logo%20(2).svg" alt="Pocket Network logo" width="340"/>
+    <img src="https://user-images.githubusercontent.com/2219004/151564884-212c0e40-3bfa-412e-a341-edb54b5f1498.jpeg" alt="Pocket Network logo" width="340"/>
   </a>
 </div>
 
