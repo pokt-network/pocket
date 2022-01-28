@@ -32,12 +32,12 @@ func init() {
 }
 
 func Build() error {
-	return sh.RunWith(env, "go", "build", "-ldflags", ldflag, pocketPackage)
+	return sh.RunWith(env, "go", "build", "-o", "build/", "-ldflags", ldflag, pocketPackage)
 }
 
 func BuildRace() error {
 	env["versionStringEnvVarName"] += "+race"
-	return sh.RunWith(env, "go", "build", "-ldflags", ldflag, "-race", pocketPackage)
+	return sh.RunWith(env, "go", "build", "-o", "build/", "-ldflags", ldflag, "-race", pocketPackage)
 }
 
 func Install() error {
