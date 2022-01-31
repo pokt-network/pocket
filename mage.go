@@ -7,9 +7,11 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-const versionStringEnvVarName = "POCKET_VERSION_STRING"
-const pocketPackage = "github.com/pokt-network/pocket/cmd/pocket"
-const ldflag = "-X main.version=$" + versionStringEnvVarName
+const (
+	versionStringEnvVarName = "POCKET_VERSION_STRING"
+	pocketPackage           = "github.com/pokt-network/pocket/cmd/pocket"
+	ldflags                 = "-X main.version=$" + versionStringEnvVarName
+)
 
 var env = map[string]string{}
 
@@ -32,16 +34,16 @@ func init() {
 }
 
 func Build() error {
-	return sh.RunWith(env, "go", "build", "-o", "build/", "-ldflags", ldflag, pocketPackage)
+	return sh.RunWith(env, "go", "build", "-o", "build/", "-ldflags", ldflags, pocketPackage)
 }
 
 func BuildRace() error {
 	env["versionStringEnvVarName"] += "+race"
-	return sh.RunWith(env, "go", "build", "-o", "build/", "-ldflags", ldflag, "-race", pocketPackage)
+	return sh.RunWith(env, "go", "build", "-o", "build/", "-ldflags", ldflags, "-race", pocketPackage)
 }
 
 func Install() error {
-	return sh.RunWith(env, "go", "install", "-ldflags", ldflag, pocketPackage)
+	return sh.RunWith(env, "go", "install", "-ldflags", ldflags, pocketPackage)
 }
 
 func Uninstall() error {
