@@ -15,7 +15,7 @@ const (
 
 var env = map[string]string{}
 
-func init() {
+func setup() {
 	env["GO111MODULE"] = "on"
 
 	fmt.Println("Getting branch and commit information")
@@ -37,17 +37,20 @@ func init() {
 
 // Builds the pocket executable and puts it in ./build
 func Build() error {
+	setup()
 	return sh.RunWith(env, "go", "build", "-o", "build/", "-ldflags", ldflags, pocketPackage)
 }
 
 // Builds the pocket executable with race detection enabled. Not for production.
 func BuildRace() error {
+	setup()
 	env[versionStringEnvVarName] += "+race"
 	return sh.RunWith(env, "go", "build", "-o", "build/", "-ldflags", ldflags, "-race", pocketPackage)
 }
 
 // Installs the pocket executable in the target used by go install.
 func Install() error {
+	setup()
 	return sh.RunWith(env, "go", "install", "-ldflags", ldflags, pocketPackage)
 }
 
