@@ -35,19 +35,23 @@ func init() {
 	env[versionStringEnvVarName] = versionNumber
 }
 
+// Builds the pocket executable and puts it in ./build
 func Build() error {
 	return sh.RunWith(env, "go", "build", "-o", "build/", "-ldflags", ldflags, pocketPackage)
 }
 
+// Builds the pocket executable with race detection enabled. Not for production.
 func BuildRace() error {
 	env[versionStringEnvVarName] += "+race"
 	return sh.RunWith(env, "go", "build", "-o", "build/", "-ldflags", ldflags, "-race", pocketPackage)
 }
 
+// Installs the pocket executable in the target used by go install.
 func Install() error {
 	return sh.RunWith(env, "go", "install", "-ldflags", ldflags, pocketPackage)
 }
 
+// Uninstalls the pocket executable if previously added with the install target.
 func Uninstall() error {
 	return sh.Run("go", "clean", "-i", pocketPackage)
 }
