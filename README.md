@@ -16,7 +16,7 @@ The next iteration of the Pocket Network protocol.
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on contributions and the process of submitting pull requests.
+Please read [CONTRIBUTING.md](docs/contributing/CONTRIBUTING.md) for details on contributions and the process of submitting pull requests.
 
 ## Building
 
