@@ -273,7 +273,7 @@ See [Ethereum.StackExchange Discussion](https://ethereum.stackexchange.com/quest
 
 5.3 Is it possible/desirablee to leverage the QC voting process such that malfunctioning or self-paused validators can "vote" via signature to remove themselves from the quorum count on the upcoming round(s)?
 
-5.4 Elaborate on the details Pacemaker protocl on a situation-by-situation basis to guarantee liveness and safety in all scenarios.
+5.4 Elaborate on the details Pacemaker protocol on a situation-by-situation basis to guarantee liveness and safety in all scenarios.
 
 5.5 A reliable and widely crypto library providing threshold signatures with minimal communication complexity. Not implemented in the [original hotstuff whitepaper](https://github.com/hot-stuff/libhotstuff/issues/4).
 
