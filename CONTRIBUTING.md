@@ -15,3 +15,10 @@ For an active research forum, checkout and post on [our forum](https://research.
 - (Optional) Use [Editor Config](https://editorconfig.org) to help your Text Editor keep the same formatting used throughout the project.
 - Code must be documented adhering to the official Go commentary guidelines.
 - Pull requests need to be based on and opened against the `main` branch.
+
+### Criteria for PR Evaluation
+
+- Quality: the PR should include instructions on how to test the submitted code. Automated tests are not a must in all situations, but always strongly encouraged
+- Judicious Dependencies: If dependencies are added, the reasoning for having them will be evaluated
+- Regularity: uniform use of language constructs. Idioms make it easier to process contributions
+- Context: make it easy for the reviewers to understand what is being addressed by the PR and why it's important to the project
