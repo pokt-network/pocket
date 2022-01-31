@@ -19,18 +19,20 @@ func init() {
 	env["GO111MODULE"] = "on"
 
 	fmt.Println("Getting branch and commit information")
-	branch, _ := sh.Output("git", "branch", "--show-current")
-	hash, _ := sh.Output("git", "rev-parse", "--short", "HEAD")
-	_, dirty := sh.Output("git", "diff", "--quiet")
+	branch, branchError := sh.Output("git", "branch", "--show-current")
+	hash, hashError := sh.Output("git", "rev-parse", "--short", "HEAD")
+	_, dirtyError := sh.Output("git", "diff", "--quiet")
 
-	if branch != "" {
-		branch = "-" + branch
-		hash = "/" + hash
+	versionNumber := "UNKNOWN"
+
+	// git repo invariant: we have a branch and a hash whenever version is known
+	if branchError == nil && hashError == nil {
+		versionNumber = fmt.Sprintf("0.0.0-%s/%s", branch, hash)
+		if dirtyError != nil {
+			versionNumber += "+dirty"
+		}
 	}
-	if dirty != nil && dirty.Error() == "running \"git diff --quiet\" failed with exit code 1" {
-		hash += "+dirty"
-	}
-	env[versionStringEnvVarName] = "0.0.0" + branch + hash
+	env[versionStringEnvVarName] = versionNumber
 }
 
 func Build() error {
@@ -38,7 +40,7 @@ func Build() error {
 }
 
 func BuildRace() error {
-	env["versionStringEnvVarName"] += "+race"
+	env[versionStringEnvVarName] += "+race"
 	return sh.RunWith(env, "go", "build", "-o", "build/", "-ldflags", ldflags, "-race", pocketPackage)
 }
 
