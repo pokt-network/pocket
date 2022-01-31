@@ -18,6 +18,10 @@ The next iteration of the Pocket Network protocol.
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on contributions and the process of submitting pull requests.
 
+## Building
+
+We use [mage](https://magefile.org/) to build the project. Once you get `mage`, you can run it in the root of the repository to see the available targets.
+
 ## Support & Contact
 
 <div>
