@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-var version string
+var version = "UNKNOWN"
 
 func main() {
 	v := flag.Bool("version", false, "")
