@@ -9,6 +9,8 @@
 ## Sections
 
 [V1 Specifications](specs)
+[Dependencies Information](deps/README.md)
+[Testing Information](testing/README.md)
 
 ## Support & Contact
 
@@ -18,7 +20,6 @@
   <a href="https://www.facebook.com/POKTnetwork" ><img src="https://img.shields.io/badge/Facebook-red.svg"></a>
   <a href="https://research.pokt.network"><img src="https://img.shields.io/discourse/https/research.pokt.network/posts.svg"></a>
 </div>
-
 
 ## License
 
