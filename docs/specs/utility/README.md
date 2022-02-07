@@ -118,7 +118,7 @@ A ServiceNode is able to modify their initial staking values including GeoZone, 
 ```
 # ServiceNode(Edit)StakeMsg Interface
 type ServiceNodeStakeMsg interface {
-  GetPublicKey()  PublicKey       # identity of edited ServiceNode
+  GetPublicKey()  PublicKey       # the public cryptographic id of the ServiceNode being edited
   GetStakeAmount() BigInt         # must be greater than or equal to the current value
   GetServiceURL() ServiceURL      # may be modified, does not reset ReportCard
   GetRelayChains() RelayChain[]   # may be modified, but removal resets ReportCard
@@ -190,7 +190,7 @@ Fishermen TestScoreMsgs operate under a probabilistic submission and proof model
 
 ![alt_text](image1.png)
 
-Furthermore, due to alignment of Fisherman incentives and desired brevity of on-chain Proof data, ProofTxs only require the Fisherman to prove they executed the sampling by verifying a single non-null sample. The specific sample required to prove the TestScore is determined by the ‘claimed’ TestScoreMsg and the BlockHash after ProofTestScoreDelay blocks elapse and is required to be submitted before MaxProofMsgDelay. This reveal mechanism allows for an unpredictable assignment of the required sample but is deterministic once the BlockHash is finalized. Using the timing requirement of the sampling strategy, the protocol can easily verify the sample index when submitted in the ProofMsg. It is important to note, that all Web3 requests and responses are signed by the requester (Fisherman or Application) and the responder (ServiceNode). This cryptographic mechanism ensures the integrity of a timestamp, as without the PrivateKey of the particular ServiceNode, a Fisherman would be unable to falsify a timestamp. Though a successful ProofMsg has no effect on the reward of any Fishermen, an unsuccessful ProofMsg burn is severe to make up for the probabilistic nature of the proof requirement.
+Furthermore, due to alignment of Fisherman incentives and desired brevity of on-chain Proof data, ProofTxs only require the Fisherman to prove they executed the sampling by verifying a single non-null sample. The specific sample required to prove the TestScore is determined by the ‘claimed’ TestScoreMsg and the BlockHash after ProofTestScoreDelay blocks elapse and is required to be submitted before MaxProofMsgDelay. This reveal mechanism allows for an unpredictable assignment of the required sample but is deterministic once the BlockHash is finalized. Using the timing requirement of the sampling strategy, the protocol can easily verify the sample index when submitted in the ProofMsg. It is important to note, that all Web3 requests and responses are signed by the requester (Fisherman or Application) and the responder (ServiceNode). This cryptographic mechanism ensures the integrity of a timestamp, as without the signature from the particular ServiceNode PrivateKey, a Fisherman would be able to falsify the timestamp. Though a successful ProofMsg has no effect on the reward of any Fishermen, an unsuccessful ProofMsg burn is severe to make up for the probabilistic nature of the proof requirement.
 
 
 ![alt_text](image2.png)
@@ -259,14 +259,14 @@ Applications are a category of actors who consume Web3 access from Pocket Networ
 type ApplicationStakeMsg interface {
   GetPublicKey()  PublicKey       # The public cryptographic id of the custodial account
   GetStakeAmount() BigInt         # The amount of uPOKT put in escrow
-  GetRelayChains() RelayChain[]   # The flavor(s) of Web3 hosted by this application
+  GetRelayChains() RelayChain[]   # The flavor(s) of Web3 consumed by this application
   GetGeoZone() LocationIdentifier # The general geolocation identifier of the application
   GetNumOfNodes() int8            # The number of ServiceNodes per session
 }
 ```
 
 
-Once successfully staked and a new SessionBlock is created, an Application is officially registered and may consume Web3 access from ServiceNodes that are assigned through the Session Protocol in the form of a request/response cycle known as a Relay. In order for an Application to get Session information, i.e. their assigned Fisherman and ServiceNodes, they may query a public Dispatch endpoint of any fullnode. To ensure Pocket Network SLA backed service, the Application executes a handshake with the assigned Fishermen. The Application provides the Fisherman with a temporary and limited Application Authentication Token and a matching Ephemeral Private Key that is used by the Fisherman to sample the service of the Session in real time. Once the Application handshake is executed, the Application may use up to MaxRelaysPerSession/NumberOfServiceNodes per ServiceNode during a Session. If the Application maxes out the usage of all of its ServiceNodes, it is unable to Relay any further until the Session elapses.
+Once successfully staked and a new SessionBlock is created, an Application is officially registered and may consume Web3 access from ServiceNodes that are assigned through the Session Protocol in the form of a request/response cycle known as a Relay. In order for an Application to get Session information, i.e. their assigned Fisherman and ServiceNodes, they may query a public Dispatch endpoint of any full node. To ensure Pocket Network SLA backed service, the Application executes a handshake with the assigned Fishermen. The Application provides the Fisherman with a temporary and limited Application Authentication Token and a matching Ephemeral Private Key that is used by the Fisherman to sample the service of the Session in real time. Once the Application handshake is executed, the Application may use up to MaxRelaysPerSession/NumberOfServiceNodes per ServiceNode during a Session. If the Application maxes out the usage of all of its ServiceNodes, it is unable to Relay any further until the Session elapses.
 
 An Application is able to modify their initial staking values including GeoZone, RelayChain(s), NumberOfNodes, and StakeAmount by submitting a StakeMsg while already staked. It is important to note, a StakeAmount is only able to be modified greater than or equal to the current value. This allows the protocol to not have to track pieces of stake from any Application and enables an overall simpler implementation. 
 
@@ -318,11 +318,11 @@ Pocket Network 1.0 adopts a traditional Validator reward process such that only 
 
 ```
 func CalculateBlockReward(TotalTxFees, DAOCutPercent) (blockProducerReward, daoBlockReward) {
-  # calculate max reward per ServiceNode
+  # calculate the DAO's cut of the block reward
   daoBlockReward = perfectMult(TotalTxFees, DAOCutPercent)
-  # calculate decrease
-  blockProducerReward = TotalTxFees + daoBlockReward
-  Return
+  # calculate the block producer reward
+  blockProducerReward = TotalTxFees - daoBlockReward
+  return
 } 
 ```
 
@@ -461,10 +461,10 @@ In addition to the ParamChange message, the DAO is able to burn or transfer from
 ```
 # DAOTreasury Interface
 type DAOTreasuryMsg interface {
-  GetAddress()  Address           # Address of sender account; Must be permissioned on ACL
-  GetToAddress() Address          # (Optional) receiver of the funds (if applicable)
-  Operation() DAOOp               # The identifier of the operation; burn or send
-  GetAmount() Big.Int             # The operation is executed on this amount of tokens
+  GetAddress() Address           # Address of sender account; Must be permissioned on ACL
+  GetToAddress() *Address        # (Optional) receiver of the funds if applicable; nil otherwise
+  Operation() DAOOp              # The identifier of the operation; burn or send
+  GetAmount() Big.Int            # The operation is executed on this amount of tokens
 }
 ```
 
