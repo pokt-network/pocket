@@ -1,0 +1,90 @@
+version: "3.8"
+
+services:
+  client:
+    container_name: client
+    image: pocket/client:latest
+    build:
+      context: ../
+      dockerfile: ./build/DockerfileClient
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network/consensus-pre-prototype
+    stdin_open: true
+    tty: true
+
+  node1.consensus:
+    container_name: node1.consensus
+    image: pocket/consensus:latest
+    command: "scripts/watch.sh config/config1.json"
+    build:
+      context: ../
+      dockerfile: ./build/Dockerfile
+    expose:
+      - "8080"
+      - "9080"
+    ports:
+      - "8081:8080"
+      - "9081:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network/consensus-pre-prototype
+
+  node2.consensus:
+    container_name: node2.consensus
+    image: pocket/consensus:latest
+    command: "scripts/watch.sh config/config2.json"
+    build:
+      context: ../
+      dockerfile: ./build/Dockerfile
+    expose:
+      - "8080"
+      - "9080"
+    ports:
+      - "8082:8080"
+      - "9082:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network/consensus-pre-prototype
+
+  node3.consensus:
+    container_name: node3.consensus
+    image: pocket/consensus:latest
+    command: "scripts/watch.sh config/config3.json"
+    build:
+      context: ../
+      dockerfile: ./build/Dockerfile
+    expose:
+      - "8080"
+      - "9080"
+    ports:
+      - "8083:8080"
+      - "9083:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network/consensus-pre-prototype
+
+  node4.consensus:
+    container_name: node4.consensus
+    image: pocket/consensus:latest
+    command: "scripts/watch.sh config/config4.json"
+    build:
+      context: ../
+      dockerfile: ./build/Dockerfile
+    expose:
+      - "8080"
+      - "9080"
+    ports:
+      - "8084:8080"
+      - "9084:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network/consensus-pre-prototype
+
+  neo4j:
+    image: neo4j
+    hostname: neo4j
+    platform: linux/x86_64 # https://stackoverflow.com/questions/65456814
+    volumes:
+      - ${PWD}/neo4j/data:/data
+    environment:
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      - NEO4J_AUTH=none
+    ports:
+      - "7474:7474"
+      - "7687:7687"

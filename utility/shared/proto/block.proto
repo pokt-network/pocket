@@ -1,0 +1,20 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+package utility;
+option go_package = "/utility/test/";
+
+message BlockHeader {
+  int64 Height = 1;
+  string Hash = 2;
+  string NetworkID = 3;
+  google.protobuf.Timestamp Time = 4;
+  uint32 NumTxs = 5;
+  int64 TotalTxs = 6;
+  string LastBlockHash = 7;
+  bytes ProposerAddress = 8;
+}
+
+message Block {
+  BlockHeader BlockHeader = 1;
+  repeated bytes Transactions = 2;
+}

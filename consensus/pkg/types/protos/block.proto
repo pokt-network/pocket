@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package pocket;
+
+option go_package = "/typespb/";
+
+message Block {
+  BlockHeader BlockHeader = 1;
+  repeated Transaction Transactions = 2;
+  repeated Evidence ConsensusEvidence = 3;
+}
+
+message BlockHeader {
+  int64 Height = 1;
+  string Hash = 2;
+  // string NetworkID = 3; // TODO: What is this for?
+  google.protobuf.Timestamp Time = 4; // BFT Timestamp.
+  uint32 NumTxs = 5;
+  // int64 TotalTxs = 6;  // TODO: What is the purpose of this relative to NumTxs?
+  string LastBlockHash = 7;
+  bytes ProposerAddress = 8;
+  uint32 ProposerId = 9; // TODO: Same as the NodeId throughout the consensus module.
+  bytes QuorumCertificate = 10; // TODO: just a gob serialization of the go struct for now, but switch to a proto.
+}
+
+// TODO: Move into a separate file.
+message Transaction {
+  bytes Data = 1;
+}
+
+// TODO: Move into a separate file.
+message Evidence {
+  bytes Data = 1;
+}

@@ -1,0 +1,168 @@
+syntax = "proto3";
+import "vote.proto";
+import "session.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+package utility;
+option go_package = "/utility/types/";
+
+message MessageSend {
+  bytes FromAddress = 1;
+  bytes ToAddress = 2;
+  string Amount = 3;
+}
+
+message MessageStakeServiceNode {
+  bytes PublicKey = 1;
+  repeated string Chains = 2;
+  string Amount = 3;
+  string ServiceURL = 4;
+  bytes OutputAddress = 5;
+  optional bytes Signer = 6;
+}
+
+message MessageEditStakeServiceNode {
+  bytes address = 1;
+  repeated string Chains = 2;
+  string AmountToAdd = 3;
+  string ServiceURL = 4;
+  optional bytes Signer = 5;
+}
+
+message MessageUnstakeServiceNode {
+  bytes Address = 1;
+  optional bytes Signer = 2;
+}
+
+message MessageUnpauseServiceNode {
+  bytes Address = 1;
+  optional bytes Signer = 2;
+}
+
+message MessagePauseServiceNode {
+  bytes Address = 1;
+  optional bytes Signer = 2;
+}
+
+message MessageStakeApp {
+  bytes PublicKey = 1;
+  repeated string Chains = 2;
+  string Amount = 3;
+  bytes OutputAddress = 4;
+  optional bytes Signer = 5;
+}
+
+message MessageEditStakeApp {
+  bytes address = 1;
+  repeated string Chains = 2;
+  string AmountToAdd = 3;
+  optional bytes Signer = 4;
+}
+
+message MessageUnstakeApp {
+  bytes Address = 1;
+  optional bytes Signer = 2;
+}
+
+message MessageUnpauseApp {
+  bytes Address = 1;
+  optional bytes Signer = 2;
+}
+
+message MessagePauseApp {
+  bytes Address = 1;
+  optional bytes Signer = 2;
+}
+
+message MessageStakeValidator {
+  bytes PublicKey = 1;
+  string Amount = 2;
+  string ServiceURL = 3;
+  bytes OutputAddress = 4;
+  optional bytes Signer = 5;
+}
+
+message MessageEditStakeValidator {
+  bytes address = 1;
+  string AmountToAdd = 2;
+  string ServiceURL = 3;
+  optional bytes Signer = 4;
+}
+
+message MessageUnstakeValidator {
+  bytes Address = 1;
+  optional bytes Signer = 2;
+}
+
+message MessageUnpauseValidator {
+  bytes Address = 1;
+  optional bytes Signer = 2;
+}
+
+message MessagePauseValidator {
+  bytes Address = 1;
+  optional bytes Signer = 2;
+}
+
+message MessageFishermanPauseServiceNode {
+  bytes Address = 1;
+  bytes Reporter = 2;
+  optional bytes Signer = 3;
+}
+
+message MessageStakeFisherman {
+  bytes PublicKey = 1;
+  repeated string Chains = 2;
+  string Amount = 3;
+  string ServiceURL = 4;
+  bytes OutputAddress = 5;
+  optional bytes Signer = 6;
+}
+
+message MessageEditStakeFisherman {
+  bytes address = 1;
+  repeated string Chains = 2;
+  string AmountToAdd = 3;
+  string ServiceURL = 4;
+  optional bytes Signer = 5;
+}
+
+message MessageUnstakeFisherman {
+  bytes Address = 1;
+  optional bytes Signer = 2;
+}
+
+message MessageTestScore {
+  utility.SessionHeader SessionHeader = 1;
+  google.protobuf.Timestamp FirstSampleTime = 2;
+  uint32 NumberOfSamples = 3;
+  repeated uint32 NullIndicies = 4;
+}
+
+message MessageProveTestScore {
+  utility.SessionHeader SessionHeader = 1;
+  google.protobuf.Timestamp Leaf = 2;
+}
+
+message MessageUnpauseFisherman {
+  bytes Address = 1;
+  optional bytes Signer = 2;
+}
+
+message MessagePauseFisherman{
+  bytes Address = 1;
+  optional bytes Signer = 2;
+}
+
+message MessageChangeParameter {
+  bytes Signer = 1;
+  bytes Owner = 2;
+  string ParameterKey = 3;
+  google.protobuf.Any ParameterValue = 4;
+}
+
+message MessageDoubleSign {
+  utility.Vote VoteA = 1;
+  utility.Vote VoteB = 2;
+  optional bytes ReporterAddress = 3;
+}
