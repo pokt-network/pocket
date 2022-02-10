@@ -60,7 +60,7 @@ func (m *consensusModule) handleHotstuffMessage(message *HotstuffMessage) {
 		return
 	}
 
-	// TODO: Move this over into the persistance m.
+	// TODO: Move this over into the persistence m.
 	m.MessagePool[message.Step] = append(m.MessagePool[message.Step], *message)
 
 	if m.LeaderId == nil && message.Step == NewRound {

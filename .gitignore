@@ -15,3 +15,7 @@
 # vendor/
 
 .DS_Store
+
+.idea
+consensus/neo4j/
+vendor/

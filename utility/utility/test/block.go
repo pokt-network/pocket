@@ -2,8 +2,8 @@ package test
 
 import (
 	"encoding/hex"
-	"github.com/pokt-network/utility-pre-prototype/shared/crypto"
-	"github.com/pokt-network/utility-pre-prototype/utility/types"
+	"pocket/utility/shared/crypto"
+	"pocket/utility/utility/types"
 )
 
 type ValidatorSet []Validator

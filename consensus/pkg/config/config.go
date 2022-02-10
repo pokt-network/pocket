@@ -21,13 +21,15 @@ type Config struct {
 
 	P2P         *P2PConfig         `json:"p2p"`
 	Consensus   *ConsensusConfig   `json:"consensus"`
-	Persistance *PersistanceConfig `json:"persistance"`
+	Persistence *persistenceConfig `json:"persistence"`
 	Utility     *UtilityConfig     `json:"utility"`
 }
 
 type P2PConfig struct {
-	ConsensusPort uint32 `json:"consensus_port"`
-	DebugPort     uint32 `json:"debug_port"`
+	Protocol   string   `json:"protocol"`
+	Address    string   `json:"address"`
+	ExternalIp string   `json:"external_ip"`
+	Peers      []string `json:"peers"`
 }
 
 type ConsensusConfig struct {
@@ -35,7 +37,7 @@ type ConsensusConfig struct {
 	NodeId types.NodeId `json:"node_id"`
 }
 
-type PersistanceConfig struct {
+type persistenceConfig struct {
 	DataDir string `json:"datadir"`
 }
 
@@ -71,7 +73,7 @@ func LoadConfig(file string) (c *Config) {
 		log.Fatalln("Error validating or completing P2P config: ", err)
 	}
 
-	// log.Printf("[DEBUG] ~~~ Finished loading config ~~~\n\t[Config] %#v\n\t[Consensus] %#v\n\t[P2P] %#v\n\t[Persistance] %#v\n\t[Utility] %#v\n", c, c.Consensus, c.P2P, c.Persistance, c.Utility)
+	// log.Printf("[DEBUG] ~~~ Finished loading config ~~~\n\t[Config] %#v\n\t[Consensus] %#v\n\t[P2P] %#v\n\t[persistence] %#v\n\t[Utility] %#v\n", c, c.Consensus, c.P2P, c.persistence, c.Utility)
 
 	return
 }
@@ -90,9 +92,9 @@ func (c *Config) validateAndComplete() error {
 }
 
 func (c *P2PConfig) validateAndComplete() error {
-	if c.ConsensusPort == 0 || c.DebugPort == 0 {
-		return fmt.Errorf("ConsensusPort and DebugPort must both be positive integers")
-	}
+	// if c.ConsensusPort == 0 || c.DebugPort == 0 {
+	// 	return fmt.Errorf("ConsensusPort and DebugPort must both be positive integers")
+	// }
 	return nil
 }
 

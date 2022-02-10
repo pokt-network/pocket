@@ -1,7 +1,7 @@
 package utility
 
 import (
-	"github.com/pokt-network/utility-pre-prototype/utility/types"
+	"pocket/utility/utility/types"
 	"math/big"
 )
 

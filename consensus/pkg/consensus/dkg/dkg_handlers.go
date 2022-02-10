@@ -9,9 +9,9 @@ import (
 	"math/big"
 	"sort"
 
-	"pocket/consensus/pkg/shared"
-	"pocket/consensus/pkg/shared/context"
 	"pocket/consensus/pkg/types"
+	"pocket/shared"
+	"pocket/shared/context"
 
 	"github.com/coinbase/kryptology/pkg/core/curves"
 	"github.com/coinbase/kryptology/pkg/dkg/gennaro"

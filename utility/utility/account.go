@@ -1,8 +1,8 @@
 package utility
 
 import (
-	"github.com/pokt-network/utility-pre-prototype/utility/types"
 	"math/big"
+	"pocket/utility/utility/types"
 )
 
 func (u *UtilityContext) HandleMessageSend(message *types.MessageSend) types.Error {
@@ -71,6 +71,7 @@ func (u *UtilityContext) SubPoolAmount(name string, amountToSub string) types.Er
 	}
 	return nil
 }
+
 
 func (u *UtilityContext) GetPoolAmount(name string) (amount *big.Int, err types.Error) {
 	store := u.Store()

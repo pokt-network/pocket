@@ -1,4 +1,4 @@
-package poktp2p
+package p2p
 
 import (
 	"bufio"
@@ -34,7 +34,7 @@ type io struct {
 		readOpen bool
 	}
 
-	dialer Dialer // an intermediary poktp2p interface that returns net.Conn, useful for mocking in testing
+	dialer Dialer // an intermediary p2p interface that returns net.Conn, useful for mocking in testing
 	conn   net.Conn
 
 	timeouts struct {

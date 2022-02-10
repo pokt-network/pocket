@@ -5,8 +5,8 @@ import (
 	"log"
 	"math/rand"
 
-	"pocket/consensus/pkg/shared"
 	"pocket/consensus/pkg/types"
+	"pocket/shared"
 )
 
 func (m *consensusModule) electNextLeader(message *HotstuffMessage) {

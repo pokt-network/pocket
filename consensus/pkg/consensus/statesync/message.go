@@ -5,7 +5,7 @@ import (
 	"encoding/gob"
 
 	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/shared"
+	"pocket/shared"
 )
 
 type StateSyncMessageType string

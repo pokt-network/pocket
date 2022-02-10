@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/pokt-network/utility-pre-prototype/utility/types"
+	"pocket/utility/utility/types"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 	"math/big"

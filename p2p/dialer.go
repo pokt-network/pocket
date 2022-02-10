@@ -1,4 +1,4 @@
-package poktp2p
+package p2p
 
 import (
 	"context"

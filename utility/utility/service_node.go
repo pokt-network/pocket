@@ -1,9 +1,9 @@
 package utility
 
 import (
-	"github.com/pokt-network/utility-pre-prototype/shared/bus"
-	"github.com/pokt-network/utility-pre-prototype/shared/crypto"
-	"github.com/pokt-network/utility-pre-prototype/utility/types"
+	"pocket/shared/modules"
+	"pocket/utility/shared/crypto"
+	"pocket/utility/utility/types"
 )
 
 func (u *UtilityContext) HandleMessageStakeServiceNode(message *types.MessageStakeServiceNode) types.Error {
@@ -242,7 +242,7 @@ func (u *UtilityContext) DeleteServiceNode(address []byte) types.Error {
 	return nil
 }
 
-func (u *UtilityContext) GetServiceNodesReadyToUnstake() (ServiceNodes []bus.UnstakingActor, err types.Error) {
+func (u *UtilityContext) GetServiceNodesReadyToUnstake() (ServiceNodes []modules.UnstakingActor, err types.Error) {
 	store := u.Store()
 	latestHeight, err := u.GetLatestHeight()
 	if err != nil {

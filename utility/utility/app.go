@@ -1,11 +1,11 @@
 package utility
 
 import (
-	"github.com/pokt-network/utility-pre-prototype/shared/bus"
-	"github.com/pokt-network/utility-pre-prototype/shared/crypto"
-	"github.com/pokt-network/utility-pre-prototype/utility/types"
 	"math"
 	"math/big"
+	"pocket/shared/modules"
+	"pocket/utility/shared/crypto"
+	"pocket/utility/utility/types"
 )
 
 func (u *UtilityContext) HandleMessageStakeApp(message *types.MessageStakeApp) types.Error {
@@ -287,7 +287,7 @@ func (u *UtilityContext) DeleteApplication(address []byte) types.Error {
 	return nil
 }
 
-func (u *UtilityContext) GetAppsReadyToUnstake() (apps []bus.UnstakingActor, err types.Error) {
+func (u *UtilityContext) GetAppsReadyToUnstake() (apps []modules.UnstakingActor, err types.Error) {
 	store := u.Store()
 	latestHeight, err := u.GetLatestHeight()
 	if err != nil {

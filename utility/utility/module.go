@@ -2,44 +2,82 @@ package utility
 
 import (
 	"encoding/hex"
-	"github.com/pokt-network/utility-pre-prototype/shared/bus"
-	"github.com/pokt-network/utility-pre-prototype/utility/types"
+	"log"
+	"pocket/consensus/pkg/config"
+	"pocket/shared/context"
+	"pocket/shared/modules"
+
+	"pocket/utility/utility/types"
 )
 
-var _ bus.UtilityModule = &UtilityContext{}
-
 type UtilityModule struct {
-	Mempool types.Mempool
-	Bus     bus.Bus
-}
+	modules.UtilityModule
+	pocketBusMod     modules.PocketBusModule
 
-func NewUtilityModule(bus bus.Bus) (UtilityModule, error) {
-	return UtilityModule{
-		Mempool: types.NewMempool(1000, 1000),
-		Bus:     bus,
-	}, nil
+	Mempool types.Mempool
 }
 
 type UtilityContext struct {
+	modules.UtilityContextInterface
+
 	LatestHeight int64
 	Mempool      types.Mempool
 	Context      *Context
 }
 
-func (u *UtilityModule) NewUtilityContext(height int64) (*UtilityContext, types.Error) {
-	context, err := u.Bus.GetPersistenceModule().NewContext(height)
+func Create(config *config.Config) (modules.UtilityModule, error) {
+	return &UtilityModule{
+		Mempool: types.NewMempool(1000, 1000),
+	}, nil
+}
+
+func(p *UtilityModule) Start(ctx *context.PocketContext) error {
+	panic("Why are you starting the utility module?")
+	return nil
+}
+
+func(p *UtilityModule) Stop(ctx *context.PocketContext) error {
+	return nil
+}
+
+func (m *UtilityModule) SetPocketBusMod(pocketBus modules.PocketBusModule) {
+	m.pocketBusMod = pocketBus
+}
+
+func (m *UtilityModule) GetPocketBusMod() modules.PocketBusModule {
+	if m.pocketBusMod == nil {
+		log.Fatalf("PocketBus is not initialized")
+	}
+	return m.pocketBusMod
+}
+
+func (u *UtilityModule) NewUtilityContextWrapper(height int64) (modules.UtilityContextInterface, error) {
+	ctx, err := u.NewUtilityContext(height)
+	if err != nil {
+		panic(err)
+	}
+	return ctx, nil
+}
+
+func (u *UtilityModule) NewUtilityContext(height int64) (modules.UtilityContextInterface, types.Error) {
+	ctx, err := u.GetPocketBusMod().GetPersistenceModule().NewContext(height)
+	// context, err := u.Bus.GetPersistenceModule().NewContext(height)
 	if err != nil {
 		return nil, types.ErrNewContext(err)
 	}
 	return &UtilityContext{
 		LatestHeight: height,
 		Mempool:      u.Mempool,
-		Context:      &Context{PersistenceContext: context},
+		Context:      &Context{PersistenceContext: ctx},
 	}, nil
 }
 
 func (u *UtilityContext) Store() *Context {
 	return u.Context
+}
+
+func (u *UtilityContext) GetPersistanceContext() modules.PersistenceContext {
+	return u.Context.PersistenceContext
 }
 
 func (u *UtilityContext) ReleaseContext() {
@@ -63,7 +101,7 @@ func (u *UtilityContext) Codec() types.Codec {
 }
 
 type Context struct {
-	bus.PersistenceContext
+	modules.PersistenceContext
 	SavePointsM map[string]struct{}
 	SavePoints  [][]byte
 }

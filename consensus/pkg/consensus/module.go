@@ -3,15 +3,16 @@ package consensus
 import (
 	"encoding/gob"
 	"log"
+	"pocket/consensus/pkg/config"
 
 	"pocket/consensus/pkg/consensus/dkg"
 	"pocket/consensus/pkg/consensus/leader_election"
 	"pocket/consensus/pkg/consensus/statesync"
 	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/shared/context"
-	"pocket/consensus/pkg/shared/modules"
 	"pocket/consensus/pkg/types"
 	"pocket/consensus/pkg/types/typespb"
+	"pocket/shared/context"
+	"pocket/shared/modules"
 )
 
 const (
@@ -19,8 +20,8 @@ const (
 )
 
 type consensusModule struct {
-	*modules.BasePocketModule
 	modules.ConsensusModule
+	pocketBusMod modules.PocketBusModule
 
 	// Hotstuff
 	Height BlockHeight
@@ -47,42 +48,43 @@ type consensusModule struct {
 	// TODO: Remove later to config/context/injected-logger
 	logPrefix string // TODO: Move over to config or context
 
-	// TODO: Move this over to the persistance module or elsewhere?
+	// TODO: Move this over to the persistence module or elsewhere?
 	// Open questions for mempool:
 	// - Should this be a map keyed by (height, round, step)?
-	// - Should this be handeled by the persistance m?
+	// - Should this be handeled by the persistence m?
 	// - How is the mempool management handled between all 4 ms?
 	// - When do we clear/remove messages from the mempool?
 	MessagePool map[Step][]HotstuffMessage
 	// MessagePool map[Height][Step][Roudn][]CandidateLeaderMessage
 	// MessagePool map[Height][Step][Roudn][]HotstuffMessage
+
+	UtilityContext modules.UtilityContextInterface
 }
 
-func Create(
-	ctx *context.PocketContext,
-	base *modules.BasePocketModule,
-) (modules.ConsensusModule, error) {
-	cfg := base.GetConfig()
+func Create(cfg* config.Config) (modules.ConsensusModule, error) {
+	gob.Register(&DebugMessage{})
+	gob.Register(&HotstuffMessage{})
+	gob.Register(&statesync.StateSyncMessage{})
+	gob.Register(&dkg.DKGMessage{})
+	gob.Register(&leader_election.LeaderElectionMessage{})
 
-	stateSyncMod, err := statesync.Create(ctx, base)
+	//stateSyncMod, err := statesync.Create(ctx, base)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	leaderElectionMod, err := leader_election.Create(cfg)
 	if err != nil {
 		return nil, err
 	}
-
-	leaderElectionMod, err := leader_election.Create(ctx, base)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Not used until we moved to threshold signatures.
-	dkgMod, err := dkg.Create(ctx, base)
-	if err != nil {
-		return nil, err
-	}
+	//
+	//// TODO: Not used until we moved to threshold signatures.
+	//dkgMod, err := dkg.Create(ctx, base)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	m := &consensusModule{
-		BasePocketModule: base,
-
 		Height: 0,
 		Round:  0,
 		Step:   NewRound,
@@ -98,18 +100,19 @@ func Create(
 		logPrefix: DefaultLogPrefix,
 
 		paceMaker:         nil, // Updated below because of the 2 way pointer design.
-		stateSyncMod:      stateSyncMod,
-		dkgMod:            dkgMod,
+		stateSyncMod:      nil,
+		dkgMod:            nil,
 		leaderElectionMod: leaderElectionMod,
 
 		MessagePool: make(map[Step][]HotstuffMessage),
 	}
 
-	paceMaker, err := CreatePaceMaker(ctx, base, m)
+	paceMaker, err := CreatePaceMaker(cfg)
 	if err != nil {
 		return nil, err
 	}
 	m.paceMaker = paceMaker
+	paceMaker.SetConsensusMod(m)
 
 	return m, nil
 }
@@ -117,21 +120,11 @@ func Create(
 func (m *consensusModule) Start(ctx *context.PocketContext) error {
 	log.Println("Starting consensus module")
 
-	gob.Register(&DebugMessage{})
-	gob.Register(&HotstuffMessage{})
-	gob.Register(&statesync.StateSyncMessage{})
-	gob.Register(&dkg.DKGMessage{})
-	gob.Register(&leader_election.LeaderElectionMessage{})
-
-	if err := m.stateSyncMod.Start(ctx); err != nil {
-		return err
-	}
+	//if err := m.dkgMod.Start(ctx); err != nil {
+	//	return err
+	//}
 
 	if err := m.paceMaker.Start(ctx); err != nil {
-		return err
-	}
-
-	if err := m.dkgMod.Start(ctx); err != nil {
 		return err
 	}
 
@@ -139,20 +132,31 @@ func (m *consensusModule) Start(ctx *context.PocketContext) error {
 		return err
 	}
 
+
+	//if err := m.stateSyncMod.Start(ctx); err != nil {
+	//	return err
+	//}
+
+
 	return nil
+}
+
+func (m *consensusModule) GetPocketBusMod() modules.PocketBusModule {
+	if m.pocketBusMod == nil {
+		log.Fatalf("PocketBus is not initialized")
+	}
+	return m.pocketBusMod
+}
+
+func (m *consensusModule) SetPocketBusMod(pocketBus modules.PocketBusModule) {
+	m.pocketBusMod = pocketBus
+	m.paceMaker.SetPocketBusMod(pocketBus)
+	m.leaderElectionMod.SetPocketBusMod(pocketBus)
 }
 
 func (m *consensusModule) Stop(ctx *context.PocketContext) error {
 	log.Println("Stopping consensus m")
 	return nil
-}
-
-func (m *consensusModule) GetPocketBusMod() modules.PocketBusModule {
-	return m.BasePocketModule.GetPocketBusMod()
-}
-
-func (m *consensusModule) SetPocketBusMod(bus modules.PocketBusModule) {
-	m.BasePocketModule.SetPocketBusMod(bus)
 }
 
 func (m *consensusModule) HandleMessage(ctx *context.PocketContext, message *consensus_types.ConsensusMessage) {
@@ -172,10 +176,12 @@ func (m *consensusModule) HandleMessage(ctx *context.PocketContext, message *con
 
 func (m *consensusModule) HandleTransaction(ctx *context.PocketContext, data []byte) {
 	// TODO: decode data, basic validation, send to utility module.
-	m.GetPocketBusMod().GetUtilityModule().HandleTransaction(ctx, &typespb.Transaction{})
+	if err := m.GetPocketBusMod().GetUtilityModule().CheckTransaction(data); err != nil {
+		m.nodeLogError("")
+	}
 }
 
 func (m *consensusModule) HandleEvidence(ctx *context.PocketContext, data []byte) {
 	// TODO: decode data, basic validation, send to utility module.
-	m.GetPocketBusMod().GetUtilityModule().HandleEvidence(ctx, &typespb.Evidence{})
+	//m.GetPocketBusMod().GetUtilityModule().HandleEvidence(ctx, &typespb.Evidence{})
 }

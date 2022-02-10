@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"pocket/consensus/pkg/consensus/dkg"
-	"pocket/consensus/pkg/shared"
-	"pocket/consensus/pkg/shared/context"
+	"pocket/shared"
+	"pocket/shared/context"
 )
 
 func (m *consensusModule) handleDebugMessage(message *DebugMessage) {

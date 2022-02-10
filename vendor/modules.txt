@@ -100,12 +100,6 @@ github.com/opentracing/opentracing-go
 github.com/opentracing/opentracing-go/log
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
-# github.com/pokt-network/utility-pre-prototype v0.0.0-20220209131635-8c0977767bca
-## explicit
-github.com/pokt-network/utility-pre-prototype/shared/bus
-github.com/pokt-network/utility-pre-prototype/shared/crypto
-github.com/pokt-network/utility-pre-prototype/utility
-github.com/pokt-network/utility-pre-prototype/utility/types
 # github.com/sirupsen/logrus v1.8.1
 ## explicit
 github.com/sirupsen/logrus

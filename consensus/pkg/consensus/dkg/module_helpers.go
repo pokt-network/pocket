@@ -2,12 +2,9 @@ package dkg
 
 import (
 	"log"
-
 	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/p2p"
-	"pocket/consensus/pkg/p2p/p2p_types"
-	"pocket/consensus/pkg/shared/events"
 	"pocket/consensus/pkg/types"
+	"pocket/shared/events"
 )
 
 func (module *dkgModule) broadcastToNodes(message *DKGMessage) {
@@ -38,17 +35,19 @@ func (module *dkgModule) publishEvent(message *DKGMessage, event *events.PocketE
 		return
 	}
 
-	networkMsg := &p2p_types.NetworkMessage{
-		Topic: events.CONSENSUS_MESSAGE,
-		Data:  data,
-	}
+	module.GetPocketBusMod().GetNetworkModule().ConsensusBroadcast(data)
 
-	networkMsgEncoded, err := p2p.EncodeNetworkMessage(networkMsg)
-	if err != nil {
-		log.Println("Error encoding network message: " + err.Error())
-		return
-	}
-
-	event.MessageData = networkMsgEncoded
-	module.GetPocketBusMod().PublishEventToBus(event)
+	//networkMsg := &p2p_types.NetworkMessage{
+	//	Topic: events.CONSENSUS_MESSAGE,
+	//	Data:  data,
+	//}
+	//
+	//networkMsgEncoded, err := p2p.EncodeNetworkMessage(networkMsg)
+	//if err != nil {
+	//	log.Println("Error encoding network message: " + err.Error())
+	//	return
+	//}
+	//
+	//event.MessageData = networkMsgEncoded
+	//module.GetPocketBusMod().PublishEventToBus(event)
 }

@@ -1,6 +1,9 @@
 package modules
 
-import "pocket/consensus/pkg/shared/events"
+import (
+	"pocket/shared/events"
+	"pocket/shared/modules"
+)
 
 type PocketBus chan events.PocketEvent
 
@@ -9,8 +12,8 @@ type PocketBusModule interface {
 	GetBusEvent() *events.PocketEvent
 	GetEventBus() PocketBus
 
-	GetPersistanceModule() PersistanceModule
-	GetNetworkModule() NetworkModule
-	GetUtilityModule() UtilityModule
-	GetConsensusModule() ConsensusModule
+	GetpersistenceModule() modules.PersistenceModule
+	GetNetworkModule() modules.NetworkModule
+	GetUtilityModule() modules.UtilityModule
+	GetConsensusModule() modules.ConsensusModule
 }

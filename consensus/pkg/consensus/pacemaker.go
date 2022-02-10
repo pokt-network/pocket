@@ -3,12 +3,12 @@ package consensus
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"pocket/consensus/pkg/config"
-	"pocket/consensus/pkg/shared"
-	pcontext "pocket/consensus/pkg/shared/context"
-	"pocket/consensus/pkg/shared/modules"
+	pcontext "pocket/shared/context"
+	"pocket/shared/modules"
 )
 
 // TODO: PaceMaker has some functionsthat are meant only part of the interface
@@ -23,11 +23,14 @@ type PaceMaker interface {
 	NewHeight()
 	InterruptRound()
 
+	SetConsensusMod(module *consensusModule)
+
 	PaceMakerDebug
 }
 
 type paceMaker struct {
-	*modules.BasePocketModule
+	modules.PocketModule
+	pocketBusMod modules.PocketBusModule
 
 	// TODO: Should the PaceMaker have a link back to the consensus module
 	// or should they communicate via events or the PocketBusManager?
@@ -40,13 +43,21 @@ type paceMaker struct {
 	paceMakerDebug // Only used for development and debugging.
 }
 
-func CreatePaceMaker(ctx *pcontext.PocketContext, base *modules.BasePocketModule, consensus *consensusModule) (m *paceMaker, err error) {
+func (m *paceMaker) SetConsensusMod(c *consensusModule) {
+	m.consensusMod = c
+}
+
+func CreatePaceMaker(cfg* config.Config) (m *paceMaker, err error) {
+	paceMakerParams := &config.PaceMakerParams{
+		TimeoutMSec: 5000,
+		RetryTimeoutMSec: 1000,
+		MaxTimeoutMSec: 60000,
+		MinBlockFreqMSec: 2000,
+		DebugTimeBetweenStepsMsec: 500,
+	}
+
 	return &paceMaker{
-		BasePocketModule: base,
-
-		consensusMod: consensus,
-
-		paceMakerParams: &shared.GetPocketState().ConsensusParams.PaceMaker,
+		paceMakerParams: paceMakerParams,
 		stepCancelFunc:  nil, // Only set on restarts
 
 		paceMakerDebug: paceMakerDebug{
@@ -59,10 +70,21 @@ func CreatePaceMaker(ctx *pcontext.PocketContext, base *modules.BasePocketModule
 func (p *paceMaker) Start(ctx *pcontext.PocketContext) error {
 	p.RestartTimer()
 	return nil
-
 }
 func (p *paceMaker) Stop(ctx *pcontext.PocketContext) error {
 	return nil
+}
+
+
+func (m *paceMaker) SetPocketBusMod(pocketBus modules.PocketBusModule) {
+	m.pocketBusMod = pocketBus
+}
+
+func (m *paceMaker) GetPocketBusMod() modules.PocketBusModule {
+	if m.pocketBusMod == nil {
+		log.Fatalf("PocketBus is not initialized")
+	}
+	return m.pocketBusMod
 }
 
 func (p *paceMaker) ShouldHandleMessage(m *HotstuffMessage) bool {

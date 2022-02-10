@@ -1,14 +1,16 @@
 {
   "root_dir": "/go/src/github.com/pocket-network/consensus-pre-prototype",
-  "private_key": "0000000100000000000000000000000000000000000000000000000000000000b1f804dabc68274c1233995c5a9119b56935bcdd83b7de07ec726dcedc4e9ce7",
   "genesis": "config/genesis.json",
+  "private_key": "0000000100000000000000000000000000000000000000000000000000000000b1f804dabc68274c1233995c5a9119b56935bcdd83b7de07ec726dcedc4e9ce7",
   "p2p": {
-    "consensus_port": 8080,
-    "debug_port": 9080
+    "protocol": "tcp",
+    "address": "",
+    "external_ip": "",
+    "peers": [""]
   },
   "consensus": {
     "node_id": 1
   },
-  "persistance": {},
+  "persistence": {},
   "utility": {}
 }

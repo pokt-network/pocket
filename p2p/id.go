@@ -1,3 +1,3 @@
-package poktp2p
+package p2p
 
 type ID struct{}

@@ -7,12 +7,12 @@ import (
 
 	"pocket/consensus/pkg/consensus"
 	"pocket/consensus/pkg/pocket"
-	"pocket/consensus/pkg/shared"
-	"pocket/consensus/pkg/shared/context"
-	"pocket/consensus/pkg/shared/events"
-	"pocket/consensus/pkg/shared/modules"
 	"pocket/consensus/pkg/types"
 	"pocket/consensus/pkg/types/typespb"
+	"pocket/shared"
+	"pocket/shared/context"
+	"pocket/shared/events"
+	"pocket/shared/modules"
 
 	"github.com/stretchr/testify/require"
 )

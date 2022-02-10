@@ -1,4 +1,4 @@
-package poktp2p
+package p2p
 
 func MockGater() *gater {
 	return &gater{

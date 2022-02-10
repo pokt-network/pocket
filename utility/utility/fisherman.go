@@ -1,9 +1,9 @@
 package utility
 
 import (
-	"github.com/pokt-network/utility-pre-prototype/shared/bus"
-	"github.com/pokt-network/utility-pre-prototype/shared/crypto"
-	"github.com/pokt-network/utility-pre-prototype/utility/types"
+	"pocket/utility/shared/crypto"
+	"pocket/utility/utility/types"
+	"pocket/shared/modules"
 )
 
 func (u *UtilityContext) HandleMessageTestScore(message *types.MessageTestScore) types.Error {
@@ -277,7 +277,7 @@ func (u *UtilityContext) DeleteFisherman(address []byte) types.Error {
 	return nil
 }
 
-func (u *UtilityContext) GetFishermenReadyToUnstake() (Fishermans []bus.UnstakingActor, err types.Error) {
+func (u *UtilityContext) GetFishermenReadyToUnstake() (Fishermans []modules.UnstakingActor, err types.Error) {
 	store := u.Store()
 	latestHeight, err := u.GetLatestHeight()
 	if err != nil {

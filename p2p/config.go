@@ -1,4 +1,4 @@
-package poktp2p
+package p2p
 
 var (
 	MaxInbound           uint = 128

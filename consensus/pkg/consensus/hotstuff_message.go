@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/shared"
 	"pocket/consensus/pkg/types"
 	"pocket/consensus/pkg/types/typespb"
+	"pocket/shared"
 )
 
 type HotstuffMessageType uint8

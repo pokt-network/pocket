@@ -19,7 +19,7 @@ func TestLoadConfigFromJson(t *testing.T) {
 		"consensus": {
 		  "node_id": 1
 		},
-		"persistance": {},
+		"persistence": {},
 		"utility": {}
 	  }`
 

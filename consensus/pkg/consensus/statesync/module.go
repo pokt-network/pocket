@@ -3,9 +3,9 @@ package statesync
 import (
 	"fmt"
 	"log"
-
-	"pocket/consensus/pkg/shared/context"
-	"pocket/consensus/pkg/shared/modules"
+	"pocket/consensus/pkg/config"
+	"pocket/shared/context"
+	"pocket/shared/modules"
 )
 
 type SyncState uint8
@@ -25,18 +25,15 @@ type StateSyncModule interface {
 }
 
 type stateSyncModule struct {
-	*modules.BasePocketModule
-
+	StateSyncModule
+	pocketBusMod modules.PocketBusModule
 	syncState SyncState
 }
 
 func Create(
-	ctx *context.PocketContext,
-	base *modules.BasePocketModule,
+	cfg *config.Config,
 ) (StateSyncModule, error) {
 	return &stateSyncModule{
-		BasePocketModule: base,
-
 		syncState: Unknown,
 	}, nil
 }
@@ -44,7 +41,13 @@ func Create(
 func (m *stateSyncModule) Start(ctx *context.PocketContext) error {
 	m.syncState = Unknown
 
-	blockHeight, err := m.GetPocketBusMod().GetPersistanceModule().GetLatestBlockHeight()
+	// Need to get block hash from PersistenceContext
+	//prevHeight := uint64(height) - 1
+	blockHeight := uint64(1)
+	err := error(nil)
+	//prevBlockHash, err := m.GetPocketBusMod().GetPersistenceModule().Get GetpersistenceModule().GetBlockHash()
+
+	//blockHeight, err := m.GetPocketBusMod().GetPersistenceModule(). GetpersistenceModule().GetLatestBlockHeight()
 	if err == nil {
 		log.Println("[WARN] Persisted block data not found, synching from genesis.")
 		m.syncFromGenesis()

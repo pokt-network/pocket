@@ -2,7 +2,7 @@ package types
 
 import (
 	"bytes"
-	"github.com/pokt-network/utility-pre-prototype/shared/crypto"
+	"pocket/utility/shared/crypto"
 	"google.golang.org/protobuf/proto"
 	"net/url"
 	"strconv"

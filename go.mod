@@ -7,7 +7,7 @@ require (
 	github.com/coinbase/kryptology v1.5.3
 	github.com/cornelk/hashmap v1.0.1 // indirect
 	github.com/dchest/siphash v1.2.2 // indirect
-	github.com/gizak/termui/v3 v3.1.0
+	github.com/gizak/termui/v3 v3.1.0 // indirect
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0 // indirect
 	// github.com/gizak/termui/v3 v3.1.0 h1:ZZmVDgwHl7gR7elfKf1xc4IudXZ5qqfDh4wExk4Iajc=
@@ -23,7 +23,6 @@ require (
 	github.com/mindstand/gogm/v2 v2.2.2
 	github.com/neo4j/neo4j-go-driver v1.8.3
 	github.com/neo4j/neo4j-go-driver/v4 v4.4.0 // indirect
-	github.com/pokt-network/utility-pre-prototype v0.0.0-20220209131635-8c0977767bca
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/goleveldb v1.0.0

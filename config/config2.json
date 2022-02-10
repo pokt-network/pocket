@@ -9,6 +9,6 @@
   "consensus": {
     "node_id": 2
   },
-  "persistance": {},
+  "persistence": {},
   "utility": {}
 }

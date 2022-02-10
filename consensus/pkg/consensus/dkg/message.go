@@ -2,8 +2,8 @@ package dkg
 
 import (
 	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/shared"
 	"pocket/consensus/pkg/types"
+	"pocket/shared"
 )
 
 type DKGMessageType string

@@ -4,8 +4,8 @@ import (
 	"pocket/consensus/pkg/consensus/leader_election/sortition"
 	"pocket/consensus/pkg/consensus/leader_election/vrf"
 	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/shared"
 	"pocket/consensus/pkg/types"
+	"pocket/shared"
 )
 
 type LeaderElectionMessageType uint8

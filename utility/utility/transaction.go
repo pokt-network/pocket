@@ -2,8 +2,8 @@ package utility
 
 import (
 	"bytes"
-	"github.com/pokt-network/utility-pre-prototype/shared/crypto"
-	"github.com/pokt-network/utility-pre-prototype/utility/types"
+	"pocket/utility/shared/crypto"
+	"pocket/utility/utility/types"
 )
 
 func (u *UtilityContext) ApplyTransaction(tx *types.Transaction) types.Error {

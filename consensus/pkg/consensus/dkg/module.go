@@ -2,10 +2,11 @@ package dkg
 
 import (
 	"log"
+	"pocket/consensus/pkg/config"
 
-	"pocket/consensus/pkg/shared/context"
-	"pocket/consensus/pkg/shared/modules"
 	"pocket/consensus/pkg/types"
+	"pocket/shared/context"
+	"pocket/shared/modules"
 
 	"github.com/coinbase/kryptology/pkg/dkg/gennaro"
 	v1 "github.com/coinbase/kryptology/pkg/sharing/v1"
@@ -18,30 +19,29 @@ type DKGModule interface {
 }
 
 type dkgModule struct {
-	*modules.BasePocketModule
+	DKGModule
+	pocketBusMod modules.PocketBusModule
 
 	NodeId types.NodeId
 
 	DKGParticipant      *gennaro.Participant
 	ThresholdSigningKey *v1.ShamirShare
 
-	// TODO: Move this over to the persistance module.
+	// TODO: Move this over to the persistence module.
 	DKGMessagePool map[DKGRound][]DKGMessage
 }
 
 func Create(
-	ctx *context.PocketContext,
-	base *modules.BasePocketModule,
+	cfg *config.Config,
 ) (m DKGModule, err error) {
 	log.Println("Creating dkg module")
-	m = &dkgModule{
-		BasePocketModule: base,
 
-		NodeId: base.GetConfig().Consensus.NodeId,
+	consensusConfig := cfg.Consensus
+	m = &dkgModule{
+		NodeId: consensusConfig.NodeId,
 
 		DKGParticipant:      nil,
 		ThresholdSigningKey: nil,
-
 		DKGMessagePool: make(map[DKGRound][]DKGMessage),
 	}
 	return m, nil

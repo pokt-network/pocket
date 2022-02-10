@@ -2,8 +2,8 @@ package test
 
 import (
 	"fmt"
-	"github.com/pokt-network/utility-pre-prototype/utility"
-	"github.com/pokt-network/utility-pre-prototype/utility/types"
+	"pocket/utility/utility"
+	"pocket/utility/utility/types"
 )
 
 func InitGenesis(u *utility.UtilityContext, state *GenesisState) types.Error {

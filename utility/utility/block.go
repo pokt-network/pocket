@@ -1,7 +1,7 @@
 package utility
 
 import (
-	"github.com/pokt-network/utility-pre-prototype/utility/types"
+	"pocket/utility/utility/types"
 )
 
 func (u *UtilityContext) ApplyBlock(latestHeight int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error) {
@@ -97,7 +97,7 @@ func (u *UtilityContext) GetAppHash() (appHash []byte, err types.Error) {
 
 func (u *UtilityContext) GetBlockHash(height int64) (blockHash []byte, err types.Error) {
 	store := u.Store()
-	hash, er := store.GetBlockHash(height)
+	hash, er := store.GetBlockHash(uint64(height))
 	if er != nil {
 		return nil, types.ErrGetBlockHash(er)
 	}

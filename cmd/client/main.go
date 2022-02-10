@@ -13,9 +13,9 @@ import (
 	consensus_types "pocket/consensus/pkg/consensus/types"
 	"pocket/consensus/pkg/p2p"
 	"pocket/consensus/pkg/p2p/p2p_types"
-	"pocket/consensus/pkg/shared"
-	"pocket/consensus/pkg/shared/events"
 	"pocket/consensus/pkg/types"
+	"pocket/shared"
+	"pocket/shared/events"
 
 	"github.com/manifoldco/promptui"
 )

@@ -2,7 +2,7 @@ package test
 
 import (
 	"bytes"
-	"github.com/pokt-network/utility-pre-prototype/utility/types"
+	"pocket/utility/utility/types"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 	"google.golang.org/protobuf/types/known/wrapperspb"

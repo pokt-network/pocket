@@ -7,8 +7,8 @@ import (
 	"net"
 
 	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/shared/context"
 	"pocket/consensus/pkg/types"
+	"pocket/shared/context"
 )
 
 func (m *consensusModule) HandleTelemetryMessage(ctx *context.PocketContext, networkConnection net.Conn) {

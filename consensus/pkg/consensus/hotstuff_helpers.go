@@ -3,7 +3,7 @@ package consensus
 import (
 	"fmt"
 
-	"pocket/consensus/pkg/shared"
+	"pocket/shared"
 )
 
 const ByzantineThreshold float64 = float64(2) / float64(3)
@@ -22,7 +22,7 @@ func (m *consensusModule) getQCForStep(step Step) (*QuorumCertificate, error) {
 	var pss []*PartialSignature
 	for _, message := range m.MessagePool[step] {
 		// TODO: We're not validating that all the messages have the same height, round and step when computing the TS.
-		// This can be fixed by making the appropriate query to the persistance m.
+		// This can be fixed by making the appropriate query to the persistence m.
 		if message.PartialSig == nil {
 			m.nodeLog(fmt.Sprintf("[WARN] No partial signature found for step %s from node %d which should not happem...", StepToString[step], message.Sender))
 			continue

@@ -18,13 +18,13 @@ import (
 	"pocket/consensus/pkg/p2p/p2p_types"
 	p2p_types_mocks "pocket/consensus/pkg/p2p/p2p_types/mocks"
 	"pocket/consensus/pkg/pocket"
-	"pocket/consensus/pkg/shared"
-	pcontext "pocket/consensus/pkg/shared/context"
-	"pocket/consensus/pkg/shared/events"
-	"pocket/consensus/pkg/shared/modules"
-	mock_modules "pocket/consensus/pkg/shared/modules/mocks"
 	"pocket/consensus/pkg/types"
 	"pocket/consensus/pkg/types/typespb"
+	"pocket/shared"
+	pcontext "pocket/shared/context"
+	"pocket/shared/events"
+	"pocket/shared/modules"
+	mock_modules "pocket/shared/modules/mocks"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -44,7 +44,7 @@ func GenerateNodeConfigs(n int) (configs []*config.Config) {
 			Consensus: &config.ConsensusConfig{
 				NodeId: types.NodeId(i),
 			},
-			Persistance: &config.PersistanceConfig{},
+			persistence: &config.persistenceConfig{},
 			Utility:     &config.UtilityConfig{},
 		}
 		configs = append(configs, &c)
@@ -79,7 +79,7 @@ func CreateTestConsensusPocketNode(
 
 	ctx := pcontext.EmptyPocketContext()
 
-	persistanceMock := mock_modules.NewMockPersistanceModule(ctrl)
+	persistenceMock := mock_modules.NewMockpersistenceModule(ctrl)
 	p2pNetworkMock := p2p_types_mocks.NewMockNetwork(ctrl)
 	networkMock := mock_modules.NewMockNetworkModule(ctrl)
 	utilityMock := mock_modules.NewMockUtilityModule(ctrl)
@@ -90,36 +90,36 @@ func CreateTestConsensusPocketNode(
 	consensusMod, err := consensus.Create(ctx, baseMod)
 	require.NoError(t, err)
 
-	pocketBusMod, err := shared.CreatePocketBus(nil, persistanceMock, networkMock, utilityMock, consensusMod)
+	pocketBusMod, err := shared.CreatePocketBus(nil, persistenceMock, networkMock, utilityMock, consensusMod)
 	require.NoError(t, err)
 
 	baseMod.SetPocketBusMod(pocketBusMod)
 
 	pocketNode := &pocket.PocketNode{
 		BasePocketModule: baseMod,
-		PersistanceMod:   persistanceMock,
+		persistenceMod:   persistenceMock,
 		NetworkMod:       networkMock,
 		UtilityMod:       utilityMock,
 		ConsensusMod:     consensusMod,
 	}
 
-	// Base Persistance mocks
+	// Base persistence mocks
 
-	persistanceMock.EXPECT().
+	persistenceMock.EXPECT().
 		Start(gomock.Any()).
 		Do(func(ctx *pcontext.PocketContext) {
-			log.Println("[MOCK] Start persistance mock")
+			log.Println("[MOCK] Start persistence mock")
 		}).
 		AnyTimes()
 
-	persistanceMock.EXPECT().
+	persistenceMock.EXPECT().
 		Stop(gomock.Any()).
 		Do(func(ctx *pcontext.PocketContext) {
-			log.Println("[MOCK] Stop persistance mock")
+			log.Println("[MOCK] Stop persistence mock")
 		}).
 		AnyTimes()
 
-	persistanceMock.EXPECT().
+	persistenceMock.EXPECT().
 		GetLatestBlockHeight().
 		Do(func() (uint64, error) {
 			log.Println("[MOCK] GetLatestBlockHeight")
@@ -127,7 +127,7 @@ func CreateTestConsensusPocketNode(
 		}).
 		AnyTimes()
 
-	persistanceMock.EXPECT().
+	persistenceMock.EXPECT().
 		GetBlockHash(gomock.Any()).
 		Do(func(height uint64) ([]byte, error) {
 			return []byte(strconv.FormatUint(height, 10)), nil

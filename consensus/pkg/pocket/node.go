@@ -4,29 +4,27 @@ import (
 
 	// "crypto/ed25519"
 
+	"fmt"
 	"log"
 
 	"pocket/consensus/pkg/config"
 	"pocket/consensus/pkg/consensus"
-	"pocket/consensus/pkg/p2p"
-	"pocket/consensus/pkg/persistance"
-	"pocket/consensus/pkg/shared"
-	"pocket/consensus/pkg/shared/context"
-	"pocket/consensus/pkg/shared/modules"
-	"pocket/consensus/pkg/types"
+	"pocket/p2p"
+	"pocket/persistence"
 
-	"pocket/consensus/pkg/utility"
+	"pocket/consensus/pkg/types"
+	"pocket/shared"
+	"pocket/shared/context"
+	"pocket/shared/modules"
+
+	"pocket/utility/utility"
 )
 
 // TODO: SHould we create an interface for this as well?
 type PocketNode struct {
-	*modules.BasePocketModule
+	modules.PocketModule
 
-	// TODO: Should we export these fields or create getters?
-	PersistanceMod modules.PersistanceModule
-	NetworkMod     modules.NetworkModule
-	UtilityMod     modules.UtilityModule
-	ConsensusMod   modules.ConsensusModule
+	pocketBusMod modules.PocketBusModule
 
 	Address string
 }
@@ -36,68 +34,61 @@ func Create(ctx *context.PocketContext, config *config.Config) (n *PocketNode, e
 	state := shared.GetPocketState()
 	state.LoadStateFromConfig(config)
 
-	baseModule, err := modules.NewBaseModule(ctx, config)
+	// baseModule, err := modules.NewBaseModule(ctx, config)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	persistenceMod, err := persistence.Create(config)
 	if err != nil {
 		return nil, err
 	}
 
-	persistanceMod, err := persistance.Create(ctx, baseModule)
+	networkMod, err := p2p.Create(config)
 	if err != nil {
 		return nil, err
 	}
 
-	networkMod, err := p2p.Create(ctx, baseModule)
+	utilityMod, err := utility.Create(config)
 	if err != nil {
 		return nil, err
 	}
 
-	utilityMod, err := utility.Create(ctx, baseModule)
+	consensusMod, err := consensus.Create(config)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: I don't like how the Create func signature is different depending on module dependency.
-	// Need to think about how to leverage event bus versus direct calls.
-	consensusMod, err := consensus.Create(ctx, baseModule)
+	bus, err := shared.CreatePocketBus(nil, persistenceMod, networkMod, utilityMod, consensusMod)
 	if err != nil {
 		return nil, err
 	}
-
-	pocketBus, err := shared.CreatePocketBus(nil, persistanceMod, networkMod, utilityMod, consensusMod)
-	if err != nil {
-		return nil, err
-	}
-
-	baseModule.SetPocketBusMod(pocketBus)
 
 	return &PocketNode{
-		BasePocketModule: baseModule,
-
-		PersistanceMod: persistanceMod,
-		NetworkMod:     networkMod,
-		UtilityMod:     utilityMod,
-		ConsensusMod:   consensusMod,
-
-		Address: types.AddressFromKey(config.PrivateKey.Public()),
+		pocketBusMod: bus,
+		Address:   types.AddressFromKey(config.PrivateKey.Public()),
 	}, nil
 }
 
 func (node *PocketNode) Start(ctx *context.PocketContext) error {
 	log.Println("Starting pocket node...")
 
-	if err := node.PersistanceMod.Start(ctx); err != nil {
+	// NOTE: Order of module initializaiton matters.
+
+	fmt.Println("OLSH", node.GetPocketBusMod())
+	if err := node.GetPocketBusMod().GetPersistenceModule().Start(ctx); err != nil {
 		return err
 	}
 
-	if err := node.NetworkMod.Start(ctx); err != nil {
+	if err := node.GetPocketBusMod().GetNetworkModule().Start(ctx); err != nil {
 		return err
 	}
 
-	if err := node.UtilityMod.Start(ctx); err != nil {
-		return err
-	}
+	//if err := node.GetPocketBusMod().GetUtilityModule().Start(ctx); err != nil {
+	//	return err
+	//}
 
-	if err := node.ConsensusMod.Start(ctx); err != nil {
+	if err := node.GetPocketBusMod().GetConsensusModule().Start(ctx); err != nil {
 		return err
 	}
 
@@ -107,4 +98,16 @@ func (node *PocketNode) Start(ctx *context.PocketContext) error {
 			log.Println("Error handling event: ", err)
 		}
 	}
+}
+
+
+func (m *PocketNode) SetPocketBusMod(pocketBus modules.PocketBusModule) {
+	m.pocketBusMod = pocketBus
+}
+
+func (m *PocketNode) GetPocketBusMod() modules.PocketBusModule {
+	if m.pocketBusMod == nil {
+		log.Fatalf("PocketBus is not initialized")
+	}
+	return m.pocketBusMod
 }

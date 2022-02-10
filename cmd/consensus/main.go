@@ -6,24 +6,22 @@ import (
 
 	"pocket/consensus/pkg/config"
 	"pocket/consensus/pkg/pocket"
-	"pocket/consensus/pkg/shared/context"
+	"pocket/shared/context"
 )
 
 func main() {
 	config_filename := flag.String("config", "", "Relative or absolute path to config file.")
 	flag.Parse()
 
-	log.Println("OLSH", config_filename)
+	ctx := context.EmptyPocketContext()
+	cfg := config.LoadConfig(*config_filename)
 
-	context := context.EmptyPocketContext()
-	config := config.LoadConfig(*config_filename)
-
-	pocketNode, err := pocket.Create(context, config)
+	pocketNode, err := pocket.Create(ctx, cfg)
 	if err != nil {
 		log.Fatalf("Failed to create pocket node: %s", err)
 	}
 
-	if err = pocketNode.Start(context); err != nil {
+	if err = pocketNode.Start(ctx); err != nil {
 		log.Fatalf("Failed to start pocket node: %s", err)
 	}
 }

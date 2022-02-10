@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"pocket/consensus/pkg/consensus/dkg"
-	"pocket/consensus/pkg/shared/context"
-	"pocket/consensus/pkg/shared/events"
-	"pocket/consensus/pkg/shared/modules"
+	"pocket/shared/context"
+	"pocket/shared/events"
+	"pocket/shared/modules"
 
 	"github.com/stretchr/testify/require"
 )

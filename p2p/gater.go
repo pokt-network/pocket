@@ -1,8 +1,9 @@
-package poktp2p
+package p2p
 
 import (
 	"fmt"
 	"net"
+	"pocket/shared/events"
 	"strings"
 	"sync"
 	"time"
@@ -12,27 +13,6 @@ type work struct {
 	nonce  uint32
 	decode bool // should decode data using the domain codec or not
 	data   []byte
-}
-
-type P2P interface {
-	Config(protocol, address, external string, peers []string)
-	Init() error
-
-	Listen() error
-	Ready() <-chan uint
-	Close()
-	Done() <-chan uint
-
-	Send(addr string, msg []byte, wrapped bool) error
-
-	Broadcast(m message, isroot bool) error
-	Handle()
-
-	Request(addr string, msg []byte, wrapped bool) ([]byte, error)
-	Respond(nonce uint32, iserroreof bool, addr string, msg []byte, wrapped bool) error
-
-	Pong(msg message) error
-	Ping(addr string) (bool, error)
 }
 
 type gater struct {
@@ -274,6 +254,16 @@ func (g *gater) Pong(msg message) error {
 	return nil
 }
 
+// Temp
+func (g *gater) ConsensusBroadcast(data []byte) error {
+	m := message{
+		payload: data,
+		topic: Topic(events.CONSENSUS_MESSAGE),
+	}
+	return g.Broadcast(m, false)
+}
+
+// Discuss: why is m not a pointer?
 func (g *gater) Broadcast(m message, isroot bool) error {
 	var toplevel int
 

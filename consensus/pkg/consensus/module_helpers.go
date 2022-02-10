@@ -1,13 +1,12 @@
 package consensus
 
 import (
+	"fmt"
 	"log"
 
 	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/p2p"
-	"pocket/consensus/pkg/p2p/p2p_types"
-	"pocket/consensus/pkg/shared/events"
 	"pocket/consensus/pkg/types"
+	"pocket/shared/events"
 )
 
 func (m *consensusModule) broadcastToNodes(message consensus_types.GenericConsensusMessage) {
@@ -38,21 +37,14 @@ func (m *consensusModule) publishConsensusEvent(message consensus_types.GenericC
 		return
 	}
 
-	networkMsg := &p2p_types.NetworkMessage{
-		Topic: events.CONSENSUS_MESSAGE,
-		Data:  data,
-	}
-	networkMsgEncoded, err := p2p.EncodeNetworkMessage(networkMsg)
-	if err != nil {
-		m.nodeLogError("Error encoding network message: " + err.Error())
-		return
-	}
-
-	event.MessageData = networkMsgEncoded
-	m.GetPocketBusMod().PublishEventToBus(event)
+	fmt.Println("Can't publish yet.", data)
+	//if err := m.GetPocketBusMod().GetNetworkModule().ConsensusBroadcast(data); err != nil {
+	//	m.nodeLogError("Error broadcasting message: " + err.Error())
+	//	return
+	//}
 }
 
-// TODO: Move this into persistance.
+// TODO: Move this into persistence.
 func (m *consensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
 		m.MessagePool[step] = make([]HotstuffMessage, 0)

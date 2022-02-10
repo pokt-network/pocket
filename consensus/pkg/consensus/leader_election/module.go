@@ -2,16 +2,15 @@ package leader_election
 
 import (
 	"log"
+	"pocket/consensus/pkg/config"
+	"strconv"
 
 	"pocket/consensus/pkg/consensus/leader_election/vrf"
 	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/p2p"
-	"pocket/consensus/pkg/p2p/p2p_types"
-	"pocket/consensus/pkg/shared"
-	"pocket/consensus/pkg/shared/context"
-	"pocket/consensus/pkg/shared/events"
-	"pocket/consensus/pkg/shared/modules"
 	"pocket/consensus/pkg/types"
+	"pocket/shared"
+	"pocket/shared/context"
+	"pocket/shared/modules"
 )
 
 // HotPocket will only have one leader per round but we set this value to 3
@@ -30,7 +29,9 @@ type LeaderElectionModule interface {
 }
 
 type leaderElectionModule struct {
-	*modules.BasePocketModule
+	LeaderElectionModule
+
+	pocketBusMod modules.PocketBusModule
 
 	// Module metadata
 	nodeId         types.NodeId
@@ -49,15 +50,10 @@ const (
 )
 
 func Create(
-	ctx *context.PocketContext,
-	base *modules.BasePocketModule,
+	config *config.Config,
 ) (LeaderElectionModule, error) {
-	state := shared.GetPocketState()
-
 	return &leaderElectionModule{
-		BasePocketModule: base,
-
-		nodeId:         state.Config.Consensus.NodeId,
+		nodeId:         config.Consensus.NodeId,
 		previousLeader: nil,
 
 		vrfSecretKey:       nil,
@@ -65,8 +61,8 @@ func Create(
 	}, nil
 }
 
-func (m *leaderElectionModule) Start(*context.PocketContext) error {
-	log.Println("[TODO] Use persistance to create leader election module.")
+func (m *leaderElectionModule) Start(ctx *context.PocketContext) error {
+	log.Println("[TODO] Use persistence to create leader election module.")
 
 	return nil
 }
@@ -74,6 +70,18 @@ func (m *leaderElectionModule) Start(*context.PocketContext) error {
 func (m *leaderElectionModule) Stop(*context.PocketContext) error {
 	log.Println("Stopping leader election module")
 	return nil
+}
+
+
+func (m *leaderElectionModule) SetPocketBusMod(pocketBus modules.PocketBusModule) {
+	m.pocketBusMod = pocketBus
+}
+
+func (m *leaderElectionModule) GetPocketBusMod() modules.PocketBusModule {
+	if m.pocketBusMod == nil {
+		log.Fatalf("PocketBus is not initialized")
+	}
+	return m.pocketBusMod
 }
 
 func (m *leaderElectionModule) HandleMessage(ctx *context.PocketContext, message *LeaderElectionMessage) {
@@ -129,7 +137,12 @@ func (m *leaderElectionModule) BroadcastVRFProofIfCandidate(ctx *context.PocketC
 		return
 	}
 
-	prevBlockHash, err := m.GetPocketBusMod().GetPersistanceModule().GetBlockHash(uint64(height) - 1)
+	// Need to get block hash from PersistenceContext
+	prevHeight := uint64(height) - 1
+	prevBlockHash := strconv.Itoa(int(prevHeight)) // temp implementation
+	err := error(nil)
+	//prevBlockHash, err := m.GetPocketBusMod().GetPersistenceModule().Get GetpersistenceModule().GetBlockHash()
+
 	if err != nil {
 		log.Printf("[ERROR] Cannot determine the block hash for height: %d", height-1)
 		return
@@ -189,20 +202,30 @@ func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElect
 		return err
 	}
 
-	networkMsg := &p2p_types.NetworkMessage{
-		Topic: events.CONSENSUS_MESSAGE,
-		Data:  data,
-	}
-	networkMsgEncoded, err := p2p.EncodeNetworkMessage(networkMsg)
-	if err != nil {
-		return err
-	}
+	m.GetPocketBusMod().GetNetworkModule().ConsensusBroadcast(data)
 
-	e := &events.PocketEvent{
-		SourceModule: events.LEADER_ELECTION,
-		PocketTopic:  events.P2P_BROADCAST_MESSAGE,
-		MessageData:  networkMsgEncoded,
-	}
-	m.GetPocketBusMod().PublishEventToBus(e)
+	//envelope := &events.PocketEvent{
+	//	SourceModule: events.LEADER_ELECTION,
+	//	PocketTopic:  events.CONSENSUS_MESSAGE,
+	//	MessageData:  data,
+	//}
+	//m.GetPocketBusMod().GetNetworkModule().Broadcast("CONSENSUS", data, false)
+	//m.GetPocketBusMod().GetNetworkModule().Broadcast(envelope, false)
+	//networkMsg := &p2p_types.NetworkMessage{
+	//	Topic: events.CONSENSUS_MESSAGE,
+	//	Data:  data,
+	//}
+	//networkMsgEncoded, err := p2p.EncodeNetworkMessage(networkMsg)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//e := &events.PocketEvent{
+	//	SourceModule: events.LEADER_ELECTION,
+	//	PocketTopic:  events.P2P_BROADCAST_MESSAGE,
+	//	MessageData:  networkMsgEncoded,
+	//}
+	//
+	//m.GetPocketBusMod().PublishEventToBus(e)
 	return nil
 }

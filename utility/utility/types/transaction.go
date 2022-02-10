@@ -3,7 +3,7 @@ package types
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/pokt-network/utility-pre-prototype/shared/crypto"
+	"pocket/utility/shared/crypto"
 	"math/big"
 )
 

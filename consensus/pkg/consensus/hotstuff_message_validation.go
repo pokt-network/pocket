@@ -3,7 +3,7 @@ package consensus
 import (
 	"fmt"
 
-	"pocket/consensus/pkg/shared"
+	"pocket/shared"
 )
 
 func (m *consensusModule) isMessagePartialSigValid(message *HotstuffMessage) bool {

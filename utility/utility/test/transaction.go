@@ -1,6 +1,6 @@
 package test
 
-import "github.com/pokt-network/utility-pre-prototype/utility/types"
+import "pocket/utility/utility/types"
 
 func NewTransaction(msg types.Message, fee string) (*types.Transaction, types.Error) {
 	any, err := types.UtilityCodec().ToAny(msg)
