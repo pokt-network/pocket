@@ -6,6 +6,9 @@ import (
 	consensus_types "pocket/consensus/pkg/consensus/types"
 	"pocket/consensus/pkg/types"
 	"pocket/shared/events"
+	"pocket/shared/messages"
+
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func (m *consensusModule) broadcastToNodes(message consensus_types.GenericConsensusMessage) {
@@ -30,17 +33,34 @@ func (m *consensusModule) publishConsensusEvent(message consensus_types.GenericC
 		Message: message,
 		Sender:  m.NodeId,
 	}
+
 	data, err := consensus_types.EncodeConsensusMessage(consensusMessage)
 	if err != nil {
 		m.nodeLogError("Error encoding message: " + err.Error())
 		return
 	}
 
-	//fmt.Println("Can't publish yet.", data)
-	if err := m.GetPocketBusMod().GetNetworkModule().ConsensusBroadcast(data); err != nil {
-		m.nodeLogError("Error broadcasting message: " + err.Error())
+	consensusProtoMsg := &messages.ConsensusMessage{
+		Data: data,
+	}
+
+	anyProto, err := anypb.New(consensusProtoMsg)
+	if err != nil {
+		m.nodeLogError("Error encoding any proto: " + err.Error())
 		return
 	}
+
+	networkProtoMsg := &messages.NetworkMessage{
+		Topic: messages.PocketTopic_CONSENSUS.String(),
+		Data:  anyProto,
+	}
+
+	m.GetPocketBusMod().GetNetworkModule().BroadcastMessage(networkProtoMsg)
+
+	// if err := m.GetPocketBusMod().GetNetworkModule().ConsensusBroadcast(data); err != nil {
+	// 	m.nodeLogError("Error broadcasting message: " + err.Error())
+	// 	return
+	// }
 }
 
 // TODO: Move this into persistence.

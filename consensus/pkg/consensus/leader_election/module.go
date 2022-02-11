@@ -10,7 +10,10 @@ import (
 	"pocket/consensus/pkg/types"
 	"pocket/shared"
 	"pocket/shared/context"
+	"pocket/shared/messages"
 	"pocket/shared/modules"
+
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // HotPocket will only have one leader per round but we set this value to 3
@@ -71,7 +74,6 @@ func (m *leaderElectionModule) Stop(*context.PocketContext) error {
 	log.Println("Stopping leader election module")
 	return nil
 }
-
 
 func (m *leaderElectionModule) SetPocketBusMod(pocketBus modules.PocketBusModule) {
 	m.pocketBusMod = pocketBus
@@ -197,12 +199,27 @@ func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElect
 		Message: message,
 		Sender:  m.nodeId,
 	}
+
 	data, err := consensus_types.EncodeConsensusMessage(consensusMessage)
 	if err != nil {
 		return err
 	}
 
-	m.GetPocketBusMod().GetNetworkModule().ConsensusBroadcast(data)
+	consensusProtoMsg := &messages.ConsensusMessage{
+		Data: data,
+	}
+
+	anyProto, err := anypb.New(consensusProtoMsg)
+	if err != nil {
+		return err
+	}
+
+	networkProtoMsg := &messages.NetworkMessage{
+		Topic: messages.PocketTopic_CONSENSUS.String(),
+		Data:  anyProto,
+	}
+
+	m.GetPocketBusMod().GetNetworkModule().BroadcastMessage(networkProtoMsg)
 
 	//envelope := &events.PocketEvent{
 	//	SourceModule: events.LEADER_ELECTION,

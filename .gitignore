@@ -19,3 +19,6 @@
 .idea
 consensus/neo4j/
 vendor/
+
+// Proto generate messages
+shared/messages/*.pb.go

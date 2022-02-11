@@ -3,10 +3,12 @@ package p2p
 import (
 	"fmt"
 	"net"
-	"pocket/shared/events"
+	"pocket/shared/messages"
 	"strings"
 	"sync"
 	"time"
+
+	"google.golang.org/protobuf/proto"
 )
 
 type work struct {
@@ -83,8 +85,6 @@ func (g *gater) Listen() error {
 	if err != nil {
 		fmt.Println("Error:", err.Error())
 	}
-	
-	fmt.Println("OLSH", g.protocol, g.address)
 
 	g.listener = listener.(*net.TCPListener)
 	g.listening = true
@@ -257,10 +257,16 @@ func (g *gater) Pong(msg message) error {
 }
 
 // Temp
-func (g *gater) ConsensusBroadcast(data []byte) error {
+func (g *gater) BroadcastMessage(msg *messages.NetworkMessage) error {
+
+	msgBytes, err := proto.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
 	m := message{
-		payload: data,
-		topic: Topic(events.CONSENSUS_MESSAGE),
+		payload: msgBytes,
+		topic:   Topic("TODO"),
 	}
 	return g.Broadcast(m, false)
 }

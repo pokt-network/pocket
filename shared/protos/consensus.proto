@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package p2p;
+
+option go_package = "./messages";
+
+message ConsensusMessage {
+  bytes data = 1;
+}

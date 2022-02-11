@@ -2,6 +2,7 @@ package modules
 
 import (
 	"pocket/shared/events"
+	"pocket/shared/messages"
 )
 
 type NetworkMessage struct {
@@ -14,21 +15,25 @@ type NetworkModule interface {
 
 	Config(protocol, address, external string, peers []string)
 	Init() error
+
 	Listen() error
 	Ready() <-chan uint
 	Close()
 	Done() <-chan uint
 
-	Send(addr string, msg []byte, wrapped bool) error
+	Send(addr string, msg messages.NetworkMessage, wrapped bool) error
+	//Send(addr string, msg []byte, wrapped bool) error
 
-	ConsensusBroadcast(message []byte) error
-	Broadcast(message []byte, isroot bool) error
+	BroadcastMessage(msg *messages.NetworkMessage) error
+	// Broadcast(m message, isroot bool) error
+
 	Handle()
 
 	Request(addr string, msg []byte, wrapped bool) ([]byte, error)
 	Respond(nonce uint32, iserroreof bool, addr string, msg []byte, wrapped bool) error
 
-	Pong(message []byte) error
+	Pong(msg []byte) error
+	//Pong(msg message) error
 	Ping(addr string) (bool, error)
 
 	//Broadcast(*context.PocketContext, *p2p_types.NetworkMessage) error

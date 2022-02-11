@@ -66,6 +66,9 @@ generate_protos:
 	$(eval types_dir := "pkg/types/")
 	protoc -I=${types_dir}/protos --go_out=${types_dir} ${types_dir}/protos/*.proto
 
+## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
+v1_generate_protos:
+	protoc -I=./shared/protos --go_out=./shared shared/protos/*.proto
 
 # Good stack overflow page for organizing tests: https://stackoverflow.com/questions/25965584/separating-unit-tests-and-integration-tests-in-go
 # Setting cout=1 for tests to avoid caching.

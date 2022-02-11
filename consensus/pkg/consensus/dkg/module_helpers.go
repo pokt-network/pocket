@@ -5,6 +5,9 @@ import (
 	consensus_types "pocket/consensus/pkg/consensus/types"
 	"pocket/consensus/pkg/types"
 	"pocket/shared/events"
+	"pocket/shared/messages"
+
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func (module *dkgModule) broadcastToNodes(message *DKGMessage) {
@@ -29,13 +32,29 @@ func (module *dkgModule) publishEvent(message *DKGMessage, event *events.PocketE
 		Message: message,
 		Sender:  module.NodeId,
 	}
+
 	data, err := consensus_types.EncodeConsensusMessage(consensusMessage)
 	if err != nil {
 		log.Println("[ERROR] Error encoding message: " + err.Error())
 		return
 	}
 
-	module.GetPocketBusMod().GetNetworkModule().ConsensusBroadcast(data)
+	consensusProtoMsg := &messages.ConsensusMessage{
+		Data: data,
+	}
+
+	anyProto, err := anypb.New(consensusProtoMsg)
+	if err != nil {
+		log.Println("[ERROR] Error encoding message: " + err.Error())
+		return
+	}
+
+	networkProtoMsg := &messages.NetworkMessage{
+		Topic: messages.PocketTopic_CONSENSUS.String(),
+		Data:  anyProto,
+	}
+
+	module.GetPocketBusMod().GetNetworkModule().BroadcastMessage(networkProtoMsg)
 
 	//networkMsg := &p2p_types.NetworkMessage{
 	//	Topic: events.CONSENSUS_MESSAGE,

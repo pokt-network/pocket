@@ -4,7 +4,6 @@ import (
 
 	// "crypto/ed25519"
 
-	"fmt"
 	"log"
 
 	"pocket/consensus/pkg/config"
@@ -66,7 +65,7 @@ func Create(ctx *context.PocketContext, config *config.Config) (n *PocketNode, e
 
 	return &PocketNode{
 		pocketBusMod: bus,
-		Address:   types.AddressFromKey(config.PrivateKey.Public()),
+		Address:      types.AddressFromKey(config.PrivateKey.Public()),
 	}, nil
 }
 
@@ -75,7 +74,6 @@ func (node *PocketNode) Start(ctx *context.PocketContext) error {
 
 	// NOTE: Order of module initializaiton matters.
 
-	fmt.Println("OLSH", node.GetPocketBusMod())
 	if err := node.GetPocketBusMod().GetPersistenceModule().Start(ctx); err != nil {
 		return err
 	}
@@ -99,7 +97,6 @@ func (node *PocketNode) Start(ctx *context.PocketContext) error {
 		}
 	}
 }
-
 
 func (m *PocketNode) SetPocketBusMod(pocketBus modules.PocketBusModule) {
 	m.pocketBusMod = pocketBus
