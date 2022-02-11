@@ -8,8 +8,9 @@
 
 ## Sections
 
-[Dependencies Information](deps/README.md)
-[Testing Information](testing/README.md)
+- [Contributing Guide](contributing/CONTRIBUTING.md)
+- [Dependencies Information](deps/README.md)
+- [Testing Information](testing/README.md)
 
 ## Support & Contact
 
