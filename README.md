@@ -4,13 +4,16 @@
   </a>
 </div>
 
-# Pocket V1
+# Pocket
 
-The next iteration of the Pocket Network protocol.
+The official implementation of the [V1 Pocket Network Protocol](https://github.com/pokt-network/pocket-network-protocol)
 
 ## Documentation
 
-[Project Documentation](docs)
+- [Documentation Index](docs)
+- [Contributing](docs/contributing)
+- [Dependencies](docs/deps)
+- [Testing](docs/testing)
 
 ## Contributing
 
