@@ -83,6 +83,8 @@ func (g *gater) Listen() error {
 	if err != nil {
 		fmt.Println("Error:", err.Error())
 	}
+	
+	fmt.Println("OLSH", g.protocol, g.address)
 
 	g.listener = listener.(*net.TCPListener)
 	g.listening = true

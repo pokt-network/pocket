@@ -3,8 +3,15 @@
   "private_key": "0000000400000000000000000000000000000000000000000000000000000000d1f87d985adee0c3466ac0458745998fc0f39a9884897ce4c7548d1db8e10642",
   "genesis": "config/genesis.json",
   "p2p": {
-    "consensus_port": 8080,
-    "debug_port": 9080
+    "protocol": "tcp",
+    "address": "0.0.0.0:8084",
+    "external_ip": "172.26.0.1:8084",
+    "peers": [
+      "172.26.0.1:8081",/p2p/gater.go,
+      "172.26.0.1:8082",
+      "172.26.0.1:8083",
+      "172.26.0.1:8084"
+    ]
   },
   "consensus": {
     "node_id": 4

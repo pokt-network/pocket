@@ -1,7 +1,6 @@
 package consensus
 
 import (
-	"fmt"
 	"log"
 
 	consensus_types "pocket/consensus/pkg/consensus/types"
@@ -37,11 +36,11 @@ func (m *consensusModule) publishConsensusEvent(message consensus_types.GenericC
 		return
 	}
 
-	fmt.Println("Can't publish yet.", data)
-	//if err := m.GetPocketBusMod().GetNetworkModule().ConsensusBroadcast(data); err != nil {
-	//	m.nodeLogError("Error broadcasting message: " + err.Error())
-	//	return
-	//}
+	//fmt.Println("Can't publish yet.", data)
+	if err := m.GetPocketBusMod().GetNetworkModule().ConsensusBroadcast(data); err != nil {
+		m.nodeLogError("Error broadcasting message: " + err.Error())
+		return
+	}
 }
 
 // TODO: Move this into persistence.
