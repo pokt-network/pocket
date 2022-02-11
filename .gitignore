@@ -12,13 +12,12 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
 
 .DS_Store
 
 .idea
 consensus/neo4j/
-vendor/
 
 // Proto generate messages
 shared/messages/*.pb.go
