@@ -7,8 +7,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"google.golang.org/protobuf/proto"
 )
 
 type work struct {
@@ -18,6 +16,8 @@ type work struct {
 }
 
 type gater struct {
+	GaterModule
+
 	id           uint64
 	protocol     string
 	address      string
@@ -39,6 +39,29 @@ type gater struct {
 	done   chan uint
 	ready  chan uint
 	closed chan uint
+}
+
+type GaterModule interface {
+	Config(protocol, address, external string, peers []string)
+	Init() error
+
+	Listen() error
+	Ready() <-chan uint
+	Close()
+	Done() <-chan uint
+
+	Send(addr string, msg []byte, wrapped bool) error
+
+	BroadcastTempWrapper(m messages.NetworkMessage) error // TODO: hamza to refactor
+	Broadcast(m message, isroot bool) error
+
+	Handle()
+
+	Request(addr string, msg []byte, wrapped bool) ([]byte, error)
+	Respond(nonce uint32, iserroreof bool, addr string, msg []byte, wrapped bool) error
+
+	Pong(msg message) error
+	Ping(addr string) (bool, error)
 }
 
 func (g *gater) Config(protocol, address, external string, peers []string) {
@@ -256,19 +279,13 @@ func (g *gater) Pong(msg message) error {
 	return nil
 }
 
-// Temp
-func (g *gater) BroadcastMessage(msg *messages.NetworkMessage) error {
-
-	msgBytes, err := proto.Marshal(msg)
-	if err != nil {
-		return err
-	}
-
+func (g *gater) BroadcastTempWrapper(msg *messages.NetworkMessage) error {
 	m := message{
-		payload: msgBytes,
-		topic:   Topic("TODO"),
+		payload: msg.Data,
+		topic:   Topic(msg.Topic),
 	}
 	return g.Broadcast(m, false)
+
 }
 
 // Discuss: why is m not a pointer?

@@ -117,9 +117,6 @@ A: ???
 Q: Library for logging (to have levels)?
 A: ???
 
-Q: How should we start structuring the event bus?
-A: First attempt an an idea here: https://github.com/pokt-network/consensus-pre-prototype/blob/main/pkg/pocket/pocket_node.go
-
 Q: Opinion on use of `log.Fatal` or `log.Panic` vs just `log.Println` for errors?
 A: ???
 

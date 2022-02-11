@@ -47,12 +47,12 @@ func (m *paceMaker) SetConsensusMod(c *consensusModule) {
 	m.consensusMod = c
 }
 
-func CreatePaceMaker(cfg* config.Config) (m *paceMaker, err error) {
+func CreatePaceMaker(cfg *config.Config) (m *paceMaker, err error) {
 	paceMakerParams := &config.PaceMakerParams{
-		TimeoutMSec: 5000,
-		RetryTimeoutMSec: 1000,
-		MaxTimeoutMSec: 60000,
-		MinBlockFreqMSec: 2000,
+		TimeoutMSec:               5000,
+		RetryTimeoutMSec:          1000,
+		MaxTimeoutMSec:            60000,
+		MinBlockFreqMSec:          2000,
 		DebugTimeBetweenStepsMsec: 500,
 	}
 
@@ -74,7 +74,6 @@ func (p *paceMaker) Start(ctx *pcontext.PocketContext) error {
 func (p *paceMaker) Stop(ctx *pcontext.PocketContext) error {
 	return nil
 }
-
 
 func (m *paceMaker) SetPocketBusMod(pocketBus modules.PocketBusModule) {
 	m.pocketBusMod = pocketBus

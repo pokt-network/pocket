@@ -51,11 +51,11 @@ neo_d:
 generate_mocks:
 	mockgen --source=pkg/shared/modules/pocket_module.go -destination=pkg/shared/modules/mocks/pocket_module_mock.go
 
-	mockgen --source=pkg/shared/modules/persistence_module.go -destination=pkg/shared/modules/mocks/persistence_module_mock.go -aux_files=github.com/pocket-network/consensus-pre-prototype/pkg/shared/modules=./pkg/shared/modules/pocket_module.go
-	mockgen --source=pkg/shared/modules/utility_module.go -destination=pkg/shared/modules/mocks/utility_module_mock.go -aux_files=github.com/pocket-network/consensus-pre-prototype/pkg/shared/modules=./pkg/shared/modules/pocket_module.go
-	mockgen --source=pkg/shared/modules/p2p_module.go -destination=pkg/shared/modules/mocks/p2p_module_mock.go -aux_files=github.com/pocket-network/consensus-pre-prototype/pkg/shared/modules=./pkg/shared/modules/pocket_module.go
+	mockgen --source=pkg/shared/modules/persistence_module.go -destination=pkg/shared/modules/mocks/persistence_module_mock.go -aux_files=github.com/pocket-network/pkg/shared/modules=./pkg/shared/modules/pocket_module.go
+	mockgen --source=pkg/shared/modules/utility_module.go -destination=pkg/shared/modules/mocks/utility_module_mock.go -aux_files=github.com/pocket-network/pkg/shared/modules=./pkg/shared/modules/pocket_module.go
+	mockgen --source=pkg/shared/modules/p2p_module.go -destination=pkg/shared/modules/mocks/p2p_module_mock.go -aux_files=github.com/pocket-network/pkg/shared/modules=./pkg/shared/modules/pocket_module.go
 	mockgen --source=pkg/p2p/p2p_types/network.go -destination=pkg/p2p/p2p_types/mocks/network_mock.go
-	mockgen --source=pkg/shared/modules/consensus_module.go -destination=pkg/shared/modules/mocks/consensus_module_mock.go -aux_files=github.com/pocket-network/consensus-pre-prototype/pkg/shared/modules=./pkg/shared/modules/pocket_module.go
+	mockgen --source=pkg/shared/modules/consensus_module.go -destination=pkg/shared/modules/mocks/consensus_module_mock.go -aux_files=github.com/pocket-network/pkg/shared/modules=./pkg/shared/modules/pocket_module.go
 
 # TODO: Mocks
 
