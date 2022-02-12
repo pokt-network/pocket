@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 
-	consensus_types "pocket/consensus/pkg/consensus/types"
 	pcontext "pocket/shared/context"
 	"pocket/shared/events"
 )
@@ -26,18 +25,15 @@ func (node *PocketNode) handleEvent(event *events.PocketEvent) error {
 	//case events.CONSENSUS_TELEMETRY_MESSAGE:
 	//	node.ConsensusMod.HandleTelemetryMessage(pocketContext, event.NetworkConnection)
 
-	case events.CONSENSUS_MESSAGE:
-		message, err := consensus_types.DecodeConsensusMessage(event.MessageData)
-		if err != nil {
-			return err
-		}
-		node.GetPocketBusMod().GetConsensusModule().HandleMessage(pocketContext, message)
+	case string(events.CONSENSUS):
+		node.GetPocketBusMod().GetConsensusModule().HandleMessage(pocketContext, event.MessageData)
 
-	case events.UTILITY_TX_MESSAGE:
+	case string(events.UTILITY_TX_MESSAGE):
 		node.GetPocketBusMod().GetConsensusModule().HandleTransaction(pocketContext, event.MessageData)
+		// node.GetPocketBusMod().GetConsensusModule().HandleTransaction(pocketContext, event.MessageData)
 
-	case events.UTILITY_EVIDENCE_MESSAGE:
-		node.GetPocketBusMod().GetConsensusModule().HandleEvidence(pocketContext, event.MessageData)
+	// case string(events.UTILITY_EVIDENCE_MESSAGE):
+	// 	node.GetPocketBusMod().GetConsensusModule().HandleEvidence(pocketContext, event.MessageData)
 
 	//case events.P2P_BROADCAST_MESSAGE:
 	//	message, err := p2p.DecodeNetworkMessage(event.MessageData)

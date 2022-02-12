@@ -19,10 +19,17 @@ type Config struct {
 	PrivateKey types.PrivateKey `json:"private_key"`
 	Genesis    string           `json:"genesis"`
 
+	PREP2P      *PREP2PConfig      `json:"prep2p"`
 	P2P         *P2PConfig         `json:"p2p"`
 	Consensus   *ConsensusConfig   `json:"consensus"`
 	Persistence *persistenceConfig `json:"persistence"`
 	Utility     *UtilityConfig     `json:"utility"`
+}
+
+// Remove me when deleting `prep2p`
+type PREP2PConfig struct {
+	ConsensusPort uint32 `json:"consensus_port"`
+	DebugPort     uint32 `json:"debug_port"`
 }
 
 type P2PConfig struct {

@@ -1,51 +1,24 @@
-package test
+package persistence
 
 import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/jordanorelli/lexnum"
-	"pocket/utility/shared/bus"
+	"math/big"
+	"pocket/shared/modules"
+	"pocket/shared/typespb"
 	"pocket/utility/shared/crypto"
-	"pocket/utility/utility"
+	"pocket/utility/utility/test"
 	"pocket/utility/utility/types"
+	"strings"
+
+	"github.com/jordanorelli/lexnum"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"google.golang.org/protobuf/proto"
-	"math/big"
-	"strings"
 )
-
-func NewMockUtilityModule(height int64, commitDB *memdb.DB) *utility.UtilityContext {
-	b := NewMockAppBus(commitDB)
-	utilityModule, err := utility.NewUtilityModule(b)
-	if err != nil {
-		panic(err)
-	}
-	utilityContext, err := utilityModule.NewUtilityContext(height)
-	if err != nil {
-		panic(err)
-	}
-	return utilityContext
-}
-
-func NewMockPersistenceModule(commitDB *memdb.DB) bus.PersistenceModule {
-	return &MockPersistenceModule{CommitDB: commitDB}
-}
-
-type MockAppBus struct {
-	Persistence bus.PersistenceModule
-}
-
-func (m *MockAppBus) GetPersistenceModule() bus.PersistenceModule {
-	return m.Persistence
-}
-
-func NewMockAppBus(commitDB *memdb.DB) bus.Bus {
-	return &MockAppBus{NewMockPersistenceModule(commitDB)}
-}
 
 func NewMockMempool() types.Mempool {
 	return types.NewMempool(1000000, 1000000)
@@ -62,15 +35,15 @@ var (
 	defaultStakeStatus      = int32(2)
 )
 
-func NewMockGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfServiceNodes int) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
-	state = &GenesisState{}
+func NewMockGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfServiceNodes int) (state *typespb.GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
+	state = &typespb.GenesisState{}
 	validatorKeys = make([]crypto.PrivateKey, numOfValidators)
 	appKeys = make([]crypto.PrivateKey, numOfApplications)
 	fishKeys = make([]crypto.PrivateKey, numOfFisherman)
 	serviceNodeKeys = make([]crypto.PrivateKey, numOfServiceNodes)
 	for i := range validatorKeys {
 		pk, _ := crypto.GeneratePrivateKey()
-		v := &Validator{
+		v := &typespb.Validator{
 			Status:       2,
 			ServiceURL:   defaultServiceURL,
 			StakedTokens: defaultStake,
@@ -79,7 +52,7 @@ func NewMockGenesisState(numOfValidators, numOfApplications, numOfFisherman, num
 		v.PublicKey = pk.PublicKey().Bytes()
 		v.Output = v.Address
 		state.Validators = append(state.Validators, v)
-		state.Accounts = append(state.Accounts, &Account{
+		state.Accounts = append(state.Accounts, &typespb.Account{
 			Address: v.Address,
 			Amount:  defaultAccountbalance,
 		})
@@ -87,7 +60,7 @@ func NewMockGenesisState(numOfValidators, numOfApplications, numOfFisherman, num
 	}
 	for i := range appKeys {
 		pk, _ := crypto.GeneratePrivateKey()
-		app := &App{
+		app := &typespb.App{
 			Status:       defaultStakeStatus,
 			Chains:       defaultChains,
 			StakedTokens: defaultStake,
@@ -96,7 +69,7 @@ func NewMockGenesisState(numOfValidators, numOfApplications, numOfFisherman, num
 		app.PublicKey = pk.PublicKey().Bytes()
 		app.Output = app.Address
 		state.Apps = append(state.Apps, app)
-		state.Accounts = append(state.Accounts, &Account{
+		state.Accounts = append(state.Accounts, &typespb.Account{
 			Address: app.Address,
 			Amount:  defaultAccountbalance,
 		})
@@ -104,7 +77,7 @@ func NewMockGenesisState(numOfValidators, numOfApplications, numOfFisherman, num
 	}
 	for i := range serviceNodeKeys {
 		pk, _ := crypto.GeneratePrivateKey()
-		sn := &ServiceNode{
+		sn := &typespb.ServiceNode{
 			Status:       defaultStakeStatus,
 			ServiceURL:   defaultServiceURL,
 			Chains:       defaultChains,
@@ -114,7 +87,7 @@ func NewMockGenesisState(numOfValidators, numOfApplications, numOfFisherman, num
 		sn.PublicKey = pk.PublicKey().Bytes()
 		sn.Output = sn.Address
 		state.ServiceNodes = append(state.ServiceNodes, sn)
-		state.Accounts = append(state.Accounts, &Account{
+		state.Accounts = append(state.Accounts, &typespb.Account{
 			Address: sn.Address,
 			Amount:  defaultAccountbalance,
 		})
@@ -122,7 +95,7 @@ func NewMockGenesisState(numOfValidators, numOfApplications, numOfFisherman, num
 	}
 	for i := range fishKeys {
 		pk, _ := crypto.GeneratePrivateKey()
-		fish := &Fisherman{
+		fish := &typespb.Fisherman{
 			Status:       defaultStakeStatus,
 			Chains:       defaultChains,
 			ServiceURL:   defaultServiceURL,
@@ -132,125 +105,107 @@ func NewMockGenesisState(numOfValidators, numOfApplications, numOfFisherman, num
 		fish.PublicKey = pk.PublicKey().Bytes()
 		fish.Output = fish.Address
 		state.Fishermen = append(state.Fishermen, fish)
-		state.Accounts = append(state.Accounts, &Account{
+		state.Accounts = append(state.Accounts, &typespb.Account{
 			Address: fish.Address,
 			Amount:  defaultAccountbalance,
 		})
 		fishKeys[i] = pk
 	}
-	state.Params = DefaultParams()
-	dao, err := NewPool(types.DAOPoolName, &Account{
-		Address: DefaultDAOPool.Address(),
+	// state.Params = test.DefaultParams()
+	dao, err := test.NewPool(types.DAOPoolName, &test.Account{
+		Address: test.DefaultDAOPool.Address(),
 		Amount:  types.BigIntToString(big.NewInt(0)),
 	})
 	if err != nil {
 		return
 	}
-	valStakePool, err := NewPool(types.ValidatorStakePoolName, &Account{
-		Address: DefaultValidatorStakePool.Address(),
+	valStakePool, err := test.NewPool(types.ValidatorStakePoolName, &test.Account{
+		Address: test.DefaultValidatorStakePool.Address(),
 		Amount:  types.BigIntToString(big.NewInt(0)),
 	})
 	if err != nil {
 		return
 	}
-	appStakePool, err := NewPool(types.AppStakePoolName, &Account{
-		Address: DefaultAppStakePool.Address(),
+	appStakePool, err := test.NewPool(types.AppStakePoolName, &test.Account{
+		Address: test.DefaultAppStakePool.Address(),
 		Amount:  types.BigIntToString(big.NewInt(0)),
 	})
 	if err != nil {
 		return
 	}
-	fishStakePool, err := NewPool(types.FishermanStakePoolName, &Account{
-		Address: DefaultFishermanStakePool.Address(),
+	fishStakePool, err := test.NewPool(types.FishermanStakePoolName, &test.Account{
+		Address: test.DefaultFishermanStakePool.Address(),
 		Amount:  types.BigIntToString(big.NewInt(0)),
 	})
 	if err != nil {
 		return
 	}
-	serNodeStakePool, err := NewPool(types.ServiceNodeStakePoolName, &Account{
-		Address: DefaultServiceNodeStakePool.Address(),
+	serNodeStakePool, err := test.NewPool(types.ServiceNodeStakePoolName, &test.Account{
+		Address: test.DefaultServiceNodeStakePool.Address(),
 		Amount:  types.BigIntToString(big.NewInt(0)),
 	})
 	if err != nil {
 		return
 	}
-	fee, err := NewPool(types.FeePoolName, &Account{
-		Address: DefaultFeeCollector.Address(),
+	fee, err := test.NewPool(types.FeePoolName, &test.Account{
+		Address: test.DefaultFeeCollector.Address(),
 		Amount:  types.BigIntToString(big.NewInt(0)),
 	})
 	if err != nil {
 		return
 	}
-	pOwnerAddress := DefaultParamsOwner.Address()
-	state.Accounts = append(state.Accounts, &Account{
+	pOwnerAddress := test.DefaultParamsOwner.Address()
+	state.Accounts = append(state.Accounts, &typespb.Account{
 		Address: pOwnerAddress,
 		Amount:  defaultAccountbalance,
 	})
-	state.Pools = append(state.Pools, dao)
-	state.Pools = append(state.Pools, fee)
-	state.Pools = append(state.Pools, serNodeStakePool)
-	state.Pools = append(state.Pools, fishStakePool)
-	state.Pools = append(state.Pools, appStakePool)
-	state.Pools = append(state.Pools, valStakePool)
+	// state.Pools = append(state.Pools, dao)
+	// state.Pools = append(state.Pools, fee)
+	// state.Pools = append(state.Pools, serNodeStakePool)
+	// state.Pools = append(state.Pools, fishStakePool)
+	// state.Pools = append(state.Pools, appStakePool)
+	// state.Pools = append(state.Pools, valStakePool)
+	fmt.Println(dao, fee, serNodeStakePool, fishStakePool, appStakePool, valStakePool)
 	return
 }
 
 var (
-	firstSavePointKey                                    = []byte("first_savepoint_key")
-	DeletedPrefixKey                                     = []byte("deleted/")
-	BlockPrefix                                          = []byte("block/")
-	TransactionKeyPrefix                                 = []byte("transaction/")
-	PoolPrefixKey                                        = []byte("pool/")
-	AccountPrefixKey                                     = []byte("account/")
-	AppPrefixKey                                         = []byte("app/")
-	UnstakingAppPrefixKey                                = []byte("unstaking_app/")
-	ServiceNodePrefixKey                                 = []byte("service_node/")
-	UnstakingServiceNodePrefixKey                        = []byte("unstaking_service_node/")
-	FishermanPrefixKey                                   = []byte("fisherman/")
-	UnstakingFishermanPrefixKey                          = []byte("unstaking_fisherman/")
-	ValidatorPrefixKey                                   = []byte("validator/")
-	UnstakingValidatorPrefixKey                          = []byte("unstaking_validator/")
-	ParamsPrefixKey                                      = []byte("params/")
-	_                             bus.PersistenceModule  = &MockPersistenceModule{}
-	_                             bus.PersistenceContext = &MockPersistenceContext{}
+	firstSavePointKey             = []byte("first_savepoint_key")
+	DeletedPrefixKey              = []byte("deleted/")
+	BlockPrefix                   = []byte("block/")
+	TransactionKeyPrefix          = []byte("transaction/")
+	PoolPrefixKey                 = []byte("pool/")
+	AccountPrefixKey              = []byte("account/")
+	AppPrefixKey                  = []byte("app/")
+	UnstakingAppPrefixKey         = []byte("unstaking_app/")
+	ServiceNodePrefixKey          = []byte("service_node/")
+	UnstakingServiceNodePrefixKey = []byte("unstaking_service_node/")
+	FishermanPrefixKey            = []byte("fisherman/")
+	UnstakingFishermanPrefixKey   = []byte("unstaking_fisherman/")
+	ValidatorPrefixKey            = []byte("validator/")
+	UnstakingValidatorPrefixKey   = []byte("unstaking_validator/")
+	ParamsPrefixKey               = []byte("params/")
+	//_                             bus.PersistenceModule  = &MockPersistenceModule{}
+	//_                             bus.PersistenceContext = &MockPersistenceContext{}
 )
 
-type MockPersistenceModule struct {
-	CommitDB *memdb.DB
-}
+//type MockPersistenceModule struct {
+//	CommitDB *memdb.DB
 
-func (m *MockPersistenceModule) NewContext(height int64) (bus.PersistenceContext, error) {
-	newDB := NewMemDB()
-	it := m.CommitDB.NewIterator(&util.Range{Start: HeightKey(height, nil), Limit: HeightKey(height+1, nil)})
-	it.First()
-	defer it.Release()
-	for ; it.Valid(); it.Next() {
-		err := newDB.Put(KeyFromHeightKey(it.Key()), it.Value())
-		if err != nil {
-			return nil, err
-		}
-	}
-	context := &MockPersistenceContext{
-		Height:     0,
-		Parent:     m,
-		SavePoints: make(map[string]int),
-		DBs:        make([]*memdb.DB, 0),
-	}
-	context.SavePoints[hex.EncodeToString(firstSavePointKey)] = types.ZeroInt
-	context.DBs = append(context.DBs, newDB)
-	return context, nil
-}
+//}
 
 type MockPersistenceContext struct {
+	modules.PersistenceContext
+
 	Height     int64
-	Parent     *MockPersistenceModule
+	Parent     modules.PersistenceModule
 	SavePoints map[string]int
 	DBs        []*memdb.DB
 }
 
-func (m *MockPersistenceContext) ExportState() (*GenesisState, types.Error) {
+func (m *MockPersistenceContext) ExportState() (*typespb.GenesisState, types.Error) {
 	var err error
-	state := &GenesisState{}
+	state := &typespb.GenesisState{}
 	state.Validators, err = m.GetAllValidators(m.Height)
 	if err != nil {
 		return nil, types.ErrGetAllValidators(err)
@@ -338,11 +293,11 @@ func (m *MockPersistenceContext) Reset() error {
 }
 
 func (m *MockPersistenceContext) Commit() error {
-	parentIt := m.Parent.CommitDB.NewIterator(&util.Range{})
+	parentIt := m.Parent.GetCommitDB().NewIterator(&util.Range{})
 	// copy over the entire last height
 	for ; parentIt.Valid(); parentIt.Next() {
 		newKey := HeightKey(m.Height, KeyFromHeightKey(parentIt.Key()))
-		if err := m.Parent.CommitDB.Put(newKey, parentIt.Value()); err != nil {
+		if err := m.Parent.GetCommitDB().Put(newKey, parentIt.Value()); err != nil {
 			return err
 		}
 	}
@@ -352,7 +307,7 @@ func (m *MockPersistenceContext) Commit() error {
 	db := m.DBs[index]
 	it := db.NewIterator(&util.Range{})
 	for ; it.Valid(); it.Next() {
-		if err := m.Parent.CommitDB.Put(HeightKey(m.Height, it.Key()), it.Value()); err != nil {
+		if err := m.Parent.GetCommitDB().Put(HeightKey(m.Height, it.Key()), it.Value()); err != nil {
 			return err
 		}
 	}
@@ -384,7 +339,7 @@ func (m *MockPersistenceContext) GetHeight() (int64, error) {
 
 func (m *MockPersistenceContext) GetBlockHash(height int64) ([]byte, error) {
 	db := m.Store()
-	block := Block{}
+	block := typespb.Block{}
 	key := append(BlockPrefix, []byte(fmt.Sprintf("%d", height))...)
 	val, err := db.Get(key)
 	if err != nil {
@@ -403,7 +358,7 @@ func (m *MockPersistenceContext) TransactionExists(transactionHash string) bool 
 
 func (m *MockPersistenceContext) AddPoolAmount(name string, amount string) error {
 	cdc := types.UtilityCodec()
-	p := Pool{}
+	p := typespb.Pool{}
 	db := m.Store()
 	key := append(PoolPrefixKey, []byte(name)...)
 	val, err := db.Get(key)
@@ -433,7 +388,7 @@ func (m *MockPersistenceContext) AddPoolAmount(name string, amount string) error
 
 func (m *MockPersistenceContext) SubtractPoolAmount(name string, amount string) error {
 	cdc := types.UtilityCodec()
-	p := Pool{}
+	p := typespb.Pool{}
 	db := m.Store()
 	key := append(PoolPrefixKey, []byte(name)...)
 	val, err := db.Get(key)
@@ -463,9 +418,9 @@ func (m *MockPersistenceContext) SubtractPoolAmount(name string, amount string) 
 
 func (m *MockPersistenceContext) InsertPool(name string, address []byte, amount string) error {
 	cdc := types.UtilityCodec()
-	p := Pool{
+	p := typespb.Pool{
 		Name: name,
-		Account: &Account{
+		Account: &typespb.Account{
 			Address: address,
 			Amount:  amount,
 		},
@@ -481,7 +436,7 @@ func (m *MockPersistenceContext) InsertPool(name string, address []byte, amount 
 
 func (m *MockPersistenceContext) SetPoolAmount(name string, amount string) error {
 	cdc := types.UtilityCodec()
-	p := Pool{}
+	p := typespb.Pool{}
 	db := m.Store()
 	key := append(PoolPrefixKey, []byte(name)...)
 	val, err := db.Get(key)
@@ -502,7 +457,7 @@ func (m *MockPersistenceContext) SetPoolAmount(name string, amount string) error
 
 func (m *MockPersistenceContext) GetPoolAmount(name string) (amount string, err error) {
 	cdc := types.UtilityCodec()
-	p := Pool{}
+	p := typespb.Pool{}
 	db := m.Store()
 	key := append(PoolPrefixKey, []byte(name)...)
 	val, err := db.Get(key)
@@ -516,9 +471,9 @@ func (m *MockPersistenceContext) GetPoolAmount(name string) (amount string, err 
 	return p.Account.Amount, nil
 }
 
-func (m *MockPersistenceContext) GetAllAccounts(height int64) (accs []*Account, err error) {
+func (m *MockPersistenceContext) GetAllAccounts(height int64) (accs []*typespb.Account, err error) {
 	cdc := types.UtilityCodec()
-	accs = make([]*Account, 0)
+	accs = make([]*typespb.Account, 0)
 	var it iterator.Iterator
 	if height == m.Height {
 		db := m.Store()
@@ -528,7 +483,7 @@ func (m *MockPersistenceContext) GetAllAccounts(height int64) (accs []*Account, 
 		})
 	} else {
 		key := HeightKey(height, AccountPrefixKey)
-		it = m.Parent.CommitDB.NewIterator(&util.Range{
+		it = m.Parent.GetCommitDB().NewIterator(&util.Range{
 			Start: key,
 			Limit: PrefixEndBytes(key),
 		})
@@ -540,7 +495,7 @@ func (m *MockPersistenceContext) GetAllAccounts(height int64) (accs []*Account, 
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
-		acc := Account{}
+		acc := typespb.Account{}
 		if err := cdc.Unmarshal(bz, &acc); err != nil {
 			return nil, err
 		}
@@ -549,9 +504,9 @@ func (m *MockPersistenceContext) GetAllAccounts(height int64) (accs []*Account, 
 	return
 }
 
-func (m *MockPersistenceContext) GetAllPools(height int64) (pools []*Pool, err error) {
+func (m *MockPersistenceContext) GetAllPools(height int64) (pools []*typespb.Pool, err error) {
 	cdc := types.UtilityCodec()
-	pools = make([]*Pool, 0)
+	pools = make([]*typespb.Pool, 0)
 	var it iterator.Iterator
 	if height == m.Height {
 		db := m.Store()
@@ -561,7 +516,7 @@ func (m *MockPersistenceContext) GetAllPools(height int64) (pools []*Pool, err e
 		})
 	} else {
 		key := HeightKey(height, PoolPrefixKey)
-		it = m.Parent.CommitDB.NewIterator(&util.Range{
+		it = m.Parent.GetCommitDB().NewIterator(&util.Range{
 			Start: key,
 			Limit: PrefixEndBytes(key),
 		})
@@ -573,7 +528,7 @@ func (m *MockPersistenceContext) GetAllPools(height int64) (pools []*Pool, err e
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
-		p := Pool{}
+		p := typespb.Pool{}
 		if err := cdc.Unmarshal(bz, &p); err != nil {
 			return nil, err
 		}
@@ -584,14 +539,14 @@ func (m *MockPersistenceContext) GetAllPools(height int64) (pools []*Pool, err e
 
 func (m *MockPersistenceContext) AddAccountAmount(address []byte, amount string) error {
 	cdc := types.UtilityCodec()
-	account := Account{}
+	account := &typespb.Account{}
 	db := m.Store()
 	key := append(AccountPrefixKey, address...)
 	val, err := db.Get(key)
 	if err != nil {
 		return err
 	}
-	err = cdc.Unmarshal(val, &account)
+	err = cdc.Unmarshal(val, account)
 	if err != nil {
 		return err
 	}
@@ -605,7 +560,7 @@ func (m *MockPersistenceContext) AddAccountAmount(address []byte, amount string)
 	}
 	s.Add(s, s2)
 	account.Amount = types.BigIntToString(s)
-	bz, err := cdc.Marshal(&account)
+	bz, err := cdc.Marshal(account)
 	if err != nil {
 		return err
 	}
@@ -614,14 +569,14 @@ func (m *MockPersistenceContext) AddAccountAmount(address []byte, amount string)
 
 func (m *MockPersistenceContext) SubtractAccountAmount(address []byte, amount string) error {
 	cdc := types.UtilityCodec()
-	account := Account{}
+	account := &typespb.Account{}
 	db := m.Store()
 	key := append(AccountPrefixKey, address...)
 	val, err := db.Get(key)
 	if err != nil {
 		return err
 	}
-	err = cdc.Unmarshal(val, &account)
+	err = cdc.Unmarshal(val, account)
 	if err != nil {
 		return err
 	}
@@ -635,7 +590,7 @@ func (m *MockPersistenceContext) SubtractAccountAmount(address []byte, amount st
 	}
 	s.Sub(s, s2)
 	account.Amount = types.BigIntToString(s)
-	bz, err := cdc.Marshal(&account)
+	bz, err := cdc.Marshal(account)
 	if err != nil {
 		return err
 	}
@@ -644,14 +599,14 @@ func (m *MockPersistenceContext) SubtractAccountAmount(address []byte, amount st
 
 func (m *MockPersistenceContext) GetAccountAmount(address []byte) (string, error) {
 	cdc := types.UtilityCodec()
-	account := Account{}
+	account := &typespb.Account{}
 	db := m.Store()
 	key := append(AccountPrefixKey, address...)
 	val, err := db.Get(key)
 	if err != nil {
 		return types.EmptyString, err
 	}
-	err = cdc.Unmarshal(val, &account)
+	err = cdc.Unmarshal(val, account)
 	if err != nil {
 		return types.EmptyString, err
 	}
@@ -660,7 +615,7 @@ func (m *MockPersistenceContext) GetAccountAmount(address []byte) (string, error
 
 func (m *MockPersistenceContext) SetAccount(address []byte, amount string) error {
 	cdc := types.UtilityCodec()
-	account := Account{
+	account := typespb.Account{
 		Address: address,
 		Amount:  amount,
 	}
@@ -692,8 +647,8 @@ func (m *MockPersistenceContext) GetAppExists(address []byte) (exists bool, err 
 	return true, nil
 }
 
-func (m *MockPersistenceContext) GetApp(address []byte) (app *App, exists bool, err error) {
-	app = &App{}
+func (m *MockPersistenceContext) GetApp(address []byte) (app *typespb.App, exists bool, err error) {
+	app = &typespb.App{}
 	db := m.Store()
 	key := append(AppPrefixKey, address...)
 	bz, err := db.Get(key)
@@ -712,9 +667,9 @@ func (m *MockPersistenceContext) GetApp(address []byte) (app *App, exists bool, 
 	return app, true, nil
 }
 
-func (m *MockPersistenceContext) GetAllApps(height int64) (apps []*App, err error) {
+func (m *MockPersistenceContext) GetAllApps(height int64) (apps []*typespb.App, err error) {
 	cdc := types.UtilityCodec()
-	apps = make([]*App, 0)
+	apps = make([]*typespb.App, 0)
 	var it iterator.Iterator
 	if height == m.Height {
 		db := m.Store()
@@ -724,7 +679,7 @@ func (m *MockPersistenceContext) GetAllApps(height int64) (apps []*App, err erro
 		})
 	} else {
 		key := HeightKey(height, AppPrefixKey)
-		it = m.Parent.CommitDB.NewIterator(&util.Range{
+		it = m.Parent.GetCommitDB().NewIterator(&util.Range{
 			Start: key,
 			Limit: PrefixEndBytes(key),
 		})
@@ -736,7 +691,7 @@ func (m *MockPersistenceContext) GetAllApps(height int64) (apps []*App, err erro
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
-		a := App{}
+		a := typespb.App{}
 		if err := cdc.Unmarshal(bz, &a); err != nil {
 			return nil, err
 		}
@@ -752,7 +707,7 @@ func (m *MockPersistenceContext) InsertApplication(address []byte, publicKey []b
 	cdc := types.UtilityCodec()
 	db := m.Store()
 	key := append(AppPrefixKey, address...)
-	app := App{
+	app := typespb.App{
 		Address:         address,
 		PublicKey:       publicKey,
 		Paused:          paused,
@@ -819,7 +774,7 @@ func (m *MockPersistenceContext) DeleteApplication(address []byte) error {
 	return db.Put(key, DeletedPrefixKey)
 }
 
-func (m *MockPersistenceContext) GetAppsReadyToUnstake(height int64, status int) (apps []bus.UnstakingActor, err error) { // TODO delete unstaking
+func (m *MockPersistenceContext) GetAppsReadyToUnstake(height int64, status int) (apps []modules.UnstakingActor, err error) { // TODO delete unstaking
 	db := m.Store()
 	unstakingKey := append(UnstakingAppPrefixKey, []byte(fmt.Sprintf("%d", height))...)
 	if has := db.Contains(unstakingKey); !has {
@@ -830,9 +785,9 @@ func (m *MockPersistenceContext) GetAppsReadyToUnstake(height int64, status int)
 		return nil, err
 	}
 	if val == nil {
-		return make([]bus.UnstakingActor, 0), nil
+		return make([]modules.UnstakingActor, 0), nil
 	}
-	unstakingApps := UnstakingActors{}
+	unstakingApps := typespb.UnstakingActors{}
 	if err := proto.Unmarshal(val, &unstakingApps); err != nil {
 		return nil, err
 	}
@@ -862,7 +817,7 @@ func (m *MockPersistenceContext) SetAppUnstakingHeightAndStatus(address []byte, 
 		return fmt.Errorf("does not exist in world state")
 	}
 	cdc := types.UtilityCodec()
-	unstakingApps := UnstakingActors{}
+	unstakingApps := typespb.UnstakingActors{}
 	db := m.Store()
 	key := append(AppPrefixKey, address...)
 	app.UnstakingHeight = unstakingHeight
@@ -885,7 +840,7 @@ func (m *MockPersistenceContext) SetAppUnstakingHeightAndStatus(address []byte, 
 			return err
 		}
 	}
-	unstakingApps.UnstakingActors = append(unstakingApps.UnstakingActors, &UnstakingActor{
+	unstakingApps.UnstakingActors = append(unstakingApps.UnstakingActors, &typespb.UnstakingActor{
 		Address:       app.Address,
 		StakeAmount:   app.StakedTokens,
 		OutputAddress: app.Output,
@@ -918,7 +873,7 @@ func (m *MockPersistenceContext) SetAppsStatusAndUnstakingHeightPausedBefore(pau
 	it.First()
 	defer it.Release()
 	for ; it.Valid(); it.Next() {
-		app := App{}
+		app := typespb.App{}
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
@@ -993,8 +948,8 @@ func (m *MockPersistenceContext) GetServiceNodeExists(address []byte) (exists bo
 	return true, nil
 }
 
-func (m *MockPersistenceContext) GetServiceNode(address []byte) (sn *ServiceNode, exists bool, err error) {
-	sn = &ServiceNode{}
+func (m *MockPersistenceContext) GetServiceNode(address []byte) (sn *typespb.ServiceNode, exists bool, err error) {
+	sn = &typespb.ServiceNode{}
 	db := m.Store()
 	key := append(ServiceNodePrefixKey, address...)
 	bz, err := db.Get(key)
@@ -1013,9 +968,9 @@ func (m *MockPersistenceContext) GetServiceNode(address []byte) (sn *ServiceNode
 	return sn, true, nil
 }
 
-func (m *MockPersistenceContext) GetAllServiceNodes(height int64) (sns []*ServiceNode, err error) {
+func (m *MockPersistenceContext) GetAllServiceNodes(height int64) (sns []*typespb.ServiceNode, err error) {
 	cdc := types.UtilityCodec()
-	sns = make([]*ServiceNode, 0)
+	sns = make([]*typespb.ServiceNode, 0)
 	var it iterator.Iterator
 	if height == m.Height {
 		db := m.Store()
@@ -1025,7 +980,7 @@ func (m *MockPersistenceContext) GetAllServiceNodes(height int64) (sns []*Servic
 		})
 	} else {
 		key := HeightKey(height, ServiceNodePrefixKey)
-		it = m.Parent.CommitDB.NewIterator(&util.Range{
+		it = m.Parent.GetCommitDB().NewIterator(&util.Range{
 			Start: key,
 			Limit: PrefixEndBytes(key),
 		})
@@ -1037,7 +992,7 @@ func (m *MockPersistenceContext) GetAllServiceNodes(height int64) (sns []*Servic
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
-		sn := ServiceNode{}
+		sn := typespb.ServiceNode{}
 		if err := cdc.Unmarshal(bz, &sn); err != nil {
 			return nil, err
 		}
@@ -1053,7 +1008,7 @@ func (m *MockPersistenceContext) InsertServiceNode(address []byte, publicKey []b
 	cdc := types.UtilityCodec()
 	db := m.Store()
 	key := append(ServiceNodePrefixKey, address...)
-	sn := ServiceNode{
+	sn := typespb.ServiceNode{
 		Address:         address,
 		PublicKey:       publicKey,
 		Paused:          paused,
@@ -1111,7 +1066,7 @@ func (m *MockPersistenceContext) DeleteServiceNode(address []byte) error {
 	return db.Put(key, DeletedPrefixKey)
 }
 
-func (m *MockPersistenceContext) GetServiceNodesReadyToUnstake(height int64, status int) (ServiceNodes []bus.UnstakingActor, err error) {
+func (m *MockPersistenceContext) GetServiceNodesReadyToUnstake(height int64, status int) (ServiceNodes []modules.UnstakingActor, err error) {
 	db := m.Store()
 	unstakingKey := append(UnstakingServiceNodePrefixKey, []byte(fmt.Sprintf("%d", height))...)
 	if has := db.Contains(unstakingKey); !has {
@@ -1122,9 +1077,9 @@ func (m *MockPersistenceContext) GetServiceNodesReadyToUnstake(height int64, sta
 		return nil, err
 	}
 	if val == nil {
-		return make([]bus.UnstakingActor, 0), nil
+		return make([]modules.UnstakingActor, 0), nil
 	}
-	unstakingActors := UnstakingActors{}
+	unstakingActors := typespb.UnstakingActors{}
 	if err := proto.Unmarshal(val, &unstakingActors); err != nil {
 		return nil, err
 	}
@@ -1154,7 +1109,7 @@ func (m *MockPersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address 
 		return fmt.Errorf("does not exist in world state")
 	}
 	cdc := types.UtilityCodec()
-	unstakingActors := UnstakingActors{}
+	unstakingActors := typespb.UnstakingActors{}
 	db := m.Store()
 	key := append(ServiceNodePrefixKey, address...)
 	sn.UnstakingHeight = unstakingHeight
@@ -1177,7 +1132,7 @@ func (m *MockPersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address 
 			return err
 		}
 	}
-	unstakingActors.UnstakingActors = append(unstakingActors.UnstakingActors, &UnstakingActor{
+	unstakingActors.UnstakingActors = append(unstakingActors.UnstakingActors, &typespb.UnstakingActor{
 		Address:       sn.Address,
 		StakeAmount:   sn.StakedTokens,
 		OutputAddress: sn.Output,
@@ -1210,7 +1165,7 @@ func (m *MockPersistenceContext) SetServiceNodesStatusAndUnstakingHeightPausedBe
 	it.First()
 	defer it.Release()
 	for ; it.Valid(); it.Next() {
-		sn := ServiceNode{}
+		sn := typespb.ServiceNode{}
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
@@ -1258,7 +1213,7 @@ func (m *MockPersistenceContext) SetServiceNodePauseHeight(address []byte, heigh
 func (m *MockPersistenceContext) InitParams() error {
 	cdc := types.UtilityCodec()
 	db := m.Store()
-	p := DefaultParams()
+	p := test.DefaultParams()
 	bz, err := cdc.Marshal(p)
 	if err != nil {
 		return err
@@ -1266,8 +1221,8 @@ func (m *MockPersistenceContext) InitParams() error {
 	return db.Put(ParamsPrefixKey, bz)
 }
 
-func (m *MockPersistenceContext) GetParams(height int64) (p *Params, err error) {
-	p = &Params{}
+func (m *MockPersistenceContext) GetParams(height int64) (p *typespb.Params, err error) {
+	p = &typespb.Params{}
 	cdc := types.UtilityCodec()
 	var paramsBz []byte
 	if height == m.Height {
@@ -1277,7 +1232,7 @@ func (m *MockPersistenceContext) GetParams(height int64) (p *Params, err error) 
 			return nil, err
 		}
 	} else {
-		paramsBz, err = m.Parent.CommitDB.Get(HeightKey(height, ParamsPrefixKey))
+		paramsBz, err = m.Parent.GetCommitDB().Get(HeightKey(height, ParamsPrefixKey))
 		if err != nil {
 			return nil, nil
 		}
@@ -1307,7 +1262,7 @@ func (m *MockPersistenceContext) GetServiceNodeCount(chain string, height int64)
 			Limit: PrefixEndBytes(ServiceNodePrefixKey),
 		})
 	} else {
-		it = m.Parent.CommitDB.NewIterator(&util.Range{
+		it = m.Parent.GetCommitDB().NewIterator(&util.Range{
 			Start: HeightKey(height, ServiceNodePrefixKey),
 			Limit: HeightKey(height, PrefixEndBytes(ServiceNodePrefixKey)),
 		})
@@ -1319,7 +1274,7 @@ func (m *MockPersistenceContext) GetServiceNodeCount(chain string, height int64)
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
-		node := ServiceNode{}
+		node := typespb.ServiceNode{}
 		if err := cdc.Unmarshal(bz, &node); err != nil {
 			return types.ZeroInt, err
 		}
@@ -1363,8 +1318,8 @@ func (m *MockPersistenceContext) GetFishermanExists(address []byte) (exists bool
 	return true, nil
 }
 
-func (m *MockPersistenceContext) GetFisherman(address []byte) (fish *Fisherman, exists bool, err error) {
-	fish = &Fisherman{}
+func (m *MockPersistenceContext) GetFisherman(address []byte) (fish *typespb.Fisherman, exists bool, err error) {
+	fish = &typespb.Fisherman{}
 	db := m.Store()
 	key := append(FishermanPrefixKey, address...)
 	bz, err := db.Get(key)
@@ -1383,9 +1338,9 @@ func (m *MockPersistenceContext) GetFisherman(address []byte) (fish *Fisherman, 
 	return fish, true, nil
 }
 
-func (m *MockPersistenceContext) GetAllFishermen(height int64) (fishermen []*Fisherman, err error) {
+func (m *MockPersistenceContext) GetAllFishermen(height int64) (fishermen []*typespb.Fisherman, err error) {
 	cdc := types.UtilityCodec()
-	fishermen = make([]*Fisherman, 0)
+	fishermen = make([]*typespb.Fisherman, 0)
 	var it iterator.Iterator
 	if height == m.Height {
 		db := m.Store()
@@ -1395,7 +1350,7 @@ func (m *MockPersistenceContext) GetAllFishermen(height int64) (fishermen []*Fis
 		})
 	} else {
 		key := HeightKey(height, FishermanPrefixKey)
-		it = m.Parent.CommitDB.NewIterator(&util.Range{
+		it = m.Parent.GetCommitDB().NewIterator(&util.Range{
 			Start: key,
 			Limit: PrefixEndBytes(key),
 		})
@@ -1407,7 +1362,7 @@ func (m *MockPersistenceContext) GetAllFishermen(height int64) (fishermen []*Fis
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
-		fish := Fisherman{}
+		fish := typespb.Fisherman{}
 		if err := cdc.Unmarshal(bz, &fish); err != nil {
 			return nil, err
 		}
@@ -1423,7 +1378,7 @@ func (m *MockPersistenceContext) InsertFisherman(address []byte, publicKey []byt
 	cdc := types.UtilityCodec()
 	db := m.Store()
 	key := append(FishermanPrefixKey, address...)
-	fish := Fisherman{
+	fish := typespb.Fisherman{
 		Address:         address,
 		PublicKey:       publicKey,
 		Paused:          paused,
@@ -1481,7 +1436,7 @@ func (m *MockPersistenceContext) DeleteFisherman(address []byte) error {
 	return db.Put(key, DeletedPrefixKey)
 }
 
-func (m *MockPersistenceContext) GetFishermanReadyToUnstake(height int64, status int) (Fisherman []bus.UnstakingActor, err error) {
+func (m *MockPersistenceContext) GetFishermanReadyToUnstake(height int64, status int) (Fisherman []modules.UnstakingActor, err error) {
 	db := m.Store()
 	unstakingKey := append(UnstakingFishermanPrefixKey, []byte(fmt.Sprintf("%d", height))...)
 	if has := db.Contains(unstakingKey); !has {
@@ -1492,9 +1447,9 @@ func (m *MockPersistenceContext) GetFishermanReadyToUnstake(height int64, status
 		return nil, err
 	}
 	if val == nil {
-		return make([]bus.UnstakingActor, 0), nil
+		return make([]modules.UnstakingActor, 0), nil
 	}
-	unstakingActors := UnstakingActors{}
+	unstakingActors := typespb.UnstakingActors{}
 	if err := proto.Unmarshal(val, &unstakingActors); err != nil {
 		return nil, err
 	}
@@ -1524,7 +1479,7 @@ func (m *MockPersistenceContext) SetFishermanUnstakingHeightAndStatus(address []
 		return fmt.Errorf("does not exist in world state")
 	}
 	cdc := types.UtilityCodec()
-	unstakingActors := UnstakingActors{}
+	unstakingActors := typespb.UnstakingActors{}
 	db := m.Store()
 	key := append(FishermanPrefixKey, address...)
 	fish.UnstakingHeight = unstakingHeight
@@ -1547,7 +1502,7 @@ func (m *MockPersistenceContext) SetFishermanUnstakingHeightAndStatus(address []
 			return err
 		}
 	}
-	unstakingActors.UnstakingActors = append(unstakingActors.UnstakingActors, &UnstakingActor{
+	unstakingActors.UnstakingActors = append(unstakingActors.UnstakingActors, &typespb.UnstakingActor{
 		Address:       fish.Address,
 		StakeAmount:   fish.StakedTokens,
 		OutputAddress: fish.Output,
@@ -1580,7 +1535,7 @@ func (m *MockPersistenceContext) SetFishermansStatusAndUnstakingHeightPausedBefo
 	it.First()
 	defer it.Release()
 	for ; it.Valid(); it.Next() {
-		fish := Fisherman{}
+		fish := typespb.Fisherman{}
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
@@ -1636,8 +1591,8 @@ func (m *MockPersistenceContext) GetFishermanOutputAddress(operator []byte) (out
 	return fish.Output, nil
 }
 
-func (m *MockPersistenceContext) GetValidator(address []byte) (val *Validator, exists bool, err error) {
-	val = &Validator{}
+func (m *MockPersistenceContext) GetValidator(address []byte) (val *typespb.Validator, exists bool, err error) {
+	val = &typespb.Validator{}
 	db := m.Store()
 	key := append(ValidatorPrefixKey, address...)
 	bz, err := db.Get(key)
@@ -1656,9 +1611,9 @@ func (m *MockPersistenceContext) GetValidator(address []byte) (val *Validator, e
 	return val, true, nil
 }
 
-func (m *MockPersistenceContext) GetAllValidators(height int64) (v []*Validator, err error) {
+func (m *MockPersistenceContext) GetAllValidators(height int64) (v []*typespb.Validator, err error) {
 	cdc := types.UtilityCodec()
-	v = make([]*Validator, 0)
+	v = make([]*typespb.Validator, 0)
 	var it iterator.Iterator
 	if height == m.Height {
 		db := m.Store()
@@ -1668,7 +1623,7 @@ func (m *MockPersistenceContext) GetAllValidators(height int64) (v []*Validator,
 		})
 	} else {
 		key := HeightKey(height, ValidatorPrefixKey)
-		it = m.Parent.CommitDB.NewIterator(&util.Range{
+		it = m.Parent.GetCommitDB().NewIterator(&util.Range{
 			Start: key,
 			Limit: PrefixEndBytes(key),
 		})
@@ -1685,7 +1640,7 @@ func (m *MockPersistenceContext) GetAllValidators(height int64) (v []*Validator,
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
-		validator := Validator{}
+		validator := typespb.Validator{}
 		if err := cdc.Unmarshal(bz, &validator); err != nil {
 			return nil, err
 		}
@@ -1720,7 +1675,7 @@ func (m *MockPersistenceContext) InsertValidator(address []byte, publicKey []byt
 	cdc := types.UtilityCodec()
 	db := m.Store()
 	key := append(ValidatorPrefixKey, address...)
-	val := Validator{
+	val := typespb.Validator{
 		Address:         address,
 		PublicKey:       publicKey,
 		Paused:          paused,
@@ -1777,7 +1732,7 @@ func (m *MockPersistenceContext) DeleteValidator(address []byte) error {
 	return db.Put(key, DeletedPrefixKey)
 }
 
-func (m *MockPersistenceContext) GetValidatorsReadyToUnstake(height int64, status int) (fishermen []bus.UnstakingActor, err error) {
+func (m *MockPersistenceContext) GetValidatorsReadyToUnstake(height int64, status int) (fishermen []modules.UnstakingActor, err error) {
 	db := m.Store()
 	unstakingKey := append(UnstakingValidatorPrefixKey, []byte(fmt.Sprintf("%d", height))...)
 	if has := db.Contains(unstakingKey); !has {
@@ -1788,9 +1743,9 @@ func (m *MockPersistenceContext) GetValidatorsReadyToUnstake(height int64, statu
 		return nil, err
 	}
 	if val == nil {
-		return make([]bus.UnstakingActor, 0), nil
+		return make([]modules.UnstakingActor, 0), nil
 	}
-	unstakingActors := UnstakingActors{}
+	unstakingActors := typespb.UnstakingActors{}
 	if err := proto.Unmarshal(val, &unstakingActors); err != nil {
 		return nil, err
 	}
@@ -1820,7 +1775,7 @@ func (m *MockPersistenceContext) SetValidatorUnstakingHeightAndStatus(address []
 		return fmt.Errorf("does not exist in world state")
 	}
 	cdc := types.UtilityCodec()
-	unstakingActors := UnstakingActors{}
+	unstakingActors := typespb.UnstakingActors{}
 	db := m.Store()
 	key := append(ValidatorPrefixKey, address...)
 	validator.UnstakingHeight = unstakingHeight
@@ -1843,7 +1798,7 @@ func (m *MockPersistenceContext) SetValidatorUnstakingHeightAndStatus(address []
 			return err
 		}
 	}
-	unstakingActors.UnstakingActors = append(unstakingActors.UnstakingActors, &UnstakingActor{
+	unstakingActors.UnstakingActors = append(unstakingActors.UnstakingActors, &typespb.UnstakingActor{
 		Address:       validator.Address,
 		StakeAmount:   validator.StakedTokens,
 		OutputAddress: validator.Output,
@@ -1876,7 +1831,7 @@ func (m *MockPersistenceContext) SetValidatorsStatusAndUnstakingHeightPausedBefo
 	it.First()
 	defer it.Release()
 	for ; it.Valid(); it.Next() {
-		validator := Validator{}
+		validator := typespb.Validator{}
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
@@ -2423,7 +2378,7 @@ func (m *MockPersistenceContext) GetMessageChangeParameterFee() (string, error) 
 	return params.MessageChangeParameterFee, nil
 }
 
-func (m *MockPersistenceContext) SetParams(p *Params) error {
+func (m *MockPersistenceContext) SetParams(p *typespb.Params) error {
 	cdc := types.UtilityCodec()
 	store := m.Store()
 	bz, err := cdc.Marshal(p)

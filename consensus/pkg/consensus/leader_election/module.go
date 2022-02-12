@@ -10,8 +10,8 @@ import (
 	"pocket/consensus/pkg/types"
 	"pocket/shared"
 	"pocket/shared/context"
-	"pocket/shared/messages"
 	"pocket/shared/modules"
+	"pocket/shared/typespb"
 
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -205,7 +205,7 @@ func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElect
 		return err
 	}
 
-	consensusProtoMsg := &messages.ConsensusMessage{
+	consensusProtoMsg := &typespb.ConsensusMessage{
 		Data: data,
 	}
 
@@ -214,8 +214,8 @@ func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElect
 		return err
 	}
 
-	networkProtoMsg := &messages.NetworkMessage{
-		Topic: messages.PocketTopic_CONSENSUS.String(),
+	networkProtoMsg := &typespb.NetworkMessage{
+		Topic: typespb.PocketTopic_CONSENSUS.String(),
 		Data:  anyProto,
 	}
 
@@ -223,13 +223,13 @@ func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElect
 
 	//envelope := &events.PocketEvent{
 	//	SourceModule: events.LEADER_ELECTION,
-	//	PocketTopic:  events.CONSENSUS_MESSAGE,
+	//	PocketTopic:  events.CONSENSUS,
 	//	MessageData:  data,
 	//}
 	//m.GetPocketBusMod().GetNetworkModule().Broadcast("CONSENSUS", data, false)
 	//m.GetPocketBusMod().GetNetworkModule().Broadcast(envelope, false)
 	//networkMsg := &p2p_types.NetworkMessage{
-	//	Topic: events.CONSENSUS_MESSAGE,
+	//	Topic: events.CONSENSUS,
 	//	Data:  data,
 	//}
 	//networkMsgEncoded, err := p2p.EncodeNetworkMessage(networkMsg)

@@ -10,9 +10,11 @@ import (
 	"pocket/consensus/pkg/consensus/statesync"
 	consensus_types "pocket/consensus/pkg/consensus/types"
 	"pocket/consensus/pkg/types"
-	"pocket/consensus/pkg/types/typespb"
 	"pocket/shared/context"
 	"pocket/shared/modules"
+	"pocket/shared/typespb"
+
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -61,7 +63,7 @@ type consensusModule struct {
 	UtilityContext modules.UtilityContextInterface
 }
 
-func Create(cfg* config.Config) (modules.ConsensusModule, error) {
+func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	gob.Register(&DebugMessage{})
 	gob.Register(&HotstuffMessage{})
 	gob.Register(&statesync.StateSyncMessage{})
@@ -132,11 +134,9 @@ func (m *consensusModule) Start(ctx *context.PocketContext) error {
 		return err
 	}
 
-
 	//if err := m.stateSyncMod.Start(ctx); err != nil {
 	//	return err
 	//}
-
 
 	return nil
 }
@@ -159,7 +159,20 @@ func (m *consensusModule) Stop(ctx *context.PocketContext) error {
 	return nil
 }
 
-func (m *consensusModule) HandleMessage(ctx *context.PocketContext, message *consensus_types.ConsensusMessage) {
+func (m *consensusModule) HandleMessage(ctx *context.PocketContext, anyMessage *anypb.Any) {
+	messageProto := &typespb.ConsensusMessage{}
+
+	if err := anyMessage.UnmarshalTo(messageProto); err != nil {
+		m.nodeLogError("[HandleMessage] Error unmarshalling message: %v" + err.Error())
+		return
+	}
+
+	message, err := consensus_types.DecodeConsensusMessage(messageProto.Data)
+	if err != nil {
+		m.nodeLogError("[HandleMessage] Error unmarshalling message: %v" + err.Error())
+		return
+	}
+
 	switch message.Message.GetType() {
 	case consensus_types.HotstuffConsensusMessage:
 		m.handleHotstuffMessage(message.Message.(*HotstuffMessage))
@@ -174,9 +187,16 @@ func (m *consensusModule) HandleMessage(ctx *context.PocketContext, message *con
 	}
 }
 
-func (m *consensusModule) HandleTransaction(ctx *context.PocketContext, data []byte) {
+func (m *consensusModule) HandleTransaction(ctx *context.PocketContext, anyMessage *anypb.Any) {
+	messageProto := &typespb.ConsensusMessage{}
+
+	if err := anyMessage.UnmarshalTo(messageProto); err != nil {
+		m.nodeLogError("[HandleMessage] Error unmarshalling message: %v" + err.Error())
+		return
+	}
+
 	// TODO: decode data, basic validation, send to utility module.
-	if err := m.GetPocketBusMod().GetUtilityModule().CheckTransaction(data); err != nil {
+	if err := m.GetPocketBusMod().GetUtilityModule().CheckTransaction(messageProto.Data); err != nil {
 		m.nodeLogError("")
 	}
 }

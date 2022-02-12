@@ -11,13 +11,14 @@ import (
 	"pocket/consensus/pkg/consensus/leader_election"
 	"pocket/consensus/pkg/consensus/statesync"
 	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/p2p"
-	"pocket/consensus/pkg/p2p/p2p_types"
 	"pocket/consensus/pkg/types"
+	p2p "pocket/prep2p"
+	p2p_types "pocket/prep2p/pre_p2p_types"
 	"pocket/shared"
-	"pocket/shared/events"
 
 	"github.com/manifoldco/promptui"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -139,15 +140,27 @@ func broadcastMessage(m consensus_types.GenericConsensusMessage, network p2p_typ
 		log.Println("[ERROR] Failed to encode message: ", err)
 		return
 	}
-	networkMessage := &p2p_types.NetworkMessage{
-		Topic: events.CONSENSUS_MESSAGE, // TODO: I don't think we should be hardcoding this here.
-		Data:  messageData,
+	consensusProtoMsg := &messages.ConsensusMessage{
+		Data: messageData,
 	}
-	bytes, err := p2p.EncodeNetworkMessage(networkMessage)
+
+	anyProto, err := anypb.New(consensusProtoMsg)
 	if err != nil {
-		log.Println("[ERROR] Failed to encode network message: ", err)
+		log.Println("[ERROR] Failed to encode message: ", err)
+		return
+	}
+
+	networkProtoMsg := &typespb.NetworkMessage{
+		Topic: messages.PocketTopic_CONSENSUS.String(),
+		Data:  anyProto,
+	}
+
+	bytes, err := proto.Marshal(networkProtoMsg)
+	if err != nil {
+		log.Println("[ERROR] Failed to encode message: ", err)
 		return
 	}
 
 	network.NetworkBroadcast(bytes, 0)
+	// m.GetPocketBusMod().GetNetworkModule().BroadcastMessage(networkProtoMsg)
 }

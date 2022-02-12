@@ -4,7 +4,6 @@ import (
 	"log"
 	"pocket/consensus/pkg/config"
 	"pocket/shared/context"
-	"pocket/shared/messages"
 	"pocket/shared/modules"
 )
 
@@ -52,6 +51,6 @@ func (m *P2PModule) GetPocketBusMod() modules.PocketBusModule {
 	return m.pocketBusMod
 }
 
-func (m *P2PModule) BroadcastMessage(msg *messages.NetworkMessage) error {
+func (m *P2PModule) BroadcastMessage(msg *typespb.NetworkMessage) error {
 	return m.gater.BroadcastTempWrapper(msg)
 }

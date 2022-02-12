@@ -19,12 +19,12 @@ import (
 	p2p_types_mocks "pocket/consensus/pkg/p2p/p2p_types/mocks"
 	"pocket/consensus/pkg/pocket"
 	"pocket/consensus/pkg/types"
-	"pocket/consensus/pkg/types/typespb"
 	"pocket/shared"
 	pcontext "pocket/shared/context"
 	"pocket/shared/events"
 	"pocket/shared/modules"
 	mock_modules "pocket/shared/modules/mocks"
+	"pocket/shared/typespb"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -337,7 +337,7 @@ func triggerDebugMessage(t *testing.T, node *pocket.PocketNode, action consensus
 
 	event := events.PocketEvent{
 		SourceModule: events.TEST,
-		PocketTopic:  events.CONSENSUS_MESSAGE,
+		PocketTopic:  events.CONSENSUS,
 		MessageData:  data,
 	}
 	node.GetPocketBusMod().PublishEventToBus(&event)
@@ -374,7 +374,7 @@ func prepareEvent(message *consensus_types.ConsensusMessage) events.PocketEvent 
 
 	return events.PocketEvent{
 		SourceModule: events.TEST,
-		PocketTopic:  events.CONSENSUS_MESSAGE,
+		PocketTopic:  events.CONSENSUS,
 		MessageData:  buff.Bytes(),
 	}
 }

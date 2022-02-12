@@ -5,23 +5,23 @@ import (
 	consensus_types "pocket/consensus/pkg/consensus/types"
 	"pocket/consensus/pkg/types"
 	"pocket/shared/events"
-	"pocket/shared/messages"
+	"pocket/shared/typespb"
 
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func (module *dkgModule) broadcastToNodes(message *DKGMessage) {
 	event := events.PocketEvent{
-		SourceModule: events.CONSENSUS,
-		PocketTopic:  events.P2P_BROADCAST_MESSAGE,
+		SourceModule: events.CONSENSUS_MODULE,
+		PocketTopic:  string(events.P2P_BROADCAST_MESSAGE),
 	}
 	module.publishEvent(message, &event)
 }
 
 func (module *dkgModule) sendToNode(message *DKGMessage, destNode *types.NodeId) {
 	event := events.PocketEvent{
-		SourceModule: events.CONSENSUS,
-		PocketTopic:  events.P2P_SEND_MESSAGE,
+		SourceModule: events.CONSENSUS_MODULE,
+		PocketTopic:  string(events.P2P_SEND_MESSAGE),
 		Destination:  *destNode,
 	}
 	module.publishEvent(message, &event)
@@ -39,7 +39,7 @@ func (module *dkgModule) publishEvent(message *DKGMessage, event *events.PocketE
 		return
 	}
 
-	consensusProtoMsg := &messages.ConsensusMessage{
+	consensusProtoMsg := &typespb.ConsensusMessage{
 		Data: data,
 	}
 
@@ -49,15 +49,15 @@ func (module *dkgModule) publishEvent(message *DKGMessage, event *events.PocketE
 		return
 	}
 
-	networkProtoMsg := &messages.NetworkMessage{
-		Topic: messages.PocketTopic_CONSENSUS.String(),
+	networkProtoMsg := &typespb.NetworkMessage{
+		Topic: typespb.PocketTopic_CONSENSUS.String(),
 		Data:  anyProto,
 	}
 
 	module.GetPocketBusMod().GetNetworkModule().BroadcastMessage(networkProtoMsg)
 
 	//networkMsg := &p2p_types.NetworkMessage{
-	//	Topic: events.CONSENSUS_MESSAGE,
+	//	Topic: events.CONSENSUS,
 	//	Data:  data,
 	//}
 	//

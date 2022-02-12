@@ -1,10 +1,13 @@
 syntax = "proto3";
+
+package typespb;
+option go_package = "./typespb/";
+
 import "vote.proto";
 import "session.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
-package utility;
-option go_package = "/utility/types/";
+
 
 message MessageSend {
   bytes FromAddress = 1;
@@ -133,14 +136,14 @@ message MessageUnstakeFisherman {
 }
 
 message MessageTestScore {
-  utility.SessionHeader SessionHeader = 1;
+  SessionHeader SessionHeader = 1;
   google.protobuf.Timestamp FirstSampleTime = 2;
   uint32 NumberOfSamples = 3;
   repeated uint32 NullIndicies = 4;
 }
 
 message MessageProveTestScore {
-  utility.SessionHeader SessionHeader = 1;
+  SessionHeader SessionHeader = 1;
   google.protobuf.Timestamp Leaf = 2;
 }
 
@@ -162,7 +165,7 @@ message MessageChangeParameter {
 }
 
 message MessageDoubleSign {
-  utility.Vote VoteA = 1;
-  utility.Vote VoteB = 2;
+  Vote VoteA = 1;
+  Vote VoteB = 2;
   optional bytes ReporterAddress = 3;
 }

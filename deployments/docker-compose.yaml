@@ -20,13 +20,17 @@ services:
       context: ../
       dockerfile: ./build/Dockerfile
     expose:
+      - "7080" # debug
       - "8080"
       - "9080"
     ports:
+      - "7081:7081" # connect with golang via 7081
       - "8081:8080"
       - "9081:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    environment:
+      - DEBUG_PORT=7081
 
   node2.consensus:
     container_name: node2.consensus
@@ -36,13 +40,17 @@ services:
       context: ../
       dockerfile: ./build/Dockerfile
     expose:
+      - "7082"
       - "8080"
       - "9080"
     ports:
+      - "7082:8082"
       - "8082:8080"
       - "9082:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    # environment:
+    #   - DEBUG_PORT=7082
 
   node3.consensus:
     container_name: node3.consensus
@@ -52,13 +60,17 @@ services:
       context: ../
       dockerfile: ./build/Dockerfile
     expose:
+      - "7083"
       - "8080"
       - "9080"
     ports:
+      - "7083:7083"
       - "8083:8080"
       - "9083:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    # environment:
+    #   - DEBUG_PORT=7083
 
   node4.consensus:
     container_name: node4.consensus

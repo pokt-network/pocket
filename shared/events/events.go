@@ -4,6 +4,8 @@ import (
 	"net"
 
 	"pocket/consensus/pkg/types"
+
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type SourceModule string
@@ -11,10 +13,10 @@ type PocketEventTopic string
 
 const (
 	// Core
-	CONSENSUS   SourceModule = "consensus"
-	P2P         SourceModule = "p2p"
-	persistence SourceModule = "persistence"
-	UTILITY     SourceModule = "utility"
+	CONSENSUS_MODULE SourceModule = "consensus"
+	P2P              SourceModule = "p2p"
+	persistence      SourceModule = "persistence"
+	UTILITY          SourceModule = "utility"
 
 	// Consensus
 	STATESYNC       SourceModule = "statesync"
@@ -27,7 +29,7 @@ const (
 
 const (
 	// Consensus
-	CONSENSUS_MESSAGE           PocketEventTopic = "CONSENSUS_MESSAGE"
+	CONSENSUS                   PocketEventTopic = "CONSENSUS"
 	CONSENSUS_TELEMETRY_MESSAGE PocketEventTopic = "CONSENSUS_TELEMETRY_MESSAGE"
 
 	// Consensus auxilary
@@ -45,9 +47,12 @@ const (
 
 type PocketEvent struct {
 	SourceModule SourceModule
-	PocketTopic  PocketEventTopic
-	MessageData  []byte
 	Destination  types.NodeId
+
+	// PocketTopic  PocketEventTopic
+	// MessageData  []byte
+	PocketTopic string
+	MessageData *anypb.Any
 
 	NetworkConnection net.Conn // TODO: Only used for debugging/telemetry. Move to PocketContext somehow...
 }

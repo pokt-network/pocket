@@ -1,7 +1,7 @@
 syntax = "proto3";
 import "google/protobuf/any.proto";
-package utility;
-option go_package = "/utility/types/";
+package typespb;
+option go_package = "./typespb/";
 
 message Transaction {
   google.protobuf.Any msg = 1;

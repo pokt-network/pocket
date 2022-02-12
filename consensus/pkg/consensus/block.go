@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"pocket/consensus/pkg/types/typespb"
 	"pocket/shared"
+	"pocket/shared/typespb"
 )
 
 func (m *consensusModule) prepareBlock() (*typespb.Block, error) {
@@ -38,15 +38,15 @@ func (m *consensusModule) prepareBlock() (*typespb.Block, error) {
 
 		LastBlockHash:   pocketState.AppHash,
 		ProposerAddress: []byte(pocketState.Address),
-		ProposerId:      uint32(m.NodeId),
+		// ProposerId:      uint32(m.NodeId),
 		// QuorumCertificate // TODO
 	}
 
 	fmt.Println("[TODO] INTEGRATION_TEMP: Not useing txs yet: ", txs)
 	block := &typespb.Block{
-		BlockHeader:       header,
-		Transactions:      make([]*typespb.Transaction, 0), // TODO: Use `txs` here.
-		ConsensusEvidence: make([]*typespb.Evidence, 0),
+		BlockHeader: header,
+		// Transactions:      make([]*typespb.Transaction, 0), // TODO: Use `txs` here.
+		// ConsensusEvidence: make([]*typespb.Evidence, 0),
 	}
 
 	return block, nil
@@ -64,9 +64,8 @@ func (m *consensusModule) isValidBlock(block *typespb.Block) bool {
 func (m *consensusModule) deliverTxToUtility(block *typespb.Block) error {
 	utilityModule := m.GetPocketBusMod().GetUtilityModule()
 
-
 	proposer := []byte(strconv.Itoa(int(m.NodeId)))
-	tx := make([][]byte, 0) // INTEGRATION_TEMP: Get from block.Transactions
+	tx := make([][]byte, 0)                // INTEGRATION_TEMP: Get from block.Transactions
 	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.UtilityContext.GetPersistanceContext().GetLastByzValidators
 
 	appHash, err := utilityModule.ApplyBlock(int64(m.Height), proposer, tx, lastByzValidators)

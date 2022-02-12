@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"pocket/utility/utility"
 	"pocket/utility/utility/types"
 )
@@ -52,9 +51,10 @@ func InitGenesis(u *utility.UtilityContext, state *GenesisState) types.Error {
 }
 
 func ExportState(u *utility.UtilityContext) (*GenesisState, types.Error) {
-	c, ok := u.Context.PersistenceContext.(*MockPersistenceContext)
-	if !ok {
-		return nil, types.ErrExportState(fmt.Errorf("couldn't convert context to `mock persistence context`"))
-	}
-	return c.ExportState()
+	panic("Commented out ExportState in genesis.go")
+	// c, ok := u.Context.PersistenceContext.(*MockPersistenceContext)
+	// if !ok {
+	// 	return nil, types.ErrExportState(fmt.Errorf("couldn't convert context to `mock persistence context`"))
+	// }
+	// return c.ExportState()
 }

@@ -9,7 +9,8 @@ import (
 	"net"
 
 	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/p2p/p2p_types"
+
+	p2p_types "pocket/prep2p/pre_p2p_types"
 
 	"github.com/mindstand/gogm/v2"
 	"github.com/neo4j/neo4j-go-driver/neo4j"

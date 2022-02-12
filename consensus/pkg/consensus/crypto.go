@@ -2,8 +2,8 @@ package consensus
 
 import (
 	"pocket/consensus/pkg/types"
-	"pocket/consensus/pkg/types/typespb"
 	"pocket/shared"
+	"pocket/shared/typespb"
 )
 
 type Signature []byte

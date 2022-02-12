@@ -5,13 +5,16 @@ import (
 
 	consensus_types "pocket/consensus/pkg/consensus/types"
 	"pocket/shared/context"
+
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type ConsensusModule interface {
 	PocketModule
 
-	HandleMessage(*context.PocketContext, *consensus_types.ConsensusMessage)
-	HandleTransaction(*context.PocketContext, []byte)
+	HandleMessage(*context.PocketContext, *anypb.Any)
+	// HandleMessage(*context.PocketContext, *consensus_types.ConsensusMessage)
+	HandleTransaction(*context.PocketContext, *anypb.Any)
 	HandleEvidence(*context.PocketContext, []byte)
 
 	// Debugging & Telemetry

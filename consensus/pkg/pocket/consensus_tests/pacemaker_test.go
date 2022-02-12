@@ -8,11 +8,11 @@ import (
 	"pocket/consensus/pkg/consensus"
 	"pocket/consensus/pkg/pocket"
 	"pocket/consensus/pkg/types"
-	"pocket/consensus/pkg/types/typespb"
 	"pocket/shared"
 	"pocket/shared/context"
 	"pocket/shared/events"
 	"pocket/shared/modules"
+	"pocket/shared/typespb"
 
 	"github.com/stretchr/testify/require"
 )

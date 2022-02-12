@@ -1,6 +1,6 @@
 syntax = "proto3";
-package utility;
-option go_package = "/utility/types/";
+package typespb;
+option go_package = "./typespb/";
 
 message Session {
   SessionHeader SessionHeader = 1;

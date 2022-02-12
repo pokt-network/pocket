@@ -1,13 +1,17 @@
 package modules
 
+import "github.com/syndtr/goleveldb/leveldb/memdb"
+
 type PersistenceModule interface {
 	PocketModule
 	NewContext(height int64) (PersistenceContext, error)
+	GetCommitDB() *memdb.DB
 }
 
 type PersistenceContext interface {
 	GetLatestBlockHeight() (uint64, error)
-	GetBlockHash(height uint64) ([]byte, error)
+	// GetBlockHash(height uint64) ([]byte, error)
+	GetBlockHash(height int64) ([]byte, error)
 
 	// Context Operations
 	NewSavePoint([]byte) error

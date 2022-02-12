@@ -97,7 +97,7 @@ func (u *UtilityContext) GetAppHash() (appHash []byte, err types.Error) {
 
 func (u *UtilityContext) GetBlockHash(height int64) (blockHash []byte, err types.Error) {
 	store := u.Store()
-	hash, er := store.GetBlockHash(uint64(height))
+	hash, er := store.GetBlockHash(int64(height))
 	if er != nil {
 		return nil, types.ErrGetBlockHash(er)
 	}
