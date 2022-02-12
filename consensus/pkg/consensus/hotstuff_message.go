@@ -24,7 +24,7 @@ type HotstuffMessage struct {
 	Step   Step
 	Height BlockHeight
 	Round  Round
-	Block  *typespb.Block
+	Block  *typespb.BlockConsTemp
 
 	// TODO: When moving to Protos, this should be a simple oneoff.
 	JustifyQC  *QuorumCertificate // Non-nil from LEADER -> REPLICA; one of {HighQC, TimeoutQC, CommitQC}
@@ -73,7 +73,7 @@ func CreateProposeMessage(m *consensusModule, step Step, qc *QuorumCertificate) 
 	return message, nil
 }
 
-func CreateVoteMessage(m *consensusModule, step Step, block *typespb.Block) (*HotstuffMessage, error) {
+func CreateVoteMessage(m *consensusModule, step Step, block *typespb.BlockConsTemp) (*HotstuffMessage, error) {
 	if block == nil {
 		return nil, fmt.Errorf("If a replica is trying to vote, the block should never be nil.")
 	}

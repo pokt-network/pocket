@@ -12,7 +12,7 @@ import (
 
 type UtilityModule struct {
 	modules.UtilityModule
-	pocketBusMod modules.PocketBusModule
+	pocketBusMod     modules.PocketBusModule
 
 	Mempool types.Mempool
 }
@@ -31,12 +31,12 @@ func Create(config *config.Config) (modules.UtilityModule, error) {
 	}, nil
 }
 
-func (p *UtilityModule) Start(ctx *context.PocketContext) error {
+func(p *UtilityModule) Start(ctx *context.PocketContext) error {
 	panic("Why are you starting the utility module?")
 	return nil
 }
 
-func (p *UtilityModule) Stop(ctx *context.PocketContext) error {
+func(p *UtilityModule) Stop(ctx *context.PocketContext) error {
 	return nil
 }
 
@@ -61,12 +61,10 @@ func (u *UtilityModule) NewUtilityContextWrapper(height int64) (modules.UtilityC
 
 func (u *UtilityModule) NewUtilityContext(height int64) (modules.UtilityContextInterface, types.Error) {
 	ctx, err := u.GetPocketBusMod().GetPersistenceModule().NewContext(height)
-
-
+	// context, err := u.Bus.GetPersistenceModule().NewContext(height)
 	if err != nil {
 		return nil, types.ErrNewContext(err)
 	}
-
 	return &UtilityContext{
 		LatestHeight: height,
 		Mempool:      u.Mempool,

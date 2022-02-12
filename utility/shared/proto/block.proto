@@ -1,7 +1,7 @@
 syntax = "proto3";
 import "google/protobuf/timestamp.proto";
-package typespb;
-option go_package = "./typespb/";
+package utility;
+option go_package = "/utility/test/";
 
 message BlockHeader {
   int64 Height = 1;

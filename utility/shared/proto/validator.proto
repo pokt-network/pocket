@@ -1,15 +1,15 @@
 syntax = "proto3";
-package typespb;
-option go_package = "./typespb/";
+package utility;
+option go_package = "/utility/test/";
 
-message App {
+message Validator {
   bytes Address = 1;
   bytes PublicKey = 2;
   bool Paused = 3;
   int32 Status = 4;
-  repeated string Chains = 5;
-  string MaxRelays = 6;
-  string StakedTokens = 7;
+  string ServiceURL = 5;
+  string StakedTokens = 6;
+  uint32 MissedBlocks = 7;
   uint64 PausedHeight = 8;
   int64 UnstakingHeight = 9;
   bytes Output = 10;

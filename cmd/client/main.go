@@ -15,6 +15,7 @@ import (
 	p2p "pocket/prep2p"
 	p2p_types "pocket/prep2p/pre_p2p_types"
 	"pocket/shared"
+	"pocket/shared/messages"
 
 	"github.com/manifoldco/promptui"
 	"google.golang.org/protobuf/proto"
@@ -150,7 +151,7 @@ func broadcastMessage(m consensus_types.GenericConsensusMessage, network p2p_typ
 		return
 	}
 
-	networkProtoMsg := &typespb.NetworkMessage{
+	networkProtoMsg := &messages.NetworkMessage{
 		Topic: messages.PocketTopic_CONSENSUS.String(),
 		Data:  anyProto,
 	}
@@ -162,5 +163,4 @@ func broadcastMessage(m consensus_types.GenericConsensusMessage, network p2p_typ
 	}
 
 	network.NetworkBroadcast(bytes, 0)
-	// m.GetPocketBusMod().GetNetworkModule().BroadcastMessage(networkProtoMsg)
 }

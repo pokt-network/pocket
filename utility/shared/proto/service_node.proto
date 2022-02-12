@@ -1,8 +1,8 @@
 syntax = "proto3";
-package typespb;
-option go_package = "./typespb/";
+package utility;
+option go_package = "/utility/test/";
 
-message Fisherman {
+message ServiceNode {
   bytes Address = 1;
   bytes PublicKey = 2;
   bool Paused = 3;

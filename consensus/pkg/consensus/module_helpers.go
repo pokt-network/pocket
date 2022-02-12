@@ -6,7 +6,7 @@ import (
 	consensus_types "pocket/consensus/pkg/consensus/types"
 	"pocket/consensus/pkg/types"
 	"pocket/shared/events"
-	"pocket/shared/typespb"
+	"pocket/shared/messages"
 
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -40,7 +40,7 @@ func (m *consensusModule) publishConsensusEvent(message consensus_types.GenericC
 		return
 	}
 
-	consensusProtoMsg := &typespb.ConsensusMessage{
+	consensusProtoMsg := &messages.ConsensusMessage{
 		Data: data,
 	}
 
@@ -50,17 +50,12 @@ func (m *consensusModule) publishConsensusEvent(message consensus_types.GenericC
 		return
 	}
 
-	networkProtoMsg := &typespb.NetworkMessage{
-		Topic: typespb.PocketTopic_CONSENSUS.String(),
+	networkProtoMsg := &messages.NetworkMessage{
+		Topic: messages.PocketTopic_CONSENSUS.String(),
 		Data:  anyProto,
 	}
 
 	m.GetPocketBusMod().GetNetworkModule().BroadcastMessage(networkProtoMsg)
-
-	// if err := m.GetPocketBusMod().GetNetworkModule().ConsensusBroadcast(data); err != nil {
-	// 	m.nodeLogError("Error broadcasting message: " + err.Error())
-	// 	return
-	// }
 }
 
 // TODO: Move this into persistence.

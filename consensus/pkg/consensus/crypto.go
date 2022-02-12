@@ -21,7 +21,7 @@ type QuorumCertificate struct {
 	Height             BlockHeight
 	Round              Round
 	Step               Step
-	Block              *typespb.Block
+	Block              *typespb.BlockConsTemp
 	ThresholdSignature ThresholdSignature
 }
 

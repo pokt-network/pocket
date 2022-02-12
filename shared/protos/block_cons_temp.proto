@@ -6,13 +6,13 @@ package pocket;
 
 option go_package = "/typespb/";
 
-message Block {
-  BlockHeader BlockHeader = 1;
+message BlockConsTemp {
+  BlockHeaderConsTemp BlockHeader = 1;
   repeated Transaction Transactions = 2;
   repeated Evidence ConsensusEvidence = 3;
 }
 
-message BlockHeader {
+message BlockHeaderConsTemp {
   int64 Height = 1;
   string Hash = 2;
   // string NetworkID = 3; // TODO: What is this for?

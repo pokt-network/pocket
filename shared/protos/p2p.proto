@@ -2,9 +2,9 @@ syntax = "proto3";
 
 import "google/protobuf/any.proto";
 
-package typespb;
+package p2p;
 
-option go_package = "./typespb";
+option go_package = "./messages";
 
 enum PocketTopic {
   CONSENSUS = 0;

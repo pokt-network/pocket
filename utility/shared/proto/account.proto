@@ -1,6 +1,6 @@
 syntax = "proto3";
-package typespb;
-option go_package = "./typespb/";
+package utility;
+option go_package = "/utility/test/";
 
 message Account {
   bytes Address = 1;

@@ -6,7 +6,7 @@ import (
 	"net"
 
 	"pocket/shared/events"
-	"pocket/shared/typespb"
+	"pocket/shared/messages"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -20,7 +20,7 @@ func (m *networkModule) handleNetworkMessage(conn net.Conn) {
 		return
 	}
 
-	networkMessage := typespb.NetworkMessage{}
+	networkMessage := messages.NetworkMessage{}
 	proto.Unmarshal(data, &networkMessage)
 	// networkMessage, err := DecodeNetworkMessage(data)
 	if err != nil {

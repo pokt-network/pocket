@@ -11,6 +11,7 @@ import (
 	consensus_types "pocket/consensus/pkg/consensus/types"
 	"pocket/consensus/pkg/types"
 	"pocket/shared/context"
+	"pocket/shared/messages"
 	"pocket/shared/modules"
 	"pocket/shared/typespb"
 
@@ -29,7 +30,7 @@ type consensusModule struct {
 	Height BlockHeight
 	Round  Round
 	Step   Step
-	Block  *typespb.Block // The current block being proposed.
+	Block  *typespb.BlockConsTemp // The current block being proposed.
 
 	HighPrepareQC *QuorumCertificate // highest QC for which replica voted PRECOMMIT.
 	LockedQC      *QuorumCertificate // highest QC for which replica voted COMMIT.
@@ -160,7 +161,7 @@ func (m *consensusModule) Stop(ctx *context.PocketContext) error {
 }
 
 func (m *consensusModule) HandleMessage(ctx *context.PocketContext, anyMessage *anypb.Any) {
-	messageProto := &typespb.ConsensusMessage{}
+	messageProto := &messages.ConsensusMessage{}
 
 	if err := anyMessage.UnmarshalTo(messageProto); err != nil {
 		m.nodeLogError("[HandleMessage] Error unmarshalling message: %v" + err.Error())
@@ -188,7 +189,7 @@ func (m *consensusModule) HandleMessage(ctx *context.PocketContext, anyMessage *
 }
 
 func (m *consensusModule) HandleTransaction(ctx *context.PocketContext, anyMessage *anypb.Any) {
-	messageProto := &typespb.ConsensusMessage{}
+	messageProto := &messages.ConsensusMessage{}
 
 	if err := anyMessage.UnmarshalTo(messageProto); err != nil {
 		m.nodeLogError("[HandleMessage] Error unmarshalling message: %v" + err.Error())

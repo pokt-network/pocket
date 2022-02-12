@@ -6,11 +6,14 @@ import (
 	"pocket/consensus/pkg/config"
 	"pocket/shared/context"
 	"pocket/shared/modules"
-	"pocket/utility/utility/types"
 
 	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 	"github.com/syndtr/goleveldb/leveldb/util"
+
+	// REALLY BAD. WE SHOULD NEVER DO THIS.
+	"pocket/utility/utility/test"
+	"pocket/utility/utility/types"
 )
 
 type persistenceModule struct {
@@ -51,23 +54,23 @@ func (m *persistenceModule) GetPocketBusMod() modules.PocketBusModule {
 }
 
 func (m *persistenceModule) NewContext(height int64) (modules.PersistenceContext, error) {
-	newDB := NewMemDB()
-	it := m.CommitDB.NewIterator(&util.Range{Start: HeightKey(height, nil), Limit: HeightKey(height+1, nil)})
+	newDB := test.NewMemDB()
+	it := m.CommitDB.NewIterator(&util.Range{Start: test.HeightKey(height, nil), Limit: test.HeightKey(height+1, nil)})
 	it.First()
 	defer it.Release()
 	for ; it.Valid(); it.Next() {
-		err := newDB.Put(KeyFromHeightKey(it.Key()), it.Value())
+		err := newDB.Put(test.KeyFromHeightKey(it.Key()), it.Value())
 		if err != nil {
 			return nil, err
 		}
 	}
-	context := &MockPersistenceContext{
+	context := &test.MockPersistenceContext{
 		Height:     0,
 		Parent:     m,
 		SavePoints: make(map[string]int),
 		DBs:        make([]*memdb.DB, 0),
 	}
-	context.SavePoints[hex.EncodeToString(firstSavePointKey)] = types.ZeroInt
+	context.SavePoints[hex.EncodeToString(test.FirstSavePointKey)] = types.ZeroInt
 	context.DBs = append(context.DBs, newDB)
 	return context, nil
 }

@@ -10,8 +10,8 @@ import (
 	"pocket/prep2p/pre_p2p_types"
 	"pocket/shared"
 	"pocket/shared/context"
+	"pocket/shared/messages"
 	"pocket/shared/modules"
-	"pocket/shared/typespb"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -115,7 +115,7 @@ func (m *networkModule) Stop(ctx *context.PocketContext) error {
 // 	return m.network.NetworkSend(data, destNodeId)
 // }
 
-func (m *networkModule) BroadcastMessage(msg *typespb.NetworkMessage) error {
+func (m *networkModule) BroadcastMessage(msg *messages.NetworkMessage) error {
 	data, err := proto.Marshal(msg)
 	if err != nil {
 		return err
@@ -123,7 +123,7 @@ func (m *networkModule) BroadcastMessage(msg *typespb.NetworkMessage) error {
 	return m.network.NetworkBroadcast(data, m.nodeId)
 }
 
-func (m *networkModule) Send(addr string, msg *typespb.NetworkMessage) error {
+func (m *networkModule) Send(addr string, msg *messages.NetworkMessage) error {
 	data, err := proto.Marshal(msg)
 	if err != nil {
 		return err

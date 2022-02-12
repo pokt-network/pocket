@@ -9,7 +9,7 @@ import (
 	"pocket/shared/typespb"
 )
 
-func (m *consensusModule) prepareBlock() (*typespb.Block, error) {
+func (m *consensusModule) prepareBlock() (*typespb.BlockConsTemp, error) {
 	if m.UtilityContext != nil {
 		m.nodeLog("[WARN] Why is the node utility context not nil when preparing a new block?. Realising for now...")
 		m.UtilityContext.ReleaseContext()
@@ -32,7 +32,7 @@ func (m *consensusModule) prepareBlock() (*typespb.Block, error) {
 
 	pocketState := shared.GetPocketState()
 
-	header := &typespb.BlockHeader{
+	header := &typespb.BlockHeaderConsTemp{
 		Height: int64(m.Height),
 		Hash:   strconv.Itoa(int(m.Height)),
 
@@ -43,7 +43,7 @@ func (m *consensusModule) prepareBlock() (*typespb.Block, error) {
 	}
 
 	fmt.Println("[TODO] INTEGRATION_TEMP: Not useing txs yet: ", txs)
-	block := &typespb.Block{
+	block := &typespb.BlockConsTemp{
 		BlockHeader: header,
 		// Transactions:      make([]*typespb.Transaction, 0), // TODO: Use `txs` here.
 		// ConsensusEvidence: make([]*typespb.Evidence, 0),
@@ -52,7 +52,7 @@ func (m *consensusModule) prepareBlock() (*typespb.Block, error) {
 	return block, nil
 }
 
-func (m *consensusModule) isValidBlock(block *typespb.Block) bool {
+func (m *consensusModule) isValidBlock(block *typespb.BlockConsTemp) bool {
 	if block == nil {
 		return false
 	}
@@ -61,7 +61,7 @@ func (m *consensusModule) isValidBlock(block *typespb.Block) bool {
 }
 
 // TODO: Should this be async?
-func (m *consensusModule) deliverTxToUtility(block *typespb.Block) error {
+func (m *consensusModule) deliverTxToUtility(block *typespb.BlockConsTemp) error {
 	utilityModule := m.GetPocketBusMod().GetUtilityModule()
 
 	proposer := []byte(strconv.Itoa(int(m.NodeId)))
@@ -81,7 +81,7 @@ func (m *consensusModule) deliverTxToUtility(block *typespb.Block) error {
 	return nil
 }
 
-func (m *consensusModule) commitBlock(block *typespb.Block) error {
+func (m *consensusModule) commitBlock(block *typespb.BlockConsTemp) error {
 	m.nodeLog(fmt.Sprintf("APPLYING BLOCK AT HEIGHT %d.", m.Height))
 
 	m.UtilityContext.ReleaseContext()

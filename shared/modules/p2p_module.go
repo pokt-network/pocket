@@ -2,7 +2,7 @@ package modules
 
 import (
 	"pocket/shared/events"
-	"pocket/shared/typespb"
+	"pocket/shared/messages"
 )
 
 type NetworkMessage struct {
@@ -13,6 +13,6 @@ type NetworkMessage struct {
 type NetworkModule interface {
 	PocketModule
 
-	BroadcastMessage(msg *typespb.NetworkMessage) error
-	Send(addr string, msg *typespb.NetworkMessage) error
+	BroadcastMessage(msg *messages.NetworkMessage) error
+	Send(addr string, msg *messages.NetworkMessage) error
 }

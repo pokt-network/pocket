@@ -5,7 +5,7 @@ import (
 	consensus_types "pocket/consensus/pkg/consensus/types"
 	"pocket/consensus/pkg/types"
 	"pocket/shared/events"
-	"pocket/shared/typespb"
+	"pocket/shared/messages"
 
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -39,7 +39,7 @@ func (module *dkgModule) publishEvent(message *DKGMessage, event *events.PocketE
 		return
 	}
 
-	consensusProtoMsg := &typespb.ConsensusMessage{
+	consensusProtoMsg := &messages.ConsensusMessage{
 		Data: data,
 	}
 
@@ -49,8 +49,8 @@ func (module *dkgModule) publishEvent(message *DKGMessage, event *events.PocketE
 		return
 	}
 
-	networkProtoMsg := &typespb.NetworkMessage{
-		Topic: typespb.PocketTopic_CONSENSUS.String(),
+	networkProtoMsg := &messages.NetworkMessage{
+		Topic: messages.PocketTopic_CONSENSUS.String(),
 		Data:  anyProto,
 	}
 

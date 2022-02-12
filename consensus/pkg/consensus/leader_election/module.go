@@ -10,8 +10,8 @@ import (
 	"pocket/consensus/pkg/types"
 	"pocket/shared"
 	"pocket/shared/context"
+	"pocket/shared/messages"
 	"pocket/shared/modules"
-	"pocket/shared/typespb"
 
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -205,7 +205,7 @@ func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElect
 		return err
 	}
 
-	consensusProtoMsg := &typespb.ConsensusMessage{
+	consensusProtoMsg := &messages.ConsensusMessage{
 		Data: data,
 	}
 
@@ -214,8 +214,8 @@ func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElect
 		return err
 	}
 
-	networkProtoMsg := &typespb.NetworkMessage{
-		Topic: typespb.PocketTopic_CONSENSUS.String(),
+	networkProtoMsg := &messages.NetworkMessage{
+		Topic: messages.PocketTopic_CONSENSUS.String(),
 		Data:  anyProto,
 	}
 
