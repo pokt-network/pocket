@@ -37,7 +37,10 @@ client_connect:
 
 ## Attached docker compose of all the services except for neo4j w/ hot reload.
 compose_and_watch:
-	docker-compose -f deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+	docker-compose -f deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+
+kill_all:
+	docker-compose -f deployments/docker-compose.yaml down
 
 ## Detached docker compose of all the services except for neo4j  w/ hot reload.
 compose_and_watch_d:
@@ -69,6 +72,12 @@ generate_protos:
 ## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
 v1_generate_protos:
 	protoc -I=./shared/protos --go_out=./shared shared/protos/*.proto
+
+protogen-m1:
+	docker build  -t pocket/proto-generator -f ./build/Dockerfile.m1.proto . && docker run --platform=linux/amd64 -it pocket/proto-generator
+
+protogen:
+	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it pocket/proto-generator
 
 # Good stack overflow page for organizing tests: https://stackoverflow.com/questions/25965584/separating-unit-tests-and-integration-tests-in-go
 # Setting cout=1 for tests to avoid caching.
