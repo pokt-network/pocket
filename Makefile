@@ -37,6 +37,10 @@ client_connect:
 
 ## Attached docker compose of all the services except for neo4j w/ hot reload.
 compose_and_watch:
+	docker-compose -f deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+
+## Attached docker compose of all the services except for neo4j w/ hot reload.
+compose_and_watch_and_build:
 	docker-compose -f deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 kill_all:
