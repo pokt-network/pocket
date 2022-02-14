@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"log"
+	"strconv"
 
 	consensus_types "pocket/consensus/pkg/consensus/types"
 	"pocket/consensus/pkg/types"
@@ -16,7 +17,8 @@ func (m *consensusModule) broadcastToNodes(message consensus_types.GenericConsen
 		SourceModule: events.CONSENSUS_MODULE,
 		PocketTopic:  string(events.P2P_BROADCAST_MESSAGE),
 	}
-	m.publishConsensusEvent(message, &event)
+	networkProtoMsg := m.getConsensusNetworkMessage(message, &event)
+	m.GetPocketBusMod().GetNetworkModule().BroadcastMessage(networkProtoMsg)
 }
 
 func (m *consensusModule) sendToNode(message consensus_types.GenericConsensusMessage, destNode *types.NodeId) {
@@ -25,10 +27,13 @@ func (m *consensusModule) sendToNode(message consensus_types.GenericConsensusMes
 		PocketTopic:  string(events.P2P_SEND_MESSAGE),
 		Destination:  *destNode,
 	}
-	m.publishConsensusEvent(message, &event)
+	// PreP2P hack
+	addr := strconv.Itoa(int(*destNode))
+	networkProtoMsg := m.getConsensusNetworkMessage(message, &event)
+	m.GetPocketBusMod().GetNetworkModule().Send(addr, networkProtoMsg)
 }
 
-func (m *consensusModule) publishConsensusEvent(message consensus_types.GenericConsensusMessage, event *events.PocketEvent) {
+func (m *consensusModule) getConsensusNetworkMessage(message consensus_types.GenericConsensusMessage, event *events.PocketEvent) *messages.NetworkMessage {
 	consensusMessage := &consensus_types.ConsensusMessage{
 		Message: message,
 		Sender:  m.NodeId,
@@ -37,7 +42,7 @@ func (m *consensusModule) publishConsensusEvent(message consensus_types.GenericC
 	data, err := consensus_types.EncodeConsensusMessage(consensusMessage)
 	if err != nil {
 		m.nodeLogError("Error encoding message: " + err.Error())
-		return
+		return nil
 	}
 
 	consensusProtoMsg := &messages.ConsensusMessage{
@@ -47,15 +52,14 @@ func (m *consensusModule) publishConsensusEvent(message consensus_types.GenericC
 	anyProto, err := anypb.New(consensusProtoMsg)
 	if err != nil {
 		m.nodeLogError("Error encoding any proto: " + err.Error())
-		return
+		return nil
 	}
 
 	networkProtoMsg := &messages.NetworkMessage{
 		Topic: messages.PocketTopic_CONSENSUS.String(),
 		Data:  anyProto,
 	}
-
-	m.GetPocketBusMod().GetNetworkModule().BroadcastMessage(networkProtoMsg)
+	return networkProtoMsg
 }
 
 // TODO: Move this into persistence.

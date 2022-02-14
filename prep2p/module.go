@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 
 	"pocket/consensus/pkg/config"
 	"pocket/consensus/pkg/types"
@@ -128,7 +129,14 @@ func (m *networkModule) Send(addr string, msg *messages.NetworkMessage) error {
 	if err != nil {
 		return err
 	}
-	destNodeId := types.NodeId(1) // Get from addr
+
+	// PreP2P hack
+	nodeIdInt, err := strconv.Atoi(addr)
+	if err != nil {
+		return err
+	}
+	destNodeId := types.NodeId(nodeIdInt)
+
 	return m.network.NetworkSend(data, destNodeId)
 }
 
