@@ -15,6 +15,7 @@ const (
 	StateSyncConsensusMessage ConsensusMessageType = "StateSync"
 	LeaderElectionMessage     ConsensusMessageType = "LeaderElection"
 	DebugConsensusMessage     ConsensusMessageType = "Debug"
+	TxWrapperMessageType      ConsensusMessageType = "Transaction"
 )
 
 type GenericConsensusMessage interface {

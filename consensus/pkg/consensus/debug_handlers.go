@@ -7,12 +7,15 @@ import (
 	"pocket/consensus/pkg/consensus/dkg"
 	"pocket/shared"
 	"pocket/shared/context"
+	"pocket/shared/events"
 )
 
 func (m *consensusModule) handleDebugMessage(message *DebugMessage) {
 	switch message.Action {
 	case TriggerNextView:
 		m.handleTriggerNextView(message)
+	case SendTx:
+		m.handleSendTx(message)
 	case TriggerDKG:
 		m.handleTriggerDKG(message)
 	case TogglePaceMakerManualMode:
@@ -25,6 +28,28 @@ func (m *consensusModule) handleDebugMessage(message *DebugMessage) {
 	default:
 		log.Fatalf("Unsupported debug message: %s \n", StepToString[Step(message.Action)])
 	}
+}
+
+func (m *consensusModule) handleSendTx(debugMessage *DebugMessage) {
+	state := shared.GetPocketState()
+
+	// TODO(andrew): Need to properly get the validator map from the bus.
+	// m.GetPocketBusMod().GetPersistenceModule().GetValidatorMap()
+	validatorMap := state.ValidatorMap
+	fmt.Println(validatorMap)
+
+	// TODO(andrew): need to format a proper message here.
+	txMessage := &TxWrapperMessage{
+		Data: make([]byte, 0),
+	}
+
+	event := events.PocketEvent{
+		SourceModule: events.CONSENSUS_MODULE,
+		PocketTopic:  string(events.UTILITY_TX_MESSAGE),
+	}
+	networkProtoMsg := m.getConsensusNetworkMessage(txMessage, &event)
+	networkProtoMsg.Topic = string(events.UTILITY_TX_MESSAGE)
+	m.GetPocketBusMod().GetNetworkModule().BroadcastMessage(networkProtoMsg)
 }
 
 func (m *consensusModule) handleTriggerNextView(debugMessage *DebugMessage) {

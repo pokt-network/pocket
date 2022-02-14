@@ -14,6 +14,7 @@ const (
 	TogglePaceMakerManualMode
 	ResetToGenesis
 	PrintNodeState
+	SendTx
 )
 
 type DebugMessage struct {

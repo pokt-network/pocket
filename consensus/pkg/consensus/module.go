@@ -70,6 +70,7 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	gob.Register(&statesync.StateSyncMessage{})
 	gob.Register(&dkg.DKGMessage{})
 	gob.Register(&leader_election.LeaderElectionMessage{})
+	gob.Register(&TxWrapperMessage{})
 
 	//stateSyncMod, err := statesync.Create(ctx, base)
 	//if err != nil {

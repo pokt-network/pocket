@@ -24,10 +24,11 @@ import (
 
 const (
 	PromptOptionTriggerNextView           string = "TriggerNextView"
-	PromptOptionTriggerDKG                string = "TriggerDKG"
-	PromptOptionTogglePaceMakerManualMode string = "TogglePaceMakerManualMode"
 	PromptOptionResetToGenesis            string = "ResetToGenesis"
 	PromptOptionPrintNodeState            string = "PrintNodeState"
+	PromptOptionSendTx                    string = "SendTx"
+	PromptOptionTogglePaceMakerManualMode string = "TogglePaceMakerManualMode"
+	PromptOptionTriggerDKG                string = "TriggerDKG"
 	PromptOptionDumpToNeo4j               string = "DumpToNeo4j"
 )
 
@@ -37,6 +38,7 @@ var items = []string{
 	PromptOptionTriggerNextView,
 	PromptOptionTriggerDKG,
 	PromptOptionTogglePaceMakerManualMode,
+	PromptOptionSendTx,
 	PromptOptionResetToGenesis,
 	PromptOptionPrintNodeState,
 	PromptOptionDumpToNeo4j,
@@ -53,6 +55,7 @@ func main() {
 	gob.Register(&statesync.StateSyncMessage{})
 	gob.Register(&dkg.DKGMessage{})
 	gob.Register(&leader_election.LeaderElectionMessage{})
+	gob.Register(&consensus.TxWrapperMessage{})
 
 	state := shared.GetPocketState()
 	state.LoadStateFromConfig(cfg)
@@ -97,6 +100,12 @@ func handleSelect(selection string, network p2p_types.Network) {
 		log.Println("[CLIENT] Broadcasting TriggerNextView...")
 		m := &consensus.DebugMessage{
 			Action: consensus.TriggerNextView,
+		}
+		broadcastMessage(m, network)
+	case PromptOptionSendTx:
+		log.Println("[CLIENT] Trigger a SendTx...")
+		m := &consensus.DebugMessage{
+			Action: consensus.SendTx,
 		}
 		broadcastMessage(m, network)
 	case PromptOptionTriggerDKG:

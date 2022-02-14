@@ -28,6 +28,7 @@ func (node *PocketNode) handleEvent(event *events.PocketEvent) error {
 	case string(events.CONSENSUS):
 		node.GetPocketBusMod().GetConsensusModule().HandleMessage(pocketContext, event.MessageData)
 
+	// TODO(Andrew): This is where the broadcasted utility message will be forwarded to the consensus module.
 	case string(events.UTILITY_TX_MESSAGE):
 		node.GetPocketBusMod().GetConsensusModule().HandleTransaction(pocketContext, event.MessageData)
 		// node.GetPocketBusMod().GetConsensusModule().HandleTransaction(pocketContext, event.MessageData)
