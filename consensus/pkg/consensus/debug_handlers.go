@@ -33,7 +33,9 @@ func (m *consensusModule) handleTriggerNextView(debugMessage *DebugMessage) {
 	// Assuming that block was applied if DECIDE step is reached.
 	if m.Height == 0 || m.Step == Decide {
 		m.paceMaker.NewHeight()
+		m.paceMaker.ForceNextView()
 	} else {
+		m.paceMaker.InterruptRound()
 		m.paceMaker.ForceNextView()
 	}
 }
