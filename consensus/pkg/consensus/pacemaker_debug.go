@@ -26,6 +26,5 @@ func (p *paceMaker) SetManualMode(manualMode bool) {
 
 func (p *paceMaker) ForceNextView() {
 	lastQC := p.quorumCertificate
-	p.InterruptRound()
 	p.startNextView(lastQC, true)
 }

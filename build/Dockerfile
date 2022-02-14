@@ -18,3 +18,4 @@ RUN go install github.com/go-delve/delve/cmd/dlv@latest
 
 # Needed to make `go install dlv` and `dlbb debug` work...
 RUN apk update && apk add --no-cache gcc musl-dev
+RUN go get github.com/go-delve/delve/cmd/dlv@latest
