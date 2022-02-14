@@ -61,7 +61,7 @@ func CreatePaceMaker(cfg *config.Config) (m *paceMaker, err error) {
 		stepCancelFunc:  nil, // Only set on restarts
 
 		paceMakerDebug: paceMakerDebug{
-			manualMode:        false,
+			manualMode:        true,
 			quorumCertificate: nil,
 		},
 	}, nil

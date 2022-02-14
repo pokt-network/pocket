@@ -23,7 +23,7 @@
       "max_timeout_msec": 60000,
       "min_block_freq_msec": 2000,
 
-      "debug_time_between_steps_msec": 500
+      "debug_time_between_steps_msec": 3000
     }
   },
   "validators": [
