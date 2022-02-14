@@ -17,6 +17,9 @@ RUN apt-get update && apt-get install -y zip && \
 
 ENV PATH=$PATH:$GOPATH/bin:/opt/protoc/bin
 
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+
 COPY . .
 
 ENTRYPOINT make v1_generate_protos && echo "Done"

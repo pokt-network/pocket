@@ -1,3 +1,5 @@
+CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
+
 .SILENT:
 
 .PHONY: help
@@ -78,7 +80,7 @@ v1_generate_protos:
 	protoc -I=./shared/protos --go_out=./shared shared/protos/*.proto
 
 protogen-m1:
-	docker build  -t pocket/proto-generator -f ./build/Dockerfile.m1.proto . && docker run --platform=linux/amd64 -it pocket/proto-generator
+	docker build  -t pocket/proto-generator -f ./build/Dockerfile.m1.proto . && docker run --platform=linux/amd64 -it -v $(CWD)/shared:/usr/src/app/shared pocket/proto-generator
 
 protogen:
 	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it pocket/proto-generator
