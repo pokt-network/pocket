@@ -20,15 +20,12 @@ func (m *consensusModule) prepareBlock() (*typespb.BlockConsTemp, error) {
 		return nil, err
 	}
 	m.UtilityContext = utilContext
-
 	//valMap := shared.GetPocketState().ValidatorMap
 	maxTxBytes := 90000 // INTEGRATION_TEMP
 	//proposer := []byte(strconv.Itoa(int(m.NodeId)))
 	pk, _ := crypto.GeneratePrivateKey()
-	//lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.UtilityContext.GetPersistanceContext().GetLastByzValidators
-	fmt.Println(m.GetPocketBusMod() == nil)
-	fmt.Println(m.GetPocketBusMod().GetUtilityModule())
-	txs, err := m.UtilityContext.GetTransactionsForProposal(pk.PublicKey().Address(), maxTxBytes, nil)
+	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.UtilityContext.GetPersistanceContext().GetLastByzValidators
+	txs, err := m.UtilityContext.GetTransactionsForProposal(pk.PublicKey().Address(), maxTxBytes, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +83,9 @@ func (m *consensusModule) deliverTxToUtility(block *typespb.BlockConsTemp) error
 
 func (m *consensusModule) commitBlock(block *typespb.BlockConsTemp) error {
 	m.nodeLog(fmt.Sprintf("APPLYING BLOCK AT HEIGHT %d.", m.Height))
-
+	if err := m.UtilityContext.GetPersistanceContext().Commit(); err != nil {
+		return err
+	}
 	m.UtilityContext.ReleaseContext()
 	m.UtilityContext = nil
 

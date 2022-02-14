@@ -340,7 +340,24 @@ func (m *MockPersistenceContext) Reset() error {
 }
 
 func (m *MockPersistenceContext) Commit() error {
-	parentIt := m.Parent.GetCommitDB().NewIterator(&util.Range{})
+	// copy over the new values
+	index := len(m.DBs) - 1
+	db := m.DBs[index]
+	it := db.NewIterator(&util.Range{})
+	it.First()
+	for ; it.Valid(); it.Next() {
+		if err := m.Parent.GetCommitDB().Put(HeightKey(m.Height, it.Key()), it.Value()); err != nil {
+			return err
+		}
+	}
+	it.Release()
+	m.Release()
+	parentIt := m.Parent.GetCommitDB().NewIterator(&util.Range{
+		Start: HeightKey(m.Height, nil),
+		Limit: PrefixEndBytes(HeightKey(m.Height, nil)),
+	})
+	parentIt.First()
+	m.Height = m.Height + 1
 	// copy over the entire last height
 	for ; parentIt.Valid(); parentIt.Next() {
 		newKey := HeightKey(m.Height, KeyFromHeightKey(parentIt.Key()))
@@ -349,17 +366,6 @@ func (m *MockPersistenceContext) Commit() error {
 		}
 	}
 	parentIt.Release()
-	// copy over the new values
-	index := len(m.DBs) - 1
-	db := m.DBs[index]
-	it := db.NewIterator(&util.Range{})
-	for ; it.Valid(); it.Next() {
-		if err := m.Parent.GetCommitDB().Put(HeightKey(m.Height, it.Key()), it.Value()); err != nil {
-			return err
-		}
-	}
-	it.Release()
-	m.Release()
 	return nil
 }
 
@@ -586,16 +592,20 @@ func (m *MockPersistenceContext) GetAllPools(height int64) (pools []*Pool, err e
 
 func (m *MockPersistenceContext) AddAccountAmount(address []byte, amount string) error {
 	cdc := types.UtilityCodec()
-	account := Account{}
+	account := Account{
+		Amount: types.BigIntToString(big.NewInt(0)),
+	}
 	db := m.Store()
 	key := append(AccountPrefixKey, address...)
-	val, err := db.Get(key)
-	if err != nil {
-		return err
-	}
-	err = cdc.Unmarshal(val, &account)
-	if err != nil {
-		return err
+	if db.Contains(key) {
+		val, err := db.Get(key)
+		if err != nil {
+			return err
+		}
+		err = cdc.Unmarshal(val, &account)
+		if err != nil {
+			return err
+		}
 	}
 	s, err := types.StringToBigInt(account.Amount)
 	if err != nil {

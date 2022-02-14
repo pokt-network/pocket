@@ -1,10 +1,10 @@
 package test
 
 import (
+	"math/big"
 	"pocket/utility/shared/crypto"
 	"pocket/utility/utility"
 	"pocket/utility/utility/types"
-	"math/big"
 )
 
 var (
@@ -131,6 +131,441 @@ func DefaultParams() *Params {
 		MessageUnpauseServiceNodeFeeOwner:        DefaultParamsOwner.Address(),
 		MessageChangeParameterFeeOwner:           DefaultParamsOwner.Address(),
 	}
+}
+
+func InsertPersistenceParams(store *MockPersistenceContext, params *Params) types.Error {
+	if err := store.InitParams(); err != nil {
+		return types.ErrInitParams(err)
+	}
+	err := store.SetBlocksPerSession(int(params.BlocksPerSession))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetServiceNodesPerSession(int(params.ServiceNodesPerSession))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMaxAppChains(int(params.AppMaxChains))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetParamAppMinimumStake(params.AppMinimumStake)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetBaselineAppStakeRate(int(params.AppBaselineStakeRate))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetStakingAdjustment(int(params.AppStakingAdjustment))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetAppUnstakingBlocks(int(params.AppUnstakingBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetAppMinimumPauseBlocks(int(params.AppMinimumPauseBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetAppMaxPausedBlocks(int(params.AppMaxPauseBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetParamServiceNodeMinimumStake(params.ServiceNodeMinimumStake)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetServiceNodeMaxChains(int(params.ServiceNodeMaxChains))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetServiceNodeUnstakingBlocks(int(params.ServiceNodeUnstakingBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetServiceNodeMinimumPauseBlocks(int(params.ServiceNodeMinimumPauseBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetServiceNodeMaxPausedBlocks(int(params.ServiceNodeMaxPauseBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetParamFishermanMinimumStake(params.FishermanMinimumStake)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetFishermanMaxChains(int(params.FishermanMaxChains))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetFishermanUnstakingBlocks(int(params.FishermanUnstakingBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetFishermanMinimumPauseBlocks(int(params.FishermanMinimumPauseBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetFishermanMaxPausedBlocks(int(params.FishermanMaxPauseBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetParamValidatorMinimumStake(params.ValidatorMinimumStake)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetValidatorUnstakingBlocks(int(params.ValidatorUnstakingBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetValidatorMinimumPauseBlocks(int(params.ValidatorMinimumPauseBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetValidatorMaxPausedBlocks(int(params.ValidatorMaxPauseBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetValidatorMaximumMissedBlocks(int(params.ValidatorMaximumMissedBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetProposerPercentageOfFees(int(params.ProposerPercentageOfFees))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMaxEvidenceAgeInBlocks(int(params.ValidatorMaxEvidenceAgeInBlocks))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMissedBlocksBurnPercentage(int(params.MissedBlocksBurnPercentage))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetDoubleSignBurnPercentage(int(params.DoubleSignBurnPercentage))
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetACLOwner(params.ACLOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetBlocksPerSessionOwner(params.BlocksPerSessionOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetServiceNodesPerSessionOwner(params.ServiceNodesPerSessionOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMaxAppChainsOwner(params.AppMaxChainsOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetAppMinimumStakeOwner(params.AppMinimumStakeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetBaselineAppOwner(params.AppBaselineStakeRateOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetStakingAdjustmentOwner(params.AppStakingAdjustmentOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetAppUnstakingBlocksOwner(params.AppUnstakingBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetAppMinimumPauseBlocksOwner(params.AppMinimumPauseBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetAppMaxPausedBlocksOwner(params.AppMaxPausedBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetParamServiceNodeMinimumStakeOwner(params.ServiceNodeMinimumStakeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMaxServiceNodeChainsOwner(params.ServiceNodeMaxChainsOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetServiceNodeUnstakingBlocksOwner(params.ServiceNodeUnstakingBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetServiceNodeMinimumPauseBlocksOwner(params.ServiceNodeMinimumPauseBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetServiceNodeMaxPausedBlocksOwner(params.ServiceNodeMaxPausedBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetFishermanMinimumStakeOwner(params.ParamFishermanMinimumStakeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMaxFishermanChainsOwner(params.FishermanMaxChainsOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetFishermanUnstakingBlocksOwner(params.FishermanUnstakingBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetFishermanMinimumPauseBlocksOwner(params.ValidatorMinimumPauseBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetFishermanMaxPausedBlocksOwner(params.FishermanMaxPausedBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetParamValidatorMinimumStakeOwner(params.ValidatorMinimumStakeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetValidatorUnstakingBlocksOwner(params.FishermanUnstakingBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetValidatorMinimumPauseBlocksOwner(params.FishermanMinimumPauseBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetValidatorMaxPausedBlocksOwner(params.ValidatorMaxPausedBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetValidatorMaximumMissedBlocksOwner(params.ValidatorMaximumMissedBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetProposerPercentageOfFeesOwner(params.ProposerPercentageOfFeesOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMaxEvidenceAgeInBlocksOwner(params.ValidatorMaxEvidenceAgeInBlocksOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMissedBlocksBurnPercentageOwner(params.MissedBlocksBurnPercentageOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetDoubleSignBurnPercentageOwner(params.DoubleSignBurnPercentageOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageSendFeeOwner(params.MessageSendFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageStakeFishermanFeeOwner(params.MessageStakeFishermanFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageEditStakeFishermanFeeOwner(params.MessageEditStakeFishermanFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnstakeFishermanFeeOwner(params.MessageUnstakeFishermanFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessagePauseFishermanFeeOwner(params.MessagePauseFishermanFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnpauseFishermanFeeOwner(params.MessageUnpauseFishermanFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageFishermanPauseServiceNodeFeeOwner(params.MessageFishermanPauseServiceNodeFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageTestScoreFeeOwner(params.MessageTestScoreFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageProveTestScoreFeeOwner(params.MessageProveTestScoreFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageStakeAppFeeOwner(params.MessageStakeAppFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageEditStakeAppFeeOwner(params.MessageEditStakeAppFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnstakeAppFeeOwner(params.MessageUnstakeAppFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessagePauseAppFeeOwner(params.MessagePauseAppFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnpauseAppFeeOwner(params.MessageUnpauseAppFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageStakeValidatorFeeOwner(params.MessageStakeValidatorFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageEditStakeValidatorFeeOwner(params.MessageEditStakeValidatorFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnstakeValidatorFeeOwner(params.MessageUnstakeValidatorFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessagePauseValidatorFeeOwner(params.MessagePauseValidatorFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnpauseValidatorFeeOwner(params.MessageUnpauseValidatorFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageStakeServiceNodeFeeOwner(params.MessageStakeServiceNodeFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageEditStakeServiceNodeFeeOwner(params.MessageEditStakeServiceNodeFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnstakeServiceNodeFeeOwner(params.MessageUnstakeServiceNodeFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessagePauseServiceNodeFeeOwner(params.MessagePauseServiceNodeFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnpauseServiceNodeFeeOwner(params.MessageUnpauseServiceNodeFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageChangeParameterFeeOwner(params.MessageChangeParameterFeeOwner)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageSendFee(params.MessageSendFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageStakeFishermanFee(params.MessageStakeFishermanFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageEditStakeFishermanFee(params.MessageEditStakeFishermanFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnstakeFishermanFee(params.MessageUnstakeFishermanFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessagePauseFishermanFee(params.MessagePauseFishermanFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnpauseFishermanFee(params.MessageUnpauseFishermanFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageFishermanPauseServiceNodeFee(params.MessageFishermanPauseServiceNodeFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageTestScoreFee(params.MessageTestScoreFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageProveTestScoreFee(params.MessageProveTestScoreFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageStakeAppFee(params.MessageStakeAppFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageEditStakeAppFee(params.MessageEditStakeAppFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnstakeAppFee(params.MessageUnstakeAppFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessagePauseAppFee(params.MessagePauseAppFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnpauseAppFee(params.MessageUnpauseAppFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageStakeValidatorFee(params.MessageStakeValidatorFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageEditStakeValidatorFee(params.MessageEditStakeValidatorFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnstakeValidatorFee(params.MessageUnstakeValidatorFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessagePauseValidatorFee(params.MessagePauseValidatorFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnpauseValidatorFee(params.MessageUnpauseValidatorFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageStakeServiceNodeFee(params.MessageStakeServiceNodeFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageEditStakeServiceNodeFee(params.MessageEditStakeServiceNodeFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnstakeServiceNodeFee(params.MessageUnstakeServiceNodeFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessagePauseServiceNodeFee(params.MessagePauseServiceNodeFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageUnpauseServiceNodeFee(params.MessageUnpauseServiceNodeFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	err = store.SetMessageChangeParameterFee(params.MessageChangeParameterFee)
+	if err != nil {
+		return types.ErrUpdateParam(err)
+	}
+	return nil
 }
 
 func InsertParams(u *utility.UtilityContext, params *Params) types.Error {
