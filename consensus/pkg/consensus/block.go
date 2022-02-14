@@ -3,6 +3,7 @@ package consensus
 import (
 	"encoding/hex"
 	"fmt"
+	"pocket/utility/shared/crypto"
 	"strconv"
 
 	"pocket/shared"
@@ -22,10 +23,12 @@ func (m *consensusModule) prepareBlock() (*typespb.BlockConsTemp, error) {
 
 	//valMap := shared.GetPocketState().ValidatorMap
 	maxTxBytes := 90000 // INTEGRATION_TEMP
-	proposer := []byte(strconv.Itoa(int(m.NodeId)))
-	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.UtilityContext.GetPersistanceContext().GetLastByzValidators
-
-	txs, err := m.GetPocketBusMod().GetUtilityModule().GetTransactionsForProposal(proposer, maxTxBytes, lastByzValidators)
+	//proposer := []byte(strconv.Itoa(int(m.NodeId)))
+	pk, _ := crypto.GeneratePrivateKey()
+	//lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.UtilityContext.GetPersistanceContext().GetLastByzValidators
+	fmt.Println(m.GetPocketBusMod() == nil)
+	fmt.Println(m.GetPocketBusMod().GetUtilityModule())
+	txs, err := m.UtilityContext.GetTransactionsForProposal(pk.PublicKey().Address(), maxTxBytes, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -63,12 +66,12 @@ func (m *consensusModule) isValidBlock(block *typespb.BlockConsTemp) bool {
 // TODO: Should this be async?
 func (m *consensusModule) deliverTxToUtility(block *typespb.BlockConsTemp) error {
 	utilityModule := m.GetPocketBusMod().GetUtilityModule()
-
+	m.UtilityContext, _ = utilityModule.NewUtilityContextWrapper(int64(m.Height))
 	proposer := []byte(strconv.Itoa(int(m.NodeId)))
 	tx := make([][]byte, 0)                // INTEGRATION_TEMP: Get from block.Transactions
 	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.UtilityContext.GetPersistanceContext().GetLastByzValidators
 
-	appHash, err := utilityModule.ApplyBlock(int64(m.Height), proposer, tx, lastByzValidators)
+	appHash, err := m.UtilityContext.ApplyBlock(int64(m.Height), proposer, tx, lastByzValidators)
 	if err != nil {
 		return err
 	}

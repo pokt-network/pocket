@@ -197,7 +197,9 @@ func (m *consensusModule) HandleTransaction(ctx *context.PocketContext, anyMessa
 	}
 
 	// TODO: decode data, basic validation, send to utility module.
-	if err := m.GetPocketBusMod().GetUtilityModule().CheckTransaction(messageProto.Data); err != nil {
+	module := m.GetPocketBusMod().GetUtilityModule()
+	m.UtilityContext, _ = module.NewUtilityContextWrapper(int64(m.Height))
+	if err := m.UtilityContext.CheckTransaction(messageProto.Data); err != nil {
 		m.nodeLogError("")
 	}
 }

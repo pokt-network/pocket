@@ -6,20 +6,18 @@ type UnstakingActor interface {
 	GetOutputAddress() []byte
 }
 
-
 type UtilityContextInterface interface {
 	ReleaseContext()
 	GetPersistanceContext() PersistenceContext
+	CheckTransaction(tx []byte) error
+	GetTransactionsForProposal(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error)
+	ApplyBlock(Height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
 }
 
 type UtilityModule interface {
 	PocketModule
 
 	NewUtilityContextWrapper(height int64) (UtilityContextInterface, error) // INTEGRATION_TEMP: need to move `types.Errors` to shared
-
-	CheckTransaction(tx []byte) error
-	GetTransactionsForProposal(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error)
-	ApplyBlock(Height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
 
 	// // Message Handling
 	// HandleTransaction(*context.PocketContext, *typespb.Transaction) error

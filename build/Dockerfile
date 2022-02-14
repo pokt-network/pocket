@@ -12,6 +12,7 @@ COPY . .
 # Hot reloading.
 RUN go install github.com/cespare/reflex@latest
 
+RUN apk add build-base
 # Debugging.
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
 
