@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"pocket/shared/messages"
 	"sync"
 	"testing"
 	"time"
@@ -548,7 +549,7 @@ func TestBroadcast(t *testing.T) {
 	gossipdone := make(chan int)
 	go func() {
 		<-g.ready
-		m := (&gossip{}).message(0, Gossip, 0, g.address, "")
+		m := (&pbuff{}).message(int32(0), int32(0), messages.PocketTopic_P2P, g.address, "")
 		g.Broadcast(m, true)
 		gossipdone <- 1
 	}()

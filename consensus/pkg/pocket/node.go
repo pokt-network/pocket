@@ -8,8 +8,8 @@ import (
 
 	"pocket/consensus/pkg/config"
 	"pocket/consensus/pkg/consensus"
+	"pocket/p2p"
 	"pocket/persistence"
-	"pocket/prep2p"
 
 	"pocket/consensus/pkg/types"
 	"pocket/shared"
@@ -48,7 +48,7 @@ func Create(ctx *context.PocketContext, config *config.Config) (n *PocketNode, e
 	// 	return nil, err
 	// }
 
-	networkMod, err := prep2p.Create(config)
+	networkMod, err := p2p.Create(config)
 	if err != nil {
 		return nil, err
 	}

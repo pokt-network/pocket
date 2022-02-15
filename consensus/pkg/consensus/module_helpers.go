@@ -56,7 +56,7 @@ func (m *consensusModule) getConsensusNetworkMessage(message consensus_types.Gen
 	}
 
 	networkProtoMsg := &messages.NetworkMessage{
-		Topic: messages.PocketTopic_CONSENSUS.String(),
+		Topic: messages.PocketTopic_CONSENSUS,
 		Data:  anyProto,
 	}
 	return networkProtoMsg

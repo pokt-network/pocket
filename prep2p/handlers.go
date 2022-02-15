@@ -20,8 +20,8 @@ func (m *networkModule) handleNetworkMessage(conn net.Conn) {
 		return
 	}
 
-	networkMessage := messages.NetworkMessage{}
-	proto.Unmarshal(data, &networkMessage)
+	networkMessage := &messages.NetworkMessage{}
+	proto.Unmarshal(data, networkMessage)
 	// networkMessage, err := DecodeNetworkMessage(data)
 	if err != nil {
 		log.Println("Error decoding network message: ", err)
@@ -32,7 +32,7 @@ func (m *networkModule) handleNetworkMessage(conn net.Conn) {
 
 	event := events.PocketEvent{
 		SourceModule: events.P2P,
-		PocketTopic:  networkMessage.Topic,
+		PocketTopic:  networkMessage.Topic.String(),
 		MessageData:  networkMessage.Data,
 	}
 

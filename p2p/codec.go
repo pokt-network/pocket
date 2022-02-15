@@ -240,7 +240,7 @@ func (c *dcodec) register(m interface{}, encoder, decoder interface{}) (uint16, 
 	)
 
 	if e.Type() != encoderSignature {
-		return uint16(0), errors.New(fmt.Sprintf("dcodec error: provided encoder for message type %+v is not valid, expected %s, but got %s", t, d, encoderSignature))
+		return uint16(0), errors.New(fmt.Sprintf("dcodec error: provided encoder for message type %+v is not valid, expected %s, but got %s", t, e, encoderSignature))
 	}
 
 	// expect decoders to be of type func([]byte) (T, error)

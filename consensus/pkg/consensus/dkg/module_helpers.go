@@ -50,7 +50,7 @@ func (module *dkgModule) publishEvent(message *DKGMessage, event *events.PocketE
 	}
 
 	networkProtoMsg := &messages.NetworkMessage{
-		Topic: messages.PocketTopic_CONSENSUS.String(),
+		Topic: messages.PocketTopic_CONSENSUS,
 		Data:  anyProto,
 	}
 

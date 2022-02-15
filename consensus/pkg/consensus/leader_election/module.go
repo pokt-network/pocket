@@ -215,7 +215,7 @@ func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElect
 	}
 
 	networkProtoMsg := &messages.NetworkMessage{
-		Topic: messages.PocketTopic_CONSENSUS.String(),
+		Topic: messages.PocketTopic_CONSENSUS,
 		Data:  anyProto,
 	}
 

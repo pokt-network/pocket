@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type work struct {
@@ -23,10 +25,10 @@ type gater struct {
 	address      string
 	externaladdr string
 
-	c *dcodec
-
 	inbound  iomap
 	outbound iomap
+
+	c *dcodec
 
 	peerlist plist
 
@@ -52,8 +54,7 @@ type GaterModule interface {
 
 	Send(addr string, msg []byte, wrapped bool) error
 
-	BroadcastTempWrapper(m messages.NetworkMessage) error // TODO: hamza to refactor
-	Broadcast(m message, isroot bool) error
+	Broadcast(m *messages.NetworkMessage, isroot bool) error
 
 	Handle()
 
@@ -83,12 +84,9 @@ func (g *gater) Config(protocol, address, external string, peers []string) {
 }
 
 func (g *gater) Init() error {
-	// TODO: revisit this
-	cm := &churnmgmt{}
-
-	churnmsg := cm.message(0, Ping, 0)
-
-	_, err := g.c.register(churnmsg, cm.encode, cm.decode)
+	pbuffmsnger := &pbuff{}
+	msg := pbuffmsnger.message(int32(0), 1, messages.PocketTopic_P2P, "", "")
+	_, err := g.c.register(msg, pbuffmsnger.encode, pbuffmsnger.decode)
 	if err != nil {
 		return err
 	}
@@ -279,17 +277,8 @@ func (g *gater) Pong(msg message) error {
 	return nil
 }
 
-func (g *gater) BroadcastTempWrapper(msg *messages.NetworkMessage) error {
-	m := message{
-		payload: msg.Data,
-		topic:   Topic(msg.Topic),
-	}
-	return g.Broadcast(m, false)
-
-}
-
 // Discuss: why is m not a pointer?
-func (g *gater) Broadcast(m message, isroot bool) error {
+func (g *gater) Broadcast(m *messages.NetworkMessage, isroot bool) error {
 	var toplevel int
 
 	if isroot {
@@ -297,7 +286,7 @@ func (g *gater) Broadcast(m message, isroot bool) error {
 		toplevel = int(maxlevel)
 	} else {
 		fmt.Println("Not root, propagating down")
-		toplevel = int(m.level)
+		toplevel = int(m.Level)
 	}
 
 	source := g.externaladdr
@@ -313,18 +302,16 @@ func (g *gater) Broadcast(m message, isroot bool) error {
 		left := targetlist[lpos]
 		right := targetlist[rpos]
 
-		m.level = uint16(currentlevel)
+		m.Level = int32(currentlevel)
 
 		var l_ack, r_ack []byte
 		var l_err, r_err error = nil, nil
 		var wg sync.WaitGroup
 
-		wg.Add(1)
-		go func(ack *[]byte, err *error, msg message) {
-
-			msg.source = source
-			msg.destination = left.address
-			encm, _ := g.c.encode(msg)
+		SendAck := func(target *peer, ack *[]byte, err *error, m messages.NetworkMessage) {
+			m.Source = source
+			m.Destination = left.address
+			encm, _ := g.c.encode(m)
 
 			// just a hack
 			if len(encm) != ReadBufferSize {
@@ -332,9 +319,9 @@ func (g *gater) Broadcast(m message, isroot bool) error {
 			}
 			// just a hack
 
-			fmt.Println("Requesting", left.address)
-			response, reqerr := g.Request(left.address, encm, true)
-			fmt.Println("Received resposne from", left.address)
+			fmt.Println("Requesting", target.address)
+			response, reqerr := g.Request(target.address, encm, true)
+			fmt.Println("Received resposne from", target.address)
 
 			if reqerr != nil {
 				*err = reqerr
@@ -342,31 +329,13 @@ func (g *gater) Broadcast(m message, isroot bool) error {
 
 			*ack = response
 			wg.Done()
-		}(&l_ack, &l_err, m)
+		}
 
 		wg.Add(1)
-		go func(ack *[]byte, err *error, msg message) {
+		go SendAck(&left, &l_ack, &l_err, *m)
 
-			msg.source = source
-			msg.destination = right.address
-			encm, _ := g.c.encode(msg)
-
-			// just a hack
-			if len(encm) != ReadBufferSize {
-				encm = append(encm, make([]byte, ReadBufferSize-len(encm))...)
-			}
-			// just a hack
-
-			fmt.Println("Requesting", right.address)
-			response, reqerr := g.Request(right.address, encm, true)
-			fmt.Println("Received resposne from", right.address)
-
-			if reqerr != nil {
-				*err = reqerr
-			}
-			*ack = response
-			wg.Done()
-		}(&r_ack, &r_err, m)
+		wg.Add(1)
+		go SendAck(&right, &r_ack, &r_err, *m)
 
 		wg.Wait()
 
@@ -386,30 +355,30 @@ func (g *gater) Broadcast(m message, isroot bool) error {
 	}
 
 	// a hack to achieve full coverage like a redundancy layer
-	sl := list.slice()
-	for i := 0; i < len(sl); i++ {
-		p := sl[i]
-		if p.address != source {
-			fmt.Println("redundancy", p, source)
-			m.source = source
-			m.destination = p.address
-			m.level = 0
+	//sl := list.slice()
+	//for i := 0; i < len(sl); i++ {
+	//	p := sl[i]
+	//	if p.address != source {
+	//		fmt.Println("redundancy", p, source)
+	//		m.source = source
+	//		m.destination = p.address
+	//		m.level = 0
 
-			encm, _ := g.c.encode(m)
+	//		encm, _ := g.c.encode(m)
 
-			// just a hack
-			if len(encm) != ReadBufferSize {
-				encm = append(encm, make([]byte, ReadBufferSize-len(encm))...)
-			}
-			// just a hack
+	//		// just a hack
+	//		if len(encm) != ReadBufferSize {
+	//			encm = append(encm, make([]byte, ReadBufferSize-len(encm))...)
+	//		}
+	//		// just a hack
 
-			fmt.Println("Requesting", p.address)
-			reqerr := g.Send(p.address, encm, true)
-			if reqerr != nil {
-				fmt.Println(reqerr)
-			}
-		}
-	}
+	//		fmt.Println("Requesting", p.address)
+	//		reqerr := g.Send(p.address, encm, true)
+	//		if reqerr != nil {
+	//			fmt.Println(reqerr)
+	//		}
+	//	}
+	//}
 
 	fmt.Println("Done broadcasting")
 
@@ -418,7 +387,7 @@ func (g *gater) Broadcast(m message, isroot bool) error {
 
 func (g *gater) Handshake() {}
 func (g *gater) Handle() {
-	var msg message
+	var msg *messages.NetworkMessage
 
 	fmt.Println("Handling...")
 	for w := range g.sink {
@@ -432,20 +401,20 @@ func (g *gater) Handle() {
 				//continue
 			}
 
-			msg = decoded.(message)
-			msg.nonce = nonce
+			msg = decoded.(*messages.NetworkMessage)
+			msg.Nonce = int32(nonce)
 		} else {
-			msg.payload = data
+			msg.Data = &anypb.Any{}
 		}
 		fmt.Println("msg:", msg)
 
-		switch msg.action {
+		switch msg.Topic {
 
-		case Gossip:
+		case messages.PocketTopic_CONSENSUS:
 			fmt.Println("Received a gossip message")
 			go func() {
 				fmt.Println("Acking...")
-				ack := (&gossip{}).message(msg.nonce, GossipACK, msg.level, g.externaladdr, msg.source)
+				ack := (&pbuff{}).message(msg.Nonce, msg.Level, messages.PocketTopic_P2P, g.externaladdr, msg.Source)
 
 				encoded, err := g.c.encode(ack)
 				if err != nil {
@@ -456,7 +425,7 @@ func (g *gater) Handle() {
 				encoded = append(encoded, make([]byte, ReadBufferSize-len(encoded))...)
 				// just a hack
 
-				err = g.Respond(msg.nonce, false, ack.destination, encoded, true)
+				err = g.Respond(uint32(msg.Nonce), false, ack.Destination, encoded, true)
 				if err != nil {
 					fmt.Println("Error encoding msg for gossipaCK", err.Error())
 				}

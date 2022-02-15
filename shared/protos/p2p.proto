@@ -12,6 +12,10 @@ enum PocketTopic {
 }
 
 message NetworkMessage {
-  string topic = 1;
-  google.protobuf.Any data = 2;
+  int32 nonce = 1;
+  int32 level = 2;
+  PocketTopic topic = 3;
+  string source = 4;
+  string destination = 5;
+  google.protobuf.Any data = 6;
 }

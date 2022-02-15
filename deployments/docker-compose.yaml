@@ -1,12 +1,23 @@
 version: "3.8"
 
 services:
-  client:
-    container_name: client
+  client_alpha: # use this to use the limited p2p version (prep2p)
+    container_name: client_alpha
     image: pocket/client:latest
     build:
       context: ../
-      dockerfile: ./build/DockerfileClient
+      dockerfile: ./build/Dockerfile.client
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    stdin_open: true
+    tty: true
+
+  client_beta: # use this to use the version with full p2p functionality
+    container_name: client_beta
+    image: pocket/client:latest
+    build:
+      context: ../
+      dockerfile: ./build/Dockerfile.client
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     stdin_open: true

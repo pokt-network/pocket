@@ -30,12 +30,18 @@ build_and_watch:
 	/bin/sh ${PWD}/scripts/watch_build.sh
 
 ## Run a client daemon which is only used for debugging.
-client_start:
-	docker-compose -f deployments/docker-compose.yaml up -d client
+client_alpha_start:
+	docker-compose -f deployments/docker-compose.yaml up -d client_alpha
 
 ## Connect to the client daemon running in a background docker container.
-client_connect:
-	docker exec -it client /bin/bash -c "go run cmd/client/*.go"
+client_alpha_connect:
+	docker exec -it client_alpha /bin/bash -c "go run cmd/client-with-pre-p2p/*.go"
+
+client_beta_start:
+	docker-compose -f deployments/docker-compose.yaml up -d client_beta
+
+client_beta_connect:
+	docker exec -it client_beta /bin/bash -c "go run cmd/client-with-p2p/*.go"
 
 ## Attached docker compose of all the services except for neo4j w/ hot reload.
 compose_and_watch:

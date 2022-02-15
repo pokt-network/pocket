@@ -4,9 +4,16 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"pocket/shared/messages"
 	"strconv"
 	"strings"
+
+	"github.com/golang/protobuf/proto"
 )
+
+/*
+ @ Domain Codec Interface
+*/
 
 type Topic string
 type Action string
@@ -222,4 +229,41 @@ func (g *gossip) decode(payload []byte) (message, error) {
 
 func GossipMessage(addr string) message {
 	return (&gossip{}).message(0, Gossip, 4, addr, "0.0.0.0:02023")
+}
+
+/*
+ @
+ @ Protobuf messages
+ @
+*/
+
+// protobuff domain codec, just a wrapper on top of protobuff
+type pbuff struct{}
+
+func (c *pbuff) message(nonce int32, level int32, topic messages.PocketTopic, src, dest string) *messages.NetworkMessage {
+	return &messages.NetworkMessage{
+		Level:       level,
+		Nonce:       nonce,
+		Topic:       topic,
+		Source:      src,
+		Destination: dest,
+	}
+}
+
+func (c *pbuff) encode(m *messages.NetworkMessage) ([]byte, error) {
+	data, err := proto.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func (c *pbuff) decode(data []byte) (*messages.NetworkMessage, error) {
+	msg := &messages.NetworkMessage{}
+	err := proto.Unmarshal(data, msg)
+	if err != nil {
+		return nil, err
+	}
+	return msg, nil
 }
