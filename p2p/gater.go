@@ -3,7 +3,7 @@ package p2p
 import (
 	"fmt"
 	"net"
-	"pocket/shared/messages"
+	"pocket/shared/types"
 	"strings"
 	"sync"
 	"time"
@@ -52,7 +52,7 @@ type GaterModule interface {
 
 	Send(addr string, msg []byte, wrapped bool) error
 
-	BroadcastTempWrapper(m messages.NetworkMessage) error // TODO: hamza to refactor
+	BroadcastTempWrapper(m types.NetworkMessage) error // TODO: hamza to refactor
 	Broadcast(m message, isroot bool) error
 
 	Handle()
@@ -279,7 +279,7 @@ func (g *gater) Pong(msg message) error {
 	return nil
 }
 
-func (g *gater) BroadcastTempWrapper(msg *messages.NetworkMessage) error {
+func (g *gater) BroadcastTempWrapper(msg *types.NetworkMessage) error {
 	m := message{
 		payload: msg.Data,
 		topic:   Topic(msg.Topic),

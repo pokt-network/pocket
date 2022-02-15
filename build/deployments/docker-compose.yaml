@@ -1,0 +1,102 @@
+version: "3.8"
+
+services:
+  client:
+    container_name: client
+    image: pocket/client:latest
+    build:
+      context: ../..
+      dockerfile: ./build/DockerfileClient
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    stdin_open: true
+    tty: true
+
+  node1.consensus:
+    container_name: node1.consensus
+    image: pocket/consensus:latest
+    command: "scripts/watch.sh build/config/config1.json"
+    build:
+      context: ../..
+      dockerfile: ../Dockerfile
+    expose:
+#      - "7080" # debug
+      - "8080"
+      - "9080"
+    ports:
+#      - "7081:7081" # connect with golang via 7081
+      - "8081:8080"
+      - "9081:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    #environment:
+     # - DEBUG_PORT=7081
+
+  node2.consensus:
+    container_name: node2.consensus
+    image: pocket/consensus:latest
+    command: "scripts/watch.sh build/config/config2.json"
+    build:
+      context: ../..
+      dockerfile: ../Dockerfile
+    expose:
+      - "7082"
+      - "8080"
+      - "9080"
+    ports:
+      - "7082:8082"
+      - "8082:8080"
+      - "9082:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    # environment:
+    #   - DEBUG_PORT=7082
+
+  node3.consensus:
+    container_name: node3.consensus
+    image: pocket/consensus:latest
+    command: "scripts/watch.sh build/config/config3.json"
+    build:
+      context: ../..
+      dockerfile: ../Dockerfile
+    expose:
+      - "7083"
+      - "8080"
+      - "9080"
+    ports:
+      - "7083:7083"
+      - "8083:8080"
+      - "9083:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    # environment:
+    #   - DEBUG_PORT=7083
+
+  node4.consensus:
+    container_name: node4.consensus
+    image: pocket/consensus:latest
+    command: "scripts/watch.sh build/config/config4.json"
+    build:
+      context: ../..
+      dockerfile: ../Dockerfile
+    expose:
+      - "8080"
+      - "9080"
+    ports:
+      - "8084:8080"
+      - "9084:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+
+  neo4j:
+    image: neo4j
+    hostname: neo4j
+    platform: linux/x86_64 # https://stackoverflow.com/questions/65456814
+    volumes:
+      - ${PWD}/neo4j/data:/data
+    environment:
+      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
+      - NEO4J_AUTH=none
+    ports:
+      - "7474:7474"
+      - "7687:7687"

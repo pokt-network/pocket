@@ -23,7 +23,7 @@ help:
 
 ## Build consensus/main.go
 build:
-	go build -v cmd/consensus/main.go
+	go build -v cmd/v1/main.go
 
 ## Continous build of consensus/main.go as files changel.
 build_and_watch:
@@ -31,7 +31,7 @@ build_and_watch:
 
 ## Run a client daemon which is only used for debugging.
 client_start:
-	docker-compose -f deployments/docker-compose.yaml up -d client
+	docker-compose -f build/deployments/docker-compose.yaml up -d client
 
 ## Connect to the client daemon running in a background docker container.
 client_connect:
@@ -39,22 +39,22 @@ client_connect:
 
 ## Attached docker compose of all the services except for neo4j w/ hot reload.
 compose_and_watch:
-	docker-compose -f deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 ## Attached docker compose of all the services except for neo4j w/ hot reload.
 compose_and_watch_and_build:
-	docker-compose -f deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+	docker-compose -f build/deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 kill_all:
-	docker-compose -f deployments/docker-compose.yaml down
+	docker-compose -f build/deployments/docker-compose.yaml down
 
 ## Detached docker compose of all the services except for neo4j  w/ hot reload.
 compose_and_watch_d:
-	docker-compose -f deployments/docker-compose.yaml up -d --force-recreate --scale neo4j=0 --scale client=0
+	docker-compose -f build/deployments/docker-compose.yaml up -d --force-recreate --scale neo4j=0 --scale client=0
 
 ## Detached deployment of the neo4j container.
 neo_d:
-	docker-compose -f deployments/docker-compose.yaml up -d neo4j
+	docker-compose -f build/deployments/docker-compose.yaml up -d neo4j
 
 ## Use `mockgen` to generate mocks used for testing.
 generate_mocks:

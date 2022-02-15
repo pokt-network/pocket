@@ -2,15 +2,14 @@ package p2p
 
 import (
 	"log"
-	"pocket/consensus/pkg/config"
-	"pocket/shared/context"
-	"pocket/shared/messages"
+	"pocket/shared/config"
 	"pocket/shared/modules"
+	"pocket/shared/types"
 )
 
 type P2PModule struct {
 	modules.NetworkModule
-	pocketBusMod modules.PocketBusModule
+	pocketBusMod modules.BusModule
 
 	p2pConfig *config.P2PConfig
 
@@ -23,7 +22,7 @@ func Create(config *config.Config) (modules.NetworkModule, error) {
 	}, nil
 }
 
-func (p *P2PModule) Start(ctx *context.PocketContext) error {
+func (p *P2PModule) Start() error {
 	gater := NewGater()
 	gater.Config(p.p2pConfig.Protocol, p.p2pConfig.Address, p.p2pConfig.ExternalIp, p.p2pConfig.Peers)
 	gater.Init()
@@ -37,21 +36,21 @@ func (p *P2PModule) Start(ctx *context.PocketContext) error {
 	return nil
 }
 
-func (p *P2PModule) Stop(*context.PocketContext) error {
+func (p *P2PModule) Stop() error {
 	return nil
 }
 
-func (m *P2PModule) SetPocketBusMod(pocketBus modules.PocketBusModule) {
+func (m *P2PModule) SetPocketBusMod(pocketBus modules.BusModule) {
 	m.pocketBusMod = pocketBus
 }
 
-func (m *P2PModule) GetPocketBusMod() modules.PocketBusModule {
+func (m *P2PModule) GetBus() modules.BusModule {
 	if m.pocketBusMod == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.pocketBusMod
 }
 
-func (m *P2PModule) BroadcastMessage(msg *messages.NetworkMessage) error {
+func (m *P2PModule) BroadcastMessage(msg *types.NetworkMessage) error {
 	return m.gater.BroadcastTempWrapper(msg)
 }

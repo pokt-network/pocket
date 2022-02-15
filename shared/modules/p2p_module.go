@@ -1,18 +1,16 @@
 package modules
 
 import (
-	"pocket/shared/events"
-	"pocket/shared/messages"
+	"pocket/shared/types"
 )
 
 type NetworkMessage struct {
-	Topic events.PocketEventTopic
+	Topic types.PocketEventTopic
 	Data  []byte
 }
 
 type NetworkModule interface {
-	PocketModule
-
-	BroadcastMessage(msg *messages.NetworkMessage) error
-	Send(addr string, msg *messages.NetworkMessage) error
+	Module
+	BroadcastMessage(msg *types.NetworkMessage) error
+	Send(addr string, msg *types.NetworkMessage) error
 }
