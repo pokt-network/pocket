@@ -31,7 +31,7 @@ func TestGetTopLevel(t *testing.T) {
 
 	list.sort()
 
-	maxl := getTopLevel(*list)
+	maxl := getTopLevel(list)
 
 	if maxl != 4 {
 		t.Errorf("Raintree algorithm error: wrong max level value, expected %d, got: %d", 4, maxl)
@@ -78,7 +78,7 @@ func TestGetTargetList(t *testing.T) {
 	list.sort()
 
 	id := list.get(18).id
-	sublist := getTargetList(*list, id, 4, 3)
+	sublist := getTargetList(list, id, 4, 3)
 
 	size := sublist.size()
 	fmt.Println("Size", size)
@@ -110,7 +110,7 @@ func TestPickLeft(t *testing.T) {
 
 	id := list.get(0).id
 
-	l := pickLeft(id, *list)
+	l := pickLeft(id, list)
 
 	s := list.slice()
 	left := s[l]
@@ -133,7 +133,7 @@ func TestPickRight(t *testing.T) {
 
 	id := list.get(0).id
 
-	r := pickRight(id, *list)
+	r := pickRight(id, list)
 
 	s := list.slice()
 	right := s[r]

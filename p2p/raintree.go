@@ -8,7 +8,7 @@ import (
 /*
  @ Determine highest level possible in the tree (i.e number of layers)
 */
-func getTopLevel(list plist) uint16 {
+func getTopLevel(list *plist) uint16 {
 	fullListSize := float64(len(list.elements))
 
 	return uint16(
@@ -31,10 +31,10 @@ func getTargetListSize(fullListSize, topl, currl int) float64 {
 /*
  @ Pick left branch of the tree in the target list
 */
-func pickLeft(srcid uint64, l plist) (lpos int) {
+func pickLeft(srcid uint64, l *plist) (lpos int) {
 	lsize := float64(l.size())
 
-	ownposition := (&l).positionof(srcid)
+	ownposition := l.positionof(srcid)
 
 	lpos = int(math.Round(float64(ownposition)+lsize/float64(1.5))) + 1
 	lpos = int(lsize) - lpos + 1
@@ -50,10 +50,10 @@ func pickLeft(srcid uint64, l plist) (lpos int) {
 /*
  @ Pick right branch of the tree in the target list
 */
-func pickRight(srcid uint64, l plist) (rpos int) {
+func pickRight(srcid uint64, l *plist) (rpos int) {
 	lsize := float64(l.size())
 
-	ownposition := (&l).positionof(srcid)
+	ownposition := l.positionof(srcid)
 
 	rpos = int(math.Round(float64(ownposition)+lsize/float64(3))) + 1
 	rpos = int(lsize) - rpos + 1
@@ -68,9 +68,9 @@ func pickRight(srcid uint64, l plist) (rpos int) {
 /*
  @ Retrieve the target list out of the full list
 */
-func getTargetList(l plist, id uint64, topl, currl int) plist {
+func getTargetList(l *plist, id uint64, topl, currl int) *plist {
 	tlsize := getTargetListSize(l.size(), topl, currl)
-	ownposition := (&l).positionof(id)
+	ownposition := l.positionof(id)
 
 	slice := l.slice()
 	if ownposition+int(tlsize) > cap(l.slice()) {
@@ -80,13 +80,14 @@ func getTargetList(l plist, id uint64, topl, currl int) plist {
 		sublist := l.copy()
 		sublist.update(psublist)
 
-		return *(&sublist).concat(csublist)
+		return sublist.concat(csublist)
 	}
 
 	sublist := l.copy()
 	slice = (&sublist).slice()
+	fmt.Println("slice", slice, ownposition, ownposition+int(tlsize))
 
 	sublist.update(slice[ownposition : ownposition+int(tlsize)])
 
-	return sublist
+	return &sublist
 }

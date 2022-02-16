@@ -5,10 +5,8 @@ import (
 	"log"
 	"os"
 
-	"pocket/consensus/pkg/consensus"
+	"pocket/consensus"
 	p2p "pocket/p2p"
-	"pocket/shared"
-	"pocket/shared/messages"
 
 	"github.com/manifoldco/promptui"
 
@@ -19,9 +17,10 @@ import (
 	"pocket/consensus/statesync"
 	consensus_types "pocket/consensus/types"
 	"pocket/shared/config"
-	"pocket/shared/types"
-
 	"pocket/shared/modules"
+
+	crypto "pocket/shared/crypto"
+	types "pocket/shared/types"
 )
 
 const (
@@ -33,7 +32,7 @@ const (
 	PromptOptionDumpToNeo4j               string = "DumpToNeo4j"
 )
 
-const defaultGenesisFile = "config/genesis.json"
+const defaultGenesisFile = "build/config/genesis.json"
 
 var items = []string{
 	PromptOptionTriggerNextView,
@@ -45,18 +44,20 @@ var items = []string{
 }
 
 func main() {
+	privateKey, err := crypto.GeneratePrivateKey()
 	cfg := &config.Config{
 		Genesis:    defaultGenesisFile,
-		PrivateKey: types.GeneratePrivateKey(uint32(0)), // Not used
+		PrivateKey: privateKey.String(), // Not used
 		P2P: &config.P2PConfig{
 			Protocol:   "tcp",
-			Address:    "0.0.0.0:12345",
-			ExternalIp: "0.0.0.0:12345",
+			Address:    "0.0.0.0:8080",
+			ExternalIp: "0.0.0.0:8080",
 			Peers: []string{
-				"0.0.0.0:8081",
-				"0.0.0.0:8082",
-				"0.0.0.0:8083",
-				"0.0.0.0:8084",
+				"172.20.0.1:8080",
+				"172.20.0.1:8081",
+				"172.20.0.1:8082",
+				"172.20.0.1:8083",
+				"172.20.0.1:8084",
 			},
 		},
 	}
@@ -67,12 +68,12 @@ func main() {
 	gob.Register(&dkg.DKGMessage{})
 	gob.Register(&leader_election.LeaderElectionMessage{})
 
-	state := shared.GetPocketState()
+	state := consensus_types.GetPocketState()
 	state.LoadStateFromConfig(cfg)
 
 	p2pmod, err := p2p.Create(cfg)
 
-	go p2pmod.Start(nil)
+	p2pmod.Start()
 
 	if err != nil {
 		panic(err)
@@ -160,7 +161,7 @@ func broadcastMessage(m consensus_types.GenericConsensusMessage, p2pmod modules.
 		log.Println("[ERROR] Failed to encode message: ", err)
 		return
 	}
-	consensusProtoMsg := &messages.ConsensusMessage{
+	consensusProtoMsg := &types.ConsensusMessage{
 		Data: messageData,
 	}
 
@@ -170,10 +171,10 @@ func broadcastMessage(m consensus_types.GenericConsensusMessage, p2pmod modules.
 		return
 	}
 
-	p2pmsg := &messages.NetworkMessage{
+	p2pmsg := &types.NetworkMessage{
 		Nonce: 0,
 		Level: 0,
-		Topic: messages.PocketTopic_CONSENSUS,
+		Topic: types.PocketTopic_CONSENSUS,
 		Data:  anyProto,
 	}
 

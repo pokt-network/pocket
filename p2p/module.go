@@ -26,6 +26,11 @@ func Create(config *config.Config) (modules.NetworkModule, error) {
 	g := NewGater()
 	cfg := config.P2P
 
+	g.SetLogger(func(args ...interface{}) (int, error) {
+		log.Println(args...)
+		return 0, nil
+	})
+
 	return &P2PModule{
 		p2pConfig: cfg,
 		gater:     g,

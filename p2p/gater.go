@@ -89,7 +89,7 @@ func (g *gater) Config(protocol, address, external string, peers []string) {
 	g.protocol = protocol
 	g.address = address
 	g.externaladdr = external
-	g.peerlist = &plist{}
+	g.peerlist = &plist{elements: make([]peer, 0)}
 
 	// this is a hack to get going no more no less
 	for i, p := range peers {
@@ -304,12 +304,10 @@ func (g *gater) Broadcast(m *types.NetworkMessage, isroot bool) error {
 
 	var toplevel int
 	var currentlevel int
-	var list plist
+	var list *plist
 	var mmutex sync.Mutex
 
-	list = *g.peerlist
-
-	g.Log("peerlist", list)
+	list = g.peerlist
 
 	toplevel = int(getTopLevel(list))
 
@@ -320,6 +318,7 @@ func (g *gater) Broadcast(m *types.NetworkMessage, isroot bool) error {
 		g.Log("Not root, propagating down")
 	}
 
+	fmt.Println(list)
 	source := g.externaladdr
 
 	for ; currentlevel > 0; currentlevel-- {
