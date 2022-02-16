@@ -140,6 +140,34 @@ func (c *wcodec) decode(wiredata []byte) (nonce uint32, enc Encoding, data []byt
 	return
 }
 
+func (c *wcodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32, bodylength uint32, err error) {
+	c.Lock()
+	defer c.Unlock()
+
+	flags := header[0]
+	requestnum := header[1:5]
+	bodylen := header[5:9]
+
+	flagswitch, _, err = parseflag(flags)
+
+	fmt.Println(flagswitch)
+	if err != nil {
+		return
+	}
+
+	isreq := flagswitch[3]
+	if isreq {
+		nonce = binary.BigEndian.Uint32(requestnum)
+	} else {
+		nonce = 0
+	}
+
+	fmt.Println(bodylen, header)
+	bodylength = binary.BigEndian.Uint32(bodylen)
+	fmt.Println(bodylength)
+	return
+}
+
 /*
  @
  @ Utils

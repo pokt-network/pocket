@@ -250,8 +250,8 @@ func (c *pbuff) message(nonce int32, level int32, topic messages.PocketTopic, sr
 	}
 }
 
-func (c *pbuff) encode(m *messages.NetworkMessage) ([]byte, error) {
-	data, err := proto.Marshal(m)
+func (c *pbuff) encode(m messages.NetworkMessage) ([]byte, error) {
+	data, err := proto.Marshal(&m)
 	if err != nil {
 		return nil, err
 	}
@@ -259,11 +259,11 @@ func (c *pbuff) encode(m *messages.NetworkMessage) ([]byte, error) {
 	return data, nil
 }
 
-func (c *pbuff) decode(data []byte) (*messages.NetworkMessage, error) {
+func (c *pbuff) decode(data []byte) (messages.NetworkMessage, error) {
 	msg := &messages.NetworkMessage{}
 	err := proto.Unmarshal(data, msg)
 	if err != nil {
-		return nil, err
+		return messages.NetworkMessage{Nonce: -1, Level: -1}, err
 	}
-	return msg, nil
+	return *msg, nil
 }

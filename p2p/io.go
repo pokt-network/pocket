@@ -8,6 +8,8 @@ import (
 	"math"
 	"net"
 	"sync"
+
+	"go.uber.org/atomic"
 )
 
 type request struct {
@@ -34,7 +36,7 @@ type io struct {
 		readOpen bool
 	}
 
-	dialer Dialer // an intermediary p2p interface that returns net.Conn, useful for mocking in testing
+	dialer Dialer // an intermediary poktp2p interface that returns net.Conn, useful for mocking in testing
 	conn   net.Conn
 
 	timeouts struct {
@@ -54,7 +56,7 @@ type io struct {
 	answering chan uint
 	polling   chan uint
 
-	opened    bool
+	opened    atomic.Bool
 	sending   bool
 	receiving bool
 
@@ -91,7 +93,7 @@ func (p *io) open(sense Sense, addr string, conn net.Conn, onopened func(*io) er
 	case <-p.answering:
 	}
 
-	p.opened = true
+	p.opened.Store(true)
 	close(p.ready)
 
 	return nil
@@ -104,7 +106,7 @@ func (p *io) close() {
 
 	p.sending = false
 	p.receiving = false
-	p.opened = false
+	p.opened.Store(false)
 	p.buffersState.writeOpen = false
 	p.buffersState.readOpen = false
 
@@ -187,10 +189,33 @@ func (p *io) inbound(addr string, conn net.Conn, onopened func(*io) error, onclo
 }
 
 func (p *io) read() ([]byte, int, error) {
-	// TODO: condition the read to an acceptable message size, add read timeout
-	n, err := stdio.ReadFull(p.reader, p.buffers.read)
+	var n int
+	fmt.Println("Gonna read header")
+	if _, err := stdio.ReadFull(p.reader, p.buffers.read[:WireByteHeaderLength]); err != nil {
+		fmt.Println("Issue reading header")
+		return nil, 0, err
+	}
+	fmt.Println("No issue reading header")
+	_, _, bodylen, err := p.c.decodeHeader(p.buffers.read[:WireByteHeaderLength])
+	if err != nil {
+		fmt.Println("Issue decoding header")
+		return nil, 0, err
+	}
+
+	fmt.Println("Bodylen: ", bodylen, "but buffered", p.reader.Buffered(), "actual size:", p.reader.Size(), p.addr)
+
+	if bodylen > uint32(ReadBufferSize) { // TODO: replace with configurable max value
+		return nil, 0, errors.New(fmt.Sprintf("io pipe error: cannot read a buffer of length %d, the acceptedl length is %d.", bodylen, ReadBufferSize))
+	}
+
+	if n, err = stdio.ReadFull(p.reader, p.buffers.read[WireByteHeaderLength:bodylen+uint32(WireByteHeaderLength)]); err != nil {
+		return nil, 0, err
+	}
+
 	buff := make([]byte, 0)
-	buff = append(buff, p.buffers.read...)
+	buff = append(buff, p.buffers.read[:WireByteHeaderLength+n]...)
+
+	fmt.Println("Read in total", len(buff))
 	return buff, n, err
 }
 
@@ -198,6 +223,7 @@ func (p *io) poll() {
 	defer func() {
 		close(p.polling)
 		p.closed <- 1
+		fmt.Println("Closing conn")
 	}()
 
 	{
@@ -248,19 +274,20 @@ func (p *io) poll() {
 					break
 				}
 
+				fmt.Println("nonce on new message=", nonce)
 				if nonce != 0 {
 					_, ch, found := p.requests.find(nonce)
 					// TODO: this is hacku
 					if found {
-						ch <- work{nonce: nonce, decode: wrapped, data: data}
+						ch <- work{nonce: nonce, decode: wrapped, data: data, addr: p.addr}
 						close(ch)
 						continue
+					} else {
+						fmt.Println("Nonce not found")
 					}
 				}
 
-				fmt.Println("Received a message")
-
-				p.g.sink <- work{nonce: nonce, decode: wrapped, data: data}
+				p.g.sink <- work{nonce: nonce, decode: wrapped, data: data, addr: p.addr}
 			}
 		}
 	}
@@ -398,7 +425,6 @@ func NewIoPipe() *io {
 		answering: make(chan uint),
 		polling:   make(chan uint),
 
-		opened:    false,
 		sending:   false,
 		receiving: false,
 

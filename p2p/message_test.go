@@ -181,7 +181,7 @@ func TestProtoDomainCodec(t *testing.T) {
 	{
 		p2pmsg := pd.message(nonce, level, messages.PocketTopic_P2P, src, dst)
 
-		encoded, err := pd.encode(p2pmsg)
+		encoded, err := pd.encode(*p2pmsg)
 
 		if err != nil {
 			t.Errorf("Protobuff messenger error: failed to encode ping message: %s", err.Error())
@@ -192,7 +192,7 @@ func TestProtoDomainCodec(t *testing.T) {
 		}
 
 		msg, err := pd.decode(encoded)
-		p2pmsg = msg
+		p2pmsg = &msg
 
 		if err != nil {
 			t.Errorf("Protobuff messenger error: failed to decode ping message: %s", err.Error())

@@ -3,6 +3,7 @@ package p2p
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"math/rand"
 	"net"
 	"testing"
@@ -93,27 +94,55 @@ func TestRead(t *testing.T) {
 	pipe := NewIoPipe()
 	pipe.buffersState.readOpen = true // usually opened by pipe.open
 
+	conn := MockConn()
 	pipe.g = MockGater()
-	pipe.conn = MockConn()
+	pipe.conn = conn
 
 	pipe.reader = bufio.NewReader(pipe.conn)
 
-	msg := GenerateByteLen(1024 * 4)
-	pipe.conn.Write(msg)
+	{
+		msg := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
+		emsg := (&wcodec{}).encode(Binary, false, 0, msg, false)
+		pipe.conn.Write(emsg)
 
-	buff, n, err := pipe.read()
+		buff, n, err := pipe.read()
 
-	if err != nil {
-		t.Errorf("pipe read error: %s", err.Error())
+		if err != nil {
+			t.Errorf("pipe read error: %s", err.Error())
+		}
+
+		if n != ReadBufferSize-WireByteHeaderLength {
+			t.Errorf("pipe read error: read buffer length mismatch, expected %d, got %d", ReadBufferSize, n)
+		}
+
+		if bytes.Compare(buff[:ReadBufferSize-WireByteHeaderLength], msg) != 0 {
+			t.Errorf("pipe read error: read buffer corrupted")
+		}
 	}
 
-	if n != ReadBufferSize {
-		t.Errorf("pipe read error: read buffer length mismatch, expected %d, got %d", ReadBufferSize, n)
+	(conn.(*connM)).Flush() // typecasting to original mock struct type to make use of Flush method
+
+	{
+		msg := GenerateByteLen(1024)
+		emsg := (&wcodec{}).encode(Binary, false, 0, msg, false)
+		fmt.Println(len(emsg))
+		pipe.conn.Write(emsg)
+
+		buff, n, err := pipe.read()
+
+		if err != nil {
+			t.Errorf("pipe read error: %s", err.Error())
+		}
+
+		if n != 1024 {
+			t.Errorf("pipe read error: read buffer length mismatch, expected %d, got %d", 1024, n)
+		}
+
+		if bytes.Compare(buff[:1024], msg) != 0 {
+			t.Errorf("pipe read error: read buffer corrupted")
+		}
 	}
 
-	if bytes.Compare(buff[:ReadBufferSize-WireByteHeaderLength], msg) != 0 {
-		t.Errorf("pipe read error: read buffer corrupted")
-	}
 }
 
 /*
@@ -128,7 +157,7 @@ func TestPoll(t *testing.T) {
 
 	pipe.buffersState.readOpen = true // usually opened by pipe.open
 
-	msg := GenerateByteLen(1024 * 4)
+	msg := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
 	data := pipe.c.encode(Binary, false, 0, msg, false)
 
 	go pipe.poll()
@@ -227,7 +256,7 @@ func TestInbound(t *testing.T) {
 		t.Errorf("pipe inbound error: expected onopened handler to be called once, got called %d times", onopenedStub.times)
 	}
 
-	msg := GenerateByteLen(1024 * 4)
+	msg := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
 	encoded := pipe.c.encode(Binary, false, 0, msg, false)
 
 	go conn.Write(encoded)
@@ -251,7 +280,7 @@ func TestInbound(t *testing.T) {
 	}
 
 	conn.Flush()
-	response := GenerateByteLen(1024 * 4)
+	response := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
 
 	wn, werr := pipe.write(response, false, 0, false)
 	if werr != nil {
@@ -367,7 +396,7 @@ func TestOutbound(t *testing.T) {
 
 	// send to the outbound peer
 
-	ping := GenerateByteLen(1024 * 4)
+	ping := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
 
 	wn, werr := pipe.write(ping, false, 0, false)
 	if werr != nil {
@@ -399,7 +428,7 @@ func TestOutbound(t *testing.T) {
 
 	conn.Flush()
 
-	rawpong := GenerateByteLen(1024 * 4)
+	rawpong := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
 	pong := pipe.c.encode(Binary, false, 0, rawpong, false)
 	go conn.Write(pong)
 

@@ -1,0 +1,5 @@
+Here is where we left off:
+
+  We have issues trying to halt the TestHandleBroadcast test.
+  How to properly halt it? counter is not effective
+  also pipes receive EOF error and not sure what happens afterwards
