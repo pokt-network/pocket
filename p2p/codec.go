@@ -150,7 +150,6 @@ func (c *wcodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32, b
 
 	flagswitch, _, err = parseflag(flags)
 
-	fmt.Println(flagswitch)
 	if err != nil {
 		return
 	}
@@ -162,9 +161,7 @@ func (c *wcodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32, b
 		nonce = 0
 	}
 
-	fmt.Println(bodylen, header)
 	bodylength = binary.BigEndian.Uint32(bodylen)
-	fmt.Println(bodylength)
 	return
 }
 

@@ -190,19 +190,13 @@ func (p *io) inbound(addr string, conn net.Conn, onopened func(*io) error, onclo
 
 func (p *io) read() ([]byte, int, error) {
 	var n int
-	fmt.Println("Gonna read header")
 	if _, err := stdio.ReadFull(p.reader, p.buffers.read[:WireByteHeaderLength]); err != nil {
-		fmt.Println("Issue reading header")
 		return nil, 0, err
 	}
-	fmt.Println("No issue reading header")
 	_, _, bodylen, err := p.c.decodeHeader(p.buffers.read[:WireByteHeaderLength])
 	if err != nil {
-		fmt.Println("Issue decoding header")
 		return nil, 0, err
 	}
-
-	fmt.Println("Bodylen: ", bodylen, "but buffered", p.reader.Buffered(), "actual size:", p.reader.Size(), p.addr)
 
 	if bodylen > uint32(ReadBufferSize) { // TODO: replace with configurable max value
 		return nil, 0, errors.New(fmt.Sprintf("io pipe error: cannot read a buffer of length %d, the acceptedl length is %d.", bodylen, ReadBufferSize))
@@ -215,7 +209,6 @@ func (p *io) read() ([]byte, int, error) {
 	buff := make([]byte, 0)
 	buff = append(buff, p.buffers.read[:WireByteHeaderLength+n]...)
 
-	fmt.Println("Read in total", len(buff))
 	return buff, n, err
 }
 
@@ -223,7 +216,6 @@ func (p *io) poll() {
 	defer func() {
 		close(p.polling)
 		p.closed <- 1
-		fmt.Println("Closing conn")
 	}()
 
 	{
@@ -274,7 +266,6 @@ func (p *io) poll() {
 					break
 				}
 
-				fmt.Println("nonce on new message=", nonce)
 				if nonce != 0 {
 					_, ch, found := p.requests.find(nonce)
 					// TODO: this is hacku
@@ -282,8 +273,6 @@ func (p *io) poll() {
 						ch <- work{nonce: nonce, decode: wrapped, data: data, addr: p.addr}
 						close(ch)
 						continue
-					} else {
-						fmt.Println("Nonce not found")
 					}
 				}
 

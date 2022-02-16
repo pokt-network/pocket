@@ -300,7 +300,7 @@ func (g *gater) Pong(msg message) error {
 
 // Discuss: why is m not a pointer?
 func (g *gater) Broadcast(m *types.NetworkMessage, isroot bool) error {
-	g.Log("Starting gossip round")
+	g.Log("Starting gossip round, level is", m.Level)
 
 	var toplevel int
 	var currentlevel int
@@ -318,22 +318,13 @@ func (g *gater) Broadcast(m *types.NetworkMessage, isroot bool) error {
 		g.Log("Not root, propagating down")
 	}
 
-	fmt.Println(list)
 	source := g.externaladdr
 
 	for ; currentlevel > 0; currentlevel-- {
-		g.Log(" ")
-		g.Log(" ")
-		g.Log("----========Level", currentlevel)
-		g.Log(" ")
-		g.Log(" ")
 		targetlist := getTargetList(list, g.id, toplevel, currentlevel)
-		g.Log("targetlist size", targetlist.size())
 
-		g.Log("Picking right and left")
 		lpos := pickLeft(g.id, targetlist)
 		rpos := pickRight(g.id, targetlist)
-		g.Log("Picked")
 
 		left := targetlist.get(lpos)
 		right := targetlist.get(rpos)
@@ -344,9 +335,7 @@ func (g *gater) Broadcast(m *types.NetworkMessage, isroot bool) error {
 		var l_err, r_err error = nil, nil
 		var wg sync.WaitGroup
 
-		fmt.Println(m)
-
-		SendAck := func(target *peer, ack *[]byte, err *error, m *types.NetworkMessage) {
+		AckSend := func(target *peer, ack *[]byte, err *error, m *types.NetworkMessage) {
 			mmutex.Lock()
 			m.Source = source
 			m.Destination = target.address
@@ -358,9 +347,7 @@ func (g *gater) Broadcast(m *types.NetworkMessage, isroot bool) error {
 				wg.Done()
 			}
 
-			g.Log("Requesting", target.address, "data len", len(encm))
 			response, reqerr := g.Request(target.address, encm, true)
-			g.Log("Received resposne from", target.address)
 
 			if reqerr != nil {
 				*err = reqerr
@@ -371,13 +358,30 @@ func (g *gater) Broadcast(m *types.NetworkMessage, isroot bool) error {
 		}
 
 		wg.Add(1)
-		go SendAck(left, &l_ack, &l_err, m)
+		lmsg := types.NetworkMessage{
+			Source:      m.Source,
+			Destination: m.Destination,
+			Topic:       m.Topic,
+			Nonce:       m.Nonce,
+			Level:       m.Level,
+			Data:        m.Data,
+		}
+		go AckSend(left, &l_ack, &l_err, &lmsg)
 
 		wg.Add(1)
-		go SendAck(right, &r_ack, &r_err, m)
+		rmsg := types.NetworkMessage{
+			Source:      m.Source,
+			Destination: m.Destination,
+			Topic:       m.Topic,
+			Nonce:       m.Nonce,
+			Level:       m.Level,
+			Data:        m.Data,
+		}
+		g.Log("Sending to right", right)
+		go AckSend(right, &r_ack, &r_err, &rmsg)
 
 		wg.Wait()
-		g.Log("*******Request routines are done, check ACKs status")
+		g.Log("Got acks from left and right")
 
 		if l_err != nil {
 			// pick next one but for send only (no ack)
@@ -472,24 +476,29 @@ func (g *gater) Handle() {
 		switch msg.Topic {
 
 		case types.PocketTopic_CONSENSUS:
-			fmt.Println("Received a gossip message")
 			go func() {
-				fmt.Println("Acking...")
 				m.Lock()
-				ack := (&pbuff{}).message(msg.Nonce, msg.Level, types.PocketTopic_CONSENSUS, g.externaladdr, msg.Source)
-				m.Unlock()
-				encoded, err := g.c.encode(ack)
+				ack := &types.NetworkMessage{Nonce: msg.Nonce, Level: msg.Level, Topic: types.PocketTopic_CONSENSUS, Source: g.externaladdr, Destination: msg.Source}
+				encoded, err := g.c.encode(*ack)
 				if err != nil {
 					g.Log("Error encoding m for gossipaCK", err.Error())
 				}
 
-				err = g.Respond(uint32(msg.Nonce), false, ack.Destination, encoded, true)
+				err = g.Respond(uint32(msg.Nonce), false, srcaddr, encoded, true)
+				m.Unlock()
 				if err != nil {
 					g.Log("Error encoding msg for gossipaCK", err.Error())
 				}
 				g.Log("Acked to", ack.Destination)
 			}()
-			go g.Broadcast(msg, false)
+			go g.Broadcast(&types.NetworkMessage{
+				Nonce:       msg.Nonce,
+				Level:       msg.Level,
+				Source:      msg.Source,
+				Topic:       msg.Topic,
+				Destination: msg.Destination,
+				Data:        msg.Data,
+			}, false)
 
 		default:
 			g.Log("Unrecognized message topic", msg.Topic, "from", msg.Source, "to", msg.Destination, "@node", g.address)

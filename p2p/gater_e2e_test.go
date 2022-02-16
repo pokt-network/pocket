@@ -15,7 +15,7 @@ func TestE2EBroadcast(t *testing.T) {
 	var wg sync.WaitGroup
 
 	var rw sync.RWMutex
-	receivedMessages := map[uint64][]message{}
+	receivedMessages := map[uint64][]*types.NetworkMessage{}
 
 	list := &plist{elements: make([]peer, 0)}
 	gaters := make([]*gater, 0)
@@ -67,21 +67,22 @@ func TestE2EBroadcast(t *testing.T) {
 
 	wg.Wait()
 
-	gossipdone := make(chan int)
+	gossipdone := make(chan int, 1)
 	go func() {
 		g := gaters[0]
 
 		g.SetLogger(fmt.Println)
-		gaters[6].SetLogger(fmt.Println)
+		gaters[20].SetLogger(fmt.Println)
 		gaters[12].SetLogger(fmt.Println)
 
 		m := (&pbuff{}).message(int32(0), int32(0), types.PocketTopic_CONSENSUS, g.address, "")
-		//notifier := func(id uint64, addr string, m message) {
-		//	fmt.Println("------------------", id)
-		//	rw.Lock()
-		//	receivedMessages[id] = append(receivedMessages[id], m)
-		//	rw.Unlock()
-		//}
+		g.On(BroadcastDoneEvent, func() {
+			fmt.Println("------------------", g.id)
+			rw.Lock()
+			receivedMessages[g.id] = append(receivedMessages[g.id], m)
+			rw.Unlock()
+			gossipdone <- 1
+		})
 		g.Broadcast(m, true)
 		fmt.Println("Done?")
 		gossipdone <- 1
@@ -91,6 +92,7 @@ closer:
 	for {
 		select {
 		case <-gossipdone:
+			panic("done")
 			for _, g := range gaters {
 				g.Close()
 			}

@@ -1,7 +1,6 @@
 package p2p
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -39,7 +38,6 @@ func pickLeft(srcid uint64, l *plist) (lpos int) {
 	lpos = int(math.Round(float64(ownposition)+lsize/float64(1.5))) + 1
 	lpos = int(lsize) - lpos + 1
 
-	fmt.Println(lpos)
 	if lpos > int(lsize) {
 		lpos -= int(lsize) // rollover
 	}
@@ -85,7 +83,6 @@ func getTargetList(l *plist, id uint64, topl, currl int) *plist {
 
 	sublist := l.copy()
 	slice = (&sublist).slice()
-	fmt.Println("slice", slice, ownposition, ownposition+int(tlsize))
 
 	sublist.update(slice[ownposition : ownposition+int(tlsize)])
 
