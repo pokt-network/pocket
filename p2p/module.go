@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"pocket/shared/config"
-	"pocket/shared/messages"
 	"pocket/shared/modules"
+	"pocket/shared/types"
 )
 
 type P2PModule struct {
@@ -32,7 +32,7 @@ func Create(config *config.Config) (modules.NetworkModule, error) {
 	}, nil
 }
 
-func (p *P2PModule) Start(ctx *context.PocketContext) error {
+func (p *P2PModule) Start() error {
 	if p.gater == nil {
 		return ErrNotCreated
 	}
@@ -48,8 +48,8 @@ func (p *P2PModule) Start(ctx *context.PocketContext) error {
 	return nil
 }
 
-func (p *P2PModule) Stop(*context.PocketContext) error {
-	p.gater.Close()
+func (p *P2PModule) Stop() error {
+	go p.gater.Close()
 
 	<-p.gater.closed
 	<-p.gater.done
@@ -57,22 +57,22 @@ func (p *P2PModule) Stop(*context.PocketContext) error {
 	return nil
 }
 
-func (p *P2PModule) SetPocketBusMod(pocketBus modules.PocketBusModule) {
+func (p *P2PModule) SetPocketBusMod(pocketBus modules.BusModule) {
 	p.pocketBusMod = pocketBus
 }
 
-func (p *P2PModule) GetPocketBusMod() modules.PocketBusModule {
+func (p *P2PModule) GetPocketBusMod() modules.BusModule {
 	if p.pocketBusMod == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return p.pocketBusMod
 }
 
-func (p *P2PModule) BroadcastMessage(msg *messages.NetworkMessage) error {
+func (p *P2PModule) BroadcastMessage(msg *types.NetworkMessage) error {
 	return p.gater.Broadcast(msg, true)
 }
 
-func (p *P2PModule) Send(addr string, msg *messages.NetworkMessage) error {
+func (p *P2PModule) Send(addr string, msg *types.NetworkMessage) error {
 	encoded, err := p.gater.c.encode(msg)
 	if err != nil {
 		return err
@@ -81,7 +81,7 @@ func (p *P2PModule) Send(addr string, msg *messages.NetworkMessage) error {
 	return p.gater.Send(addr, encoded, true) // true: meaning that this message is already encoded
 }
 
-func (p *P2PModule) AckSend(addr string, msg *messages.NetworkMessage) (bool, error) {
+func (p *P2PModule) AckSend(addr string, msg *types.NetworkMessage) (bool, error) {
 	encoded, err := p.gater.c.encode(msg)
 	if err != nil {
 		return false, err
@@ -97,7 +97,7 @@ func (p *P2PModule) AckSend(addr string, msg *messages.NetworkMessage) (bool, er
 		return true, err // TODO: notice it's true
 	}
 
-	ackmsg := ack.(*messages.NetworkMessage)
+	ackmsg := ack.(*types.NetworkMessage)
 
 	if ackmsg.Nonce == msg.Nonce {
 		return true, nil

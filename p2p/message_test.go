@@ -3,7 +3,7 @@ package p2p
 import (
 	"bytes"
 	"encoding/binary"
-	"pocket/shared/messages"
+	"pocket/shared/types"
 	"testing"
 )
 
@@ -153,9 +153,9 @@ func TestProtoDomainCodec(t *testing.T) {
 
 	// test message instantiation
 	{
-		p2pmsg := pd.message(nonce, level, messages.PocketTopic_P2P, src, dst)
+		p2pmsg := pd.message(nonce, level, types.PocketTopic_P2P, src, dst)
 
-		if p2pmsg.Topic != messages.PocketTopic_P2P {
+		if p2pmsg.Topic != types.PocketTopic_P2P {
 			t.Errorf("Protobuff messenger error: Failed to instantiate a ping message, expected topic: %s, got: %s", Churn, p2pmsg.Topic)
 		}
 
@@ -179,7 +179,7 @@ func TestProtoDomainCodec(t *testing.T) {
 
 	// test encoding/decoding of ping
 	{
-		p2pmsg := pd.message(nonce, level, messages.PocketTopic_P2P, src, dst)
+		p2pmsg := pd.message(nonce, level, types.PocketTopic_P2P, src, dst)
 
 		encoded, err := pd.encode(*p2pmsg)
 
@@ -214,7 +214,7 @@ func TestProtoDomainCodec(t *testing.T) {
 			t.Errorf("Protobuff messenger error: decoder corrupted ping message, expected action: %s, got: %s", dst, p2pmsg.Destination)
 		}
 
-		if p2pmsg.Topic != messages.PocketTopic_P2P {
+		if p2pmsg.Topic != types.PocketTopic_P2P {
 			t.Errorf("Protobuff messenger error: decoder corrupted ping message, expected topic: %s, got: %s", Churn, p2pmsg.Topic)
 		}
 	}

@@ -4,27 +4,26 @@ import (
 	"log"
 	"strconv"
 
-	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/types"
-	"pocket/shared/events"
-	"pocket/shared/messages"
+	consensus_types "pocket/consensus/types"
 
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (m *consensusModule) broadcastToNodes(message consensus_types.GenericConsensusMessage) {
-	event := events.PocketEvent{
-		SourceModule: events.CONSENSUS_MODULE,
-		PocketTopic:  string(events.P2P_BROADCAST_MESSAGE),
+type ConsensusModule struct{}
+
+func (m *ConsensusModule) broadcastToNodes(message consensus_types.GenericConsensusMessage) {
+	event := types.PocketEvent{
+		SourceModule: types.CONSENSUS_MODULE,
+		PocketTopic:  string(types.P2P_BROADCAST_MESSAGE),
 	}
 	networkProtoMsg := m.getConsensusNetworkMessage(message, &event)
 	m.GetPocketBusMod().GetNetworkModule().BroadcastMessage(networkProtoMsg)
 }
 
-func (m *consensusModule) sendToNode(message consensus_types.GenericConsensusMessage, destNode *types.NodeId) {
-	event := events.PocketEvent{
-		SourceModule: events.CONSENSUS_MODULE,
-		PocketTopic:  string(events.P2P_SEND_MESSAGE),
+func (m *ConsensusModule) sendToNode(message consensus_types.GenericConsensusMessage, destNode *types.NodeId) {
+	event := types.PocketEvent{
+		SourceModule: types.CONSENSUS_MODULE,
+		PocketTopic:  string(types.P2P_SEND_MESSAGE),
 		Destination:  *destNode,
 	}
 	// PreP2P hack
@@ -33,7 +32,7 @@ func (m *consensusModule) sendToNode(message consensus_types.GenericConsensusMes
 	m.GetPocketBusMod().GetNetworkModule().Send(addr, networkProtoMsg)
 }
 
-func (m *consensusModule) getConsensusNetworkMessage(message consensus_types.GenericConsensusMessage, event *events.PocketEvent) *messages.NetworkMessage {
+func (m *ConsensusModule) getConsensusNetworkMessage(message consensus_types.GenericConsensusMessage, event *types.PocketEvent) *types.NetworkMessage {
 	consensusMessage := &consensus_types.ConsensusMessage{
 		Message: message,
 		Sender:  m.NodeId,
@@ -45,7 +44,7 @@ func (m *consensusModule) getConsensusNetworkMessage(message consensus_types.Gen
 		return nil
 	}
 
-	consensusProtoMsg := &messages.ConsensusMessage{
+	consensusProtoMsg := &types.ConsensusMessage{
 		Data: data,
 	}
 
@@ -55,28 +54,28 @@ func (m *consensusModule) getConsensusNetworkMessage(message consensus_types.Gen
 		return nil
 	}
 
-	networkProtoMsg := &messages.NetworkMessage{
-		Topic: messages.PocketTopic_CONSENSUS,
+	networkProtoMsg := &types.NetworkMessage{
+		Topic: types.PocketTopic_CONSENSUS,
 		Data:  anyProto,
 	}
 	return networkProtoMsg
 }
 
 // TODO: Move this into persistence.
-func (m *consensusModule) clearMessagesPool() {
+func (m *ConsensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
 		m.MessagePool[step] = make([]HotstuffMessage, 0)
 	}
 }
 
-func (m *consensusModule) nodeLog(s string) {
+func (m *ConsensusModule) nodeLog(s string) {
 	log.Printf("[%s][%d] %s\n", m.logPrefix, m.NodeId, s)
 }
 
-func (m *consensusModule) nodeLogError(s string) {
+func (m *ConsensusModule) nodeLogError(s string) {
 	log.Printf("[ERROR][%s][%d] %s\n", m.logPrefix, m.NodeId, s)
 }
 
-func (m *consensusModule) isLeader() bool {
+func (m *ConsensusModule) isLeader() bool {
 	return m.LeaderId != nil && *m.LeaderId == m.NodeId
 }

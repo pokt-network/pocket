@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
-	"pocket/shared/messages"
+	"pocket/shared/types"
 	"sync"
 	"testing"
 	"time"
@@ -556,7 +556,7 @@ func TestBroadcast(t *testing.T) {
 	gossipdone := make(chan int)
 	go func() {
 		<-g.ready
-		m := (&pbuff{}).message(int32(0), int32(0), messages.PocketTopic_CONSENSUS, g.address, "")
+		m := (&pbuff{}).message(int32(0), int32(0), types.PocketTopic_CONSENSUS, g.address, "")
 
 		fmt.Println("Starting gossip")
 		g.Broadcast(m, true)
@@ -779,7 +779,7 @@ func TestHandleBroadcast(t *testing.T) {
 
 					nonce, _, _, _, err := (&wcodec{}).decode(d.buff)
 					fmt.Println("Err", err)
-					ack := (&pbuff{}).message(int32(nonce), int32(0), messages.PocketTopic_CONSENSUS, e.address, g.address)
+					ack := (&pbuff{}).message(int32(nonce), int32(0), types.PocketTopic_CONSENSUS, e.address, g.address)
 					eack, _ := g.c.encode(*ack)
 					wack := (&wcodec{}).encode(Binary, false, nonce, eack, true)
 
@@ -795,7 +795,7 @@ func TestHandleBroadcast(t *testing.T) {
 
 	conn, _ := net.Dial("tcp", g.address)
 
-	gm := (&pbuff{}).message(int32(0), int32(4), messages.PocketTopic_CONSENSUS, conn.LocalAddr().String(), g.address)
+	gm := (&pbuff{}).message(int32(0), int32(4), types.PocketTopic_CONSENSUS, conn.LocalAddr().String(), g.address)
 	egm, _ := g.c.encode(*gm)
 	wgm := (&wcodec{}).encode(Binary, false, 0, egm, true)
 

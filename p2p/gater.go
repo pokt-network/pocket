@@ -29,7 +29,7 @@ type GaterModule interface {
 	Done() <-chan uint
 
 	Send(addr string, msg []byte, wrapped bool) error
-	Broadcast(m *messages.NetworkMessage, isroot bool) error
+	Broadcast(m *types.NetworkMessage, isroot bool) error
 
 	On(GaterEvent, func())
 	Handle()
@@ -105,7 +105,7 @@ func (g *gater) Config(protocol, address, external string, peers []string) {
 
 func (g *gater) Init() error {
 	pbuffmsnger := &pbuff{}
-	msg := pbuffmsnger.message(int32(0), 1, messages.PocketTopic_P2P, "", "")
+	msg := pbuffmsnger.message(int32(0), 1, types.PocketTopic_P2P, "", "")
 	_, err := g.c.register(*msg, pbuffmsnger.encode, pbuffmsnger.decode)
 	if err != nil {
 		return err
@@ -299,7 +299,7 @@ func (g *gater) Pong(msg message) error {
 }
 
 // Discuss: why is m not a pointer?
-func (g *gater) Broadcast(m *messages.NetworkMessage, isroot bool) error {
+func (g *gater) Broadcast(m *types.NetworkMessage, isroot bool) error {
 	g.Log("Starting gossip round")
 
 	var toplevel int
@@ -347,7 +347,7 @@ func (g *gater) Broadcast(m *messages.NetworkMessage, isroot bool) error {
 
 		fmt.Println(m)
 
-		SendAck := func(target *peer, ack *[]byte, err *error, m *messages.NetworkMessage) {
+		SendAck := func(target *peer, ack *[]byte, err *error, m *types.NetworkMessage) {
 			mmutex.Lock()
 			m.Source = source
 			m.Destination = target.address
@@ -443,7 +443,7 @@ func (g *gater) On(e GaterEvent, handler func()) {
 }
 
 func (g *gater) Handle() {
-	var msg *messages.NetworkMessage
+	var msg *types.NetworkMessage
 	var m sync.Mutex
 
 	g.Log("Handling...")
@@ -460,7 +460,7 @@ func (g *gater) Handle() {
 			}
 
 			m.Lock()
-			msgi := decoded.(messages.NetworkMessage)
+			msgi := decoded.(types.NetworkMessage)
 			msg = &msgi
 			msg.Nonce = int32(nonce)
 			m.Unlock()
@@ -472,12 +472,12 @@ func (g *gater) Handle() {
 
 		switch msg.Topic {
 
-		case messages.PocketTopic_CONSENSUS:
+		case types.PocketTopic_CONSENSUS:
 			fmt.Println("Received a gossip message")
 			go func() {
 				fmt.Println("Acking...")
 				m.Lock()
-				ack := (&pbuff{}).message(msg.Nonce, msg.Level, messages.PocketTopic_CONSENSUS, g.externaladdr, msg.Source)
+				ack := (&pbuff{}).message(msg.Nonce, msg.Level, types.PocketTopic_CONSENSUS, g.externaladdr, msg.Source)
 				m.Unlock()
 				encoded, err := g.c.encode(ack)
 				if err != nil {

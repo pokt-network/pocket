@@ -160,7 +160,7 @@ func broadcastMessage(m consensus_types.GenericConsensusMessage, network p2p_typ
 	}
 
 	networkProtoMsg := &types.NetworkMessage{
-		Topic: types.PocketTopic_CONSENSUS.String(),
+		Topic: types.PocketTopic_CONSENSUS,
 		Data:  anyProto,
 	}
 

@@ -3,7 +3,6 @@ package dkg
 import (
 	"log"
 	consensus_types "pocket/consensus/types"
-	"pocket/shared/messages"
 	"pocket/shared/types"
 
 	"google.golang.org/protobuf/types/known/anypb"
@@ -48,8 +47,8 @@ func (module *dkgModule) publishEvent(message *DKGMessage, event *types.PocketEv
 		return
 	}
 
-	networkProtoMsg := &messages.NetworkMessage{
-		Topic: messages.PocketTopic_CONSENSUS,
+	networkProtoMsg := &types.NetworkMessage{
+		Topic: types.PocketTopic_CONSENSUS,
 		Data:  anyProto,
 	}
 

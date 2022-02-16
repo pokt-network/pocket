@@ -2,7 +2,7 @@ package p2p
 
 import (
 	"fmt"
-	"pocket/shared/messages"
+	"pocket/shared/types"
 	"sync"
 	"testing"
 )
@@ -75,7 +75,7 @@ func TestE2EBroadcast(t *testing.T) {
 		gaters[6].SetLogger(fmt.Println)
 		gaters[12].SetLogger(fmt.Println)
 
-		m := (&pbuff{}).message(int32(0), int32(0), messages.PocketTopic_CONSENSUS, g.address, "")
+		m := (&pbuff{}).message(int32(0), int32(0), types.PocketTopic_CONSENSUS, g.address, "")
 		//notifier := func(id uint64, addr string, m message) {
 		//	fmt.Println("------------------", id)
 		//	rw.Lock()

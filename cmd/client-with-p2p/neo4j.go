@@ -4,11 +4,12 @@ import (
 	"context"
 	"log"
 
-	consensus_types "pocket/consensus/pkg/consensus/types"
 	"pocket/shared/modules"
 
 	"github.com/mindstand/gogm/v2"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
+
+	consensus_types "pocket/consensus/types"
 )
 
 func getNodeData(p2pmod modules.NetworkModule) (node_data []*consensus_types.ConsensusNodeState) {

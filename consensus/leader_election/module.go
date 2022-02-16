@@ -5,7 +5,6 @@ import (
 	"pocket/consensus/leader_election/vrf"
 	c_types "pocket/consensus/types"
 	"pocket/shared/config"
-	"pocket/shared/messages"
 	"pocket/shared/modules"
 	"pocket/shared/types"
 	"strconv"
@@ -211,8 +210,8 @@ func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElect
 		return err
 	}
 
-	networkProtoMsg := &messages.NetworkMessage{
-		Topic: messages.PocketTopic_CONSENSUS,
+	networkProtoMsg := &types.NetworkMessage{
+		Topic: types.PocketTopic_CONSENSUS,
 		Data:  anyProto,
 	}
 

@@ -1,11 +1,11 @@
 version: "3.8"
 
 services:
-  client_alpha: # use this to use the limited p2p version (prep2p)
+  client: # use this to use the limited p2p version (prep2p)
     container_name: client
     image: pocket/client:latest
     build:
-      context: ../
+      context: ../..
       dockerfile: ./build/Dockerfile.client
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
@@ -18,7 +18,7 @@ services:
     command: "scripts/watch.sh build/config/config1.json"
     build:
       context: ../..
-      dockerfile: ../Dockerfile
+      dockerfile: ./build/Dockerfile
     expose:
 #      - "7080" # debug
       - "8080"
@@ -38,7 +38,7 @@ services:
     command: "scripts/watch.sh build/config/config2.json"
     build:
       context: ../..
-      dockerfile: ../Dockerfile
+      dockerfile: ./build/Dockerfile
     expose:
       - "7082"
       - "8080"
@@ -58,7 +58,7 @@ services:
     command: "scripts/watch.sh build/config/config3.json"
     build:
       context: ../..
-      dockerfile: ../Dockerfile
+      dockerfile: ./build/Dockerfile
     expose:
       - "7083"
       - "8080"
@@ -78,7 +78,7 @@ services:
     command: "scripts/watch.sh build/config/config4.json"
     build:
       context: ../..
-      dockerfile: ../Dockerfile
+      dockerfile: ./build/Dockerfile
     expose:
       - "8080"
       - "9080"

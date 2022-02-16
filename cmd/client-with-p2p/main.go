@@ -5,20 +5,23 @@ import (
 	"log"
 	"os"
 
-	"pocket/consensus/pkg/config"
 	"pocket/consensus/pkg/consensus"
-	"pocket/consensus/pkg/consensus/dkg"
-	"pocket/consensus/pkg/consensus/leader_election"
-	"pocket/consensus/pkg/consensus/statesync"
-	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/types"
 	p2p "pocket/p2p"
 	"pocket/shared"
 	"pocket/shared/messages"
-	"pocket/shared/modules"
 
 	"github.com/manifoldco/promptui"
+
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"pocket/consensus/dkg"
+	"pocket/consensus/leader_election"
+	"pocket/consensus/statesync"
+	consensus_types "pocket/consensus/types"
+	"pocket/shared/config"
+	"pocket/shared/types"
+
+	"pocket/shared/modules"
 )
 
 const (

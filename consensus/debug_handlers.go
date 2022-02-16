@@ -46,7 +46,8 @@ func (m *ConsensusModule) handleSendTx(debugMessage *DebugMessage) {
 		PocketTopic:  string(types.UTILITY_TX_MESSAGE),
 	}
 	networkProtoMsg := m.getConsensusNetworkMessage(txMessage, &event)
-	networkProtoMsg.Topic = string(types.UTILITY_TX_MESSAGE)
+	// TODO: Fix this later in proto to support UTILITY_TX_MESSAGE. Repalaced by PocketTopic_CONSENSUS ftm
+	networkProtoMsg.Topic = types.PocketTopic_CONSENSUS
 	m.GetBus().GetNetworkModule().BroadcastMessage(networkProtoMsg)
 }
 
