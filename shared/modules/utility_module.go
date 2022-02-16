@@ -6,7 +6,7 @@ type UnstakingActor interface {
 	GetOutputAddress() []byte
 }
 
-type UtilityContextInterface interface {
+type UtilityContext interface {
 	ReleaseContext()
 	GetPersistanceContext() PersistenceContext
 	CheckTransaction(tx []byte) error
@@ -15,17 +15,6 @@ type UtilityContextInterface interface {
 }
 
 type UtilityModule interface {
-	PocketModule
-
-	NewUtilityContextWrapper(height int64) (UtilityContextInterface, error) // INTEGRATION_TEMP: need to move `types.Errors` to shared
-
-	// // Message Handling
-	// HandleTransaction(*context.PocketContext, *typespb.Transaction) error
-	// HandleEvidence(*context.PocketContext, *typespb.Evidence) error
-
-	// // Block Application
-	// ReapMempool(*context.PocketContext) ([]*typespb.Transaction, error)
-	// BeginBlock(*context.PocketContext) error
-	// DeliverTx(*context.PocketContext, *typespb.Transaction) error
-	// EndBlock(*context.PocketContext) error
+	Module
+	NewContext(height int64) (UtilityContext, error) // INTEGRATION_TEMP: need to move `types.Errors` to shared
 }

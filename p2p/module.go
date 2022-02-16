@@ -4,15 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"pocket/consensus/pkg/config"
-	"pocket/shared/context"
+	"pocket/shared/config"
 	"pocket/shared/messages"
 	"pocket/shared/modules"
 )
 
 type P2PModule struct {
 	modules.NetworkModule
-	pocketBusMod modules.PocketBusModule
+	pocketBusMod modules.BusModule
 
 	p2pConfig *config.P2PConfig
 

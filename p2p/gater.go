@@ -3,7 +3,7 @@ package p2p
 import (
 	"fmt"
 	"net"
-	"pocket/shared/messages"
+	"pocket/shared/types"
 	"strings"
 	"sync"
 	"time"
@@ -29,7 +29,6 @@ type GaterModule interface {
 	Done() <-chan uint
 
 	Send(addr string, msg []byte, wrapped bool) error
-
 	Broadcast(m *messages.NetworkMessage, isroot bool) error
 
 	On(GaterEvent, func())

@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
-	p2p "p2p"
+	"pocket/p2p"
 	"strings"
 	"time"
 )

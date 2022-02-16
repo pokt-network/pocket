@@ -4,18 +4,16 @@ import (
 	"encoding/gob"
 	"log"
 	"os"
-
-	"pocket/consensus/pkg/config"
-	"pocket/consensus/pkg/consensus"
-	"pocket/consensus/pkg/consensus/dkg"
-	"pocket/consensus/pkg/consensus/leader_election"
-	"pocket/consensus/pkg/consensus/statesync"
-	consensus_types "pocket/consensus/pkg/consensus/types"
-	"pocket/consensus/pkg/types"
-	p2p "pocket/prep2p"
-	p2p_types "pocket/prep2p/pre_p2p_types"
-	"pocket/shared"
-	"pocket/shared/messages"
+	"pocket/consensus"
+	"pocket/consensus/dkg"
+	"pocket/consensus/leader_election"
+	"pocket/consensus/statesync"
+	consensus_types "pocket/consensus/types"
+	"pocket/p2p/pre_p2p"
+	p2p_types "pocket/p2p/pre_p2p/pre_p2p_types"
+	"pocket/shared/config"
+	"pocket/shared/crypto"
+	"pocket/shared/types"
 
 	"github.com/manifoldco/promptui"
 	"google.golang.org/protobuf/proto"
@@ -32,7 +30,7 @@ const (
 	PromptOptionDumpToNeo4j               string = "DumpToNeo4j"
 )
 
-const defaultGenesisFile = "config/genesis.json"
+const defaultGenesisFile = "build/config/genesis.json"
 
 var items = []string{
 	PromptOptionTriggerNextView,
@@ -45,9 +43,10 @@ var items = []string{
 }
 
 func main() {
+	pk, _ := crypto.GeneratePrivateKey()
 	cfg := &config.Config{
 		Genesis:    defaultGenesisFile,
-		PrivateKey: types.GeneratePrivateKey(uint32(0)), // Not used
+		PrivateKey: pk.String(), // Not used
 	}
 
 	gob.Register(&consensus.DebugMessage{})
@@ -57,10 +56,10 @@ func main() {
 	gob.Register(&leader_election.LeaderElectionMessage{})
 	gob.Register(&consensus.TxWrapperMessage{})
 
-	state := shared.GetPocketState()
+	state := pre_p2p.GetPocketState()
 	state.LoadStateFromConfig(cfg)
 
-	network := p2p.ConnectToNetwork(state.ValidatorMap)
+	network := pre_p2p.ConnectToNetwork(state.ValidatorMap)
 
 	log.Println("[CLIENT] Toggling paceMaker into manual mode...")
 	handleSelect(PromptOptionTogglePaceMakerManualMode, network)
@@ -150,7 +149,7 @@ func broadcastMessage(m consensus_types.GenericConsensusMessage, network p2p_typ
 		log.Println("[ERROR] Failed to encode message: ", err)
 		return
 	}
-	consensusProtoMsg := &messages.ConsensusMessage{
+	consensusProtoMsg := &types.ConsensusMessage{
 		Data: messageData,
 	}
 
@@ -160,8 +159,8 @@ func broadcastMessage(m consensus_types.GenericConsensusMessage, network p2p_typ
 		return
 	}
 
-	networkProtoMsg := &messages.NetworkMessage{
-		Topic: messages.PocketTopic_CONSENSUS.String(),
+	networkProtoMsg := &types.NetworkMessage{
+		Topic: types.PocketTopic_CONSENSUS.String(),
 		Data:  anyProto,
 	}
 

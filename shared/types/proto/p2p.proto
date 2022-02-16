@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package p2p;
+
+option go_package = "/types/";
+
+enum PocketTopic {
+  CONSENSUS = 0;
+  P2P = 1;
+}
+
+message NetworkMessage {
+  int32 nonce = 1;
+  int32 level = 2;
+  PocketTopic topic = 3;
+  string source = 4;
+  string destination = 5;
+  google.protobuf.Any data = 6;
+}

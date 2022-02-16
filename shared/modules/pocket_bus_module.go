@@ -1,17 +1,14 @@
 package modules
 
 import (
-	// "pocket/consensus/pkg/persistence"
-
-	"pocket/shared/events"
-	// "pocket/utility/utility"
+	"pocket/shared/types"
 )
 
-type PocketEventsChannel chan events.PocketEvent
+type PocketEventsChannel chan types.PocketEvent
 
-type PocketBusModule interface {
-	PublishEventToBus(e *events.PocketEvent)
-	GetBusEvent() *events.PocketEvent
+type BusModule interface {
+	PublishEventToBus(e *types.PocketEvent)
+	GetBusEvent() *types.PocketEvent
 	GetEventBus() PocketEventsChannel
 
 	GetPersistenceModule() PersistenceModule

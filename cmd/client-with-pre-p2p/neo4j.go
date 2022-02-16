@@ -4,16 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"github.com/mindstand/gogm/v2"
+	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"io/ioutil"
 	"log"
 	"net"
-
-	consensus_types "pocket/consensus/pkg/consensus/types"
-
-	p2p_types "pocket/prep2p/pre_p2p_types"
-
-	"github.com/mindstand/gogm/v2"
-	"github.com/neo4j/neo4j-go-driver/neo4j"
+	consensus_types "pocket/consensus/types"
+	p2p_types "pocket/p2p/pre_p2p/pre_p2p_types"
 )
 
 func getNodeData(network p2p_types.Network) (node_data []*consensus_types.ConsensusNodeState) {
