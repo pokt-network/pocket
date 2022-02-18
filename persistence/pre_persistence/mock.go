@@ -29,14 +29,19 @@ var (
 	defaultStakeStatus      = int32(2)
 )
 
-func NewMockGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfServiceNodes int) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto2.PrivateKey, err error) {
+func NewMockGenesisState(_, numOfApplications, numOfFisherman, numOfServiceNodes int) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto2.PrivateKey, err error) {
 	state = &GenesisState{}
+	testing_state := GetTestState()
+	vm := testing_state.ValidatorMap
+	numOfValidators := len(vm)
 	validatorKeys = make([]crypto2.PrivateKey, numOfValidators)
 	appKeys = make([]crypto2.PrivateKey, numOfApplications)
 	fishKeys = make([]crypto2.PrivateKey, numOfFisherman)
 	serviceNodeKeys = make([]crypto2.PrivateKey, numOfServiceNodes)
 	for i := range validatorKeys {
-		pk, _ := crypto2.GeneratePrivateKey()
+		n := vm[NodeId(i+1)]
+		//pk, _ := crypto2.GeneratePrivateKey() CHANGED FOR INTEGRATION!!! USING STATE
+		pk, _ := crypto2.NewPrivateKey(n.PrivateKey)
 		v := &Validator{
 			Status:       2,
 			ServiceURL:   defaultServiceURL,

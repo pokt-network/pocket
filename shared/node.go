@@ -19,7 +19,7 @@ import (
 type Node struct {
 	modules.Module
 
-	pocketBusMod modules.BusModule
+	pocketBusMod modules.Bus
 
 	Address string
 }
@@ -29,11 +29,6 @@ func Create(config *config.Config) (n *Node, err error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// networkMod, err := p2p.Create(config)
-	// if err != nil {
-	// 	return nil, err
-	// }
 
 	networkMod, err := pre_p2p.Create(config)
 	if err != nil {
@@ -93,11 +88,11 @@ func (node *Node) Start() error {
 	}
 }
 
-func (m *Node) SetPocketBusMod(pocketBus modules.BusModule) {
+func (m *Node) SetBus(pocketBus modules.Bus) {
 	m.pocketBusMod = pocketBus
 }
 
-func (m *Node) GetBus() modules.BusModule {
+func (m *Node) GetBus() modules.Bus {
 	if m.pocketBusMod == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}

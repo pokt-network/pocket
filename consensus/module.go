@@ -2,6 +2,9 @@ package consensus
 
 import (
 	"encoding/gob"
+	"fmt"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"log"
 	"pocket/consensus/dkg"
 	"pocket/consensus/leader_election"
@@ -9,9 +12,6 @@ import (
 	consensus_types "pocket/consensus/types"
 	"pocket/shared/config"
 	"pocket/shared/crypto"
-	"pocket/shared/types"
-
-	"google.golang.org/protobuf/types/known/anypb"
 	"pocket/shared/modules"
 )
 
@@ -21,13 +21,13 @@ const (
 
 type ConsensusModule struct {
 	modules.ConsensusModule
-	pocketBusMod modules.BusModule
+	pocketBusMod modules.Bus
 
 	// Hotstuff
 	Height BlockHeight
 	Round  Round
 	Step   Step
-	Block  *types.BlockConsTemp // The current block being proposed.
+	Block  *consensus_types.BlockConsTemp // The current block being proposed.
 
 	HighPrepareQC *QuorumCertificate // highest QC for which replica voted PRECOMMIT.
 	LockedQC      *QuorumCertificate // highest QC for which replica voted COMMIT.
@@ -68,7 +68,7 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	gob.Register(&dkg.DKGMessage{})
 	gob.Register(&leader_election.LeaderElectionMessage{})
 	gob.Register(&TxWrapperMessage{})
-	state := consensus_types.GetPocketState()
+	state := consensus_types.GetTestState()
 	state.LoadStateFromConfig(cfg)
 
 	//stateSyncMod, err := statesync.Create(ctx, base)
@@ -145,17 +145,17 @@ func (m *ConsensusModule) Start() error {
 	return nil
 }
 
-func (m *ConsensusModule) GetBus() modules.BusModule {
+func (m *ConsensusModule) GetBus() modules.Bus {
 	if m.pocketBusMod == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.pocketBusMod
 }
 
-func (m *ConsensusModule) SetPocketBusMod(pocketBus modules.BusModule) {
+func (m *ConsensusModule) SetBus(pocketBus modules.Bus) {
 	m.pocketBusMod = pocketBus
-	m.paceMaker.SetPocketBusMod(pocketBus)
-	m.leaderElectionMod.SetPocketBusMod(pocketBus)
+	m.paceMaker.SetBus(pocketBus)
+	m.leaderElectionMod.SetBus(pocketBus)
 }
 
 func (m *ConsensusModule) Stop() error {
@@ -164,13 +164,14 @@ func (m *ConsensusModule) Stop() error {
 }
 
 func (m *ConsensusModule) HandleMessage(anyMessage *anypb.Any) {
-	messageProto := &types.ConsensusMessage{}
-
-	if err := anyMessage.UnmarshalTo(messageProto); err != nil {
-		m.nodeLogError("[HandleMessage] Error unmarshalling message: %v" + err.Error())
-		return
+	d, err := anypb.UnmarshalNew(anyMessage, proto.UnmarshalOptions{})
+	if err != nil {
+		panic(err.Error()) // TODO remove
 	}
-
+	messageProto, ok := d.(*consensus_types.Message)
+	if !ok {
+		panic("any isn't Message type")
+	}
 	message, err := consensus_types.DecodeConsensusMessage(messageProto.Data)
 	if err != nil {
 		m.nodeLogError("[HandleMessage] Error unmarshalling message: %v" + err.Error())
@@ -192,10 +193,10 @@ func (m *ConsensusModule) HandleMessage(anyMessage *anypb.Any) {
 }
 
 func (m *ConsensusModule) HandleTransaction(anyMessage *anypb.Any) {
-	messageProto := &types.ConsensusMessage{}
+	messageProto := &consensus_types.Message{}
 
 	if err := anyMessage.UnmarshalTo(messageProto); err != nil {
-		m.nodeLogError("[HandleMessage] Error unmarshalling message: %v" + err.Error())
+		m.nodeLogError("[HandleTransaction] Error unmarshalling message: %v" + err.Error())
 		return
 	}
 
@@ -203,6 +204,8 @@ func (m *ConsensusModule) HandleTransaction(anyMessage *anypb.Any) {
 	module := m.GetBus().GetUtilityModule()
 	m.UtilityContext, _ = module.NewContext(int64(m.Height))
 	if err := m.UtilityContext.CheckTransaction(messageProto.Data); err != nil {
-		m.nodeLogError("")
+		m.nodeLogError(err.Error())
 	}
+	fmt.Println("TRANSACTION IS CHECKED")
+	m.UtilityContext.ReleaseContext()
 }

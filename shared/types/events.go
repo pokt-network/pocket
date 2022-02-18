@@ -7,7 +7,7 @@ import (
 )
 
 type SourceModule string
-type PocketEventTopic string
+type EventTopic string
 
 const (
 	// Core
@@ -27,27 +27,27 @@ const (
 
 const (
 	// Consensus
-	CONSENSUS                   PocketEventTopic = "CONSENSUS"
-	CONSENSUS_TELEMETRY_MESSAGE PocketEventTopic = "CONSENSUS_TELEMETRY_MESSAGE"
+	CONSENSUS                   EventTopic = "CONSENSUS"
+	CONSENSUS_TELEMETRY_MESSAGE EventTopic = "CONSENSUS_TELEMETRY_MESSAGE"
 
 	// Consensus auxilary
-	STATE_SYNC_MESSAGE      PocketEventTopic = "STATE_SYNC_MESSAGE"
-	LEADER_ELECTION_MESSAGE PocketEventTopic = "LEADER_ELECTION_MESSAGE"
+	STATE_SYNC_MESSAGE      EventTopic = "STATE_SYNC_MESSAGE"
+	LEADER_ELECTION_MESSAGE EventTopic = "LEADER_ELECTION_MESSAGE"
 
 	// UTILITY?
-	UTILITY_TX_MESSAGE       PocketEventTopic = "TRANSACTION_MESSAGE"
-	UTILITY_EVIDENCE_MESSAGE PocketEventTopic = "EVIDENCE_MESSAGE"
+	UTILITY_TX_MESSAGE       EventTopic = "TRANSACTION_MESSAGE"
+	UTILITY_EVIDENCE_MESSAGE EventTopic = "EVIDENCE_MESSAGE"
 
 	// P2P
-	P2P_SEND_MESSAGE      PocketEventTopic = "p2p_send_message"
-	P2P_BROADCAST_MESSAGE PocketEventTopic = "p2p_broadcast_message"
+	P2P_SEND_MESSAGE      EventTopic = "p2p_send_message"
+	P2P_BROADCAST_MESSAGE EventTopic = "p2p_broadcast_message"
 )
 
-type PocketEvent struct {
+type Event struct {
 	SourceModule SourceModule
 	Destination  types.NodeId
 
-	// PocketTopic  PocketEventTopic
+	// PocketTopic  EventTopic
 	// MessageData  []byte
 	PocketTopic string
 	MessageData *anypb.Any

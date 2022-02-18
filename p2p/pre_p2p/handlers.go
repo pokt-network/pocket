@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	types2 "pocket/p2p/pre_p2p/types"
 	"pocket/shared/types"
 
 	"google.golang.org/protobuf/proto"
@@ -18,8 +19,10 @@ func (m *networkModule) handleNetworkMessage(conn net.Conn) {
 		return
 	}
 
-	networkMessage := types.NetworkMessage{}
-	proto.Unmarshal(data, &networkMessage)
+	networkMessage := types2.P2PMessage{}
+	if err := proto.Unmarshal(data, &networkMessage); err != nil {
+		panic(err) // TODO remove and handle
+	}
 	// networkMessage, err := DecodeNetworkMessage(data)
 	if err != nil {
 		log.Println("Error decoding network message: ", err)
@@ -28,7 +31,7 @@ func (m *networkModule) handleNetworkMessage(conn net.Conn) {
 
 	// temporarily convert
 
-	event := types.PocketEvent{
+	event := types.Event{
 		SourceModule: types.P2P,
 		PocketTopic:  networkMessage.Topic,
 		MessageData:  networkMessage.Data,
@@ -42,7 +45,7 @@ func (m *networkModule) respondToTelemetryMessage(conn net.Conn) {
 	// to Consensus node for debugging purposes.
 	log.Println("Responding to telemetry request...")
 
-	event := types.PocketEvent{
+	event := types.Event{
 		SourceModule: types.P2P,
 		PocketTopic:  string(types.CONSENSUS_TELEMETRY_MESSAGE),
 

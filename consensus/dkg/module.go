@@ -18,7 +18,7 @@ type DKGModule interface {
 
 type dkgModule struct {
 	DKGModule
-	pocketBusMod modules.BusModule
+	pocketBusMod modules.Bus
 
 	NodeId types.NodeId
 

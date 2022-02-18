@@ -13,7 +13,7 @@ func (m *ConsensusModule) isMessagePartialSigValid(message *HotstuffMessage) boo
 		return true
 	}
 
-	validator, ok := types.GetPocketState().ValidatorMap[message.Sender]
+	validator, ok := types.GetTestState().ValidatorMap[message.Sender]
 	if !ok {
 		m.nodeLog(fmt.Sprintf("[WARN] Trying to verify PartialSig from %d but it is not in the validator map.", message.Sender))
 		return false

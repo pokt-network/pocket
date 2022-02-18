@@ -25,7 +25,7 @@ type StateSyncModule interface {
 
 type stateSyncModule struct {
 	StateSyncModule
-	pocketBusMod modules.BusModule
+	pocketBusMod modules.Bus
 	syncState    SyncState
 }
 

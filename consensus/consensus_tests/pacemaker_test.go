@@ -47,7 +47,7 @@ func TestPacemakerTimeouts(t *testing.T) {
 
 	// TODO: Should this be part of the configs?
 	// Update the State Singleton.
-	types2.GetPocketState().ConsensusParams.PaceMaker.TimeoutMSec = 50
+	types2.GetTestState().ConsensusParams.PaceMaker.TimeoutMSec = 50
 
 	// Start test pocket nodes.
 	ctx := context.EmptyPocketContext()
@@ -138,7 +138,7 @@ func TestPaceMakerCatchupSameStepDifferentRounds(t *testing.T) {
 		// consensusModImpl.FieldByName("LeaderId").Set(reflect.ValueOf(nil)) // Leader is not set because the round update should set it appropriately.
 	}
 
-	header := &types.BlockHeaderConsTemp{
+	header := &types2.BlockHeaderConsTemp{
 		Height: int64(testHeight),
 		Hash:   "new_hash",
 
@@ -146,10 +146,10 @@ func TestPaceMakerCatchupSameStepDifferentRounds(t *testing.T) {
 		ProposerAddress: []byte(leader.Address),
 		ProposerId:      uint32(leaderId),
 	}
-	leaderBlock := &types.BlockConsTemp{
+	leaderBlock := &types2.BlockConsTemp{
 		BlockHeader:       header,
-		Transactions:      make([]*types.Transaction, 0),
-		ConsensusEvidence: make([]*types.Evidence, 0),
+		Transactions:      make([]*types2.Transaction, 0),
+		ConsensusEvidence: make([]*types2.Evidence, 0),
 	}
 
 	leaderConsensusMod := getConsensusModImplementation(leader)

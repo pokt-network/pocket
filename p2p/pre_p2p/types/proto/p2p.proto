@@ -11,7 +11,7 @@ enum PocketTopic {
   P2P = 1;
 }
 
-message NetworkMessage {
+message P2PMessage {
   string topic = 1;
   google.protobuf.Any data = 2;
 }

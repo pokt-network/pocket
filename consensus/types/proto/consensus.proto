@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package p2p;
+package consensus;
 
 option go_package = "/types/";
 
-message ConsensusMessage {
+message Message {
   bytes data = 1;
 }

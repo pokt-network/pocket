@@ -16,5 +16,5 @@ type UtilityContext interface {
 
 type UtilityModule interface {
 	Module
-	NewContext(height int64) (UtilityContext, error) // INTEGRATION_TEMP: need to move `types.Errors` to shared
+	NewContext(height int64) (UtilityContext, error)
 }

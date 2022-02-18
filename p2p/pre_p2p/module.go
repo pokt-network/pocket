@@ -2,12 +2,13 @@ package pre_p2p
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/types/known/anypb"
 	"log"
 	"net"
-	"pocket/p2p/pre_p2p/pre_p2p_types"
+	"pocket/p2p/pre_p2p/types"
 	"pocket/shared/config"
 	"pocket/shared/modules"
-	"pocket/shared/types"
+
 	"strconv"
 
 	"google.golang.org/protobuf/proto"
@@ -15,16 +16,16 @@ import (
 
 type networkModule struct {
 	modules.NetworkModule
-	pocketBusMod modules.BusModule
+	pocketBusMod modules.Bus
 
 	listener *net.TCPListener
-	network  pre_p2p_types.Network
-	nodeId   pre_p2p_types.NodeId
+	network  types.Network
+	nodeId   types.NodeId
 }
 
 func Create(cfg *config.Config) (m modules.NetworkModule, err error) {
 	log.Println("Creating network module")
-	p2pState := GetPocketState()
+	p2pState := GetTestState()
 	p2pState.LoadStateFromConfig(cfg)
 	tcpAddr, _ := net.ResolveTCPAddr("tcp4", fmt.Sprintf(":%d", cfg.PREP2P.ConsensusPort))
 	l, err := net.ListenTCP("tcp", tcpAddr)
@@ -35,17 +36,17 @@ func Create(cfg *config.Config) (m modules.NetworkModule, err error) {
 	m = &networkModule{
 		listener: l,
 		network:  ConnectToNetwork(state.ValidatorMap),
-		nodeId:   pre_p2p_types.NodeId(cfg.Consensus.NodeId),
+		nodeId:   types.NodeId(cfg.Consensus.NodeId),
 	}
 
 	return m, nil
 }
 
-func (m *networkModule) SetPocketBusMod(pocketBus modules.BusModule) {
+func (m *networkModule) SetBus(pocketBus modules.Bus) {
 	m.pocketBusMod = pocketBus
 }
 
-func (m *networkModule) GetBus() modules.BusModule {
+func (m *networkModule) GetBus() modules.Bus {
 	if m.pocketBusMod == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
@@ -95,7 +96,7 @@ func (m *networkModule) Stop() error {
 	return nil
 }
 
-// func (m *networkModule) Broadcast(ctx *context.PocketContext, message *pre_p2p_types.NetworkMessage) error {
+// func (m *networkModule) Broadcast(ctx *context.PocketContext, message *pre_p2p_types.Message) error {
 // 	data, err := EncodeNetworkMessage(message)
 // 	if err != nil {
 // 		return err
@@ -103,7 +104,7 @@ func (m *networkModule) Stop() error {
 // 	return m.network.NetworkBroadcast(data, m.nodeId)
 // }
 
-// func (m *networkModule) Send(ctx *context.PocketContext, message *pre_p2p_types.NetworkMessage, destNodeId types.NodeId) error {
+// func (m *networkModule) Send(ctx *context.PocketContext, message *pre_p2p_types.Message, destNodeId types.NodeId) error {
 // 	data, err := EncodeNetworkMessage(message)
 // 	if err != nil {
 // 		return err
@@ -111,16 +112,25 @@ func (m *networkModule) Stop() error {
 // 	return m.network.NetworkSend(data, destNodeId)
 // }
 
-func (m *networkModule) BroadcastMessage(msg *types.NetworkMessage) error {
-	data, err := proto.Marshal(msg)
+func (m *networkModule) BroadcastMessage(msg *anypb.Any, topic string) error {
+	c := &types.P2PMessage{
+		Topic: topic, // TODO topic is either P2P (from this module) or consensus
+		Data:  msg,
+	}
+	data, err := proto.Marshal(c)
 	if err != nil {
 		return err
 	}
+	fmt.Println("broadcasting message to network")
 	return m.network.NetworkBroadcast(data, m.nodeId)
 }
 
-func (m *networkModule) Send(addr string, msg *types.NetworkMessage) error {
-	data, err := proto.Marshal(msg)
+func (m *networkModule) Send(addr string, msg *anypb.Any, topic string) error {
+	c := &types.P2PMessage{
+		Topic: topic, // TODO topic is either P2P (from this module) or consensus
+		Data:  msg,
+	}
+	data, err := proto.Marshal(c)
 	if err != nil {
 		return err
 	}
@@ -130,11 +140,11 @@ func (m *networkModule) Send(addr string, msg *types.NetworkMessage) error {
 	if err != nil {
 		return err
 	}
-	destNodeId := pre_p2p_types.NodeId(nodeIdInt)
+	destNodeId := types.NodeId(nodeIdInt)
 
 	return m.network.NetworkSend(data, destNodeId)
 }
 
-func (m *networkModule) GetNetwork() pre_p2p_types.Network {
+func (m *networkModule) GetNetwork() types.Network {
 	return m.network
 }

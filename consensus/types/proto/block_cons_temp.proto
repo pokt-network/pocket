@@ -8,8 +8,7 @@ option go_package = "/types/";
 
 message BlockConsTemp {
   BlockHeaderConsTemp BlockHeader = 1;
-  repeated Transaction Transactions = 2;
-  repeated Evidence ConsensusEvidence = 3;
+  repeated bytes Transactions = 2;
 }
 
 message BlockHeaderConsTemp {

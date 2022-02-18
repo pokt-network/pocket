@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"pocket/p2p/pre_p2p/pre_p2p_types"
+	"pocket/p2p/pre_p2p/types"
 	"time"
 )
 
 type P2PGenesis struct {
-	GenesisTime time.Time                  `json:"genesis_time"`
-	AppHash     string                     `json:"app_hash"`
-	Validators  []*pre_p2p_types.Validator `json:"validators"`
+	GenesisTime time.Time          `json:"genesis_time"`
+	AppHash     string             `json:"app_hash"`
+	Validators  []*types.Validator `json:"validators"`
 }
 
 // TODO: This is a temporary hack that can load Genesis from a single string

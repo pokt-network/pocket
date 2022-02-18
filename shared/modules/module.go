@@ -5,6 +5,6 @@ type Module interface {
 	Start() error
 	Stop() error
 
-	SetPocketBusMod(BusModule)
-	GetBus() BusModule
+	SetBus(Bus)
+	GetBus() Bus
 }

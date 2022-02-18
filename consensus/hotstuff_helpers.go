@@ -13,7 +13,7 @@ func (m *ConsensusModule) didReceiveEnoughMessageForStep(step Step) bool {
 }
 
 func (m *ConsensusModule) isOptimisticThresholdMet(n int) bool {
-	valMap := types.GetPocketState().ValidatorMap
+	valMap := types.GetTestState().ValidatorMap
 	m.nodeLog(fmt.Sprintf("[DEBUG] Checking byzantine safety: %d > %.2f?", n, ByzantineThreshold*float64(len(valMap))))
 	return float64(n) > ByzantineThreshold*float64(len(valMap))
 }
@@ -35,7 +35,7 @@ func (m *ConsensusModule) getQCForStep(step Step) (*QuorumCertificate, error) {
 	}
 
 	if !m.isOptimisticThresholdMet(len(pss)) {
-		return nil, fmt.Errorf("did not receive enough partial signature for Byzantine safety: %d/%d", len(pss), len(types.GetPocketState().ValidatorMap))
+		return nil, fmt.Errorf("did not receive enough partial signature for Byzantine safety: %d/%d", len(pss), len(types.GetTestState().ValidatorMap))
 	}
 
 	return &QuorumCertificate{
@@ -66,7 +66,7 @@ func (m *ConsensusModule) isQCValid(qc *QuorumCertificate) bool {
 	}
 
 	messageToJustify := QCToHotstuffMessage(qc)
-	valMap := types.GetPocketState().ValidatorMap
+	valMap := types.GetTestState().ValidatorMap
 	for _, partialSig := range qc.ThresholdSignature {
 		validator, ok := valMap[partialSig.NodeId]
 		if !ok {

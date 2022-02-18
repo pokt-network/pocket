@@ -1,7 +1,6 @@
 package persistence
 
 import (
-	"encoding/hex"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -17,15 +16,18 @@ type persistenceModule struct {
 
 	CommitDB     *memdb.DB
 	Mempool      types2.Mempool
-	pocketBusMod modules.BusModule
+	pocketBusMod modules.Bus
+	Cfg          *config.Config
 }
 
-func Create(_ *config.Config) (modules.PersistenceModule, error) {
+func Create(cfg *config.Config) (modules.PersistenceModule, error) {
 	db := memdb.New(comparer.DefaultComparer, 888888888)
-
+	state := pre_persistence.GetTestState()
+	state.LoadStateFromConfig(cfg)
 	return &persistenceModule{
 		PersistenceModule: nil,
 		CommitDB:          db,
+		Cfg:               cfg,
 		Mempool:           types2.NewMempool(1000, 1000),
 		pocketBusMod:      nil,
 	}, nil
@@ -57,11 +59,11 @@ func (p *persistenceModule) Stop() error {
 	return nil
 }
 
-func (m *persistenceModule) SetPocketBusMod(pocketBus modules.BusModule) {
+func (m *persistenceModule) SetBus(pocketBus modules.Bus) {
 	m.pocketBusMod = pocketBus
 }
 
-func (m *persistenceModule) GetBus() modules.BusModule {
+func (m *persistenceModule) GetBus() modules.Bus {
 	if m.pocketBusMod == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
@@ -80,12 +82,12 @@ func (m *persistenceModule) NewContext(height int64) (modules.PersistenceContext
 		}
 	}
 	context := &pre_persistence.MockPersistenceContext{
-		Height:     height,
-		Parent:     m,
-		SavePoints: make(map[string]int),
-		DBs:        make([]*memdb.DB, 0),
+		Height: height,
+		Parent: m,
+		//SavePoints: make(map[string]int),
+		DBs: make([]*memdb.DB, 0),
 	}
-	context.SavePoints[hex.EncodeToString(pre_persistence.FirstSavePointKey)] = types2.ZeroInt
+	//context.SavePoints[hex.EncodeToString(pre_persistence.FirstSavePointKey)] = types2.ZeroInt
 	context.DBs = append(context.DBs, newDB)
 	return context, nil
 }

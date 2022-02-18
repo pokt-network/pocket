@@ -2,8 +2,9 @@ package p2p
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/types/known/anypb"
 	"net"
-	"pocket/shared/types"
+	"pocket/p2p/pre_p2p/types"
 	"strings"
 	"sync"
 	"time"
@@ -52,7 +53,7 @@ type GaterModule interface {
 
 	Send(addr string, msg []byte, wrapped bool) error
 
-	BroadcastTempWrapper(m types.NetworkMessage) error // TODO: hamza to refactor
+	BroadcastTempWrapper(m types.P2PMessage) error // TODO: hamza to refactor
 	Broadcast(m message, isroot bool) error
 
 	Handle()
@@ -279,10 +280,10 @@ func (g *gater) Pong(msg message) error {
 	return nil
 }
 
-func (g *gater) BroadcastTempWrapper(msg *types.NetworkMessage) error {
+func (g *gater) BroadcastTempWrapper(msg *anypb.Any) error {
 	m := message{
-		payload: msg.Data,
-		topic:   Topic(msg.Topic),
+		payload: msg,
+		topic:   Topic(types.PocketTopic_CONSENSUS.String()),
 	}
 	return g.Broadcast(m, false)
 

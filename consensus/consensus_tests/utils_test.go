@@ -72,7 +72,7 @@ func CreateTestConsensusPocketNode(
 ) *shared.Node {
 	ctrl := gomock.NewController(nil)
 
-	state := consensus_types.GetPocketState()
+	state := consensus_types.GetTestState()
 	state.LoadStateFromConfig(config)
 
 	ctx := pcontext.EmptyPocketContext()
@@ -167,7 +167,7 @@ func CreateTestConsensusPocketNode(
 		Send(gomock.Any(), gomock.Any(), gomock.Any()).
 		Do(func(ctx *pcontext.PocketContext, message *p2p_types.NetworkMessage, address types2.NodeId) {
 			networkMsg, _ := p2p.EncodeNetworkMessage(message)
-			e := types.PocketEvent{PocketTopic: types.P2P_SEND_MESSAGE, MessageData: networkMsg}
+			e := types.Event{PocketTopic: types.P2P_SEND_MESSAGE, MessageData: networkMsg}
 			testPocketBus <- e
 		}).
 		AnyTimes()
@@ -177,7 +177,7 @@ func CreateTestConsensusPocketNode(
 		Broadcast(gomock.Any(), gomock.Any()).
 		Do(func(ctx *pcontext.PocketContext, message *p2p_types.NetworkMessage) {
 			networkMsg, _ := p2p.EncodeNetworkMessage(message)
-			e := types.PocketEvent{PocketTopic: types.P2P_BROADCAST_MESSAGE, MessageData: networkMsg}
+			e := types.Event{PocketTopic: types.P2P_BROADCAST_MESSAGE, MessageData: networkMsg}
 			testPocketBus <- e
 		}).
 		AnyTimes()
@@ -200,14 +200,14 @@ func CreateTestConsensusPocketNode(
 
 	utilityMock.EXPECT().
 		HandleTransaction(gomock.Any(), gomock.Any()).
-		Do(func(*pcontext.PocketContext, *types.Transaction) {
+		Do(func(*pcontext.PocketContext, *consensus_types.Transaction) {
 			log.Println("[MOCK] HandleTransaction utility mock")
 		}).
 		AnyTimes()
 
 	utilityMock.EXPECT().
 		HandleEvidence(gomock.Any(), gomock.Any()).
-		Do(func(*pcontext.PocketContext, *types.Evidence) {
+		Do(func(*pcontext.PocketContext, *consensus_types.Evidence) {
 			log.Println("[MOCK] HandleEvidence utility mock")
 		}).
 		AnyTimes()
@@ -228,7 +228,7 @@ func CreateTestConsensusPocketNode(
 
 	utilityMock.EXPECT().
 		DeliverTx(gomock.Any(), gomock.Any()).
-		Do(func(*pcontext.PocketContext, *types.Transaction) {
+		Do(func(*pcontext.PocketContext, *consensus_types.Transaction) {
 			log.Println("[MOCK] DeliverTx utility mock")
 		}).
 		AnyTimes()
@@ -246,7 +246,7 @@ func CreateTestConsensusPocketNode(
 func WaitForNetworkConsensusMessage(
 	t *testing.T,
 	pocketBus modules.PocketBus,
-	pocketEvent types.PocketEventTopic,
+	pocketEvent types.EventTopic,
 	step consensus.Step,
 	numMessages int,
 	millis time.Duration,
@@ -279,7 +279,7 @@ func WaitForNetworkConsensusMessage(
 func WaitFoNetworkDKGMessages(
 	t *testing.T,
 	pocketBus modules.PocketBus,
-	pocketEvent types.PocketEventTopic,
+	pocketEvent types.EventTopic,
 	round dkg.DKGRound,
 	numMessages int,
 	millis time.Duration,
@@ -333,7 +333,7 @@ func triggerDebugMessage(t *testing.T, node *shared.Node, action consensus.Debug
 	data, err := consensus_types.EncodeConsensusMessage(consensusMessage)
 	require.NoError(t, err)
 
-	event := types.PocketEvent{
+	event := types.Event{
 		SourceModule: types.TEST,
 		PocketTopic:  types.CONSENSUS,
 		MessageData:  data,
@@ -363,14 +363,14 @@ func P2PSend(node *shared.Node, message consensus_types.GenericConsensusMessage)
 	node.GetBus().PublishEventToBus(&event)
 }
 
-func prepareEvent(message *consensus_types.ConsensusMessage) types.PocketEvent {
+func prepareEvent(message *consensus_types.ConsensusMessage) types.Event {
 	var buff bytes.Buffer
 	enc := gob.NewEncoder(&buff)
 	if err := enc.Encode(message); err != nil {
 		panic("Failed to encode message")
 	}
 
-	return types.PocketEvent{
+	return types.Event{
 		SourceModule: types.TEST,
 		PocketTopic:  types.CONSENSUS,
 		MessageData:  buff.Bytes(),
@@ -383,7 +383,7 @@ func prepareEvent(message *consensus_types.ConsensusMessage) types.PocketEvent {
 func WaitForNetworkConsensusMessageInternal(
 	t *testing.T,
 	testPocketBus modules.PocketBus,
-	pocketEvent types.PocketEventTopic,
+	pocketEvent types.EventTopic,
 	numMessages int,
 	millis time.Duration,
 	decoder func([]byte) consensus_types.GenericConsensusMessage,
@@ -392,7 +392,7 @@ func WaitForNetworkConsensusMessageInternal(
 ) (messages []consensus_types.GenericConsensusMessage) {
 	messages = make([]consensus_types.GenericConsensusMessage, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*millis)
-	unused := make([]types.PocketEvent, 0) // TODO: Move this into a pool rather than resending back to the eventbus.
+	unused := make([]types.Event, 0) // TODO: Move this into a pool rather than resending back to the eventbus.
 loop:
 	for {
 		select {

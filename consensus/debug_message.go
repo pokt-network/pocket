@@ -19,7 +19,8 @@ const (
 type DebugMessage struct {
 	consensus_types.GenericConsensusMessage
 
-	Action DebugMessageAction
+	Action  DebugMessageAction
+	Payload []byte
 }
 
 func (m *DebugMessage) GetType() consensus_types.ConsensusMessageType {

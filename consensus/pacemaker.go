@@ -30,7 +30,7 @@ type PaceMaker interface {
 
 type paceMaker struct {
 	modules.Module
-	pocketBusMod modules.BusModule
+	pocketBusMod modules.Bus
 
 	// TODO: Should the PaceMaker have a link back to the consensus module
 	// or should they communicate via events or the PocketBusManager?
@@ -75,11 +75,11 @@ func (p *paceMaker) Stop() error {
 	return nil
 }
 
-func (m *paceMaker) SetPocketBusMod(pocketBus modules.BusModule) {
+func (m *paceMaker) SetBus(pocketBus modules.Bus) {
 	m.pocketBusMod = pocketBus
 }
 
-func (m *paceMaker) GetBus() modules.BusModule {
+func (m *paceMaker) GetBus() modules.Bus {
 	if m.pocketBusMod == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}

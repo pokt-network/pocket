@@ -20,7 +20,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type ConsensusMessage struct {
+type Message struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -28,8 +28,8 @@ type ConsensusMessage struct {
 	Data []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 }
 
-func (x *ConsensusMessage) Reset() {
-	*x = ConsensusMessage{}
+func (x *Message) Reset() {
+	*x = Message{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_consensus_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -37,13 +37,13 @@ func (x *ConsensusMessage) Reset() {
 	}
 }
 
-func (x *ConsensusMessage) String() string {
+func (x *Message) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConsensusMessage) ProtoMessage() {}
+func (*Message) ProtoMessage() {}
 
-func (x *ConsensusMessage) ProtoReflect() protoreflect.Message {
+func (x *Message) ProtoReflect() protoreflect.Message {
 	mi := &file_consensus_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -55,12 +55,12 @@ func (x *ConsensusMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ConsensusMessage.ProtoReflect.Descriptor instead.
-func (*ConsensusMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use Message.ProtoReflect.Descriptor instead.
+func (*Message) Descriptor() ([]byte, []int) {
 	return file_consensus_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ConsensusMessage) GetData() []byte {
+func (x *Message) GetData() []byte {
 	if x != nil {
 		return x.Data
 	}
@@ -71,11 +71,10 @@ var File_consensus_proto protoreflect.FileDescriptor
 
 var file_consensus_proto_rawDesc = []byte{
 	0x0a, 0x0f, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x12, 0x03, 0x70, 0x32, 0x70, 0x22, 0x26, 0x0a, 0x10, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e,
-	0x73, 0x75, 0x73, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61,
-	0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x42, 0x09,
-	0x5a, 0x07, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x6f, 0x12, 0x09, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x22, 0x1d, 0x0a, 0x07,
+	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x42, 0x09, 0x5a, 0x07, 0x2f,
+	0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -92,7 +91,7 @@ func file_consensus_proto_rawDescGZIP() []byte {
 
 var file_consensus_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_consensus_proto_goTypes = []interface{}{
-	(*ConsensusMessage)(nil), // 0: p2p.ConsensusMessage
+	(*Message)(nil), // 0: consensus.Message
 }
 var file_consensus_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -109,7 +108,7 @@ func file_consensus_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_consensus_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConsensusMessage); i {
+			switch v := v.(*Message); i {
 			case 0:
 				return &v.state
 			case 1:

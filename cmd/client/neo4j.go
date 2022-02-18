@@ -10,7 +10,7 @@ import (
 	"log"
 	"net"
 	consensus_types "pocket/consensus/types"
-	p2p_types "pocket/p2p/pre_p2p/pre_p2p_types"
+	p2p_types "pocket/p2p/pre_p2p/types"
 )
 
 func getNodeData(network p2p_types.Network) (node_data []*consensus_types.ConsensusNodeState) {

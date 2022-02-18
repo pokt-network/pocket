@@ -1,10 +1,10 @@
-package pre_p2p_types
+package types
 
 import (
 	"pocket/shared/types"
 )
 
 type NetworkMessage struct {
-	Topic types.PocketEventTopic
+	Topic types.EventTopic
 	Data  []byte
 }

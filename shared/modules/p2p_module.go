@@ -1,16 +1,17 @@
 package modules
 
 import (
+	"google.golang.org/protobuf/types/known/anypb"
 	"pocket/shared/types"
 )
 
 type NetworkMessage struct {
-	Topic types.PocketEventTopic
+	Topic types.EventTopic
 	Data  []byte
 }
 
 type NetworkModule interface {
 	Module
-	BroadcastMessage(msg *types.NetworkMessage) error
-	Send(addr string, msg *types.NetworkMessage) error
+	BroadcastMessage(msg *anypb.Any, topic string) error  // TODO get rid of topic
+	Send(addr string, msg *anypb.Any, topic string) error // TODO get rid of topic
 }

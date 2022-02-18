@@ -9,23 +9,23 @@ import (
 )
 
 func (module *dkgModule) broadcastToNodes(message *DKGMessage) {
-	event := types.PocketEvent{
+	event := types.Event{
 		SourceModule: types.CONSENSUS_MODULE,
-		PocketTopic:  string(types.P2P_BROADCAST_MESSAGE),
+		PocketTopic:  string(types.CONSENSUS),
 	}
 	module.publishEvent(message, &event)
 }
 
 func (module *dkgModule) sendToNode(message *DKGMessage, destNode *consensus_types.NodeId) {
-	event := types.PocketEvent{
+	event := types.Event{
 		SourceModule: types.CONSENSUS_MODULE,
-		PocketTopic:  string(types.P2P_SEND_MESSAGE),
+		PocketTopic:  string(types.CONSENSUS),
 		Destination:  *destNode,
 	}
 	module.publishEvent(message, &event)
 }
 
-func (module *dkgModule) publishEvent(message *DKGMessage, event *types.PocketEvent) {
+func (module *dkgModule) publishEvent(message *DKGMessage, event *types.Event) {
 	consensusMessage := &consensus_types.ConsensusMessage{
 		Message: message,
 		Sender:  module.NodeId,
@@ -37,7 +37,7 @@ func (module *dkgModule) publishEvent(message *DKGMessage, event *types.PocketEv
 		return
 	}
 
-	consensusProtoMsg := &types.ConsensusMessage{
+	consensusProtoMsg := &consensus_types.Message{
 		Data: data,
 	}
 
@@ -47,14 +47,17 @@ func (module *dkgModule) publishEvent(message *DKGMessage, event *types.PocketEv
 		return
 	}
 
-	networkProtoMsg := &types.NetworkMessage{
-		Topic: types.PocketTopic_CONSENSUS.String(),
-		Data:  anyProto,
+	//networkProtoMsg := &types2.Message{
+	//	Topic: types2.PocketTopic_CONSENSUS.String(),
+	//	Data:  anyProto,
+	//}
+
+	if err := module.GetBus().GetNetworkModule().BroadcastMessage(anyProto, event.PocketTopic); err != nil {
+		// TODO handle
+		return
 	}
 
-	module.GetBus().GetNetworkModule().BroadcastMessage(networkProtoMsg)
-
-	//networkMsg := &p2p_types.NetworkMessage{
+	//networkMsg := &p2p_types.Message{
 	//	Topic: events.CONSENSUS,
 	//	Data:  data,
 	//}

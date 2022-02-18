@@ -2,7 +2,6 @@ package consensus
 
 import (
 	consensus_types "pocket/consensus/types"
-	"pocket/shared/types"
 )
 
 type Signature []byte
@@ -20,7 +19,7 @@ type QuorumCertificate struct {
 	Height             BlockHeight
 	Round              Round
 	Step               Step
-	Block              *types.BlockConsTemp
+	Block              *consensus_types.BlockConsTemp
 	ThresholdSignature ThresholdSignature
 }
 

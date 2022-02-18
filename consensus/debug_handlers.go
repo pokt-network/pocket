@@ -2,10 +2,11 @@ package consensus
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/types/known/anypb"
 	"log"
 	"pocket/consensus/dkg"
-	types2 "pocket/consensus/types"
-	"pocket/shared/types"
+	"pocket/consensus/types"
+	shared_types "pocket/shared/types"
 )
 
 func (m *ConsensusModule) handleDebugMessage(message *DebugMessage) {
@@ -21,7 +22,7 @@ func (m *ConsensusModule) handleDebugMessage(message *DebugMessage) {
 	case ResetToGenesis:
 		m.resetToGenesis(message)
 	case PrintNodeState:
-		types2.GetPocketState().PrintGlobalState()
+		types.GetTestState().PrintGlobalState()
 		m.printNodeState(message)
 	default:
 		log.Fatalf("Unsupported debug message: %s \n", StepToString[Step(message.Action)])
@@ -29,25 +30,31 @@ func (m *ConsensusModule) handleDebugMessage(message *DebugMessage) {
 }
 
 func (m *ConsensusModule) handleSendTx(debugMessage *DebugMessage) {
-	state := types2.GetPocketState()
-
-	// TODO(andrew): Need to properly get the validator map from the bus.
-	// m.GetBus().GetPersistenceModule().GetValidatorMap()
-	validatorMap := state.ValidatorMap
-	fmt.Println(validatorMap)
-
-	// TODO(andrew): need to format a proper message here.
-	txMessage := &TxWrapperMessage{
-		Data: make([]byte, 0),
+	// convert to consensus message
+	//txMessage := &TxWrapperMessage{
+	//	Data: debugMessage.Payload,
+	//}
+	// create the event
+	event := shared_types.Event{
+		SourceModule: shared_types.CONSENSUS_MODULE,
+		PocketTopic:  string(shared_types.UTILITY_TX_MESSAGE),
+	}
+	// convert to network message
+	consensusProtoMsg := &types.Message{
+		Data: debugMessage.Payload,
 	}
 
-	event := types.PocketEvent{
-		SourceModule: types.CONSENSUS_MODULE,
-		PocketTopic:  string(types.UTILITY_TX_MESSAGE),
+	anyProto, err := anypb.New(consensusProtoMsg)
+	if err != nil {
+		m.nodeLogError("Error encoding any proto: " + err.Error())
+		panic("^")
 	}
-	networkProtoMsg := m.getConsensusNetworkMessage(txMessage, &event)
-	networkProtoMsg.Topic = string(types.UTILITY_TX_MESSAGE)
-	m.GetBus().GetNetworkModule().BroadcastMessage(networkProtoMsg)
+
+	//networkProtoMsg := m.getConsensusNetworkMessage(debugMessage, &event)
+	// broacast the message
+	if err := m.GetBus().GetNetworkModule().BroadcastMessage(anyProto, event.PocketTopic); err != nil {
+		panic(err)
+	}
 }
 
 func (m *ConsensusModule) handleTriggerNextView(debugMessage *DebugMessage) {

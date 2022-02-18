@@ -2,6 +2,9 @@ package main
 
 import (
 	"encoding/gob"
+	"github.com/manifoldco/promptui"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 	"log"
 	"os"
 	"pocket/consensus"
@@ -10,14 +13,10 @@ import (
 	"pocket/consensus/statesync"
 	consensus_types "pocket/consensus/types"
 	"pocket/p2p/pre_p2p"
-	p2p_types "pocket/p2p/pre_p2p/pre_p2p_types"
+	"pocket/p2p/pre_p2p/types"
+	p2p_types "pocket/p2p/pre_p2p/types"
 	"pocket/shared/config"
 	"pocket/shared/crypto"
-	"pocket/shared/types"
-
-	"github.com/manifoldco/promptui"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -56,18 +55,18 @@ func main() {
 	gob.Register(&leader_election.LeaderElectionMessage{})
 	gob.Register(&consensus.TxWrapperMessage{})
 
-	state := pre_p2p.GetPocketState()
+	state := pre_p2p.GetTestState()
 	state.LoadStateFromConfig(cfg)
 
 	network := pre_p2p.ConnectToNetwork(state.ValidatorMap)
 
 	log.Println("[CLIENT] Toggling paceMaker into manual mode...")
-	handleSelect(PromptOptionTogglePaceMakerManualMode, network)
+	handleSelect(PromptOptionTogglePaceMakerManualMode, network, state)
 
 	for {
 		selection, err := promptGetInput()
 		if err == nil {
-			handleSelect(selection, network)
+			handleSelect(selection, network, state)
 		}
 	}
 }
@@ -93,7 +92,7 @@ func promptGetInput() (string, error) {
 	return result, nil
 }
 
-func handleSelect(selection string, network p2p_types.Network) {
+func handleSelect(selection string, network p2p_types.Network, state *pre_p2p.TestState) {
 	switch selection {
 	case PromptOptionTriggerNextView:
 		log.Println("[CLIENT] Broadcasting TriggerNextView...")
@@ -104,7 +103,8 @@ func handleSelect(selection string, network p2p_types.Network) {
 	case PromptOptionSendTx:
 		log.Println("[CLIENT] Trigger a SendTx...")
 		m := &consensus.DebugMessage{
-			Action: consensus.SendTx,
+			Action:  consensus.SendTx,
+			Payload: NewSendTxBytes(state),
 		}
 		broadcastMessage(m, network)
 	case PromptOptionTriggerDKG:
@@ -149,7 +149,7 @@ func broadcastMessage(m consensus_types.GenericConsensusMessage, network p2p_typ
 		log.Println("[ERROR] Failed to encode message: ", err)
 		return
 	}
-	consensusProtoMsg := &types.ConsensusMessage{
+	consensusProtoMsg := &consensus_types.Message{
 		Data: messageData,
 	}
 
@@ -159,7 +159,7 @@ func broadcastMessage(m consensus_types.GenericConsensusMessage, network p2p_typ
 		return
 	}
 
-	networkProtoMsg := &types.NetworkMessage{
+	networkProtoMsg := &types.P2PMessage{
 		Topic: types.PocketTopic_CONSENSUS.String(),
 		Data:  anyProto,
 	}

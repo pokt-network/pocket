@@ -1,6 +1,6 @@
 {
   "root_dir": "/go/src/github.com/pocket-network",
-  "private_key": "0000000400000000000000000000000000000000000000000000000000000000d1f87d985adee0c3466ac0458745998fc0f39a9884897ce4c7548d1db8e10642",
+  "private_key": "a33d534a7622f7ca395b47448cefc1f80620c873ce7fdc43b36937887fcebbf43292861092ca961878a303481dd91dfdc4a6fcc960b33f8e04bc23b34cac675e",
   "genesis": "build/config/genesis.json",
   "prep2p": {
     "consensus_port": 8080,

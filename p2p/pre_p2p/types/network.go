@@ -1,4 +1,4 @@
-package pre_p2p_types
+package types
 
 import (
 	"crypto"

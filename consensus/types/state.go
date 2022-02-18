@@ -13,7 +13,7 @@ import (
 // TODO: Return this as a singleton!
 // Consider using the singleton pattern? https://medium.com/golang-issue/how-singleton-pattern-works-with-golang-2fdd61cd5a7f
 
-type ConsensusState struct {
+type TestState struct {
 	BlockHeight      uint64
 	AppHash          string // TODO: Why not call this a BlockHash or StateHash? SHould it be a []byte or string?
 	ValidatorMap     ValMap // TODO: Need to update this on every validator pause/stake/unstake/etc.
@@ -41,7 +41,7 @@ type ConsensusNodeState struct {
 }
 
 // The pocket state singleton.
-var state *ConsensusState
+var state *TestState
 
 // Used to load the state when the singleton is created.
 var once sync.Once
@@ -49,15 +49,15 @@ var once sync.Once
 // Used to update the state. All exported functions should lock this when they are called and defer an unlock.
 var lock = &sync.Mutex{}
 
-func GetPocketState() *ConsensusState {
+func GetTestState() *TestState {
 	once.Do(func() {
-		state = &ConsensusState{}
+		state = &TestState{}
 	})
 
 	return state
 }
 
-func (ps *ConsensusState) LoadStateFromConfig(cfg *config.Config) {
+func (ps *TestState) LoadStateFromConfig(cfg *config.Config) {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -71,7 +71,7 @@ func (ps *ConsensusState) LoadStateFromConfig(cfg *config.Config) {
 	log.Fatalf("[TODO] Config must not be nil when initializing the pocket state. ...")
 }
 
-func (ps *ConsensusState) loadStateFromGenesis(cfg *config.Config) {
+func (ps *TestState) loadStateFromGenesis(cfg *config.Config) {
 	genesis, err := PocketGenesisFromFileOrJSON(cfg.Genesis)
 	if err != nil {
 		log.Fatalf("Failed to load genesis: %v", err)
@@ -85,7 +85,7 @@ func (ps *ConsensusState) loadStateFromGenesis(cfg *config.Config) {
 	if err != nil {
 		panic(err)
 	}
-	*ps = ConsensusState{
+	*ps = TestState{
 		BlockHeight:  0,
 		AppHash:      genesis.AppHash,
 		ValidatorMap: ValidatorListToMap(genesis.Validators),
@@ -100,21 +100,21 @@ func (ps *ConsensusState) loadStateFromGenesis(cfg *config.Config) {
 	ps.recomputeTotalVotingPower()
 }
 
-func (ps *ConsensusState) recomputeTotalVotingPower() {
+func (ps *TestState) recomputeTotalVotingPower() {
 	ps.TotalVotingPower = 0
 	for _, v := range ps.ValidatorMap {
 		ps.TotalVotingPower += v.UPokt
 	}
 }
 
-func (ps *ConsensusState) PrintGlobalState() {
+func (ps *TestState) PrintGlobalState() {
 	fmt.Printf("\tGLOBAL STATE: (BlockHeight, PrevAppHash, # Validators, TotalVotingPower) is: (%d, %s, %d, %d)\n", ps.BlockHeight, ps.AppHash, len(ps.ValidatorMap), ps.TotalVotingPower)
 }
 
-func (ps *ConsensusState) UpdateAppHash(appHash string) {
+func (ps *TestState) UpdateAppHash(appHash string) {
 	ps.AppHash = appHash
 }
 
-func (ps *ConsensusState) UpdateBlockHeight(blockHeight uint64) {
+func (ps *TestState) UpdateBlockHeight(blockHeight uint64) {
 	ps.BlockHeight = blockHeight
 }

@@ -3,7 +3,7 @@ package pre_p2p
 import (
 	"fmt"
 	"log"
-	"pocket/p2p/pre_p2p/pre_p2p_types"
+	"pocket/p2p/pre_p2p/types"
 	"pocket/shared/config"
 	"pocket/shared/crypto"
 	"sync"
@@ -12,11 +12,11 @@ import (
 // TODO: Return this as a singleton!
 // Consider using the singleton pattern? https://medium.com/golang-issue/how-singleton-pattern-works-with-golang-2fdd61cd5a7f
 
-type P2PState struct {
+type TestState struct {
 	BlockHeight      uint64
-	AppHash          string               // TODO: Why not call this a BlockHash or StateHash? SHould it be a []byte or string?
-	ValidatorMap     pre_p2p_types.ValMap // TODO: Need to update this on every validator pause/stake/unstake/etc.
-	TotalVotingPower uint64               // TODO: Need to update this on every send transaction.
+	AppHash          string       // TODO: Why not call this a BlockHash or StateHash? SHould it be a []byte or string?
+	ValidatorMap     types.ValMap // TODO: Need to update this on every validator pause/stake/unstake/etc.
+	TotalVotingPower uint64       // TODO: Need to update this on every send transaction.
 
 	PublicKey crypto.PublicKey
 	Address   string
@@ -25,7 +25,7 @@ type P2PState struct {
 }
 
 // The pocket state singleton.
-var state *P2PState
+var state *TestState
 
 // Used to load the state when the singleton is created.
 var once sync.Once
@@ -33,15 +33,15 @@ var once sync.Once
 // Used to update the state. All exported functions should lock this when they are called and defer an unlock.
 var lock = &sync.Mutex{}
 
-func GetPocketState() *P2PState {
+func GetTestState() *TestState {
 	once.Do(func() {
-		state = &P2PState{}
+		state = &TestState{}
 	})
 
 	return state
 }
 
-func (ps *P2PState) LoadStateFromConfig(cfg *config.Config) {
+func (ps *TestState) LoadStateFromConfig(cfg *config.Config) {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -55,7 +55,7 @@ func (ps *P2PState) LoadStateFromConfig(cfg *config.Config) {
 	log.Fatalf("[TODO] Config must not be nil when initializing the pocket state. ...")
 }
 
-func (ps *P2PState) loadStateFromGenesis(cfg *config.Config) {
+func (ps *TestState) loadStateFromGenesis(cfg *config.Config) {
 	genesis, err := PocketGenesisFromFileOrJSON(cfg.Genesis)
 	if err != nil {
 		log.Fatalf("Failed to load genesis: %v", err)
@@ -68,9 +68,9 @@ func (ps *P2PState) loadStateFromGenesis(cfg *config.Config) {
 	if err != nil {
 		panic(err)
 	}
-	*ps = P2PState{
+	*ps = TestState{
 		BlockHeight:  0,
-		ValidatorMap: pre_p2p_types.ValidatorListToMap(genesis.Validators),
+		ValidatorMap: types.ValidatorListToMap(genesis.Validators),
 
 		PublicKey: pk.PublicKey(),
 		Address:   pk.Address().String(),
@@ -81,21 +81,21 @@ func (ps *P2PState) loadStateFromGenesis(cfg *config.Config) {
 	ps.recomputeTotalVotingPower()
 }
 
-func (ps *P2PState) recomputeTotalVotingPower() {
+func (ps *TestState) recomputeTotalVotingPower() {
 	ps.TotalVotingPower = 0
 	for _, v := range ps.ValidatorMap {
 		ps.TotalVotingPower += v.UPokt
 	}
 }
 
-func (ps *P2PState) PrintGlobalState() {
+func (ps *TestState) PrintGlobalState() {
 	fmt.Printf("\tGLOBAL STATE: (BlockHeight, PrevAppHash, # Validators, TotalVotingPower) is: (%d, %s, %d, %d)\n", ps.BlockHeight, ps.AppHash, len(ps.ValidatorMap), ps.TotalVotingPower)
 }
 
-func (ps *P2PState) UpdateAppHash(appHash string) {
+func (ps *TestState) UpdateAppHash(appHash string) {
 	ps.AppHash = appHash
 }
 
-func (ps *P2PState) UpdateBlockHeight(blockHeight uint64) {
+func (ps *TestState) UpdateBlockHeight(blockHeight uint64) {
 	ps.BlockHeight = blockHeight
 }

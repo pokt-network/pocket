@@ -11,14 +11,12 @@ import (
 var _ modules.UtilityModule = &UtilityModule{}
 
 type UtilityModule struct {
-	pocketBusMod modules.BusModule
+	pocketBusMod modules.Bus
 
 	Mempool types.Mempool
 }
 
 type UtilityContext struct {
-	modules.UtilityContext
-
 	LatestHeight int64
 	Mempool      types.Mempool
 	Context      *Context
@@ -38,11 +36,11 @@ func (p *UtilityModule) Stop() error {
 	return nil
 }
 
-func (m *UtilityModule) SetPocketBusMod(pocketBus modules.BusModule) {
+func (m *UtilityModule) SetBus(pocketBus modules.Bus) {
 	m.pocketBusMod = pocketBus
 }
 
-func (m *UtilityModule) GetBus() modules.BusModule {
+func (m *UtilityModule) GetBus() modules.Bus {
 	if m.pocketBusMod == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
@@ -51,7 +49,6 @@ func (m *UtilityModule) GetBus() modules.BusModule {
 
 func (u *UtilityModule) NewContext(height int64) (modules.UtilityContext, error) {
 	ctx, err := u.GetBus().GetPersistenceModule().NewContext(height)
-	// context, err := u.Bus.GetPersistenceModule().NewContext(height)
 	if err != nil {
 		return nil, types.ErrNewContext(err)
 	}

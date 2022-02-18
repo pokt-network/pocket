@@ -4,7 +4,6 @@ import (
 	"fmt"
 	consensus_types "pocket/consensus/types"
 	"pocket/shared/crypto"
-	"pocket/shared/types"
 )
 
 type HotstuffMessageType uint8
@@ -22,7 +21,7 @@ type HotstuffMessage struct {
 	Step   Step
 	Height BlockHeight
 	Round  Round
-	Block  *types.BlockConsTemp
+	Block  *consensus_types.BlockConsTemp
 
 	// TODO: When moving to Protos, this should be a simple oneoff.
 	JustifyQC  *QuorumCertificate // Non-nil from LEADER -> REPLICA; one of {HighQC, TimeoutQC, CommitQC}
@@ -71,7 +70,7 @@ func CreateProposeMessage(m *ConsensusModule, step Step, qc *QuorumCertificate) 
 	return message, nil
 }
 
-func CreateVoteMessage(m *ConsensusModule, step Step, block *types.BlockConsTemp) (*HotstuffMessage, error) {
+func CreateVoteMessage(m *ConsensusModule, step Step, block *consensus_types.BlockConsTemp) (*HotstuffMessage, error) {
 	if block == nil {
 		return nil, fmt.Errorf("If a replica is trying to vote, the block should never be nil.")
 	}

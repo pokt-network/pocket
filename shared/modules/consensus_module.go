@@ -10,8 +10,6 @@ type ConsensusModule interface {
 	HandleMessage(*anypb.Any)
 	// HandleMessage(*context.PocketContext, *consensus_types.ConsensusMessage)
 	HandleTransaction(*anypb.Any)
-	HandleEvidence([]byte)
-
 	// Debugging & Telemetry
 	HandleTelemetryMessage(net.Conn)
 }

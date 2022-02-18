@@ -4,12 +4,12 @@ import (
 	"pocket/shared/types"
 )
 
-type PocketEventsChannel chan types.PocketEvent
+type EventsChannel chan types.Event
 
-type BusModule interface {
-	PublishEventToBus(e *types.PocketEvent)
-	GetBusEvent() *types.PocketEvent
-	GetEventBus() PocketEventsChannel
+type Bus interface {
+	PublishEventToBus(e *types.Event)
+	GetBusEvent() *types.Event
+	GetEventBus() EventsChannel
 
 	GetPersistenceModule() PersistenceModule
 	GetNetworkModule() NetworkModule

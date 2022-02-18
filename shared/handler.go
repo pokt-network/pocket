@@ -5,7 +5,7 @@ import (
 	"pocket/shared/types"
 )
 
-func (node *Node) handleEvent(event *types.PocketEvent) error {
+func (node *Node) handleEvent(event *types.Event) error {
 	switch event.PocketTopic {
 
 	//case events.CONSENSUS_TELEMETRY_MESSAGE:

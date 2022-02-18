@@ -5,21 +5,21 @@ import (
 	"fmt"
 	types2 "pocket/consensus/types"
 	"pocket/shared/crypto"
-	"pocket/shared/types"
 	"strconv"
 )
 
-func (m *ConsensusModule) prepareBlock() (*types.BlockConsTemp, error) {
-	if m.UtilityContext != nil {
-		m.nodeLog("[WARN] Why is the node utility context not nil when preparing a new block?. Realising for now...")
-		m.UtilityContext.ReleaseContext()
-	}
+func (m *ConsensusModule) prepareBlock() (*types2.BlockConsTemp, error) {
+	//if m.UtilityContext != nil {
+	//	m.nodeLog("[WARN] Why is the node utility context not nil when preparing a new block?. Realising for now...")
+	//	m.UtilityContext.ReleaseContext()
+	//}
+	fmt.Println("creating new context for prepareBlock()")
 	utilContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
 	if err != nil {
 		return nil, err
 	}
 	m.UtilityContext = utilContext
-	//valMap := shared.GetPocketState().ValidatorMap
+	//valMap := shared.GetTestState().ValidatorMap
 	maxTxBytes := 90000 // INTEGRATION_TEMP
 	//proposer := []byte(strconv.Itoa(int(m.NodeId)))
 	pk, _ := crypto.GeneratePrivateKey()
@@ -29,9 +29,9 @@ func (m *ConsensusModule) prepareBlock() (*types.BlockConsTemp, error) {
 		return nil, err
 	}
 
-	pocketState := types2.GetPocketState()
+	pocketState := types2.GetTestState()
 
-	header := &types.BlockHeaderConsTemp{
+	header := &types2.BlockHeaderConsTemp{
 		Height: int64(m.Height),
 		Hash:   strconv.Itoa(int(m.Height)),
 
@@ -41,17 +41,15 @@ func (m *ConsensusModule) prepareBlock() (*types.BlockConsTemp, error) {
 		// QuorumCertificate // TODO
 	}
 
-	fmt.Println("[TODO] INTEGRATION_TEMP: Not useing txs yet: ", txs)
-	block := &types.BlockConsTemp{
-		BlockHeader: header,
-		// Transactions:      make([]*typespb.Transaction, 0), // TODO: Use `txs` here.
-		// ConsensusEvidence: make([]*typespb.Evidence, 0),
+	block := &types2.BlockConsTemp{
+		BlockHeader:  header,
+		Transactions: txs,
 	}
 
 	return block, nil
 }
 
-func (m *ConsensusModule) isValidBlock(block *types.BlockConsTemp) bool {
+func (m *ConsensusModule) isValidBlock(block *types2.BlockConsTemp) bool {
 	if block == nil {
 		return false
 	}
@@ -60,14 +58,13 @@ func (m *ConsensusModule) isValidBlock(block *types.BlockConsTemp) bool {
 }
 
 // TODO: Should this be async?
-func (m *ConsensusModule) deliverTxToUtility(block *types.BlockConsTemp) error {
+func (m *ConsensusModule) deliverTxToUtility(block *types2.BlockConsTemp) error {
 	utilityModule := m.GetBus().GetUtilityModule()
 	m.UtilityContext, _ = utilityModule.NewContext(int64(m.Height))
 	proposer := []byte(strconv.Itoa(int(m.NodeId)))
-	tx := make([][]byte, 0)                // INTEGRATION_TEMP: Get from block.Transactions
 	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.UtilityContext.GetPersistanceContext().GetLastByzValidators
 
-	appHash, err := m.UtilityContext.ApplyBlock(int64(m.Height), proposer, tx, lastByzValidators)
+	appHash, err := m.UtilityContext.ApplyBlock(int64(m.Height), proposer, block.Transactions, lastByzValidators)
 	if err != nil {
 		return err
 	}
@@ -80,8 +77,8 @@ func (m *ConsensusModule) deliverTxToUtility(block *types.BlockConsTemp) error {
 	return nil
 }
 
-func (m *ConsensusModule) commitBlock(block *types.BlockConsTemp) error {
-	m.nodeLog(fmt.Sprintf("APPLYING BLOCK AT HEIGHT %d.", m.Height))
+func (m *ConsensusModule) commitBlock(block *types2.BlockConsTemp) error {
+	m.nodeLog(fmt.Sprintf("COMMITTING BLOCK AT HEIGHT %d. WITH TRANSACTION COUNT: %d", m.Height, len(block.Transactions)))
 	if err := m.UtilityContext.GetPersistanceContext().Commit(); err != nil {
 		return err
 	}
@@ -94,7 +91,7 @@ func (m *ConsensusModule) commitBlock(block *types.BlockConsTemp) error {
 	//	return err
 	//}
 
-	pocketState := types2.GetPocketState()
+	pocketState := types2.GetTestState()
 	pocketState.UpdateAppHash(block.BlockHeader.Hash)
 	pocketState.UpdateBlockHeight(uint64(block.BlockHeader.Height))
 

@@ -2,6 +2,7 @@ package utility
 
 import (
 	"bytes"
+	"fmt"
 	"pocket/shared/crypto"
 	types2 "pocket/utility/types"
 )
@@ -57,6 +58,7 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 		}
 		err = u.ApplyTransaction(transaction)
 		if err != nil {
+			fmt.Println(err)
 			if err := u.RevertLastSavePoint(); err != nil {
 				return nil, err
 			}

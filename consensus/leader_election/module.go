@@ -30,7 +30,7 @@ type LeaderElectionModule interface {
 type leaderElectionModule struct {
 	LeaderElectionModule
 
-	pocketBusMod modules.BusModule
+	pocketBusMod modules.Bus
 
 	// Module metadata
 	nodeId         c_types.NodeId
@@ -71,11 +71,11 @@ func (m *leaderElectionModule) Stop() error {
 	return nil
 }
 
-func (m *leaderElectionModule) SetPocketBusMod(pocketBus modules.BusModule) {
+func (m *leaderElectionModule) SetBus(pocketBus modules.Bus) {
 	m.pocketBusMod = pocketBus
 }
 
-func (m *leaderElectionModule) GetBus() modules.BusModule {
+func (m *leaderElectionModule) GetBus() modules.Bus {
 	if m.pocketBusMod == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
@@ -127,7 +127,7 @@ func (m *leaderElectionModule) GetLeaderId(height c_types.BlockHeight, round c_t
 }
 
 func (m *leaderElectionModule) BroadcastVRFProofIfCandidate(height c_types.BlockHeight, round c_types.Round) {
-	state := c_types.GetPocketState()
+	state := c_types.GetTestState()
 
 	validator, ok := state.ValidatorMap[m.nodeId]
 	if !ok {
@@ -201,7 +201,7 @@ func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElect
 		return err
 	}
 
-	consensusProtoMsg := &types.ConsensusMessage{
+	consensusProtoMsg := &c_types.Message{
 		Data: data,
 	}
 
@@ -210,21 +210,23 @@ func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElect
 		return err
 	}
 
-	networkProtoMsg := &types.NetworkMessage{
-		Topic: types.PocketTopic_CONSENSUS.String(),
-		Data:  anyProto,
+	//networkProtoMsg := &types.Message{
+	//	Topic: types.PocketTopic_CONSENSUS.String(),
+	//	Data:  anyProto,
+	//}
+
+	if err := m.GetBus().GetNetworkModule().BroadcastMessage(anyProto, string(types.CONSENSUS)); err != nil {
+		// TODO handle
 	}
 
-	m.GetBus().GetNetworkModule().BroadcastMessage(networkProtoMsg)
-
-	//envelope := &events.PocketEvent{
+	//envelope := &events.Event{
 	//	SourceModule: events.LEADER_ELECTION,
 	//	PocketTopic:  events.CONSENSUS,
 	//	MessageData:  data,
 	//}
 	//m.GetBus().GetNetworkModule().Broadcast("CONSENSUS", data, false)
 	//m.GetBus().GetNetworkModule().Broadcast(envelope, false)
-	//networkMsg := &p2p_types.NetworkMessage{
+	//networkMsg := &p2p_types.Message{
 	//	Topic: events.CONSENSUS,
 	//	Data:  data,
 	//}
@@ -233,7 +235,7 @@ func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElect
 	//	return err
 	//}
 	//
-	//e := &events.PocketEvent{
+	//e := &events.Event{
 	//	SourceModule: events.LEADER_ELECTION,
 	//	PocketTopic:  events.P2P_BROADCAST_MESSAGE,
 	//	MessageData:  networkMsgEncoded,

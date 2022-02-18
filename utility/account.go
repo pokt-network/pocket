@@ -1,6 +1,8 @@
 package utility
 
 import (
+	"encoding/hex"
+	"fmt"
 	"math/big"
 	types2 "pocket/utility/types"
 )
@@ -35,6 +37,7 @@ func (u *UtilityContext) GetAccountAmount(address []byte) (*big.Int, types2.Erro
 	store := u.Store()
 	amount, err := store.GetAccountAmount(address)
 	if err != nil {
+		fmt.Println(hex.EncodeToString(address))
 		return nil, types2.ErrGetAccountAmount(err)
 	}
 	return StringToBigInt(amount)

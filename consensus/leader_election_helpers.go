@@ -37,13 +37,13 @@ func (m *ConsensusModule) clearLeader() {
 }
 
 func (m *ConsensusModule) electNextLeaderDeterministic(message *HotstuffMessage) types.NodeId {
-	valMap := types.GetPocketState().ValidatorMap
+	valMap := types.GetTestState().ValidatorMap
 	value := int64(message.Height) + int64(message.Round) + int64(message.Step) - 1
 	return types.NodeId(value%int64(len(valMap)) + 1)
 }
 
 func (m *ConsensusModule) electNextLeaderPseudoRandom(message *HotstuffMessage) types.NodeId {
-	valMap := types.GetPocketState().ValidatorMap
+	valMap := types.GetTestState().ValidatorMap
 	value := int64(message.Height) + int64(message.Round) + int64(message.Step)
 	rand.Seed(value)
 	return types.NodeId(rand.Intn(len(valMap)) + 1)
@@ -54,7 +54,7 @@ func (m *ConsensusModule) electNextLeaderRoundRobin(message *HotstuffMessage) ty
 	return types.NodeId(0)
 
 	// leaderNum := uint32(0)
-	// valMap := shared.GetPocketState().ValidatorMap
+	// valMap := shared.GetTestState().ValidatorMap
 	// if m.PreviousLeader != nil {
 	// 	leaderNum = uint32(*m.PreviousLeader)
 	// }
