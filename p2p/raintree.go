@@ -71,7 +71,7 @@ func getTargetList(l *plist, id uint64, topl, currl int) *plist {
 	ownposition := l.positionof(id)
 
 	slice := l.slice()
-	if ownposition+int(tlsize) > cap(l.slice()) {
+	if ownposition+int(tlsize) > len(l.slice()) {
 		psublist := slice[ownposition:]
 		csublist := slice[:int(tlsize)-len(psublist)]
 

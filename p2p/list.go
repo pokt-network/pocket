@@ -106,7 +106,8 @@ func (l *plist) concat(additional []peer) *plist {
 	l.Lock()
 	defer l.Unlock()
 
-	s := l.elements
+	s := make([]peer, len(l.elements))
+	copy(s, l.elements)
 	s = append(s, additional...)
 
 	nl := *l

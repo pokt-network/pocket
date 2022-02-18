@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestChurnMgmtMessenger(t *testing.T) {
+func TestMessage_ChurnMgmtMessenger(t *testing.T) {
 	cm := &churnmgmt{}
 	nonce, src, dst, level := uint32(1), "10.0.0.1:1234", "9.0.0.2:5432", uint16(2)
 
@@ -147,7 +147,7 @@ func TestChurnMgmtMessenger(t *testing.T) {
 	}
 }
 
-func TestProtoDomainCodec(t *testing.T) {
+func TestMessage_ProtoDomainCodec(t *testing.T) {
 	pd := &pbuff{}
 	nonce, src, dst, level := int32(1), "10.0.0.1:1234", "9.0.0.2:5432", int32(2)
 

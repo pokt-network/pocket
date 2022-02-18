@@ -17,6 +17,22 @@ type request struct {
 	id uint32
 }
 
+type Pipe interface {
+	Error() error
+	SetLogger(func(...interface{}) (int, error))
+}
+
+var (
+	ErrPeerHangUp func(error) error = func(err error) error {
+		strerr := fmt.Sprintf("Peer Hang Up Error: %s", err.Error())
+		return errors.New(strerr)
+	}
+	ErrUnexpected func(error) error = func(err error) error {
+		strerr := fmt.Sprintf("Unexpected Peer Error: %s", err.Error())
+		return errors.New(strerr)
+	}
+)
+
 type io struct {
 	g *gater
 	c *wcodec
@@ -29,11 +45,10 @@ type io struct {
 		write []byte
 	}
 	buffersState struct {
+		sync.Mutex   // for the actual struct elements, like writeSignals
 		writeOpen    bool
 		writeSignals chan uint
 		writeLock    sync.Mutex
-
-		readOpen bool
 	}
 
 	dialer Dialer // an intermediary poktp2p interface that returns net.Conn, useful for mocking in testing
@@ -56,11 +71,17 @@ type io struct {
 	answering chan uint
 	polling   chan uint
 
-	opened    atomic.Bool
-	sending   bool
-	receiving bool
+	opened atomic.Bool
 
-	err error
+	logger struct {
+		sync.Mutex
+		print func(...interface{}) (int, error)
+	}
+
+	err struct {
+		sync.Mutex
+		error
+	}
 }
 
 type Sense string
@@ -73,7 +94,6 @@ var (
 
 func (p *io) open(sense Sense, addr string, conn net.Conn, onopened func(*io) error, onclosed func(*io) error) error {
 	p.buffersState.writeOpen = true
-	p.buffersState.readOpen = true
 
 	switch sense {
 	case OutboundIoPipe:
@@ -100,17 +120,31 @@ func (p *io) open(sense Sense, addr string, conn net.Conn, onopened func(*io) er
 }
 
 func (p *io) close() {
+	if !p.opened.Load() {
+		return
+	}
 	close(p.done)
-	close(p.errored)
-	close(p.buffersState.writeSignals)
 
-	p.sending = false
-	p.receiving = false
+	p.err.Lock()
+	close(p.errored)
+	p.err.Unlock()
+
+	p.buffersState.Lock()
+	close(p.buffersState.writeSignals)
+	p.buffersState.Unlock()
+
 	p.opened.Store(false)
+
+	p.buffersState.writeLock.Lock()
 	p.buffersState.writeOpen = false
-	p.buffersState.readOpen = false
+	p.buffersState.writeLock.Unlock()
+
+	if p.conn != nil {
+		p.conn.Close()
+	}
 
 	p.closed <- 1
+	p.opened.Store(false)
 }
 
 func (p *io) outbound(addr string, onopened func(p *io) error, onclosed func(p *io) error) {
@@ -127,8 +161,7 @@ func (p *io) outbound(addr string, onopened func(p *io) error, onclosed func(p *
 
 	conn, err := p.dialer.Dial("tcp", addr)
 	if err != nil {
-		p.err = err
-		p.errored <- 1
+		p.error(err)
 		close(p.answering)
 		close(p.polling)
 		return
@@ -139,8 +172,7 @@ func (p *io) outbound(addr string, onopened func(p *io) error, onclosed func(p *
 	p.writer = bufio.NewWriter(p.conn)
 
 	if err := onopened(p); err != nil {
-		p.err = err
-		p.errored <- 1
+		p.error(err)
 
 		close(p.answering)
 		close(p.polling)
@@ -151,8 +183,7 @@ func (p *io) outbound(addr string, onopened func(p *io) error, onclosed func(p *
 	p.answer()
 
 	if err := onclosed(p); err != nil {
-		p.err = err
-		p.errored <- 1
+		p.error(err)
 		return
 	}
 }
@@ -170,8 +201,7 @@ func (p *io) inbound(addr string, conn net.Conn, onopened func(*io) error, onclo
 	p.writer = bufio.NewWriter(conn)
 
 	if err := onopened(p); err != nil {
-		p.err = err
-		p.errored <- 1
+		p.error(err)
 
 		close(p.answering)
 		close(p.polling)
@@ -182,8 +212,7 @@ func (p *io) inbound(addr string, conn net.Conn, onopened func(*io) error, onclo
 	p.answer()  // closes p.answering when done
 
 	if err := onclosed(p); err != nil {
-		p.err = err
-		p.errored <- 1
+		p.error(err)
 		return
 	}
 }
@@ -198,8 +227,8 @@ func (p *io) read() ([]byte, int, error) {
 		return nil, 0, err
 	}
 
-	if bodylen > uint32(ReadBufferSize) { // TODO: replace with configurable max value
-		return nil, 0, errors.New(fmt.Sprintf("io pipe error: cannot read a buffer of length %d, the acceptedl length is %d.", bodylen, ReadBufferSize))
+	if bodylen > uint32(ReadBufferSize-WireByteHeaderLength) { // TODO: replace with configurable max value
+		return nil, 0, errors.New(fmt.Sprintf("io pipe error: cannot read a buffer of length %d, the accepted body length is %d.", bodylen, ReadBufferSize-WireByteHeaderLength))
 	}
 
 	if n, err = stdio.ReadFull(p.reader, p.buffers.read[WireByteHeaderLength:bodylen+uint32(WireByteHeaderLength)]); err != nil {
@@ -219,28 +248,21 @@ func (p *io) poll() {
 	}()
 
 	{
-		p.receiving = true
 		p.polling <- 1 // signal start
 	}
 
 	for stop := false; !stop; {
 		select {
+		// TODO: replace with passed down context
 		case <-p.g.done:
-			p.receiving = false
-			p.buffersState.readOpen = false
-			stop = true
 			break
 
 		case <-p.done:
-			p.receiving = false
-			p.buffersState.readOpen = false
 			stop = true
 			break
 
 		case _, open := <-p.polling:
 			if !open {
-				p.receiving = false
-				p.buffersState.readOpen = false
 				stop = true
 				break
 			}
@@ -249,10 +271,20 @@ func (p *io) poll() {
 			{
 				buf, n, err := p.read()
 				if err != nil {
-					fmt.Println("Error!", err)
-					p.err = err
-					p.errored <- 1
-					break
+
+					switch err {
+					case stdio.EOF:
+						p.error(ErrPeerHangUp(err))
+						break
+
+					case stdio.ErrUnexpectedEOF:
+						p.error(ErrPeerHangUp(err))
+						break
+
+					default:
+						p.error(ErrUnexpected(err))
+						break
+					}
 				}
 
 				if n == 0 {
@@ -261,8 +293,7 @@ func (p *io) poll() {
 
 				nonce, _, data, wrapped, err := p.c.decode(buf)
 				if err != nil {
-					p.err = err
-					p.errored <- 1
+					p.error(err)
 					break
 				}
 
@@ -285,9 +316,15 @@ func (p *io) poll() {
 func (p *io) write(b []byte, iserroreof bool, reqnum uint32, wrapped bool) (uint, error) {
 	defer p.buffersState.writeLock.Unlock()
 	p.buffersState.writeLock.Lock()
+
 	buff := p.c.encode(Binary, iserroreof, reqnum, b, wrapped)
 	p.buffers.write = append(p.buffers.write, buff...)
+
+	// TODO: find a better way, maybe the value itself (the channel) should be an atomic on and off switch to signal writes
+	p.buffersState.Lock()
 	p.buffersState.writeSignals <- 1
+	p.buffersState.Unlock()
+
 	return uint(len(b)), nil // TODO: should length be of b or of the encoded b
 }
 
@@ -314,28 +351,21 @@ func (p *io) answer() {
 	}()
 
 	{
-		p.sending = true
 		p.answering <- 1 // signal start
 	}
 
 	for stop := false; !stop; {
 		select {
 		case <-p.g.done:
-			p.sending = false
-			p.buffersState.writeOpen = false
 			stop = true
 			break
 
 		case <-p.done:
-			p.sending = false
-			p.buffersState.writeOpen = false
 			stop = true
 			break
 
 		case _, open := <-p.answering:
 			if !open {
-				p.sending = false
-				p.buffersState.writeOpen = false
 				stop = true
 				break
 			}
@@ -357,21 +387,30 @@ func (p *io) answer() {
 				}
 
 				if _, err := p.writer.Write(buff); err != nil {
-					p.err = err
-					p.errored <- 1
+					p.error(err)
 					stop = true
 					break
 				}
 
 				if err := p.writer.Flush(); err != nil {
-					p.err = err
-					p.errored <- 1
+					p.error(err)
 					stop = true
 					break
 				}
 			}
 		}
 	}
+}
+
+func (p *io) error(err error) {
+	defer p.err.Unlock()
+	p.err.Lock()
+
+	if p.err.error == nil {
+		p.err.error = err
+	}
+
+	p.errored <- 1
 }
 
 func NewIoPipe() *io {
@@ -388,17 +427,14 @@ func NewIoPipe() *io {
 			write: make([]byte, 0),
 		},
 		buffersState: struct {
+			sync.Mutex
 			writeOpen    bool
 			writeSignals chan uint
 			writeLock    sync.Mutex
-
-			readOpen bool
 		}{
 			writeOpen:    false,
 			writeSignals: make(chan uint, 1),
 			writeLock:    sync.Mutex{},
-
-			readOpen: false,
 		},
 
 		timeouts: struct{ read int }{read: ReadDeadlineMs},
@@ -413,11 +449,6 @@ func NewIoPipe() *io {
 
 		answering: make(chan uint),
 		polling:   make(chan uint),
-
-		sending:   false,
-		receiving: false,
-
-		err: nil,
 	}
 
 	return pipe
