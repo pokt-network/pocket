@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"sync"
 	"testing"
 )
 
@@ -178,5 +179,117 @@ func TestRainTree_PickRight(t *testing.T) {
 	if right.id != 19 {
 		t.Errorf("Raintree algorithm error: failed to pick proper left at provided level, expected %d, got: %d", 19, right.id)
 		t.Log("list size", list.size(), "top level=", 4, "current level=", 3)
+	}
+}
+
+func TestRainTree_Rain(t *testing.T) {
+	var rw sync.RWMutex
+
+	peermap := map[uint64][]struct {
+		l uint64
+		r uint64
+	}{}
+	addtopeermap := func(id, l, r uint64) {
+		peermap[id] = append(peermap[id], struct {
+			l uint64
+			r uint64
+		}{l, r})
+	}
+
+	queue := make([]struct {
+		id          uint64
+		level       int
+		root        bool
+		contactedby uint64
+	}, 0)
+	queuein := func(id uint64, level int, root bool, contactedby uint64) {
+		queue = append(queue, struct {
+			id          uint64
+			level       int
+			root        bool
+			contactedby uint64
+		}{id, level, root, contactedby})
+	}
+	queuepop := func() struct {
+		id          uint64
+		level       int
+		root        bool
+		contactedby uint64
+	} {
+		popped := queue[0]
+		queue = queue[1:]
+		return popped
+	}
+
+	list := &plist{}
+
+	for i := 0; i < 9; i++ {
+		p := Peer(uint64(i+1), "")
+		list.add(*p)
+		peermap[uint64(i+1)] = make([]struct {
+			l uint64
+			r uint64
+		}, 0)
+	}
+
+	t.Logf("List instantiated: OK")
+	t.Logf("List: %v", list.elements)
+
+	act := func(id uint64, l, r *peer, currentlevel int) {
+		defer rw.Unlock()
+		rw.Lock()
+
+		addtopeermap(id, l.id, r.id)
+		queuein(l.id, currentlevel, false, id)
+		queuein(r.id, currentlevel, false, id)
+
+		t.Logf("Queue in left %d and right %d at level %d, by peer %d: OK", l.id, r.id, currentlevel, id)
+	}
+
+	// uncomment to play step by step
+	//var signalc chan os.Signal
+	//var signalg chan os.Signal
+
+	//signalc = make(chan os.Signal)
+	//signalg = make(chan os.Signal)
+
+	//signal.Notify(signalc, syscall.SIGQUIT)
+	//signal.Notify(signalg, os.Interrupt)
+
+	// queue in node id=5 to start raining
+	queuein(uint64(5), 3, true, 0)
+
+	// uncomment to play step by step
+	// runner:
+	for {
+		currentpeer := queuepop()
+		//t.Logf("Peer %d will start raining...", currentpeer.id)
+		//t.Logf("Is root %v", currentpeer.root)
+		rain(currentpeer.id, list, act, currentpeer.root, currentpeer.level)
+		t.Logf("Peer %d done raining: OK", currentpeer.id)
+		if len(queue) == 0 {
+			t.Logf("End of queue.")
+			break
+		}
+		// uncomment to play step by step
+		//select {
+		//// CTRL+\ to continue
+		//case <-signalg:
+		//	fmt.Println("got user input")
+		//	continue
+		//case <-signalc:
+		//	t.Logf("Interrupting...")
+		//	break runner
+		//}
+	}
+
+	for id, _ := range peermap {
+
+		p := list.get(int(id - 1))
+		if p == nil {
+			t.Errorf("Raintree error: expected peer %d to have received a message during the broadcast, but it did not", id)
+			break
+		}
+
 	}
 }

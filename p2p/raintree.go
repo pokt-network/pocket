@@ -88,3 +88,27 @@ func getTargetList(l *plist, id uint64, topl, currl int) *plist {
 
 	return &sublist
 }
+
+func rain(originatorId uint64, list *plist, act func(id uint64, l, r *peer, currentlevel int), root bool, fromlevel int) {
+	var toplevel int = int(getTopLevel(list))
+	var currentlevel int = toplevel
+
+	if !root {
+		currentlevel = fromlevel
+	}
+
+	for currentlevel > 0 {
+		targetlist := getTargetList(list, originatorId, toplevel, currentlevel)
+
+		var left, right *peer
+		{
+			lpos := pickLeft(originatorId, targetlist)
+			rpos := pickRight(originatorId, targetlist)
+
+			left = targetlist.get(lpos)
+			right = targetlist.get(rpos)
+		}
+		currentlevel--
+		act(originatorId, left, right, currentlevel)
+	}
+}

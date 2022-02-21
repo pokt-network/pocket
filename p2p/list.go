@@ -69,8 +69,14 @@ func (l *plist) add(p peer) {
 }
 
 func (l *plist) get(pos int) *peer {
-	p := l.elements[pos]
-	return &p
+	var p *peer
+	defer func() {
+		if err := recover(); err != nil {
+			p = nil
+		}
+	}()
+	p = &l.elements[pos]
+	return p
 }
 
 func (l *plist) copy() plist {
