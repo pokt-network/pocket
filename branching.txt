@@ -1,0 +1,10 @@
+* integration/workshop2/attempt2
+|
+|___> integration/workshop2/attempt2_p2p_int_1
+                                            |
+                                            |
+                                            |
+                                            ___> sidetracked/integration-with-p2p
+
+
+

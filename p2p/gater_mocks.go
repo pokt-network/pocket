@@ -10,11 +10,9 @@ func MockGater() *gater {
 		peerlist: &plist{elements: make([]peer, 0)},
 		sink:     make(chan work, 1),
 
-		listener: nil,
-
-		err:    nil,
-		done:   make(chan uint, 1),
-		ready:  make(chan uint, 1),
-		closed: make(chan uint, 1),
+		done:    make(chan uint, 1),
+		ready:   make(chan uint, 1),
+		closed:  make(chan uint, 1),
+		errored: make(chan uint, 1),
 	}
 }

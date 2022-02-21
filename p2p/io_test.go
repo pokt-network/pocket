@@ -3,14 +3,13 @@ package p2p
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"math/rand"
 	"net"
 	"testing"
 	"time"
 )
 
-func TestNewIO(t *testing.T) {
+func TestIO_NewIO(t *testing.T) {
 	pipe := NewIoPipe()
 	if cap(pipe.buffers.read) != ReadBufferSize && cap(pipe.buffers.write) != WriteBufferSize {
 		t.Logf("IO pipe is malconfigured")
@@ -19,7 +18,7 @@ func TestNewIO(t *testing.T) {
 	}
 }
 
-func TestWrite(t *testing.T) {
+func TestIO_Write(t *testing.T) {
 	pipe := NewIoPipe()
 
 	pipe.buffersState.writeOpen = true // this is usually set to true by pipe.open
@@ -37,13 +36,14 @@ func TestWrite(t *testing.T) {
 	}
 }
 
-func TestWriteConcurrently(t *testing.T) {
+func TestIO_WriteConcurrently(t *testing.T) {
 	t.Skip()
 }
 
-func TestAnswer(t *testing.T) {
+func TestIO_Answer(t *testing.T) {
 	pipe := NewIoPipe()
 	pipe.buffersState.writeOpen = true // usually opened by pipe.open
+	pipe.opened.Store(true)
 
 	pipe.g = MockGater()
 
@@ -83,16 +83,15 @@ func TestAnswer(t *testing.T) {
 
 	pipe.close()
 
-	<-pipe.answering
+	<-pipe.closed
 	_, writerSignalsOpen := <-pipe.buffersState.writeSignals
-	if writerSignalsOpen || pipe.sending || pipe.buffersState.writeOpen {
+	if writerSignalsOpen {
 		t.Errorf("pipe answer routing error: answer routing still going after pipe close")
 	}
 }
 
-func TestRead(t *testing.T) {
+func TestIO_Read(t *testing.T) {
 	pipe := NewIoPipe()
-	pipe.buffersState.readOpen = true // usually opened by pipe.open
 
 	conn := MockConn()
 	pipe.g = MockGater()
@@ -115,7 +114,7 @@ func TestRead(t *testing.T) {
 			t.Errorf("pipe read error: read buffer length mismatch, expected %d, got %d", ReadBufferSize, n)
 		}
 
-		if bytes.Compare(buff[:ReadBufferSize-WireByteHeaderLength], msg) != 0 {
+		if bytes.Compare(buff[WireByteHeaderLength:], msg) != 0 {
 			t.Errorf("pipe read error: read buffer corrupted")
 		}
 	}
@@ -125,7 +124,6 @@ func TestRead(t *testing.T) {
 	{
 		msg := GenerateByteLen(1024)
 		emsg := (&wcodec{}).encode(Binary, false, 0, msg, false)
-		fmt.Println(len(emsg))
 		pipe.conn.Write(emsg)
 
 		buff, n, err := pipe.read()
@@ -138,7 +136,7 @@ func TestRead(t *testing.T) {
 			t.Errorf("pipe read error: read buffer length mismatch, expected %d, got %d", 1024, n)
 		}
 
-		if bytes.Compare(buff[:1024], msg) != 0 {
+		if bytes.Compare(buff[WireByteHeaderLength:], msg) != 0 {
 			t.Errorf("pipe read error: read buffer corrupted")
 		}
 	}
@@ -148,17 +146,17 @@ func TestRead(t *testing.T) {
 /*
  @ io.poll is a continuous read loop that reads incoming messages from a reader/writer/closer (like a network connection)
 */
-func TestPoll(t *testing.T) {
+func TestIO_Poll(t *testing.T) {
 	pipe := NewIoPipe()
 
 	pipe.g = MockGater()
 	pipe.conn = MockConn()
 	pipe.reader = bufio.NewReader(pipe.conn)
 
-	pipe.buffersState.readOpen = true // usually opened by pipe.open
-
 	msg := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
 	data := pipe.c.encode(Binary, false, 0, msg, false)
+
+	pipe.opened.Store(true)
 
 	go pipe.poll()
 
@@ -188,46 +186,32 @@ func TestPoll(t *testing.T) {
 	<-pipe.g.sink
 	pipe.close()
 
+	<-pipe.closed
 	_, pollingOpen := <-pipe.polling
-	if pipe.receiving != false || pollingOpen || pipe.buffersState.readOpen {
+	if pollingOpen {
 		t.Errorf("pipe poll error: state indicates polling/receiving is active after pipe closed")
 	}
 }
 
-func TestInbound(t *testing.T) {
+func TestIO_Inbound(t *testing.T) {
 	pipe := NewIoPipe()
 
 	pipe.g = MockGater()
-	pipe.buffersState.readOpen = true
 	pipe.buffersState.writeOpen = true
 
 	addr := "dummy-test-host:dummyport"
 	conn := MockConnM()
 
 	// did not use MockFunc due to the issues it has with nil errors
-	onopenedStub := &struct {
-		called bool
-		times  int
-	}{
-		called: false,
-		times:  0,
-	}
+	onopenedStub := newFnCallStub()
 	onopened := func(p *io) error {
-		onopenedStub.called = true
-		onopenedStub.times++
+		onopenedStub.trackCall()
 		return nil
 	}
 
-	onclosedStub := &struct {
-		called bool
-		times  int
-	}{
-		called: false,
-		times:  0,
-	}
+	onclosedStub := newFnCallStub()
 	onclosed := func(p *io) error {
-		onclosedStub.called = true
-		onclosedStub.times++
+		onclosedStub.trackCall()
 		return nil
 	}
 
@@ -244,16 +228,16 @@ func TestInbound(t *testing.T) {
 		t.Errorf("pipe inbound error: pipe connection is not initialized after inbound launch")
 	}
 
-	if !pipe.receiving || !answeringOpen || !pipe.sending || !pollingOpen {
+	if !answeringOpen || !pollingOpen {
 		t.Errorf("pipe inbound error: pipe is not receiving or sending after inbound launch")
 	}
 
-	if onopenedStub.called != true {
+	if !onopenedStub.wasCalled() {
 		t.Errorf("pipe inbound error: did not call onopened handler on opened connection event")
 	}
 
-	if onopenedStub.times != 1 {
-		t.Errorf("pipe inbound error: expected onopened handler to be called once, got called %d times", onopenedStub.times)
+	if !onopenedStub.wasCalledTimes(1) {
+		t.Errorf("pipe inbound error: expected onopened handler to be called once, got called %d times", onopenedStub.times())
 	}
 
 	msg := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
@@ -263,19 +247,19 @@ func TestInbound(t *testing.T) {
 	<-conn.signals
 
 	<-time.After(time.Millisecond * 20)
-	buff := make([]byte, ReadBufferSize)
-	n := copy(buff, pipe.buffers.read)
+	w := <-pipe.g.sink
+	n := len(w.data)
 
-	_, _, data, _, err := pipe.c.decode(buff)
-	if err != nil {
-		t.Errorf("pipe inbound error: failed to decode received inbound buffer: %s", err.Error())
-	}
+	//_, _, data, _, err := pipe.c.decode(buff)
+	//if err != nil {
+	//	t.Errorf("pipe inbound error: failed to decode received inbound buffer: %s", err.Error())
+	//}
 
-	if n != ReadBufferSize {
+	if n != ReadBufferSize-WireByteHeaderLength {
 		t.Errorf("pipe inbound error (read error): received inbound buffer length mismatch, expected %d, got %d", ReadBufferSize, n)
 	}
 
-	if bytes.Compare(data, msg) != 0 {
+	if bytes.Compare(w.data, msg) != 0 {
 		t.Errorf("pipe inbound error (read error): received inbound buffer corrupted")
 	}
 
@@ -300,7 +284,7 @@ func TestInbound(t *testing.T) {
 		t.Errorf("pipe inbound error (answer error): inbound peer received wrong number of bytes")
 	}
 
-	_, _, answer, _, err = pipe.c.decode(answer)
+	_, _, answer, _, err := pipe.c.decode(answer)
 
 	if err != nil {
 		t.Errorf("pipe inbound error (answer error): inbound peer could not decode response")
@@ -314,12 +298,12 @@ func TestInbound(t *testing.T) {
 
 	<-time.After(time.Millisecond * 10) // give time for routines to wrap up
 
-	if onclosedStub.called != true {
+	if !onclosedStub.wasCalled() {
 		t.Errorf("pipe inbound error: did not call onclosed handler on closed connection event")
 	}
 
-	if onclosedStub.times != 1 {
-		t.Errorf("pipe inbound error: expected onclosed handler to be called once, got called %d times", onopenedStub.times)
+	if !onclosedStub.wasCalledTimes(1) {
+		t.Errorf("pipe inbound error: expected onclosed handler to be called once, got called %d times", onopenedStub.times())
 	}
 }
 
@@ -328,42 +312,29 @@ func TestInbound(t *testing.T) {
  @ Might fail (from time to time) due to goroutines synchronization, expected behavior, the test case is fine nonetheless, expected behavior, the test case is fine nonetheless, expected behavior, the test case is fine nonetheless, expected behavior, the test case is fine nonetheless
  @
 */
-func TestOutbound(t *testing.T) {
+func TestIO_Outbound(t *testing.T) {
 	pipe := NewIoPipe()
 
 	dialer := MockDialer()
 
 	pipe.dialer = Dialer(dialer)
 	pipe.g = MockGater()
-	pipe.buffersState.readOpen = true
 	pipe.buffersState.writeOpen = true
+
+	pipe.opened.Store(true)
 
 	addr := "dummy-test-host:dummyport"
 
 	// did not use MockFunc due to the issues it has with nil errors
-	onopenedStub := &struct {
-		called bool
-		times  int
-	}{
-		called: false,
-		times:  0,
-	}
+	onopenedStub := newFnCallStub()
 	onopened := func(p *io) error {
-		onopenedStub.called = true
-		onopenedStub.times++
+		onopenedStub.trackCall()
 		return nil
 	}
 
-	onclosedStub := &struct {
-		called bool
-		times  int
-	}{
-		called: false,
-		times:  0,
-	}
+	onclosedStub := newFnCallStub()
 	onclosed := func(p *io) error {
-		onclosedStub.called = true
-		onclosedStub.times++
+		onclosedStub.trackCall()
 		return nil
 	}
 
@@ -382,93 +353,98 @@ func TestOutbound(t *testing.T) {
 		t.Errorf("pipe outbound error: pipe connection is not initialized after outbound launch")
 	}
 
-	if !pipe.receiving || !answeringOpen || !pipe.sending || !pollingOpen {
+	if !answeringOpen || !pollingOpen {
 		t.Errorf("pipe outbound error: pipe is not receiving or sending after outbound launch")
 	}
 
-	if onopenedStub.called != true {
+	if !onopenedStub.wasCalled() {
 		t.Errorf("pipe inbound error: did not call onopened handler on opened connection event")
 	}
 
-	if onopenedStub.times != 1 {
-		t.Errorf("pipe inbound error: expected onopened handler to be called once, got called %d times", onopenedStub.times)
+	if !onopenedStub.wasCalledTimes(1) {
+		t.Errorf("pipe inbound error: expected onopened handler to be called once, got called %d times", onopenedStub.times())
 	}
 
-	// send to the outbound peer
+	{
+		// send to the outbound peer
 
-	ping := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
+		ping := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
 
-	wn, werr := pipe.write(ping, false, 0, false)
-	if werr != nil {
-		t.Errorf("pipe outbound error (write error): error writing to the outbound pipe")
+		wn, werr := pipe.write(ping, false, 0, false)
+		if werr != nil {
+			t.Errorf("pipe outbound error (write error): error writing to the outbound pipe")
+		}
+
+		<-conn.signals
+
+		rping := make([]byte, 1024*4+WireByteHeaderLength) // buffer for the received ping message
+		cn, cerr := conn.Read(rping)
+
+		if cerr != nil {
+			t.Errorf("pipe outbound error (answer error): outbound peer could not read response, %s", cerr.Error())
+		}
+
+		if uint(cn-WireByteHeaderLength) != wn {
+			t.Errorf("pipe outbound error (answer error): outbound peer received wrong number of bytes")
+		}
+
+		_, _, rping, _, err := pipe.c.decode(rping)
+
+		if err != nil {
+			t.Errorf("pipe outbound error: outbound peer could not decode received buff: %s ", err.Error())
+		}
+
+		if bytes.Compare(rping, ping) != 0 {
+			t.Errorf("pipe outbound error (answer error): outbound peer received corrupted response")
+		}
 	}
 
-	<-conn.signals
+	// whatever has been written to the conn, will also be read by the pipe
+	// since the conn mock is a singal conduit and not two (in/out) as in a real conn
+	// so after flushing, we need to make sure to flush out the what's been read by the pipe
+	// and sent to the sink. (by emptying the sink)
+	conn.Flush()
+	<-pipe.g.sink
 
-	rping := make([]byte, 1024*4+WireByteHeaderLength) // buffer for the received ping message
-	cn, cerr := conn.Read(rping)
+	{
+		rawpong := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
+		pong := pipe.c.encode(Binary, false, 0, rawpong, false)
+		go conn.Write(pong)
 
-	if cerr != nil {
-		t.Errorf("pipe outbound error (answer error): outbound peer could not read response, %s", cerr.Error())
-	}
+		<-conn.signals
 
-	if uint(cn-WireByteHeaderLength) != wn {
-		t.Errorf("pipe outbound error (answer error): outbound peer received wrong number of bytes")
-	}
+		if bytes.Compare(conn.buff, pong) != 0 {
+			t.Errorf("Conn Error: payload mismatch, payload length: %d, buffer length: %d", len(pong), len(conn.buff))
+		}
 
-	_, _, rping, _, err := pipe.c.decode(rping)
+		w := <-pipe.g.sink
 
-	if err != nil {
-		t.Errorf("pipe outbound error: outbound peer could not decode received buff: %s ", err.Error())
-	}
+		rpong := w.data
 
-	if bytes.Compare(rping, ping) != 0 {
-		t.Errorf("pipe outbound error (answer error): outbound peer received corrupted response")
+		if len(rpong) != ReadBufferSize-WireByteHeaderLength {
+			t.Errorf("pipe outbound error (read error): received outbound buffer length mismatch, expected %d, got %d", ReadBufferSize-WireByteHeaderLength, len(rpong))
+		}
+
+		if bytes.Compare(rpong, rawpong) != 0 {
+			t.Errorf("pipe outbound error (read error): received corrupted buffer from outbound peer")
+		}
 	}
 
 	conn.Flush()
 
-	rawpong := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
-	pong := pipe.c.encode(Binary, false, 0, rawpong, false)
-	go conn.Write(pong)
-
-	<-conn.signals
-
-	if bytes.Compare(conn.buff, pong) != 0 {
-		t.Errorf("Conn Error: payload mismatch, payload length: %d, buffer length: %d", len(pong), len(conn.buff))
-	}
-
-	if err != nil {
-		t.Errorf("pipe outbound error (read error): could not decode received buffer: %s", err.Error())
-	}
-
-	w := <-pipe.g.sink
-
-	rpong := w.data
-
-	if len(rpong) != ReadBufferSize-WireByteHeaderLength {
-		t.Errorf("pipe outbound error (read error): received outbound buffer length mismatch, expected %d, got %d", ReadBufferSize-WireByteHeaderLength, len(rpong))
-	}
-
-	if bytes.Compare(rpong, rawpong) != 0 {
-		t.Errorf("pipe outbound error (read error): received corrupted buffer from outbound peer")
-	}
-
-	conn.Flush()
-
-	pipe.g.done <- 1
+	pipe.close()
 
 	<-time.After(time.Millisecond * 10)
-	if onclosedStub.called != true {
+	if !onclosedStub.wasCalled() {
 		t.Errorf("pipe inbound error: did not call onclosed handler on closed connection event")
 	}
 
-	if onclosedStub.times != 1 {
-		t.Errorf("pipe inbound error: expected onclosed handler to be called once, got called %d times", onopenedStub.times)
+	if !onclosedStub.wasCalledTimes(1) {
+		t.Errorf("pipe inbound error: expected onclosed handler to be called once, got called %d times", onopenedStub.times())
 	}
 }
 
-func TestOpen(t *testing.T) {
+func TestIO_Open(t *testing.T) {
 
 	// test opening an outbound connection
 	{
@@ -478,35 +454,20 @@ func TestOpen(t *testing.T) {
 
 		pipe.dialer = Dialer(dialer)
 		pipe.g = MockGater()
-		pipe.buffersState.readOpen = true
 		pipe.buffersState.writeOpen = true
 
 		addr := "dummy-test-host:dummyport"
 
 		// did not use MockFunc due to the issues it has with nil errors
-		onopenedStub := &struct {
-			called bool
-			times  int
-		}{
-			called: false,
-			times:  0,
-		}
+		onopenedStub := newFnCallStub()
 		onopened := func(p *io) error {
-			onopenedStub.called = true
-			onopenedStub.times++
+			onopenedStub.trackCall()
 			return nil
 		}
 
-		onclosedStub := &struct {
-			called bool
-			times  int
-		}{
-			called: false,
-			times:  0,
-		}
+		onclosedStub := newFnCallStub()
 		onclosed := func(p *io) error {
-			onclosedStub.called = true
-			onclosedStub.times++
+			onclosedStub.trackCall()
 			return nil
 		}
 
@@ -515,7 +476,7 @@ func TestOpen(t *testing.T) {
 		_, closed := <-pipe.ready
 		ready := !closed
 
-		if !ready || !pipe.receiving || !pipe.sending {
+		if !ready {
 			t.Errorf("pipe outbound error: pipe is not receiving or sending after outbound launch")
 		}
 
@@ -527,23 +488,23 @@ func TestOpen(t *testing.T) {
 			t.Errorf("pipe outbound error: pipe connection is not initialized after outbound launch")
 		}
 
-		if onopenedStub.called != true {
+		if !onopenedStub.wasCalled() {
 			t.Errorf("pipe inbound error: did not call onopened handler on opened connection event")
 		}
 
-		if onopenedStub.times != 1 {
-			t.Errorf("pipe inbound error: expected onopened handler to be called once, got called %d times", onopenedStub.times)
+		if !onopenedStub.wasCalledTimes(1) {
+			t.Errorf("pipe inbound error: expected onopened handler to be called once, got called %d times", onopenedStub.times())
 		}
 
 		pipe.g.done <- 1
 		<-time.After(time.Millisecond * 10)
 
-		if onclosedStub.called != true {
+		if !onclosedStub.wasCalled() {
 			t.Errorf("pipe inbound error: did not call onclosed handler on closed connection event")
 		}
 
-		if onclosedStub.times != 1 {
-			t.Errorf("pipe inbound error: expected onclosed handler to be called once, got called %d times", onopenedStub.times)
+		if !onclosedStub.wasCalledTimes(1) {
+			t.Errorf("pipe inbound error: expected onclosed handler to be called once, got called %d times", onopenedStub.times())
 		}
 	}
 
@@ -552,35 +513,20 @@ func TestOpen(t *testing.T) {
 		pipe := NewIoPipe()
 
 		pipe.g = MockGater()
-		pipe.buffersState.readOpen = true
 		pipe.buffersState.writeOpen = true
 
 		addr := "dummy-test-host:dummyport"
 
 		// did not use MockFunc due to the issues it has with nil errors
-		onopenedStub := &struct {
-			called bool
-			times  int
-		}{
-			called: false,
-			times:  0,
-		}
+		onopenedStub := newFnCallStub()
 		onopened := func(p *io) error {
-			onopenedStub.called = true
-			onopenedStub.times++
+			onopenedStub.trackCall()
 			return nil
 		}
 
-		onclosedStub := &struct {
-			called bool
-			times  int
-		}{
-			called: false,
-			times:  0,
-		}
+		onclosedStub := newFnCallStub()
 		onclosed := func(p *io) error {
-			onclosedStub.called = true
-			onclosedStub.times++
+			onclosedStub.trackCall()
 			return nil
 		}
 
@@ -589,7 +535,7 @@ func TestOpen(t *testing.T) {
 		_, closed := <-pipe.ready
 		ready := !closed
 
-		if !ready || !pipe.receiving || !pipe.sending {
+		if !ready {
 			t.Errorf("pipe open inbound error: pipe is not receiving or sending after inbound launch")
 		}
 
@@ -605,23 +551,23 @@ func TestOpen(t *testing.T) {
 			t.Errorf("pipe open inbound error: wrong pipe sense")
 		}
 
-		if onopenedStub.called != true {
+		if !onopenedStub.wasCalled() {
 			t.Errorf("pipe inbound error: did not call onopened handler on opened connection event")
 		}
 
-		if onopenedStub.times != 1 {
-			t.Errorf("pipe inbound error: expected onopened handler to be called once, got called %d times", onopenedStub.times)
+		if !onopenedStub.wasCalledTimes(1) {
+			t.Errorf("pipe inbound error: expected onopened handler to be called once, got called %d times", onopenedStub.times())
 		}
 
 		pipe.g.done <- 1
 		<-time.After(time.Millisecond * 10)
 
-		if onclosedStub.called != true {
+		if !onclosedStub.wasCalled() {
 			t.Errorf("pipe inbound error: did not call onclosed handler on closed connection event")
 		}
 
-		if onclosedStub.times != 1 {
-			t.Errorf("pipe inbound error: expected onclosed handler to be called once, got called %d times", onopenedStub.times)
+		if !onclosedStub.wasCalledTimes(1) {
+			t.Errorf("pipe inbound error: expected onclosed handler to be called once, got called %d times", onopenedStub.times())
 		}
 	}
 
