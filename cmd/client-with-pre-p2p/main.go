@@ -10,8 +10,8 @@ import (
 	"pocket/consensus/statesync"
 	consensus_types "pocket/consensus/types"
 	"pocket/p2p/pre_p2p"
-	"pocket/p2p/pre_p2p/types"
 	p2p_types "pocket/p2p/pre_p2p/types"
+	p2ptypes "pocket/p2p/types"
 	"pocket/shared/config"
 	"pocket/shared/crypto"
 
@@ -160,8 +160,8 @@ func broadcastMessage(m consensus_types.GenericConsensusMessage, network p2p_typ
 		return
 	}
 
-	networkProtoMsg := &types.NetworkMessage{
-		Topic: types.PocketTopic_CONSENSUS,
+	networkProtoMsg := &p2ptypes.NetworkMessage{
+		Topic: p2ptypes.PocketTopic_CONSENSUS,
 		Data:  anyProto,
 	}
 

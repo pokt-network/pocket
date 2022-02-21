@@ -4,7 +4,7 @@ import (
 	"pocket/shared/types"
 )
 
-type NetworkMessage struct {
+type P2PMessage struct {
 	Topic types.EventTopic
 	Data  []byte
 }

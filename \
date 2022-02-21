@@ -136,7 +136,7 @@ func TestRainTree_GetTargetList(t *testing.T) {
 }
 
 func TestRainTree_PickLeft(t *testing.T) {
-	list := types.NewPeerlist()
+	list := &types.NewPeerlist()
 
 	for i := 0; i < 27; i++ {
 		p := types.NewPeer(uint64(i+1), "")
@@ -151,16 +151,15 @@ func TestRainTree_PickLeft(t *testing.T) {
 
 	s := list.Slice()
 	left := s[l]
-	lid := left.Id()
 
-	if lid != 10 {
-		t.Errorf("Raintree algorithm error: failed to pick proper left at provided level, expected %d, got: %d", 10, lid)
-		t.Log("list.Size", list.Size(), "top level=", 4, "current level=", 3)
+	if left.id != 10 {
+		t.Errorf("Raintree algorithm error: failed to pick proper left at provided level, expected %d, got: %d", 10, left.id)
+		t.Log("list.Size", list.size(), "top level=", 4, "current level=", 3)
 	}
 }
 
 func TestRainTree_PickRight(t *testing.T) {
-	list := types.NewPeerlist()
+	list := types.NewPeerlist
 
 	for i := 0; i < 27; i++ {
 		p := types.NewPeer(uint64(i+1), "")
@@ -175,11 +174,10 @@ func TestRainTree_PickRight(t *testing.T) {
 
 	s := list.Slice()
 	right := s[r]
-	rid := right.Id()
 
-	if right.Id() != 19 {
-		t.Errorf("Raintree algorithm error: failed to pick proper left at provided level, expected %d, got: %d", 19, rid)
-		t.Log("list.Size", list.Size(), "top level=", 4, "current level=", 3)
+	if right.id != 19 {
+		t.Errorf("Raintree algorithm error: failed to pick proper left at provided level, expected %d, got: %d", 19, right.id)
+		t.Log("list.Size", list.size(), "top level=", 4, "current level=", 3)
 	}
 }
 
@@ -222,7 +220,7 @@ func TestRainTree_Rain(t *testing.T) {
 		return popped
 	}
 
-	list := types.NewPeerlist()
+	list := &types.NewPeerlist{}
 
 	for i := 0; i < 9; i++ {
 		p := types.NewPeer(uint64(i+1), "")
@@ -234,20 +232,17 @@ func TestRainTree_Rain(t *testing.T) {
 	}
 
 	t.Logf("List instantiated: OK")
-	t.Logf("List: %v", list.Slice())
+	t.Logf("List: %v", list.elements)
 
-	act := func(id uint64, l, r *types.Peer, currentlevel int) {
+	act := func(id uint64, l, r *peer, currentlevel int) {
 		defer rw.Unlock()
 		rw.Lock()
 
-		lid := l.Id()
-		rid := r.Id()
+		addtopeermap(id, l.id, r.id)
+		queuein(l.id, currentlevel, false, id)
+		queuein(r.id, currentlevel, false, id)
 
-		addtopeermap(id, lid, rid)
-		queuein(lid, currentlevel, false, id)
-		queuein(rid, currentlevel, false, id)
-
-		t.Logf("Queue in left %d and right %d at level %d, by peer %d: OK", lid, rid, currentlevel, id)
+		t.Logf("Queue in left %d and right %d at level %d, by peer %d: OK", l.id, r.id, currentlevel, id)
 	}
 
 	// uncomment to play step by step

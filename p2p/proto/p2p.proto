@@ -9,6 +9,9 @@ option go_package = "/types/";
 enum PocketTopic {
   CONSENSUS = 0;
   P2P = 1;
+  P2P_PING = 2;
+  P2P_PONG = 3;
+  UNDEFINED = 4;
 }
 
 message NetworkMessage {

@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"crypto/rand"
 	"sync/atomic"
 )
 
@@ -33,4 +34,10 @@ func (f *fnCallStub) wasCalledTimes(times int32) bool {
 
 func (f *fnCallStub) times() int32 {
 	return atomic.LoadInt32(f.timesc)
+}
+
+func GenerateByteLen(size int) []byte {
+	buff := make([]byte, size)
+	rand.Read(buff)
+	return buff
 }

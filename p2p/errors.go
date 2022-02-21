@@ -2,12 +2,24 @@ package p2p
 
 import (
 	"errors"
-	stdio "io"
+	"fmt"
+	"io"
 	"net"
 )
 
+var (
+	ErrPeerHangUp func(error) error = func(err error) error {
+		strerr := fmt.Sprintf("Peer Hang Up Error: %s", err.Error())
+		return errors.New(strerr)
+	}
+	ErrUnexpected func(error) error = func(err error) error {
+		strerr := fmt.Sprintf("Unexpected Peer Error: %s", err.Error())
+		return errors.New(strerr)
+	}
+)
+
 func isErrEOF(err error) bool {
-	if errors.Is(err, stdio.EOF) {
+	if errors.Is(err, io.EOF) {
 		return true
 	}
 

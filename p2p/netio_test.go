@@ -3,14 +3,14 @@ package p2p
 import (
 	"bufio"
 	"bytes"
-	"math/rand"
 	"net"
+	"pocket/p2p/types"
 	"testing"
 	"time"
 )
 
 func TestIO_NewIO(t *testing.T) {
-	pipe := NewIoPipe()
+	pipe := NewNetPipe()
 	if cap(pipe.buffers.read) != ReadBufferSize && cap(pipe.buffers.write) != WriteBufferSize {
 		t.Logf("IO pipe is malconfigured")
 	} else {
@@ -19,7 +19,7 @@ func TestIO_NewIO(t *testing.T) {
 }
 
 func TestIO_Write(t *testing.T) {
-	pipe := NewIoPipe()
+	pipe := NewNetPipe()
 
 	pipe.buffersState.writeOpen = true // this is usually set to true by pipe.open
 
@@ -41,11 +41,11 @@ func TestIO_WriteConcurrently(t *testing.T) {
 }
 
 func TestIO_Answer(t *testing.T) {
-	pipe := NewIoPipe()
+	pipe := NewNetPipe()
 	pipe.buffersState.writeOpen = true // usually opened by pipe.open
 	pipe.opened.Store(true)
 
-	pipe.g = MockGater()
+	pipe.g = MockBasicInstance()
 
 	conn := MockConnM()
 	pipe.conn = net.Conn(conn)
@@ -91,10 +91,10 @@ func TestIO_Answer(t *testing.T) {
 }
 
 func TestIO_Read(t *testing.T) {
-	pipe := NewIoPipe()
+	pipe := NewNetPipe()
 
 	conn := MockConn()
-	pipe.g = MockGater()
+	pipe.g = MockBasicInstance()
 	pipe.conn = conn
 
 	pipe.reader = bufio.NewReader(pipe.conn)
@@ -147,9 +147,9 @@ func TestIO_Read(t *testing.T) {
  @ io.poll is a continuous read loop that reads incoming messages from a reader/writer/closer (like a network connection)
 */
 func TestIO_Poll(t *testing.T) {
-	pipe := NewIoPipe()
+	pipe := NewNetPipe()
 
-	pipe.g = MockGater()
+	pipe.g = MockBasicInstance()
 	pipe.conn = MockConn()
 	pipe.reader = bufio.NewReader(pipe.conn)
 
@@ -194,9 +194,9 @@ func TestIO_Poll(t *testing.T) {
 }
 
 func TestIO_Inbound(t *testing.T) {
-	pipe := NewIoPipe()
+	pipe := NewNetPipe()
 
-	pipe.g = MockGater()
+	pipe.g = MockBasicInstance()
 	pipe.buffersState.writeOpen = true
 
 	addr := "dummy-test-host:dummyport"
@@ -204,13 +204,13 @@ func TestIO_Inbound(t *testing.T) {
 
 	// did not use MockFunc due to the issues it has with nil errors
 	onopenedStub := newFnCallStub()
-	onopened := func(p *io) error {
+	onopened := func(p *netpipe) error {
 		onopenedStub.trackCall()
 		return nil
 	}
 
 	onclosedStub := newFnCallStub()
-	onclosed := func(p *io) error {
+	onclosed := func(p *netpipe) error {
 		onclosedStub.trackCall()
 		return nil
 	}
@@ -248,7 +248,7 @@ func TestIO_Inbound(t *testing.T) {
 
 	<-time.After(time.Millisecond * 20)
 	w := <-pipe.g.sink
-	n := len(w.data)
+	n := len(w.Bytes())
 
 	//_, _, data, _, err := pipe.c.decode(buff)
 	//if err != nil {
@@ -259,7 +259,7 @@ func TestIO_Inbound(t *testing.T) {
 		t.Errorf("pipe inbound error (read error): received inbound buffer length mismatch, expected %d, got %d", ReadBufferSize, n)
 	}
 
-	if bytes.Compare(w.data, msg) != 0 {
+	if bytes.Compare(w.Bytes(), msg) != 0 {
 		t.Errorf("pipe inbound error (read error): received inbound buffer corrupted")
 	}
 
@@ -313,12 +313,12 @@ func TestIO_Inbound(t *testing.T) {
  @
 */
 func TestIO_Outbound(t *testing.T) {
-	pipe := NewIoPipe()
+	pipe := NewNetPipe()
 
 	dialer := MockDialer()
 
 	pipe.dialer = Dialer(dialer)
-	pipe.g = MockGater()
+	pipe.g = MockBasicInstance()
 	pipe.buffersState.writeOpen = true
 
 	pipe.opened.Store(true)
@@ -327,13 +327,13 @@ func TestIO_Outbound(t *testing.T) {
 
 	// did not use MockFunc due to the issues it has with nil errors
 	onopenedStub := newFnCallStub()
-	onopened := func(p *io) error {
+	onopened := func(p *netpipe) error {
 		onopenedStub.trackCall()
 		return nil
 	}
 
 	onclosedStub := newFnCallStub()
-	onclosed := func(p *io) error {
+	onclosed := func(p *netpipe) error {
 		onclosedStub.trackCall()
 		return nil
 	}
@@ -419,7 +419,7 @@ func TestIO_Outbound(t *testing.T) {
 
 		w := <-pipe.g.sink
 
-		rpong := w.data
+		rpong := w.Bytes()
 
 		if len(rpong) != ReadBufferSize-WireByteHeaderLength {
 			t.Errorf("pipe outbound error (read error): received outbound buffer length mismatch, expected %d, got %d", ReadBufferSize-WireByteHeaderLength, len(rpong))
@@ -448,25 +448,25 @@ func TestIO_Open(t *testing.T) {
 
 	// test opening an outbound connection
 	{
-		pipe := NewIoPipe()
+		pipe := NewNetPipe()
 
 		dialer := MockDialer()
 
 		pipe.dialer = Dialer(dialer)
-		pipe.g = MockGater()
+		pipe.g = MockBasicInstance()
 		pipe.buffersState.writeOpen = true
 
 		addr := "dummy-test-host:dummyport"
 
 		// did not use MockFunc due to the issues it has with nil errors
 		onopenedStub := newFnCallStub()
-		onopened := func(p *io) error {
+		onopened := func(p *netpipe) error {
 			onopenedStub.trackCall()
 			return nil
 		}
 
 		onclosedStub := newFnCallStub()
-		onclosed := func(p *io) error {
+		onclosed := func(p *netpipe) error {
 			onclosedStub.trackCall()
 			return nil
 		}
@@ -510,22 +510,22 @@ func TestIO_Open(t *testing.T) {
 
 	// test opening an inbound connection
 	{
-		pipe := NewIoPipe()
+		pipe := NewNetPipe()
 
-		pipe.g = MockGater()
+		pipe.g = MockBasicInstance()
 		pipe.buffersState.writeOpen = true
 
 		addr := "dummy-test-host:dummyport"
 
 		// did not use MockFunc due to the issues it has with nil errors
 		onopenedStub := newFnCallStub()
-		onopened := func(p *io) error {
+		onopened := func(p *netpipe) error {
 			onopenedStub.trackCall()
 			return nil
 		}
 
 		onclosedStub := newFnCallStub()
-		onclosed := func(p *io) error {
+		onclosed := func(p *netpipe) error {
 			onclosedStub.trackCall()
 			return nil
 		}
@@ -573,11 +573,72 @@ func TestIO_Open(t *testing.T) {
 
 }
 
-/*
- @ test utils
-*/
-func GenerateByteLen(size int) []byte {
-	buff := make([]byte, size)
-	rand.Read(buff)
-	return buff
+func TestReqMapGet(t *testing.T) {
+	rmap := types.NewRequestMap(100)
+
+	request := rmap.Get()
+
+	if request.Nonce() != 1 {
+		t.Errorf("reqmap error: failed to retrieve new request with valid nonce")
+	}
+
+	if request.Response() == nil {
+		t.Errorf("reqmap error: failed to retrieve request with a respond channel")
+	}
+}
+
+func TestReqMapFind(t *testing.T) {
+
+	rmap := types.NewRequestMap(100)
+	request := rmap.Get()
+	nonce, ch, exists := rmap.Find(request.Nonce())
+
+	if !exists {
+		t.Errorf("reqmap error: cannot retrieve/find existing request!")
+	}
+
+	if nonce != request.Nonce() {
+		t.Errorf("reqmap error: faield to retrieve existing request, found a wrong one with invalid nonce")
+	}
+
+	var isproperch bool
+
+	go func(channel chan types.Work) {
+	waiter:
+		for {
+			select {
+			case <-channel:
+				isproperch = true
+				break waiter
+			}
+		}
+	}(ch)
+
+	<-time.After(time.Millisecond)
+	request.Respond(types.Work{})
+	<-time.After(time.Millisecond * 5)
+	if isproperch != true {
+		t.Errorf("reqmap error: failed to retrieve existing request, found a wrong one with a diffrent respond channel")
+	}
+}
+
+func TestReqMapDelete(t *testing.T) {
+	rmap := types.NewRequestMap(100)
+	request := rmap.Get()
+
+	deleted := rmap.Delete(request.Nonce())
+
+	if !deleted {
+		t.Errorf("reqmap error: could not delete existing request")
+	}
+
+	_, open := <-request.Response()
+	if open != false {
+		t.Errorf("reqmap error: request respond channel is still open after delete")
+	}
+
+	_, _, exists := rmap.Find(request.Nonce())
+	if exists {
+		t.Errorf("reqmap error: the request is still tracked in the reqmap after delete")
+	}
 }
