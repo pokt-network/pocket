@@ -7,11 +7,10 @@ func MockGater() *gater {
 
 		c: NewDomainCodec(),
 
-		peerlist: plist{},
+		peerlist: &plist{elements: make([]peer, 0)},
 		sink:     make(chan work, 1),
 
-		listener:  nil,
-		listening: false,
+		listener: nil,
 
 		err:    nil,
 		done:   make(chan uint, 1),

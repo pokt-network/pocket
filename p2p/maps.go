@@ -1,7 +1,6 @@
 package p2p
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -84,7 +83,6 @@ func (rm *reqmap) get() *req {
 
 	rm.nonces++
 	nonce := rm.nonces
-	fmt.Println("nonce=", nonce)
 	newreq := &req{nonce: nonce, ch: make(chan work, 1)}
 	rm.elements = append(rm.elements, newreq)
 	return newreq

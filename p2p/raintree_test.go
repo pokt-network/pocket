@@ -1,24 +1,24 @@
 package p2p
 
 import (
+	"fmt"
 	"testing"
 )
 
 func TestGetTopLevel(t *testing.T) {
-	peer := Peer(0, "")
+
 	g := NewGater()
 
-	err := peer.generateId()
-
+	p := Peer(0, "")
+	err := p.generateId()
 	if err != nil {
 		t.Errorf("Failed to init test, could not generate peer id, err: %s", err.Error())
 		t.Failed()
 	}
 
-	g.id = peer.id
+	g.id = p.id
 
-	list := &plist{}
-
+	list := &plist{elements: make([]peer, 0)}
 	for i := 0; i < 27; i++ {
 		p := Peer(0, "")
 
@@ -31,7 +31,7 @@ func TestGetTopLevel(t *testing.T) {
 
 	list.sort()
 
-	maxl := getTopLevel(*list)
+	maxl := getTopLevel(list)
 
 	if maxl != 4 {
 		t.Errorf("Raintree algorithm error: wrong max level value, expected %d, got: %d", 4, maxl)
@@ -39,7 +39,7 @@ func TestGetTopLevel(t *testing.T) {
 }
 
 func TestGetTargetListSize(t *testing.T) {
-	list := &plist{}
+	list := &plist{elements: make([]peer, 0)}
 
 	for i := 0; i < 27; i++ {
 		p := Peer(uint64(i+1), "")
@@ -53,10 +53,22 @@ func TestGetTargetListSize(t *testing.T) {
 	if tlsize != 18 {
 		t.Errorf("Raintree algorithm error: failed to retrieve proper sublist, expected list of size %d, got: %d", 18, tlsize)
 	}
+
+	tlsize = int(getTargetListSize(list.size(), 4, 2))
+
+	if tlsize != 12 {
+		t.Errorf("Raintree algorithm error: failed to retrieve proper sublist, expected list of size %d, got: %d", 12, tlsize)
+	}
+
+	tlsize = int(getTargetListSize(list.size(), 4, 1))
+
+	if tlsize != 8 {
+		t.Errorf("Raintree algorithm error: failed to retrieve proper sublist, expected list of size %d, got: %d", 8, tlsize)
+	}
 }
 
 func TestGetTargetList(t *testing.T) {
-	list := &plist{}
+	list := &plist{elements: make([]peer, 0)}
 
 	for i := 0; i < 27; i++ {
 		p := Peer(uint64(i+1), "")
@@ -66,10 +78,12 @@ func TestGetTargetList(t *testing.T) {
 	list.sort()
 
 	id := list.get(18).id
-	sublist := getTargetList(*list, id, 4, 3)
+	sublist := getTargetList(list, id, 4, 3)
 
-	if len(sublist) != 18 {
-		t.Errorf("Raintree algorithm error: failed to retrieve proper sublist, expected list of size %d, got: %d", 18, len(sublist))
+	size := sublist.size()
+	fmt.Println("Size", size)
+	if size != 18 {
+		t.Errorf("Raintree algorithm error: failed to retrieve proper sublist, expected list of size %d, got: %d", 18, size)
 	}
 
 	expectedpos := []int{19, 20, 21, 22, 23, 24, 25, 26, 27, 1, 2, 3, 4, 5, 6, 7, 8, 9}
@@ -84,7 +98,7 @@ func TestGetTargetList(t *testing.T) {
 	}
 }
 
-func TestGetPickLeft(t *testing.T) {
+func TestPickLeft(t *testing.T) {
 	list := &plist{}
 
 	for i := 0; i < 27; i++ {
@@ -96,7 +110,7 @@ func TestGetPickLeft(t *testing.T) {
 
 	id := list.get(0).id
 
-	l := pickLeft(id, *list)
+	l := pickLeft(id, list)
 
 	s := list.slice()
 	left := s[l]
@@ -107,7 +121,7 @@ func TestGetPickLeft(t *testing.T) {
 	}
 }
 
-func TestGetPickRight(t *testing.T) {
+func TestPickRight(t *testing.T) {
 	list := &plist{}
 
 	for i := 0; i < 27; i++ {
@@ -119,7 +133,7 @@ func TestGetPickRight(t *testing.T) {
 
 	id := list.get(0).id
 
-	r := pickRight(id, *list)
+	r := pickRight(id, list)
 
 	s := list.slice()
 	right := s[r]

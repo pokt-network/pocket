@@ -4,8 +4,8 @@ var (
 	MaxInbound           uint = 128
 	MaxOutbound          uint = 128
 	WireByteHeaderLength int  = 9
-	ReadBufferSize       int  = (1024 * 4) + WireByteHeaderLength
-	WriteBufferSize      int  = (1024 * 4) + WireByteHeaderLength
+	ReadBufferSize       int  = (1024 * 4)
+	WriteBufferSize      int  = (1024 * 4)
 	ReadDeadlineMs       int  = 400
 )
 

@@ -35,7 +35,10 @@ client_start:
 
 ## Connect to the client daemon running in a background docker container.
 client_connect:
-	docker exec -it client /bin/bash -c "go run cmd/client/*.go"
+	docker exec -it client /bin/bash -c "go run cmd/client-with-pre-p2p/*.go"
+
+client_beta_connect:
+	docker exec -it client /bin/bash -c "go run cmd/client-with-p2p/*.go"
 
 ## Attached docker compose of all the services except for neo4j w/ hot reload.
 compose_and_watch:
@@ -77,7 +80,7 @@ generate_protos:
 
 ## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
 v1_generate_protos:
-	protoc -I=./shared/protos --go_out=./shared shared/protos/*.proto
+	protoc -I=./shared/types/proto --go_out=./shared shared/types/proto/*.proto
 
 protogen-m1:
 	docker build  -t pocket/proto-generator -f ./build/Dockerfile.m1.proto . && docker run --platform=linux/amd64 -it -v $(CWD)/shared:/usr/src/app/shared pocket/proto-generator

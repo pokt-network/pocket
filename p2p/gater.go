@@ -2,44 +2,23 @@ package p2p
 
 import (
 	"fmt"
-	"google.golang.org/protobuf/types/known/anypb"
 	"net"
 	"pocket/p2p/pre_p2p/types"
 	"strings"
 	"sync"
 	"time"
+
+	"google.golang.org/protobuf/types/known/anypb"
+
+	"go.uber.org/atomic"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type work struct {
 	nonce  uint32
 	decode bool // should decode data using the domain codec or not
 	data   []byte
-}
-
-type gater struct {
-	GaterModule
-
-	id           uint64
-	protocol     string
-	address      string
-	externaladdr string
-
-	c *dcodec
-
-	inbound  iomap
-	outbound iomap
-
-	peerlist plist
-
-	sink chan work
-
-	listener  *net.TCPListener
-	listening bool
-
-	err    error
-	done   chan uint
-	ready  chan uint
-	closed chan uint
+	addr   string // temporary until we start using ids
 }
 
 type GaterModule interface {
@@ -52,10 +31,9 @@ type GaterModule interface {
 	Done() <-chan uint
 
 	Send(addr string, msg []byte, wrapped bool) error
+	Broadcast(m *types.NetworkMessage, isroot bool) error
 
-	BroadcastTempWrapper(m types.P2PMessage) error // TODO: hamza to refactor
-	Broadcast(m message, isroot bool) error
-
+	On(GaterEvent, func())
 	Handle()
 
 	Request(addr string, msg []byte, wrapped bool) ([]byte, error)
@@ -63,13 +41,57 @@ type GaterModule interface {
 
 	Pong(msg message) error
 	Ping(addr string) (bool, error)
+
+	Log(m ...interface{})
+	SetLogger(func(m ...interface{}))
+}
+
+type GaterEvent int
+
+const (
+	BroadcastDoneEvent GaterEvent = iota
+	PeerConnectedEvent
+	PeerDisconnectedEvent
+)
+
+type gater struct {
+	GaterModule
+
+	id           uint64
+	protocol     string
+	address      string
+	externaladdr string
+
+	inbound  iomap
+	outbound iomap
+
+	c *dcodec
+
+	peerlist *plist
+
+	sink chan work
+
+	listener  *net.TCPListener
+	listening atomic.Bool
+
+	err    error
+	done   chan uint
+	ready  chan uint
+	closed chan uint
+
+	handlers map[GaterEvent][]func()
+
+	logger struct {
+		sync.RWMutex
+		print func(...interface{}) (int, error)
+	}
 }
 
 func (g *gater) Config(protocol, address, external string, peers []string) {
 	g.protocol = protocol
 	g.address = address
 	g.externaladdr = external
-	g.peerlist = plist{}
+	g.peerlist = &plist{elements: make([]peer, 0)}
 
 	// this is a hack to get going no more no less
 	for i, p := range peers {
@@ -84,12 +106,9 @@ func (g *gater) Config(protocol, address, external string, peers []string) {
 }
 
 func (g *gater) Init() error {
-	// TODO: revisit this
-	cm := &churnmgmt{}
-
-	churnmsg := cm.message(0, Ping, 0)
-
-	_, err := g.c.register(churnmsg, cm.encode, cm.decode)
+	pbuffmsnger := &pbuff{}
+	msg := pbuffmsnger.message(int32(0), 1, types.PocketTopic_P2P, "", "")
+	_, err := g.c.register(*msg, pbuffmsnger.encode, pbuffmsnger.decode)
 	if err != nil {
 		return err
 	}
@@ -100,22 +119,24 @@ func (g *gater) Init() error {
 func (g *gater) Listen() error {
 	defer func() {
 		g.listener = nil
-		g.listening = false
+		g.listening.Store(false)
 		close(g.closed)
 	}()
 
 	// add address validation and parsing
 	listener, err := net.Listen(g.protocol, g.address)
 	if err != nil {
-		fmt.Println("Error:", err.Error())
+		g.Log("Error:", err.Error())
 	}
 
 	g.listener = listener.(*net.TCPListener)
-	g.listening = true
+	g.Log("prehere")
+	g.listening.Store(true)
 
 	close(g.ready)
 
-	fmt.Println("Listening at", g.protocol, g.address, "...")
+	g.Log("here?")
+	g.Log("Listening at", g.protocol, g.address, "...")
 	for stop := false; !stop; {
 		select {
 		case <-g.done:
@@ -124,14 +145,14 @@ func (g *gater) Listen() error {
 		default:
 			{
 				conn, err := g.listener.Accept()
-				if err != nil && g.listening {
-					fmt.Println("Error receiving an inbound connection: ", err.Error())
+				if err != nil && g.listening.Load() {
+					g.Log("Error receiving an inbound connection: ", err.Error())
 					// TODO ignore use of closed network connection error when listener has closed
 					g.err = err
 					break // report error
 				}
 
-				if !g.listening {
+				if !g.listening.Load() {
 					break
 				}
 
@@ -151,7 +172,7 @@ func (g *gater) Ready() <-chan uint {
 func (g *gater) Close() {
 	g.done <- 1
 	g.closed <- 1
-	g.listening = false
+	g.listening.Store(false)
 	g.listener.Close()
 	close(g.done)
 }
@@ -190,7 +211,6 @@ func (g *gater) Request(addr string, msg []byte, wrapped bool) ([]byte, error) {
 }
 
 func (g *gater) Respond(nonce uint32, iserroreof bool, addr string, msg []byte, wrapped bool) error {
-	fmt.Println("Respond dialing", addr)
 	pipe, derr := g.dial(addr)
 	if derr != nil {
 		return derr
@@ -280,62 +300,56 @@ func (g *gater) Pong(msg message) error {
 	return nil
 }
 
-func (g *gater) BroadcastTempWrapper(msg *anypb.Any) error {
-	m := message{
-		payload: msg,
-		topic:   Topic(types.PocketTopic_CONSENSUS.String()),
-	}
-	return g.Broadcast(m, false)
-
-}
-
 // Discuss: why is m not a pointer?
-func (g *gater) Broadcast(m message, isroot bool) error {
+func (g *gater) Broadcast(m *types.NetworkMessage, isroot bool) error {
+	g.Log("Starting gossip round, level is", m.Level)
+
 	var toplevel int
+	var currentlevel int
+	var list *plist
+	var mmutex sync.Mutex
+
+	list = g.peerlist
+
+	toplevel = int(getTopLevel(list))
 
 	if isroot {
-		maxlevel := getTopLevel(g.peerlist)
-		toplevel = int(maxlevel)
+		currentlevel = toplevel - 1
 	} else {
-		fmt.Println("Not root, propagating down")
-		toplevel = int(m.level)
+		currentlevel = int(m.Level)
+		g.Log("Not root, propagating down")
 	}
 
 	source := g.externaladdr
-	list := g.peerlist
 
-	for currentlevel := toplevel - 1; currentlevel > 0; currentlevel-- {
-		fmt.Println("New send")
+	for ; currentlevel > 0; currentlevel-- {
 		targetlist := getTargetList(list, g.id, toplevel, currentlevel)
 
 		lpos := pickLeft(g.id, targetlist)
 		rpos := pickRight(g.id, targetlist)
 
-		left := targetlist[lpos]
-		right := targetlist[rpos]
+		left := targetlist.get(lpos)
+		right := targetlist.get(rpos)
 
-		m.level = uint16(currentlevel)
+		m.Level = int32(currentlevel)
 
 		var l_ack, r_ack []byte
 		var l_err, r_err error = nil, nil
 		var wg sync.WaitGroup
 
-		wg.Add(1)
-		go func(ack *[]byte, err *error, msg message) {
+		AckSend := func(target *peer, ack *[]byte, err *error, m *types.NetworkMessage) {
+			mmutex.Lock()
+			m.Source = source
+			m.Destination = target.address
+			encm, errenc := g.c.encode(*m)
+			mmutex.Unlock()
 
-			msg.source = source
-			msg.destination = left.address
-			encm, _ := g.c.encode(msg)
-
-			// just a hack
-			if len(encm) != ReadBufferSize {
-				encm = append(encm, make([]byte, ReadBufferSize-len(encm))...)
+			if errenc != nil {
+				*err = errenc
+				wg.Done()
 			}
-			// just a hack
 
-			fmt.Println("Requesting", left.address)
-			response, reqerr := g.Request(left.address, encm, true)
-			fmt.Println("Received resposne from", left.address)
+			response, reqerr := g.Request(target.address, encm, true)
 
 			if reqerr != nil {
 				*err = reqerr
@@ -343,130 +357,173 @@ func (g *gater) Broadcast(m message, isroot bool) error {
 
 			*ack = response
 			wg.Done()
-		}(&l_ack, &l_err, m)
+		}
 
 		wg.Add(1)
-		go func(ack *[]byte, err *error, msg message) {
+		lmsg := types.NetworkMessage{
+			Source:      m.Source,
+			Destination: m.Destination,
+			Topic:       m.Topic,
+			Nonce:       m.Nonce,
+			Level:       m.Level,
+			Data:        m.Data,
+		}
+		go AckSend(left, &l_ack, &l_err, &lmsg)
 
-			msg.source = source
-			msg.destination = right.address
-			encm, _ := g.c.encode(msg)
-
-			// just a hack
-			if len(encm) != ReadBufferSize {
-				encm = append(encm, make([]byte, ReadBufferSize-len(encm))...)
-			}
-			// just a hack
-
-			fmt.Println("Requesting", right.address)
-			response, reqerr := g.Request(right.address, encm, true)
-			fmt.Println("Received resposne from", right.address)
-
-			if reqerr != nil {
-				*err = reqerr
-			}
-			*ack = response
-			wg.Done()
-		}(&r_ack, &r_err, m)
+		wg.Add(1)
+		rmsg := types.NetworkMessage{
+			Source:      m.Source,
+			Destination: m.Destination,
+			Topic:       m.Topic,
+			Nonce:       m.Nonce,
+			Level:       m.Level,
+			Data:        m.Data,
+		}
+		g.Log("Sending to right", right)
+		go AckSend(right, &r_ack, &r_err, &rmsg)
 
 		wg.Wait()
+		g.Log("Got acks from left and right")
 
 		if l_err != nil {
 			// pick next one but for send only (no ack)
-			fmt.Println("Left failed to ack", l_err.Error())
+			g.Log("!!Left failed to ack", l_err.Error())
 		} else {
-			fmt.Println("Left has acked", l_ack[:8])
+			g.Log("!!Left has acked", l_ack[:8])
 		}
 
 		if r_err != nil {
 			// pick next one but for send only (no ack)
-			fmt.Println("Right failed to ack", r_err.Error())
+			g.Log("!!Right failed to ack", r_err.Error())
 		} else {
-			fmt.Println("Right has acked", l_ack[:8])
+			g.Log("!!Right has acked", l_ack[:8])
 		}
 	}
 
 	// a hack to achieve full coverage like a redundancy layer
-	sl := list.slice()
-	for i := 0; i < len(sl); i++ {
-		p := sl[i]
-		if p.address != source {
-			fmt.Println("redundancy", p, source)
-			m.source = source
-			m.destination = p.address
-			m.level = 0
+	//	sl := list.slice()
+	//	for i := 0; i < len(sl); i++ {
+	//		p := sl[i]
+	//		if p.address != source {
+	//			g.Log("redundancy", p, source)
+	//			m.source = source
+	//			m.destination = p.address
+	//			m.level = 0
+	//
+	//			encm, _ := g.c.encode(m)
+	//
+	//			// just a hack
+	//			if len(encm) != ReadBufferSize {
+	//				encm = append(encm, make([]byte, ReadBufferSize-len(encm))...)
+	//			}
+	//			// just a hack
+	//
+	//			g.Log("Requesting", p.address)
+	//			reqerr := g.Send(p.address, encm, true)
+	//			if reqerr != nil {
+	//				g.Log(reqerr)
+	//			}
+	//		}
+	//	}
 
-			encm, _ := g.c.encode(m)
+	g.Log("Done broadcasting")
 
-			// just a hack
-			if len(encm) != ReadBufferSize {
-				encm = append(encm, make([]byte, ReadBufferSize-len(encm))...)
-			}
-			// just a hack
-
-			fmt.Println("Requesting", p.address)
-			reqerr := g.Send(p.address, encm, true)
-			if reqerr != nil {
-				fmt.Println(reqerr)
-			}
-		}
+	for _, handler := range g.handlers[BroadcastDoneEvent] {
+		handler()
 	}
-
-	fmt.Println("Done broadcasting")
 
 	return nil
 }
 
 func (g *gater) Handshake() {}
-func (g *gater) Handle() {
-	var msg message
 
-	fmt.Println("Handling...")
+func (g *gater) On(e GaterEvent, handler func()) {
+	if g.handlers != nil {
+		if hmap, exists := g.handlers[e]; exists {
+			hmap = append(hmap, handler)
+		} else {
+			g.handlers[e] = append(make([]func(), 0), handler)
+		}
+	}
+}
+
+func (g *gater) Handle() {
+	var msg *types.NetworkMessage
+	var m sync.Mutex
+
+	g.Log("Handling...")
 	for w := range g.sink {
-		nonce, data, decode := w.nonce, w.data, w.decode
+		nonce, data, decode, srcaddr := w.nonce, w.data, w.decode, w.addr
 
 		if decode {
 			decoded, err := g.c.decode(data)
 			if err != nil {
-				fmt.Println("Error decoding data", err.Error())
+				g.Log("Error decoding data", err.Error())
+				fmt.Println("Error decoding?", err)
 				panic("D")
 				//continue
 			}
 
-			msg = decoded.(message)
-			msg.nonce = nonce
+			m.Lock()
+			msgi := decoded.(types.NetworkMessage)
+			msg = &msgi
+			msg.Nonce = int32(nonce)
+			m.Unlock()
 		} else {
-			msg.payload = data
+			msg.Data = &anypb.Any{}
+			msg.Nonce = int32(nonce)
+			msg.Source = srcaddr
 		}
-		fmt.Println("msg:", msg)
 
-		switch msg.action {
+		switch msg.Topic {
 
-		case Gossip:
-			fmt.Println("Received a gossip message")
+		case types.PocketTopic_CONSENSUS:
 			go func() {
-				fmt.Println("Acking...")
-				ack := (&gossip{}).message(msg.nonce, GossipACK, msg.level, g.externaladdr, msg.source)
-
-				encoded, err := g.c.encode(ack)
+				m.Lock()
+				ack := &types.NetworkMessage{Nonce: msg.Nonce, Level: msg.Level, Topic: types.PocketTopic_CONSENSUS, Source: g.externaladdr, Destination: msg.Source}
+				encoded, err := g.c.encode(*ack)
 				if err != nil {
-					fmt.Println("Error encoding msg for gossipaCK", err.Error())
+					g.Log("Error encoding m for gossipaCK", err.Error())
 				}
 
-				// just a hack
-				encoded = append(encoded, make([]byte, ReadBufferSize-len(encoded))...)
-				// just a hack
-
-				err = g.Respond(msg.nonce, false, ack.destination, encoded, true)
+				err = g.Respond(uint32(msg.Nonce), false, srcaddr, encoded, true)
+				m.Unlock()
 				if err != nil {
-					fmt.Println("Error encoding msg for gossipaCK", err.Error())
+					g.Log("Error encoding msg for gossipaCK", err.Error())
 				}
+				g.Log("Acked to", ack.Destination)
 			}()
-			go g.Broadcast(msg, false)
+			go g.Broadcast(&types.NetworkMessage{
+				Nonce:       msg.Nonce,
+				Level:       msg.Level,
+				Source:      msg.Source,
+				Topic:       msg.Topic,
+				Destination: msg.Destination,
+				Data:        msg.Data,
+			}, false)
 
 		default:
-			fmt.Println("Unrecognized message topic")
+			g.Log("Unrecognized message topic", msg.Topic, "from", msg.Source, "to", msg.Destination, "@node", g.address)
 		}
+	}
+}
+
+func (g *gater) SetLogger(logger func(...interface{}) (int, error)) {
+	defer g.logger.Unlock()
+	g.logger.Lock()
+
+	g.logger.print = logger
+}
+
+func (g *gater) Log(m ...interface{}) {
+	defer g.logger.Unlock()
+	g.logger.Lock()
+
+	if g.logger.print != nil {
+		args := make([]interface{}, 0)
+		args = append(args, fmt.Sprintf("[%s]", g.address))
+		args = append(args, m...)
+		g.logger.print(args...)
 	}
 }
 
@@ -483,13 +540,14 @@ func NewGater() *gater {
 		peerlist: nil,
 		sink:     make(chan work, 100), // TODO: rethink whether this should be buffered
 
-		listener:  nil,
-		listening: false,
+		listener: nil,
 
 		err:    nil,
 		done:   make(chan uint, 1),
 		ready:  make(chan uint, 1),
 		closed: make(chan uint, 1),
+
+		handlers: make(map[GaterEvent][]func(), 0),
 	}
 }
 
@@ -514,7 +572,7 @@ func (g *gater) handleInbound(conn net.Conn, addr string) {
 			err = nil
 		}
 
-		fmt.Println("New connection from", addr, err)
+		g.Log("New connection from", addr, err)
 		if err != nil {
 			pipe.close()
 			<-pipe.closed
@@ -526,6 +584,7 @@ func (g *gater) handleInbound(conn net.Conn, addr string) {
 }
 
 func (g *gater) peerConnected(p *io) error {
+	g.Log("Peer connected", p.addr)
 	return nil
 }
 
@@ -538,6 +597,7 @@ func (g *gater) dial(addr string) (*io, error) {
 	// TODO: this is equivalent to maxRetries = 1, add logic for > 1
 	// TODO: should we explictly tell dial to use either inbound or outbound?
 	exists := g.inbound.peak(addr)
+	g.Log("Peaked into inbound clients map for", addr, "found=", exists)
 	if exists {
 		pipe, _ := g.inbound.get(addr)
 		return pipe, nil
@@ -562,7 +622,7 @@ func (g *gater) dial(addr string) (*io, error) {
 	}
 
 	if err != nil {
-		fmt.Println("Error openning pipe", err.Error())
+		g.Log("Error openning pipe", err.Error())
 		pipe.close()
 		<-pipe.closed
 		pipe = nil

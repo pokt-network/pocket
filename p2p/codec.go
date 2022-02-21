@@ -140,6 +140,31 @@ func (c *wcodec) decode(wiredata []byte) (nonce uint32, enc Encoding, data []byt
 	return
 }
 
+func (c *wcodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32, bodylength uint32, err error) {
+	c.Lock()
+	defer c.Unlock()
+
+	flags := header[0]
+	requestnum := header[1:5]
+	bodylen := header[5:9]
+
+	flagswitch, _, err = parseflag(flags)
+
+	if err != nil {
+		return
+	}
+
+	isreq := flagswitch[3]
+	if isreq {
+		nonce = binary.BigEndian.Uint32(requestnum)
+	} else {
+		nonce = 0
+	}
+
+	bodylength = binary.BigEndian.Uint32(bodylen)
+	return
+}
+
 /*
  @
  @ Utils
@@ -240,7 +265,7 @@ func (c *dcodec) register(m interface{}, encoder, decoder interface{}) (uint16, 
 	)
 
 	if e.Type() != encoderSignature {
-		return uint16(0), errors.New(fmt.Sprintf("dcodec error: provided encoder for message type %+v is not valid, expected %s, but got %s", t, d, encoderSignature))
+		return uint16(0), errors.New(fmt.Sprintf("dcodec error: provided encoder for message type %+v is not valid, expected %s, but got %s", t, e, encoderSignature))
 	}
 
 	// expect decoders to be of type func([]byte) (T, error)

@@ -33,7 +33,7 @@ func (m *networkModule) handleNetworkMessage(conn net.Conn) {
 
 	event := types.Event{
 		SourceModule: types.P2P,
-		PocketTopic:  networkMessage.Topic,
+		PocketTopic:  networkMessage.Topic.String(),
 		MessageData:  networkMessage.Data,
 	}
 

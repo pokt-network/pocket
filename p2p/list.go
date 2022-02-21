@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"sort"
+	"sync"
 )
 
 /*
@@ -53,45 +54,71 @@ func (p *peer) generateId() error {
  @ list
  @
 */
-type plist []peer
+type plist struct {
+	sync.RWMutex
+	elements []peer
+}
 
 func (l *plist) add(p peer) {
-	slice := []peer(*l)
+	l.Lock()
+	defer l.Unlock()
+
+	slice := []peer(l.elements)
 	slice = append(slice, p)
-	*l = plist(slice)
+	l.elements = slice
 }
 
 func (l *plist) get(pos int) *peer {
-	slice := []peer(*l)
-	p := slice[pos]
+	p := l.elements[pos]
 	return &p
 }
 
+func (l *plist) copy() plist {
+	copy := *l
+	return copy
+}
+
+func (l *plist) update(p []peer) {
+	l.Lock()
+	defer l.Unlock()
+
+	l.elements = p
+}
+
 func (l *plist) sort() {
-	slice := []peer(*l)
+	l.Lock()
+	defer l.Unlock()
+
+	slice := l.elements
 	less := func(i, j int) bool {
 		return slice[i].id < slice[j].id
 	}
+
 	sort.SliceStable(slice, less)
-	*l = plist(slice)
+	l.elements = slice
 }
 
 func (l *plist) slice() []peer {
-	return []peer(*l)
+	return l.elements
 }
 
 func (l *plist) concat(additional []peer) *plist {
-	s := l.slice()
+	l.Lock()
+	defer l.Unlock()
 
+	s := l.elements
 	s = append(s, additional...)
-	newl := plist(s)
-	return &newl
+
+	nl := *l
+	nl.elements = s
+
+	return &nl
 }
 
 func (l *plist) positionof(id uint64) int {
 	var position int = -1
 
-	slice := l.slice()
+	slice := l.elements
 	for i := 0; i < len(slice); i++ {
 		if slice[i].id == id {
 			position = i
@@ -103,6 +130,5 @@ func (l *plist) positionof(id uint64) int {
 }
 
 func (l *plist) size() int {
-	slice := []peer(*l)
-	return len(slice)
+	return len(l.elements)
 }
