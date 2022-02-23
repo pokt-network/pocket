@@ -6,7 +6,7 @@ services:
     image: pocket/client:latest
     build:
       context: ../..
-      dockerfile: ./build/DockerfileClient
+      dockerfile: ./build/Dockerfile.client
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     stdin_open: true
@@ -18,19 +18,19 @@ services:
     command: "scripts/watch.sh build/config/config1.json"
     build:
       context: ../..
-      dockerfile: ../Dockerfile
+      dockerfile: ./build/Dockerfile
     expose:
-#      - "7080" # debug
+      #      - "7080" # debug
       - "8080"
       - "9080"
     ports:
-#      - "7081:7081" # connect with golang via 7081
+      #      - "7081:7081" # connect with golang via 7081
       - "8081:8080"
       - "9081:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     #environment:
-     # - DEBUG_PORT=7081
+    # - DEBUG_PORT=7081
 
   node2.consensus:
     container_name: node2.consensus
@@ -38,7 +38,7 @@ services:
     command: "scripts/watch.sh build/config/config2.json"
     build:
       context: ../..
-      dockerfile: ../Dockerfile
+      dockerfile: ./build/Dockerfile
     expose:
       - "7082"
       - "8080"
@@ -58,7 +58,7 @@ services:
     command: "scripts/watch.sh build/config/config3.json"
     build:
       context: ../..
-      dockerfile: ../Dockerfile
+      dockerfile: ./build/Dockerfile
     expose:
       - "7083"
       - "8080"
@@ -78,7 +78,7 @@ services:
     command: "scripts/watch.sh build/config/config4.json"
     build:
       context: ../..
-      dockerfile: ../Dockerfile
+      dockerfile: ./build/Dockerfile
     expose:
       - "8080"
       - "9080"
