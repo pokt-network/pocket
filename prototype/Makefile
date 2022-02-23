@@ -122,8 +122,11 @@ benchmark_sortition:
 
 # TODO: This error if the list of containers/images/volumes is empty.
 ## Remove all the docker containers
-docker_rm_all: prompt_user
-	docker stop $(shell docker ps -a -q) && docker rm $(shell docker ps -a -q) && docker rmi $(shell docker images -q) && docker volume rm $(shell docker volume ls -q)
+docker_wipe: prompt_user
+	docker ps -a -q | xargs -r -I {} docker stop {}
+	docker ps -a -q | xargs -r -I {} docker rm {}
+	docker images -q | xargs -r -I {} docker rmi {}
+	docker volume ls -q | xargs -r -I {} docker volume rm {}
 
 prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
