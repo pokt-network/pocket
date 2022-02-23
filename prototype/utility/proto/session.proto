@@ -1,0 +1,16 @@
+syntax = "proto3";
+package utility;
+option go_package = "/utility/types/";
+
+message Session {
+  SessionHeader SessionHeader = 1;
+  bytes SessionKey = 2;
+  repeated bytes SessionNodes = 3;
+  bytes Fishermen = 4;
+}
+
+message SessionHeader {
+  bytes AppPublicKey = 1;
+  string Chain = 2;
+  int64 SessionBlockHeight = 3;
+}
