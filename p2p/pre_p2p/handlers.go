@@ -31,10 +31,10 @@ func (m *networkModule) handleNetworkMessage(conn net.Conn) {
 
 	// temporarily convert
 
-	topic := p2ptypes.Topic(p2ptypes.Topics.Consensus)
+	log.Println(conn.LocalAddr().String(), "Received a network message of topic:", networkMessage.Topic)
 	event := types.Event{
 		SourceModule: types.P2P,
-		PocketTopic:  topic.String(),
+		PocketTopic:  networkMessage.Topic.String(),
 		MessageData:  networkMessage.Data,
 	}
 

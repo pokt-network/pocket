@@ -115,6 +115,7 @@ func (m *networkModule) Stop() error {
 // }
 
 func (m *networkModule) BroadcastMessage(msg *anypb.Any, topic string) error {
+	fmt.Println("Trying to broadcast message with topic", topic)
 	c := &p2ptypes.NetworkMessage{
 		Topic: p2ptypes.Topic(topic), // TODO topic is either P2P (from this module) or consensus
 		Data:  msg,

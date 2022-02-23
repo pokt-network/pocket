@@ -164,6 +164,7 @@ func broadcastMessage(m consensus_types.GenericConsensusMessage, network p2p_typ
 		Topic: p2ptypes.PocketTopic_CONSENSUS,
 		Data:  anyProto,
 	}
+	log.Println("Sending a network message with topic", p2ptypes.PocketTopic_CONSENSUS)
 
 	bytes, err := proto.Marshal(networkProtoMsg)
 	if err != nil {

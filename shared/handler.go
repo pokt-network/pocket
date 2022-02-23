@@ -1,7 +1,6 @@
 package shared
 
 import (
-	"fmt"
 	"log"
 	"pocket/shared/types"
 )
@@ -13,7 +12,6 @@ func (node *Node) handleEvent(event *types.Event) error {
 	//	node.ConsensusMod.HandleTelemetryMessage(pocketContext, event.NetworkConnection)
 
 	case string(types.CONSENSUS):
-		fmt.Println(event.MessageData)
 		node.GetBus().GetConsensusModule().HandleMessage(event.MessageData)
 
 	// TODO(Andrew): This is where the broadcasted utility message will be forwarded to the consensus module.

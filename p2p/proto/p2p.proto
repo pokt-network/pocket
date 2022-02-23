@@ -11,7 +11,8 @@ enum PocketTopic {
   P2P = 1;
   P2P_PING = 2;
   P2P_PONG = 3;
-  UNDEFINED = 4;
+  TRANSACTION = 4;
+  UNDEFINED = 5;
 }
 
 message NetworkMessage {
