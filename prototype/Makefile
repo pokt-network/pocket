@@ -115,3 +115,11 @@ test_sortition:
 ## Benchmarking the sortition unit tests
 benchmark_sortition:
 	go test --count=1 -v ./pkg/consensus/leader_election/sortition -bench=.
+
+# TODO: This error if the list of containers/images/volumes is empty.
+## Remove all the docker containers
+docker_rm_all: prompt_user
+	docker stop $(shell docker ps -a -q) && docker rm $(shell docker ps -a -q) && docker rmi $(shell docker images -q) && docker volume rm $(shell docker volume ls -q)
+
+prompt_user:
+	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
