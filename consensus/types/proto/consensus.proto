@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package consensus;
-
-option go_package = "/types/";
-
-message Message {
-  bytes data = 1;
-}
