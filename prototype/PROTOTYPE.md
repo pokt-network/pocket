@@ -3,7 +3,7 @@
 Shell 1
 
 ```
-$ make v1_generate_protos
+$ make protogen_local
 $ make compose_and_watch
 ```
 

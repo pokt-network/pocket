@@ -76,7 +76,7 @@ generate_protos:
 	protoc -I=${types_dir}/protos --go_out=${types_dir} ${types_dir}/protos/*.proto
 
 ## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
-v1_generate_protos:
+protogen_local:
 	protoc -I=./shared/types/proto/ -I=./consensus/types/proto --go_out=./ ./consensus/types/proto/*.proto
 	protoc -I=./shared/types/proto/ --go_out=./ ./shared/types/proto/*.proto
 	protoc -I=./shared/types/proto/ -I=./persistence/pre_persistence/proto --go_out=./ ./persistence/pre_persistence/proto/*.proto

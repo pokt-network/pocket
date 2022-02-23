@@ -22,4 +22,4 @@ WORKDIR /usr/src/app
 
 COPY . .
 
-ENTRYPOINT make v1_generate_protos && echo "Done"
+ENTRYPOINT make protogen_local && echo "Done"
