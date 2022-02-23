@@ -77,7 +77,11 @@ generate_protos:
 
 ## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
 v1_generate_protos:
-	protoc -I=./shared/protos --go_out=./shared shared/protos/*.proto
+	protoc -I=./shared/types/proto/ -I=./consensus/types/proto --go_out=./ ./consensus/types/proto/*.proto
+	protoc -I=./shared/types/proto/ --go_out=./ ./shared/types/proto/*.proto
+	protoc -I=./shared/types/proto/ -I=./persistence/pre_persistence/proto --go_out=./ ./persistence/pre_persistence/proto/*.proto
+	protoc -I=./shared/types/proto/ -I=./p2p/pre_p2p/types/proto --go_out=./ ./p2p/pre_p2p/types/proto/*.proto
+	protoc -I=./shared/types/proto/ -I=./utility/proto --go_out=./ ./utility/proto/*.proto
 
 protogen-m1:
 	docker build  -t pocket/proto-generator -f ./build/Dockerfile.m1.proto . && docker run --platform=linux/amd64 -it -v $(CWD)/shared:/usr/src/app/shared pocket/proto-generator

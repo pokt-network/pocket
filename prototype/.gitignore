@@ -21,3 +21,6 @@ consensus/neo4j/
 
 // Proto generate messages
 shared/messages/*.pb.go
+
+types/
+utility/test
