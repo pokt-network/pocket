@@ -15,14 +15,12 @@ const (
 var _ modules.ConsensusModule = &consensusModule{}
 
 type consensusModule struct {
-	modules.ConsensusModule
 	pocketBus modules.Bus
 }
 
 func Create(_ *config.Config) (modules.ConsensusModule, error) {
 	m := &consensusModule{
-		ConsensusModule: nil, // TODO(olshansky): sync with Andrew on a better way to do this
-		pocketBus:       nil,
+		pocketBus: nil,
 	}
 	return m, nil
 }

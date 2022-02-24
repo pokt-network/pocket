@@ -8,18 +8,17 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-type networkModule struct {
-	modules.NetworkModule
-	pocketBus modules.Bus
+var _ modules.NetworkModule = &networkModule{}
 
+type networkModule struct {
+	pocketBus modules.Bus
 	p2pConfig *config.P2PConfig
 }
 
 func Create(config *config.Config) (modules.NetworkModule, error) {
 	return &networkModule{
-		NetworkModule: nil, // TODO(olshansky): sync with Andrew on a better way to do this
-		pocketBus:     nil,
-		p2pConfig:     config.P2P,
+		pocketBus: nil,
+		p2pConfig: config.P2P,
 	}, nil
 }
 

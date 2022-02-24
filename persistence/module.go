@@ -8,15 +8,15 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 )
 
+var _ modules.PersistenceModule = &persistenceModule{}
+
 type persistenceModule struct {
-	modules.PersistenceModule
 	pocketBus modules.Bus
 }
 
 func Create(cfg *config.Config) (modules.PersistenceModule, error) {
 	return &persistenceModule{
-		PersistenceModule: nil, // TODO(olshansky): sync with Andrew on a better way to do this
-		pocketBus:         nil,
+		pocketBus: nil,
 	}, nil
 
 }

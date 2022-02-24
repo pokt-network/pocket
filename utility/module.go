@@ -9,14 +9,12 @@ import (
 var _ modules.UtilityModule = &utilityModule{}
 
 type utilityModule struct {
-	modules.UtilityModule
 	pocketBus modules.Bus
 }
 
 func Create(cfg *config.Config) (modules.UtilityModule, error) {
 	m := &utilityModule{
-		UtilityModule: nil, // TODO(olshansky): sync with Andrew on a better way to do this
-		pocketBus:     nil,
+		pocketBus: nil,
 	}
 	return m, nil
 }
