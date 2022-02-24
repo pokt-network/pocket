@@ -3,8 +3,8 @@ package shared
 import (
 	"log"
 	"pocket/consensus"
-	"pocket/p2p/pre_p2p"
 	"pocket/persistence"
+	"pocket/pre_p2p"
 	"pocket/shared/config"
 	"pocket/shared/crypto"
 	"pocket/utility"
@@ -27,6 +27,7 @@ func Create(config *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
+	// TODO(derrands): Replace with real P2P module
 	networkMod, err := pre_p2p.Create(config)
 	if err != nil {
 		return nil, err
