@@ -59,13 +59,10 @@ docker_wipe: prompt_user
 .PHONY: mockgen
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
-	mockgen --source=pkg/shared/modules/pocket_module.go -destination=pkg/shared/modules/mocks/pocket_module_mock.go
-
-	mockgen --source=pkg/shared/modules/persistence_module.go -destination=pkg/shared/modules/mocks/persistence_module_mock.go -aux_files=github.com/pocket-network/pkg/shared/modules=./pkg/shared/modules/pocket_module.go
-	mockgen --source=pkg/shared/modules/utility_module.go -destination=pkg/shared/modules/mocks/utility_module_mock.go -aux_files=github.com/pocket-network/pkg/shared/modules=./pkg/shared/modules/pocket_module.go
-	mockgen --source=pkg/shared/modules/p2p_module.go -destination=pkg/shared/modules/mocks/p2p_module_mock.go -aux_files=github.com/pocket-network/pkg/shared/modules=./pkg/shared/modules/pocket_module.go
-	mockgen --source=pkg/p2p/p2p_types/network.go -destination=pkg/p2p/p2p_types/mocks/network_mock.go
-	mockgen --source=pkg/shared/modules/consensus_module.go -destination=pkg/shared/modules/mocks/consensus_module_mock.go -aux_files=github.com/pocket-network/pkg/shared/modules=./pkg/shared/modules/pocket_module.go
+	mockgen --source=./shared/modules/persistence_module.go -destination=./shared/modules/mocks/persistence_module_mock.go -aux_files=pocket/shared/modules=./shared/modules/module.go
+	mockgen --source=./shared/modules/p2p_module.go -destination=./shared/modules/mocks/p2p_module_mock.go -aux_files=pocket/shared/modules=./shared/modules/module.go
+	mockgen --source=./shared/modules/utility_module.go -destination=./shared/modules/mocks/utility_module_mock.go -aux_files=pocket/shared/modules=./shared/modules/module.go
+	mockgen --source=./shared/modules/consensus_module.go -destination=./shared/modules/mocks/consensus_module_mock.go -aux_files=pocket/shared/modules=./shared/modules/module.go
 
 .PHONY: test_all
 ## Run all go unit tests

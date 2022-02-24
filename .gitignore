@@ -19,3 +19,6 @@ vendor/
 
 # Intellij / Goland dot files
 .idea/
+
+# Generated Mocks (for testing)
+shared/modules/mocks/
