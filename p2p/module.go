@@ -25,12 +25,12 @@ func Create(config *config.Config) (modules.NetworkModule, error) {
 
 func (p *networkModule) Start() error {
 	// TODO(olshansky): Add a test that pocketBus is set
-	log.Println("Starting P2P module...")
+	log.Println("Starting PRE P2P module...")
 	return nil
 }
 
 func (p *networkModule) Stop() error {
-	log.Println("Stopping P2P module...")
+	log.Println("Stopping PRE P2P module...")
 	return nil
 }
 

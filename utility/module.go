@@ -23,12 +23,12 @@ func Create(cfg *config.Config) (modules.UtilityModule, error) {
 
 func (u *utilityModule) Start() error {
 	// TODO(olshansky): Add a test that pocketBus is set
-	log.Println("Starting consensus module...")
+	log.Println("Starting utility module...")
 	return nil
 }
 
 func (u *utilityModule) Stop() error {
-	log.Println("Stopping consensus module...")
+	log.Println("Stopping utility module...")
 	return nil
 }
 

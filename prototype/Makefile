@@ -23,7 +23,7 @@ help:
 
 ## Build consensus/main.go
 build:
-	go build -v cmd/v1/main.go
+	go build -v cmd/pocket/main.go
 
 ## Continous build of consensus/main.go as files changel.
 build_and_watch:

@@ -1,13 +1,16 @@
 package shared
 
 import (
+	"fmt"
 	"log"
 	"pocket/consensus"
 	"pocket/persistence"
 	"pocket/pre_p2p"
 	"pocket/shared/config"
 	"pocket/shared/crypto"
+	"pocket/shared/types"
 	"pocket/utility"
+	"time"
 
 	"pocket/shared/modules"
 )
@@ -22,6 +25,11 @@ type Node struct {
 }
 
 func Create(config *config.Config) (n *Node, err error) {
+	pk, err := crypto.NewPrivateKey(config.PrivateKey)
+	if err != nil {
+		return nil, err
+	}
+
 	persistenceMod, err := persistence.Create(config)
 	if err != nil {
 		return nil, err
@@ -44,11 +52,6 @@ func Create(config *config.Config) (n *Node, err error) {
 	}
 
 	bus, err := CreateBus(nil, persistenceMod, networkMod, utilityMod, consensusMod)
-	if err != nil {
-		return nil, err
-	}
-
-	pk, err := crypto.NewPrivateKey(config.PrivateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +82,18 @@ func (node *Node) Start() error {
 	if err := node.GetBus().GetConsensusModule().Start(); err != nil {
 		return err
 	}
+
+	// TODO(olshansky): This is a temporary function in order to avoid
+	// the `all goroutines are asleep - deadlock` error. This happens because
+	// there is no existing functionality in the source code, so the static
+	// compiler understands that no future events will take place.
+	go func() {
+		for {
+			fmt.Println("Sending placeholder event...")
+			node.GetBus().PublishEventToBus(&types.Event{PocketTopic: "Placeholder"})
+			time.Sleep(time.Second * 5)
+		}
+	}()
 
 	// While loop lasting throughout the entire lifecycle of the node.
 	for {

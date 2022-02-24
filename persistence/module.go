@@ -23,12 +23,12 @@ func Create(cfg *config.Config) (modules.PersistenceModule, error) {
 
 func (p *persistenceModule) Start() error {
 	// TODO(olshansky): Add a test that pocketBus is set
-	log.Println("Starting P2P module...")
+	log.Println("Starting persistence module...")
 	return nil
 }
 
 func (p *persistenceModule) Stop() error {
-	log.Println("Stopping P2P module...")
+	log.Println("Stopping persistence module...")
 	return nil
 }
 
