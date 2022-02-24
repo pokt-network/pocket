@@ -59,10 +59,11 @@ docker_wipe: prompt_user
 .PHONY: mockgen
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
-	mockgen --source=./shared/modules/persistence_module.go -destination=./shared/modules/mocks/persistence_module_mock.go -aux_files=pocket/shared/modules=./shared/modules/module.go
-	mockgen --source=./shared/modules/p2p_module.go -destination=./shared/modules/mocks/p2p_module_mock.go -aux_files=pocket/shared/modules=./shared/modules/module.go
-	mockgen --source=./shared/modules/utility_module.go -destination=./shared/modules/mocks/utility_module_mock.go -aux_files=pocket/shared/modules=./shared/modules/module.go
-	mockgen --source=./shared/modules/consensus_module.go -destination=./shared/modules/mocks/consensus_module_mock.go -aux_files=pocket/shared/modules=./shared/modules/module.go
+	$(eval modules_dir = "shared/modules")
+	mockgen --source=${modules_dir}/persistence_module.go -destination=${modules_dir}/mocks/persistence_module_mock.go -aux_files=pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/p2p_module.go -destination=${modules_dir}/mocks/p2p_module_mock.go -aux_files=pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=pocket/${modules_dir}=${modules_dir}/module.go
 
 .PHONY: test_all
 ## Run all go unit tests
@@ -72,11 +73,11 @@ test_all: # generate_mocks
 .PHONY: protogen_local
 ## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
 protogen_local:
-	protoc -I=./shared/types/proto/ -I=./consensus/types/proto --go_out=./ ./consensus/types/proto/*.proto
 	protoc -I=./shared/types/proto/ --go_out=./ ./shared/types/proto/*.proto
 	protoc -I=./shared/types/proto/ -I=./persistence/pre_persistence/proto --go_out=./ ./persistence/pre_persistence/proto/*.proto
 	protoc -I=./shared/types/proto/ -I=./p2p/pre_p2p/types/proto --go_out=./ ./p2p/pre_p2p/types/proto/*.proto
 	protoc -I=./shared/types/proto/ -I=./utility/proto --go_out=./ ./utility/proto/*.proto
+	protoc -I=./shared/types/proto/ -I=./consensus/types/proto --go_out=./ ./consensus/types/proto/*.proto
 
 .PHONY: protogen_m1
 ## TODO(derrandz): Test, validate & update.
