@@ -134,3 +134,49 @@ protogen_docker:
 ## Format all the .go files in the project in place.
 gofmt:
 	gofmt -w -s .
+
+## Module commands
+
+## Run the p2p message behavior test
+test_p2p_message:
+	go test -run TestMessage -v -race ./p2p
+
+## Run the p2p wire codec behavior test
+test_p2p_wire_codec:
+	go test -run TestCodec -v -race ./p2p
+
+## Run the p2p net IO behaviors test
+test_p2p_netio:
+	go test -run TestIO -v -race ./p2p
+
+## Run the p2p network behavior (send, broadcast, listen...)
+test_p2p_network:
+	go test -run TestNetwork -v -race ./p2p
+
+## Run the p2p raintree algorithm test (in isolation of networking logic)
+test_p2p_raintree:
+	go test -run TestRainTree -v -race ./p2p
+
+## Run all p2p tests
+test_p2p:
+	go test -run Test -v -race ./p2p
+
+## Compile the p2p module into a separate binary
+compile-p2p:
+	go build -race -a -o ./build/dist/node ./cmd/main.go
+	chmod +x ./build/dist/node
+
+## Run the compiled p2p binary in isolation
+run-p2p:
+	./build/dist/node -address=$(ADDR)
+
+## Run the p2p e2e test script
+test_p2p_e2e:
+	echo "Not implemented"
+
+## Run the p2p e2e test stack
+test_p2p_e2e_docker:
+	docker-compose -f ./build/p2p_e2e_test_stack.yml --project-directory $(CWD) up --build --force-recreate
+
+stop_p2p_e2e_docker:
+	docker-compose -f ./build/p2p_e2e_test_stack.yml --project-directory $(CWD) down

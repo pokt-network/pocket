@@ -1,0 +1,394 @@
+version: "3.5"
+services:
+  node.1:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:1201
+      PORT: "1201"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 1201
+      published: 1201
+      protocol: tcp
+    networks:
+    - local
+
+  node.2:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:1202
+      PORT: "1202"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 1202
+      published: 1202
+      protocol: tcp
+    networks:
+    - local
+
+  node.3:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:1203
+      PORT: "1203"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 1203
+      published: 1203
+      protocol: tcp
+    networks:
+    - local
+  node.4:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:1204
+      PORT: "1204"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 1204
+      published: 1204
+      protocol: tcp
+    networks:
+    - local
+  node.5:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:1205
+      PORT: "1205"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 1205
+      published: 1205
+      protocol: tcp
+    networks:
+    - local
+  node.6:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:1206
+      PORT: "1206"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 1206
+      published: 1206
+      protocol: tcp
+    networks:
+    - local
+  node.7:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:1207
+      PORT: "1207"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 1207
+      published: 1207
+      protocol: tcp
+    networks:
+    - local
+  node.8:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:1208
+      PORT: "1208"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 1208
+      published: 1208
+      protocol: tcp
+    networks:
+    - local
+  node.9:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:1209
+      PORT: "1209"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 1209
+      published: 1209
+      protocol: tcp
+    networks:
+    - local
+  node.10:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12010
+      PORT: "1201"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12010
+      published: 12010
+      protocol: tcp
+    networks:
+    - local
+  node.11:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12011
+      PORT: "1201"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12011
+      published: 12011
+      protocol: tcp
+    networks:
+    - local
+  node.12:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12012
+      PORT: "1201"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12012
+      published: 12012
+      protocol: tcp
+    networks:
+    - local
+  node.13:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12013
+      PORT: "1201"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12013
+      published: 12013
+      protocol: tcp
+    networks:
+    - local
+  node.14:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12014
+      PORT: "1201"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12014
+      published: 12014
+      protocol: tcp
+    networks:
+    - local
+  node.15:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12015
+      PORT: "1201"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12015
+      published: 12015
+      protocol: tcp
+    networks:
+    - local
+  node.16:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12016
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12016
+      published: 12016
+      protocol: tcp
+    networks:
+    - local
+  node.17:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12017
+      PORT: "1201"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12017
+      published: 12017
+      protocol: tcp
+    networks:
+    - local
+
+  node.18:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12018
+      PORT: "1201"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12018
+      published: 12018
+      protocol: tcp
+    networks:
+    - local
+
+  node.19:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12019
+      PORT: "1201"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12019
+      published: 12019
+      protocol: tcp
+    networks:
+    - local
+
+  node.20:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12020
+      PORT: "1202"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12020
+      published: 12020
+      protocol: tcp
+    networks:
+    - local
+
+  node.21:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12021
+      PORT: "1202"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12021
+      published: 12021
+      protocol: tcp
+    networks:
+    - local
+
+  node.22:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12022
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12022
+      published: 12022
+      protocol: tcp
+    networks:
+    - local
+
+  node.23:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12023
+      PORT: "1202"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12023
+      published: 12023
+      protocol: tcp
+    networks:
+    - local
+
+  node.24:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12024
+      PORT: "1202"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12024
+      published: 12024
+      protocol: tcp
+    networks:
+    - local
+
+  node.25:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12025
+      PORT: "1202"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12025
+      published: 12025
+      protocol: tcp
+    networks:
+    - local
+
+  node.26:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12026
+      PORT: "1202"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12026
+      published: 12026
+      protocol: tcp
+    networks:
+    - local
+
+  node.27:
+    build:
+      dockerfile: ${CWD}/build/p2p-test-node.Dockerfile
+    environment:
+      ADDRESS: 0.0.0.0:12027
+      PORT: "1202"
+    image: poktp2p
+    ports:
+    - mode: ingress
+      target: 12027
+      published: 12027
+      protocol: tcp
+    networks:
+    - local
+
+networks:
+  local:
+    driver: bridge

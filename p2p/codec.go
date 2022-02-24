@@ -25,7 +25,7 @@ const (
  @
  @ Idea inspired by scuttlebutt's secure p2p wire protocol
 */
-type wcodec struct {
+type wCodec struct {
 	sync.RWMutex
 }
 
@@ -51,20 +51,20 @@ type wcodec struct {
  @ *: does the body have to be decoded at the application level (i.e by the domain codec)
  @
  @ 1234: request number as uint16, empty if not a request
- @ 5678: bodylength
+ @ 5678: bodyLength
  @
  @ body.
 */
-func (c *wcodec) encode(encoding Encoding, iserror bool, reqnum uint32, data []byte, wrapped bool) []byte {
+func (c *wCodec) encode(encoding Encoding, iserror bool, reqnum uint32, data []byte, wrapped bool) []byte {
 	c.Lock()
 	defer c.Unlock()
 
 	var flags byte = 0x00
 
-	bodylength := make([]byte, 4)
+	bodyLength := make([]byte, 4)
 	requestnumber := make([]byte, 4)
 
-	binary.BigEndian.PutUint32(bodylength, uint32(len(data)))
+	binary.BigEndian.PutUint32(bodyLength, uint32(len(data)))
 	binary.BigEndian.PutUint32(requestnumber, uint32(reqnum))
 
 	if wrapped {
@@ -95,7 +95,7 @@ func (c *wcodec) encode(encoding Encoding, iserror bool, reqnum uint32, data []b
 
 	header := append([]byte{}, flags)
 	header = append(header, requestnumber...)
-	header = append(header, bodylength...)
+	header = append(header, bodyLength...)
 
 	body := data
 
@@ -104,7 +104,7 @@ func (c *wcodec) encode(encoding Encoding, iserror bool, reqnum uint32, data []b
 	return payload
 }
 
-func (c *wcodec) decode(wiredata []byte) (nonce uint32, enc Encoding, data []byte, wrapped bool, err error) {
+func (c *wCodec) decode(wiredata []byte) (nonce uint32, enc Encoding, data []byte, wrapped bool, err error) {
 	c.Lock()
 	defer c.Unlock()
 
@@ -137,6 +137,31 @@ func (c *wcodec) decode(wiredata []byte) (nonce uint32, enc Encoding, data []byt
 
 	length := binary.BigEndian.Uint32(bodylen)
 	data = body[:length]
+	return
+}
+
+func (c *wCodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32, bodyLength uint32, err error) {
+	c.Lock()
+	defer c.Unlock()
+
+	flags := header[0]
+	requestnum := header[1:5]
+	bodylen := header[5:9]
+
+	flagswitch, _, err = parseflag(flags)
+
+	if err != nil {
+		return
+	}
+
+	isreq := flagswitch[3]
+	if isreq {
+		nonce = binary.BigEndian.Uint32(requestnum)
+	} else {
+		nonce = 0
+	}
+
+	bodyLength = binary.BigEndian.Uint32(bodylen)
 	return
 }
 
@@ -240,7 +265,7 @@ func (c *dcodec) register(m interface{}, encoder, decoder interface{}) (uint16, 
 	)
 
 	if e.Type() != encoderSignature {
-		return uint16(0), errors.New(fmt.Sprintf("dcodec error: provided encoder for message type %+v is not valid, expected %s, but got %s", t, d, encoderSignature))
+		return uint16(0), errors.New(fmt.Sprintf("dcodec error: provided encoder for message type %+v is not valid, expected %s, but got %s", t, e, encoderSignature))
 	}
 
 	// expect decoders to be of type func([]byte) (T, error)

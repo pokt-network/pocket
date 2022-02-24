@@ -30,6 +30,12 @@ func Create(config *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
+	// TODO(derrandz): Uncomment this and comment out the pre_p2p.Create once the p2p module is ready for use
+	//networkMod, err := p2p.Create(config)
+	//if err != nil {
+	//	return nil, err
+	//}
+
 	networkMod, err := pre_p2p.Create(config)
 	if err != nil {
 		return nil, err

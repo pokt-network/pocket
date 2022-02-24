@@ -6,6 +6,7 @@ import (
 	stdio "io"
 	"net"
 	"reflect"
+	"sync"
 	"time"
 )
 
@@ -16,11 +17,14 @@ import (
 */
 
 type connM struct {
+	sync.Mutex
 	buff    []byte
 	signals chan int
 }
 
 func (c *connM) Read(b []byte) (n int, err error) {
+	defer c.Unlock()
+	c.Lock()
 	if len(c.buff) == 0 {
 		return 0, nil
 	}
@@ -35,6 +39,8 @@ func (c *connM) Read(b []byte) (n int, err error) {
 }
 
 func (c *connM) Write(b []byte) (n int, err error) {
+	defer c.Unlock()
+	c.Lock()
 	cbuff := append(make([]byte, 0), c.buff...)
 	buff := bytes.NewBuffer(cbuff)
 	n, err = buff.Write(b)
@@ -45,12 +51,18 @@ func (c *connM) Write(b []byte) (n int, err error) {
 }
 
 func (c *connM) Flush() ([]byte, int, error) {
+	defer c.Unlock()
+	c.Lock()
+
 	flushed := append(make([]byte, 0), c.buff...)
 	c.buff = make([]byte, 0)
 	return flushed, len(flushed), nil
 }
 
 func (c *connM) Close() error {
+	defer c.Unlock()
+	c.Lock()
+
 	c.buff = nil
 	return nil
 }

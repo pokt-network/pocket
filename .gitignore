@@ -5,6 +5,9 @@
 *.so
 *.dylib
 
+# Vim swap files
+*.swp**
+
 # Test binary, built with `go test -c`
 *.test
 
@@ -16,10 +19,9 @@ vendor/
 
 # MacOS metadata
 .DS_Store
-
 # Intellij / Goland dot files
 .idea/
-
+#
 # Generated Mocks (for testing)
 shared/modules/mocks/
 
@@ -29,6 +31,11 @@ utility/test/
 utility/types/
 # TODO(team): Does the `types` directory contain generated or raw type files?
 # types/
+shared/messages/*.pb.go
 
 # Output binaries
 bin/
+build/dist/*
+
+vendor/
+prototype/vendor/
