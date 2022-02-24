@@ -70,14 +70,17 @@ mockgen:
 test_all: # generate_mocks
 	go test ./...
 
+# TODO(olshansky): Replace `prefix` with `./` when moving over the protobufs.
 .PHONY: protogen_local
 ## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
 protogen_local:
-	protoc -I=./shared/types/proto/ --go_out=./ ./shared/types/proto/*.proto
-	protoc -I=./shared/types/proto/ -I=./persistence/pre_persistence/proto --go_out=./ ./persistence/pre_persistence/proto/*.proto
-	protoc -I=./shared/types/proto/ -I=./p2p/pre_p2p/types/proto --go_out=./ ./p2p/pre_p2p/types/proto/*.proto
-	protoc -I=./shared/types/proto/ -I=./utility/proto --go_out=./ ./utility/proto/*.proto
-	protoc -I=./shared/types/proto/ -I=./consensus/types/proto --go_out=./ ./consensus/types/proto/*.proto
+	$(eval prefix = "./prototype")
+	$(eval proto_dir = "${prefix}/shared/types/proto/")
+	protoc -I=${proto_dir} --go_out=./ ${proto_dir}/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/persistence/pre_persistence/proto --go_out=./ ${prefix}/persistence/pre_persistence/proto/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/p2p/pre_p2p/types/proto --go_out=./ ${prefix}/p2p/pre_p2p/types/proto/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/utility/proto --go_out=./ ${prefix}/utility/proto/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/consensus/types/proto --go_out=./ ${prefix}/consensus/types/proto/*.proto
 
 .PHONY: protogen_m1
 ## TODO(derrandz): Test, validate & update.
