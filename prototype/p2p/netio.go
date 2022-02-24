@@ -7,16 +7,14 @@ import (
 	stdio "io"
 	"math"
 	"net"
+	"pocket/p2p/types"
 	"sync"
+
+	"go.uber.org/atomic"
 )
 
-type request struct {
-	ch chan []byte
-	id uint32
-}
-
-type io struct {
-	g *gater
+type netpipe struct {
+	g *P2PModule // TODO: use an interface?
 	c *wcodec
 
 	addr  string
@@ -27,14 +25,13 @@ type io struct {
 		write []byte
 	}
 	buffersState struct {
+		sync.Mutex   // for the actual struct elements, like writeSignals
 		writeOpen    bool
 		writeSignals chan uint
 		writeLock    sync.Mutex
-
-		readOpen bool
 	}
 
-	dialer Dialer // an intermediary p2p interface that returns net.Conn, useful for mocking in testing
+	dialer Dialer // an intermediary poktp2p interface that returns net.Conn, useful for mocking in testing
 	conn   net.Conn
 
 	timeouts struct {
@@ -44,7 +41,7 @@ type io struct {
 	reader *bufio.Reader
 	writer *bufio.Writer
 
-	requests *reqmap
+	requests *types.RequestMap
 
 	ready   chan uint
 	done    chan uint
@@ -54,11 +51,23 @@ type io struct {
 	answering chan uint
 	polling   chan uint
 
-	opened    bool
-	sending   bool
-	receiving bool
+	opened atomic.Bool
 
-	err error
+	logger struct {
+		sync.Mutex
+		print func(...interface{}) (int, error)
+	}
+
+	err struct {
+		sync.Mutex
+		error
+	}
+}
+
+type pipemap struct {
+	sync.Mutex
+	maxcap   uint32
+	elements map[string]*netpipe
 }
 
 type Sense string
@@ -69,9 +78,8 @@ var (
 	UnspecifiedIoPipeSense Sense = "unspecified"
 )
 
-func (p *io) open(sense Sense, addr string, conn net.Conn, onopened func(*io) error, onclosed func(*io) error) error {
+func (p *netpipe) open(sense Sense, addr string, conn net.Conn, onopened func(*netpipe) error, onclosed func(*netpipe) error) error {
 	p.buffersState.writeOpen = true
-	p.buffersState.readOpen = true
 
 	switch sense {
 	case OutboundIoPipe:
@@ -91,27 +99,41 @@ func (p *io) open(sense Sense, addr string, conn net.Conn, onopened func(*io) er
 	case <-p.answering:
 	}
 
-	p.opened = true
+	p.opened.Store(true)
 	close(p.ready)
 
 	return nil
 }
 
-func (p *io) close() {
+func (p *netpipe) close() {
+	if !p.opened.Load() {
+		return
+	}
 	close(p.done)
-	close(p.errored)
-	close(p.buffersState.writeSignals)
 
-	p.sending = false
-	p.receiving = false
-	p.opened = false
+	p.err.Lock()
+	close(p.errored)
+	p.err.Unlock()
+
+	p.buffersState.Lock()
+	close(p.buffersState.writeSignals)
+	p.buffersState.Unlock()
+
+	p.opened.Store(false)
+
+	p.buffersState.writeLock.Lock()
 	p.buffersState.writeOpen = false
-	p.buffersState.readOpen = false
+	p.buffersState.writeLock.Unlock()
+
+	if p.conn != nil {
+		p.conn.Close()
+	}
 
 	p.closed <- 1
+	p.opened.Store(false)
 }
 
-func (p *io) outbound(addr string, onopened func(p *io) error, onclosed func(p *io) error) {
+func (p *netpipe) outbound(addr string, onopened func(p *netpipe) error, onclosed func(p *netpipe) error) {
 	defer func() {
 		p.close()
 	}()
@@ -125,8 +147,7 @@ func (p *io) outbound(addr string, onopened func(p *io) error, onclosed func(p *
 
 	conn, err := p.dialer.Dial("tcp", addr)
 	if err != nil {
-		p.err = err
-		p.errored <- 1
+		p.error(err)
 		close(p.answering)
 		close(p.polling)
 		return
@@ -137,8 +158,7 @@ func (p *io) outbound(addr string, onopened func(p *io) error, onclosed func(p *
 	p.writer = bufio.NewWriter(p.conn)
 
 	if err := onopened(p); err != nil {
-		p.err = err
-		p.errored <- 1
+		p.error(err)
 
 		close(p.answering)
 		close(p.polling)
@@ -149,13 +169,12 @@ func (p *io) outbound(addr string, onopened func(p *io) error, onclosed func(p *
 	p.answer()
 
 	if err := onclosed(p); err != nil {
-		p.err = err
-		p.errored <- 1
+		p.error(err)
 		return
 	}
 }
 
-func (p *io) inbound(addr string, conn net.Conn, onopened func(*io) error, onclosed func(*io) error) {
+func (p *netpipe) inbound(addr string, conn net.Conn, onopened func(*netpipe) error, onclosed func(*netpipe) error) {
 	defer func() {
 		p.close()
 	}()
@@ -168,8 +187,7 @@ func (p *io) inbound(addr string, conn net.Conn, onopened func(*io) error, onclo
 	p.writer = bufio.NewWriter(conn)
 
 	if err := onopened(p); err != nil {
-		p.err = err
-		p.errored <- 1
+		p.error(err)
 
 		close(p.answering)
 		close(p.polling)
@@ -180,49 +198,57 @@ func (p *io) inbound(addr string, conn net.Conn, onopened func(*io) error, onclo
 	p.answer()  // closes p.answering when done
 
 	if err := onclosed(p); err != nil {
-		p.err = err
-		p.errored <- 1
+		p.error(err)
 		return
 	}
 }
 
-func (p *io) read() ([]byte, int, error) {
-	// TODO: condition the read to an acceptable message size, add read timeout
-	n, err := stdio.ReadFull(p.reader, p.buffers.read)
+func (p *netpipe) read() ([]byte, int, error) {
+	var n int
+	if _, err := stdio.ReadFull(p.reader, p.buffers.read[:WireByteHeaderLength]); err != nil {
+		return nil, 0, err
+	}
+	_, _, bodylen, err := p.c.decodeHeader(p.buffers.read[:WireByteHeaderLength])
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if bodylen > uint32(ReadBufferSize-WireByteHeaderLength) { // TODO: replace with configurable max value
+		return nil, 0, errors.New(fmt.Sprintf("io pipe error: cannot read a buffer of length %d, the accepted body length is %d.", bodylen, ReadBufferSize-WireByteHeaderLength))
+	}
+
+	if n, err = stdio.ReadFull(p.reader, p.buffers.read[WireByteHeaderLength:bodylen+uint32(WireByteHeaderLength)]); err != nil {
+		return nil, 0, err
+	}
+
 	buff := make([]byte, 0)
-	buff = append(buff, p.buffers.read...)
+	buff = append(buff, p.buffers.read[:WireByteHeaderLength+n]...)
+
 	return buff, n, err
 }
 
-func (p *io) poll() {
+func (p *netpipe) poll() {
 	defer func() {
 		close(p.polling)
 		p.closed <- 1
 	}()
 
 	{
-		p.receiving = true
 		p.polling <- 1 // signal start
 	}
 
 	for stop := false; !stop; {
 		select {
+		// TODO: replace with passed down context
 		case <-p.g.done:
-			p.receiving = false
-			p.buffersState.readOpen = false
-			stop = true
 			break
 
 		case <-p.done:
-			p.receiving = false
-			p.buffersState.readOpen = false
 			stop = true
 			break
 
 		case _, open := <-p.polling:
 			if !open {
-				p.receiving = false
-				p.buffersState.readOpen = false
 				stop = true
 				break
 			}
@@ -231,10 +257,20 @@ func (p *io) poll() {
 			{
 				buf, n, err := p.read()
 				if err != nil {
-					fmt.Println("Error!", err)
-					p.err = err
-					p.errored <- 1
-					break
+
+					switch err {
+					case stdio.EOF:
+						p.error(ErrPeerHangUp(err))
+						break
+
+					case stdio.ErrUnexpectedEOF:
+						p.error(ErrPeerHangUp(err))
+						break
+
+					default:
+						p.error(ErrUnexpected(err))
+						break
+					}
 				}
 
 				if n == 0 {
@@ -243,83 +279,80 @@ func (p *io) poll() {
 
 				nonce, _, data, wrapped, err := p.c.decode(buf)
 				if err != nil {
-					p.err = err
-					p.errored <- 1
+					p.error(err)
 					break
 				}
 
 				if nonce != 0 {
-					_, ch, found := p.requests.find(nonce)
+					_, ch, found := p.requests.Find(nonce)
 					// TODO: this is hacku
 					if found {
-						ch <- work{nonce: nonce, decode: wrapped, data: data}
+						ch <- types.NewWork(nonce, data, p.addr, wrapped)
 						close(ch)
 						continue
 					}
 				}
 
-				fmt.Println("Received a message")
-
-				p.g.sink <- work{nonce: nonce, decode: wrapped, data: data}
+				p.g.sink <- types.NewWork(nonce, data, p.addr, wrapped)
 			}
 		}
 	}
 }
 
-func (p *io) write(b []byte, iserroreof bool, reqnum uint32, wrapped bool) (uint, error) {
+func (p *netpipe) write(b []byte, iserroreof bool, reqnum uint32, wrapped bool) (uint, error) {
 	defer p.buffersState.writeLock.Unlock()
 	p.buffersState.writeLock.Lock()
+
 	buff := p.c.encode(Binary, iserroreof, reqnum, b, wrapped)
 	p.buffers.write = append(p.buffers.write, buff...)
+
+	// TODO: find a better way, maybe the value itself (the channel) should be an atomic on and off switch to signal writes
+	p.buffersState.Lock()
 	p.buffersState.writeSignals <- 1
+	p.buffersState.Unlock()
+
 	return uint(len(b)), nil // TODO: should length be of b or of the encoded b
 }
 
-func (p *io) ackwrite(b []byte, wrapped bool) (work, error) {
-	request := p.requests.get()
+func (p *netpipe) ackwrite(b []byte, wrapped bool) (types.Work, error) {
+	request := p.requests.Get()
+	requestNonce := request.Nonce()
 
-	if _, err := p.write(b, false, request.nonce, wrapped); err != nil {
-		p.requests.delete(request.nonce)
-		return work{data: nil}, err
+	if _, err := p.write(b, false, requestNonce, wrapped); err != nil {
+		p.requests.Delete(requestNonce)
+		return types.NewWork(requestNonce, nil, "", false), err
 	}
 
-	var response work
+	var response types.Work
 	select {
-	case response = <-request.ch:
+	case response = <-request.Response():
 	}
 
 	return response, nil
 }
 
-func (p *io) answer() {
+func (p *netpipe) answer() {
 	defer func() {
 		close(p.answering)
 		p.closed <- 1
 	}()
 
 	{
-		p.sending = true
 		p.answering <- 1 // signal start
 	}
 
 	for stop := false; !stop; {
 		select {
 		case <-p.g.done:
-			p.sending = false
-			p.buffersState.writeOpen = false
 			stop = true
 			break
 
 		case <-p.done:
-			p.sending = false
-			p.buffersState.writeOpen = false
 			stop = true
 			break
 
 		case _, open := <-p.answering:
 			if !open {
-				p.sending = false
-				p.buffersState.writeOpen = false
 				stop = true
 				break
 			}
@@ -341,15 +374,13 @@ func (p *io) answer() {
 				}
 
 				if _, err := p.writer.Write(buff); err != nil {
-					p.err = err
-					p.errored <- 1
+					p.error(err)
 					stop = true
 					break
 				}
 
 				if err := p.writer.Flush(); err != nil {
-					p.err = err
-					p.errored <- 1
+					p.error(err)
 					stop = true
 					break
 				}
@@ -358,11 +389,22 @@ func (p *io) answer() {
 	}
 }
 
-func NewIoPipe() *io {
-	pipe := &io{
+func (p *netpipe) error(err error) {
+	defer p.err.Unlock()
+	p.err.Lock()
+
+	if p.err.error == nil {
+		p.err.error = err
+	}
+
+	p.errored <- 1
+}
+
+func NewNetPipe() *netpipe {
+	pipe := &netpipe{
 		c: &wcodec{},
 
-		requests: NewReqMap(math.MaxUint32),
+		requests: types.NewRequestMap(math.MaxUint32),
 
 		buffers: struct {
 			read  []byte
@@ -372,17 +414,14 @@ func NewIoPipe() *io {
 			write: make([]byte, 0),
 		},
 		buffersState: struct {
+			sync.Mutex
 			writeOpen    bool
 			writeSignals chan uint
 			writeLock    sync.Mutex
-
-			readOpen bool
 		}{
 			writeOpen:    false,
 			writeSignals: make(chan uint, 1),
 			writeLock:    sync.Mutex{},
-
-			readOpen: false,
 		},
 
 		timeouts: struct{ read int }{read: ReadDeadlineMs},
@@ -397,13 +436,61 @@ func NewIoPipe() *io {
 
 		answering: make(chan uint),
 		polling:   make(chan uint),
-
-		opened:    false,
-		sending:   false,
-		receiving: false,
-
-		err: nil,
 	}
 
 	return pipe
+}
+
+/*
+ @ pipemap
+*/
+
+func (m *pipemap) get(id string) (*netpipe, bool) {
+	defer m.Unlock()
+	m.Lock()
+
+	var pipe *netpipe
+	var exists bool
+
+	pipe, exists = m.elements[id]
+	if !exists {
+		// create a new iopipe
+		// TODO: add logic to check for maxcap if reached
+		// TODO: add logic to swap old connections for new one on maxcap reached
+		pipe = NewNetPipe()
+		m.elements[id] = pipe
+	}
+
+	return pipe, exists
+}
+
+func (m *pipemap) find(id string) (*netpipe, bool) {
+	defer m.Unlock()
+	m.Lock()
+
+	el, exists := m.elements[id]
+	return el, exists
+}
+
+func (m *pipemap) peak(id string) bool {
+	defer m.Unlock()
+	m.Lock()
+
+	_, exists := m.elements[id]
+	return exists
+}
+
+func (m *pipemap) remove(id string) (bool, error) {
+	defer m.Unlock()
+	m.Lock()
+
+	panic("Not implemented")
+	return false, nil
+}
+
+func NewIoMap(cap uint) *pipemap {
+	return &pipemap{
+		maxcap:   uint32(cap),
+		elements: make(map[string]*netpipe),
+	}
 }

@@ -1,9 +1,10 @@
 package types
 
 import (
-	"google.golang.org/protobuf/types/known/anypb"
 	"net"
 	"pocket/consensus/types"
+
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type SourceModule string
@@ -35,7 +36,7 @@ const (
 	LEADER_ELECTION_MESSAGE EventTopic = "LEADER_ELECTION_MESSAGE"
 
 	// UTILITY?
-	UTILITY_TX_MESSAGE       EventTopic = "TRANSACTION_MESSAGE"
+	UTILITY_TX_MESSAGE       EventTopic = "TRANSACTION"
 	UTILITY_EVIDENCE_MESSAGE EventTopic = "EVIDENCE_MESSAGE"
 
 	// P2P

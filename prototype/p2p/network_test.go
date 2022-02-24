@@ -1,17 +1,21 @@
 package p2p
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
+	stdio "io"
 	"net"
+	"pocket/p2p/types"
 	"sync"
 	"testing"
 	"time"
 )
 
-func TestNewGater(t *testing.T) {
-	g := NewGater()
-	if len(g.peerlist) == 0 && g.inbound.maxcap == uint32(MaxInbound) && g.outbound.maxcap == uint32(MaxOutbound) {
+func TestNetwork_NewP2PModule(t *testing.T) {
+	g := NewP2PModule()
+	g.peerlist = types.NewPeerlist()
+	if g.peerlist.Size() == 0 && g.inbound.maxcap == uint32(MaxInbound) && g.outbound.maxcap == uint32(MaxOutbound) {
 		t.Log("Success!")
 	} else {
 		t.Logf("Gater is malconfigured")
@@ -19,10 +23,10 @@ func TestNewGater(t *testing.T) {
 	}
 }
 
-func TestListenStop(t *testing.T) {
-	g := NewGater()
-	g.address = "localhost:12345" // g.Config
-	go g.Listen()
+func TestNetwork_ListenStop(t *testing.T) {
+	g := NewP2PModule()
+	g.address = "localhost:12345" // g.config
+	go g.listen()
 
 	_, waiting := <-g.ready
 
@@ -30,37 +34,45 @@ func TestListenStop(t *testing.T) {
 		t.Errorf("Error listening: gater not ready yet")
 	}
 
-	if g.listening != true {
+	if !g.listening.Load() {
 		t.Errorf("Error listening: flag shows false after start")
 	}
 
-	g.Close()
+	g.close()
 
 	_, finished := <-g.closed
 
-	if finished {
-		t.Log("Server closed")
+	if !finished {
+		t.Errorf("Error: not closed after .Close()")
 	}
 
-	if err := g.err; err != nil {
+	if err := g.err.error; err != nil {
 		t.Errorf("Error listening: %s", err.Error())
 	}
 
-	if g.listener != nil {
-		t.Errorf("Error: listener is still active")
-	}
-
-	if g.listening != false {
+	if g.listening.Load() {
 		t.Errorf("Error listening: flag shows true after stop")
 	}
+
+	g.listener.Lock()
+	if g.listener.TCPListener != nil {
+		t.Errorf("Error: listener is still active")
+	}
+	g.listener.Unlock()
 }
 
-func TestSendOutbound(t *testing.T) {
-	g := NewGater()
-	go g.Listen()
-	<-g.ready
+func TestNetwork_SendOutbound(t *testing.T) {
+	g := NewP2PModule()
+	g.configure("tcp", "0.0.0.0:3030", "0.0.0.0:3030", []string{})
+	go g.listen()
 
-	addr := "localhost:20202"
+	select {
+	case <-g.ready:
+	case <-g.errored:
+		t.Errorf("Send error: could not start listening, error: %s", g.err.error.Error())
+	}
+
+	addr := "0.0.0.0:2111"
 	msg := []byte("hello")
 
 	ready, _, data, _ := ListenAndServe(addr, ReadBufferSize)
@@ -72,7 +84,7 @@ func TestSendOutbound(t *testing.T) {
 		}
 	}
 
-	err := g.Send(addr, msg, false)
+	err := g.send(addr, msg, false)
 
 	if err != nil {
 		t.Errorf("Send error: Failed to write message to target")
@@ -88,28 +100,30 @@ func TestSendOutbound(t *testing.T) {
 		t.Errorf("Send error: pipe is not ready")
 	}
 
-	if pipe.opened != true {
+	if !pipe.opened.Load() {
 		t.Errorf("Send error: pipe is not open")
-	}
-
-	if pipe.receiving != true && pipe.sending != true {
-		t.Errorf("Send error: pipe is neither sending nor receiving")
 	}
 
 	received := <-data
 	if received.err != nil {
-		t.Errorf("Send error: recipient has received an error while receiving: %s", err.Error())
+		t.Errorf("Send error: recipient has received an error while receiving: %s", received.err.Error())
 	}
 
-	if bytes.Compare(received.buff[WireByteHeaderLength:received.n], msg) != 0 {
+	if bytes.Compare(received.buff[WireByteHeaderLength:], msg) != 0 {
 		t.Errorf("Send error: recipient received a corrupted message")
 	}
 }
 
-func TestSendInbound(t *testing.T) {
-	g := NewGater()
-	go g.Listen()
-	<-g.ready
+func TestNetwork_SendInbound(t *testing.T) {
+	g := NewP2PModule()
+	g.configure("tcp", "127.0.0.1:30303", "127.0.0.1:30303", []string{})
+	go g.listen()
+	select {
+
+	case <-g.ready:
+	case <-g.errored:
+		t.Errorf("Send error: could not start listening, error: %s", g.err.error.Error())
+	}
 
 	conn, err := net.Dial("tcp", g.address)
 
@@ -119,10 +133,10 @@ func TestSendInbound(t *testing.T) {
 
 	<-time.After(time.Millisecond * 10) // let gater catch up and store the new inbound conn
 
-	msg := GenerateByteLen(1024 * 4)
+	msg := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
 	sent := make(chan int)
 	go func() {
-		err = g.Send(conn.LocalAddr().String(), msg, false)
+		err = g.send(conn.LocalAddr().String(), msg, false)
 		sent <- 1
 	}()
 
@@ -142,12 +156,8 @@ func TestSendInbound(t *testing.T) {
 		t.Errorf("Send error: pipe is not ready")
 	}
 
-	if pipe.opened != true {
+	if !pipe.opened.Load() {
 		t.Errorf("Send error: pipe is not open")
-	}
-
-	if pipe.receiving != true && pipe.sending != true {
-		t.Errorf("Send error: pipe is neither sending nor receiving")
 	}
 
 	received := make([]byte, ReadBufferSize)
@@ -161,15 +171,19 @@ func TestSendInbound(t *testing.T) {
 	}
 }
 
-func TestRequest(t *testing.T) {
-	g := NewGater()
+func TestNetwork_Request(t *testing.T) {
+	g := NewP2PModule()
 
-	go g.Listen()
+	g.configure("tcp", "0.0.0.0:4030", "0.0.0.0:4030", []string{})
+	go g.listen()
+	t.Logf("Started listeningy")
 	_, waiting := <-g.ready
 
 	if waiting {
-		t.Errorf("Request error: gater still not started after Listen")
+		t.Errorf("Request error: gater still not started after.listen")
 	}
+
+	t.Logf("Started listenig: OK")
 
 	addr := "localhost:22302"
 	ready, _, data, respond := ListenAndServe(addr, ReadBufferSize)
@@ -181,12 +195,18 @@ func TestRequest(t *testing.T) {
 		}
 	}
 
+	t.Logf("Recipient: OK")
+
+	fmt.Println("listening started")
 	// send request to addr
-	msgA := GenerateByteLen(1024 * 4)
+	msgA := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
+
 	responses := make(chan []byte)
 	errs := make(chan error, 10)
+
 	go func() {
-		res, err := g.Request(addr, msgA, false)
+		fmt.Println("Requesting")
+		res, err := g.request(addr, msgA, false)
 		if err != nil {
 			errs <- err
 			close(responses)
@@ -194,75 +214,94 @@ func TestRequest(t *testing.T) {
 		responses <- res
 	}()
 
-	go func() {
-		c := &wcodec{}
-		d := <-data
-		nonce, encoding, _, _, err := c.decode(d.buff)
-		if err != nil {
-			fmt.Println("Error decoding", err.Error())
+	c := &wcodec{}
+
+	t.Logf("Receiving...")
+	d := <-data
+	t.Logf("Received: OK")
+	nonce, encoding, _, _, err := c.decode(d.buff)
+
+	if err != nil {
+		t.Errorf("Request error:  %s", err.Error())
+	}
+
+	fmt.Println("Where are you blocked?")
+	respond <- c.encode(encoding, false, nonce, msgA, false)
+
+	pipe, _ := g.outbound.find(addr)
+	select {
+	case err := <-errs:
+		t.Errorf("Request error:  %s", err.Error())
+	case <-pipe.errored:
+		t.Errorf("Request error: error while receiving a response: %s", pipe.err.error.Error())
+
+	case d, open := <-responses:
+		if !open {
+			err := <-errs
+			t.Errorf("Request error: error while receiving a response: %s", err.Error())
 		}
-		respond <- c.encode(encoding, false, nonce, msgA, false)
-	}()
 
-	d, open := <-responses
-	if !open {
-		err := <-errs
-		t.Errorf("Request error: error while receiving a response: %s", err.Error())
-	}
+		if len(d) != ReadBufferSize-WireByteHeaderLength {
+			t.Errorf("Request error: received response buffer length mistach")
+		}
 
-	if len(d) != ReadBufferSize-WireByteHeaderLength {
-		t.Errorf("Request error: received response buffer length mistach")
-	}
-
-	if bytes.Compare(d, msgA) != 0 {
-		t.Errorf("Request error: received response buffer is corrupted")
+		if bytes.Compare(d, msgA) != 0 {
+			t.Errorf("Request error: received response buffer is corrupted")
+		}
 	}
 }
 
-func TestRespond(t *testing.T) {
-	g := NewGater()
+func TestNetwork_Respond(t *testing.T) {
+	g := NewP2PModule()
 
-	go g.Listen()
+	g.configure("tcp", "0.0.0.0:4031", "0.0.0.0:4031", []string{})
+	go g.listen()
+	t.Logf("Listening...")
 	_, waiting := <-g.ready
+	t.Logf("Listening: OK")
 
 	if waiting {
-		t.Errorf("Request error: gater still not started after Listen")
+		t.Errorf("Request error: gater still not started after.listen")
 	}
 
-	<-time.After(time.Millisecond * 20)
+	t.Logf("Listening: OK")
+
+	<-time.After(time.Millisecond * 2)
 	conn, err := net.Dial(g.protocol, g.address)
 
 	if err != nil {
 		t.Errorf("Failed to dial gater. Error: %s", err.Error())
 	}
 
+	t.Logf("Dial: OK")
 	// send to the gater a nonced message (i.e: request)
 	addr := conn.LocalAddr().String()
 	requestNonce := 12
-	msgA := GenerateByteLen(1024 * 4)
-	msgB := GenerateByteLen(1024 * 4)
-	errs := make(chan error, 10)
-	signals := make(chan int)
-
-	go func() {
-		<-time.After(time.Millisecond * 50)
-		w := <-g.sink
-		nonce := w.nonce
-
-		err := g.Respond(nonce, false, addr, msgB, false)
-		if err != nil {
-			errs <- err
-		}
-		signals <- 1
-	}()
+	msgA := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
+	msgB := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
 
 	go func() {
 		c := &wcodec{}
 		request := c.encode(Binary, false, 12, msgA, false)
-		conn.Write(request)
+		_, err := conn.Write(request)
+		t.Logf("Write: OK")
+		fmt.Println(err)
 	}()
 
-	<-signals
+	<-time.After(time.Millisecond * 5)
+
+	t.Logf("Receiving...")
+	w := <-g.sink // blocks
+	t.Logf("Receiving: OK")
+
+	nonce := w.Nonce()
+	t.Logf("Got work %d", nonce)
+
+	err = g.respond(nonce, false, addr, msgB, false)
+	if err != nil {
+		t.Errorf("Respond error: %s", err.Error())
+	}
+
 	buff := make([]byte, ReadBufferSize)
 	_, err = conn.Read(buff)
 
@@ -288,20 +327,26 @@ func TestRespond(t *testing.T) {
 	}
 }
 
-func TestPing(t *testing.T) {
-	g := NewGater()
+func TestNetwork_Ping(t *testing.T) {
+	g := NewP2PModule()
 
-	g.address = "127.0.0.1:30303"
-	g.Init()
+	g.configure("tcp", "0.0.0.0:4032", "0.0.0.0:4032", []string{})
+	g.init()
 
-	go g.Listen()
+	err := g.init()
+
+	if err != nil {
+		t.Logf("Error: failed to initialize gater. %s", err.Error())
+	}
+
+	go g.listen()
 	_, waiting := <-g.ready
 
 	if waiting {
 		t.Errorf("Request error: gater still not started after Listen")
 	}
 
-	addr := "127.0.0.1:22302"
+	addr := "127.0.0.1:2313"
 	ready, _, data, respond := ListenAndServe(addr, ReadBufferSize)
 
 	select {
@@ -315,87 +360,86 @@ func TestPing(t *testing.T) {
 	errors := make(chan error)
 	responses := make(chan bool)
 	go func() {
-		alive, err := g.Ping(addr)
+		t.Logf("Pinging...")
+		alive, err := g.ping(addr)
 		if err != nil {
+			t.Logf("Ping: failed. %s", err.Error())
 			errors <- err
 		}
+		t.Logf("Ping: OK")
 		responses <- alive
 	}()
 
-	sink := make(chan []byte)
-	<-time.After(time.Millisecond * 20)
-	go func() {
-		c := &wcodec{}
-		d := <-data
-		nonce, encoding, buff, _, err := c.decode(d.buff)
-		if err != nil {
-			errors <- err
-		}
-		sink <- buff
-
-		if err != nil {
-			errors <- err
-		}
-
-		pongmsg := (&churnmgmt{}).message(nonce, Pong, 0, addr, g.address)
-		encoded, err := g.c.encode(pongmsg)
-
-		if err != nil {
-			errors <- err
-		}
-
-		respond <- c.encode(encoding, false, nonce, encoded, false)
-	}()
+	<-time.After(time.Microsecond * 10)
+	t.Logf("Receiving...")
+	c := &wcodec{}
 
 	select {
-
 	case err := <-errors:
-		t.Errorf("Ping error: Encountered error: %s", err.Error())
-		t.Failed()
+		t.Errorf("err: %s", err.Error())
 
-	case buff := <-sink:
+	case d := <-data:
 		{
+			t.Logf("Received: OK")
+			nonce, encoding, buff, _, err := c.decode(d.buff)
+			if err != nil {
+				t.Errorf("Ping error: Encountered error while decoding received ping: %s", err.Error())
+			}
+
 			m, err := g.c.decode(buff)
 			if err != nil {
 				t.Errorf("Ping error: failed to decode ping on receipt (domain codec). Encountered error: %s", err.Error())
 			}
 
-			msg := m.(message)
+			msg := m.(types.NetworkMessage)
 
-			if msg.action != Ping {
-				t.Errorf("Ping error: peer expecte to receive ping message, got %s instead", msg.action)
+			if msg.Topic != types.PocketTopic_P2P_PING {
+				t.Errorf("Ping error: peer expecte to receive ping message, got %s instead", msg.Topic)
 			}
 
+			pongmsg := Message(int32(nonce), 0, types.PocketTopic_P2P_PONG, addr, g.address)
+			encoded, err := g.c.encode(pongmsg)
+
+			if err != nil {
+				t.Errorf("Ping error: Encountered error while encoding pong message: %s", err.Error())
+			}
+
+			respond <- c.encode(encoding, false, nonce, encoded, false)
 		}
 
 	case alive, open := <-responses:
-		{
-			if !open {
-				err := <-errors
-				t.Errorf("Ping error: error while receiving a response: %s", err.Error())
-			}
-
-			if alive != true {
-				t.Errorf("Ping error: expected peer to be alive, got the following instead: alive=%v", alive)
-			}
+		if !open {
+			err := <-errors
+			t.Errorf("Ping error: error while receiving a response: %s", err.Error())
 		}
+
+		if alive != true {
+			t.Errorf("Ping error: expected peer to be alive, got the following instead: alive=%v", alive)
+		}
+
 	}
 }
 
-func TestPong(t *testing.T) {
-	g := NewGater()
+func TestNetwork_Pong(t *testing.T) {
+	g := NewP2PModule()
 
-	g.address = "127.0.0.1:30303"
-	g.Init()
+	g.configure("tcp", "0.0.0.0:4033", "0.0.0.0:4033", []string{})
 
-	go g.Listen()
+	err := g.init()
+	if err != nil {
+		t.Logf("Error: failed to initialize gater. %s", err.Error())
+	}
+
+	msg := *Message(0, 0, types.PocketTopic_P2P_PONG, "", g.address)
+
+	go g.listen()
 	_, waiting := <-g.ready
 
 	if waiting {
 		t.Errorf("Request error: gater still not started after Listen")
 	}
 
-	addr := "127.0.0.1:22302"
+	addr := "127.0.0.1:22312"
 	ready, _, data, _ := ListenAndServe(addr, ReadBufferSize)
 
 	select {
@@ -411,8 +455,9 @@ func TestPong(t *testing.T) {
 	pongnonce := uint32(1)
 	signals := make(chan int)
 	go func() {
-		msg := (&churnmgmt{}).message(pongnonce, Ping, 0, addr, g.address)
-		err := g.Pong(msg)
+		msg := Message(0, 0, types.PocketTopic_P2P_PING, "", g.address)
+
+		err := g.pong(*msg)
 		if err != nil {
 			perr = &err
 		}
@@ -437,9 +482,9 @@ func TestPong(t *testing.T) {
 		t.Errorf("Pong error: failed to decode received pong message. Error: %s", err.Error())
 	}
 
-	msg := decoded.(message)
-	if msg.action != Pong {
-		t.Errorf("Pong error: expected to receive a message with action=%s, got: %s instead.", Pong, msg.action)
+	msg = decoded.(types.NetworkMessage)
+	if msg.Topic != types.PocketTopic_P2P_PONG {
+		t.Errorf("Pong error: expected to receive a message with action=%s, got: %s instead.", types.PocketTopic_P2P_PONG, msg.Topic)
 	}
 
 	if nonce != 1 {
@@ -447,7 +492,7 @@ func TestPong(t *testing.T) {
 	}
 }
 
-func TestBroadcast(t *testing.T) {
+func TestNetwork_Broadcast(t *testing.T) {
 	// we will have a gater with id = 1
 	// it should raintree to the other 27 peers
 	// such that it performs SEND/ACK/RESEND on the full list with no redundancy/no cleanup
@@ -471,22 +516,25 @@ func TestBroadcast(t *testing.T) {
 		respond chan []byte
 	}, 0)
 
-	list := &plist{}
+	fmt.Println("Startin hereg")
+	list := types.NewPeerlist()
 
 	for i := 0; i < 27; i++ {
-		p := Peer(uint64(i+1), fmt.Sprintf("127.0.0.1:110%d", i+1))
-		list.add(*p)
+		p := types.NewPeer(uint64(i+1), fmt.Sprintf("127.0.0.1:110%d", i+1))
+		list.Add(*p)
 	}
 
+	fmt.Println("Starting")
 	// mark gater as peer with id=1
-	p := list.get(0)
-	g := NewGater()
+	p := list.Get(0)
+	g := NewP2PModule()
 
-	g.id = p.id
-	g.address = p.address
-	g.peerlist = *list
+	g.id = p.Id()
+	g.address = p.Addr()
+	g.externaladdr = p.Addr()
+	g.peerlist = list
 
-	err := g.Init()
+	err := g.init()
 	if err != nil {
 		t.Errorf("Broadcast error: could not initialize gater. Error: %s", err.Error())
 	}
@@ -495,10 +543,13 @@ func TestBroadcast(t *testing.T) {
 		t.Errorf("Broadcast error: (test setup error) expected gater to have id 1")
 	}
 
-	for i, p := range list.slice()[1:] {
+	g.setLogger(fmt.Println)
+	fmt.Println("here?")
+
+	for i, p := range list.Slice()[1:] {
 		wg.Add(1)
-		go func(i int, p peer) {
-			ready, done, data, respond := ListenAndServe(p.address, ReadBufferSize)
+		go func(i int, p types.Peer) {
+			ready, done, data, respond := ListenAndServe(p.Addr(), ReadBufferSize)
 			<-ready
 
 			m.Lock()
@@ -514,14 +565,14 @@ func TestBroadcast(t *testing.T) {
 				}
 				respond chan []byte
 			}{
-				id:      p.id,
-				address: p.address,
+				id:      p.Id(),
+				address: p.Addr(),
 				ready:   ready,
 				done:    done,
 				data:    data,
 				respond: respond,
 			})
-			receivedMessages[p.id] = make([][]byte, 0)
+			receivedMessages[p.Id()] = make([][]byte, 0)
 
 			m.Unlock()
 
@@ -531,7 +582,7 @@ func TestBroadcast(t *testing.T) {
 
 	wg.Wait()
 
-	go g.Listen()
+	go g.listen()
 
 	_, waiting := <-g.ready
 
@@ -539,7 +590,7 @@ func TestBroadcast(t *testing.T) {
 		t.Errorf("Broadcast error: error listening: gater not ready yet")
 	}
 
-	if g.listening != true {
+	if !g.listening.Load() {
 		t.Errorf("Broadcast error: error listening: flag shows false after start")
 	}
 
@@ -548,9 +599,14 @@ func TestBroadcast(t *testing.T) {
 	gossipdone := make(chan int)
 	go func() {
 		<-g.ready
-		m := (&gossip{}).message(0, Gossip, 0, g.address, "")
-		g.Broadcast(m, true)
+		m := Message(int32(0), int32(0), types.PocketTopic_CONSENSUS, g.address, "")
+
+		fmt.Println("Starting gossip")
+		g.broadcast(m, true)
 		gossipdone <- 1
+	}()
+	go func() {
+		<-g.sink
 	}()
 
 	fanin := make(chan struct {
@@ -571,7 +627,9 @@ func TestBroadcast(t *testing.T) {
 					receivedMessages[e.id] = append(receivedMessages[e.id], d.buff)
 					rw.Unlock()
 					fanin <- d
+					fmt.Println("Sending back", len(d.buff), e.address)
 					e.respond <- d.buff
+					fmt.Println("Should now have responded")
 
 				case <-e.done:
 					break waiter
@@ -591,6 +649,7 @@ fan:
 			for _, io := range iolist {
 				io.done <- 1
 			}
+
 			break fan
 		default:
 		}
@@ -606,10 +665,12 @@ fan:
 	rw.Unlock()
 
 	expectedImpact := [][]uint64{
-		{7, 13},  // target list size at level 3 = 18, left = 7, right = 13
-		{13, 25}, // target list size at level 2 = 35, left = 13, right = 25 (rolling over involved)
-		{9, 19},  // target list size at level 2 = 52, left = 9, right = 19 (rolling over involved)
+		{4, 5},  // target list size at level 3 = 18, left = 7, right = 13
+		{6, 7},  // target list size at level 2 = 35, left = 13, right = 25 (rolling over involved)
+		{9, 13}, // target list size at level 2 = 52, left = 9, right = 19 (rolling over involved)
 	}
+
+	fmt.Println(recipients)
 
 	for _, level := range expectedImpact {
 		l, r := level[0], level[1]
@@ -625,7 +686,7 @@ fan:
 	}
 }
 
-func TestHandleBroadcast(t *testing.T) {
+func TestNetwork_HandleBroadcast(t *testing.T) {
 	// we will have a gater with id = 1
 	// it should raintree to the other 27 peers
 	// such that it performs SEND/ACK/RESEND on the full list with no redundancy/no cleanup
@@ -649,22 +710,23 @@ func TestHandleBroadcast(t *testing.T) {
 		respond chan []byte
 	}, 0)
 
-	list := &plist{}
+	list := types.NewPeerlist()
 
 	for i := 0; i < 27; i++ {
-		p := Peer(uint64(i+1), fmt.Sprintf("127.0.0.1:110%d", i+1))
-		list.add(*p)
+		p := types.NewPeer(uint64(i+1), fmt.Sprintf("127.0.0.1:110%d", i+1))
+		list.Add(*p)
 	}
 
 	// mark gater as peer with id=1
-	p := list.get(0)
-	g := NewGater()
+	p := list.Get(0)
+	g := NewP2PModule()
 
-	g.id = p.id
-	g.address = p.address
-	g.peerlist = *list
+	g.id = p.Id()
+	g.address = p.Addr()
+	g.externaladdr = p.Addr()
+	g.peerlist = list
 
-	err := g.Init()
+	err := g.init()
 	if err != nil {
 		t.Errorf("Broadcast error: could not initialize gater. Error: %s", err.Error())
 	}
@@ -673,43 +735,46 @@ func TestHandleBroadcast(t *testing.T) {
 		t.Errorf("Broadcast error: (test setup error) expected gater to have id 1")
 	}
 
-	for i, p := range list.slice()[1:] {
-		wg.Add(1)
-		go func(i int, p peer) {
-			ready, done, data, respond := ListenAndServe(p.address, ReadBufferSize)
-			<-ready
+	g.setLogger(fmt.Println)
+	for i, p := range list.Slice()[1:] {
+		if p.Id() != g.id {
+			wg.Add(1)
+			go func(i int, p types.Peer) {
+				ready, done, data, respond := ListenAndServe(p.Addr(), ReadBufferSize)
+				<-ready
 
-			m.Lock()
-			iolist = append(iolist, struct {
-				id      uint64
-				address string
-				ready   chan uint
-				done    chan uint
-				data    chan struct {
-					n    int
-					err  error
-					buff []byte
-				}
-				respond chan []byte
-			}{
-				id:      p.id,
-				address: p.address,
-				ready:   ready,
-				done:    done,
-				data:    data,
-				respond: respond,
-			})
-			receivedMessages[p.id] = make([][]byte, 0)
+				m.Lock()
+				iolist = append(iolist, struct {
+					id      uint64
+					address string
+					ready   chan uint
+					done    chan uint
+					data    chan struct {
+						n    int
+						err  error
+						buff []byte
+					}
+					respond chan []byte
+				}{
+					id:      p.Id(),
+					address: p.Addr(),
+					ready:   ready,
+					done:    done,
+					data:    data,
+					respond: respond,
+				})
+				receivedMessages[p.Id()] = make([][]byte, 0)
 
-			m.Unlock()
+				m.Unlock()
 
-			wg.Done()
-		}(i, p)
+				wg.Done()
+			}(i, p)
+		}
 	}
 
 	wg.Wait()
 
-	go g.Listen()
+	go g.listen()
 
 	_, waiting := <-g.ready
 
@@ -717,15 +782,19 @@ func TestHandleBroadcast(t *testing.T) {
 		t.Errorf("Broadcast error: error listening: gater not ready yet")
 	}
 
-	if g.listening != true {
+	if !g.listening.Load() {
 		t.Errorf("Broadcast error: error listening: flag shows false after start")
 	}
 
 	<-time.After(time.Millisecond * 10)
 
+	gossipdone := make(chan int, 1)
 	go func() {
 		<-g.ready
-		g.Handle()
+		g.on(types.BroadcastDoneEvent, func(args ...interface{}) {
+			gossipdone <- 1
+		})
+		g.handle()
 	}()
 
 	fanin := make(chan struct {
@@ -751,16 +820,13 @@ func TestHandleBroadcast(t *testing.T) {
 					fmt.Println(e.address, "received data", len(d.buff))
 					fanin <- d
 
-					nonce, _, _, _, _ := (&wcodec{}).decode(d.buff)
-					ack := (&gossip{}).message(nonce, GossipACK, 0, e.address, g.address)
-					eack, _ := g.c.encode(ack)
-					eack = append(eack, make([]byte, ReadBufferSize-len(eack))...)
+					nonce, _, _, _, err := (&wcodec{}).decode(d.buff)
+					fmt.Println("Err", err)
+					ack := Message(int32(nonce), int32(0), types.PocketTopic_CONSENSUS, e.address, g.address)
+					eack, _ := g.c.encode(*ack)
 					wack := (&wcodec{}).encode(Binary, false, nonce, eack, true)
 
-					e.respond <- wack[:ReadBufferSize]
-					//e.respond <- d.buff
-					<-time.After(time.Millisecond * 300)
-
+					e.respond <- wack
 				case <-e.done:
 					break waiter
 
@@ -772,35 +838,19 @@ func TestHandleBroadcast(t *testing.T) {
 
 	conn, _ := net.Dial("tcp", g.address)
 
-	level := uint16(4)
-	gm := (&gossip{}).message(0, Gossip, level, conn.LocalAddr().String(), g.address)
-	egm, _ := g.c.encode(gm)
-	egm = append(egm, make([]byte, ReadBufferSize-len(egm))...)
+	gm := Message(int32(0), int32(4), types.PocketTopic_CONSENSUS, conn.LocalAddr().String(), g.address)
+	egm, _ := g.c.encode(*gm)
 	wgm := (&wcodec{}).encode(Binary, false, 0, egm, true)
 
 	conn.Write(wgm)
+	fmt.Println("Has written the size of", len(wgm))
 	buff := make([]byte, ReadBufferSize)
 	conn.Read(buff)
 	fmt.Println("Acked", len(buff))
 	conn.Close()
 
-	counter := 0
-closer:
-	for {
-		select {
-
-		case <-fanin:
-			counter++
-		default:
-			if counter > 35 {
-
-				for _, io := range iolist {
-					io.done <- 1
-				}
-				break closer
-			}
-		}
-
+	select {
+	case <-gossipdone:
 	}
 
 	recipients := map[uint64]bool{}
@@ -813,9 +863,9 @@ closer:
 	rw.Unlock()
 
 	expectedImpact := [][]uint64{
-		{7, 13},  // target list size at level 3 = 18, left = 7, right = 13
-		{13, 25}, // target list size at level 2 = 35, left = 13, right = 25 (rolling over involved)
-		{9, 19},  // target list size at level 2 = 52, left = 9, right = 19 (rolling over involved)
+		{4, 5},  // target list size at level 3 = 18, left = 7, right = 13
+		{6, 7},  // target list size at level 2 = 35, left = 13, right = 25 (rolling over involved)
+		{9, 13}, // target list size at level 2 = 52, left = 9, right = 19 (rolling over involved)
 	}
 
 	for _, level := range expectedImpact {
@@ -843,6 +893,7 @@ func ListenAndServe(addr string, readbufflen int) (ready, done chan uint, data c
 	err  error
 	buff []byte
 }, response chan []byte) {
+
 	ready = make(chan uint)
 	done = make(chan uint)
 	data = make(chan struct {
@@ -851,9 +902,88 @@ func ListenAndServe(addr string, readbufflen int) (ready, done chan uint, data c
 		buff []byte
 	}, 10)
 	response = make(chan []byte, 1)
-	rw := sync.RWMutex{}
 
-	go func() {
+	datapoint := func(n int, err error, buff []byte) struct {
+		n    int
+		err  error
+		buff []byte
+	} {
+		return struct {
+			n    int
+			err  error
+			buff []byte
+		}{n: n, err: err, buff: buff}
+	}
+
+	readwriteconn := func(c net.Conn) {
+		readerClosed := false
+
+		codec := (&wcodec{})
+		creader := bufio.NewReader(c)
+		buffer := make([]byte, readbufflen)
+
+	reader:
+		for {
+			select {
+			case <-done:
+				break reader
+
+			case msg := <-response:
+				_, err := c.Write(msg)
+				if err != nil {
+					close(ready)
+					close(done)
+					close(data)
+					close(response)
+				}
+
+			default:
+				if readerClosed {
+					continue reader
+				}
+				c.SetReadDeadline(time.Now().Add(time.Millisecond * 2))
+				n, err := stdio.ReadFull(creader, buffer[:WireByteHeaderLength])
+				if err != nil {
+					if isErrTimeout(err) {
+						readerClosed = true
+						continue reader
+					}
+					data <- datapoint(n, err, buffer)
+					break reader
+				}
+
+				_, _, bodylength, derr := codec.decodeHeader(buffer[:WireByteHeaderLength])
+				if derr != nil {
+					data <- datapoint(len(buffer), err, buffer)
+					break reader
+				}
+
+				n, err = stdio.ReadAtLeast(creader, buffer[WireByteHeaderLength:], int(bodylength))
+				if err != nil {
+					if isErrEOF(err) {
+						err = nil
+					}
+
+					if isErrTimeout(err) {
+						readerClosed = true
+						continue
+					}
+
+					data <- datapoint(n, err, buffer)
+					break reader
+				}
+
+				if n > 0 {
+					hl := WireByteHeaderLength
+					bl := int(bodylength)
+					buff := buffer[:hl+bl]
+					data <- datapoint(n, err, buff)
+				}
+			}
+		}
+		close(ready)
+	}
+	accept := func() {
 		l, err := net.Listen("tcp", addr)
 		if err != nil {
 			ready <- 0
@@ -871,44 +1001,14 @@ func ListenAndServe(addr string, readbufflen int) (ready, done chan uint, data c
 
 			conn, err := l.Accept()
 			if err != nil {
-				fmt.Println("New connection from", conn.RemoteAddr().String())
 				ready <- 0
 			}
 
-			go func(c net.Conn) {
-				buff := make([]byte, readbufflen)
-			reader:
-				for {
-
-					rw.Lock()
-					select {
-					case <-done:
-						fmt.Println("A done")
-						break reader
-					case msg := <-response:
-						fmt.Println("A write")
-						_, err := c.Write(msg)
-						fmt.Println("Written", err)
-						if err != nil {
-							close(ready)
-							close(done)
-							close(data)
-							close(response)
-						}
-					default:
-						c.SetReadDeadline(time.Now().Add(time.Millisecond * 2))
-						n, err := c.Read(buff)
-						cp := append(make([]byte, 0), buff...)
-						data <- struct {
-							n    int
-							err  error
-							buff []byte
-						}{n, err, cp}
-					}
-					rw.Unlock()
-				}
-			}(conn)
+			go readwriteconn(conn)
 		}
-	}()
+	}
+
+	go accept()
+
 	return
 }

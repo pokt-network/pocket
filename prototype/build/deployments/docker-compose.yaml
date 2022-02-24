@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  client:
+  client: # use this to use the limited p2p version (prep2p)
     container_name: client
     image: pocket/client:latest
     build:

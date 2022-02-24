@@ -7,6 +7,7 @@ import (
 	"pocket/p2p/types"
 	"pocket/shared/config"
 	"pocket/shared/modules"
+	"pocket/shared/types"
 	"sync"
 
 	"go.uber.org/atomic"
