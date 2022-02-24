@@ -64,6 +64,7 @@ mockgen:
 	mockgen --source=${modules_dir}/p2p_module.go -destination=${modules_dir}/mocks/p2p_module_mock.go -aux_files=pocket/${modules_dir}=${modules_dir}/module.go
 	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=pocket/${modules_dir}=${modules_dir}/module.go
 	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=pocket/${modules_dir}=${modules_dir}/module.go
+	echo "Mocks generated in ${modules_dir}/mocks"
 
 .PHONY: test_all
 ## Run all go unit tests
@@ -81,6 +82,7 @@ protogen_local:
 	protoc -I=${proto_dir} -I=${prefix}/p2p/pre_p2p/types/proto --go_out=./ ${prefix}/p2p/pre_p2p/types/proto/*.proto
 	protoc -I=${proto_dir} -I=${prefix}/utility/proto --go_out=./ ${prefix}/utility/proto/*.proto
 	protoc -I=${proto_dir} -I=${prefix}/consensus/types/proto --go_out=./ ${prefix}/consensus/types/proto/*.proto
+	echo "View generated proto files by running: $ find . -name \"*.pb.go\" | grep -v \"./protoype\""
 
 .PHONY: protogen_m1
 ## TODO(derrandz): Test, validate & update.
