@@ -71,18 +71,40 @@ mockgen:
 test_all: # generate_mocks
 	go test ./...
 
-# TODO(olshansky): Replace `prefix` with `./` when moving over the protobufs.
+.PHONY: test_pre2p
+## Run all go unit tests in the pre2p module
+test_pre2p: # generate_mocks
+	go test ./pre2p/...
+
+# TODO(team): Add more protogen targets here.
 .PHONY: protogen_local
 ## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
 protogen_local:
+	$(eval proto_dir = "./shared/types/proto/")
+
+	protoc -I=${proto_dir} -I=./pre2p/types/proto --go_out=./ ./pre2p/types/proto/*.proto
+
+	echo "View generated proto files by running: make protogen_show"
+
+# TODO(team): Delete this once the `prototype` directory is removed.
+.PHONY: protogen_local_prototype
+## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
+protogen_local_prototype:
 	$(eval prefix = "./prototype")
 	$(eval proto_dir = "${prefix}/shared/types/proto/")
+
 	protoc -I=${proto_dir} --go_out=./ ${proto_dir}/*.proto
 	protoc -I=${proto_dir} -I=${prefix}/persistence/pre_persistence/proto --go_out=./ ${prefix}/persistence/pre_persistence/proto/*.proto
 	protoc -I=${proto_dir} -I=${prefix}/p2p/pre_p2p/types/proto --go_out=./ ${prefix}/p2p/pre_p2p/types/proto/*.proto
 	protoc -I=${proto_dir} -I=${prefix}/utility/proto --go_out=./ ${prefix}/utility/proto/*.proto
 	protoc -I=${proto_dir} -I=${prefix}/consensus/types/proto --go_out=./ ${prefix}/consensus/types/proto/*.proto
-	echo "View generated proto files by running: $ find . -name \"*.pb.go\" | grep -v \"./protoype\""
+
+	echo "View generated proto files by running: make protogen_show"
+
+.PHONY: protogen_show
+## A simple `find` command that shows you the generated protobufs.
+protogen_show:
+	find . -name "*.pb.go" | grep -v "./prototype"
 
 .PHONY: protogen_m1
 ## TODO(derrandz): Test, validate & update.
