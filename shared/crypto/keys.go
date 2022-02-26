@@ -19,4 +19,5 @@ type PrivateKey interface {
 	Address() Address
 	Sign(msg []byte) ([]byte, error)
 	Size() int
+	Seed() []byte
 }

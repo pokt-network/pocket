@@ -68,13 +68,23 @@ mockgen:
 
 .PHONY: test_all
 ## Run all go unit tests
-test_all: # generate_mocks
+test_all: # mockgen
 	go test ./...
 
 .PHONY: test_pre2p
 ## Run all go unit tests in the pre2p module
-test_pre2p: # generate_mocks
+test_pre2p: # mockgen
 	go test ./pre2p/...
+
+.PHONY: test_consensus
+## Run all go unit tests in the consensus module
+test_consensus: # mockgen
+	go test ./consensus/...
+
+.PHONY: test_vrf
+## Run all go unit tests in the consensus module
+test_vrf: # mockgen
+	go test -v ./consensus/leader_election/vrf
 
 # TODO(team): Add more protogen targets here.
 .PHONY: protogen_local
