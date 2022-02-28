@@ -7,6 +7,10 @@ import (
 	"pocket/p2p/pre2p/types"
 )
 
+const (
+	NetworkProtocol = "tcp4"
+)
+
 var _ types.Network = &network{}
 
 type network struct {
@@ -34,7 +38,7 @@ func (n *network) NetworkBroadcast(data []byte, self types.NodeId) error {
 		if self == peer.NodeId {
 			continue
 		}
-		client, err := net.DialTCP("tcp", nil, peer.ConsensusAddr)
+		client, err := net.DialTCP(NetworkProtocol, nil, peer.ConsensusAddr)
 		if err != nil {
 			log.Println("Error connecting to peer: ", err)
 			continue
@@ -51,7 +55,7 @@ func (n *network) NetworkSend(data []byte, node types.NodeId) error {
 		if node != peer.NodeId {
 			continue
 		}
-		client, err := net.DialTCP("tcp", nil, peer.ConsensusAddr)
+		client, err := net.DialTCP(NetworkProtocol, nil, peer.ConsensusAddr)
 		if err != nil {
 			log.Println("Error connecting to peer: ", err)
 			continue
@@ -70,12 +74,9 @@ func (n *network) GetAddrBook() []*types.NetworkPeer {
 }
 
 func (n *network) connectToValidator(nodeId types.NodeId, v *types.Validator) error {
-	var tcpAddr *net.TCPAddr
-	var err, errDebug error
-
-	tcpAddr, err = net.ResolveTCPAddr("tcp4", fmt.Sprintf("%s:%d", v.Host, v.Port))
-	if err != nil || errDebug != nil {
-		return fmt.Errorf("error resolving addr: %v %v", err, errDebug)
+	tcpAddr, err := net.ResolveTCPAddr(NetworkProtocol, fmt.Sprintf("%s:%d", v.Host, v.Port))
+	if err != nil {
+		return fmt.Errorf("error resolving addr: %v %v", err)
 	}
 
 	peer := &types.NetworkPeer{
