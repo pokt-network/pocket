@@ -15,10 +15,9 @@ import (
 	"pocket/shared/modules"
 )
 
-// TODO: SHould we create an interface for this as well?
-type Node struct {
-	modules.Module
+var _ modules.Module = &Node{}
 
+type Node struct {
 	bus modules.Bus
 
 	Address string
@@ -102,6 +101,11 @@ func (node *Node) Start() error {
 			log.Println("Error handling event: ", err)
 		}
 	}
+}
+
+func (node *Node) Stop() error {
+	log.Println("Stopping pocket node...")
+	return nil
 }
 
 func (m *Node) SetBus(bus modules.Bus) {

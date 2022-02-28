@@ -6,6 +6,7 @@ type UnstakingActor interface {
 	GetOutputAddress() []byte
 }
 
+// TODO(andrew): Look into a better way to structure this interface.
 type UtilityContext interface {
 	ReleaseContext()
 	GetPersistanceContext() PersistenceContext
