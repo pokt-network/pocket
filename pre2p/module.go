@@ -1,5 +1,9 @@
 package pre2p
 
+// TODO(team): This is a Top Level Module since it is a temporary parallel to the
+// real `p2p` module. It should be removed once the real `p2p` module is ready but
+// is meant to be a "real" replacement for now.
+
 import (
 	"fmt"
 	"log"
@@ -15,9 +19,9 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var _ modules.NetworkModule = &networkModule{}
+var _ modules.P2PModule = &p2pModule{}
 
-type networkModule struct {
+type p2pModule struct {
 	pocketBusMod modules.Bus
 
 	listener *net.TCPListener
@@ -25,7 +29,7 @@ type networkModule struct {
 	nodeId   types.NodeId
 }
 
-func Create(cfg *config.Config) (m modules.NetworkModule, err error) {
+func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	log.Println("Creating network module")
 
 	p2pState := GetTestState()
@@ -37,7 +41,7 @@ func Create(cfg *config.Config) (m modules.NetworkModule, err error) {
 		return nil, err
 	}
 
-	m = &networkModule{
+	m = &p2pModule{
 		listener: l,
 		network:  ConnectToValidatorNetwork(state.ValidatorMap),
 		nodeId:   types.NodeId(cfg.Consensus.NodeId),
@@ -46,18 +50,18 @@ func Create(cfg *config.Config) (m modules.NetworkModule, err error) {
 	return m, nil
 }
 
-func (m *networkModule) SetBus(pocketBus modules.Bus) {
+func (m *p2pModule) SetBus(pocketBus modules.Bus) {
 	m.pocketBusMod = pocketBus
 }
 
-func (m *networkModule) GetBus() modules.Bus {
+func (m *p2pModule) GetBus() modules.Bus {
 	if m.pocketBusMod == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.pocketBusMod
 }
 
-func (m *networkModule) Start() error {
+func (m *p2pModule) Start() error {
 	log.Println("Starting network module")
 
 	go func() {
@@ -74,7 +78,7 @@ func (m *networkModule) Start() error {
 	return nil
 }
 
-func (m *networkModule) Stop() error {
+func (m *p2pModule) Stop() error {
 	log.Println("Stopping network module")
 	if err := m.listener.Close(); err != nil {
 		return err
@@ -82,7 +86,7 @@ func (m *networkModule) Stop() error {
 	return nil
 }
 
-func (m *networkModule) BroadcastMessage(msg *anypb.Any, topic string) error {
+func (m *p2pModule) BroadcastMessage(msg *anypb.Any, topic string) error {
 	c := &types.P2PMessage{
 		Topic: topic, // TODO topic is either P2P (from this module) or consensus
 		Data:  msg,
@@ -95,7 +99,7 @@ func (m *networkModule) BroadcastMessage(msg *anypb.Any, topic string) error {
 	return m.network.NetworkBroadcast(data, m.nodeId)
 }
 
-func (m *networkModule) Send(addr string, msg *anypb.Any, topic string) error {
+func (m *p2pModule) Send(addr string, msg *anypb.Any, topic string) error {
 	c := &types.P2PMessage{
 		Topic: topic, // TODO(discuss): Is this the approach we want to go with for P2PMessages?
 		Data:  msg,
@@ -115,6 +119,6 @@ func (m *networkModule) Send(addr string, msg *anypb.Any, topic string) error {
 	return m.network.NetworkSend(data, destNodeId)
 }
 
-func (m *networkModule) GetAddrBook() []*types.NetworkPeer {
+func (m *p2pModule) GetAddrBook() []*types.NetworkPeer {
 	return m.network.GetAddrBook()
 }

@@ -11,7 +11,7 @@ type NetworkMessage struct {
 	Data  []byte
 }
 
-type NetworkModule interface {
+type P2PModule interface {
 	Module
 	BroadcastMessage(msg *anypb.Any, topic string) error  // TODO(derrandz): get rid of topic
 	Send(addr string, msg *anypb.Any, topic string) error // TODO(derrandz): get rid of topic

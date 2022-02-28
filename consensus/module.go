@@ -8,25 +8,21 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-const (
-	DefaultLogPrefix string = "NODE" // Just a default that'll be replaced during consensus operations.
-)
-
 var _ modules.ConsensusModule = &consensusModule{}
 
 type consensusModule struct {
-	pocketBus modules.Bus
+	bus modules.Bus
 }
 
 func Create(_ *config.Config) (modules.ConsensusModule, error) {
 	m := &consensusModule{
-		pocketBus: nil,
+		bus: nil,
 	}
 	return m, nil
 }
 
 func (m *consensusModule) Start() error {
-	// TODO(olshansky): Add a test that pocketBus is set
+	// TODO(olshansky): Add a test that bus is set
 	log.Println("Starting consensus module...")
 	return nil
 }
@@ -37,20 +33,16 @@ func (m *consensusModule) Stop() error {
 }
 
 func (m *consensusModule) GetBus() modules.Bus {
-	if m.pocketBus == nil {
+	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
-	return m.pocketBus
+	return m.bus
 }
 
-func (m *consensusModule) SetBus(pocketBus modules.Bus) {
-	m.pocketBus = pocketBus
+func (m *consensusModule) SetBus(bus modules.Bus) {
+	m.bus = bus
 }
 
 func (m *consensusModule) HandleMessage(anyMessage *anypb.Any) {
 	panic("HandleMessage not implemented")
-}
-
-func (m *consensusModule) HandleTransaction(anyMessage *anypb.Any) {
-	panic("HandleTransaction not implemented")
 }

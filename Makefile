@@ -71,9 +71,11 @@ mockgen:
 test_all: # mockgen
 	go test ./...
 
+# TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
+
 .PHONY: test_pre2p
 ## Run all go unit tests in the pre2p module
-test_pre2p: # mockgen
+test_pre2p: # generate_mocks
 	go test ./pre2p/...
 
 .PHONY: test_consensus
@@ -125,3 +127,8 @@ protogen_m1:
 ## TODO(derrandz): Test, validate & update.
 protogen:
 	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it pocket/proto-generator
+
+.PHONY: gofmt
+## Format all the .go files in the project in place.
+gofmt:
+	gofmt -w -s .

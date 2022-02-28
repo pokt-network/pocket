@@ -15,11 +15,10 @@ import (
 	"pocket/shared/modules"
 )
 
-// TODO: SHould we create an interface for this as well?
-type Node struct {
-	modules.Module
+var _ modules.Module = &Node{}
 
-	pocketBus modules.Bus
+type Node struct {
+	bus modules.Bus
 
 	Address string
 }
@@ -35,8 +34,8 @@ func Create(config *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	// TODO(derrandz): Replace `pre2p` with `p2p`.
-	networkMod, err := pre2p.Create(config)
+	// TODO(derrandz): Replace with real P2P module
+	pre2pMod, err := pre2p.Create(config)
 	if err != nil {
 		return nil, err
 	}
@@ -51,14 +50,14 @@ func Create(config *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(nil, persistenceMod, networkMod, utilityMod, consensusMod)
+	bus, err := CreateBus(nil, persistenceMod, pre2pMod, utilityMod, consensusMod)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Node{
-		pocketBus: bus,
-		Address:   pk.Address().String(),
+		bus:     bus,
+		Address: pk.Address().String(),
 	}, nil
 }
 
@@ -71,7 +70,7 @@ func (node *Node) Start() error {
 		return err
 	}
 
-	if err := node.GetBus().GetNetworkModule().Start(); err != nil {
+	if err := node.GetBus().GetP2PModule().Start(); err != nil {
 		return err
 	}
 
@@ -104,13 +103,18 @@ func (node *Node) Start() error {
 	}
 }
 
-func (m *Node) SetBus(pocketBus modules.Bus) {
-	m.pocketBus = pocketBus
+func (node *Node) Stop() error {
+	log.Println("Stopping pocket node...")
+	return nil
+}
+
+func (m *Node) SetBus(bus modules.Bus) {
+	m.bus = bus
 }
 
 func (m *Node) GetBus() modules.Bus {
-	if m.pocketBus == nil {
+	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
-	return m.pocketBus
+	return m.bus
 }

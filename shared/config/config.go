@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 )
 
-const DefaultGenesis = "build/config/genesis.json"
-
 // TODO(olshansky): Should this be an interface so it can be mocked and injected?
 type Config struct {
 	RootDir    string `json:"root_dir"`

@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func (m *networkModule) handleNetworkMessage(conn net.Conn) {
+func (m *p2pModule) handleNetworkMessage(conn net.Conn) {
 	defer conn.Close()
 
 	data, err := ioutil.ReadAll(conn)
