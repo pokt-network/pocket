@@ -88,8 +88,10 @@ func (node *Node) Start() error {
 	// compiler understands that no future events will take place.
 	go func() {
 		for {
-			fmt.Println("Sending placeholder event...")
-			node.GetBus().PublishEventToBus(&types.Event{PocketTopic: "Placeholder"})
+			log.Println("Sending placeholder event...")
+			node.GetBus().PublishEventToBus(&types.Event{
+				PocketTopic: "Placeholder"
+			})
 			time.Sleep(time.Second * 5)
 		}
 	}()

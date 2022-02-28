@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	pre2ptypes "pocket/pre2p/types"
+	pre2ptypes "pocket/p2p/pre2p/types"
 	"pocket/shared/types"
 
 	"google.golang.org/protobuf/proto"

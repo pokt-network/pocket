@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"pocket/pre2p/types"
+	"pocket/p2p/pre2p/types"
 )
 
 var _ types.Network = &network{}

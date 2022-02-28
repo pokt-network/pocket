@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"pocket/shared"
 	"pocket/shared/config"
@@ -17,7 +16,7 @@ func main() {
 	flag.Parse()
 
 	if *version {
-		fmt.Printf("Version: %b\n", version)
+		log.Printf("Version: %b\n", version)
 	}
 
 	cfg := config.LoadConfig(*config_filename)

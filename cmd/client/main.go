@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -30,7 +29,7 @@ func main() {
 	for {
 		selection, err := promptGetInput()
 		if err == nil {
-			fmt.Println("Selection not yet implemented...", selection)
+			log.Println("Selection not yet implemented...", selection)
 		}
 	}
 }

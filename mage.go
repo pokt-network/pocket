@@ -4,6 +4,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/magefile/mage/sh"
 )
 
@@ -18,7 +20,7 @@ var env = map[string]string{}
 func setup() {
 	env["GO111MODULE"] = "on"
 
-	fmt.Println("Getting branch and commit information")
+	log.Println("Getting branch and commit information")
 	branch, branchError := sh.Output("git", "branch", "--show-current")
 	hash, hashError := sh.Output("git", "rev-parse", "--short", "HEAD")
 	_, dirtyError := sh.Output("git", "diff", "--quiet")

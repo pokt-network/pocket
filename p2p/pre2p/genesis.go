@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"pocket/pre2p/types"
+	"pocket/p2p/pre2p/types"
 	"time"
 )
 

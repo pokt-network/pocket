@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"pocket/pre2p/types"
+	"pocket/p2p/pre2p/types"
 	"pocket/shared/config"
 	"pocket/shared/modules"
 
@@ -95,7 +95,7 @@ func (m *p2pModule) BroadcastMessage(msg *anypb.Any, topic string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("broadcasting message to network")
+	log.Println("broadcasting message to network")
 	return m.network.NetworkBroadcast(data, m.nodeId)
 }
 

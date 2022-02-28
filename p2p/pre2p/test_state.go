@@ -1,9 +1,8 @@
 package pre2p
 
 import (
-	"fmt"
 	"log"
-	"pocket/pre2p/types"
+	"pocket/p2p/pre2p/types"
 	"pocket/shared/config"
 	"pocket/shared/crypto"
 	"sync"
@@ -87,7 +86,7 @@ func (ps *TestState) recomputeTotalVotingPower() {
 }
 
 func (ps *TestState) PrintGlobalState() {
-	fmt.Printf("\tGLOBAL STATE: (BlockHeight, PrevAppHash, # Validators, TotalVotingPower) is: (%d, %s, %d, %d)\n", ps.BlockHeight, ps.AppHash, len(ps.ValidatorMap), ps.TotalVotingPower)
+	log.Printf("\tGLOBAL STATE: (BlockHeight, PrevAppHash, # Validators, TotalVotingPower) is: (%d, %s, %d, %d)\n", ps.BlockHeight, ps.AppHash, len(ps.ValidatorMap), ps.TotalVotingPower)
 }
 
 func (ps *TestState) UpdateAppHash(appHash string) {
