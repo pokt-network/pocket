@@ -75,8 +75,7 @@ Deliverables: [List of deliverables besides the PR - Optional]
 A new milestone needs to be created as part of this Integration Issue. All work related issues will use the same milestone to group the work that needs to be deployed. Milestone description will have a backlink to the integration Issue.
 
 ```
-# Origin Document
-[Link to the Integration Issue]
+**Origin Document:** [Link to the Integration Issue]
 ```
 
 ## Integration Branching Model

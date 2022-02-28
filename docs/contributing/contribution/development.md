@@ -147,6 +147,11 @@ For bugs provide the following information, if available, link to the reporting 
 - [ ] Any dependent changes have been merged and published in downstream modules
 ```
 
+Make sure to complete all required fields with the following information,
+- Reviewers: Provide at least 2 reviewers to ensure you get enough approvals
+- Milestone: Link the PR to the corresponding Milestone
+- Linked Issues: Link the PR to the corresponding Issue
+
 ## Testing Phase
 
 After a PR has been created, wait for the automation test suite to complete. it is desirable to have some community members review and test locally the PR, by providing feedback on the PR comments.

@@ -66,6 +66,13 @@ Please mark the options that are relevant.
 - [ ] Any dependent changes have been merged and published in downstream modules
 ```
 
+Make sure to complete all required fields with the following information,
+- Reviewers: Provide at least 2 reviewers to ensure you get enough approvals, in this case, at least 2 reviewers from Pocket Network Core team should be provided
+- Labels: Add `integration` label to the list and any other label you want
+- Milestone: Link the PR to the corresponding Milestone
+- Linked Issues: Link the PR to the corresponding Integration Issue
+
+
 ## Testing Phase
 
 After a PR has been created, wait for the automation test suite to complete. it is desirable to have some community members review and test locally the PR, by providing feedback on the PR comments.
