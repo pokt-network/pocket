@@ -1,4 +1,8 @@
-package pre_p2p
+package pre2p
+
+// TODO(team): This is a Top Level Module since it is a temporary parallel to the
+// real `p2p` module. It should be removed once the real `p2p` module is ready but
+// is meant to be a "real" replacement for now.
 
 import (
 	"log"

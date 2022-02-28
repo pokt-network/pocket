@@ -5,7 +5,7 @@ import (
 	"log"
 	"pocket/consensus"
 	"pocket/persistence"
-	"pocket/pre_p2p"
+	"pocket/pre2p"
 	"pocket/shared/config"
 	"pocket/shared/crypto"
 	"pocket/shared/types"
@@ -36,7 +36,7 @@ func Create(config *config.Config) (n *Node, err error) {
 	}
 
 	// TODO(derrands): Replace with real P2P module
-	p2pMod, err := pre_p2p.Create(config)
+	pre2pMod, err := pre2p.Create(config)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func Create(config *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(nil, persistenceMod, p2pMod, utilityMod, consensusMod)
+	bus, err := CreateBus(nil, persistenceMod, pre2pMod, utilityMod, consensusMod)
 	if err != nil {
 		return nil, err
 	}
