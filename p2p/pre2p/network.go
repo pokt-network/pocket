@@ -38,13 +38,19 @@ func (n *network) NetworkBroadcast(data []byte, self types.NodeId) error {
 		if self == peer.NodeId {
 			continue
 		}
+
 		client, err := net.DialTCP(NetworkProtocol, nil, peer.ConsensusAddr)
 		if err != nil {
-			log.Println("Error connecting to peer: ", err)
+			log.Println("Error connecting to one of the peers during broadcast: ", err)
 			continue
 		}
-		client.Write(data)
-		client.Close()
+		defer client.Close()
+
+		_, err = client.Write(data)
+		if err != nil {
+			log.Println("Error writing to one of the peers during broadcast: ", err)
+			continue
+		}
 	}
 	return nil
 }
@@ -55,13 +61,21 @@ func (n *network) NetworkSend(data []byte, node types.NodeId) error {
 		if node != peer.NodeId {
 			continue
 		}
+
 		client, err := net.DialTCP(NetworkProtocol, nil, peer.ConsensusAddr)
 		if err != nil {
-			log.Println("Error connecting to peer: ", err)
-			continue
+			log.Println("Error connecting to peer during send: ", err)
+			return err
 		}
-		client.Write(data)
-		client.Close()
+		defer client.Close()
+
+		_, err = client.Write(data)
+		if err != nil {
+			log.Println("Error writing to peer during send: ", err)
+			return err
+		}
+
+		// We only need to send message to one peer.
 		break
 	}
 
