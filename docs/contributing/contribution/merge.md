@@ -2,26 +2,20 @@
 
 ```mermaid
 flowchart TB
+  fix((Create fix Issue))
   pr((Create a PR<br>to main))
   pr --> testing{Automated<br>Regression}
-  testing --> |error| error((Create fix Issue))
+  testing --> |error| fix
   testing --> |success| qa[Manual QA<br>Enforcement]
   qa --> |comment| review{Comments<br>Resolved?}
   
-  review --> |No| code
+  review --> |No| fix
 	feedback --> |answer| review
 
   review --> |Yes| approvals{Actors<br>Approved?}
-  approvals --> |No| code
+  approvals --> |No| fix
   approvals --> |Yes| merge[Merge PR]
   merge --> close((Close Milestone<br>& Issues))
-
-  subgraph fix [Fix for Comments]
-		direction BT
-    code[Fix Issues]
-		feedback[Provide feedback]
-    code --> |code| feedback
-  end
 ```
 
 Once all the issues are finalized, and the milestone integration branch is ready and tested, a PR has to be open against the `main` branch. You can follow this guide to create the PR,
@@ -77,9 +71,14 @@ Make sure to complete all required fields with the following information,
 
 After a PR has been created, wait for the automation test suite to complete. it is desirable to have some community members review and test locally the PR, by providing feedback on the PR comments.
 
+Integration PR should have no testing issues ideally, since previous PR should have proper testing passing. If something is found, a new Fix Issue should be created and once done, merged back to the integration PR.
+
 ## Review Phase
 
 Wait a couple of days to collect comments from other contributors. Make sure to respond, eventually fix, and mark all the comments as done.
+
+Integration PR should have no comments ideally, since previous PR should have proper review passing. If something is found, a new Fix Issue should be created and once done, merged back to the integration PR.
+
 Wait for the commenter to acknowledge the answer or the fix of its comment.
 
 - Commenter mask as resolved
@@ -87,6 +86,8 @@ Wait for the commenter to acknowledge the answer or the fix of its comment.
 ## Actors Approvals
 
 Ping the required actors on a PR comment to call their attention after this step has been fulfilled to ask for their final review. Take into consideration that these actors are busy and will ignore any PR that doesn’t have the previous checks. Follow the actor's comments and provide feedback for the fix. make sure to mention them on any change related to their comments.
+
+Integration PR should have no comments ideally, since previous PR should have proper review passing. If something is found, a new Fix Issue should be created and once done, merged back to the integration PR.
 
 ## Merge Blockers
 
