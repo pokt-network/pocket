@@ -1,0 +1,20 @@
+syntax = "proto3";
+package utility;
+option go_package = "/utility/test/";
+
+import "validator.proto";
+import "account.proto";
+import "app.proto";
+import "fisherman.proto";
+import "service_node.proto";
+import "gov.proto";
+
+message GenesisState {
+  repeated Validator Validators = 1;
+  repeated Account Accounts = 2;
+  repeated Pool Pools = 3;
+  repeated Fisherman Fishermen = 4;
+  repeated ServiceNode ServiceNodes = 5;
+  repeated App Apps = 6;
+  Params Params = 7;
+}
