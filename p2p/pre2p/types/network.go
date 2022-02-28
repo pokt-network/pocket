@@ -14,7 +14,6 @@ type Network interface {
 
 type NetworkPeer struct {
 	ConsensusAddr *net.TCPAddr
-	DebugAddr     *net.TCPAddr
 
 	NodeId    NodeId
 	PublicKey crypto.PublicKey

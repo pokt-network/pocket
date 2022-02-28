@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"pocket/p2p/pre2p/types"
+	pre2ptypes "pocket/p2p/pre2p/types"
 	"pocket/shared/config"
 	"pocket/shared/modules"
+	"pocket/shared/types"
 
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -25,8 +26,8 @@ type p2pModule struct {
 	pocketBusMod modules.Bus
 
 	listener *net.TCPListener
-	network  types.Network
-	nodeId   types.NodeId
+	network  pre2ptypes.Network
+	nodeId   pre2ptypes.NodeId
 }
 
 func Create(cfg *config.Config) (m modules.P2PModule, err error) {
@@ -44,7 +45,7 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	m = &p2pModule{
 		listener: l,
 		network:  ConnectToValidatorNetwork(state.ValidatorMap),
-		nodeId:   types.NodeId(cfg.Consensus.NodeId),
+		nodeId:   pre2ptypes.NodeId(cfg.Consensus.NodeId),
 	}
 
 	return m, nil
@@ -86,9 +87,9 @@ func (m *p2pModule) Stop() error {
 	return nil
 }
 
-func (m *p2pModule) BroadcastMessage(msg *anypb.Any, topic string) error {
-	c := &types.P2PMessage{
-		Topic: topic, // TODO topic is either P2P (from this module) or consensus
+func (m *p2pModule) BroadcastMessage(msg *anypb.Any, topic types.PocketTopic) error {
+	c := &types.PocketEvent{
+		Topic: topic,
 		Data:  msg,
 	}
 	data, err := proto.Marshal(c)
@@ -99,9 +100,9 @@ func (m *p2pModule) BroadcastMessage(msg *anypb.Any, topic string) error {
 	return m.network.NetworkBroadcast(data, m.nodeId)
 }
 
-func (m *p2pModule) Send(addr string, msg *anypb.Any, topic string) error {
-	c := &types.P2PMessage{
-		Topic: topic, // TODO(discuss): Is this the approach we want to go with for P2PMessages?
+func (m *p2pModule) Send(addr string, msg *anypb.Any, topic types.PocketTopic) error {
+	c := &types.PocketEvent{
+		Topic: topic,
 		Data:  msg,
 	}
 	data, err := proto.Marshal(c)
@@ -114,11 +115,11 @@ func (m *p2pModule) Send(addr string, msg *anypb.Any, topic string) error {
 	if err != nil {
 		return err
 	}
-	destNodeId := types.NodeId(nodeIdInt)
+	destNodeId := pre2ptypes.NodeId(nodeIdInt)
 
 	return m.network.NetworkSend(data, destNodeId)
 }
 
-func (m *p2pModule) GetAddrBook() []*types.NetworkPeer {
+func (m *p2pModule) GetAddrBook() []*pre2ptypes.NetworkPeer {
 	return m.network.GetAddrBook()
 }

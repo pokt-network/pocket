@@ -71,12 +71,22 @@ mockgen:
 test_all: # generate_mocks
 	go test ./...
 
-# TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
-
 .PHONY: test_pre2p
 ## Run all go unit tests in the pre2p module
 test_pre2p: # generate_mocks
 	go test ./pre2p/...
+
+# TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
+
+.PHONY: protogen_show
+## A simple `find` command that shows you the generated protobufs.
+protogen_show:
+	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor"
+
+.PHONY: protogen_clean
+## Remove all the generated protobufs.
+protogen_clean:
+	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs rm
 
 # TODO(team): Add more protogen targets here.
 .PHONY: protogen_local
@@ -84,7 +94,7 @@ test_pre2p: # generate_mocks
 protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
 
-	protoc -I=${proto_dir} -I=./pre2p/types/proto --go_out=./ ./pre2p/types/proto/*.proto
+	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=./shared ./shared/types/proto/*.proto
 
 	echo "View generated proto files by running: make protogen_show"
 
@@ -96,17 +106,12 @@ protogen_local_prototype:
 	$(eval proto_dir = "${prefix}/shared/types/proto/")
 
 	protoc -I=${proto_dir} --go_out=./ ${proto_dir}/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/persistence/pre_persistence/proto --go_out=./ ${prefix}/persistence/pre_persistence/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/p2p/pre_p2p/types/proto --go_out=./ ${prefix}/p2p/pre_p2p/types/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/utility/proto --go_out=./ ${prefix}/utility/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/consensus/types/proto --go_out=./ ${prefix}/consensus/types/proto/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/persistence/pre_persistence/proto --go_out=${prefix} ${prefix}/persistence/pre_persistence/proto/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/p2p/pre_p2p/types/proto --go_out=${prefix} ${prefix}/p2p/pre_p2p/types/proto/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/utility/proto --go_out=${prefix} ${prefix}/utility/proto/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/consensus/types/proto --go_out=${prefix} ${prefix}/consensus/types/proto/*.proto
 
 	echo "View generated proto files by running: make protogen_show"
-
-.PHONY: protogen_show
-## A simple `find` command that shows you the generated protobufs.
-protogen_show:
-	find . -name "*.pb.go" | grep -v "./prototype"
 
 .PHONY: protogen_m1
 ## TODO(derrandz): Test, validate & update.

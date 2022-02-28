@@ -5,13 +5,12 @@ import (
 	"pocket/shared/types"
 )
 
-// TODO: Only supporting a subset of topics because not all are used.
-func (node *Node) handleEvent(event *types.Event) error {
-	switch event.PocketTopic {
-	case types.CONSENSUS_MESSAGE:
-		node.GetBus().GetConsensusModule().HandleMessage(event.MessageData)
+func (node *Node) handleEvent(event *types.PocketEvent) error {
+	switch event.Topic {
+	case types.PocketTopic_CONSENSUS_MESSAGE_TOPIC:
+		node.GetBus().GetConsensusModule().HandleMessage(event.Data)
 	default:
-		log.Printf("Unsupported event: %s \n", event.PocketTopic)
+		log.Printf("Unsupported event: %s \n", event.Topic)
 
 	}
 	return nil

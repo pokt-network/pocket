@@ -1,7 +1,6 @@
 package shared
 
 import (
-	"fmt"
 	"log"
 	"pocket/consensus"
 	"pocket/p2p/pre2p"
@@ -89,8 +88,8 @@ func (node *Node) Start() error {
 	go func() {
 		for {
 			log.Println("Sending placeholder event...")
-			node.GetBus().PublishEventToBus(&types.Event{
-				PocketTopic: "Placeholder"
+			node.GetBus().PublishEventToBus(&types.PocketEvent{
+				Topic: types.PocketTopic_UNKNOWN_POCKET_TOPIC,
 			})
 			time.Sleep(time.Second * 5)
 		}

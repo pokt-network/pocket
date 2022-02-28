@@ -51,11 +51,11 @@ func CreateBus(
 	return bus, nil
 }
 
-func (m *bus) PublishEventToBus(e *types.Event) {
+func (m *bus) PublishEventToBus(e *types.PocketEvent) {
 	m.channel <- *e
 }
 
-func (m *bus) GetBusEvent() *types.Event {
+func (m *bus) GetBusEvent() *types.PocketEvent {
 	e := <-m.channel
 	return &e
 }

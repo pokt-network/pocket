@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package pocket;
+
+option go_package = "/types/";
+
+enum SourceModule {
+    UNKNOWN_SOURCE_MODULE = 0;
+
+    // Core
+	CONSENSUS_MODULE = 1;
+	P2P_MODULE = 2;
+	PERSISTENCE_MODULE = 3;
+	UTILITY_MODULE = 4;
+
+    // Auxiliary
+	TEST_MODULE = 5;
+	DEBUG_MODULE = 6;
+}
+
+enum PocketTopic {
+	UNKNOWN_POCKET_TOPIC = 0;
+	CONSENSUS_MESSAGE_TOPIC = 1;
+	P2P_MESSAGE_TOPIC = 2;
+}
+
+message PocketEvent {
+  SourceModule module = 1;
+  PocketTopic topic = 2;
+  google.protobuf.Any data = 3;
+}
