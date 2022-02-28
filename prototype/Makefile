@@ -70,6 +70,8 @@ generate_mocks:
 
 # mockgen --source=pkg/pocket/node.go -destination=pkg/pocket/mocks/node_mock.go
 
+# TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
+
 ## Use `protoc` to generate consensus .go files from .proto files.
 generate_protos:
 	$(eval types_dir := "pkg/types/")
