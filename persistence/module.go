@@ -11,18 +11,18 @@ import (
 var _ modules.PersistenceModule = &persistenceModule{}
 
 type persistenceModule struct {
-	pocketBus modules.Bus
+	bus modules.Bus
 }
 
 func Create(cfg *config.Config) (modules.PersistenceModule, error) {
 	return &persistenceModule{
-		pocketBus: nil,
+		bus: nil,
 	}, nil
 
 }
 
 func (p *persistenceModule) Start() error {
-	// TODO(olshansky): Add a test that pocketBus is set
+	// TODO(olshansky): Add a test that bus is set
 	log.Println("Starting persistence module...")
 	return nil
 }
@@ -32,15 +32,15 @@ func (p *persistenceModule) Stop() error {
 	return nil
 }
 
-func (m *persistenceModule) SetBus(pocketBus modules.Bus) {
-	m.pocketBus = pocketBus
+func (m *persistenceModule) SetBus(bus modules.Bus) {
+	m.bus = bus
 }
 
 func (m *persistenceModule) GetBus() modules.Bus {
-	if m.pocketBus == nil {
+	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
-	return m.pocketBus
+	return m.bus
 }
 
 func (m *persistenceModule) NewContext(height int64) (modules.PersistenceContext, error) {

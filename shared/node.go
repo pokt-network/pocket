@@ -19,7 +19,7 @@ import (
 type Node struct {
 	modules.Module
 
-	pocketBus modules.Bus
+	bus modules.Bus
 
 	Address string
 }
@@ -57,8 +57,8 @@ func Create(config *config.Config) (n *Node, err error) {
 	}
 
 	return &Node{
-		pocketBus: bus,
-		Address:   pk.Address().String(),
+		bus:     bus,
+		Address: pk.Address().String(),
 	}, nil
 }
 
@@ -104,13 +104,13 @@ func (node *Node) Start() error {
 	}
 }
 
-func (m *Node) SetBus(pocketBus modules.Bus) {
-	m.pocketBus = pocketBus
+func (m *Node) SetBus(bus modules.Bus) {
+	m.bus = bus
 }
 
 func (m *Node) GetBus() modules.Bus {
-	if m.pocketBus == nil {
+	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
-	return m.pocketBus
+	return m.bus
 }

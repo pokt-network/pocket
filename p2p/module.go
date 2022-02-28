@@ -11,19 +11,19 @@ import (
 var _ modules.NetworkModule = &networkModule{}
 
 type networkModule struct {
-	pocketBus modules.Bus
+	bus       modules.Bus
 	p2pConfig *config.P2PConfig
 }
 
 func Create(config *config.Config) (modules.NetworkModule, error) {
 	return &networkModule{
-		pocketBus: nil,
+		bus:       nil,
 		p2pConfig: config.P2P,
 	}, nil
 }
 
 func (p *networkModule) Start() error {
-	// TODO(olshansky): Add a test that pocketBus is set
+	// TODO(olshansky): Add a test that bus is set
 	log.Println("Starting PRE P2P module...")
 	return nil
 }
@@ -33,15 +33,15 @@ func (p *networkModule) Stop() error {
 	return nil
 }
 
-func (m *networkModule) SetBus(pocketBus modules.Bus) {
-	m.pocketBus = pocketBus
+func (m *networkModule) SetBus(bus modules.Bus) {
+	m.bus = bus
 }
 
 func (m *networkModule) GetBus() modules.Bus {
-	if m.pocketBus == nil {
+	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
-	return m.pocketBus
+	return m.bus
 }
 
 func (m *networkModule) BroadcastMessage(msg *anypb.Any, topic string) error {
