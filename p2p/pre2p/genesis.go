@@ -60,6 +60,10 @@ func (genesis *P2PGenesis) Validate() error {
 		return fmt.Errorf("Genesis must contain at least one validator")
 	}
 
+	if len(genesis.AppHash) == 0 {
+		return fmt.Errorf("Genesis app hash cannot be zero.")
+	}
+
 	for _, validator := range genesis.Validators {
 		if err := validator.Validate(); err != nil {
 			return fmt.Errorf("validator in genesis is invalid: %w", err)

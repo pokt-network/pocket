@@ -23,20 +23,24 @@ var (
 func NewAddress(hexString string) (Address, error) {
 	bz, err := hex.DecodeString(hexString)
 	if err != nil {
-		return bz, ErrCreateAddress(err)
+		var addr Address
+		copy(addr[:], bz[:AddressLen])
+		return addr, ErrCreateAddress(err)
 	}
 	return NewAddressFromBytes(bz)
 }
 
 func NewAddressFromBytes(bz []byte) (Address, error) {
+	var addr Address
+	copy(addr[:], bz[:AddressLen])
 	if len(bz) != AddressLen {
-		return bz, ErrInvalidAddressLen()
+		return addr, ErrInvalidAddressLen()
 	}
-	return bz, nil
+	return addr, nil
 }
 
 func (a Address) String() string {
-	return hex.EncodeToString(a)
+	return hex.EncodeToString(a[:])
 }
 
 func NewPrivateKey(hexString string) (PrivateKey, error) {
@@ -118,7 +122,9 @@ func (pub Ed25519PublicKey) String() string {
 
 func (pub Ed25519PublicKey) Address() Address {
 	hash := sha256.Sum256(pub[:])
-	return hash[:AddressLen]
+	var addr Address
+	copy(addr[:], hash[:AddressLen])
+	return addr
 }
 
 func (pub Ed25519PublicKey) Equals(other PublicKey) bool {

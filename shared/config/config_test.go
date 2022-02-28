@@ -16,9 +16,7 @@ func TestLoadConfigFromJson(t *testing.T) {
 		  "consensus_port": 8080,
 		  "debug_port": 9080
 		},
-		"consensus": {
-		  "node_id": 1
-		},
+		"consensus": {},
 		"persistence": {},
 		"utility": {}
 	  }`

@@ -27,7 +27,7 @@ type p2pModule struct {
 
 	listener *net.TCPListener
 	network  pre2ptypes.Network
-	nodeId   pre2ptypes.NodeId
+	address  pre2ptypes.Address
 }
 
 func Create(cfg *config.Config) (m modules.P2PModule, err error) {
@@ -45,7 +45,7 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	m = &p2pModule{
 		listener: l,
 		network:  ConnectToValidatorNetwork(state.ValidatorMap),
-		nodeId:   pre2ptypes.NodeId(cfg.Consensus.NodeId),
+		address:  cfg.P2P.Address,
 	}
 
 	return m, nil
@@ -97,7 +97,7 @@ func (m *p2pModule) BroadcastMessage(msg *anypb.Any, topic types.PocketTopic) er
 		return err
 	}
 	log.Println("broadcasting message to network")
-	return m.network.NetworkBroadcast(data, m.nodeId)
+	return m.network.NetworkBroadcast(data)
 }
 
 func (m *p2pModule) Send(addr string, msg *anypb.Any, topic types.PocketTopic) error {

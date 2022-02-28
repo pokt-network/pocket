@@ -1,6 +1,6 @@
 package crypto
 
-type Address []byte
+type Address [AddressLen]byte
 
 type PublicKey interface {
 	Bytes() []byte

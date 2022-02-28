@@ -1,20 +1,17 @@
 package types
 
 import (
-	"crypto"
 	"net"
+	pcrypto "pocket/shared/crypto"
 )
 
-// TODO(olshansky): Try to find a way to remove `NodeId` from the entire codebase altogether; this is a stop-gap prototype measure.
 type Network interface {
-	NetworkBroadcast(data []byte, self NodeId) error
-	NetworkSend(data []byte, node NodeId) error
+	NetworkBroadcast(data []byte) error
+	NetworkSend(data []byte, address pcrypto.Address) error
 	GetAddrBook() []*NetworkPeer
 }
 
 type NetworkPeer struct {
 	ConsensusAddr *net.TCPAddr
-
-	NodeId    NodeId
-	PublicKey crypto.PublicKey
+	PublicKey     pcrypto.PublicKey
 }

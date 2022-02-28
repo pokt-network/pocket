@@ -36,8 +36,6 @@ type P2PConfig struct {
 }
 
 type ConsensusConfig struct {
-	// TODO(olshansky): This should be assigned dynamically by the consensus module through sorting and validation.
-	NodeId uint32 `json:"node_id"`
 }
 
 type PersistenceConfig struct {
