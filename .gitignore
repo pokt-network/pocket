@@ -29,3 +29,6 @@ shared/modules/mocks/
 *.pb.go
 utility/test/
 utility/types/
+
+# Output binaries
+bin/

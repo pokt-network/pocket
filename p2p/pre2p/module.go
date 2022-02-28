@@ -8,16 +8,15 @@ import (
 	"fmt"
 	"log"
 	"net"
-	pre2ptypes "pocket/p2p/pre2p/types"
-	"pocket/shared/config"
-	"pocket/shared/modules"
-	"pocket/shared/types"
-
-	"google.golang.org/protobuf/types/known/anypb"
-
 	"strconv"
 
+	pre2ptypes "github.com/pokt-network/pocket/p2p/pre2p/types"
+
+	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var _ modules.P2PModule = &p2pModule{}

@@ -2,8 +2,9 @@ package utility
 
 import (
 	"log"
-	"pocket/shared/config"
-	"pocket/shared/modules"
+
+	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 var _ modules.UtilityModule = &utilityModule{}

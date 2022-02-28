@@ -1,7 +1,7 @@
 package modules
 
 import (
-	"pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types"
 )
 
 type EventsChannel chan types.PocketEvent

@@ -1,6 +1,6 @@
 package types
 
-import pcrypto "pocket/shared/crypto"
+import pcrypto "github.com/pokt-network/pocket/shared/crypto"
 
 type ValMap map[pcrypto.Address]*Validator
 

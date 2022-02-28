@@ -2,7 +2,8 @@ package types
 
 import (
 	"net"
-	pcrypto "pocket/shared/crypto"
+
+	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 )
 
 type Network interface {

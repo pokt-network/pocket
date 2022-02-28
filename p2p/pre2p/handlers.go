@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	"pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types"
 
 	"google.golang.org/protobuf/proto"
 )

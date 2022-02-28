@@ -2,7 +2,8 @@ package shared
 
 import (
 	"log"
-	"pocket/shared/types"
+
+	"github.com/pokt-network/pocket/shared/types"
 )
 
 func (node *Node) handleEvent(event *types.PocketEvent) error {
@@ -11,7 +12,6 @@ func (node *Node) handleEvent(event *types.PocketEvent) error {
 		node.GetBus().GetConsensusModule().HandleMessage(event.Data)
 	default:
 		log.Printf("Unsupported event: %s \n", event.Topic)
-
 	}
 	return nil
 }

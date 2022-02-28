@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"pocket/p2p/pre2p/types"
-	pcrypto "pocket/shared/crypto"
+
+	"github.com/pokt-network/pocket/p2p/pre2p/types"
+	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 )
 
 const (

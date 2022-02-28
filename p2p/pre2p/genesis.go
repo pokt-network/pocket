@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"pocket/p2p/pre2p/types"
 	"time"
+
+	"github.com/pokt-network/pocket/p2p/pre2p/types"
 )
 
 // TODO(olshansky): This is an interim genesis structure that will be replaced with a real one. It is the bare minimum for prototyping purposes.

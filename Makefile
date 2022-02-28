@@ -1,3 +1,5 @@
+# TODO(discuss): Determine if we want to use Makefile or mage.go and merge the two.
+
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
 .SILENT:
@@ -21,7 +23,7 @@ prompt_user:
 .PHONY: build
 ## Build Pocket's main entrypoint
 build:
-	go build -v cmd/pocket/main.go
+	go build -o bin/ -v cmd/pocket/main.go
 
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
@@ -113,14 +115,14 @@ protogen_local_prototype:
 
 	echo "View generated proto files by running: make protogen_show"
 
-.PHONY: protogen_m1
+.PHONY: protogen_docker_m1
 ## TODO(derrandz): Test, validate & update.
-protogen_m1:
+protogen_docker_m1:
 	docker build  -t pocket/proto-generator -f ./build/Dockerfile.m1.proto . && docker run --platform=linux/amd64 -it -v $(CWD)/shared:/usr/src/app/shared pocket/proto-generator
 
-.PHONY: protogen
+.PHONY: protogen_docker
 ## TODO(derrandz): Test, validate & update.
-protogen:
+protogen_docker:
 	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it pocket/proto-generator
 
 .PHONY: gofmt

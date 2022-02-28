@@ -7,10 +7,11 @@ import (
 )
 
 var (
-	SHA3HashLen = crypto.SHA3_256.Size()
+	hash        = crypto.SHA3_256
+	SHA3HashLen = hash.Size()
 )
 
 func SHA3Hash(b []byte) []byte {
-	hasher := crypto.SHA3_256.New()
+	hasher := hash.New()
 	return hasher.Sum(b)
 }

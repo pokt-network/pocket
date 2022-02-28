@@ -2,10 +2,11 @@ package pre2p
 
 import (
 	"log"
-	"pocket/p2p/pre2p/types"
-	"pocket/shared/config"
-	"pocket/shared/crypto"
 	"sync"
+
+	"github.com/pokt-network/pocket/p2p/pre2p/types"
+	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 // TODO(discuss): This whole structure can potentially be removed altogether in the future once mainline has a functioning end-to-end implementation.

@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO(team): Define the configs we need and add more tests here.
+
 func TestLoadConfigFromJson(t *testing.T) {
 	config := `{
 		"root_dir": "/go/src/github.com/pocket-network",
