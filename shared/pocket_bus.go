@@ -2,8 +2,9 @@ package shared
 
 import (
 	"log"
-	"pocket/shared/modules"
-	"pocket/shared/types"
+
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types"
 )
 
 type bus struct {

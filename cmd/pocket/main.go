@@ -4,12 +4,13 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"pocket/shared"
-	"pocket/shared/config"
+
+	"github.com/pokt-network/pocket/shared"
+	"github.com/pokt-network/pocket/shared/config"
 )
 
-// TODO(iajrz): Do we need this default variable?
-// var version = "UNKNOWN"
+// TODO(iajrz): Document where/how the version number is injected from the build process into this variable.
+var version = "UNKNOWN"
 
 func main() {
 	config_filename := flag.String("config", "", "Relative or absolute path to config file.")

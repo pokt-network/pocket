@@ -3,16 +3,17 @@ package shared
 import (
 	"fmt"
 	"log"
-	"pocket/consensus"
-	"pocket/p2p/pre2p"
-	"pocket/persistence"
-	"pocket/shared/config"
-	"pocket/shared/crypto"
-	"pocket/shared/types"
-	"pocket/utility"
 	"time"
 
-	"pocket/shared/modules"
+	"github.com/pokt-network/pocket/consensus"
+	"github.com/pokt-network/pocket/p2p/pre2p"
+	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/utility"
+
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 var _ modules.Module = &Node{}

@@ -6,8 +6,9 @@ package pre2p
 
 import (
 	"log"
-	"pocket/shared/config"
-	"pocket/shared/modules"
+
+	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/modules"
 
 	"google.golang.org/protobuf/types/known/anypb"
 )
