@@ -8,7 +8,7 @@ import (
 // TODO: Only supporting a subset of topics because not all are used.
 func (node *Node) handleEvent(event *types.Event) error {
 	switch event.PocketTopic {
-	case string(types.CONSENSUS):
+	case types.CONSENSUS_MESSAGE:
 		node.GetBus().GetConsensusModule().HandleMessage(event.MessageData)
 	default:
 		log.Printf("Unsupported event: %s \n", event.PocketTopic)
