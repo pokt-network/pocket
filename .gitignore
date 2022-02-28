@@ -27,3 +27,6 @@ shared/modules/mocks/
 types/
 utility/test/
 utility/types/
+
+# Output binaries
+bin/
