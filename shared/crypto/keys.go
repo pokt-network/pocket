@@ -1,5 +1,7 @@
 package crypto
 
+// TODO(discuss): Consider create a type for signature and having constraints for each type as well.
+
 type Address []byte
 
 type PublicKey interface {
