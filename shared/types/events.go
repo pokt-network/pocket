@@ -9,10 +9,10 @@ type EventTopic string
 
 const (
 	// Core
-	CONSENSUS_MODULE SourceModule = "consensus"
-	P2P              SourceModule = "p2p"
-	persistence      SourceModule = "persistence"
-	UTILITY          SourceModule = "utility"
+	CONSENSUS   SourceModule = "consensus"
+	P2P         SourceModule = "p2p"
+	PERSISTENCE SourceModule = "persistence"
+	UTILITY     SourceModule = "utility"
 
 	// Consensus
 	STATESYNC       SourceModule = "statesync"
@@ -25,7 +25,7 @@ const (
 
 const (
 	// Consensus
-	CONSENSUS                   EventTopic = "CONSENSUS"
+	CONSENSUS_MESSAGE           EventTopic = "CONSENSUS_MESSAGE"
 	CONSENSUS_TELEMETRY_MESSAGE EventTopic = "CONSENSUS_TELEMETRY_MESSAGE"
 
 	// Consensus auxilary
