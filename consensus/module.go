@@ -8,10 +8,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-const (
-	DefaultLogPrefix string = "NODE" // Just a default that'll be replaced during consensus operations.
-)
-
 var _ modules.ConsensusModule = &consensusModule{}
 
 type consensusModule struct {
@@ -49,8 +45,4 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 
 func (m *consensusModule) HandleMessage(anyMessage *anypb.Any) {
 	panic("HandleMessage not implemented")
-}
-
-func (m *consensusModule) HandleTransaction(anyMessage *anypb.Any) {
-	panic("HandleTransaction not implemented")
 }

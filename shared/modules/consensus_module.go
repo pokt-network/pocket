@@ -7,5 +7,4 @@ import (
 type ConsensusModule interface {
 	Module
 	HandleMessage(*anypb.Any)
-	HandleTransaction(*anypb.Any)
 }
