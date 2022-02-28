@@ -12,7 +12,7 @@ type bus struct {
 	channel modules.EventsChannel
 
 	persistence modules.PersistenceModule
-	network     modules.NetworkModule
+	p2p         modules.P2PModule
 	utility     modules.UtilityModule
 	consensus   modules.ConsensusModule
 }
@@ -24,7 +24,7 @@ const (
 func CreateBus(
 	channel modules.EventsChannel,
 	persistence modules.PersistenceModule,
-	network modules.NetworkModule,
+	p2p modules.P2PModule,
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 ) (modules.Bus, error) {
@@ -38,14 +38,14 @@ func CreateBus(
 	bus := &bus{
 		channel:     channel,
 		persistence: persistence,
-		network:     network,
+		p2p:         p2p,
 		utility:     utility,
 		consensus:   consensus,
 	}
 
 	persistence.SetBus(bus)
 	consensus.SetBus(bus)
-	network.SetBus(bus)
+	p2p.SetBus(bus)
 	utility.SetBus(bus)
 
 	return bus, nil
@@ -68,8 +68,8 @@ func (m *bus) GetPersistenceModule() modules.PersistenceModule {
 	return m.persistence
 }
 
-func (m *bus) GetNetworkModule() modules.NetworkModule {
-	return m.network
+func (m *bus) GetP2PModule() modules.P2PModule {
+	return m.p2p
 }
 
 func (m *bus) GetUtilityModule() modules.UtilityModule {

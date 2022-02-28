@@ -36,7 +36,7 @@ func Create(config *config.Config) (n *Node, err error) {
 	}
 
 	// TODO(derrands): Replace with real P2P module
-	networkMod, err := pre_p2p.Create(config)
+	p2pMod, err := pre_p2p.Create(config)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func Create(config *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(nil, persistenceMod, networkMod, utilityMod, consensusMod)
+	bus, err := CreateBus(nil, persistenceMod, p2pMod, utilityMod, consensusMod)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func (node *Node) Start() error {
 		return err
 	}
 
-	if err := node.GetBus().GetNetworkModule().Start(); err != nil {
+	if err := node.GetBus().GetP2PModule().Start(); err != nil {
 		return err
 	}
 
