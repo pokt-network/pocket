@@ -14,7 +14,7 @@ type persistenceModule struct {
 	bus modules.Bus
 }
 
-func Create(cfg *config.Config) (modules.PersistenceModule, error) {
+func Create(_ *config.Config) (modules.PersistenceModule, error) {
 	return &persistenceModule{
 		bus: nil,
 	}, nil

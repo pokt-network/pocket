@@ -12,7 +12,7 @@ type utilityModule struct {
 	bus modules.Bus
 }
 
-func Create(cfg *config.Config) (modules.UtilityModule, error) {
+func Create(_ *config.Config) (modules.UtilityModule, error) {
 	m := &utilityModule{
 		bus: nil,
 	}
