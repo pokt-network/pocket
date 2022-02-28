@@ -18,6 +18,7 @@ func main() {
 	flag.Parse()
 
 	if *version {
+		// TODO(iajrz): Fix/remove how version is injected into this variable and its type.
 		fmt.Printf("Version: %b\n", version)
 	}
 

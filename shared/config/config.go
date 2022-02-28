@@ -15,7 +15,7 @@ type Config struct {
 	PrivateKey string `json:"private_key"`
 	Genesis    string `json:"genesis"`
 
-	PREP2P      *PREP2PConfig      `json:"prep2p"` // TODO(derrandz): delete this once P2P is ready.
+	PRE2P       *PRE2PConfig       `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
 	P2P         *P2PConfig         `json:"p2p"`
 	Consensus   *ConsensusConfig   `json:"consensus"`
 	Persistence *PersistenceConfig `json:"persistence"`
@@ -23,7 +23,7 @@ type Config struct {
 }
 
 // TODO(derrandz): delete this once P2P is ready.
-type PREP2PConfig struct {
+type PRE2PConfig struct {
 	ConsensusPort uint32 `json:"consensus_port"`
 	DebugPort     uint32 `json:"debug_port"`
 }

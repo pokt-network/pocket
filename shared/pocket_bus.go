@@ -19,7 +19,7 @@ type bus struct {
 }
 
 const (
-	DefaultPocketBusBufferSize = 100 // Create a synchronous event bus by blocking on every message
+	DefaultPocketBusBufferSize = 100
 )
 
 func CreateBus(

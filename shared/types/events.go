@@ -9,19 +9,19 @@ type EventTopic string
 
 const (
 	// Core
-	CONSENSUS   SourceModule = "consensus"
+	Consensus   SourceModule = "consensus"
 	P2P         SourceModule = "p2p"
-	PERSISTENCE SourceModule = "persistence"
-	UTILITY     SourceModule = "utility"
+	Persistence SourceModule = "persistence"
+	Utility     SourceModule = "utility"
 
 	// Auxiliary
-	TEST  SourceModule = "test"
-	DEBUG SourceModule = "debug"
+	Test  SourceModule = "test"
+	Debug SourceModule = "debug"
 )
 
 const (
 	// Consensus
-	CONSENSUS_MESSAGE EventTopic = "CONSENSUS_MESSAGE"
+	ConsensusMessage EventTopic = "CONSENSUS_MESSAGE"
 )
 
 type Event struct {
