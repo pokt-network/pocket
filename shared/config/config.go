@@ -9,10 +9,9 @@ import (
 	"path/filepath"
 )
 
-// TODO(olshansky): Should this be an interface so it can be mocked and injected?
 type Config struct {
 	RootDir    string `json:"root_dir"`
-	PrivateKey string `json:"private_key"`
+	PrivateKey string `json:"private_key"` // TODO(olshansky): make this a proper key type.
 	Genesis    string `json:"genesis"`
 
 	PRE2P       *PRE2PConfig       `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
@@ -47,6 +46,7 @@ type PersistenceConfig struct {
 type UtilityConfig struct {
 }
 
+// TODO(insert tooling issue # here): Re-evaluate how load configs should be handeled.
 func LoadConfig(file string) (c *Config) {
 	c = &Config{}
 

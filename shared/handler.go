@@ -6,7 +6,6 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 )
 
-// TODO: Only supporting a subset of topics because not all are used.
 func (node *Node) handleEvent(event *types.Event) error {
 	switch event.PocketTopic {
 	case types.ConsensusMessage:

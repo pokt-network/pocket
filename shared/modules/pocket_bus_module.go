@@ -7,8 +7,6 @@ import (
 type EventsChannel chan types.Event
 
 type Bus interface {
-	// TODO: Do we want to implement `Module` here as well?
-
 	// Bus Events
 	PublishEventToBus(e *types.Event)
 	GetBusEvent() *types.Event
