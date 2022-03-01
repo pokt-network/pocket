@@ -19,7 +19,6 @@ func Create(_ *config.Config) (modules.PersistenceModule, error) {
 	return &persistenceModule{
 		bus: nil,
 	}, nil
-
 }
 
 func (p *persistenceModule) Start() error {

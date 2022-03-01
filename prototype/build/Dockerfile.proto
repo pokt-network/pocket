@@ -21,4 +21,4 @@ ENV PATH=$PATH:$GOPATH/bin:/opt/protoc/bin
 
 COPY . .
 
-RUN make protogen_local && echo "Done."
+RUN make v1_generate_protos && echo "Done."
