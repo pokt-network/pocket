@@ -52,10 +52,10 @@ func (n *network) NetworkBroadcast(data []byte) error {
 	return nil
 }
 
-func (n *network) NetworkSend(data []byte, node pcrypto.Address) error {
+func (n *network) NetworkSend(data []byte, address pcrypto.Address) error {
 	for _, peer := range n.AddrBook {
 		// TODO(team): If the address book is a map instead of a list, we wouldn't have to do this loop.
-		if node != peer.PublicKey.Address() {
+		if address.String() != peer.PublicKey.Address().String() {
 			continue
 		}
 
