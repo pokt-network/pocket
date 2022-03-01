@@ -11,7 +11,12 @@ func (g *networkModule) configure(protocol, address, external string, peers []st
 	g.externaladdr = external
 	g.peerlist = types.NewPeerlist()
 
-	// this is a hack to get going no more no less
+	// TODO(derrandz): this is a hack to get going no more no less
+	// This hack tries to achieve addressbook injection behavior
+	// it basically takes a slice of ips and turns them into peers
+	// and generating consecutive uints for them from i to length(peers)
+	// while also self-filtering.
+	// this is filler code until the expected behavior is well spec'd
 	for i, p := range peers {
 		peer := types.NewPeer(uint64(i+1), p)
 		port := strings.Split(peer.Addr(), ":")

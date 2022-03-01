@@ -27,7 +27,6 @@ const (
 	PromptOptionSendTx                    string = "SendTx"
 	PromptOptionTogglePaceMakerManualMode string = "TogglePaceMakerManualMode"
 	PromptOptionTriggerDKG                string = "TriggerDKG"
-	PromptOptionDumpToNeo4j               string = "DumpToNeo4j"
 )
 
 const defaultGenesisFile = "build/config/genesis.json"
@@ -39,7 +38,6 @@ var items = []string{
 	PromptOptionSendTx,
 	PromptOptionResetToGenesis,
 	PromptOptionPrintNodeState,
-	PromptOptionDumpToNeo4j,
 }
 
 func main() {
@@ -132,9 +130,6 @@ func handleSelect(selection string, network p2p_types.Network, state *pre_p2p.Te
 			Action: consensus.PrintNodeState,
 		}
 		broadcastMessage(m, network)
-	case PromptOptionDumpToNeo4j:
-		log.Println("[CLIENT] Dumping to Neo4j...")
-		DumpToNeo4j(network)
 	default:
 		log.Println("Invalid selection")
 	}

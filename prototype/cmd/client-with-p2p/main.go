@@ -29,7 +29,6 @@ const (
 	PromptOptionTogglePaceMakerManualMode string = "TogglePaceMakerManualMode"
 	PromptOptionResetToGenesis            string = "ResetToGenesis"
 	PromptOptionPrintNodeState            string = "PrintNodeState"
-	PromptOptionDumpToNeo4j               string = "DumpToNeo4j"
 )
 
 const defaultGenesisFile = "build/config/genesis.json"
@@ -40,7 +39,6 @@ var items = []string{
 	PromptOptionTogglePaceMakerManualMode,
 	PromptOptionResetToGenesis,
 	PromptOptionPrintNodeState,
-	PromptOptionDumpToNeo4j,
 }
 
 func main() {
@@ -143,9 +141,6 @@ func handleSelect(selection string, p2pmod modules.NetworkModule) {
 			Action: consensus.PrintNodeState,
 		}
 		broadcastMessage(m, p2pmod)
-	case PromptOptionDumpToNeo4j:
-		log.Println("[CLIENT] Dumping to Neo4j...")
-		DumpToNeo4j(p2pmod)
 	default:
 		log.Println("Invalid selection")
 	}

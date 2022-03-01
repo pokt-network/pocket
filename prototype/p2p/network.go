@@ -12,8 +12,8 @@ import (
 func (g *networkModule) handshake() {}
 
 func (g *networkModule) dial(addr string) (*netpipe, error) {
-	// TODO: this is equivalent to maxRetries = 1, add logic for > 1
-	// TODO: should we explictly tell dial to use either inbound or outbound?
+	// TODO(derrandz): this is equivalent to maxRetries = 1, add logic for > 1
+	// TODO(derrandz): should we explictly tell dial to use either inbound or outbound?
 	exists := g.inbound.peak(addr)
 	g.log("Peaked into inbound clients map for", addr, "found=", exists)
 	if exists {
@@ -98,7 +98,7 @@ func (g *networkModule) listen() error {
 				conn, err := g.listener.Accept()
 				if err != nil && g.listening.Load() {
 					g.log("Error receiving an inbound connection: ", err.Error())
-					// TODO ignore use of closed network connection error when listener has closed
+					// TODO(derrandz) ignore use of closed network connection error when listener has closed
 					g.error(err)
 					break // report error
 				}
@@ -120,7 +120,7 @@ func (g *networkModule) listen() error {
 	return nil
 }
 
-// TODO: this: msg []byte, wrapped bool) is repeat everything, maybe a struct for this?
+// TODO(derrandz): this: msg []byte, wrapped bool) is repeat everything, maybe a struct for this?
 func (g *networkModule) request(addr string, msg []byte, wrapped bool) ([]byte, error) {
 	pipe, derr := g.dial(addr)
 	if derr != nil {
@@ -151,7 +151,7 @@ func (g *networkModule) respond(nonce uint32, iserroreof bool, addr string, msg 
 }
 
 func (g *networkModule) ping(addr string) (bool, error) {
-	// TODO: refactor this to use types.NetworkMessage
+	// TODO(derrandz): refactor this to use types.NetworkMessage
 	var pongbytes []byte
 
 	pingmsg := types.NetworkMessage{Topic: types.PocketTopic_P2P_PING, Source: g.address, Destination: addr}
@@ -204,11 +204,11 @@ func (g *networkModule) ping(addr string) (bool, error) {
 
 		return valid, nil
 	}
-} // TODO: should we use UDP requests for ping?
+} // TODO(derrandz): should we use UDP requests for ping?
 
-// TODO: test
+// TODO(derrandz): test
 func (g *networkModule) pong(msg types.NetworkMessage) error {
-	// TODO: refactor to use networkMessage
+	// TODO(derrandz): refactor to use networkMessage
 	if msg.IsRequest() && msg.Topic == types.PocketTopic_P2P_PING {
 		pongmsg := types.NetworkMessage{
 			Nonce:       msg.Nonce,

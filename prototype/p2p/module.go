@@ -69,7 +69,7 @@ func newNetworkModule() *networkModule {
 		c: NewDomainCodec(),
 
 		peerlist: nil,
-		sink:     make(chan types.Work, 100), // TODO: rethink whether this should be buffered
+		sink:     make(chan types.Work, 100), // TODO(derrandz): rethink whether this should be buffered
 
 		done:   make(chan uint, 1),
 		ready:  make(chan uint, 1),
@@ -166,7 +166,7 @@ func (m *networkModule) AckSend(addr string, msg *types.NetworkMessage) (bool, e
 
 	ack, err := m.c.decode(response)
 	if err != nil {
-		return true, err // TODO: notice it's true
+		return true, err // TODO(derrandz): notice it's true
 	}
 
 	ackmsg := ack.(*types.NetworkMessage)

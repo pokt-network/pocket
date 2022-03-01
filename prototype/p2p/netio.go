@@ -14,7 +14,7 @@ import (
 )
 
 type netpipe struct {
-	g *networkModule // TODO: use an interface?
+	g *networkModule // TODO(derrandz): use an interface?
 	c *wcodec
 
 	addr  string
@@ -213,7 +213,7 @@ func (p *netpipe) read() ([]byte, int, error) {
 		return nil, 0, err
 	}
 
-	if bodylen > uint32(ReadBufferSize-WireByteHeaderLength) { // TODO: replace with configurable max value
+	if bodylen > uint32(ReadBufferSize-WireByteHeaderLength) { // TODO(derrandz): replace with configurable max value
 		return nil, 0, errors.New(fmt.Sprintf("io pipe error: cannot read a buffer of length %d, the accepted body length is %d.", bodylen, ReadBufferSize-WireByteHeaderLength))
 	}
 
@@ -239,7 +239,7 @@ func (p *netpipe) poll() {
 
 	for stop := false; !stop; {
 		select {
-		// TODO: replace with passed down context
+		// TODO(derrandz): replace with passed down context
 		case <-p.g.done:
 			break
 
@@ -285,7 +285,7 @@ func (p *netpipe) poll() {
 
 				if nonce != 0 {
 					_, ch, found := p.requests.Find(nonce)
-					// TODO: this is hacku
+					// TODO(derrandz): this is hacku
 					if found {
 						ch <- types.NewWork(nonce, data, p.addr, wrapped)
 						close(ch)
@@ -306,12 +306,12 @@ func (p *netpipe) write(b []byte, iserroreof bool, reqnum uint32, wrapped bool) 
 	buff := p.c.encode(Binary, iserroreof, reqnum, b, wrapped)
 	p.buffers.write = append(p.buffers.write, buff...)
 
-	// TODO: find a better way, maybe the value itself (the channel) should be an atomic on and off switch to signal writes
+	// TODO(derrandz): find a better way, maybe the value itself (the channel) should be an atomic on and off switch to signal writes
 	p.buffersState.Lock()
 	p.buffersState.writeSignals <- 1
 	p.buffersState.Unlock()
 
-	return uint(len(b)), nil // TODO: should length be of b or of the encoded b
+	return uint(len(b)), nil // TODO(derrandz): should length be of b or of the encoded b
 }
 
 func (p *netpipe) ackwrite(b []byte, wrapped bool) (types.Work, error) {
@@ -455,8 +455,8 @@ func (m *pipemap) get(id string) (*netpipe, bool) {
 	pipe, exists = m.elements[id]
 	if !exists {
 		// create a new iopipe
-		// TODO: add logic to check for maxcap if reached
-		// TODO: add logic to swap old connections for new one on maxcap reached
+		// TODO(derrandz): add logic to check for maxcap if reached
+		// TODO(derrandz): add logic to swap old connections for new one on maxcap reached
 		pipe = NewNetPipe()
 		m.elements[id] = pipe
 	}
