@@ -30,7 +30,7 @@ func Create(config *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	// TODO(derrands): Replace with real P2P module
+	// TODO(derrandz): Replace with real P2P module
 	pre2pMod, err := pre2p.Create(config)
 	if err != nil {
 		return nil, err

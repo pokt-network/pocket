@@ -8,21 +8,11 @@ import (
 )
 
 const (
-	PromptOptionTriggerNextView           string = "TriggerNextView"
-	PromptOptionResetToGenesis            string = "ResetToGenesis"
-	PromptOptionPrintNodeState            string = "PrintNodeState"
-	PromptOptionSendTx                    string = "SendTx"
-	PromptOptionTogglePaceMakerManualMode string = "TogglePaceMakerManualMode"
-	PromptOptionTriggerDKG                string = "TriggerDKG"
+	PromptPlaceholder string = "Placeholder"
 )
 
 var items = []string{
-	PromptOptionTriggerNextView,
-	PromptOptionTriggerDKG,
-	PromptOptionTogglePaceMakerManualMode,
-	PromptOptionSendTx,
-	PromptOptionResetToGenesis,
-	PromptOptionPrintNodeState,
+	PromptPlaceholder,
 }
 
 func main() {

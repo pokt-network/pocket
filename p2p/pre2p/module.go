@@ -86,7 +86,7 @@ func (m *p2pModule) Stop() error {
 	return nil
 }
 
-func (m *p2pModule) BroadcastMessage(msg *anypb.Any, topic types.PocketTopic) error {
+func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
 	c := &types.PocketEvent{
 		Topic: topic,
 		Data:  msg,

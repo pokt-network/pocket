@@ -8,17 +8,16 @@ import (
 	"github.com/pokt-network/pocket/shared/config"
 )
 
-// TODO(iajrz): Document where/how the version number is injected from the build process into this variable.
+// See `docs/deps/README.md` for details on how this is injected via mage.
 var version = "UNKNOWN"
 
 func main() {
 	config_filename := flag.String("config", "", "Relative or absolute path to config file.")
-	version := flag.Bool("version", false, "")
+	v := flag.Bool("version", false, "")
 	flag.Parse()
 
-	if *version {
-		// TODO(iajrz): Fix/remove how version is injected into this variable and its type.
-		log.Printf("Version: %b\n", version)
+	if *v {
+		log.Println(version)
 	}
 
 	cfg := config.LoadConfig(*config_filename)

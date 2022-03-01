@@ -11,7 +11,6 @@ import (
 	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 )
 
-// TODO(olshansky): Should this be an interface so it can be mocked and injected?
 type Config struct {
 	RootDir    string                    `json:"root_dir"`
 	PrivateKey pcrypto.Ed25519PrivateKey `json:"private_key"`
@@ -47,6 +46,7 @@ type PersistenceConfig struct {
 type UtilityConfig struct {
 }
 
+// TODO(insert tooling issue # here): Re-evaluate how load configs should be handeled.
 func LoadConfig(file string) (c *Config) {
 	c = &Config{}
 

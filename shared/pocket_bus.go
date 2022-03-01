@@ -29,7 +29,6 @@ func CreateBus(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 ) (modules.Bus, error) {
-
 	// A channel can be injected into the bus only for testing purposes
 	if channel == nil {
 		log.Print("Creating a new Go channel for the Pocket bus...")

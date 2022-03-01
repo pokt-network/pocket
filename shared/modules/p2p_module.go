@@ -8,6 +8,6 @@ import (
 
 type P2PModule interface {
 	Module
-	BroadcastMessage(msg *anypb.Any, topic types.PocketTopic) error           // TODO(derrandz): get rid of topic
+	Broadcast(msg *anypb.Any, topic types.PocketTopic) error                  // TODO(derrandz): get rid of topic
 	Send(addr pcrypto.Address, msg *anypb.Any, topic types.PocketTopic) error // TODO(derrandz): get rid of topic
 }
