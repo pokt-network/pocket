@@ -2,7 +2,8 @@ package types
 
 import pcrypto "github.com/pokt-network/pocket/shared/crypto"
 
-type ValMap map[pcrypto.Address]*Validator
+// The key is a hex encoded representation of the validator byte address.
+type ValMap map[string]*Validator
 
 type Validator struct {
 	Address    pcrypto.Address           `json:"address"`
@@ -26,7 +27,7 @@ func (v *Validator) Validate() error {
 func ValidatorListToMap(validators []*Validator) (m ValMap) {
 	m = make(ValMap, len(validators))
 	for _, v := range validators {
-		m[v.PublicKey.Address()] = v
+		m[v.PublicKey.Address().String()] = v
 	}
 	return
 }

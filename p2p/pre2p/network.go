@@ -5,22 +5,23 @@ import (
 	"log"
 	"net"
 
-	"github.com/pokt-network/pocket/p2p/pre2p/types"
+	pre2ptypes "github.com/pokt-network/pocket/p2p/pre2p/types"
 	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types"
 )
 
 const (
 	NetworkProtocol = "tcp4"
 )
 
-var _ types.Network = &network{}
+var _ pre2ptypes.Network = &network{}
 
 type network struct {
 	// TODO(team): This address book is currently static and does not update dynamically as new peers come on/offline.
-	AddrBook []*types.NetworkPeer
+	AddrBook []*pre2ptypes.NetworkPeer
 }
 
-func ConnectToValidatorNetwork(validators types.ValMap) (n types.Network) {
+func ConnectToValidatorNetwork(validators types.ValMap) (n pre2ptypes.Network) {
 	n = &network{}
 	for _, v := range validators {
 		err := n.(*network).connectToValidator(v)
@@ -78,7 +79,7 @@ func (n *network) NetworkSend(data []byte, node pcrypto.Address) error {
 }
 
 // TODO(hack): Publically exposed for testing purposes only.
-func (n *network) GetAddrBook() []*types.NetworkPeer {
+func (n *network) GetAddrBook() []*pre2ptypes.NetworkPeer {
 	return n.AddrBook
 }
 
@@ -88,7 +89,7 @@ func (n *network) connectToValidator(v *types.Validator) error {
 		return fmt.Errorf("error resolving addr: %v", err)
 	}
 
-	peer := &types.NetworkPeer{
+	peer := &pre2ptypes.NetworkPeer{
 		ConsensusAddr: tcpAddr,
 		PublicKey:     v.PublicKey,
 	}

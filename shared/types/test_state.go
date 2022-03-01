@@ -1,20 +1,20 @@
-package pre2p
+package types
 
 import (
 	"log"
 	"sync"
 
-	"github.com/pokt-network/pocket/p2p/pre2p/types"
 	"github.com/pokt-network/pocket/shared/config"
 	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 )
 
-// TODO(discuss): This whole structure can potentially be removed altogether in the future once mainline has a functioning end-to-end implementation.
+// TODO(hack by olshansky): This is a singleton that can be used as a view into the genesis file (since state is not currently being loaded)
+// from disk. It will be removed in the future but currently enables continued work.
 type TestState struct {
 	BlockHeight      uint64
-	AppHash          string       // TODO(discuss): Why not call this a BlockHash or StateHash? Should it be a []byte or string?
-	ValidatorMap     types.ValMap // TODO(olshansky): Need to update this on every validator pause/stake/unstake/etc.
-	TotalVotingPower uint64       // TODO(team): Need to update this on every send transaction.
+	AppHash          string // TODO(discuss): Why not call this a BlockHash or StateHash? Should it be a []byte or string?
+	ValidatorMap     ValMap // TODO(olshansky): Need to update this on every validator pause/stake/unstake/etc.
+	TotalVotingPower uint64 // TODO(team): Need to update this on every send transaction.
 
 	PrivateKey pcrypto.PrivateKey
 
@@ -63,7 +63,7 @@ func (ps *TestState) loadStateFromGenesis(cfg *config.Config) {
 	}
 	*ps = TestState{
 		BlockHeight:  0,
-		ValidatorMap: types.ValidatorListToMap(genesis.Validators),
+		ValidatorMap: ValidatorListToMap(genesis.Validators),
 
 		PrivateKey: cfg.PrivateKey,
 

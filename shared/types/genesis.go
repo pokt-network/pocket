@@ -1,19 +1,18 @@
-package pre2p
+package types
 
 import (
 	"encoding/json"
 	"fmt"
 	"os"
 	"time"
-
-	"github.com/pokt-network/pocket/shared/types"
 )
 
-// TODO(team): This is an interim genesis structure that will be replaced with a real one. It is the bare minimum for prototyping purposes.
+// Come back to this.
+// TODO(olshansky): This is an interim genesis structure that will be replaced with a real one. It is the bare minimum for prototyping purposes.
 type Genesis struct {
-	GenesisTime time.Time          `json:"genesis_time"`
-	AppHash     string             `json:"app_hash"`
-	Validators  []*types.Validator `json:"validators"`
+	GenesisTime time.Time    `json:"genesis_time"`
+	AppHash     string       `json:"app_hash"`
+	Validators  []*Validator `json:"validators"`
 }
 
 // TODO(olshansky): Temporary hack that can load Genesis from a single string
