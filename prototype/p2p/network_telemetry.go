@@ -2,14 +2,14 @@ package p2p
 
 import "fmt"
 
-func (g *P2PModule) setLogger(logger func(...interface{}) (int, error)) {
+func (g *networkModule) setLogger(logger func(...interface{}) (int, error)) {
 	defer g.logger.Unlock()
 	g.logger.Lock()
 
 	g.logger.print = logger
 }
 
-func (g *P2PModule) log(m ...interface{}) {
+func (g *networkModule) log(m ...interface{}) {
 	defer g.logger.Unlock()
 	g.logger.Lock()
 
@@ -21,7 +21,7 @@ func (g *P2PModule) log(m ...interface{}) {
 	}
 }
 
-func (g *P2PModule) clog(cond bool, m ...interface{}) {
+func (g *networkModule) clog(cond bool, m ...interface{}) {
 	if cond {
 		g.log(m)
 	}

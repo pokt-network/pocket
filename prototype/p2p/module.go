@@ -1,7 +1,6 @@
 package p2p
 
 import (
-	"errors"
 	"log"
 	"net"
 	"pocket/p2p/types"
@@ -13,7 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-var (
+const (
 	MaxInbound           uint = 128
 	MaxOutbound          uint = 128
 	WireByteHeaderLength int  = 9
@@ -22,14 +21,7 @@ var (
 	ReadDeadlineMs       int  = 400
 )
 
-var (
-	Protocol = "tcp"
-	Address  = "localhost:30303"
-)
-
-type P2PModule struct {
-	modules.NetworkModule
-
+type networkModule struct {
 	bus    modules.Bus
 	config *config.P2PConfig
 	c      *dcodec
@@ -69,15 +61,8 @@ type P2PModule struct {
 	}
 }
 
-var (
-	ErrNotCreated = errors.New("Module error: P2P Module not created. Trying to start the p2p module before calling create.")
-)
-
-func NewP2PModule() *P2PModule {
-	return &P2PModule{
-		protocol: Protocol,
-		address:  Address,
-
+func newNetworkModule() *networkModule {
+	return &networkModule{
 		inbound:  *NewIoMap(MaxInbound),
 		outbound: *NewIoMap(MaxOutbound),
 
@@ -95,8 +80,10 @@ func NewP2PModule() *P2PModule {
 	}
 }
 
+var _ modules.NetworkModule = &networkModule{}
+
 func Create(config *config.Config) (modules.NetworkModule, error) {
-	module := NewP2PModule()
+	module := newNetworkModule()
 
 	module.setLogger(func(args ...interface{}) (int, error) {
 		log.Println(args...)
@@ -108,7 +95,7 @@ func Create(config *config.Config) (modules.NetworkModule, error) {
 	return module, nil
 }
 
-func (m *P2PModule) Start() error {
+func (m *networkModule) Start() error {
 	m.log("p.list", m.peerlist)
 
 	m.configure(
@@ -126,7 +113,7 @@ func (m *P2PModule) Start() error {
 	return nil
 }
 
-func (m *P2PModule) Stop() error {
+func (m *networkModule) Stop() error {
 	go m.close()
 
 	<-m.closed
@@ -140,23 +127,23 @@ func (m *P2PModule) Stop() error {
 	return nil
 }
 
-func (m *P2PModule) SetBus(pocketBus modules.Bus) {
+func (m *networkModule) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
 }
 
-func (m *P2PModule) GetBus() modules.Bus {
+func (m *networkModule) GetBus() modules.Bus {
 	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
 }
 
-func (m *P2PModule) BroadcastMessage(msg *anypb.Any, topic string) error {
+func (m *networkModule) BroadcastMessage(msg *anypb.Any, topic string) error {
 	netmsg := &types.NetworkMessage{Data: msg, Topic: types.Topic(topic)}
 	return m.broadcast(netmsg, true)
 }
 
-func (m *P2PModule) Send(addr string, msg *anypb.Any, topic string) error {
+func (m *networkModule) Send(addr string, msg *anypb.Any, topic string) error {
 	netmsg := &types.NetworkMessage{Data: msg, Topic: types.Topic(topic)}
 	encodedBytes, err := m.c.encode(netmsg)
 	if err != nil {
@@ -166,7 +153,7 @@ func (m *P2PModule) Send(addr string, msg *anypb.Any, topic string) error {
 	return m.send(addr, encodedBytes, true) // true: meaning that this message is already encoded
 }
 
-func (m *P2PModule) AckSend(addr string, msg *types.NetworkMessage) (bool, error) {
+func (m *networkModule) AckSend(addr string, msg *types.NetworkMessage) (bool, error) {
 	encodedBytes, err := m.c.encode(msg)
 	if err != nil {
 		return false, err

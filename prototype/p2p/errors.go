@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	ErrNotCreated                   = errors.New("Module error: P2P Module not created. Trying to start the p2p module before calling create.")
 	ErrPeerHangUp func(error) error = func(err error) error {
 		strerr := fmt.Sprintf("Peer Hang Up Error: %s", err.Error())
 		return errors.New(strerr)

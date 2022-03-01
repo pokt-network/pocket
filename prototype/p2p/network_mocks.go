@@ -2,8 +2,8 @@ package p2p
 
 import "pocket/p2p/types"
 
-func MockBasicInstance() *P2PModule {
-	return &P2PModule{
+func MockBasicInstance() *networkModule {
+	return &networkModule{
 		inbound:  *NewIoMap(0),
 		outbound: *NewIoMap(0),
 

@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-func TestNetwork_NewP2PModule(t *testing.T) {
-	g := NewP2PModule()
+func TestNetwork_newNetworkModule(t *testing.T) {
+	g := newNetworkModule()
 	g.peerlist = types.NewPeerlist()
 	if g.peerlist.Size() == 0 && g.inbound.maxcap == uint32(MaxInbound) && g.outbound.maxcap == uint32(MaxOutbound) {
 		t.Log("Success!")
@@ -24,8 +24,9 @@ func TestNetwork_NewP2PModule(t *testing.T) {
 }
 
 func TestNetwork_ListenStop(t *testing.T) {
-	g := NewP2PModule()
+	g := newNetworkModule()
 	g.address = "localhost:12345" // g.config
+	g.protocol = "tcp"
 	go g.listen()
 
 	_, waiting := <-g.ready
@@ -37,6 +38,8 @@ func TestNetwork_ListenStop(t *testing.T) {
 	if !g.listening.Load() {
 		t.Errorf("Error listening: flag shows false after start")
 	}
+
+	t.Log("Server listening.")
 
 	g.close()
 
@@ -59,10 +62,12 @@ func TestNetwork_ListenStop(t *testing.T) {
 		t.Errorf("Error: listener is still active")
 	}
 	g.listener.Unlock()
+
+	t.Log("Server closed.")
 }
 
 func TestNetwork_SendOutbound(t *testing.T) {
-	g := NewP2PModule()
+	g := newNetworkModule()
 	g.configure("tcp", "0.0.0.0:3030", "0.0.0.0:3030", []string{})
 	go g.listen()
 
@@ -115,7 +120,7 @@ func TestNetwork_SendOutbound(t *testing.T) {
 }
 
 func TestNetwork_SendInbound(t *testing.T) {
-	g := NewP2PModule()
+	g := newNetworkModule()
 	g.configure("tcp", "127.0.0.1:30303", "127.0.0.1:30303", []string{})
 	go g.listen()
 	select {
@@ -172,7 +177,7 @@ func TestNetwork_SendInbound(t *testing.T) {
 }
 
 func TestNetwork_Request(t *testing.T) {
-	g := NewP2PModule()
+	g := newNetworkModule()
 
 	g.configure("tcp", "0.0.0.0:4030", "0.0.0.0:4030", []string{})
 	go g.listen()
@@ -252,7 +257,7 @@ func TestNetwork_Request(t *testing.T) {
 }
 
 func TestNetwork_Respond(t *testing.T) {
-	g := NewP2PModule()
+	g := newNetworkModule()
 
 	g.configure("tcp", "0.0.0.0:4031", "0.0.0.0:4031", []string{})
 	go g.listen()
@@ -328,7 +333,7 @@ func TestNetwork_Respond(t *testing.T) {
 }
 
 func TestNetwork_Ping(t *testing.T) {
-	g := NewP2PModule()
+	g := newNetworkModule()
 
 	g.configure("tcp", "0.0.0.0:4032", "0.0.0.0:4032", []string{})
 	g.init()
@@ -421,7 +426,7 @@ func TestNetwork_Ping(t *testing.T) {
 }
 
 func TestNetwork_Pong(t *testing.T) {
-	g := NewP2PModule()
+	g := newNetworkModule()
 
 	g.configure("tcp", "0.0.0.0:4033", "0.0.0.0:4033", []string{})
 
@@ -527,7 +532,7 @@ func TestNetwork_Broadcast(t *testing.T) {
 	fmt.Println("Starting")
 	// mark gater as peer with id=1
 	p := list.Get(0)
-	g := NewP2PModule()
+	g := newNetworkModule()
 
 	g.id = p.Id()
 	g.address = p.Addr()
@@ -719,7 +724,7 @@ func TestNetwork_HandleBroadcast(t *testing.T) {
 
 	// mark gater as peer with id=1
 	p := list.Get(0)
-	g := NewP2PModule()
+	g := newNetworkModule()
 
 	g.id = p.Id()
 	g.address = p.Addr()

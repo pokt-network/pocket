@@ -14,7 +14,7 @@ import (
 )
 
 type netpipe struct {
-	g *P2PModule // TODO: use an interface?
+	g *networkModule // TODO: use an interface?
 	c *wcodec
 
 	addr  string

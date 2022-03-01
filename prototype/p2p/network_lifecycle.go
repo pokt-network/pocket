@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (g *P2PModule) configure(protocol, address, external string, peers []string) {
+func (g *networkModule) configure(protocol, address, external string, peers []string) {
 	g.protocol = protocol
 	g.address = address
 	g.externaladdr = external
@@ -23,7 +23,7 @@ func (g *P2PModule) configure(protocol, address, external string, peers []string
 	}
 }
 
-func (g *P2PModule) init() error {
+func (g *networkModule) init() error {
 	msg := Message(int32(0), 1, types.PocketTopic_P2P_PING, "", "")
 	_, err := g.c.register(*msg, Encode, Decode)
 	if err != nil {
@@ -33,11 +33,11 @@ func (g *P2PModule) init() error {
 	return nil
 }
 
-func (g *P2PModule) isReady() <-chan uint {
+func (g *networkModule) isReady() <-chan uint {
 	return g.ready
 }
 
-func (g *P2PModule) close() {
+func (g *networkModule) close() {
 	g.done <- 1
 	g.closed <- 1
 	g.listening.Store(false)
@@ -45,11 +45,11 @@ func (g *P2PModule) close() {
 	close(g.done)
 }
 
-func (g *P2PModule) finished() <-chan uint {
+func (g *networkModule) finished() <-chan uint {
 	return g.closed
 }
 
-func (g *P2PModule) error(err error) {
+func (g *networkModule) error(err error) {
 	defer g.err.Unlock()
 	g.err.Lock()
 

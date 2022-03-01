@@ -9,9 +9,9 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (g *P2PModule) handshake() {}
+func (g *networkModule) handshake() {}
 
-func (g *P2PModule) dial(addr string) (*netpipe, error) {
+func (g *networkModule) dial(addr string) (*netpipe, error) {
 	// TODO: this is equivalent to maxRetries = 1, add logic for > 1
 	// TODO: should we explictly tell dial to use either inbound or outbound?
 	exists := g.inbound.peak(addr)
@@ -49,7 +49,7 @@ func (g *P2PModule) dial(addr string) (*netpipe, error) {
 	return pipe, err
 }
 
-func (g *P2PModule) send(addr string, msg []byte, wrapped bool) error {
+func (g *networkModule) send(addr string, msg []byte, wrapped bool) error {
 	pipe, derr := g.dial(addr)
 	if derr != nil {
 		return derr
@@ -67,7 +67,7 @@ func (g *P2PModule) send(addr string, msg []byte, wrapped bool) error {
 	return nil
 }
 
-func (g *P2PModule) listen() error {
+func (g *networkModule) listen() error {
 	defer func() {
 		g.listening.Store(false)
 		close(g.closed)
@@ -83,12 +83,10 @@ func (g *P2PModule) listen() error {
 	g.listener.Lock()
 	g.listener.TCPListener = listener.(*net.TCPListener)
 	g.listener.Unlock()
-	g.log("prehere")
 	g.listening.Store(true)
 
 	close(g.ready)
 
-	g.log("here?")
 	g.log("Listening at", g.protocol, g.address, "...")
 	for stop := false; !stop; {
 		select {
@@ -123,7 +121,7 @@ func (g *P2PModule) listen() error {
 }
 
 // TODO: this: msg []byte, wrapped bool) is repeat everything, maybe a struct for this?
-func (g *P2PModule) request(addr string, msg []byte, wrapped bool) ([]byte, error) {
+func (g *networkModule) request(addr string, msg []byte, wrapped bool) ([]byte, error) {
 	pipe, derr := g.dial(addr)
 	if derr != nil {
 		return nil, derr
@@ -138,7 +136,7 @@ func (g *P2PModule) request(addr string, msg []byte, wrapped bool) ([]byte, erro
 	return response.Bytes(), nil
 }
 
-func (g *P2PModule) respond(nonce uint32, iserroreof bool, addr string, msg []byte, wrapped bool) error {
+func (g *networkModule) respond(nonce uint32, iserroreof bool, addr string, msg []byte, wrapped bool) error {
 	pipe, derr := g.dial(addr)
 	if derr != nil {
 		return derr
@@ -152,7 +150,7 @@ func (g *P2PModule) respond(nonce uint32, iserroreof bool, addr string, msg []by
 	return nil
 }
 
-func (g *P2PModule) ping(addr string) (bool, error) {
+func (g *networkModule) ping(addr string) (bool, error) {
 	// TODO: refactor this to use types.NetworkMessage
 	var pongbytes []byte
 
@@ -209,7 +207,7 @@ func (g *P2PModule) ping(addr string) (bool, error) {
 } // TODO: should we use UDP requests for ping?
 
 // TODO: test
-func (g *P2PModule) pong(msg types.NetworkMessage) error {
+func (g *networkModule) pong(msg types.NetworkMessage) error {
 	// TODO: refactor to use networkMessage
 	if msg.IsRequest() && msg.Topic == types.PocketTopic_P2P_PING {
 		pongmsg := types.NetworkMessage{
@@ -234,7 +232,7 @@ func (g *P2PModule) pong(msg types.NetworkMessage) error {
 }
 
 // Discuss: why is m not a pointer?
-func (g *P2PModule) broadcast(m *types.NetworkMessage, isroot bool) error {
+func (g *networkModule) broadcast(m *types.NetworkMessage, isroot bool) error {
 	g.clog(isroot, "Starting gossip round, level is", m.Level)
 
 	// var mmutex sync.Mutex
@@ -336,7 +334,7 @@ func (g *P2PModule) broadcast(m *types.NetworkMessage, isroot bool) error {
 	return nil
 }
 
-func (g *P2PModule) handle() {
+func (g *networkModule) handle() {
 	var msg *types.NetworkMessage
 	var m sync.Mutex
 
@@ -394,7 +392,7 @@ func (g *P2PModule) handle() {
 	}
 }
 
-func (g *P2PModule) handleInbound(conn net.Conn, addr string) {
+func (g *networkModule) handleInbound(conn net.Conn, addr string) {
 	pipe, exists := g.inbound.get(addr)
 	if !exists {
 		pipe.g = g
@@ -421,7 +419,7 @@ func (g *P2PModule) handleInbound(conn net.Conn, addr string) {
 	}
 }
 
-func (g *P2PModule) on(e types.PeerEvent, handler func(...interface{})) {
+func (g *networkModule) on(e types.PeerEvent, handler func(...interface{})) {
 	if g.handlers != nil {
 		if hmap, exists := g.handlers[e]; exists {
 			hmap = append(hmap, handler)
@@ -431,11 +429,11 @@ func (g *P2PModule) on(e types.PeerEvent, handler func(...interface{})) {
 	}
 }
 
-func (g *P2PModule) peerConnected(p *netpipe) error {
+func (g *networkModule) peerConnected(p *netpipe) error {
 	g.log("Peer connected", p.addr)
 	return nil
 }
 
-func (g *P2PModule) peerDisconnected(p *netpipe) error {
+func (g *networkModule) peerDisconnected(p *netpipe) error {
 	return nil
 }
