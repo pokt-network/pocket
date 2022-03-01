@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"strconv"
 
 	pre2ptypes "github.com/pokt-network/pocket/p2p/pre2p/types"
 
 	"github.com/pokt-network/pocket/shared/config"
+	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/proto"
@@ -26,7 +26,7 @@ type p2pModule struct {
 
 	listener *net.TCPListener
 	network  pre2ptypes.Network
-	address  pre2ptypes.Address
+	address  pcrypto.Address
 }
 
 func Create(cfg *config.Config) (m modules.P2PModule, err error) {
@@ -35,7 +35,7 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	p2pState := GetTestState()
 	p2pState.LoadStateFromConfig(cfg)
 
-	tcpAddr, _ := net.ResolveTCPAddr("tcp4", fmt.Sprintf(":%d", cfg.PREP2P.ConsensusPort))
+	tcpAddr, _ := net.ResolveTCPAddr("tcp4", fmt.Sprintf(":%d", cfg.Pre2P.ConsensusPort))
 	l, err := net.ListenTCP("tcp", tcpAddr)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	m = &p2pModule{
 		listener: l,
 		network:  ConnectToValidatorNetwork(state.ValidatorMap),
-		address:  cfg.P2P.Address,
+		address:  cfg.PrivateKey.Address(),
 	}
 
 	return m, nil
@@ -99,7 +99,7 @@ func (m *p2pModule) BroadcastMessage(msg *anypb.Any, topic types.PocketTopic) er
 	return m.network.NetworkBroadcast(data)
 }
 
-func (m *p2pModule) Send(addr string, msg *anypb.Any, topic types.PocketTopic) error {
+func (m *p2pModule) Send(addr pcrypto.Address, msg *anypb.Any, topic types.PocketTopic) error {
 	c := &types.PocketEvent{
 		Topic: topic,
 		Data:  msg,
@@ -109,14 +109,7 @@ func (m *p2pModule) Send(addr string, msg *anypb.Any, topic types.PocketTopic) e
 		return err
 	}
 
-	// TODO(olshansky): This is a hack while the consensus module is still dependant on `NodeId`.
-	nodeIdInt, err := strconv.Atoi(addr)
-	if err != nil {
-		return err
-	}
-	destNodeId := pre2ptypes.NodeId(nodeIdInt)
-
-	return m.network.NetworkSend(data, destNodeId)
+	return m.network.NetworkSend(data, addr)
 }
 
 func (m *p2pModule) GetAddrBook() []*pre2ptypes.NetworkPeer {

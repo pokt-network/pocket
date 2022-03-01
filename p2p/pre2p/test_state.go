@@ -59,19 +59,15 @@ func (ps *TestState) loadStateFromGenesis(cfg *config.Config) {
 		log.Fatalf("Failed to load genesis: %v", err)
 	}
 
-	if cfg.PrivateKey == "" {
+	if len(cfg.PrivateKey) == 0 {
 		log.Fatalf("[TODO] Private key must be set when initializing the pocket state. ...")
-	}
-	pk, err := crypto.NewPrivateKey(cfg.PrivateKey)
-	if err != nil {
-		panic(err)
 	}
 	*ps = TestState{
 		BlockHeight:  0,
 		ValidatorMap: types.ValidatorListToMap(genesis.Validators),
 
-		PublicKey: pk.PublicKey(),
-		Address:   pk.Address().String(),
+		PublicKey: cfg.PrivateKey.PublicKey(),
+		// Address:   cfg.PrivateKey.PublicKey().Address(),
 
 		Config: *cfg,
 	}

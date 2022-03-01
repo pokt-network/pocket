@@ -54,7 +54,7 @@ func (n *network) NetworkBroadcast(data []byte) error {
 func (n *network) NetworkSend(data []byte, node pcrypto.Address) error {
 	for _, peer := range n.AddrBook {
 		// TODO(olshansky): Quick hack to avoid sending network messages to self.
-		if node != peer.NodeId {
+		if node != peer.PublicKey.Address() {
 			continue
 		}
 
