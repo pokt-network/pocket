@@ -25,20 +25,11 @@ func isErrEOF(err error) bool {
 	}
 
 	var netErr *net.OpError
-
-	if errors.As(err, &netErr) && netErr.Err.Error() == "use of closed network connection" {
-		return true
-	}
-
-	return false
+	return errors.As(err, &netErr) && netErr.Err.Error() == "use of closed network connection"
 }
 
 func isErrTimeout(err error) bool {
 	var netErr *net.OpError
 
-	if errors.As(err, &netErr) && netErr.Timeout() {
-		return true
-	}
-
-	return false
+	return errors.As(err, &netErr) && netErr.Timeout()
 }

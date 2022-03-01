@@ -7,7 +7,7 @@ import (
 )
 
 func TestWireEncode(t *testing.T) {
-	c := &wcodec{}
+	c := &wCodec{}
 
 	encoding := Binary
 	requestNumber := uint32(12)
@@ -65,7 +65,7 @@ func TestWireEncode(t *testing.T) {
 }
 
 func TestWireDecode(t *testing.T) {
-	c := &wcodec{}
+	c := &wCodec{}
 
 	encoding := Binary
 	requestNumber := uint32(12)

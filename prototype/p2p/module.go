@@ -40,7 +40,7 @@ type networkModule struct {
 		sync.Mutex
 		*net.TCPListener
 	}
-	listening atomic.Bool
+	isListening atomic.Bool
 
 	done    chan uint
 	ready   chan uint

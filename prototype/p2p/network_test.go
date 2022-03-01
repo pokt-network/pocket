@@ -35,7 +35,7 @@ func TestNetwork_ListenStop(t *testing.T) {
 		t.Errorf("Error listening: gater not ready yet")
 	}
 
-	if !g.listening.Load() {
+	if !g.isListening.Load() {
 		t.Errorf("Error listening: flag shows false after start")
 	}
 
@@ -53,7 +53,7 @@ func TestNetwork_ListenStop(t *testing.T) {
 		t.Errorf("Error listening: %s", err.Error())
 	}
 
-	if g.listening.Load() {
+	if g.isListening.Load() {
 		t.Errorf("Error listening: flag shows true after stop")
 	}
 
@@ -219,7 +219,7 @@ func TestNetwork_Request(t *testing.T) {
 		responses <- res
 	}()
 
-	c := &wcodec{}
+	c := &wCodec{}
 
 	t.Logf("Receiving...")
 	d := <-data
@@ -286,7 +286,7 @@ func TestNetwork_Respond(t *testing.T) {
 	msgB := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
 
 	go func() {
-		c := &wcodec{}
+		c := &wCodec{}
 		request := c.encode(Binary, false, 12, msgA, false)
 		_, err := conn.Write(request)
 		t.Logf("Write: OK")
@@ -314,7 +314,7 @@ func TestNetwork_Respond(t *testing.T) {
 		t.Errorf("Respond error: peer failed to read gater's response")
 	}
 
-	dnonce, _, decoded, _, err := (&wcodec{}).decode(buff)
+	dnonce, _, decoded, _, err := (&wCodec{}).decode(buff)
 	if err != nil {
 		t.Errorf("Respond error: could not decode payload. Encountered following error: %s", err.Error())
 	}
@@ -377,7 +377,7 @@ func TestNetwork_Ping(t *testing.T) {
 
 	<-time.After(time.Microsecond * 10)
 	t.Logf("Receiving...")
-	c := &wcodec{}
+	c := &wCodec{}
 
 	select {
 	case err := <-errors:
@@ -477,7 +477,7 @@ func TestNetwork_Pong(t *testing.T) {
 
 	d := <-data
 
-	nonce, _, buff, _, err := (&wcodec{}).decode(d.buff)
+	nonce, _, buff, _, err := (&wCodec{}).decode(d.buff)
 	if err != nil {
 		t.Errorf("Pong error: faield to decode wire bytes received from pong message. Error: %s", err.Error())
 	}
@@ -595,7 +595,7 @@ func TestNetwork_Broadcast(t *testing.T) {
 		t.Errorf("Broadcast error: error listening: gater not ready yet")
 	}
 
-	if !g.listening.Load() {
+	if !g.isListening.Load() {
 		t.Errorf("Broadcast error: error listening: flag shows false after start")
 	}
 
@@ -787,7 +787,7 @@ func TestNetwork_HandleBroadcast(t *testing.T) {
 		t.Errorf("Broadcast error: error listening: gater not ready yet")
 	}
 
-	if !g.listening.Load() {
+	if !g.isListening.Load() {
 		t.Errorf("Broadcast error: error listening: flag shows false after start")
 	}
 
@@ -825,11 +825,11 @@ func TestNetwork_HandleBroadcast(t *testing.T) {
 					fmt.Println(e.address, "received data", len(d.buff))
 					fanin <- d
 
-					nonce, _, _, _, err := (&wcodec{}).decode(d.buff)
+					nonce, _, _, _, err := (&wCodec{}).decode(d.buff)
 					fmt.Println("Err", err)
 					ack := Message(int32(nonce), int32(0), types.PocketTopic_CONSENSUS, e.address, g.address)
 					eack, _ := g.c.encode(*ack)
-					wack := (&wcodec{}).encode(Binary, false, nonce, eack, true)
+					wack := (&wCodec{}).encode(Binary, false, nonce, eack, true)
 
 					e.respond <- wack
 				case <-e.done:
@@ -845,7 +845,7 @@ func TestNetwork_HandleBroadcast(t *testing.T) {
 
 	gm := Message(int32(0), int32(4), types.PocketTopic_CONSENSUS, conn.LocalAddr().String(), g.address)
 	egm, _ := g.c.encode(*gm)
-	wgm := (&wcodec{}).encode(Binary, false, 0, egm, true)
+	wgm := (&wCodec{}).encode(Binary, false, 0, egm, true)
 
 	conn.Write(wgm)
 	fmt.Println("Has written the size of", len(wgm))
@@ -923,7 +923,7 @@ func ListenAndServe(addr string, readbufflen int) (ready, done chan uint, data c
 	readwriteconn := func(c net.Conn) {
 		readerClosed := false
 
-		codec := (&wcodec{})
+		codec := (&wCodec{})
 		creader := bufio.NewReader(c)
 		buffer := make([]byte, readbufflen)
 

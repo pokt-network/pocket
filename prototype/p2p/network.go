@@ -9,25 +9,25 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (g *networkModule) handshake() {}
+func (m *networkModule) handshake() {}
 
-func (g *networkModule) dial(addr string) (*netpipe, error) {
+func (m *networkModule) dial(addr string) (*netpipe, error) {
 	// TODO(derrandz): this is equivalent to maxRetries = 1, add logic for > 1
 	// TODO(derrandz): should we explictly tell dial to use either inbound or outbound?
-	exists := g.inbound.peak(addr)
-	g.log("Peaked into inbound clients map for", addr, "found=", exists)
+	exists := m.inbound.peak(addr)
+	m.log("Peaked into inbound clients map for", addr, "found=", exists)
 	if exists {
-		pipe, _ := g.inbound.get(addr)
+		pipe, _ := m.inbound.get(addr)
 		return pipe, nil
 	}
 
-	pipe, exists := g.outbound.get(addr)
+	pipe, exists := m.outbound.get(addr)
 	if exists {
 		return pipe, nil
 	}
 
-	pipe.g = g
-	go pipe.open(OutboundIoPipe, addr, nil, g.peerConnected, g.peerDisconnected)
+	pipe.network = m
+	go pipe.open(OutboundIoPipe, addr, nil, m.peerConnected, m.peerDisconnected)
 
 	var err error
 	select {
@@ -40,7 +40,7 @@ func (g *networkModule) dial(addr string) (*netpipe, error) {
 	}
 
 	if err != nil {
-		g.log("Error openning pipe", err.Error())
+		m.log("Error openning pipe", err.Error())
 		pipe.close()
 		<-pipe.closed
 		pipe = nil
@@ -49,8 +49,8 @@ func (g *networkModule) dial(addr string) (*netpipe, error) {
 	return pipe, err
 }
 
-func (g *networkModule) send(addr string, msg []byte, wrapped bool) error {
-	pipe, derr := g.dial(addr)
+func (m *networkModule) send(addr string, msg []byte, wrapped bool) error {
+	pipe, derr := m.dial(addr)
 	if derr != nil {
 		return derr
 	}
@@ -67,62 +67,62 @@ func (g *networkModule) send(addr string, msg []byte, wrapped bool) error {
 	return nil
 }
 
-func (g *networkModule) listen() error {
+func (m *networkModule) listen() error {
 	defer func() {
-		g.listening.Store(false)
-		close(g.closed)
+		m.isListening.Store(false)
+		close(m.closed)
 	}()
 
 	// add address validation and parsing
-	listener, err := net.Listen(g.protocol, g.address)
+	listener, err := net.Listen(m.protocol, m.address)
 	if err != nil {
-		g.log("Error:", err.Error())
+		m.log("Error:", err.Error())
 		return err
 	}
 
-	g.listener.Lock()
-	g.listener.TCPListener = listener.(*net.TCPListener)
-	g.listener.Unlock()
-	g.listening.Store(true)
+	m.listener.Lock()
+	m.listener.TCPListener = listener.(*net.TCPListener)
+	m.listener.Unlock()
+	m.isListening.Store(true)
 
-	close(g.ready)
+	close(m.ready)
 
-	g.log("Listening at", g.protocol, g.address, "...")
+	m.log("Listening at", m.protocol, m.address, "...")
 	for stop := false; !stop; {
 		select {
-		case <-g.done:
+		case <-m.done:
 			stop = true
 			break
 		default:
 			{
-				conn, err := g.listener.Accept()
-				if err != nil && g.listening.Load() {
-					g.log("Error receiving an inbound connection: ", err.Error())
+				conn, err := m.listener.Accept()
+				if err != nil && m.isListening.Load() {
+					m.log("Error receiving an inbound connection: ", err.Error())
 					// TODO(derrandz) ignore use of closed network connection error when listener has closed
-					g.error(err)
+					m.error(err)
 					break // report error
 				}
 
-				if !g.listening.Load() {
+				if !m.isListening.Load() {
 					break
 				}
 
 				addr := conn.RemoteAddr().String()
-				go g.handleInbound(conn, addr)
+				go m.handleInbound(conn, addr)
 			}
 		}
 	}
 
-	g.listener.Lock()
-	g.listener.TCPListener = nil
-	g.listener.Unlock()
+	m.listener.Lock()
+	m.listener.TCPListener = nil
+	m.listener.Unlock()
 
 	return nil
 }
 
 // TODO(derrandz): this: msg []byte, wrapped bool) is repeat everything, maybe a struct for this?
-func (g *networkModule) request(addr string, msg []byte, wrapped bool) ([]byte, error) {
-	pipe, derr := g.dial(addr)
+func (m *networkModule) request(addr string, msg []byte, wrapped bool) ([]byte, error) {
+	pipe, derr := m.dial(addr)
 	if derr != nil {
 		return nil, derr
 	}
@@ -136,8 +136,8 @@ func (g *networkModule) request(addr string, msg []byte, wrapped bool) ([]byte, 
 	return response.Bytes(), nil
 }
 
-func (g *networkModule) respond(nonce uint32, iserroreof bool, addr string, msg []byte, wrapped bool) error {
-	pipe, derr := g.dial(addr)
+func (m *networkModule) respond(nonce uint32, iserroreof bool, addr string, msg []byte, wrapped bool) error {
+	pipe, derr := m.dial(addr)
 	if derr != nil {
 		return derr
 	}
@@ -150,12 +150,12 @@ func (g *networkModule) respond(nonce uint32, iserroreof bool, addr string, msg 
 	return nil
 }
 
-func (g *networkModule) ping(addr string) (bool, error) {
+func (m *networkModule) ping(addr string) (bool, error) {
 	// TODO(derrandz): refactor this to use types.NetworkMessage
 	var pongbytes []byte
 
-	pingmsg := types.NetworkMessage{Topic: types.PocketTopic_P2P_PING, Source: g.address, Destination: addr}
-	pingbytes, err := g.c.encode(pingmsg)
+	pingmsg := types.NetworkMessage{Topic: types.PocketTopic_P2P_PING, Source: m.address, Destination: addr}
+	pingbytes, err := m.c.encode(pingmsg)
 
 	if err != nil {
 		return false, err
@@ -171,7 +171,7 @@ func (g *networkModule) ping(addr string) (bool, error) {
 	}()
 
 	go func() {
-		response, err := g.request(addr, pingbytes, true)
+		response, err := m.request(addr, pingbytes, true)
 
 		if err != nil {
 			errored <- err
@@ -190,7 +190,7 @@ func (g *networkModule) ping(addr string) (bool, error) {
 		return false, err
 
 	case <-ponged:
-		pong, err := g.c.decode(pongbytes)
+		pong, err := m.c.decode(pongbytes)
 		pongmsg := pong.(types.NetworkMessage)
 
 		if err != nil {
@@ -207,22 +207,22 @@ func (g *networkModule) ping(addr string) (bool, error) {
 } // TODO(derrandz): should we use UDP requests for ping?
 
 // TODO(derrandz): test
-func (g *networkModule) pong(msg types.NetworkMessage) error {
+func (m *networkModule) pong(msg types.NetworkMessage) error {
 	// TODO(derrandz): refactor to use networkMessage
 	if msg.IsRequest() && msg.Topic == types.PocketTopic_P2P_PING {
 		pongmsg := types.NetworkMessage{
 			Nonce:       msg.Nonce,
 			Topic:       types.PocketTopic_P2P_PONG,
-			Source:      g.address,
+			Source:      m.address,
 			Destination: msg.Source,
 		}
-		pongbytes, err := g.c.encode(pongmsg)
+		pongbytes, err := m.c.encode(pongmsg)
 
 		if err != nil {
 			return err
 		}
 
-		err = g.respond(uint32(msg.Nonce), false, msg.Source, pongbytes, true)
+		err = m.respond(uint32(msg.Nonce), false, msg.Source, pongbytes, true)
 
 		if err != nil {
 			return err
@@ -232,24 +232,24 @@ func (g *networkModule) pong(msg types.NetworkMessage) error {
 }
 
 // Discuss: why is m not a pointer?
-func (g *networkModule) broadcast(m *types.NetworkMessage, isroot bool) error {
-	g.clog(isroot, "Starting gossip round, level is", m.Level)
+func (m *networkModule) broadcast(msg *types.NetworkMessage, isroot bool) error {
+	m.clog(isroot, "Starting gossip round, level is", msg.Level)
 
 	// var mmutex sync.Mutex
 
-	var list *types.Peerlist = g.peerlist
-	var sourceAddr string = g.externaladdr
+	var list *types.Peerlist = m.peerlist
+	var sourceAddr string = m.externaladdr
 
 	var toplevel int = int(getTopLevel(list))
 	var currentlevel int = toplevel - 1
 
 	if !isroot {
-		g.clog(isroot, "Received gossip message from level", m.Level)
-		currentlevel = int(m.Level)
+		m.clog(isroot, "Received gossip message from level", msg.Level)
+		currentlevel = int(msg.Level)
 	}
 
 	SEND_AND_WAIT_FOR_ACK := func(encodedMsg []byte, wg *sync.WaitGroup, target *types.Peer, ack *[]byte, err *error) {
-		response, reqerr := g.request(target.Addr(), encodedMsg, true)
+		response, reqerr := m.request(target.Addr(), encodedMsg, true)
 
 		if reqerr != nil {
 			*err = reqerr
@@ -264,14 +264,14 @@ func (g *networkModule) broadcast(m *types.NetworkMessage, isroot bool) error {
 	}
 
 	for ; currentlevel > 0; currentlevel-- {
-		m.Level = int32(currentlevel)
-		g.clog(isroot, "Gossiping to peers at level", currentlevel, "message level=", m.Level)
-		targetlist := getTargetList(list, g.id, toplevel, currentlevel)
+		msg.Level = int32(currentlevel)
+		m.clog(isroot, "Gossiping to peers at level", currentlevel, "message level=", msg.Level)
+		targetlist := getTargetList(list, m.id, toplevel, currentlevel)
 
 		var left, right *types.Peer
 		{
-			lpos := pickLeft(g.id, targetlist)
-			rpos := pickRight(g.id, targetlist)
+			lpos := pickLeft(m.id, targetlist)
+			rpos := pickRight(m.id, targetlist)
 
 			left = targetlist.Get(lpos)
 			right = targetlist.Get(rpos)
@@ -285,10 +285,10 @@ func (g *networkModule) broadcast(m *types.NetworkMessage, isroot bool) error {
 		var l_data, r_data []byte
 
 		{
-			l_msg = *m
+			l_msg = *msg
 			l_msg.Source = sourceAddr
 			l_msg.Destination = left.Addr()
-			encm, errenc := g.c.encode(l_msg)
+			encm, errenc := m.c.encode(l_msg)
 			if errenc != nil {
 				return errenc
 			}
@@ -296,10 +296,10 @@ func (g *networkModule) broadcast(m *types.NetworkMessage, isroot bool) error {
 		}
 
 		{
-			r_msg = *m
+			r_msg = *msg
 			r_msg.Source = sourceAddr
 			r_msg.Destination = right.Addr()
-			encm, errenc := g.c.encode(r_msg)
+			encm, errenc := m.c.encode(r_msg)
 			if errenc != nil {
 				return errenc
 			}
@@ -313,47 +313,47 @@ func (g *networkModule) broadcast(m *types.NetworkMessage, isroot bool) error {
 		go SEND_AND_WAIT_FOR_ACK(r_data, &wg, right, &r_ack, &r_err)
 
 		wg.Wait()
-		g.clog(isroot, "Got acks from left and right")
+		m.clog(isroot, "Got acks from left and right")
 
 		if l_err != nil {
 			return l_err
 		}
-		g.clog(isroot, "(raintree) left peer: ACK")
+		m.clog(isroot, "(raintree) left peer: ACK")
 
 		if r_err != nil {
 			return r_err
 		}
-		g.clog(isroot, "(raintree) right peer: ACK")
+		m.clog(isroot, "(raintree) right peer: ACK")
 	}
 
-	g.clog(isroot, "Done broadcasting")
+	m.clog(isroot, "Done broadcasting")
 
-	for _, handler := range g.handlers[types.BroadcastDoneEvent] {
+	for _, handler := range m.handlers[types.BroadcastDoneEvent] {
 		handler(m)
 	}
 	return nil
 }
 
-func (g *networkModule) handle() {
+func (m *networkModule) handle() {
 	var msg *types.NetworkMessage
-	var m sync.Mutex
+	var mx sync.Mutex
 
-	g.log("Handling...")
-	for w := range g.sink {
+	m.log("Handling...")
+	for w := range m.sink {
 		nonce, data, srcaddr, encoded := (&w).Implode()
 
 		if encoded {
-			decoded, err := g.c.decode(data)
+			decoded, err := m.c.decode(data)
 			if err != nil {
-				g.log("Error decoding data", err.Error())
+				m.log("Error decoding data", err.Error())
 				continue
 			}
 
-			m.Lock()
+			mx.Lock()
 			msgi := decoded.(types.NetworkMessage)
 			msg = &msgi
 			msg.Nonce = int32(nonce)
-			m.Unlock()
+			mx.Unlock()
 		} else {
 			msg.Data = &anypb.Any{}
 			msg.Nonce = int32(nonce)
@@ -363,21 +363,21 @@ func (g *networkModule) handle() {
 		switch msg.Topic {
 
 		case types.PocketTopic_CONSENSUS:
-			m.Lock()
-			ack := &types.NetworkMessage{Nonce: msg.Nonce, Level: msg.Level, Topic: types.PocketTopic_CONSENSUS, Source: g.externaladdr, Destination: msg.Source}
-			encoded, err := g.c.encode(*ack)
+			mx.Lock()
+			ack := &types.NetworkMessage{Nonce: msg.Nonce, Level: msg.Level, Topic: types.PocketTopic_CONSENSUS, Source: m.externaladdr, Destination: msg.Source}
+			encoded, err := m.c.encode(*ack)
 			if err != nil {
-				g.log("Error encoding m for gossipaCK", err.Error())
+				m.log("Error encoding m for gossipaCK", err.Error())
 			}
 
-			err = g.respond(uint32(msg.Nonce), false, srcaddr, encoded, true)
-			m.Unlock()
+			err = m.respond(uint32(msg.Nonce), false, srcaddr, encoded, true)
+			mx.Unlock()
 			if err != nil {
-				g.log("Error encoding msg for gossipaCK", err.Error())
+				m.log("Error encoding msg for gossipaCK", err.Error())
 			}
 			<-time.After(time.Millisecond * 5)
-			g.log("Acked to", ack.Destination)
-			go g.broadcast(&types.NetworkMessage{
+			m.log("Acked to", ack.Destination)
+			go m.broadcast(&types.NetworkMessage{
 				Nonce:       msg.Nonce,
 				Level:       msg.Level,
 				Source:      msg.Source,
@@ -387,16 +387,16 @@ func (g *networkModule) handle() {
 			}, false)
 
 		default:
-			g.log("Unrecognized message topic", msg.Topic, "from", msg.Source, "to", msg.Destination, "@node", g.address)
+			m.log("Unrecognized message topic", msg.Topic, "from", msg.Source, "to", msg.Destination, "@node", m.address)
 		}
 	}
 }
 
-func (g *networkModule) handleInbound(conn net.Conn, addr string) {
-	pipe, exists := g.inbound.get(addr)
+func (m *networkModule) handleInbound(conn net.Conn, addr string) {
+	pipe, exists := m.inbound.get(addr)
 	if !exists {
-		pipe.g = g
-		go pipe.open(InboundIoPipe, addr, conn, g.peerConnected, g.peerDisconnected)
+		pipe.network = m
+		go pipe.open(InboundIoPipe, addr, conn, m.peerConnected, m.peerDisconnected)
 
 		var err error
 		select {
@@ -408,32 +408,32 @@ func (g *networkModule) handleInbound(conn net.Conn, addr string) {
 			err = nil
 		}
 
-		g.log("New connection from", addr, err)
+		m.log("New connection from", addr, err)
 		if err != nil {
 			pipe.close()
 			<-pipe.closed
 			pipe = nil
-			g.error(err)
+			m.error(err)
 		}
 
 	}
 }
 
-func (g *networkModule) on(e types.PeerEvent, handler func(...interface{})) {
-	if g.handlers != nil {
-		if hmap, exists := g.handlers[e]; exists {
+func (m *networkModule) on(e types.PeerEvent, handler func(...interface{})) {
+	if m.handlers != nil {
+		if hmap, exists := m.handlers[e]; exists {
 			hmap = append(hmap, handler)
 		} else {
-			g.handlers[e] = append(make([]func(...interface{}), 0), handler)
+			m.handlers[e] = append(make([]func(...interface{}), 0), handler)
 		}
 	}
 }
 
-func (g *networkModule) peerConnected(p *netpipe) error {
-	g.log("Peer connected", p.addr)
+func (m *networkModule) peerConnected(p *netpipe) error {
+	m.log("Peer connected", p.addr)
 	return nil
 }
 
-func (g *networkModule) peerDisconnected(p *netpipe) error {
+func (m *networkModule) peerDisconnected(p *netpipe) error {
 	return nil
 }

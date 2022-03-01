@@ -14,8 +14,8 @@ import (
 )
 
 type netpipe struct {
-	g *networkModule // TODO(derrandz): use an interface?
-	c *wcodec
+	network *networkModule // TODO(derrandz): use an interface?
+	c       *wCodec
 
 	addr  string
 	sense Sense // inbound or outbound
@@ -240,7 +240,7 @@ func (p *netpipe) poll() {
 	for stop := false; !stop; {
 		select {
 		// TODO(derrandz): replace with passed down context
-		case <-p.g.done:
+		case <-p.network.done:
 			break
 
 		case <-p.done:
@@ -293,7 +293,7 @@ func (p *netpipe) poll() {
 					}
 				}
 
-				p.g.sink <- types.NewWork(nonce, data, p.addr, wrapped)
+				p.network.sink <- types.NewWork(nonce, data, p.addr, wrapped)
 			}
 		}
 	}
@@ -343,7 +343,7 @@ func (p *netpipe) answer() {
 
 	for stop := false; !stop; {
 		select {
-		case <-p.g.done:
+		case <-p.network.done:
 			stop = true
 			break
 
@@ -402,7 +402,7 @@ func (p *netpipe) error(err error) {
 
 func NewNetPipe() *netpipe {
 	pipe := &netpipe{
-		c: &wcodec{},
+		c: &wCodec{},
 
 		requests: types.NewRequestMap(math.MaxUint32),
 

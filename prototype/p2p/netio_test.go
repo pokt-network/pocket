@@ -45,7 +45,7 @@ func TestIO_Answer(t *testing.T) {
 	pipe.buffersState.writeOpen = true // usually opened by pipe.open
 	pipe.opened.Store(true)
 
-	pipe.g = MockBasicInstance()
+	pipe.network = MockBasicInstance()
 
 	conn := MockConnM()
 	pipe.conn = net.Conn(conn)
@@ -94,14 +94,14 @@ func TestIO_Read(t *testing.T) {
 	pipe := NewNetPipe()
 
 	conn := MockConn()
-	pipe.g = MockBasicInstance()
+	pipe.network = MockBasicInstance()
 	pipe.conn = conn
 
 	pipe.reader = bufio.NewReader(pipe.conn)
 
 	{
 		msg := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
-		emsg := (&wcodec{}).encode(Binary, false, 0, msg, false)
+		emsg := (&wCodec{}).encode(Binary, false, 0, msg, false)
 		pipe.conn.Write(emsg)
 
 		buff, n, err := pipe.read()
@@ -123,7 +123,7 @@ func TestIO_Read(t *testing.T) {
 
 	{
 		msg := GenerateByteLen(1024)
-		emsg := (&wcodec{}).encode(Binary, false, 0, msg, false)
+		emsg := (&wCodec{}).encode(Binary, false, 0, msg, false)
 		pipe.conn.Write(emsg)
 
 		buff, n, err := pipe.read()
@@ -149,7 +149,7 @@ func TestIO_Read(t *testing.T) {
 func TestIO_Poll(t *testing.T) {
 	pipe := NewNetPipe()
 
-	pipe.g = MockBasicInstance()
+	pipe.network = MockBasicInstance()
 	pipe.conn = MockConn()
 	pipe.reader = bufio.NewReader(pipe.conn)
 
@@ -183,7 +183,7 @@ func TestIO_Poll(t *testing.T) {
 		t.Errorf("pipe read error: read buffer corrupted")
 	}
 
-	<-pipe.g.sink
+	<-pipe.network.sink
 	pipe.close()
 
 	<-pipe.closed
@@ -196,7 +196,7 @@ func TestIO_Poll(t *testing.T) {
 func TestIO_Inbound(t *testing.T) {
 	pipe := NewNetPipe()
 
-	pipe.g = MockBasicInstance()
+	pipe.network = MockBasicInstance()
 	pipe.buffersState.writeOpen = true
 
 	addr := "dummy-test-host:dummyport"
@@ -247,7 +247,7 @@ func TestIO_Inbound(t *testing.T) {
 	<-conn.signals
 
 	<-time.After(time.Millisecond * 20)
-	w := <-pipe.g.sink
+	w := <-pipe.network.sink
 	n := len(w.Bytes())
 
 	//_, _, data, _, err := pipe.c.decode(buff)
@@ -294,7 +294,7 @@ func TestIO_Inbound(t *testing.T) {
 		t.Errorf("pipe inbound error (answer error): inbound peer received corrupted response")
 	}
 
-	pipe.g.done <- 1
+	pipe.network.done <- 1
 
 	<-time.After(time.Millisecond * 10) // give time for routines to wrap up
 
@@ -318,7 +318,7 @@ func TestIO_Outbound(t *testing.T) {
 	dialer := MockDialer()
 
 	pipe.dialer = Dialer(dialer)
-	pipe.g = MockBasicInstance()
+	pipe.network = MockBasicInstance()
 	pipe.buffersState.writeOpen = true
 
 	pipe.opened.Store(true)
@@ -404,7 +404,7 @@ func TestIO_Outbound(t *testing.T) {
 	// so after flushing, we need to make sure to flush out the what's been read by the pipe
 	// and sent to the sink. (by emptying the sink)
 	conn.Flush()
-	<-pipe.g.sink
+	<-pipe.network.sink
 
 	{
 		rawpong := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
@@ -417,7 +417,7 @@ func TestIO_Outbound(t *testing.T) {
 			t.Errorf("Conn Error: payload mismatch, payload length: %d, buffer length: %d", len(pong), len(conn.buff))
 		}
 
-		w := <-pipe.g.sink
+		w := <-pipe.network.sink
 
 		rpong := w.Bytes()
 
@@ -453,7 +453,7 @@ func TestIO_Open(t *testing.T) {
 		dialer := MockDialer()
 
 		pipe.dialer = Dialer(dialer)
-		pipe.g = MockBasicInstance()
+		pipe.network = MockBasicInstance()
 		pipe.buffersState.writeOpen = true
 
 		addr := "dummy-test-host:dummyport"
@@ -496,7 +496,7 @@ func TestIO_Open(t *testing.T) {
 			t.Errorf("pipe inbound error: expected onopened handler to be called once, got called %d times", onopenedStub.times())
 		}
 
-		pipe.g.done <- 1
+		pipe.network.done <- 1
 		<-time.After(time.Millisecond * 10)
 
 		if !onclosedStub.wasCalled() {
@@ -512,7 +512,7 @@ func TestIO_Open(t *testing.T) {
 	{
 		pipe := NewNetPipe()
 
-		pipe.g = MockBasicInstance()
+		pipe.network = MockBasicInstance()
 		pipe.buffersState.writeOpen = true
 
 		addr := "dummy-test-host:dummyport"
@@ -559,7 +559,7 @@ func TestIO_Open(t *testing.T) {
 			t.Errorf("pipe inbound error: expected onopened handler to be called once, got called %d times", onopenedStub.times())
 		}
 
-		pipe.g.done <- 1
+		pipe.network.done <- 1
 		<-time.After(time.Millisecond * 10)
 
 		if !onclosedStub.wasCalled() {

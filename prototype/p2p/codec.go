@@ -25,7 +25,7 @@ const (
  @
  @ Idea inspired by scuttlebutt's secure p2p wire protocol
 */
-type wcodec struct {
+type wCodec struct {
 	sync.RWMutex
 }
 
@@ -51,20 +51,20 @@ type wcodec struct {
  @ *: does the body have to be decoded at the application level (i.e by the domain codec)
  @
  @ 1234: request number as uint16, empty if not a request
- @ 5678: bodylength
+ @ 5678: bodyLength
  @
  @ body.
 */
-func (c *wcodec) encode(encoding Encoding, iserror bool, reqnum uint32, data []byte, wrapped bool) []byte {
+func (c *wCodec) encode(encoding Encoding, iserror bool, reqnum uint32, data []byte, wrapped bool) []byte {
 	c.Lock()
 	defer c.Unlock()
 
 	var flags byte = 0x00
 
-	bodylength := make([]byte, 4)
+	bodyLength := make([]byte, 4)
 	requestnumber := make([]byte, 4)
 
-	binary.BigEndian.PutUint32(bodylength, uint32(len(data)))
+	binary.BigEndian.PutUint32(bodyLength, uint32(len(data)))
 	binary.BigEndian.PutUint32(requestnumber, uint32(reqnum))
 
 	if wrapped {
@@ -95,7 +95,7 @@ func (c *wcodec) encode(encoding Encoding, iserror bool, reqnum uint32, data []b
 
 	header := append([]byte{}, flags)
 	header = append(header, requestnumber...)
-	header = append(header, bodylength...)
+	header = append(header, bodyLength...)
 
 	body := data
 
@@ -104,7 +104,7 @@ func (c *wcodec) encode(encoding Encoding, iserror bool, reqnum uint32, data []b
 	return payload
 }
 
-func (c *wcodec) decode(wiredata []byte) (nonce uint32, enc Encoding, data []byte, wrapped bool, err error) {
+func (c *wCodec) decode(wiredata []byte) (nonce uint32, enc Encoding, data []byte, wrapped bool, err error) {
 	c.Lock()
 	defer c.Unlock()
 
@@ -140,7 +140,7 @@ func (c *wcodec) decode(wiredata []byte) (nonce uint32, enc Encoding, data []byt
 	return
 }
 
-func (c *wcodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32, bodylength uint32, err error) {
+func (c *wCodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32, bodyLength uint32, err error) {
 	c.Lock()
 	defer c.Unlock()
 
@@ -161,7 +161,7 @@ func (c *wcodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32, b
 		nonce = 0
 	}
 
-	bodylength = binary.BigEndian.Uint32(bodylen)
+	bodyLength = binary.BigEndian.Uint32(bodylen)
 	return
 }
 

@@ -116,6 +116,30 @@ test_leader_election:
 test_sortition:
 	go test --count=1 -v ./pkg/consensus/leader_election/sortition
 
+## Run the p2p message behavior test
+test_p2p_message:
+	go test -run TestMessage -v -race ./p2p
+
+## Run the p2p wire codec behavior test
+test_p2p_wire_codec:
+	go test -run TestCodec -v -race ./p2p
+
+## Run the p2p net IO behaviors test
+test_p2p_netio:
+	go test -run TestIO -v -race ./p2p
+
+## Run the p2p network behavior (send, broadcast, listen...)
+test_p2p_network:
+	go test -run TestNetwork -v -race ./p2p
+
+## Run the p2p raintree algorithm test (in isolation of networking logic)
+test_p2p_raintree:
+	go test -run TestRainTree -v -race ./p2p
+
+## Run all p2p tests
+test_p2p:
+	go test -run Test -v -race ./p2p
+
 ## Benchmarking the sortition unit tests
 benchmark_sortition:
 	go test --count=1 -v ./pkg/consensus/leader_election/sortition -bench=.

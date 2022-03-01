@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestMessager_Protobuff(t *testing.T) {
+func TestMessage_Protobuf(t *testing.T) {
 	nonce, src, dst, level := int32(1), "10.0.0.1:1234", "9.0.0.2:5432", int32(2)
 
 	// test message instantiation

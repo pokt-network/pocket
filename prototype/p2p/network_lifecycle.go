@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-func (g *networkModule) configure(protocol, address, external string, peers []string) {
-	g.protocol = protocol
-	g.address = address
-	g.externaladdr = external
-	g.peerlist = types.NewPeerlist()
+func (m *networkModule) configure(protocol, address, external string, peers []string) {
+	m.protocol = protocol
+	m.address = address
+	m.externaladdr = external
+	m.peerlist = types.NewPeerlist()
 
 	// TODO(derrandz): this is a hack to get going no more no less
 	// This hack tries to achieve addressbook injection behavior
@@ -19,18 +19,21 @@ func (g *networkModule) configure(protocol, address, external string, peers []st
 	// this is filler code until the expected behavior is well spec'd
 	for i, p := range peers {
 		peer := types.NewPeer(uint64(i+1), p)
-		port := strings.Split(peer.Addr(), ":")
-		myport := strings.Split(g.address, ":")
-		if port[1] == myport[1] {
-			g.id = peer.Id()
+
+		peerAddrParts := strings.Split(peer.Addr(), ":")
+		myAddrParts := strings.Split(m.address, ":")
+
+		peerPort, myPort := peerAddrParts[1], myAddrParts[1]
+		if peerPort == myPort {
+			m.id = peer.Id()
 		}
-		g.peerlist.Add(*peer)
+		m.peerlist.Add(*peer)
 	}
 }
 
-func (g *networkModule) init() error {
+func (m *networkModule) init() error {
 	msg := Message(int32(0), 1, types.PocketTopic_P2P_PING, "", "")
-	_, err := g.c.register(*msg, Encode, Decode)
+	_, err := m.c.register(*msg, Encode, Decode)
 	if err != nil {
 		return err
 	}
@@ -38,29 +41,29 @@ func (g *networkModule) init() error {
 	return nil
 }
 
-func (g *networkModule) isReady() <-chan uint {
-	return g.ready
+func (m *networkModule) isReady() <-chan uint {
+	return m.ready
 }
 
-func (g *networkModule) close() {
-	g.done <- 1
-	g.closed <- 1
-	g.listening.Store(false)
-	g.listener.Close()
-	close(g.done)
+func (m *networkModule) close() {
+	m.done <- 1
+	m.closed <- 1
+	m.isListening.Store(false)
+	m.listener.Close()
+	close(m.done)
 }
 
-func (g *networkModule) finished() <-chan uint {
-	return g.closed
+func (m *networkModule) finished() <-chan uint {
+	return m.closed
 }
 
-func (g *networkModule) error(err error) {
-	defer g.err.Unlock()
-	g.err.Lock()
+func (m *networkModule) error(err error) {
+	defer m.err.Unlock()
+	m.err.Lock()
 
-	if g.err.error != nil {
-		g.err.error = err
+	if m.err.error != nil {
+		m.err.error = err
 	}
 
-	g.errored <- 1
+	m.errored <- 1
 }
