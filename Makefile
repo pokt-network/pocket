@@ -62,10 +62,10 @@ docker_wipe: prompt_user
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
 	$(eval modules_dir = "shared/modules")
-	mockgen --source=${modules_dir}/persistence_module.go -destination=${modules_dir}/mocks/persistence_module_mock.go -aux_files=pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/p2p_module.go -destination=${modules_dir}/mocks/p2p_module_mock.go -aux_files=pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/persistence_module.go -destination=${modules_dir}/mocks/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/p2p_module.go -destination=${modules_dir}/mocks/p2p_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	echo "Mocks generated in ${modules_dir}/mocks"
 
 .PHONY: test_all
@@ -75,18 +75,30 @@ test_all: # generate_mocks
 
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
-# TODO(olshansky): Replace `prefix` with `./` when moving over the protobufs.
-.PHONY: protogen_local
+.PHONY: protogen_show
+## A simple `find` command that shows you the generated protobufs.
+protogen_show:
+	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor"
+
+.PHONY: protogen_clean
+## Remove all the generated protobufs.
+protogen_clean:
+	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs rm
+
+# TODO(team): Delete this once the `prototype` directory is removed.
+.PHONY: protogen_local_prototype
 ## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
-protogen_local:
+protogen_local_prototype:
 	$(eval prefix = "./prototype")
 	$(eval proto_dir = "${prefix}/shared/types/proto/")
+
 	protoc -I=${proto_dir} --go_out=./ ${proto_dir}/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/persistence/pre_persistence/proto --go_out=./ ${prefix}/persistence/pre_persistence/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/p2p/pre_p2p/types/proto --go_out=./ ${prefix}/p2p/pre_p2p/types/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/utility/proto --go_out=./ ${prefix}/utility/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/consensus/types/proto --go_out=./ ${prefix}/consensus/types/proto/*.proto
-	echo "View generated proto files by running: $ find . -name \"*.pb.go\" | grep -v \"./protoype\""
+	protoc -I=${proto_dir} -I=${prefix}/persistence/pre_persistence/proto --go_out=${prefix} ${prefix}/persistence/pre_persistence/proto/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/p2p/pre_p2p/types/proto --go_out=${prefix} ${prefix}/p2p/pre_p2p/types/proto/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/utility/proto --go_out=${prefix} ${prefix}/utility/proto/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/consensus/types/proto --go_out=${prefix} ${prefix}/consensus/types/proto/*.proto
+
+	echo "View generated proto files by running: make protogen_show"
 
 .PHONY: protogen_docker_m1
 ## TODO(derrandz): Test, validate & update.
