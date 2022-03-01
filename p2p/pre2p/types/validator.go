@@ -4,7 +4,6 @@ import pcrypto "github.com/pokt-network/pocket/shared/crypto"
 
 type ValMap map[pcrypto.Address]*Validator
 
-// TODO(olshansky): Review all the attributes of this struct.
 type Validator struct {
 	Address    pcrypto.Address           `json:"address"`
 	PublicKey  pcrypto.Ed25519PublicKey  `json:"public_key"`

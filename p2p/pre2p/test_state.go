@@ -6,7 +6,7 @@ import (
 
 	"github.com/pokt-network/pocket/p2p/pre2p/types"
 	"github.com/pokt-network/pocket/shared/config"
-	"github.com/pokt-network/pocket/shared/crypto"
+	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 )
 
 // TODO(discuss): This whole structure can potentially be removed altogether in the future once mainline has a functioning end-to-end implementation.
@@ -16,8 +16,7 @@ type TestState struct {
 	ValidatorMap     types.ValMap // TODO(olshansky): Need to update this on every validator pause/stake/unstake/etc.
 	TotalVotingPower uint64       // TODO(team): Need to update this on every send transaction.
 
-	PublicKey crypto.PublicKey
-	Address   string
+	PrivateKey pcrypto.PrivateKey
 
 	Config config.Config // TODO(hack): Should we store this here?
 }
@@ -66,8 +65,7 @@ func (ps *TestState) loadStateFromGenesis(cfg *config.Config) {
 		BlockHeight:  0,
 		ValidatorMap: types.ValidatorListToMap(genesis.Validators),
 
-		PublicKey: cfg.PrivateKey.PublicKey(),
-		// Address:   cfg.PrivateKey.PublicKey().Address(),
+		PrivateKey: cfg.PrivateKey,
 
 		Config: *cfg,
 	}

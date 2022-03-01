@@ -16,6 +16,7 @@ const (
 var _ types.Network = &network{}
 
 type network struct {
+	// TODO(team): This address book is currently static and does not update dynamically as new peers come on/offline.
 	AddrBook []*types.NetworkPeer
 }
 
@@ -31,9 +32,8 @@ func ConnectToValidatorNetwork(validators types.ValMap) (n types.Network) {
 	return
 }
 
-// func (n *network) NetworkBroadcast(data []byte, self pcrypto.Address) error {
+// TODO(olshansky): How do we avoid self-broadcasts?
 func (n *network) NetworkBroadcast(data []byte) error {
-	// TODO(team): This address book is currently static and does not update dynamically as new peers come on/offline.
 	for _, peer := range n.AddrBook {
 		client, err := net.DialTCP(NetworkProtocol, nil, peer.ConsensusAddr)
 		if err != nil {
@@ -53,7 +53,7 @@ func (n *network) NetworkBroadcast(data []byte) error {
 
 func (n *network) NetworkSend(data []byte, node pcrypto.Address) error {
 	for _, peer := range n.AddrBook {
-		// TODO(olshansky): Quick hack to avoid sending network messages to self.
+		// TODO(team): If the address book is a map instead of a list, we wouldn't have to do this loop.
 		if node != peer.PublicKey.Address() {
 			continue
 		}
@@ -71,8 +71,7 @@ func (n *network) NetworkSend(data []byte, node pcrypto.Address) error {
 			return err
 		}
 
-		// We only need to send message to one peer.
-		break
+		break // During a send, only one peer needs to receive the message
 	}
 
 	return nil
@@ -84,16 +83,9 @@ func (n *network) GetAddrBook() []*types.NetworkPeer {
 }
 
 func (n *network) connectToValidator(v *types.Validator) error {
-	// TODO(team): Discuss how self-broadcasts should be handled. A the moment, the consensus
-	// module has custom logic that makes a leader take extra actions to also behave as a replica
-	// rather than having it be "generalized" through the P2P layer.
-	// if m.address == peer.Address {
-	// 	continue
-	// }
-
 	tcpAddr, err := net.ResolveTCPAddr(NetworkProtocol, fmt.Sprintf("%s:%d", v.Host, v.Port))
 	if err != nil {
-		return fmt.Errorf("error resolving addr: %v %v", err)
+		return fmt.Errorf("error resolving addr: %v", err)
 	}
 
 	peer := &types.NetworkPeer{

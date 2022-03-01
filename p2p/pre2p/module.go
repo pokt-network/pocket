@@ -22,7 +22,7 @@ import (
 var _ modules.P2PModule = &p2pModule{}
 
 type p2pModule struct {
-	pocketBusMod modules.Bus
+	bus modules.Bus
 
 	listener *net.TCPListener
 	network  pre2ptypes.Network
@@ -35,8 +35,8 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	p2pState := GetTestState()
 	p2pState.LoadStateFromConfig(cfg)
 
-	tcpAddr, _ := net.ResolveTCPAddr("tcp4", fmt.Sprintf(":%d", cfg.Pre2P.ConsensusPort))
-	l, err := net.ListenTCP("tcp", tcpAddr)
+	tcpAddr, _ := net.ResolveTCPAddr(NetworkProtocol, fmt.Sprintf(":%d", cfg.Pre2P.ConsensusPort))
+	l, err := net.ListenTCP(NetworkProtocol, tcpAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -51,14 +51,14 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 }
 
 func (m *p2pModule) SetBus(pocketBus modules.Bus) {
-	m.pocketBusMod = pocketBus
+	m.bus = pocketBus
 }
 
 func (m *p2pModule) GetBus() modules.Bus {
-	if m.pocketBusMod == nil {
+	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
-	return m.pocketBusMod
+	return m.bus
 }
 
 func (m *p2pModule) Start() error {
