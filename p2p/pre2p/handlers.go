@@ -29,9 +29,8 @@ func (m *p2pModule) handleNetworkMessage(conn net.Conn) {
 	}
 
 	event := types.PocketEvent{
-		Module: types.SourceModule_P2P_MODULE,
-		Topic:  networkMessage.Topic,
-		Data:   networkMessage.Data,
+		Topic: networkMessage.Topic,
+		Data:  networkMessage.Data,
 	}
 
 	m.GetBus().PublishEventToBus(&event)

@@ -32,7 +32,7 @@ func ConnectToValidatorNetwork(validators types.ValMap) (n types.Network) {
 	return
 }
 
-// TODO(olshansky): How do we avoid self-broadcasts?
+// TODO(olshansky): How do we avoid self-broadcasts given that `AddrBook` may contain self in the current pre2p implementation?
 func (n *network) NetworkBroadcast(data []byte) error {
 	for _, peer := range n.AddrBook {
 		client, err := net.DialTCP(NetworkProtocol, nil, peer.ConsensusAddr)

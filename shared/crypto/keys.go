@@ -4,7 +4,7 @@ import "encoding/json"
 
 // TODO(discuss): Consider create a type for signature and having constraints for each type as well.
 
-type Address [AddressLen]byte
+type Address []byte
 
 type PublicKey interface {
 	Bytes() []byte
@@ -31,6 +31,6 @@ func (a *Address) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	copy(a[:], address)
+	*a = []byte(address)
 	return nil
 }

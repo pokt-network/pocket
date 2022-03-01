@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/pre2p/types"
 )
 
+// Come back to this.
 // TODO(olshansky): This is an interim genesis structure that will be replaced with a real one. It is the bare minimum for prototyping purposes.
 type P2PGenesis struct {
 	GenesisTime time.Time          `json:"genesis_time"`

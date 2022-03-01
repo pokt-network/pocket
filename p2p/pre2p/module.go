@@ -50,8 +50,8 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	return m, nil
 }
 
-func (m *p2pModule) SetBus(pocketBus modules.Bus) {
-	m.bus = pocketBus
+func (m *p2pModule) SetBus(bus modules.Bus) {
+	m.bus = bus
 }
 
 func (m *p2pModule) GetBus() modules.Bus {
