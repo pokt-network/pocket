@@ -1,4 +1,4 @@
-module pocket
+module github.com/pokt-network/pocket
 
 go 1.17
 

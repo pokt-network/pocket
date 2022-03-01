@@ -7,15 +7,16 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 )
 
-// TODO(olshansky): Should this be an interface so it can be mocked and injected?
 type Config struct {
-	RootDir    string `json:"root_dir"`
-	PrivateKey string `json:"private_key"`
-	Genesis    string `json:"genesis"`
+	RootDir    string                    `json:"root_dir"`
+	PrivateKey pcrypto.Ed25519PrivateKey `json:"private_key"`
+	Genesis    string                    `json:"genesis"`
 
-	PREP2P      *PREP2PConfig      `json:"prep2p"` // TODO(derrandz): delete this once P2P is ready.
+	Pre2P       *Pre2PConfig       `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
 	P2P         *P2PConfig         `json:"p2p"`
 	Consensus   *ConsensusConfig   `json:"consensus"`
 	Persistence *PersistenceConfig `json:"persistence"`
@@ -23,21 +24,19 @@ type Config struct {
 }
 
 // TODO(derrandz): delete this once P2P is ready.
-type PREP2PConfig struct {
+type Pre2PConfig struct {
 	ConsensusPort uint32 `json:"consensus_port"`
 	DebugPort     uint32 `json:"debug_port"`
 }
 
 type P2PConfig struct {
-	Protocol   string   `json:"protocol"`
-	Address    string   `json:"address"`
-	ExternalIp string   `json:"external_ip"`
-	Peers      []string `json:"peers"`
+	Protocol   string          `json:"protocol"`
+	Address    pcrypto.Address `json:"address"`
+	ExternalIp string          `json:"external_ip"`
+	Peers      []string        `json:"peers"`
 }
 
 type ConsensusConfig struct {
-	// TODO(olshansky): This should be assigned dynamically by the consensus module through sorting and validation.
-	NodeId uint32 `json:"node_id"`
 }
 
 type PersistenceConfig struct {
@@ -47,6 +46,7 @@ type PersistenceConfig struct {
 type UtilityConfig struct {
 }
 
+// TODO(insert tooling issue # here): Re-evaluate how load configs should be handeled.
 func LoadConfig(file string) (c *Config) {
 	c = &Config{}
 
@@ -80,7 +80,7 @@ func LoadConfig(file string) (c *Config) {
 }
 
 func (c *Config) validateAndComplete() error {
-	if c.PrivateKey == "" {
+	if len(c.PrivateKey) == 0 {
 		return fmt.Errorf("private key in config file cannot be empty")
 	}
 

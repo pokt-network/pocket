@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -9,28 +8,18 @@ import (
 )
 
 const (
-	PromptOptionTriggerNextView           string = "TriggerNextView"
-	PromptOptionResetToGenesis            string = "ResetToGenesis"
-	PromptOptionPrintNodeState            string = "PrintNodeState"
-	PromptOptionSendTx                    string = "SendTx"
-	PromptOptionTogglePaceMakerManualMode string = "TogglePaceMakerManualMode"
-	PromptOptionTriggerDKG                string = "TriggerDKG"
+	PromptPlaceholder string = "Placeholder"
 )
 
 var items = []string{
-	PromptOptionTriggerNextView,
-	PromptOptionTriggerDKG,
-	PromptOptionTogglePaceMakerManualMode,
-	PromptOptionSendTx,
-	PromptOptionResetToGenesis,
-	PromptOptionPrintNodeState,
+	PromptPlaceholder,
 }
 
 func main() {
 	for {
 		selection, err := promptGetInput()
 		if err == nil {
-			fmt.Println("Selection not yet implemented...", selection)
+			log.Println("Selection not yet implemented...", selection)
 		}
 	}
 }

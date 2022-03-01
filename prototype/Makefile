@@ -23,7 +23,7 @@ help:
 
 ## Build consensus/main.go
 build:
-	go build -v cmd/pocket/main.go
+	go build -v cmd/v1/main.go
 
 ## Continous build of consensus/main.go as files changel.
 build_and_watch:
@@ -70,15 +70,13 @@ generate_mocks:
 
 # mockgen --source=pkg/pocket/node.go -destination=pkg/pocket/mocks/node_mock.go
 
-# TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
-
 ## Use `protoc` to generate consensus .go files from .proto files.
 generate_protos:
 	$(eval types_dir := "pkg/types/")
 	protoc -I=${types_dir}/protos --go_out=${types_dir} ${types_dir}/protos/*.proto
 
 ## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
-protogen_local:
+v1_generate_protos:
 	protoc -I=./shared/types/proto/ -I=./consensus/types/proto --go_out=./ ./consensus/types/proto/*.proto
 	protoc -I=./shared/types/proto/ --go_out=./ ./shared/types/proto/*.proto
 	protoc -I=./shared/types/proto/ -I=./persistence/pre_persistence/proto --go_out=./ ./persistence/pre_persistence/proto/*.proto

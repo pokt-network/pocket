@@ -2,9 +2,11 @@ package p2p
 
 import (
 	"log"
-	"pocket/shared/config"
-	"pocket/shared/modules"
 
+	"github.com/pokt-network/pocket/shared/config"
+	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -24,12 +26,12 @@ func Create(config *config.Config) (modules.P2PModule, error) {
 
 func (p *p2pModule) Start() error {
 	// TODO(olshansky): Add a test that bus is set
-	log.Println("Starting PRE P2P module...")
+	log.Println("Starting P2P module...")
 	return nil
 }
 
 func (p *p2pModule) Stop() error {
-	log.Println("Stopping PRE P2P module...")
+	log.Println("Stopping P2P module...")
 	return nil
 }
 
@@ -44,10 +46,10 @@ func (m *p2pModule) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (m *p2pModule) BroadcastMessage(msg *anypb.Any, topic string) error {
-	panic("BroadcastMessage not implemented")
+func (m *p2pModule) Broadcast(msg *anypb.Any, topic string) error {
+	panic("Broadcast not implemented")
 }
 
-func (m *p2pModule) Send(addr string, msg *anypb.Any, topic string) error {
+func (m *p2pModule) Send(addr pcrypto.Address, msg *anypb.Any, topic types.PocketTopic) error {
 	panic("Send not implemented")
 }

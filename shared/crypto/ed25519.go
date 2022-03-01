@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"encoding/json"
 )
 
 const (
@@ -104,6 +105,15 @@ func (priv Ed25519PrivateKey) Size() int {
 
 func (priv Ed25519PrivateKey) Seed() []byte {
 	return ed25519.PrivateKey(priv).Seed()
+
+func (priv *Ed25519PrivateKey) UnmarshalJSON(data []byte) error {
+	var privateKey string
+	err := json.Unmarshal(data, &privateKey)
+	if err != nil {
+		return err
+	}
+	*priv = []byte(privateKey)
+	return nil
 }
 
 var _ PublicKey = Ed25519PublicKey{}
@@ -146,4 +156,14 @@ func (pub Ed25519PublicKey) VerifyBytes(msg []byte, sig []byte) bool {
 
 func (pub Ed25519PublicKey) Size() int {
 	return ed25519.PublicKeySize
+}
+
+func (pub *Ed25519PublicKey) UnmarshalJSON(data []byte) error {
+	var publicKey string
+	err := json.Unmarshal(data, &publicKey)
+	if err != nil {
+		return err
+	}
+	*pub = []byte(publicKey)
+	return nil
 }

@@ -2,8 +2,9 @@ package shared
 
 import (
 	"log"
-	"pocket/shared/modules"
-	"pocket/shared/types"
+
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types"
 )
 
 type bus struct {
@@ -18,7 +19,7 @@ type bus struct {
 }
 
 const (
-	DefaultPocketBusBufferSize = 100 // Create a synchronous event bus by blocking on every message
+	DefaultPocketBusBufferSize = 100
 )
 
 func CreateBus(
@@ -28,7 +29,6 @@ func CreateBus(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 ) (modules.Bus, error) {
-
 	// A channel can be injected into the bus only for testing purposes
 	if channel == nil {
 		log.Print("Creating a new Go channel for the Pocket bus...")
@@ -51,11 +51,11 @@ func CreateBus(
 	return bus, nil
 }
 
-func (m *bus) PublishEventToBus(e *types.Event) {
+func (m *bus) PublishEventToBus(e *types.PocketEvent) {
 	m.channel <- *e
 }
 
-func (m *bus) GetBusEvent() *types.Event {
+func (m *bus) GetBusEvent() *types.PocketEvent {
 	e := <-m.channel
 	return &e
 }

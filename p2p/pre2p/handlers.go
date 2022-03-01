@@ -5,8 +5,7 @@ import (
 	"log"
 	"net"
 
-	pre2ptypes "pocket/pre2p/types"
-	"pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -20,7 +19,7 @@ func (m *p2pModule) handleNetworkMessage(conn net.Conn) {
 		return
 	}
 
-	networkMessage := pre2ptypes.P2PMessage{}
+	networkMessage := types.PocketEvent{}
 	if err := proto.Unmarshal(data, &networkMessage); err != nil {
 		panic(err)
 	}
@@ -29,10 +28,9 @@ func (m *p2pModule) handleNetworkMessage(conn net.Conn) {
 		return
 	}
 
-	event := types.Event{
-		SourceModule: types.P2P,
-		PocketTopic:  networkMessage.Topic,
-		MessageData:  networkMessage.Data,
+	event := types.PocketEvent{
+		Topic: networkMessage.Topic,
+		Data:  networkMessage.Data,
 	}
 
 	m.GetBus().PublishEventToBus(&event)

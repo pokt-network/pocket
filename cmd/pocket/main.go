@@ -2,22 +2,22 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
-	"pocket/shared"
-	"pocket/shared/config"
+
+	"github.com/pokt-network/pocket/shared"
+	"github.com/pokt-network/pocket/shared/config"
 )
 
-// TODO(iajrz): Do we need this default variable?
-// var version = "UNKNOWN"
+// See `docs/deps/README.md` for details on how this is injected via mage.
+var version = "UNKNOWN"
 
 func main() {
 	config_filename := flag.String("config", "", "Relative or absolute path to config file.")
-	version := flag.Bool("version", false, "")
+	v := flag.Bool("version", false, "")
 	flag.Parse()
 
-	if *version {
-		fmt.Printf("Version: %b\n", version)
+	if *v {
+		log.Println(version)
 	}
 
 	cfg := config.LoadConfig(*config_filename)

@@ -24,8 +24,11 @@ vendor/
 shared/modules/mocks/
 
 # Proto generated files
-# TODO(team): Does the `types` directory contain generated or raw type files?
-# types/
 *.pb.go
 utility/test/
 utility/types/
+# TODO(team): Does the `types` directory contain generated or raw type files?
+# types/
+
+# Output binaries
+bin/

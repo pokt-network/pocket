@@ -3,7 +3,7 @@
 Shell 1
 
 ```
-$ make protogen_local
+$ make v1_generate_protos
 $ make compose_and_watch
 ```
 
@@ -23,7 +23,7 @@ Start starting new views.
 - We are not discarding the transactions from the mempool and all the shenanigans and the details of code-completeness, but we produce BLOCK 1 !!! 🥳
 - We have hot-reloading on from the get go on 5 validators, and this is unbelievably productive!
 - Code walkthrough
-  - `cmd/pocket/main.go` is the entrypoint
+  - `cmd/v1/main.go` is the entrypoint
     - this file loads a configuration from a file. (check `shared/config.go`)
     - the actual json configuration lives in `build/config/*.json` (including `genesis.json`)
     - the configuration has a path to genesis file, p2p configuration, node_id, and keys (private_key) and all the rest filler configurations for the module to come (persistence, utility...)

@@ -1,23 +1,22 @@
-package pre2p
+package types
 
 import (
-	"fmt"
 	"log"
-	"pocket/pre2p/types"
-	"pocket/shared/config"
-	"pocket/shared/crypto"
 	"sync"
+
+	"github.com/pokt-network/pocket/shared/config"
+	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 )
 
-// TODO(discuss): This whole structure can potentially be removed altogether in the future once mainline has a functioning end-to-end implementation.
+// TODO(hack by olshansky): This is a singleton that can be used as a view into the genesis file (since state is not currently being loaded)
+// from disk. It will be removed in the future but currently enables continued work.
 type TestState struct {
 	BlockHeight      uint64
-	AppHash          string       // TODO(discuss): Why not call this a BlockHash or StateHash? Should it be a []byte or string?
-	ValidatorMap     types.ValMap // TODO(olshansky): Need to update this on every validator pause/stake/unstake/etc.
-	TotalVotingPower uint64       // TODO(team): Need to update this on every send transaction.
+	AppHash          string // TODO(discuss): Why not call this a BlockHash or StateHash? Should it be a []byte or string?
+	ValidatorMap     ValMap // TODO(olshansky): Need to update this on every validator pause/stake/unstake/etc.
+	TotalVotingPower uint64 // TODO(team): Need to update this on every send transaction.
 
-	PublicKey crypto.PublicKey
-	Address   string
+	PrivateKey pcrypto.PrivateKey
 
 	Config config.Config // TODO(hack): Should we store this here?
 }
@@ -59,19 +58,14 @@ func (ps *TestState) loadStateFromGenesis(cfg *config.Config) {
 		log.Fatalf("Failed to load genesis: %v", err)
 	}
 
-	if cfg.PrivateKey == "" {
+	if len(cfg.PrivateKey) == 0 {
 		log.Fatalf("[TODO] Private key must be set when initializing the pocket state. ...")
-	}
-	pk, err := crypto.NewPrivateKey(cfg.PrivateKey)
-	if err != nil {
-		panic(err)
 	}
 	*ps = TestState{
 		BlockHeight:  0,
-		ValidatorMap: types.ValidatorListToMap(genesis.Validators),
+		ValidatorMap: ValidatorListToMap(genesis.Validators),
 
-		PublicKey: pk.PublicKey(),
-		Address:   pk.Address().String(),
+		PrivateKey: cfg.PrivateKey,
 
 		Config: *cfg,
 	}
@@ -87,7 +81,7 @@ func (ps *TestState) recomputeTotalVotingPower() {
 }
 
 func (ps *TestState) PrintGlobalState() {
-	fmt.Printf("\tGLOBAL STATE: (BlockHeight, PrevAppHash, # Validators, TotalVotingPower) is: (%d, %s, %d, %d)\n", ps.BlockHeight, ps.AppHash, len(ps.ValidatorMap), ps.TotalVotingPower)
+	log.Printf("\tGLOBAL STATE: (BlockHeight, PrevAppHash, # Validators, TotalVotingPower) is: (%d, %s, %d, %d)\n", ps.BlockHeight, ps.AppHash, len(ps.ValidatorMap), ps.TotalVotingPower)
 }
 
 func (ps *TestState) UpdateAppHash(appHash string) {

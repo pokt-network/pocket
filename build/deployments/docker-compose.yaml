@@ -20,7 +20,7 @@ services:
       context: ../..
       dockerfile: ./build/Dockerfile
     expose:
-      - "7080" # debug
+      - "7080" # dlv debug
       - "8080"
       - "9080"
     ports:
@@ -29,6 +29,7 @@ services:
       - "9081:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    # Uncomment to enable DLV debugging
     # environment:
     #   - DEBUG_PORT=7081
 
@@ -40,7 +41,7 @@ services:
       context: ../..
       dockerfile: ./build/Dockerfile
     expose:
-      - "7082" # debug
+      - "7082" # dlv debug
       - "8080"
       - "9080"
     ports:
@@ -49,6 +50,7 @@ services:
       - "9082:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    # Uncomment to enable DLV debugging
     # environment:
     #   - DEBUG_PORT=7082
 
@@ -60,7 +62,7 @@ services:
       context: ../..
       dockerfile: ./build/Dockerfile
     expose:
-      - "7083"
+      - "7083" # dlv debug
       - "8080"
       - "9080"
     ports:
@@ -69,6 +71,7 @@ services:
       - "9083:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    # Uncomment to enable DLV debugging
     # environment:
     #   - DEBUG_PORT=7083
 
@@ -80,7 +83,7 @@ services:
       context: ../..
       dockerfile: ./build/Dockerfile
     expose:
-      - "7084"
+      - "7084" # dlv debug
       - "8080"
       - "9080"
     ports:
@@ -89,5 +92,6 @@ services:
       - "9084:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
-    # environment:
-    #   - DEBUG_PORT=7084
+  # Uncomment to enable DLV debugging
+  # environment:
+  #   - DEBUG_PORT=7084
