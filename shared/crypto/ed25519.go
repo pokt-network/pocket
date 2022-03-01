@@ -4,8 +4,8 @@ import (
 	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"encoding/json"
+	"fmt"
 )
 
 const (
@@ -105,6 +105,7 @@ func (priv Ed25519PrivateKey) Size() int {
 
 func (priv Ed25519PrivateKey) Seed() []byte {
 	return ed25519.PrivateKey(priv).Seed()
+}
 
 func (priv *Ed25519PrivateKey) UnmarshalJSON(data []byte) error {
 	var privateKey string

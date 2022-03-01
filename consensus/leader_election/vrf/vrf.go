@@ -11,7 +11,8 @@ import (
 	"crypto/sha512"
 	"fmt"
 	"io"
-	"pocket/shared/crypto"
+
+	"github.com/pokt-network/pocket/shared/crypto"
 
 	"github.com/ProtonMail/go-ecvrf/ecvrf"
 )
