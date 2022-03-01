@@ -23,7 +23,7 @@ prompt_user:
 .PHONY: build
 ## Build Pocket's main entrypoint
 build:
-	go build -o bin/ -v cmd/pocket/main.go
+	mage build
 
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
