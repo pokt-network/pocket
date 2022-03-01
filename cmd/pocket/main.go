@@ -19,6 +19,7 @@ func main() {
 
 	if *v {
 		fmt.Println(version)
+		return
 	}
 
 	cfg := config.LoadConfig(*config_filename)
