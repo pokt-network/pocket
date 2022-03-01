@@ -29,3 +29,9 @@ Hence, mage.
 ### On the minus side
 
 - The maintainer does not include information for support contracts, although they accept donations.
+
+# Reflex
+
+We're using it to hot reload the code. It can be installed with
+
+`go install github.com/cespare/reflex@latest`
