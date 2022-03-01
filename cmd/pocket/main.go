@@ -18,6 +18,7 @@ func main() {
 
 	if *v {
 		log.Println(version)
+		return
 	}
 
 	cfg := config.LoadConfig(*config_filename)
