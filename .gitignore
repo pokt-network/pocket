@@ -12,7 +12,21 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
 
+# MacOS metadata
 .DS_Store
+
+# Intellij / Goland dot files
 .idea/
+
+# Generated Mocks (for testing)
+shared/modules/mocks/
+
+# Proto generated files
+types/
+utility/test/
+utility/types/
+
+# Output binaries
+bin/
