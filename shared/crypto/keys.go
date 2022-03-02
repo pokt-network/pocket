@@ -23,6 +23,7 @@ type PrivateKey interface {
 	Address() Address
 	Sign(msg []byte) ([]byte, error)
 	Size() int
+	Seed() []byte
 }
 
 func (a *Address) UnmarshalJSON(data []byte) error {

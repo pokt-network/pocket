@@ -5,12 +5,15 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 )
 
 const (
 	AddressLen = 20
+	SeedSize   = ed25519.SeedSize
 )
 
+// TODO(discuss): Why do we even need these wrappers?
 type (
 	Ed25519PublicKey  ed25519.PublicKey
 	Ed25519PrivateKey ed25519.PrivateKey
@@ -60,6 +63,14 @@ func NewPrivateKeyFromBytes(b []byte) (PrivateKey, error) {
 	return Ed25519PrivateKey(b), nil
 }
 
+func NewPrivateKeyFromSeed(seed []byte) (PrivateKey, error) {
+	if len(seed) < SeedSize {
+		return nil, fmt.Errorf("seed too short to generate a private key")
+	}
+	privKey := ed25519.NewKeyFromSeed([]byte(seed[:SeedSize]))
+	return Ed25519PrivateKey(privKey), nil
+}
+
 var _ PrivateKey = Ed25519PrivateKey{}
 
 func (priv Ed25519PrivateKey) Bytes() []byte {
@@ -90,6 +101,10 @@ func (priv Ed25519PrivateKey) Sign(msg []byte) ([]byte, error) {
 
 func (priv Ed25519PrivateKey) Size() int {
 	return ed25519.PrivateKeySize
+}
+
+func (priv Ed25519PrivateKey) Seed() []byte {
+	return ed25519.PrivateKey(priv).Seed()
 }
 
 func (priv *Ed25519PrivateKey) UnmarshalJSON(data []byte) error {
