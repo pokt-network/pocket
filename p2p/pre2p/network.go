@@ -18,6 +18,7 @@ var _ pre2ptypes.Network = &network{}
 
 type network struct {
 	// TODO(team): This address book is currently static and does not update dynamically as new peers come on/offline.
+	// TODO(olshansky): Make sure that self (the current node) is not added to the list to avoid self-broadcasts.
 	AddrBook []*pre2ptypes.NetworkPeer
 }
 
