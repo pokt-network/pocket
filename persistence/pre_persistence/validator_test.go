@@ -1,0 +1,247 @@
+package pre_persistence
+
+import (
+	"bytes"
+	"github.com/pokt-network/pocket/shared/crypto"
+	"math/big"
+	"testing"
+)
+
+func NewTestValidator() Validator {
+	pub1, _ := crypto.GeneratePublicKey()
+	addr1 := pub1.Address()
+	addr2, _ := crypto.GenerateAddress()
+	return Validator{
+		Address:         addr1,
+		PublicKey:       pub1.Bytes(),
+		Paused:          false,
+		Status:          defaultStakeStatus,
+		ServiceURL:      defaultServiceURL,
+		StakedTokens:    defaultStake,
+		PausedHeight:    0,
+		UnstakingHeight: 0,
+		Output:          addr2,
+	}
+}
+
+func TestGetValidatorExists(t *testing.T) {
+	ctx := NewTestingPrePersistenceContext(t)
+	actor := NewTestValidator()
+	addr2, _ := crypto.GenerateAddress()
+	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		t.Fatal(err)
+	}
+	exists, err := ctx.GetValidatorExists(actor.Address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !exists {
+		t.Fatal("actor that should exists does not")
+	}
+	exists, err = ctx.GetValidatorExists(addr2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if exists {
+		t.Fatal("actor that exists should not")
+	}
+}
+
+func TestGetValidator(t *testing.T) {
+	ctx := NewTestingPrePersistenceContext(t)
+	actor := NewTestValidator()
+	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		t.Fatal(err)
+	}
+	got, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(actor.Address, got.Address) || !bytes.Equal(actor.PublicKey, got.PublicKey) {
+		t.Fatalf("unexpected actor returned; expected %v got %v", actor, got)
+	}
+}
+
+func TestGetAllValidators(t *testing.T) {
+	ctx := NewTestingPrePersistenceContext(t)
+	actor1 := NewTestValidator()
+	actor2 := NewTestValidator()
+	if err := ctx.InsertValidator(actor1.Address, actor1.PublicKey, actor1.Output, actor1.Paused, int(actor1.Status),
+		actor1.ServiceURL, actor1.StakedTokens, int64(actor1.PausedHeight), actor1.UnstakingHeight); err != nil {
+		t.Fatal(err)
+	}
+	if err := ctx.InsertValidator(actor2.Address, actor2.PublicKey, actor2.Output, actor2.Paused, int(actor2.Status),
+		actor2.ServiceURL, actor2.StakedTokens, int64(actor2.PausedHeight), actor2.UnstakingHeight); err != nil {
+		t.Fatal(err)
+	}
+	validators, err := ctx.(*PrePersistenceContext).GetAllValidators(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got1, got2 := false, false
+	for _, a := range validators {
+		if bytes.Equal(a.Address, actor1.Address) {
+			got1 = true
+		}
+		if bytes.Equal(a.Address, actor2.Address) {
+			got2 = true
+		}
+	}
+	if !got1 || !got2 {
+		t.Fatal("not all actors returned")
+	}
+}
+
+func TestUpdateValidator(t *testing.T) {
+	ctx := NewTestingPrePersistenceContext(t)
+	actor := NewTestValidator()
+	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		t.Fatal(err)
+	}
+	bigExpectedTokens := big.NewInt(1)
+	one := BigIntToString(bigExpectedTokens)
+	before, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tokens := before.StakedTokens
+	bigBeforeTokens, err := StringToBigInt(tokens)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = ctx.UpdateValidator(actor.Address, defaultServiceURL, one)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bigAfterTokens, err := StringToBigInt(got.StakedTokens)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bigAfterTokens.Sub(bigAfterTokens, bigBeforeTokens)
+	if bigAfterTokens.Cmp(bigExpectedTokens) != 0 {
+		t.Fatal("incorrect after balance")
+	}
+}
+
+func TestDeleteValidator(t *testing.T) {
+	ctx := NewTestingPrePersistenceContext(t)
+	actor := NewTestValidator()
+	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		t.Fatal(err)
+	}
+	err := ctx.DeleteValidator(actor.Address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	exists, err := ctx.(*PrePersistenceContext).GetValidatorExists(actor.Address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if exists {
+		t.Fatal("actor exists when it shouldn't")
+	}
+}
+
+func TestGetValidatorsReadyToUnstake(t *testing.T) {
+	ctx := NewTestingPrePersistenceContext(t)
+	actor := NewTestValidator()
+	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		t.Fatal(err)
+	}
+	if err := ctx.SetValidatorUnstakingHeightAndStatus(actor.Address, 0, 1); err != nil {
+		t.Fatal(err)
+	}
+	unstakingValidators, err := ctx.(*PrePersistenceContext).GetValidatorsReadyToUnstake(0, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(unstakingValidators[0].Address, actor.Address) {
+		t.Fatalf("wrong actor returned, expected addr %v, got %v", unstakingValidators[0].Address, actor.Address)
+	}
+}
+
+func TestGetValidatorStatus(t *testing.T) {
+	ctx := NewTestingPrePersistenceContext(t)
+	actor := NewTestValidator()
+	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		t.Fatal(err)
+	}
+	status, err := ctx.GetValidatorStatus(actor.Address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if status != int(actor.Status) {
+		t.Fatal("unequal status")
+	}
+}
+
+func TestGetValidatorPauseHeightIfExists(t *testing.T) {
+	ctx := NewTestingPrePersistenceContext(t)
+	actor := NewTestValidator()
+	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		t.Fatal(err)
+	}
+	pauseHeight := 1
+	err := ctx.SetValidatorPauseHeight(actor.Address, int64(pauseHeight))
+	if err != nil {
+		t.Fatal(err)
+	}
+	pauseBeforeHeight, err := ctx.GetValidatorPauseHeightIfExists(actor.Address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pauseHeight != int(pauseBeforeHeight) {
+		t.Fatalf("incorrect pause height: expected %v, got %v", pauseHeight, pauseBeforeHeight)
+	}
+}
+
+func TestSetValidatorsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+	ctx := NewTestingPrePersistenceContext(t)
+	actor := NewTestValidator()
+	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, true, int(actor.Status),
+		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		t.Fatal(err)
+	}
+	pauseBeforeHeight, unstakingHeight, status := int64(1), int64(10), 1
+	err := ctx.SetValidatorsStatusAndUnstakingHeightPausedBefore(pauseBeforeHeight, unstakingHeight, status)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.UnstakingHeight != unstakingHeight {
+		t.Fatalf("wrong unstaking height: expected %v, got %v", unstakingHeight, got.UnstakingHeight)
+	}
+	if int(got.Status) != status {
+		t.Fatalf("wrong status: expected %v, got %v", status, got.Status)
+	}
+}
+
+func TestGetValidatorOutputAddress(t *testing.T) {
+	ctx := NewTestingPrePersistenceContext(t)
+	actor := NewTestValidator()
+	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		t.Fatal(err)
+	}
+	output, err := ctx.GetValidatorOutputAddress(actor.Address)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(actor.Output, output) {
+		t.Fatalf("incorrect output address expected %v, got %v", actor.Output, output)
+	}
+}

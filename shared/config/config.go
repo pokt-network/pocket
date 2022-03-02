@@ -75,7 +75,6 @@ func LoadConfig(file string) (c *Config) {
 	if err := c.P2P.validateAndComplete(); err != nil {
 		log.Fatalln("Error validating or completing P2P config: ", err)
 	}
-
 	return
 }
 
@@ -97,10 +96,12 @@ func (c *P2PConfig) validateAndComplete() error {
 }
 
 func (c *ConsensusConfig) validateAndComplete() error {
+	// TODO: c.NodeId should be set dynamically but set via config for testing
+
 	return nil
 }
 
-// Helper to make config creation independent of root dir
+// Helper function to make config creation independent of root dir
 func rootify(path, root string) string {
 	if filepath.IsAbs(path) {
 		return path

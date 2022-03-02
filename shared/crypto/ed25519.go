@@ -132,3 +132,19 @@ func (pub Ed25519PublicKey) VerifyBytes(msg []byte, sig []byte) bool {
 func (pub Ed25519PublicKey) Size() int {
 	return ed25519.PublicKeySize
 }
+
+func GeneratePublicKey() (PublicKey, error) {
+	pk, err := GeneratePrivateKey()
+	if err != nil {
+		return nil, err
+	}
+	return pk.PublicKey(), nil
+}
+
+func GenerateAddress() (Address, error) {
+	pk, err := GeneratePrivateKey()
+	if err != nil {
+		return nil, err
+	}
+	return pk.Address(), nil
+}
