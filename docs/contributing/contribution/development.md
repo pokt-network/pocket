@@ -18,53 +18,51 @@ flowchart TD
 
 ## How to begin
 
-The first step is to find how to contribute, the best on do that is to open the [issues section](https://github.com/pokt-network/pocket/issues) and find any open issue that you feel you can contribute somehow, issues without assignee are more likely to be available, although you can possibly contribute on any open already assigned issue as well. Feel free to ask!
+The first step is to find how to contribute. The best way to do so is to open the [issues section](https://github.com/pokt-network/pocket/issues) and find any open issue that you feel you can contribute to. Issues without assignees are more likely to be available, although you can still contribute to any open and already assigned issue as well. Feel free to ask!
 
-## Don’t jump to the code yet
+## Don't jump to the code yet
 
-A crucial step before jumping to the code is talking with others and especially with the issue creator. **Make sure you have this information before even start working. We value your time. We want your contribution to be valuable.**
+Before jumping to the code, a crucial step is talking with others, especially with the issue creator. **Make sure you have this information before starting work. We value your time. We want your contribution to be valuable.**
 
+Questions to ask:
 - Is there anyone working on this issue?
 - Is this issue blocked by something else?
 - Is this issue fully described and ready to be worked on?
-- Do I understand correctly what needs to be done?
-- Does everyone agree that I’m the right person for the job?
-- Where are these issues integrated? Integration Branch, Milestone Branch?
-- Where should I branch from? Integration Branch, Milestone Branch, main?
+- Do I have a full understanding of what needs to be done?
+- Does everyone agree that I'm the right person for the job?
+- Where are these issues integrated (integration branch, milestone branch, main, etc)?
+- Where should I branch from (integration branch, milestone branch, main, etc)?
 
-Join [Pocket Forum](https://forum.pokt.network/), discuss with other contributors, share ideas, check if something else is already working on that issue. Analyze the feasibility of your implementation with other members of the community. Try to get consensus across the community on your implementation idea before even start working.
+Join [Pocket Forum](https://forum.pokt.network/), discuss with other contributors, share ideas, check if someone else is already working on that issue. Analyze the feasibility of your implementation with other members of the community. Try to get consensus across the community of your implementation idea before starting any work.
 
-If you have all the answers, then assign the issue to you and start working on it.
+If you have answered the questions above, move forward with assigning the issue to yourself and start working on it.
 
 ## Fork the project
 
-It’s important to fork the project and work on your own repository, we want to keep the project lean and make sure the project history represents solid steps moving forward.
+It's essential to fork the project and work out of your own repository. We want to keep the project lean and ensure the history represents concrete steps moving forward.
 
-Go to the [home of the repo](https://github.com/pokt-network/pocket) and click fork on the top right corner, you will be able to create a local fork on your account very quickly.
+Go to the [home of the repo](https://github.com/pokt-network/pocket) and click fork in the top right corrne. You will be able to create a local fork on your account very quickly.
 
-Depending on the case, create a branch out of,
-
+Depending on the specific case, create a branch out of one of the following:
 - Integration Branch
 - main
 
-make sure the branch name follows this convention
-
-`issue/[issue name, in lowercase, with an underscore as space]`
+Make sure the branch name follows this convention: `issue/[issue name, in snake_case]`
 
 ## Coding style
 - Code must adhere to the official Go formatting guidelines (i.e. uses gofmt).
-- (Optional) Use Editor Config to help your Text Editor keep the same formatting used throughout the project.
-- Code must be documented adhering to the official Go commentary guidelines.
+- (Optional) Use editor config to help your text editor keep the same formatting throughout the entire project.
+- Code must be well documented and adhere to the official Go commentary guidelines.
 
-## Journaling and Ask for help
+## Journaling and asks for help
 
-You can use issue comments to follow up on the progress of your work and ask the community for any help, make sure that you are not blocked too much, it’s probable that other community member have the answer to your problem. Regular journaling it’s important for the issue creator to keep track of your progress and its good for others to know the progress of the issue and be able to participate and propose better solutions down the road.
+You can use issue comments to follow up on the progress of your work and ask the community for any help. Make sure that you are not blocked too much. It is probable that another community member may have the answer to your problem. Regular journaling is important for the issue creator to keep track of your progress, and it's good to give others visibility of the progress you've been making so they can participate and propose better solutions down the road.
 
-**Add link to guide for creating test suite for the feature.**
+**TODO: Add link to guide for creating test suite for the feature.**
 
 ## Test your code
 
-Before pushing your code to the integration or milestone branch, make sure you run all the tests locally following the **local testing guide**, it’s important to keep integration branches as healthy as possible since other developers will work on the same project. If your work is delivering a partial breaking code, make sure to coordinate and detail this on the PR before doing the final merge.
+Before pushing your code to the integration or milestone branches, make sure you ran all the tests locally following the **local testing guide**. It's critical to keep integration branches as healthy as possible since other developers will work on the project out of the same branch. If your work delivers partially breaking code, make sure to coordinate and communicate these details in the PR prior to merging it in.
 
 ## Create a PR to the Integration Branch
 
