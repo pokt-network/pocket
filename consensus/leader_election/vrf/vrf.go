@@ -1,10 +1,7 @@
 package vrf
 
-/*
-This file is a light wrapper around https://pkg.go.dev/github.com/ProtonMail/go-ecvrf.
-
-It is needed to to achieve more semantic variable naming in the use of HotPocket.
-*/
+// This file is a light wrapper around https://pkg.go.dev/github.com/ProtonMail/go-ecvrf.
+// It is needed to to achieve more semantic variable naming in the use of HotPocket.
 
 import (
 	"bytes"
@@ -24,17 +21,17 @@ const (
 type SecretKey ecvrf.PrivateKey
 type VerificationKey ecvrf.PublicKey
 
-// TODO(olshansky): Make these arrays of a specific size rather than slices.
-type VRFProof []byte
-type VRFOutput []byte
+// These are slices rather than arrays in order to more easily comply with the underlying `go-ecvrf/ecvrf` library.
+type VRFProof []byte  // A proof to verify that VRFOutput belongs to a certain publicKey.
+type VRFOutput []byte // Uniformally distributed output that can be normalized to be used in a binomial distribution.
 
 func CreateVRFRandReader(lastBlockHash string, privKey crypto.PrivateKey) (io.Reader, error) {
-	if len(lastBlockHash) < crypto.SeedSize/2 {
-		return nil, fmt.Errorf("the last block hash must be at least %d bytes in length", crypto.SeedSize/2)
-	}
-
 	if privKey == nil {
 		return nil, fmt.Errorf("private key cannot be nil")
+	}
+
+	if len(lastBlockHash) < crypto.SeedSize/2 {
+		return nil, fmt.Errorf("the last block hash must be at least %d bytes in length", crypto.SeedSize/2)
 	}
 
 	privKeySeed := privKey.Seed()[:crypto.SeedSize/2]
@@ -47,7 +44,7 @@ func CreateVRFRandReader(lastBlockHash string, privKey crypto.PrivateKey) (io.Re
 	return bytes.NewReader(seed), nil
 }
 
-// TODO(discuss): Should this return a pointer or a value?
+// TODO(in this commit): Should we return pointers or values here?
 func GenerateVRFKeys(reader io.Reader) (*SecretKey, *VerificationKey, error) {
 	privateKey, err := ecvrf.GenerateKey(reader)
 	if err != nil {
@@ -62,7 +59,7 @@ func GenerateVRFKeys(reader io.Reader) (*SecretKey, *VerificationKey, error) {
 	return (*SecretKey)(privateKey), (*VerificationKey)(publicKey), nil
 }
 
-// TODO(discuss): Should this return a pointer or a value?
+// TODO(in this commit): Should we return pointers or values here?
 func VerificationKeyFromBytes(data []byte) (*VerificationKey, error) {
 	key, err := ecvrf.NewPublicKey(data)
 	if err != nil {
@@ -86,7 +83,7 @@ func (key *SecretKey) Prove(msg []byte) (vrf VRFOutput, proof VRFProof, err erro
 	return
 }
 
-// TODO(discuss): Should this return a pointer or a value?
+// TODO(in this commit): Should we return pointers or values here?
 func (key *SecretKey) VerificationKey() (*VerificationKey, error) {
 	verificationKey, err := (*ecvrf.PrivateKey)(key).Public()
 	if err != nil {

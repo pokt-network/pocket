@@ -84,9 +84,19 @@ test_consensus: # mockgen
 	go test ./consensus/...
 
 .PHONY: test_vrf
-## Run all go unit tests in the consensus module
-test_vrf: # mockgen
+## Run all go unit tests in the VRF library
+test_vrf:
 	go test -v ./consensus/leader_election/vrf
+
+.PHONY: test_sortition
+## Run all go unit tests in the sortition library
+test_sortition:
+	go test -v ./consensus/leader_election/sortition/
+
+.PHONY: benchmark_sortition
+## Benchmark the sortition library
+benchmark_sortition:
+	go test -v ./consensus/leader_election/sortition -bench=.
 
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
