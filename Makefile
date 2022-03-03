@@ -78,6 +78,11 @@ test_all: # mockgen
 test_pre2p: # generate_mocks
 	go test ./pre2p/...
 
+.PHONY: test_shared
+## Run all go unit tests in the shared module
+test_shared: # generate_mocks
+	go test ./shared/...
+
 .PHONY: test_consensus
 ## Run all go unit tests in the consensus module
 test_consensus: # mockgen

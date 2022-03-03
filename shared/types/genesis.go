@@ -61,7 +61,7 @@ func (genesis *Genesis) Validate() error {
 	}
 
 	if len(genesis.AppHash) == 0 {
-		return fmt.Errorf("Genesis app hash cannot be zero.")
+		return fmt.Errorf("Genesis app hash cannot be zero")
 	}
 
 	for _, validator := range genesis.Validators {
