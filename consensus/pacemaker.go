@@ -6,8 +6,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/pokt-network/pocket/consensus/types"
+	// "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/types"
 
 	"github.com/pokt-network/pocket/shared/modules"
 )

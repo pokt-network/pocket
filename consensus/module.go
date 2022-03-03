@@ -9,7 +9,6 @@ import (
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -48,12 +47,13 @@ type consensusModule struct {
 }
 
 func Create(cfg *config.Config) (modules.ConsensusModule, error) {
+	// state := types.GetTestState()
+	// state.LoadStateFromConfig(cfg)
+
 	gob.Register(&DebugMessage{})
 	gob.Register(&HotstuffMessage{})
 	// gob.Register(&leader_election.LeaderElectionMessage{})
 	// gob.Register(&TxWrapperMessage{})
-	state := types.GetTestState()
-	state.LoadStateFromConfig(cfg)
 
 	// leaderElectionMod, err := leader_election.Create(cfg)
 	// if err != nil {
@@ -71,7 +71,7 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		HighPrepareQC: nil,
 		LockedQC:      nil,
 
-		NodeId:   types_consensus.NodeId(cfg.Consensus.NodeId),
+		// NodeId:   types_consensus.NodeId(cfg.Consensus.NodeId),
 		LeaderId: nil,
 
 		paceMaker: nil, // Updated below because of the 2 way pointer design.
