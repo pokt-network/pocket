@@ -1,10 +1,12 @@
 package leader_election
 
 import (
+	"crypto"
 	"testing"
 
 	"github.com/pokt-network/pocket/consensus/leader_election/vrf"
-	// types2 "github.com/pokt-network/pocket/shared/pkg/types"
+	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/types"
 
 	"github.com/stretchr/testify/require"
 )
@@ -16,30 +18,30 @@ type TestValidatorConfigs struct {
 
 // TODO: Should there be a global value like this?
 type ValidatorWithPrivateKeys struct {
-	validator *types2.Validator
-	privKey   *types2.PrivateKey
+	validator *types.Validator
+	privKey   *crypto.PrivateKey
 	secretKey *vrf.SecretKey
 }
 
-type ValMap map[types2.NodeId]*ValidatorWithPrivateKeys
+type ValMap map[types_consensus.NodeId]*ValidatorWithPrivateKeys
 
 func prepareTestValidators(t *testing.T, testValidatorConfigs []*TestValidatorConfigs) (valMap ValMap, totalStakedAmount uint64) {
 	valMap = make(ValMap)
 	for _, cfg := range testValidatorConfigs {
-		privKey := types2.GeneratePrivateKey(uint32(cfg.NodeId))
+		privKey := types_consensus.GeneratePrivateKey(uint32(cfg.NodeId))
 
-		sk, vk, err := vrf.GenerateVRFKeys(nil)
+		sk, _, err := vrf.GenerateVRFKeys(nil)
 		require.NoError(t, err)
 
-		nodeId := types2.NodeId(cfg.NodeId)
+		nodeId := types_consensus.NodeId(cfg.NodeId)
 		uPokt := uint64(cfg.UPokt)
 
 		valMap[nodeId] = &ValidatorWithPrivateKeys{
-			validator: &types2.Validator{
-				NodeId:             nodeId,
-				PublicKey:          privKey.Public(),
-				UPokt:              uPokt,
-				VRFVerificationKey: *vk,
+			validator: &types.Validator{
+				// NodeId:             nodeId,
+				PublicKey: privKey.Public(),
+				UPokt:     uPokt,
+				// VRFVerificationKey: *vk,
 			},
 			privKey:   &privKey,
 			secretKey: sk,

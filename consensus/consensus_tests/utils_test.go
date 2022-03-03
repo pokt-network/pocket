@@ -202,13 +202,6 @@ func CreateTestConsensusPocketNode(
 		AnyTimes()
 
 	utilityMock.EXPECT().
-		HandleTransaction(gomock.Any(), gomock.Any()).
-		Do(func(*pcontext.PocketContext, *types_consensus.Transaction) {
-			log.Println("[MOCK] HandleTransaction utility mock")
-		}).
-		AnyTimes()
-
-	utilityMock.EXPECT().
 		HandleEvidence(gomock.Any(), gomock.Any()).
 		Do(func(*pcontext.PocketContext, *types_consensus.Evidence) {
 			log.Println("[MOCK] HandleEvidence utility mock")

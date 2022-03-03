@@ -46,7 +46,7 @@ func (m *p2pModule) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (m *p2pModule) Broadcast(msg *anypb.Any, topic string) error {
+func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
 	panic("Broadcast not implemented")
 }
 

@@ -1,6 +1,3 @@
-//go:build test
-// +build test
-
 package leader_election
 
 import (
@@ -8,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/pokt-network/pocket/consensus/leader_election/vrf"
-	c_types "github.com/pokt-network/pocket/consensus/types"
+	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
@@ -25,10 +22,10 @@ type LeaderElectionModule interface {
 	modules.Module
 
 	HandleMessage(*LeaderElectionMessage)
-	RegenerateVRFKeys(c_types.BlockHeight, c_types.Round)            // Needs to be triggered every N blocks depending on some parameter.
-	BroadcastVRFProofIfCandidate(c_types.BlockHeight, c_types.Round) // Needs to be executed on every DECIDE phase.
+	RegenerateVRFKeys(types_consensus.BlockHeight, types_consensus.Round)            // Needs to be triggered every N blocks depending on some parameter.
+	BroadcastVRFProofIfCandidate(types_consensus.BlockHeight, types_consensus.Round) // Needs to be executed on every DECIDE phase.
 
-	GetLeaderId(c_types.BlockHeight, c_types.Round) (c_types.NodeId, error)
+	GetLeaderId(types_consensus.BlockHeight, types_consensus.Round) (types_consensus.NodeId, error)
 }
 
 type leaderElectionModule struct {
@@ -37,8 +34,8 @@ type leaderElectionModule struct {
 	pocketBusMod modules.Bus
 
 	// Module metadata
-	// nodeId         c_types.NodeId
-	previousLeader *c_types.NodeId
+	nodeId         types_consensus.NodeId
+	previousLeader *types_consensus.NodeId
 
 	// VRF
 	vrfSecretKey       *vrf.SecretKey
@@ -56,7 +53,7 @@ func Create(
 	config *config.Config,
 ) (LeaderElectionModule, error) {
 	return &leaderElectionModule{
-		// nodeId:         c_types.NodeId(config.Consensus.NodeId),
+		// nodeId:         types_consensus.NodeId(config.Consensus.NodeId),
 		previousLeader: nil,
 
 		vrfSecretKey:       nil,
@@ -97,7 +94,7 @@ func (m *leaderElectionModule) HandleMessage(message *LeaderElectionMessage) {
 	}
 }
 
-func (m *leaderElectionModule) RegenerateVRFKeys(height c_types.BlockHeight, round c_types.Round) {
+func (m *leaderElectionModule) RegenerateVRFKeys(height types_consensus.BlockHeight, round types_consensus.Round) {
 	sk, vk, err := vrf.GenerateVRFKeys(nil)
 	if err != nil {
 		log.Println("[ERROR] Failed to generate VRF keys:", err)
@@ -117,7 +114,7 @@ func (m *leaderElectionModule) RegenerateVRFKeys(height c_types.BlockHeight, rou
 			VKEndHeight:     height + 1,
 		},
 
-		Sender: m.nodeId,
+		// Sender: m.nodeId,
 	}
 	err = m.publishLeaderElectionMessage(message)
 	if err != nil {
@@ -125,15 +122,15 @@ func (m *leaderElectionModule) RegenerateVRFKeys(height c_types.BlockHeight, rou
 	}
 }
 
-func (m *leaderElectionModule) GetLeaderId(height c_types.BlockHeight, round c_types.Round) (c_types.NodeId, error) {
+func (m *leaderElectionModule) GetLeaderId(height types_consensus.BlockHeight, round types_consensus.Round) (types_consensus.NodeId, error) {
 	// Run SelectLead
 	return 0, nil
 }
 
-func (m *leaderElectionModule) BroadcastVRFProofIfCandidate(height c_types.BlockHeight, round c_types.Round) {
-	state := c_types.GetTestState()
+func (m *leaderElectionModule) BroadcastVRFProofIfCandidate(height types_consensus.BlockHeight, round types_consensus.Round) {
+	state := types.GetTestState()
 
-	validator, ok := state.ValidatorMap[m.nodeId]
+	validator, ok := state.ValidatorMap[string(m.nodeId)] // HACK
 	if !ok {
 		log.Printf("[ERROR] Cannot broadcast VRF Proof because validator not foudn in Pocket State: %d", m.nodeId)
 		return
@@ -186,7 +183,7 @@ func (m *leaderElectionModule) BroadcastVRFProofIfCandidate(height c_types.Block
 			SortitionResult: leaderCandidate.sortitionResult,
 		},
 
-		Sender: m.nodeId,
+		// Sender: m.nodeId,
 	}
 	err = m.publishLeaderElectionMessage(message)
 	if err != nil {
@@ -195,17 +192,17 @@ func (m *leaderElectionModule) BroadcastVRFProofIfCandidate(height c_types.Block
 }
 
 func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElectionMessage) error {
-	consensusMessage := &c_types.ConsensusMessage{
+	consensusMessage := &types_consensus.ConsensusMessage{
 		Message: message,
-		Sender:  m.nodeId,
+		// Sender:  m.nodeId,
 	}
 
-	data, err := c_types.EncodeConsensusMessage(consensusMessage)
+	data, err := types_consensus.EncodeConsensusMessage(consensusMessage)
 	if err != nil {
 		return err
 	}
 
-	consensusProtoMsg := &c_types.Message{
+	consensusProtoMsg := &types_consensus.Message{
 		Data: data,
 	}
 
@@ -219,8 +216,8 @@ func (m *leaderElectionModule) publishLeaderElectionMessage(message *LeaderElect
 	//	Data:  anyProto,
 	//}
 
-	if err := m.GetBus().GetNetworkModule().BroadcastMessage(anyProto, string(types.CONSENSUS)); err != nil {
-		// TODO handle
+	if err := m.GetBus().GetP2PModule().Broadcast(anyProto, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
+		return err
 	}
 
 	//envelope := &events.Event{

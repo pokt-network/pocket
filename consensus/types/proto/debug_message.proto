@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package consensus;
+
+option go_package = "/types/";
+
+enum DebugMessageAction {
+	DEBUG_ACTION_UNKNOWN = 0;
+	DEBUG_CONSENSUS_RESET_TO_GENESIS = 1;
+	DEBUG_CONSENSUSPRINT_NODE_STATE = 2;
+	DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW = 3;
+	DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MANUAL_MODE = 4;
+}
+
+message DebugMessage {
+  // ConsensusMessage
+  DebugMessageAction action = 1;
+  repeated byte payload = 2;
+}
+
+
+
+// package consensus
+
+// import (
+// 	types_consensus "github.com/pokt-network/pocket/consensus/types"
+// )
+
+// type DebugMessageAction uint8
+
+// const (
+// 	InterruptCurrentView DebugMessageAction = iota
+// 	TriggerNextView
+// 	TriggerDKG
+// 	TogglePaceMakerManualMode
+// 	ResetToGenesis
+// 	PrintNodeState
+// 	SendTx
+// )
+
+// type DebugMessage struct {
+// 	types_consensus.GenericConsensusMessage
+
+// 	Action  DebugMessageAction
+// 	Payload []byte
+// }
+
+// func (m *DebugMessage) GetType() types_consensus.ConsensusMessageType {
+// 	return types_consensus.DebugConsensusMessage
+// }
+
+// func (m *DebugMessage) Encode() ([]byte, error) {
+// 	bytes, err := types_consensus.GobEncode(m)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return bytes, nil
+// }
+
+// func (m *DebugMessage) Decode(data []byte) error {
+// 	err := types_consensus.GobDecode(data, m)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+}

@@ -11,22 +11,22 @@ import (
 )
 
 func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, error) {
-	//if m.UtilityContext != nil {
+	//if m.utilityContext != nil {
 	//	m.nodeLog("[WARN] Why is the node utility context not nil when preparing a new block?. Realising for now...")
-	//	m.UtilityContext.ReleaseContext()
+	//	m.utilityContext.ReleaseContext()
 	//}
 	fmt.Println("creating new context for prepareBlock()")
 	utilContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
 	if err != nil {
 		return nil, err
 	}
-	m.UtilityContext = utilContext
+	m.utilityContext = utilContext
 	//valMap := shared.GetTestState().ValidatorMap
 	maxTxBytes := 90000 // INTEGRATION_TEMP
 	//proposer := []byte(strconv.Itoa(int(m.NodeId)))
 	pk, _ := crypto.GeneratePrivateKey()
-	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.UtilityContext.GetPersistanceContext().GetLastByzValidators
-	txs, err := m.UtilityContext.GetTransactionsForProposal(pk.PublicKey().Address(), maxTxBytes, lastByzValidators)
+	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.utilityContext.GetPersistanceContext().GetLastByzValidators
+	txs, err := m.utilityContext.GetTransactionsForProposal(pk.PublicKey().Address(), maxTxBytes, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}
@@ -62,11 +62,11 @@ func (m *consensusModule) isValidBlock(block *types_consensus.BlockConsensusTemp
 // TODO: Should this be async?
 func (m *consensusModule) deliverTxToUtility(block *types_consensus.BlockConsensusTemp) error {
 	utilityModule := m.GetBus().GetUtilityModule()
-	m.UtilityContext, _ = utilityModule.NewContext(int64(m.Height))
+	m.utilityContext, _ = utilityModule.NewContext(int64(m.Height))
 	proposer := []byte(strconv.Itoa(int(m.NodeId)))
-	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.UtilityContext.GetPersistanceContext().GetLastByzValidators
+	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.utilityContext.GetPersistanceContext().GetLastByzValidators
 
-	appHash, err := m.UtilityContext.ApplyBlock(int64(m.Height), proposer, block.Transactions, lastByzValidators)
+	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), proposer, block.Transactions, lastByzValidators)
 	if err != nil {
 		return err
 	}
@@ -81,11 +81,11 @@ func (m *consensusModule) deliverTxToUtility(block *types_consensus.BlockConsens
 
 func (m *consensusModule) commitBlock(block *types_consensus.BlockConsensusTemp) error {
 	m.nodeLog(fmt.Sprintf("COMMITTING BLOCK AT HEIGHT %d. WITH TRANSACTION COUNT: %d", m.Height, len(block.Transactions)))
-	if err := m.UtilityContext.GetPersistanceContext().Commit(); err != nil {
+	if err := m.utilityContext.GetPersistanceContext().Commit(); err != nil {
 		return err
 	}
-	m.UtilityContext.ReleaseContext()
-	m.UtilityContext = nil
+	m.utilityContext.ReleaseContext()
+	m.utilityContext = nil
 
 	//utilityModule := m.GetBus().GetUtilityModule()
 	//if err := utilityModule.EndBlock(nil); err != nil {

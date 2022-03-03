@@ -3,6 +3,7 @@ package types
 import pcrypto "github.com/pokt-network/pocket/shared/crypto"
 
 // The key is a hex encoded representation of the validator byte address.
+// TODO(discuss): Should there be a type for a stringified version of `Address`?
 type ValMap map[string]*Validator
 
 type Validator struct {
