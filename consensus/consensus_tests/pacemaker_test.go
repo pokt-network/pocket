@@ -139,7 +139,7 @@ func TestPaceMakerCatchupSameStepDifferentRounds(t *testing.T) {
 		// consensusModImpl.FieldByName("LeaderId").Set(reflect.ValueOf(nil)) // Leader is not set because the round update should set it appropriately.
 	}
 
-	header := &types2.BlockHeaderConsTemp{
+	header := &types2.BlockHeaderConsensusTemp{
 		Height: int64(testHeight),
 		Hash:   "new_hash",
 
@@ -147,7 +147,7 @@ func TestPaceMakerCatchupSameStepDifferentRounds(t *testing.T) {
 		ProposerAddress: []byte(leader.Address),
 		ProposerId:      uint32(leaderId),
 	}
-	leaderBlock := &types2.BlockConsTemp{
+	leaderBlock := &types2.BlockConsensusTemp{
 		BlockHeader:       header,
 		Transactions:      make([]*types2.Transaction, 0),
 		ConsensusEvidence: make([]*types2.Evidence, 0),

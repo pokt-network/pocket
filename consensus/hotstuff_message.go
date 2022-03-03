@@ -5,6 +5,7 @@ import (
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types"
 )
 
 type HotstuffMessageType uint8
@@ -22,7 +23,7 @@ type HotstuffMessage struct {
 	Step   Step
 	Height BlockHeight
 	Round  Round
-	Block  *types_consensus.BlockConsTemp
+	Block  *types_consensus.BlockConsensusTemp
 
 	// TODO: When moving to Protos, this should be a simple oneoff.
 	JustifyQC  *QuorumCertificate // Non-nil from LEADER -> REPLICA; one of {HighQC, TimeoutQC, CommitQC}
@@ -53,7 +54,7 @@ func (m *HotstuffMessage) Decode(data []byte) error {
 
 func CreateProposeMessage(m *consensusModule, step Step, qc *QuorumCertificate) (*HotstuffMessage, error) {
 	if m.Block == nil {
-		return nil, fmt.Errorf("If a leader is trying to create a ProposeMessage, the block should never be nil.")
+		return nil, fmt.Errorf("if a leader is trying to create a ProposeMessage, the block should never be nil")
 	}
 
 	message := &HotstuffMessage{
@@ -71,9 +72,9 @@ func CreateProposeMessage(m *consensusModule, step Step, qc *QuorumCertificate) 
 	return message, nil
 }
 
-func CreateVoteMessage(m *consensusModule, step Step, block *types_consensus.BlockConsTemp) (*HotstuffMessage, error) {
+func CreateVoteMessage(m *consensusModule, step Step, block *types_consensus.BlockConsensusTemp) (*HotstuffMessage, error) {
 	if block == nil {
-		return nil, fmt.Errorf("If a replica is trying to vote, the block should never be nil.")
+		return nil, fmt.Errorf("if a replica is trying to vote, the block should never be nil")
 	}
 
 	message := &HotstuffMessage{
@@ -86,7 +87,9 @@ func CreateVoteMessage(m *consensusModule, step Step, block *types_consensus.Blo
 
 		Sender: m.NodeId,
 	}
-	message.PartialSig = message.getSignature(m.PrivateKey)
+
+	privKey := types.GetTestState().PrivateKey // TODO(discuss): Is this where we should be storing/accessing the privateKey
+	message.PartialSig = message.getSignature(privKey)
 
 	return message, nil
 }

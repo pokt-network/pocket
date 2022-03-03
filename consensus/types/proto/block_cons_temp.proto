@@ -6,12 +6,12 @@ package consensus;
 
 option go_package = "/types/";
 
-message BlockConsTemp {
-  BlockHeaderConsTemp BlockHeader = 1;
+message BlockConsensusTemp {
+  BlockHeaderConsensusTemp BlockHeader = 1;
   repeated bytes Transactions = 2;
 }
 
-message BlockHeaderConsTemp {
+message BlockHeaderConsensusTemp {
   int64 Height = 1;
   string Hash = 2;
   // string NetworkID = 3; // TODO: What is this for?

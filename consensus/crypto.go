@@ -19,7 +19,7 @@ type QuorumCertificate struct {
 	Height             BlockHeight
 	Round              Round
 	Step               Step
-	Block              *types_consensus.BlockConsTemp
+	Block              *types_consensus.BlockConsensusTemp
 	ThresholdSignature ThresholdSignature
 }
 

@@ -7,10 +7,7 @@ import (
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 
-	// "github.com/pokt-network/pocket/consensus/dkg"
-	"github.com/pokt-network/pocket/consensus/leader_election"
 	"github.com/pokt-network/pocket/shared/config"
-	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/proto"
@@ -30,91 +27,57 @@ type consensusModule struct {
 	Height BlockHeight
 	Round  Round
 	Step   Step
-	Block  *types_consensus.BlockConsTemp // The current block being proposed.
+	Block  *types_consensus.BlockConsensusTemp // The current block being voted on priot to committing to finality
 
-	HighPrepareQC *QuorumCertificate // highest QC for which replica voted PRECOMMIT.
-	LockedQC      *QuorumCertificate // highest QC for which replica voted COMMIT.
+	HighPrepareQC *QuorumCertificate // Highest QC for which replica voted PRECOMMIT
+	LockedQC      *QuorumCertificate // Highest QC for which replica voted COMMIT
 
 	// Leader Election
 	NodeId   types_consensus.NodeId
-	LeaderId *types_consensus.NodeId // pointer because it is nullable
-
-	// Crypto
-	PrivateKey crypto.PrivateKey // should we generalize to crypto.PrivateKey?
+	LeaderId *types_consensus.NodeId // Pointer because it is nullable
 
 	// Module Dependencies
-	paceMaker PaceMaker
-	// stateSyncMod      statesync.StateSyncModule
-	// dkgMod            dkg.DKGModule
+	UtilityContext modules.UtilityContext
+	paceMaker      PaceMaker
 	// leaderElectionMod leader_election.LeaderElectionModule
 
-	// TODO: Remove later to build/config/context/injected-logger
-	logPrefix string // TODO: Move over to config or context
-
-	// TODO: Move this over to the persistence module or elsewhere?
-	// Open questions for mempool:
-	// - Should this be a map keyed by (height, round, step)?
-	// - Should this be handeled by the persistence m?
-	// - How is the mempool management handled between all 4 ms?
-	// - When do we clear/remove messages from the mempool?
+	// TODO(design): Remove later when we build a shared/proper/injected logger
+	logPrefix string
+	// TODO(design): Move this over to the persistence module or elsewhere?
 	MessagePool map[Step][]HotstuffMessage
-	// MessagePool map[Height][Step][Roudn][]CandidateLeaderMessage
-	// MessagePool map[Height][Step][Roudn][]HotstuffMessage
-
-	UtilityContext modules.UtilityContext
 }
 
 func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	gob.Register(&DebugMessage{})
 	gob.Register(&HotstuffMessage{})
-	// gob.Register(&dkg.DKGMessage{})
-	gob.Register(&leader_election.LeaderElectionMessage{})
-	gob.Register(&TxWrapperMessage{})
+	// gob.Register(&leader_election.LeaderElectionMessage{})
+	// gob.Register(&TxWrapperMessage{})
 	state := types.GetTestState()
 	state.LoadStateFromConfig(cfg)
 
-	//stateSyncMod, err := statesync.Create(ctx, base)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
 	// leaderElectionMod, err := leader_election.Create(cfg)
 	// if err != nil {
 	// 	return nil, err
 	// }
 	//
-	//// TODO: Not used until we moved to threshold signatures.
-	//dkgMod, err := dkg.Create(ctx, base)
-	//if err != nil {
-	//	return nil, err
-	//}
-	// pk, err := crypto.NewPrivateKey(cfg.PrivateKey)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	pk := cfg.PrivateKey
 	m := &consensusModule{
 		bus: nil,
 
 		Height: 0,
 		Round:  0,
 		Step:   NewRound,
+		Block:  nil,
 
 		HighPrepareQC: nil,
 		LockedQC:      nil,
 
-		// NodeId:   types_consensus.NodeId(cfg.Consensus.NodeId),
-		// LeaderId: nil,
-
-		PrivateKey: pk,
-
-		logPrefix: DefaultLogPrefix,
+		NodeId:   types_consensus.NodeId(cfg.Consensus.NodeId),
+		LeaderId: nil,
 
 		paceMaker: nil, // Updated below because of the 2 way pointer design.
-		// stateSyncMod:      nil,
-		// dkgMod:            nil,
 		// leaderElectionMod: leaderElectionMod,
 
+		logPrefix:   DefaultLogPrefix,
 		MessagePool: make(map[Step][]HotstuffMessage),
 	}
 
@@ -131,10 +94,6 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 func (m *consensusModule) Start() error {
 	log.Println("Starting consensus module")
 
-	//if err := m.dkgMod.Start(); err != nil {
-	//	return err
-	//}
-
 	if err := m.paceMaker.Start(); err != nil {
 		return err
 	}
@@ -142,10 +101,6 @@ func (m *consensusModule) Start() error {
 	// if err := m.leaderElectionMod.Start(); err != nil {
 	// 	return err
 	// }
-
-	//if err := m.stateSyncMod.Start(); err != nil {
-	//	return err
-	//}
 
 	return nil
 }
@@ -188,8 +143,6 @@ func (m *consensusModule) HandleMessage(anyMessage *anypb.Any) {
 		m.handleHotstuffMessage(message.Message.(*HotstuffMessage))
 	// case types_consensus.DebugConsensusMessage:
 	// 	m.handleDebugMessage(message.Message.(*DebugMessage))
-	// case types_consensus.DKGConsensusMessage:
-	// 	m.dkgMod.HandleMessage(message.Message.(*dkg.DKGMessage))
 	// case types_consensus.LeaderElectionMessage:
 	// 	m.leaderElectionMod.HandleMessage(message.Message.(*leader_election.LeaderElectionMessage))
 	case types_consensus.StateSyncConsensusMessage:

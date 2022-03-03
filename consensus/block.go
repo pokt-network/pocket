@@ -10,7 +10,7 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 )
 
-func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsTemp, error) {
+func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, error) {
 	//if m.UtilityContext != nil {
 	//	m.nodeLog("[WARN] Why is the node utility context not nil when preparing a new block?. Realising for now...")
 	//	m.UtilityContext.ReleaseContext()
@@ -33,7 +33,7 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsTemp, error)
 
 	pocketState := types.GetTestState()
 
-	header := &types_consensus.BlockHeaderConsTemp{
+	header := &types_consensus.BlockHeaderConsensusTemp{
 		Height: int64(m.Height),
 		Hash:   strconv.Itoa(int(m.Height)),
 
@@ -43,7 +43,7 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsTemp, error)
 		// QuorumCertificate // TODO
 	}
 
-	block := &types_consensus.BlockConsTemp{
+	block := &types_consensus.BlockConsensusTemp{
 		BlockHeader:  header,
 		Transactions: txs,
 	}
@@ -51,7 +51,7 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsTemp, error)
 	return block, nil
 }
 
-func (m *consensusModule) isValidBlock(block *types_consensus.BlockConsTemp) bool {
+func (m *consensusModule) isValidBlock(block *types_consensus.BlockConsensusTemp) bool {
 	if block == nil {
 		return false
 	}
@@ -60,7 +60,7 @@ func (m *consensusModule) isValidBlock(block *types_consensus.BlockConsTemp) boo
 }
 
 // TODO: Should this be async?
-func (m *consensusModule) deliverTxToUtility(block *types_consensus.BlockConsTemp) error {
+func (m *consensusModule) deliverTxToUtility(block *types_consensus.BlockConsensusTemp) error {
 	utilityModule := m.GetBus().GetUtilityModule()
 	m.UtilityContext, _ = utilityModule.NewContext(int64(m.Height))
 	proposer := []byte(strconv.Itoa(int(m.NodeId)))
@@ -79,7 +79,7 @@ func (m *consensusModule) deliverTxToUtility(block *types_consensus.BlockConsTem
 	return nil
 }
 
-func (m *consensusModule) commitBlock(block *types_consensus.BlockConsTemp) error {
+func (m *consensusModule) commitBlock(block *types_consensus.BlockConsensusTemp) error {
 	m.nodeLog(fmt.Sprintf("COMMITTING BLOCK AT HEIGHT %d. WITH TRANSACTION COUNT: %d", m.Height, len(block.Transactions)))
 	if err := m.UtilityContext.GetPersistanceContext().Commit(); err != nil {
 		return err
