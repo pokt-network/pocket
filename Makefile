@@ -78,6 +78,11 @@ test_all: # generate_mocks
 test_pre2p: # generate_mocks
 	go test ./pre2p/...
 
+.PHONY: test_shared
+## Run all go unit tests in the shared module
+test_shared: # generate_mocks
+	go test ./shared/...
+
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
 .PHONY: protogen_show
