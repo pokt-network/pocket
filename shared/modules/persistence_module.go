@@ -1,6 +1,8 @@
 package modules
 
-import "github.com/syndtr/goleveldb/leveldb/memdb"
+import (
+	"github.com/syndtr/goleveldb/leveldb/memdb"
+)
 
 type PersistenceModule interface {
 	Module

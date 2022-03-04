@@ -1,15 +1,15 @@
 package shared
 
 import (
-	"fmt"
 	"log"
 	"time"
+
+	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p/pre2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/config"
-	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/utility"
 
@@ -21,15 +21,10 @@ var _ modules.Module = &Node{}
 type Node struct {
 	bus modules.Bus
 
-	Address string
+	Address pcrypto.Address
 }
 
 func Create(config *config.Config) (n *Node, err error) {
-	pk, err := crypto.NewPrivateKey(config.PrivateKey)
-	if err != nil {
-		return nil, err
-	}
-
 	persistenceMod, err := persistence.Create(config)
 	if err != nil {
 		return nil, err
@@ -58,7 +53,7 @@ func Create(config *config.Config) (n *Node, err error) {
 
 	return &Node{
 		bus:     bus,
-		Address: pk.Address().String(),
+		Address: config.PrivateKey.Address(),
 	}, nil
 }
 
@@ -89,8 +84,10 @@ func (node *Node) Start() error {
 	// compiler understands that no future events will take place.
 	go func() {
 		for {
-			fmt.Println("Sending placeholder event...")
-			node.GetBus().PublishEventToBus(&types.Event{PocketTopic: "Placeholder"})
+			log.Println("Sending placeholder event...")
+			node.GetBus().PublishEventToBus(&types.PocketEvent{
+				Topic: types.PocketTopic_UNKNOWN_POCKET_TOPIC,
+			})
 			time.Sleep(time.Second * 5)
 		}
 	}()
