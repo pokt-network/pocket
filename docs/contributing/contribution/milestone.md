@@ -15,21 +15,21 @@ flowchart LR
 
 ## What is a milestone?
 
-A milestone it’s a requested feature or fix that will be integrated to the project when all the required work and testing is done. Milestones changes should make the project go from a stable state to another stable state while incorporating the new feature or fix. Milestones will group a set of issues to split the work on smaller tasks or developers.
+A milestone is a requested feature or fix that will be integrated to the project when all the required work and testing is complete. Milestones changes should make the project go from a stable state to another stable state while incorporating the new feature or fix. Milestones will group a set of issues to split the work on smaller tasks or developers.
 
 ## Check before you go
 
-Before creating a new milestone, is important to check if there’s another milestone already in the project. Take in consideration that the feature or fix you are requesting, could be part of another milestone. Make sure that this milestone won’t duplicate efforts on the project.
+Before creating a new milestone, is important to check if there’s another similar milestone already in the project. Take in consideration that the feature or fix you are requesting could be part of another milestone. Make sure that this milestone won’t duplicate other ongoing efforts.
 
 ## Discuss with someone
 
-It’s important that the new feature or fix request is discussed with someone, in particular with someone from the core team or with big contributions to the project. With this previous discussion you need to find out if theres already a pending milestone that encapsulate the request and if what you are requesting is necessary and correct.
+It’s important that the new feature or fix request is discussed with someone, in particular with someone from the core team or with major project contributors. With this previous discussion you need to find out if theres already a pending milestone that encapsulate the request and if what you are requesting is necessary and correct.
 
 Join [Pocket Forum](https://forum.pokt.network/), discuss with other contributors, share ideas, check if something else is encapsulating your proposal. Analyze the feasibility of your proposal with other members of the community. Try to get consensus across the community before pushing a proposal.
 
 ## Integration Issues
 
-Every milestone needs to be accompanied by an Integration Issue. Integration issue is the joining and entry point for the whole milestone. 
+Every Milestone needs to be accompanied by an Integration Issue. Integration Issue is the entrypoint for the whole milestone.
 
 Integration Issues will have an integration branch, to integrate all milestone issues before reaching to `main` branch.
 
@@ -41,18 +41,18 @@ Integration issues should have the `integration` tag on its labels. Make sure to
 
 You can follow GitHub guides to create the integration issue
 
-[https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues)
+* [https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues)
+* [https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue)
 
-[https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue)
 
-It’s important to provide the following information for the issue. Issues not properly formatted can be deleted.
+It’s important to provide the following information for the issue (_issues not properly formatted may be deleted_):
 
-- Title: A descriptive title representing the goal of the issue
-- Description: What this issue will be for. It’s important that the description provides enough feedback to anyone to understand the motivation and deliverables of this issue.
-- Assignee: (Optional for Creation) must be assigned before anyone starting to work. It’s important for other developers to identify available issues to work on, or who to reach to participate on the development of that issue.
-- Labels: (Optional) you can use labels to identify issue types and goals
-- Projects: (Optional) the project which this issue is linked to
-- Milestone: The new milestone to be created
+- **Title**: A descriptive title representing the goal of the issue.
+- **Description**: What this issue will be for. It’s important that the description provides enough feedback to anyone to understand the motivation and deliverables of this issue.
+- **Assignee (optional for Creation)**: Must be assigned before anyone starting to work. It’s important for other developers to identify available issues to work on, or who to reach to participate on the development of that issue.
+- **Labels (Optional):** You can use any of the available labels to identify issue types and goals.
+- **Projects: (Optional):** The project which this issue is linked to.
+- **Milestone**: The new milestone to be created.
 
 Description can be provided in the form on a document link, although a summary is required.
 
