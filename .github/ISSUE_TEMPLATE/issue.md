@@ -1,7 +1,7 @@
 ---
 name: Issue
 about: This is a general purpose issue, which should have a milestone attached
-title: ''
+title: '[REPLACE ME] with a descriptive title'
 labels: ''
 assignees: ''
 
@@ -12,6 +12,16 @@ assignees: ''
 
 # Origin Document
 [ Issue of the origin or link to a document]
+
+# Goals
+## Deliverables
+- [ ] List of deliverables
+
+## [Optional] Testing Methodology
+How to proper test this issue
+
+## Non-goals
+- List of goals that this issue won't address
 
 Creator: [github username of the creator]
 Co-Owners: [github usernames of the owner - Optional]

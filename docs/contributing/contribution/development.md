@@ -2,18 +2,33 @@
 
 ```mermaid
 flowchart TD
-  check((Chat, Ask,<br>Investigate)) --> fork[Fork<br>the Project]
-  fork --> |code| code[Implement]
-  code --> |comment| done{Working?}
-  done --> |code| code
-  done --> |Yes| test{Local Test<br>OK?}
-	test --> |No| code
-  test --> |Yes| pr[Open PR]
-  pr --> |comment| comment{Has Comments?}
-  comment --> |Yes| code
-  comment --> |No| approved[Wait for Approvals]
-  approved --> merge[Merge PR]
-  merge --> close((Close Issue))
+  check((Chat, Ask,<br>Investigate))
+  fork[Fork<br>the Project]
+  code[Code &<br>Implement]
+	journal[Journal on<br>GH Issue]
+  done{Working?}
+  test{Local Test<br>OK?}
+  pr[Open/Update<br>PR]
+	review[Colleague<br>Review]
+  comment{Has Comments?}
+  approved[Wait for Approvals]
+  merge[Merge PR]
+  close((Close Issue))
+
+  check --> fork
+  fork --> code
+	code --> journal
+  journal --> done
+  done --> |no| code
+  done --> |yes| test
+	test --> |no| code
+  test --> |yes| pr
+  pr --> review
+	review --> |comment| comment
+  comment --> |yes| code
+  comment --> |no| approved
+  approved --> merge
+  merge --> close
 ```
 
 ## How to begin
