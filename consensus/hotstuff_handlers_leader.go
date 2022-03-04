@@ -2,13 +2,15 @@ package consensus
 
 import (
 	"fmt"
+
+	types_consensus "github.com/pokt-network/pocket/consensus/types"
 )
 
 type HotstuffLeaderMessageHandler struct{}
 
 /*** Prepare Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusModule, message *HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusModule, message *types_consensus.HotstuffMessage) {
 	if !m.didReceiveEnoughMessageForStep(NewRound) {
 		m.nodeLog("still waiting for more NEWROUND messages.")
 		return
@@ -24,7 +26,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	if highPrepareQC == nil || highPrepareQC.Height < m.Height || highPrepareQC.Round < m.Round {
 		block, err := m.prepareBlock()
 		if err != nil {
-			m.nodeLogError(fmt.Sprintf("Could not prepare a block for proposal: %v", err))
+			m.nodeLogError("Could not prepare a block for proposal: %v", err)
 			m.paceMaker.InterruptRound()
 			return
 		}
@@ -43,7 +45,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 	prepareProposeMessage, err := CreateProposeMessage(m, Prepare, highPrepareQC)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not create a propose message: %v", err))
+		m.nodeLogError("Could not create a propose message: %v", err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -52,7 +54,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// Leader also acts like a replica.
 	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, m.Block)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not create a vote message: %v", err))
+		m.nodeLogError("Could not create a vote message: %v", err)
 		return // TODO: Should we interrupt the round here?
 	}
 	m.hotstuffNodeSend(prepareVoteMessage)
@@ -60,7 +62,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 /*** PreCommit Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusModule, message *HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusModule, message *types_consensus.HotstuffMessage) {
 	if !m.didReceiveEnoughMessageForStep(Prepare) {
 		m.nodeLog("Still waiting for more PREPARE messages...")
 		return
@@ -69,7 +71,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 	prepareQC, err := m.getQCForStep(Prepare)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not get QC for PREPARE step: %v", err))
+		m.nodeLogError("Could not get QC for PREPARE step: %v", err)
 		return
 	}
 
@@ -80,7 +82,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 	precommitProposeMessages, err := CreateProposeMessage(m, PreCommit, prepareQC)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not create a propose message: %v", err))
+		m.nodeLogError("Could not create a propose message: %v", err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -89,7 +91,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	// Leader also acts like a replica.
 	precommitVoteMessage, err := CreateVoteMessage(m, PreCommit, m.Block)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not create a vote message: %v", err))
+		m.nodeLogError("Could not create a vote message: %v", err)
 		return // TODO: Should we interrupt the round here?
 	}
 	m.hotstuffNodeSend(precommitVoteMessage)
@@ -97,7 +99,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 /*** Commit Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensusModule, message *HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensusModule, message *types_consensus.HotstuffMessage) {
 	if !m.didReceiveEnoughMessageForStep(PreCommit) {
 		m.nodeLog("still waiting for more PRECOMMIT votes.")
 		return
@@ -106,7 +108,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 	preCommitQC, err := m.getQCForStep(PreCommit)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not get QC for PRECOMMIT step: %v", err))
+		m.nodeLogError("Could not get QC for PRECOMMIT step: %v", err)
 		return
 	}
 
@@ -117,7 +119,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 	commitProposeMessage, err := CreateProposeMessage(m, Commit, preCommitQC)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not create a propose message: %v", err))
+		m.nodeLogError("Could not create a propose message: %v", err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -126,7 +128,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 	// Leader also acts like a replica.
 	commitVoteMessage, err := CreateVoteMessage(m, Commit, m.Block)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not create a vote message: %v", err))
+		m.nodeLogError("Could not create a vote message: %v", err)
 		return // TODO: Should we interrupt the round here?
 	}
 	m.hotstuffNodeSend(commitVoteMessage)
@@ -134,7 +136,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 /*** Decide Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusModule, message *HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusModule, message *types_consensus.HotstuffMessage) {
 	if !m.didReceiveEnoughMessageForStep(Commit) {
 		m.nodeLog("still waiting for more COMMIT votes.")
 		return
@@ -143,7 +145,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 
 	commitQC, err := m.getQCForStep(Commit)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not get QC for COMMIT step: %v", err))
+		m.nodeLogError("Could not get QC for COMMIT step: %v", err)
 		return
 	}
 
@@ -153,14 +155,14 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 
 	decideProposeMessage, err := CreateProposeMessage(m, Decide, commitQC)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not create a propose message: %v", err))
+		m.nodeLogError("Could not create a propose message: %v", err)
 		m.paceMaker.InterruptRound()
 		return
 	}
 	m.hotstuffLeaderBroadcast(decideProposeMessage)
 
 	if err := m.commitBlock(m.Block); err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not commit block: %v", err))
+		m.nodeLogError("Could not commit block: %v", err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -168,13 +170,13 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	m.paceMaker.NewHeight()
 }
 
-func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, message *HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, message *types_consensus.HotstuffMessage) {
 	m.nodeLog("[NOOP] Leader does nothing on DECIDE message.")
 }
 
 // Helpers
 
-func (m *consensusModule) hotstuffLeaderBroadcast(message *HotstuffMessage) {
+func (m *consensusModule) hotstuffLeaderBroadcast(message *types_consensus.HotstuffMessage) {
 	m.nodeLog(fmt.Sprintf("Broadcasting %s message.", StepToString[message.Step]))
-	m.broadcastToNodes(message)
+	m.broadcastToNodes(message, types_consensus.ConsensusMessageType_CONSENSUS_HOTSTUFF_MESSAGE)
 }

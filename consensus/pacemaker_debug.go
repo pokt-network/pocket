@@ -1,6 +1,10 @@
 package consensus
 
-// TODO: PaceMaker has some functionsthat are meant only part of the interface
+import (
+	types_consensus "github.com/pokt-network/pocket/consensus/types"
+)
+
+// TODO: PaceMaker has some functions that are meant only part of the interface
 // for development and debugging purposes. Need to think about how to decouple
 // it (if needed) to avoid code complexity in the core business logic.
 
@@ -13,7 +17,7 @@ type PaceMakerDebug interface {
 type paceMakerDebug struct {
 	// Debug variables.
 	manualMode        bool
-	quorumCertificate *QuorumCertificate
+	quorumCertificate *types_consensus.QuorumCertificate
 }
 
 func (p *paceMaker) IsManualMode() bool {

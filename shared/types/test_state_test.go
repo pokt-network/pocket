@@ -14,7 +14,7 @@ func TestLoadStateFromGenesis(t *testing.T) {
 		Genesis:    genesisJson(),
 		PrivateKey: pk,
 	}
-	state := GetTestState()
+	state := GetTestState(nil)
 	state.LoadStateFromConfig(cfg)
 	// require.Equal(t, 4, len(state.ValidatorMap))
 }

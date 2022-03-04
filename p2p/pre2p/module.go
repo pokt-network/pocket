@@ -32,18 +32,18 @@ type p2pModule struct {
 func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	log.Println("Creating network module")
 
-	testState := types.GetTestState()
-	testState.LoadStateFromConfig(cfg)
-
 	tcpAddr, _ := net.ResolveTCPAddr(NetworkProtocol, fmt.Sprintf(":%d", cfg.Pre2P.ConsensusPort))
 	l, err := net.ListenTCP(NetworkProtocol, tcpAddr)
 	if err != nil {
 		return nil, err
 	}
 
+	testState := types.GetTestState(nil)
+	network := ConnectToValidatorNetwork(testState.ValidatorMap)
+
 	m = &p2pModule{
 		listener: l,
-		network:  ConnectToValidatorNetwork(testState.ValidatorMap),
+		network:  network,
 		address:  cfg.PrivateKey.Address(),
 	}
 

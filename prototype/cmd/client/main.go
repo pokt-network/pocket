@@ -2,9 +2,6 @@ package main
 
 import (
 	"encoding/gob"
-	"github.com/manifoldco/promptui"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 	"log"
 	"os"
 	"pocket/consensus"
@@ -17,6 +14,10 @@ import (
 	p2p_types "pocket/p2p/pre_p2p/types"
 	"pocket/shared/config"
 	"pocket/shared/crypto"
+
+	"github.com/manifoldco/promptui"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (

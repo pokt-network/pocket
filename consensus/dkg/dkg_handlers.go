@@ -60,7 +60,7 @@ func (module *dkgModule) handleDKGRound1() {
 	}
 	module.broadcastToNodes(broadcastMessage)
 
-	valMap := types.GetTestState().ValidatorMap
+	valMap := types.GetTestState(nil).ValidatorMap
 	for nodeIdNumber, p2pPacket := range p2psend {
 		dest, ok := valMap[types.NodeId(nodeIdNumber)]
 		if !ok {
@@ -81,7 +81,7 @@ func (module *dkgModule) handleDKGRound1() {
 func (module *dkgModule) handleDKGRound2(m *DKGMessage) {
 	log.Printf("[%d][DEBUG] Handling DKG Messages Round2 \n", module.NodeId)
 
-	valMap := types.GetTestState().ValidatorMap
+	valMap := types.GetTestState(nil).ValidatorMap
 
 	module.DKGMessagePool[m.Round] = append(module.DKGMessagePool[m.Round], *m)
 	numExpectedMessages := len(valMap)*2 - 1 // 1 bcast (including self) and 1 send from every validator. TODO: Add byzantine threshold.
@@ -122,7 +122,7 @@ func (module *dkgModule) handleDKGRound2(m *DKGMessage) {
 func (module *dkgModule) handleDKGRound3(m *DKGMessage) {
 	log.Printf("[%d][DEBUG] Handling DKG Messages Round3 \n", module.NodeId)
 
-	valMap := types.GetTestState().ValidatorMap
+	valMap := types.GetTestState(nil).ValidatorMap
 
 	module.DKGMessagePool[m.Round] = append(module.DKGMessagePool[m.Round], *m)
 	if len(module.DKGMessagePool[m.Round]) != len(valMap) {
@@ -156,7 +156,7 @@ func (module *dkgModule) handleDKGRound3(m *DKGMessage) {
 func (module *dkgModule) handleDKGRound4(m *DKGMessage) {
 	log.Printf("[%d][DEBUG] Handling DKG Messages Round4 \n", module.NodeId)
 
-	valMap := types.GetTestState().ValidatorMap
+	valMap := types.GetTestState(nil).ValidatorMap
 
 	module.DKGMessagePool[m.Round] = append(module.DKGMessagePool[m.Round], *m)
 	if len(module.DKGMessagePool[m.Round]) != len(valMap) {
@@ -177,7 +177,7 @@ func (module *dkgModule) handleDKGRound4(m *DKGMessage) {
 }
 
 func (module *dkgModule) addNewDKGParticipant() {
-	valMap := types.GetTestState().ValidatorMap
+	valMap := types.GetTestState(nil).ValidatorMap
 
 	valIdx := uint32(module.NodeId)
 	threshold := uint32(2) // TODO: 2/3 of the ValMap?

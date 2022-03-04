@@ -1,6 +1,7 @@
 package consensus
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
@@ -24,14 +25,14 @@ type consensusModule struct {
 	bus modules.Bus
 
 	// Hotstuff
-	Height BlockHeight
-	Round  Round
-	Step   Step
+	Height uint64
+	Round  uint64
+	Step   types_consensus.HotstuffStep
 	// TODO(olshansky): Merge with block from utility
 	Block *types_consensus.BlockConsensusTemp // The current block being voted on priot to committing to finality
 
-	HighPrepareQC *QuorumCertificate // Highest QC for which replica voted PRECOMMIT
-	LockedQC      *QuorumCertificate // Highest QC for which replica voted COMMIT
+	HighPrepareQC *types_consensus.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
+	LockedQC      *types_consensus.QuorumCertificate // Highest QC for which replica voted COMMIT
 
 	// Leader Election
 	NodeId    types_consensus.NodeId
@@ -46,7 +47,7 @@ type consensusModule struct {
 	// TODO(design): Remove later when we build a shared/proper/injected logger
 	logPrefix string
 	// TODO(design): Move this over to the persistence module or elsewhere?
-	MessagePool map[Step][]HotstuffMessage
+	MessagePool map[types_consensus.HotstuffStep][]types_consensus.HotstuffMessage
 }
 
 func Create(cfg *config.Config) (modules.ConsensusModule, error) {
@@ -55,14 +56,14 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		return nil, err
 	}
 
+	// TODO(olshansky): Can we make this a submodule?
 	paceMaker, err := CreatePaceMaker(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	state := types.GetTestState()
-	// state.LoadStateFromConfig(cfg)
-	nodeIdMap := types_consensus.GetValToIdMap(types.GetTestState().ValidatorMap)
+	state := types.GetTestState(nil)
+	nodeIdMap := types_consensus.GetValToIdMap(types.GetTestState(nil).ValidatorMap)
 
 	m := &consensusModule{
 		bus: nil,
@@ -84,10 +85,11 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		leaderElectionMod: leaderElectionMod,
 
 		logPrefix:   DefaultLogPrefix,
-		MessagePool: make(map[Step][]HotstuffMessage),
+		MessagePool: make(map[types_consensus.HotstuffStep][]types_consensus.HotstuffMessage),
 	}
 
-	paceMaker.SetConsensusMod(m) // TODO(olshansky): Can I avoid doing this?
+	// TODO(olshansky): Can I avoid doing this?
+	paceMaker.SetConsensusMod(m)
 
 	return m, nil
 }
@@ -107,7 +109,7 @@ func (m *consensusModule) Start() error {
 }
 
 func (m *consensusModule) Stop() error {
-	log.Println("Stopping consensus m")
+	log.Println("Stopping consensus module")
 	return nil
 }
 
@@ -124,37 +126,41 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	m.leaderElectionMod.SetBus(pocketBus)
 }
 
-func (m *consensusModule) HandleMessage(anyMessage *anypb.Any) {
-	d, err := anypb.UnmarshalNew(anyMessage, proto.UnmarshalOptions{})
+func (m *consensusModule) HandleMessage(message *anypb.Any) error {
+	var consensusMessage types_consensus.ConsensusMessage
+	err := anypb.UnmarshalTo(message, &consensusMessage, proto.UnmarshalOptions{})
 	if err != nil {
-		panic(err.Error()) // TODO remove
-	}
-	messageProto, ok := d.(*types_consensus.Message)
-	if !ok {
-		panic("any isn't Message type")
-	}
-	message, err := types_consensus.DecodeConsensusMessage(messageProto.Data)
-	if err != nil {
-		m.nodeLogError("[HandleMessage] Error unmarshalling message: %v" + err.Error())
-		return
+		return err
 	}
 
-	switch message.Message.GetType() {
-	case types_consensus.HotstuffConsensusMessage:
-		m.handleHotstuffMessage(message.Message.(*HotstuffMessage))
-
-		// case types_consensus.TransactionMessage:
-		// 	m.handleTransaction(message.Message.(*TxWrapperMessage))
-
-		// case types_consensus.LeaderElectionMessage:
-		// 	m.leaderElectionMod.HandleMessage(message.Message.(*leader_election.LeaderElectionMessage))
-
-		// case types_consensus.DebugConsensusMessage:
-		// 	m.handleDebugMessage(message.Message.(*DebugMessage))
-
-	case types_consensus.StateSyncConsensusMessage:
-		log.Println("[TODO] Not implementing StateSyncConsensusMessage")
+	switch consensusMessage.Type {
+	case types_consensus.ConsensusMessageType_CONSENSUS_HOTSTUFF_MESSAGE:
+		var hotstuffMessage types_consensus.HotstuffMessage
+		err := anypb.UnmarshalTo(consensusMessage.Message, &hotstuffMessage, proto.UnmarshalOptions{})
+		if err != nil {
+			return err
+		}
+		m.handleHotstuffMessage(&hotstuffMessage)
+	default:
+		return fmt.Errorf("Unknown consensus message type: %v", consensusMessage.Type)
 	}
+	return nil
+}
+
+func (m *consensusModule) HandleDebugMessage(debugMessage *types.DebugMessage) error {
+	switch debugMessage.Action {
+	case types.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
+		log.Println("TEMP")
+	case types.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
+		log.Println("TEMP")
+	case types.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
+		log.Println("TEMP")
+	case types.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
+		log.Println("TEMP")
+	default:
+		log.Printf("Debug message: %s \n", debugMessage.Message)
+	}
+	return nil
 }
 
 // func (m *consensusModule) handleTransaction(anyMessage *anypb.Any) {

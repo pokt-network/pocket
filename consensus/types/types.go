@@ -6,12 +6,6 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 )
 
-// The Pocket Network block height.
-type BlockHeight uint64 // TODO: Move this into `types_consensus`.
-
-// The number of times the node was interrupted at the current height; always 0 in the "happy path".
-type Round uint8 // TODO: Move this into `types_consensus`.
-
 type NodeId uint64
 
 type ValToIdMap map[string]NodeId

@@ -4,12 +4,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/pokt-network/pocket/shared/config"
 	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p/pre2p"
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/utility"
 
@@ -24,24 +24,27 @@ type Node struct {
 	Address pcrypto.Address
 }
 
-func Create(config *config.Config) (n *Node, err error) {
-	persistenceMod, err := persistence.Create(config)
+func Create(cfg *config.Config) (n *Node, err error) {
+	// TODO(design): initialize the state singleton until we have a proper solution for this.
+	_ = types.GetTestState(cfg)
+
+	persistenceMod, err := persistence.Create(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO(derrandz): Replace with real P2P module
-	pre2pMod, err := pre2p.Create(config)
+	pre2pMod, err := pre2p.Create(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	utilityMod, err := utility.Create(config)
+	utilityMod, err := utility.Create(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	consensusMod, err := consensus.Create(config)
+	consensusMod, err := consensus.Create(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -53,14 +56,14 @@ func Create(config *config.Config) (n *Node, err error) {
 
 	return &Node{
 		bus:     bus,
-		Address: config.PrivateKey.Address(),
+		Address: cfg.PrivateKey.Address(),
 	}, nil
 }
 
 func (node *Node) Start() error {
 	log.Println("Starting pocket node...")
 
-	// NOTE: Order of module initialization matters.
+	// NOTE: Order of module startup here matters.
 
 	if err := node.GetBus().GetPersistenceModule().Start(); err != nil {
 		return err

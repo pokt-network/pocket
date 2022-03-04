@@ -4,46 +4,25 @@ import (
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 )
 
-type Signature []byte
-
-// TODO: Until we figure out which library to use for threshold signatures,
-// mimick the behaviour by looping over individual signatures.
-type PartialSignature struct {
-	Signature Signature
-	NodeId    types_consensus.NodeId
-}
-
-type ThresholdSignature []PartialSignature
-
-type QuorumCertificate struct {
-	Height             BlockHeight
-	Round              Round
-	Step               Step
-	Block              *types_consensus.BlockConsensusTemp
-	ThresholdSignature ThresholdSignature
-}
-
-func GetThresholdSignature(partialSigs []*PartialSignature) *ThresholdSignature {
-	thresholdSig := make(ThresholdSignature, len(partialSigs))
+func GetThresholdSignature(
+	partialSigs []*types_consensus.PartialSignature,
+) *types_consensus.ThresholdSignature {
+	thresholdSig := &types_consensus.ThresholdSignature{}
+	thresholdSig.Signatures = make([]*types_consensus.PartialSignature, len(partialSigs))
 	for i, parpartialSig := range partialSigs {
-		thresholdSig[i] = *parpartialSig
+		thresholdSig.Signatures[i] = parpartialSig
 	}
-	return &thresholdSig
+	return thresholdSig
 }
 
-func QCToHotstuffMessage(qc *QuorumCertificate) *HotstuffMessage {
-	return &HotstuffMessage{
+func QuorumCertificateToHotstuffMessage(qc *types_consensus.QuorumCertificate) *types_consensus.HotstuffMessage {
+	return &types_consensus.HotstuffMessage{
+		Step:   qc.Step,
 		Height: qc.Height,
 		Round:  qc.Round,
-		Step:   qc.Step,
 		Block:  qc.Block,
+		Justification: &types_consensus.HotstuffMessage_QuorumCertificate{
+			QuorumCertificate: qc,
+		},
 	}
-}
-
-func (s *Signature) ToString() string {
-	return types_consensus.HexEncode(*s)
-}
-
-func (s *Signature) HashString() string {
-	return types_consensus.HashString(*s)
 }

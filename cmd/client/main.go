@@ -5,28 +5,68 @@ import (
 	"os"
 
 	"github.com/manifoldco/promptui"
+	"github.com/pokt-network/pocket/p2p/pre2p"
+	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
-	PromptPlaceholder string = "Placeholder"
+	PromptResetToGenesis      string = "ResetToGenesis"
+	PromptPrintNodeState      string = "PrintNodeState"
+	PromptTriggerNextView     string = "TriggerNextView"
+	PromptTogglePaceMakerMode string = "TogglePaceMakerMode"
 )
 
 var items = []string{
-	PromptPlaceholder,
+	PromptResetToGenesis,
+	PromptPrintNodeState,
+	PromptTriggerNextView,
+	PromptTogglePaceMakerMode,
 }
 
+var pre2pMod modules.P2PModule
+
 func main() {
+	pk, err := crypto.GeneratePrivateKey()
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to generate private key: %v", err)
+	}
+
+	// TODO(design): How should the debug client become aware of the validator network and blockchain state?
+	cfg := &config.Config{
+		Genesis: "build/config/genesis.json",
+
+		// Not used - only set to avoid `GetTestState()` from crashing
+		PrivateKey: pk.(crypto.Ed25519PrivateKey),
+
+		// Not used - only set to avoid `pre2p.Create()` from crashing
+		Pre2P: &config.Pre2PConfig{
+			ConsensusPort: 9999,
+		},
+	}
+
+	// Initialize the state singleton
+	_ = types.GetTestState(cfg)
+
+	pre2pMod, err = pre2p.Create(cfg)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to create pre2p module: " + err.Error())
+	}
+
 	for {
 		selection, err := promptGetInput()
 		if err == nil {
-			log.Println("Selection not yet implemented...", selection)
+			handleSelect(selection)
 		}
 	}
 }
 
 func promptGetInput() (string, error) {
 	prompt := promptui.Select{
-		Label: "Select an option",
+		Label: "Select an action",
 		Items: items,
 		Size:  len(items),
 	}
@@ -43,4 +83,27 @@ func promptGetInput() (string, error) {
 	}
 
 	return result, nil
+}
+
+func handleSelect(selection string) {
+	switch selection {
+	case PromptResetToGenesis:
+		log.Println("[CLIENT] Resetting to genesis...")
+		m := &types.DebugMessage{
+			Action:  types.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
+			Message: nil,
+		}
+		broadcastDebugMessage(m)
+	default:
+		log.Println("Selection not yet implemented...", selection)
+	}
+}
+
+func broadcastDebugMessage(debugMsg *types.DebugMessage) {
+	anyProto, err := anypb.New(debugMsg)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
+	}
+
+	pre2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
 }

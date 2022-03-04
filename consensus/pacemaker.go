@@ -7,6 +7,7 @@ import (
 	"time"
 
 	// "github.com/pokt-network/pocket/consensus/types"
+	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/types"
 
@@ -20,7 +21,7 @@ import (
 type PaceMaker interface {
 	modules.Module
 
-	ShouldHandleMessage(message *HotstuffMessage) bool
+	ShouldHandleMessage(message *types_consensus.HotstuffMessage) bool
 	RestartTimer()
 	NewHeight()
 	InterruptRound()
@@ -88,19 +89,19 @@ func (m *paceMaker) GetBus() modules.Bus {
 	return m.pocketBusMod
 }
 
-func (p *paceMaker) ShouldHandleMessage(m *HotstuffMessage) bool {
+func (p *paceMaker) ShouldHandleMessage(m *types_consensus.HotstuffMessage) bool {
 	consensusMod := p.consensusMod
 	// consensusMod.nodeLog(fmt.Sprintf("[WARN] Pacemaker received unexpected message of Height, Step, Round) from %d:  Expected: (%d, %d, %d); Actual (%d, %d, %d). Discarding...", message.Sender, consensusMod.Height, consensusMod.Step, consensusMod.Round, message.Height, message.Step, message.Round))
 
 	// Chain is out of sync.
 	if m.Height != consensusMod.Height {
 		// TODO: Need to broadcast message to start state sync.
-		consensusMod.nodeLog(fmt.Sprintf("[DEBUG] Discarding hotstuff message: Received message of an unexpected height from %d. Current: %d; Message: %d ", m.Sender, consensusMod.Height, m.Height))
+		consensusMod.nodeLog(fmt.Sprintf("[DEBUG] Discarding hotstuff message: Received message of an unexpected height. Current: %d; Message: %d ", consensusMod.Height, m.Height))
 		return false
 	}
 
 	// Do not handle messages if it is a self proposal.
-	if consensusMod.isLeader() && m.Type == ProposeMessageType && m.Step != NewRound {
+	if consensusMod.isLeader() && m.Type == types_consensus.HotstuffMessageType_HOTSTUFF_MESAGE_PROPOSE && m.Step != NewRound {
 		// TODO: Optimization that leads to some code complexity.
 		// Since the leader also acts as a replica but doesn't use the replica's handlers given the current
 		// implementation, it is safe to drop proposal that the leader made to itself.
@@ -121,7 +122,7 @@ func (p *paceMaker) ShouldHandleMessage(m *HotstuffMessage) bool {
 
 	if m.Round > consensusMod.Round {
 		consensusMod.nodeLog("[WARN][TODO] We are catching up the node's round so the leader needs to be updated, but right now we're just setting the leader to the message sender...")
-		consensusMod.LeaderId = &m.Sender
+		// consensusMod.LeaderId = &m.Sender
 	}
 
 	// Advance to the latest step/round.
@@ -180,7 +181,7 @@ func (p *paceMaker) NewHeight() {
 	p.startNextView(nil, false) // Do we really need to pass commitQC here?
 }
 
-func (p *paceMaker) startNextView(qc *QuorumCertificate, forceNextView bool) {
+func (p *paceMaker) startNextView(qc *types_consensus.QuorumCertificate, forceNextView bool) {
 	p.consensusMod.Step = NewRound
 	p.consensusMod.clearLeader()
 	p.consensusMod.clearMessagesPool()
@@ -190,19 +191,22 @@ func (p *paceMaker) startNextView(qc *QuorumCertificate, forceNextView bool) {
 		return
 	}
 
-	m := &HotstuffMessage{
-		Step:      NewRound,
-		Height:    p.consensusMod.Height,
-		Round:     p.consensusMod.Round,
-		JustifyQC: qc,
-		Type:      ProposeMessageType,
+	hotstuffMessage := &types_consensus.HotstuffMessage{
+		Type:   types_consensus.HotstuffMessageType_HOTSTUFF_MESAGE_PROPOSE,
+		Step:   NewRound,
+		Height: p.consensusMod.Height,
+		Round:  p.consensusMod.Round,
+		Block:  nil,
+		Justification: &types_consensus.HotstuffMessage_QuorumCertificate{
+			QuorumCertificate: qc,
+		},
 	}
 
 	p.RestartTimer()
-	p.consensusMod.broadcastToNodes(m)
+	p.consensusMod.broadcastToNodes(hotstuffMessage, types_consensus.ConsensusMessageType_CONSENSUS_HOTSTUFF_MESSAGE)
 }
 
-func (p *paceMaker) getStepTimeout(round Round) time.Duration {
+func (p *paceMaker) getStepTimeout(round uint64) time.Duration {
 	baseTimeout := time.Duration(int64(time.Millisecond) * int64(p.paceMakerParams.TimeoutMSec))
 	// TODO: Increase timeout using exponential backoff.
 	return baseTimeout

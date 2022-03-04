@@ -13,7 +13,6 @@ import (
 	"golang.org/x/exp/rand"
 
 	"github.com/pokt-network/pocket/consensus/leader_election/vrf"
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
 
 	"gonum.org/v1/gonum/stat/distuv"
 )
@@ -62,12 +61,8 @@ TODO(discuss): Discrepancies here from the original spec (github.com/pokt-networ
 */
 
 // Seed to be used for soritition when generating the vrfOut and vrfProof. Exposed publically for optimization purposes.
-func FormatSeed(
-	h types_consensus.BlockHeight,
-	r types_consensus.Round,
-	prevBlockHash string,
-) []byte {
-	return []byte(fmt.Sprintf("%d:%d:%s", h, r, prevBlockHash))
+func FormatSeed(height uint64, round uint64, prevBlockHash string) []byte {
+	return []byte(fmt.Sprintf("%d:%d:%s", height, round, prevBlockHash))
 }
 
 // For a specific validator, at most `validatorStakeAmount` (i.e. # of POKT staked) may be used to elect

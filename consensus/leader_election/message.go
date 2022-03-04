@@ -16,8 +16,8 @@ const (
 type LeaderElectionMessage struct {
 	types_consensus.ConsensusMessage
 
-	Height types_consensus.BlockHeight
-	Round  types_consensus.Round
+	Height uint64
+	Round  uint64
 
 	// TODO: This can be a one-off when we move to protobufs.
 	Type     LeaderElectionMessageType
@@ -29,8 +29,8 @@ type LeaderElectionMessage struct {
 
 type LeaderElectionKeyBroadcastMessage struct {
 	VerificationKey vrf.VerificationKey
-	VKStartHeight   types_consensus.BlockHeight
-	VKEndHeight     types_consensus.BlockHeight
+	VKStartHeight   uint64
+	VKEndHeight     uint64
 }
 
 type LeaderElectionProofBroadcastMessage struct {
@@ -40,7 +40,7 @@ type LeaderElectionProofBroadcastMessage struct {
 }
 
 func (m *LeaderElectionMessage) GetType() types_consensus.ConsensusMessageType {
-	return types_consensus.DKGConsensusMessage
+	return types_consensus.ConsensusMessageType_CONSENSUS_UKNOWN_MESSAGE
 }
 
 func (m *LeaderElectionMessage) Encode() ([]byte, error) {

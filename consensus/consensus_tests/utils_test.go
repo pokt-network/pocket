@@ -75,7 +75,7 @@ func CreateTestConsensusPocketNode(
 ) *shared.Node {
 	ctrl := gomock.NewController(nil)
 
-	state := types_consensus.GetTestState()
+	state := types_consensus.GetTestState(nil)
 	state.LoadStateFromConfig(config)
 
 	ctx := pcontext.EmptyPocketContext()

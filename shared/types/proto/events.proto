@@ -10,6 +10,7 @@ enum PocketTopic {
 	UNKNOWN_POCKET_TOPIC = 0;
 	CONSENSUS_MESSAGE_TOPIC = 1;
 	P2P_MESSAGE_TOPIC = 2;
+	DEBUG_TOPIC = 3;
 }
 
 message PocketEvent {

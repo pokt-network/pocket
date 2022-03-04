@@ -48,7 +48,7 @@ func TestPacemakerTimeouts(t *testing.T) {
 
 	// TODO: Should this be part of the configs?
 	// Update the State Singleton.
-	types2.GetTestState().ConsensusParams.PaceMaker.TimeoutMSec = 50
+	types2.GetTestState(nil).ConsensusParams.PaceMaker.TimeoutMSec = 50
 
 	// Start test pocket nodes.
 	ctx := context.EmptyPocketContext()

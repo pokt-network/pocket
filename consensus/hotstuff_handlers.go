@@ -2,14 +2,16 @@ package consensus
 
 import (
 	"fmt"
+
+	types_consensus "github.com/pokt-network/pocket/consensus/types"
 )
 
 type HotstuffMessageHandler interface {
-	HandleNewRoundMessage(*consensusModule, *HotstuffMessage)
-	HandlePrepareMessage(*consensusModule, *HotstuffMessage)
-	HandlePrecommitMessage(*consensusModule, *HotstuffMessage)
-	HandleCommitMessage(*consensusModule, *HotstuffMessage)
-	HandleDecideMessage(*consensusModule, *HotstuffMessage)
+	HandleNewRoundMessage(*consensusModule, *types_consensus.HotstuffMessage)
+	HandlePrepareMessage(*consensusModule, *types_consensus.HotstuffMessage)
+	HandlePrecommitMessage(*consensusModule, *types_consensus.HotstuffMessage)
+	HandleCommitMessage(*consensusModule, *types_consensus.HotstuffMessage)
+	HandleDecideMessage(*consensusModule, *types_consensus.HotstuffMessage)
 }
 
 /*
@@ -29,7 +31,7 @@ var (
 	ReplicaMessageHandler HotstuffMessageHandler = &HotstuffReplicaMessageHandler{}
 )
 
-var replicaMessageMapper map[Step]func(*consensusModule, *HotstuffMessage) = map[Step]func(*consensusModule, *HotstuffMessage){
+var replicaMessageMapper map[types_consensus.HotstuffStep]func(*consensusModule, *types_consensus.HotstuffMessage) = map[types_consensus.HotstuffStep]func(*consensusModule, *types_consensus.HotstuffMessage){
 	NewRound:  ReplicaMessageHandler.HandleNewRoundMessage,
 	Prepare:   ReplicaMessageHandler.HandlePrepareMessage,
 	PreCommit: ReplicaMessageHandler.HandlePrecommitMessage,
@@ -37,7 +39,7 @@ var replicaMessageMapper map[Step]func(*consensusModule, *HotstuffMessage) = map
 	Decide:    ReplicaMessageHandler.HandleDecideMessage,
 }
 
-var leaderMessageMapper map[Step]func(*consensusModule, *HotstuffMessage) = map[Step]func(*consensusModule, *HotstuffMessage){
+var leaderMessageMapper map[types_consensus.HotstuffStep]func(*consensusModule, *types_consensus.HotstuffMessage) = map[types_consensus.HotstuffStep]func(*consensusModule, *types_consensus.HotstuffMessage){
 	NewRound:  LeaderMessageHandler.HandleNewRoundMessage,
 	Prepare:   LeaderMessageHandler.HandlePrepareMessage,
 	PreCommit: LeaderMessageHandler.HandlePrecommitMessage,
@@ -45,8 +47,9 @@ var leaderMessageMapper map[Step]func(*consensusModule, *HotstuffMessage) = map[
 	Decide:    LeaderMessageHandler.HandleDecideMessage,
 }
 
-func (m *consensusModule) handleHotstuffMessage(message *HotstuffMessage) {
-	m.nodeLog(fmt.Sprintf("[DEBUG] (%d->%d) - Height: %d; Type: %s; Round: %d.", message.Sender, m.NodeId, message.Height, StepToString[message.Step], message.Round))
+func (m *consensusModule) handleHotstuffMessage(message *types_consensus.HotstuffMessage) {
+	sender := 4 // message.Sender
+	m.nodeLog(fmt.Sprintf("[DEBUG] (%d->%d) - Height: %d; Type: %s; Round: %d.", sender, m.NodeId, message.Height, StepToString[message.Step], message.Round))
 
 	// TODO: Basics metadata & byte checks.
 

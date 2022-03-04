@@ -6,7 +6,6 @@ import (
 
 	"github.com/pokt-network/pocket/consensus/leader_election/sortition"
 	"github.com/pokt-network/pocket/consensus/leader_election/vrf"
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
@@ -36,8 +35,8 @@ type LeaderCandidate struct {
 */
 func IsLeaderCandidate(
 	validator *types.Validator,
-	height types_consensus.BlockHeight,
-	round types_consensus.Round,
+	height uint64,
+	round uint64,
 	prevBlockHash string,
 	votingPower float64,
 	totalStakedAmount float64,
@@ -72,8 +71,8 @@ func IsLeaderCandidate(
 
 func ElectLeader(
 	leaderCandidates []*LeaderCandidate,
-	height types_consensus.BlockHeight,
-	round types_consensus.Round,
+	height uint64,
+	round uint64,
 	prevBlockHash string,
 	// ) (types_consensus.NodeId, error) {
 ) (string, error) {

@@ -21,7 +21,7 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 		return nil, err
 	}
 	m.utilityContext = utilContext
-	//valMap := shared.GetTestState().ValidatorMap
+	//valMap := shared.GetTestState(nil).ValidatorMap
 	maxTxBytes := 90000 // INTEGRATION_TEMP
 	//proposer := []byte(strconv.Itoa(int(m.NodeId)))
 	pk, _ := crypto.GeneratePrivateKey()
@@ -31,7 +31,7 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 		return nil, err
 	}
 
-	pocketState := types.GetTestState()
+	pocketState := types.GetTestState(nil)
 
 	header := &types_consensus.BlockHeaderConsensusTemp{
 		Height: int64(m.Height),
@@ -93,7 +93,7 @@ func (m *consensusModule) commitBlock(block *types_consensus.BlockConsensusTemp)
 	//	return err
 	//}
 
-	pocketState := types.GetTestState()
+	pocketState := types.GetTestState(nil)
 	pocketState.UpdateAppHash(block.BlockHeader.Hash)
 	pocketState.UpdateBlockHeight(uint64(block.BlockHeader.Height))
 

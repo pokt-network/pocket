@@ -31,8 +31,8 @@ func TestLeaderElection(t *testing.T) {
 
 	mapNumCandidates := make(map[uint64]uint64)
 	for h := 0; h < numViewChanges; h++ {
-		height := types_consensus.BlockHeight(h)
-		round := types_consensus.Round(rand.Intn(10))
+		height := uint64(h)
+		round := uint64(rand.Intn(10))
 		prevBlockHash := strconv.Itoa(rand.Intn(1e10)) // TODO: Create a general purpose utility for random strings?
 
 		candidates := make([]*LeaderCandidate, 0)
