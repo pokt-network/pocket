@@ -1,7 +1,6 @@
 package consensus
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
@@ -10,8 +9,6 @@ import (
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -29,15 +26,16 @@ type consensusModule struct {
 	Round  uint64
 	Step   types_consensus.HotstuffStep
 	// TODO(olshansky): Merge with block from utility
-	Block *types_consensus.BlockConsensusTemp // The current block being voted on priot to committing to finality
+	Block *types_consensus.BlockConsensusTemp // The current block being voted on prior to committing to finality
 
 	HighPrepareQC *types_consensus.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	LockedQC      *types_consensus.QuorumCertificate // Highest QC for which replica voted COMMIT
 
 	// Leader Election
-	NodeId    types_consensus.NodeId
-	LeaderId  *types_consensus.NodeId
-	NodeIdMap types_consensus.ValToIdMap // TODO(design): This needs to be updated every time the ValMap is modified
+	LeaderId   *types_consensus.NodeId
+	NodeId     types_consensus.NodeId
+	ValToIdMap types_consensus.ValToIdMap // TODO(design): This needs to be updated every time the ValMap is modified
+	IdToValMap types_consensus.IdToValMap // TODO(design): This needs to be updated every time the ValMap is modified
 
 	// Module Dependencies
 	utilityContext    modules.UtilityContext
@@ -63,7 +61,8 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	}
 
 	state := types.GetTestState(nil)
-	nodeIdMap := types_consensus.GetValToIdMap(types.GetTestState(nil).ValidatorMap)
+	address := state.PrivateKey.Address().String()
+	valIdMap, idValMap := types_consensus.GetValToIdMap(types.GetTestState(nil).ValidatorMap)
 
 	m := &consensusModule{
 		bus: nil,
@@ -76,9 +75,10 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		HighPrepareQC: nil,
 		LockedQC:      nil,
 
-		NodeId:    nodeIdMap[state.PrivateKey.Address().String()],
-		LeaderId:  nil,
-		NodeIdMap: nodeIdMap,
+		NodeId:     valIdMap[address],
+		LeaderId:   nil,
+		ValToIdMap: valIdMap,
+		IdToValMap: idValMap,
 
 		utilityContext:    nil,
 		paceMaker:         paceMaker,
@@ -88,8 +88,8 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		MessagePool: make(map[types_consensus.HotstuffStep][]types_consensus.HotstuffMessage),
 	}
 
-	// TODO(olshansky): Can I avoid doing this?
-	paceMaker.SetConsensusMod(m)
+	// TODO(olshansky): Look for a way to avoid doing this.
+	paceMaker.SetConsensusModule(m)
 
 	return m, nil
 }
@@ -125,58 +125,3 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	m.paceMaker.SetBus(pocketBus)
 	m.leaderElectionMod.SetBus(pocketBus)
 }
-
-func (m *consensusModule) HandleMessage(message *anypb.Any) error {
-	var consensusMessage types_consensus.ConsensusMessage
-	err := anypb.UnmarshalTo(message, &consensusMessage, proto.UnmarshalOptions{})
-	if err != nil {
-		return err
-	}
-
-	switch consensusMessage.Type {
-	case types_consensus.ConsensusMessageType_CONSENSUS_HOTSTUFF_MESSAGE:
-		var hotstuffMessage types_consensus.HotstuffMessage
-		err := anypb.UnmarshalTo(consensusMessage.Message, &hotstuffMessage, proto.UnmarshalOptions{})
-		if err != nil {
-			return err
-		}
-		m.handleHotstuffMessage(&hotstuffMessage)
-	default:
-		return fmt.Errorf("Unknown consensus message type: %v", consensusMessage.Type)
-	}
-	return nil
-}
-
-func (m *consensusModule) HandleDebugMessage(debugMessage *types.DebugMessage) error {
-	switch debugMessage.Action {
-	case types.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
-		log.Println("TEMP")
-	case types.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
-		log.Println("TEMP")
-	case types.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
-		log.Println("TEMP")
-	case types.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
-		log.Println("TEMP")
-	default:
-		log.Printf("Debug message: %s \n", debugMessage.Message)
-	}
-	return nil
-}
-
-// func (m *consensusModule) handleTransaction(anyMessage *anypb.Any) {
-// 	messageProto := &types_consensus.Message{}
-
-// 	if err := anyMessage.UnmarshalTo(messageProto); err != nil {
-// 		m.nodeLogError("[HandleTransaction] Error unmarshalling message: %v" + err.Error())
-// 		return
-// 	}
-
-// 	// TODO: decode data, basic validation, send to utility module.
-// 	module := m.GetBus().GetUtilityModule()
-// 	m.utilityContext, _ = module.NewContext(int64(m.Height))
-// 	if err := m.utilityContext.CheckTransaction(messageProto.Data); err != nil {
-// 		m.nodeLogError(err.Error())
-// 	}
-// 	fmt.Println("TRANSACTION IS CHECKED")
-// 	m.utilityContext.ReleaseContext()
-// }

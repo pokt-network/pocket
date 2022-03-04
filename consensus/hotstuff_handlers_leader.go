@@ -6,6 +6,8 @@ import (
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 )
 
+var _ HotstuffMessageHandler = &HotstuffLeaderMessageHandler{}
+
 type HotstuffLeaderMessageHandler struct{}
 
 /*** Prepare Step ***/
@@ -178,5 +180,5 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusMod
 
 func (m *consensusModule) hotstuffLeaderBroadcast(message *types_consensus.HotstuffMessage) {
 	m.nodeLog(fmt.Sprintf("Broadcasting %s message.", StepToString[message.Step]))
-	m.broadcastToNodes(message, types_consensus.ConsensusMessageType_CONSENSUS_HOTSTUFF_MESSAGE)
+	m.broadcastToNodes(message, HotstuffMessage)
 }

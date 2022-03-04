@@ -18,7 +18,7 @@ func CreateProposeMessage(
 	}
 
 	message := &types_consensus.HotstuffMessage{
-		Type:   types_consensus.HotstuffMessageType_HOTSTUFF_MESAGE_PROPOSE,
+		Type:   Propose,
 		Step:   step, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
 		Height: uint64(m.Height),
 		Round:  m.Round,
@@ -40,7 +40,7 @@ func CreateVoteMessage(
 	}
 
 	message := &types_consensus.HotstuffMessage{
-		Type:          types_consensus.HotstuffMessageType_HOTSTUFF_MESSAGE_VOTE,
+		Type:          Vote,
 		Step:          step, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
 		Height:        m.Height,
 		Round:         m.Round,

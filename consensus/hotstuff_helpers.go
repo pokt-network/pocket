@@ -75,7 +75,7 @@ func (m *consensusModule) isQCValid(qc *types_consensus.QuorumCertificate) bool 
 		if !ok {
 			// TODO: There is an optimization here where we can continue as long as we still
 			// meet the byazantine minimum, but just fail fast for now.
-			m.nodeLog(fmt.Sprintf("[WARN] Validator %d not found in the ValMap but a partial sig was signed by them.", m.NodeIdMap[partialSig.Address]))
+			m.nodeLog(fmt.Sprintf("[WARN] Validator %d not found in the ValMap but a partial sig was signed by them.", m.ValToIdMap[partialSig.Address]))
 			return false
 		}
 		// TODO: Every call to `IsSignatureValid` does a serialization and should be optimized. We can
@@ -87,7 +87,7 @@ func (m *consensusModule) isQCValid(qc *types_consensus.QuorumCertificate) bool 
 		pubKey := validator.PublicKey
 		// just serialize `Message` once and verify each signature without reserializing every time.
 		if !IsSignatureValid(messageToJustify, pubKey, partialSig.Signature) {
-			m.nodeLog(fmt.Sprintf("[WARN] QC invalid because partial signature from the following node is invalid: %d\n", m.NodeIdMap[partialSig.Address]))
+			m.nodeLog(fmt.Sprintf("[WARN] QC invalid because partial signature from the following node is invalid: %d\n", m.ValToIdMap[partialSig.Address]))
 			return false
 		}
 	}

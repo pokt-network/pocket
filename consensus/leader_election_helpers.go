@@ -9,6 +9,10 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 )
 
+func (m *consensusModule) isLeader() bool {
+	return m.LeaderId != nil && *m.LeaderId == m.NodeId
+}
+
 func (m *consensusModule) electNextLeader(message *types_consensus.HotstuffMessage) {
 	leaderId := m.electNextLeaderDeterministic(message)
 

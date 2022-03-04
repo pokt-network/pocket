@@ -6,6 +6,8 @@ import (
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 )
 
+var _ HotstuffMessageHandler = &HotstuffReplicaMessageHandler{}
+
 type HotstuffReplicaMessageHandler struct{}
 
 func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensusModule, message *types_consensus.HotstuffMessage) {
@@ -107,5 +109,5 @@ func (m *consensusModule) hotstuffNodeSend(message *types_consensus.HotstuffMess
 	}
 
 	m.nodeLog(fmt.Sprintf("Sending %s vote.", StepToString[message.Step]))
-	m.sendToNode(message, types_consensus.ConsensusMessageType_CONSENSUS_HOTSTUFF_MESSAGE, m.LeaderId)
+	m.sendToNode(message, HotstuffMessage, m.LeaderId)
 }

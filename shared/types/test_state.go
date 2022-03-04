@@ -19,8 +19,7 @@ type TestState struct {
 	ValidatorMap     ValMap // TODO(olshansky): Need to update this on every validator operation(pause, stake, unstake, etc)
 	TotalVotingPower uint64 // TODO(design): Need to update this on every send transaction.
 
-	// TODO(discuss): Should this maintain a pointer to the config?
-	// Config config.Config
+	ConsensusParams ConsensusParams
 }
 
 // The pocket state singleton.
@@ -76,12 +75,14 @@ func (ps *TestState) loadStateFromGenesis(cfg *config.Config) {
 	}
 
 	*ps = TestState{
-		BlockHeight:  0,
-		ValidatorMap: ValidatorListToMap(genesis.Validators),
-
 		PrivateKey: cfg.PrivateKey,
 
-		// Config: *cfg,
+		BlockHeight:      0,
+		AppHash:          genesis.AppHash,
+		ValidatorMap:     ValidatorListToMap(genesis.Validators),
+		TotalVotingPower: 0, // Value is compute below in `recomputeTotalVotingPower`
+
+		ConsensusParams: *genesis.ConsensusParams,
 	}
 
 	ps.recomputeTotalVotingPower()

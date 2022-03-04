@@ -15,7 +15,7 @@ type ConsensusParams struct {
 	VRFKeyValidityBlock    uint64 `json:"vrf_key_validity_block"`
 
 	// PaceMaker
-	PaceMaker PaceMakerParams `json:"pace_maker"`
+	PaceMakerParams PaceMakerParams `json:"pace_maker"`
 }
 
 type PaceMakerParams struct {
@@ -48,7 +48,7 @@ func (c *ConsensusParams) Validate() error {
 		return fmt.Errorf("VRFKeyValidityBlock must be a positive integer")
 	}
 
-	if err := c.PaceMaker.Validate(); err != nil {
+	if err := c.PaceMakerParams.Validate(); err != nil {
 		return fmt.Errorf("Pacemaker params invalid: %w", err)
 	}
 

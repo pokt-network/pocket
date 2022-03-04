@@ -15,15 +15,18 @@ type HotstuffMessageHandler interface {
 }
 
 /*
-TODO: Think/discuss: The reason we do not assign both the leader and the replica handlers
-to the leader (which should also act as a replica) is because it can create a weird
-inconsistent state (e.g. the replica handler restarts the PaceMaker timeout). This requires
-additional "replica-like" logic in the leader handler which has both pros and cons:
-Pros:
- * The leader can short-circuit and optimize replica messages.
- * Allows for micr-Micro-optimizationAllows optimization on both
-Cons:
- * The leader's replica code utilizes a different code-path.
+TODO(design): The reason we do not assign both the leader and the replica handlers
+to the leader (which should also act as a replica when it is a leader) is because it
+can create a weird inconsistent state (e.g. the replica handler restarts the
+PaceMaker timeout). This requires additional "replica-like" logic in the leader handler
+which has both pros and cons:
+	Pros:
+		* The leader can short-circuit and optimize replica related logic
+		* Allows for micro-optimizations
+		* Avoids code flowing through the P2P pipeline
+	Cons:
+		* The leader's "replica related logic" utilizes a different code-path
+		* Code is less "generalizable" and therefore potentially more error prone.
 */
 var (
 	// TODO: Should we just make these singletons?
@@ -51,19 +54,22 @@ func (m *consensusModule) handleHotstuffMessage(message *types_consensus.Hotstuf
 	sender := 4 // message.Sender
 	m.nodeLog(fmt.Sprintf("[DEBUG] (%d->%d) - Height: %d; Type: %s; Round: %d.", sender, m.NodeId, message.Height, StepToString[message.Step], message.Round))
 
-	// TODO: Basics metadata & byte checks.
+	// TODO(olshansky): Basics metadata & byte checks.
 
-	// Liveness & safety checks & updates.
-	if !m.paceMaker.ShouldHandleMessage(message) {
+	// Liveness & safety checks.
+	shouldHandle, reason := m.paceMaker.ShouldHandleMessage(message)
+	if !shouldHandle {
+		m.nodeLog(fmt.Sprintf("[WARN] Discarding hotstuff message because: %s", reason))
 		return
 	}
+	m.nodeLog(reason)
 
 	// Discard messages with invalid partial signatures.
 	if !m.isMessagePartialSigValid(message) {
 		return
 	}
 
-	// TODO: Move this over into the persistence m.
+	// TODO(olshansky): Move this over into the persistence m.
 	m.MessagePool[message.Step] = append(m.MessagePool[message.Step], *message)
 
 	if m.LeaderId == nil && message.Step == NewRound {

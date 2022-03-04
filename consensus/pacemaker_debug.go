@@ -4,9 +4,9 @@ import (
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 )
 
-// TODO: PaceMaker has some functions that are meant only part of the interface
-// for development and debugging purposes. Need to think about how to decouple
-// it (if needed) to avoid code complexity in the core business logic.
+// TODO(olshansky): PaceMaker has some functions that are meant only part of the
+// interface for development and debugging purposes. Need to think about how to
+// decouple it (if needed) to avoid code complexity in the core business logic.
 
 type PaceMakerDebug interface {
 	SetManualMode(bool)
@@ -15,7 +15,6 @@ type PaceMakerDebug interface {
 }
 
 type paceMakerDebug struct {
-	// Debug variables.
 	manualMode        bool
 	quorumCertificate *types_consensus.QuorumCertificate
 }

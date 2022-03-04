@@ -7,33 +7,35 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 )
 
-func (m *consensusModule) isMessagePartialSigValid(message *types_consensus.HotstuffMessage) bool {
+func (m *consensusModule) isMessagePartialSigValid(message *types_consensus.HotstuffMessage) (bool, string) {
 	// Special case for development. No node will have ID 0.
 	// TODO: Can this create a vulnerability?
 	// if message.Sender == 0 {
 	// 	return true
 	// }
 
+	if message.GetPartialSignature() == nil || message.GetPartialSignature().Signature == nil || message.GetPartialSignature().Address == "" {
+		return false, "PartialSignature or internal attributes are nillis nil"
+	}
+
 	address := message.GetPartialSignature().Address
-	nodeId, ok := m.NodeIdMap[address]
+	nodeId, ok := m.ValToIdMap[address]
 	if !ok {
-		m.nodeLog(fmt.Sprintf("[WARN] Trying to get the nodeId for an address that's not in the validator mapping: %s", address))
-		return false
+		return false, fmt.Sprintf("Trying to get the nodeId for an address that's not in the validator mapping: %s", address)
 	}
 
 	valMap := types.GetTestState(nil).ValidatorMap
 	validator, ok := valMap[address]
 	if !ok {
-		m.nodeLog(fmt.Sprintf("[WARN] Trying to verify PartialSig from %d but it is not in the validator map.", m.NodeIdMap[address]))
-		return false
+		return false, fmt.Sprintf("[WARN] Trying to verify PartialSig from %d but it is not in the validator map.", m.ValToIdMap[address])
 	}
 
 	pubKey := validator.PublicKey
 	if message.GetPartialSignature() != nil && !IsSignatureValid(message, pubKey, message.GetPartialSignature().Signature) {
-		m.nodeLogError(fmt.Sprintf("Partial signature on message is invalid. Sender: %d; Height: %d; Step: %d; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s", nodeId, message.Height, message.Step, message.Round, message.GetPartialSignature().Signature, types_consensus.ProtoHash(message.Block), pubKey.String()), nil)
-		return false
+		return false, fmt.Sprintf("Partial signature on message is invalid. Sender: %d; Height: %d; Step: %d; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s", nodeId, message.Height, message.Step, message.Round, message.GetPartialSignature().Signature, types_consensus.ProtoHash(message.Block), pubKey.String())
 	}
-	return true
+
+	return true, ""
 }
 
 // TODO: Should this return an error or simply log every locally?

@@ -9,6 +9,7 @@ import "google/protobuf/any.proto";
 enum ConsensusMessageType {
     CONSENSUS_UKNOWN_MESSAGE = 0;
     CONSENSUS_HOTSTUFF_MESSAGE = 1;
+    CONSENSUS_UTILITY_TRANSACTION = 2;
 }
 
 message ConsensusMessage {
