@@ -36,11 +36,3 @@ func GetValToIdMap(valMap types.ValMap) (ValToIdMap, IdToValMap) {
 
 	return valToIdMap, idToValMap
 }
-
-// Returns 0 if the NodeId of the message source cannot be identified.
-// func NodeIdFromMessage(message *HotstuffMessage) NodeId {
-// 	if message.GetPartialSignature() != nil {
-// 		message.GetPartialSignature().Address
-// 	}
-// 	return 0
-// }

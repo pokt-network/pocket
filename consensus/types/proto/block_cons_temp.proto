@@ -6,30 +6,30 @@ package consensus;
 
 option go_package = "/types/";
 
+// TODO(olshansky): Work with andrew to generalize and merge type with the corresponding one in utility.
 message BlockConsensusTemp {
   BlockHeaderConsensusTemp BlockHeader = 1;
   repeated bytes Transactions = 2;
 }
 
+// TODO(olshansky): Work with andrew to generalize and merge type with the corresponding one in utility.
 message BlockHeaderConsensusTemp {
   int64 Height = 1;
   string Hash = 2;
-  // string NetworkID = 3; // TODO: What is this for?
-  google.protobuf.Timestamp Time = 4; // BFT Timestamp.
-  uint32 NumTxs = 5;
-  // int64 TotalTxs = 6;  // TODO: What is the purpose of this relative to NumTxs?
-  string LastBlockHash = 7;
-  bytes ProposerAddress = 8;
-  uint32 ProposerId = 9; // TODO: Same as the NodeId throughout the consensus module.
-  bytes QuorumCertificate = 10; // TODO: just a gob serialization of the go struct for now, but switch to a proto.
+  google.protobuf.Timestamp Time = 3; // BFT Timestamp.
+  uint32 NumTxs = 4;
+  string LastBlockHash = 5;
+  bytes ProposerAddress = 6;
+   // TODO(discuss): The `QuorumCertificate` structure contains the `Block` inside of it so we end up with a two way relationship?
+  bytes QuorumCertificate = 7;
 }
 
-// TODO: Move into a separate file.
+// TODO(design): Temporary structure.
 message Transaction {
   bytes Data = 1;
 }
 
-// TODO: Move into a separate file.
+// TODO(design): Temporary structure.
 message Evidence {
   bytes Data = 1;
 }

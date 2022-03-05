@@ -14,30 +14,32 @@ type HotstuffLeaderMessageHandler struct{}
 
 func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusModule, message *types_consensus.HotstuffMessage) {
 	if !m.didReceiveEnoughMessageForStep(NewRound) {
-		m.nodeLog("still waiting for more NEWROUND messages.")
+		m.nodeLog("Still waiting for more NEWROUND messages...")
 		return
 	}
 
-	// TODO: Do we need to pause for MinBlockFreqMSec here to let more transactions come in?
-	m.nodeLog("received enough NEWROUND messages.")
+	// TODO(olshansky): Do we need to pause for MinBlockFreqMSec here to let more transactions come in?
+	m.nodeLog("Received enough NEWROUND messages!")
 
 	// Likely to be `nil` if blockchain is progressing well.
 	highPrepareQC := m.findHighQC(NewRound)
 
-	// TODO: Is this check sufficient?
+	// TODO(design): Is this check sufficient?
 	if highPrepareQC == nil || highPrepareQC.Height < m.Height || highPrepareQC.Round < m.Round {
 		block, err := m.prepareBlock()
 		if err != nil {
-			m.nodeLogError("Could not prepare a block for proposal: %v", err)
+			m.nodeLogError("Could not prepare a block for proposal.", err)
 			m.paceMaker.InterruptRound()
 			return
 		}
 		m.Block = block
 		if err := m.deliverTxToUtility(block); err != nil {
-			// TODO
+			m.nodeLogError("Could not deliver transactions to the utility module.", err)
+			m.paceMaker.InterruptRound()
+			return
 		}
 	} else {
-		// TODO: Do we need to validate highPrepareQC here?
+		// TODO(design): Do we need to validate highPrepareQC here?
 		m.Block = highPrepareQC.Block
 	}
 
@@ -47,17 +49,17 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 	prepareProposeMessage, err := CreateProposeMessage(m, Prepare, highPrepareQC)
 	if err != nil {
-		m.nodeLogError("Could not create a propose message: %v", err)
+		m.nodeLogError("Could not create a propose message.", err)
 		m.paceMaker.InterruptRound()
 		return
 	}
 	m.hotstuffLeaderBroadcast(prepareProposeMessage)
 
-	// Leader also acts like a replica.
+	// Leader also acts like a replica
 	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, m.Block)
 	if err != nil {
-		m.nodeLogError("Could not create a vote message: %v", err)
-		return // TODO: Should we interrupt the round here?
+		m.nodeLogError("Could not create a vote message.", err)
+		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.hotstuffNodeSend(prepareVoteMessage)
 }
@@ -69,11 +71,11 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		m.nodeLog("Still waiting for more PREPARE messages...")
 		return
 	}
-	m.nodeLog("received enough PREPARE messages.")
+	m.nodeLog("received enough PREPARE messages!")
 
 	prepareQC, err := m.getQCForStep(Prepare)
 	if err != nil {
-		m.nodeLogError("Could not get QC for PREPARE step: %v", err)
+		m.nodeLogError("Could not get QC for PREPARE step.", err)
 		return
 	}
 
@@ -84,17 +86,17 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 	precommitProposeMessages, err := CreateProposeMessage(m, PreCommit, prepareQC)
 	if err != nil {
-		m.nodeLogError("Could not create a propose message: %v", err)
+		m.nodeLogError("Could not create a propose message.", err)
 		m.paceMaker.InterruptRound()
 		return
 	}
 	m.hotstuffLeaderBroadcast(precommitProposeMessages)
 
-	// Leader also acts like a replica.
+	// Leader also acts like a replica
 	precommitVoteMessage, err := CreateVoteMessage(m, PreCommit, m.Block)
 	if err != nil {
-		m.nodeLogError("Could not create a vote message: %v", err)
-		return // TODO: Should we interrupt the round here?
+		m.nodeLogError("Could not create a vote message.", err)
+		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.hotstuffNodeSend(precommitVoteMessage)
 }
@@ -110,8 +112,8 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 	preCommitQC, err := m.getQCForStep(PreCommit)
 	if err != nil {
-		m.nodeLogError("Could not get QC for PRECOMMIT step: %v", err)
-		return
+		m.nodeLogError("Could not get QC for PRECOMMIT step.", err)
+		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
 	m.Step = Commit
@@ -121,17 +123,17 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 	commitProposeMessage, err := CreateProposeMessage(m, Commit, preCommitQC)
 	if err != nil {
-		m.nodeLogError("Could not create a propose message: %v", err)
+		m.nodeLogError("Could not create a propose message.", err)
 		m.paceMaker.InterruptRound()
 		return
 	}
 	m.hotstuffLeaderBroadcast(commitProposeMessage)
 
-	// Leader also acts like a replica.
+	// Leader also acts like a replica
 	commitVoteMessage, err := CreateVoteMessage(m, Commit, m.Block)
 	if err != nil {
-		m.nodeLogError("Could not create a vote message: %v", err)
-		return // TODO: Should we interrupt the round here?
+		m.nodeLogError("Could not create a vote message.", err)
+		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.hotstuffNodeSend(commitVoteMessage)
 }
@@ -140,14 +142,14 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusModule, message *types_consensus.HotstuffMessage) {
 	if !m.didReceiveEnoughMessageForStep(Commit) {
-		m.nodeLog("still waiting for more COMMIT votes.")
+		m.nodeLog("Still waiting for more COMMIT votes...")
 		return
 	}
-	m.nodeLog("received enough COMMIT votes.")
+	m.nodeLog("Received enough COMMIT votes!")
 
 	commitQC, err := m.getQCForStep(Commit)
 	if err != nil {
-		m.nodeLogError("Could not get QC for COMMIT step: %v", err)
+		m.nodeLogError("Could not get QC for COMMIT step.", err)
 		return
 	}
 
@@ -157,17 +159,19 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 
 	decideProposeMessage, err := CreateProposeMessage(m, Decide, commitQC)
 	if err != nil {
-		m.nodeLogError("Could not create a propose message: %v", err)
+		m.nodeLogError("Could not create a propose message.", err)
 		m.paceMaker.InterruptRound()
 		return
 	}
 	m.hotstuffLeaderBroadcast(decideProposeMessage)
 
 	if err := m.commitBlock(m.Block); err != nil {
-		m.nodeLogError("Could not commit block: %v", err)
+		m.nodeLogError("Could not commit block.", err)
 		m.paceMaker.InterruptRound()
 		return
 	}
+
+	// There is no "replica behaviour" to immitate here
 
 	m.paceMaker.NewHeight()
 }
@@ -176,7 +180,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusMod
 	m.nodeLog("[NOOP] Leader does nothing on DECIDE message.")
 }
 
-// Helpers
+/*** Helpers ***/
 
 func (m *consensusModule) hotstuffLeaderBroadcast(message *types_consensus.HotstuffMessage) {
 	m.nodeLog(fmt.Sprintf("Broadcasting %s message.", StepToString[message.Step]))

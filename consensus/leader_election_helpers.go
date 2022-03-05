@@ -2,8 +2,6 @@ package consensus
 
 import (
 	"fmt"
-	"log"
-	"math/rand"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/types"
@@ -48,24 +46,24 @@ func (m *consensusModule) electNextLeaderDeterministic(message *types_consensus.
 	return types_consensus.NodeId(value%int64(len(valMap)) + 1)
 }
 
-func (m *consensusModule) electNextLeaderPseudoRandom(message *types_consensus.HotstuffMessage) types_consensus.NodeId {
-	valMap := types.GetTestState(nil).ValidatorMap
-	value := int64(message.Height) + int64(message.Round) + int64(message.Step)
-	rand.Seed(value)
-	return types_consensus.NodeId(rand.Intn(len(valMap)) + 1)
-}
+// func (m *consensusModule) electNextLeaderPseudoRandom(message *types_consensus.HotstuffMessage) types_consensus.NodeId {
+// 	valMap := types.GetTestState(nil).ValidatorMap
+// 	value := int64(message.Height) + int64(message.Round) + int64(message.Step)
+// 	rand.Seed(value)
+// 	return types_consensus.NodeId(rand.Intn(len(valMap)) + 1)
+// }
 
-func (m *consensusModule) electNextLeaderRoundRobin(message *types_consensus.HotstuffMessage) types_consensus.NodeId {
-	log.Fatalf("Not supported right now")
-	return types_consensus.NodeId(0)
+// func (m *consensusModule) electNextLeaderRoundRobin(message *types_consensus.HotstuffMessage) types_consensus.NodeId {
+// 	log.Fatalf("Not supported right now")
+// 	return types_consensus.NodeId(0)
 
-	// leaderNum := uint32(0)
-	// valMap := shared.GetTestState(nil).ValidatorMap
-	// if m.PreviousLeader != nil {
-	// 	leaderNum = uint32(*m.PreviousLeader)
-	// }
-	// if leaderNum >= uint32(len(valMap)) {
-	// 	return types_consensus.NodeId(leaderNum)
-	// }
-	// return types_consensus.NodeId(leaderNum + 1)
-}
+// 	leaderNum := uint32(0)
+// 	valMap := shared.GetTestState(nil).ValidatorMap
+// 	if m.PreviousLeader != nil {
+// 		leaderNum = uint32(*m.PreviousLeader)
+// 	}
+// 	if leaderNum >= uint32(len(valMap)) {
+// 		return types_consensus.NodeId(leaderNum)
+// 	}
+// 	return types_consensus.NodeId(leaderNum + 1)
+// }

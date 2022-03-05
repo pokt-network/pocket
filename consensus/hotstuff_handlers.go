@@ -1,5 +1,7 @@
 package consensus
 
+// TODO(olshansky): Low priority design: think of a way to make `hotstuff_*` files be a sub-package under consensus.
+
 import (
 	"fmt"
 
@@ -51,8 +53,8 @@ var leaderMessageMapper map[types_consensus.HotstuffStep]func(*consensusModule, 
 }
 
 func (m *consensusModule) handleHotstuffMessage(message *types_consensus.HotstuffMessage) {
-	sender := 4 // message.Sender
-	m.nodeLog(fmt.Sprintf("[DEBUG] (%d->%d) - Height: %d; Type: %s; Round: %d.", sender, m.NodeId, message.Height, StepToString[message.Step], message.Round))
+	// TODO(olshansky): Can we add the senderID back in here?
+	m.nodeLog(fmt.Sprintf("[DEBUG] (%s->%d) - Height: %d; Type: %s; Round: %d.", "???", m.NodeId, message.Height, StepToString[message.Step], message.Round))
 
 	// TODO(olshansky): Basics metadata & byte checks.
 
@@ -65,19 +67,23 @@ func (m *consensusModule) handleHotstuffMessage(message *types_consensus.Hotstuf
 	m.nodeLog(reason)
 
 	// Discard messages with invalid partial signatures.
-	if !m.isMessagePartialSigValid(message) {
+	validPartialSig, reason := m.isMessagePartialSigValid(message)
+	if !validPartialSig {
+		m.nodeLogError("Discarding hotstuff message because the partial signature is invalid.", fmt.Errorf(reason))
 		return
 	}
 
-	// TODO(olshansky): Move this over into the persistence m.
+	// TODO(olshansky): Move this over into the persistence module.
 	m.MessagePool[message.Step] = append(m.MessagePool[message.Step], *message)
 
+	// Need to execute leader election if there is no leader and we are in a new round.
 	if m.LeaderId == nil && message.Step == NewRound {
 		m.electNextLeader(message)
 	}
 
 	m.nodeLog(fmt.Sprintf("About to process %s message.", StepToString[m.Step]))
 	if m.isLeader() {
+		// Note that the leader also acts as a replica, but this logic is implemented in the underlying code.
 		leaderMessageMapper[message.Step](m, message)
 	} else {
 		replicaMessageMapper[message.Step](m, message)

@@ -59,21 +59,6 @@ func (m *consensusModule) printNodeState(message *types.DebugMessage) {
 	fmt.Printf("\tCONSENSUS STATE: [%s] Node %d is at (Height, Step, Round): (%d, %s, %d)\n", m.logPrefix, state.NodeId, state.Height, StepToString[types_consensus.HotstuffStep(state.Step)], state.Round)
 }
 
-// func (m *consensusModule) handleDebugMessage(message *types.DebugMessage) {
-// 	switch message.Action {
-// 	case types.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
-// 		m.resetToGenesis(message)
-// 	case types.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
-// 		m.resetToGenesis(message)
-// 	case types.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
-// 		m.handleTriggerNextView(message)
-// 	case types.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
-// 		m.handleTriggerNextView(message)
-// 	default:
-// 		log.Fatalf("Unsupported debug message: %s \n", types.DebugMessageAction_name[int32(message.Action)])
-// 	}
-// }
-
 func (m *consensusModule) triggerNextView(message *types.DebugMessage) {
 	m.nodeLog("[DEBUG] Triggering next view...")
 

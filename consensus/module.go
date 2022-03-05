@@ -25,8 +25,7 @@ type consensusModule struct {
 	Height uint64
 	Round  uint64
 	Step   types_consensus.HotstuffStep
-	// TODO(olshansky): Merge with block from utility
-	Block *types_consensus.BlockConsensusTemp // The current block being voted on prior to committing to finality
+	Block  *types_consensus.BlockConsensusTemp // The current block being voted on prior to committing to finality
 
 	HighPrepareQC *types_consensus.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	LockedQC      *types_consensus.QuorumCertificate // Highest QC for which replica voted COMMIT
@@ -42,10 +41,8 @@ type consensusModule struct {
 	paceMaker         PaceMaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-	// TODO(design): Remove later when we build a shared/proper/injected logger
-	logPrefix string
-	// TODO(design): Move this over to the persistence module or elsewhere?
-	MessagePool map[types_consensus.HotstuffStep][]types_consensus.HotstuffMessage
+	logPrefix   string                                                             // TODO(design): Remove later when we build a shared/proper/injected logger
+	MessagePool map[types_consensus.HotstuffStep][]types_consensus.HotstuffMessage // TODO(design): Move this over to the persistence module or elsewhere?
 }
 
 func Create(cfg *config.Config) (modules.ConsensusModule, error) {

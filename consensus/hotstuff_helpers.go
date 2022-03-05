@@ -26,15 +26,16 @@ func (m *consensusModule) getQCForStep(step types_consensus.HotstuffStep) (*type
 		// TODO(olshansky): We're not validating that all the messages have the same height,
 		// round and step when computing the ThresholdSignature. This can be fixed by making
 		// the appropriate query to the persistence module.
-		if message.GetPartialSignature() == nil {
-			m.nodeLog(fmt.Sprintf("[WARN] No partial signature found for step %s which should not happem...", StepToString[step]))
+		ps := message.GetPartialSignature()
+		if ps == nil {
+			m.nodeLog(fmt.Sprintf("[WARN] No partial signature found for step %s which should not happen...", StepToString[step]))
 			continue
 		}
-		ps := &types_consensus.PartialSignature{
-			Signature: message.GetPartialSignature().Signature,
-			// Address:   message.Sender,
+		if ps.Signature == nil || len(ps.Address) == 0 {
+			m.nodeLog(fmt.Sprintf("[WARN] Partial signature is incomplete for step %s which should not happen...", StepToString[step]))
+			continue
 		}
-		pss = append(pss, ps)
+		pss = append(pss, message.GetPartialSignature())
 	}
 
 	if !m.isOptimisticThresholdMet(len(pss)) {
@@ -42,9 +43,9 @@ func (m *consensusModule) getQCForStep(step types_consensus.HotstuffStep) (*type
 	}
 
 	return &types_consensus.QuorumCertificate{
+		Height:    m.Height,
 		Step:      step,
 		Round:     m.Round,
-		Height:    m.Height,
 		Block:     m.Block,
 		Signature: GetThresholdSignature(pss),
 	}, nil
@@ -73,20 +74,14 @@ func (m *consensusModule) isQCValid(qc *types_consensus.QuorumCertificate) bool 
 	for _, partialSig := range qc.Signature.Signatures {
 		validator, ok := valMap[partialSig.Address]
 		if !ok {
-			// TODO: There is an optimization here where we can continue as long as we still
-			// meet the byazantine minimum, but just fail fast for now.
+			// TODO(olshansky): There is an optimization here where we can continue as long as
+			// we still meet the byazantine minimum, but just fail fast for now.
 			m.nodeLog(fmt.Sprintf("[WARN] Validator %d not found in the ValMap but a partial sig was signed by them.", m.ValToIdMap[partialSig.Address]))
 			return false
 		}
-		// TODO: Every call to `IsSignatureValid` does a serialization and should be optimized. We can
-		// pubKey, err := crypto.NewPublicKey(validator.PublicKey)
-		// if err != nil {
-		// 	panic(err) // todo remove
-		// 	return false
-		// }
-		pubKey := validator.PublicKey
+		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
 		// just serialize `Message` once and verify each signature without reserializing every time.
-		if !IsSignatureValid(messageToJustify, pubKey, partialSig.Signature) {
+		if !IsSignatureValid(messageToJustify, validator.PublicKey, partialSig.Signature) {
 			m.nodeLog(fmt.Sprintf("[WARN] QC invalid because partial signature from the following node is invalid: %d\n", m.ValToIdMap[partialSig.Address]))
 			return false
 		}

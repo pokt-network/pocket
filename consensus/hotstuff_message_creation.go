@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"fmt"
+	"log"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -74,7 +75,7 @@ func getHotstuffMessageSignature(m *types_consensus.HotstuffMessage, privKey cry
 	}
 	signature, err := privKey.Sign(bytesToSign)
 	if err != nil {
-		panic(err) // remove
+		log.Fatalf("Error signing message: %v", err)
 		return nil
 	}
 	return signature

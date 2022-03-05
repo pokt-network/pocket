@@ -13,7 +13,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// TODO(olshansky): Low priority design: think of a way to make pacemaker_* files be a sub-package under consensus.
+// TODO(olshansky): Low priority design: think of a way to make `pacemaker_*` files be a sub-package under consensus.
 type PaceMaker interface {
 	modules.Module
 	PaceMakerDebug

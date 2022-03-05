@@ -33,7 +33,7 @@ func (m *consensusModule) broadcastToNodes(message proto.Message, messageType ty
 	}
 }
 
-func (m *consensusModule) sendToNode(message proto.Message, messageType types_consensus.ConsensusMessageType, destNode *types_consensus.NodeId) {
+func (m *consensusModule) sendToNode(message proto.Message, messageType types_consensus.ConsensusMessageType, destNode types_consensus.NodeId) {
 	anyConsensusMessage, err := anypb.New(message)
 	if err != nil {
 		m.nodeLogError("Failed to create inner consensus message", err)
@@ -51,9 +51,7 @@ func (m *consensusModule) sendToNode(message proto.Message, messageType types_co
 		return
 	}
 
-addr := m.NodeIdMap
-
-	if err := m.GetBus().GetP2PModule().Send(any, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
+	if err := m.GetBus().GetP2PModule().Send([]byte(m.IdToValMap[destNode]), any, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError("Error broadcasting message:", err)
 		return
 	}

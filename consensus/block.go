@@ -6,41 +6,38 @@ import (
 	"strconv"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
 func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, error) {
-	//if m.utilityContext != nil {
-	//	m.nodeLog("[WARN] Why is the node utility context not nil when preparing a new block?. Realising for now...")
-	//	m.utilityContext.ReleaseContext()
-	//}
-	fmt.Println("creating new context for prepareBlock()")
+	state := types.GetTestState(nil)
+
+	if m.utilityContext != nil {
+		m.nodeLog("[WARN] Why is the node utility context not nil when preparing a new block? Realising for now...")
+		m.utilityContext.ReleaseContext()
+	}
+
 	utilContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
 	if err != nil {
 		return nil, err
 	}
 	m.utilityContext = utilContext
-	//valMap := shared.GetTestState(nil).ValidatorMap
-	maxTxBytes := 90000 // INTEGRATION_TEMP
-	//proposer := []byte(strconv.Itoa(int(m.NodeId)))
-	pk, _ := crypto.GeneratePrivateKey()
-	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.utilityContext.GetPersistanceContext().GetLastByzValidators
-	txs, err := m.utilityContext.GetTransactionsForProposal(pk.PublicKey().Address(), maxTxBytes, lastByzValidators)
+
+	maxTxBytes := 90000                    // TODO(olshansky): Retrieve this from global configs
+	lastByzValidators := make([][]byte, 0) // TODO(olshansky): Retrieve this from persistence
+	txs, err := m.utilityContext.GetTransactionsForProposal(state.PrivateKey.Address(), maxTxBytes, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}
 
-	pocketState := types.GetTestState(nil)
-
 	header := &types_consensus.BlockHeaderConsensusTemp{
-		Height: int64(m.Height),
-		Hash:   strconv.Itoa(int(m.Height)),
-
-		LastBlockHash: pocketState.AppHash,
-		// ProposerAddress: []byte(pocketState.Address),
-		// ProposerId:      uint32(m.NodeId),
-		// QuorumCertificate // TODO
+		Height:            int64(m.Height),
+		Hash:              strconv.Itoa(int(m.Height)),
+		Time:              nil, // TODO(olshansky): What should this be?
+		NumTxs:            uint32(len(txs)),
+		LastBlockHash:     state.AppHash,
+		ProposerAddress:   state.PrivateKey.Address(),
+		QuorumCertificate: nil, // TODO(olshansky): See the comment in `block_cons_temp.proto`
 	}
 
 	block := &types_consensus.BlockConsensusTemp{
@@ -51,11 +48,12 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 	return block, nil
 }
 
-func (m *consensusModule) isValidBlock(block *types_consensus.BlockConsensusTemp) bool {
+// TODO(olshansky): Implement this properly....
+func (m *consensusModule) isValidBlock(block *types_consensus.BlockConsensusTemp) (bool, string) {
 	if block == nil {
-		return false
+		return false, "Block is nil"
 	}
-	return true
+	return true, ""
 
 }
 
