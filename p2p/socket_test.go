@@ -13,11 +13,12 @@ import (
 const (
 	ReadBufferSize       = 1024 * 4
 	WriteBufferSize      = 1024 * 4
-	WireByteHeaderLength = 8
+	WireByteHeaderLength = 9
+	ReadDeadlineInMs     = 400
 )
 
-func TestIO_NewIO(t *testing.T) {
-	pipe := NewSocket(1024*4, 8, 100)
+func TestSocket_NewIO(t *testing.T) {
+	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 	if cap(pipe.buffers.read) != ReadBufferSize && cap(pipe.buffers.write) != WriteBufferSize {
 		t.Logf("IO pipe is malconfigured")
 	} else {
@@ -25,8 +26,8 @@ func TestIO_NewIO(t *testing.T) {
 	}
 }
 
-func TestIO_Write(t *testing.T) {
-	pipe := NewSocket(1024*4, 8, 100)
+func TestSocket_Write(t *testing.T) {
+	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 
 	pipe.buffersState.writeOpen = true // this is usually set to true by pipe.open
 
@@ -43,18 +44,18 @@ func TestIO_Write(t *testing.T) {
 	}
 }
 
-func TestIO_WriteConcurrently(t *testing.T) {
+func TestSocket_WriteConcurrently(t *testing.T) {
 	t.Skip()
 }
 
-func TestIO_Answer(t *testing.T) {
+func TestSocket_Answer(t *testing.T) {
 	t.Skip()
 
-	pipe := NewSocket(1024*4, 8, 100)
+	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 	pipe.buffersState.writeOpen = true // usually opened by pipe.open
 	pipe.opened.Store(true)
 
-	pipe.network = nil // TODO(derrandz): replace with mockgen
+	pipe.runner = NewRunnerMock()
 
 	conn := MockConnM()
 	pipe.conn = net.Conn(conn)
@@ -99,11 +100,11 @@ func TestIO_Answer(t *testing.T) {
 	}
 }
 
-func TestIO_Read(t *testing.T) {
-	pipe := NewSocket(1024*4, 8, 100)
+func TestSocket_Read(t *testing.T) {
+	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 
 	conn := MockConn()
-	pipe.network = nil // TODO(derrandz): replace with mockgen
+	pipe.runner = NewRunnerMock()
 	pipe.conn = conn
 
 	pipe.reader = bufio.NewReader(pipe.conn)
@@ -155,10 +156,11 @@ func TestIO_Read(t *testing.T) {
 /*
  @ io.poll is a continuous read loop that reads incoming messages from a reader/writer/closer (like a network connection)
 */
-func TestIO_Poll(t *testing.T) {
-	pipe := NewSocket(1024*4, 8, 100)
+func TestSocket_Poll(t *testing.T) {
+	runner := NewRunnerMock()
+	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 
-	pipe.network = nil // TODO(derrandz): replace with mockgen
+	pipe.runner = runner
 	pipe.conn = MockConn()
 	pipe.reader = bufio.NewReader(pipe.conn)
 
@@ -192,7 +194,7 @@ func TestIO_Poll(t *testing.T) {
 		t.Errorf("pipe read error: read buffer corrupted")
 	}
 
-	<-pipe.network.sink
+	<-runner.sink
 	pipe.close()
 
 	<-pipe.closed
@@ -202,10 +204,11 @@ func TestIO_Poll(t *testing.T) {
 	}
 }
 
-func TestIO_Inbound(t *testing.T) {
-	pipe := NewSocket(1024*4, 8, 100)
+func TestSocket_Inbound(t *testing.T) {
+	runner := NewRunnerMock()
+	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 
-	pipe.network = nil // TODO(derrandz): replace with mockgen
+	pipe.runner = runner
 	pipe.buffersState.writeOpen = true
 
 	addr := "dummy-test-host:dummyport"
@@ -256,7 +259,7 @@ func TestIO_Inbound(t *testing.T) {
 	<-conn.signals
 
 	<-time.After(time.Millisecond * 20)
-	w := <-pipe.network.sink
+	w := <-runner.sink
 	n := len(w.Bytes())
 
 	//_, _, data, _, err := pipe.c.decode(buff)
@@ -303,7 +306,7 @@ func TestIO_Inbound(t *testing.T) {
 		t.Errorf("pipe inbound error (answer error): inbound peer received corrupted response")
 	}
 
-	pipe.network.done <- 1
+	runner.done <- 1
 
 	<-time.After(time.Millisecond * 10) // give time for routines to wrap up
 
@@ -321,13 +324,14 @@ func TestIO_Inbound(t *testing.T) {
  @ Might fail (from time to time) due to goroutines synchronization, expected behavior, the test case is fine nonetheless, expected behavior, the test case is fine nonetheless, expected behavior, the test case is fine nonetheless, expected behavior, the test case is fine nonetheless
  @
 */
-func TestIO_Outbound(t *testing.T) {
-	pipe := NewSocket(1024*4, 8, 100)
+func TestSocket_Outbound(t *testing.T) {
+	runner := NewRunnerMock()
+	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 
 	dialer := MockDialer()
 
 	pipe.dialer = types.Dialer(dialer)
-	pipe.network = nil // TODO(derrandz): replace with mockgen
+	pipe.runner = runner
 	pipe.buffersState.writeOpen = true
 
 	pipe.opened.Store(true)
@@ -413,7 +417,7 @@ func TestIO_Outbound(t *testing.T) {
 	// so after flushing, we need to make sure to flush out the what's been read by the pipe
 	// and sent to the sink. (by emptying the sink)
 	conn.Flush()
-	<-pipe.network.sink
+	<-runner.sink
 
 	{
 		rawpong := GenerateByteLen((1024 * 4) - WireByteHeaderLength)
@@ -426,7 +430,7 @@ func TestIO_Outbound(t *testing.T) {
 			t.Errorf("Conn Error: payload mismatch, payload length: %d, buffer length: %d", len(pong), len(conn.buff))
 		}
 
-		w := <-pipe.network.sink
+		w := <-runner.sink
 
 		rpong := w.Bytes()
 
@@ -453,16 +457,17 @@ func TestIO_Outbound(t *testing.T) {
 	}
 }
 
-func TestIO_Open(t *testing.T) {
+func TestSocket_Open(t *testing.T) {
 
 	// test opening an outbound connection
 	{
-		pipe := NewSocket(1024*4, 8, 100)
+		runner := NewRunnerMock()
+		pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 
 		dialer := MockDialer()
 
 		pipe.dialer = types.Dialer(dialer)
-		pipe.network = nil // TODO(derrandz): replace with mockgen
+		pipe.runner = runner
 		pipe.buffersState.writeOpen = true
 
 		addr := "dummy-test-host:dummyport"
@@ -505,7 +510,7 @@ func TestIO_Open(t *testing.T) {
 			t.Errorf("pipe inbound error: expected onopened handler to be called once, got called %d times", onopenedStub.times())
 		}
 
-		pipe.network.done <- 1
+		runner.done <- 1
 		<-time.After(time.Millisecond * 10)
 
 		if !onclosedStub.wasCalled() {
@@ -519,9 +524,10 @@ func TestIO_Open(t *testing.T) {
 
 	// test opening an inbound connection
 	{
-		pipe := NewSocket(1024*4, 8, 100)
+		runner := NewRunnerMock()
+		pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 
-		pipe.network = nil // TODO(derrandz): replace with mockgen
+		pipe.runner = runner
 		pipe.buffersState.writeOpen = true
 
 		addr := "dummy-test-host:dummyport"
@@ -568,7 +574,7 @@ func TestIO_Open(t *testing.T) {
 			t.Errorf("pipe inbound error: expected onopened handler to be called once, got called %d times", onopenedStub.times())
 		}
 
-		pipe.network.done <- 1
+		runner.done <- 1
 		<-time.After(time.Millisecond * 10)
 
 		if !onclosedStub.wasCalled() {

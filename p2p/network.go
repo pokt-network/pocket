@@ -29,7 +29,7 @@ func (m *p2pModule) dial(addr string) (*socket, error) {
 		return pipe, nil
 	}
 
-	pipe.network = m
+	pipe.runner = m
 	go pipe.open(OutboundIoPipe, addr, nil, m.peerConnected, m.peerDisconnected)
 
 	var err error
@@ -327,7 +327,7 @@ func (m *p2pModule) handleInbound(conn net.Conn, addr string) {
 	obj, exists := m.inbound.Get(addr)
 	pipe = obj.(*socket)
 	if !exists {
-		pipe.network = m
+		pipe.runner = m
 		go pipe.open(InboundIoPipe, addr, conn, m.peerConnected, m.peerDisconnected)
 
 		var err error

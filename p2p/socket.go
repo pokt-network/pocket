@@ -21,8 +21,8 @@ type parameters struct {
 }
 
 type socket struct {
-	network *p2pModule // TODO(derrandz): use an interface?
-	c       *wireCodec
+	runner types.Runner
+	c      *wireCodec
 
 	params parameters
 	addr   string
@@ -242,7 +242,7 @@ func (s *socket) poll() {
 	for stop := false; !stop; {
 		select {
 		// TODO(derrandz): replace with passed down context
-		case <-s.network.done:
+		case <-s.runner.Done():
 			break
 
 		case <-s.done:
@@ -295,7 +295,7 @@ func (s *socket) poll() {
 					}
 				}
 
-				s.network.sink <- types.NewWork(nonce, data, s.addr, wrapped)
+				s.runner.Sink() <- types.NewWork(nonce, data, s.addr, wrapped)
 			}
 		}
 	}
@@ -345,7 +345,7 @@ func (s *socket) answer() {
 
 	for stop := false; !stop; {
 		select {
-		case <-s.network.done:
+		case <-s.runner.Done():
 			stop = true
 			break
 

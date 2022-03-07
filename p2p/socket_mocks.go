@@ -5,9 +5,10 @@ import (
 	"context"
 	stdio "io"
 	"net"
-	"reflect"
 	"sync"
 	"time"
+
+	"github.com/pokt-network/pocket/p2p/types"
 )
 
 /*
@@ -133,39 +134,22 @@ func MockDialer() *dialer {
 	}
 }
 
-/*
- @
- @ Functions mock
- @ Has issues with functions that return nil err
- @
-*/
-func MockFunc(rts []interface{}, fn interface{}) *struct {
-	called bool
-	times  int
-} {
-	stub := struct {
-		called bool
-		times  int
-	}{
-		called: false,
-		times:  0,
+type runner struct {
+	sink chan types.Work
+	done chan uint
+}
+
+func (r *runner) Sink() chan<- types.Work {
+	return r.sink
+}
+
+func (r *runner) Done() <-chan uint {
+	return r.done
+}
+
+func NewRunnerMock() *runner {
+	return &runner{
+		sink: make(chan types.Work, 1),
+		done: make(chan uint, 1),
 	}
-
-	template := func(in []reflect.Value) []reflect.Value {
-		returns := make([]reflect.Value, 0)
-		stub.called = true
-		stub.times++
-
-		for i := 0; i < len(rts); i++ {
-			elem := reflect.ValueOf(&rts[i]).Elem()
-			returns = append(returns, reflect.Zero(reflect.TypeOf(elem)))
-		}
-		return returns
-	}
-
-	f := reflect.ValueOf(fn).Elem()
-	v := reflect.MakeFunc(f.Type(), template)
-	f.Set(v)
-
-	return &stub
 }

@@ -154,8 +154,8 @@ test_p2p_wire_codec:
 	go test -run TestCodec -v -race ./p2p
 
 ## Run the p2p net IO behaviors test
-test_p2p_netio:
-	go test -run TestIO -v -race ./p2p
+test_p2p_socket:
+	go test -run TestSocket -v -race ./p2p
 
 ## Run the p2p network behavior (send, broadcast, listen...)
 test_p2p_network:

@@ -55,6 +55,7 @@ type p2pModule struct {
 }
 
 var _ modules.P2PModule = &p2pModule{}
+var _ types.Runner = &p2pModule{}
 
 var networkLogger func(...interface{}) (int, error) = func(args ...interface{}) (int, error) {
 	log.Println(args...)
