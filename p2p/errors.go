@@ -20,8 +20,8 @@ var (
 		strerr := fmt.Sprintf("%s Unexpected Peer Error: %s", P2PModErrPrefix, err.Error())
 		return errors.New(strerr)
 	}
-	ErrMissingConfigField func(string) error = func(name string) error {
-		strerr := fmt.Sprintf("%s Missing required configuration field: %s", P2PModErrPrefix, name)
+	ErrMissingOrEmptyConfigField func(string) error = func(name string) error {
+		strerr := fmt.Sprintf("%s Missing or empty required configuration field: %s", P2PModErrPrefix, name)
 		return errors.New(strerr)
 	}
 )

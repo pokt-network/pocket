@@ -51,7 +51,7 @@ func (c *typesCodec) Register(m interface{}, encoder, decoder interface{}) (uint
 	)
 
 	if e.Type() != encoderSignature {
-		return uint16(0), errors.New(fmt.Sprintf("typesCodec error: provided encoder for message type %+v is not valid, expected %s, but got %s", t, e, encoderSignature))
+		return uint16(0), errors.New(fmt.Sprintf("typesCodec error: provided encoder for message type %+v is not valid, expected %s, but got %s", t, encoderSignature, e))
 	}
 
 	// expect decoders to be of type func([]byte) (T, error)
@@ -145,6 +145,10 @@ func (c *typesCodec) Decode(data []byte) (interface{}, error) {
 	}
 
 	return msg.Interface().(interface{}), nil
+}
+
+func (c *typesCodec) Registered() int {
+	return int(c.registered)
 }
 
 func NewTypesCodec() *typesCodec {

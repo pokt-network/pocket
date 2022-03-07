@@ -370,16 +370,6 @@ func (m *p2pModule) peerDisconnected(p *socket) error {
 	return nil
 }
 
-func (m *p2pModule) initializePools() {
-	socketFactory := func() interface{} {
-		sck := NewSocket(m.config.BufferSize, m.config.WireHeaderLength, m.config.TimeoutInMs)
-		return interface{}(sck) // TODO(derrandz): remember to change this if you end up using unsafe_ptr instead of interface{}
-	}
-
-	m.inbound = types.NewRegistry(m.config.MaxInbound, socketFactory)
-	m.outbound = types.NewRegistry(m.config.MaxOutbound, socketFactory)
-}
-
 func newP2PModule() *p2pModule {
 	return &p2pModule{
 		c: NewTypesCodec(),

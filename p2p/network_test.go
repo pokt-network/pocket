@@ -15,9 +15,9 @@ import (
 	common "github.com/pokt-network/pocket/shared/types"
 )
 
-func TestNetwork_newP2PModule(t *testing.T) {
+func TestNetwork_NewP2PModule(t *testing.T) {
 	m := newP2PModule()
-	m.peerlist = types.NewPeerlist()
+
 	m.config = &shared.P2PConfig{
 		MaxInbound:       100,
 		MaxOutbound:      100,
@@ -25,6 +25,7 @@ func TestNetwork_newP2PModule(t *testing.T) {
 		WireHeaderLength: 8,
 		TimeoutInMs:      200,
 	}
+	m.initSocketPools()
 
 	if m.peerlist.Size() == 0 && m.inbound.Capacity() == uint32(100) && m.outbound.Capacity() == uint32(100) {
 		t.Log("Success!")
@@ -79,14 +80,16 @@ func TestNetwork_ListenStop(t *testing.T) {
 func TestNetwork_SendOutbound(t *testing.T) {
 	m := newP2PModule()
 	m.config = &shared.P2PConfig{
+		Protocol: "tcp",
+		//Address:          "0.0.0.0:30301",
+		ExternalIp:       "0.0.0.0:32321",
+		Peers:            []string{},
 		MaxInbound:       100,
 		MaxOutbound:      100,
 		BufferSize:       1024 * 4,
 		WireHeaderLength: 8,
 		TimeoutInMs:      200,
 	}
-
-	m.configure("tcp", "0.0.0.0:3030", "0.0.0.0:3030", []string{})
 	go m.listen()
 
 	select {
@@ -148,7 +151,6 @@ func TestNetwork_SendInbound(t *testing.T) {
 		WireHeaderLength: 8,
 		TimeoutInMs:      200,
 	}
-	m.configure("tcp", "127.0.0.1:30303", "127.0.0.1:30303", []string{})
 	go m.listen()
 	select {
 
@@ -214,7 +216,6 @@ func TestNetwork_Request(t *testing.T) {
 		WireHeaderLength: 8,
 		TimeoutInMs:      200,
 	}
-	m.configure("tcp", "0.0.0.0:4030", "0.0.0.0:4030", []string{})
 
 	go m.listen()
 
@@ -305,7 +306,6 @@ func TestNetwork_Respond(t *testing.T) {
 		WireHeaderLength: 8,
 		TimeoutInMs:      200,
 	}
-	m.configure("tcp", "0.0.0.0:4031", "0.0.0.0:4031", []string{})
 	go m.listen()
 	t.Logf("Listening...")
 	_, waiting := <-m.ready
@@ -430,7 +430,7 @@ func TestNetwork_Broadcast(t *testing.T) {
 	m.externaladdr = p.Addr()
 	m.peerlist = list
 
-	err := m.init()
+	err := m.initialize(nil)
 	if err != nil {
 		t.Errorf("Broadcast error: could not initialize gater. Error: %s", err.Error())
 	}
@@ -635,7 +635,7 @@ func TestNetwork_HandleBroadcast(t *testing.T) {
 	m.externaladdr = p.Addr()
 	m.peerlist = list
 
-	err := m.init()
+	err := m.initialize(nil)
 	if err != nil {
 		t.Errorf("Broadcast error: could not initialize gater. Error: %s", err.Error())
 	}

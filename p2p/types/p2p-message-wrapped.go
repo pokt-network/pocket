@@ -19,8 +19,8 @@ func Message(nonce int32, level int32, src, dest string, event *shared.PocketEve
 	}
 }
 
-func Encode(m *P2PMessage) ([]byte, error) {
-	data, err := proto.Marshal(m)
+func Encode(m P2PMessage) ([]byte, error) {
+	data, err := proto.Marshal(&m)
 	if err != nil {
 		return nil, err
 	}
@@ -28,11 +28,11 @@ func Encode(m *P2PMessage) ([]byte, error) {
 	return data, nil
 }
 
-func Decode(data []byte) (*P2PMessage, error) {
+func Decode(data []byte) (P2PMessage, error) {
 	msg := &P2PMessage{}
 	err := proto.Unmarshal(data, msg)
 	if err != nil {
-		return &P2PMessage{}, err
+		return P2PMessage{}, err
 	}
-	return msg, nil
+	return *msg, nil
 }

@@ -1,15 +1,50 @@
 package p2p
 
 import (
+	"reflect"
 	"strings"
 
 	"github.com/pokt-network/pocket/p2p/types"
+	cfg "github.com/pokt-network/pocket/shared/config"
 )
 
-func (m *p2pModule) configure(protocol, address, external string, peers []string) {
-	m.protocol = protocol
-	m.address = address
-	m.externaladdr = external
+func (m *p2pModule) validateConfiguration(config *cfg.P2PConfig) error {
+	requiredCfgEntries := []string{
+		"Protocol",
+		"Address",
+		"ExternalIp",
+		"Peers",
+		"MaxInbound",
+		"MaxOutbound",
+		"WireHeaderLength",
+		"BufferSize",
+		"TimeoutInMs",
+	}
+
+	cfg := reflect.ValueOf(config).Elem()
+
+	for _, name := range requiredCfgEntries {
+		field := cfg.FieldByName(name)
+
+		if field == (reflect.Value{}) || field.IsZero() {
+			return ErrMissingOrEmptyConfigField(name)
+		}
+	}
+
+	return nil
+}
+
+func (m *p2pModule) configure(config *cfg.P2PConfig) error {
+	if err := m.validateConfiguration(config); err != nil {
+		return err
+	}
+
+	m.config = config
+
+	m.protocol = config.Protocol
+	m.address = config.ExternalIp // TODO(derrandz): use pcrypto.Address (config.Address)
+	m.externaladdr = config.ExternalIp
+
 	m.peerlist = types.NewPeerlist()
 
 	// TODO(derrandz): this is a hack to get going no more no less
@@ -18,7 +53,7 @@ func (m *p2pModule) configure(protocol, address, external string, peers []string
 	// and generating consecutive uints for them from i to length(peers)
 	// while also self-filtering.
 	// this is filler code until the expected behavior is well spec'd
-	for i, p := range peers {
+	for i, p := range config.Peers {
 		peer := types.NewPeer(uint64(i+1), p)
 
 		peerAddrParts := strings.Split(peer.Addr(), ":")
@@ -30,14 +65,40 @@ func (m *p2pModule) configure(protocol, address, external string, peers []string
 		}
 		m.peerlist.Add(*peer)
 	}
+
+	return nil
 }
 
-func (m *p2pModule) init() error {
-	p2pmsg := types.P2PMessage{}
-	_, err := m.c.Register(p2pmsg, types.Encode, types.Decode)
+func (m *p2pModule) initCodec() error {
+	p2pmsg := &types.P2PMessage{}
+	_, err := m.c.Register(*p2pmsg, types.Encode, types.Decode)
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (m *p2pModule) initSocketPools() {
+	socketFactory := func() interface{} {
+		sck := NewSocket(m.config.BufferSize, m.config.WireHeaderLength, m.config.TimeoutInMs)
+		return interface{}(sck) // TODO(derrandz): remember to change this if you end up using unsafe_ptr instead of interface{}
+	}
+
+	m.inbound = types.NewRegistry(m.config.MaxInbound, socketFactory)
+	m.outbound = types.NewRegistry(m.config.MaxOutbound, socketFactory)
+}
+
+func (m *p2pModule) initialize(config *cfg.P2PConfig) error {
+	if err := m.configure(config); err != nil {
+		return err
+	}
+
+	if err := m.initCodec(); err != nil {
+		return err
+	}
+
+	m.initSocketPools()
 
 	return nil
 }
@@ -67,4 +128,11 @@ func (m *p2pModule) error(err error) {
 	}
 
 	m.errored <- 1
+}
+
+func (m *p2pModule) hasErrored() bool {
+	defer m.err.Unlock()
+	m.err.Lock()
+
+	return m.err.error != nil
 }

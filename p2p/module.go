@@ -3,7 +3,6 @@ package p2p
 import (
 	"log"
 	"net"
-	"reflect"
 	"sync"
 
 	"github.com/pokt-network/pocket/p2p/types"
@@ -67,49 +66,11 @@ func Create(config *config.Config) (modules.P2PModule, error) {
 
 	m.setLogger(networkLogger)
 
-	m.config = config.P2P
-
-	if err := m.validateConfig(); err != nil {
+	if err := m.initialize(config.P2P); err != nil { // TODO(derrandz): Should initialize also include logger intialization?
 		return nil, err
 	}
 
-	m.configure(
-		m.config.Protocol,
-		"",
-		// TODO(derrandz): look into using pcrypto.Address m.config.Address,
-		m.config.ExternalIp,
-		m.config.Peers,
-	)
-
-	m.init()
-
-	m.initializePools()
-
 	return m, nil
-}
-
-func (m *p2pModule) validateConfig() error {
-	requiredCfgEntries := []string{
-		"MaxInbound",
-		"MaxOutbound",
-		"WireByteHeaderLength",
-		"ReadBufferSize",
-		"WriteBufferSize",
-		"ReadDeadlineMs",
-		"ReadBufferSize",
-		"ReadDeadlineMs",
-	}
-
-	cfg := reflect.ValueOf(m.config).Elem()
-
-	for _, name := range requiredCfgEntries {
-		field := cfg.FieldByName(name)
-		if field == (reflect.Value{}) {
-			return ErrMissingConfigField(name)
-		}
-	}
-
-	return nil
 }
 
 func (m *p2pModule) Start() error {
