@@ -2,7 +2,8 @@ package p2p
 
 import (
 	"math"
-	"pocket/p2p/types"
+
+	"github.com/pokt-network/pocket/p2p/types"
 )
 
 /*

@@ -1,11 +1,12 @@
 package p2p
 
 import (
-	"pocket/p2p/types"
 	"strings"
+
+	"github.com/pokt-network/pocket/p2p/types"
 )
 
-func (m *networkModule) configure(protocol, address, external string, peers []string) {
+func (m *p2pModule) configure(protocol, address, external string, peers []string) {
 	m.protocol = protocol
 	m.address = address
 	m.externaladdr = external
@@ -31,9 +32,9 @@ func (m *networkModule) configure(protocol, address, external string, peers []st
 	}
 }
 
-func (m *networkModule) init() error {
-	msg := Message(int32(0), 1, types.PocketTopic_P2P_PING, "", "")
-	_, err := m.c.register(*msg, Encode, Decode)
+func (m *p2pModule) init() error {
+	p2pmsg := types.P2PMessage{}
+	_, err := m.c.Register(p2pmsg, types.Encode, types.Decode)
 	if err != nil {
 		return err
 	}
@@ -41,11 +42,11 @@ func (m *networkModule) init() error {
 	return nil
 }
 
-func (m *networkModule) isReady() <-chan uint {
+func (m *p2pModule) isReady() <-chan uint {
 	return m.ready
 }
 
-func (m *networkModule) close() {
+func (m *p2pModule) close() {
 	m.done <- 1
 	m.closed <- 1
 	m.isListening.Store(false)
@@ -53,11 +54,11 @@ func (m *networkModule) close() {
 	close(m.done)
 }
 
-func (m *networkModule) finished() <-chan uint {
+func (m *p2pModule) finished() <-chan uint {
 	return m.closed
 }
 
-func (m *networkModule) error(err error) {
+func (m *p2pModule) error(err error) {
 	defer m.err.Unlock()
 	m.err.Lock()
 

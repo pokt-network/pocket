@@ -2,26 +2,29 @@ package p2p
 
 import (
 	"net"
-	"pocket/p2p/types"
 	"sync"
-	"time"
+
+	"github.com/pokt-network/pocket/p2p/types"
+	shared "github.com/pokt-network/pocket/shared/types"
 
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (m *networkModule) handshake() {}
+func (m *p2pModule) handshake() {}
 
-func (m *networkModule) dial(addr string) (*socket, error) {
+func (m *p2pModule) dial(addr string) (*socket, error) {
 	// TODO(derrandz): this is equivalent to maxRetries = 1, add logic for > 1
 	// TODO(derrandz): should we explictly tell dial to use either inbound or outbound?
-	exists := m.inbound.peak(addr)
+	exists := m.inbound.Peak(addr)
 	m.log("Peaked into inbound clients map for", addr, "found=", exists)
 	if exists {
-		pipe, _ := m.inbound.get(addr)
+		obj, _ := m.inbound.Get(addr)
+		pipe := obj.(*socket)
 		return pipe, nil
 	}
 
-	pipe, exists := m.outbound.get(addr)
+	obj, exists := m.outbound.Get(addr)
+	pipe := obj.(*socket)
 	if exists {
 		return pipe, nil
 	}
@@ -49,7 +52,7 @@ func (m *networkModule) dial(addr string) (*socket, error) {
 	return pipe, err
 }
 
-func (m *networkModule) send(addr string, msg []byte, wrapped bool) error {
+func (m *p2pModule) send(addr string, msg []byte, wrapped bool) error {
 	pipe, derr := m.dial(addr)
 	if derr != nil {
 		return derr
@@ -67,7 +70,7 @@ func (m *networkModule) send(addr string, msg []byte, wrapped bool) error {
 	return nil
 }
 
-func (m *networkModule) listen() error {
+func (m *p2pModule) listen() error {
 	defer func() {
 		m.isListening.Store(false)
 		close(m.closed)
@@ -121,7 +124,7 @@ func (m *networkModule) listen() error {
 }
 
 // TODO(derrandz): this: msg []byte, wrapped bool) is repeat everything, maybe a struct for this?
-func (m *networkModule) request(addr string, msg []byte, wrapped bool) ([]byte, error) {
+func (m *p2pModule) request(addr string, msg []byte, wrapped bool) ([]byte, error) {
 	pipe, derr := m.dial(addr)
 	if derr != nil {
 		return nil, derr
@@ -136,7 +139,7 @@ func (m *networkModule) request(addr string, msg []byte, wrapped bool) ([]byte, 
 	return response.Bytes(), nil
 }
 
-func (m *networkModule) respond(nonce uint32, iserroreof bool, addr string, msg []byte, wrapped bool) error {
+func (m *p2pModule) respond(nonce uint32, iserroreof bool, addr string, msg []byte, wrapped bool) error {
 	pipe, derr := m.dial(addr)
 	if derr != nil {
 		return derr
@@ -150,102 +153,25 @@ func (m *networkModule) respond(nonce uint32, iserroreof bool, addr string, msg 
 	return nil
 }
 
-func (m *networkModule) ping(addr string) (bool, error) {
-	// TODO(derrandz): refactor this to use types.NetworkMessage
-	var pongbytes []byte
-
-	pingmsg := types.NetworkMessage{Topic: types.PocketTopic_P2P_PING, Source: m.address, Destination: addr}
-	pingbytes, err := m.c.encode(pingmsg)
-
-	if err != nil {
-		return false, err
-	}
-
-	timedout := make(chan int)
-	ponged := make(chan int)
-	errored := make(chan error)
-
-	go func() {
-		<-time.After(time.Millisecond * 500)
-		timedout <- 1
-	}()
-
-	go func() {
-		response, err := m.request(addr, pingbytes, true)
-
-		if err != nil {
-			errored <- err
-		}
-
-		pongbytes = response
-		ponged <- 1
-	}()
-
-	select {
-
-	case <-timedout:
-		return false, nil
-
-	case err := <-errored:
-		return false, err
-
-	case <-ponged:
-		pong, err := m.c.decode(pongbytes)
-		pongmsg := pong.(types.NetworkMessage)
-
-		if err != nil {
-			return false, err
-		}
-
-		var valid bool
-		if pongmsg.Topic != types.PocketTopic_P2P_PONG {
-			valid = true
-		}
-
-		return valid, nil
-	}
-} // TODO(derrandz): should we use UDP requests for ping?
-
-// TODO(derrandz): test
-func (m *networkModule) pong(msg types.NetworkMessage) error {
-	// TODO(derrandz): refactor to use networkMessage
-	if msg.IsRequest() && msg.Topic == types.PocketTopic_P2P_PING {
-		pongmsg := types.NetworkMessage{
-			Nonce:       msg.Nonce,
-			Topic:       types.PocketTopic_P2P_PONG,
-			Source:      m.address,
-			Destination: msg.Source,
-		}
-		pongbytes, err := m.c.encode(pongmsg)
-
-		if err != nil {
-			return err
-		}
-
-		err = m.respond(uint32(msg.Nonce), false, msg.Source, pongbytes, true)
-
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Discuss: why is m not a pointer?
-func (m *networkModule) broadcast(msg *types.NetworkMessage, isroot bool) error {
-	m.clog(isroot, "Starting gossip round, level is", msg.Level)
+func (m *p2pModule) broadcast(msg *types.P2PMessage, isRoot bool) error {
 
 	// var mmutex sync.Mutex
 
 	var list *types.Peerlist = m.peerlist
 	var sourceAddr string = m.externaladdr
 
-	var toplevel int = int(getTopLevel(list))
-	var currentlevel int = toplevel - 1
+	var topLevel int = int(getTopLevel(list))
+	var currentLevel int = topLevel - 1
 
-	if !isroot {
-		m.clog(isroot, "Received gossip message from level", msg.Level)
-		currentlevel = int(msg.Level)
+	if msg.Metadata.Level == int32(topLevel) && msg.Metadata.Source == "" { // TODO(Derrandz): m.config.Address
+		isRoot = true
+	}
+
+	m.clog(isRoot, "Starting gossip round, level is", msg.Metadata.Level)
+
+	if !isRoot {
+		m.clog(isRoot, "Received gossip message from level", msg.Metadata.Level)
+		currentLevel = int(msg.Metadata.Level)
 	}
 
 	SEND_AND_WAIT_FOR_ACK := func(encodedMsg []byte, wg *sync.WaitGroup, target *types.Peer, ack *[]byte, err *error) {
@@ -263,10 +189,10 @@ func (m *networkModule) broadcast(msg *types.NetworkMessage, isroot bool) error 
 		return
 	}
 
-	for ; currentlevel > 0; currentlevel-- {
-		msg.Level = int32(currentlevel)
-		m.clog(isroot, "Gossiping to peers at level", currentlevel, "message level=", msg.Level)
-		targetlist := getTargetList(list, m.id, toplevel, currentlevel)
+	for ; currentLevel > 0; currentLevel-- {
+		msg.Metadata.Level = int32(currentLevel)
+		m.clog(isRoot, "Gossiping to peers at level", currentLevel, "message level=", msg.Metadata.Level)
+		targetlist := getTargetList(list, m.id, topLevel, currentLevel)
 
 		var left, right *types.Peer
 		{
@@ -281,14 +207,14 @@ func (m *networkModule) broadcast(msg *types.NetworkMessage, isroot bool) error 
 
 		var l_ack, r_ack []byte
 		var l_err, r_err error = nil, nil
-		var l_msg, r_msg types.NetworkMessage
+		var l_msg, r_msg types.P2PMessage
 		var l_data, r_data []byte
 
 		{
 			l_msg = *msg
-			l_msg.Source = sourceAddr
-			l_msg.Destination = left.Addr()
-			encm, errenc := m.c.encode(l_msg)
+			l_msg.Metadata.Source = sourceAddr
+			l_msg.Metadata.Destination = left.Addr()
+			encm, errenc := m.c.Encode(l_msg)
 			if errenc != nil {
 				return errenc
 			}
@@ -297,9 +223,9 @@ func (m *networkModule) broadcast(msg *types.NetworkMessage, isroot bool) error 
 
 		{
 			r_msg = *msg
-			r_msg.Source = sourceAddr
-			r_msg.Destination = right.Addr()
-			encm, errenc := m.c.encode(r_msg)
+			r_msg.Metadata.Source = sourceAddr
+			r_msg.Metadata.Destination = right.Addr()
+			encm, errenc := m.c.Encode(r_msg)
 			if errenc != nil {
 				return errenc
 			}
@@ -313,20 +239,20 @@ func (m *networkModule) broadcast(msg *types.NetworkMessage, isroot bool) error 
 		go SEND_AND_WAIT_FOR_ACK(r_data, &wg, right, &r_ack, &r_err)
 
 		wg.Wait()
-		m.clog(isroot, "Got acks from left and right")
+		m.clog(isRoot, "Got acks from left and right")
 
 		if l_err != nil {
 			return l_err
 		}
-		m.clog(isroot, "(raintree) left peer: ACK")
+		m.clog(isRoot, "(raintree) left peer: ACK")
 
 		if r_err != nil {
 			return r_err
 		}
-		m.clog(isroot, "(raintree) right peer: ACK")
+		m.clog(isRoot, "(raintree) right peer: ACK")
 	}
 
-	m.clog(isroot, "Done broadcasting")
+	m.clog(isRoot, "Done broadcasting")
 
 	for _, handler := range m.handlers[types.BroadcastDoneEvent] {
 		handler(m)
@@ -334,8 +260,8 @@ func (m *networkModule) broadcast(msg *types.NetworkMessage, isroot bool) error 
 	return nil
 }
 
-func (m *networkModule) handle() {
-	var msg *types.NetworkMessage
+func (m *p2pModule) handle() {
+	var msg *types.P2PMessage
 	var mx sync.Mutex
 
 	m.log("Handling...")
@@ -343,57 +269,63 @@ func (m *networkModule) handle() {
 		nonce, data, srcaddr, encoded := (&w).Implode()
 
 		if encoded {
-			decoded, err := m.c.decode(data)
+			decoded, err := m.c.Decode(data)
 			if err != nil {
 				m.log("Error decoding data", err.Error())
 				continue
 			}
 
 			mx.Lock()
-			msgi := decoded.(types.NetworkMessage)
+			msgi := decoded.(types.P2PMessage)
 			msg = &msgi
-			msg.Nonce = int32(nonce)
+			msg.Metadata.Nonce = int32(nonce)
 			mx.Unlock()
 		} else {
-			msg.Data = &anypb.Any{}
-			msg.Nonce = int32(nonce)
-			msg.Source = srcaddr
+			msg.Payload.Data = &anypb.Any{}
+			msg.Metadata.Nonce = int32(nonce)
+			msg.Metadata.Source = srcaddr
 		}
 
-		switch msg.Topic {
+		switch msg.Payload.Topic {
 
-		case types.PocketTopic_CONSENSUS:
+		case shared.PocketTopic_CONSENSUS_MESSAGE_TOPIC:
 			mx.Lock()
-			ack := &types.NetworkMessage{Nonce: msg.Nonce, Level: msg.Level, Topic: types.PocketTopic_CONSENSUS, Source: m.externaladdr, Destination: msg.Source}
-			encoded, err := m.c.encode(*ack)
+			md := &types.Metadata{
+				Nonce:       msg.Metadata.Nonce,
+				Level:       msg.Metadata.Level,
+				Source:      m.externaladdr,
+				Destination: msg.Metadata.Source,
+			}
+			pl := &shared.PocketEvent{
+				Topic: shared.PocketTopic_CONSENSUS_MESSAGE_TOPIC,
+			}
+			ack := &types.P2PMessage{Metadata: md, Payload: pl}
+			encoded, err := m.c.Encode(*ack)
 			if err != nil {
 				m.log("Error encoding m for gossipaCK", err.Error())
 			}
 
-			err = m.respond(uint32(msg.Nonce), false, srcaddr, encoded, true)
-			mx.Unlock()
+			err = m.respond(uint32(msg.Metadata.Nonce), false, srcaddr, encoded, true)
 			if err != nil {
 				m.log("Error encoding msg for gossipaCK", err.Error())
 			}
-			<-time.After(time.Millisecond * 5)
-			m.log("Acked to", ack.Destination)
-			go m.broadcast(&types.NetworkMessage{
-				Nonce:       msg.Nonce,
-				Level:       msg.Level,
-				Source:      msg.Source,
-				Topic:       msg.Topic,
-				Destination: msg.Destination,
-				Data:        msg.Data,
-			}, false)
+
+			mx.Unlock()
+
+			m.log("Acked to", ack.Metadata.Destination)
+
+			go m.broadcast(msg, false)
 
 		default:
-			m.log("Unrecognized message topic", msg.Topic, "from", msg.Source, "to", msg.Destination, "@node", m.address)
+			m.log("Unrecognized message topic", msg.Payload.Topic, "from", msg.Metadata.Source, "to", msg.Metadata.Destination, "@node", m.address)
 		}
 	}
 }
 
-func (m *networkModule) handleInbound(conn net.Conn, addr string) {
-	pipe, exists := m.inbound.get(addr)
+func (m *p2pModule) handleInbound(conn net.Conn, addr string) {
+	var pipe *socket
+	obj, exists := m.inbound.Get(addr)
+	pipe = obj.(*socket)
 	if !exists {
 		pipe.network = m
 		go pipe.open(InboundIoPipe, addr, conn, m.peerConnected, m.peerDisconnected)
@@ -419,7 +351,7 @@ func (m *networkModule) handleInbound(conn net.Conn, addr string) {
 	}
 }
 
-func (m *networkModule) on(e types.PeerEvent, handler func(...interface{})) {
+func (m *p2pModule) on(e types.PeerEvent, handler func(...interface{})) {
 	if m.handlers != nil {
 		if hmap, exists := m.handlers[e]; exists {
 			hmap = append(hmap, handler)
@@ -429,21 +361,38 @@ func (m *networkModule) on(e types.PeerEvent, handler func(...interface{})) {
 	}
 }
 
-func (m *networkModule) peerConnected(p *socket) error {
+func (m *p2pModule) peerConnected(p *socket) error {
 	m.log("Peer connected", p.addr)
 	return nil
 }
 
-func (m *networkModule) peerDisconnected(p *socket) error {
+func (m *p2pModule) peerDisconnected(p *socket) error {
 	return nil
 }
 
-func (m *networkModule) initConnectionPools() {
+func (m *p2pModule) initializePools() {
 	socketFactory := func() interface{} {
-		sck := NewSocket(m.config)
+		sck := NewSocket(m.config.BufferSize, m.config.WireHeaderLength, m.config.TimeoutInMs)
 		return interface{}(sck) // TODO(derrandz): remember to change this if you end up using unsafe_ptr instead of interface{}
 	}
 
-	m.inbound = NewRegistry(m.config.MaxInbound, socketFactory)
-	m.outbound = NewRegistry(m.config.MaxInbound, socketFactory)
+	m.inbound = types.NewRegistry(m.config.MaxInbound, socketFactory)
+	m.outbound = types.NewRegistry(m.config.MaxOutbound, socketFactory)
+}
+
+func newP2PModule() *p2pModule {
+	return &p2pModule{
+		c: NewTypesCodec(),
+
+		sink: make(chan types.Work, 100), // TODO(derrandz): rethink whether this should be buffered
+
+		peerlist: nil,
+
+		done:   make(chan uint, 1),
+		ready:  make(chan uint, 1),
+		closed: make(chan uint, 1),
+
+		handlers: make(map[types.PeerEvent][]func(...interface{}), 0),
+		errored:  make(chan uint, 1),
+	}
 }

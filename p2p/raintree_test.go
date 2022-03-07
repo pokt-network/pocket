@@ -1,9 +1,10 @@
 package p2p
 
 import (
-	"pocket/p2p/types"
 	"sync"
 	"testing"
+
+	"github.com/pokt-network/pocket/p2p/types"
 )
 
 func TestRainTree_GetTopLevel(t *testing.T) {

@@ -1,13 +1,13 @@
 package p2p
 
-import "pocket/p2p/types"
+import "github.com/pokt-network/pocket/p2p/types"
 
-func MockBasicInstance() *networkModule {
-	return &networkModule{
+func MockBasicInstance() *p2pModule {
+	return p2pModule{
 		inbound:  *NewIoMap(0),
 		outbound: *NewIoMap(0),
 
-		c: NewDomainCodec(),
+		c: NewTypesCodec(),
 
 		peerlist: types.NewPeerlist(),
 		sink:     make(chan types.Work, 1),

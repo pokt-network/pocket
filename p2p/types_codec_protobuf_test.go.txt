@@ -1,16 +1,17 @@
 package p2p
 
 import (
-	"pocket/p2p/types"
 	"testing"
+
+	"github.com/pokt-network/pocket/p2p/types"
 )
 
-func TestMessage_Protobuf(t *testing.T) {
+func TestMessage_ProtobufWrapper(t *testing.T) {
 	nonce, src, dst, level := int32(1), "10.0.0.1:1234", "9.0.0.2:5432", int32(2)
 
 	// test message instantiation
 	{
-		p2pmsg := Message(nonce, level, types.PocketTopic_P2P_PING, src, dst)
+		p2pmsg := types.Message(nonce, level, types.PocketTopic_P2P_PING, src, dst)
 
 		if p2pmsg.Topic != types.PocketTopic_P2P_PING {
 			t.Errorf("Protobuff messenger error: Failed to instantiate a ping message, expected topic: %s, got: %s", types.PocketTopic_P2P_PING, p2pmsg.Topic)

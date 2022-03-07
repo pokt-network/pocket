@@ -1,108 +1,12 @@
 package p2p
 
 import (
-	"bytes"
 	"encoding/binary"
 	"testing"
 )
 
-func TestWireEncode(t *testing.T) {
-	c := &wCodec{}
-
-	encoding := Binary
-	requestNumber := uint32(12)
-	isErrorOrEnd := false
-	data := GenerateByteLen(1024)
-
-	msg := c.encode(encoding, isErrorOrEnd, requestNumber, data, false)
-
-	header := msg[:9]
-	body := msg[9:]
-
-	flags := header[0]
-	flagswitch, encoding, err := parseflag(flags)
-
-	if err != nil {
-		t.Errorf("Codec error: failed to encode, encountered error while parsing flag: %s", err.Error())
-	}
-
-	iswrapped := flagswitch[4]
-	isrequest := flagswitch[3]
-	iserrorOrEnd := flagswitch[2]
-
-	reqnum := header[1:5]
-	bodylen := header[5:9]
-
-	if iswrapped {
-		t.Errorf("Codec error: failed to encode, wrong flag for non-wrapped message (not domain encoded)")
-	}
-
-	if !isrequest {
-		t.Errorf("Codec error: failed to encode, wrong flag for message of type request")
-	}
-
-	if iserrorOrEnd {
-		t.Errorf("Codec error: failed to encode, wrong flag for non-error message")
-	}
-
-	if encoding != Binary {
-		t.Errorf("Codec error: failed to encode, wrong flag(s) for message encoding type")
-	}
-
-	requestNum := binary.BigEndian.Uint32(reqnum)
-	if requestNum != 12 {
-		t.Errorf("Codec error: failed to encode, corrupted request number bits in header")
-	}
-
-	length := binary.BigEndian.Uint32(bodylen)
-	if length != uint32(len(data)) {
-		t.Errorf("Codec error: failed to encode, corrupted request body length bits in header")
-	}
-
-	if bytes.Compare(body, data) != 0 {
-		t.Errorf("Codec error: failed to encode, corrupted body")
-	}
-}
-
-func TestWireDecode(t *testing.T) {
-	c := &wCodec{}
-
-	encoding := Binary
-	requestNumber := uint32(12)
-	isErrorOrEnd := false
-	data := GenerateByteLen(1024)
-
-	msg := c.encode(encoding, isErrorOrEnd, requestNumber, data, true)
-
-	reqnum, encoding, decodedData, wrapped, err := c.decode(msg)
-
-	if err != nil {
-		t.Errorf("Codec error: failed to decode. Encoutered error: %s", err.Error())
-	}
-
-	if !wrapped {
-		t.Errorf("Codec error: failed to decode, is_wrapped flag bits are corrupted")
-	}
-
-	if err != nil {
-		t.Errorf("Codec error: failed to decode, error bits are corrupted")
-	}
-
-	if reqnum != uint32(12) {
-		t.Errorf("Codec error: failed to decode, request number bits are corrupted")
-	}
-
-	if encoding != Binary {
-		t.Errorf("Codec error: failed to decode, encoding bits are corrupted")
-	}
-
-	if bytes.Compare(decodedData, data) != 0 {
-		t.Errorf("Codec error: failed to decode, data bits are corrupted")
-	}
-}
-
-func TestDomainEncode(t *testing.T) {
-	c := NewDomainCodec()
+func TestTypesCodec_Encode(t *testing.T) {
+	c := NewTypesCodec()
 
 	msg := struct {
 		topic  string
@@ -156,9 +60,9 @@ func TestDomainEncode(t *testing.T) {
 		}{topic: topic, action: action}, nil
 	}
 
-	c.register(msg, encoder, decoder)
+	c.Register(msg, encoder, decoder)
 
-	encoding, err := c.encode(msg)
+	encoding, err := c.Encode(msg)
 	if err != nil {
 		t.Errorf("Domain Codec error: failed to encode message: %s", err.Error())
 	}
@@ -180,8 +84,8 @@ func TestDomainEncode(t *testing.T) {
 	}
 }
 
-func TestDomainDecode(t *testing.T) {
-	c := NewDomainCodec()
+func TestTypesCodec_Decode(t *testing.T) {
+	c := NewTypesCodec()
 
 	msg := struct {
 		topic  string
@@ -235,11 +139,11 @@ func TestDomainDecode(t *testing.T) {
 		}{topic: topic, action: action}, nil
 	}
 
-	id, err := c.register(msg, encoder, decoder)
+	id, err := c.Register(msg, encoder, decoder)
 	idb := make([]byte, 2)
 	binary.BigEndian.PutUint16(idb[:2], id)
 	encoding, err := encoder(msg)
-	decoding, err := c.decode(append(idb, encoding...))
+	decoding, err := c.Decode(append(idb, encoding...))
 	if err != nil {
 		t.Errorf("Domain Codec error: failed to decode encoding bytes: %s", err.Error())
 	}

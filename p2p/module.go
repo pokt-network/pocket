@@ -3,32 +3,30 @@ package p2p
 import (
 	"log"
 	"net"
-	"pocket/p2p/types"
-	"pocket/shared/config"
-	"pocket/shared/modules"
 	"reflect"
 	"sync"
 
+	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/config"
 	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types"
+	shared "github.com/pokt-network/pocket/shared/types"
 	"go.uber.org/atomic"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-type networkModule struct {
+type p2pModule struct {
 	bus    modules.Bus
 	config *config.P2PConfig
-	c      *dcodec
+	c      *typesCodec
 
 	id           uint64
 	protocol     string
 	address      string
 	externaladdr string
 
-	inbound  *Registry
-	outbound *Registry
+	inbound  *types.Registry
+	outbound *types.Registry
 
 	peerlist *types.Peerlist
 
@@ -57,32 +55,15 @@ type networkModule struct {
 	}
 }
 
-func newNetworkModule() *networkModule {
-	return &networkModule{
-		c: NewDomainCodec(),
-
-		sink: make(chan types.Work, 100), // TODO(derrandz): rethink whether this should be buffered
-
-		peerlist: nil,
-
-		done:   make(chan uint, 1),
-		ready:  make(chan uint, 1),
-		closed: make(chan uint, 1),
-
-		handlers: make(map[types.PeerEvent][]func(...interface{}), 0),
-		errored:  make(chan uint, 1),
-	}
-}
-
-var _ modules.NetworkModule = &networkModule{}
+var _ modules.P2PModule = &p2pModule{}
 
 var networkLogger func(...interface{}) (int, error) = func(args ...interface{}) (int, error) {
 	log.Println(args...)
 	return 0, nil
 }
 
-func Create(config *config.Config) (modules.NetworkModule, error) {
-	m := newNetworkModule()
+func Create(config *config.Config) (modules.P2PModule, error) {
+	m := newP2PModule()
 
 	m.setLogger(networkLogger)
 
@@ -94,19 +75,20 @@ func Create(config *config.Config) (modules.NetworkModule, error) {
 
 	m.configure(
 		m.config.Protocol,
-		m.config.Address,
+		"",
+		// TODO(derrandz): look into using pcrypto.Address m.config.Address,
 		m.config.ExternalIp,
 		m.config.Peers,
 	)
 
 	m.init()
 
-	m.initConnectionPools()
+	m.initializePools()
 
 	return m, nil
 }
 
-func (m *networkModule) validateConfig() error {
+func (m *p2pModule) validateConfig() error {
 	requiredCfgEntries := []string{
 		"MaxInbound",
 		"MaxOutbound",
@@ -130,7 +112,7 @@ func (m *networkModule) validateConfig() error {
 	return nil
 }
 
-func (m *networkModule) Start() error {
+func (m *p2pModule) Start() error {
 	m.log("Starting the P2P Module.")
 	go m.listen()
 
@@ -139,7 +121,7 @@ func (m *networkModule) Start() error {
 	return nil
 }
 
-func (m *networkModule) Stop() error {
+func (m *p2pModule) Stop() error {
 	go m.close()
 
 	<-m.closed
@@ -153,35 +135,44 @@ func (m *networkModule) Stop() error {
 	return nil
 }
 
-func (m *networkModule) SetBus(pocketBus modules.Bus) {
+func (m *p2pModule) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
 }
 
-func (m *networkModule) GetBus() modules.Bus {
+func (m *p2pModule) GetBus() modules.Bus {
 	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
 }
 
-func (m *networkModule) BroadcastMessage(msg *anypb.Any, topic string) error {
-	netmsg := &types.NetworkMessage{Data: msg, Topic: types.Topic(topic)}
-	return m.broadcast(netmsg, true)
+func (m *p2pModule) BroadcastMessage(data *anypb.Any, topic shared.PocketTopic) error {
+	return m.Broadcast(data, topic)
 }
 
-func (m *p2pModule) Send(addr pcrypto.Address, msg *anypb.Any, topic types.PocketTopic) error {
-	panic("Send not implemented")
-	netmsg := &types.NetworkMessage{Data: msg, Topic: types.Topic(topic)}
-	encodedBytes, err := m.c.encode(netmsg)
+func (m *p2pModule) Broadcast(data *anypb.Any, topic shared.PocketTopic) error {
+	metadata := &types.Metadata{}
+	payload := &shared.PocketEvent{Data: data, Topic: topic}
+	p2pmsg := &types.P2PMessage{Metadata: metadata, Payload: payload}
+
+	return m.broadcast(p2pmsg, true)
+}
+
+func (m *p2pModule) Send(addr pcrypto.Address, data *anypb.Any, topic shared.PocketTopic) error {
+	metadata := &types.Metadata{}
+	payload := &shared.PocketEvent{Data: data, Topic: topic}
+	p2pmsg := &types.P2PMessage{Metadata: metadata, Payload: payload}
+	encodedBytes, err := m.c.Encode(p2pmsg)
 	if err != nil {
 		return err
 	}
 
-	return m.send(addr, encodedBytes, true) // true: meaning that this message is already encoded
+	// TODO(derrandz): look into using pcrypto.Address
+	return m.send("", encodedBytes, true) // true: meaning that this message is already encoded
 }
 
-func (m *networkModule) AckSend(addr string, msg *types.NetworkMessage) (bool, error) {
-	encodedBytes, err := m.c.encode(msg)
+func (m *p2pModule) AckSend(addr string, msg *types.P2PMessage) (bool, error) {
+	encodedBytes, err := m.c.Encode(msg)
 	if err != nil {
 		return false, err
 	}
@@ -191,14 +182,14 @@ func (m *networkModule) AckSend(addr string, msg *types.NetworkMessage) (bool, e
 		return false, err
 	}
 
-	ack, err := m.c.decode(response)
+	ack, err := m.c.Decode(response)
 	if err != nil {
 		return true, err // TODO(derrandz): notice it's true
 	}
 
-	ackmsg := ack.(*types.NetworkMessage)
+	ackmsg := ack.(*types.P2PMessage)
 
-	if ackmsg.Nonce == msg.Nonce {
+	if ackmsg.Metadata.Nonce == msg.Metadata.Nonce {
 		return true, nil
 	}
 

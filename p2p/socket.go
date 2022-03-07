@@ -7,9 +7,9 @@ import (
 	stdio "io"
 	"math"
 	"net"
-	"pocket/p2p/types"
-	"pocket/shared/config"
 	"sync"
+
+	"github.com/pokt-network/pocket/p2p/types"
 
 	"go.uber.org/atomic"
 )
@@ -17,11 +17,12 @@ import (
 type parameters struct {
 	headerLength uint
 	bufferSize   uint
+	timeoutMs    uint
 }
 
 type socket struct {
-	network *networkModule // TODO(derrandz): use an interface?
-	c       *wCodec
+	network *p2pModule // TODO(derrandz): use an interface?
+	c       *wireCodec
 
 	params parameters
 	addr   string
@@ -38,11 +39,11 @@ type socket struct {
 		writeLock    sync.Mutex
 	}
 
-	dialer Dialer // an intermediary poktp2p interface that returns net.Conn, useful for mocking in testing
+	dialer types.Dialer // an intermediary poktp2p interface that returns net.Conn, useful for mocking in testing
 	conn   net.Conn
 
 	timeouts struct {
-		read int
+		read uint
 	}
 
 	reader *bufio.Reader
@@ -142,7 +143,7 @@ func (s *socket) outbound(addr string, onopened func(s *socket) error, onclosed 
 	s.sense = OutboundIoPipe
 
 	if s.dialer == nil {
-		s.dialer = NewDialer()
+		s.dialer = types.NewDialer()
 	}
 
 	conn, err := s.dialer.Dial("tcp", addr)
@@ -401,13 +402,12 @@ func (s *socket) error(err error) {
 	s.errored <- 1
 }
 
-func (s *socket) parameterize(headerLength, bufferSize uint) {
-	s.params = parameters{headerLength, bufferSize}
-}
-
-func NewSocket(config config.P2PConfig) *socket {
+func NewSocket(readBufferSize uint, packetHeaderLength uint, readTimeoutInMs uint) *socket {
+	params := parameters{headerLength: packetHeaderLength, bufferSize: readBufferSize, timeoutMs: readTimeoutInMs}
+	wc := newWireCodec()
 	pipe := &socket{
-		c: &wCodec{},
+		params: params,
+		c:      wc,
 
 		requests: types.NewRequestMap(math.MaxUint32),
 
@@ -415,7 +415,7 @@ func NewSocket(config config.P2PConfig) *socket {
 			read  []byte
 			write []byte
 		}{
-			read:  make([]byte, config.ReadBufferSize),
+			read:  make([]byte, params.bufferSize),
 			write: make([]byte, 0),
 		},
 		buffersState: struct {
@@ -429,7 +429,7 @@ func NewSocket(config config.P2PConfig) *socket {
 			writeLock:    sync.Mutex{},
 		},
 
-		timeouts: struct{ read int }{read: config.ReadDeadlineMs},
+		timeouts: struct{ read uint }{read: params.timeoutMs},
 
 		sense: UnspecifiedIoPipeSense,
 

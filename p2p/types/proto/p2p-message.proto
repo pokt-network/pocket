@@ -1,0 +1,19 @@
+syntax = "proto3";
+package p2p;
+
+import "events.proto";
+
+option go_package = "github.com/pokt-network/pocket/p2p/types;types";
+
+message Metadata {
+  bytes hash = 1;
+  int32 nonce = 2;
+  int32 level = 3;
+  string source = 4;
+  string destination = 5;
+}
+
+message P2PMessage {
+  Metadata metadata = 1;
+  pocket.PocketEvent payload = 2;
+}
