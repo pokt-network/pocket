@@ -2,7 +2,6 @@ package p2p
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	stdio "io"
 	"net"
@@ -11,8 +10,10 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/p2p/types"
+	cfg "github.com/pokt-network/pocket/shared/config"
 	shared "github.com/pokt-network/pocket/shared/config"
 	common "github.com/pokt-network/pocket/shared/types"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -23,84 +24,170 @@ const (
 func TestNetwork_NewP2PModule(t *testing.T) {
 	m := newP2PModule()
 
-	m.config = &shared.P2PConfig{
-		MaxInbound:       100,
-		MaxOutbound:      100,
-		BufferSize:       200,
-		WireHeaderLength: 8,
-		TimeoutInMs:      200,
-	}
-	m.initSocketPools()
+	assert.Nil(
+		t,
+		m.peerlist,
+		"NewP2PModule: Encountered error while instantiating the p2p module",
+	)
 
-	if m.peerlist.Size() == 0 && m.inbound.Capacity() == uint32(100) && m.outbound.Capacity() == uint32(100) {
-		t.Log("Success!")
-	} else {
-		t.Errorf("Gater is malconfigured")
-	}
+	assert.Nil(
+		t,
+		m.inbound,
+		"NewP2PModule: Encountered error while instantiating the p2p module",
+	)
+
+	assert.Nil(
+		t,
+		m.outbound,
+		"NewP2PModule: Encountered error while instantiating the p2p module",
+	)
+
+	assert.Equal(
+		t,
+		m.protocol,
+		"",
+		"NewP2PModule: Encountered error while instantiating the p2p module",
+	)
+
+	assert.Equal(
+		t,
+		m.address,
+		"",
+		"NewP2PModule: Encountered error while instantiating the p2p module",
+	)
+
+	assert.Equal(
+		t,
+		m.externaladdr,
+		"",
+		"NewP2PModule: Encountered error while instantiating the p2p module",
+	)
+
+	assert.NotNil(
+		t,
+		m.c,
+		"NewP2PModule: Encountered error while instantiating the p2p module",
+	)
+
+	assert.Equal(
+		t,
+		m.isListening.Load(),
+		false,
+		"NewP2PModule: Encountered error while instantiating the p2p module",
+	)
+
 }
 
 func TestNetwork_ListenStop(t *testing.T) {
+	config := &cfg.P2PConfig{
+		Protocol:         "tcp",
+		Address:          []byte("0.0.0.0:12345"),
+		ExternalIp:       "0.0.0.0:12345",
+		MaxInbound:       128,
+		MaxOutbound:      128,
+		Peers:            []string{"0.0.0.0:1111"},
+		BufferSize:       BufferSize,
+		WireHeaderLength: WireByteHeaderLength,
+		TimeoutInMs:      100,
+	}
+
 	m := newP2PModule()
-	m.address = "localhost:12345" // m.config
-	m.protocol = "tcp"
+	err := m.initialize(config)
+
+	assert.Nilf(
+		t,
+		err,
+		"ListenStop: Encountered error while initializing the p2p module: %s", err,
+	)
+
 	go m.listen()
 
 	_, waiting := <-m.ready
 
-	if waiting {
-		t.Errorf("Error listening: gater not ready yet")
-	}
+	assert.Equal(
+		t,
+		waiting,
+		false,
+		"Error listening: gater not ready yet",
+	)
 
-	if !m.isListening.Load() {
-		t.Errorf("Error listening: flag shows false after start")
-	}
+	assert.Equal(
+		t,
+		m.isListening.Load(),
+		true,
+		"Error listening: flag shows false after start",
+	)
 
-	t.Log("Server listeninm.")
+	t.Log("Server listening.")
+	t.Log("Closing...")
 
 	m.close()
 
 	_, finished := <-m.closed
 
-	if !finished {
-		t.Errorf("Error: not closed after .Close()")
-	}
+	assert.Equal(
+		t,
+		finished,
+		true,
+		"Error: not closed after .Close()",
+	)
 
-	if err := m.err.error; err != nil {
-		t.Errorf("Error listening: %s", err.Error())
-	}
+	assert.Nilf(
+		t,
+		m.err.error,
+		"Error listening: %s", err,
+	)
 
-	if m.isListening.Load() {
-		t.Errorf("Error listening: flag shows true after stop")
-	}
+	assert.Equal(
+		t,
+		m.isListening.Load(),
+		false,
+		"Error listening: flag shows true after stop",
+	)
 
 	m.listener.Lock()
-	if m.listener.TCPListener != nil {
-		t.Errorf("Error: listener is still active")
-	}
+	assert.Nil(
+		t,
+		m.listener.TCPListener,
+		"Error: listener is still active",
+	)
 	m.listener.Unlock()
 
 	t.Log("Server closed.")
 }
 
 func TestNetwork_SendOutbound(t *testing.T) {
-	m := newP2PModule()
-	m.config = &shared.P2PConfig{
-		Protocol: "tcp",
-		//Address:          "0.0.0.0:30301",
+	config := &shared.P2PConfig{
+		Protocol:         "tcp",
+		Address:          []byte("0.0.0.0:30301"),
 		ExternalIp:       "0.0.0.0:32321",
-		Peers:            []string{},
+		Peers:            []string{"0.0.0.0:2221"},
 		MaxInbound:       100,
 		MaxOutbound:      100,
-		BufferSize:       1024 * 4,
-		WireHeaderLength: 8,
+		BufferSize:       BufferSize,
+		WireHeaderLength: WireByteHeaderLength,
 		TimeoutInMs:      200,
 	}
-	go m.listen()
+	m := newP2PModule()
 
-	select {
-	case <-m.isReady():
-	case <-m.errored:
-		t.Errorf("Send error: could not start listening, error: %s", m.err.error.Error())
+	{
+		err := m.initialize(config)
+
+		assert.Nilf(
+			t,
+			err,
+			"SendOutbound: failed to initialize the p2p module: %s", err,
+		)
+	}
+
+	{
+		go m.listen()
+
+		select {
+		case <-m.isReady():
+		case <-m.errored:
+			t.Errorf("Send error: could not start listening, error: %s", m.err.error.Error())
+		}
 	}
 
 	addr := "0.0.0.0:2111"
@@ -110,125 +197,209 @@ func TestNetwork_SendOutbound(t *testing.T) {
 
 	select {
 	case v := <-ready:
-		if v == 0 {
-			t.Errorf("Send error: could not start recipient server")
-		}
+		assert.Equal(
+			t,
+			v,
+			uint(1),
+			"Send error: could not start recipient server",
+		)
 	}
 
-	err := m.send(addr, msg, false)
+	{
+		err := m.send(addr, msg, false)
 
-	if err != nil {
-		t.Errorf("Send error: Failed to write message to target")
+		assert.Nilf(
+			t,
+			err,
+			"Send error: Failed to write message to target: %s", err,
+		)
 	}
 
-	var pipe *socket
-	obj, exists := m.outbound.Find(addr)
-	pipe = obj.(*socket)
+	{
+		var pipe *socket
+		obj, exists := m.outbound.Find(addr)
+		pipe = obj.(*socket)
 
-	if !exists {
-		t.Errorf("Send error: outbound connection not registered")
+		assert.Equal(
+			t,
+			exists,
+			true,
+			"Send error: outbound connection not registered",
+		)
+
+		_, down := <-pipe.ready
+		assert.Equal(
+			t,
+			down,
+			false,
+			"Send error: pipe is not ready",
+		)
+
+		assert.Equal(
+			t,
+			pipe.opened.Load(),
+			true,
+			"Send error: pipe is not open",
+		)
 	}
 
-	if _, down := <-pipe.ready; down != false {
-		t.Errorf("Send error: pipe is not ready")
-	}
+	{
+		received := <-data
+		assert.Nilf(
+			t,
+			received.err,
+			"Send error: recipient has received an error while receiving: %s", received.err,
+		)
 
-	if !pipe.opened.Load() {
-		t.Errorf("Send error: pipe is not open")
-	}
-
-	received := <-data
-	if received.err != nil {
-		t.Errorf("Send error: recipient has received an error while receiving: %s", received.err.Error())
-	}
-
-	if bytes.Compare(received.buff[m.config.WireHeaderLength:], msg) != 0 {
-		t.Errorf("Send error: recipient received a corrupted message")
+		assert.Equalf(
+			t,
+			received.buff[m.config.WireHeaderLength:],
+			msg,
+			"Send error: recipient received a corrupted message",
+		)
 	}
 }
 
 func TestNetwork_SendInbound(t *testing.T) {
-	m := newP2PModule()
-	m.config = &shared.P2PConfig{
+	config := &shared.P2PConfig{
+		Protocol:         "tcp",
+		Address:          []byte("0.0.0.0:31301"),
+		ExternalIp:       "0.0.0.0:31321",
+		Peers:            []string{"0.0.0.0:2221"},
 		MaxInbound:       100,
 		MaxOutbound:      100,
-		BufferSize:       1024 * 4,
-		WireHeaderLength: 8,
+		BufferSize:       BufferSize,
+		WireHeaderLength: WireByteHeaderLength,
 		TimeoutInMs:      200,
 	}
-	go m.listen()
-	select {
 
-	case <-m.ready:
-	case <-m.errored:
-		t.Errorf("Send error: could not start listening, error: %s", m.err.error.Error())
+	m := newP2PModule()
+
+	{
+		err := m.initialize(config)
+
+		assert.Nilf(
+			t,
+			err,
+			"SendInbound: failed to initialize the p2p module: %s", err,
+		)
+	}
+
+	{
+		go m.listen()
+
+		select {
+		case <-m.isReady():
+		case <-m.errored:
+			t.Errorf("Send error: could not start listening, error: %s", m.err.error.Error())
+		}
 	}
 
 	conn, err := net.Dial("tcp", m.address)
 
-	if err != nil {
-		t.Errorf("Send error: could not dial gater")
-	}
+	assert.Nil(
+		t,
+		err,
+		"SendInbound: encountered error while dialing the p2p peer",
+	)
 
-	<-time.After(time.Millisecond * 10) // let gater catch up and store the new inbound conn
+	<-time.After(time.Millisecond * 2) // let p2p peer catch up and store the new inbound conn
 
-	msg := GenerateByteLen((1024 * 4) - int(m.config.WireHeaderLength))
-	sent := make(chan int)
+	msg := GenerateByteLen(int(m.config.BufferSize) - int(m.config.WireHeaderLength))
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
 	go func() {
 		err = m.send(conn.LocalAddr().String(), msg, false)
-		sent <- 1
+		assert.Nil(
+			t,
+			err,
+			"SendInbound: Failed to write message to target",
+		)
+		wg.Done()
 	}()
 
-	<-sent
+	wg.Wait()
 
-	if err != nil {
-		t.Errorf("Send error: Failed to write message to target")
-	}
+	{
+		var pipe *socket
+		obj, exists := m.inbound.Find(conn.LocalAddr().String())
+		pipe = obj.(*socket)
 
-	var pipe *socket
-	obj, exists := m.inbound.Find(conn.LocalAddr().String())
-	pipe = obj.(*socket)
+		assert.Equal(
+			t,
+			exists,
+			true,
+			"Send error: outbound connection not registered",
+		)
 
-	if !exists {
-		t.Errorf("Send error: outbound connection not registered")
-	}
+		_, down := <-pipe.ready
+		assert.Equal(
+			t,
+			down,
+			false,
+			"Send error: pipe is not ready",
+		)
 
-	if _, down := <-pipe.ready; down != false {
-		t.Errorf("Send error: pipe is not ready")
-	}
+		assert.Equal(
+			t,
+			pipe.opened.Load(),
+			true,
+			"Send error: pipe is not open",
+		)
 
-	if !pipe.opened.Load() {
-		t.Errorf("Send error: pipe is not open")
-	}
+		received := make([]byte, m.config.BufferSize)
+		n, err := conn.Read(received)
 
-	received := make([]byte, m.config.BufferSize)
-	n, err := conn.Read(received)
-	if err != nil {
-		t.Errorf("Send error: recipient has received an error while receiving: %s", err.Error())
-	}
+		assert.Nil(
+			t,
+			err,
+			"Send error: recipient has received an error while receiving: %s", err,
+		)
 
-	if bytes.Compare(received[m.config.WireHeaderLength:n], msg) != 0 {
-		t.Errorf("Send error: recipient received a corrupted message")
+		assert.Equal(
+			t,
+			received[m.config.WireHeaderLength:n],
+			msg,
+			"Send error: recipient received a corrupted message",
+		)
 	}
 }
 
 func TestNetwork_Request(t *testing.T) {
-	m := newP2PModule()
-	m.config = &shared.P2PConfig{
+	config := &shared.P2PConfig{
+		Protocol:         "tcp",
+		Address:          []byte("0.0.0.0:36301"),
+		ExternalIp:       "0.0.0.0:31361",
+		Peers:            []string{"0.0.0.0:2221"},
 		MaxInbound:       100,
 		MaxOutbound:      100,
-		BufferSize:       1024 * 4,
-		WireHeaderLength: 8,
+		BufferSize:       BufferSize,
+		WireHeaderLength: WireByteHeaderLength,
 		TimeoutInMs:      200,
 	}
 
-	go m.listen()
+	m := newP2PModule()
 
-	t.Logf("Started listeningy")
-	_, waiting := <-m.ready
+	{
+		err := m.initialize(config)
 
-	if waiting {
-		t.Errorf("Request error: gater still not started after.listen")
+		assert.Nilf(
+			t,
+			err,
+			"Request: failed to initialize the p2p module: %s", err,
+		)
+	}
+
+	{
+		go m.listen()
+
+		select {
+		case <-m.isReady():
+		case <-m.errored:
+			t.Errorf("Send error: could not start listening, error: %s", m.err.error.Error())
+		}
 	}
 
 	t.Logf("Started listenig: OK")
@@ -238,98 +409,162 @@ func TestNetwork_Request(t *testing.T) {
 
 	select {
 	case v := <-ready:
-		if v == 0 {
-			t.Errorf("Send error: could not start recipient server")
-		}
+		assert.Equal(
+			t,
+			v,
+			uint(1),
+			"Request: Encountered error while trying to start the mock peer",
+		)
 	}
 
-	t.Logf("Recipient: OK")
+	t.Logf("Request: Successfully started the mock peer: OK")
 
-	fmt.Println("listening started")
-	// send request to addr
 	msgA := GenerateByteLen((1024 * 4) - int(m.config.WireHeaderLength))
 
-	responses := make(chan []byte)
-	errs := make(chan error, 10)
+	wg := &sync.WaitGroup{}
+	responses := make(chan []byte, 10)
 
+	wg.Add(1)
 	go func() {
-		fmt.Println("Requesting")
-		res, err := m.request(addr, msgA, false)
+		t.Log("Request: p2p peer is initiating the request")
+		res, err := m.request(addr, msgA, false) // false indicates that no types encoding is taking place: i.e raw payload
 		if err != nil {
-			errs <- err
+			assert.Failf(
+				t,
+				"Request: p2p peer failed to perform request: %s", err.Error(),
+			)
 			close(responses)
+			wg.Done()
+			return
 		}
 		responses <- res
+		t.Logf("Request: p2p peer has gotten a response")
+		wg.Done()
 	}()
 
-	c := newWireCodec()
+	{
+		wg.Add(1)
+		go func() {
+			c := newWireCodec()
 
-	t.Logf("Receiving...")
-	d := <-data
-	t.Logf("Received: OK")
-	nonce, encoding, _, _, err := c.decode(d.buff)
+			t.Logf("Request: mock peer receiving request...")
+			d := <-data
+			t.Logf("Request: mock peer received request: OK")
 
-	if err != nil {
-		t.Errorf("Request error:  %s", err.Error())
+			nonce, encoding, _, _, err := c.decode(d.buff)
+
+			assert.Nil(
+				t,
+				err,
+				"Request:  mock peer encoutered error while decoding the received request %s", err,
+			)
+
+			respond <- c.encode(encoding, false, nonce, msgA, false)
+			t.Logf("Request: mock peer has sent a response.")
+			wg.Done()
+		}()
 	}
 
-	fmt.Println("Where are you blocked?")
-	respond <- c.encode(encoding, false, nonce, msgA, false)
+	wg.Wait()
 
-	var pipe *socket
-	obj, _ := m.outbound.Find(addr)
-	pipe = obj.(*socket)
+	t.Log("Past the wait")
+	{
+		var pipe *socket
+		obj, _ := m.outbound.Find(addr)
+		pipe = obj.(*socket)
 
-	select {
-	case err := <-errs:
-		t.Errorf("Request error:  %s", err.Error())
-	case <-pipe.errored:
-		t.Errorf("Request error: error while receiving a response: %s", pipe.err.error.Error())
+		wg.Add(1)
+		go func() {
+			select {
+			case <-pipe.errored:
+				assert.Nilf(
+					t,
+					pipe.err.error,
+					"Request error: error while receiving a response: %s", pipe.err.error,
+				)
+			case <-pipe.ready:
+			}
+			wg.Done()
+		}()
+	}
 
-	case d, open := <-responses:
-		if !open {
-			err := <-errs
-			t.Errorf("Request error: error while receiving a response: %s", err.Error())
-		}
+	{
 
-		if len(d) != int(m.config.BufferSize-m.config.WireHeaderLength) {
-			t.Errorf("Request error: received response buffer length mistach")
-		}
+		wg.Add(1)
+		go func() {
+			t.Log("Parsing the responses")
+			select {
+			case d, _ := <-responses:
+				t.Log("fioatch")
+				assert.Equal(
+					t,
+					len(d),
+					int(m.config.BufferSize-m.config.WireHeaderLength),
+					"Request error: received response buffer length mistach",
+				)
 
-		if bytes.Compare(d, msgA) != 0 {
-			t.Errorf("Request error: received response buffer is corrupted")
-		}
+				assert.Equal(
+					t,
+					d,
+					msgA,
+					"Request error: received response buffer is corrupted",
+				)
+			}
+
+			wg.Done()
+		}()
+
+		wg.Wait()
 	}
 }
 
 func TestNetwork_Respond(t *testing.T) {
-	m := newP2PModule()
-	m.config = &shared.P2PConfig{
+	config := &shared.P2PConfig{
+		Protocol:         "tcp",
+		Address:          []byte("0.0.0.0:36301"),
+		ExternalIp:       "0.0.0.0:31361",
+		Peers:            []string{"0.0.0.0:2221"},
 		MaxInbound:       100,
 		MaxOutbound:      100,
-		BufferSize:       1024 * 4,
-		WireHeaderLength: 8,
+		BufferSize:       BufferSize,
+		WireHeaderLength: WireByteHeaderLength,
 		TimeoutInMs:      200,
 	}
-	go m.listen()
-	t.Logf("Listening...")
-	_, waiting := <-m.ready
-	t.Logf("Listening: OK")
 
-	if waiting {
-		t.Errorf("Request error: gater still not started after.listen")
+	m := newP2PModule()
+
+	{
+		err := m.initialize(config)
+
+		assert.Nilf(
+			t,
+			err,
+			"Request: failed to initialize the p2p module: %s", err,
+		)
 	}
 
-	t.Logf("Listening: OK")
+	{
+		go m.listen()
 
-	<-time.After(time.Millisecond * 2)
-	conn, err := net.Dial(m.protocol, m.address)
-
-	if err != nil {
-		t.Errorf("Failed to dial gater. Error: %s", err.Error())
+		select {
+		case <-m.isReady():
+		case <-m.errored:
+			t.Errorf("Send error: could not start listening, error: %s", m.err.error.Error())
+		}
 	}
 
-	t.Logf("Dial: OK")
+	t.Logf("Respond: p2p peer has started listening: OK")
+
+	conn, err := net.Dial(m.protocol, m.externaladdr)
+
+	assert.Nil(
+		t,
+		err,
+		"Failed to dial gater. Error: %s", err,
+	)
+
+	t.Logf("Respond: mock peer has dialed the p2p peer successfully: OK")
+
 	// send to the gater a nonced message (i.e: request)
 	addr := conn.LocalAddr().String()
 	requestNonce := 12
@@ -337,50 +572,83 @@ func TestNetwork_Respond(t *testing.T) {
 	msgB := GenerateByteLen((1024 * 4) - int(m.config.WireHeaderLength))
 
 	go func() {
-		c := newWireCodec() // two instances better than one with locks (for a test)
+		c := newWireCodec()
 		request := c.encode(Binary, false, 12, msgA, false)
 		_, err := conn.Write(request)
-		t.Logf("Write: OK")
-		fmt.Println(err)
+		assert.Nil(
+			t,
+			err,
+			"Respond: encountered error while mock peer trying to request the p2p peer.",
+		)
+		t.Logf("Respond: mock peer has successfully sent a request to the p2p peer: OK")
 	}()
 
-	<-time.After(time.Millisecond * 5)
+	{
+		<-time.After(time.Millisecond * 5)
 
-	t.Logf("Receiving...")
-	w := <-m.sink // blocks
-	t.Logf("Receiving: OK")
+		t.Logf("Respond: p2p peer waiting on requests...")
+		w := <-m.sink // blocks
+		t.Logf("Respond: p2p peer has received a request: OK")
 
-	nonce := w.Nonce()
-	t.Logf("Got work %d", nonce)
+		nonce := w.Nonce()
 
-	err = m.respond(nonce, false, addr, msgB, false)
-	if err != nil {
-		t.Errorf("Respond error: %s", err.Error())
+		t.Logf("Respond: p2p peer responding...")
+
+		err = m.respond(nonce, false, addr, msgB, false)
+
+		assert.Nil(
+			t,
+			err,
+			"Respond error: %s", err,
+		)
+
+		t.Logf("Respond: p2p peer has sent a response")
 	}
 
-	buff := make([]byte, m.config.BufferSize)
-	_, err = conn.Read(buff)
+	{
+		buff := make([]byte, m.config.BufferSize)
+		_, err = conn.Read(buff)
 
-	if err != nil {
-		t.Errorf("Respond error: peer failed to read gater's response")
-	}
+		assert.Nil(
+			t,
+			err,
+			"Respond: mock peer encountered error while trying to read the response", err,
+		)
 
-	c := newWireCodec()
-	dnonce, _, decoded, _, err := c.decode(buff)
-	if err != nil {
-		t.Errorf("Respond error: could not decode payload. Encountered following error: %s", err.Error())
-	}
+		t.Logf("Respond: mock peer has received the response")
 
-	if dnonce != uint32(requestNonce) {
-		t.Errorf("Respond error: received wrong nonce")
-	}
+		c := newWireCodec()
 
-	if len(decoded) != int(m.config.BufferSize-m.config.WireHeaderLength) {
-		t.Errorf("Respond error: received response buffer length mistach")
-	}
+		dnonce, _, decoded, _, err := c.decode(buff)
 
-	if bytes.Compare(decoded, msgB) != 0 {
-		t.Errorf("Respond error: received response buffer is corrupted")
+		assert.Nil(
+			t,
+			err,
+			"Respond error: could not decode payload. Encountered following error: %s", err,
+		)
+
+		t.Logf("Respond: p2p peer has sent a response")
+
+		assert.Equal(
+			t,
+			dnonce,
+			uint32(requestNonce),
+			"Respond error: received wrong nonce",
+		)
+
+		assert.Equal(
+			t,
+			len(decoded),
+			int(m.config.BufferSize-m.config.WireHeaderLength),
+			"Respond error: received response buffer length mistach",
+		)
+
+		assert.Equal(
+			t,
+			decoded,
+			msgB,
+			"Respond error: received response buffer is corrupted",
+		)
 	}
 }
 
@@ -895,7 +1163,7 @@ func ListenAndServe(addr string, readbufflen int) (ready, done chan uint, data c
 				}
 
 				if n > 0 {
-					hl := 8
+					hl := 9
 					bl := int(bodylength)
 					buff := buffer[:hl+bl]
 					data <- datapoint(n, err, buff)
