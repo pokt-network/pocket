@@ -17,22 +17,26 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 		m.utilityContext.ReleaseContext()
 	}
 
-	utilContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
+	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
 	if err != nil {
 		return nil, err
 	}
-	m.utilityContext = utilContext
+	fmt.Println("OLSH FIRST", utilityContext, err)
+	m.utilityContext = utilityContext
 
-	maxTxBytes := 90000                    // TODO(olshansky): Retrieve this from global configs
+	maxTxBytes := 90000                    // TODO(olshansky): Move this to config.json.
 	lastByzValidators := make([][]byte, 0) // TODO(olshansky): Retrieve this from persistence
+	fmt.Println("OLSH", m.privateKey.Address(), m.utilityContext)
 	txs, err := m.utilityContext.GetTransactionsForProposal(m.privateKey.Address(), maxTxBytes, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}
+	appHash := hex.EncodeToString([]byte(strconv.Itoa(int(m.Height)))) // TODO: Temp
+	fmt.Println("OLSH WTF", appHash)
 
 	header := &types_consensus.BlockHeaderConsensusTemp{
 		Height:            int64(m.Height),
-		Hash:              strconv.Itoa(int(m.Height)),
+		Hash:              appHash,
 		Time:              nil, // TODO(olshansky): What should this be?
 		NumTxs:            uint32(len(txs)),
 		LastBlockHash:     state.AppHash,
@@ -59,15 +63,19 @@ func (m *consensusModule) isValidBlock(block *types_consensus.BlockConsensusTemp
 
 // TODO: Should this be async?
 func (m *consensusModule) deliverTxToUtility(block *types_consensus.BlockConsensusTemp) error {
-	utilityModule := m.GetBus().GetUtilityModule()
-	m.utilityContext, _ = utilityModule.NewContext(int64(m.Height))
-	proposer := []byte(strconv.Itoa(int(m.NodeId)))
-	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.utilityContext.GetPersistanceContext().GetLastByzValidators
-
-	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), proposer, block.Transactions, lastByzValidators)
+	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
 	if err != nil {
 		return err
 	}
+	m.utilityContext = utilityContext
+	proposer := m.privateKey.Address()
+	lastByzValidators := make([][]byte, 0) // TODO(olshansky): Retrieve this from persistence
+
+	appHash, err := utilityContext.ApplyBlock(int64(m.Height), proposer, block.Transactions, lastByzValidators)
+	if err != nil {
+		return err
+	}
+	fmt.Println("OLSH 222", appHash, hex.EncodeToString(appHash), block.BlockHeader.Hash)
 
 	// INTEGRATION_TEMP: Make sure the BlockHeader uses the same encoding as the appHash
 	if block.BlockHeader.Hash != hex.EncodeToString(appHash) {

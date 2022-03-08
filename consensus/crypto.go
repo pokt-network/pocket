@@ -1,6 +1,8 @@
 package consensus
 
 import (
+	"log"
+
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 )
 
@@ -16,6 +18,9 @@ func GetThresholdSignature(
 }
 
 func QuorumCertificateToHotstuffMessage(qc *types_consensus.QuorumCertificate) *types_consensus.HotstuffMessage {
+	if qc == nil {
+		log.Fatalf("QuorumCertificateToHotstuffMessage called with nil qc")
+	}
 	return &types_consensus.HotstuffMessage{
 		Step:   qc.Step,
 		Height: qc.Height,

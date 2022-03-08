@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/binary"
+	"encoding/hex"
 	"reflect"
 	"testing"
 	"time"
@@ -83,22 +84,6 @@ func CreateTestConsensusPocketNode(
 		Address: cfg.PrivateKey.Address(),
 	}
 	pocketNode.SetBus(bus)
-
-	p2pMock.EXPECT().
-		Broadcast(gomock.Any(), gomock.Any()).
-		Do(func(msg *anypb.Any, topic types.PocketTopic) {
-			e := &types.PocketEvent{Topic: topic, Data: msg}
-			testChannel <- e
-		}).
-		AnyTimes()
-
-	p2pMock.EXPECT().
-		Send(gomock.Any(), gomock.Any(), gomock.Any()).
-		Do(func(addr pcrypto.Address, msg *anypb.Any, topic types.PocketTopic) {
-			e := &types.PocketEvent{Topic: topic, Data: msg}
-			testChannel <- e
-		}).
-		AnyTimes()
 
 	// Base persistence mocks
 	// persistenceMock.EXPECT().
@@ -234,7 +219,6 @@ func triggerDebugMessage(t *testing.T, node *shared.Node, action types.DebugMess
 
 	e := &types.PocketEvent{Topic: types.PocketTopic_DEBUG_TOPIC, Data: anyProto}
 	node.GetBus().PublishEventToBus(e)
-	// node.GetBus().GetP2PModule().Send(node.Address, anyProto, types.PocketTopic_DEBUG_TOPIC)
 }
 
 func P2PBroadcast(t *testing.T, nodes IdToNodeMapping, message *types_consensus.ConsensusMessage) {
@@ -251,7 +235,7 @@ func WaitForNetworkConsensusMessages(
 	t *testing.T,
 	testChannel modules.EventsChannel,
 	step types_consensus.HotstuffStep,
-	numMessages uint8,
+	numMessages int,
 	millis time.Duration,
 ) (messages []*types_consensus.ConsensusMessage) {
 	decoder := func(any *anypb.Any) *types_consensus.ConsensusMessage {
@@ -275,7 +259,7 @@ func WaitForNetworkConsensusMessagesInternal(
 	t *testing.T,
 	testChannel modules.EventsChannel,
 	topic types.PocketTopic,
-	numMessages uint8,
+	numMessages int,
 	millis time.Duration,
 	decoder func(*anypb.Any) *types_consensus.ConsensusMessage,
 	includeFilter func(m *types_consensus.ConsensusMessage) bool,
@@ -306,11 +290,13 @@ loop:
 			messages = append(messages, message)
 			numMessages--
 
-			// NOTE: We could add the following if structure to "break early" but this will prevent us from catching
-			// the scenario where we get more messages than we expect.
-			// if numMessages <= 0 {
-			// 	break loop
-			// }
+			// NOTE: The if structure below "breaks early" when we get enough messages. However, it does not captur
+			// the case where we could be receiving more messages than expected. To make sure the latter doesn't
+			// happen, the if structure needs to be removed.
+			// TODO(design): discuss the comment above with the team.
+			if numMessages <= 0 {
+				break loop
+			}
 		case <-ctx.Done():
 			if numMessages == 0 {
 				break loop
@@ -325,7 +311,7 @@ loop:
 	return
 }
 
-// Creates a persistence mock that NOOPs some basic functions
+// Creates a persistence module mock with mock implementations of some basic functionality
 func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *mock_modules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 	persistenceMock := mock_modules.NewMockPersistenceModule(ctrl)
@@ -337,32 +323,60 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *mock_modules.Mo
 	return persistenceMock
 }
 
-// Creates a p2p mock that NOOPs some basic functions
+// Creates a p2p module mock with mock implementations of some basic functionality
 func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *mock_modules.MockP2PModule {
 	ctrl := gomock.NewController(t)
 	p2pMock := mock_modules.NewMockP2PModule(ctrl)
 
 	p2pMock.EXPECT().Start().Do(func() {}).AnyTimes()
 	p2pMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
-	// p2pMock.EXPECT().
-	// 	Broadcast(gomock.Any(), gomock.Any()).
-	// 	Do(func(msg *anypb.Any, topic types.PocketTopic) {
-	// 		e := types.PocketEvent{Topic: topic, Data: msg}
-	// 		testChannel <- e
-	// 	}).
-	// 	AnyTimes()
+	p2pMock.EXPECT().
+		Broadcast(gomock.Any(), gomock.Any()).
+		Do(func(msg *anypb.Any, topic types.PocketTopic) {
+			e := &types.PocketEvent{Topic: topic, Data: msg}
+			testChannel <- e
+		}).
+		AnyTimes()
+
+	p2pMock.EXPECT().
+		Send(gomock.Any(), gomock.Any(), gomock.Any()).
+		Do(func(addr pcrypto.Address, msg *anypb.Any, topic types.PocketTopic) {
+			e := &types.PocketEvent{Topic: topic, Data: msg}
+			testChannel <- e
+		}).
+		AnyTimes()
 
 	return p2pMock
 }
 
-// Creates a utility mock that NOOPs some basic functions
+// Creates a utility module mock with mock implementations of some basic functionality
 func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *mock_modules.MockUtilityModule {
 	ctrl := gomock.NewController(t)
 	utilityMock := mock_modules.NewMockUtilityModule(ctrl)
+	utilityContext := mock_modules.NewMockUtilityContext(ctrl)
 
-	// Basic NOOP operations
-	utilityMock.EXPECT().Start().Do(func() {}).AnyTimes()
+	// TODO(integration): This is only valid while we are still integrating and will likely break soon...
+	emptyByzValidators := make([][]byte, 0)
+	emptyTxs := make([][]byte, 0)
+
+	appHash, err := hex.DecodeString("31")
+	require.NoError(t, err)
+
+	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
 	utilityMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
+	utilityMock.EXPECT().
+		NewContext(int64(1)).
+		Return(utilityContext, nil).
+		// Times(4)
+		AnyTimes()
+	utilityContext.EXPECT().
+		GetTransactionsForProposal(gomock.Any(), 90000, gomock.AssignableToTypeOf(emptyByzValidators)).
+		Return(make([][]byte, 0), nil).
+		AnyTimes()
+	utilityContext.EXPECT().
+		ApplyBlock(int64(1), gomock.Any(), gomock.AssignableToTypeOf(emptyTxs), gomock.AssignableToTypeOf(emptyByzValidators)).
+		Return(appHash, nil).
+		AnyTimes()
 
 	return utilityMock
 }

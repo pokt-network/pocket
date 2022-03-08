@@ -23,9 +23,9 @@ func CreateProposeMessage(
 		Height: uint64(m.Height),
 		Round:  m.Round,
 		Block:  m.Block,
-		Justification: &types_consensus.HotstuffMessage_QuorumCertificate{
-			QuorumCertificate: qc,
-		},
+		// Justification: &types_consensus.HotstuffMessage_QuorumCertificate{
+		// 	QuorumCertificate: qc,
+		// },
 	}
 	return message, nil
 }
@@ -40,12 +40,12 @@ func CreateVoteMessage(
 	}
 
 	message := &types_consensus.HotstuffMessage{
-		Type:          Vote,
-		Step:          step, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
-		Height:        m.Height,
-		Round:         m.Round,
-		Block:         block,
-		Justification: nil, // signature is computed below
+		Type:   Vote,
+		Step:   step, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
+		Height: m.Height,
+		Round:  m.Round,
+		Block:  block,
+		// Justification: nil, // signature is computed below
 	}
 
 	privKey := m.privateKey

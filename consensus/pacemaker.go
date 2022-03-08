@@ -190,10 +190,11 @@ func (p *paceMaker) startNextView(qc *types_consensus.QuorumCertificate, forceNe
 		Height: p.consensusMod.Height,
 		Round:  p.consensusMod.Round,
 		Block:  nil,
-		Justification: &types_consensus.HotstuffMessage_QuorumCertificate{
-			QuorumCertificate: qc,
-		},
+		// Justification: &types_consensus.HotstuffMessage_QuorumCertificate{
+		// 	QuorumCertificate: qc,
+		// },
 	}
+	fmt.Println("OLSH TEST", p.quorumCertificate, qc, hotstuffMessage.GetQuorumCertificate())
 
 	p.RestartTimer()
 	p.consensusMod.broadcastToNodes(hotstuffMessage, HotstuffMessage)

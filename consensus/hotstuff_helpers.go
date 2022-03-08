@@ -57,6 +57,7 @@ func (m *consensusModule) findHighQC(step types_consensus.HotstuffStep) (qc *typ
 			continue
 		}
 		if qc == nil || m.GetQuorumCertificate().Height > qc.Height {
+			fmt.Println("OLSH here???")
 			qc = m.GetQuorumCertificate()
 		}
 	}
@@ -69,8 +70,10 @@ func (m *consensusModule) isQCValid(qc *types_consensus.QuorumCertificate) bool 
 		return false
 	}
 
+	fmt.Println("OLSH 111 BEFORE", qc == nil)
 	messageToJustify := QuorumCertificateToHotstuffMessage(qc)
 	valMap := types.GetTestState(nil).ValidatorMap
+	fmt.Println("OLSH 111", qc, " ~~~ ", qc == nil, qc.Signature)
 	for _, partialSig := range qc.Signature.Signatures {
 		validator, ok := valMap[partialSig.Address]
 		if !ok {
