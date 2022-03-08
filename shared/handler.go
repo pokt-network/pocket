@@ -26,7 +26,6 @@ func (node *Node) handleDebugEvent(anyMessage *anypb.Any) error {
 	if err != nil {
 		return err
 	}
-
 	switch debugMessage.Action {
 	case types.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
 		fallthrough

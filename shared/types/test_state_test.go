@@ -5,18 +5,19 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/config"
-	"github.com/pokt-network/pocket/shared/crypto"
+	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLoadStateFromGenesis(t *testing.T) {
-	pk, _ := crypto.GeneratePrivateKey()
+	pk, err := pcrypto.GeneratePrivateKey()
+	require.NoError(t, err)
 	cfg := &config.Config{
 		Genesis:    genesisJson(),
-		PrivateKey: pk,
+		PrivateKey: pk.(pcrypto.Ed25519PrivateKey),
 	}
-	state := GetTestState(nil)
-	state.LoadStateFromConfig(cfg)
-	// require.Equal(t, 4, len(state.ValidatorMap))
+	state := GetTestState(cfg)
+	require.Equal(t, 4, len(state.ValidatorMap))
 }
 
 func TestLoadStateFrompersistence(t *testing.T) {

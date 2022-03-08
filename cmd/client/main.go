@@ -88,9 +88,26 @@ func promptGetInput() (string, error) {
 func handleSelect(selection string) {
 	switch selection {
 	case PromptResetToGenesis:
-		log.Println("[CLIENT] Resetting to genesis...")
 		m := &types.DebugMessage{
 			Action:  types.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
+			Message: nil,
+		}
+		broadcastDebugMessage(m)
+	case PromptPrintNodeState:
+		m := &types.DebugMessage{
+			Action:  types.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
+			Message: nil,
+		}
+		broadcastDebugMessage(m)
+	case PromptTriggerNextView:
+		m := &types.DebugMessage{
+			Action:  types.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
+			Message: nil,
+		}
+		broadcastDebugMessage(m)
+	case PromptTogglePaceMakerMode:
+		m := &types.DebugMessage{
+			Action:  types.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
 			Message: nil,
 		}
 		broadcastDebugMessage(m)

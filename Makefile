@@ -20,6 +20,11 @@ help:
 prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 
+.PHONY: go_vet
+## Run `go vet` on all files in the current project
+go_vet:
+	go vet ./...
+
 .PHONY: build
 ## Build Pocket's main entrypoint
 build:
@@ -87,6 +92,11 @@ test_shared: # generate_mocks
 ## Run all go unit tests in the consensus module
 test_consensus: # mockgen
 	go test ./consensus/...
+
+.PHONY: test_hotstuff
+## Run all go unit tests related to hotstuff consensus
+test_hotstuff: # mockgen
+	go test -v ./consensus/consensus_tests -run Hotstuff
 
 .PHONY: test_vrf
 ## Run all go unit tests in the VRF library

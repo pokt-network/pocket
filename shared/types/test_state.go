@@ -5,15 +5,12 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/shared/config"
-	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 )
 
 // TODO(hack): This is a singleton that can be used as a view into the genesis
 // file - since state is not currently being loaded from disk. This structure will
 // either be removed or redesigned altogether.
 type TestState struct {
-	PrivateKey pcrypto.PrivateKey // The private key of this node
-
 	BlockHeight      uint64 // The current block height of the chain (updated through load, state sync, normal operation, etc)
 	AppHash          string // TODO(discuss): Why not call this a BlockHash or StateHash? Should it be a []byte or string?
 	ValidatorMap     ValMap // TODO(olshansky): Need to update this on every validator operation(pause, stake, unstake, etc)
@@ -56,7 +53,7 @@ func (ps *TestState) loadStateFromConfig(cfg *config.Config) {
 
 	persistenceConfig := cfg.Persistence
 	if persistenceConfig == nil || len(persistenceConfig.DataDir) == 0 {
-		log.Println("[TODO] Load p2p state from persistence. Only supporting loading p2p state from genesis file for now.")
+		// TODO(design): Load p2p state from persistence. Only supporting loading p2p state from genesis file for now.
 		ps.loadStateFromGenesis(cfg)
 		return
 	}
@@ -75,8 +72,6 @@ func (ps *TestState) loadStateFromGenesis(cfg *config.Config) {
 	}
 
 	*ps = TestState{
-		PrivateKey: cfg.PrivateKey,
-
 		BlockHeight:      0,
 		AppHash:          genesis.AppHash,
 		ValidatorMap:     ValidatorListToMap(genesis.Validators),

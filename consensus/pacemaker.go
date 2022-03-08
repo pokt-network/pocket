@@ -132,7 +132,7 @@ func (p *paceMaker) RestartTimer() {
 	}
 
 	// TODO(olshansky): This is a hack only used to slow down the progress of the blockchain during development.
-	time.Sleep(time.Duration(int64(time.Millisecond) * int64(p.paceMakerParams.DebugTimeBetweenStepsMsec)))
+	// time.Sleep(time.Duration(int64(time.Millisecond) * int64(p.paceMakerParams.DebugTimeBetweenStepsMsec)))
 
 	stepTimeout := p.getStepTimeout(p.consensusMod.Round)
 

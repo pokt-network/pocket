@@ -2,7 +2,6 @@ package shared
 
 import (
 	"log"
-	"time"
 
 	"github.com/pokt-network/pocket/shared/config"
 	pcrypto "github.com/pokt-network/pocket/shared/crypto"
@@ -80,20 +79,6 @@ func (node *Node) Start() error {
 	if err := node.GetBus().GetConsensusModule().Start(); err != nil {
 		return err
 	}
-
-	// TODO(olshansky): This is a temporary function in order to avoid
-	// the `all goroutines are asleep - deadlock` error. This happens because
-	// there is no existing functionality in the source code, so the static
-	// compiler understands that no future events will take place.
-	go func() {
-		for {
-			log.Println("Sending placeholder event...")
-			node.GetBus().PublishEventToBus(&types.PocketEvent{
-				Topic: types.PocketTopic_UNKNOWN_POCKET_TOPIC,
-			})
-			time.Sleep(time.Second * 5)
-		}
-	}()
 
 	// While loop lasting throughout the entire lifecycle of the node.
 	for {

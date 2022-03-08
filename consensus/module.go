@@ -5,6 +5,7 @@ import (
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -19,7 +20,8 @@ var _ modules.ConsensusModule = &consensusModule{}
 
 // TODO(olshansky): Any reason to make all of these attributes local only (i.e. not exposed outside the struct)?
 type consensusModule struct {
-	bus modules.Bus
+	bus        modules.Bus
+	privateKey pcrypto.Ed25519PrivateKey
 
 	// Hotstuff
 	Height uint64
@@ -41,8 +43,8 @@ type consensusModule struct {
 	paceMaker         PaceMaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-	logPrefix   string                                                             // TODO(design): Remove later when we build a shared/proper/injected logger
-	MessagePool map[types_consensus.HotstuffStep][]types_consensus.HotstuffMessage // TODO(design): Move this over to the persistence module or elsewhere?
+	logPrefix   string                                                              // TODO(design): Remove later when we build a shared/proper/injected logger
+	MessagePool map[types_consensus.HotstuffStep][]*types_consensus.HotstuffMessage // TODO(design): Move this over to the persistence module or elsewhere?
 }
 
 func Create(cfg *config.Config) (modules.ConsensusModule, error) {
@@ -57,12 +59,12 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		return nil, err
 	}
 
-	state := types.GetTestState(nil)
-	address := state.PrivateKey.Address().String()
+	address := cfg.PrivateKey.Address().String()
 	valIdMap, idValMap := types_consensus.GetValToIdMap(types.GetTestState(nil).ValidatorMap)
 
 	m := &consensusModule{
-		bus: nil,
+		bus:        nil,
+		privateKey: cfg.PrivateKey,
 
 		Height: 0,
 		Round:  0,
@@ -82,7 +84,7 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		leaderElectionMod: leaderElectionMod,
 
 		logPrefix:   DefaultLogPrefix,
-		MessagePool: make(map[types_consensus.HotstuffStep][]types_consensus.HotstuffMessage),
+		MessagePool: make(map[types_consensus.HotstuffStep][]*types_consensus.HotstuffMessage),
 	}
 
 	// TODO(olshansky): Look for a way to avoid doing this.

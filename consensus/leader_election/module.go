@@ -26,10 +26,12 @@ type LeaderElectionModule interface {
 	GetLeaderId(uint64, uint64) (types_consensus.NodeId, error)
 }
 
+var _ leaderElectionModule = leaderElectionModule{}
+
 type leaderElectionModule struct {
 	LeaderElectionModule
 
-	pocketBusMod modules.Bus
+	bus modules.Bus
 
 	// Module metadata
 	nodeId         types_consensus.NodeId
@@ -51,7 +53,9 @@ func Create(
 	config *config.Config,
 ) (LeaderElectionModule, error) {
 	return &leaderElectionModule{
-		// nodeId:         types_consensus.NodeId(config.Consensus.NodeId),
+		bus: nil,
+
+		// nodeId: ???
 		previousLeader: nil,
 
 		vrfSecretKey:       nil,
@@ -60,8 +64,7 @@ func Create(
 }
 
 func (m *leaderElectionModule) Start() error {
-	log.Println("[TODO] Use persistence to create leader election module.")
-
+	// TODO(olshansky): Use persistence to create leader election module.
 	return nil
 }
 
@@ -71,14 +74,14 @@ func (m *leaderElectionModule) Stop() error {
 }
 
 func (m *leaderElectionModule) SetBus(pocketBus modules.Bus) {
-	m.pocketBusMod = pocketBus
+	m.bus = pocketBus
 }
 
 func (m *leaderElectionModule) GetBus() modules.Bus {
-	if m.pocketBusMod == nil {
+	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
-	return m.pocketBusMod
+	return m.bus
 }
 
 func (m *leaderElectionModule) HandleMessage(message *LeaderElectionMessage) {
@@ -128,7 +131,8 @@ func (m *leaderElectionModule) GetLeaderId(height uint64, round uint64) (types_c
 func (m *leaderElectionModule) BroadcastVRFProofIfCandidate(height uint64, round uint64) {
 	state := types.GetTestState(nil)
 
-	validator, ok := state.ValidatorMap[string(m.nodeId)] // HACK
+	addr := "TODO: FIX ME" // TEMP
+	validator, ok := state.ValidatorMap[addr]
 	if !ok {
 		log.Printf("[ERROR] Cannot broadcast VRF Proof because validator not foudn in Pocket State: %d", m.nodeId)
 		return

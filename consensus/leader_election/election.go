@@ -86,7 +86,7 @@ func ElectLeader(
 
 		verification, err := candidate.verificationKey.Verify(seed, candidate.vrfProof, candidate.vrfOut)
 		if err != nil || !verification {
-			log.Printf("[WARN] Candidate leader failed verification: NodeId: %d; Error: %v", candidate.nodeId, err)
+			log.Printf("[WARN] Candidate leader failed verification: NodeId: %s; Error: %v", candidate.nodeId, err)
 			continue
 		}
 

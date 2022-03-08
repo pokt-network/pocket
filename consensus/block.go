@@ -25,7 +25,7 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 
 	maxTxBytes := 90000                    // TODO(olshansky): Retrieve this from global configs
 	lastByzValidators := make([][]byte, 0) // TODO(olshansky): Retrieve this from persistence
-	txs, err := m.utilityContext.GetTransactionsForProposal(state.PrivateKey.Address(), maxTxBytes, lastByzValidators)
+	txs, err := m.utilityContext.GetTransactionsForProposal(m.privateKey.Address(), maxTxBytes, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 		Time:              nil, // TODO(olshansky): What should this be?
 		NumTxs:            uint32(len(txs)),
 		LastBlockHash:     state.AppHash,
-		ProposerAddress:   state.PrivateKey.Address(),
+		ProposerAddress:   m.privateKey.Address(),
 		QuorumCertificate: nil, // TODO(olshansky): See the comment in `block_cons_temp.proto`
 	}
 
@@ -91,9 +91,9 @@ func (m *consensusModule) commitBlock(block *types_consensus.BlockConsensusTemp)
 	//	return err
 	//}
 
-	pocketState := types.GetTestState(nil)
-	pocketState.UpdateAppHash(block.BlockHeader.Hash)
-	pocketState.UpdateBlockHeight(uint64(block.BlockHeader.Height))
+	state := types.GetTestState(nil)
+	state.UpdateAppHash(block.BlockHeader.Hash)
+	state.UpdateBlockHeight(uint64(block.BlockHeader.Height))
 
 	// TODO: Something with the persistence module?
 	// persistenceModule := m.GetBus().GetpersistenceModule()

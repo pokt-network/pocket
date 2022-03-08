@@ -74,7 +74,7 @@ func (m *consensusModule) handleHotstuffMessage(message *types_consensus.Hotstuf
 	}
 
 	// TODO(olshansky): Move this over into the persistence module.
-	m.MessagePool[message.Step] = append(m.MessagePool[message.Step], *message)
+	m.MessagePool[message.Step] = append(m.MessagePool[message.Step], message)
 
 	// Need to execute leader election if there is no leader and we are in a new round.
 	if m.LeaderId == nil && message.Step == NewRound {

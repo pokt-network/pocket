@@ -26,7 +26,6 @@ func (m *consensusModule) broadcastToNodes(message proto.Message, messageType ty
 		m.nodeLogError("Failed to create consensus message", err)
 		return
 	}
-
 	if err := m.GetBus().GetP2PModule().Broadcast(any, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError("Error broadcasting message:", err)
 		return
@@ -60,7 +59,7 @@ func (m *consensusModule) sendToNode(message proto.Message, messageType types_co
 // TODO(olshansky): Move this into persistence.
 func (m *consensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
-		m.MessagePool[step] = make([]types_consensus.HotstuffMessage, 0)
+		m.MessagePool[step] = make([]*types_consensus.HotstuffMessage, 0)
 	}
 }
 

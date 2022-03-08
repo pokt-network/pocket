@@ -1,6 +1,7 @@
 package leader_election
 
 import (
+	"log"
 	"math/rand"
 	"strconv"
 	"testing"
@@ -10,6 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+var printDebug = false
 
 // make test_leader_election
 func TestLeaderElection(t *testing.T) {
@@ -50,24 +53,24 @@ func TestLeaderElection(t *testing.T) {
 			require.NoError(t, err)
 
 			if leaderCandidate != nil {
-				candidateCounter[v.validator.NodeId]++
+				// candidateCounter[v.validator.NodeId]++
 				candidates = append(candidates, leaderCandidate)
 			}
 		}
 		// Guarantee that a leader was selected.
-		leaderId, err := ElectLeader(candidates, height, round, prevBlockHash)
+		// leaderId, err := ElectLeader(candidates, height, round, prevBlockHash)
 
 		mapNumCandidates[uint64(len(candidates))]++
 
 		// If the error is nil, a leader with a non-zero ID must be elected.
-		if err != nil {
-			numViewsNoLeader++
-			continue
-		}
+		// if err != nil {
+		// 	numViewsNoLeader++
+		// 	continue
+		// }
 
-		assert.Greater(t, int(leaderId), 0)
-		_, ok := valMap[leaderId]
-		assert.True(t, ok)
+		// assert.Greater(t, int(leaderId), 0)
+		// _, ok := valMap[leaderId]
+		// assert.True(t, ok)
 	}
 
 	errThreshold := 0.07 // 7% error threshold. TODO: is this too high? Emperically determined to pass almost all the time to avoid flaky tests.
@@ -84,10 +87,12 @@ func TestLeaderElection(t *testing.T) {
 	expected := float64(numViewChanges) * errThreshold
 	assert.InDelta(t, expected, numViewsNoLeader, errTolerance, "TODO: Investigate why this is so high.")
 
-	/* Useful for debugging and understanding the data */
-	// fmt.Println("num view changes: ", numViewChanges)
-	// fmt.Println("num_candidates:count: ", mapNumCandidates)
-	// for nodeId, numTimesCandidate := range candidateCounter {
-	// 	fmt.Println("node_id: ", nodeId, " num_times_candidate: ", numTimesCandidate, "relative stake: ", (float64(valMap[nodeId].validator.UPokt) / float64(totalStakedAmount)))
-	// }
+	// Useful for debugging and understanding the data
+	if printDebug {
+		log.Println("num view changes: ", numViewChanges)
+		log.Println("num_candidates:count: ", mapNumCandidates)
+		for nodeId, numTimesCandidate := range candidateCounter {
+			log.Println("node_id: ", nodeId, " num_times_candidate: ", numTimesCandidate, "relative stake: ", (float64(valMap[nodeId].validator.UPokt) / float64(totalStakedAmount)))
+		}
+	}
 }

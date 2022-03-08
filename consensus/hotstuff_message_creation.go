@@ -6,7 +6,6 @@ import (
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
 )
 
 func CreateProposeMessage(
@@ -49,7 +48,7 @@ func CreateVoteMessage(
 		Justification: nil, // signature is computed below
 	}
 
-	privKey := types.GetTestState(nil).PrivateKey // TODO(design): Is this where we should be storing/accessing the privateKey
+	privKey := m.privateKey
 	message.Justification = &types_consensus.HotstuffMessage_PartialSignature{
 		PartialSignature: &types_consensus.PartialSignature{
 			Signature: getHotstuffMessageSignature(message, privKey),

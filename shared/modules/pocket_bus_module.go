@@ -4,7 +4,7 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 )
 
-type EventsChannel chan types.PocketEvent
+type EventsChannel chan *types.PocketEvent
 
 type Bus interface {
 	// Bus Events

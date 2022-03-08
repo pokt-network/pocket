@@ -8,13 +8,21 @@ import (
 )
 
 func (m *consensusModule) isMessagePartialSigValid(message *types_consensus.HotstuffMessage) (bool, string) {
-	if message.GetPartialSignature() == nil {
-		return false, "Partial signature is nil"
+	if message.Step == NewRound {
+		return true, "NewRound messages do not need a partial signature"
+	}
+
+	if message.Type == Propose {
+		return true, "Leader proposals do not need a partial signature"
 	}
 
 	// TODO(olshansky): Remove this special case for debugging only.
-	if message.GetPartialSignature().Address == "DEBUG" {
-		return true, ""
+	// if message.GetPartialSignature().Address == "DEBUG" {
+	// 	return true, ""
+	// }
+
+	if message.GetPartialSignature() == nil {
+		return false, "Partial signature is nil"
 	}
 
 	if message.GetPartialSignature().Signature == nil || message.GetPartialSignature().Address == "" {
@@ -30,7 +38,7 @@ func (m *consensusModule) isMessagePartialSigValid(message *types_consensus.Hots
 	}
 
 	pubKey := validator.PublicKey
-	if message.GetPartialSignature() != nil && !IsSignatureValid(message, pubKey, message.GetPartialSignature().Signature) {
+	if !IsSignatureValid(message, pubKey, message.GetPartialSignature().Signature) {
 		return false, fmt.Sprintf("Partial signature on message is invalid. Sender: %d; Height: %d; Step: %d; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s", m.ValToIdMap[address], message.Height, message.Step, message.Round, message.GetPartialSignature().Signature, types_consensus.ProtoHash(message.Block), pubKey.String())
 	}
 

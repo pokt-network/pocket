@@ -23,13 +23,12 @@ const (
 )
 
 func CreateBus(
-	channel modules.EventsChannel,
+	channel modules.EventsChannel, // A channel can be injected into the bus only for testing purposes
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 ) (modules.Bus, error) {
-	// A channel can be injected into the bus only for testing purposes
 	if channel == nil {
 		log.Print("Creating a new Go channel for the Pocket bus...")
 		channel = make(modules.EventsChannel, DefaultPocketBusBufferSize)
@@ -52,12 +51,12 @@ func CreateBus(
 }
 
 func (m *bus) PublishEventToBus(e *types.PocketEvent) {
-	m.channel <- *e
+	m.channel <- e
 }
 
 func (m *bus) GetBusEvent() *types.PocketEvent {
 	e := <-m.channel
-	return &e
+	return e
 }
 
 func (m *bus) GetEventBus() modules.EventsChannel {

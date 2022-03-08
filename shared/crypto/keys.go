@@ -1,6 +1,8 @@
 package crypto
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // TODO(discuss): Consider create a type for signature and having constraints for each type as well.
 
