@@ -15,6 +15,11 @@ import (
 	common "github.com/pokt-network/pocket/shared/types"
 )
 
+const (
+	WireHeaderLength = 9
+	BufferSize       = 1024 * 4
+)
+
 func TestNetwork_NewP2PModule(t *testing.T) {
 	m := newP2PModule()
 
@@ -858,7 +863,7 @@ func ListenAndServe(addr string, readbufflen int) (ready, done chan uint, data c
 					continue reader
 				}
 				c.SetReadDeadline(time.Now().Add(time.Millisecond * 2))
-				n, err := stdio.ReadFull(creader, buffer[:8]) // TODO(derrandz): parameterize this
+				n, err := stdio.ReadFull(creader, buffer[:WireHeaderLength]) // TODO(derrandz): parameterize this
 				if err != nil {
 					if isErrTimeout(err) {
 						readerClosed = true
@@ -868,13 +873,13 @@ func ListenAndServe(addr string, readbufflen int) (ready, done chan uint, data c
 					break reader
 				}
 
-				_, _, bodylength, derr := codec.decodeHeader(buffer[:8]) // TODO(derrandz): DITTO line 861
+				_, _, bodylength, derr := codec.decodeHeader(buffer[:WireHeaderLength]) // TODO(derrandz): DITTO line 861
 				if derr != nil {
 					data <- datapoint(len(buffer), err, buffer)
 					break reader
 				}
 
-				n, err = stdio.ReadAtLeast(creader, buffer[8:], int(bodylength)) // TODO(derrandz): DITTO line 861
+				n, err = stdio.ReadAtLeast(creader, buffer[WireHeaderLength:], int(bodylength)) // TODO(derrandz): DITTO line 861
 				if err != nil {
 					if isErrEOF(err) {
 						err = nil

@@ -157,6 +157,10 @@ test_p2p_wire_codec:
 test_p2p_socket:
 	go test -run TestSocket -v -race ./p2p
 
+## Run the p2p network churn tests
+test_p2p_churn:
+	go test -run TestNetworkChurn -v -race ./p2p
+
 ## Run the p2p network behavior (send, broadcast, listen...)
 test_p2p_network:
 	go test -run TestNetwork -v -race ./p2p
