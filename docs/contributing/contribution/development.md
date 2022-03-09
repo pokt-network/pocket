@@ -126,12 +126,14 @@ Make sure to complete all required fields with the following information:
 
 ## Testing Phase
 
-After a PR has been created, wait for the automation test suite to complete. it is desirable to have some community members review and test locally the PR, by providing feedback on the PR comments.
+After a PR has been created, wait for the automated test suite to complete. it is desirable to have some community members review and locally test the PR, by providing feedback on the PR comments.
 
 ## Review Phase
 
-Wait a couple of days to collect comments from other contributors. Make sure to respond, eventually fix, and mark all the comments as done.
+You should wait for 2 days to collect comments from other contributors. Make sure to respond, eventually fix, and mark all the comments as done.
 Wait for the commenter to acknowledge the answer or the fix of its comment.
+
+If you didn't get a proper review after 2 days, we should re request the review.
 
 ## Actors Approvals
 
@@ -139,8 +141,8 @@ Ping the required actors on a PR comment to call their attention after this step
 
 ## Merge Blockers
 
-- Issue PRs will be selected for running a subset of the Testing Regression suite and require all test to be green before being merged.
-- Issue PRs will require having all the comments reviewed and checked by both commenter and developer.
+- Issue PRs will require to pass a subset of the Testing Regression suite and require all test to be green before being merged.
+- Issue PRs will require having all the comments reviewed and resolved by both commenter and developer.
 - Issues PRs will require at lease 2 approvals from any contributor to unblock merging to the integration branch.
 
 ## Merge and Issue Close
