@@ -264,7 +264,7 @@ func WaitForNetworkConsensusMessages(
 	hotstuffMsgType types_consensus.HotstuffMessageType,
 	numMessages int,
 	millis time.Duration,
-) (messages []*types_consensus.ConsensusMessage) {
+) (messages []*types_consensus.ConsensusMessage, err error) {
 	decoder := func(any *anypb.Any) *types_consensus.ConsensusMessage {
 		var consensusMessage types_consensus.ConsensusMessage
 		err := anypb.UnmarshalTo(any, &consensusMessage, proto.UnmarshalOptions{})
@@ -299,7 +299,7 @@ func WaitForNetworkConsensusMessagesInternal(
 	decoder func(*anypb.Any) *types_consensus.ConsensusMessage,
 	includeFilter func(m *types_consensus.ConsensusMessage) bool,
 	errorMessage string,
-) (messages []*types_consensus.ConsensusMessage) {
+) (messages []*types_consensus.ConsensusMessage, err error) {
 	messages = make([]*types_consensus.ConsensusMessage, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*millis)
 	unused := make([]*types.PocketEvent, 0) // TODO: Move this into a pool rather than resending back to the eventbus.
@@ -331,9 +331,9 @@ loop:
 			if numMessages == 0 {
 				break loop
 			} else if numMessages > 0 {
-				t.Fatalf("Missing %s messages; missing: %d, received: %d; (%s)", topic, numMessages, len(messages), errorMessage)
+				return nil, fmt.Errorf("Missing %s messages; missing: %d, received: %d; (%s)", topic, numMessages, len(messages), errorMessage)
 			} else {
-				t.Fatalf("Too many %s messages received; expected: %d, received: %d; (%s)", topic, numMessages+len(messages), len(messages), errorMessage)
+				return nil, fmt.Errorf("Too many %s messages received; expected: %d, received: %d; (%s)", topic, numMessages+len(messages), len(messages), errorMessage)
 			}
 		}
 	}

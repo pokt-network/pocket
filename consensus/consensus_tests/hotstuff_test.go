@@ -30,7 +30,8 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 
 	// NewRound
-	newRoundMessages := WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 1000)
+	newRoundMessages, err := WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 1000)
+	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		require.Equal(t, uint64(1), nodeState.Height)
@@ -47,7 +48,8 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	leader := pocketNodes[leaderId]
 
 	// Prepare
-	prepareProposal := WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Propose, 1, 1000)
+	prepareProposal, err := WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Propose, 1, 1000)
+	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		require.Equal(t, uint64(1), nodeState.Height)
@@ -60,12 +62,14 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 
 	// Precommit
-	prepareVotes := WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Vote, numNodes, 1000)
+	prepareVotes, err := WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Vote, numNodes, 1000)
+	require.NoError(t, err)
 	for _, vote := range prepareVotes {
 		P2PSend(t, leader, vote)
 	}
 
-	preCommitProposal := WaitForNetworkConsensusMessages(t, testChannel, consensus.PreCommit, consensus.Propose, 1, 1000)
+	preCommitProposal, err := WaitForNetworkConsensusMessages(t, testChannel, consensus.PreCommit, consensus.Propose, 1, 1000)
+	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		require.Equal(t, uint64(1), nodeState.Height)
@@ -78,12 +82,14 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 
 	// Commit
-	preCommitVotes := WaitForNetworkConsensusMessages(t, testChannel, consensus.PreCommit, consensus.Vote, numNodes, 1000)
+	preCommitVotes, err := WaitForNetworkConsensusMessages(t, testChannel, consensus.PreCommit, consensus.Vote, numNodes, 1000)
+	require.NoError(t, err)
 	for _, vote := range preCommitVotes {
 		P2PSend(t, leader, vote)
 	}
 
-	commitProposal := WaitForNetworkConsensusMessages(t, testChannel, consensus.Commit, consensus.Propose, 1, 1000)
+	commitProposal, err := WaitForNetworkConsensusMessages(t, testChannel, consensus.Commit, consensus.Propose, 1, 1000)
+	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		require.Equal(t, uint64(1), nodeState.Height)
@@ -96,12 +102,14 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 
 	// Decide
-	commitVotes := WaitForNetworkConsensusMessages(t, testChannel, consensus.Commit, consensus.Vote, numNodes, 1000)
+	commitVotes, err := WaitForNetworkConsensusMessages(t, testChannel, consensus.Commit, consensus.Vote, numNodes, 1000)
+	require.NoError(t, err)
 	for _, vote := range commitVotes {
 		P2PSend(t, leader, vote)
 	}
 
-	decideProposal := WaitForNetworkConsensusMessages(t, testChannel, consensus.Decide, consensus.Propose, 1, 1000)
+	decideProposal, err := WaitForNetworkConsensusMessages(t, testChannel, consensus.Decide, consensus.Propose, 1, 1000)
+	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		// Leader has already committed the block and hence moved to the next height.
@@ -122,7 +130,8 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 
 	// Block has been committed and new round has begun
-	_ = WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 1000)
+	_, err = WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 1000)
+	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		require.Equal(t, uint64(2), nodeState.Height)

@@ -33,7 +33,8 @@ func TestPacemakerTimeouts(t *testing.T) {
 	}
 
 	// paceMakerTimeout
-	WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	_, err := WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		require.Equal(t, uint64(1), nodeState.Height)
@@ -45,7 +46,8 @@ func TestPacemakerTimeouts(t *testing.T) {
 	time.Sleep(paceMakerTimeout)
 
 	// Check that a new round starts at the same height.
-	WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	_, err = WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		require.Equal(t, uint64(1), nodeState.Height)
@@ -57,7 +59,8 @@ func TestPacemakerTimeouts(t *testing.T) {
 	time.Sleep(paceMakerTimeout)
 
 	// // Check that a new round starts at the same height.
-	WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	_, err = WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		require.Equal(t, uint64(1), nodeState.Height)
@@ -69,7 +72,8 @@ func TestPacemakerTimeouts(t *testing.T) {
 	time.Sleep(paceMakerTimeout)
 
 	// Check that a new round starts at the same height.
-	newRoundMessages := WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	newRoundMessages, err := WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		require.Equal(t, uint64(1), nodeState.Height)
@@ -77,13 +81,14 @@ func TestPacemakerTimeouts(t *testing.T) {
 		require.Equal(t, uint8(3), nodeState.Round)
 	}
 
-	// Continue to the next step at the current roun
+	// Continue to the next step at the current round
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)
 	}
 
-	// Allow
-	WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Propose, 1, 500)
+	// Confirm we are at the next step
+	_, err = WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Propose, 1, 500)
+	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		require.Equal(t, uint64(1), nodeState.Height)
