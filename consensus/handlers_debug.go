@@ -17,7 +17,7 @@ func (m *consensusModule) HandleDebugMessage(debugMessage *types.DebugMessage) e
 	case types.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
 		m.triggerNextView(debugMessage)
 	case types.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
-		m.togglePaceMakerManualMode(debugMessage)
+		m.togglePacemakerManualMode(debugMessage)
 	default:
 		log.Printf("Debug message: %s \n", debugMessage.Message)
 	}
@@ -73,7 +73,7 @@ func (m *consensusModule) triggerNextView(message *types.DebugMessage) {
 	}
 }
 
-func (m *consensusModule) togglePaceMakerManualMode(message *types.DebugMessage) {
+func (m *consensusModule) togglePacemakerManualMode(message *types.DebugMessage) {
 	newMode := !m.paceMaker.IsManualMode()
 	if newMode {
 		m.nodeLog("[DEBUG] Toggling Pacemaker mode to MANUAL")

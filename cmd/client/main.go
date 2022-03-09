@@ -17,14 +17,14 @@ const (
 	PromptResetToGenesis      string = "ResetToGenesis"
 	PromptPrintNodeState      string = "PrintNodeState"
 	PromptTriggerNextView     string = "TriggerNextView"
-	PromptTogglePaceMakerMode string = "TogglePaceMakerMode"
+	PromptTogglePacemakerMode string = "TogglePacemakerMode"
 )
 
 var items = []string{
 	PromptResetToGenesis,
 	PromptPrintNodeState,
 	PromptTriggerNextView,
-	PromptTogglePaceMakerMode,
+	PromptTogglePacemakerMode,
 }
 
 var pre2pMod modules.P2PModule
@@ -105,7 +105,7 @@ func handleSelect(selection string) {
 			Message: nil,
 		}
 		broadcastDebugMessage(m)
-	case PromptTogglePaceMakerMode:
+	case PromptTogglePacemakerMode:
 		m := &types.DebugMessage{
 			Action:  types.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
 			Message: nil,

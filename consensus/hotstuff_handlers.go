@@ -22,7 +22,7 @@ type HotstuffMessageHandler interface {
 TODO(design): The reason we do not assign both the leader and the replica handlers
 to the leader (which should also act as a replica when it is a leader) is because it
 can create a weird inconsistent state (e.g. both the replica and leader try to restart
-the PaceMaker timeout). This requires additional "replica-like" logic in the leader
+the Pacemaker timeout). This requires additional "replica-like" logic in the leader
 handler which has both pros and cons:
 	Pros:
 		* The leader can short-circuit and optimize replica related logic

@@ -16,7 +16,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	numNodes := 4
 	configs := GenerateNodeConfigs(t, numNodes)
 
-	// Start test pocket nodes.
+	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
 	pocketNodes := CreateTestConsensusPocketNodes(t, configs, testChannel)
 	for _, pocketNode := range pocketNodes {
@@ -33,8 +33,8 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	newRoundMessages := WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 1000)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
 		require.Equal(t, uint64(1), nodeState.Height)
+		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
 		require.Equal(t, uint8(0), nodeState.Round)
 		require.Equal(t, false, nodeState.IsLeader)
 	}
@@ -50,8 +50,8 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	prepareProposal := WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Propose, 1, 1000)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-		require.Equal(t, uint8(consensus.Prepare), nodeState.Step)
 		require.Equal(t, uint64(1), nodeState.Height)
+		require.Equal(t, uint8(consensus.Prepare), nodeState.Step)
 		require.Equal(t, uint8(0), nodeState.Round)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
 	}
@@ -68,8 +68,8 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	preCommitProposal := WaitForNetworkConsensusMessages(t, testChannel, consensus.PreCommit, consensus.Propose, 1, 1000)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-		require.Equal(t, uint8(consensus.PreCommit), nodeState.Step)
 		require.Equal(t, uint64(1), nodeState.Height)
+		require.Equal(t, uint8(consensus.PreCommit), nodeState.Step)
 		require.Equal(t, uint8(0), nodeState.Round)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
 	}
@@ -86,8 +86,8 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	commitProposal := WaitForNetworkConsensusMessages(t, testChannel, consensus.Commit, consensus.Propose, 1, 1000)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-		require.Equal(t, uint8(consensus.Commit), nodeState.Step)
 		require.Equal(t, uint64(1), nodeState.Height)
+		require.Equal(t, uint8(consensus.Commit), nodeState.Step)
 		require.Equal(t, uint8(0), nodeState.Round)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
 	}
@@ -106,14 +106,14 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		nodeState := GetConsensusNodeState(pocketNode)
 		// Leader has already committed the block and hence moved to the next height.
 		if pocketId == leaderId {
-			require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
 			require.Equal(t, uint64(2), nodeState.Height)
+			require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
 			require.Equal(t, uint8(0), nodeState.Round)
 			require.Equal(t, nodeState.LeaderId, types_consensus.NodeId(0), "Leader should be empty")
 			continue
 		}
-		require.Equal(t, uint8(consensus.Decide), nodeState.Step)
 		require.Equal(t, uint64(1), nodeState.Height)
+		require.Equal(t, uint8(consensus.Decide), nodeState.Step)
 		require.Equal(t, uint8(0), nodeState.Round)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
 	}
@@ -121,183 +121,66 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		P2PBroadcast(t, pocketNodes, message)
 	}
 
+	// Block has been committed and new round has begun
 	_ = WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 1000)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
 		require.Equal(t, uint64(2), nodeState.Height)
+		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
 		require.Equal(t, uint8(0), nodeState.Round)
 		require.Equal(t, nodeState.LeaderId, types_consensus.NodeId(0), "Leader should be empty")
 	}
 }
 
-// func TestHotstuffSignatures(t *testing.T) {
-// 	// Test configs.
-// 	numNodes := 4
-// 	configs := GenerateNodeConfigs(numNodes)
+/*
+func TestHotstuff4Nodes1Byzantine1Block(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
 
-// 	// Start test pocket nodes.
-// 	testPocketBus := make(modules.Bus, 100)
-// 	pocketNodes := CreateTestConsensusPocketNodes(t, configs, testPocketBus)
-// 	ctx := context.EmptyPocketContext()
-// 	for _, pocketNode := range pocketNodes {
-// 		go pocketNode.Start(ctx)
-// 	}
-// 	time.Sleep(10 * time.Millisecond) // Needed to avoid minor race condition if pocketNode has not finished initialization
+func TestHotstuff4Nodes2Byzantine1Block(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
 
-// 	// Debug message to start consensus by triggering next view.
-// 	for _, pocketNode := range pocketNodes {
-// 		TriggerNextView(t, pocketNode)
-// 	}
+func TestHotstuff4Nodes1BlockNetworkPartition(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
 
-// 	// NewRound
-// 	newRoundMessages := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.NewRound, numNodes, 500)
-// 	for _, pocketNode := range pocketNodes {
-// 		nodeState := GetConsensusNodeState(pocketNode)
-// 		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
-// 		require.Equal(t, uint64(1), nodeState.Height)
-// 		require.Equal(t, uint8(0), nodeState.Round)
-// 	}
-// 	for _, message := range newRoundMessages {
-// 		P2PBroadcast(t, pocketNodes, message)
-// 	}
+func TestHotstuff4Nodes1Block4Rounds(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
+func TestHotstuff4Nodes2Blocks(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
 
-// 	leaderId := s_types.NodeId(1)
-// 	leader := pocketNodes[leaderId]
+func TestHotstuff4Nodes2NewNodes1Block(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
 
-// 	// Prepare
-// 	prepareProposal := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.Prepare, 1, 500)
-// 	for _, pocketNode := range pocketNodes {
-// 		nodeState := GetConsensusNodeState(pocketNode)
-// 		require.Equal(t, uint8(consensus.Prepare), nodeState.Step)
-// 		require.Equal(t, uint64(1), nodeState.Height)
-// 		require.Equal(t, uint8(0), nodeState.Round)
-// 	}
-// 	for _, message := range prepareProposal {
-// 		P2PBroadcast(t, pocketNodes, message)
-// 	}
+func TestHotstuff4Nodes2DroppedNodes1Block(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
 
-// 	// Precommit
-// 	prepareVotes := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_SEND_MESSAGE, consensus.Prepare, numNodes, 500)
-// 	for _, vote := range prepareVotes {
-// 		P2PSend(t, leader, vote)
-// 	}
+func TestHotstuff4NodesFailOnPrepare(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
 
-// 	preCommitProposal := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.PreCommit, 1, 500)
-// 	for _, pocketNode := range pocketNodes {
-// 		nodeState := GetConsensusNodeState(pocketNode)
-// 		require.Equal(t, uint8(consensus.PreCommit), nodeState.Step)
-// 		require.Equal(t, uint64(1), nodeState.Height)
-// 		require.Equal(t, uint8(0), nodeState.Round)
-// 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
-// 	}
-// 	for _, message := range preCommitProposal {
-// 		P2PBroadcast(t, pocketNodes, message)
-// 	}
+func TestHotstuff4NodesFailOnPrecommit(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
 
-// 	// Commit
-// 	preCommitVotes := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_SEND_MESSAGE, consensus.PreCommit, numNodes, 500)
-// 	for _, vote := range preCommitVotes {
-// 		P2PSend(t, leader, vote)
-// 	}
+func TestHotstuff4NodesFailOnCommit(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
 
-// 	commitProposal := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.Commit, 1, 500)
-// 	for _, pocketNode := range pocketNodes {
-// 		nodeState := GetConsensusNodeState(pocketNode)
-// 		require.Equal(t, uint8(consensus.Commit), nodeState.Step)
-// 		require.Equal(t, uint64(1), nodeState.Height)
-// 		require.Equal(t, uint8(0), nodeState.Round)
-// 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
-// 	}
-// 	for _, message := range commitProposal {
-// 		P2PBroadcast(t, pocketNodes, message)
-// 	}
+func TestHotstuff4NodesFailOnDecide(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
 
-// 	// Decide
-// 	commitVotes := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_SEND_MESSAGE, consensus.Commit, numNodes, 500)
-// 	for _, vote := range commitVotes {
-// 		P2PSend(t, leader, vote)
-// 	}
+func TestHotstuffAvailableQCFromLockedValidator(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
 
-// 	decideProposal := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.Decide, 1, 500)
-// 	for pocketId, pocketNode := range pocketNodes {
-// 		nodeState := GetConsensusNodeState(pocketNode)
-// 		// Leader has already committed the block and hence moved to the next height.
-// 		if pocketId == leaderId {
-// 			require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
-// 			require.Equal(t, uint64(2), nodeState.Height)
-// 			require.Equal(t, uint8(0), nodeState.Round)
-// 			require.Equal(t, nodeState.LeaderId, s_types.NodeId(0), "Leader should be 0 - no one is the leader.")
-// 			continue
-// 		}
-// 		require.Equal(t, uint8(consensus.Decide), nodeState.Step)
-// 		require.Equal(t, uint64(1), nodeState.Height)
-// 		require.Equal(t, uint8(0), nodeState.Round)
-// 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
-// 	}
-// 	for _, message := range decideProposal {
-// 		P2PBroadcast(t, pocketNodes, message)
-// 	}
-
-// 	// Block has been committed and new round has begun.
-// 	WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.NewRound, numNodes, 500)
-// 	for _, pocketNode := range pocketNodes {
-// 		nodeState := GetConsensusNodeState(pocketNode)
-// 		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
-// 		require.Equal(t, uint64(2), nodeState.Height)
-// 		require.Equal(t, uint8(0), nodeState.Round)
-// 		require.Equal(t, nodeState.LeaderId, s_types.NodeId(0), "Leader should be 0 - no one is the leader.")
-// 	}
-
-// }
-
-// func TestHotstuff4Nodes1Byzantine1Block(t *testing.T) {
-// 	// TODO
-// }
-
-// func TestHotstuff4Nodes2Byzantine1Block(t *testing.T) {
-// 	// TODO
-// }
-
-// func TestHotstuff4Nodes1BlockNetworkPartition(t *testing.T) {
-// 	// TODO
-// }
-
-// func TestHotstuff4Nodes1Block4Rounds(t *testing.T) {
-// 	// TODO
-// }
-// func TestHotstuff4Nodes2Blocks(t *testing.T) {
-// 	// TODO
-// }
-
-// func TestHotstuff4Nodes2NewNodes1Block(t *testing.T) {
-// 	// TODO
-// }
-
-// func TestHotstuff4Nodes2DroppedNodes1Block(t *testing.T) {
-// 	// TODO
-// }
-
-// func TestHotstuff4NodesFailOnPrepare(t *testing.T) {
-// 	// TODO
-// }
-
-// func TestHotstuff4NodesFailOnPrecommit(t *testing.T) {
-// 	// TODO
-// }
-
-// func TestHotstuff4NodesFailOnCommit(t *testing.T) {
-// 	// TODO
-// }
-
-// func TestHotstuff4NodesFailOnDecide(t *testing.T) {
-// 	// TODO
-// }
-
-// func TestHotstuffAvailableQCFromLockedValidator(t *testing.T) {
-// 	// TODO
-// }
-
-// func TestHotstuffMissingNewRoundMsgFromLockedValidator(t *testing.T) {
-// 	// TODO
-// }
+func TestHotstuffMissingNewRoundMsgFromLockedValidator(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
+*/

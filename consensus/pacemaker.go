@@ -8,15 +8,14 @@ import (
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/config"
-	"github.com/pokt-network/pocket/shared/types"
 
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // TODO(olshansky): Low priority design: think of a way to make `pacemaker_*` files be a sub-package under consensus.
-type PaceMaker interface {
+type Pacemaker interface {
 	modules.Module
-	PaceMakerDebug
+	PacemakerDebug
 
 	// TODO(olshansky): Rather than exposing the underlying `consensusModule` struct,
 	// we could create a `ConsensusModuleDebug` interface that'll expose setters/getters
@@ -30,31 +29,28 @@ type PaceMaker interface {
 }
 
 var _ modules.Module = &paceMaker{}
-var _ PaceMakerDebug = &paceMaker{}
+var _ PacemakerDebug = &paceMaker{}
 
 type paceMaker struct {
 	bus          modules.Bus
 	consensusMod *consensusModule
 
-	stepCancelFunc context.CancelFunc
+	pacemakerConfigs *config.PacemakerConfig
 
-	// TODO(design): The configurations for the PaceMaker are currently split across
-	// `config.json` and `genesis.json`. This is inherintely a poor design but easy
-	// to refactor and not a priority at the time of implementing the consensus prototype.
-	paceMakerParams *types.PaceMakerParams
+	stepCancelFunc context.CancelFunc
 
 	// Only used for development and debugging.
 	paceMakerDebug
 }
 
-func CreatePaceMaker(cfg *config.Config) (m *paceMaker, err error) {
+func CreatePacemaker(cfg *config.Config) (m *paceMaker, err error) {
 	return &paceMaker{
 		bus:          nil,
 		consensusMod: nil,
 
-		stepCancelFunc: nil, // Only set on restarts
+		pacemakerConfigs: cfg.Consensus.Pacemaker,
 
-		paceMakerParams: &types.GetTestState(nil).ConsensusParams.PaceMakerParams,
+		stepCancelFunc: nil, // Only set on restarts
 
 		paceMakerDebug: paceMakerDebug{
 			manualMode:                cfg.Consensus.Pacemaker.Manual,
@@ -210,7 +206,7 @@ func (p *paceMaker) startNextView(qc *types_consensus.QuorumCertificate, forceNe
 }
 
 func (p *paceMaker) getStepTimeout(round uint64) time.Duration {
-	baseTimeout := time.Duration(int64(time.Millisecond) * int64(p.paceMakerParams.TimeoutMSec))
+	baseTimeout := time.Duration(int64(time.Millisecond) * int64(p.pacemakerConfigs.TimeoutMsec))
 	// TODO(olshansky): Increase timeout using exponential backoff.
 	return baseTimeout
 }

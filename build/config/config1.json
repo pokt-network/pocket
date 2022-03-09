@@ -19,6 +19,7 @@
   },
   "consensus": {
     "pacemaker": {
+      "timeout_msec": 5000,
       "manual": true,
       "debug_time_between_steps_msec": 3000
     }

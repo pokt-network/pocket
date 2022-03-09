@@ -2,109 +2,104 @@ package consensus_tests
 
 import (
 	"testing"
-	// "github.com/pokt-network/pocket/consensus/s_types"
-	// "github.com/pokt-network/pocket/shared/context"
+	"time"
+
+	"github.com/pokt-network/pocket/consensus"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/stretchr/testify/require"
 )
 
-func TestPaceMakerWithLockedQC(t *testing.T) {
-	// TODO
+func TestPacemakerTimeouts(t *testing.T) {
+	// Test configs
+	numNodes := 4
+	paceMakerTimeoutMsec := uint64(50) // Set a very small pacemaker timeout
+	paceMakerTimeout := 50 * time.Millisecond
+	configs := GenerateNodeConfigs(t, numNodes)
+	for _, config := range configs {
+		config.Consensus.Pacemaker.TimeoutMsec = paceMakerTimeoutMsec
+	}
+
+	// Create & start test pocket nodes
+	testChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, configs, testChannel)
+	for _, pocketNode := range pocketNodes {
+		go pocketNode.Start()
+	}
+	time.Sleep(10 * time.Millisecond) // Needed to avoid minor race condition if pocketNode has not finished initialization
+
+	// Debug message to start consensus by triggering next view.
+	for _, pocketNode := range pocketNodes {
+		TriggerNextView(t, pocketNode)
+	}
+
+	// paceMakerTimeout
+	WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	for _, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		require.Equal(t, uint64(1), nodeState.Height)
+		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
+		require.Equal(t, uint8(0), nodeState.Round)
+	}
+
+	// Cause the pacemaker to timeout.
+	time.Sleep(paceMakerTimeout)
+
+	// Check that a new round starts at the same height.
+	WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	for _, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		require.Equal(t, uint64(1), nodeState.Height)
+		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
+		require.Equal(t, uint8(1), nodeState.Round)
+	}
+
+	// Cause the pacemaker to timeout.
+	time.Sleep(paceMakerTimeout)
+
+	// // Check that a new round starts at the same height.
+	WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	for _, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		require.Equal(t, uint64(1), nodeState.Height)
+		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
+		require.Equal(t, uint8(2), nodeState.Round)
+	}
+
+	// Cause the pacemaker to timeout.
+	time.Sleep(paceMakerTimeout)
+
+	// Check that a new round starts at the same height.
+	newRoundMessages := WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	for _, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		require.Equal(t, uint64(1), nodeState.Height)
+		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
+		require.Equal(t, uint8(3), nodeState.Round)
+	}
+
+	// Continue to the next step at the current roun
+	for _, message := range newRoundMessages {
+		P2PBroadcast(t, pocketNodes, message)
+	}
+
+	// Allow
+	WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Propose, 1, 500)
+	for _, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		require.Equal(t, uint64(1), nodeState.Height)
+		require.Equal(t, uint8(consensus.Prepare), nodeState.Step)
+		require.Equal(t, uint8(3), nodeState.Round)
+	}
+
 }
 
-func TestPaceMakerWithHighPrepareQC(t *testing.T) {
-	// TODO
-}
-
-func TestPaceMakerNoQuorum(t *testing.T) {
-	// TODO
-}
-
-func TestPaceMakerNotSafeProposal(t *testing.T) {
-	// TODO
-}
-
-func TestPaceMakerExponentialTimeouts(t *testing.T) {
-	// TODO
-}
-
-// func TestPacemakerTimeouts(t *testing.T) {
-// 	// Test configs.
-// 	numNodes := 4
-// 	paceMakerTimeout := 50 * time.Millisecond // Set a very small pacemaker timeout
-// 	configs := GenerateNodeConfigs(numNodes)
-
-// 	// Create the Pocket Nodes.
-// 	testPocketBus := make(modules.PocketBus, 100)
-// 	pocketNodes := CreateTestConsensusPocketNodes(t, configs, testPocketBus)
-
-// 	// TODO: Should this be part of the configs?
-// 	// Update the State Singleton.
-// 	types2.GetTestState(nil).ConsensusParams.PaceMaker.TimeoutMSec = 50
-
-// 	// Start test pocket nodes.
-// 	ctx := context.EmptyPocketContext()
-// 	for _, pocketNode := range pocketNodes {
-// 		go pocketNode.Start(ctx)
-// 	}
-// 	time.Sleep(10 * time.Millisecond) // Needed to avoid minor race condition if pocketNode has not finished initialization
-
-// 	// Debug message to start consensus by triggering next view.
-// 	for _, pocketNode := range pocketNodes {
-// 		TriggerNextView(t, pocketNode)
-// 	}
-
-// 	// paceMakerTimeout
-// 	WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.NewRound, numNodes, 500)
-// 	for _, pocketNode := range pocketNodes {
-// 		nodeState := pocketNode.ConsensusMod.GetNodeState()
-// 		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
-// 		require.Equal(t, uint64(1), nodeState.Height)
-// 		require.Equal(t, uint8(0), nodeState.Round)
-// 	}
-
-// 	// Cause the pacemaker to timeout.
-// 	time.Sleep(paceMakerTimeout)
-
-// 	// Check that a new round starts at the same height.
-// 	WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.NewRound, numNodes, 500)
-// 	for _, pocketNode := range pocketNodes {
-// 		nodeState := pocketNode.ConsensusMod.GetNodeState()
-// 		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
-// 		require.Equal(t, uint64(1), nodeState.Height)
-// 		require.Equal(t, uint8(1), nodeState.Round)
-// 	}
-
-// 	// Cause the pacemaker to timeout.
-// 	time.Sleep(paceMakerTimeout)
-
-// 	// // Check that a new round starts at the same height.
-// 	WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.NewRound, numNodes, 500)
-// 	for _, pocketNode := range pocketNodes {
-// 		nodeState := pocketNode.ConsensusMod.GetNodeState()
-// 		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
-// 		require.Equal(t, uint64(1), nodeState.Height)
-// 		require.Equal(t, uint8(2), nodeState.Round)
-// 	}
-
-// 	// Cause the pacemaker to timeout.
-// 	time.Sleep(paceMakerTimeout)
-
-// 	// Check that a new round starts at the same height.
-// 	WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.NewRound, numNodes, 500)
-// 	for _, pocketNode := range pocketNodes {
-// 		nodeState := pocketNode.ConsensusMod.GetNodeState()
-// 		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
-// 		require.Equal(t, uint64(1), nodeState.Height)
-// 		require.Equal(t, uint8(3), nodeState.Round)
-// 	}
+// func TestPacemakerDifferentHeightsCatchup(t *testing.T) {
 // }
 
-// func TestPaceMakerDifferentHeightsCatchup(t *testing.T) {
+// func TestPacemakerDifferentStepsCatchup(t *testing.T) {
 // }
 
-// func TestPaceMakerDifferentStepsCatchup(t *testing.T) {
-// }
-
-// func TestPaceMakerCatchupSameStepDifferentRounds(t *testing.T) {
+// func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 // 	numNodes := 4
 // 	configs := GenerateNodeConfigs(numNodes)
 
@@ -170,7 +165,7 @@ func TestPaceMakerExponentialTimeouts(t *testing.T) {
 
 // 	// Check that the leader is in the latest round.
 // 	for _, pocketNode := range pocketNodes {
-// 		nodeState := pocketNode.ConsensusMod.GetNodeState()
+// 		nodeState := GetConsensusNodeState(pocketNode)
 // 		require.Equal(t, uint8(consensus.PreCommit), nodeState.Step)
 // 		require.Equal(t, uint64(3), nodeState.Height)
 // 		require.Equal(t, uint8(6), nodeState.Round)
@@ -181,3 +176,25 @@ func TestPaceMakerExponentialTimeouts(t *testing.T) {
 // func getConsensusModImplementation(n *shared.Node) reflect.Value {
 // 	return reflect.ValueOf(n.ConsensusMod).Elem()
 // }
+
+/*
+func TestPacemakerWithLockedQC(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
+
+func TestPacemakerWithHighPrepareQC(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
+
+func TestPacemakerNoQuorum(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
+
+func TestPacemakerNotSafeProposal(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
+
+func TestPacemakerExponentialTimeouts(t *testing.T) {
+	t.Skip() // TODO: Implement
+}
+*/

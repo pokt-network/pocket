@@ -40,7 +40,7 @@ type consensusModule struct {
 
 	// Module Dependencies
 	utilityContext    modules.UtilityContext
-	paceMaker         PaceMaker
+	paceMaker         Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
 	logPrefix   string                                                              // TODO(design): Remove later when we build a shared/proper/injected logger
@@ -54,7 +54,7 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	}
 
 	// TODO(olshansky): Can we make this a submodule?
-	paceMaker, err := CreatePaceMaker(cfg)
+	paceMaker, err := CreatePacemaker(cfg)
 	if err != nil {
 		return nil, err
 	}

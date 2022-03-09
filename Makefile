@@ -104,6 +104,11 @@ test_consensus: # mockgen
 test_hotstuff: # mockgen
 	go test -v ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
+.PHONY: test_pacemaker
+## Run all go unit tests related to hotstuff consensus
+test_pacemaker: # mockgen
+	go test -v ./consensus/consensus_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
+
 .PHONY: test_vrf
 ## Run all go unit tests in the VRF library
 test_vrf:

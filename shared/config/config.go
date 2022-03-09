@@ -38,6 +38,7 @@ type P2PConfig struct {
 }
 
 type PacemakerConfig struct {
+	TimeoutMsec               uint64 `json:"timeout_msec"`
 	Manual                    bool   `json:"manual"`
 	DebugTimeBetweenStepsMsec uint64 `json:"debug_time_between_steps_msec"`
 }
@@ -71,22 +72,22 @@ func LoadConfig(file string) (c *Config) {
 		log.Fatalln("Error parsing config file: ", err)
 	}
 
-	if err := c.validateAndComplete(); err != nil {
+	if err := c.validateAndHydrate(); err != nil {
 		log.Fatalln("Error validating or completing config: ", err)
 	}
 
-	if err := c.Consensus.validateAndComplete(); err != nil {
+	if err := c.Consensus.validateAndHydrate(); err != nil {
 		log.Fatalln("Error validating or completing consensus config: ", err)
 	}
 
-	if err := c.P2P.validateAndComplete(); err != nil {
+	if err := c.P2P.validateAndHydrate(); err != nil {
 		log.Fatalln("Error validating or completing P2P config: ", err)
 	}
 
 	return
 }
 
-func (c *Config) validateAndComplete() error {
+func (c *Config) validateAndHydrate() error {
 	if len(c.PrivateKey) == 0 {
 		return fmt.Errorf("private key in config file cannot be empty")
 	}
@@ -99,11 +100,18 @@ func (c *Config) validateAndComplete() error {
 	return nil
 }
 
-func (c *P2PConfig) validateAndComplete() error {
+func (c *P2PConfig) validateAndHydrate() error {
 	return nil
 }
 
-func (c *ConsensusConfig) validateAndComplete() error {
+func (c *ConsensusConfig) validateAndHydrate() error {
+	if err := c.Pacemaker.validateAndHydrate(); err != nil {
+		log.Fatalf("Error validating or completing Pacemaker configs")
+	}
+	return nil
+}
+
+func (c *PacemakerConfig) validateAndHydrate() error {
 	return nil
 }
 

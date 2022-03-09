@@ -20,7 +20,9 @@ func TestLoadConfigFromJson(t *testing.T) {
 		},
 		"consensus": {
 			"pacemaker": {
-				"manual": true
+				"timeout_msec": 5000,
+				"manual": true,
+				"debug_time_between_steps_msec": 1000
 			}
 		},
 		"persistence": {},

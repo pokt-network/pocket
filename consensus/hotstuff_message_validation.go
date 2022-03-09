@@ -39,7 +39,7 @@ func (m *consensusModule) isValidPartialSignature(msg *types_consensus.HotstuffM
 	return false, fmt.Sprintf("Partial signature on message is invalid. Sender: %d; Height: %d; Step: %d; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s", m.ValToIdMap[address], msg.Height, msg.Step, msg.Round, msg.GetPartialSignature().Signature, types_consensus.ProtoHash(msg.Block), pubKey.String())
 }
 
-// TODO(olshansky): Should this be part of the PaceMaker?
+// TODO(olshansky): Should this be part of the Pacemaker?
 func (m *consensusModule) isValidProposal(msg *types_consensus.HotstuffMessage) (bool, string) {
 	if !(msg.Type == Propose && msg.Step == Prepare) {
 		return false, "Proposal is not valid in the PREPARE step"

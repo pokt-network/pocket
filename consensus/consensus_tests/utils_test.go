@@ -53,6 +53,7 @@ func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
 			P2P:   nil,
 			Consensus: &config.ConsensusConfig{
 				Pacemaker: &config.PacemakerConfig{
+					TimeoutMsec:               5000,
 					Manual:                    false,
 					DebugTimeBetweenStepsMsec: 0,
 				},
@@ -432,13 +433,7 @@ func genesisJson(t *testing.T) string {
 			"max_block_bytes": 4000000,
 			"max_transaction_bytes": 100000,
 			"vrf_key_refresh_freq_block": 5,
-			"vrf_key_validity_block": 5,
-			"pace_maker": {
-				"timeout_msec": 5000,
-				"retry_timeout_msec": 1000,
-				"max_timeout_msec": 60000,
-				"min_block_freq_msec": 2000
-			}
+			"vrf_key_validity_block": 5
 		},
 		"validators": [
 			{
