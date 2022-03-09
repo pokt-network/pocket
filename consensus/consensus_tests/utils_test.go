@@ -53,7 +53,7 @@ func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
 			P2P:   nil,
 			Consensus: &config.ConsensusConfig{
 				Pacemaker: &config.PacemakerConfig{
-					Manual:                    true,
+					Manual:                    false,
 					DebugTimeBetweenStepsMsec: 0,
 				},
 			},

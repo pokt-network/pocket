@@ -24,7 +24,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 	time.Sleep(10 * time.Millisecond) // Avoids minor race conditions if pocket node has not finished starting/initialization
 
-	// Debug message to start consensus by triggering next view since the paceMaker is in manual mode.
+	// Debug message to start consensus by triggering first view change.
 	for _, pocketNode := range pocketNodes {
 		TriggerNextView(t, pocketNode)
 	}
@@ -121,11 +121,6 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		P2PBroadcast(t, pocketNodes, message)
 	}
 
-	for _, pocketNode := range pocketNodes {
-		TriggerNextView(t, pocketNode)
-	}
-
-	// Block has been committed and new round has begun.
 	_ = WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 1000)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)

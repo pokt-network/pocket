@@ -62,12 +62,13 @@ func (m *consensusModule) printNodeState(message *types.DebugMessage) {
 func (m *consensusModule) triggerNextView(message *types.DebugMessage) {
 	m.nodeLog("[DEBUG] Triggering next view...")
 
-	// Assuming that block was applied if DECIDE step is reached.
-	if m.Height == 0 || m.Step == Decide {
+	if m.Height == 0 || (m.Step == Decide && m.paceMaker.IsManualMode()) {
 		m.paceMaker.NewHeight()
-		m.paceMaker.ForceNextView()
 	} else {
 		m.paceMaker.InterruptRound()
+	}
+
+	if m.paceMaker.IsManualMode() {
 		m.paceMaker.ForceNextView()
 	}
 }

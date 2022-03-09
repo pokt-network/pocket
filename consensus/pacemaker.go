@@ -169,7 +169,7 @@ func (p *paceMaker) InterruptRound() {
 func (p *paceMaker) NewHeight() {
 	p.consensusMod.nodeLog(fmt.Sprintf("Starting first round for new block at height: %d", p.consensusMod.Height+1))
 
-	p.consensusMod.Height = p.consensusMod.Height + 1
+	p.consensusMod.Height++
 	p.consensusMod.Round = 0
 	p.consensusMod.Block = nil
 
