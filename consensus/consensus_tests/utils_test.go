@@ -281,7 +281,7 @@ func WaitForNetworkConsensusMessages(
 		err := anypb.UnmarshalTo(m.Message, &hotstuffMessage, proto.UnmarshalOptions{})
 		require.NoError(t, err)
 
-		return hotstuffMessage.Type == hotstuffMsgType
+		return hotstuffMessage.Type == hotstuffMsgType && hotstuffMessage.Step == step
 	}
 
 	errorMessage := fmt.Sprintf("HotStuff step: %s", types_consensus.HotstuffStep_name[int32(step)])
