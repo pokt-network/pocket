@@ -15,7 +15,9 @@ type PaceMakerDebug interface {
 }
 
 type paceMakerDebug struct {
-	manualMode        bool
+	manualMode                bool
+	debugTimeBetweenStepsMsec uint64
+
 	quorumCertificate *types_consensus.QuorumCertificate
 }
 

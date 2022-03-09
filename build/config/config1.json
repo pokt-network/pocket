@@ -17,7 +17,12 @@
       "172.18.0.1:8084"
     ]
   },
-  "consensus": {},
+  "consensus": {
+    "pacemaker": {
+      "manual": true,
+      "debug_time_between_steps_msec": 3000
+    }
+  },
   "persistence": {},
   "utility": {}
 }

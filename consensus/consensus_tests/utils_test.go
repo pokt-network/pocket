@@ -49,9 +49,14 @@ func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
 			PrivateKey: pk.(pcrypto.Ed25519PrivateKey), // deterministic key based on `i`
 			Genesis:    genesisJson(t),
 
-			Pre2P:       nil,
-			P2P:         nil,
-			Consensus:   nil,
+			Pre2P: nil,
+			P2P:   nil,
+			Consensus: &config.ConsensusConfig{
+				Pacemaker: &config.PacemakerConfig{
+					Manual:                    true,
+					DebugTimeBetweenStepsMsec: 0,
+				},
+			},
 			Persistence: nil,
 			Utility:     nil,
 		}
@@ -432,8 +437,7 @@ func genesisJson(t *testing.T) string {
 				"timeout_msec": 5000,
 				"retry_timeout_msec": 1000,
 				"max_timeout_msec": 60000,
-				"min_block_freq_msec": 2000,
-				"debug_time_between_steps_msec": 3000
+				"min_block_freq_msec": 2000
 			}
 		},
 		"validators": [

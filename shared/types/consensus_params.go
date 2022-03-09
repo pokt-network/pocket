@@ -23,8 +23,6 @@ type PaceMakerParams struct {
 	RetryTimeoutMSec uint64 `json:"retry_timeout_msec"`  // TODO: Not used yet.
 	MaxTimeoutMSec   uint64 `json:"max_timeout_msec"`    // TODO: Not used yet.
 	MinBlockFreqMSec uint64 `json:"min_block_freq_msec"` // TODO: Not used yet.
-
-	DebugTimeBetweenStepsMsec uint64 `json:"debug_time_between_steps_msec"` // Only used for development/debugging
 }
 
 func (c *ConsensusParams) Validate() error {

@@ -38,13 +38,16 @@ type paceMaker struct {
 
 	stepCancelFunc context.CancelFunc
 
+	// TODO(design): The configurations for the PaceMaker are currently split across
+	// `config.json` and `genesis.json`. This is inherintely a poor design but easy
+	// to refactor and not a priority at the time of implementing the consensus prototype.
 	paceMakerParams *types.PaceMakerParams
 
 	// Only used for development and debugging.
 	paceMakerDebug
 }
 
-func CreatePaceMaker(_ *config.Config) (m *paceMaker, err error) {
+func CreatePaceMaker(cfg *config.Config) (m *paceMaker, err error) {
 	return &paceMaker{
 		bus:          nil,
 		consensusMod: nil,
@@ -54,8 +57,9 @@ func CreatePaceMaker(_ *config.Config) (m *paceMaker, err error) {
 		paceMakerParams: &types.GetTestState(nil).ConsensusParams.PaceMakerParams,
 
 		paceMakerDebug: paceMakerDebug{
-			manualMode:        true, // TODO(olshansky): Make this via config.json
-			quorumCertificate: nil,
+			manualMode:                cfg.Consensus.Pacemaker.Manual,
+			debugTimeBetweenStepsMsec: cfg.Consensus.Pacemaker.DebugTimeBetweenStepsMsec,
+			quorumCertificate:         nil,
 		},
 	}, nil
 }
@@ -134,7 +138,7 @@ func (p *paceMaker) RestartTimer() {
 	}
 
 	// TODO(olshansky): This is a hack only used to slow down the progress of the blockchain during development.
-	// time.Sleep(time.Duration(int64(time.Millisecond) * int64(p.paceMakerParams.DebugTimeBetweenStepsMsec)))
+	time.Sleep(time.Duration(int64(time.Millisecond) * int64(p.debugTimeBetweenStepsMsec)))
 
 	stepTimeout := p.getStepTimeout(p.consensusMod.Round)
 

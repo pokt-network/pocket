@@ -12,9 +12,10 @@ import (
 )
 
 type Config struct {
-	RootDir    string                    `json:"root_dir"`
+	RootDir string `json:"root_dir"`
+	Genesis string `json:"genesis"`
+
 	PrivateKey pcrypto.Ed25519PrivateKey `json:"private_key"`
-	Genesis    string                    `json:"genesis"`
 
 	Pre2P       *Pre2PConfig       `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
 	P2P         *P2PConfig         `json:"p2p"`
@@ -36,7 +37,13 @@ type P2PConfig struct {
 	Peers      []string        `json:"peers"`
 }
 
+type PacemakerConfig struct {
+	Manual                    bool   `json:"manual"`
+	DebugTimeBetweenStepsMsec uint64 `json:"debug_time_between_steps_msec"`
+}
+
 type ConsensusConfig struct {
+	Pacemaker *PacemakerConfig `json:"pacemaker"`
 }
 
 type PersistenceConfig struct {
