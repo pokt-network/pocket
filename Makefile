@@ -163,7 +163,7 @@ test_p2p_churn:
 
 ## Run the p2p network behavior (send, broadcast, listen...)
 test_p2p_network:
-	go test -run TestNetwork -v -race ./p2p
+	go test -run TestNetwork_ -v -race ./p2p
 
 ## Run the p2p raintree algorithm test (in isolation of networking logic)
 test_p2p_raintree:

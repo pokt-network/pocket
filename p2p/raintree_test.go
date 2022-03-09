@@ -237,7 +237,7 @@ func TestRainTree_Rain(t *testing.T) {
 	t.Logf("List instantiated: OK")
 	t.Logf("List: %v", list.Slice())
 
-	act := func(id uint64, l, r *types.Peer, currentlevel int) {
+	act := func(id uint64, l, r *types.Peer, currentlevel int) error {
 		defer rw.Unlock()
 		rw.Lock()
 
@@ -249,6 +249,7 @@ func TestRainTree_Rain(t *testing.T) {
 		queuein(rid, currentlevel, false, id)
 
 		t.Logf("Queue in left %d and right %d at level %d, by peer %d: OK", lid, rid, currentlevel, id)
+		return nil
 	}
 
 	// uncomment to play step by step

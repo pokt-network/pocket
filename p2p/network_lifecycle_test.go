@@ -177,14 +177,7 @@ func TestNetworkLifecycle_Configure(t *testing.T) {
 func TestNetworkLifecycle_InitCodec(t *testing.T) {
 	m := newP2PModule()
 
-	err := m.initCodec()
-
-	assert.ErrorIs(
-		t,
-		err,
-		nil,
-		fmt.Sprintf("initCodec: failed, expected to initialize successfully, got error %s", err),
-	)
+	m.initCodec()
 
 	assert.NotNil(
 		t,
@@ -192,14 +185,18 @@ func TestNetworkLifecycle_InitCodec(t *testing.T) {
 		"initCodec: failed, codec is still nil after initialization",
 	)
 
-	actual := m.c.Registered()
-	expected := 1
-	assert.Equal(
+	assert.NotNil(
 		t,
-		actual,
-		expected,
-		fmt.Sprintf("initCodec: failed, expected to have registered %d messages, got %d", expected, actual),
+		m.c.Marshal,
+		"initCodec: failed, codec is still nil after initialization",
 	)
+
+	assert.NotNil(
+		t,
+		m.c.Unmarshal,
+		"initCodec: failed, codec is still nil after initialization",
+	)
+
 }
 
 func TestNetworkLifecycle_InitSocketPools(t *testing.T) {

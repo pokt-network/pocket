@@ -9,14 +9,14 @@ func (m *p2pModule) setLogger(logger func(...interface{}) (int, error)) {
 	m.logger.print = logger
 }
 
-func (m *p2pModule) log(args ...interface{}) {
+func (m *p2pModule) log(logArgs ...interface{}) {
 	defer m.logger.Unlock()
 	m.logger.Lock()
 
 	if m.logger.print != nil {
 		args := make([]interface{}, 0)
 		args = append(args, fmt.Sprintf("[%s]", m.address))
-		args = append(args, args...)
+		args = append(args, logArgs...)
 		m.logger.print(args...)
 	}
 }

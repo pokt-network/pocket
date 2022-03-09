@@ -6,11 +6,9 @@ import "events.proto";
 option go_package = "github.com/pokt-network/pocket/p2p/types;types";
 
 message Metadata {
-  bytes hash = 1;
-  int32 nonce = 2;
-  int32 level = 3;
-  string source = 4;
-  string destination = 5;
+  int32 level = 2;
+  string source = 3;
+  string destination = 4;
 }
 
 message P2PMessage {

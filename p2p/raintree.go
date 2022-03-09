@@ -91,7 +91,7 @@ func getTargetList(l *types.Peerlist, id uint64, topl, currl int) *types.Peerlis
 	return &sublist
 }
 
-func rain(originatorId uint64, list *types.Peerlist, act func(id uint64, l, r *types.Peer, currentlevel int), root bool, fromlevel int) {
+func rain(originatorId uint64, list *types.Peerlist, act func(id uint64, l, r *types.Peer, currentlevel int) error, root bool, fromlevel int) error {
 	var toplevel int = int(getTopLevel(list))
 	var currentlevel int = toplevel
 
@@ -111,6 +111,10 @@ func rain(originatorId uint64, list *types.Peerlist, act func(id uint64, l, r *t
 			right = targetlist.Get(rpos)
 		}
 		currentlevel--
-		act(originatorId, left, right, currentlevel)
+		if err := act(originatorId, left, right, currentlevel); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }

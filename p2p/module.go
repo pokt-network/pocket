@@ -17,7 +17,7 @@ import (
 type p2pModule struct {
 	bus    modules.Bus
 	config *config.P2PConfig
-	c      *typesCodec
+	c      types.Marshaler
 
 	id           uint64
 	protocol     string
@@ -124,7 +124,7 @@ func (m *p2pModule) Send(addr pcrypto.Address, data *anypb.Any, topic shared.Poc
 	metadata := &types.Metadata{}
 	payload := &shared.PocketEvent{Data: data, Topic: topic}
 	p2pmsg := &types.P2PMessage{Metadata: metadata, Payload: payload}
-	encodedBytes, err := m.c.Encode(p2pmsg)
+	encodedBytes, err := m.c.Marshal(p2pmsg)
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func (m *p2pModule) Send(addr pcrypto.Address, data *anypb.Any, topic shared.Poc
 }
 
 func (m *p2pModule) AckSend(addr string, msg *types.P2PMessage) (bool, error) {
-	encodedBytes, err := m.c.Encode(msg)
+	encodedBytes, err := m.c.Marshal(msg)
 	if err != nil {
 		return false, err
 	}
@@ -144,14 +144,13 @@ func (m *p2pModule) AckSend(addr string, msg *types.P2PMessage) (bool, error) {
 		return false, err
 	}
 
-	ack, err := m.c.Decode(response)
+	var ack *types.P2PAckMessage
+	err = m.c.Unmarshal(response, ack)
 	if err != nil {
 		return true, err // TODO(derrandz): notice it's true
 	}
 
-	ackmsg := ack.(*types.P2PMessage)
-
-	if ackmsg.Metadata.Nonce == msg.Metadata.Nonce {
+	if ack.Ackee == msg.Metadata.Source {
 		return true, nil
 	}
 
