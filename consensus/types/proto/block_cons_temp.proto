@@ -1,7 +1,5 @@
 syntax = "proto3";
 
-import "google/protobuf/timestamp.proto";
-
 package consensus;
 
 option go_package = "/types/";
@@ -15,21 +13,10 @@ message BlockConsensusTemp {
 // TODO(olshansky): Work with andrew to generalize and merge type with the corresponding one in utility.
 message BlockHeaderConsensusTemp {
   int64 Height = 1;
-  string Hash = 2;
-  google.protobuf.Timestamp Time = 3; // BFT Timestamp.
-  uint32 NumTxs = 4;
-  string LastBlockHash = 5;
-  bytes ProposerAddress = 6;
-   // TODO(discuss): The `QuorumCertificate` structure contains the `Block` inside of it so we end up with a two way relationship?
-  bytes QuorumCertificate = 7;
-}
-
-// TODO(design): Temporary structure.
-message Transaction {
-  bytes Data = 1;
-}
-
-// TODO(design): Temporary structure.
-message Evidence {
-  bytes Data = 1;
+  bytes Hash = 2;
+  uint32 NumTxs = 3;
+  string LastBlockHash = 4;
+  bytes ProposerAddress = 5;
+// TODO(discuss): The `QuorumCertificate` structure contains the `Block` inside of it so we end up with a two way relationship?
+  bytes QuorumCertificate = 6;
 }

@@ -34,23 +34,26 @@ message ThresholdSignature {
     repeated PartialSignature signatures = 1;
 }
 
+// This is essentially a version of the hostuff message where the
+// threshold signature MUST be defined.
 message QuorumCertificate {
     uint64 height = 1;
     uint64 round = 2;
     HotstuffStep step = 3;
     BlockConsensusTemp block = 4;
-    ThresholdSignature signature = 5;
+    ThresholdSignature threshold_signature = 5;
 }
 
 message HotstuffMessage  {
     HotstuffMessageType type = 1;
-    HotstuffStep step = 2;
-    uint64 height = 3;
+    uint64 height = 2;
+    HotstuffStep step = 3;
     uint64 round = 4;
     BlockConsensusTemp block = 5;
 
     oneof justification {
-        QuorumCertificate quorum_certificate = 6;  // From LEADER -> REPLICA for PROPOSE messages; one of {HighQC, TimeoutQC, CommitQC}
-        PartialSignature partial_signature = 7; // From REPLICA -> LEADER for VOTE messages; signature over <height, round, block>
+        QuorumCertificate quorum_certificate = 6;  // From NODE -> NODE when new rounds start; one of {HighQC, TimeoutQC, CommitQC}
+        ThresholdSignature threshold_signature = 7;  // From LEADER -> REPLICA for PROPOSE messages;
+        PartialSignature partial_signature = 8; // From REPLICA -> LEADER for VOTE messages; signature over <height, round, block>
     }
 }

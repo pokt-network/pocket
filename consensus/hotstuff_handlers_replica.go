@@ -10,29 +10,28 @@ var _ HotstuffMessageHandler = &HotstuffReplicaMessageHandler{}
 
 type HotstuffReplicaMessageHandler struct{}
 
-func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensusModule, message *types_consensus.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
 	m.paceMaker.RestartTimer()
 	m.Step = Prepare
 }
 
 /*** Prepare Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusModule, message *types_consensus.HotstuffMessage) {
-	isProposalValid, reason := m.isValidProposal(message)
-	if !isProposalValid {
-		m.nodeLogError("Invalid proposal in PREPARE message.", fmt.Errorf(reason))
+func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+	if valid, reason := m.isValidProposal(msg); !valid {
+		m.nodeLogError("Invalid proposal in PREPARE message", fmt.Errorf(reason))
 		m.paceMaker.InterruptRound()
 		return
 	}
 
-	isBlockValid, reason := m.isValidBlock(message.Block)
-	if !isBlockValid {
-		m.nodeLogError("Invalid block in PREPARE message.", fmt.Errorf(reason))
+	if valid, reason := m.isValidBlock(msg.Block); !valid {
+		m.nodeLogError("Invalid block in PREPARE message", fmt.Errorf(reason))
 		m.paceMaker.InterruptRound()
 		return
 	}
-	if err := m.deliverTxToUtility(message.Block); err != nil {
-		m.nodeLogError("Could not deliver transactions to the utility module.", err)
+
+	if err := m.applyBlock(msg.Block); err != nil {
+		m.nodeLogError("Could not apply the block", err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -40,29 +39,30 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 	m.Step = PreCommit
 	m.paceMaker.RestartTimer()
 
-	prepareVoteMessages, err := CreateVoteMessage(m, Prepare, message.Block)
+	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, msg.Block)
 	if err != nil {
-		m.nodeLogError("Could not create a vote message.", err)
+		m.nodeLogError("Could not create a PREPARE Vote", err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
-	m.hotstuffNodeSend(prepareVoteMessages)
+	m.hotstuffNodeSend(prepareVoteMessage)
 }
 
 /*** PreCommit Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensusModule, message *types_consensus.HotstuffMessage) {
-	if !m.isQCValid(message.GetQuorumCertificate()) {
+func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+	if valid, reason := m.isQuorumCertificateValid(msg.GetQuorumCertificate()); !valid {
+		m.nodeLogError("QC is invalid in the PRECOMMIT step", fmt.Errorf(reason))
 		m.paceMaker.InterruptRound()
 		return
 	}
 
 	m.Step = Commit
-	m.HighPrepareQC = message.GetQuorumCertificate() // TODO(design): Why are we never using this for validation?
+	m.HighPrepareQC = msg.GetQuorumCertificate() // TODO(discuss): Why are we never using this for validation?
 	m.paceMaker.RestartTimer()
 
-	preCommitVoteMessage, err := CreateVoteMessage(m, PreCommit, message.Block)
+	preCommitVoteMessage, err := CreateVoteMessage(m, PreCommit, msg.Block)
 	if err != nil {
-		m.nodeLogError("Could not create a vote message.", err)
+		m.nodeLogError("Could not create a PRECOMMIT Vote", err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.hotstuffNodeSend(preCommitVoteMessage)
@@ -70,19 +70,20 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 
 /*** Commit Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusModule, message *types_consensus.HotstuffMessage) {
-	if !m.isQCValid(message.GetQuorumCertificate()) {
+func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+	if valid, reason := m.isQuorumCertificateValid(msg.GetQuorumCertificate()); !valid {
+		m.nodeLogError("QC is invalid in the COMMIT step", fmt.Errorf(reason))
 		m.paceMaker.InterruptRound()
 		return
 	}
 
 	m.Step = Decide
-	m.LockedQC = message.GetQuorumCertificate() // TODO(design): How do the replica recover if it's locked? Replica `formally` agrees on the QC while the rest of the network `verbally` agrees on the QC.
+	m.LockedQC = msg.GetQuorumCertificate() // TODO(discuss): How do the replica recover if it's locked? Replica `formally` agrees on the QC while the rest of the network `verbally` agrees on the QC.
 	m.paceMaker.RestartTimer()
 
-	commitVoteMessage, err := CreateVoteMessage(m, Commit, message.Block)
+	commitVoteMessage, err := CreateVoteMessage(m, Commit, msg.Block)
 	if err != nil {
-		m.nodeLogError("Could not create a vote message: %v", err)
+		m.nodeLogError("Could not create a COMMIT Vote", err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.hotstuffNodeSend(commitVoteMessage)
@@ -90,13 +91,14 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 
 /*** Decide Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusModule, message *types_consensus.HotstuffMessage) {
-	if !m.isQCValid(message.GetQuorumCertificate()) {
+func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+	if valid, reason := m.isQuorumCertificateValid(msg.GetQuorumCertificate()); !valid {
+		m.nodeLogError("QC is invalid in the DECIDE step", fmt.Errorf(reason))
 		m.paceMaker.InterruptRound()
 		return
 	}
 
-	if err := m.commitBlock(message.Block); err != nil {
+	if err := m.commitBlock(msg.Block); err != nil {
 		m.nodeLogError("Could not commit block: %v", err)
 		m.paceMaker.InterruptRound()
 		return
@@ -107,13 +109,13 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 
 /*** Helpers ***/
 
-func (m *consensusModule) hotstuffNodeSend(message *types_consensus.HotstuffMessage) {
+func (m *consensusModule) hotstuffNodeSend(msg *types_consensus.HotstuffMessage) {
 	// TODO(olshansky): This can happen due to a race condition with the pacemaker.
 	if m.LeaderId == nil {
-		m.nodeLogError("[TODO] Why am I trying to send a message to a nil leader?", nil)
+		m.nodeLogError("[TODO] How/why am I trying to send a message to a nil leader?", nil)
 		return
 	}
 
-	m.nodeLog(fmt.Sprintf("Sending %s vote.", StepToString[message.Step]))
-	m.sendToNode(message, HotstuffMessage, *m.LeaderId)
+	m.nodeLog(fmt.Sprintf("Sending %s vote.", StepToString[msg.Step]))
+	m.sendToNode(msg, HotstuffMessage, *m.LeaderId)
 }

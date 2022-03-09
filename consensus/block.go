@@ -1,47 +1,48 @@
 package consensus
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
-	"strconv"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
-func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, error) {
-	state := types.GetTestState(nil)
-
-	if m.utilityContext != nil {
-		m.nodeLog("[WARN] Why is the node utility context not nil when preparing a new block? Realising for now...")
-		m.utilityContext.ReleaseContext()
+// TODO(olshansky): Implement this properly....
+func (m *consensusModule) isValidBlock(block *types_consensus.BlockConsensusTemp) (bool, string) {
+	if block == nil {
+		return false, "block is nil"
 	}
+	return true, "block is valid"
+}
 
-	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
-	if err != nil {
+func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, error) {
+	if err := m.updateUtilityContext(); err != nil {
 		return nil, err
 	}
-	fmt.Println("OLSH FIRST", utilityContext, err)
-	m.utilityContext = utilityContext
 
 	maxTxBytes := 90000                    // TODO(olshansky): Move this to config.json.
 	lastByzValidators := make([][]byte, 0) // TODO(olshansky): Retrieve this from persistence
-	fmt.Println("OLSH", m.privateKey.Address(), m.utilityContext)
 	txs, err := m.utilityContext.GetTransactionsForProposal(m.privateKey.Address(), maxTxBytes, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}
-	appHash := hex.EncodeToString([]byte(strconv.Itoa(int(m.Height)))) // TODO: Temp
-	fmt.Println("OLSH WTF", appHash)
+
+	height := int64(m.Height)
+	proposer := m.privateKey.Address()
+	appHash, err := m.utilityContext.ApplyBlock(height, proposer, txs, lastByzValidators)
+	if err != nil {
+		return nil, err
+	}
 
 	header := &types_consensus.BlockHeaderConsensusTemp{
-		Height:            int64(m.Height),
+		Height:            height,
 		Hash:              appHash,
-		Time:              nil, // TODO(olshansky): What should this be?
 		NumTxs:            uint32(len(txs)),
-		LastBlockHash:     state.AppHash,
+		LastBlockHash:     types.GetTestState(nil).AppHash,
 		ProposerAddress:   m.privateKey.Address(),
-		QuorumCertificate: nil, // TODO(olshansky): See the comment in `block_cons_temp.proto`
+		QuorumCertificate: nil,
 	}
 
 	block := &types_consensus.BlockConsensusTemp{
@@ -52,59 +53,54 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 	return block, nil
 }
 
-// TODO(olshansky): Implement this properly....
-func (m *consensusModule) isValidBlock(block *types_consensus.BlockConsensusTemp) (bool, string) {
-	if block == nil {
-		return false, "Block is nil"
-	}
-	return true, ""
-
-}
-
-// TODO: Should this be async?
-func (m *consensusModule) deliverTxToUtility(block *types_consensus.BlockConsensusTemp) error {
-	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
-	if err != nil {
+func (m *consensusModule) applyBlock(block *types_consensus.BlockConsensusTemp) error {
+	if err := m.updateUtilityContext(); err != nil {
 		return err
 	}
-	m.utilityContext = utilityContext
-	proposer := m.privateKey.Address()
+
 	lastByzValidators := make([][]byte, 0) // TODO(olshansky): Retrieve this from persistence
+	height := int64(m.Height)
+	proposer := m.privateKey.Address()
 
-	appHash, err := utilityContext.ApplyBlock(int64(m.Height), proposer, block.Transactions, lastByzValidators)
+	appHash, err := m.utilityContext.ApplyBlock(height, proposer, block.Transactions, lastByzValidators)
 	if err != nil {
 		return err
 	}
-	fmt.Println("OLSH 222", appHash, hex.EncodeToString(appHash), block.BlockHeader.Hash)
-
-	// INTEGRATION_TEMP: Make sure the BlockHeader uses the same encoding as the appHash
-	if block.BlockHeader.Hash != hex.EncodeToString(appHash) {
-		return fmt.Errorf("[ERROR] Why is the block header hash not what utility returned?")
+	if !bytes.Equal(block.BlockHeader.Hash, appHash) {
+		return fmt.Errorf("block hash does not match app hash: %s != %s", hex.EncodeToString(block.BlockHeader.Hash), hex.EncodeToString(appHash))
 	}
 
 	return nil
 }
 
+func (m *consensusModule) updateUtilityContext() error {
+	if m.utilityContext != nil {
+		m.nodeLog("[WARN] Why is the node utility context not nil when preparing a new block? Releasing for now...")
+		m.utilityContext.ReleaseContext()
+		m.utilityContext = nil
+	}
+
+	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
+	if err != nil {
+		return err
+	}
+
+	m.utilityContext = utilityContext
+	return nil
+}
+
 func (m *consensusModule) commitBlock(block *types_consensus.BlockConsensusTemp) error {
-	m.nodeLog(fmt.Sprintf("COMMITTING BLOCK AT HEIGHT %d. WITH TRANSACTION COUNT: %d", m.Height, len(block.Transactions)))
+	m.nodeLog(fmt.Sprintf("COMMITTING BLOCK AT HEIGHT %d WITH %d TRANSACTIONS", m.Height, len(block.Transactions)))
+
 	if err := m.utilityContext.GetPersistanceContext().Commit(); err != nil {
 		return err
 	}
 	m.utilityContext.ReleaseContext()
 	m.utilityContext = nil
 
-	//utilityModule := m.GetBus().GetUtilityModule()
-	//if err := utilityModule.EndBlock(nil); err != nil {
-	//	m.paceMaker.InterruptRound()
-	//	return err
-	//}
-
 	state := types.GetTestState(nil)
-	state.UpdateAppHash(block.BlockHeader.Hash)
+	state.UpdateAppHash(hex.EncodeToString(block.BlockHeader.Hash))
 	state.UpdateBlockHeight(uint64(block.BlockHeader.Height))
-
-	// TODO: Something with the persistence module?
-	// persistenceModule := m.GetBus().GetpersistenceModule()
 
 	return nil
 }

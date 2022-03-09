@@ -155,8 +155,8 @@ func TestPaceMakerExponentialTimeouts(t *testing.T) {
 
 // 	prepareProposeMessage := &consensus.HotstuffMessage{
 // 		Type:      consensus.ProposeMessageType,
-// 		Step:      consensus.Prepare,
 // 		Height:    consensus.BlockHeight(testHeight),
+// 		Step:      consensus.Prepare,
 // 		Round:     consensus.Round(leaderRound),
 // 		Block:     leaderBlock,
 // 		JustifyQC: nil,

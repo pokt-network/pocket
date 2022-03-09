@@ -83,47 +83,49 @@ func (m *paceMaker) SetConsensusModule(c *consensusModule) {
 	m.consensusMod = c
 }
 
-// Returns a boolean indicating if the message should be handled or not, and a string indicating the reason.
 func (p *paceMaker) ShouldHandleMessage(m *types_consensus.HotstuffMessage) (bool, string) {
-	// Message is from the past
+	// Consensus message is from the past
 	if m.Height < p.consensusMod.Height {
 		return false, fmt.Sprintf("Hotstuff message is behind the node's height. Current: %d; Message: %d ", p.consensusMod.Height, m.Height)
 	}
 
-	// Chain is out of sync
+	// Current node is out of sync
 	if m.Height > p.consensusMod.Height {
-		// TODO(design): Need to broadcast message to (re)start state sync
+		// TODO(design): Need to restart state sync
 		return false, fmt.Sprintf("Hotstuff message is ahead the node's height. Current: %d; Message: %d ", p.consensusMod.Height, m.Height)
 	}
 
-	// Do not handle messages if it is a self proposal.
+	// Do not handle messages if it is a self proposal
 	if p.consensusMod.isLeader() && m.Type == Propose && m.Step != NewRound {
-		// TODO(olshansky): This pptimization that leads to some code complexity. Since the
-		// leader also acts as a replica but doesn't use the replica's handlers given the
-		// current implementation, it is safe to drop proposal that the leader made to itself.
+		// TODO(olshansky): This code branch is a function of the optimization in the leader
+		// handlers. Since the leader also acts as a replica but doesn't use the replica's
+		// handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
 		return false, "Hotstuff message is a self proposal"
 	}
 
 	// Message is from the past
 	if m.Round < p.consensusMod.Round || (m.Round == p.consensusMod.Round && m.Step < p.consensusMod.Step) {
-		return false, fmt.Sprintf("Hotstuff message is of the right height but from the past. Current(step, round): (%s, %d); Message (step, round): (%s, %d).", StepToString[p.consensusMod.Step], p.consensusMod.Round, StepToString[m.Step], m.Round)
+		return false, fmt.Sprintf("Hotstuff message is of the right height but from the past. Current (step, round): (%s, %d); Message (step, round): (%s, %d).", StepToString[p.consensusMod.Step], p.consensusMod.Round, StepToString[m.Step], m.Round)
 	}
 
-	// Everything checks out => handle message.
+	// Everything checks out!
 	if m.Height == p.consensusMod.Height && m.Step == p.consensusMod.Step && m.Round == p.consensusMod.Round {
 		return true, "Hotstuff message received is of the right height, step and round"
 	}
 
-	// Catch up: Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
+	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
 	if m.Round > p.consensusMod.Round || (m.Round == p.consensusMod.Round && m.Step > p.consensusMod.Step) {
 		p.consensusMod.Step = m.Step
 		p.consensusMod.Round = m.Round
-		// TODO(olshansky): MAKE SURE TO ADD TESTS for this. Making sure the leader is correct after a Pacemaker catch up is critical.
-		p.consensusMod.electNextLeader(m)
+		// TODO(olshansky): TESTS for this. When we catch up to a later step, the leader is still the same.
+		// However, when we catch up to a later round, the leader at the same height will be different.
+		if p.consensusMod.Round != m.Round {
+			p.consensusMod.electNextLeader(m)
+		}
 		return true, fmt.Sprintf("Pacemaker catching up the node's (height, step, round) FROM (%d, %s, %d) TO (%d, %s, %d).", p.consensusMod.Height, StepToString[p.consensusMod.Step], p.consensusMod.Round, m.Height, StepToString[m.Step], m.Round)
 	}
 
-	return false, "UNHANDLED PACEMAKER CIRCUMSTANCE"
+	return false, "UNHANDLED PACEMAKER CHECK"
 }
 
 func (p *paceMaker) RestartTimer() {
@@ -185,16 +187,19 @@ func (p *paceMaker) startNextView(qc *types_consensus.QuorumCertificate, forceNe
 	}
 
 	hotstuffMessage := &types_consensus.HotstuffMessage{
-		Type:   Propose,
-		Step:   NewRound,
-		Height: p.consensusMod.Height,
-		Round:  p.consensusMod.Round,
-		Block:  nil,
-		// Justification: &types_consensus.HotstuffMessage_QuorumCertificate{
-		// 	QuorumCertificate: qc,
-		// },
+		Type:          Propose,
+		Height:        p.consensusMod.Height,
+		Step:          NewRound,
+		Round:         p.consensusMod.Round,
+		Block:         nil,
+		Justification: nil, // Set below if qc is not nil
 	}
-	fmt.Println("OLSH TEST", p.quorumCertificate, qc, hotstuffMessage.GetQuorumCertificate())
+
+	if qc != nil {
+		hotstuffMessage.Justification = &types_consensus.HotstuffMessage_QuorumCertificate{
+			QuorumCertificate: qc,
+		}
+	}
 
 	p.RestartTimer()
 	p.consensusMod.broadcastToNodes(hotstuffMessage, HotstuffMessage)

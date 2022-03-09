@@ -14,20 +14,25 @@ func CreateProposeMessage(
 	qc *types_consensus.QuorumCertificate,
 ) (*types_consensus.HotstuffMessage, error) {
 	if m.Block == nil {
-		return nil, fmt.Errorf("if a leader is trying to create a ProposeMessage, the block should never be nil")
+		return nil, fmt.Errorf("When a leader is trying to create a ProposeMessage, the block should never be nil")
 	}
 
-	message := &types_consensus.HotstuffMessage{
-		Type:   Propose,
-		Step:   step, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
-		Height: uint64(m.Height),
-		Round:  m.Round,
-		Block:  m.Block,
-		// Justification: &types_consensus.HotstuffMessage_QuorumCertificate{
-		// 	QuorumCertificate: qc,
-		// },
+	msg := &types_consensus.HotstuffMessage{
+		Type:          Propose,
+		Height:        uint64(m.Height),
+		Step:          step, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
+		Round:         m.Round,
+		Block:         m.Block,
+		Justification: nil, // QC is set below if it is non-nil
 	}
-	return message, nil
+
+	if qc != nil {
+		msg.Justification = &types_consensus.HotstuffMessage_QuorumCertificate{
+			QuorumCertificate: qc,
+		}
+	}
+
+	return msg, nil
 }
 
 func CreateVoteMessage(
@@ -36,39 +41,39 @@ func CreateVoteMessage(
 	block *types_consensus.BlockConsensusTemp,
 ) (*types_consensus.HotstuffMessage, error) {
 	if block == nil {
-		return nil, fmt.Errorf("replica tring to vote on a nil block")
+		return nil, fmt.Errorf("Replica should never vote on a nil block proposal")
 	}
 
-	message := &types_consensus.HotstuffMessage{
-		Type:   Vote,
-		Step:   step, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
-		Height: m.Height,
-		Round:  m.Round,
-		Block:  block,
-		// Justification: nil, // signature is computed below
+	msg := &types_consensus.HotstuffMessage{
+		Type:          Vote,
+		Height:        m.Height,
+		Step:          step, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
+		Round:         m.Round,
+		Block:         block,
+		Justification: nil, // signature is computed below
 	}
 
-	privKey := m.privateKey
-	message.Justification = &types_consensus.HotstuffMessage_PartialSignature{
+	msg.Justification = &types_consensus.HotstuffMessage_PartialSignature{
 		PartialSignature: &types_consensus.PartialSignature{
-			Signature: getHotstuffMessageSignature(message, privKey),
-			Address:   privKey.PublicKey().Address().String(),
+			Signature: getMessageSignature(msg, m.privateKey),
+			Address:   m.privateKey.PublicKey().Address().String(),
 		},
 	}
 
-	return message, nil
+	return msg, nil
 }
 
-func IsSignatureValid(m *types_consensus.HotstuffMessage, pubKey crypto.PublicKey, signature []byte) bool {
-	bytesToVerify, err := types_consensus.GobEncode(getSignableStruct(m))
+func isSignatureValid(m *types_consensus.HotstuffMessage, pubKey crypto.PublicKey, signature []byte) bool {
+	bytesToVerify, err := getSignableBytes(m)
 	if err != nil {
+		log.Println("[WARN] Error getting bytes to verify:", err)
 		return false
 	}
 	return pubKey.VerifyBytes(bytesToVerify, signature)
 }
 
-func getHotstuffMessageSignature(m *types_consensus.HotstuffMessage, privKey crypto.PrivateKey) []byte {
-	bytesToSign, err := types_consensus.GobEncode(getSignableStruct(m))
+func getMessageSignature(m *types_consensus.HotstuffMessage, privKey crypto.PrivateKey) []byte {
+	bytesToSign, err := getSignableBytes(m)
 	if err != nil {
 		return nil
 	}
@@ -80,8 +85,8 @@ func getHotstuffMessageSignature(m *types_consensus.HotstuffMessage, privKey cry
 	return signature
 }
 
-func getSignableStruct(m *types_consensus.HotstuffMessage) interface{} {
-	return struct {
+func getSignableBytes(m *types_consensus.HotstuffMessage) ([]byte, error) {
+	signableStruct := struct {
 		Step   types_consensus.HotstuffStep `json:"step"`
 		Height uint64                       `json:"height"`
 		Round  uint64                       `json:"round"`
@@ -92,4 +97,5 @@ func getSignableStruct(m *types_consensus.HotstuffMessage) interface{} {
 		m.Round,
 		types_consensus.ProtoMarshall(m.Block),
 	}
+	return types_consensus.GobEncode(signableStruct)
 }

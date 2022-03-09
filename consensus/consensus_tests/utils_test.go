@@ -357,7 +357,7 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *mock_modules.MockUt
 
 	// TODO(integration): This is only valid while we are still integrating and will likely break soon...
 	emptyByzValidators := make([][]byte, 0)
-	emptyTxs := make([][]byte, 0)
+	// emptyTxs := make([][]byte, 0)
 
 	appHash, err := hex.DecodeString("31")
 	require.NoError(t, err)
@@ -374,7 +374,8 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *mock_modules.MockUt
 		Return(make([][]byte, 0), nil).
 		AnyTimes()
 	utilityContext.EXPECT().
-		ApplyBlock(int64(1), gomock.Any(), gomock.AssignableToTypeOf(emptyTxs), gomock.AssignableToTypeOf(emptyByzValidators)).
+		// ApplyBlock(int64(1), gomock.Any(), gomock.AssignableToTypeOf(emptyTxs), gomock.AssignableToTypeOf(emptyByzValidators)).
+		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(appHash, nil).
 		AnyTimes()
 
