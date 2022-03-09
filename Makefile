@@ -26,6 +26,11 @@ prompt_user:
 go_vet:
 	go vet ./...
 
+.PHONY: go_staticcheck
+## Run `go vet` on all files in the current project
+go_staticcheck:
+	@if  builtin type -P "staticcheck"; then staticcheck ./... ; else echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; fi
+
 .PHONY: build
 ## Build Pocket's main entrypoint
 build:
