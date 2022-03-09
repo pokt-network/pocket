@@ -7,10 +7,10 @@ flowchart TB
   pr --> testing{Automated<br>Regression}
   testing --> |error| fix
   testing --> |success| qa[Manual QA<br>Enforcement]
-  qa --> |comment| review{Comments<br>Resolved?}
+  qa --> feedback[Wait for<br>Review]
+  feedback --> |comment| review{Comments<br>Resolved?}
   
   review --> |No| fix
-	feedback --> |answer| review
 
   review --> |Yes| approvals{Actors<br>Approved?}
   approvals --> |No| fix
@@ -31,34 +31,7 @@ If the issue had extra deliverables, make sure to include them as part of your P
 
 Every PR should follow this template,
 
-```jsx
-# Description
-
-Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.
-
-Fixes # (integration issue)
-
-## Type of change
-
-Please mark the options that are relevant.
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
-
-# Checklist:
-
-- [ ] Every PR Merged to the integration branch followed the tests specifications
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented on my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
-```
+* [PULL\_REQUEST\_TEMPLATE.md](../../../.github/PULL_REQUEST_TEMPLATE.md)
 
 Make sure to complete all required fields with the following information,
 - Reviewers: Provide at least 2 reviewers to ensure you get enough approvals, in this case, at least 2 reviewers from Pocket Network Core team should be provided
@@ -71,13 +44,13 @@ Make sure to complete all required fields with the following information,
 
 After a PR has been created, wait for the automation test suite to complete. it is desirable to have some community members review and test locally the PR, by providing feedback on the PR comments.
 
-Integration PR should have no testing issues ideally, since previous PR should have proper testing passing. If something is found, a new Fix Issue should be created and once done, merged back to the integration PR.
+Integration PR should have no testing issues ideally, since previous PR should have properly testing passing. If something is found, a new Fix Issue should be created and once done, merged back to the integration PR.
 
 ## Review Phase
 
 Wait a couple of days to collect comments from other contributors. Make sure to respond, eventually fix, and mark all the comments as done.
 
-Integration PR should have no comments ideally, since previous PR should have proper review passing. If something is found, a new Fix Issue should be created and once done, merged back to the integration PR.
+Integration PR should have no comments ideally, since previous PR should have properly review passing. If something is found, a new Fix Issue should be created and once done, merged back to the integration PR.
 
 Wait for the commenter to acknowledge the answer or the fix of its comment.
 
@@ -87,7 +60,7 @@ Wait for the commenter to acknowledge the answer or the fix of its comment.
 
 Ping the required actors on a PR comment to call their attention after this step has been fulfilled to ask for their final review. Take into consideration that these actors are busy and will ignore any PR that doesn’t have the previous checks. Follow the actor's comments and provide feedback for the fix. make sure to mention them on any change related to their comments.
 
-Integration PR should have no comments ideally, since previous PR should have proper review passing. If something is found, a new Fix Issue should be created and once done, merged back to the integration PR.
+Integration PR should have no comments ideally, since previous PR should have properly review passing. If something is found, a new Fix Issue should be created and once done, merged back to the integration PR.
 
 ## Merge Blockers
 

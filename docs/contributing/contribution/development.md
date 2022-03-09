@@ -83,14 +83,14 @@ Before pushing your code to the integration or milestone branches, make sure you
 
 ```mermaid
 flowchart TB
-  pr((Create a PR<br>to main))
+  pr((Create a PR<br>to integration branch))
   pr --> testing{Automated<br>Regression}
-  testing --> |error| error((Create fix Issue))
-  testing --> |success| qa[Manual QA<br>Enforcement]
+  testing --> |error| code
+  testing --> |success| qa[Wait for<br>Review]
   qa --> |comment| review{Comments<br>Resolved?}
   
   review --> |No| code
-	feedback --> |answer| review
+	feedback --> |answer| testing
 
   review --> |Yes| approvals{Actors<br>Approved?}
   approvals --> |No| code
@@ -117,48 +117,7 @@ If the issue had extra deliverables, make sure to include them as part of your P
 
 Every PR should follow this template,
 
-```jsx
-# Description
-
-Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.
-
-Fixes # (issue)
-
-## Type of change
-
-Please mark the options that are relevant.
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
-
-# How Has This Been Tested?
-
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration
-
-- [ ] Test A
-- [ ] Test B
-
-For bugs provide the following information, if available, link to the reporting issue
-**How to reproduce**
-- Reporter Name: 
-- Reported Date:  
-- Steps to reproduce: As specific as possible
-- Release/Build Version: 
-- Environment: OS, framework version
-
-# Checklist:
-
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented on my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
-```
+* [PULL\_REQUEST\_TEMPLATE.md](../../../.github/PULL_REQUEST_TEMPLATE.md)
 
 Make sure to complete all required fields with the following information,
 - Reviewers: Provide at least 2 reviewers to ensure you get enough approvals

@@ -11,7 +11,7 @@ assignees: ''
 [ Milestone description - What]
 
 # Origin Document
-[ Description of the origin or link to a document]
+[ Description of the origin or link to a document - Planning and Justification for the milestone]
 
 # Goals
 ## Deliverables

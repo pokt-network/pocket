@@ -11,7 +11,7 @@ assignees: ''
 [ Issue description - What]
 
 # Origin Document
-[ Issue of the origin or link to a document]
+[ Issue of the origin or link to a document - Planning and Justification for the issue]
 
 # Goals
 ## Deliverables
