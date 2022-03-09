@@ -5,6 +5,7 @@ import (
 	"crypto/ed25519"
 	"encoding/binary"
 	"encoding/hex"
+	"flag"
 	"fmt"
 	"reflect"
 	"testing"
@@ -23,6 +24,16 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
+
+// If this is set to true, consensus unit tests will fail if additional unexpected messages are received.
+// This slows down the tests because we always fail until the timeout specified by the test before continuing
+// but guarantees more correctness.
+var failOnExtraMessages bool
+
+// Initialize certain unit test configurations on startup.
+func init() {
+	flag.BoolVar(&failOnExtraMessages, "failOnExtraMessages", false, "Fail if unexpected additional messages are received")
+}
 
 type IdToNodeMapping map[types_consensus.NodeId]*shared.Node
 
@@ -301,20 +312,15 @@ loop:
 				continue
 			}
 
-			// if numMessages <= 0 {
-			// 	t.Fatalf("Was only expecting to wait for %d messages, but got more...", len(messages))
-			// }
-
 			messages = append(messages, message)
 			numMessages--
 
-			// NOTE: The if structure below "breaks early" when we get enough messages. However, it does not captur
+			// The if structure below "breaks early" when we get enough messages. However, it does not capture
 			// the case where we could be receiving more messages than expected. To make sure the latter doesn't
-			// happen, the if structure needs to be removed.
-			// TODO(design): discuss the comment above with the team.
-			// if numMessages <= 0 {
-			// 	break loop
-			// }
+			// happen, the `failOnExtraMessages` flag must be set to true.
+			if !failOnExtraMessages && numMessages == 0 {
+				break loop
+			}
 		case <-ctx.Done():
 			if numMessages == 0 {
 				break loop

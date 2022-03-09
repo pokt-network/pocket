@@ -1,6 +1,7 @@
 # TODO(discuss): Determine if we want to use Makefile or mage.go and merge the two.
 
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
+EXTRA_MSG_FAIL ?= false
 
 .SILENT:
 
@@ -91,12 +92,12 @@ test_shared: # generate_mocks
 .PHONY: test_consensus
 ## Run all go unit tests in the consensus module
 test_consensus: # mockgen
-	go test ./consensus/...
+	go test ./consensus/... -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
 .PHONY: test_hotstuff
 ## Run all go unit tests related to hotstuff consensus
 test_hotstuff: # mockgen
-	go test -v ./consensus/consensus_tests -run Hotstuff
+	go test -v ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
 .PHONY: test_vrf
 ## Run all go unit tests in the VRF library
