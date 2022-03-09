@@ -176,11 +176,11 @@ func TestHotstuff4NodesFailOnDecide(t *testing.T) {
 	t.Skip() // TODO: Implement
 }
 
-func TestHotstuffAvailableQCFromLockedValidator(t *testing.T) {
+func TestHotstuffValidatorWithLockedQC(t *testing.T) {
 	t.Skip() // TODO: Implement
 }
 
-func TestHotstuffMissingNewRoundMsgFromLockedValidator(t *testing.T) {
+func TestHotstuffValidatorWithLockedQCMissingNewRoundMsg(t *testing.T) {
 	t.Skip() // TODO: Implement
 }
 */
