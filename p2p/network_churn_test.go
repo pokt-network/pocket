@@ -48,7 +48,7 @@ func TestNetworkChurn_Ping(t *testing.T) {
 	t.Log("Ping: peer started listening...")
 
 	addr := "127.0.0.1:2313"
-	ready, _, data, respond := ListenAndServe(addr, int(m.config.BufferSize))
+	ready, _, data, respond := ListenAndServe(addr, int(m.config.BufferSize), 200)
 
 	select {
 	case v := <-ready:
@@ -181,7 +181,7 @@ func TestNetworkChurn_Pong(t *testing.T) {
 	}
 
 	addr := "127.0.0.1:22312"
-	ready, _, data, _ := ListenAndServe(addr, int(config.BufferSize))
+	ready, _, data, _ := ListenAndServe(addr, int(config.BufferSize), 200)
 
 	{
 		select {

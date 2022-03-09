@@ -1,0 +1,10 @@
+syntax = "proto3";
+package p2p;
+
+option go_package = "github.com/pokt-network/pocket/p2p/types;types";
+
+message P2PAckMessage {
+  string acker = 1;
+  string ackee = 2;
+}
+

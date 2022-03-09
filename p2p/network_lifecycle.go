@@ -69,14 +69,8 @@ func (m *p2pModule) configure(config *cfg.P2PConfig) error {
 	return nil
 }
 
-func (m *p2pModule) initCodec() error {
-	p2pmsg := &types.P2PMessage{}
-	_, err := m.c.Register(*p2pmsg, types.Encode, types.Decode)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (m *p2pModule) initCodec() {
+	m.c = types.NewProtoMarshaler()
 }
 
 func (m *p2pModule) initSocketPools() {
@@ -94,10 +88,7 @@ func (m *p2pModule) initialize(config *cfg.P2PConfig) error {
 		return err
 	}
 
-	if err := m.initCodec(); err != nil {
-		return err
-	}
-
+	m.initCodec()
 	m.initSocketPools()
 
 	return nil

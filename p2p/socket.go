@@ -8,6 +8,7 @@ import (
 	"math"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/pokt-network/pocket/p2p/types"
 
@@ -328,6 +329,8 @@ func (s *socket) ackwrite(b []byte, wrapped bool) (types.Work, error) {
 	var response types.Work
 	select {
 	case response = <-request.Response():
+	case <-time.After(time.Millisecond * time.Duration(s.params.timeoutMs)):
+		return types.Work{}, fmt.Errorf("ackwrite: request timed out. nonce=%d, addr=%s", requestNonce, s.addr)
 	}
 
 	return response, nil
