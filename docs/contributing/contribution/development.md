@@ -105,24 +105,24 @@ flowchart TB
   end
 ```
 
-You can follow this guide to create a PR from the fork to the integration branch, **take in consideration that the integration branch could be in a fork as well.**
+You can follow this guide to create a PR from a fork to the integration branch. **Take in consideration that the integration branch could be in a fork as well.**
 
 [https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork)
 
-On the PR, please include any details related to the job that you pushed. Proof of your local tests passing is a good practice, to help other developers know that the code is tested. Any screenshot or screencast is welcome to help others understand the impact of your work.
+On the PR, please include any details related to the task that you pushed. Proof of your local tests passing is a good practice in order to help other developers know that the code is tested. Any screenshot or screencast is welcome to help others understand the impact of your work.
 
-Be as detailed as you can, since this will help get a faster review of the PR. If the PR is not being reviewed, make sure to tag the issue creator from time to time, and even propose a review meeting to make this faster.
+Be as detailed as you can, since this will help get a faster review of the PR. If the PR is not being reviewed, make sure to tag the issue creator from time to time, and even propose a review meeting to make it faster.
 
-If the issue had extra deliverables, make sure to include them as part of your PR, to get the approvals.
+If the issue had extra deliverables, make sure to include them as part of your PR to get the approvals.
 
 Every PR should follow this template,
 
 * [PULL\_REQUEST\_TEMPLATE.md](../../../.github/PULL_REQUEST_TEMPLATE.md)
 
-Make sure to complete all required fields with the following information,
-- Reviewers: Provide at least 2 reviewers to ensure you get enough approvals
-- Milestone: Link the PR to the corresponding Milestone
-- Linked Issues: Link the PR to the corresponding Issue
+Make sure to complete all required fields with the following information:
+- **Reviewers**: Provide at least 2 reviewers to ensure you get enough approvals
+- **Milestone**: Link the PR to the corresponding Milestone
+- **Linked Issues**: Link the PR to the corresponding Issue
 
 ## Testing Phase
 
@@ -133,18 +133,15 @@ After a PR has been created, wait for the automation test suite to complete. it 
 Wait a couple of days to collect comments from other contributors. Make sure to respond, eventually fix, and mark all the comments as done.
 Wait for the commenter to acknowledge the answer or the fix of its comment.
 
-- Commenter mask as resolved
-
 ## Actors Approvals
 
-Ping the required actors on a PR comment to call their attention after this step has been fulfilled to ask for their final review. Take into consideration that these actors are busy and will ignore any PR that doesn’t have the previous checks. Follow the actor's comments and provide feedback for the fix. make sure to mention them on any change related to their comments.
+Ping the required actors on a PR comment to call their attention after this step has been fulfilled to ask for their final review. Take into consideration that these actors are busy and will ignore any PRs that do not have the previous checks. Follow the actor's comments and provide feedback for the fix. Make sure to mention them on any change related to their comments.
 
 ## Merge Blockers
 
-- Issues PRs will be selected for running a subset of the Testing Regression and requires all test to be green before being merged.
-- Issues PRs will require having all the comments reviewed and checked by both commenter and developer.
-- Issues PRs will require at these approvals to unblock the merge,
-    - 2 approvals from any contributor
+- Issue PRs will be selected for running a subset of the Testing Regression suite and require all test to be green before being merged.
+- Issue PRs will require having all the comments reviewed and checked by both commenter and developer.
+- Issues PRs will require at lease 2 approvals from any contributor to unblock merging to the integration branch.
 
 ## Merge and Issue Close
 

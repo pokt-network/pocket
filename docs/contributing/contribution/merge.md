@@ -23,7 +23,7 @@ Once all the issues are finalized, and the milestone integration branch is ready
 - **From a fork:** [https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork)
 - **From a branch:** [https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request)
 
-On the PR, please include any details related to the job that you pushed. Proof of your local tests passing is a good practice, to help other developers know that the code is tested. Any screenshot or screencast is welcome to help others understand the impact of your work.
+On the PR, please include any details related to the work that you pushed. Proof of your local tests passing is a good practice, in order to help other developers know that the code is tested. Any screenshot or screencast is welcome to help others understand the impact of your work.
 
 Be as detailed as you can, since this will help get a faster review of the PR. If the PR is not being reviewed, make sure to tag the issue creator from time to time, and even propose a review meeting to make this faster.
 
@@ -33,42 +33,39 @@ Every PR should follow this template,
 
 * [PULL\_REQUEST\_TEMPLATE.md](../../../.github/PULL_REQUEST_TEMPLATE.md)
 
-Make sure to complete all required fields with the following information,
-- Reviewers: Provide at least 2 reviewers to ensure you get enough approvals, in this case, at least 2 reviewers from Pocket Network Core team should be provided
-- Labels: Add `integration` label to the list and any other label you want
-- Milestone: Link the PR to the corresponding Milestone
-- Linked Issues: Link the PR to the corresponding Integration Issue
+Make sure to complete all required fields with the following information:
+- **Reviewers**: Provide at least 2 reviewers to ensure you get enough approvals. In this case, at least 2 reviewers from Pocket Network Core team must be provided.
+- **Labels**: Add the `integration` label to the list, along with any other related labels.
+- **Milestone**: Link the PR to the corresponding Milestone.
+- **Linked Issues**: Link the PR to the corresponding Integration Issue.
 
 
 ## Testing Phase
 
-After a PR has been created, wait for the automation test suite to complete. it is desirable to have some community members review and test locally the PR, by providing feedback on the PR comments.
+After a PR has been created, wait for the automated test suite to complete. it is desirable to have some community members review and test the PR locally and provide feedback via comments.
 
-Integration PR should have no testing issues ideally, since previous PR should have properly testing passing. If something is found, a new Fix Issue should be created and once done, merged back to the integration PR.
+Ideally, the integration PR should have no testing issues because the previous PR should have validated everything. However, if something is found, a new _Fix Issue_ should be created, and once complete, merged back to the integration PR.
 
 ## Review Phase
 
-Wait a couple of days to collect comments from other contributors. Make sure to respond, eventually fix, and mark all the comments as done.
+Wait a couple of days to collect comments from other contributors. Make sure to respond, eventually fix, and mark all the comments as resolved.
 
-Integration PR should have no comments ideally, since previous PR should have properly review passing. If something is found, a new Fix Issue should be created and once done, merged back to the integration PR.
+Ideally, the integration PR should have no comments because the previous PR should have been properly reviewed. However, if something is found, a new _Fix Issue_ should be created, and once complete, merged back to the integration PR.
 
 Wait for the commenter to acknowledge the answer or the fix of its comment.
 
-- Commenter mask as resolved
-
 ## Actors Approvals
 
-Ping the required actors on a PR comment to call their attention after this step has been fulfilled to ask for their final review. Take into consideration that these actors are busy and will ignore any PR that doesn’t have the previous checks. Follow the actor's comments and provide feedback for the fix. make sure to mention them on any change related to their comments.
+Ping the required actors on a PR comment to call their attention after this step has been fulfilled to ask for their final review. Take into consideration that these actors are busy and will ignore any PR that doesn’t have the previous checks. Follow the actor's comments and provide feedback for the fix. Make sure to mention them on any change related to their comments.
 
-Integration PR should have no comments ideally, since previous PR should have properly review passing. If something is found, a new Fix Issue should be created and once done, merged back to the integration PR.
+Ideally, the integration PR should have no comments because the previous PR should have been properly reviewed. However, if something is found, a new _Fix Issue_ should be created, and once complete, merged back to the integration PR.
 
 ## Merge Blockers
 
-- Milestone PRs will be selected for running the full Testing Regression and requires all test to be green before being merged.
+- Milestone PRs will be selected for running the full Testing Regression Suite and requires all tests to be green before merging.
 - Milestone PRs will require to have all the comments reviewed and checked by both commenter and developer.
-- Milestone PRs will require these approvals to unblock the merge,
-    - 2 approvals from PNI Developers
-- Milestone PRs should provide a working protocol, no pending work should be part of the milestone PR.
+- Milestone PRs will require at least 2 approvals from Core Pocket Network Developers to unblock merging.
+- Milestone PRs should provide a fully functional protocol, with no pending work that could cause regressions.
 
 ## Merge and Milestone Close
 
