@@ -54,7 +54,7 @@ func CreatePaceMaker(_ *config.Config) (m *paceMaker, err error) {
 		paceMakerParams: &types.GetTestState(nil).ConsensusParams.PaceMakerParams,
 
 		paceMakerDebug: paceMakerDebug{
-			manualMode:        true,
+			manualMode:        true, // TODO(olshansky): Make this via config.json
 			quorumCertificate: nil,
 		},
 	}, nil

@@ -24,13 +24,13 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 	time.Sleep(10 * time.Millisecond) // Avoids minor race conditions if pocket node has not finished starting/initialization
 
-	// Debug message to start consensus by triggering next view.
+	// Debug message to start consensus by triggering next view since the paceMaker is in manual mode.
 	for _, pocketNode := range pocketNodes {
 		TriggerNextView(t, pocketNode)
 	}
 
 	// NewRound
-	newRoundMessages := WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, numNodes, 1000)
+	newRoundMessages := WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 1000)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
@@ -44,10 +44,10 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 
 	leaderId := types_consensus.NodeId(2)
-	// leader := pocketNodes[leaderId]
+	leader := pocketNodes[leaderId]
 
 	// Prepare
-	prepareProposal := WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, 1, 1000)
+	prepareProposal := WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Propose, 1, 1000)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		require.Equal(t, uint8(consensus.Prepare), nodeState.Step)
@@ -60,77 +60,80 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 
 	// Precommit
-	prepareVotes := WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, numNodes, 1000)
-	fmt.Println(prepareVotes)
-	// for _, vote := range prepareVotes {
-	// 	P2PSend(pocketNodes[leaderId], vote)
-	// }
+	prepareVotes := WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Vote, numNodes, 1000)
+	for _, vote := range prepareVotes {
+		P2PSend(t, leader, vote)
+	}
 
-	// preCommitProposal := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.PreCommit, 1, 1000)
-	// for _, pocketNode := range pocketNodes {
-	// 	nodeState := GetConsensusNodeState(pocketNode)
-	// 	require.Equal(t, uint8(consensus.PreCommit), nodeState.Step)
-	// 	require.Equal(t, uint64(1), nodeState.Height)
-	// 	require.Equal(t, uint8(0), nodeState.Round)
-	// 	require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
-	// }
-	// for _, message := range preCommitProposal {
-	// 	P2PBroadcast(t, pocketNodes, message)
-	// }
+	preCommitProposal := WaitForNetworkConsensusMessages(t, testChannel, consensus.PreCommit, consensus.Propose, 1, 1000)
+	for _, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		require.Equal(t, uint8(consensus.PreCommit), nodeState.Step)
+		require.Equal(t, uint64(1), nodeState.Height)
+		require.Equal(t, uint8(0), nodeState.Round)
+		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
+	}
+	for _, message := range preCommitProposal {
+		P2PBroadcast(t, pocketNodes, message)
+	}
 
-	// // Commit
-	// preCommitVotes := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_SEND_MESSAGE, consensus.PreCommit, numNodes, 1000)
-	// for _, vote := range preCommitVotes {
-	// 	P2PSend(leader, vote)
-	// }
+	// Commit
+	preCommitVotes := WaitForNetworkConsensusMessages(t, testChannel, consensus.PreCommit, consensus.Vote, numNodes, 1000)
+	for _, vote := range preCommitVotes {
+		P2PSend(t, leader, vote)
+	}
 
-	// commitProposal := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.Commit, 1, 1000)
-	// for _, pocketNode := range pocketNodes {
-	// 	nodeState := GetConsensusNodeState(pocketNode)
-	// 	require.Equal(t, uint8(consensus.Commit), nodeState.Step)
-	// 	require.Equal(t, uint64(1), nodeState.Height)
-	// 	require.Equal(t, uint8(0), nodeState.Round)
-	// 	require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
-	// }
-	// for _, message := range commitProposal {
-	// 	P2PBroadcast(t, pocketNodes, message)
-	// }
+	commitProposal := WaitForNetworkConsensusMessages(t, testChannel, consensus.Commit, consensus.Propose, 1, 1000)
+	for _, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		require.Equal(t, uint8(consensus.Commit), nodeState.Step)
+		require.Equal(t, uint64(1), nodeState.Height)
+		require.Equal(t, uint8(0), nodeState.Round)
+		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
+	}
+	for _, message := range commitProposal {
+		P2PBroadcast(t, pocketNodes, message)
+	}
 
-	// // Decide
-	// commitVotes := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_SEND_MESSAGE, consensus.Commit, numNodes, 1000)
-	// for _, vote := range commitVotes {
-	// 	P2PSend(leader, vote)
-	// }
+	// Decide
+	commitVotes := WaitForNetworkConsensusMessages(t, testChannel, consensus.Commit, consensus.Vote, numNodes, 1000)
+	for _, vote := range commitVotes {
+		P2PSend(t, leader, vote)
+	}
 
-	// decideProposal := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.Decide, 1, 1000)
-	// for pocketId, pocketNode := range pocketNodes {
-	// 	nodeState := GetConsensusNodeState(pocketNode)
-	// 	// Leader has already committed the block and hence moved to the next height.
-	// 	if pocketId == leaderId {
-	// 		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
-	// 		require.Equal(t, uint64(2), nodeState.Height)
-	// 		require.Equal(t, uint8(0), nodeState.Round)
-	// 		require.Equal(t, nodeState.LeaderId, s_types.NodeId(0), "Leader should be empty")
-	// 		continue
-	// 	}
-	// 	require.Equal(t, uint8(consensus.Decide), nodeState.Step)
-	// 	require.Equal(t, uint64(1), nodeState.Height)
-	// 	require.Equal(t, uint8(0), nodeState.Round)
-	// 	require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
-	// }
-	// for _, message := range decideProposal {
-	// 	P2PBroadcast(t, pocketNodes, message)
-	// }
+	decideProposal := WaitForNetworkConsensusMessages(t, testChannel, consensus.Decide, consensus.Propose, 1, 1000)
+	for pocketId, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		// Leader has already committed the block and hence moved to the next height.
+		if pocketId == leaderId {
+			require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
+			require.Equal(t, uint64(2), nodeState.Height)
+			require.Equal(t, uint8(0), nodeState.Round)
+			require.Equal(t, nodeState.LeaderId, types_consensus.NodeId(0), "Leader should be empty")
+			continue
+		}
+		require.Equal(t, uint8(consensus.Decide), nodeState.Step)
+		require.Equal(t, uint64(1), nodeState.Height)
+		require.Equal(t, uint8(0), nodeState.Round)
+		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
+	}
+	for _, message := range decideProposal {
+		P2PBroadcast(t, pocketNodes, message)
+	}
 
-	// // Block has been committed and new round has begun.
-	// WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.NewRound, numNodes, 1000)
-	// for _, pocketNode := range pocketNodes {
-	// 	nodeState := GetConsensusNodeState(pocketNode)
-	// 	require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
-	// 	require.Equal(t, uint64(2), nodeState.Height)
-	// 	require.Equal(t, uint8(0), nodeState.Round)
-	// 	require.Equal(t, nodeState.LeaderId, s_types.NodeId(0), "Leader should be empty")
-	// }
+	for _, pocketNode := range pocketNodes {
+		TriggerNextView(t, pocketNode)
+	}
+
+	// Block has been committed and new round has begun.
+	_ = WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 1000)
+	for _, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
+		require.Equal(t, uint64(2), nodeState.Height)
+		require.Equal(t, uint8(0), nodeState.Round)
+		require.Equal(t, nodeState.LeaderId, types_consensus.NodeId(0), "Leader should be empty")
+	}
 }
 
 // func TestHotstuffSignatures(t *testing.T) {
@@ -182,7 +185,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 // 	// Precommit
 // 	prepareVotes := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_SEND_MESSAGE, consensus.Prepare, numNodes, 500)
 // 	for _, vote := range prepareVotes {
-// 		P2PSend(leader, vote)
+// 		P2PSend(t, leader, vote)
 // 	}
 
 // 	preCommitProposal := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.PreCommit, 1, 500)
@@ -200,7 +203,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 // 	// Commit
 // 	preCommitVotes := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_SEND_MESSAGE, consensus.PreCommit, numNodes, 500)
 // 	for _, vote := range preCommitVotes {
-// 		P2PSend(leader, vote)
+// 		P2PSend(t, leader, vote)
 // 	}
 
 // 	commitProposal := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.Commit, 1, 500)
@@ -218,7 +221,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 // 	// Decide
 // 	commitVotes := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_SEND_MESSAGE, consensus.Commit, numNodes, 500)
 // 	for _, vote := range commitVotes {
-// 		P2PSend(leader, vote)
+// 		P2PSend(t, leader, vote)
 // 	}
 
 // 	decideProposal := WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_BROADCAST_MESSAGE, consensus.Decide, 1, 500)

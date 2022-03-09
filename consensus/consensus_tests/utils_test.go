@@ -5,6 +5,7 @@ import (
 	"crypto/ed25519"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -231,10 +232,19 @@ func P2PBroadcast(t *testing.T, nodes IdToNodeMapping, message *types_consensus.
 	}
 }
 
+func P2PSend(t *testing.T, node *shared.Node, message *types_consensus.ConsensusMessage) {
+	any, err := anypb.New(message)
+	require.NoError(t, err)
+
+	e := &types.PocketEvent{Topic: types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, Data: any}
+	node.GetBus().PublishEventToBus(e)
+}
+
 func WaitForNetworkConsensusMessages(
 	t *testing.T,
 	testChannel modules.EventsChannel,
 	step types_consensus.HotstuffStep,
+	hotstuffMsgType types_consensus.HotstuffMessageType,
 	numMessages int,
 	millis time.Duration,
 ) (messages []*types_consensus.ConsensusMessage) {
@@ -247,11 +257,19 @@ func WaitForNetworkConsensusMessages(
 	}
 
 	includeFilter := func(m *types_consensus.ConsensusMessage) bool {
-		return m.Type == types_consensus.ConsensusMessageType_CONSENSUS_HOTSTUFF_MESSAGE
+		if m.Type != types_consensus.ConsensusMessageType_CONSENSUS_HOTSTUFF_MESSAGE {
+			return false
+		}
+
+		var hotstuffMessage types_consensus.HotstuffMessage
+		err := anypb.UnmarshalTo(m.Message, &hotstuffMessage, proto.UnmarshalOptions{})
+		require.NoError(t, err)
+
+		return hotstuffMessage.Type == hotstuffMsgType
 	}
 
-	// errorMessage := fmt.Sprintf("HotStuff step: %s", types_consensus.HotstuffStep_name[int32(step)])
-	return WaitForNetworkConsensusMessagesInternal(t, testChannel, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, decoder, includeFilter, "error")
+	errorMessage := fmt.Sprintf("HotStuff step: %s", types_consensus.HotstuffStep_name[int32(step)])
+	return WaitForNetworkConsensusMessagesInternal(t, testChannel, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, decoder, includeFilter, errorMessage)
 }
 
 // TODO(olshansky): Translate this to use generics.
@@ -283,9 +301,9 @@ loop:
 				continue
 			}
 
-			if numMessages <= 0 {
-				t.Fatalf("Was only expecting to wait ofr %d messages, but got more...", numMessages)
-			}
+			// if numMessages <= 0 {
+			// 	t.Fatalf("Was only expecting to wait for %d messages, but got more...", len(messages))
+			// }
 
 			messages = append(messages, message)
 			numMessages--
@@ -294,14 +312,17 @@ loop:
 			// the case where we could be receiving more messages than expected. To make sure the latter doesn't
 			// happen, the if structure needs to be removed.
 			// TODO(design): discuss the comment above with the team.
-			if numMessages <= 0 {
-				break loop
-			}
+			// if numMessages <= 0 {
+			// 	break loop
+			// }
 		case <-ctx.Done():
 			if numMessages == 0 {
 				break loop
+			} else if numMessages > 0 {
+				t.Fatalf("Missing %s messages; missing: %d, received: %d; (%s)", topic, numMessages, len(messages), errorMessage)
+			} else {
+				t.Fatalf("Too many %s messages received; expected: %d, received: %d; (%s)", topic, numMessages+len(messages), len(messages), errorMessage)
 			}
-			t.Fatalf("Missing %s messages; missing: %d, received: %d; (%s)", topic, numMessages, len(messages), errorMessage)
 		}
 	}
 	cancel()
@@ -353,7 +374,8 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *mock_modules.
 func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *mock_modules.MockUtilityModule {
 	ctrl := gomock.NewController(t)
 	utilityMock := mock_modules.NewMockUtilityModule(ctrl)
-	utilityContext := mock_modules.NewMockUtilityContext(ctrl)
+	utilityContextMock := mock_modules.NewMockUtilityContext(ctrl)
+	persistenceContextMock := mock_modules.NewMockPersistenceContext(ctrl)
 
 	// TODO(integration): This is only valid while we are still integrating and will likely break soon...
 	emptyByzValidators := make([][]byte, 0)
@@ -366,18 +388,23 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *mock_modules.MockUt
 	utilityMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
 	utilityMock.EXPECT().
 		NewContext(int64(1)).
-		Return(utilityContext, nil).
+		Return(utilityContextMock, nil).
 		// Times(4)
 		AnyTimes()
-	utilityContext.EXPECT().
+
+	utilityContextMock.EXPECT().GetPersistanceContext().Return(persistenceContextMock).AnyTimes()
+	utilityContextMock.EXPECT().ReleaseContext().Return().AnyTimes()
+	utilityContextMock.EXPECT().
 		GetTransactionsForProposal(gomock.Any(), 90000, gomock.AssignableToTypeOf(emptyByzValidators)).
 		Return(make([][]byte, 0), nil).
 		AnyTimes()
-	utilityContext.EXPECT().
+	utilityContextMock.EXPECT().
 		// ApplyBlock(int64(1), gomock.Any(), gomock.AssignableToTypeOf(emptyTxs), gomock.AssignableToTypeOf(emptyByzValidators)).
 		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(appHash, nil).
 		AnyTimes()
+
+	persistenceContextMock.EXPECT().Commit().Return(nil).AnyTimes()
 
 	return utilityMock
 }
