@@ -15,7 +15,7 @@ func (m *consensusModule) HandleDebugMessage(debugMessage *types.DebugMessage) e
 	case types.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
 		m.printNodeState(debugMessage)
 	case types.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
-		m.triggerNextView(debugMessage)
+		m.TriggerNextView(debugMessage)
 	case types.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
 		m.togglePacemakerManualMode(debugMessage)
 	default:
@@ -59,7 +59,7 @@ func (m *consensusModule) printNodeState(message *types.DebugMessage) {
 	fmt.Printf("\tCONSENSUS STATE: [%s] Node %d is at (Height, Step, Round): (%d, %s, %d)\n", m.logPrefix, state.NodeId, state.Height, StepToString[types_consensus.HotstuffStep(state.Step)], state.Round)
 }
 
-func (m *consensusModule) triggerNextView(message *types.DebugMessage) {
+func (m *consensusModule) TriggerNextView(message *types.DebugMessage) {
 	m.nodeLog("[DEBUG] Triggering next view...")
 
 	if m.Height == 0 || (m.Step == Decide && m.paceMaker.IsManualMode()) {

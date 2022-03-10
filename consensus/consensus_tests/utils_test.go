@@ -103,116 +103,6 @@ func CreateTestConsensusPocketNode(
 	}
 	pocketNode.SetBus(bus)
 
-	// Base persistence mocks
-	// persistenceMock.EXPECT().
-	// 	Stop(gomock.Any()).
-	// 	Do(func(ctx *pcontext.PocketContext) {
-	// 		log.Println("[MOCK] Stop persistence mock")
-	// 	}).
-	// 	AnyTimes()
-
-	// persistenceMock.EXPECT().
-	// 	GetLatestBlockHeight().
-	// 	Do(func() (uint64, error) {
-	// 		log.Println("[MOCK] GetLatestBlockHeight")
-	// 		return uint64(0), fmt.Errorf("[MOCK] GetLatestBlockHeight not implemented yet...")
-	// 	}).
-	// 	AnyTimes()
-
-	// persistenceMock.EXPECT().
-	// 	GetBlockHash(gomock.Any()).
-	// 	Do(func(height uint64) ([]byte, error) {
-	// 		return []byte(strconv.FormatUint(height, 10)), nil
-	// 	}).
-	// 	AnyTimes()
-
-	// Base network module mocks
-
-	// p2pNetworkMock.EXPECT().
-	// 	GetAddrBook().
-	// 	DoAndReturn(func() []*p2p_types.NetworkPeer {
-	// 		log.Println("[MOCK] Network GetNetwork", addrBook)
-	// 		return addrBook
-	// 	}).
-	// 	AnyTimes()
-
-	// networkMock.EXPECT().
-	// 	Stop(gomock.Any()).
-	// 	Do(func(ctx *pcontext.PocketContext) {
-	// 		log.Println("[MOCK] Stop network mock")
-	// 	}).
-	// 	AnyTimes()
-
-	// networkMock.EXPECT().
-	// 	GetNetwork().
-	// 	DoAndReturn(func() p2p_types.Network {
-	// 		return p2pNetworkMock
-	// 	}).
-	// 	AnyTimes()
-
-	// networkMock.EXPECT().
-	// 	Send(gomock.Any(), gomock.Any(), gomock.Any()).
-	// 	Do(func(ctx *pcontext.PocketContext, message *p2p_types.NetworkMessage, address types2.NodeId) {
-	// 		networkMsg, _ := p2p.EncodeNetworkMessage(message)
-	// 		e := types.Event{PocketTopic: types.P2P_SEND_MESSAGE, MessageData: networkMsg}
-	// 		testPocketBus <- e
-	// 	}).
-	// 	AnyTimes()
-
-	// networkMock.EXPECT().
-	// 	// decoder
-	// 	Broadcast(gomock.Any(), gomock.Any()).
-	// 	Do(func(ctx *pcontext.PocketContext, message *p2p_types.NetworkMessage) {
-	// 		networkMsg, _ := p2p.EncodeNetworkMessage(message)
-	// 		e := types.Event{PocketTopic: types.P2P_BROADCAST_MESSAGE, MessageData: networkMsg}
-	// 		testPocketBus <- e
-	// 	}).
-	// 	AnyTimes()
-
-	// Base utility mocks
-
-	// utilityMock.EXPECT().
-	// 	Stop(gomock.Any()).
-	// 	Do(func(*pcontext.PocketContext) {
-	// 		log.Println("[MOCK] Stop utility mock")
-	// 	}).
-	// 	AnyTimes()
-
-	// utilityMock.EXPECT().
-	// 	HandleEvidence(gomock.Any(), gomock.Any()).
-	// 	Do(func(*pcontext.PocketContext, *types_consensus.Evidence) {
-	// 		log.Println("[MOCK] HandleEvidence utility mock")
-	// 	}).
-	// 	AnyTimes()
-
-	// utilityMock.EXPECT().
-	// 	ReapMempool(gomock.Any()).
-	// 	Do(func(*pcontext.PocketContext) {
-	// 		log.Println("[MOCK] ReapMempool utility mock")
-	// 	}).
-	// 	AnyTimes()
-
-	// utilityMock.EXPECT().
-	// 	BeginBlock(gomock.Any()).
-	// 	Do(func(*pcontext.PocketContext) {
-	// 		log.Println("[MOCK] BeginBlock utility mock")
-	// 	}).
-	// 	AnyTimes()
-
-	// utilityMock.EXPECT().
-	// 	DeliverTx(gomock.Any(), gomock.Any()).
-	// 	Do(func(*pcontext.PocketContext, *types_consensus.Transaction) {
-	// 		log.Println("[MOCK] DeliverTx utility mock")
-	// 	}).
-	// 	AnyTimes()
-
-	// utilityMock.EXPECT().
-	// 	EndBlock(gomock.Any()).
-	// 	Do(func(*pcontext.PocketContext) {
-	// 		log.Println("[MOCK] Stop EndBlock mock")
-	// 	}).
-	// 	AnyTimes()
-
 	return pocketNode
 }
 
@@ -221,6 +111,10 @@ func CreateTestConsensusPocketNode(
 // require more effort.
 func GetConsensusNodeState(node *shared.Node) types_consensus.ConsensusNodeState {
 	return reflect.ValueOf(node.GetBus().GetConsensusModule()).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(types_consensus.ConsensusNodeState)
+}
+
+func GetConsensusModImplementation(node *shared.Node) reflect.Value {
+	return reflect.ValueOf(node.GetBus().GetConsensusModule()).Elem()
 }
 
 func TriggerNextView(t *testing.T, node *shared.Node) {
@@ -286,11 +180,11 @@ func WaitForNetworkConsensusMessages(
 	}
 
 	errorMessage := fmt.Sprintf("HotStuff step: %s", types_consensus.HotstuffStep_name[int32(step)])
-	return WaitForNetworkConsensusMessagesInternal(t, testChannel, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, decoder, includeFilter, errorMessage)
+	return waitForNetworkConsensusMessagesInternal(t, testChannel, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, decoder, includeFilter, errorMessage)
 }
 
 // TODO(olshansky): Translate this to use generics.
-func WaitForNetworkConsensusMessagesInternal(
+func waitForNetworkConsensusMessagesInternal(
 	t *testing.T,
 	testChannel modules.EventsChannel,
 	topic types.PocketTopic,
@@ -370,7 +264,6 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *mock_modules.
 			testChannel <- e
 		}).
 		AnyTimes()
-
 	p2pMock.EXPECT().
 		Send(gomock.Any(), gomock.Any(), gomock.Any()).
 		Do(func(addr pcrypto.Address, msg *anypb.Any, topic types.PocketTopic) {

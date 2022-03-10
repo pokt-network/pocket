@@ -2,12 +2,15 @@ package consensus_tests
 
 import (
 	"log"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/pokt-network/pocket/consensus"
+	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func TestTinyPacemakerTimeouts(t *testing.T) {
@@ -108,77 +111,82 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 }
 
 func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
-	// numNodes := 4
-	// configs := GenerateNodeConfigs(numNodes)
+	numNodes := 4
+	configs := GenerateNodeConfigs(t, numNodes)
 
-	// // Start test pocket nodes.
-	// testPocketBus := make(modules.PocketBus, 100)
-	// pocketNodes := CreateTestConsensusPocketNodes(t, configs, testPocketBus)
-	// ctx := context.EmptyPocketContext()
-	// for _, pocketNode := range pocketNodes {
-	// 	go pocketNode.Start(ctx)
-	// }
-	// time.Sleep(10 * time.Millisecond) // Needed to avoid minor race condition if pocketNode has not finished initialization
+	// Create & start test pocket nodes
+	testChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, configs, testChannel)
+	for _, pocketNode := range pocketNodes {
+		go pocketNode.Start()
+	}
+	time.Sleep(10 * time.Millisecond) // Needed to avoid minor race condition if pocketNode has not finished initialization
 
-	// // Set all nodes to the same step and height but different rounds.
-	// testHeight := uint64(3)
-	// testStep := uint64(consensus.NewRound)
-	// leaderId := s_types.NodeId(1)
-	// leader := pocketNodes[leaderId]
-	// for _, pocketNode := range pocketNodes {
-	// 	consensusModImpl := getConsensusModImplementation(pocketNode)
-	// 	consensusModImpl.FieldByName("Height").SetUint(testHeight)
-	// 	consensusModImpl.FieldByName("Step").SetUint(testStep)
-	// 	// consensusModImpl.FieldByName("LeaderId").Set(reflect.ValueOf(nil)) // Leader is not set because the round update should set it appropriately.
-	// }
+	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS.
+	testHeight := uint64(3)
+	testStep := int64(consensus.NewRound)
+	leaderId := types_consensus.NodeId(1)
+	leader := pocketNodes[leaderId]
+	for _, pocketNode := range pocketNodes {
+		consensusModImpl := GetConsensusModImplementation(pocketNode)
+		consensusModImpl.FieldByName("Height").SetUint(testHeight)
+		consensusModImpl.FieldByName("Step").SetInt(testStep)
+		// consensusModImpl.FieldByName("LeaderId").Set(reflect.ValueOf(nil)) // Leader is not set because the round update should set it appropriately.
+	}
 
-	// header := &types2.BlockHeaderConsensusTemp{
-	// 	Height: int64(testHeight),
-	// 	Hash:   "new_hash",
+	header := &types_consensus.BlockHeaderConsensusTemp{
+		Height: int64(testHeight),
+		// Hash:   "new_hash",
 
-	// 	LastBlockHash:   "prev_hash",
-	// 	ProposerAddress: []byte(leader.Address),
-	// 	ProposerId:      uint32(leaderId),
-	// }
-	// leaderBlock := &types2.BlockConsensusTemp{
-	// 	BlockHeader:       header,
-	// 	Transactions:      make([]*types2.Transaction, 0),
-	// 	ConsensusEvidence: make([]*types2.Evidence, 0),
-	// }
+		LastBlockHash:   "prev_hash",
+		ProposerAddress: []byte(leader.Address),
+		// ProposerId:      uint32(leaderId),
+	}
+	leaderBlock := &types_consensus.BlockConsensusTemp{
+		BlockHeader: header,
+		// Transactions:      make([]*types_consensus.Transaction, 0),
+		// ConsensusEvidence: make([]*types_consensus.Evidence, 0),
+	}
 
-	// leaderConsensusMod := getConsensusModImplementation(leader)
-	// leaderConsensusMod.FieldByName("Block").Set(reflect.ValueOf(leaderBlock))
+	leaderConsensusMod := GetConsensusModImplementation(leader)
+	leaderConsensusMod.FieldByName("Block").Set(reflect.ValueOf(leaderBlock))
 
-	// leaderRound := uint64(6)
-	// // Set the leader to be in the highest round.
-	// getConsensusModImplementation(pocketNodes[leaderId]).FieldByName("Round").SetUint(leaderRound)
-	// getConsensusModImplementation(pocketNodes[2]).FieldByName("Round").SetUint(uint64(2))
-	// getConsensusModImplementation(pocketNodes[3]).FieldByName("Round").SetUint(uint64(3))
-	// getConsensusModImplementation(pocketNodes[4]).FieldByName("Round").SetUint(uint64(4))
+	leaderRound := uint64(6)
+	// Set the leader to be in the highest round.
+	GetConsensusModImplementation(pocketNodes[0]).FieldByName("Round").SetUint(uint64(4))
+	GetConsensusModImplementation(pocketNodes[leaderId]).FieldByName("Round").SetUint(leaderRound)
+	GetConsensusModImplementation(pocketNodes[2]).FieldByName("Round").SetUint(uint64(2))
+	GetConsensusModImplementation(pocketNodes[3]).FieldByName("Round").SetUint(uint64(3))
 
-	// prepareProposeMessage := &consensus.HotstuffMessage{
-	// 	Type:      consensus.ProposeMessageType,
-	// 	Height:    consensus.BlockHeight(testHeight),
-	// 	Step:      consensus.Prepare,
-	// 	Round:     consensus.Round(leaderRound),
-	// 	Block:     leaderBlock,
-	// 	JustifyQC: nil,
-	// 	Sender:    leaderId,
-	// }
-	// P2PBroadcast(pocketNodes, prepareProposeMessage) // Broadcast the prepare proposal.
+	prepareProposeMessage := &types_consensus.HotstuffMessage{
+		Type:          consensus.Propose,
+		Height:        testHeight,
+		Step:          consensus.Prepare,
+		Round:         leaderRound,
+		Block:         leaderBlock,
+		Justification: nil,
+	}
+	anyMsg, err := anypb.New(prepareProposeMessage)
+	require.NoError(t, err)
+	consensusMessage := &types_consensus.ConsensusMessage{
+		Type:    consensus.HotstuffMessage,
+		Message: anyMsg,
+	}
+	P2PBroadcast(t, pocketNodes, consensusMessage) // Broadcast the prepare proposal.
 
-	// // numNodes-1 because one of the messages is a self-proposal.
-	// WaitForNetworkConsensusMessage(t, testPocketBus, types.P2P_SEND_MESSAGE, consensus.Prepare, numNodes-1, 2000)
-	// leaderConsensusMod.FieldByName("LeaderId").Set(reflect.ValueOf(&leaderId))
+	// numNodes-1 because one of the messages is a self-proposal.
+	_, err = WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Propose, numNodes-1, 2000)
+	require.NoError(t, err)
+	leaderConsensusMod.FieldByName("LeaderId").Set(reflect.ValueOf(&leaderId))
 
-	// // Check that the leader is in the latest round.
-	// for _, pocketNode := range pocketNodes {
-	// 	nodeState := GetConsensusNodeState(pocketNode)
-	// 	require.Equal(t, uint8(consensus.PreCommit), nodeState.Step)
-	// 	require.Equal(t, uint64(3), nodeState.Height)
-	// 	require.Equal(t, uint8(6), nodeState.Round)
-	// 	require.Equal(t, leaderId, nodeState.LeaderId)
-	// }
+	// Check that the leader is in the latest round.
+	for _, pocketNode := range pocketNodes {
+		nodeState := GetConsensusNodeState(pocketNode)
+		require.Equal(t, uint8(consensus.PreCommit), nodeState.Step)
+		require.Equal(t, uint64(3), nodeState.Height)
+		require.Equal(t, uint8(6), nodeState.Round)
+		require.Equal(t, leaderId, nodeState.LeaderId)
+	}
 }
 
 /*
