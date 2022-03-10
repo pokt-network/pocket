@@ -30,8 +30,9 @@ func GetValToIdMap(valMap types.ValMap) (ValToIdMap, IdToValMap) {
 	valToIdMap := make(ValToIdMap, len(valMap))
 	idToValMap := make(IdToValMap, len(valMap))
 	for i, addr := range valAddresses {
-		valToIdMap[addr] = NodeId(i + 1)
-		idToValMap[NodeId(i+1)] = addr
+		nodeId := NodeId(i + 1)
+		valToIdMap[addr] = nodeId
+		idToValMap[nodeId] = addr
 	}
 
 	return valToIdMap, idToValMap

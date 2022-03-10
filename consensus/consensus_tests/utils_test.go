@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"sort"
 	"testing"
 	"time"
 
@@ -87,6 +88,11 @@ func CreateTestConsensusPocketNodes(
 	testChannel modules.EventsChannel,
 ) (pocketNodes IdToNodeMapping) {
 	pocketNodes = make(IdToNodeMapping, len(configs))
+	// TODO(design): The order here is important in order for NodeId to be set corresctly below.
+	// This logic will need to change once proper leader election is implemented.
+	sort.Slice(configs, func(i, j int) bool {
+		return configs[i].PrivateKey.Address().String() < configs[j].PrivateKey.Address().String()
+	})
 	for i, cfg := range configs {
 		pocketNode := CreateTestConsensusPocketNode(t, cfg, testChannel)
 		// TODO(olshansky): Figure this part out.
@@ -196,7 +202,7 @@ func WaitForNetworkConsensusMessages(
 		return hotstuffMessage.Type == hotstuffMsgType && hotstuffMessage.Step == step
 	}
 
-	errorMessage := fmt.Sprintf("HotStuff step: %s", types_consensus.HotstuffStep_name[int32(step)])
+	errorMessage := fmt.Sprintf("HotStuff step: %s, type: %s", types_consensus.HotstuffStep_name[int32(step)], types_consensus.HotstuffMessageType_name[int32(hotstuffMsgType)])
 	return waitForNetworkConsensusMessagesInternal(t, testChannel, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, decoder, includeFilter, errorMessage)
 }
 

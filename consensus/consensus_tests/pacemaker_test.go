@@ -181,18 +181,18 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	P2PBroadcast(t, pocketNodes, consensusMessage)
 
 	// numNodes-1 because one of the messages is a self-proposal that is not passed through the network
-	_, err = WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Vote, numNodes, 2000)
+	_, err = WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Vote, numNodes-1, 2000)
 	require.NoError(t, err)
 
 	time.Sleep(50 * time.Millisecond)
 	// Check that the leader is in the latest round.
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-		fmt.Println("OLSH", nodeId, nodeState.Step, leaderId)
-		if nodeId == leaderId {
+		fmt.Println("OLSH", leaderId, nodeId, nodeState.Step)
+		if nodeId != leaderId {
 			require.Equal(t, uint8(consensus.PreCommit), nodeState.Step)
 		} else {
-			// require.Equal(t, uint8(consensus.PreCommit), nodeState.Step)
+			require.Equal(t, uint8(consensus.Prepare), nodeState.Step)
 		}
 		require.Equal(t, uint64(3), nodeState.Height)
 		require.Equal(t, uint8(6), nodeState.Round)

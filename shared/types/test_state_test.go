@@ -34,7 +34,7 @@ func genesisJson() string {
 			"max_block_bytes": 4000000,
 			"max_transaction_bytes": 100000,
 			"vrf_key_refresh_freq_block": 5,
-			"vrf_key_validity_block": 5,
+			"vrf_key_validity_block": 5
 		},
 		"validators": [
 		  {
