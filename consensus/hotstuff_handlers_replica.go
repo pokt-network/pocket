@@ -24,12 +24,6 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 		return
 	}
 
-	if valid, reason := m.isValidBlock(msg.Block); !valid {
-		m.nodeLogError("Invalid block in PREPARE message", fmt.Errorf(reason))
-		m.paceMaker.InterruptRound()
-		return
-	}
-
 	if err := m.applyBlock(msg.Block); err != nil {
 		m.nodeLogError("Could not apply the block", err)
 		m.paceMaker.InterruptRound()

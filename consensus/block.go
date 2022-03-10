@@ -9,7 +9,13 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 )
 
-// TODO(olshansky): Implement this properly....
+// TODO(integration): Temporary vars for integration purposes.
+var (
+	maxTxBytes        = 90000             // TODO(olshansky): Move this to config.json.
+	lastByzValidators = make([][]byte, 0) // TODO(olshansky): Retrieve this from persistence
+)
+
+// TODO(olshansky): Sync with Andrew on the type of validation we need here.
 func (m *consensusModule) isValidBlock(block *types_consensus.BlockConsensusTemp) (bool, string) {
 	if block == nil {
 		return false, "block is nil"
@@ -22,22 +28,18 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 		return nil, err
 	}
 
-	maxTxBytes := 90000                    // TODO(olshansky): Move this to config.json.
-	lastByzValidators := make([][]byte, 0) // TODO(olshansky): Retrieve this from persistence
 	txs, err := m.utilityContext.GetTransactionsForProposal(m.privateKey.Address(), maxTxBytes, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}
 
-	height := int64(m.Height)
-	proposer := m.privateKey.Address()
-	appHash, err := m.utilityContext.ApplyBlock(height, proposer, txs, lastByzValidators)
+	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}
 
-	header := &types_consensus.BlockHeaderConsensusTemp{
-		Height:            height,
+	blockHeader := &types_consensus.BlockHeaderConsensusTemp{
+		Height:            int64(m.Height),
 		Hash:              appHash,
 		NumTxs:            uint32(len(txs)),
 		LastBlockHash:     types.GetTestState(nil).AppHash,
@@ -46,7 +48,7 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 	}
 
 	block := &types_consensus.BlockConsensusTemp{
-		BlockHeader:  header,
+		BlockHeader:  blockHeader,
 		Transactions: txs,
 	}
 
@@ -58,16 +60,13 @@ func (m *consensusModule) applyBlock(block *types_consensus.BlockConsensusTemp) 
 		return err
 	}
 
-	lastByzValidators := make([][]byte, 0) // TODO(olshansky): Retrieve this from persistence
-	height := int64(m.Height)
-	proposer := m.privateKey.Address()
-
-	appHash, err := m.utilityContext.ApplyBlock(height, proposer, block.Transactions, lastByzValidators)
+	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), block.Transactions, lastByzValidators)
 	if err != nil {
 		return err
 	}
+
 	if !bytes.Equal(block.BlockHeader.Hash, appHash) {
-		return fmt.Errorf("block hash does not match app hash: %s != %s", hex.EncodeToString(block.BlockHeader.Hash), hex.EncodeToString(appHash))
+		return fmt.Errorf("block hash being applied does not equal that from utility: %s != %s", hex.EncodeToString(block.BlockHeader.Hash), hex.EncodeToString(appHash))
 	}
 
 	return nil
@@ -90,7 +89,7 @@ func (m *consensusModule) updateUtilityContext() error {
 }
 
 func (m *consensusModule) commitBlock(block *types_consensus.BlockConsensusTemp) error {
-	m.nodeLog(fmt.Sprintf("COMMITTING BLOCK AT HEIGHT %d WITH %d TRANSACTIONS", m.Height, len(block.Transactions)))
+	m.nodeLog(fmt.Sprintf("🧱🧱🧱 Committing block at height %d with %d transactions 🧱🧱🧱", m.Height, len(block.Transactions)))
 
 	if err := m.utilityContext.GetPersistanceContext().Commit(); err != nil {
 		return err

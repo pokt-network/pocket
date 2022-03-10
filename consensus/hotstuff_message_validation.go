@@ -45,6 +45,10 @@ func (m *consensusModule) isValidProposal(msg *types_consensus.HotstuffMessage) 
 		return false, "Proposal is not valid in the PREPARE step"
 	}
 
+	if valid, reason := m.isValidBlock(msg.Block); !valid {
+		return false, fmt.Sprintf("Invalid block in message: %s", reason)
+	}
+
 	// TODO(discuss): Discuss the point below.
 	// A nil QC implies a successfull CommitQC or TimeoutQC, which havebeen ommitted intentionally since they are
 	// not needed for consensus validity. However, if a QC is specified, it must be valid.
