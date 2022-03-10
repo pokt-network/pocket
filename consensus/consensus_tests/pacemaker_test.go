@@ -1,6 +1,7 @@
 package consensus_tests
 
 import (
+	"log"
 	"testing"
 	"time"
 
@@ -9,7 +10,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPacemakerTimeouts(t *testing.T) {
+func TestTinyPacemakerTimeouts(t *testing.T) {
+	// There can be race conditions related to having a small paceMaker time out, so we skip this test
+	// when `failOnExtraMessages` is set to true to simplify things for now. However, we still validate
+	// that the rounds are incremented as expected when `failOnExtraMessages` is false.
+	if failOnExtraMessages == true {
+		log.Println("[DEBUG] Skipping TestPacemakerTimeouts because `failOnExtraMessages` is set to true.")
+		t.Skip()
+	}
+
 	// Test configs
 	numNodes := 4
 	paceMakerTimeoutMsec := uint64(50) // Set a very small pacemaker timeout
