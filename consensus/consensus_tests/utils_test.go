@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
+	"log"
 	"reflect"
 	"testing"
 	"time"
@@ -30,9 +31,23 @@ import (
 // but guarantees more correctness.
 var failOnExtraMessages bool
 
+// TODO(integration): These are temporary variables used in the prototype
+// integration phase that will need to be parameterized later once the test
+// framework design matures.
+var maxTxBytes = 90000
+var emptyByzValidators = make([][]byte, 0)
+var appHash []byte
+var emptyTxs = make([][]byte, 0)
+
 // Initialize certain unit test configurations on startup.
 func init() {
 	flag.BoolVar(&failOnExtraMessages, "failOnExtraMessages", false, "Fail if unexpected additional messages are received")
+
+	var err error
+	appHash, err = hex.DecodeString("31")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 }
 
 type IdToNodeMapping map[types_consensus.NodeId]*shared.Node
@@ -75,7 +90,7 @@ func CreateTestConsensusPocketNodes(
 	for i, cfg := range configs {
 		pocketNode := CreateTestConsensusPocketNode(t, cfg, testChannel)
 		// TODO(olshansky): Figure this part out.
-		pocketNodes[types_consensus.NodeId(i)] = pocketNode
+		pocketNodes[types_consensus.NodeId(i+1)] = pocketNode
 	}
 	return
 }
@@ -91,6 +106,8 @@ func CreateTestConsensusPocketNode(
 	consensusMod, err := consensus.Create(cfg)
 	require.NoError(t, err)
 
+	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
+	// but note that they will need to be customized on a per test basis.
 	persistenceMock := basePersistenceMock(t, testChannel)
 	p2pMock := baseP2PMock(t, testChannel)
 	utilityMock := baseUtilityMock(t, testChannel)
@@ -245,7 +262,6 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *mock_modules.Mo
 	ctrl := gomock.NewController(t)
 	persistenceMock := mock_modules.NewMockPersistenceModule(ctrl)
 
-	// Basic NOOP operations
 	persistenceMock.EXPECT().Start().Do(func() {}).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
 
@@ -284,25 +300,18 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *mock_modules.MockUt
 	utilityContextMock := mock_modules.NewMockUtilityContext(ctrl)
 	persistenceContextMock := mock_modules.NewMockPersistenceContext(ctrl)
 
-	// TODO(integration): This is only valid while we are still integrating and will likely break soon...
-	emptyByzValidators := make([][]byte, 0)
-	// emptyTxs := make([][]byte, 0)
-
-	appHash, err := hex.DecodeString("31")
-	require.NoError(t, err)
-
 	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
 	utilityMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
 	utilityMock.EXPECT().
-		NewContext(int64(1)).
+		// NewContext(int64(1)).
+		NewContext(gomock.Any()).
 		Return(utilityContextMock, nil).
-		// Times(4)
-		AnyTimes()
+		MaxTimes(4)
 
 	utilityContextMock.EXPECT().GetPersistanceContext().Return(persistenceContextMock).AnyTimes()
 	utilityContextMock.EXPECT().ReleaseContext().Return().AnyTimes()
 	utilityContextMock.EXPECT().
-		GetTransactionsForProposal(gomock.Any(), 90000, gomock.AssignableToTypeOf(emptyByzValidators)).
+		GetTransactionsForProposal(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
 		Return(make([][]byte, 0), nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().

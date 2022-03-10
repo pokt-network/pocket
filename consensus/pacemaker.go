@@ -109,20 +109,25 @@ func (p *paceMaker) ShouldHandleMessage(m *types_consensus.HotstuffMessage) (boo
 	}
 
 	// Everything checks out!
+	fmt.Println("OLSH", m.Step, p.consensusMod.Step)
 	if m.Height == p.consensusMod.Height && m.Step == p.consensusMod.Step && m.Round == p.consensusMod.Round {
 		return true, "Hotstuff message received is of the right height, step and round"
 	}
 
 	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
 	if m.Round > p.consensusMod.Round || (m.Round == p.consensusMod.Round && m.Step > p.consensusMod.Step) {
+		reason := fmt.Sprintf("Pacemaker catching up the node's (height, step, round) FROM (%d, %s, %d) TO (%d, %s, %d).", p.consensusMod.Height, StepToString[p.consensusMod.Step], p.consensusMod.Round, m.Height, StepToString[m.Step], m.Round)
+
 		p.consensusMod.Step = m.Step
 		p.consensusMod.Round = m.Round
+
 		// TODO(olshansky): TESTS for this. When we catch up to a later step, the leader is still the same.
 		// However, when we catch up to a later round, the leader at the same height will be different.
-		if p.consensusMod.Round != m.Round {
+		if p.consensusMod.Round != m.Round || p.consensusMod.LeaderId == nil {
 			p.consensusMod.electNextLeader(m)
 		}
-		return true, fmt.Sprintf("Pacemaker catching up the node's (height, step, round) FROM (%d, %s, %d) TO (%d, %s, %d).", p.consensusMod.Height, StepToString[p.consensusMod.Step], p.consensusMod.Round, m.Height, StepToString[m.Step], m.Round)
+
+		return true, reason
 	}
 
 	return false, "UNHANDLED PACEMAKER CHECK"

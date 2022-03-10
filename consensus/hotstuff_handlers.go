@@ -65,7 +65,8 @@ func (m *consensusModule) handleHotstuffMessage(msg *types_consensus.HotstuffMes
 	}
 
 	// Liveness & safety checks
-	if shouldHandle, reason := m.paceMaker.ShouldHandleMessage(msg); !shouldHandle {
+	shouldHandle, reason := m.paceMaker.ShouldHandleMessage(msg)
+	if !shouldHandle {
 		// If a replica is not a leader for this round, but has already determined a leader,
 		// and continues to receive NewRound messages, we avoid logging the "message discard"
 		// because it creates unnecessary spam.
@@ -74,9 +75,10 @@ func (m *consensusModule) handleHotstuffMessage(msg *types_consensus.HotstuffMes
 		}
 		return
 	}
+	m.nodeLog(fmt.Sprintf("[DEBUG] Handling Hotstuff message w/ reason: %s", reason))
 
 	// Need to execute leader election if there is no leader and we are in a new round.
-	if msg.Step == NewRound && m.LeaderId == nil {
+	if m.Step == NewRound && m.LeaderId == nil {
 		m.electNextLeader(msg)
 	}
 
