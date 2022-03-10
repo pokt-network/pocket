@@ -40,7 +40,7 @@ func (m *consensusModule) getQuorumCertificateForStep(step types_consensus.Hotst
 	if ok, reason := m.isOptimisticThresholdMet(len(pss)); !ok {
 		return nil, fmt.Errorf("did not receive enough partial signature; %s", reason)
 	}
-	thresholdSig, err := GetThresholdSignature(pss)
+	thresholdSig, err := getThresholdSignature(pss)
 	if err != nil {
 		return nil, err
 	}
@@ -112,4 +112,15 @@ func qcToHotstuffMessage(qc *types_consensus.QuorumCertificate) *types_consensus
 			QuorumCertificate: qc,
 		},
 	}
+}
+
+func getThresholdSignature(
+	partialSigs []*types_consensus.PartialSignature,
+) (*types_consensus.ThresholdSignature, error) {
+	thresholdSig := &types_consensus.ThresholdSignature{}
+	thresholdSig.Signatures = make([]*types_consensus.PartialSignature, len(partialSigs))
+	for i, parpartialSig := range partialSigs {
+		thresholdSig.Signatures[i] = parpartialSig
+	}
+	return thresholdSig, nil
 }
