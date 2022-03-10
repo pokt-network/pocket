@@ -2,8 +2,10 @@ package consensus
 
 import (
 	"fmt"
+	"log"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
@@ -79,4 +81,72 @@ func (m *consensusModule) isValidProposal(msg *types_consensus.HotstuffMessage) 
 	}
 
 	return false, "UNHANDELED PROPOSAL VALIDATION CHECK"
+}
+
+// TODO(olshansky): Check basic message metadata for validity (hash, size, etc)
+func (m *consensusModule) isMessageBasicValid(message *types_consensus.HotstuffMessage) (bool, string) {
+	return true, "basic message metadata is valid"
+}
+
+func (m *consensusModule) isQuorumCertificateValid(qc *types_consensus.QuorumCertificate) (bool, string) {
+	if qc == nil {
+		return false, "QC being validated is nil"
+	}
+
+	if qc.Block == nil {
+		return false, "QC must contain a non nil block"
+	}
+
+	if qc.ThresholdSignature == nil || len(qc.ThresholdSignature.Signatures) == 0 {
+		return false, "QC must contains a non nil threshold signature"
+	}
+
+	msgToJustify := qcToHotstuffMessage(qc)
+	valMap := types.GetTestState(nil).ValidatorMap
+	for _, partialSig := range qc.ThresholdSignature.Signatures {
+		validator, ok := valMap[partialSig.Address]
+		if !ok {
+			// TODO(olshansky): Remove this check. Even if we can't validate some partial signature, we could still meet byzantine safety.
+			return false, fmt.Sprintf("Validator %d not found in the ValMap but a partial sig was signed by them.", m.ValAddrToIdMap[partialSig.Address])
+		}
+		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
+		// just serialize `Message` once and verify each signature without reserializing every time.
+		if !isSignatureValid(msgToJustify, validator.PublicKey, partialSig.Signature) {
+			return false, fmt.Sprintf("QC invalid because partial signature from the following node is invalid: %d\n", m.ValAddrToIdMap[partialSig.Address])
+		}
+	}
+
+	return true, "QC is valid"
+}
+
+func isSignatureValid(m *types_consensus.HotstuffMessage, pubKey crypto.PublicKey, signature []byte) bool {
+	bytesToVerify, err := getSignableBytes(m)
+	if err != nil {
+		log.Println("[WARN] Error getting bytes to verify:", err)
+		return false
+	}
+	return pubKey.VerifyBytes(bytesToVerify, signature)
+}
+
+func qcToHotstuffMessage(qc *types_consensus.QuorumCertificate) *types_consensus.HotstuffMessage {
+	return &types_consensus.HotstuffMessage{
+		Height: qc.Height,
+		Step:   qc.Step,
+		Round:  qc.Round,
+		Block:  qc.Block,
+		Justification: &types_consensus.HotstuffMessage_QuorumCertificate{
+			QuorumCertificate: qc,
+		},
+	}
+}
+
+func getThresholdSignature(
+	partialSigs []*types_consensus.PartialSignature,
+) (*types_consensus.ThresholdSignature, error) {
+	thresholdSig := &types_consensus.ThresholdSignature{}
+	thresholdSig.Signatures = make([]*types_consensus.PartialSignature, len(partialSigs))
+	for i, parpartialSig := range partialSigs {
+		thresholdSig.Signatures[i] = parpartialSig
+	}
+	return thresholdSig, nil
 }

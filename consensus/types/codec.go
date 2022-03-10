@@ -62,11 +62,3 @@ func ProtoHash(m proto.Message) string {
 	}
 	return base64.StdEncoding.EncodeToString(b)
 }
-
-func ProtoMarshall(m proto.Message) []byte {
-	b, err := proto.Marshal(m)
-	if err != nil {
-		log.Fatalf("Could not marshal proto message: %v", err)
-	}
-	return b
-}

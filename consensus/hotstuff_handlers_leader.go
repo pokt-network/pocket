@@ -4,7 +4,10 @@ import (
 	"fmt"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/types"
 )
+
+const ByzantineThreshold float64 = float64(2) / float64(3)
 
 var _ HotstuffMessageHandler = &HotstuffLeaderMessageHandler{}
 
@@ -68,7 +71,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	}
 	m.nodeLog("Received enough PREPARE votes!")
 
-	prepareQC, err := m.getQuorumCertificateForStep(Prepare)
+	prepareQC, err := m.getQuorumCertificate(m.Height, Prepare, m.Round)
 	if err != nil {
 		m.nodeLogError("Could not get QC for PREPARE step", err)
 		return // TODO(olshansky): Should we interrupt the round here?
@@ -105,7 +108,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 	}
 	m.nodeLog("received enough PRECOMMIT votes!")
 
-	preCommitQC, err := m.getQuorumCertificateForStep(PreCommit)
+	preCommitQC, err := m.getQuorumCertificate(m.Height, PreCommit, m.Round)
 	if err != nil {
 		m.nodeLogError("Could not get QC for PRECOMMIT step", err)
 		return // TODO(olshansky): Should we interrupt the round here?
@@ -142,7 +145,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	}
 	m.nodeLog("Received enough COMMIT votes!")
 
-	commitQC, err := m.getQuorumCertificateForStep(Commit)
+	commitQC, err := m.getQuorumCertificate(m.Height, Commit, m.Round)
 	if err != nil {
 		m.nodeLogError("Could not get QC for COMMIT step.", err)
 		return // TODO(olshansky): Should we interrupt the round here?
@@ -180,4 +183,65 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusMod
 func (m *consensusModule) hotstuffLeaderBroadcast(msg *types_consensus.HotstuffMessage) {
 	m.nodeLog(fmt.Sprintf("Broadcasting %s message.", StepToString[msg.Step]))
 	m.broadcastToNodes(msg, HotstuffMessage)
+}
+
+func (m *consensusModule) didReceiveEnoughMessageForStep(step types_consensus.HotstuffStep) (bool, string) {
+	return m.isOptimisticThresholdMet(len(m.MessagePool[step]))
+}
+
+func (m *consensusModule) isOptimisticThresholdMet(n int) (bool, string) {
+	valMap := types.GetTestState(nil).ValidatorMap
+	return float64(n) > ByzantineThreshold*float64(len(valMap)), fmt.Sprintf("byzantine safety check: (%d > %.2f?)", n, ByzantineThreshold*float64(len(valMap)))
+}
+
+func (m *consensusModule) getQuorumCertificate(height uint64, step types_consensus.HotstuffStep, round uint64) (*types_consensus.QuorumCertificate, error) {
+	var pss []*types_consensus.PartialSignature
+	for _, msg := range m.MessagePool[step] {
+		// TODO(olshansky): Add tests for this
+		if msg.GetPartialSignature() == nil {
+			m.nodeLog(fmt.Sprintf("[WARN] No partial signature found for step %s which should not happen...", StepToString[step]))
+			continue
+		}
+		// TODO(olshansky): Add tests for this
+		if msg.Height != height || msg.Round != round || msg.Step != step {
+			m.nodeLog(fmt.Sprintf("[WARN] Message in pool does not match (height, step, round) of QC being generated; %d, %s, %d", height, StepToString[step], round))
+			continue
+		}
+		ps := msg.GetPartialSignature()
+
+		if ps.Signature == nil || len(ps.Address) == 0 {
+			m.nodeLog(fmt.Sprintf("[WARN] Partial signature is incomplete for step %s which should not happen...", StepToString[step]))
+			continue
+		}
+		pss = append(pss, msg.GetPartialSignature())
+	}
+
+	if ok, reason := m.isOptimisticThresholdMet(len(pss)); !ok {
+		return nil, fmt.Errorf("did not receive enough partial signature; %s", reason)
+	}
+
+	thresholdSig, err := getThresholdSignature(pss)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types_consensus.QuorumCertificate{
+		Height:             m.Height,
+		Step:               step,
+		Round:              m.Round,
+		Block:              m.Block,
+		ThresholdSignature: thresholdSig,
+	}, nil
+}
+
+func (m *consensusModule) findHighQC(step types_consensus.HotstuffStep) (qc *types_consensus.QuorumCertificate) {
+	for _, m := range m.MessagePool[step] {
+		if m.GetQuorumCertificate() == nil {
+			continue
+		}
+		if qc == nil || m.GetQuorumCertificate().Height > qc.Height {
+			qc = m.GetQuorumCertificate()
+		}
+	}
+	return
 }

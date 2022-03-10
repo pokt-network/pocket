@@ -6,6 +6,7 @@ import (
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"google.golang.org/protobuf/proto"
 )
 
 func CreateProposeMessage(
@@ -26,6 +27,7 @@ func CreateProposeMessage(
 		Justification: nil, // QC is set below if it is non-nil
 	}
 
+	// TODO(olshansky): Should we add a check to return an error if qc is nil and the step is not NewRound?
 	if qc != nil {
 		msg.Justification = &types_consensus.HotstuffMessage_QuorumCertificate{
 			QuorumCertificate: qc,
@@ -63,15 +65,6 @@ func CreateVoteMessage(
 	return msg, nil
 }
 
-func isSignatureValid(m *types_consensus.HotstuffMessage, pubKey crypto.PublicKey, signature []byte) bool {
-	bytesToVerify, err := getSignableBytes(m)
-	if err != nil {
-		log.Println("[WARN] Error getting bytes to verify:", err)
-		return false
-	}
-	return pubKey.VerifyBytes(bytesToVerify, signature)
-}
-
 func getMessageSignature(m *types_consensus.HotstuffMessage, privKey crypto.PrivateKey) []byte {
 	bytesToSign, err := getSignableBytes(m)
 	if err != nil {
@@ -85,17 +78,13 @@ func getMessageSignature(m *types_consensus.HotstuffMessage, privKey crypto.Priv
 	return signature
 }
 
+// Signature should only be over a subset of the fields in a HotstuffMessage
 func getSignableBytes(m *types_consensus.HotstuffMessage) ([]byte, error) {
-	signableStruct := struct {
-		Step   types_consensus.HotstuffStep `json:"step"`
-		Height uint64                       `json:"height"`
-		Round  uint64                       `json:"round"`
-		Block  []byte                       `json:"block"`
-	}{
-		m.Step,
-		m.Height,
-		m.Round,
-		types_consensus.ProtoMarshall(m.Block),
+	msgToSign := &types_consensus.HotstuffMessage{
+		Height: m.Height,
+		Step:   m.Step,
+		Round:  m.Round,
+		Block:  m.Block,
 	}
-	return types_consensus.GobEncode(signableStruct)
+	return proto.Marshal(msgToSign)
 }
