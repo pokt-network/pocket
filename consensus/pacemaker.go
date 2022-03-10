@@ -109,7 +109,6 @@ func (p *paceMaker) ShouldHandleMessage(m *types_consensus.HotstuffMessage) (boo
 	}
 
 	// Everything checks out!
-	fmt.Println("OLSH", m.Step, p.consensusMod.Step)
 	if m.Height == p.consensusMod.Height && m.Step == p.consensusMod.Step && m.Round == p.consensusMod.Round {
 		return true, "Hotstuff message received is of the right height, step and round"
 	}

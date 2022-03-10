@@ -38,7 +38,7 @@ func (m *consensusModule) GetNodeState() types_consensus.ConsensusNodeState {
 	}
 }
 
-func (m *consensusModule) resetToGenesis(message *types.DebugMessage) {
+func (m *consensusModule) resetToGenesis(_ *types.DebugMessage) {
 	m.nodeLog("[DEBUG] Resetting to genesis...")
 
 	m.Height = 0
@@ -53,12 +53,12 @@ func (m *consensusModule) resetToGenesis(message *types.DebugMessage) {
 	m.clearMessagesPool()
 }
 
-func (m *consensusModule) printNodeState(message *types.DebugMessage) {
+func (m *consensusModule) printNodeState(_ *types.DebugMessage) {
 	state := m.GetNodeState()
 	log.Printf("\t[DEBUG] NODE STATE: [%s] Node %d is at (Height, Step, Round): (%d, %s, %d)\n", m.logPrefix, state.NodeId, state.Height, StepToString[types_consensus.HotstuffStep(state.Step)], state.Round)
 }
 
-func (m *consensusModule) TriggerNextView(message *types.DebugMessage) {
+func (m *consensusModule) TriggerNextView(_ *types.DebugMessage) {
 	m.nodeLog("[DEBUG] Triggering next view...")
 
 	if m.Height == 0 || (m.Step == Decide && m.paceMaker.IsManualMode()) {
@@ -72,7 +72,7 @@ func (m *consensusModule) TriggerNextView(message *types.DebugMessage) {
 	}
 }
 
-func (m *consensusModule) togglePacemakerManualMode(message *types.DebugMessage) {
+func (m *consensusModule) togglePacemakerManualMode(_ *types.DebugMessage) {
 	newMode := !m.paceMaker.IsManualMode()
 	if newMode {
 		m.nodeLog("[DEBUG] Toggling Pacemaker mode to MANUAL")

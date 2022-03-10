@@ -56,7 +56,7 @@ var leaderMessageMapper map[types_consensus.HotstuffStep]func(*consensusModule, 
 }
 
 func (m *consensusModule) handleHotstuffMessage(msg *types_consensus.HotstuffMessage) {
-	// TODO(olshansky): How can we add the `senderId` back in here for debugging purposes?
+	// TODO(olshansky): How can we inject the nodeId of the source address here?
 	m.nodeLog(fmt.Sprintf("[DEBUG] (%s->%d) - Height: %d; Type: %s; Round: %d.", "???", m.NodeId, msg.Height, StepToString[msg.Step], msg.Round))
 
 	// Basic metadata checks
@@ -88,6 +88,7 @@ func (m *consensusModule) handleHotstuffMessage(msg *types_consensus.HotstuffMes
 		replicaMessageMapper[msg.Step](m, msg)
 		return
 	}
+	// Leader only logic below
 
 	// Discard messages with invalid partial signatures before storing it in the leader's consensus mempool
 	if validPartialSig, reason := m.isValidPartialSignature(msg); !validPartialSig {

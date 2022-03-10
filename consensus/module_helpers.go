@@ -1,7 +1,6 @@
 package consensus
 
 import (
-	"fmt"
 	"log"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
@@ -53,7 +52,6 @@ func (m *consensusModule) sendToNode(message proto.Message, messageType types_co
 	}
 
 	addr := crypto.AddressFromString(m.IdToValAddrMap[destNode])
-	fmt.Println("OLSH BEFORE", destNode, addr)
 	if err := m.GetBus().GetP2PModule().Send(addr, any, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError("Error broadcasting message:", err)
 		return

@@ -55,7 +55,6 @@ func (n *network) NetworkBroadcast(data []byte) error {
 
 func (n *network) NetworkSend(data []byte, address pcrypto.Address) error {
 	for _, peer := range n.AddrBook {
-		fmt.Println("OLSH HERE", peer.PublicKey.Address(), address.String())
 		// TODO(team): If the address book is a map instead of a list, we wouldn't have to do this loop.
 		if address.String() != peer.PublicKey.Address().String() {
 			continue

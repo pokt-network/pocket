@@ -49,7 +49,5 @@ func AddressFromString(s string) Address {
 	if err != nil {
 		log.Fatal("Should never fail on decoding an address from string: ", err)
 	}
-	// *a = bytes
-	// fmt.Println("OLSH HERE2222", a)
 	return Address(bytes)
 }
