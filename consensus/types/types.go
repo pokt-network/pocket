@@ -8,8 +8,8 @@ import (
 
 type NodeId uint64
 
-type ValToIdMap map[string]NodeId // Mapping from hex encoded address to an integer node id.
-type IdToValMap map[NodeId]string // Mapping from node id to a hex encoded string address.
+type ValAddrToIdMap map[string]NodeId // Mapping from hex encoded address to an integer node id.
+type IdToValAddrMap map[NodeId]string // Mapping from node id to a hex encoded string address.
 
 type ConsensusNodeState struct {
 	NodeId   NodeId
@@ -20,15 +20,15 @@ type ConsensusNodeState struct {
 	LeaderId NodeId
 }
 
-func GetValToIdMap(valMap types.ValMap) (ValToIdMap, IdToValMap) {
+func GetValAddrToIdMap(valMap types.ValMap) (ValAddrToIdMap, IdToValAddrMap) {
 	valAddresses := make([]string, 0, len(valMap))
 	for addr := range valMap {
 		valAddresses = append(valAddresses, addr)
 	}
 	sort.Strings(valAddresses)
 
-	valToIdMap := make(ValToIdMap, len(valMap))
-	idToValMap := make(IdToValMap, len(valMap))
+	valToIdMap := make(ValAddrToIdMap, len(valMap))
+	idToValMap := make(IdToValAddrMap, len(valMap))
 	for i, addr := range valAddresses {
 		nodeId := NodeId(i + 1)
 		valToIdMap[addr] = nodeId

@@ -3,14 +3,14 @@ package shared
 import (
 	"log"
 
+	"github.com/pokt-network/pocket/p2p/pre2p"
 	"github.com/pokt-network/pocket/shared/config"
 	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/utility"
 
 	"github.com/pokt-network/pocket/consensus"
-	"github.com/pokt-network/pocket/p2p/pre2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/utility"
 
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -33,12 +33,15 @@ func Create(cfg *config.Config) (n *Node, err error) {
 	}
 
 	// TODO(derrandz): Replace with real P2P module
+	// p2pMod, err := p2p.Create(cfg)
 	pre2pMod, err := pre2p.Create(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	utilityMod, err := utility.Create(cfg)
+	// TODO(andrew): Replace with real Utility module
+	// utilityMod, err := utility.Create(cfg)
+	mockedUtilityMod, err := utility.CreateMockedModule(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +51,7 @@ func Create(cfg *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(nil, persistenceMod, pre2pMod, utilityMod, consensusMod)
+	bus, err := CreateBus(nil, persistenceMod, pre2pMod, mockedUtilityMod, consensusMod)
 	if err != nil {
 		return nil, err
 	}

@@ -116,6 +116,6 @@ func (m *consensusModule) hotstuffNodeSend(msg *types_consensus.HotstuffMessage)
 		return
 	}
 
-	m.nodeLog(fmt.Sprintf("Sending %s vote.", StepToString[msg.Step]))
+	m.nodeLog(fmt.Sprintf("Sending %s vote to %d.", StepToString[msg.Step], *m.LeaderId))
 	m.sendToNode(msg, HotstuffMessage, *m.LeaderId)
 }

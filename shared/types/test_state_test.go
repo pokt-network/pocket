@@ -37,50 +37,50 @@ func genesisJson() string {
 			"vrf_key_validity_block": 5
 		},
 		"validators": [
-		  {
-			"node_id": 1,
-			"address": "71f8be163036c0da94f188bb817d77691869ccff5932059f3c398f2fb92fa08b",
-			"public_key": "b1f804dabc68274c1233995c5a9119b56935bcdd83b7de07ec726dcedc4e9ce7",
-			"jailed": false,
-			"upokt": 5000000000000,
-			"host": "node1.consensus",
-			"port": 8080,
-			"debug_port": 9080,
-			"chains": ["0001", "0021"]
-		  },
-		  {
-			"node_id": 2,
-			"address": "0273a7327f5cd145ae29a12a76ffbfd4d89c0b78ca247450c05f556c24bc264f",
-			"public_key": "6a0f6a283a8e4e86d2a3d60ef9e37ec33f2ab6071a30e0a477735128e7571eb0",
-			"jailed": false,
-			"upokt": 5000000000000,
-			"host": "node2.consensus",
-			"port": 8080,
-			"debug_port": 9080,
-			"chains": ["0001", "0021"]
-		  },
-		  {
-			"node_id": 3,
-			"address": "2a4156d371f8a49a88a6285e9f2ffd77947eac6801c0cfeccdb79ab4b8705f16",
-			"public_key": "ab5696551fe1711c3c31669ff20e1e0bc12cb99917c3ab2412e7c13013dee7e7",
-			"jailed": false,
-			"upokt": 5000000000000,
-			"host": "node3.consensus",
-			"port": 8080,
-			"debug_port": 9080,
-			"chains": ["0001", "0021"]
-		  },
-		  {
-			"node_id": 4,
-			"address": "ffeb214baf0cc1b8019e91a5e5ba0aa71d58de2cc140dd6885147b5b26299fb8",
-			"public_key": "d1f87d985adee0c3466ac0458745998fc0f39a9884897ce4c7548d1db8e10642",
-			"jailed": false,
-			"upokt": 5000000000000,
-			"host": "node4.consensus",
-			"port": 8080,
-			"debug_port": 9080,
-			"chains": ["0001", "0021"]
-		  }
+			{
+				"address": "6f1e5b61ed9a821457aa6b4d7c2a2b37715ffb16",
+				"public_key": "9be3287795907809407e14439ff198d5bfc7dce6f9bc743cb369146f610b4801",
+				"private_key": "04000000000000000000000000000000000000000000000000000000000000009be3287795907809407e14439ff198d5bfc7dce6f9bc743cb369146f610b4801",
+				"jailed": false,
+				"upokt": 5000000000000,
+				"host": "node4",
+				"port": 8080,
+				"debug_port": 9080,
+				"chains": ["0001", "0021"]
+			},
+			{
+				"address": "db0743e2dcba9ebf2419bde0881beea966689a26",
+				"public_key": "dadbd184a2d526f1ebdd5c06fdad9359b228759b4d7f79d66689fa254aad8546",
+				"private_key": "0300000000000000000000000000000000000000000000000000000000000000dadbd184a2d526f1ebdd5c06fdad9359b228759b4d7f79d66689fa254aad8546",
+				"jailed": false,
+				"upokt": 5000000000000,
+				"host": "node3",
+				"port": 8080,
+				"debug_port": 9080,
+				"chains": ["0001", "0021"]
+			},
+			{
+				"address": "e3c1b362c0df36f6b370b8b1479b67dad96392b2",
+				"public_key": "6b79c57e6a095239282c04818e96112f3f03a4001ba97a564c23852a3f1ea5fc",
+				"private_key": "02000000000000000000000000000000000000000000000000000000000000006b79c57e6a095239282c04818e96112f3f03a4001ba97a564c23852a3f1ea5fc",
+				"jailed": false,
+				"upokt": 5000000000000,
+				"host": "node2",
+				"port": 8080,
+				"debug_port": 9080,
+				"chains": ["0001", "0021"]
+			},
+			{
+				"address": "fa4d86c3b551aa6cd7c3759d040c037ef2c6379f",
+				"public_key": "cecc1507dc1ddd7295951c290888f095adb9044d1b73d696e6df065d683bd4fc",
+				"private_key": "0100000000000000000000000000000000000000000000000000000000000000cecc1507dc1ddd7295951c290888f095adb9044d1b73d696e6df065d683bd4fc",
+				"jailed": false,
+				"upokt": 5000000000000,
+				"host": "1",
+				"port": 8080,
+				"debug_port": 9080,
+				"chains": ["0001", "0021"]
+			}
 		]
 	  }`
 }

@@ -1,9 +1,11 @@
 package consensus
 
 import (
+	"fmt"
 	"log"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -50,7 +52,9 @@ func (m *consensusModule) sendToNode(message proto.Message, messageType types_co
 		return
 	}
 
-	if err := m.GetBus().GetP2PModule().Send([]byte(m.IdToValMap[destNode]), any, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
+	addr := crypto.AddressFromString(m.IdToValAddrMap[destNode])
+	fmt.Println("OLSH BEFORE", destNode, addr)
+	if err := m.GetBus().GetP2PModule().Send(addr, any, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError("Error broadcasting message:", err)
 		return
 	}

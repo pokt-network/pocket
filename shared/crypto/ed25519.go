@@ -181,6 +181,7 @@ func (pub *Ed25519PublicKey) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("OLSH WTF", publicKey, pubKey.Address())
 	*pub = pubKey.(Ed25519PublicKey)
 	return nil
 }

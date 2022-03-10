@@ -1,7 +1,6 @@
 package consensus_tests
 
 import (
-	"fmt"
 	"log"
 	"reflect"
 	"testing"
@@ -188,11 +187,10 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	// Check that the leader is in the latest round.
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-		fmt.Println("OLSH", leaderId, nodeId, nodeState.Step)
-		if nodeId != leaderId {
-			require.Equal(t, uint8(consensus.PreCommit), nodeState.Step)
-		} else {
+		if nodeId == leaderId {
 			require.Equal(t, uint8(consensus.Prepare), nodeState.Step)
+		} else {
+			require.Equal(t, uint8(consensus.PreCommit), nodeState.Step)
 		}
 		require.Equal(t, uint64(3), nodeState.Height)
 		require.Equal(t, uint8(6), nodeState.Round)

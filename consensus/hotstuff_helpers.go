@@ -90,12 +90,12 @@ func (m *consensusModule) isQuorumCertificateValid(qc *types_consensus.QuorumCer
 		validator, ok := valMap[partialSig.Address]
 		if !ok {
 			// TODO(olshansky): Remove this check. Even if we can't validate some partial signature, we could still meet byzantine safety.
-			return false, fmt.Sprintf("Validator %d not found in the ValMap but a partial sig was signed by them.", m.ValToIdMap[partialSig.Address])
+			return false, fmt.Sprintf("Validator %d not found in the ValMap but a partial sig was signed by them.", m.ValAddrToIdMap[partialSig.Address])
 		}
 		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
 		// just serialize `Message` once and verify each signature without reserializing every time.
 		if !isSignatureValid(msgToJustify, validator.PublicKey, partialSig.Signature) {
-			return false, fmt.Sprintf("QC invalid because partial signature from the following node is invalid: %d\n", m.ValToIdMap[partialSig.Address])
+			return false, fmt.Sprintf("QC invalid because partial signature from the following node is invalid: %d\n", m.ValAddrToIdMap[partialSig.Address])
 		}
 	}
 

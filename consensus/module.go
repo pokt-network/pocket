@@ -33,10 +33,10 @@ type consensusModule struct {
 	LockedQC      *types_consensus.QuorumCertificate // Highest QC for which replica voted COMMIT
 
 	// Leader Election
-	LeaderId   *types_consensus.NodeId
-	NodeId     types_consensus.NodeId
-	ValToIdMap types_consensus.ValToIdMap // TODO(design): This needs to be updated every time the ValMap is modified
-	IdToValMap types_consensus.IdToValMap // TODO(design): This needs to be updated every time the ValMap is modified
+	LeaderId       *types_consensus.NodeId
+	NodeId         types_consensus.NodeId
+	ValAddrToIdMap types_consensus.ValAddrToIdMap // TODO(design): This needs to be updated every time the ValMap is modified
+	IdToValAddrMap types_consensus.IdToValAddrMap // TODO(design): This needs to be updated every time the ValMap is modified
 
 	// Module Dependencies
 	utilityContext    modules.UtilityContext
@@ -60,7 +60,7 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	}
 
 	address := cfg.PrivateKey.Address().String()
-	valIdMap, idValMap := types_consensus.GetValToIdMap(types.GetTestState(nil).ValidatorMap)
+	valIdMap, idValMap := types_consensus.GetValAddrToIdMap(types.GetTestState(nil).ValidatorMap)
 
 	m := &consensusModule{
 		bus:        nil,
@@ -74,10 +74,10 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		HighPrepareQC: nil,
 		LockedQC:      nil,
 
-		NodeId:     valIdMap[address],
-		LeaderId:   nil,
-		ValToIdMap: valIdMap,
-		IdToValMap: idValMap,
+		NodeId:         valIdMap[address],
+		LeaderId:       nil,
+		ValAddrToIdMap: valIdMap,
+		IdToValAddrMap: idValMap,
 
 		utilityContext:    nil,
 		paceMaker:         paceMaker,

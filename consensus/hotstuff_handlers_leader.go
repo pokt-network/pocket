@@ -66,7 +66,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		m.nodeLog(fmt.Sprintf("Still waiting for more PREPARE messages; %s", reason))
 		return
 	}
-	m.nodeLog("received enough PREPARE votes!")
+	m.nodeLog("Received enough PREPARE votes!")
 
 	prepareQC, err := m.getQuorumCertificateForStep(Prepare)
 	if err != nil {

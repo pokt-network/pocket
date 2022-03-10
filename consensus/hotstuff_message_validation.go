@@ -28,7 +28,7 @@ func (m *consensusModule) isValidPartialSignature(msg *types_consensus.HotstuffM
 	address := msg.GetPartialSignature().Address
 	validator, ok := valMap[address]
 	if !ok {
-		return false, fmt.Sprintf("Trying to verify PartialSignature from %d but it is not in the validator map.", m.ValToIdMap[address])
+		return false, fmt.Sprintf("Trying to verify PartialSignature from %d but it is not in the validator map.", m.ValAddrToIdMap[address])
 	}
 
 	pubKey := validator.PublicKey
@@ -36,7 +36,7 @@ func (m *consensusModule) isValidPartialSignature(msg *types_consensus.HotstuffM
 		return true, "Partial signature is valid"
 	}
 
-	return false, fmt.Sprintf("Partial signature on message is invalid. Sender: %d; Height: %d; Step: %d; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s", m.ValToIdMap[address], msg.Height, msg.Step, msg.Round, msg.GetPartialSignature().Signature, types_consensus.ProtoHash(msg.Block), pubKey.String())
+	return false, fmt.Sprintf("Partial signature on message is invalid. Sender: %d; Height: %d; Step: %d; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s", m.ValAddrToIdMap[address], msg.Height, msg.Step, msg.Round, msg.GetPartialSignature().Signature, types_consensus.ProtoHash(msg.Block), pubKey.String())
 }
 
 // TODO(olshansky): Should this be part of the Pacemaker?
