@@ -38,7 +38,7 @@ func (m *consensusModule) getQuorumCertificateForStep(step types_consensus.Hotst
 	}
 
 	if ok, reason := m.isOptimisticThresholdMet(len(pss)); !ok {
-		return nil, fmt.Errorf("Did not receive enough partial signature; %s", reason)
+		return nil, fmt.Errorf("did not receive enough partial signature; %s", reason)
 	}
 	thresholdSig, err := GetThresholdSignature(pss)
 	if err != nil {

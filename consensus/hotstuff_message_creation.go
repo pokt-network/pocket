@@ -14,7 +14,7 @@ func CreateProposeMessage(
 	qc *types_consensus.QuorumCertificate,
 ) (*types_consensus.HotstuffMessage, error) {
 	if m.Block == nil {
-		return nil, fmt.Errorf("When a leader is trying to create a ProposeMessage, the block should never be nil")
+		return nil, fmt.Errorf("when a leader is trying to create a ProposeMessage, the block should never be nil")
 	}
 
 	msg := &types_consensus.HotstuffMessage{
@@ -41,7 +41,7 @@ func CreateVoteMessage(
 	block *types_consensus.BlockConsensusTemp,
 ) (*types_consensus.HotstuffMessage, error) {
 	if block == nil {
-		return nil, fmt.Errorf("Replica should never vote on a nil block proposal")
+		return nil, fmt.Errorf("replica should never vote on a nil block proposal")
 	}
 
 	msg := &types_consensus.HotstuffMessage{

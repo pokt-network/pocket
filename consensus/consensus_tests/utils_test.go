@@ -225,8 +225,10 @@ loop:
 			if numMessages == 0 {
 				break loop
 			} else if numMessages > 0 {
+				cancel()
 				return nil, fmt.Errorf("Missing %s messages; missing: %d, received: %d; (%s)", topic, numMessages, len(messages), errorMessage)
 			} else {
+				cancel()
 				return nil, fmt.Errorf("Too many %s messages received; expected: %d, received: %d; (%s)", topic, numMessages+len(messages), len(messages), errorMessage)
 			}
 		}
