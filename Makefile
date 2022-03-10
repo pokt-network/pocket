@@ -27,9 +27,9 @@ go_vet:
 	go vet ./...
 
 .PHONY: go_staticcheck
-## Run `go vet` on all files in the current project
+## Run `go staticcheck` on all files in the current project
 go_staticcheck:
-	@if  builtin type -P "staticcheck"; then staticcheck ./... ; else echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; fi
+	@if builtin type -P "staticcheck"; then staticcheck ./... ; else echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; fi
 
 .PHONY: build
 ## Build Pocket's main entrypoint
@@ -97,7 +97,7 @@ test_shared: # generate_mocks
 .PHONY: test_consensus
 ## Run all go unit tests in the consensus module
 test_consensus: # mockgen
-	go test ./consensus/... -failOnExtraMessages=${EXTRA_MSG_FAIL}
+	go test ./consensus/...
 
 .PHONY: test_hotstuff
 ## Run all go unit tests related to hotstuff consensus
