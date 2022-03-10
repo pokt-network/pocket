@@ -1,11 +1,14 @@
 package consensus
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -123,4 +126,27 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
 	m.paceMaker.SetBus(pocketBus)
 	m.leaderElectionMod.SetBus(pocketBus)
+}
+
+func (m *consensusModule) HandleMessage(message *anypb.Any) error {
+	var consensusMessage types_consensus.ConsensusMessage
+	err := anypb.UnmarshalTo(message, &consensusMessage, proto.UnmarshalOptions{})
+	if err != nil {
+		return err
+	}
+
+	switch consensusMessage.Type {
+	case HotstuffMessage:
+		var hotstuffMessage types_consensus.HotstuffMessage
+		err := anypb.UnmarshalTo(consensusMessage.Message, &hotstuffMessage, proto.UnmarshalOptions{})
+		if err != nil {
+			return err
+		}
+		m.handleHotstuffMessage(&hotstuffMessage)
+	case UtilityMessage:
+		m.nodeLog("[WARN] UtilityMessage handling is not implemented by consensus yet...")
+	default:
+		return fmt.Errorf("unknown consensus message type: %v", consensusMessage.Type)
+	}
+	return nil
 }

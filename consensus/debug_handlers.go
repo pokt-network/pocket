@@ -1,7 +1,6 @@
 package consensus
 
 import (
-	"fmt"
 	"log"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
@@ -56,7 +55,7 @@ func (m *consensusModule) resetToGenesis(message *types.DebugMessage) {
 
 func (m *consensusModule) printNodeState(message *types.DebugMessage) {
 	state := m.GetNodeState()
-	fmt.Printf("\tCONSENSUS STATE: [%s] Node %d is at (Height, Step, Round): (%d, %s, %d)\n", m.logPrefix, state.NodeId, state.Height, StepToString[types_consensus.HotstuffStep(state.Step)], state.Round)
+	log.Printf("\t[DEBUG] NODE STATE: [%s] Node %d is at (Height, Step, Round): (%d, %s, %d)\n", m.logPrefix, state.NodeId, state.Height, StepToString[types_consensus.HotstuffStep(state.Step)], state.Round)
 }
 
 func (m *consensusModule) TriggerNextView(message *types.DebugMessage) {
