@@ -80,10 +80,9 @@ func (m *consensusModule) clearLeader() {
 }
 
 func (m *consensusModule) electNextLeader(message *types_consensus.HotstuffMessage) {
-	leaderId := m.electNextLeaderDeterministic(message)
-
-	if leaderId == 0 {
-		m.nodeLogError(fmt.Sprintf("Leader election failed. Validator cannot take part in consensus at height %d round %d", message.Height, message.Round), nil)
+	leaderId, err := m.leaderElectionMod.ElectNextLeader(message)
+	if err != nil || leaderId == 0 {
+		m.nodeLogError(fmt.Sprintf("Leader election failed. Validator cannot take part in consensus at height %d round %d", message.Height, message.Round), err)
 		m.clearLeader()
 		return
 	}
@@ -97,12 +96,6 @@ func (m *consensusModule) electNextLeader(message *types_consensus.HotstuffMessa
 		m.logPrefix = "REPLICA"
 		m.nodeLog(fmt.Sprintf("Elected %d as 👑.", *m.LeaderId))
 	}
-}
-
-func (m *consensusModule) electNextLeaderDeterministic(message *types_consensus.HotstuffMessage) types_consensus.NodeId {
-	valMap := types.GetTestState(nil).ValidatorMap
-	value := int64(message.Height) + int64(message.Round) + int64(message.Step) - 1
-	return types_consensus.NodeId(value%int64(len(valMap)) + 1)
 }
 
 /*** General Infrastructure Helpers ***/
