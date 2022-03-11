@@ -41,7 +41,6 @@ func (m *consensusModule) isValidPartialSignature(msg *types_consensus.HotstuffM
 	return false, fmt.Sprintf("Partial signature on message is invalid. Sender: %d; Height: %d; Step: %d; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s", m.ValAddrToIdMap[address], msg.Height, msg.Step, msg.Round, msg.GetPartialSignature().Signature, types_consensus.ProtoHash(msg.Block), pubKey.String())
 }
 
-// TODO(olshansky): Should this be part of the Pacemaker?
 func (m *consensusModule) isValidProposal(msg *types_consensus.HotstuffMessage) (bool, string) {
 	if !(msg.Type == Propose && msg.Step == Prepare) {
 		return false, "Proposal is not valid in the PREPARE step"
@@ -51,9 +50,9 @@ func (m *consensusModule) isValidProposal(msg *types_consensus.HotstuffMessage) 
 		return false, fmt.Sprintf("Invalid block in message: %s", reason)
 	}
 
-	// TODO(discuss): Discuss the point below.
-	// A nil QC implies a successfull CommitQC or TimeoutQC, which havebeen ommitted intentionally since they are
-	// not needed for consensus validity. However, if a QC is specified, it must be valid.
+	// TODO(olshansky): Discuss this with Andrew:
+	// A nil QC implies a successfull CommitQC or TimeoutQC, which have been ommitted intentionally since
+	// they are not needed for consensus validity. However, if a QC is specified, it must be valid.
 	if msg.GetQuorumCertificate() != nil {
 		if valid, reason := m.isQuorumCertificateValid(msg.GetQuorumCertificate()); !valid {
 			return false, fmt.Sprintf("Proposal QC is invalid because: %s", reason)
@@ -103,17 +102,24 @@ func (m *consensusModule) isQuorumCertificateValid(qc *types_consensus.QuorumCer
 
 	msgToJustify := qcToHotstuffMessage(qc)
 	valMap := types.GetTestState(nil).ValidatorMap
+	numValid := 0
 	for _, partialSig := range qc.ThresholdSignature.Signatures {
 		validator, ok := valMap[partialSig.Address]
 		if !ok {
-			// TODO(olshansky): Remove this check. Even if we can't validate some partial signature, we could still meet byzantine safety.
-			return false, fmt.Sprintf("Validator %d not found in the ValMap but a partial sig was signed by them.", m.ValAddrToIdMap[partialSig.Address])
+			m.nodeLog(fmt.Sprintf("[WARN] Validator %d not found in the ValMap but a partial sig was signed by them.", m.ValAddrToIdMap[partialSig.Address]))
+			continue
 		}
 		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
 		// just serialize `Message` once and verify each signature without reserializing every time.
 		if !isSignatureValid(msgToJustify, validator.PublicKey, partialSig.Signature) {
-			return false, fmt.Sprintf("QC invalid because partial signature from the following node is invalid: %d\n", m.ValAddrToIdMap[partialSig.Address])
+			m.nodeLog(fmt.Sprintf("[WARN] QC invalid because partial signature from the following node is invalid: %d", m.ValAddrToIdMap[partialSig.Address]))
+			continue
 		}
+		numValid++
+	}
+
+	if ok, reason := m.isOptimisticThresholdMet(numValid); !ok {
+		return false, fmt.Sprintf("QC invalid because optimistic threshold is not met: %s", reason)
 	}
 
 	return true, "QC is valid"

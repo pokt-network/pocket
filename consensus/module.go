@@ -148,5 +148,6 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	default:
 		return fmt.Errorf("unknown consensus message type: %v", consensusMessage.Type)
 	}
+
 	return nil
 }

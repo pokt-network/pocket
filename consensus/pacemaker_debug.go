@@ -1,13 +1,12 @@
 package consensus
 
 import (
+	"time"
+
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 )
 
-// TODO(olshansky): Pacemaker has some functions that are meant only part of the
-// interface for development and debugging purposes. Need to think about how to
-// decouple it (if needed) to avoid code complexity in the core business logic.
-
+// This Pacemaker interface is only used for development & debugging purposes.
 type PacemakerDebug interface {
 	SetManualMode(bool)
 	IsManualMode() bool
@@ -32,4 +31,9 @@ func (p *paceMaker) SetManualMode(manualMode bool) {
 func (p *paceMaker) ForceNextView() {
 	lastQC := p.quorumCertificate
 	p.startNextView(lastQC, true)
+}
+
+// This is a hack only used to slow down the progress of the blockchain during development.
+func (p *paceMaker) debugSleep() {
+	time.Sleep(time.Duration(int64(time.Millisecond) * int64(p.debugTimeBetweenStepsMsec)))
 }

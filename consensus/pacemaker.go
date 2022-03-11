@@ -12,7 +12,6 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// TODO(olshansky): Low priority design: think of a way to make `pacemaker_*` files be a sub-package under consensus.
 type Pacemaker interface {
 	modules.Module
 	PacemakerDebug
@@ -32,7 +31,12 @@ var _ modules.Module = &paceMaker{}
 var _ PacemakerDebug = &paceMaker{}
 
 type paceMaker struct {
-	bus          modules.Bus
+	bus modules.Bus
+
+	// TODO(olshansky): The reason `pacemaker_*` files are not a sub-package under consensus
+	// due to it's dependency on the underlying implementation of `consensusModule`. Think
+	// through a way to decouple these. This could be fixed with reflection but that's not
+	// a great idea in production code.
 	consensusMod *consensusModule
 
 	pacemakerConfigs *config.PacemakerConfig
@@ -97,7 +101,7 @@ func (p *paceMaker) ShouldHandleMessage(m *types_consensus.HotstuffMessage) (boo
 
 	// Do not handle messages if it is a self proposal
 	if p.consensusMod.isLeader() && m.Type == Propose && m.Step != NewRound {
-		// TODO(olshansky): This code branch is a function of the optimization in the leader
+		// TODO(olshansky): This code branch is a result of the optimization in the leader
 		// handlers. Since the leader also acts as a replica but doesn't use the replica's
 		// handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
 		return false, "Hotstuff message is a self proposal"
@@ -120,7 +124,7 @@ func (p *paceMaker) ShouldHandleMessage(m *types_consensus.HotstuffMessage) (boo
 		p.consensusMod.Step = m.Step
 		p.consensusMod.Round = m.Round
 
-		// TODO(olshansky): TESTS for this. When we catch up to a later step, the leader is still the same.
+		// TODO(olshansky): Add tests for this. When we catch up to a later step, the leader is still the same.
 		// However, when we catch up to a later round, the leader at the same height will be different.
 		if p.consensusMod.Round != m.Round || p.consensusMod.LeaderId == nil {
 			p.consensusMod.electNextLeader(m)
@@ -136,13 +140,10 @@ func (p *paceMaker) RestartTimer() {
 	if p.stepCancelFunc != nil {
 		p.stepCancelFunc()
 	}
-
-	// TODO(olshansky): This is a hack only used to slow down the progress of the blockchain during development.
-	time.Sleep(time.Duration(int64(time.Millisecond) * int64(p.debugTimeBetweenStepsMsec)))
-
-	stepTimeout := p.getStepTimeout(p.consensusMod.Round)
+	p.debugSleep()
 
 	// NOTE: Not defering a cancel call because this function is asynchronous.
+	stepTimeout := p.getStepTimeout(p.consensusMod.Round)
 	ctx, cancel := context.WithTimeout(context.TODO(), stepTimeout)
 	p.stepCancelFunc = cancel
 
@@ -209,8 +210,8 @@ func (p *paceMaker) startNextView(qc *types_consensus.QuorumCertificate, forceNe
 	p.consensusMod.broadcastToNodes(hotstuffMessage, HotstuffMessage)
 }
 
+// TODO(olshansky): Increase timeout using exponential backoff.
 func (p *paceMaker) getStepTimeout(round uint64) time.Duration {
 	baseTimeout := time.Duration(int64(time.Millisecond) * int64(p.pacemakerConfigs.TimeoutMsec))
-	// TODO(olshansky): Increase timeout using exponential backoff.
 	return baseTimeout
 }
