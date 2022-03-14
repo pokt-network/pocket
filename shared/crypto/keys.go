@@ -35,3 +35,13 @@ func (a *Address) UnmarshalJSON(data []byte) error {
 	*a = []byte(address)
 	return nil
 }
+
+func (a *Address) UnmarshalJSON(data []byte) error {
+	var address string
+	err := json.Unmarshal(data, &address)
+	if err != nil {
+		return err
+	}
+	*a = []byte(address)
+	return nil
+}
