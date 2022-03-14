@@ -32,3 +32,6 @@ utility/types/
 
 # Output binaries
 bin/
+
+# VSCode
+.vscode/

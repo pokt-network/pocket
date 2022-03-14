@@ -1,4 +1,4 @@
-# TODO(discuss): Determine if we want to use Makefile or mage.go and merge the two.
+# TODO(pocket/issues/43): Delete this files after moving the necessary helpers to mage.go.
 
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
@@ -84,9 +84,9 @@ test_shared: # generate_mocks
 	go test ./shared/...
 
 .PHONY: test_consensus
-## Run all go unit tests in the consensus module
+## Run all go unit tests in the Consensus module
 test_consensus: # mockgen
-	go test ./consensus/...
+	go test -v ./consensus/...
 
 .PHONY: test_vrf
 ## Run all go unit tests in the VRF library
@@ -94,12 +94,12 @@ test_vrf:
 	go test -v ./consensus/leader_election/vrf
 
 .PHONY: test_sortition
-## Run all go unit tests in the sortition library
+## Run all go unit tests in the Sortition library
 test_sortition:
-	go test -v ./consensus/leader_election/sortition/
+	go test -v ./consensus/leader_election/sortition
 
 .PHONY: benchmark_sortition
-## Benchmark the sortition library
+## Benchmark the Sortition library
 benchmark_sortition:
 	go test -v ./consensus/leader_election/sortition -bench=.
 
@@ -154,3 +154,13 @@ protogen_docker:
 ## Format all the .go files in the project in place.
 gofmt:
 	gofmt -w -s .
+
+.PHONY: todo_list
+## List all the TODOs in the project (excludes vendor and prototype directories)
+todo_list:
+	grep --exclude-dir={vendor,prototype} -r "TODO" .
+
+.PHONY: todo_count
+## Print a count of all the TODOs in the project
+todo_count:
+	grep --exclude-dir={vendor,prototype} -r "TODO" . | wc -l
