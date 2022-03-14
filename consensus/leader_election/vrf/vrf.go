@@ -1,3 +1,5 @@
+// NOTE: At the time of implementation, the VRF library is only used with consensus, but may
+// be extracted into shared/crypto when/if it will be needed elsewhere.
 package vrf
 
 // This file is a light wrapper around https://pkg.go.dev/github.com/ProtonMail/go-ecvrf.
@@ -27,11 +29,11 @@ type VRFOutput []byte // Uniformally distributed output that can be normalized t
 
 func CreateVRFRandReader(lastBlockHash string, privKey crypto.PrivateKey) (io.Reader, error) {
 	if privKey == nil {
-		return nil, fmt.Errorf("private key cannot be nil")
+		return nil, fmt.Errorf(ErrNilPrivateKey)
 	}
 
 	if len(lastBlockHash) < crypto.SeedSize/2 {
-		return nil, fmt.Errorf("the last block hash must be at least %d bytes in length", crypto.SeedSize/2)
+		return nil, fmt.Errorf(ErrBadAppHashLength, crypto.SeedSize/2)
 	}
 
 	privKeySeed := privKey.Seed()[:crypto.SeedSize/2]
@@ -44,7 +46,6 @@ func CreateVRFRandReader(lastBlockHash string, privKey crypto.PrivateKey) (io.Re
 	return bytes.NewReader(seed), nil
 }
 
-// TODO(in this commit): Should we return pointers or values here?
 func GenerateVRFKeys(reader io.Reader) (*SecretKey, *VerificationKey, error) {
 	privateKey, err := ecvrf.GenerateKey(reader)
 	if err != nil {
@@ -59,7 +60,6 @@ func GenerateVRFKeys(reader io.Reader) (*SecretKey, *VerificationKey, error) {
 	return (*SecretKey)(privateKey), (*VerificationKey)(publicKey), nil
 }
 
-// TODO(in this commit): Should we return pointers or values here?
 func VerificationKeyFromBytes(data []byte) (*VerificationKey, error) {
 	key, err := ecvrf.NewPublicKey(data)
 	if err != nil {
@@ -83,7 +83,6 @@ func (key *SecretKey) Prove(msg []byte) (vrf VRFOutput, proof VRFProof, err erro
 	return
 }
 
-// TODO(in this commit): Should we return pointers or values here?
 func (key *SecretKey) VerificationKey() (*VerificationKey, error) {
 	verificationKey, err := (*ecvrf.PrivateKey)(key).Public()
 	if err != nil {
