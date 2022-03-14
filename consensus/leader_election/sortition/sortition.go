@@ -35,11 +35,16 @@ var maxRandomInt *big.Int
 // potential view change leaders that is uniformally distributed and proportional to the validator's
 // stake. See [3] for simpler explanation of the algorithm [1].
 // [3] https://community.algorand.org/blog/the-intuition-behind-algorand-cryptographic-sortition/
-func Sortition(validatorStake, networkStake, numExpectedCandidates float64, vrfOut vrf.VRFOutput) SortitionResult {
-	// Explanation by example: Assuming that all validators in the network staked `networkStake`
+func Sortition(validatorStake, networkStake, numExpectedCandidates uint64, vrfOut vrf.VRFOutput) SortitionResult {
+	// Explanation: In Pocket Network's leader consensus algorithm, there is only going to be one leader
+	// per round / view change. However, during sortition, several candidates are selected, to avoid
+	// the chances of there being no leader at all. The chosen leaders (<= numCandidatesLeadersPerRound)
+	// are sorted based on their sortition result and the top one is selected.
+	//
+	// Example: Assuming that all validators in the network staked `networkStake`
 	// uPOKT, and each individual uPOKT has `1 / networkStake` probability of being selected, with
 	// a total of `numExpectedCandidates` (i.e. # of uPOKT) to be selected as potential leaders.
-	p := numExpectedCandidates / networkStake
+	p := float64(numExpectedCandidates) / float64(networkStake)
 
 	// Normalizes vrfOut to a uniformally distributed value in [0, 1)
 	vrfProb := vrfOutProb(vrfOut)
@@ -52,8 +57,8 @@ func Sortition(validatorStake, networkStake, numExpectedCandidates float64, vrfO
 	src := rand.NewSource(f.Uint64())
 
 	binomial := distuv.Binomial{
-		N:   validatorStake, // # of Bernoulli trials == validator's stake: 1 trial per uPOKT staked
-		P:   p,              // Each uPOKT has an equal probability of being selected
+		N:   float64(validatorStake), // # of Bernoulli trials == validator's stake: 1 trial per uPOKT staked
+		P:   p,                       // Each uPOKT has an equal probability of being selected
 		Src: src,
 	}
 
