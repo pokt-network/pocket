@@ -27,15 +27,15 @@ func TestSortition(t *testing.T) {
 	testParameters := []struct {
 		uPOKTValidatorStake, uPOKTTotalStaked, numViewChanges, numCandidates uint64
 	}{
-		{uPOKTMinValidatorStake, uPOKTNetworkStake, 10, 1},
 		{uPOKTMinValidatorStake, uPOKTNetworkStake, 100, 1},
 		{uPOKTMinValidatorStake, uPOKTNetworkStake, 1000, 1},
-		{uPOKTMinValidatorStake * 5, uPOKTNetworkStake, 10, 3},
-		{uPOKTMinValidatorStake * 10, uPOKTNetworkStake, 100, 3},
-		{uPOKTMinValidatorStake * 100, uPOKTNetworkStake, 1000, 3},
-		{uPOKTMinValidatorStake * 5, uPOKTNetworkStake, 10, 10},
-		{uPOKTMinValidatorStake * 10, uPOKTNetworkStake, 100, 10},
-		{uPOKTMinValidatorStake * 100, uPOKTNetworkStake, 1000, 10},
+		{uPOKTMinValidatorStake, uPOKTNetworkStake, 10000, 1},
+		{uPOKTMinValidatorStake * 5, uPOKTNetworkStake, 100, 3},
+		{uPOKTMinValidatorStake * 10, uPOKTNetworkStake, 1000, 3},
+		{uPOKTMinValidatorStake * 100, uPOKTNetworkStake, 10000, 3},
+		{uPOKTMinValidatorStake * 5, uPOKTNetworkStake, 100, 10},
+		{uPOKTMinValidatorStake * 10, uPOKTNetworkStake, 1000, 10},
+		{uPOKTMinValidatorStake * 100, uPOKTNetworkStake, 10000, 10},
 	}
 
 	for _, test := range testParameters {

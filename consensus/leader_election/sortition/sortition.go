@@ -18,7 +18,6 @@ import (
 	"golang.org/x/exp/rand"
 
 	"github.com/pokt-network/pocket/consensus/leader_election/vrf"
-	consensus_types "github.com/pokt-network/pocket/consensus/types"
 
 	"gonum.org/v1/gonum/stat/distuv"
 )
@@ -75,14 +74,9 @@ Reasoning:
 	guarantees are maintained - this is provided by `prevBlockHash`.
 [4] github.com/pokt-network/pocket-network-protocol/tree/main/consensus
 */
-
-// Seed to be used for sortition when generating the vrfOut and vrfProof.
-func FormatSeed(
-	h consensus_types.BlockHeight,
-	r consensus_types.Round,
-	prevBlockHash string,
-) []byte {
-	return []byte(fmt.Sprintf("%d:%d:%s", h, r, prevBlockHash))
+// Seed to be used for soritition when generating the vrfOut and vrfProof
+func FormatSeed(height uint64, round uint64, prevBlockHash string) []byte {
+	return []byte(fmt.Sprintf("%d:%d:%s", height, round, prevBlockHash))
 }
 
 // For a specific validator, at most `validatorStake` (i.e. # uof POKT staked) may be used to elect
