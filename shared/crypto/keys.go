@@ -36,7 +36,11 @@ func (a *Address) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	*a = []byte(address)
+	bytes, err := hex.DecodeString(address)
+	if err != nil {
+		return err
+	}
+	*a = bytes
 	return nil
 }
 
