@@ -1,6 +1,13 @@
 # TODO(pocket/issues/43): Delete this files after moving the necessary helpers to mage.go.
 
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
+
+# This flag is useful when running the consensus unit tests. It causes the test to wait up to the
+# maximum delay specified in the source code and errors if additional unexpected messages are received.
+# For example, if the test expects to receive 5 messages within 2 seconds:
+# 	When EXTRA_MSG_FAIL = false: continue if 5 messages are received in 0.5 seconds
+# 	When EXTRA_MSG_FAIL = true: wait for another 1.5 seconds after 5 messages are received in 0.5
+#		                        seconds, and fail if any additional messages are received.
 EXTRA_MSG_FAIL ?= false
 
 .SILENT:
@@ -105,7 +112,7 @@ test_hotstuff: # mockgen
 	go test -v ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
 .PHONY: test_pacemaker
-## Run all go unit tests related to hotstuff consensus
+## Run all go unit tests related to the hotstuff pacemaker
 test_pacemaker: # mockgen
 	go test -v ./consensus/consensus_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
