@@ -48,8 +48,7 @@ type ConsensusConfig struct {
 	MaxMempoolBytes uint64 `json:"max_mempool_bytes"` // TODO(olshansky): add unit tests for this
 
 	// Block
-	MaxBlockBytes       uint64 `json:"max_block_bytes"`       // TODO(olshansky): add unit tests for this
-	MaxTransactionBytes uint64 `json:"max_transaction_bytes"` // TODO(olshansky): add unit tests for this
+	MaxBlockBytes uint64 `json:"max_block_bytes"` // TODO(olshansky): add unit tests for this
 
 	// Pacemaker
 	Pacemaker *PacemakerConfig `json:"pacemaker"`
@@ -123,10 +122,6 @@ func (c *ConsensusConfig) ValidateAndHydrate() error {
 
 	if c.MaxBlockBytes <= 0 {
 		return fmt.Errorf("MaxBlockBytes must be a positive integer")
-	}
-
-	if c.MaxTransactionBytes <= 0 {
-		return fmt.Errorf("MaxTransactionBytes must be a positive integer")
 	}
 
 	return nil

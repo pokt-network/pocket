@@ -24,7 +24,12 @@ func (m *consensusModule) isValidBlock(block *types_consensus.BlockConsensusTemp
 	return true, "block is valid"
 }
 
+// This is a helper function intended to be called by a leader/validator during a view change
 func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, error) {
+	if !m.isLeader() {
+		return nil, fmt.Errorf("node should not call `prepareBlock` if it is not a leader")
+	}
+
 	if err := m.updateUtilityContext(); err != nil {
 		return nil, err
 	}
@@ -56,7 +61,12 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 	return block, nil
 }
 
+// This is a helper function intended to be called by a replica/voter during a view change
 func (m *consensusModule) applyBlock(block *types_consensus.BlockConsensusTemp) error {
+	if m.isLeader() {
+		return fmt.Errorf("node should not call `applyBlock` if it is not a leader")
+	}
+
 	// TODO(olshansky): Add unit tests to verify this.
 	if unsafe.Sizeof(*block) > uintptr(m.consCfg.MaxBlockBytes) {
 		return fmt.Errorf("block size is too large: %d bytes VS max of %d bytes", unsafe.Sizeof(*block), m.consCfg.MaxBlockBytes)
@@ -78,6 +88,7 @@ func (m *consensusModule) applyBlock(block *types_consensus.BlockConsensusTemp) 
 	return nil
 }
 
+// Creates a new Utility context and clears/nullifies any previous contexts if they exist
 func (m *consensusModule) updateUtilityContext() error {
 	if m.utilityContext != nil {
 		m.nodeLog("[WARN] Why is the node utility context not nil when preparing a new block? Releasing for now...")

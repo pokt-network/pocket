@@ -27,6 +27,7 @@ var items = []string{
 	PromptTogglePacemakerMode,
 }
 
+// A P2P module is initialized in order to broadcast a message to the local network
 var pre2pMod modules.P2PModule
 
 func main() {

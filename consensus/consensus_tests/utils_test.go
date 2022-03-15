@@ -68,9 +68,8 @@ func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
 			Pre2P: nil,
 			P2P:   nil,
 			Consensus: &config.ConsensusConfig{
-				MaxMempoolBytes:     500000000,
-				MaxBlockBytes:       4000000,
-				MaxTransactionBytes: 100000,
+				MaxMempoolBytes: 500000000,
+				MaxBlockBytes:   4000000,
 				Pacemaker: &config.PacemakerConfig{
 					TimeoutMsec:               5000,
 					Manual:                    false,

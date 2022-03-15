@@ -21,7 +21,6 @@ func TestLoadConfigFromJson(t *testing.T) {
 		"consensus": {
 			"max_mempool_bytes": 500000000,
 			"max_block_bytes": 4000000,
-			"max_transaction_bytes": 100000,
 			"pacemaker": {
 				"timeout_msec": 5000,
 				"manual": true,
