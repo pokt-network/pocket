@@ -13,7 +13,6 @@ func TestGenesisFromJson(t *testing.T) {
 		"app_hash": "genesis_block_or_state_hash",
 		"validators": [
 		  {
-			"node_id": 1,
 			"address": "71f8be163036c0da94f188bb817d77691869ccff5932059f3c398f2fb92fa08b",
 			"public_key": "b1f804dabc68274c1233995c5a9119b56935bcdd83b7de07ec726dcedc4e9ce7",
 			"jailed": false,

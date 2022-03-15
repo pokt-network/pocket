@@ -15,8 +15,6 @@ type TestState struct {
 	AppHash          string // TODO(discuss): Why not call this a BlockHash or StateHash? Should it be a []byte or string?
 	ValidatorMap     ValMap // TODO(olshansky): Need to update this on every validator operation(pause, stake, unstake, etc)
 	TotalVotingPower uint64 // TODO(design): Need to update this on every send transaction.
-
-	ConsensusParams ConsensusParams
 }
 
 // The pocket state singleton.

@@ -126,7 +126,7 @@ func CreateTestConsensusPocketNode(
 	p2pMock := baseP2PMock(t, testChannel)
 	utilityMock := baseUtilityMock(t, testChannel)
 
-	bus, err := shared.CreateBus(nil, persistenceMock, p2pMock, utilityMock, consensusMod)
+	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod)
 	require.NoError(t, err)
 
 	pocketNode := &shared.Node{
@@ -238,13 +238,13 @@ loop:
 		select {
 		case testEvent := <-testChannel:
 			if testEvent.Topic != topic {
-				unused = append(unused, testEvent)
+				unused = append(unused, &testEvent)
 				continue
 			}
 
 			message := decoder(testEvent.Data)
 			if message == nil || !includeFilter(message) {
-				unused = append(unused, testEvent)
+				unused = append(unused, &testEvent)
 				continue
 			}
 
@@ -271,7 +271,7 @@ loop:
 	}
 	cancel()
 	for _, u := range unused {
-		testChannel <- u
+		testChannel <- *u
 	}
 	return
 }
@@ -300,14 +300,14 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *mock_modules.
 		Broadcast(gomock.Any(), gomock.Any()).
 		Do(func(msg *anypb.Any, topic types.PocketTopic) {
 			e := &types.PocketEvent{Topic: topic, Data: msg}
-			testChannel <- e
+			testChannel <- *e
 		}).
 		AnyTimes()
 	p2pMock.EXPECT().
 		Send(gomock.Any(), gomock.Any(), gomock.Any()).
 		Do(func(addr pcrypto.Address, msg *anypb.Any, topic types.PocketTopic) {
 			e := &types.PocketEvent{Topic: topic, Data: msg}
-			testChannel <- e
+			testChannel <- *e
 		}).
 		AnyTimes()
 

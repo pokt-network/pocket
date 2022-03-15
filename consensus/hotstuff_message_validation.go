@@ -40,7 +40,7 @@ func (m *consensusModule) isPartialSignatureValid(msg *types_consensus.HotstuffM
 		return true, "Partial signature is valid"
 	}
 
-	return false, fmt.Sprintf("Partial signature on message is invalid. Sender: %d; Height: %d; Step: %d; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s", m.ValAddrToIdMap[address], msg.Height, msg.Step, msg.Round, msg.GetPartialSignature().Signature, types_consensus.ProtoHash(msg.Block), pubKey.String())
+	return false, fmt.Sprintf("Partial signature on message is invalid. Sender: %d; Height: %d; Step: %d; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s", m.ValAddrToIdMap[address], msg.Height, msg.Step, msg.Round, msg.GetPartialSignature().Signature, protoHash(msg.Block), pubKey.String())
 }
 
 func (m *consensusModule) isProposalValid(msg *types_consensus.HotstuffMessage) (bool, string) {

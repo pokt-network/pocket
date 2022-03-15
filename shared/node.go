@@ -51,7 +51,7 @@ func Create(cfg *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(nil, persistenceMod, pre2pMod, mockedUtilityMod, consensusMod)
+	bus, err := CreateBus(persistenceMod, pre2pMod, mockedUtilityMod, consensusMod)
 	if err != nil {
 		return nil, err
 	}

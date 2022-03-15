@@ -1,8 +1,6 @@
 package shared
 
 import (
-	"log"
-
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 )
@@ -23,19 +21,13 @@ const (
 )
 
 func CreateBus(
-	channel modules.EventsChannel, // A channel can be injected into the bus only for testing purposes
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 ) (modules.Bus, error) {
-	if channel == nil {
-		log.Print("Creating a new Go channel for the Pocket bus...")
-		channel = make(modules.EventsChannel, DefaultPocketBusBufferSize)
-	}
-
 	bus := &bus{
-		channel:     channel,
+		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
 		persistence: persistence,
 		p2p:         p2p,
 		utility:     utility,
@@ -51,12 +43,12 @@ func CreateBus(
 }
 
 func (m *bus) PublishEventToBus(e *types.PocketEvent) {
-	m.channel <- e
+	m.channel <- *e
 }
 
 func (m *bus) GetBusEvent() *types.PocketEvent {
 	e := <-m.channel
-	return e
+	return &e
 }
 
 func (m *bus) GetEventBus() modules.EventsChannel {
