@@ -31,10 +31,10 @@ type Pre2PConfig struct {
 }
 
 type P2PConfig struct {
-	Protocol   string          `json:"protocol"`
-	Address    pcrypto.Address `json:"address"`
-	ExternalIp string          `json:"external_ip"`
-	Peers      []string        `json:"peers"`
+	Protocol   string   `json:"protocol"`
+	Address    string   `json:"address"`
+	ExternalIp string   `json:"external_ip"`
+	Peers      []string `json:"peers"`
 }
 
 type PacemakerConfig struct {
