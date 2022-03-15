@@ -227,7 +227,7 @@ func (m *PrePersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address [
 func (m *PrePersistenceContext) GetServiceNodePauseHeightIfExists(address []byte) (int64, error) {
 	sn, exists, err := m.GetServiceNode(address)
 	if err != nil {
-		return ZeroInt, nil
+		return ZeroInt, err
 	}
 	if !exists {
 		return ZeroInt, fmt.Errorf("does not exist in world state")
@@ -281,7 +281,11 @@ func (m *PrePersistenceContext) SetServiceNodePauseHeight(address []byte, height
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	sn.Paused = true
+	if height == 0 {
+		sn.Paused = false
+	} else {
+		sn.Paused = true
+	}
 	sn.PausedHeight = uint64(height)
 	bz, err := cdc.Marshal(sn)
 	if err != nil {

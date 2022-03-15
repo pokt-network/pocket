@@ -236,7 +236,7 @@ func (m *PrePersistenceContext) SetAppUnstakingHeightAndStatus(address []byte, u
 func (m *PrePersistenceContext) GetAppPauseHeightIfExists(address []byte) (int64, error) {
 	app, exists, err := m.GetApp(address)
 	if err != nil {
-		return ZeroInt, nil
+		return ZeroInt, err
 	}
 	if !exists {
 		return ZeroInt, fmt.Errorf("does not exist in world state")
@@ -290,7 +290,11 @@ func (m *PrePersistenceContext) SetAppPauseHeight(address []byte, height int64) 
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	app.Paused = true
+	if height == 0 {
+		app.Paused = false
+	} else {
+		app.Paused = true
+	}
 	app.PausedHeight = uint64(height)
 	bz, err := cdc.Marshal(app)
 	if err != nil {

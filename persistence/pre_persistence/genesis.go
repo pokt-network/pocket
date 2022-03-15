@@ -1,6 +1,7 @@
 package pre_persistence
 
 import (
+	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"math"
 	"math/big"
@@ -16,7 +17,7 @@ var ( // TODO these are needed placeholders to pass validation checks. Until we 
 )
 
 // NewGenesisState IMPORTANT NOTE: Not using numOfValidators param, as Validators are now read from the test_state json file
-func NewGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfServiceNodes int) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
+func NewGenesisState(config *config.Config, numOfValidators, numOfApplications, numOfFisherman, numOfServiceNodes int) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
 	// create the genesis state object
 	state = &GenesisState{}
 	// use the `integration test state` to populate parts of the genesis state
@@ -25,15 +26,24 @@ func NewGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfSe
 	vm := testingState.ValidatorMap
 	// generate `mocked` keys for each actor
 	// specifically, use the test state json file to create the validator keys
-	validatorKeys = make([]crypto.PrivateKey, len(vm))
+	if config.IsTesting {
+		validatorKeys = make([]crypto.PrivateKey, numOfValidators)
+	} else {
+		validatorKeys = make([]crypto.PrivateKey, len(vm))
+	}
 	// use the number param to create the rest
 	appKeys = make([]crypto.PrivateKey, numOfApplications)
 	fishKeys = make([]crypto.PrivateKey, numOfFisherman)
 	serviceNodeKeys = make([]crypto.PrivateKey, numOfServiceNodes)
 	// create state objects for each key type
 	for i := range validatorKeys {
-		n := vm[NodeId(i+1)] // TODO will have to fix conflict when NodeId is deprecated
-		pk, _ := crypto.NewPrivateKey(n.PrivateKey)
+		var pk crypto.PrivateKey
+		if config.IsTesting {
+			pk, _ = crypto.GeneratePrivateKey()
+		} else {
+			n := vm[NodeId(i+1)] // TODO will have to fix conflict when NodeId is deprecated
+			pk, _ = crypto.NewPrivateKey(n.PrivateKey)
+		}
 		v := &Validator{
 			Status:       2,
 			ServiceURL:   defaultServiceURL,

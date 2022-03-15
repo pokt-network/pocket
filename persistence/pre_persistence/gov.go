@@ -122,7 +122,7 @@ func DefaultParams() *Params {
 		ServiceNodeMinimumPauseBlocksOwner:       DefaultParamsOwner.Address(),
 		ServiceNodeMaxPausedBlocksOwner:          DefaultParamsOwner.Address(),
 		ServiceNodesPerSessionOwner:              DefaultParamsOwner.Address(),
-		ParamFishermanMinimumStakeOwner:          DefaultParamsOwner.Address(),
+		FishermanMinimumStakeOwner:               DefaultParamsOwner.Address(),
 		FishermanMaxChainsOwner:                  DefaultParamsOwner.Address(),
 		FishermanUnstakingBlocksOwner:            DefaultParamsOwner.Address(),
 		FishermanMinimumPauseBlocksOwner:         DefaultParamsOwner.Address(),
@@ -341,7 +341,7 @@ func InsertPersistenceParams(store *PrePersistenceContext, params *Params) types
 	if err != nil {
 		return types.ErrUpdateParam(err)
 	}
-	err = store.SetFishermanMinimumStakeOwner(params.ParamFishermanMinimumStakeOwner)
+	err = store.SetFishermanMinimumStakeOwner(params.FishermanMinimumStakeOwner)
 	if err != nil {
 		return types.ErrUpdateParam(err)
 	}
@@ -2005,7 +2005,7 @@ func (m *PrePersistenceContext) GetFishermanMinimumStakeOwner() ([]byte, error) 
 	if err != nil {
 		return nil, err
 	}
-	return params.ParamFishermanMinimumStakeOwner, nil
+	return params.FishermanMinimumStakeOwner, nil
 }
 
 func (m *PrePersistenceContext) SetFishermanMinimumStakeOwner(owner []byte) error {
@@ -2013,7 +2013,7 @@ func (m *PrePersistenceContext) SetFishermanMinimumStakeOwner(owner []byte) erro
 	if err != nil {
 		return err
 	}
-	params.ParamFishermanMinimumStakeOwner = owner
+	params.FishermanMinimumStakeOwner = owner
 	return m.SetParams(params)
 }
 

@@ -93,9 +93,9 @@ type Params struct {
 	ServiceNodeUnstakingBlocksOwner          []byte `protobuf:"bytes,66,opt,name=ServiceNodeUnstakingBlocksOwner,proto3" json:"ServiceNodeUnstakingBlocksOwner,omitempty"`
 	ServiceNodeMinimumPauseBlocksOwner       []byte `protobuf:"bytes,67,opt,name=ServiceNodeMinimumPauseBlocksOwner,proto3" json:"ServiceNodeMinimumPauseBlocksOwner,omitempty"`
 	ServiceNodeMaxPausedBlocksOwner          []byte `protobuf:"bytes,68,opt,name=ServiceNodeMaxPausedBlocksOwner,proto3" json:"ServiceNodeMaxPausedBlocksOwner,omitempty"`
-	ServiceNodesPerSessionOwner              []byte `protobuf:"bytes,69,opt,name=ServiceNodesPerSessionOwner,proto3" json:"ServiceNodesPerSessionOwner,omitempty"`
-	ParamFishermanMinimumStakeOwner          []byte `protobuf:"bytes,70,opt,name=ParamFishermanMinimumStakeOwner,proto3" json:"ParamFishermanMinimumStakeOwner,omitempty"`
-	FishermanMaxChainsOwner                  []byte `protobuf:"bytes,71,opt,name=FishermanMaxChainsOwner,proto3" json:"FishermanMaxChainsOwner,omitempty"`
+	ServiceNodesPerSessionOwner []byte `protobuf:"bytes,69,opt,name=ServiceNodesPerSessionOwner,proto3" json:"ServiceNodesPerSessionOwner,omitempty"`
+	FishermanMinimumStakeOwner  []byte `protobuf:"bytes,70,opt,name=FishermanMinimumStakeOwner,proto3" json:"FishermanMinimumStakeOwner,omitempty"`
+	FishermanMaxChainsOwner     []byte `protobuf:"bytes,71,opt,name=FishermanMaxChainsOwner,proto3" json:"FishermanMaxChainsOwner,omitempty"`
 	FishermanUnstakingBlocksOwner            []byte `protobuf:"bytes,72,opt,name=FishermanUnstakingBlocksOwner,proto3" json:"FishermanUnstakingBlocksOwner,omitempty"`
 	FishermanMinimumPauseBlocksOwner         []byte `protobuf:"bytes,73,opt,name=FishermanMinimumPauseBlocksOwner,proto3" json:"FishermanMinimumPauseBlocksOwner,omitempty"`
 	FishermanMaxPausedBlocksOwner            []byte `protobuf:"bytes,74,opt,name=FishermanMaxPausedBlocksOwner,proto3" json:"FishermanMaxPausedBlocksOwner,omitempty"`
@@ -653,7 +653,7 @@ func (x *Params) GetServiceNodesPerSessionOwner() []byte {
 
 func (x *Params) GetParamFishermanMinimumStakeOwner() []byte {
 	if x != nil {
-		return x.ParamFishermanMinimumStakeOwner
+		return x.FishermanMinimumStakeOwner
 	}
 	return nil
 }

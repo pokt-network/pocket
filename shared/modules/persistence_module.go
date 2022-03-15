@@ -89,6 +89,7 @@ type PersistenceContext interface {
 	GetValidatorPauseHeightIfExists(address []byte) (int64, error)
 	SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetValidatorPauseHeightAndMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) error
+	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
 	GetValidatorMissedBlocks(address []byte) (int, error)
 	SetValidatorPauseHeight(address []byte, height int64) error
 	SetValidatorStakedTokens(address []byte, tokens string) error

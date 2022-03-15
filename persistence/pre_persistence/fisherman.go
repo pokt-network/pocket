@@ -227,7 +227,7 @@ func (m *PrePersistenceContext) SetFishermanUnstakingHeightAndStatus(address []b
 func (m *PrePersistenceContext) GetFishermanPauseHeightIfExists(address []byte) (int64, error) {
 	fish, exists, err := m.GetFisherman(address)
 	if err != nil {
-		return ZeroInt, nil
+		return ZeroInt, err
 	}
 	if !exists {
 		return ZeroInt, fmt.Errorf("does not exist in world state")
@@ -281,7 +281,11 @@ func (m *PrePersistenceContext) SetFishermanPauseHeight(address []byte, height i
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	fish.Paused = true
+	if height == 0 {
+		fish.Paused = false
+	} else {
+		fish.Paused = true
+	}
 	fish.PausedHeight = uint64(height)
 	bz, err := cdc.Marshal(fish)
 	if err != nil {
