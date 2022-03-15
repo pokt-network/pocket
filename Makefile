@@ -154,6 +154,7 @@ protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
 
 	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=./shared ./shared/types/proto/*.proto
+	protoc -I=${proto_dir} -I=./consensus/types/proto --go_out=./consensus ./consensus/types/proto/*.proto
 
 	echo "View generated proto files by running: make protogen_show"
 

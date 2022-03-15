@@ -11,8 +11,6 @@ var maxTxBytes = 90000
 var emptyByzValidators = make([][]byte, 0)
 var appHash []byte
 
-// var emptyTxs = make([][]byte, 0)
-
 func CreateMockedModule(_ *config.Config) (modules.UtilityModule, error) {
 	ctrl := gomock.NewController(nil)
 	utilityMock := mock_modules.NewMockUtilityModule(ctrl)
