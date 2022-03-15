@@ -1,8 +1,8 @@
 package consensus
 
-// TODO(olshansky): Low priority design: think of a way to make `hotstuff_*` files be a sub-package under consensus.
-// This is currently not possible because functions tied to the `consensusModule` struct (implementing the ConsensusModule module)
-// spans multiple files.
+// TODO(discuss): Low priority design: think of a way to make `hotstuff_*` files be a sub-package under consensus.
+// This is currently not possible because functions tied to the `consensusModule`
+// struct (implementing the ConsensusModule module), which spans multiple files.
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ type HotstuffMessageHandler interface {
 }
 
 /*
-TODO(design): The reason we do not assign both the leader and the replica handlers
+TODO(discuss): The reason we do not assign both the leader and the replica handlers
 to the leader (which should also act as a replica when it is a leader) is because it
 can create a weird inconsistent state (e.g. both the replica and leader try to restart
 the Pacemaker timeout). This requires additional "replica-like" logic in the leader
@@ -92,7 +92,7 @@ func (m *consensusModule) handleHotstuffMessage(msg *types_consensus.HotstuffMes
 	// Leader only logic below
 
 	// Discard messages with invalid partial signatures before storing it in the leader's consensus mempool
-	if validPartialSig, reason := m.isValidPartialSignature(msg); !validPartialSig {
+	if valid, reason := m.isPartialSignatureValid(msg); !valid {
 		m.nodeLogError("Discarding hotstuff message because the partial signature is invalid", fmt.Errorf(reason))
 		return
 	}

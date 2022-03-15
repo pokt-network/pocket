@@ -11,7 +11,7 @@ import (
 
 func CreateProposeMessage(
 	m *consensusModule,
-	step types_consensus.HotstuffStep,
+	step types_consensus.HotstuffStep, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
 	qc *types_consensus.QuorumCertificate,
 ) (*types_consensus.HotstuffMessage, error) {
 	if m.Block == nil {
@@ -21,14 +21,19 @@ func CreateProposeMessage(
 	msg := &types_consensus.HotstuffMessage{
 		Type:          Propose,
 		Height:        uint64(m.Height),
-		Step:          step, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
+		Step:          step,
 		Round:         m.Round,
 		Block:         m.Block,
 		Justification: nil, // QC is set below if it is non-nil
 	}
 
-	// TODO(olshansky): Should we add a check to return an error if qc is nil and the step is not NewRound?
-	if qc != nil {
+	// TODO(olshansky): Add unit tests for this
+	if qc == nil && step != Prepare {
+		return nil, fmt.Errorf("when creating a ProposeMessage for a step other than PREPARE, the qc should NEVER be nil")
+	}
+
+	// TODO(olshansky): Add unit tests for this
+	if qc != nil { // QC may optionally be nil for NEWROUND steps when everything is progressing smoothly
 		msg.Justification = &types_consensus.HotstuffMessage_QuorumCertificate{
 			QuorumCertificate: qc,
 		}
@@ -39,7 +44,7 @@ func CreateProposeMessage(
 
 func CreateVoteMessage(
 	m *consensusModule,
-	step types_consensus.HotstuffStep,
+	step types_consensus.HotstuffStep, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
 	block *types_consensus.BlockConsensusTemp,
 ) (*types_consensus.HotstuffMessage, error) {
 	if block == nil {
@@ -49,7 +54,7 @@ func CreateVoteMessage(
 	msg := &types_consensus.HotstuffMessage{
 		Type:          Vote,
 		Height:        m.Height,
-		Step:          step, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
+		Step:          step,
 		Round:         m.Round,
 		Block:         block,
 		Justification: nil, // signature is computed below
@@ -65,6 +70,7 @@ func CreateVoteMessage(
 	return msg, nil
 }
 
+// Returns a "partial" signature of the hotstuff message from one of the validators
 func getMessageSignature(m *types_consensus.HotstuffMessage, privKey crypto.PrivateKey) []byte {
 	bytesToSign, err := getSignableBytes(m)
 	if err != nil {

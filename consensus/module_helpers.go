@@ -30,6 +30,7 @@ func (m *consensusModule) broadcastToNodes(message proto.Message, messageType ty
 		m.nodeLogError("Failed to create consensus message", err)
 		return
 	}
+
 	if err := m.GetBus().GetP2PModule().Broadcast(any, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError("Error broadcasting message:", err)
 		return

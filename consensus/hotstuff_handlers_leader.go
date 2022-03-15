@@ -84,7 +84,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 	precommitProposeMessages, err := CreateProposeMessage(m, PreCommit, prepareQC)
 	if err != nil {
-		m.nodeLogError("Could not create a propose message.", err)
+		m.nodeLogError("Could not create a propose message", err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -121,7 +121,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 	commitProposeMessage, err := CreateProposeMessage(m, Commit, preCommitQC)
 	if err != nil {
-		m.nodeLogError("Could not create a propose message.", err)
+		m.nodeLogError("Could not create a propose message", err)
 		m.paceMaker.InterruptRound()
 		return
 	}

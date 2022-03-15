@@ -9,7 +9,7 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 )
 
-func (m *consensusModule) isValidPartialSignature(msg *types_consensus.HotstuffMessage) (bool, string) {
+func (m *consensusModule) isPartialSignatureValid(msg *types_consensus.HotstuffMessage) (bool, string) {
 	if msg.Step == NewRound {
 		return true, "NewRound messages do not need a partial signature"
 	}
@@ -41,7 +41,7 @@ func (m *consensusModule) isValidPartialSignature(msg *types_consensus.HotstuffM
 	return false, fmt.Sprintf("Partial signature on message is invalid. Sender: %d; Height: %d; Step: %d; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s", m.ValAddrToIdMap[address], msg.Height, msg.Step, msg.Round, msg.GetPartialSignature().Signature, types_consensus.ProtoHash(msg.Block), pubKey.String())
 }
 
-func (m *consensusModule) isValidProposal(msg *types_consensus.HotstuffMessage) (bool, string) {
+func (m *consensusModule) isProposalValid(msg *types_consensus.HotstuffMessage) (bool, string) {
 	if !(msg.Type == Propose && msg.Step == Prepare) {
 		return false, "Proposal is not valid in the PREPARE step"
 	}
@@ -50,8 +50,7 @@ func (m *consensusModule) isValidProposal(msg *types_consensus.HotstuffMessage) 
 		return false, fmt.Sprintf("Invalid block in message: %s", reason)
 	}
 
-	// TODO(olshansky): Discuss this with Andrew:
-	// A nil QC implies a successfull CommitQC or TimeoutQC, which have been ommitted intentionally since
+	// TODO(discuss): A nil QC implies a successfull CommitQC or TimeoutQC, which have been omitted intentionally since
 	// they are not needed for consensus validity. However, if a QC is specified, it must be valid.
 	if msg.GetQuorumCertificate() != nil {
 		if valid, reason := m.isQuorumCertificateValid(msg.GetQuorumCertificate()); !valid {
@@ -75,11 +74,10 @@ func (m *consensusModule) isValidProposal(msg *types_consensus.HotstuffMessage) 
 
 	// Liveness: node is locked on a QC from the past.
 	if justifyQC.Height > lockedQC.Height || (justifyQC.Height == lockedQC.Height && justifyQC.Round > lockedQC.Round) {
-		// m.LockedQC = nil
-		return false, "[TODO]: Olshansky must discuss this case with Andrew"
+		return false, "[TODO]: Do we want to set `m.LockedQC = nil` here or something else?"
 	}
 
-	return false, "UNHANDELED PROPOSAL VALIDATION CHECK"
+	return false, "[WARN] UNHANDLED PROPOSAL VALIDATION CHECK"
 }
 
 // TODO(olshansky): Check basic message metadata for validity (hash, size, etc)
@@ -110,7 +108,7 @@ func (m *consensusModule) isQuorumCertificateValid(qc *types_consensus.QuorumCer
 			continue
 		}
 		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
-		// just serialize `Message` once and verify each signature without reserializing every time.
+		// just serialize `Message` once and verify each signature without re-serializing every time.
 		if !isSignatureValid(msgToJustify, validator.PublicKey, partialSig.Signature) {
 			m.nodeLog(fmt.Sprintf("[WARN] QC invalid because partial signature from the following node is invalid: %d", m.ValAddrToIdMap[partialSig.Address]))
 			continue

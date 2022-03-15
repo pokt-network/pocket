@@ -18,7 +18,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 /*** Prepare Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
-	if valid, reason := m.isValidProposal(msg); !valid {
+	if valid, reason := m.isProposalValid(msg); !valid {
 		m.nodeLogError("Invalid proposal in PREPARE message", fmt.Errorf(reason))
 		m.paceMaker.InterruptRound()
 		return
