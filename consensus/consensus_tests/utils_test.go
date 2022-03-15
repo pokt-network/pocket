@@ -32,12 +32,11 @@ import (
 // but guarantees more correctness.
 var failOnExtraMessages bool
 
-// TODO(integration): These are temporary variables used in the prototype
-// integration phase that will need to be parameterized later once the test
-// framework design matures.
+// TODO(integration): These are temporary variables used in the prototype integration phase that
+// will need to be parameterized later once the test framework design matures.
+var appHash []byte
 var maxTxBytes = 90000
 var emptyByzValidators = make([][]byte, 0)
-var appHash []byte
 var emptyTxs = make([][]byte, 0)
 
 // Initialize certain unit test configurations on startup.
@@ -53,20 +52,23 @@ func init() {
 
 type IdToNodeMapping map[types_consensus.NodeId]*shared.Node
 
+/*** Node Generation Helpers ***/
+
 func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
 	for i := uint32(1); i <= uint32(n); i++ {
+		// Deterministically generate a private key for the node
 		seed := make([]byte, ed25519.PrivateKeySize)
 		binary.LittleEndian.PutUint32(seed, i)
 		pk, err := pcrypto.NewPrivateKeyFromSeed(seed)
 		require.NoError(t, err)
 
+		// Generate test config
 		c := config.Config{
 			RootDir:    "",                             // left empty intentionally
 			PrivateKey: pk.(pcrypto.Ed25519PrivateKey), // deterministic key based on `i`
 			Genesis:    genesisJson(t),
-
-			Pre2P: nil,
-			P2P:   nil,
+			Pre2P:      nil,
+			P2P:        nil,
 			Consensus: &config.ConsensusConfig{
 				MaxMempoolBytes: 500000000,
 				MaxBlockBytes:   4000000,
@@ -79,10 +81,10 @@ func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
 			Persistence: nil,
 			Utility:     nil,
 		}
-
 		err = c.ValidateAndHydrate()
 		require.NoError(t, err)
 
+		// Append the config to the list of configurations used in the test
 		configs = append(configs, &c)
 	}
 	return
@@ -94,7 +96,7 @@ func CreateTestConsensusPocketNodes(
 	testChannel modules.EventsChannel,
 ) (pocketNodes IdToNodeMapping) {
 	pocketNodes = make(IdToNodeMapping, len(configs))
-	// TODO(design): The order here is important in order for NodeId to be set corresctly below.
+	// TODO(design): The order here is important in order for NodeId to be set correctly below.
 	// This logic will need to change once proper leader election is implemented.
 	sort.Slice(configs, func(i, j int) bool {
 		return configs[i].PrivateKey.Address().String() < configs[j].PrivateKey.Address().String()
@@ -107,7 +109,7 @@ func CreateTestConsensusPocketNodes(
 	return
 }
 
-// Creates a pocket node where all the primary modules, exception for consensus, are mocked.
+// Creates a pocket node where all the primary modules, exception for consensus, are mocked
 func CreateTestConsensusPocketNode(
 	t *testing.T,
 	cfg *config.Config,
@@ -135,9 +137,11 @@ func CreateTestConsensusPocketNode(
 	return pocketNode
 }
 
+/*** Node Visibility/Reflection Helpers ***/
+
 // TODO(discuss): Should we use reflections inside the testing module as being done here or explicitly
 // define the interfaces used for debug/development. The latter will probably scale more but will
-// require more effort.
+// require more effort and pollute the source code with debugging information.
 func GetConsensusNodeState(node *shared.Node) types_consensus.ConsensusNodeState {
 	return reflect.ValueOf(node.GetBus().GetConsensusModule()).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(types_consensus.ConsensusNodeState)
 }
@@ -145,6 +149,8 @@ func GetConsensusNodeState(node *shared.Node) types_consensus.ConsensusNodeState
 func GetConsensusModImplementation(node *shared.Node) reflect.Value {
 	return reflect.ValueOf(node.GetBus().GetConsensusModule()).Elem()
 }
+
+/*** Debug/Development Message Helpers ***/
 
 func TriggerNextView(t *testing.T, node *shared.Node) {
 	triggerDebugMessage(t, node, types.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW)
@@ -161,6 +167,8 @@ func triggerDebugMessage(t *testing.T, node *shared.Node, action types.DebugMess
 	e := &types.PocketEvent{Topic: types.PocketTopic_DEBUG_TOPIC, Data: anyProto}
 	node.GetBus().PublishEventToBus(e)
 }
+
+/*** P2P Helpers ***/
 
 func P2PBroadcast(t *testing.T, nodes IdToNodeMapping, message *types_consensus.ConsensusMessage) {
 	any, err := anypb.New(message)
@@ -212,8 +220,7 @@ func WaitForNetworkConsensusMessages(
 	return waitForNetworkConsensusMessagesInternal(t, testChannel, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, decoder, includeFilter, errorMessage)
 }
 
-// TODO(olshansky): Translate this to use generics.
-func waitForNetworkConsensusMessagesInternal(
+func waitForNetworkConsensusMessagesInternal( // TODO(olshansky): Translate this to use generics.
 	t *testing.T,
 	testChannel modules.EventsChannel,
 	topic types.PocketTopic,
@@ -268,6 +275,8 @@ loop:
 	}
 	return
 }
+
+/*** Module Mocking Helpers ***/
 
 // Creates a persistence module mock with mock implementations of some basic functionality
 func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *mock_modules.MockPersistenceModule {
@@ -336,6 +345,8 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *mock_modules.MockUt
 
 	return utilityMock
 }
+
+/*** Genesis Helpers ***/
 
 // The genesis file is hardcoded for test purposes, but is also
 // validated before returning the string in case changes in the

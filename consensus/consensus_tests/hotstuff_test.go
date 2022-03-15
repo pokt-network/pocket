@@ -24,7 +24,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 	time.Sleep(10 * time.Millisecond) // Avoids minor race conditions if pocket node has not finished starting/initialization
 
-	// Debug message to start consensus by triggering first view change.
+	// Debug message to start consensus by triggering first view change
 	for _, pocketNode := range pocketNodes {
 		TriggerNextView(t, pocketNode)
 	}
@@ -39,11 +39,11 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		require.Equal(t, uint8(0), nodeState.Round)
 		require.Equal(t, false, nodeState.IsLeader)
 	}
-
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)
 	}
 
+	// Leader election is deterministic for now, so we know its NodeId
 	leaderId := types_consensus.NodeId(2)
 	leader := pocketNodes[leaderId]
 

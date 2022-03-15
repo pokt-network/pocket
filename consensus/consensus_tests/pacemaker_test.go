@@ -54,7 +54,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 		require.Equal(t, uint8(0), nodeState.Round)
 	}
 
-	// Cause the pacemaker to timeout.
+	// Cause the pacemaker to timeout
 	time.Sleep(paceMakerTimeout)
 
 	// Check that a new round starts at the same height.
@@ -67,10 +67,10 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 		require.Equal(t, uint8(1), nodeState.Round)
 	}
 
-	// Cause the pacemaker to timeout.
+	// Cause the pacemaker to timeout
 	time.Sleep(paceMakerTimeout)
 
-	// // Check that a new round starts at the same height.
+	// // Check that a new round starts at the same height
 	_, err = WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
 	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
@@ -80,7 +80,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 		require.Equal(t, uint8(2), nodeState.Round)
 	}
 
-	// Cause the pacemaker to timeout.
+	// Cause the pacemaker to timeout
 	time.Sleep(paceMakerTimeout)
 
 	// Check that a new round starts at the same height.
@@ -107,7 +107,6 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 		require.Equal(t, uint8(consensus.Prepare), nodeState.Step)
 		require.Equal(t, uint8(3), nodeState.Round)
 	}
-
 }
 
 func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
@@ -148,7 +147,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	leaderConsensusMod := GetConsensusModImplementation(leader)
 	leaderConsensusMod.FieldByName("Block").Set(reflect.ValueOf(block))
 
-	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS.
+	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS
 	for _, pocketNode := range pocketNodes {
 		consensusModImpl := GetConsensusModImplementation(pocketNode)
 		consensusModImpl.FieldByName("Height").SetUint(testHeight)
