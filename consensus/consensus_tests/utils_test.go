@@ -68,6 +68,9 @@ func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
 			Pre2P: nil,
 			P2P:   nil,
 			Consensus: &config.ConsensusConfig{
+				MaxMempoolBytes:     500000000,
+				MaxBlockBytes:       4000000,
+				MaxTransactionBytes: 100000,
 				Pacemaker: &config.PacemakerConfig{
 					TimeoutMsec:               5000,
 					Manual:                    false,
@@ -77,6 +80,10 @@ func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
 			Persistence: nil,
 			Utility:     nil,
 		}
+
+		err = c.ValidateAndHydrate()
+		require.NoError(t, err)
+
 		configs = append(configs, &c)
 	}
 	return
@@ -338,11 +345,6 @@ func genesisJson(t *testing.T) string {
 	genesisJsonStr := `{
 		"genesis_time": "2022-01-19T00:00:00.000000Z",
 		"app_hash": "genesis_block_or_state_hash",
-		"consensus_params": {
-			"max_mempool_bytes": 50000000,
-			"max_block_bytes": 4000000,
-			"max_transaction_bytes": 100000
-		},
 		"validators": [
 			{
 				"address": "6f1e5b61ed9a821457aa6b4d7c2a2b37715ffb16",

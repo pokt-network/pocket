@@ -25,6 +25,7 @@ var _ modules.ConsensusModule = &consensusModule{}
 type consensusModule struct {
 	bus        modules.Bus
 	privateKey pcrypto.Ed25519PrivateKey
+	consCfg    *config.ConsensusConfig
 
 	// Hotstuff
 	Height uint64
@@ -68,6 +69,7 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	m := &consensusModule{
 		bus:        nil,
 		privateKey: cfg.PrivateKey,
+		consCfg:    cfg.Consensus,
 
 		Height: 0,
 		Round:  0,

@@ -38,6 +38,10 @@ go_vet:
 go_staticcheck:
 	@if builtin type -P "staticcheck"; then staticcheck ./... ; else echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; fi
 
+.PHONY: go_clean_dep
+## Runs `go mod vendor` && `go mod tidy`
+	go mod vendor && go mod tidy
+
 .PHONY: build
 ## Build Pocket's main entrypoint
 build:

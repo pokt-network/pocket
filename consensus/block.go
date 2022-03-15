@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"unsafe"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/types"
@@ -56,6 +57,11 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 }
 
 func (m *consensusModule) applyBlock(block *types_consensus.BlockConsensusTemp) error {
+	// TODO(olshansky): Add unit tests to verify this.
+	if unsafe.Sizeof(*block) > uintptr(m.consCfg.MaxBlockBytes) {
+		return fmt.Errorf("block size is too large: %d bytes VS max of %d bytes", unsafe.Sizeof(*block), m.consCfg.MaxBlockBytes)
+	}
+
 	if err := m.updateUtilityContext(); err != nil {
 		return err
 	}

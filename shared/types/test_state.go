@@ -76,8 +76,6 @@ func (ps *TestState) loadStateFromGenesis(cfg *config.Config) {
 		AppHash:          genesis.AppHash,
 		ValidatorMap:     ValidatorListToMap(genesis.Validators),
 		TotalVotingPower: 0, // Value is compute below in `recomputeTotalVotingPower`
-
-		ConsensusParams: *genesis.ConsensusParams,
 	}
 
 	ps.recomputeTotalVotingPower()

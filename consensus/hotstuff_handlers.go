@@ -6,6 +6,7 @@ package consensus
 
 import (
 	"fmt"
+	"unsafe"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 )
@@ -93,6 +94,14 @@ func (m *consensusModule) handleHotstuffMessage(msg *types_consensus.HotstuffMes
 	// Discard messages with invalid partial signatures before storing it in the leader's consensus mempool
 	if validPartialSig, reason := m.isValidPartialSignature(msg); !validPartialSig {
 		m.nodeLogError("Discarding hotstuff message because the partial signature is invalid", fmt.Errorf(reason))
+		return
+	}
+
+	// TODO(olshansky): Add proper tests for this when we figure out where the mempool should live.
+	// NOTE: This is just a placeholder at the moment. It doesn't actually work because SizeOf returns
+	// the size of the map pointer, and does not recursively determine the size of all the underlying elements.
+	if m.consCfg.MaxMempoolBytes < uint64(unsafe.Sizeof(m.MessagePool)) {
+		m.nodeLogError("Discarding hotstuff message because the mempool is full", fmt.Errorf("mempool is full"))
 		return
 	}
 

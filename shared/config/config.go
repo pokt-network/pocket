@@ -44,6 +44,14 @@ type PacemakerConfig struct {
 }
 
 type ConsensusConfig struct {
+	// Mempool
+	MaxMempoolBytes uint64 `json:"max_mempool_bytes"` // TODO(olshansky): add unit tests for this
+
+	// Block
+	MaxBlockBytes       uint64 `json:"max_block_bytes"`       // TODO(olshansky): add unit tests for this
+	MaxTransactionBytes uint64 `json:"max_transaction_bytes"` // TODO(olshansky): add unit tests for this
+
+	// Pacemaker
 	Pacemaker *PacemakerConfig `json:"pacemaker"`
 }
 
@@ -72,22 +80,14 @@ func LoadConfig(file string) (c *Config) {
 		log.Fatalln("Error parsing config file: ", err)
 	}
 
-	if err := c.validateAndHydrate(); err != nil {
+	if err := c.ValidateAndHydrate(); err != nil {
 		log.Fatalln("Error validating or completing config: ", err)
-	}
-
-	if err := c.Consensus.validateAndHydrate(); err != nil {
-		log.Fatalln("Error validating or completing consensus config: ", err)
-	}
-
-	if err := c.P2P.validateAndHydrate(); err != nil {
-		log.Fatalln("Error validating or completing P2P config: ", err)
 	}
 
 	return
 }
 
-func (c *Config) validateAndHydrate() error {
+func (c *Config) ValidateAndHydrate() error {
 	if len(c.PrivateKey) == 0 {
 		return fmt.Errorf("private key in config file cannot be empty")
 	}
@@ -97,21 +97,42 @@ func (c *Config) validateAndHydrate() error {
 	}
 	c.Genesis = rootify(c.Genesis, c.RootDir)
 
+	if err := c.Consensus.ValidateAndHydrate(); err != nil {
+		log.Fatalln("Error validating or completing consensus config: ", err)
+	}
+
+	if err := c.P2P.ValidateAndHydrate(); err != nil {
+		log.Fatalln("Error validating or completing P2P config: ", err)
+	}
+
 	return nil
 }
 
-func (c *P2PConfig) validateAndHydrate() error {
+func (c *P2PConfig) ValidateAndHydrate() error {
 	return nil
 }
 
-func (c *ConsensusConfig) validateAndHydrate() error {
-	if err := c.Pacemaker.validateAndHydrate(); err != nil {
+func (c *ConsensusConfig) ValidateAndHydrate() error {
+	if err := c.Pacemaker.ValidateAndHydrate(); err != nil {
 		log.Fatalf("Error validating or completing Pacemaker configs")
 	}
+
+	if c.MaxMempoolBytes <= 0 {
+		return fmt.Errorf("MaxMempoolBytes must be a positive integer")
+	}
+
+	if c.MaxBlockBytes <= 0 {
+		return fmt.Errorf("MaxBlockBytes must be a positive integer")
+	}
+
+	if c.MaxTransactionBytes <= 0 {
+		return fmt.Errorf("MaxTransactionBytes must be a positive integer")
+	}
+
 	return nil
 }
 
-func (c *PacemakerConfig) validateAndHydrate() error {
+func (c *PacemakerConfig) ValidateAndHydrate() error {
 	return nil
 }
 

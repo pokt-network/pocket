@@ -11,11 +11,6 @@ func TestGenesisFromJson(t *testing.T) {
 	genesis := `{
 		"genesis_time": "2022-01-19T00:00:00.000000Z",
 		"app_hash": "genesis_block_or_state_hash",
-		"consensus_params": {
-			"max_mempool_bytes": 50000000,
-			"max_block_bytes": 4000000,
-			"max_transaction_bytes": 100000
-		},
 		"validators": [
 		  {
 			"node_id": 1,

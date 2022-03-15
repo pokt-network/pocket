@@ -12,8 +12,6 @@ type Genesis struct {
 	GenesisTime time.Time    `json:"genesis_time"`
 	AppHash     string       `json:"app_hash"`
 	Validators  []*Validator `json:"validators"`
-
-	ConsensusParams *ConsensusParams `json:"consensus_params"`
 }
 
 // TODO: This is a temporary hack that can load Genesis from a single string
@@ -53,10 +51,6 @@ func PocketGenesisFromJSON(jsonBlob []byte) (*Genesis, error) {
 func (genesis *Genesis) Validate() error {
 	if genesis.GenesisTime.IsZero() {
 		return fmt.Errorf("GenesisTime cannot be zero")
-	}
-
-	if err := genesis.ConsensusParams.Validate(); err != nil {
-		return fmt.Errorf("ConsensusParams genesis error: %w", err)
 	}
 
 	// TODO: validate each account.
