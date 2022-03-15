@@ -1,12 +1,14 @@
 package consensus
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	"google.golang.org/protobuf/proto"
 )
 
 func (m *consensusModule) isPartialSignatureValid(msg *types_consensus.HotstuffMessage) (bool, string) {
@@ -68,7 +70,7 @@ func (m *consensusModule) isProposalValid(msg *types_consensus.HotstuffMessage) 
 
 	// Safety: check the hash of the locked QC
 	// TODO(olshansky): Extend implementation to adopt `ExtendsFrom` as described in the Hotstuff whitepaper.
-	if types_consensus.ProtoHash(lockedQC.Block) == types_consensus.ProtoHash(justifyQC.Block) { // && lockedQC.Block.ExtendsFrom(justifyQC.Block)
+	if protoHash(lockedQC.Block) == protoHash(justifyQC.Block) { // && lockedQC.Block.ExtendsFrom(justifyQC.Block)
 		return true, "The ProposalQC block is the same as the LockedQC block"
 	}
 
@@ -153,4 +155,12 @@ func getThresholdSignature(
 		thresholdSig.Signatures[i] = parpartialSig
 	}
 	return thresholdSig, nil
+}
+
+func protoHash(m proto.Message) string {
+	b, err := proto.Marshal(m)
+	if err != nil {
+		log.Fatalf("Could not marshal proto message: %v", err)
+	}
+	return base64.StdEncoding.EncodeToString(b)
 }
