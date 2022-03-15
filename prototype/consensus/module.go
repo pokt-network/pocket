@@ -3,8 +3,6 @@ package consensus
 import (
 	"encoding/gob"
 	"fmt"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 	"log"
 	"pocket/consensus/dkg"
 	"pocket/consensus/leader_election"
@@ -13,6 +11,9 @@ import (
 	"pocket/shared/config"
 	"pocket/shared/crypto"
 	"pocket/shared/modules"
+
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (

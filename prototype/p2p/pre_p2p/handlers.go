@@ -4,8 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	types2 "pocket/p2p/pre_p2p/types"
-	"pocket/shared/types"
+	"pocket/p2p/pre_p2p/types"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -19,7 +18,7 @@ func (m *networkModule) handleNetworkMessage(conn net.Conn) {
 		return
 	}
 
-	networkMessage := types2.P2PMessage{}
+	networkMessage := types.P2PMessage{}
 	if err := proto.Unmarshal(data, &networkMessage); err != nil {
 		panic(err) // TODO remove and handle
 	}
@@ -31,6 +30,7 @@ func (m *networkModule) handleNetworkMessage(conn net.Conn) {
 
 	// temporarily convert
 
+	log.Println(conn.LocalAddr().String(), "Received a network message of topic:", networkMessage.Topic)
 	event := types.Event{
 		SourceModule: types.P2P,
 		PocketTopic:  networkMessage.Topic,

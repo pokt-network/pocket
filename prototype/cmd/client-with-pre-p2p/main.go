@@ -2,9 +2,6 @@ package main
 
 import (
 	"encoding/gob"
-	"github.com/manifoldco/promptui"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 	"log"
 	"os"
 	"pocket/consensus"
@@ -13,10 +10,13 @@ import (
 	"pocket/consensus/statesync"
 	consensus_types "pocket/consensus/types"
 	"pocket/p2p/pre_p2p"
-	"pocket/p2p/pre_p2p/types"
 	p2p_types "pocket/p2p/pre_p2p/types"
 	"pocket/shared/config"
 	"pocket/shared/crypto"
+
+	"github.com/manifoldco/promptui"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -26,7 +26,6 @@ const (
 	PromptOptionSendTx                    string = "SendTx"
 	PromptOptionTogglePaceMakerManualMode string = "TogglePaceMakerManualMode"
 	PromptOptionTriggerDKG                string = "TriggerDKG"
-	PromptOptionDumpToNeo4j               string = "DumpToNeo4j"
 )
 
 const defaultGenesisFile = "build/config/genesis.json"
@@ -38,7 +37,6 @@ var items = []string{
 	PromptOptionSendTx,
 	PromptOptionResetToGenesis,
 	PromptOptionPrintNodeState,
-	PromptOptionDumpToNeo4j,
 }
 
 func main() {
@@ -131,9 +129,6 @@ func handleSelect(selection string, network p2p_types.Network, state *pre_p2p.Te
 			Action: consensus.PrintNodeState,
 		}
 		broadcastMessage(m, network)
-	case PromptOptionDumpToNeo4j:
-		log.Println("[CLIENT] Dumping to Neo4j...")
-		DumpToNeo4j(network)
 	default:
 		log.Println("Invalid selection")
 	}
@@ -163,6 +158,7 @@ func broadcastMessage(m consensus_types.GenericConsensusMessage, network p2p_typ
 		Topic: types.PocketTopic_CONSENSUS.String(),
 		Data:  anyProto,
 	}
+	log.Println("Sending a network message with topic", p2ptypes.PocketTopic_CONSENSUS)
 
 	bytes, err := proto.Marshal(networkProtoMsg)
 	if err != nil {

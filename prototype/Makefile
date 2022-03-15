@@ -35,7 +35,7 @@ client_start:
 
 ## Connect to the client daemon running in a background docker container.
 client_connect:
-	docker exec -it client /bin/bash -c "go run cmd/client/*.go"
+	docker exec -it client /bin/bash -c "go run cmd/client-with-pre-p2p/*.go"
 
 ## Attached docker compose of all the services except for neo4j w/ hot reload.
 compose_and_watch:
@@ -115,6 +115,50 @@ test_leader_election:
 ## Run the sortition unit tests
 test_sortition:
 	go test --count=1 -v ./pkg/consensus/leader_election/sortition
+
+## Run the p2p message behavior test
+test_p2p_message:
+	go test -run TestMessage -v -race ./p2p
+
+## Run the p2p wire codec behavior test
+test_p2p_wire_codec:
+	go test -run TestCodec -v -race ./p2p
+
+## Run the p2p net IO behaviors test
+test_p2p_netio:
+	go test -run TestIO -v -race ./p2p
+
+## Run the p2p network behavior (send, broadcast, listen...)
+test_p2p_network:
+	go test -run TestNetwork -v -race ./p2p
+
+## Run the p2p raintree algorithm test (in isolation of networking logic)
+test_p2p_raintree:
+	go test -run TestRainTree -v -race ./p2p
+
+## Run all p2p tests
+test_p2p:
+	go test -run Test -v -race ./p2p
+
+## Compile the p2p module into a separate binary
+compile-p2p:
+	go build -race -a -o ./build/dist/node ./cmd/main.go
+	chmod +x ./build/dist/node
+
+## Run the compiled p2p binary in isolation
+run-p2p:
+	./build/dist/node -address=$(ADDR)
+
+## Run the p2p e2e test script
+test_p2p_e2e:
+	echo "Not implemented"
+
+## Run the p2p e2e test stack
+test_p2p_e2e_docker:
+	docker-compose -f ./build/p2p_e2e_test_stack.yml --project-directory $(CWD) up --build --force-recreate
+
+stop_p2p_e2e_docker:
+	docker-compose -f ./build/p2p_e2e_test_stack.yml --project-directory $(CWD) down
 
 ## Benchmarking the sortition unit tests
 benchmark_sortition:
