@@ -1,13 +1,13 @@
 syntax = "proto3";
-package utility;
-option go_package = "/utility/test/";
+package pre_persistence;
+option go_package = "/pre_persistence/test/";
 
 message Account {
   bytes Address = 1;
-  string Amount = 2;
+  string Amount = 2; // all amounts are big.Int converted to string using Text protocol
 }
 
-message Pool {
+message Pool { // pools are 'special' accounts; Examples are fee collector & stake pool
   string Name = 1;
   Account Account = 2;
 }

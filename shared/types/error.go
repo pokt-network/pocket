@@ -67,11 +67,12 @@ const ( // Explain: using these numbers as it fits nicely with the other error c
 	CodeGetAllServiceNodesError Code = 98
 	CodeGetAllAppsError         Code = 99
 
-	CodeGetAllPoolsError    Code = 107
-	CodeGetAllAccountsError Code = 108
-	CodeGetAllParamsError   Code = 109
-
-	EmptyTransactionError = "the transaction is empty"
+	CodeGetAllPoolsError        Code = 107
+	CodeGetAllAccountsError     Code = 108
+	CodeGetAllParamsError       Code = 109
+	CodeInsufficientAmountError Code = 41
+	CodeNegativeAmountError     Code = 118
+	EmptyTransactionError            = "the transaction is empty"
 
 	StringToBigIntError = "an error occurred converting the string primitive to big.Int, the conversion was unsuccessful with base 10"
 
@@ -107,6 +108,8 @@ const ( // Explain: using these numbers as it fits nicely with the other error c
 	GetAllAccountsError       = "an error occurred getting all of the accounts"
 	GetAllParamsError         = "an error occurred getting all of the params"
 	DuplicateTransactionError = "the transaction is already found in the mempool"
+	InsufficientAmountError   = "the account has insufficient funds to complete the operation"
+	NegativeAmountError       = "the amount is negative"
 )
 
 func ErrDuplicateTransaction() Error {
@@ -115,6 +118,14 @@ func ErrDuplicateTransaction() Error {
 
 func ErrStringToBigInt() Error {
 	return NewError(CodeStringToBigIntError, fmt.Sprintf("%s", StringToBigIntError))
+}
+
+func ErrInsufficientAmountError() Error {
+	return NewError(CodeInsufficientAmountError, fmt.Sprintf("%s", InsufficientAmountError))
+}
+
+func ErrNegativeAmountError() Error {
+	return NewError(CodeNegativeAmountError, fmt.Sprintf("%s", NegativeAmountError))
 }
 
 func ErrGetAllValidators(err error) Error {

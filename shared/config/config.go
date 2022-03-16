@@ -14,17 +14,24 @@ type Config struct {
 	PrivateKey string `json:"private_key"` // TODO(olshansky): make this a proper key type.
 	Genesis    string `json:"genesis"`
 
-	PRE2P       *PRE2PConfig       `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
-	P2P         *P2PConfig         `json:"p2p"`
-	Consensus   *ConsensusConfig   `json:"consensus"`
-	Persistence *PersistenceConfig `json:"persistence"`
-	Utility     *UtilityConfig     `json:"utility"`
+	PRE2P          *PRE2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
+	P2P            *P2PConfig            `json:"p2p"`
+	PrePersistence *PrePersistenceConfig `json:"prePersistence"`
+	Consensus      *ConsensusConfig      `json:"consensus"`
+	Persistence    *PersistenceConfig    `json:"persistence"`
+	Utility        *UtilityConfig        `json:"utility"`
 }
 
 // TODO(derrandz): delete this once P2P is ready.
 type PRE2PConfig struct {
 	ConsensusPort uint32 `json:"consensus_port"`
 	DebugPort     uint32 `json:"debug_port"`
+}
+
+type PrePersistenceConfig struct {
+	Capacity        int `json:"capacity"`
+	MempoolMaxBytes int `json:"mempoolMaxBytes"`
+	MempoolMaxTxs   int `json:"mempoolMaxTxs"`
 }
 
 type P2PConfig struct {

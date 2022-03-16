@@ -27,10 +27,10 @@ func NewSendTxBytes(state *pre_p2p.TestState) []byte {
 	amount := types.BigIntToString(amountBig)
 	feeBig := big.NewInt(10000)
 	fee := types.BigIntToString(feeBig)
-	nonceBig := big.NewInt(0)
+	nonceBig := big.Int{}
 	nonce := types.BigIntToString(nonceBig)
-	cdc := types.UtilityCodec()
-	msg, err := cdc.ToAny(&types.MessageSend{
+	codec := types.UtilityCodec()
+	msg, err := codec.ToAny(&types.MessageSend{
 		FromAddress: addr1,
 		ToAddress:   addr2,
 		Amount:      amount,

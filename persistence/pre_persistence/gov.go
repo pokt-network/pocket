@@ -19,10 +19,10 @@ var (
 )
 
 func (m *PrePersistenceContext) InitParams() error {
-	cdc := Cdc()
+	codec := GetCodec()
 	db := m.Store()
 	p := DefaultParams()
-	bz, err := cdc.Marshal(p)
+	bz, err := codec.Marshal(p)
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func (m *PrePersistenceContext) InitParams() error {
 
 func (m *PrePersistenceContext) GetParams(height int64) (p *Params, err error) {
 	p = &Params{}
-	cdc := Cdc()
+	codec := GetCodec()
 	var paramsBz []byte
 	if height == m.Height {
 		db := m.Store()
@@ -45,7 +45,7 @@ func (m *PrePersistenceContext) GetParams(height int64) (p *Params, err error) {
 			return nil, nil
 		}
 	}
-	if err := cdc.Unmarshal(paramsBz, p); err != nil {
+	if err := codec.Unmarshal(paramsBz, p); err != nil {
 		return nil, err
 	}
 	return
@@ -1033,9 +1033,9 @@ func (m *PrePersistenceContext) GetMessageChangeParameterFee() (string, error) {
 }
 
 func (m *PrePersistenceContext) SetParams(p *Params) error {
-	cdc := Cdc()
+	codec := GetCodec()
 	store := m.Store()
-	bz, err := cdc.Marshal(p)
+	bz, err := codec.Marshal(p)
 	if err != nil {
 		return err
 	}

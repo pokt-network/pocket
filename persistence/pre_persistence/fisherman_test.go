@@ -102,7 +102,7 @@ func TestUpdateFisherman(t *testing.T) {
 		actor.ServiceURL, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	zero := BigIntToString(big.NewInt(0))
+	zero := BigIntToString(&big.Int{})
 	bigExpectedTokens := big.NewInt(1)
 	one := BigIntToString(bigExpectedTokens)
 	before, _, err := ctx.(*PrePersistenceContext).GetFisherman(actor.Address)

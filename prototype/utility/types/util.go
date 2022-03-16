@@ -36,7 +36,7 @@ func RandBigInt() *big.Int {
 }
 
 func StringToBigInt(s string) (*big.Int, Error) {
-	b := big.NewInt(0)
+	b := big.Int{}
 	i, ok := b.SetString(s, 10)
 	if !ok {
 		return nil, ErrStringToBigInt()

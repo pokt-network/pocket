@@ -30,7 +30,7 @@ func (m *PrePersistenceContext) GetServiceNode(address []byte) (sn *ServiceNode,
 }
 
 func (m *PrePersistenceContext) GetAllServiceNodes(height int64) (sns []*ServiceNode, err error) {
-	cdc := Cdc()
+	codec := GetCodec()
 	sns = make([]*ServiceNode, 0)
 	var it iterator.Iterator
 	if height == m.Height {
@@ -46,15 +46,14 @@ func (m *PrePersistenceContext) GetAllServiceNodes(height int64) (sns []*Service
 			Limit: PrefixEndBytes(key),
 		})
 	}
-	it.First()
 	defer it.Release()
-	for ; it.Valid(); it.Next() {
+	for valid := it.First(); valid; valid = it.Next() {
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
 		sn := ServiceNode{}
-		if err := cdc.Unmarshal(bz, &sn); err != nil {
+		if err := codec.Unmarshal(bz, &sn); err != nil {
 			return nil, err
 		}
 		sns = append(sns, &sn)
@@ -66,7 +65,7 @@ func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []by
 	if _, exists, _ := m.GetServiceNode(address); exists {
 		return fmt.Errorf("already exists in world state")
 	}
-	cdc := Cdc()
+	codec := GetCodec()
 	db := m.Store()
 	key := append(ServiceNodePrefixKey, address...)
 	sn := ServiceNode{
@@ -81,7 +80,7 @@ func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []by
 		UnstakingHeight: unstakingHeight,
 		Output:          output,
 	}
-	bz, err := cdc.Marshal(&sn)
+	bz, err := codec.Marshal(&sn)
 	if err != nil {
 		return err
 	}
@@ -93,7 +92,7 @@ func (m *PrePersistenceContext) UpdateServiceNode(address []byte, serviceURL str
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	cdc := Cdc()
+	codec := GetCodec()
 	db := m.Store()
 	key := append(ServiceNodePrefixKey, address...)
 	// compute new values
@@ -111,7 +110,7 @@ func (m *PrePersistenceContext) UpdateServiceNode(address []byte, serviceURL str
 	sn.StakedTokens = BigIntToString(stakedTokens)
 	sn.Chains = chains
 	// marshal
-	bz, err := cdc.Marshal(sn)
+	bz, err := codec.Marshal(sn)
 	if err != nil {
 		return err
 	}
@@ -188,14 +187,14 @@ func (m *PrePersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address [
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	cdc := Cdc()
+	codec := GetCodec()
 	unstakingActors := types.UnstakingActors{}
 	db := m.Store()
 	key := append(ServiceNodePrefixKey, address...)
 	sn.UnstakingHeight = unstakingHeight
 	sn.Status = int32(status)
 	// marshal
-	bz, err := cdc.Marshal(sn)
+	bz, err := codec.Marshal(sn)
 	if err != nil {
 		return err
 	}
@@ -217,7 +216,7 @@ func (m *PrePersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address [
 		StakeAmount:   sn.StakedTokens,
 		OutputAddress: sn.Output,
 	})
-	unstakingBz, err := cdc.Marshal(&unstakingActors)
+	unstakingBz, err := codec.Marshal(&unstakingActors)
 	if err != nil {
 		return err
 	}
@@ -227,7 +226,7 @@ func (m *PrePersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address [
 func (m *PrePersistenceContext) GetServiceNodePauseHeightIfExists(address []byte) (int64, error) {
 	sn, exists, err := m.GetServiceNode(address)
 	if err != nil {
-		return ZeroInt, nil
+		return ZeroInt, err
 	}
 	if !exists {
 		return ZeroInt, fmt.Errorf("does not exist in world state")
@@ -235,22 +234,22 @@ func (m *PrePersistenceContext) GetServiceNodePauseHeightIfExists(address []byte
 	return int64(sn.PausedHeight), nil
 }
 
+// SetServiceNodesStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
 func (m *PrePersistenceContext) SetServiceNodesStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	db := m.Store()
-	cdc := Cdc()
+	codec := GetCodec()
 	it := db.NewIterator(&util.Range{
 		Start: ServiceNodePrefixKey,
 		Limit: PrefixEndBytes(ServiceNodePrefixKey),
 	})
-	it.First()
 	defer it.Release()
-	for ; it.Valid(); it.Next() {
+	for valid := it.First(); valid; valid = it.Next() {
 		sn := ServiceNode{}
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
-		if err := cdc.Unmarshal(bz, &sn); err != nil {
+		if err := codec.Unmarshal(bz, &sn); err != nil {
 			return err
 		}
 		if sn.PausedHeight < uint64(pausedBeforeHeight) {
@@ -259,7 +258,7 @@ func (m *PrePersistenceContext) SetServiceNodesStatusAndUnstakingHeightPausedBef
 			if err := m.SetServiceNodeUnstakingHeightAndStatus(sn.Address, sn.UnstakingHeight, status); err != nil {
 				return err
 			}
-			bz, err := cdc.Marshal(&sn)
+			bz, err := codec.Marshal(&sn)
 			if err != nil {
 				return err
 			}
@@ -272,7 +271,7 @@ func (m *PrePersistenceContext) SetServiceNodesStatusAndUnstakingHeightPausedBef
 }
 
 func (m *PrePersistenceContext) SetServiceNodePauseHeight(address []byte, height int64) error {
-	cdc := Cdc()
+	codec := GetCodec()
 	db := m.Store()
 	sn, exists, err := m.GetServiceNode(address)
 	if err != nil {
@@ -283,7 +282,7 @@ func (m *PrePersistenceContext) SetServiceNodePauseHeight(address []byte, height
 	}
 	sn.Paused = true
 	sn.PausedHeight = uint64(height)
-	bz, err := cdc.Marshal(sn)
+	bz, err := codec.Marshal(sn)
 	if err != nil {
 		return err
 	}
@@ -299,7 +298,7 @@ func (m *PrePersistenceContext) GetServiceNodesPerSessionAt(height int64) (int, 
 }
 
 func (m *PrePersistenceContext) GetServiceNodeCount(chain string, height int64) (int, error) {
-	cdc := Cdc()
+	codec := GetCodec()
 	var it iterator.Iterator
 	count := 0
 	if m.Height == height {
@@ -314,15 +313,14 @@ func (m *PrePersistenceContext) GetServiceNodeCount(chain string, height int64) 
 			Limit: HeightKey(height, PrefixEndBytes(ServiceNodePrefixKey)),
 		})
 	}
-	it.First()
 	defer it.Release()
-	for ; it.Valid(); it.Next() {
+	for valid := it.First(); valid; valid = it.Next() {
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
 		node := ServiceNode{}
-		if err := cdc.Unmarshal(bz, &node); err != nil {
+		if err := codec.Unmarshal(bz, &node); err != nil {
 			return ZeroInt, err
 		}
 		for _, c := range node.Chains {

@@ -229,7 +229,7 @@ func (u *UtilityContext) HandleProposal(proposer []byte) types2.Error {
 	if err != nil {
 		return err
 	}
-	if err := u.SetPoolAmount(types2.FeePoolName, big.NewInt(0)); err != nil {
+	if err := u.SetPoolAmount(types2.FeePoolName, big.Int{}); err != nil {
 		return err
 	}
 	proposerCutPercentage, err := u.GetProposerPercentageOfFees()
@@ -284,7 +284,7 @@ func (u *UtilityContext) BurnValidator(address []byte, percentage int) types2.Er
 	if err != nil {
 		return err
 	}
-	zeroBigInt := big.NewInt(0)
+	zeroBigInt := big.Int{}
 	tokensFloat := new(big.Float).SetInt(tokens)
 	tokensFloat.Mul(tokensFloat, big.NewFloat(float64(percentage)))
 	tokensFloat.Quo(tokensFloat, big.NewFloat(100))

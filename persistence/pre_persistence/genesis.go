@@ -107,28 +107,28 @@ func NewGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfSe
 	// create appropriate 'stake' pools for each actor type
 	valStakePool, err := NewPool(ValidatorStakePoolName, &Account{
 		Address: DefaultValidatorStakePool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
 	}
 	appStakePool, err := NewPool(AppStakePoolName, &Account{
 		Address: DefaultAppStakePool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
 	}
 	fishStakePool, err := NewPool(FishermanStakePoolName, &Account{
 		Address: DefaultFishermanStakePool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
 	}
 	serNodeStakePool, err := NewPool(ServiceNodeStakePoolName, &Account{
 		Address: DefaultServiceNodeStakePool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
@@ -136,7 +136,7 @@ func NewGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfSe
 	// create a pool for collected fees (helps with rewards)
 	fee, err := NewPool(FeePoolName, &Account{
 		Address: DefaultFeeCollector.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
@@ -144,7 +144,7 @@ func NewGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfSe
 	// create a pool for the dao treasury
 	dao, err := NewPool(DAOPoolName, &Account{
 		Address: DefaultDAOPool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return

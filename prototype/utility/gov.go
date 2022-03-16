@@ -7,8 +7,8 @@ import (
 )
 
 func (u *UtilityContext) HandleMessageChangeParameter(message *types2.MessageChangeParameter) types2.Error {
-	cdc := u.Codec()
-	v, err := cdc.FromAny(message.ParameterValue)
+	codec := u.Codec()
+	v, err := codec.FromAny(message.ParameterValue)
 	if err != nil {
 		return types2.ErrProtoFromAny(err)
 	}

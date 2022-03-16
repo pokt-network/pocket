@@ -25,9 +25,9 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 	if store.TransactionExists(txHash) { // TODO non ordered nonce requires non-pruned tx indexer
 		return types2.ErrTransactionAlreadyCommitted()
 	}
-	cdc := u.Codec()
+	codec := u.Codec()
 	transaction := &types2.Transaction{}
-	err := cdc.Unmarshal(transactionProtoBytes, transaction)
+	err := codec.Unmarshal(transactionProtoBytes, transaction)
 	if err != nil {
 		return types2.ErrProtoUnmarshal(err)
 	}

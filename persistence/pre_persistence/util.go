@@ -11,7 +11,7 @@ const (
 )
 
 func StringToBigInt(s string) (*big.Int, types.Error) {
-	b := big.NewInt(0)
+	b := &big.Int{}
 	i, ok := b.SetString(s, 10)
 	if !ok {
 		return nil, types.ErrStringToBigInt()

@@ -3,6 +3,7 @@ module github.com/pokt-network/pocket
 go 1.17
 
 require (
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
 	github.com/magefile/mage v1.12.1
 	github.com/manifoldco/promptui v0.9.0

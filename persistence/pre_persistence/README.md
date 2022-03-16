@@ -10,10 +10,10 @@ Creator: @andrewnguyen22
 Co-Owners: @iajrz
 
 Deliverables:
-- Pre-Persistence Prototype
-- How to build guide
-- How to use guide
-- How to test guide
+- [ ] Pre-Persistence Prototype implementation
+- [ ] How to build guide
+- [ ] How to use guide
+- [ ] How to test guide
 
 ## How to build
 
@@ -24,15 +24,19 @@ persistence database is needed.
 
 ## How to use
 
-Pre_Persistence implements the PersistenceModule and subsequent PersistenceContext interfaces 
+Pre_Persistence implements the /Pre_Persistence/PrePersitence and subsequent PersistenceContext interfaces 
 `github.com/pokt-network/pocket/shared/modules/persistence_module.go`
 
 To use, simply initialize a Pre_Persistence instance using the constructor function:
+
+```
+// Params: in memory goleveldb; mempool for storing transactions; global configuration object
+func NewPrePersistenceModule(commitDB *memdb.DB, mempool types.Mempool, cfg *config.Config) *PrePersistenceModule {
+```
 
 and use as the persistence module in the desired integration / test. 
 
 ## How to test
 ```
-cd persistence/pre_persistence
-go test ./...
+go test ./persistence/pre_persistence/....
 ```
