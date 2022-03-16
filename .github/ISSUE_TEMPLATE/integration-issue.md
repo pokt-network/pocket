@@ -18,7 +18,7 @@ assignees: ''
 - [ ] List of deliverables
 
 ## [Optional] Testing Methodology
-How to proper test this issue
+How to properly test this issue
 
 ## Non-goals
 - List of goals that this issue won't address
