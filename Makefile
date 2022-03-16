@@ -101,7 +101,15 @@ protogen_clean:
 protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
 
-	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=./shared ./shared/types/proto/*.proto
+	protoc \
+		-I=${proto_dir} -I=./shared/types/proto \
+		--go_opt=paths=source_relative \
+		--go_out=./shared/types/ ./shared/types/proto/*.proto
+
+	protoc \
+		-I=${proto_dir} -I=./p2p/types/proto \
+		--go_opt=paths=source_relative \
+		--go_out=./p2p/types/ ./p2p/types/proto/*.proto
 
 	echo "View generated proto files by running: make protogen_show"
 
@@ -134,3 +142,21 @@ protogen_docker:
 ## Format all the .go files in the project in place.
 gofmt:
 	gofmt -w -s .
+
+## Module commands
+
+## Run the p2p wire codec behavior test
+test_p2p_wire_codec:
+	go test -run TestWireCodec -v -race ./p2p
+
+## Run the p2p net IO behaviors test
+test_p2p_socket:
+	go test -run TestSocket -v -race ./p2p
+
+## Run p2p subcomponents' tests
+test_p2p_types:
+    go test -v -race ./p2p/types
+
+## Run all p2p tests
+test_p2p:
+	go test -run Test -v -race ./p2p

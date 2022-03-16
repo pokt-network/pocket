@@ -1,15 +1,14 @@
 syntax = "proto3";
-
 import "google/protobuf/any.proto";
 
 package pocket;
 
-option go_package = "/types/";
+option go_package = "github.com/pokt-network/pocket/shared/types;types";
 
 enum PocketTopic {
-	UNKNOWN_POCKET_TOPIC = 0;
-	CONSENSUS_MESSAGE_TOPIC = 1;
-	P2P_MESSAGE_TOPIC = 2;
+  UNKNOWN_POCKET_TOPIC = 0;
+  CONSENSUS_MESSAGE_TOPIC = 1;
+  P2P_MESSAGE_TOPIC = 2;
 }
 
 message PocketEvent {
