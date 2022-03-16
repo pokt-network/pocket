@@ -4,17 +4,17 @@ package pre_persistence;
 option go_package = "/pre_persistence/test/";
 
 message BlockHeader {
-  int64 Height = 1;
-  string Hash = 2;
-  string NetworkID = 3;
-  google.protobuf.Timestamp Time = 4;
-  uint32 NumTxs = 5;
-  int64 TotalTxs = 6;
-  string LastBlockHash = 7;
-  bytes ProposerAddress = 8;
+  int64 height = 1;
+  string hash = 2;
+  string networkID = 3;
+  google.protobuf.Timestamp time = 4;
+  uint32 numTxs = 5;
+  int64 totalTxs = 6;
+  string lastBlockHash = 7;
+  bytes proposerAddress = 8;
 }
 
 message Block {
-  BlockHeader BlockHeader = 1;
-  repeated bytes Transactions = 2;
+  BlockHeader blockHeader = 1;
+  repeated bytes transactions = 2;
 }

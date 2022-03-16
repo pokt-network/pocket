@@ -10,11 +10,11 @@ import "service_node.proto";
 import "gov.proto";
 
 message GenesisState {
-  repeated Validator Validators = 1;
-  repeated Account Accounts = 2;
-  repeated Pool Pools = 3;
-  repeated Fisherman Fishermen = 4;
-  repeated ServiceNode ServiceNodes = 5;
-  repeated App Apps = 6;
-  Params Params = 7;
+  repeated validator Validators = 1;
+  repeated account Accounts = 2;
+  repeated pool Pools = 3;
+  repeated fisherman Fishermen = 4;
+  repeated serviceNode ServiceNodes = 5;
+  repeated app Apps = 6;
+  params Params = 7;
 }
