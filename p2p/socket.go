@@ -26,48 +26,66 @@ var (
 
 type SocketEventMonitor func(context.Context, *socket) error
 
+// socket is an abstraction around net.Conn to represent a p2p connection with full read/write capabilities
+// both read and write operations are buffer, and both buffer sizes are configurable through configuration
+// configuration paramters are directly assigned to the socket struct
+// 1 live p2p connection = 1 socket
 type socket struct {
+	// the agent responsible for running/creating/managing sockets
 	runner types.Runner
-	c      *wireCodec
 
+	// configuration parameters
 	headerLength uint
 	bufferSize   uint
 	readTimeout  uint
 	addr         string
 	kind         SocketKind // inbound or outbound
 
+	// the actual network socket
+	conn net.Conn
+
+	// the wire codec
+	c *wireCodec
+
+	// io buffers
 	buffers struct {
 		read  *types.Buffer
 		write *types.ConcurrentBuffer
 	}
 
-	conn net.Conn
-
+	// the io reader/writer
 	reader *bufio.Reader
 	writer *bufio.Writer
 
+	// the map to track writes that expects acknowledgements
+	// we call them requests (as they require responses)
 	requests *types.RequestMap
 
+	// turns true when the socket is opened (i.e: the connection is established and IO is on going)
 	isOpen atomic.Bool
 
-	ready   chan uint
-	writing chan uint
-	reading chan uint
-	done    chan uint
-	closed  chan uint
+	ready   chan uint // when the socket is opened and IO starts, this channel gets closed to signal readiness
+	writing chan uint // when the writing starts, this channel receives a new input; closes when done writing (i.e: stopped the socket)
+	reading chan uint // when the reading starts, this channel receives a new input; closes when done reading (i.e: stopped the socket)
+	done    chan uint // if this channel is closed or receives and input, it stops the socket and IO operations
+	closed  chan uint // this channel signals that the socket has been closed by receiving a new input
 
-	errored chan uint
-	err     struct {
+	errored chan uint // on error, this channel receives a new input to signal the happening of an error
+	err     struct {  // the reference to store the encountered error.
 		sync.Mutex
 		error
 	}
 
-	logger struct {
+	// TODO(team): replace with whatever logged decided upon when telemetry hits the code base
+	logger struct { // a temporary logger struct to allow flexible injection of log functions
 		sync.Mutex
 		print func(...interface{}) (int, error)
 	}
 }
 
+// retrieves the network connection in question through the connector argument
+// and starts the IO operations on that connection, while putting in place event handlers for onSocketOpened and onSocketClosed events
+// returns an error on failure
 func (s *socket) open(ctx context.Context, connector func() net.Conn, onopened SocketEventMonitor, onclosed SocketEventMonitor) error {
 	s.buffers.write.Open()
 
@@ -95,10 +113,14 @@ func (s *socket) open(ctx context.Context, connector func() net.Conn, onopened S
 	go s.startIO(ctx, kind, addr, conn, onopened, onclosed)
 
 	select {
+	case <-s.errored:
+		return s.err.error
 	case <-s.reading:
 	}
 
 	select {
+	case <-s.errored:
+		return s.err.error
 	case <-s.writing:
 	}
 
@@ -108,6 +130,9 @@ func (s *socket) open(ctx context.Context, connector func() net.Conn, onopened S
 	return nil
 }
 
+// Stops the ongoing IO operations gracefully
+// closes the network connection and closes all opened channels and signals that the close has went gracefully
+// does not block
 func (s *socket) close() {
 	if !s.isOpen.Load() {
 		return
@@ -130,6 +155,11 @@ func (s *socket) close() {
 	s.isOpen.Store(false)
 }
 
+// creates a reader and writer for the network connection
+// kicks off the onSocketOpened event handler, returns if there is an error
+// launches both the reading and writing routines (read, write methods): both are blocking
+// when the write routine exists, the onSocketClosed event handler kicks off (returns an error if there is one)
+// the write and read routines will both exist for the same reasons, so having just one of them block is sufficient.
 func (s *socket) startIO(ctx context.Context, kind SocketKind, addr string, conn net.Conn, onopened SocketEventMonitor, onclosed SocketEventMonitor) {
 	defer func() {
 		s.close()
@@ -159,10 +189,14 @@ func (s *socket) startIO(ctx context.Context, kind SocketKind, addr string, conn
 	}
 }
 
+// the TLS handshake algorithm to establish encrypted connections
 func (s *socket) handshake() {
 
 }
 
+// reads a chunk=readbufferSize amount of bytes out of the reader
+// this is used by the read routine to perform buffer reads
+// this operation blocks until the full body length is read
 func (s *socket) readChunk() ([]byte, int, error) {
 	var n int
 
@@ -190,6 +224,17 @@ func (s *socket) readChunk() ([]byte, int, error) {
 	return buff, n, err
 }
 
+// the read routine
+// this routine performs buffered reads (readBufferSize) on the established connection
+// and does two things as a consequence of a read operation:
+//    1- if it's a response to a request out of this socket, it will redirect the response to the request's response channel (see types/request.go)
+// .  2- if not, it will handover the read buffer as Work (check types/work.go) to the runner (check types/runner.go)
+// this routine halfs if:
+//   - the cancelable routine cancels
+//   - if the runner stops
+//   - if the socket closes
+//   - if some party signals that this routine should stop (by closing the s.reading channel)
+//   - if there is an IO error: EOF, UnexpectedEOF, peer hang up, unexpected error
 func (s *socket) read(ctx context.Context) {
 	defer func() {
 		close(s.reading)
@@ -265,6 +310,11 @@ reader:
 	}
 }
 
+// TODO(derrandz): add buffered write by writing exactly the writeBufferSize. Will need to think about how to split big payloads and sequence them
+// writes a chunk=writeBufferSize to the writer
+// this operation is blocking, and blocks until a waiter is ready to receive the signal from the write buffer (signaling that is has written)
+// This is used by send/request/broadcast operations
+// upon each send, the write routine will receive a signal so that it may proceed to send the write over the network
 func (s *socket) writeChunk(b []byte, iserroreof bool, reqnum uint32, wrapped bool) (uint, error) {
 	defer s.buffers.write.Unlock()
 	s.buffers.write.Lock()
@@ -302,6 +352,14 @@ func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Work, error) {
 	}
 }
 
+// the write routine
+// this routine performs buffered writes (writeBufferSize) on the established connection
+// this routine halfs if:
+//   - the cancelable routine cancels
+//   - if the runner stops
+//   - if the socket closes
+//   - if some party signals that this routine should stop (by closing the s.writing channel)
+//   - if there is a write error
 func (s *socket) write(ctx context.Context) {
 	defer func() {
 		close(s.writing)
@@ -350,6 +408,7 @@ writer:
 	}
 }
 
+// tracks and stores the encountered error
 func (s *socket) error(err error) {
 	defer s.err.Unlock()
 	s.err.Lock()
@@ -361,6 +420,7 @@ func (s *socket) error(err error) {
 	s.errored <- 1
 }
 
+// A constructor to create a socket
 func NewSocket(readBufferSize uint, packetHeaderLength uint, readTimeoutInMs uint) *socket {
 	wc := newWireCodec()
 	pipe := &socket{
@@ -381,10 +441,16 @@ func NewSocket(readBufferSize uint, packetHeaderLength uint, readTimeoutInMs uin
 
 		requests: types.NewRequestMap(math.MaxUint32),
 
-		ready:  make(chan uint),
+		ready: make(chan uint),
+
+		// to allow for graceful shutdown, we buffer this to 3 since there are 3 routines that we need to have them signal their closing.
+		//Upon their signals, this channel becomes blocking thus allowing the parent routine to wait until all 3 are closed
 		closed: make(chan uint, 3),
 
-		done:    make(chan uint, 1),
+		done: make(chan uint),
+
+		// any reporting routine will immediately halt after signaling on this channel.
+		//buffering this channel to 1 allows the erroring routine to not block, but the parent to wait if it needs to confirm error or no error
 		errored: make(chan uint, 1),
 
 		writing: make(chan uint),
