@@ -16,37 +16,46 @@ const (
 	Unsupported Encoding = "unsupported"
 )
 
-/*
- @ Idea inspired by scuttlebutt's secure p2p wire protocol
- @
- @ Layout:
- @
- @ * = 1 byte
- @ + = 1 bit
- @
- @    9 bytes header
- @    -----header---][----body----]
- @    [*][****][****][****....****]
- @     0  1234  5678  ............
- @
- @    0: flags [ + + + + + + + + ]
- @               <---> | | | <->
- @      empty:____|    | | |
- @                     | | |
- @    body wrapped?* __| | | encoding [0,0] = binary, [0,1] = utf8, [1,1] = json
- @                       | |
- @          is request __| |
- @    is erroror end ______|
- @
- @
- @    *: does the body have to be decoded at the application level (i.e by the domain codec)
- @
- @    1234: request number as uint16, empty if not a request
- @    5678: bodyLength
- @
- @ body.
- @
-*/
+// Idea inspired by scuttlebutt's secure p2p wire protocol
+//
+// Layout of an encoded packet using wireCodec:
+//
+//    9 bytes header  a free length body not exceeding the max defined by configuration
+//    [----header---][----body----]
+//
+//
+// Breakdown of header:
+//
+// Symbolism used:____
+//                    |
+//    ---> * = 1 byte |
+//    ---> + = 1 bit  |
+//                    |
+// --------------------
+//
+//    9 bytes header
+//    [----header---][----body----]
+//    [*][****][****][****....****]
+//     0  1234  5678  ............
+//
+// Breakdown of the first byte reserved for flags:
+//                  0 1 2 3 4 5 6 7
+//  byte 0: flags [ + + + + + + + + ]
+//                  <---> | | | <->
+//         empty:____|    | | |  |
+//                        | | |  |
+//    is body wrapped?* __| | |  |---> wire encoding [0,0] = binary; [0,1] = utf8; [1,1] = json
+//                          | |
+//            is request? __| |
+//      is erroror end? ______|
+//
+//
+// *: does the body have to be decoded at the application level (i.e by the domain codec, think proto)
+//
+//  bytes 1234: request number/nonce/id as uint16, empty if not a request
+//  bytes 5678: bodyLength
+//
+
 type wireCodec struct {
 	sync.RWMutex
 }
