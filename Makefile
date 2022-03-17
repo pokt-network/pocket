@@ -145,18 +145,23 @@ gofmt:
 
 ## Module commands
 
+.PNONY: test_p2p_wire_codec
 ## Run the p2p wire codec behavior test
 test_p2p_wire_codec:
 	go test -run TestWireCodec -v -race ./p2p
 
+.PHONY: test_p2p_socket
 ## Run the p2p net IO behaviors test
 test_p2p_socket:
 	go test -run TestSocket -v -race ./p2p
 
+.PHONY: test_p2p_types
 ## Run p2p subcomponents' tests
 test_p2p_types:
-    go test -v -race ./p2p/types
+	go test -v -race ./p2p/types
 
+.PHONY: test_p2p
 ## Run all p2p tests
 test_p2p:
 	go test -run Test -v -race ./p2p
+
