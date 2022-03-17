@@ -14,12 +14,12 @@ func TestWireEncode(t *testing.T) {
 	encoding := Binary
 	requestNumber := uint32(12)
 	isErrorOrEnd := false
-	data := testutils.GenerateByteLen(1024)
+	chunk := testutils.NewDataChunk(1024, func(b []byte) []byte {
+		return c.encode(encoding, isErrorOrEnd, requestNumber, b, false)
+	})
 
-	msg := c.encode(encoding, isErrorOrEnd, requestNumber, data, false)
-
-	header := msg[:9]
-	body := msg[9:]
+	header := chunk.Encoded[:9]
+	body := chunk.Encoded[9:]
 
 	flags := header[0]
 	flagswitch, encoding, err := parseFlag(flags)
@@ -72,14 +72,14 @@ func TestWireEncode(t *testing.T) {
 	assert.Equal(
 		t,
 		length,
-		uint32(len(data)),
+		uint32(len(chunk.Bytes)),
 		"Codec error: failed to encode, corrupted request body length bits in header",
 	)
 
 	assert.Equal(
 		t,
 		body,
-		data,
+		chunk.Bytes,
 		"Codec error: failed to encode, corrupted body",
 	)
 }
@@ -90,11 +90,11 @@ func TestWireDecode(t *testing.T) {
 	encoding := Binary
 	requestNumber := uint32(12)
 	isErrorOrEnd := false
-	data := testutils.GenerateByteLen(1024)
+	chunk := testutils.NewDataChunk(1024, func(b []byte) []byte {
+		return c.encode(encoding, isErrorOrEnd, requestNumber, b, true)
+	})
 
-	msg := c.encode(encoding, isErrorOrEnd, requestNumber, data, true)
-
-	reqnum, encoding, decodedData, wrapped, err := c.decode(msg)
+	reqnum, encoding, decodedData, wrapped, err := c.decode(chunk.Encoded)
 
 	assert.Nil(
 		t,
@@ -131,7 +131,7 @@ func TestWireDecode(t *testing.T) {
 	assert.Equal(
 		t,
 		decodedData,
-		data,
+		chunk.Bytes,
 		"Codec error: failed to decode, data bits are corrupted",
 	)
 }

@@ -17,7 +17,7 @@ type p2pModule struct {
 var _ modules.P2PModule = &p2pModule{}
 
 func Create(config *config.Config) (modules.P2PModule, error) {
-	panic("Not implemented")
+	return &p2pModule{}, nil
 }
 
 func (m *p2pModule) Start() error {
@@ -28,8 +28,8 @@ func (m *p2pModule) Stop() error {
 	panic("Not implemented")
 }
 
-func (m *p2pModule) SetBus(pocketBus modules.Bus) {
-	m.bus = pocketBus
+func (m *p2pModule) SetBus(bus modules.Bus) {
+	m.bus = bus
 }
 
 func (m *p2pModule) GetBus() modules.Bus {
@@ -39,11 +39,7 @@ func (m *p2pModule) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (m *p2pModule) BroadcastMessage(data *anypb.Any, topic shared.PocketTopic) error {
-	panic("Not implemented")
-}
-
-func (m *p2pModule) Broadcast(data *anypb.Any, topic shared.PocketTopic) error {
+func (m *p2pModule) Broadcast(msg *anypb.Any, topic shared.PocketTopic) error {
 	panic("Not implemented")
 }
 

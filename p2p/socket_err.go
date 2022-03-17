@@ -1,7 +1,6 @@
 package p2p
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -16,11 +15,9 @@ var (
 		return fmt.Errorf("socket error: undefined given socket kind: %s", kind)
 	}
 	ErrPeerHangUp func(error) error = func(err error) error {
-		strerr := fmt.Sprintf("socket error: Peer hang up: %s", err.Error())
-		return errors.New(strerr)
+		return fmt.Errorf("socket error: Peer hang up: %s", err.Error())
 	}
 	ErrUnexpected func(error) error = func(err error) error {
-		strerr := fmt.Sprintf("socket error: Unexpected peer error: %s", err.Error())
-		return errors.New(strerr)
+		return fmt.Errorf("socket error: Unexpected peer error: %s", err.Error())
 	}
 )

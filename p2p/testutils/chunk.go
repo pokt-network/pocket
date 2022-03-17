@@ -9,12 +9,13 @@ type DataChunk struct {
 	Length  uint   // the length written or read
 }
 
-func (d *DataChunk) Randomize(length int) {
-	d.Bytes = GenerateByteLen(length)
+func (d *DataChunk) Randomize(length int, encode func([]byte) []byte) {
+	d.Bytes = randBytes(length)
+	d.Encoded = encode(d.Bytes)
 	d.Length = uint(len(d.Bytes))
 }
 
-func NewDataChunk(l int) DataChunk {
+func NewDataChunk(l int, encode func([]byte) []byte) DataChunk {
 	dchunk := DataChunk{
 		Bytes:   make([]byte, 0),
 		Encoded: make([]byte, 0),
@@ -22,12 +23,12 @@ func NewDataChunk(l int) DataChunk {
 		Error:   nil,
 	}
 
-	dchunk.Randomize(l)
+	dchunk.Randomize(l, encode)
 
 	return dchunk
 }
 
-func GenerateByteLen(size int) []byte {
+func randBytes(size int) []byte {
 	buff := make([]byte, size)
 	rand.Read(buff)
 	return buff

@@ -19,6 +19,10 @@ const (
 	ReadDeadlineInMs     = 400
 )
 
+var encode func([]byte) []byte = func(b []byte) []byte {
+	return (&wireCodec{}).encode(Binary, false, 0, b, false)
+}
+
 func TestSocket_New(t *testing.T) {
 	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 	if cap(pipe.buffers.read.Bytes()) != ReadBufferSize && cap(pipe.buffers.write.Bytes()) != WriteBufferSize {
@@ -85,7 +89,8 @@ func TestSocket_WriteRoutine(t *testing.T) {
 	runner := NewRunnerMock() // TODO(derrandz): use mockgen
 	conn := MockConnM()       // TODO(derrandz): use mockgen
 	ctx, cancel := context.WithCancel(context.Background())
-	chunk := testutils.NewDataChunk(1024)
+
+	chunk := testutils.NewDataChunk(1024, encode)
 
 	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 
@@ -172,8 +177,8 @@ func TestSocket_WriteRoutine(t *testing.T) {
 func TestSocket_ReadChunk(t *testing.T) {
 	conn := MockConn()
 	runner := NewRunnerMock()
-	messageA := testutils.NewDataChunk(ReadBufferSize - WireByteHeaderLength)
-	messageB := testutils.NewDataChunk(1024)
+	messageA := testutils.NewDataChunk(ReadBufferSize-WireByteHeaderLength, encode)
+	messageB := testutils.NewDataChunk(1024, encode)
 
 	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 
@@ -217,7 +222,6 @@ func TestSocket_ReadChunk(t *testing.T) {
 
 	// write message B
 	{
-		messageB.Encoded = pipe.c.encode(Binary, false, 0, messageB.Bytes, false)
 		pipe.conn.Write(messageB.Encoded)
 	}
 
@@ -245,9 +249,6 @@ func TestSocket_ReadChunk(t *testing.T) {
 	}
 }
 
-/*
- @ io.poll is a continuous read loop that reads incoming messages from a reader/writer/closer (like a network connection)
-*/
 func TestSocket_ReadRoutine(t *testing.T) {
 	runner := NewRunnerMock()
 	conn := MockConn()
@@ -262,21 +263,17 @@ func TestSocket_ReadRoutine(t *testing.T) {
 		pipe.isOpen.Store(true)
 	}
 
-	msg := testutils.GenerateByteLen((1024 * 4) - WireByteHeaderLength)
-	data := pipe.c.encode(Binary, false, 0, msg, false)
+	chunk := testutils.NewDataChunk((1024*4)-WireByteHeaderLength, encode)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go pipe.read(ctx)
 
 	{
 		<-pipe.reading
-		<-time.After(time.Millisecond * 5)
-
-		pipe.conn.Write(data)
-
-		<-time.After(time.Millisecond * 5)
-
+		conn.Write(chunk.Encoded)
 	}
+
+	<-time.After(time.Millisecond * 2)
 
 	{
 		buff := pipe.buffers.read.Bytes()
@@ -299,7 +296,7 @@ func TestSocket_ReadRoutine(t *testing.T) {
 		assert.Equal(
 			t,
 			dbuff,
-			msg,
+			chunk.Bytes,
 			"pipe read error: read buffer corrupted",
 		)
 	}
@@ -338,8 +335,8 @@ func TestSocket_EngageInbound(t *testing.T) {
 	}
 
 	// generate random data chunks to send back and forth
-	message := testutils.NewDataChunk(ReadBufferSize - WireByteHeaderLength)
-	response := testutils.NewDataChunk(ReadBufferSize - WireByteHeaderLength)
+	message := testutils.NewDataChunk(ReadBufferSize-WireByteHeaderLength, encode)
+	response := testutils.NewDataChunk(ReadBufferSize-WireByteHeaderLength, encode)
 
 	pipe := NewSocket(
 		ReadBufferSize,
@@ -356,7 +353,8 @@ func TestSocket_EngageInbound(t *testing.T) {
 	_, isSocketWriting := <-pipe.writing
 	_, isSocketReading := <-pipe.reading
 
-	{ // assert that startIO has launched properly and started IO on the inbound connection
+	// assert that startIO has launched properly and started IO on the inbound connection
+	{
 		assert.NotNil(
 			t,
 			pipe.reader,
@@ -404,8 +402,8 @@ func TestSocket_EngageInbound(t *testing.T) {
 		)
 	}
 
-	{ // write data to the socket from the inbound connection
-		message.Encoded = pipe.c.encode(Binary, false, 0, message.Bytes, false)
+	// write data to the socket from the inbound connection
+	{
 		go conn.Write(message.Encoded)
 	}
 
@@ -413,7 +411,8 @@ func TestSocket_EngageInbound(t *testing.T) {
 	<-conn.signals
 	<-time.After(time.Millisecond * 5)
 
-	{ // assert that the socket receives data properly from the inbound connection (i,e: that startIO launches IO routines properly (read routine))
+	// assert that the socket receives data properly from the inbound connection (i,e: that startIO launches IO routines properly (read routine))
+	{
 		w := <-runner.sink
 		n := len(w.Bytes())
 
@@ -448,7 +447,8 @@ func TestSocket_EngageInbound(t *testing.T) {
 	// wait for data to be recieved on the inbound connection
 	<-conn.signals
 
-	{ // assert that the inbound connection has received data properly from the socket (i,e: io routines are working properly)
+	// assert that the inbound connection has received data properly from the socket (i,e: io routines are working properly)
+	{
 		answer := make([]byte, ReadBufferSize)
 		cn, cerr := conn.Read(answer)
 
@@ -523,8 +523,8 @@ func TestSocket_EngageOutbound(t *testing.T) {
 	conn := dialer.conn
 
 	// generate random data chunks to send back and forth
-	message := testutils.NewDataChunk(ReadBufferSize - WireByteHeaderLength)
-	response := testutils.NewDataChunk(ReadBufferSize - WireByteHeaderLength)
+	message := testutils.NewDataChunk(ReadBufferSize-WireByteHeaderLength, encode)
+	response := testutils.NewDataChunk(ReadBufferSize-WireByteHeaderLength, encode)
 
 	pipe := NewSocket(
 		ReadBufferSize,
@@ -534,7 +534,6 @@ func TestSocket_EngageOutbound(t *testing.T) {
 
 	{
 		pipe.runner = runner
-
 		pipe.buffers.write.Open()
 		pipe.isOpen.Store(true)
 
@@ -652,7 +651,6 @@ func TestSocket_EngageOutbound(t *testing.T) {
 	}
 
 	// send a message to the outbound socket from the outbound end
-	response.Encoded = pipe.c.encode(Binary, false, 0, response.Bytes, false)
 	go conn.Write(response.Encoded)
 
 	// wait for the mock connection to finish writing/sending
@@ -699,12 +697,11 @@ func TestSocket_EngageOutbound(t *testing.T) {
 		)
 	}
 
-	cancel()
+	cancel() // has no effect after pipe.close, just to prevent the context from leaking
 	t.Log("Success")
 }
 
 func TestSocket_Open(t *testing.T) {
-	// test opening an outbound connection
 	{
 		addr := "dummy-test-host:dummyport"
 		dialer := MockDialer()
@@ -742,65 +739,74 @@ func TestSocket_Open(t *testing.T) {
 
 		pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 
-		pipe.runner = runner
-		pipe.buffers.write.Open()
+		{
+			pipe.runner = runner
+			pipe.buffers.write.Open()
+		}
 
-		pipe.open(ctx, connector, onopened, onclosed)
+		// test opening an outbound connection
+		{
+			pipe.open(ctx, connector, onopened, onclosed)
 
-		_, isNotReady := <-pipe.ready
+			_, isNotReady := <-pipe.ready
 
-		assert.False(
-			t,
-			isNotReady,
-			"pipe.engage error: pipe is not receiving or sending after outbound launch",
-		)
+			assert.False(
+				t,
+				isNotReady,
+				"pipe.engage error: pipe is not receiving or sending after outbound launch",
+			)
 
-		assert.NotNil(
-			t,
-			pipe.reader,
-			"pipe.engage error: reader/writter is not initialized after outbound launch",
-		)
+			assert.NotNil(
+				t,
+				pipe.reader,
+				"pipe.engage error: reader/writter is not initialized after outbound launch",
+			)
 
-		assert.NotNil(
-			t,
-			pipe.writer,
-			"pipe.engage error: reader/writter is not initialized after outbound launch",
-		)
+			assert.NotNil(
+				t,
+				pipe.writer,
+				"pipe.engage error: reader/writter is not initialized after outbound launch",
+			)
 
-		assert.NotNil(
-			t,
-			pipe.conn,
-			"pipe.engage error: pipe connection is not initialized after outbound launch",
-		)
+			assert.NotNil(
+				t,
+				pipe.conn,
+				"pipe.engage error: pipe connection is not initialized after outbound launch",
+			)
 
-		assert.Equal(
-			t,
-			onopenedStub.WasCalled(),
-			true,
-			"pipe.engage error: did not call onopened handler on opened connection event",
-		)
+			assert.Equal(
+				t,
+				onopenedStub.WasCalled(),
+				true,
+				"pipe.engage error: did not call onopened handler on opened connection event",
+			)
 
-		assert.Equal(
-			t,
-			onopenedStub.WasCalledTimes(1),
-			true,
-			"pipe.engage error: expected onopened handler to be called once",
-		)
+			assert.Equal(
+				t,
+				onopenedStub.WasCalledTimes(1),
+				true,
+				"pipe.engage error: expected onopened handler to be called once",
+			)
+		}
 
 		runner.done <- 1
 		<-time.After(time.Millisecond * 10)
 
-		assert.True(
-			t,
-			onclosedStub.WasCalled(),
-			"pipe.engage error: did not call onclosed handler on closed connection event",
-		)
+		{
 
-		assert.True(
-			t,
-			onclosedStub.WasCalledTimes(1),
-			"pipe.engage error: expected onclosed handler to be called once",
-		)
+			assert.True(
+				t,
+				onclosedStub.WasCalled(),
+				"pipe.engage error: did not call onclosed handler on closed connection event",
+			)
+
+			assert.True(
+				t,
+				onclosedStub.WasCalledTimes(1),
+				"pipe.engage error: expected onclosed handler to be called once",
+			)
+		}
+
 		cancel()
 	}
 
@@ -841,70 +847,75 @@ func TestSocket_Open(t *testing.T) {
 
 		pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 
-		pipe.runner = runner
-		pipe.buffers.write.Open()
+		{
+			pipe.runner = runner
+			pipe.buffers.write.Open()
+		}
 
-		pipe.open(ctx, connector, onopened, onclosed)
+		{
+			pipe.open(ctx, connector, onopened, onclosed)
 
-		_, isNotReady := <-pipe.ready
+			_, isNotReady := <-pipe.ready
 
-		assert.Equal(
-			t,
-			isNotReady,
-			false,
-			"pipe open inbound error: pipe is not receiving or sending after inbound launch",
-		)
+			assert.Equal(
+				t,
+				isNotReady,
+				false,
+				"pipe open inbound error: pipe is not receiving or sending after inbound launch",
+			)
 
-		assert.NotNil(
-			t,
-			pipe.reader,
-			"pipe open inbound error: reader/writter is not initialized after inbound launch",
-		)
-		assert.NotNil(
-			t,
-			pipe.writer,
-			"pipe open inbound error: reader/writter is not initialized after inbound launch",
-		)
+			assert.NotNil(
+				t,
+				pipe.reader,
+				"pipe open inbound error: reader/writter is not initialized after inbound launch",
+			)
+			assert.NotNil(
+				t,
+				pipe.writer,
+				"pipe open inbound error: reader/writter is not initialized after inbound launch",
+			)
 
-		assert.NotNil(
-			t,
-			pipe.conn,
-			"pipe open inbound error: pipe connection is not initialized after inbound launch",
-		)
+			assert.NotNil(
+				t,
+				pipe.conn,
+				"pipe open inbound error: pipe connection is not initialized after inbound launch",
+			)
 
-		assert.Equal(
-			t,
-			pipe.kind,
-			Inbound,
-			"pipe open inbound error: wrong pipe sense",
-		)
+			assert.Equal(
+				t,
+				pipe.kind,
+				Inbound,
+				"pipe open inbound error: wrong pipe sense",
+			)
 
-		assert.True(
-			t,
-			onopenedStub.WasCalled(),
-			"pipe.engage error: did not call onopened handler on opened connection event",
-		)
+			assert.True(
+				t,
+				onopenedStub.WasCalled(),
+				"pipe.engage error: did not call onopened handler on opened connection event",
+			)
 
-		assert.True(
-			t,
-			onopenedStub.WasCalledTimes(1),
-			"pipe.engage error: expected onopened handler to be called once",
-		)
+			assert.True(
+				t,
+				onopenedStub.WasCalledTimes(1),
+				"pipe.engage error: expected onopened handler to be called once",
+			)
+		}
 
 		runner.done <- 1
 		<-time.After(time.Millisecond * 10)
 
-		assert.True(
-			t,
-			onclosedStub.WasCalled(),
-			"pipe.engage error: did not call onclosed handler on closed connection event",
-		)
+		{
+			assert.True(
+				t,
+				onclosedStub.WasCalled(),
+				"pipe.engage error: did not call onclosed handler on closed connection event",
+			)
 
-		assert.True(
-			t,
-			onclosedStub.WasCalledTimes(1),
-			"pipe.engage error: expected onclosed handler to be called once",
-		)
+			assert.True(
+				t,
+				onclosedStub.WasCalledTimes(1),
+				"pipe.engage error: expected onclosed handler to be called once",
+			)
+		}
 	}
-
 }
