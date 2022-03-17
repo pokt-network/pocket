@@ -7,9 +7,9 @@ import (
 )
 
 func TestRequestMap_Get(t *testing.T) {
-	rmap := NewRequestMap(100)
+	rMap := NewRequestMap(100)
 
-	request := rmap.Get()
+	request := rMap.Get()
 
 	assert.Equal(
 		t,
@@ -26,9 +26,9 @@ func TestRequestMap_Get(t *testing.T) {
 }
 
 func TestRequestMap_Find(t *testing.T) {
-	rmap := NewRequestMap(100)
-	request := rmap.Get()
-	nonce, ch, exists := rmap.Find(request.Nonce)
+	rMap := NewRequestMap(100)
+	request := rMap.Get()
+	nonce, ch, exists := rMap.Find(request.Nonce)
 
 	assert.True(
 		t,
@@ -66,10 +66,10 @@ func TestRequestMap_Find(t *testing.T) {
 }
 
 func TestRequestMap_Delete(t *testing.T) {
-	rmap := NewRequestMap(100)
-	request := rmap.Get()
+	rMap := NewRequestMap(100)
+	request := rMap.Get()
 
-	deleted := rmap.Delete(request.Nonce)
+	deleted := rMap.Delete(request.Nonce)
 
 	assert.True(
 		t,
@@ -85,7 +85,7 @@ func TestRequestMap_Delete(t *testing.T) {
 		"Request map error: request respond channel is still open after delete",
 	)
 
-	_, _, exists := rmap.Find(request.Nonce)
+	_, _, exists := rMap.Find(request.Nonce)
 	assert.False(
 		t,
 		exists,

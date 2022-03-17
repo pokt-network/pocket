@@ -4,20 +4,20 @@ import sync "sync"
 
 type RequestMap struct {
 	sync.Mutex
-	maxcap   uint32
-	elements []*Request
-	nonces   uint32
+	maxCap    uint32
+	elements  []*Request
+	numNonces uint32
 }
 
 func (rm *RequestMap) Get() *Request {
 	rm.Lock()
 	defer rm.Unlock()
 
-	rm.nonces++
-	nonce := rm.nonces
-	newreq := &Request{Nonce: nonce, ResponsesCh: make(chan Packet)}
-	rm.elements = append(rm.elements, newreq)
-	return newreq
+	rm.numNonces++
+	nonce := rm.numNonces
+	newReq := &Request{Nonce: nonce, ResponsesCh: make(chan Packet)}
+	rm.elements = append(rm.elements, newReq)
+	return newReq
 }
 
 func (rm *RequestMap) Find(nonce uint32) (uint32, chan Packet, bool) {
@@ -25,26 +25,31 @@ func (rm *RequestMap) Find(nonce uint32) (uint32, chan Packet, bool) {
 	defer rm.Unlock()
 
 	var request *Request
-	var exists bool
-	var index int
 
-	for i := 0; i < len(rm.elements); i++ {
-		if rm.elements[i].Nonce == nonce {
+	var ch chan Packet = nil
+	var exists bool
+
+	var index int
+	for i, element := range rm.elements {
+		if element.Nonce == nonce {
 			exists = true
 			index = i
 			request = rm.elements[i]
+			break
 		}
 	}
 
 	if exists {
 		rm.elements[index] = nil
-		fhalf := rm.elements[:index]
-		shalf := rm.elements[index+1:]
-		rm.elements = append(fhalf, shalf...)
-		return request.Nonce, request.ResponsesCh, exists
+		rm.elements = append(
+			rm.elements[:index],
+			rm.elements[index+1:]...,
+		)
+
+		ch = request.ResponsesCh
 	}
 
-	return nonce, nil, false
+	return nonce, ch, exists
 }
 
 func (rm *RequestMap) Delete(nonce uint32) bool {
@@ -64,15 +69,21 @@ func (rm *RequestMap) Delete(nonce uint32) bool {
 
 	if exists {
 		close(rm.elements[index].ResponsesCh)
+
 		rm.elements[index] = nil
-		fhalf := rm.elements[:index]
-		shalf := rm.elements[index+1:]
-		rm.elements = append(fhalf, shalf...)
+		rm.elements = append(
+			rm.elements[:index],
+			rm.elements[index+1:]...,
+		)
 	}
 
 	return exists
 }
 
 func NewRequestMap(cap uint) *RequestMap {
-	return &RequestMap{maxcap: uint32(cap), elements: make([]*Request, 0), nonces: uint32(0)}
+	return &RequestMap{
+		maxCap:    uint32(cap),
+		elements:  make([]*Request, 0),
+		numNonces: uint32(0),
+	}
 }
