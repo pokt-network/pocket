@@ -36,7 +36,9 @@ utility/types/
 
 # TODO(team): Does the `types` directory contain generated or raw type files?
 # types/
-./**/*.pb.go
+
+# ignore protobuf generated files
+*.pb.go
 
 # Output binaries
 bin/

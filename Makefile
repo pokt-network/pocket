@@ -106,11 +106,6 @@ protogen_local:
 		--go_opt=paths=source_relative \
 		--go_out=./shared/types/ ./shared/types/proto/*.proto
 
-	protoc \
-		-I=${proto_dir} -I=./p2p/types/proto \
-		--go_opt=paths=source_relative \
-		--go_out=./p2p/types/ ./p2p/types/proto/*.proto
-
 	echo "View generated proto files by running: make protogen_show"
 
 # TODO(team): Delete this once the `prototype` directory is removed.
