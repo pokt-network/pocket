@@ -228,7 +228,7 @@ func (s *socket) readChunk() ([]byte, int, error) {
 // this routine performs buffered reads (readBufferSize) on the established connection
 // and does two things as a consequence of a read operation:
 //    1- if it's a response to a request out of this socket, it will redirect the response to the request's response channel (see types/request.go)
-// .  2- if not, it will handover the read buffer as Work (check types/work.go) to the runner (check types/runner.go)
+// .  2- if not, it will handover the read buffer as Packet (check types/work.go) to the runner (check types/runner.go)
 // this routine halfs if:
 //   - the cancelable routine cancels
 //   - if the runner stops
@@ -299,12 +299,12 @@ reader:
 						// report that we've received a nonced message whose requested does not exist on our end!
 					}
 
-					ch <- types.NewWork(nonce, data, s.addr, wrapped)
+					ch <- types.NewPacket(nonce, data, s.addr, wrapped)
 					close(ch)
 					continue
 				}
 
-				s.runner.Sink() <- types.NewWork(nonce, data, s.addr, wrapped)
+				s.runner.Sink() <- types.NewPacket(nonce, data, s.addr, wrapped)
 			}
 		}
 	}
@@ -332,23 +332,23 @@ func (s *socket) writeChunk(b []byte, iserroreof bool, reqnum uint32, wrapped bo
 // This method will create a request, which is basically a nonce to identify the chunk to write, and a channel on which to receive the response
 // the channel is blocking, thus allowing the 'wait to receive the response' behavior.
 // the `read` routine takes care of identifying incoming responses (_using the nonce_) and redirecting them to the waiting channels of the currently-open requests.
-func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Work, error) {
+func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Packet, error) {
 	request := s.requests.Get()
-	requestNonce := request.Nonce()
+	requestNonce := request.Nonce
 
 	if _, err := s.writeChunk(b, false, requestNonce, wrapped); err != nil {
 		s.requests.Delete(requestNonce)
-		return types.NewWork(requestNonce, nil, "", false), err
+		return types.NewPacket(requestNonce, nil, "", false), err
 	}
 
-	var response types.Work
+	var response types.Packet
 
 	select {
-	case response = <-request.Response():
+	case response = <-request.ResponsesCh:
 		return response, nil
 
 	case <-time.After(time.Millisecond * time.Duration(s.readTimeout)):
-		return types.Work{}, ErrSocketRequestTimedOut(s.addr, requestNonce)
+		return types.Packet{}, ErrSocketRequestTimedOut(s.addr, requestNonce)
 	}
 }
 

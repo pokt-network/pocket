@@ -1,6 +1,6 @@
 package types
 
 type Runner interface {
-	Sink() chan<- Work
+	Sink() chan<- Packet
 	Done() <-chan uint
 }

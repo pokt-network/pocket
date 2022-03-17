@@ -414,7 +414,7 @@ func TestSocket_EngageInbound(t *testing.T) {
 	// assert that the socket receives data properly from the inbound connection (i,e: that startIO launches IO routines properly (read routine))
 	{
 		w := <-runner.sink
-		n := len(w.Bytes())
+		n := len(w.Data)
 
 		assert.Equal(
 			t,
@@ -425,7 +425,7 @@ func TestSocket_EngageInbound(t *testing.T) {
 
 		assert.Equal(
 			t,
-			w.Bytes(),
+			w.Data,
 			message.Bytes,
 			"pipe.engage error (read error): received inbound buffer corrupted",
 		)
@@ -660,7 +660,7 @@ func TestSocket_EngageOutbound(t *testing.T) {
 	{
 		w := <-runner.sink
 
-		receivedResponse := w.Bytes()
+		receivedResponse := w.Data
 
 		assert.Equal(
 			t,

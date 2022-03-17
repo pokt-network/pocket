@@ -13,7 +13,7 @@ type Buffer struct {
 type ConcurrentBuffer struct {
 	Buffer
 	sync.Mutex
-	open   atomic.Bool
+	isOpen atomic.Bool
 	signal chan struct{}
 }
 
@@ -22,7 +22,7 @@ func (b *Buffer) Bytes() []byte {
 }
 
 func (b *Buffer) Ref() *[]byte {
-	return &(b.bytes)
+	return &b.bytes
 }
 
 func (cb *ConcurrentBuffer) Bytes() []byte {
@@ -40,19 +40,19 @@ func (cb *ConcurrentBuffer) DumpBytes() []byte {
 }
 
 func (cb *ConcurrentBuffer) Open() {
-	cb.open.Store(true)
+	cb.isOpen.Store(true)
 }
 
 func (cb *ConcurrentBuffer) Close() {
 	defer cb.Unlock()
 	cb.Lock()
 
-	cb.open.Store(false)
+	cb.isOpen.Store(false)
 	close(cb.signal)
 }
 
 func (cb *ConcurrentBuffer) IsOpen() bool {
-	return cb.open.Load() == true
+	return cb.isOpen.Load() == true
 }
 
 func (cb *ConcurrentBuffer) Signal() {

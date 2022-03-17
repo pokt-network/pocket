@@ -15,12 +15,12 @@ func (rm *RequestMap) Get() *Request {
 
 	rm.nonces++
 	nonce := rm.nonces
-	newreq := &Request{nonce: nonce, ch: make(chan Work)}
+	newreq := &Request{Nonce: nonce, ResponsesCh: make(chan Packet)}
 	rm.elements = append(rm.elements, newreq)
 	return newreq
 }
 
-func (rm *RequestMap) Find(nonce uint32) (uint32, chan Work, bool) {
+func (rm *RequestMap) Find(nonce uint32) (uint32, chan Packet, bool) {
 	rm.Lock()
 	defer rm.Unlock()
 
@@ -29,7 +29,7 @@ func (rm *RequestMap) Find(nonce uint32) (uint32, chan Work, bool) {
 	var index int
 
 	for i := 0; i < len(rm.elements); i++ {
-		if rm.elements[i].nonce == nonce {
+		if rm.elements[i].Nonce == nonce {
 			exists = true
 			index = i
 			request = rm.elements[i]
@@ -41,7 +41,7 @@ func (rm *RequestMap) Find(nonce uint32) (uint32, chan Work, bool) {
 		fhalf := rm.elements[:index]
 		shalf := rm.elements[index+1:]
 		rm.elements = append(fhalf, shalf...)
-		return request.nonce, request.ch, exists
+		return request.Nonce, request.ResponsesCh, exists
 	}
 
 	return nonce, nil, false
@@ -55,7 +55,7 @@ func (rm *RequestMap) Delete(nonce uint32) bool {
 	var index int
 
 	for i := 0; i < len(rm.elements); i++ {
-		if rm.elements[i].nonce == nonce {
+		if rm.elements[i].Nonce == nonce {
 			exists = true
 			index = i
 			break
@@ -63,7 +63,7 @@ func (rm *RequestMap) Delete(nonce uint32) bool {
 	}
 
 	if exists {
-		close(rm.elements[index].ch)
+		close(rm.elements[index].ResponsesCh)
 		rm.elements[index] = nil
 		fhalf := rm.elements[:index]
 		shalf := rm.elements[index+1:]

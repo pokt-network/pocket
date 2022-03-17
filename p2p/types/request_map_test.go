@@ -13,14 +13,14 @@ func TestRequestMap_Get(t *testing.T) {
 
 	assert.Equal(
 		t,
-		request.Nonce(),
+		request.Nonce,
 		uint32(1),
 		"Request map error: failed to retrieve new request with valid nonce",
 	)
 
 	assert.NotNil(
 		t,
-		request.Response(),
+		request.ResponsesCh,
 		"Request map error: failed to retrieve request with a respond channel",
 	)
 }
@@ -28,7 +28,7 @@ func TestRequestMap_Get(t *testing.T) {
 func TestRequestMap_Find(t *testing.T) {
 	rmap := NewRequestMap(100)
 	request := rmap.Get()
-	nonce, ch, exists := rmap.Find(request.Nonce())
+	nonce, ch, exists := rmap.Find(request.Nonce)
 
 	assert.True(
 		t,
@@ -39,19 +39,19 @@ func TestRequestMap_Find(t *testing.T) {
 	assert.Equal(
 		t,
 		nonce,
-		request.Nonce(),
+		request.Nonce,
 		"Request map error: faield to retrieve existing request, found a wrong one with invalid nonce",
 	)
 
-	sentWork := Work{}
-	go request.Respond(Work{})
-	receivedWork := <-ch
+	sentPacket := Packet{}
+	go request.Respond(Packet{})
+	receivedPacket := <-ch
 
 	// assert that the found request is the same as the one sought after by verifying their response channels ref
 	assert.Equal(
 		t,
-		(<-chan Work)(ch),
-		request.Response(),
+		(chan Packet)(ch),
+		request.ResponsesCh,
 		"Request map error: failed to retrieve an existing request, found a wrong one with a diffrent respond channel",
 	)
 
@@ -59,8 +59,8 @@ func TestRequestMap_Find(t *testing.T) {
 	// and expecting the found one to receive it (will if found==created)
 	assert.Equal(
 		t,
-		sentWork,
-		receivedWork,
+		sentPacket,
+		receivedPacket,
 		"Request map error: failed to retrieve existing request, found a wrong one with a diffrent respond channel",
 	)
 }
@@ -69,7 +69,7 @@ func TestRequestMap_Delete(t *testing.T) {
 	rmap := NewRequestMap(100)
 	request := rmap.Get()
 
-	deleted := rmap.Delete(request.Nonce())
+	deleted := rmap.Delete(request.Nonce)
 
 	assert.True(
 		t,
@@ -77,7 +77,7 @@ func TestRequestMap_Delete(t *testing.T) {
 		"Request map error: could not delete existing request",
 	)
 
-	_, canStillReceiveResponses := <-request.Response()
+	_, canStillReceiveResponses := <-request.ResponsesCh
 
 	assert.False(
 		t,
@@ -85,7 +85,7 @@ func TestRequestMap_Delete(t *testing.T) {
 		"Request map error: request respond channel is still open after delete",
 	)
 
-	_, _, exists := rmap.Find(request.Nonce())
+	_, _, exists := rmap.Find(request.Nonce)
 	assert.False(
 		t,
 		exists,

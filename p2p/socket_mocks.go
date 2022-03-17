@@ -135,11 +135,11 @@ func MockDialer() *dialer {
 }
 
 type runner struct {
-	sink chan types.Work
+	sink chan types.Packet
 	done chan uint
 }
 
-func (r *runner) Sink() chan<- types.Work {
+func (r *runner) Sink() chan<- types.Packet {
 	return r.sink
 }
 
@@ -149,7 +149,7 @@ func (r *runner) Done() <-chan uint {
 
 func NewRunnerMock() *runner {
 	return &runner{
-		sink: make(chan types.Work, 1),
+		sink: make(chan types.Packet, 1),
 		done: make(chan uint, 1),
 	}
 }

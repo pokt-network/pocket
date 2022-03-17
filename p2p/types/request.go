@@ -1,18 +1,10 @@
 package types
 
 type Request struct {
-	nonce uint32
-	ch    chan Work
+	Nonce       uint32
+	ResponsesCh chan Packet
 }
 
-func (r *Request) Nonce() uint32 {
-	return r.nonce
-}
-
-func (r *Request) Response() <-chan Work {
-	return r.ch
-}
-
-func (r *Request) Respond(w Work) {
-	r.ch <- w
+func (r *Request) Respond(packet Packet) {
+	r.ResponsesCh <- packet
 }
