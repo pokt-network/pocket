@@ -56,10 +56,29 @@ VRFs are not part of Golang's [standard crypto library](https://pkg.go.dev/crypt
 3. [yoseplee/VRF](https://github.com/yoseplee/vrf)
    - This is a great repository that also compares, lists and evaluates some of the other VRF libraries available, but was implemented by a single individual and while the explanation is very extensive, it lacks the backing and verification of a larger company.
 4. [ProtonMail/Go-ECVRF](https://github.com/ProtonMail/go-ecvrf)
+
    - This is a very small and light-weight library dedidcated to a VRF implementation in Go, that was released in December of 2021 by ProtonMail: a well-known privacy-focused impartial company with
      great documentation and a very easy to use API
+   - This implementation of VRFs uses the [new draft](https://datatracker.ietf.org/doc/draft-irtf-cfrg-vrf/), which introduced several changes to the original implementations, some of which improved the security model.
+
 5. [coniks-sys/coins-go](https://github.com/coniks-sys/coniks-go/tree/master/crypto/vrf)
    - This is a small submodule of a much larger repository that is 5 years old, lacks documentation,
      with unclear code.
 
-Though there are other articles and libraries available, [ProtonMail/Go-ECVRF](https://github.com/ProtonMail/go-ecvrf) was selected at the time of writing due to its recency (i.e. < 3 months old>), simplicity, clear documentation (i.e. easy to use), small size (lack of additional dependency), complete implementation in Go (i.e. no C++), and the backing of a well known brand (i.e. ProtonMail).
+Though there are other articles and libraries available, [ProtonMail/Go-ECVRF](https://github.com/ProtonMail/go-ecvrf) was selected at the time of writing due to its recency (i.e., < 3 months old>), simplicity, clear documentation (i.e., easy to use), small size (lack of additional dependency), complete implementation in Go (i.e., no C++), and the backing of a well-known brand (i.e., ProtonMail).
+
+## ProtonMail/Go-ECVRF - Security Notice
+
+The author, [@wussler](https://github.com/wussler), of the `ProtonMail/Go-ECVRF` library pointed out the following security notice:
+
+```
+Watch out that we only implemented the TAI (Try-And-Increment) method to encode a value to the curve, that (as the name suggests) is a non-constant time mapping. I can't tell from the PR if you'll be proving secret inputs, but if you do beware that someone timing the operation might be able to infer some info about the secret input itself.
+If your security model needs to consider this attack you should consider implementing the ELL2 (Ellgator map), that is not so trivial.
+```
+
+This is okay in the case of Pocket's Leader Election Algorithm because the seed that we are proving is not secret at the time that it is used. Specifically, the flow is:
+
+1. Each validator generates VRF keys at some `height N`
+2. The network leverages consensus messages to distribute the keys throughout the network in `O(N)`
+3. The VRF keys begin to be used for leader election at some `height (N+M)` where `M > 0`
+4. The input to the VRF for each `height (N+M')` where `M' ≥ M` will use publicly known information (e.g. appHash, byzValidators, etc..) known at `height (N+M'-1)` and therefore satisfy the security notice above.
