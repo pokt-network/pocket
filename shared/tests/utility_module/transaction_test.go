@@ -3,12 +3,13 @@ package utility_module
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/pokt-network/pocket/shared/crypto"
-	sharedTypes "github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/utility"
-	"github.com/pokt-network/pocket/utility/types"
 	"math/big"
 	"testing"
+
+	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/utility"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 func TestUtilityContext_AnteHandleMessage(t *testing.T) {
@@ -69,8 +70,8 @@ func TestUtilityContext_CheckTransaction(t *testing.T) {
 	if !ctx.Mempool.Contains(hash) {
 		t.Fatal("the transaction was unable to be checked")
 	}
-	if err := ctx.CheckTransaction(txBz); err.Error() != sharedTypes.ErrDuplicateTransaction().Error() {
-		t.Fatalf("unexpected err, expected %v got %v", sharedTypes.ErrDuplicateTransaction().Error(), err.Error())
+	if err := ctx.CheckTransaction(txBz); err.Error() != types.ErrDuplicateTransaction().Error() {
+		t.Fatalf("unexpected err, expected %v got %v", types.ErrDuplicateTransaction().Error(), err.Error())
 	}
 }
 
@@ -78,7 +79,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	accs := GetAllTestingAccounts(t, ctx)
 	sendAmount := big.NewInt(1000000)
-	sendAmountString := sharedTypes.BigIntToString(sendAmount)
+	sendAmountString := types.BigIntToString(sendAmount)
 	msg := NewTestingSendMessage(t, accs[0].Address, accs[1].Address, sendAmountString)
 	candidates, err := ctx.GetSignerCandidates(&msg)
 	if err != nil {
@@ -119,12 +120,12 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	accs := GetAllTestingAccounts(t, ctx)
 	sendAmount := big.NewInt(1000000)
-	sendAmountString := sharedTypes.BigIntToString(sendAmount)
-	senderBalanceBefore, err := sharedTypes.StringToBigInt(accs[0].Amount)
+	sendAmountString := types.BigIntToString(sendAmount)
+	senderBalanceBefore, err := types.StringToBigInt(accs[0].Amount)
 	if err != nil {
 		t.Fatal(err)
 	}
-	recipientBalanceBefore, err := sharedTypes.StringToBigInt(accs[1].Amount)
+	recipientBalanceBefore, err := types.StringToBigInt(accs[1].Amount)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,11 +134,11 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 		t.Fatal(err)
 	}
 	accs = GetAllTestingAccounts(t, ctx)
-	senderBalanceAfter, err := sharedTypes.StringToBigInt(accs[0].Amount)
+	senderBalanceAfter, err := types.StringToBigInt(accs[0].Amount)
 	if err != nil {
 		t.Fatal(err)
 	}
-	recipientBalanceAfter, err := sharedTypes.StringToBigInt(accs[1].Amount)
+	recipientBalanceAfter, err := types.StringToBigInt(accs[1].Amount)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,9 +150,9 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	}
 }
 
-func NewTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *types.Transaction, startingAmount, amountSent *big.Int, signer crypto.PrivateKey) {
+func NewTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingAmount, amountSent *big.Int, signer crypto.PrivateKey) {
 	var err error
-	cdc := types.UtilityCodec()
+	cdc := typesUtil.UtilityCodec()
 	recipient := GetAllTestingAccounts(t, ctx)[1]
 	signer, err = crypto.GeneratePrivateKey()
 	if err != nil {
@@ -172,8 +173,8 @@ func NewTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transactio
 	if err != nil {
 		t.Fatal(err)
 	}
-	fee := sharedTypes.BigIntToString(feeBig)
-	transaction = &types.Transaction{
+	fee := types.BigIntToString(feeBig)
+	transaction = &typesUtil.Transaction{
 		Msg:   any,
 		Fee:   fee,
 		Nonce: defaultNonceString,

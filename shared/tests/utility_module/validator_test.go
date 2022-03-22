@@ -2,13 +2,14 @@ package utility_module
 
 import (
 	"bytes"
-	"github.com/pokt-network/pocket/persistence/pre_persistence"
-	"github.com/pokt-network/pocket/shared/crypto"
-	sharedTypes "github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/utility"
-	"github.com/pokt-network/pocket/utility/types"
 	"math/big"
 	"testing"
+
+	"github.com/pokt-network/pocket/persistence/pre_persistence"
+	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/utility"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 func TestUtilityContext_HandleMessageStakeValidator(t *testing.T) {
@@ -18,7 +19,7 @@ func TestUtilityContext_HandleMessageStakeValidator(t *testing.T) {
 	if err := ctx.SetAccount(out, defaultAmount); err != nil {
 		t.Fatal(err)
 	}
-	msg := &types.MessageStakeValidator{
+	msg := &typesUtil.MessageStakeValidator{
 		PublicKey:     pubKey.Bytes(),
 		Amount:        defaultAmountString,
 		ServiceURL:    defaultServiceURL,
@@ -39,8 +40,8 @@ func TestUtilityContext_HandleMessageStakeValidator(t *testing.T) {
 	if !bytes.Equal(actor.Address, pubKey.Address()) {
 		t.Fatalf("incorrect address, expected %v, got %v", pubKey.Address(), actor.Address)
 	}
-	if actor.Status != types.StakedStatus {
-		t.Fatalf("incorrect status, expected %v, got %v", types.StakedStatus, actor.Status)
+	if actor.Status != typesUtil.StakedStatus {
+		t.Fatalf("incorrect status, expected %v, got %v", typesUtil.StakedStatus, actor.Status)
 	}
 	if actor.ServiceURL != defaultServiceURL {
 		t.Fatalf("incorrect chains, expected %v, got %v", actor.ServiceURL, defaultServiceURL)
@@ -65,7 +66,7 @@ func TestUtilityContext_HandleMessageStakeValidator(t *testing.T) {
 func TestUtilityContext_HandleMessageEditStakeValidator(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingValidators(t, ctx)[0]
-	msg := &types.MessageEditStakeValidator{
+	msg := &typesUtil.MessageEditStakeValidator{
 		Address:     actor.Address,
 		ServiceURL:  defaultServiceURLEdited,
 		AmountToAdd: zeroAmountString,
@@ -96,8 +97,8 @@ func TestUtilityContext_HandleMessageEditStakeValidator(t *testing.T) {
 		t.Fatalf("incorrect output address, expected %v, got %v", actor.Output, actor.Output)
 	}
 	amountEdited := big.NewInt(1)
-	expectedAmount := sharedTypes.BigIntToString(big.NewInt(0).Add(defaultAmount, amountEdited))
-	amountEditedString := sharedTypes.BigIntToString(amountEdited)
+	expectedAmount := types.BigIntToString(big.NewInt(0).Add(defaultAmount, amountEdited))
+	amountEditedString := types.BigIntToString(amountEdited)
 	msgAmountEdited := msg
 	msgAmountEdited.AmountToAdd = amountEditedString
 	if err := ctx.HandleMessageEditStakeValidator(msgAmountEdited); err != nil {
@@ -112,7 +113,7 @@ func TestUtilityContext_HandleMessageEditStakeValidator(t *testing.T) {
 func TestUtilityContext_HandleMessagePauseValidator(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingValidators(t, ctx)[0]
-	msg := &types.MessagePauseValidator{
+	msg := &typesUtil.MessagePauseValidator{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -131,7 +132,7 @@ func TestUtilityContext_HandleMessageUnpauseValidator(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor := GetAllTestingValidators(t, ctx)[0]
-	msg := &types.MessagePauseValidator{
+	msg := &typesUtil.MessagePauseValidator{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -142,7 +143,7 @@ func TestUtilityContext_HandleMessageUnpauseValidator(t *testing.T) {
 	if !actor.Paused {
 		t.Fatal("actor isn't paused after")
 	}
-	msgU := &types.MessageUnpauseValidator{
+	msgU := &typesUtil.MessageUnpauseValidator{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -161,7 +162,7 @@ func TestUtilityContext_HandleMessageUnstakeValidator(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor := GetAllTestingValidators(t, ctx)[0]
-	msg := &types.MessageUnstakeValidator{
+	msg := &typesUtil.MessageUnstakeValidator{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -169,7 +170,7 @@ func TestUtilityContext_HandleMessageUnstakeValidator(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor = GetAllTestingValidators(t, ctx)[0]
-	if actor.Status != types.UnstakingStatus {
+	if actor.Status != typesUtil.UnstakingStatus {
 		t.Fatal("actor isn't unstaking")
 	}
 }
@@ -291,7 +292,7 @@ func TestUtilityContext_GetValidatorsReadyToUnstake(t *testing.T) {
 func TestUtilityContext_GetMessageEditStakeValidatorSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingValidators(t, ctx)
-	msgEditStake := &types.MessageEditStakeValidator{
+	msgEditStake := &typesUtil.MessageEditStakeValidator{
 		Address:     actors[0].Address,
 		ServiceURL:  defaultServiceURL,
 		AmountToAdd: defaultAmountString,
@@ -308,7 +309,7 @@ func TestUtilityContext_GetMessageEditStakeValidatorSignerCandidates(t *testing.
 func TestUtilityContext_GetMessagePauseValidatorSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingValidators(t, ctx)
-	msg := &types.MessagePauseValidator{
+	msg := &typesUtil.MessagePauseValidator{
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessagePauseValidatorSignerCandidates(msg)
@@ -325,7 +326,7 @@ func TestUtilityContext_GetMessageStakeValidatorSignerCandidates(t *testing.T) {
 	pubKey, _ := crypto.GeneratePublicKey()
 	addr := pubKey.Address()
 	out, _ := crypto.GenerateAddress()
-	msg := &types.MessageStakeValidator{
+	msg := &typesUtil.MessageStakeValidator{
 		PublicKey:     pubKey.Bytes(),
 		Amount:        defaultAmountString,
 		ServiceURL:    defaultServiceURL,
@@ -344,7 +345,7 @@ func TestUtilityContext_GetMessageStakeValidatorSignerCandidates(t *testing.T) {
 func TestUtilityContext_GetMessageUnpauseValidatorSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingValidators(t, ctx)
-	msg := &types.MessageUnpauseValidator{
+	msg := &typesUtil.MessageUnpauseValidator{
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnpauseValidatorSignerCandidates(msg)
@@ -359,7 +360,7 @@ func TestUtilityContext_GetMessageUnpauseValidatorSignerCandidates(t *testing.T)
 func TestUtilityContext_GetMessageUnstakeValidatorSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingValidators(t, ctx)
-	msg := &types.MessageUnstakeValidator{
+	msg := &typesUtil.MessageUnstakeValidator{
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnstakeValidatorSignerCandidates(msg)
@@ -406,7 +407,7 @@ func TestUtilityContext_InsertValidator(t *testing.T) {
 func TestUtilityContext_UnstakeValidatorsPausedBefore(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingValidators(t, ctx)[0]
-	if actor.Status != types.StakedStatus {
+	if actor.Status != typesUtil.StakedStatus {
 		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetValidatorMaxPausedBlocks(0)
@@ -420,7 +421,7 @@ func TestUtilityContext_UnstakeValidatorsPausedBefore(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor = GetAllTestingValidators(t, ctx)[0]
-	if actor.Status != types.UnstakingStatus {
+	if actor.Status != typesUtil.UnstakingStatus {
 		t.Fatal("status does not equal unstaking")
 	}
 	unstakingBlocks, err := ctx.GetValidatorUnstakingBlocks()
@@ -438,7 +439,7 @@ func TestUtilityContext_UnstakeValidatorsThatAreReady(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor := GetAllTestingValidators(t, ctx)[0]
-	if actor.Status != types.StakedStatus {
+	if actor.Status != typesUtil.StakedStatus {
 		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetValidatorMaxPausedBlocks(0)
@@ -463,14 +464,14 @@ func TestUtilityContext_UpdateValidator(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingValidators(t, ctx)[0]
 	newAmountBig := big.NewInt(9999999999999999)
-	newAmount := sharedTypes.BigIntToString(newAmountBig)
+	newAmount := types.BigIntToString(newAmountBig)
 	oldAmount := actor.StakedTokens
-	oldAmountBig, err := sharedTypes.StringToBigInt(oldAmount)
+	oldAmountBig, err := types.StringToBigInt(oldAmount)
 	if err != nil {
 		t.Fatal(err)
 	}
 	expectedAmountBig := newAmountBig.Add(newAmountBig, oldAmountBig)
-	expectedAmount := sharedTypes.BigIntToString(expectedAmountBig)
+	expectedAmount := types.BigIntToString(expectedAmountBig)
 	if err := ctx.UpdateValidator(actor.Address, actor.ServiceURL, newAmount); err != nil {
 		t.Fatal(err)
 	}
@@ -484,7 +485,7 @@ func TestUtilityContext_BurnValidator(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingValidators(t, ctx)[0]
 	burnPercentage := big.NewFloat(10)
-	tokens, err := sharedTypes.StringToBigInt(actor.StakedTokens)
+	tokens, err := types.StringToBigInt(actor.StakedTokens)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -493,7 +494,7 @@ func TestUtilityContext_BurnValidator(t *testing.T) {
 	tokensFloat.Quo(tokensFloat, big.NewFloat(100))
 	tokensTrunc, _ := tokensFloat.Int(nil)
 	afterTokensBig := big.NewInt(0).Sub(tokens, tokensTrunc)
-	afterTokens := sharedTypes.BigIntToString(afterTokensBig)
+	afterTokens := types.BigIntToString(afterTokensBig)
 	if err := ctx.BurnValidator(actor.Address, 10); err != nil {
 		t.Fatal(err)
 	}
@@ -506,7 +507,7 @@ func TestUtilityContext_BurnValidator(t *testing.T) {
 func TestUtilityContext_GetMessageDoubleSignSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingValidators(t, ctx)[0]
-	msg := &types.MessageDoubleSign{
+	msg := &typesUtil.MessageDoubleSign{
 		ReporterAddress: actor.Address,
 	}
 	candidates, err := ctx.GetMessageDoubleSignSignerCandidates(msg)
@@ -523,7 +524,7 @@ func TestUtilityContext_HandleMessageDoubleSign(t *testing.T) {
 	actors := GetAllTestingValidators(t, ctx)
 	reporter := actors[0]
 	byzVal := actors[1]
-	voteA := types.Vote{
+	voteA := typesUtil.Vote{
 		PublicKey: byzVal.PublicKey,
 		Height:    0,
 		Round:     0,
@@ -532,7 +533,7 @@ func TestUtilityContext_HandleMessageDoubleSign(t *testing.T) {
 	}
 	voteB := voteA
 	voteB.BlockHash = crypto.SHA3Hash([]byte("voteB"))
-	msg := &types.MessageDoubleSign{
+	msg := &typesUtil.MessageDoubleSign{
 		VoteA:           &voteA,
 		VoteB:           &voteB,
 		ReporterAddress: reporter.Address,
@@ -544,12 +545,12 @@ func TestUtilityContext_HandleMessageDoubleSign(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	stakedTokensAfter := sharedTypes.BigIntToString(stakedTokensAfterBig)
+	stakedTokensAfter := types.BigIntToString(stakedTokensAfterBig)
 	burnPercentage, err := ctx.GetDoubleSignBurnPercentage()
 	if err != nil {
 		t.Fatal(err)
 	}
-	stakedTokensBeforeBig, err := sharedTypes.StringToBigInt(byzVal.StakedTokens)
+	stakedTokensBeforeBig, err := types.StringToBigInt(byzVal.StakedTokens)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -558,7 +559,7 @@ func TestUtilityContext_HandleMessageDoubleSign(t *testing.T) {
 	stakedTokensBeforeFloat.Quo(stakedTokensBeforeFloat, big.NewFloat(100))
 	trunactedDiffTokens, _ := stakedTokensBeforeFloat.Int(nil)
 	stakedTokensExpectedAfterBig := big.NewInt(0).Sub(stakedTokensBeforeBig, trunactedDiffTokens)
-	stakedTokensExpectedAfter := sharedTypes.BigIntToString(stakedTokensExpectedAfterBig)
+	stakedTokensExpectedAfter := types.BigIntToString(stakedTokensExpectedAfterBig)
 	if stakedTokensAfter != stakedTokensExpectedAfter {
 		t.Fatalf("unexpected token amount after double sign handling: expected %v got %v", stakedTokensExpectedAfter, stakedTokensAfter)
 	}
@@ -591,7 +592,7 @@ func TestUtilityContext_GetValidatorStakedTokens(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tokens := sharedTypes.BigIntToString(tokensBig)
+	tokens := types.BigIntToString(tokensBig)
 	if actor.StakedTokens != tokens {
 		t.Fatalf("unexpected staked tokens: expected %v got %v ", actor.StakedTokens, tokens)
 	}
@@ -612,7 +613,7 @@ func TestUtilityContext_GetValidatorStatus(t *testing.T) {
 func TestUtilityContext_HandleByzantineValidators(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingValidators(t, ctx)[0]
-	stakedTokensBeforeBig, err := sharedTypes.StringToBigInt(actor.StakedTokens)
+	stakedTokensBeforeBig, err := types.StringToBigInt(actor.StakedTokens)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -632,11 +633,11 @@ func TestUtilityContext_HandleByzantineValidators(t *testing.T) {
 	if !actor.Paused {
 		t.Fatal("actor should be paused after byzantine handling")
 	}
-	stakedTokensAfterBig, err := sharedTypes.StringToBigInt(actor.StakedTokens)
+	stakedTokensAfterBig, err := types.StringToBigInt(actor.StakedTokens)
 	if err != nil {
 		t.Fatal(err)
 	}
-	stakedTokensAfter := sharedTypes.BigIntToString(stakedTokensAfterBig)
+	stakedTokensAfter := types.BigIntToString(stakedTokensAfterBig)
 	burnPercentage, err := ctx.GetMissedBlocksBurnPercentage()
 	if err != nil {
 		t.Fatal(err)
@@ -646,7 +647,7 @@ func TestUtilityContext_HandleByzantineValidators(t *testing.T) {
 	stakedTokensBeforeFloat.Quo(stakedTokensBeforeFloat, big.NewFloat(100))
 	trunactedDiffTokens, _ := stakedTokensBeforeFloat.Int(nil)
 	stakedTokensExpectedAfterBig := big.NewInt(0).Sub(stakedTokensBeforeBig, trunactedDiffTokens)
-	stakedTokensExpectedAfter := sharedTypes.BigIntToString(stakedTokensExpectedAfterBig)
+	stakedTokensExpectedAfter := types.BigIntToString(stakedTokensExpectedAfterBig)
 	if stakedTokensAfter != stakedTokensExpectedAfter {
 		t.Fatalf("tokens are not as expected after handling: expected %v got %v", stakedTokensExpectedAfter, stakedTokensAfter)
 	}
@@ -663,7 +664,7 @@ func TestUtilityContext_HandleProposal(t *testing.T) {
 		t.Fatal(err)
 	}
 	feeAndRewardsCollected := big.NewInt(100)
-	err = ctx.SetPoolAmount(types.FeePoolName, feeAndRewardsCollected)
+	err = ctx.SetPoolAmount(typesUtil.FeePoolName, feeAndRewardsCollected)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -680,7 +681,7 @@ func TestUtilityContext_HandleProposal(t *testing.T) {
 	feesAndRewardsCollectedFloat.Quo(feesAndRewardsCollectedFloat, big.NewFloat(100))
 	amountToProposer, _ := feesAndRewardsCollectedFloat.Int(nil)
 	expectedResultBig := actorTokensBeforeBig.Add(actorTokensBeforeBig, amountToProposer)
-	expectedResult := sharedTypes.BigIntToString(expectedResultBig)
+	expectedResult := types.BigIntToString(expectedResultBig)
 	if err := ctx.HandleProposal(actor.Address); err != nil {
 		t.Fatal(err)
 	}
@@ -688,7 +689,7 @@ func TestUtilityContext_HandleProposal(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	actorTokensAfter := sharedTypes.BigIntToString(actorTokensAfterBig)
+	actorTokensAfter := types.BigIntToString(actorTokensAfterBig)
 	if actorTokensAfter != expectedResult {
 		t.Fatalf("unexpected token amount after; expected %v got %v", expectedResult, actorTokensAfter)
 	}
@@ -697,7 +698,7 @@ func TestUtilityContext_HandleProposal(t *testing.T) {
 func TestUtilityContext_SetValidatorStakedTokens(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	afterTokensExpectedBig := big.NewInt(100)
-	afterTokensExpected := sharedTypes.BigIntToString(afterTokensExpectedBig)
+	afterTokensExpected := types.BigIntToString(afterTokensExpectedBig)
 	actor := GetAllTestingValidators(t, ctx)[0]
 	if actor.StakedTokens == afterTokensExpected {
 		t.Fatal("bad starting amount for staked tokens")
