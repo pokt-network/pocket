@@ -3,6 +3,7 @@ package pre_persistence
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -94,7 +95,7 @@ func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte
 		Paused:          paused,
 		Status:          int32(status),
 		Chains:          chains,
-		ServiceURL:      serviceURL,
+		ServiceUrl:      serviceURL,
 		StakedTokens:    stakedTokens,
 		PausedHeight:    uint64(pausedHeight),
 		UnstakingHeight: unstakingHeight,
@@ -126,7 +127,7 @@ func (m *PrePersistenceContext) UpdateFisherman(address []byte, serviceURL strin
 	}
 	stakedTokens.Add(stakedTokens, stakedTokensToAddI)
 	// update values
-	fish.ServiceURL = serviceURL
+	fish.ServiceUrl = serviceURL
 	fish.StakedTokens = BigIntToString(stakedTokens)
 	fish.Chains = chains
 	// marshal

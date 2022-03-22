@@ -1,21 +1,22 @@
 package utility_module
 
 import (
+	"math/big"
+	"testing"
+
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/utility"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
-	"math/big"
-	"testing"
 )
 
 var (
 	defaultTestingChains          = []string{"0001"}
 	defaultTestingChainsEdited    = []string{"0002"}
-	defaultServiceURL             = "https://foo.bar"
-	defaultServiceURLEdited       = "https://bar.foo"
+	defaultServiceUrl             = "https://foo.bar"
+	defaultServiceUrlEdited       = "https://bar.foo"
 	defaultServiceNodesPerSession = 24
 	zeroAmount                    = big.NewInt(0)
 	zeroAmountString              = types.BigIntToString(zeroAmount)

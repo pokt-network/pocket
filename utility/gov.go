@@ -300,12 +300,12 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case utilTypes.ACLOwner:
+	case utilTypes.AclOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
 		}
-		err := store.SetACLOwner(owner.Value)
+		err := store.SetAclOwner(owner.Value)
 		if err != nil {
 			return types.ErrUpdateParam(err)
 		}
@@ -1595,8 +1595,8 @@ func (u *UtilityContext) GetDoubleSignFeeOwner() (owner []byte, err types.Error)
 func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
 	store := u.Store()
 	switch paramName {
-	case utilTypes.ACLOwner:
-		return store.GetACLOwner()
+	case utilTypes.AclOwner:
+		return store.GetAclOwner()
 	case utilTypes.BlocksPerSessionParamName:
 		return store.GetBlocksPerSessionOwner()
 	case utilTypes.AppMaxChainsParamName:
@@ -1706,111 +1706,111 @@ func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
 	case utilTypes.MessageChangeParameterFee:
 		return store.GetMessageChangeParameterFeeOwner()
 	case utilTypes.BlocksPerSessionOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.AppMaxChainsOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.AppMinimumStakeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.AppBaselineStakeRateOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.AppStakingAdjustmentOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.AppUnstakingBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.AppMinimumPauseBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.AppMaxPausedBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.ServiceNodeMinimumStakeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.ServiceNodeMaxChainsOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.ServiceNodeUnstakingBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.ServiceNodeMinimumPauseBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.ServiceNodeMaxPausedBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.ServiceNodesPerSessionOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.FishermanMinimumStakeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.FishermanMaxChainsOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.FishermanUnstakingBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.FishermanMinimumPauseBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.FishermanMaxPausedBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.ValidatorMinimumStakeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.ValidatorUnstakingBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.ValidatorMinimumPauseBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.ValidatorMaxPausedBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.ValidatorMaximumMissedBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.ProposerPercentageOfFeesOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.ValidatorMaxEvidenceAgeInBlocksOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MissedBlocksBurnPercentageOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.DoubleSignBurnPercentageOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageSendFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageStakeFishermanFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageEditStakeFishermanFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageUnstakeFishermanFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessagePauseFishermanFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageUnpauseFishermanFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageFishermanPauseServiceNodeFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageTestScoreFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageProveTestScoreFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageStakeAppFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageEditStakeAppFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageUnstakeAppFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessagePauseAppFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageUnpauseAppFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageStakeValidatorFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageEditStakeValidatorFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageUnstakeValidatorFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessagePauseValidatorFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageUnpauseValidatorFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageStakeServiceNodeFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageEditStakeServiceNodeFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageUnstakeServiceNodeFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessagePauseServiceNodeFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageUnpauseServiceNodeFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	case utilTypes.MessageChangeParameterFeeOwner:
-		return store.GetACLOwner()
+		return store.GetAclOwner()
 	default:
 		return nil, types.ErrUnknownParam(paramName)
 	}

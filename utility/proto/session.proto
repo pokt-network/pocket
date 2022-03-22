@@ -3,14 +3,14 @@ package utility;
 option go_package = "/utility/types/";
 
 message Session {
-  SessionHeader SessionHeader = 1;
-  bytes SessionKey = 2;
-  repeated bytes SessionNodes = 3;
-  bytes Fishermen = 4;
+  SessionHeader session_header = 1;
+  bytes session_key = 2;
+  repeated bytes session_nodes = 3;
+  bytes fishermen = 4;
 }
 
 message SessionHeader {
-  bytes AppPublicKey = 1;
-  string Chain = 2;
-  int64 SessionBlockHeight = 3;
+  bytes app_public_key = 1;
+  string chain = 2;
+  int64 session_block_height = 3;
 }

@@ -250,8 +250,8 @@ type PersistenceContext interface {
 	SetMessageChangeParameterFeeOwner([]byte) error
 
 	// ACL
-	GetACLOwner() ([]byte, error)
-	SetACLOwner(owner []byte) error
+	GetAclOwner() ([]byte, error)
+	SetAclOwner(owner []byte) error
 	SetBlocksPerSessionOwner(owner []byte) error
 	GetBlocksPerSessionOwner() ([]byte, error)
 	GetMaxAppChainsOwner() ([]byte, error)

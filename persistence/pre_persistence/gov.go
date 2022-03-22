@@ -108,7 +108,7 @@ func DefaultParams() *Params {
 		MessagePauseServiceNodeFee:               BigIntToString(big.NewInt(10000)),
 		MessageUnpauseServiceNodeFee:             BigIntToString(big.NewInt(10000)),
 		MessageChangeParameterFee:                BigIntToString(big.NewInt(10000)),
-		ACLOwner:                                 DefaultParamsOwner.Address(),
+		AclOwner:                                 DefaultParamsOwner.Address(),
 		BlocksPerSessionOwner:                    DefaultParamsOwner.Address(),
 		AppMinimumStakeOwner:                     DefaultParamsOwner.Address(),
 		AppMaxChainsOwner:                        DefaultParamsOwner.Address(),
@@ -282,7 +282,7 @@ func InsertPersistenceParams(store *PrePersistenceContext, params *Params) types
 	if err != nil {
 		return types.ErrUpdateParam(err)
 	}
-	err = store.SetACLOwner(params.ACLOwner)
+	err = store.SetAclOwner(params.AclOwner)
 	if err != nil {
 		return types.ErrUpdateParam(err)
 	}
@@ -1763,20 +1763,20 @@ func (m *PrePersistenceContext) SetMessageChangeParameterFeeOwner(bytes []byte) 
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetACLOwner() ([]byte, error) {
+func (m *PrePersistenceContext) GetAclOwner() ([]byte, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
 		return nil, err
 	}
-	return params.ACLOwner, nil
+	return params.AclOwner, nil
 }
 
-func (m *PrePersistenceContext) SetACLOwner(owner []byte) error {
+func (m *PrePersistenceContext) SetAclOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
 		return err
 	}
-	params.ACLOwner = owner
+	params.AclOwner = owner
 	return m.SetParams(params)
 }
 

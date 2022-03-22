@@ -62,7 +62,7 @@ const (
 	MessageUnpauseServiceNodeFee        = "MessageUnpauseServiceNodeFee"
 	MessageChangeParameterFee           = "MessageChangeParameterFee"
 
-	ACLOwner                                 = "ACLOwner"
+	AclOwner                                 = "AclOwner"
 	BlocksPerSessionOwner                    = "BlocksPerSessionOwner"
 	AppMinimumStakeOwner                     = "AppMinimumStakeOwner"
 	AppMaxChainsOwner                        = "AppMaxChainsOwner"

@@ -7,20 +7,20 @@ message Transaction {
   google.protobuf.Any msg = 1;
   string fee = 2;
   Signature signature = 3;
-  string Nonce = 4;
+  string nonce = 4;
 }
 
 message TransactionResult {
-  uint32 Code = 1;
-  bytes Signer = 2;
-  bytes Recipient = 3;
-  string MessageType = 4;
-  int64 Height = 5;
-  uint32 Index = 6;
-  Transaction Transaction = 7;
+  uint32 code = 1;
+  bytes signer = 2;
+  bytes recipient = 3;
+  string message_type = 4;
+  int64 height = 5;
+  uint32 index = 6;
+  Transaction transaction = 7;
 }
 
 message Signature {
-  bytes publicKey = 1;
+  bytes public_key = 1;
   bytes signature = 2;
 }

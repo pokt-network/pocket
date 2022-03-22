@@ -1,15 +1,16 @@
 package pre_persistence
 
 import (
-	"github.com/pokt-network/pocket/shared/config"
-	"github.com/pokt-network/pocket/shared/crypto"
 	"math"
 	"math/big"
+
+	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 var ( // TODO these are needed placeholders to pass validation checks. Until we have a real genesis implementation & testing environment, this will suffice
 	defaultChains         = []string{"0001"}
-	defaultServiceURL     = "https://foo.bar"
+	defaultServiceUrl     = "https://foo.bar"
 	defaultStakeBig       = big.NewInt(1000000000000000)
 	defaultStake          = BigIntToString(defaultStakeBig)
 	defaultAccountbalance = defaultStake
@@ -46,7 +47,7 @@ func NewGenesisState(config *config.Config, numOfValidators, numOfApplications, 
 		}
 		v := &Validator{
 			Status:       2,
-			ServiceURL:   defaultServiceURL,
+			ServiceUrl:   defaultServiceUrl,
 			StakedTokens: defaultStake,
 		}
 		v.Address = pk.Address()
@@ -80,7 +81,7 @@ func NewGenesisState(config *config.Config, numOfValidators, numOfApplications, 
 		pk, _ := crypto.GeneratePrivateKey()
 		sn := &ServiceNode{
 			Status:       defaultStakeStatus,
-			ServiceURL:   defaultServiceURL,
+			ServiceUrl:   defaultServiceUrl,
 			Chains:       defaultChains,
 			StakedTokens: defaultStake,
 		}
@@ -99,7 +100,7 @@ func NewGenesisState(config *config.Config, numOfValidators, numOfApplications, 
 		fish := &Fisherman{
 			Status:       defaultStakeStatus,
 			Chains:       defaultChains,
-			ServiceURL:   defaultServiceURL,
+			ServiceUrl:   defaultServiceUrl,
 			StakedTokens: defaultStake,
 		}
 		fish.Address = pk.Address()
@@ -190,19 +191,19 @@ func InitGenesis(u *PrePersistenceContext, state *GenesisState) error {
 		}
 	}
 	for _, validator := range state.Validators {
-		err := u.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 2, validator.ServiceURL, validator.StakedTokens, 0, 0)
+		err := u.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 2, validator.ServiceUrl, validator.StakedTokens, 0, 0)
 		if err != nil {
 			return err
 		}
 	}
 	for _, fisherman := range state.Fishermen {
-		err := u.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 2, fisherman.ServiceURL, fisherman.StakedTokens, fisherman.Chains, 0, 0)
+		err := u.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 2, fisherman.ServiceUrl, fisherman.StakedTokens, fisherman.Chains, 0, 0)
 		if err != nil {
 			return err
 		}
 	}
 	for _, serviceNode := range state.ServiceNodes {
-		err := u.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 2, serviceNode.ServiceURL, serviceNode.StakedTokens, serviceNode.Chains, 0, 0)
+		err := u.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 2, serviceNode.ServiceUrl, serviceNode.StakedTokens, serviceNode.Chains, 0, 0)
 		if err != nil {
 			return err
 		}

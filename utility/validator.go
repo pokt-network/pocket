@@ -1,10 +1,11 @@
 package utility
 
 import (
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
-	"math/big"
 )
 
 func (u *UtilityContext) HandleMessageStakeValidator(message *utilTypes.MessageStakeValidator) types.Error {
@@ -50,7 +51,7 @@ func (u *UtilityContext) HandleMessageStakeValidator(message *utilTypes.MessageS
 		return types.ErrAlreadyExists()
 	}
 	// insert the Validator structure
-	if err := u.InsertValidator(publicKey.Address(), message.PublicKey, message.OutputAddress, message.ServiceURL, message.Amount); err != nil {
+	if err := u.InsertValidator(publicKey.Address(), message.PublicKey, message.OutputAddress, message.ServiceUrl, message.Amount); err != nil {
 		return err
 	}
 	return nil
@@ -86,7 +87,7 @@ func (u *UtilityContext) HandleMessageEditStakeValidator(message *utilTypes.Mess
 		return err
 	}
 	// insert the validator structure
-	if err := u.UpdateValidator(message.Address, message.ServiceURL, message.AmountToAdd); err != nil {
+	if err := u.UpdateValidator(message.Address, message.ServiceUrl, message.AmountToAdd); err != nil {
 		return err
 	}
 	return nil

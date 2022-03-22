@@ -2,14 +2,15 @@ package utility_module
 
 import (
 	"bytes"
+	"math/big"
+	"reflect"
+	"testing"
+
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
 	types2 "github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/utility"
 	"github.com/pokt-network/pocket/utility/types"
-	"math/big"
-	"reflect"
-	"testing"
 )
 
 func TestUtilityContext_HandleMessageStakeFisherman(t *testing.T) {
@@ -377,7 +378,7 @@ func TestUtilityContext_InsertFisherman(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	pubKey, _ := crypto.GeneratePublicKey()
 	addr := pubKey.Address()
-	if err := ctx.InsertFisherman(addr, pubKey.Bytes(), addr, defaultServiceURL, defaultAmountString, defaultTestingChains); err != nil {
+	if err := ctx.InsertFisherman(addr, pubKey.Bytes(), addr, defaultServiceUrl, defaultAmountString, defaultTestingChains); err != nil {
 		t.Fatal(err)
 	}
 	exists, err := ctx.GetFishermanExists(addr)
@@ -393,7 +394,7 @@ func TestUtilityContext_InsertFisherman(t *testing.T) {
 			if actor.Chains[0] != defaultTestingChains[0] {
 				t.Fatal("wrong chains")
 			}
-			if actor.ServiceURL != defaultServiceURL {
+			if actor.ServiceUrl != defaultServiceUrl {
 				t.Fatal("wrong serviceURL")
 			}
 			if actor.StakedTokens != defaultAmountString {
@@ -476,7 +477,7 @@ func TestUtilityContext_UpdateFisherman(t *testing.T) {
 	}
 	expectedAmountBig := newAmountBig.Add(newAmountBig, oldAmountBig)
 	expectedAmount := types2.BigIntToString(expectedAmountBig)
-	if err := ctx.UpdateFisherman(actor.Address, actor.ServiceURL, newAmount, actor.Chains); err != nil {
+	if err := ctx.UpdateFisherman(actor.Address, actor.ServiceUrl, newAmount, actor.Chains); err != nil {
 		t.Fatal(err)
 	}
 	actor = GetAllTestingFishermen(t, ctx)[0]

@@ -67,7 +67,7 @@ func (u *UtilityContext) HandleMessageStakeFisherman(message *types2.MessageStak
 		return types.ErrAlreadyExists()
 	}
 	// insert the Fisherman structure
-	if err := u.InsertFisherman(publicKey.Address(), message.PublicKey, message.OutputAddress, message.ServiceURL, message.Amount, message.Chains); err != nil {
+	if err := u.InsertFisherman(publicKey.Address(), message.PublicKey, message.OutputAddress, message.ServiceUrl, message.Amount, message.Chains); err != nil {
 		return err
 	}
 	return nil
@@ -111,7 +111,7 @@ func (u *UtilityContext) HandleMessageEditStakeFisherman(message *types2.Message
 		return err
 	}
 	// insert the Fisherman structure
-	if err := u.UpdateFisherman(message.Address, message.ServiceURL, message.AmountToAdd, message.Chains); err != nil {
+	if err := u.UpdateFisherman(message.Address, message.ServiceUrl, message.AmountToAdd, message.Chains); err != nil {
 		return err
 	}
 	return nil

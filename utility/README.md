@@ -98,7 +98,7 @@ Added governance params:
 - MessageUnpauseServiceNodeFee
 - MessageChangeParameterFee
 
-- ACLOwner
+- AclOwner
 - BlocksPerSessionOwner
 - AppMinimumStakeOwner
 - AppMaxChainsOwner

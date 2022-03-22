@@ -3,6 +3,7 @@ package pre_persistence
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -75,7 +76,7 @@ func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []by
 		Paused:          paused,
 		Status:          int32(status),
 		Chains:          chains,
-		ServiceURL:      serviceURL,
+		ServiceUrl:      serviceURL,
 		StakedTokens:    stakedTokens,
 		PausedHeight:    uint64(pausedHeight),
 		UnstakingHeight: unstakingHeight,
@@ -107,7 +108,7 @@ func (m *PrePersistenceContext) UpdateServiceNode(address []byte, serviceURL str
 	}
 	stakedTokens.Add(stakedTokens, stakedTokensToAddI)
 	// update values
-	sn.ServiceURL = serviceURL
+	sn.ServiceUrl = serviceURL
 	sn.StakedTokens = BigIntToString(stakedTokens)
 	sn.Chains = chains
 	// marshal

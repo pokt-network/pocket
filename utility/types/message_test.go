@@ -1,16 +1,17 @@
 package types
 
 import (
+	"math/big"
+	"testing"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/types/known/wrapperspb"
-	"math/big"
-	"testing"
 )
 
 var (
 	defaultTestingChains = []string{"0001"}
-	defaultServiceURL    = "https://foo.bar:443"
+	defaultServiceUrl    = "https://foo.bar:443"
 	defaultAmountBig     = big.NewInt(1000000)
 	defaultAmount        = types.BigIntToString(defaultAmountBig)
 	defaultFeeBig        = big.NewInt(10000)
@@ -174,7 +175,7 @@ func TestMessageEditStakeFisherman_ValidateBasic(t *testing.T) {
 		Address:     addr,
 		Chains:      defaultTestingChains,
 		AmountToAdd: defaultAmount,
-		ServiceURL:  defaultServiceURL,
+		ServiceUrl:  defaultServiceUrl,
 	}
 	if err := msg.ValidateBasic(); err != nil {
 		t.Fatal(err)
@@ -209,9 +210,9 @@ func TestMessageEditStakeFisherman_ValidateBasic(t *testing.T) {
 	if err := msgInvalidRelayChains.ValidateBasic(); err.Code() != types.ErrInvalidRelayChainLength(0, RelayChainLength).Code() {
 		t.Fatal(err)
 	}
-	msgEmptyServiceURL := msg
-	msgEmptyServiceURL.ServiceURL = ""
-	if err := msgEmptyServiceURL.ValidateBasic(); err.Code() != types.ErrInvalidServiceURL("").Code() {
+	msgEmptyServiceUrl := msg
+	msgEmptyServiceUrl.ServiceUrl = ""
+	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceUrl("").Code() {
 		t.Fatal(err)
 	}
 }
@@ -222,7 +223,7 @@ func TestMessageEditStakeServiceNode_ValidateBasic(t *testing.T) {
 		Address:     addr,
 		Chains:      defaultTestingChains,
 		AmountToAdd: defaultAmount,
-		ServiceURL:  defaultServiceURL,
+		ServiceUrl:  defaultServiceUrl,
 	}
 	if err := msg.ValidateBasic(); err != nil {
 		t.Fatal(err)
@@ -257,9 +258,9 @@ func TestMessageEditStakeServiceNode_ValidateBasic(t *testing.T) {
 	if err := msgInvalidRelayChains.ValidateBasic(); err.Code() != types.ErrInvalidRelayChainLength(0, RelayChainLength).Code() {
 		t.Fatal(err)
 	}
-	msgEmptyServiceURL := msg
-	msgEmptyServiceURL.ServiceURL = ""
-	if err := msgEmptyServiceURL.ValidateBasic(); err.Code() != types.ErrInvalidServiceURL("").Code() {
+	msgEmptyServiceUrl := msg
+	msgEmptyServiceUrl.ServiceUrl = ""
+	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceUrl("").Code() {
 		t.Fatal(err)
 	}
 }
@@ -269,7 +270,7 @@ func TestMessageEditStakeValidator_ValidateBasic(t *testing.T) {
 	msg := MessageEditStakeValidator{
 		Address:     addr,
 		AmountToAdd: defaultAmount,
-		ServiceURL:  defaultServiceURL,
+		ServiceUrl:  defaultServiceUrl,
 	}
 	if err := msg.ValidateBasic(); err != nil {
 		t.Fatal(err)
@@ -294,9 +295,9 @@ func TestMessageEditStakeValidator_ValidateBasic(t *testing.T) {
 	if err := msgInvalidAddress.ValidateBasic(); err.Code() != types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen()).Code() {
 		t.Fatal(err)
 	}
-	msgEmptyServiceURL := msg
-	msgEmptyServiceURL.ServiceURL = ""
-	if err := msgEmptyServiceURL.ValidateBasic(); err.Code() != types.ErrInvalidServiceURL("").Code() {
+	msgEmptyServiceUrl := msg
+	msgEmptyServiceUrl.ServiceUrl = ""
+	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceUrl("").Code() {
 		t.Fatal(err)
 	}
 }
@@ -454,7 +455,7 @@ func TestMessageStakeFisherman_ValidateBasic(t *testing.T) {
 		PublicKey:     pk.Bytes(),
 		Chains:        defaultTestingChains,
 		Amount:        defaultAmount,
-		ServiceURL:    defaultServiceURL,
+		ServiceUrl:    defaultServiceUrl,
 		OutputAddress: pk.Address(),
 	}
 	if err := msg.ValidateBasic(); err != nil {
@@ -481,8 +482,8 @@ func TestMessageStakeFisherman_ValidateBasic(t *testing.T) {
 		t.Fatal(err)
 	}
 	msgEmptyServiceUrl := msg
-	msgEmptyServiceUrl.ServiceURL = ""
-	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceURL("").Code() {
+	msgEmptyServiceUrl.ServiceUrl = ""
+	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceUrl("").Code() {
 		t.Fatal(err)
 	}
 }
@@ -493,7 +494,7 @@ func TestMessageStakeServiceNode_ValidateBasic(t *testing.T) {
 		PublicKey:     pk.Bytes(),
 		Chains:        defaultTestingChains,
 		Amount:        defaultAmount,
-		ServiceURL:    defaultServiceURL,
+		ServiceUrl:    defaultServiceUrl,
 		OutputAddress: pk.Address(),
 	}
 	if err := msg.ValidateBasic(); err != nil {
@@ -520,8 +521,8 @@ func TestMessageStakeServiceNode_ValidateBasic(t *testing.T) {
 		t.Fatal(err)
 	}
 	msgEmptyServiceUrl := msg
-	msgEmptyServiceUrl.ServiceURL = ""
-	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceURL("").Code() {
+	msgEmptyServiceUrl.ServiceUrl = ""
+	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceUrl("").Code() {
 		t.Fatal(err)
 	}
 }
@@ -531,7 +532,7 @@ func TestMessageStakeValidator_ValidateBasic(t *testing.T) {
 	msg := MessageStakeValidator{
 		PublicKey:     pk.Bytes(),
 		Amount:        defaultAmount,
-		ServiceURL:    defaultServiceURL,
+		ServiceUrl:    defaultServiceUrl,
 		OutputAddress: pk.Address(),
 	}
 	if err := msg.ValidateBasic(); err != nil {
@@ -553,8 +554,8 @@ func TestMessageStakeValidator_ValidateBasic(t *testing.T) {
 		t.Fatal(err)
 	}
 	msgEmptyServiceUrl := msg
-	msgEmptyServiceUrl.ServiceURL = ""
-	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceURL("").Code() {
+	msgEmptyServiceUrl.ServiceUrl = ""
+	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceUrl("").Code() {
 		t.Fatal(err)
 	}
 }

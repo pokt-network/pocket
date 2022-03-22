@@ -22,7 +22,7 @@ func TestUtilityContext_HandleMessageStakeValidator(t *testing.T) {
 	msg := &typesUtil.MessageStakeValidator{
 		PublicKey:     pubKey.Bytes(),
 		Amount:        defaultAmountString,
-		ServiceURL:    defaultServiceURL,
+		ServiceUrl:    defaultServiceUrl,
 		OutputAddress: out,
 		Signer:        out,
 	}
@@ -43,8 +43,8 @@ func TestUtilityContext_HandleMessageStakeValidator(t *testing.T) {
 	if actor.Status != typesUtil.StakedStatus {
 		t.Fatalf("incorrect status, expected %v, got %v", typesUtil.StakedStatus, actor.Status)
 	}
-	if actor.ServiceURL != defaultServiceURL {
-		t.Fatalf("incorrect chains, expected %v, got %v", actor.ServiceURL, defaultServiceURL)
+	if actor.ServiceUrl != defaultServiceUrl {
+		t.Fatalf("incorrect chains, expected %v, got %v", actor.ServiceUrl, defaultServiceUrl)
 	}
 	if actor.Paused != false {
 		t.Fatalf("incorrect paused status, expected %v, got %v", false, actor.Paused)
@@ -68,12 +68,12 @@ func TestUtilityContext_HandleMessageEditStakeValidator(t *testing.T) {
 	actor := GetAllTestingValidators(t, ctx)[0]
 	msg := &typesUtil.MessageEditStakeValidator{
 		Address:     actor.Address,
-		ServiceURL:  defaultServiceURLEdited,
+		ServiceUrl:  defaultServiceUrlEdited,
 		AmountToAdd: zeroAmountString,
 		Signer:      actor.Address,
 	}
 	msgServiceUrlEdited := msg
-	msgServiceUrlEdited.ServiceURL = defaultServiceURLEdited
+	msgServiceUrlEdited.ServiceUrl = defaultServiceUrlEdited
 	if err := ctx.HandleMessageEditStakeValidator(msgServiceUrlEdited); err != nil {
 		t.Fatal(err)
 	}
@@ -84,8 +84,8 @@ func TestUtilityContext_HandleMessageEditStakeValidator(t *testing.T) {
 	if actor.PausedHeight != 0 {
 		t.Fatalf("incorrect paused status, expected %v, got %v", actor.PausedHeight, 0)
 	}
-	if actor.ServiceURL != defaultServiceURLEdited {
-		t.Fatalf("incorrect serviceurl, expected %v, got %v", defaultServiceURLEdited, actor.ServiceURL)
+	if actor.ServiceUrl != defaultServiceUrlEdited {
+		t.Fatalf("incorrect serviceurl, expected %v, got %v", defaultServiceUrlEdited, actor.ServiceUrl)
 	}
 	if actor.StakedTokens != defaultAmountString {
 		t.Fatalf("incorrect staked tokens, expected %v, got %v", defaultAmountString, actor.StakedTokens)
@@ -294,7 +294,7 @@ func TestUtilityContext_GetMessageEditStakeValidatorSignerCandidates(t *testing.
 	actors := GetAllTestingValidators(t, ctx)
 	msgEditStake := &typesUtil.MessageEditStakeValidator{
 		Address:     actors[0].Address,
-		ServiceURL:  defaultServiceURL,
+		ServiceUrl:  defaultServiceUrl,
 		AmountToAdd: defaultAmountString,
 	}
 	candidates, err := ctx.GetMessageEditStakeValidatorSignerCandidates(msgEditStake)
@@ -329,7 +329,7 @@ func TestUtilityContext_GetMessageStakeValidatorSignerCandidates(t *testing.T) {
 	msg := &typesUtil.MessageStakeValidator{
 		PublicKey:     pubKey.Bytes(),
 		Amount:        defaultAmountString,
-		ServiceURL:    defaultServiceURL,
+		ServiceUrl:    defaultServiceUrl,
 		OutputAddress: out,
 		Signer:        nil,
 	}
@@ -376,7 +376,7 @@ func TestUtilityContext_InsertValidator(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	pubKey, _ := crypto.GeneratePublicKey()
 	addr := pubKey.Address()
-	if err := ctx.InsertValidator(addr, pubKey.Bytes(), addr, defaultServiceURL, defaultAmountString); err != nil {
+	if err := ctx.InsertValidator(addr, pubKey.Bytes(), addr, defaultServiceUrl, defaultAmountString); err != nil {
 		t.Fatal(err)
 	}
 	exists, err := ctx.GetValidatorExists(addr)
@@ -392,7 +392,7 @@ func TestUtilityContext_InsertValidator(t *testing.T) {
 			if actor.StakedTokens != defaultAmountString {
 				t.Fatal("wrong staked tokens")
 			}
-			if actor.ServiceURL != defaultServiceURL {
+			if actor.ServiceUrl != defaultServiceUrl {
 				t.Fatal("wrong serviceURL")
 			}
 			if !bytes.Equal(actor.Output, addr) {
@@ -472,7 +472,7 @@ func TestUtilityContext_UpdateValidator(t *testing.T) {
 	}
 	expectedAmountBig := newAmountBig.Add(newAmountBig, oldAmountBig)
 	expectedAmount := types.BigIntToString(expectedAmountBig)
-	if err := ctx.UpdateValidator(actor.Address, actor.ServiceURL, newAmount); err != nil {
+	if err := ctx.UpdateValidator(actor.Address, actor.ServiceUrl, newAmount); err != nil {
 		t.Fatal(err)
 	}
 	actor = GetAllTestingValidators(t, ctx)[0]

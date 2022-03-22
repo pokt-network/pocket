@@ -2,9 +2,10 @@ package pre_persistence
 
 import (
 	"bytes"
-	"github.com/pokt-network/pocket/shared/crypto"
 	"math/big"
 	"testing"
+
+	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 func NewTestValidator() Validator {
@@ -16,7 +17,7 @@ func NewTestValidator() Validator {
 		PublicKey:       pub1.Bytes(),
 		Paused:          false,
 		Status:          defaultStakeStatus,
-		ServiceURL:      defaultServiceURL,
+		ServiceUrl:      defaultServiceUrl,
 		StakedTokens:    defaultStake,
 		PausedHeight:    0,
 		UnstakingHeight: 0,
@@ -29,7 +30,7 @@ func TestGetValidatorExists(t *testing.T) {
 	actor := NewTestValidator()
 	addr2, _ := crypto.GenerateAddress()
 	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	exists, err := ctx.GetValidatorExists(actor.Address)
@@ -52,7 +53,7 @@ func TestGetValidator(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestValidator()
 	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	got, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address)
@@ -69,11 +70,11 @@ func TestGetAllValidators(t *testing.T) {
 	actor1 := NewTestValidator()
 	actor2 := NewTestValidator()
 	if err := ctx.InsertValidator(actor1.Address, actor1.PublicKey, actor1.Output, actor1.Paused, int(actor1.Status),
-		actor1.ServiceURL, actor1.StakedTokens, int64(actor1.PausedHeight), actor1.UnstakingHeight); err != nil {
+		actor1.ServiceUrl, actor1.StakedTokens, int64(actor1.PausedHeight), actor1.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	if err := ctx.InsertValidator(actor2.Address, actor2.PublicKey, actor2.Output, actor2.Paused, int(actor2.Status),
-		actor2.ServiceURL, actor2.StakedTokens, int64(actor2.PausedHeight), actor2.UnstakingHeight); err != nil {
+		actor2.ServiceUrl, actor2.StakedTokens, int64(actor2.PausedHeight), actor2.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	validators, err := ctx.(*PrePersistenceContext).GetAllValidators(0)
@@ -98,7 +99,7 @@ func TestUpdateValidator(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestValidator()
 	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	bigExpectedTokens := big.NewInt(1)
@@ -112,7 +113,7 @@ func TestUpdateValidator(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ctx.UpdateValidator(actor.Address, defaultServiceURL, one)
+	err = ctx.UpdateValidator(actor.Address, defaultServiceUrl, one)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,7 +135,7 @@ func TestDeleteValidator(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestValidator()
 	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	err := ctx.DeleteValidator(actor.Address)
@@ -154,7 +155,7 @@ func TestGetValidatorsReadyToUnstake(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestValidator()
 	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	if err := ctx.SetValidatorUnstakingHeightAndStatus(actor.Address, 0, 1); err != nil {
@@ -173,7 +174,7 @@ func TestGetValidatorStatus(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestValidator()
 	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	status, err := ctx.GetValidatorStatus(actor.Address)
@@ -189,7 +190,7 @@ func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestValidator()
 	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	pauseHeight := 1
@@ -210,7 +211,7 @@ func TestSetValidatorsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestValidator()
 	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, true, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	pauseBeforeHeight, unstakingHeight, status := int64(1), int64(10), 1
@@ -234,7 +235,7 @@ func TestGetValidatorOutputAddress(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestValidator()
 	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	output, err := ctx.GetValidatorOutputAddress(actor.Address)

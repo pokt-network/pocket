@@ -3,6 +3,7 @@ package pre_persistence
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -98,7 +99,7 @@ func (m *PrePersistenceContext) InsertValidator(address []byte, publicKey []byte
 		PublicKey:       publicKey,
 		Paused:          paused,
 		Status:          int32(status),
-		ServiceURL:      serviceURL,
+		ServiceUrl:      serviceURL,
 		StakedTokens:    stakedTokens,
 		MissedBlocks:    0,
 		PausedHeight:    uint64(pausedHeight),
@@ -131,7 +132,7 @@ func (m *PrePersistenceContext) UpdateValidator(address []byte, serviceURL strin
 	}
 	stakedTokens.Add(stakedTokens, stakedTokensToAddI)
 	// update values
-	val.ServiceURL = serviceURL
+	val.ServiceUrl = serviceURL
 	val.StakedTokens = BigIntToString(stakedTokens)
 	// marshal
 	bz, err := cdc.Marshal(val)

@@ -57,7 +57,7 @@ func (u *UtilityContext) HandleMessageStakeServiceNode(message *utilTypes.Messag
 		return types.ErrAlreadyExists()
 	}
 	// insert the ServiceNode structure
-	if err := u.InsertServiceNode(publicKey.Address(), message.PublicKey, message.OutputAddress, message.ServiceURL, message.Amount, message.Chains); err != nil {
+	if err := u.InsertServiceNode(publicKey.Address(), message.PublicKey, message.OutputAddress, message.ServiceUrl, message.Amount, message.Chains); err != nil {
 		return err
 	}
 	return nil
@@ -101,7 +101,7 @@ func (u *UtilityContext) HandleMessageEditStakeServiceNode(message *utilTypes.Me
 		return err
 	}
 	// insert the serviceNode structure
-	if err := u.UpdateServiceNode(message.Address, message.ServiceURL, message.AmountToAdd, message.Chains); err != nil {
+	if err := u.UpdateServiceNode(message.Address, message.ServiceUrl, message.AmountToAdd, message.Chains); err != nil {
 		return err
 	}
 	return nil

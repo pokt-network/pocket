@@ -2,6 +2,7 @@ package pre_persistence
 
 import (
 	"encoding/hex"
+
 	crypto2 "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 )
@@ -21,7 +22,7 @@ func (b *Block) ValidateBasic() types.Error {
 }
 
 func (bh *BlockHeader) ValidateBasic() types.Error {
-	if bh.NetworkID == "" {
+	if bh.NetworkId == "" {
 		return types.ErrEmptyNetworkID()
 	}
 	if bh.Time.Seconds == 0 {

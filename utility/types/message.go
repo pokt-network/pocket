@@ -2,12 +2,13 @@ package types
 
 import (
 	"bytes"
-	crypto2 "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
-	"google.golang.org/protobuf/proto"
 	"net/url"
 	"strconv"
 	"strings"
+
+	crypto2 "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types"
+	"google.golang.org/protobuf/proto"
 )
 
 type Message interface {
@@ -92,7 +93,7 @@ func (x *MessageStakeServiceNode) ValidateBasic() types.Error {
 	if err := ValidateRelayChains(x.Chains); err != nil {
 		return err
 	}
-	if err := ValidateServiceURL(x.ServiceURL); err != nil {
+	if err := ValidateServiceUrl(x.ServiceUrl); err != nil {
 		return err
 	}
 	// validate output address
@@ -114,7 +115,7 @@ func (x *MessageEditStakeServiceNode) ValidateBasic() types.Error {
 	if err := ValidateRelayChains(x.Chains); err != nil {
 		return err
 	}
-	if err := ValidateServiceURL(x.ServiceURL); err != nil {
+	if err := ValidateServiceUrl(x.ServiceUrl); err != nil {
 		return err
 	}
 	return nil
@@ -159,7 +160,7 @@ func (x *MessageStakeFisherman) ValidateBasic() types.Error {
 	if err := ValidateRelayChains(x.Chains); err != nil {
 		return err
 	}
-	if err := ValidateServiceURL(x.ServiceURL); err != nil {
+	if err := ValidateServiceUrl(x.ServiceUrl); err != nil {
 		return err
 	}
 	// validate output address
@@ -198,7 +199,7 @@ func (x *MessageEditStakeFisherman) ValidateBasic() types.Error {
 	if err := ValidateRelayChains(x.Chains); err != nil {
 		return err
 	}
-	if err := ValidateServiceURL(x.ServiceURL); err != nil {
+	if err := ValidateServiceUrl(x.ServiceUrl); err != nil {
 		return err
 	}
 	return nil
@@ -251,7 +252,7 @@ func (x *MessageStakeValidator) ValidateBasic() types.Error {
 	if err := ValidatePublicKey(x.PublicKey); err != nil {
 		return err
 	}
-	if err := ValidateServiceURL(x.ServiceURL); err != nil {
+	if err := ValidateServiceUrl(x.ServiceUrl); err != nil {
 		return err
 	}
 	// validate output address
@@ -270,7 +271,7 @@ func (x *MessageEditStakeValidator) ValidateBasic() types.Error {
 	if err := ValidateAddress(x.Address); err != nil {
 		return err
 	}
-	if err := ValidateServiceURL(x.ServiceURL); err != nil {
+	if err := ValidateServiceUrl(x.ServiceUrl); err != nil {
 		return err
 	}
 	return nil
@@ -414,28 +415,28 @@ func ValidateAmount(amount string) types.Error {
 	return nil
 }
 
-func ValidateServiceURL(u string) types.Error {
+func ValidateServiceUrl(u string) types.Error {
 	u = strings.ToLower(u)
 	_, err := url.ParseRequestURI(u)
 	if err != nil {
-		return types.ErrInvalidServiceURL(err.Error())
+		return types.ErrInvalidServiceUrl(err.Error())
 	}
 	if u[:8] != HttpsPrefix && u[:7] != HttpPrefix {
-		return types.ErrInvalidServiceURL(InvalidURLPrefix)
+		return types.ErrInvalidServiceUrl(InvalidURLPrefix)
 	}
 	temp := strings.Split(u, Colon)
 	if len(temp) != 3 {
-		return types.ErrInvalidServiceURL(PortRequired)
+		return types.ErrInvalidServiceUrl(PortRequired)
 	}
 	port, err := strconv.Atoi(temp[2])
 	if err != nil {
-		return types.ErrInvalidServiceURL(NonNumberPort)
+		return types.ErrInvalidServiceUrl(NonNumberPort)
 	}
 	if port > 65535 || port < 0 {
-		return types.ErrInvalidServiceURL(PortOutOfRange)
+		return types.ErrInvalidServiceUrl(PortOutOfRange)
 	}
 	if !strings.Contains(u, Period) {
-		return types.ErrInvalidServiceURL(NoPeriod)
+		return types.ErrInvalidServiceUrl(NoPeriod)
 	}
 	return nil
 }

@@ -2,9 +2,10 @@ package pre_persistence
 
 import (
 	"bytes"
-	"github.com/pokt-network/pocket/shared/crypto"
 	"math/big"
 	"testing"
+
+	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 func NewTestServiceNode() ServiceNode {
@@ -17,7 +18,7 @@ func NewTestServiceNode() ServiceNode {
 		Paused:          false,
 		Status:          defaultStakeStatus,
 		Chains:          defaultChains,
-		ServiceURL:      defaultServiceURL,
+		ServiceUrl:      defaultServiceUrl,
 		StakedTokens:    defaultStake,
 		PausedHeight:    0,
 		UnstakingHeight: 0,
@@ -30,7 +31,7 @@ func TestGetServiceNodeExists(t *testing.T) {
 	actor := NewTestServiceNode()
 	addr2, _ := crypto.GenerateAddress()
 	if err := ctx.InsertServiceNode(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	exists, err := ctx.GetServiceNodeExists(actor.Address)
@@ -53,7 +54,7 @@ func TestGetServiceNode(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestServiceNode()
 	if err := ctx.InsertServiceNode(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	got, _, err := ctx.(*PrePersistenceContext).GetServiceNode(actor.Address)
@@ -70,11 +71,11 @@ func TestGetAllServiceNodes(t *testing.T) {
 	actor1 := NewTestServiceNode()
 	actor2 := NewTestServiceNode()
 	if err := ctx.InsertServiceNode(actor1.Address, actor1.PublicKey, actor1.Output, actor1.Paused, int(actor1.Status),
-		actor1.ServiceURL, actor1.StakedTokens, actor1.Chains, int64(actor1.PausedHeight), actor1.UnstakingHeight); err != nil {
+		actor1.ServiceUrl, actor1.StakedTokens, actor1.Chains, int64(actor1.PausedHeight), actor1.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	if err := ctx.InsertServiceNode(actor2.Address, actor2.PublicKey, actor2.Output, actor2.Paused, int(actor2.Status),
-		actor2.ServiceURL, actor2.StakedTokens, actor2.Chains, int64(actor2.PausedHeight), actor2.UnstakingHeight); err != nil {
+		actor2.ServiceUrl, actor2.StakedTokens, actor2.Chains, int64(actor2.PausedHeight), actor2.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	serviceNodes, err := ctx.(*PrePersistenceContext).GetAllServiceNodes(0)
@@ -99,7 +100,7 @@ func TestUpdateServiceNode(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestServiceNode()
 	if err := ctx.InsertServiceNode(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	zero := BigIntToString(big.NewInt(0))
@@ -136,7 +137,7 @@ func TestDeleteServiceNode(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestServiceNode()
 	if err := ctx.InsertServiceNode(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	err := ctx.DeleteServiceNode(actor.Address)
@@ -156,7 +157,7 @@ func TestGetServiceNodesReadyToUnstake(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestServiceNode()
 	if err := ctx.InsertServiceNode(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	if err := ctx.SetServiceNodeUnstakingHeightAndStatus(actor.Address, 0, 1); err != nil {
@@ -175,7 +176,7 @@ func TestGetServiceNodeStatus(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestServiceNode()
 	if err := ctx.InsertServiceNode(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	status, err := ctx.GetServiceNodeStatus(actor.Address)
@@ -191,7 +192,7 @@ func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestServiceNode()
 	if err := ctx.InsertServiceNode(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	pauseHeight := 1
@@ -212,7 +213,7 @@ func TestSetServiceNodesStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestServiceNode()
 	if err := ctx.InsertServiceNode(actor.Address, actor.PublicKey, actor.Output, true, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	pauseBeforeHeight, unstakingHeight, status := int64(1), int64(10), 1
@@ -236,7 +237,7 @@ func TestGetServiceNodeOutputAddress(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestServiceNode()
 	if err := ctx.InsertServiceNode(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
-		actor.ServiceURL, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
+		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	output, err := ctx.GetServiceNodeOutputAddress(actor.Address)
