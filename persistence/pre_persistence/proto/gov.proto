@@ -1,6 +1,6 @@
 syntax = "proto3";
-package utility;
-option go_package = "/utility/test/";
+package pre_persistence;
+option go_package = "/persistence/pre_persistence/";
 
 message Params {
   int32 BlocksPerSession = 1;
@@ -79,7 +79,7 @@ message Params {
   bytes ServiceNodeMinimumPauseBlocksOwner = 67;
   bytes ServiceNodeMaxPausedBlocksOwner = 68;
   bytes ServiceNodesPerSessionOwner = 69;
-  bytes ParamFishermanMinimumStakeOwner = 70;
+  bytes FishermanMinimumStakeOwner = 70;
   bytes FishermanMaxChainsOwner = 71;
   bytes FishermanUnstakingBlocksOwner = 72;
   bytes FishermanMinimumPauseBlocksOwner = 73;

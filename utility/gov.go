@@ -1,10 +1,11 @@
 package utility
 
 import (
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/types"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/wrapperspb"
-	"math/big"
 )
 
 func (u *UtilityContext) HandleMessageChangeParameter(message *utilTypes.MessageChangeParameter) types.Error {
@@ -449,7 +450,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case utilTypes.ParamFishermanMinimumStakeOwner:
+	case utilTypes.FishermanMinimumStakeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -1732,7 +1733,7 @@ func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
 		return store.GetACLOwner()
 	case utilTypes.ServiceNodesPerSessionOwner:
 		return store.GetACLOwner()
-	case utilTypes.ParamFishermanMinimumStakeOwner:
+	case utilTypes.FishermanMinimumStakeOwner:
 		return store.GetACLOwner()
 	case utilTypes.FishermanMaxChainsOwner:
 		return store.GetACLOwner()

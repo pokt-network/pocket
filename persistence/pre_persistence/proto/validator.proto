@@ -1,6 +1,6 @@
 syntax = "proto3";
-package utility;
-option go_package = "/utility/test/";
+package pre_persistence;
+option go_package = "/persistence/pre_persistence/";
 
 message Validator {
   bytes Address = 1;

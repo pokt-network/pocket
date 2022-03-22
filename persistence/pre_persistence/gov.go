@@ -1,9 +1,10 @@
 package pre_persistence
 
 import (
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
-	"math/big"
 )
 
 var (

@@ -113,7 +113,7 @@ Added governance params:
 - ServiceNodeMinimumPauseBlocksOwner
 - ServiceNodeMaxPausedBlocksOwner
 - ServiceNodesPerSessionOwner
-- ParamFishermanMinimumStakeOwner
+- FishermanMinimumStakeOwner
 - FishermanMaxChainsOwner
 - FishermanUnstakingBlocksOwner
 - FishermanMinimumPauseBlocksOwner

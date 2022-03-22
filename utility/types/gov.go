@@ -77,7 +77,7 @@ const (
 	ServiceNodeMinimumPauseBlocksOwner       = "ServiceNodeMinimumPauseBlocksOwner"
 	ServiceNodeMaxPausedBlocksOwner          = "ServiceNodeMaxPausedBlocksOwner"
 	ServiceNodesPerSessionOwner              = "ServiceNodesPerSessionOwner"
-	ParamFishermanMinimumStakeOwner          = "FishermanMinimumStakeOwner"
+	FishermanMinimumStakeOwner               = "FishermanMinimumStakeOwner"
 	FishermanMaxChainsOwner                  = "FishermanMaxChainsOwner"
 	FishermanUnstakingBlocksOwner            = "FishermanUnstakingBlocksOwner"
 	FishermanMinimumPauseBlocksOwner         = "FishermanMinimumPauseBlocksOwner"

@@ -2,11 +2,15 @@ package pre_persistence
 
 import (
 	"bytes"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+
+	// typesPrePersistence "github.com/pokt-network/pocket/persistence/pre-p"
+	"math/big"
+
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"math/big"
 )
 
 const (

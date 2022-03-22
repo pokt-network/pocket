@@ -2,11 +2,12 @@ package utility_module
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/pokt-network/pocket/shared/types"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/wrapperspb"
-	"testing"
 )
 
 func DefaultTestingParams(_ *testing.T) *pre_persistence.Params {
@@ -1307,7 +1308,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ACLOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ParamFishermanMinimumStakeOwner)
+	gotParam, err = ctx.GetParamOwner(utilTypes.FishermanMinimumStakeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}

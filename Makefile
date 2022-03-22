@@ -78,6 +78,11 @@ test_all: # generate_mocks
 test_utility_module: # generate_mocks
 	go test -v ./shared/tests/utility_module/...
 
+.PHONY: test_utility_types
+## Run all go utility types module unit tests
+test_utility_types: # generate_mocks
+	go test -v ./utility/types/...
+
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
 .PHONY: protogen_show
@@ -95,7 +100,8 @@ protogen_clean:
 protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
 
-	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=./shared ./shared/types/proto/*.proto
+# protoc -I=${proto_dir} -I=./shared/types/proto --go_out=./shared ./shared/types/proto/*.proto
+	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=. ./shared/types/proto/*.proto
 	protoc -I=${proto_dir} -I=./utility/proto --go_out=. ./utility/proto/*.proto
 	protoc -I=${proto_dir} -I=./persistence/pre_persistence/proto --go_out=. ./persistence/pre_persistence/proto/*.proto
 
