@@ -25,3 +25,9 @@ shared/modules/mocks/
 
 # Output binaries
 bin/
+
+# VS Code
+.vscode
+
+# Generated go files
+.pb.go
