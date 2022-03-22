@@ -96,11 +96,10 @@ protogen_clean:
 	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs rm
 
 .PHONY: protogen_local
-## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
+## Generate go structures for all of the protobufs
 protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
 
-# protoc -I=${proto_dir} -I=./shared/types/proto --go_out=./shared ./shared/types/proto/*.proto
 	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=. ./shared/types/proto/*.proto
 	protoc -I=${proto_dir} -I=./utility/proto --go_out=. ./utility/proto/*.proto
 	protoc -I=${proto_dir} -I=./persistence/pre_persistence/proto --go_out=. ./persistence/pre_persistence/proto/*.proto

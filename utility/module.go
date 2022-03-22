@@ -2,11 +2,12 @@ package utility
 
 import (
 	"encoding/hex"
+	"log"
+
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	sharedTypes "github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/utility/types"
-	"log"
 )
 
 var _ modules.UtilityModule = &UtilityModule{}

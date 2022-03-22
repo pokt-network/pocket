@@ -6,7 +6,6 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 
-	// typesPrePersistence "github.com/pokt-network/pocket/persistence/pre-p"
 	"math/big"
 
 	"github.com/syndtr/goleveldb/leveldb/iterator"
