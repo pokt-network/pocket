@@ -23,8 +23,5 @@ vendor/
 # Generated Mocks (for testing)
 shared/modules/mocks/
 
-# Proto generated files
-types/
-
 # Output binaries
 bin/
