@@ -6,6 +6,8 @@ import (
 )
 
 type PersistenceModule interface {
+	Module
+
 	NewContext(height int64) (PersistenceContext, error)
 	GetCommitDB() *memdb.DB
 }

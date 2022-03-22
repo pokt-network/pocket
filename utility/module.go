@@ -13,7 +13,7 @@ import (
 var _ modules.UtilityModule = &UtilityModule{}
 
 type UtilityModule struct {
-	pocketBusMod modules.Bus
+	bus modules.Bus
 
 	Mempool types.Mempool
 }
@@ -39,14 +39,14 @@ func (p *UtilityModule) Stop() error {
 }
 
 func (m *UtilityModule) SetBus(pocketBus modules.Bus) {
-	m.pocketBusMod = pocketBus
+	m.bus = pocketBus
 }
 
 func (m *UtilityModule) GetBus() modules.Bus {
-	if m.pocketBusMod == nil {
+	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
-	return m.pocketBusMod
+	return m.bus
 }
 
 func (u *UtilityModule) NewContext(height int64) (modules.UtilityContext, error) {
