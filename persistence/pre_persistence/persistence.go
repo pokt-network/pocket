@@ -3,11 +3,12 @@ package pre_persistence
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
+
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
-	"strings"
 
 	"github.com/jordanorelli/lexnum"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
@@ -37,10 +38,11 @@ var (
 )
 
 type PrePersistenceModule struct {
+	bus modules.Bus
+
 	CommitDB *memdb.DB
 	Mempool  types.Mempool
-	//pocketBusMod modules.Bus  TODO: add back in once bus is integrated
-	Cfg *config.Config
+	Cfg      *config.Config
 }
 
 func NewPrePersistenceModule(commitDB *memdb.DB, mempool types.Mempool, cfg *config.Config) *PrePersistenceModule {
