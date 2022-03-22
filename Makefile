@@ -73,6 +73,11 @@ mockgen:
 test_all: # generate_mocks
 	go test ./...
 
+.PHONY: test_utility_module
+## Run all go utility module unit tests
+test_utility_module: # generate_mocks
+	go test -v ./shared/tests/utility_module/...
+
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
 .PHONY: protogen_show
@@ -84,6 +89,17 @@ protogen_show:
 ## Remove all the generated protobufs.
 protogen_clean:
 	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs rm
+
+.PHONY: protogen_local
+## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
+protogen_local:
+	$(eval proto_dir = "./shared/types/proto/")
+
+	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=./shared ./shared/types/proto/*.proto
+	protoc -I=${proto_dir} -I=./utility/proto --go_out=. ./utility/proto/*.proto
+	protoc -I=${proto_dir} -I=./persistence/pre_persistence/proto --go_out=. ./persistence/pre_persistence/proto/*.proto
+
+	echo "View generated proto files by running: make protogen_show"
 
 # TODO(team): Delete this once the `prototype` directory is removed.
 .PHONY: protogen_local_prototype
