@@ -26,6 +26,7 @@ type UtilityContext struct {
 
 func Create(_ *config.Config) (modules.UtilityModule, error) {
 	return &UtilityModule{
+		// TODO: Add `maxTransactionBytes` and `maxTransactions` to cfg.Utility
 		Mempool: types.NewMempool(1000, 1000),
 	}, nil
 }
@@ -52,7 +53,7 @@ func (m *UtilityModule) GetBus() modules.Bus {
 func (u *UtilityModule) NewContext(height int64) (modules.UtilityContext, error) {
 	ctx, err := u.GetBus().GetPersistenceModule().NewContext(height)
 	if err != nil {
-		return nil, types.ErrNewContext(err)
+		return nil, types.ErrNewPersistenceContext(err)
 	}
 	return &UtilityContext{
 		LatestHeight: height,
@@ -96,7 +97,7 @@ type Context struct {
 }
 
 func (u *UtilityContext) RevertLastSavePoint() types.Error {
-	if u.Context.SavePointsM == nil || len(u.Context.SavePointsM) == 0 {
+	if len(u.Context.SavePointsM) == 0 {
 		return types.ErrEmptySavePoints()
 	}
 	var key []byte
@@ -110,7 +111,7 @@ func (u *UtilityContext) RevertLastSavePoint() types.Error {
 }
 
 func (u *UtilityContext) NewSavePoint(transactionHash []byte) types.Error {
-	if u.Context.SavePointsM == nil || len(u.Context.SavePointsM) == 0 {
+	if len(u.Context.SavePointsM) == 0 {
 		u.Context.SavePoints = make([][]byte, 0)
 		u.Context.SavePointsM = make(map[string]struct{})
 	}

@@ -84,13 +84,13 @@ const (
 	CodeGetOutputAddressError            Code = 94
 	CodeTransactionAlreadyCommittedError Code = 95
 
-	CodeNewContextError        Code = 100
-	CodeGetAppHashError        Code = 101
-	CodeNewSavePointError      Code = 102
-	CodeRollbackSavePointError Code = 103
-	CodeResetContextError      Code = 104
-	CodeCommitContextError     Code = 105
-	CodeReleaseContextError    Code = 106
+	CodeNewPersistenceContextError Code = 100
+	CodeGetAppHashError            Code = 101
+	CodeNewSavePointError          Code = 102
+	CodeRollbackSavePointError     Code = 103
+	CodeResetContextError          Code = 104
+	CodeCommitContextError         Code = 105
+	CodeReleaseContextError        Code = 106
 
 	CodeSetPoolError             Code = 110
 	CodeDuplicateSavePointError  Code = 111
@@ -172,7 +172,7 @@ const (
 	TransactionAlreadyCommittedError  = "the transaction is already committed"
 	NewSavePointError                 = "an error occurred creating the save point"
 	RollbackSavePointError            = "an error occurred rolling back to save point"
-	NewContextError                   = "an error occurred creating the persistence context"
+	NewPersistenceContextError        = "an error occurred creating the persistence context"
 	GetAppHashError                   = "an error occurred getting the apphash"
 	ResetContextError                 = "an error occurred resetting the context"
 	CommitContextError                = "an error occurred committing the context"
@@ -491,8 +491,8 @@ func ErrRollbackSavePoint(err error) Error {
 	return NewError(CodeRollbackSavePointError, fmt.Sprintf("%s: %s", RollbackSavePointError, err.Error()))
 }
 
-func ErrNewContext(err error) Error {
-	return NewError(CodeNewContextError, fmt.Sprintf("%s: %s", NewContextError, err.Error()))
+func ErrNewPersistenceContext(err error) Error {
+	return NewError(CodeNewPersistenceContextError, fmt.Sprintf("%s: %s", NewPersistenceContextError, err.Error()))
 }
 
 func ErrGetAppHash(err error) Error {
