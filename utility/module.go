@@ -24,6 +24,12 @@ type UtilityContext struct {
 	Context      *Context
 }
 
+type Context struct {
+	modules.PersistenceContext
+	SavePointsM map[string]struct{}
+	SavePoints  [][]byte
+}
+
 func Create(_ *config.Config) (modules.UtilityModule, error) {
 	return &UtilityModule{
 		// TODO: Add `maxTransactionBytes` and `maxTransactions` to cfg.Utility
@@ -79,25 +85,12 @@ func (u *UtilityContext) ReleaseContext() {
 	u.Context = nil
 }
 
-func (c *Context) Reset() types.Error {
-	if err := c.PersistenceContext.Reset(); err != nil {
-		return types.ErrResetContext(err)
-	}
-	return nil
-}
-
 func (u *UtilityContext) GetLatestHeight() (int64, types.Error) {
 	return u.LatestHeight, nil
 }
 
 func (u *UtilityContext) Codec() typesUtil.Codec {
 	return typesUtil.UtilityCodec()
-}
-
-type Context struct {
-	modules.PersistenceContext
-	SavePointsM map[string]struct{}
-	SavePoints  [][]byte
 }
 
 func (u *UtilityContext) RevertLastSavePoint() types.Error {
@@ -124,5 +117,12 @@ func (u *UtilityContext) NewSavePoint(transactionHash []byte) types.Error {
 	}
 	u.Context.SavePoints = append(u.Context.SavePoints, transactionHash)
 	u.Context.SavePointsM[txHash] = struct{}{}
+	return nil
+}
+
+func (c *Context) Reset() types.Error {
+	if err := c.PersistenceContext.Reset(); err != nil {
+		return types.ErrResetContext(err)
+	}
 	return nil
 }
