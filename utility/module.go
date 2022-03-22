@@ -58,7 +58,11 @@ func (u *UtilityModule) NewContext(height int64) (modules.UtilityContext, error)
 	return &UtilityContext{
 		LatestHeight: height,
 		Mempool:      u.Mempool,
-		Context:      &Context{PersistenceContext: ctx},
+		Context: &Context{
+			PersistenceContext: ctx,
+			SavePoints:         make([][]byte, 0),
+			SavePointsM:        make(map[string]struct{}),
+		},
 	}, nil
 }
 
@@ -111,15 +115,11 @@ func (u *UtilityContext) RevertLastSavePoint() types.Error {
 }
 
 func (u *UtilityContext) NewSavePoint(transactionHash []byte) types.Error {
-	if len(u.Context.SavePointsM) == 0 {
-		u.Context.SavePoints = make([][]byte, 0)
-		u.Context.SavePointsM = make(map[string]struct{})
-	}
 	if err := u.Context.PersistenceContext.NewSavePoint(transactionHash); err != nil {
 		return types.ErrNewSavePoint(err)
 	}
 	txHash := hex.EncodeToString(transactionHash)
-	if _, ok := u.Context.SavePointsM[txHash]; ok {
+	if _, exists := u.Context.SavePointsM[txHash]; exists {
 		return types.ErrDuplicateSavePoint()
 	}
 	u.Context.SavePoints = append(u.Context.SavePoints, transactionHash)
