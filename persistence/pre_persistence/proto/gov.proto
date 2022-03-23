@@ -43,7 +43,7 @@ message Params {
   string message_stake_fisherman_fee = 31;
   string message_edit_stake_fisherman_fee = 32;
   string message_unstake_fisherman_fee = 33;
-  string  message_pause_fisherman_fee = 34;
+  string message_pause_fisherman_fee = 34;
   string message_unpause_fisherman_fee = 35;
   string message_fisherman_pause_service_node_fee = 36;
   string message_test_score_fee = 37;

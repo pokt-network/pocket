@@ -10,6 +10,7 @@ import "fisherman.proto";
 import "service_node.proto";
 import "gov.proto";
 
+// TODO(team): Consolidate this into a shared genesis proto.
 message GenesisState {
   repeated Validator validators = 1;
   repeated Account accounts = 2;
