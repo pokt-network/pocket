@@ -1,10 +1,12 @@
 syntax = "proto3";
+package utility;
+
+option go_package = "/utility/types/";
+
 import "vote.proto";
 import "session.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
-package utility;
-option go_package = "/utility/types/";
 
 message MessageSend {
   bytes from_address = 1;

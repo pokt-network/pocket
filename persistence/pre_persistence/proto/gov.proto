@@ -1,5 +1,6 @@
 syntax = "proto3";
 package pre_persistence;
+
 option go_package = "/persistence/pre_persistence/";
 
 message Params {

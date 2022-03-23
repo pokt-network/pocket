@@ -1,7 +1,9 @@
 syntax = "proto3";
-import "google/protobuf/timestamp.proto";
 package pre_persistence;
+
 option go_package = "/persistence/pre_persistence/";
+
+import "google/protobuf/timestamp.proto";
 
 message BlockHeader {
   int64 height = 1;
