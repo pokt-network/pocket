@@ -1,9 +1,10 @@
 package utility
 
 import (
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/types"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
-	"math/big"
 )
 
 func (u *UtilityContext) HandleMessageSend(message *utilTypes.MessageSend) types.Error {

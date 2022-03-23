@@ -1,11 +1,12 @@
 package utility
 
 import (
+	"math"
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
-	"math"
-	"math/big"
 )
 
 func (u *UtilityContext) HandleMessageStakeApp(message *utilTypes.MessageStakeApp) types.Error {
@@ -38,7 +39,7 @@ func (u *UtilityContext) HandleMessageStakeApp(message *utilTypes.MessageStakeAp
 	if err != nil {
 		return err
 	}
-	// validate chains
+	// validate number of chains
 	if len(message.Chains) > maxChains {
 		return types.ErrMaxChains(maxChains)
 	}
@@ -95,7 +96,7 @@ func (u *UtilityContext) HandleMessageEditStakeApp(message *utilTypes.MessageEdi
 	if err != nil {
 		return err
 	}
-	// validate chains
+	// validate number of chains
 	if len(message.Chains) > maxChains {
 		return types.ErrMaxChains(maxChains)
 	}
@@ -232,7 +233,7 @@ func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.
 	if err != nil {
 		return utilTypes.EmptyString, err
 	}
-	// convert tokens to int64
+	// convert tokens to float64
 	tokensFloat64 := big.NewFloat(float64(tokens.Int64()))
 	// get the percentage of the baseline stake rate (can be over 100%)
 	basePercentage := big.NewFloat(float64(baseRate) / float64(100))
