@@ -2,27 +2,26 @@ package types
 
 import (
 	"bytes"
+	"log"
 	"net/url"
 	"strconv"
 	"strings"
 
-	crypto2 "github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/proto"
 )
 
 type Message interface {
 	proto.Message
+
 	SetSigner(signer []byte)
 	ValidateBasic() types.Error
 }
 
-var (
-	_ Message = &MessageStakeApp{}
-)
+var _ Message = &MessageStakeApp{}
 
 func (x *MessageStakeApp) ValidateBasic() types.Error {
-	// validate amount
 	if err := ValidateAmount(x.Amount); err != nil {
 		return err
 	}
@@ -32,7 +31,6 @@ func (x *MessageStakeApp) ValidateBasic() types.Error {
 	if err := ValidateRelayChains(x.Chains); err != nil {
 		return err
 	}
-	// validate output address
 	return ValidateOutputAddress(x.OutputAddress)
 }
 
@@ -41,7 +39,6 @@ func (x *MessageStakeApp) SetSigner(signer []byte) {
 }
 
 func (x *MessageEditStakeApp) ValidateBasic() types.Error {
-	// validate amount
 	if err := ValidateAmount(x.AmountToAdd); err != nil {
 		return err
 	}
@@ -83,7 +80,6 @@ func (x *MessagePauseApp) SetSigner(signer []byte) {
 }
 
 func (x *MessageStakeServiceNode) ValidateBasic() types.Error {
-	// validate amount
 	if err := ValidateAmount(x.Amount); err != nil {
 		return err
 	}
@@ -96,7 +92,6 @@ func (x *MessageStakeServiceNode) ValidateBasic() types.Error {
 	if err := ValidateServiceUrl(x.ServiceUrl); err != nil {
 		return err
 	}
-	// validate output address
 	return ValidateOutputAddress(x.OutputAddress)
 }
 
@@ -105,7 +100,6 @@ func (x *MessageStakeServiceNode) SetSigner(signer []byte) {
 }
 
 func (x *MessageEditStakeServiceNode) ValidateBasic() types.Error {
-	// validate amount
 	if err := ValidateAmount(x.AmountToAdd); err != nil {
 		return err
 	}
@@ -150,7 +144,6 @@ func (x *MessagePauseServiceNode) SetSigner(signer []byte) {
 }
 
 func (x *MessageStakeFisherman) ValidateBasic() types.Error {
-	// validate amount
 	if err := ValidateAmount(x.Amount); err != nil {
 		return err
 	}
@@ -163,7 +156,6 @@ func (x *MessageStakeFisherman) ValidateBasic() types.Error {
 	if err := ValidateServiceUrl(x.ServiceUrl); err != nil {
 		return err
 	}
-	// validate output address
 	return ValidateOutputAddress(x.OutputAddress)
 }
 
@@ -189,7 +181,6 @@ func (x *MessageStakeFisherman) SetSigner(signer []byte) {
 }
 
 func (x *MessageEditStakeFisherman) ValidateBasic() types.Error {
-	// validate amount
 	if err := ValidateAmount(x.AmountToAdd); err != nil {
 		return err
 	}
@@ -245,7 +236,6 @@ func (x *MessageFishermanPauseServiceNode) SetSigner(signer []byte) {
 }
 
 func (x *MessageStakeValidator) ValidateBasic() types.Error {
-	// validate amount
 	if err := ValidateAmount(x.Amount); err != nil {
 		return err
 	}
@@ -255,7 +245,6 @@ func (x *MessageStakeValidator) ValidateBasic() types.Error {
 	if err := ValidateServiceUrl(x.ServiceUrl); err != nil {
 		return err
 	}
-	// validate output address
 	return ValidateOutputAddress(x.OutputAddress)
 }
 
@@ -348,15 +337,15 @@ func (x *MessageSend) ValidateBasic() types.Error {
 }
 
 func (x *MessageSend) SetSigner(signer []byte) {
-	// no op
+	log.Println("[NOOP] SetSigner on MessageSend")
 }
 
 func ValidateAddress(address []byte) types.Error {
 	if address == nil {
 		return types.ErrEmptyAddress()
 	}
-	if len(address) != crypto2.AddressLen {
-		return types.ErrInvalidAddressLen(crypto2.ErrInvalidAddressLen())
+	if len(address) != cryptoPocket.AddressLen {
+		return types.ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen())
 	}
 	return nil
 }
@@ -365,19 +354,18 @@ func ValidateOutputAddress(address []byte) types.Error {
 	if address == nil {
 		return types.ErrNilOutputAddress()
 	}
-	if len(address) != crypto2.AddressLen {
-		return types.ErrInvalidAddressLen(crypto2.ErrInvalidAddressLen())
+	if len(address) != cryptoPocket.AddressLen {
+		return types.ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen())
 	}
 	return nil
 }
 
 func ValidatePublicKey(publicKey []byte) types.Error {
-	// validate public key
 	if publicKey == nil {
 		return types.ErrEmptyPublicKey()
 	}
-	if len(publicKey) != crypto2.PublicKeyLen {
-		return types.ErrInvalidPublicKeylen(crypto2.ErrInvalidPublicKeyLen())
+	if len(publicKey) != cryptoPocket.PublicKeyLen {
+		return types.ErrInvalidPublicKeylen(cryptoPocket.ErrInvalidPublicKeyLen())
 	}
 	return nil
 }
@@ -386,8 +374,8 @@ func ValidateHash(hash []byte) types.Error {
 	if hash == nil {
 		return types.ErrEmptyHash()
 	}
-	if len(hash) != crypto2.SHA3HashLen {
-		return types.ErrInvalidHashLength(crypto2.ErrInvalidHashLen())
+	if len(hash) != cryptoPocket.SHA3HashLen {
+		return types.ErrInvalidHashLength(cryptoPocket.ErrInvalidHashLen())
 	}
 	return nil
 }

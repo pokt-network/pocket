@@ -9,6 +9,7 @@ const (
 type RelayChain string
 
 func (rc *RelayChain) Validate() types.Error {
+	// TODO: Consider validating against a static list (gov parameter?) of supported relay chains
 	if rc == nil || *rc == "" {
 		return types.ErrEmptyRelayChain()
 	}
