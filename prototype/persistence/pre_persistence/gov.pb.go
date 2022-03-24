@@ -94,7 +94,7 @@ type Params struct {
 	ServiceNodeMinimumPauseBlocksOwner       []byte `protobuf:"bytes,67,opt,name=ServiceNodeMinimumPauseBlocksOwner,proto3" json:"ServiceNodeMinimumPauseBlocksOwner,omitempty"`
 	ServiceNodeMaxPausedBlocksOwner          []byte `protobuf:"bytes,68,opt,name=ServiceNodeMaxPausedBlocksOwner,proto3" json:"ServiceNodeMaxPausedBlocksOwner,omitempty"`
 	ServiceNodesPerSessionOwner              []byte `protobuf:"bytes,69,opt,name=ServiceNodesPerSessionOwner,proto3" json:"ServiceNodesPerSessionOwner,omitempty"`
-	ParamFishermanMinimumStakeOwner          []byte `protobuf:"bytes,70,opt,name=FishermanMinimumStakeOwner,proto3" json:"FishermanMinimumStakeOwner,omitempty"`
+	ParamFishermanMinimumStakeOwner          []byte `protobuf:"bytes,70,opt,name=ParamFishermanMinimumStakeOwner,proto3" json:"ParamFishermanMinimumStakeOwner,omitempty"`
 	FishermanMaxChainsOwner                  []byte `protobuf:"bytes,71,opt,name=FishermanMaxChainsOwner,proto3" json:"FishermanMaxChainsOwner,omitempty"`
 	FishermanUnstakingBlocksOwner            []byte `protobuf:"bytes,72,opt,name=FishermanUnstakingBlocksOwner,proto3" json:"FishermanUnstakingBlocksOwner,omitempty"`
 	FishermanMinimumPauseBlocksOwner         []byte `protobuf:"bytes,73,opt,name=FishermanMinimumPauseBlocksOwner,proto3" json:"FishermanMinimumPauseBlocksOwner,omitempty"`
