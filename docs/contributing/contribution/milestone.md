@@ -41,8 +41,8 @@ Integration issues should have the `integration` tag on its labels. Make sure to
 
 You can follow GitHub guides to create the integration issue
 
-* [https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues)
-* [https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue)
+* [About Issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues)
+* [How to create an Issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue)
 
 
 It’s important to provide the following information for the issue (_issues not properly formatted may be deleted_):

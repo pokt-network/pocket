@@ -107,7 +107,7 @@ flowchart TB
 
 You can follow this guide to create a PR from a fork to the integration branch. **Take in consideration that the integration branch could be in a fork as well.**
 
-[https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork)
+[How to create a Pull Request from a Fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork)
 
 On the PR, please include any details related to the task that you pushed. Proof of your local tests passing is a good practice in order to help other developers know that the code is tested. Any screenshot or screencast is welcome to help others understand the impact of your work.
 

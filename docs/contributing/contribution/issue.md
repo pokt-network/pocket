@@ -28,11 +28,11 @@ Join [Pocket Forum](https://forum.pokt.network/), discuss with other contributor
 
 ## Issue Creation
 
-You can follow GitHub guides to create the issue
+You can follow these GitHub guides to create the issue
 
-* [https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues)
+* [About Issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/about-issues)
 
-* [https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue)
+* [How to create an Issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue)
 
 It’s important to provide the following information for the issue. Issues not properly formatted can be deleted.
 
