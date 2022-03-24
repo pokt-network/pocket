@@ -262,7 +262,11 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) types.Error {
 }
 
 func (u *UtilityContext) HandleMessageDoubleSign(message *utilTypes.MessageDoubleSign) types.Error {
-	evidenceAge := u.LatestHeight - message.VoteA.Height
+	latestHeight, err := u.GetLatestHeight()
+	if err != nil {
+		return err
+	}
+	evidenceAge := latestHeight - message.VoteA.Height
 	maxEvidenceAge, err := u.GetMaxEvidenceAgeInBlocks()
 	if err != nil {
 		return err
@@ -275,7 +279,7 @@ func (u *UtilityContext) HandleMessageDoubleSign(message *utilTypes.MessageDoubl
 		return types.ErrNewPublicKeyFromBytes(er)
 	}
 	doubleSigner := pk.Address()
-	// burn validator for missing blocks
+	// burn validator for double signing blocks
 	burnPercentage, err := u.GetDoubleSignBurnPercentage()
 	if err != nil {
 		return err
@@ -326,7 +330,7 @@ func (u *UtilityContext) BurnValidator(address []byte, percentage int) types.Err
 	return nil
 }
 
-func (u *UtilityContext) GetValidatorExists(address []byte) (exists bool, err types.Error) {
+func (u *UtilityContext) GetValidatorExists(address []byte) (bool, types.Error) {
 	store := u.Store()
 	exists, er := store.GetValidatorExists(address)
 	if er != nil {
@@ -387,7 +391,7 @@ func (u *UtilityContext) UnstakeValidatorsPausedBefore(pausedBeforeHeight int64)
 	return nil
 }
 
-func (u *UtilityContext) GetValidatorStatus(address []byte) (status int, err types.Error) {
+func (u *UtilityContext) GetValidatorStatus(address []byte) (int, types.Error) {
 	store := u.Store()
 	status, er := store.GetValidatorStatus(address)
 	if er != nil {
@@ -396,7 +400,7 @@ func (u *UtilityContext) GetValidatorStatus(address []byte) (status int, err typ
 	return status, nil
 }
 
-func (u *UtilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) (err types.Error) {
+func (u *UtilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) types.Error {
 	store := u.Store()
 	er := store.SetValidatorMissedBlocks(address, missedBlocks)
 	if er != nil {
@@ -405,7 +409,7 @@ func (u *UtilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks i
 	return nil
 }
 
-func (u *UtilityContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) (err types.Error) {
+func (u *UtilityContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) types.Error {
 	store := u.Store()
 	if er := store.SetValidatorUnstakingHeightAndStatus(address, unstakingHeight, status); er != nil {
 		return types.ErrSetUnstakingHeightAndStatus(er)
@@ -413,7 +417,7 @@ func (u *UtilityContext) SetValidatorUnstakingHeightAndStatus(address []byte, un
 	return nil
 }
 
-func (u *UtilityContext) GetValidatorPauseHeightIfExists(address []byte) (ValidatorPauseHeight int64, err types.Error) {
+func (u *UtilityContext) GetValidatorPauseHeightIfExists(address []byte) (int64, types.Error) {
 	store := u.Store()
 	ValidatorPauseHeight, er := store.GetValidatorPauseHeightIfExists(address)
 	if er != nil {
@@ -430,32 +434,32 @@ func (u *UtilityContext) SetValidatorPauseHeight(address []byte, height int64) t
 	return nil
 }
 
-func (u *UtilityContext) CalculateValidatorUnstakingHeight() (unstakingHeight int64, err types.Error) {
+func (u *UtilityContext) CalculateValidatorUnstakingHeight() (int64, types.Error) {
 	unstakingBlocks, err := u.GetValidatorUnstakingBlocks()
 	if err != nil {
 		return utilTypes.ZeroInt, err
 	}
-	unstakingHeight, err = u.CalculateUnstakingHeight(unstakingBlocks)
+	unstakingHeight, err := u.CalculateUnstakingHeight(unstakingBlocks)
 	if err != nil {
 		return utilTypes.ZeroInt, err
 	}
-	return
+	return unstakingHeight, nil
 }
 
-func (u *UtilityContext) GetValidatorMissedBlocks(address []byte) (missedBlocks int, err types.Error) {
+func (u *UtilityContext) GetValidatorMissedBlocks(address []byte) (int, types.Error) {
 	store := u.Store()
 	missedBlocks, er := store.GetValidatorMissedBlocks(address)
 	if er != nil {
-		return utilTypes.ZeroInt, types.ErrGetMissedBlocks(err)
+		return utilTypes.ZeroInt, types.ErrGetMissedBlocks(er)
 	}
 	return missedBlocks, nil
 }
 
-func (u *UtilityContext) GetValidatorStakedTokens(address []byte) (tokens *big.Int, err types.Error) {
+func (u *UtilityContext) GetValidatorStakedTokens(address []byte) (*big.Int, types.Error) {
 	store := u.Store()
 	validatorStakedTokens, er := store.GetValidatorStakedTokens(address)
 	if er != nil {
-		return nil, types.ErrGetValidatorStakedTokens(err)
+		return nil, types.ErrGetValidatorStakedTokens(er)
 	}
 	i, err := types.StringToBigInt(validatorStakedTokens)
 	if err != nil {
@@ -464,11 +468,11 @@ func (u *UtilityContext) GetValidatorStakedTokens(address []byte) (tokens *big.I
 	return i, nil
 }
 
-func (u *UtilityContext) SetValidatorStakedTokens(address []byte, tokens *big.Int) (err types.Error) {
+func (u *UtilityContext) SetValidatorStakedTokens(address []byte, tokens *big.Int) types.Error {
 	store := u.Store()
 	er := store.SetValidatorStakedTokens(address, types.BigIntToString(tokens))
 	if er != nil {
-		return types.ErrSetValidatorStakedTokens(err)
+		return types.ErrSetValidatorStakedTokens(er)
 	}
 	return nil
 }
@@ -481,57 +485,62 @@ func (u *UtilityContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, 
 	return nil
 }
 
-func (u *UtilityContext) GetMessageStakeValidatorSignerCandidates(msg *utilTypes.MessageStakeValidator) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageStakeValidatorSignerCandidates(msg *utilTypes.MessageStakeValidator) ([][]byte, types.Error) {
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, msg.OutputAddress)
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(er)
 	}
 	candidates = append(candidates, pk.Address())
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageEditStakeValidatorSignerCandidates(msg *utilTypes.MessageEditStakeValidator) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageEditStakeValidatorSignerCandidates(msg *utilTypes.MessageEditStakeValidator) ([][]byte, types.Error) {
 	output, err := u.GetValidatorOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnstakeValidatorSignerCandidates(msg *utilTypes.MessageUnstakeValidator) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageUnstakeValidatorSignerCandidates(msg *utilTypes.MessageUnstakeValidator) ([][]byte, types.Error) {
 	output, err := u.GetValidatorOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnpauseValidatorSignerCandidates(msg *utilTypes.MessageUnpauseValidator) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageUnpauseValidatorSignerCandidates(msg *utilTypes.MessageUnpauseValidator) ([][]byte, types.Error) {
 	output, err := u.GetValidatorOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessagePauseValidatorSignerCandidates(msg *utilTypes.MessagePauseValidator) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessagePauseValidatorSignerCandidates(msg *utilTypes.MessagePauseValidator) ([][]byte, types.Error) {
 	output, err := u.GetValidatorOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageDoubleSignSignerCandidates(msg *utilTypes.MessageDoubleSign) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageDoubleSignSignerCandidates(msg *utilTypes.MessageDoubleSign) ([][]byte, types.Error) {
 	return [][]byte{msg.ReporterAddress}, nil
 }
 
@@ -544,7 +553,7 @@ func (u *UtilityContext) GetValidatorOutputAddress(operator []byte) (output []by
 	return output, nil
 }
 
-func (u *UtilityContext) CalculateUnstakingHeight(unstakingBlocks int64) (unstakingheight int64, err types.Error) {
+func (u *UtilityContext) CalculateUnstakingHeight(unstakingBlocks int64) (int64, types.Error) {
 	latestHeight, err := u.GetLatestHeight()
 	if err != nil {
 		return utilTypes.ZeroInt, err
