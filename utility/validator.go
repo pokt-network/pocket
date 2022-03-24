@@ -231,7 +231,7 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 	return nil
 }
 
-func (u *UtilityContext) HandleProposal(proposer []byte) types.Error {
+func (u *UtilityContext) HandleProposalRewards(proposer []byte) types.Error {
 	feesAndRewardsCollected, err := u.GetPoolAmount(utilTypes.FeePoolName)
 	if err != nil {
 		return err

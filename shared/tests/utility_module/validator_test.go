@@ -653,7 +653,7 @@ func TestUtilityContext_HandleByzantineValidators(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_HandleProposal(t *testing.T) {
+func TestUtilityContext_HandleProposalRewards(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingValidators(t, ctx)[0]
 	actorTokensBeforeBig, err := ctx.GetAccountAmount(actor.Address)
@@ -682,7 +682,7 @@ func TestUtilityContext_HandleProposal(t *testing.T) {
 	amountToProposer, _ := feesAndRewardsCollectedFloat.Int(nil)
 	expectedResultBig := actorTokensBeforeBig.Add(actorTokensBeforeBig, amountToProposer)
 	expectedResult := types.BigIntToString(expectedResultBig)
-	if err := ctx.HandleProposal(actor.Address); err != nil {
+	if err := ctx.HandleProposalRewards(actor.Address); err != nil {
 		t.Fatal(err)
 	}
 	actorTokensAfterBig, err := ctx.GetAccountAmount(actor.Address)

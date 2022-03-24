@@ -44,7 +44,7 @@ func (u *UtilityContext) BeginBlock(previousBlockByzantineValidators [][]byte) t
 }
 
 func (u *UtilityContext) EndBlock(proposer []byte) types.Error {
-	if err := u.HandleProposal(proposer); err != nil {
+	if err := u.HandleProposalRewards(proposer); err != nil {
 		return err
 	}
 	if err := u.UnstakeActorsThatAreReady(); err != nil {
