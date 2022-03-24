@@ -16,20 +16,15 @@ import (
 	"go.uber.org/atomic"
 )
 
-type SocketKind string
-
-var (
-	Outbound            SocketKind = "outbound"
-	Inbound             SocketKind = "inbound"
-	UndefinedSocketKind SocketKind = "unspecified"
-)
-
 type SocketEventMonitor func(context.Context, *socket) error
 
-// socket is an abstraction around net.Conn to represent a p2p connection with full read/write capabilities
-// both read and write operations are buffer, and both buffer sizes are configurable through configuration
-// configuration paramters are directly assigned to the socket struct
+// a "socket" (not to be confused with the OS' socket) is an abstraction around the net.Conn go interface, whose purpose is to represent a p2p connection with full "read/write" capabilities
+// Both read and write operations are buffered, and both buffer sizes are configurable.
+//
+// Configuration paramters are directly assigned to the socket struct.
+//
 // 1 live p2p connection = 1 socket
+//
 type socket struct {
 	// the agent responsible for running/creating/managing sockets
 	runner types.Runner
@@ -39,13 +34,13 @@ type socket struct {
 	bufferSize   uint
 	readTimeout  uint
 	addr         string
-	kind         SocketKind // inbound or outbound
+	kind         types.SocketType // inbound or outbound
 
 	// the actual network socket
 	conn net.Conn
 
 	// the wire codec
-	c *wireCodec
+	codec *wireCodec
 
 	// io buffers
 	buffers struct {
@@ -64,23 +59,19 @@ type socket struct {
 	// turns true when the socket is opened (i.e: the connection is established and IO is on going)
 	isOpen atomic.Bool
 
-	ready   chan uint // when the socket is opened and IO starts, this channel gets closed to signal readiness
-	writing chan uint // when the writing starts, this channel receives a new input; closes when done writing (i.e: stopped the socket)
-	reading chan uint // when the reading starts, this channel receives a new input; closes when done reading (i.e: stopped the socket)
-	done    chan uint // if this channel is closed or receives and input, it stops the socket and IO operations
-	closed  chan uint // this channel signals that the socket has been closed by receiving a new input
+	ready   chan struct{} // when the socket is opened and IO starts, this channel gets closed to signal readiness
+	writing chan struct{} // when the writing starts, this channel receives a new input; closes when done writing (i.e: stopped the socket)
+	reading chan struct{} // when the reading starts, this channel receives a new input; closes when done reading (i.e: stopped the socket)
+	done    chan struct{} // if this channel is closed or receives and input, it stops the socket and IO operations
+	closed  chan struct{} // this channel signals that the socket has been closed by receiving a new input
 
-	errored chan uint // on error, this channel receives a new input to signal the happening of an error
-	err     struct {  // the reference to store the encountered error.
+	errored chan struct{} // on error, this channel receives a new input to signal the happening of an error
+	err     struct {      // the reference to store the encountered error.
 		sync.Mutex
 		error
 	}
 
-	// TODO(team): replace with whatever logged decided upon when telemetry hits the code base
-	logger struct { // a temporary logger struct to allow flexible injection of log functions
-		sync.Mutex
-		print func(...interface{}) (int, error)
-	}
+	logger types.Logger
 }
 
 // retrieves the network connection in question through the connector argument
@@ -92,8 +83,9 @@ func (s *socket) open(ctx context.Context, connector func() net.Conn, onopened S
 	conn := connector()
 
 	addr := ctx.Value("address").(string)
-	kind := ctx.Value("kind").(SocketKind)
+	kind := ctx.Value("kind").(types.SocketType)
 
+	//TODO(derrandz): retrieve from parameters or config
 	if addr == "" {
 		return ErrSocketEmptyContextValue("address")
 	}
@@ -103,8 +95,10 @@ func (s *socket) open(ctx context.Context, connector func() net.Conn, onopened S
 	}
 
 	switch kind {
-	case Outbound:
-	case Inbound:
+	case types.Outbound:
+		fallthrough
+	case types.Inbound:
+		fallthrough
 	default:
 		s.close()
 		return ErrSocketUndefinedKind(string(kind))
@@ -116,12 +110,14 @@ func (s *socket) open(ctx context.Context, connector func() net.Conn, onopened S
 	case <-s.errored:
 		return s.err.error
 	case <-s.reading:
+		s.logger.Debug("Socket has started the reading routine successfully")
 	}
 
 	select {
 	case <-s.errored:
 		return s.err.error
 	case <-s.writing:
+		s.logger.Debug("Socket has started the reading routine successfully")
 	}
 
 	s.isOpen.Store(true)
@@ -130,9 +126,10 @@ func (s *socket) open(ctx context.Context, connector func() net.Conn, onopened S
 	return nil
 }
 
-// Stops the ongoing IO operations gracefully
-// closes the network connection and closes all opened channels and signals that the close has went gracefully
-// does not block
+// close() stops the ongoing IO operations gracefully (i.e: s.read and s.write routines) and closes the underlying network connection (s.conn),
+// as well as all opened channels. Finally, close() signals that the closing process has went successfully by sending a signal on s.closed.
+//
+// This method does not block.
 func (s *socket) close() {
 	if !s.isOpen.Load() {
 		return
@@ -151,7 +148,7 @@ func (s *socket) close() {
 		s.conn.Close()
 	}
 
-	s.closed <- 1
+	s.closed <- struct{}{}
 	s.isOpen.Store(false)
 }
 
@@ -160,10 +157,8 @@ func (s *socket) close() {
 // launches both the reading and writing routines (read, write methods): both are blocking
 // when the write routine exists, the onSocketClosed event handler kicks off (returns an error if there is one)
 // the write and read routines will both exist for the same reasons, so having just one of them block is sufficient.
-func (s *socket) startIO(ctx context.Context, kind SocketKind, addr string, conn net.Conn, onopened SocketEventMonitor, onclosed SocketEventMonitor) {
-	defer func() {
-		s.close()
-	}()
+func (s *socket) startIO(ctx context.Context, kind types.SocketType, addr string, conn net.Conn, onOpened SocketEventMonitor, onClosed SocketEventMonitor) {
+	defer s.close()
 
 	s.addr = addr
 	s.kind = kind
@@ -172,9 +167,8 @@ func (s *socket) startIO(ctx context.Context, kind SocketKind, addr string, conn
 	s.reader = bufio.NewReader(conn)
 	s.writer = bufio.NewWriter(conn)
 
-	if err := onopened(ctx, s); err != nil {
+	if err := onOpened(ctx, s); err != nil {
 		s.error(err)
-
 		close(s.writing)
 		close(s.reading)
 		return
@@ -183,7 +177,7 @@ func (s *socket) startIO(ctx context.Context, kind SocketKind, addr string, conn
 	go s.read(ctx) // closes s.reading when done
 	s.write(ctx)   // closes s.writing when done
 
-	if err := onclosed(ctx, s); err != nil {
+	if err := onClosed(ctx, s); err != nil {
 		s.error(err)
 		return
 	}
@@ -191,12 +185,17 @@ func (s *socket) startIO(ctx context.Context, kind SocketKind, addr string, conn
 
 // the TLS handshake algorithm to establish encrypted connections
 func (s *socket) handshake() {
-
+	panic("Not implemented")
 }
 
-// reads a chunk=readbufferSize amount of bytes out of the reader
-// this is used by the read routine to perform buffer reads
-// this operation blocks until the full body length is read
+// s.readChunk reads a chunk (of size readbufferSize) out of the TCP connection using the s.reader.
+//
+// This is used by the read routine (s.read) to perform buffered reads.
+// To achieve buffered reading, readChunk first off reads the header bytes (first bytes from 0 to headerLength) to retrieve size of
+// received/to-be-read payload. If the payload size exceeds the configured max, readChunk will error out, the other end will receive a ErrPayloadTooBig error. (TODO: implement erroring logic to send this error)
+//
+// After reading the header, readChunk blocks until the full body length is read.
+//
 func (s *socket) readChunk() ([]byte, int, error) {
 	var n int
 
@@ -204,17 +203,18 @@ func (s *socket) readChunk() ([]byte, int, error) {
 	if _, err := io.ReadFull(s.reader, (*readBuffer)[:s.headerLength]); err != nil {
 		return nil, 0, err
 	}
-	_, _, bodylen, err := s.c.decodeHeader((*readBuffer)[:s.headerLength])
+	_, _, bodyLen, err := s.codec.decodeHeader((*readBuffer)[:s.headerLength])
 	if err != nil {
 		return nil, 0, err
 	}
 
 	// TODO(derrandz): replace with configurable max value or keep it as is (i.e: max=chunk size) ??
-	if bodylen > uint32(s.bufferSize-s.headerLength) {
-		return nil, 0, errors.New(fmt.Sprintf("io pipe error: cannot read a buffer of length %d, the accepted body length is %d.", bodylen, s.bufferSize-s.headerLength))
+	if bodyLen > uint32(s.bufferSize-s.headerLength) {
+		// TODO(derrandz): move error to socket_err.go
+		return nil, 0, errors.New(fmt.Sprintf("io pipe error: cannot read a buffer of length %d, the accepted body length is %d.", bodyLen, s.bufferSize-s.headerLength))
 	}
 
-	if n, err = io.ReadFull(s.reader, (*readBuffer)[s.headerLength:bodylen+uint32(s.headerLength)]); err != nil {
+	if n, err = io.ReadFull(s.reader, (*readBuffer)[s.headerLength:uint32(s.headerLength)+bodyLen]); err != nil {
 		return nil, 0, err
 	}
 
@@ -238,11 +238,11 @@ func (s *socket) readChunk() ([]byte, int, error) {
 func (s *socket) read(ctx context.Context) {
 	defer func() {
 		close(s.reading)
-		s.closed <- 1
+		s.closed <- struct{}{}
 	}()
 
 	{
-		s.reading <- 1 // signal start
+		s.reading <- struct{}{} // signal start
 	}
 
 reader:
@@ -287,7 +287,7 @@ reader:
 					continue
 				}
 
-				nonce, _, data, wrapped, err := s.c.decode(buf)
+				nonce, _, data, wrapped, err := s.codec.decode(buf)
 				if err != nil {
 					s.error(err)
 					break reader
@@ -321,7 +321,7 @@ func (s *socket) writeChunk(b []byte, iserroreof bool, reqnum uint32, wrapped bo
 
 	writeBuffer := s.buffers.write.Ref()
 
-	buff := s.c.encode(Binary, iserroreof, reqnum, b, wrapped)
+	buff := s.codec.encode(Binary, iserroreof, reqnum, b, wrapped)
 	(*writeBuffer) = append((*writeBuffer), buff...)
 
 	s.buffers.write.Signal()
@@ -363,11 +363,11 @@ func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Packet, error) 
 func (s *socket) write(ctx context.Context) {
 	defer func() {
 		close(s.writing)
-		s.closed <- 1
+		s.closed <- struct{}{}
 	}()
 
 	{
-		s.writing <- 1 // signal start
+		s.writing <- struct{}{} // signal start
 	}
 
 writer:
@@ -417,16 +417,16 @@ func (s *socket) error(err error) {
 		s.err.error = err
 	}
 
-	s.errored <- 1
+	s.errored <- struct{}{}
 }
 
 // A constructor to create a socket
 func NewSocket(readBufferSize uint, packetHeaderLength uint, readTimeoutInMs uint) *socket {
 	wc := newWireCodec()
 	pipe := &socket{
-		c: wc,
+		codec: wc,
 
-		kind:         UndefinedSocketKind,
+		kind:         types.UndefinedSocketType,
 		headerLength: packetHeaderLength,
 		bufferSize:   readBufferSize,
 		readTimeout:  readTimeoutInMs,
@@ -441,20 +441,20 @@ func NewSocket(readBufferSize uint, packetHeaderLength uint, readTimeoutInMs uin
 
 		requests: types.NewRequestMap(math.MaxUint32),
 
-		ready: make(chan uint),
+		ready: make(chan struct{}),
 
 		// to allow for graceful shutdown, we buffer this to 3 since there are 3 routines that we need to have them signal their closing.
 		//Upon their signals, this channel becomes blocking thus allowing the parent routine to wait until all 3 are closed
-		closed: make(chan uint, 3),
+		closed: make(chan struct{}, 3),
 
-		done: make(chan uint),
+		done: make(chan struct{}),
 
 		// any reporting routine will immediately halt after signaling on this channel.
 		//buffering this channel to 1 allows the erroring routine to not block, but the parent to wait if it needs to confirm error or no error
-		errored: make(chan uint, 1),
+		errored: make(chan struct{}, 1),
 
-		writing: make(chan uint),
-		reading: make(chan uint),
+		writing: make(chan struct{}),
+		reading: make(chan struct{}),
 	}
 
 	return pipe
