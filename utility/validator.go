@@ -113,11 +113,12 @@ func (u *UtilityContext) HandleMessageUnstakeValidator(message *utilTypes.Messag
 }
 
 func (u *UtilityContext) UnstakeValidatorsThatAreReady() types.Error {
-	ValidatorsReadyToUnstake, err := u.GetValidatorsReadyToUnstake()
+	validatorsReadyToUnstake, err := u.GetValidatorsReadyToUnstake()
 	if err != nil {
 		return err
 	}
-	for _, validator := range ValidatorsReadyToUnstake {
+	// If unstaking even a single validator fails, the whole operation falls through.
+	for _, validator := range validatorsReadyToUnstake {
 		if err := u.SubPoolAmount(utilTypes.ValidatorStakePoolName, validator.GetStakeAmount()); err != nil {
 			return err
 		}
@@ -211,8 +212,6 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 		numberOfMissedBlocks++
 		// handle if over the threshold
 		if numberOfMissedBlocks >= maxMissedBlocks {
-			// reset missed blocks
-			numberOfMissedBlocks = 0
 			// pause the validator and reset missed blocks
 			if err := u.SetValidatorPauseHeightAndMissedBlocks(address, latestBlockHeight, utilTypes.ZeroInt); err != nil {
 				return err
@@ -225,8 +224,7 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 			if err := u.BurnValidator(address, burnPercentage); err != nil {
 				return err
 			}
-		}
-		if err := u.SetValidatorMissedBlocks(address, numberOfMissedBlocks); err != nil {
+		} else if err := u.SetValidatorMissedBlocks(address, numberOfMissedBlocks); err != nil {
 			return err
 		}
 	}
@@ -249,10 +247,10 @@ func (u *UtilityContext) HandleProposal(proposer []byte) types.Error {
 	if daoCutPercentage < 0 {
 		return types.ErrInvalidProposerCutPercentage()
 	}
-	feesAndRewardsCollectedFloat := new(big.Float).SetInt(feesAndRewardsCollected)
-	feesAndRewardsCollectedFloat.Mul(feesAndRewardsCollectedFloat, big.NewFloat(float64(proposerCutPercentage)))
-	feesAndRewardsCollectedFloat.Quo(feesAndRewardsCollectedFloat, big.NewFloat(100))
-	amountToProposer, _ := feesAndRewardsCollectedFloat.Int(nil)
+	amountToProposerFloat := new(big.Float).SetInt(feesAndRewardsCollected)
+	amountToProposerFloat.Mul(amountToProposerFloat, big.NewFloat(float64(proposerCutPercentage)))
+	amountToProposerFloat.Quo(amountToProposerFloat, big.NewFloat(100))
+	amountToProposer, _ := amountToProposerFloat.Int(nil)
 	amountToDAO := feesAndRewardsCollected.Sub(feesAndRewardsCollected, amountToProposer)
 	if err := u.AddAccountAmount(proposer, amountToProposer); err != nil {
 		return err
@@ -363,7 +361,7 @@ func (u *UtilityContext) DeleteValidator(address []byte) types.Error {
 	return nil
 }
 
-func (u *UtilityContext) GetValidatorsReadyToUnstake() (Validators []*types.UnstakingActor, err types.Error) {
+func (u *UtilityContext) GetValidatorsReadyToUnstake() ([]*types.UnstakingActor, types.Error) {
 	store := u.Store()
 	latestHeight, err := u.GetLatestHeight()
 	if err != nil {
