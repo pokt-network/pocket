@@ -2,14 +2,15 @@ package utility_module
 
 import (
 	"bytes"
-	"github.com/pokt-network/pocket/persistence/pre_persistence"
-	"github.com/pokt-network/pocket/shared/crypto"
-	types2 "github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/utility"
-	"github.com/pokt-network/pocket/utility/types"
 	"math/big"
 	"reflect"
 	"testing"
+
+	"github.com/pokt-network/pocket/persistence/pre_persistence"
+	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/utility"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 func TestUtilityContext_HandleMessageStakeApp(t *testing.T) {
@@ -19,7 +20,7 @@ func TestUtilityContext_HandleMessageStakeApp(t *testing.T) {
 	if err := ctx.SetAccount(out, defaultAmount); err != nil {
 		t.Fatal(err)
 	}
-	msg := &types.MessageStakeApp{
+	msg := &typesUtil.MessageStakeApp{
 		PublicKey:     pubKey.Bytes(),
 		Chains:        defaultTestingChains,
 		Amount:        defaultAmountString,
@@ -40,8 +41,8 @@ func TestUtilityContext_HandleMessageStakeApp(t *testing.T) {
 	if !bytes.Equal(actor.Address, pubKey.Address()) {
 		t.Fatalf("incorrect address, expected %v, got %v", pubKey.Address(), actor.Address)
 	}
-	if actor.Status != types.StakedStatus {
-		t.Fatalf("incorrect status, expected %v, got %v", types.StakedStatus, actor.Status)
+	if actor.Status != typesUtil.StakedStatus {
+		t.Fatalf("incorrect status, expected %v, got %v", typesUtil.StakedStatus, actor.Status)
 	}
 	if !reflect.DeepEqual(actor.Chains, msg.Chains) {
 		t.Fatalf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains)
@@ -66,7 +67,7 @@ func TestUtilityContext_HandleMessageStakeApp(t *testing.T) {
 func TestUtilityContext_HandleMessageEditStakeApp(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingApps(t, ctx)[0]
-	msg := &types.MessageEditStakeApp{
+	msg := &typesUtil.MessageEditStakeApp{
 		Address:     actor.Address,
 		Chains:      defaultTestingChains,
 		AmountToAdd: zeroAmountString,
@@ -100,8 +101,8 @@ func TestUtilityContext_HandleMessageEditStakeApp(t *testing.T) {
 		t.Fatalf("incorrect output address, expected %v, got %v", actor.Output, actor.Output)
 	}
 	amountEdited := big.NewInt(1)
-	expectedAmount := types2.BigIntToString(big.NewInt(0).Add(defaultAmount, amountEdited))
-	amountEditedString := types2.BigIntToString(amountEdited)
+	expectedAmount := types.BigIntToString(big.NewInt(0).Add(defaultAmount, amountEdited))
+	amountEditedString := types.BigIntToString(amountEdited)
 	msgAmountEdited := msg
 	msgAmountEdited.AmountToAdd = amountEditedString
 	if err := ctx.HandleMessageEditStakeApp(msgAmountEdited); err != nil {
@@ -116,7 +117,7 @@ func TestUtilityContext_HandleMessageEditStakeApp(t *testing.T) {
 func TestUtilityContext_HandleMessagePauseApp(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingApps(t, ctx)[0]
-	msg := &types.MessagePauseApp{
+	msg := &typesUtil.MessagePauseApp{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -135,7 +136,7 @@ func TestUtilityContext_HandleMessageUnpauseApp(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor := GetAllTestingApps(t, ctx)[0]
-	msg := &types.MessagePauseApp{
+	msg := &typesUtil.MessagePauseApp{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -146,7 +147,7 @@ func TestUtilityContext_HandleMessageUnpauseApp(t *testing.T) {
 	if !actor.Paused {
 		t.Fatal("actor isn't paused after")
 	}
-	msgU := &types.MessageUnpauseApp{
+	msgU := &typesUtil.MessageUnpauseApp{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -165,7 +166,7 @@ func TestUtilityContext_HandleMessageUnstakeApp(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor := GetAllTestingApps(t, ctx)[0]
-	msg := &types.MessageUnstakeApp{
+	msg := &typesUtil.MessageUnstakeApp{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -173,7 +174,7 @@ func TestUtilityContext_HandleMessageUnstakeApp(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor = GetAllTestingApps(t, ctx)[0]
-	if actor.Status != types.UnstakingStatus {
+	if actor.Status != typesUtil.UnstakingStatus {
 		t.Fatal("actor isn't unstaking")
 	}
 }
@@ -306,7 +307,7 @@ func TestUtilityContext_GetAppsReadyToUnstake(t *testing.T) {
 func TestUtilityContext_GetMessageEditStakeAppSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingApps(t, ctx)
-	msgEditStake := &types.MessageEditStakeApp{
+	msgEditStake := &typesUtil.MessageEditStakeApp{
 		Address:     actors[0].Address,
 		Chains:      defaultTestingChains,
 		AmountToAdd: defaultAmountString,
@@ -323,7 +324,7 @@ func TestUtilityContext_GetMessageEditStakeAppSignerCandidates(t *testing.T) {
 func TestUtilityContext_GetMessagePauseAppSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingApps(t, ctx)
-	msg := &types.MessagePauseApp{
+	msg := &typesUtil.MessagePauseApp{
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessagePauseAppSignerCandidates(msg)
@@ -340,7 +341,7 @@ func TestUtilityContext_GetMessageStakeAppSignerCandidates(t *testing.T) {
 	pubKey, _ := crypto.GeneratePublicKey()
 	addr := pubKey.Address()
 	out, _ := crypto.GenerateAddress()
-	msg := &types.MessageStakeApp{
+	msg := &typesUtil.MessageStakeApp{
 		PublicKey:     pubKey.Bytes(),
 		Chains:        defaultTestingChains,
 		Amount:        defaultAmountString,
@@ -358,7 +359,7 @@ func TestUtilityContext_GetMessageStakeAppSignerCandidates(t *testing.T) {
 func TestUtilityContext_GetMessageUnpauseAppSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingApps(t, ctx)
-	msg := &types.MessageUnpauseApp{
+	msg := &typesUtil.MessageUnpauseApp{
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnpauseAppSignerCandidates(msg)
@@ -373,7 +374,7 @@ func TestUtilityContext_GetMessageUnpauseAppSignerCandidates(t *testing.T) {
 func TestUtilityContext_GetMessageUnstakeAppSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingApps(t, ctx)
-	msg := &types.MessageUnstakeApp{
+	msg := &typesUtil.MessageUnstakeApp{
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnstakeAppSignerCandidates(msg)
@@ -423,7 +424,7 @@ func TestUtilityContext_InsertApplication(t *testing.T) {
 func TestUtilityContext_UnstakeAppsPausedBefore(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingApps(t, ctx)[0]
-	if actor.Status != types.StakedStatus {
+	if actor.Status != typesUtil.StakedStatus {
 		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetAppMaxPausedBlocks(0)
@@ -437,7 +438,7 @@ func TestUtilityContext_UnstakeAppsPausedBefore(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor = GetAllTestingApps(t, ctx)[0]
-	if actor.Status != types.UnstakingStatus {
+	if actor.Status != typesUtil.UnstakingStatus {
 		t.Fatal("status does not equal unstaking")
 	}
 	unstakingBlocks, err := ctx.GetAppUnstakingBlocks()
@@ -455,7 +456,7 @@ func TestUtilityContext_UnstakeAppsThatAreReady(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor := GetAllTestingApps(t, ctx)[0]
-	if actor.Status != types.StakedStatus {
+	if actor.Status != typesUtil.StakedStatus {
 		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetAppMaxPausedBlocks(0)
@@ -480,14 +481,14 @@ func TestUtilityContext_UpdateApplication(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingApps(t, ctx)[0]
 	newAmountBig := big.NewInt(9999999999999999)
-	newAmount := types2.BigIntToString(newAmountBig)
+	newAmount := types.BigIntToString(newAmountBig)
 	oldAmount := actor.StakedTokens
-	oldAmountBig, err := types2.StringToBigInt(oldAmount)
+	oldAmountBig, err := types.StringToBigInt(oldAmount)
 	if err != nil {
 		t.Fatal(err)
 	}
 	expectedAmountBig := newAmountBig.Add(newAmountBig, oldAmountBig)
-	expectedAmount := types2.BigIntToString(expectedAmountBig)
+	expectedAmount := types.BigIntToString(expectedAmountBig)
 	if err := ctx.UpdateApplication(actor.Address, actor.MaxRelays, newAmount, actor.Chains); err != nil {
 		t.Fatal(err)
 	}

@@ -3,20 +3,20 @@ package utility
 import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
-	types2 "github.com/pokt-network/pocket/utility/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *UtilityContext) HandleMessageTestScore(message *types2.MessageTestScore) types.Error {
+func (u *UtilityContext) HandleMessageTestScore(message *typesUtil.MessageTestScore) types.Error {
 	// TODO
 	panic("TODO")
 }
 
-func (u *UtilityContext) HandleMessageProveTestScore(message *types2.MessageProveTestScore) types.Error {
+func (u *UtilityContext) HandleMessageProveTestScore(message *typesUtil.MessageProveTestScore) types.Error {
 	// TODO
 	panic("TODO")
 }
 
-func (u *UtilityContext) HandleMessageStakeFisherman(message *types2.MessageStakeFisherman) types.Error {
+func (u *UtilityContext) HandleMessageStakeFisherman(message *typesUtil.MessageStakeFisherman) types.Error {
 	publicKey, er := crypto.NewPublicKeyFromBytes(message.PublicKey)
 	if er != nil {
 		return types.ErrNewPublicKeyFromBytes(er)
@@ -55,7 +55,7 @@ func (u *UtilityContext) HandleMessageStakeFisherman(message *types2.MessageStak
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(types2.FishermanStakePoolName, amount); err != nil {
+	if err := u.AddPoolAmount(typesUtil.FishermanStakePoolName, amount); err != nil {
 		return err
 	}
 	// ensure Fisherman doesn't already exist
@@ -73,7 +73,7 @@ func (u *UtilityContext) HandleMessageStakeFisherman(message *types2.MessageStak
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageEditStakeFisherman(message *types2.MessageEditStakeFisherman) types.Error {
+func (u *UtilityContext) HandleMessageEditStakeFisherman(message *typesUtil.MessageEditStakeFisherman) types.Error {
 	exists, err := u.GetFishermanExists(message.Address)
 	if err != nil {
 		return err
@@ -107,7 +107,7 @@ func (u *UtilityContext) HandleMessageEditStakeFisherman(message *types2.Message
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(types2.FishermanStakePoolName, amountToAdd); err != nil {
+	if err := u.AddPoolAmount(typesUtil.FishermanStakePoolName, amountToAdd); err != nil {
 		return err
 	}
 	// insert the Fisherman structure
@@ -117,20 +117,20 @@ func (u *UtilityContext) HandleMessageEditStakeFisherman(message *types2.Message
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageUnstakeFisherman(message *types2.MessageUnstakeFisherman) types.Error {
+func (u *UtilityContext) HandleMessageUnstakeFisherman(message *typesUtil.MessageUnstakeFisherman) types.Error {
 	status, err := u.GetFishermanStatus(message.Address)
 	if err != nil {
 		return err
 	}
 	// validate is staked
-	if status != types2.StakedStatus {
-		return types.ErrInvalidStatus(status, types2.StakedStatus)
+	if status != typesUtil.StakedStatus {
+		return types.ErrInvalidStatus(status, typesUtil.StakedStatus)
 	}
 	unstakingHeight, err := u.CalculateFishermanUnstakingHeight()
 	if err != nil {
 		return err
 	}
-	if err := u.SetFishermanUnstakingHeightAndStatus(message.Address, unstakingHeight, types2.UnstakingStatus); err != nil {
+	if err := u.SetFishermanUnstakingHeightAndStatus(message.Address, unstakingHeight, typesUtil.UnstakingStatus); err != nil {
 		return err
 	}
 	return nil
@@ -142,7 +142,7 @@ func (u *UtilityContext) UnstakeFishermenThatAreReady() types.Error {
 		return err
 	}
 	for _, Fisherman := range FishermansReadyToUnstake {
-		if err := u.SubPoolAmount(types2.FishermanStakePoolName, Fisherman.GetStakeAmount()); err != nil {
+		if err := u.SubPoolAmount(typesUtil.FishermanStakePoolName, Fisherman.GetStakeAmount()); err != nil {
 			return err
 		}
 		if err := u.AddAccountAmountString(Fisherman.GetOutputAddress(), Fisherman.GetStakeAmount()); err != nil {
@@ -174,7 +174,7 @@ func (u *UtilityContext) BeginUnstakingMaxPausedFishermen() types.Error {
 	return nil
 }
 
-func (u *UtilityContext) HandleMessagePauseFisherman(message *types2.MessagePauseFisherman) types.Error {
+func (u *UtilityContext) HandleMessagePauseFisherman(message *typesUtil.MessagePauseFisherman) types.Error {
 	height, err := u.GetFishermanPauseHeightIfExists(message.Address)
 	if err != nil {
 		return err
@@ -192,7 +192,7 @@ func (u *UtilityContext) HandleMessagePauseFisherman(message *types2.MessagePaus
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageFishermanPauseServiceNode(message *types2.MessageFishermanPauseServiceNode) types.Error {
+func (u *UtilityContext) HandleMessageFishermanPauseServiceNode(message *typesUtil.MessageFishermanPauseServiceNode) types.Error {
 	exists, err := u.GetFishermanExists(message.Reporter)
 	if err != nil {
 		return err
@@ -217,7 +217,7 @@ func (u *UtilityContext) HandleMessageFishermanPauseServiceNode(message *types2.
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageUnpauseFisherman(message *types2.MessageUnpauseFisherman) types.Error {
+func (u *UtilityContext) HandleMessageUnpauseFisherman(message *typesUtil.MessageUnpauseFisherman) types.Error {
 	pausedHeight, err := u.GetFishermanPauseHeightIfExists(message.Address)
 	if err != nil {
 		return err
@@ -236,7 +236,7 @@ func (u *UtilityContext) HandleMessageUnpauseFisherman(message *types2.MessageUn
 	if latestHeight < int64(minPauseBlocks)+pausedHeight {
 		return types.ErrNotReadyToUnpause()
 	}
-	if err := u.SetFishermanPauseHeight(message.Address, types2.ZeroInt); err != nil {
+	if err := u.SetFishermanPauseHeight(message.Address, typesUtil.ZeroInt); err != nil {
 		return err
 	}
 	return nil
@@ -253,7 +253,7 @@ func (u *UtilityContext) GetFishermanExists(address []byte) (exists bool, err ty
 
 func (u *UtilityContext) InsertFisherman(address, publicKey, output []byte, serviceURL, amount string, chains []string) types.Error {
 	store := u.Store()
-	err := store.InsertFisherman(address, publicKey, output, false, types2.StakedStatus, serviceURL, amount, chains, types2.ZeroInt, types2.ZeroInt)
+	err := store.InsertFisherman(address, publicKey, output, false, typesUtil.StakedStatus, serviceURL, amount, chains, typesUtil.ZeroInt, typesUtil.ZeroInt)
 	if err != nil {
 		return types.ErrInsert(err)
 	}
@@ -283,7 +283,7 @@ func (u *UtilityContext) GetFishermenReadyToUnstake() (Fishermans []*types.Unsta
 	if err != nil {
 		return nil, err
 	}
-	unstakingFishermans, er := store.GetFishermanReadyToUnstake(latestHeight, types2.UnstakingStatus)
+	unstakingFishermans, er := store.GetFishermanReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return nil, types.ErrGetReadyToUnstake(er)
 	}
@@ -296,7 +296,7 @@ func (u *UtilityContext) UnstakeFishermenPausedBefore(pausedBeforeHeight int64) 
 	if err != nil {
 		return err
 	}
-	er := store.SetFishermansStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, types2.UnstakingStatus)
+	er := store.SetFishermansStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return types.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}
@@ -307,7 +307,7 @@ func (u *UtilityContext) GetFishermanStatus(address []byte) (status int, err typ
 	store := u.Store()
 	status, er := store.GetFishermanStatus(address)
 	if er != nil {
-		return types2.ZeroInt, types.ErrGetStatus(er)
+		return typesUtil.ZeroInt, types.ErrGetStatus(er)
 	}
 	return status, nil
 }
@@ -324,7 +324,7 @@ func (u *UtilityContext) GetFishermanPauseHeightIfExists(address []byte) (Fisher
 	store := u.Store()
 	FishermanPauseHeight, er := store.GetFishermanPauseHeightIfExists(address)
 	if er != nil {
-		return types2.ZeroInt, types.ErrGetPauseHeight(er)
+		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
 	}
 	return FishermanPauseHeight, nil
 }
@@ -340,16 +340,16 @@ func (u *UtilityContext) SetFishermanPauseHeight(address []byte, height int64) t
 func (u *UtilityContext) CalculateFishermanUnstakingHeight() (unstakingHeight int64, err types.Error) {
 	unstakingBlocks, err := u.GetFishermanUnstakingBlocks()
 	if err != nil {
-		return types2.ZeroInt, err
+		return typesUtil.ZeroInt, err
 	}
 	unstakingHeight, err = u.CalculateUnstakingHeight(unstakingBlocks)
 	if err != nil {
-		return types2.ZeroInt, err
+		return typesUtil.ZeroInt, err
 	}
 	return
 }
 
-func (u *UtilityContext) GetMessageStakeFishermanSignerCandidates(msg *types2.MessageStakeFisherman) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageStakeFishermanSignerCandidates(msg *typesUtil.MessageStakeFisherman) (candidates [][]byte, err types.Error) {
 	candidates = append(candidates, msg.OutputAddress)
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
@@ -359,7 +359,7 @@ func (u *UtilityContext) GetMessageStakeFishermanSignerCandidates(msg *types2.Me
 	return
 }
 
-func (u *UtilityContext) GetMessageEditStakeFishermanSignerCandidates(msg *types2.MessageEditStakeFisherman) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageEditStakeFishermanSignerCandidates(msg *typesUtil.MessageEditStakeFisherman) (candidates [][]byte, err types.Error) {
 	output, err := u.GetFishermanOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -369,7 +369,7 @@ func (u *UtilityContext) GetMessageEditStakeFishermanSignerCandidates(msg *types
 	return
 }
 
-func (u *UtilityContext) GetMessageUnstakeFishermanSignerCandidates(msg *types2.MessageUnstakeFisherman) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageUnstakeFishermanSignerCandidates(msg *typesUtil.MessageUnstakeFisherman) (candidates [][]byte, err types.Error) {
 	output, err := u.GetFishermanOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -379,7 +379,7 @@ func (u *UtilityContext) GetMessageUnstakeFishermanSignerCandidates(msg *types2.
 	return
 }
 
-func (u *UtilityContext) GetMessageUnpauseFishermanSignerCandidates(msg *types2.MessageUnpauseFisherman) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageUnpauseFishermanSignerCandidates(msg *typesUtil.MessageUnpauseFisherman) (candidates [][]byte, err types.Error) {
 	output, err := u.GetFishermanOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -389,7 +389,7 @@ func (u *UtilityContext) GetMessageUnpauseFishermanSignerCandidates(msg *types2.
 	return
 }
 
-func (u *UtilityContext) GetMessagePauseFishermanSignerCandidates(msg *types2.MessagePauseFisherman) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessagePauseFishermanSignerCandidates(msg *typesUtil.MessagePauseFisherman) (candidates [][]byte, err types.Error) {
 	output, err := u.GetFishermanOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -399,7 +399,7 @@ func (u *UtilityContext) GetMessagePauseFishermanSignerCandidates(msg *types2.Me
 	return
 }
 
-func (u *UtilityContext) GetMessageFishermanPauseServiceNodeSignerCandidates(msg *types2.MessageFishermanPauseServiceNode) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageFishermanPauseServiceNodeSignerCandidates(msg *typesUtil.MessageFishermanPauseServiceNode) (candidates [][]byte, err types.Error) {
 	output, err := u.GetFishermanOutputAddress(msg.Reporter)
 	if err != nil {
 		return nil, err

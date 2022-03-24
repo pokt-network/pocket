@@ -2,7 +2,7 @@ package utility
 
 import (
 	"github.com/pokt-network/pocket/shared/types"
-	types2 "github.com/pokt-network/pocket/utility/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 func (u *UtilityContext) ApplyBlock(latestHeight int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error) {
@@ -13,7 +13,7 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposer []byte, transac
 	}
 	// deliver txs lifecycle phase
 	for _, transaction := range transactions {
-		tx, err := types2.TransactionFromBytes(transaction)
+		tx, err := typesUtil.TransactionFromBytes(transaction)
 		if err != nil {
 			return nil, err
 		}

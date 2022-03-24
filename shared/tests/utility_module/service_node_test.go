@@ -8,9 +8,9 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
-	types2 "github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/utility"
-	"github.com/pokt-network/pocket/utility/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 func TestUtilityContext_HandleMessageStakeServiceNode(t *testing.T) {
@@ -20,7 +20,7 @@ func TestUtilityContext_HandleMessageStakeServiceNode(t *testing.T) {
 	if err := ctx.SetAccount(out, defaultAmount); err != nil {
 		t.Fatal(err)
 	}
-	msg := &types.MessageStakeServiceNode{
+	msg := &typesUtil.MessageStakeServiceNode{
 		PublicKey:     pubKey.Bytes(),
 		Chains:        defaultTestingChains,
 		Amount:        defaultAmountString,
@@ -41,8 +41,8 @@ func TestUtilityContext_HandleMessageStakeServiceNode(t *testing.T) {
 	if !bytes.Equal(actor.Address, pubKey.Address()) {
 		t.Fatalf("incorrect address, expected %v, got %v", pubKey.Address(), actor.Address)
 	}
-	if actor.Status != types.StakedStatus {
-		t.Fatalf("incorrect status, expected %v, got %v", types.StakedStatus, actor.Status)
+	if actor.Status != typesUtil.StakedStatus {
+		t.Fatalf("incorrect status, expected %v, got %v", typesUtil.StakedStatus, actor.Status)
 	}
 	if !reflect.DeepEqual(actor.Chains, msg.Chains) {
 		t.Fatalf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains)
@@ -90,7 +90,7 @@ func TestUtilityContext_GetServiceNodesPerSession(t *testing.T) {
 func TestUtilityContext_HandleMessageEditStakeServiceNode(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingServiceNodes(t, ctx)[0]
-	msg := &types.MessageEditStakeServiceNode{
+	msg := &typesUtil.MessageEditStakeServiceNode{
 		Address:     actor.Address,
 		Chains:      defaultTestingChains,
 		AmountToAdd: zeroAmountString,
@@ -124,8 +124,8 @@ func TestUtilityContext_HandleMessageEditStakeServiceNode(t *testing.T) {
 		t.Fatalf("incorrect output address, expected %v, got %v", actor.Output, actor.Output)
 	}
 	amountEdited := big.NewInt(1)
-	expectedAmount := types2.BigIntToString(big.NewInt(0).Add(defaultAmount, amountEdited))
-	amountEditedString := types2.BigIntToString(amountEdited)
+	expectedAmount := types.BigIntToString(big.NewInt(0).Add(defaultAmount, amountEdited))
+	amountEditedString := types.BigIntToString(amountEdited)
 	msgAmountEdited := msg
 	msgAmountEdited.AmountToAdd = amountEditedString
 	if err := ctx.HandleMessageEditStakeServiceNode(msgAmountEdited); err != nil {
@@ -140,7 +140,7 @@ func TestUtilityContext_HandleMessageEditStakeServiceNode(t *testing.T) {
 func TestUtilityContext_HandleMessagePauseServiceNode(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingServiceNodes(t, ctx)[0]
-	msg := &types.MessagePauseServiceNode{
+	msg := &typesUtil.MessagePauseServiceNode{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -159,7 +159,7 @@ func TestUtilityContext_HandleMessageUnpauseServiceNode(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor := GetAllTestingServiceNodes(t, ctx)[0]
-	msg := &types.MessagePauseServiceNode{
+	msg := &typesUtil.MessagePauseServiceNode{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -170,7 +170,7 @@ func TestUtilityContext_HandleMessageUnpauseServiceNode(t *testing.T) {
 	if !actor.Paused {
 		t.Fatal("actor isn't paused after")
 	}
-	msgU := &types.MessageUnpauseServiceNode{
+	msgU := &typesUtil.MessageUnpauseServiceNode{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -189,7 +189,7 @@ func TestUtilityContext_HandleMessageUnstakeServiceNode(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor := GetAllTestingServiceNodes(t, ctx)[0]
-	msg := &types.MessageUnstakeServiceNode{
+	msg := &typesUtil.MessageUnstakeServiceNode{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -197,7 +197,7 @@ func TestUtilityContext_HandleMessageUnstakeServiceNode(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor = GetAllTestingServiceNodes(t, ctx)[0]
-	if actor.Status != types.UnstakingStatus {
+	if actor.Status != typesUtil.UnstakingStatus {
 		t.Fatal("actor isn't unstaking")
 	}
 }
@@ -319,7 +319,7 @@ func TestUtilityContext_GetServiceNodesReadyToUnstake(t *testing.T) {
 func TestUtilityContext_GetMessageEditStakeServiceNodeSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingServiceNodes(t, ctx)
-	msgEditStake := &types.MessageEditStakeServiceNode{
+	msgEditStake := &typesUtil.MessageEditStakeServiceNode{
 		Address:     actors[0].Address,
 		Chains:      defaultTestingChains,
 		AmountToAdd: defaultAmountString,
@@ -336,7 +336,7 @@ func TestUtilityContext_GetMessageEditStakeServiceNodeSignerCandidates(t *testin
 func TestUtilityContext_GetMessagePauseServiceNodeSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingServiceNodes(t, ctx)
-	msg := &types.MessagePauseServiceNode{
+	msg := &typesUtil.MessagePauseServiceNode{
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessagePauseServiceNodeSignerCandidates(msg)
@@ -353,7 +353,7 @@ func TestUtilityContext_GetMessageStakeServiceNodeSignerCandidates(t *testing.T)
 	pubKey, _ := crypto.GeneratePublicKey()
 	addr := pubKey.Address()
 	out, _ := crypto.GenerateAddress()
-	msg := &types.MessageStakeServiceNode{
+	msg := &typesUtil.MessageStakeServiceNode{
 		PublicKey:     pubKey.Bytes(),
 		Chains:        defaultTestingChains,
 		Amount:        defaultAmountString,
@@ -371,7 +371,7 @@ func TestUtilityContext_GetMessageStakeServiceNodeSignerCandidates(t *testing.T)
 func TestUtilityContext_GetMessageUnpauseServiceNodeSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingServiceNodes(t, ctx)
-	msg := &types.MessageUnpauseServiceNode{
+	msg := &typesUtil.MessageUnpauseServiceNode{
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnpauseServiceNodeSignerCandidates(msg)
@@ -386,7 +386,7 @@ func TestUtilityContext_GetMessageUnpauseServiceNodeSignerCandidates(t *testing.
 func TestUtilityContext_GetMessageUnstakeServiceNodeSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingServiceNodes(t, ctx)
-	msg := &types.MessageUnstakeServiceNode{
+	msg := &typesUtil.MessageUnstakeServiceNode{
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnstakeServiceNodeSignerCandidates(msg)
@@ -436,7 +436,7 @@ func TestUtilityContext_InsertServiceNode(t *testing.T) {
 func TestUtilityContext_UnstakeServiceNodesPausedBefore(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingServiceNodes(t, ctx)[0]
-	if actor.Status != types.StakedStatus {
+	if actor.Status != typesUtil.StakedStatus {
 		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetServiceNodeMaxPausedBlocks(0)
@@ -450,7 +450,7 @@ func TestUtilityContext_UnstakeServiceNodesPausedBefore(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor = GetAllTestingServiceNodes(t, ctx)[0]
-	if actor.Status != types.UnstakingStatus {
+	if actor.Status != typesUtil.UnstakingStatus {
 		t.Fatal("status does not equal unstaking")
 	}
 	unstakingBlocks, err := ctx.GetServiceNodeUnstakingBlocks()
@@ -468,7 +468,7 @@ func TestUtilityContext_UnstakeServiceNodesThatAreReady(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor := GetAllTestingServiceNodes(t, ctx)[0]
-	if actor.Status != types.StakedStatus {
+	if actor.Status != typesUtil.StakedStatus {
 		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetServiceNodeMaxPausedBlocks(0)
@@ -493,14 +493,14 @@ func TestUtilityContext_UpdateServiceNode(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingServiceNodes(t, ctx)[0]
 	newAmountBig := big.NewInt(9999999999999999)
-	newAmount := types2.BigIntToString(newAmountBig)
+	newAmount := types.BigIntToString(newAmountBig)
 	oldAmount := actor.StakedTokens
-	oldAmountBig, err := types2.StringToBigInt(oldAmount)
+	oldAmountBig, err := types.StringToBigInt(oldAmount)
 	if err != nil {
 		t.Fatal(err)
 	}
 	expectedAmountBig := newAmountBig.Add(newAmountBig, oldAmountBig)
-	expectedAmount := types2.BigIntToString(expectedAmountBig)
+	expectedAmount := types.BigIntToString(expectedAmountBig)
 	if err := ctx.UpdateServiceNode(actor.Address, actor.ServiceUrl, newAmount, actor.Chains); err != nil {
 		t.Fatal(err)
 	}

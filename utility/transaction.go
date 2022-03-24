@@ -3,12 +3,13 @@ package utility
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
-	types2 "github.com/pokt-network/pocket/utility/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *UtilityContext) ApplyTransaction(tx *types2.Transaction) types.Error {
+func (u *UtilityContext) ApplyTransaction(tx *typesUtil.Transaction) types.Error {
 	msg, err := u.AnteHandleMessage(tx)
 	if err != nil {
 		return err
@@ -18,7 +19,7 @@ func (u *UtilityContext) ApplyTransaction(tx *types2.Transaction) types.Error {
 
 func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 	// validate transaction
-	txHash := types2.TransactionHash(transactionProtoBytes)
+	txHash := typesUtil.TransactionHash(transactionProtoBytes)
 	if u.Mempool.Contains(txHash) {
 		return types.ErrDuplicateTransaction()
 	}
@@ -27,7 +28,7 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 		return types.ErrTransactionAlreadyCommitted()
 	}
 	cdc := u.Codec()
-	transaction := &types2.Transaction{}
+	transaction := &typesUtil.Transaction{}
 	err := cdc.Unmarshal(transactionProtoBytes, transaction)
 	if err != nil {
 		return types.ErrProtoUnmarshal(err)
@@ -49,7 +50,7 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 		if err != nil {
 			return nil, err
 		}
-		transaction, err := types2.TransactionFromBytes(txBytes)
+		transaction, err := typesUtil.TransactionFromBytes(txBytes)
 		if err != nil {
 			return nil, err
 		}
@@ -77,7 +78,7 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 	return
 }
 
-func (u *UtilityContext) AnteHandleMessage(tx *types2.Transaction) (msg types2.Message, err types.Error) {
+func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (msg typesUtil.Message, err types.Error) {
 	msg, err = tx.Message()
 	if err != nil {
 		return nil, err
@@ -116,125 +117,125 @@ func (u *UtilityContext) AnteHandleMessage(tx *types2.Transaction) (msg types2.M
 	if err := u.SetAccount(address, accountAmount); err != nil {
 		return nil, err
 	}
-	if err := u.AddPoolAmount(types2.FeePoolName, fee); err != nil {
+	if err := u.AddPoolAmount(typesUtil.FeePoolName, fee); err != nil {
 		return nil, err
 	}
 	msg.SetSigner(address)
 	return msg, nil
 }
 
-func (u *UtilityContext) HandleMessage(msg types2.Message) types.Error {
+func (u *UtilityContext) HandleMessage(msg typesUtil.Message) types.Error {
 	switch x := msg.(type) {
-	case *types2.MessageDoubleSign:
+	case *typesUtil.MessageDoubleSign:
 		return u.HandleMessageDoubleSign(x)
-	case *types2.MessageSend:
+	case *typesUtil.MessageSend:
 		return u.HandleMessageSend(x)
-	case *types2.MessageStakeFisherman:
+	case *typesUtil.MessageStakeFisherman:
 		return u.HandleMessageStakeFisherman(x)
-	case *types2.MessageEditStakeFisherman:
+	case *typesUtil.MessageEditStakeFisherman:
 		return u.HandleMessageEditStakeFisherman(x)
-	case *types2.MessageUnstakeFisherman:
+	case *typesUtil.MessageUnstakeFisherman:
 		return u.HandleMessageUnstakeFisherman(x)
-	case *types2.MessagePauseFisherman:
+	case *typesUtil.MessagePauseFisherman:
 		return u.HandleMessagePauseFisherman(x)
-	case *types2.MessageUnpauseFisherman:
+	case *typesUtil.MessageUnpauseFisherman:
 		return u.HandleMessageUnpauseFisherman(x)
-	case *types2.MessageFishermanPauseServiceNode:
+	case *typesUtil.MessageFishermanPauseServiceNode:
 		return u.HandleMessageFishermanPauseServiceNode(x)
 	//case *types.MessageTestScore:
 	//	return u.HandleMessageTestScore(x)
 	//case *types.MessageProveTestScore:
 	//	return u.HandleMessageProveTestScore(x)
-	case *types2.MessageStakeApp:
+	case *typesUtil.MessageStakeApp:
 		return u.HandleMessageStakeApp(x)
-	case *types2.MessageEditStakeApp:
+	case *typesUtil.MessageEditStakeApp:
 		return u.HandleMessageEditStakeApp(x)
-	case *types2.MessageUnstakeApp:
+	case *typesUtil.MessageUnstakeApp:
 		return u.HandleMessageUnstakeApp(x)
-	case *types2.MessagePauseApp:
+	case *typesUtil.MessagePauseApp:
 		return u.HandleMessagePauseApp(x)
-	case *types2.MessageUnpauseApp:
+	case *typesUtil.MessageUnpauseApp:
 		return u.HandleMessageUnpauseApp(x)
-	case *types2.MessageStakeValidator:
+	case *typesUtil.MessageStakeValidator:
 		return u.HandleMessageStakeValidator(x)
-	case *types2.MessageEditStakeValidator:
+	case *typesUtil.MessageEditStakeValidator:
 		return u.HandleMessageEditStakeValidator(x)
-	case *types2.MessageUnstakeValidator:
+	case *typesUtil.MessageUnstakeValidator:
 		return u.HandleMessageUnstakeValidator(x)
-	case *types2.MessagePauseValidator:
+	case *typesUtil.MessagePauseValidator:
 		return u.HandleMessagePauseValidator(x)
-	case *types2.MessageUnpauseValidator:
+	case *typesUtil.MessageUnpauseValidator:
 		return u.HandleMessageUnpauseValidator(x)
-	case *types2.MessageStakeServiceNode:
+	case *typesUtil.MessageStakeServiceNode:
 		return u.HandleMessageStakeServiceNode(x)
-	case *types2.MessageEditStakeServiceNode:
+	case *typesUtil.MessageEditStakeServiceNode:
 		return u.HandleMessageEditStakeServiceNode(x)
-	case *types2.MessageUnstakeServiceNode:
+	case *typesUtil.MessageUnstakeServiceNode:
 		return u.HandleMessageUnstakeServiceNode(x)
-	case *types2.MessagePauseServiceNode:
+	case *typesUtil.MessagePauseServiceNode:
 		return u.HandleMessagePauseServiceNode(x)
-	case *types2.MessageUnpauseServiceNode:
+	case *typesUtil.MessageUnpauseServiceNode:
 		return u.HandleMessageUnpauseServiceNode(x)
-	case *types2.MessageChangeParameter:
+	case *typesUtil.MessageChangeParameter:
 		return u.HandleMessageChangeParameter(x)
 	default:
 		return types.ErrUnknownMessage(x)
 	}
 }
 
-func (u *UtilityContext) GetSignerCandidates(msg types2.Message) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) (candidates [][]byte, err types.Error) {
 	switch x := msg.(type) {
-	case *types2.MessageDoubleSign:
+	case *typesUtil.MessageDoubleSign:
 		return u.GetMessageDoubleSignSignerCandidates(x)
-	case *types2.MessageSend:
+	case *typesUtil.MessageSend:
 		return u.GetMessageSendSignerCandidates(x)
-	case *types2.MessageStakeFisherman:
+	case *typesUtil.MessageStakeFisherman:
 		return u.GetMessageStakeFishermanSignerCandidates(x)
-	case *types2.MessageEditStakeFisherman:
+	case *typesUtil.MessageEditStakeFisherman:
 		return u.GetMessageEditStakeFishermanSignerCandidates(x)
-	case *types2.MessageUnstakeFisherman:
+	case *typesUtil.MessageUnstakeFisherman:
 		return u.GetMessageUnstakeFishermanSignerCandidates(x)
-	case *types2.MessagePauseFisherman:
+	case *typesUtil.MessagePauseFisherman:
 		return u.GetMessagePauseFishermanSignerCandidates(x)
-	case *types2.MessageUnpauseFisherman:
+	case *typesUtil.MessageUnpauseFisherman:
 		return u.GetMessageUnpauseFishermanSignerCandidates(x)
-	case *types2.MessageFishermanPauseServiceNode:
+	case *typesUtil.MessageFishermanPauseServiceNode:
 		return u.GetMessageFishermanPauseServiceNodeSignerCandidates(x)
 	//case *types.MessageTestScore:
 	//	return u.GetMessageTestScoreSignerCandidates(x)
 	//case *types.MessageProveTestScore:
 	//	return u.GetMessageProveTestScoreSignerCandidates(x)
-	case *types2.MessageStakeApp:
+	case *typesUtil.MessageStakeApp:
 		return u.GetMessageStakeAppSignerCandidates(x)
-	case *types2.MessageEditStakeApp:
+	case *typesUtil.MessageEditStakeApp:
 		return u.GetMessageEditStakeAppSignerCandidates(x)
-	case *types2.MessageUnstakeApp:
+	case *typesUtil.MessageUnstakeApp:
 		return u.GetMessageUnstakeAppSignerCandidates(x)
-	case *types2.MessagePauseApp:
+	case *typesUtil.MessagePauseApp:
 		return u.GetMessagePauseAppSignerCandidates(x)
-	case *types2.MessageUnpauseApp:
+	case *typesUtil.MessageUnpauseApp:
 		return u.GetMessageUnpauseAppSignerCandidates(x)
-	case *types2.MessageStakeValidator:
+	case *typesUtil.MessageStakeValidator:
 		return u.GetMessageStakeValidatorSignerCandidates(x)
-	case *types2.MessageEditStakeValidator:
+	case *typesUtil.MessageEditStakeValidator:
 		return u.GetMessageEditStakeValidatorSignerCandidates(x)
-	case *types2.MessageUnstakeValidator:
+	case *typesUtil.MessageUnstakeValidator:
 		return u.GetMessageUnstakeValidatorSignerCandidates(x)
-	case *types2.MessagePauseValidator:
+	case *typesUtil.MessagePauseValidator:
 		return u.GetMessagePauseValidatorSignerCandidates(x)
-	case *types2.MessageUnpauseValidator:
+	case *typesUtil.MessageUnpauseValidator:
 		return u.GetMessageUnpauseValidatorSignerCandidates(x)
-	case *types2.MessageStakeServiceNode:
+	case *typesUtil.MessageStakeServiceNode:
 		return u.GetMessageStakeServiceNodeSignerCandidates(x)
-	case *types2.MessageEditStakeServiceNode:
+	case *typesUtil.MessageEditStakeServiceNode:
 		return u.GetMessageEditStakeServiceNodeSignerCandidates(x)
-	case *types2.MessageUnstakeServiceNode:
+	case *typesUtil.MessageUnstakeServiceNode:
 		return u.GetMessageUnstakeServiceNodeSignerCandidates(x)
-	case *types2.MessagePauseServiceNode:
+	case *typesUtil.MessagePauseServiceNode:
 		return u.GetMessagePauseServiceNodeSignerCandidates(x)
-	case *types2.MessageUnpauseServiceNode:
+	case *typesUtil.MessageUnpauseServiceNode:
 		return u.GetMessageUnpauseServiceNodeSignerCandidates(x)
-	case *types2.MessageChangeParameter:
+	case *typesUtil.MessageChangeParameter:
 		return u.GetMessageChangeParameterSignerCandidates(x)
 	default:
 		return nil, types.ErrUnknownMessage(x)

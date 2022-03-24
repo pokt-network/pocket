@@ -8,9 +8,9 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
-	types2 "github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/utility"
-	"github.com/pokt-network/pocket/utility/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 func TestUtilityContext_HandleMessageStakeFisherman(t *testing.T) {
@@ -20,7 +20,7 @@ func TestUtilityContext_HandleMessageStakeFisherman(t *testing.T) {
 	if err := ctx.SetAccount(out, defaultAmount); err != nil {
 		t.Fatal(err)
 	}
-	msg := &types.MessageStakeFisherman{
+	msg := &typesUtil.MessageStakeFisherman{
 		PublicKey:     pubKey.Bytes(),
 		Chains:        defaultTestingChains,
 		Amount:        defaultAmountString,
@@ -41,8 +41,8 @@ func TestUtilityContext_HandleMessageStakeFisherman(t *testing.T) {
 	if !bytes.Equal(actor.Address, pubKey.Address()) {
 		t.Fatalf("incorrect address, expected %v, got %v", pubKey.Address(), actor.Address)
 	}
-	if actor.Status != types.StakedStatus {
-		t.Fatalf("incorrect status, expected %v, got %v", types.StakedStatus, actor.Status)
+	if actor.Status != typesUtil.StakedStatus {
+		t.Fatalf("incorrect status, expected %v, got %v", typesUtil.StakedStatus, actor.Status)
 	}
 	if !reflect.DeepEqual(actor.Chains, msg.Chains) {
 		t.Fatalf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains)
@@ -67,7 +67,7 @@ func TestUtilityContext_HandleMessageStakeFisherman(t *testing.T) {
 func TestUtilityContext_HandleMessageEditStakeFisherman(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingFishermen(t, ctx)[0]
-	msg := &types.MessageEditStakeFisherman{
+	msg := &typesUtil.MessageEditStakeFisherman{
 		Address:     actor.Address,
 		Chains:      defaultTestingChains,
 		AmountToAdd: zeroAmountString,
@@ -101,8 +101,8 @@ func TestUtilityContext_HandleMessageEditStakeFisherman(t *testing.T) {
 		t.Fatalf("incorrect output address, expected %v, got %v", actor.Output, actor.Output)
 	}
 	amountEdited := big.NewInt(1)
-	expectedAmount := types2.BigIntToString(big.NewInt(0).Add(defaultAmount, amountEdited))
-	amountEditedString := types2.BigIntToString(amountEdited)
+	expectedAmount := types.BigIntToString(big.NewInt(0).Add(defaultAmount, amountEdited))
+	amountEditedString := types.BigIntToString(amountEdited)
 	msgAmountEdited := msg
 	msgAmountEdited.AmountToAdd = amountEditedString
 	if err := ctx.HandleMessageEditStakeFisherman(msgAmountEdited); err != nil {
@@ -117,7 +117,7 @@ func TestUtilityContext_HandleMessageEditStakeFisherman(t *testing.T) {
 func TestUtilityContext_HandleMessagePauseFisherman(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingFishermen(t, ctx)[0]
-	msg := &types.MessagePauseFisherman{
+	msg := &typesUtil.MessagePauseFisherman{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -136,7 +136,7 @@ func TestUtilityContext_HandleMessageUnpauseFisherman(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor := GetAllTestingFishermen(t, ctx)[0]
-	msg := &types.MessagePauseFisherman{
+	msg := &typesUtil.MessagePauseFisherman{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -147,7 +147,7 @@ func TestUtilityContext_HandleMessageUnpauseFisherman(t *testing.T) {
 	if !actor.Paused {
 		t.Fatal("actor isn't paused after")
 	}
-	msgU := &types.MessageUnpauseFisherman{
+	msgU := &typesUtil.MessageUnpauseFisherman{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -166,7 +166,7 @@ func TestUtilityContext_HandleMessageUnstakeFisherman(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor := GetAllTestingFishermen(t, ctx)[0]
-	msg := &types.MessageUnstakeFisherman{
+	msg := &typesUtil.MessageUnstakeFisherman{
 		Address: actor.Address,
 		Signer:  actor.Address,
 	}
@@ -174,7 +174,7 @@ func TestUtilityContext_HandleMessageUnstakeFisherman(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor = GetAllTestingFishermen(t, ctx)[0]
-	if actor.Status != types.UnstakingStatus {
+	if actor.Status != typesUtil.UnstakingStatus {
 		t.Fatal("actor isn't unstaking")
 	}
 }
@@ -295,7 +295,7 @@ func TestUtilityContext_GetFishermenReadyToUnstake(t *testing.T) {
 func TestUtilityContext_GetMessageEditStakeFishermanSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingFishermen(t, ctx)
-	msgEditStake := &types.MessageEditStakeFisherman{
+	msgEditStake := &typesUtil.MessageEditStakeFisherman{
 		Address:     actors[0].Address,
 		Chains:      defaultTestingChains,
 		AmountToAdd: defaultAmountString,
@@ -312,7 +312,7 @@ func TestUtilityContext_GetMessageEditStakeFishermanSignerCandidates(t *testing.
 func TestUtilityContext_GetMessagePauseFishermanSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingFishermen(t, ctx)
-	msg := &types.MessagePauseFisherman{
+	msg := &typesUtil.MessagePauseFisherman{
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessagePauseFishermanSignerCandidates(msg)
@@ -329,7 +329,7 @@ func TestUtilityContext_GetMessageStakeFishermanSignerCandidates(t *testing.T) {
 	pubKey, _ := crypto.GeneratePublicKey()
 	addr := pubKey.Address()
 	out, _ := crypto.GenerateAddress()
-	msg := &types.MessageStakeFisherman{
+	msg := &typesUtil.MessageStakeFisherman{
 		PublicKey:     pubKey.Bytes(),
 		Chains:        defaultTestingChains,
 		Amount:        defaultAmountString,
@@ -347,7 +347,7 @@ func TestUtilityContext_GetMessageStakeFishermanSignerCandidates(t *testing.T) {
 func TestUtilityContext_GetMessageUnpauseFishermanSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingFishermen(t, ctx)
-	msg := &types.MessageUnpauseFisherman{
+	msg := &typesUtil.MessageUnpauseFisherman{
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnpauseFishermanSignerCandidates(msg)
@@ -362,7 +362,7 @@ func TestUtilityContext_GetMessageUnpauseFishermanSignerCandidates(t *testing.T)
 func TestUtilityContext_GetMessageUnstakeFishermanSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingFishermen(t, ctx)
-	msg := &types.MessageUnstakeFisherman{
+	msg := &typesUtil.MessageUnstakeFisherman{
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnstakeFishermanSignerCandidates(msg)
@@ -412,7 +412,7 @@ func TestUtilityContext_InsertFisherman(t *testing.T) {
 func TestUtilityContext_UnstakeFishermenPausedBefore(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingFishermen(t, ctx)[0]
-	if actor.Status != types.StakedStatus {
+	if actor.Status != typesUtil.StakedStatus {
 		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetFishermanMaxPausedBlocks(0)
@@ -426,7 +426,7 @@ func TestUtilityContext_UnstakeFishermenPausedBefore(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor = GetAllTestingFishermen(t, ctx)[0]
-	if actor.Status != types.UnstakingStatus {
+	if actor.Status != typesUtil.UnstakingStatus {
 		t.Fatal("status does not equal unstaking")
 	}
 	unstakingBlocks, err := ctx.GetFishermanUnstakingBlocks()
@@ -444,7 +444,7 @@ func TestUtilityContext_UnstakeFishermenThatAreReady(t *testing.T) {
 		t.Fatal(err)
 	}
 	actor := GetAllTestingFishermen(t, ctx)[0]
-	if actor.Status != types.StakedStatus {
+	if actor.Status != typesUtil.StakedStatus {
 		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetFishermanMaxPausedBlocks(0)
@@ -469,14 +469,14 @@ func TestUtilityContext_UpdateFisherman(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingFishermen(t, ctx)[0]
 	newAmountBig := big.NewInt(9999999999999999)
-	newAmount := types2.BigIntToString(newAmountBig)
+	newAmount := types.BigIntToString(newAmountBig)
 	oldAmount := actor.StakedTokens
-	oldAmountBig, err := types2.StringToBigInt(oldAmount)
+	oldAmountBig, err := types.StringToBigInt(oldAmount)
 	if err != nil {
 		t.Fatal(err)
 	}
 	expectedAmountBig := newAmountBig.Add(newAmountBig, oldAmountBig)
-	expectedAmount := types2.BigIntToString(expectedAmountBig)
+	expectedAmount := types.BigIntToString(expectedAmountBig)
 	if err := ctx.UpdateFisherman(actor.Address, actor.ServiceUrl, newAmount, actor.Chains); err != nil {
 		t.Fatal(err)
 	}
@@ -497,7 +497,7 @@ func GetAllTestingFishermen(t *testing.T, ctx utility.UtilityContext) []*pre_per
 func TestUtilityContext_GetMessageFishermanPauseServiceNodeSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingFishermen(t, ctx)[0]
-	candidates, err := ctx.GetMessageFishermanPauseServiceNodeSignerCandidates(&types.MessageFishermanPauseServiceNode{
+	candidates, err := ctx.GetMessageFishermanPauseServiceNodeSignerCandidates(&typesUtil.MessageFishermanPauseServiceNode{
 		Reporter: actor.Address,
 	})
 	if err != nil {
@@ -518,7 +518,7 @@ func TestUtilityContext_HandleMessageFishermanPauseServiceNode(t *testing.T) {
 	if sn.Paused == true {
 		t.Fatal("incorrect starting pause status")
 	}
-	if err := ctx.HandleMessageFishermanPauseServiceNode(&types.MessageFishermanPauseServiceNode{
+	if err := ctx.HandleMessageFishermanPauseServiceNode(&typesUtil.MessageFishermanPauseServiceNode{
 		Address:  sn.Address,
 		Reporter: actor.Address,
 	}); err != nil {
