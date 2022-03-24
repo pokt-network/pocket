@@ -9,6 +9,7 @@ import (
 	"time"
 
 	testutils "github.com/pokt-network/pocket/p2p/testutils"
+	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -143,7 +144,7 @@ func TestSocket_WriteRoutine(t *testing.T) {
 			"pipe.write routine error: written buffer length mismatch",
 		)
 
-		_, _, conndata, _, err := pipe.c.decode(buff)
+		_, _, conndata, _, err := pipe.codec.decode(buff)
 
 		assert.Equal(
 			t,
@@ -190,7 +191,7 @@ func TestSocket_ReadChunk(t *testing.T) {
 
 	// write message A
 	{
-		messageA.Encoded = pipe.c.encode(Binary, false, 0, messageA.Bytes, false)
+		messageA.Encoded = pipe.codec.encode(Binary, false, 0, messageA.Bytes, false)
 		conn.Write(messageA.Encoded)
 	}
 
@@ -278,7 +279,7 @@ func TestSocket_ReadRoutine(t *testing.T) {
 	{
 		buff := pipe.buffers.read.Bytes()
 
-		_, _, dbuff, _, err := pipe.c.decode(buff)
+		_, _, dbuff, _, err := pipe.codec.decode(buff)
 
 		assert.Nil(
 			t,
@@ -347,7 +348,7 @@ func TestSocket_EngageInbound(t *testing.T) {
 	{
 		pipe.runner = runner
 		pipe.buffers.write.Open()
-		go pipe.startIO(ctx, Inbound, addr, net.Conn(conn), onopened, onclosed)
+		go pipe.startIO(ctx, types.Inbound, addr, net.Conn(conn), onopened, onclosed)
 	}
 
 	_, isSocketWriting := <-pipe.writing
@@ -358,47 +359,47 @@ func TestSocket_EngageInbound(t *testing.T) {
 		assert.NotNil(
 			t,
 			pipe.reader,
-			"pipe.engage error: reader/writter is not initialized after inbound launch",
+			"pipe.open error: reader/writter is not initialized after inbound launch",
 		)
 
 		assert.NotNil(
 			t,
 			pipe.writer,
-			"pipe.engage error: reader/writter is not initialized after inbound launch",
+			"pipe.open error: reader/writter is not initialized after inbound launch",
 		)
 
 		assert.NotNil(
 			t,
 			pipe.conn,
-			"pipe.engage error: pipe connection is not initialized after inbound launch",
+			"pipe.open error: pipe connection is not initialized after inbound launch",
 		)
 
 		assert.Equal(
 			t,
 			isSocketWriting,
 			true,
-			"pipe.engage error: pipe is not receiving or sending after inbound launch",
+			"pipe.open error: pipe is not receiving or sending after inbound launch",
 		)
 
 		assert.Equal(
 			t,
 			isSocketReading,
 			true,
-			"pipe.engage error: pipe is not receiving or sending after inbound launch",
+			"pipe.open error: pipe is not receiving or sending after inbound launch",
 		)
 
 		assert.Equal(
 			t,
 			onopenedStub.WasCalled(),
 			true,
-			"pipe.engage error: did not call onopened handler on opened connection event",
+			"pipe.open error: did not call onopened handler on opened connection event",
 		)
 
 		assert.Equalf(
 			t,
 			onopenedStub.WasCalledTimes(1),
 			true,
-			"pipe.engage error: expected onopened handler to be called once, got called %d times", onopenedStub.Times(),
+			"pipe.open error: expected onopened handler to be called once, got called %d times", onopenedStub.Times(),
 		)
 	}
 
@@ -420,14 +421,14 @@ func TestSocket_EngageInbound(t *testing.T) {
 			t,
 			n,
 			ReadBufferSize-WireByteHeaderLength,
-			"pipe.engage error (read error): received inbound buffer length mismatch, expected %d, got %d", ReadBufferSize, n,
+			"pipe.open error (read error): received inbound buffer length mismatch, expected %d, got %d", ReadBufferSize, n,
 		)
 
 		assert.Equal(
 			t,
 			w.Data,
 			message.Bytes,
-			"pipe.engage error (read error): received inbound buffer corrupted",
+			"pipe.open error (read error): received inbound buffer corrupted",
 		)
 	}
 
@@ -440,7 +441,7 @@ func TestSocket_EngageInbound(t *testing.T) {
 		assert.Nil(
 			t,
 			werr,
-			"pipe.engage error (write error): error writing to the inbound pipe",
+			"pipe.open error (write error): error writing to the inbound pipe",
 		)
 	}
 
@@ -455,29 +456,29 @@ func TestSocket_EngageInbound(t *testing.T) {
 		assert.Nil(
 			t,
 			cerr,
-			"pipe.engage error (answer error): inbound peer could not read response, %s", cerr,
+			"pipe.open error (answer error): inbound peer could not read response, %s", cerr,
 		)
 
 		assert.Equal(
 			t,
 			uint(cn)-WireByteHeaderLength,
 			response.Length,
-			"pipe.engage error (answer error): inbound peer received wrong number of bytes",
+			"pipe.open error (answer error): inbound peer received wrong number of bytes",
 		)
 
-		_, _, answer, _, err := pipe.c.decode(answer)
+		_, _, answer, _, err := pipe.codec.decode(answer)
 
 		assert.Nil(
 			t,
 			err,
-			"pipe.engage error (answer error): inbound peer could not decode response",
+			"pipe.open error (answer error): inbound peer could not decode response",
 		)
 
 		assert.Equal(
 			t,
 			answer,
 			response.Bytes,
-			"pipe.engage error (answer error): inbound peer received corrupted response",
+			"pipe.open error (answer error): inbound peer received corrupted response",
 		)
 	}
 
@@ -490,14 +491,14 @@ func TestSocket_EngageInbound(t *testing.T) {
 			t,
 			onclosedStub.WasCalled(),
 			true,
-			"pipe.engage error: did not call onclosed handler on closed connection event",
+			"pipe.open error: did not call onclosed handler on closed connection event",
 		)
 
 		assert.Equalf(
 			t,
 			onclosedStub.WasCalledTimes(1),
 			true,
-			"pipe.engage error: expected onclosed handler to be called once, got called %d times", onopenedStub.Times(),
+			"pipe.open error: expected onclosed handler to be called once, got called %d times", onopenedStub.Times(),
 		)
 	}
 
@@ -537,7 +538,7 @@ func TestSocket_EngageOutbound(t *testing.T) {
 		pipe.buffers.write.Open()
 		pipe.isOpen.Store(true)
 
-		go pipe.startIO(ctx, Outbound, addr, conn, onopened, onclosed)
+		go pipe.startIO(ctx, types.Outbound, addr, conn, onopened, onclosed)
 	}
 
 	_, isSocketWriting := <-pipe.writing
@@ -547,47 +548,47 @@ func TestSocket_EngageOutbound(t *testing.T) {
 		assert.NotNil(
 			t,
 			pipe.reader,
-			"pipe.engage error: reader/writter is not initialized after inbound launch",
+			"pipe.open error: reader/writter is not initialized after inbound launch",
 		)
 
 		assert.NotNil(
 			t,
 			pipe.writer,
-			"pipe.engage error: reader/writter is not initialized after inbound launch",
+			"pipe.open error: reader/writter is not initialized after inbound launch",
 		)
 
 		assert.NotNil(
 			t,
 			pipe.conn,
-			"pipe.engage error: pipe connection is not initialized after inbound launch",
+			"pipe.open error: pipe connection is not initialized after inbound launch",
 		)
 
 		assert.Equal(
 			t,
 			isSocketWriting,
 			true,
-			"pipe.engage error: pipe is not receiving or sending after inbound launch",
+			"pipe.open error: pipe is not receiving or sending after inbound launch",
 		)
 
 		assert.Equal(
 			t,
 			isSocketReading,
 			true,
-			"pipe.engage error: pipe is not receiving or sending after inbound launch",
+			"pipe.open error: pipe is not receiving or sending after inbound launch",
 		)
 
 		assert.Equal(
 			t,
 			onopenedStub.WasCalled(),
 			true,
-			"pipe.engage error: did not call onopened handler on opened connection event",
+			"pipe.open error: did not call onopened handler on opened connection event",
 		)
 
 		assert.Equalf(
 			t,
 			onopenedStub.WasCalledTimes(1),
 			true,
-			"pipe.engage error: expected onopened handler to be called once, got called %d times", onopenedStub.Times(),
+			"pipe.open error: expected onopened handler to be called once, got called %d times", onopenedStub.Times(),
 		)
 	}
 
@@ -599,7 +600,7 @@ func TestSocket_EngageOutbound(t *testing.T) {
 		assert.Nil(
 			t,
 			werr,
-			"pipe.engage error (write error): error writing to the outbound pipe",
+			"pipe.open error (write error): error writing to the outbound pipe",
 		)
 
 	}
@@ -615,29 +616,29 @@ func TestSocket_EngageOutbound(t *testing.T) {
 		assert.Nilf(
 			t,
 			cerr,
-			"pipe.engage error (answer error): outbound peer could not read response, %s", cerr,
+			"pipe.open error (answer error): outbound peer could not read response, %s", cerr,
 		)
 
 		assert.Equal(
 			t,
 			uint(cn-WireByteHeaderLength),
 			message.Length,
-			"pipe.engage error (answer error): outbound peer received wrong number of bytes",
+			"pipe.open error (answer error): outbound peer received wrong number of bytes",
 		)
 
-		_, _, decoded, _, err := pipe.c.decode(buffer)
+		_, _, decoded, _, err := pipe.codec.decode(buffer)
 
 		assert.Nil(
 			t,
 			err,
-			"pipe.engage error: outbound peer could not decode received buff: %s ", err,
+			"pipe.open error: outbound peer could not decode received buff: %s ", err,
 		)
 
 		assert.Equal(
 			t,
 			decoded,
 			message.Bytes,
-			"pipe.engage error (answer error): outbound peer received corrupted response",
+			"pipe.open error (answer error): outbound peer received corrupted response",
 		)
 	}
 
@@ -666,14 +667,14 @@ func TestSocket_EngageOutbound(t *testing.T) {
 			t,
 			len(receivedResponse),
 			ReadBufferSize-WireByteHeaderLength,
-			"pipe.engage error (read error): received outbound buffer length mismatch",
+			"pipe.open error (read error): received outbound buffer length mismatch",
 		)
 
 		assert.Equal(
 			t,
 			receivedResponse,
 			response.Bytes,
-			"pipe.engage error (read error): received corrupted buffer from outbound peer",
+			"pipe.open error (read error): received corrupted buffer from outbound peer",
 		)
 	}
 
@@ -686,14 +687,14 @@ func TestSocket_EngageOutbound(t *testing.T) {
 			t,
 			onclosedStub.WasCalled(),
 			true,
-			"pipe.engage error: did not call onclosed handler on closed connection event",
+			"pipe.open error: did not call onclosed handler on closed connection event",
 		)
 
 		assert.Equal(
 			t,
 			onclosedStub.WasCalledTimes(1),
 			true,
-			"pipe.engage error: expected onclosed handler to be called once, got called %d times", onopenedStub.Times(),
+			"pipe.open error: expected onclosed handler to be called once, got called %d times", onopenedStub.Times(),
 		)
 	}
 
@@ -707,23 +708,11 @@ func TestSocket_Open(t *testing.T) {
 		dialer := MockDialer()
 		runner := NewRunnerMock()
 
-		connector := func() net.Conn {
-			return dialer.conn
+		connector := func() (string, types.SocketType, net.Conn) {
+			return addr, types.Inbound, dialer.conn
 		}
 
-		ctx, cancel := context.WithCancel(
-			context.WithValue(
-				context.Background(),
-				"address",
-				addr,
-			),
-		)
-
-		ctx = context.WithValue(
-			ctx,
-			"kind",
-			Inbound,
-		)
+		ctx, cancel := context.WithCancel(context.Background())
 
 		onopenedStub := testutils.NewFnCallStub()
 		onopened := func(_ context.Context, p *socket) error {
@@ -746,46 +735,51 @@ func TestSocket_Open(t *testing.T) {
 
 		// test opening an outbound connection
 		{
-			pipe.open(ctx, connector, onopened, onclosed)
+			err := pipe.open(ctx, connector, onopened, onclosed)
 
+			assert.Nil(
+				t,
+				err,
+				"pipe.open: error while opeining the socket",
+			)
 			_, isNotReady := <-pipe.ready
 
 			assert.False(
 				t,
 				isNotReady,
-				"pipe.engage error: pipe is not receiving or sending after outbound launch",
+				"pipe.open error: pipe is not receiving or sending after outbound launch",
 			)
 
 			assert.NotNil(
 				t,
 				pipe.reader,
-				"pipe.engage error: reader/writter is not initialized after outbound launch",
+				"pipe.open error: reader/writter is not initialized after outbound launch",
 			)
 
 			assert.NotNil(
 				t,
 				pipe.writer,
-				"pipe.engage error: reader/writter is not initialized after outbound launch",
+				"pipe.open error: reader/writter is not initialized after outbound launch",
 			)
 
 			assert.NotNil(
 				t,
 				pipe.conn,
-				"pipe.engage error: pipe connection is not initialized after outbound launch",
+				"pipe.open error: pipe connection is not initialized after outbound launch",
 			)
 
 			assert.Equal(
 				t,
 				onopenedStub.WasCalled(),
 				true,
-				"pipe.engage error: did not call onopened handler on opened connection event",
+				"pipe.open error: did not call onopened handler on opened connection event",
 			)
 
 			assert.Equal(
 				t,
 				onopenedStub.WasCalledTimes(1),
 				true,
-				"pipe.engage error: expected onopened handler to be called once",
+				"pipe.open error: expected onopened handler to be called once",
 			)
 		}
 
@@ -797,13 +791,13 @@ func TestSocket_Open(t *testing.T) {
 			assert.True(
 				t,
 				onclosedStub.WasCalled(),
-				"pipe.engage error: did not call onclosed handler on closed connection event",
+				"pipe.open error: did not call onclosed handler on closed connection event",
 			)
 
 			assert.True(
 				t,
 				onclosedStub.WasCalledTimes(1),
-				"pipe.engage error: expected onclosed handler to be called once",
+				"pipe.open error: expected onclosed handler to be called once",
 			)
 		}
 
@@ -816,22 +810,11 @@ func TestSocket_Open(t *testing.T) {
 		runner := NewRunnerMock()
 		conn := MockConnM()
 
-		connector := func() net.Conn {
-			return conn
+		connector := func() (string, types.SocketType, net.Conn) {
+			return addr, types.Inbound, conn
 		}
 
-		ctx, _ := context.WithCancel(
-			context.WithValue(
-				context.Background(),
-				"address",
-				addr,
-			),
-		)
-		ctx = context.WithValue(
-			ctx,
-			"kind",
-			Inbound,
-		)
+		ctx, _ := context.WithCancel(context.Background())
 
 		onopenedStub := testutils.NewFnCallStub()
 		onopened := func(_ context.Context, p *socket) error {
@@ -884,20 +867,20 @@ func TestSocket_Open(t *testing.T) {
 			assert.Equal(
 				t,
 				pipe.kind,
-				Inbound,
+				types.Inbound,
 				"pipe open inbound error: wrong pipe sense",
 			)
 
 			assert.True(
 				t,
 				onopenedStub.WasCalled(),
-				"pipe.engage error: did not call onopened handler on opened connection event",
+				"pipe.open error: did not call onopened handler on opened connection event",
 			)
 
 			assert.True(
 				t,
 				onopenedStub.WasCalledTimes(1),
-				"pipe.engage error: expected onopened handler to be called once",
+				"pipe.open error: expected onopened handler to be called once",
 			)
 		}
 
@@ -908,13 +891,13 @@ func TestSocket_Open(t *testing.T) {
 			assert.True(
 				t,
 				onclosedStub.WasCalled(),
-				"pipe.engage error: did not call onclosed handler on closed connection event",
+				"pipe.open error: did not call onclosed handler on closed connection event",
 			)
 
 			assert.True(
 				t,
 				onclosedStub.WasCalledTimes(1),
-				"pipe.engage error: expected onclosed handler to be called once",
+				"pipe.open error: expected onclosed handler to be called once",
 			)
 		}
 	}

@@ -3,8 +3,6 @@ package p2p
 import (
 	"bufio"
 	"context"
-	"errors"
-	"fmt"
 	"io"
 	"math"
 	"net"
@@ -12,6 +10,7 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/p2p/utils"
 
 	"go.uber.org/atomic"
 )
@@ -44,7 +43,15 @@ type socket struct {
 
 	// io buffers
 	buffers struct {
-		read  *types.Buffer
+		// the read buffer is a byte slice of a certain size (configurable: ReadBufferSize) which is destined
+		// to receive incoming data. This buffer is not concurrent and is primarily used by the s.read routine
+		read *types.Buffer
+
+		// the write buffer is a byte slice of a certain size (configurable: WriteBufferSize) which is written to
+		// by the owner of this socket (i.e: the runner, the peer). When the peer is done writing to the buffer, the s.write routine
+		// proceeds to writing this buffer to the concerned connection, resulting in a network send.
+		// This buffer is concurrent because two operations are happening in parallel, the writing to the buffer by the peer
+		// and the reading off of the buffer by the s.write routine
 		write *types.ConcurrentBuffer
 	}
 
@@ -56,7 +63,7 @@ type socket struct {
 	// we call them requests (as they require responses)
 	requests *types.RequestMap
 
-	// turns true when the socket is opened (i.e: the connection is established and IO is on going)
+	// turns true when the socket is opened (i.e: the connection is established and IO routines are launched)
 	isOpen atomic.Bool
 
 	ready   chan struct{} // when the socket is opened and IO starts, this channel gets closed to signal readiness
@@ -74,37 +81,31 @@ type socket struct {
 	logger types.Logger
 }
 
-// retrieves the network connection in question through the connector argument
-// and starts the IO operations on that connection, while putting in place event handlers for onSocketOpened and onSocketClosed events
-// returns an error on failure
-func (s *socket) open(ctx context.Context, connector func() net.Conn, onopened SocketEventMonitor, onclosed SocketEventMonitor) error {
+// Retrieves the underlying TCP socket (net.Conn) in question through the connector argument
+// and starts the IO operations on that socket, while putting in place event handlers for onSocketOpened and onSocketClosed events.
+// returns an error on failure.
+func (s *socket) open(ctx context.Context, connector func() (string, types.SocketType, net.Conn), onOpened SocketEventMonitor, onClosed SocketEventMonitor) error {
 	s.buffers.write.Open()
 
-	conn := connector()
+	addr, socketType, conn := connector()
 
-	addr := ctx.Value("address").(string)
-	kind := ctx.Value("kind").(types.SocketType)
-
-	//TODO(derrandz): retrieve from parameters or config
-	if addr == "" {
-		return ErrSocketEmptyContextValue("address")
+	if utils.IsEmpty(addr) {
+		return ErrMissingRequiredArg("address")
 	}
 
-	if kind == "" {
-		return ErrSocketEmptyContextValue("kind")
+	if utils.IsEmpty(string(socketType)) {
+		return ErrMissingRequiredArg("socketType")
 	}
 
-	switch kind {
+	switch socketType {
 	case types.Outbound:
-		fallthrough
 	case types.Inbound:
-		fallthrough
 	default:
 		s.close()
-		return ErrSocketUndefinedKind(string(kind))
+		return ErrSocketUndefinedKind(string(socketType))
 	}
 
-	go s.startIO(ctx, kind, addr, conn, onopened, onclosed)
+	go s.startIO(ctx, socketType, addr, conn, onOpened, onClosed)
 
 	select {
 	case <-s.errored:
@@ -156,7 +157,7 @@ func (s *socket) close() {
 // kicks off the onSocketOpened event handler, returns if there is an error
 // launches both the reading and writing routines (read, write methods): both are blocking
 // when the write routine exists, the onSocketClosed event handler kicks off (returns an error if there is one)
-// the write and read routines will both exist for the same reasons, so having just one of them block is sufficient.
+// the write and read routines will both exit for the same reasons, so having just one of them block is sufficient.
 func (s *socket) startIO(ctx context.Context, kind types.SocketType, addr string, conn net.Conn, onOpened SocketEventMonitor, onClosed SocketEventMonitor) {
 	defer s.close()
 
@@ -211,7 +212,7 @@ func (s *socket) readChunk() ([]byte, int, error) {
 	// TODO(derrandz): replace with configurable max value or keep it as is (i.e: max=chunk size) ??
 	if bodyLen > uint32(s.bufferSize-s.headerLength) {
 		// TODO(derrandz): move error to socket_err.go
-		return nil, 0, errors.New(fmt.Sprintf("io pipe error: cannot read a buffer of length %d, the accepted body length is %d.", bodyLen, s.bufferSize-s.headerLength))
+		return nil, 0, ErrPayloadTooBig(uint(bodyLen), s.bufferSize-s.headerLength)
 	}
 
 	if n, err = io.ReadFull(s.reader, (*readBuffer)[s.headerLength:uint32(s.headerLength)+bodyLen]); err != nil {
@@ -224,17 +225,18 @@ func (s *socket) readChunk() ([]byte, int, error) {
 	return buff, n, err
 }
 
-// the read routine
-// this routine performs buffered reads (readBufferSize) on the established connection
+// The read routine.
+// This routine performs buffered reads (the size of the buffer is the config param: readBufferSize) on the established connection
 // and does two things as a consequence of a read operation:
 //    1- if it's a response to a request out of this socket, it will redirect the response to the request's response channel (see types/request.go)
-// .  2- if not, it will handover the read buffer as Packet (check types/work.go) to the runner (check types/runner.go)
-// this routine halfs if:
-//   - the cancelable routine cancels
-//   - if the runner stops
-//   - if the socket closes
-//   - if some party signals that this routine should stop (by closing the s.reading channel)
-//   - if there is an IO error: EOF, UnexpectedEOF, peer hang up, unexpected error
+//    2- if not, it will handover the read (past-tense participle) buffer as a Packet (check types/packet.go) to the runner (check types/runner.go)
+//
+// This routine halts if:
+//   - The cancelable context cancels
+//   - If the runner stops (i.e: s.runner.Done() receives)
+//   - If the socket closes
+//   - If some party signals that this routine should stop (by closing the s.reading channel)
+//   - If there is an IO error: EOF, UnexpectedEOF, peer hang up, unexpected error
 func (s *socket) read(ctx context.Context) {
 	defer func() {
 		close(s.reading)
@@ -248,21 +250,16 @@ func (s *socket) read(ctx context.Context) {
 reader:
 	for {
 		select {
-		// TODO(derrandz): replace with passed down context ?
 		case <-ctx.Done():
 			break reader
-
 		case <-s.runner.Done():
 			break reader
-
 		case <-s.done:
 			break reader
-
 		case _, open := <-s.reading:
 			if !open {
 				break reader
 			}
-
 		default:
 			{
 				buf, n, err := s.readChunk()
@@ -284,6 +281,7 @@ reader:
 				}
 
 				if n == 0 {
+					s.logger.Warn("Read 0 bytes on socket:", s.addr)
 					continue
 				}
 
@@ -310,11 +308,13 @@ reader:
 	}
 }
 
-// TODO(derrandz): add buffered write by writing exactly the writeBufferSize. Will need to think about how to split big payloads and sequence them
-// writes a chunk=writeBufferSize to the writer
-// this operation is blocking, and blocks until a waiter is ready to receive the signal from the write buffer (signaling that is has written)
-// This is used by send/request/broadcast operations
-// upon each send, the write routine will receive a signal so that it may proceed to send the write over the network
+// TODO(derrandz): add buffered write by writing exactly WriteBufferSize amount of bytes, and splitting if larger.
+// Will need to think about how to split big payloads and sequence them
+//
+// writeChunk writes a chunk=writeBufferSize to the writer (s.writer).
+// This operation is blocking, and blocks until a waiter is ready to receive the signal from the write buffer (signaling that is has written)
+// This is used by send/request/broadcast operations.
+// Upon each send, the write routine will receive a signal so that it may proceed to send the write over the network.
 func (s *socket) writeChunk(b []byte, iserroreof bool, reqnum uint32, wrapped bool) (uint, error) {
 	defer s.buffers.write.Unlock()
 	s.buffers.write.Lock()
@@ -328,10 +328,12 @@ func (s *socket) writeChunk(b []byte, iserroreof bool, reqnum uint32, wrapped bo
 	return uint(len(b)), nil // TODO(derrandz): should length be of b or of the encoded b
 }
 
-// writeChunkAckful is a writeChunk that expects to receive an ACK response for the chunk it has written
-// This method will create a request, which is basically a nonce to identify the chunk to write, and a channel on which to receive the response
-// the channel is blocking, thus allowing the 'wait to receive the response' behavior.
-// the `read` routine takes care of identifying incoming responses (_using the nonce_) and redirecting them to the waiting channels of the currently-open requests.
+// writeChunkAckful is a writeChunk that expects to receive an ACK response for the chunk it has written.
+// This method will create a request, which is basically a nonce and a channel, the nonce to identify the written chunk and the channel
+// to receive the response for that particular written chunk.
+//
+// The channel -on which the response is expected to be received- is blocking, thus enabling the 'wait to receive the response' behavior.
+// The `read` routine takes care of identifying incoming responses (_using the nonce_) and redirecting them to the waiting channels of the currently-open requests.
 func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Packet, error) {
 	request := s.requests.Get()
 	requestNonce := request.Nonce
@@ -377,15 +379,12 @@ writer:
 			break writer
 		case <-s.runner.Done():
 			break writer
-
 		case <-s.done:
 			break writer
-
 		case _, open := <-s.writing:
 			if !open {
 				break writer
 			}
-
 		case <-s.buffers.write.Signals(): // blocks
 			{
 				if !s.buffers.write.IsOpen() {
@@ -422,9 +421,8 @@ func (s *socket) error(err error) {
 
 // A constructor to create a socket
 func NewSocket(readBufferSize uint, packetHeaderLength uint, readTimeoutInMs uint) *socket {
-	wc := newWireCodec()
 	pipe := &socket{
-		codec: wc,
+		codec: newWireCodec(),
 
 		kind:         types.UndefinedSocketType,
 		headerLength: packetHeaderLength,
@@ -455,6 +453,7 @@ func NewSocket(readBufferSize uint, packetHeaderLength uint, readTimeoutInMs uin
 
 		writing: make(chan struct{}),
 		reading: make(chan struct{}),
+		logger:  types.NewLogger(),
 	}
 
 	return pipe

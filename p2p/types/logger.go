@@ -1,13 +1,11 @@
 package types
 
-import sync "sync"
+import (
+	log "log"
+)
 
 type (
-	// TODO(team): replace with whatever logged decided upon when telemetry hits the code base
-	logger struct { // a temporary logger struct to allow flexible injection of log functions
-		sync.Mutex
-		print func(...interface{}) (int, error)
-	}
+	logger struct{}
 
 	Logger interface {
 		Debug(...interface{})
@@ -18,8 +16,34 @@ type (
 	}
 )
 
-func (l *logger) Debug(...interface{}) {}
-func (l *logger) Log(...interface{})   {}
-func (l *logger) Info(...interface{})  {}
-func (l *logger) Error(...interface{}) {}
-func (l *logger) Warn(...interface{})  {}
+func NewLogger() *logger {
+	return &logger{}
+}
+
+func (l *logger) Debug(args ...interface{}) {
+	fArgs := []interface{}{"[DEBUG]"}
+	fArgs = append(fArgs, args...)
+	log.Println(fArgs...)
+}
+func (l *logger) Log(args ...interface{}) {
+	fArgs := []interface{}{"[LOG]"}
+	fArgs = append(fArgs, args...)
+	log.Println(fArgs...)
+}
+
+func (l *logger) Info(args ...interface{}) {
+	fArgs := []interface{}{"[INFO]"}
+	fArgs = append(fArgs, args...)
+	log.Println(fArgs...)
+}
+func (l *logger) Error(args ...interface{}) {
+	fArgs := []interface{}{"[Error]"}
+	fArgs = append(fArgs, args...)
+	log.Println(fArgs...)
+}
+
+func (l *logger) Warn(args ...interface{}) {
+	fArgs := []interface{}{"[WARNING]"}
+	fArgs = append(fArgs, args...)
+	log.Println(fArgs...)
+}
