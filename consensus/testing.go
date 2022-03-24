@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"log"
+	"time"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/types"
@@ -30,7 +31,7 @@ func (m *consensusModule) GetNodeState() types_consensus.ConsensusNodeState {
 	}
 	return types_consensus.ConsensusNodeState{
 		NodeId:   m.NodeId,
-		Height:   uint64(m.Height),
+		Height:   m.Height,
 		Round:    uint8(m.Round),
 		Step:     uint8(m.Step),
 		IsLeader: m.isLeader(),
@@ -80,4 +81,36 @@ func (m *consensusModule) togglePacemakerManualMode(_ *types.DebugMessage) {
 		m.nodeLog("[DEBUG] Toggling Pacemaker mode to AUTOMATIC")
 	}
 	m.paceMaker.SetManualMode(newMode)
+}
+
+// This Pacemaker interface is only used for development & debugging purposes.
+type PacemakerDebug interface {
+	SetManualMode(bool)
+	IsManualMode() bool
+	ForceNextView()
+}
+
+type paceMakerDebug struct {
+	manualMode                bool
+	debugTimeBetweenStepsMsec uint64
+
+	quorumCertificate *types_consensus.QuorumCertificate
+}
+
+func (p *paceMaker) IsManualMode() bool {
+	return p.manualMode
+}
+
+func (p *paceMaker) SetManualMode(manualMode bool) {
+	p.manualMode = manualMode
+}
+
+func (p *paceMaker) ForceNextView() {
+	lastQC := p.quorumCertificate
+	p.startNextView(lastQC, true)
+}
+
+// This is a hack only used to slow down the progress of the blockchain during development.
+func (p *paceMaker) debugSleep() {
+	time.Sleep(time.Duration(int64(time.Millisecond) * int64(p.debugTimeBetweenStepsMsec)))
 }

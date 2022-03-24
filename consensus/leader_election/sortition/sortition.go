@@ -11,11 +11,10 @@ Algorand's own implementation of the algorithm [2].
 import (
 	crand "crypto/rand"
 	"fmt"
+	"golang.org/x/exp/rand"
 	"log"
 	"math/big"
 	"strings"
-
-	"golang.org/x/exp/rand"
 
 	"github.com/pokt-network/pocket/consensus/leader_election/vrf"
 
@@ -26,8 +25,27 @@ type SortitionResult uint64
 
 const vrfOutFloatPrecision = uint(8 * (vrf.VRFOutputSize + 1)) // Hashlen in bits of vrfOut
 
-var maxVrfOutFloat *big.Float // Computed in `init()` below
-var maxRandomInt *big.Int
+var (
+	maxVrfOutFloat *big.Float // Computed in `init()`
+	maxRandomInt   *big.Int
+)
+
+// One time initialization of sortition related constants
+func init() {
+	// The maximum lexical value that vrfOut can be, based on the VRFOutputSize.
+	// In other words, the denominator used to normalize vrfOut to a value in [0, 1).
+	var maxVrfOutFloatString string = fmt.Sprintf("0x%s", strings.Repeat("f", vrf.VRFOutputSize*2))
+
+	var base int
+	var err error
+	maxVrfOutFloat, base, err = big.ParseFloat(maxVrfOutFloatString, 0, vrfOutFloatPrecision, big.ToNearestEven)
+	if base != 16 || err != nil {
+		log.Fatal("failed to parse big float constant for sortition")
+	}
+
+	maxRandomInt = big.NewInt(^int64(0))
+	maxRandomInt.Abs(maxRandomInt)
+}
 
 // Based on a validator's stake, the amount of staked uPOKT in the network, and the VRF output that
 // the validator generated at some point in the past, this returns a value that can be used to rank
@@ -106,21 +124,4 @@ func vrfOutProb(vrfOut vrf.VRFOutput) float64 {
 	fratio, _ := ratio.Quo(&h, maxVrfOutFloat).Float64()
 
 	return fratio
-}
-
-// One time initialization of sortition related constants
-func init() {
-	// The maximum lexical value that vrfOut can be, based on the VRFOutputSize.
-	// In other words, the denominator used to normalize vrfOut to a value in [0, 1).
-	var maxVrfOutFloatString string = fmt.Sprintf("0x%s", strings.Repeat("f", vrf.VRFOutputSize*2))
-
-	var base int
-	var err error
-	maxVrfOutFloat, base, err = big.ParseFloat(maxVrfOutFloatString, 0, vrfOutFloatPrecision, big.ToNearestEven)
-	if base != 16 || err != nil {
-		log.Fatal("failed to parse big float constant for sortition")
-	}
-
-	maxRandomInt = big.NewInt(^int64(0))
-	maxRandomInt.Abs(maxRandomInt)
 }

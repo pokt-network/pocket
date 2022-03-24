@@ -2,13 +2,13 @@ package consensus
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+	"log"
+	"unsafe"
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -130,17 +130,38 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	m.leaderElectionMod.SetBus(pocketBus)
 }
 
-func (m *consensusModule) HandleMessage(message *anypb.Any) error {
-	var consensusMessage types_consensus.ConsensusMessage
-	err := anypb.UnmarshalTo(message, &consensusMessage, proto.UnmarshalOptions{})
-	if err != nil {
-		return err
-	}
+// TODO(discuss): Low priority design: think of a way to make `hotstuff_*` files be a sub-package under consensus.
+// This is currently not possible because functions tied to the `consensusModule`
+// struct (implementing the ConsensusModule module), which spans multiple files.
+/*
+TODO(discuss): The reason we do not assign both the leader and the replica handlers
+to the leader (which should also act as a replica when it is a leader) is because it
+can create a weird inconsistent state (e.g. both the replica and leader try to restart
+the Pacemaker timeout). This requires additional "replica-like" logic in the leader
+handler which has both pros and cons:
+	Pros:
+		* The leader can short-circuit and optimize replica related logic
+		* Avoids additional code flowing through the P2P pipeline
+		* Allows for micro-optimizations
+	Cons:
+		* The leader's "replica related logic" requires an additional code path
+		* Code is less "generalizable" and therefore potentially more error prone
+*/
 
-	switch consensusMessage.Type {
+// TODO(olshansky): Should we just make these singletons or embed them directly in the consensusModule?
+type HotstuffMessageHandler interface {
+	HandleNewRoundMessage(*consensusModule, *types_consensus.HotstuffMessage)
+	HandlePrepareMessage(*consensusModule, *types_consensus.HotstuffMessage)
+	HandlePrecommitMessage(*consensusModule, *types_consensus.HotstuffMessage)
+	HandleCommitMessage(*consensusModule, *types_consensus.HotstuffMessage)
+	HandleDecideMessage(*consensusModule, *types_consensus.HotstuffMessage)
+}
+
+func (m *consensusModule) HandleMessage(message *anypb.Any) error {
+	switch message.MessageName() {
 	case HotstuffMessage:
 		var hotstuffMessage types_consensus.HotstuffMessage
-		err := anypb.UnmarshalTo(consensusMessage.Message, &hotstuffMessage, proto.UnmarshalOptions{})
+		err := anypb.UnmarshalTo(message, &hotstuffMessage, proto.UnmarshalOptions{})
 		if err != nil {
 			return err
 		}
@@ -148,8 +169,50 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	case UtilityMessage:
 		m.nodeLog("[WARN] UtilityMessage handling is not implemented by consensus yet...")
 	default:
-		return fmt.Errorf("unknown consensus message type: %v", consensusMessage.Type)
+		return fmt.Errorf("unknown consensus message type: %v", message.MessageName())
 	}
 
 	return nil
+}
+
+func (m *consensusModule) handleHotstuffMessage(msg *types_consensus.HotstuffMessage) {
+	// TODO(olshansky): How can we inject the nodeId of the source address here?
+	m.nodeLog(fmt.Sprintf("[DEBUG] (%s->%d) - Height: %d; Type: %s; Round: %d.", "???", m.NodeId, msg.Height, StepToString[msg.Step], msg.Round))
+
+	// Liveness & safety checks
+	if err := m.paceMaker.ValidateMessage(msg); err != nil {
+		// If a replica is not a leader for this round, but has already determined a leader,
+		// and continues to receive NewRound messages, we avoid logging the "message discard"
+		// because it creates unnecessary spam.
+		if !(m.LeaderId != nil && !m.isLeader() && msg.Step == NewRound) {
+			m.nodeLog(fmt.Sprintf("[WARN] Discarding hotstuff message because: %s", err))
+		}
+		return
+	}
+
+	// Need to execute leader election if there is no leader and we are in a new round.
+	if m.Step == NewRound && m.LeaderId == nil {
+		m.electNextLeader(msg)
+	}
+
+	if m.isReplica() {
+		replicaHandlers[msg.Step](m, msg)
+		return
+	}
+
+	// Note that the leader also acts as a replica, but this logic is implemented in the underlying code.
+	leaderHandlers[msg.Step](m, msg)
+}
+
+func (m *consensusModule) AggregateMessage(msg *types_consensus.HotstuffMessage) {
+	// TODO(olshansky): Add proper tests for this when we figure out where the mempool should live.
+	// NOTE: This is just a placeholder at the moment. It doesn't actually work because SizeOf returns
+	// the size of the map pointer, and does not recursively determine the size of all the underlying elements.
+	if m.consCfg.MaxMempoolBytes < uint64(unsafe.Sizeof(m.MessagePool)) {
+		m.nodeLogError("Discarding hotstuff message because the mempool is full", fmt.Errorf("mempool is full"))
+		return
+	}
+
+	// Only the leader needs to aggregate consensus related messages.
+	m.MessagePool[msg.Step] = append(m.MessagePool[msg.Step], msg)
 }

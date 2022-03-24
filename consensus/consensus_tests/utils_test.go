@@ -170,20 +170,14 @@ func triggerDebugMessage(t *testing.T, node *shared.Node, action types.DebugMess
 
 /*** P2P Helpers ***/
 
-func P2PBroadcast(t *testing.T, nodes IdToNodeMapping, message *types_consensus.ConsensusMessage) {
-	any, err := anypb.New(message)
-	require.NoError(t, err)
-
+func P2PBroadcast(_ *testing.T, nodes IdToNodeMapping, any *anypb.Any) {
 	e := &types.PocketEvent{Topic: types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, Data: any}
 	for _, node := range nodes {
 		node.GetBus().PublishEventToBus(e)
 	}
 }
 
-func P2PSend(t *testing.T, node *shared.Node, message *types_consensus.ConsensusMessage) {
-	any, err := anypb.New(message)
-	require.NoError(t, err)
-
+func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 	e := &types.PocketEvent{Topic: types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, Data: any}
 	node.GetBus().PublishEventToBus(e)
 }
@@ -195,42 +189,30 @@ func WaitForNetworkConsensusMessages(
 	hotstuffMsgType types_consensus.HotstuffMessageType,
 	numMessages int,
 	millis time.Duration,
-) (messages []*types_consensus.ConsensusMessage, err error) {
-	decoder := func(any *anypb.Any) *types_consensus.ConsensusMessage {
-		var consensusMessage types_consensus.ConsensusMessage
-		err := anypb.UnmarshalTo(any, &consensusMessage, proto.UnmarshalOptions{})
-		require.NoError(t, err)
+) (messages []*anypb.Any, err error) {
 
-		return &consensusMessage
-	}
-
-	includeFilter := func(m *types_consensus.ConsensusMessage) bool {
-		if m.Type != types_consensus.ConsensusMessageType_CONSENSUS_HOTSTUFF_MESSAGE {
-			return false
-		}
-
+	includeFilter := func(m *anypb.Any) bool {
 		var hotstuffMessage types_consensus.HotstuffMessage
-		err := anypb.UnmarshalTo(m.Message, &hotstuffMessage, proto.UnmarshalOptions{})
+		err := anypb.UnmarshalTo(m, &hotstuffMessage, proto.UnmarshalOptions{})
 		require.NoError(t, err)
 
 		return hotstuffMessage.Type == hotstuffMsgType && hotstuffMessage.Step == step
 	}
 
 	errorMessage := fmt.Sprintf("HotStuff step: %s, type: %s", types_consensus.HotstuffStep_name[int32(step)], types_consensus.HotstuffMessageType_name[int32(hotstuffMsgType)])
-	return waitForNetworkConsensusMessagesInternal(t, testChannel, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, decoder, includeFilter, errorMessage)
+	return waitForNetworkConsensusMessagesInternal(t, testChannel, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, includeFilter, errorMessage)
 }
 
 func waitForNetworkConsensusMessagesInternal( // TODO(olshansky): Translate this to use generics.
-	t *testing.T,
+	_ *testing.T,
 	testChannel modules.EventsChannel,
 	topic types.PocketTopic,
 	numMessages int,
 	millis time.Duration,
-	decoder func(*anypb.Any) *types_consensus.ConsensusMessage,
-	includeFilter func(m *types_consensus.ConsensusMessage) bool,
+	includeFilter func(m *anypb.Any) bool,
 	errorMessage string,
-) (messages []*types_consensus.ConsensusMessage, err error) {
-	messages = make([]*types_consensus.ConsensusMessage, 0)
+) (messages []*anypb.Any, err error) {
+	messages = make([]*anypb.Any, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*millis)
 	unused := make([]*types.PocketEvent, 0) // TODO: Move this into a pool rather than resending back to the eventbus.
 loop:
@@ -242,7 +224,7 @@ loop:
 				continue
 			}
 
-			message := decoder(testEvent.Data)
+			message := testEvent.Data
 			if message == nil || !includeFilter(message) {
 				unused = append(unused, &testEvent)
 				continue
@@ -265,6 +247,7 @@ loop:
 				return nil, fmt.Errorf("Missing %s messages; missing: %d, received: %d; (%s)", topic, numMessages, len(messages), errorMessage)
 			} else {
 				cancel()
+				fmt.Println("")
 				return nil, fmt.Errorf("Too many %s messages received; expected: %d, received: %d; (%s)", topic, numMessages+len(messages), len(messages), errorMessage)
 			}
 		}

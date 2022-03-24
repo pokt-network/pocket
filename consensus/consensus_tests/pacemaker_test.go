@@ -171,12 +171,8 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	}
 	anyMsg, err := anypb.New(prepareProposal)
 	require.NoError(t, err)
-	consensusMessage := &types_consensus.ConsensusMessage{
-		Type:    consensus.HotstuffMessage,
-		Message: anyMsg,
-	}
 
-	P2PBroadcast(t, pocketNodes, consensusMessage)
+	P2PBroadcast(t, pocketNodes, anyMsg)
 
 	// numNodes-1 because one of the messages is a self-proposal that is not passed through the network
 	_, err = WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Vote, numNodes-1, 2000)

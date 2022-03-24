@@ -21,7 +21,7 @@ type Pacemaker interface {
 	// for the height/round/step/etc, and interface with the module that way.
 	SetConsensusModule(module *consensusModule)
 
-	ShouldHandleMessage(message *types_consensus.HotstuffMessage) (bool, string)
+	ValidateMessage(message *types_consensus.HotstuffMessage) error
 	RestartTimer()
 	NewHeight()
 	InterruptRound()
@@ -87,16 +87,16 @@ func (m *paceMaker) SetConsensusModule(c *consensusModule) {
 	m.consensusMod = c
 }
 
-func (p *paceMaker) ShouldHandleMessage(m *types_consensus.HotstuffMessage) (bool, string) {
+func (p *paceMaker) ValidateMessage(m *types_consensus.HotstuffMessage) error {
 	// Consensus message is from the past
 	if m.Height < p.consensusMod.Height {
-		return false, fmt.Sprintf("Hotstuff message is behind the node's height. Current: %d; Message: %d ", p.consensusMod.Height, m.Height)
+		return fmt.Errorf("%s Current: %d; Message: %d ", types_consensus.ErrOlderMessage, p.consensusMod.Height, m.Height)
 	}
 
 	// Current node is out of sync
 	if m.Height > p.consensusMod.Height {
 		// TODO(design): Need to restart state sync
-		return false, fmt.Sprintf("Hotstuff message is ahead the node's height. Current: %d; Message: %d ", p.consensusMod.Height, m.Height)
+		return fmt.Errorf("%s. Current: %d; Message: %d ", types_consensus.ErrFutureMessage, p.consensusMod.Height, m.Height)
 	}
 
 	// Do not handle messages if it is a self proposal
@@ -104,23 +104,24 @@ func (p *paceMaker) ShouldHandleMessage(m *types_consensus.HotstuffMessage) (boo
 		// TODO(olshansky): This code branch is a result of the optimization in the leader
 		// handlers. Since the leader also acts as a replica but doesn't use the replica's
 		// handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
-		return false, "Hotstuff message is a self proposal"
+		return types_consensus.ErrSelfProposal
 	}
 
 	// Message is from the past
 	if m.Round < p.consensusMod.Round || (m.Round == p.consensusMod.Round && m.Step < p.consensusMod.Step) {
-		return false, fmt.Sprintf("Hotstuff message is of the right height but from the past. Current (step, round): (%s, %d); Message (step, round): (%s, %d).", StepToString[p.consensusMod.Step], p.consensusMod.Round, StepToString[m.Step], m.Round)
+		return fmt.Errorf("%s. Current (step, round): (%s, %d); Message (step, round): (%s, %d)", types_consensus.ErrOlderStepRound, StepToString[p.consensusMod.Step], p.consensusMod.Round, StepToString[m.Step], m.Round)
 	}
 
 	// Everything checks out!
 	if m.Height == p.consensusMod.Height && m.Step == p.consensusMod.Step && m.Round == p.consensusMod.Round {
-		return true, "Hotstuff message received is of the right height, step and round"
+		return nil
 	}
 
 	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
 	if m.Round > p.consensusMod.Round || (m.Round == p.consensusMod.Round && m.Step > p.consensusMod.Step) {
-		reason := fmt.Sprintf("Pacemaker catching up the node's (height, step, round) FROM (%d, %s, %d) TO (%d, %s, %d).", p.consensusMod.Height, StepToString[p.consensusMod.Step], p.consensusMod.Round, m.Height, StepToString[m.Step], m.Round)
-
+		p.consensusMod.nodeLog(fmt.Sprintf("%s FROM (%d, %s, %d) TO (%d, %s, %d)",
+			types_consensus.ErrPacemakerCatchup, p.consensusMod.Height, StepToString[p.consensusMod.Step],
+			p.consensusMod.Round, m.Height, StepToString[m.Step], m.Round))
 		p.consensusMod.Step = m.Step
 		p.consensusMod.Round = m.Round
 
@@ -130,10 +131,10 @@ func (p *paceMaker) ShouldHandleMessage(m *types_consensus.HotstuffMessage) (boo
 			p.consensusMod.electNextLeader(m)
 		}
 
-		return true, reason
+		return nil
 	}
 
-	return false, "UNHANDLED PACEMAKER CHECK"
+	return types_consensus.ErrUnexpectedPacemakerCase
 }
 
 func (p *paceMaker) RestartTimer() {
@@ -207,7 +208,7 @@ func (p *paceMaker) startNextView(qc *types_consensus.QuorumCertificate, forceNe
 	}
 
 	p.RestartTimer()
-	p.consensusMod.broadcastToNodes(hotstuffMessage, HotstuffMessage)
+	p.consensusMod.broadcastToNodes(hotstuffMessage)
 }
 
 // TODO(olshansky): Increase timeout using exponential backoff.
