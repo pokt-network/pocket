@@ -2,7 +2,6 @@ package utility
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
@@ -24,13 +23,12 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 		return types.ErrDuplicateTransaction()
 	}
 	store := u.Store()
-	if store.TransactionExists(txHash) { // TODO non ordered nonce requires non-pruned tx indexer
+	if store.TransactionExists(txHash) { // TODO non-ordered nonce requires non-pruned tx indexer
 		return types.ErrTransactionAlreadyCommitted()
 	}
 	cdc := u.Codec()
 	transaction := &typesUtil.Transaction{}
-	err := cdc.Unmarshal(transactionProtoBytes, transaction)
-	if err != nil {
+	if err := cdc.Unmarshal(transactionProtoBytes, transaction); err != nil {
 		return types.ErrProtoUnmarshal(err)
 	}
 	if err := transaction.ValidateBasic(); err != nil {
@@ -40,10 +38,11 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 	return u.Mempool.AddTransaction(transactionProtoBytes)
 }
 
-func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error) {
+func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) ([][]byte, error) {
 	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {
 		return nil, err
 	}
+	transactions := make([][]byte, 0)
 	totalSizeInBytes := 0
 	for u.Mempool.Size() != 0 {
 		txBytes, txSizeInBytes, err := u.Mempool.PopTransaction()
@@ -56,6 +55,7 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 		}
 		totalSizeInBytes += txSizeInBytes
 		if totalSizeInBytes >= maxTransactionBytes {
+			// Add back popped transaction to be applied in a future block
 			err := u.Mempool.AddTransaction(txBytes)
 			if err != nil {
 				return nil, err
@@ -64,7 +64,6 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 		}
 		err = u.ApplyTransaction(transaction)
 		if err != nil {
-			fmt.Println(err)
 			if err := u.RevertLastSavePoint(); err != nil {
 				return nil, err
 			}
@@ -75,11 +74,11 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 	if err := u.EndBlock(proposer); err != nil {
 		return nil, err
 	}
-	return
+	return transactions, nil
 }
 
-func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (msg typesUtil.Message, err types.Error) {
-	msg, err = tx.Message()
+func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil.Message, types.Error) {
+	msg, err := tx.Message()
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +93,7 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (msg types
 	address := pubKey.Address()
 	accountAmount, err := u.GetAccountAmount(address)
 	if err != nil {
-		return
+		return nil, types.ErrGetAccountAmount(err)
 	}
 	accountAmount.Sub(accountAmount, fee)
 	if accountAmount.Sign() == -1 {
