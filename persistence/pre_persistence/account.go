@@ -304,8 +304,9 @@ func (x *Account) ValidateBasic() types.Error {
 	if x.Address == nil {
 		return types.ErrEmptyAddress()
 	}
-	if len(x.Address) != crypto.AddressLen {
-		return types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen())
+	addrLen := len(x.Address)
+	if addrLen != crypto.AddressLen {
+		return types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen(addrLen))
 	}
 	amount := big.NewInt(0)
 	if _, ok := amount.SetString(x.Amount, 10); !ok {
@@ -318,8 +319,9 @@ func (x *Account) SetAddress(address crypto.Address) types.Error {
 	if x == nil {
 		return types.ErrEmptyAccount()
 	}
-	if len(x.Address) != crypto.AddressLen {
-		return types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen())
+	addrLen := len(address)
+	if addrLen != crypto.AddressLen {
+		return types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen(addrLen))
 	}
 	x.Address = address
 	return nil

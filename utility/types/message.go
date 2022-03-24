@@ -344,8 +344,9 @@ func ValidateAddress(address []byte) types.Error {
 	if address == nil {
 		return types.ErrEmptyAddress()
 	}
-	if len(address) != cryptoPocket.AddressLen {
-		return types.ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen())
+	addrLen := len(address)
+	if addrLen != cryptoPocket.AddressLen {
+		return types.ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
 	}
 	return nil
 }
@@ -354,8 +355,9 @@ func ValidateOutputAddress(address []byte) types.Error {
 	if address == nil {
 		return types.ErrNilOutputAddress()
 	}
-	if len(address) != cryptoPocket.AddressLen {
-		return types.ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen())
+	addrLen := len(address)
+	if addrLen != cryptoPocket.AddressLen {
+		return types.ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
 	}
 	return nil
 }
@@ -364,8 +366,9 @@ func ValidatePublicKey(publicKey []byte) types.Error {
 	if publicKey == nil {
 		return types.ErrEmptyPublicKey()
 	}
-	if len(publicKey) != cryptoPocket.PublicKeyLen {
-		return types.ErrInvalidPublicKeylen(cryptoPocket.ErrInvalidPublicKeyLen())
+	pubKeyLen := len(publicKey)
+	if pubKeyLen != cryptoPocket.PublicKeyLen {
+		return types.ErrInvalidPublicKeylen(cryptoPocket.ErrInvalidPublicKeyLen(pubKeyLen))
 	}
 	return nil
 }
@@ -374,8 +377,9 @@ func ValidateHash(hash []byte) types.Error {
 	if hash == nil {
 		return types.ErrEmptyHash()
 	}
-	if len(hash) != cryptoPocket.SHA3HashLen {
-		return types.ErrInvalidHashLength(cryptoPocket.ErrInvalidHashLen())
+	hashLen := len(hash)
+	if hashLen != cryptoPocket.SHA3HashLen {
+		return types.ErrInvalidHashLength(cryptoPocket.ErrInvalidHashLen(hashLen))
 	}
 	return nil
 }

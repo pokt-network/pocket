@@ -16,6 +16,7 @@ var (
 	defaultAmount        = types.BigIntToString(defaultAmountBig)
 	defaultFeeBig        = big.NewInt(10000)
 	defaultFee           = types.BigIntToString(defaultFeeBig)
+	defaultUnusedLength  = -1
 )
 
 func TestMessageChangeParameter_ValidateBasic(t *testing.T) {
@@ -154,7 +155,7 @@ func TestMessageEditStakeApp_ValidateBasic(t *testing.T) {
 	}
 	msgInvalidAddress := msg
 	msgInvalidAddress.Address = []byte("badAddr")
-	if err := msgInvalidAddress.ValidateBasic(); err.Code() != types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen()).Code() {
+	if err := msgInvalidAddress.ValidateBasic(); err.Code() != types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen(defaultUnusedLength)).Code() {
 		t.Fatal(err)
 	}
 	msgEmptyRelayChains := msg
@@ -197,7 +198,7 @@ func TestMessageEditStakeFisherman_ValidateBasic(t *testing.T) {
 	}
 	msgInvalidAddress := msg
 	msgInvalidAddress.Address = []byte("badAddr")
-	if err := msgInvalidAddress.ValidateBasic(); err.Code() != types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen()).Code() {
+	if err := msgInvalidAddress.ValidateBasic(); err.Code() != types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen(defaultUnusedLength)).Code() {
 		t.Fatal(err)
 	}
 	msgEmptyRelayChains := msg
@@ -245,7 +246,7 @@ func TestMessageEditStakeServiceNode_ValidateBasic(t *testing.T) {
 	}
 	msgInvalidAddress := msg
 	msgInvalidAddress.Address = []byte("badAddr")
-	if err := msgInvalidAddress.ValidateBasic(); err.Code() != types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen()).Code() {
+	if err := msgInvalidAddress.ValidateBasic(); err.Code() != types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen(defaultUnusedLength)).Code() {
 		t.Fatal(err)
 	}
 	msgEmptyRelayChains := msg
@@ -292,7 +293,7 @@ func TestMessageEditStakeValidator_ValidateBasic(t *testing.T) {
 	}
 	msgInvalidAddress := msg
 	msgInvalidAddress.Address = []byte("badAddr")
-	if err := msgInvalidAddress.ValidateBasic(); err.Code() != types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen()).Code() {
+	if err := msgInvalidAddress.ValidateBasic(); err.Code() != types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen(defaultUnusedLength)).Code() {
 		t.Fatal(err)
 	}
 	msgEmptyServiceUrl := msg
