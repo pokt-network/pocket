@@ -182,7 +182,7 @@ func (u *UtilityContext) HandleMessage(msg typesUtil.Message) types.Error {
 	}
 }
 
-func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, types.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageDoubleSign:
 		return u.GetMessageDoubleSignSignerCandidates(x)

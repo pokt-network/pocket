@@ -360,54 +360,59 @@ func (u *UtilityContext) CalculateAppUnstakingHeight() (unstakingHeight int64, e
 	return
 }
 
-func (u *UtilityContext) GetMessageStakeAppSignerCandidates(msg *utilTypes.MessageStakeApp) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageStakeAppSignerCandidates(msg *utilTypes.MessageStakeApp) ([][]byte, types.Error) {
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, msg.OutputAddress)
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(er)
 	}
 	candidates = append(candidates, pk.Address())
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageEditStakeAppSignerCandidates(msg *utilTypes.MessageEditStakeApp) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageEditStakeAppSignerCandidates(msg *utilTypes.MessageEditStakeApp) ([][]byte, types.Error) {
 	output, err := u.GetAppOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnstakeAppSignerCandidates(msg *utilTypes.MessageUnstakeApp) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageUnstakeAppSignerCandidates(msg *utilTypes.MessageUnstakeApp) ([][]byte, types.Error) {
 	output, err := u.GetAppOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnpauseAppSignerCandidates(msg *utilTypes.MessageUnpauseApp) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageUnpauseAppSignerCandidates(msg *utilTypes.MessageUnpauseApp) ([][]byte, types.Error) {
 	output, err := u.GetAppOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessagePauseAppSignerCandidates(msg *utilTypes.MessagePauseApp) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessagePauseAppSignerCandidates(msg *utilTypes.MessagePauseApp) ([][]byte, types.Error) {
 	output, err := u.GetAppOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
 func (u *UtilityContext) GetAppOutputAddress(operator []byte) (output []byte, err types.Error) {

@@ -36,7 +36,7 @@ func (u *UtilityContext) HandleMessageSend(message *utilTypes.MessageSend) types
 	return nil
 }
 
-func (u *UtilityContext) GetMessageSendSignerCandidates(msg *utilTypes.MessageSend) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageSendSignerCandidates(msg *utilTypes.MessageSend) ([][]byte, types.Error) {
 	// only the from address is a proper signer candidate
 	return [][]byte{msg.FromAddress}, nil
 }
