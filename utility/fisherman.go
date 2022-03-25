@@ -7,12 +7,10 @@ import (
 )
 
 func (u *UtilityContext) HandleMessageTestScore(message *typesUtil.MessageTestScore) types.Error {
-	// TODO
 	panic("TODO")
 }
 
 func (u *UtilityContext) HandleMessageProveTestScore(message *typesUtil.MessageProveTestScore) types.Error {
-	// TODO
 	panic("TODO")
 }
 
@@ -137,18 +135,18 @@ func (u *UtilityContext) HandleMessageUnstakeFisherman(message *typesUtil.Messag
 }
 
 func (u *UtilityContext) UnstakeFishermenThatAreReady() types.Error {
-	FishermansReadyToUnstake, err := u.GetFishermenReadyToUnstake()
+	fishermansReadyToUnstake, err := u.GetFishermenReadyToUnstake()
 	if err != nil {
 		return err
 	}
-	for _, Fisherman := range FishermansReadyToUnstake {
-		if err := u.SubPoolAmount(typesUtil.FishermanStakePoolName, Fisherman.GetStakeAmount()); err != nil {
+	for _, fisherman := range fishermansReadyToUnstake {
+		if err := u.SubPoolAmount(typesUtil.FishermanStakePoolName, fisherman.GetStakeAmount()); err != nil {
 			return err
 		}
-		if err := u.AddAccountAmountString(Fisherman.GetOutputAddress(), Fisherman.GetStakeAmount()); err != nil {
+		if err := u.AddAccountAmountString(fisherman.GetOutputAddress(), fisherman.GetStakeAmount()); err != nil {
 			return err
 		}
-		if err := u.DeleteFisherman(Fisherman.GetAddress()); err != nil {
+		if err := u.DeleteFisherman(fisherman.GetAddress()); err != nil {
 			return err
 		}
 	}
@@ -242,7 +240,7 @@ func (u *UtilityContext) HandleMessageUnpauseFisherman(message *typesUtil.Messag
 	return nil
 }
 
-func (u *UtilityContext) GetFishermanExists(address []byte) (exists bool, err types.Error) {
+func (u *UtilityContext) GetFishermanExists(address []byte) (bool, types.Error) {
 	store := u.Store()
 	exists, er := store.GetFishermanExists(address)
 	if er != nil {
@@ -277,7 +275,7 @@ func (u *UtilityContext) DeleteFisherman(address []byte) types.Error {
 	return nil
 }
 
-func (u *UtilityContext) GetFishermenReadyToUnstake() (Fishermans []*types.UnstakingActor, err types.Error) {
+func (u *UtilityContext) GetFishermenReadyToUnstake() ([]*types.UnstakingActor, types.Error) {
 	store := u.Store()
 	latestHeight, err := u.GetLatestHeight()
 	if err != nil {
@@ -303,7 +301,7 @@ func (u *UtilityContext) UnstakeFishermenPausedBefore(pausedBeforeHeight int64) 
 	return nil
 }
 
-func (u *UtilityContext) GetFishermanStatus(address []byte) (status int, err types.Error) {
+func (u *UtilityContext) GetFishermanStatus(address []byte) (int, types.Error) {
 	store := u.Store()
 	status, er := store.GetFishermanStatus(address)
 	if er != nil {
@@ -320,13 +318,13 @@ func (u *UtilityContext) SetFishermanUnstakingHeightAndStatus(address []byte, un
 	return nil
 }
 
-func (u *UtilityContext) GetFishermanPauseHeightIfExists(address []byte) (FishermanPauseHeight int64, err types.Error) {
+func (u *UtilityContext) GetFishermanPauseHeightIfExists(address []byte) (int64, types.Error) {
 	store := u.Store()
-	FishermanPauseHeight, er := store.GetFishermanPauseHeightIfExists(address)
+	fishermanPauseHeight, er := store.GetFishermanPauseHeightIfExists(address)
 	if er != nil {
 		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
 	}
-	return FishermanPauseHeight, nil
+	return fishermanPauseHeight, nil
 }
 
 func (u *UtilityContext) SetFishermanPauseHeight(address []byte, height int64) types.Error {
@@ -337,79 +335,85 @@ func (u *UtilityContext) SetFishermanPauseHeight(address []byte, height int64) t
 	return nil
 }
 
-func (u *UtilityContext) CalculateFishermanUnstakingHeight() (unstakingHeight int64, err types.Error) {
+func (u *UtilityContext) CalculateFishermanUnstakingHeight() (int64, types.Error) {
 	unstakingBlocks, err := u.GetFishermanUnstakingBlocks()
 	if err != nil {
 		return typesUtil.ZeroInt, err
 	}
-	unstakingHeight, err = u.CalculateUnstakingHeight(unstakingBlocks)
+	unstakingHeight, err := u.CalculateUnstakingHeight(unstakingBlocks)
 	if err != nil {
 		return typesUtil.ZeroInt, err
 	}
-	return
+	return unstakingHeight, nil
 }
 
-func (u *UtilityContext) GetMessageStakeFishermanSignerCandidates(msg *typesUtil.MessageStakeFisherman) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageStakeFishermanSignerCandidates(msg *typesUtil.MessageStakeFisherman) ([][]byte, types.Error) {
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, msg.OutputAddress)
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(er)
 	}
 	candidates = append(candidates, pk.Address())
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageEditStakeFishermanSignerCandidates(msg *typesUtil.MessageEditStakeFisherman) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageEditStakeFishermanSignerCandidates(msg *typesUtil.MessageEditStakeFisherman) ([][]byte, types.Error) {
 	output, err := u.GetFishermanOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnstakeFishermanSignerCandidates(msg *typesUtil.MessageUnstakeFisherman) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageUnstakeFishermanSignerCandidates(msg *typesUtil.MessageUnstakeFisherman) ([][]byte, types.Error) {
 	output, err := u.GetFishermanOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnpauseFishermanSignerCandidates(msg *typesUtil.MessageUnpauseFisherman) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageUnpauseFishermanSignerCandidates(msg *typesUtil.MessageUnpauseFisherman) ([][]byte, types.Error) {
 	output, err := u.GetFishermanOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessagePauseFishermanSignerCandidates(msg *typesUtil.MessagePauseFisherman) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessagePauseFishermanSignerCandidates(msg *typesUtil.MessagePauseFisherman) ([][]byte, types.Error) {
 	output, err := u.GetFishermanOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageFishermanPauseServiceNodeSignerCandidates(msg *typesUtil.MessageFishermanPauseServiceNode) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageFishermanPauseServiceNodeSignerCandidates(msg *typesUtil.MessageFishermanPauseServiceNode) ([][]byte, types.Error) {
 	output, err := u.GetFishermanOutputAddress(msg.Reporter)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Reporter)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetFishermanOutputAddress(operator []byte) (output []byte, err types.Error) {
+func (u *UtilityContext) GetFishermanOutputAddress(operator []byte) ([]byte, types.Error) {
 	store := u.Store()
 	output, er := store.GetFishermanOutputAddress(operator)
 	if er != nil {
