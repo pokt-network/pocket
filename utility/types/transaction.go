@@ -3,9 +3,10 @@ package types
 import (
 	"bytes"
 	"encoding/hex"
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
-	"math/big"
 )
 
 func TransactionFromBytes(transaction []byte) (*Transaction, types.Error) {
@@ -16,43 +17,43 @@ func TransactionFromBytes(transaction []byte) (*Transaction, types.Error) {
 	return tx, nil
 }
 
-func (x *Transaction) ValidateBasic() types.Error {
+func (tx *Transaction) ValidateBasic() types.Error {
 	fee := big.Int{}
-	if _, ok := fee.SetString(x.Fee, 10); x.Fee == "" || !ok {
-		return types.ErrNewFeeFromString(x.Fee)
+	if _, ok := fee.SetString(tx.Fee, 10); tx.Fee == "" || !ok {
+		return types.ErrNewFeeFromString(tx.Fee)
 	}
-	if x.Nonce == "" {
+	if tx.Nonce == "" {
 		return types.ErrEmptyNonce()
 	}
-	if _, err := UtilityCodec().FromAny(x.Msg); err != nil {
+	if _, err := UtilityCodec().FromAny(tx.Msg); err != nil {
 		return types.ErrProtoFromAny(err)
 	}
-	if x.Signature == nil || x.Signature.Signature == nil {
+	if tx.Signature == nil || tx.Signature.Signature == nil {
 		return types.ErrEmptySignature()
 	}
-	if x.Signature.PublicKey == nil {
+	if tx.Signature.PublicKey == nil {
 		return types.ErrEmptyPublicKey()
 	}
-	publicKey, err := crypto.NewPublicKeyFromBytes(x.Signature.PublicKey)
+	publicKey, err := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
 	if err != nil {
 		return types.ErrNewPublicKeyFromBytes(err)
 	}
-	signBytes, err := x.SignBytes()
+	signBytes, err := tx.SignBytes()
 	if err != nil {
 		return types.ErrProtoMarshal(err)
 	}
-	if ok := publicKey.Verify(signBytes, x.Signature.Signature); !ok {
+	if ok := publicKey.Verify(signBytes, tx.Signature.Signature); !ok {
 		return types.ErrSignatureVerificationFailed()
 	}
-	if _, err := x.Message(); err != nil {
+	if _, err := tx.Message(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (x *Transaction) Message() (Message, types.Error) {
+func (tx *Transaction) Message() (Message, types.Error) {
 	codec := UtilityCodec()
-	msg, er := codec.FromAny(x.Msg)
+	msg, er := codec.FromAny(tx.Msg)
 	if er != nil {
 		return nil, er
 	}
@@ -63,9 +64,9 @@ func (x *Transaction) Message() (Message, types.Error) {
 	return message, nil
 }
 
-func (x *Transaction) Sign(privateKey crypto.PrivateKey) types.Error {
+func (tx *Transaction) Sign(privateKey crypto.PrivateKey) types.Error {
 	publicKey := privateKey.PublicKey()
-	bz, err := x.SignBytes()
+	bz, err := tx.SignBytes()
 	if err != nil {
 		return err
 	}
@@ -73,23 +74,24 @@ func (x *Transaction) Sign(privateKey crypto.PrivateKey) types.Error {
 	if er != nil {
 		return types.ErrTransactionSign(er)
 	}
-	x.Signature = &Signature{
+	tx.Signature = &Signature{
 		PublicKey: publicKey.Bytes(),
 		Signature: signature,
 	}
 	return nil
 }
 
-func (x *Transaction) Hash() (string, types.Error) {
-	b, err := x.Bytes()
+func (tx *Transaction) Hash() (string, types.Error) {
+	b, err := tx.Bytes()
 	if err != nil {
 		return "", types.ErrProtoMarshal(err)
 	}
 	return TransactionHash(b), nil
 }
 
-func (x *Transaction) SignBytes() ([]byte, types.Error) {
-	transaction := *x
+func (tx *Transaction) SignBytes() ([]byte, types.Error) {
+	// transaction := proto.Clone(tx).(*Transaction)
+	transaction := *tx
 	transaction.Signature = nil
 	bz, err := UtilityCodec().Marshal(&transaction)
 	if err != nil {
@@ -98,17 +100,17 @@ func (x *Transaction) SignBytes() ([]byte, types.Error) {
 	return bz, nil
 }
 
-func (x *Transaction) Bytes() ([]byte, types.Error) {
-	bz, err := UtilityCodec().Marshal(x)
+func (tx *Transaction) Bytes() ([]byte, types.Error) {
+	bz, err := UtilityCodec().Marshal(tx)
 	if err != nil {
 		return nil, types.ErrProtoMarshal(err)
 	}
 	return bz, nil
 }
 
-func (x *Transaction) Equals(tx *Transaction) bool {
-	b, _ := tx.Bytes()
-	b1, _ := x.Bytes()
+func (tx *Transaction) Equals(tx2 *Transaction) bool {
+	b, _ := tx2.Bytes()
+	b1, _ := tx2.Bytes()
 	return bytes.Equal(b, b1)
 }
 
