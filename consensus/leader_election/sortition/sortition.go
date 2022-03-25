@@ -11,10 +11,11 @@ Algorand's own implementation of the algorithm [2].
 import (
 	crand "crypto/rand"
 	"fmt"
-	"golang.org/x/exp/rand"
 	"log"
 	"math/big"
 	"strings"
+
+	"golang.org/x/exp/rand"
 
 	"github.com/pokt-network/pocket/consensus/leader_election/vrf"
 
@@ -121,7 +122,7 @@ func vrfOutProb(vrfOut vrf.VRFOutput) float64 {
 	h.SetInt(t)
 
 	ratio := big.Float{}
-	fratio, _ := ratio.Quo(&h, maxVrfOutFloat).Float64()
+	prob, _ := ratio.Quo(&h, maxVrfOutFloat).Float64()
 
-	return fratio
+	return prob
 }

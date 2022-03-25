@@ -2,13 +2,13 @@ package consensus
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	"log"
-	"unsafe"
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -202,17 +202,4 @@ func (m *consensusModule) handleHotstuffMessage(msg *types_consensus.HotstuffMes
 
 	// Note that the leader also acts as a replica, but this logic is implemented in the underlying code.
 	leaderHandlers[msg.Step](m, msg)
-}
-
-func (m *consensusModule) AggregateMessage(msg *types_consensus.HotstuffMessage) {
-	// TODO(olshansky): Add proper tests for this when we figure out where the mempool should live.
-	// NOTE: This is just a placeholder at the moment. It doesn't actually work because SizeOf returns
-	// the size of the map pointer, and does not recursively determine the size of all the underlying elements.
-	if m.consCfg.MaxMempoolBytes < uint64(unsafe.Sizeof(m.MessagePool)) {
-		m.nodeLogError("Discarding hotstuff message because the mempool is full", fmt.Errorf("mempool is full"))
-		return
-	}
-
-	// Only the leader needs to aggregate consensus related messages.
-	m.MessagePool[msg.Step] = append(m.MessagePool[msg.Step], msg)
 }

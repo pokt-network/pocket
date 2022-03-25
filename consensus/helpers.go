@@ -3,8 +3,9 @@ package consensus
 import (
 	"encoding/base64"
 	"fmt"
-	"google.golang.org/protobuf/proto"
 	"log"
+
+	"google.golang.org/protobuf/proto"
 
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/crypto"

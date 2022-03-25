@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"fmt"
+
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/types"
 )
@@ -22,8 +23,8 @@ var (
 /*** NewRound Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
-	if err := handler.AnteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because", err)
+	if err := handler.anteHandle(m, msg); err != nil {
+		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
@@ -34,8 +35,8 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 /*** Prepare Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
-	if err := handler.AnteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because", err)
+	if err := handler.anteHandle(m, msg); err != nil {
+		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
@@ -65,8 +66,8 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 /*** PreCommit Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
-	if err := handler.AnteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because", err)
+	if err := handler.anteHandle(m, msg); err != nil {
+		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
@@ -91,8 +92,8 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 /*** Commit Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
-	if err := handler.AnteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because", err)
+	if err := handler.anteHandle(m, msg); err != nil {
+		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
@@ -117,8 +118,8 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 /*** Decide Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
-	if err := handler.AnteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because", err)
+	if err := handler.anteHandle(m, msg); err != nil {
+		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
@@ -137,8 +138,8 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 	m.paceMaker.NewHeight()
 }
 
-// AnteHandle is the handler called on every replica message before specific handler
-func (handler *HotstuffReplicaMessageHandler) AnteHandle(m *consensusModule, msg *types_consensus.HotstuffMessage) error {
+// anteHandle is the handler called on every replica message before specific handler
+func (handler *HotstuffReplicaMessageHandler) anteHandle(m *consensusModule, msg *types_consensus.HotstuffMessage) error {
 	return nil
 }
 

@@ -2,10 +2,11 @@ package consensus
 
 import (
 	"fmt"
+	"log"
+
 	types_consensus "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
-	"log"
 )
 
 func CreateProposeMessage(
@@ -67,11 +68,6 @@ func CreateVoteMessage(
 	}
 
 	return msg, nil
-}
-
-// TODO(olshansky): Check basic message metadata for validity (hash, size, etc)
-func (m *consensusModule) validateBasicMessage(message *types_consensus.HotstuffMessage) error {
-	return nil
 }
 
 // Returns a "partial" signature of the hotstuff message from one of the validators
