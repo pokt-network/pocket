@@ -8,8 +8,8 @@ const (
 
 type RelayChain string
 
+// TODO: Consider adding a governance parameter for a list of valid relay chains
 func (rc *RelayChain) Validate() types.Error {
-	// TODO: Consider validating against a static list (gov parameter?) of supported relay chains
 	if rc == nil || *rc == "" {
 		return types.ErrEmptyRelayChain()
 	}

@@ -388,8 +388,8 @@ func ValidateRelayChains(chains []string) types.Error {
 	if chains == nil {
 		return types.ErrEmptyRelayChains()
 	}
-	for i := 0; i < len(chains); i++ {
-		relayChain := RelayChain(chains[i])
+	for _, chain := range chains {
+		relayChain := RelayChain(chain)
 		if err := relayChain.Validate(); err != nil {
 			return err
 		}
@@ -407,16 +407,16 @@ func ValidateAmount(amount string) types.Error {
 	return nil
 }
 
-func ValidateServiceUrl(u string) types.Error {
-	u = strings.ToLower(u)
-	_, err := url.ParseRequestURI(u)
+func ValidateServiceUrl(uri string) types.Error {
+	uri = strings.ToLower(uri)
+	_, err := url.ParseRequestURI(uri)
 	if err != nil {
 		return types.ErrInvalidServiceUrl(err.Error())
 	}
-	if u[:8] != HttpsPrefix && u[:7] != HttpPrefix {
+	if !(uri[:8] == HttpsPrefix || uri[:7] == HttpPrefix) {
 		return types.ErrInvalidServiceUrl(InvalidURLPrefix)
 	}
-	temp := strings.Split(u, Colon)
+	temp := strings.Split(uri, Colon)
 	if len(temp) != 3 {
 		return types.ErrInvalidServiceUrl(PortRequired)
 	}
@@ -424,10 +424,10 @@ func ValidateServiceUrl(u string) types.Error {
 	if err != nil {
 		return types.ErrInvalidServiceUrl(NonNumberPort)
 	}
-	if port > 65535 || port < 0 {
+	if port > MaxPort || port < 0 {
 		return types.ErrInvalidServiceUrl(PortOutOfRange)
 	}
-	if !strings.Contains(u, Period) {
+	if !strings.Contains(uri, Period) {
 		return types.ErrInvalidServiceUrl(NoPeriod)
 	}
 	return nil

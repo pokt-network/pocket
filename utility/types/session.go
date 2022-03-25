@@ -12,6 +12,7 @@ const (
 	NonNumberPort    = "invalid port, cant convert to integer"
 	PortOutOfRange   = "invalid port, out of valid port range"
 	NoPeriod         = "must contain one '.'"
+	MaxPort          = 65535
 )
 
 type SessionNode struct {
