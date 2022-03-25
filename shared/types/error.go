@@ -74,7 +74,8 @@ const ( // Explain: using these numbers as it fits nicely with the other error c
 	CodeGetAllParamsError       Code = 109
 	CodeInsufficientAmountError Code = 41
 	CodeNegativeAmountError     Code = 118
-	EmptyTransactionError            = "the transaction is empty"
+
+	EmptyTransactionError = "the transaction is empty"
 
 	StringToBigIntError = "an error occurred converting the string primitive to big.Int, the conversion was unsuccessful with base 10"
 

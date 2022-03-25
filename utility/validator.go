@@ -544,7 +544,7 @@ func (u *UtilityContext) GetMessageDoubleSignSignerCandidates(msg *utilTypes.Mes
 	return [][]byte{msg.ReporterAddress}, nil
 }
 
-func (u *UtilityContext) GetValidatorOutputAddress(operator []byte) (output []byte, err types.Error) {
+func (u *UtilityContext) GetValidatorOutputAddress(operator []byte) ([]byte, types.Error) {
 	store := u.Store()
 	output, er := store.GetValidatorOutputAddress(operator)
 	if er != nil {

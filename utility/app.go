@@ -253,7 +253,7 @@ func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.
 	return types.BigIntToString(result), nil
 }
 
-func (u *UtilityContext) GetAppExists(address []byte) (exists bool, err types.Error) {
+func (u *UtilityContext) GetAppExists(address []byte) (bool, types.Error) {
 	store := u.Store()
 	exists, er := store.GetAppExists(address)
 	if er != nil {
@@ -288,7 +288,7 @@ func (u *UtilityContext) DeleteApplication(address []byte) types.Error {
 	return nil
 }
 
-func (u *UtilityContext) GetAppsReadyToUnstake() (apps []*types.UnstakingActor, err types.Error) {
+func (u *UtilityContext) GetAppsReadyToUnstake() ([]*types.UnstakingActor, types.Error) {
 	store := u.Store()
 	latestHeight, err := u.GetLatestHeight()
 	if err != nil {
@@ -314,7 +314,7 @@ func (u *UtilityContext) UnstakeAppsPausedBefore(pausedBeforeHeight int64) types
 	return nil
 }
 
-func (u *UtilityContext) GetAppStatus(address []byte) (status int, err types.Error) {
+func (u *UtilityContext) GetAppStatus(address []byte) (int, types.Error) {
 	store := u.Store()
 	status, er := store.GetAppStatus(address)
 	if er != nil {
@@ -331,7 +331,7 @@ func (u *UtilityContext) SetAppUnstakingHeightAndStatus(address []byte, unstakin
 	return nil
 }
 
-func (u *UtilityContext) GetAppPauseHeightIfExists(address []byte) (appPauseHeight int64, err types.Error) {
+func (u *UtilityContext) GetAppPauseHeightIfExists(address []byte) (int64, types.Error) {
 	store := u.Store()
 	appPauseHeight, er := store.GetAppPauseHeightIfExists(address)
 	if er != nil {
@@ -348,16 +348,16 @@ func (u *UtilityContext) SetAppPauseHeight(address []byte, height int64) types.E
 	return nil
 }
 
-func (u *UtilityContext) CalculateAppUnstakingHeight() (unstakingHeight int64, err types.Error) {
+func (u *UtilityContext) CalculateAppUnstakingHeight() (int64, types.Error) {
 	unstakingBlocks, err := u.GetAppUnstakingBlocks()
 	if err != nil {
 		return utilTypes.ZeroInt, err
 	}
-	unstakingHeight, err = u.CalculateUnstakingHeight(unstakingBlocks)
+	unstakingHeight, err := u.CalculateUnstakingHeight(unstakingBlocks)
 	if err != nil {
 		return utilTypes.ZeroInt, err
 	}
-	return
+	return unstakingHeight, nil
 }
 
 func (u *UtilityContext) GetMessageStakeAppSignerCandidates(msg *utilTypes.MessageStakeApp) ([][]byte, types.Error) {
@@ -415,7 +415,7 @@ func (u *UtilityContext) GetMessagePauseAppSignerCandidates(msg *utilTypes.Messa
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetAppOutputAddress(operator []byte) (output []byte, err types.Error) {
+func (u *UtilityContext) GetAppOutputAddress(operator []byte) ([]byte, types.Error) {
 	store := u.Store()
 	output, er := store.GetAppOutputAddress(operator)
 	if er != nil {

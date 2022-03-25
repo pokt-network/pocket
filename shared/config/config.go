@@ -13,7 +13,7 @@ type Config struct {
 	RootDir    string `json:"root_dir"`
 	PrivateKey string `json:"private_key"` // TODO(olshansky): make this a proper key type.
 	Genesis    string `json:"genesis"`
-	IsTesting  bool   `json:"testing"`
+	IsTesting  bool   `json:"testing"` // TODO: consider renaming this to either `DebugMode` or `DevMode`.
 
 	PRE2P       *PRE2PConfig       `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
 	P2P         *P2PConfig         `json:"p2p"`

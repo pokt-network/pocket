@@ -37,23 +37,23 @@ func Create(_ *config.Config) (modules.UtilityModule, error) {
 	}, nil
 }
 
-func (p *UtilityModule) Start() error {
+func (u *UtilityModule) Start() error {
 	return nil
 }
 
-func (p *UtilityModule) Stop() error {
+func (u *UtilityModule) Stop() error {
 	return nil
 }
 
-func (m *UtilityModule) SetBus(pocketBus modules.Bus) {
-	m.bus = pocketBus
+func (u *UtilityModule) SetBus(pocketBus modules.Bus) {
+	u.bus = pocketBus
 }
 
-func (m *UtilityModule) GetBus() modules.Bus {
-	if m.bus == nil {
+func (u *UtilityModule) GetBus() modules.Bus {
+	if u.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
-	return m.bus
+	return u.bus
 }
 
 func (u *UtilityModule) NewContext(height int64) (modules.UtilityContext, error) {

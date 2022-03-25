@@ -387,7 +387,7 @@ func (u *UtilityContext) GetMessagePauseServiceNodeSignerCandidates(msg *utilTyp
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetServiceNodeOutputAddress(operator []byte) (output []byte, err types.Error) {
+func (u *UtilityContext) GetServiceNodeOutputAddress(operator []byte) ([]byte, types.Error) {
 	store := u.Store()
 	output, er := store.GetServiceNodeOutputAddress(operator)
 	if er != nil {
