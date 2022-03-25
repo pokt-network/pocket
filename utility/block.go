@@ -5,7 +5,7 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *UtilityContext) ApplyBlock(latestHeight int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error) {
+func (u *UtilityContext) ApplyBlock(latestHeight int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
 	u.LatestHeight = latestHeight
 	// begin block lifecycle phase
 	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {
@@ -23,10 +23,10 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposer []byte, transac
 		if err := u.ApplyTransaction(tx); err != nil {
 			return nil, err
 		}
-		// if found, remove transaction from mempool
-		//if err := u.Mempool.DeleteTransaction(tx); err != nil {
-		//	return nil, err
-		//}
+		// TODO: if found, remove transaction from mempool
+		// if err := u.Mempool.DeleteTransaction(tx); err != nil {
+		// 	return nil, err
+		// }
 	}
 	// end block lifecycle phase
 	if err := u.EndBlock(proposer); err != nil {
@@ -88,7 +88,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() types.Error {
 	return nil
 }
 
-func (u *UtilityContext) GetAppHash() (appHash []byte, err types.Error) {
+func (u *UtilityContext) GetAppHash() ([]byte, types.Error) {
 	appHash, er := u.Context.AppHash()
 	if er != nil {
 		return nil, types.ErrAppHash(er)
@@ -96,7 +96,7 @@ func (u *UtilityContext) GetAppHash() (appHash []byte, err types.Error) {
 	return appHash, nil
 }
 
-func (u *UtilityContext) GetBlockHash(height int64) (blockHash []byte, err types.Error) {
+func (u *UtilityContext) GetBlockHash(height int64) ([]byte, types.Error) {
 	store := u.Store()
 	hash, er := store.GetBlockHash(int64(height))
 	if er != nil {
