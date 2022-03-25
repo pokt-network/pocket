@@ -18,7 +18,7 @@ var ( // TODO these are needed placeholders to pass validation checks. Until we 
 )
 
 // NewGenesisState IMPORTANT NOTE: Not using numOfValidators param, as Validators are now read from the test_state json file
-func NewGenesisState(config *config.Config, numOfValidators, numOfApplications, numOfFisherman, numOfServiceNodes int) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
+func NewGenesisState(cfg *config.Config, numOfValidators, numOfApplications, numOfFisherman, numOfServiceNodes int) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
 	// create the genesis state object
 	state = &GenesisState{}
 	// use the `integration test state` to populate parts of the genesis state
@@ -27,7 +27,7 @@ func NewGenesisState(config *config.Config, numOfValidators, numOfApplications, 
 	vm := testingState.ValidatorMap
 	// generate `mocked` keys for each actor
 	// specifically, use the test state json file to create the validator keys
-	if config.IsTesting {
+	if cfg.IsTesting {
 		validatorKeys = make([]crypto.PrivateKey, numOfValidators)
 	} else {
 		validatorKeys = make([]crypto.PrivateKey, len(vm))
@@ -39,7 +39,7 @@ func NewGenesisState(config *config.Config, numOfValidators, numOfApplications, 
 	// create state objects for each key type
 	for i := range validatorKeys {
 		var pk crypto.PrivateKey
-		if config.IsTesting {
+		if cfg.IsTesting {
 			pk, _ = crypto.GeneratePrivateKey()
 		} else {
 			n := vm[NodeId(i+1)] // TODO will have to fix conflict when NodeId is deprecated
