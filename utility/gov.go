@@ -1180,11 +1180,11 @@ func (u *UtilityContext) GetAppMaxPausedBlocks() (maxPausedBlocks int, err types
 
 func (u *UtilityContext) GetServiceNodeMinimumStake() (*big.Int, types.Error) {
 	store := u.Store()
-	ServiceNodeMininimumStake, err := store.GetParamServiceNodeMinimumStake()
+	serviceNodeMininimumStake, err := store.GetParamServiceNodeMinimumStake()
 	if err != nil {
 		return nil, types.ErrGetParam(utilTypes.ServiceNodeMinimumStakeParamName, err)
 	}
-	return types.StringToBigInt(ServiceNodeMininimumStake)
+	return types.StringToBigInt(serviceNodeMininimumStake)
 }
 
 func (u *UtilityContext) GetServiceNodeMaxChains() (int, types.Error) {
@@ -1225,11 +1225,11 @@ func (u *UtilityContext) GetServiceNodeMaxPausedBlocks() (maxPausedBlocks int, e
 
 func (u *UtilityContext) GetValidatorMinimumStake() (*big.Int, types.Error) {
 	store := u.Store()
-	ValidatorMininimumStake, err := store.GetParamValidatorMinimumStake()
+	validatorMininimumStake, err := store.GetParamValidatorMinimumStake()
 	if err != nil {
 		return nil, types.ErrGetParam(utilTypes.ValidatorMinimumStakeParamName, err)
 	}
-	return types.StringToBigInt(ValidatorMininimumStake)
+	return types.StringToBigInt(validatorMininimumStake)
 }
 
 func (u *UtilityContext) GetValidatorUnstakingBlocks() (int64, types.Error) {
