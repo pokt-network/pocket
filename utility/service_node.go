@@ -36,7 +36,7 @@ func (u *UtilityContext) HandleMessageStakeServiceNode(message *utilTypes.Messag
 	if err != nil {
 		return err
 	}
-	// validate chains
+	// validate chain count
 	if len(message.Chains) > maxChains {
 		return types.ErrMaxChains(maxChains)
 	}
@@ -127,11 +127,11 @@ func (u *UtilityContext) HandleMessageUnstakeServiceNode(message *utilTypes.Mess
 }
 
 func (u *UtilityContext) UnstakeServiceNodesThatAreReady() types.Error {
-	ServiceNodesReadyToUnstake, err := u.GetServiceNodesReadyToUnstake()
+	serviceNodesReadyToUnstake, err := u.GetServiceNodesReadyToUnstake()
 	if err != nil {
 		return err
 	}
-	for _, serviceNode := range ServiceNodesReadyToUnstake {
+	for _, serviceNode := range serviceNodesReadyToUnstake {
 		if err := u.SubPoolAmount(utilTypes.ServiceNodeStakePoolName, serviceNode.GetStakeAmount()); err != nil {
 			return err
 		}
@@ -207,7 +207,7 @@ func (u *UtilityContext) HandleMessageUnpauseServiceNode(message *utilTypes.Mess
 	return nil
 }
 
-func (u *UtilityContext) GetServiceNodeExists(address []byte) (exists bool, err types.Error) {
+func (u *UtilityContext) GetServiceNodeExists(address []byte) (bool, types.Error) {
 	store := u.Store()
 	exists, er := store.GetServiceNodeExists(address)
 	if er != nil {
@@ -242,7 +242,7 @@ func (u *UtilityContext) DeleteServiceNode(address []byte) types.Error {
 	return nil
 }
 
-func (u *UtilityContext) GetServiceNodesReadyToUnstake() (ServiceNodes []*types.UnstakingActor, err types.Error) {
+func (u *UtilityContext) GetServiceNodesReadyToUnstake() ([]*types.UnstakingActor, types.Error) {
 	store := u.Store()
 	latestHeight, err := u.GetLatestHeight()
 	if err != nil {
@@ -268,7 +268,7 @@ func (u *UtilityContext) UnstakeServiceNodesPausedBefore(pausedBeforeHeight int6
 	return nil
 }
 
-func (u *UtilityContext) GetServiceNodeStatus(address []byte) (status int, err types.Error) {
+func (u *UtilityContext) GetServiceNodeStatus(address []byte) (int, types.Error) {
 	store := u.Store()
 	status, er := store.GetServiceNodeStatus(address)
 	if er != nil {
@@ -277,7 +277,7 @@ func (u *UtilityContext) GetServiceNodeStatus(address []byte) (status int, err t
 	return status, nil
 }
 
-func (u *UtilityContext) SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) (err types.Error) {
+func (u *UtilityContext) SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) types.Error {
 	store := u.Store()
 	if er := store.SetServiceNodeUnstakingHeightAndStatus(address, unstakingHeight, status); er != nil {
 		return types.ErrSetUnstakingHeightAndStatus(er)
@@ -285,7 +285,7 @@ func (u *UtilityContext) SetServiceNodeUnstakingHeightAndStatus(address []byte, 
 	return nil
 }
 
-func (u *UtilityContext) GetServiceNodePauseHeightIfExists(address []byte) (ServiceNodePauseHeight int64, err types.Error) {
+func (u *UtilityContext) GetServiceNodePauseHeightIfExists(address []byte) (int64, types.Error) {
 	store := u.Store()
 	ServiceNodePauseHeight, er := store.GetServiceNodePauseHeightIfExists(address)
 	if er != nil {
@@ -302,16 +302,16 @@ func (u *UtilityContext) SetServiceNodePauseHeight(address []byte, height int64)
 	return nil
 }
 
-func (u *UtilityContext) CalculateServiceNodeUnstakingHeight() (unstakingHeight int64, err types.Error) {
+func (u *UtilityContext) CalculateServiceNodeUnstakingHeight() (int64, types.Error) {
 	unstakingBlocks, err := u.GetServiceNodeUnstakingBlocks()
 	if err != nil {
 		return utilTypes.ZeroInt, err
 	}
-	unstakingHeight, err = u.CalculateUnstakingHeight(unstakingBlocks)
+	unstakingHeight, err := u.CalculateUnstakingHeight(unstakingBlocks)
 	if err != nil {
 		return utilTypes.ZeroInt, err
 	}
-	return
+	return unstakingHeight, nil
 }
 
 func (u *UtilityContext) GetServiceNodesPerSession(height int64) (int, types.Error) {
@@ -332,54 +332,59 @@ func (u *UtilityContext) GetServiceNodeCount(chain string, height int64) (int, t
 	return i, nil
 }
 
-func (u *UtilityContext) GetMessageStakeServiceNodeSignerCandidates(msg *utilTypes.MessageStakeServiceNode) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageStakeServiceNodeSignerCandidates(msg *utilTypes.MessageStakeServiceNode) ([][]byte, types.Error) {
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, msg.OutputAddress)
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(er)
 	}
 	candidates = append(candidates, pk.Address())
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageEditStakeServiceNodeSignerCandidates(msg *utilTypes.MessageEditStakeServiceNode) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageEditStakeServiceNodeSignerCandidates(msg *utilTypes.MessageEditStakeServiceNode) ([][]byte, types.Error) {
 	output, err := u.GetServiceNodeOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnstakeServiceNodeSignerCandidates(msg *utilTypes.MessageUnstakeServiceNode) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageUnstakeServiceNodeSignerCandidates(msg *utilTypes.MessageUnstakeServiceNode) ([][]byte, types.Error) {
 	output, err := u.GetServiceNodeOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnpauseServiceNodeSignerCandidates(msg *utilTypes.MessageUnpauseServiceNode) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessageUnpauseServiceNodeSignerCandidates(msg *utilTypes.MessageUnpauseServiceNode) ([][]byte, types.Error) {
 	output, err := u.GetServiceNodeOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessagePauseServiceNodeSignerCandidates(msg *utilTypes.MessagePauseServiceNode) (candidates [][]byte, err types.Error) {
+func (u *UtilityContext) GetMessagePauseServiceNodeSignerCandidates(msg *utilTypes.MessagePauseServiceNode) ([][]byte, types.Error) {
 	output, err := u.GetServiceNodeOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, output)
 	candidates = append(candidates, msg.Address)
-	return
+	return candidates, nil
 }
 
 func (u *UtilityContext) GetServiceNodeOutputAddress(operator []byte) (output []byte, err types.Error) {
