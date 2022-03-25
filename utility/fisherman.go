@@ -312,7 +312,7 @@ func (u *UtilityContext) GetFishermanStatus(address []byte) (status int, err typ
 	return status, nil
 }
 
-func (u *UtilityContext) SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) (err types.Error) {
+func (u *UtilityContext) SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) types.Error {
 	store := u.Store()
 	if er := store.SetFishermanUnstakingHeightAndStatus(address, unstakingHeight, status); er != nil {
 		return types.ErrSetUnstakingHeightAndStatus(er)

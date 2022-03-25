@@ -323,7 +323,7 @@ func (u *UtilityContext) GetAppStatus(address []byte) (status int, err types.Err
 	return status, nil
 }
 
-func (u *UtilityContext) SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) (err types.Error) {
+func (u *UtilityContext) SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) types.Error {
 	store := u.Store()
 	if er := store.SetAppUnstakingHeightAndStatus(address, unstakingHeight, status); er != nil {
 		return types.ErrSetUnstakingHeightAndStatus(er)

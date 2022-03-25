@@ -82,33 +82,33 @@ func (u *UtilityContext) SubPoolAmount(name string, amountToSub string) types.Er
 	return nil
 }
 
-func (u *UtilityContext) GetPoolAmount(name string) (amount *big.Int, err types.Error) {
+func (u *UtilityContext) GetPoolAmount(name string) (*big.Int, types.Error) {
 	store := u.Store()
 	tokens, er := store.GetPoolAmount(name)
 	if er != nil {
 		return nil, types.ErrGetPoolAmount(name, er)
 	}
-	amount, err = types.StringToBigInt(tokens)
+	amount, err := types.StringToBigInt(tokens)
 	if err != nil {
 		return nil, err
 	}
-	return
+	return amount, nil
 }
 
-func (u *UtilityContext) InsertPool(name string, address []byte, amount string) (err types.Error) {
+func (u *UtilityContext) InsertPool(name string, address []byte, amount string) types.Error {
 	store := u.Store()
 	if err := store.InsertPool(name, address, amount); err != nil {
 		return types.ErrSetPool(name, err)
 	}
-	return
+	return nil
 }
 
-func (u *UtilityContext) SetPoolAmount(name string, amount *big.Int) (err types.Error) {
+func (u *UtilityContext) SetPoolAmount(name string, amount *big.Int) types.Error {
 	store := u.Store()
 	if err := store.SetPoolAmount(name, types.BigIntToString(amount)); err != nil {
 		return types.ErrSetPoolAmount(name, err)
 	}
-	return
+	return nil
 }
 
 func (u *UtilityContext) SetAccountWithAmountString(address []byte, amount string) types.Error {

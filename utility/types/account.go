@@ -1,5 +1,9 @@
 package types
 
+// TODO: Consider refactoring PoolNames and statuses to an enum
+// with appropriate enum <-> string mappers where appropriate.
+// This can make it easier to track all the different states
+// available.
 const (
 	ServiceNodeStakePoolName = "SERVICE_NODE_STAKE_POOL"
 	AppStakePoolName         = "APP_STAKE_POOL"
