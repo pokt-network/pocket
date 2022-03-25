@@ -56,31 +56,36 @@ const (
 //  bytes 5678: bodyLength
 //
 
+const (
+	BodyLengthBytes    = 4
+	RequestNonceLength = 4
+)
+
 type wireCodec struct {
 	sync.RWMutex
 }
 
-func (c *wireCodec) encode(encoding Encoding, iserror bool, reqnum uint32, data []byte, wrapped bool) []byte {
+func (c *wireCodec) encode(encoding Encoding, isError bool, reqNonce uint32, data []byte, wrapped bool) []byte {
 	c.Lock()
 	defer c.Unlock()
 
 	var flags byte = 0x00
 
-	bodyLength := make([]byte, 4)
-	requestnumber := make([]byte, 4)
+	bodyLength := make([]byte, BodyLengthBytes)
+	requestNonce := make([]byte, RequestNonceLength)
 
 	binary.BigEndian.PutUint32(bodyLength, uint32(len(data)))
-	binary.BigEndian.PutUint32(requestnumber, uint32(reqnum))
+	binary.BigEndian.PutUint32(requestNonce, uint32(reqNonce))
 
 	if wrapped {
 		flags ^= 16 // set the fifth bit to 1
 	}
 
-	if reqnum != 0 {
+	if reqNonce != 0 {
 		flags ^= 8 // setting the fourth bit to 1
 	}
 
-	if iserror {
+	if isError {
 		flags |= 4 // setting the third bit to 1
 	}
 
@@ -88,6 +93,7 @@ func (c *wireCodec) encode(encoding Encoding, iserror bool, reqnum uint32, data 
 
 	case Binary:
 		// set the second and first bits to 0 (they are already at 0 from initialization)
+		// do not fallthrough
 
 	case Utf8:
 		flags |= 1 // setting the first bit to 1, and the second to 0
@@ -99,7 +105,7 @@ func (c *wireCodec) encode(encoding Encoding, iserror bool, reqnum uint32, data 
 	}
 
 	header := append([]byte{}, flags)
-	header = append(header, requestnumber...)
+	header = append(header, requestNonce...)
 	header = append(header, bodyLength...)
 
 	body := data
@@ -115,7 +121,7 @@ func (c *wireCodec) decode(wiredata []byte) (nonce uint32, enc Encoding, data []
 
 	header, body := wiredata[:9], wiredata[9:]
 	flags := header[0]
-	requestnum := header[1:5]
+	requestNonce := header[1:5]
 	bodylen := header[5:9]
 
 	flagswitch, encoding, err := parseFlag(flags)
@@ -126,15 +132,15 @@ func (c *wireCodec) decode(wiredata []byte) (nonce uint32, enc Encoding, data []
 
 	enc = encoding
 	wrapped = flagswitch[4]
-	isreq := flagswitch[3]
-	if isreq {
-		nonce = binary.BigEndian.Uint32(requestnum)
+	isReq := flagswitch[3]
+	if isReq {
+		nonce = binary.BigEndian.Uint32(requestNonce)
 	} else {
 		nonce = 0
 	}
 
-	iserr := flagswitch[2]
-	if iserr {
+	isErr := flagswitch[2]
+	if isErr {
 		err = errors.New("")
 	} else {
 		err = nil
@@ -150,8 +156,8 @@ func (c *wireCodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32
 	defer c.Unlock()
 
 	flags := header[0]
-	requestnum := header[1:5]
-	bodylen := header[5:9]
+	requestNonce := header[1:5]
+	bodyLen := header[5:9]
 
 	flagswitch, _, err = parseFlag(flags)
 
@@ -159,30 +165,30 @@ func (c *wireCodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32
 		return
 	}
 
-	isreq := flagswitch[3]
-	if isreq {
-		nonce = binary.BigEndian.Uint32(requestnum)
+	isReq := flagswitch[3]
+	if isReq {
+		nonce = binary.BigEndian.Uint32(requestNonce)
 	} else {
 		nonce = 0
 	}
 
-	bodyLength = binary.BigEndian.Uint32(bodylen)
+	bodyLength = binary.BigEndian.Uint32(bodyLen)
 	return
 }
 
-/*
- @
- @ Utils
- @
-*/
+// Utility functions for the codec
+
+// parseflag parses the first 1 byte of the header that constitutes the header flags.
+// Flags are distributed on the 8 bits according to the codec's convention.
+// Check the documentation at the top of the file to re-discover the flags represented on this 1 byte.
 func parseFlag(f byte) (flagswitch []bool, e Encoding, err error) {
 	if (f|31)^31 != 0 { // check if the first 3 bits are empty
 		return nil, Unsupported, errors.New("codec wire flag error: invalid flag")
 	}
 
 	iswrapped := f & 16
-	isreq := f & 8
-	iserroreof := f & 4
+	isReq := f & 8
+	isErrOrEOF := f & 4
 	encoding := (f | 248) ^ 248
 
 	flagswitch = make([]bool, 8)
@@ -193,13 +199,13 @@ func parseFlag(f byte) (flagswitch []bool, e Encoding, err error) {
 		flagswitch[4] = false
 	}
 
-	if uint(isreq) == 8 {
+	if uint(isReq) == 8 {
 		flagswitch[3] = true
 	} else {
 		flagswitch[3] = false
 	}
 
-	if uint(iserroreof) == 4 {
+	if uint(isErrOrEOF) == 4 {
 		flagswitch[2] = true
 	} else {
 		flagswitch[2] = false
