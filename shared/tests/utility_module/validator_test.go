@@ -16,7 +16,7 @@ func TestUtilityContext_HandleMessageStakeValidator(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	pubKey, _ := crypto.GeneratePublicKey()
 	out, _ := crypto.GenerateAddress()
-	if err := ctx.SetAccount(out, defaultAmount); err != nil {
+	if err := ctx.SetAccountAmount(out, defaultAmount); err != nil {
 		t.Fatal(err)
 	}
 	msg := &typesUtil.MessageStakeValidator{

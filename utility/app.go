@@ -44,7 +44,7 @@ func (u *UtilityContext) HandleMessageStakeApp(message *utilTypes.MessageStakeAp
 		return types.ErrMaxChains(maxChains)
 	}
 	// update account amount
-	if err := u.SetAccount(message.Signer, signerAccountAmount); err != nil {
+	if err := u.SetAccountAmount(message.Signer, signerAccountAmount); err != nil {
 		return err
 	}
 	// move funds from account to pool
@@ -101,7 +101,7 @@ func (u *UtilityContext) HandleMessageEditStakeApp(message *utilTypes.MessageEdi
 		return types.ErrMaxChains(maxChains)
 	}
 	// update account amount
-	if err := u.SetAccount(message.Signer, signerAccountAmount); err != nil {
+	if err := u.SetAccountAmount(message.Signer, signerAccountAmount); err != nil {
 		return err
 	}
 	// move funds from account to pool

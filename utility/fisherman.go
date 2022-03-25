@@ -51,7 +51,7 @@ func (u *UtilityContext) HandleMessageStakeFisherman(message *typesUtil.MessageS
 		return types.ErrMaxChains(maxChains)
 	}
 	// update account amount
-	if err := u.SetAccount(message.Signer, signerAccountAmount); err != nil {
+	if err := u.SetAccountAmount(message.Signer, signerAccountAmount); err != nil {
 		return err
 	}
 	// move funds from account to pool
@@ -103,7 +103,7 @@ func (u *UtilityContext) HandleMessageEditStakeFisherman(message *typesUtil.Mess
 		return types.ErrMaxChains(maxChains)
 	}
 	// update account amount
-	if err := u.SetAccount(message.Signer, signerAccountAmount); err != nil {
+	if err := u.SetAccountAmount(message.Signer, signerAccountAmount); err != nil {
 		return err
 	}
 	// move funds from account to pool

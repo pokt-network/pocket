@@ -2,12 +2,13 @@ package utility_module
 
 import (
 	"bytes"
+	"math/big"
+	"testing"
+
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/utility"
-	"math/big"
-	"testing"
 )
 
 func TestUtilityContext_AddAccountAmount(t *testing.T) {
@@ -144,11 +145,11 @@ func TestUtilityContext_InsertPool(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_SetAccount(t *testing.T) {
+func TestUtilityContext_SetAccountAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	addr, _ := crypto.GenerateAddress()
 	amount := big.NewInt(100)
-	if err := ctx.SetAccount(addr, amount); err != nil {
+	if err := ctx.SetAccountAmount(addr, amount); err != nil {
 		t.Fatal(err)
 	}
 	gotAmount, err := ctx.GetAccountAmount(addr)

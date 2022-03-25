@@ -249,7 +249,7 @@ func (m *PrePersistenceContext) GetAccountAmount(address []byte) (string, error)
 	return account.Amount, nil
 }
 
-func (m *PrePersistenceContext) SetAccount(address []byte, amount string) error {
+func (m *PrePersistenceContext) SetAccountAmount(address []byte, amount string) error {
 	cdc := Cdc()
 	account := Account{
 		Address: address,

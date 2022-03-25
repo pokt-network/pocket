@@ -30,7 +30,7 @@ func (u *UtilityContext) HandleMessageSend(message *utilTypes.MessageSend) types
 		return err
 	}
 	// set the sender's account amount
-	if err := u.SetAccount(message.FromAddress, fromAccountAmount); err != nil {
+	if err := u.SetAccountAmount(message.FromAddress, fromAccountAmount); err != nil {
 		return err
 	}
 	return nil
@@ -113,16 +113,16 @@ func (u *UtilityContext) SetPoolAmount(name string, amount *big.Int) (err types.
 
 func (u *UtilityContext) SetAccountWithAmountString(address []byte, amount string) types.Error {
 	store := u.Store()
-	if err := store.SetAccount(address, amount); err != nil {
-		return types.ErrSetAccount(err)
+	if err := store.SetAccountAmount(address, amount); err != nil {
+		return types.ErrSetAccountAmount(err)
 	}
 	return nil
 }
 
-func (u *UtilityContext) SetAccount(address []byte, amount *big.Int) types.Error {
+func (u *UtilityContext) SetAccountAmount(address []byte, amount *big.Int) types.Error {
 	store := u.Store()
-	if err := store.SetAccount(address, types.BigIntToString(amount)); err != nil {
-		return types.ErrSetAccount(err)
+	if err := store.SetAccountAmount(address, types.BigIntToString(amount)); err != nil {
+		return types.ErrSetAccountAmount(err)
 	}
 	return nil
 }
@@ -130,7 +130,7 @@ func (u *UtilityContext) SetAccount(address []byte, amount *big.Int) types.Error
 func (u *UtilityContext) SubtractAccountAmount(address []byte, amountToSubtract *big.Int) types.Error {
 	store := u.Store()
 	if err := store.SubtractAccountAmount(address, types.BigIntToString(amountToSubtract)); err != nil {
-		return types.ErrSetAccount(err)
+		return types.ErrSetAccountAmount(err)
 	}
 	return nil
 }

@@ -387,7 +387,7 @@ func ErrGetPoolAmount(name string, err error) Error {
 	return NewError(CodeGetPoolAmountError, fmt.Sprintf("%s: pool: %s, %s", GetPoolAmountError, name, err.Error()))
 }
 
-func ErrSetAccount(err error) Error {
+func ErrSetAccountAmount(err error) Error {
 	return NewError(CodeSetAccountError, fmt.Sprintf("%s, %s", SetAccountError, err.Error()))
 }
 

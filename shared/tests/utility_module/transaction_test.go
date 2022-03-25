@@ -160,7 +160,7 @@ func NewTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transactio
 	}
 	startingAmount = defaultAmount
 	signerAddr := signer.Address()
-	if err = ctx.SetAccount(signerAddr, defaultAmount); err != nil {
+	if err = ctx.SetAccountAmount(signerAddr, defaultAmount); err != nil {
 		t.Fatal(err)
 	}
 	amountSent = defaultSendAmount

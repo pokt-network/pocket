@@ -113,7 +113,7 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil
 	if !isValidSigner {
 		return nil, types.ErrInvalidSigner()
 	}
-	if err := u.SetAccount(address, accountAmount); err != nil {
+	if err := u.SetAccountAmount(address, accountAmount); err != nil {
 		return nil, err
 	}
 	if err := u.AddPoolAmount(typesUtil.FeePoolName, fee); err != nil {

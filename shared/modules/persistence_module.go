@@ -37,7 +37,7 @@ type PersistenceContext interface {
 	AddAccountAmount(address []byte, amount string) error
 	SubtractAccountAmount(address []byte, amount string) error
 	GetAccountAmount(address []byte) (string, error)
-	SetAccount(address []byte, amount string) error
+	SetAccountAmount(address []byte, amount string) error
 
 	// App
 	GetAppExists(address []byte) (exists bool, err error)

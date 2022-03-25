@@ -35,7 +35,7 @@ func (u *UtilityContext) HandleMessageStakeValidator(message *utilTypes.MessageS
 		return types.ErrInsufficientAmountError()
 	}
 	// update account amount
-	if err := u.SetAccount(message.Signer, signerAccountAmount); err != nil {
+	if err := u.SetAccountAmount(message.Signer, signerAccountAmount); err != nil {
 		return err
 	}
 	// move funds from account to pool
@@ -79,7 +79,7 @@ func (u *UtilityContext) HandleMessageEditStakeValidator(message *utilTypes.Mess
 		return types.ErrInsufficientAmountError()
 	}
 	// update account amount
-	if err := u.SetAccount(message.Signer, signerAccountAmount); err != nil {
+	if err := u.SetAccountAmount(message.Signer, signerAccountAmount); err != nil {
 		return err
 	}
 	// move funds from account to pool

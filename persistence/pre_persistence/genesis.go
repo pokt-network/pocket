@@ -181,7 +181,7 @@ func InitGenesis(u *PrePersistenceContext, state *GenesisState) error {
 		return err
 	}
 	for _, account := range state.Accounts {
-		if err := u.SetAccount(account.Address, account.Amount); err != nil {
+		if err := u.SetAccountAmount(account.Address, account.Amount); err != nil {
 			return err
 		}
 	}
