@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/consensus"
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -126,12 +126,12 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	testStep := int64(consensus.NewRound)
 
 	// Leader info
-	leaderId := types_consensus.NodeId(3) // TODO(olshansky): Same as height % numValidators until we add back leader election
+	leaderId := typesCons.NodeId(3) // TODO(olshansky): Same as height % numValidators until we add back leader election
 	leader := pocketNodes[leaderId]
 	leaderRound := uint64(6)
 
 	// Placeholder block
-	blockHeader := &types_consensus.BlockHeaderConsensusTemp{
+	blockHeader := &typesCons.BlockHeaderConsensusTemp{
 		Height:            int64(testHeight),
 		Hash:              appHash,
 		NumTxs:            0,
@@ -139,7 +139,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		ProposerAddress:   []byte(leader.Address),
 		QuorumCertificate: nil,
 	}
-	block := &types_consensus.BlockConsensusTemp{
+	block := &typesCons.BlockConsensusTemp{
 		BlockHeader:  blockHeader,
 		Transactions: emptyTxs,
 	}
@@ -161,10 +161,10 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	GetConsensusModImplementation(pocketNodes[leaderId]).FieldByName("Round").SetUint(uint64(leaderRound))
 	GetConsensusModImplementation(pocketNodes[4]).FieldByName("Round").SetUint(uint64(leaderRound - 4))
 
-	prepareProposal := &types_consensus.HotstuffMessage{
+	prepareProposal := &typesCons.HotstuffMessage{
 		Type:          consensus.Propose,
 		Height:        testHeight,
-		Step:          consensus.Prepare, //types_consensus.HotstuffStep(testStep),
+		Step:          consensus.Prepare, //typesCons.HotstuffStep(testStep),
 		Round:         leaderRound,
 		Block:         block,
 		Justification: nil,

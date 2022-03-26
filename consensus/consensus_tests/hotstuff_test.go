@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/consensus"
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 )
@@ -44,7 +44,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 
 	// Leader election is deterministic for now, so we know its NodeId
-	leaderId := types_consensus.NodeId(2)
+	leaderId := typesCons.NodeId(2)
 	leader := pocketNodes[leaderId]
 
 	// Prepare
@@ -117,7 +117,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 			require.Equal(t, uint64(2), nodeState.Height)
 			require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
 			require.Equal(t, uint8(0), nodeState.Round)
-			require.Equal(t, nodeState.LeaderId, types_consensus.NodeId(0), "Leader should be empty")
+			require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
 			continue
 		}
 		require.Equal(t, uint64(1), nodeState.Height)
@@ -137,7 +137,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		require.Equal(t, uint64(2), nodeState.Height)
 		require.Equal(t, uint8(consensus.NewRound), nodeState.Step)
 		require.Equal(t, uint8(0), nodeState.Round)
-		require.Equal(t, nodeState.LeaderId, types_consensus.NodeId(0), "Leader should be empty")
+		require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
 	}
 }
 

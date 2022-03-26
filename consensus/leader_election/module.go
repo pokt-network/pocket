@@ -3,7 +3,7 @@ package leader_election
 import (
 	"log"
 
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
@@ -11,7 +11,7 @@ import (
 
 type LeaderElectionModule interface {
 	modules.Module
-	ElectNextLeader(*types_consensus.HotstuffMessage) (types_consensus.NodeId, error)
+	ElectNextLeader(*typesCons.HotstuffMessage) (typesCons.NodeId, error)
 }
 
 var _ leaderElectionModule = leaderElectionModule{}
@@ -47,12 +47,12 @@ func (m *leaderElectionModule) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (m *leaderElectionModule) ElectNextLeader(message *types_consensus.HotstuffMessage) (types_consensus.NodeId, error) {
+func (m *leaderElectionModule) ElectNextLeader(message *typesCons.HotstuffMessage) (typesCons.NodeId, error) {
 	return m.electNextLeaderDeterministicRoundRobin(message), nil
 }
 
-func (m *leaderElectionModule) electNextLeaderDeterministicRoundRobin(message *types_consensus.HotstuffMessage) types_consensus.NodeId {
+func (m *leaderElectionModule) electNextLeaderDeterministicRoundRobin(message *typesCons.HotstuffMessage) typesCons.NodeId {
 	valMap := types.GetTestState(nil).ValidatorMap
 	value := int64(message.Height) + int64(message.Round) + int64(message.Step) - 1
-	return types_consensus.NodeId(value%int64(len(valMap)) + 1)
+	return typesCons.NodeId(value%int64(len(valMap)) + 1)
 }

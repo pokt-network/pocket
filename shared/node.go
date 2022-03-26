@@ -5,7 +5,7 @@ import (
 
 	"github.com/pokt-network/pocket/p2p/pre2p"
 	"github.com/pokt-network/pocket/shared/config"
-	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"
 
 	"github.com/pokt-network/pocket/consensus"
@@ -20,7 +20,7 @@ var _ modules.Module = &Node{}
 type Node struct {
 	bus modules.Bus
 
-	Address pcrypto.Address
+	Address cryptoPocket.Address
 }
 
 func Create(cfg *config.Config) (n *Node, err error) {

@@ -4,7 +4,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
-	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
+	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 )
 
 var maxTxBytes = 90000
@@ -13,9 +13,9 @@ var appHash []byte
 
 func CreateMockedModule(_ *config.Config) (modules.UtilityModule, error) {
 	ctrl := gomock.NewController(nil)
-	utilityMock := mock_modules.NewMockUtilityModule(ctrl)
-	utilityContextMock := mock_modules.NewMockUtilityContext(ctrl)
-	persistenceContextMock := mock_modules.NewMockPersistenceContext(ctrl)
+	utilityMock := modulesMock.NewMockUtilityModule(ctrl)
+	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
+	persistenceContextMock := modulesMock.NewMockPersistenceContext(ctrl)
 
 	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
 	utilityMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()

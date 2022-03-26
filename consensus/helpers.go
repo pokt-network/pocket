@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -17,38 +17,38 @@ import (
 // added to simply make the code in the `consensus` module more readable.
 
 const (
-	NewRound  = types_consensus.HotstuffStep_HOTSTUFF_STEP_NEWROUND
-	Prepare   = types_consensus.HotstuffStep_HOTSTUFF_STEP_PREPARE
-	PreCommit = types_consensus.HotstuffStep_HOTSTUFF_STEP_PRECOMMIT
-	Commit    = types_consensus.HotstuffStep_HOTSTUFF_STEP_COMMIT
-	Decide    = types_consensus.HotstuffStep_HOTSTUFF_STEP_DECIDE
+	NewRound  = typesCons.HotstuffStep_HOTSTUFF_STEP_NEWROUND
+	Prepare   = typesCons.HotstuffStep_HOTSTUFF_STEP_PREPARE
+	PreCommit = typesCons.HotstuffStep_HOTSTUFF_STEP_PRECOMMIT
+	Commit    = typesCons.HotstuffStep_HOTSTUFF_STEP_COMMIT
+	Decide    = typesCons.HotstuffStep_HOTSTUFF_STEP_DECIDE
 
 	ByzantineThreshold = float64(2) / float64(3)
 	HotstuffMessage    = "consensus.HotstuffMessage"
 	UtilityMessage     = "consensus.UtilityMessage"
-	Propose            = types_consensus.HotstuffMessageType_HOTSTUFF_MESAGE_PROPOSE
-	Vote               = types_consensus.HotstuffMessageType_HOTSTUFF_MESSAGE_VOTE
+	Propose            = typesCons.HotstuffMessageType_HOTSTUFF_MESAGE_PROPOSE
+	Vote               = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_VOTE
 )
 
 var (
-	HotstuffSteps = [...]types_consensus.HotstuffStep{NewRound, Prepare, PreCommit, Commit, Decide}
-	StepToString  map[types_consensus.HotstuffStep]string
+	HotstuffSteps = [...]typesCons.HotstuffStep{NewRound, Prepare, PreCommit, Commit, Decide}
+	StepToString  map[typesCons.HotstuffStep]string
 
 	maxTxBytes        = 90000             // TODO(olshansky): Move this to config.json.
 	lastByzValidators = make([][]byte, 0) // TODO(olshansky): Retrieve this from persistence
 )
 
 func init() {
-	StepToString = make(map[types_consensus.HotstuffStep]string, len(types_consensus.HotstuffStep_name))
-	for i, step := range types_consensus.HotstuffStep_name {
-		StepToString[types_consensus.HotstuffStep(i)] = step
+	StepToString = make(map[typesCons.HotstuffStep]string, len(typesCons.HotstuffStep_name))
+	for i, step := range typesCons.HotstuffStep_name {
+		StepToString[typesCons.HotstuffStep(i)] = step
 	}
 }
 
 // ** Hotstuff Helpers ** //
 
-func (m *consensusModule) getQuorumCertificate(height uint64, step types_consensus.HotstuffStep, round uint64) (*types_consensus.QuorumCertificate, error) {
-	var pss []*types_consensus.PartialSignature
+func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
+	var pss []*typesCons.PartialSignature
 	for _, msg := range m.MessagePool[step] {
 		// TODO(olshansky): Add tests for this
 		if msg.GetPartialSignature() == nil {
@@ -70,7 +70,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step types_consens
 	}
 
 	if err := m.isOptimisticThresholdMet(len(pss)); err != nil {
-		return nil, fmt.Errorf("%s; %s", types_consensus.ErrNotEnoughSignatures, err.Error())
+		return nil, err
 	}
 
 	thresholdSig, err := getThresholdSignature(pss)
@@ -78,7 +78,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step types_consens
 		return nil, err
 	}
 
-	return &types_consensus.QuorumCertificate{
+	return &typesCons.QuorumCertificate{
 		Height:             m.Height,
 		Step:               step,
 		Round:              m.Round,
@@ -87,7 +87,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step types_consens
 	}, nil
 }
 
-func (m *consensusModule) findHighQC(step types_consensus.HotstuffStep) (qc *types_consensus.QuorumCertificate) {
+func (m *consensusModule) findHighQC(step typesCons.HotstuffStep) (qc *typesCons.QuorumCertificate) {
 	for _, m := range m.MessagePool[step] {
 		if m.GetQuorumCertificate() == nil {
 			continue
@@ -100,16 +100,16 @@ func (m *consensusModule) findHighQC(step types_consensus.HotstuffStep) (qc *typ
 }
 
 func getThresholdSignature(
-	partialSigs []*types_consensus.PartialSignature) (*types_consensus.ThresholdSignature, error) {
-	thresholdSig := new(types_consensus.ThresholdSignature)
-	thresholdSig.Signatures = make([]*types_consensus.PartialSignature, len(partialSigs))
+	partialSigs []*typesCons.PartialSignature) (*typesCons.ThresholdSignature, error) {
+	thresholdSig := new(typesCons.ThresholdSignature)
+	thresholdSig.Signatures = make([]*typesCons.PartialSignature, len(partialSigs))
 	for i, parpartialSig := range partialSigs {
 		thresholdSig.Signatures[i] = parpartialSig
 	}
 	return thresholdSig, nil
 }
 
-func isSignatureValid(m *types_consensus.HotstuffMessage, pubKey crypto.PublicKey, signature []byte) bool {
+func isSignatureValid(m *typesCons.HotstuffMessage, pubKey crypto.PublicKey, signature []byte) bool {
 	bytesToVerify, err := getSignableBytes(m)
 	if err != nil {
 		log.Println("[WARN] Error getting bytes to verify:", err)
@@ -118,14 +118,14 @@ func isSignatureValid(m *types_consensus.HotstuffMessage, pubKey crypto.PublicKe
 	return pubKey.VerifyBytes(bytesToVerify, signature)
 }
 
-func (m *consensusModule) didReceiveEnoughMessageForStep(step types_consensus.HotstuffStep) error {
+func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
 	return m.isOptimisticThresholdMet(len(m.MessagePool[step]))
 }
 
 func (m *consensusModule) isOptimisticThresholdMet(n int) error {
 	valMap := types.GetTestState(nil).ValidatorMap
 	if !(float64(n) > ByzantineThreshold*float64(len(valMap))) {
-		return fmt.Errorf("byzantine safety check: (%d > %.2f?)", n, ByzantineThreshold*float64(len(valMap))) // TODO (olshansk) convert to error obj
+		return typesCons.ErrByzantineThresholdCheck(n, ByzantineThreshold*float64(len(valMap)))
 	}
 	return nil
 }
@@ -140,7 +140,7 @@ func protoHash(m proto.Message) string {
 
 /*** P2P Helpers ***/
 
-func (m *consensusModule) sendToNode(msg *types_consensus.HotstuffMessage) {
+func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 	// TODO(olshansky): This can happen due to a race condition with the pacemaker.
 	if m.LeaderId == nil {
 		m.nodeLogError("[TODO] How/why am I trying to send a message to a nil leader?", nil)
@@ -160,7 +160,7 @@ func (m *consensusModule) sendToNode(msg *types_consensus.HotstuffMessage) {
 	}
 }
 
-func (m *consensusModule) broadcastToNodes(msg *types_consensus.HotstuffMessage) {
+func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 	m.nodeLog(fmt.Sprintf("Broadcasting %s message.", StepToString[msg.Step]))
 	anyConsensusMessage, err := anypb.New(msg)
 	if err != nil {
@@ -178,7 +178,7 @@ func (m *consensusModule) broadcastToNodes(msg *types_consensus.HotstuffMessage)
 
 func (m *consensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
-		m.MessagePool[step] = make([]*types_consensus.HotstuffMessage, 0)
+		m.MessagePool[step] = make([]*typesCons.HotstuffMessage, 0)
 	}
 }
 
@@ -197,7 +197,7 @@ func (m *consensusModule) clearLeader() {
 	m.LeaderId = nil
 }
 
-func (m *consensusModule) electNextLeader(message *types_consensus.HotstuffMessage) {
+func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 	leaderId, err := m.leaderElectionMod.ElectNextLeader(message)
 	if err != nil || leaderId == 0 {
 		m.nodeLogError(fmt.Sprintf("Leader election failed. Validator cannot take part in consensus at height %d round %d", message.Height, message.Round), err)

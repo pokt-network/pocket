@@ -6,12 +6,12 @@ import (
 
 	"github.com/pokt-network/pocket/shared/types"
 
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
 
 var (
 	LeaderMessageHandler HotstuffMessageHandler = &HotstuffLeaderMessageHandler{}
-	leaderHandlers                              = map[types_consensus.HotstuffStep]func(*consensusModule, *types_consensus.HotstuffMessage){
+	leaderHandlers                              = map[typesCons.HotstuffStep]func(*consensusModule, *typesCons.HotstuffMessage){
 		NewRound:  LeaderMessageHandler.HandleNewRoundMessage,
 		Prepare:   LeaderMessageHandler.HandlePrepareMessage,
 		PreCommit: LeaderMessageHandler.HandlePrecommitMessage,
@@ -24,7 +24,7 @@ type HotstuffLeaderMessageHandler struct{}
 
 /*** Prepare Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
@@ -78,7 +78,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 /*** PreCommit Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
@@ -120,7 +120,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 /*** Commit Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
@@ -162,7 +162,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 /*** Decide Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
@@ -203,7 +203,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	m.paceMaker.NewHeight()
 }
 
-func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
@@ -212,7 +212,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusMod
 }
 
 // anteHandle is the general handler called for every before every specific HotstuffLeaderMessageHandler handler
-func (handler *HotstuffLeaderMessageHandler) anteHandle(m *consensusModule, msg *types_consensus.HotstuffMessage) error {
+func (handler *HotstuffLeaderMessageHandler) anteHandle(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	if err := handler.validateBasic(m, msg); err != nil {
 		return err
 	}
@@ -221,7 +221,7 @@ func (handler *HotstuffLeaderMessageHandler) anteHandle(m *consensusModule, msg 
 }
 
 // ValidateBasic general validation checks that apply to every HotstuffLeaderMessage
-func (handler *HotstuffLeaderMessageHandler) validateBasic(m *consensusModule, msg *types_consensus.HotstuffMessage) error {
+func (handler *HotstuffLeaderMessageHandler) validateBasic(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	// Discard messages with invalid partial signatures before storing it in the leader's consensus mempool
 	if err := m.validatePartialSignature(msg); err != nil {
 		return err
@@ -229,43 +229,42 @@ func (handler *HotstuffLeaderMessageHandler) validateBasic(m *consensusModule, m
 	return nil
 }
 
-func (m *consensusModule) validatePartialSignature(msg *types_consensus.HotstuffMessage) error {
+func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessage) error {
 	if msg.Step == NewRound {
-		m.nodeLog(types_consensus.ErrUnnecessaryPartialSigForNewRound.Error())
+		m.nodeLog(typesCons.ErrUnnecessaryPartialSigForNewRound.Error())
 		return nil
 	}
 
 	if msg.Type == Propose {
-		m.nodeLog(types_consensus.ErrUnnecessaryPartialSigForLeaderProposal.Error())
+		m.nodeLog(typesCons.ErrUnnecessaryPartialSigForLeaderProposal.Error())
 		return nil
 	}
 
 	if msg.GetPartialSignature() == nil {
-		return types_consensus.ErrNilPartialSig
+		return typesCons.ErrNilPartialSig
 	}
 
 	if msg.GetPartialSignature().Signature == nil || len(msg.GetPartialSignature().Address) == 0 {
-		return types_consensus.ErrNilPartialSigOrSourceNotSpecified
+		return typesCons.ErrNilPartialSigOrSourceNotSpecified
 	}
 
 	valMap := types.GetTestState(nil).ValidatorMap
 	address := msg.GetPartialSignature().Address
 	validator, ok := valMap[address]
 	if !ok {
-		return fmt.Errorf("%s: %d", types_consensus.ErrValidatorNotFoundInMap, m.ValAddrToIdMap[address])
+		return typesCons.ErrMissingValidator(address, uint64(m.ValAddrToIdMap[address]))
 	}
-
 	pubKey := validator.PublicKey
 	if isSignatureValid(msg, pubKey, msg.GetPartialSignature().Signature) {
 		return nil
 	}
 
-	return fmt.Errorf("%s Sender: %d; Height: %d; Step: %d; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s",
-		types_consensus.ErrInvalidPartialSignature, m.ValAddrToIdMap[address], msg.Height, msg.Step, msg.Round,
-		msg.GetPartialSignature().Signature, protoHash(msg.Block), pubKey.String())
+	return typesCons.ErrValidatingPartialSig(
+		address, uint64(m.ValAddrToIdMap[address]), uint64(msg.Height), uint64(msg.Round), StepToString[msg.Step],
+		string(msg.GetPartialSignature().Signature), protoHash(msg.Block), pubKey.String())
 }
 
-func (m *consensusModule) aggregateMessage(msg *types_consensus.HotstuffMessage) {
+func (m *consensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {
 	// TODO(olshansky): Add proper tests for this when we figure out where the mempool should live.
 	// NOTE: This is just a placeholder at the moment. It doesn't actually work because SizeOf returns
 	// the size of the map pointer, and does not recursively determine the size of all the underlying elements.

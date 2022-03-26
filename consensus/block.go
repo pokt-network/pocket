@@ -6,22 +6,22 @@ import (
 	"fmt"
 	"unsafe"
 
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
 // TODO(olshansky): Sync with Andrew on the type of validation we need here.
-func (m *consensusModule) validateBlock(block *types_consensus.BlockConsensusTemp) error {
+func (m *consensusModule) validateBlock(block *typesCons.BlockConsensusTemp) error {
 	if block == nil {
-		return types_consensus.ErrNilBlock
+		return typesCons.ErrNilBlock
 	}
 	return nil
 }
 
 // This is a helper function intended to be called by a leader/validator during a view change
-func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, error) {
+func (m *consensusModule) prepareBlock() (*typesCons.BlockConsensusTemp, error) {
 	if m.isReplica() {
-		return nil, types_consensus.ErrReplicaPrepareBlock
+		return nil, typesCons.ErrReplicaPrepareBlock
 	}
 
 	if err := m.updateUtilityContext(); err != nil {
@@ -38,7 +38,7 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 		return nil, err
 	}
 
-	blockHeader := &types_consensus.BlockHeaderConsensusTemp{
+	blockHeader := &typesCons.BlockHeaderConsensusTemp{
 		Height:            int64(m.Height),
 		Hash:              appHash,
 		NumTxs:            uint32(len(txs)),
@@ -47,7 +47,7 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 		QuorumCertificate: nil,
 	}
 
-	block := &types_consensus.BlockConsensusTemp{
+	block := &typesCons.BlockConsensusTemp{
 		BlockHeader:  blockHeader,
 		Transactions: txs,
 	}
@@ -56,15 +56,14 @@ func (m *consensusModule) prepareBlock() (*types_consensus.BlockConsensusTemp, e
 }
 
 // This is a helper function intended to be called by a replica/voter during a view change
-func (m *consensusModule) applyBlock(block *types_consensus.BlockConsensusTemp) error {
+func (m *consensusModule) applyBlock(block *typesCons.BlockConsensusTemp) error {
 	if m.isLeader() {
-		return types_consensus.ErrLeaderApplyBLock
+		return typesCons.ErrLeaderApplyBLock
 	}
 
 	// TODO(olshansky): Add unit tests to verify this.
 	if unsafe.Sizeof(*block) > uintptr(m.consCfg.MaxBlockBytes) {
-		// TODO(olshansky) use error functions to pass params
-		return fmt.Errorf("%s: %d bytes VS max of %d bytes", types_consensus.ErrBlockSizeTooLarge, unsafe.Sizeof(*block), m.consCfg.MaxBlockBytes)
+		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.consCfg.MaxBlockBytes)
 	}
 
 	if err := m.updateUtilityContext(); err != nil {
@@ -76,9 +75,9 @@ func (m *consensusModule) applyBlock(block *types_consensus.BlockConsensusTemp) 
 		return err
 	}
 
-	if !bytes.Equal(block.BlockHeader.Hash, appHash) { // TODO(olshansky) blockhash is not the appHash. Discuss offline with Andrew
-		return fmt.Errorf("%s: %s != %s",
-			types_consensus.ErrInvalidApphash, hex.EncodeToString(block.BlockHeader.Hash), hex.EncodeToString(appHash))
+	// TODO(olshansky) blockhash is not the appHash. Discuss offline with Andrew
+	if !bytes.Equal(block.BlockHeader.Hash, appHash) {
+		return typesCons.ErrInvalidAppHash(hex.EncodeToString(block.BlockHeader.Hash), hex.EncodeToString(appHash))
 	}
 
 	return nil
@@ -101,7 +100,7 @@ func (m *consensusModule) updateUtilityContext() error {
 	return nil
 }
 
-func (m *consensusModule) commitBlock(block *types_consensus.BlockConsensusTemp) error {
+func (m *consensusModule) commitBlock(block *typesCons.BlockConsensusTemp) error {
 	m.nodeLog(fmt.Sprintf("🧱🧱🧱 Committing block at height %d with %d transactions 🧱🧱🧱", m.Height, len(block.Transactions)))
 
 	if err := m.utilityContext.GetPersistanceContext().Commit(); err != nil {

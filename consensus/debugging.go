@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
@@ -24,12 +24,12 @@ func (m *consensusModule) HandleDebugMessage(debugMessage *types.DebugMessage) e
 	return nil
 }
 
-func (m *consensusModule) GetNodeState() types_consensus.ConsensusNodeState {
-	leaderId := types_consensus.NodeId(0)
+func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
+	leaderId := typesCons.NodeId(0)
 	if m.LeaderId != nil {
 		leaderId = *m.LeaderId
 	}
-	return types_consensus.ConsensusNodeState{
+	return typesCons.ConsensusNodeState{
 		NodeId:   m.NodeId,
 		Height:   m.Height,
 		Round:    uint8(m.Round),
@@ -56,7 +56,7 @@ func (m *consensusModule) resetToGenesis(_ *types.DebugMessage) {
 
 func (m *consensusModule) printNodeState(_ *types.DebugMessage) {
 	state := m.GetNodeState()
-	log.Printf("\t[DEBUG] NODE STATE: [%s] Node %d is at (Height, Step, Round): (%d, %s, %d)\n", m.logPrefix, state.NodeId, state.Height, StepToString[types_consensus.HotstuffStep(state.Step)], state.Round)
+	log.Printf("\t[DEBUG] NODE STATE: [%s] Node %d is at (Height, Step, Round): (%d, %s, %d)\n", m.logPrefix, state.NodeId, state.Height, StepToString[typesCons.HotstuffStep(state.Step)], state.Round)
 }
 
 func (m *consensusModule) triggerNextView(_ *types.DebugMessage) {
@@ -94,7 +94,7 @@ type paceMakerDebug struct {
 	manualMode                bool
 	debugTimeBetweenStepsMsec uint64
 
-	quorumCertificate *types_consensus.QuorumCertificate
+	quorumCertificate *typesCons.QuorumCertificate
 }
 
 func (p *paceMaker) IsManualMode() bool {

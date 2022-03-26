@@ -1,24 +1,23 @@
 package consensus
 
 import (
-	"fmt"
 	"log"
 
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
 )
 
 func CreateProposeMessage(
 	m *consensusModule,
-	step types_consensus.HotstuffStep, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
-	qc *types_consensus.QuorumCertificate,
-) (*types_consensus.HotstuffMessage, error) {
+	step typesCons.HotstuffStep, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
+	qc *typesCons.QuorumCertificate,
+) (*typesCons.HotstuffMessage, error) {
 	if m.Block == nil {
-		return nil, fmt.Errorf("when a leader is trying to create a ProposeMessage, the block should never be nil")
+		return nil, typesCons.ErrNilBlockProposal
 	}
 
-	msg := &types_consensus.HotstuffMessage{
+	msg := &typesCons.HotstuffMessage{
 		Type:          Propose,
 		Height:        m.Height,
 		Step:          step,
@@ -29,12 +28,12 @@ func CreateProposeMessage(
 
 	// TODO(olshansky): Add unit tests for this
 	if qc == nil && step != Prepare {
-		return nil, fmt.Errorf("when creating a ProposeMessage for a step other than PREPARE, the qc should NEVER be nil")
+		return nil, typesCons.ErrNilQCProposal
 	}
 
 	// TODO(olshansky): Add unit tests for this
 	if qc != nil { // QC may optionally be nil for NEWROUND steps when everything is progressing smoothly
-		msg.Justification = &types_consensus.HotstuffMessage_QuorumCertificate{
+		msg.Justification = &typesCons.HotstuffMessage_QuorumCertificate{
 			QuorumCertificate: qc,
 		}
 	}
@@ -44,14 +43,14 @@ func CreateProposeMessage(
 
 func CreateVoteMessage(
 	m *consensusModule,
-	step types_consensus.HotstuffStep, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
-	block *types_consensus.BlockConsensusTemp,
-) (*types_consensus.HotstuffMessage, error) {
+	step typesCons.HotstuffStep, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
+	block *typesCons.BlockConsensusTemp,
+) (*typesCons.HotstuffMessage, error) {
 	if block == nil {
-		return nil, fmt.Errorf("replica should never vote on a nil block proposal")
+		return nil, typesCons.ErrNilBlockVote
 	}
 
-	msg := &types_consensus.HotstuffMessage{
+	msg := &typesCons.HotstuffMessage{
 		Type:          Vote,
 		Height:        m.Height,
 		Step:          step,
@@ -60,8 +59,8 @@ func CreateVoteMessage(
 		Justification: nil, // signature is computed below
 	}
 
-	msg.Justification = &types_consensus.HotstuffMessage_PartialSignature{
-		PartialSignature: &types_consensus.PartialSignature{
+	msg.Justification = &typesCons.HotstuffMessage_PartialSignature{
+		PartialSignature: &typesCons.PartialSignature{
 			Signature: getMessageSignature(msg, m.privateKey),
 			Address:   m.privateKey.PublicKey().Address().String(),
 		},
@@ -71,7 +70,7 @@ func CreateVoteMessage(
 }
 
 // Returns a "partial" signature of the hotstuff message from one of the validators
-func getMessageSignature(m *types_consensus.HotstuffMessage, privKey crypto.PrivateKey) []byte {
+func getMessageSignature(m *typesCons.HotstuffMessage, privKey crypto.PrivateKey) []byte {
 	bytesToSign, err := getSignableBytes(m)
 	if err != nil {
 		return nil
@@ -85,8 +84,8 @@ func getMessageSignature(m *types_consensus.HotstuffMessage, privKey crypto.Priv
 }
 
 // Signature should only be over a subset of the fields in a HotstuffMessage
-func getSignableBytes(m *types_consensus.HotstuffMessage) ([]byte, error) {
-	msgToSign := &types_consensus.HotstuffMessage{
+func getSignableBytes(m *typesCons.HotstuffMessage) ([]byte, error) {
+	msgToSign := &typesCons.HotstuffMessage{
 		Height: m.Height,
 		Step:   m.Step,
 		Round:  m.Round,

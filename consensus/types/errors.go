@@ -1,6 +1,9 @@
 package types
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 const (
 	// TODO(olshansk) port over all of the logging info
@@ -11,8 +14,11 @@ const (
 
 const (
 	nilBLockError                               = "block is nil"
+	nilBLockProposalError                       = "block should never be nil when creating a proposal message"
+	nilBLockVoteError                           = "block should never be nil when creating a vote message for a proposal"
 	proposalNotValidInPrepareError              = "proposal is not valid in the PREPARE step"
 	nilQCError                                  = "QC being validated is nil"
+	nilQCProposalError                          = "QC should never be nil when creating a proposal message"
 	nilBlockInQCError                           = "QC must contain a non nil block"
 	nilThresholdSigInQCError                    = "QC must contains a non nil threshold signature"
 	notEnoughSignaturesError                    = "did not receive enough partial signature"
@@ -34,12 +40,16 @@ const (
 	leaderApplyBlockError                       = "node should not call `applyBlock` if it is leader"
 	blockSizeTooLargeError                      = "block size is too large"
 	invalidAppHashError                         = "apphash being applied does not equal that from utility"
+	byzantineOptimisticThresholdError           = "byzantine optimistic threshold not met"
 )
 
 var (
 	ErrNilBlock                               = errors.New(nilBLockError)
+	ErrNilBlockProposal                       = errors.New(nilBLockProposalError)
+	ErrNilBlockVote                           = errors.New(nilBLockVoteError)
 	ErrProposalNotValidInPrepare              = errors.New(proposalNotValidInPrepareError)
 	ErrNilQC                                  = errors.New(nilQCError)
+	ErrNilQCProposal                          = errors.New(nilQCProposalError)
 	ErrNilBlockInQC                           = errors.New(nilBlockInQCError)
 	ErrNilThresholdSigInQC                    = errors.New(nilThresholdSigInQCError)
 	ErrNotEnoughSignatures                    = errors.New(notEnoughSignaturesError)
@@ -49,8 +59,6 @@ var (
 	ErrUnnecessaryPartialSigForLeaderProposal = errors.New(unnecessaryPartialSigForLeaderProposalError)
 	ErrNilPartialSig                          = errors.New(nilPartialSigError)
 	ErrNilPartialSigOrSourceNotSpecified      = errors.New(nilPartialSigOrSourceNotSpecifiedError)
-	ErrValidatorNotFoundInMap                 = errors.New(validatorNotFoundInMapError)
-	ErrInvalidPartialSignature                = errors.New(invalidPartialSignatureError)
 	ErrOlderMessage                           = errors.New(olderHeightMessageError)
 	ErrFutureMessage                          = errors.New(futureHeightMessageError)
 	ErrSelfProposal                           = errors.New(selfProposalError)
@@ -59,6 +67,25 @@ var (
 	ErrUnexpectedPacemakerCase                = errors.New(UnexpectedPacemakerCaseError)
 	ErrReplicaPrepareBlock                    = errors.New(replicaPrepareBlockError)
 	ErrLeaderApplyBLock                       = errors.New(leaderApplyBlockError)
-	ErrBlockSizeTooLarge                      = errors.New(blockSizeTooLargeError)
-	ErrInvalidApphash                         = errors.New(invalidAppHashError)
 )
+
+func ErrInvalidBlockSize(blockSize, maxSize uint64) error {
+	return fmt.Errorf("%s: %d bytes VS max of %d bytes", blockSizeTooLargeError, blockSize, maxSize)
+}
+
+func ErrInvalidAppHash(blockHeaderHash, appHash string) error {
+	return fmt.Errorf("%s: %s != %s", invalidAppHashError, blockHeaderHash, appHash)
+}
+
+func ErrByzantineThresholdCheck(n int, threshold float64) error {
+	return fmt.Errorf("%s: (%d > %.2f?)", byzantineOptimisticThresholdError, n, threshold)
+}
+
+func ErrMissingValidator(address string, nodeId uint64) error {
+	return fmt.Errorf("%s: %s (%d)", validatorNotFoundInMapError, address, nodeId)
+}
+
+func ErrValidatingPartialSig(senderAddr string, senderNodeId, height, round uint64, step, signature, blockHash, pubKey string) error {
+	return fmt.Errorf("%s: Sender: %s (%d); Height: %d; Step: %s; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s",
+		invalidPartialSignatureError, senderAddr, senderNodeId, height, step, round, signature, blockHash, pubKey)
+}

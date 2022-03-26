@@ -15,12 +15,12 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/config"
-	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
-	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
+	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -50,7 +50,7 @@ func init() {
 	}
 }
 
-type IdToNodeMapping map[types_consensus.NodeId]*shared.Node
+type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
 /*** Node Generation Helpers ***/
 
@@ -59,13 +59,13 @@ func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
 		// Deterministically generate a private key for the node
 		seed := make([]byte, ed25519.PrivateKeySize)
 		binary.LittleEndian.PutUint32(seed, i)
-		pk, err := pcrypto.NewPrivateKeyFromSeed(seed)
+		pk, err := cryptoPocket.NewPrivateKeyFromSeed(seed)
 		require.NoError(t, err)
 
 		// Generate test config
 		c := config.Config{
-			RootDir:    "",                             // left empty intentionally
-			PrivateKey: pk.(pcrypto.Ed25519PrivateKey), // deterministic key based on `i`
+			RootDir:    "",                                  // left empty intentionally
+			PrivateKey: pk.(cryptoPocket.Ed25519PrivateKey), // deterministic key based on `i`
 			Genesis:    genesisJson(t),
 			Pre2P:      nil,
 			P2P:        nil,
@@ -104,7 +104,7 @@ func CreateTestConsensusPocketNodes(
 	for i, cfg := range configs {
 		pocketNode := CreateTestConsensusPocketNode(t, cfg, testChannel)
 		// TODO(olshansky): Figure this part out.
-		pocketNodes[types_consensus.NodeId(i+1)] = pocketNode
+		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
 	return
 }
@@ -142,8 +142,8 @@ func CreateTestConsensusPocketNode(
 // TODO(discuss): Should we use reflections inside the testing module as being done here or explicitly
 // define the interfaces used for debug/development. The latter will probably scale more but will
 // require more effort and pollute the source code with debugging information.
-func GetConsensusNodeState(node *shared.Node) types_consensus.ConsensusNodeState {
-	return reflect.ValueOf(node.GetBus().GetConsensusModule()).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(types_consensus.ConsensusNodeState)
+func GetConsensusNodeState(node *shared.Node) typesCons.ConsensusNodeState {
+	return reflect.ValueOf(node.GetBus().GetConsensusModule()).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(typesCons.ConsensusNodeState)
 }
 
 func GetConsensusModImplementation(node *shared.Node) reflect.Value {
@@ -185,21 +185,21 @@ func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 func WaitForNetworkConsensusMessages(
 	t *testing.T,
 	testChannel modules.EventsChannel,
-	step types_consensus.HotstuffStep,
-	hotstuffMsgType types_consensus.HotstuffMessageType,
+	step typesCons.HotstuffStep,
+	hotstuffMsgType typesCons.HotstuffMessageType,
 	numMessages int,
 	millis time.Duration,
 ) (messages []*anypb.Any, err error) {
 
 	includeFilter := func(m *anypb.Any) bool {
-		var hotstuffMessage types_consensus.HotstuffMessage
+		var hotstuffMessage typesCons.HotstuffMessage
 		err := anypb.UnmarshalTo(m, &hotstuffMessage, proto.UnmarshalOptions{})
 		require.NoError(t, err)
 
 		return hotstuffMessage.Type == hotstuffMsgType && hotstuffMessage.Step == step
 	}
 
-	errorMessage := fmt.Sprintf("HotStuff step: %s, type: %s", types_consensus.HotstuffStep_name[int32(step)], types_consensus.HotstuffMessageType_name[int32(hotstuffMsgType)])
+	errorMessage := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(hotstuffMsgType)])
 	return waitForNetworkConsensusMessagesInternal(t, testChannel, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, includeFilter, errorMessage)
 }
 
@@ -261,9 +261,9 @@ loop:
 /*** Module Mocking Helpers ***/
 
 // Creates a persistence module mock with mock implementations of some basic functionality
-func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *mock_modules.MockPersistenceModule {
+func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
-	persistenceMock := mock_modules.NewMockPersistenceModule(ctrl)
+	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
 
 	persistenceMock.EXPECT().Start().Do(func() {}).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
@@ -272,9 +272,9 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *mock_modules.Mo
 }
 
 // Creates a p2p module mock with mock implementations of some basic functionality
-func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *mock_modules.MockP2PModule {
+func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.MockP2PModule {
 	ctrl := gomock.NewController(t)
-	p2pMock := mock_modules.NewMockP2PModule(ctrl)
+	p2pMock := modulesMock.NewMockP2PModule(ctrl)
 
 	p2pMock.EXPECT().Start().Do(func() {}).AnyTimes()
 	p2pMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
@@ -287,7 +287,7 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *mock_modules.
 		AnyTimes()
 	p2pMock.EXPECT().
 		Send(gomock.Any(), gomock.Any(), gomock.Any()).
-		Do(func(addr pcrypto.Address, msg *anypb.Any, topic types.PocketTopic) {
+		Do(func(addr cryptoPocket.Address, msg *anypb.Any, topic types.PocketTopic) {
 			e := &types.PocketEvent{Topic: topic, Data: msg}
 			testChannel <- *e
 		}).
@@ -297,11 +297,11 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *mock_modules.
 }
 
 // Creates a utility module mock with mock implementations of some basic functionality
-func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *mock_modules.MockUtilityModule {
+func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUtilityModule {
 	ctrl := gomock.NewController(t)
-	utilityMock := mock_modules.NewMockUtilityModule(ctrl)
-	utilityContextMock := mock_modules.NewMockUtilityContext(ctrl)
-	persistenceContextMock := mock_modules.NewMockPersistenceContext(ctrl)
+	utilityMock := modulesMock.NewMockUtilityModule(ctrl)
+	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
+	persistenceContextMock := modulesMock.NewMockPersistenceContext(ctrl)
 
 	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
 	utilityMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()

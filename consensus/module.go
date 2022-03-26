@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
-	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -24,31 +24,31 @@ var _ modules.ConsensusModule = &consensusModule{}
 // TODO(olshansky): Any reason to make all of these attributes local only (i.e. not exposed outside the struct)?
 type consensusModule struct {
 	bus        modules.Bus
-	privateKey pcrypto.Ed25519PrivateKey
+	privateKey cryptoPocket.Ed25519PrivateKey
 	consCfg    *config.ConsensusConfig
 
 	// Hotstuff
 	Height uint64
 	Round  uint64
-	Step   types_consensus.HotstuffStep
-	Block  *types_consensus.BlockConsensusTemp // The current block being voted on prior to committing to finality
+	Step   typesCons.HotstuffStep
+	Block  *typesCons.BlockConsensusTemp // The current block being voted on prior to committing to finality
 
-	HighPrepareQC *types_consensus.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
-	LockedQC      *types_consensus.QuorumCertificate // Highest QC for which replica voted COMMIT
+	HighPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
+	LockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
 	// Leader Election
-	LeaderId       *types_consensus.NodeId
-	NodeId         types_consensus.NodeId
-	ValAddrToIdMap types_consensus.ValAddrToIdMap // TODO(design): This needs to be updated every time the ValMap is modified
-	IdToValAddrMap types_consensus.IdToValAddrMap // TODO(design): This needs to be updated every time the ValMap is modified
+	LeaderId       *typesCons.NodeId
+	NodeId         typesCons.NodeId
+	ValAddrToIdMap typesCons.ValAddrToIdMap // TODO(design): This needs to be updated every time the ValMap is modified
+	IdToValAddrMap typesCons.IdToValAddrMap // TODO(design): This needs to be updated every time the ValMap is modified
 
 	// Module Dependencies
 	utilityContext    modules.UtilityContext
 	paceMaker         Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-	logPrefix   string                                                              // TODO(design): Remove later when we build a shared/proper/injected logger
-	MessagePool map[types_consensus.HotstuffStep][]*types_consensus.HotstuffMessage // TODO(design): Move this over to the persistence module or elsewhere?
+	logPrefix   string                                                  // TODO(design): Remove later when we build a shared/proper/injected logger
+	MessagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage // TODO(design): Move this over to the persistence module or elsewhere?
 }
 
 func Create(cfg *config.Config) (modules.ConsensusModule, error) {
@@ -64,7 +64,7 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	}
 
 	address := cfg.PrivateKey.Address().String()
-	valIdMap, idValMap := types_consensus.GetValAddrToIdMap(types.GetTestState(nil).ValidatorMap)
+	valIdMap, idValMap := typesCons.GetValAddrToIdMap(types.GetTestState(nil).ValidatorMap)
 
 	m := &consensusModule{
 		bus:        nil,
@@ -89,7 +89,7 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		leaderElectionMod: leaderElectionMod,
 
 		logPrefix:   DefaultLogPrefix,
-		MessagePool: make(map[types_consensus.HotstuffStep][]*types_consensus.HotstuffMessage),
+		MessagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
 	}
 
 	// TODO(olshansky): Look for a way to avoid doing this.
@@ -150,17 +150,17 @@ handler which has both pros and cons:
 
 // TODO(olshansky): Should we just make these singletons or embed them directly in the consensusModule?
 type HotstuffMessageHandler interface {
-	HandleNewRoundMessage(*consensusModule, *types_consensus.HotstuffMessage)
-	HandlePrepareMessage(*consensusModule, *types_consensus.HotstuffMessage)
-	HandlePrecommitMessage(*consensusModule, *types_consensus.HotstuffMessage)
-	HandleCommitMessage(*consensusModule, *types_consensus.HotstuffMessage)
-	HandleDecideMessage(*consensusModule, *types_consensus.HotstuffMessage)
+	HandleNewRoundMessage(*consensusModule, *typesCons.HotstuffMessage)
+	HandlePrepareMessage(*consensusModule, *typesCons.HotstuffMessage)
+	HandlePrecommitMessage(*consensusModule, *typesCons.HotstuffMessage)
+	HandleCommitMessage(*consensusModule, *typesCons.HotstuffMessage)
+	HandleDecideMessage(*consensusModule, *typesCons.HotstuffMessage)
 }
 
 func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	switch message.MessageName() {
 	case HotstuffMessage:
-		var hotstuffMessage types_consensus.HotstuffMessage
+		var hotstuffMessage typesCons.HotstuffMessage
 		err := anypb.UnmarshalTo(message, &hotstuffMessage, proto.UnmarshalOptions{})
 		if err != nil {
 			return err
@@ -175,7 +175,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	return nil
 }
 
-func (m *consensusModule) handleHotstuffMessage(msg *types_consensus.HotstuffMessage) {
+func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) {
 	// TODO(olshansky): How can we inject the nodeId of the source address here?
 	m.nodeLog(fmt.Sprintf("[DEBUG] (%s->%d) - Height: %d; Type: %s; Round: %d.", "???", m.NodeId, msg.Height, StepToString[msg.Step], msg.Round))
 

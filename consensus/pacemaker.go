@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/config"
 
 	"github.com/pokt-network/pocket/shared/modules"
@@ -21,7 +21,7 @@ type Pacemaker interface {
 	// for the height/round/step/etc, and interface with the module that way.
 	SetConsensusModule(module *consensusModule)
 
-	ValidateMessage(message *types_consensus.HotstuffMessage) error
+	ValidateMessage(message *typesCons.HotstuffMessage) error
 	RestartTimer()
 	NewHeight()
 	InterruptRound()
@@ -87,16 +87,16 @@ func (m *paceMaker) SetConsensusModule(c *consensusModule) {
 	m.consensusMod = c
 }
 
-func (p *paceMaker) ValidateMessage(m *types_consensus.HotstuffMessage) error {
+func (p *paceMaker) ValidateMessage(m *typesCons.HotstuffMessage) error {
 	// Consensus message is from the past
 	if m.Height < p.consensusMod.Height {
-		return fmt.Errorf("%s Current: %d; Message: %d ", types_consensus.ErrOlderMessage, p.consensusMod.Height, m.Height)
+		return fmt.Errorf("%s Current: %d; Message: %d ", typesCons.ErrOlderMessage, p.consensusMod.Height, m.Height)
 	}
 
 	// Current node is out of sync
 	if m.Height > p.consensusMod.Height {
 		// TODO(design): Need to restart state sync
-		return fmt.Errorf("%s. Current: %d; Message: %d ", types_consensus.ErrFutureMessage, p.consensusMod.Height, m.Height)
+		return fmt.Errorf("%s. Current: %d; Message: %d ", typesCons.ErrFutureMessage, p.consensusMod.Height, m.Height)
 	}
 
 	// Do not handle messages if it is a self proposal
@@ -104,12 +104,12 @@ func (p *paceMaker) ValidateMessage(m *types_consensus.HotstuffMessage) error {
 		// TODO(olshansky): This code branch is a result of the optimization in the leader
 		// handlers. Since the leader also acts as a replica but doesn't use the replica's
 		// handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
-		return types_consensus.ErrSelfProposal
+		return typesCons.ErrSelfProposal
 	}
 
 	// Message is from the past
 	if m.Round < p.consensusMod.Round || (m.Round == p.consensusMod.Round && m.Step < p.consensusMod.Step) {
-		return fmt.Errorf("%s. Current (step, round): (%s, %d); Message (step, round): (%s, %d)", types_consensus.ErrOlderStepRound, StepToString[p.consensusMod.Step], p.consensusMod.Round, StepToString[m.Step], m.Round)
+		return fmt.Errorf("%s. Current (step, round): (%s, %d); Message (step, round): (%s, %d)", typesCons.ErrOlderStepRound, StepToString[p.consensusMod.Step], p.consensusMod.Round, StepToString[m.Step], m.Round)
 	}
 
 	// Everything checks out!
@@ -120,7 +120,7 @@ func (p *paceMaker) ValidateMessage(m *types_consensus.HotstuffMessage) error {
 	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
 	if m.Round > p.consensusMod.Round || (m.Round == p.consensusMod.Round && m.Step > p.consensusMod.Step) {
 		p.consensusMod.nodeLog(fmt.Sprintf("%s FROM (%d, %s, %d) TO (%d, %s, %d)",
-			types_consensus.ErrPacemakerCatchup, p.consensusMod.Height, StepToString[p.consensusMod.Step],
+			typesCons.ErrPacemakerCatchup, p.consensusMod.Height, StepToString[p.consensusMod.Step],
 			p.consensusMod.Round, m.Height, StepToString[m.Step], m.Round))
 		p.consensusMod.Step = m.Step
 		p.consensusMod.Round = m.Round
@@ -134,7 +134,7 @@ func (p *paceMaker) ValidateMessage(m *types_consensus.HotstuffMessage) error {
 		return nil
 	}
 
-	return types_consensus.ErrUnexpectedPacemakerCase
+	return typesCons.ErrUnexpectedPacemakerCase
 }
 
 func (p *paceMaker) RestartTimer() {
@@ -181,7 +181,7 @@ func (p *paceMaker) NewHeight() {
 	p.startNextView(nil, false) // TODO(design): We are omitting CommitQC and TimeoutQC here.
 }
 
-func (p *paceMaker) startNextView(qc *types_consensus.QuorumCertificate, forceNextView bool) {
+func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
 	p.consensusMod.Step = NewRound
 	p.consensusMod.clearLeader()
 	p.consensusMod.clearMessagesPool()
@@ -192,7 +192,7 @@ func (p *paceMaker) startNextView(qc *types_consensus.QuorumCertificate, forceNe
 		return
 	}
 
-	hotstuffMessage := &types_consensus.HotstuffMessage{
+	hotstuffMessage := &typesCons.HotstuffMessage{
 		Type:          Propose,
 		Height:        p.consensusMod.Height,
 		Step:          NewRound,
@@ -202,7 +202,7 @@ func (p *paceMaker) startNextView(qc *types_consensus.QuorumCertificate, forceNe
 	}
 
 	if qc != nil {
-		hotstuffMessage.Justification = &types_consensus.HotstuffMessage_QuorumCertificate{
+		hotstuffMessage.Justification = &typesCons.HotstuffMessage_QuorumCertificate{
 			QuorumCertificate: qc,
 		}
 	}

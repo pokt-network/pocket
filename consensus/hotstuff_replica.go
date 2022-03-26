@@ -3,7 +3,7 @@ package consensus
 import (
 	"fmt"
 
-	types_consensus "github.com/pokt-network/pocket/consensus/types"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
@@ -11,7 +11,7 @@ type HotstuffReplicaMessageHandler struct{}
 
 var (
 	ReplicaMessageHandler HotstuffMessageHandler = &HotstuffReplicaMessageHandler{}
-	replicaHandlers                              = map[types_consensus.HotstuffStep]func(*consensusModule, *types_consensus.HotstuffMessage){
+	replicaHandlers                              = map[typesCons.HotstuffStep]func(*consensusModule, *typesCons.HotstuffMessage){
 		NewRound:  ReplicaMessageHandler.HandleNewRoundMessage,
 		Prepare:   ReplicaMessageHandler.HandlePrepareMessage,
 		PreCommit: ReplicaMessageHandler.HandlePrecommitMessage,
@@ -22,7 +22,7 @@ var (
 
 /*** NewRound Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
@@ -34,7 +34,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 
 /*** Prepare Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
@@ -65,7 +65,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 
 /*** PreCommit Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
@@ -91,7 +91,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 
 /*** Commit Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
@@ -117,7 +117,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 
 /*** Decide Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusModule, msg *types_consensus.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
@@ -139,13 +139,13 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 }
 
 // anteHandle is the handler called on every replica message before specific handler
-func (handler *HotstuffReplicaMessageHandler) anteHandle(m *consensusModule, msg *types_consensus.HotstuffMessage) error {
+func (handler *HotstuffReplicaMessageHandler) anteHandle(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	return nil
 }
 
-func (m *consensusModule) validateProposal(msg *types_consensus.HotstuffMessage) error {
+func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error {
 	if !(msg.Type == Propose && msg.Step == Prepare) {
-		return types_consensus.ErrProposalNotValidInPrepare
+		return typesCons.ErrProposalNotValidInPrepare
 	}
 
 	if err := m.validateBlock(msg.Block); err != nil {
@@ -165,36 +165,36 @@ func (m *consensusModule) validateProposal(msg *types_consensus.HotstuffMessage)
 
 	// Safety: not locked
 	if lockedQC == nil {
-		m.nodeLog(types_consensus.NotLockedOnQC)
+		m.nodeLog(typesCons.NotLockedOnQC)
 		return nil
 	}
 
 	// Safety: check the hash of the locked QC
 	// TODO(olshansky): Extend implementation to adopt `ExtendsFrom` as described in the Hotstuff whitepaper.
 	if protoHash(lockedQC.Block) == protoHash(justifyQC.Block) { // && lockedQC.Block.ExtendsFrom(justifyQC.Block)
-		m.nodeLog(types_consensus.ProposalBlockExtends)
+		m.nodeLog(typesCons.ProposalBlockExtends)
 		return nil
 	}
 
 	// Liveness: node is locked on a QC from the past. [TODO]: Do we want to set `m.LockedQC = nil` here or something else?
 	if justifyQC.Height > lockedQC.Height || (justifyQC.Height == lockedQC.Height && justifyQC.Round > lockedQC.Round) {
-		return types_consensus.ErrNodeIsLockedOnPastQC
+		return typesCons.ErrNodeIsLockedOnPastQC
 	}
 
-	return types_consensus.ErrUnhandledProposalCase
+	return typesCons.ErrUnhandledProposalCase
 }
 
-func (m *consensusModule) validateQuorumCertificate(qc *types_consensus.QuorumCertificate) error {
+func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertificate) error {
 	if qc == nil {
-		return types_consensus.ErrNilQC
+		return typesCons.ErrNilQC
 	}
 
 	if qc.Block == nil {
-		return types_consensus.ErrNilBlockInQC
+		return typesCons.ErrNilBlockInQC
 	}
 
 	if qc.ThresholdSignature == nil || len(qc.ThresholdSignature.Signatures) == 0 {
-		return types_consensus.ErrNilThresholdSigInQC
+		return typesCons.ErrNilThresholdSigInQC
 	}
 
 	msgToJustify := qcToHotstuffMessage(qc)
@@ -222,13 +222,13 @@ func (m *consensusModule) validateQuorumCertificate(qc *types_consensus.QuorumCe
 	return nil
 }
 
-func qcToHotstuffMessage(qc *types_consensus.QuorumCertificate) *types_consensus.HotstuffMessage {
-	return &types_consensus.HotstuffMessage{
+func qcToHotstuffMessage(qc *typesCons.QuorumCertificate) *typesCons.HotstuffMessage {
+	return &typesCons.HotstuffMessage{
 		Height: qc.Height,
 		Step:   qc.Step,
 		Round:  qc.Round,
 		Block:  qc.Block,
-		Justification: &types_consensus.HotstuffMessage_QuorumCertificate{
+		Justification: &typesCons.HotstuffMessage_QuorumCertificate{
 			QuorumCertificate: qc,
 		},
 	}

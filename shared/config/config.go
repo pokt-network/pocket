@@ -8,14 +8,14 @@ import (
 	"os"
 	"path/filepath"
 
-	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
 type Config struct {
 	RootDir string `json:"root_dir"`
 	Genesis string `json:"genesis"`
 
-	PrivateKey pcrypto.Ed25519PrivateKey `json:"private_key"`
+	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 
 	Pre2P       *Pre2PConfig       `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
 	P2P         *P2PConfig         `json:"p2p"`

@@ -12,7 +12,7 @@ import (
 	pre2ptypes "github.com/pokt-network/pocket/p2p/pre2p/types"
 
 	"github.com/pokt-network/pocket/shared/config"
-	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/proto"
@@ -26,7 +26,7 @@ type p2pModule struct {
 
 	listener *net.TCPListener
 	network  pre2ptypes.Network
-	address  pcrypto.Address
+	address  cryptoPocket.Address
 }
 
 func Create(cfg *config.Config) (m modules.P2PModule, err error) {
@@ -99,7 +99,7 @@ func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
 	return m.network.NetworkBroadcast(data)
 }
 
-func (m *p2pModule) Send(addr pcrypto.Address, msg *anypb.Any, topic types.PocketTopic) error {
+func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.PocketTopic) error {
 	c := &types.PocketEvent{
 		Topic: topic,
 		Data:  msg,
