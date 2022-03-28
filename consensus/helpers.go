@@ -150,12 +150,12 @@ func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 	m.nodeLog(fmt.Sprintf("Sending %s vote to %d.", StepToString[msg.Step], *m.LeaderId))
 	anyConsensusMessage, err := anypb.New(msg)
 	if err != nil {
-		m.nodeLogError("Failed to create inner consensus message", err)
+		m.nodeLogError(typesCons.CreateConsensusMessageError, err)
 		return
 	}
 
 	if err := m.GetBus().GetP2PModule().Send(crypto.AddressFromString(m.IdToValAddrMap[*m.LeaderId]), anyConsensusMessage, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
-		m.nodeLogError("Error broadcasting message:", err)
+		m.nodeLogError(typesCons.SendMessageError, err)
 		return
 	}
 }
@@ -164,12 +164,12 @@ func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 	m.nodeLog(fmt.Sprintf("Broadcasting %s message.", StepToString[msg.Step]))
 	anyConsensusMessage, err := anypb.New(msg)
 	if err != nil {
-		m.nodeLogError("Failed to create inner consensus message", err)
+		m.nodeLogError(typesCons.CreateConsensusMessageError, err)
 		return
 	}
 
 	if err := m.GetBus().GetP2PModule().Broadcast(anyConsensusMessage, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
-		m.nodeLogError("Error broadcasting message:", err)
+		m.nodeLogError(typesCons.BroadcastMessageError, err)
 		return
 	}
 }

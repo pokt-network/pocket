@@ -99,8 +99,6 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 }
 
 func (m *consensusModule) Start() error {
-	log.Println("Starting consensus module")
-
 	if err := m.paceMaker.Start(); err != nil {
 		return err
 	}
@@ -113,7 +111,6 @@ func (m *consensusModule) Start() error {
 }
 
 func (m *consensusModule) Stop() error {
-	log.Println("Stopping consensus module")
 	return nil
 }
 

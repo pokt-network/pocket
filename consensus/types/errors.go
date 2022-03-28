@@ -5,13 +5,19 @@ import (
 	"fmt"
 )
 
+// Errors logged at the top level in the consensus module
 const (
 	// TODO(olshansk) port over all of the logging info
 	DisregardHotstuffMessage = "Discarding hotstuff message because"
 	NotLockedOnQC            = "node is not locked on any QC"
 	ProposalBlockExtends     = "the ProposalQC block is the same as the LockedQC block"
+
+	SendMessageError            = "error sending message"
+	BroadcastMessageError       = "error broadcasting message"
+	CreateConsensusMessageError = "error creating consensus message"
 )
 
+// Errors propagated throughout the consensus module
 const (
 	nilBLockError                               = "block is nil"
 	nilBLockProposalError                       = "block should never be nil when creating a proposal message"

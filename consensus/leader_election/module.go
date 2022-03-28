@@ -32,7 +32,6 @@ func (m *leaderElectionModule) Start() error {
 }
 
 func (m *leaderElectionModule) Stop() error {
-	log.Println("Stopping leader election module")
 	return nil
 }
 
