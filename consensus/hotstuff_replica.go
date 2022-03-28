@@ -41,7 +41,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.validateProposal(msg); err != nil {
-		m.nodeLogError("Invalid proposal in PREPARE message", err)
+		m.nodeLogError(fmt.Sprintf("Invalid proposal in %s message", StepToString[Prepare]), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -57,7 +57,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 
 	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, msg.Block)
 	if err != nil {
-		m.nodeLogError("Could not create a PREPARE Vote", err)
+		m.nodeLogError(fmt.Sprintf("Could not create a %s Vote", StepToString[Prepare]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(prepareVoteMessage)
@@ -72,7 +72,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
-		m.nodeLogError("QC is invalid in the PRECOMMIT step", err)
+		m.nodeLogError(fmt.Sprintf("QC is invalid in the %s step", StepToString[PreCommit]), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -83,7 +83,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 
 	preCommitVoteMessage, err := CreateVoteMessage(m, PreCommit, msg.Block)
 	if err != nil {
-		m.nodeLogError("Could not create a PRECOMMIT Vote", err)
+		m.nodeLogError(fmt.Sprintf("Could not create a %s Vote", StepToString[PreCommit]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(preCommitVoteMessage)
@@ -98,7 +98,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
-		m.nodeLogError("QC is invalid in the COMMIT step", err)
+		m.nodeLogError(fmt.Sprintf("QC is invalid in the %s step", StepToString[Commit]), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -109,7 +109,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 
 	commitVoteMessage, err := CreateVoteMessage(m, Commit, msg.Block)
 	if err != nil {
-		m.nodeLogError("Could not create a COMMIT Vote", err)
+		m.nodeLogError(fmt.Sprintf("Could not create a %s Vote", StepToString[Commit]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(commitVoteMessage)
@@ -124,7 +124,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
-		m.nodeLogError("QC is invalid in the DECIDE step", err)
+		m.nodeLogError(fmt.Sprintf("QC is invalid in the %s step", StepToString[Decide]), err)
 		m.paceMaker.InterruptRound()
 		return
 	}

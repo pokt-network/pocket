@@ -31,12 +31,12 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(NewRound); err != nil {
-		m.nodeLog(fmt.Sprintf("Still waiting for more NEWROUND messages; %s", err.Error()))
+		m.nodeLog(fmt.Sprintf("Still waiting for more %s messages; %s", StepToString[NewRound], err.Error()))
 		return
 	}
 
 	// TODO(olshansky): Do we need to pause for `MinBlockFreqMSec` here to let more transactions come in?
-	m.nodeLog("Received enough NEWROUND messages!")
+	m.nodeLog(fmt.Sprintf("Received enough %s votes!", StepToString[NewRound]))
 
 	// Likely to be `nil` if blockchain is progressing well.
 	highPrepareQC := m.findHighQC(NewRound)
@@ -85,14 +85,14 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(Prepare); err != nil {
-		m.nodeLog(fmt.Sprintf("Still waiting for more PREPARE messages; %s", err.Error()))
+		m.nodeLog(fmt.Sprintf("Still waiting for more %s messages; %s", StepToString[Prepare], err.Error()))
 		return
 	}
-	m.nodeLog("Received enough PREPARE votes!")
+	m.nodeLog(fmt.Sprintf("Received enough %s votes!", StepToString[Prepare]))
 
 	prepareQC, err := m.getQuorumCertificate(m.Height, Prepare, m.Round)
 	if err != nil {
-		m.nodeLogError("Could not get QC for PREPARE step", err)
+		m.nodeLogError(fmt.Sprintf("Could not get QC for %s step", StepToString[Prepare]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
@@ -127,14 +127,14 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(PreCommit); err != nil {
-		m.nodeLog(fmt.Sprintf("Still waiting for more PRECOMMIT messages; %s", err.Error()))
+		m.nodeLog(fmt.Sprintf("Still waiting for more %s messages; %s", StepToString[PreCommit], err.Error()))
 		return
 	}
 	m.nodeLog("received enough PRECOMMIT votes!")
 
 	preCommitQC, err := m.getQuorumCertificate(m.Height, PreCommit, m.Round)
 	if err != nil {
-		m.nodeLogError("Could not get QC for PRECOMMIT step", err)
+		m.nodeLogError(fmt.Sprintf("Could not get QC for %s step", StepToString[PreCommit]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
@@ -169,14 +169,14 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(Commit); err != nil {
-		m.nodeLog(fmt.Sprintf("Still waiting for more COMMIT messages; %s", err.Error()))
+		m.nodeLog(fmt.Sprintf("Still waiting for more %s messages; %s", StepToString[Commit], err.Error()))
 		return
 	}
-	m.nodeLog("Received enough COMMIT votes!")
+	m.nodeLog(fmt.Sprintf("Received enough %s votes!", StepToString[Commit]))
 
 	commitQC, err := m.getQuorumCertificate(m.Height, Commit, m.Round)
 	if err != nil {
-		m.nodeLogError("Could not get QC for COMMIT step.", err)
+		m.nodeLogError(fmt.Sprintf("Could not get QC for %s step", StepToString[Commit]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
@@ -208,7 +208,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusMod
 		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
 		return
 	}
-	m.nodeLog("[NOOP] Leader does nothing on DECIDE message.")
+	m.nodeLog("[NOOP] Leader does nothing on DECIDE message")
 }
 
 // anteHandle is the general handler called for every before every specific HotstuffLeaderMessageHandler handler
