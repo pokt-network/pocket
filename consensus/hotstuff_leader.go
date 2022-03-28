@@ -269,7 +269,7 @@ func (m *consensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {
 	// NOTE: This is just a placeholder at the moment. It doesn't actually work because SizeOf returns
 	// the size of the map pointer, and does not recursively determine the size of all the underlying elements.
 	if m.consCfg.MaxMempoolBytes < uint64(unsafe.Sizeof(m.MessagePool)) {
-		m.nodeLogError("Discarding hotstuff message because the mempool is full", fmt.Errorf("mempool is full"))
+		m.nodeLogError("Discarding hotstuff message because the mempool is full", typesCons.ErrConsensusMempoolFull)
 		return
 	}
 

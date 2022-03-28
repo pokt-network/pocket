@@ -41,6 +41,7 @@ const (
 	blockSizeTooLargeError                      = "block size is too large"
 	invalidAppHashError                         = "apphash being applied does not equal that from utility"
 	byzantineOptimisticThresholdError           = "byzantine optimistic threshold not met"
+	consensusMempoolFullError                   = "mempool is full"
 )
 
 var (
@@ -67,6 +68,7 @@ var (
 	ErrUnexpectedPacemakerCase                = errors.New(UnexpectedPacemakerCaseError)
 	ErrReplicaPrepareBlock                    = errors.New(replicaPrepareBlockError)
 	ErrLeaderApplyBLock                       = errors.New(leaderApplyBlockError)
+	ErrConsensusMempoolFull                   = errors.New(consensusMempoolFullError)
 )
 
 func ErrInvalidBlockSize(blockSize, maxSize uint64) error {
@@ -88,4 +90,16 @@ func ErrMissingValidator(address string, nodeId uint64) error {
 func ErrValidatingPartialSig(senderAddr string, senderNodeId, height, round uint64, step, signature, blockHash, pubKey string) error {
 	return fmt.Errorf("%s: Sender: %s (%d); Height: %d; Step: %s; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s",
 		invalidPartialSignatureError, senderAddr, senderNodeId, height, step, round, signature, blockHash, pubKey)
+}
+
+func ErrPacemakerUnexpectedMessageHeight(err error, heightCurrent, heightMessage uint64) error {
+	return fmt.Errorf("%s: Current: %d; Message: %d ", err, heightCurrent, heightMessage)
+}
+
+func ErrPacemakerUnexpectedMessageStepRound(err error, stepCurrent string, roundCurrent uint64, stepMessage string, roundMessage uint64) error {
+	return fmt.Errorf("%s: Current (step, round): (%s, %d); Message (step, round): (%s, %d)", err, stepCurrent, roundCurrent, stepMessage, roundMessage)
+}
+
+func ErrUnknownConsensusMessageType(var1 interface{}) error {
+	return fmt.Errorf("unknown consensus message type: %v", var1)
 }

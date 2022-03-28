@@ -90,13 +90,13 @@ func (m *paceMaker) SetConsensusModule(c *consensusModule) {
 func (p *paceMaker) ValidateMessage(m *typesCons.HotstuffMessage) error {
 	// Consensus message is from the past
 	if m.Height < p.consensusMod.Height {
-		return fmt.Errorf("%s Current: %d; Message: %d ", typesCons.ErrOlderMessage, p.consensusMod.Height, m.Height)
+		return typesCons.ErrPacemakerUnexpectedMessageHeight(typesCons.ErrOlderMessage, p.consensusMod.Height, m.Height)
 	}
 
 	// Current node is out of sync
 	if m.Height > p.consensusMod.Height {
 		// TODO(design): Need to restart state sync
-		return fmt.Errorf("%s. Current: %d; Message: %d ", typesCons.ErrFutureMessage, p.consensusMod.Height, m.Height)
+		return typesCons.ErrPacemakerUnexpectedMessageHeight(typesCons.ErrFutureMessage, p.consensusMod.Height, m.Height)
 	}
 
 	// Do not handle messages if it is a self proposal
@@ -109,7 +109,7 @@ func (p *paceMaker) ValidateMessage(m *typesCons.HotstuffMessage) error {
 
 	// Message is from the past
 	if m.Round < p.consensusMod.Round || (m.Round == p.consensusMod.Round && m.Step < p.consensusMod.Step) {
-		return fmt.Errorf("%s. Current (step, round): (%s, %d); Message (step, round): (%s, %d)", typesCons.ErrOlderStepRound, StepToString[p.consensusMod.Step], p.consensusMod.Round, StepToString[m.Step], m.Round)
+		return typesCons.ErrPacemakerUnexpectedMessageStepRound(typesCons.ErrOlderStepRound, StepToString[p.consensusMod.Step], p.consensusMod.Round, StepToString[m.Step], m.Round)
 	}
 
 	// Everything checks out!

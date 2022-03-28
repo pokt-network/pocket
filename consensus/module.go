@@ -169,7 +169,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	case UtilityMessage:
 		m.nodeLog("[WARN] UtilityMessage handling is not implemented by consensus yet...")
 	default:
-		return fmt.Errorf("unknown consensus message type: %v", message.MessageName())
+		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
 	}
 
 	return nil
