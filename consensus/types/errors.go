@@ -5,20 +5,53 @@ import (
 	"fmt"
 )
 
-// Errors logged at the top level in the consensus module
+// Logs and warnings
 const (
-	// TODO(olshansk) port over all of the logging info
 	DisregardHotstuffMessage = "Discarding hotstuff message because"
 	NotLockedOnQC            = "node is not locked on any QC"
 	ProposalBlockExtends     = "the ProposalQC block is the same as the LockedQC block"
 
-	SendMessageError            = "error sending message"
-	BroadcastMessageError       = "error broadcasting message"
-	CreateConsensusMessageError = "error creating consensus message"
+	NilUtilityContextWarning = "[WARN] Why is the node utility context not nil when preparing a new block? Releasing for now..."
+
+	DebugResetToGenesis  = "[DEBUG] Resetting to genesis..."
+	DebugTriggerNextView = "[DEBUG] Triggering next view..."
 )
 
-// Errors propagated throughout the consensus module
+func OptimisticVoteCountWaiting(step string, status string) string {
+	return fmt.Sprintf("Still waiting for more %s messages; %s", step, status)
+}
+
+func OptimisticVoteCountPassed(step string) string {
+	return fmt.Sprintf("received enough %s votes!", step)
+}
+
+func CommittingBlock(height uint64, numTxs int) string {
+	return fmt.Sprintf("🧱🧱🧱 Committing block at height %d with %d transactions 🧱🧱🧱", height, numTxs)
+}
+
+func ElectedNewLeader(address string, nodeId uint64) string {
+	return fmt.Sprintf("Elected new leader: %s (%d)", address, nodeId)
+}
+
+func SendingMessageForStep(step string, nodeId int) string {
+	return fmt.Sprintf("Sending %s message to %d", step, nodeId)
+}
+
+func BroadcastingMessageForStep(step string) string {
+	return fmt.Sprintf("Sending message for %s step", step)
+}
+
+func DebugTogglePacemakerManualMode(mode string) string {
+	return fmt.Sprintf("[DEBUG] Toggling pacemaker manual mode to %s", mode)
+}
+
+func DebugNodeState(state ConsensusNodeState) string {
+	return fmt.Sprintf("\t[DEBUG] NODE STATE: Node %d is at (Height, Step, Round): (%d, %d, %d)\n", state.NodeId, state.Height, state.Step, state.Round)
+}
+
+// Errors
 const (
+	// Messages used to create error objects
 	nilBLockError                               = "block is nil"
 	nilBLockProposalError                       = "block should never be nil when creating a proposal message"
 	nilBLockVoteError                           = "block should never be nil when creating a vote message for a proposal"
@@ -41,13 +74,21 @@ const (
 	selfProposalError                           = "hotstuff message is a self proposal"
 	olderStepRoundError                         = "hotstuff message is of the right height but from the past"
 	pacemakerCatchupError                       = "pacemaker catching up the node's (height, step, round)"
-	UnexpectedPacemakerCaseError                = "an unexpected pacemaker case occurred"
+	unexpectedPacemakerCaseError                = "an unexpected pacemaker case occurred"
 	replicaPrepareBlockError                    = "node should not call `prepareBlock` if it is not a leader"
-	leaderApplyBlockError                       = "node should not call `applyBlock` if it is leader"
+	leaderErrApplyBlock                         = "node should not call `applyBlock` if it is leader"
 	blockSizeTooLargeError                      = "block size is too large"
 	invalidAppHashError                         = "apphash being applied does not equal that from utility"
 	byzantineOptimisticThresholdError           = "byzantine optimistic threshold not met"
 	consensusMempoolFullError                   = "mempool is full"
+	applyBlockError                             = "could not apply block"
+	prepareBlockError                           = "could not prepare block"
+	commitBlockError                            = "could not commit block"
+	sendMessageError                            = "error sending message"
+	broadcastMessageError                       = "error broadcasting message"
+	createConsensusMessageError                 = "error creating consensus message"
+	hotstuffAnteValidationError                 = "discarding hotstuff message because ante validation failed"
+	nilLeaderIdError                            = "attempting to send a message to leader when LeaderId is nil"
 )
 
 var (
@@ -71,10 +112,18 @@ var (
 	ErrSelfProposal                           = errors.New(selfProposalError)
 	ErrOlderStepRound                         = errors.New(olderStepRoundError)
 	ErrPacemakerCatchup                       = errors.New(pacemakerCatchupError)
-	ErrUnexpectedPacemakerCase                = errors.New(UnexpectedPacemakerCaseError)
+	ErrUnexpectedPacemakerCase                = errors.New(unexpectedPacemakerCaseError)
 	ErrReplicaPrepareBlock                    = errors.New(replicaPrepareBlockError)
-	ErrLeaderApplyBLock                       = errors.New(leaderApplyBlockError)
+	ErrLeaderApplyBLock                       = errors.New(leaderErrApplyBlock)
 	ErrConsensusMempoolFull                   = errors.New(consensusMempoolFullError)
+	ErrApplyBlock                             = errors.New(applyBlockError)
+	ErrPrepareBlock                           = errors.New(prepareBlockError)
+	ErrCommitBlock                            = errors.New(commitBlockError)
+	ErrSendMessage                            = errors.New(sendMessageError)
+	ErrBroadcastMessage                       = errors.New(broadcastMessageError)
+	ErrCreateConsensusMessage                 = errors.New(createConsensusMessageError)
+	ErrHotstuffAnteValidation                 = errors.New(hotstuffAnteValidationError)
+	ErrNilLeaderId                            = errors.New(nilLeaderIdError)
 )
 
 func ErrInvalidBlockSize(blockSize, maxSize uint64) error {
@@ -108,4 +157,16 @@ func ErrPacemakerUnexpectedMessageStepRound(err error, stepCurrent string, round
 
 func ErrUnknownConsensusMessageType(var1 interface{}) error {
 	return fmt.Errorf("unknown consensus message type: %v", var1)
+}
+
+func CreateProposeMessageError(step string) string {
+	return fmt.Sprintf("Could not create a %s Propose message", step)
+}
+
+func CreateVoteMessageError(step string) string {
+	return fmt.Sprintf("Could not create a %s Vote message", step)
+}
+
+func QCInvalidError(step string) string {
+	return fmt.Sprintf("QC is invalid in the %s step", step)
 }

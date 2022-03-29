@@ -143,33 +143,33 @@ func protoHash(m proto.Message) string {
 func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 	// TODO(olshansky): This can happen due to a race condition with the pacemaker.
 	if m.LeaderId == nil {
-		m.nodeLogError("[TODO] How/why am I trying to send a message to a nil leader?", nil)
+		m.nodeLogError(typesCons.ErrNilLeaderId.Error(), nil)
 		return
 	}
 
-	m.nodeLog(fmt.Sprintf("Sending %s vote to %d.", StepToString[msg.Step], *m.LeaderId))
+	m.nodeLog(typesCons.SendingMessageForStep(StepToString[msg.Step], int(*m.LeaderId)))
 	anyConsensusMessage, err := anypb.New(msg)
 	if err != nil {
-		m.nodeLogError(typesCons.CreateConsensusMessageError, err)
+		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
 		return
 	}
 
 	if err := m.GetBus().GetP2PModule().Send(crypto.AddressFromString(m.IdToValAddrMap[*m.LeaderId]), anyConsensusMessage, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
-		m.nodeLogError(typesCons.SendMessageError, err)
+		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return
 	}
 }
 
 func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
-	m.nodeLog(fmt.Sprintf("Broadcasting %s message.", StepToString[msg.Step]))
+	m.nodeLog(typesCons.BroadcastingMessageForStep(StepToString[msg.Step]))
 	anyConsensusMessage, err := anypb.New(msg)
 	if err != nil {
-		m.nodeLogError(typesCons.CreateConsensusMessageError, err)
+		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
 		return
 	}
 
 	if err := m.GetBus().GetP2PModule().Broadcast(anyConsensusMessage, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
-		m.nodeLogError(typesCons.BroadcastMessageError, err)
+		m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
 		return
 	}
 }

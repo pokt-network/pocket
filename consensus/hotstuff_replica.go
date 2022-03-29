@@ -24,7 +24,7 @@ var (
 
 func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
+		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
@@ -36,7 +36,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
+		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
@@ -47,7 +47,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 	}
 
 	if err := m.applyBlock(msg.Block); err != nil {
-		m.nodeLogError("Could not apply the block", err)
+		m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -57,7 +57,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 
 	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, msg.Block)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not create a %s Vote", StepToString[Prepare]), err)
+		m.nodeLogError(typesCons.CreateVoteMessageError(StepToString[Prepare]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(prepareVoteMessage)
@@ -67,12 +67,12 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
+		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
-		m.nodeLogError(fmt.Sprintf("QC is invalid in the %s step", StepToString[PreCommit]), err)
+		m.nodeLogError(typesCons.QCInvalidError(StepToString[PreCommit]), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -83,7 +83,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 
 	preCommitVoteMessage, err := CreateVoteMessage(m, PreCommit, msg.Block)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not create a %s Vote", StepToString[PreCommit]), err)
+		m.nodeLogError(typesCons.CreateVoteMessageError(StepToString[PreCommit]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(preCommitVoteMessage)
@@ -93,12 +93,12 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 
 func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
+		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
-		m.nodeLogError(fmt.Sprintf("QC is invalid in the %s step", StepToString[Commit]), err)
+		m.nodeLogError(typesCons.QCInvalidError(StepToString[Commit]), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -109,7 +109,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 
 	commitVoteMessage, err := CreateVoteMessage(m, Commit, msg.Block)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not create a %s Vote", StepToString[Commit]), err)
+		m.nodeLogError(typesCons.CreateVoteMessageError(StepToString[Commit]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(commitVoteMessage)
@@ -119,12 +119,12 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 
 func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
+		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
-		m.nodeLogError(fmt.Sprintf("QC is invalid in the %s step", StepToString[Decide]), err)
+		m.nodeLogError(typesCons.QCInvalidError(StepToString[Decide]), err)
 		m.paceMaker.InterruptRound()
 		return
 	}

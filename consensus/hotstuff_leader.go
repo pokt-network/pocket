@@ -1,7 +1,6 @@
 package consensus
 
 import (
-	"fmt"
 	"unsafe"
 
 	"github.com/pokt-network/pocket/shared/types"
@@ -26,17 +25,17 @@ type HotstuffLeaderMessageHandler struct{}
 
 func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
+		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(NewRound); err != nil {
-		m.nodeLog(fmt.Sprintf("Still waiting for more %s messages; %s", StepToString[NewRound], err.Error()))
+		m.nodeLog(typesCons.OptimisticVoteCountWaiting(StepToString[NewRound], err.Error()))
 		return
 	}
 
 	// TODO(olshansky): Do we need to pause for `MinBlockFreqMSec` here to let more transactions come in?
-	m.nodeLog(fmt.Sprintf("Received enough %s votes!", StepToString[NewRound]))
+	m.nodeLog(typesCons.OptimisticVoteCountPassed(StepToString[NewRound]))
 
 	// Likely to be `nil` if blockchain is progressing well.
 	highPrepareQC := m.findHighQC(NewRound)
@@ -45,7 +44,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	if highPrepareQC == nil || highPrepareQC.Height < m.Height || highPrepareQC.Round < m.Round {
 		block, err := m.prepareBlock()
 		if err != nil {
-			m.nodeLogError("Could not prepare a block for proposal", err)
+			m.nodeLogError(typesCons.ErrPrepareBlock.Error(), err)
 			m.paceMaker.InterruptRound()
 			return
 		}
@@ -61,7 +60,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 	prepareProposeMessage, err := CreateProposeMessage(m, Prepare, highPrepareQC)
 	if err != nil {
-		m.nodeLogError("Could not create a propose message", err)
+		m.nodeLogError(typesCons.CreateProposeMessageError(StepToString[Prepare]), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -70,7 +69,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// Leader also acts like a replica
 	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, m.Block)
 	if err != nil {
-		m.nodeLogError("Leader could not create a vote message", err)
+		m.nodeLogError(typesCons.CreateVoteMessageError(StepToString[Prepare]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(prepareVoteMessage)
@@ -80,19 +79,19 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
+		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(Prepare); err != nil {
-		m.nodeLog(fmt.Sprintf("Still waiting for more %s messages; %s", StepToString[Prepare], err.Error()))
+		m.nodeLog(typesCons.OptimisticVoteCountWaiting(StepToString[Prepare], err.Error()))
 		return
 	}
-	m.nodeLog(fmt.Sprintf("Received enough %s votes!", StepToString[Prepare]))
+	m.nodeLog(typesCons.OptimisticVoteCountPassed(StepToString[Prepare]))
 
 	prepareQC, err := m.getQuorumCertificate(m.Height, Prepare, m.Round)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not get QC for %s step", StepToString[Prepare]), err)
+		m.nodeLogError(typesCons.QCInvalidError(StepToString[Prepare]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
@@ -103,7 +102,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 	precommitProposeMessages, err := CreateProposeMessage(m, PreCommit, prepareQC)
 	if err != nil {
-		m.nodeLogError("Could not create a propose message", err)
+		m.nodeLogError(typesCons.CreateProposeMessageError(StepToString[PreCommit]), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -112,7 +111,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	// Leader also acts like a replica
 	precommitVoteMessage, err := CreateVoteMessage(m, PreCommit, m.Block)
 	if err != nil {
-		m.nodeLogError("Could not create a vote message", err)
+		m.nodeLogError(typesCons.CreateVoteMessageError(StepToString[PreCommit]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(precommitVoteMessage)
@@ -122,19 +121,19 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
+		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(PreCommit); err != nil {
-		m.nodeLog(fmt.Sprintf("Still waiting for more %s messages; %s", StepToString[PreCommit], err.Error()))
+		m.nodeLog(typesCons.OptimisticVoteCountWaiting(StepToString[PreCommit], err.Error()))
 		return
 	}
-	m.nodeLog("received enough PRECOMMIT votes!")
+	m.nodeLog(typesCons.OptimisticVoteCountPassed(StepToString[PreCommit]))
 
 	preCommitQC, err := m.getQuorumCertificate(m.Height, PreCommit, m.Round)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not get QC for %s step", StepToString[PreCommit]), err)
+		m.nodeLogError(typesCons.QCInvalidError(StepToString[PreCommit]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
@@ -145,7 +144,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 	commitProposeMessage, err := CreateProposeMessage(m, Commit, preCommitQC)
 	if err != nil {
-		m.nodeLogError("Could not create a propose message", err)
+		m.nodeLogError(typesCons.CreateProposeMessageError(StepToString[Commit]), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -154,7 +153,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 	// Leader also acts like a replica
 	commitVoteMessage, err := CreateVoteMessage(m, Commit, m.Block)
 	if err != nil {
-		m.nodeLogError("Could not create a vote message", err)
+		m.nodeLogError(typesCons.CreateVoteMessageError(StepToString[Commit]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(commitVoteMessage)
@@ -164,19 +163,19 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
+		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(Commit); err != nil {
-		m.nodeLog(fmt.Sprintf("Still waiting for more %s messages; %s", StepToString[Commit], err.Error()))
+		m.nodeLog(typesCons.OptimisticVoteCountWaiting(StepToString[Commit], err.Error()))
 		return
 	}
-	m.nodeLog(fmt.Sprintf("Received enough %s votes!", StepToString[Commit]))
+	m.nodeLog(typesCons.OptimisticVoteCountPassed(StepToString[Commit]))
 
 	commitQC, err := m.getQuorumCertificate(m.Height, Commit, m.Round)
 	if err != nil {
-		m.nodeLogError(fmt.Sprintf("Could not get QC for %s step", StepToString[Commit]), err)
+		m.nodeLogError(typesCons.QCInvalidError(StepToString[Commit]), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
@@ -186,29 +185,28 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 
 	decideProposeMessage, err := CreateProposeMessage(m, Decide, commitQC)
 	if err != nil {
-		m.nodeLogError("Could not create a propose message", err)
+		m.nodeLogError(typesCons.CreateProposeMessageError(StepToString[Decide]), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
 	m.broadcastToNodes(decideProposeMessage)
 
 	if err := m.commitBlock(m.Block); err != nil {
-		m.nodeLogError("Leader could not commit block during DECIDE step", err)
+		m.nodeLogError(typesCons.ErrCommitBlock.Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
 
-	// There is no "replica behaviour" to immitate here
+	// There is no "replica behavior" to imitate here
 
 	m.paceMaker.NewHeight()
 }
 
 func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError("Discarding hotstuff message because ante validation failed", err)
+		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
 		return
 	}
-	m.nodeLog("[NOOP] Leader does nothing on DECIDE message")
 }
 
 // anteHandle is the general handler called for every before every specific HotstuffLeaderMessageHandler handler
@@ -269,7 +267,7 @@ func (m *consensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {
 	// NOTE: This is just a placeholder at the moment. It doesn't actually work because SizeOf returns
 	// the size of the map pointer, and does not recursively determine the size of all the underlying elements.
 	if m.consCfg.MaxMempoolBytes < uint64(unsafe.Sizeof(m.MessagePool)) {
-		m.nodeLogError("Discarding hotstuff message because the mempool is full", typesCons.ErrConsensusMempoolFull)
+		m.nodeLogError(typesCons.DisregardHotstuffMessage, typesCons.ErrConsensusMempoolFull)
 		return
 	}
 

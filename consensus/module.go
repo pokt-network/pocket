@@ -164,7 +164,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		}
 		m.handleHotstuffMessage(&hotstuffMessage)
 	case UtilityMessage:
-		m.nodeLog("[WARN] UtilityMessage handling is not implemented by consensus yet...")
+		panic("[WARN] UtilityMessage handling is not implemented by consensus yet...")
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
 	}

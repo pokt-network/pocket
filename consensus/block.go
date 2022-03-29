@@ -3,7 +3,6 @@ package consensus
 import (
 	"bytes"
 	"encoding/hex"
-	"fmt"
 	"unsafe"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -86,7 +85,7 @@ func (m *consensusModule) applyBlock(block *typesCons.BlockConsensusTemp) error 
 // Creates a new Utility context and clears/nullifies any previous contexts if they exist
 func (m *consensusModule) updateUtilityContext() error {
 	if m.utilityContext != nil {
-		m.nodeLog("[WARN] Why is the node utility context not nil when preparing a new block? Releasing for now...")
+		m.nodeLog(typesCons.NilUtilityContextWarning)
 		m.utilityContext.ReleaseContext()
 		m.utilityContext = nil
 	}
@@ -101,7 +100,7 @@ func (m *consensusModule) updateUtilityContext() error {
 }
 
 func (m *consensusModule) commitBlock(block *typesCons.BlockConsensusTemp) error {
-	m.nodeLog(fmt.Sprintf("🧱🧱🧱 Committing block at height %d with %d transactions 🧱🧱🧱", m.Height, len(block.Transactions)))
+	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
 
 	if err := m.utilityContext.GetPersistanceContext().Commit(); err != nil {
 		return err
