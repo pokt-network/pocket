@@ -120,7 +120,7 @@ func (u *UtilityContext) HandleMessageUnstakeServiceNode(message *utilTypes.Mess
 	if err != nil {
 		return err
 	}
-	if err := u.SetServiceNodeUnstakingHeightAndStatus(message.Address, unstakingHeight, utilTypes.UnstakingStatus); err != nil {
+	if err := u.SetServiceNodeUnstakingHeightAndStatus(message.Address, unstakingHeight); err != nil {
 		return err
 	}
 	return nil
@@ -277,9 +277,9 @@ func (u *UtilityContext) GetServiceNodeStatus(address []byte) (int, types.Error)
 	return status, nil
 }
 
-func (u *UtilityContext) SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) types.Error {
+func (u *UtilityContext) SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64) types.Error {
 	store := u.Store()
-	if er := store.SetServiceNodeUnstakingHeightAndStatus(address, unstakingHeight, status); er != nil {
+	if er := store.SetServiceNodeUnstakingHeightAndStatus(address, unstakingHeight, utilTypes.UnstakingStatus); er != nil {
 		return types.ErrSetUnstakingHeightAndStatus(er)
 	}
 	return nil

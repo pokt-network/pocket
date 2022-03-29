@@ -70,7 +70,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case utilTypes.AppStakingAdjustmentParamName:
+	case utilTypes.AppStabilityAdjustmentParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -1142,11 +1142,11 @@ func (u *UtilityContext) GetBaselineAppStakeRate() (int, types.Error) {
 	return baselineRate, nil
 }
 
-func (u *UtilityContext) GetStakingAdjustment() (int, types.Error) {
+func (u *UtilityContext) GetStabilityAdjustment() (int, types.Error) {
 	store := u.Store()
-	adjustment, err := store.GetStakingAdjustment()
+	adjustment, err := store.GetStabilityAdjustment()
 	if err != nil {
-		return utilTypes.ZeroInt, types.ErrGetParam(utilTypes.AppStakingAdjustmentParamName, err)
+		return utilTypes.ZeroInt, types.ErrGetParam(utilTypes.AppStabilityAdjustmentParamName, err)
 	}
 	return adjustment, nil
 }
@@ -1605,7 +1605,7 @@ func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
 		return store.GetAppMinimumStakeOwner()
 	case utilTypes.AppBaselineStakeRateParamName:
 		return store.GetBaselineAppOwner()
-	case utilTypes.AppStakingAdjustmentParamName:
+	case utilTypes.AppStabilityAdjustmentParamName:
 		return store.GetStakingAdjustmentOwner()
 	case utilTypes.AppUnstakingBlocksParamName:
 		return store.GetAppUnstakingBlocksOwner()

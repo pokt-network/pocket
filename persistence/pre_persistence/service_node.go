@@ -282,7 +282,7 @@ func (m *PrePersistenceContext) SetServiceNodePauseHeight(address []byte, height
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	if height == 0 {
+	if height == heightNotUsed {
 		sn.Paused = false
 	} else {
 		sn.Paused = true

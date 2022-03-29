@@ -5,9 +5,14 @@ import (
 	"math/big"
 )
 
-func RandBigInt() *big.Int {
-	max := new(big.Int)
+var max *big.Int
+
+func init() {
+	max = new(big.Int)
 	max.Exp(big.NewInt(2), big.NewInt(256), nil).Sub(max, big.NewInt(1))
+}
+
+func RandBigInt() *big.Int {
 	n, _ := rand.Int(rand.Reader, max)
 	return n
 }

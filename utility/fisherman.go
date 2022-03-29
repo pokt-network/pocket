@@ -128,7 +128,7 @@ func (u *UtilityContext) HandleMessageUnstakeFisherman(message *typesUtil.Messag
 	if err != nil {
 		return err
 	}
-	if err := u.SetFishermanUnstakingHeightAndStatus(message.Address, unstakingHeight, typesUtil.UnstakingStatus); err != nil {
+	if err := u.SetFishermanUnstakingHeightAndStatus(message.Address, unstakingHeight); err != nil {
 		return err
 	}
 	return nil
@@ -310,9 +310,9 @@ func (u *UtilityContext) GetFishermanStatus(address []byte) (int, types.Error) {
 	return status, nil
 }
 
-func (u *UtilityContext) SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) types.Error {
+func (u *UtilityContext) SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64) types.Error {
 	store := u.Store()
-	if er := store.SetFishermanUnstakingHeightAndStatus(address, unstakingHeight, status); er != nil {
+	if er := store.SetFishermanUnstakingHeightAndStatus(address, unstakingHeight, typesUtil.UnstakingStatus); er != nil {
 		return types.ErrSetUnstakingHeightAndStatus(er)
 	}
 	return nil
@@ -354,6 +354,7 @@ func (u *UtilityContext) GetMessageStakeFishermanSignerCandidates(msg *typesUtil
 	if er != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(er)
 	}
+	candidates = append(candidates, msg.OutputAddress)
 	candidates = append(candidates, pk.Address())
 	return candidates, nil
 }

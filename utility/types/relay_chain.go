@@ -3,7 +3,7 @@ package types
 import "github.com/pokt-network/pocket/shared/types"
 
 const (
-	RelayChainLength = 4
+	RelayChainLength = 4 // pre-determined length that strikes a balance between combination possibilities & storage
 )
 
 type RelayChain string

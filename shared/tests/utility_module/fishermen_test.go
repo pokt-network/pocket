@@ -280,7 +280,7 @@ func TestUtilityContext_GetFishermanPauseHeightIfExists(t *testing.T) {
 func TestUtilityContext_GetFishermenReadyToUnstake(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingFishermen(t, ctx)[0]
-	if err := ctx.SetFishermanUnstakingHeightAndStatus(actor.Address, 0, 1); err != nil {
+	if err := ctx.SetFishermanUnstakingHeightAndStatus(actor.Address, 0); err != nil {
 		t.Fatal(err)
 	}
 	actors, err := ctx.GetFishermenReadyToUnstake()

@@ -633,7 +633,7 @@ func (m *PrePersistenceContext) GetBaselineAppStakeRate() (int, error) {
 	return int(params.AppBaselineStakeRate), nil
 }
 
-func (m *PrePersistenceContext) GetStakingAdjustment() (int, error) {
+func (m *PrePersistenceContext) GetStabilityAdjustment() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
 		return ZeroInt, err

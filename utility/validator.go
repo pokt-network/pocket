@@ -106,7 +106,7 @@ func (u *UtilityContext) HandleMessageUnstakeValidator(message *utilTypes.Messag
 	if err != nil {
 		return err
 	}
-	if err := u.SetValidatorUnstakingHeightAndStatus(message.Address, unstakingHeight, utilTypes.UnstakingStatus); err != nil {
+	if err := u.SetValidatorUnstakingHeightAndStatus(message.Address, unstakingHeight); err != nil {
 		return err
 	}
 	return nil
@@ -244,7 +244,7 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) types.Error {
 		return err
 	}
 	daoCutPercentage := 100 - proposerCutPercentage
-	if daoCutPercentage < 0 {
+	if daoCutPercentage < 0 || daoCutPercentage > 100 {
 		return types.ErrInvalidProposerCutPercentage()
 	}
 	amountToProposerFloat := new(big.Float).SetInt(feesAndRewardsCollected)
@@ -323,7 +323,7 @@ func (u *UtilityContext) BurnValidator(address []byte, percentage int) types.Err
 		if err != nil {
 			return err
 		}
-		if err := u.SetValidatorUnstakingHeightAndStatus(address, unstakingHeight, utilTypes.UnstakingStatus); err != nil {
+		if err := u.SetValidatorUnstakingHeightAndStatus(address, unstakingHeight); err != nil {
 			return err
 		}
 	}
@@ -409,9 +409,9 @@ func (u *UtilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks i
 	return nil
 }
 
-func (u *UtilityContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) types.Error {
+func (u *UtilityContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64) types.Error {
 	store := u.Store()
-	if er := store.SetValidatorUnstakingHeightAndStatus(address, unstakingHeight, status); er != nil {
+	if er := store.SetValidatorUnstakingHeightAndStatus(address, unstakingHeight, utilTypes.UnstakingStatus); er != nil {
 		return types.ErrSetUnstakingHeightAndStatus(er)
 	}
 	return nil

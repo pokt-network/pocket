@@ -304,7 +304,7 @@ func TestUtilityContext_GetServiceNodePauseHeightIfExists(t *testing.T) {
 func TestUtilityContext_GetServiceNodesReadyToUnstake(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingServiceNodes(t, ctx)[0]
-	if err := ctx.SetServiceNodeUnstakingHeightAndStatus(actor.Address, 0, 1); err != nil {
+	if err := ctx.SetServiceNodeUnstakingHeightAndStatus(actor.Address, 0); err != nil {
 		t.Fatal(err)
 	}
 	actors, err := ctx.GetServiceNodesReadyToUnstake()

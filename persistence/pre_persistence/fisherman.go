@@ -282,7 +282,7 @@ func (m *PrePersistenceContext) SetFishermanPauseHeight(address []byte, height i
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	if height == 0 {
+	if height == heightNotUsed {
 		fish.Paused = false
 	} else {
 		fish.Paused = true

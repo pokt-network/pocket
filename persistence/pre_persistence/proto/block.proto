@@ -4,15 +4,15 @@ package pre_persistence;
 option go_package = "/persistence/pre_persistence/";
 
 import "google/protobuf/timestamp.proto";
-
+// TODO (Team) Discuss all tendermint legacy
 message BlockHeader {
   int64 height = 1;
   string hash = 2;
-  string network_id = 3;
+  string network_id = 3; // used to differentiate what network the chain is on (Tendermint legacy)
   google.protobuf.Timestamp time = 4;
   uint32 num_txs = 5;
-  int64 total_txs = 6;
-  string last_block_hash = 7;
+  int64 total_txs = 6; // Total = total in the entire chain Num = total in block (Tendermint legacy)
+  string prev_block_hash = 7;
   bytes proposer_address = 8;
 }
 

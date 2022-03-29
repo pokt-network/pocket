@@ -45,7 +45,7 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 	transactions := make([][]byte, 0)
 	totalSizeInBytes := 0
 	for u.Mempool.Size() != 0 {
-		txBytes, txSizeInBytes, err := u.Mempool.PopTransaction()
+		txBytes, err := u.Mempool.PopTransaction()
 		if err != nil {
 			return nil, err
 		}
@@ -53,6 +53,7 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 		if err != nil {
 			return nil, err
 		}
+		txSizeInBytes := len(txBytes)
 		totalSizeInBytes += txSizeInBytes
 		if totalSizeInBytes >= maxTransactionBytes {
 			// Add back popped transaction to be applied in a future block
@@ -64,7 +65,7 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 		}
 		err = u.ApplyTransaction(transaction)
 		if err != nil {
-			if err := u.RevertLastSavePoint(); err != nil {
+			if err := u.RevertLastSavePoint(); err != nil { // TODO (Andrew) Properly implement 'unhappy path' for save points
 				return nil, err
 			}
 			totalSizeInBytes -= txSizeInBytes

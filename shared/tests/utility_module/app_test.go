@@ -292,7 +292,7 @@ func TestUtilityContext_GetAppPauseHeightIfExists(t *testing.T) {
 func TestUtilityContext_GetAppsReadyToUnstake(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingApps(t, ctx)[0]
-	if err := ctx.SetAppUnstakingHeightAndStatus(actor.Address, 0, 1); err != nil {
+	if err := ctx.SetAppUnstakingHeightAndStatus(actor.Address, 0); err != nil {
 		t.Fatal(err)
 	}
 	actors, err := ctx.GetAppsReadyToUnstake()

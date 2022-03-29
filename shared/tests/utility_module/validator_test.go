@@ -277,7 +277,7 @@ func TestUtilityContext_GetValidatorPauseHeightIfExists(t *testing.T) {
 func TestUtilityContext_GetValidatorsReadyToUnstake(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingValidators(t, ctx)[0]
-	if err := ctx.SetValidatorUnstakingHeightAndStatus(actor.Address, 0, 1); err != nil {
+	if err := ctx.SetValidatorUnstakingHeightAndStatus(actor.Address, 0); err != nil {
 		t.Fatal(err)
 	}
 	actors, err := ctx.GetValidatorsReadyToUnstake()

@@ -5,7 +5,7 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *UtilityContext) ApplyBlock(latestHeight int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
+func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
 	u.LatestHeight = latestHeight
 	// begin block lifecycle phase
 	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {
@@ -29,7 +29,7 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposer []byte, transac
 		// }
 	}
 	// end block lifecycle phase
-	if err := u.EndBlock(proposer); err != nil {
+	if err := u.EndBlock(proposerAddress); err != nil {
 		return nil, err
 	}
 	// return the app hash (consensus module will get the validator set directly

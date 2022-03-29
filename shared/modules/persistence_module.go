@@ -106,7 +106,7 @@ type PersistenceContext interface {
 	GetParamAppMinimumStake() (string, error)
 	GetMaxAppChains() (int, error)
 	GetBaselineAppStakeRate() (int, error)
-	GetStakingAdjustment() (int, error)
+	GetStabilityAdjustment() (int, error)
 	GetAppUnstakingBlocks() (int, error)
 	GetAppMinimumPauseBlocks() (int, error)
 	GetAppMaxPausedBlocks() (int, error)

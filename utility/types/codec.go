@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-type Codec interface {
+type Codec interface { // TODO (Team) move to shared. Possibly rename
 	Marshal(proto.Message) ([]byte, types.Error)
 	Unmarshal([]byte, proto.Message) types.Error
 	ToAny(proto.Message) (*anypb.Any, types.Error)

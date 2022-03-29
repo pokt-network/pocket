@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	ZeroInt     = 0
-	EmptyString = ""
+	ZeroInt       = 0
+	heightNotUsed = 0 // TODO (Andrew) update design, could use -1
+	EmptyString   = ""
 )
 
 func StringToBigInt(s string) (*big.Int, types.Error) {

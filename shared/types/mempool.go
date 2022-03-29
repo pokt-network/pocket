@@ -16,7 +16,7 @@ type Mempool interface {
 	Flush()
 	Size() int
 	TxsBytes() int
-	PopTransaction() (tx []byte, sizeInBytes int, err Error)
+	PopTransaction() (tx []byte, err Error)
 }
 
 var _ Mempool = &FIFOMempool{}
@@ -92,12 +92,11 @@ func (f *FIFOMempool) DeleteTransaction(tx []byte) Error {
 	return nil
 }
 
-func (f *FIFOMempool) PopTransaction() (tx []byte, size int, err Error) {
+func (f *FIFOMempool) PopTransaction() (tx []byte, err Error) {
 	tx, err = popTransaction(f)
 	if err != nil {
 		return
 	}
-	size = len(tx)
 	return
 }
 

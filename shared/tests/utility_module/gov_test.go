@@ -640,7 +640,7 @@ func TestUtilityContext_GetStakingAdjustment(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.AppStakingAdjustment)
-	gotParam, err := ctx.GetStakingAdjustment()
+	gotParam, err := ctx.GetStabilityAdjustment()
 	if err != nil {
 		t.Fatal(err)
 	}

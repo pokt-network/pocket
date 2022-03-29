@@ -32,8 +32,8 @@ And implement the basic transaction functionality:
 And a few additional skeleton implementations for pocket specific transactions:
 
 - FishermanPauseServiceNode [x] Implemented
-- TestScore [x] Shell // requires sessions & report card structures
-- ProveTestScore [x] Shell // requires sessions & report card structures
+- TestScore [x] Placeholder // requires sessions & report card structures
+- ProveTestScore [x] Placeholder // requires sessions & report card structures
 
 Added governance params:
 
@@ -161,7 +161,19 @@ CheckTransaction(tx []byte) error
 
 GetTransactionsForProposal(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error)
 
+
+
 ApplyBlock(Height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
+
+CheckTransaction(tx []byte) error
+
+
+
+GetTransactionsForProposal(proposerAddr []byte, maxTransactionBytes int, lastBlockByzantineValAddresses [][]byte) (transactions [][]byte, err error)
+
+
+
+ApplyBlock(Height int64, proposerAddr []byte, transactions [][]byte, lastBlockByzantineValAddresses [][]byte) (appHash []byte, err error)
 ```
 
 ## How to build

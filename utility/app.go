@@ -133,7 +133,7 @@ func (u *UtilityContext) HandleMessageUnstakeApp(message *utilTypes.MessageUnsta
 	if err != nil {
 		return err
 	}
-	if err := u.SetAppUnstakingHeightAndStatus(message.Address, unstakingHeight, utilTypes.UnstakingStatus); err != nil {
+	if err := u.SetAppUnstakingHeightAndStatus(message.Address, unstakingHeight); err != nil {
 		return err
 	}
 	return nil
@@ -225,7 +225,11 @@ func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.
 	if err != nil {
 		return utilTypes.EmptyString, err
 	}
-	stakingAdjustment, err := u.GetStakingAdjustment()
+	// the constant integer adjustment that the DAO may use to move the stakThe DAO may manually adjust an application's
+	// MaxRelays at the time of staking to correct for short-term fluctuations in the price of POKT,
+	// which may not be reflected in ParticipationRate
+	//When this parameter is set to 0, no adjustment is being made.
+	stabilityAdjustment, err := u.GetStabilityAdjustment()
 	if err != nil {
 		return utilTypes.EmptyString, err
 	}
@@ -238,11 +242,12 @@ func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.
 	// get the percentage of the baseline stake rate (can be over 100%)
 	basePercentage := big.NewFloat(float64(baseRate) / float64(100))
 	// multiply the two
+	// TODO (team) evaluate whether or not we should use micro denomination or not
 	baselineThroughput := basePercentage.Mul(basePercentage, tokensFloat64)
 	// adjust for uPOKT
-	baselineThroughput.Quo(baselineThroughput, big.NewFloat(1000000))
+	baselineThroughput.Quo(baselineThroughput, big.NewFloat(utilTypes.MillionInt))
 	// add staking adjustment (can be negative)
-	adjusted := baselineThroughput.Add(baselineThroughput, big.NewFloat(float64(stakingAdjustment)))
+	adjusted := baselineThroughput.Add(baselineThroughput, big.NewFloat(float64(stabilityAdjustment)))
 	// truncate the integer
 	result, _ := adjusted.Int(nil)
 	// bounding Max Amount of relays to maxint64
@@ -271,6 +276,7 @@ func (u *UtilityContext) InsertApplication(address, publicKey, output []byte, ma
 	return nil
 }
 
+// TODO (Team) re-evaluate whether the delta should be here or the updated value
 func (u *UtilityContext) UpdateApplication(address []byte, maxRelays, amount string, chains []string) types.Error {
 	store := u.Store()
 	err := store.UpdateApplication(address, maxRelays, amount, chains)
@@ -323,9 +329,9 @@ func (u *UtilityContext) GetAppStatus(address []byte) (int, types.Error) {
 	return status, nil
 }
 
-func (u *UtilityContext) SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) types.Error {
+func (u *UtilityContext) SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64) types.Error {
 	store := u.Store()
-	if er := store.SetAppUnstakingHeightAndStatus(address, unstakingHeight, status); er != nil {
+	if er := store.SetAppUnstakingHeightAndStatus(address, unstakingHeight, utilTypes.UnstakingStatus); er != nil { // TODO (Andrew) remove unstaking status from prepersistence
 		return types.ErrSetUnstakingHeightAndStatus(er)
 	}
 	return nil

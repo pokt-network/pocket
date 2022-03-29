@@ -3,13 +3,13 @@ package types
 const (
 	BlocksPerSessionParamName = "BlocksPerSession"
 
-	AppMinimumStakeParamName       = "AppMinimumStake"
-	AppMaxChainsParamName          = "AppMaximumChains"
-	AppBaselineStakeRateParamName  = "AppStakeRate"
-	AppStakingAdjustmentParamName  = "AppStakingAdjustment"
-	AppUnstakingBlocksParamName    = "AppUnstakingBlocks"
-	AppMinimumPauseBlocksParamName = "AppMinimumPauseBlocks"
-	AppMaxPauseBlocksParamName     = "AppMaxPauseBlocks"
+	AppMinimumStakeParamName        = "AppMinimumStake"
+	AppMaxChainsParamName           = "AppMaximumChains"
+	AppBaselineStakeRateParamName   = "AppStakeRate"
+	AppStabilityAdjustmentParamName = "AppStakingAdjustment"
+	AppUnstakingBlocksParamName     = "AppUnstakingBlocks"
+	AppMinimumPauseBlocksParamName  = "AppMinimumPauseBlocks"
+	AppMaxPauseBlocksParamName      = "AppMaxPauseBlocks"
 
 	ServiceNodeMinimumStakeParamName       = "ServiceNodeMinimumStake"
 	ServiceNodeMaxChainsParamName          = "ServiceNodeMaximumChains"

@@ -3,7 +3,7 @@ package utility;
 
 option go_package = "/utility/types/";
 
-message Vote {
+message Vote { // TODO (Team) Consolidate with consensus types
   bytes public_key = 1;
   int64 height = 2;
   uint32 round = 3;
