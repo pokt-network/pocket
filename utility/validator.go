@@ -5,6 +5,7 @@ import (
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -156,7 +157,7 @@ func (u *UtilityContext) HandleMessagePauseValidator(message *utilTypes.MessageP
 	if err != nil {
 		return err
 	}
-	if height != 0 {
+	if height != typesUtil.HeightNotUsed {
 		return types.ErrAlreadyPaused()
 	}
 	height, err = u.GetLatestHeight()
@@ -174,7 +175,7 @@ func (u *UtilityContext) HandleMessageUnpauseValidator(message *utilTypes.Messag
 	if err != nil {
 		return err
 	}
-	if pausedHeight == 0 {
+	if pausedHeight == typesUtil.HeightNotUsed {
 		return types.ErrNotPaused()
 	}
 	minPauseBlocks, err := u.GetValidatorMinimumPauseBlocks()
@@ -188,7 +189,7 @@ func (u *UtilityContext) HandleMessageUnpauseValidator(message *utilTypes.Messag
 	if latestHeight < int64(minPauseBlocks)+pausedHeight {
 		return types.ErrNotReadyToUnpause()
 	}
-	if err := u.SetValidatorPauseHeight(message.Address, utilTypes.ZeroInt); err != nil {
+	if err := u.SetValidatorPauseHeight(message.Address, utilTypes.HeightNotUsed); err != nil {
 		return err
 	}
 	return nil
@@ -213,7 +214,7 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 		// handle if over the threshold
 		if numberOfMissedBlocks >= maxMissedBlocks {
 			// pause the validator and reset missed blocks
-			if err := u.SetValidatorPauseHeightAndMissedBlocks(address, latestBlockHeight, utilTypes.ZeroInt); err != nil {
+			if err := u.SetValidatorPauseHeightAndMissedBlocks(address, latestBlockHeight, utilTypes.HeightNotUsed); err != nil {
 				return err
 			}
 			// burn validator for missing blocks
@@ -341,7 +342,7 @@ func (u *UtilityContext) GetValidatorExists(address []byte) (bool, types.Error) 
 
 func (u *UtilityContext) InsertValidator(address, publicKey, output []byte, serviceURL, amount string) types.Error {
 	store := u.Store()
-	err := store.InsertValidator(address, publicKey, output, false, utilTypes.StakedStatus, serviceURL, amount, utilTypes.ZeroInt, utilTypes.ZeroInt)
+	err := store.InsertValidator(address, publicKey, output, false, utilTypes.StakedStatus, serviceURL, amount, utilTypes.HeightNotUsed, utilTypes.HeightNotUsed)
 	if err != nil {
 		return types.ErrInsert(err)
 	}

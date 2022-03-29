@@ -44,7 +44,7 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 	}
 	transactions := make([][]byte, 0)
 	totalSizeInBytes := 0
-	for u.Mempool.Size() != 0 {
+	for u.Mempool.Size() != typesUtil.ZeroInt {
 		txBytes, err := u.Mempool.PopTransaction()
 		if err != nil {
 			return nil, err

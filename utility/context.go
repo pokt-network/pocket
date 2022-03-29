@@ -2,6 +2,7 @@ package utility
 
 import (
 	"encoding/hex"
+
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -59,7 +60,7 @@ func (u *UtilityContext) Codec() typesUtil.Codec {
 }
 
 func (u *UtilityContext) RevertLastSavePoint() types.Error {
-	if len(u.Context.SavePointsM) == 0 {
+	if len(u.Context.SavePointsM) == typesUtil.ZeroInt {
 		return types.ErrEmptySavePoints()
 	}
 	var key []byte

@@ -3,6 +3,7 @@ package utility
 import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -169,7 +170,7 @@ func (u *UtilityContext) HandleMessagePauseServiceNode(message *utilTypes.Messag
 	if err != nil {
 		return err
 	}
-	if height != 0 {
+	if height != typesUtil.HeightNotUsed {
 		return types.ErrAlreadyPaused()
 	}
 	height, err = u.GetLatestHeight()
@@ -187,7 +188,7 @@ func (u *UtilityContext) HandleMessageUnpauseServiceNode(message *utilTypes.Mess
 	if err != nil {
 		return err
 	}
-	if pausedHeight == 0 {
+	if pausedHeight == typesUtil.HeightNotUsed {
 		return types.ErrNotPaused()
 	}
 	minPauseBlocks, err := u.GetServiceNodeMinimumPauseBlocks()

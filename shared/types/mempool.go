@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"container/list"
 	"encoding/hex"
-	"github.com/pokt-network/pocket/shared/crypto"
 	"sync"
+
+	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 type Mempool interface {

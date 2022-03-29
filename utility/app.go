@@ -6,6 +6,7 @@ import (
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -182,7 +183,7 @@ func (u *UtilityContext) HandleMessagePauseApp(message *utilTypes.MessagePauseAp
 	if err != nil {
 		return err
 	}
-	if height != 0 {
+	if height != typesUtil.HeightNotUsed {
 		return types.ErrAlreadyPaused()
 	}
 	height, err = u.GetLatestHeight()
@@ -200,7 +201,7 @@ func (u *UtilityContext) HandleMessageUnpauseApp(message *utilTypes.MessageUnpau
 	if err != nil {
 		return err
 	}
-	if pausedHeight == 0 {
+	if pausedHeight == typesUtil.HeightNotUsed {
 		return types.ErrNotPaused()
 	}
 	minPauseBlocks, err := u.GetAppMinimumPauseBlocks()
@@ -214,7 +215,7 @@ func (u *UtilityContext) HandleMessageUnpauseApp(message *utilTypes.MessageUnpau
 	if latestHeight < int64(minPauseBlocks)+pausedHeight {
 		return types.ErrNotReadyToUnpause()
 	}
-	if err := u.SetAppPauseHeight(message.Address, utilTypes.ZeroInt); err != nil {
+	if err := u.SetAppPauseHeight(message.Address, utilTypes.HeightNotUsed); err != nil {
 		return err
 	}
 	return nil
@@ -269,7 +270,7 @@ func (u *UtilityContext) GetAppExists(address []byte) (bool, types.Error) {
 
 func (u *UtilityContext) InsertApplication(address, publicKey, output []byte, maxRelays, amount string, chains []string) types.Error {
 	store := u.Store()
-	err := store.InsertApplication(address, publicKey, output, false, utilTypes.StakedStatus, maxRelays, amount, chains, utilTypes.ZeroInt, utilTypes.ZeroInt)
+	err := store.InsertApplication(address, publicKey, output, false, utilTypes.StakedStatus, maxRelays, amount, chains, utilTypes.HeightNotUsed, utilTypes.HeightNotUsed)
 	if err != nil {
 		return types.ErrInsert(err)
 	}
