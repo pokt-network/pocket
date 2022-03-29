@@ -333,12 +333,12 @@ func (u *UtilityContext) GetServiceNodeCount(chain string, height int64) (int, t
 }
 
 func (u *UtilityContext) GetMessageStakeServiceNodeSignerCandidates(msg *utilTypes.MessageStakeServiceNode) ([][]byte, types.Error) {
-	candidates := make([][]byte, 0)
-	candidates = append(candidates, msg.OutputAddress)
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(er)
 	}
+	candidates := make([][]byte, 0)
+	candidates = append(candidates, msg.OutputAddress)
 	candidates = append(candidates, pk.Address())
 	return candidates, nil
 }

@@ -486,12 +486,12 @@ func (u *UtilityContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, 
 }
 
 func (u *UtilityContext) GetMessageStakeValidatorSignerCandidates(msg *utilTypes.MessageStakeValidator) ([][]byte, types.Error) {
-	candidates := make([][]byte, 0)
-	candidates = append(candidates, msg.OutputAddress)
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(er)
 	}
+	candidates := make([][]byte, 0)
+	candidates = append(candidates, msg.OutputAddress)
 	candidates = append(candidates, pk.Address())
 	return candidates, nil
 }

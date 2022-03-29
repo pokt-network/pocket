@@ -45,7 +45,7 @@ func (bh *BlockHeader) ValidateBasic() types.Error {
 	if hashLen != crypto2.SHA3HashLen {
 		return types.ErrInvalidHashLength(crypto2.ErrInvalidHashLen(hashLen))
 	}
-	hashBytes, err = hex.DecodeString(bh.LastBlockHash)
+	hashBytes, err = hex.DecodeString(bh.PrevBlockHash)
 	if err != nil {
 		return types.ErrHexDecodeFromString(err)
 	}
