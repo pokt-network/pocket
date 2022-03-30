@@ -299,7 +299,7 @@ func (a *Account) SetAddress(address crypto.Address) types.Error {
 	return nil
 }
 
-func (a *Account) SetAmount(amount big.Int) types.Error {
+func (a *Account) SetAccountAmount(amount big.Int) types.Error {
 	if a == nil {
 		return types.ErrEmptyAccount()
 	}

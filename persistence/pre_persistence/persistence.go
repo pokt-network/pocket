@@ -259,7 +259,7 @@ func (m *PrePersistenceContext) GetHeight() (int64, error) {
 func (m *PrePersistenceContext) GetBlockHash(height int64) ([]byte, error) {
 	db := m.Store()
 	block := Block{}
-	key := append(BlockPrefix, []byte(fmt.Sprintf("%d", height))...)
+	key := append(BlockPrefix, Int64ToBytes(height)...)
 	val, err := db.Get(key)
 	if err != nil {
 		return nil, err

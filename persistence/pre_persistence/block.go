@@ -21,7 +21,7 @@ func (b *Block) ValidateBasic() types.Error {
 	return nil
 }
 
-func (bh *BlockHeader) ValidateBasic() types.Error {
+func (bh *BlockHeader) ValidateBasic() types.Error { // TODO (team) move this into shared
 	if bh.NetworkId == "" {
 		return types.ErrEmptyNetworkID()
 	}

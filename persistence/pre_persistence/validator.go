@@ -50,9 +50,6 @@ func (m *PrePersistenceContext) GetAllValidators(height int64) (v []*Validator, 
 	defer it.Release()
 	for valid := it.First(); valid; valid = it.Next() {
 		bz := it.Value()
-		//if bz == nil {
-		//	break
-		//}
 		valid := it.Valid()
 		valid = valid
 		if bytes.Contains(bz, DeletedPrefixKey) {
@@ -133,7 +130,6 @@ func (m *PrePersistenceContext) UpdateValidator(address []byte, serviceURL strin
 	// update values
 	val.ServiceUrl = serviceURL
 	val.StakedTokens = BigIntToString(stakedTokens)
-	// marshal
 	bz, err := codec.Marshal(val)
 	if err != nil {
 		return err
@@ -152,7 +148,7 @@ func (m *PrePersistenceContext) DeleteValidator(address []byte) error {
 
 func (m *PrePersistenceContext) GetValidatorsReadyToUnstake(height int64, status int) (fishermen []*types.UnstakingActor, err error) {
 	db := m.Store()
-	unstakingKey := append(UnstakingValidatorPrefixKey, []byte(fmt.Sprintf("%d", height))...)
+	unstakingKey := append(UnstakingValidatorPrefixKey, Int64ToBytes(height)...)
 	if has := db.Contains(unstakingKey); !has {
 		return nil, nil
 	}
@@ -198,7 +194,6 @@ func (m *PrePersistenceContext) SetValidatorUnstakingHeightAndStatus(address []b
 	key := append(ValidatorPrefixKey, address...)
 	validator.UnstakingHeight = unstakingHeight
 	validator.Status = int32(status)
-	// marshal
 	bz, err := codec.Marshal(validator)
 	if err != nil {
 		return err
@@ -206,7 +201,7 @@ func (m *PrePersistenceContext) SetValidatorUnstakingHeightAndStatus(address []b
 	if err := db.Put(key, bz); err != nil {
 		return err
 	}
-	unstakingKey := append(UnstakingValidatorPrefixKey, []byte(fmt.Sprintf("%d", unstakingHeight))...)
+	unstakingKey := append(UnstakingValidatorPrefixKey, Int64ToBytes(unstakingHeight)...)
 	if found := db.Contains(unstakingKey); found {
 		val, err := db.Get(unstakingKey)
 		if err != nil {

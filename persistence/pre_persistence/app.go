@@ -159,7 +159,7 @@ func (m *PrePersistenceContext) DeleteApplication(address []byte) error {
 
 func (m *PrePersistenceContext) GetAppsReadyToUnstake(height int64, _ int) (apps []*types.UnstakingActor, err error) { // TODO delete unused parameter
 	db := m.Store()
-	unstakingKey := append(UnstakingAppPrefixKey, []byte(fmt.Sprintf("%d", height))...)
+	unstakingKey := append(UnstakingAppPrefixKey, Int64ToBytes(height)...)
 	if has := db.Contains(unstakingKey); !has {
 		return nil, nil
 	}
@@ -205,7 +205,6 @@ func (m *PrePersistenceContext) SetAppUnstakingHeightAndStatus(address []byte, u
 	key := append(AppPrefixKey, address...)
 	app.UnstakingHeight = unstakingHeight
 	app.Status = int32(status)
-	// marshal
 	bz, err := codec.Marshal(app)
 	if err != nil {
 		return err
@@ -213,7 +212,7 @@ func (m *PrePersistenceContext) SetAppUnstakingHeightAndStatus(address []byte, u
 	if err := db.Put(key, bz); err != nil {
 		return err
 	}
-	unstakingKey := append(UnstakingAppPrefixKey, []byte(fmt.Sprintf("%d", unstakingHeight))...)
+	unstakingKey := append(UnstakingAppPrefixKey, Int64ToBytes(unstakingHeight)...)
 	if found := db.Contains(unstakingKey); found {
 		val, err := db.Get(unstakingKey)
 		if err != nil {

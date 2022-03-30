@@ -110,7 +110,6 @@ func (m *PrePersistenceContext) UpdateServiceNode(address []byte, serviceURL str
 	sn.ServiceUrl = serviceURL
 	sn.StakedTokens = BigIntToString(stakedTokens)
 	sn.Chains = chains
-	// marshal
 	bz, err := codec.Marshal(sn)
 	if err != nil {
 		return err
@@ -148,7 +147,7 @@ func (m *PrePersistenceContext) GetServiceNodeExists(address []byte) (exists boo
 
 func (m *PrePersistenceContext) GetServiceNodesReadyToUnstake(height int64, status int) (ServiceNodes []*types.UnstakingActor, err error) {
 	db := m.Store()
-	unstakingKey := append(UnstakingServiceNodePrefixKey, []byte(fmt.Sprintf("%d", height))...)
+	unstakingKey := append(UnstakingServiceNodePrefixKey, Int64ToBytes(height)...)
 	if has := db.Contains(unstakingKey); !has {
 		return nil, nil
 	}
@@ -194,7 +193,6 @@ func (m *PrePersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address [
 	key := append(ServiceNodePrefixKey, address...)
 	sn.UnstakingHeight = unstakingHeight
 	sn.Status = int32(status)
-	// marshal
 	bz, err := codec.Marshal(sn)
 	if err != nil {
 		return err
@@ -202,7 +200,7 @@ func (m *PrePersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address [
 	if err := db.Put(key, bz); err != nil {
 		return err
 	}
-	unstakingKey := append(UnstakingServiceNodePrefixKey, []byte(fmt.Sprintf("%d", unstakingHeight))...)
+	unstakingKey := append(UnstakingServiceNodePrefixKey, Int64ToBytes(unstakingHeight)...)
 	if found := db.Contains(unstakingKey); found {
 		val, err := db.Get(unstakingKey)
 		if err != nil {
