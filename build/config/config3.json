@@ -17,9 +17,7 @@
       "172.18.0.1:8084"
     ]
   },
-  "consensus": {
-    "node_id": 3
-  },
+  "consensus": {},
   "persistence": {},
   "utility": {}
 }

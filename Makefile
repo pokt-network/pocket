@@ -73,6 +73,16 @@ mockgen:
 test_all: # generate_mocks
 	go test ./...
 
+.PHONY: test_pre2p
+## Run all go unit tests in the pre2p module
+test_pre2p: # generate_mocks
+	go test ./pre2p/...
+
+.PHONY: test_shared
+## Run all go unit tests in the shared module
+test_shared: # generate_mocks
+	go test ./shared/...
+
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
 .PHONY: protogen_show
@@ -84,6 +94,16 @@ protogen_show:
 ## Remove all the generated protobufs.
 protogen_clean:
 	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs rm
+
+# TODO(team): Add more protogen targets here.
+.PHONY: protogen_local
+## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
+protogen_local:
+	$(eval proto_dir = "./shared/types/proto/")
+
+	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=./shared ./shared/types/proto/*.proto
+
+	echo "View generated proto files by running: make protogen_show"
 
 # TODO(team): Delete this once the `prototype` directory is removed.
 .PHONY: protogen_local_prototype

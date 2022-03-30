@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/shared"
@@ -18,7 +17,7 @@ func main() {
 	flag.Parse()
 
 	if *v {
-		fmt.Println(version)
+		log.Println(version)
 		return
 	}
 
