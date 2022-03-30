@@ -3,6 +3,7 @@ package types
 const (
 	MillionInt       = 1000000
 	ZeroInt          = 0
+	HeightNotUsed    = 0
 	EmptyString      = ""
 	HttpsPrefix      = "https://"
 	HttpPrefix       = "http://"

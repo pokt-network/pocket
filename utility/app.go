@@ -6,6 +6,7 @@ import (
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -182,7 +183,7 @@ func (u *UtilityContext) HandleMessagePauseApp(message *utilTypes.MessagePauseAp
 	if err != nil {
 		return err
 	}
-	if height != 0 {
+	if height != typesUtil.HeightNotUsed {
 		return types.ErrAlreadyPaused()
 	}
 	height, err = u.GetLatestHeight()
@@ -200,7 +201,7 @@ func (u *UtilityContext) HandleMessageUnpauseApp(message *utilTypes.MessageUnpau
 	if err != nil {
 		return err
 	}
-	if pausedHeight == 0 {
+	if pausedHeight == typesUtil.HeightNotUsed {
 		return types.ErrNotPaused()
 	}
 	minPauseBlocks, err := u.GetAppMinimumPauseBlocks()
@@ -214,7 +215,7 @@ func (u *UtilityContext) HandleMessageUnpauseApp(message *utilTypes.MessageUnpau
 	if latestHeight < int64(minPauseBlocks)+pausedHeight {
 		return types.ErrNotReadyToUnpause()
 	}
-	if err := u.SetAppPauseHeight(message.Address, utilTypes.ZeroInt); err != nil {
+	if err := u.SetAppPauseHeight(message.Address, utilTypes.HeightNotUsed); err != nil {
 		return err
 	}
 	return nil
@@ -225,10 +226,10 @@ func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.
 	if err != nil {
 		return utilTypes.EmptyString, err
 	}
-	// the constant integer adjustment that the DAO may use to move the stakThe DAO may manually adjust an application's
-	// MaxRelays at the time of staking to correct for short-term fluctuations in the price of POKT,
-	// which may not be reflected in ParticipationRate
-	//When this parameter is set to 0, no adjustment is being made.
+	// The constant integer adjustment that the DAO may use to move the stake. The DAO may manually
+	// adjust an application's MaxRelays at the time of staking to correct for short-term fluctuations
+	// in the price of POKT, which may not be reflected in ParticipationRate
+	// When this parameter is set to 0, no adjustment is being made.
 	stabilityAdjustment, err := u.GetStabilityAdjustment()
 	if err != nil {
 		return utilTypes.EmptyString, err
@@ -269,7 +270,7 @@ func (u *UtilityContext) GetAppExists(address []byte) (bool, types.Error) {
 
 func (u *UtilityContext) InsertApplication(address, publicKey, output []byte, maxRelays, amount string, chains []string) types.Error {
 	store := u.Store()
-	err := store.InsertApplication(address, publicKey, output, false, utilTypes.StakedStatus, maxRelays, amount, chains, utilTypes.ZeroInt, utilTypes.ZeroInt)
+	err := store.InsertApplication(address, publicKey, output, false, utilTypes.StakedStatus, maxRelays, amount, chains, utilTypes.HeightNotUsed, utilTypes.HeightNotUsed)
 	if err != nil {
 		return types.ErrInsert(err)
 	}
@@ -367,12 +368,12 @@ func (u *UtilityContext) CalculateAppUnstakingHeight() (int64, types.Error) {
 }
 
 func (u *UtilityContext) GetMessageStakeAppSignerCandidates(msg *utilTypes.MessageStakeApp) ([][]byte, types.Error) {
-	candidates := make([][]byte, 0)
-	candidates = append(candidates, msg.OutputAddress)
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(er)
 	}
+	candidates := make([][]byte, 0)
+	candidates = append(candidates, msg.OutputAddress)
 	candidates = append(candidates, pk.Address())
 	return candidates, nil
 }

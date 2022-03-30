@@ -177,7 +177,7 @@ func (u *UtilityContext) HandleMessagePauseFisherman(message *typesUtil.MessageP
 	if err != nil {
 		return err
 	}
-	if height != 0 {
+	if height != typesUtil.HeightNotUsed {
 		return types.ErrAlreadyPaused()
 	}
 	height, err = u.GetLatestHeight()
@@ -202,7 +202,7 @@ func (u *UtilityContext) HandleMessageFishermanPauseServiceNode(message *typesUt
 	if err != nil {
 		return err
 	}
-	if height != 0 {
+	if height != typesUtil.HeightNotUsed {
 		return types.ErrAlreadyPaused()
 	}
 	height, err = u.GetLatestHeight()
@@ -220,7 +220,7 @@ func (u *UtilityContext) HandleMessageUnpauseFisherman(message *typesUtil.Messag
 	if err != nil {
 		return err
 	}
-	if pausedHeight == 0 {
+	if pausedHeight == typesUtil.HeightNotUsed {
 		return types.ErrNotPaused()
 	}
 	minPauseBlocks, err := u.GetFishermanMinimumPauseBlocks()
@@ -234,7 +234,7 @@ func (u *UtilityContext) HandleMessageUnpauseFisherman(message *typesUtil.Messag
 	if latestHeight < int64(minPauseBlocks)+pausedHeight {
 		return types.ErrNotReadyToUnpause()
 	}
-	if err := u.SetFishermanPauseHeight(message.Address, typesUtil.ZeroInt); err != nil {
+	if err := u.SetFishermanPauseHeight(message.Address, typesUtil.HeightNotUsed); err != nil {
 		return err
 	}
 	return nil
@@ -251,7 +251,7 @@ func (u *UtilityContext) GetFishermanExists(address []byte) (bool, types.Error) 
 
 func (u *UtilityContext) InsertFisherman(address, publicKey, output []byte, serviceURL, amount string, chains []string) types.Error {
 	store := u.Store()
-	err := store.InsertFisherman(address, publicKey, output, false, typesUtil.StakedStatus, serviceURL, amount, chains, typesUtil.ZeroInt, typesUtil.ZeroInt)
+	err := store.InsertFisherman(address, publicKey, output, false, typesUtil.StakedStatus, serviceURL, amount, chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	if err != nil {
 		return types.ErrInsert(err)
 	}
@@ -348,11 +348,11 @@ func (u *UtilityContext) CalculateFishermanUnstakingHeight() (int64, types.Error
 }
 
 func (u *UtilityContext) GetMessageStakeFishermanSignerCandidates(msg *typesUtil.MessageStakeFisherman) ([][]byte, types.Error) {
-	candidates := make([][]byte, 0)
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(er)
 	}
+	candidates := make([][]byte, 0)
 	candidates = append(candidates, msg.OutputAddress)
 	candidates = append(candidates, pk.Address())
 	return candidates, nil
