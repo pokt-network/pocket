@@ -6,7 +6,7 @@ import (
 )
 
 func StringToBigInt(s string) (*big.Int, types2.Error) {
-	b := big.Int{}
+	b := big.NewInt(0)
 	i, ok := b.SetString(s, 10)
 	if !ok {
 		return nil, types2.ErrStringToBigInt()

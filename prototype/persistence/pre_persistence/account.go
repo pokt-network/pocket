@@ -24,7 +24,7 @@ func (x *Account) ValidateBasic() Error {
 	if len(x.Address) != crypto2.AddressLen {
 		return ErrInvalidAddressLen(crypto2.ErrInvalidAddressLen())
 	}
-	amount := big.Int{}
+	amount := big.NewInt(0)
 	if _, ok := amount.SetString(x.Amount, 10); !ok {
 		return ErrInvalidAmount()
 	}

@@ -73,8 +73,9 @@ func (m *persistenceModule) GetBus() modules.Bus {
 func (m *persistenceModule) NewContext(height int64) (modules.PersistenceContext, error) {
 	newDB := pre_persistence.NewMemDB()
 	it := m.CommitDB.NewIterator(&util.Range{Start: pre_persistence.HeightKey(height, nil), Limit: pre_persistence.HeightKey(height+1, nil)})
+	it.First()
 	defer it.Release()
-	for valid := it.First(); valid; valid = it.Next() {
+	for ; it.Valid(); it.Next() {
 		err := newDB.Put(pre_persistence.KeyFromHeightKey(it.Key()), it.Value())
 		if err != nil {
 			return nil, err

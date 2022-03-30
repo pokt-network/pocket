@@ -48,6 +48,6 @@ func (p *ProtoCodec) FromAny(any *anypb.Any) (proto.Message, Error) {
 	return msg, nil
 }
 
-func codec() Codec {
+func Cdc() Codec {
 	return &ProtoCodec{}
 }

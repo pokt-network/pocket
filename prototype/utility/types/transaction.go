@@ -16,7 +16,7 @@ func TransactionFromBytes(transaction []byte) (*Transaction, Error) {
 }
 
 func (x *Transaction) ValidateBasic() Error {
-	fee := big.Int{}
+	fee := big.NewInt(0)
 	if _, ok := fee.SetString(x.Fee, 10); x.Fee == "" || !ok {
 		return ErrNewFeeFromString(x.Fee)
 	}
@@ -50,8 +50,8 @@ func (x *Transaction) ValidateBasic() Error {
 }
 
 func (x *Transaction) Message() (Message, Error) {
-	codec := UtilityCodec()
-	msg, er := codec.FromAny(x.Msg)
+	cdc := UtilityCodec()
+	msg, er := cdc.FromAny(x.Msg)
 	if er != nil {
 		return nil, er
 	}

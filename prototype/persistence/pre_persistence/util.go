@@ -17,7 +17,7 @@ type Page struct {
 }
 
 func StringToBigInt(s string) (*big.Int, Error) {
-	b := big.Int{}
+	b := big.NewInt(0)
 	i, ok := b.SetString(s, 10)
 	if !ok {
 		return nil, ErrStringToBigInt()
