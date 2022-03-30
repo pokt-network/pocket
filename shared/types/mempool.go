@@ -14,7 +14,7 @@ type Mempool interface {
 	AddTransaction(tx []byte) Error
 	DeleteTransaction(tx []byte) Error
 
-	Flush()
+	Clear()
 	Size() int
 	TxsBytes() int
 	PopTransaction() (tx []byte, sizeInBytes int, err Error) // TODO(andrew): In the upcoming merge, remove `sizeInBytes` from return value
@@ -102,7 +102,7 @@ func (f *FIFOMempool) PopTransaction() ([]byte, int, Error) {
 	return tx, size, nil
 }
 
-func (f *FIFOMempool) Flush() {
+func (f *FIFOMempool) Clear() {
 	f.l.Lock()
 	defer f.l.Unlock()
 	f.pool = list.New()
