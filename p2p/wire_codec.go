@@ -1,5 +1,7 @@
 package p2p
 
+// TODO(derrandz): Deprecate this codec. Details in https://github.com/pokt-network/pocket/issues/57.
+
 import (
 	"encoding/binary"
 	"errors"
@@ -8,6 +10,7 @@ import (
 
 type Encoding string
 
+// TODO(derrandz): consider converting this to an enum.
 const (
 	Binary      Encoding = "bin"
 	Utf8        Encoding = "utf8"
@@ -91,7 +94,7 @@ func (c *wireCodec) encode(encoding Encoding, isError bool, reqNonce uint32, dat
 
 	switch encoding {
 
-	case Binary:
+	case Binary: // NOTE: Left empty w/o a fallthrough intentionally
 		// set the second and first bits to 0 (they are already at 0 from initialization)
 		// do not fallthrough
 

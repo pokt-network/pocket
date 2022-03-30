@@ -149,6 +149,7 @@ func (s *socket) close() {
 		s.conn.Close()
 	}
 
+	// TODO: Why not close the channels?
 	s.closed <- struct{}{}
 	s.isOpen.Store(false)
 }
@@ -243,9 +244,7 @@ func (s *socket) read(ctx context.Context) {
 		s.closed <- struct{}{}
 	}()
 
-	{
-		s.reading <- struct{}{} // signal start
-	}
+	s.reading <- struct{}{} // signal start
 
 reader:
 	for {
@@ -291,10 +290,13 @@ reader:
 					break reader
 				}
 
+				// A non-zero nonce happens on nonced-respones (i.e., responses to already sent requests).
+				// Using the non-zero nonce, we are able to fetch the existing (waiting) request from
+				// the request map and pull out the channel on which this request expects to receive a response.
 				if nonce != 0 {
 					_, ch, found := s.requests.Find(nonce)
 					if !found {
-						// report that we've received a nonced message whose requested does not exist on our end!
+						s.logger.Warn("Received response with nonce but no request found:", nonce)
 					}
 
 					ch <- types.NewPacket(nonce, data, s.addr, wrapped)
@@ -368,9 +370,7 @@ func (s *socket) write(ctx context.Context) {
 		s.closed <- struct{}{}
 	}()
 
-	{
-		s.writing <- struct{}{} // signal start
-	}
+	s.writing <- struct{}{} // signal start
 
 writer:
 	for {

@@ -20,6 +20,11 @@ func (rm *RequestMap) Get() *Request {
 	return newReq
 }
 
+// Nonces are like IDs. Each generated Request is identified by an ID, so that if a peer makes a request
+// (i.e. generates a work channel that is identified by ID) it can listen on responses coming from the
+// network that have this nonce/ID. It can then redirect this this response to the proper workChannel,
+// since the peer has kept this channel open (and blocking) to receive the response.
+// This is how we achieve a SEND/ACK behavior in our p2p module.
 func (rm *RequestMap) Find(nonce uint32) (uint32, chan Packet, bool) {
 	rm.Lock()
 	defer rm.Unlock()
