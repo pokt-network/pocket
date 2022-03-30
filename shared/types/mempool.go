@@ -32,7 +32,6 @@ type FIFOMempool struct {
 	maxTransactions      int
 }
 
-// TODO(team): Consider moving these parameters to config.json
 func NewMempool(maxTransactionBytes int, maxTransactions int) Mempool {
 	return &FIFOMempool{
 		l:                    sync.RWMutex{},

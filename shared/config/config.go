@@ -102,8 +102,7 @@ func (c *P2PConfig) validateAndComplete() error {
 }
 
 func (c *ConsensusConfig) validateAndComplete() error {
-	// TODO: c.NodeId should be set dynamically but set via config for testing
-
+	// TODO(olshansky): c.NodeId should be set dynamically but set via config for testing
 	return nil
 }
 

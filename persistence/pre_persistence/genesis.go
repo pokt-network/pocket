@@ -1,5 +1,7 @@
 package pre_persistence
 
+// TODO(team): Consolidate this `gensis.go` with `shared/genesis.go`
+
 import (
 	"math"
 	"math/big"
