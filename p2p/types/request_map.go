@@ -2,6 +2,8 @@ package types
 
 import sync "sync"
 
+// TODO(derrandz): This structure is called a `RequestMap`, but is using a slice and therefore does
+// not take advantage of the o(1) slice indexing.
 type RequestMap struct {
 	sync.Mutex
 	maxCap    uint32
