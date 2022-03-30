@@ -11,10 +11,10 @@ import (
 )
 
 func Create(cfg *config.Config) (modules.PersistenceModule, error) {
-	db := memdb.New(comparer.DefaultComparer, 888888888)
+	db := memdb.New(comparer.DefaultComparer, cfg.PrePersistence.Capacity)
 	state := GetTestState()
 	state.LoadStateFromConfig(cfg)
-	return NewPrePersistenceModule(db, types.NewMempool(10000, 10000), cfg), nil
+	return NewPrePersistenceModule(db, types.NewMempool(cfg.PrePersistence.MempoolMaxBytes, cfg.PrePersistence.MempoolMaxTxs), cfg), nil
 
 }
 
@@ -23,7 +23,7 @@ func (p *PrePersistenceModule) Start() error {
 	if err != nil {
 		return err
 	}
-	genesis, _, _, _, _, err := NewGenesisState(p.Cfg, 5, 1, 1, 5)
+	genesis, _, _, _, _, err := NewGenesisState(5, 1, 1, 5)
 	if err != nil {
 		return err
 	}

@@ -31,7 +31,7 @@ func (m *PrePersistenceContext) GetValidator(address []byte) (val *Validator, ex
 }
 
 func (m *PrePersistenceContext) GetAllValidators(height int64) (v []*Validator, err error) {
-	cdc := Cdc()
+	codec := GetCodec()
 	v = make([]*Validator, 0)
 	var it iterator.Iterator
 	if height == m.Height {
@@ -47,9 +47,8 @@ func (m *PrePersistenceContext) GetAllValidators(height int64) (v []*Validator, 
 			Limit: PrefixEndBytes(key),
 		})
 	}
-	it.First()
 	defer it.Release()
-	for ; it.Valid(); it.Next() {
+	for valid := it.First(); valid; valid = it.Next() {
 		bz := it.Value()
 		//if bz == nil {
 		//	break
@@ -60,7 +59,7 @@ func (m *PrePersistenceContext) GetAllValidators(height int64) (v []*Validator, 
 			continue
 		}
 		validator := Validator{}
-		if err := cdc.Unmarshal(bz, &validator); err != nil {
+		if err := codec.Unmarshal(bz, &validator); err != nil {
 			return nil, err
 		}
 		v = append(v, &validator)
@@ -88,10 +87,10 @@ func (m *PrePersistenceContext) GetValidatorExists(address []byte) (exists bool,
 }
 
 func (m *PrePersistenceContext) InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error {
-	if _, exists, _ := m.GetValidator(address); exists {
+	if _, exists, _ := m.GetFisherman(address); exists {
 		return fmt.Errorf("already exists in world state")
 	}
-	cdc := Cdc()
+	codec := GetCodec()
 	db := m.Store()
 	key := append(ValidatorPrefixKey, address...)
 	val := Validator{
@@ -106,7 +105,7 @@ func (m *PrePersistenceContext) InsertValidator(address []byte, publicKey []byte
 		UnstakingHeight: unstakingHeight,
 		Output:          output,
 	}
-	bz, err := cdc.Marshal(&val)
+	bz, err := codec.Marshal(&val)
 	if err != nil {
 		return err
 	}
@@ -118,7 +117,7 @@ func (m *PrePersistenceContext) UpdateValidator(address []byte, serviceURL strin
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	cdc := Cdc()
+	codec := GetCodec()
 	db := m.Store()
 	key := append(ValidatorPrefixKey, address...)
 	// compute new values
@@ -135,7 +134,7 @@ func (m *PrePersistenceContext) UpdateValidator(address []byte, serviceURL strin
 	val.ServiceUrl = serviceURL
 	val.StakedTokens = BigIntToString(stakedTokens)
 	// marshal
-	bz, err := cdc.Marshal(val)
+	bz, err := codec.Marshal(val)
 	if err != nil {
 		return err
 	}
@@ -193,14 +192,14 @@ func (m *PrePersistenceContext) SetValidatorUnstakingHeightAndStatus(address []b
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	cdc := Cdc()
+	codec := GetCodec()
 	unstakingActors := types.UnstakingActors{}
 	db := m.Store()
 	key := append(ValidatorPrefixKey, address...)
 	validator.UnstakingHeight = unstakingHeight
 	validator.Status = int32(status)
 	// marshal
-	bz, err := cdc.Marshal(validator)
+	bz, err := codec.Marshal(validator)
 	if err != nil {
 		return err
 	}
@@ -222,7 +221,7 @@ func (m *PrePersistenceContext) SetValidatorUnstakingHeightAndStatus(address []b
 		StakeAmount:   validator.StakedTokens,
 		OutputAddress: validator.Output,
 	})
-	unstakingBz, err := cdc.Marshal(&unstakingActors)
+	unstakingBz, err := codec.Marshal(&unstakingActors)
 	if err != nil {
 		return err
 	}
@@ -240,22 +239,22 @@ func (m *PrePersistenceContext) GetValidatorPauseHeightIfExists(address []byte) 
 	return int64(val.PausedHeight), nil
 }
 
+// SetValidatorsStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
 func (m *PrePersistenceContext) SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	db := m.Store()
-	cdc := Cdc()
+	codec := GetCodec()
 	it := db.NewIterator(&util.Range{
 		Start: ValidatorPrefixKey,
 		Limit: PrefixEndBytes(ValidatorPrefixKey),
 	})
-	it.First()
 	defer it.Release()
-	for ; it.Valid(); it.Next() {
+	for valid := it.First(); valid; valid = it.Next() {
 		validator := Validator{}
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
-		if err := cdc.Unmarshal(bz, &validator); err != nil {
+		if err := codec.Unmarshal(bz, &validator); err != nil {
 			return err
 		}
 		if validator.PausedHeight < uint64(pausedBeforeHeight) {
@@ -264,7 +263,7 @@ func (m *PrePersistenceContext) SetValidatorsStatusAndUnstakingHeightPausedBefor
 			if err := m.SetValidatorUnstakingHeightAndStatus(validator.Address, validator.UnstakingHeight, status); err != nil {
 				return err
 			}
-			bz, err := cdc.Marshal(&validator)
+			bz, err := codec.Marshal(&validator)
 			if err != nil {
 				return err
 			}
@@ -277,7 +276,7 @@ func (m *PrePersistenceContext) SetValidatorsStatusAndUnstakingHeightPausedBefor
 }
 
 func (m *PrePersistenceContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) error {
-	cdc := Cdc()
+	codec := GetCodec()
 	db := m.Store()
 	val, exists, err := m.GetValidator(address)
 	if err != nil {
@@ -287,27 +286,8 @@ func (m *PrePersistenceContext) SetValidatorPauseHeightAndMissedBlocks(address [
 		return fmt.Errorf("does not exist in world state")
 	}
 	val.PausedHeight = uint64(pauseHeight)
-	val.Paused = true
 	val.MissedBlocks = uint32(missedBlocks)
-	bz, err := cdc.Marshal(val)
-	if err != nil {
-		return err
-	}
-	return db.Put(append(ValidatorPrefixKey, address...), bz)
-}
-
-func (m *PrePersistenceContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) error {
-	cdc := Cdc()
-	db := m.Store()
-	val, exists, err := m.GetValidator(address)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return fmt.Errorf("does not exist in world state")
-	}
-	val.MissedBlocks = uint32(missedBlocks)
-	bz, err := cdc.Marshal(val)
+	bz, err := codec.Marshal(val)
 	if err != nil {
 		return err
 	}
@@ -326,7 +306,7 @@ func (m *PrePersistenceContext) GetValidatorMissedBlocks(address []byte) (int, e
 }
 
 func (m *PrePersistenceContext) SetValidatorPauseHeight(address []byte, height int64) error {
-	cdc := Cdc()
+	codec := GetCodec()
 	db := m.Store()
 	val, exists, err := m.GetValidator(address)
 	if err != nil {
@@ -335,13 +315,9 @@ func (m *PrePersistenceContext) SetValidatorPauseHeight(address []byte, height i
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	if height == 0 {
-		val.Paused = false
-	} else {
-		val.Paused = true
-	}
+	val.Paused = true
 	val.PausedHeight = uint64(height)
-	bz, err := cdc.Marshal(val)
+	bz, err := codec.Marshal(val)
 	if err != nil {
 		return err
 	}
@@ -349,7 +325,7 @@ func (m *PrePersistenceContext) SetValidatorPauseHeight(address []byte, height i
 }
 
 func (m *PrePersistenceContext) SetValidatorStakedTokens(address []byte, tokens string) error {
-	cdc := Cdc()
+	codec := GetCodec()
 	db := m.Store()
 	val, exists, err := m.GetValidator(address)
 	if err != nil {
@@ -359,7 +335,7 @@ func (m *PrePersistenceContext) SetValidatorStakedTokens(address []byte, tokens 
 		return fmt.Errorf("does not exist in world state")
 	}
 	val.StakedTokens = tokens
-	bz, err := cdc.Marshal(val)
+	bz, err := codec.Marshal(val)
 	if err != nil {
 		return err
 	}

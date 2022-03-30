@@ -1,12 +1,9 @@
 package pre_persistence
 
-// TODO(team): Consolidate this `gensis.go` with `shared/genesis.go`
-
 import (
 	"math"
 	"math/big"
 
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
@@ -20,7 +17,7 @@ var ( // TODO these are needed placeholders to pass validation checks. Until we 
 )
 
 // NewGenesisState IMPORTANT NOTE: Not using numOfValidators param, as Validators are now read from the test_state json file
-func NewGenesisState(cfg *config.Config, numOfValidators, numOfApplications, numOfFisherman, numOfServiceNodes int) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
+func NewGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfServiceNodes int) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
 	// create the genesis state object
 	state = &GenesisState{}
 	// use the `integration test state` to populate parts of the genesis state
@@ -36,9 +33,8 @@ func NewGenesisState(cfg *config.Config, numOfValidators, numOfApplications, num
 	serviceNodeKeys = make([]crypto.PrivateKey, numOfServiceNodes)
 	// create state objects for each key type
 	for i := range validatorKeys {
-		var pk crypto.PrivateKey
 		n := vm[NodeId(i+1)] // TODO will have to fix conflict when NodeId is deprecated
-		pk, _ = crypto.NewPrivateKey(n.PrivateKey)
+		pk, _ := crypto.NewPrivateKey(n.PrivateKey)
 		v := &Validator{
 			Status:       2,
 			ServiceUrl:   defaultServiceUrl,
@@ -112,28 +108,28 @@ func NewGenesisState(cfg *config.Config, numOfValidators, numOfApplications, num
 	// create appropriate 'stake' pools for each actor type
 	valStakePool, err := NewPool(ValidatorStakePoolName, &Account{
 		Address: DefaultValidatorStakePool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
 	}
 	appStakePool, err := NewPool(AppStakePoolName, &Account{
 		Address: DefaultAppStakePool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
 	}
 	fishStakePool, err := NewPool(FishermanStakePoolName, &Account{
 		Address: DefaultFishermanStakePool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
 	}
 	serNodeStakePool, err := NewPool(ServiceNodeStakePoolName, &Account{
 		Address: DefaultServiceNodeStakePool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
@@ -141,7 +137,7 @@ func NewGenesisState(cfg *config.Config, numOfValidators, numOfApplications, num
 	// create a pool for collected fees (helps with rewards)
 	fee, err := NewPool(FeePoolName, &Account{
 		Address: DefaultFeeCollector.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
@@ -149,7 +145,7 @@ func NewGenesisState(cfg *config.Config, numOfValidators, numOfApplications, num
 	// create a pool for the dao treasury
 	dao, err := NewPool(DAOPoolName, &Account{
 		Address: DefaultDAOPool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
