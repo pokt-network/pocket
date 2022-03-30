@@ -3,11 +3,12 @@ package pre_persistence
 import (
 	"bytes"
 	"fmt"
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"google.golang.org/protobuf/proto"
-	"math/big"
 )
 
 func (m *PrePersistenceContext) GetAppExists(address []byte) (exists bool, err error) {

@@ -1,5 +1,6 @@
 package pre_persistence
 
+// TODO(team): Consolidate this with `shared/genesis.go`
 import (
 	"math"
 	"math/big"
@@ -211,7 +212,7 @@ func InitGenesis(u *PrePersistenceContext, state *GenesisState) error {
 	return nil
 }
 
-// TODO this is a state operation that really shouldn't live here, rather the utility module... but is needed for genesis creation
+// TODO(andrew): this is a state operation that really shouldn't live here, rather the utility module... but is needed for genesis creation
 func CalculateAppRelays(u *PrePersistenceContext, height int64, stakedTokens string) (string, error) {
 	tokens, err := StringToBigInt(stakedTokens)
 	if err != nil {

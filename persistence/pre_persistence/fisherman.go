@@ -146,7 +146,7 @@ func (m *PrePersistenceContext) DeleteFisherman(address []byte) error {
 	return db.Put(key, DeletedPrefixKey)
 }
 
-func (m *PrePersistenceContext) GetFishermanReadyToUnstake(height int64, status int) (Fisherman []*types.UnstakingActor, err error) {
+func (m *PrePersistenceContext) GetFishermanReadyToUnstake(height int64, status int) (fisherman []*types.UnstakingActor, err error) {
 	db := m.Store()
 	unstakingKey := append(UnstakingFishermanPrefixKey, []byte(fmt.Sprintf("%d", height))...)
 	if has := db.Contains(unstakingKey); !has {
@@ -163,9 +163,7 @@ func (m *PrePersistenceContext) GetFishermanReadyToUnstake(height int64, status 
 	if err := proto.Unmarshal(val, &unstakingActors); err != nil {
 		return nil, err
 	}
-	for _, sn := range unstakingActors.UnstakingActors {
-		Fisherman = append(Fisherman, sn)
-	}
+	fisherman = append(fisherman, unstakingActors.UnstakingActors...)
 	return
 }
 
