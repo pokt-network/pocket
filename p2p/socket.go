@@ -17,13 +17,14 @@ import (
 
 type SocketEventMonitor func(context.Context, *socket) error
 
-// a "socket" (not to be confused with the OS' socket) is an abstraction around the net.Conn go interface, whose purpose is to represent a p2p connection with full "read/write" capabilities
+// A "socket" (not to be confused with the OS' socket) is an abstraction around the net.Conn go interface,
+// whose purpose is to represent a p2p connection with full "read/write" capabilities.
+//
 // Both read and write operations are buffered, and both buffer sizes are configurable.
 //
 // Configuration paramters are directly assigned to the socket struct.
 //
 // 1 live p2p connection = 1 socket
-//
 type socket struct {
 	// the agent responsible for running/creating/managing sockets
 	runner types.Runner
@@ -43,11 +44,11 @@ type socket struct {
 
 	// io buffers
 	buffers struct {
-		// the read buffer is a byte slice of a certain size (configurable: ReadBufferSize) which is destined
+		// the read buffer is a byte slice of a certain size (configurable: `ReadBufferSize``) which is destined
 		// to receive incoming data. This buffer is not concurrent and is primarily used by the s.read routine
 		read *types.Buffer
 
-		// the write buffer is a byte slice of a certain size (configurable: WriteBufferSize) which is written to
+		// the write buffer is a byte slice of a certain size (configurable: `WriteBufferSize``) which is written to
 		// by the owner of this socket (i.e: the runner, the peer). When the peer is done writing to the buffer, the s.write routine
 		// proceeds to writing this buffer to the concerned connection, resulting in a network send.
 		// This buffer is concurrent because two operations are happening in parallel, the writing to the buffer by the peer
@@ -63,8 +64,12 @@ type socket struct {
 	// we call them requests (as they require responses)
 	requests *types.RequestMap
 
-	// turns true when the socket is opened (i.e: the connection is established and IO routines are launched)
+	// turns true when the socket is opened (i.e., the connection is established and IO routines are launched)
 	isOpen atomic.Bool
+
+	// For reference, see these resources on the use of empty structs in go channels:
+	// - https://dave.cheney.net/2014/03/25/the-empty-struct
+	// - https://dave.cheney.net/2013/04/30/curious-channels
 
 	ready   chan struct{} // when the socket is opened and IO starts, this channel gets closed to signal readiness
 	writing chan struct{} // when the writing starts, this channel receives a new input; closes when done writing (i.e: stopped the socket)
@@ -73,7 +78,7 @@ type socket struct {
 	closed  chan struct{} // this channel signals that the socket has been closed by receiving a new input
 
 	errored chan struct{} // on error, this channel receives a new input to signal the happening of an error
-	err     struct {      // the reference to store the encountered error.
+	err     struct {      // the reference to store the encountered error
 		sync.Mutex
 		error
 	}
@@ -81,9 +86,9 @@ type socket struct {
 	logger types.Logger
 }
 
-// Retrieves the underlying TCP socket (net.Conn) in question through the connector argument
-// and starts the IO operations on that socket, while putting in place event handlers for onSocketOpened and onSocketClosed events.
-// returns an error on failure.
+// Retrieves the underlying TCP socket (net.Conn) in question through the connector argument and starts
+// the IO operations on that socket, while also putting in place event handlers for onSocketOpened
+// and onSocketClosed events.
 func (s *socket) open(ctx context.Context, connector func() (string, types.SocketType, net.Conn), onOpened SocketEventMonitor, onClosed SocketEventMonitor) error {
 	s.buffers.write.Open()
 
@@ -127,10 +132,10 @@ func (s *socket) open(ctx context.Context, connector func() (string, types.Socke
 	return nil
 }
 
-// close() stops the ongoing IO operations gracefully (i.e: s.read and s.write routines) and closes the underlying network connection (s.conn),
-// as well as all opened channels. Finally, close() signals that the closing process has went successfully by sending a signal on s.closed.
-//
-// This method does not block.
+// Stops the ongoing IO operations gracefully (i.e., s.read and s.write routines) and closes the
+// underlying network connection (s.conn), as well as all opened channels. Finally, close() signals
+// that the closing process has went successfully by sending a signal on s.closed.
+// NOTE: This method does not block.
 func (s *socket) close() {
 	if !s.isOpen.Load() {
 		return
@@ -153,11 +158,10 @@ func (s *socket) close() {
 	s.isOpen.Store(false)
 }
 
-// creates a reader and writer for the network connection
-// kicks off the onSocketOpened event handler, returns if there is an error
-// launches both the reading and writing routines (read, write methods): both are blocking
-// when the write routine exists, the onSocketClosed event handler kicks off (returns an error if there is one)
-// the write and read routines will both exit for the same reasons, so having just one of them block is sufficient.
+// Creates a reader and writer for the network connection and kicks off the onSocketOpened event handler.
+// This also launches both the reading and writing routines (read, write methods), both of which are blocking.
+// When the write routine exists, the onSocketClosed event handler kicks off and returns an error if there is one.
+// NOTE: The write and read routines will both exit for the same reasons, so having just one of them block is sufficient.
 func (s *socket) startIO(ctx context.Context, kind types.SocketType, addr string, conn net.Conn, onOpened SocketEventMonitor, onClosed SocketEventMonitor) {
 	defer s.close()
 
@@ -184,19 +188,20 @@ func (s *socket) startIO(ctx context.Context, kind types.SocketType, addr string
 	}
 }
 
-// the TLS handshake algorithm to establish encrypted connections
+// The TLS handshake algorithm to establish encrypted connections
 func (s *socket) handshake() {
 	panic("Not implemented")
 }
 
-// s.readChunk reads a chunk (of size readbufferSize) out of the TCP connection using the s.reader.
+// Reads a chunk (of size `readbufferSize`) out of the TCP connection using `s.reader`.
 //
-// This is used by the read routine (s.read) to perform buffered reads.
-// To achieve buffered reading, readChunk first off reads the header bytes (first bytes from 0 to headerLength) to retrieve size of
-// received/to-be-read payload. If the payload size exceeds the configured max, readChunk will error out, the other end will receive a ErrPayloadTooBig error. (TODO: implement erroring logic to send this error)
+// This is used by the read routine (`s.read`) to perform buffered reads.
+// To achieve buffered reading, `readChunk` first off reads the header bytes (first bytes from 0 to `headerLength``)
+// to retrieve size of received/to-be-read payload. If the payload size exceeds the configured max,
+// `readChunk` will error out, the other end will receive a `ErrPayloadTooBig` error.
+// TODO(derrandz): implement erroring logic to send this error.
 //
-// After reading the header, readChunk blocks until the full body length is read.
-//
+// NOTE: After reading the header, readChunk blocks until the full body length is read.
 func (s *socket) readChunk() ([]byte, int, error) {
 	var n int
 
@@ -211,7 +216,6 @@ func (s *socket) readChunk() ([]byte, int, error) {
 
 	// TODO(derrandz): replace with configurable max value or keep it as is (i.e: max=chunk size) ??
 	if bodyLen > uint32(s.bufferSize-s.headerLength) {
-		// TODO(derrandz): move error to socket_err.go
 		return nil, 0, ErrPayloadTooBig(uint(bodyLen), s.bufferSize-s.headerLength)
 	}
 
@@ -226,10 +230,11 @@ func (s *socket) readChunk() ([]byte, int, error) {
 }
 
 // The read routine.
-// This routine performs buffered reads (the size of the buffer is the config param: readBufferSize) on the established connection
-// and does two things as a consequence of a read operation:
-//    1- if it's a response to a request out of this socket, it will redirect the response to the request's response channel (see types/request.go)
-//    2- if not, it will handover the read (past-tense participle) buffer as a Packet (check types/packet.go) to the runner (check types/runner.go)
+//
+// This routine performs buffered reads (the size of the buffer is the config param: `readBufferSize`) on the
+// established connection and does two things as a consequence of a read operation:
+//    1. If it's a response to a request out of this socket, it will redirect the response to the request's response channel (see `types/request.go`)
+//    2. If not, it will handover the read (past-tense participle) buffer as a Packet (check `types/packet.go`) to the runner (check `types/runner.go`)
 //
 // This routine halts if:
 //   - The cancelable context cancels
@@ -243,9 +248,7 @@ func (s *socket) read(ctx context.Context) {
 		s.closed <- struct{}{}
 	}()
 
-	{
-		s.reading <- struct{}{} // signal start
-	}
+	s.reading <- struct{}{} // signal start
 
 reader:
 	for {
@@ -291,10 +294,13 @@ reader:
 					break reader
 				}
 
+				// A non-zero nonce happens on nonced-respones (i.e., responses to already sent requests).
+				// Using the non-zero nonce, we are able to fetch the existing (waiting) request from
+				// the request map and pull out the channel on which this request expects to receive a response.
 				if nonce != 0 {
 					_, ch, found := s.requests.Find(nonce)
 					if !found {
-						// report that we've received a nonced message whose requested does not exist on our end!
+						s.logger.Warn("Received response with nonce but no request found:", nonce)
 					}
 
 					ch <- types.NewPacket(nonce, data, s.addr, wrapped)
@@ -308,20 +314,20 @@ reader:
 	}
 }
 
-// TODO(derrandz): add buffered write by writing exactly WriteBufferSize amount of bytes, and splitting if larger.
-// Will need to think about how to split big payloads and sequence them
+// TODO(derrandz): Add buffered write by writing exactly `WriteBufferSize` amount of bytes, and splitting if larger.
+//                 Will need to think about how to split big payloads and sequence them.
 //
-// writeChunk writes a chunk=writeBufferSize to the writer (s.writer).
-// This operation is blocking, and blocks until a waiter is ready to receive the signal from the write buffer (signaling that is has written)
+// Writes a chunk=writeBufferSize to the writer (s.writer).
+// This operation is blocking, and blocks until a waiter is ready to receive the signal from the write buffer (signaling that is has written).
 // This is used by send/request/broadcast operations.
 // Upon each send, the write routine will receive a signal so that it may proceed to send the write over the network.
-func (s *socket) writeChunk(b []byte, iserroreof bool, reqnum uint32, wrapped bool) (uint, error) {
+func (s *socket) writeChunk(b []byte, isErrorOf bool, reqNum uint32, wrapped bool) (uint, error) {
 	defer s.buffers.write.Unlock()
 	s.buffers.write.Lock()
 
 	writeBuffer := s.buffers.write.Ref()
 
-	buff := s.codec.encode(Binary, iserroreof, reqnum, b, wrapped)
+	buff := s.codec.encode(Binary, isErrorOf, reqNum, b, wrapped)
 	(*writeBuffer) = append((*writeBuffer), buff...)
 
 	s.buffers.write.Signal()
@@ -329,12 +335,14 @@ func (s *socket) writeChunk(b []byte, iserroreof bool, reqnum uint32, wrapped bo
 }
 
 // writeChunkAckful is a writeChunk that expects to receive an ACK response for the chunk it has written.
-// This method will create a request, which is basically a nonce and a channel, the nonce to identify the written chunk and the channel
-// to receive the response for that particular written chunk.
+// This method will create a request, which is basically a nonce and a channel, the nonce to identify the
+// written chunk and the channel to receive the response for that particular written chunk.
 //
-// The channel -on which the response is expected to be received- is blocking, thus enabling the 'wait to receive the response' behavior.
+// The channel - on which the response is expected to be received - is blocking, thus enables the 'wait to receive the response' behavior.
 // The `read` routine takes care of identifying incoming responses (_using the nonce_) and redirecting them to the waiting channels of the currently-open requests.
 func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Packet, error) {
+	panic("Not used or tested at the moment")
+
 	request := s.requests.Get()
 	requestNonce := request.Nonce
 
@@ -354,9 +362,10 @@ func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Packet, error) 
 	}
 }
 
-// the write routine
-// this routine performs buffered writes (writeBufferSize) on the established connection
-// this routine halfs if:
+// The write routine.
+//
+// This routine performs buffered writes (`writeBufferSize``) on the established connection.
+// This routine halts if:
 //   - the cancelable routine cancels
 //   - if the runner stops
 //   - if the socket closes
@@ -368,9 +377,7 @@ func (s *socket) write(ctx context.Context) {
 		s.closed <- struct{}{}
 	}()
 
-	{
-		s.writing <- struct{}{} // signal start
-	}
+	s.writing <- struct{}{} // signal start
 
 writer:
 	for {
@@ -407,7 +414,7 @@ writer:
 	}
 }
 
-// tracks and stores the encountered error
+// Tracks and stores the encountered error
 func (s *socket) error(err error) {
 	defer s.err.Unlock()
 	s.err.Lock()

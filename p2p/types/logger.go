@@ -1,5 +1,7 @@
 package types
 
+// TODO(team): Consolidate the logging library with the rest of the codebase
+
 import (
 	"io"
 	log "log"

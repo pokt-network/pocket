@@ -3,7 +3,7 @@ package types
 type Packet struct {
 	Nonce     uint32
 	Data      []byte
-	From      string // temporary until we start using ids
+	From      string // TODO(team): Change this temporary string when we strar using IDs
 	isEncoded bool   // should decode data using the domain codec or not
 }
 
