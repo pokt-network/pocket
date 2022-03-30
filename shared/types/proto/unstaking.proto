@@ -1,13 +1,14 @@
 syntax = "proto3";
 package utility;
+
 option go_package = "shared/types/";
 
 message UnstakingActor {
-  bytes Address = 1;
-  string StakeAmount = 2;
-  bytes OutputAddress = 3;
+  bytes address = 1;
+  string stake_amount = 2;
+  bytes output_address = 3;
 }
 
 message UnstakingActors {
-  repeated UnstakingActor UnstakingActors = 1;
+  repeated UnstakingActor unstaking_actors = 1;
 }
