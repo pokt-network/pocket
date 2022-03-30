@@ -2,7 +2,13 @@ package modules
 
 import (
 	"google.golang.org/protobuf/types/known/anypb"
+	"pocket/shared/types"
 )
+
+type NetworkMessage struct {
+	Topic types.EventTopic
+	Data  []byte
+}
 
 type NetworkModule interface {
 	Module

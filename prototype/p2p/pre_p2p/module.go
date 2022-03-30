@@ -2,13 +2,12 @@ package pre_p2p
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/types/known/anypb"
 	"log"
 	"net"
 	"pocket/p2p/pre_p2p/types"
 	"pocket/shared/config"
 	"pocket/shared/modules"
-
-	"google.golang.org/protobuf/types/known/anypb"
 
 	"strconv"
 
@@ -114,9 +113,8 @@ func (m *networkModule) Stop() error {
 // }
 
 func (m *networkModule) BroadcastMessage(msg *anypb.Any, topic string) error {
-	fmt.Println("Trying to broadcast message with topic", topic)
 	c := &types.P2PMessage{
-		Topic: topic,
+		Topic: topic, // TODO topic is either P2P (from this module) or consensus
 		Data:  msg,
 	}
 	data, err := proto.Marshal(c)
@@ -129,7 +127,7 @@ func (m *networkModule) BroadcastMessage(msg *anypb.Any, topic string) error {
 
 func (m *networkModule) Send(addr string, msg *anypb.Any, topic string) error {
 	c := &types.P2PMessage{
-		Topic: topic,
+		Topic: topic, // TODO topic is either P2P (from this module) or consensus
 		Data:  msg,
 	}
 	data, err := proto.Marshal(c)

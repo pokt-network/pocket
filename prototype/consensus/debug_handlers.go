@@ -2,12 +2,11 @@ package consensus
 
 import (
 	"fmt"
+	"google.golang.org/protobuf/types/known/anypb"
 	"log"
 	"pocket/consensus/dkg"
 	"pocket/consensus/types"
 	shared_types "pocket/shared/types"
-
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func (m *ConsensusModule) handleDebugMessage(message *DebugMessage) {

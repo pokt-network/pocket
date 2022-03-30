@@ -1,10 +1,9 @@
 package types
 
 import (
+	"google.golang.org/protobuf/types/known/anypb"
 	"net"
 	"pocket/consensus/types"
-
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type SourceModule string
