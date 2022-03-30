@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"container/list"
 	"encoding/hex"
-	"github.com/pokt-network/pocket/shared/crypto"
 	"sync"
+
+	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 type Mempool interface {
@@ -16,7 +17,7 @@ type Mempool interface {
 	Flush()
 	Size() int
 	TxsBytes() int
-	PopTransaction() (tx []byte, sizeInBytes int, err Error)
+	PopTransaction() (tx []byte, sizeInBytes int, err Error) // TODO(andrew): In the upcoming merge, remove `sizeInBytes` from return value
 }
 
 var _ Mempool = &FIFOMempool{}
@@ -31,6 +32,7 @@ type FIFOMempool struct {
 	maxTransactions      int
 }
 
+// TODO(team): Consider moving these parameters to config.json
 func NewMempool(maxTransactionBytes int, maxTransactions int) Mempool {
 	return &FIFOMempool{
 		l:                    sync.RWMutex{},
@@ -92,13 +94,13 @@ func (f *FIFOMempool) DeleteTransaction(tx []byte) Error {
 	return nil
 }
 
-func (f *FIFOMempool) PopTransaction() (tx []byte, size int, err Error) {
-	tx, err = popTransaction(f)
+func (f *FIFOMempool) PopTransaction() ([]byte, int, Error) {
+	tx, err := popTransaction(f)
 	if err != nil {
-		return
+		return nil, 0, err
 	}
-	size = len(tx)
-	return
+	size := len(tx)
+	return tx, size, nil
 }
 
 func (f *FIFOMempool) Flush() {
@@ -126,15 +128,15 @@ func removeTransaction(f *FIFOMempool, e *list.Element) ([]byte, Error) {
 	if f.size == 0 {
 		return nil, nil
 	}
-	transaction := e.Value.([]byte)
-	tBz := len(transaction)
+	txBz := e.Value.([]byte)
+	txBzLen := len(txBz)
 	f.pool.Remove(e)
-	hash := crypto.SHA3Hash(transaction)
+	hash := crypto.SHA3Hash(txBz)
 	hashString := hex.EncodeToString(hash)
 	delete(f.hashMap, hashString)
 	f.size--
-	f.transactionBytes -= tBz
-	return transaction, nil
+	f.transactionBytes -= txBzLen
+	return txBz, nil
 }
 
 func popTransaction(f *FIFOMempool) ([]byte, Error) {
