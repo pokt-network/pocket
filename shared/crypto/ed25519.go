@@ -158,6 +158,7 @@ func GenerateAddress() (Address, error) {
 		return nil, err
 	}
 	return pk.Address(), nil
+}
 
 func (pub *Ed25519PublicKey) UnmarshalJSON(data []byte) error {
 	var publicKey string

@@ -57,7 +57,7 @@ func TestGetApp(t *testing.T) {
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	got, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
+	got, _, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,10 +103,10 @@ func TestUpdateApplication(t *testing.T) {
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	zero := BigIntToString(&big.Int{})
+	zero := BigIntToString(big.NewInt(0))
 	bigExpectedTokens := big.NewInt(1)
 	one := BigIntToString(bigExpectedTokens)
-	before, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
+	before, _, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,7 +119,7 @@ func TestUpdateApplication(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
+	got, _, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -221,7 +221,7 @@ func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
+	got, _, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
 	if err != nil {
 		t.Fatal(err)
 	}

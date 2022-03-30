@@ -13,7 +13,7 @@ const (
 // NOTE: Pools encapsulate `accounts` so the functionality is tested
 func TestAddPoolAmount(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
-	initialBalanceBig := &big.Int{}
+	initialBalanceBig := big.NewInt(0)
 	initialBalance := BigIntToString(initialBalanceBig)
 	addedBalanceBig := big.NewInt(1)
 	addedBalance := BigIntToString(addedBalanceBig)

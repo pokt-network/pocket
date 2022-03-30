@@ -1,9 +1,10 @@
 package pre_persistence
 
 import (
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
-	"math/big"
 )
 
 var (
@@ -19,10 +20,10 @@ var (
 )
 
 func (m *PrePersistenceContext) InitParams() error {
-	codec := GetCodec()
+	cdc := Cdc()
 	db := m.Store()
 	p := DefaultParams()
-	bz, err := codec.Marshal(p)
+	bz, err := cdc.Marshal(p)
 	if err != nil {
 		return err
 	}
@@ -31,7 +32,7 @@ func (m *PrePersistenceContext) InitParams() error {
 
 func (m *PrePersistenceContext) GetParams(height int64) (p *Params, err error) {
 	p = &Params{}
-	codec := GetCodec()
+	cdc := Cdc()
 	var paramsBz []byte
 	if height == m.Height {
 		db := m.Store()
@@ -45,7 +46,7 @@ func (m *PrePersistenceContext) GetParams(height int64) (p *Params, err error) {
 			return nil, nil
 		}
 	}
-	if err := codec.Unmarshal(paramsBz, p); err != nil {
+	if err := cdc.Unmarshal(paramsBz, p); err != nil {
 		return nil, err
 	}
 	return
@@ -107,7 +108,7 @@ func DefaultParams() *Params {
 		MessagePauseServiceNodeFee:               BigIntToString(big.NewInt(10000)),
 		MessageUnpauseServiceNodeFee:             BigIntToString(big.NewInt(10000)),
 		MessageChangeParameterFee:                BigIntToString(big.NewInt(10000)),
-		ACLOwner:                                 DefaultParamsOwner.Address(),
+		AclOwner:                                 DefaultParamsOwner.Address(),
 		BlocksPerSessionOwner:                    DefaultParamsOwner.Address(),
 		AppMinimumStakeOwner:                     DefaultParamsOwner.Address(),
 		AppMaxChainsOwner:                        DefaultParamsOwner.Address(),
@@ -122,7 +123,7 @@ func DefaultParams() *Params {
 		ServiceNodeMinimumPauseBlocksOwner:       DefaultParamsOwner.Address(),
 		ServiceNodeMaxPausedBlocksOwner:          DefaultParamsOwner.Address(),
 		ServiceNodesPerSessionOwner:              DefaultParamsOwner.Address(),
-		ParamFishermanMinimumStakeOwner:          DefaultParamsOwner.Address(),
+		FishermanMinimumStakeOwner:               DefaultParamsOwner.Address(),
 		FishermanMaxChainsOwner:                  DefaultParamsOwner.Address(),
 		FishermanUnstakingBlocksOwner:            DefaultParamsOwner.Address(),
 		FishermanMinimumPauseBlocksOwner:         DefaultParamsOwner.Address(),
@@ -281,7 +282,7 @@ func InsertPersistenceParams(store *PrePersistenceContext, params *Params) types
 	if err != nil {
 		return types.ErrUpdateParam(err)
 	}
-	err = store.SetACLOwner(params.ACLOwner)
+	err = store.SetAclOwner(params.AclOwner)
 	if err != nil {
 		return types.ErrUpdateParam(err)
 	}
@@ -341,7 +342,7 @@ func InsertPersistenceParams(store *PrePersistenceContext, params *Params) types
 	if err != nil {
 		return types.ErrUpdateParam(err)
 	}
-	err = store.SetFishermanMinimumStakeOwner(params.ParamFishermanMinimumStakeOwner)
+	err = store.SetFishermanMinimumStakeOwner(params.FishermanMinimumStakeOwner)
 	if err != nil {
 		return types.ErrUpdateParam(err)
 	}
@@ -1033,9 +1034,9 @@ func (m *PrePersistenceContext) GetMessageChangeParameterFee() (string, error) {
 }
 
 func (m *PrePersistenceContext) SetParams(p *Params) error {
-	codec := GetCodec()
+	cdc := Cdc()
 	store := m.Store()
-	bz, err := codec.Marshal(p)
+	bz, err := cdc.Marshal(p)
 	if err != nil {
 		return err
 	}
@@ -1762,20 +1763,20 @@ func (m *PrePersistenceContext) SetMessageChangeParameterFeeOwner(bytes []byte) 
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetACLOwner() ([]byte, error) {
+func (m *PrePersistenceContext) GetAclOwner() ([]byte, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
 		return nil, err
 	}
-	return params.ACLOwner, nil
+	return params.AclOwner, nil
 }
 
-func (m *PrePersistenceContext) SetACLOwner(owner []byte) error {
+func (m *PrePersistenceContext) SetAclOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
 		return err
 	}
-	params.ACLOwner = owner
+	params.AclOwner = owner
 	return m.SetParams(params)
 }
 
@@ -2005,7 +2006,7 @@ func (m *PrePersistenceContext) GetFishermanMinimumStakeOwner() ([]byte, error) 
 	if err != nil {
 		return nil, err
 	}
-	return params.ParamFishermanMinimumStakeOwner, nil
+	return params.FishermanMinimumStakeOwner, nil
 }
 
 func (m *PrePersistenceContext) SetFishermanMinimumStakeOwner(owner []byte) error {
@@ -2013,7 +2014,7 @@ func (m *PrePersistenceContext) SetFishermanMinimumStakeOwner(owner []byte) erro
 	if err != nil {
 		return err
 	}
-	params.ParamFishermanMinimumStakeOwner = owner
+	params.FishermanMinimumStakeOwner = owner
 	return m.SetParams(params)
 }
 

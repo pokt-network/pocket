@@ -6,6 +6,8 @@ import (
 )
 
 type PersistenceModule interface {
+	Module
+
 	NewContext(height int64) (PersistenceContext, error)
 	GetCommitDB() *memdb.DB
 }
@@ -26,7 +28,7 @@ type PersistenceContext interface {
 	// Indexer
 	TransactionExists(transactionHash string) bool
 
-	// Account
+	//Account
 	AddPoolAmount(name string, amount string) error
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error
@@ -247,8 +249,8 @@ type PersistenceContext interface {
 	SetMessageChangeParameterFeeOwner([]byte) error
 
 	// ACL
-	GetACLOwner() ([]byte, error)
-	SetACLOwner(owner []byte) error
+	GetAclOwner() ([]byte, error)
+	SetAclOwner(owner []byte) error
 	SetBlocksPerSessionOwner(owner []byte) error
 	GetBlocksPerSessionOwner() ([]byte, error)
 	GetMaxAppChainsOwner() ([]byte, error)

@@ -1,6 +1,8 @@
 package pre_persistence
 
 import (
+	"log"
+
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
@@ -9,10 +11,10 @@ import (
 )
 
 func Create(cfg *config.Config) (modules.PersistenceModule, error) {
-	db := memdb.New(comparer.DefaultComparer, cfg.PrePersistence.Capacity)
+	db := memdb.New(comparer.DefaultComparer, 888888888)
 	state := GetTestState()
 	state.LoadStateFromConfig(cfg)
-	return NewPrePersistenceModule(db, types.NewMempool(cfg.PrePersistence.MempoolMaxBytes, cfg.PrePersistence.MempoolMaxTxs), cfg), nil
+	return NewPrePersistenceModule(db, types.NewMempool(10000, 10000), cfg), nil
 
 }
 
@@ -21,7 +23,7 @@ func (p *PrePersistenceModule) Start() error {
 	if err != nil {
 		return err
 	}
-	genesis, _, _, _, _, err := NewGenesisState(5, 1, 1, 5)
+	genesis, _, _, _, _, err := NewGenesisState(p.Cfg, 5, 1, 1, 5)
 	if err != nil {
 		return err
 	}
@@ -41,13 +43,13 @@ func (p *PrePersistenceModule) Stop() error {
 	return nil
 }
 
-//func (m *PrePersistenceModule) SetBus(pocketBus modules.Bus) { TODO: add back in once bus is integrated
-//	m.pocketBusMod = pocketBus
-//}
-//
-//func (m *PrePersistenceModule) GetBus() modules.Bus {
-//	if m.pocketBusMod == nil {
-//		log.Fatalf("PocketBus is not initialized")
-//	}
-//	return m.pocketBusMod
-//}
+func (m *PrePersistenceModule) SetBus(pocketBus modules.Bus) {
+	m.bus = pocketBus
+}
+
+func (m *PrePersistenceModule) GetBus() modules.Bus {
+	if m.bus == nil {
+		log.Fatalf("PocketBus is not initialized")
+	}
+	return m.bus
+}

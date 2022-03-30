@@ -1,6 +1,7 @@
 syntax = "proto3";
 package pre_persistence;
-option go_package = "/pre_persistence/test/";
+
+option go_package = "/persistence/pre_persistence/";
 
 import "validator.proto";
 import "account.proto";
@@ -9,12 +10,13 @@ import "fisherman.proto";
 import "service_node.proto";
 import "gov.proto";
 
+// TODO(team): Consolidate this into a shared genesis proto.
 message GenesisState {
-  repeated validator Validators = 1;
-  repeated account Accounts = 2;
-  repeated pool Pools = 3;
-  repeated fisherman Fishermen = 4;
-  repeated serviceNode ServiceNodes = 5;
-  repeated app Apps = 6;
-  params Params = 7;
+  repeated Validator validators = 1;
+  repeated Account accounts = 2;
+  repeated Pool pools = 3;
+  repeated Fisherman fishermen = 4;
+  repeated ServiceNode service_nodes = 5;
+  repeated App apps = 6;
+  Params params = 7;
 }

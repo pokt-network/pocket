@@ -1,8 +1,9 @@
 package pre_persistence
 
 import (
-	"github.com/pokt-network/pocket/shared/types"
 	"math/big"
+
+	"github.com/pokt-network/pocket/shared/types"
 )
 
 const (

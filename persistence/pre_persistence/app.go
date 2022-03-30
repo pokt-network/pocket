@@ -3,11 +3,11 @@ package pre_persistence
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"google.golang.org/protobuf/proto"
-	"math/big"
 )
 
 func (m *PrePersistenceContext) GetAppExists(address []byte) (exists bool, err error) {
@@ -29,28 +29,28 @@ func (m *PrePersistenceContext) GetAppExists(address []byte) (exists bool, err e
 	return true, nil
 }
 
-func (m *PrePersistenceContext) GetApp(address []byte) (app *App, err error) {
+func (m *PrePersistenceContext) GetApp(address []byte) (app *App, exists bool, err error) {
 	app = &App{}
 	db := m.Store()
 	key := append(AppPrefixKey, address...)
 	bz, err := db.Get(key)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	if bz == nil {
-		return nil, nil
+		return nil, false, nil
 	}
 	if bytes.Contains(bz, DeletedPrefixKey) {
-		return nil, nil
+		return nil, false, nil
 	}
 	if err = proto.Unmarshal(bz, app); err != nil {
-		return nil, err
+		return nil, true, err
 	}
-	return app, nil
+	return app, true, nil
 }
 
 func (m *PrePersistenceContext) GetAllApps(height int64) (apps []*App, err error) {
-	codec := GetCodec()
+	cdc := Cdc()
 	apps = make([]*App, 0)
 	var it iterator.Iterator
 	if height == m.Height {
@@ -66,14 +66,15 @@ func (m *PrePersistenceContext) GetAllApps(height int64) (apps []*App, err error
 			Limit: PrefixEndBytes(key),
 		})
 	}
+	it.First()
 	defer it.Release()
-	for valid := it.First(); valid; valid = it.Next() {
+	for ; it.Valid(); it.Next() {
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
 		a := App{}
-		if err := codec.Unmarshal(bz, &a); err != nil {
+		if err := cdc.Unmarshal(bz, &a); err != nil {
 			return nil, err
 		}
 		apps = append(apps, &a)
@@ -82,10 +83,10 @@ func (m *PrePersistenceContext) GetAllApps(height int64) (apps []*App, err error
 }
 
 func (m *PrePersistenceContext) InsertApplication(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
-	if exists, _ := m.GetAppExists(address); exists {
+	if _, exists, _ := m.GetApp(address); exists {
 		return fmt.Errorf("already exists in world state")
 	}
-	codec := GetCodec()
+	cdc := Cdc()
 	db := m.Store()
 	key := append(AppPrefixKey, address...)
 	app := App{
@@ -100,43 +101,46 @@ func (m *PrePersistenceContext) InsertApplication(address []byte, publicKey []by
 		UnstakingHeight: unstakingHeight,
 		Output:          output,
 	}
-	bz, err := codec.Marshal(&app)
+	bz, err := cdc.Marshal(&app)
 	if err != nil {
 		return err
 	}
 	return db.Put(key, bz)
 }
 
-func AddAmounts(amountA, amountB string) (string, error) {
-	bigA, err := StringToBigInt(amountA)
-	if err != nil {
-		return "", err
-	}
-	bigB, err := StringToBigInt(amountB)
-	if err != nil {
-		return "", err
-	}
-	result := new(big.Int).Add(bigA, bigB)
-	return BigIntToString(result), nil
-}
-
 func (m *PrePersistenceContext) UpdateApplication(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error {
-	app, _ := m.GetApp(address)
-	if app == nil {
-		return fmt.Errorf("does not exist in world state: %v", address)
+	app, exists, _ := m.GetApp(address)
+	if !exists {
+		return fmt.Errorf("does not exist in world state")
 	}
-	codec := GetCodec()
+	cdc := Cdc()
 	db := m.Store()
 	key := append(AppPrefixKey, address...)
 	// compute new values
-	var err error
-	app.StakedTokens, err = AddAmounts(app.StakedTokens, amountToAdd)
+	stakedTokens, err := StringToBigInt(app.StakedTokens)
 	if err != nil {
 		return err
 	}
-	app.MaxRelays, err = AddAmounts(app.MaxRelays, maxRelaysToAdd)
+	stakedTokensToAddI, err := StringToBigInt(amountToAdd)
+	if err != nil {
+		return err
+	}
+	stakedTokens.Add(stakedTokens, stakedTokensToAddI)
+	maxRelays, err := StringToBigInt(app.MaxRelays)
+	if err != nil {
+		return err
+	}
+	maxRelaysToAddI, err := StringToBigInt(maxRelaysToAdd)
+	if err != nil {
+		return err
+	}
+	maxRelays.Add(maxRelays, maxRelaysToAddI)
+	// update values
+	app.MaxRelays = BigIntToString(maxRelays)
+	app.StakedTokens = BigIntToString(stakedTokens)
 	app.Chains = chainsToUpdate
-	bz, err := codec.Marshal(app)
+	// marshal
+	bz, err := cdc.Marshal(app)
 	if err != nil {
 		return err
 	}
@@ -144,19 +148,15 @@ func (m *PrePersistenceContext) UpdateApplication(address []byte, maxRelaysToAdd
 }
 
 func (m *PrePersistenceContext) DeleteApplication(address []byte) error {
-	exists, err := m.GetAppExists(address)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return fmt.Errorf("does not exist in world state: %v", address)
+	if exists, _ := m.GetAppExists(address); !exists {
+		return fmt.Errorf("does not exist in world state")
 	}
 	db := m.Store()
 	key := append(AppPrefixKey, address...)
 	return db.Put(key, DeletedPrefixKey)
 }
 
-func (m *PrePersistenceContext) GetAppsReadyToUnstake(height int64, _ int) (apps []*types.UnstakingActor, err error) { // TODO delete unused parameter
+func (m *PrePersistenceContext) GetAppsReadyToUnstake(height int64, status int) (apps []*types.UnstakingActor, err error) { // TODO delete unstaking
 	db := m.Store()
 	unstakingKey := append(UnstakingAppPrefixKey, []byte(fmt.Sprintf("%d", height))...)
 	if has := db.Contains(unstakingKey); !has {
@@ -180,32 +180,32 @@ func (m *PrePersistenceContext) GetAppsReadyToUnstake(height int64, _ int) (apps
 }
 
 func (m *PrePersistenceContext) GetAppStatus(address []byte) (status int, err error) {
-	app, err := m.GetApp(address)
+	app, exists, err := m.GetApp(address)
 	if err != nil {
 		return ZeroInt, err
 	}
-	if app == nil {
+	if !exists {
 		return ZeroInt, fmt.Errorf("does not exist in world state")
 	}
 	return int(app.Status), nil
 }
 
 func (m *PrePersistenceContext) SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error {
-	app, err := m.GetApp(address)
+	app, exists, err := m.GetApp(address)
 	if err != nil {
 		return err
 	}
-	if app == nil {
-		return fmt.Errorf("does not exist in world state: %v", address)
+	if !exists {
+		return fmt.Errorf("does not exist in world state")
 	}
-	codec := GetCodec()
+	cdc := Cdc()
 	unstakingApps := types.UnstakingActors{}
 	db := m.Store()
 	key := append(AppPrefixKey, address...)
 	app.UnstakingHeight = unstakingHeight
 	app.Status = int32(status)
 	// marshal
-	bz, err := codec.Marshal(app)
+	bz, err := cdc.Marshal(app)
 	if err != nil {
 		return err
 	}
@@ -227,7 +227,7 @@ func (m *PrePersistenceContext) SetAppUnstakingHeightAndStatus(address []byte, u
 		StakeAmount:   app.StakedTokens,
 		OutputAddress: app.Output,
 	})
-	unstakingBz, err := codec.Marshal(&unstakingApps)
+	unstakingBz, err := cdc.Marshal(&unstakingApps)
 	if err != nil {
 		return err
 	}
@@ -235,32 +235,32 @@ func (m *PrePersistenceContext) SetAppUnstakingHeightAndStatus(address []byte, u
 }
 
 func (m *PrePersistenceContext) GetAppPauseHeightIfExists(address []byte) (int64, error) {
-	app, err := m.GetApp(address)
+	app, exists, err := m.GetApp(address)
 	if err != nil {
 		return ZeroInt, err
 	}
-	if app == nil {
+	if !exists {
 		return ZeroInt, fmt.Errorf("does not exist in world state")
 	}
 	return int64(app.PausedHeight), nil
 }
 
-// SetAppsStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
 func (m *PrePersistenceContext) SetAppsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	db := m.Store()
-	codec := GetCodec()
+	cdc := Cdc()
 	it := db.NewIterator(&util.Range{
 		Start: AppPrefixKey,
 		Limit: PrefixEndBytes(AppPrefixKey),
 	})
+	it.First()
 	defer it.Release()
-	for valid := it.First(); valid; valid = it.Next() {
+	for ; it.Valid(); it.Next() {
 		app := App{}
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
-		if err := codec.Unmarshal(bz, &app); err != nil {
+		if err := cdc.Unmarshal(bz, &app); err != nil {
 			return err
 		}
 		if app.PausedHeight < uint64(pausedBeforeHeight) {
@@ -269,7 +269,7 @@ func (m *PrePersistenceContext) SetAppsStatusAndUnstakingHeightPausedBefore(paus
 			if err := m.SetAppUnstakingHeightAndStatus(app.Address, app.UnstakingHeight, status); err != nil {
 				return err
 			}
-			bz, err := codec.Marshal(&app)
+			bz, err := cdc.Marshal(&app)
 			if err != nil {
 				return err
 			}
@@ -282,18 +282,22 @@ func (m *PrePersistenceContext) SetAppsStatusAndUnstakingHeightPausedBefore(paus
 }
 
 func (m *PrePersistenceContext) SetAppPauseHeight(address []byte, height int64) error {
-	codec := GetCodec()
+	cdc := Cdc()
 	db := m.Store()
-	app, err := m.GetApp(address)
+	app, exists, err := m.GetApp(address)
 	if err != nil {
 		return err
 	}
-	if app == nil {
-		return fmt.Errorf("does not exist in world state: %v", address)
+	if !exists {
+		return fmt.Errorf("does not exist in world state")
 	}
-	app.Paused = true
+	if height == 0 {
+		app.Paused = false
+	} else {
+		app.Paused = true
+	}
 	app.PausedHeight = uint64(height)
-	bz, err := codec.Marshal(app)
+	bz, err := cdc.Marshal(app)
 	if err != nil {
 		return err
 	}
@@ -301,11 +305,11 @@ func (m *PrePersistenceContext) SetAppPauseHeight(address []byte, height int64) 
 }
 
 func (m *PrePersistenceContext) GetAppOutputAddress(operator []byte) (output []byte, err error) {
-	app, err := m.GetApp(operator)
+	app, exists, err := m.GetApp(operator)
 	if err != nil {
 		return nil, err
 	}
-	if app == nil {
+	if !exists {
 		return nil, fmt.Errorf("does not exist in world state")
 	}
 	return app.Output, nil

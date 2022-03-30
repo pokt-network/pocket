@@ -3,11 +3,12 @@ package pre_persistence
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
+
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
-	"strings"
 
 	"github.com/jordanorelli/lexnum"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
@@ -16,50 +17,32 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const (
-	FirstSavePointKeyName             = "first_savepoint_key"
-	DeletedPrefixKeyName              = "first_savepoint_key"
-	BlockPrefixName                   = "first_savepoint_key"
-	TransactionKeyPrefixName          = "transaction/"
-	PoolPrefixKeyName                 = "pool/"
-	AccountPrefixKeyName              = "account/"
-	AppPrefixKeyName                  = "app/"
-	UnstakingAppPrefixKeyName         = "unstaking_app/"
-	ServiceNodePrefixKeyName          = "service_node/"
-	UnstakingServiceNodePrefixKeyName = "unstaking_service_node/"
-	FishermanPrefixKeyName            = "fisherman/"
-	UnstakingFishermanPrefixKeyName   = "unstaking_fisherman/"
-	ValidatorPrefixKeyName            = "validator/"
-	UnstakingValidatorPrefixKeyName   = "unstaking_validator/"
-	ParamsPrefixKeyName               = "params/"
-)
-
 var (
-	FirstSavePointKey                                        = []byte(FirstSavePointKeyName)
-	DeletedPrefixKey                                         = []byte(DeletedPrefixKeyName)
-	BlockPrefix                                              = []byte(BlockPrefixName)
-	TransactionKeyPrefix                                     = []byte(TransactionKeyPrefixName)
-	PoolPrefixKey                                            = []byte(PoolPrefixKeyName)
-	AccountPrefixKey                                         = []byte(AccountPrefixKeyName)
-	AppPrefixKey                                             = []byte(AppPrefixKeyName)
-	UnstakingAppPrefixKey                                    = []byte(UnstakingAppPrefixKeyName)
-	ServiceNodePrefixKey                                     = []byte(ServiceNodePrefixKeyName)
-	UnstakingServiceNodePrefixKey                            = []byte(UnstakingServiceNodePrefixKeyName)
-	FishermanPrefixKey                                       = []byte(FishermanPrefixKeyName)
-	UnstakingFishermanPrefixKey                              = []byte(UnstakingFishermanPrefixKeyName)
-	ValidatorPrefixKey                                       = []byte(ValidatorPrefixKeyName)
-	UnstakingValidatorPrefixKey                              = []byte(UnstakingValidatorPrefixKeyName)
-	ParamsPrefixKey                                          = []byte(ParamsPrefixKeyName)
+	FirstSavePointKey                                        = []byte("first_savepoint_key")
+	DeletedPrefixKey                                         = []byte("deleted/")
+	BlockPrefix                                              = []byte("block/")
+	TransactionKeyPrefix                                     = []byte("transaction/")
+	PoolPrefixKey                                            = []byte("pool/")
+	AccountPrefixKey                                         = []byte("account/")
+	AppPrefixKey                                             = []byte("app/")
+	UnstakingAppPrefixKey                                    = []byte("unstaking_app/")
+	ServiceNodePrefixKey                                     = []byte("service_node/")
+	UnstakingServiceNodePrefixKey                            = []byte("unstaking_service_node/")
+	FishermanPrefixKey                                       = []byte("fisherman/")
+	UnstakingFishermanPrefixKey                              = []byte("unstaking_fisherman/")
+	ValidatorPrefixKey                                       = []byte("validator/")
+	UnstakingValidatorPrefixKey                              = []byte("unstaking_validator/")
+	ParamsPrefixKey                                          = []byte("params/")
 	_                             modules.PersistenceModule  = &PrePersistenceModule{}
 	_                             modules.PersistenceContext = &PrePersistenceContext{}
-	elenEncoder                                              = lexnum.NewEncoder('=', '-')
 )
 
-type PrePersistenceModule struct { // TODO make private if possible
+type PrePersistenceModule struct {
+	bus modules.Bus
+
 	CommitDB *memdb.DB
 	Mempool  types.Mempool
-	//pocketBusMod modules.Bus  TODO: add back in once bus is integrated
-	Cfg *config.Config
+	Cfg      *config.Config
 }
 
 func NewPrePersistenceModule(commitDB *memdb.DB, mempool types.Mempool, cfg *config.Config) *PrePersistenceModule {
@@ -68,12 +51,10 @@ func NewPrePersistenceModule(commitDB *memdb.DB, mempool types.Mempool, cfg *con
 
 func (m *PrePersistenceModule) NewContext(height int64) (modules.PersistenceContext, error) {
 	newDB := NewMemDB()
-	it := m.CommitDB.NewIterator(&util.Range{
-		Start: HeightKey(height, nil),
-		Limit: HeightKey(height+1, nil),
-	})
+	it := m.CommitDB.NewIterator(&util.Range{Start: HeightKey(height, nil), Limit: HeightKey(height+1, nil)})
+	it.First()
 	defer it.Release()
-	for valid := it.First(); valid; valid = it.Next() {
+	for ; it.Valid(); it.Next() {
 		err := newDB.Put(KeyFromHeightKey(it.Key()), it.Value())
 		if err != nil {
 			return nil, err
@@ -180,13 +161,13 @@ func (m *PrePersistenceContext) RollbackToSavePoint(bytes []byte) error {
 // AppHash creates a unique hash based on the global state object
 // NOTE: AppHash is an inefficient, arbitrary, mock implementation that enables the functionality
 // TODO written for replacement, taking any and all better implementation suggestions - even if a temporary measure
-// Assigned Andrewnguyen22 / Iajz
 func (m *PrePersistenceContext) AppHash() ([]byte, error) {
 	result := make([]byte, 0)
 	index := len(m.DBs) - 1
 	db := m.DBs[index]
 	it := db.NewIterator(&util.Range{})
-	for valid := it.First(); valid; valid = it.Next() {
+	it.First()
+	for ; it.Valid(); it.Next() {
 		result = append(result, it.Value()...)
 		// chunk into 100000 byte segments
 		if len(result) >= 100000 {
@@ -208,7 +189,8 @@ func (m *PrePersistenceContext) Commit() error {
 	index := len(m.DBs) - 1
 	db := m.DBs[index]
 	it := db.NewIterator(&util.Range{})
-	for valid := it.First(); valid; valid = it.Next() {
+	it.First()
+	for ; it.Valid(); it.Next() {
 		if err := m.Parent.GetCommitDB().Put(HeightKey(m.Height, it.Key()), it.Value()); err != nil {
 			return err
 		}
@@ -279,8 +261,9 @@ func NewMemDB() *memdb.DB {
 
 func CopyMemDB(src, dest *memdb.DB) error {
 	it := src.NewIterator(&util.Range{})
+	it.First()
 	defer it.Release()
-	for valid := it.First(); valid; valid = it.Next() {
+	for ; it.Valid(); it.Next() {
 		err := dest.Put(it.Key(), it.Value())
 		if err != nil {
 			return err
@@ -288,6 +271,10 @@ func CopyMemDB(src, dest *memdb.DB) error {
 	}
 	return nil
 }
+
+var (
+	elenEncoder = lexnum.NewEncoder('=', '-')
+)
 
 func HeightKey(height int64, k []byte) (key []byte) {
 	keyString := fmt.Sprintf("%s/%s", elenEncoder.EncodeInt(int(height)), k)
@@ -299,7 +286,6 @@ func KeyFromHeightKey(heightKey []byte) (key []byte) {
 	return []byte(k)
 }
 
-// PrefixEndBytes : Returns the 'END RANGE' or LIMIT for a prefix; Commonly used in KV range functions
 func PrefixEndBytes(prefix []byte) []byte {
 	if len(prefix) == 0 {
 		return nil

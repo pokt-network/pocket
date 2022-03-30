@@ -1,6 +1,6 @@
 syntax = "proto3";
 package utility;
-option go_package = "/types/";
+option go_package = "shared/types/";
 
 message UnstakingActor {
   bytes Address = 1;

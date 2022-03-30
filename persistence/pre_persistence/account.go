@@ -2,14 +2,17 @@ package pre_persistence
 
 import (
 	"bytes"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+
+	"math/big"
+
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	"math/big"
 )
 
-const ( // Names for each 'pool' (specialized accounts)
+const (
 	ServiceNodeStakePoolName = "SERVICE_NODE_STAKE_POOL"
 	AppStakePoolName         = "APP_STAKE_POOL"
 	ValidatorStakePoolName   = "VALIDATOR_STAKE_POOL"
@@ -19,15 +22,7 @@ const ( // Names for each 'pool' (specialized accounts)
 )
 
 func (m *PrePersistenceContext) AddPoolAmount(name string, amount string) error {
-	add := func(s *big.Int, s1 *big.Int) error {
-		s.Add(s, s1)
-		return nil
-	}
-	return m.operationPoolAmount(name, amount, add)
-}
-
-func (m *PrePersistenceContext) operationPoolAmount(name string, amount string, op func(*big.Int, *big.Int) error) error {
-	codec := GetCodec()
+	cdc := Cdc()
 	p := Pool{}
 	db := m.Store()
 	key := append(PoolPrefixKey, []byte(name)...)
@@ -35,7 +30,7 @@ func (m *PrePersistenceContext) operationPoolAmount(name string, amount string, 
 	if err != nil {
 		return err
 	}
-	err = codec.Unmarshal(val, &p)
+	err = cdc.Unmarshal(val, &p)
 	if err != nil {
 		return err
 	}
@@ -47,11 +42,9 @@ func (m *PrePersistenceContext) operationPoolAmount(name string, amount string, 
 	if err != nil {
 		return err
 	}
-	if err := op(s, s2); err != nil {
-		return err
-	}
+	s.Add(s, s2)
 	p.Account.Amount = BigIntToString(s)
-	bz, err := codec.Marshal(&p)
+	bz, err := cdc.Marshal(&p)
 	if err != nil {
 		return err
 	}
@@ -59,18 +52,37 @@ func (m *PrePersistenceContext) operationPoolAmount(name string, amount string, 
 }
 
 func (m *PrePersistenceContext) SubtractPoolAmount(name string, amount string) error {
-	sub := func(s *big.Int, s1 *big.Int) error {
-		s.Sub(s, s1)
-		if s.Sign() == -1 {
-			return types.ErrInsufficientAmountError()
-		}
-		return nil
+	cdc := Cdc()
+	p := Pool{}
+	db := m.Store()
+	key := append(PoolPrefixKey, []byte(name)...)
+	val, err := db.Get(key)
+	if err != nil {
+		return err
 	}
-	return m.operationPoolAmount(name, amount, sub)
+	err = cdc.Unmarshal(val, &p)
+	if err != nil {
+		return err
+	}
+	s, err := StringToBigInt(p.Account.Amount)
+	if err != nil {
+		return err
+	}
+	s2, err := StringToBigInt(amount)
+	if err != nil {
+		return err
+	}
+	s.Sub(s, s2)
+	p.Account.Amount = BigIntToString(s)
+	bz, err := cdc.Marshal(&p)
+	if err != nil {
+		return err
+	}
+	return db.Put(key, bz)
 }
 
 func (m *PrePersistenceContext) InsertPool(name string, address []byte, amount string) error {
-	codec := GetCodec()
+	cdc := Cdc()
 	p := Pool{
 		Name: name,
 		Account: &Account{
@@ -80,7 +92,7 @@ func (m *PrePersistenceContext) InsertPool(name string, address []byte, amount s
 	}
 	db := m.Store()
 	key := append(PoolPrefixKey, []byte(name)...)
-	bz, err := codec.Marshal(&p)
+	bz, err := cdc.Marshal(&p)
 	if err != nil {
 		return err
 	}
@@ -88,7 +100,7 @@ func (m *PrePersistenceContext) InsertPool(name string, address []byte, amount s
 }
 
 func (m *PrePersistenceContext) SetPoolAmount(name string, amount string) error {
-	codec := GetCodec()
+	cdc := Cdc()
 	p := Pool{}
 	db := m.Store()
 	key := append(PoolPrefixKey, []byte(name)...)
@@ -96,12 +108,12 @@ func (m *PrePersistenceContext) SetPoolAmount(name string, amount string) error 
 	if err != nil {
 		return err
 	}
-	err = codec.Unmarshal(val, &p)
+	err = cdc.Unmarshal(val, &p)
 	if err != nil {
 		return err
 	}
 	p.Account.Amount = amount
-	bz, err := codec.Marshal(&p)
+	bz, err := cdc.Marshal(&p)
 	if err != nil {
 		return err
 	}
@@ -109,7 +121,7 @@ func (m *PrePersistenceContext) SetPoolAmount(name string, amount string) error 
 }
 
 func (m *PrePersistenceContext) GetPoolAmount(name string) (amount string, err error) {
-	codec := GetCodec()
+	cdc := Cdc()
 	p := Pool{}
 	db := m.Store()
 	key := append(PoolPrefixKey, []byte(name)...)
@@ -117,7 +129,7 @@ func (m *PrePersistenceContext) GetPoolAmount(name string) (amount string, err e
 	if err != nil {
 		return EmptyString, err
 	}
-	err = codec.Unmarshal(val, &p)
+	err = cdc.Unmarshal(val, &p)
 	if err != nil {
 		return EmptyString, err
 	}
@@ -125,7 +137,7 @@ func (m *PrePersistenceContext) GetPoolAmount(name string) (amount string, err e
 }
 
 func (m *PrePersistenceContext) GetAllPools(height int64) (pools []*Pool, err error) {
-	codec := GetCodec()
+	cdc := Cdc()
 	pools = make([]*Pool, 0)
 	var it iterator.Iterator
 	if height == m.Height {
@@ -141,14 +153,15 @@ func (m *PrePersistenceContext) GetAllPools(height int64) (pools []*Pool, err er
 			Limit: PrefixEndBytes(key),
 		})
 	}
+	it.First()
 	defer it.Release()
-	for valid := it.First(); valid; valid = it.Next() {
+	for ; it.Valid(); it.Next() {
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
 		p := Pool{}
-		if err := codec.Unmarshal(bz, &p); err != nil {
+		if err := cdc.Unmarshal(bz, &p); err != nil {
 			return nil, err
 		}
 		pools = append(pools, &p)
@@ -156,20 +169,24 @@ func (m *PrePersistenceContext) GetAllPools(height int64) (pools []*Pool, err er
 	return
 }
 
-func (m *PrePersistenceContext) operationAccountAmount(address []byte, amount string, op func(*big.Int, *big.Int) error) error {
-	codec := GetCodec()
-	a := Account{}
+func (m *PrePersistenceContext) AddAccountAmount(address []byte, amount string) error {
+	cdc := Cdc()
+	account := Account{
+		Amount: BigIntToString(big.NewInt(0)),
+	}
 	db := m.Store()
 	key := append(AccountPrefixKey, address...)
-	val, err := db.Get(key)
-	if err != nil {
-		return err
+	if db.Contains(key) {
+		val, err := db.Get(key)
+		if err != nil {
+			return err
+		}
+		err = cdc.Unmarshal(val, &account)
+		if err != nil {
+			return err
+		}
 	}
-	err = codec.Unmarshal(val, &a)
-	if err != nil {
-		return err
-	}
-	s, err := StringToBigInt(a.Amount)
+	s, err := StringToBigInt(account.Amount)
 	if err != nil {
 		return err
 	}
@@ -177,38 +194,47 @@ func (m *PrePersistenceContext) operationAccountAmount(address []byte, amount st
 	if err != nil {
 		return err
 	}
-	if err := op(s, s2); err != nil {
-		return err
-	}
-	a.Amount = BigIntToString(s)
-	bz, err := codec.Marshal(&a)
+	s.Add(s, s2)
+	account.Amount = BigIntToString(s)
+	bz, err := cdc.Marshal(&account)
 	if err != nil {
 		return err
 	}
 	return db.Put(key, bz)
 }
 
-func (m *PrePersistenceContext) AddAccountAmount(address []byte, amount string) error {
-	add := func(s *big.Int, s1 *big.Int) error {
-		s.Add(s, s1)
-		return nil
-	}
-	return m.operationAccountAmount(address, amount, add)
-}
-
 func (m *PrePersistenceContext) SubtractAccountAmount(address []byte, amount string) error {
-	sub := func(s *big.Int, s1 *big.Int) error {
-		s.Sub(s, s1)
-		if s.Sign() == -1 {
-			return types.ErrInsufficientAmountError()
-		}
-		return nil
+	cdc := Cdc()
+	account := Account{}
+	db := m.Store()
+	key := append(AccountPrefixKey, address...)
+	val, err := db.Get(key)
+	if err != nil {
+		return err
 	}
-	return m.operationAccountAmount(address, amount, sub)
+	err = cdc.Unmarshal(val, &account)
+	if err != nil {
+		return err
+	}
+	s, err := StringToBigInt(account.Amount)
+	if err != nil {
+		return err
+	}
+	s2, err := StringToBigInt(amount)
+	if err != nil {
+		return err
+	}
+	s.Sub(s, s2)
+	account.Amount = BigIntToString(s)
+	bz, err := cdc.Marshal(&account)
+	if err != nil {
+		return err
+	}
+	return db.Put(key, bz)
 }
 
 func (m *PrePersistenceContext) GetAccountAmount(address []byte) (string, error) {
-	codec := GetCodec()
+	cdc := Cdc()
 	account := Account{}
 	db := m.Store()
 	key := append(AccountPrefixKey, address...)
@@ -216,7 +242,7 @@ func (m *PrePersistenceContext) GetAccountAmount(address []byte) (string, error)
 	if err != nil {
 		return EmptyString, err
 	}
-	err = codec.Unmarshal(val, &account)
+	err = cdc.Unmarshal(val, &account)
 	if err != nil {
 		return EmptyString, err
 	}
@@ -224,14 +250,14 @@ func (m *PrePersistenceContext) GetAccountAmount(address []byte) (string, error)
 }
 
 func (m *PrePersistenceContext) SetAccount(address []byte, amount string) error {
-	codec := GetCodec()
+	cdc := Cdc()
 	account := Account{
 		Address: address,
 		Amount:  amount,
 	}
 	db := m.Store()
 	key := append(AccountPrefixKey, address...)
-	bz, err := codec.Marshal(&account)
+	bz, err := cdc.Marshal(&account)
 	if err != nil {
 		return err
 	}
@@ -239,7 +265,7 @@ func (m *PrePersistenceContext) SetAccount(address []byte, amount string) error 
 }
 
 func (m *PrePersistenceContext) GetAllAccounts(height int64) (accs []*Account, err error) {
-	codec := GetCodec()
+	cdc := Cdc()
 	accs = make([]*Account, 0)
 	var it iterator.Iterator
 	if height == m.Height {
@@ -255,14 +281,15 @@ func (m *PrePersistenceContext) GetAllAccounts(height int64) (accs []*Account, e
 			Limit: PrefixEndBytes(key),
 		})
 	}
+	it.First()
 	defer it.Release()
-	for valid := it.First(); valid; valid = it.Next() {
+	for ; it.Valid(); it.Next() {
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
 		acc := Account{}
-		if err := codec.Unmarshal(bz, &acc); err != nil {
+		if err := cdc.Unmarshal(bz, &acc); err != nil {
 			return nil, err
 		}
 		accs = append(accs, &acc)
@@ -270,79 +297,78 @@ func (m *PrePersistenceContext) GetAllAccounts(height int64) (accs []*Account, e
 	return
 }
 
-func (x *Account) ValidateBasic() types.Error {
-	if x == nil {
+func (acc *Account) ValidateBasic() types.Error {
+	if acc == nil {
 		return types.ErrEmptyAccount()
 	}
-	if x.Address == nil {
+	if acc.Address == nil {
 		return types.ErrEmptyAddress()
 	}
-	if len(x.Address) != crypto.AddressLen {
+	addrLen := len(acc.Address)
+	if addrLen != crypto.AddressLen {
 		return types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen())
 	}
-	amount := &big.Int{}
-	if _, ok := amount.SetString(x.Amount, 10); !ok {
+	amount := big.NewInt(0)
+	if _, ok := amount.SetString(acc.Amount, 10); !ok {
 		return types.ErrInvalidAmount()
 	}
 	return nil
 }
 
-func (x *Account) SetAddress(address crypto.Address) types.Error {
-	if x == nil {
+func (acc *Account) SetAddress(address crypto.Address) types.Error {
+	if acc == nil {
 		return types.ErrEmptyAccount()
 	}
-	if len(address) != crypto.AddressLen {
+	addrLen := len(address)
+	if addrLen != crypto.AddressLen {
 		return types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen())
 	}
-	x.Address = address
+	acc.Address = address
 	return nil
 }
 
-func (x *Account) SetAmount(amount big.Int) types.Error {
-	if x == nil {
+func (acc *Account) SetAmount(amount big.Int) types.Error {
+	if acc == nil {
 		return types.ErrEmptyAccount()
 	}
-	if amount.Sign() == -1 {
-		return types.ErrNegativeAmountError()
-	}
-	x.Amount = amount.String()
+	acc.Amount = amount.String()
 	return nil
 }
 
 func NewPool(name string, account *Account) (*Pool, types.Error) {
-	pool := &Pool{
-		Name:    name,
-		Account: account,
+	pool := &Pool{}
+	if err := pool.SetName(name); err != nil {
+		return nil, err
 	}
-	if err := pool.ValidateBasic(); err != nil {
+	if err := pool.SetAccount(account); err != nil {
 		return nil, err
 	}
 	return pool, nil
 }
 
-func (x *Pool) ValidateBasic() types.Error {
-	if x == nil {
+func (p *Pool) ValidateBasic() types.Error {
+	if p == nil {
 		return types.ErrNilPool()
 	}
-	if x.Name == "" {
+	if p.Name == "" {
 		return types.ErrEmptyName()
 	}
-	return x.Account.ValidateBasic()
+	return p.Account.ValidateBasic()
 }
 
-func (x *Pool) SetName(name string) types.Error {
+func (p *Pool) SetName(name string) types.Error {
 	if name == "" {
 		return types.ErrEmptyName()
 	}
-	if x == nil {
+	if p == nil {
 		return types.ErrNilPool()
 	}
-	x.Name = name
+	p.Name = name
 	return nil
 }
 
-func (x *Pool) SetAccount(account *Account) types.Error {
-	if x == nil {
+func (p *Pool) SetAccount(account *Account) types.Error {
+	if p == nil {
 		return types.ErrNilPool()
 	}
 	if account == nil {
@@ -351,6 +377,6 @@ func (x *Pool) SetAccount(account *Account) types.Error {
 	if err := account.ValidateBasic(); err != nil {
 		return err
 	}
-	x.Account = account
+	p.Account = account
 	return nil
 }

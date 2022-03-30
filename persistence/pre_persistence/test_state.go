@@ -3,12 +3,13 @@ package pre_persistence
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/config"
-	"github.com/pokt-network/pocket/shared/crypto"
 	"log"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 // TODO: Return this as a singleton!
@@ -63,19 +64,19 @@ func (ps *TestState) loadStateFromGenesis(cfg *config.Config) {
 		log.Fatalf("Failed to load genesis: %v", err)
 	}
 
-	if cfg.PrivateKey == "" {
-		log.Fatalf("[TODO] Private key must be set when initializing the pocket state. ...")
-	}
-	pk, err := crypto.NewPrivateKey(cfg.PrivateKey)
-	if err != nil {
-		panic(err)
-	}
+	// if cfg.PrivateKey == "" {
+	// 	log.Fatalf("[TODO] Private key must be set when initializing the pocket state. ...")
+	// }
+	// pk, err := cfg.PrivateKey
+	// if err != nil {
+	// 	panic(err)
+	// }
 	*ps = TestState{
 		BlockHeight:  0,
 		ValidatorMap: ValidatorListToMap(genesis.Validators),
 
-		PublicKey: pk.PublicKey(),
-		Address:   pk.Address().String(),
+		PublicKey: cfg.PrivateKey.PublicKey(),
+		Address:   cfg.PrivateKey.Address().String(),
 
 		Config: *cfg,
 	}

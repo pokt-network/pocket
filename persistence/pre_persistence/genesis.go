@@ -1,14 +1,16 @@
 package pre_persistence
 
 import (
-	"github.com/pokt-network/pocket/shared/crypto"
 	"math"
 	"math/big"
+
+	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 var ( // TODO these are needed placeholders to pass validation checks. Until we have a real genesis implementation & testing environment, this will suffice
 	defaultChains         = []string{"0001"}
-	defaultServiceURL     = "https://foo.bar"
+	defaultServiceUrl     = "https://foo.bar"
 	defaultStakeBig       = big.NewInt(1000000000000000)
 	defaultStake          = BigIntToString(defaultStakeBig)
 	defaultAccountbalance = defaultStake
@@ -16,7 +18,7 @@ var ( // TODO these are needed placeholders to pass validation checks. Until we 
 )
 
 // NewGenesisState IMPORTANT NOTE: Not using numOfValidators param, as Validators are now read from the test_state json file
-func NewGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfServiceNodes int) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
+func NewGenesisState(cfg *config.Config, numOfValidators, numOfApplications, numOfFisherman, numOfServiceNodes int) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
 	// create the genesis state object
 	state = &GenesisState{}
 	// use the `integration test state` to populate parts of the genesis state
@@ -32,11 +34,12 @@ func NewGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfSe
 	serviceNodeKeys = make([]crypto.PrivateKey, numOfServiceNodes)
 	// create state objects for each key type
 	for i := range validatorKeys {
+		var pk crypto.PrivateKey
 		n := vm[NodeId(i+1)] // TODO will have to fix conflict when NodeId is deprecated
-		pk, _ := crypto.NewPrivateKey(n.PrivateKey)
+		pk, _ = crypto.NewPrivateKey(n.PrivateKey)
 		v := &Validator{
 			Status:       2,
-			ServiceURL:   defaultServiceURL,
+			ServiceUrl:   defaultServiceUrl,
 			StakedTokens: defaultStake,
 		}
 		v.Address = pk.Address()
@@ -70,7 +73,7 @@ func NewGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfSe
 		pk, _ := crypto.GeneratePrivateKey()
 		sn := &ServiceNode{
 			Status:       defaultStakeStatus,
-			ServiceURL:   defaultServiceURL,
+			ServiceUrl:   defaultServiceUrl,
 			Chains:       defaultChains,
 			StakedTokens: defaultStake,
 		}
@@ -89,7 +92,7 @@ func NewGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfSe
 		fish := &Fisherman{
 			Status:       defaultStakeStatus,
 			Chains:       defaultChains,
-			ServiceURL:   defaultServiceURL,
+			ServiceUrl:   defaultServiceUrl,
 			StakedTokens: defaultStake,
 		}
 		fish.Address = pk.Address()
@@ -107,28 +110,28 @@ func NewGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfSe
 	// create appropriate 'stake' pools for each actor type
 	valStakePool, err := NewPool(ValidatorStakePoolName, &Account{
 		Address: DefaultValidatorStakePool.Address(),
-		Amount:  BigIntToString(&big.Int{}),
+		Amount:  BigIntToString(big.NewInt(0)),
 	})
 	if err != nil {
 		return
 	}
 	appStakePool, err := NewPool(AppStakePoolName, &Account{
 		Address: DefaultAppStakePool.Address(),
-		Amount:  BigIntToString(&big.Int{}),
+		Amount:  BigIntToString(big.NewInt(0)),
 	})
 	if err != nil {
 		return
 	}
 	fishStakePool, err := NewPool(FishermanStakePoolName, &Account{
 		Address: DefaultFishermanStakePool.Address(),
-		Amount:  BigIntToString(&big.Int{}),
+		Amount:  BigIntToString(big.NewInt(0)),
 	})
 	if err != nil {
 		return
 	}
 	serNodeStakePool, err := NewPool(ServiceNodeStakePoolName, &Account{
 		Address: DefaultServiceNodeStakePool.Address(),
-		Amount:  BigIntToString(&big.Int{}),
+		Amount:  BigIntToString(big.NewInt(0)),
 	})
 	if err != nil {
 		return
@@ -136,7 +139,7 @@ func NewGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfSe
 	// create a pool for collected fees (helps with rewards)
 	fee, err := NewPool(FeePoolName, &Account{
 		Address: DefaultFeeCollector.Address(),
-		Amount:  BigIntToString(&big.Int{}),
+		Amount:  BigIntToString(big.NewInt(0)),
 	})
 	if err != nil {
 		return
@@ -144,7 +147,7 @@ func NewGenesisState(numOfValidators, numOfApplications, numOfFisherman, numOfSe
 	// create a pool for the dao treasury
 	dao, err := NewPool(DAOPoolName, &Account{
 		Address: DefaultDAOPool.Address(),
-		Amount:  BigIntToString(&big.Int{}),
+		Amount:  BigIntToString(big.NewInt(0)),
 	})
 	if err != nil {
 		return
@@ -180,19 +183,19 @@ func InitGenesis(u *PrePersistenceContext, state *GenesisState) error {
 		}
 	}
 	for _, validator := range state.Validators {
-		err := u.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 2, validator.ServiceURL, validator.StakedTokens, 0, 0)
+		err := u.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 2, validator.ServiceUrl, validator.StakedTokens, 0, 0)
 		if err != nil {
 			return err
 		}
 	}
 	for _, fisherman := range state.Fishermen {
-		err := u.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 2, fisherman.ServiceURL, fisherman.StakedTokens, fisherman.Chains, 0, 0)
+		err := u.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 2, fisherman.ServiceUrl, fisherman.StakedTokens, fisherman.Chains, 0, 0)
 		if err != nil {
 			return err
 		}
 	}
 	for _, serviceNode := range state.ServiceNodes {
-		err := u.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 2, serviceNode.ServiceURL, serviceNode.StakedTokens, serviceNode.Chains, 0, 0)
+		err := u.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 2, serviceNode.ServiceUrl, serviceNode.StakedTokens, serviceNode.Chains, 0, 0)
 		if err != nil {
 			return err
 		}

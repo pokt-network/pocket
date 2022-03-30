@@ -12,15 +12,15 @@ import (
 )
 
 type Config struct {
-	RootDir    string                    `json:"root_dir"`
-	PrivateKey pcrypto.Ed25519PrivateKey `json:"private_key"`
-	Genesis    string                    `json:"genesis"`
-	PRE2P          *PRE2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
-	P2P            *P2PConfig            `json:"p2p"`
-	PrePersistence *PrePersistenceConfig `json:"prePersistence"`
-	Consensus      *ConsensusConfig      `json:"consensus"`
-	Persistence    *PersistenceConfig    `json:"persistence"`
-	Utility        *UtilityConfig        `json:"utility"`
+	RootDir        string                    `json:"root_dir"`
+	PrivateKey     pcrypto.Ed25519PrivateKey `json:"private_key"`
+	Genesis        string                    `json:"genesis"`
+	Pre2P          *Pre2PConfig              `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
+	P2P            *P2PConfig                `json:"p2p"`
+	PrePersistence *PrePersistenceConfig     `json:"prePersistence"`
+	Consensus      *ConsensusConfig          `json:"consensus"`
+	Persistence    *PersistenceConfig        `json:"persistence"`
+	Utility        *UtilityConfig            `json:"utility"`
 }
 
 // TODO(derrandz): delete this once P2P is ready.
