@@ -349,7 +349,6 @@ func (u *UtilityContext) CalculateFishermanUnstakingHeight() (int64, types.Error
 
 func (u *UtilityContext) GetMessageStakeFishermanSignerCandidates(msg *typesUtil.MessageStakeFisherman) ([][]byte, types.Error) {
 	candidates := make([][]byte, 0)
-	candidates = append(candidates, msg.OutputAddress)
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(er)
