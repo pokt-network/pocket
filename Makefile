@@ -1,4 +1,4 @@
-# TODO(discuss): Determine if we want to use Makefile or mage.go and merge the two.
+# TODO(pocket/issues/43): Delete this files after moving the necessary helpers to mage.go.
 
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
@@ -73,7 +73,6 @@ mockgen:
 test_all: # generate_mocks
 	go test ./... -p=1
 
-
 .PHONY: test_utility_module
 ## Run all go utility module unit tests
 test_utility_module: # generate_mocks
@@ -94,10 +93,30 @@ test_pre2p: # generate_mocks
 test_shared: # generate_mocks
 	go test ./shared/...
 
+.PHONY: test_consensus
+## Run all go unit tests in the Consensus module
+test_consensus: # mockgen
+	go test -v ./consensus/...
+
 .PHONY: test_pre_persistence
 ## Run all go per persistence unit tests
 test_pre_persistence: # generate_mocks
 	go test ./persistence/pre_persistence/...
+
+.PHONY: test_vrf
+## Run all go unit tests in the VRF library
+test_vrf:
+	go test -v ./consensus/leader_election/vrf
+
+.PHONY: test_sortition
+## Run all go unit tests in the Sortition library
+test_sortition:
+	go test -v ./consensus/leader_election/sortition
+
+.PHONY: benchmark_sortition
+## Benchmark the Sortition library
+benchmark_sortition:
+	go test -v ./consensus/leader_election/sortition -bench=.
 
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
@@ -152,3 +171,13 @@ protogen_docker:
 ## Format all the .go files in the project in place.
 gofmt:
 	gofmt -w -s .
+
+.PHONY: todo_list
+## List all the TODOs in the project (excludes vendor and prototype directories)
+todo_list:
+	grep --exclude-dir={vendor,prototype} -r "TODO" .
+
+.PHONY: todo_count
+## Print a count of all the TODOs in the project
+todo_count:
+	grep --exclude-dir={vendor,prototype} -r "TODO" . | wc -l

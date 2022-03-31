@@ -1,6 +1,9 @@
 package crypto
 
-import "encoding/json"
+import (
+	"encoding/hex"
+	"encoding/json"
+)
 
 // TODO(discuss): Consider create a type for signature and having constraints for each type as well.
 type Address []byte
@@ -22,6 +25,7 @@ type PrivateKey interface {
 	Address() Address
 	Sign(msg []byte) ([]byte, error)
 	Size() int
+	Seed() []byte
 }
 
 func (a *Address) UnmarshalJSON(data []byte) error {
@@ -30,6 +34,10 @@ func (a *Address) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	*a = []byte(address)
+	bytes, err := hex.DecodeString(address)
+	if err != nil {
+		return err
+	}
+	*a = bytes
 	return nil
 }

@@ -9,6 +9,7 @@ import (
 
 const (
 	AddressLen = 20
+	SeedSize   = ed25519.SeedSize
 )
 
 type (
@@ -62,6 +63,14 @@ func NewPrivateKeyFromBytes(bz []byte) (PrivateKey, error) {
 	return Ed25519PrivateKey(bz), nil
 }
 
+func NewPrivateKeyFromSeed(seed []byte) (PrivateKey, error) {
+	if len(seed) < SeedSize {
+		return nil, ErrInvalidPrivateKeySeedLenError(len(seed))
+	}
+	privKey := ed25519.NewKeyFromSeed([]byte(seed[:SeedSize]))
+	return Ed25519PrivateKey(privKey), nil
+}
+
 var _ PrivateKey = Ed25519PrivateKey{}
 
 func (priv Ed25519PrivateKey) Bytes() []byte {
@@ -92,6 +101,10 @@ func (priv Ed25519PrivateKey) Sign(msg []byte) ([]byte, error) {
 
 func (priv Ed25519PrivateKey) Size() int {
 	return ed25519.PrivateKeySize
+}
+
+func (priv Ed25519PrivateKey) Seed() []byte {
+	return ed25519.PrivateKey(priv).Seed()
 }
 
 func (priv *Ed25519PrivateKey) UnmarshalJSON(data []byte) error {
