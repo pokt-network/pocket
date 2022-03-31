@@ -66,7 +66,9 @@ type socket struct {
 	requests *types.RequestMap
 
 	// turns true when the socket is opened (i.e., the connection is established and IO routines are launched)
-	isOpen atomic.Bool
+	isOpen    atomic.Bool
+	isWriting atomic.Bool
+	isReading atomic.Bool
 
 	// For reference, see these resources on the use of empty structs in go channels:
 	// - https://dave.cheney.net/2014/03/25/the-empty-struct
@@ -221,8 +223,24 @@ func (s *socket) startIO(ctx context.Context, kind types.SocketType, addr string
 		return
 	}
 
-	go s.read(ctx) // closes s.reading when done
-	s.write(ctx)   // closes s.writing when done
+	go s.read(ctx)  // closes s.reading when done
+	go s.write(ctx) // closes s.writing when done
+
+waiter:
+	for {
+		select {
+		case _, open := <-s.writing:
+			if !open {
+				s.logger.Warn("Socket stopped writing...")
+				break waiter
+			}
+		case _, open := <-s.reading:
+			if !open {
+				s.logger.Warn("Socket stopped reading...")
+				break waiter
+			}
+		}
+	}
 
 	if err := onClosed(ctx, s); err != nil {
 		s.error(err)
@@ -285,11 +303,8 @@ func (s *socket) readChunk() ([]byte, int, error) {
 //   - If some party signals that this routine should stop (by closing the s.reading channel)
 //   - If there is an IO error: EOF, UnexpectedEOF, peer hang up, unexpected error
 func (s *socket) read(ctx context.Context) {
-	defer func() {
-		close(s.reading)
-	}()
-
-	s.reading <- struct{}{} // signal start
+	defer s.signalReadingStop()
+	s.signalReadingStart()
 
 reader:
 	for {
@@ -365,7 +380,7 @@ func (s *socket) writeChunk(b []byte, isErrorOf bool, reqNum uint32, wrapped boo
 	writeBuffer := s.buffers.write.Ref()
 
 	buff := s.codec.encode(Binary, isErrorOf, reqNum, b, wrapped)
-	(*writeBuffer) = append((*writeBuffer), buff...)
+	*writeBuffer = append(*writeBuffer, buff...)
 
 	s.buffers.write.Signal()
 	return uint(len(b)), nil // TODO(derrandz): should length be of b or of the encoded b
@@ -409,11 +424,8 @@ func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Packet, error) 
 //   - if some party signals that this routine should stop (by closing the s.writing channel)
 //   - if there is a write error
 func (s *socket) write(ctx context.Context) {
-	defer func() {
-		close(s.writing)
-	}()
-
-	s.writing <- struct{}{} // signal start
+	defer s.signalWritingStop()
+	s.signalWritingStart()
 
 writer:
 	for {
@@ -478,4 +490,24 @@ func (s *socket) stopErrorReporting() {
 
 	s.err.Lock()
 	close(s.errored)
+}
+
+func (s *socket) signalWritingStart() {
+	s.writing <- struct{}{}
+	s.isWriting.Store(true)
+}
+
+func (s *socket) signalWritingStop() {
+	close(s.writing)
+	s.isWriting.Store(false)
+}
+
+func (s *socket) signalReadingStart() {
+	s.reading <- struct{}{}
+	s.isReading.Store(true)
+}
+
+func (s *socket) signalReadingStop() {
+	close(s.reading)
+	s.isReading.Store(false)
 }
