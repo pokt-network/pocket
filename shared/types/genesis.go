@@ -40,11 +40,9 @@ func PocketGenesisFromJSON(jsonBlob []byte) (*Genesis, error) {
 	if err := json.Unmarshal(jsonBlob, &genesis); err != nil {
 		return nil, err
 	}
-
 	if err := genesis.Validate(); err != nil {
 		return nil, err
 	}
-
 	return &genesis, nil
 }
 
@@ -57,6 +55,11 @@ func (genesis *Genesis) Validate() error {
 	if len(genesis.Validators) == 0 {
 		return fmt.Errorf("genesis must contain at least one validator")
 	}
+
+	if len(genesis.AppHash) == 0 {
+		return fmt.Errorf("Genesis app hash cannot be zero")
+	}
+
 	for _, validator := range genesis.Validators {
 		if err := validator.Validate(); err != nil {
 			return fmt.Errorf("validator in genesis is invalid: %w", err)

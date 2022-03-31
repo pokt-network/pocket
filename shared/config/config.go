@@ -12,22 +12,30 @@ import (
 )
 
 type Config struct {
-	RootDir string `json:"root_dir"`
-	Genesis string `json:"genesis"`
+	RootDir   string `json:"root_dir"`
+	Genesis   string `json:"genesis"`
+	IsTesting bool   `json:"testing"` // TODO: consider renaming this to either `DebugMode` or `DevMode`.
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 
-	Pre2P       *Pre2PConfig       `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
-	P2P         *P2PConfig         `json:"p2p"`
-	Consensus   *ConsensusConfig   `json:"consensus"`
-	Persistence *PersistenceConfig `json:"persistence"`
-	Utility     *UtilityConfig     `json:"utility"`
+	Pre2P          *Pre2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
+	P2P            *P2PConfig            `json:"p2p"`
+	Consensus      *ConsensusConfig      `json:"consensus"`
+	PrePersistence *PrePersistenceConfig `json:"prePersistence"`
+	Persistence    *PersistenceConfig    `json:"persistence"`
+	Utility        *UtilityConfig        `json:"utility"`
 }
 
 // TODO(derrandz): delete this once P2P is ready.
 type Pre2PConfig struct {
 	ConsensusPort uint32 `json:"consensus_port"`
 	DebugPort     uint32 `json:"debug_port"`
+}
+
+type PrePersistenceConfig struct {
+	Capacity        int `json:"capacity"`
+	MempoolMaxBytes int `json:"mempoolMaxBytes"`
+	MempoolMaxTxs   int `json:"mempoolMaxTxs"`
 }
 
 type P2PConfig struct {
@@ -131,7 +139,7 @@ func (c *PacemakerConfig) ValidateAndHydrate() error {
 	return nil
 }
 
-// Helper to make config creation independent of root dir
+// Helper function to make config creation independent of root dir
 func rootify(path, root string) string {
 	if filepath.IsAbs(path) {
 		return path

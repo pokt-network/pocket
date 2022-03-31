@@ -1,0 +1,17 @@
+syntax = "proto3";
+package pre_persistence;
+
+option go_package = "/persistence/pre_persistence/";
+
+message App {
+  bytes address = 1;
+  bytes public_key = 2;
+  bool paused = 3;
+  int32 status = 4;
+  repeated string chains = 5;
+  string max_relays = 6;
+  string staked_tokens = 7;
+  uint64 paused_height = 8;
+  int64 unstaking_height = 9;
+  bytes output = 10;
+}

@@ -106,7 +106,7 @@ func isSignatureValid(m *typesCons.HotstuffMessage, pubKey crypto.PublicKey, sig
 		log.Println("[WARN] Error getting bytes to verify:", err)
 		return false
 	}
-	return pubKey.VerifyBytes(bytesToVerify, signature)
+	return pubKey.Verify(bytesToVerify, signature)
 }
 
 func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
