@@ -157,7 +157,7 @@ func TestSocket_WriteRoutine(t *testing.T) {
 	t.Log("Closing the socket")
 	pipe.close()
 
-	<-pipe.closed
+	<-pipe.done
 
 	// close the socket and assert for proper closing consequences
 	{
@@ -306,7 +306,7 @@ func TestSocket_ReadRoutine(t *testing.T) {
 
 	{
 		pipe.close()
-		<-pipe.closed
+		<-pipe.done
 		_, pollingOpen := <-pipe.reading
 		assert.Equal(
 			t,

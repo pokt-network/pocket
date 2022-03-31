@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 	"net"
+	"os"
 	"sync"
 	"time"
 
@@ -72,18 +73,54 @@ type socket struct {
 	// - https://dave.cheney.net/2013/04/30/curious-channels
 
 	ready   chan struct{} // when the socket is opened and IO starts, this channel gets closed to signal readiness
+	done    chan struct{} // if this channel is closed or receives and input, it stops the socket and IO operations
 	writing chan struct{} // when the writing starts, this channel receives a new input; closes when done writing (i.e: stopped the socket)
 	reading chan struct{} // when the reading starts, this channel receives a new input; closes when done reading (i.e: stopped the socket)
-	done    chan struct{} // if this channel is closed or receives and input, it stops the socket and IO operations
-	closed  chan struct{} // this channel signals that the socket has been closed by receiving a new input
-
 	errored chan struct{} // on error, this channel receives a new input to signal the happening of an error
-	err     struct {      // the reference to store the encountered error
+
+	err struct { // the reference to store the encountered error
 		sync.Mutex
 		error
 	}
 
 	logger types.Logger
+}
+
+// A constructor to create a socket
+func NewSocket(readBufferSize uint, packetHeaderLength uint, readTimeoutInMs uint) *socket {
+	pipe := &socket{
+		codec: newWireCodec(),
+
+		kind:         types.UndefinedSocketType,
+		headerLength: packetHeaderLength,
+		bufferSize:   readBufferSize,
+		readTimeout:  readTimeoutInMs,
+
+		buffers: struct {
+			read  *types.Buffer
+			write *types.ConcurrentBuffer
+		}{
+			read:  types.NewBuffer(readBufferSize),
+			write: types.NewConcurrentBuffer(0),
+		},
+
+		requests: types.NewRequestMap(math.MaxUint32),
+
+		ready:   make(chan struct{}), // closes to signal the readiness of the socket
+		done:    make(chan struct{}), // closes to signal the closing of the socket
+		writing: make(chan struct{}), // sends a new input to signal the start of the writing routine, closes when done writing
+		reading: make(chan struct{}), // sends new input to signal the start of the reading routine, closes when done reading
+
+		// sends new input to signal the encoutering of an error in running routines
+		// closes when the socket closes.
+		// Bufferred to 1 to allow non-blocking signaling of errors, and blocking awaiting of error signals.
+		// (We are handling 1 error at most, so not more than one signal is expected to be received at a time, establishing a queue of exactly 1 error...)
+		errored: make(chan struct{}, 1),
+
+		logger: types.NewLogger(os.Stdout),
+	}
+
+	return pipe
 }
 
 // Retrieves the underlying TCP socket (net.Conn) in question through the connector argument and starts
@@ -115,19 +152,29 @@ func (s *socket) open(ctx context.Context, connector func() (string, types.Socke
 	select {
 	case <-s.errored:
 		return s.err.error
-	case <-s.reading:
-		s.logger.Debug("Socket has started the reading routine successfully")
+	case _, closed := <-s.reading:
+		if closed {
+			s.logger.Debug("Socket has stopped reading...")
+			s.logger.Error("Socket stopped reading imemdiately after opening...")
+		} else {
+			s.logger.Debug("Socket has started the reading routine successfully")
+		}
 	}
 
 	select {
 	case <-s.errored:
 		return s.err.error
-	case <-s.writing:
-		s.logger.Debug("Socket has started the reading routine successfully")
+	case _, closed := <-s.writing:
+		if closed {
+			s.logger.Debug("Socket has stopped writing...")
+			s.logger.Error("Socket stopped writing imemdiately after opening...")
+		} else {
+			s.logger.Debug("Socket has started the reading routine successfully")
+		}
 	}
 
-	s.isOpen.Store(true)
-	close(s.ready)
+	s.signalOpen()
+	s.signalReady()
 
 	return nil
 }
@@ -140,22 +187,17 @@ func (s *socket) close() {
 	if !s.isOpen.Load() {
 		return
 	}
+
 	close(s.done)
 
-	s.err.Lock()
-	close(s.errored)
-	s.err.Unlock()
-
+	s.stopErrorReporting()
 	s.buffers.write.Close()
-
-	s.isOpen.Store(false)
 
 	if s.conn != nil {
 		s.conn.Close()
 	}
 
-	s.closed <- struct{}{}
-	s.isOpen.Store(false)
+	s.signalClose()
 }
 
 // Creates a reader and writer for the network connection and kicks off the onSocketOpened event handler.
@@ -245,7 +287,6 @@ func (s *socket) readChunk() ([]byte, int, error) {
 func (s *socket) read(ctx context.Context) {
 	defer func() {
 		close(s.reading)
-		s.closed <- struct{}{}
 	}()
 
 	s.reading <- struct{}{} // signal start
@@ -253,16 +294,12 @@ func (s *socket) read(ctx context.Context) {
 reader:
 	for {
 		select {
-		case <-ctx.Done():
+		case <-ctx.Done(): // stop if context cancels
 			break reader
-		case <-s.runner.Done():
+		case <-s.runner.Done(): // stop if runner stops
 			break reader
-		case <-s.done:
+		case <-s.done: // stop if the socket closes
 			break reader
-		case _, open := <-s.reading:
-			if !open {
-				break reader
-			}
 		default:
 			{
 				buf, n, err := s.readChunk()
@@ -374,7 +411,6 @@ func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Packet, error) 
 func (s *socket) write(ctx context.Context) {
 	defer func() {
 		close(s.writing)
-		s.closed <- struct{}{}
 	}()
 
 	s.writing <- struct{}{} // signal start
@@ -382,16 +418,12 @@ func (s *socket) write(ctx context.Context) {
 writer:
 	for {
 		select {
-		case <-ctx.Done():
+		case <-ctx.Done(): // stop if context cancels
 			break writer
-		case <-s.runner.Done():
+		case <-s.runner.Done(): // stop if runner stops
 			break writer
-		case <-s.done:
+		case <-s.done: // stop if the socket closes
 			break writer
-		case _, open := <-s.writing:
-			if !open {
-				break writer
-			}
 		case <-s.buffers.write.Signals(): // blocks
 			{
 				if !s.buffers.write.IsOpen() {
@@ -426,42 +458,24 @@ func (s *socket) error(err error) {
 	s.errored <- struct{}{}
 }
 
-// A constructor to create a socket
-func NewSocket(readBufferSize uint, packetHeaderLength uint, readTimeoutInMs uint) *socket {
-	pipe := &socket{
-		codec: newWireCodec(),
+// signal the readiness of the socket, called when everything has been perofrmed successfully when opening the socket
+func (s *socket) signalReady() {
+	close(s.ready)
+}
 
-		kind:         types.UndefinedSocketType,
-		headerLength: packetHeaderLength,
-		bufferSize:   readBufferSize,
-		readTimeout:  readTimeoutInMs,
+// signal that the socket has been opened. Flip the flag.
+func (s *socket) signalOpen() {
+	s.isOpen.Store(true)
+}
 
-		buffers: struct {
-			read  *types.Buffer
-			write *types.ConcurrentBuffer
-		}{
-			read:  types.NewBuffer(readBufferSize),
-			write: types.NewConcurrentBuffer(0),
-		},
+// signal that the socket has been closed.
+func (s *socket) signalClose() {
+	s.isOpen.Store(false)
+}
 
-		requests: types.NewRequestMap(math.MaxUint32),
+func (s *socket) stopErrorReporting() {
+	defer s.err.Unlock()
 
-		ready: make(chan struct{}),
-
-		// to allow for graceful shutdown, we buffer this to 3 since there are 3 routines that we need to have them signal their closing.
-		//Upon their signals, this channel becomes blocking thus allowing the parent routine to wait until all 3 are closed
-		closed: make(chan struct{}, 3),
-
-		done: make(chan struct{}),
-
-		// any reporting routine will immediately halt after signaling on this channel.
-		//buffering this channel to 1 allows the erroring routine to not block, but the parent to wait if it needs to confirm error or no error
-		errored: make(chan struct{}, 1),
-
-		writing: make(chan struct{}),
-		reading: make(chan struct{}),
-		logger:  types.NewLogger(),
-	}
-
-	return pipe
+	s.err.Lock()
+	close(s.errored)
 }
