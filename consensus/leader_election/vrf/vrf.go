@@ -8,6 +8,7 @@ package vrf
 import (
 	"bytes"
 	"crypto/sha512"
+
 	"io"
 
 	"github.com/pokt-network/pocket/shared/crypto"

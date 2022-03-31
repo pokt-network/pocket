@@ -16,8 +16,9 @@ require (
 	google.golang.org/protobuf v1.27.1
 )
 
+require filippo.io/edwards25519 v1.0.0-rc.1 // indirect
+
 require (
-	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect; indir
 	github.com/kr/pretty v0.3.0 // indirect
