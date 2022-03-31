@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	types2 "github.com/pokt-network/pocket/shared/types"
 	"math/big"
 	crypto2 "pocket/shared/crypto"
 	"pocket/shared/modules"
@@ -364,7 +365,7 @@ func (m *MockPersistenceContext) GetHeight() (int64, error) {
 
 func (m *MockPersistenceContext) GetBlockHash(height int64) ([]byte, error) {
 	db := m.Store()
-	block := Block{}
+	block := types2.Block{}
 	key := append(BlockPrefix, []byte(fmt.Sprintf("%d", height))...)
 	val, err := db.Get(key)
 	if err != nil {

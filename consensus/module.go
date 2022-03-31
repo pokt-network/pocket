@@ -30,7 +30,7 @@ type consensusModule struct {
 	Height uint64
 	Round  uint64
 	Step   typesCons.HotstuffStep
-	Block  *typesCons.BlockConsensusTemp // The current block being voted on prior to committing to finality
+	Block  *types.Block // The current block being voted on prior to committing to finality
 
 	HighPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	LockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT

@@ -69,12 +69,14 @@ const ( // Explain: using these numbers as it fits nicely with the other error c
 	CodeGetAllServiceNodesError Code = 98
 	CodeGetAllAppsError         Code = 99
 
-	CodeGetAllPoolsError        Code = 107
-	CodeGetAllAccountsError     Code = 108
-	CodeGetAllParamsError       Code = 109
-	CodeInsufficientAmountError Code = 41
-	CodeNegativeAmountError     Code = 118
-	EmptyTransactionError            = "the transaction is empty"
+	CodeGetAllPoolsError          Code = 107
+	CodeGetAllAccountsError       Code = 108
+	CodeGetAllParamsError         Code = 109
+	CodeInsufficientAmountError   Code = 41
+	CodeNegativeAmountError       Code = 118
+	CodeNilQuorumCertificateError Code = 119
+
+	EmptyTransactionError = "the transaction is empty"
 
 	StringToBigIntError = "an error occurred converting the string primitive to big.Int, the conversion was unsuccessful with base 10"
 
@@ -94,6 +96,7 @@ const ( // Explain: using these numbers as it fits nicely with the other error c
 	EmptyProposerError           = "the proposer field is empty"
 	EmptyNetworkIDError          = "the network id field is empty"
 	InvalidHashLengthError       = "the length of the hash is not the correct size"
+	NilQuorumCertificateError    = "the quorum certificate is nil"
 
 	HexDecodeFromStringError = "an error occurred decoding the string into hex bytes"
 	ProtoMarshalError        = "an error occurred marshalling the structure in protobuf"
@@ -208,6 +211,10 @@ func ErrInvalidTransactionCount() Error {
 
 func ErrInvalidHashLength(err error) Error {
 	return NewError(CodeInvalidHashLengthError, fmt.Sprintf("%s: %s", InvalidHashLengthError, err.Error()))
+}
+
+func ErrNilQuorumCertificate() Error {
+	return NewError(CodeNilQuorumCertificateError, NilQuorumCertificateError)
 }
 
 func ErrNewAddressFromBytes(err error) Error {

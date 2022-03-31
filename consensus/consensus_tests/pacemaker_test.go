@@ -1,6 +1,8 @@
 package consensus_tests
 
 import (
+	"encoding/hex"
+	"github.com/pokt-network/pocket/shared/types"
 	"log"
 	"reflect"
 	"testing"
@@ -125,15 +127,15 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	leaderRound := uint64(6)
 
 	// Placeholder block
-	blockHeader := &typesCons.BlockHeaderConsensusTemp{
+	blockHeader := &types.BlockHeader{
 		Height:            int64(testHeight),
-		Hash:              appHash,
+		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            0,
 		LastBlockHash:     "",
 		ProposerAddress:   []byte(leader.Address),
 		QuorumCertificate: nil,
 	}
-	block := &typesCons.BlockConsensusTemp{
+	block := &types.Block{
 		BlockHeader:  blockHeader,
 		Transactions: emptyTxs,
 	}
