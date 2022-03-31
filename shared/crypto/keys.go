@@ -10,7 +10,7 @@ type PublicKey interface {
 	String() string
 	Address() Address
 	Equals(other PublicKey) bool
-	VerifyBytes(msg []byte, sig []byte) bool // TODO(andrew): consider renaming to Verify
+	Verify(msg []byte, sig []byte) bool
 	Size() int
 }
 

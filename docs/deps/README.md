@@ -6,11 +6,12 @@ We wanted to reduce the possibility of human error in the creation of releases a
 
 To introduce automation in version generation there are several strategies, the simplest of which involves setting the version information at build time through flags sent to the Go toolchain linker.
 
-Generating version information in general, and generating releases in particular, will use algorithms that can vary in complexity and amount of tasks automated. 
+Generating version information in general, and generating releases in particular, will use algorithms that can vary in complexity and amount of tasks automated.
 
 In order to facilitate usage for the whole team, choosing a tool that is programmed in Go instead of a domain specific language seems sensible.
 
 Usage in this case means:
+
 - Ease of understanding the algorithms used for targets
 - Ease of adding targets
 - Ease of modifying targets

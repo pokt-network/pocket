@@ -3,8 +3,6 @@ package pre_persistence
 import (
 	"bytes"
 	"fmt"
-	"math/big"
-
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -108,35 +106,38 @@ func (m *PrePersistenceContext) InsertApplication(address []byte, publicKey []by
 	return db.Put(key, bz)
 }
 
-func AddAmounts(amountA, amountB string) (string, error) {
-	bigA, err := StringToBigInt(amountA)
-	if err != nil {
-		return "", err
-	}
-	bigB, err := StringToBigInt(amountB)
-	if err != nil {
-		return "", err
-	}
-	result := new(big.Int).Add(bigA, bigB)
-	return BigIntToString(result), nil
-}
-
 func (m *PrePersistenceContext) UpdateApplication(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error {
-	app, _ := m.GetApp(address)
-	if app == nil {
-		return fmt.Errorf("does not exist in world state: %v", address)
+	app, err := m.GetApp(address)
+	if err != nil {
+		return err
 	}
 	codec := GetCodec()
 	db := m.Store()
 	key := append(AppPrefixKey, address...)
 	// compute new values
-	var err error
-	app.StakedTokens, err = AddAmounts(app.StakedTokens, amountToAdd)
+	stakedTokens, err := StringToBigInt(app.StakedTokens)
 	if err != nil {
 		return err
 	}
-	app.MaxRelays, err = AddAmounts(app.MaxRelays, maxRelaysToAdd)
+	stakedTokensToAddI, err := StringToBigInt(amountToAdd)
+	if err != nil {
+		return err
+	}
+	stakedTokens.Add(stakedTokens, stakedTokensToAddI)
+	maxRelays, err := StringToBigInt(app.MaxRelays)
+	if err != nil {
+		return err
+	}
+	maxRelaysToAddI, err := StringToBigInt(maxRelaysToAdd)
+	if err != nil {
+		return err
+	}
+	maxRelays.Add(maxRelays, maxRelaysToAddI)
+	// update values
+	app.MaxRelays = BigIntToString(maxRelays)
+	app.StakedTokens = BigIntToString(stakedTokens)
 	app.Chains = chainsToUpdate
+	// marshal
 	bz, err := codec.Marshal(app)
 	if err != nil {
 		return err
@@ -291,7 +292,11 @@ func (m *PrePersistenceContext) SetAppPauseHeight(address []byte, height int64) 
 	if app == nil {
 		return fmt.Errorf("does not exist in world state: %v", address)
 	}
-	app.Paused = true
+	if app.PausedHeight == heightNotUsed {
+		app.Paused = true
+	} else {
+		app.Paused = false
+	}
 	app.PausedHeight = uint64(height)
 	bz, err := codec.Marshal(app)
 	if err != nil {

@@ -32,7 +32,7 @@ type p2pModule struct {
 func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	log.Println("Creating network module")
 
-	testState := types.GetTestState()
+	testState := types.GetTestState(cfg)
 	testState.LoadStateFromConfig(cfg)
 
 	tcpAddr, _ := net.ResolveTCPAddr(NetworkProtocol, fmt.Sprintf(":%d", cfg.Pre2P.ConsensusPort))

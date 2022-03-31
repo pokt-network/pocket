@@ -1,3 +1,4 @@
+// See https://github.com/pokt-network/pocket-network-genesis as a reference
 package types
 
 import (
@@ -29,12 +30,10 @@ func PocketGenesisFromFile(file string) (*Genesis, error) {
 	if err != nil {
 		return nil, fmt.Errorf("couldn't read Genesis file: %w", err)
 	}
-
 	genesis, err := PocketGenesisFromJSON(jsonBlob)
 	if err != nil {
 		return nil, fmt.Errorf("error reading Genesis at %s: %w", file, err)
 	}
-
 	return genesis, nil
 }
 
@@ -43,11 +42,9 @@ func PocketGenesisFromJSON(jsonBlob []byte) (*Genesis, error) {
 	if err := json.Unmarshal(jsonBlob, &genesis); err != nil {
 		return nil, err
 	}
-
 	if err := genesis.Validate(); err != nil {
 		return nil, err
 	}
-
 	return &genesis, nil
 }
 
@@ -63,7 +60,6 @@ func (genesis *Genesis) Validate() error {
 	if len(genesis.AppHash) == 0 {
 		return fmt.Errorf("Genesis app hash cannot be zero")
 	}
-
 	for _, validator := range genesis.Validators {
 		if err := validator.Validate(); err != nil {
 			return fmt.Errorf("validator in genesis is invalid: %w", err)

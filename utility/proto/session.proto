@@ -1,0 +1,17 @@
+syntax = "proto3";
+package utility;
+
+option go_package = "/utility/types/";
+
+message Session {
+  SessionHeader session_header = 1;
+  bytes session_key = 2; // session key is the unique hash used as seed data to select actors accordingly
+  repeated bytes service_nodes = 3;
+  bytes fishermen = 4;
+}
+
+message SessionHeader {
+  bytes app_public_key = 1;
+  string chain = 2;
+  int64 session_block_height = 3;
+}

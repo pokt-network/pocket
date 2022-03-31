@@ -12,15 +12,16 @@ import (
 )
 
 type Config struct {
-	RootDir        string                    `json:"root_dir"`
-	PrivateKey     pcrypto.Ed25519PrivateKey `json:"private_key"`
-	Genesis        string                    `json:"genesis"`
-	Pre2P          *Pre2PConfig              `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
-	P2P            *P2PConfig                `json:"p2p"`
-	PrePersistence *PrePersistenceConfig     `json:"prePersistence"`
-	Consensus      *ConsensusConfig          `json:"consensus"`
-	Persistence    *PersistenceConfig        `json:"persistence"`
-	Utility        *UtilityConfig            `json:"utility"`
+	RootDir        string                `json:"root_dir"`
+	PrivateKey     pcrypto.PrivateKey    `json:"private_key"` // TODO(olshansky): make this a proper key type.
+	Genesis        string                `json:"genesis"`
+	IsTesting      bool                  `json:"testing"` // TODO: consider renaming this to either `DebugMode` or `DevMode`.
+	P2P            *P2PConfig            `json:"p2p"`
+	Consensus      *ConsensusConfig      `json:"consensus"`
+	Persistence    *PersistenceConfig    `json:"persistence"`
+	Utility        *UtilityConfig        `json:"utility"`
+	Pre2P          *Pre2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
+	PrePersistence *PrePersistenceConfig `json:"prePersistence"`
 }
 
 // TODO(derrandz): delete this once P2P is ready.
@@ -85,7 +86,7 @@ func LoadConfig(file string) (c *Config) {
 }
 
 func (c *Config) validateAndComplete() error {
-	if len(c.PrivateKey) == 0 {
+	if len(c.PrivateKey.Bytes()) == 0 {
 		return fmt.Errorf("private key in config file cannot be empty")
 	}
 

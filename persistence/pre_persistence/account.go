@@ -2,10 +2,12 @@ package pre_persistence
 
 import (
 	"bytes"
+	"github.com/pokt-network/pocket/shared/crypto"
+
+	"github.com/pokt-network/pocket/shared/types"
+
 	"math/big"
 
-	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
@@ -157,7 +159,7 @@ func (m *PrePersistenceContext) GetAllPools(height int64) (pools []*Pool, err er
 	return
 }
 
-func (m *PrePersistenceContext) operationAccountAmount(address []byte, amount string, op func(*big.Int, *big.Int) error) error {
+func (m *PrePersistenceContext) operationAccountAmount(address []byte, amount string, op func(a, b *big.Int) error) error {
 	codec := GetCodec()
 	a := Account{}
 	db := m.Store()
@@ -224,7 +226,7 @@ func (m *PrePersistenceContext) GetAccountAmount(address []byte) (string, error)
 	return account.Amount, nil
 }
 
-func (m *PrePersistenceContext) SetAccount(address []byte, amount string) error {
+func (m *PrePersistenceContext) SetAccountAmount(address []byte, amount string) error {
 	codec := GetCodec()
 	account := Account{
 		Address: address,
@@ -279,7 +281,7 @@ func (a *Account) ValidateBasic() types.Error {
 		return types.ErrEmptyAddress()
 	}
 	if len(a.Address) != crypto.AddressLen {
-		return types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen())
+		return types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen(crypto.AddressLen))
 	}
 	amount := &big.Int{}
 	if _, ok := amount.SetString(a.Amount, 10); !ok {
@@ -293,7 +295,7 @@ func (a *Account) SetAddress(address crypto.Address) types.Error {
 		return types.ErrEmptyAccount()
 	}
 	if len(address) != crypto.AddressLen {
-		return types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen())
+		return types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen(crypto.AddressLen))
 	}
 	a.Address = address
 	return nil
@@ -311,6 +313,7 @@ func (a *Account) SetAccountAmount(amount big.Int) types.Error {
 }
 
 func NewPool(name string, account *Account) (*Pool, types.Error) {
+
 	pool := &Pool{
 		Name:    name,
 		Account: account,

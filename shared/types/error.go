@@ -32,6 +32,8 @@ func NewError(code Code, msg string) Error {
 
 type Code float64
 
+// TODO(Andrew) consolidate errors into one file after recovery
+
 const ( // Explain: using these numbers as it fits nicely with the other error codes in the prototype
 	CodeEmptyTransactionError Code = 2
 

@@ -5,43 +5,39 @@ import (
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types"
 )
 
-var _ modules.UtilityModule = &utilityModule{}
+var _ modules.UtilityModule = &UtilityModule{}
 
-type utilityModule struct {
+type UtilityModule struct {
 	bus modules.Bus
+
+	Mempool types.Mempool
 }
 
 func Create(_ *config.Config) (modules.UtilityModule, error) {
-	m := &utilityModule{
-		bus: nil,
-	}
-	return m, nil
+	return &UtilityModule{
+		// TODO: Add `maxTransactionBytes` and `maxTransactions` to cfg.Utility
+		Mempool: types.NewMempool(1000, 1000),
+	}, nil
 }
 
-func (u *utilityModule) Start() error {
-	// TODO(olshansky): Add a test that bus is set
-	log.Println("Starting utility module...")
+func (u *UtilityModule) Start() error {
 	return nil
 }
 
-func (u *utilityModule) Stop() error {
-	log.Println("Stopping utility module...")
+func (u *UtilityModule) Stop() error {
 	return nil
 }
 
-func (u *utilityModule) GetBus() modules.Bus {
-	if u.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
-	}
-	return u.bus
-}
-
-func (u *utilityModule) SetBus(bus modules.Bus) {
+func (u *UtilityModule) SetBus(bus modules.Bus) {
 	u.bus = bus
 }
 
-func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error) {
-	panic("NewContext not implemented")
+func (u *UtilityModule) GetBus() modules.Bus {
+	if u.bus == nil {
+		log.Fatalf("Bus is not initialized")
+	}
+	return u.bus
 }

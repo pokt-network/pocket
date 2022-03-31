@@ -23,7 +23,7 @@ func (p *PrePersistenceModule) Start() error {
 	if err != nil {
 		return err
 	}
-	genesis, _, _, _, _, err := NewGenesisState(5, 1, 1, 5)
+	genesis, _, _, _, _, err := NewGenesisState(p.Cfg, 5, 1, 1, 5)
 	if err != nil {
 		return err
 	}

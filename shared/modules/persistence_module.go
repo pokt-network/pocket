@@ -37,7 +37,7 @@ type PersistenceContext interface {
 	AddAccountAmount(address []byte, amount string) error
 	SubtractAccountAmount(address []byte, amount string) error
 	GetAccountAmount(address []byte) (string, error)
-	SetAccount(address []byte, amount string) error
+	SetAccountAmount(address []byte, amount string) error
 
 	// App
 	GetAppExists(address []byte) (exists bool, err error)
@@ -91,6 +91,7 @@ type PersistenceContext interface {
 	GetValidatorPauseHeightIfExists(address []byte) (int64, error)
 	SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetValidatorPauseHeightAndMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) error
+	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
 	GetValidatorMissedBlocks(address []byte) (int, error)
 	SetValidatorPauseHeight(address []byte, height int64) error
 	SetValidatorStakedTokens(address []byte, tokens string) error
@@ -105,7 +106,7 @@ type PersistenceContext interface {
 	GetParamAppMinimumStake() (string, error)
 	GetMaxAppChains() (int, error)
 	GetBaselineAppStakeRate() (int, error)
-	GetStakingAdjustment() (int, error)
+	GetStabilityAdjustment() (int, error)
 	GetAppUnstakingBlocks() (int, error)
 	GetAppMinimumPauseBlocks() (int, error)
 	GetAppMaxPausedBlocks() (int, error)

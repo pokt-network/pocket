@@ -19,8 +19,8 @@ import (
 
 const (
 	FirstSavePointKeyName             = "first_savepoint_key"
-	DeletedPrefixKeyName              = "first_savepoint_key"
-	BlockPrefixName                   = "first_savepoint_key"
+	DeletedPrefixKeyName              = "deleted/"
+	BlockPrefixName                   = "block/"
 	TransactionKeyPrefixName          = "transaction/"
 	PoolPrefixKeyName                 = "pool/"
 	AccountPrefixKeyName              = "account/"

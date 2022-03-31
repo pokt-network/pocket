@@ -3,13 +3,13 @@ package pre_persistence
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"log"
 	"os"
 	"sync"
 	"time"
-
-	"github.com/pokt-network/pocket/shared/config"
-	"github.com/pokt-network/pocket/shared/crypto"
 )
 
 // TODO: Return this as a singleton!
@@ -67,11 +67,9 @@ func (ps *TestState) loadStateFromGenesis(cfg *config.Config) {
 	*ps = TestState{
 		BlockHeight:  0,
 		ValidatorMap: ValidatorListToMap(genesis.Validators),
-
-		PublicKey: cfg.PrivateKey.PublicKey(),
-		Address:   cfg.PrivateKey.Address().String(),
-
-		Config: *cfg,
+		PublicKey:    cfg.PrivateKey.PublicKey(),
+		Address:      cfg.PrivateKey.Address().String(),
+		Config:       *cfg,
 	}
 
 	ps.recomputeTotalVotingPower()

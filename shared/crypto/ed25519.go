@@ -30,8 +30,9 @@ func NewAddress(hexString string) (Address, error) {
 }
 
 func NewAddressFromBytes(bz []byte) (Address, error) {
-	if len(bz) != AddressLen {
-		return bz, ErrInvalidAddressLen()
+	bzLen := len(bz)
+	if bzLen != AddressLen {
+		return bz, ErrInvalidAddressLen(bzLen)
 	}
 	return bz, nil
 }
@@ -53,11 +54,12 @@ func GeneratePrivateKey() (PrivateKey, error) {
 	return Ed25519PrivateKey(pk), err
 }
 
-func NewPrivateKeyFromBytes(b []byte) (PrivateKey, error) {
-	if len(b) != ed25519.PrivateKeySize {
-		return nil, ErrInvalidPrivateKeyLen()
+func NewPrivateKeyFromBytes(bz []byte) (PrivateKey, error) {
+	bzLen := len(bz)
+	if bzLen != ed25519.PrivateKeySize {
+		return nil, ErrInvalidPrivateKeyLen(bzLen)
 	}
-	return Ed25519PrivateKey(b), nil
+	return Ed25519PrivateKey(bz), nil
 }
 
 var _ PrivateKey = Ed25519PrivateKey{}
@@ -112,11 +114,12 @@ func NewPublicKey(hexString string) (PublicKey, error) {
 	return NewPublicKeyFromBytes(bz)
 }
 
-func NewPublicKeyFromBytes(b []byte) (PublicKey, error) {
-	if len(b) != ed25519.PublicKeySize {
-		return nil, ErrInvalidPublicKeyLen()
+func NewPublicKeyFromBytes(bz []byte) (PublicKey, error) {
+	bzLen := len(bz)
+	if bzLen != ed25519.PublicKeySize {
+		return nil, ErrInvalidPublicKeyLen(bzLen)
 	}
-	return Ed25519PublicKey(b), nil
+	return Ed25519PublicKey(bz), nil
 }
 
 func (pub Ed25519PublicKey) Bytes() []byte {
@@ -136,7 +139,7 @@ func (pub Ed25519PublicKey) Equals(other PublicKey) bool {
 	return ed25519.PublicKey(pub).Equal(ed25519.PublicKey(other.(Ed25519PublicKey)))
 }
 
-func (pub Ed25519PublicKey) VerifyBytes(msg []byte, sig []byte) bool {
+func (pub Ed25519PublicKey) Verify(msg []byte, sig []byte) bool {
 	return ed25519.Verify(ed25519.PublicKey(pub), msg, sig)
 }
 

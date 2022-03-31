@@ -84,7 +84,7 @@ func (m *PrePersistenceContext) GetValidatorExists(address []byte) (exists bool,
 }
 
 func (m *PrePersistenceContext) InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error {
-	if _, exists, _ := m.GetFisherman(address); exists {
+	if _, exists, _ := m.GetValidator(address); exists {
 		return fmt.Errorf("already exists in world state")
 	}
 	codec := GetCodec()
@@ -281,6 +281,25 @@ func (m *PrePersistenceContext) SetValidatorPauseHeightAndMissedBlocks(address [
 		return fmt.Errorf("does not exist in world state")
 	}
 	val.PausedHeight = uint64(pauseHeight)
+	val.Paused = true
+	val.MissedBlocks = uint32(missedBlocks)
+	bz, err := codec.Marshal(val)
+	if err != nil {
+		return err
+	}
+	return db.Put(append(ValidatorPrefixKey, address...), bz)
+}
+
+func (m *PrePersistenceContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) error {
+	codec := GetCodec()
+	db := m.Store()
+	val, exists, err := m.GetValidator(address)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("does not exist in world state")
+	}
 	val.MissedBlocks = uint32(missedBlocks)
 	bz, err := codec.Marshal(val)
 	if err != nil {
@@ -310,7 +329,11 @@ func (m *PrePersistenceContext) SetValidatorPauseHeight(address []byte, height i
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	val.Paused = true
+	if height == heightNotUsed {
+		val.Paused = false
+	} else {
+		val.Paused = true
+	}
 	val.PausedHeight = uint64(height)
 	bz, err := codec.Marshal(val)
 	if err != nil {

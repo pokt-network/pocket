@@ -17,7 +17,7 @@ type Mempool interface {
 	Clear()
 	Size() int
 	TxsBytes() int
-	PopTransaction() (tx []byte, sizeInBytes int, err Error) // TODO(andrew): In the upcoming merge, remove `sizeInBytes` from return value
+	PopTransaction() (tx []byte, err Error)
 }
 
 var _ Mempool = &FIFOMempool{}
@@ -93,13 +93,12 @@ func (f *FIFOMempool) DeleteTransaction(tx []byte) Error {
 	return nil
 }
 
-func (f *FIFOMempool) PopTransaction() ([]byte, int, Error) {
+func (f *FIFOMempool) PopTransaction() ([]byte, Error) {
 	tx, err := popTransaction(f)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
-	size := len(tx)
-	return tx, size, nil
+	return tx, nil
 }
 
 func (f *FIFOMempool) Clear() {

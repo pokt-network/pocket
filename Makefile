@@ -71,7 +71,18 @@ mockgen:
 .PHONY: test_all
 ## Run all go unit tests
 test_all: # generate_mocks
-	go test ./...
+	go test ./... -p=1
+
+
+.PHONY: test_utility_module
+## Run all go utility module unit tests
+test_utility_module: # generate_mocks
+	go test -v ./shared/tests/utility_module/...
+
+.PHONY: test_utility_types
+## Run all go utility types module unit tests
+test_utility_types: # generate_mocks
+	go test -v ./utility/types/...
 
 .PHONY: test_pre2p
 ## Run all go unit tests in the pre2p module
@@ -105,8 +116,10 @@ protogen_clean:
 protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
 
-	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=./ ./shared/types/proto/*.proto
-	protoc -I=${proto_dir} -I=./persistence/pre_persistence/proto --go_out=./ ./persistence/pre_persistence/proto/*.proto
+	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=. ./shared/types/proto/*.proto
+	protoc -I=${proto_dir} -I=./utility/proto --go_out=. ./utility/proto/*.proto
+	protoc -I=${proto_dir} -I=./persistence/pre_persistence/proto --go_out=. ./persistence/pre_persistence/proto/*.proto
+
 
 	echo "View generated proto files by running: make protogen_show"
 

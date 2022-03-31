@@ -43,7 +43,7 @@ func (bh *BlockHeader) ValidateBasic() types.Error { // TODO (team) move this in
 	}
 	hashLen := len(hashBytes)
 	if hashLen != crypto2.SHA3HashLen {
-		return types.ErrInvalidHashLength(crypto2.ErrInvalidHashLen())
+		return types.ErrInvalidHashLength(crypto2.ErrInvalidHashLen(hashLen))
 	}
 	hashBytes, err = hex.DecodeString(bh.PrevBlockHash)
 	if err != nil {
@@ -51,7 +51,7 @@ func (bh *BlockHeader) ValidateBasic() types.Error { // TODO (team) move this in
 	}
 	hashLen = len(hashBytes)
 	if hashLen != crypto2.SHA3HashLen {
-		return types.ErrInvalidHashLength(crypto2.ErrInvalidHashLen())
+		return types.ErrInvalidHashLength(crypto2.ErrInvalidHashLen(hashLen))
 	}
 	return nil
 }
