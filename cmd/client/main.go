@@ -1,5 +1,7 @@
 package main
 
+// TODO(team): discuss & design the long-term solution to this client.
+
 import (
 	"log"
 	"os"
@@ -36,7 +38,6 @@ func main() {
 		log.Fatalf("[ERROR] Failed to generate private key: %v", err)
 	}
 
-	// TODO(design): How should the debug client become aware of the validator network and blockchain state?
 	cfg := &config.Config{
 		Genesis: "build/config/genesis.json",
 

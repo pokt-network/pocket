@@ -44,6 +44,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 
 	// Leader election is deterministic for now, so we know its NodeId
+	// TODO(olshansky): Use seeding for deterministic leader election in unit tests.
 	leaderId := typesCons.NodeId(2)
 	leader := pocketNodes[leaderId]
 
