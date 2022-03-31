@@ -2,7 +2,6 @@ package consensus
 
 import (
 	"encoding/base64"
-	"fmt"
 	"log"
 
 	"google.golang.org/protobuf/proto"
@@ -32,18 +31,10 @@ const (
 
 var (
 	HotstuffSteps = [...]typesCons.HotstuffStep{NewRound, Prepare, PreCommit, Commit, Decide}
-	StepToString  map[typesCons.HotstuffStep]string
 
 	maxTxBytes        = 90000             // TODO(olshansky): Move this to config.json.
 	lastByzValidators = make([][]byte, 0) // TODO(olshansky): Retrieve this from persistence
 )
-
-func init() {
-	StepToString = make(map[typesCons.HotstuffStep]string, len(typesCons.HotstuffStep_name))
-	for i, step := range typesCons.HotstuffStep_name {
-		StepToString[typesCons.HotstuffStep(i)] = step
-	}
-}
 
 // ** Hotstuff Helpers ** //
 
@@ -52,18 +43,18 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 	for _, msg := range m.MessagePool[step] {
 		// TODO(olshansky): Add tests for this
 		if msg.GetPartialSignature() == nil {
-			m.nodeLog(fmt.Sprintf("[WARN] No partial signature found for step %s which should not happen...", StepToString[step]))
+			m.nodeLog(typesCons.WarnMissingPartialSig(msg))
 			continue
 		}
 		// TODO(olshansky): Add tests for this
-		if msg.Height != height || msg.Round != round || msg.Step != step {
-			m.nodeLog(fmt.Sprintf("[WARN] Message in pool does not match (height, step, round) of QC being generated; %d, %s, %d", height, StepToString[step], round))
+		if msg.Height != height || msg.Step != step || msg.Round != round {
+			m.nodeLog(typesCons.WarnUnexpectedMessageInPool(msg, height, step, round))
 			continue
 		}
 		ps := msg.GetPartialSignature()
 
 		if ps.Signature == nil || len(ps.Address) == 0 {
-			m.nodeLog(fmt.Sprintf("[WARN] Partial signature is incomplete for step %s which should not happen...", StepToString[step]))
+			m.nodeLog(typesCons.WarnIncompletePartialSig(ps, msg))
 			continue
 		}
 		pss = append(pss, msg.GetPartialSignature())
@@ -147,7 +138,7 @@ func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 		return
 	}
 
-	m.nodeLog(typesCons.SendingMessageForStep(StepToString[msg.Step], int(*m.LeaderId)))
+	m.nodeLog(typesCons.SendingMessage(msg, *m.LeaderId))
 	anyConsensusMessage, err := anypb.New(msg)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
@@ -161,7 +152,7 @@ func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 }
 
 func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
-	m.nodeLog(typesCons.BroadcastingMessageForStep(StepToString[msg.Step]))
+	m.nodeLog(typesCons.BroadcastingMessage(msg))
 	anyConsensusMessage, err := anypb.New(msg)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
@@ -200,7 +191,7 @@ func (m *consensusModule) clearLeader() {
 func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 	leaderId, err := m.leaderElectionMod.ElectNextLeader(message)
 	if err != nil || leaderId == 0 {
-		m.nodeLogError(fmt.Sprintf("Leader election failed. Validator cannot take part in consensus at height %d round %d", message.Height, message.Round), err)
+		m.nodeLogError(typesCons.ErrLeaderElection(message).Error(), err)
 		m.clearLeader()
 		return
 	}
@@ -209,10 +200,10 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 
 	if m.LeaderId != nil && *m.LeaderId == m.NodeId {
 		m.logPrefix = "LEADER"
-		m.nodeLog(fmt.Sprintf("👑👑👑👑👑   %d   👑👑👑👑👑", m.NodeId))
+		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId))
 	} else {
 		m.logPrefix = "REPLICA"
-		m.nodeLog(fmt.Sprintf("Elected %d as 👑.", *m.LeaderId))
+		m.nodeLog(typesCons.ElectedNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId))
 	}
 }
 

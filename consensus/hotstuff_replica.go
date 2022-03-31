@@ -24,7 +24,7 @@ var (
 
 func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
+		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
@@ -36,12 +36,12 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
+		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.validateProposal(msg); err != nil {
-		m.nodeLogError(fmt.Sprintf("Invalid proposal in %s message", StepToString[Prepare]), err)
+		m.nodeLogError(fmt.Sprintf("Invalid proposal in %s message", Prepare), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -57,7 +57,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 
 	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, msg.Block)
 	if err != nil {
-		m.nodeLogError(typesCons.CreateVoteMessageError(StepToString[Prepare]), err)
+		m.nodeLogError(typesCons.ErrCreateVoteMessage(Prepare).Error(), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(prepareVoteMessage)
@@ -67,12 +67,12 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
+		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
-		m.nodeLogError(typesCons.QCInvalidError(StepToString[PreCommit]), err)
+		m.nodeLogError(typesCons.ErrQCInvalid(PreCommit).Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -83,7 +83,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 
 	preCommitVoteMessage, err := CreateVoteMessage(m, PreCommit, msg.Block)
 	if err != nil {
-		m.nodeLogError(typesCons.CreateVoteMessageError(StepToString[PreCommit]), err)
+		m.nodeLogError(typesCons.ErrCreateVoteMessage(PreCommit).Error(), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(preCommitVoteMessage)
@@ -93,12 +93,12 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 
 func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
+		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
-		m.nodeLogError(typesCons.QCInvalidError(StepToString[Commit]), err)
+		m.nodeLogError(typesCons.ErrQCInvalid(Commit).Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -109,7 +109,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 
 	commitVoteMessage, err := CreateVoteMessage(m, Commit, msg.Block)
 	if err != nil {
-		m.nodeLogError(typesCons.CreateVoteMessageError(StepToString[Commit]), err)
+		m.nodeLogError(typesCons.ErrCreateVoteMessage(Commit).Error(), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(commitVoteMessage)
@@ -119,12 +119,12 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 
 func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
+		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
-		m.nodeLogError(typesCons.QCInvalidError(StepToString[Decide]), err)
+		m.nodeLogError(typesCons.ErrQCInvalid(Decide).Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -203,13 +203,13 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 	for _, partialSig := range qc.ThresholdSignature.Signatures {
 		validator, ok := valMap[partialSig.Address]
 		if !ok {
-			m.nodeLog(fmt.Sprintf("[WARN] Validator %d not found in the ValMap but a partial sig was signed by them.", m.ValAddrToIdMap[partialSig.Address]))
+			m.nodeLogError(typesCons.ErrMissingValidator(partialSig.Address, m.ValAddrToIdMap[partialSig.Address]).Error(), nil)
 			continue
 		}
 		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
 		// just serialize `Message` once and verify each signature without re-serializing every time.
 		if !isSignatureValid(msgToJustify, validator.PublicKey, partialSig.Signature) {
-			m.nodeLog(fmt.Sprintf("[WARN] QC invalid because partial signature from the following node is invalid: %d", m.ValAddrToIdMap[partialSig.Address]))
+			m.nodeLog(typesCons.WarnInvalidPartialSigInQC(partialSig.Address, m.ValAddrToIdMap[partialSig.Address]))
 			continue
 		}
 		numValid++

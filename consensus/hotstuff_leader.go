@@ -25,17 +25,17 @@ type HotstuffLeaderMessageHandler struct{}
 
 func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
+		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(NewRound); err != nil {
-		m.nodeLog(typesCons.OptimisticVoteCountWaiting(StepToString[NewRound], err.Error()))
+		m.nodeLog(typesCons.OptimisticVoteCountWaiting(NewRound, err.Error()))
 		return
 	}
 
 	// TODO(olshansky): Do we need to pause for `MinBlockFreqMSec` here to let more transactions come in?
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(StepToString[NewRound]))
+	m.nodeLog(typesCons.OptimisticVoteCountPassed(NewRound))
 
 	// Likely to be `nil` if blockchain is progressing well.
 	highPrepareQC := m.findHighQC(NewRound)
@@ -60,7 +60,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 	prepareProposeMessage, err := CreateProposeMessage(m, Prepare, highPrepareQC)
 	if err != nil {
-		m.nodeLogError(typesCons.CreateProposeMessageError(StepToString[Prepare]), err)
+		m.nodeLogError(typesCons.ErrCreateProposeMessage(Prepare).Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -69,7 +69,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// Leader also acts like a replica
 	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, m.Block)
 	if err != nil {
-		m.nodeLogError(typesCons.CreateVoteMessageError(StepToString[Prepare]), err)
+		m.nodeLogError(typesCons.ErrCreateVoteMessage(Prepare).Error(), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(prepareVoteMessage)
@@ -79,19 +79,19 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
+		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(Prepare); err != nil {
-		m.nodeLog(typesCons.OptimisticVoteCountWaiting(StepToString[Prepare], err.Error()))
+		m.nodeLog(typesCons.OptimisticVoteCountWaiting(Prepare, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(StepToString[Prepare]))
+	m.nodeLog(typesCons.OptimisticVoteCountPassed(Prepare))
 
 	prepareQC, err := m.getQuorumCertificate(m.Height, Prepare, m.Round)
 	if err != nil {
-		m.nodeLogError(typesCons.QCInvalidError(StepToString[Prepare]), err)
+		m.nodeLogError(typesCons.ErrQCInvalid(Prepare).Error(), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
@@ -102,7 +102,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 	precommitProposeMessages, err := CreateProposeMessage(m, PreCommit, prepareQC)
 	if err != nil {
-		m.nodeLogError(typesCons.CreateProposeMessageError(StepToString[PreCommit]), err)
+		m.nodeLogError(typesCons.ErrCreateProposeMessage(PreCommit).Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -111,7 +111,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	// Leader also acts like a replica
 	precommitVoteMessage, err := CreateVoteMessage(m, PreCommit, m.Block)
 	if err != nil {
-		m.nodeLogError(typesCons.CreateVoteMessageError(StepToString[PreCommit]), err)
+		m.nodeLogError(typesCons.ErrCreateVoteMessage(PreCommit).Error(), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(precommitVoteMessage)
@@ -121,19 +121,19 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
+		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(PreCommit); err != nil {
-		m.nodeLog(typesCons.OptimisticVoteCountWaiting(StepToString[PreCommit], err.Error()))
+		m.nodeLog(typesCons.OptimisticVoteCountWaiting(PreCommit, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(StepToString[PreCommit]))
+	m.nodeLog(typesCons.OptimisticVoteCountPassed(PreCommit))
 
 	preCommitQC, err := m.getQuorumCertificate(m.Height, PreCommit, m.Round)
 	if err != nil {
-		m.nodeLogError(typesCons.QCInvalidError(StepToString[PreCommit]), err)
+		m.nodeLogError(typesCons.ErrQCInvalid(PreCommit).Error(), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
@@ -144,7 +144,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 	commitProposeMessage, err := CreateProposeMessage(m, Commit, preCommitQC)
 	if err != nil {
-		m.nodeLogError(typesCons.CreateProposeMessageError(StepToString[Commit]), err)
+		m.nodeLogError(typesCons.ErrCreateProposeMessage(Commit).Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -153,7 +153,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 	// Leader also acts like a replica
 	commitVoteMessage, err := CreateVoteMessage(m, Commit, m.Block)
 	if err != nil {
-		m.nodeLogError(typesCons.CreateVoteMessageError(StepToString[Commit]), err)
+		m.nodeLogError(typesCons.ErrCreateVoteMessage(Commit).Error(), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(commitVoteMessage)
@@ -163,19 +163,19 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
+		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
 	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(Commit); err != nil {
-		m.nodeLog(typesCons.OptimisticVoteCountWaiting(StepToString[Commit], err.Error()))
+		m.nodeLog(typesCons.OptimisticVoteCountWaiting(Commit, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(StepToString[Commit]))
+	m.nodeLog(typesCons.OptimisticVoteCountPassed(Commit))
 
 	commitQC, err := m.getQuorumCertificate(m.Height, Commit, m.Round)
 	if err != nil {
-		m.nodeLogError(typesCons.QCInvalidError(StepToString[Commit]), err)
+		m.nodeLogError(typesCons.ErrQCInvalid(Commit).Error(), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
@@ -185,7 +185,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 
 	decideProposeMessage, err := CreateProposeMessage(m, Decide, commitQC)
 	if err != nil {
-		m.nodeLogError(typesCons.CreateProposeMessageError(StepToString[Decide]), err)
+		m.nodeLogError(typesCons.ErrCreateProposeMessage(Decide).Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -204,7 +204,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 
 func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffAnteValidation.Error(), err)
+		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
 }
@@ -250,7 +250,7 @@ func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 	address := msg.GetPartialSignature().Address
 	validator, ok := valMap[address]
 	if !ok {
-		return typesCons.ErrMissingValidator(address, uint64(m.ValAddrToIdMap[address]))
+		return typesCons.ErrMissingValidator(address, m.ValAddrToIdMap[address])
 	}
 	pubKey := validator.PublicKey
 	if isSignatureValid(msg, pubKey, msg.GetPartialSignature().Signature) {
@@ -258,8 +258,7 @@ func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 	}
 
 	return typesCons.ErrValidatingPartialSig(
-		address, uint64(m.ValAddrToIdMap[address]), uint64(msg.Height), uint64(msg.Round), StepToString[msg.Step],
-		string(msg.GetPartialSignature().Signature), protoHash(msg.Block), pubKey.String())
+		address, m.ValAddrToIdMap[address], msg, pubKey.String())
 }
 
 func (m *consensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {

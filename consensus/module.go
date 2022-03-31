@@ -1,7 +1,6 @@
 package consensus
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
@@ -173,8 +172,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 }
 
 func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) {
-	// TODO(olshansky): How can we inject the nodeId of the source address here?
-	m.nodeLog(fmt.Sprintf("[DEBUG] (%s->%d) - Height: %d; Type: %s; Round: %d.", "???", m.NodeId, msg.Height, StepToString[msg.Step], msg.Round))
+	m.nodeLog(typesCons.DebugHandlingHotstuffMessage(msg))
 
 	// Liveness & safety checks
 	if err := m.paceMaker.ValidateMessage(msg); err != nil {
@@ -182,7 +180,7 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 		// and continues to receive NewRound messages, we avoid logging the "message discard"
 		// because it creates unnecessary spam.
 		if !(m.LeaderId != nil && !m.isLeader() && msg.Step == NewRound) {
-			m.nodeLog(fmt.Sprintf("[WARN] Discarding hotstuff message because: %s", err))
+			m.nodeLog(typesCons.WarnDiscardHotstuffMessage(msg, err.Error()))
 		}
 		return
 	}

@@ -2,7 +2,6 @@ package consensus
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -109,7 +108,7 @@ func (p *paceMaker) ValidateMessage(m *typesCons.HotstuffMessage) error {
 
 	// Message is from the past
 	if m.Round < p.consensusMod.Round || (m.Round == p.consensusMod.Round && m.Step < p.consensusMod.Step) {
-		return typesCons.ErrPacemakerUnexpectedMessageStepRound(typesCons.ErrOlderStepRound, StepToString[p.consensusMod.Step], p.consensusMod.Round, StepToString[m.Step], m.Round)
+		return typesCons.ErrPacemakerUnexpectedMessageStepRound(typesCons.ErrOlderStepRound, p.consensusMod.Step, p.consensusMod.Round, m)
 	}
 
 	// Everything checks out!
@@ -119,9 +118,7 @@ func (p *paceMaker) ValidateMessage(m *typesCons.HotstuffMessage) error {
 
 	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
 	if m.Round > p.consensusMod.Round || (m.Round == p.consensusMod.Round && m.Step > p.consensusMod.Step) {
-		p.consensusMod.nodeLog(fmt.Sprintf("%s FROM (%d, %s, %d) TO (%d, %s, %d)",
-			typesCons.ErrPacemakerCatchup, p.consensusMod.Height, StepToString[p.consensusMod.Step],
-			p.consensusMod.Round, m.Height, StepToString[m.Step], m.Round))
+		p.consensusMod.nodeLog(typesCons.PacemakerCatchup(p.consensusMod.Height, uint64(p.consensusMod.Step), p.consensusMod.Round, m.Height, uint64(m.Step), m.Round))
 		p.consensusMod.Step = m.Step
 		p.consensusMod.Round = m.Round
 
@@ -152,7 +149,7 @@ func (p *paceMaker) RestartTimer() {
 		select {
 		case <-ctx.Done():
 			if ctx.Err() == context.DeadlineExceeded {
-				p.consensusMod.nodeLog(fmt.Sprintf("Timed out at (height, step, round) (%d, %s, %d)!", p.consensusMod.Height, StepToString[p.consensusMod.Step], p.consensusMod.Round))
+				p.consensusMod.nodeLog(typesCons.PacemakerTimeout(p.consensusMod.Height, p.consensusMod.Step, p.consensusMod.Round))
 				p.InterruptRound()
 			}
 		case <-time.After(stepTimeout + 30*time.Millisecond): // Adding 30ms to the context timeout to avoid race condition.
@@ -162,14 +159,14 @@ func (p *paceMaker) RestartTimer() {
 }
 
 func (p *paceMaker) InterruptRound() {
-	p.consensusMod.nodeLog(fmt.Sprintf("INTERRUPT at (height, step, round): (%d, %s, %d)!", p.consensusMod.Height, StepToString[p.consensusMod.Step], p.consensusMod.Round))
+	p.consensusMod.nodeLog(typesCons.PacemakerInterrupt(p.consensusMod.Height, p.consensusMod.Step, p.consensusMod.Round))
 
 	p.consensusMod.Round++
 	p.startNextView(p.consensusMod.HighPrepareQC, false)
 }
 
 func (p *paceMaker) NewHeight() {
-	p.consensusMod.nodeLog(fmt.Sprintf("Starting first round for new block at height: %d", p.consensusMod.Height+1))
+	p.consensusMod.nodeLog(typesCons.PacemakerNewHeight(p.consensusMod.Height + 1))
 
 	p.consensusMod.Height++
 	p.consensusMod.Round = 0
