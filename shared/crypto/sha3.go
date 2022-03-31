@@ -2,7 +2,6 @@ package crypto
 
 import (
 	"crypto"
-
 	_ "golang.org/x/crypto/sha3"
 )
 
@@ -13,5 +12,6 @@ var (
 
 func SHA3Hash(b []byte) []byte {
 	hasher := hash.New()
+	SHA3HashLen = crypto.SHA3_256.Size()
 	return hasher.Sum(b)
 }

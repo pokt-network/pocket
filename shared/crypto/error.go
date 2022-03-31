@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"crypto/ed25519"
+	"errors"
 	"fmt"
 )
 
@@ -41,4 +42,5 @@ func ErrInvalidPublicKeyLen() error {
 
 func ErrCreatePublicKey(err error) error {
 	return fmt.Errorf("%s; %s", CreatePublicKeyError, err.Error())
+	return errors.New(fmt.Sprintf("%s, expected length %d", InvalidAddressLenError, AddressLen))
 }

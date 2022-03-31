@@ -83,6 +83,11 @@ test_pre2p: # generate_mocks
 test_shared: # generate_mocks
 	go test ./shared/...
 
+.PHONY: test_pre_persistence
+## Run all go per persistence unit tests
+test_pre_persistence: # generate_mocks
+	go test ./persistence/pre_persistence/...
+
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
 .PHONY: protogen_show
@@ -95,13 +100,13 @@ protogen_show:
 protogen_clean:
 	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs rm
 
-# TODO(team): Add more protogen targets here.
 .PHONY: protogen_local
-## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
+## Generate go structures for all of the protobufs
 protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
 
-	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=./shared ./shared/types/proto/*.proto
+	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=./ ./shared/types/proto/*.proto
+	protoc -I=${proto_dir} -I=./persistence/pre_persistence/proto --go_out=./ ./persistence/pre_persistence/proto/*.proto
 
 	echo "View generated proto files by running: make protogen_show"
 

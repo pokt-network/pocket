@@ -12,21 +12,27 @@ import (
 )
 
 type Config struct {
-	RootDir    string                    `json:"root_dir"`
-	PrivateKey pcrypto.Ed25519PrivateKey `json:"private_key"`
-	Genesis    string                    `json:"genesis"`
-
-	Pre2P       *Pre2PConfig       `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
-	P2P         *P2PConfig         `json:"p2p"`
-	Consensus   *ConsensusConfig   `json:"consensus"`
-	Persistence *PersistenceConfig `json:"persistence"`
-	Utility     *UtilityConfig     `json:"utility"`
+	RootDir        string                    `json:"root_dir"`
+	PrivateKey     pcrypto.Ed25519PrivateKey `json:"private_key"`
+	Genesis        string                    `json:"genesis"`
+	Pre2P          *Pre2PConfig              `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
+	P2P            *P2PConfig                `json:"p2p"`
+	PrePersistence *PrePersistenceConfig     `json:"prePersistence"`
+	Consensus      *ConsensusConfig          `json:"consensus"`
+	Persistence    *PersistenceConfig        `json:"persistence"`
+	Utility        *UtilityConfig            `json:"utility"`
 }
 
 // TODO(derrandz): delete this once P2P is ready.
 type Pre2PConfig struct {
 	ConsensusPort uint32 `json:"consensus_port"`
 	DebugPort     uint32 `json:"debug_port"`
+}
+
+type PrePersistenceConfig struct {
+	Capacity        int `json:"capacity"`
+	MempoolMaxBytes int `json:"mempoolMaxBytes"`
+	MempoolMaxTxs   int `json:"mempoolMaxTxs"`
 }
 
 type P2PConfig struct {
@@ -75,7 +81,6 @@ func LoadConfig(file string) (c *Config) {
 	if err := c.P2P.validateAndComplete(); err != nil {
 		log.Fatalln("Error validating or completing P2P config: ", err)
 	}
-
 	return
 }
 
@@ -97,10 +102,11 @@ func (c *P2PConfig) validateAndComplete() error {
 }
 
 func (c *ConsensusConfig) validateAndComplete() error {
+	// TODO(olshansky): c.NodeId should be set dynamically but set via config for testing
 	return nil
 }
 
-// Helper to make config creation independent of root dir
+// Helper function to make config creation independent of root dir
 func rootify(path, root string) string {
 	if filepath.IsAbs(path) {
 		return path
