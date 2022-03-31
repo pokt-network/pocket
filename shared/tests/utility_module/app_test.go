@@ -2,6 +2,7 @@ package utility_module
 
 import (
 	"bytes"
+	"math"
 	"math/big"
 	"reflect"
 	"testing"
@@ -452,6 +453,7 @@ func TestUtilityContext_UnstakeAppsPausedBefore(t *testing.T) {
 
 func TestUtilityContext_UnstakeAppsThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
+	ctx.SetPoolAmount(typesUtil.AppStakePoolName, big.NewInt(math.MaxInt64))
 	if err := ctx.Context.SetAppUnstakingBlocks(0); err != nil {
 		t.Fatal(err)
 	}

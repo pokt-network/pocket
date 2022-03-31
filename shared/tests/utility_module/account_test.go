@@ -205,11 +205,8 @@ func TestUtilityContext_SetPoolAmount(t *testing.T) {
 func TestUtilityContext_SubPoolAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	pool := GetAllTestingPools(t, ctx)[0]
-	beforeAmount := pool.Account.Amount
-	beforeAmountBig, err := types.StringToBigInt(beforeAmount)
-	if err != nil {
-		t.Fatal(err)
-	}
+	beforeAmountBig := big.NewInt(1000000000000000)
+	ctx.SetPoolAmount(pool.Name, beforeAmountBig)
 	subAmountBig := big.NewInt(100)
 	subAmount := types.BigIntToString(subAmountBig)
 	if err := ctx.SubPoolAmount(pool.Name, subAmount); err != nil {

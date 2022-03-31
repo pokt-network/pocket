@@ -50,7 +50,7 @@ func (m *PrePersistenceContext) GetFisherman(address []byte) (fish *Fisherman, e
 }
 
 func (m *PrePersistenceContext) GetAllFishermen(height int64) (fishermen []*Fisherman, err error) {
-	cdc := Cdc()
+	codec := GetCodec()
 	fishermen = make([]*Fisherman, 0)
 	var it iterator.Iterator
 	if height == m.Height {
@@ -66,15 +66,14 @@ func (m *PrePersistenceContext) GetAllFishermen(height int64) (fishermen []*Fish
 			Limit: PrefixEndBytes(key),
 		})
 	}
-	it.First()
 	defer it.Release()
-	for ; it.Valid(); it.Next() {
+	for valid := it.First(); valid; valid = it.Next() {
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
 		fish := Fisherman{}
-		if err := cdc.Unmarshal(bz, &fish); err != nil {
+		if err := codec.Unmarshal(bz, &fish); err != nil {
 			return nil, err
 		}
 		fishermen = append(fishermen, &fish)
@@ -86,7 +85,7 @@ func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte
 	if _, exists, _ := m.GetFisherman(address); exists {
 		return fmt.Errorf("already exists in world state")
 	}
-	cdc := Cdc()
+	codec := GetCodec()
 	db := m.Store()
 	key := append(FishermanPrefixKey, address...)
 	fish := Fisherman{
@@ -101,7 +100,7 @@ func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte
 		UnstakingHeight: unstakingHeight,
 		Output:          output,
 	}
-	bz, err := cdc.Marshal(&fish)
+	bz, err := codec.Marshal(&fish)
 	if err != nil {
 		return err
 	}
@@ -113,7 +112,7 @@ func (m *PrePersistenceContext) UpdateFisherman(address []byte, serviceURL strin
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	cdc := Cdc()
+	codec := GetCodec()
 	db := m.Store()
 	key := append(FishermanPrefixKey, address...)
 	// compute new values
@@ -130,8 +129,7 @@ func (m *PrePersistenceContext) UpdateFisherman(address []byte, serviceURL strin
 	fish.ServiceUrl = serviceURL
 	fish.StakedTokens = BigIntToString(stakedTokens)
 	fish.Chains = chains
-	// marshal
-	bz, err := cdc.Marshal(fish)
+	bz, err := codec.Marshal(fish)
 	if err != nil {
 		return err
 	}
@@ -147,9 +145,9 @@ func (m *PrePersistenceContext) DeleteFisherman(address []byte) error {
 	return db.Put(key, DeletedPrefixKey)
 }
 
-func (m *PrePersistenceContext) GetFishermanReadyToUnstake(height int64, status int) (Fisherman []*types.UnstakingActor, err error) {
+func (m *PrePersistenceContext) GetFishermanReadyToUnstake(height int64, status int) (fisherman []*types.UnstakingActor, err error) {
 	db := m.Store()
-	unstakingKey := append(UnstakingFishermanPrefixKey, []byte(fmt.Sprintf("%d", height))...)
+	unstakingKey := append(UnstakingFishermanPrefixKey, Int64ToBytes(height)...)
 	if has := db.Contains(unstakingKey); !has {
 		return nil, nil
 	}
@@ -164,9 +162,7 @@ func (m *PrePersistenceContext) GetFishermanReadyToUnstake(height int64, status 
 	if err := proto.Unmarshal(val, &unstakingActors); err != nil {
 		return nil, err
 	}
-	for _, sn := range unstakingActors.UnstakingActors {
-		Fisherman = append(Fisherman, sn)
-	}
+	fisherman = append(fisherman, unstakingActors.UnstakingActors...)
 	return
 }
 
@@ -189,21 +185,20 @@ func (m *PrePersistenceContext) SetFishermanUnstakingHeightAndStatus(address []b
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	cdc := Cdc()
+	codec := GetCodec()
 	unstakingActors := types.UnstakingActors{}
 	db := m.Store()
 	key := append(FishermanPrefixKey, address...)
 	fish.UnstakingHeight = unstakingHeight
 	fish.Status = int32(status)
-	// marshal
-	bz, err := cdc.Marshal(fish)
+	bz, err := codec.Marshal(fish)
 	if err != nil {
 		return err
 	}
 	if err := db.Put(key, bz); err != nil {
 		return err
 	}
-	unstakingKey := append(UnstakingFishermanPrefixKey, []byte(fmt.Sprintf("%d", unstakingHeight))...)
+	unstakingKey := append(UnstakingFishermanPrefixKey, Int64ToBytes(unstakingHeight)...)
 	if found := db.Contains(unstakingKey); found {
 		val, err := db.Get(unstakingKey)
 		if err != nil {
@@ -218,7 +213,7 @@ func (m *PrePersistenceContext) SetFishermanUnstakingHeightAndStatus(address []b
 		StakeAmount:   fish.StakedTokens,
 		OutputAddress: fish.Output,
 	})
-	unstakingBz, err := cdc.Marshal(&unstakingActors)
+	unstakingBz, err := codec.Marshal(&unstakingActors)
 	if err != nil {
 		return err
 	}
@@ -236,22 +231,22 @@ func (m *PrePersistenceContext) GetFishermanPauseHeightIfExists(address []byte) 
 	return int64(fish.PausedHeight), nil
 }
 
+// SetFishermansStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
 func (m *PrePersistenceContext) SetFishermansStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	db := m.Store()
-	cdc := Cdc()
+	codec := GetCodec()
 	it := db.NewIterator(&util.Range{
 		Start: FishermanPrefixKey,
 		Limit: PrefixEndBytes(FishermanPrefixKey),
 	})
-	it.First()
 	defer it.Release()
-	for ; it.Valid(); it.Next() {
+	for valid := it.First(); valid; valid = it.Next() {
 		fish := Fisherman{}
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
-		if err := cdc.Unmarshal(bz, &fish); err != nil {
+		if err := codec.Unmarshal(bz, &fish); err != nil {
 			return err
 		}
 		if fish.PausedHeight < uint64(pausedBeforeHeight) {
@@ -260,7 +255,7 @@ func (m *PrePersistenceContext) SetFishermansStatusAndUnstakingHeightPausedBefor
 			if err := m.SetFishermanUnstakingHeightAndStatus(fish.Address, fish.UnstakingHeight, status); err != nil {
 				return err
 			}
-			bz, err := cdc.Marshal(&fish)
+			bz, err := codec.Marshal(&fish)
 			if err != nil {
 				return err
 			}
@@ -273,7 +268,7 @@ func (m *PrePersistenceContext) SetFishermansStatusAndUnstakingHeightPausedBefor
 }
 
 func (m *PrePersistenceContext) SetFishermanPauseHeight(address []byte, height int64) error {
-	cdc := Cdc()
+	codec := GetCodec()
 	db := m.Store()
 	fish, exists, err := m.GetFisherman(address)
 	if err != nil {
@@ -288,7 +283,7 @@ func (m *PrePersistenceContext) SetFishermanPauseHeight(address []byte, height i
 		fish.Paused = true
 	}
 	fish.PausedHeight = uint64(height)
-	bz, err := cdc.Marshal(fish)
+	bz, err := codec.Marshal(fish)
 	if err != nil {
 		return err
 	}

@@ -11,7 +11,7 @@ func TestLoadStateFromGenesis(t *testing.T) {
 	pk, _ := crypto.GeneratePrivateKey()
 	cfg := &config.Config{
 		Genesis:    genesisJson(),
-		PrivateKey: pk,
+		PrivateKey: pk.String(),
 	}
 	state := GetTestState()
 	state.LoadStateFromConfig(cfg)

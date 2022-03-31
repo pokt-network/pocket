@@ -7,37 +7,43 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 )
 
 type Config struct {
-	RootDir    string `json:"root_dir"`
-	PrivateKey string `json:"private_key"` // TODO(olshansky): make this a proper key type.
-	Genesis    string `json:"genesis"`
-	IsTesting  bool   `json:"testing"` // TODO: consider renaming this to either `DebugMode` or `DevMode`.
-
-	PRE2P       *PRE2PConfig       `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
-	P2P         *P2PConfig         `json:"p2p"`
-	Consensus   *ConsensusConfig   `json:"consensus"`
-	Persistence *PersistenceConfig `json:"persistence"`
-	Utility     *UtilityConfig     `json:"utility"`
+	RootDir        string                `json:"root_dir"`
+	PrivateKey     pcrypto.PrivateKey    `json:"private_key"` // TODO(olshansky): make this a proper key type.
+	Genesis        string                `json:"genesis"`
+	IsTesting      bool                  `json:"testing"` // TODO: consider renaming this to either `DebugMode` or `DevMode`.
+	P2P            *P2PConfig            `json:"p2p"`
+	Consensus      *ConsensusConfig      `json:"consensus"`
+	Persistence    *PersistenceConfig    `json:"persistence"`
+	Utility        *UtilityConfig        `json:"utility"`
+	Pre2P          *Pre2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
+	PrePersistence *PrePersistenceConfig `json:"prePersistence"`
 }
 
 // TODO(derrandz): delete this once P2P is ready.
-type PRE2PConfig struct {
+type Pre2PConfig struct {
 	ConsensusPort uint32 `json:"consensus_port"`
 	DebugPort     uint32 `json:"debug_port"`
 }
 
+type PrePersistenceConfig struct {
+	Capacity        int `json:"capacity"`
+	MempoolMaxBytes int `json:"mempoolMaxBytes"`
+	MempoolMaxTxs   int `json:"mempoolMaxTxs"`
+}
+
 type P2PConfig struct {
-	Protocol   string   `json:"protocol"`
-	Address    string   `json:"address"`
-	ExternalIp string   `json:"external_ip"`
-	Peers      []string `json:"peers"`
+	Protocol   string          `json:"protocol"`
+	Address    pcrypto.Address `json:"address"`
+	ExternalIp string          `json:"external_ip"`
+	Peers      []string        `json:"peers"`
 }
 
 type ConsensusConfig struct {
-	// TODO(olshansky): This should be assigned dynamically by the consensus module through sorting and validation.
-	NodeId uint32 `json:"node_id"`
 }
 
 type PersistenceConfig struct {
@@ -80,7 +86,7 @@ func LoadConfig(file string) (c *Config) {
 }
 
 func (c *Config) validateAndComplete() error {
-	if c.PrivateKey == "" {
+	if len(c.PrivateKey.Bytes()) == 0 {
 		return fmt.Errorf("private key in config file cannot be empty")
 	}
 
@@ -97,8 +103,7 @@ func (c *P2PConfig) validateAndComplete() error {
 }
 
 func (c *ConsensusConfig) validateAndComplete() error {
-	// TODO: c.NodeId should be set dynamically but set via config for testing
-
+	// TODO(olshansky): c.NodeId should be set dynamically but set via config for testing
 	return nil
 }
 

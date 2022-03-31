@@ -3,6 +3,7 @@ package utility_module
 import (
 	"bytes"
 	"github.com/pokt-network/pocket/utility/types"
+	"math"
 	"math/big"
 	"testing"
 )
@@ -168,6 +169,7 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 
 func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
+	ctx.SetPoolAmount(types.ValidatorStakePoolName, big.NewInt(math.MaxInt64))
 	if err := ctx.Context.SetValidatorUnstakingBlocks(0); err != nil {
 		t.Fatal(err)
 	}

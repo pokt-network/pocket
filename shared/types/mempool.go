@@ -14,7 +14,7 @@ type Mempool interface {
 	AddTransaction(tx []byte) Error
 	DeleteTransaction(tx []byte) Error
 
-	Flush()
+	Clear()
 	Size() int
 	TxsBytes() int
 	PopTransaction() (tx []byte, err Error)
@@ -93,15 +93,15 @@ func (f *FIFOMempool) DeleteTransaction(tx []byte) Error {
 	return nil
 }
 
-func (f *FIFOMempool) PopTransaction() (tx []byte, err Error) {
-	tx, err = popTransaction(f)
+func (f *FIFOMempool) PopTransaction() ([]byte, Error) {
+	tx, err := popTransaction(f)
 	if err != nil {
-		return
+		return nil, err
 	}
-	return
+	return tx, nil
 }
 
-func (f *FIFOMempool) Flush() {
+func (f *FIFOMempool) Clear() {
 	f.l.Lock()
 	defer f.l.Unlock()
 	f.pool = list.New()
@@ -126,15 +126,15 @@ func removeTransaction(f *FIFOMempool, e *list.Element) ([]byte, Error) {
 	if f.size == 0 {
 		return nil, nil
 	}
-	transaction := e.Value.([]byte)
-	tBz := len(transaction)
+	txBz := e.Value.([]byte)
+	txBzLen := len(txBz)
 	f.pool.Remove(e)
-	hash := crypto.SHA3Hash(transaction)
+	hash := crypto.SHA3Hash(txBz)
 	hashString := hex.EncodeToString(hash)
 	delete(f.hashMap, hashString)
 	f.size--
-	f.transactionBytes -= tBz
-	return transaction, nil
+	f.transactionBytes -= txBzLen
+	return txBz, nil
 }
 
 func popTransaction(f *FIFOMempool) ([]byte, Error) {

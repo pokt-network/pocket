@@ -2,6 +2,7 @@ package utility_module
 
 import (
 	"bytes"
+	"math"
 	"math/big"
 	"reflect"
 	"testing"
@@ -464,6 +465,7 @@ func TestUtilityContext_UnstakeServiceNodesPausedBefore(t *testing.T) {
 
 func TestUtilityContext_UnstakeServiceNodesThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
+	ctx.SetPoolAmount(typesUtil.ServiceNodeStakePoolName, big.NewInt(math.MaxInt64))
 	if err := ctx.Context.SetServiceNodeUnstakingBlocks(0); err != nil {
 		t.Fatal(err)
 	}

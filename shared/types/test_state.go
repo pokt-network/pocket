@@ -1,6 +1,7 @@
 package types
 
 import (
+	pcrypto "github.com/pokt-network/pocket/shared/crypto"
 	"log"
 	"sync"
 
@@ -15,6 +16,10 @@ type TestState struct {
 	AppHash          string // TODO(discuss): Why not call this a BlockHash or StateHash? Should it be a []byte or string?
 	ValidatorMap     ValMap // TODO(olshansky): Need to update this on every validator operation(pause, stake, unstake, etc)
 	TotalVotingPower uint64 // TODO(design): Need to update this on every send transaction.
+
+	PrivateKey pcrypto.PrivateKey
+
+	Config config.Config // TODO(hack): Should we store this here?
 }
 
 // The pocket state singleton.
@@ -39,13 +44,13 @@ func GetTestState(cfg *config.Config) *TestState {
 		}
 
 		state = &TestState{}
-		state.loadStateFromConfig(cfg)
+		state.LoadStateFromConfig(cfg)
 	})
 
 	return state
 }
 
-func (ps *TestState) loadStateFromConfig(cfg *config.Config) {
+func (ps *TestState) LoadStateFromConfig(cfg *config.Config) {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -65,7 +70,7 @@ func (ps *TestState) loadStateFromGenesis(cfg *config.Config) {
 		log.Fatalf("Failed to load genesis: %v", err)
 	}
 
-	if len(cfg.PrivateKey) == 0 {
+	if len(cfg.PrivateKey.Bytes()) == 0 {
 		log.Fatalf("[TODO] Private key must be set when initializing the pocket state. ...")
 	}
 
@@ -74,6 +79,8 @@ func (ps *TestState) loadStateFromGenesis(cfg *config.Config) {
 		AppHash:          genesis.AppHash,
 		ValidatorMap:     ValidatorListToMap(genesis.Validators),
 		TotalVotingPower: 0, // Value is compute below in `recomputeTotalVotingPower`
+		PrivateKey:       cfg.PrivateKey,
+		Config:           *cfg,
 	}
 
 	ps.recomputeTotalVotingPower()

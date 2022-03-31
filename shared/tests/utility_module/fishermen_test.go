@@ -2,6 +2,7 @@ package utility_module
 
 import (
 	"bytes"
+	"math"
 	"math/big"
 	"reflect"
 	"testing"
@@ -440,6 +441,7 @@ func TestUtilityContext_UnstakeFishermenPausedBefore(t *testing.T) {
 
 func TestUtilityContext_UnstakeFishermenThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
+	ctx.SetPoolAmount(typesUtil.FishermanStakePoolName, big.NewInt(math.MaxInt64))
 	if err := ctx.Context.SetFishermanUnstakingBlocks(0); err != nil {
 		t.Fatal(err)
 	}

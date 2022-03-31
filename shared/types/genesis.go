@@ -8,14 +8,16 @@ import (
 	"time"
 )
 
+// Come back to this.
+// TODO(olshansky): This is an interim genesis structure that will be replaced with a real one. It is the bare minimum for prototyping purposes.
 type Genesis struct {
 	GenesisTime time.Time    `json:"genesis_time"`
 	AppHash     string       `json:"app_hash"`
 	Validators  []*Validator `json:"validators"`
 }
 
-// TODO: This is a temporary hack that can load Genesis from a single string
-// that may be either a JSON blob or a file.
+// TODO(olshansky): Temporary hack that can load Genesis from a single string
+// that may be either a JSON blob or a file. Should be removed in the future.
 func PocketGenesisFromFileOrJSON(fileOrJson string) (*Genesis, error) {
 	if _, err := os.Stat(fileOrJson); err == nil {
 		return PocketGenesisFromFile(fileOrJson)
@@ -40,11 +42,9 @@ func PocketGenesisFromJSON(jsonBlob []byte) (*Genesis, error) {
 	if err := json.Unmarshal(jsonBlob, &genesis); err != nil {
 		return nil, err
 	}
-
 	if err := genesis.Validate(); err != nil {
 		return nil, err
 	}
-
 	return &genesis, nil
 }
 
@@ -53,9 +53,12 @@ func (genesis *Genesis) Validate() error {
 		return fmt.Errorf("GenesisTime cannot be zero")
 	}
 
-	// TODO: validate each account.
 	if len(genesis.Validators) == 0 {
-		return fmt.Errorf("genesis must contain at least one validator")
+		return fmt.Errorf("Genesis must contain at least one validator")
+	}
+
+	if len(genesis.AppHash) == 0 {
+		return fmt.Errorf("Genesis app hash cannot be zero")
 	}
 	for _, validator := range genesis.Validators {
 		if err := validator.Validate(); err != nil {

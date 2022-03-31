@@ -71,7 +71,8 @@ mockgen:
 .PHONY: test_all
 ## Run all go unit tests
 test_all: # generate_mocks
-	go test ./...
+	go test ./... -p=1
+
 
 .PHONY: test_utility_module
 ## Run all go utility module unit tests
@@ -82,6 +83,21 @@ test_utility_module: # generate_mocks
 ## Run all go utility types module unit tests
 test_utility_types: # generate_mocks
 	go test -v ./utility/types/...
+
+.PHONY: test_pre2p
+## Run all go unit tests in the pre2p module
+test_pre2p: # generate_mocks
+	go test ./pre2p/...
+
+.PHONY: test_shared
+## Run all go unit tests in the shared module
+test_shared: # generate_mocks
+	go test ./shared/...
+
+.PHONY: test_pre_persistence
+## Run all go per persistence unit tests
+test_pre_persistence: # generate_mocks
+	go test ./persistence/pre_persistence/...
 
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
@@ -103,6 +119,7 @@ protogen_local:
 	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=. ./shared/types/proto/*.proto
 	protoc -I=${proto_dir} -I=./utility/proto --go_out=. ./utility/proto/*.proto
 	protoc -I=${proto_dir} -I=./persistence/pre_persistence/proto --go_out=. ./persistence/pre_persistence/proto/*.proto
+
 
 	echo "View generated proto files by running: make protogen_show"
 

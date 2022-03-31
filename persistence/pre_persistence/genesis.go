@@ -1,11 +1,12 @@
 package pre_persistence
 
-import (
-	"math"
-	"math/big"
+// TODO(team): Consolidate this with `shared/genesis.go`
 
+import (
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"math"
+	"math/big"
 )
 
 var ( // TODO these are needed placeholders to pass validation checks. Until we have a real genesis implementation & testing environment, this will suffice
@@ -118,28 +119,28 @@ func NewGenesisState(cfg *config.Config, numOfValidators, numOfApplications, num
 	// create appropriate 'stake' pools for each actor type
 	valStakePool, err := NewPool(ValidatorStakePoolName, &Account{
 		Address: DefaultValidatorStakePool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
 	}
 	appStakePool, err := NewPool(AppStakePoolName, &Account{
 		Address: DefaultAppStakePool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
 	}
 	fishStakePool, err := NewPool(FishermanStakePoolName, &Account{
 		Address: DefaultFishermanStakePool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
 	}
 	serNodeStakePool, err := NewPool(ServiceNodeStakePoolName, &Account{
 		Address: DefaultServiceNodeStakePool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
@@ -147,7 +148,7 @@ func NewGenesisState(cfg *config.Config, numOfValidators, numOfApplications, num
 	// create a pool for collected fees (helps with rewards)
 	fee, err := NewPool(FeePoolName, &Account{
 		Address: DefaultFeeCollector.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
@@ -155,7 +156,7 @@ func NewGenesisState(cfg *config.Config, numOfValidators, numOfApplications, num
 	// create a pool for the dao treasury
 	dao, err := NewPool(DAOPoolName, &Account{
 		Address: DefaultDAOPool.Address(),
-		Amount:  BigIntToString(big.NewInt(0)),
+		Amount:  BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
@@ -221,7 +222,7 @@ func InitGenesis(u *PrePersistenceContext, state *GenesisState) error {
 	return nil
 }
 
-// TODO this is a state operation that really shouldn't live here, rather the utility module... but is needed for genesis creation
+// TODO(andrew): this is a state operation that really shouldn't live here, rather the utility module... but is needed for genesis creation
 func CalculateAppRelays(u *PrePersistenceContext, height int64, stakedTokens string) (string, error) {
 	tokens, err := StringToBigInt(stakedTokens)
 	if err != nil {

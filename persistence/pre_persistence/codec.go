@@ -25,8 +25,8 @@ func (p *ProtoCodec) Marshal(message proto.Message) ([]byte, types.Error) {
 	return bz, nil
 }
 
-func (p *ProtoCodec) Unmarshal(bz []byte, message proto.Message) types.Error {
-	err := proto.Unmarshal(bz, message)
+func (p *ProtoCodec) Unmarshal(b []byte, message proto.Message) types.Error {
+	err := proto.Unmarshal(b, message)
 	if err != nil {
 		return types.ErrProtoUnmarshal(err)
 	}
@@ -49,6 +49,6 @@ func (p *ProtoCodec) FromAny(any *anypb.Any) (proto.Message, types.Error) {
 	return msg, nil
 }
 
-func Cdc() Codec {
+func GetCodec() Codec {
 	return &ProtoCodec{}
 }

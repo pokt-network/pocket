@@ -435,6 +435,7 @@ func TestUtilityContext_UnstakeValidatorsPausedBefore(t *testing.T) {
 
 func TestUtilityContext_UnstakeValidatorsThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
+	ctx.SetPoolAmount(typesUtil.ValidatorStakePoolName, big.NewInt(100000000000000000))
 	if err := ctx.Context.SetValidatorUnstakingBlocks(0); err != nil {
 		t.Fatal(err)
 	}
@@ -483,6 +484,7 @@ func TestUtilityContext_UpdateValidator(t *testing.T) {
 
 func TestUtilityContext_BurnValidator(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
+	ctx.SetPoolAmount(typesUtil.ValidatorStakePoolName, big.NewInt(100000000000000))
 	actor := GetAllTestingValidators(t, ctx)[0]
 	burnPercentage := big.NewFloat(10)
 	tokens, err := types.StringToBigInt(actor.StakedTokens)
@@ -521,6 +523,7 @@ func TestUtilityContext_GetMessageDoubleSignSignerCandidates(t *testing.T) {
 
 func TestUtilityContext_HandleMessageDoubleSign(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
+	ctx.SetPoolAmount(typesUtil.ValidatorStakePoolName, big.NewInt(100000000000000))
 	actors := GetAllTestingValidators(t, ctx)
 	reporter := actors[0]
 	byzVal := actors[1]
@@ -612,6 +615,7 @@ func TestUtilityContext_GetValidatorStatus(t *testing.T) {
 
 func TestUtilityContext_HandleByzantineValidators(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
+	ctx.SetPoolAmount(typesUtil.ValidatorStakePoolName, big.NewInt(100000000000000))
 	actor := GetAllTestingValidators(t, ctx)[0]
 	stakedTokensBeforeBig, err := types.StringToBigInt(actor.StakedTokens)
 	if err != nil {

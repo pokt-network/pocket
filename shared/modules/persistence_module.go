@@ -28,7 +28,7 @@ type PersistenceContext interface {
 	// Indexer
 	TransactionExists(transactionHash string) bool
 
-	// Account
+	//Account
 	AddPoolAmount(name string, amount string) error
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error

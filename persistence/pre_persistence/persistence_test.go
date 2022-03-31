@@ -1,12 +1,13 @@
 package pre_persistence
 
 import (
+	"testing"
+
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
-	"testing"
 )
 
 func NewTestingPrePersistenceModule(_ *testing.T) *PrePersistenceModule {
