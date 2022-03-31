@@ -137,6 +137,14 @@ func CreateTestConsensusPocketNode(
 	return pocketNode
 }
 
+func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
+	for _, pocketNode := range pocketNodes {
+		go pocketNode.Start()
+		startEvent := pocketNode.GetBus().GetBusEvent()
+		require.Equal(t, startEvent.Topic, types.PocketTopic_POCKET_NODE_TOPIC)
+	}
+}
+
 /*** Node Visibility/Reflection Helpers ***/
 
 // TODO(discuss): Should we use reflections inside the testing module as being done here or explicitly

@@ -3,7 +3,6 @@ package consensus_tests
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -19,10 +18,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
 	pocketNodes := CreateTestConsensusPocketNodes(t, configs, testChannel)
-	for _, pocketNode := range pocketNodes {
-		go pocketNode.Start()
-	}
-	time.Sleep(10 * time.Millisecond) // Avoids minor race conditions if pocket node has not finished starting/initialization
+	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Debug message to start consensus by triggering first view change
 	for _, pocketNode := range pocketNodes {

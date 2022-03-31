@@ -83,6 +83,10 @@ func (node *Node) Start() error {
 		return err
 	}
 
+	// TODO(olshansky): discuss if we need a special type/event for this.
+	signalNodeStartedEvent := &types.PocketEvent{Topic: types.PocketTopic_POCKET_NODE_TOPIC, Data: nil}
+	node.GetBus().PublishEventToBus(signalNodeStartedEvent)
+
 	// While loop lasting throughout the entire lifecycle of the node.
 	for {
 		event := node.GetBus().GetBusEvent()

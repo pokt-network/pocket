@@ -8,9 +8,10 @@ option go_package = "/types/";
 
 enum PocketTopic {
 	UNKNOWN_POCKET_TOPIC = 0;
-	CONSENSUS_MESSAGE_TOPIC = 1;
-	P2P_MESSAGE_TOPIC = 2;
-	DEBUG_TOPIC = 3;
+	POCKET_NODE_TOPIC = 1;
+	CONSENSUS_MESSAGE_TOPIC = 2;
+	P2P_MESSAGE_TOPIC = 3;
+	DEBUG_TOPIC = 4;
 }
 
 message PocketEvent {
