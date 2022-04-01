@@ -1,7 +1,7 @@
 syntax = "proto3";
 package genesis;
 
-option go_package = "/shared/types/genesis";
+option go_package = "github.com/pokt-network/pocket/shared/types/genesis";
 
 import "validator.proto";
 import "account.proto";
