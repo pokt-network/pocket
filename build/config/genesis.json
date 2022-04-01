@@ -1,46 +1,12 @@
 {
+  "genesis_state_configs": {
+    "num_validators": 4,
+    "num_applications": 0,
+    "num_fisherman": 0,
+    "num_servicers": 0,
+    "validator_url_format": "node%d.consensus:8080",
+    "keys_seed_start": 42
+  },
   "genesis_time": "2022-01-19T00:00:00.000000Z",
-  "app_hash": "genesis_block_or_state_hash",
-  "validators": [
-    {
-      "address": "2e8465488b882e9fdb25d0f427b6a05719039a22",
-      "public_key": "59f909af5ba461cd8d6f4250d12aeea7c5b0152187caf27ac1abd3c39575f929",
-      "jailed": false,
-      "upokt": 5000000000000,
-      "host": "node1.consensus",
-      "port": 8080,
-      "debug_port": 9080,
-      "chains": ["0001", "0021"]
-    },
-    {
-      "address": "693d951f77a36ff28e45322adaa53ef839f256f8",
-      "public_key": "3292861092ca961878a303481dd91dfdc4a6fcc960b33f8e04bc23b34cac675e",
-      "jailed": false,
-      "upokt": 5000000000000,
-      "host": "node2.consensus",
-      "port": 8080,
-      "debug_port": 9080,
-      "chains": ["0001", "0021"]
-    },
-    {
-      "address": "75d1dd6ec5378d849eb01be209b80db0048a7e0c",
-      "public_key": "5dfc52b24b0d259885cfcf8fb80ed9704c779c22bdbdcb0c20c80f8bf649d3c9",
-      "jailed": false,
-      "upokt": 5000000000000,
-      "host": "node3.consensus",
-      "port": 8080,
-      "debug_port": 9080,
-      "chains": ["0001", "0021"]
-    },
-    {
-      "address": "b72293204a393c91848d32c2a5a74bad0451b126",
-      "public_key": "e9193a6eca262cb1dbc10e893cba50e5ae6c6646f0f134a028017d509e4dfa67",
-      "jailed": false,
-      "upokt": 5000000000000,
-      "host": "node4.consensus",
-      "port": 8080,
-      "debug_port": 9080,
-      "chains": ["0001", "0021"]
-    }
-  ]
+  "app_hash": "genesis_block_or_state_hash"
 }

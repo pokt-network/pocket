@@ -3,15 +3,17 @@ package consensus
 import (
 	"log"
 
+	"github.com/pokt-network/pocket/shared/types"
+
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types"
 )
 
 const (
@@ -30,7 +32,7 @@ type consensusModule struct {
 	Height uint64
 	Round  uint64
 	Step   typesCons.HotstuffStep
-	Block  *typesCons.BlockConsensusTemp // The current block being voted on prior to committing to finality
+	Block  *types.Block // The current block being voted on prior to committing to finality
 
 	HighPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	LockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
@@ -63,7 +65,7 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	}
 
 	address := cfg.PrivateKey.Address().String()
-	valIdMap, idValMap := typesCons.GetValAddrToIdMap(types.GetTestState(nil).ValidatorMap)
+	valIdMap, idValMap := typesCons.GetValAddrToIdMap(typesGenesis.GetNodeState(nil).ValidatorMap)
 
 	m := &consensusModule{
 		bus:        nil,

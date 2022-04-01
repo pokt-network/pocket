@@ -4,10 +4,10 @@ import (
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/types"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *UtilityContext) HandleMessageSend(message *utilTypes.MessageSend) types.Error {
+func (u *UtilityContext) HandleMessageSend(message *typesUtil.MessageSend) types.Error {
 	// convert the amount to big.Int
 	amount, err := types.StringToBigInt(message.Amount)
 	if err != nil {
@@ -36,7 +36,7 @@ func (u *UtilityContext) HandleMessageSend(message *utilTypes.MessageSend) types
 	return nil
 }
 
-func (u *UtilityContext) GetMessageSendSignerCandidates(msg *utilTypes.MessageSend) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageSendSignerCandidates(msg *typesUtil.MessageSend) ([][]byte, types.Error) {
 	// only the from address is a proper signer candidate
 	return [][]byte{msg.FromAddress}, nil
 }

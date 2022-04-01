@@ -3,11 +3,13 @@ package pre_persistence
 import (
 	"bytes"
 	"testing"
+
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 func TestGetAllParams(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
-	expected := DefaultParams()
+	expected := typesGenesis.DefaultParams()
 	err := ctx.(*PrePersistenceContext).SetParams(expected)
 	if err != nil {
 		t.Fatal(err)

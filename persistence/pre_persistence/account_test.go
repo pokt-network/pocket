@@ -1,6 +1,7 @@
 package pre_persistence
 
 import (
+	typesGenesis "github.com/pokt-network/pocket/shared/types"
 	"math/big"
 	"testing"
 )
@@ -14,11 +15,11 @@ const (
 func TestAddPoolAmount(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	initialBalanceBig := &big.Int{}
-	initialBalance := BigIntToString(initialBalanceBig)
+	initialBalance := typesGenesis.BigIntToString(initialBalanceBig)
 	addedBalanceBig := big.NewInt(1)
-	addedBalance := BigIntToString(addedBalanceBig)
+	addedBalance := typesGenesis.BigIntToString(addedBalanceBig)
 	expectedBalanceBig := initialBalanceBig.Add(initialBalanceBig, addedBalanceBig)
-	expectedBalance := BigIntToString(expectedBalanceBig)
+	expectedBalance := typesGenesis.BigIntToString(expectedBalanceBig)
 	if err := ctx.InsertPool(testPoolName, nil, initialBalance); err != nil {
 		t.Fatal(err)
 	}
@@ -37,11 +38,11 @@ func TestAddPoolAmount(t *testing.T) {
 func TestSubtractPoolAmount(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	initialBalanceBig := big.NewInt(2)
-	initialBalance := BigIntToString(initialBalanceBig)
+	initialBalance := typesGenesis.BigIntToString(initialBalanceBig)
 	subBalanceBig := big.NewInt(1)
-	subBalance := BigIntToString(subBalanceBig)
+	subBalance := typesGenesis.BigIntToString(subBalanceBig)
 	expectedBalanceBig := initialBalanceBig.Sub(initialBalanceBig, subBalanceBig)
-	expectedBalance := BigIntToString(expectedBalanceBig)
+	expectedBalance := typesGenesis.BigIntToString(expectedBalanceBig)
 	if err := ctx.InsertPool(testPoolName, nil, initialBalance); err != nil {
 		t.Fatal(err)
 	}
@@ -60,9 +61,9 @@ func TestSubtractPoolAmount(t *testing.T) {
 func TestSetPoolAmount(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	initialBalanceBig := big.NewInt(2)
-	initialBalance := BigIntToString(initialBalanceBig)
+	initialBalance := typesGenesis.BigIntToString(initialBalanceBig)
 	setBalanceBig := big.NewInt(1)
-	setBalance := BigIntToString(setBalanceBig)
+	setBalance := typesGenesis.BigIntToString(setBalanceBig)
 	if err := ctx.InsertPool(testPoolName, nil, initialBalance); err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +82,7 @@ func TestSetPoolAmount(t *testing.T) {
 func TestGetAllPoolsAmount(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	initialBalanceBig := big.NewInt(2)
-	initialBalance := BigIntToString(initialBalanceBig)
+	initialBalance := typesGenesis.BigIntToString(initialBalanceBig)
 	if err := ctx.InsertPool(testPoolName, nil, initialBalance); err != nil {
 		t.Fatal(err)
 	}

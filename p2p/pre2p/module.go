@@ -9,12 +9,13 @@ import (
 	"log"
 	"net"
 
-	pre2ptypes "github.com/pokt-network/pocket/p2p/pre2p/types"
+	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 
 	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -25,7 +26,7 @@ type p2pModule struct {
 	bus modules.Bus
 
 	listener *net.TCPListener
-	network  pre2ptypes.Network
+	network  typesPre2P.Network
 	address  cryptoPocket.Address
 }
 
@@ -38,7 +39,7 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 		return nil, err
 	}
 
-	testState := types.GetTestState(nil)
+	testState := typesGenesis.GetNodeState(nil)
 	network := ConnectToValidatorNetwork(testState.ValidatorMap)
 
 	m = &p2pModule{
@@ -112,6 +113,6 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 	return m.network.NetworkSend(data, addr)
 }
 
-func (m *p2pModule) GetAddrBook() []*pre2ptypes.NetworkPeer {
+func (m *p2pModule) GetAddrBook() []*typesPre2P.NetworkPeer {
 	return m.network.GetAddrBook()
 }

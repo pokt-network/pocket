@@ -2,23 +2,25 @@ package pre_persistence
 
 import (
 	"bytes"
+	"github.com/pokt-network/pocket/shared/types"
 	"math/big"
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/crypto"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
-func NewTestValidator() Validator {
+func NewTestValidator() typesGenesis.Validator {
 	pub1, _ := crypto.GeneratePublicKey()
 	addr1 := pub1.Address()
 	addr2, _ := crypto.GenerateAddress()
-	return Validator{
+	return typesGenesis.Validator{
 		Address:         addr1,
 		PublicKey:       pub1.Bytes(),
 		Paused:          false,
-		Status:          defaultStakeStatus,
-		ServiceUrl:      defaultServiceUrl,
-		StakedTokens:    defaultStake,
+		Status:          typesGenesis.DefaultStakeStatus,
+		ServiceUrl:      typesGenesis.DefaultServiceUrl,
+		StakedTokens:    typesGenesis.DefaultStake,
 		PausedHeight:    0,
 		UnstakingHeight: 0,
 		Output:          addr2,
@@ -103,17 +105,17 @@ func TestUpdateValidator(t *testing.T) {
 		t.Fatal(err)
 	}
 	bigExpectedTokens := big.NewInt(1)
-	one := BigIntToString(bigExpectedTokens)
+	one := types.BigIntToString(bigExpectedTokens)
 	before, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address)
 	if err != nil {
 		t.Fatal(err)
 	}
 	tokens := before.StakedTokens
-	bigBeforeTokens, err := StringToBigInt(tokens)
+	bigBeforeTokens, err := types.StringToBigInt(tokens)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ctx.UpdateValidator(actor.Address, defaultServiceUrl, one)
+	err = ctx.UpdateValidator(actor.Address, typesGenesis.DefaultServiceUrl, one)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +123,7 @@ func TestUpdateValidator(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	bigAfterTokens, err := StringToBigInt(got.StakedTokens)
+	bigAfterTokens, err := types.StringToBigInt(got.StakedTokens)
 	if err != nil {
 		t.Fatal(err)
 	}

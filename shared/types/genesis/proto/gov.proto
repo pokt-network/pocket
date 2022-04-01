@@ -1,7 +1,7 @@
 syntax = "proto3";
-package pre_persistence;
+package genesis;
 
-option go_package = "/persistence/pre_persistence/";
+option go_package = "github.com/pokt-network/pocket/shared/types/genesis";
 
 message Params {
   int32 blocks_per_session = 1;

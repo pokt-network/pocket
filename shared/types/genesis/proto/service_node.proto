@@ -1,9 +1,9 @@
 syntax = "proto3";
-package pre_persistence;
+package genesis;
 
-option go_package = "/persistence/pre_persistence/";
+option go_package = "github.com/pokt-network/pocket/shared/types/genesis";
 
-message Fisherman {
+message ServiceNode {
   bytes address = 1;
   bytes public_key = 2;
   bool paused = 3;

@@ -1,4 +1,4 @@
-package types
+package genesis
 
 import (
 	"log"
@@ -16,7 +16,7 @@ func TestLoadStateFromGenesis(t *testing.T) {
 		Genesis:    genesisJson(),
 		PrivateKey: pk.(cryptoPocket.Ed25519PrivateKey),
 	}
-	state := GetTestState(cfg)
+	state := GetNodeState(cfg)
 	require.Equal(t, 4, len(state.ValidatorMap))
 }
 
@@ -37,7 +37,6 @@ func genesisJson() string {
 				"upokt": 5000000000000,
 				"host": "node4",
 				"port": 8080,
-				"debug_port": 9080,
 				"chains": ["0001", "0021"]
 			},
 			{
@@ -47,7 +46,6 @@ func genesisJson() string {
 				"upokt": 5000000000000,
 				"host": "node3",
 				"port": 8080,
-				"debug_port": 9080,
 				"chains": ["0001", "0021"]
 			},
 			{
@@ -57,7 +55,6 @@ func genesisJson() string {
 				"upokt": 5000000000000,
 				"host": "node2",
 				"port": 8080,
-				"debug_port": 9080,
 				"chains": ["0001", "0021"]
 			},
 			{
@@ -67,7 +64,6 @@ func genesisJson() string {
 				"upokt": 5000000000000,
 				"host": "1",
 				"port": 8080,
-				"debug_port": 9080,
 				"chains": ["0001", "0021"]
 			}
 		]

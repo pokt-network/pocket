@@ -55,8 +55,8 @@ func (u *UtilityContext) GetLatestHeight() (int64, types.Error) {
 	return u.LatestHeight, nil
 }
 
-func (u *UtilityContext) Codec() typesUtil.Codec {
-	return typesUtil.UtilityCodec()
+func (u *UtilityContext) Codec() types.Codec {
+	return types.GetCodec()
 }
 
 func (u *UtilityContext) RevertLastSavePoint() types.Error {

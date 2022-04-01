@@ -23,7 +23,7 @@ func NewTestingMsg(_ *testing.T) Message {
 }
 
 func NewUnsignedTestingTransaction(t *testing.T) Transaction {
-	codec := UtilityCodec()
+	codec := types.GetCodec()
 	msg := NewTestingMsg(t)
 	anyMsg, err := codec.ToAny(msg)
 	if err != nil {

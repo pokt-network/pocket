@@ -2,7 +2,14 @@ package types
 
 import (
 	"crypto/rand"
+	"encoding/binary"
 	"math/big"
+)
+
+const (
+	ZeroInt       = 0
+	HeightNotUsed = 0 // TODO (Andrew) update design, could use -1
+	EmptyString   = ""
 )
 
 var max *big.Int
@@ -35,4 +42,10 @@ func BigIntLessThan(a, b *big.Int) bool {
 		return true
 	}
 	return false
+}
+
+func Int64ToBytes(i int64) []byte {
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, uint64(i))
+	return b
 }

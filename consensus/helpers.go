@@ -8,7 +8,9 @@ import (
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -100,7 +102,12 @@ func getThresholdSignature(
 	return thresholdSig, nil
 }
 
-func isSignatureValid(m *typesCons.HotstuffMessage, pubKey crypto.PublicKey, signature []byte) bool {
+func isSignatureValid(m *typesCons.HotstuffMessage, pubKeyBz []byte, signature []byte) bool {
+	pubKey, err := cryptoPocket.NewPublicKeyFromBytes(pubKeyBz)
+	if err != nil {
+		log.Println("[WARN] Error getting PublicKey from bytes:", err)
+		return false
+	}
 	bytesToVerify, err := getSignableBytes(m)
 	if err != nil {
 		log.Println("[WARN] Error getting bytes to verify:", err)
@@ -114,9 +121,9 @@ func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.Hotstuff
 }
 
 func (m *consensusModule) isOptimisticThresholdMet(n int) error {
-	valMap := types.GetTestState(nil).ValidatorMap
-	if !(float64(n) > ByzantineThreshold*float64(len(valMap))) {
-		return typesCons.ErrByzantineThresholdCheck(n, ByzantineThreshold*float64(len(valMap)))
+	numValidators := len(typesGenesis.GetNodeState(nil).ValidatorMap)
+	if !(float64(n) > ByzantineThreshold*float64(numValidators)) {
+		return typesCons.ErrByzantineThresholdCheck(n, ByzantineThreshold*float64(numValidators))
 	}
 	return nil
 }

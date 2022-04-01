@@ -8,8 +8,10 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
@@ -32,7 +34,7 @@ func TestUtilityContext_HandleMessageStakeFisherman(t *testing.T) {
 		t.Fatal(err)
 	}
 	actors := GetAllTestingFishermen(t, ctx)
-	var actor *pre_persistence.Fisherman
+	var actor *genesis.Fisherman
 	for _, a := range actors {
 		if bytes.Equal(a.PublicKey, msg.PublicKey) {
 			actor = a
@@ -488,7 +490,7 @@ func TestUtilityContext_UpdateFisherman(t *testing.T) {
 	}
 }
 
-func GetAllTestingFishermen(t *testing.T, ctx utility.UtilityContext) []*pre_persistence.Fisherman {
+func GetAllTestingFishermen(t *testing.T, ctx utility.UtilityContext) []*genesis.Fisherman {
 	actors, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllFishermen(ctx.LatestHeight)
 	if err != nil {
 		t.Fatal(err)

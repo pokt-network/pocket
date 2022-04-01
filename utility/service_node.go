@@ -4,10 +4,9 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *UtilityContext) HandleMessageStakeServiceNode(message *utilTypes.MessageStakeServiceNode) types.Error {
+func (u *UtilityContext) HandleMessageStakeServiceNode(message *typesUtil.MessageStakeServiceNode) types.Error {
 	publicKey, er := crypto.NewPublicKeyFromBytes(message.PublicKey)
 	if er != nil {
 		return types.ErrNewPublicKeyFromBytes(er)
@@ -46,7 +45,7 @@ func (u *UtilityContext) HandleMessageStakeServiceNode(message *utilTypes.Messag
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(utilTypes.ServiceNodeStakePoolName, amount); err != nil {
+	if err := u.AddPoolAmount(typesUtil.ServiceNodeStakePoolName, amount); err != nil {
 		return err
 	}
 	// ensure ServiceNode doesn't already exist
@@ -64,7 +63,7 @@ func (u *UtilityContext) HandleMessageStakeServiceNode(message *utilTypes.Messag
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageEditStakeServiceNode(message *utilTypes.MessageEditStakeServiceNode) types.Error {
+func (u *UtilityContext) HandleMessageEditStakeServiceNode(message *typesUtil.MessageEditStakeServiceNode) types.Error {
 	exists, err := u.GetServiceNodeExists(message.Address)
 	if err != nil {
 		return err
@@ -98,7 +97,7 @@ func (u *UtilityContext) HandleMessageEditStakeServiceNode(message *utilTypes.Me
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(utilTypes.ServiceNodeStakePoolName, amountToAdd); err != nil {
+	if err := u.AddPoolAmount(typesUtil.ServiceNodeStakePoolName, amountToAdd); err != nil {
 		return err
 	}
 	// insert the serviceNode structure
@@ -108,14 +107,14 @@ func (u *UtilityContext) HandleMessageEditStakeServiceNode(message *utilTypes.Me
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageUnstakeServiceNode(message *utilTypes.MessageUnstakeServiceNode) types.Error {
+func (u *UtilityContext) HandleMessageUnstakeServiceNode(message *typesUtil.MessageUnstakeServiceNode) types.Error {
 	status, err := u.GetServiceNodeStatus(message.Address)
 	if err != nil {
 		return err
 	}
 	// validate is staked
-	if status != utilTypes.StakedStatus {
-		return types.ErrInvalidStatus(status, utilTypes.StakedStatus)
+	if status != typesUtil.StakedStatus {
+		return types.ErrInvalidStatus(status, typesUtil.StakedStatus)
 	}
 	unstakingHeight, err := u.CalculateServiceNodeUnstakingHeight()
 	if err != nil {
@@ -133,7 +132,7 @@ func (u *UtilityContext) UnstakeServiceNodesThatAreReady() types.Error {
 		return err
 	}
 	for _, serviceNode := range serviceNodesReadyToUnstake {
-		if err := u.SubPoolAmount(utilTypes.ServiceNodeStakePoolName, serviceNode.GetStakeAmount()); err != nil {
+		if err := u.SubPoolAmount(typesUtil.ServiceNodeStakePoolName, serviceNode.GetStakeAmount()); err != nil {
 			return err
 		}
 		if err := u.AddAccountAmountString(serviceNode.GetOutputAddress(), serviceNode.GetStakeAmount()); err != nil {
@@ -165,7 +164,7 @@ func (u *UtilityContext) BeginUnstakingMaxPausedServiceNodes() types.Error {
 	return nil
 }
 
-func (u *UtilityContext) HandleMessagePauseServiceNode(message *utilTypes.MessagePauseServiceNode) types.Error {
+func (u *UtilityContext) HandleMessagePauseServiceNode(message *typesUtil.MessagePauseServiceNode) types.Error {
 	height, err := u.GetServiceNodePauseHeightIfExists(message.Address)
 	if err != nil {
 		return err
@@ -183,7 +182,7 @@ func (u *UtilityContext) HandleMessagePauseServiceNode(message *utilTypes.Messag
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageUnpauseServiceNode(message *utilTypes.MessageUnpauseServiceNode) types.Error {
+func (u *UtilityContext) HandleMessageUnpauseServiceNode(message *typesUtil.MessageUnpauseServiceNode) types.Error {
 	pausedHeight, err := u.GetServiceNodePauseHeightIfExists(message.Address)
 	if err != nil {
 		return err
@@ -202,7 +201,7 @@ func (u *UtilityContext) HandleMessageUnpauseServiceNode(message *utilTypes.Mess
 	if latestHeight < int64(minPauseBlocks)+pausedHeight {
 		return types.ErrNotReadyToUnpause()
 	}
-	if err := u.SetServiceNodePauseHeight(message.Address, utilTypes.ZeroInt); err != nil {
+	if err := u.SetServiceNodePauseHeight(message.Address, typesUtil.ZeroInt); err != nil {
 		return err
 	}
 	return nil
@@ -219,7 +218,7 @@ func (u *UtilityContext) GetServiceNodeExists(address []byte) (bool, types.Error
 
 func (u *UtilityContext) InsertServiceNode(address, publicKey, output []byte, serviceURL, amount string, chains []string) types.Error {
 	store := u.Store()
-	err := store.InsertServiceNode(address, publicKey, output, false, utilTypes.StakedStatus, serviceURL, amount, chains, utilTypes.ZeroInt, utilTypes.ZeroInt)
+	err := store.InsertServiceNode(address, publicKey, output, false, typesUtil.StakedStatus, serviceURL, amount, chains, typesUtil.ZeroInt, typesUtil.ZeroInt)
 	if err != nil {
 		return types.ErrInsert(err)
 	}
@@ -249,7 +248,7 @@ func (u *UtilityContext) GetServiceNodesReadyToUnstake() ([]*types.UnstakingActo
 	if err != nil {
 		return nil, err
 	}
-	unstakingServiceNodes, er := store.GetServiceNodesReadyToUnstake(latestHeight, utilTypes.UnstakingStatus)
+	unstakingServiceNodes, er := store.GetServiceNodesReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return nil, types.ErrGetReadyToUnstake(er)
 	}
@@ -262,7 +261,7 @@ func (u *UtilityContext) UnstakeServiceNodesPausedBefore(pausedBeforeHeight int6
 	if err != nil {
 		return err
 	}
-	er := store.SetServiceNodesStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, utilTypes.UnstakingStatus)
+	er := store.SetServiceNodesStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return types.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}
@@ -273,14 +272,14 @@ func (u *UtilityContext) GetServiceNodeStatus(address []byte) (int, types.Error)
 	store := u.Store()
 	status, er := store.GetServiceNodeStatus(address)
 	if er != nil {
-		return utilTypes.ZeroInt, types.ErrGetStatus(er)
+		return typesUtil.ZeroInt, types.ErrGetStatus(er)
 	}
 	return status, nil
 }
 
 func (u *UtilityContext) SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64) types.Error {
 	store := u.Store()
-	if er := store.SetServiceNodeUnstakingHeightAndStatus(address, unstakingHeight, utilTypes.UnstakingStatus); er != nil {
+	if er := store.SetServiceNodeUnstakingHeightAndStatus(address, unstakingHeight, typesUtil.UnstakingStatus); er != nil {
 		return types.ErrSetUnstakingHeightAndStatus(er)
 	}
 	return nil
@@ -290,7 +289,7 @@ func (u *UtilityContext) GetServiceNodePauseHeightIfExists(address []byte) (int6
 	store := u.Store()
 	ServiceNodePauseHeight, er := store.GetServiceNodePauseHeightIfExists(address)
 	if er != nil {
-		return utilTypes.ZeroInt, types.ErrGetPauseHeight(er)
+		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
 	}
 	return ServiceNodePauseHeight, nil
 }
@@ -306,11 +305,11 @@ func (u *UtilityContext) SetServiceNodePauseHeight(address []byte, height int64)
 func (u *UtilityContext) CalculateServiceNodeUnstakingHeight() (int64, types.Error) {
 	unstakingBlocks, err := u.GetServiceNodeUnstakingBlocks()
 	if err != nil {
-		return utilTypes.ZeroInt, err
+		return typesUtil.ZeroInt, err
 	}
 	unstakingHeight, err := u.CalculateUnstakingHeight(unstakingBlocks)
 	if err != nil {
-		return utilTypes.ZeroInt, err
+		return typesUtil.ZeroInt, err
 	}
 	return unstakingHeight, nil
 }
@@ -319,7 +318,7 @@ func (u *UtilityContext) GetServiceNodesPerSession(height int64) (int, types.Err
 	store := u.Store()
 	i, err := store.GetServiceNodesPerSessionAt(height)
 	if err != nil {
-		return utilTypes.ZeroInt, types.ErrGetServiceNodesPerSessionAt(height, err)
+		return typesUtil.ZeroInt, types.ErrGetServiceNodesPerSessionAt(height, err)
 	}
 	return i, nil
 }
@@ -328,12 +327,12 @@ func (u *UtilityContext) GetServiceNodeCount(chain string, height int64) (int, t
 	store := u.Store()
 	i, err := store.GetServiceNodeCount(chain, height)
 	if err != nil {
-		return utilTypes.ZeroInt, types.ErrGetServiceNodeCount(chain, height, err)
+		return typesUtil.ZeroInt, types.ErrGetServiceNodeCount(chain, height, err)
 	}
 	return i, nil
 }
 
-func (u *UtilityContext) GetMessageStakeServiceNodeSignerCandidates(msg *utilTypes.MessageStakeServiceNode) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageStakeServiceNodeSignerCandidates(msg *typesUtil.MessageStakeServiceNode) ([][]byte, types.Error) {
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(er)
@@ -344,7 +343,7 @@ func (u *UtilityContext) GetMessageStakeServiceNodeSignerCandidates(msg *utilTyp
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageEditStakeServiceNodeSignerCandidates(msg *utilTypes.MessageEditStakeServiceNode) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageEditStakeServiceNodeSignerCandidates(msg *typesUtil.MessageEditStakeServiceNode) ([][]byte, types.Error) {
 	output, err := u.GetServiceNodeOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -355,7 +354,7 @@ func (u *UtilityContext) GetMessageEditStakeServiceNodeSignerCandidates(msg *uti
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnstakeServiceNodeSignerCandidates(msg *utilTypes.MessageUnstakeServiceNode) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageUnstakeServiceNodeSignerCandidates(msg *typesUtil.MessageUnstakeServiceNode) ([][]byte, types.Error) {
 	output, err := u.GetServiceNodeOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -366,7 +365,7 @@ func (u *UtilityContext) GetMessageUnstakeServiceNodeSignerCandidates(msg *utilT
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnpauseServiceNodeSignerCandidates(msg *utilTypes.MessageUnpauseServiceNode) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageUnpauseServiceNodeSignerCandidates(msg *typesUtil.MessageUnpauseServiceNode) ([][]byte, types.Error) {
 	output, err := u.GetServiceNodeOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -377,7 +376,7 @@ func (u *UtilityContext) GetMessageUnpauseServiceNodeSignerCandidates(msg *utilT
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessagePauseServiceNodeSignerCandidates(msg *utilTypes.MessagePauseServiceNode) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessagePauseServiceNodeSignerCandidates(msg *typesUtil.MessagePauseServiceNode) ([][]byte, types.Error) {
 	output, err := u.GetServiceNodeOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err

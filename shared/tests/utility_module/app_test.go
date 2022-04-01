@@ -8,8 +8,10 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
@@ -32,7 +34,7 @@ func TestUtilityContext_HandleMessageStakeApp(t *testing.T) {
 		t.Fatal(err)
 	}
 	actors := GetAllTestingApps(t, ctx)
-	var actor *pre_persistence.App
+	var actor *genesis.App
 	for _, a := range actors {
 		if bytes.Equal(a.PublicKey, msg.PublicKey) {
 			actor = a
@@ -500,7 +502,7 @@ func TestUtilityContext_UpdateApplication(t *testing.T) {
 	}
 }
 
-func GetAllTestingApps(t *testing.T, ctx utility.UtilityContext) []*pre_persistence.App {
+func GetAllTestingApps(t *testing.T, ctx utility.UtilityContext) []*genesis.App {
 	actors, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllApps(ctx.LatestHeight)
 	if err != nil {
 		t.Fatal(err)

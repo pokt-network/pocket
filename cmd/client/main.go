@@ -12,6 +12,7 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -41,7 +42,7 @@ func main() {
 	cfg := &config.Config{
 		Genesis: "build/config/genesis.json",
 
-		// Not used - only set to avoid `GetTestState()` from crashing
+		// Not used - only set to avoid `GetNodeState(_)` from crashing
 		PrivateKey: pk.(crypto.Ed25519PrivateKey),
 
 		// Not used - only set to avoid `pre2p.Create()` from crashing
@@ -51,7 +52,7 @@ func main() {
 	}
 
 	// Initialize the state singleton
-	_ = types.GetTestState(cfg)
+	_ = typesGenesis.GetNodeState(cfg)
 
 	pre2pMod, err = pre2p.Create(cfg)
 	if err != nil {

@@ -2,24 +2,26 @@ package pre_persistence
 
 import (
 	"bytes"
+	"github.com/pokt-network/pocket/shared/types"
 	"math/big"
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/crypto"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
-func NewTestServiceNode() ServiceNode {
+func NewTestServiceNode() typesGenesis.ServiceNode {
 	pub1, _ := crypto.GeneratePublicKey()
 	addr1 := pub1.Address()
 	addr2, _ := crypto.GenerateAddress()
-	return ServiceNode{
+	return typesGenesis.ServiceNode{
 		Address:         addr1,
 		PublicKey:       pub1.Bytes(),
 		Paused:          false,
-		Status:          defaultStakeStatus,
-		Chains:          defaultChains,
-		ServiceUrl:      defaultServiceUrl,
-		StakedTokens:    defaultStake,
+		Status:          typesGenesis.DefaultStakeStatus,
+		Chains:          typesGenesis.DefaultChains,
+		ServiceUrl:      typesGenesis.DefaultServiceUrl,
+		StakedTokens:    typesGenesis.DefaultStake,
 		PausedHeight:    0,
 		UnstakingHeight: 0,
 		Output:          addr2,
@@ -103,19 +105,19 @@ func TestUpdateServiceNode(t *testing.T) {
 		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	zero := BigIntToString(big.NewInt(0))
+	zero := types.BigIntToString(big.NewInt(0))
 	bigExpectedTokens := big.NewInt(1)
-	one := BigIntToString(bigExpectedTokens)
+	one := types.BigIntToString(bigExpectedTokens)
 	before, _, err := ctx.(*PrePersistenceContext).GetServiceNode(actor.Address)
 	if err != nil {
 		t.Fatal(err)
 	}
 	tokens := before.StakedTokens
-	bigBeforeTokens, err := StringToBigInt(tokens)
+	bigBeforeTokens, err := types.StringToBigInt(tokens)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ctx.UpdateServiceNode(actor.Address, zero, one, defaultChains)
+	err = ctx.UpdateServiceNode(actor.Address, zero, one, typesGenesis.DefaultChains)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,7 +125,7 @@ func TestUpdateServiceNode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	bigAfterTokens, err := StringToBigInt(got.StakedTokens)
+	bigAfterTokens, err := types.StringToBigInt(got.StakedTokens)
 	if err != nil {
 		t.Fatal(err)
 	}

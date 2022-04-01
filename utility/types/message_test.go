@@ -20,7 +20,7 @@ var (
 )
 
 func TestMessageChangeParameter_ValidateBasic(t *testing.T) {
-	codec := UtilityCodec()
+	codec := types.GetCodec()
 	owner, _ := crypto.GenerateAddress()
 	paramKey := "key"
 	paramValueRaw := wrapperspb.Int32(1)

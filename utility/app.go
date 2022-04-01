@@ -7,10 +7,9 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *UtilityContext) HandleMessageStakeApp(message *utilTypes.MessageStakeApp) types.Error {
+func (u *UtilityContext) HandleMessageStakeApp(message *typesUtil.MessageStakeApp) types.Error {
 	publicKey, er := crypto.NewPublicKeyFromBytes(message.PublicKey)
 	if er != nil {
 		return types.ErrNewPublicKeyFromBytes(er)
@@ -49,7 +48,7 @@ func (u *UtilityContext) HandleMessageStakeApp(message *utilTypes.MessageStakeAp
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(utilTypes.AppStakePoolName, amount); err != nil {
+	if err := u.AddPoolAmount(typesUtil.AppStakePoolName, amount); err != nil {
 		return err
 	}
 	// calculate maximum relays from stake amount
@@ -72,7 +71,7 @@ func (u *UtilityContext) HandleMessageStakeApp(message *utilTypes.MessageStakeAp
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageEditStakeApp(message *utilTypes.MessageEditStakeApp) types.Error {
+func (u *UtilityContext) HandleMessageEditStakeApp(message *typesUtil.MessageEditStakeApp) types.Error {
 	exists, err := u.GetAppExists(message.Address)
 	if err != nil {
 		return err
@@ -106,7 +105,7 @@ func (u *UtilityContext) HandleMessageEditStakeApp(message *utilTypes.MessageEdi
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(utilTypes.AppStakePoolName, amountToAdd); err != nil {
+	if err := u.AddPoolAmount(typesUtil.AppStakePoolName, amountToAdd); err != nil {
 		return err
 	}
 	// calculate maximum relays from stake amount
@@ -121,14 +120,14 @@ func (u *UtilityContext) HandleMessageEditStakeApp(message *utilTypes.MessageEdi
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageUnstakeApp(message *utilTypes.MessageUnstakeApp) types.Error {
+func (u *UtilityContext) HandleMessageUnstakeApp(message *typesUtil.MessageUnstakeApp) types.Error {
 	status, err := u.GetAppStatus(message.Address)
 	if err != nil {
 		return err
 	}
 	// validate is staked
-	if status != utilTypes.StakedStatus {
-		return types.ErrInvalidStatus(status, utilTypes.StakedStatus)
+	if status != typesUtil.StakedStatus {
+		return types.ErrInvalidStatus(status, typesUtil.StakedStatus)
 	}
 	unstakingHeight, err := u.CalculateAppUnstakingHeight()
 	if err != nil {
@@ -146,7 +145,7 @@ func (u *UtilityContext) UnstakeAppsThatAreReady() types.Error {
 		return err
 	}
 	for _, app := range appsReadyToUnstake {
-		if err := u.SubPoolAmount(utilTypes.AppStakePoolName, app.GetStakeAmount()); err != nil {
+		if err := u.SubPoolAmount(typesUtil.AppStakePoolName, app.GetStakeAmount()); err != nil {
 			return err
 		}
 		if err := u.AddAccountAmountString(app.GetOutputAddress(), app.GetStakeAmount()); err != nil {
@@ -178,7 +177,7 @@ func (u *UtilityContext) BeginUnstakingMaxPausedApps() types.Error {
 	return nil
 }
 
-func (u *UtilityContext) HandleMessagePauseApp(message *utilTypes.MessagePauseApp) types.Error {
+func (u *UtilityContext) HandleMessagePauseApp(message *typesUtil.MessagePauseApp) types.Error {
 	height, err := u.GetAppPauseHeightIfExists(message.Address)
 	if err != nil {
 		return err
@@ -196,7 +195,7 @@ func (u *UtilityContext) HandleMessagePauseApp(message *utilTypes.MessagePauseAp
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageUnpauseApp(message *utilTypes.MessageUnpauseApp) types.Error {
+func (u *UtilityContext) HandleMessageUnpauseApp(message *typesUtil.MessageUnpauseApp) types.Error {
 	pausedHeight, err := u.GetAppPauseHeightIfExists(message.Address)
 	if err != nil {
 		return err
@@ -215,7 +214,7 @@ func (u *UtilityContext) HandleMessageUnpauseApp(message *utilTypes.MessageUnpau
 	if latestHeight < int64(minPauseBlocks)+pausedHeight {
 		return types.ErrNotReadyToUnpause()
 	}
-	if err := u.SetAppPauseHeight(message.Address, utilTypes.HeightNotUsed); err != nil {
+	if err := u.SetAppPauseHeight(message.Address, typesUtil.HeightNotUsed); err != nil {
 		return err
 	}
 	return nil
@@ -224,7 +223,7 @@ func (u *UtilityContext) HandleMessageUnpauseApp(message *utilTypes.MessageUnpau
 func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.Error) {
 	tokens, err := types.StringToBigInt(stakedTokens)
 	if err != nil {
-		return utilTypes.EmptyString, err
+		return typesUtil.EmptyString, err
 	}
 	// The constant integer adjustment that the DAO may use to move the stake. The DAO may manually
 	// adjust an application's MaxRelays at the time of staking to correct for short-term fluctuations
@@ -232,11 +231,11 @@ func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.
 	// When this parameter is set to 0, no adjustment is being made.
 	stabilityAdjustment, err := u.GetStabilityAdjustment()
 	if err != nil {
-		return utilTypes.EmptyString, err
+		return typesUtil.EmptyString, err
 	}
 	baseRate, err := u.GetBaselineAppStakeRate()
 	if err != nil {
-		return utilTypes.EmptyString, err
+		return typesUtil.EmptyString, err
 	}
 	// convert tokens to float64
 	tokensFloat64 := big.NewFloat(float64(tokens.Int64()))
@@ -246,7 +245,7 @@ func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.
 	// TODO (team) evaluate whether or not we should use micro denomination or not
 	baselineThroughput := basePercentage.Mul(basePercentage, tokensFloat64)
 	// adjust for uPOKT
-	baselineThroughput.Quo(baselineThroughput, big.NewFloat(utilTypes.MillionInt))
+	baselineThroughput.Quo(baselineThroughput, big.NewFloat(typesUtil.MillionInt))
 	// add staking adjustment (can be negative)
 	adjusted := baselineThroughput.Add(baselineThroughput, big.NewFloat(float64(stabilityAdjustment)))
 	// truncate the integer
@@ -270,7 +269,7 @@ func (u *UtilityContext) GetAppExists(address []byte) (bool, types.Error) {
 
 func (u *UtilityContext) InsertApplication(address, publicKey, output []byte, maxRelays, amount string, chains []string) types.Error {
 	store := u.Store()
-	err := store.InsertApplication(address, publicKey, output, false, utilTypes.StakedStatus, maxRelays, amount, chains, utilTypes.HeightNotUsed, utilTypes.HeightNotUsed)
+	err := store.InsertApplication(address, publicKey, output, false, typesUtil.StakedStatus, maxRelays, amount, chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	if err != nil {
 		return types.ErrInsert(err)
 	}
@@ -301,7 +300,7 @@ func (u *UtilityContext) GetAppsReadyToUnstake() ([]*types.UnstakingActor, types
 	if err != nil {
 		return nil, err
 	}
-	unstakingApps, er := store.GetAppsReadyToUnstake(latestHeight, utilTypes.UnstakingStatus)
+	unstakingApps, er := store.GetAppsReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return nil, types.ErrGetReadyToUnstake(er)
 	}
@@ -314,7 +313,7 @@ func (u *UtilityContext) UnstakeAppsPausedBefore(pausedBeforeHeight int64) types
 	if err != nil {
 		return err
 	}
-	er := store.SetAppsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, utilTypes.UnstakingStatus)
+	er := store.SetAppsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return types.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}
@@ -325,14 +324,14 @@ func (u *UtilityContext) GetAppStatus(address []byte) (int, types.Error) {
 	store := u.Store()
 	status, er := store.GetAppStatus(address)
 	if er != nil {
-		return utilTypes.ZeroInt, types.ErrGetStatus(er)
+		return typesUtil.ZeroInt, types.ErrGetStatus(er)
 	}
 	return status, nil
 }
 
 func (u *UtilityContext) SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64) types.Error {
 	store := u.Store()
-	if er := store.SetAppUnstakingHeightAndStatus(address, unstakingHeight, utilTypes.UnstakingStatus); er != nil { // TODO (Andrew) remove unstaking status from prepersistence
+	if er := store.SetAppUnstakingHeightAndStatus(address, unstakingHeight, typesUtil.UnstakingStatus); er != nil { // TODO (Andrew) remove unstaking status from prepersistence
 		return types.ErrSetUnstakingHeightAndStatus(er)
 	}
 	return nil
@@ -342,7 +341,7 @@ func (u *UtilityContext) GetAppPauseHeightIfExists(address []byte) (int64, types
 	store := u.Store()
 	appPauseHeight, er := store.GetAppPauseHeightIfExists(address)
 	if er != nil {
-		return utilTypes.ZeroInt, types.ErrGetPauseHeight(er)
+		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
 	}
 	return appPauseHeight, nil
 }
@@ -358,16 +357,16 @@ func (u *UtilityContext) SetAppPauseHeight(address []byte, height int64) types.E
 func (u *UtilityContext) CalculateAppUnstakingHeight() (int64, types.Error) {
 	unstakingBlocks, err := u.GetAppUnstakingBlocks()
 	if err != nil {
-		return utilTypes.ZeroInt, err
+		return typesUtil.ZeroInt, err
 	}
 	unstakingHeight, err := u.CalculateUnstakingHeight(unstakingBlocks)
 	if err != nil {
-		return utilTypes.ZeroInt, err
+		return typesUtil.ZeroInt, err
 	}
 	return unstakingHeight, nil
 }
 
-func (u *UtilityContext) GetMessageStakeAppSignerCandidates(msg *utilTypes.MessageStakeApp) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageStakeAppSignerCandidates(msg *typesUtil.MessageStakeApp) ([][]byte, types.Error) {
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(er)
@@ -378,7 +377,7 @@ func (u *UtilityContext) GetMessageStakeAppSignerCandidates(msg *utilTypes.Messa
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageEditStakeAppSignerCandidates(msg *utilTypes.MessageEditStakeApp) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageEditStakeAppSignerCandidates(msg *typesUtil.MessageEditStakeApp) ([][]byte, types.Error) {
 	output, err := u.GetAppOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -389,7 +388,7 @@ func (u *UtilityContext) GetMessageEditStakeAppSignerCandidates(msg *utilTypes.M
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnstakeAppSignerCandidates(msg *utilTypes.MessageUnstakeApp) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageUnstakeAppSignerCandidates(msg *typesUtil.MessageUnstakeApp) ([][]byte, types.Error) {
 	output, err := u.GetAppOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -400,7 +399,7 @@ func (u *UtilityContext) GetMessageUnstakeAppSignerCandidates(msg *utilTypes.Mes
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnpauseAppSignerCandidates(msg *utilTypes.MessageUnpauseApp) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageUnpauseAppSignerCandidates(msg *typesUtil.MessageUnpauseApp) ([][]byte, types.Error) {
 	output, err := u.GetAppOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -411,7 +410,7 @@ func (u *UtilityContext) GetMessageUnpauseAppSignerCandidates(msg *utilTypes.Mes
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessagePauseAppSignerCandidates(msg *utilTypes.MessagePauseApp) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessagePauseAppSignerCandidates(msg *typesUtil.MessagePauseApp) ([][]byte, types.Error) {
 	output, err := u.GetAppOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
