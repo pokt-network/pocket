@@ -1,8 +1,9 @@
 package consensus
 
 import (
-	"github.com/pokt-network/pocket/shared/types"
 	"log"
+
+	"github.com/pokt-network/pocket/shared/types"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	typesCons "github.com/pokt-network/pocket/consensus/types"

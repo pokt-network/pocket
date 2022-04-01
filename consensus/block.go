@@ -2,8 +2,9 @@ package consensus
 
 import (
 	"encoding/hex"
-	"github.com/pokt-network/pocket/shared/types"
 	"unsafe"
+
+	"github.com/pokt-network/pocket/shared/types"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"

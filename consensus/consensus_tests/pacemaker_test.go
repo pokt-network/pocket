@@ -2,11 +2,12 @@ package consensus_tests
 
 import (
 	"encoding/hex"
-	"github.com/pokt-network/pocket/shared/types"
 	"log"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/pokt-network/pocket/shared/types"
 
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"

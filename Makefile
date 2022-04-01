@@ -167,7 +167,6 @@ protogen_clean:
 protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
 
-# protoc -I=${proto_dir} -I=./shared/types/proto --go_out=./shared ./shared/types/proto/*.proto
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto         --go_out=./shared/types         ./shared/types/proto/*.proto
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto              --go_out=./utility/types        ./utility/proto/*.proto
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto

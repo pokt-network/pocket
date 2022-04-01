@@ -1,8 +1,9 @@
 package consensus
 
 import (
-	"github.com/pokt-network/pocket/shared/types"
 	"log"
+
+	"github.com/pokt-network/pocket/shared/types"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/crypto"
