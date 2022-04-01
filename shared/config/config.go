@@ -12,16 +12,15 @@ import (
 )
 
 type Config struct {
-	RootDir   string `json:"root_dir"`
-	Genesis   string `json:"genesis"`
-	IsTesting bool   `json:"testing"` // TODO: consider renaming this to either `DebugMode` or `DevMode`.
+	RootDir string `json:"root_dir"`
+	Genesis string `json:"genesis"`
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 
 	Pre2P          *Pre2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
 	P2P            *P2PConfig            `json:"p2p"`
 	Consensus      *ConsensusConfig      `json:"consensus"`
-	PrePersistence *PrePersistenceConfig `json:"prePersistence"`
+	PrePersistence *PrePersistenceConfig `json:"pre_persistence"`
 	Persistence    *PersistenceConfig    `json:"persistence"`
 	Utility        *UtilityConfig        `json:"utility"`
 }
@@ -29,13 +28,12 @@ type Config struct {
 // TODO(derrandz): delete this once P2P is ready.
 type Pre2PConfig struct {
 	ConsensusPort uint32 `json:"consensus_port"`
-	DebugPort     uint32 `json:"debug_port"`
 }
 
 type PrePersistenceConfig struct {
 	Capacity        int `json:"capacity"`
-	MempoolMaxBytes int `json:"mempoolMaxBytes"`
-	MempoolMaxTxs   int `json:"mempoolMaxTxs"`
+	MempoolMaxBytes int `json:"mempool_max_bytes"`
+	MempoolMaxTxs   int `json:"mempool_max_txs"`
 }
 
 type P2PConfig struct {
@@ -100,7 +98,7 @@ func (c *Config) ValidateAndHydrate() error {
 	}
 
 	if len(c.Genesis) == 0 {
-		return fmt.Errorf("must specify a genesis file")
+		return fmt.Errorf("must specify a genesis file or string")
 	}
 	c.Genesis = rootify(c.Genesis, c.RootDir)
 

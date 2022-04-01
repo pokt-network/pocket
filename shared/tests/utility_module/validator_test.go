@@ -6,8 +6,10 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
@@ -30,7 +32,7 @@ func TestUtilityContext_HandleMessageStakeValidator(t *testing.T) {
 		t.Fatal(err)
 	}
 	actors := GetAllTestingValidators(t, ctx)
-	var actor *pre_persistence.Validator
+	var actor *genesis.Validator
 	for _, a := range actors {
 		if bytes.Equal(a.PublicKey, msg.PublicKey) {
 			actor = a
@@ -716,7 +718,7 @@ func TestUtilityContext_SetValidatorStakedTokens(t *testing.T) {
 	}
 }
 
-func GetAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []*pre_persistence.Validator {
+func GetAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []*genesis.Validator {
 	actors, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllValidators(ctx.LatestHeight)
 	if err != nil {
 		t.Fatal(err)

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/jordanorelli/lexnum"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
-
-	"github.com/jordanorelli/lexnum"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 	"github.com/syndtr/goleveldb/leveldb/util"
@@ -106,9 +106,9 @@ func (m *PrePersistenceContext) GetLatestBlockHeight() (uint64, error) {
 }
 
 // ExportState Unused but high potential for usefulness for telemetry
-func (m *PrePersistenceContext) ExportState() (*GenesisState, types.Error) {
+func (m *PrePersistenceContext) ExportState() (*typesGenesis.GenesisState, types.Error) {
 	var err error
-	state := &GenesisState{}
+	state := &typesGenesis.GenesisState{}
 	state.Validators, err = m.GetAllValidators(m.Height)
 	if err != nil {
 		return nil, types.ErrGetAllValidators(err)
@@ -258,8 +258,8 @@ func (m *PrePersistenceContext) GetHeight() (int64, error) {
 
 func (m *PrePersistenceContext) GetBlockHash(height int64) ([]byte, error) {
 	db := m.Store()
-	block := Block{}
-	key := append(BlockPrefix, Int64ToBytes(height)...)
+	block := typesGenesis.Block{}
+	key := append(BlockPrefix, typesGenesis.Int64ToBytes(height)...)
 	val, err := db.Get(key)
 	if err != nil {
 		return nil, err

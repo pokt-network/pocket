@@ -1,11 +1,11 @@
 package consensus
 
 import (
+	"encoding/hex"
 	"unsafe"
 
-	"github.com/pokt-network/pocket/shared/types"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 var (
@@ -246,7 +246,7 @@ func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 		return typesCons.ErrNilPartialSigOrSourceNotSpecified
 	}
 
-	valMap := types.GetTestState(nil).ValidatorMap
+	valMap := typesGenesis.GetNodeState(nil).ValidatorMap
 	address := msg.GetPartialSignature().Address
 	validator, ok := valMap[address]
 	if !ok {
@@ -258,7 +258,7 @@ func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 	}
 
 	return typesCons.ErrValidatingPartialSig(
-		address, m.ValAddrToIdMap[address], msg, pubKey.String())
+		address, m.ValAddrToIdMap[address], msg, hex.EncodeToString(pubKey))
 }
 
 func (m *consensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {

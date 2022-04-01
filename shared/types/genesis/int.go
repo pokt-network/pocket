@@ -1,4 +1,4 @@
-package pre_persistence
+package genesis
 
 import (
 	"encoding/binary"
@@ -8,7 +8,7 @@ import (
 
 const (
 	ZeroInt       = 0
-	heightNotUsed = 0 // TODO (Andrew) update design, could use -1
+	HeightNotUsed = 0 // TODO (Andrew) update design, could use -1
 	EmptyString   = ""
 )
 

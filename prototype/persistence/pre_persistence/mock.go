@@ -25,7 +25,7 @@ var (
 	defaultServiceURLEdited = "https://bar.foo"
 	defaultStakeBig         = big.NewInt(1000000000000000)
 	defaultStake            = BigIntToString(defaultStakeBig)
-	defaultAccountbalance   = defaultStake
+	defaultAccountBalance   = defaultStake
 	defaultStakeStatus      = int32(2)
 )
 
@@ -53,7 +53,7 @@ func NewMockGenesisState(_, numOfApplications, numOfFisherman, numOfServiceNodes
 		state.Validators = append(state.Validators, v)
 		state.Accounts = append(state.Accounts, &Account{
 			Address: v.Address,
-			Amount:  defaultAccountbalance,
+			Amount:  defaultAccountBalance,
 		})
 		validatorKeys[i] = pk
 	}
@@ -70,7 +70,7 @@ func NewMockGenesisState(_, numOfApplications, numOfFisherman, numOfServiceNodes
 		state.Apps = append(state.Apps, app)
 		state.Accounts = append(state.Accounts, &Account{
 			Address: app.Address,
-			Amount:  defaultAccountbalance,
+			Amount:  defaultAccountBalance,
 		})
 		appKeys[i] = pk
 	}
@@ -88,7 +88,7 @@ func NewMockGenesisState(_, numOfApplications, numOfFisherman, numOfServiceNodes
 		state.ServiceNodes = append(state.ServiceNodes, sn)
 		state.Accounts = append(state.Accounts, &Account{
 			Address: sn.Address,
-			Amount:  defaultAccountbalance,
+			Amount:  defaultAccountBalance,
 		})
 		serviceNodeKeys[i] = pk
 	}
@@ -106,7 +106,7 @@ func NewMockGenesisState(_, numOfApplications, numOfFisherman, numOfServiceNodes
 		state.Fishermen = append(state.Fishermen, fish)
 		state.Accounts = append(state.Accounts, &Account{
 			Address: fish.Address,
-			Amount:  defaultAccountbalance,
+			Amount:  defaultAccountBalance,
 		})
 		fishKeys[i] = pk
 	}
@@ -156,7 +156,7 @@ func NewMockGenesisState(_, numOfApplications, numOfFisherman, numOfServiceNodes
 	pOwnerAddress := DefaultParamsOwner.Address()
 	state.Accounts = append(state.Accounts, &Account{
 		Address: pOwnerAddress,
-		Amount:  defaultAccountbalance,
+		Amount:  defaultAccountBalance,
 	})
 	state.Pools = append(state.Pools, dao)
 	state.Pools = append(state.Pools, fee)

@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/pokt-network/pocket/shared/types"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func DefaultTestingParams(_ *testing.T) *pre_persistence.Params {
-	return pre_persistence.DefaultParams()
+func DefaultTestingParams(_ *testing.T) *genesis.Params {
+	return typesGenesis.DefaultParams()
 }
 
 func TestUtilityContext_GetAppMaxChains(t *testing.T) {
@@ -715,7 +716,7 @@ func TestUtilityContext_GetValidatorUnstakingBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
-	cdc := utilTypes.UtilityCodec()
+	cdc := typesUtil.UtilityCodec()
 	ctx := NewTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.MissedBlocksBurnPercentage)
@@ -727,16 +728,16 @@ func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	newParamValue := int32(2)
-	paramOwnerPK := pre_persistence.DefaultParamsOwner
+	paramOwnerPK := typesGenesis.DefaultParamsOwner
 	any, err := cdc.ToAny(&wrapperspb.Int32Value{
 		Value: newParamValue,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	msg := &utilTypes.MessageChangeParameter{
+	msg := &typesUtil.MessageChangeParameter{
 		Owner:          paramOwnerPK.Address(),
-		ParameterKey:   utilTypes.MissedBlocksBurnPercentageParamName,
+		ParameterKey:   typesUtil.MissedBlocksBurnPercentageParamName,
 		ParameterValue: any,
 	}
 	if err := ctx.HandleMessageChangeParameter(msg); err != nil {
@@ -755,7 +756,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := defaultParams.AclOwner
-	gotParam, err := ctx.GetParamOwner(utilTypes.AclOwner)
+	gotParam, err := ctx.GetParamOwner(typesUtil.AclOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -763,7 +764,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.BlocksPerSessionOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.BlocksPerSessionParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.BlocksPerSessionParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -771,7 +772,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AppMaxChainsOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppMaxChainsParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppMaxChainsParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -779,7 +780,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AppMinimumStakeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppMinimumStakeParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppMinimumStakeParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -787,7 +788,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AppBaselineStakeRateOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppBaselineStakeRateParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppBaselineStakeRateParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -795,7 +796,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AppStakingAdjustmentOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppStakingAdjustmentOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppStakingAdjustmentOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -803,7 +804,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AppUnstakingBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppUnstakingBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppUnstakingBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -811,7 +812,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AppMinimumPauseBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppMinimumPauseBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppMinimumPauseBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -819,7 +820,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AppMaxPausedBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppMaxPauseBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppMaxPauseBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -827,7 +828,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ServiceNodesPerSessionOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ServiceNodesPerSessionParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ServiceNodesPerSessionParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -835,7 +836,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ServiceNodeMinimumStakeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ServiceNodeMinimumStakeParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ServiceNodeMinimumStakeParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -843,7 +844,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ServiceNodeMaxChainsOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ServiceNodeMaxChainsParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ServiceNodeMaxChainsParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -851,7 +852,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ServiceNodeUnstakingBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ServiceNodeUnstakingBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ServiceNodeUnstakingBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -859,7 +860,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ServiceNodeMinimumPauseBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ServiceNodeMinimumPauseBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ServiceNodeMinimumPauseBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -867,7 +868,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ServiceNodeMaxPausedBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ServiceNodeMaxPauseBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ServiceNodeMaxPauseBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -875,7 +876,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.FishermanMinimumStakeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.FishermanMinimumStakeParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.FishermanMinimumStakeParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -883,7 +884,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.GetServiceNodeMaxChainsOwner()
-	gotParam, err = ctx.GetParamOwner(utilTypes.ServiceNodeMaxPauseBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ServiceNodeMaxPauseBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -891,7 +892,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.FishermanUnstakingBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.FishermanUnstakingBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.FishermanUnstakingBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -899,7 +900,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.FishermanMinimumPauseBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.FishermanMinimumPauseBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.FishermanMinimumPauseBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -907,7 +908,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.FishermanMaxPausedBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.FishermanMaxPauseBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.FishermanMaxPauseBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -915,7 +916,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ValidatorMinimumStakeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ValidatorMinimumStakeParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ValidatorMinimumStakeParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -923,7 +924,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ValidatorUnstakingBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ValidatorUnstakingBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ValidatorUnstakingBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -931,7 +932,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ValidatorMinimumPauseBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ValidatorMinimumPauseBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ValidatorMinimumPauseBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -939,7 +940,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ValidatorMaxPausedBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ValidatorMaxPausedBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ValidatorMaxPausedBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -947,7 +948,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ValidatorMaximumMissedBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ValidatorMaximumMissedBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ValidatorMaximumMissedBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -955,7 +956,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ProposerPercentageOfFeesOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ProposerPercentageOfFeesParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ProposerPercentageOfFeesParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -963,7 +964,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.ValidatorMaxEvidenceAgeInBlocksOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ValidatorMaxEvidenceAgeInBlocksParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ValidatorMaxEvidenceAgeInBlocksParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -971,7 +972,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MissedBlocksBurnPercentageOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MissedBlocksBurnPercentageParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MissedBlocksBurnPercentageParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -979,7 +980,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.DoubleSignBurnPercentageOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.DoubleSignBurnPercentageParamName)
+	gotParam, err = ctx.GetParamOwner(typesUtil.DoubleSignBurnPercentageParamName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -987,7 +988,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageDoubleSignFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageDoubleSignFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageDoubleSignFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -995,7 +996,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageSendFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageSendFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageSendFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1003,7 +1004,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageStakeFishermanFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageStakeFishermanFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageStakeFishermanFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1011,7 +1012,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageEditStakeFishermanFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageEditStakeFishermanFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageEditStakeFishermanFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1019,7 +1020,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageUnstakeFishermanFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnstakeFishermanFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnstakeFishermanFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1027,7 +1028,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessagePauseFishermanFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessagePauseFishermanFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessagePauseFishermanFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1035,7 +1036,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageUnpauseFishermanFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnpauseFishermanFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnpauseFishermanFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1043,7 +1044,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageTestScoreFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageTestScoreFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageTestScoreFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1051,7 +1052,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageFishermanPauseServiceNodeFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageFishermanPauseServiceNodeFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageFishermanPauseServiceNodeFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1059,7 +1060,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageProveTestScoreFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageProveTestScoreFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageProveTestScoreFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1067,7 +1068,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageStakeAppFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageStakeAppFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageStakeAppFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1075,7 +1076,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageEditStakeAppFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageEditStakeAppFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageEditStakeAppFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1083,7 +1084,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageUnstakeAppFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnstakeAppFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnstakeAppFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1091,7 +1092,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessagePauseAppFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessagePauseAppFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessagePauseAppFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1099,7 +1100,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageUnpauseAppFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnpauseAppFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnpauseAppFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1107,7 +1108,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageStakeValidatorFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageStakeValidatorFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageStakeValidatorFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1115,7 +1116,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageEditStakeValidatorFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageEditStakeValidatorFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageEditStakeValidatorFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1123,7 +1124,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageUnstakeValidatorFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnstakeValidatorFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnstakeValidatorFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1131,7 +1132,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessagePauseValidatorFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessagePauseValidatorFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessagePauseValidatorFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1139,7 +1140,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageUnpauseValidatorFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnpauseValidatorFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnpauseValidatorFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1147,7 +1148,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageStakeServiceNodeFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageStakeServiceNodeFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageStakeServiceNodeFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1155,7 +1156,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageEditStakeServiceNodeFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageEditStakeServiceNodeFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageEditStakeServiceNodeFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1163,7 +1164,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageUnstakeServiceNodeFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnstakeServiceNodeFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnstakeServiceNodeFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1171,7 +1172,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessagePauseServiceNodeFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessagePauseServiceNodeFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessagePauseServiceNodeFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1179,7 +1180,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageUnpauseServiceNodeFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnpauseServiceNodeFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnpauseServiceNodeFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1187,7 +1188,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.MessageChangeParameterFeeOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageChangeParameterFee)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageChangeParameterFee)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1196,7 +1197,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	}
 	// owners
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.BlocksPerSessionOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.BlocksPerSessionOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1204,7 +1205,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppMaxChainsOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppMaxChainsOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1212,7 +1213,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppMinimumStakeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppMinimumStakeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1220,7 +1221,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppBaselineStakeRateOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppBaselineStakeRateOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1228,7 +1229,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppStakingAdjustmentOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppStakingAdjustmentOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1236,7 +1237,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppUnstakingBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppUnstakingBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1244,7 +1245,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppMinimumPauseBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppMinimumPauseBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1252,7 +1253,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.AppMaxPausedBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.AppMaxPausedBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1260,7 +1261,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ServiceNodeMinimumPauseBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ServiceNodeMinimumPauseBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1268,7 +1269,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ServiceNodeMaxChainsOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ServiceNodeMaxChainsOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1276,7 +1277,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ServiceNodeUnstakingBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ServiceNodeUnstakingBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1284,7 +1285,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ServiceNodeMinimumStakeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ServiceNodeMinimumStakeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1292,7 +1293,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ServiceNodeMaxPausedBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ServiceNodeMaxPausedBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1300,7 +1301,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ServiceNodesPerSessionOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ServiceNodesPerSessionOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1308,7 +1309,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.FishermanMinimumStakeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.FishermanMinimumStakeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1316,7 +1317,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.FishermanMaxChainsOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.FishermanMaxChainsOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1324,7 +1325,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.FishermanUnstakingBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.FishermanUnstakingBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1332,7 +1333,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.FishermanMinimumPauseBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.FishermanMinimumPauseBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1340,7 +1341,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.FishermanMaxPausedBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.FishermanMaxPausedBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1348,7 +1349,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ValidatorMinimumStakeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ValidatorMinimumStakeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1356,7 +1357,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ValidatorUnstakingBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ValidatorUnstakingBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1364,7 +1365,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ValidatorMinimumPauseBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ValidatorMinimumPauseBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1372,7 +1373,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ValidatorMaxPausedBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ValidatorMaxPausedBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1380,7 +1381,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ValidatorMaxPausedBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ValidatorMaxPausedBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1388,7 +1389,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ProposerPercentageOfFeesOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ProposerPercentageOfFeesOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1396,7 +1397,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.ValidatorMaxEvidenceAgeInBlocksOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.ValidatorMaxEvidenceAgeInBlocksOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1404,7 +1405,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MissedBlocksBurnPercentageOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MissedBlocksBurnPercentageOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1412,7 +1413,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.DoubleSignBurnPercentageOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.DoubleSignBurnPercentageOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1420,7 +1421,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageSendFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageSendFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1428,7 +1429,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageStakeFishermanFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageStakeFishermanFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1436,7 +1437,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageEditStakeFishermanFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageEditStakeFishermanFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1444,7 +1445,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnstakeFishermanFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnstakeFishermanFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1452,7 +1453,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessagePauseFishermanFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessagePauseFishermanFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1460,7 +1461,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnpauseFishermanFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnpauseFishermanFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1468,7 +1469,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageFishermanPauseServiceNodeFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageFishermanPauseServiceNodeFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1476,7 +1477,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageTestScoreFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageTestScoreFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1484,7 +1485,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageProveTestScoreFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageProveTestScoreFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1492,7 +1493,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageStakeAppFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageStakeAppFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1500,7 +1501,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageEditStakeAppFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageEditStakeAppFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1508,7 +1509,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnstakeAppFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnstakeAppFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1516,7 +1517,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessagePauseAppFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessagePauseAppFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1524,7 +1525,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnpauseAppFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnpauseAppFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1532,7 +1533,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageStakeValidatorFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageStakeValidatorFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1540,7 +1541,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageEditStakeValidatorFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageEditStakeValidatorFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1548,7 +1549,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnstakeValidatorFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnstakeValidatorFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1556,7 +1557,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessagePauseValidatorFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessagePauseValidatorFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1564,7 +1565,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnpauseValidatorFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnpauseValidatorFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1572,7 +1573,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageStakeServiceNodeFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageStakeServiceNodeFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1580,7 +1581,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageEditStakeServiceNodeFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageEditStakeServiceNodeFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1588,7 +1589,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnstakeServiceNodeFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnstakeServiceNodeFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1596,7 +1597,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessagePauseServiceNodeFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessagePauseServiceNodeFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1604,7 +1605,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageUnpauseServiceNodeFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageUnpauseServiceNodeFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1612,7 +1613,7 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	defaultParam = defaultParams.AclOwner
-	gotParam, err = ctx.GetParamOwner(utilTypes.MessageChangeParameterFeeOwner)
+	gotParam, err = ctx.GetParamOwner(typesUtil.MessageChangeParameterFeeOwner)
 	if err != nil {
 		t.Fatal(err)
 	}

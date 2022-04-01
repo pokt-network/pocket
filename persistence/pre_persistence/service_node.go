@@ -5,13 +5,14 @@ import (
 	"fmt"
 
 	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"google.golang.org/protobuf/proto"
 )
 
-func (m *PrePersistenceContext) GetServiceNode(address []byte) (sn *ServiceNode, exists bool, err error) {
-	sn = &ServiceNode{}
+func (m *PrePersistenceContext) GetServiceNode(address []byte) (sn *typesGenesis.ServiceNode, exists bool, err error) {
+	sn = &typesGenesis.ServiceNode{}
 	db := m.Store()
 	key := append(ServiceNodePrefixKey, address...)
 	bz, err := db.Get(key)
@@ -30,9 +31,9 @@ func (m *PrePersistenceContext) GetServiceNode(address []byte) (sn *ServiceNode,
 	return sn, true, nil
 }
 
-func (m *PrePersistenceContext) GetAllServiceNodes(height int64) (sns []*ServiceNode, err error) {
-	codec := GetCodec()
-	sns = make([]*ServiceNode, 0)
+func (m *PrePersistenceContext) GetAllServiceNodes(height int64) (sns []*typesGenesis.ServiceNode, err error) {
+	codec := typesGenesis.GetCodec()
+	sns = make([]*typesGenesis.ServiceNode, 0)
 	var it iterator.Iterator
 	if height == m.Height {
 		db := m.Store()
@@ -53,7 +54,7 @@ func (m *PrePersistenceContext) GetAllServiceNodes(height int64) (sns []*Service
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
-		sn := ServiceNode{}
+		sn := typesGenesis.ServiceNode{}
 		if err := codec.Unmarshal(bz, &sn); err != nil {
 			return nil, err
 		}
@@ -66,10 +67,10 @@ func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []by
 	if _, exists, _ := m.GetServiceNode(address); exists {
 		return fmt.Errorf("already exists in world state")
 	}
-	codec := GetCodec()
+	codec := typesGenesis.GetCodec()
 	db := m.Store()
 	key := append(ServiceNodePrefixKey, address...)
-	sn := ServiceNode{
+	sn := typesGenesis.ServiceNode{
 		Address:         address,
 		PublicKey:       publicKey,
 		Paused:          paused,
@@ -93,22 +94,22 @@ func (m *PrePersistenceContext) UpdateServiceNode(address []byte, serviceURL str
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	codec := GetCodec()
+	codec := typesGenesis.GetCodec()
 	db := m.Store()
 	key := append(ServiceNodePrefixKey, address...)
 	// compute new values
-	stakedTokens, err := StringToBigInt(sn.StakedTokens)
+	stakedTokens, err := typesGenesis.StringToBigInt(sn.StakedTokens)
 	if err != nil {
 		return err
 	}
-	stakedTokensToAddI, err := StringToBigInt(amountToAdd)
+	stakedTokensToAddI, err := typesGenesis.StringToBigInt(amountToAdd)
 	if err != nil {
 		return err
 	}
 	stakedTokens.Add(stakedTokens, stakedTokensToAddI)
 	// update values
 	sn.ServiceUrl = serviceURL
-	sn.StakedTokens = BigIntToString(stakedTokens)
+	sn.StakedTokens = typesGenesis.BigIntToString(stakedTokens)
 	sn.Chains = chains
 	bz, err := codec.Marshal(sn)
 	if err != nil {
@@ -147,7 +148,7 @@ func (m *PrePersistenceContext) GetServiceNodeExists(address []byte) (exists boo
 
 func (m *PrePersistenceContext) GetServiceNodesReadyToUnstake(height int64, status int) (ServiceNodes []*types.UnstakingActor, err error) {
 	db := m.Store()
-	unstakingKey := append(UnstakingServiceNodePrefixKey, Int64ToBytes(height)...)
+	unstakingKey := append(UnstakingServiceNodePrefixKey, typesGenesis.Int64ToBytes(height)...)
 	if has := db.Contains(unstakingKey); !has {
 		return nil, nil
 	}
@@ -171,10 +172,10 @@ func (m *PrePersistenceContext) GetServiceNodesReadyToUnstake(height int64, stat
 func (m *PrePersistenceContext) GetServiceNodeStatus(address []byte) (status int, err error) {
 	sn, exists, err := m.GetServiceNode(address)
 	if err != nil {
-		return ZeroInt, err
+		return typesGenesis.ZeroInt, err
 	}
 	if !exists {
-		return ZeroInt, fmt.Errorf("does not exist in world state")
+		return typesGenesis.ZeroInt, fmt.Errorf("does not exist in world state")
 	}
 	return int(sn.Status), nil
 }
@@ -187,7 +188,7 @@ func (m *PrePersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address [
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	codec := GetCodec()
+	codec := typesGenesis.GetCodec()
 	unstakingActors := types.UnstakingActors{}
 	db := m.Store()
 	key := append(ServiceNodePrefixKey, address...)
@@ -200,7 +201,7 @@ func (m *PrePersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address [
 	if err := db.Put(key, bz); err != nil {
 		return err
 	}
-	unstakingKey := append(UnstakingServiceNodePrefixKey, Int64ToBytes(unstakingHeight)...)
+	unstakingKey := append(UnstakingServiceNodePrefixKey, typesGenesis.Int64ToBytes(unstakingHeight)...)
 	if found := db.Contains(unstakingKey); found {
 		val, err := db.Get(unstakingKey)
 		if err != nil {
@@ -225,10 +226,10 @@ func (m *PrePersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address [
 func (m *PrePersistenceContext) GetServiceNodePauseHeightIfExists(address []byte) (int64, error) {
 	sn, exists, err := m.GetServiceNode(address)
 	if err != nil {
-		return ZeroInt, err
+		return typesGenesis.ZeroInt, err
 	}
 	if !exists {
-		return ZeroInt, fmt.Errorf("does not exist in world state")
+		return typesGenesis.ZeroInt, fmt.Errorf("does not exist in world state")
 	}
 	return int64(sn.PausedHeight), nil
 }
@@ -236,14 +237,14 @@ func (m *PrePersistenceContext) GetServiceNodePauseHeightIfExists(address []byte
 // SetServiceNodesStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
 func (m *PrePersistenceContext) SetServiceNodesStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	db := m.Store()
-	codec := GetCodec()
+	codec := typesGenesis.GetCodec()
 	it := db.NewIterator(&util.Range{
 		Start: ServiceNodePrefixKey,
 		Limit: PrefixEndBytes(ServiceNodePrefixKey),
 	})
 	defer it.Release()
 	for valid := it.First(); valid; valid = it.Next() {
-		sn := ServiceNode{}
+		sn := typesGenesis.ServiceNode{}
 		bz := it.Value()
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
@@ -270,7 +271,7 @@ func (m *PrePersistenceContext) SetServiceNodesStatusAndUnstakingHeightPausedBef
 }
 
 func (m *PrePersistenceContext) SetServiceNodePauseHeight(address []byte, height int64) error {
-	codec := GetCodec()
+	codec := typesGenesis.GetCodec()
 	db := m.Store()
 	sn, exists, err := m.GetServiceNode(address)
 	if err != nil {
@@ -279,7 +280,7 @@ func (m *PrePersistenceContext) SetServiceNodePauseHeight(address []byte, height
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	if height == heightNotUsed {
+	if height == typesGenesis.HeightNotUsed {
 		sn.Paused = false
 	} else {
 		sn.Paused = true
@@ -295,13 +296,13 @@ func (m *PrePersistenceContext) SetServiceNodePauseHeight(address []byte, height
 func (m *PrePersistenceContext) GetServiceNodesPerSessionAt(height int64) (int, error) {
 	params, err := m.GetParams(height)
 	if err != nil {
-		return ZeroInt, err
+		return typesGenesis.ZeroInt, err
 	}
 	return int(params.ServiceNodesPerSession), nil
 }
 
 func (m *PrePersistenceContext) GetServiceNodeCount(chain string, height int64) (int, error) {
-	codec := GetCodec()
+	codec := typesGenesis.GetCodec()
 	var it iterator.Iterator
 	count := 0
 	if m.Height == height {
@@ -322,9 +323,9 @@ func (m *PrePersistenceContext) GetServiceNodeCount(chain string, height int64) 
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}
-		node := ServiceNode{}
+		node := typesGenesis.ServiceNode{}
 		if err := codec.Unmarshal(bz, &node); err != nil {
-			return ZeroInt, err
+			return typesGenesis.ZeroInt, err
 		}
 		for _, c := range node.Chains {
 			if c == chain {

@@ -9,8 +9,9 @@ import (
 	"github.com/pokt-network/pocket/utility"
 
 	"github.com/pokt-network/pocket/consensus"
-	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -25,13 +26,13 @@ type Node struct {
 
 func Create(cfg *config.Config) (n *Node, err error) {
 	// TODO(design): initialize the state singleton until we have a proper solution for this.
-	_ = types.GetTestState(cfg)
+	_ = typesGenesis.GetNodeState(cfg)
 
-	persistenceMod, err := persistence.Create(cfg)
+	// persistenceMod, err := persistence.Create(cfg)
+	prePersistenceMod, err := pre_persistence.Create(cfg)
 	if err != nil {
 		return nil, err
 	}
-
 	// TODO(derrandz): Replace with real P2P module
 	// p2pMod, err := p2p.Create(cfg)
 	pre2pMod, err := pre2p.Create(cfg)
@@ -40,8 +41,8 @@ func Create(cfg *config.Config) (n *Node, err error) {
 	}
 
 	// TODO(andrew): Replace with real Utility module
-	// utilityMod, err := utility.Create(cfg)
-	mockedUtilityMod, err := utility.CreateMockedModule(cfg)
+	utilityMod, err := utility.Create(cfg)
+	// mockedUtilityMod, err := utility.CreateMockedModule(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +52,7 @@ func Create(cfg *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(persistenceMod, pre2pMod, mockedUtilityMod, consensusMod)
+	bus, err := CreateBus(prePersistenceMod, pre2pMod, utilityMod, consensusMod)
 	if err != nil {
 		return nil, err
 	}

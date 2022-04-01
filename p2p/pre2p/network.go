@@ -5,24 +5,24 @@ import (
 	"log"
 	"net"
 
-	pre2ptypes "github.com/pokt-network/pocket/p2p/pre2p/types"
+	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 const (
 	NetworkProtocol = "tcp4"
 )
 
-var _ pre2ptypes.Network = &network{}
+var _ typesPre2P.Network = &network{}
 
 type network struct {
 	// TODO(team): This address book is currently static and does not update dynamically as new peers come on/offline.
 	// TODO(olshansky): Make sure that self (the current node) is not added to the list to avoid self-broadcasts.
-	AddrBook []*pre2ptypes.NetworkPeer
+	AddrBook []*typesPre2P.NetworkPeer
 }
 
-func ConnectToValidatorNetwork(validators types.ValMap) (n pre2ptypes.Network) {
+func ConnectToValidatorNetwork(validators map[string]*typesGenesis.Validator) (n typesPre2P.Network) {
 	n = &network{}
 	for _, v := range validators {
 		err := n.(*network).connectToValidator(v)
@@ -80,19 +80,24 @@ func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) error {
 }
 
 // TODO(hack): Publically exposed for testing purposes only.
-func (n *network) GetAddrBook() []*pre2ptypes.NetworkPeer {
+func (n *network) GetAddrBook() []*typesPre2P.NetworkPeer {
 	return n.AddrBook
 }
 
-func (n *network) connectToValidator(v *types.Validator) error {
-	tcpAddr, err := net.ResolveTCPAddr(NetworkProtocol, fmt.Sprintf("%s:%d", v.Host, v.Port))
+func (n *network) connectToValidator(v *typesGenesis.Validator) error {
+	tcpAddr, err := net.ResolveTCPAddr(NetworkProtocol, v.ServiceUrl)
 	if err != nil {
 		return fmt.Errorf("error resolving addr: %v", err)
 	}
 
-	peer := &pre2ptypes.NetworkPeer{
+	pubKey, err := cryptoPocket.NewPublicKeyFromBytes(v.PublicKey)
+	if err != nil {
+		return err
+	}
+
+	peer := &typesPre2P.NetworkPeer{
 		ConsensusAddr: tcpAddr,
-		PublicKey:     v.PublicKey,
+		PublicKey:     pubKey,
 	}
 
 	n.AddrBook = append(n.AddrBook, peer)

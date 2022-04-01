@@ -6,12 +6,12 @@ import (
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types"
 )
 
 const (
@@ -63,7 +63,7 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	}
 
 	address := cfg.PrivateKey.Address().String()
-	valIdMap, idValMap := typesCons.GetValAddrToIdMap(types.GetTestState(nil).ValidatorMap)
+	valIdMap, idValMap := typesCons.GetValAddrToIdMap(typesGenesis.GetNodeState(nil).ValidatorMap)
 
 	m := &consensusModule{
 		bus:        nil,

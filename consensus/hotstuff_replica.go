@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 type HotstuffReplicaMessageHandler struct{}
@@ -198,7 +198,7 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 	}
 
 	msgToJustify := qcToHotstuffMessage(qc)
-	valMap := types.GetTestState(nil).ValidatorMap
+	valMap := typesGenesis.GetNodeState(nil).ValidatorMap
 	numValid := 0
 	for _, partialSig := range qc.ThresholdSignature.Signatures {
 		validator, ok := valMap[partialSig.Address]

@@ -6,7 +6,7 @@ import (
 	"unsafe"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 // TODO(olshansky): Sync with Andrew on the type of validation we need here.
@@ -41,7 +41,7 @@ func (m *consensusModule) prepareBlock() (*typesCons.BlockConsensusTemp, error) 
 		Height:            int64(m.Height),
 		Hash:              appHash,
 		NumTxs:            uint32(len(txs)),
-		LastBlockHash:     types.GetTestState(nil).AppHash, // testing temporary
+		LastBlockHash:     typesGenesis.GetNodeState(nil).AppHash, // testing temporary
 		ProposerAddress:   m.privateKey.Address(),
 		QuorumCertificate: nil,
 	}
@@ -108,7 +108,7 @@ func (m *consensusModule) commitBlock(block *typesCons.BlockConsensusTemp) error
 	m.utilityContext.ReleaseContext()
 	m.utilityContext = nil
 
-	state := types.GetTestState(nil)
+	state := typesGenesis.GetNodeState(nil)
 	state.UpdateAppHash(hex.EncodeToString(block.BlockHeader.Hash))
 	state.UpdateBlockHeight(uint64(block.BlockHeader.Height))
 

@@ -6,8 +6,10 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
 )
 
@@ -250,7 +252,7 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	}
 }
 
-func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []*pre_persistence.Account {
+func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []*genesis.Account {
 	accs, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllAccounts(0)
 	if err != nil {
 		t.Fatal(err)
@@ -258,7 +260,7 @@ func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []*pre_pers
 	return accs
 }
 
-func GetAllTestingPools(t *testing.T, ctx utility.UtilityContext) []*pre_persistence.Pool {
+func GetAllTestingPools(t *testing.T, ctx utility.UtilityContext) []*genesis.Pool {
 	accs, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllPools(0)
 	if err != nil {
 		t.Fatal(err)

@@ -1,10 +1,9 @@
 {
   "root_dir": "/go/src/github.com/pocket-network",
   "genesis": "build/config/genesis.json",
-  "private_key": "a33d534a7622f7ca395b47448cefc1f80620c873ce7fdc43b36937887fcebbf43292861092ca961878a303481dd91dfdc4a6fcc960b33f8e04bc23b34cac675e",
+  "private_key": "2c00000000000000000000000000000000000000000000000000000000000000f868bcc508133899cc47b612e4f7d9d5dacc90ce1f28214a97b651baa00bf6e4",
   "pre2p": {
-    "consensus_port": 8080,
-    "debug_port": 9080
+    "consensus_port": 8080
   },
   "p2p": {
     "protocol": "tcp",
@@ -25,6 +24,11 @@
       "manual": true,
       "debug_time_between_steps_msec": 1000
     }
+  },
+  "pre_persistence": {
+    "capacity": 99999,
+    "mempool_max_bytes": 99999,
+    "mempool_max_txs": 99999
   },
   "persistence": {},
   "utility": {}

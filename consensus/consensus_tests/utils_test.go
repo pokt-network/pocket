@@ -22,10 +22,15 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
+
+// The number at which to start incrementing the seeds
+// used for random key generation.
+const genesisConfigSeedStart = uint32(42)
 
 // If this is set to true, consensus unit tests will fail if additional unexpected messages are received.
 // This slows down the tests because we always fail until the timeout specified by the test before continuing
@@ -58,7 +63,7 @@ func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
 	for i := uint32(1); i <= uint32(n); i++ {
 		// Deterministically generate a private key for the node
 		seed := make([]byte, ed25519.PrivateKeySize)
-		binary.LittleEndian.PutUint32(seed, i)
+		binary.LittleEndian.PutUint32(seed, i+genesisConfigSeedStart)
 		pk, err := cryptoPocket.NewPrivateKeyFromSeed(seed)
 		require.NoError(t, err)
 
@@ -115,7 +120,7 @@ func CreateTestConsensusPocketNode(
 	cfg *config.Config,
 	testChannel modules.EventsChannel,
 ) *shared.Node {
-	_ = types.GetTestState(cfg)
+	_ = typesGenesis.GetNodeState(cfg)
 
 	consensusMod, err := consensus.Create(cfg)
 	require.NoError(t, err)
@@ -342,54 +347,19 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 // validated before returning the string in case changes in the
 // configurations are made.
 func genesisJson(t *testing.T) string {
-	genesisJsonStr := `{
+	genesisJsonStr := fmt.Sprintf(`{
+		"genesis_state_configs": {
+			"num_validators": 4,
+			"num_applications": 0,
+			"num_fisherman": 0,
+			"num_servicers": 0,
+			"keys_seed_start": %d
+		},
 		"genesis_time": "2022-01-19T00:00:00.000000Z",
-		"app_hash": "genesis_block_or_state_hash",
-		"validators": [
-			{
-				"address": "6f1e5b61ed9a821457aa6b4d7c2a2b37715ffb16",
-				"public_key": "9be3287795907809407e14439ff198d5bfc7dce6f9bc743cb369146f610b4801",
-				"jailed": false,
-				"upokt": 5000000000000,
-				"host": "node4",
-				"port": 8080,
-				"debug_port": 9080,
-				"chains": ["0001", "0021"]
-			},
-			{
-				"address": "db0743e2dcba9ebf2419bde0881beea966689a26",
-				"public_key": "dadbd184a2d526f1ebdd5c06fdad9359b228759b4d7f79d66689fa254aad8546",
-				"jailed": false,
-				"upokt": 5000000000000,
-				"host": "node3",
-				"port": 8080,
-				"debug_port": 9080,
-				"chains": ["0001", "0021"]
-			},
-			{
-				"address": "e3c1b362c0df36f6b370b8b1479b67dad96392b2",
-				"public_key": "6b79c57e6a095239282c04818e96112f3f03a4001ba97a564c23852a3f1ea5fc",
-				"jailed": false,
-				"upokt": 5000000000000,
-				"host": "node2",
-				"port": 8080,
-				"debug_port": 9080,
-				"chains": ["0001", "0021"]
-			},
-			{
-				"address": "fa4d86c3b551aa6cd7c3759d040c037ef2c6379f",
-				"public_key": "cecc1507dc1ddd7295951c290888f095adb9044d1b73d696e6df065d683bd4fc",
-				"jailed": false,
-				"upokt": 5000000000000,
-				"host": "1",
-				"port": 8080,
-				"debug_port": 9080,
-				"chains": ["0001", "0021"]
-			}
-		]
-	}`
+		"app_hash": "genesis_block_or_state_hash"
+	}`, genesisConfigSeedStart)
 
-	_, err := types.PocketGenesisFromJSON([]byte(genesisJsonStr))
+	_, err := typesGenesis.PocketGenesisFromJSON([]byte(genesisJsonStr))
 	require.NoError(t, err)
 
 	return genesisJsonStr

@@ -1,4 +1,4 @@
-package pre_persistence
+package genesis
 
 import (
 	"github.com/pokt-network/pocket/shared/types"

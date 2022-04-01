@@ -1,5 +1,6 @@
-// See https://github.com/pokt-network/pocket-network-genesis as a reference
-package types
+package genesis
+
+// TODO(team): Consolidate this with `shared/genesis.go`
 
 import (
 	"encoding/json"
@@ -9,6 +10,9 @@ import (
 )
 
 type Genesis struct {
+	// TODO(olshansky): Discuss this structure with Andrew.
+	GenesisStateConfig *NewGenesisStateConfigs `json:"genesis_state_configs"`
+
 	GenesisTime time.Time    `json:"genesis_time"`
 	AppHash     string       `json:"app_hash"`
 	Validators  []*Validator `json:"validators"`
@@ -52,7 +56,7 @@ func (genesis *Genesis) Validate() error {
 	}
 
 	// TODO: validate each account.
-	if len(genesis.Validators) == 0 {
+	if len(genesis.Validators) == 0 && genesis.GenesisStateConfig == nil {
 		return fmt.Errorf("genesis must contain at least one validator")
 	}
 
@@ -61,7 +65,7 @@ func (genesis *Genesis) Validate() error {
 	}
 
 	for _, validator := range genesis.Validators {
-		if err := validator.Validate(); err != nil {
+		if err := validator.ValidateBasic(); err != nil {
 			return fmt.Errorf("validator in genesis is invalid: %w", err)
 		}
 	}

@@ -6,10 +6,9 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *UtilityContext) HandleMessageStakeValidator(message *utilTypes.MessageStakeValidator) types.Error {
+func (u *UtilityContext) HandleMessageStakeValidator(message *typesUtil.MessageStakeValidator) types.Error {
 	publicKey, er := crypto.NewPublicKeyFromBytes(message.PublicKey)
 	if er != nil {
 		return types.ErrNewPublicKeyFromBytes(er)
@@ -40,7 +39,7 @@ func (u *UtilityContext) HandleMessageStakeValidator(message *utilTypes.MessageS
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(utilTypes.ValidatorStakePoolName, amount); err != nil {
+	if err := u.AddPoolAmount(typesUtil.ValidatorStakePoolName, amount); err != nil {
 		return err
 	}
 	// ensure Validator doesn't already exist
@@ -58,7 +57,7 @@ func (u *UtilityContext) HandleMessageStakeValidator(message *utilTypes.MessageS
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageEditStakeValidator(message *utilTypes.MessageEditStakeValidator) types.Error {
+func (u *UtilityContext) HandleMessageEditStakeValidator(message *typesUtil.MessageEditStakeValidator) types.Error {
 	exists, err := u.GetValidatorExists(message.Address)
 	if err != nil {
 		return err
@@ -84,7 +83,7 @@ func (u *UtilityContext) HandleMessageEditStakeValidator(message *utilTypes.Mess
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(utilTypes.ValidatorStakePoolName, amountToAdd); err != nil {
+	if err := u.AddPoolAmount(typesUtil.ValidatorStakePoolName, amountToAdd); err != nil {
 		return err
 	}
 	// insert the validator structure
@@ -94,14 +93,14 @@ func (u *UtilityContext) HandleMessageEditStakeValidator(message *utilTypes.Mess
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageUnstakeValidator(message *utilTypes.MessageUnstakeValidator) types.Error {
+func (u *UtilityContext) HandleMessageUnstakeValidator(message *typesUtil.MessageUnstakeValidator) types.Error {
 	status, err := u.GetValidatorStatus(message.Address)
 	if err != nil {
 		return err
 	}
 	// validate is staked
-	if status != utilTypes.StakedStatus {
-		return types.ErrInvalidStatus(status, utilTypes.StakedStatus)
+	if status != typesUtil.StakedStatus {
+		return types.ErrInvalidStatus(status, typesUtil.StakedStatus)
 	}
 	unstakingHeight, err := u.CalculateValidatorUnstakingHeight()
 	if err != nil {
@@ -120,7 +119,7 @@ func (u *UtilityContext) UnstakeValidatorsThatAreReady() types.Error {
 	}
 	// If unstaking even a single validator fails, the whole operation falls through.
 	for _, validator := range validatorsReadyToUnstake {
-		if err := u.SubPoolAmount(utilTypes.ValidatorStakePoolName, validator.GetStakeAmount()); err != nil {
+		if err := u.SubPoolAmount(typesUtil.ValidatorStakePoolName, validator.GetStakeAmount()); err != nil {
 			return err
 		}
 		if err := u.AddAccountAmountString(validator.GetOutputAddress(), validator.GetStakeAmount()); err != nil {
@@ -152,7 +151,7 @@ func (u *UtilityContext) BeginUnstakingMaxPausedValidators() types.Error {
 	return nil
 }
 
-func (u *UtilityContext) HandleMessagePauseValidator(message *utilTypes.MessagePauseValidator) types.Error {
+func (u *UtilityContext) HandleMessagePauseValidator(message *typesUtil.MessagePauseValidator) types.Error {
 	height, err := u.GetValidatorPauseHeightIfExists(message.Address)
 	if err != nil {
 		return err
@@ -170,7 +169,7 @@ func (u *UtilityContext) HandleMessagePauseValidator(message *utilTypes.MessageP
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageUnpauseValidator(message *utilTypes.MessageUnpauseValidator) types.Error {
+func (u *UtilityContext) HandleMessageUnpauseValidator(message *typesUtil.MessageUnpauseValidator) types.Error {
 	pausedHeight, err := u.GetValidatorPauseHeightIfExists(message.Address)
 	if err != nil {
 		return err
@@ -189,7 +188,7 @@ func (u *UtilityContext) HandleMessageUnpauseValidator(message *utilTypes.Messag
 	if latestHeight < int64(minPauseBlocks)+pausedHeight {
 		return types.ErrNotReadyToUnpause()
 	}
-	if err := u.SetValidatorPauseHeight(message.Address, utilTypes.HeightNotUsed); err != nil {
+	if err := u.SetValidatorPauseHeight(message.Address, typesUtil.HeightNotUsed); err != nil {
 		return err
 	}
 	return nil
@@ -214,7 +213,7 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 		// handle if over the threshold
 		if numberOfMissedBlocks >= maxMissedBlocks {
 			// pause the validator and reset missed blocks
-			if err := u.SetValidatorPauseHeightAndMissedBlocks(address, latestBlockHeight, utilTypes.HeightNotUsed); err != nil {
+			if err := u.SetValidatorPauseHeightAndMissedBlocks(address, latestBlockHeight, typesUtil.HeightNotUsed); err != nil {
 				return err
 			}
 			// burn validator for missing blocks
@@ -233,11 +232,11 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 }
 
 func (u *UtilityContext) HandleProposalRewards(proposer []byte) types.Error {
-	feesAndRewardsCollected, err := u.GetPoolAmount(utilTypes.FeePoolName)
+	feesAndRewardsCollected, err := u.GetPoolAmount(typesUtil.FeePoolName)
 	if err != nil {
 		return err
 	}
-	if err := u.SetPoolAmount(utilTypes.FeePoolName, big.NewInt(0)); err != nil {
+	if err := u.SetPoolAmount(typesUtil.FeePoolName, big.NewInt(0)); err != nil {
 		return err
 	}
 	proposerCutPercentage, err := u.GetProposerPercentageOfFees()
@@ -256,13 +255,13 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) types.Error {
 	if err := u.AddAccountAmount(proposer, amountToProposer); err != nil {
 		return err
 	}
-	if err := u.AddPoolAmount(utilTypes.DAOPoolName, amountToDAO); err != nil {
+	if err := u.AddPoolAmount(typesUtil.DAOPoolName, amountToDAO); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageDoubleSign(message *utilTypes.MessageDoubleSign) types.Error {
+func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubleSign) types.Error {
 	latestHeight, err := u.GetLatestHeight()
 	if err != nil {
 		return err
@@ -306,7 +305,7 @@ func (u *UtilityContext) BurnValidator(address []byte, percentage int) types.Err
 	}
 	newTokensAfterBurn := big.NewInt(0).Sub(tokens, truncatedTokens)
 	// remove from pool
-	if err := u.SubPoolAmount(utilTypes.ValidatorStakePoolName, types.BigIntToString(truncatedTokens)); err != nil {
+	if err := u.SubPoolAmount(typesUtil.ValidatorStakePoolName, types.BigIntToString(truncatedTokens)); err != nil {
 		return err
 	}
 	// remove from validator
@@ -342,7 +341,7 @@ func (u *UtilityContext) GetValidatorExists(address []byte) (bool, types.Error) 
 
 func (u *UtilityContext) InsertValidator(address, publicKey, output []byte, serviceURL, amount string) types.Error {
 	store := u.Store()
-	err := store.InsertValidator(address, publicKey, output, false, utilTypes.StakedStatus, serviceURL, amount, utilTypes.HeightNotUsed, utilTypes.HeightNotUsed)
+	err := store.InsertValidator(address, publicKey, output, false, typesUtil.StakedStatus, serviceURL, amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	if err != nil {
 		return types.ErrInsert(err)
 	}
@@ -372,7 +371,7 @@ func (u *UtilityContext) GetValidatorsReadyToUnstake() ([]*types.UnstakingActor,
 	if err != nil {
 		return nil, err
 	}
-	unstakingValidators, er := store.GetValidatorsReadyToUnstake(latestHeight, utilTypes.UnstakingStatus)
+	unstakingValidators, er := store.GetValidatorsReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return nil, types.ErrGetReadyToUnstake(er)
 	}
@@ -385,7 +384,7 @@ func (u *UtilityContext) UnstakeValidatorsPausedBefore(pausedBeforeHeight int64)
 	if err != nil {
 		return err
 	}
-	er := store.SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, utilTypes.UnstakingStatus)
+	er := store.SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return types.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}
@@ -396,7 +395,7 @@ func (u *UtilityContext) GetValidatorStatus(address []byte) (int, types.Error) {
 	store := u.Store()
 	status, er := store.GetValidatorStatus(address)
 	if er != nil {
-		return utilTypes.ZeroInt, types.ErrGetStatus(er)
+		return typesUtil.ZeroInt, types.ErrGetStatus(er)
 	}
 	return status, nil
 }
@@ -412,7 +411,7 @@ func (u *UtilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks i
 
 func (u *UtilityContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64) types.Error {
 	store := u.Store()
-	if er := store.SetValidatorUnstakingHeightAndStatus(address, unstakingHeight, utilTypes.UnstakingStatus); er != nil {
+	if er := store.SetValidatorUnstakingHeightAndStatus(address, unstakingHeight, typesUtil.UnstakingStatus); er != nil {
 		return types.ErrSetUnstakingHeightAndStatus(er)
 	}
 	return nil
@@ -422,7 +421,7 @@ func (u *UtilityContext) GetValidatorPauseHeightIfExists(address []byte) (int64,
 	store := u.Store()
 	ValidatorPauseHeight, er := store.GetValidatorPauseHeightIfExists(address)
 	if er != nil {
-		return utilTypes.ZeroInt, types.ErrGetPauseHeight(er)
+		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
 	}
 	return ValidatorPauseHeight, nil
 }
@@ -438,11 +437,11 @@ func (u *UtilityContext) SetValidatorPauseHeight(address []byte, height int64) t
 func (u *UtilityContext) CalculateValidatorUnstakingHeight() (int64, types.Error) {
 	unstakingBlocks, err := u.GetValidatorUnstakingBlocks()
 	if err != nil {
-		return utilTypes.ZeroInt, err
+		return typesUtil.ZeroInt, err
 	}
 	unstakingHeight, err := u.CalculateUnstakingHeight(unstakingBlocks)
 	if err != nil {
-		return utilTypes.ZeroInt, err
+		return typesUtil.ZeroInt, err
 	}
 	return unstakingHeight, nil
 }
@@ -451,7 +450,7 @@ func (u *UtilityContext) GetValidatorMissedBlocks(address []byte) (int, types.Er
 	store := u.Store()
 	missedBlocks, er := store.GetValidatorMissedBlocks(address)
 	if er != nil {
-		return utilTypes.ZeroInt, types.ErrGetMissedBlocks(er)
+		return typesUtil.ZeroInt, types.ErrGetMissedBlocks(er)
 	}
 	return missedBlocks, nil
 }
@@ -486,7 +485,7 @@ func (u *UtilityContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, 
 	return nil
 }
 
-func (u *UtilityContext) GetMessageStakeValidatorSignerCandidates(msg *utilTypes.MessageStakeValidator) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageStakeValidatorSignerCandidates(msg *typesUtil.MessageStakeValidator) ([][]byte, types.Error) {
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(er)
@@ -497,7 +496,7 @@ func (u *UtilityContext) GetMessageStakeValidatorSignerCandidates(msg *utilTypes
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageEditStakeValidatorSignerCandidates(msg *utilTypes.MessageEditStakeValidator) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageEditStakeValidatorSignerCandidates(msg *typesUtil.MessageEditStakeValidator) ([][]byte, types.Error) {
 	output, err := u.GetValidatorOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -508,7 +507,7 @@ func (u *UtilityContext) GetMessageEditStakeValidatorSignerCandidates(msg *utilT
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnstakeValidatorSignerCandidates(msg *utilTypes.MessageUnstakeValidator) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageUnstakeValidatorSignerCandidates(msg *typesUtil.MessageUnstakeValidator) ([][]byte, types.Error) {
 	output, err := u.GetValidatorOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -519,7 +518,7 @@ func (u *UtilityContext) GetMessageUnstakeValidatorSignerCandidates(msg *utilTyp
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnpauseValidatorSignerCandidates(msg *utilTypes.MessageUnpauseValidator) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageUnpauseValidatorSignerCandidates(msg *typesUtil.MessageUnpauseValidator) ([][]byte, types.Error) {
 	output, err := u.GetValidatorOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -530,7 +529,7 @@ func (u *UtilityContext) GetMessageUnpauseValidatorSignerCandidates(msg *utilTyp
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessagePauseValidatorSignerCandidates(msg *utilTypes.MessagePauseValidator) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessagePauseValidatorSignerCandidates(msg *typesUtil.MessagePauseValidator) ([][]byte, types.Error) {
 	output, err := u.GetValidatorOutputAddress(msg.Address)
 	if err != nil {
 		return nil, err
@@ -541,7 +540,7 @@ func (u *UtilityContext) GetMessagePauseValidatorSignerCandidates(msg *utilTypes
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageDoubleSignSignerCandidates(msg *utilTypes.MessageDoubleSign) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageDoubleSignSignerCandidates(msg *typesUtil.MessageDoubleSign) ([][]byte, types.Error) {
 	return [][]byte{msg.ReporterAddress}, nil
 }
 
@@ -557,7 +556,7 @@ func (u *UtilityContext) GetValidatorOutputAddress(operator []byte) ([]byte, typ
 func (u *UtilityContext) CalculateUnstakingHeight(unstakingBlocks int64) (int64, types.Error) {
 	latestHeight, err := u.GetLatestHeight()
 	if err != nil {
-		return utilTypes.ZeroInt, err
+		return typesUtil.ZeroInt, err
 	}
 	return unstakingBlocks + latestHeight, nil
 }
