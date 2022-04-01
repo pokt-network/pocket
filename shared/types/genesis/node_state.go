@@ -10,9 +10,9 @@ import (
 	"github.com/pokt-network/pocket/shared/config"
 )
 
-// TODO: Return this as a singleton!
-// Consider using the singleton pattern? https://medium.com/golang-issue/how-singleton-pattern-works-with-golang-2fdd61cd5a7f
-
+// TODO(team): This structure is a proxy into the current / active state of the network
+// containing information such as the current validator map. As a next step, we can move
+// all of this data over into the persistence module.
 type NodeState struct {
 	GenesisState *GenesisState
 
