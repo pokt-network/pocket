@@ -51,7 +51,7 @@ func (m *PrePersistenceContext) GetFisherman(address []byte) (fish *typesGenesis
 }
 
 func (m *PrePersistenceContext) GetAllFishermen(height int64) (fishermen []*typesGenesis.Fisherman, err error) {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	fishermen = make([]*typesGenesis.Fisherman, 0)
 	var it iterator.Iterator
 	if height == m.Height {
@@ -86,7 +86,7 @@ func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte
 	if _, exists, _ := m.GetFisherman(address); exists {
 		return fmt.Errorf("already exists in world state")
 	}
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	db := m.Store()
 	key := append(FishermanPrefixKey, address...)
 	fish := typesGenesis.Fisherman{
@@ -113,22 +113,22 @@ func (m *PrePersistenceContext) UpdateFisherman(address []byte, serviceURL strin
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	db := m.Store()
 	key := append(FishermanPrefixKey, address...)
 	// compute new values
-	stakedTokens, err := typesGenesis.StringToBigInt(fish.StakedTokens)
+	stakedTokens, err := types.StringToBigInt(fish.StakedTokens)
 	if err != nil {
 		return err
 	}
-	stakedTokensToAddI, err := typesGenesis.StringToBigInt(amountToAdd)
+	stakedTokensToAddI, err := types.StringToBigInt(amountToAdd)
 	if err != nil {
 		return err
 	}
 	stakedTokens.Add(stakedTokens, stakedTokensToAddI)
 	// update values
 	fish.ServiceUrl = serviceURL
-	fish.StakedTokens = typesGenesis.BigIntToString(stakedTokens)
+	fish.StakedTokens = types.BigIntToString(stakedTokens)
 	fish.Chains = chains
 	bz, err := codec.Marshal(fish)
 	if err != nil {
@@ -148,7 +148,7 @@ func (m *PrePersistenceContext) DeleteFisherman(address []byte) error {
 
 func (m *PrePersistenceContext) GetFishermanReadyToUnstake(height int64, status int) (fisherman []*types.UnstakingActor, err error) {
 	db := m.Store()
-	unstakingKey := append(UnstakingFishermanPrefixKey, typesGenesis.Int64ToBytes(height)...)
+	unstakingKey := append(UnstakingFishermanPrefixKey, types.Int64ToBytes(height)...)
 	if has := db.Contains(unstakingKey); !has {
 		return nil, nil
 	}
@@ -170,10 +170,10 @@ func (m *PrePersistenceContext) GetFishermanReadyToUnstake(height int64, status 
 func (m *PrePersistenceContext) GetFishermanStatus(address []byte) (status int, err error) {
 	fish, exists, err := m.GetFisherman(address)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	if !exists {
-		return typesGenesis.ZeroInt, fmt.Errorf("does not exist in world state")
+		return types.ZeroInt, fmt.Errorf("does not exist in world state")
 	}
 	return int(fish.Status), nil
 }
@@ -186,7 +186,7 @@ func (m *PrePersistenceContext) SetFishermanUnstakingHeightAndStatus(address []b
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	unstakingActors := types.UnstakingActors{}
 	db := m.Store()
 	key := append(FishermanPrefixKey, address...)
@@ -199,7 +199,7 @@ func (m *PrePersistenceContext) SetFishermanUnstakingHeightAndStatus(address []b
 	if err := db.Put(key, bz); err != nil {
 		return err
 	}
-	unstakingKey := append(UnstakingFishermanPrefixKey, typesGenesis.Int64ToBytes(unstakingHeight)...)
+	unstakingKey := append(UnstakingFishermanPrefixKey, types.Int64ToBytes(unstakingHeight)...)
 	if found := db.Contains(unstakingKey); found {
 		val, err := db.Get(unstakingKey)
 		if err != nil {
@@ -224,10 +224,10 @@ func (m *PrePersistenceContext) SetFishermanUnstakingHeightAndStatus(address []b
 func (m *PrePersistenceContext) GetFishermanPauseHeightIfExists(address []byte) (int64, error) {
 	fish, exists, err := m.GetFisherman(address)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	if !exists {
-		return typesGenesis.ZeroInt, fmt.Errorf("does not exist in world state")
+		return types.ZeroInt, fmt.Errorf("does not exist in world state")
 	}
 	return int64(fish.PausedHeight), nil
 }
@@ -235,7 +235,7 @@ func (m *PrePersistenceContext) GetFishermanPauseHeightIfExists(address []byte) 
 // SetFishermansStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
 func (m *PrePersistenceContext) SetFishermansStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	db := m.Store()
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	it := db.NewIterator(&util.Range{
 		Start: FishermanPrefixKey,
 		Limit: PrefixEndBytes(FishermanPrefixKey),
@@ -269,7 +269,7 @@ func (m *PrePersistenceContext) SetFishermansStatusAndUnstakingHeightPausedBefor
 }
 
 func (m *PrePersistenceContext) SetFishermanPauseHeight(address []byte, height int64) error {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	db := m.Store()
 	fish, exists, err := m.GetFisherman(address)
 	if err != nil {
@@ -278,7 +278,7 @@ func (m *PrePersistenceContext) SetFishermanPauseHeight(address []byte, height i
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	if height == typesGenesis.HeightNotUsed {
+	if height == types.HeightNotUsed {
 		fish.Paused = false
 	} else {
 		fish.Paused = true

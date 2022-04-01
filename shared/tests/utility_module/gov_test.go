@@ -716,7 +716,7 @@ func TestUtilityContext_GetValidatorUnstakingBlocks(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
-	cdc := typesUtil.UtilityCodec()
+	cdc := types.GetCodec()
 	ctx := NewTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.MissedBlocksBurnPercentage)

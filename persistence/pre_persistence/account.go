@@ -33,7 +33,7 @@ func (m *PrePersistenceContext) SubtractPoolAmount(name string, amount string) e
 }
 
 func (m *PrePersistenceContext) operationPoolAmount(name string, amount string, op func(*big.Int, *big.Int) error) error {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	p := typesGenesis.Pool{}
 	db := m.Store()
 	key := append(PoolPrefixKey, []byte(name)...)
@@ -45,18 +45,18 @@ func (m *PrePersistenceContext) operationPoolAmount(name string, amount string, 
 	if err != nil {
 		return err
 	}
-	s, err := typesGenesis.StringToBigInt(p.Account.Amount)
+	s, err := types.StringToBigInt(p.Account.Amount)
 	if err != nil {
 		return err
 	}
-	s2, err := typesGenesis.StringToBigInt(amount)
+	s2, err := types.StringToBigInt(amount)
 	if err != nil {
 		return err
 	}
 	if err := op(s, s2); err != nil {
 		return err
 	}
-	p.Account.Amount = typesGenesis.BigIntToString(s)
+	p.Account.Amount = types.BigIntToString(s)
 	bz, err := codec.Marshal(&p)
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func (m *PrePersistenceContext) operationPoolAmount(name string, amount string, 
 }
 
 func (m *PrePersistenceContext) InsertPool(name string, address []byte, amount string) error {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	p := typesGenesis.Pool{
 		Name: name,
 		Account: &typesGenesis.Account{
@@ -83,7 +83,7 @@ func (m *PrePersistenceContext) InsertPool(name string, address []byte, amount s
 }
 
 func (m *PrePersistenceContext) SetPoolAmount(name string, amount string) error {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	p := typesGenesis.Pool{}
 	db := m.Store()
 	key := append(PoolPrefixKey, []byte(name)...)
@@ -104,23 +104,23 @@ func (m *PrePersistenceContext) SetPoolAmount(name string, amount string) error 
 }
 
 func (m *PrePersistenceContext) GetPoolAmount(name string) (amount string, err error) {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	p := typesGenesis.Pool{}
 	db := m.Store()
 	key := append(PoolPrefixKey, []byte(name)...)
 	val, err := db.Get(key)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	err = codec.Unmarshal(val, &p)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return p.Account.Amount, nil
 }
 
 func (m *PrePersistenceContext) GetAllPools(height int64) (pools []*typesGenesis.Pool, err error) {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	pools = make([]*typesGenesis.Pool, 0)
 	var it iterator.Iterator
 	if height == m.Height {
@@ -152,7 +152,7 @@ func (m *PrePersistenceContext) GetAllPools(height int64) (pools []*typesGenesis
 }
 
 func (m *PrePersistenceContext) operationAccountAmount(address []byte, amount string, op func(a, b *big.Int) error) error {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	a := typesGenesis.Account{}
 	db := m.Store()
 	key := append(AccountPrefixKey, address...)
@@ -164,18 +164,18 @@ func (m *PrePersistenceContext) operationAccountAmount(address []byte, amount st
 	if err != nil {
 		return err
 	}
-	s, err := typesGenesis.StringToBigInt(a.Amount)
+	s, err := types.StringToBigInt(a.Amount)
 	if err != nil {
 		return err
 	}
-	s2, err := typesGenesis.StringToBigInt(amount)
+	s2, err := types.StringToBigInt(amount)
 	if err != nil {
 		return err
 	}
 	if err := op(s, s2); err != nil {
 		return err
 	}
-	a.Amount = typesGenesis.BigIntToString(s)
+	a.Amount = types.BigIntToString(s)
 	bz, err := codec.Marshal(&a)
 	if err != nil {
 		return err
@@ -203,23 +203,23 @@ func (m *PrePersistenceContext) SubtractAccountAmount(address []byte, amount str
 }
 
 func (m *PrePersistenceContext) GetAccountAmount(address []byte) (string, error) {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	account := typesGenesis.Account{}
 	db := m.Store()
 	key := append(AccountPrefixKey, address...)
 	val, err := db.Get(key)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	err = codec.Unmarshal(val, &account)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return account.Amount, nil
 }
 
 func (m *PrePersistenceContext) SetAccountAmount(address []byte, amount string) error {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	account := typesGenesis.Account{
 		Address: address,
 		Amount:  amount,
@@ -234,7 +234,7 @@ func (m *PrePersistenceContext) SetAccountAmount(address []byte, amount string) 
 }
 
 func (m *PrePersistenceContext) GetAllAccounts(height int64) (accs []*typesGenesis.Account, err error) {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	accs = make([]*typesGenesis.Account, 0)
 	var it iterator.Iterator
 	if height == m.Height {

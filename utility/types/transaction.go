@@ -11,7 +11,7 @@ import (
 
 func TransactionFromBytes(transaction []byte) (*Transaction, types.Error) {
 	tx := &Transaction{}
-	if err := UtilityCodec().Unmarshal(transaction, tx); err != nil {
+	if err := types.GetCodec().Unmarshal(transaction, tx); err != nil {
 		return nil, types.ErrUnmarshalTransaction(err)
 	}
 	return tx, nil
@@ -25,7 +25,7 @@ func (tx *Transaction) ValidateBasic() types.Error {
 	if tx.Nonce == "" {
 		return types.ErrEmptyNonce()
 	}
-	if _, err := UtilityCodec().FromAny(tx.Msg); err != nil {
+	if _, err := types.GetCodec().FromAny(tx.Msg); err != nil {
 		return types.ErrProtoFromAny(err)
 	}
 	if tx.Signature == nil || tx.Signature.Signature == nil {
@@ -52,7 +52,7 @@ func (tx *Transaction) ValidateBasic() types.Error {
 }
 
 func (tx *Transaction) Message() (Message, types.Error) {
-	codec := UtilityCodec()
+	codec := types.GetCodec()
 	msg, er := codec.FromAny(tx.Msg)
 	if er != nil {
 		return nil, er
@@ -93,7 +93,7 @@ func (tx *Transaction) SignBytes() ([]byte, types.Error) {
 	// transaction := proto.Clone(tx).(*Transaction)
 	transaction := *tx
 	transaction.Signature = nil
-	bz, err := UtilityCodec().Marshal(&transaction)
+	bz, err := types.GetCodec().Marshal(&transaction)
 	if err != nil {
 		return nil, types.ErrProtoMarshal(err)
 	}
@@ -101,7 +101,7 @@ func (tx *Transaction) SignBytes() ([]byte, types.Error) {
 }
 
 func (tx *Transaction) Bytes() ([]byte, types.Error) {
-	bz, err := UtilityCodec().Marshal(tx)
+	bz, err := types.GetCodec().Marshal(tx)
 	if err != nil {
 		return nil, types.ErrProtoMarshal(err)
 	}

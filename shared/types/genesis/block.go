@@ -9,7 +9,7 @@ import (
 
 type ValidatorSet []Validator
 
-func (b *Block) ValidateBasic() types.Error {
+func (b *Block) ValidateBasic() types.Error { // TODO (Andrew) Consolidate block
 	if err := b.BlockHeader.ValidateBasic(); err != nil {
 		return err
 	}

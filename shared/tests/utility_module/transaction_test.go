@@ -152,7 +152,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 
 func NewTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingAmount, amountSent *big.Int, signer crypto.PrivateKey) {
 	var err error
-	cdc := typesUtil.UtilityCodec()
+	cdc := types.GetCodec()
 	recipient := GetAllTestingAccounts(t, ctx)[1]
 	signer, err = crypto.GeneratePrivateKey()
 	if err != nil {

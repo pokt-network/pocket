@@ -2,6 +2,7 @@ package pre_persistence
 
 import (
 	"bytes"
+	"github.com/pokt-network/pocket/shared/types"
 	"math/big"
 	"testing"
 
@@ -104,13 +105,13 @@ func TestUpdateValidator(t *testing.T) {
 		t.Fatal(err)
 	}
 	bigExpectedTokens := big.NewInt(1)
-	one := typesGenesis.BigIntToString(bigExpectedTokens)
+	one := types.BigIntToString(bigExpectedTokens)
 	before, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address)
 	if err != nil {
 		t.Fatal(err)
 	}
 	tokens := before.StakedTokens
-	bigBeforeTokens, err := typesGenesis.StringToBigInt(tokens)
+	bigBeforeTokens, err := types.StringToBigInt(tokens)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +123,7 @@ func TestUpdateValidator(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	bigAfterTokens, err := typesGenesis.StringToBigInt(got.StakedTokens)
+	bigAfterTokens, err := types.StringToBigInt(got.StakedTokens)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -103,9 +103,9 @@ func InitGenesis(u *PrePersistenceContext, state *typesGenesis.GenesisState) err
 
 // TODO(andrew): this is a state operation that really shouldn't live here, rather the utility module... but is needed for genesis creation
 func CalculateAppRelays(u *PrePersistenceContext, height int64, stakedTokens string) (string, error) {
-	tokens, err := typesGenesis.StringToBigInt(stakedTokens)
+	tokens, err := types.StringToBigInt(stakedTokens)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	p, er := u.GetParams(height)
 	if er != nil {
@@ -113,11 +113,11 @@ func CalculateAppRelays(u *PrePersistenceContext, height int64, stakedTokens str
 	}
 	stakingAdjustment := p.GetAppStakingAdjustment()
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	baseRate := p.GetAppBaselineStakeRate()
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	// convert tokens to int64
 	tokensFloat64 := big.NewFloat(float64(tokens.Int64()))
@@ -136,5 +136,5 @@ func CalculateAppRelays(u *PrePersistenceContext, height int64, stakedTokens str
 	if i := result.Cmp(max); i < -1 {
 		result = max
 	}
-	return typesGenesis.BigIntToString(result), nil
+	return types.BigIntToString(result), nil
 }

@@ -1,10 +1,9 @@
 package pre_persistence
 
 import (
+	typesGenesis "github.com/pokt-network/pocket/shared/types"
 	"math/big"
 	"testing"
-
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 const (

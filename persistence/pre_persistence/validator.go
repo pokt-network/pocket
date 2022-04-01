@@ -32,7 +32,7 @@ func (m *PrePersistenceContext) GetValidator(address []byte) (val *typesGenesis.
 }
 
 func (m *PrePersistenceContext) GetAllValidators(height int64) (v []*typesGenesis.Validator, err error) {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	v = make([]*typesGenesis.Validator, 0)
 	var it iterator.Iterator
 	if height == m.Height {
@@ -88,7 +88,7 @@ func (m *PrePersistenceContext) InsertValidator(address []byte, publicKey []byte
 	if _, exists, _ := m.GetValidator(address); exists {
 		return fmt.Errorf("already exists in world state")
 	}
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	db := m.Store()
 	key := append(ValidatorPrefixKey, address...)
 	val := typesGenesis.Validator{
@@ -115,22 +115,22 @@ func (m *PrePersistenceContext) UpdateValidator(address []byte, serviceURL strin
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	db := m.Store()
 	key := append(ValidatorPrefixKey, address...)
 	// compute new values
-	stakedTokens, err := typesGenesis.StringToBigInt(val.StakedTokens)
+	stakedTokens, err := types.StringToBigInt(val.StakedTokens)
 	if err != nil {
 		return err
 	}
-	stakedTokensToAddI, err := typesGenesis.StringToBigInt(amountToAdd)
+	stakedTokensToAddI, err := types.StringToBigInt(amountToAdd)
 	if err != nil {
 		return err
 	}
 	stakedTokens.Add(stakedTokens, stakedTokensToAddI)
 	// update values
 	val.ServiceUrl = serviceURL
-	val.StakedTokens = typesGenesis.BigIntToString(stakedTokens)
+	val.StakedTokens = types.BigIntToString(stakedTokens)
 	bz, err := codec.Marshal(val)
 	if err != nil {
 		return err
@@ -149,7 +149,7 @@ func (m *PrePersistenceContext) DeleteValidator(address []byte) error {
 
 func (m *PrePersistenceContext) GetValidatorsReadyToUnstake(height int64, status int) (fishermen []*types.UnstakingActor, err error) {
 	db := m.Store()
-	unstakingKey := append(UnstakingValidatorPrefixKey, typesGenesis.Int64ToBytes(height)...)
+	unstakingKey := append(UnstakingValidatorPrefixKey, types.Int64ToBytes(height)...)
 	if has := db.Contains(unstakingKey); !has {
 		return nil, nil
 	}
@@ -173,10 +173,10 @@ func (m *PrePersistenceContext) GetValidatorsReadyToUnstake(height int64, status
 func (m *PrePersistenceContext) GetValidatorStatus(address []byte) (status int, err error) {
 	val, exists, err := m.GetValidator(address)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	if !exists {
-		return typesGenesis.ZeroInt, fmt.Errorf("does not exist in world state")
+		return types.ZeroInt, fmt.Errorf("does not exist in world state")
 	}
 	return int(val.Status), nil
 }
@@ -189,7 +189,7 @@ func (m *PrePersistenceContext) SetValidatorUnstakingHeightAndStatus(address []b
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	unstakingActors := types.UnstakingActors{}
 	db := m.Store()
 	key := append(ValidatorPrefixKey, address...)
@@ -202,7 +202,7 @@ func (m *PrePersistenceContext) SetValidatorUnstakingHeightAndStatus(address []b
 	if err := db.Put(key, bz); err != nil {
 		return err
 	}
-	unstakingKey := append(UnstakingValidatorPrefixKey, typesGenesis.Int64ToBytes(unstakingHeight)...)
+	unstakingKey := append(UnstakingValidatorPrefixKey, types.Int64ToBytes(unstakingHeight)...)
 	if found := db.Contains(unstakingKey); found {
 		val, err := db.Get(unstakingKey)
 		if err != nil {
@@ -227,10 +227,10 @@ func (m *PrePersistenceContext) SetValidatorUnstakingHeightAndStatus(address []b
 func (m *PrePersistenceContext) GetValidatorPauseHeightIfExists(address []byte) (int64, error) {
 	val, exists, err := m.GetValidator(address)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	if !exists {
-		return typesGenesis.ZeroInt, fmt.Errorf("does not exist in world state")
+		return types.ZeroInt, fmt.Errorf("does not exist in world state")
 	}
 	return int64(val.PausedHeight), nil
 }
@@ -238,7 +238,7 @@ func (m *PrePersistenceContext) GetValidatorPauseHeightIfExists(address []byte) 
 // SetValidatorsStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
 func (m *PrePersistenceContext) SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	db := m.Store()
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	it := db.NewIterator(&util.Range{
 		Start: ValidatorPrefixKey,
 		Limit: PrefixEndBytes(ValidatorPrefixKey),
@@ -272,7 +272,7 @@ func (m *PrePersistenceContext) SetValidatorsStatusAndUnstakingHeightPausedBefor
 }
 
 func (m *PrePersistenceContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) error {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	db := m.Store()
 	val, exists, err := m.GetValidator(address)
 	if err != nil {
@@ -292,7 +292,7 @@ func (m *PrePersistenceContext) SetValidatorPauseHeightAndMissedBlocks(address [
 }
 
 func (m *PrePersistenceContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) error {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	db := m.Store()
 	val, exists, err := m.GetValidator(address)
 	if err != nil {
@@ -312,16 +312,16 @@ func (m *PrePersistenceContext) SetValidatorMissedBlocks(address []byte, missedB
 func (m *PrePersistenceContext) GetValidatorMissedBlocks(address []byte) (int, error) {
 	val, exists, err := m.GetValidator(address)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	if !exists {
-		return typesGenesis.ZeroInt, fmt.Errorf("does not exist in world state")
+		return types.ZeroInt, fmt.Errorf("does not exist in world state")
 	}
 	return int(val.MissedBlocks), nil
 }
 
 func (m *PrePersistenceContext) SetValidatorPauseHeight(address []byte, height int64) error {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	db := m.Store()
 	val, exists, err := m.GetValidator(address)
 	if err != nil {
@@ -330,7 +330,7 @@ func (m *PrePersistenceContext) SetValidatorPauseHeight(address []byte, height i
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	if height == typesGenesis.HeightNotUsed {
+	if height == types.HeightNotUsed {
 		val.Paused = false
 	} else {
 		val.Paused = true
@@ -344,7 +344,7 @@ func (m *PrePersistenceContext) SetValidatorPauseHeight(address []byte, height i
 }
 
 func (m *PrePersistenceContext) SetValidatorStakedTokens(address []byte, tokens string) error {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	db := m.Store()
 	val, exists, err := m.GetValidator(address)
 	if err != nil {
@@ -364,10 +364,10 @@ func (m *PrePersistenceContext) SetValidatorStakedTokens(address []byte, tokens 
 func (m *PrePersistenceContext) GetValidatorStakedTokens(address []byte) (tokens string, err error) {
 	val, exists, err := m.GetValidator(address)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	if !exists {
-		return typesGenesis.EmptyString, fmt.Errorf("does not exist in world state")
+		return types.EmptyString, fmt.Errorf("does not exist in world state")
 	}
 	return val.StakedTokens, nil
 }

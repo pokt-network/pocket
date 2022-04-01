@@ -7,7 +7,7 @@ import (
 )
 
 func (m *PrePersistenceContext) InitParams() error {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	db := m.Store()
 	p := typesGenesis.DefaultParams()
 	bz, err := codec.Marshal(p)
@@ -19,7 +19,7 @@ func (m *PrePersistenceContext) InitParams() error {
 
 func (m *PrePersistenceContext) GetParams(height int64) (p *typesGenesis.Params, err error) {
 	p = &typesGenesis.Params{}
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	var paramsBz []byte
 	if height == m.Height {
 		db := m.Store()
@@ -477,7 +477,7 @@ func InsertPersistenceParams(store *PrePersistenceContext, params *typesGenesis.
 func (m *PrePersistenceContext) GetBlocksPerSession() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.BlocksPerSession), nil
 }
@@ -485,7 +485,7 @@ func (m *PrePersistenceContext) GetBlocksPerSession() (int, error) {
 func (m *PrePersistenceContext) GetParamAppMinimumStake() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.GetAppMinimumStake(), nil
 }
@@ -493,7 +493,7 @@ func (m *PrePersistenceContext) GetParamAppMinimumStake() (string, error) {
 func (m *PrePersistenceContext) GetMaxAppChains() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.AppMaxChains), nil
 }
@@ -501,7 +501,7 @@ func (m *PrePersistenceContext) GetMaxAppChains() (int, error) {
 func (m *PrePersistenceContext) GetBaselineAppStakeRate() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.AppBaselineStakeRate), nil
 }
@@ -509,7 +509,7 @@ func (m *PrePersistenceContext) GetBaselineAppStakeRate() (int, error) {
 func (m *PrePersistenceContext) GetStabilityAdjustment() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.AppStakingAdjustment), nil
 }
@@ -517,7 +517,7 @@ func (m *PrePersistenceContext) GetStabilityAdjustment() (int, error) {
 func (m *PrePersistenceContext) GetAppUnstakingBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.AppUnstakingBlocks), nil
 }
@@ -525,7 +525,7 @@ func (m *PrePersistenceContext) GetAppUnstakingBlocks() (int, error) {
 func (m *PrePersistenceContext) GetAppMinimumPauseBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.AppMinimumPauseBlocks), nil
 }
@@ -533,7 +533,7 @@ func (m *PrePersistenceContext) GetAppMinimumPauseBlocks() (int, error) {
 func (m *PrePersistenceContext) GetAppMaxPausedBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.AppMaxPauseBlocks), nil
 }
@@ -541,7 +541,7 @@ func (m *PrePersistenceContext) GetAppMaxPausedBlocks() (int, error) {
 func (m *PrePersistenceContext) GetParamServiceNodeMinimumStake() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.ServiceNodeMinimumStake, nil
 }
@@ -549,7 +549,7 @@ func (m *PrePersistenceContext) GetParamServiceNodeMinimumStake() (string, error
 func (m *PrePersistenceContext) GetServiceNodeMaxChains() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.ServiceNodeMaxChains), nil
 }
@@ -557,7 +557,7 @@ func (m *PrePersistenceContext) GetServiceNodeMaxChains() (int, error) {
 func (m *PrePersistenceContext) GetServiceNodeUnstakingBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.ServiceNodeUnstakingBlocks), nil
 }
@@ -565,7 +565,7 @@ func (m *PrePersistenceContext) GetServiceNodeUnstakingBlocks() (int, error) {
 func (m *PrePersistenceContext) GetServiceNodeMinimumPauseBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.ServiceNodeMinimumPauseBlocks), nil
 }
@@ -573,7 +573,7 @@ func (m *PrePersistenceContext) GetServiceNodeMinimumPauseBlocks() (int, error) 
 func (m *PrePersistenceContext) GetServiceNodeMaxPausedBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.ServiceNodeMaxPauseBlocks), nil
 }
@@ -581,7 +581,7 @@ func (m *PrePersistenceContext) GetServiceNodeMaxPausedBlocks() (int, error) {
 func (m *PrePersistenceContext) GetServiceNodesPerSession() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.ServiceNodesPerSession), nil
 }
@@ -589,7 +589,7 @@ func (m *PrePersistenceContext) GetServiceNodesPerSession() (int, error) {
 func (m *PrePersistenceContext) GetParamFishermanMinimumStake() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.FishermanMinimumStake, nil
 }
@@ -597,7 +597,7 @@ func (m *PrePersistenceContext) GetParamFishermanMinimumStake() (string, error) 
 func (m *PrePersistenceContext) GetFishermanMaxChains() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.FishermanMaxChains), nil
 }
@@ -605,7 +605,7 @@ func (m *PrePersistenceContext) GetFishermanMaxChains() (int, error) {
 func (m *PrePersistenceContext) GetFishermanUnstakingBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.FishermanUnstakingBlocks), nil
 }
@@ -613,7 +613,7 @@ func (m *PrePersistenceContext) GetFishermanUnstakingBlocks() (int, error) {
 func (m *PrePersistenceContext) GetFishermanMinimumPauseBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.FishermanMinimumPauseBlocks), nil
 }
@@ -621,7 +621,7 @@ func (m *PrePersistenceContext) GetFishermanMinimumPauseBlocks() (int, error) {
 func (m *PrePersistenceContext) GetFishermanMaxPausedBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.FishermanMaxPauseBlocks), nil
 }
@@ -629,7 +629,7 @@ func (m *PrePersistenceContext) GetFishermanMaxPausedBlocks() (int, error) {
 func (m *PrePersistenceContext) GetParamValidatorMinimumStake() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.ValidatorMinimumStake, nil
 }
@@ -637,7 +637,7 @@ func (m *PrePersistenceContext) GetParamValidatorMinimumStake() (string, error) 
 func (m *PrePersistenceContext) GetValidatorUnstakingBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.ValidatorUnstakingBlocks), nil
 }
@@ -645,7 +645,7 @@ func (m *PrePersistenceContext) GetValidatorUnstakingBlocks() (int, error) {
 func (m *PrePersistenceContext) GetValidatorMinimumPauseBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.ValidatorMinimumPauseBlocks), nil
 }
@@ -653,7 +653,7 @@ func (m *PrePersistenceContext) GetValidatorMinimumPauseBlocks() (int, error) {
 func (m *PrePersistenceContext) GetValidatorMaxPausedBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.ValidatorMaxPauseBlocks), nil
 }
@@ -661,7 +661,7 @@ func (m *PrePersistenceContext) GetValidatorMaxPausedBlocks() (int, error) {
 func (m *PrePersistenceContext) GetValidatorMaximumMissedBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.ValidatorMaximumMissedBlocks), nil
 }
@@ -669,7 +669,7 @@ func (m *PrePersistenceContext) GetValidatorMaximumMissedBlocks() (int, error) {
 func (m *PrePersistenceContext) GetProposerPercentageOfFees() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.ProposerPercentageOfFees), nil
 }
@@ -677,7 +677,7 @@ func (m *PrePersistenceContext) GetProposerPercentageOfFees() (int, error) {
 func (m *PrePersistenceContext) GetMaxEvidenceAgeInBlocks() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.ValidatorMaxEvidenceAgeInBlocks), nil
 }
@@ -685,7 +685,7 @@ func (m *PrePersistenceContext) GetMaxEvidenceAgeInBlocks() (int, error) {
 func (m *PrePersistenceContext) GetMissedBlocksBurnPercentage() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.MissedBlocksBurnPercentage), nil
 }
@@ -693,7 +693,7 @@ func (m *PrePersistenceContext) GetMissedBlocksBurnPercentage() (int, error) {
 func (m *PrePersistenceContext) GetDoubleSignBurnPercentage() (int, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.ZeroInt, err
+		return types.ZeroInt, err
 	}
 	return int(params.DoubleSignBurnPercentage), nil
 }
@@ -701,7 +701,7 @@ func (m *PrePersistenceContext) GetDoubleSignBurnPercentage() (int, error) {
 func (m *PrePersistenceContext) GetMessageDoubleSignFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageDoubleSignFee, nil
 }
@@ -709,7 +709,7 @@ func (m *PrePersistenceContext) GetMessageDoubleSignFee() (string, error) {
 func (m *PrePersistenceContext) GetMessageSendFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageSendFee, nil
 }
@@ -717,7 +717,7 @@ func (m *PrePersistenceContext) GetMessageSendFee() (string, error) {
 func (m *PrePersistenceContext) GetMessageStakeFishermanFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageStakeFishermanFee, nil
 }
@@ -725,7 +725,7 @@ func (m *PrePersistenceContext) GetMessageStakeFishermanFee() (string, error) {
 func (m *PrePersistenceContext) GetMessageEditStakeFishermanFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageEditStakeFishermanFee, nil
 }
@@ -733,7 +733,7 @@ func (m *PrePersistenceContext) GetMessageEditStakeFishermanFee() (string, error
 func (m *PrePersistenceContext) GetMessageUnstakeFishermanFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageUnstakeFishermanFee, nil
 }
@@ -741,7 +741,7 @@ func (m *PrePersistenceContext) GetMessageUnstakeFishermanFee() (string, error) 
 func (m *PrePersistenceContext) GetMessagePauseFishermanFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessagePauseFishermanFee, nil
 }
@@ -749,7 +749,7 @@ func (m *PrePersistenceContext) GetMessagePauseFishermanFee() (string, error) {
 func (m *PrePersistenceContext) GetMessageUnpauseFishermanFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageUnpauseFishermanFee, nil
 }
@@ -757,7 +757,7 @@ func (m *PrePersistenceContext) GetMessageUnpauseFishermanFee() (string, error) 
 func (m *PrePersistenceContext) GetMessageFishermanPauseServiceNodeFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessagePauseServiceNodeFee, nil
 }
@@ -765,7 +765,7 @@ func (m *PrePersistenceContext) GetMessageFishermanPauseServiceNodeFee() (string
 func (m *PrePersistenceContext) GetMessageTestScoreFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageProveTestScoreFee, nil
 }
@@ -773,7 +773,7 @@ func (m *PrePersistenceContext) GetMessageTestScoreFee() (string, error) {
 func (m *PrePersistenceContext) GetMessageProveTestScoreFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageProveTestScoreFee, nil
 }
@@ -781,7 +781,7 @@ func (m *PrePersistenceContext) GetMessageProveTestScoreFee() (string, error) {
 func (m *PrePersistenceContext) GetMessageStakeAppFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageStakeAppFee, nil
 }
@@ -789,7 +789,7 @@ func (m *PrePersistenceContext) GetMessageStakeAppFee() (string, error) {
 func (m *PrePersistenceContext) GetMessageEditStakeAppFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageEditStakeAppFee, nil
 }
@@ -797,7 +797,7 @@ func (m *PrePersistenceContext) GetMessageEditStakeAppFee() (string, error) {
 func (m *PrePersistenceContext) GetMessageUnstakeAppFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageUnstakeAppFee, nil
 }
@@ -805,7 +805,7 @@ func (m *PrePersistenceContext) GetMessageUnstakeAppFee() (string, error) {
 func (m *PrePersistenceContext) GetMessagePauseAppFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessagePauseAppFee, nil
 }
@@ -813,7 +813,7 @@ func (m *PrePersistenceContext) GetMessagePauseAppFee() (string, error) {
 func (m *PrePersistenceContext) GetMessageUnpauseAppFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageUnpauseAppFee, nil
 }
@@ -821,7 +821,7 @@ func (m *PrePersistenceContext) GetMessageUnpauseAppFee() (string, error) {
 func (m *PrePersistenceContext) GetMessageStakeValidatorFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageStakeValidatorFee, nil
 }
@@ -829,7 +829,7 @@ func (m *PrePersistenceContext) GetMessageStakeValidatorFee() (string, error) {
 func (m *PrePersistenceContext) GetMessageEditStakeValidatorFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageEditStakeValidatorFee, nil
 }
@@ -837,7 +837,7 @@ func (m *PrePersistenceContext) GetMessageEditStakeValidatorFee() (string, error
 func (m *PrePersistenceContext) GetMessageUnstakeValidatorFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageUnstakeValidatorFee, nil
 }
@@ -845,7 +845,7 @@ func (m *PrePersistenceContext) GetMessageUnstakeValidatorFee() (string, error) 
 func (m *PrePersistenceContext) GetMessagePauseValidatorFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessagePauseValidatorFee, nil
 }
@@ -853,7 +853,7 @@ func (m *PrePersistenceContext) GetMessagePauseValidatorFee() (string, error) {
 func (m *PrePersistenceContext) GetMessageUnpauseValidatorFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageUnpauseValidatorFee, nil
 }
@@ -861,7 +861,7 @@ func (m *PrePersistenceContext) GetMessageUnpauseValidatorFee() (string, error) 
 func (m *PrePersistenceContext) GetMessageStakeServiceNodeFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageStakeServiceNodeFee, nil
 }
@@ -869,7 +869,7 @@ func (m *PrePersistenceContext) GetMessageStakeServiceNodeFee() (string, error) 
 func (m *PrePersistenceContext) GetMessageEditStakeServiceNodeFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageEditStakeServiceNodeFee, nil
 }
@@ -877,7 +877,7 @@ func (m *PrePersistenceContext) GetMessageEditStakeServiceNodeFee() (string, err
 func (m *PrePersistenceContext) GetMessageUnstakeServiceNodeFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageUnstakeServiceNodeFee, nil
 }
@@ -885,7 +885,7 @@ func (m *PrePersistenceContext) GetMessageUnstakeServiceNodeFee() (string, error
 func (m *PrePersistenceContext) GetMessagePauseServiceNodeFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessagePauseServiceNodeFee, nil
 }
@@ -893,7 +893,7 @@ func (m *PrePersistenceContext) GetMessagePauseServiceNodeFee() (string, error) 
 func (m *PrePersistenceContext) GetMessageUnpauseServiceNodeFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageUnpauseServiceNodeFee, nil
 }
@@ -901,13 +901,13 @@ func (m *PrePersistenceContext) GetMessageUnpauseServiceNodeFee() (string, error
 func (m *PrePersistenceContext) GetMessageChangeParameterFee() (string, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
-		return typesGenesis.EmptyString, err
+		return types.EmptyString, err
 	}
 	return params.MessageChangeParameterFee, nil
 }
 
 func (m *PrePersistenceContext) SetParams(p *typesGenesis.Params) error {
-	codec := typesGenesis.GetCodec()
+	codec := types.GetCodec()
 	store := m.Store()
 	bz, err := codec.Marshal(p)
 	if err != nil {

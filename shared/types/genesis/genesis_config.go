@@ -6,6 +6,7 @@ import (
 	"crypto/ed25519"
 	"encoding/binary"
 	"fmt"
+	"github.com/pokt-network/pocket/shared/types"
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -36,7 +37,7 @@ var ( // TODO these are needed placeholders to pass validation checks. Until we 
 	DefaultChains         = []string{"0001"}
 	DefaultServiceUrl     = "https://foo.bar"
 	DefaultStakeBig       = big.NewInt(1000000000000000)
-	DefaultStake          = BigIntToString(DefaultStakeBig)
+	DefaultStake          = types.BigIntToString(DefaultStakeBig)
 	DefaultAccountBalance = DefaultStake
 	DefaultStakeStatus    = int32(2)
 )
@@ -167,28 +168,28 @@ func NewGenesisState(genesisConfig *NewGenesisStateConfigs) (state *GenesisState
 	// create appropriate 'stake' pools for each actor type
 	valStakePool, err := NewPool(ValidatorStakePoolName, &Account{
 		Address: DefaultValidatorStakePool.Address(),
-		Amount:  BigIntToString(&big.Int{}),
+		Amount:  types.BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
 	}
 	appStakePool, err := NewPool(AppStakePoolName, &Account{
 		Address: DefaultAppStakePool.Address(),
-		Amount:  BigIntToString(&big.Int{}),
+		Amount:  types.BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
 	}
 	fishStakePool, err := NewPool(FishermanStakePoolName, &Account{
 		Address: DefaultFishermanStakePool.Address(),
-		Amount:  BigIntToString(&big.Int{}),
+		Amount:  types.BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
 	}
 	serNodeStakePool, err := NewPool(ServiceNodeStakePoolName, &Account{
 		Address: DefaultServiceNodeStakePool.Address(),
-		Amount:  BigIntToString(&big.Int{}),
+		Amount:  types.BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
@@ -196,7 +197,7 @@ func NewGenesisState(genesisConfig *NewGenesisStateConfigs) (state *GenesisState
 	// create a pool for collected fees (helps with rewards)
 	fee, err := NewPool(FeePoolName, &Account{
 		Address: DefaultFeeCollector.Address(),
-		Amount:  BigIntToString(&big.Int{}),
+		Amount:  types.BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
@@ -204,7 +205,7 @@ func NewGenesisState(genesisConfig *NewGenesisStateConfigs) (state *GenesisState
 	// create a pool for the dao treasury
 	dao, err := NewPool(DAOPoolName, &Account{
 		Address: DefaultDAOPool.Address(),
-		Amount:  BigIntToString(&big.Int{}),
+		Amount:  types.BigIntToString(&big.Int{}),
 	})
 	if err != nil {
 		return
@@ -228,25 +229,25 @@ func NewGenesisState(genesisConfig *NewGenesisStateConfigs) (state *GenesisState
 func DefaultParams() *Params {
 	return &Params{
 		BlocksPerSession:                         4,
-		AppMinimumStake:                          BigIntToString(big.NewInt(15000000000)),
+		AppMinimumStake:                          types.BigIntToString(big.NewInt(15000000000)),
 		AppMaxChains:                             15,
 		AppBaselineStakeRate:                     100,
 		AppStakingAdjustment:                     0,
 		AppUnstakingBlocks:                       2016,
 		AppMinimumPauseBlocks:                    4,
 		AppMaxPauseBlocks:                        672,
-		ServiceNodeMinimumStake:                  BigIntToString(big.NewInt(15000000000)),
+		ServiceNodeMinimumStake:                  types.BigIntToString(big.NewInt(15000000000)),
 		ServiceNodeMaxChains:                     15,
 		ServiceNodeUnstakingBlocks:               2016,
 		ServiceNodeMinimumPauseBlocks:            4,
 		ServiceNodeMaxPauseBlocks:                672,
 		ServiceNodesPerSession:                   24,
-		FishermanMinimumStake:                    BigIntToString(big.NewInt(15000000000)),
+		FishermanMinimumStake:                    types.BigIntToString(big.NewInt(15000000000)),
 		FishermanMaxChains:                       15,
 		FishermanUnstakingBlocks:                 2016,
 		FishermanMinimumPauseBlocks:              4,
 		FishermanMaxPauseBlocks:                  672,
-		ValidatorMinimumStake:                    BigIntToString(big.NewInt(15000000000)),
+		ValidatorMinimumStake:                    types.BigIntToString(big.NewInt(15000000000)),
 		ValidatorUnstakingBlocks:                 2016,
 		ValidatorMinimumPauseBlocks:              4,
 		ValidatorMaxPauseBlocks:                  672,
@@ -255,32 +256,32 @@ func DefaultParams() *Params {
 		ProposerPercentageOfFees:                 10,
 		MissedBlocksBurnPercentage:               1,
 		DoubleSignBurnPercentage:                 5,
-		MessageDoubleSignFee:                     BigIntToString(big.NewInt(10000)),
-		MessageSendFee:                           BigIntToString(big.NewInt(10000)),
-		MessageStakeFishermanFee:                 BigIntToString(big.NewInt(10000)),
-		MessageEditStakeFishermanFee:             BigIntToString(big.NewInt(10000)),
-		MessageUnstakeFishermanFee:               BigIntToString(big.NewInt(10000)),
-		MessagePauseFishermanFee:                 BigIntToString(big.NewInt(10000)),
-		MessageUnpauseFishermanFee:               BigIntToString(big.NewInt(10000)),
-		MessageFishermanPauseServiceNodeFee:      BigIntToString(big.NewInt(10000)),
-		MessageTestScoreFee:                      BigIntToString(big.NewInt(10000)),
-		MessageProveTestScoreFee:                 BigIntToString(big.NewInt(10000)),
-		MessageStakeAppFee:                       BigIntToString(big.NewInt(10000)),
-		MessageEditStakeAppFee:                   BigIntToString(big.NewInt(10000)),
-		MessageUnstakeAppFee:                     BigIntToString(big.NewInt(10000)),
-		MessagePauseAppFee:                       BigIntToString(big.NewInt(10000)),
-		MessageUnpauseAppFee:                     BigIntToString(big.NewInt(10000)),
-		MessageStakeValidatorFee:                 BigIntToString(big.NewInt(10000)),
-		MessageEditStakeValidatorFee:             BigIntToString(big.NewInt(10000)),
-		MessageUnstakeValidatorFee:               BigIntToString(big.NewInt(10000)),
-		MessagePauseValidatorFee:                 BigIntToString(big.NewInt(10000)),
-		MessageUnpauseValidatorFee:               BigIntToString(big.NewInt(10000)),
-		MessageStakeServiceNodeFee:               BigIntToString(big.NewInt(10000)),
-		MessageEditStakeServiceNodeFee:           BigIntToString(big.NewInt(10000)),
-		MessageUnstakeServiceNodeFee:             BigIntToString(big.NewInt(10000)),
-		MessagePauseServiceNodeFee:               BigIntToString(big.NewInt(10000)),
-		MessageUnpauseServiceNodeFee:             BigIntToString(big.NewInt(10000)),
-		MessageChangeParameterFee:                BigIntToString(big.NewInt(10000)),
+		MessageDoubleSignFee:                     types.BigIntToString(big.NewInt(10000)),
+		MessageSendFee:                           types.BigIntToString(big.NewInt(10000)),
+		MessageStakeFishermanFee:                 types.BigIntToString(big.NewInt(10000)),
+		MessageEditStakeFishermanFee:             types.BigIntToString(big.NewInt(10000)),
+		MessageUnstakeFishermanFee:               types.BigIntToString(big.NewInt(10000)),
+		MessagePauseFishermanFee:                 types.BigIntToString(big.NewInt(10000)),
+		MessageUnpauseFishermanFee:               types.BigIntToString(big.NewInt(10000)),
+		MessageFishermanPauseServiceNodeFee:      types.BigIntToString(big.NewInt(10000)),
+		MessageTestScoreFee:                      types.BigIntToString(big.NewInt(10000)),
+		MessageProveTestScoreFee:                 types.BigIntToString(big.NewInt(10000)),
+		MessageStakeAppFee:                       types.BigIntToString(big.NewInt(10000)),
+		MessageEditStakeAppFee:                   types.BigIntToString(big.NewInt(10000)),
+		MessageUnstakeAppFee:                     types.BigIntToString(big.NewInt(10000)),
+		MessagePauseAppFee:                       types.BigIntToString(big.NewInt(10000)),
+		MessageUnpauseAppFee:                     types.BigIntToString(big.NewInt(10000)),
+		MessageStakeValidatorFee:                 types.BigIntToString(big.NewInt(10000)),
+		MessageEditStakeValidatorFee:             types.BigIntToString(big.NewInt(10000)),
+		MessageUnstakeValidatorFee:               types.BigIntToString(big.NewInt(10000)),
+		MessagePauseValidatorFee:                 types.BigIntToString(big.NewInt(10000)),
+		MessageUnpauseValidatorFee:               types.BigIntToString(big.NewInt(10000)),
+		MessageStakeServiceNodeFee:               types.BigIntToString(big.NewInt(10000)),
+		MessageEditStakeServiceNodeFee:           types.BigIntToString(big.NewInt(10000)),
+		MessageUnstakeServiceNodeFee:             types.BigIntToString(big.NewInt(10000)),
+		MessagePauseServiceNodeFee:               types.BigIntToString(big.NewInt(10000)),
+		MessageUnpauseServiceNodeFee:             types.BigIntToString(big.NewInt(10000)),
+		MessageChangeParameterFee:                types.BigIntToString(big.NewInt(10000)),
 		AclOwner:                                 DefaultParamsOwner.Address(),
 		BlocksPerSessionOwner:                    DefaultParamsOwner.Address(),
 		AppMinimumStakeOwner:                     DefaultParamsOwner.Address(),
