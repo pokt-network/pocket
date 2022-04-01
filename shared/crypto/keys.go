@@ -3,6 +3,7 @@ package crypto
 import (
 	"encoding/hex"
 	"encoding/json"
+	"log"
 )
 
 // TODO(discuss): Consider create a type for signature and having constraints for each type as well.
@@ -40,4 +41,16 @@ func (a *Address) UnmarshalJSON(data []byte) error {
 	}
 	*a = bytes
 	return nil
+}
+
+func (a *Address) ToString() string {
+	return hex.EncodeToString(*a)
+}
+
+func AddressFromString(s string) Address {
+	bytes, err := hex.DecodeString(s)
+	if err != nil {
+		log.Fatal("Should never fail on decoding an address from string: ", err)
+	}
+	return Address(bytes)
 }

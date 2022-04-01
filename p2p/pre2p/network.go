@@ -6,7 +6,7 @@ import (
 	"net"
 
 	pre2ptypes "github.com/pokt-network/pocket/p2p/pre2p/types"
-	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
@@ -53,7 +53,7 @@ func (n *network) NetworkBroadcast(data []byte) error {
 	return nil
 }
 
-func (n *network) NetworkSend(data []byte, address pcrypto.Address) error {
+func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) error {
 	for _, peer := range n.AddrBook {
 		// TODO(team): If the address book is a map instead of a list, we wouldn't have to do this loop.
 		if address.String() != peer.PublicKey.Address().String() {

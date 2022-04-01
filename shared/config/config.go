@@ -8,20 +8,22 @@ import (
 	"os"
 	"path/filepath"
 
-	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
 type Config struct {
-	RootDir        string                `json:"root_dir"`
-	PrivateKey     pcrypto.PrivateKey    `json:"private_key"` // TODO(olshansky): make this a proper key type.
-	Genesis        string                `json:"genesis"`
-	IsTesting      bool                  `json:"testing"` // TODO: consider renaming this to either `DebugMode` or `DevMode`.
+	RootDir   string `json:"root_dir"`
+	Genesis   string `json:"genesis"`
+	IsTesting bool   `json:"testing"` // TODO: consider renaming this to either `DebugMode` or `DevMode`.
+
+	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
+
+	Pre2P          *Pre2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
 	P2P            *P2PConfig            `json:"p2p"`
 	Consensus      *ConsensusConfig      `json:"consensus"`
+	PrePersistence *PrePersistenceConfig `json:"prePersistence"`
 	Persistence    *PersistenceConfig    `json:"persistence"`
 	Utility        *UtilityConfig        `json:"utility"`
-	Pre2P          *Pre2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
-	PrePersistence *PrePersistenceConfig `json:"prePersistence"`
 }
 
 // TODO(derrandz): delete this once P2P is ready.
@@ -37,13 +39,27 @@ type PrePersistenceConfig struct {
 }
 
 type P2PConfig struct {
-	Protocol   string          `json:"protocol"`
-	Address    pcrypto.Address `json:"address"`
-	ExternalIp string          `json:"external_ip"`
-	Peers      []string        `json:"peers"`
+	Protocol   string   `json:"protocol"`
+	Address    string   `json:"address"`
+	ExternalIp string   `json:"external_ip"`
+	Peers      []string `json:"peers"`
+}
+
+type PacemakerConfig struct {
+	TimeoutMsec               uint64 `json:"timeout_msec"`
+	Manual                    bool   `json:"manual"`
+	DebugTimeBetweenStepsMsec uint64 `json:"debug_time_between_steps_msec"`
 }
 
 type ConsensusConfig struct {
+	// Mempool
+	MaxMempoolBytes uint64 `json:"max_mempool_bytes"` // TODO(olshansky): add unit tests for this
+
+	// Block
+	MaxBlockBytes uint64 `json:"max_block_bytes"` // TODO(olshansky): add unit tests for this
+
+	// Pacemaker
+	Pacemaker *PacemakerConfig `json:"pacemaker"`
 }
 
 type PersistenceConfig struct {
@@ -71,22 +87,15 @@ func LoadConfig(file string) (c *Config) {
 		log.Fatalln("Error parsing config file: ", err)
 	}
 
-	if err := c.validateAndComplete(); err != nil {
+	if err := c.ValidateAndHydrate(); err != nil {
 		log.Fatalln("Error validating or completing config: ", err)
 	}
 
-	if err := c.Consensus.validateAndComplete(); err != nil {
-		log.Fatalln("Error validating or completing consensus config: ", err)
-	}
-
-	if err := c.P2P.validateAndComplete(); err != nil {
-		log.Fatalln("Error validating or completing P2P config: ", err)
-	}
 	return
 }
 
-func (c *Config) validateAndComplete() error {
-	if len(c.PrivateKey.Bytes()) == 0 {
+func (c *Config) ValidateAndHydrate() error {
+	if len(c.PrivateKey) == 0 {
 		return fmt.Errorf("private key in config file cannot be empty")
 	}
 
@@ -95,15 +104,38 @@ func (c *Config) validateAndComplete() error {
 	}
 	c.Genesis = rootify(c.Genesis, c.RootDir)
 
+	if err := c.Consensus.ValidateAndHydrate(); err != nil {
+		log.Fatalln("Error validating or completing consensus config: ", err)
+	}
+
+	if err := c.P2P.ValidateAndHydrate(); err != nil {
+		log.Fatalln("Error validating or completing P2P config: ", err)
+	}
+
 	return nil
 }
 
-func (c *P2PConfig) validateAndComplete() error {
+func (c *P2PConfig) ValidateAndHydrate() error {
 	return nil
 }
 
-func (c *ConsensusConfig) validateAndComplete() error {
-	// TODO(olshansky): c.NodeId should be set dynamically but set via config for testing
+func (c *ConsensusConfig) ValidateAndHydrate() error {
+	if err := c.Pacemaker.ValidateAndHydrate(); err != nil {
+		log.Fatalf("Error validating or completing Pacemaker configs")
+	}
+
+	if c.MaxMempoolBytes <= 0 {
+		return fmt.Errorf("MaxMempoolBytes must be a positive integer")
+	}
+
+	if c.MaxBlockBytes <= 0 {
+		return fmt.Errorf("MaxBlockBytes must be a positive integer")
+	}
+
+	return nil
+}
+
+func (c *PacemakerConfig) ValidateAndHydrate() error {
 	return nil
 }
 

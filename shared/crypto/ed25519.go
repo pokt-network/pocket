@@ -113,7 +113,15 @@ func (priv *Ed25519PrivateKey) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	*priv = []byte(privateKey)
+	keyBytes, err := hex.DecodeString(privateKey)
+	if err != nil {
+		return err
+	}
+	privKey, err := NewPrivateKeyFromBytes(keyBytes)
+	if err != nil {
+		return err
+	}
+	*priv = privKey.(Ed25519PrivateKey)
 	return nil
 }
 
@@ -182,6 +190,14 @@ func (pub *Ed25519PublicKey) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	*pub = []byte(publicKey)
+	keyBytes, err := hex.DecodeString(publicKey)
+	if err != nil {
+		return err
+	}
+	pubKey, err := NewPublicKeyFromBytes(keyBytes)
+	if err != nil {
+		return err
+	}
+	*pub = pubKey.(Ed25519PublicKey)
 	return nil
 }

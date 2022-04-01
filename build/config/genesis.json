@@ -1,32 +1,10 @@
 {
   "genesis_time": "2022-01-19T00:00:00.000000Z",
   "app_hash": "genesis_block_or_state_hash",
-  "accounts": [
-    {
-      "address": "04c56dfc51c3ec68d90a08a2efaa4b9d3db32b3b",
-      "public_key": "03e6b38162ccdd0cd8ed657be73885e0b7b99ca09969729e3390c218cfcff07d",
-      "upokt": 69
-    }
-  ],
-  "consensus_params": {
-    "max_mempool_bytes": 50000000,
-    "max_block_bytes": 4000000,
-    "max_transaction_bytes": 100000,
-    "vrf_key_refresh_freq_block": 5,
-    "vrf_key_validity_block": 5,
-    "pace_maker": {
-      "timeout_msec": 5000,
-      "retry_timeout_msec": 1000,
-      "max_timeout_msec": 60000,
-      "min_block_freq_msec": 2000,
-      "debug_time_between_steps_msec": 3000
-    }
-  },
   "validators": [
     {
       "address": "2e8465488b882e9fdb25d0f427b6a05719039a22",
       "public_key": "59f909af5ba461cd8d6f4250d12aeea7c5b0152187caf27ac1abd3c39575f929",
-      "private_Key": "58b49f09e315a42b77a2ed97ba613dc6f03a7cb297f4bf41f4a2a51c8d2656f759f909af5ba461cd8d6f4250d12aeea7c5b0152187caf27ac1abd3c39575f929",
       "jailed": false,
       "upokt": 5000000000000,
       "host": "node1.consensus",
@@ -35,9 +13,8 @@
       "chains": ["0001", "0021"]
     },
     {
-      "address": "75d1dd6ec5378d849eb01be209b80db0048a7e0c",
-      "public_key": "5dfc52b24b0d259885cfcf8fb80ed9704c779c22bdbdcb0c20c80f8bf649d3c9",
-      "private_Key": "422ec0e9ab340321a0064f767d1cafdbd40c8689fdb24b167535c6b29a87a8365dfc52b24b0d259885cfcf8fb80ed9704c779c22bdbdcb0c20c80f8bf649d3c9",
+      "address": "693d951f77a36ff28e45322adaa53ef839f256f8",
+      "public_key": "3292861092ca961878a303481dd91dfdc4a6fcc960b33f8e04bc23b34cac675e",
       "jailed": false,
       "upokt": 5000000000000,
       "host": "node2.consensus",
@@ -46,9 +23,8 @@
       "chains": ["0001", "0021"]
     },
     {
-      "address": "b72293204a393c91848d32c2a5a74bad0451b126",
-      "public_key": "e9193a6eca262cb1dbc10e893cba50e5ae6c6646f0f134a028017d509e4dfa67",
-      "private_Key": "9ff604a2cf6fb23a64775789ac740661ce401f826be1fd52f25c821c3339e1d5e9193a6eca262cb1dbc10e893cba50e5ae6c6646f0f134a028017d509e4dfa67",
+      "address": "75d1dd6ec5378d849eb01be209b80db0048a7e0c",
+      "public_key": "5dfc52b24b0d259885cfcf8fb80ed9704c779c22bdbdcb0c20c80f8bf649d3c9",
       "jailed": false,
       "upokt": 5000000000000,
       "host": "node3.consensus",
@@ -57,9 +33,8 @@
       "chains": ["0001", "0021"]
     },
     {
-      "address": "693d951f77a36ff28e45322adaa53ef839f256f8",
-      "public_key": "3292861092ca961878a303481dd91dfdc4a6fcc960b33f8e04bc23b34cac675e",
-      "private_Key": "a33d534a7622f7ca395b47448cefc1f80620c873ce7fdc43b36937887fcebbf43292861092ca961878a303481dd91dfdc4a6fcc960b33f8e04bc23b34cac675e",
+      "address": "b72293204a393c91848d32c2a5a74bad0451b126",
+      "public_key": "e9193a6eca262cb1dbc10e893cba50e5ae6c6646f0f134a028017d509e4dfa67",
       "jailed": false,
       "upokt": 5000000000000,
       "host": "node4.consensus",

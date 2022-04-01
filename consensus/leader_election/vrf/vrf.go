@@ -8,7 +8,7 @@ package vrf
 import (
 	"bytes"
 	"crypto/sha512"
-	"fmt"
+
 	"io"
 
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -29,11 +29,11 @@ type VRFOutput []byte // Uniformally distributed output that can be normalized t
 
 func CreateVRFRandReader(lastBlockHash string, privKey crypto.PrivateKey) (io.Reader, error) {
 	if privKey == nil {
-		return nil, fmt.Errorf(ErrNilPrivateKey)
+		return nil, ErrNilPrivateKey
 	}
 
 	if len(lastBlockHash) < crypto.SeedSize/2 {
-		return nil, fmt.Errorf(ErrBadAppHashLength, crypto.SeedSize/2)
+		return nil, ErrBadAppHashLength(crypto.SeedSize)
 	}
 
 	privKeySeed := privKey.Seed()[:crypto.SeedSize/2]

@@ -2,6 +2,14 @@
 
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
+# This flag is useful when running the consensus unit tests. It causes the test to wait up to the
+# maximum delay specified in the source code and errors if additional unexpected messages are received.
+# For example, if the test expects to receive 5 messages within 2 seconds:
+# 	When EXTRA_MSG_FAIL = false: continue if 5 messages are received in 0.5 seconds
+# 	When EXTRA_MSG_FAIL = true: wait for another 1.5 seconds after 5 messages are received in 0.5
+#		                        seconds, and fail if any additional messages are received.
+EXTRA_MSG_FAIL ?= false
+
 .SILENT:
 
 help:
@@ -19,6 +27,20 @@ help:
 
 prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
+
+.PHONY: go_vet
+## Run `go vet` on all files in the current project
+go_vet:
+	go vet ./...
+
+.PHONY: go_staticcheck
+## Run `go staticcheck` on all files in the current project
+go_staticcheck:
+	@if builtin type -P "staticcheck"; then staticcheck ./... ; else echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; fi
+
+.PHONY: go_clean_dep
+## Runs `go mod vendor` && `go mod tidy`
+	go mod vendor && go mod tidy
 
 .PHONY: build
 ## Build Pocket's main entrypoint
@@ -103,6 +125,16 @@ test_consensus: # mockgen
 test_pre_persistence: # generate_mocks
 	go test ./persistence/pre_persistence/...
 
+.PHONY: test_hotstuff
+## Run all go unit tests related to hotstuff consensus
+test_hotstuff: # mockgen
+	go test -v ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
+
+.PHONY: test_pacemaker
+## Run all go unit tests related to the hotstuff pacemaker
+test_pacemaker: # mockgen
+	go test -v ./consensus/consensus_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
+
 .PHONY: test_vrf
 ## Run all go unit tests in the VRF library
 test_vrf:
@@ -135,10 +167,11 @@ protogen_clean:
 protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
 
+# protoc -I=${proto_dir} -I=./shared/types/proto --go_out=./shared ./shared/types/proto/*.proto
 	protoc -I=${proto_dir} -I=./shared/types/proto --go_out=. ./shared/types/proto/*.proto
 	protoc -I=${proto_dir} -I=./utility/proto --go_out=. ./utility/proto/*.proto
 	protoc -I=${proto_dir} -I=./persistence/pre_persistence/proto --go_out=. ./persistence/pre_persistence/proto/*.proto
-
+	protoc -I=${proto_dir} -I=./consensus/types/proto --go_out=./consensus ./consensus/types/proto/*.proto
 
 	echo "View generated proto files by running: make protogen_show"
 
@@ -175,9 +208,9 @@ gofmt:
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)
 todo_list:
-	grep --exclude-dir={vendor,prototype} -r "TODO" .
+	grep --exclude-dir={.git,vendor,prototype} -r "TODO" .
 
 .PHONY: todo_count
 ## Print a count of all the TODOs in the project
 todo_count:
-	grep --exclude-dir={vendor,prototype} -r "TODO" . | wc -l
+	grep --exclude-dir={.git,vendor,prototype} -r "TODO" . | wc -l
