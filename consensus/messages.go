@@ -1,6 +1,7 @@
 package consensus
 
 import (
+	"github.com/pokt-network/pocket/shared/types"
 	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -44,7 +45,7 @@ func CreateProposeMessage(
 func CreateVoteMessage(
 	m *consensusModule,
 	step typesCons.HotstuffStep, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
-	block *typesCons.BlockConsensusTemp,
+	block *types.Block,
 ) (*typesCons.HotstuffMessage, error) {
 	if block == nil {
 		return nil, typesCons.ErrNilBlockVote

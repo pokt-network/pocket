@@ -1,8 +1,8 @@
 package consensus
 
 import (
-	"bytes"
 	"encoding/hex"
+	"github.com/pokt-network/pocket/shared/types"
 	"unsafe"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -10,7 +10,7 @@ import (
 )
 
 // TODO(olshansky): Sync with Andrew on the type of validation we need here.
-func (m *consensusModule) validateBlock(block *typesCons.BlockConsensusTemp) error {
+func (m *consensusModule) validateBlock(block *types.Block) error {
 	if block == nil {
 		return typesCons.ErrNilBlock
 	}
@@ -18,7 +18,7 @@ func (m *consensusModule) validateBlock(block *typesCons.BlockConsensusTemp) err
 }
 
 // This is a helper function intended to be called by a leader/validator during a view change
-func (m *consensusModule) prepareBlock() (*typesCons.BlockConsensusTemp, error) {
+func (m *consensusModule) prepareBlock() (*types.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
@@ -37,16 +37,16 @@ func (m *consensusModule) prepareBlock() (*typesCons.BlockConsensusTemp, error) 
 		return nil, err
 	}
 
-	blockHeader := &typesCons.BlockHeaderConsensusTemp{
+	blockHeader := &types.BlockHeader{
 		Height:            int64(m.Height),
-		Hash:              appHash,
+		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            uint32(len(txs)),
 		LastBlockHash:     typesGenesis.GetNodeState(nil).AppHash, // testing temporary
 		ProposerAddress:   m.privateKey.Address(),
 		QuorumCertificate: nil,
 	}
 
-	block := &typesCons.BlockConsensusTemp{
+	block := &types.Block{
 		BlockHeader:  blockHeader,
 		Transactions: txs,
 	}
@@ -55,7 +55,7 @@ func (m *consensusModule) prepareBlock() (*typesCons.BlockConsensusTemp, error) 
 }
 
 // This is a helper function intended to be called by a replica/voter during a view change
-func (m *consensusModule) applyBlock(block *typesCons.BlockConsensusTemp) error {
+func (m *consensusModule) applyBlock(block *types.Block) error {
 	if m.isLeader() {
 		return typesCons.ErrLeaderApplyBLock
 	}
@@ -75,8 +75,8 @@ func (m *consensusModule) applyBlock(block *typesCons.BlockConsensusTemp) error 
 	}
 
 	// TODO(olshansky) blockhash is not the appHash. Discuss offline with Andrew
-	if !bytes.Equal(block.BlockHeader.Hash, appHash) {
-		return typesCons.ErrInvalidAppHash(hex.EncodeToString(block.BlockHeader.Hash), hex.EncodeToString(appHash))
+	if block.BlockHeader.Hash != hex.EncodeToString(appHash) {
+		return typesCons.ErrInvalidAppHash(block.BlockHeader.Hash, hex.EncodeToString(appHash))
 	}
 
 	return nil
@@ -99,7 +99,7 @@ func (m *consensusModule) updateUtilityContext() error {
 	return nil
 }
 
-func (m *consensusModule) commitBlock(block *typesCons.BlockConsensusTemp) error {
+func (m *consensusModule) commitBlock(block *types.Block) error {
 	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
 
 	if err := m.utilityContext.GetPersistenceContext().Commit(); err != nil {
@@ -109,7 +109,7 @@ func (m *consensusModule) commitBlock(block *typesCons.BlockConsensusTemp) error
 	m.utilityContext = nil
 
 	state := typesGenesis.GetNodeState(nil)
-	state.UpdateAppHash(hex.EncodeToString(block.BlockHeader.Hash))
+	state.UpdateAppHash(block.BlockHeader.Hash)
 	state.UpdateBlockHeight(uint64(block.BlockHeader.Height))
 
 	return nil
