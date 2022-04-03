@@ -397,8 +397,6 @@ func (s *socket) writeChunk(b []byte, isErrorOf bool, reqNum uint32, wrapped boo
 // The channel - on which the response is expected to be received - is blocking, thus enables the 'wait to receive the response' behavior.
 // The `read` routine takes care of identifying incoming responses (_using the nonce_) and redirecting them to the waiting channels of the currently-open requests.
 func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Packet, error) {
-	panic("Not used or tested at the moment")
-
 	request := s.requests.Get()
 	requestNonce := request.Nonce
 
@@ -414,6 +412,7 @@ func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Packet, error) 
 		return response, nil
 
 	case <-time.After(time.Millisecond * time.Duration(s.readTimeout)):
+		close(request.ResponsesCh)
 		return types.Packet{}, ErrSocketRequestTimedOut(s.addr, requestNonce)
 	}
 }

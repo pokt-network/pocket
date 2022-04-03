@@ -45,9 +45,9 @@ func TestSocket_WriteChunk(t *testing.T) {
 
 	// write a chunk
 	{
-		// writeChunk is blocking, since it signals that it has written a chunk everytime it's done writing one.
-		// if no one is waiting on that signal, writeChunk will block forever
-		// thus we are sending in an early goroutine to wait on that signal so that writeChunk writes and unblocks
+		// writeChunk is blocking, since it signals (using a channel) that it has written a chunk everytime it's done writing one.
+		// if no one is waiting on that signal, writeChunk will block forever.
+		// Thus we are sending in an early goroutine to wait on that signal so that writeChunk writes and unblocks immediately after signaling
 		wg.Add(1)
 		go func() {
 			pipe.buffers.write.Wait()
@@ -79,6 +79,120 @@ func TestSocket_WriteChunk(t *testing.T) {
 			true,
 			"pipe write error: write buffer closed for no reason",
 		)
+	}
+}
+
+func TestSocket_WriteChunkAckful(t *testing.T) {
+	// 1. prepare socket for writing (i.e: make sure the writer does not block on signaling)
+	// 2. ref a reference of the requests map such that we retrieve ethe nonce of the write and response channel
+	// 3. test a successful write and that the proper response is retrieved
+	// 4. test a non successful write with a timeout
+	var wg sync.WaitGroup
+	var response types.Packet
+	var err error
+	var requestNonce uint32
+	var responseChannel chan types.Packet
+	var data []byte = []byte("Hello World")
+	var requestsMap *types.RequestMap
+
+	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
+	requestsMap = pipe.requests
+
+	pipe.buffers.write.Open() // this is usually set to true by pipe.open
+
+	{ // test a successful write
+		// write a chunk and respond to it immediately
+		{
+
+			wg.Add(1)
+			go func() {
+				response, err = pipe.writeChunkAckful(data, false)
+				wg.Done()
+			}()
+
+			pipe.buffers.write.Wait() // will unblock once the writeAckful has written the chunk
+			responseChannel = requestsMap.Requests()[0].ResponsesCh
+			requestNonce = requestsMap.Requests()[0].Nonce
+			responseChannel <- types.Packet{Nonce: requestNonce, Data: []byte("Bye bye world")}
+			wg.Wait()
+		}
+
+		{
+			assert.Nilf(
+				t,
+				err,
+				"pipe write error: %s", err,
+			)
+
+			assert.Equal(
+				t,
+				pipe.buffers.write.IsOpen(),
+				true,
+				"pipe writeAckful error: write buffer closed for no reason",
+			)
+
+			assert.Equal(
+				t,
+				response.Nonce,
+				requestNonce,
+				"pipe writeAckful error: nonce mismatch",
+			)
+
+			assert.Equal(
+				t,
+				response.Data,
+				[]byte("Bye bye world"),
+				"pipe writeAckful error: response data mismatch",
+			)
+		}
+	}
+
+	{ // test a non successful write with a timeout
+		// write a chunk and timeout
+		{
+
+			wg.Add(1)
+			go func() {
+				response, err = pipe.writeChunkAckful(data, false)
+				wg.Done()
+			}()
+
+			pipe.buffers.write.Wait() // will unblock once the writeAckful has written the chunk
+			wg.Wait()
+		}
+
+		{
+
+			requestNonce = requestsMap.Requests()[1].Nonce
+			responseChannel = requestsMap.Requests()[1].ResponsesCh
+
+			assert.NotNil(
+				t,
+				err,
+				"pipe writeAckful error: expected error to be a timeout, got nil",
+			)
+
+			assert.Equal(
+				t,
+				err,
+				ErrSocketRequestTimedOut(pipe.addr, requestNonce),
+				"pipe writeAckful error: expected error to be a timeout, got %s", err,
+			)
+
+			assert.Equal(
+				t,
+				pipe.buffers.write.IsOpen(),
+				true,
+				"pipe writeAckful error: write buffer closed for no reason",
+			)
+
+			_, open := <-responseChannel
+			assert.False(
+				t,
+				open,
+				"pipe writeAckful error: response channel should be closed, but it is still open after timeout",
+			)
+		}
 	}
 }
 

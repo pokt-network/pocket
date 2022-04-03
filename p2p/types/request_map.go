@@ -87,6 +87,17 @@ func (rm *RequestMap) Delete(nonce uint32) bool {
 	return exists
 }
 
+func (rm *RequestMap) Requests() []*Request {
+	rm.Lock()
+	defer rm.Unlock()
+
+	return rm.elements
+}
+
+func (rm *RequestMap) Len() int {
+	return len(rm.elements)
+}
+
 func NewRequestMap(cap uint) *RequestMap {
 	return &RequestMap{
 		maxCap:    uint32(cap),
