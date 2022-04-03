@@ -4,6 +4,15 @@ import (
 	"fmt"
 )
 
+// TOOO(derrandz): add/implement (or consolidate with shared/types/error.go) error codes for the following:
+// const (
+// 	ErrMsgTooLong = iota
+// 	ErrMsgTooShort
+// 	ErrInternal
+// 	ErrConnClosed
+// 	ErrConnTimeout
+// )
+
 var (
 	ErrMissingRequiredArg = func(value string) error {
 		return fmt.Errorf("socket error: missing required argument: %s", value)
@@ -22,5 +31,8 @@ var (
 	}
 	ErrPayloadTooBig = func(bodyLength, acceptedLength uint) error {
 		return fmt.Errorf("socket error: cannot read a buffer of length %d, the accepted body length is %d", bodyLength, acceptedLength)
+	}
+	ErrSocketIOStartFailed = func(socketType string) error {
+		return fmt.Errorf("socket error: (%s socket) failed to start socket reading/writing (io)", socketType)
 	}
 )

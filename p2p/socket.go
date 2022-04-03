@@ -74,11 +74,12 @@ type socket struct {
 	// - https://dave.cheney.net/2014/03/25/the-empty-struct
 	// - https://dave.cheney.net/2013/04/30/curious-channels
 
-	ready   chan struct{} // when the socket is opened and IO starts, this channel gets closed to signal readiness
-	done    chan struct{} // if this channel is closed or receives and input, it stops the socket and IO operations
-	writing chan struct{} // when the writing starts, this channel receives a new input; closes when done writing (i.e: stopped the socket)
-	reading chan struct{} // when the reading starts, this channel receives a new input; closes when done reading (i.e: stopped the socket)
-	errored chan struct{} // on error, this channel receives a new input to signal the happening of an error
+	ready     chan struct{} // when the socket is opened and IO starts, this channel gets closed to signal readiness
+	done      chan struct{} // if this channel is closed or receives and input, it stops the socket and IO operations
+	writing   chan struct{} // when the writing starts, this channel receives a new input; closes when done writing (i.e: stopped the socket)
+	reading   chan struct{} // when the reading starts, this channel receives a new input; closes when done reading (i.e: stopped the socket)
+	errored   chan struct{} // on error, this channel receives a new input to signal the happening of an error
+	ioStarted chan struct{} // on start of IO, this channel closes to signal out that the IO has kicked off
 
 	err struct { // the reference to store the encountered error
 		sync.Mutex
@@ -108,10 +109,11 @@ func NewSocket(readBufferSize uint, packetHeaderLength uint, readTimeoutInMs uin
 
 		requests: types.NewRequestMap(math.MaxUint32),
 
-		ready:   make(chan struct{}), // closes to signal the readiness of the socket
-		done:    make(chan struct{}), // closes to signal the closing of the socket
-		writing: make(chan struct{}), // sends a new input to signal the start of the writing routine, closes when done writing
-		reading: make(chan struct{}), // sends new input to signal the start of the reading routine, closes when done reading
+		ready:     make(chan struct{}), // closes to signal the readiness of the socket
+		done:      make(chan struct{}), // closes to signal the closing of the socket
+		writing:   make(chan struct{}), // sends a new input to signal the start of the writing routine, closes when done writing
+		reading:   make(chan struct{}), // sends new input to signal the start of the reading routine, closes when done reading
+		ioStarted: make(chan struct{}), // closes to signal the start of IO
 
 		// sends new input to signal the encoutering of an error in running routines
 		// closes when the socket closes.
@@ -152,27 +154,12 @@ func (s *socket) open(ctx context.Context, connector func() (string, types.Socke
 	go s.startIO(ctx, socketType, addr, conn, onOpened, onClosed)
 
 	select {
+	case _, open := <-s.ioStarted: // wait for the IO to start, closes on failure, signals on success
+		if !open {
+			return ErrSocketIOStartFailed(string(socketType))
+		}
 	case <-s.errored:
 		return s.err.error
-	case _, closed := <-s.reading:
-		if closed {
-			s.logger.Debug("Socket has stopped reading...")
-			s.logger.Error("Socket stopped reading imemdiately after opening...")
-		} else {
-			s.logger.Debug("Socket has started the reading routine successfully")
-		}
-	}
-
-	select {
-	case <-s.errored:
-		return s.err.error
-	case _, closed := <-s.writing:
-		if closed {
-			s.logger.Debug("Socket has stopped writing...")
-			s.logger.Error("Socket stopped writing imemdiately after opening...")
-		} else {
-			s.logger.Debug("Socket has started the reading routine successfully")
-		}
 	}
 
 	s.signalOpen()
@@ -223,29 +210,46 @@ func (s *socket) startIO(ctx context.Context, kind types.SocketType, addr string
 		return
 	}
 
-	go s.read(ctx)  // closes s.reading when done
-	go s.write(ctx) // closes s.writing when done
+	go s.read(context.Context(ctx))  // closes s.reading when done
+	go s.write(context.Context(ctx)) // closes s.writing when done
 
-waiter:
-	for {
-		select {
-		case _, open := <-s.writing:
-			if !open {
-				s.logger.Warn("Socket stopped writing...")
-				break waiter
-			}
-		case _, open := <-s.reading:
-			if !open {
-				s.logger.Warn("Socket stopped reading...")
-				break waiter
-			}
-		}
+	_, open := <-s.writing
+	if !open {
+		s.logger.Error("Socket stopped writing after starting...")
+		s.signalIoFailure()
+		return
 	}
+
+	_, open = <-s.reading
+	if !open {
+		s.logger.Error("Socket stopped reading after starting...")
+		s.signalIoFailure()
+		return
+	}
+
+	s.signalIoStarted()
+
+	s.logger.Info("Running...")
+	select {
+	case <-s.runner.Done(): // if the socket runner is done, the socket moves on to run onClosed
+		if !s.isOpen.Load() {
+			s.close()
+		}
+	case <-ctx.Done(): // if the context is done, the socket moves on to run onClosed
+		if !s.isOpen.Load() {
+			s.close()
+		}
+	case <-s.done: // if the socket is done, the socket moves on to run onClosed
+	}
+
+	s.logger.Info("Closing the socket")
 
 	if err := onClosed(ctx, s); err != nil {
 		s.error(err)
 		return
 	}
+
+	s.logger.Info("Closed")
 }
 
 // The TLS handshake algorithm to establish encrypted connections
@@ -493,8 +497,8 @@ func (s *socket) stopErrorReporting() {
 }
 
 func (s *socket) signalWritingStart() {
-	s.writing <- struct{}{}
 	s.isWriting.Store(true)
+	s.writing <- struct{}{}
 }
 
 func (s *socket) signalWritingStop() {
@@ -503,11 +507,20 @@ func (s *socket) signalWritingStop() {
 }
 
 func (s *socket) signalReadingStart() {
-	s.reading <- struct{}{}
 	s.isReading.Store(true)
+	s.reading <- struct{}{}
 }
 
 func (s *socket) signalReadingStop() {
 	close(s.reading)
 	s.isReading.Store(false)
+}
+
+// used by startIO to signal that IO has been kicked off
+func (s *socket) signalIoStarted() {
+	s.ioStarted <- struct{}{}
+}
+
+func (s *socket) signalIoFailure() {
+	close(s.ioStarted)
 }

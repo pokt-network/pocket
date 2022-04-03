@@ -351,8 +351,7 @@ func TestSocket_EngageInbound(t *testing.T) {
 		go pipe.startIO(ctx, types.Inbound, addr, net.Conn(conn), onopened, onclosed)
 	}
 
-	_, isSocketWriting := <-pipe.writing
-	_, isSocketReading := <-pipe.reading
+	<-pipe.ioStarted
 
 	// assert that startIO has launched properly and started IO on the inbound connection
 	{
@@ -376,15 +375,15 @@ func TestSocket_EngageInbound(t *testing.T) {
 
 		assert.Equal(
 			t,
-			isSocketWriting,
 			true,
+			pipe.isWriting.Load(),
 			"pipe.open error: pipe is not receiving or sending after inbound launch",
 		)
 
 		assert.Equal(
 			t,
-			isSocketReading,
 			true,
+			pipe.isReading.Load(),
 			"pipe.open error: pipe is not receiving or sending after inbound launch",
 		)
 
@@ -541,8 +540,7 @@ func TestSocket_EngageOutbound(t *testing.T) {
 		go pipe.startIO(ctx, types.Outbound, addr, conn, onopened, onclosed)
 	}
 
-	_, isSocketWriting := <-pipe.writing
-	_, isSocketReading := <-pipe.reading
+	<-pipe.ioStarted
 
 	{
 		assert.NotNil(
@@ -565,15 +563,15 @@ func TestSocket_EngageOutbound(t *testing.T) {
 
 		assert.Equal(
 			t,
-			isSocketWriting,
 			true,
+			pipe.isWriting.Load(),
 			"pipe.open error: pipe is not receiving or sending after inbound launch",
 		)
 
 		assert.Equal(
 			t,
-			isSocketReading,
 			true,
+			pipe.isReading.Load(),
 			"pipe.open error: pipe is not receiving or sending after inbound launch",
 		)
 
@@ -726,7 +724,11 @@ func TestSocket_Open(t *testing.T) {
 			return nil
 		}
 
-		pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
+		pipe := NewSocket(
+			ReadBufferSize,
+			WireByteHeaderLength,
+			ReadDeadlineInMs,
+		)
 
 		{
 			pipe.runner = runner
@@ -742,6 +744,7 @@ func TestSocket_Open(t *testing.T) {
 				err,
 				"pipe.open: error while opeining the socket",
 			)
+
 			_, isNotReady := <-pipe.ready
 
 			assert.False(
@@ -783,11 +786,10 @@ func TestSocket_Open(t *testing.T) {
 			)
 		}
 
-		runner.done <- 1
-		<-time.After(time.Millisecond * 10)
-
+		cancel()
+		<-pipe.done
+		time.After(time.Millisecond * 10)
 		{
-
 			assert.True(
 				t,
 				onclosedStub.WasCalled(),
@@ -800,8 +802,6 @@ func TestSocket_Open(t *testing.T) {
 				"pipe.open error: expected onclosed handler to be called once",
 			)
 		}
-
-		cancel()
 	}
 
 	// test opening an inbound connection
@@ -814,7 +814,7 @@ func TestSocket_Open(t *testing.T) {
 			return addr, types.Inbound, conn
 		}
 
-		ctx, _ := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(context.Background())
 
 		onopenedStub := testutils.NewFnCallStub()
 		onopened := func(_ context.Context, p *socket) error {
@@ -884,7 +884,8 @@ func TestSocket_Open(t *testing.T) {
 			)
 		}
 
-		runner.done <- 1
+		cancel()
+		<-pipe.done
 		<-time.After(time.Millisecond * 10)
 
 		{
