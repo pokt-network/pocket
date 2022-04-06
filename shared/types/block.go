@@ -1,11 +1,9 @@
-package pre_persistence
+package types
 
 import (
 	"encoding/hex"
-	crypto2 "pocket/shared/crypto"
+	crypto2 "github.com/pokt-network/pocket/shared/crypto"
 )
-
-type ValidatorSet []Validator
 
 func (b *Block) ValidateBasic() Error {
 	if err := b.BlockHeader.ValidateBasic(); err != nil {
@@ -20,7 +18,7 @@ func (b *Block) ValidateBasic() Error {
 }
 
 func (bh *BlockHeader) ValidateBasic() Error {
-	if bh.NetworkID == "" {
+	if bh.NetworkId == "" {
 		return ErrEmptyNetworkID()
 	}
 	if bh.Time.Seconds == 0 {
@@ -41,7 +39,7 @@ func (bh *BlockHeader) ValidateBasic() Error {
 	}
 	hashLen := len(hashBytes)
 	if hashLen != crypto2.SHA3HashLen {
-		return ErrInvalidHashLength(crypto2.ErrInvalidHashLen())
+		return ErrInvalidHashLength(crypto2.ErrInvalidHashLen(hashLen))
 	}
 	hashBytes, err = hex.DecodeString(bh.LastBlockHash)
 	if err != nil {
@@ -49,7 +47,10 @@ func (bh *BlockHeader) ValidateBasic() Error {
 	}
 	hashLen = len(hashBytes)
 	if hashLen != crypto2.SHA3HashLen {
-		return ErrInvalidHashLength(crypto2.ErrInvalidHashLen())
+		return ErrInvalidHashLength(crypto2.ErrInvalidHashLen(hashLen))
+	}
+	if bh.QuorumCertificate == nil {
+		return ErrNilQuorumCertificate()
 	}
 	return nil
 }

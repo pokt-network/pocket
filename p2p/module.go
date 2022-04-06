@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/pokt-network/pocket/shared/config"
-	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -40,9 +40,9 @@ func (m *p2pModule) GetBus() modules.Bus {
 }
 
 func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
-	panic("Not implemented")
+	panic("Broadcast not implemented")
 }
 
-func (m *p2pModule) Send(addr pcrypto.Address, data *anypb.Any, topic types.PocketTopic) error {
-	panic("Not implemented")
+func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.PocketTopic) error {
+	panic("Send not implemented")
 }

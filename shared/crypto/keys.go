@@ -1,9 +1,12 @@
 package crypto
 
-import "encoding/json"
+import (
+	"encoding/hex"
+	"encoding/json"
+	"log"
+)
 
 // TODO(discuss): Consider create a type for signature and having constraints for each type as well.
-
 type Address []byte
 
 type PublicKey interface {
@@ -11,7 +14,7 @@ type PublicKey interface {
 	String() string
 	Address() Address
 	Equals(other PublicKey) bool
-	VerifyBytes(msg []byte, sig []byte) bool // TODO(andrew): consider renaming to Verify
+	Verify(msg []byte, sig []byte) bool
 	Size() int
 }
 
@@ -23,6 +26,7 @@ type PrivateKey interface {
 	Address() Address
 	Sign(msg []byte) ([]byte, error)
 	Size() int
+	Seed() []byte
 }
 
 func (a *Address) UnmarshalJSON(data []byte) error {
@@ -31,6 +35,22 @@ func (a *Address) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	*a = []byte(address)
+	bytes, err := hex.DecodeString(address)
+	if err != nil {
+		return err
+	}
+	*a = bytes
 	return nil
+}
+
+func (a *Address) ToString() string {
+	return hex.EncodeToString(*a)
+}
+
+func AddressFromString(s string) Address {
+	bytes, err := hex.DecodeString(s)
+	if err != nil {
+		log.Fatal("Should never fail on decoding an address from string: ", err)
+	}
+	return Address(bytes)
 }

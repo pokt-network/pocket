@@ -1,4 +1,4 @@
-package types
+package genesis
 
 import (
 	"encoding/json"
@@ -19,7 +19,6 @@ func TestGenesisFromJson(t *testing.T) {
 			"upokt": 5000000000000,
 			"host": "node1.consensus",
 			"port": 8080,
-			"debug_port": 9080,
 			"chains": ["0001", "0021"]
 		  }
 		]
