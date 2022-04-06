@@ -646,7 +646,7 @@ func TestSocket_EngageOutbound(t *testing.T) {
 		ReadDeadlineInMs,
 	)
 
-	{
+	{ // startIO on outbound connection (Mock)
 		pipe.runner = runner
 		pipe.buffers.write.Open()
 		pipe.isOpen.Store(true)
@@ -654,8 +654,9 @@ func TestSocket_EngageOutbound(t *testing.T) {
 		go pipe.startIO(ctx, types.Outbound, addr, conn, onopened, onclosed)
 	}
 
-	<-pipe.ioStarted
+	<-pipe.ioStarted // wait for IO to start
 
+	// assert that IO started successfully
 	{
 		assert.NotNil(
 			t,
@@ -706,8 +707,8 @@ func TestSocket_EngageOutbound(t *testing.T) {
 
 	// send data to the other end of the outbound socket
 	{
-		wn, werr := pipe.writeChunk(message.Bytes, false, 0, false)
-		message.Length = wn
+		wn, werr := pipe.writeChunk(message.Bytes, false, 0, false) // write a randomly generated message
+		message.Length = wn                                         // store the written length
 
 		assert.Nil(
 			t,
@@ -763,7 +764,7 @@ func TestSocket_EngageOutbound(t *testing.T) {
 		<-runner.sink
 	}
 
-	// send a message to the outbound socket from the outbound end
+	// send a message as a response to the outbound socket from the outbound end
 	go conn.Write(response.Encoded)
 
 	// wait for the mock connection to finish writing/sending
@@ -771,6 +772,7 @@ func TestSocket_EngageOutbound(t *testing.T) {
 
 	// assert that the outbound socket receives data properly from the other end
 	{
+		<-time.After(time.Millisecond * 5)
 		w := <-runner.sink
 
 		receivedResponse := w.Data
@@ -791,8 +793,8 @@ func TestSocket_EngageOutbound(t *testing.T) {
 	}
 
 	conn.Flush()
-	pipe.close()
-	<-time.After(time.Millisecond * 1)
+	cancel()
+	<-pipe.done
 
 	{
 		assert.Equal(
@@ -809,9 +811,6 @@ func TestSocket_EngageOutbound(t *testing.T) {
 			"pipe.open error: expected onclosed handler to be called once, got called %d times", onopenedStub.Times(),
 		)
 	}
-
-	cancel() // has no effect after pipe.close, just to prevent the context from leaking
-	t.Log("Success")
 }
 
 func TestSocket_Open(t *testing.T) {

@@ -11,6 +11,9 @@ type RequestMap struct {
 	numNonces uint32
 }
 
+// Retrieves a new one request instance with a fresh new nonce.
+// This is a factory function/method.
+// The nonce is monotonically increasing with every .Get
 func (rm *RequestMap) Get() *Request {
 	rm.Lock()
 	defer rm.Unlock()
