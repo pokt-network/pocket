@@ -82,11 +82,10 @@ func TestSocket_WriteChunk(t *testing.T) {
 	}
 }
 
-func TestSocket_WriteChunkAckful(t *testing.T) {
+func TestSocket_WriteChunkAckfulPeerAcks(t *testing.T) {
 	// 1. prepare socket for writing (i.e: make sure the writer does not block on signaling)
 	// 2. ref a reference of the requests map such that we retrieve ethe nonce of the write and response channel
 	// 3. test a successful write and that the proper response is retrieved
-	// 4. test a non successful write with a timeout
 	var wg sync.WaitGroup
 	var response types.Packet
 	var err error
@@ -147,13 +146,32 @@ func TestSocket_WriteChunkAckful(t *testing.T) {
 		}
 	}
 
-	{ // test a non successful write with a timeout
+}
+
+func TestSocket_WriteChunkAckfulPeerTimesOut(t *testing.T) {
+	// 1. prepare socket for writing (i.e: make sure the writer does not block on signaling)
+	// 2. ref a reference of the requests map such that we retrieve ethe nonce of the write and response channel
+	// 3. test a non successful write with a timeout
+	var wg sync.WaitGroup
+	var err error
+	var requestNonce uint32
+	var responseChannel chan types.Packet
+	var data []byte = []byte("Hello World")
+	var requestsMap *types.RequestMap
+
+	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
+	requestsMap = pipe.requests
+
+	pipe.buffers.write.Open() // this is usually set to true by pipe.open
+
+	// test a non successful write with a timeout
+	{
 		// write a chunk and timeout
 		{
 
 			wg.Add(1)
 			go func() {
-				response, err = pipe.writeChunkAckful(data, false)
+				_, err = pipe.writeChunkAckful(data, false)
 				wg.Done()
 			}()
 
@@ -163,8 +181,8 @@ func TestSocket_WriteChunkAckful(t *testing.T) {
 
 		{
 
-			requestNonce = requestsMap.Requests()[1].Nonce
-			responseChannel = requestsMap.Requests()[1].ResponsesCh
+			requestNonce = requestsMap.Requests()[0].Nonce
+			responseChannel = requestsMap.Requests()[0].ResponsesCh
 
 			assert.NotNil(
 				t,
@@ -289,6 +307,18 @@ func TestSocket_WriteRoutine(t *testing.T) {
 	cancel() // to prevent the context from leaking. This won't have any effect this close would have done its job
 }
 
+func TestSocket_WriteRoutineWriterWriteFailure(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
+func TestSocket_WriteRoutineWriterFlushFailure(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
+func TestSocket_WriteRoutineWriterSuddenlyCloses(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
 func TestSocket_ReadChunk(t *testing.T) {
 	conn := MockConn()
 	runner := NewRunnerMock()
@@ -364,6 +394,18 @@ func TestSocket_ReadChunk(t *testing.T) {
 	}
 }
 
+func TestSocket_ReadChunkPayloadTooBig(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
+func TestSocket_ReadChunkReaderFailure(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
+func TestSocket_ReadChunkDecoderFailure(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
 func TestSocket_ReadRoutine(t *testing.T) {
 	runner := NewRunnerMock()
 	conn := MockConn()
@@ -432,8 +474,20 @@ func TestSocket_ReadRoutine(t *testing.T) {
 	}
 }
 
+func TestSocket_ReadRoutineIOFailure(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
+func TestSocket_ReadRoutineDecoderFailure(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
+func TestSocket_ReadRoutineRunnerSinkBlocksIndefinitely(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
 // This test simulates an inbound connection and tests the `startIO` method
-func TestSocket_EngageInbound(t *testing.T) {
+func TestSocket_StartIOInbound(t *testing.T) {
 	addr := "dummy-test-host:dummyport"
 	runner := NewRunnerMock()
 	conn := MockConnM()
@@ -619,7 +673,7 @@ func TestSocket_EngageInbound(t *testing.T) {
 }
 
 // This test simulates an inbound connection and tests the `startIO` method
-func TestSocket_EngageOutbound(t *testing.T) {
+func TestSocket_StartIOOutbound(t *testing.T) {
 	addr := "dummy-test-host:dummyport"
 	runner := NewRunnerMock()
 	dialer := MockDialer()
@@ -813,206 +867,233 @@ func TestSocket_EngageOutbound(t *testing.T) {
 	}
 }
 
-func TestSocket_Open(t *testing.T) {
+func TestSocket_StartIOWriteRoutineStartFailure(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
+func TestSocket_StartIOReadRoutineStartFailure(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
+func TestSocket_StartIORunnerSuddenlyStopped(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
+func TestSocket_StartIOContextSuddenlyCancled(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
+func TestSocket_StartIOSocketSuddenlyClosed(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
+func TestSocket_StartIOSocketSuddenlyErrored(t *testing.T) {
+	assert.False(t, true, "Not implemented")
+}
+
+// test opening an inbound connection
+func TestSocket_OpenInbound(t *testing.T) {
+	addr := "dummy-test-host:dummyport"
+	runner := NewRunnerMock()
+	conn := MockConnM()
+
+	connector := func() (string, types.SocketType, net.Conn) {
+		return addr, types.Inbound, conn
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	onopenedStub := testutils.NewFnCallStub()
+	onopened := func(_ context.Context, p *socket) error {
+		onopenedStub.TrackCall()
+		return nil
+	}
+
+	onclosedStub := testutils.NewFnCallStub()
+	onclosed := func(_ context.Context, p *socket) error {
+		onclosedStub.TrackCall()
+		return nil
+	}
+
+	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
+
 	{
-		addr := "dummy-test-host:dummyport"
-		dialer := MockDialer()
-		runner := NewRunnerMock()
+		pipe.runner = runner
+		pipe.buffers.write.Open()
+	}
 
-		connector := func() (string, types.SocketType, net.Conn) {
-			return addr, types.Inbound, dialer.conn
-		}
+	{
+		pipe.open(ctx, connector, onopened, onclosed)
 
-		ctx, cancel := context.WithCancel(context.Background())
+		_, isNotReady := <-pipe.ready
 
-		onopenedStub := testutils.NewFnCallStub()
-		onopened := func(_ context.Context, p *socket) error {
-			onopenedStub.TrackCall()
-			return nil
-		}
-
-		onclosedStub := testutils.NewFnCallStub()
-		onclosed := func(_ context.Context, p *socket) error {
-			onclosedStub.TrackCall()
-			return nil
-		}
-
-		pipe := NewSocket(
-			ReadBufferSize,
-			WireByteHeaderLength,
-			ReadDeadlineInMs,
+		assert.Equal(
+			t,
+			isNotReady,
+			false,
+			"pipe open inbound error: pipe is not receiving or sending after inbound launch",
 		)
 
-		{
-			pipe.runner = runner
-			pipe.buffers.write.Open()
-		}
+		assert.NotNil(
+			t,
+			pipe.reader,
+			"pipe open inbound error: reader/writter is not initialized after inbound launch",
+		)
+		assert.NotNil(
+			t,
+			pipe.writer,
+			"pipe open inbound error: reader/writter is not initialized after inbound launch",
+		)
 
-		// test opening an outbound connection
-		{
-			err := pipe.open(ctx, connector, onopened, onclosed)
+		assert.NotNil(
+			t,
+			pipe.conn,
+			"pipe open inbound error: pipe connection is not initialized after inbound launch",
+		)
 
-			assert.Nil(
-				t,
-				err,
-				"pipe.open: error while opeining the socket",
-			)
+		assert.Equal(
+			t,
+			pipe.kind,
+			types.Inbound,
+			"pipe open inbound error: wrong pipe sense",
+		)
 
-			_, isNotReady := <-pipe.ready
+		assert.True(
+			t,
+			onopenedStub.WasCalled(),
+			"pipe.open error: did not call onopened handler on opened connection event",
+		)
 
-			assert.False(
-				t,
-				isNotReady,
-				"pipe.open error: pipe is not receiving or sending after outbound launch",
-			)
-
-			assert.NotNil(
-				t,
-				pipe.reader,
-				"pipe.open error: reader/writter is not initialized after outbound launch",
-			)
-
-			assert.NotNil(
-				t,
-				pipe.writer,
-				"pipe.open error: reader/writter is not initialized after outbound launch",
-			)
-
-			assert.NotNil(
-				t,
-				pipe.conn,
-				"pipe.open error: pipe connection is not initialized after outbound launch",
-			)
-
-			assert.Equal(
-				t,
-				onopenedStub.WasCalled(),
-				true,
-				"pipe.open error: did not call onopened handler on opened connection event",
-			)
-
-			assert.Equal(
-				t,
-				onopenedStub.WasCalledTimes(1),
-				true,
-				"pipe.open error: expected onopened handler to be called once",
-			)
-		}
-
-		cancel()
-		<-pipe.done
-		time.After(time.Millisecond * 10)
-		{
-			assert.True(
-				t,
-				onclosedStub.WasCalled(),
-				"pipe.open error: did not call onclosed handler on closed connection event",
-			)
-
-			assert.True(
-				t,
-				onclosedStub.WasCalledTimes(1),
-				"pipe.open error: expected onclosed handler to be called once",
-			)
-		}
+		assert.True(
+			t,
+			onopenedStub.WasCalledTimes(1),
+			"pipe.open error: expected onopened handler to be called once",
+		)
 	}
 
-	// test opening an inbound connection
+	cancel()
+	<-pipe.done
+	<-time.After(time.Millisecond * 10)
+
 	{
-		addr := "dummy-test-host:dummyport"
-		runner := NewRunnerMock()
-		conn := MockConnM()
+		assert.True(
+			t,
+			onclosedStub.WasCalled(),
+			"pipe.open error: did not call onclosed handler on closed connection event",
+		)
 
-		connector := func() (string, types.SocketType, net.Conn) {
-			return addr, types.Inbound, conn
-		}
-
-		ctx, cancel := context.WithCancel(context.Background())
-
-		onopenedStub := testutils.NewFnCallStub()
-		onopened := func(_ context.Context, p *socket) error {
-			onopenedStub.TrackCall()
-			return nil
-		}
-
-		onclosedStub := testutils.NewFnCallStub()
-		onclosed := func(_ context.Context, p *socket) error {
-			onclosedStub.TrackCall()
-			return nil
-		}
-
-		pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
-
-		{
-			pipe.runner = runner
-			pipe.buffers.write.Open()
-		}
-
-		{
-			pipe.open(ctx, connector, onopened, onclosed)
-
-			_, isNotReady := <-pipe.ready
-
-			assert.Equal(
-				t,
-				isNotReady,
-				false,
-				"pipe open inbound error: pipe is not receiving or sending after inbound launch",
-			)
-
-			assert.NotNil(
-				t,
-				pipe.reader,
-				"pipe open inbound error: reader/writter is not initialized after inbound launch",
-			)
-			assert.NotNil(
-				t,
-				pipe.writer,
-				"pipe open inbound error: reader/writter is not initialized after inbound launch",
-			)
-
-			assert.NotNil(
-				t,
-				pipe.conn,
-				"pipe open inbound error: pipe connection is not initialized after inbound launch",
-			)
-
-			assert.Equal(
-				t,
-				pipe.kind,
-				types.Inbound,
-				"pipe open inbound error: wrong pipe sense",
-			)
-
-			assert.True(
-				t,
-				onopenedStub.WasCalled(),
-				"pipe.open error: did not call onopened handler on opened connection event",
-			)
-
-			assert.True(
-				t,
-				onopenedStub.WasCalledTimes(1),
-				"pipe.open error: expected onopened handler to be called once",
-			)
-		}
-
-		cancel()
-		<-pipe.done
-		<-time.After(time.Millisecond * 10)
-
-		{
-			assert.True(
-				t,
-				onclosedStub.WasCalled(),
-				"pipe.open error: did not call onclosed handler on closed connection event",
-			)
-
-			assert.True(
-				t,
-				onclosedStub.WasCalledTimes(1),
-				"pipe.open error: expected onclosed handler to be called once",
-			)
-		}
+		assert.True(
+			t,
+			onclosedStub.WasCalledTimes(1),
+			"pipe.open error: expected onclosed handler to be called once",
+		)
 	}
+}
+
+// test opening an outbound connection
+func TestSocket_OpenOutbound(t *testing.T) {
+	addr := "dummy-test-host:dummyport"
+	dialer := MockDialer()
+	runner := NewRunnerMock()
+
+	connector := func() (string, types.SocketType, net.Conn) {
+		return addr, types.Inbound, dialer.conn
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	onopenedStub := testutils.NewFnCallStub()
+	onopened := func(_ context.Context, p *socket) error {
+		onopenedStub.TrackCall()
+		return nil
+	}
+
+	onclosedStub := testutils.NewFnCallStub()
+	onclosed := func(_ context.Context, p *socket) error {
+		onclosedStub.TrackCall()
+		return nil
+	}
+
+	pipe := NewSocket(
+		ReadBufferSize,
+		WireByteHeaderLength,
+		ReadDeadlineInMs,
+	)
+
+	{
+		pipe.runner = runner
+		pipe.buffers.write.Open()
+	}
+
+	// test opening an outbound connection
+	{
+		err := pipe.open(ctx, connector, onopened, onclosed)
+
+		assert.Nil(
+			t,
+			err,
+			"pipe.open: error while opeining the socket",
+		)
+
+		_, isNotReady := <-pipe.ready
+
+		assert.False(
+			t,
+			isNotReady,
+			"pipe.open error: pipe is not receiving or sending after outbound launch",
+		)
+
+		assert.NotNil(
+			t,
+			pipe.reader,
+			"pipe.open error: reader/writter is not initialized after outbound launch",
+		)
+
+		assert.NotNil(
+			t,
+			pipe.writer,
+			"pipe.open error: reader/writter is not initialized after outbound launch",
+		)
+
+		assert.NotNil(
+			t,
+			pipe.conn,
+			"pipe.open error: pipe connection is not initialized after outbound launch",
+		)
+
+		assert.Equal(
+			t,
+			onopenedStub.WasCalled(),
+			true,
+			"pipe.open error: did not call onopened handler on opened connection event",
+		)
+
+		assert.Equal(
+			t,
+			onopenedStub.WasCalledTimes(1),
+			true,
+			"pipe.open error: expected onopened handler to be called once",
+		)
+	}
+
+	cancel()
+	<-pipe.done
+	time.After(time.Millisecond * 10)
+	{
+		assert.True(
+			t,
+			onclosedStub.WasCalled(),
+			"pipe.open error: did not call onclosed handler on closed connection event",
+		)
+
+		assert.True(
+			t,
+			onclosedStub.WasCalledTimes(1),
+			"pipe.open error: expected onclosed handler to be called once",
+		)
+	}
+}
+
+func TestSocket_OpenConnectorFailure(t *testing.T) {
+	assert.False(t, true, "Not implemented")
 }

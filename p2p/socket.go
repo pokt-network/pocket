@@ -18,6 +18,19 @@ import (
 
 type SocketEventMonitor func(context.Context, *socket) error
 
+type RWBUffer struct {
+	// the read buffer is a byte slice of a certain size (configurable: `ReadBufferSize``) which is destined
+	// to receive incoming data. This buffer is not concurrent and is primarily used by the s.read routine
+	read *types.Buffer
+
+	// the write buffer is a byte slice of a certain size (configurable: `WriteBufferSize``) which is written to
+	// by the owner of this socket (i.e: the runner, the peer). When the peer is done writing to the buffer, the s.write routine
+	// proceeds to writing this buffer to the concerned connection, resulting in a network send.
+	// This buffer is concurrent because two operations are happening in parallel, the writing to the buffer by the peer
+	// and the reading off of the buffer by the s.write routine
+	write *types.ConcurrentBuffer
+}
+
 // A "socket" (not to be confused with the OS' socket) is an abstraction around the net.Conn go interface,
 // whose purpose is to represent a p2p connection with full "read/write" capabilities.
 //
@@ -44,18 +57,7 @@ type socket struct {
 	codec *wireCodec
 
 	// io buffers
-	buffers struct {
-		// the read buffer is a byte slice of a certain size (configurable: `ReadBufferSize``) which is destined
-		// to receive incoming data. This buffer is not concurrent and is primarily used by the s.read routine
-		read *types.Buffer
-
-		// the write buffer is a byte slice of a certain size (configurable: `WriteBufferSize``) which is written to
-		// by the owner of this socket (i.e: the runner, the peer). When the peer is done writing to the buffer, the s.write routine
-		// proceeds to writing this buffer to the concerned connection, resulting in a network send.
-		// This buffer is concurrent because two operations are happening in parallel, the writing to the buffer by the peer
-		// and the reading off of the buffer by the s.write routine
-		write *types.ConcurrentBuffer
-	}
+	buffers *RWBUffer
 
 	// the io reader/writer
 	reader *bufio.Reader
@@ -90,7 +92,7 @@ type socket struct {
 }
 
 // A constructor to create a socket
-func NewSocket(readBufferSize uint, packetHeaderLength uint, readTimeoutInMs uint) *socket {
+func NewSocket(readBufferSize, packetHeaderLength, readTimeoutInMs uint) *socket {
 	pipe := &socket{
 		codec: newWireCodec(),
 
@@ -99,10 +101,7 @@ func NewSocket(readBufferSize uint, packetHeaderLength uint, readTimeoutInMs uin
 		bufferSize:   readBufferSize,
 		readTimeout:  readTimeoutInMs,
 
-		buffers: struct {
-			read  *types.Buffer
-			write *types.ConcurrentBuffer
-		}{
+		buffers: &RWBUffer{
 			read:  types.NewBuffer(readBufferSize),
 			write: types.NewConcurrentBuffer(0),
 		},
@@ -323,7 +322,6 @@ reader:
 			{
 				buf, n, err := s.readChunk()
 				if err != nil {
-
 					switch err {
 					case io.EOF:
 						s.error(ErrPeerHangUp(err))
@@ -364,6 +362,7 @@ reader:
 					continue
 				}
 
+				// TODO(derrandz): should we make this in a separate routine to avoid any potential issues?
 				s.runner.Sink() <- types.NewPacket(nonce, data, s.addr, wrapped)
 			}
 		}

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWireEncode(t *testing.T) {
+func TestWireCodec_Encode(t *testing.T) {
 	c := newWireCodec()
 
 	encoding := Binary
@@ -84,7 +84,7 @@ func TestWireEncode(t *testing.T) {
 	)
 }
 
-func TestWireDecode(t *testing.T) {
+func TestWireCodec_Decode(t *testing.T) {
 	c := newWireCodec()
 
 	encoding := Binary
