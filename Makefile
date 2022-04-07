@@ -224,7 +224,7 @@ test_p2p_types:
 .PHONY: test_p2p
 ## Run all p2p tests
 test_p2p:
-	go test -run Test -v -race ./p2p
+	go test -v -race ./p2p
 
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)
