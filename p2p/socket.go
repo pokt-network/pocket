@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/p2p/utils"
+	sharedTypes "github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/utils"
 
 	"go.uber.org/atomic"
 )
@@ -116,7 +117,7 @@ func NewSocket(readBufferSize, packetHeaderLength, readTimeoutInMs uint) *socket
 
 		// sends new input to signal the encoutering of an error in running routines
 		// closes when the socket closes.
-		// Bufferred to 1 to allow non-blocking signaling of errors, and blocking awaiting of error signals.
+		// Bufferred to 1 to allow non-blocking signaling of types. and blocking awaiting of error signals.
 		// (We are handling 1 error at most, so not more than one signal is expected to be received at a time, establishing a queue of exactly 1 error...)
 		errored: make(chan struct{}, 1),
 
@@ -135,11 +136,11 @@ func (s *socket) open(ctx context.Context, connector func() (string, types.Socke
 	addr, socketType, conn := connector()
 
 	if utils.IsEmpty(addr) {
-		return ErrMissingRequiredArg("address")
+		return sharedTypes.ErrMissingRequiredArg("address")
 	}
 
 	if utils.IsEmpty(string(socketType)) {
-		return ErrMissingRequiredArg("socketType")
+		return sharedTypes.ErrMissingRequiredArg("socketType")
 	}
 
 	switch socketType {
@@ -147,7 +148,7 @@ func (s *socket) open(ctx context.Context, connector func() (string, types.Socke
 	case types.Inbound:
 	default:
 		s.close()
-		return ErrSocketUndefinedKind(string(socketType))
+		return sharedTypes.ErrUndefinedSocketType(string(socketType))
 	}
 
 	go s.startIO(ctx, socketType, addr, conn, onOpened, onClosed)
@@ -155,7 +156,7 @@ func (s *socket) open(ctx context.Context, connector func() (string, types.Socke
 	select {
 	case _, open := <-s.ioStarted: // wait for the IO to start, closes on failure, signals on success
 		if !open {
-			return ErrSocketIOStartFailed(string(socketType))
+			return sharedTypes.ErrSocketIOStartFailed(string(socketType))
 		}
 	case <-s.errored:
 		return s.err.error
@@ -279,7 +280,7 @@ func (s *socket) readChunk() ([]byte, int, error) {
 
 	// TODO(derrandz): replace with configurable max value or keep it as is (i.e: max=chunk size) ??
 	if bodyLen > uint32(s.bufferSize-s.headerLength) {
-		return nil, 0, ErrPayloadTooBig(uint(bodyLen), s.bufferSize-s.headerLength)
+		return nil, 0, sharedTypes.ErrPayloadTooBig(uint(bodyLen), s.bufferSize-s.headerLength)
 	}
 
 	if n, err = io.ReadFull(s.reader, (*readBuffer)[s.headerLength:uint32(s.headerLength)+bodyLen]); err != nil {
@@ -324,15 +325,15 @@ reader:
 				if err != nil {
 					switch err {
 					case io.EOF:
-						s.error(ErrPeerHangUp(err))
+						s.error(sharedTypes.ErrPeerHangUp(err))
 						break reader
 
 					case io.ErrUnexpectedEOF:
-						s.error(ErrPeerHangUp(err))
+						s.error(sharedTypes.ErrPeerHangUp(err))
 						break reader
 
 					default:
-						s.error(ErrUnexpected(err))
+						s.error(sharedTypes.ErrUnexpected(err))
 						break reader
 					}
 				}
@@ -412,7 +413,7 @@ func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Packet, error) 
 
 	case <-time.After(time.Millisecond * time.Duration(s.readTimeout)):
 		close(request.ResponsesCh)
-		return types.Packet{}, ErrSocketRequestTimedOut(s.addr, requestNonce)
+		return types.Packet{}, sharedTypes.ErrSocketRequestTimedOut(s.addr, requestNonce)
 	}
 }
 

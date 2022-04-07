@@ -10,6 +10,7 @@ import (
 
 	testutils "github.com/pokt-network/pocket/p2p/testutils"
 	"github.com/pokt-network/pocket/p2p/types"
+	sharedTypes "github.com/pokt-network/pocket/shared/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -193,7 +194,7 @@ func TestSocket_WriteChunkAckfulPeerTimesOut(t *testing.T) {
 			assert.Equal(
 				t,
 				err,
-				ErrSocketRequestTimedOut(pipe.addr, requestNonce),
+				sharedTypes.ErrSocketRequestTimedOut(pipe.addr, requestNonce),
 				"pipe writeAckful error: expected error to be a timeout, got %s", err,
 			)
 
@@ -219,8 +220,8 @@ func TestSocket_WriteConcurrently(t *testing.T) {
 }
 
 func TestSocket_WriteRoutine(t *testing.T) {
-	runner := NewRunnerMock() // TODO(derrandz): use mockgen
-	conn := MockConnM()       // TODO(derrandz): use mockgen
+	runner := testutils.NewRunnerMock() // TODO(derrandz): use mockgen
+	conn := testutils.NewConnMock()     // TODO(derrandz): use mockgen
 	ctx, cancel := context.WithCancel(context.Background())
 
 	chunk := testutils.NewDataChunk(1024, encode)
@@ -255,7 +256,7 @@ func TestSocket_WriteRoutine(t *testing.T) {
 	}
 
 	// wait for the connection to receive the written data from the write routine
-	<-conn.signals
+	<-conn.Signals
 
 	t.Log("Mock connection received the written data")
 
@@ -320,8 +321,8 @@ func TestSocket_WriteRoutineWriterSuddenlyCloses(t *testing.T) {
 }
 
 func TestSocket_ReadChunk(t *testing.T) {
-	conn := MockConn()
-	runner := NewRunnerMock()
+	conn := testutils.NewConnMockBuffered()
+	runner := testutils.NewRunnerMock()
 	messageA := testutils.NewDataChunk(ReadBufferSize-WireByteHeaderLength, encode)
 	messageB := testutils.NewDataChunk(1024, encode)
 
@@ -363,7 +364,7 @@ func TestSocket_ReadChunk(t *testing.T) {
 		)
 	}
 
-	(conn.(*connM)).Flush() // typecasting to original mock struct type to make use of Flush method
+	(conn.(*testutils.ConnMock)).Flush() // typecasting to original mock struct type to make use of Flush method
 
 	// write message B
 	{
@@ -407,8 +408,8 @@ func TestSocket_ReadChunkDecoderFailure(t *testing.T) {
 }
 
 func TestSocket_ReadRoutine(t *testing.T) {
-	runner := NewRunnerMock()
-	conn := MockConn()
+	runner := testutils.NewRunnerMock()
+	conn := testutils.NewConnMockBuffered()
 
 	pipe := NewSocket(ReadBufferSize, WireByteHeaderLength, ReadDeadlineInMs)
 
@@ -458,7 +459,7 @@ func TestSocket_ReadRoutine(t *testing.T) {
 		)
 	}
 
-	<-runner.sink
+	<-runner.GetSinkCh()
 
 	{
 		pipe.close()
@@ -489,8 +490,8 @@ func TestSocket_ReadRoutineRunnerSinkBlocksIndefinitely(t *testing.T) {
 // This test simulates an inbound connection and tests the `startIO` method
 func TestSocket_StartIOInbound(t *testing.T) {
 	addr := "dummy-test-host:dummyport"
-	runner := NewRunnerMock()
-	conn := MockConnM()
+	runner := testutils.NewRunnerMock()
+	conn := testutils.NewConnMock()
 	ctx, cancel := context.WithCancel(context.Background())
 	onopenedStub := testutils.NewFnCallStub()
 	onopened := func(ctx context.Context, p *socket) error {
@@ -576,12 +577,12 @@ func TestSocket_StartIOInbound(t *testing.T) {
 	}
 
 	// wait for the inbound connection to finish writing
-	<-conn.signals
+	<-conn.Signals
 	<-time.After(time.Millisecond * 5)
 
 	// assert that the socket receives data properly from the inbound connection (i,e: that startIO launches IO routines properly (read routine))
 	{
-		w := <-runner.sink
+		w := <-runner.GetSinkCh()
 		n := len(w.Data)
 
 		assert.Equal(
@@ -613,7 +614,7 @@ func TestSocket_StartIOInbound(t *testing.T) {
 	}
 
 	// wait for data to be recieved on the inbound connection
-	<-conn.signals
+	<-conn.Signals
 
 	// assert that the inbound connection has received data properly from the socket (i,e: io routines are working properly)
 	{
@@ -649,7 +650,7 @@ func TestSocket_StartIOInbound(t *testing.T) {
 		)
 	}
 
-	runner.done <- 1
+	runner.GetDoneCh() <- 1
 
 	<-time.After(time.Millisecond * 10) // give time for routines to wrap up
 
@@ -669,14 +670,14 @@ func TestSocket_StartIOInbound(t *testing.T) {
 		)
 	}
 
-	cancel() // just to stop the context from leaking. won't have any effect since runner.done <- 1 has closed running routines
+	cancel() // just to stop the context from leaking. won't have any effect since runner.GetDoneCh() 1 has closed running routines
 }
 
 // This test simulates an inbound connection and tests the `startIO` method
 func TestSocket_StartIOOutbound(t *testing.T) {
 	addr := "dummy-test-host:dummyport"
-	runner := NewRunnerMock()
-	dialer := MockDialer()
+	runner := testutils.NewRunnerMock()
+	dialer := testutils.MockDialer()
 	ctx, cancel := context.WithCancel(context.Background())
 	onopenedStub := testutils.NewFnCallStub()
 	onopened := func(_ context.Context, p *socket) error {
@@ -688,7 +689,7 @@ func TestSocket_StartIOOutbound(t *testing.T) {
 		onclosedStub.TrackCall()
 		return nil
 	}
-	conn := dialer.conn
+	conn := dialer.Conn
 
 	// generate random data chunks to send back and forth
 	message := testutils.NewDataChunk(ReadBufferSize-WireByteHeaderLength, encode)
@@ -773,7 +774,7 @@ func TestSocket_StartIOOutbound(t *testing.T) {
 	}
 
 	// wait for the outbound connection to receive  data
-	<-conn.signals
+	<-conn.Signals
 
 	// assert that the other end of the outbound connection has received data properly
 	{
@@ -814,20 +815,20 @@ func TestSocket_StartIOOutbound(t *testing.T) {
 
 	// whatever has been written to the conn, will also be read by the socket (since the conn mock is a single conduit and bidirectional (in/out) conduit as in a real conn)
 	// so after flushing, we need to make sure to flush out the what's been read and queud by the socket. (i.e: draining the queue/sink)
-	for len(runner.sink) > 0 {
-		<-runner.sink
+	for len(runner.GetSinkCh()) > 0 {
+		<-runner.GetSinkCh()
 	}
 
 	// send a message as a response to the outbound socket from the outbound end
 	go conn.Write(response.Encoded)
 
 	// wait for the mock connection to finish writing/sending
-	<-conn.signals
+	<-conn.Signals
 
 	// assert that the outbound socket receives data properly from the other end
 	{
 		<-time.After(time.Millisecond * 5)
-		w := <-runner.sink
+		w := <-runner.GetSinkCh()
 
 		receivedResponse := w.Data
 
@@ -894,8 +895,8 @@ func TestSocket_StartIOSocketSuddenlyErrored(t *testing.T) {
 // test opening an inbound connection
 func TestSocket_OpenInbound(t *testing.T) {
 	addr := "dummy-test-host:dummyport"
-	runner := NewRunnerMock()
-	conn := MockConnM()
+	runner := testutils.NewRunnerMock()
+	conn := testutils.NewConnMock()
 
 	connector := func() (string, types.SocketType, net.Conn) {
 		return addr, types.Inbound, conn
@@ -993,11 +994,11 @@ func TestSocket_OpenInbound(t *testing.T) {
 // test opening an outbound connection
 func TestSocket_OpenOutbound(t *testing.T) {
 	addr := "dummy-test-host:dummyport"
-	dialer := MockDialer()
-	runner := NewRunnerMock()
+	dialer := testutils.MockDialer()
+	runner := testutils.NewRunnerMock()
 
 	connector := func() (string, types.SocketType, net.Conn) {
-		return addr, types.Inbound, dialer.conn
+		return addr, types.Inbound, dialer.Conn
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

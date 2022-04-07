@@ -101,6 +101,14 @@ const (
 	CodeUnequalHeightsError      Code = 116
 	CodeSetMissedBlocksError     Code = 117
 
+	CodeMissingRequiredArgError    Code = 118 // TODO(derrandz): revisit whether this is needed
+	CodeSocketRequestTimedOutError Code = 119
+	CodeUndefinedSocketTypeError   Code = 120
+	CodePeerHangUpError            Code = 121
+	CodeUnexpectedSocketError      Code = 122
+	CodePayloadTooBigError         Code = 123
+	CodeSocketIOStartFailedError   Code = 124
+
 	GetValidatorStakedTokensError     = "an error occurred getting the validator staked tokens"
 	SetValidatorStakedTokensError     = "an error occurred setting the validator staked tokens"
 	EqualVotesError                   = "the votes are identical and not equivocating"
@@ -185,6 +193,14 @@ const (
 	ExportStateError                  = "an error occurred exporting the state"
 	UnequalHeightsError               = "the heights are not equal"
 	SetMissedBlocksError              = "an error occurred setting missed blocks"
+
+	MissingRequiredArgError    = "socket error: missing required argument."
+	SocketRequestTimedOutError = "socket error: request timed out while waiting on ACK."
+	UndefinedSocketTypeError   = "socket error: undefined given socket type."
+	PeerHangUpError            = "socket error: Peer hang up."
+	UnexpectedSocketError      = "socket error: Unexpected peer error."
+	PayloadTooBigError         = "socket error: payload size is too big. "
+	SocketIOStartFailedError   = "socket error: failed to start socket reading/writing (io)"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -521,4 +537,33 @@ func ErrCommitContext(err error) Error {
 
 func ErrReleaseContext(err error) Error {
 	return NewError(CodeReleaseContextError, fmt.Sprintf("%s: %s", ReleaseContextError, err.Error()))
+}
+
+func ErrMissingRequiredArg(value string) error {
+	return NewError(CodeMissingRequiredArgError, fmt.Sprintf("%s: %s", MissingRequiredArgError, value))
+}
+
+func ErrSocketRequestTimedOut(addr string, nonce uint32) error {
+	return NewError(CodeSocketRequestTimedOutError, fmt.Sprintf("%s: %s, %d", SocketRequestTimedOutError, addr, nonce))
+
+}
+
+func ErrUndefinedSocketType(socketType string) error {
+	return NewError(CodeUndefinedSocketTypeError, fmt.Sprintf("%s: %s", UndefinedSocketTypeError, socketType))
+}
+
+func ErrPeerHangUp(err error) error {
+	return NewError(CodePeerHangUpError, fmt.Sprintf("%s: %s", PeerHangUpError, err.Error()))
+}
+
+func ErrUnexpected(err error) error {
+	return NewError(CodeUnexpectedSocketError, fmt.Sprintf("%s: %s", UnexpectedSocketError, err.Error()))
+}
+
+func ErrPayloadTooBig(bodyLength, acceptedLength uint) error {
+	return NewError(CodePayloadTooBigError, fmt.Sprintf("%s: payload length: %d, accepted length: %d", PayloadTooBigError, bodyLength, acceptedLength))
+}
+
+func ErrSocketIOStartFailed(socketType string) error {
+	return NewError(CodeSocketIOStartFailedError, fmt.Sprintf("%s: (%s socket)", SocketIOStartFailedError, socketType))
 }
