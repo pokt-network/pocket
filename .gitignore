@@ -6,6 +6,12 @@
 *.so
 *.dylib
 
+# Vim swap files
+*.swp**
+
+# Vscode
+.vscode
+
 # Test binary, built with `go test -c`
 *.test
 
@@ -24,11 +30,20 @@ vendor/
 # Generated Mocks (for testing)
 shared/modules/mocks/
 
+# Proto generated files
+*.pb.go
+utility/test/
+utility/types/
+
+# TODO(team): Does the `types` directory contain generated or raw type files?
+# types/
+
+# ignore protobuf generated files
+*.pb.go
+
 # Output binaries
 bin/
+build/dist/*
 
-# VS Code
-.vscode
-
-# Generated go files
-*.pb.go
+vendor/
+prototype/vendor/
