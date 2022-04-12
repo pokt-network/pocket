@@ -8,20 +8,17 @@
 
 The official implementation of the [V1 Pocket Network Protocol](https://github.com/pokt-network/pocket-network-protocol)
 
-## Documentation
+\*_Please note that V1 development is currently under development and see [pocket-core](https://github.com/pokt-network/pocket-core) for the version that is currently live on mainnet._\*
+
+## Getting Started
+
+---
 
 - [Documentation Index](docs)
-- [Contributing](docs/contributing)
+- [Contribution Guide](docs/contributing)
+- [Building & Testing](docs/testing)
+- [Start Developing](docs/development)
 - [Dependencies](docs/deps)
-- [Testing](docs/testing)
-
-## Contributing
-
-Please read [CONTRIBUTING.md](docs/contributing/CONTRIBUTING.md) for details on contributions and the process of submitting pull requests.
-
-## Building
-
-We use [mage](https://magefile.org/) to build the project. Once you get `mage`, you can run it in the root of the repository to see the available targets.
 
 ## Support & Contact
 
@@ -32,6 +29,7 @@ We use [mage](https://magefile.org/) to build the project. Once you get `mage`, 
   <a href="https://research.pokt.network"><img src="https://img.shields.io/discourse/https/research.pokt.network/posts.svg"></a>
 </div>
 
+---
 
 ## License
 
