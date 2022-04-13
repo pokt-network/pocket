@@ -67,6 +67,11 @@ client_connect:
 compose_and_watch:
 	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
+.PHONY: start_db
+## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
+start_db:
+	docker-compose -f build/deployments/docker-compose.yaml up db
+
 .PHONY: compose_and_watch
 ## Kill all containers started by the docker-compose file
 docker_kill_all:
