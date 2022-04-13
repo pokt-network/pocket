@@ -67,10 +67,15 @@ client_connect:
 compose_and_watch:
 	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
-.PHONY: start_db
-## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-start_db:
+.PHONY: db_start
+## Start a local postgres instance
+db_start:
 	docker-compose -f build/deployments/docker-compose.yaml up db
+
+.PHONY: db_connect
+## Connect to local db
+db_connect:
+	docker exec -it deployments_db_1 bash
 
 .PHONY: compose_and_watch
 ## Kill all containers started by the docker-compose file
