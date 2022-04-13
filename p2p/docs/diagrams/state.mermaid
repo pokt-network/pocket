@@ -1,0 +1,10 @@
+stateDiagram-v2
+    [*] --> Closed
+    Closed --> Open
+    Open --> Reading
+    Open --> Writing
+    Reading --> Closed
+    Reading --> Error
+    Error --> Closed
+    Writing --> Closed
+    Writing --> Error
