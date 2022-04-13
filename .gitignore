@@ -20,6 +20,7 @@
 
 # Dependency directories (remove the comment below to include it)
 vendor/
+prototype/vendor/
 
 # MacOS metadata
 .DS_Store
@@ -32,8 +33,6 @@ shared/modules/mocks/
 
 # Proto generated files
 *.pb.go
-utility/test/
-utility/types/
 
 # TODO(team): Does the `types` directory contain generated or raw type files?
 # types/
@@ -44,6 +43,3 @@ utility/types/
 # Output binaries
 bin/
 build/dist/*
-
-vendor/
-prototype/vendor/

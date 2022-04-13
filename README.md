@@ -6,7 +6,7 @@
 
 # Pocket
 
-The official implementation of the [V1 Pocket Network Protocol](https://github.com/pokt-network/pocket-network-protocol)
+The official implementation of the [V1 Pocket Network Protocol Specification](https://github.com/pokt-network/pocket-network-protocol).
 
 \*_Please note that V1 development is currently under development and see [pocket-core](https://github.com/pokt-network/pocket-core) for the version that is currently live on mainnet._\*
 
@@ -14,11 +14,36 @@ The official implementation of the [V1 Pocket Network Protocol](https://github.c
 
 ---
 
-- [Documentation Index](docs)
-- [Contribution Guide](docs/contributing)
-- [Building & Testing](docs/testing)
-- [Start Developing](docs/development)
-- [Dependencies](docs/deps)
+All the links you'll need are listed below. If you'd like to contribute to the Pocket V1 Protocol, start by:
+
+1. Reading the **Contribution Guide**
+2. Get things running by reading the **Development Guide**
+3. Dive into any of the other guides or modules depending on what your interests are
+
+<!--
+  The list of documents below was created by manually curating the output of the following command:
+    $ find .. -name "*.md" | grep -v -e "vendor" -e "prototype" -e "SUMMARY.md" -e "TASTE.md"
+-->
+
+### Guides
+
+- [Contribution Guide](docs/contributing/CONTRIBUTING.md)
+- [Development Guide](docs/development/README.md)
+- [Testing Guide](docs/testing/README.md)
+- [Dependencies Guide](docs/deps/README.md)
+
+### Architectures
+
+- [Shared Architecture](shared/README.md)
+- [Consensus Architecture](consensus/README.md)
+- [PrePersistence Architecture](persistence/pre_persistence/README.md)
+- [P2P Architecture](p2p/README.md)
+- [Utility Architecture](utility/README.md)
+
+### Changelogs
+
+- [Consensus Changelog](consensus/CHANGELOG.md)
+- [Utility Changelog](utility/CHANGELOG.md)
 
 ## Support & Contact
 
