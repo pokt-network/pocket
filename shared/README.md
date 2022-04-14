@@ -1,10 +1,11 @@
-\*\*\*\*# Shared Module
+# Shared Module
 
-- [Where Do I start?](#where-do-i-start)
-- [Code Structure](#code-structure)
-- [High Level Architecture](#high-level-architecture)
-- [Types](#types)
-- [Interfaces](#interfaces)
+- [Shared Module](#shared-module)
+  - [Where Do I start?](#where-do-i-start)
+  - [Code Structure](#code-structure)
+  - [High Level Architecture](#high-level-architecture)
+  - [Types](#types)
+  - [Interfaces](#interfaces)
 
 ## Where Do I start?
 
