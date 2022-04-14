@@ -18,15 +18,16 @@ Please note that this repository is under very active development and breaking c
 - Install [Docker](https://docs.docker.com/get-docker/)
 - Install [Docker Compose](https://docs.docker.com/compose/install/)
 - Install [Golang](https://go.dev/doc/install)
+- Install [protoc-gen-go](https://pkg.go.dev/google.golang.org/protobuf/cmd/protoc-gen-go)
 
 ### Prepare Local Environment
 
 Generate local files
 
 ```bash
-$ go mod vendor && go mod tidy
 $ make protogen_clean
-$ make protogen_local
+$ make protogen_locak
+$ go mod vendor && go mod tidy
 $ make mockgen
 ```
 

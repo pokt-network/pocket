@@ -5,7 +5,6 @@ go 1.17
 require (
 	github.com/ProtonMail/go-ecvrf v0.0.1
 	github.com/golang/mock v1.6.0
-	github.com/golang/protobuf v1.5.2
 	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
 	github.com/magefile/mage v1.12.1
 	github.com/manifoldco/promptui v0.9.0
