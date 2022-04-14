@@ -16,6 +16,7 @@ type PublicKey interface {
 	Equals(other PublicKey) bool
 	Verify(msg []byte, sig []byte) bool
 	Size() int
+	ToCurve25519() []byte
 }
 
 type PrivateKey interface {
@@ -27,6 +28,7 @@ type PrivateKey interface {
 	Sign(msg []byte) ([]byte, error)
 	Size() int
 	Seed() []byte
+	ToCurve25519() []byte
 }
 
 func (a *Address) UnmarshalJSON(data []byte) error {

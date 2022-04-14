@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/p2p/utils"
+	sharedTypes "github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/utils"
 
 	"go.uber.org/atomic"
 )
@@ -135,11 +136,11 @@ func (s *socket) open(ctx context.Context, connector func() (string, types.Socke
 	addr, socketType, conn := connector()
 
 	if utils.IsEmpty(addr) {
-		return ErrMissingRequiredArg("address")
+		return sharedTypes.ErrMissingRequiredArg("address")
 	}
 
 	if utils.IsEmpty(string(socketType)) {
-		return ErrMissingRequiredArg("socketType")
+		return sharedTypes.ErrMissingRequiredArg("socketType")
 	}
 
 	switch socketType {
@@ -147,7 +148,7 @@ func (s *socket) open(ctx context.Context, connector func() (string, types.Socke
 	case types.Inbound:
 	default:
 		s.close()
-		return ErrSocketUndefinedKind(string(socketType))
+		return sharedTypes.ErrUndefinedSocketType(string(socketType))
 	}
 
 	go s.startIO(ctx, socketType, addr, conn, onOpened, onClosed)
@@ -155,7 +156,7 @@ func (s *socket) open(ctx context.Context, connector func() (string, types.Socke
 	select {
 	case _, open := <-s.ioStarted: // wait for the IO to start, closes on failure, signals on success
 		if !open {
-			return ErrSocketIOStartFailed(string(socketType))
+			return sharedTypes.ErrSocketIOStartFailed(string(socketType))
 		}
 	case <-s.errored:
 		return s.err.error
@@ -203,7 +204,7 @@ func (s *socket) startIO(ctx context.Context, kind types.SocketType, addr string
 	s.writer = bufio.NewWriter(conn)
 
 	if err := onOpened(ctx, s); err != nil {
-		s.error(err)
+		s.reportError(err)
 		close(s.writing)
 		close(s.reading)
 		return
@@ -244,16 +245,11 @@ func (s *socket) startIO(ctx context.Context, kind types.SocketType, addr string
 	s.logger.Info("Closing the socket")
 
 	if err := onClosed(ctx, s); err != nil {
-		s.error(err)
+		s.reportError(err)
 		return
 	}
 
 	s.logger.Info("Closed")
-}
-
-// The TLS handshake algorithm to establish encrypted connections
-func (s *socket) handshake() {
-	panic("Not implemented")
 }
 
 // Reads a chunk (of size `readbufferSize`) out of the TCP connection using `s.reader`.
@@ -279,7 +275,7 @@ func (s *socket) readChunk() ([]byte, int, error) {
 
 	// TODO(derrandz): replace with configurable max value or keep it as is (i.e: max=chunk size) ??
 	if bodyLen > uint32(s.bufferSize-s.headerLength) {
-		return nil, 0, ErrPayloadTooBig(uint(bodyLen), s.bufferSize-s.headerLength)
+		return nil, 0, sharedTypes.ErrPayloadTooBig(uint(bodyLen), s.bufferSize-s.headerLength)
 	}
 
 	if n, err = io.ReadFull(s.reader, (*readBuffer)[s.headerLength:uint32(s.headerLength)+bodyLen]); err != nil {
@@ -324,15 +320,15 @@ reader:
 				if err != nil {
 					switch err {
 					case io.EOF:
-						s.error(ErrPeerHangUp(err))
+						s.reportError(ErrPeerHangUp(err))
 						break reader
 
 					case io.ErrUnexpectedEOF:
-						s.error(ErrPeerHangUp(err))
+						s.reportError(ErrPeerHangUp(err))
 						break reader
 
 					default:
-						s.error(ErrUnexpected(err))
+						s.reportError(ErrUnexpected(err))
 						break reader
 					}
 				}
@@ -344,7 +340,7 @@ reader:
 
 				nonce, _, data, wrapped, err := s.codec.decode(buf)
 				if err != nil {
-					s.error(err)
+					s.reportError(err)
 					break reader
 				}
 
@@ -412,7 +408,7 @@ func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Packet, error) 
 
 	case <-time.After(time.Millisecond * time.Duration(s.readTimeout)):
 		close(request.ResponsesCh)
-		return types.Packet{}, ErrSocketRequestTimedOut(s.addr, requestNonce)
+		return types.Packet{}, sharedTypes.ErrSocketRequestTimedOut(s.addr, requestNonce)
 	}
 }
 
@@ -447,12 +443,12 @@ writer:
 				buff := s.buffers.write.DumpBytes()
 
 				if _, err := s.writer.Write(buff); err != nil {
-					s.error(err)
+					s.reportError(err)
 					break writer
 				}
 
 				if err := s.writer.Flush(); err != nil {
-					s.error(err)
+					s.reportError(err)
 					break writer
 				}
 			}
@@ -461,7 +457,7 @@ writer:
 }
 
 // Tracks and stores the encountered error
-func (s *socket) error(err error) {
+func (s *socket) reportError(err error) {
 	defer s.err.Unlock()
 	s.err.Lock()
 
