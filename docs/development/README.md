@@ -26,7 +26,7 @@ Generate local files
 
 ```bash
 $ make protogen_clean
-$ make protogen_locak
+$ make protogen_local
 $ go mod vendor && go mod tidy
 $ make mockgen
 ```
