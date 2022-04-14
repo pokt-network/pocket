@@ -64,18 +64,19 @@ client_connect:
 
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-compose_and_watch:
+compose_and_watch: db_start
 	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: db_start
 ## Start a local postgres instance
 db_start:
-	docker-compose -f build/deployments/docker-compose.yaml up db
+	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d db
 
 .PHONY: db_connect
 ## Connect to local db
 db_connect:
-	docker exec -it deployments_db_1 bash
+	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
+	docker exec -it pocket-db bash -c "psql -U postgres"
 
 .PHONY: compose_and_watch
 ## Kill all containers started by the docker-compose file
