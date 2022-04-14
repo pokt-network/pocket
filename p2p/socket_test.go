@@ -815,7 +815,6 @@ func TestSocket_StartIOOutbound(t *testing.T) {
 
 	// whatever has been written to the conn, will also be read by the socket (since the conn mock is a single conduit and bidirectional (in/out) conduit as in a real conn)
 	// so after flushing, we need to make sure to flush out the what's been read and queud by the socket. (i.e: draining the queue/sink)
-
 	for len(runner.GetSinkCh()) > 0 {
 		<-runner.GetSinkCh()
 	}
