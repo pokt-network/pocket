@@ -37,6 +37,16 @@ shared             # [to-be-refactored] All of this is bound to change
 
 ## High Level Architecture
 
+The key things to keep in mind are:
+
+- Every **module** has a 2 way pointer with the **Bus**, through which it can:
+  - Call methods defined by the interfaces of other modules
+  - Receive asynchronous events from the **main events channel**
+- The **Persistence** module is the only module that communicates with the local database
+- The **P2P** module is the only one that communicates with the outside world
+
+<!-- Though this flowchart could be made more explicit, it was implemented in mermaid to follow the Visualisation-As-Code paradigm and make it easier to maintain and upkeep. -->
+
 ```mermaid
 flowchart TD
     subgraph Pocket Node
