@@ -8,7 +8,7 @@
 
 The official implementation of the [V1 Pocket Network Protocol Specification](https://github.com/pokt-network/pocket-network-protocol).
 
-\*_Please note that V1 development is currently under development and see [pocket-core](https://github.com/pokt-network/pocket-core) for the version that is currently live on mainnet._\*
+\*_Please note that V1 protocol is currently under development and see [pocket-core](https://github.com/pokt-network/pocket-core) for the version that is currently live on mainnet._\*
 
 ## Getting Started
 
