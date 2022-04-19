@@ -131,6 +131,66 @@ Upon signaling that there is new data to be sent, the write-routine will unblock
 
 [![](https://mermaid.ink/img/pako:eNpVkc1qwzAQhF9l0amF5AV8aGls5-dSShoIrZ3DYm0Sgb0K8opQ7Lx7ZcuBRCcx8w2zy3aqsppUok4OL2fYZSVDeB_F7kywd0YIttaLYTrAfP4Gi5fWnBhrcITa8AlaQSekX2NuMUJpNySFGJiukKHg-y366eD3n7aHrNijkUOUsxh7YCAvYrtYkDDKLv2CyjJTJcYyXAfPTel8DCy7nCvrOeikASMC5Jx19_blCPY_1PawKrZ0sU4icXgChvnWxbL27XkyVqPxW6S1bWnS1qO2ibX31jH03Lp5bH2Shp64tJqphlyDRodTdINUqrB2Q6VKwlfTEX0tpSr5FlB_0SiUayPWqeSIdUszhV7s9x9XKhHn6Q5lBsNlm4m6_QM4nZsP)](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNpVkc1qwzAQhF9l0amF5AV8aGls5-dSShoIrZ3DYm0Sgb0K8opQ7Lx7ZcuBRCcx8w2zy3aqsppUok4OL2fYZSVDeB_F7kywd0YIttaLYTrAfP4Gi5fWnBhrcITa8AlaQSekX2NuMUJpNySFGJiukKHg-y366eD3n7aHrNijkUOUsxh7YCAvYrtYkDDKLv2CyjJTJcYyXAfPTel8DCy7nCvrOeikASMC5Jx19_blCPY_1PawKrZ0sU4icXgChvnWxbL27XkyVqPxW6S1bWnS1qO2ibX31jH03Lp5bH2Shp64tJqphlyDRodTdINUqrB2Q6VKwlfTEX0tpSr5FlB_0SiUayPWqeSIdUszhV7s9x9XKhHn6Q5lBsNlm4m6_QM4nZsP)
 
+#### 2.2.3 The Socket's API
 
-### 2.3 The Glue
-_TODO(derrandz): Write this part._
+[comment]: <> (This might change if we implement the Module interface for the socket)
+
+The socket is meant to be an internal component of p2p, therefore all methods on this module are "private". However, if we are to imagine to a second that 
+Go allows for "private" implicit interfaces, then the socket's interface would look as follows:
+
+```golang
+type Socket interface {
+	open(ctx context.Context, connector func() (string, types.SocketType, net.Conn), onOpened SocketEventMonitor, onClosed SocketEventMonitor) error
+	close()
+	startIO(ctx context.Context, kind types.SocketType, addr string, conn net.Conn, onOpened SocketEventMonitor, onClosed SocketEventMonitor)
+        handshake()
+        readChunk() ([]byte, int, error)
+        read(ctx context.Context)
+        writeChunk(b []byte, isErrorOf bool, reqNum uint32, wrapped bool) (uint, error)
+        writeChunkAckful(b []byte, wrapped bool) (types.Packet, error)
+        write(ctx context.Context)
+        error(err error)
+	signalReady()
+	signalOpen()
+	signalClose()
+	stopErrorReporting()
+	signalWritingStart()
+	signalWritingStop()
+	signalReadingStart()
+	signalReadingStop()
+	signalIOStarted()
+	signalIOFailure()
+}
+```
+
+
+The network module makes use of this API to interact and control the sockets.
+
+For instance, to open a socket for an outbound TCP connection, we would call the `open` method on the network module:
+
+```golang
+var conn net.Conn // assume we already got this
+var addr string // assume we have this
+var type SocketType = Outbound.
+
+socket := NewSocket(readBufferSize, packetHeaderLength, readTimeoutInMs) // uints
+err := socket.open(
+	context.Background(),
+    func() (string, types.SocketType, net.Conn) {
+        return address, type, conn
+    },  // connector      
+    func((context.Context, *socket) error {
+		log.Info("%s just opened", socket.address)
+    }, // onOpened
+    func((context.Context, *socket) error {
+      log.Info("%s just closed", socket.address)
+    } // onClosed
+)
+```
+
+This piece of code will open a socket for the given address and type, and will call the given callbacks when the socket is opened and closed.
+The opening process engages in a handshake with the remote peer, upon a successful authentication, the socket will kick off the I/O loops and be ready to send and receive data.
+
+### 2.3 The Network Module
+
+TBD
