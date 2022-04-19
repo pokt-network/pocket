@@ -1,0 +1,13 @@
+graph TD
+    A[The Write Routine] --> B(signal reading started)
+    B --> C{Written new Data?}
+    C -->|No| D[Wait]
+    D --> C
+    C --> E[Write to the TCP connection writer]
+    E --> F{Encountered a write error?}
+    F --> |Yes| G[Report error]
+    F --> |No| H[Flush]
+    G --> Z[Close]
+    H --> I{Encoutered a Flush error?}
+    I --> |Yes| G
+    I --> |No| C

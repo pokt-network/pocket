@@ -1,10 +1,16 @@
 stateDiagram-v2
     [*] --> Closed
-    Closed --> Open
-    Open --> Reading
-    Open --> Writing
+    Closed --> Opening
+    Opening --> Connecting
+    Connecting --> Authenticating
+    Authenticating --> Authenticated
+    Authenticated --> Connected
+    Connected --> Reading
+    Connected --> Writing
+    Reading --> Open
+    Writing --> Open
+    Open --> Closed
     Reading --> Closed
-    Reading --> Error
     Error --> Closed
-    Writing --> Closed
-    Writing --> Error
+    Open --> Errored
+    Errored --> Closed
