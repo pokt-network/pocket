@@ -78,6 +78,12 @@ db_connect:
 	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
 	docker exec -it pocket-db bash -c "psql -U postgres"
 
+
+# benchmark: pgbench
+# geozone: postgis
+# gui: some sort of postgres GUI
+
+
 .PHONY: compose_and_watch
 ## Kill all containers started by the docker-compose file
 docker_kill_all:
