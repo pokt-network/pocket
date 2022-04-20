@@ -2,398 +2,461 @@ package p2p
 
 import (
 	"bufio"
-	"errors"
-	"fmt"
-	stdio "io"
+	"context"
+	"io"
 	"math"
 	"net"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/pokt-network/pocket/p2p/types"
+	sharedTypes "github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/utils"
 
 	"go.uber.org/atomic"
 )
 
-type parameters struct {
-	headerLength uint
-	bufferSize   uint
-	timeoutMs    uint
+type SocketEventMonitor func(context.Context, *socket) error
+
+type RWBUffer struct {
+	// the read buffer is a byte slice of a certain size (configurable: `ReadBufferSize``) which is destined
+	// to receive incoming data. This buffer is not concurrent and is primarily used by the s.read routine
+	read *types.Buffer
+
+	// the write buffer is a byte slice of a certain size (configurable: `WriteBufferSize``) which is written to
+	// by the owner of this socket (i.e: the runner, the peer). When the peer is done writing to the buffer, the s.write routine
+	// proceeds to writing this buffer to the concerned connection, resulting in a network send.
+	// This buffer is concurrent because two operations are happening in parallel, the writing to the buffer by the peer
+	// and the reading off of the buffer by the s.write routine
+	write *types.ConcurrentBuffer
 }
 
+// A "socket" (not to be confused with the OS' socket) is an abstraction around the net.Conn go interface,
+// whose purpose is to represent a p2p connection with full "read/write" capabilities.
+//
+// Both read and write operations are buffered, and both buffer sizes are configurable.
+//
+// Configuration paramters are directly assigned to the socket struct.
+//
+// 1 live p2p connection = 1 socket
 type socket struct {
+	// the agent responsible for running/creating/managing sockets
 	runner types.Runner
-	c      *wireCodec
 
-	params parameters
-	addr   string
-	sense  Sense // inbound or outbound
+	// configuration parameters
+	headerLength uint
+	bufferSize   uint
+	readTimeout  uint
+	addr         string
+	kind         types.SocketType // inbound or outbound
 
-	buffers struct {
-		read  []byte
-		write []byte
-	}
-	buffersState struct {
-		sync.Mutex   // for the actual struct elements, like writeSignals
-		writeOpen    bool
-		writeSignals chan uint
-		writeLock    sync.Mutex
-	}
+	// the actual network socket
+	conn net.Conn
 
-	dialer types.Dialer // an intermediary poktp2p interface that returns net.Conn, useful for mocking in testing
-	conn   net.Conn
+	// the wire codec
+	codec *wireCodec
 
-	timeouts struct {
-		read uint
-	}
+	// io buffers
+	buffers *RWBUffer
 
+	// the io reader/writer
 	reader *bufio.Reader
 	writer *bufio.Writer
 
+	// the map to track writes that expects acknowledgements
+	// we call them requests (as they require responses)
 	requests *types.RequestMap
 
-	ready   chan uint
-	done    chan uint
-	errored chan uint
-	closed  chan uint
+	// turns true when the socket is opened (i.e., the connection is established and IO routines are launched)
+	isOpen    atomic.Bool
+	isWriting atomic.Bool
+	isReading atomic.Bool
 
-	answering chan uint
-	polling   chan uint
+	// For reference, see these resources on the use of empty structs in go channels:
+	// - https://dave.cheney.net/2014/03/25/the-empty-struct
+	// - https://dave.cheney.net/2013/04/30/curious-channels
 
-	opened atomic.Bool
+	ready     chan struct{} // when the socket is opened and IO starts, this channel gets closed to signal readiness
+	done      chan struct{} // if this channel is closed or receives and input, it stops the socket and IO operations
+	writing   chan struct{} // when the writing starts, this channel receives a new input; closes when done writing (i.e: stopped the socket)
+	reading   chan struct{} // when the reading starts, this channel receives a new input; closes when done reading (i.e: stopped the socket)
+	errored   chan struct{} // on error, this channel receives a new input to signal the happening of an error
+	ioStarted chan struct{} // on start of IO, this channel closes to signal out that the IO has kicked off
 
-	logger struct {
-		sync.Mutex
-		print func(...interface{}) (int, error)
-	}
-
-	err struct {
+	err struct { // the reference to store the encountered error
 		sync.Mutex
 		error
 	}
+
+	logger types.Logger
 }
-type Sense string
 
-var (
-	OutboundIoPipe         Sense = "outbound"
-	InboundIoPipe          Sense = "inbound"
-	UnspecifiedIoPipeSense Sense = "unspecified"
-)
+// A constructor to create a socket
+func NewSocket(readBufferSize, packetHeaderLength, readTimeoutInMs uint) *socket {
+	pipe := &socket{
+		codec: newWireCodec(),
 
-func (s *socket) open(sense Sense, addr string, conn net.Conn, onopened func(*socket) error, onclosed func(*socket) error) error {
-	s.buffersState.writeOpen = true
+		kind:         types.UndefinedSocketType,
+		headerLength: packetHeaderLength,
+		bufferSize:   readBufferSize,
+		readTimeout:  readTimeoutInMs,
 
-	switch sense {
-	case OutboundIoPipe:
-		go s.outbound(addr, onopened, onclosed)
-	case InboundIoPipe:
-		go s.inbound(addr, conn, onopened, onclosed)
+		buffers: &RWBUffer{
+			read:  types.NewBuffer(readBufferSize),
+			write: types.NewConcurrentBuffer(0),
+		},
+
+		requests: types.NewRequestMap(math.MaxUint32),
+
+		ready:     make(chan struct{}), // closes to signal the readiness of the socket
+		done:      make(chan struct{}), // closes to signal the closing of the socket
+		writing:   make(chan struct{}), // sends a new input to signal the start of the writing routine, closes when done writing
+		reading:   make(chan struct{}), // sends new input to signal the start of the reading routine, closes when done reading
+		ioStarted: make(chan struct{}), // closes to signal the start of IO
+
+		// sends new input to signal the encoutering of an error in running routines
+		// closes when the socket closes.
+		// Bufferred to 1 to allow non-blocking signaling of types. and blocking awaiting of error signals.
+		// (We are handling 1 error at most, so not more than one signal is expected to be received at a time, establishing a queue of exactly 1 error...)
+		errored: make(chan struct{}, 1),
+
+		logger: types.NewLogger(os.Stdout),
+	}
+
+	return pipe
+}
+
+// Retrieves the underlying TCP socket (net.Conn) in question through the connector argument and starts
+// the IO operations on that socket, while also putting in place event handlers for onSocketOpened
+// and onSocketClosed events.
+func (s *socket) open(ctx context.Context, connector func() (string, types.SocketType, net.Conn), onOpened SocketEventMonitor, onClosed SocketEventMonitor) error {
+	s.buffers.write.Open()
+
+	addr, socketType, conn := connector()
+
+	if utils.IsEmpty(addr) {
+		return sharedTypes.ErrMissingRequiredArg("address")
+	}
+
+	if utils.IsEmpty(string(socketType)) {
+		return sharedTypes.ErrMissingRequiredArg("socketType")
+	}
+
+	switch socketType {
+	case types.Outbound:
+	case types.Inbound:
 	default:
 		s.close()
-		return errors.New("io pipe open error: undefined sense")
+		return sharedTypes.ErrUndefinedSocketType(string(socketType))
 	}
+
+	go s.startIO(ctx, socketType, addr, conn, onOpened, onClosed)
 
 	select {
-	case <-s.polling:
+	case _, open := <-s.ioStarted: // wait for the IO to start, closes on failure, signals on success
+		if !open {
+			return sharedTypes.ErrSocketIOStartFailed(string(socketType))
+		}
+	case <-s.errored:
+		return s.err.error
 	}
 
-	select {
-	case <-s.answering:
-	}
-
-	s.opened.Store(true)
-	close(s.ready)
+	s.signalOpen()
+	s.signalReady()
 
 	return nil
 }
 
+// Stops the ongoing IO operations gracefully (i.e., s.read and s.write routines) and closes the
+// underlying network connection (s.conn), as well as all opened channels. Finally, close() signals
+// that the closing process has went successfully by sending a signal on s.closed.
+// NOTE: This method does not block.
 func (s *socket) close() {
-	if !s.opened.Load() {
+	if !s.isOpen.Load() {
 		return
 	}
+
 	close(s.done)
 
-	s.err.Lock()
-	close(s.errored)
-	s.err.Unlock()
-
-	s.buffersState.Lock()
-	close(s.buffersState.writeSignals)
-	s.buffersState.Unlock()
-
-	s.opened.Store(false)
-
-	s.buffersState.writeLock.Lock()
-	s.buffersState.writeOpen = false
-	s.buffersState.writeLock.Unlock()
+	s.stopErrorReporting()
+	s.buffers.write.Close()
 
 	if s.conn != nil {
 		s.conn.Close()
 	}
 
-	s.closed <- 1
-	s.opened.Store(false)
+	s.signalClose()
 }
 
-func (s *socket) outbound(addr string, onopened func(s *socket) error, onclosed func(s *socket) error) {
-	defer func() {
-		s.close()
-	}()
+// Creates a reader and writer for the network connection and kicks off the onSocketOpened event handler.
+// This also launches both the reading and writing routines (read, write methods), both of which are blocking.
+// When the write routine exists, the onSocketClosed event handler kicks off and returns an error if there is one.
+// NOTE: The write and read routines will both exit for the same reasons, so having just one of them block is sufficient.
+func (s *socket) startIO(ctx context.Context, kind types.SocketType, addr string, conn net.Conn, onOpened SocketEventMonitor, onClosed SocketEventMonitor) {
+	defer s.close()
 
 	s.addr = addr
-	s.sense = OutboundIoPipe
-
-	if s.dialer == nil {
-		s.dialer = types.NewDialer()
-	}
-
-	conn, err := s.dialer.Dial("tcp", addr)
-	if err != nil {
-		s.error(err)
-		close(s.answering)
-		close(s.polling)
-		return
-	}
-
-	s.conn = conn
-	s.reader = bufio.NewReader(s.conn)
-	s.writer = bufio.NewWriter(s.conn)
-
-	if err := onopened(s); err != nil {
-		s.error(err)
-
-		close(s.answering)
-		close(s.polling)
-		return
-	}
-
-	go s.poll()
-	s.answer()
-
-	if err := onclosed(s); err != nil {
-		s.error(err)
-		return
-	}
-}
-
-func (s *socket) inbound(addr string, conn net.Conn, onopened func(*socket) error, onclosed func(*socket) error) {
-	defer func() {
-		s.close()
-	}()
-
-	s.addr = addr
-	s.sense = InboundIoPipe
+	s.kind = kind
 
 	s.conn = conn
 	s.reader = bufio.NewReader(conn)
 	s.writer = bufio.NewWriter(conn)
 
-	if err := onopened(s); err != nil {
+	if err := onOpened(ctx, s); err != nil {
 		s.error(err)
-
-		close(s.answering)
-		close(s.polling)
+		close(s.writing)
+		close(s.reading)
 		return
 	}
 
-	go s.poll() // closes s.polling when done
-	s.answer()  // closes s.answering when done
+	go s.read(context.Context(ctx))  // closes s.reading when done
+	go s.write(context.Context(ctx)) // closes s.writing when done
 
-	if err := onclosed(s); err != nil {
+	_, open := <-s.writing
+	if !open {
+		s.logger.Error("Socket stopped writing after starting...")
+		s.signalIoFailure()
+		return
+	}
+
+	_, open = <-s.reading
+	if !open {
+		s.logger.Error("Socket stopped reading after starting...")
+		s.signalIoFailure()
+		return
+	}
+
+	s.signalIoStarted()
+
+	s.logger.Info("Running...")
+	select {
+	case <-s.runner.Done(): // if the socket runner is done, the socket moves on to run onClosed
+		if !s.isOpen.Load() {
+			s.close()
+		}
+	case <-ctx.Done(): // if the context is done, the socket moves on to run onClosed
+		if !s.isOpen.Load() {
+			s.close()
+		}
+	case <-s.done: // if the socket is done, the socket moves on to run onClosed
+	}
+
+	s.logger.Info("Closing the socket")
+
+	if err := onClosed(ctx, s); err != nil {
 		s.error(err)
 		return
 	}
+
+	s.logger.Info("Closed")
 }
 
-func (s *socket) read() ([]byte, int, error) {
+// The TLS handshake algorithm to establish encrypted connections
+func (s *socket) handshake() {
+	panic("Not implemented")
+}
+
+// Reads a chunk (of size `readbufferSize`) out of the TCP connection using `s.reader`.
+//
+// This is used by the read routine (`s.read`) to perform buffered reads.
+// To achieve buffered reading, `readChunk` first off reads the header bytes (first bytes from 0 to `headerLength``)
+// to retrieve size of received/to-be-read payload. If the payload size exceeds the configured max,
+// `readChunk` will error out, the other end will receive a `ErrPayloadTooBig` error.
+// TODO(derrandz): implement erroring logic to send this error.
+//
+// NOTE: After reading the header, readChunk blocks until the full body length is read.
+func (s *socket) readChunk() ([]byte, int, error) {
 	var n int
 
-	if _, err := stdio.ReadFull(s.reader, s.buffers.read[:s.params.headerLength]); err != nil {
+	readBuffer := s.buffers.read.Ref()
+	if _, err := io.ReadFull(s.reader, (*readBuffer)[:s.headerLength]); err != nil {
 		return nil, 0, err
 	}
-	_, _, bodylen, err := s.c.decodeHeader(s.buffers.read[:s.params.headerLength])
+	_, _, bodyLen, err := s.codec.decodeHeader((*readBuffer)[:s.headerLength])
 	if err != nil {
 		return nil, 0, err
 	}
 
-	if bodylen > uint32(s.params.bufferSize-s.params.headerLength) { // TODO(derrandz): replace with configurable max value
-		return nil, 0, errors.New(fmt.Sprintf("io pipe error: cannot read a buffer of length %d, the accepted body length is %d.", bodylen, s.params.bufferSize-s.params.headerLength))
+	// TODO(derrandz): replace with configurable max value or keep it as is (i.e: max=chunk size) ??
+	if bodyLen > uint32(s.bufferSize-s.headerLength) {
+		return nil, 0, sharedTypes.ErrPayloadTooBig(uint(bodyLen), s.bufferSize-s.headerLength)
 	}
 
-	if n, err = stdio.ReadFull(s.reader, s.buffers.read[s.params.headerLength:bodylen+uint32(s.params.headerLength)]); err != nil {
+	if n, err = io.ReadFull(s.reader, (*readBuffer)[s.headerLength:uint32(s.headerLength)+bodyLen]); err != nil {
 		return nil, 0, err
 	}
 
 	buff := make([]byte, 0)
-	buff = append(buff, s.buffers.read[:s.params.headerLength+uint(n)]...)
+	buff = append(buff, (*readBuffer)[:s.headerLength+uint(n)]...)
 
 	return buff, n, err
 }
 
-func (s *socket) poll() {
-	defer func() {
-		close(s.polling)
-		s.closed <- 1
-	}()
+// The read routine.
+//
+// This routine performs buffered reads (the size of the buffer is the config param: `readBufferSize`) on the
+// established connection and does two things as a consequence of a read operation:
+//    1. If it's a response to a request out of this socket, it will redirect the response to the request's response channel (see `types/request.go`)
+//    2. If not, it will handover the read (past-tense participle) buffer as a Packet (check `types/packet.go`) to the runner (check `types/runner.go`)
+//
+// This routine halts if:
+//   - The cancelable context cancels
+//   - If the runner stops (i.e: s.runner.Done() receives)
+//   - If the socket closes
+//   - If some party signals that this routine should stop (by closing the s.reading channel)
+//   - If there is an IO error: EOF, UnexpectedEOF, peer hang up, unexpected error
+func (s *socket) read(ctx context.Context) {
+	defer s.signalReadingStop()
+	s.signalReadingStart()
 
-	{
-		s.polling <- 1 // signal start
-	}
-
-	for stop := false; !stop; {
+reader:
+	for {
 		select {
-		// TODO(derrandz): replace with passed down context
-		case <-s.runner.Done():
-			break
-
-		case <-s.done:
-			stop = true
-			break
-
-		case _, open := <-s.polling:
-			if !open {
-				stop = true
-				break
-			}
-
+		case <-ctx.Done(): // stop if context cancels
+			break reader
+		case <-s.runner.Done(): // stop if runner stops
+			break reader
+		case <-s.done: // stop if the socket closes
+			break reader
 		default:
 			{
-				buf, n, err := s.read()
+				buf, n, err := s.readChunk()
 				if err != nil {
-
 					switch err {
-					case stdio.EOF:
-						s.error(ErrPeerHangUp(err))
-						break
+					case io.EOF:
+						s.error(sharedTypes.ErrPeerHangUp(err))
+						break reader
 
-					case stdio.ErrUnexpectedEOF:
-						s.error(ErrPeerHangUp(err))
-						break
+					case io.ErrUnexpectedEOF:
+						s.error(sharedTypes.ErrPeerHangUp(err))
+						break reader
 
 					default:
-						s.error(ErrUnexpected(err))
-						break
+						s.error(sharedTypes.ErrUnexpected(err))
+						break reader
 					}
 				}
 
 				if n == 0 {
+					s.logger.Warn("Read 0 bytes on socket:", s.addr)
 					continue
 				}
 
-				nonce, _, data, wrapped, err := s.c.decode(buf)
+				nonce, _, data, wrapped, err := s.codec.decode(buf)
 				if err != nil {
 					s.error(err)
-					break
+					break reader
 				}
 
-				if nonce != 0 {
-					_, ch, found := s.requests.Find(nonce)
-					// TODO(derrandz): this is hacku
-					if found {
-						ch <- types.NewWork(nonce, data, s.addr, wrapped)
-						close(ch)
-						continue
-					}
+				// A non-zero nonce happens on nonced-respones (i.e., responses to already sent requests).
+				// Using the non-zero nonce, we are able to fetch the existing (waiting) request from
+				// the request map and pull out the channel on which this request expects to receive a response.
+				if _, ch, _ := s.requests.Find(nonce); nonce != 0 && ch != nil {
+					ch <- types.NewPacket(nonce, data, s.addr, wrapped)
+					close(ch)
+					continue
 				}
 
-				s.runner.Sink() <- types.NewWork(nonce, data, s.addr, wrapped)
+				// TODO(derrandz): should we make this in a separate routine to avoid any potential issues?
+				s.runner.Sink() <- types.NewPacket(nonce, data, s.addr, wrapped)
 			}
 		}
 	}
 }
 
-func (s *socket) write(b []byte, iserroreof bool, reqnum uint32, wrapped bool) (uint, error) {
-	defer s.buffersState.writeLock.Unlock()
-	s.buffersState.writeLock.Lock()
+// TODO(derrandz): Add buffered write by writing exactly `WriteBufferSize` amount of bytes, and splitting if larger.
+//                 Will need to think about how to split big payloads and sequence them.
+//
+// Writes a chunk=writeBufferSize to the writer (s.writer).
+// This operation is blocking, and blocks until a waiter is ready to receive the signal from the write buffer (signaling that is has written).
+// This is used by send/request/broadcast operations.
+// Upon each send, the write routine will receive a signal so that it may proceed to send the write over the network.
+func (s *socket) writeChunk(b []byte, isErrorOf bool, reqNum uint32, wrapped bool) (uint, error) {
+	defer s.buffers.write.Unlock()
+	s.buffers.write.Lock()
 
-	buff := s.c.encode(Binary, iserroreof, reqnum, b, wrapped)
-	s.buffers.write = append(s.buffers.write, buff...)
+	writeBuffer := s.buffers.write.Ref()
 
-	// TODO(derrandz): find a better way, maybe the value itself (the channel) should be an atomic on and off switch to signal writes
-	s.buffersState.Lock()
-	s.buffersState.writeSignals <- 1
-	s.buffersState.Unlock()
+	buff := s.codec.encode(Binary, isErrorOf, reqNum, b, wrapped)
+	*writeBuffer = append(*writeBuffer, buff...)
 
+	s.buffers.write.Signal()
 	return uint(len(b)), nil // TODO(derrandz): should length be of b or of the encoded b
 }
 
-func (s *socket) ackwrite(b []byte, wrapped bool) (types.Work, error) {
+// writeChunkAckful is a writeChunk that expects to receive an ACK response for the chunk it has written.
+// This method will create a request, which is basically a nonce and a channel, the nonce to identify the
+// written chunk and the channel to receive the response for that particular written chunk.
+//
+// The channel - on which the response is expected to be received - is blocking, thus enables the 'wait to receive the response' behavior.
+// The `read` routine takes care of identifying incoming responses (_using the nonce_) and redirecting them to the waiting channels of the currently-open requests.
+func (s *socket) writeChunkAckful(b []byte, wrapped bool) (types.Packet, error) {
 	request := s.requests.Get()
-	requestNonce := request.Nonce()
+	requestNonce := request.Nonce
 
-	if _, err := s.write(b, false, requestNonce, wrapped); err != nil {
+	if _, err := s.writeChunk(b, false, requestNonce, wrapped); err != nil {
 		s.requests.Delete(requestNonce)
-		return types.NewWork(requestNonce, nil, "", false), err
+		return types.NewPacket(requestNonce, nil, "", false), err
 	}
 
-	var response types.Work
+	var response types.Packet
+
 	select {
-	case response = <-request.Response():
-	case <-time.After(time.Millisecond * time.Duration(s.params.timeoutMs)):
-		return types.Work{}, fmt.Errorf("ackwrite: request timed out. nonce=%d, addr=%s", requestNonce, s.addr)
-	}
+	case response = <-request.ResponsesCh:
+		return response, nil
 
-	return response, nil
+	case <-time.After(time.Millisecond * time.Duration(s.readTimeout)):
+		close(request.ResponsesCh)
+		return types.Packet{}, sharedTypes.ErrSocketRequestTimedOut(s.addr, requestNonce)
+	}
 }
 
-func (s *socket) answer() {
-	defer func() {
-		close(s.answering)
-		s.closed <- 1
-	}()
+// The write routine.
+//
+// This routine performs buffered writes (`writeBufferSize``) on the established connection.
+// This routine halts if:
+//   - the cancelable routine cancels
+//   - if the runner stops
+//   - if the socket closes
+//   - if some party signals that this routine should stop (by closing the s.writing channel)
+//   - if there is a write error
+func (s *socket) write(ctx context.Context) {
+	defer s.signalWritingStop()
+	s.signalWritingStart()
 
-	{
-		s.answering <- 1 // signal start
-	}
-
-	for stop := false; !stop; {
+writer:
+	for {
 		select {
-		case <-s.runner.Done():
-			stop = true
-			break
-
-		case <-s.done:
-			stop = true
-			break
-
-		case _, open := <-s.answering:
-			if !open {
-				stop = true
-				break
-			}
-
-		case <-s.buffersState.writeSignals: // blocks
+		case <-ctx.Done(): // stop if context cancels
+			break writer
+		case <-s.runner.Done(): // stop if runner stops
+			break writer
+		case <-s.done: // stop if the socket closes
+			break writer
+		case <-s.buffers.write.Signals(): // blocks
 			{
-				if stop {
-					break
+				if !s.buffers.write.IsOpen() {
+					break writer
 				}
 
-				s.buffersState.writeLock.Lock()
-				buff, open := s.buffers.write, s.buffersState.writeOpen
-				s.buffers.write = nil
-				s.buffersState.writeLock.Unlock()
-
-				if !open {
-					stop = true
-					break
-				}
+				buff := s.buffers.write.DumpBytes()
 
 				if _, err := s.writer.Write(buff); err != nil {
 					s.error(err)
-					stop = true
-					break
+					break writer
 				}
 
 				if err := s.writer.Flush(); err != nil {
 					s.error(err)
-					stop = true
-					break
+					break writer
 				}
 			}
 		}
 	}
 }
 
+// Tracks and stores the encountered error
 func (s *socket) error(err error) {
 	defer s.err.Unlock()
 	s.err.Lock()
@@ -402,49 +465,56 @@ func (s *socket) error(err error) {
 		s.err.error = err
 	}
 
-	s.errored <- 1
+	s.errored <- struct{}{}
 }
 
-func NewSocket(readBufferSize uint, packetHeaderLength uint, readTimeoutInMs uint) *socket {
-	params := parameters{headerLength: packetHeaderLength, bufferSize: readBufferSize, timeoutMs: readTimeoutInMs}
-	wc := newWireCodec()
-	pipe := &socket{
-		params: params,
-		c:      wc,
+// signal the readiness of the socket, called when everything has been perofrmed successfully when opening the socket
+func (s *socket) signalReady() {
+	close(s.ready)
+}
 
-		requests: types.NewRequestMap(math.MaxUint32),
+// signal that the socket has been opened. Flip the flag.
+func (s *socket) signalOpen() {
+	s.isOpen.Store(true)
+}
 
-		buffers: struct {
-			read  []byte
-			write []byte
-		}{
-			read:  make([]byte, params.bufferSize),
-			write: make([]byte, 0),
-		},
-		buffersState: struct {
-			sync.Mutex
-			writeOpen    bool
-			writeSignals chan uint
-			writeLock    sync.Mutex
-		}{
-			writeOpen:    false,
-			writeSignals: make(chan uint, 1),
-			writeLock:    sync.Mutex{},
-		},
+// signal that the socket has been closed.
+func (s *socket) signalClose() {
+	s.isOpen.Store(false)
+}
 
-		timeouts: struct{ read uint }{read: params.timeoutMs},
+func (s *socket) stopErrorReporting() {
+	defer s.err.Unlock()
 
-		sense: UnspecifiedIoPipeSense,
+	s.err.Lock()
+	close(s.errored)
+}
 
-		ready:  make(chan uint),
-		closed: make(chan uint, 3),
+func (s *socket) signalWritingStart() {
+	s.isWriting.Store(true)
+	s.writing <- struct{}{}
+}
 
-		done:    make(chan uint, 1),
-		errored: make(chan uint, 1),
+func (s *socket) signalWritingStop() {
+	close(s.writing)
+	s.isWriting.Store(false)
+}
 
-		answering: make(chan uint),
-		polling:   make(chan uint),
-	}
+func (s *socket) signalReadingStart() {
+	s.isReading.Store(true)
+	s.reading <- struct{}{}
+}
 
-	return pipe
+func (s *socket) signalReadingStop() {
+	close(s.reading)
+	s.isReading.Store(false)
+}
+
+// used by startIO to signal that IO has been kicked off
+func (s *socket) signalIoStarted() {
+	s.ioStarted <- struct{}{}
+}
+
+func (s *socket) signalIoFailure() {
+	close(s.ioStarted)
 }

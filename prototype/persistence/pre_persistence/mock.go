@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	types2 "github.com/pokt-network/pocket/shared/types"
 	"math/big"
 	crypto2 "pocket/shared/crypto"
 	"pocket/shared/modules"
@@ -25,7 +26,7 @@ var (
 	defaultServiceURLEdited = "https://bar.foo"
 	defaultStakeBig         = big.NewInt(1000000000000000)
 	defaultStake            = BigIntToString(defaultStakeBig)
-	defaultAccountbalance   = defaultStake
+	defaultAccountBalance   = defaultStake
 	defaultStakeStatus      = int32(2)
 )
 
@@ -53,7 +54,7 @@ func NewMockGenesisState(_, numOfApplications, numOfFisherman, numOfServiceNodes
 		state.Validators = append(state.Validators, v)
 		state.Accounts = append(state.Accounts, &Account{
 			Address: v.Address,
-			Amount:  defaultAccountbalance,
+			Amount:  defaultAccountBalance,
 		})
 		validatorKeys[i] = pk
 	}
@@ -70,7 +71,7 @@ func NewMockGenesisState(_, numOfApplications, numOfFisherman, numOfServiceNodes
 		state.Apps = append(state.Apps, app)
 		state.Accounts = append(state.Accounts, &Account{
 			Address: app.Address,
-			Amount:  defaultAccountbalance,
+			Amount:  defaultAccountBalance,
 		})
 		appKeys[i] = pk
 	}
@@ -88,7 +89,7 @@ func NewMockGenesisState(_, numOfApplications, numOfFisherman, numOfServiceNodes
 		state.ServiceNodes = append(state.ServiceNodes, sn)
 		state.Accounts = append(state.Accounts, &Account{
 			Address: sn.Address,
-			Amount:  defaultAccountbalance,
+			Amount:  defaultAccountBalance,
 		})
 		serviceNodeKeys[i] = pk
 	}
@@ -106,7 +107,7 @@ func NewMockGenesisState(_, numOfApplications, numOfFisherman, numOfServiceNodes
 		state.Fishermen = append(state.Fishermen, fish)
 		state.Accounts = append(state.Accounts, &Account{
 			Address: fish.Address,
-			Amount:  defaultAccountbalance,
+			Amount:  defaultAccountBalance,
 		})
 		fishKeys[i] = pk
 	}
@@ -156,7 +157,7 @@ func NewMockGenesisState(_, numOfApplications, numOfFisherman, numOfServiceNodes
 	pOwnerAddress := DefaultParamsOwner.Address()
 	state.Accounts = append(state.Accounts, &Account{
 		Address: pOwnerAddress,
-		Amount:  defaultAccountbalance,
+		Amount:  defaultAccountBalance,
 	})
 	state.Pools = append(state.Pools, dao)
 	state.Pools = append(state.Pools, fee)
@@ -364,7 +365,7 @@ func (m *MockPersistenceContext) GetHeight() (int64, error) {
 
 func (m *MockPersistenceContext) GetBlockHash(height int64) ([]byte, error) {
 	db := m.Store()
-	block := Block{}
+	block := types2.Block{}
 	key := append(BlockPrefix, []byte(fmt.Sprintf("%d", height))...)
 	val, err := db.Get(key)
 	if err != nil {
@@ -786,7 +787,6 @@ func (m *MockPersistenceContext) UpdateApplication(address []byte, maxRelaysToAd
 	app.MaxRelays = BigIntToString(maxRelays)
 	app.StakedTokens = BigIntToString(stakedTokens)
 	app.Chains = chainsToUpdate
-	// marshal
 	bz, err := cdc.Marshal(app)
 	if err != nil {
 		return err
@@ -851,7 +851,6 @@ func (m *MockPersistenceContext) SetAppUnstakingHeightAndStatus(address []byte, 
 	key := append(AppPrefixKey, address...)
 	app.UnstakingHeight = unstakingHeight
 	app.Status = int32(status)
-	// marshal
 	bz, err := cdc.Marshal(app)
 	if err != nil {
 		return err
@@ -1078,7 +1077,6 @@ func (m *MockPersistenceContext) UpdateServiceNode(address []byte, serviceURL st
 	sn.ServiceURL = serviceURL
 	sn.StakedTokens = BigIntToString(stakedTokens)
 	sn.Chains = chains
-	// marshal
 	bz, err := cdc.Marshal(sn)
 	if err != nil {
 		return err
@@ -1143,7 +1141,6 @@ func (m *MockPersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address 
 	key := append(ServiceNodePrefixKey, address...)
 	sn.UnstakingHeight = unstakingHeight
 	sn.Status = int32(status)
-	// marshal
 	bz, err := cdc.Marshal(sn)
 	if err != nil {
 		return err
@@ -1448,7 +1445,6 @@ func (m *MockPersistenceContext) UpdateFisherman(address []byte, serviceURL stri
 	fish.ServiceURL = serviceURL
 	fish.StakedTokens = BigIntToString(stakedTokens)
 	fish.Chains = chains
-	// marshal
 	bz, err := cdc.Marshal(fish)
 	if err != nil {
 		return err
@@ -1513,7 +1509,6 @@ func (m *MockPersistenceContext) SetFishermanUnstakingHeightAndStatus(address []
 	key := append(FishermanPrefixKey, address...)
 	fish.UnstakingHeight = unstakingHeight
 	fish.Status = int32(status)
-	// marshal
 	bz, err := cdc.Marshal(fish)
 	if err != nil {
 		return err
@@ -1661,9 +1656,6 @@ func (m *MockPersistenceContext) GetAllValidators(height int64) (v []*Validator,
 	defer it.Release()
 	for ; it.Valid(); it.Next() {
 		bz := it.Value()
-		//if bz == nil {
-		//	break
-		//}
 		valid := it.Valid()
 		valid = valid
 		if bytes.Contains(bz, DeletedPrefixKey) {
@@ -1744,7 +1736,6 @@ func (m *MockPersistenceContext) UpdateValidator(address []byte, serviceURL stri
 	// update values
 	val.ServiceURL = serviceURL
 	val.StakedTokens = BigIntToString(stakedTokens)
-	// marshal
 	bz, err := cdc.Marshal(val)
 	if err != nil {
 		return err
@@ -1809,7 +1800,6 @@ func (m *MockPersistenceContext) SetValidatorUnstakingHeightAndStatus(address []
 	key := append(ValidatorPrefixKey, address...)
 	validator.UnstakingHeight = unstakingHeight
 	validator.Status = int32(status)
-	// marshal
 	bz, err := cdc.Marshal(validator)
 	if err != nil {
 		return err

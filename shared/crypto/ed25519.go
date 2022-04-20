@@ -9,6 +9,7 @@ import (
 
 const (
 	AddressLen = 20
+	SeedSize   = ed25519.SeedSize
 )
 
 type (
@@ -30,8 +31,9 @@ func NewAddress(hexString string) (Address, error) {
 }
 
 func NewAddressFromBytes(bz []byte) (Address, error) {
-	if len(bz) != AddressLen {
-		return bz, ErrInvalidAddressLen()
+	bzLen := len(bz)
+	if bzLen != AddressLen {
+		return bz, ErrInvalidAddressLen(bzLen)
 	}
 	return bz, nil
 }
@@ -53,11 +55,20 @@ func GeneratePrivateKey() (PrivateKey, error) {
 	return Ed25519PrivateKey(pk), err
 }
 
-func NewPrivateKeyFromBytes(b []byte) (PrivateKey, error) {
-	if len(b) != ed25519.PrivateKeySize {
-		return nil, ErrInvalidPrivateKeyLen()
+func NewPrivateKeyFromBytes(bz []byte) (PrivateKey, error) {
+	bzLen := len(bz)
+	if bzLen != ed25519.PrivateKeySize {
+		return nil, ErrInvalidPrivateKeyLen(bzLen)
 	}
-	return Ed25519PrivateKey(b), nil
+	return Ed25519PrivateKey(bz), nil
+}
+
+func NewPrivateKeyFromSeed(seed []byte) (PrivateKey, error) {
+	if len(seed) < SeedSize {
+		return nil, ErrInvalidPrivateKeySeedLenError(len(seed))
+	}
+	privKey := ed25519.NewKeyFromSeed([]byte(seed[:SeedSize]))
+	return Ed25519PrivateKey(privKey), nil
 }
 
 var _ PrivateKey = Ed25519PrivateKey{}
@@ -92,13 +103,25 @@ func (priv Ed25519PrivateKey) Size() int {
 	return ed25519.PrivateKeySize
 }
 
+func (priv Ed25519PrivateKey) Seed() []byte {
+	return ed25519.PrivateKey(priv).Seed()
+}
+
 func (priv *Ed25519PrivateKey) UnmarshalJSON(data []byte) error {
 	var privateKey string
 	err := json.Unmarshal(data, &privateKey)
 	if err != nil {
 		return err
 	}
-	*priv = []byte(privateKey)
+	keyBytes, err := hex.DecodeString(privateKey)
+	if err != nil {
+		return err
+	}
+	privKey, err := NewPrivateKeyFromBytes(keyBytes)
+	if err != nil {
+		return err
+	}
+	*priv = privKey.(Ed25519PrivateKey)
 	return nil
 }
 
@@ -112,11 +135,12 @@ func NewPublicKey(hexString string) (PublicKey, error) {
 	return NewPublicKeyFromBytes(bz)
 }
 
-func NewPublicKeyFromBytes(b []byte) (PublicKey, error) {
-	if len(b) != ed25519.PublicKeySize {
-		return nil, ErrInvalidPublicKeyLen()
+func NewPublicKeyFromBytes(bz []byte) (PublicKey, error) {
+	bzLen := len(bz)
+	if bzLen != ed25519.PublicKeySize {
+		return nil, ErrInvalidPublicKeyLen(bzLen)
 	}
-	return Ed25519PublicKey(b), nil
+	return Ed25519PublicKey(bz), nil
 }
 
 func (pub Ed25519PublicKey) Bytes() []byte {
@@ -136,12 +160,28 @@ func (pub Ed25519PublicKey) Equals(other PublicKey) bool {
 	return ed25519.PublicKey(pub).Equal(ed25519.PublicKey(other.(Ed25519PublicKey)))
 }
 
-func (pub Ed25519PublicKey) VerifyBytes(msg []byte, sig []byte) bool {
+func (pub Ed25519PublicKey) Verify(msg []byte, sig []byte) bool {
 	return ed25519.Verify(ed25519.PublicKey(pub), msg, sig)
 }
 
 func (pub Ed25519PublicKey) Size() int {
 	return ed25519.PublicKeySize
+}
+
+func GeneratePublicKey() (PublicKey, error) {
+	pk, err := GeneratePrivateKey()
+	if err != nil {
+		return nil, err
+	}
+	return pk.PublicKey(), nil
+}
+
+func GenerateAddress() (Address, error) {
+	pk, err := GeneratePrivateKey()
+	if err != nil {
+		return nil, err
+	}
+	return pk.Address(), nil
 }
 
 func (pub *Ed25519PublicKey) UnmarshalJSON(data []byte) error {
@@ -150,6 +190,14 @@ func (pub *Ed25519PublicKey) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	*pub = []byte(publicKey)
+	keyBytes, err := hex.DecodeString(publicKey)
+	if err != nil {
+		return err
+	}
+	pubKey, err := NewPublicKeyFromBytes(keyBytes)
+	if err != nil {
+		return err
+	}
+	*pub = pubKey.(Ed25519PublicKey)
 	return nil
 }
