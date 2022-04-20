@@ -83,7 +83,7 @@ func TestNetwork_ListenStop(t *testing.T) {
 		Peers:            []string{"0.0.0.0:1111"},
 		BufferSize:       BufferSize,
 		WireHeaderLength: WireByteHeaderLength,
-		TimeoutInMs:      100,
+		TimeoutInMs:      500,
 	}
 
 	m := newP2PModule()
@@ -161,7 +161,7 @@ func TestNetwork_SendOutbound(t *testing.T) {
 		MaxOutbound:      100,
 		BufferSize:       BufferSize,
 		WireHeaderLength: WireByteHeaderLength,
-		TimeoutInMs:      200,
+		TimeoutInMs:      500,
 	}
 	m := newP2PModule()
 
@@ -232,7 +232,7 @@ func TestNetwork_SendOutbound(t *testing.T) {
 
 		assert.Equal(
 			t,
-			pipe.opened.Load(),
+			pipe.isOpen.Load(),
 			true,
 			"Send error: pipe is not open",
 		)
@@ -265,7 +265,7 @@ func TestNetwork_SendInbound(t *testing.T) {
 		MaxOutbound:      100,
 		BufferSize:       BufferSize,
 		WireHeaderLength: WireByteHeaderLength,
-		TimeoutInMs:      200,
+		TimeoutInMs:      500,
 	}
 
 	m := newP2PModule()
@@ -339,7 +339,7 @@ func TestNetwork_SendInbound(t *testing.T) {
 
 		assert.Equal(
 			t,
-			pipe.opened.Load(),
+			pipe.isOpen.Load(),
 			true,
 			"Send error: pipe is not open",
 		)
@@ -372,7 +372,7 @@ func TestNetwork_Request(t *testing.T) {
 		MaxOutbound:      100,
 		BufferSize:       BufferSize,
 		WireHeaderLength: WireByteHeaderLength,
-		TimeoutInMs:      200,
+		TimeoutInMs:      500,
 	}
 
 	m := newP2PModule()
@@ -518,14 +518,14 @@ func TestNetwork_Request(t *testing.T) {
 func TestNetwork_Respond(t *testing.T) {
 	config := &shared.P2PConfig{
 		Protocol:         "tcp",
-		Address:          []byte("0.0.0.0:36301"),
-		ExternalIp:       "0.0.0.0:31361",
+		Address:          []byte("0.0.0.0:36341"),
+		ExternalIp:       "0.0.0.0:31341",
 		Peers:            []string{"0.0.0.0:2221"},
 		MaxInbound:       100,
 		MaxOutbound:      100,
 		BufferSize:       BufferSize,
 		WireHeaderLength: WireByteHeaderLength,
-		TimeoutInMs:      200,
+		TimeoutInMs:      100,
 	}
 
 	m := newP2PModule()
@@ -544,7 +544,7 @@ func TestNetwork_Respond(t *testing.T) {
 		go m.listen()
 
 		select {
-		case <-m.isReady():
+		case <-m.ready:
 		case <-m.errored:
 			t.Errorf("Send error: could not start listening, error: %s", m.err.error.Error())
 		}
@@ -568,26 +568,32 @@ func TestNetwork_Respond(t *testing.T) {
 	msgA := GenerateByteLen((1024 * 4) - int(m.config.WireHeaderLength))
 	msgB := GenerateByteLen((1024 * 4) - int(m.config.WireHeaderLength))
 
-	go func() {
-		c := newWireCodec()
-		request := c.encode(Binary, false, 12, msgA, false)
-		_, err := conn.Write(request)
-		assert.Nil(
-			t,
-			err,
-			"Respond: encountered error while mock peer trying to request the p2p peer.",
-		)
-		t.Logf("Respond: mock peer has successfully sent a request to the p2p peer: OK")
-	}()
+	//go func() {
+	c := newWireCodec()
+	request := c.encode(Binary, false, 12, msgA, false)
+	t.Logf("Mock peer about to write")
+	_, werr := conn.Write(request)
+
+	t.Logf("The mock peer has written, err=%s", werr)
+	assert.Nil(
+		t,
+		err,
+		"Respond: encountered error while mock peer trying to request the p2p peer.",
+	)
+
+	t.Logf("Respond: mock peer has successfully sent a request to the p2p peer: OK")
+
+	//}()
 
 	{
-		<-time.After(time.Millisecond * 5)
+		<-time.After(time.Millisecond * 10)
 
 		t.Logf("Respond: p2p peer waiting on requests...")
-		w := <-m.sink // blocks
+		t.Logf("The sink has %d elements", len(m.sink))
+		w := <-m.sink // blocking
 		t.Logf("Respond: p2p peer has received a request: OK")
 
-		nonce := w.Nonce()
+		nonce := w.Nonce
 
 		t.Logf("Respond: p2p peer responding...")
 

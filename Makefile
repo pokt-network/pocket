@@ -222,17 +222,25 @@ test_p2p_wire_codec:
 test_p2p_socket:
 	go test -run TestSocket -v -race ./p2p
 
+.PHONY: test_p2p_churn
 ## Run the p2p network churn tests
 test_p2p_churn:
 	go test -run TestNetworkChurn_ -v -race ./p2p
 
+.PHONY: test_p2p_network
 ## Run the p2p network behavior (send, broadcast, listen...)
 test_p2p_network:
 	go test -run TestNetwork_ -v -race ./p2p
 
+.PHONY: test_p2p_raintree
 ## Run the p2p raintree algorithm test (in isolation of networking logic)
 test_p2p_raintree:
 	go test -run TestRainTree_ -v -race ./p2p
+
+.PHONY: test_p2p_gossip
+## Run the p2p network gossip test
+test_p2p_gossip:
+	go test -run TestNetworkGossip_ -v -race ./p2p
 
 .PHONY: test_p2p_types
 ## Run p2p subcomponents' tests

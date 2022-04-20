@@ -3,6 +3,7 @@ package p2p
 import (
 	"net"
 
+	"context"
 	"github.com/pokt-network/pocket/p2p/types"
 )
 
@@ -26,7 +27,13 @@ func (m *p2pModule) dial(addr string) (*socket, error) {
 	}
 
 	pipe.runner = m
-	go pipe.open(OutboundIoPipe, addr, nil, m.peerConnected, m.peerDisconnected)
+	go pipe.open(context.Background(), func() (string, types.SocketType, net.Conn) {
+		conn, err := net.Dial("tcp", addr)
+		if err != nil {
+			return "", types.UndefinedSocketType, nil
+		}
+		return addr, types.Outbound, conn
+	}, m.peerConnected, m.peerDisconnected)
 
 	var err error
 	select {
@@ -41,7 +48,7 @@ func (m *p2pModule) dial(addr string) (*socket, error) {
 	if err != nil {
 		m.log("Error openning pipe", err.Error())
 		pipe.close()
-		<-pipe.closed
+		<-pipe.done
 		pipe = nil
 	}
 
@@ -54,7 +61,7 @@ func (m *p2pModule) send(addr string, msg []byte, wrapped bool) error {
 		return derr
 	}
 
-	_, werr := pipe.write(msg, false, 0, wrapped)
+	_, werr := pipe.writeChunk(msg, false, 0, wrapped)
 	if werr != nil {
 		return werr
 	}
@@ -84,6 +91,7 @@ func (m *p2pModule) listen() error {
 	m.listener.Unlock()
 	m.isListening.Store(true)
 
+	m.log("Listening on", m.address)
 	close(m.ready)
 
 	m.log("Listening at", m.protocol, m.address, "...")
@@ -125,14 +133,14 @@ func (m *p2pModule) request(addr string, msg []byte, wrapped bool) ([]byte, erro
 	if derr != nil {
 		return nil, derr
 	}
-	var response types.Work
+	var response types.Packet
 
-	response, rerr := pipe.ackwrite(msg, wrapped)
+	response, rerr := pipe.writeChunkAckful(msg, wrapped)
 	if rerr != nil {
 		return nil, rerr
 	}
 
-	return response.Bytes(), nil
+	return response.Data, nil
 }
 
 func (m *p2pModule) respond(nonce uint32, iserroreof bool, addr string, msg []byte, wrapped bool) error {
@@ -141,7 +149,7 @@ func (m *p2pModule) respond(nonce uint32, iserroreof bool, addr string, msg []by
 		return derr
 	}
 
-	_, werr := pipe.write(msg, iserroreof, nonce, wrapped)
+	_, werr := pipe.writeChunk(msg, iserroreof, nonce, wrapped)
 	if werr != nil {
 		return werr
 	}
@@ -155,7 +163,11 @@ func (m *p2pModule) handleInbound(conn net.Conn, addr string) {
 	pipe = obj.(*socket)
 	if !exists {
 		pipe.runner = m
-		go pipe.open(InboundIoPipe, addr, conn, m.peerConnected, m.peerDisconnected)
+		connect := func() (string, types.SocketType, net.Conn) {
+			return addr, types.Inbound, conn
+		}
+		// TODO(derrandz): pass proper context instead of background
+		go pipe.open(context.Background(), connect, m.peerConnected, m.peerDisconnected)
 
 		var err error
 		select {
@@ -170,7 +182,7 @@ func (m *p2pModule) handleInbound(conn net.Conn, addr string) {
 		m.log("New connection from", addr, err)
 		if err != nil {
 			pipe.close()
-			<-pipe.closed
+			<-pipe.done
 			pipe = nil
 			m.error(err)
 		}
@@ -188,12 +200,12 @@ func (m *p2pModule) on(e types.PeerEvent, handler func(...interface{})) {
 	}
 }
 
-func (m *p2pModule) peerConnected(p *socket) error {
+func (m *p2pModule) peerConnected(ctx context.Context, p *socket) error {
 	m.log("Peer connected", p.addr)
 	return nil
 }
 
-func (m *p2pModule) peerDisconnected(p *socket) error {
+func (m *p2pModule) peerDisconnected(ctx context.Context, p *socket) error {
 	return nil
 }
 
@@ -201,7 +213,7 @@ func newP2PModule() *p2pModule {
 	return &p2pModule{
 		c: types.NewProtoMarshaler(),
 
-		sink: make(chan types.Work, 100), // TODO(derrandz): rethink whether this should be buffered
+		sink: make(chan types.Packet, 100), // TODO(derrandz): rethink whether this should be buffered
 
 		peerlist: nil,
 

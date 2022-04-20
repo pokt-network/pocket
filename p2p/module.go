@@ -1,13 +1,13 @@
 package p2p
 
 import (
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"log"
 	"net"
 	"sync"
 
 	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/config"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	shared "github.com/pokt-network/pocket/shared/types"
 	"go.uber.org/atomic"
@@ -40,7 +40,7 @@ type p2pModule struct {
 	closed  chan uint
 	errored chan uint
 
-	sink     chan types.Work
+	sink     chan types.Packet
 	handlers map[types.PeerEvent][]func(...interface{})
 
 	logger struct {
@@ -101,7 +101,7 @@ func (m *p2pModule) Stop() error {
 
 func (m *p2pModule) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
-}x
+}
 
 func (m *p2pModule) GetBus() modules.Bus {
 	if m.bus == nil {
@@ -122,7 +122,7 @@ func (m *p2pModule) Broadcast(data *anypb.Any, topic shared.PocketTopic) error {
 	return m.broadcast(p2pmsg, true)
 }
 
-func (m *p2pModule) Send(addr pcrypto.Address, data *anypb.Any, topic shared.PocketTopic) error {
+func (m *p2pModule) Send(addr cryptoPocket.Address, data *anypb.Any, topic shared.PocketTopic) error {
 	metadata := &types.Metadata{}
 	payload := &shared.PocketEvent{Data: data, Topic: topic}
 	p2pmsg := &types.P2PMessage{Metadata: metadata, Payload: payload}

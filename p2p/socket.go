@@ -352,12 +352,7 @@ reader:
 				// A non-zero nonce happens on nonced-respones (i.e., responses to already sent requests).
 				// Using the non-zero nonce, we are able to fetch the existing (waiting) request from
 				// the request map and pull out the channel on which this request expects to receive a response.
-				if nonce != 0 {
-					_, ch, found := s.requests.Find(nonce)
-					if !found {
-						s.logger.Warn("Received response with nonce but no request found:", nonce)
-					}
-
+				if _, ch, _ := s.requests.Find(nonce); nonce != 0 && ch != nil {
 					ch <- types.NewPacket(nonce, data, s.addr, wrapped)
 					close(ch)
 					continue

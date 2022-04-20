@@ -20,7 +20,7 @@ func TestNetworkChurn_Ping(t *testing.T) {
 		MaxOutbound:      100,
 		BufferSize:       1024 * 4,
 		WireHeaderLength: 9,
-		TimeoutInMs:      200,
+		TimeoutInMs:      500,
 	}
 
 	m := newP2PModule()
@@ -154,7 +154,7 @@ func TestNetworkChurn_Pong(t *testing.T) {
 		MaxOutbound:      100,
 		BufferSize:       1024 * 4,
 		WireHeaderLength: 9,
-		TimeoutInMs:      200,
+		TimeoutInMs:      500,
 	}
 	m := newP2PModule()
 
