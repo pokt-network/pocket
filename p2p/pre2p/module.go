@@ -9,12 +9,13 @@ import (
 	"log"
 	"net"
 
-	pre2ptypes "github.com/pokt-network/pocket/p2p/pre2p/types"
+	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 
 	"github.com/pokt-network/pocket/shared/config"
-	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -25,15 +26,12 @@ type p2pModule struct {
 	bus modules.Bus
 
 	listener *net.TCPListener
-	network  pre2ptypes.Network
-	address  pcrypto.Address
+	network  typesPre2P.Network
+	address  cryptoPocket.Address
 }
 
 func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	log.Println("Creating network module")
-
-	testState := types.GetTestState()
-	testState.LoadStateFromConfig(cfg)
 
 	tcpAddr, _ := net.ResolveTCPAddr(NetworkProtocol, fmt.Sprintf(":%d", cfg.Pre2P.ConsensusPort))
 	l, err := net.ListenTCP(NetworkProtocol, tcpAddr)
@@ -41,9 +39,12 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 		return nil, err
 	}
 
+	testState := typesGenesis.GetNodeState(nil)
+	network := ConnectToValidatorNetwork(testState.ValidatorMap)
+
 	m = &p2pModule{
 		listener: l,
-		network:  ConnectToValidatorNetwork(testState.ValidatorMap),
+		network:  network,
 		address:  cfg.PrivateKey.Address(),
 	}
 
@@ -99,7 +100,7 @@ func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
 	return m.network.NetworkBroadcast(data)
 }
 
-func (m *p2pModule) Send(addr pcrypto.Address, msg *anypb.Any, topic types.PocketTopic) error {
+func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.PocketTopic) error {
 	c := &types.PocketEvent{
 		Topic: topic,
 		Data:  msg,
@@ -112,6 +113,6 @@ func (m *p2pModule) Send(addr pcrypto.Address, msg *anypb.Any, topic types.Pocke
 	return m.network.NetworkSend(data, addr)
 }
 
-func (m *p2pModule) GetAddrBook() []*pre2ptypes.NetworkPeer {
+func (m *p2pModule) GetAddrBook() []*typesPre2P.NetworkPeer {
 	return m.network.GetAddrBook()
 }

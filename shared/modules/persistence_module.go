@@ -1,11 +1,13 @@
 package modules
 
 import (
+	"github.com/pokt-network/pocket/shared/types"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 )
 
 type PersistenceModule interface {
 	Module
+
 	NewContext(height int64) (PersistenceContext, error)
 	GetCommitDB() *memdb.DB
 }
@@ -26,23 +28,23 @@ type PersistenceContext interface {
 	// Indexer
 	TransactionExists(transactionHash string) bool
 
-	// Account
+	//Account
 	AddPoolAmount(name string, amount string) error
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error
-	InsertPool(name string, address []byte, amoutn string) error
+	InsertPool(name string, address []byte, amount string) error
 	GetPoolAmount(name string) (amount string, err error)
 	AddAccountAmount(address []byte, amount string) error
 	SubtractAccountAmount(address []byte, amount string) error
 	GetAccountAmount(address []byte) (string, error)
-	SetAccount(address []byte, amount string) error
+	SetAccountAmount(address []byte, amount string) error
 
 	// App
 	GetAppExists(address []byte) (exists bool, err error)
 	InsertApplication(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateApplication(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error
 	DeleteApplication(address []byte) error
-	GetAppsReadyToUnstake(Height int64, status int) (apps []UnstakingActor, err error)
+	GetAppsReadyToUnstake(Height int64, status int) (apps []*types.UnstakingActor, err error)
 	GetAppStatus(address []byte) (status int, err error)
 	SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
 	GetAppPauseHeightIfExists(address []byte) (int64, error)
@@ -55,7 +57,7 @@ type PersistenceContext interface {
 	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateServiceNode(address []byte, serviceURL string, amountToAdd string, chains []string) error
 	DeleteServiceNode(address []byte) error
-	GetServiceNodesReadyToUnstake(Height int64, status int) (ServiceNodes []UnstakingActor, err error)
+	GetServiceNodesReadyToUnstake(Height int64, status int) (ServiceNodes []*types.UnstakingActor, err error)
 	GetServiceNodeStatus(address []byte) (status int, err error)
 	SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
 	GetServiceNodePauseHeightIfExists(address []byte) (int64, error)
@@ -70,7 +72,7 @@ type PersistenceContext interface {
 	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateFisherman(address []byte, serviceURL string, amountToAdd string, chains []string) error
 	DeleteFisherman(address []byte) error
-	GetFishermanReadyToUnstake(Height int64, status int) (Fishermans []UnstakingActor, err error)
+	GetFishermanReadyToUnstake(Height int64, status int) (Fishermans []*types.UnstakingActor, err error)
 	GetFishermanStatus(address []byte) (status int, err error)
 	SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
 	GetFishermanPauseHeightIfExists(address []byte) (int64, error)
@@ -83,12 +85,13 @@ type PersistenceContext interface {
 	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error
 	UpdateValidator(address []byte, serviceURL string, amountToAdd string) error
 	DeleteValidator(address []byte) error
-	GetValidatorsReadyToUnstake(Height int64, status int) (Validators []UnstakingActor, err error)
+	GetValidatorsReadyToUnstake(Height int64, status int) (Validators []*types.UnstakingActor, err error)
 	GetValidatorStatus(address []byte) (status int, err error)
 	SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
 	GetValidatorPauseHeightIfExists(address []byte) (int64, error)
 	SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetValidatorPauseHeightAndMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) error
+	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
 	GetValidatorMissedBlocks(address []byte) (int, error)
 	SetValidatorPauseHeight(address []byte, height int64) error
 	SetValidatorStakedTokens(address []byte, tokens string) error
@@ -103,7 +106,7 @@ type PersistenceContext interface {
 	GetParamAppMinimumStake() (string, error)
 	GetMaxAppChains() (int, error)
 	GetBaselineAppStakeRate() (int, error)
-	GetStakingAdjustment() (int, error)
+	GetStabilityAdjustment() (int, error)
 	GetAppUnstakingBlocks() (int, error)
 	GetAppMinimumPauseBlocks() (int, error)
 	GetAppMaxPausedBlocks() (int, error)
@@ -247,8 +250,8 @@ type PersistenceContext interface {
 	SetMessageChangeParameterFeeOwner([]byte) error
 
 	// ACL
-	GetACLOwner() ([]byte, error)
-	SetACLOwner(owner []byte) error
+	GetAclOwner() ([]byte, error)
+	SetAclOwner(owner []byte) error
 	SetBlocksPerSessionOwner(owner []byte) error
 	GetBlocksPerSessionOwner() ([]byte, error)
 	GetMaxAppChainsOwner() ([]byte, error)

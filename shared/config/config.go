@@ -8,40 +8,61 @@ import (
 	"os"
 	"path/filepath"
 
-	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
 type Config struct {
-	RootDir    string                    `json:"root_dir"`
-	PrivateKey pcrypto.Ed25519PrivateKey `json:"private_key"`
-	Genesis    string                    `json:"genesis"`
+	RootDir string `json:"root_dir"`
+	Genesis string `json:"genesis"`
 
-	Pre2P       *Pre2PConfig       `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
-	P2P         *P2PConfig         `json:"p2p"`
-	Consensus   *ConsensusConfig   `json:"consensus"`
-	Persistence *PersistenceConfig `json:"persistence"`
-	Utility     *UtilityConfig     `json:"utility"`
+	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
+
+	Pre2P          *Pre2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
+	P2P            *P2PConfig            `json:"p2p"`
+	Consensus      *ConsensusConfig      `json:"consensus"`
+	PrePersistence *PrePersistenceConfig `json:"pre_persistence"`
+	Persistence    *PersistenceConfig    `json:"persistence"`
+	Utility        *UtilityConfig        `json:"utility"`
 }
 
 // TODO(derrandz): delete this once P2P is ready.
 type Pre2PConfig struct {
 	ConsensusPort uint32 `json:"consensus_port"`
-	DebugPort     uint32 `json:"debug_port"`
+}
+
+type PrePersistenceConfig struct {
+	Capacity        int `json:"capacity"`
+	MempoolMaxBytes int `json:"mempool_max_bytes"`
+	MempoolMaxTxs   int `json:"mempool_max_txs"`
 }
 
 type P2PConfig struct {
-	Protocol         string          `json:"protocol"`
-	Address          pcrypto.Address `json:"address"`
-	ExternalIp       string          `json:"external_ip"`
-	Peers            []string        `json:"peers"`
-	MaxInbound       uint32          `json:max_inbound`
-	MaxOutbound      uint32          `json:max_outbound`
-	BufferSize       uint            `json:connection_buffer_size`
-	WireHeaderLength uint            `json:max_wire_header_length`
-	TimeoutInMs      uint            `json:timeout_in_ms`
+	Protocol         string               `json:"protocol"`
+	Address          cryptoPocket.Address `json:"address"`
+	ExternalIp       string               `json:"external_ip"`
+	Peers            []string             `json:"peers"`
+	MaxInbound       uint32               `json:"max_inbound"`
+	MaxOutbound      uint32               `json:"max_outbound"`
+	BufferSize       uint                 `json:"connection_buffer_size"`
+	WireHeaderLength uint                 `json:"max_wire_header_length"`
+	TimeoutInMs      uint                 `json:"timeout_in_ms"`
+}
+
+type PacemakerConfig struct {
+	TimeoutMsec               uint64 `json:"timeout_msec"`
+	Manual                    bool   `json:"manual"`
+	DebugTimeBetweenStepsMsec uint64 `json:"debug_time_between_steps_msec"`
 }
 
 type ConsensusConfig struct {
+	// Mempool
+	MaxMempoolBytes uint64 `json:"max_mempool_bytes"` // TODO(olshansky): add unit tests for this
+
+	// Block
+	MaxBlockBytes uint64 `json:"max_block_bytes"` // TODO(olshansky): add unit tests for this
+
+	// Pacemaker
+	Pacemaker *PacemakerConfig `json:"pacemaker"`
 }
 
 type PersistenceConfig struct {
@@ -69,43 +90,59 @@ func LoadConfig(file string) (c *Config) {
 		log.Fatalln("Error parsing config file: ", err)
 	}
 
-	if err := c.validateAndComplete(); err != nil {
+	if err := c.ValidateAndHydrate(); err != nil {
 		log.Fatalln("Error validating or completing config: ", err)
-	}
-
-	if err := c.Consensus.validateAndComplete(); err != nil {
-		log.Fatalln("Error validating or completing consensus config: ", err)
-	}
-
-	if err := c.P2P.validateAndComplete(); err != nil {
-		log.Fatalln("Error validating or completing P2P config: ", err)
 	}
 
 	return
 }
 
-func (c *Config) validateAndComplete() error {
+func (c *Config) ValidateAndHydrate() error {
 	if len(c.PrivateKey) == 0 {
 		return fmt.Errorf("private key in config file cannot be empty")
 	}
 
 	if len(c.Genesis) == 0 {
-		return fmt.Errorf("must specify a genesis file")
+		return fmt.Errorf("must specify a genesis file or string")
 	}
 	c.Genesis = rootify(c.Genesis, c.RootDir)
 
+	if err := c.Consensus.ValidateAndHydrate(); err != nil {
+		log.Fatalln("Error validating or completing consensus config: ", err)
+	}
+
+	if err := c.P2P.ValidateAndHydrate(); err != nil {
+		log.Fatalln("Error validating or completing P2P config: ", err)
+	}
+
 	return nil
 }
 
-func (c *P2PConfig) validateAndComplete() error {
+func (c *P2PConfig) ValidateAndHydrate() error {
 	return nil
 }
 
-func (c *ConsensusConfig) validateAndComplete() error {
+func (c *ConsensusConfig) ValidateAndHydrate() error {
+	if err := c.Pacemaker.ValidateAndHydrate(); err != nil {
+		log.Fatalf("Error validating or completing Pacemaker configs")
+	}
+
+	if c.MaxMempoolBytes <= 0 {
+		return fmt.Errorf("MaxMempoolBytes must be a positive integer")
+	}
+
+	if c.MaxBlockBytes <= 0 {
+		return fmt.Errorf("MaxBlockBytes must be a positive integer")
+	}
+
 	return nil
 }
 
-// Helper to make config creation independent of root dir
+func (c *PacemakerConfig) ValidateAndHydrate() error {
+	return nil
+}
+
+// Helper function to make config creation independent of root dir
 func rootify(path, root string) string {
 	if filepath.IsAbs(path) {
 		return path

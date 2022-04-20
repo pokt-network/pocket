@@ -27,7 +27,7 @@ type Session struct {
 
 	SessionHeader *SessionHeader `protobuf:"bytes,1,opt,name=SessionHeader,proto3" json:"SessionHeader,omitempty"`
 	SessionKey    []byte         `protobuf:"bytes,2,opt,name=SessionKey,proto3" json:"SessionKey,omitempty"`
-	SessionNodes  [][]byte       `protobuf:"bytes,3,rep,name=SessionNodes,proto3" json:"SessionNodes,omitempty"`
+	SessionNodes  [][]byte       `protobuf:"bytes,3,rep,name=ServiceNodes,proto3" json:"ServiceNodes,omitempty"`
 	Fishermen     []byte         `protobuf:"bytes,4,opt,name=Fishermen,proto3" json:"Fishermen,omitempty"`
 }
 

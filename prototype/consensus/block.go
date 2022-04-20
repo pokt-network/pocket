@@ -23,7 +23,7 @@ func (m *ConsensusModule) prepareBlock() (*types2.BlockConsTemp, error) {
 	maxTxBytes := 90000 // INTEGRATION_TEMP
 	//proposer := []byte(strconv.Itoa(int(m.NodeId)))
 	pk, _ := crypto.GeneratePrivateKey()
-	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.UtilityContext.GetPersistanceContext().GetLastByzValidators
+	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.UtilityContext.GetPersistenceContext().GetLastByzValidators
 	txs, err := m.UtilityContext.GetTransactionsForProposal(pk.PublicKey().Address(), maxTxBytes, lastByzValidators)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (m *ConsensusModule) deliverTxToUtility(block *types2.BlockConsTemp) error 
 	utilityModule := m.GetBus().GetUtilityModule()
 	m.UtilityContext, _ = utilityModule.NewContext(int64(m.Height))
 	proposer := []byte(strconv.Itoa(int(m.NodeId)))
-	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.UtilityContext.GetPersistanceContext().GetLastByzValidators
+	lastByzValidators := make([][]byte, 0) // INTEGRATION_TEMP: m.UtilityContext.GetPersistenceContext().GetLastByzValidators
 
 	appHash, err := m.UtilityContext.ApplyBlock(int64(m.Height), proposer, block.Transactions, lastByzValidators)
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/config"
-	pcrypto "github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	shared "github.com/pokt-network/pocket/shared/types"
 	"go.uber.org/atomic"
@@ -62,6 +62,8 @@ var networkLogger func(...interface{}) (int, error) = func(args ...interface{}) 
 	return 0, nil
 }
 
+var _ modules.P2PModule = &p2pModule{}
+
 func Create(config *config.Config) (modules.P2PModule, error) {
 	m := newP2PModule()
 
@@ -99,7 +101,7 @@ func (m *p2pModule) Stop() error {
 
 func (m *p2pModule) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
-}
+}x
 
 func (m *p2pModule) GetBus() modules.Bus {
 	if m.bus == nil {
