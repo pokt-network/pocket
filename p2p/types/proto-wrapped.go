@@ -47,3 +47,7 @@ func NewP2PMessage(nonce int32, level int32, src, dest string, event *shared.Poc
 		Payload: event,
 	}
 }
+
+func (msg *P2PMessage) MarkAsBroadcastMessage() {
+	msg.Metadata.Broadcast = true
+}

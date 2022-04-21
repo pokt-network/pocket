@@ -9,6 +9,7 @@ func (m *P2PMessage) Copy() *P2PMessage {
 		Level:       m.Metadata.Level,
 		Source:      m.Metadata.Source,
 		Destination: m.Metadata.Destination,
+		Broadcast:   m.Metadata.Broadcast,
 	}
 
 	newm.Payload = &shared.PocketEvent{

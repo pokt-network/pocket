@@ -1,10 +1,11 @@
 package p2p
 
 import (
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"log"
 	"net"
 	"sync"
+
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 
 	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/config"

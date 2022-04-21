@@ -101,10 +101,15 @@ func (m *p2pModule) broadcast(msg *types.P2PMessage, isRoot bool) error {
 	onRainDrop := func(id uint64, l, r *types.Peer, itCurrentLevel int) error {
 		msg.Metadata.Level = int32(itCurrentLevel)
 		msg.Metadata.Source = sourceAddr
+		msg.Metadata.Broadcast = true // forcing function
 
 		return m.dichotomicAckSend(l, r, msg)
 	}
 
+	fmt.Println("id", m.id)
+	fmt.Println("list", list)
+	fmt.Println("current level:", currentLevel)
+	// panic(nil)
 	err := rain(
 		m.id,
 		list,
@@ -124,64 +129,24 @@ func (m *p2pModule) broadcast(msg *types.P2PMessage, isRoot bool) error {
 	return nil
 }
 
-func (m *p2pModule) handle() {
-	// var msg *types.P2PMessage
-	// var mx sync.Mutex
+// handles the received broadcast message
+// TODO(derrandz): he need for the sourceAddr (even though the p2pmsg has a source field) stems from the inbound/outbound differentiation in address
+// this will be resolved with nodeIds used to index the pooled connection as opposed to temporary ip addresses
+func (m *p2pModule) handleBroadcast(nonce uint32, sourceAddr string, msg *types.P2PMessage) error {
+	// todo send ack
+	ackMsg := &types.P2PAckMessage{
+		Acker: m.address,
+		Ackee: sourceAddr,
+	}
+	encodedAck, encErr := m.c.Marshal(ackMsg)
+	if encErr != nil {
+		return ErrFailedToAckBroadcast(encErr)
+	}
 
-	// m.log("Handling...")
-	// for w := range m.sink {
-	// 	nonce, data, srcaddr, encoded := (&w).Implode()
+	err := m.respond(nonce, false, sourceAddr, encodedAck, true)
+	if err != nil {
+		return ErrFailedToAckBroadcast(err)
+	}
 
-	// 	if encoded {
-	// 		mx.Lock()
-	// 		var msg
-	// 		err := m.c.Unmarshal(data)
-	// 		if err != nil {
-	// 			m.log("Error decoding data", err.Error())
-	// 			continue
-	// 		}
-	// 		msgi := decoded.(*types.P2PMessage)
-	// 		msg = msgi
-	// 		msg.Metadata.Nonce = int32(nonce)
-	// 		mx.Unlock()
-	// 	} else {
-	// 		msg.Payload.Data = &anypb.Any{}
-	// 		msg.Metadata.Nonce = int32(nonce)
-	// 		msg.Metadata.Source = srcaddr
-	// 	}
-
-	// 	switch msg.Payload.Topic {
-
-	// 	case shared.PocketTopic_CONSENSUS_MESSAGE_TOPIC:
-	// 		mx.Lock()
-	// 		md := &types.Metadata{
-	// 			Nonce:       msg.Metadata.Nonce,
-	// 			Level:       msg.Metadata.Level,
-	// 			Source:      m.externaladdr,
-	// 			Destination: msg.Metadata.Source,
-	// 		}
-	// 		pl := &shared.PocketEvent{
-	// 			Topic: shared.PocketTopic_CONSENSUS_MESSAGE_TOPIC,
-	// 		}
-	// 		ack := &types.P2PMessage{Metadata: md, Payload: pl}
-	// 		encoded, err := m.c.Marshal(ack)
-	// 		if err != nil {
-	// 			m.log("Error encoding m for gossipaCK", err.Error())
-	// 		}
-
-	// 		err = m.respond(uint32(msg.Metadata.Nonce), false, srcaddr, encoded, true)
-	// 		if err != nil {
-	// 			m.log("Error encoding msg for gossipaCK", err.Error())
-	// 		}
-
-	// 		mx.Unlock()
-
-	// 		m.log("Acked to", ack.Metadata.Destination)
-
-	// 		go m.broadcast(msg, false)
-
-	// 	default:
-	// 		m.log("Unrecognized message topic", msg.Payload.Topic, "from", msg.Metadata.Source, "to", msg.Metadata.Destination, "@node", m.address)
-	// 	}
-	// }
+	return m.broadcast(msg, false)
 }

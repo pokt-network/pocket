@@ -14,6 +14,7 @@ require (
 	golang.org/x/exp v0.0.0-20220301223727-77fc55f9b6c1
 	gonum.org/v1/gonum v0.9.3
 	google.golang.org/protobuf v1.27.1
+
 )
 
 require github.com/golang/protobuf v1.5.2

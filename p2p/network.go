@@ -1,10 +1,14 @@
 package p2p
 
 import (
+	"fmt"
+	"log"
 	"net"
 
 	"context"
+
 	"github.com/pokt-network/pocket/p2p/types"
+	"google.golang.org/protobuf/proto"
 )
 
 func (m *p2pModule) handshake() {}
@@ -95,11 +99,12 @@ func (m *p2pModule) listen() error {
 	close(m.ready)
 
 	m.log("Listening at", m.protocol, m.address, "...")
-	for stop := false; !stop; {
+accepter:
+	for {
 		select {
 		case <-m.done:
-			stop = true
-			break
+			m.listener.Close()
+			break accepter
 		default:
 			{
 				conn, err := m.listener.Accept()
@@ -107,15 +112,15 @@ func (m *p2pModule) listen() error {
 					m.log("Error receiving an inbound connection: ", err.Error())
 					// TODO(derrandz) ignore use of closed network connection error when listener has closed
 					m.error(err)
-					break // report error
+					break accepter
 				}
 
 				if !m.isListening.Load() {
-					break
+					break accepter
 				}
 
 				addr := conn.RemoteAddr().String()
-				go m.handleInbound(conn, addr)
+				go m.poolInbound(conn, addr)
 			}
 		}
 	}
@@ -123,6 +128,7 @@ func (m *p2pModule) listen() error {
 	m.listener.Lock()
 	m.listener.TCPListener = nil
 	m.listener.Unlock()
+	m.isListening.Store(false)
 
 	return nil
 }
@@ -157,7 +163,47 @@ func (m *p2pModule) respond(nonce uint32, iserroreof bool, addr string, msg []by
 	return nil
 }
 
-func (m *p2pModule) handleInbound(conn net.Conn, addr string) {
+func (m *p2pModule) consume() {
+	for w := range m.sink {
+
+		if w.IsEncoded {
+			p2pMsg := &types.P2PMessage{}
+
+			//err := m.c.Unmarshal(w.Data, &p2pMsg)
+			err := proto.Unmarshal(w.Data, p2pMsg)
+			if err != nil {
+				// TODO(derrandz): this is a place holder error handling pattern as discussed in protocol hours
+				log.Fatalf("handleBroadcast: failed to unmarsha received message: %s", err)
+				continue
+			}
+
+			m.log("Nonce=", w.Nonce, "from=", w.From, "p2pMsg=", p2pMsg)
+			m.handle(w.Nonce, w.From, p2pMsg)
+		} else {
+			m.log(fmt.Sprintf("Consume: received a %d wire-level bytes from %s. Left unhandled.", len(w.Data), w.From))
+		}
+	}
+}
+
+func (m *p2pModule) handle(nonce uint32, sourceAddr string, msg *types.P2PMessage) {
+	m.log("Message metadata", msg.Metadata, "broadcast?", msg.Metadata.Broadcast)
+	if msg.Metadata.Broadcast {
+		err := m.handleBroadcast(nonce, sourceAddr, msg)
+		if err != nil {
+			m.log("Handle: encountered error while handling broadcast message: %s", err)
+		}
+	}
+
+	// TODO(derrandz): prevent network from listening if bus is nil and remove this check
+	// Temporarily added to fix an isolated test
+	//if m.bus != nil {
+	//	m.bus.PublishEventToBus(msg.Payload)
+	//} else {
+	//	log.Fatal("[ERROR]: No bus was set!")
+	//}
+}
+
+func (m *p2pModule) poolInbound(conn net.Conn, addr string) {
 	var pipe *socket
 	obj, exists := m.inbound.Get(addr)
 	pipe = obj.(*socket)

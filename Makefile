@@ -84,10 +84,32 @@ docker_wipe: prompt_user
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
 	$(eval modules_dir = "shared/modules")
-	mockgen --source=${modules_dir}/persistence_module.go -destination=${modules_dir}/mocks/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/p2p_module.go -destination=${modules_dir}/mocks/p2p_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen \
+		--source=${modules_dir}/persistence_module.go \
+		-destination=${modules_dir}/mocks/persistence_module_mock.go \
+		-aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+
+	mockgen \
+		--source=${modules_dir}/p2p_module.go \
+		-destination=${modules_dir}/mocks/p2p_module_mock.go \
+		-aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+
+	mockgen \
+		--source=${modules_dir}/utility_module.go \
+		-destination=${modules_dir}/mocks/utility_module_mock.go \
+		-aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+
+	mockgen \
+		--source=${modules_dir}/consensus_module.go \
+		-destination=${modules_dir}/mocks/consensus_module_mock.go \
+		-aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+
+	mockgen \
+		--source=${modules_dir}/pocket_bus_module.go \
+		-destination=${modules_dir}/mocks/pocket_bus_module_mock.go \
+		-aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+
+
 	echo "Mocks generated in ${modules_dir}/mocks"
 
 .PHONY: test_all

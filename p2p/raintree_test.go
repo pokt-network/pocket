@@ -191,12 +191,6 @@ func TestRainTree_Rain(t *testing.T) {
 		l uint64
 		r uint64
 	}{}
-	addtopeermap := func(id, l, r uint64) {
-		peermap[id] = append(peermap[id], struct {
-			l uint64
-			r uint64
-		}{l, r})
-	}
 
 	queue := make([]struct {
 		id          uint64
@@ -204,6 +198,13 @@ func TestRainTree_Rain(t *testing.T) {
 		root        bool
 		contactedby uint64
 	}, 0)
+
+	addtopeermap := func(id, l, r uint64) {
+		peermap[id] = append(peermap[id], struct {
+			l uint64
+			r uint64
+		}{l, r})
+	}
 	queuein := func(id uint64, level int, root bool, contactedby uint64) {
 		queue = append(queue, struct {
 			id          uint64
@@ -289,13 +290,11 @@ func TestRainTree_Rain(t *testing.T) {
 		//}
 	}
 
-	for id, _ := range peermap {
-
-		p := list.Get(int(id - 1))
-		if p == nil {
-			t.Errorf("Raintree error: expected peer %d to have received a message during the broadcast, but it did not", id)
+	for _, peer := range list.Slice() {
+		_, exists := peermap[peer.Id()]
+		if !exists {
+			t.Errorf("Raintree error: expected peer %d to have received a message during the broadcast, but it did not", peer.Id())
 			break
 		}
-
 	}
 }

@@ -61,7 +61,7 @@ func (l *Peerlist) Sort() {
 }
 
 func (l *Peerlist) Slice() []Peer {
-	return l.elements
+	return append(make([]Peer, 0), l.elements...)
 }
 
 func (l *Peerlist) Concat(additional []Peer) *Peerlist {

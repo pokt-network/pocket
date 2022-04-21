@@ -9,6 +9,7 @@ message Metadata {
   int32 level = 2;
   string source = 3;
   string destination = 4;
+  bool broadcast = 5;
 }
 
 message P2PMessage {

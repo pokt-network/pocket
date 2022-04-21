@@ -7,21 +7,25 @@ import (
 	"net"
 )
 
-const P2PModErrPrefix = "[p2p error]:"
+const P2PModErrPrefix = "[p2p error]"
 
 var (
 	ErrNotCreated = errors.New("Module error: P2P Module not created. Trying to start the p2p module before calling create.")
 
 	ErrPeerHangUp func(error) error = func(err error) error {
-		strerr := fmt.Sprintf("%s Peer Hang Up Error: %s", P2PModErrPrefix, err.Error())
+		strerr := fmt.Sprintf("%s: Peer Hang Up Error: %s", P2PModErrPrefix, err.Error())
 		return errors.New(strerr)
 	}
 	ErrUnexpected func(error) error = func(err error) error {
-		strerr := fmt.Sprintf("%s Unexpected Peer Error: %s", P2PModErrPrefix, err.Error())
+		strerr := fmt.Sprintf("%s: Unexpected Peer Error: %s", P2PModErrPrefix, err.Error())
 		return errors.New(strerr)
 	}
 	ErrMissingOrEmptyConfigField func(string) error = func(name string) error {
-		strerr := fmt.Sprintf("%s Missing or empty required configuration field: %s", P2PModErrPrefix, name)
+		strerr := fmt.Sprintf("%s: Missing or empty required configuration field: %s", P2PModErrPrefix, name)
+		return errors.New(strerr)
+	}
+	ErrFailedToAckBroadcast func(error) error = func(err error) error {
+		strerr := fmt.Sprintf("%s: handleBroadcast error: failed to ACK broadcast message: %s", P2PModErrPrefix, err.Error())
 		return errors.New(strerr)
 	}
 )
