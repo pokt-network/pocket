@@ -465,7 +465,11 @@ func (s *socket) error(err error) {
 		s.err.error = err
 	}
 
-	s.errored <- struct{}{}
+	_, open := <-s.errored
+
+	if s.isOpen.Load() && open {
+		s.errored <- struct{}{}
+	}
 }
 
 // signal the readiness of the socket, called when everything has been perofrmed successfully when opening the socket

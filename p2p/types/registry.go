@@ -52,6 +52,10 @@ func (r *Registry) Remove(id string) (bool, error) {
 	return false, nil
 }
 
+func (r *Registry) Elements() map[string]interface{} {
+	return r.elements
+}
+
 func (r *Registry) Capacity() uint32 {
 	return r.maxcap
 }

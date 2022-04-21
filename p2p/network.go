@@ -103,7 +103,6 @@ accepter:
 	for {
 		select {
 		case <-m.done:
-			m.listener.Close()
 			break accepter
 		default:
 			{
@@ -126,9 +125,12 @@ accepter:
 	}
 
 	m.listener.Lock()
+	m.listener.Close()
 	m.listener.TCPListener = nil
 	m.listener.Unlock()
 	m.isListening.Store(false)
+
+	m.releaseSockets()
 
 	return nil
 }
@@ -253,6 +255,18 @@ func (m *p2pModule) peerConnected(ctx context.Context, p *socket) error {
 
 func (m *p2pModule) peerDisconnected(ctx context.Context, p *socket) error {
 	return nil
+}
+
+func (m *p2pModule) releaseSockets() {
+	for _, s := range m.inbound.Elements() {
+		sckt := s.(socket)
+		sckt.close()
+	}
+
+	for _, s := range m.outbound.Elements() {
+		sckt := s.(socket)
+		sckt.close()
+	}
 }
 
 func newP2PModule() *p2pModule {

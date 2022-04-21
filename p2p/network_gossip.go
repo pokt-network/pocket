@@ -85,6 +85,8 @@ func (m *p2pModule) dichotomicAckSend(l, r *types.Peer, msg *types.P2PMessage) e
 func (m *p2pModule) broadcast(msg *types.P2PMessage, isRoot bool) error {
 	var list *types.Peerlist = m.peerlist
 
+	fmt.Println("<><><>: list", list)
+
 	var topLevel int = int(getTopLevel(list))
 	var currentLevel int = topLevel - 1
 
@@ -106,10 +108,8 @@ func (m *p2pModule) broadcast(msg *types.P2PMessage, isRoot bool) error {
 		return m.dichotomicAckSend(l, r, msg)
 	}
 
-	fmt.Println("id", m.id)
-	fmt.Println("list", list)
-	fmt.Println("current level:", currentLevel)
-	// panic(nil)
+	fmt.Println(">>>>>> starting parameters for p2p rain:", m.id, list.Size(), isRoot, currentLevel)
+	fmt.Println(">>>>>>list:", list)
 	err := rain(
 		m.id,
 		list,

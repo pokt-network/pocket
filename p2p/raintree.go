@@ -34,7 +34,6 @@ func getTargetListSize(fullListSize, topl, currl int) float64 {
 */
 func pickLeft(srcid uint64, l *types.Peerlist) (lpos int) {
 	lsize := float64(l.Size())
-
 	ownposition := l.PositionOf(srcid)
 
 	lpos = int(math.Round(float64(ownposition)+lsize/float64(1.5))) + 1
@@ -58,7 +57,7 @@ func pickRight(srcid uint64, l *types.Peerlist) (rpos int) {
 	rpos = int(math.Round(float64(ownposition)+lsize/float64(3))) + 1
 	rpos = int(lsize) - rpos + 1
 
-	if rpos > int(lsize) { // rollover if needed // rollover if needed // rollover if needed // rollover if needed
+	if rpos > int(lsize) { // rollover if needed
 		rpos -= int(lsize)
 	}
 

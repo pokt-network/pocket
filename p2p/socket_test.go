@@ -206,7 +206,7 @@ func TestSocket_WriteChunkAckfulPeerTimesOut(t *testing.T) {
 			)
 
 			_, open := <-responseChannel
-			t.Skip(
+			assert.False(
 				t,
 				open,
 				"pipe writeAckful error: response channel should be closed, but it is still open after timeout",
@@ -928,44 +928,45 @@ func TestSocket_OpenInbound(t *testing.T) {
 
 		_, isNotReady := <-pipe.ready
 
-		t.Skip(
+		assert.Equal(
 			t,
 			isNotReady,
 			false,
 			"pipe open inbound error: pipe is not receiving or sending after inbound launch",
 		)
 
-		t.Skip(
+		assert.NotNil(
 			t,
 			pipe.reader,
 			"pipe open inbound error: reader/writter is not initialized after inbound launch",
 		)
-		t.Skip(
+
+		assert.NotNil(
 			t,
 			pipe.writer,
 			"pipe open inbound error: reader/writter is not initialized after inbound launch",
 		)
 
-		t.Skip(
+		assert.NotNil(
 			t,
 			pipe.conn,
 			"pipe open inbound error: pipe connection is not initialized after inbound launch",
 		)
 
-		t.Skip(
+		assert.NotNil(
 			t,
 			pipe.kind,
 			types.Inbound,
 			"pipe open inbound error: wrong pipe sense",
 		)
 
-		t.Skip(
+		assert.True(
 			t,
 			onopenedStub.WasCalled(),
 			"pipe.open error: did not call onopened handler on opened connection event",
 		)
 
-		t.Skip(
+		assert.True(
 			t,
 			onopenedStub.WasCalledTimes(1),
 			"pipe.open error: expected onopened handler to be called once",
@@ -977,13 +978,13 @@ func TestSocket_OpenInbound(t *testing.T) {
 	<-time.After(time.Millisecond * 10)
 
 	{
-		t.Skip(
+		assert.True(
 			t,
 			onclosedStub.WasCalled(),
 			"pipe.open error: did not call onclosed handler on closed connection event",
 		)
 
-		t.Skip(
+		assert.True(
 			t,
 			onclosedStub.WasCalledTimes(1),
 			"pipe.open error: expected onclosed handler to be called once",
