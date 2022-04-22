@@ -37,15 +37,17 @@ type PrePersistenceConfig struct {
 }
 
 type P2PConfig struct {
-	Protocol         string               `json:"protocol"`
-	Address          cryptoPocket.Address `json:"address"`
-	ExternalIp       string               `json:"external_ip"`
-	Peers            []string             `json:"peers"`
-	MaxInbound       uint32               `json:"max_inbound"`
-	MaxOutbound      uint32               `json:"max_outbound"`
-	BufferSize       uint                 `json:"connection_buffer_size"`
-	WireHeaderLength uint                 `json:"max_wire_header_length"`
-	TimeoutInMs      uint                 `json:"timeout_in_ms"`
+	Protocol string `json:"protocol"`
+	Address  string `json:"address"`
+	// TODO(derrandz): Fix the config imports appropriately
+	// Address          cryptoPocket.Address `json:"address"`
+	ExternalIp       string   `json:"external_ip"`
+	Peers            []string `json:"peers"`
+	MaxInbound       uint32   `json:"max_inbound"`
+	MaxOutbound      uint32   `json:"max_outbound"`
+	BufferSize       uint     `json:"connection_buffer_size"`
+	WireHeaderLength uint     `json:"max_wire_header_length"`
+	TimeoutInMs      uint     `json:"timeout_in_ms"`
 }
 
 type PacemakerConfig struct {
