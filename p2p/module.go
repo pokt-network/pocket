@@ -36,10 +36,11 @@ type p2pModule struct {
 	}
 	isListening atomic.Bool
 
-	done    chan uint
 	ready   chan uint
-	closed  chan uint
 	errored chan uint
+	quit    chan uint
+
+	waiters sync.WaitGroup
 
 	sink     chan types.Packet
 	handlers map[types.PeerEvent][]func(...interface{})
@@ -87,11 +88,7 @@ func (m *p2pModule) Start() error {
 }
 
 func (m *p2pModule) Stop() error {
-	go m.close()
-
-	<-m.closed
-	<-m.done
-	<-m.errored
+	m.close()
 
 	if m.err.error != nil {
 		return m.err.error

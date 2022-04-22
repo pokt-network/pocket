@@ -118,11 +118,11 @@ func TestNetwork_ListenStop(t *testing.T) {
 
 	m.close()
 
-	_, finished := <-m.closed
+	_, running := <-m.quit
 
 	assert.Equal(
 		t,
-		finished,
+		!running,
 		true,
 		"Error: not closed after .Close()",
 	)

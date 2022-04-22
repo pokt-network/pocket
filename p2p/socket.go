@@ -177,8 +177,6 @@ func (s *socket) close() {
 		return
 	}
 
-	close(s.done)
-
 	s.stopErrorReporting()
 	s.buffers.write.Close()
 
@@ -186,6 +184,7 @@ func (s *socket) close() {
 		s.conn.Close()
 	}
 
+	close(s.done)
 	s.signalClose()
 }
 

@@ -99,14 +99,11 @@ func (m *p2pModule) isReady() <-chan uint {
 }
 
 func (m *p2pModule) close() {
-	m.done <- 1
-	m.closed <- 1
-	close(m.done)
+	m.isListening.Store(false)
+	m.listener.Close()
+	close(m.quit)
 	close(m.errored)
-}
-
-func (m *p2pModule) finished() <-chan uint {
-	return m.closed
+	m.waiters.Wait()
 }
 
 func (m *p2pModule) error(err error) {

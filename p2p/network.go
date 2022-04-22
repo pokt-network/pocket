@@ -78,11 +78,6 @@ func (m *p2pModule) send(addr string, msg []byte, wrapped bool) error {
 }
 
 func (m *p2pModule) listen() error {
-	defer func() {
-		m.isListening.Store(false)
-		close(m.closed)
-	}()
-
 	// add address validation and parsing
 	listener, err := net.Listen(m.protocol, m.address)
 	if err != nil {
@@ -99,38 +94,39 @@ func (m *p2pModule) listen() error {
 	close(m.ready)
 
 	m.log("Listening at", m.protocol, m.address, "...")
-accepter:
-	for {
-		select {
-		case <-m.done:
-			break accepter
-		default:
-			{
-				conn, err := m.listener.Accept()
-				if err != nil && m.isListening.Load() {
+
+	go func() {
+		defer func() {
+			m.listener.Lock()
+			m.listener.TCPListener = nil
+			m.listener.Unlock()
+			m.releaseSockets()
+			m.waiters.Done()
+		}()
+
+		for {
+			conn, err := m.listener.Accept()
+			if err != nil {
+				select {
+				case <-m.quit:
+					return
+				default:
 					m.log("Error receiving an inbound connection: ", err.Error())
 					// TODO(derrandz) ignore use of closed network connection error when listener has closed
-					m.error(err)
-					break accepter
+					//m.error(err)
+					conn.Close()
 				}
-
-				if !m.isListening.Load() {
-					break accepter
-				}
-
-				addr := conn.RemoteAddr().String()
-				go m.poolInbound(conn, addr)
 			}
+
+			if !m.isListening.Load() {
+				conn.Close()
+				break
+			}
+
+			addr := conn.RemoteAddr().String()
+			go m.poolInbound(conn, addr)
 		}
-	}
-
-	m.listener.Lock()
-	m.listener.Close()
-	m.listener.TCPListener = nil
-	m.listener.Unlock()
-	m.isListening.Store(false)
-
-	m.releaseSockets()
+	}()
 
 	return nil
 }
@@ -167,7 +163,7 @@ func (m *p2pModule) respond(nonce uint32, iserroreof bool, addr string, msg []by
 
 func (m *p2pModule) consume() {
 	for w := range m.sink {
-
+		// m.log("Received a new message")
 		if w.IsEncoded {
 			p2pMsg := &types.P2PMessage{}
 
@@ -234,7 +230,6 @@ func (m *p2pModule) poolInbound(conn net.Conn, addr string) {
 			pipe = nil
 			m.error(err)
 		}
-
 	}
 }
 
@@ -259,13 +254,19 @@ func (m *p2pModule) peerDisconnected(ctx context.Context, p *socket) error {
 
 func (m *p2pModule) releaseSockets() {
 	for _, s := range m.inbound.Elements() {
-		sckt := s.(socket)
-		sckt.close()
+		sckt := s.(*socket)
+		if sckt.isOpen.Load() {
+			go sckt.close()
+			<-sckt.done
+		}
 	}
 
 	for _, s := range m.outbound.Elements() {
-		sckt := s.(socket)
-		sckt.close()
+		sckt := s.(*socket)
+		if sckt.isOpen.Load() {
+			go sckt.close()
+			<-sckt.done
+		}
 	}
 }
 
@@ -277,9 +278,8 @@ func newP2PModule() *p2pModule {
 
 		peerlist: nil,
 
-		done:   make(chan uint, 1),
-		ready:  make(chan uint, 1),
-		closed: make(chan uint, 1),
+		ready: make(chan uint, 1),
+		quit:  make(chan uint, 1),
 
 		handlers: make(map[types.PeerEvent][]func(...interface{}), 0),
 		errored:  make(chan uint, 1),

@@ -88,6 +88,8 @@ func ListenAndServe(addr string, readbufflen int, timeoutinMs int) (ready, done 
 		for {
 			select {
 			case <-done:
+				c.Close()
+				c = nil
 				break reader
 
 			case msg := <-response:
@@ -143,7 +145,6 @@ func ListenAndServe(addr string, readbufflen int, timeoutinMs int) (ready, done 
 				}
 			}
 		}
-		close(ready)
 	}
 	accept := func() {
 		l, err := net.Listen("tcp", addr)
@@ -157,6 +158,7 @@ func ListenAndServe(addr string, readbufflen int, timeoutinMs int) (ready, done 
 		for {
 			select {
 			case <-done:
+				l.Close()
 				break listener
 			default:
 			}

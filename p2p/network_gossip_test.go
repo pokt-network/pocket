@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"fmt"
+	"net"
 	"sync"
 	"testing"
 	"time"
@@ -27,7 +28,7 @@ type testPeer struct {
 	infected bool
 }
 
-func Setup_TestNetworkGossip_Broadcast() (*p2pModule, []*testPeer, *types.Peerlist) {
+func Setup_TestNetworkGossip_Broadcast(peerCount, originatorPositionInList int) (*p2pModule, []*testPeer, *types.Peerlist) {
 	var p2pPeer *p2pModule = newP2PModule()
 
 	var mx sync.Mutex
@@ -40,15 +41,17 @@ func Setup_TestNetworkGossip_Broadcast() (*p2pModule, []*testPeer, *types.Peerli
 
 	{ // Prepare mock peers and add them to the peer list
 		peers = make([]*testPeer, 0)
-		peerList = generatePeerList(27)
+		peerList = generatePeerList(peerCount)
+
+		peerListSlice := peerList.Slice()
+		peerListSlice = append(peerListSlice[:originatorPositionInList], peerListSlice[originatorPositionInList+1:]...)
 
 		// launch tcp servers for each mock peer
-		for i, p := range peerList.Slice()[1:] {
+		for i, p := range peerListSlice {
 			wg.Add(1)
 			go func(i int, p types.Peer) {
 				ready, done, data, respond := ListenAndServe(p.Addr(), int(BufferSize), 100)
 
-				fmt.Println(p)
 				mx.Lock()
 				peers = append(peers, &testPeer{
 					id:      p.Id(),
@@ -69,7 +72,7 @@ func Setup_TestNetworkGossip_Broadcast() (*p2pModule, []*testPeer, *types.Peerli
 	wg.Wait() // wait for the tcp servers to come up
 
 	{ // prepare the p2p peer
-		p := peerList.Get(0)
+		p := peerList.Get(originatorPositionInList)
 
 		config = &shared.P2PConfig{
 			Protocol:         "tcp",
@@ -92,7 +95,7 @@ func Setup_TestNetworkGossip_Broadcast() (*p2pModule, []*testPeer, *types.Peerli
 		p2pPeer.id = p.Id()
 		p2pPeer.setLogger(fmt.Println)
 
-		go p2pPeer.listen()
+		p2pPeer.listen()
 
 		<-p2pPeer.ready
 	}
@@ -109,7 +112,9 @@ func Setup_TestNetworkGossip_Broadcast() (*p2pModule, []*testPeer, *types.Peerli
 // such that it performs SEND/ACK/RESEND on the full list with no redundancy/no cleanup
 // Atm no RESEND on NACK is implemented, so it's just SEND/ACK
 func TestNetworkGossip_Broadcast(t *testing.T) {
-	p2pPeer, mockPeers, _ := Setup_TestNetworkGossip_Broadcast()
+	peerListSize := 27
+	originatorPeerPositionInList := 0
+	p2pPeer, mockPeers, _ := Setup_TestNetworkGossip_Broadcast(peerListSize, originatorPeerPositionInList)
 
 	var wg_ack sync.WaitGroup
 	{ // Prepare the mock peers such that they ACK the received broadcast message
@@ -164,9 +169,6 @@ func TestNetworkGossip_Broadcast(t *testing.T) {
 		actualInfectedPeers := getInfectedPeers(mockPeers)
 		expectedInfectedPeers := getExpectedInfectedPeers(p2pPeer.id, p2pPeer.peerlist)
 
-		fmt.Println("Expected Infected Peers", expectedInfectedPeers)
-		fmt.Println("Actual Infected Peers", actualInfectedPeers)
-
 		for id, _ := range expectedInfectedPeers {
 			_, wasInfected := actualInfectedPeers[id]
 			assert.Equalf(
@@ -183,14 +185,92 @@ func TestNetworkGossip_Broadcast(t *testing.T) {
 
 func Teardown_TestNetworkGossip_Broadcast(p2pPeer *p2pModule, mockPeers []*testPeer) {
 	p2pPeer.Stop()
-	<-p2pPeer.done
-	for i, p := range mockPeers {
+	for _, p := range mockPeers {
 		close(p.done)
 	}
 }
 
 func TestNetworkGossip_HandleBroadcast(t *testing.T) {
-	t.Skip()
+	time.After(time.Millisecond * 100)
+	peerListSize := 27
+	originatorPeerPositionInList := 0
+	p2pPeer, mockPeers, _ := Setup_TestNetworkGossip_Broadcast(peerListSize, originatorPeerPositionInList)
+
+	var wg_ack sync.WaitGroup
+	{ // Prepare the mock peers such that they ACK the received broadcast message
+		for _, peer := range mockPeers {
+			wg_ack.Add(1)
+			go sendAckOnBroadcastReceived(&wg_ack, peer, p2pPeer.externaladdr)
+		}
+	}
+
+	var wg sync.WaitGroup
+	var broadcastErr error
+	{ // Launch the broadcast
+		wg.Add(1)
+		go func() {
+			<-p2pPeer.ready
+
+			t.Log("Broadcast: p2p peer is about to start the broadcast")
+			p2pPeer.on(types.BroadcastDoneEvent, func(args ...interface{}) {
+				wg.Done()
+			})
+			go p2pPeer.consume()
+		}()
+
+		// Just to dequeue queued respones (ACKS) from mock peers as no handlers to consume from the sink are present
+		// It not dequeued, will block.
+		//go func() {
+		//	<-p2pPeer.sink
+		//}()
+	}
+
+	msg := types.NewP2PMessage(int32(0), int32(4), p2pPeer.address, "", &common.PocketEvent{
+		Topic: common.PocketTopic_CONSENSUS_MESSAGE_TOPIC,
+		Data:  nil,
+	})
+
+	msg.MarkAsBroadcastMessage()
+
+	nerr := sendMessageTo(msg, p2pPeer.externaladdr)
+
+	if nerr != nil {
+		panic("Fatal! failed to send a broadcast message to the p2p peer.")
+	}
+
+	// wait on the broadcast to finish
+	// and signal to the ACKing routines (to stop waiting on messages to ACK)
+	wg.Wait()
+	time.After(time.Millisecond * 100)
+	for _, peer := range mockPeers {
+		peer.done <- 1
+	}
+
+	// wait on ACK routines to wrap up after the signal
+	wg_ack.Wait()
+
+	{ // Assert that the broadcast was carried out successfully
+		assert.Nilf(
+			t,
+			broadcastErr,
+			"Broadcast: Encountered error while broadcasting: %s", broadcastErr,
+		)
+
+		actualInfectedPeers := getInfectedPeers(mockPeers)
+		expectedInfectedPeers := getExpectedInfectedPeers(p2pPeer.id, p2pPeer.peerlist)
+
+		for id, _ := range expectedInfectedPeers {
+			_, wasInfected := actualInfectedPeers[id]
+			assert.Equalf(
+				t,
+				true,
+				wasInfected,
+				"Broadcast: Expected peer with id %d to be impacted, it was not. Impacted peers were: %v", id, actualInfectedPeers,
+			)
+		}
+	}
+
+	Teardown_TestNetworkGossip_Broadcast(p2pPeer, mockPeers)
 }
 
 func getInfectedPeers(l []*testPeer) map[uint64]bool {
@@ -214,8 +294,6 @@ func getExpectedInfectedPeers(originatorId uint64, list *types.Peerlist) map[uin
 		return nil
 	}
 
-	fmt.Println("<<<<<< starting parameters for expectation mock rain:", originatorId, list.Size(), true, 0)
-	fmt.Println("<<<<<<<list:", list)
 	rain(originatorId, list, act, true, 0)
 
 	return expectedPeers
@@ -256,7 +334,7 @@ waiter:
 				wg.Done()
 				panic(fmt.Sprintf("Fatal!: Mock peer failed to decode received broadcast message."))
 			}
-			ack, err := MakeEncodedAckMsg(nonce, p.address, broadcasterAddr)
+			ack, err := makeEncodedAckMsg(nonce, p.address, broadcasterAddr)
 			<-time.After(time.Millisecond * 2) // a few mock peers time out on ACKs, this aleviates this problem.
 			p.respond <- ack
 		case <-p.done:
@@ -266,7 +344,7 @@ waiter:
 	wg.Done()
 }
 
-func MakeEncodedAckMsg(nonce uint32, ackerAddr string, ackeeAddr string) ([]byte, error) {
+func makeEncodedAckMsg(nonce uint32, ackerAddr string, ackeeAddr string) ([]byte, error) {
 	ack := &types.P2PAckMessage{
 		Acker: ackerAddr,
 		Ackee: ackeeAddr,
@@ -277,4 +355,31 @@ func MakeEncodedAckMsg(nonce uint32, ackerAddr string, ackeeAddr string) ([]byte
 	}
 	wireEncoded := (&wireCodec{}).encode(Binary, false, nonce, encoded, true)
 	return wireEncoded, nil
+}
+
+func sendMessageTo(msg *types.P2PMessage, addr string) error {
+	conn, err := net.Dial("tcp", addr)
+
+	if err != nil {
+		return err
+	}
+
+	msg.Metadata.Source = conn.LocalAddr().String()
+	msg.Metadata.Destination = addr
+
+	data, err := proto.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	wCodec := newWireCodec()
+	encodedMsg := wCodec.encode(Binary, false, 1, data, true)
+
+	if err != nil {
+		return err
+	}
+
+	conn.Write(encodedMsg)
+
+	return nil
 }
