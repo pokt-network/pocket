@@ -2,7 +2,7 @@ package shared
 
 import (
 	"log"
-ported over postgres db to persistence module)
+
 	"github.com/pokt-network/pocket/p2p/pre2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/config"
