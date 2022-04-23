@@ -60,7 +60,7 @@ client_start:
 .PHONY: client_connect
 ## Connect to the running client debugging daemon
 client_connect:
-	docker exec -it client /bin/bash -c "go run cmd/client/*.go"
+	docker exec -it client /bin/bash -c "go run app/client/*.go"
 
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
@@ -74,9 +74,29 @@ db_start:
 
 .PHONY: db_connect
 ## Connect to local db
-db_connect:
-	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
-	docker exec -it pocket-db bash -c "psql -U postgres"
+## Start a detached local postgres instance
+db_start:
+	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d db pgadmin
+
+.PHONY: db_bench_init
+# Initialize pgbench on local postgres
+db_bench_init:
+	docker exec -it pocket-db bash -c "pgbench -i -U postgres -d postgres"
+
+.PHONY: db_bench
+# Run a local benchmark against the local postgres instance
+db_bench:
+	docker exec -it pocket-db bash -c "pgbench -U postgres -d postgres"
+
+.PHONY: db_admin
+#
+db_admin:
+	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n Password is 'postgres'"
+
+# http://0.0.0.0:5050
+
+# benchmark: pgbench
+# gui: some sort of postgres GUI
 
 .PHONY: compose_and_watch
 ## Kill all containers started by the docker-compose file

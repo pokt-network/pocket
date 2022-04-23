@@ -6,22 +6,44 @@
 
 # Pocket
 
-The official implementation of the [V1 Pocket Network Protocol](https://github.com/pokt-network/pocket-network-protocol)
+The official implementation of the [V1 Pocket Network Protocol Specification](https://github.com/pokt-network/pocket-network-protocol).
 
-## Documentation
+\*_Please note that V1 protocol is currently under development and see [pocket-core](https://github.com/pokt-network/pocket-core) for the version that is currently live on mainnet._\*
 
-- [Documentation Index](docs)
-- [Contributing](docs/contributing)
-- [Dependencies](docs/deps)
-- [Testing](docs/testing)
+## Getting Started
 
-## Contributing
+---
 
-Please read [CONTRIBUTING.md](docs/contributing/CONTRIBUTING.md) for details on contributions and the process of submitting pull requests.
+All the links you'll need are listed below. If you'd like to contribute to the Pocket V1 Protocol, start by:
 
-## Building
+1. Reading the **Contribution Guide**
+2. Get things running by reading the **Development Guide**
+3. Dive into any of the other guides or modules depending on what your interests are
 
-We use [mage](https://magefile.org/) to build the project. Once you get `mage`, you can run it in the root of the repository to see the available targets.
+<!--
+  The list of documents below was created by manually curating the output of the following command:
+    $ find .. -name "*.md" | grep -v -e "vendor" -e "prototype" -e "SUMMARY.md" -e "TASTE.md"
+-->
+
+### Guides
+
+- [Contribution Guide](docs/contributing/CONTRIBUTING.md)
+- [Development Guide](docs/development/README.md)
+- [Testing Guide](docs/testing/README.md)
+- [Dependencies Guide](docs/deps/README.md)
+
+### Architectures
+
+- [Shared Architecture](shared/README.md)
+- _Coming Soon: Consensus Architecture_
+- [PrePersistence Architecture](persistence/pre_persistence/README.md)
+- [P2P Architecture](p2p/README.md)
+- [Utility Architecture](utility/README.md)
+
+### Changelogs
+
+- [Consensus Changelog](consensus/CHANGELOG.md)
+- [Utility Changelog](utility/CHANGELOG.md)
 
 ## Support & Contact
 
@@ -32,6 +54,7 @@ We use [mage](https://magefile.org/) to build the project. Once you get `mage`, 
   <a href="https://research.pokt.network"><img src="https://img.shields.io/discourse/https/research.pokt.network/posts.svg"></a>
 </div>
 
+---
 
 ## License
 

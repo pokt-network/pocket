@@ -11,7 +11,7 @@ import (
 
 const (
 	versionStringEnvVarName = "POCKET_VERSION_STRING"
-	pocketPackage           = "github.com/pokt-network/pocket/cmd/pocket"
+	pocketPackage           = "github.com/pokt-network/pocket/app/pocket"
 	ldflags                 = "-X main.version=$" + versionStringEnvVarName
 )
 

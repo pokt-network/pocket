@@ -15,7 +15,7 @@ services:
   node1.consensus:
     container_name: node1.consensus
     image: pocket/consensus:latest
-    command: "scripts/watch.sh build/config/config1.json"
+    command: "build/scripts/watch.sh build/config/config1.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile
@@ -38,7 +38,7 @@ services:
   node2.consensus:
     container_name: node2.consensus
     image: pocket/consensus:latest
-    command: "scripts/watch.sh build/config/config2.json"
+    command: "build/scripts/watch.sh build/config/config2.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile
@@ -61,7 +61,7 @@ services:
   node3.consensus:
     container_name: node3.consensus
     image: pocket/consensus:latest
-    command: "scripts/watch.sh build/config/config3.json"
+    command: "build/scripts/watch.sh build/config/config3.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile
@@ -84,7 +84,7 @@ services:
   node4.consensus:
     container_name: node4.consensus
     image: pocket/consensus:latest
-    command: "scripts/watch.sh build/config/config4.json"
+    command: "build/scripts/watch.sh build/config/config4.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile
@@ -104,8 +104,10 @@ services:
   db:
     container_name: pocket-db
     image: postgres:14.1-alpine
+    # image: postgis/postgis  # TODO(olshansky): switch image when we start adding support for GeoZones
     restart: always
     environment:
+      - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
@@ -113,10 +115,25 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
 
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    depends_on:
+      - db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: pgadmin4
+      PGADMIN_LISTEN_ADDRESS: 0.0.0.0
+      PGADMIN_LISTEN_PORT: 5050
+      # PGADMIN_ENABLE_TLS: "False"
+    volumes:
+      - ${PWD}/build/pgadmin/servers.json:/pgadmin4/servers.json
+      - ${PWD}/build/pgadmin/pgpass.json:/pgpass
+
+    ports:
+      - "5050:5050"
+
 volumes:
   db:
     driver: local
-
-  # Uncomment to enable DLV debugging
-  # environment:
-  #   - DEBUG_PORT=7084
