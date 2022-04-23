@@ -11,8 +11,6 @@ import (
 )
 
 const (
-	PostgresSchemaEnvVar    = "POSTGRES_SCHEMA"
-	CreateTable             = "CREATE TABLE"
 	CreateSchemaIfNotExists = "CREATE SCHEMA IF NOT EXISTS"
 	SetSearchPathTo         = "SET search_path TO"
 	CreateTableIfNotExists  = "CREATE TABLE IF NOT EXISTS"
