@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"os"
 	"time"
 
 	"github.com/jackc/pgx/v4"
@@ -25,24 +24,22 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func connectAndInitializeDatabase(postgresUrl string) error {
+func connectAndInitializeDatabase(postgresUrl string, schema string) error {
 	ctx := context.TODO()
-	conn, err := pgx.Connect(context.Background(), postgresUrl)
+	// Connect to the DB
+	db, err := pgx.Connect(context.Background(), postgresUrl)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
-	schema := os.Getenv(PostgresSchemaEnvVar)
-	if _, err = conn.Exec(ctx, fmt.Sprintf("%s %s", CreateSchemaIfNotExists, schema)); err != nil {
+	// Create and set schema (see https://github.com/go-pg/pg/issues/351)
+	if _, err = db.Exec(ctx, fmt.Sprintf("%s %s", CreateSchemaIfNotExists, schema)); err != nil {
 		return err
 	}
-	if err != nil {
-
-	}
-	if _, err = conn.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, schema)); err != nil {
+	if _, err = db.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, schema)); err != nil {
 		return err
 	}
-
-	if _, err = conn.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, TableName, TableSchema)); err != nil {
+	// pgx.MigrateUp(options, "persistence/schema/migrations")
+	if _, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, TableName, TableSchema)); err != nil {
 		log.Fatalf("Unable to create %s table: %v\n", TableName, err)
 	}
 	return nil

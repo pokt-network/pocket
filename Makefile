@@ -68,19 +68,34 @@ compose_and_watch: db_start
 	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: db_start
-## Start a local postgres instance
+## Start a detached local postgres instance
 db_start:
-	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d db
+	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d db pgadmin
 
 .PHONY: db_connect
-## Connect to local db
+## Connect to local postgres instance
 db_connect:
 	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
 	docker exec -it pocket-db bash -c "psql -U postgres"
 
+.PHONY: db_bench_init
+# Initialize pgbench on local postgres
+db_bench_init:
+	docker exec -it pocket-db bash -c "pgbench -i -U postgres -d postgres"
+
+.PHONY: db_bench
+# Run a local benchmark against the local postgres instance
+db_bench:
+	docker exec -it pocket-db bash -c "pgbench -U postgres -d postgres"
+
+.PHONY: db_admin
+#
+db_admin:
+	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n Password is 'postgres'"
+
+# http://0.0.0.0:5050
 
 # benchmark: pgbench
-# geozone: postgis
 # gui: some sort of postgres GUI
 
 

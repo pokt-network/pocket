@@ -70,6 +70,7 @@ type ConsensusConfig struct {
 type PersistenceConfig struct {
 	DataDir     string `json:"datadir"`
 	PostgresUrl string `json:"postgres_url"`
+	NodeSchema  string `json:"schema"`
 }
 
 type UtilityConfig struct {

@@ -29,8 +29,6 @@ services:
       - "9081:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
-    environment:
-      - POSTGRES_SCHEMA=node1
     # Uncomment to enable DLV debugging
     # environment:
     #   - DEBUG_PORT=7081
@@ -52,8 +50,6 @@ services:
       - "9082:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
-    environment:
-      - POSTGRES_SCHEMA=node2
     # Uncomment to enable DLV debugging
     # environment:
     #   - DEBUG_PORT=7082
@@ -75,8 +71,6 @@ services:
       - "9083:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
-    environment:
-      - POSTGRES_SCHEMA=node3
     # Uncomment to enable DLV debugging
     # environment:
     #   - DEBUG_PORT=7083
@@ -98,14 +92,17 @@ services:
       - "9084:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
-    environment:
-      - POSTGRES_SCHEMA=node4
+  # Uncomment to enable DLV debugging
+  # environment:
+  #   - DEBUG_PORT=7084
 
   db:
     container_name: pocket-db
     image: postgres:14.1-alpine
+    # image: postgis/postgis  # TODO(olshansky): switch image when we start adding support for GeoZones
     restart: always
     environment:
+      - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
@@ -113,10 +110,25 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
 
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    depends_on:
+      - db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: pgadmin4
+      PGADMIN_LISTEN_ADDRESS: 0.0.0.0
+      PGADMIN_LISTEN_PORT: 5050
+      # PGADMIN_ENABLE_TLS: "False"
+    volumes:
+      - ${PWD}/build/pgadmin/servers.json:/pgadmin4/servers.json
+      - ${PWD}/build/pgadmin/pgpass.json:/pgpass
+
+    ports:
+      - "5050:5050"
+
 volumes:
   db:
     driver: local
-
-  # Uncomment to enable DLV debugging
-  # environment:
-  #   - DEBUG_PORT=7084
