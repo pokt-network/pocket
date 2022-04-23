@@ -1,28 +1,30 @@
 package schema
 
 const (
-	AccountTableName   = "Account"
+	AccountTableName   = "account"
 	AccountTableSchema = `(
-			id         BIGINT PRIMARY KEY,
-			address    STRING NOT NULL UNIQUE,
+			id         UUID PRIMARY KEY,
+			address    TEXT NOT NULL UNIQUE
 		)`
-	AccountMetaTableName   = "Account_meta"
+	AccountMetaTableName   = "account_meta"
 	AccountMetaTableSchema = `(
-			account_id        BIGINT,
-			balance           STRING,
-			constraint account_id_key_fk foreign key (account_id) references Account (id)
+			account_id        UUID,
+			height 			  BIGINT,
+			balance           TEXT,
+			constraint account_id_key_fk foreign key (account_id) references account (id)
 		)`
 
-	PoolTableName   = "Pool"
+	PoolTableName   = "pool"
 	PoolTableSchema = `(
-			id         BIGINT PRIMARY KEY,
-			name       STRING NOT NULL UNIQUE,
-			address    STRING NOT NULL UNIQUE,
+			id         UUID PRIMARY KEY,
+			name       TEXT NOT NULL UNIQUE,
+			address    TEXT NOT NULL UNIQUE
 		)`
-	PoolMetaTableName   = "Pool_meta"
+	PoolMetaTableName   = "pool_meta"
 	PoolMetaTableSchema = `(
-			pool_id        BIGINT,
-			balance        STRING,
-			constraint pool_id_key_fk foreign key (pool_id) references Pool (id)
+			pool_id        UUID,
+			height 		   BIGINT,
+			balance        TEXT,
+			constraint pool_id_key_fk foreign key (pool_id) references pool (id)
 		)`
 )
