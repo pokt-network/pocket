@@ -3,11 +3,12 @@ package persistence
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v4"
-	"github.com/pokt-network/pocket/persistence/schema"
 	"log"
 	"math/rand"
 	"time"
+
+	"github.com/jackc/pgx/v4"
+	"github.com/pokt-network/pocket/persistence/schema"
 )
 
 const (
