@@ -38,9 +38,12 @@ func connectAndInitializeDatabase(postgresUrl string, schema string) error {
 	if _, err = db.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, schema)); err != nil {
 		return err
 	}
-	// pgx.MigrateUp(options, "persistence/schema/migrations")
 	if _, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, TableName, TableSchema)); err != nil {
 		log.Fatalf("Unable to create %s table: %v\n", TableName, err)
 	}
+
+	// TODO(olshansky;github.com/pokt-network/pocket/issues/77): Enable proper up and down migrations
+	// pgx.MigrateUp(options, "persistence/schema/migrations")
+
 	return nil
 }
