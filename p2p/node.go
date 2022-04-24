@@ -14,6 +14,7 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/p2p/types"
+	"go.uber.org/atomic"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -39,6 +40,7 @@ type (
 		Broadcast([]byte, bool, int, bool) error
 		BroadcastMessage(*types.P2PMessage, bool, int) error
 		Address() string
+		SetId(id int)
 	}
 	p2pNode struct {
 		sync.Mutex
@@ -54,8 +56,9 @@ type (
 		peers    *peerMap
 		requests *requestMap
 
-		wg   sync.WaitGroup
-		quit chan struct{}
+		wg        sync.WaitGroup
+		quit      chan struct{}
+		isRunning atomic.Bool
 
 		sink chan Packet
 
@@ -195,8 +198,13 @@ func NewPacket(isProto bool, Nonce uint32, data []byte) *Packet {
 
 // the P2PNode interface implementation
 
-func CreateP2PNode(address string) P2PNode {
-	return NewP2PNode(map[string]interface{}{"address": address})
+func CreateP2PNode(address string, readBufferSize int, writeBufferSize int, peers []string) P2PNode {
+	return NewP2PNode(map[string]interface{}{
+		"address":         address,
+		"readBufferSize":  readBufferSize,
+		"writeBufferSize": writeBufferSize,
+		"peers":           peers,
+	})
 }
 
 func (n *p2pNode) Start() error {
@@ -207,6 +215,7 @@ func (n *p2pNode) Start() error {
 	n.Listener = l
 	n.wg.Add(1)
 	go n.Serve()
+	n.isRunning.Store(true)
 	return nil
 }
 
@@ -237,12 +246,12 @@ func (n *p2pNode) Serve() {
 func (n *p2pNode) Stop() {
 	close(n.quit)
 	n.Listener.Close()
+	n.isRunning.Store(false)
 	n.wg.Wait()
 }
 
 func (n *p2pNode) IsRunning() bool {
-	_, running := <-n.quit
-	return running
+	return n.isRunning.Load()
 }
 
 func (n *p2pNode) HandleConnection(direction Direction, c net.Conn, signaler chan struct{}) {
@@ -638,6 +647,10 @@ func (n *p2pNode) BroadcastMessage(msg *types.P2PMessage, isRoot bool, fromLevel
 
 func (n *p2pNode) Address() string {
 	return n.config["address"].(string)
+}
+
+func (n *p2pNode) SetId(id int) {
+	n.ID = id
 }
 
 // p2pConn additional functionality

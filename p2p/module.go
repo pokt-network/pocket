@@ -24,7 +24,12 @@ func Create(config *config.Config) (modules.P2PModule, error) {
 	m := &p2pModule{
 		config: config.P2P,
 		bus:    nil,
-		node:   CreateP2PNode(config.P2P.ExternalIp),
+		node: CreateP2PNode(
+			config.P2P.ExternalIp,
+			int(config.P2P.BufferSize),
+			int(config.P2P.BufferSize),
+			config.P2P.Peers,
+		),
 	}
 
 	return m, nil
@@ -35,6 +40,7 @@ func (m *p2pModule) Start() error {
 
 	if m.bus != nil {
 		m.node.OnNewMessage(func(msg *types.P2PMessage) {
+			m.node.Info("Publishing")
 			m.bus.PublishEventToBus(msg.Payload)
 		})
 	} else {

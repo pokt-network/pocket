@@ -4,7 +4,8 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/pokt-network/pocket/p2p/testutils"
+	"crypto/rand"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +15,7 @@ func TestWireCodec_Encode(t *testing.T) {
 	encoding := Binary
 	requestNumber := uint32(12)
 	isErrorOrEnd := false
-	chunk := testutils.NewDataChunk(1024, func(b []byte) []byte {
+	chunk := NewDataChunk(1024, func(b []byte) []byte {
 		return c.encode(isErrorOrEnd, requestNumber, b, false)
 	})
 
@@ -89,7 +90,7 @@ func TestWireCodec_Decode(t *testing.T) {
 
 	requestNumber := uint32(12)
 	isErrorOrEnd := false
-	chunk := testutils.NewDataChunk(1024, func(b []byte) []byte {
+	chunk := NewDataChunk(1024, func(b []byte) []byte {
 		return c.encode(isErrorOrEnd, requestNumber, b, true)
 	})
 
@@ -126,4 +127,36 @@ func TestWireCodec_Decode(t *testing.T) {
 		chunk.Bytes,
 		"Codec error: failed to decode, data bits are corrupted",
 	)
+}
+
+type DataChunk struct {
+	Bytes   []byte // actual data
+	Encoded []byte // data after encoding
+	Error   error  // error encountered while reading or writing
+	Length  uint   // the length written or read
+}
+
+func (d *DataChunk) Randomize(length int, encode func([]byte) []byte) {
+	d.Bytes = randBytes(length)
+	d.Encoded = encode(d.Bytes)
+	d.Length = uint(len(d.Bytes))
+}
+
+func NewDataChunk(l int, encode func([]byte) []byte) DataChunk {
+	dchunk := DataChunk{
+		Bytes:   make([]byte, 0),
+		Encoded: make([]byte, 0),
+		Length:  0,
+		Error:   nil,
+	}
+
+	dchunk.Randomize(l, encode)
+
+	return dchunk
+}
+
+func randBytes(size int) []byte {
+	buff := make([]byte, size)
+	rand.Read(buff)
+	return buff
 }
