@@ -4,6 +4,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	shared "github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/runtime/protoiface"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type Marshaler interface {
@@ -45,6 +46,13 @@ func NewP2PMessage(nonce int32, level int32, src, dest string, event *shared.Poc
 			Destination: dest,
 		},
 		Payload: event,
+	}
+}
+
+func NewPocketEvent(topic shared.PocketTopic, message *anypb.Any) *shared.PocketEvent {
+	return &shared.PocketEvent{
+		Topic: topic,
+		Data:  message,
 	}
 }
 

@@ -5,11 +5,14 @@ package types
 import (
 	"io"
 	log "log"
+	sync "sync"
 )
 
 type (
 	logger struct {
+		sync.Mutex
 		*log.Logger
+		suppressed bool
 	}
 
 	Logger interface {
@@ -18,12 +21,14 @@ type (
 		Info(...interface{})
 		Error(...interface{})
 		Warn(...interface{})
+		Suppress(bool)
 	}
 )
 
 func NewLogger(w io.Writer) *logger {
 	return &logger{
-		Logger: log.New(w, "[pocket]", 0),
+		Logger:     log.New(w, "[pocket]", 0),
+		suppressed: false,
 	}
 }
 
@@ -34,21 +39,47 @@ func (l *logger) decorate(decor string, args []interface{}) []interface{} {
 }
 
 func (l *logger) Debug(args ...interface{}) {
-	l.Logger.Println(l.decorate("[DEBUG]:", args)...)
+	defer l.Unlock()
+	l.Lock()
+	if !l.suppressed {
+		l.Logger.Println(l.decorate("[DEBUG]:", args)...)
+	}
 }
 
 func (l *logger) Log(args ...interface{}) {
-	l.Logger.Println(l.decorate("[LOG]:", args)...)
+	defer l.Unlock()
+	l.Lock()
+	if !l.suppressed {
+		l.Logger.Println(l.decorate("[LOG]:", args)...)
+	}
 }
 
 func (l *logger) Info(args ...interface{}) {
-	l.Logger.Println(l.decorate("[INFO]:", args)...)
+	defer l.Unlock()
+	l.Lock()
+	if !l.suppressed {
+		l.Logger.Println(l.decorate("[INFO]:", args)...)
+	}
 }
 
 func (l *logger) Error(args ...interface{}) {
-	l.Logger.Println(l.decorate("[ERROR]:", args)...)
+	defer l.Unlock()
+	l.Lock()
+	if !l.suppressed {
+		l.Logger.Println(l.decorate("[ERROR]:", args)...)
+	}
 }
 
 func (l *logger) Warn(args ...interface{}) {
-	l.Logger.Println(l.decorate("[WARNING]:", args)...)
+	defer l.Unlock()
+	l.Lock()
+	if !l.suppressed {
+		l.Logger.Println(l.decorate("[WARNING]:", args)...)
+	}
+}
+
+func (l *logger) Suppress(suppress bool) {
+	defer l.Unlock()
+	l.Lock()
+	l.suppressed = suppress
 }
