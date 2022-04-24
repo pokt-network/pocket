@@ -1,11 +1,13 @@
 package schema
 
-const ( // TODO (Team) - I'm sure there's obvious optimizations here
+// TODO(andrew;github.com/pokt-network/pocket/issues/77): Discuss, design and properly implement
+// the params / flags table.
+const (
 	paramsTableName = "param"
 	paramsTable     = `(
 		height BIGINT NOT NULL,
-		blocks_per_session INT NOT NULL, 		
-		
+		blocks_per_session INT NOT NULL,
+
 		app_minimum_stake TEXT NOT NULL,
 		app_max_chains SMALLINT  NOT NULL,
 		app_baseline_stake_rate	 INT NOT NULL,
@@ -20,13 +22,13 @@ const ( // TODO (Team) - I'm sure there's obvious optimizations here
 		service_node_minimum_pause_blocks SMALLINT NOT NULL,
 		service_node_max_pause_blocks INT NOT NULL,
 		service_nodes_per_session SMALLINT NOT NULL,
-		
+
 		fisherman_minimum_stake TEXT NOT NULL,
 		fisherman_max_chains SMALLINT NOT NULL,
 		fisherman_unstaking_blocks INT NOT NULL,
 		fisherman_minimum_pause_blocks SMALLINT NOT NULL,
 		fisherman_max_pause_blocks SMALLINT NOT NULL,
-		
+
 		validator_minimum_stake TEXT NOT NULL,
 		validator_unstaking_blocks INT NOT NULL,
 		validator_minimum_pause_blocks SMALLINT NOT NULL,
