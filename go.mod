@@ -19,6 +19,8 @@ require (
 
 require github.com/golang/protobuf v1.5.2
 
+require golang.org/x/net v0.0.0-20220421235706-1d1ef9303861 // indirect
+
 require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
@@ -31,7 +33,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	go.uber.org/atomic v1.9.0
 	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
-	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )

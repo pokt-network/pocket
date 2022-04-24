@@ -64,11 +64,15 @@ const (
 	RequestNonceLength = 4
 )
 
+const (
+	WireCodecHeaderSize = 9
+)
+
 type wireCodec struct {
 	sync.RWMutex
 }
 
-func (c *wireCodec) encode(encoding Encoding, isError bool, reqNonce uint32, data []byte, wrapped bool) []byte {
+func (c *wireCodec) encode(isError bool, reqNonce uint32, data []byte, wrapped bool) []byte {
 	c.Lock()
 	defer c.Unlock()
 
@@ -92,21 +96,6 @@ func (c *wireCodec) encode(encoding Encoding, isError bool, reqNonce uint32, dat
 		flags |= 4 // setting the third bit to 1
 	}
 
-	switch encoding {
-
-	case Binary: // NOTE: Left empty w/o a fallthrough intentionally
-		// set the second and first bits to 0 (they are already at 0 from initialization)
-		// do not fallthrough
-
-	case Utf8:
-		flags |= 1 // setting the first bit to 1, and the second to 0
-
-	case Json:
-		// set the first and second bit to 1
-		flags |= 1
-		flags |= 2
-	}
-
 	header := append([]byte{}, flags)
 	header = append(header, requestNonce...)
 	header = append(header, bodyLength...)
@@ -118,7 +107,7 @@ func (c *wireCodec) encode(encoding Encoding, isError bool, reqNonce uint32, dat
 	return payload
 }
 
-func (c *wireCodec) decode(wiredata []byte) (nonce uint32, enc Encoding, data []byte, wrapped bool, err error) {
+func (c *wireCodec) decode(wiredata []byte) (nonce uint32, data []byte, wrapped bool, err error) {
 	c.Lock()
 	defer c.Unlock()
 
@@ -127,13 +116,12 @@ func (c *wireCodec) decode(wiredata []byte) (nonce uint32, enc Encoding, data []
 	requestNonce := header[1:5]
 	bodylen := header[5:9]
 
-	flagswitch, encoding, err := parseFlag(flags)
+	flagswitch, err := parseFlag(flags)
 
 	if err != nil {
-		return 0, Unsupported, data, false, err
+		return 0, data, false, err
 	}
 
-	enc = encoding
 	wrapped = flagswitch[4]
 	isReq := flagswitch[3]
 	if isReq {
@@ -154,7 +142,7 @@ func (c *wireCodec) decode(wiredata []byte) (nonce uint32, enc Encoding, data []
 	return
 }
 
-func (c *wireCodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32, bodyLength uint32, err error) {
+func (c *wireCodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32, isWrapped bool, bodyLength uint32, err error) {
 	c.Lock()
 	defer c.Unlock()
 
@@ -162,7 +150,7 @@ func (c *wireCodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32
 	requestNonce := header[1:5]
 	bodyLen := header[5:9]
 
-	flagswitch, _, err = parseFlag(flags)
+	flagswitch, err = parseFlag(flags)
 
 	if err != nil {
 		return
@@ -175,6 +163,7 @@ func (c *wireCodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32
 		nonce = 0
 	}
 
+	isWrapped = flagswitch[4]
 	bodyLength = binary.BigEndian.Uint32(bodyLen)
 	return
 }
@@ -184,15 +173,14 @@ func (c *wireCodec) decodeHeader(header []byte) (flagswitch []bool, nonce uint32
 // parseflag parses the first 1 byte of the header that constitutes the header flags.
 // Flags are distributed on the 8 bits according to the codec's convention.
 // Check the documentation at the top of the file to re-discover the flags represented on this 1 byte.
-func parseFlag(f byte) (flagswitch []bool, e Encoding, err error) {
+func parseFlag(f byte) (flagswitch []bool, err error) {
 	if (f|31)^31 != 0 { // check if the first 3 bits are empty
-		return nil, Unsupported, errors.New("codec wire flag error: invalid flag")
+		return nil, errors.New("codec wire flag error: invalid flag")
 	}
 
 	iswrapped := f & 16
 	isReq := f & 8
 	isErrOrEOF := f & 4
-	encoding := (f | 248) ^ 248
 
 	flagswitch = make([]bool, 8)
 
@@ -214,19 +202,6 @@ func parseFlag(f byte) (flagswitch []bool, e Encoding, err error) {
 		flagswitch[2] = false
 	}
 
-	switch uint(encoding) {
-	case 0:
-		e = Binary
-	case 1:
-		e = Utf8
-	case 2:
-		e = Json
-	case 3:
-		e = Grpc
-	default:
-		e = Unsupported
-	}
-
 	// filler values
 	flagswitch[1] = false
 	flagswitch[0] = false
@@ -235,9 +210,9 @@ func parseFlag(f byte) (flagswitch []bool, e Encoding, err error) {
 		flagswitch[i] = false
 	}
 
-	return flagswitch, e, nil
+	return flagswitch, nil
 }
 
-func newWireCodec() *wireCodec {
+func NewWireCodec() *wireCodec {
 	return &wireCodec{}
 }

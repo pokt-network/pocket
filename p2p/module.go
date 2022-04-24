@@ -2,8 +2,6 @@ package p2p
 
 import (
 	"log"
-	"net"
-	"sync"
 
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 
@@ -11,89 +9,51 @@ import (
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	shared "github.com/pokt-network/pocket/shared/types"
-	"go.uber.org/atomic"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type p2pModule struct {
 	bus    modules.Bus
 	config *config.P2PConfig
-	c      types.Marshaler
-
-	id           uint64
-	protocol     string
-	address      string
-	externaladdr string
-
-	inbound  *types.Registry
-	outbound *types.Registry
-
-	peerlist *types.Peerlist
-
-	listener struct {
-		sync.Mutex
-		*net.TCPListener
-	}
-	isListening atomic.Bool
-
-	ready   chan uint
-	errored chan uint
-	quit    chan uint
-
-	waiters sync.WaitGroup
-
-	sink     chan types.Packet
-	handlers map[types.PeerEvent][]func(...interface{})
-
-	logger struct {
-		sync.RWMutex
-		print func(...interface{}) (int, error)
-	}
-
-	err struct {
-		sync.Mutex
-		error
-	}
-}
-
-var _ modules.P2PModule = &p2pModule{}
-var _ types.Runner = &p2pModule{}
-
-var networkLogger func(...interface{}) (int, error) = func(args ...interface{}) (int, error) {
-	log.Println(args...)
-	return 0, nil
+	node   P2PNode
 }
 
 var _ modules.P2PModule = &p2pModule{}
 
 func Create(config *config.Config) (modules.P2PModule, error) {
-	m := newP2PModule()
-
-	m.setLogger(networkLogger)
-
-	if err := m.initialize(config.P2P); err != nil { // TODO(derrandz): Should initialize also include logger intialization?
-		return nil, err
+	m := &p2pModule{
+		config: config.P2P,
+		bus:    nil,
+		node:   CreateP2PNode(config.P2P.ExternalIp),
 	}
 
 	return m, nil
 }
 
 func (m *p2pModule) Start() error {
-	m.log("Starting the P2P Module.")
-	go m.listen()
+	m.node.Info("Starting p2p module...")
 
-	<-m.isReady()
+	if m.bus != nil {
+		m.node.OnNewMessage(func(msg *types.P2PMessage) {
+			m.bus.PublishEventToBus(msg.Payload)
+		})
+	} else {
+		m.node.Warn("PocketBus is not initialized; no events will be published")
+	}
+
+	err := m.node.Start()
+
+	if err != nil {
+		return err
+	}
+
+	go m.node.Handle()
 
 	return nil
 }
 
 func (m *p2pModule) Stop() error {
-	m.close()
-
-	if m.err.error != nil {
-		return m.err.error
-	}
-
+	m.node.Stop()
 	return nil
 }
 
@@ -108,51 +68,33 @@ func (m *p2pModule) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (m *p2pModule) BroadcastMessage(data *anypb.Any, topic shared.PocketTopic) error {
-	return m.Broadcast(data, topic)
-}
-
 func (m *p2pModule) Broadcast(data *anypb.Any, topic shared.PocketTopic) error {
-	metadata := &types.Metadata{}
-	payload := &shared.PocketEvent{Data: data, Topic: topic}
-	p2pmsg := &types.P2PMessage{Metadata: metadata, Payload: payload}
-
-	return m.broadcast(p2pmsg, true)
+	msg := &types.P2PMessage{
+		Metadata: &types.Metadata{
+			Broadcast: true,
+			Source:    m.node.Address(),
+			Level:     0, // ignore, will be adjusted automatically,
+		},
+		Payload: &shared.PocketEvent{
+			Topic: topic,
+			Data:  data,
+		},
+	}
+	return m.node.BroadcastMessage(msg, true, 0)
 }
 
 func (m *p2pModule) Send(addr cryptoPocket.Address, data *anypb.Any, topic shared.PocketTopic) error {
-	metadata := &types.Metadata{}
-	payload := &shared.PocketEvent{Data: data, Topic: topic}
-	p2pmsg := &types.P2PMessage{Metadata: metadata, Payload: payload}
-	encodedBytes, err := m.c.Marshal(p2pmsg)
-	if err != nil {
-		return err
+	msg := &types.P2PMessage{
+		Metadata: &types.Metadata{
+			Broadcast:   true,
+			Source:      m.node.Address(),
+			Destination: string(addr),
+			Level:       0, // ignore, will be adjusted automatically,
+		},
+		Payload: &shared.PocketEvent{
+			Topic: topic,
+			Data:  data,
+		},
 	}
-
-	// TODO(derrandz): look into using pcrypto.Address
-	return m.send("", encodedBytes, true) // true: meaning that this message is already encoded
-}
-
-func (m *p2pModule) AckSend(addr string, msg *types.P2PMessage) (bool, error) {
-	encodedBytes, err := m.c.Marshal(msg)
-	if err != nil {
-		return false, err
-	}
-
-	response, err := m.request(addr, encodedBytes, true) // true: meaning that this message is already encoded
-	if err != nil {
-		return false, err
-	}
-
-	var ack *types.P2PAckMessage
-	err = m.c.Unmarshal(response, ack)
-	if err != nil {
-		return true, err // TODO(derrandz): notice it's true
-	}
-
-	if ack.Ackee == msg.Metadata.Source {
-		return true, nil
-	}
-
-	return false, nil
+	return m.node.SendMessage(0, string(addr), msg)
 }

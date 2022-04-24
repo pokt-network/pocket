@@ -9,20 +9,20 @@ import (
 )
 
 func TestWireCodec_Encode(t *testing.T) {
-	c := newWireCodec()
+	c := NewWireCodec()
 
 	encoding := Binary
 	requestNumber := uint32(12)
 	isErrorOrEnd := false
 	chunk := testutils.NewDataChunk(1024, func(b []byte) []byte {
-		return c.encode(encoding, isErrorOrEnd, requestNumber, b, false)
+		return c.encode(isErrorOrEnd, requestNumber, b, false)
 	})
 
 	header := chunk.Encoded[:9]
 	body := chunk.Encoded[9:]
 
 	flags := header[0]
-	flagswitch, encoding, err := parseFlag(flags)
+	flagswitch, err := parseFlag(flags)
 
 	if err != nil {
 		t.Errorf("Codec error: failed to encode, encountered error while parsing flag: %s", err.Error())
@@ -85,16 +85,15 @@ func TestWireCodec_Encode(t *testing.T) {
 }
 
 func TestWireCodec_Decode(t *testing.T) {
-	c := newWireCodec()
+	c := NewWireCodec()
 
-	encoding := Binary
 	requestNumber := uint32(12)
 	isErrorOrEnd := false
 	chunk := testutils.NewDataChunk(1024, func(b []byte) []byte {
-		return c.encode(encoding, isErrorOrEnd, requestNumber, b, true)
+		return c.encode(isErrorOrEnd, requestNumber, b, true)
 	})
 
-	reqnum, encoding, decodedData, wrapped, err := c.decode(chunk.Encoded)
+	reqnum, decodedData, wrapped, err := c.decode(chunk.Encoded)
 
 	assert.Nil(
 		t,
@@ -119,13 +118,6 @@ func TestWireCodec_Decode(t *testing.T) {
 		reqnum,
 		uint32(12),
 		"Codec error: failed to decode, request number bits are corrupted",
-	)
-
-	assert.Equal(
-		t,
-		encoding,
-		Binary,
-		"Codec error: failed to decode, encoding bits are corrupted",
 	)
 
 	assert.Equal(
