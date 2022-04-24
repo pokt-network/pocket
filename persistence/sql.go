@@ -23,6 +23,8 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+// TODO(drewsky): Rethink how `connectAndInitializeDatabase` should be implemented in small
+// subcomponents, but this curent implementation is more than sufficient for the time being.
 func connectAndInitializeDatabase(postgresUrl string, schema string) error {
 	ctx := context.TODO()
 	// Connect to the DB
