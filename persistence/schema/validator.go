@@ -7,18 +7,19 @@ const (
 	ValTableName   = "validator"
 	ValTableSchema = `(
 			id         UUID PRIMARY KEY,
-			address    TEXT NOT NULL UNIQUE, /*look into this being a "computed" field*/
+			address    TEXT NOT NULL UNIQUE, /*TODO(andrew): look into this being a "computed" field*/
 			public_key TEXT NOT NULL UNIQUE
 		)`
 	ValMetaTableName   = "validator_meta"
 	ValMetaTableSchema = `(
-			val_id           UUID NOT NULL,
+			validator_id     UUID   NOT NULL,
 			height           BIGINT NOT NULL,
-			service_url      TEXT NOT NULL,
-			staked_tokens    TEXT NOT NULL,
-			output_address   TEXT  NOT NULL,
+			service_url      TEXT   NOT NULL,
+			staked_tokens    TEXT   NOT NULL,
+			output_address   TEXT   NOT NULL,
 			paused           BOOL   NOT NULL default false,
 			unstaking_height BIGINT NOT NULL default -1,
-			constraint val_id_key_fk foreign key (val_id) references val (id)
+
+			constraint validator_id_key_fk foreign key (validator_id) references val (id)
 		)`
 )

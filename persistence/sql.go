@@ -51,6 +51,8 @@ func connectAndInitializeDatabase(postgresUrl string, schema string) error {
 	return nil
 }
 
+// TODO(olshansky;github.com/pokt-network/pocket/issues/77): Delete all the `InitializeTables` calls
+// once proper migrations are implemented.
 func InitializeTables(ctx context.Context, db *pgx.Conn) error {
 	if err := InitializeAccountTables(ctx, db); err != nil {
 		return err

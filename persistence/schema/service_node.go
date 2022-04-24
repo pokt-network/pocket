@@ -4,7 +4,7 @@ const (
 	ServiceNodeTableName   = "service_node"
 	ServiceNodeTableSchema = `(
 			id         UUID PRIMARY KEY,
-			address    TEXT NOT NULL UNIQUE, /*look into this being a "computed" field*/
+			address    TEXT NOT NULL UNIQUE, /*TODO(andrew): look into this being a "computed" field*/
 			public_key TEXT NOT NULL UNIQUE
 		)`
 	ServiceNodeMetaTableName   = "service_node_meta"
