@@ -78,6 +78,11 @@ db_cli:
 	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
 	docker exec -it pocket-db bash -c "psql -U postgres"
 
+.PHONY: db_drop
+## Drop all schemas used for LocalNet development matching `node%`
+db_drop:
+	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/drop_all_schemas.sql"
+
 .PHONY: db_bench_init
 # Initialize pgbench on local postgres - needs to be called once after container is created.
 db_bench_init:
