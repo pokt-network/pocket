@@ -92,6 +92,9 @@ services:
       - "9084:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+  # Uncomment to enable DLV debugging
+  # environment:
+  #   - DEBUG_PORT=7084
 
   db:
     container_name: pocket-db
