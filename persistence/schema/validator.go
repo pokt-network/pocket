@@ -20,6 +20,6 @@ const (
 			paused           BOOL   NOT NULL default false,
 			unstaking_height BIGINT NOT NULL default -1,
 
-			constraint validator_id_key_fk foreign key (validator_id) references val (id)
+			constraint validator_id_key_fk foreign key (validator_id) references validator (id)
 		)`
 )
