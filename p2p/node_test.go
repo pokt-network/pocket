@@ -1118,7 +1118,7 @@ func TestP2PNode_BroadcastMessage_Integration(t *testing.T) {
 	// track broadcast impact
 	wg := sync.WaitGroup{}
 	rw := sync.RWMutex{}
-	impact := map[int]bool{}
+	impact := map[int][]bool{}
 	data := map[int]*types.P2PMessage{}
 
 	// setup the expectation
@@ -1128,17 +1128,21 @@ func TestP2PNode_BroadcastMessage_Integration(t *testing.T) {
 	// not all nodes in the list will receive the broadcast message (no cleanup or redundancy layer is implemented yet)
 	for _, node := range nodes {
 		if _, exists := expectedImpact[node.ID]; exists {
-			wg.Add(1)
-			go func(node *p2pNode, m map[int]bool, d map[int]*types.P2PMessage) {
-				node.OnNewMessage(func(msg *types.P2PMessage) {
-					rw.Lock()
-					impact[node.ID] = true
-					data[node.ID] = msg
-					rw.Unlock()
-					wg.Done()
-				})
-			}(node, impact, data)
-
+			for i := 0; i < len(expectedImpact[node.ID]); i++ {
+				wg.Add(1)
+				go func(node *p2pNode) {
+					node.OnNewMessage(func(msg *types.P2PMessage) {
+						rw.Lock()
+						if _, ok := impact[node.ID]; !ok {
+							impact[node.ID] = make([]bool, 0)
+						}
+						impact[node.ID] = append(impact[node.ID], true)
+						data[node.ID] = msg
+						rw.Unlock()
+						wg.Done()
+					})
+				}(node)
+			}
 		}
 	}
 
@@ -1238,7 +1242,7 @@ func GetRainTreeExpectedImpactAtLevel(root, listSize, level int) map[int]bool {
 	return impact
 }
 
-func GetRainTreeExpectedImpactAtAllLevels(root int, listSize int) map[int]bool {
+func GetRainTreeExpectedImpactAtAllLevels(root int, listSize int) map[int][]bool {
 	list := make([]peerInfo, 0)
 	for i := 0; i < listSize; i++ {
 		list = append(list, peerInfo{
@@ -1296,7 +1300,7 @@ func GetRainTreeExpectedImpactAtAllLevels(root int, listSize int) map[int]bool {
 		return popped
 	}
 
-	impact := map[int]bool{}
+	impact := map[int][]bool{}
 	act := func(originator int, l, r peerInfo, currentlevel int) error {
 		defer rw.Unlock()
 		rw.Lock()
@@ -1307,8 +1311,18 @@ func GetRainTreeExpectedImpactAtAllLevels(root int, listSize int) map[int]bool {
 		addtopeermap(originator, lid, rid)
 		queuein(lid, currentlevel, false, originator)
 		queuein(rid, currentlevel, false, originator)
-		impact[lid] = true
-		impact[rid] = true
+
+		if _, ok := impact[lid]; !ok {
+			impact[lid] = make([]bool, 0)
+		}
+
+		if _, ok := impact[rid]; !ok {
+			impact[rid] = make([]bool, 0)
+		}
+
+		impact[lid] = append(impact[lid], true)
+		impact[rid] = append(impact[rid], true)
+
 		return nil
 	}
 
