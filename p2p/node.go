@@ -29,8 +29,6 @@ type (
 		IsRunning() bool
 		HandleConnection(Direction, net.Conn, chan struct{})
 		Dial(string) error
-		Write(string, []byte) error
-		WriteMessage(string, *types.P2PMessage) error
 		Send(uint32, string, []byte, bool) error
 		SendMessage(uint32, string, *types.P2PMessage) error
 		Request(context.Context, string, []byte, bool) ([]byte, error)
@@ -208,8 +206,15 @@ func CreateP2PNode(address string, readBufferSize int, writeBufferSize int, peer
 }
 
 func (n *p2pNode) Start() error {
-	l, err := net.Listen("tcp", n.config["address"].(string))
+	tcpAddr, err := net.ResolveTCPAddr("tcp", n.config["address"].(string))
 	if err != nil {
+		n.Error("Failed to resolve TCP address", err)
+		return err
+	}
+
+	l, err := net.ListenTCP("tcp", tcpAddr)
+	if err != nil {
+		n.Error("Failed to listen on TCP address", err)
 		return err
 	}
 	n.Listener = l
@@ -469,58 +474,20 @@ func (n *p2pNode) Dial(address string) error {
 	return nil
 }
 
-func (n *p2pNode) Write(address string, data []byte) error {
-	var conn net.Conn
-	var isPooled bool
-
-	n.peers.Lock()
-	if _, exists := n.peers.m[address]; exists {
-		conn = n.peers.m[address].Conn
-		isPooled = true
-	}
-	n.peers.Unlock()
-
-	n.Debug("Write: isPooled: %t", isPooled)
-
-	conn, err := n.Dialer.Dial("tcp", address)
-	if err != nil {
-		n.Error("Write: ERROR!", err)
-		return err
-	}
-
-	n.Debug("Write: BEGIN")
-
-	defer func() {
-		if !isPooled {
-			conn.Close()
-		}
-	}()
-
-	_, err = conn.Write(data)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (n *p2pNode) WriteMessage(address string, msg *types.P2PMessage) error {
-	buff, err := proto.Marshal(msg)
-	if err != nil {
-		return err
-	}
-
-	return n.Write(address, buff)
-}
-
 func (n *p2pNode) Send(nonce uint32, address string, data []byte, isProto bool) error {
-	err := n.Dial(address)
+	addr, err := net.ResolveTCPAddr("tcp", address)
+	if err != nil {
+		n.Error("Send: failed to resolve address", err)
+		return err
+	}
+
+	err = n.Dial(addr.String())
 	if err != nil {
 		return err
 	}
 
 	n.peers.Lock()
-	peer := n.peers.m[address]
+	peer := n.peers.m[addr.String()]
 	n.peers.Unlock()
 	peer.write(nonce, data, isProto)
 
@@ -642,7 +609,23 @@ func (n *p2pNode) BroadcastMessage(msg *types.P2PMessage, isRoot bool, fromLevel
 	if err != nil {
 		return err
 	}
-	return n.Broadcast(data, isRoot, fromLevel, true)
+
+	err = n.Broadcast(data, isRoot, fromLevel, true)
+	if err != nil {
+		return err
+	}
+
+	// redundancy layer
+	if isRoot && n.config["redundancy"].(bool) {
+		for _, peer := range n.peerList {
+			if peer.ID != n.ID {
+				msg.Metadata.Broadcast = false
+				go n.SendMessage(0, peer.address, msg)
+			}
+		}
+	}
+
+	return nil
 }
 
 func (n *p2pNode) Address() string {

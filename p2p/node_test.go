@@ -51,6 +51,7 @@ func Setup_TestP2PNode_HandleConnection() *p2pNode {
 		"address":         "127.0.0.1:10001",
 		"readBufferSize":  1024,
 		"writeBufferSize": 1024,
+		"redundancy":      false,
 	}
 
 	node := NewP2PNode(config)
@@ -217,6 +218,7 @@ func Setup_TestP2PNode_Dial() (*p2pNode, net.Listener) {
 		"address":         "127.0.0.1:10001",
 		"readBufferSize":  1024,
 		"writeBufferSize": 1024,
+		"redundancy":      false,
 	}
 
 	node := NewP2PNode(config)
@@ -293,6 +295,7 @@ func Setup_TestP2PNode_Send() *p2pNode {
 		"address":         "127.0.0.1:10001",
 		"readBufferSize":  1024,
 		"writeBufferSize": 1024,
+		"redundancy":      false,
 	}
 
 	node := NewP2PNode(config)
@@ -511,6 +514,7 @@ func Setup_TestP2PNode_Request() *p2pNode {
 		"address":         "127.0.0.1:10001",
 		"readBufferSize":  1024,
 		"writeBufferSize": 1024,
+		"redundancy":      false,
 	}
 
 	node := NewP2PNode(config)
@@ -799,6 +803,7 @@ func Setup_TestP2PNode_Broadcast() (*p2pNode, []net.Conn, []net.Listener) {
 		"readBufferSize":  1024,
 		"writeBufferSize": 1024,
 		"peers":           peers,
+		"redundancy":      false,
 	}
 
 	node := NewP2PNode(config)
@@ -1083,6 +1088,7 @@ func Setup_TestP2PNode_BroadcastMessage_Integration() []*p2pNode {
 			"readBufferSize":  1024,
 			"writeBufferSize": 1024,
 			"peers":           peers,
+			"redundancy":      false,
 		}
 
 		node := NewP2PNode(config)
