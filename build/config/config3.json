@@ -6,14 +6,16 @@
     "consensus_port": 8080
   },
   "p2p": {
+    "id": 3,
     "protocol": "tcp",
-    "address": "0.0.0.0:8082",
-    "external_ip": "172.18.0.1:8082",
+    "address": "0.0.0.0:8083",
+    "connection_buffer_size": 1024,
+    "external_ip": "0.0.0.0:8083",
     "peers": [
-      "172.18.0.1:8081",
-      "172.18.0.1:8082",
-      "172.18.0.1:8083",
-      "172.18.0.1:8084"
+      "1@node1.consensus:8081",
+      "2@node2.consensus:8082",
+      "3@node3.consensus:8083",
+      "4@node4.consensus:8084"
     ]
   },
   "consensus": {

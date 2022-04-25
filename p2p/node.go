@@ -305,7 +305,7 @@ func (n *p2pNode) HandleConnection(direction Direction, c net.Conn, signaler cha
 				return
 			default:
 				n.Debug("Read: blocking")
-				if nbytes, err := io.ReadFull(p.reader, p.readBuffer[:WireCodecHeaderSize]); err != nil || nbytes == 0 {
+				if _, err := io.ReadFull(p.reader, p.readBuffer[:WireCodecHeaderSize]); err != nil {
 					n.Debug("read error", err)
 					return
 				}
@@ -402,21 +402,28 @@ func (n *p2pNode) HandleConnection(direction Direction, c net.Conn, signaler cha
 	n.Debug("Connection closed")
 }
 
+// TODO(derrandz): fix the broken integration test caused by this for loop
+// more info: this causes a wait group in the test to be `.Done` more than the times `.Add(1)` was called.
+// To fix: debug to see how many times the HandleMessage is called...
 func (n *p2pNode) Handle() {
-	select {
-	case packet := <-n.sink:
-		n.Log("Got a packet", packet)
-		if packet.IsProto {
-			msg := &types.P2PMessage{}
-			err := proto.Unmarshal(packet.Data, msg)
-			if err != nil {
-				n.Error("Handle: failed to uunmarshal proto messsage, error", err)
+	for {
+		select {
+		case <-n.quit:
+			return
+		case packet := <-n.sink:
+			n.Log("Got a packet", packet)
+			if packet.IsProto {
+				msg := &types.P2PMessage{}
+				err := proto.Unmarshal(packet.Data, msg)
+				if err != nil {
+					n.Error("Handle: failed to uunmarshal proto messsage, error", err)
+				} else {
+					n.Log("Handle: got a proto message")
+					n.HandleMessage(packet.Nonce, msg)
+				}
 			} else {
-				n.Log("Handle: got a proto message")
-				n.HandleMessage(packet.Nonce, msg)
+				n.HandleRawBytes(packet.Nonce, packet.Data)
 			}
-		} else {
-			n.HandleRawBytes(packet.Nonce, packet.Data)
 		}
 	}
 }
@@ -596,6 +603,7 @@ func (n *p2pNode) Pong(nonce uint32, address string) error {
 func (n *p2pNode) Broadcast(msg []byte, isRoot bool, fromLevel int, isWrapped bool) error {
 	peerTree := NewRainTree()
 
+	n.Debug("peer list", n.peerList)
 	peerTree.SetLeafs(n.peerList)
 	peerTree.SetRoot(n.ID)
 	err := peerTree.Traverse(

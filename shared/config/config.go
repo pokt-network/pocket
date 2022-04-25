@@ -162,6 +162,7 @@ func (jc *JsonConfig) toConfig() *Config {
 		PrivateKey: cryptoPocket.Ed25519PrivateKey([]byte(jc.PrivateKey)),
 
 		P2P: &P2PConfig{
+			ID:               jc.P2P.ID,
 			Protocol:         jc.P2P.Protocol,
 			Address:          jc.P2P.Address,
 			ExternalIp:       jc.P2P.ExternalIp,

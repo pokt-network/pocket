@@ -22,10 +22,10 @@ var _ modules.P2PModule = &p2pModule{}
 
 func Create(config *config.Config) (modules.P2PModule, error) {
 	cfg := map[string]interface{}{
+		"id":              config.P2P.ID,
 		"address":         config.P2P.ExternalIp,
 		"readBufferSize":  int(config.P2P.BufferSize),
 		"writeBufferSize": int(config.P2P.BufferSize),
-		"id":              config.P2P.ID,
 		"redundancy":      config.P2P.Redundancy,
 		"peers":           config.P2P.Peers,
 	}

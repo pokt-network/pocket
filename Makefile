@@ -50,7 +50,7 @@ build:
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
 build_and_watch:
-	/bin/sh ${PWD}/scripts/watch_build.sh
+	/bin/sh ${PWD}/build/scripts/watch_build.sh
 
 .PHONY: client_start
 ## Run a client daemon which is only used for debugging purposes
@@ -65,7 +65,7 @@ client_connect:
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
 compose_and_watch:
-	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate client node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: compose_and_watch
 ## Kill all containers started by the docker-compose file

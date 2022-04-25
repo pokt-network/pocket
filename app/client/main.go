@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/manifoldco/promptui"
-	"github.com/pokt-network/pocket/p2p/pre2p"
+	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -31,7 +31,7 @@ var items = []string{
 }
 
 // A P2P module is initialized in order to broadcast a message to the local network
-var pre2pMod modules.P2PModule
+var p2pMod modules.P2PModule
 
 func main() {
 	pk, err := crypto.GeneratePrivateKey()
@@ -49,12 +49,26 @@ func main() {
 		Pre2P: &config.Pre2PConfig{
 			ConsensusPort: 9999,
 		},
+
+		P2P: &config.P2PConfig{
+			ID:         5,
+			ExternalIp: "172.0.0.1:8888",
+			BufferSize: 1024,
+			Peers: []string{
+				"1@node1.consensus:8081",
+				"2@node2.consensus:8082",
+				"3@node3.consensus:8083",
+				"4@node4.consensus:8084",
+				"5@client:8085",
+			},
+			Redundancy: true,
+		},
 	}
 
 	// Initialize the state singleton
 	_ = typesGenesis.GetNodeState(cfg)
 
-	pre2pMod, err = pre2p.Create(cfg)
+	p2pMod, err = p2p.Create(cfg)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create pre2p module: " + err.Error())
 	}
@@ -125,5 +139,8 @@ func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
 	}
 
-	pre2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
+	err = p2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
+	if err != nil {
+		log.Println("[ERROR] Failed to broadcast message: ", err)
+	}
 }
