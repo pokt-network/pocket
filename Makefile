@@ -60,7 +60,7 @@ client_start:
 .PHONY: client_connect
 ## Connect to the running client debugging daemon
 client_connect:
-	docker exec -it client /bin/bash -c "go run cmd/client/*.go"
+	docker exec -it client /bin/bash -c "go run app/client/*.go"
 
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
