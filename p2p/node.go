@@ -31,11 +31,13 @@ type (
 		Dial(string) error
 		Send(uint32, string, []byte, bool) error
 		SendMessage(uint32, string, *types.P2PMessage) error
+		Write(string, []byte) error
+		WriteMessage(uint32, string, *types.P2PMessage) error
 		Request(context.Context, string, []byte, bool) ([]byte, error)
 		RequestMessage(context.Context, string, *types.P2PMessage) (*types.P2PMessage, error)
 		Ping(string) error
 		Pong(uint32, string) error
-		Broadcast([]byte, bool, int, bool) error
+		Broadcast([]byte, bool, int) error
 		BroadcastMessage(*types.P2PMessage, bool, int) error
 		Address() string
 		SetId(id int)
@@ -251,10 +253,15 @@ func (n *p2pNode) Serve() {
 }
 
 func (n *p2pNode) Stop() {
+	if !n.isRunning.Load() {
+		return
+	}
+
 	close(n.quit)
 	n.Listener.Close()
 	n.isRunning.Store(false)
 	n.wg.Wait()
+	close(n.sink)
 }
 
 func (n *p2pNode) IsRunning() bool {
@@ -402,9 +409,6 @@ func (n *p2pNode) HandleConnection(direction Direction, c net.Conn, signaler cha
 	n.Debug("Connection closed")
 }
 
-// TODO(derrandz): fix the broken integration test caused by this for loop
-// more info: this causes a wait group in the test to be `.Done` more than the times `.Add(1)` was called.
-// To fix: debug to see how many times the HandleMessage is called...
 func (n *p2pNode) Handle() {
 	for {
 		select {
@@ -520,6 +524,52 @@ func (n *p2pNode) SendMessage(nonce uint32, address string, msg *types.P2PMessag
 	return n.Send(nonce, address, data, true)
 }
 
+func (n *p2pNode) Write(address string, data []byte) error {
+	var peer *p2pConn
+	var exists bool
+
+	n.peers.Lock()
+	peer, exists = n.peers.m[address]
+	n.peers.Unlock()
+
+	if !exists {
+		c, err := n.Dialer.Dial("tcp", address)
+		if err != nil {
+			return err
+		}
+
+		peer = NewP2PConn(
+			DirectionOutbound,
+			c,
+			n.config["readBufferSize"].(int),
+			n.config["writeBufferSize"].(int),
+		)
+	}
+
+	_, err := peer.Conn.Write(data)
+	if err != nil {
+		return err
+	}
+
+	peer.Conn.Close()
+
+	return nil
+}
+
+func (n *p2pNode) WriteMessage(nonce uint32, address string, msg *types.P2PMessage) error {
+	msg.Metadata.Destination = address
+	msg.Metadata.Source = n.Address()
+
+	data, err := proto.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	encodedData := n.encode(false, nonce, data, true)
+
+	return n.Write(address, encodedData)
+}
+
 func (n *p2pNode) Request(ctx context.Context, address string, data []byte, isProto bool) ([]byte, error) {
 	ch, nonce := n.NewRequest()
 
@@ -600,7 +650,7 @@ func (n *p2pNode) Pong(nonce uint32, address string) error {
 	return n.Send(nonce, address, pong, false)
 }
 
-func (n *p2pNode) Broadcast(msg []byte, isRoot bool, fromLevel int, isWrapped bool) error {
+func (n *p2pNode) Broadcast(msg []byte, isRoot bool, fromLevel int) error {
 	peerTree := NewRainTree()
 
 	n.Debug("peer list", n.peerList)
@@ -611,8 +661,8 @@ func (n *p2pNode) Broadcast(msg []byte, isRoot bool, fromLevel int, isWrapped bo
 		fromLevel,
 		func(originatorId int, left, right peerInfo, currentLevel int) error {
 			n.Log(fmt.Sprintf("Broadcast: originatorId: %d, left: %d, right: %d, currentLevel: %d", originatorId, left.ID, right.ID, currentLevel))
-			go n.Send(0, right.address, msg, isWrapped)
-			go n.Send(0, left.address, msg, isWrapped)
+			go n.Write(right.address, msg)
+			go n.Write(left.address, msg)
 			return nil
 		})
 
@@ -625,7 +675,9 @@ func (n *p2pNode) BroadcastMessage(msg *types.P2PMessage, isRoot bool, fromLevel
 		return err
 	}
 
-	err = n.Broadcast(data, isRoot, fromLevel, true)
+	encodedData := n.encode(false, 0, data, true)
+
+	err = n.Broadcast(encodedData, isRoot, fromLevel)
 	if err != nil {
 		return err
 	}
@@ -635,7 +687,7 @@ func (n *p2pNode) BroadcastMessage(msg *types.P2PMessage, isRoot bool, fromLevel
 		for _, peer := range n.peerList {
 			if peer.ID != n.ID {
 				msg.Metadata.Broadcast = false
-				go n.SendMessage(0, peer.address, msg)
+				go n.WriteMessage(0, peer.address, msg)
 			}
 		}
 	}

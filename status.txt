@@ -1,4 +1,0 @@
-1- renaming things
-2- dont forget to use paramterize of socket on socket
-3- dont forget to replace inbound/outbound registries with exported calls to get peak etc..
-4- should write e2e test
