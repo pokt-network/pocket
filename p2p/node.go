@@ -39,6 +39,8 @@ type (
 		BroadcastMessage(*types.P2PMessage, bool, int) error
 		Address() string
 		SetId(id int)
+		AddMsgToHistory(int64)
+		IsMsgInHistory(int64) bool
 	}
 	p2pNode struct {
 		sync.Mutex
@@ -61,6 +63,9 @@ type (
 		sink chan Packet
 
 		handlers []MessageHandler
+
+		historyLock     sync.Mutex
+		messagesHistory map[int64]bool
 	}
 
 	p2pConn struct {
@@ -127,20 +132,21 @@ var _ P2PNode = &p2pNode{}
 
 func NewP2PNode(config map[string]interface{}) *p2pNode {
 	node := &p2pNode{
-		ID:        config["id"].(int),
-		Mutex:     sync.Mutex{},
-		Listener:  nil,
-		Dialer:    net.Dialer{},
-		wireCodec: NewWireCodec(),
-		Logger:    types.NewLogger(os.Stdout),
-		requests:  NewRequestMap(),
-		peers:     NewPeerMap(),
-		config:    config,
-		wg:        sync.WaitGroup{},
-		quit:      make(chan struct{}, 1),
-		sink:      make(chan Packet, 100),
-		handlers:  make([]MessageHandler, 0),
-		peerList:  make([]peerInfo, 0),
+		ID:              config["id"].(int),
+		Mutex:           sync.Mutex{},
+		Listener:        nil,
+		Dialer:          net.Dialer{},
+		wireCodec:       NewWireCodec(),
+		Logger:          types.NewLogger(os.Stdout),
+		requests:        NewRequestMap(),
+		peers:           NewPeerMap(),
+		config:          config,
+		wg:              sync.WaitGroup{},
+		quit:            make(chan struct{}, 1),
+		sink:            make(chan Packet, 100),
+		handlers:        make([]MessageHandler, 0),
+		peerList:        make([]peerInfo, 0),
+		messagesHistory: make(map[int64]bool),
 	}
 
 	// TODO(derrandz): refactor when the addressbook is spec'd out
@@ -425,6 +431,11 @@ func (n *p2pNode) HandleMessage(nonce uint32, msg *types.P2PMessage) {
 		n.Log("HandleMessage: broadcast message handled")
 	}
 
+	if n.IsMsgInHistory(msg.Metadata.Hash) {
+		n.Log("HandleMessage: message already in history, not handling")
+		return
+	}
+
 	n.Lock()
 	for _, handle := range n.handlers {
 		n.Log("HandleMessage: calling handler")
@@ -630,6 +641,17 @@ func (n *p2pNode) Address() string {
 
 func (n *p2pNode) SetId(id int) {
 	n.ID = id
+}
+
+func (n *p2pNode) AddMsgToHistory(msgHash int64) {
+	n.historyLock.Lock()
+	defer n.historyLock.Unlock()
+	n.messagesHistory[msgHash] = true
+}
+
+func (n *p2pNode) IsMsgInHistory(id int64) bool {
+	_, seen := n.messagesHistory[id]
+	return seen
 }
 
 // p2pConn additional functionality

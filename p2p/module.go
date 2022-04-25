@@ -78,32 +78,19 @@ func (m *p2pModule) GetBus() modules.Bus {
 }
 
 func (m *p2pModule) Broadcast(data *anypb.Any, topic shared.PocketTopic) error {
-	msg := &types.P2PMessage{
-		Metadata: &types.Metadata{
-			Broadcast: true,
-			Source:    m.node.Address(),
-			Level:     0, // ignore, will be adjusted automatically,
-		},
-		Payload: &shared.PocketEvent{
-			Topic: topic,
-			Data:  data,
-		},
-	}
+	msg := types.NewP2PMessage(0, 0, m.node.Address(), "", &shared.PocketEvent{
+		Topic: topic,
+		Data:  data,
+	})
+
+	msg.MarkAsBroadcastMessage()
 	return m.node.BroadcastMessage(msg, true, 0)
 }
 
 func (m *p2pModule) Send(addr cryptoPocket.Address, data *anypb.Any, topic shared.PocketTopic) error {
-	msg := &types.P2PMessage{
-		Metadata: &types.Metadata{
-			Broadcast:   true,
-			Source:      m.node.Address(),
-			Destination: string(addr),
-			Level:       0, // ignore, will be adjusted automatically,
-		},
-		Payload: &shared.PocketEvent{
-			Topic: topic,
-			Data:  data,
-		},
-	}
+	msg := types.NewP2PMessage(0, 0, m.node.Address(), string(addr), &shared.PocketEvent{
+		Topic: topic,
+		Data:  data,
+	})
 	return m.node.SendMessage(0, string(addr), msg)
 }
