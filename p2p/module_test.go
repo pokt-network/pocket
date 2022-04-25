@@ -31,6 +31,8 @@ func Setup_TestP2PModule_Case() modules.P2PModule {
 			ExternalIp: "127.0.0.1:10001",
 			BufferSize: 1024,
 			Peers:      peers,
+			ID:         1,
+			Redundancy: false,
 		},
 	})
 

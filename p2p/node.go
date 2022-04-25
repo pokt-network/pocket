@@ -127,6 +127,7 @@ var _ P2PNode = &p2pNode{}
 
 func NewP2PNode(config map[string]interface{}) *p2pNode {
 	node := &p2pNode{
+		ID:        config["id"].(int),
 		Mutex:     sync.Mutex{},
 		Listener:  nil,
 		Dialer:    net.Dialer{},
@@ -196,13 +197,8 @@ func NewPacket(isProto bool, Nonce uint32, data []byte) *Packet {
 
 // the P2PNode interface implementation
 
-func CreateP2PNode(address string, readBufferSize int, writeBufferSize int, peers []string) P2PNode {
-	return NewP2PNode(map[string]interface{}{
-		"address":         address,
-		"readBufferSize":  readBufferSize,
-		"writeBufferSize": writeBufferSize,
-		"peers":           peers,
-	})
+func CreateP2PNode(config map[string]interface{}) P2PNode {
+	return NewP2PNode(config)
 }
 
 func (n *p2pNode) Start() error {

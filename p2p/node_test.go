@@ -18,7 +18,14 @@ import (
 )
 
 func TestP2PNode_StartStop(t *testing.T) {
-	node := NewP2PNode(map[string]interface{}{"address": "127.0.0.1:10001"})
+	config := map[string]interface{}{
+		"address":         "127.0.0.1:10001",
+		"readBufferSize":  1024,
+		"writeBufferSize": 1024,
+		"redundancy":      false,
+		"id":              1,
+	}
+	node := NewP2PNode(config)
 	err := node.Start()
 
 	assert.Nil(
@@ -52,6 +59,7 @@ func Setup_TestP2PNode_HandleConnection() *p2pNode {
 		"readBufferSize":  1024,
 		"writeBufferSize": 1024,
 		"redundancy":      false,
+		"id":              1,
 	}
 
 	node := NewP2PNode(config)
@@ -219,6 +227,7 @@ func Setup_TestP2PNode_Dial() (*p2pNode, net.Listener) {
 		"readBufferSize":  1024,
 		"writeBufferSize": 1024,
 		"redundancy":      false,
+		"id":              1,
 	}
 
 	node := NewP2PNode(config)
@@ -296,6 +305,7 @@ func Setup_TestP2PNode_Send() *p2pNode {
 		"readBufferSize":  1024,
 		"writeBufferSize": 1024,
 		"redundancy":      false,
+		"id":              1,
 	}
 
 	node := NewP2PNode(config)
@@ -515,6 +525,7 @@ func Setup_TestP2PNode_Request() *p2pNode {
 		"readBufferSize":  1024,
 		"writeBufferSize": 1024,
 		"redundancy":      false,
+		"id":              1,
 	}
 
 	node := NewP2PNode(config)
@@ -804,6 +815,7 @@ func Setup_TestP2PNode_Broadcast() (*p2pNode, []net.Conn, []net.Listener) {
 		"writeBufferSize": 1024,
 		"peers":           peers,
 		"redundancy":      false,
+		"id":              1,
 	}
 
 	node := NewP2PNode(config)
@@ -1089,6 +1101,7 @@ func Setup_TestP2PNode_BroadcastMessage_Integration() []*p2pNode {
 			"writeBufferSize": 1024,
 			"peers":           peers,
 			"redundancy":      false,
+			"id":              i + 1,
 		}
 
 		node := NewP2PNode(config)

@@ -57,6 +57,8 @@ type P2PConfig struct {
 	BufferSize       uint     `json:"connection_buffer_size,omitempty"`
 	WireHeaderLength uint     `json:"max_wire_header_length,omitempty"`
 	TimeoutInMs      uint     `json:"timeout_in_ms,omitempty"`
+	ID               int      `json:"id,omitempty"`
+	Redundancy       bool     `json:"redundancy,omitempty"`
 }
 
 type PacemakerConfig struct {

@@ -21,15 +21,18 @@ type p2pModule struct {
 var _ modules.P2PModule = &p2pModule{}
 
 func Create(config *config.Config) (modules.P2PModule, error) {
+	cfg := map[string]interface{}{
+		"address":         config.P2P.ExternalIp,
+		"readBufferSize":  int(config.P2P.BufferSize),
+		"writeBufferSize": int(config.P2P.BufferSize),
+		"id":              config.P2P.ID,
+		"redundancy":      config.P2P.Redundancy,
+		"peers":           config.P2P.Peers,
+	}
 	m := &p2pModule{
 		config: config.P2P,
 		bus:    nil,
-		node: CreateP2PNode(
-			config.P2P.ExternalIp,
-			int(config.P2P.BufferSize),
-			int(config.P2P.BufferSize),
-			config.P2P.Peers,
-		),
+		node:   CreateP2PNode(cfg),
 	}
 
 	return m, nil
