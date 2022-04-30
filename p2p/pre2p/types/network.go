@@ -4,24 +4,26 @@ import (
 	"net"
 
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
-type AddrBook []*NetworkPeer
+const (
+	TransportLayerProtocol = "tcp4"
+)
 
-// TODO(olshansky): See which of these structures is better overall
+// TODO(olshansky): See if we can deprecate one of these structures.
+type AddrBook []*NetworkPeer
 type AddrBookMap map[string]*NetworkPeer
 
+// TODO(olshansky): When we delete `stdnetwork` and only go with `raintree`, this interface
+// can be simplified greatly.
 type Network interface {
 	NetworkBroadcast(data []byte) error
 	NetworkSend(data []byte, address cryptoPocket.Address) error
-	GetAddrBook() AddrBook
 
-	// TODO(olshansky): This should not be a separate interface from `NetworkBroadcast`
-	// Similar to broadcast but when we are not the originator
-	NetworkPropagate(msg *anypb.Any) error
+	HandleRawData(data []byte) ([]byte, error) // TODO(olshansky): Only adding this function for raintree support.
 
 	// TODO(olshansky): Discuss if we should just have an `Update` method or whether this should accept a list.
+	GetAddrBook() AddrBook
 	AddPeerToAddrBook(peer *NetworkPeer) error
 	RemovePeerToAddrBook(peer *NetworkPeer) error
 }

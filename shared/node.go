@@ -129,8 +129,8 @@ func (node *Node) handleEvent(event *types.PocketEvent) error {
 		return node.GetBus().GetConsensusModule().HandleMessage(event.Data)
 	case types.PocketTopic_DEBUG_TOPIC:
 		return node.handleDebugEvent(event.Data)
-	case types.PocketTopic_P2P_PROPAGATE_TOPIC:
-		return node.GetBus().GetP2PModule().Broadcast(event.Data, event.Topic)
+	case types.PocketTopic_POCKET_NODE_TOPIC:
+		log.Println("NOOP - Received pocket node topic signal")
 	default:
 		log.Printf("[WARN] Unsupported PocketEvent topic: %s \n", event.Topic)
 	}

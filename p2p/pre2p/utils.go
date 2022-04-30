@@ -10,6 +10,8 @@ import (
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
+// TODO(drewsky): These functions will turn into more of a "ActorToAddrBook" when we have a closer
+// integration with utility.
 func ValidatorMapToAddrBook(validators map[string]*typesGenesis.Validator) (typesPre2P.AddrBook, error) {
 	book := make(typesPre2P.AddrBook, 0)
 	for _, v := range validators {
@@ -23,8 +25,10 @@ func ValidatorMapToAddrBook(validators map[string]*typesGenesis.Validator) (type
 	return book, nil
 }
 
+// TODO(drewsky): These functions will turn into more of a "ActorToAddrBook" when we have a closer
+// integration with utility.
 func ValidatorToNetworkPeer(v *typesGenesis.Validator) (*typesPre2P.NetworkPeer, error) {
-	tcpAddr, err := net.ResolveTCPAddr(NetworkProtocol, v.ServiceUrl)
+	tcpAddr, err := net.ResolveTCPAddr(typesPre2P.TransportLayerProtocol, v.ServiceUrl)
 	if err != nil {
 		return nil, fmt.Errorf("error resolving addr: %v", err)
 	}

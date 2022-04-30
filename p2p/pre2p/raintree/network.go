@@ -8,9 +8,7 @@ import (
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 
-	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var _ typesPre2P.Network = &rainTreeNetwork{}
@@ -29,50 +27,63 @@ func NewRainTreeNetwork(selfAddr cryptoPocket.Address, addrBook typesPre2P.AddrB
 	n := &rainTreeNetwork{
 		addr:     selfAddr,
 		addrBook: addrBook,
+
+		// These fields are initialized by calling `handleAddrBookUpdates` below.
+		addrBookMap:  make(typesPre2P.AddrBookMap),
+		addrList:     make([]string, 0),
+		maxNumLevels: 0,
 	}
 	n.handleAddrBookUpdates()
-	return n
+
+	return typesPre2P.Network(n)
 }
 
 func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
-	// TODO(drewsky): How should we reduce the # of envelopes here
-	rainTreeMsg := &typesPre2P.RainTreeMessage{
+	return n.networkBroadcastInternal(data, n.maxNumLevels)
+}
+
+func (n *rainTreeNetwork) networkBroadcastInternal(data []byte, level uint32) error {
+	msg := &typesPre2P.RainTreeMessage{
+		Level: level,
 		Data:  data,
-		Level: n.maxNumLevels,
 	}
-	anyProto, err := anypb.New(rainTreeMsg)
-	if err != nil {
-		return err
-	}
-	pocketEvent := &types.PocketEvent{
-		Topic: types.PocketTopic_P2P_BROADCAST_TOPIC,
-		Data:  anyProto,
-	}
-	bz, err := proto.Marshal(pocketEvent)
+	bz, err := proto.Marshal(msg)
 	if err != nil {
 		return err
 	}
 
-	if addr1, ok := n.getFirstTargetAddr(); ok {
-		n.NetworkSend(bz, addr1)
+	if addr1, ok := n.getFirstTargetAddr(level); ok {
+		n.networkSendInternal(bz, addr1)
 	}
-	if addr2, ok := n.getSecondTargetAddr(); ok {
-		n.NetworkSend(bz, addr2)
+	if addr2, ok := n.getSecondTargetAddr(level); ok {
+		n.networkSendInternal(bz, addr2)
 	}
-	n.NetworkSend(bz, n.addr) // Demote
+	n.networkSendInternal(bz, n.addr) // Demote
 
 	return nil
 }
 
 func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address) error {
-	peer, ok := n.addrBookMap[address.String()]
-	if !ok {
-		return fmt.Errorf("Address %s not found in addrBookMap", address.String())
-	}
-	if !ok {
+	msg := &typesPre2P.RainTreeMessage{
+		Level: 0, // Direct send that does not need to be propagated
+		Data:  data,
 	}
 
-	client, err := net.DialTCP("tcp4", nil, peer.ConsensusAddr)
+	bz, err := proto.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	return n.networkSendInternal(bz, address)
+}
+
+func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.Address) error {
+	peer, ok := n.addrBookMap[address.String()]
+	if !ok {
+		return fmt.Errorf("address %s not found in addrBookMap", address.String())
+	}
+
+	client, err := net.DialTCP(typesPre2P.TransportLayerProtocol, nil, peer.ConsensusAddr)
 	if err != nil {
 		log.Println("Error connecting to peer during send: ", err)
 		return err
@@ -86,6 +97,21 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 	}
 
 	return nil
+}
+
+func (n *rainTreeNetwork) HandleRawData(data []byte) ([]byte, error) {
+	var rainTreeMsg typesPre2P.RainTreeMessage
+	if err := proto.Unmarshal(data, &rainTreeMsg); err != nil {
+		return nil, err
+	}
+
+	// Message propagation if level is non-zero
+	if rainTreeMsg.Level > 0 {
+		n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1)
+	}
+
+	// Return the data back to the caller so it can be handeled by the app specific bus
+	return rainTreeMsg.Data, nil
 }
 
 func (n *rainTreeNetwork) GetAddrBook() typesPre2P.AddrBook {

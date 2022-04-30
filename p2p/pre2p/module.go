@@ -6,10 +6,12 @@ package pre2p
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 
 	"github.com/pokt-network/pocket/p2p/pre2p/raintree"
+	"github.com/pokt-network/pocket/p2p/pre2p/stdnetwork"
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 
 	"github.com/pokt-network/pocket/shared/config"
@@ -35,8 +37,8 @@ type p2pModule struct {
 func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	log.Println("Creating network module")
 
-	tcpAddr, _ := net.ResolveTCPAddr(NetworkProtocol, fmt.Sprintf(":%d", cfg.Pre2P.ConsensusPort))
-	l, err := net.ListenTCP(NetworkProtocol, tcpAddr)
+	tcpAddr, _ := net.ResolveTCPAddr(typesPre2P.TransportLayerProtocol, fmt.Sprintf(":%d", cfg.Pre2P.ConsensusPort))
+	l, err := net.ListenTCP(typesPre2P.TransportLayerProtocol, tcpAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -46,12 +48,13 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var network typesPre2P.Network
 	if cfg.Pre2P.UseRainTree {
 		selfAddr := cryptoPocket.Address(cfg.PrivateKey.Address())
 		network = raintree.NewRainTreeNetwork(selfAddr, addrBook)
 	} else {
-		network = NewNetwork(addrBook)
+		network = stdnetwork.NewNetwork(addrBook)
 	}
 
 	m = &p2pModule{
@@ -100,11 +103,6 @@ func (m *p2pModule) Stop() error {
 }
 
 func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
-	// TODO(olshansky): This should not be a separate interface from `NetworkBroadcast`
-	if topic == types.PocketTopic_P2P_PROPAGATE_TOPIC {
-		return m.network.NetworkPropagate(msg)
-	}
-
 	c := &types.PocketEvent{
 		Topic: topic,
 		Data:  msg,
@@ -133,4 +131,33 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 
 func (m *p2pModule) GetAddrBook() typesPre2P.AddrBook {
 	return m.network.GetAddrBook()
+}
+
+func (m *p2pModule) handleNetworkMessage(conn net.Conn) {
+	defer conn.Close()
+
+	dataRaw, err := ioutil.ReadAll(conn)
+	if err != nil {
+		log.Println("Error reading from conn: ", err)
+		return
+	}
+
+	data, err := m.network.HandleRawData(dataRaw)
+	if err != nil {
+		log.Println("Error handling raw data: ", err)
+		return
+	}
+
+	networkMessage := types.PocketEvent{}
+	if err := proto.Unmarshal(data, &networkMessage); err != nil {
+		log.Println("Error decoding network message: ", err)
+		return
+	}
+
+	event := types.PocketEvent{
+		Topic: networkMessage.Topic,
+		Data:  networkMessage.Data,
+	}
+
+	m.GetBus().PublishEventToBus(&event)
 }
