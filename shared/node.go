@@ -1,6 +1,8 @@
 package shared
 
 import (
+	"log"
+
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/config"
@@ -8,7 +10,6 @@ import (
 	"github.com/pokt-network/pocket/utility"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	"log"
 
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
@@ -133,6 +134,8 @@ func (node *Node) handleEvent(event *types.PocketEvent) error {
 		return node.handleDebugEvent(event.Data)
 	case types.PocketTopic_POCKET_NODE_TOPIC:
 		log.Println("[NOOP] Received pocket node topic signal")
+	case types.PocketTopic_P2P_PROPAGATE_TOPIC:
+		return node.GetBus().GetP2PModule().Broadcast(event.Data, event.Topic)
 	default:
 		log.Printf("[WARN] Unsupported PocketEvent topic: %s \n", event.Topic)
 	}
