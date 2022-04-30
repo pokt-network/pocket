@@ -55,11 +55,6 @@ func main() {
 		// Not used - only set to avoid `GetNodeState(_)` from crashing
 		PrivateKey: pk.(crypto.Ed25519PrivateKey),
 
-		// Used to access the validator map
-		Consensus: &config.ConsensusConfig{
-			Pacemaker: &config.PacemakerConfig{},
-		},
-
 		// Not used - only set to avoid `p2p.Create()` from crashing
 		P2P: &config.P2PConfig{
 			ConsensusPort:  9999,
