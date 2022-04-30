@@ -198,10 +198,11 @@ protogen_clean:
 protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
 
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto         --go_out=./shared/types         ./shared/types/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto              --go_out=./utility/types        ./utility/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto      --go_out=./consensus/types      ./consensus/types/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/pre2p/raintree/types/proto --go_out=./p2p/pre2p/types      ./p2p/pre2p/raintree/types/proto/*.proto
 
 	echo "View generated proto files by running: make protogen_show"
 
@@ -212,11 +213,11 @@ protogen_local_prototype:
 	$(eval prefix = "./prototype")
 	$(eval proto_dir = "${prefix}/shared/types/proto/")
 
-	protoc -I=${proto_dir} --go_out=./ ${proto_dir}/*.proto
+	protoc -I=${proto_dir}                                                --go_out=./        ${proto_dir}/*.proto
 	protoc -I=${proto_dir} -I=${prefix}/persistence/pre_persistence/proto --go_out=${prefix} ${prefix}/persistence/pre_persistence/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/p2p/pre_p2p/types/proto --go_out=${prefix} ${prefix}/p2p/pre_p2p/types/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/utility/proto --go_out=${prefix} ${prefix}/utility/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/consensus/types/proto --go_out=${prefix} ${prefix}/consensus/types/proto/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/p2p/pre_p2p/types/proto           --go_out=${prefix} ${prefix}/p2p/pre_p2p/types/proto/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/utility/proto                     --go_out=${prefix} ${prefix}/utility/proto/*.proto
+	protoc -I=${proto_dir} -I=${prefix}/consensus/types/proto             --go_out=${prefix} ${prefix}/consensus/types/proto/*.proto
 
 	echo "View generated proto files by running: make protogen_show"
 

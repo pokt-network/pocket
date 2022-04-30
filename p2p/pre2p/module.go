@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 
+	"github.com/pokt-network/pocket/p2p/pre2p/raintree"
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 
 	"github.com/pokt-network/pocket/shared/config"
@@ -26,8 +27,9 @@ type p2pModule struct {
 	bus modules.Bus
 
 	listener *net.TCPListener
-	network  typesPre2P.Network
 	address  cryptoPocket.Address
+
+	network typesPre2P.Network
 }
 
 func Create(cfg *config.Config) (m modules.P2PModule, err error) {
@@ -40,7 +42,17 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	}
 
 	testState := typesGenesis.GetNodeState(nil)
-	network := ConnectToValidatorNetwork(testState.ValidatorMap)
+	addrBook, err := ValidatorMapToAddrBook(testState.ValidatorMap)
+	if err != nil {
+		return nil, err
+	}
+	var network typesPre2P.Network
+	if cfg.Pre2P.UseRainTree {
+		selfAddr := cryptoPocket.Address(cfg.PrivateKey.Address())
+		network = raintree.NewRainTreeNetwork(selfAddr, addrBook)
+	} else {
+		network = NewNetwork(addrBook)
+	}
 
 	m = &p2pModule{
 		listener: l,
@@ -88,6 +100,11 @@ func (m *p2pModule) Stop() error {
 }
 
 func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
+	// TODO(olshansky): This should not be a separate interface from `NetworkBroadcast`
+	if topic == types.PocketTopic_P2P_PROPAGATE_TOPIC {
+		return m.network.NetworkPropagate(msg)
+	}
+
 	c := &types.PocketEvent{
 		Topic: topic,
 		Data:  msg,
@@ -97,6 +114,7 @@ func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
 		return err
 	}
 	log.Println("broadcasting message to network")
+
 	return m.network.NetworkBroadcast(data)
 }
 
@@ -113,6 +131,6 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 	return m.network.NetworkSend(data, addr)
 }
 
-func (m *p2pModule) GetAddrBook() []*typesPre2P.NetworkPeer {
+func (m *p2pModule) GetAddrBook() typesPre2P.AddrBook {
 	return m.network.GetAddrBook()
 }

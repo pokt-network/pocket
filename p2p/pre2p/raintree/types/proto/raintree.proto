@@ -1,0 +1,17 @@
+// TODO(olshansky): This encapsulates hotstuff types, hotstuff messages and hotstuff specific crypto primitives. Consider if it's worth splitting into smaller files.
+
+syntax = "proto3";
+package raintree;
+
+option go_package = "github.com/pokt-network/pocket/p2p/pre2p/types";
+
+// enum HotstuffMessageType {
+//     HOTSTUFF_MESSAGE_UNKNOWN = 0;
+//     HOTSTUFF_MESAGE_PROPOSE = 1;
+//     HOTSTUFF_MESSAGE_VOTE = 2;
+// }
+
+message RainTreeMessage {
+    bytes data = 1;
+    uint32 level = 2;
+}

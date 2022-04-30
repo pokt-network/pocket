@@ -28,6 +28,7 @@ type Config struct {
 // TODO(derrandz): delete this once P2P is ready.
 type Pre2PConfig struct {
 	ConsensusPort uint32 `json:"consensus_port"`
+	UseRainTree   bool   `json:"use_raintree"`
 }
 
 type PrePersistenceConfig struct {
