@@ -2,8 +2,10 @@ package raintree
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"sort"
+	"strings"
 
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -31,13 +33,13 @@ func (n *rainTreeNetwork) handleAddrBookUpdates() error {
 	n.maxNumLevels = n.getMaxAddrBookLevels()
 
 	sort.Strings(n.addrList)
-	if i, ok := n.getSelfIndexInAddrBook(); !ok {
-		return fmt.Errorf("self address not found in addrBook so this client can send messages but does not propagate them")
-	} else {
+	if i, ok := n.getSelfIndexInAddrBook(); ok {
 		// We sorted the list lexicographically above, but we reformat it here so
 		// the address of this node is first in the list to make RainTree propagation
 		// easier to compute and interpret.
 		n.addrList = append(n.addrList[i:len(n.addrList)], n.addrList[0:i]...)
+	} else {
+		return fmt.Errorf("self address not found in addrBook so this client can send messages but does not propagate them")
 	}
 
 	return nil
@@ -47,13 +49,15 @@ func (n *rainTreeNetwork) getFirstTargetAddr(level uint32) (cryptoPocket.Address
 	l := n.getAddrBookLengthAtHeight(level)
 	i := int(firstMsgTargetPercentage * float64(l))
 	addrStr := n.addrList[i]
+	log.Printf("[DEBUG] First target: %s", n.debugMsgTargetString(l, i))
 	return n.addrBookMap[addrStr].Address, true
 }
 
 func (n *rainTreeNetwork) getSecondTargetAddr(level uint32) (cryptoPocket.Address, bool) {
 	l := n.getAddrBookLengthAtHeight(level)
-	i := int(firstMsgTargetPercentage * float64(l))
+	i := int(secondMsgTargetPercentage * float64(l))
 	addrStr := n.addrList[i]
+	log.Printf("[DEBUG] Second target: %s", n.debugMsgTargetString(l, i))
 	return n.addrBookMap[addrStr].Address, true
 }
 
@@ -82,4 +86,26 @@ func (n *rainTreeNetwork) getMaxAddrBookLevels() uint32 {
 
 func logBase(x float64) float64 {
 	return math.Log(x) / math.Log(maxLevelsLogBase)
+}
+
+func (n *rainTreeNetwork) debugMsgTargetString(len, idx int) string {
+	s := strings.Builder{}
+	s.WriteString("[")
+	serviceUrl := n.addrBookMap[n.addrList[0]].ServiceUrl
+	if n.addrList[0] == n.addr.String() {
+		s.WriteString(fmt.Sprintf(" (%s) ", serviceUrl))
+	} else {
+		s.WriteString(fmt.Sprintf("(self) %s ", serviceUrl))
+	}
+
+	for i := 1; i < len; i++ {
+		serviceUrl := n.addrBookMap[n.addrList[i]].ServiceUrl
+		if i == idx {
+			s.WriteString(fmt.Sprintf(" **%s** ", serviceUrl))
+		} else {
+			s.WriteString(fmt.Sprintf(" %s ", serviceUrl))
+		}
+	}
+	s.WriteString("]")
+	return s.String()
 }

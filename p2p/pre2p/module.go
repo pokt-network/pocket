@@ -147,6 +147,10 @@ func (m *p2pModule) handleNetworkMessage(conn net.Conn) {
 		log.Println("Error handling raw data: ", err)
 		return
 	}
+	// There was no error, but we don't need to forward this to the app-specific bus
+	if data == nil {
+		return
+	}
 
 	networkMessage := types.PocketEvent{}
 	if err := proto.Unmarshal(data, &networkMessage); err != nil {

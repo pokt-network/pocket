@@ -62,12 +62,12 @@ func CommittingBlock(height uint64, numTxs int) string {
 	return fmt.Sprintf("🧱🧱🧱 Committing block at height %d with %d transactions 🧱🧱🧱", height, numTxs)
 }
 
-func ElectedNewLeader(address string, nodeId NodeId) string {
-	return fmt.Sprintf("Elected new 👑: %d (%s)", nodeId, address)
+func ElectedNewLeader(address string, nodeId NodeId, height, round uint64) string {
+	return fmt.Sprintf("👑 Electied new leader for (%d-%d): %d (%s) 👑", height, round, nodeId, address)
 }
 
-func ElectedSelfAsNewLeader(address string, nodeId NodeId) string {
-	return fmt.Sprintf("👑👑👑👑👑   %d   👑👑👑👑👑 (%s)", nodeId, address)
+func ElectedSelfAsNewLeader(address string, nodeId NodeId, height, round uint64) string {
+	return fmt.Sprintf("👑👑👑👑👑👑 I am the new leader for (%d-%d): %d (%s) 👑👑👑👑👑👑👑👑", height, round, nodeId, address)
 }
 
 func SendingMessage(msg *HotstuffMessage, nodeId NodeId) string {

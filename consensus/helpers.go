@@ -207,10 +207,10 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 
 	if m.LeaderId != nil && *m.LeaderId == m.NodeId {
 		m.logPrefix = "LEADER"
-		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId))
+		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	} else {
 		m.logPrefix = "REPLICA"
-		m.nodeLog(typesCons.ElectedNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId))
+		m.nodeLog(typesCons.ElectedNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	}
 }
 

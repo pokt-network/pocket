@@ -32,4 +32,5 @@ type NetworkPeer struct {
 	ConsensusAddr *net.TCPAddr
 	PublicKey     cryptoPocket.PublicKey
 	Address       cryptoPocket.Address
+	ServiceUrl    string // This is only included because it's a more human-friendly differentiator between peers
 }

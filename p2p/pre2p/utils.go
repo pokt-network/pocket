@@ -42,6 +42,7 @@ func ValidatorToNetworkPeer(v *typesGenesis.Validator) (*typesPre2P.NetworkPeer,
 		ConsensusAddr: tcpAddr,
 		PublicKey:     pubKey,
 		Address:       pubKey.Address(),
+		ServiceUrl:    v.ServiceUrl,
 	}
 
 	return peer, nil
