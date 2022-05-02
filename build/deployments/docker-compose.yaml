@@ -73,6 +73,7 @@ services:
     # Uncomment to enable DLV debugging
     security_opt:
       - "seccomp:unconfined"
+    # Uncomment to enable DLV debugging
     environment:
       - DEBUG_PORT=7082
 
