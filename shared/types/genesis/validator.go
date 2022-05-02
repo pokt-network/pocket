@@ -45,3 +45,41 @@ func (v *Validator) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
+
+func (v *ValidatorJsonCompatibleWrapper) ValidateBasic() error {
+	return nil
+}
+
+func (v *ValidatorJsonCompatibleWrapper) Validator() *Validator {
+	return &Validator{
+		Address:         v.Address,
+		PublicKey:       v.PublicKey,
+		Paused:          v.Paused,
+		Status:          v.Status,
+		ServiceUrl:      v.ServiceUrl,
+		StakedTokens:    v.StakedTokens,
+		MissedBlocks:    v.MissedBlocks,
+		PausedHeight:    v.PausedHeight,
+		UnstakingHeight: v.UnstakingHeight,
+		Output:          v.Output,
+	}
+}
+
+func GetValidators(vals []*ValidatorJsonCompatibleWrapper) (validators []*Validator) {
+	validators = make([]*Validator, len(vals))
+	for i, v := range vals {
+		validators[i] = &Validator{
+			Address:         v.Address,
+			PublicKey:       v.PublicKey,
+			Paused:          v.Paused,
+			Status:          v.Status,
+			ServiceUrl:      v.ServiceUrl,
+			StakedTokens:    v.StakedTokens,
+			MissedBlocks:    v.MissedBlocks,
+			PausedHeight:    v.PausedHeight,
+			UnstakingHeight: v.UnstakingHeight,
+			Output:          v.Output,
+		}
+	}
+	return
+}
