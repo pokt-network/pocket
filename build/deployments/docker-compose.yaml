@@ -51,8 +51,10 @@ services:
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Uncomment to enable DLV debugging
-    # environment:
-    #   - DEBUG_PORT=7082
+    security_opt:
+      - "seccomp:unconfined"
+    environment:
+      - DEBUG_PORT=7082
 
   node3.consensus:
     container_name: node3.consensus

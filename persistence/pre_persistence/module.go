@@ -1,6 +1,8 @@
 package pre_persistence
 
 import (
+	"encoding/hex"
+	"fmt"
 	"log"
 	"math"
 	"math/big"
@@ -71,6 +73,7 @@ func InitGenesis(u *PrePersistenceContext, state *typesGenesis.GenesisState) err
 		}
 	}
 	for _, validator := range state.Validators {
+		fmt.Println("OLSH", hex.EncodeToString(validator.Address))
 		err := u.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 2, validator.ServiceUrl, validator.StakedTokens, 0, 0)
 		if err != nil {
 			return err

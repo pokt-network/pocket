@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"encoding/hex"
+	"fmt"
 	"unsafe"
 
 	"github.com/pokt-network/pocket/shared/types"
@@ -23,7 +24,7 @@ func (m *consensusModule) prepareBlock() (*types.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
-
+	fmt.Println("OLSH")
 	if err := m.updateUtilityContext(); err != nil {
 		return nil, err
 	}
