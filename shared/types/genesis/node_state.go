@@ -77,7 +77,7 @@ func (ps *NodeState) loadStateFromGenesis(cfg *config.Config) {
 			log.Fatalf("Failed to generate genesis: %v", err)
 		}
 
-		if genesis.Validators != nil && genesis.GenesisStateConfig.NumValidators == 0 {
+		if genesis.Validators != nil {
 			genesisState.Validators = GetValidators(genesis.Validators)
 		}
 

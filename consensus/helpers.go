@@ -94,11 +94,8 @@ func (m *consensusModule) findHighQC(step typesCons.HotstuffStep) (qc *typesCons
 func getThresholdSignature(
 	partialSigs []*typesCons.PartialSignature) (*typesCons.ThresholdSignature, error) {
 	thresholdSig := new(typesCons.ThresholdSignature)
+	thresholdSig.Signatures = make([]*typesCons.PartialSignature, len(partialSigs))
 	copy(thresholdSig.Signatures, partialSigs)
-	// thresholdSig.Signatures = partialSigs. make([]*typesCons.PartialSignature, len(partialSigs))
-	// for i, parpartialSig := range partialSigs {
-	// 	thresholdSig.Signatures[i] = parpartialSig
-	// }
 	return thresholdSig, nil
 }
 

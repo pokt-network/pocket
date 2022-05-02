@@ -60,6 +60,10 @@ func (genesis *Genesis) Validate() error {
 		return fmt.Errorf("genesis must contain at least one validator")
 	}
 
+	if len(genesis.Validators) > 0 && genesis.GenesisStateConfig.NumValidators != uint16(len(genesis.Validators)) {
+		return fmt.Errorf("genesis state validator count is misconfigured")
+	}
+
 	if len(genesis.AppHash) == 0 {
 		return fmt.Errorf("Genesis app hash cannot be zero")
 	}
