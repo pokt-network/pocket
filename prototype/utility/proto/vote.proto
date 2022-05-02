@@ -1,0 +1,11 @@
+syntax = "proto3";
+package utility;
+option go_package = "/utility/types/";
+
+message Vote {
+  bytes PublicKey = 1;
+  int64 Height = 2;
+  uint32 Round = 3;
+  uint32 Type = 4;
+  bytes BlockHash = 5;
+}
