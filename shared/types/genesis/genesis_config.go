@@ -6,8 +6,9 @@ import (
 	"crypto/ed25519"
 	"encoding/binary"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/types"
 	"math/big"
+
+	"github.com/pokt-network/pocket/shared/types"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 )
@@ -51,8 +52,11 @@ type NewGenesisStateConfigs struct {
 	NumFisherman     uint16 `json:"num_fisherman"`
 	NumServicers     uint16 `json:"num_servicers"`
 
-	SeedStart          uint32 `json:"keys_seed_start"`
+	// HACK(olshansky): We should remove `SeedStart` and `ValidatorUrlFormat` altogther.
+	// They just enabled prototype integration faster but will lead to configuration confusion even
+	// in the short-term.
 	ValidatorUrlFormat string `json:"validator_url_format"`
+	SeedStart          uint32 `json:"keys_seed_start"`
 }
 
 // NewGenesisState IMPORTANT NOTE: Not using numOfValidators param, as Validators are now read from the test_state json file

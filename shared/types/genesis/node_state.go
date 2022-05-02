@@ -76,11 +76,19 @@ func (ps *NodeState) loadStateFromGenesis(cfg *config.Config) {
 		if err != nil {
 			log.Fatalf("Failed to generate genesis: %v", err)
 		}
+
+		var validators []*Validator
+		if genesis.Validators != nil && genesis.GenesisStateConfig.NumValidators == 0 {
+			validators = GetValidators(genesis.Validators)
+		} else {
+			validators = genesisState.Validators
+		}
+
 		*ps = NodeState{
 			GenesisState: genesisState,
 			BlockHeight:  0,
 			AppHash:      genesis.AppHash,
-			ValidatorMap: ValidatorListToMap(genesisState.Validators),
+			ValidatorMap: ValidatorListToMap(validators),
 		}
 	} else {
 		log.Println("Loading state from json file data")
@@ -88,7 +96,7 @@ func (ps *NodeState) loadStateFromGenesis(cfg *config.Config) {
 			GenesisState: nil,
 			BlockHeight:  0,
 			AppHash:      genesis.AppHash,
-			ValidatorMap: ValidatorListToMap(genesis.Validators),
+			ValidatorMap: ValidatorListToMap(GetValidators(genesis.Validators)),
 		}
 	}
 

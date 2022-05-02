@@ -63,7 +63,7 @@ func CommittingBlock(height uint64, numTxs int) string {
 }
 
 func ElectedNewLeader(address string, nodeId NodeId, height, round uint64) string {
-	return fmt.Sprintf("👑 Electied new leader for (%d-%d): %d (%s) 👑", height, round, nodeId, address)
+	return fmt.Sprintf("👑 Elected new leader for (%d-%d): %d (%s) 👑", height, round, nodeId, address)
 }
 
 func ElectedSelfAsNewLeader(address string, nodeId NodeId, height, round uint64) string {

@@ -147,7 +147,8 @@ func (m *p2pModule) handleNetworkMessage(conn net.Conn) {
 		log.Println("Error handling raw data: ", err)
 		return
 	}
-	// There was no error, but we don't need to forward this to the app-specific bus
+	// There was no error, but we don't need to forward this to the app-specific bus.
+	// For example, the message has already been handled by the application.
 	if data == nil {
 		return
 	}
