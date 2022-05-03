@@ -92,11 +92,14 @@ services:
       - "9084:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+  # Uncomment to enable DLV debugging
+  # environment:
+  #   - DEBUG_PORT=7084
 
   db:
     container_name: pocket-db
-    image: postgres:14.1-alpine
     # image: postgis/postgis  # TODO(olshansky): switch image when we start adding support for GeoZones
+    image: postgres:14.1-alpine
     restart: always
     environment:
       - POSTGRES_DB=postgres
@@ -105,6 +108,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
+      - ${PWD}/build/sql:/tmp/scripts
       - db:/var/lib/postgresql/data
 
   pgadmin:
@@ -118,7 +122,6 @@ services:
       PGADMIN_DEFAULT_PASSWORD: pgadmin4
       PGADMIN_LISTEN_ADDRESS: 0.0.0.0
       PGADMIN_LISTEN_PORT: 5050
-      # PGADMIN_ENABLE_TLS: "False"
     volumes:
       - ${PWD}/build/pgadmin/servers.json:/pgadmin4/servers.json
       - ${PWD}/build/pgadmin/pgpass.json:/pgpass

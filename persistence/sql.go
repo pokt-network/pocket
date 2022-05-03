@@ -54,6 +54,8 @@ func (pg *PostgresDB) GetContext() (context.Context, error) {
 }
 
 func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
+	// TODO(drewsky): Rethink how `connectAndInitializeDatabase` should be implemented in small
+	// subcomponents, but this curent implementation is more than sufficient for the time being.
 	ctx := context.TODO()
 	// Connect to the DB
 	db, err := pgx.Connect(context.Background(), postgresUrl)
@@ -67,7 +69,6 @@ func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn,
 	if _, err = db.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, schema)); err != nil {
 		return nil, err
 	}
-	// pgx.MigrateUp(options, "persistence/schema/migrations")
 	if _, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, TableName, TableSchema)); err != nil {
 		return nil, fmt.Errorf("unable to create %s table: %v", TableName, err)
 	}
@@ -75,8 +76,12 @@ func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn,
 		return nil, fmt.Errorf("unable to create %s table: %v", TableName, err)
 	}
 	return db, nil
+	// TODO(olshansky;github.com/pokt-network/pocket/issues/77): Enable proper up and down migrations
+	// pgx.MigrateUp(options, "persistence/schema/migrations")
 }
 
+// TODO(olshansky;github.com/pokt-network/pocket/issues/77): Delete all the `InitializeTables` calls
+// once proper migrations are implemented.
 func InitializeTables(ctx context.Context, db *pgx.Conn) error {
 	if err := InitializeAccountTables(ctx, db); err != nil {
 		return err
@@ -191,6 +196,9 @@ func (p PostgresContext) ClearAllDebug() error {
 		return err
 	}
 	if _, err = tx.Exec(ctx, schema.ClearAllAppChainsQuery()); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, schema.ClearAllGovQuery()); err != nil {
 		return err
 	}
 	return nil

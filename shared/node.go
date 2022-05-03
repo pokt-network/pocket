@@ -30,10 +30,14 @@ func Create(cfg *config.Config) (n *Node, err error) {
 	// TODO(design): initialize the state singleton until we have a proper solution for this.
 	_ = typesGenesis.GetNodeState(cfg)
 
+	// TODO(drewsky): The module is initialized to run background processes during development
+	// to make sure it's part of the node's lifecycle, but is not referenced YET byt the app specific
+	// bus.
 	if _, err := persistence.Create(cfg); err != nil {
 		return nil, err
 	}
-	// TODO (andrew) deprecate pre-persistence
+
+	// TODO(drewsky): deprecate pre-persistence
 	prePersistenceMod, err := pre_persistence.Create(cfg)
 	if err != nil {
 		return nil, err
