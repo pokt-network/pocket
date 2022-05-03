@@ -1,8 +1,6 @@
 package types
 
 import (
-	"net"
-
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
@@ -33,9 +31,7 @@ type NetworkPeer struct {
 
 type TransportLayerConn interface {
 	IsListener() bool
-	Accept() (net.Conn, error)
+	Read() ([]byte, error)
 	Write([]byte) error
-	// io.Reader
-	// Read() ([]byte, error)
 	Close() error
 }

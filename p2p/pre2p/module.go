@@ -5,9 +5,7 @@ package pre2p
 // to be a "real" replacement for now.
 
 import (
-	"io/ioutil"
 	"log"
-	"net"
 
 	"github.com/pokt-network/pocket/p2p/pre2p/raintree"
 	"github.com/pokt-network/pocket/p2p/pre2p/stdnetwork"
@@ -80,12 +78,12 @@ func (m *p2pModule) Start() error {
 
 	go func() {
 		for {
-			conn, err := m.listener.Accept()
+			data, err := m.listener.Read()
 			if err != nil {
-				log.Println("Error accepting connection: ", err)
+				log.Println("Error reading data from connection: ", err)
 				continue
 			}
-			go m.handleNetworkMessage(conn)
+			go m.handleNetworkMessage(data)
 		}
 	}()
 
@@ -131,15 +129,7 @@ func (m *p2pModule) GetAddrBook() typesPre2P.AddrBook {
 	return m.network.GetAddrBook()
 }
 
-func (m *p2pModule) handleNetworkMessage(conn net.Conn) {
-	defer conn.Close()
-
-	dataRaw, err := ioutil.ReadAll(conn)
-	if err != nil {
-		log.Println("Error reading from conn: ", err)
-		return
-	}
-
+func (m *p2pModule) handleNetworkMessage(dataRaw []byte) {
 	data, err := m.network.HandleRawData(dataRaw)
 	if err != nil {
 		log.Println("Error handling raw data: ", err)
