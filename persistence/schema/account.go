@@ -1,30 +1,50 @@
 package schema
 
+import "fmt"
+
 const (
 	AccountTableName   = "account"
 	AccountTableSchema = `(
-			id         UUID PRIMARY KEY,
-			address    TEXT NOT NULL UNIQUE
+			address    TEXT NOT NULL,
+			balance    TEXT NOT NULL,
+			height 	   BIGINT NOT NULL,
+			end_height BIGINT NOT NULL
 		)`
-	AccountMetaTableName   = "account_meta"
-	AccountMetaTableSchema = `(
-			account_id        UUID,
-			height 			  BIGINT,
-			balance           TEXT,
-			constraint account_id_key_fk foreign key (account_id) references account (id)
-		)`
-
 	PoolTableName   = "pool"
 	PoolTableSchema = `(
-			id         UUID PRIMARY KEY,
-			name       TEXT NOT NULL UNIQUE,
-			address    TEXT NOT NULL UNIQUE
-		)`
-	PoolMetaTableName   = "pool_meta"
-	PoolMetaTableSchema = `(
-			pool_id        UUID,
-			height 		   BIGINT,
-			balance        TEXT,
-			constraint pool_id_key_fk foreign key (pool_id) references pool (id)
+			name       TEXT NOT NULL,
+			balance    TEXT NOT NULL,
+			height 	   BIGINT NOT NULL,
+			end_height BIGINT NOT NULL
 		)`
 )
+
+func GetAccountAmountQuery(address string) string {
+	return fmt.Sprintf(`SELECT balance FROM %s WHERE address='%s' AND end_height=%d`,
+		AccountTableName, address, DefaultEndHeight)
+}
+
+func InsertAccountAmountQuery(address, amount string, height int64) string {
+	return fmt.Sprintf(`INSERT INTO %s (address, balance, height, end_height) VALUES ('%s','%s',%d, %d)`,
+		AccountTableName, address, amount, height, DefaultEndHeight)
+}
+
+func NullifyAccountAmountQuery(address string) string {
+	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s' AND end_height=%d`,
+		AccountTableName, DefaultEndHeight, address, DefaultEndHeight)
+}
+
+func GetPoolAmountQuery(name string) string {
+	return fmt.Sprintf(`SELECT balance FROM %s WHERE name='%s' AND end_height=%d`,
+		PoolTableName, name, DefaultEndHeight)
+}
+
+func NullifyPoolAmountQuery(name string) string {
+	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE name='%s' AND end_height=%d`,
+		PoolTableName, DefaultEndHeight, name, DefaultEndHeight)
+}
+
+func InsertPoolAmountQuery(name, amount string, height int64) string {
+	return fmt.Sprintf(`INSERT INTO %s (name, balance, height, end_height) VALUES ('%s', '%s',%d, %d)`,
+		PoolTableName, name, amount, height, DefaultEndHeight)
+}

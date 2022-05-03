@@ -269,7 +269,7 @@ type PersistenceContext interface {
 	GetAppMaxPausedBlocksOwner() ([]byte, error)
 	SetAppMaxPausedBlocksOwner(owner []byte) error
 	GetParamServiceNodeMinimumStakeOwner() ([]byte, error)
-	SetParamServiceNodeMinimumStakeOwner(owner []byte) error
+	SetServiceNodeMinimumStakeOwner(owner []byte) error
 	GetServiceNodeMaxChainsOwner() ([]byte, error)
 	SetMaxServiceNodeChainsOwner(owner []byte) error
 	GetServiceNodeUnstakingBlocksOwner() ([]byte, error)
@@ -288,8 +288,8 @@ type PersistenceContext interface {
 	SetFishermanMinimumPauseBlocksOwner(owner []byte) error
 	GetFishermanMaxPausedBlocksOwner() ([]byte, error)
 	SetFishermanMaxPausedBlocksOwner(owner []byte) error
-	GetParamValidatorMinimumStakeOwner() ([]byte, error)
-	SetParamValidatorMinimumStakeOwner(owner []byte) error
+	GetValidatorMinimumStakeOwner() ([]byte, error)
+	SetValidatorMinimumStakeOwner(owner []byte) error
 	GetValidatorUnstakingBlocksOwner() ([]byte, error)
 	SetValidatorUnstakingBlocksOwner(owner []byte) error
 	GetValidatorMinimumPauseBlocksOwner() ([]byte, error)
