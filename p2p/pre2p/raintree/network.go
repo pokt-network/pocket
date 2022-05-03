@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"net"
 	"time"
 
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
@@ -100,15 +99,7 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return fmt.Errorf("address %s not found in addrBookMap", address.String())
 	}
 
-	client, err := net.DialTCP(typesPre2P.TransportLayerProtocol, nil, peer.ConsensusAddr)
-	if err != nil {
-		log.Println("Error connecting to peer during send: ", err)
-		return err
-	}
-	defer client.Close()
-
-	_, err = client.Write(data)
-	if err != nil {
+	if err := peer.Dialer.Write(data); err != nil {
 		log.Println("Error writing to peer during send: ", err)
 		return err
 	}
