@@ -2,6 +2,7 @@ package pre2p
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net"
 
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
@@ -70,11 +71,22 @@ func (c *tcpConn) IsListener() bool {
 	return c.listener != nil
 }
 
-func (c *tcpConn) Accept() (net.Conn, error) {
+func (c *tcpConn) Read() ([]byte, error) {
 	if !c.IsListener() {
 		return nil, fmt.Errorf("connection is not a listener")
 	}
-	return c.listener.AcceptTCP()
+	conn, err := c.listener.Accept()
+	if err != nil {
+		return nil, fmt.Errorf("error accepting connection: %v", err)
+	}
+	defer conn.Close()
+
+	data, err := ioutil.ReadAll(conn)
+	if err != nil {
+		return nil, fmt.Errorf("error reading from conn: %v", err)
+	}
+
+	return data, nil
 }
 
 func (c *tcpConn) Write(data []byte) error {
@@ -124,12 +136,13 @@ func (c *pipeConn) IsListener() bool {
 	panic("Not implemented")
 }
 
-func (c *pipeConn) Accept() (net.Conn, error) {
+func (c *pipeConn) Read() ([]byte, error) {
 	panic("Not implemented")
 }
 
 func (c *pipeConn) Write(data []byte) error {
-	panic("Not implemented")
+	_, err := c.writeConn.Write(data)
+	return err
 }
 
 func (c *pipeConn) Close() error {
