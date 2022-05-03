@@ -5,7 +5,6 @@ package pre2p
 // to be a "real" replacement for now.
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -28,7 +27,7 @@ var _ modules.P2PModule = &p2pModule{}
 type p2pModule struct {
 	bus modules.Bus
 
-	listener *net.TCPListener
+	listener typesPre2P.TransportLayerConn
 	address  cryptoPocket.Address
 
 	network typesPre2P.Network
@@ -37,14 +36,13 @@ type p2pModule struct {
 func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	log.Println("Creating network module")
 
-	tcpAddr, _ := net.ResolveTCPAddr(typesPre2P.TransportLayerProtocol, fmt.Sprintf(":%d", cfg.Pre2P.ConsensusPort))
-	l, err := net.ListenTCP(typesPre2P.TransportLayerProtocol, tcpAddr)
+	l, err := CreateListener(cfg.Pre2P)
 	if err != nil {
 		return nil, err
 	}
 
 	testState := typesGenesis.GetNodeState(nil)
-	addrBook, err := ValidatorMapToAddrBook(testState.ValidatorMap)
+	addrBook, err := ValidatorMapToAddrBook(cfg.Pre2P, testState.ValidatorMap)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +80,7 @@ func (m *p2pModule) Start() error {
 
 	go func() {
 		for {
-			conn, err := m.listener.AcceptTCP()
+			conn, err := m.listener.Accept()
 			if err != nil {
 				log.Println("Error accepting connection: ", err)
 				continue

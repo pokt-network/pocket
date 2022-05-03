@@ -136,11 +136,6 @@ test_utility_module: # generate_mocks
 test_utility_types: # generate_mocks
 	go test -v ./utility/types/...
 
-.PHONY: test_pre2p
-## Run all go unit tests in the pre2p module
-test_pre2p: # generate_mocks
-	go test ./pre2p/...
-
 .PHONY: test_shared
 ## Run all go unit tests in the shared module
 test_shared: # generate_mocks
@@ -257,6 +252,11 @@ test_p2p_types:
 ## Run all p2p tests
 test_p2p:
 	go test -v -race ./p2p
+
+.PHONY: test_p2p
+## Run all pre2p
+test_pre2p:
+	go test -v -race ./p2p/pre2p
 
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)

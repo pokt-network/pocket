@@ -47,8 +47,9 @@ func main() {
 
 		// Not used - only set to avoid `pre2p.Create()` from crashing
 		Pre2P: &config.Pre2PConfig{
-			ConsensusPort: 9999,
-			UseRainTree:   true,
+			ConsensusPort:  9999,
+			UseRainTree:    true,
+			ConnectionType: config.TCPConnection,
 		},
 	}
 

@@ -25,10 +25,18 @@ type Config struct {
 	Utility        *UtilityConfig        `json:"utility"`
 }
 
+type ConnectionType string
+
+const (
+	TCPConnection  ConnectionType = "tcp"
+	PipeConnection ConnectionType = "pipe"
+)
+
 // TODO(derrandz): delete this once P2P is ready.
 type Pre2PConfig struct {
-	ConsensusPort uint32 `json:"consensus_port"`
-	UseRainTree   bool   `json:"use_raintree"`
+	ConsensusPort  uint32         `json:"consensus_port"`
+	UseRainTree    bool           `json:"use_raintree"`
+	ConnectionType ConnectionType `json:"connection_type"`
 }
 
 type PrePersistenceConfig struct {

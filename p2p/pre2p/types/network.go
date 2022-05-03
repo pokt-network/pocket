@@ -6,10 +6,6 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
-const (
-	TransportLayerProtocol = "tcp4"
-)
-
 // TODO(olshansky): See if we can deprecate one of these structures.
 type AddrBook []*NetworkPeer
 type AddrBookMap map[string]*NetworkPeer
@@ -29,8 +25,17 @@ type Network interface {
 }
 
 type NetworkPeer struct {
-	ConsensusAddr *net.TCPAddr
-	PublicKey     cryptoPocket.PublicKey
-	Address       cryptoPocket.Address
-	ServiceUrl    string // This is only included because it's a more human-friendly differentiator between peers
+	Dialer     TransportLayerConn
+	PublicKey  cryptoPocket.PublicKey
+	Address    cryptoPocket.Address
+	ServiceUrl string // This is only included because it's a more human-friendly differentiator between peers
+}
+
+type TransportLayerConn interface {
+	IsListener() bool
+	Accept() (net.Conn, error)
+	Write([]byte) error
+	// io.Reader
+	// Read() ([]byte, error)
+	Close() error
 }

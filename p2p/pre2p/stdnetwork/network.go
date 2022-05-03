@@ -2,7 +2,6 @@ package stdnetwork
 
 import (
 	"log"
-	"net"
 
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -23,15 +22,7 @@ func NewNetwork(addrBook typesPre2P.AddrBook) (n typesPre2P.Network) {
 // TODO(olshansky): How do we avoid self-broadcasts given that `AddrBook` may contain self in the current pre2p implementation?
 func (n *network) NetworkBroadcast(data []byte) error {
 	for _, peer := range n.GetAddrBook() {
-		client, err := net.DialTCP(typesPre2P.TransportLayerProtocol, nil, peer.ConsensusAddr)
-		if err != nil {
-			log.Println("Error connecting to one of the peers during broadcast: ", err)
-			continue
-		}
-		defer client.Close()
-
-		_, err = client.Write(data)
-		if err != nil {
+		if err := peer.Dialer.Write(data); err != nil {
 			log.Println("Error writing to one of the peers during broadcast: ", err)
 			continue
 		}
@@ -46,20 +37,12 @@ func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) error {
 			continue
 		}
 
-		client, err := net.DialTCP(typesPre2P.TransportLayerProtocol, nil, peer.ConsensusAddr)
-		if err != nil {
-			log.Println("Error connecting to peer during send: ", err)
-			return err
-		}
-		defer client.Close()
-
-		_, err = client.Write(data)
-		if err != nil {
+		if err := peer.Dialer.Write(data); err != nil {
 			log.Println("Error writing to peer during send: ", err)
 			return err
 		}
 
-		break // During a send, only one peer needs to receive the message
+		break
 	}
 
 	return nil

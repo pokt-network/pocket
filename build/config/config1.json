@@ -4,7 +4,8 @@
   "private_key": "2e00000000000000000000000000000000000000000000000000000000000000264a0707979e0d6691f74b055429b5f318d39c2883bb509310b67424252e9ef2",
   "pre2p": {
     "consensus_port": 8080,
-    "use_raintree": true
+    "use_raintree": true,
+    "connection_type": "tcp"
   },
   "p2p": {
     "protocol": "tcp",
