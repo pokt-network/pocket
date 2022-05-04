@@ -27,6 +27,7 @@ const (
 	serviceUrlFormat       = "val_%d"
 )
 
+// REFACTOR(olshansky): look into refactoring this to use dependency injection with `uber-go/dig` or `uber-go/fx`
 func TestRainTree(t *testing.T) {
 	// Network configurations
 	numValidators := 4
@@ -55,7 +56,6 @@ func TestRainTree(t *testing.T) {
 	}
 
 	// Module injection
-	// TODO(olshansky): look into refactoring this to use dependency injection with `uber-go/dig` or `uber-go/fx`
 	p2pModules := prepareP2PModules(t, configs)
 	for validatorId, mod := range p2pModules {
 		mod.listener = connMocks[validatorId]
@@ -66,9 +66,13 @@ func TestRainTree(t *testing.T) {
 		mod.Start()
 		defer mod.Stop()
 	}
+
+	// Trigger originator message
 	p := &anypb.Any{}
 	p2pMod := p2pModules[originatorNode]
 	p2pMod.Broadcast(p, types.PocketTopic_DEBUG_TOPIC)
+
+	// Wait for completion
 	messageHandeledWaitGroup.Wait()
 }
 
@@ -91,13 +95,13 @@ func prepareConnMock(t *testing.T, valId string, expectedNumReads, expectedNumWr
 		// time.Sleep(10 * time.Second)
 		testChannel <- data
 		return nil
-	}).AnyTimes() //Times(int(expectedNumWrites))
+	}).Times(int(expectedNumWrites))
 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
 		// fmt.Println(valId, "reading")
 		// time.Sleep(10 * time.Second)
 		data := <-testChannel
 		return data, nil
-	}).AnyTimes() //Times(int(expectedNumReads))
+	}).Times(int(expectedNumReads))
 	connMock.EXPECT().Close().Return(nil).Times(1)
 	return connMock
 }
