@@ -116,9 +116,8 @@ func (n *rainTreeNetwork) HandleRawData(data []byte) ([]byte, error) {
 	networkMessage := types.PocketEvent{}
 	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
 		log.Println("Error decoding network message: ", err)
-		// return
+		return nil, nil
 	}
-
 	// Message propagation if level is non-zero
 	if rainTreeMsg.Level > 0 {
 		n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce)
