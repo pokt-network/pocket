@@ -68,12 +68,20 @@ func (n *rainTreeNetwork) networkBroadcastInternal(data []byte, level uint32, no
 	}
 
 	if addr1, ok := n.getFirstTargetAddr(level); ok {
-		n.networkSendInternal(bz, addr1)
+		if err := n.networkSendInternal(bz, addr1); err != nil {
+			log.Println("Error sending to peer during broadcast: ", err)
+		}
 	}
+
 	if addr2, ok := n.getSecondTargetAddr(level); ok {
-		n.networkSendInternal(bz, addr2)
+		if err := n.networkSendInternal(bz, addr2); err != nil {
+			log.Println("Error sending to peer during broadcast: ", err)
+		}
 	}
-	n.networkSendInternal(bz, n.addr) // Demote
+
+	if err := n.demote(msg); err != nil {
+		log.Println("Error demoting self during RainTree message propagation: ", err)
+	}
 
 	return nil
 }
@@ -94,6 +102,11 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 }
 
 func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.Address) error {
+	if n.addr.Equals(address) {
+		log.Println("[WARN] Trying to send a message to self.")
+		return nil
+	}
+
 	peer, ok := n.addrBookMap[address.String()]
 	if !ok {
 		return fmt.Errorf("address %s not found in addrBookMap", address.String())
@@ -107,6 +120,15 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 	return nil
 }
 
+func (n *rainTreeNetwork) demote(rainTreeMsg *typesPre2P.RainTreeMessage) error {
+	if rainTreeMsg.Level > 0 {
+		if err := n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (n *rainTreeNetwork) HandleRawData(data []byte) ([]byte, error) {
 	var rainTreeMsg typesPre2P.RainTreeMessage
 	if err := proto.Unmarshal(data, &rainTreeMsg); err != nil {
@@ -116,11 +138,14 @@ func (n *rainTreeNetwork) HandleRawData(data []byte) ([]byte, error) {
 	networkMessage := types.PocketEvent{}
 	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
 		log.Println("Error decoding network message: ", err)
-		return nil, nil
+		return nil, err
 	}
+
 	// Message propagation if level is non-zero
 	if rainTreeMsg.Level > 0 {
-		n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce)
+		if err := n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
+			return nil, err
+		}
 	}
 
 	b := make([]byte, 8)
