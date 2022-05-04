@@ -13,7 +13,7 @@ import (
 
 type Config struct {
 	RootDir string `json:"root_dir"`
-	Genesis string `json:"genesis"`
+	Genesis string `json:"genesis"` // FIXME(olshansky): we should be able to pass the struct in here.
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 

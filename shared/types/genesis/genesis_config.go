@@ -52,7 +52,7 @@ type NewGenesisStateConfigs struct {
 	NumFisherman     uint16 `json:"num_fisherman"`
 	NumServicers     uint16 `json:"num_servicers"`
 
-	// HACK(olshansky): We should remove `SeedStart` and `ValidatorUrlFormat` altogther.
+	// HACK(olshansky): We should remove `SeedStart` and `ValidatorUrlFormat` altogether.
 	// They just enabled prototype integration faster but will lead to configuration confusion even
 	// in the short-term.
 	ValidatorUrlFormat string `json:"validator_url_format"`

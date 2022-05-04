@@ -119,7 +119,13 @@ mockgen:
 	mockgen --source=${modules_dir}/p2p_module.go -destination=${modules_dir}/mocks/p2p_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/bus_module.go -destination=${modules_dir}/mocks/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	echo "Mocks generated in ${modules_dir}/mocks"
+
+	$(eval p2p_types_dir = "p2p/pre2p/types")
+	mockgen --source=${p2p_types_dir}/network.go -destination=${p2p_types_dir}/mocks/network_mock.go
+	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
+
 
 .PHONY: test_all
 ## Run all go unit tests
@@ -256,7 +262,7 @@ test_p2p:
 .PHONY: test_p2p
 ## Run all pre2p
 test_pre2p:
-	go test -v ./p2p/pre2p
+	go test -v -count=1 ./p2p/pre2p
 # go test -v -race ./p2p/pre2p
 
 .PHONY: todo_list

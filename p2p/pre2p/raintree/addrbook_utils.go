@@ -41,7 +41,6 @@ func (n *rainTreeNetwork) handleAddrBookUpdates() error {
 	} else {
 		return fmt.Errorf("self address not found in addrBook so this client can send messages but does not propagate them")
 	}
-
 	return nil
 }
 
@@ -81,7 +80,9 @@ func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level uint32) int {
 
 func (n *rainTreeNetwork) getMaxAddrBookLevels() uint32 {
 	addrBookSize := float64(len(n.addrBook))
+	// TODO(olshansky): Why do we need the *100 here?
 	return uint32(math.Ceil(logBase(addrBookSize)*100) / 100)
+	// return uint32(math.Ceil(logBase(addrBookSize)))
 }
 
 func logBase(x float64) float64 {

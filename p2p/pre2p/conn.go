@@ -115,6 +115,8 @@ func (c *tcpConn) Close() error {
 	return nil
 }
 
+// var _ typesPre2P.TransportLayerConn = &chanConn{}
+
 var _ typesPre2P.TransportLayerConn = &pipeConn{}
 
 type pipeConn struct {
