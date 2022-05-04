@@ -34,15 +34,21 @@ func TestRainTree(t *testing.T) {
 	configs := createConfigs(t, numValidators)
 
 	// Test configurations
-	originatorNode := validatorId(0)
+	//
+	// 	                     val_1
+	// 	┌─────────┬────────────┴───────────────┐
+	// val_1     val_3                        val_2
+	// 			 └───────┐             ┌───────┴───────┐
+	// 				   val_4         val_3           val_2
+	originatorNode := validatorId(1)
 	var expectedCalls = map[string]struct {
 		numReads  uint16
 		numWrites uint16
 	}{
-		validatorId(0): {4, 3}, // originator
-		validatorId(1): {4, 3},
-		validatorId(2): {5, 4},
-		validatorId(3): {3, 2},
+		validatorId(1): {4, 3}, // originator
+		validatorId(2): {4, 3}, //
+		validatorId(3): {5, 4}, //
+		validatorId(4): {3, 2}, //
 	}
 	var messageHandeledWaitGroup sync.WaitGroup
 	messageHandeledWaitGroup.Add(numValidators)
@@ -81,11 +87,15 @@ func prepareBusMock(t *testing.T, wg *sync.WaitGroup) *modulesMock.MockBus {
 	busMock := modulesMock.NewMockBus(ctrl)
 	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(func(e *types.PocketEvent) {
 		wg.Done()
-		fmt.Println("Publishing event to bus")
+		fmt.Println("App specific bus mock publishing event to bus")
 	}).Times(1)
 	return busMock
 }
 
+// The reason with use `MaxTimes` instead of `Times` is because we could have gotten full coverage
+// while a message was still being sent that would have later been dropped due to de-duplication. There
+// is a race condition here, but it is okay because our goal is max coverage with an upper limit
+// on the number of messages propagated.
 func prepareConnMock(t *testing.T, valId string, expectedNumReads, expectedNumWrites uint16) typesPre2P.TransportLayerConn {
 	testChannel := make(chan []byte, 10000)
 	ctrl := gomock.NewController(t)
@@ -95,13 +105,13 @@ func prepareConnMock(t *testing.T, valId string, expectedNumReads, expectedNumWr
 		// time.Sleep(10 * time.Second)
 		testChannel <- data
 		return nil
-	}).Times(int(expectedNumWrites))
+	}).MaxTimes(int(expectedNumWrites))
 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
 		// fmt.Println(valId, "reading")
 		// time.Sleep(10 * time.Second)
 		data := <-testChannel
 		return data, nil
-	}).Times(int(expectedNumReads))
+	}).MaxTimes(int(expectedNumReads))
 	connMock.EXPECT().Close().Return(nil).Times(1)
 	return connMock
 }
@@ -112,7 +122,7 @@ func prepareP2PModules(t *testing.T, configs []*config.Config) (p2pModules map[s
 		_ = typesGenesis.GetNodeState(config)
 		p2pMod, err := Create(config)
 		require.NoError(t, err)
-		p2pModules[validatorId(i)] = p2pMod.(*p2pModule)
+		p2pModules[validatorId(i+1)] = p2pMod.(*p2pModule)
 	}
 	return
 }
@@ -144,7 +154,7 @@ func createConfigs(t *testing.T, numValidators int) (configs []*config.Config) {
 }
 
 func validatorId(i int) string {
-	return fmt.Sprintf(serviceUrlFormat, i+1)
+	return fmt.Sprintf(serviceUrlFormat, i)
 }
 
 func generateKeys(t *testing.T, numValidators int) []cryptoPocket.Ed25519PrivateKey {
@@ -170,13 +180,12 @@ func genesisJson(numVlidators int, validatorConfigs string) string {
 			"num_applications": 0,
 			"num_fisherman": 0,
 			"num_servicers": 0,
-			"validator_url_format": "%s",
 			"keys_seed_start": %d
 		},
 		"genesis_time": "2022-01-19T00:00:00.000000Z",
 		"app_hash": "genesis_block_or_state_hash",
 		"validators": [%s]
-	}`, numVlidators, serviceUrlFormat, genesisConfigSeedStart, validatorConfigs)
+	}`, numVlidators, genesisConfigSeedStart, validatorConfigs)
 }
 
 func genesisValidatorConfig(keys []cryptoPocket.Ed25519PrivateKey) string {
@@ -193,7 +202,7 @@ func genesisValidatorConfig(keys []cryptoPocket.Ed25519PrivateKey) string {
 			"address": "%s",
 			"output": "%s",
 			"public_key": "%s"
-		}`, validatorId(i), addr, addr, key.PublicKey().String()))
+		}`, validatorId(i+1), addr, addr, key.PublicKey().String()))
 	}
 	return s.String()
 }
