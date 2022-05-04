@@ -64,8 +64,39 @@ client_connect:
 
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-compose_and_watch:
+compose_and_watch: db_start
 	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+
+.PHONY: db_start
+## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
+db_start:
+	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d db pgadmin
+
+.PHONY: db_cli
+## Open a CLI to the local containerized postgres instance
+db_cli:
+	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
+	docker exec -it pocket-db bash -c "psql -U postgres"
+
+.PHONY: db_drop
+## Drop all schemas used for LocalNet development matching `node%`
+db_drop:
+	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/drop_all_schemas.sql"
+
+.PHONY: db_bench_init
+## Initialize pgbench on local postgres - needs to be called once after container is created.
+db_bench_init:
+	docker exec -it pocket-db bash -c "pgbench -i -U postgres -d postgres"
+
+.PHONY: db_bench
+## Run a local benchmark against the local postgres instance - TODO(olshansky): visualize results
+db_bench:
+	docker exec -it pocket-db bash -c "pgbench -U postgres -d postgres"
+
+.PHONY: db_admin
+## Helper to access to postgres admin GUI interface
+db_admin:
+	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
 
 .PHONY: compose_and_watch
 ## Kill all containers started by the docker-compose file
