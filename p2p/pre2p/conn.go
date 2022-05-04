@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"sync"
 
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	"github.com/pokt-network/pocket/shared/config"
@@ -117,40 +118,76 @@ func (c *tcpConn) Close() error {
 var _ typesPre2P.TransportLayerConn = &pipeConn{}
 
 type pipeConn struct {
-	readConn  net.Conn
-	writeConn net.Conn
-	addr      *string
+	readLock   *sync.Mutex
+	writeLock  *sync.Mutex
+	readConns  []net.Conn
+	writeConns []net.Conn
+	destAddr   *string
 }
 
 func createPipeListener(cfg *config.Pre2PConfig) (typesPre2P.TransportLayerConn, error) {
 	r, w := net.Pipe()
-	return &pipeConn{r, w, nil}, nil
+	return &pipeConn{
+		readLock:   &sync.Mutex{},
+		writeLock:  &sync.Mutex{},
+		readConns:  []net.Conn{r},
+		writeConns: []net.Conn{w},
+	}, nil
 }
 
-func createPipeDialer(cfg *config.Pre2PConfig, url string) (typesPre2P.TransportLayerConn, error) {
+func createPipeDialer(cfg *config.Pre2PConfig, dest string) (typesPre2P.TransportLayerConn, error) {
 	r, w := net.Pipe()
-	return &pipeConn{r, w, &url}, nil
+	return &pipeConn{
+		readLock:   &sync.Mutex{},
+		writeLock:  &sync.Mutex{},
+		readConns:  []net.Conn{r},
+		writeConns: []net.Conn{w},
+		destAddr:   &dest,
+	}, nil
 }
 
 func (c *pipeConn) IsListener() bool {
-	panic("Not implemented")
+	return c.destAddr != nil
 }
 
 func (c *pipeConn) Read() ([]byte, error) {
-	panic("Not implemented")
+	c.readLock.Lock()
+	defer c.readLock.Unlock()
+
+	reader, readConns := c.readConns[0], c.readConns[1:]
+	c.readConns = readConns
+
+	data, err := ioutil.ReadAll(reader)
+	return data, err
 }
 
 func (c *pipeConn) Write(data []byte) error {
-	_, err := c.writeConn.Write(data)
-	return err
+	c.writeLock.Lock()
+	defer c.writeLock.Unlock()
+
+	writer, writeConns := c.writeConns[0], c.writeConns[1:]
+	c.writeConns = writeConns
+
+	_, err := writer.Write(data)
+	if err != nil {
+		return err
+	}
+	writer.Close()
+	return nil
 }
 
 func (c *pipeConn) Close() error {
-	if err := c.writeConn.Close(); err != nil {
-		return err
+	for _, conn := range c.readConns {
+		if err := conn.Close(); err != nil {
+			return err
+		}
 	}
-	if err := c.readConn.Close(); err != nil {
-		return err
+
+	for _, conn := range c.writeConns {
+		if err := conn.Close(); err != nil {
+			return err
+		}
 	}
+
 	return nil
 }

@@ -29,7 +29,7 @@ type ConnectionType string
 
 const (
 	TCPConnection  ConnectionType = "tcp"
-	PipeConnection ConnectionType = "pipe"
+	PipeConnection ConnectionType = "pipe" // Only used for testing
 )
 
 // TODO(derrandz): delete this once P2P is ready.

@@ -256,7 +256,8 @@ test_p2p:
 .PHONY: test_p2p
 ## Run all pre2p
 test_pre2p:
-	go test -v -race ./p2p/pre2p
+	go test -v ./p2p/pre2p
+# go test -v -race ./p2p/pre2p
 
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)
