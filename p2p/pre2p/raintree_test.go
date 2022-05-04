@@ -27,31 +27,87 @@ const (
 	serviceUrlFormat       = "val_%d"
 )
 
+type TestRainTreeCommConfig map[string]struct {
+	numReads  uint16
+	numWrites uint16
+}
+
 // REFACTOR(olshansky): look into refactoring this to use dependency injection with `uber-go/dig` or `uber-go/fx`
-func TestRainTree(t *testing.T) {
+func TestRainTreeSmall(t *testing.T) {
 	// Network configurations
 	numValidators := 4
 	configs := createConfigs(t, numValidators)
 
 	// Test configurations
-	//
-	// 	                     val_1
-	// 	┌─────────┬────────────┴───────────────┐
-	// val_1     val_3                        val_2
-	// 			 └───────┐             ┌───────┴───────┐
-	// 				   val_4         val_3           val_2
+	// 	                 val_1
+	// 	   ┌───────────────┴────┬─────────────────┐
+	//   val_2                val_1             val_3
+	//     └───────┐            └───────┐         └───────┐
+	// 		     val_3                val_2             val_4
 	originatorNode := validatorId(1)
-	var expectedCalls = map[string]struct {
-		numReads  uint16
-		numWrites uint16
-	}{
-		validatorId(1): {4, 3}, // originator
-		validatorId(2): {4, 3}, //
-		validatorId(3): {5, 4}, //
-		validatorId(4): {3, 2}, //
+	var expectedCalls = TestRainTreeCommConfig{
+		validatorId(1): {0, 2}, // originator
+		validatorId(2): {2, 2}, //
+		validatorId(3): {2, 2}, //
+		validatorId(4): {1, 1}, //
 	}
 	var messageHandeledWaitGroup sync.WaitGroup
-	messageHandeledWaitGroup.Add(numValidators)
+	messageHandeledWaitGroup.Add(numValidators - 1) // -1 because the originator node implicitly handles the message
+
+	// Network initialization
+	connMocks := make(map[string]typesPre2P.TransportLayerConn)
+	busMocks := make(map[string]modules.Bus)
+	for valId, expectedCall := range expectedCalls {
+		connMocks[valId] = prepareConnMock(t, valId, expectedCall.numReads, expectedCall.numWrites)
+		busMocks[valId] = prepareBusMock(t, &messageHandeledWaitGroup)
+	}
+
+	// Module injection
+	p2pModules := prepareP2PModules(t, configs)
+	for validatorId, mod := range p2pModules {
+		mod.listener = connMocks[validatorId]
+		mod.SetBus(busMocks[validatorId])
+		for _, peer := range mod.network.GetAddrBook() {
+			peer.Dialer = connMocks[peer.ServiceUrl]
+		}
+		mod.Start()
+		defer mod.Stop()
+	}
+
+	// Trigger originator message
+	p := &anypb.Any{}
+	p2pMod := p2pModules[originatorNode]
+	p2pMod.Broadcast(p, types.PocketTopic_DEBUG_TOPIC)
+
+	// Wait for completion
+	messageHandeledWaitGroup.Wait()
+}
+
+func testRainTreeLarge(t *testing.T) {
+	// Network configurations
+	numValidators := 9
+	configs := createConfigs(t, numValidators)
+
+	// Test configurations
+	// 	                       val_1
+	// 	         ┌───────────────┴────────────┬────────────────────────────────┐
+	//         val_1                        val_7                            val_4
+	//   ┌───────┴───────┐            ┌───────┴────┬─────────┐         ┌───────┴────┬─────────┐
+	// val_3           val_5        val_9        val_7     val_2     val_6        val_4     val_8
+	originatorNode := validatorId(1)
+	var expectedCalls = TestRainTreeCommConfig{
+		validatorId(1): {20, 20}, // originator
+		validatorId(2): {20, 20}, //
+		validatorId(3): {20, 20}, //
+		validatorId(4): {20, 20}, //
+		validatorId(5): {20, 20}, //
+		validatorId(6): {20, 20}, //
+		validatorId(7): {20, 20}, //
+		validatorId(8): {20, 20}, //
+		validatorId(9): {20, 20}, //
+	}
+	var messageHandeledWaitGroup sync.WaitGroup
+	messageHandeledWaitGroup.Add(numValidators) // -1 because the originator node implicitly handles the message
 
 	// Network initialization
 	connMocks := make(map[string]typesPre2P.TransportLayerConn)
@@ -88,7 +144,7 @@ func prepareBusMock(t *testing.T, wg *sync.WaitGroup) *modulesMock.MockBus {
 	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(func(e *types.PocketEvent) {
 		wg.Done()
 		fmt.Println("App specific bus mock publishing event to bus")
-	}).Times(1)
+	}).MaxTimes(1) // `MaxTimes` rather than `Times` because originator node implicitly handles the message
 	return busMock
 }
 
@@ -100,18 +156,14 @@ func prepareConnMock(t *testing.T, valId string, expectedNumReads, expectedNumWr
 	testChannel := make(chan []byte, 10000)
 	ctrl := gomock.NewController(t)
 	connMock := mocksPre2P.NewMockTransportLayerConn(ctrl)
+	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
+		data := <-testChannel
+		return data, nil
+	}).MaxTimes(int(expectedNumReads + 1)) // INVESTIGATE(olshansky): The +1 is necessary because there is one extra read of empty data by every channel.
 	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) error {
-		// fmt.Println(valId, "writing")
-		// time.Sleep(10 * time.Second)
 		testChannel <- data
 		return nil
 	}).MaxTimes(int(expectedNumWrites))
-	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
-		// fmt.Println(valId, "reading")
-		// time.Sleep(10 * time.Second)
-		data := <-testChannel
-		return data, nil
-	}).MaxTimes(int(expectedNumReads))
 	connMock.EXPECT().Close().Return(nil).Times(1)
 	return connMock
 }

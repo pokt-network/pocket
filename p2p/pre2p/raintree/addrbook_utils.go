@@ -45,19 +45,26 @@ func (n *rainTreeNetwork) handleAddrBookUpdates() error {
 }
 
 func (n *rainTreeNetwork) getFirstTargetAddr(level uint32) (cryptoPocket.Address, bool) {
-	l := n.getAddrBookLengthAtHeight(level)
-	i := int(firstMsgTargetPercentage * float64(l))
-	addrStr := n.addrList[i]
-	log.Printf("[DEBUG] First target: %s", n.debugMsgTargetString(l, i))
-	return n.addrBookMap[addrStr].Address, true
+	return n.getTarget(level, firstMsgTargetPercentage)
 }
 
 func (n *rainTreeNetwork) getSecondTargetAddr(level uint32) (cryptoPocket.Address, bool) {
+	return n.getTarget(level, secondMsgTargetPercentage)
+}
+
+func (n *rainTreeNetwork) getTarget(level uint32, targetPercentage float64) (cryptoPocket.Address, bool) {
 	l := n.getAddrBookLengthAtHeight(level)
-	i := int(secondMsgTargetPercentage * float64(l))
+	i := int(targetPercentage * float64(l))
+	// Demote are handeled separately
+	if i == 0 {
+		return nil, false
+	}
 	addrStr := n.addrList[i]
-	log.Printf("[DEBUG] Second target: %s", n.debugMsgTargetString(l, i))
-	return n.addrBookMap[addrStr].Address, true
+	if addr, ok := n.addrBookMap[addrStr]; ok {
+		log.Printf("[DEBUG] Target (%0.2f): %s", targetPercentage, n.debugMsgTargetString(l, i))
+		return addr.Address, true
+	}
+	return nil, false
 }
 
 func (n *rainTreeNetwork) getSelfIndexInAddrBook() (int, bool) {
@@ -75,7 +82,8 @@ func (n *rainTreeNetwork) getSelfIndexInAddrBook() (int, bool) {
 // current height.
 func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level uint32) int {
 	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(n.maxNumLevels-level))
-	return int(math.Ceil(float64(len(n.addrList)) * shrinkageCoefficient))
+	return int(float64(len(n.addrList)) * shrinkageCoefficient)
+	// return int(math.Ceil(float64(len(n.addrList)) * shrinkageCoefficient))
 }
 
 func (n *rainTreeNetwork) getMaxAddrBookLevels() uint32 {
