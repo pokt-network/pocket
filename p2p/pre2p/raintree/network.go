@@ -57,6 +57,11 @@ func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
 }
 
 func (n *rainTreeNetwork) networkBroadcastInternal(data []byte, level uint32, nonce uint64) error {
+	if level == 0 {
+		// log.Println("[NOOP] Internal broadcast at height level 0.")
+		return nil
+	}
+
 	msg := &typesPre2P.RainTreeMessage{
 		Level: level,
 		Data:  data,
@@ -103,7 +108,7 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 
 func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.Address) error {
 	if n.addr.Equals(address) {
-		log.Println("[WARN] Trying to send a message to self.")
+		log.Println("[NOOP] Trying to send a message to self.")
 		return nil
 	}
 
