@@ -11,8 +11,7 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
-// Refer to the specification for a formal description and proof of how the constants
-// and math functions here were determined.
+// Refer to the P2P specification for a formal description and proof of how the constants are selected
 const (
 	firstMsgTargetPercentage  = float64(1) / float64(3)
 	secondMsgTargetPercentage = float64(2) / float64(3)
@@ -21,9 +20,9 @@ const (
 	floatPrecision            = float64(0.001)
 )
 
-// Whenever `addrBook` changes, we also need to update `addrBookMap` and `addrList`.
-// TODO(olshansky): This is a very naive approach for now that recomputes everything every time that we can optimize later
+// Whenever `addrBook` changes, we also need to update `addrBookMap` and `addrList`
 func (n *rainTreeNetwork) handleAddrBookUpdates() error {
+	// OPTIMIZE(olshansky): This is a very naive approach for now that recomputes everything every time that we can optimize later
 	n.addrBookMap = make(map[string]*typesPre2P.NetworkPeer, len(n.addrBook))
 	n.addrList = make([]string, len(n.addrBook))
 	for i, peer := range n.addrBook {
@@ -35,14 +34,23 @@ func (n *rainTreeNetwork) handleAddrBookUpdates() error {
 
 	sort.Strings(n.addrList)
 	if i, ok := n.getSelfIndexInAddrBook(); ok {
-		// We sorted the list lexicographically above, but we reformat it here so
-		// the address of this node is first in the list to make RainTree propagation
-		// easier to compute and interpret.
+		// The list is sorted lexicographically above, but is reformatted below so this addr of this node
+		// is always the first in the list. This makes RainTree propagation easier to compute and interpret.
 		n.addrList = append(n.addrList[i:len(n.addrList)], n.addrList[0:i]...)
 	} else {
-		return fmt.Errorf("self address not found for %s in addrBook so this client can send messages but does not propagate them", n.addr)
+		return fmt.Errorf("self address not found for %s in addrBook so this client can send messages but does not propagate them", n.selfAddr)
 	}
 	return nil
+}
+
+func (n *rainTreeNetwork) getSelfIndexInAddrBook() (int, bool) {
+	addrString := n.selfAddr.String()
+	for i, addr := range n.addrList {
+		if addr == addrString {
+			return i, true
+		}
+	}
+	return -1, false
 }
 
 func (n *rainTreeNetwork) getFirstTargetAddr(level uint32) (cryptoPocket.Address, bool) {
@@ -56,33 +64,26 @@ func (n *rainTreeNetwork) getSecondTargetAddr(level uint32) (cryptoPocket.Addres
 func (n *rainTreeNetwork) getTarget(level uint32, targetPercentage float64) (cryptoPocket.Address, bool) {
 	l := n.getAddrBookLengthAtHeight(level)
 	i := int(targetPercentage * float64(l))
-	// Demote are handeled separately
+
+	// Demotes are handeled separately
 	if i == 0 {
 		return nil, false
 	}
+
 	addrStr := n.addrList[i]
 	if addr, ok := n.addrBookMap[addrStr]; ok {
+		// IMPROVE(olshansky): Consolidate so the debug print contains all (i.e. both) targets in one log line
 		log.Printf("[DEBUG] Target (%0.2f) at height (%d): %s", targetPercentage, level, n.debugMsgTargetString(l, i))
 		return addr.Address, true
 	}
 	return nil, false
 }
 
-func (n *rainTreeNetwork) getSelfIndexInAddrBook() (int, bool) {
-	addrString := n.addr.String()
-	for i, addr := range n.addrList {
-		if addr == addrString {
-			return i, true
-		}
-	}
-	return -1, false
-}
-
 func (n *rainTreeNetwork) debugMsgTargetString(len, idx int) string {
 	s := strings.Builder{}
 	s.WriteString("[")
 	serviceUrl := n.addrBookMap[n.addrList[0]].ServiceUrl
-	if n.addrList[0] == n.addr.String() {
+	if n.addrList[0] == n.selfAddr.String() {
 		s.WriteString(fmt.Sprintf(" (%s) ", serviceUrl))
 	} else {
 		s.WriteString(fmt.Sprintf("(self) %s ", serviceUrl))
@@ -100,8 +101,9 @@ func (n *rainTreeNetwork) debugMsgTargetString(len, idx int) string {
 	return s.String()
 }
 
-// TODO(drewsky): Could we hit an issue where we are propagating a message from an older height
-// (e.g. before the addr book was updated), but we're using `maxNumLevels` associated with the
+// DISCUSS(drewsky): Need to integrate with persistence so we are storing this on a per height basis.
+// We hit an issue where we are propagating a message from an older height (e.g. before the addr book
+// was updated), but we're using `maxNumLevels` associated with the number of validators at the
 // current height.
 func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level uint32) int {
 	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(n.maxNumLevels-level))
