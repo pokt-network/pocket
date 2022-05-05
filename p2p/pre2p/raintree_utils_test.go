@@ -94,7 +94,7 @@ func createConfigs(t *testing.T, numValidators int) (configs []*config.Config) {
 			Pre2P: &config.Pre2PConfig{
 				ConsensusPort:  8080,
 				UseRainTree:    true,
-				ConnectionType: "pipe",
+				ConnectionType: config.EmptyConnection,
 			},
 			P2P:            &config.P2PConfig{},
 			Consensus:      &config.ConsensusConfig{},
