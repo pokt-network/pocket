@@ -9,7 +9,6 @@ import (
 	"time"
 
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
-	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 
@@ -19,7 +18,7 @@ import (
 var _ typesPre2P.Network = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
-	addr     cryptoPocket.Address
+	selfAddr cryptoPocket.Address
 	addrBook typesPre2P.AddrBook
 
 	// TODO(olshansky): still thinking through these structures
@@ -27,26 +26,28 @@ type rainTreeNetwork struct {
 	addrList     []string
 	maxNumLevels uint32
 
-	// TODO(drewsky): Discuss if there should be an internal one to P2P
+	// DISCUSS(drewsky): What should we use for de-duping messages within P2P?
 	mempool types.Mempool
 }
 
-func NewRainTreeNetwork(selfAddr cryptoPocket.Address, addrBook typesPre2P.AddrBook) typesPre2P.Network {
+func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook) typesPre2P.Network {
 	n := &rainTreeNetwork{
-		addr:     selfAddr,
+		selfAddr: addr,
 		addrBook: addrBook,
 
-		// These fields are initialized by calling `handleAddrBookUpdates` below.
+		// This subset of fields are initialized by `handleAddrBookUpdates` below
 		addrBookMap:  make(typesPre2P.AddrBookMap),
 		addrList:     make([]string, 0),
 		maxNumLevels: 0,
 
-		mempool: types.NewMempool(1000000, 1000), // TODO: Don't hardcode these
+		// TODO: Mempool size should be configurable
+		mempool: types.NewMempool(1000000, 1000),
 	}
+
 	if err := n.handleAddrBookUpdates(); err != nil {
-		// TODO(olshansky): this is currently not creating a fatal error just to add support
-		// for the client, so think of how this should work.
-		log.Println("Error initializing rainTreeNetwork: ", err)
+		// DISCUSS(drewsky): if this errors, the node could still function but not participate in
+		// message propagation. Should we return an error or just log?
+		log.Println("[ERROR] Error initializing rainTreeNetwork: ", err)
 	}
 
 	return typesPre2P.Network(n)
@@ -57,8 +58,8 @@ func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
 }
 
 func (n *rainTreeNetwork) networkBroadcastInternal(data []byte, level uint32, nonce uint64) error {
+	// NOOP: Internal broadcast at height level 0
 	if level == 0 {
-		// log.Println("[NOOP] Internal broadcast at height level 0.")
 		return nil
 	}
 
@@ -91,6 +92,15 @@ func (n *rainTreeNetwork) networkBroadcastInternal(data []byte, level uint32, no
 	return nil
 }
 
+func (n *rainTreeNetwork) demote(rainTreeMsg *typesPre2P.RainTreeMessage) error {
+	if rainTreeMsg.Level > 0 {
+		if err := n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address) error {
 	msg := &typesPre2P.RainTreeMessage{
 		Level: 0, // Direct send that does not need to be propagated
@@ -107,8 +117,8 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 }
 
 func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.Address) error {
-	if n.addr.Equals(address) {
-		log.Println("[NOOP] Trying to send a message to self.")
+	if n.selfAddr.Equals(address) {
+		// NOOP: Trying to send a message to self
 		return nil
 	}
 
@@ -125,15 +135,6 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 	return nil
 }
 
-func (n *rainTreeNetwork) demote(rainTreeMsg *typesPre2P.RainTreeMessage) error {
-	if rainTreeMsg.Level > 0 {
-		if err := n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	var rainTreeMsg typesPre2P.RainTreeMessage
 	if err := proto.Unmarshal(data, &rainTreeMsg); err != nil {
@@ -146,7 +147,6 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	// Message propagation if level is non-zero
 	if rainTreeMsg.Level > 0 {
 		if err := n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return nil, err
@@ -155,10 +155,9 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, uint64(rainTreeMsg.Nonce))
-
-	// Don't process the transaction again - only propagate
-	hash := crypto.SHA3Hash(b)
+	hash := cryptoPocket.SHA3Hash(b)
 	hashString := hex.EncodeToString(hash)
+	// Don't process the transaction again - only propagate
 	if n.mempool.Contains(hashString) {
 		return nil, nil
 	}
@@ -190,12 +189,14 @@ func (n *rainTreeNetwork) RemovePeerToAddrBook(peer *typesPre2P.NetworkPeer) err
 }
 
 func getNonce() uint64 {
-	// TODO: This did not generate a random nonce on every call
+	// INVESTIGATE(olshansky): This did not generate a random nonce on every call
+
 	// seed, err := cryptRand.Int(cryptRand.Reader, big.NewInt(math.MaxInt64))
 	// if err != nil {
 	// 	panic(err)
 	// }
 	// rand.Seed(seed.Int64())
+
 	rand.Seed(time.Now().UTC().UnixNano())
 	return rand.Uint64()
 }
