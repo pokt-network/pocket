@@ -62,6 +62,8 @@ client_start:
 client_connect:
 	docker exec -it client /bin/bash -c "go run app/client/*.go"
 
+# TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
+
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
 compose_and_watch: db_start
