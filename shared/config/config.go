@@ -23,15 +23,13 @@ type Config struct {
 	PrePersistence *PrePersistenceConfig `json:"pre_persistence"`
 	Persistence    *PersistenceConfig    `json:"persistence"`
 	Utility        *UtilityConfig        `json:"utility"`
-
-	
 }
 
 type ConnectionType string
 
 const (
-	TCPConnection  ConnectionType = "tcp"
-	PipeConnection ConnectionType = "pipe" // Only used for testing
+	TCPConnection   ConnectionType = "tcp"
+	EmptyConnection ConnectionType = "empty" // Only used for testing
 )
 
 // TODO(derrandz): delete this once P2P is ready.
