@@ -84,17 +84,17 @@ db_drop:
 	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/drop_all_schemas.sql"
 
 .PHONY: db_bench_init
-# Initialize pgbench on local postgres - needs to be called once after container is created.
+## Initialize pgbench on local postgres - needs to be called once after container is created.
 db_bench_init:
 	docker exec -it pocket-db bash -c "pgbench -i -U postgres -d postgres"
 
 .PHONY: db_bench
-# Run a local benchmark against the local postgres instance - TODO(olshansky): visualize results
+## Run a local benchmark against the local postgres instance - TODO(olshansky): visualize results
 db_bench:
 	docker exec -it pocket-db bash -c "pgbench -U postgres -d postgres"
 
 .PHONY: db_admin
-# Helper to access to postgres admin GUI interface
+## Helper to access to postgres admin GUI interface
 db_admin:
 	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
 
