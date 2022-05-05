@@ -3,10 +3,12 @@ package genesis
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
 
 	"log"
 	"sync"
 
+	"github.com/matryer/resync"
 	"github.com/pokt-network/pocket/shared/config"
 )
 
@@ -26,12 +28,13 @@ type NodeState struct {
 var state *NodeState
 
 // Used to load the state when the singleton is created.
-var once sync.Once
+var once resync.Once
 
 // Used to update the state. All exported functions should lock this when they are called and defer an unlock.
 var lock = &sync.Mutex{}
 
-// TODO(team): Passing both config and genesis to `GetNodeState` is a hack and only used for integration purposes
+// REFACTOR(olshansky): look into refactoring this to use dependency injection with `uber-go/dig` or `uber-go/fx`
+// because this singleton needs to be deleted altogether.
 func GetNodeState(cfg *config.Config) *NodeState {
 	once.Do(func() {
 		if state == nil && cfg == nil {
@@ -47,6 +50,14 @@ func GetNodeState(cfg *config.Config) *NodeState {
 	})
 
 	return state
+}
+
+// HACK(olshansky): The NodeState singleton is being complex but is outside the scope of current changes.
+// For testing purposes, it needs to be reset because it exists in a global scope but multiple nodes
+// are configured in parallel.
+func ResetNodeState(_ *testing.T) {
+	once.Reset()
+	state = nil
 }
 
 func (ps *NodeState) loadStateFromConfig(cfg *config.Config) {

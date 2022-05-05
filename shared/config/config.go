@@ -23,6 +23,8 @@ type Config struct {
 	PrePersistence *PrePersistenceConfig `json:"pre_persistence"`
 	Persistence    *PersistenceConfig    `json:"persistence"`
 	Utility        *UtilityConfig        `json:"utility"`
+
+	
 }
 
 type ConnectionType string

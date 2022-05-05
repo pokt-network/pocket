@@ -18,6 +18,7 @@ const (
 	secondMsgTargetPercentage = float64(2) / float64(3)
 	shrinkagePercentage       = float64(2) / float64(3)
 	maxLevelsLogBase          = float64(3)
+	floatPrecision            = float64(0.001)
 )
 
 // Whenever `addrBook` changes, we also need to update `addrBookMap` and `addrList`.
@@ -39,7 +40,7 @@ func (n *rainTreeNetwork) handleAddrBookUpdates() error {
 		// easier to compute and interpret.
 		n.addrList = append(n.addrList[i:len(n.addrList)], n.addrList[0:i]...)
 	} else {
-		return fmt.Errorf("self address not found in addrBook so this client can send messages but does not propagate them")
+		return fmt.Errorf("self address not found for %s in addrBook so this client can send messages but does not propagate them", n.addr)
 	}
 	return nil
 }
@@ -61,7 +62,7 @@ func (n *rainTreeNetwork) getTarget(level uint32, targetPercentage float64) (cry
 	}
 	addrStr := n.addrList[i]
 	if addr, ok := n.addrBookMap[addrStr]; ok {
-		log.Printf("[DEBUG] Target (%0.2f): %s", targetPercentage, n.debugMsgTargetString(l, i))
+		log.Printf("[DEBUG] Target (%0.2f) at height (%d): %s", targetPercentage, level, n.debugMsgTargetString(l, i))
 		return addr.Address, true
 	}
 	return nil, false
@@ -75,26 +76,6 @@ func (n *rainTreeNetwork) getSelfIndexInAddrBook() (int, bool) {
 		}
 	}
 	return -1, false
-}
-
-// TODO(drewsky): Could we hit an issue where we are propagating a message from an older height
-// (e.g. before the addr book was updated), but we're using `maxNumLevels` associated with the
-// current height.
-func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level uint32) int {
-	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(n.maxNumLevels-level))
-	return int(float64(len(n.addrList)) * shrinkageCoefficient)
-	// return int(math.Ceil(float64(len(n.addrList)) * shrinkageCoefficient))
-}
-
-func (n *rainTreeNetwork) getMaxAddrBookLevels() uint32 {
-	addrBookSize := float64(len(n.addrBook))
-	// TODO(olshansky): Why do we need the *100 here?
-	return uint32(math.Ceil(logBase(addrBookSize)*100) / 100)
-	// return uint32(math.Ceil(logBase(addrBookSize)))
-}
-
-func logBase(x float64) float64 {
-	return math.Log(x) / math.Log(maxLevelsLogBase)
 }
 
 func (n *rainTreeNetwork) debugMsgTargetString(len, idx int) string {
@@ -117,4 +98,25 @@ func (n *rainTreeNetwork) debugMsgTargetString(len, idx int) string {
 	}
 	s.WriteString("]")
 	return s.String()
+}
+
+// TODO(drewsky): Could we hit an issue where we are propagating a message from an older height
+// (e.g. before the addr book was updated), but we're using `maxNumLevels` associated with the
+// current height.
+func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level uint32) int {
+	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(n.maxNumLevels-level))
+	return int(float64(len(n.addrList)) * shrinkageCoefficient)
+}
+
+func (n *rainTreeNetwork) getMaxAddrBookLevels() uint32 {
+	addrBookSize := float64(len(n.addrBook))
+	return uint32(math.Ceil(logBase(addrBookSize)))
+}
+
+func logBase(x float64) float64 {
+	return round(math.Log(x)/math.Log(maxLevelsLogBase), floatPrecision)
+}
+
+func round(value, precision float64) float64 {
+	return math.Round(value/precision) * precision
 }
