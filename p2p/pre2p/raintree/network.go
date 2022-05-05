@@ -134,7 +134,7 @@ func (n *rainTreeNetwork) demote(rainTreeMsg *typesPre2P.RainTreeMessage) error 
 	return nil
 }
 
-func (n *rainTreeNetwork) HandleRawData(data []byte) ([]byte, error) {
+func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	var rainTreeMsg typesPre2P.RainTreeMessage
 	if err := proto.Unmarshal(data, &rainTreeMsg); err != nil {
 		return nil, err
