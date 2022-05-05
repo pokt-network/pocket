@@ -1,5 +1,4 @@
 # TODO(pocket/issues/43): Delete this files after moving the necessary helpers to mage.go.
-
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
 # This flag is useful when running the consensus unit tests. It causes the test to wait up to the
@@ -24,6 +23,13 @@ help:
 	} \
 	{ lastLine = $$0 }' $(MAKEFILE_LIST)
 
+docker_check:
+	{ \
+	if builtin type -P "docker" > /dev/null || ! builtin type -P "docker-compose" > /dev/null; then \
+		echo "Seems like you don't have Docker installed. Make sure you review docs/development/README.md before continuing"; \
+		exit 1; \
+	fi; \
+	}
 
 prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
@@ -36,7 +42,25 @@ go_vet:
 .PHONY: go_staticcheck
 ## Run `go staticcheck` on all files in the current project
 go_staticcheck:
-	@if builtin type -P "staticcheck"; then staticcheck ./... ; else echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; fi
+	{ \
+	if builtin type -P "staticcheck"; then \
+		staticcheck ./...; \
+	else \
+		echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; \
+	fi; \
+	}
+
+.PHONY: go_doc
+## Generate documentation for the current project using `godo`
+go_doc:
+	{ \
+	if builtin type "godoc"; then \
+		echo "Visit http://localhost:6060/pocket"; \
+		godoc -http=localhost:6060  -goroot=${PWD}/..; \
+	else \
+		echo "Install with 'go install golang.org/x/tools/cmd/godoc@latest'"; \
+	fi; \
+	}
 
 .PHONY: go_clean_dep
 ## Runs `go mod vendor` && `go mod tidy`
@@ -54,22 +78,22 @@ build_and_watch:
 
 .PHONY: client_start
 ## Run a client daemon which is only used for debugging purposes
-client_start:
+client_start: docker_check
 	docker-compose -f build/deployments/docker-compose.yaml up -d client
 
 .PHONY: client_connect
 ## Connect to the running client debugging daemon
-client_connect:
+client_connect: docker_check
 	docker exec -it client /bin/bash -c "go run app/client/*.go"
 
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-compose_and_watch: db_start
+compose_and_watch: docker_check db_start
 	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: db_start
 ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
-db_start:
+db_start: docker_check
 	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d db pgadmin
 
 .PHONY: db_cli
@@ -80,17 +104,17 @@ db_cli:
 
 .PHONY: db_drop
 ## Drop all schemas used for LocalNet development matching `node%`
-db_drop:
+db_drop: docker_check
 	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/drop_all_schemas.sql"
 
 .PHONY: db_bench_init
 ## Initialize pgbench on local postgres - needs to be called once after container is created.
-db_bench_init:
+db_bench_init: docker_check
 	docker exec -it pocket-db bash -c "pgbench -i -U postgres -d postgres"
 
 .PHONY: db_bench
 ## Run a local benchmark against the local postgres instance - TODO(olshansky): visualize results
-db_bench:
+db_bench: docker_check
 	docker exec -it pocket-db bash -c "pgbench -U postgres -d postgres"
 
 .PHONY: db_admin
@@ -98,14 +122,14 @@ db_bench:
 db_admin:
 	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
 
-.PHONY: compose_and_watch
+.PHONY: docker_kill_all
 ## Kill all containers started by the docker-compose file
-docker_kill_all:
+docker_kill_all: docker_check
 	docker-compose -f build/deployments/docker-compose.yaml down
 
 .PHONY: docker_wipe
 ## [WARNING] Remove all the docker containers, images and volumes.
-docker_wipe: prompt_user
+docker_wipe: docker_check prompt_user
 	docker ps -a -q | xargs -r -I {} docker stop {}
 	docker ps -a -q | xargs -r -I {} docker rm {}
 	docker images -q | xargs -r -I {} docker rmi {}
@@ -222,12 +246,12 @@ protogen_local_prototype:
 
 .PHONY: protogen_docker_m1
 ## TODO(derrandz): Test, validate & update.
-protogen_docker_m1:
+protogen_docker_m1: docker_check
 	docker build  -t pocket/proto-generator -f ./build/Dockerfile.m1.proto . && docker run --platform=linux/amd64 -it -v $(CWD)/shared:/usr/src/app/shared pocket/proto-generator
 
 .PHONY: protogen_docker
 ## TODO(derrandz): Test, validate & update.
-protogen_docker:
+protogen_docker: docker_check
 	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it pocket/proto-generator
 
 .PHONY: gofmt
