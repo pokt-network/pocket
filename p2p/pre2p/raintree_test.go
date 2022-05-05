@@ -10,6 +10,11 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// TODO(olshansky): add more tests with different configurations:
+// - different number of levels (i.e. 1, 2, 3, 4, & 5)
+// - partial network views
+// - dead nodes (ephemeral and constant)
+
 func TestRainTreeSmall(t *testing.T) {
 	// Network configurations
 	numValidators := 4
@@ -23,7 +28,7 @@ func TestRainTreeSmall(t *testing.T) {
 	// 		     val_3                val_2             val_4
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(1): {0, 2},
+		validatorId(1): {0, 0},
 		validatorId(2): {2, 2},
 		validatorId(3): {2, 2},
 		validatorId(4): {1, 1},
@@ -73,15 +78,15 @@ func TestRainTreeLarge(t *testing.T) {
 	// val_6        val_4     val_8        val_3        val_1     val_5     val_9        val_7     val_2
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(1): {20, 3}, // originator
-		validatorId(2): {20, 1}, //
-		validatorId(3): {20, 3}, //
-		validatorId(4): {20, 3}, //
-		validatorId(5): {20, 3}, //
-		validatorId(6): {20, 3}, //
-		validatorId(7): {20, 3}, //
-		validatorId(8): {20, 3}, //
-		validatorId(9): {20, 3}, //
+		validatorId(1): {0, 0},
+		validatorId(2): {1, 1},
+		validatorId(3): {1, 1},
+		validatorId(4): {1, 1},
+		validatorId(5): {1, 1},
+		validatorId(6): {1, 1},
+		validatorId(7): {1, 1},
+		validatorId(8): {1, 1},
+		validatorId(9): {1, 1},
 	}
 	var messageHandeledWaitGroup sync.WaitGroup
 	messageHandeledWaitGroup.Add(numValidators - 1) // -1 because the originator node implicitly handles the message
