@@ -56,6 +56,8 @@ func GetNodeState(cfg *config.Config) *NodeState {
 // For testing purposes, it needs to be reset because it exists in a global scope but multiple nodes
 // are configured in parallel.
 func ResetNodeState(_ *testing.T) {
+	lock.Lock()
+	defer lock.Unlock()
 	once.Reset()
 	state = nil
 }
