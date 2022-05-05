@@ -124,10 +124,6 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 	return m.network.NetworkSend(data, addr)
 }
 
-func (m *p2pModule) getAddrBook() typesPre2P.AddrBook {
-	return m.network.GetAddrBook()
-}
-
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	appMsgData, err := m.network.HandleNetworkData(networkMsgData)
 	if err != nil {
