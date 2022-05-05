@@ -23,10 +23,10 @@ func TestRainTreeSmall(t *testing.T) {
 	// 		     val_3                val_2             val_4
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(1): {0, 2}, // originator
-		validatorId(2): {2, 2}, //
-		validatorId(3): {2, 2}, //
-		validatorId(4): {1, 1}, //
+		validatorId(1): {0, 2},
+		validatorId(2): {2, 2},
+		validatorId(3): {2, 2},
+		validatorId(4): {1, 1},
 	}
 	var messageHandeledWaitGroup sync.WaitGroup
 	messageHandeledWaitGroup.Add(numValidators - 1) // -1 because the originator node implicitly handles the message
@@ -64,6 +64,7 @@ func TestRainTreeLarge(t *testing.T) {
 	// Network configurations
 	numValidators := 9
 	configs := createConfigs(t, numValidators)
+
 	// Test configurations
 	// 	                              val_1
 	// 	         ┌──────────────────────┴────────────┬────────────────────────────────┐
