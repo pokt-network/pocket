@@ -127,5 +127,14 @@ func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
 	}
 
-	pre2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
+	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
+	// broadcast. The reason it cannot be done right now is because this client is not in the
+	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
+
+	// pre2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
+
+	for _, val := range typesGenesis.GetNodeState(nil).ValidatorMap {
+		pre2pMod.Send(val.Address, anyProto, types.PocketTopic_DEBUG_TOPIC)
+	}
+
 }
