@@ -14,12 +14,13 @@ type Network interface {
 	NetworkBroadcast(data []byte) error
 	NetworkSend(data []byte, address cryptoPocket.Address) error
 
-	HandleRawData(data []byte) ([]byte, error) // TODO(olshansky): Only adding this function for raintree support.
-
-	// TODO(olshansky): Discuss if we should just have an `Update` method or whether this should accept a list.
+	// Address book helpers
 	GetAddrBook() AddrBook
 	AddPeerToAddrBook(peer *NetworkPeer) error
 	RemovePeerToAddrBook(peer *NetworkPeer) error
+
+	// This function was added to support the raintree implementation.
+	HandleNetworkData(data []byte) ([]byte, error)
 }
 
 type NetworkPeer struct {

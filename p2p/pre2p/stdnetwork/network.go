@@ -48,7 +48,7 @@ func (n *network) NetworkSend(data []byte, address cryptoPocket.Address) error {
 	return nil
 }
 
-func (n *network) HandleRawData(data []byte) ([]byte, error) {
+func (n *network) HandleNetworkData(data []byte) ([]byte, error) {
 	return data, nil // intentional passthrough
 }
 

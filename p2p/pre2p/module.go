@@ -128,8 +128,8 @@ func (m *p2pModule) getAddrBook() typesPre2P.AddrBook {
 	return m.network.GetAddrBook()
 }
 
-func (m *p2pModule) handleNetworkMessage(dataRaw []byte) {
-	data, err := m.network.HandleRawData(dataRaw)
+func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
+	appMsgData, err := m.network.HandleNetworkData(networkMsgData)
 	if err != nil {
 		log.Println("Error handling raw data: ", err)
 		return
@@ -137,12 +137,12 @@ func (m *p2pModule) handleNetworkMessage(dataRaw []byte) {
 
 	// There was no error, but we don't need to forward this to the app-specific bus.
 	// For example, the message has already been handled by the application.
-	if data == nil {
+	if appMsgData == nil {
 		return
 	}
 
 	networkMessage := types.PocketEvent{}
-	if err := proto.Unmarshal(data, &networkMessage); err != nil {
+	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
 		log.Println("Error decoding network message: ", err)
 		return
 	}

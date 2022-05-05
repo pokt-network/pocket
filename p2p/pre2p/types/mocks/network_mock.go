@@ -62,21 +62,6 @@ func (mr *MockNetworkMockRecorder) NetworkSend(data, address interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NetworkSend", reflect.TypeOf((*MockNetwork)(nil).NetworkSend), data, address)
 }
 
-// HandleRawData mocks base method
-func (m *MockNetwork) HandleRawData(data []byte) ([]byte, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HandleRawData", data)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// HandleRawData indicates an expected call of HandleRawData
-func (mr *MockNetworkMockRecorder) HandleRawData(data interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleRawData", reflect.TypeOf((*MockNetwork)(nil).HandleRawData), data)
-}
-
 // GetAddrBook mocks base method
 func (m *MockNetwork) GetAddrBook() types.AddrBook {
 	m.ctrl.T.Helper()
@@ -117,6 +102,21 @@ func (m *MockNetwork) RemovePeerToAddrBook(peer *types.NetworkPeer) error {
 func (mr *MockNetworkMockRecorder) RemovePeerToAddrBook(peer interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePeerToAddrBook", reflect.TypeOf((*MockNetwork)(nil).RemovePeerToAddrBook), peer)
+}
+
+// HandleNetworkData mocks base method
+func (m *MockNetwork) HandleNetworkData(data []byte) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HandleNetworkData", data)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HandleNetworkData indicates an expected call of HandleNetworkData
+func (mr *MockNetworkMockRecorder) HandleNetworkData(data interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleNetworkData", reflect.TypeOf((*MockNetwork)(nil).HandleNetworkData), data)
 }
 
 // MockTransportLayerConn is a mock of TransportLayerConn interface
