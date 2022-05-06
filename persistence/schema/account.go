@@ -10,6 +10,7 @@ const (
 			height 	   BIGINT NOT NULL,
 			end_height BIGINT NOT NULL
 		)`
+
 	PoolTableName   = "pool"
 	PoolTableSchema = `(
 			name       TEXT NOT NULL,
@@ -29,9 +30,9 @@ func InsertAccountAmountQuery(address, amount string, height int64) string {
 		AccountTableName, address, amount, height, DefaultEndHeight)
 }
 
-func NullifyAccountAmountQuery(address string) string {
+func NullifyAccountAmountQuery(address string, height int64) string {
 	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s' AND end_height=%d`,
-		AccountTableName, DefaultEndHeight, address, DefaultEndHeight)
+		AccountTableName, height, address, DefaultEndHeight)
 }
 
 func GetPoolAmountQuery(name string) string {
@@ -39,9 +40,9 @@ func GetPoolAmountQuery(name string) string {
 		PoolTableName, name, DefaultEndHeight)
 }
 
-func NullifyPoolAmountQuery(name string) string {
+func NullifyPoolAmountQuery(name string, height int64) string {
 	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE name='%s' AND end_height=%d`,
-		PoolTableName, DefaultEndHeight, name, DefaultEndHeight)
+		PoolTableName, height, name, DefaultEndHeight)
 }
 
 func InsertPoolAmountQuery(name, amount string, height int64) string {

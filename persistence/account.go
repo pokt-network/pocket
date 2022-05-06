@@ -2,15 +2,16 @@ package persistence
 
 import (
 	"encoding/hex"
+	"math/big"
+
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/schema"
 	shared "github.com/pokt-network/pocket/shared/types"
-	"math/big"
 )
 
-// TODO (Andrew) Convert all queries to use 'height' in the interface for historical lookups
-// TODO (Team) Consider converting all address params from bytes to string?
-// TODO (Andrew) remove address from pool, use name only
+// TODO(Andrew): Convert all queries to use 'height' in the interface for historical lookups
+// TODO(Team): Consider converting all address params from bytes to string?
+// TODO(Andrew): remove address from pool, use name only
 
 func (p PostgresContext) AddAccountAmount(address []byte, amount string) error {
 	return p.operationAccountAmount(address, amount, func(s *big.Int, s1 *big.Int) error {
@@ -58,7 +59,7 @@ func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, schema.NullifyAccountAmountQuery(hex.EncodeToString(address)))
+	_, err = tx.Exec(ctx, schema.NullifyAccountAmountQuery(hex.EncodeToString(address), height))
 	if err != nil {
 		return err
 	}
@@ -101,7 +102,7 @@ func (p PostgresContext) InsertPool(name string, address []byte, amount string) 
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, schema.NullifyPoolAmountQuery(name))
+	_, err = tx.Exec(ctx, schema.NullifyPoolAmountQuery(name, height))
 	if err != nil {
 		return err
 	}
@@ -139,7 +140,7 @@ func (p PostgresContext) SetPoolAmount(name string, amount string) error {
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, schema.NullifyPoolAmountQuery(name))
+	_, err = tx.Exec(ctx, schema.NullifyPoolAmountQuery(name, height))
 	if err != nil {
 		return err
 	}
@@ -222,7 +223,7 @@ func (p *PostgresContext) operationPoolAmount(name string, amount string, op fun
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, schema.NullifyPoolAmountQuery(name))
+	_, err = tx.Exec(ctx, schema.NullifyPoolAmountQuery(name, height))
 	if err != nil {
 		return err
 	}
