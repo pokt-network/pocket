@@ -25,8 +25,8 @@ help:
 
 docker_check:
 	{ \
-	if builtin type -P "docker" > /dev/null || ! builtin type -P "docker-compose" > /dev/null; then \
-		echo "Seems like you don't have Docker installed. Make sure you review docs/development/README.md before continuing"; \
+	if ! builtin type -P "docker" > /dev/null || ! builtin type -P "docker-compose" > /dev/null; then \
+		echo "Seems like you don't have Docker or docker-compose installed. Make sure you review docs/development/README.md before continuing"; \
 		exit 1; \
 	fi; \
 	}
@@ -199,6 +199,11 @@ test_vrf:
 ## Run all go unit tests in the Sortition library
 test_sortition:
 	go test -v ./consensus/leader_election/sortition
+
+.PHONY: test_persistence
+## Run all go unit tests in the Persistence module
+test_persistence:
+	go test -v -p=1 ./persistence/...
 
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library
