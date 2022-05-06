@@ -44,3 +44,17 @@ After logging in, you can view the tables within each schema by following the fo
 #### Benchmarking - db_bench
 
 // TODO(olshansky)
+
+## Testing
+
+_Note: There are many TODO's in the testing environment including thread safety. It's possible that running the tests in parallel may cause tests to break so it is recommended to use `-p 1` flag_
+
+### Setup
+
+Make sure you have a Docker daemon running. See our [Development Guide](docs/development/README.md) for more references and links.
+
+### Unit Tests
+
+```
+$ make test_persistence
+```
