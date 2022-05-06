@@ -2,13 +2,14 @@ package test
 
 import (
 	"fmt"
-	"github.com/ory/dockertest"
-	"github.com/ory/dockertest/docker"
-	"github.com/pokt-network/pocket/persistence"
 	"log"
 	"os"
 	"os/signal"
 	"testing"
+
+	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/docker"
+	"github.com/pokt-network/pocket/persistence"
 )
 
 var (
@@ -20,7 +21,12 @@ var (
 	connString = "postgres://%s:%s@localhost:%s/%s?sslmode=disable"
 )
 
-var PostgresDB = new(persistence.PostgresDB) // TODO (TEAM) make these tests thread safe
+// TODO:(TEAM) make these tests thread safe
+var PostgresDB *persistence.PostgresDB
+
+func init() {
+	PostgresDB = new(persistence.PostgresDB)
+}
 
 func TestMain(m *testing.M) {
 	pool, err := dockertest.NewPool("")
