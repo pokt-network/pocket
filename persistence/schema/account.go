@@ -10,14 +10,8 @@ const (
 			height 	   BIGINT NOT NULL,
 			end_height BIGINT NOT NULL
 		)`
-
-	PoolTableName   = "pool"
-	PoolTableSchema = `(
-			name       TEXT NOT NULL,
-			balance    TEXT NOT NULL,
-			height 	   BIGINT NOT NULL,
-			end_height BIGINT NOT NULL
-		)`
+	AccountUniqueCreateIndex = `CREATE UNIQUE INDEX IF NOT EXISTS account_create_height ON account (address, height)`
+	AccountUniqueDeleteIndex = `CREATE UNIQUE INDEX IF NOT EXISTS account_end_height ON account (address, end_height)`
 )
 
 func GetAccountAmountQuery(address string) string {
@@ -34,6 +28,18 @@ func NullifyAccountAmountQuery(address string, height int64) string {
 	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s' AND end_height=%d`,
 		AccountTableName, height, address, DefaultEndHeight)
 }
+
+const (
+	PoolTableName   = "pool"
+	PoolTableSchema = `(
+		name       TEXT NOT NULL,
+		balance    TEXT NOT NULL,
+		height 	   BIGINT NOT NULL,
+		end_height BIGINT NOT NULL
+	)`
+	PoolUniqueCreateIndex = `CREATE UNIQUE INDEX IF NOT EXISTS pool_create_height ON pool (address, height)`
+	PoolUniqueDeleteIndex = `CREATE UNIQUE INDEX IF NOT EXISTS pool_end_height ON pool (address, end_height)`
+)
 
 func GetPoolAmountQuery(name string) string {
 	return fmt.Sprintf(`SELECT balance FROM %s WHERE name='%s' AND end_height=%d`,
