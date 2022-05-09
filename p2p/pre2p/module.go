@@ -47,8 +47,8 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 
 	var network typesPre2P.Network
 	if cfg.Pre2P.UseRainTree {
-		selfAddr := cryptoPocket.Address(cfg.PrivateKey.Address())
-		network = raintree.NewRainTreeNetwork(selfAddr, addrBook)
+		selfAddr := cfg.PrivateKey.Address()
+		network = raintree.NewRainTreeNetwork(selfAddr, addrBook, cfg)
 	} else {
 		network = stdnetwork.NewNetwork(addrBook)
 	}

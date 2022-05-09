@@ -34,9 +34,11 @@ const (
 
 // TODO(derrandz): delete this once P2P is ready.
 type Pre2PConfig struct {
-	ConsensusPort  uint32         `json:"consensus_port"`
-	UseRainTree    bool           `json:"use_raintree"`
-	ConnectionType ConnectionType `json:"connection_type"`
+	ConsensusPort             uint32         `json:"consensus_port"`
+	UseRainTree               bool           `json:"use_raintree"`
+	RainTreeRedundancyLayerOn bool           `json:"rain_tree_redundancy_layer_on"`
+	RainTreeCleanupLayerOn    bool           `json:"rain_tree_cleanup_layer_on"`
+	ConnectionType            ConnectionType `json:"connection_type"`
 }
 
 type PrePersistenceConfig struct {

@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"github.com/pokt-network/pocket/shared/config"
 	"log"
 	"math/rand"
 	"time"
@@ -28,20 +29,23 @@ type rainTreeNetwork struct {
 
 	// DISCUSS(drewsky): What should we use for de-duping messages within P2P?
 	mempool types.Mempool
+
+	redundancyLayerOn bool
+	cleanupLayerOn    bool
 }
 
-func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook) typesPre2P.Network {
+func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook, config *config.Config) typesPre2P.Network {
 	n := &rainTreeNetwork{
 		selfAddr: addr,
 		addrBook: addrBook,
-
 		// This subset of fields are initialized by `handleAddrBookUpdates` below
 		addrBookMap:  make(typesPre2P.AddrBookMap),
 		addrList:     make([]string, 0),
 		maxNumLevels: 0,
-
 		// TODO: Mempool size should be configurable
-		mempool: types.NewMempool(1000000, 1000),
+		mempool:           types.NewMempool(1000000, 1000),
+		redundancyLayerOn: config.Pre2P.RainTreeRedundancyLayerOn,
+		cleanupLayerOn:    config.Pre2P.RainTreeCleanupLayerOn,
 	}
 
 	if err := n.handleAddrBookUpdates(); err != nil {
@@ -58,11 +62,6 @@ func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
 }
 
 func (n *rainTreeNetwork) networkBroadcastInternal(data []byte, level uint32, nonce uint64) error {
-	// NOOP: Internal broadcast at height level 0
-	if level == 0 {
-		return nil
-	}
-
 	msg := &typesPre2P.RainTreeMessage{
 		Level: level,
 		Data:  data,
@@ -73,22 +72,71 @@ func (n *rainTreeNetwork) networkBroadcastInternal(data []byte, level uint32, no
 		return err
 	}
 
+	// cleanup layer triggered always on level 0
+	if level == 0 {
+		return n.CleanupLayer(bz)
+	}
+
 	if addr1, ok := n.getFirstTargetAddr(level); ok {
-		if err := n.networkSendInternal(bz, addr1); err != nil {
+		if err = n.networkSendInternal(bz, addr1); err != nil {
 			log.Println("Error sending to peer during broadcast: ", err)
 		}
 	}
 
 	if addr2, ok := n.getSecondTargetAddr(level); ok {
-		if err := n.networkSendInternal(bz, addr2); err != nil {
+		if err = n.networkSendInternal(bz, addr2); err != nil {
 			log.Println("Error sending to peer during broadcast: ", err)
 		}
 	}
 
-	if err := n.demote(msg); err != nil {
+	if err = n.demote(msg); err != nil {
 		log.Println("Error demoting self during RainTree message propagation: ", err)
 	}
 
+	// redundancy layer triggered after level 1 sent but before the cleanup layer
+	if level == 0 {
+		return n.RedundancyLayer(bz)
+	}
+
+	return nil
+}
+
+// RedundancyLayer : the redundancy layer is an optional, additional spread mechanism that shoots at the full list
+// 66% and 33% level 0 message that triggers the cleanup layer in potential dead spot areas
+func (n *rainTreeNetwork) RedundancyLayer(messageBytes []byte) error {
+	if !n.redundancyLayerOn {
+		return nil
+	}
+	if addr1, ok := n.getFirstTargetAddr(n.maxNumLevels); ok {
+		if err := n.networkSendInternal(messageBytes, addr1); err != nil {
+			log.Println("Error sending to peer during redundancy layer broadcast: ", err)
+		}
+	}
+
+	if addr2, ok := n.getSecondTargetAddr(n.maxNumLevels); ok {
+		if err := n.networkSendInternal(messageBytes, addr2); err != nil {
+			log.Println("Error sending to peer during redundancy layer broadcast: ", err)
+		}
+	}
+	return nil
+}
+
+// CleanupLayer : the cleanup layer is a simple immediate left and immediate right send that terminates upon a successful ACK from both
+// the left and right
+func (n *rainTreeNetwork) CleanupLayer(messageBytes []byte) error { // TODO (Team) the cleanup layer doesn't need to send the actual message it can be just the hash to check to see
+	if !n.cleanupLayerOn {
+		return nil
+	}
+	addr1, addr2, err := n.getCleanupTargets() // TODO (Drewsky) need acks to ensure the targets are proper and we may terminate the cleanup layer
+	if err != nil {
+		return err
+	}
+	if err = n.networkSendInternal(messageBytes, addr1); err != nil {
+		log.Println("Error sending to peer during redundancy layer broadcast: ", err)
+	}
+	if err = n.networkSendInternal(messageBytes, addr2); err != nil {
+		log.Println("Error sending to peer during redundancy layer broadcast: ", err)
+	}
 	return nil
 }
 

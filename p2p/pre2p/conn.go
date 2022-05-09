@@ -119,11 +119,11 @@ var _ typesPre2P.TransportLayerConn = &emptyConn{}
 type emptyConn struct {
 }
 
-func createPipeListener(cfg *config.Pre2PConfig) (typesPre2P.TransportLayerConn, error) {
+func createPipeListener(_ *config.Pre2PConfig) (typesPre2P.TransportLayerConn, error) {
 	return &emptyConn{}, nil
 }
 
-func createPipeDialer(cfg *config.Pre2PConfig, dest string) (typesPre2P.TransportLayerConn, error) {
+func createPipeDialer(_ *config.Pre2PConfig, _ string) (typesPre2P.TransportLayerConn, error) {
 	return &emptyConn{}, nil
 }
 
