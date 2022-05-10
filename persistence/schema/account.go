@@ -33,11 +33,6 @@ func NullifyAccountAmountQuery(address string, height int64) string {
 		AccountTableName, height, address, DefaultEndHeight)
 }
 
-// func NullifyAccountAmountQuery(address string, height int64) string {
-// 	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s'AND end_height=%d AND height!=%d`,
-// 		AccountTableName, height, address, DefaultEndHeight, height)
-// }
-
 const (
 	PoolTableName   = "pool"
 	PoolTableSchema = `(

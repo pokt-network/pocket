@@ -16,10 +16,13 @@ var (
 	ChainsToUpdate         = []string{"0002"}
 	DefaultServiceUrl      = "https://foo.bar"
 	DefaultPoolName        = "TESTING_POOL"
+	DefaultDeltaBig        = big.NewInt(100)
+	DefaultAccountBig      = big.NewInt(1000000)
 	DefaultStakeBig        = big.NewInt(1000000000000000)
-	DefaultAccountAmount   = types.BigIntToString(big.NewInt(1000000))
+	DefaultDeltaAmount     = types.BigIntToString(DefaultDeltaBig)
+	DefaultAccountAmount   = types.BigIntToString(DefaultAccountBig)
 	DefaultStake           = types.BigIntToString(DefaultStakeBig)
-	StakeToUpdate          = types.BigIntToString((&big.Int{}).Add(DefaultStakeBig, big.NewInt(100)))
+	StakeToUpdate          = types.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
 	ParamToUpdate          = 2
 	DefaultAccountBalance  = DefaultStake
 	DefaultStakeStatus     = 2
