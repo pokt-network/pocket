@@ -20,14 +20,23 @@ func GetAccountAmountQuery(address string) string {
 }
 
 func InsertAccountAmountQuery(address, amount string, height int64) string {
-	return fmt.Sprintf(`INSERT INTO %s (address, balance, height, end_height) VALUES ('%s','%s',%d, %d)`,
-		AccountTableName, address, amount, height, DefaultEndHeight)
+	return fmt.Sprintf(`
+		INSERT INTO %s (address, balance, height, end_height)
+			VALUES ('%s','%s',%d, %d)
+			ON CONFLICT (address, height)
+			DO UPDATE SET balance='%s', end_height=%d
+		`, AccountTableName, address, amount, height, DefaultEndHeight, amount, DefaultEndHeight)
 }
 
 func NullifyAccountAmountQuery(address string, height int64) string {
-	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s' AND end_height=%d`,
+	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s'AND end_height=%d`,
 		AccountTableName, height, address, DefaultEndHeight)
 }
+
+// func NullifyAccountAmountQuery(address string, height int64) string {
+// 	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s'AND end_height=%d AND height!=%d`,
+// 		AccountTableName, height, address, DefaultEndHeight, height)
+// }
 
 const (
 	PoolTableName   = "pool"
@@ -37,8 +46,8 @@ const (
 		height 	   BIGINT NOT NULL,
 		end_height BIGINT NOT NULL
 	)`
-	PoolUniqueCreateIndex = `CREATE UNIQUE INDEX IF NOT EXISTS pool_create_height ON pool (address, height)`
-	PoolUniqueDeleteIndex = `CREATE UNIQUE INDEX IF NOT EXISTS pool_end_height ON pool (address, end_height)`
+	PoolUniqueCreateIndex = `CREATE UNIQUE INDEX IF NOT EXISTS pool_create_height ON pool (name, height)`
+	PoolUniqueDeleteIndex = `CREATE UNIQUE INDEX IF NOT EXISTS pool_end_height ON pool (name, end_height)`
 )
 
 func GetPoolAmountQuery(name string) string {

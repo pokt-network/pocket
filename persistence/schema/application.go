@@ -3,27 +3,28 @@ package schema
 import "fmt"
 
 const (
+	DefaultUnstakingHeight = -1
+	DefaultEndHeight       = -1
+
 	// TODO (team) look into address being a "computed" field
 	AppTableName   = "app"
 	AppTableSchema = `(
-			address    	     TEXT NOT NULL, 
+			address    	     TEXT NOT NULL,
 			public_key 		 TEXT NOT NULL,
 			staked_tokens    TEXT NOT NULL,
-			max_relays		 TEXT NOT NULL, 
+			max_relays		 TEXT NOT NULL,
 			output_address   TEXT NOT NULL,
 			paused_height    BIGINT NOT NULL default -1,
 			unstaking_height BIGINT NOT NULL default -1,
 			end_height       BIGINT NOT NULL default -1
 		)`
+
 	AppChainsTableName   = "app_chains"
 	AppChainsTableSchema = `(
 			address      TEXT NOT NULL,
 			chain_id     CHAR(4) NOT NULL,
 			end_height   BIGINT NOT NULL default -1
 		)`
-
-	DefaultUnstakingHeight = -1
-	DefaultEndHeight       = -1
 )
 
 func AppQuery(address string) string {
@@ -75,6 +76,8 @@ func InsertAppQuery(address, publicKey, stakedTokens, maxRelays, outputAddress s
 	return insertIntoAppTable
 }
 
+// https://www.postgresql.org/docs/current/sql-insert.html
+
 func NullifyAppQuery(address string, height int64) string {
 	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s' AND end_height=%d`,
 		AppTableName, height, address, DefaultEndHeight)
@@ -87,21 +90,28 @@ func NullifyAppChainsQuery(address string, height int64) string {
 
 func UpdateAppQuery(address, stakedTokens, maxRelays string, height int64) string {
 	return fmt.Sprintf(`INSERT INTO %s(address,public_key,staked_tokens,max_relays,output_address,paused_height,unstaking_height,end_height)
-                               ((SELECT address,public_key,'%s','%s',output_address,paused_height,unstaking_height,%d FROM %s WHERE address='%s'AND 
+                               ((SELECT address,public_key,'%s','%s',output_address,paused_height,unstaking_height,%d FROM %s WHERE address='%s'AND
                                end_height=%d))`,
 		AppTableName, stakedTokens, maxRelays, DefaultEndHeight, AppTableName, address, height)
 }
 
+// func UpdateAppQuery(address, stakedTokens, maxRelays string, height int64) string {
+// 	return fmt.Sprintf(`UPSERT INTO %s(address,public_key,staked_tokens,max_relays,output_address,paused_height,unstaking_height,end_height)
+//                                ((SELECT address,public_key,'%s','%s',output_address,paused_height,unstaking_height,%d FROM %s WHERE address='%s'AND
+//                                (end_height=%d OR end_height=(-1))))`,
+// 		AppTableName, stakedTokens, maxRelays, DefaultEndHeight, AppTableName, address, height)
+// }
+
 func UpdateAppUnstakingHeightQuery(address string, unstakingHeight, height int64) string {
 	return fmt.Sprintf(`INSERT INTO %s(address,public_key,staked_tokens,max_relays,output_address,paused_height,unstaking_height,end_height)
-                               ((SELECT address,public_key,staked_tokens,max_relays,output_address,paused_height,%d,%d FROM %s WHERE address='%s'AND 
+                               ((SELECT address,public_key,staked_tokens,max_relays,output_address,paused_height,%d,%d FROM %s WHERE address='%s'AND
                                end_height=%d))`,
 		AppTableName, unstakingHeight, DefaultEndHeight, AppTableName, address, height)
 }
 
 func UpdateAppPausedHeightQuery(address string, pauseHeight, height int64) string {
 	return fmt.Sprintf(`INSERT INTO %s(address,public_key,staked_tokens,max_relays,output_address,paused_height,unstaking_height,end_height)
-                               (SELECT address,public_key,staked_tokens,max_relays,output_address,%d,unstaking_height,%d FROM %s WHERE address='%s'AND 
+                               (SELECT address,public_key,staked_tokens,max_relays,output_address,%d,unstaking_height,%d FROM %s WHERE address='%s'AND
                                end_height=%d)`,
 		AppTableName, pauseHeight, DefaultEndHeight, AppTableName, address, height)
 }

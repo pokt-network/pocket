@@ -51,12 +51,12 @@ func TestAddAccountAmount(t *testing.T) {
 	err = db.AddAccountAmount(acc.Address, types.BigIntToString(amountToAddBig))
 	require.NoError(t, err)
 
-	// am, err := db.GetAccountAmount(acc.Address)
-	// require.NoError(t, err)
+	am, err := db.GetAccountAmount(acc.Address)
+	require.NoError(t, err)
 
-	// resultBig := (&big.Int{}).Add(DefaultStakeBig, amountToAddBig)
-	// expectedResult := types.BigIntToString(resultBig)
-	// require.Equal(t, expectedResult, am, "unexpected amount after add")
+	resultBig := (&big.Int{}).Add(DefaultStakeBig, amountToAddBig)
+	expectedResult := types.BigIntToString(resultBig)
+	require.Equal(t, expectedResult, am, "unexpected amount after add")
 }
 
 func TestSubAccountAmount(t *testing.T) {

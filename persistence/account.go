@@ -10,8 +10,8 @@ import (
 )
 
 // TODO(Andrew): Convert all queries to use 'height' in the interface for historical lookups
-// TODO(Team): Consider converting all address params from bytes to string?
 // TODO(Andrew): remove address from pool, use name only
+// TODO(team): Consider converting all address params from bytes to string to avoid unnecessary encoding?
 
 func (p PostgresContext) AddAccountAmount(address []byte, amount string) error {
 	return p.operationAccountAmount(address, amount, func(s *big.Int, s1 *big.Int) error {
