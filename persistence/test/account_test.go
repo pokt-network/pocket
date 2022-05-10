@@ -67,14 +67,14 @@ func TestSubAccountAmount(t *testing.T) {
 	err := db.SetAccountAmount(acc.Address, DefaultStake)
 	require.NoError(t, err)
 
-	amountToAddBig := big.NewInt(100)
-	db.SubtractAccountAmount(acc.Address, types.BigIntToString(amountToAddBig))
+	amountToSubBig := big.NewInt(100)
+	db.SubtractAccountAmount(acc.Address, types.BigIntToString(amountToSubBig))
 	require.NoError(t, err)
 
 	am, err := db.GetAccountAmount(acc.Address)
 	require.NoError(t, err)
 
-	resultBig := (&big.Int{}).Sub(DefaultStakeBig, amountToAddBig)
+	resultBig := (&big.Int{}).Sub(DefaultStakeBig, amountToSubBig)
 	expectedResult := types.BigIntToString(resultBig)
 	require.Equal(t, expectedResult, am, "unexpected amount after sub")
 }
