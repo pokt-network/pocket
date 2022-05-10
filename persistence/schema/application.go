@@ -3,6 +3,9 @@ package schema
 import "fmt"
 
 const (
+	// We use `-1` with semantic variable names to indicate non-existence or non-validity
+	// in various contexts to avoid the usage of nullability in columns and for performance
+	// optimization purposes.
 	DefaultUnstakingHeight = -1
 	DefaultEndHeight       = -1
 
