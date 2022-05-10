@@ -7,13 +7,24 @@ scrape_configs:
   - job_name: "victoria-metrics"
     static_configs:
       - targets: ["localhost:8428"]
-  - job_name: "docker-containers"
+  - job_name: "pocket-nodes"
     docker_sd_configs:
       - host: unix:///var/run/docker.sock # You can also use http/https to connect to the Docker daemon.
-        port: 9000
     relabel_configs:
-      # directory where docker-compose.yml file resides called `deployments` so we can configure SD to only pick up containers related to this docker-compose.
+      # only keep node\d.consensus containers in the discovery.
       - source_labels:
           [__meta_docker_container_label_com_docker_compose_project]
         regex: deployments
         action: keep
+      - source_labels: [__meta_docker_container_name]
+        regex: /node\d?.consensus
+        action: keep
+      - source_labels: ["__address__"]
+        separator: ":"
+        regex: '(.*):(\d*)'
+        target_label: "__address__"
+        replacement: "${1}:9000"
+      - source_labels:
+          [__meta_docker_container_label_com_docker_compose_service]
+        target_label: instance
+        replacement: "${1}"

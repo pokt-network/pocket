@@ -50,7 +50,7 @@ build:
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
 build_and_watch:
-	/bin/sh ${PWD}/scripts/watch_build.sh
+	/bin/sh ${PWD}/build/scripts/watch_build.sh
 
 .PHONY: client_start
 ## Run a client daemon which is only used for debugging purposes
