@@ -11,9 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	defaultAmount = types.BigIntToString(big.NewInt(1000000))
-)
+// --- Account Tests ---
 
 func TestSetAccountAmount(t *testing.T) {
 	db := persistence.PostgresContext{
@@ -81,6 +79,8 @@ func TestSubAccountAmount(t *testing.T) {
 	require.Equal(t, expectedResult, am, "unexpected amount after sub")
 }
 
+// --- Pool Tests ---
+
 func TestSetPoolAmount(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
@@ -109,22 +109,20 @@ func TestAddPoolAmount(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	pool := NewTestPool(t)
-	if err := db.SetPoolAmount(pool.Name, DefaultStake); err != nil {
-		t.Fatal(err)
-	}
+
+	err := db.SetPoolAmount(pool.Name, DefaultStake)
+	require.NoError(t, err)
+
 	amountToAddBig := big.NewInt(100)
-	if err := db.AddPoolAmount(pool.Name, types.BigIntToString(amountToAddBig)); err != nil {
-		t.Fatal(err)
-	}
+	err = db.AddPoolAmount(pool.Name, types.BigIntToString(amountToAddBig))
+	require.NoError(t, err)
+
 	am, err := db.GetPoolAmount(pool.Name)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+
 	resultBig := (&big.Int{}).Add(DefaultStakeBig, amountToAddBig)
 	expectedResult := types.BigIntToString(resultBig)
-	if expectedResult != am {
-		t.Fatal("unexpected amount after add")
-	}
+	require.Equal(t, expectedResult, am, "unexpected amount after add")
 }
 
 func TestSubPoolAmount(t *testing.T) {
@@ -137,17 +135,19 @@ func TestSubPoolAmount(t *testing.T) {
 	err := db.SetPoolAmount(pool.Name, DefaultStake)
 	require.NoError(t, err)
 
-	amountToAddBig := big.NewInt(100)
-	err = db.SubtractPoolAmount(pool.Name, types.BigIntToString(amountToAddBig))
+	amountToSubBig := big.NewInt(100)
+	err = db.SubtractPoolAmount(pool.Name, types.BigIntToString(amountToSubBig))
 	require.NoError(t, err)
 
 	am, err := db.GetPoolAmount(pool.Name)
 	require.NoError(t, err)
 
-	resultBig := (&big.Int{}).Sub(DefaultStakeBig, amountToAddBig)
+	resultBig := (&big.Int{}).Sub(DefaultStakeBig, amountToSubBig)
 	expectedResult := types.BigIntToString(resultBig)
 	require.Equal(t, expectedResult, am, "unexpected amount after sub")
 }
+
+// --- Helpers ---
 
 func NewTestAccount(t *testing.T) typesGenesis.Account {
 	addr, err := crypto.GenerateAddress()
@@ -155,19 +155,18 @@ func NewTestAccount(t *testing.T) typesGenesis.Account {
 
 	return typesGenesis.Account{
 		Address: addr,
-		Amount:  defaultAmount,
+		Amount:  DefaultAccountAmount,
 	}
 }
 
 func NewTestPool(t *testing.T) typesGenesis.Pool {
-	addr, err := crypto.GenerateAddress()
+	_, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
 	return typesGenesis.Pool{
 		Name: DefaultPoolName,
 		Account: &typesGenesis.Account{
-			Address: addr, // TODO(Andrew): deprecate address in pool
-			Amount:  defaultAmount,
+			Amount: DefaultAccountAmount,
 		},
 	}
 }

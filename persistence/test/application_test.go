@@ -2,12 +2,13 @@ package test
 
 import (
 	"bytes"
+	"math/big"
+	"testing"
+
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
-	"math/big"
-	"testing"
 )
 
 var (
@@ -16,6 +17,7 @@ var (
 	DefaultServiceUrl      = "https://foo.bar"
 	DefaultPoolName        = "TESTING_POOL"
 	DefaultStakeBig        = big.NewInt(1000000000000000)
+	DefaultAccountAmount   = types.BigIntToString(big.NewInt(1000000))
 	DefaultStake           = types.BigIntToString(DefaultStakeBig)
 	StakeToUpdate          = types.BigIntToString((&big.Int{}).Add(DefaultStakeBig, big.NewInt(100)))
 	ParamToUpdate          = 2

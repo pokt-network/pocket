@@ -8,9 +8,8 @@ message Account {
   string amount = 2;
 }
 
-// TODO: Provide a better explanation of what a Pool is.
-// Not obvious even after reading https://github.com/pokt-network/pocket-network-protocol/tree/main/utility#36-account-protocol.
+// TODO(team): Provide a better explanation of what a Pool is. Not obvious even after reading https://github.com/pokt-network/pocket-network-protocol/tree/main/utility#36-account-protocol.
 message Pool {
   string name = 1;
-  Account account = 2;
+  Account account = 2; // TODO(team): Do we need to enforce `aaddress` in a Pool's Account from every being used?
 }

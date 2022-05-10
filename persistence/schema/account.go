@@ -55,12 +55,16 @@ func GetPoolAmountQuery(name string) string {
 		PoolTableName, name, DefaultEndHeight)
 }
 
+func InsertPoolAmountQuery(name, amount string, height int64) string {
+	return fmt.Sprintf(`
+		INSERT INTO %s (name, balance, height, end_height)
+			VALUES ('%s','%s',%d, %d)
+			ON CONFLICT (name, height)
+			DO UPDATE SET balance='%s', end_height=%d
+		`, PoolTableName, name, amount, height, DefaultEndHeight, amount, DefaultEndHeight)
+}
+
 func NullifyPoolAmountQuery(name string, height int64) string {
 	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE name='%s' AND end_height=%d`,
 		PoolTableName, height, name, DefaultEndHeight)
-}
-
-func InsertPoolAmountQuery(name, amount string, height int64) string {
-	return fmt.Sprintf(`INSERT INTO %s (name, balance, height, end_height) VALUES ('%s', '%s',%d, %d)`,
-		PoolTableName, name, amount, height, DefaultEndHeight)
 }
