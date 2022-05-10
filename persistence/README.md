@@ -49,9 +49,33 @@ After logging in, you can view the tables within each schema by following the fo
 
 _Note: There are many TODO's in the testing environment including thread safety. It's possible that running the tests in parallel may cause tests to break so it is recommended to use `-p 1` flag_
 
+### Dependencies
+
+We use a library called [dockertest](https://github.com/ory/dockertest), along with `TestMain` (learn more [here](https://medium.com/goingogo/why-use-testmain-for-testing-in-go-dafb52b406bc]), to use the local Docker Daemon for unit testing.
+
 ### Setup
 
-Make sure you have a Docker daemon running. See our [Development Guide](docs/development/README.md) for more references and links.
+Make sure you have a Docker daemon running. See the [Development Guide](docs/development/README.md) for more references and links.
+
+#### Setup Issue - Docker Daemon is not Running
+
+If you see an issue similar to the one below, make sure your Docker Daemon is running.
+
+```
+not start resource: : dial unix /var/run/docker.sock: connect: no such file or directory
+```
+
+For example, on macOS, you can run `open /Applications/Docker.app` to start it up.
+
+#### Setup Issue - Docker Daemon is not Running
+
+If you see an issue similar to the one below, make sure you don't already have a Postgres docker container running or one running on your host machine.
+
+```
+Bind for 0.0.0.0:5432 failed: port is already allocated
+```
+
+For example, on macOS, you can check for this with `lsof -i:5432` and kill the appropriate process if one exists.
 
 ### Unit Tests
 
