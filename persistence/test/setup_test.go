@@ -3,6 +3,7 @@ package test
 import (
 	"fmt"
 	"log"
+	"math/big"
 	"os"
 	"os/signal"
 	"testing"
@@ -10,6 +11,7 @@ import (
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/shared/types"
 )
 
 const (
@@ -21,6 +23,26 @@ const (
 	port             = "5432"
 	dialect          = "postgres"
 	connStringFormat = "postgres://%s:%s@localhost:%s/%s?sslmode=disable"
+)
+
+var (
+	DefaultChains          = []string{"0001"}
+	ChainsToUpdate         = []string{"0002"}
+	DefaultServiceUrl      = "https://foo.bar"
+	DefaultPoolName        = "TESTING_POOL"
+	DefaultDeltaBig        = big.NewInt(100)
+	DefaultAccountBig      = big.NewInt(1000000)
+	DefaultStakeBig        = big.NewInt(1000000000000000)
+	DefaultDeltaAmount     = types.BigIntToString(DefaultDeltaBig)
+	DefaultAccountAmount   = types.BigIntToString(DefaultAccountBig)
+	DefaultStake           = types.BigIntToString(DefaultStakeBig)
+	StakeToUpdate          = types.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
+	ParamToUpdate          = 2
+	DefaultAccountBalance  = DefaultStake
+	DefaultStakeStatus     = 2
+	DefaultPauseHeight     = int64(-1)
+	DefaultUnstakingHeight = int64(-1)
+	PauseHeightToSet       = 1
 )
 
 // TODO:(team) make these tests thread safe

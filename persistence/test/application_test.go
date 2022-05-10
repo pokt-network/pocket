@@ -11,26 +11,6 @@ import (
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
-var (
-	DefaultChains          = []string{"0001"}
-	ChainsToUpdate         = []string{"0002"}
-	DefaultServiceUrl      = "https://foo.bar"
-	DefaultPoolName        = "TESTING_POOL"
-	DefaultDeltaBig        = big.NewInt(100)
-	DefaultAccountBig      = big.NewInt(1000000)
-	DefaultStakeBig        = big.NewInt(1000000000000000)
-	DefaultDeltaAmount     = types.BigIntToString(DefaultDeltaBig)
-	DefaultAccountAmount   = types.BigIntToString(DefaultAccountBig)
-	DefaultStake           = types.BigIntToString(DefaultStakeBig)
-	StakeToUpdate          = types.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
-	ParamToUpdate          = 2
-	DefaultAccountBalance  = DefaultStake
-	DefaultStakeStatus     = 2
-	DefaultPauseHeight     = int64(-1)
-	DefaultUnstakingHeight = int64(-1)
-	PauseHeightToSet       = 1
-)
-
 func TestInsertAppAndExists(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
