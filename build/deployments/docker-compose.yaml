@@ -141,6 +141,23 @@ services:
     ports:
       - "5050:5050"
 
+  vm:
+    container_name: victoria-metrics
+    image: victoriametrics/victoria-metrics
+    restart: always
+    ports:
+      - "8428:8428"
+    volumes:
+      - vm:/storage
+      - ./victoria-metrics:/configs
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - "--storageDataPath=/storage"
+      - "--httpListenAddr=:8428"
+      - "--promscrape.config=/configs/scrape.yml"
+
 volumes:
   db:
+    driver: local
+  vm:
     driver: local
