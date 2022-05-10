@@ -74,7 +74,7 @@ func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn,
 		return nil, fmt.Errorf("unable to create %s table: %v", TableName, err)
 	}
 	if err := InitializeTables(ctx, db); err != nil {
-		return nil, fmt.Errorf("unable to create %s table: %v", TableName, err)
+		return nil, fmt.Errorf("unable to initialize tables: %v", err)
 	}
 	return db, nil
 	// TODO(olshansky;github.com/pokt-network/pocket/issues/77): Enable proper up and down migrations
