@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
@@ -39,16 +40,12 @@ func TestGetAppExists(t *testing.T) {
 		t.Fatal(err)
 	}
 	exists, err := ctx.GetAppExists(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor that should exists does not")
 	}
 	exists, err = ctx.GetAppExists(addr2)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor that exists should not")
 	}
@@ -62,9 +59,7 @@ func TestGetApp(t *testing.T) {
 		t.Fatal(err)
 	}
 	got, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(actor.Address, got.Address) || !bytes.Equal(actor.PublicKey, got.PublicKey) {
 		t.Fatalf("unexpected actor returned; expected %v got %v", actor, got)
 	}
@@ -83,9 +78,7 @@ func TestGetAllApps(t *testing.T) {
 		t.Fatal(err)
 	}
 	apps, err := ctx.(*PrePersistenceContext).GetAllApps(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	got1, got2 := false, false
 	for _, a := range apps {
 		if bytes.Equal(a.Address, actor1.Address) {
@@ -111,26 +104,16 @@ func TestUpdateApp(t *testing.T) {
 	bigExpectedTokens := big.NewInt(1)
 	one := types.BigIntToString(bigExpectedTokens)
 	before, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	tokens := before.StakedTokens
 	bigBeforeTokens, err := types.StringToBigInt(tokens)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	err = ctx.UpdateApp(actor.Address, zero, one, typesGenesis.DefaultChains)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	got, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	bigAfterTokens, err := types.StringToBigInt(got.StakedTokens)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	bigAfterTokens.Sub(bigAfterTokens, bigBeforeTokens)
 	if bigAfterTokens.Cmp(bigExpectedTokens) != 0 {
 		t.Fatal("incorrect after balance")
@@ -145,13 +128,9 @@ func TestDeleteApp(t *testing.T) {
 		t.Fatal(err)
 	}
 	err := ctx.DeleteApp(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	exists, err := ctx.(*PrePersistenceContext).GetAppExists(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor exists when it shouldn't")
 	}
@@ -168,9 +147,7 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 		t.Fatal(err)
 	}
 	unstakingApps, err := ctx.(*PrePersistenceContext).GetAppsReadyToUnstake(0, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(unstakingApps[0].Address, actor.Address) {
 		t.Fatalf("wrong actor returned, expected addr %v, got %v", unstakingApps[0].Address, actor.Address)
 	}
@@ -184,9 +161,7 @@ func TestGetAppStatus(t *testing.T) {
 		t.Fatal(err)
 	}
 	status, err := ctx.GetAppStatus(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if status != int(actor.Status) {
 		t.Fatal("unequal status")
 	}
@@ -201,13 +176,9 @@ func TestGetAppPauseHeightIfExists(t *testing.T) {
 	}
 	pauseHeight := 1
 	err := ctx.SetAppPauseHeight(actor.Address, int64(pauseHeight))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	pauseBeforeHeight, err := ctx.GetAppPauseHeightIfExists(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if pauseHeight != int(pauseBeforeHeight) {
 		t.Fatalf("incorrect pause height: expected %v, got %v", pauseHeight, pauseBeforeHeight)
 	}
@@ -222,13 +193,9 @@ func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	}
 	pauseBeforeHeight, unstakingHeight, status := int64(1), int64(10), 1
 	err := ctx.SetAppsStatusAndUnstakingHeightPausedBefore(pauseBeforeHeight, unstakingHeight, status)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	got, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if got.UnstakingHeight != unstakingHeight {
 		t.Fatalf("wrong unstaking height: expected %v, got %v", unstakingHeight, got.UnstakingHeight)
 	}
@@ -245,9 +212,7 @@ func TestGetAppOutputAddress(t *testing.T) {
 		t.Fatal(err)
 	}
 	output, err := ctx.GetAppOutputAddress(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(actor.Output, output) {
 		t.Fatalf("incorrect output address expected %v, got %v", actor.Output, output)
 	}

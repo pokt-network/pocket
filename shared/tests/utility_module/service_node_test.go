@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
+	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
@@ -71,9 +72,7 @@ func TestUtilityContext_GetServiceNodeCount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingServiceNodes(t, ctx)
 	count, err := ctx.GetServiceNodeCount(defaultTestingChains[0], 0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if count != len(actors) {
 		t.Fatalf("wrong chain count, expected %d, got %d", len(actors), count)
 	}
@@ -82,9 +81,7 @@ func TestUtilityContext_GetServiceNodeCount(t *testing.T) {
 func TestUtilityContext_GetServiceNodesPerSession(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	count, err := ctx.GetServiceNodesPerSession(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if count != defaultServiceNodesPerSession {
 		t.Fatalf("incorrect service node per session, expected %d got %d", defaultServiceNodesPerSession, count)
 	}
@@ -209,9 +206,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedServiceNodes(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingServiceNodes(t, ctx)[0]
 	err := ctx.Context.SetServiceNodeMaxPausedBlocks(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if err := ctx.SetServiceNodePauseHeight(actor.Address, 0); err != nil {
 		t.Fatal(err)
 	}
@@ -227,13 +222,9 @@ func TestUtilityContext_BeginUnstakingMaxPausedServiceNodes(t *testing.T) {
 func TestUtilityContext_CalculateServiceNodeUnstakingHeight(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	unstakingBlocks, err := ctx.GetServiceNodeUnstakingBlocks()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	unstakingHeight, err := ctx.CalculateServiceNodeUnstakingHeight()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if unstakingBlocks != unstakingHeight {
 		t.Fatalf("unexpected unstakingHeight; got %d expected %d", unstakingBlocks, unstakingHeight)
 	}
@@ -256,16 +247,12 @@ func TestUtilityContext_GetServiceNodeExists(t *testing.T) {
 	randAddr, _ := crypto.GenerateAddress()
 	actor := GetAllTestingServiceNodes(t, ctx)[0]
 	exists, err := ctx.GetServiceNodeExists(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor that should exist does not")
 	}
 	exists, err = ctx.GetServiceNodeExists(randAddr)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor that shouldn't exist does")
 	}
@@ -275,9 +262,7 @@ func TestUtilityContext_GetServiceNodeOutputAddress(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingServiceNodes(t, ctx)[0]
 	outputAddress, err := ctx.GetServiceNodeOutputAddress(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(outputAddress, actor.Output) {
 		t.Fatalf("unexpected output address, expected %v got %v", actor.Output, outputAddress)
 	}
@@ -291,9 +276,7 @@ func TestUtilityContext_GetServiceNodePauseHeightIfExists(t *testing.T) {
 		t.Fatal(err)
 	}
 	gotPauseHeight, err := ctx.GetServiceNodePauseHeightIfExists(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if pauseHeight != gotPauseHeight {
 		t.Fatal("unable to get pause height from the actor")
 	}
@@ -311,9 +294,7 @@ func TestUtilityContext_GetServiceNodesReadyToUnstake(t *testing.T) {
 		t.Fatal(err)
 	}
 	actors, err := ctx.GetServiceNodesReadyToUnstake()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(actors[0].Address, actor.Address) {
 		t.Fatalf("unexpected actor ready to unstake: expected %s, got %s", actor.Address, actors[0].Address)
 	}
@@ -328,9 +309,7 @@ func TestUtilityContext_GetMessageEditStakeServiceNodeSignerCandidates(t *testin
 		AmountToAdd: defaultAmountString,
 	}
 	candidates, err := ctx.GetMessageEditStakeServiceNodeSignerCandidates(msgEditStake)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -343,9 +322,7 @@ func TestUtilityContext_GetMessagePauseServiceNodeSignerCandidates(t *testing.T)
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessagePauseServiceNodeSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -363,9 +340,7 @@ func TestUtilityContext_GetMessageStakeServiceNodeSignerCandidates(t *testing.T)
 		OutputAddress: out,
 	}
 	candidates, err := ctx.GetMessageStakeServiceNodeSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], out) || !bytes.Equal(candidates[1], addr) {
 		t.Fatal(err)
 	}
@@ -378,9 +353,7 @@ func TestUtilityContext_GetMessageUnpauseServiceNodeSignerCandidates(t *testing.
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnpauseServiceNodeSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -393,9 +366,7 @@ func TestUtilityContext_GetMessageUnstakeServiceNodeSignerCandidates(t *testing.
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnstakeServiceNodeSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -409,9 +380,7 @@ func TestUtilityContext_InsertServiceNode(t *testing.T) {
 		t.Fatal(err)
 	}
 	exists, err := ctx.GetServiceNodeExists(addr)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor does not exist after insert")
 	}
@@ -443,9 +412,7 @@ func TestUtilityContext_UnstakeServiceNodesPausedBefore(t *testing.T) {
 		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetServiceNodeMaxPausedBlocks(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if err := ctx.SetServiceNodePauseHeight(actor.Address, 0); err != nil {
 		t.Fatal(err)
 	}
@@ -457,9 +424,7 @@ func TestUtilityContext_UnstakeServiceNodesPausedBefore(t *testing.T) {
 		t.Fatal("status does not equal unstaking")
 	}
 	unstakingBlocks, err := ctx.GetServiceNodeUnstakingBlocks()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if actor.UnstakingHeight != unstakingBlocks+1 {
 		t.Fatal("incorrect unstaking height")
 	}
@@ -476,9 +441,7 @@ func TestUtilityContext_UnstakeServiceNodesThatAreReady(t *testing.T) {
 		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetServiceNodeMaxPausedBlocks(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if err := ctx.SetServiceNodePauseHeight(actor.Address, 0); err != nil {
 		t.Fatal(err)
 	}
@@ -500,9 +463,7 @@ func TestUtilityContext_UpdateServiceNode(t *testing.T) {
 	newAmount := types.BigIntToString(newAmountBig)
 	oldAmount := actor.StakedTokens
 	oldAmountBig, err := types.StringToBigInt(oldAmount)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	expectedAmountBig := newAmountBig.Add(newAmountBig, oldAmountBig)
 	expectedAmount := types.BigIntToString(expectedAmountBig)
 	if err := ctx.UpdateServiceNode(actor.Address, actor.ServiceUrl, newAmount, actor.Chains); err != nil {
@@ -516,8 +477,6 @@ func TestUtilityContext_UpdateServiceNode(t *testing.T) {
 
 func GetAllTestingServiceNodes(t *testing.T, ctx utility.UtilityContext) []*genesis.ServiceNode {
 	actors, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllServiceNodes(ctx.LatestHeight)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return actors
 }

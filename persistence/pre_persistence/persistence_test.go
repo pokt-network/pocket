@@ -8,6 +8,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/stretchr/testify/require"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 )
@@ -22,9 +23,7 @@ func NewTestingPrePersistenceModule(_ *testing.T) *PrePersistenceModule {
 func NewTestingPrePersistenceContext(t *testing.T) modules.PersistenceContext {
 	persistenceModule := NewTestingPrePersistenceModule(t)
 	persistenceContext, err := persistenceModule.NewContext(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return persistenceContext
 }
 

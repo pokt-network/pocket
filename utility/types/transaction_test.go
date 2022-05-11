@@ -2,9 +2,11 @@ package types
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
-	"testing"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -26,9 +28,7 @@ func NewUnsignedTestingTransaction(t *testing.T) Transaction {
 	codec := types.GetCodec()
 	msg := NewTestingMsg(t)
 	anyMsg, err := codec.ToAny(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return Transaction{
 		Msg:   anyMsg,
 		Fee:   defaultFee,
@@ -39,13 +39,9 @@ func NewUnsignedTestingTransaction(t *testing.T) Transaction {
 func TestTransactionBytesAndFromBytes(t *testing.T) {
 	tx := NewUnsignedTestingTransaction(t)
 	bz, err := tx.Bytes()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	tx2, err := TransactionFromBytes(bz)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	hash1, err := tx.Hash()
 	if err != nil {
 		t.Fatal()
@@ -65,9 +61,7 @@ func TestTransactionBytesAndFromBytes(t *testing.T) {
 func TestTransaction_Message(t *testing.T) {
 	tx := NewUnsignedTestingTransaction(t)
 	msg, err := tx.Message()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	expected := NewTestingMsg(t)
 	if msg.ProtoReflect().Type() != expected.ProtoReflect().Type() {
 		t.Fatal("invalid message type")
@@ -87,9 +81,7 @@ func TestTransaction_Sign(t *testing.T) {
 		t.Fatal(err)
 	}
 	msg, err := tx.SignBytes()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !testingSenderPublicKey.Verify(msg, tx.Signature.Signature) {
 		t.Fatal("invalid signature error")
 	}

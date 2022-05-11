@@ -79,6 +79,7 @@ func TestSubAccountAmount(t *testing.T) {
 	require.Equal(t, expectedResult, am, "unexpected amount after sub")
 }
 
+// NOTE: Only works with Go 1.18
 // DISCUSS(discuss): Do we want to add fuzzing like this everywhere?
 // func FuzzAccountAmount(f *testing.F) {
 // 	f.Skip("TODO: Unskip ones we discuss the items below")

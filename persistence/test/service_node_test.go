@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInsertServiceNodeAndExists(t *testing.T) {
@@ -16,20 +17,15 @@ func TestInsertServiceNodeAndExists(t *testing.T) {
 	}
 	serviceNode := NewTestServiceNode()
 	serviceNode2 := NewTestServiceNode()
-	if err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	exists, err := db.GetServiceNodeExists(serviceNode.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor that should exist does not")
 	}
 	exists, err = db.GetServiceNodeExists(serviceNode2.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor that should not exist, appears to")
 	}
@@ -41,20 +37,14 @@ func TestUpdateServiceNode(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	serviceNode := NewTestServiceNode()
-	if err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	_, _, stakedTokens, _, _, _, _, _, chains, err := db.GetServiceNode(serviceNode.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err = db.UpdateServiceNode(serviceNode.Address, serviceNode.ServiceUrl, StakeToUpdate, ChainsToUpdate); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+	err = db.UpdateServiceNode(serviceNode.Address, serviceNode.ServiceUrl, StakeToUpdate, ChainsToUpdate)
+	require.NoError(t, err)
 	_, _, stakedTokens, _, _, _, _, _, chains, err = db.GetServiceNode(serviceNode.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if chains[0] != ChainsToUpdate[0] {
 		t.Fatal("chains not updated")
 	}
@@ -69,20 +59,14 @@ func TestDeleteServiceNode(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	serviceNode := NewTestServiceNode()
-	if err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	_, _, _, _, _, _, _, _, chains, err := db.GetServiceNode(serviceNode.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err = db.DeleteServiceNode(serviceNode.Address); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+	err = db.DeleteServiceNode(serviceNode.Address)
+	require.NoError(t, err)
 	_, _, _, _, _, _, _, _, chains, err = db.GetServiceNode(serviceNode.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if len(chains) != 0 {
 		t.Fatal("chains not nullified")
 	}
@@ -94,18 +78,14 @@ func TestGetServiceNodesReadyToUnstake(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	serviceNode := NewTestServiceNode()
-	if err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	// test SetServiceNodeUnstakingHeightAndStatus
-	if err := db.SetServiceNodeUnstakingHeightAndStatus(serviceNode.Address, 0, 1); err != nil {
-		t.Fatal(err)
-	}
+	err = db.SetServiceNodeUnstakingHeightAndStatus(serviceNode.Address, 0, 1)
+	require.NoError(t, err)
 	// test GetServiceNodesReadyToUnstake
 	serviceNodes, err := db.GetServiceNodesReadyToUnstake(0, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if len(serviceNodes) != 1 {
 		t.Fatal("wrong number of actors")
 	}
@@ -120,13 +100,10 @@ func TestGetServiceNodeStatus(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	serviceNode := NewTestServiceNode()
-	if err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	status, err := db.GetServiceNodeStatus(serviceNode.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if status != DefaultStakeStatus {
 		t.Fatalf("unexpected status: got %d expected %d", status, DefaultStakeStatus)
 	}
@@ -138,13 +115,10 @@ func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	serviceNode := NewTestServiceNode()
-	if err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	height, err := db.GetServiceNodePauseHeightIfExists(serviceNode.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if height != DefaultPauseHeight {
 		t.Fatalf("unexpected pauseHeight: got %d expected %d", DefaultPauseHeight, DefaultStakeStatus)
 	}
@@ -156,16 +130,12 @@ func TestSetServiceNodesStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	serviceNode := NewTestServiceNode()
-	if err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.SetServiceNodesStatusAndUnstakingHeightPausedBefore(1, 0, 1); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
+	require.NoError(t, err)
+	err = db.SetServiceNodesStatusAndUnstakingHeightPausedBefore(1, 0, 1)
+	require.NoError(t, err)
 	_, _, _, _, _, _, unstakingHeight, _, _, err := db.GetServiceNode(serviceNode.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if unstakingHeight != 0 {
 		t.Fatal("unexpected unstaking height")
 	}
@@ -177,16 +147,12 @@ func TestSetServiceNodePauseHeight(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	serviceNode := NewTestServiceNode()
-	if err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.SetServiceNodePauseHeight(serviceNode.Address, int64(PauseHeightToSet)); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
+	require.NoError(t, err)
+	err = db.SetServiceNodePauseHeight(serviceNode.Address, int64(PauseHeightToSet))
+	require.NoError(t, err)
 	_, _, _, _, _, pauseHeight, _, _, _, err := db.GetServiceNode(serviceNode.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if pauseHeight != int64(PauseHeightToSet) {
 		t.Fatal("unexpected pause height")
 	}
@@ -198,13 +164,10 @@ func TestGetServiceNodeOutputAddress(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	serviceNode := NewTestServiceNode()
-	if err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	output, err := db.GetServiceNodeOutputAddress(serviceNode.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(output, serviceNode.Output) {
 		t.Fatal("unexpected output address")
 	}
@@ -215,24 +178,18 @@ func TestServiceNodeCount(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	if err := db.ClearAllDebug(); err != nil {
-		t.Fatal(err)
-	}
+	err := db.ClearAllDebug()
+	require.NoError(t, err)
 	count, err := db.GetServiceNodeCount(DefaultChains[0], 0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if count != 0 {
 		t.Fatal("unexpected service node count")
 	}
 	serviceNode := NewTestServiceNode()
-	if err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, -1, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err = db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, -1, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	count, err = db.GetServiceNodeCount(DefaultChains[0], 0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if count != 1 {
 		t.Fatal("unexpected service node count")
 	}

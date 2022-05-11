@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInsertAppAndExists(t *testing.T) {
@@ -18,20 +19,15 @@ func TestInsertAppAndExists(t *testing.T) {
 	}
 	app := NewTestApp()
 	app2 := NewTestApp()
-	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	exists, err := db.GetAppExists(app.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor that should exist does not")
 	}
 	exists, err = db.GetAppExists(app2.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor that should not exist, appears to")
 	}
@@ -43,20 +39,14 @@ func TestUpdateApp(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	_, _, stakedTokens, _, _, _, _, _, chains, err := db.GetApp(app.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err = db.UpdateApp(app.Address, app.MaxRelays, StakeToUpdate, ChainsToUpdate); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+	err = db.UpdateApp(app.Address, app.MaxRelays, StakeToUpdate, ChainsToUpdate)
+	require.NoError(t, err)
 	_, _, stakedTokens, _, _, _, _, _, chains, err = db.GetApp(app.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if chains[0] != ChainsToUpdate[0] {
 		t.Fatal("chains not updated")
 	}
@@ -71,20 +61,14 @@ func TestDeleteApp(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	_, _, _, _, _, _, _, _, chains, err := db.GetApp(app.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err = db.DeleteApp(app.Address); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+	err = db.DeleteApp(app.Address)
+	require.NoError(t, err)
 	_, _, _, _, _, _, _, _, chains, err = db.GetApp(app.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if len(chains) != 0 {
 		t.Fatal("chains not nullified")
 	}
@@ -96,18 +80,14 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	// test SetAppUnstakingHeightAndStatus
-	if err := db.SetAppUnstakingHeightAndStatus(app.Address, 0, 1); err != nil {
-		t.Fatal(err)
-	}
+	err = db.SetAppUnstakingHeightAndStatus(app.Address, 0, 1)
+	require.NoError(t, err)
 	// test GetAppsReadyToUnstake
 	apps, err := db.GetAppsReadyToUnstake(0, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if len(apps) != 1 {
 		t.Fatal("wrong number of actors")
 	}
@@ -122,13 +102,10 @@ func TestGetAppStatus(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	status, err := db.GetAppStatus(app.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if status != DefaultStakeStatus {
 		t.Fatalf("unexpected status: got %d expected %d", status, DefaultStakeStatus)
 	}
@@ -140,13 +117,10 @@ func TestGetPauseHeightIfExists(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	height, err := db.GetAppPauseHeightIfExists(app.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if height != DefaultPauseHeight {
 		t.Fatalf("unexpected pauseHeight: got %d expected %d", DefaultPauseHeight, DefaultStakeStatus)
 	}
@@ -158,16 +132,12 @@ func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.SetAppsStatusAndUnstakingHeightPausedBefore(1, 0, 1); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
+	require.NoError(t, err)
+	err = db.SetAppsStatusAndUnstakingHeightPausedBefore(1, 0, 1)
+	require.NoError(t, err)
 	_, _, _, _, _, _, unstakingHeight, _, _, err := db.GetApp(app.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if unstakingHeight != 0 {
 		t.Fatal("unexpected unstaking height")
 	}
@@ -179,16 +149,12 @@ func TestSetAppPauseHeight(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.SetAppPauseHeight(app.Address, int64(PauseHeightToSet)); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	require.NoError(t, err)
+	err = db.SetAppPauseHeight(app.Address, int64(PauseHeightToSet))
+	require.NoError(t, err)
 	_, _, _, _, _, pauseHeight, _, _, _, err := db.GetApp(app.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if pauseHeight != int64(PauseHeightToSet) {
 		t.Fatal("unexpected pause height")
 	}
@@ -200,13 +166,10 @@ func TestGetAppOutputAddress(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight); err != nil {
-		t.Fatal(err)
-	}
+	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
+	require.NoError(t, err)
 	output, err := db.GetAppOutputAddress(app.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(output, app.Output) {
 		t.Fatal("unexpected output address")
 	}

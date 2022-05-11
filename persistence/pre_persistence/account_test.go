@@ -1,9 +1,11 @@
 package pre_persistence
 
 import (
-	typesGenesis "github.com/pokt-network/pocket/shared/types"
 	"math/big"
 	"testing"
+
+	typesGenesis "github.com/pokt-network/pocket/shared/types"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -27,9 +29,7 @@ func TestAddPoolAmount(t *testing.T) {
 		t.Fatal(err)
 	}
 	actualBalance, err := ctx.GetPoolAmount(testPoolName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if actualBalance != expectedBalance {
 		t.Fatalf("not equal balances, expected: %s got %s", expectedBalance, actualBalance)
 	}
@@ -50,9 +50,7 @@ func TestSubtractPoolAmount(t *testing.T) {
 		t.Fatal(err)
 	}
 	actualBalance, err := ctx.GetPoolAmount(testPoolName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if actualBalance != expectedBalance {
 		t.Fatalf("not equal balances, expected: %s got %s", expectedBalance, actualBalance)
 	}
@@ -71,9 +69,7 @@ func TestSetPoolAmount(t *testing.T) {
 		t.Fatal(err)
 	}
 	actualBalance, err := ctx.GetPoolAmount(testPoolName)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if actualBalance != setBalance {
 		t.Fatalf("not equal balances, expected: %s got %s", setBalance, actualBalance)
 	}
@@ -90,9 +86,7 @@ func TestGetAllPoolsAmount(t *testing.T) {
 		t.Fatal(err)
 	}
 	pools, err := ctx.(*PrePersistenceContext).GetAllPools(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	got1, got2 := false, false
 	for _, pool := range pools {
 		if pool.Name == testPoolName {

@@ -5,23 +5,18 @@ import (
 	"testing"
 
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetAllParams(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	expected := typesGenesis.DefaultParams()
 	err := ctx.(*PrePersistenceContext).SetParams(expected)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	params, err := ctx.(*PrePersistenceContext).GetParams(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	fee, err := ctx.GetMessagePauseServiceNodeFee()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if params.BlocksPerSession != expected.BlocksPerSession ||
 		fee != expected.MessagePauseServiceNodeFee ||
 		!bytes.Equal(params.MessageChangeParameterFeeOwner, params.MessageChangeParameterFeeOwner) {

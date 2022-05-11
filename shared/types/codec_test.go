@@ -2,15 +2,15 @@ package types
 
 import (
 	"bytes"
-	"github.com/pokt-network/pocket/shared/crypto"
 	"testing"
+
+	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUtilityCodec(t *testing.T) {
 	addr, err := crypto.GenerateAddress()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	v := UnstakingActor{
 		Address:       addr,
 		StakeAmount:   "100",
@@ -19,9 +19,7 @@ func TestUtilityCodec(t *testing.T) {
 	v2 := UnstakingActor{}
 	codec := GetCodec()
 	protoBytes, err := codec.Marshal(&v)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if err := codec.Unmarshal(protoBytes, &v2); err != nil {
 		t.Fatal(err)
 	}
@@ -29,13 +27,9 @@ func TestUtilityCodec(t *testing.T) {
 		t.Fatalf("unequal objects after marshal/unmarshal, expected %v, got %v", v, v2)
 	}
 	any, err := codec.ToAny(&v)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	protoMsg, err := codec.FromAny(any)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	v3, ok := protoMsg.(*UnstakingActor)
 	if !ok {
 		t.Fatal("any couldn't be converted back to original type")

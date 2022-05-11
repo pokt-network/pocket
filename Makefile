@@ -135,6 +135,8 @@ docker_wipe: docker_check prompt_user
 	docker images -q | xargs -r -I {} docker rmi {}
 	docker volume ls -q | xargs -r -I {} docker volume rm {}
 
+# Reference the following for mockgen with 1.18: https://github.com/golang/mock/issues/621
+
 .PHONY: mockgen
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
