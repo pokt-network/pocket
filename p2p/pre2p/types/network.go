@@ -2,6 +2,7 @@ package types
 
 import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // TODO(olshansky): See if we can deprecate one of these structures.
@@ -21,6 +22,8 @@ type Network interface {
 
 	// This function was added to support the raintree implementation.
 	HandleNetworkData(data []byte) ([]byte, error)
+
+	SetTelemetry(modules.TelemetryModule)
 }
 
 type NetworkPeer struct {

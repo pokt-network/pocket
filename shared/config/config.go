@@ -40,6 +40,7 @@ type Pre2PConfig struct {
 	RainTreeRedundancyLayerOn bool           `json:"rain_tree_redundancy_layer_on"`
 	RainTreeCleanupLayerOn    bool           `json:"rain_tree_cleanup_layer_on"`
 	ConnectionType            ConnectionType `json:"connection_type"`
+	EnableTelemetry           bool           `json:"enable_telemetry"`
 }
 
 type PrePersistenceConfig struct {

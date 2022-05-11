@@ -149,11 +149,6 @@ services:
     container_name: victoria-metrics
     image: victoriametrics/victoria-metrics
     restart: always
-    depends_on:
-      - node1.consensus
-      - node2.consensus
-      - node3.consensus
-      - node4.consensus
     ports:
       - "8428:8428"
     volumes:

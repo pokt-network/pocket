@@ -5,7 +5,8 @@
   "pre2p": {
     "consensus_port": 8080,
     "use_raintree": true,
-    "connection_type": "tcp"
+    "connection_type": "tcp",
+    "enable_telemetry": true
   },
   "p2p": {
     "protocol": "tcp",

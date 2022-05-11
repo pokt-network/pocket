@@ -5,12 +5,14 @@ import (
 
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 var _ typesPre2P.Network = &network{}
 
 type network struct {
-	addrBook typesPre2P.AddrBook
+	telemetry modules.TelemetryModule
+	addrBook  typesPre2P.AddrBook
 }
 
 func NewNetwork(addrBook typesPre2P.AddrBook) (n typesPre2P.Network) {
@@ -63,4 +65,8 @@ func (n *network) AddPeerToAddrBook(peer *typesPre2P.NetworkPeer) error {
 
 func (n *network) RemovePeerToAddrBook(peer *typesPre2P.NetworkPeer) error {
 	panic("RemovePeerToAddrBook not implemented")
+}
+
+func (n *network) SetTelemetry(telemetryMod modules.TelemetryModule) {
+	n.telemetry = telemetryMod
 }
