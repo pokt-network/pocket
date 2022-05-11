@@ -8,8 +8,9 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 )
 
+// TODO(team): get rid of status and/or move to shared and/or create an enum
 const (
-	StakedStatus    = 2 // TODO (Team) get rid of status and/or move to shared
+	StakedStatus    = 2
 	UnstakingStatus = 1
 	UnstakedStatus  = 0
 )
@@ -19,17 +20,10 @@ func (p PostgresContext) GetAppExists(address []byte) (exists bool, err error) {
 	if err != nil {
 		return
 	}
-	row, err := conn.Query(ctx, schema.AppExistsQuery(hex.EncodeToString(address)))
-	if err != nil {
+	if err = conn.QueryRow(ctx, schema.AppExistsQuery(hex.EncodeToString(address))).Scan(&exists); err != nil {
 		return
 	}
-	for row.Next() {
-		err = row.Scan(&exists)
-		if err != nil {
-			return false, err
-		}
-	}
-	row.Close()
+
 	return
 }
 

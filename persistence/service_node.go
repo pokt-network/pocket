@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"encoding/hex"
+
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
@@ -12,17 +13,9 @@ func (p PostgresContext) GetServiceNodeExists(address []byte) (exists bool, err 
 	if err != nil {
 		return
 	}
-	row, err := conn.Query(ctx, schema.ServiceNodeExistsQuery(hex.EncodeToString(address)))
-	if err != nil {
+	if err = conn.QueryRow(ctx, schema.ServiceNodeExistsQuery(hex.EncodeToString(address))).Scan(&exists); err != nil {
 		return
 	}
-	for row.Next() {
-		err = row.Scan(&exists)
-		if err != nil {
-			return false, err
-		}
-	}
-	row.Close()
 	return
 }
 
