@@ -26,20 +26,23 @@ const (
 )
 
 var (
-	DefaultChains          = []string{"0001"}
-	ChainsToUpdate         = []string{"0002"}
-	DefaultServiceUrl      = "https://foo.bar"
-	DefaultPoolName        = "TESTING_POOL"
-	DefaultDeltaBig        = big.NewInt(100)
-	DefaultAccountBig      = big.NewInt(1000000)
-	DefaultStakeBig        = big.NewInt(1000000000000000)
-	DefaultDeltaAmount     = types.BigIntToString(DefaultDeltaBig)
-	DefaultAccountAmount   = types.BigIntToString(DefaultAccountBig)
-	DefaultStake           = types.BigIntToString(DefaultStakeBig)
-	StakeToUpdate          = types.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
-	ParamToUpdate          = 2
-	DefaultAccountBalance  = DefaultStake
-	DefaultStakeStatus     = 2
+	DefaultChains         = []string{"0001"}
+	ChainsToUpdate        = []string{"0002"}
+	DefaultServiceUrl     = "https://foo.bar"
+	DefaultPoolName       = "TESTING_POOL"
+	DefaultDeltaBig       = big.NewInt(100)
+	DefaultAccountBig     = big.NewInt(1000000)
+	DefaultStakeBig       = big.NewInt(1000000000000000)
+	DefaultMaxRelaysBig   = big.NewInt(1000000)
+	DefaultDeltaAmount    = types.BigIntToString(DefaultDeltaBig)
+	DefaultAccountAmount  = types.BigIntToString(DefaultAccountBig)
+	DefaultStake          = types.BigIntToString(DefaultStakeBig)
+	DefaultMaxRelays      = types.BigIntToString(DefaultMaxRelaysBig)
+	StakeToUpdate         = types.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
+	ParamToUpdate         = 2
+	DefaultAccountBalance = DefaultStake
+	DefaultStakeStatus    = persistence.StakedStatus
+	// DISCUSS(drewsky): Not a fan of using `Default` as something that has semantic meaning (i.e. currently active). Pick a better name together.
 	DefaultPauseHeight     = int64(-1)
 	DefaultUnstakingHeight = int64(-1)
 	PauseHeightToSet       = 1

@@ -52,7 +52,7 @@ func (p PostgresContext) GetServiceNode(address []byte) (operator, publicKey, st
 	return
 }
 
-// TODO (Andrew) remove paused and status from the interface
+// TODO(Andrew): remove paused and status from the interface
 func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -76,7 +76,7 @@ func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, out
 	return err
 }
 
-// TODO (Andrew) change amount to add, to the amount to be SET
+// TODO(Andrew): change amount to add, to the amount to be SET
 func (p PostgresContext) UpdateServiceNode(address []byte, serviceURL string, amountToAdd string, chainsToUpdate []string) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -154,7 +154,7 @@ func (p PostgresContext) GetServiceNodeCount(chain string, height int64) (int, e
 	return count, nil
 }
 
-// TODO (Andrew) remove status - not needed
+// TODO(Andrew): remove status - not needed
 func (p PostgresContext) GetServiceNodesReadyToUnstake(height int64, status int) (ServiceNodes []*types.UnstakingActor, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -215,7 +215,7 @@ func (p PostgresContext) GetServiceNodeStatus(address []byte) (status int, err e
 	}
 }
 
-// TODO (Andrew) remove status - no longer needed
+// TODO(Andrew): remove status - no longer needed
 func (p PostgresContext) SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -264,7 +264,7 @@ func (p PostgresContext) GetServiceNodePauseHeightIfExists(address []byte) (int6
 	return pauseHeight, nil
 }
 
-// TODO (Andrew) remove status - it's not needed
+// TODO(Andrew): remove status - it's not needed
 func (p PostgresContext) SetServiceNodesStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {

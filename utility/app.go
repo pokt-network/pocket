@@ -331,7 +331,7 @@ func (u *UtilityContext) GetAppStatus(address []byte) (int, types.Error) {
 
 func (u *UtilityContext) SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64) types.Error {
 	store := u.Store()
-	if er := store.SetAppUnstakingHeightAndStatus(address, unstakingHeight, typesUtil.UnstakingStatus); er != nil { // TODO (Andrew) remove unstaking status from prepersistence
+	if er := store.SetAppUnstakingHeightAndStatus(address, unstakingHeight, typesUtil.UnstakingStatus); er != nil { // TODO(Andrew): remove unstaking status from prepersistence
 		return types.ErrSetUnstakingHeightAndStatus(er)
 	}
 	return nil

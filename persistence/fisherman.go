@@ -52,7 +52,7 @@ func (p PostgresContext) GetFisherman(address []byte) (operator, publicKey, stak
 	return
 }
 
-// TODO (Andrew) remove paused and status from the interface
+// TODO(Andrew): remove paused and status from the interface
 func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -76,7 +76,7 @@ func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, outpu
 	return err
 }
 
-// TODO (Andrew) change amount to add, to the amount to be SET
+// TODO(Andrew): change amount to add, to the amount to be SET
 func (p PostgresContext) UpdateFisherman(address []byte, serviceURL string, amountToAdd string, chainsToUpdate []string) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -133,7 +133,7 @@ func (p PostgresContext) DeleteFisherman(address []byte) error {
 	return tx.Commit(ctx)
 }
 
-// TODO (Andrew) remove status - not needed
+// TODO(Andrew): remove status - not needed
 func (p PostgresContext) GetFishermanReadyToUnstake(height int64, status int) (Fishermans []*types.UnstakingActor, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -194,7 +194,7 @@ func (p PostgresContext) GetFishermanStatus(address []byte) (status int, err err
 	}
 }
 
-// TODO (Andrew) remove status - no longer needed
+// TODO(Andrew): remove status - no longer needed
 func (p PostgresContext) SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -243,7 +243,7 @@ func (p PostgresContext) GetFishermanPauseHeightIfExists(address []byte) (int64,
 	return pauseHeight, nil
 }
 
-// TODO (Andrew) remove status - it's not needed
+// TODO(Andrew): remove status - it's not needed
 func (p PostgresContext) SetFishermansStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {

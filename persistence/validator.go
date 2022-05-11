@@ -38,7 +38,7 @@ func (p PostgresContext) GetValidator(address []byte) (operator, publicKey, stak
 	return
 }
 
-// TODO (Andrew) remove paused and status from the interface
+// TODO(Andrew): remove paused and status from the interface
 func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -61,7 +61,7 @@ func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, outpu
 	return err
 }
 
-// TODO (Andrew) change amount to add, to the amount to be SET
+// TODO(Andrew): change amount to add, to the amount to be SET
 func (p PostgresContext) UpdateValidator(address []byte, serviceURL string, amountToAdd string) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -108,7 +108,7 @@ func (p PostgresContext) DeleteValidator(address []byte) error {
 	return tx.Commit(ctx)
 }
 
-// TODO (Andrew) remove status - not needed
+// TODO(Andrew): remove status - not needed
 func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, status int) (Validators []*types.UnstakingActor, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -169,7 +169,7 @@ func (p PostgresContext) GetValidatorStatus(address []byte) (status int, err err
 	}
 }
 
-// TODO (Andrew) remove status - no longer needed
+// TODO(Andrew): remove status - no longer needed
 func (p PostgresContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -218,7 +218,7 @@ func (p PostgresContext) GetValidatorPauseHeightIfExists(address []byte) (int64,
 	return pauseHeight, nil
 }
 
-// TODO (Andrew) remove status - it's not needed
+// TODO(Andrew): remove status - it's not needed
 func (p PostgresContext) SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {

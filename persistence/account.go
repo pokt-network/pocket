@@ -116,7 +116,7 @@ func (p PostgresContext) GetPoolAmount(name string) (amount string, err error) {
 	return
 }
 
-func (p PostgresContext) InsertPool(name string, address []byte, amount string) error { // TODO (Andrew) remove address param
+func (p PostgresContext) InsertPool(name string, address []byte, amount string) error { // TODO(Andrew): remove address param
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err

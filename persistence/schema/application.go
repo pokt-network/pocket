@@ -6,8 +6,8 @@ const (
 	// We use `-1` with semantic variable names to indicate non-existence or non-validity
 	// in various contexts to avoid the usage of nullability in columns and for performance
 	// optimization purposes.
-	DefaultUnstakingHeight = -1
-	DefaultEndHeight       = -1
+	DefaultUnstakingHeight = -1 // TODO(team): Move this into a shared file?
+	DefaultEndHeight       = -1 // TODO(team): Move this into a shared file?
 
 	// TODO (team) look into address being a "computed" field
 	AppTableName   = "app"
@@ -21,6 +21,7 @@ const (
 			unstaking_height BIGINT NOT NULL default -1,
 			end_height       BIGINT NOT NULL default -1
 		)`
+	// AppUniqueCreateIndex = `CREATE UNIQUE INDEX IF NOT EXISTS app_create_height ON account (address, height)`
 
 	AppChainsTableName   = "app_chains"
 	AppChainsTableSchema = `(
@@ -35,9 +36,10 @@ func AppQuery(address string) string {
 }
 
 func AppChainsQuery(address string) string {
-	return fmt.Sprintf(`SELECT * FROM %s WHERE address='%s' AND end_height=(%d)`, AppChainsTableName, address, DefaultEndHeight)
+	return fmt.Sprintf(`SELECT * FROM %s WHERE address='%s' AND end_height=%d`, AppChainsTableName, address, DefaultEndHeight)
 }
 
+// DISCUSS(drewsky): Do we not want to filter by DefaultEndHeight=-1 here?
 func AppExistsQuery(address string) string {
 	return fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE address='%s')`, AppTableName, address)
 }
