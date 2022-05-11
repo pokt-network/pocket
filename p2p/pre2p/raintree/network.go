@@ -4,10 +4,12 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/config"
 	"log"
 	"math/rand"
 	"time"
+
+	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/modules"
 
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -19,6 +21,8 @@ import (
 var _ typesPre2P.Network = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
+	telemetry modules.TelemetryModule
+
 	selfAddr cryptoPocket.Address
 	addrBook typesPre2P.AddrBook
 
@@ -142,6 +146,10 @@ func (n *rainTreeNetwork) CleanupLayer(messageBytes []byte) error { // TODO (Tea
 
 func (n *rainTreeNetwork) demote(rainTreeMsg *typesPre2P.RainTreeMessage) error {
 	if rainTreeMsg.Level > 0 {
+		if n.telemetry != nil {
+			n.telemetry.IncrementCounterMetric("p2p_msg_broadcast_depth")
+		}
+
 		if err := n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return err
 		}
@@ -247,4 +255,8 @@ func getNonce() uint64 {
 
 	rand.Seed(time.Now().UTC().UnixNano())
 	return rand.Uint64()
+}
+
+func (n *rainTreeNetwork) SetTelemetry(telemetryMod modules.TelemetryModule) {
+	n.telemetry = telemetryMod
 }

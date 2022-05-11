@@ -3,8 +3,9 @@
 package stdnetwork
 
 import (
-	types "github.com/pokt-network/pocket/p2p/types"
 	"log"
+
+	types "github.com/pokt-network/pocket/p2p/types"
 
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
