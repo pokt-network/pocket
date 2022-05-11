@@ -23,6 +23,7 @@ type Config struct {
 	PrePersistence *PrePersistenceConfig `json:"pre_persistence"`
 	Persistence    *PersistenceConfig    `json:"persistence"`
 	Utility        *UtilityConfig        `json:"utility"`
+	Telemetry      *TelemetryConfig      `json:"telemetry"`
 }
 
 type ConnectionType string
@@ -85,6 +86,11 @@ type PersistenceConfig struct {
 }
 
 type UtilityConfig struct {
+}
+
+type TelemetryConfig struct {
+	Address  string
+	Endpoint string
 }
 
 // TODO(insert tooling issue # here): Re-evaluate how load configs should be handeled.

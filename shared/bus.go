@@ -14,6 +14,7 @@ type bus struct {
 	p2p         modules.P2PModule
 	utility     modules.UtilityModule
 	consensus   modules.ConsensusModule
+	telemetry   modules.TelemetryModule
 }
 
 const (
@@ -25,6 +26,7 @@ func CreateBus(
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
+	telemetry modules.TelemetryModule,
 ) (modules.Bus, error) {
 	bus := &bus{
 		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -32,12 +34,14 @@ func CreateBus(
 		p2p:         p2p,
 		utility:     utility,
 		consensus:   consensus,
+		telemetry:   telemetry,
 	}
 
 	persistence.SetBus(bus)
 	consensus.SetBus(bus)
 	p2p.SetBus(bus)
 	utility.SetBus(bus)
+	telemetry.SetBus(bus)
 
 	return bus, nil
 }
@@ -69,4 +73,8 @@ func (m *bus) GetUtilityModule() modules.UtilityModule {
 
 func (m *bus) GetConsensusModule() modules.ConsensusModule {
 	return m.consensus
+}
+
+func (m *bus) GetTelemetryModule() modules.TelemetryModule {
+	return m.telemetry
 }
