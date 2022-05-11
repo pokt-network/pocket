@@ -67,7 +67,7 @@ client_connect:
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
 compose_and_watch: db_start
-	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus vm
+	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: db_start
 ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)

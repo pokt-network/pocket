@@ -156,7 +156,7 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	m.GetBus().
 		GetTelemetryModule().
-		IncrementCounterMetric("receieved_messages")
+		IncrementCounterMetric("received_messages")
 
 	appMsgData, err := m.network.HandleNetworkData(networkMsgData)
 	if err != nil {

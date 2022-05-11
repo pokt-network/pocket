@@ -32,9 +32,10 @@ func Create(cfg *config.Config) (*PromModule, error) {
 }
 
 func (m *PromModule) Start() error {
+	log.Println("Started the metrics exporter...")
 	http.Handle(m.endpoint, promhttp.Handler())
 	go http.ListenAndServe(m.address, nil)
-	log.Println("Started the metrics exporter...")
+	log.Println("Started OK")
 	return nil
 }
 
