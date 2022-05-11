@@ -85,23 +85,23 @@ func NullifyFishermanChainsQuery(address string, height int64) string {
 
 func UpdateFishermanQuery(address, stakedTokens, serviceURL string, height int64) string {
 	return fmt.Sprintf(`INSERT INTO %s(address,public_key,staked_tokens,service_url,output_address,paused_height,unstaking_height,end_height)
-                               ((SELECT address,public_key,'%s','%s',output_address,paused_height,unstaking_height,%d FROM %s WHERE address='%s'AND 
+                               ((SELECT address,public_key,'%s','%s',output_address,paused_height,unstaking_height,%d FROM %s WHERE address='%s'AND
                                end_height=%d))`,
 		FishTableName, stakedTokens, serviceURL, DefaultEndHeight, FishTableName, address, height)
 }
 
 func UpdateFishermanUnstakingHeightQuery(address string, unstakingHeight, height int64) string {
 	return fmt.Sprintf(`INSERT INTO %s(address,public_key,staked_tokens,service_url,output_address,paused_height,unstaking_height,end_height)
-                               ((SELECT address,public_key,staked_tokens,service_url,output_address,paused_height,%d,%d FROM %s WHERE address='%s'AND 
+                               ((SELECT address,public_key,staked_tokens,service_url,output_address,paused_height,%d,%d FROM %s WHERE address='%s'AND
                                end_height=%d))`,
 		FishTableName, unstakingHeight, DefaultEndHeight, FishTableName, address, height)
 }
 
-func UpdateFishermanPausedHeightQuery(address string, pauseHeight, height int64) string {
+func UpdateFishermanPausedHeightQuery(address string, pausedHeight, height int64) string {
 	return fmt.Sprintf(`INSERT INTO %s(address,public_key,staked_tokens,service_url,output_address,paused_height,unstaking_height,end_height)
-                               ((SELECT address,public_key,staked_tokens,service_url,output_address,%d,unstaking_height,%d FROM %s WHERE address='%s'AND 
+                               ((SELECT address,public_key,staked_tokens,service_url,output_address,%d,unstaking_height,%d FROM %s WHERE address='%s'AND
                                end_height=%d))`,
-		FishTableName, pauseHeight, DefaultEndHeight, FishTableName, address, height)
+		FishTableName, pausedHeight, DefaultEndHeight, FishTableName, address, height)
 }
 
 func UpdateFishermansPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight int64) string {

@@ -120,7 +120,7 @@ func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 	height, err := db.GetServiceNodePauseHeightIfExists(serviceNode.Address)
 	require.NoError(t, err)
 	if height != DefaultPauseHeight {
-		t.Fatalf("unexpected pauseHeight: got %d expected %d", DefaultPauseHeight, DefaultStakeStatus)
+		t.Fatalf("unexpected pausedHeight: got %d expected %d", DefaultPauseHeight, DefaultStakeStatus)
 	}
 }
 
@@ -151,9 +151,9 @@ func TestSetServiceNodePauseHeight(t *testing.T) {
 	require.NoError(t, err)
 	err = db.SetServiceNodePauseHeight(serviceNode.Address, int64(PauseHeightToSet))
 	require.NoError(t, err)
-	_, _, _, _, _, pauseHeight, _, _, _, err := db.GetServiceNode(serviceNode.Address)
+	_, _, _, _, _, pausedHeight, _, _, _, err := db.GetServiceNode(serviceNode.Address)
 	require.NoError(t, err)
-	if pauseHeight != int64(PauseHeightToSet) {
+	if pausedHeight != int64(PauseHeightToSet) {
 		t.Fatal("unexpected pause height")
 	}
 }

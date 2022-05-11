@@ -117,7 +117,7 @@ func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 	height, err := db.GetValidatorPauseHeightIfExists(validator.Address)
 	require.NoError(t, err)
 	if height != DefaultPauseHeight {
-		t.Fatalf("unexpected pauseHeight: got %d expected %d", DefaultPauseHeight, DefaultStakeStatus)
+		t.Fatalf("unexpected pausedHeight: got %d expected %d", DefaultPauseHeight, DefaultStakeStatus)
 	}
 }
 
@@ -148,9 +148,9 @@ func TestSetValidatorPauseHeight(t *testing.T) {
 	require.NoError(t, err)
 	err = db.SetValidatorPauseHeight(validator.Address, int64(PauseHeightToSet))
 	require.NoError(t, err)
-	_, _, _, _, _, pauseHeight, _, _, err := db.GetValidator(validator.Address)
+	_, _, _, _, _, pausedHeight, _, _, err := db.GetValidator(validator.Address)
 	require.NoError(t, err)
-	if pauseHeight != int64(PauseHeightToSet) {
+	if pausedHeight != int64(PauseHeightToSet) {
 		t.Fatal("unexpected pause height")
 	}
 }

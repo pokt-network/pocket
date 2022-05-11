@@ -161,9 +161,9 @@ func TestSetAppPauseHeight(t *testing.T) {
 	err = db.SetAppPauseHeight(app.Address, int64(PauseHeightToSet))
 	require.NoError(t, err)
 
-	_, _, _, _, _, pauseHeight, _, _, _, err := db.GetApp(app.Address)
+	_, _, _, _, _, pausedHeight, _, _, _, err := db.GetApp(app.Address)
 	require.NoError(t, err)
-	require.Equal(t, pauseHeight, int64(PauseHeightToSet), "pause height not updated")
+	require.Equal(t, pausedHeight, int64(PauseHeightToSet), "pause height not updated")
 }
 
 func TestGetAppOutputAddress(t *testing.T) {

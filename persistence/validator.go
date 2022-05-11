@@ -19,7 +19,7 @@ func (p PostgresContext) GetValidatorExists(address []byte) (exists bool, err er
 	return
 }
 
-func (p PostgresContext) GetValidator(address []byte) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pauseHeight, unstakingHeight, height int64, err error) {
+func (p PostgresContext) GetValidator(address []byte) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight, height int64, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return
@@ -29,7 +29,7 @@ func (p PostgresContext) GetValidator(address []byte) (operator, publicKey, stak
 		return
 	}
 	for row.Next() {
-		err = row.Scan(&operator, &publicKey, &stakedTokens, &serviceURL, &outputAddress, &pauseHeight, &unstakingHeight, &height)
+		err = row.Scan(&operator, &publicKey, &stakedTokens, &serviceURL, &outputAddress, &pausedHeight, &unstakingHeight, &height)
 		if err != nil {
 			return
 		}
@@ -203,19 +203,19 @@ func (p PostgresContext) GetValidatorPauseHeightIfExists(address []byte) (int64,
 	if err != nil {
 		return 0, err
 	}
-	var pauseHeight int64
+	var pausedHeight int64
 	row, err := conn.Query(ctx, schema.ValidatorPauseHeightQuery(hex.EncodeToString(address), height))
 	if err != nil {
 		return 0, err
 	}
 	defer row.Close()
 	for row.Next() {
-		err = row.Scan(&pauseHeight)
+		err = row.Scan(&pausedHeight)
 		if err != nil {
 			return 0, err
 		}
 	}
-	return pauseHeight, nil
+	return pausedHeight, nil
 }
 
 // TODO(Andrew): remove status - it's not needed
@@ -302,7 +302,7 @@ func (p PostgresContext) GetValidatorOutputAddress(operator []byte) (output []by
 	return hex.DecodeString(outputAddr)
 }
 
-func (p PostgresContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) error {
+func (p PostgresContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, pausedHeight int64, missedBlocks int) error {
 	// TODO implement missed blocks
 	return nil
 }

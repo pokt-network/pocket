@@ -62,23 +62,23 @@ func NullifyValidatorQuery(address string, height int64) string {
 
 func UpdateValidatorQuery(address, stakedTokens, serviceURL string, height int64) string {
 	return fmt.Sprintf(`INSERT INTO %s(address,public_key,staked_tokens,service_url,output_address,paused_height,unstaking_height,end_height)
-                               ((SELECT address,public_key,'%s','%s',output_address,paused_height,unstaking_height,%d FROM %s WHERE address='%s'AND 
+                               ((SELECT address,public_key,'%s','%s',output_address,paused_height,unstaking_height,%d FROM %s WHERE address='%s'AND
                                end_height=%d))`,
 		ValTableName, stakedTokens, serviceURL, DefaultEndHeight, ValTableName, address, height)
 }
 
 func UpdateValidatorUnstakingHeightQuery(address string, unstakingHeight, height int64) string {
 	return fmt.Sprintf(`INSERT INTO %s(address,public_key,staked_tokens,service_url,output_address,paused_height,unstaking_height,end_height)
-                               ((SELECT address,public_key,staked_tokens,service_url,output_address,paused_height,%d,%d FROM %s WHERE address='%s'AND 
+                               ((SELECT address,public_key,staked_tokens,service_url,output_address,paused_height,%d,%d FROM %s WHERE address='%s'AND
                                end_height=%d))`,
 		ValTableName, unstakingHeight, DefaultEndHeight, ValTableName, address, height)
 }
 
-func UpdateValidatorPausedHeightQuery(address string, pauseHeight, height int64) string {
+func UpdateValidatorPausedHeightQuery(address string, pausedHeight, height int64) string {
 	return fmt.Sprintf(`INSERT INTO %s(address,public_key,staked_tokens,service_url,output_address,paused_height,unstaking_height,end_height)
-                               ((SELECT address,public_key,staked_tokens,service_url,output_address,%d,unstaking_height,%d FROM %s WHERE address='%s'AND 
+                               ((SELECT address,public_key,staked_tokens,service_url,output_address,%d,unstaking_height,%d FROM %s WHERE address='%s'AND
                                end_height=%d))`,
-		ValTableName, pauseHeight, DefaultEndHeight, ValTableName, address, height)
+		ValTableName, pausedHeight, DefaultEndHeight, ValTableName, address, height)
 }
 
 func UpdateValidatorsPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight int64) string {

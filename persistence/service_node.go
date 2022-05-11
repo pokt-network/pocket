@@ -19,7 +19,7 @@ func (p PostgresContext) GetServiceNodeExists(address []byte) (exists bool, err 
 	return
 }
 
-func (p PostgresContext) GetServiceNode(address []byte) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pauseHeight, unstakingHeight, height int64, chains []string, err error) {
+func (p PostgresContext) GetServiceNode(address []byte) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight, height int64, chains []string, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return
@@ -29,7 +29,7 @@ func (p PostgresContext) GetServiceNode(address []byte) (operator, publicKey, st
 		return
 	}
 	for row.Next() {
-		err = row.Scan(&operator, &publicKey, &stakedTokens, &serviceURL, &outputAddress, &pauseHeight, &unstakingHeight, &height)
+		err = row.Scan(&operator, &publicKey, &stakedTokens, &serviceURL, &outputAddress, &pausedHeight, &unstakingHeight, &height)
 		if err != nil {
 			return
 		}
@@ -249,19 +249,19 @@ func (p PostgresContext) GetServiceNodePauseHeightIfExists(address []byte) (int6
 	if err != nil {
 		return 0, err
 	}
-	var pauseHeight int64
+	var pausedHeight int64
 	row, err := conn.Query(ctx, schema.ServiceNodePauseHeightQuery(hex.EncodeToString(address), height))
 	if err != nil {
 		return 0, err
 	}
 	defer row.Close()
 	for row.Next() {
-		err = row.Scan(&pauseHeight)
+		err = row.Scan(&pausedHeight)
 		if err != nil {
 			return 0, err
 		}
 	}
-	return pauseHeight, nil
+	return pausedHeight, nil
 }
 
 // TODO(Andrew): remove status - it's not needed

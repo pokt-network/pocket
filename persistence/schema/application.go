@@ -53,7 +53,8 @@ func AppOutputAddressQuery(operatorAddress string, height int64) string {
 		AppTableName, operatorAddress, DefaultEndHeight)
 }
 
-func AppUnstakingHeightQuery(address string, height int64) string { // TODO (Team) if current_height == unstaking_height - is the actor unstaking or unstaked? IE did we process the block yet?
+// TODO(team): if current_height == unstaking_height - is the actor unstaking or unstaked (i.e. did we process the block yet)?
+func AppUnstakingHeightQuery(address string, height int64) string {
 	return fmt.Sprintf(`SELECT unstaking_height FROM %s WHERE address='%s' AND end_height=%d`,
 		AppTableName, address, DefaultEndHeight)
 }
@@ -114,11 +115,11 @@ func UpdateAppUnstakingHeightQuery(address string, unstakingHeight, height int64
 		AppTableName, unstakingHeight, DefaultEndHeight, AppTableName, address, height)
 }
 
-func UpdateAppPausedHeightQuery(address string, pauseHeight, height int64) string {
+func UpdateAppPausedHeightQuery(address string, pausedHeight, height int64) string {
 	return fmt.Sprintf(`INSERT INTO %s(address,public_key,staked_tokens,max_relays,output_address,paused_height,unstaking_height,end_height)
                                (SELECT address,public_key,staked_tokens,max_relays,output_address,%d,unstaking_height,%d FROM %s WHERE address='%s'AND
                                end_height=%d)`,
-		AppTableName, pauseHeight, DefaultEndHeight, AppTableName, address, height)
+		AppTableName, pausedHeight, DefaultEndHeight, AppTableName, address, height)
 }
 
 func UpdateAppsPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight int64) string {

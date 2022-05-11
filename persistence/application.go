@@ -28,12 +28,12 @@ func (p PostgresContext) GetAppExists(address []byte) (exists bool, err error) {
 	return
 }
 
-func (p PostgresContext) GetApp(address []byte) (operator, publicKey, stakedTokens, maxRelays, outputAddress string, pauseHeight, unstakingHeight, endHeight int64, chains []string, err error) {
+func (p PostgresContext) GetApp(address []byte) (operator, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight, endHeight int64, chains []string, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return
 	}
-	if err = conn.QueryRow(ctx, schema.AppQuery(hex.EncodeToString(address))).Scan(&operator, &publicKey, &stakedTokens, &maxRelays, &outputAddress, &pauseHeight, &unstakingHeight, &endHeight); err != nil {
+	if err = conn.QueryRow(ctx, schema.AppQuery(hex.EncodeToString(address))).Scan(&operator, &publicKey, &stakedTokens, &maxRelays, &outputAddress, &pausedHeight, &unstakingHeight, &endHeight); err != nil {
 		return
 	}
 

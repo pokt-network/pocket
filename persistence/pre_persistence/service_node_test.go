@@ -173,13 +173,13 @@ func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	pauseHeight := 1
-	err := ctx.SetServiceNodePauseHeight(actor.Address, int64(pauseHeight))
+	pausedHeight := 1
+	err := ctx.SetServiceNodePauseHeight(actor.Address, int64(pausedHeight))
 	require.NoError(t, err)
 	pauseBeforeHeight, err := ctx.GetServiceNodePauseHeightIfExists(actor.Address)
 	require.NoError(t, err)
-	if pauseHeight != int(pauseBeforeHeight) {
-		t.Fatalf("incorrect pause height: expected %v, got %v", pauseHeight, pauseBeforeHeight)
+	if pausedHeight != int(pauseBeforeHeight) {
+		t.Fatalf("incorrect pause height: expected %v, got %v", pausedHeight, pauseBeforeHeight)
 	}
 }
 
