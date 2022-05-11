@@ -38,7 +38,7 @@
   },
   "utility": {},
   "telemetry": {
-  	"address": "172.18.0.2:9000",
+  	"address": "127.0.0.1:9000",
     "endpoint": "/metrics"
   }
 }
