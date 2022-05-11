@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"encoding/hex"
+
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
@@ -68,7 +69,7 @@ func (p PostgresContext) GetApp(address []byte) (operator, publicKey, stakedToke
 }
 
 // TODO (Andrew) remove paused and status from the interface
-func (p PostgresContext) InsertApplication(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err
@@ -80,7 +81,7 @@ func (p PostgresContext) InsertApplication(address []byte, publicKey []byte, out
 // TODO (Andrew) change amount to add, to the amount to be SET
 // NOTE: originally, we thought we could do arithmetic operations quite easily to just 'bump' the max relays - but since
 // it's a bigint (TEXT in Postgres) I don't beleive this optimization is possible. Best use new amounts for 'Update'
-func (p PostgresContext) UpdateApplication(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error {
+func (p PostgresContext) UpdateApp(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err
@@ -114,7 +115,7 @@ func (p PostgresContext) UpdateApplication(address []byte, maxRelaysToAdd string
 }
 
 // NOTE: Leaving as transaction as I anticipate we'll need more ops in the future
-func (p PostgresContext) DeleteApplication(address []byte) error {
+func (p PostgresContext) DeleteApp(address []byte) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err

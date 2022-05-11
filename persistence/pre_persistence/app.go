@@ -82,7 +82,7 @@ func (m *PrePersistenceContext) GetAllApps(height int64) (apps []*typesGenesis.A
 	return
 }
 
-func (m *PrePersistenceContext) InsertApplication(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (m *PrePersistenceContext) InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	if exists, _ := m.GetAppExists(address); exists {
 		return fmt.Errorf("already exists in world state")
 	}
@@ -108,7 +108,7 @@ func (m *PrePersistenceContext) InsertApplication(address []byte, publicKey []by
 	return db.Put(key, bz)
 }
 
-func (m *PrePersistenceContext) UpdateApplication(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error {
+func (m *PrePersistenceContext) UpdateApp(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error {
 	app, err := m.GetApp(address)
 	if err != nil {
 		return err
@@ -147,7 +147,7 @@ func (m *PrePersistenceContext) UpdateApplication(address []byte, maxRelaysToAdd
 	return db.Put(key, bz)
 }
 
-func (m *PrePersistenceContext) DeleteApplication(address []byte) error {
+func (m *PrePersistenceContext) DeleteApp(address []byte) error {
 	exists, err := m.GetAppExists(address)
 	if err != nil {
 		return err

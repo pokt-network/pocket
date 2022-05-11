@@ -1,9 +1,7 @@
 package test
 
 import (
-	"fmt"
 	"math/big"
-	"math/rand"
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence"
@@ -82,47 +80,47 @@ func TestSubAccountAmount(t *testing.T) {
 }
 
 // DISCUSS(discuss): Do we want to add fuzzing like this everywhere?
-func FuzzAccountAmount(f *testing.F) {
-	f.Skip("TODO: Unskip ones we discuss the items below")
+// func FuzzAccountAmount(f *testing.F) {
+// 	f.Skip("TODO: Unskip ones we discuss the items below")
 
-	// Fuzzing configurations
-	accountOps := []string{"Add", "Sub", "Set"}
-	numOps := len(accountOps)
-	for i := 0; i < 10; i++ {
-		f.Add(accountOps[rand.Intn(numOps)])
-	}
+// 	// Fuzzing configurations
+// 	accountOps := []string{"Add", "Sub", "Set"}
+// 	numOps := len(accountOps)
+// 	for i := 0; i < 10; i++ {
+// 		f.Add(accountOps[rand.Intn(numOps)])
+// 	}
 
-	// Setup
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *PostgresDB,
-	}
-	acc := NewTestAccount(nil)
+// 	// Setup
+// 	db := persistence.PostgresContext{
+// 		Height: 0,
+// 		DB:     *PostgresDB,
+// 	}
+// 	acc := NewTestAccount(nil)
 
-	// TODO(team): Further improvements:
-	// - Randomize the amounts
-	// - Make sure negative balances never happen
-	expectedAmount := big.NewInt(DefaultAccountBig.Int64())
-	f.Fuzz(func(t *testing.T, op string) {
-		switch op {
-		case "Add": // TODO: What should this return before a set?
-			err := db.AddAccountAmount(acc.Address, DefaultDeltaAmount)
-			require.NoError(t, err)
-			expectedAmount.Add(expectedAmount, DefaultDeltaBig)
-		case "Sub": // TODO: What should this return before a set?
-			err := db.SubtractAccountAmount(acc.Address, DefaultDeltaAmount)
-			require.NoError(t, err)
-			expectedAmount.Sub(expectedAmount, DefaultDeltaBig)
-		case "Set":
-			err := db.SetAccountAmount(acc.Address, DefaultAccountAmount)
-			require.NoError(t, err)
-			expectedAmount = DefaultAccountBig
-		}
-		currentAmount, err := db.GetAccountAmount(acc.Address)
-		require.NoError(t, err)
-		require.Equal(t, types.BigIntToString(expectedAmount), currentAmount, fmt.Sprintf("unexpected amount after %s", op))
-	})
-}
+// 	// TODO(team): Further improvements:
+// 	// - Randomize the amounts
+// 	// - Make sure negative balances never happen
+// 	expectedAmount := big.NewInt(DefaultAccountBig.Int64())
+// 	f.Fuzz(func(t *testing.T, op string) {
+// 		switch op {
+// 		case "Add": // TODO: What should this return before a set?
+// 			err := db.AddAccountAmount(acc.Address, DefaultDeltaAmount)
+// 			require.NoError(t, err)
+// 			expectedAmount.Add(expectedAmount, DefaultDeltaBig)
+// 		case "Sub": // TODO: What should this return before a set?
+// 			err := db.SubtractAccountAmount(acc.Address, DefaultDeltaAmount)
+// 			require.NoError(t, err)
+// 			expectedAmount.Sub(expectedAmount, DefaultDeltaBig)
+// 		case "Set":
+// 			err := db.SetAccountAmount(acc.Address, DefaultAccountAmount)
+// 			require.NoError(t, err)
+// 			expectedAmount = DefaultAccountBig
+// 		}
+// 		currentAmount, err := db.GetAccountAmount(acc.Address)
+// 		require.NoError(t, err)
+// 		require.Equal(t, types.BigIntToString(expectedAmount), currentAmount, fmt.Sprintf("unexpected amount after %s", op))
+// 	})
+// }
 
 // --- Pool Tests ---
 

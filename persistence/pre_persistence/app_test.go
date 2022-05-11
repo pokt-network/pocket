@@ -2,9 +2,10 @@ package pre_persistence
 
 import (
 	"bytes"
-	"github.com/pokt-network/pocket/shared/types"
 	"math/big"
 	"testing"
+
+	"github.com/pokt-network/pocket/shared/types"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
@@ -33,7 +34,7 @@ func TestGetAppExists(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
 	addr2, _ := crypto.GenerateAddress()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +57,7 @@ func TestGetAppExists(t *testing.T) {
 func TestGetApp(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
@@ -73,11 +74,11 @@ func TestGetAllApps(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor1 := NewTestApp()
 	actor2 := NewTestApp()
-	if err := ctx.InsertApplication(actor1.Address, actor1.PublicKey, actor1.Output, actor1.Paused, int(actor1.Status),
+	if err := ctx.InsertApp(actor1.Address, actor1.PublicKey, actor1.Output, actor1.Paused, int(actor1.Status),
 		actor1.MaxRelays, actor1.StakedTokens, actor1.Chains, int64(actor1.PausedHeight), actor1.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	if err := ctx.InsertApplication(actor2.Address, actor2.PublicKey, actor2.Output, actor2.Paused, int(actor2.Status),
+	if err := ctx.InsertApp(actor2.Address, actor2.PublicKey, actor2.Output, actor2.Paused, int(actor2.Status),
 		actor2.MaxRelays, actor2.StakedTokens, actor2.Chains, int64(actor2.PausedHeight), actor2.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
@@ -99,10 +100,10 @@ func TestGetAllApps(t *testing.T) {
 	}
 }
 
-func TestUpdateApplication(t *testing.T) {
+func TestUpdateApp(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
@@ -118,7 +119,7 @@ func TestUpdateApplication(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = ctx.UpdateApplication(actor.Address, zero, one, typesGenesis.DefaultChains)
+	err = ctx.UpdateApp(actor.Address, zero, one, typesGenesis.DefaultChains)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,14 +137,14 @@ func TestUpdateApplication(t *testing.T) {
 	}
 }
 
-func TestDeleteApplication(t *testing.T) {
+func TestDeleteApp(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	err := ctx.DeleteApplication(actor.Address)
+	err := ctx.DeleteApp(actor.Address)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -159,7 +160,7 @@ func TestDeleteApplication(t *testing.T) {
 func TestGetAppsReadyToUnstake(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
@@ -178,7 +179,7 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 func TestGetAppStatus(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
@@ -194,7 +195,7 @@ func TestGetAppStatus(t *testing.T) {
 func TestGetAppPauseHeightIfExists(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
@@ -215,7 +216,7 @@ func TestGetAppPauseHeightIfExists(t *testing.T) {
 func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, true, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, true, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
@@ -239,7 +240,7 @@ func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 func TestGetAppOutputAddress(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}

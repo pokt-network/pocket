@@ -18,7 +18,7 @@ func TestInsertAppAndExists(t *testing.T) {
 	}
 	app := NewTestApp()
 	app2 := NewTestApp()
-	if err := db.InsertApplication(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
+	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	exists, err := db.GetAppExists(app.Address)
@@ -37,20 +37,20 @@ func TestInsertAppAndExists(t *testing.T) {
 	}
 }
 
-func TestUpdateApplication(t *testing.T) {
+func TestUpdateApp(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApplication(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
+	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	_, _, stakedTokens, _, _, _, _, _, chains, err := db.GetApp(app.Address)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = db.UpdateApplication(app.Address, app.MaxRelays, StakeToUpdate, ChainsToUpdate); err != nil {
+	if err = db.UpdateApp(app.Address, app.MaxRelays, StakeToUpdate, ChainsToUpdate); err != nil {
 		t.Fatal(err)
 	}
 	_, _, stakedTokens, _, _, _, _, _, chains, err = db.GetApp(app.Address)
@@ -65,20 +65,20 @@ func TestUpdateApplication(t *testing.T) {
 	}
 }
 
-func TestDeleteApplication(t *testing.T) {
+func TestDeleteApp(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApplication(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
+	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	_, _, _, _, _, _, _, _, chains, err := db.GetApp(app.Address)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = db.DeleteApplication(app.Address); err != nil {
+	if err = db.DeleteApp(app.Address); err != nil {
 		t.Fatal(err)
 	}
 	_, _, _, _, _, _, _, _, chains, err = db.GetApp(app.Address)
@@ -96,7 +96,7 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApplication(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
+	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	// test SetAppUnstakingHeightAndStatus
@@ -122,7 +122,7 @@ func TestGetAppStatus(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApplication(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
+	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	status, err := db.GetAppStatus(app.Address)
@@ -140,7 +140,7 @@ func TestGetPauseHeightIfExists(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApplication(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
+	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	height, err := db.GetAppPauseHeightIfExists(app.Address)
@@ -158,7 +158,7 @@ func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApplication(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight); err != nil {
+	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.SetAppsStatusAndUnstakingHeightPausedBefore(1, 0, 1); err != nil {
@@ -179,7 +179,7 @@ func TestSetAppPauseHeight(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApplication(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
+	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	if err := db.SetAppPauseHeight(app.Address, int64(PauseHeightToSet)); err != nil {
@@ -200,7 +200,7 @@ func TestGetAppOutputAddress(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	app := NewTestApp()
-	if err := db.InsertApplication(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight); err != nil {
+	if err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	output, err := db.GetAppOutputAddress(app.Address)

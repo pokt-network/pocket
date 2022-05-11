@@ -2,11 +2,11 @@ package test
 
 import (
 	"bytes"
-	"fmt"
+	"testing"
+
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
-	"testing"
 )
 
 func TestInsertServiceNodeAndExists(t *testing.T) {
@@ -222,7 +222,6 @@ func TestServiceNodeCount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(count)
 	if count != 0 {
 		t.Fatal("unexpected service node count")
 	}

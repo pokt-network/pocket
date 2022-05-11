@@ -228,10 +228,10 @@ func TestUtilityContext_CalculateAppUnstakingHeight(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_DeleteApplication(t *testing.T) {
+func TestUtilityContext_DeleteApp(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingApps(t, ctx)[0]
-	if err := ctx.DeleteApplication(actor.Address); err != nil {
+	if err := ctx.DeleteApp(actor.Address); err != nil {
 		t.Fatal(err)
 	}
 	if len(GetAllTestingApps(t, ctx)) > 0 {
@@ -389,11 +389,11 @@ func TestUtilityContext_GetMessageUnstakeAppSignerCandidates(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_InsertApplication(t *testing.T) {
+func TestUtilityContext_InsertApp(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	pubKey, _ := crypto.GeneratePublicKey()
 	addr := pubKey.Address()
-	if err := ctx.InsertApplication(addr, pubKey.Bytes(), addr, defaultAmountString, defaultAmountString, defaultTestingChains); err != nil {
+	if err := ctx.InsertApp(addr, pubKey.Bytes(), addr, defaultAmountString, defaultAmountString, defaultTestingChains); err != nil {
 		t.Fatal(err)
 	}
 	exists, err := ctx.GetAppExists(addr)
@@ -481,7 +481,7 @@ func TestUtilityContext_UnstakeAppsThatAreReady(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_UpdateApplication(t *testing.T) {
+func TestUtilityContext_UpdateApp(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingApps(t, ctx)[0]
 	newAmountBig := big.NewInt(9999999999999999)
@@ -493,7 +493,7 @@ func TestUtilityContext_UpdateApplication(t *testing.T) {
 	}
 	expectedAmountBig := newAmountBig.Add(newAmountBig, oldAmountBig)
 	expectedAmount := types.BigIntToString(expectedAmountBig)
-	if err := ctx.UpdateApplication(actor.Address, actor.MaxRelays, newAmount, actor.Chains); err != nil {
+	if err := ctx.UpdateApp(actor.Address, actor.MaxRelays, newAmount, actor.Chains); err != nil {
 		t.Fatal(err)
 	}
 	actor = GetAllTestingApps(t, ctx)[0]

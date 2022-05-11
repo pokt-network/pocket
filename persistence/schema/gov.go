@@ -3,6 +3,7 @@ package schema
 import (
 	"encoding/hex"
 	"fmt"
+
 	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
@@ -165,7 +166,6 @@ func SetParam(paramName string, paramValue interface{}, height int64) string {
 		}
 	}
 	subQuery += fmt.Sprintf(` FROM %s WHERE end_height=%d`, ParamsTableName, height)
-	fmt.Println(fmt.Sprintf(`INSERT INTO %s((%s))`, ParamsTableName, subQuery))
 	return fmt.Sprintf(`INSERT INTO %s((%s))`, ParamsTableName, subQuery)
 }
 
