@@ -81,6 +81,10 @@ func (node *Node) Start() error {
 		return err
 	}
 
+	if err := node.GetBus().GetTelemetryModule().Start(); err != nil {
+		return err
+	}
+
 	if err := node.GetBus().GetPersistenceModule().Start(); err != nil {
 		return err
 	}
