@@ -23,6 +23,7 @@ services:
       - "7080" # dlv debug
       - "8080"
       - "9080"
+      - "9000"
     ports:
       - "7081:7081"
       - "8081:8080"
@@ -47,6 +48,7 @@ services:
       - "7082" # dlv debug
       - "8080"
       - "9080"
+      - "9000"
     ports:
       - "7082:7082"
       - "8082:8080"
@@ -71,6 +73,7 @@ services:
       - "7083" # dlv debug
       - "8080"
       - "9080"
+      - "9000"
     ports:
       - "7083:7083"
       - "8083:8080"
@@ -95,6 +98,7 @@ services:
       - "7084" # dlv debug
       - "8080"
       - "9080"
+      - "9000"
     ports:
       - "7084:7084"
       - "8084:8080"
@@ -145,6 +149,11 @@ services:
     container_name: victoria-metrics
     image: victoriametrics/victoria-metrics
     restart: always
+    depends_on:
+      - node1.consensus
+      - node2.consensus
+      - node3.consensus
+      - node4.consensus
     ports:
       - "8428:8428"
     volumes:

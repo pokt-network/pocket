@@ -76,6 +76,23 @@ func (m *p2pModule) GetBus() modules.Bus {
 func (m *p2pModule) Start() error {
 	log.Println("Starting network module")
 
+	telemetryMod := m.GetBus().GetTelemetryModule()
+
+	telemetryMod.RegisterCounterMetric(
+		"nodes",
+		"the counter to track the number of nodes online",
+	)
+
+	telemetryMod.RegisterCounterMetric(
+		"received_messages",
+		"the counter to track received messages",
+	)
+
+	telemetryMod.RegisterCounterMetric(
+		"opened_connections",
+		"the counter to track how many connections were open",
+	)
+
 	go func() {
 		for {
 			data, err := m.listener.Read()
@@ -83,9 +100,21 @@ func (m *p2pModule) Start() error {
 				log.Println("Error reading data from connection: ", err)
 				continue
 			}
+
+			m.GetBus().
+				GetTelemetryModule().
+				IncrementCounterMetric("opened_connections")
+
 			go m.handleNetworkMessage(data)
 		}
 	}()
+
+	// TODO(tema):
+	// No way to know if the node has actually properly started as of the current implementation of m.listener
+	// Make sure to do this after the node has started if the implementation allowed for this in the future.
+	m.GetBus().
+		GetTelemetryModule().
+		IncrementCounterMetric("nodes")
 
 	return nil
 }
@@ -125,6 +154,10 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 }
 
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
+	m.GetBus().
+		GetTelemetryModule().
+		IncrementCounterMetric("receieved_messages")
+
 	appMsgData, err := m.network.HandleNetworkData(networkMsgData)
 	if err != nil {
 		log.Println("Error handling raw data: ", err)

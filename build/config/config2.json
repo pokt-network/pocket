@@ -36,5 +36,9 @@
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
     "schema": "node2"
   },
-  "utility": {}
+  "utility": {},
+  "telemetry": {
+  	"address": "172.18.0.2:9000",
+    "endpoint": "/metrics"
+  }
 }
