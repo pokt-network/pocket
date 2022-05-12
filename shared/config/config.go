@@ -23,6 +23,7 @@ type JsonConfig struct {
 	PrePersistence PrePersistenceConfig `json:"pre_persistence"`
 	Persistence    PersistenceConfig    `json:"persistence"`
 	Utility        UtilityConfig        `json:"utility"`
+	Telemetry      TelemetryConfig      `json:"telemetry"`
 }
 type Config struct {
 	RootDir string `json:"root_dir"`
@@ -174,6 +175,8 @@ func (c *ConsensusConfig) ValidateAndHydrate() error {
 	return nil
 }
 
+// This was added to fix config parsing errors that rise a Marshal time
+// due to encoding issues coming from unrecognized character(s)
 func (jc *JsonConfig) toConfig() *Config {
 	pc := &Config{
 		RootDir: jc.RootDir,
@@ -206,9 +209,15 @@ func (jc *JsonConfig) toConfig() *Config {
 			MempoolMaxTxs:   jc.PrePersistence.MempoolMaxTxs,
 		},
 		Persistence: &PersistenceConfig{
-			DataDir: jc.Persistence.DataDir,
+			DataDir:     jc.Persistence.DataDir,
+			PostgresUrl: jc.Persistence.PostgresUrl,
+			NodeSchema:  jc.Persistence.NodeSchema,
 		},
 		Utility: &UtilityConfig{},
+		Telemetry: &TelemetryConfig{
+			Address:  jc.Telemetry.Address,
+			Endpoint: jc.Telemetry.Endpoint,
+		},
 	}
 	return pc
 }

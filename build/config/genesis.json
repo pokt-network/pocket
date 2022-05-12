@@ -12,7 +12,7 @@
   "validators": [
     {
       "status": 2,
-      "service_url": "node1.consensus:8080",
+      "service_url": "node1.consensus:8081",
       "staked_tokens": "1000000000000000",
       "address": "0157a1d82da437eb6b2d0a612ebf934c3a54fb19",
       "output": "0157a1d82da437eb6b2d0a612ebf934c3a54fb19",
@@ -20,7 +20,7 @@
     },
     {
       "status": 2,
-      "service_url": "node2.consensus:8080",
+      "service_url": "node2.consensus:8082",
       "staked_tokens": "1000000000000000",
       "address": "4cda991a51da75acf50e966c2716a7a2837d72eb",
       "output": "4cda991a51da75acf50e966c2716a7a2837d72eb",
@@ -28,7 +28,7 @@
     },
     {
       "status": 2,
-      "service_url": "node3.consensus:8080",
+      "service_url": "node3.consensus:8083",
       "staked_tokens": "1000000000000000",
       "address": "67f6e8c48c62dc62a3706e7a8ba2164ca345d762",
       "output": "67f6e8c48c62dc62a3706e7a8ba2164ca345d762",
@@ -36,7 +36,7 @@
     },
     {
       "status": 2,
-      "service_url": "node4.consensus:8080",
+      "service_url": "node4.consensus:8084",
       "staked_tokens": "1000000000000000",
       "address": "b0cca84843f6f5a274150a98da66d78f0273f64e",
       "output": "b0cca84843f6f5a274150a98da66d78f0273f64e",

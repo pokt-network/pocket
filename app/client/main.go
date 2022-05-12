@@ -148,7 +148,9 @@ func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 	// }
 
 	for _, val := range typesGenesis.GetNodeState(nil).ValidatorMap {
-		p2pMod.Send(val.Address, anyProto, types.PocketTopic_DEBUG_TOPIC)
+		if err := p2pMod.Send(val.Address, anyProto, types.PocketTopic_DEBUG_TOPIC); err != nil {
+			log.Printf("[ERROR]: Send failed due to %s.\n", err.Error())
+		}
 	}
 
 	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use

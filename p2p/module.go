@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"fmt"
 	"log"
 
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -10,6 +11,8 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	shared "github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 type p2pModule struct {
@@ -88,9 +91,18 @@ func (m *p2pModule) Broadcast(data *anypb.Any, topic shared.PocketTopic) error {
 }
 
 func (m *p2pModule) Send(addr cryptoPocket.Address, data *anypb.Any, topic shared.PocketTopic) error {
-	msg := types.NewP2PMessage(0, 0, m.node.Address(), string(addr), &shared.PocketEvent{
+	var tcpAddr string
+	v, exists := typesGenesis.GetNodeState(nil).ValidatorMap[addr.String()]
+	if !exists {
+		return fmt.Errorf("[ERROR]: p2p send: address not in validator map")
+	}
+	tcpAddr = v.ServiceUrl
+
+	m.node.Info("Sending to:", tcpAddr)
+
+	msg := types.NewP2PMessage(0, 0, m.node.Address(), tcpAddr, &shared.PocketEvent{
 		Topic: topic,
 		Data:  data,
 	})
-	return m.node.SendMessage(0, string(addr), msg)
+	return m.node.WriteMessage(0, tcpAddr, msg)
 }
