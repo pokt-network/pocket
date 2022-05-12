@@ -22,8 +22,8 @@ const (
 			unstaking_height BIGINT NOT NULL default -1,
 			end_height       BIGINT NOT NULL default -1
 		)`
-	AppUniquePausedHeightIndex = `CREATE UNIQUE INDEX IF NOT EXISTS app_paused_height ON app (address, paused_height)`
-	// AppUniqueUnstakingHeightIndex = `CREATE UNIQUE INDEX IF NOT EXISTS app_create_height ON app (address, unstaking_height)`
+	AppUniquePausedHeightIndex    = `CREATE UNIQUE INDEX IF NOT EXISTS app_paused_height ON app (address, paused_height)`
+	AppUniqueUnstakingHeightIndex = `CREATE UNIQUE INDEX IF NOT EXISTS app_unstaking ON app (address, unstaking_height)`
 	// AppUniqueCreateHeightIndex    = `CREATE UNIQUE INDEX IF NOT EXISTS app_create_height ON app (address, end_height)`
 
 	AppChainsTableName   = "app_chains"
@@ -107,7 +107,9 @@ func UpdateAppQuery(address, stakedTokens, maxRelays string, height int64) strin
 				FROM %s WHERE address='%s' AND (end_height=%d OR end_height=%d)
 			)
 		ON CONFLICT (address, paused_height) DO UPDATE SET staked_tokens='%s', max_relays='%s', end_height=%d`,
-		AppTableName, stakedTokens, maxRelays, DefaultEndHeight, AppTableName, address, height, DefaultEndHeight,
+		AppTableName,
+		stakedTokens, maxRelays, DefaultEndHeight,
+		AppTableName, address, height, DefaultEndHeight,
 		stakedTokens, maxRelays, DefaultEndHeight)
 }
 
@@ -119,7 +121,9 @@ func UpdateAppUnstakingHeightQuery(address string, unstakingHeight, height int64
 				FROM %s WHERE address='%s' AND (end_height=%d OR end_height=%d)
 			)
 		ON CONFLICT (address, paused_height) DO UPDATE SET unstaking_height='%d', end_height=%d`,
-		AppTableName, unstakingHeight, DefaultEndHeight, AppTableName, address, height, DefaultEndHeight,
+		AppTableName,
+		unstakingHeight, DefaultEndHeight,
+		AppTableName, address, height, DefaultEndHeight,
 		unstakingHeight, DefaultEndHeight)
 
 }
@@ -129,10 +133,12 @@ func UpdateAppPausedHeightQuery(address string, pausedHeight, height int64) stri
 		INSERT INTO %s(address, public_key, staked_tokens, max_relays, output_address, paused_height, unstaking_height, end_height)
 			(
 				SELECT address, public_key, staked_tokens, max_relays, output_address, %d, unstaking_height, %d
-				FROM %s WHERE address='%s'AND (end_height=%d OR end_height=%d)
+				FROM %s WHERE address='%s' AND (end_height=%d OR end_height=%d)
 			)
 		ON CONFLICT (address, paused_height) DO UPDATE SET paused_height='%d', end_height=%d`,
-		AppTableName, pausedHeight, DefaultEndHeight, AppTableName, address, height, DefaultEndHeight,
+		AppTableName,
+		pausedHeight, DefaultEndHeight,
+		AppTableName, address, height, DefaultEndHeight,
 		pausedHeight, DefaultEndHeight)
 }
 
@@ -141,17 +147,19 @@ func UpdateAppsPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight in
 		INSERT INTO %s(address, public_key, staked_tokens, max_relays, output_address, paused_height, unstaking_height, end_height)
 			(
 				SELECT address, public_key, staked_tokens, max_relays, output_address, paused_height, %d, %d
-				FROM %s WHERE paused_height<%d AND paused_height!=(-1) AND end_height=%d
+				FROM %s WHERE paused_height<%d AND paused_height>=0 AND (end_height=%d OR end_height=%d)
 			)
 		ON CONFLICT (address, paused_height) DO UPDATE SET unstaking_height='%d', end_height=%d`,
-		AppTableName, unstakingHeight, DefaultEndHeight, AppTableName, pauseBeforeHeight, currentHeight,
+		AppTableName,
+		unstakingHeight, DefaultEndHeight,
+		AppTableName, pauseBeforeHeight, currentHeight, DefaultEndHeight,
 		unstakingHeight, DefaultEndHeight)
 }
 
 func NullifyAppsPausedBeforeQuery(pausedBeforeHeight, height int64) string {
 	return fmt.Sprintf(`
 		UPDATE %s SET end_height=%d
-		WHERE paused_height<%d AND paused_height!=(-1) AND end_height=%d`,
+		WHERE paused_height<%d AND paused_height>=0 AND end_height=%d`,
 		AppTableName, height, pausedBeforeHeight, DefaultEndHeight)
 }
 
