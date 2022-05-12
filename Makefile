@@ -105,7 +105,7 @@ mockgen:
 		-aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 
 	mockgen \
-		--source=${modules_dir}/pocket_bus_module.go \
+		--source=${modules_dir}/bus_module.go \
 		-destination=${modules_dir}/mocks/pocket_bus_module_mock.go \
 		-aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 
@@ -190,11 +190,11 @@ protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
 
 
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto         --go_out=./shared/types         ./shared/types/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto              --go_out=./utility/types        ./utility/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto      --go_out=./consensus/types      ./consensus/types/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/types/proto --go_out=./p2p/types/ ./p2p/types/proto/*.proto
+	protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto         --go_out=./shared/types         ./shared/types/proto/*.proto
+	protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto              --go_out=./utility/types        ./utility/proto/*.proto
+	protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto
+	protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto      --go_out=./consensus/types      ./consensus/types/proto/*.proto
+	protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/types/proto --go_out=./p2p/types/ ./p2p/types/proto/*.proto
 
 	echo "View generated proto files by running: make protogen_show"
 
