@@ -153,14 +153,10 @@ func (m *p2pModule) Start() error {
 			}
 
 			log.Printf("Was it this one?")
-			m.GetBus().
-				GetTelemetryModule().
-				IncrementCounterMetric("p2p_opened_connections_total")
+			m.IncrementCounterMetric("p2p_opened_connections_total")
 
 			log.Printf("or that one?")
-			m.GetBus().
-				GetTelemetryModule().
-				IncrementCounterMetric("p2p_msg_received_total")
+			m.IncrementCounterMetric("p2p_msg_received_total")
 
 			go m.handleNetworkMessage(data)
 		}

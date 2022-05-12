@@ -64,7 +64,8 @@ func main() {
 				"4@node4.consensus:8084",
 				"5@client:8085",
 			},
-			Redundancy: true,
+			Redundancy:      true,
+			EnableTelemetry: false,
 		},
 	}
 

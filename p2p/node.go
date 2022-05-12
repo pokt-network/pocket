@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"os"
 	"strconv"
@@ -14,6 +15,7 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/modules"
 	"go.uber.org/atomic"
 	"google.golang.org/protobuf/proto"
 )
@@ -43,6 +45,7 @@ type (
 		SetId(id int)
 		AddMsgToHistory(int64)
 		IsMsgInHistory(int64) bool
+		SetTelemetry(modules.TelemetryModule)
 	}
 	p2pNode struct {
 		sync.Mutex
@@ -50,6 +53,9 @@ type (
 		net.Dialer
 		*wireCodec
 		types.Logger
+
+		telemetry   modules.TelemetryModule
+		telemetryOn bool
 
 		config map[string]interface{}
 		ID     int
@@ -149,8 +155,10 @@ func NewP2PNode(config map[string]interface{}) *p2pNode {
 		handlers:        make([]MessageHandler, 0),
 		peerList:        make([]peerInfo, 0),
 		messagesHistory: make(map[int64]bool),
+		telemetryOn:     config["enable_telemetry"].(bool),
 	}
 
+	log.Printf("telemetry status: ON=%v\n", node.telemetryOn)
 	// TODO(derrandz): refactor when the addressbook is spec'd out
 	if _, exists := config["peers"]; exists && len(config["peers"].([]string)) > 0 {
 		for _, peerString := range config["peers"].([]string) {
@@ -285,6 +293,8 @@ func (n *p2pNode) HandleConnection(direction Direction, c net.Conn, signaler cha
 	n.peers.Unlock()
 
 	n.Info("New connection successfully pooled")
+	n.IncrementCounterMetric("p2p_connections_pooled_total")
+	n.IncrementCounterMetric("p2p_connections_opened_total")
 
 	// add handshake logic
 
@@ -305,32 +315,37 @@ func (n *p2pNode) HandleConnection(direction Direction, c net.Conn, signaler cha
 		for {
 			select {
 			case <-n.quit:
-				n.Info("Read: Got it?")
+				n.IncrementCounterMetric("p2p_connections_closed_total")
 				return
 			case <-p.Context.Done():
-				n.Info("Read: Got it?")
+				n.IncrementCounterMetric("p2p_connections_closed_total")
 				return
 			default:
 				n.Debug("Read: blocking")
 				if _, err := io.ReadFull(p.reader, p.readBuffer[:WireCodecHeaderSize]); err != nil {
 					n.Debug("read error", err)
+					n.IncrementCounterMetric("p2p_connections_closed_total")
 					return
 				}
 
 				_, nonce, isProto, size, err := n.decodeHeader(p.readBuffer[:WireCodecHeaderSize])
 				if err != nil {
 					n.Debug("header decoding", err)
+					n.IncrementCounterMetric("p2p_connections_closed_total")
 					return
 				}
 
 				// TODO(derrandz): replace with configurable max value or keep it as is (i.e: max=chunk size) ??
+				// TODO(derrandz): don't drop the connection, send err over
 				if size > uint32(len(p.readBuffer)-WireCodecHeaderSize) {
 					n.Debug("invalid body size", err)
+					n.IncrementCounterMetric("p2p_connections_closed_total")
 					return
 				}
 
 				if nbytes, err := io.ReadFull(p.reader, p.readBuffer[WireCodecHeaderSize:WireCodecHeaderSize+int(size)]); err != nil || nbytes == 0 {
 					n.Debug("body read error", err)
+					n.IncrementCounterMetric("p2p_connections_closed_total")
 					return
 				}
 
@@ -372,9 +387,11 @@ func (n *p2pNode) HandleConnection(direction Direction, c net.Conn, signaler cha
 			select {
 			case <-n.quit:
 				n.Info("Write: Got it?")
+				n.IncrementCounterMetric("p2p_connections_closed_total")
 				return
 			case <-p.Context.Done():
 				n.Info("Read: Got it?")
+				n.IncrementCounterMetric("p2p_connections_closed_total")
 				return
 
 			case <-p.signals():
@@ -391,11 +408,13 @@ func (n *p2pNode) HandleConnection(direction Direction, c net.Conn, signaler cha
 
 				if _, err := p.writer.Write(buff); err != nil {
 					n.Debug("write error", err)
+					n.IncrementCounterMetric("p2p_connections_closed_total")
 					return
 				}
 
 				if err := p.writer.Flush(); err != nil {
 					n.Debug("flush error", err)
+					n.IncrementCounterMetric("p2p_connections_closed_total")
 					return
 				}
 			}
@@ -444,6 +463,7 @@ func (n *p2pNode) HandleMessage(nonce uint32, msg *types.P2PMessage) {
 
 	if n.IsMsgInHistory(msg.Metadata.Hash) {
 		n.Log("HandleMessage: message already in history, not handling")
+		n.IncrementCounterMetric("p2p_msg_handle_skipped_total")
 		return
 	}
 
@@ -521,7 +541,12 @@ func (n *p2pNode) SendMessage(nonce uint32, address string, msg *types.P2PMessag
 		return err
 	}
 
-	return n.Send(nonce, address, data, true)
+	if err = n.Send(nonce, address, data, true); err != nil {
+		n.IncrementCounterMetric("p2p_msg_msg_failed_total")
+		return err
+	}
+	n.IncrementCounterMetric("p2p_msg_msg_succeeded_total")
+	return nil
 }
 
 func (n *p2pNode) Write(address string, data []byte) error {
@@ -544,6 +569,10 @@ func (n *p2pNode) Write(address string, data []byte) error {
 			n.config["readBufferSize"].(int),
 			n.config["writeBufferSize"].(int),
 		)
+
+		if n.telemetry != nil {
+			n.IncrementCounterMetric("p2p_connections_opened_total")
+		}
 	}
 
 	_, err := peer.Conn.Write(data)
@@ -552,6 +581,10 @@ func (n *p2pNode) Write(address string, data []byte) error {
 	}
 
 	peer.Conn.Close()
+
+	if n.telemetry != nil {
+		n.IncrementCounterMetric("p2p_connections_closed_total")
+	}
 
 	return nil
 }
@@ -679,8 +712,11 @@ func (n *p2pNode) BroadcastMessage(msg *types.P2PMessage, isRoot bool, fromLevel
 
 	err = n.Broadcast(encodedData, isRoot, fromLevel)
 	if err != nil {
+		n.IncrementCounterMetric("p2p_msg_broadcast_failed_total")
 		return err
 	}
+
+	n.IncrementCounterMetric("p2p_msg_broadcast_succeeded_total")
 
 	// redundancy layer
 	if isRoot && n.config["redundancy"].(bool) {
@@ -712,6 +748,26 @@ func (n *p2pNode) AddMsgToHistory(msgHash int64) {
 func (n *p2pNode) IsMsgInHistory(id int64) bool {
 	_, seen := n.messagesHistory[id]
 	return seen
+}
+
+func (p *p2pNode) SetTelemetry(telemetry modules.TelemetryModule) {
+	p.telemetry = telemetry
+}
+
+func (p *p2pNode) RegisterCounterMetric(name string, description string) {
+	if p.telemetryOn {
+		if telemetry := p.telemetry; telemetry != nil {
+			telemetry.RegisterCounterMetric(name, description)
+		}
+	}
+}
+
+func (p *p2pNode) IncrementCounterMetric(name string) {
+	if p.telemetryOn {
+		if telemetry := p.telemetry; telemetry != nil {
+			telemetry.IncrementCounterMetric(name)
+		}
+	}
 }
 
 // p2pConn additional functionality

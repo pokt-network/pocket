@@ -73,6 +73,7 @@ type P2PConfig struct {
 	TimeoutInMs      uint     `json:"timeout_in_ms,omitempty"`
 	ID               int      `json:"id,omitempty"`
 	Redundancy       bool     `json:"redundancy,omitempty"`
+	EnableTelemetry  bool     `json:"enable_telemetry"`
 }
 
 type PacemakerConfig struct {
@@ -183,7 +184,14 @@ func (jc *JsonConfig) toConfig() *Config {
 		Genesis: jc.Genesis,
 
 		PrivateKey: cryptoPocket.Ed25519PrivateKey([]byte(jc.PrivateKey)),
-
+		Pre2P: &Pre2PConfig{
+			ConsensusPort:             jc.Pre2P.ConsensusPort,
+			UseRainTree:               jc.Pre2P.UseRainTree,
+			RainTreeRedundancyLayerOn: jc.Pre2P.RainTreeRedundancyLayerOn,
+			RainTreeCleanupLayerOn:    jc.Pre2P.RainTreeCleanupLayerOn,
+			ConnectionType:            jc.Pre2P.ConnectionType,
+			EnableTelemetry:           jc.Pre2P.EnableTelemetry,
+		},
 		P2P: &P2PConfig{
 			ID:               jc.P2P.ID,
 			Protocol:         jc.P2P.Protocol,
@@ -193,6 +201,7 @@ func (jc *JsonConfig) toConfig() *Config {
 			BufferSize:       jc.P2P.BufferSize,
 			WireHeaderLength: jc.P2P.WireHeaderLength,
 			TimeoutInMs:      jc.P2P.TimeoutInMs,
+			EnableTelemetry:  jc.P2P.EnableTelemetry,
 		},
 		Consensus: &ConsensusConfig{
 			MaxMempoolBytes: jc.Consensus.MaxMempoolBytes,

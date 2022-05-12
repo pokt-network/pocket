@@ -19,7 +19,8 @@
       "2@node2.consensus:8082",
       "3@node3.consensus:8083",
       "4@node4.consensus:8084"
-    ]
+    ],
+    "enable_telemetry": true
   },
   "consensus": {
     "max_mempool_bytes": 500000000,
