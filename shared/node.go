@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/pokt-network/pocket/p2p"
+	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"
@@ -16,13 +17,13 @@ import (
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/telemetry"
 )
 
 var _ modules.Module = &Node{}
 
 type Node struct {
-	bus modules.Bus
-
+	bus     modules.Bus
 	Address cryptoPocket.Address
 }
 
@@ -30,7 +31,14 @@ func Create(cfg *config.Config) (n *Node, err error) {
 	// TODO(design): initialize the state singleton until we have a proper solution for this.
 	_ = typesGenesis.GetNodeState(cfg)
 
-	// persistenceMod, err := persistence.Create(cfg)
+	// TODO(drewsky): The module is initialized to run background processes during development
+	// to make sure it's part of the node's lifecycle, but is not referenced YET byt the app specific
+	// bus.
+	if _, err := persistence.Create(cfg); err != nil {
+		return nil, err
+	}
+
+	// TODO(drewsky): deprecate pre-persistence
 	prePersistenceMod, err := pre_persistence.Create(cfg)
 	if err != nil {
 		return nil, err
@@ -55,7 +63,12 @@ func Create(cfg *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(prePersistenceMod, p2pMod, utilityMod, consensusMod)
+	telemetryMod, err := telemetry.Create(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	bus, err := CreateBus(prePersistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod)
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +83,10 @@ func (node *Node) Start() error {
 	log.Println("Starting pocket node...")
 
 	// NOTE: Order of module startup here matters.
+
+	if err := node.GetBus().GetTelemetryModule().Start(); err != nil {
+		return err
+	}
 
 	if err := node.GetBus().GetPersistenceModule().Start(); err != nil {
 		return err
@@ -122,6 +139,8 @@ func (node *Node) handleEvent(event *types.PocketEvent) error {
 		return node.GetBus().GetConsensusModule().HandleMessage(event.Data)
 	case types.PocketTopic_DEBUG_TOPIC:
 		return node.handleDebugEvent(event.Data)
+	case types.PocketTopic_POCKET_NODE_TOPIC:
+		log.Println("NOOP - Received pocket node topic signal")
 	default:
 		log.Printf("[WARN] Unsupported PocketEvent topic: %s \n", event.Topic)
 	}

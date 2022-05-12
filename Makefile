@@ -62,10 +62,43 @@ client_start:
 client_connect:
 	docker exec -it client /bin/bash -c "go run app/client/*.go"
 
+# TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
+
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-compose_and_watch:
-	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate client node1.consensus node2.consensus node3.consensus node4.consensus
+compose_and_watch: db_start
+	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+
+.PHONY: db_start
+## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
+db_start:
+	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d db pgadmin
+
+.PHONY: db_cli
+## Open a CLI to the local containerized postgres instance
+db_cli:
+	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
+	docker exec -it pocket-db bash -c "psql -U postgres"
+
+.PHONY: db_drop
+## Drop all schemas used for LocalNet development matching `node%`
+db_drop:
+	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/drop_all_schemas.sql"
+
+.PHONY: db_bench_init
+## Initialize pgbench on local postgres - needs to be called once after container is created.
+db_bench_init:
+	docker exec -it pocket-db bash -c "pgbench -i -U postgres -d postgres"
+
+.PHONY: db_bench
+## Run a local benchmark against the local postgres instance - TODO(olshansky): visualize results
+db_bench:
+	docker exec -it pocket-db bash -c "pgbench -U postgres -d postgres"
+
+.PHONY: db_admin
+## Helper to access to postgres admin GUI interface
+db_admin:
+	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
 
 .PHONY: compose_and_watch
 ## Kill all containers started by the docker-compose file
@@ -84,33 +117,17 @@ docker_wipe: prompt_user
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
 	$(eval modules_dir = "shared/modules")
-	mockgen \
-		--source=${modules_dir}/persistence_module.go \
-		-destination=${modules_dir}/mocks/persistence_module_mock.go \
-		-aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-
-	mockgen \
-		--source=${modules_dir}/p2p_module.go \
-		-destination=${modules_dir}/mocks/p2p_module_mock.go \
-		-aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-
-	mockgen \
-		--source=${modules_dir}/utility_module.go \
-		-destination=${modules_dir}/mocks/utility_module_mock.go \
-		-aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-
-	mockgen \
-		--source=${modules_dir}/consensus_module.go \
-		-destination=${modules_dir}/mocks/consensus_module_mock.go \
-		-aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-
-	mockgen \
-		--source=${modules_dir}/bus_module.go \
-		-destination=${modules_dir}/mocks/pocket_bus_module_mock.go \
-		-aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-
-
+	mockgen --source=${modules_dir}/persistence_module.go -destination=${modules_dir}/mocks/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/p2p_module.go -destination=${modules_dir}/mocks/p2p_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/bus_module.go -destination=${modules_dir}/mocks/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	echo "Mocks generated in ${modules_dir}/mocks"
+
+	$(eval p2p_types_dir = "p2p/pre2p/types")
+	mockgen --source=${p2p_types_dir}/network.go -destination=${p2p_types_dir}/mocks/network_mock.go
+	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
+
 
 .PHONY: test_all
 ## Run all go unit tests
@@ -126,11 +143,6 @@ test_utility_module: # generate_mocks
 ## Run all go utility types module unit tests
 test_utility_types: # generate_mocks
 	go test -v ./utility/types/...
-
-.PHONY: test_pre2p
-## Run all go unit tests in the pre2p module
-test_pre2p: # generate_mocks
-	go test ./pre2p/...
 
 .PHONY: test_shared
 ## Run all go unit tests in the shared module
@@ -188,28 +200,15 @@ protogen_clean:
 ## Generate go structures for all of the protobufs
 protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
+	$(eval shared_flags = "--experimental_allow_proto3_optional")
 
 
-	protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto         --go_out=./shared/types         ./shared/types/proto/*.proto
-	protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto              --go_out=./utility/types        ./utility/proto/*.proto
-	protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto
-	protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto      --go_out=./consensus/types      ./consensus/types/proto/*.proto
-	protoc --experimental_allow_proto3_optional --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/types/proto --go_out=./p2p/types/ ./p2p/types/proto/*.proto
-
-	echo "View generated proto files by running: make protogen_show"
-
-# TODO(team): Delete this once the `prototype` directory is removed.
-.PHONY: protogen_local_prototype
-## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
-protogen_local_prototype:
-	$(eval prefix = "./prototype")
-	$(eval proto_dir = "${prefix}/shared/types/proto/")
-
-	protoc -I=${proto_dir} --go_out=./ ${proto_dir}/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/persistence/pre_persistence/proto --go_out=${prefix} ${prefix}/persistence/pre_persistence/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/p2p/pre_p2p/types/proto --go_out=${prefix} ${prefix}/p2p/pre_p2p/types/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/utility/proto --go_out=${prefix} ${prefix}/utility/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/consensus/types/proto --go_out=${prefix} ${prefix}/consensus/types/proto/*.proto
+	protoc ${shared_flags} --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto         --go_out=./shared/types         ./shared/types/proto/*.proto
+	protoc ${shared_flags} --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto              --go_out=./utility/types        ./utility/proto/*.proto
+	protoc ${shared_flags} --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto
+	protoc ${shared_flags} --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto      --go_out=./consensus/types      ./consensus/types/proto/*.proto
+	protoc ${shared_flags} --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/types/proto --go_out=./p2p/types/ ./p2p/types/proto/*.proto
+	protoc ${shared_flags} --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/pre2p/raintree/types/proto --go_out=./p2p/pre2p/types      ./p2p/pre2p/raintree/types/proto/*.proto
 
 	echo "View generated proto files by running: make protogen_show"
 
@@ -273,6 +272,12 @@ test_p2p_types:
 ## Run all p2p tests
 test_p2p:
 	go test -v -race ./p2p
+
+.PHONY: test_p2p
+## Run all pre2p
+test_pre2p:
+# go test -v -count=1 ./p2p/pre2p
+	go test -v -race -count=1 ./p2p/pre2p
 
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)

@@ -23,12 +23,16 @@ services:
       - "7080" # dlv debug
       - "8080"
       - "9080"
+      - "9000"
     ports:
       - "7081:7081"
       - "8081:8080"
       - "9081:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
     # Uncomment to enable DLV debugging
     # environment:
     #   - DEBUG_PORT=7081
@@ -44,15 +48,19 @@ services:
       - "7082" # dlv debug
       - "8080"
       - "9080"
+      - "9000"
     ports:
       - "7082:7082"
       - "8082:8080"
       - "9082:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
     # Uncomment to enable DLV debugging
-    # environment:
-    #   - DEBUG_PORT=7082
+    environment:
+      - DEBUG_PORT=7082
 
   node3.consensus:
     container_name: node3.consensus
@@ -65,12 +73,16 @@ services:
       - "7083" # dlv debug
       - "8080"
       - "9080"
+      - "9000"
     ports:
       - "7083:7083"
       - "8083:8080"
       - "9083:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
     # Uncomment to enable DLV debugging
     # environment:
     #   - DEBUG_PORT=7083
@@ -86,12 +98,70 @@ services:
       - "7084" # dlv debug
       - "8080"
       - "9080"
+      - "9000"
     ports:
       - "7084:7084"
       - "8084:8080"
       - "9084:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
   # Uncomment to enable DLV debugging
   # environment:
   #   - DEBUG_PORT=7084
+
+  db:
+    container_name: pocket-db
+    # image: postgis/postgis  # TODO(olshansky): switch image when we start adding support for GeoZones
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ${PWD}/build/sql:/tmp/scripts
+      - db:/var/lib/postgresql/data
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    depends_on:
+      - db
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: pgadmin4
+      PGADMIN_LISTEN_ADDRESS: 0.0.0.0
+      PGADMIN_LISTEN_PORT: 5050
+    volumes:
+      - ${PWD}/build/pgadmin/servers.json:/pgadmin4/servers.json
+      - ${PWD}/build/pgadmin/pgpass.json:/pgpass
+
+    ports:
+      - "5050:5050"
+
+  vm:
+    container_name: victoria-metrics
+    image: victoriametrics/victoria-metrics
+    restart: always
+    ports:
+      - "8428:8428"
+    volumes:
+      - vm:/storage
+      - ./victoria-metrics:/configs
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - "--storageDataPath=/storage"
+      - "--httpListenAddr=:8428"
+      - "--promscrape.config=/configs/scrape.yml"
+
+volumes:
+  db:
+    driver: local
+  vm:
+    driver: local

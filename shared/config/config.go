@@ -26,7 +26,7 @@ type JsonConfig struct {
 }
 type Config struct {
 	RootDir string `json:"root_dir"`
-	Genesis string `json:"genesis"`
+	Genesis string `json:"genesis"` // FIXME(olshansky): we should be able to pass the struct in here.
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 
@@ -36,11 +36,24 @@ type Config struct {
 	PrePersistence *PrePersistenceConfig `json:"pre_persistence"`
 	Persistence    *PersistenceConfig    `json:"persistence"`
 	Utility        *UtilityConfig        `json:"utility"`
+	Telemetry      *TelemetryConfig      `json:"telemetry"`
 }
+
+type ConnectionType string
+
+const (
+	TCPConnection   ConnectionType = "tcp"
+	EmptyConnection ConnectionType = "empty" // Only used for testing
+)
 
 // TODO(derrandz): delete this once P2P is ready.
 type Pre2PConfig struct {
-	ConsensusPort uint32 `json:"consensus_port"`
+	ConsensusPort             uint32         `json:"consensus_port"`
+	UseRainTree               bool           `json:"use_raintree"`
+	RainTreeRedundancyLayerOn bool           `json:"rain_tree_redundancy_layer_on"`
+	RainTreeCleanupLayerOn    bool           `json:"rain_tree_cleanup_layer_on"`
+	ConnectionType            ConnectionType `json:"connection_type"`
+	EnableTelemetry           bool           `json:"enable_telemetry"`
 }
 
 type PrePersistenceConfig struct {
@@ -79,10 +92,17 @@ type ConsensusConfig struct {
 }
 
 type PersistenceConfig struct {
-	DataDir string `json:"datadir"`
+	DataDir     string `json:"datadir"`
+	PostgresUrl string `json:"postgres_url"`
+	NodeSchema  string `json:"schema"`
 }
 
 type UtilityConfig struct {
+}
+
+type TelemetryConfig struct {
+	Address  string
+	Endpoint string
 }
 
 // TODO(insert tooling issue # here): Re-evaluate how load configs should be handeled.
