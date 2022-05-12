@@ -110,7 +110,8 @@ func UpdateAppQuery(address, stakedTokens, maxRelays string, height int64) strin
 				SELECT address, public_key, '%s', '%s', output_address, paused_height, unstaking_height, %d
 				FROM %s WHERE address='%s' AND (end_height=%d OR end_height=%d)
 			)
-		ON CONFLICT ON CONSTRAINT app_end_height DO UPDATE SET staked_tokens=excluded.staked_tokens, max_relays=excluded.max_relays, end_height=excluded.end_height`,
+		ON CONFLICT ON CONSTRAINT app_end_height
+			DO UPDATE SET staked_tokens=EXCLUDED.staked_tokens, max_relays=EXCLUDED.max_relays, end_height=EXCLUDED.end_height`,
 		AppTableName,
 		stakedTokens, maxRelays, DefaultEndHeight,
 		AppTableName, address, height, DefaultEndHeight)
@@ -123,7 +124,8 @@ func UpdateAppUnstakingHeightQuery(address string, unstakingHeight, height int64
 				SELECT address, public_key, staked_tokens, max_relays, output_address, paused_height, %d, %d
 				FROM %s WHERE address='%s' AND (end_height=%d OR end_height=%d)
 			)
-		ON CONFLICT ON CONSTRAINT app_end_height DO UPDATE SET unstaking_height=excluded.unstaking_height, end_height=excluded.end_height`,
+		ON CONFLICT ON CONSTRAINT app_end_height
+			DO UPDATE SET unstaking_height=EXCLUDED.unstaking_height, end_height=EXCLUDED.end_height`,
 		AppTableName,
 		unstakingHeight, DefaultEndHeight,
 		AppTableName, address, height, DefaultEndHeight)
@@ -137,7 +139,8 @@ func UpdateAppPausedHeightQuery(address string, pausedHeight, height int64) stri
 				SELECT address, public_key, staked_tokens, max_relays, output_address, %d, unstaking_height, %d
 				FROM %s WHERE address='%s' AND (end_height=%d OR end_height=%d)
 			)
-		ON CONFLICT ON CONSTRAINT app_end_height DO UPDATE SET paused_height=excluded.paused_height, end_height=excluded.end_height`,
+		ON CONFLICT ON CONSTRAINT app_end_height
+			DO UPDATE SET paused_height=EXCLUDED.paused_height, end_height=EXCLUDED.end_height`,
 		AppTableName,
 		pausedHeight, DefaultEndHeight,
 		AppTableName, address, height, DefaultEndHeight)
@@ -150,7 +153,8 @@ func UpdateAppsPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight in
 				SELECT address, public_key, staked_tokens, max_relays, output_address, paused_height, %d, %d
 				FROM %s WHERE paused_height<%d AND paused_height>=0 AND (end_height=%d OR end_height=%d)
 			)
-		ON CONFLICT ON CONSTRAINT app_end_height DO UPDATE SET unstaking_height=excluded.unstaking_height, end_height=excluded.end_height`,
+		ON CONFLICT ON CONSTRAINT app_end_height
+			DO UPDATE SET unstaking_height=EXCLUDED.unstaking_height, end_height=EXCLUDED.end_height`,
 		AppTableName,
 		unstakingHeight, DefaultEndHeight,
 		AppTableName, pauseBeforeHeight, currentHeight, DefaultEndHeight)

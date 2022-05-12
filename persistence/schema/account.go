@@ -10,6 +10,7 @@ const (
 			height 	   BIGINT NOT NULL,
 			end_height BIGINT NOT NULL default -1,
 
+			/* DISCUSS(drewsky): We can't do ON CONFLICT multiple constraints, so what should we do here? */
 			CONSTRAINT account_create_height UNIQUE (address, height),
 			CONSTRAINT account_end_height UNIQUE (address, end_height)
 		)`
@@ -25,8 +26,8 @@ func InsertAccountAmountQuery(address, amount string, height int64) string {
 		INSERT INTO %s (address, balance, height, end_height)
 			VALUES ('%s','%s',%d, %d)
 			ON CONFLICT ON CONSTRAINT account_create_height
-			DO UPDATE SET balance='%s', end_height=%d
-		`, AccountTableName, address, amount, height, DefaultEndHeight, amount, DefaultEndHeight)
+			DO UPDATE SET balance=EXCLUDED.balance, end_height=EXCLUDED.end_height
+		`, AccountTableName, address, amount, height, DefaultEndHeight)
 }
 
 func NullifyAccountAmountQuery(address string, height int64) string {
@@ -57,8 +58,8 @@ func InsertPoolAmountQuery(name, amount string, height int64) string {
 		INSERT INTO %s (name, balance, height, end_height)
 			VALUES ('%s','%s',%d, %d)
 			ON CONFLICT ON CONSTRAINT pool_create_height
-			DO UPDATE SET balance='%s', end_height=%d
-		`, PoolTableName, name, amount, height, DefaultEndHeight, amount, DefaultEndHeight)
+			DO UPDATE SET balance=EXCLUDED.balance, end_height=EXCLUDED.end_height
+		`, PoolTableName, name, amount, height, DefaultEndHeight)
 }
 
 func NullifyPoolAmountQuery(name string, height int64) string {
