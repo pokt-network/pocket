@@ -141,12 +141,6 @@ func InitializeAppTables(ctx context.Context, db *pgx.Conn) error {
 	if err != nil {
 		return err
 	}
-	for _, uniqueIndex := range schema.AppUniqueIndecies {
-		if _, err := db.Exec(ctx, uniqueIndex); err != nil {
-			return err
-		}
-	}
-
 	_, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.AppChainsTableName, schema.AppChainsTableSchema))
 	if err != nil {
 		return err

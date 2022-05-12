@@ -10,7 +10,7 @@ const (
 	DefaultEndHeight       = -1 // TODO(team): Move this into a shared file?
 
 	// TODO (team) look into address being a "computed" field
-	// DISCUSS(drewskey): How do we handle historical queries here? E.g. get staked chains at some specific height?
+	// DISCUSS(drewsky): How do we handle historical queries here? E.g. get staked chains at some specific height?
 	AppTableName   = "app"
 	AppTableSchema = `(
 			address    	     TEXT NOT NULL,
@@ -20,24 +20,23 @@ const (
 			output_address   TEXT NOT NULL,
 			paused_height    BIGINT NOT NULL default -1,
 			unstaking_height BIGINT NOT NULL default -1,
-			end_height       BIGINT NOT NULL default -1
-		)`
+			end_height       BIGINT NOT NULL default -1,
 
-	AppUniqueIndexPauseHeight     = `CREATE UNIQUE INDEX IF NOT EXISTS app_paused_height ON app (address, paused_height)`
-	AppUniqueIndexUnstakingHeight = `CREATE UNIQUE INDEX IF NOT EXISTS app_unstaking_height ON app (address, unstaking_height)`
-	AppUniqueIndexEndHeight       = `CREATE UNIQUE INDEX IF NOT EXISTS app_end_height ON app (address, end_height)`
+			/* DISCUSS(drewsky): We can't do ON CONFLICT multiple constraints, so what should we do here? */
+			/* CONSTRAINT app_paused_height UNIQUE (address, paused_height), */
+			/* CONSTRAINT app_paused_height UNIQUE (address, unstaking_height), */
+			CONSTRAINT app_end_height UNIQUE (address, end_height)
+		)`
 
 	AppChainsTableName   = "app_chains"
 	AppChainsTableSchema = `(
 			address      TEXT NOT NULL,
 			chain_id     CHAR(4) NOT NULL,
-			end_height   BIGINT NOT NULL default -1
-		)`
-	AppChainUniqueIndexEndHeight = `CREATE UNIQUE INDEX IF NOT EXISTS app_chain_end_height ON app_chains (address, end_height)`
-)
+			end_height   BIGINT NOT NULL default -1,
 
-var AppUniqueIndecies = []string{AppUniqueIndexPauseHeight} //, AppUniqueIndexUnstakingHeight, AppUniqueIndexEndHeight}
-var AppChainUniqueIndecies = []string{AppChainUniqueIndexEndHeight}
+			CONSTRAINT app_chain_end_height UNIQUE (address, chain_id, end_height)
+		)`
+)
 
 func AppQuery(address string) string {
 	return fmt.Sprintf(`SELECT * FROM %s WHERE address='%s' AND end_height=%d`, AppTableName, address, DefaultEndHeight)
@@ -111,7 +110,7 @@ func UpdateAppQuery(address, stakedTokens, maxRelays string, height int64) strin
 				SELECT address, public_key, '%s', '%s', output_address, paused_height, unstaking_height, %d
 				FROM %s WHERE address='%s' AND (end_height=%d OR end_height=%d)
 			)
-		ON CONFLICT (address, paused_height) DO UPDATE SET staked_tokens=excluded.staked_tokens, max_relays=excluded.max_relays, end_height=excluded.end_height`,
+		ON CONFLICT ON CONSTRAINT app_end_height DO UPDATE SET staked_tokens=excluded.staked_tokens, max_relays=excluded.max_relays, end_height=excluded.end_height`,
 		AppTableName,
 		stakedTokens, maxRelays, DefaultEndHeight,
 		AppTableName, address, height, DefaultEndHeight)
@@ -124,7 +123,7 @@ func UpdateAppUnstakingHeightQuery(address string, unstakingHeight, height int64
 				SELECT address, public_key, staked_tokens, max_relays, output_address, paused_height, %d, %d
 				FROM %s WHERE address='%s' AND (end_height=%d OR end_height=%d)
 			)
-		ON CONFLICT (address, paused_height) DO UPDATE SET unstaking_height=excluded.unstaking_height, end_height=excluded.end_height`,
+		ON CONFLICT ON CONSTRAINT app_end_height DO UPDATE SET unstaking_height=excluded.unstaking_height, end_height=excluded.end_height`,
 		AppTableName,
 		unstakingHeight, DefaultEndHeight,
 		AppTableName, address, height, DefaultEndHeight)
@@ -138,7 +137,7 @@ func UpdateAppPausedHeightQuery(address string, pausedHeight, height int64) stri
 				SELECT address, public_key, staked_tokens, max_relays, output_address, %d, unstaking_height, %d
 				FROM %s WHERE address='%s' AND (end_height=%d OR end_height=%d)
 			)
-		ON CONFLICT (address, paused_height) DO UPDATE SET paused_height=excluded.paused_height, end_height=excluded.end_height`,
+		ON CONFLICT ON CONSTRAINT app_end_height DO UPDATE SET paused_height=excluded.paused_height, end_height=excluded.end_height`,
 		AppTableName,
 		pausedHeight, DefaultEndHeight,
 		AppTableName, address, height, DefaultEndHeight)
@@ -151,7 +150,7 @@ func UpdateAppsPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight in
 				SELECT address, public_key, staked_tokens, max_relays, output_address, paused_height, %d, %d
 				FROM %s WHERE paused_height<%d AND paused_height>=0 AND (end_height=%d OR end_height=%d)
 			)
-		ON CONFLICT (address, paused_height) DO UPDATE SET unstaking_height=excluded.unstaking_height, end_height=excluded.end_height`,
+		ON CONFLICT ON CONSTRAINT app_end_height DO UPDATE SET unstaking_height=excluded.unstaking_height, end_height=excluded.end_height`,
 		AppTableName,
 		unstakingHeight, DefaultEndHeight,
 		AppTableName, pauseBeforeHeight, currentHeight, DefaultEndHeight)
