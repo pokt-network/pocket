@@ -109,22 +109,9 @@ func InitializeAccountTables(ctx context.Context, db *pgx.Conn) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.AccountTableName, schema.AccountTableSchema)); err != nil {
 		return err
 	}
-	if _, err := db.Exec(ctx, schema.AccountUniqueCreateIndex); err != nil {
-		return err
-	}
-	if _, err := db.Exec(ctx, schema.AccountUniqueDeleteIndex); err != nil {
-		return err
-	}
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.PoolTableName, schema.PoolTableSchema)); err != nil {
 		return err
 	}
-	if _, err := db.Exec(ctx, schema.PoolUniqueCreateIndex); err != nil {
-		return err
-	}
-	if _, err := db.Exec(ctx, schema.PoolUniqueDeleteIndex); err != nil {
-		return err
-	}
-
 	return nil
 }
 
