@@ -10,6 +10,7 @@ const (
 	DefaultEndHeight       = -1 // TODO(team): Move this into a shared file?
 
 	// TODO (team) look into address being a "computed" field
+	// DISCUSS(drewskey): How do we handle historical queries here? E.g. get staked chains at some specific height?
 	AppTableName   = "app"
 	AppTableSchema = `(
 			address    	     TEXT NOT NULL,
@@ -21,7 +22,9 @@ const (
 			unstaking_height BIGINT NOT NULL default -1,
 			end_height       BIGINT NOT NULL default -1
 		)`
-	// AppUniqueCreateIndex = `CREATE UNIQUE INDEX IF NOT EXISTS app_create_height ON account (address, height)`
+	AppUniquePausedHeightIndex = `CREATE UNIQUE INDEX IF NOT EXISTS app_paused_height ON app (address, paused_height)`
+	// AppUniqueUnstakingHeightIndex = `CREATE UNIQUE INDEX IF NOT EXISTS app_create_height ON app (address, unstaking_height)`
+	// AppUniqueCreateHeightIndex    = `CREATE UNIQUE INDEX IF NOT EXISTS app_create_height ON app (address, end_height)`
 
 	AppChainsTableName   = "app_chains"
 	AppChainsTableSchema = `(
@@ -44,8 +47,9 @@ func AppExistsQuery(address string) string {
 	return fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE address='%s')`, AppTableName, address)
 }
 
+// DISCUSS(drewsky): Do we not want to filter by `unstaking_height >= unstakingHeight AND end_height=DefaultEndHeight=-1" here?
 func AppReadyToUnstakeQuery(unstakingHeight int64) string {
-	return fmt.Sprintf(`SELECT address,staked_tokens,output_address FROM %s WHERE unstaking_height=%d`, AppTableName, unstakingHeight)
+	return fmt.Sprintf(`SELECT address, staked_tokens, output_address FROM %s WHERE unstaking_height=%d`, AppTableName, unstakingHeight)
 }
 
 func AppOutputAddressQuery(operatorAddress string, height int64) string {
@@ -53,7 +57,7 @@ func AppOutputAddressQuery(operatorAddress string, height int64) string {
 		AppTableName, operatorAddress, DefaultEndHeight)
 }
 
-// TODO(team): if current_height == unstaking_height - is the actor unstaking or unstaked (i.e. did we process the block yet)?
+// DISCUSS(team): if current_height == unstaking_height - is the actor unstaking or unstaked (i.e. did we process the block yet)?
 func AppUnstakingHeightQuery(address string, height int64) string {
 	return fmt.Sprintf(`SELECT unstaking_height FROM %s WHERE address='%s' AND end_height=%d`,
 		AppTableName, address, DefaultEndHeight)
@@ -65,13 +69,16 @@ func AppPauseHeightQuery(address string, height int64) string {
 }
 
 func InsertAppQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, chains []string) string {
-	maxIndex := len(chains) - 1
-	// insert into main table
+	// insert the app
 	insertIntoAppTable := fmt.Sprintf(
-		`WITH ins1 AS (INSERT INTO %s(address, public_key, staked_tokens, max_relays, output_address, paused_height, unstaking_height, end_height)
-				VALUES('%s','%s','%s','%s','%s',%d,%d,%d) RETURNING address)`,
+		`WITH
+			ins1 AS (INSERT INTO %s(address, public_key, staked_tokens, max_relays, output_address, paused_height, unstaking_height, end_height)
+			VALUES('%s','%s','%s','%s','%s',%d,%d,%d)
+			RETURNING address)`,
 		AppTableName, address, publicKey, stakedTokens, maxRelays, outputAddress, pausedHeight, unstakingHeight, DefaultEndHeight)
-	// insert into chains table for each chain
+
+	// Insert each app chain
+	maxIndex := len(chains) - 1
 	insertIntoAppTable += "\nINSERT INTO app_chains (address, chain_id, end_height) VALUES"
 	for i, chain := range chains {
 		insertIntoAppTable += fmt.Sprintf("\n((SELECT address FROM ins1), '%s', %d)", chain, DefaultEndHeight)
@@ -81,8 +88,6 @@ func InsertAppQuery(address, publicKey, stakedTokens, maxRelays, outputAddress s
 	}
 	return insertIntoAppTable
 }
-
-// https://www.postgresql.org/docs/current/sql-insert.html
 
 func NullifyAppQuery(address string, height int64) string {
 	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s' AND end_height=%d`,
@@ -95,47 +100,63 @@ func NullifyAppChainsQuery(address string, height int64) string {
 }
 
 func UpdateAppQuery(address, stakedTokens, maxRelays string, height int64) string {
-	return fmt.Sprintf(`INSERT INTO %s(address,public_key,staked_tokens,max_relays,output_address,paused_height,unstaking_height,end_height)
-                               ((SELECT address,public_key,'%s','%s',output_address,paused_height,unstaking_height,%d FROM %s WHERE address='%s'AND
-                               end_height=%d))`,
-		AppTableName, stakedTokens, maxRelays, DefaultEndHeight, AppTableName, address, height)
+	return fmt.Sprintf(
+		`INSERT INTO %s(address, public_key, staked_tokens, max_relays, output_address, paused_height, unstaking_height, end_height)
+			(
+				SELECT address, public_key, '%s', '%s', output_address, paused_height, unstaking_height, %d
+				FROM %s WHERE address='%s' AND (end_height=%d OR end_height=%d)
+			)
+		ON CONFLICT (address, paused_height) DO UPDATE SET staked_tokens='%s', max_relays='%s', end_height=%d`,
+		AppTableName, stakedTokens, maxRelays, DefaultEndHeight, AppTableName, address, height, DefaultEndHeight,
+		stakedTokens, maxRelays, DefaultEndHeight)
 }
 
-// func UpdateAppQuery(address, stakedTokens, maxRelays string, height int64) string {
-// 	return fmt.Sprintf(`UPSERT INTO %s(address,public_key,staked_tokens,max_relays,output_address,paused_height,unstaking_height,end_height)
-//                                ((SELECT address,public_key,'%s','%s',output_address,paused_height,unstaking_height,%d FROM %s WHERE address='%s'AND
-//                                (end_height=%d OR end_height=(-1))))`,
-// 		AppTableName, stakedTokens, maxRelays, DefaultEndHeight, AppTableName, address, height)
-// }
-
 func UpdateAppUnstakingHeightQuery(address string, unstakingHeight, height int64) string {
-	return fmt.Sprintf(`INSERT INTO %s(address,public_key,staked_tokens,max_relays,output_address,paused_height,unstaking_height,end_height)
-                               ((SELECT address,public_key,staked_tokens,max_relays,output_address,paused_height,%d,%d FROM %s WHERE address='%s'AND
-                               end_height=%d))`,
-		AppTableName, unstakingHeight, DefaultEndHeight, AppTableName, address, height)
+	return fmt.Sprintf(`
+		INSERT INTO %s(address, public_key, staked_tokens, max_relays, output_address, paused_height, unstaking_height, end_height)
+			(
+				SELECT address, public_key, staked_tokens, max_relays, output_address, paused_height, %d, %d
+				FROM %s WHERE address='%s' AND (end_height=%d OR end_height=%d)
+			)
+		ON CONFLICT (address, paused_height) DO UPDATE SET unstaking_height='%d', end_height=%d`,
+		AppTableName, unstakingHeight, DefaultEndHeight, AppTableName, address, height, DefaultEndHeight,
+		unstakingHeight, DefaultEndHeight)
+
 }
 
 func UpdateAppPausedHeightQuery(address string, pausedHeight, height int64) string {
-	return fmt.Sprintf(`INSERT INTO %s(address,public_key,staked_tokens,max_relays,output_address,paused_height,unstaking_height,end_height)
-                               (SELECT address,public_key,staked_tokens,max_relays,output_address,%d,unstaking_height,%d FROM %s WHERE address='%s'AND
-                               end_height=%d)`,
-		AppTableName, pausedHeight, DefaultEndHeight, AppTableName, address, height)
+	return fmt.Sprintf(`
+		INSERT INTO %s(address, public_key, staked_tokens, max_relays, output_address, paused_height, unstaking_height, end_height)
+			(
+				SELECT address, public_key, staked_tokens, max_relays, output_address, %d, unstaking_height, %d
+				FROM %s WHERE address='%s'AND (end_height=%d OR end_height=%d)
+			)
+		ON CONFLICT (address, paused_height) DO UPDATE SET paused_height='%d', end_height=%d`,
+		AppTableName, pausedHeight, DefaultEndHeight, AppTableName, address, height, DefaultEndHeight,
+		pausedHeight, DefaultEndHeight)
 }
 
 func UpdateAppsPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight int64) string {
-	return fmt.Sprintf(`INSERT INTO %s
-	(address, public_key, staked_tokens, max_relays, output_address, paused_height, unstaking_height, end_height)
-	SELECT address, public_key, staked_tokens, max_relays, output_address, paused_height, %d, %d
-	FROM %s WHERE paused_height<%d AND paused_height!=(-1) AND end_height=%d`, AppTableName, unstakingHeight, DefaultEndHeight, AppTableName, pauseBeforeHeight, currentHeight)
+	return fmt.Sprintf(`
+		INSERT INTO %s(address, public_key, staked_tokens, max_relays, output_address, paused_height, unstaking_height, end_height)
+			(
+				SELECT address, public_key, staked_tokens, max_relays, output_address, paused_height, %d, %d
+				FROM %s WHERE paused_height<%d AND paused_height!=(-1) AND end_height=%d
+			)
+		ON CONFLICT (address, paused_height) DO UPDATE SET unstaking_height='%d', end_height=%d`,
+		AppTableName, unstakingHeight, DefaultEndHeight, AppTableName, pauseBeforeHeight, currentHeight,
+		unstakingHeight, DefaultEndHeight)
 }
 
 func NullifyAppsPausedBeforeQuery(pausedBeforeHeight, height int64) string {
-	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE paused_height<%d AND paused_height!=(-1) AND end_height=%d`,
+	return fmt.Sprintf(`
+		UPDATE %s SET end_height=%d
+		WHERE paused_height<%d AND paused_height!=(-1) AND end_height=%d`,
 		AppTableName, height, pausedBeforeHeight, DefaultEndHeight)
 }
 
 func UpdateAppChainsQuery(address string, chains []string, height int64) string {
-	insert := fmt.Sprintf("\nINSERT INTO %s (address, chain_id, end_height) VALUES", AppChainsTableName)
+	insert := fmt.Sprintf("INSERT INTO %s (address, chain_id, end_height) VALUES", AppChainsTableName)
 	maxIndex := len(chains) - 1
 	for i, chain := range chains {
 		insert += fmt.Sprintf("\n('%s', '%s', %d)", address, chain, DefaultEndHeight)
@@ -146,7 +167,7 @@ func UpdateAppChainsQuery(address string, chains []string, height int64) string 
 	return insert
 }
 
-func ClearAllAppQuery() string {
+func ClearAllAppsQuery() string {
 	return fmt.Sprintf(`DELETE FROM %s`, AppTableName)
 }
 

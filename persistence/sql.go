@@ -141,6 +141,9 @@ func InitializeAppTables(ctx context.Context, db *pgx.Conn) error {
 	if err != nil {
 		return err
 	}
+	if _, err := db.Exec(ctx, schema.AppUniquePausedHeightIndex); err != nil {
+		return err
+	}
 	_, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.AppChainsTableName, schema.AppChainsTableSchema))
 	if err != nil {
 		return err
@@ -180,6 +183,7 @@ func InitializeGovTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
+// Only exposed for testing purposes.
 func (p PostgresContext) ClearAllDebug() error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -204,7 +208,7 @@ func (p PostgresContext) ClearAllDebug() error {
 	if _, err = tx.Exec(ctx, schema.ClearAllServiceNodesQuery()); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.ClearAllAppQuery()); err != nil {
+	if _, err = tx.Exec(ctx, schema.ClearAllAppsQuery()); err != nil {
 		return err
 	}
 	if _, err = tx.Exec(ctx, schema.ClearAllAppChainsQuery()); err != nil {
