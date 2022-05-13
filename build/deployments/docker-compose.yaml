@@ -112,6 +112,156 @@ services:
   # environment:
   #   - DEBUG_PORT=7084
 
+  node5.consensus:
+    container_name: node5.consensus
+    image: pocket/consensus:latest
+    command: "build/scripts/watch.sh build/config/config5.json"
+    build:
+      context: ../..
+      dockerfile: ./build/Dockerfile
+    expose:
+      - "7085" # dlv debug
+      - "8080"
+      - "9080"
+      - "9000"
+    ports:
+      - "7085:7085"
+      - "8085:8080"
+      - "9085:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
+  # Uncomment to enable DLV debugging
+  # environment:
+  #   - DEBUG_PORT=7085
+
+  node6.consensus:
+    container_name: node6.consensus
+    image: pocket/consensus:latest
+    command: "build/scripts/watch.sh build/config/config6.json"
+    build:
+      context: ../..
+      dockerfile: ./build/Dockerfile
+    expose:
+      - "7086" # dlv debug
+      - "8080"
+      - "9080"
+      - "9000"
+    ports:
+      - "7086:7086"
+      - "8086:8080"
+      - "9086:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
+  # Uncomment to enable DLV debugging
+  # environment:
+  #   - DEBUG_PORT=7086
+
+  node7.consensus:
+    container_name: node7.consensus
+    image: pocket/consensus:latest
+    command: "build/scripts/watch.sh build/config/config7.json"
+    build:
+      context: ../..
+      dockerfile: ./build/Dockerfile
+    expose:
+      - "7087" # dlv debug
+      - "8080"
+      - "9080"
+      - "9000"
+    ports:
+      - "7087:7087"
+      - "8087:8080"
+      - "9087:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
+  # Uncomment to enable DLV debugging
+  # environment:
+  #   - DEBUG_PORT=7087
+
+  node8.consensus:
+    container_name: node8.consensus
+    image: pocket/consensus:latest
+    command: "build/scripts/watch.sh build/config/config8.json"
+    build:
+      context: ../..
+      dockerfile: ./build/Dockerfile
+    expose:
+      - "7088" # dlv debug
+      - "8080"
+      - "9080"
+      - "9000"
+    ports:
+      - "7088:7088"
+      - "8088:8080"
+      - "9088:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
+  # Uncomment to enable DLV debugging
+  # environment:
+  #   - DEBUG_PORT=7088
+
+  node9.consensus:
+    container_name: node9.consensus
+    image: pocket/consensus:latest
+    command: "build/scripts/watch.sh build/config/config9.json"
+    build:
+      context: ../..
+      dockerfile: ./build/Dockerfile
+    expose:
+      - "7089" # dlv debug
+      - "8080"
+      - "9080"
+      - "9000"
+    ports:
+      - "7089:7089"
+      - "8089:8080"
+      - "9089:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
+  # Uncomment to enable DLV debugging
+  # environment:
+  #   - DEBUG_PORT=7089
+
+  node10.consensus:
+    container_name: node10.consensus
+    image: pocket/consensus:latest
+    command: "build/scripts/watch.sh build/config/config10.json"
+    build:
+      context: ../..
+      dockerfile: ./build/Dockerfile
+    expose:
+      - "7090" # dlv debug
+      - "8080"
+      - "9080"
+      - "9000"
+    ports:
+      - "7090:7090"
+      - "8090:8080"
+      - "9090:9080"
+    volumes:
+      - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
+  # Uncomment to enable DLV debugging
+  # environment:
+  #   - DEBUG_PORT=7090
+
   db:
     container_name: pocket-db
     # image: postgis/postgis  # TODO(olshansky): switch image when we start adding support for GeoZones
