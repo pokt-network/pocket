@@ -66,7 +66,7 @@ client_connect:
 
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-compose_and_watch: db_start
+compose_and_watch: db_start monitoring_start
 	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus node5.consensus node6.consensus node7.consensus node8.consensus node9.consensus node10.consensus
 
 .PHONY: db_start
@@ -112,6 +112,11 @@ docker_wipe: prompt_user
 	docker ps -a -q | xargs -r -I {} docker rm {}
 	docker images -q | xargs -r -I {} docker rmi {}
 	docker volume ls -q | xargs -r -I {} docker volume rm {}
+
+.PHONY: monitoring_start
+## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
+monitoring_start:
+	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d grafana loki vm
 
 .PHONY: mockgen
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
