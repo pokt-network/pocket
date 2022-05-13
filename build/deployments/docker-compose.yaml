@@ -1,5 +1,16 @@
 version: "3.8"
 
+# docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
+x-loki:
+  &loki-logging
+  driver: loki
+  options:
+    loki-url: "http://localhost:3100/loki/api/v1/push"
+    max-size: '5m'
+    max-file: '3'
+    keep-file: 'false'
+    loki-external-labels: "job=pocket-nodes,container_name={{.Name}},project=pocket-v1"
+
 services:
   client:
     container_name: client
@@ -13,6 +24,7 @@ services:
     tty: true
 
   node1.consensus:
+    logging: *loki-logging
     container_name: node1.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config1.json"
@@ -38,6 +50,7 @@ services:
     #   - DEBUG_PORT=7081
 
   node2.consensus:
+    logging: *loki-logging
     container_name: node2.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config2.json"
@@ -63,6 +76,7 @@ services:
       - DEBUG_PORT=7082
 
   node3.consensus:
+    logging: *loki-logging
     container_name: node3.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config3.json"
@@ -88,6 +102,7 @@ services:
     #   - DEBUG_PORT=7083
 
   node4.consensus:
+    logging: *loki-logging
     container_name: node4.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config4.json"
@@ -113,6 +128,7 @@ services:
   #   - DEBUG_PORT=7084
 
   node5.consensus:
+    logging: *loki-logging
     container_name: node5.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config5.json"
@@ -138,6 +154,7 @@ services:
   #   - DEBUG_PORT=7085
 
   node6.consensus:
+    logging: *loki-logging
     container_name: node6.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config6.json"
@@ -163,6 +180,7 @@ services:
   #   - DEBUG_PORT=7086
 
   node7.consensus:
+    logging: *loki-logging
     container_name: node7.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config7.json"
@@ -188,6 +206,7 @@ services:
   #   - DEBUG_PORT=7087
 
   node8.consensus:
+    logging: *loki-logging
     container_name: node8.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config8.json"
@@ -213,6 +232,7 @@ services:
   #   - DEBUG_PORT=7088
 
   node9.consensus:
+    logging: *loki-logging
     container_name: node9.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config9.json"
@@ -238,6 +258,7 @@ services:
   #   - DEBUG_PORT=7089
 
   node10.consensus:
+    logging: *loki-logging
     container_name: node10.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config10.json"
@@ -263,6 +284,7 @@ services:
   #   - DEBUG_PORT=7090
 
   db:
+    logging: *loki-logging
     container_name: pocket-db
     # image: postgis/postgis  # TODO(olshansky): switch image when we start adding support for GeoZones
     image: postgres:14.1-alpine
@@ -296,22 +318,54 @@ services:
       - "5050:5050"
 
   vm:
+    logging: *loki-logging
     container_name: victoria-metrics
     image: victoriametrics/victoria-metrics
-    restart: always
+    restart: unless-stopped
     ports:
       - "8428:8428"
     volumes:
       - vm:/storage
-      - ./victoria-metrics:/configs
+      - ./telemetry/victoria-metrics:/configs
       - /var/run/docker.sock:/var/run/docker.sock
     command:
       - "--storageDataPath=/storage"
       - "--httpListenAddr=:8428"
       - "--promscrape.config=/configs/scrape.yml"
 
+  grafana:
+    logging: *loki-logging
+    container_name: grafana
+    image: grafana/grafana:8.5.2
+    depends_on:
+      - "vm"
+    ports:
+      - 3000:3000
+    volumes:
+      - grafanadata:/var/lib/grafana
+      - ./telemetry/grafana/provisioning/:/etc/grafana/provisioning/
+      - ./telemetry/dashboards/:/var/lib/grafana/dashboards/
+    restart: unless-stopped
+
+  loki:
+    logging: *loki-logging
+    image: grafana/loki:2.5.0
+    container_name: loki
+    expose:
+      - 3100
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
+    volumes:
+      - ./telemetry/loki/config.yaml:/etc/loki/local-config.yaml
+      - loki:/loki
+
 volumes:
   db:
     driver: local
   vm:
+    driver: local
+  grafanadata:
+    driver: local
+  loki:
     driver: local
