@@ -130,6 +130,7 @@ services:
   #   - DEBUG_PORT=7084
 
   node5.consensus:
+    logging: *loki-logging
     container_name: node5.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config5.json"
@@ -155,6 +156,7 @@ services:
   #   - DEBUG_PORT=7085
 
   node6.consensus:
+    logging: *loki-logging
     container_name: node6.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config6.json"
@@ -180,6 +182,7 @@ services:
   #   - DEBUG_PORT=7086
 
   node7.consensus:
+    logging: *loki-logging
     container_name: node7.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config7.json"
@@ -205,6 +208,7 @@ services:
   #   - DEBUG_PORT=7087
 
   node8.consensus:
+    logging: *loki-logging
     container_name: node8.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config8.json"
@@ -230,6 +234,7 @@ services:
   #   - DEBUG_PORT=7088
 
   node9.consensus:
+    logging: *loki-logging
     container_name: node9.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config9.json"
@@ -255,6 +260,7 @@ services:
   #   - DEBUG_PORT=7089
 
   node10.consensus:
+    logging: *loki-logging
     container_name: node10.consensus
     image: pocket/consensus:latest
     command: "build/scripts/watch.sh build/config/config10.json"
