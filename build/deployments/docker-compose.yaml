@@ -9,7 +9,7 @@ x-loki:
     max-size: '5m'
     max-file: '3'
     keep-file: 'false'
-    loki-external-labels: "job=pocket-nodes,container_name={{.Name}},project=pocket-v1"
+    loki-external-labels: "job=pocket-nodes,container_name={{.Name}},instance={{.Name}},project=pocket-v1"
 
 services:
   client:
