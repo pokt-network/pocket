@@ -19,11 +19,11 @@ scrape_configs:
       - source_labels: [__meta_docker_container_name]
         regex: /node\d?.consensus
         action: keep
-      - source_labels: ["__address__"]
-        separator: ":"
-        regex: '(.*):(\d*)'
-        target_label: "__address__"
-        replacement: "${1}:9000"
+      # only keep targets with port 9000
+      - source_labels: [__meta_docker_port_private]
+        regex: "9000"
+        action: keep
+      # rename instance with the name of the container
       - source_labels:
           [__meta_docker_container_label_com_docker_compose_service]
         target_label: instance
