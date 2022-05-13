@@ -263,7 +263,7 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 }
 
 func (m *p2pModule) GetTelemetry() (modules.TelemetryModule, error) {
-	if m.telemetryOn {
+	if !m.telemetryOn {
 		return nil, nil
 	}
 
