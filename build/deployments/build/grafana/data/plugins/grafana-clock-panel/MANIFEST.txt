@@ -1,0 +1,38 @@
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+{
+  "manifestVersion": "2.0.0",
+  "signatureType": "grafana",
+  "signedByOrg": "grafana",
+  "signedByOrgName": "Grafana Labs",
+  "plugin": "grafana-clock-panel",
+  "version": "1.3.0",
+  "time": 1644597367839,
+  "keyId": "7e4d0c6a708866e7",
+  "files": {
+    "CHANGELOG.md": "d952e1b14c7543862e11a1fa4db6e409f744b940a60a7b7a3cf334ee95eb3cac",
+    "LICENSE": "b46400c1ab5630edeb4e43b240a027d203375ebe5a9efb7de88c604c5c5cace0",
+    "README.md": "ddf9eb94b0f3bedf4d2794165c40648790485768e2eb878bcbf935dc4ebcb210",
+    "img/clock.svg": "d27cbdb85432fe1ad96eeec6758c2c4a0b189b306ba2040519aec09938889fbc",
+    "img/countdown1.png": "ce51c235273667dde4a8fedc36ea70c6bfa7670b247514a2ae1654bd872548aa",
+    "img/screenshot-clock-options.png": "55f428cc45f65e53a118db2b969353cd01e0d2f879848b1df503750ed27007cf",
+    "img/screenshot-clocks.png": "4dcf3c3d303e63239689df853b80ef79557eaf5496679400f362e68f57f60577",
+    "img/screenshot-showcase.png": "43c6520f1efa3343d839b9462a22ce962d2b041f2d5d9c743a8603caa8392a71",
+    "module.js": "f0c108cf8e2e64e5d66122c558bd4d18fa14bd607fffa68e311318a81c95c744",
+    "module.js.LICENSE.txt": "e3d68f4e2038dfb5241866a48a748f2647948e450949462bcbb750bb712e1062",
+    "module.js.map": "c123df7545855b14898a3e7b14ea2dca4519dcc36ca2a8f08f43b050fa457635",
+    "plugin.json": "90f4b7f7c2ad473b851cfed118ccf4d8d1a422ba896be7a20cfa162861b242c4"
+  }
+}
+-----BEGIN PGP SIGNATURE-----
+Version: OpenPGP.js v4.10.1
+Comment: https://openpgpjs.org
+
+wqEEARMKAAYFAmIGkHgACgkQfk0ManCIZudrugIJARRMZQWDmRXtwTJzHMwJ
+QrtQw73pow2KbAr+GbP7n/80g/gLR6PQiA1DbJIR8JHakDSNTpz4RHrB5w1E
+NMGodyooAgY2FVZd02jhRLLV1Nx0CoEQiiXTTzgWRlRoSYvRSFp/xgXIdPIT
+tqQhdmR+5i0HGCNdIFfK2OZqpd7BV064sPsLUQ==
+=75s3
+-----END PGP SIGNATURE-----

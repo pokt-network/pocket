@@ -340,7 +340,7 @@ services:
     depends_on:
       - "vm"
     ports:
-      - 3000:3000
+      - "3000:3000"
     volumes:
       - grafanadata:/var/lib/grafana
       - ./telemetry/grafana/provisioning/:/etc/grafana/provisioning/

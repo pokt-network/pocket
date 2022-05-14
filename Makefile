@@ -38,6 +38,11 @@ go_vet:
 go_staticcheck:
 	@if builtin type -P "staticcheck"; then staticcheck ./... ; else echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; fi
 
+.PHONY: refresh
+## Removes vendor, installs deps, generates mocks and protobuf files. Perform after a new pull or a branch switch
+refresh:
+	rm -rf ./vendor && go mod download && go mod vendor && go mod tidy && make protogen_local && make mockgen
+
 .PHONY: go_clean_dep
 ## Runs `go mod vendor` && `go mod tidy`
 	go mod vendor && go mod tidy
@@ -67,7 +72,7 @@ client_connect:
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
 compose_and_watch: db_start monitoring_start
-	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus node5.consensus node6.consensus node7.consensus node8.consensus node9.consensus node10.consensus
+	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus ## node5.consensus node6.consensus node7.consensus node8.consensus node9.consensus node10.consensus
 
 .PHONY: db_start
 ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
