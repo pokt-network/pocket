@@ -24,7 +24,6 @@ func (p PostgresContext) GetAppExists(address []byte) (exists bool, err error) {
 	if err = conn.QueryRow(ctx, schema.AppExistsQuery(hex.EncodeToString(address))).Scan(&exists); err != nil {
 		return
 	}
-
 	return
 }
 
@@ -44,6 +43,8 @@ func (p PostgresContext) GetApp(address []byte) (operator, publicKey, stakedToke
 	}
 	defer row.Close()
 
+	// DISCUSS(team): It's a little bit weird that the process of reading multiple items is done at the
+	// logic layer, and the process of writing multiple items is done at the SQL level.
 	var chainID string
 	var chainEndHeight int64
 	for row.Next() {
@@ -218,7 +219,7 @@ func (p PostgresContext) GetAppPauseHeightIfExists(address []byte) (pausedHeight
 }
 
 // TODO(Andrew): remove status (third parameter) - it's not needed
-// DISCUSS(drewsky): This function seems to be doing too much from a naming perspective.
+// DISCUSS(drewsky): This function seems to be doing too much from a naming perspective. Perhaps `SetPausedAppsToStartUnstaking`?
 func (p PostgresContext) SetAppsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {

@@ -24,7 +24,7 @@ const (
 
 			/* DISCUSS(drewsky): We can't do ON CONFLICT multiple constraints, so what should we do here? */
 			/* CONSTRAINT app_paused_height UNIQUE (address, paused_height), */
-			/* CONSTRAINT app_paused_height UNIQUE (address, unstaking_height), */
+			/* CONSTRAINT app_unstaking_height UNIQUE (address, unstaking_height), */
 			CONSTRAINT app_end_height UNIQUE (address, end_height)
 		)`
 
@@ -61,7 +61,8 @@ func AppOutputAddressQuery(operatorAddress string, height int64) string {
 		AppTableName, operatorAddress, DefaultEndHeight)
 }
 
-// DISCUSS(team): if current_height == unstaking_height - is the actor unstaking or unstaked (i.e. did we process the block yet)?
+// DISCUSS(team): if current_height == unstaking_height - is the actor unstaking or unstaked
+// (i.e. did we process the block yet => yes if you're a replica and no if you're a proposer)?
 func AppUnstakingHeightQuery(address string, height int64) string {
 	return fmt.Sprintf(`SELECT unstaking_height FROM %s WHERE address='%s' AND end_height=%d`,
 		AppTableName, address, DefaultEndHeight)
@@ -72,35 +73,27 @@ func AppPauseHeightQuery(address string, height int64) string {
 		AppTableName, address, DefaultEndHeight)
 }
 
+// CLEANUP(team): Can we remove the the `WITH` statement here?
 func InsertAppQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, chains []string) string {
 	// insert the app
-	insertIntoAppTable := fmt.Sprintf(
-		`WITH
-			ins1 AS (INSERT INTO %s(address, public_key, staked_tokens, max_relays, output_address, paused_height, unstaking_height, end_height)
-			VALUES('%s','%s','%s','%s','%s',%d,%d,%d)
-			RETURNING address)`,
+	insertStatement := fmt.Sprintf(
+		`WITH _ AS (INSERT INTO %s(address, public_key, staked_tokens, max_relays, output_address, paused_height, unstaking_height, end_height)
+			VALUES('%s','%s','%s','%s','%s',%d,%d,%d))`,
 		AppTableName, address, publicKey, stakedTokens, maxRelays, outputAddress, pausedHeight, unstakingHeight, DefaultEndHeight)
 
-	// Insert each app chain
+	return fmt.Sprintf("%s\n%s", insertStatement, UpdateAppChainsQuery(address, chains, DefaultEndHeight))
+}
+
+func UpdateAppChainsQuery(address string, chains []string, height int64) string {
+	insert := fmt.Sprintf("INSERT INTO %s (address, chain_id, end_height) VALUES", AppChainsTableName)
 	maxIndex := len(chains) - 1
-	insertIntoAppTable += "\nINSERT INTO app_chains (address, chain_id, end_height) VALUES"
 	for i, chain := range chains {
-		insertIntoAppTable += fmt.Sprintf("\n((SELECT address FROM ins1), '%s', %d)", chain, DefaultEndHeight)
+		insert += fmt.Sprintf("\n('%s', '%s', %d)", address, chain, DefaultEndHeight)
 		if i < maxIndex {
-			insertIntoAppTable += ","
+			insert += ","
 		}
 	}
-	return insertIntoAppTable
-}
-
-func NullifyAppQuery(address string, height int64) string {
-	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s' AND end_height=%d`,
-		AppTableName, height, address, DefaultEndHeight)
-}
-
-func NullifyAppChainsQuery(address string, height int64) string {
-	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s' AND end_height=%d`,
-		AppChainsTableName, height, address, DefaultEndHeight)
+	return insert
 }
 
 func UpdateAppQuery(address, stakedTokens, maxRelays string, height int64) string {
@@ -146,6 +139,8 @@ func UpdateAppPausedHeightQuery(address string, pausedHeight, height int64) stri
 		AppTableName, address, height, DefaultEndHeight)
 }
 
+// DOCUMENT(team): Need to do a better job at documenting the process of paused apps being turned into unstaking apps.
+//                 This pertains to all instances in the codebase, not just here.
 func UpdateAppsPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight int64) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s(address, public_key, staked_tokens, max_relays, output_address, paused_height, unstaking_height, end_height)
@@ -160,23 +155,24 @@ func UpdateAppsPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight in
 		AppTableName, pauseBeforeHeight, currentHeight, DefaultEndHeight)
 }
 
+// DOCUMENT(team): Need to do a better job at documenting what nullification means (i.e. still exists
+//                 for read purposes but unused for all business logic purposes.
+//                 This pertains to all instances in the codebase, not just here.
+func NullifyAppQuery(address string, height int64) string {
+	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s' AND end_height=%d`,
+		AppTableName, height, address, DefaultEndHeight)
+}
+
+func NullifyAppChainsQuery(address string, height int64) string {
+	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s' AND end_height=%d`,
+		AppChainsTableName, height, address, DefaultEndHeight)
+}
+
 func NullifyAppsPausedBeforeQuery(pausedBeforeHeight, height int64) string {
 	return fmt.Sprintf(`
 		UPDATE %s SET end_height=%d
 		WHERE paused_height<%d AND paused_height>=0 AND end_height=%d`,
 		AppTableName, height, pausedBeforeHeight, DefaultEndHeight)
-}
-
-func UpdateAppChainsQuery(address string, chains []string, height int64) string {
-	insert := fmt.Sprintf("INSERT INTO %s (address, chain_id, end_height) VALUES", AppChainsTableName)
-	maxIndex := len(chains) - 1
-	for i, chain := range chains {
-		insert += fmt.Sprintf("\n('%s', '%s', %d)", address, chain, DefaultEndHeight)
-		if i < maxIndex {
-			insert += ","
-		}
-	}
-	return insert
 }
 
 func ClearAllAppsQuery() string {

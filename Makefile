@@ -291,9 +291,9 @@ test_p2p:
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)
 todo_list:
-	grep --exclude-dir={.git,vendor,prototype} -r -e "TODO" -e "DISCUSS" .
+	grep --exclude-dir={.git,vendor,prototype} -r -e "TODO" -e "DISCUSS" -e "REFACTOR" -e "DOCUMENT" -e "CLEANUP" .
 
 .PHONY: todo_count
 ## Print a count of all the TODOs in the project
 todo_count:
-	grep --exclude-dir={.git,vendor,prototype} -r -e "TODO" -e "DISCUSS" . | wc -l
+	grep --exclude-dir={.git,vendor,prototype} -r -e "TODO" -e "DISCUSS" -e "REFACTOR" -e "DOCUMENT" -e "CLEANUP" . | wc -l
