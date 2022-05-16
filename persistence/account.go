@@ -174,6 +174,8 @@ func (p PostgresContext) SetPoolAmount(name string, amount string) error {
 	return tx.Commit(ctx)
 }
 
+// DISCUSS(team): I'm not a fan of how similar the functionality is here to operationAccountAmount.
+// Do we want to keep the verbosity?
 func (p *PostgresContext) operationPoolAmount(name string, amount string, op func(*big.Int, *big.Int) error) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {

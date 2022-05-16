@@ -26,12 +26,13 @@ func InsertAccountAmountQuery(address, amount string, height int64) string {
 		INSERT INTO %s (address, balance, height, end_height)
 			VALUES ('%s','%s',%d, %d)
 			ON CONFLICT ON CONSTRAINT account_create_height
-			DO UPDATE SET balance=EXCLUDED.balance, end_height=EXCLUDED.end_height
+			DO UPDATE SET balance=EXCLUDED.balance, height=EXCLUDED.height, end_height=EXCLUDED.end_height
 		`, AccountTableName, address, amount, height, DefaultEndHeight)
 }
 
 func NullifyAccountAmountQuery(address string, height int64) string {
-	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE address='%s'AND end_height=%d`,
+	return fmt.Sprintf(`
+		UPDATE %s SET end_height=%d WHERE address='%s'AND end_height=%d`,
 		AccountTableName, height, address, DefaultEndHeight)
 }
 
@@ -58,11 +59,12 @@ func InsertPoolAmountQuery(name, amount string, height int64) string {
 		INSERT INTO %s (name, balance, height, end_height)
 			VALUES ('%s','%s',%d, %d)
 			ON CONFLICT ON CONSTRAINT pool_create_height
-			DO UPDATE SET balance=EXCLUDED.balance, end_height=EXCLUDED.end_height
+			DO UPDATE SET balance=EXCLUDED.balance, height=EXCLUDED.height, end_height=EXCLUDED.end_height
 		`, PoolTableName, name, amount, height, DefaultEndHeight)
 }
 
 func NullifyPoolAmountQuery(name string, height int64) string {
-	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE name='%s' AND end_height=%d`,
+	return fmt.Sprintf(`
+		UPDATE %s SET end_height=%d WHERE name='%s' AND end_height=%d`,
 		PoolTableName, height, name, DefaultEndHeight)
 }
