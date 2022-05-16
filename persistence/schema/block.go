@@ -3,18 +3,18 @@ package schema
 import "fmt"
 
 const (
-	// TODO (OLSHANK) needs to be implemented, only height is here because it's the mvp requirement for utility
+	// TODO(olshansk): needs to be implemented (and tests obviously), only height is here because it's the MVP requirement for utility
 	BlockTableName   = "block"
 	BlockTableSchema = `(
-			Height  BIGINT PRIMARY KEY,
-			Hash 	TEXT NOT NULL
+			height  BIGINT PRIMARY KEY,
+			hash 	TEXT NOT NULL
 		)`
 )
 
 func BlockHashQuery(height int64) string {
-	return fmt.Sprintf(`SELECT hash FROM %s WHERE Height=%d`, BlockTableName, height)
+	return fmt.Sprintf(`SELECT hash FROM %s WHERE height=%d`, BlockTableName, height)
 }
 
 func LatestBlockHeightQuery() string {
-	return fmt.Sprintf(`SELECT MAX(Height) FROM %s`, BlockTableName)
+	return fmt.Sprintf(`SELECT MAX(height) FROM %s`, BlockTableName)
 }
