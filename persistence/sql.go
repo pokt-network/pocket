@@ -168,6 +168,18 @@ func InitializeGovTables(ctx context.Context, db *pgx.Conn) error {
 }
 
 // Only exposed for testing purposes.
+
+var clearFunctions = []func() string{
+	schema.ClearAllValidatorsQuery,
+	schema.ClearAllFishermanQuery,
+	schema.ClearAllFishermanChainsQuery,
+	schema.ClearAllServiceNodesChainsQuery,
+	schema.ClearAllServiceNodesQuery,
+	schema.ClearAllAppsQuery,
+	schema.ClearAllAppChainsQuery,
+	schema.ClearAllGovQuery,
+}
+
 func (p PostgresContext) ClearAllDebug() error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -177,29 +189,10 @@ func (p PostgresContext) ClearAllDebug() error {
 	if err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.ClearAllValidatorsQuery()); err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.ClearAllFishermanQuery()); err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.ClearAllFishermanChainsQuery()); err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.ClearAllServiceNodesChainsQuery()); err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.ClearAllServiceNodesQuery()); err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.ClearAllAppsQuery()); err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.ClearAllAppChainsQuery()); err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.ClearAllGovQuery()); err != nil {
-		return err
+	for _, clearFunc := range clearFunctions {
+		if _, err = tx.Exec(ctx, clearFunc()); err != nil {
+			return err
+		}
 	}
 	return nil
 }

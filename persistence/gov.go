@@ -892,6 +892,7 @@ func (p PostgresContext) InitParams() error {
 	return err
 }
 
+// TODO(team): Switch to generics
 func (p PostgresContext) SetParam(paramName string, paramValue interface{}) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -905,73 +906,38 @@ func (p PostgresContext) SetParam(paramName string, paramValue interface{}) erro
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, schema.NullifyParamsQuery(height))
-	if err != nil {
+	if _, err = tx.Exec(ctx, schema.NullifyParamsQuery(height)); err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, schema.SetParam(paramName, paramValue, height))
-	if err != nil {
+	if _, err = tx.Exec(ctx, schema.SetParam(paramName, paramValue, height)); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
 }
 
-func (p PostgresContext) GetIntParam(paramName string) (int, error) {
+func (p PostgresContext) GetIntParam(paramName string) (i int, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return 0, err
 	}
-	row, err := conn.Query(ctx, schema.GetParamQuery(paramName))
-	if err != nil {
-		return 0, err
-	}
-	var param int
-	defer row.Close()
-	for row.Next() {
-		err = row.Scan(&param)
-		if err != nil {
-			return 0, err
-		}
-	}
-	return param, nil
+	err = conn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&i)
+	return
 }
 
-func (p PostgresContext) GetStringParam(paramName string) (string, error) {
+func (p PostgresContext) GetStringParam(paramName string) (s string, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return "", err
 	}
-	row, err := conn.Query(ctx, schema.GetParamQuery(paramName))
-	if err != nil {
-		return "", err
-	}
-	var param string
-	defer row.Close()
-	for row.Next() {
-		err = row.Scan(&param)
-		if err != nil {
-			return "", err
-		}
-	}
-	return param, nil
+	err = conn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&s)
+	return
 }
 
-func (p PostgresContext) GetBytesParam(paramName string) ([]byte, error) {
+func (p PostgresContext) GetBytesParam(paramName string) (param []byte, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return nil, err
 	}
-	row, err := conn.Query(ctx, schema.GetParamQuery(paramName))
-	if err != nil {
-		return nil, err
-	}
-	var param []byte
-	defer row.Close()
-	for row.Next() {
-		err = row.Scan(&param)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return param, nil
+	err = conn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&param)
+	return
 }
