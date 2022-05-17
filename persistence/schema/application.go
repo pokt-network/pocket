@@ -51,7 +51,7 @@ func AppExistsQuery(address string) string {
 	return fmt.Sprintf(`SELECT EXISTS(SELECT 1 FROM %s WHERE address='%s')`, AppTableName, address)
 }
 
-// DISCUSS(drewsky): Do we not want to filter by `unstaking_height >= unstakingHeight AND end_height=DefaultEndHeight=-1" here?
+// DISCUSS(drewsky): Do we not want to filter by `unstaking_height >= unstakingHeight AND end_height=DefaultEndHeight=-1" here in case unstaking failed at the exact height?
 func AppReadyToUnstakeQuery(unstakingHeight int64) string {
 	return fmt.Sprintf(`SELECT address, staked_tokens, output_address FROM %s WHERE unstaking_height=%d`, AppTableName, unstakingHeight)
 }
@@ -75,12 +75,10 @@ func AppPauseHeightQuery(address string, height int64) string {
 
 // CLEANUP(team): Can we remove the the `WITH` statement here?
 func InsertAppQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, chains []string) string {
-	// insert the app
 	insertStatement := fmt.Sprintf(
 		`WITH _ AS (INSERT INTO %s(address, public_key, staked_tokens, max_relays, output_address, paused_height, unstaking_height, end_height)
 			VALUES('%s','%s','%s','%s','%s',%d,%d,%d))`,
 		AppTableName, address, publicKey, stakedTokens, maxRelays, outputAddress, pausedHeight, unstakingHeight, DefaultEndHeight)
-
 	return fmt.Sprintf("%s\n%s", insertStatement, UpdateAppChainsQuery(address, chains, DefaultEndHeight))
 }
 
