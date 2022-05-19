@@ -136,6 +136,18 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 	}
 
 	m.paceMaker.NewHeight()
+
+	m.
+		GetBus().
+		GetTelemetryModule().
+		IncCounter("consensus_blockchain_height")
+
+	fmt.Println("Incremented blockchain height counter")
+	// reset the total broadcast received at every new height
+	m.
+		GetBus().
+		GetTelemetryModule().
+		SetGauge("p2p_msg_broadcast_received_total_per_block", 0)
 }
 
 // anteHandle is the handler called on every replica message before specific handler

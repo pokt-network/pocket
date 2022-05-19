@@ -8,9 +8,11 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/pokt-network/pocket/p2p/pre2p"
+	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/telemetry"
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -47,11 +49,11 @@ func main() {
 
 		// Not used - only set to avoid `pre2p.Create()` from crashing
 		Pre2P: &config.Pre2PConfig{
-			ConsensusPort:   9999,
-			UseRainTree:     true,
-			ConnectionType:  config.TCPConnection,
-			EnableTelemetry: false,
+			ConsensusPort:  9999,
+			UseRainTree:    true,
+			ConnectionType: config.TCPConnection,
 		},
+		UseTelemetry: false,
 	}
 
 	// Initialize the state singleton
@@ -61,6 +63,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create pre2p module: " + err.Error())
 	}
+
+	telemetryMod, err := telemetry.Create(cfg) // will be NOOP because of client config (use_telemetry false) since we don't need to include a dev client in telemetry
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
+	}
+
+	_ = shared.CreateBusWithOptionalModules(nil, pre2pMod, nil, nil, telemetryMod)
 
 	for {
 		selection, err := promptGetInput()

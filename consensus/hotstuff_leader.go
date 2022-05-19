@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"encoding/hex"
+	"fmt"
 	"unsafe"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -200,6 +201,19 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	// There is no "replica behavior" to imitate here
 
 	m.paceMaker.NewHeight()
+
+	m.
+		GetBus().
+		GetTelemetryModule().
+		IncCounter("consensus_blockchain_height")
+
+	fmt.Println("Incremented blockchain height counter")
+
+	// reset the total broadcast received at every new height
+	m.
+		GetBus().
+		GetTelemetryModule().
+		SetGauge("p2p_msg_broadcast_received_total_per_block", 0)
 }
 
 func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {

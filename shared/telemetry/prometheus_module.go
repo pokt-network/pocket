@@ -1,7 +1,6 @@
 package telemetry
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -14,6 +13,7 @@ import (
 
 var _ modules.TelemetryModule = &PromModule{}
 
+// Prometheus struct
 type PromModule struct {
 	bus modules.Bus
 
@@ -21,11 +21,13 @@ type PromModule struct {
 	endpoint string
 
 	counters map[string]prometheus.Counter
+	gauges   map[string]prometheus.Gauge
 }
 
-func Create(cfg *config.Config) (*PromModule, error) {
+func CreatePromModule(cfg *config.Config) (*PromModule, error) {
 	return &PromModule{
 		counters: map[string]prometheus.Counter{},
+		gauges:   map[string]prometheus.Gauge{},
 		address:  cfg.Telemetry.Address,
 		endpoint: cfg.Telemetry.Endpoint,
 	}, nil
@@ -54,7 +56,7 @@ func (m *PromModule) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (p *PromModule) RegisterCounterMetric(name string, description string) {
+func (p *PromModule) RegisterCounter(name string, description string) {
 	if _, exists := p.counters[name]; exists {
 		return
 	}
@@ -65,11 +67,72 @@ func (p *PromModule) RegisterCounterMetric(name string, description string) {
 	})
 }
 
-func (p *PromModule) IncrementCounterMetric(name string) error {
+func (p *PromModule) IncCounter(name string) {
 	if _, exists := p.counters[name]; !exists {
-		return fmt.Errorf("Prometheus Instrument: Trying to increment a non-tracked counter")
+		return
 	}
 
 	p.counters[name].Inc()
-	return nil
+}
+
+func (p *PromModule) RegisterGauge(name string, description string) {
+	if _, exists := p.gauges[name]; exists {
+		return
+	}
+
+	p.gauges[name] = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: name,
+		Help: description,
+	})
+}
+
+// Set sets the Gauge to an arbitrary value.
+func (p *PromModule) SetGauge(name string, value float64) {
+	if _, exists := p.gauges[name]; !exists {
+		return
+	}
+
+	p.gauges[name].Set(value)
+}
+
+// Inc increments the Gauge by 1. Use Add to increment it by arbitrary
+// values.
+func (p *PromModule) IncGauge(name string) {
+	if _, exists := p.gauges[name]; !exists {
+		return
+	}
+
+	p.gauges[name].Inc()
+}
+
+// IncGauge(name string)
+
+// // Dec decrements the Gauge by 1. Use Sub to decrement it by arbitrary
+// // values.
+func (p *PromModule) DecGauge(name string) {
+	if _, exists := p.gauges[name]; !exists {
+		return
+	}
+
+	p.gauges[name].Dec()
+}
+
+// // Add adds the given value to the Gauge. (The value can be negative,
+// // resulting in a decrease of the Gauge.)
+func (p *PromModule) AddToGauge(name string, value float64) {
+	if _, exists := p.gauges[name]; !exists {
+		return
+	}
+
+	p.gauges[name].Add(value)
+}
+
+// // Sub subtracts the given value from the Gauge. (The value can be
+// // negative, resulting in an increase of the Gauge.)
+func (p *PromModule) SubFromGauge(name string, value float64) {
+	if _, exists := p.gauges[name]; !exists {
+		return
+	}
+
+	p.gauges[name].Sub(value)
 }
