@@ -23,6 +23,50 @@ const (
 	DefaultPocketBusBufferSize = 100
 )
 
+func CreateBusWithOptionalModules(
+	persistence modules.PersistenceModule,
+	p2p modules.P2PModule,
+	utility modules.UtilityModule,
+	consensus modules.ConsensusModule,
+	telemetry modules.TelemetryModule,
+) modules.Bus {
+	bus := &bus{
+		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
+		persistence: nil,
+		p2p:         nil,
+		utility:     nil,
+		consensus:   nil,
+		telemetry:   nil,
+	}
+
+	if persistence != nil {
+		bus.persistence = persistence
+		persistence.SetBus(bus)
+	}
+
+	if p2p != nil {
+		bus.p2p = p2p
+		p2p.SetBus(bus)
+	}
+
+	if utility != nil {
+		bus.utility = utility
+		utility.SetBus(bus)
+	}
+
+	if consensus != nil {
+		bus.consensus = consensus
+		consensus.SetBus(bus)
+	}
+
+	if telemetry != nil {
+		bus.telemetry = telemetry
+		telemetry.SetBus(bus)
+	}
+
+	return bus
+}
+
 func CreateBus(
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
