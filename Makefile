@@ -41,7 +41,7 @@ go_staticcheck:
 .PHONY: refresh
 ## Removes vendor, installs deps, generates mocks and protobuf files. Perform after a new pull or a branch switch
 refresh:
-	rm -rf ./vendor && go mod download && go mod vendor && go mod tidy && make protogen_local && make mockgen
+	 make protogen_clean && make protogen_local && make protogen_show && make mockgen && rm -rf ./vendor && go mod download && go mod vendor && go mod tidy
 
 .PHONY: go_clean_dep
 ## Runs `go mod vendor` && `go mod tidy`
@@ -50,7 +50,6 @@ refresh:
 .PHONY: build
 ## Build Pocket's main entrypoint
 build:
-	mage build
 
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
@@ -72,7 +71,7 @@ client_connect:
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
 compose_and_watch: db_start monitoring_start
-	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus ## node5.consensus node6.consensus node7.consensus node8.consensus node9.consensus node10.consensus
+	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus  ## node5.consensus node6.consensus node7.consensus node8.consensus node9.consensus node10.consensus
 
 .PHONY: db_start
 ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
@@ -132,6 +131,7 @@ mockgen:
 	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	mockgen --source=${modules_dir}/bus_module.go -destination=${modules_dir}/mocks/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/telemetry_module.go -destination=${modules_dir}/mocks/telemetry_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	echo "Mocks generated in ${modules_dir}/mocks"
 
 	$(eval p2p_types_dir = "p2p/pre2p/types")

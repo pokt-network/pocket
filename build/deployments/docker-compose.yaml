@@ -289,6 +289,8 @@ services:
     # image: postgis/postgis  # TODO(olshansky): switch image when we start adding support for GeoZones
     image: postgres:14.1-alpine
     restart: always
+    depends_on:
+      - loki
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
@@ -348,7 +350,7 @@ services:
     restart: unless-stopped
 
   loki:
-    logging: *loki-logging
+    # logging: *loki-logging
     image: grafana/loki:2.5.0
     container_name: loki
     expose:

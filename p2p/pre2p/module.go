@@ -5,7 +5,6 @@ package pre2p
 // to be a "real" replacement for now.
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/p2p/pre2p/raintree"
@@ -26,9 +25,6 @@ var _ modules.P2PModule = &p2pModule{}
 type p2pModule struct {
 	// p2pModule is a telemetryModule, that will use the shared telemetry module in the bus
 	// this allows the p2pModule to have fine-grain control over its own telemetry, using the shared telemetry module.
-	modules.TelemetryModule
-	telemetryOn bool
-
 	bus modules.Bus
 
 	listener typesPre2P.TransportLayerConn
@@ -60,10 +56,9 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	}
 
 	m = &p2pModule{
-		listener:    l,
-		network:     network,
-		address:     cfg.PrivateKey.Address(),
-		telemetryOn: cfg.Pre2P.EnableTelemetry,
+		listener: l,
+		network:  network,
+		address:  cfg.PrivateKey.Address(),
 	}
 
 	return m, nil
@@ -84,67 +79,88 @@ func (m *p2pModule) GetBus() modules.Bus {
 func (m *p2pModule) Start() error {
 	log.Println("Starting network module")
 
-	m.RegisterCounterMetric(
-		"nodes",
-		"the counter to track the number of nodes online",
-	)
+	// TODO(derrandz): find a way to reset gauges at new consensus height
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterCounter(
+			"nodes",
+			"the counter to track the number of nodes online",
+		)
 
-	m.RegisterCounterMetric(
-		"p2p_msg_received_total",
-		"the counter to track received messages",
-	)
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterCounter(
+			"p2p_msg_received_per_round",
+			"the counter to track received messages",
+		)
 
-	m.RegisterCounterMetric(
+	m.
+		GetBus().
+		GetTelemetryModule().RegisterCounter(
 		"p2p_opened_connections_total",
 		"the counter to track how many connections were open",
 	)
 
-	m.RegisterCounterMetric(
+	m.
+		GetBus().
+		GetTelemetryModule().RegisterCounter(
 		"p2p_msg_broadcast_failed_total",
 		"the counter to track how many broadcast rounds were initiated",
 	)
 
-	m.RegisterCounterMetric(
-		"p2p_msg_broadcast_succeeded_total",
-		"the counter to track how many broadcast rounds were performed successfully",
-	)
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterCounter(
+			"p2p_msg_broadcast_succeeded_total",
+			"the counter to track how many broadcast rounds were performed successfully",
+		)
 
-	m.RegisterCounterMetric(
-		"p2p_msg_send_failed_total",
-		"the counter to track how many message sends have failed",
-	)
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterCounter(
+			"p2p_msg_send_failed_total",
+			"the counter to track how many message sends have failed",
+		)
 
-	m.RegisterCounterMetric(
-		"p2p_msg_send_succeeded_total",
-		"the counter to track how many message sends have succeeded",
-	)
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterCounter(
+			"p2p_msg_send_succeeded_total",
+			"the counter to track how many message sends have succeeded",
+		)
 
-	m.RegisterCounterMetric(
-		"p2p_msg_handle_failed_total",
-		"the counter to track how many message handlings have failed",
-	)
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterCounter(
+			"p2p_msg_handle_failed_total",
+			"the counter to track how many message handlings have failed",
+		)
 
-	m.RegisterCounterMetric(
-		"p2p_msg_handle_succeeded_total",
-		"the counter to track how many messages handlings have succeeded",
-	)
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterCounter(
+			"p2p_msg_handle_succeeded_total",
+			"the counter to track how many messages handlings have succeeded",
+		)
 
-	m.RegisterCounterMetric(
-		"p2p_msg_broadcast_depth",
-		"the counter to track the depths to which the broadcast algorithm has went",
-	)
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterCounter(
+			"p2p_msg_broadcast_depth",
+			"the counter to track the depths to which the broadcast algorithm has went",
+		)
 
-	telemetry, err := m.GetTelemetry()
-	if err == nil && telemetry != nil {
-		m.network.SetTelemetry(telemetry)
-	}
+	m.network.SetBus(m.GetBus())
 
 	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				fmt.Println("Encoutered error", err)
-			}
-		}()
 		for {
 			data, err := m.listener.Read()
 			if err != nil {
@@ -152,15 +168,15 @@ func (m *p2pModule) Start() error {
 				continue
 			}
 
-			log.Printf("Was it this one?")
-			m.GetBus().
+			m.
+				GetBus().
 				GetTelemetryModule().
-				IncrementCounterMetric("p2p_opened_connections_total")
+				IncGauge("p2p_opened_connections_total")
 
-			log.Printf("or that one?")
-			m.GetBus().
+			m.
+				GetBus().
 				GetTelemetryModule().
-				IncrementCounterMetric("p2p_msg_received_total")
+				IncCounter("p2p_msg_received_total")
 
 			go m.handleNetworkMessage(data)
 		}
@@ -169,9 +185,10 @@ func (m *p2pModule) Start() error {
 	// TODO(tema):
 	// No way to know if the node has actually properly started as of the current implementation of m.listener
 	// Make sure to do this after the node has started if the implementation allowed for this in the future.
-	m.GetBus().
+	m.
+		GetBus().
 		GetTelemetryModule().
-		IncrementCounterMetric("nodes")
+		IncCounter("nodes")
 
 	return nil
 }
@@ -196,13 +213,18 @@ func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
 	log.Println("broadcasting message to network")
 
 	if err := m.network.NetworkBroadcast(data); err != nil {
-		m.IncrementCounterMetric("p2p_msg_broadcast_failed_total")
+		m.
+			GetBus().
+			GetTelemetryModule().
+			IncCounter("p2p_msg_broadcast_failed_total")
+
 		return err
 	}
 
-	m.GetBus().
+	m.
+		GetBus().
 		GetTelemetryModule().
-		IncrementCounterMetric("p2p_msg_broadcast_succeeded_total")
+		IncCounter("p2p_msg_broadcast_succeeded_total")
 
 	return nil
 }
@@ -218,11 +240,18 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 	}
 
 	if err := m.network.NetworkSend(data, addr); err != nil {
-		m.IncrementCounterMetric("p2p_msg_send_failed_total")
+		m.
+			GetBus().
+			GetTelemetryModule().
+			IncCounter("p2p_msg_send_failed_total")
+
 		return err
 	}
 
-	m.IncrementCounterMetric("p2p_msg_send_succeeded_total")
+	m.
+		GetBus().
+		GetTelemetryModule().
+		IncCounter("p2p_msg_send_succeeded_total")
 
 	return nil
 }
@@ -230,7 +259,10 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	appMsgData, err := m.network.HandleNetworkData(networkMsgData)
 	if err != nil {
-		m.IncrementCounterMetric("p2p_msg_handle_failed_total")
+		m.
+			GetBus().
+			GetTelemetryModule().
+			IncCounter("p2p_msg_handle_failed_total")
 
 		log.Println("Error handling raw data: ", err)
 
@@ -245,7 +277,10 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 
 	networkMessage := types.PocketEvent{}
 	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
-		m.IncrementCounterMetric("p2p_msg_handle_failed_total")
+		m.
+			GetBus().
+			GetTelemetryModule().
+			IncCounter("p2p_msg_handle_failed_total")
 
 		log.Println("Error decoding network message: ", err)
 
@@ -259,36 +294,8 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 
 	m.GetBus().PublishEventToBus(&event)
 
-	m.IncrementCounterMetric("p2p_msg_handle_succeeded_total")
-}
-
-func (m *p2pModule) GetTelemetry() (modules.TelemetryModule, error) {
-	if !m.telemetryOn {
-		return nil, nil
-	}
-
-	bus := m.GetBus()
-	if bus == nil {
-		return nil, fmt.Errorf("PocketBus is not initialized")
-	}
-
-	telemetry := bus.GetTelemetryModule()
-
-	return telemetry, nil
-}
-
-func (m *p2pModule) RegisterCounterMetric(name string, description string) {
-	if m.telemetryOn {
-		if telemetry, err := m.GetTelemetry(); err == nil && telemetry != nil {
-			telemetry.RegisterCounterMetric(name, description)
-		}
-	}
-}
-
-func (m *p2pModule) IncrementCounterMetric(name string) {
-	if m.telemetryOn {
-		if telemetry, err := m.GetTelemetry(); err == nil && telemetry != nil {
-			telemetry.IncrementCounterMetric(name)
-		}
-	}
+	m.
+		GetBus().
+		GetTelemetryModule().
+		IncCounter("p2p_msg_handle_succeeded_total")
 }

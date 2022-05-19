@@ -11,8 +11,7 @@ import (
 var _ typesPre2P.Network = &network{}
 
 type network struct {
-	telemetry modules.TelemetryModule
-	addrBook  typesPre2P.AddrBook
+	addrBook typesPre2P.AddrBook
 }
 
 func NewNetwork(addrBook typesPre2P.AddrBook) (n typesPre2P.Network) {
@@ -67,6 +66,7 @@ func (n *network) RemovePeerToAddrBook(peer *typesPre2P.NetworkPeer) error {
 	panic("RemovePeerToAddrBook not implemented")
 }
 
-func (n *network) SetTelemetry(telemetryMod modules.TelemetryModule) {
-	n.telemetry = telemetryMod
-}
+func (n *network) GetBus() modules.Bus  { return nil }
+func (n *network) SetBus(_ modules.Bus) {}
+func (n *network) Start() error         { return nil }
+func (n *network) Stop() error          { return nil }

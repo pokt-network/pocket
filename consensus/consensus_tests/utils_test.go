@@ -130,8 +130,9 @@ func CreateTestConsensusPocketNode(
 	persistenceMock := basePersistenceMock(t, testChannel)
 	p2pMock := baseP2PMock(t, testChannel)
 	utilityMock := baseUtilityMock(t, testChannel)
+	telemetryMock := baseTelemetryMock(t, testChannel)
 
-	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod)
+	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock)
 	require.NoError(t, err)
 
 	pocketNode := &shared.Node{
@@ -339,6 +340,16 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 	persistenceContextMock.EXPECT().Commit().Return(nil).AnyTimes()
 
 	return utilityMock
+}
+
+func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockTelemetryModule {
+	ctrl := gomock.NewController(t)
+	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
+
+	telemetryMock.EXPECT().Start().Do(func() {}).AnyTimes()
+	telemetryMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
+
+	return telemetryMock
 }
 
 /*** Genesis Helpers ***/
