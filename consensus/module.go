@@ -111,6 +111,14 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 }
 
 func (m *consensusModule) Start() error {
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterCounter(
+			"consensus_blockchain_height",
+			"the counter to track the number of nodes online",
+		)
+
 	if err := m.paceMaker.Start(); err != nil {
 		return err
 	}
