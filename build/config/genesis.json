@@ -1,6 +1,6 @@
 {
   "genesis_state_configs": {
-    "num_validators": 4,
+    "num_validators": 10,
     "num_applications": 0,
     "num_fisherman": 0,
     "num_servicers": 0,
