@@ -17,7 +17,7 @@ scrape_configs:
         regex: deployments
         action: keep
       - source_labels: [__meta_docker_container_name]
-        regex: /node\d?.consensus
+        regex: /node\d+.consensus
         action: keep
       # only keep targets with port 9000
       - source_labels: [__meta_docker_port_private]
