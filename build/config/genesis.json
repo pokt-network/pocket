@@ -1,6 +1,6 @@
 {
   "genesis_state_configs": {
-    "num_validators": 10,
+    "num_validators": 4,
     "num_applications": 0,
     "num_fisherman": 0,
     "num_servicers": 0,
@@ -41,54 +41,6 @@
       "address": "b0cca84843f6f5a274150a98da66d78f0273f64e",
       "output": "b0cca84843f6f5a274150a98da66d78f0273f64e",
       "public_key": "f868bcc508133899cc47b612e4f7d9d5dacc90ce1f28214a97b651baa00bf6e4"
-    },
-    {
-      "status": 2,
-      "service_url": "node5.consensus:8080",
-      "staked_tokens": "1000000000000000",
-      "address": "000057e85a37c3b4b3e55a686abde00a98f5000f",
-      "output": "000057e85a37c3b4b3e55a686abde00a98f5000f",
-      "public_key": "6dd7afeed9d29436a4d2c63852aae627fd00911554daa97f4aeb4448425b1e49"
-    },
-    {
-      "status": 2,
-      "service_url": "node6.consensus:8080",
-      "staked_tokens": "1000000000000000",
-      "address": "00006d01f447b1af74457029886fc9d0e6dd2a5d",
-      "output": "00006d01f447b1af74457029886fc9d0e6dd2a5d",
-      "public_key": "ee4f0b291c54a5962c840633cb51ee82cc5088413406e5718c6ce2f9997857c4"
-    },
-    {
-      "status": 2,
-      "service_url": "node7.consensus:8080",
-      "staked_tokens": "1000000000000000",
-      "address": "000075ea4f5b2244cc3f10454e8deb0032d3fedf",
-      "output": "000075ea4f5b2244cc3f10454e8deb0032d3fedf",
-      "public_key": "1824a3755c8af8c1a50df66682fda05581b93dbbe91c50e57d4da4515e8180eb"
-    },
-    {
-      "status": 2,
-      "service_url": "node8.consensus:8080",
-      "staked_tokens": "1000000000000000",
-      "address": "000080b1d1aa897b039cd83a4df03b2584776097",
-      "output": "000080b1d1aa897b039cd83a4df03b2584776097",
-      "public_key": "9dd971ff229cac485c7dfca63f67a45d09a3c9f3a52bb68df6c8125bb7ed73ea"
-    },
-    {
-      "status": 2,
-      "service_url": "node9.consensus:8080",
-      "staked_tokens": "1000000000000000",
-      "address": "0000976f73c607706783d5563b3aa38d3034dec6",
-      "output": "0000976f73c607706783d5563b3aa38d3034dec6",
-      "public_key": "23e831e7762d252b376bd9f1ce4e0e98efe192af0e92dd88393c9b8bce0c8d11"
-    },
-    {
-      "status": 2,
-      "service_url": "node10.consensus:8080",
-      "staked_tokens": "1000000000000000",
-      "address": "000101f29329fce33d2c2330d3ac8d8158774811",
-      "output": "000101f29329fce33d2c2330d3ac8d8158774811",
-      "public_key": "a6ff8b2171de46eaa9967a3dd31c4f60226b78b6b7873d83ffb029752476284a"
     }
   ]
 }
