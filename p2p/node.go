@@ -26,7 +26,7 @@ type (
 		modules.Module
 		types.Logger
 		Start() error
-		Stop()
+		Stop() error
 		Serve()
 		Handle()
 		OnNewMessage(MessageHandler)
@@ -47,7 +47,6 @@ type (
 		SetId(id int)
 		AddMsgToHistory(int64)
 		IsMsgInHistory(int64) bool
-		SetTelemetry(modules.TelemetryModule)
 	}
 	p2pNode struct {
 		bus modules.Bus
@@ -158,7 +157,6 @@ func NewP2PNode(config map[string]interface{}) *p2pNode {
 		handlers:        make([]MessageHandler, 0),
 		peerList:        make([]peerInfo, 0),
 		messagesHistory: make(map[int64]bool),
-		telemetryOn:     config["enable_telemetry"].(bool),
 	}
 
 	log.Printf("telemetry status: ON=%v\n", node.telemetryOn)
@@ -263,9 +261,9 @@ func (n *p2pNode) Serve() {
 	}
 }
 
-func (n *p2pNode) Stop() {
+func (n *p2pNode) Stop() error {
 	if !n.isRunning.Load() {
-		return
+		return nil
 	}
 
 	close(n.quit)
@@ -273,6 +271,7 @@ func (n *p2pNode) Stop() {
 	n.isRunning.Store(false)
 	n.wg.Wait()
 	close(n.sink)
+	return nil
 }
 
 func (n *p2pNode) IsRunning() bool {
@@ -296,8 +295,8 @@ func (n *p2pNode) HandleConnection(direction Direction, c net.Conn, signaler cha
 	n.peers.Unlock()
 
 	n.Info("New connection successfully pooled")
-	n.IncrementCounterMetric("p2p_connections_pooled_total")
-	n.IncrementCounterMetric("p2p_connections_opened_total")
+	// n.IncrementCounterMetric("p2p_connections_pooled_total")
+	// n.IncrementCounterMetric("p2p_connections_opened_total")
 
 	// add handshake logic
 
@@ -318,23 +317,23 @@ func (n *p2pNode) HandleConnection(direction Direction, c net.Conn, signaler cha
 		for {
 			select {
 			case <-n.quit:
-				n.IncrementCounterMetric("p2p_connections_closed_total")
+				// n.IncrementCounterMetric("p2p_connections_closed_total")
 				return
 			case <-p.Context.Done():
-				n.IncrementCounterMetric("p2p_connections_closed_total")
+				// n.IncrementCounterMetric("p2p_connections_closed_total")
 				return
 			default:
 				n.Debug("Read: blocking")
 				if _, err := io.ReadFull(p.reader, p.readBuffer[:WireCodecHeaderSize]); err != nil {
 					n.Debug("read error", err)
-					n.IncrementCounterMetric("p2p_connections_closed_total")
+					// n.IncrementCounterMetric("p2p_connections_closed_total")
 					return
 				}
 
 				_, nonce, isProto, size, err := n.decodeHeader(p.readBuffer[:WireCodecHeaderSize])
 				if err != nil {
 					n.Debug("header decoding", err)
-					n.IncrementCounterMetric("p2p_connections_closed_total")
+					// n.IncrementCounterMetric("p2p_connections_closed_total")
 					return
 				}
 
@@ -342,13 +341,13 @@ func (n *p2pNode) HandleConnection(direction Direction, c net.Conn, signaler cha
 				// TODO(derrandz): don't drop the connection, send err over
 				if size > uint32(len(p.readBuffer)-WireCodecHeaderSize) {
 					n.Debug("invalid body size", err)
-					n.IncrementCounterMetric("p2p_connections_closed_total")
+					// n.IncrementCounterMetric("p2p_connections_closed_total")
 					return
 				}
 
 				if nbytes, err := io.ReadFull(p.reader, p.readBuffer[WireCodecHeaderSize:WireCodecHeaderSize+int(size)]); err != nil || nbytes == 0 {
 					n.Debug("body read error", err)
-					n.IncrementCounterMetric("p2p_connections_closed_total")
+					// n.IncrementCounterMetric("p2p_connections_closed_total")
 					return
 				}
 
@@ -390,11 +389,11 @@ func (n *p2pNode) HandleConnection(direction Direction, c net.Conn, signaler cha
 			select {
 			case <-n.quit:
 				n.Info("Write: Got it?")
-				n.IncrementCounterMetric("p2p_connections_closed_total")
+				// n.IncrementCounterMetric("p2p_connections_closed_total")
 				return
 			case <-p.Context.Done():
 				n.Info("Read: Got it?")
-				n.IncrementCounterMetric("p2p_connections_closed_total")
+				// n.IncrementCounterMetric("p2p_connections_closed_total")
 				return
 
 			case <-p.signals():
@@ -411,13 +410,13 @@ func (n *p2pNode) HandleConnection(direction Direction, c net.Conn, signaler cha
 
 				if _, err := p.writer.Write(buff); err != nil {
 					n.Debug("write error", err)
-					n.IncrementCounterMetric("p2p_connections_closed_total")
+					// n.IncrementCounterMetric("p2p_connections_closed_total")
 					return
 				}
 
 				if err := p.writer.Flush(); err != nil {
 					n.Debug("flush error", err)
-					n.IncrementCounterMetric("p2p_connections_closed_total")
+					// n.IncrementCounterMetric("p2p_connections_closed_total")
 					return
 				}
 			}
@@ -471,7 +470,7 @@ func (n *p2pNode) HandleMessage(nonce uint32, msg *types.P2PMessage) {
 
 	if n.IsMsgInHistory(msg.Metadata.Hash) {
 		n.Log("HandleMessage: message already in history, not handling")
-		n.IncrementCounterMetric("p2p_msg_handle_skipped_total")
+		// n.IncrementCounterMetric("p2p_msg_handle_skipped_total")
 		return
 	}
 
@@ -550,10 +549,10 @@ func (n *p2pNode) SendMessage(nonce uint32, address string, msg *types.P2PMessag
 	}
 
 	if err = n.Send(nonce, address, data, true); err != nil {
-		n.IncrementCounterMetric("p2p_msg_msg_failed_total")
+		// n.IncrementCounterMetric("p2p_msg_msg_failed_total")
 		return err
 	}
-	n.IncrementCounterMetric("p2p_msg_msg_succeeded_total")
+	// n.IncrementCounterMetric("p2p_msg_msg_succeeded_total")
 	return nil
 }
 
@@ -579,7 +578,7 @@ func (n *p2pNode) Write(address string, data []byte) error {
 		)
 
 		if n.telemetry != nil {
-			n.IncrementCounterMetric("p2p_connections_opened_total")
+			// n.IncrementCounterMetric("p2p_connections_opened_total")
 		}
 	}
 
@@ -591,7 +590,7 @@ func (n *p2pNode) Write(address string, data []byte) error {
 	peer.Conn.Close()
 
 	if n.telemetry != nil {
-		n.IncrementCounterMetric("p2p_connections_closed_total")
+		// n.IncrementCounterMetric("p2p_connections_closed_total")
 	}
 
 	return nil
@@ -721,11 +720,11 @@ func (n *p2pNode) BroadcastMessage(msg *types.P2PMessage, isRoot bool, fromLevel
 
 	err = n.Broadcast(encodedData, isRoot, fromLevel)
 	if err != nil {
-		n.IncrementCounterMetric("p2p_msg_broadcast_failed_total")
+		// n.IncrementCounterMetric("p2p_msg_broadcast_failed_total")
 		return err
 	}
 
-	n.IncrementCounterMetric("p2p_msg_broadcast_succeeded_total")
+	// n.IncrementCounterMetric("p2p_msg_broadcast_succeeded_total")
 
 	// redundancy layer
 	if isRoot && n.config["redundancy"].(bool) {

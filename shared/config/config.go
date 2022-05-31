@@ -11,20 +11,6 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
-type JsonConfig struct {
-	RootDir string `json:"root_dir"`
-	Genesis string `json:"genesis"`
-
-	PrivateKey string `json:"private_key"`
-
-	Pre2P          Pre2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
-	P2P            P2PConfig            `json:"p2p"`
-	Consensus      ConsensusConfig      `json:"consensus"`
-	PrePersistence PrePersistenceConfig `json:"pre_persistence"`
-	Persistence    PersistenceConfig    `json:"persistence"`
-	Utility        UtilityConfig        `json:"utility"`
-	Telemetry      TelemetryConfig      `json:"telemetry"`
-}
 type Config struct {
 	RootDir string `json:"root_dir"`
 	Genesis string `json:"genesis"` // FIXME(olshansky): we should be able to pass the struct in here.
@@ -74,13 +60,12 @@ type P2PConfig struct {
 	TimeoutInMs      uint     `json:"timeout_in_ms,omitempty"`
 	ID               int      `json:"id,omitempty"`
 	Redundancy       bool     `json:"redundancy,omitempty"`
-	EnableTelemetry  bool     `json:"enable_telemetry"`
 }
 
 type PacemakerConfig struct {
-	TimeoutMsec               uint64 `json:"timeout_msec,omitempty"`
-	Manual                    bool   `json:"manual,omitempty"`
-	DebugTimeBetweenStepsMsec uint64 `json:"debug_time_between_steps_msec,omitempty"`
+	TimeoutMsec               uint64 `json:"timeout_msec"`
+	Manual                    bool   `json:"manual"`
+	DebugTimeBetweenStepsMsec uint64 `json:"debug_time_between_steps_msec"`
 }
 
 type ConsensusConfig struct {
@@ -122,12 +107,9 @@ func LoadConfig(file string) (c *Config) {
 	if err != nil {
 		log.Fatalln("Error reading config file: ", err)
 	}
-	jsonCfg := &JsonConfig{}
-	if err = json.Unmarshal(bytes, jsonCfg); err != nil {
+	if err = json.Unmarshal(bytes, c); err != nil {
 		log.Fatalln("Error parsing config file: ", err)
 	}
-
-	c = jsonCfg.toConfig()
 
 	if err := c.ValidateAndHydrate(); err != nil {
 		log.Fatalln("Error validating or completing config: ", err)
@@ -175,61 +157,6 @@ func (c *ConsensusConfig) ValidateAndHydrate() error {
 	}
 
 	return nil
-}
-
-// This was added to fix config parsing errors that rise a Marshal time
-// due to encoding issues coming from unrecognized character(s)
-func (jc *JsonConfig) toConfig() *Config {
-	pc := &Config{
-		RootDir: jc.RootDir,
-		Genesis: jc.Genesis,
-
-		PrivateKey: cryptoPocket.Ed25519PrivateKey([]byte(jc.PrivateKey)),
-		Pre2P: &Pre2PConfig{
-			ConsensusPort:             jc.Pre2P.ConsensusPort,
-			UseRainTree:               jc.Pre2P.UseRainTree,
-			RainTreeRedundancyLayerOn: jc.Pre2P.RainTreeRedundancyLayerOn,
-			RainTreeCleanupLayerOn:    jc.Pre2P.RainTreeCleanupLayerOn,
-			ConnectionType:            jc.Pre2P.ConnectionType,
-			EnableTelemetry:           jc.Pre2P.EnableTelemetry,
-		},
-		P2P: &P2PConfig{
-			ID:               jc.P2P.ID,
-			Protocol:         jc.P2P.Protocol,
-			Address:          jc.P2P.Address,
-			ExternalIp:       jc.P2P.ExternalIp,
-			Peers:            jc.P2P.Peers,
-			BufferSize:       jc.P2P.BufferSize,
-			WireHeaderLength: jc.P2P.WireHeaderLength,
-			TimeoutInMs:      jc.P2P.TimeoutInMs,
-			EnableTelemetry:  jc.P2P.EnableTelemetry,
-		},
-		Consensus: &ConsensusConfig{
-			MaxMempoolBytes: jc.Consensus.MaxMempoolBytes,
-			MaxBlockBytes:   jc.Consensus.MaxBlockBytes,
-			Pacemaker: &PacemakerConfig{
-				TimeoutMsec:               jc.Consensus.Pacemaker.TimeoutMsec,
-				Manual:                    jc.Consensus.Pacemaker.Manual,
-				DebugTimeBetweenStepsMsec: jc.Consensus.Pacemaker.DebugTimeBetweenStepsMsec,
-			},
-		},
-		PrePersistence: &PrePersistenceConfig{
-			Capacity:        jc.PrePersistence.Capacity,
-			MempoolMaxBytes: jc.PrePersistence.MempoolMaxBytes,
-			MempoolMaxTxs:   jc.PrePersistence.MempoolMaxTxs,
-		},
-		Persistence: &PersistenceConfig{
-			DataDir:     jc.Persistence.DataDir,
-			PostgresUrl: jc.Persistence.PostgresUrl,
-			NodeSchema:  jc.Persistence.NodeSchema,
-		},
-		Utility: &UtilityConfig{},
-		Telemetry: &TelemetryConfig{
-			Address:  jc.Telemetry.Address,
-			Endpoint: jc.Telemetry.Endpoint,
-		},
-	}
-	return pc
 }
 
 func (c *PacemakerConfig) ValidateAndHydrate() error {

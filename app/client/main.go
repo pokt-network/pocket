@@ -63,12 +63,14 @@ func main() {
 				"2@node2.consensus:8082",
 				"3@node3.consensus:8083",
 				"4@node4.consensus:8084",
-				"5@client:8085",
 			},
-			Redundancy:      true,
-			EnableTelemetry: false,
+			Redundancy: true,
 		},
-		UseTelemetry: false,
+		Telemetry: &config.TelemetryConfig{
+			Address:  "0.0.0.0:9000",
+			Endpoint: "/metrics",
+		},
+		UseTelemetry: true,
 	}
 
 	// Initialize the state singleton

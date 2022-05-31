@@ -25,19 +25,17 @@ var _ modules.P2PModule = &p2pModule{}
 
 func Create(config *config.Config) (modules.P2PModule, error) {
 	cfg := map[string]interface{}{
-		"id":               config.P2P.ID,
-		"address":          config.P2P.ExternalIp,
-		"readBufferSize":   int(config.P2P.BufferSize),
-		"writeBufferSize":  int(config.P2P.BufferSize),
-		"redundancy":       config.P2P.Redundancy,
-		"peers":            config.P2P.Peers,
-		"enable_telemetry": config.P2P.EnableTelemetry,
+		"id":              config.P2P.ID,
+		"address":         config.P2P.ExternalIp,
+		"readBufferSize":  int(config.P2P.BufferSize),
+		"writeBufferSize": int(config.P2P.BufferSize),
+		"redundancy":      config.P2P.Redundancy,
+		"peers":           config.P2P.Peers,
 	}
 	m := &p2pModule{
-		config:      config.P2P,
-		bus:         nil,
-		node:        CreateP2PNode(cfg),
-		telemetryOn: config.P2P.EnableTelemetry,
+		config: config.P2P,
+		bus:    nil,
+		node:   CreateP2PNode(cfg),
 	}
 
 	return m, nil
@@ -77,7 +75,7 @@ func (m *p2pModule) Start() error {
 		m.node.Warn("PocketBus is not initialized; no events will be published")
 	}
 
-	err = m.node.Start()
+	err := m.node.Start()
 
 	if err != nil {
 		return err

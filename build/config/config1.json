@@ -20,7 +20,7 @@
       "3@node3.consensus:8083",
       "4@node4.consensus:8084"
     ],
-    "enable_telemetry": true
+    "redundancy": true
   },
   "consensus": {
     "max_mempool_bytes": 500000000,

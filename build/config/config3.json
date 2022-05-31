@@ -13,14 +13,14 @@
     "protocol": "tcp",
     "address": "0.0.0.0:8083",
     "connection_buffer_size": 1024,
-    "external_ip": "172.18.0.1:8083",
+    "external_ip": "0.0.0.0:8083",
     "peers": [
       "1@node1.consensus:8081",
       "2@node2.consensus:8082",
       "3@node3.consensus:8083",
       "4@node4.consensus:8084"
     ],
-    "enable_telemetry": true
+    "redundancy": true
   },
   "consensus": {
     "max_mempool_bytes": 500000000,
