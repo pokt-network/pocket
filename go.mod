@@ -1,6 +1,6 @@
 module github.com/pokt-network/pocket
 
-go 1.17
+go 1.18
 
 require (
 	github.com/ProtonMail/go-ecvrf v0.0.1
