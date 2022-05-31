@@ -9,7 +9,7 @@ import (
 	shared "github.com/pokt-network/pocket/shared/types"
 )
 
-// TODO(Andrew): Convert all queries to use 'height' in the interface for historical lookups
+// TODO(team): Convert all queries to use 'height' in the interface for historical lookups
 // TODO(team): Consider converting all address params from bytes to string to avoid unnecessary encoding?
 
 // --- Account Functions ---

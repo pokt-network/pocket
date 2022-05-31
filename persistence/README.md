@@ -1,6 +1,21 @@
-# Persistence Module
+# Persistence Module <!-- omit in toc -->
 
 This document is meant to be a supplement to the living specification of [1.0 Pocket's Persistence Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/persistence) primarily focused on the implementation, and additional details related to the design of the codebase and information related to development.
+
+- [Database Migrations](#database-migrations)
+  - [Configuration](#configuration)
+  - [LocalNet](#localnet)
+- [Debugging & Development](#debugging--development)
+  - [Makefile Helpers](#makefile-helpers)
+    - [Admin View - db_admin](#admin-view---db_admin)
+    - [Benchmarking - db_bench](#benchmarking---db_bench)
+- [Testing](#testing)
+  - [Dependencies](#dependencies)
+  - [Setup](#setup)
+    - [Setup Issue - Docker Daemon is not Running](#setup-issue---docker-daemon-is-not-running)
+    - [Setup Issue - Docker Daemon is not Running](#setup-issue---docker-daemon-is-not-running-1)
+  - [Unit Tests](#unit-tests)
+- [Implementation FAQ](#implementation-faq)
 
 ## Database Migrations
 
@@ -82,3 +97,5 @@ For example, on macOS, you can check for this with `lsof -i:5432` and kill the a
 ```
 $ make test_persistence
 ```
+
+## Implementation FAQ
