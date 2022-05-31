@@ -12,6 +12,8 @@ type AddrBookMap map[string]*NetworkPeer
 // TODO(olshansky): When we delete `stdnetwork` and only go with `raintree`, this interface
 // can be simplified greatly.
 type Network interface {
+	modules.Module // to allow passing down telemetry through the bus
+
 	NetworkBroadcast(data []byte) error
 	NetworkSend(data []byte, address cryptoPocket.Address) error
 
@@ -22,8 +24,6 @@ type Network interface {
 
 	// This function was added to support the raintree implementation.
 	HandleNetworkData(data []byte) ([]byte, error)
-
-	SetTelemetry(modules.TelemetryModule)
 }
 
 type NetworkPeer struct {

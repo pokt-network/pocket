@@ -31,6 +31,8 @@ type Config struct {
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 
+	UseTelemetry bool `json:"use_telemetry"`
+
 	Pre2P          *Pre2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
 	P2P            *P2PConfig            `json:"p2p"`
 	Consensus      *ConsensusConfig      `json:"consensus"`
@@ -54,7 +56,6 @@ type Pre2PConfig struct {
 	RainTreeRedundancyLayerOn bool           `json:"rain_tree_redundancy_layer_on"`
 	RainTreeCleanupLayerOn    bool           `json:"rain_tree_cleanup_layer_on"`
 	ConnectionType            ConnectionType `json:"connection_type"`
-	EnableTelemetry           bool           `json:"enable_telemetry"`
 }
 
 type PrePersistenceConfig struct {

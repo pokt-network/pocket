@@ -38,6 +38,11 @@ go_vet:
 go_staticcheck:
 	@if builtin type -P "staticcheck"; then staticcheck ./... ; else echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; fi
 
+.PHONY: refresh
+## Removes vendor, installs deps, generates mocks and protobuf files. Perform after a new pull or a branch switch
+refresh:
+	 make protogen_clean && make protogen_local && make protogen_show && make mockgen && rm -rf ./vendor && go mod download && go mod vendor && go mod tidy
+
 .PHONY: go_clean_dep
 ## Runs `go mod vendor` && `go mod tidy`
 	go mod vendor && go mod tidy
@@ -66,8 +71,8 @@ client_connect:
 
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-compose_and_watch: db_start
-	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate client pgadmin db node1.consensus node2.consensus node3.consensus node4.consensus
+compose_and_watch: db_start monitoring_start
+	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus # node5.consensus node6.consensus node7.consensus node8.consensus node9.consensus node10.consensus
 
 .PHONY: db_start
 ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
@@ -113,6 +118,11 @@ docker_wipe: prompt_user
 	docker images -q | xargs -r -I {} docker rmi {}
 	docker volume ls -q | xargs -r -I {} docker volume rm {}
 
+.PHONY: monitoring_start
+## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
+monitoring_start:
+	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d grafana loki vm
+
 .PHONY: mockgen
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
@@ -122,6 +132,7 @@ mockgen:
 	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	mockgen --source=${modules_dir}/bus_module.go -destination=${modules_dir}/mocks/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/telemetry_module.go -destination=${modules_dir}/mocks/telemetry_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	echo "Mocks generated in ${modules_dir}/mocks"
 
 	$(eval p2p_types_dir = "p2p/pre2p/types")

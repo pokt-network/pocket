@@ -21,7 +21,8 @@ import (
 var _ typesPre2P.Network = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
-	telemetry modules.TelemetryModule
+	modules.Module
+	bus modules.Bus
 
 	selfAddr cryptoPocket.Address
 	addrBook typesPre2P.AddrBook
@@ -146,9 +147,10 @@ func (n *rainTreeNetwork) CleanupLayer(messageBytes []byte) error { // TODO (Tea
 
 func (n *rainTreeNetwork) demote(rainTreeMsg *typesPre2P.RainTreeMessage) error {
 	if rainTreeMsg.Level > 0 {
-		if n.telemetry != nil {
-			n.telemetry.IncrementCounterMetric("p2p_msg_broadcast_depth")
-		}
+		// n.
+		// 	GetBus().
+		// 	GetTelemetryModule().
+		// 	IncCounter("p2p_msg_broadcast_depth")
 
 		if err := n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return err
@@ -204,6 +206,11 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	}
 
 	if rainTreeMsg.Level > 0 {
+		n.
+			GetBus().
+			GetTelemetryModule().
+			IncGauge("p2p_msg_broadcast_received_total_per_block")
+
 		if err := n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return nil, err
 		}
@@ -229,7 +236,6 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 func (n *rainTreeNetwork) GetAddrBook() typesPre2P.AddrBook {
 	return n.addrBook
-
 }
 
 func (n *rainTreeNetwork) AddPeerToAddrBook(peer *typesPre2P.NetworkPeer) error {
@@ -244,6 +250,14 @@ func (n *rainTreeNetwork) RemovePeerToAddrBook(peer *typesPre2P.NetworkPeer) err
 	panic("Not implemented")
 }
 
+func (n *rainTreeNetwork) SetBus(bus modules.Bus) {
+	n.bus = bus
+}
+
+func (n *rainTreeNetwork) GetBus() modules.Bus {
+	return n.bus
+}
+
 func getNonce() uint64 {
 	// INVESTIGATE(olshansky): This did not generate a random nonce on every call
 
@@ -255,8 +269,4 @@ func getNonce() uint64 {
 
 	rand.Seed(time.Now().UTC().UnixNano())
 	return rand.Uint64()
-}
-
-func (n *rainTreeNetwork) SetTelemetry(telemetryMod modules.TelemetryModule) {
-	n.telemetry = telemetryMod
 }

@@ -68,7 +68,8 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	valIdMap, idValMap := typesCons.GetValAddrToIdMap(typesGenesis.GetNodeState(nil).ValidatorMap)
 
 	m := &consensusModule{
-		bus:        nil,
+		bus: nil,
+
 		privateKey: cfg.PrivateKey,
 		consCfg:    cfg.Consensus,
 
@@ -100,6 +101,14 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 }
 
 func (m *consensusModule) Start() error {
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterCounter(
+			"consensus_blockchain_height",
+			"the counter to track the number of nodes online",
+		)
+
 	if err := m.paceMaker.Start(); err != nil {
 		return err
 	}
