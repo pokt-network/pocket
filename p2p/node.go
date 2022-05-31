@@ -22,6 +22,8 @@ import (
 
 type (
 	P2PNode interface {
+		// This allows P2PNode to have access to bus functionality to access telemetry
+		modules.Module
 		types.Logger
 		Start() error
 		Stop()
@@ -48,6 +50,7 @@ type (
 		SetTelemetry(modules.TelemetryModule)
 	}
 	p2pNode struct {
+		bus modules.Bus
 		sync.Mutex
 		net.Listener
 		net.Dialer
@@ -453,6 +456,11 @@ func (n *p2pNode) Handle() {
 
 func (n *p2pNode) HandleMessage(nonce uint32, msg *types.P2PMessage) {
 	if msg.Metadata.Broadcast {
+		n.
+			GetBus().
+			GetTelemetryModule().
+			IncGauge("p2p_msg_broadcast_received_total_per_block")
+
 		n.Log("HandleMessage: got a broadcast message")
 		err := n.BroadcastMessage(msg, false, int(msg.Metadata.Level))
 		if err != nil {
@@ -696,6 +704,7 @@ func (n *p2pNode) Broadcast(msg []byte, isRoot bool, fromLevel int) error {
 			n.Log(fmt.Sprintf("Broadcast: originatorId: %d, left: %d, right: %d, currentLevel: %d", originatorId, left.ID, right.ID, currentLevel))
 			go n.Write(right.address, msg)
 			go n.Write(left.address, msg)
+
 			return nil
 		})
 
@@ -750,24 +759,12 @@ func (n *p2pNode) IsMsgInHistory(id int64) bool {
 	return seen
 }
 
-func (p *p2pNode) SetTelemetry(telemetry modules.TelemetryModule) {
-	p.telemetry = telemetry
+func (p *p2pNode) SetBus(bus modules.Bus) {
+	p.bus = bus
 }
 
-func (p *p2pNode) RegisterCounterMetric(name string, description string) {
-	if p.telemetryOn {
-		if telemetry := p.telemetry; telemetry != nil {
-			telemetry.RegisterCounterMetric(name, description)
-		}
-	}
-}
-
-func (p *p2pNode) IncrementCounterMetric(name string) {
-	if p.telemetryOn {
-		if telemetry := p.telemetry; telemetry != nil {
-			telemetry.IncrementCounterMetric(name)
-		}
-	}
+func (p *p2pNode) GetBus() modules.Bus {
+	return p.bus
 }
 
 // p2pConn additional functionality

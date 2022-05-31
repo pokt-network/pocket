@@ -16,9 +16,6 @@ import (
 )
 
 type p2pModule struct {
-	modules.TelemetryModule
-	telemetryOn bool
-
 	bus    modules.Bus
 	config *config.P2PConfig
 	node   P2PNode
@@ -49,81 +46,32 @@ func Create(config *config.Config) (modules.P2PModule, error) {
 func (m *p2pModule) Start() error {
 	m.node.Info("Starting p2p module...")
 
-	m.RegisterCounterMetric(
-		"nodes",
-		"the counter to track the number of nodes online",
-	)
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterCounter(
+			"blockchain_nodes_connected",
+			"the counter to track the number of nodes online",
+		)
 
-	m.RegisterCounterMetric(
-		"p2p_msg_received_total",
-		"the counter to track received messages",
-	)
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterGauge(
+			"p2p_msg_broadcast_received_total_per_block",
+			"the counter to track the number of broadcast messages received per block",
+		)
 
-	m.RegisterCounterMetric(
-		"p2p_connections_opened_total",
-		"the counter to track how many connections were open",
-	)
-
-	m.RegisterCounterMetric(
-		"p2p_connections_closed_total",
-		"the counter to track how many connections were open",
-	)
-
-	m.RegisterCounterMetric(
-		"p2p_connections_pooled_total",
-		"the counter to track how many connections were pooled",
-	)
-
-	m.RegisterCounterMetric(
-		"p2p_msg_broadcast_failed_total",
-		"the counter to track how many broadcast rounds were initiated",
-	)
-
-	m.RegisterCounterMetric(
-		"p2p_msg_broadcast_succeeded_total",
-		"the counter to track how many broadcast rounds were performed successfully",
-	)
-
-	m.RegisterCounterMetric(
-		"p2p_msg_send_failed_total",
-		"the counter to track how many message sends have failed",
-	)
-
-	m.RegisterCounterMetric(
-		"p2p_msg_send_succeeded_total",
-		"the counter to track how many message sends have succeeded",
-	)
-
-	m.RegisterCounterMetric(
-		"p2p_msg_handle_failed_total",
-		"the counter to track how many message handlings have failed",
-	)
-
-	m.RegisterCounterMetric(
-		"p2p_msg_handle_skipped_total",
-		"the counter to track how many messages handlings have succeeded",
-	)
-
-	m.RegisterCounterMetric(
-		"p2p_msg_handle_succeeded_total",
-		"the counter to track how many messages handlings have succeeded",
-	)
-
-	m.RegisterCounterMetric(
-		"p2p_msg_broadcast_depth",
-		"the counter to track the depths to which the broadcast algorithm has went",
-	)
-
-	telemetry, err := m.GetTelemetry()
-	if err == nil && telemetry != nil {
-		m.node.SetTelemetry(telemetry)
-	}
+	m.node.SetBus(m.GetBus())
 
 	if m.bus != nil {
 		m.node.OnNewMessage(func(msg *types.P2PMessage) {
 			m.node.Info("Publishing")
 			m.bus.PublishEventToBus(msg.Payload)
-			m.IncrementCounterMetric("p2p_msg_handle_succeeded_total")
+			m.
+				GetBus().
+				GetTelemetryModule().
+				IncCounter("p2p_msg_handle_succeeded_total")
 		})
 	} else {
 		m.node.Warn("PocketBus is not initialized; no events will be published")
@@ -137,7 +85,13 @@ func (m *p2pModule) Start() error {
 
 	go m.node.Handle()
 
-	m.IncrementCounterMetric("nodes")
+	// TODO(tema):
+	// No way to know if the node has actually properly started as of the current implementation of m.listener
+	// Make sure to do this after the node has started if the implementation allowed for this in the future.
+	m.
+		GetBus().
+		GetTelemetryModule().
+		IncCounter("blockchain_nodes_connected")
 
 	return nil
 }
@@ -187,44 +141,8 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, data *anypb.Any, topic share
 		Data:  data,
 	})
 	if err := m.node.WriteMessage(0, tcpAddr, msg); err != nil {
-		m.IncrementCounterMetric("p2p_msg_send_failed_total")
 		return err
 	}
 
-	m.IncrementCounterMetric("p2p_msg_send_succeeded_total")
 	return nil
-}
-
-func (m *p2pModule) GetTelemetry() (modules.TelemetryModule, error) {
-	m.node.Debug("telemetry enabled=%v", m.telemetryOn)
-	if !m.telemetryOn {
-		return nil, nil
-	}
-
-	bus := m.GetBus()
-	if bus == nil {
-		return nil, fmt.Errorf("PocketBus is not initialized")
-	}
-
-	telemetry := bus.GetTelemetryModule()
-
-	return telemetry, nil
-}
-
-func (m *p2pModule) RegisterCounterMetric(name string, description string) {
-	if m.telemetryOn {
-		if telemetry, err := m.GetTelemetry(); err == nil && telemetry != nil {
-			telemetry.RegisterCounterMetric(name, description)
-		}
-	}
-}
-
-func (m *p2pModule) IncrementCounterMetric(name string) {
-	if m.telemetryOn {
-		if telemetry, err := m.GetTelemetry(); err == nil && telemetry != nil {
-			telemetry.IncrementCounterMetric(name)
-		}
-	} else {
-		m.node.Info("Telemetry is OFF")
-	}
 }
