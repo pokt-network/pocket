@@ -1,14 +1,13 @@
 version: "3.8"
 
 # docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
-x-loki:
-  &loki-logging
+x-loki: &loki-logging
   driver: loki
   options:
     loki-url: "http://localhost:3100/loki/api/v1/push"
-    max-size: '5m'
-    max-file: '3'
-    keep-file: 'false'
+    max-size: "5m"
+    max-file: "3"
+    keep-file: "false"
     loki-external-labels: "job=pocket-nodes,container_name={{.Name}},instance={{.Name}},project=pocket-v1"
 
 services:
@@ -342,12 +341,14 @@ services:
     depends_on:
       - "vm"
     environment:
-      - GF_INSTALL_PLUGINS="grafana-clock-panel,grafana-simple-json-datasource"
-      - GF_AUTH_DISABLE_LOGIN_FORM=true
-      - GF_AUTH_ANONYMOUS_ENABLED=true
+      # TODO(kdas): Figure out why including these plugins on some platforms causes this error:
+      #             `Error: ✗ Plugin not found (Grafana v8.5.2 linux-arm64)`
+      # - GF_INSTALL_PLUGINS="grafana-clock-panel,grafana-simple-json-datasource"
+      - GF_AUTH_DISABLE_LOGIN_FORM="true"
+      - GF_AUTH_ANONYMOUS_ENABLED="true"
       - GF_AUTH_ANONYMOUS_ORG_NAME="Main Org."
       - GF_AUTH_ANONYMOUS_ORG_ROLE="Admin"
-      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_USERS_ALLOW_SIGN_UP="false"
     ports:
       - "3000:3000"
     volumes:
