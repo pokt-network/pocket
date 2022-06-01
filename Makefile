@@ -41,7 +41,7 @@ go_staticcheck:
 .PHONY: refresh
 ## Removes vendor, installs deps, generates mocks and protobuf files. Perform after a new pull or a branch switch
 refresh:
-	 make protogen_clean && make protogen_local && make protogen_show && make mockgen && rm -rf ./vendor && go mod download && go mod vendor && go mod tidy
+	go mod tidy && go mod vendor && make protogen_clean && make protogen_local
 
 .PHONY: go_clean_dep
 ## Runs `go mod vendor` && `go mod tidy`
