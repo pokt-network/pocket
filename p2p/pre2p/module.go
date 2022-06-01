@@ -134,6 +134,7 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	// There was no error, but we don't need to forward this to the app-specific bus.
 	// For example, the message has already been handled by the application.
 	if appMsgData == nil {
+		// log.Println("[DEBUG] No app-specific message to forward from the network")
 		return
 	}
 

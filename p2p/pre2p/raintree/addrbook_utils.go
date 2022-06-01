@@ -38,7 +38,7 @@ func (n *rainTreeNetwork) handleAddrBookUpdates() error {
 		// is always the first in the list. This makes RainTree propagation easier to compute and interpret.
 		n.addrList = append(n.addrList[i:len(n.addrList)], n.addrList[0:i]...)
 	} else {
-		return fmt.Errorf("self address not found for %s in addrBook so this client can send messages but does not propagate them", n.selfAddr)
+		return fmt.Errorf("self address not found for %s in addrBook so this client can send messages but does cannot propagate them", n.selfAddr)
 	}
 	return nil
 }
@@ -65,7 +65,8 @@ func (n *rainTreeNetwork) getTarget(level uint32, targetPercentage float64) (cry
 	l := n.getAddrBookLengthAtHeight(level)
 	i := int(targetPercentage * float64(l))
 
-	// Demotes are handeled separately
+	// If the target is 0, it is a reference to self, which is a `Demote` in RainTree terms.
+	// This is handled separately.
 	if i == 0 {
 		return nil, false
 	}
@@ -79,32 +80,10 @@ func (n *rainTreeNetwork) getTarget(level uint32, targetPercentage float64) (cry
 	return nil, false
 }
 
-func (n *rainTreeNetwork) debugMsgTargetString(len, idx int) string {
-	s := strings.Builder{}
-	s.WriteString("[")
-	serviceUrl := n.addrBookMap[n.addrList[0]].ServiceUrl
-	if n.addrList[0] == n.selfAddr.String() {
-		s.WriteString(fmt.Sprintf(" (%s) ", serviceUrl))
-	} else {
-		s.WriteString(fmt.Sprintf("(self) %s ", serviceUrl))
-	}
-
-	for i := 1; i < len; i++ {
-		serviceUrl := n.addrBookMap[n.addrList[i]].ServiceUrl
-		if i == idx {
-			s.WriteString(fmt.Sprintf(" **%s** ", serviceUrl))
-		} else {
-			s.WriteString(fmt.Sprintf(" %s ", serviceUrl))
-		}
-	}
-	s.WriteString("]")
-	return s.String()
-}
-
-// DISCUSS(drewsky): Need to integrate with persistence so we are storing this on a per height basis.
-// We hit an issue where we are propagating a message from an older height (e.g. before the addr book
-// was updated), but we're using `maxNumLevels` associated with the number of validators at the
-// current height.
+// DISCUSS(team): Need to integrate with persistence so we are storing this on a per height basis.
+// We can easily hit an issue where we are propagating a message from an older height (e.g. before
+// the addr book was updated), but we're using `maxNumLevels` associated with the number of
+// validators at the current height.
 func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level uint32) int {
 	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(n.maxNumLevels-level))
 	return int(float64(len(n.addrList)) * shrinkageCoefficient)
@@ -136,4 +115,27 @@ func logBase(x float64) float64 {
 
 func round(value, precision float64) float64 {
 	return math.Round(value/precision) * precision
+}
+
+// Only used for debug logging to understand what RainTree is doing under the hood
+func (n *rainTreeNetwork) debugMsgTargetString(len, idx int) string {
+	s := strings.Builder{}
+	s.WriteString("[")
+	serviceUrl := n.addrBookMap[n.addrList[0]].ServiceUrl
+	if n.addrList[0] == n.selfAddr.String() {
+		s.WriteString(fmt.Sprintf(" (%s) ", serviceUrl))
+	} else {
+		s.WriteString(fmt.Sprintf("(self) %s ", serviceUrl))
+	}
+
+	for i := 1; i < len; i++ {
+		serviceUrl := n.addrBookMap[n.addrList[i]].ServiceUrl
+		if i == idx {
+			s.WriteString(fmt.Sprintf(" **%s** ", serviceUrl))
+		} else {
+			s.WriteString(fmt.Sprintf(" %s ", serviceUrl))
+		}
+	}
+	s.WriteString("]")
+	return s.String()
 }

@@ -63,7 +63,6 @@ client_connect:
 	docker exec -it client /bin/bash -c "go run app/client/*.go"
 
 # TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
-
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
 compose_and_watch: db_start
@@ -127,7 +126,6 @@ mockgen:
 	$(eval p2p_types_dir = "p2p/pre2p/types")
 	mockgen --source=${p2p_types_dir}/network.go -destination=${p2p_types_dir}/mocks/network_mock.go
 	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
-
 
 .PHONY: test_all
 ## Run all go unit tests
@@ -246,18 +244,30 @@ test_p2p_types:
 test_p2p:
 	go test -v -race ./p2p
 
-.PHONY: test_p2p
+.PHONY: test_pre2p
 ## Run all pre2p
 test_pre2p:
-# go test -v -count=1 ./p2p/pre2p
 	go test -v -race -count=1 ./p2p/pre2p
+
+# Inspired by: https://goldin.io/blog/stop-using-todo
+# TODO        - General Purpose catch-all.
+# TECHDEBT    - Not a great implementation, but we need to fix it later.
+# IMPROVE     - A nice to have, but not a priority. It's okay if we never get to this.
+# DISCUSS     - Probably requires a lengthy offline discussion to understand next steps.
+# INCOMPLETE  - A change which was out of scope of a specific PR but needed to be documented.
+# INVESTIGATE - TBD what was going on, but needed to continue moving and not get distracted.
+# CLEANUP     - Like TECHDEBT, but not as bad.  It's okay if we never get to this.
+# HACK        - Like TECHDEBT, but much worse. This needs to be prioritized
+# REFACTOR    - Similar to TECHDEBT, but will require a substantial rewrite and change across the codebase
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR"
 
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)
 todo_list:
-	grep --exclude-dir={.git,vendor,prototype} -r "TODO" .
+	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS}  .
 
 .PHONY: todo_count
 ## Print a count of all the TODOs in the project
 todo_count:
-	grep --exclude-dir={.git,vendor,prototype} -r "TODO" . | wc -l
+	@echo ${KEYWORDS}
+	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS} . | wc -l

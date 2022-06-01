@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-// TEMP(olshansky): This is a wrapper around the generated `Validator.go`
+// TECHDEBT(olshansky): This is a wrapper around the generated `Validator.go`
 // because we cannot load `[]byte` from JSON.
 type ValidatorJsonCompatibleWrapper struct {
 	Address         HexData `json:"address,omitempty"`

@@ -13,11 +13,11 @@ import (
 
 type Config struct {
 	RootDir string `json:"root_dir"`
-	Genesis string `json:"genesis"` // FIXME(olshansky): we should be able to pass the struct in here.
+	Genesis string `json:"genesis"` // TECHDEBT(olshansky): we should be able to pass the struct in here.
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 
-	Pre2P          *Pre2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
+	Pre2P          *Pre2PConfig          `json:"pre2p"` // TECHDEBT(team): consolidate/replace this with P2P configs depending on next steps
 	P2P            *P2PConfig            `json:"p2p"`
 	Consensus      *ConsensusConfig      `json:"consensus"`
 	PrePersistence *PrePersistenceConfig `json:"pre_persistence"`
@@ -32,7 +32,7 @@ const (
 	EmptyConnection ConnectionType = "empty" // Only used for testing
 )
 
-// TODO(derrandz): delete this once P2P is ready.
+// TECHDEBT(team): consolidate/replace this with P2P configs depending on next steps
 type Pre2PConfig struct {
 	ConsensusPort             uint32         `json:"consensus_port"`
 	UseRainTree               bool           `json:"use_raintree"`

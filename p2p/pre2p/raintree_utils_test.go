@@ -27,7 +27,7 @@ const (
 	testChannelSize        = 10000
 )
 
-// TEST(olshansky): Add configurations tests for dead and partially visible nodes
+// TODO(olshansky): Add configurations tests for dead and partially visible nodes
 type TestRainTreeCommConfig map[string]struct {
 	numReads  uint16
 	numWrites uint16
@@ -59,6 +59,8 @@ func generateKeys(numValidators int) []cryptoPocket.PrivateKey {
 }
 
 // A mock of the application specific to know if a message was sent to be handeled by the application
+// INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
+//                         expectation with RainTree by comparing with Telemetry after updating specs.
 func prepareBusMock(t *testing.T, wg *sync.WaitGroup) *modulesMock.MockBus {
 	ctrl := gomock.NewController(t)
 	busMock := modulesMock.NewMockBus(ctrl)
@@ -73,6 +75,8 @@ func prepareBusMock(t *testing.T, wg *sync.WaitGroup) *modulesMock.MockBus {
 // while a message was still being sent that would have later been dropped due to de-duplication. There
 // is a race condition here, but it is okay because our goal is to achieve max coverage with an upper limit
 // on the number of expected messages propagated.
+// INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
+//                         expectation with RainTree by comparing with Telemetry after updating specs.
 func prepareConnMock(t *testing.T, valId string, expectedNumReads, expectedNumWrites uint16) typesPre2P.TransportLayerConn {
 	testChannel := make(chan []byte, testChannelSize)
 	ctrl := gomock.NewController(t)
@@ -95,13 +99,13 @@ func prepareConnMock(t *testing.T, valId string, expectedNumReads, expectedNumWr
 
 func prepareP2PModules(t *testing.T, configs []*config.Config) (p2pModules map[string]*p2pModule) {
 	p2pModules = make(map[string]*p2pModule, len(configs))
-
 	for i, config := range configs {
 		_ = typesGenesis.GetNodeState(config)
 		p2pMod, err := Create(config)
 		require.NoError(t, err)
 		p2pModules[validatorId(i+1)] = p2pMod.(*p2pModule)
 		// HACK(olshansky): I hate that we have to do this, but it is outside the scope of this change...
+		// Cleanup once we get rid of the singleton
 		typesGenesis.ResetNodeState(t)
 	}
 	return
@@ -139,7 +143,7 @@ func validatorId(i int) string {
 	return fmt.Sprintf(serviceUrlFormat, i)
 }
 
-// REFACTOR(olshansky): The fact that we are passing in a genesis string rather than a properly
+// TECHDEBT(olshansky): The fact that we are passing in a genesis string rather than a properly
 // configured struct is a big of legacy. Need to fix this sooner rather than later.
 func genesisJson(numValidators int, validatorConfigs string) string {
 	return fmt.Sprintf(`{

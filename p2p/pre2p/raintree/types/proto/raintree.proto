@@ -7,5 +7,6 @@ message RainTreeMessage {
     uint32 level = 1;
     bytes data = 2;
 
-    uint64 nonce = 3; // TODO(drewsky): discuss if we should have entropy at the RainTree level.
+    uint64 nonce = 3;
+     // DISCUSS(drewsky): discuss if we should have entropy at the RainTree level.
 }

@@ -10,17 +10,18 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// TODO(olshansky): add more tests with different configurations:
-// - different number of levels (i.e. 1, 2, 3, 4, & 5)
-// - partial network views
-// - dead nodes (ephemeral and constant)
+// TODO(team): add more tests with different configurations:
+// - varying number of levels (i.e. 1, 2, 3, 4, 5)
+// - partial/incomplete network views
+// - dead nodes; both ephemeral and constant
+// - redundancy related tests
 
 func TestRainTreeSmall(t *testing.T) {
 	// Network configurations
 	numValidators := 4
 	configs := createConfigs(t, numValidators)
 
-	// Test configurations
+	// Test configurations (visualization retrieved from simulator)
 	// 	                 val_1
 	// 	   ┌───────────────┴────┬─────────────────┐
 	//   val_2                val_1             val_3
@@ -28,6 +29,7 @@ func TestRainTreeSmall(t *testing.T) {
 	// 		     val_3                val_2             val_4
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
+		// valId: {numReads, numWrites}
 		validatorId(1): {0, 0},
 		validatorId(2): {2, 2},
 		validatorId(3): {2, 2},
@@ -78,6 +80,7 @@ func TestRainTreeLarge(t *testing.T) {
 	// val_6        val_4     val_8        val_3        val_1     val_5     val_9        val_7     val_2
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
+		// valId: {numReads, numWrites}
 		validatorId(1): {0, 0},
 		validatorId(2): {1, 1},
 		validatorId(3): {1, 1},
