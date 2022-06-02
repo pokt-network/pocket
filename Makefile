@@ -247,8 +247,19 @@ test_p2p:
 .PHONY: test_pre2p
 ## Run all pre2p
 test_pre2p:
-	go test -v -race -count=1 ./p2p/pre2p
+	go test -v -count=1 ./p2p/pre2p/...
 
+.PHONY: test_pre2p_addrbook
+## Run all Pre2P addr book related tests
+test_pre2p_addrbook:
+	go test -run AddrBook -v -count=1 ./p2p/pre2p/...
+
+.PHONY: benchmark_pre2p_addrbook
+## Benchmark all Pre2P addr book related tests
+benchmark_pre2p_addrbook:
+	go test -bench=. -run BenchmarkAddrBook -v -count=1 ./p2p/pre2p/...
+
+# /Users/olshansky/workspace/pocket/pocket/p2p/pre2p/raintree/addrbook_utils_test.go
 # Inspired by: https://goldin.io/blog/stop-using-todo
 # TODO        - General Purpose catch-all.
 # TECHDEBT    - Not a great implementation, but we need to fix it later.
