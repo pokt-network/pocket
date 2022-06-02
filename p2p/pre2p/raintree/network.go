@@ -32,10 +32,6 @@ type rainTreeNetwork struct {
 
 	// TECHDEBT(drewsky): What should we use for de-duping messages within P2P?
 	mempool types.Mempool
-
-	// RainTree redundancy parameters
-	redundancyLayerOn bool
-	cleanupLayerOn    bool
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook, config *config.Config) typesPre2P.Network {
@@ -46,9 +42,6 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook,
 		addrBookMap:  make(typesPre2P.AddrBookMap),
 		addrList:     make([]string, 0),
 		maxNumLevels: 0,
-		// RainTree redundancy parameters
-		// redundancyLayerOn: config.Pre2P.RainTreeRedundancyLayerOn,
-		// cleanupLayerOn:    config.Pre2P.RainTreeCleanupLayerOn,
 		// TODO(team): Mempool size should be configurable
 		mempool: types.NewMempool(1000000, 1000),
 	}
@@ -67,6 +60,11 @@ func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
 }
 
 func (n *rainTreeNetwork) networkBroadcastInternal(data []byte, level uint32, nonce uint64) error {
+	// This is handled either by the cleanup layer or redundancy layer
+	if level == 0 {
+		return nil
+	}
+
 	msg := &typesPre2P.RainTreeMessage{
 		Level: level,
 		Data:  data,
@@ -75,11 +73,6 @@ func (n *rainTreeNetwork) networkBroadcastInternal(data []byte, level uint32, no
 	bz, err := proto.Marshal(msg)
 	if err != nil {
 		return err
-	}
-
-	// cleanup layer always triggered on level 0
-	if level == 0 {
-		return n.CleanupLayer(bz)
 	}
 
 	if addr1, ok := n.getFirstTargetAddr(level); ok {
@@ -98,53 +91,6 @@ func (n *rainTreeNetwork) networkBroadcastInternal(data []byte, level uint32, no
 		log.Println("Error demoting self during RainTree message propagation: ", err)
 	}
 
-	// redundancy layer triggered after level 1 sent but before the cleanup layer
-	if level == 0 {
-		return n.RedundancyLayer(bz)
-	}
-
-	return nil
-}
-
-// RedundancyLayer: the redundancy layer is an additional, optional, spread mechanism that shoots at
-// the full list's 66% and 33% targets when level 0 is reached. This, in turn, triggers the cleanup
-// layer in potential dead spots.
-func (n *rainTreeNetwork) RedundancyLayer(messageBytes []byte) error {
-	if !n.redundancyLayerOn {
-		return nil
-	}
-	if addr1, ok := n.getFirstTargetAddr(n.maxNumLevels); ok {
-		if err := n.networkSendInternal(messageBytes, addr1); err != nil {
-			log.Println("Error sending to 1st peer during redundancy layer broadcast: ", err)
-		}
-	}
-	if addr2, ok := n.getSecondTargetAddr(n.maxNumLevels); ok {
-		if err := n.networkSendInternal(messageBytes, addr2); err != nil {
-			log.Println("Error sending to 2nd peer during redundancy layer broadcast: ", err)
-		}
-	}
-	return nil
-}
-
-// CleanupLayer: the cleanup layer is a simple, immediate left and immediate right, send that
-// terminates upon a successful ACK from both the left and right peers.
-// TODO(Team): the cleanup layer doesn't need to send the actual message it can be just the hash to check to see
-func (n *rainTreeNetwork) CleanupLayer(messageBytes []byte) error {
-	if !n.cleanupLayerOn {
-		return nil
-	}
-	// TODO(drewsky): need to implement ACKs to ensure the targets are proper and we may terminate
-	// the cleanup layer
-	addr1, addr2, err := n.getCleanupTargets()
-	if err != nil {
-		return err
-	}
-	if err = n.networkSendInternal(messageBytes, addr1); err != nil {
-		log.Println("Error sending to peer during redundancy layer broadcast: ", err)
-	}
-	if err = n.networkSendInternal(messageBytes, addr2); err != nil {
-		log.Println("Error sending to peer during redundancy layer broadcast: ", err)
-	}
 	return nil
 }
 

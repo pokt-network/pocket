@@ -62,7 +62,9 @@ func (n *rainTreeNetwork) getSecondTargetAddr(level uint32) (cryptoPocket.Addres
 }
 
 func (n *rainTreeNetwork) getTarget(level uint32, targetPercentage float64) (cryptoPocket.Address, bool) {
+	// OPTIMIZE(olshansky): We are computing this twice for each message, but it's not that expensive.
 	l := n.getAddrBookLengthAtHeight(level)
+
 	i := int(targetPercentage * float64(l))
 
 	// If the target is 0, it is a reference to self, which is a `Demote` in RainTree terms.
@@ -86,7 +88,7 @@ func (n *rainTreeNetwork) getTarget(level uint32, targetPercentage float64) (cry
 // validators at the current height.
 func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level uint32) int {
 	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(n.maxNumLevels-level))
-	return int(float64(len(n.addrList)) * shrinkageCoefficient)
+	return int(float64(len(n.addrList)) * (shrinkageCoefficient))
 }
 
 func (n *rainTreeNetwork) getCleanupTargets() (targetA, targetB cryptoPocket.Address, err error) {

@@ -119,7 +119,7 @@ func TestRainTreeCompleteEighteenNodes(t *testing.T) {
 		validatorId(17): {2, 2},
 		validatorId(18): {1, 1},
 	}
-	// Note that the originator, `val_1` is also messaged by `val_17` outside of continously
+	// Note that the originator, `val_1` is also messaged by `val_17` outside of continuously
 	// demoting itself.
 	testRainTreeCalls(t, originatorNode, expectedCalls, true)
 }
