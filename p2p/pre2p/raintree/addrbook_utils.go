@@ -91,21 +91,6 @@ func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level uint32) int {
 	return int(float64(len(n.addrList)) * (shrinkageCoefficient))
 }
 
-func (n *rainTreeNetwork) getCleanupTargets() (targetA, targetB cryptoPocket.Address, err error) {
-	addrListLen := len(n.addrList)
-	if addrListLen < 3 {
-		return nil, nil, fmt.Errorf("the address book is too small to get cleanup targets")
-	}
-	targetAAddressString := n.addrList[1]
-	targetBAddressString := n.addrList[addrListLen-1]
-	peerA, ok1 := n.addrBookMap[targetAAddressString]
-	peerB, ok2 := n.addrBookMap[targetBAddressString]
-	if !ok1 || !ok2 {
-		return nil, nil, fmt.Errorf("addrBook not in sync with the addrList")
-	}
-	return peerA.Address, peerB.Address, nil
-}
-
 func (n *rainTreeNetwork) getMaxAddrBookLevels() uint32 {
 	addrBookSize := float64(len(n.addrBook))
 	return uint32(math.Ceil(logBase(addrBookSize)))
