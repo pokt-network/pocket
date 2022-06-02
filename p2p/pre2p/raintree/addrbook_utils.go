@@ -17,7 +17,7 @@ const (
 	secondMsgTargetPercentage = float64(2) / float64(3)
 	shrinkagePercentage       = float64(2) / float64(3)
 	maxLevelsLogBase          = float64(3)
-	floatPrecision            = float64(0.001)
+	floatPrecision            = float64(0.0000001)
 )
 
 // Whenever `addrBook` changes, we also need to update `addrBookMap` and `addrList`

@@ -40,6 +40,9 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 		{59049, 10},
 		// 11 levels
 		{59050, 11},
+		// 19 levels
+		// INVESTIGATE(olshansky/team): Does not scale to 1,000,000,000 nodes
+		// {1000000000, 19},
 	}
 
 	for _, testCase := range testCases {
@@ -72,7 +75,9 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 		// Small
 		{9, 2},
 		// Large
-		{59049, 10},
+		{59050, 11},
+		// INVESTIGATE(olshansky/team): Does not scale to 1,000,000,000 nodes
+		// {1000000000, 19},
 	}
 
 	for _, testCase := range testCases {
