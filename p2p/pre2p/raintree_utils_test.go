@@ -29,8 +29,8 @@ const (
 
 // TODO(olshansky): Add configurations tests for dead and partially visible nodes
 type TestRainTreeCommConfig map[string]struct {
-	numReads  uint16
-	numWrites uint16
+	numNetworkReads  uint16
+	numNetworkWrites uint16
 }
 
 var keys []cryptoPocket.PrivateKey
@@ -77,7 +77,7 @@ func prepareBusMock(t *testing.T, wg *sync.WaitGroup) *modulesMock.MockBus {
 // on the number of expected messages propagated.
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
 //                         expectation with RainTree by comparing with Telemetry after updating specs.
-func prepareConnMock(t *testing.T, valId string, expectedNumReads, expectedNumWrites uint16) typesPre2P.TransportLayerConn {
+func prepareConnMock(t *testing.T, valId string, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesPre2P.TransportLayerConn {
 	testChannel := make(chan []byte, testChannelSize)
 	ctrl := gomock.NewController(t)
 	connMock := mocksPre2P.NewMockTransportLayerConn(ctrl)
@@ -85,12 +85,12 @@ func prepareConnMock(t *testing.T, valId string, expectedNumReads, expectedNumWr
 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
 		data := <-testChannel
 		return data, nil
-	}).MaxTimes(int(expectedNumReads + 1)) // INVESTIGATE(olshansky): The +1 is necessary because there is one extra read of empty data by every channel...
+	}).MaxTimes(int(expectedNumNetworkReads + 1)) // INVESTIGATE(olshansky): The +1 is necessary because there is one extra read of empty data by every channel...
 
 	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) error {
 		testChannel <- data
 		return nil
-	}).MaxTimes(int(expectedNumWrites))
+	}).MaxTimes(int(expectedNumNetworkWrites))
 
 	connMock.EXPECT().Close().Return(nil).Times(1)
 

@@ -24,7 +24,7 @@ type rainTreeNetwork struct {
 	addrBook typesPre2P.AddrBook
 
 	// TECHDEBT(olshansky): Consider optimizing these away if possible.
-	// Helpers / abstractions aroudn `addrBook` for simpler implementation through additional
+	// Helpers / abstractions around `addrBook` for simpler implementation through additional
 	// storage & pre-computation.
 	addrBookMap  typesPre2P.AddrBookMap
 	addrList     []string
@@ -47,8 +47,8 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook,
 		addrList:     make([]string, 0),
 		maxNumLevels: 0,
 		// RainTree redundancy parameters
-		redundancyLayerOn: config.Pre2P.RainTreeRedundancyLayerOn,
-		cleanupLayerOn:    config.Pre2P.RainTreeCleanupLayerOn,
+		// redundancyLayerOn: config.Pre2P.RainTreeRedundancyLayerOn,
+		// cleanupLayerOn:    config.Pre2P.RainTreeCleanupLayerOn,
 		// TODO(team): Mempool size should be configurable
 		mempool: types.NewMempool(1000000, 1000),
 	}
