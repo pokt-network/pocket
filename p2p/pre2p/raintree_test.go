@@ -11,12 +11,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// TODO(team): add more tests with different configurations:
-// - olshansky: varying number of levels (i.e. 1, 2, 3, 4, 5)
-// - andrew:
-// 	 - partial/incomplete network views
-// 	 - dead nodes; both ephemeral and constant
-// 	 - redundancy related tests
+// IMPROVE(team): Looking into adding more tests and accounting for more edge cases.
 
 func TestRainTreeCompleteOneNodes(t *testing.T) {
 	// val_1

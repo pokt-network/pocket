@@ -29,6 +29,8 @@ type ExpectedRainTreeMessageProp struct {
 	targets  []ExpectedRainTreeMessageTarget
 }
 
+// IMPROVE(team): Looking into adding more tests and accounting for more edge cases.
+
 func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 	cfg := &config.Config{}
 
