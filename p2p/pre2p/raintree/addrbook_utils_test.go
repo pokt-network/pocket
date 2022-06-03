@@ -1,7 +1,9 @@
 package raintree
 
 import (
+	"encoding/hex"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/pokt-network/pocket/p2p/pre2p/types"
@@ -10,16 +12,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type ExpectedRainTreeNetworkConfig struct {
+	numNodes          int
+	numExpectedLevels int
+}
+
+type ExpectedRainTreeMessageTarget struct {
+	level int
+	left  string
+	right string
+}
+type ExpectedRainTreeMessageProp struct {
+	orig     byte
+	numNodes int
+	addrList string
+	targets  []ExpectedRainTreeMessageTarget
+}
+
 func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 	cfg := &config.Config{}
 
 	addr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
 
-	testCases := []struct {
-		numNodes          int
-		numExpectedLevels int
-	}{
+	testCases := []ExpectedRainTreeNetworkConfig{
 		// 0 levels
 		{1, 0}, // Just self
 		// 1 level
@@ -68,10 +84,7 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 	addr, err := cryptoPocket.GenerateAddress()
 	require.NoError(b, err)
 
-	testCases := []struct {
-		numNodes          int
-		numExpectedLevels int
-	}{
+	testCases := []ExpectedRainTreeNetworkConfig{
 		// Small
 		{9, 2},
 		// Large
@@ -97,6 +110,7 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 	}
 }
 
+// Generates an address book with a random set of `n` addresses
 func getAddrBook(t *testing.T, n int) (addrBook types.AddrBook) {
 	addrBook = make([]*types.NetworkPeer, 0)
 	for i := 0; i < n; i++ {
@@ -107,4 +121,85 @@ func getAddrBook(t *testing.T, n int) (addrBook types.AddrBook) {
 		addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
 	}
 	return
+}
+
+func TestRainTreeAddrBookTargetsSixNodes(t *testing.T) {
+	// 		                  A
+	// 		   ┌──────────────┴────────┬────────────────────┐
+	// 		   C                       A                    E
+	//   ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐
+	//   D        C     E        B        A     C     F        E     A
+	prop := &ExpectedRainTreeMessageProp{'A', 6, "ABCDEF", []ExpectedRainTreeMessageTarget{
+		{2, "C", "E"},
+		{1, "B", "C"},
+	}}
+	testRainTreeMessageTargets(t, prop)
+}
+
+func TestRainTreeAddrBookTargetsNineNodes(t *testing.T) {
+	//                      A
+	//       ┌──────────────┴────────┬────────────────────┐
+	//       D                       A                    G
+	// ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐
+	// F        D     H        C        A     E     I        G     B
+	prop := &ExpectedRainTreeMessageProp{'A', 9, "ABCDEFGHI", []ExpectedRainTreeMessageTarget{
+		{2, "D", "G"},
+		{1, "C", "E"},
+	}}
+	testRainTreeMessageTargets(t, prop)
+}
+func TestRainTreeAddrBookTargetsTwentySevenNodes(t *testing.T) {
+
+	// 		                                                             O
+	// 		                ┌────────────────────────────────────────────┴───────────────────────┬─────────────────────────────────────────────────────────────────┐
+	// 		                X                                                                    O                                                                 F
+	//       ┌──────────────┴────────┬────────────────────┐                       ┌──────────────┴────────┬────────────────────┐                    ┌──────────────┴────────┬────────────────────┐
+	//       C                       X                    I                       U                       O                    [                    L                       F                    R
+	// ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐        ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐     ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐
+	// G        C     K        A        X     E     M        I     Z        Y        U     B        S        O     W     D        [     Q     P        L     T        J        F     N     V        R     H
+	prop := &ExpectedRainTreeMessageProp{'O', 27, "OPQRSTUVWXYZ[ABCDEFGHIJKLMN", []ExpectedRainTreeMessageTarget{
+		{3, "X", "F"},
+		{2, "U", "["},
+		{1, "S", "W"},
+	}}
+	testRainTreeMessageTargets(t, prop)
+}
+
+func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeMessageProp) {
+	addrBook := getAlphabetAddrBook(expectedMsgProp.numNodes)
+	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, addrBook, &config.Config{}).(*rainTreeNetwork)
+	network.handleAddrBookUpdates()
+
+	require.Equal(t, strings.Join(network.addrList, ""), strToAddrList(expectedMsgProp.addrList))
+
+	i, found := network.getSelfIndexInAddrBook()
+	require.True(t, found)
+	require.Equal(t, i, 0)
+
+	for _, target := range expectedMsgProp.targets {
+		addr, found := network.getFirstTargetAddr(uint32(target.level))
+		require.True(t, found)
+		require.Equal(t, addr, cryptoPocket.Address(target.left))
+
+		addr, found = network.getSecondTargetAddr(uint32(target.level))
+		require.True(t, found)
+		require.Equal(t, addr, cryptoPocket.Address(target.right))
+	}
+}
+
+// Generates an address book with a constant set 27 addresses; ['A', ..., 'Z']
+func getAlphabetAddrBook(n int) (addrBook types.AddrBook) {
+	addrBook = make([]*types.NetworkPeer, 0)
+	for i, ch := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ[" {
+		if i >= n {
+			return
+		}
+		addrBook = append(addrBook, &types.NetworkPeer{Address: []byte{byte(ch)}})
+	}
+	return
+}
+
+func strToAddrList(s string) string {
+	return hex.EncodeToString([]byte(s))
+
 }
