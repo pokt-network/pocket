@@ -9,9 +9,6 @@ import (
 	shared "github.com/pokt-network/pocket/shared/types"
 )
 
-// TODO(team): Convert all queries to use 'height' in the interface for historical lookups
-// TODO(team): Consider converting all address params from bytes to string to avoid unnecessary encoding?
-
 // --- Account Functions ---
 
 func (p PostgresContext) GetAccountAmount(address []byte) (amount string, err error) {
@@ -41,7 +38,6 @@ func (p PostgresContext) SubtractAccountAmount(address []byte, amount string) er
 
 // DISCUSS(team): If we are okay with `GetAccountAmount` return 0 as a default, this function
 // can leverage `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
-// Ditto below for the pool.
 func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -105,17 +101,6 @@ func (p *PostgresContext) operationAccountAmount(address []byte, deltaAmount str
 
 // --- Pool Functions ---
 
-func (p PostgresContext) GetPoolAmount(name string) (amount string, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return
-	}
-	if err = conn.QueryRow(ctx, schema.GetPoolAmountQuery(name)).Scan(&amount); err != nil {
-		return
-	}
-	return
-}
-
 func (p PostgresContext) InsertPool(name string, address []byte, amount string) error { // TODO(Andrew): remove address param
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -138,6 +123,17 @@ func (p PostgresContext) InsertPool(name string, address []byte, amount string) 
 	return tx.Commit(ctx)
 }
 
+func (p PostgresContext) GetPoolAmount(name string) (amount string, err error) {
+	ctx, conn, err := p.DB.GetCtxAndConnection()
+	if err != nil {
+		return
+	}
+	if err = conn.QueryRow(ctx, schema.GetPoolAmountQuery(name)).Scan(&amount); err != nil {
+		return
+	}
+	return
+}
+
 func (p PostgresContext) AddPoolAmount(name string, amount string) error {
 	return p.operationPoolAmount(name, amount, func(s *big.Int, s1 *big.Int) error {
 		s.Add(s, s1)
@@ -152,6 +148,8 @@ func (p PostgresContext) SubtractPoolAmount(name string, amount string) error {
 	})
 }
 
+// DISCUSS(team): If we are okay with `GetPoolAmount` return 0 as a default, this function
+// can leverage `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
 func (p PostgresContext) SetPoolAmount(name string, amount string) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {

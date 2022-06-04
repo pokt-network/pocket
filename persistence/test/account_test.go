@@ -15,40 +15,49 @@ import (
 
 // --- Account Tests ---
 
-// DISCUSS(team): We need to add fuzzing everywhere.
 func FuzzAccountAmount(f *testing.F) {
-	// Fuzzing configurations
-	accountOps := []string{"Add", "Sub", "Set"}
-	numOps := len(accountOps)
-	for i := 0; i < 10; i++ {
-		f.Add(accountOps[rand.Intn(numOps)])
-	}
-
 	// Setup
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	acc := NewTestAccount(nil)
 
-	// TODO(team): Further improvements:
-	// - Randomize the amounts
-	// - Make sure negative balances never happen
+	// TODO(team): We can create a map of functions once the following is answered:
+	// https://stackoverflow.com/questions/72496074/golang-1-18-map-of-functions is answered
+	ops := []string{"Get", "Add", "Sub", "Set"}
+
+	// IMPROVE(team): See the documentation in `persistence/README.md` for more information on
+	// why we need to call this initialization.
+	acc := NewTestAccount(nil)
+	db.SetAccountAmount(acc.Address, DefaultAccountAmount)
 	expectedAmount := big.NewInt(DefaultAccountBig.Int64())
+
+	numOptions := len(ops)
+	numOperations := 20
+	for i := 0; i < numOperations; i++ {
+		f.Add(ops[rand.Intn(numOptions)])
+	}
+
+	// IMPROVE(team): Randomize the amounts
+	// IMPROVE(team): Assert negative balances never happen
 	f.Fuzz(func(t *testing.T, op string) {
 		switch op {
-		case "Add": // TODO: What should this return before a set?
+		case "Get":
+			amount, err := db.GetAccountAmount(acc.Address)
+			require.NoError(t, err)
+			require.Equal(t, types.BigIntToString(expectedAmount), amount, "unexpected retrieved amount")
+		case "Add":
 			err := db.AddAccountAmount(acc.Address, DefaultDeltaAmount)
 			require.NoError(t, err)
 			expectedAmount.Add(expectedAmount, DefaultDeltaBig)
-		case "Sub": // TODO: What should this return before a set?
+		case "Sub":
 			err := db.SubtractAccountAmount(acc.Address, DefaultDeltaAmount)
 			require.NoError(t, err)
 			expectedAmount.Sub(expectedAmount, DefaultDeltaBig)
 		case "Set":
 			err := db.SetAccountAmount(acc.Address, DefaultAccountAmount)
 			require.NoError(t, err)
-			expectedAmount = DefaultAccountBig
+			expectedAmount = big.NewInt(DefaultAccountBig.Int64())
 		}
 		currentAmount, err := db.GetAccountAmount(acc.Address)
 		require.NoError(t, err)
@@ -124,6 +133,55 @@ func TestSubAccountAmount(t *testing.T) {
 
 // --- Pool Tests ---
 
+func FuzzPoolAmount(f *testing.F) {
+	// Setup
+	db := persistence.PostgresContext{
+		Height: 0,
+		DB:     *PostgresDB,
+	}
+
+	// TODO(team): We can create a map of functions once the following is answered:
+	// https://stackoverflow.com/questions/72496074/golang-1-18-map-of-functions is answered
+	ops := []string{"Get", "Add", "Sub", "Set"}
+
+	// IMPROVE(team): See the documentation in `persistence/README.md` for more information on
+	// why we need to call this initialization.
+	pool := NewTestPool(nil)
+	db.SetPoolAmount(pool.Name, DefaultAccountAmount)
+	expectedAmount := big.NewInt(DefaultAccountBig.Int64())
+
+	numOptions := len(ops)
+	numOperations := 20
+	for i := 0; i < numOperations; i++ {
+		f.Add(ops[rand.Intn(numOptions)])
+	}
+
+	// IMPROVE(team): Randomize the amounts
+	// IMPROVE(team): Assert negative balances never happen
+	f.Fuzz(func(t *testing.T, op string) {
+		switch op {
+		case "Get":
+			amount, err := db.GetPoolAmount(pool.Name)
+			require.NoError(t, err)
+			require.Equal(t, types.BigIntToString(expectedAmount), amount, "unexpected retrieved amount")
+		case "Add":
+			err := db.AddPoolAmount(pool.Name, DefaultDeltaAmount)
+			require.NoError(t, err)
+			expectedAmount.Add(expectedAmount, DefaultDeltaBig)
+		case "Sub":
+			err := db.SubtractPoolAmount(pool.Name, DefaultDeltaAmount)
+			require.NoError(t, err)
+			expectedAmount.Sub(expectedAmount, DefaultDeltaBig)
+		case "Set":
+			err := db.SetPoolAmount(pool.Name, DefaultAccountAmount)
+			require.NoError(t, err)
+			expectedAmount = big.NewInt(DefaultAccountBig.Int64())
+		}
+		currentAmount, err := db.GetPoolAmount(pool.Name)
+		require.NoError(t, err)
+		require.Equal(t, types.BigIntToString(expectedAmount), currentAmount, fmt.Sprintf("unexpected amount after %s", op))
+	})
+}
 func TestSetPoolAmount(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
