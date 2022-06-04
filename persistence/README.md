@@ -16,12 +16,13 @@ This document is meant to be a supplement to the living specification of [1.0 Po
     - [Setup Issue - Docker Daemon is not Running](#setup-issue---docker-daemon-is-not-running-1)
   - [Unit Tests](#unit-tests)
 - [Implementation FAQ](#implementation-faq)
+- [Implementation TODO(team)](#implementation-todoteam)
 
 ## Database Migrations
 
 ### Configuration
 
-The persistence specific configuratin within `config.json` looks like this:
+The persistence specific configuration within `config.json` looks like this:
 
 ```
   "persistence": {
@@ -99,3 +100,21 @@ $ make test_persistence
 ```
 
 ## Implementation FAQ
+
+**Q**: Why do `Get` methods (e.g. `GetAccountAmount`) not return 0 by default?
+**A**: This was
+
+**Q**: Why are amounts strings?
+**A**: A lesson from Tendermint in order to enforce the use of BigInts throughout and avoid floating point issues when storing data on disk.
+
+## Implementation TODO(team)
+
+These are major TODOs spanning the entire repo so they are documented here instead.
+
+- [ ] Figure out how to handle conflicts while having multiple constraints with Postgres
+- [ ] Remove all the SQL strings and use a proper query builder
+- [ ] Remove all the SQL strings and consider using prepared statements
+- [ ] Convert all queries to use 'height' in the interface for historical lookups
+- [ ] Consider converting all address params from bytes to string to avoid unnecessary encoding
+- [ ] Consider removing all `Set` methods (e.g. `SetAccountAmount`) and replace with `Add` (e.g. `AddAccountAmount`) by having it leverage a "default zero".
+- [ ] Use proper SQL migration methodoligies
