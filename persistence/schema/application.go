@@ -9,7 +9,6 @@ const (
 	DefaultUnstakingHeight = -1 // TODO(team): Move this into a shared file?
 	DefaultEndHeight       = -1 // TODO(team): Move this into a shared file?
 
-	// TODO (team) look into address being a "computed" field
 	// DISCUSS(drewsky): How do we handle historical queries here? E.g. get staked chains at some specific height?
 	AppTableName   = "app"
 	AppTableSchema = `(
@@ -173,10 +172,12 @@ func NullifyAppsPausedBeforeQuery(pausedBeforeHeight, height int64) string {
 		AppTableName, height, pausedBeforeHeight, DefaultEndHeight)
 }
 
+// Exposed for debugging purposes only
 func ClearAllAppsQuery() string {
 	return fmt.Sprintf(`DELETE FROM %s`, AppTableName)
 }
 
+// Exposed for debugging purposes only
 func ClearAllAppChainsQuery() string {
 	return fmt.Sprintf(`DELETE FROM %s`, AppChainsTableName)
 }

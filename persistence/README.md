@@ -111,6 +111,7 @@ $ make test_persistence
 
 These are major TODOs spanning the entire repo so they are documented here instead.
 
+- [ ] Look into `address` being a computed field in most Postgres tables
 - [ ] Figure out how to handle conflicts while having multiple constraints with Postgres
 - [ ] Remove all the SQL strings and use a proper query builder
 - [ ] Remove all the SQL strings and consider using prepared statements
