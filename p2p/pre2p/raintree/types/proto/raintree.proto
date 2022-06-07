@@ -8,4 +8,5 @@ message RainTreeMessage {
     bytes data = 2;
 
     uint64 nonce = 3; // TODO(drewsky): discuss if we should have entropy at the RainTree level.
+    int32 hash = 4;
 }

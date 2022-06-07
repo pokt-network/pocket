@@ -119,6 +119,18 @@ func (m *consensusModule) Start() error {
 			"the counter to track the number of nodes online",
 		)
 
+	// Inc on every new hotpokt message send.
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterGaugeVector(
+			"v1",
+			"consensus",
+			"hotpokt_message",
+			"a gauge to count hotpokt messages generated to produce a new block",
+			[]string{"type", "step", "round", "height"},
+		)
+
 	if err := m.paceMaker.Start(); err != nil {
 		return err
 	}
