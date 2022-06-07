@@ -20,14 +20,17 @@ type PromModule struct {
 	address  string
 	endpoint string
 
-	counters map[string]prometheus.Counter
-	gauges   map[string]prometheus.Gauge
+	counters     map[string]prometheus.Counter
+	gauges       map[string]prometheus.Gauge
+	gaugeVectors map[string]*prometheus.GaugeVec
 }
 
 func CreatePromModule(cfg *config.Config) (*PromModule, error) {
 	return &PromModule{
-		counters: map[string]prometheus.Counter{},
-		gauges:   map[string]prometheus.Gauge{},
+		counters:     map[string]prometheus.Counter{},
+		gauges:       map[string]prometheus.Gauge{},
+		gaugeVectors: map[string]*prometheus.GaugeVec{},
+
 		address:  cfg.Telemetry.Address,
 		endpoint: cfg.Telemetry.Endpoint,
 	}, nil
@@ -87,52 +90,92 @@ func (p *PromModule) RegisterGauge(name string, description string) {
 }
 
 // Set sets the Gauge to an arbitrary value.
-func (p *PromModule) SetGauge(name string, value float64) {
+func (p *PromModule) SetGauge(name string, value float64) prometheus.Gauge {
 	if _, exists := p.gauges[name]; !exists {
-		return
+		return nil
 	}
 
-	p.gauges[name].Set(value)
+	gg := p.gauges[name]
+	gg.Set(value)
+
+	return gg
 }
 
 // Inc increments the Gauge by 1. Use Add to increment it by arbitrary
 // values.
-func (p *PromModule) IncGauge(name string) {
+func (p *PromModule) IncGauge(name string) prometheus.Gauge {
 	if _, exists := p.gauges[name]; !exists {
-		return
+		return nil
 	}
 
-	p.gauges[name].Inc()
+	gg := p.gauges[name]
+	gg.Inc()
+
+	return gg
 }
 
 // IncGauge(name string)
 
 // // Dec decrements the Gauge by 1. Use Sub to decrement it by arbitrary
 // // values.
-func (p *PromModule) DecGauge(name string) {
+func (p *PromModule) DecGauge(name string) prometheus.Gauge {
 	if _, exists := p.gauges[name]; !exists {
-		return
+		return nil
 	}
 
-	p.gauges[name].Dec()
+	gg := p.gauges[name]
+	gg.Dec()
+
+	return gg
 }
 
 // // Add adds the given value to the Gauge. (The value can be negative,
 // // resulting in a decrease of the Gauge.)
-func (p *PromModule) AddToGauge(name string, value float64) {
+func (p *PromModule) AddToGauge(name string, value float64) prometheus.Gauge {
 	if _, exists := p.gauges[name]; !exists {
-		return
+		return nil
 	}
 
-	p.gauges[name].Add(value)
+	gg := p.gauges[name]
+	gg.Add(value)
+
+	return gg
 }
 
 // // Sub subtracts the given value from the Gauge. (The value can be
 // // negative, resulting in an increase of the Gauge.)
-func (p *PromModule) SubFromGauge(name string, value float64) {
+func (p *PromModule) SubFromGauge(name string, value float64) prometheus.Gauge {
 	if _, exists := p.gauges[name]; !exists {
+		return nil
+	}
+
+	gg := p.gauges[name]
+	gg.Sub(value)
+	return gg
+}
+
+// Register a gauge vector by name and provide labels
+func (p *PromModule) RegisterGaugeVector(namespace, module, name, description string, labels []string) {
+	if _, exists := p.counters[name]; exists {
 		return
 	}
 
-	p.gauges[name].Sub(value)
+	gg := promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Subsystem: module,
+			Name:      name,
+			Help:      description,
+		},
+		labels,
+	)
+	p.gaugeVectors[name] = gg
+}
+
+// Retrieve a gauge vector by name
+func (p *PromModule) GetGaugeVec(name string) *prometheus.GaugeVec {
+	if gv, exists := p.gaugeVectors[name]; exists {
+		return gv
+	}
+	return nil
 }

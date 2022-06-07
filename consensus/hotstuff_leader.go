@@ -208,12 +208,10 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		IncCounter("consensus_blockchain_height")
 
 	fmt.Println("Incremented blockchain height counter")
-
-	// reset the total broadcast received at every new height
 	m.
 		GetBus().
 		GetTelemetryModule().
-		SetGauge("p2p_msg_broadcast_received_total_per_block", 0)
+		SetGauge("p2p_broadcast_msg_received_total_per_block", 0)
 }
 
 func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {

@@ -91,7 +91,21 @@ func (m *p2pModule) Start() error {
 	m.
 		GetBus().
 		GetTelemetryModule().
-		RegisterGauge("p2p_msg_broadcast_received_total_per_block", "the counter to track the number of messages received per block")
+		RegisterGauge(
+			"p2p_broadcast_msg_received_total_per_block",
+			"the gauge to track the total number of messages received per block",
+		)
+
+	m.
+		GetBus().
+		GetTelemetryModule().
+		RegisterGaugeVector(
+			"pocket",
+			"p2p",
+			"broadcast_msg_redundancy_total_per_block",
+			"the counter to track the number of messages received per block",
+			[]string{"message_hash"},
+		)
 
 	m.network.SetBus(m.GetBus())
 
@@ -138,18 +152,8 @@ func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
 	log.Println("broadcasting message to network")
 
 	if err := m.network.NetworkBroadcast(data); err != nil {
-		// m.
-		// 	GetBus().
-		// 	GetTelemetryModule().
-		// 	IncCounter("p2p_msg_broadcast_failed_total")
-
 		return err
 	}
-
-	// m.
-	// 	GetBus().
-	// 	GetTelemetryModule().
-	// 	IncCounter("p2p_msg_broadcast_succeeded_total")
 
 	return nil
 }
@@ -165,18 +169,8 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 	}
 
 	if err := m.network.NetworkSend(data, addr); err != nil {
-		// m.
-		// 	GetBus().
-		// 	GetTelemetryModule().
-		// 	IncCounter("p2p_msg_send_failed_total")
-
 		return err
 	}
-
-	// m.
-	// 	GetBus().
-	// 	GetTelemetryModule().
-	// 	IncCounter("p2p_msg_send_succeeded_total")
 
 	return nil
 }
@@ -184,11 +178,6 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	appMsgData, err := m.network.HandleNetworkData(networkMsgData)
 	if err != nil {
-		// m.
-		// 	GetBus().
-		// 	GetTelemetryModule().
-		// 	IncCounter("p2p_msg_handle_failed_total")
-
 		log.Println("Error handling raw data: ", err)
 
 		return
@@ -202,11 +191,6 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 
 	networkMessage := types.PocketEvent{}
 	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
-		// m.
-		// 	GetBus().
-		// 	GetTelemetryModule().
-		// 	IncCounter("p2p_msg_handle_failed_total")
-
 		log.Println("Error decoding network message: ", err)
 
 		return
@@ -218,9 +202,4 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	}
 
 	m.GetBus().PublishEventToBus(&event)
-
-	// m.
-	// 	GetBus().
-	// 	GetTelemetryModule().
-	// 	IncCounter("p2p_msg_handle_succeeded_total")
 }
