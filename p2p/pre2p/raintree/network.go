@@ -22,7 +22,6 @@ var _ typesPre2P.Network = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
 	modules.Module
-
 	bus modules.Bus
 
 	selfAddr cryptoPocket.Address
@@ -72,6 +71,7 @@ func (n *rainTreeNetwork) networkBroadcastInternal(data []byte, level uint32, no
 		Level: level,
 		Data:  data,
 		Nonce: nonce,
+		Hash:  GenerateRandInt(),
 	}
 	bz, err := proto.Marshal(msg)
 	if err != nil {
@@ -148,11 +148,6 @@ func (n *rainTreeNetwork) CleanupLayer(messageBytes []byte) error { // TODO (Tea
 
 func (n *rainTreeNetwork) demote(rainTreeMsg *typesPre2P.RainTreeMessage) error {
 	if rainTreeMsg.Level > 0 {
-		n.
-			GetBus().
-			GetTelemetryModule().
-			IncCounter("p2p_msg_broadcast_depth")
-
 		if err := n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return err
 		}
@@ -207,6 +202,19 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	}
 
 	if rainTreeMsg.Level > 0 {
+		log.Println("Message hash=", rainTreeMsg.Hash)
+		hashString := fmt.Sprintf("%x", rainTreeMsg.Hash)
+		n.
+			GetBus().
+			GetTelemetryModule().
+			GetGaugeVec("broadcast_msg_redundancy_total_per_block").
+			WithLabelValues(hashString).
+			Inc()
+
+		n.GetBus().
+			GetTelemetryModule().
+			IncGauge("p2p_broadcast_msg_received_total_per_block")
+
 		if err := n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return nil, err
 		}

@@ -17,7 +17,7 @@ type Config struct {
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 
-	UseTelemetry bool
+	UseTelemetry bool `json:"use_telemetry"`
 
 	Pre2P          *Pre2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
 	P2P            *P2PConfig            `json:"p2p"`

@@ -2,11 +2,11 @@
   "root_dir": "/go/src/github.com/pocket-network",
   "genesis": "build/config/genesis.json",
   "private_key": "743ef7f435747335b59861028f502cd67db50f9ac23b3220f9c05a6b5f7828b923e831e7762d252b376bd9f1ce4e0e98efe192af0e92dd88393c9b8bce0c8d11",
+  "use_telemetry": true,
   "pre2p": {
     "consensus_port": 8080,
     "use_raintree": true,
-    "connection_type": "tcp",
-    "enable_telemetry": true
+    "connection_type": "tcp"
   },
   "p2p": {
     "protocol": "tcp",

@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"encoding/hex"
+	"fmt"
 	"unsafe"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -205,6 +206,12 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		GetBus().
 		GetTelemetryModule().
 		IncCounter("consensus_blockchain_height")
+
+	fmt.Println("Incremented blockchain height counter")
+	m.
+		GetBus().
+		GetTelemetryModule().
+		SetGauge("p2p_broadcast_msg_received_total_per_block", 0)
 }
 
 func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {

@@ -41,7 +41,7 @@ go_staticcheck:
 .PHONY: refresh
 ## Removes vendor, installs deps, generates mocks and protobuf files. Perform after a new pull or a branch switch
 refresh:
-	 make protogen_clean && make protogen_local && make protogen_show && make mockgen && rm -rf ./vendor && go mod download && go mod vendor && go mod tidy
+	go mod tidy && go mod vendor && make protogen_clean && make protogen_local
 
 .PHONY: go_clean_dep
 ## Runs `go mod vendor` && `go mod tidy`
@@ -71,7 +71,7 @@ client_connect:
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
 compose_and_watch: db_start monitoring_start
-	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus  ## node5.consensus node6.consensus node7.consensus node8.consensus node9.consensus node10.consensus
+	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus # node5.consensus node6.consensus node7.consensus node8.consensus node9.consensus node10.consensus
 
 .PHONY: db_start
 ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)

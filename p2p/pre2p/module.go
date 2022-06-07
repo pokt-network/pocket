@@ -84,78 +84,27 @@ func (m *p2pModule) Start() error {
 		GetBus().
 		GetTelemetryModule().
 		RegisterCounter(
-			"nodes",
+			"blockchain_nodes_connected",
 			"the counter to track the number of nodes online",
 		)
 
 	m.
 		GetBus().
 		GetTelemetryModule().
-		RegisterCounter(
-			"p2p_msg_received_per_round",
-			"the counter to track received messages",
-		)
-
-	m.
-		GetBus().
-		GetTelemetryModule().RegisterCounter(
-		"p2p_opened_connections_total",
-		"the counter to track how many connections were open",
-	)
-
-	m.
-		GetBus().
-		GetTelemetryModule().RegisterCounter(
-		"p2p_msg_broadcast_failed_total",
-		"the counter to track how many broadcast rounds were initiated",
-	)
-
-	m.
-		GetBus().
-		GetTelemetryModule().
-		RegisterCounter(
-			"p2p_msg_broadcast_succeeded_total",
-			"the counter to track how many broadcast rounds were performed successfully",
+		RegisterGauge(
+			"p2p_broadcast_msg_received_total_per_block",
+			"the gauge to track the total number of messages received per block",
 		)
 
 	m.
 		GetBus().
 		GetTelemetryModule().
-		RegisterCounter(
-			"p2p_msg_send_failed_total",
-			"the counter to track how many message sends have failed",
-		)
-
-	m.
-		GetBus().
-		GetTelemetryModule().
-		RegisterCounter(
-			"p2p_msg_send_succeeded_total",
-			"the counter to track how many message sends have succeeded",
-		)
-
-	m.
-		GetBus().
-		GetTelemetryModule().
-		RegisterCounter(
-			"p2p_msg_handle_failed_total",
-			"the counter to track how many message handlings have failed",
-		)
-
-	m.
-		GetBus().
-		GetTelemetryModule().
-		RegisterCounter(
-			"p2p_msg_handle_succeeded_total",
-			"the counter to track how many messages handlings have succeeded",
-		)
-
-	m.
-		GetBus().
-		GetTelemetryModule().
-		RegisterCounter(
-			"p2p_msg_broadcast_depth",
-			"the counter to track the depths to which the broadcast algorithm has went",
+		RegisterGaugeVector(
+			"pocket",
+			"p2p",
+			"broadcast_msg_redundancy_total_per_block",
+			"the counter to track the number of messages received per block",
+			[]string{"message_hash"},
 		)
 
 	m.network.SetBus(m.GetBus())
@@ -168,16 +117,6 @@ func (m *p2pModule) Start() error {
 				continue
 			}
 
-			m.
-				GetBus().
-				GetTelemetryModule().
-				IncGauge("p2p_opened_connections_total")
-
-			m.
-				GetBus().
-				GetTelemetryModule().
-				IncCounter("p2p_msg_received_total")
-
 			go m.handleNetworkMessage(data)
 		}
 	}()
@@ -188,7 +127,7 @@ func (m *p2pModule) Start() error {
 	m.
 		GetBus().
 		GetTelemetryModule().
-		IncCounter("nodes")
+		IncCounter("blockchain_nodes_connected")
 
 	return nil
 }
@@ -213,18 +152,8 @@ func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
 	log.Println("broadcasting message to network")
 
 	if err := m.network.NetworkBroadcast(data); err != nil {
-		m.
-			GetBus().
-			GetTelemetryModule().
-			IncCounter("p2p_msg_broadcast_failed_total")
-
 		return err
 	}
-
-	m.
-		GetBus().
-		GetTelemetryModule().
-		IncCounter("p2p_msg_broadcast_succeeded_total")
 
 	return nil
 }
@@ -240,18 +169,8 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 	}
 
 	if err := m.network.NetworkSend(data, addr); err != nil {
-		m.
-			GetBus().
-			GetTelemetryModule().
-			IncCounter("p2p_msg_send_failed_total")
-
 		return err
 	}
-
-	m.
-		GetBus().
-		GetTelemetryModule().
-		IncCounter("p2p_msg_send_succeeded_total")
 
 	return nil
 }
@@ -259,11 +178,6 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	appMsgData, err := m.network.HandleNetworkData(networkMsgData)
 	if err != nil {
-		m.
-			GetBus().
-			GetTelemetryModule().
-			IncCounter("p2p_msg_handle_failed_total")
-
 		log.Println("Error handling raw data: ", err)
 
 		return
@@ -277,11 +191,6 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 
 	networkMessage := types.PocketEvent{}
 	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
-		m.
-			GetBus().
-			GetTelemetryModule().
-			IncCounter("p2p_msg_handle_failed_total")
-
 		log.Println("Error decoding network message: ", err)
 
 		return
@@ -293,9 +202,4 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	}
 
 	m.GetBus().PublishEventToBus(&event)
-
-	m.
-		GetBus().
-		GetTelemetryModule().
-		IncCounter("p2p_msg_handle_succeeded_total")
 }
