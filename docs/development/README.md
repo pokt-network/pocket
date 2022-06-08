@@ -17,8 +17,38 @@ Please note that this repository is under very active development and breaking c
 
 - Install [Docker](https://docs.docker.com/get-docker/)
 - Install [Docker Compose](https://docs.docker.com/compose/install/)
-- Install [Golang](https://go.dev/doc/install)
 - Install [protoc-gen-go](https://pkg.go.dev/google.golang.org/protobuf/cmd/protoc-gen-go)
+- Install [Golang](https://go.dev/doc/install)
+- Install [mockgen](https://github.com/golang/mock)
+
+_Note to the reader: Please update this list if you found anything missing._
+
+Last tested by with:
+
+```bash
+$ docker --version
+Docker version 20.10.14, build a224086
+
+$ protoc --version
+libprotoc 3.19.4
+
+$ protoc --version
+libprotoc 3.19.4
+
+$ go version
+go version go1.18.1 darwin/arm64
+
+$ mockgen --version
+v1.6.0
+
+$ system_profiler SPSoftwareDataType
+Software:
+
+    System Software Overview:
+
+      System Version: macOS 12.3.1 (21E258)
+      Kernel Version: Darwin 21.4.0
+```
 
 ### Prepare Local Environment
 
