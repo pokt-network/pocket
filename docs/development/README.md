@@ -146,15 +146,13 @@ Pocket
 ├── build            # Build related source files including Docker, scripts, etc
 |   ├── config       # Configuration files for to run nodes in development
 |   ├── deployments  # Docker-compose to run different cluster of services for development
-|   ├── Docker*      # Various Dockerfiles
+|   ├── Docker*      # Various Dockerfile(s)
 ├── consensus        # Implementation of the Consensus module
 ├── core             # [currently-unused]
-├── docs             # Links to V1 Protocol documentation (except the protocol specification)
+├── docs             # Links to V1 Protocol implementation documentation (excluding the protocol specification)
 ├── p2p              # Implementation of the P2P module
 ├── persistence      # Implementation of the Persistence module
-├── prototype        # [to-be-deleted] A snapshot of the very first v1 prototype
 ├── shared           # [to-be-refactored] Shared types, modules and utils
-├── utility          # Implementation of the Persistence module
+├── utility          # Implementation of the Utility module
 ├── Makefile         # [to-be-deleted] The source of targets used to develop, build and test
-├── mage.go          # [currently-unused] The future source of targets used to develop, build and test
 ```

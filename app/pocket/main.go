@@ -8,7 +8,7 @@ import (
 	"github.com/pokt-network/pocket/shared/config"
 )
 
-// See `docs/deps/README.md` for details on how this is injected via mage.
+// See `docs/build/README.md` for details on how this is injected via mage.
 var version = "UNKNOWN"
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 	flag.Parse()
 
 	if *v {
-		log.Println(version)
+		log.Printf("Version flag currently unused %s", version)
 		return
 	}
 
