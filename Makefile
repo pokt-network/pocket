@@ -1,5 +1,3 @@
-# TODO(pocket/issues/43): Delete this files after moving the necessary helpers to mage.go.
-
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
 # This flag is useful when running the consensus unit tests. It causes the test to wait up to the
@@ -40,12 +38,8 @@ go_staticcheck:
 
 .PHONY: go_clean_deps
 ## Runs `go mod tidy` && `go mod vendor`
+go_clean_deps:
 	go mod tidy && go mod vendor
-
-.PHONY: build
-## Build Pocket's main entrypoint
-build:
-	mage build
 
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change

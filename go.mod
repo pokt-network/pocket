@@ -7,7 +7,6 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
-	github.com/magefile/mage v1.12.1
 	github.com/manifoldco/promptui v0.9.0
 	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/goleveldb v1.0.0
