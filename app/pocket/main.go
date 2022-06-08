@@ -17,7 +17,7 @@ func main() {
 	flag.Parse()
 
 	if *v {
-		log.Printf("Version flag currently unused %s", version)
+		log.Printf("Version flag currently unused %s\n", version)
 		return
 	}
 
