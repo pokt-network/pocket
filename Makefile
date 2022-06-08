@@ -297,3 +297,11 @@ todo_list:
 ## Print a count of all the TODOs in the project
 todo_count:
 	grep --exclude-dir={.git,vendor,prototype} -r -e "TODO" -e "DISCUSS" -e "REFACTOR" -e "DOCUMENT" -e "CLEANUP" . | wc -l
+
+.PHONY: develop
+## Run all of the make commands necessary to develop on the project
+develop:
+	make protogen_clean && make protogen_local
+	make mockgen
+	go mod vendor && go mod tidy
+	make test_all
