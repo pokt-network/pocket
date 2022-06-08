@@ -1,0 +1,19 @@
+syntax = "proto3";
+package shared;
+
+option go_package = "github.com/pokt-network/pocket/shared/types";
+
+import "google/protobuf/any.proto";
+
+enum DebugMessageAction {
+	DEBUG_ACTION_UNKNOWN = 0;
+	DEBUG_CONSENSUS_RESET_TO_GENESIS = 1;
+	DEBUG_CONSENSUS_PRINT_NODE_STATE = 2;
+	DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW = 3;
+	DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE = 4; // toggle between manual and automatic
+}
+
+message DebugMessage {
+  DebugMessageAction action = 1;
+  google.protobuf.Any message = 2;
+}
