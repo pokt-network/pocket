@@ -73,6 +73,8 @@ $ make
 $ make test_all
 ```
 
+Note that there are a few tests in the library that are prone to race conditions and we are working on improving them. This can be checked with `make test_race`.
+
 ### Running LocalNet
 
 ![V1 Localnet Demo](./v1_localnet.gif)

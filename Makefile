@@ -126,6 +126,11 @@ mockgen:
 test_all: # generate_mocks
 	go test -p=1 -count=1 ./...
 
+.PHONY: test_race
+## Identify all unit tests that may result in race conditions
+test_race: # generate_mocks
+	go test -race ./...
+
 .PHONY: test_utility_module
 ## Run all go utility module unit tests
 test_utility_module: # generate_mocks
@@ -260,9 +265,9 @@ test_p2p:
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)
 todo_list:
-	grep --exclude-dir={.git,vendor,prototype} -r "TODO" .
+	grep --exclude-dir={.git,vendor,prototype} -r -e "TODO" -e "INVESTIGATE" .
 
 .PHONY: todo_count
 ## Print a count of all the TODOs in the project
 todo_count:
-	grep --exclude-dir={.git,vendor,prototype} -r "TODO" . | wc -l
+	grep --exclude-dir={.git,vendor,prototype} -r -e "TODO" -e "INVESTIGATE" . | wc -l
