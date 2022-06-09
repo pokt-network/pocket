@@ -673,6 +673,7 @@ func TestSocket_StartIOInbound(t *testing.T) {
 	cancel() // just to stop the context from leaking. won't have any effect since runner.GetDoneCh() 1 has closed running routines
 }
 
+// INVESTIGATE(team): Investigate why this test occasionally fails due to a race condition.
 // This test simulates an inbound connection and tests the `startIO` method
 func TestSocket_StartIOOutbound(t *testing.T) {
 	addr := "dummy-test-host:dummyport"

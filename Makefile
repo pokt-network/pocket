@@ -1,5 +1,3 @@
-# TODO(pocket/issues/43): Delete this files after moving the necessary helpers to mage.go.
-
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
 # This flag is useful when running the consensus unit tests. It causes the test to wait up to the
@@ -38,14 +36,10 @@ go_vet:
 go_staticcheck:
 	@if builtin type -P "staticcheck"; then staticcheck ./... ; else echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; fi
 
-.PHONY: go_clean_dep
-## Runs `go mod vendor` && `go mod tidy`
-	go mod vendor && go mod tidy
-
-.PHONY: build
-## Build Pocket's main entrypoint
-build:
-	mage build
+.PHONY: go_clean_deps
+## Runs `go mod tidy` && `go mod vendor`
+go_clean_deps:
+	go mod tidy && go mod vendor
 
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
@@ -130,7 +124,12 @@ mockgen:
 .PHONY: test_all
 ## Run all go unit tests
 test_all: # generate_mocks
-	go test ./... -p=1
+	go test -p=1 -count=1 ./...
+
+.PHONY: test_race
+## Identify all unit tests that may result in race conditions
+test_race: # generate_mocks
+	go test -race ./...
 
 .PHONY: test_utility_module
 ## Run all go utility module unit tests
@@ -280,5 +279,4 @@ todo_list:
 .PHONY: todo_count
 ## Print a count of all the TODOs in the project
 todo_count:
-	@echo ${KEYWORDS}
 	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS} . | wc -l
