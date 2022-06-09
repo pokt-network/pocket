@@ -58,8 +58,8 @@ p2p/pre2p
 │   └── types
 │       └── proto
 │           └── raintree.proto
-├── raintree_test.go            # RainTree unit tests
-├── raintree_utils_test.go      # Test suite for RainTree
+├── raintree_integration_test.go            # RainTree unit tests
+├── raintree_integration_utils_test.go      # Test suite for RainTree
 ├── stdnetwork
 │   └── network.go              # Implementation of the Network interface using Golang's std networking lib
 ├── types

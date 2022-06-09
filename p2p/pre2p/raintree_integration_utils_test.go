@@ -36,10 +36,10 @@ type TestRainTreeCommConfig map[string]struct {
 var keys []cryptoPocket.PrivateKey
 
 func init() {
-	keys = generateKeys(maxNumKeys)
+	keys = generateKeys(nil, maxNumKeys)
 }
 
-func generateKeys(numValidators int) []cryptoPocket.PrivateKey {
+func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
 	keys := make([]cryptoPocket.PrivateKey, numValidators)
 
 	for i := range keys {
@@ -58,7 +58,7 @@ func generateKeys(numValidators int) []cryptoPocket.PrivateKey {
 	return keys
 }
 
-// A mock of the application specific to know if a message was sent to be handeled by the application
+// A mock of the application specific to know if a message was sent to be handled by the application
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
 //                         expectation with RainTree by comparing with Telemetry after updating specs.
 func prepareBusMock(t *testing.T, wg *sync.WaitGroup) *modulesMock.MockBus {
@@ -77,7 +77,7 @@ func prepareBusMock(t *testing.T, wg *sync.WaitGroup) *modulesMock.MockBus {
 // on the number of expected messages propagated.
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
 //                         expectation with RainTree by comparing with Telemetry after updating specs.
-func prepareConnMock(t *testing.T, valId string, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesPre2P.TransportLayerConn {
+func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesPre2P.TransportLayerConn {
 	testChannel := make(chan []byte, testChannelSize)
 	ctrl := gomock.NewController(t)
 	connMock := mocksPre2P.NewMockTransportLayerConn(ctrl)
@@ -103,7 +103,7 @@ func prepareP2PModules(t *testing.T, configs []*config.Config) (p2pModules map[s
 		_ = typesGenesis.GetNodeState(config)
 		p2pMod, err := Create(config)
 		require.NoError(t, err)
-		p2pModules[validatorId(i+1)] = p2pMod.(*p2pModule)
+		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
 		// HACK(olshansky): I hate that we have to do this, but it is outside the scope of this change...
 		// Cleanup once we get rid of the singleton
 		typesGenesis.ResetNodeState(t)
@@ -115,12 +115,12 @@ func createConfigs(t *testing.T, numValidators int) (configs []*config.Config) {
 	configs = make([]*config.Config, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
 	copy(valKeys[:], keys[:numValidators])
-	validatorConfigs := genesisValidatorConfig(valKeys)
+	validatorConfigs := genesisValidatorConfig(t, valKeys)
 
 	for i := range configs {
 		configs[i] = &config.Config{
 			RootDir: "",
-			Genesis: genesisJson(numValidators, validatorConfigs),
+			Genesis: genesisJson(t, numValidators, validatorConfigs),
 
 			PrivateKey: valKeys[i].(cryptoPocket.Ed25519PrivateKey),
 
@@ -139,13 +139,13 @@ func createConfigs(t *testing.T, numValidators int) (configs []*config.Config) {
 	return
 }
 
-func validatorId(i int) string {
+func validatorId(_ *testing.T, i int) string {
 	return fmt.Sprintf(serviceUrlFormat, i)
 }
 
 // TECHDEBT(olshansky): The fact that we are passing in a genesis string rather than a properly
-// configured struct is a big of legacy. Need to fix this sooner rather than later.
-func genesisJson(numValidators int, validatorConfigs string) string {
+// configured struct is a bit of legacy. Need to fix this sooner rather than later.
+func genesisJson(_ *testing.T, numValidators int, validatorConfigs string) string {
 	return fmt.Sprintf(`{
 		"genesis_state_configs": {
 			"num_validators": %d,
@@ -160,7 +160,7 @@ func genesisJson(numValidators int, validatorConfigs string) string {
 	}`, numValidators, genesisConfigSeedStart, validatorConfigs)
 }
 
-func genesisValidatorConfig(valKeys []cryptoPocket.PrivateKey) string {
+func genesisValidatorConfig(t *testing.T, valKeys []cryptoPocket.PrivateKey) string {
 	s := strings.Builder{}
 	for i, valKey := range valKeys {
 		if i != 0 {
@@ -174,7 +174,7 @@ func genesisValidatorConfig(valKeys []cryptoPocket.PrivateKey) string {
 			"address": "%s",
 			"output": "%s",
 			"public_key": "%s"
-		}`, validatorId(i+1), addr, addr, valKey.PublicKey().String()))
+		}`, validatorId(t, i+1), addr, addr, valKey.PublicKey().String()))
 	}
 	return s.String()
 }
