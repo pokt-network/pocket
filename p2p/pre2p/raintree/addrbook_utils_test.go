@@ -59,7 +59,10 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 		// 11 levels
 		{59050, 11},
 		// 19 levels
-		// INVESTIGATE(olshansky/team): Does not scale to 1,000,000,000 nodes
+		// NOTE: This does not scale to 1,000,000,000 (1B) nodes because it's too slow.
+		//       However, optimizing the code to handle 1B nodes would be a very premature optimization
+		//       at this stage in the project's lifecycle, so the comment is simply left to inform
+		//       future readers.
 		// {1000000000, 19},
 	}
 

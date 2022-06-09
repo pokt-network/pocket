@@ -38,7 +38,7 @@ func (n *rainTreeNetwork) handleAddrBookUpdates() error {
 		// is always the first in the list. This makes RainTree propagation easier to compute and interpret.
 		n.addrList = append(n.addrList[i:len(n.addrList)], n.addrList[0:i]...)
 	} else {
-		return fmt.Errorf("self address not found for %s in addrBook so this client can send messages but does cannot propagate them", n.selfAddr)
+		return fmt.Errorf("self address not found for %s in addrBook so this client can send messages but does not propagate them", n.selfAddr)
 	}
 	return nil
 }
@@ -82,7 +82,7 @@ func (n *rainTreeNetwork) getTarget(level uint32, targetPercentage float64) (cry
 	return nil, false
 }
 
-// DISCUSS(team): Need to integrate with persistence so we are storing this on a per height basis.
+// TODO(team): Need to integrate with persistence layer so we are storing this on a per height basis.
 // We can easily hit an issue where we are propagating a message from an older height (e.g. before
 // the addr book was updated), but we're using `maxNumLevels` associated with the number of
 // validators at the current height.
