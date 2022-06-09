@@ -11,12 +11,12 @@ import (
 
 // --- Account Functions ---
 
-func (p PostgresContext) GetAccountAmount(address []byte) (amount string, err error) {
+func (p PostgresContext) GetAccountAmount(address []byte, height int64) (amount string, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return
 	}
-	if err = conn.QueryRow(ctx, schema.GetAccountAmountQuery(hex.EncodeToString(address))).Scan(&amount); err != nil {
+	if err = conn.QueryRow(ctx, schema.GetAccountAmountQuery(hex.EncodeToString(address), height)).Scan(&amount); err != nil {
 		return
 	}
 	return
@@ -51,9 +51,6 @@ func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	if err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.NullifyAccountAmountQuery(hex.EncodeToString(address), height)); err != nil {
-		return err
-	}
 	// DISCUSS(team): Do we want to enforce `amount > 0` here? Ditto below for the pool.
 	if _, err = tx.Exec(ctx, schema.InsertAccountAmountQuery(hex.EncodeToString(address), amount, height)); err != nil {
 		return err
@@ -70,7 +67,7 @@ func (p *PostgresContext) operationAccountAmount(address []byte, deltaAmount str
 	if err != nil {
 		return err
 	}
-	accountAmount, err := p.GetAccountAmount(address)
+	accountAmount, err := p.GetAccountAmount(address, height)
 	if err != nil {
 		return err
 	}
@@ -87,9 +84,6 @@ func (p *PostgresContext) operationAccountAmount(address []byte, deltaAmount str
 	}
 	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		return err
-	}
-	if _, err := tx.Exec(ctx, schema.NullifyAccountAmountQuery(hex.EncodeToString(address), height)); err != nil {
 		return err
 	}
 	// DISCUSS(team): Do we want to enforce `accountAmountBig > 0` here? Ditto below for the pool.
@@ -114,21 +108,18 @@ func (p PostgresContext) InsertPool(name string, address []byte, amount string) 
 	if err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.NullifyPoolAmountQuery(name, height)); err != nil {
-		return err
-	}
 	if _, err = tx.Exec(ctx, schema.InsertPoolAmountQuery(name, amount, height)); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
 }
 
-func (p PostgresContext) GetPoolAmount(name string) (amount string, err error) {
+func (p PostgresContext) GetPoolAmount(name string, height int64) (amount string, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return
 	}
-	if err = conn.QueryRow(ctx, schema.GetPoolAmountQuery(name)).Scan(&amount); err != nil {
+	if err = conn.QueryRow(ctx, schema.GetPoolAmountQuery(name, height)).Scan(&amount); err != nil {
 		return
 	}
 	return
@@ -163,9 +154,6 @@ func (p PostgresContext) SetPoolAmount(name string, amount string) error {
 	if err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.NullifyPoolAmountQuery(name, height)); err != nil {
-		return err
-	}
 	if _, err = tx.Exec(ctx, schema.InsertPoolAmountQuery(name, amount, height)); err != nil {
 		return err
 	}
@@ -183,7 +171,7 @@ func (p *PostgresContext) operationPoolAmount(name string, amount string, op fun
 	if err != nil {
 		return err
 	}
-	originalAmount, err := p.GetPoolAmount(name)
+	originalAmount, err := p.GetPoolAmount(name, height)
 	if err != nil {
 		return err
 	}
@@ -200,9 +188,6 @@ func (p *PostgresContext) operationPoolAmount(name string, amount string, op fun
 	}
 	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.NullifyPoolAmountQuery(name, height)); err != nil {
 		return err
 	}
 	if _, err = tx.Exec(ctx, schema.InsertPoolAmountQuery(name, shared.BigIntToString(originalAmountBig), height)); err != nil {

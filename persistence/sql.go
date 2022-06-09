@@ -8,7 +8,6 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/schema"
-	"github.com/pokt-network/pocket/shared/modules"
 )
 
 const (
@@ -23,7 +22,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-var _ modules.PersistenceContext = PostgresContext{}
+//var _ modules.PersistenceContext = PostgresContext{}
 
 type PostgresContext struct {
 	Height int64

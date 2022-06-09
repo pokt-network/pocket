@@ -43,7 +43,7 @@ func FuzzAccountAmount(f *testing.F) {
 	f.Fuzz(func(t *testing.T, op string) {
 		switch op {
 		case "Get":
-			amount, err := db.GetAccountAmount(acc.Address)
+			amount, err := db.GetAccountAmount(acc.Address, db.Height)
 			require.NoError(t, err)
 			require.Equal(t, types.BigIntToString(expectedAmount), amount, "unexpected retrieved amount")
 		case "Add":
@@ -59,7 +59,7 @@ func FuzzAccountAmount(f *testing.F) {
 			require.NoError(t, err)
 			expectedAmount = big.NewInt(DefaultAccountBig.Int64())
 		}
-		currentAmount, err := db.GetAccountAmount(acc.Address)
+		currentAmount, err := db.GetAccountAmount(acc.Address, db.Height)
 		require.NoError(t, err)
 		require.Equal(t, types.BigIntToString(expectedAmount), currentAmount, fmt.Sprintf("unexpected amount after %s", op))
 	})
@@ -75,14 +75,14 @@ func TestSetAccountAmount(t *testing.T) {
 	err := db.SetAccountAmount(acc.Address, DefaultStake)
 	require.NoError(t, err)
 
-	am, err := db.GetAccountAmount(acc.Address)
+	am, err := db.GetAccountAmount(acc.Address, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, DefaultStake, am, "unexpected amount")
 
 	db.SetAccountAmount(acc.Address, StakeToUpdate)
 	require.NoError(t, err)
 
-	am, err = db.GetAccountAmount(acc.Address)
+	am, err = db.GetAccountAmount(acc.Address, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, StakeToUpdate, am, "unexpected amount after second set")
 }
@@ -101,7 +101,7 @@ func TestAddAccountAmount(t *testing.T) {
 	err = db.AddAccountAmount(acc.Address, types.BigIntToString(amountToAddBig))
 	require.NoError(t, err)
 
-	am, err := db.GetAccountAmount(acc.Address)
+	am, err := db.GetAccountAmount(acc.Address, db.Height)
 	require.NoError(t, err)
 
 	resultBig := (&big.Int{}).Add(DefaultStakeBig, amountToAddBig)
@@ -123,7 +123,7 @@ func TestSubAccountAmount(t *testing.T) {
 	db.SubtractAccountAmount(acc.Address, types.BigIntToString(amountToSubBig))
 	require.NoError(t, err)
 
-	am, err := db.GetAccountAmount(acc.Address)
+	am, err := db.GetAccountAmount(acc.Address, db.Height)
 	require.NoError(t, err)
 
 	resultBig := (&big.Int{}).Sub(DefaultStakeBig, amountToSubBig)
@@ -161,7 +161,7 @@ func FuzzPoolAmount(f *testing.F) {
 	f.Fuzz(func(t *testing.T, op string) {
 		switch op {
 		case "Get":
-			amount, err := db.GetPoolAmount(pool.Name)
+			amount, err := db.GetPoolAmount(pool.Name, db.Height)
 			require.NoError(t, err)
 			require.Equal(t, types.BigIntToString(expectedAmount), amount, "unexpected retrieved amount")
 		case "Add":
@@ -177,7 +177,7 @@ func FuzzPoolAmount(f *testing.F) {
 			require.NoError(t, err)
 			expectedAmount = big.NewInt(DefaultAccountBig.Int64())
 		}
-		currentAmount, err := db.GetPoolAmount(pool.Name)
+		currentAmount, err := db.GetPoolAmount(pool.Name, db.Height)
 		require.NoError(t, err)
 		require.Equal(t, types.BigIntToString(expectedAmount), currentAmount, fmt.Sprintf("unexpected amount after %s", op))
 	})
@@ -192,14 +192,14 @@ func TestSetPoolAmount(t *testing.T) {
 	err := db.SetPoolAmount(pool.Name, DefaultStake)
 	require.NoError(t, err)
 
-	am, err := db.GetPoolAmount(pool.Name)
+	am, err := db.GetPoolAmount(pool.Name, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, DefaultStake, am, "unexpected amount")
 
 	err = db.SetPoolAmount(pool.Name, StakeToUpdate)
 	require.NoError(t, err)
 
-	am, err = db.GetPoolAmount(pool.Name)
+	am, err = db.GetPoolAmount(pool.Name, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, StakeToUpdate, am, "unexpected amount after second set")
 }
@@ -218,7 +218,7 @@ func TestAddPoolAmount(t *testing.T) {
 	err = db.AddPoolAmount(pool.Name, types.BigIntToString(amountToAddBig))
 	require.NoError(t, err)
 
-	am, err := db.GetPoolAmount(pool.Name)
+	am, err := db.GetPoolAmount(pool.Name, db.Height)
 	require.NoError(t, err)
 
 	resultBig := (&big.Int{}).Add(DefaultStakeBig, amountToAddBig)
@@ -240,7 +240,7 @@ func TestSubPoolAmount(t *testing.T) {
 	err = db.SubtractPoolAmount(pool.Name, types.BigIntToString(amountToSubBig))
 	require.NoError(t, err)
 
-	am, err := db.GetPoolAmount(pool.Name)
+	am, err := db.GetPoolAmount(pool.Name, db.Height)
 	require.NoError(t, err)
 
 	resultBig := (&big.Int{}).Sub(DefaultStakeBig, amountToSubBig)

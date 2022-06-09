@@ -16,27 +16,27 @@ const (
 	StakedStatus
 )
 
-func (p PostgresContext) GetAppExists(address []byte) (exists bool, err error) {
+func (p PostgresContext) GetAppExists(address []byte, height int64) (exists bool, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return
 	}
-	if err = conn.QueryRow(ctx, schema.AppExistsQuery(hex.EncodeToString(address))).Scan(&exists); err != nil {
+	if err = conn.QueryRow(ctx, schema.AppExistsQuery(hex.EncodeToString(address), height)).Scan(&exists); err != nil {
 		return
 	}
 	return
 }
 
-func (p PostgresContext) GetApp(address []byte) (operator, publicKey, stakedTokens, maxRelays, outputAddress string, pauseHeight, unstakingHeight, endHeight int64, chains []string, err error) {
+func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicKey, stakedTokens, maxRelays, outputAddress string, pauseHeight, unstakingHeight, endHeight int64, chains []string, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return
 	}
-	if err = conn.QueryRow(ctx, schema.AppQuery(hex.EncodeToString(address))).Scan(&operator, &publicKey, &stakedTokens, &maxRelays, &outputAddress, &pauseHeight, &unstakingHeight, &endHeight); err != nil {
+	if err = conn.QueryRow(ctx, schema.AppQuery(hex.EncodeToString(address), height)).Scan(&operator, &publicKey, &stakedTokens, &maxRelays, &outputAddress, &pauseHeight, &unstakingHeight, &endHeight); err != nil {
 		return
 	}
 
-	row, err := conn.Query(ctx, schema.AppChainsQuery(hex.EncodeToString(address)))
+	row, err := conn.Query(ctx, schema.AppChainsQuery(hex.EncodeToString(address), height))
 	if err != nil {
 		row.Close()
 		return
@@ -63,14 +63,18 @@ func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []by
 	if err != nil {
 		return err
 	}
-	_, err = conn.Exec(ctx, schema.InsertAppQuery(hex.EncodeToString(address), hex.EncodeToString(publicKey), stakedTokens, maxRelays, hex.EncodeToString(output), pausedHeight, unstakingHeight, chains))
+	height, err := p.GetHeight()
+	if err != nil {
+		return err
+	}
+	_, err = conn.Exec(ctx, schema.InsertAppQuery(hex.EncodeToString(address), hex.EncodeToString(publicKey), stakedTokens, maxRelays, hex.EncodeToString(output), pausedHeight, unstakingHeight, chains, height))
 	return err
 }
 
 // TODO(Andrew): change `amountToAdd` to`amountToSET`
 // NOTE: originally, we thought we could do arithmetic operations quite easily to just 'bump' the max relays - but since
 // it's a bigint (TEXT in Postgres) I don't believe this optimization is possible. Best use new amounts for 'Update'
-func (p PostgresContext) UpdateApp(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error {
+func (p PostgresContext) UpdateApp(address []byte, maxRelays string, stakedTokens string, chains []string) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err
@@ -83,49 +87,18 @@ func (p PostgresContext) UpdateApp(address []byte, maxRelaysToAdd string, amount
 	if err != nil {
 		return err
 	}
-	addrString := hex.EncodeToString(address)
-	// DISCUSS(drewsky): Should we also add a a check that it's not empty? Is an app valid without any chains?
-	if chainsToUpdate != nil {
-		if _, err = tx.Exec(ctx, schema.NullifyAppChainsQuery(addrString, height)); err != nil {
-			return err
-		}
-		if _, err = tx.Exec(ctx, schema.UpdateAppChainsQuery(addrString, chainsToUpdate, height)); err != nil {
-			return err
-		}
+	if _, err = tx.Exec(ctx, schema.UpdateAppQuery(hex.EncodeToString(address), stakedTokens, maxRelays, height)); err != nil {
+		return err
 	}
-	// DISCUSS(drewsky): Confirm that we can trust this input (no validation required).
-	if maxRelaysToAdd != "" || amountToAdd != "" {
-		if _, err = tx.Exec(ctx, schema.NullifyAppQuery(addrString, height)); err != nil {
-			return err
-		}
-		if _, err = tx.Exec(ctx, schema.UpdateAppQuery(addrString, amountToAdd, maxRelaysToAdd, height)); err != nil {
-			return err
-		}
+	if _, err = tx.Exec(ctx, schema.UpdateAppChainsQuery(hex.EncodeToString(address), chains, height)); err != nil {
+		return err
 	}
 	return tx.Commit(ctx)
 }
 
-func (p PostgresContext) DeleteApp(address []byte) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return err
-	}
-	height, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return err
-	}
-	addrString := hex.EncodeToString(address)
-	if _, err = tx.Exec(ctx, schema.NullifyAppQuery(addrString, height)); err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.NullifyAppChainsQuery(addrString, height)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+func (p PostgresContext) DeleteApp(_ []byte) error {
+	// No op
+	return nil
 }
 
 // TODO(Andrew): remove status (second parameter) - not needed
@@ -193,9 +166,6 @@ func (p PostgresContext) SetAppUnstakingHeightAndStatus(address []byte, unstakin
 	if err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.NullifyAppQuery(hex.EncodeToString(address), height)); err != nil {
-		return err
-	}
 	if _, err = tx.Exec(ctx, schema.UpdateAppUnstakingHeightQuery(hex.EncodeToString(address), unstakingHeight, height)); err != nil {
 		return err
 	}
@@ -233,9 +203,6 @@ func (p PostgresContext) SetAppsStatusAndUnstakingHeightPausedBefore(pausedBefor
 	if err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.NullifyAppsPausedBeforeQuery(pausedBeforeHeight, currentHeight)); err != nil {
-		return err
-	}
 	if _, err = tx.Exec(ctx, schema.UpdateAppsPausedBefore(pausedBeforeHeight, unstakingHeight, currentHeight)); err != nil {
 		return err
 	}
@@ -253,9 +220,6 @@ func (p PostgresContext) SetAppPauseHeight(address []byte, height int64) error {
 	}
 	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.NullifyAppQuery(hex.EncodeToString(address), currentHeight)); err != nil {
 		return err
 	}
 	if _, err = tx.Exec(ctx, schema.UpdateAppPausedHeightQuery(hex.EncodeToString(address), height, currentHeight)); err != nil {

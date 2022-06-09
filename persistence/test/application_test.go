@@ -20,11 +20,11 @@ func TestInsertAppAndExists(t *testing.T) {
 	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultMaxRelays, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
-	exists, err := db.GetAppExists(app.Address)
+	exists, err := db.GetAppExists(app.Address, db.Height)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist does not")
 
-	exists, err = db.GetAppExists(app2.Address)
+	exists, err = db.GetAppExists(app2.Address, db.Height)
 	require.NoError(t, err)
 	require.False(t, exists, "actor that should not exist, appears to")
 }
@@ -39,7 +39,7 @@ func TestUpdateApp(t *testing.T) {
 	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultMaxRelays, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, _, chains, err := db.GetApp(app.Address)
+	_, _, stakedTokens, _, _, _, _, _, chains, err := db.GetApp(app.Address, db.Height)
 	require.NoError(t, err)
 
 	require.Equal(t, chains, DefaultChains, "default chains incorrect")
@@ -48,33 +48,11 @@ func TestUpdateApp(t *testing.T) {
 	err = db.UpdateApp(app.Address, app.MaxRelays, StakeToUpdate, ChainsToUpdate)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, _, chains, err = db.GetApp(app.Address)
+	_, _, stakedTokens, _, _, _, _, _, chains, err = db.GetApp(app.Address, db.Height)
 	require.NoError(t, err)
 
 	require.Equal(t, chains, ChainsToUpdate, "chains not updated")
 	require.Equal(t, stakedTokens, StakeToUpdate, "stake not updated")
-}
-
-func TestDeleteApp(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *PostgresDB,
-	}
-	app := NewTestApp(t)
-
-	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultMaxRelays, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
-	require.NoError(t, err)
-
-	_, _, _, _, _, _, _, _, chains, err := db.GetApp(app.Address)
-	require.NoError(t, err)
-	require.NotEmpty(t, chains, "chains should not be empty but are")
-
-	err = db.DeleteApp(app.Address)
-	require.NoError(t, err)
-
-	_, _, _, _, _, _, _, _, chains, err = db.GetApp(app.Address)
-	require.Empty(t, chains, "chains should be nullified but are not")
-	require.Error(t, err) // DISCUSS(drewsky): A change I made to `GetApp` made this return an error after `DeleteApp`. What's the expected behavior?
 }
 
 func TestGetAppsReadyToUnstake(t *testing.T) {
@@ -143,7 +121,7 @@ func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	err = db.SetAppsStatusAndUnstakingHeightPausedBefore(1, unstakingHeightSet, 1)
 	require.NoError(t, err)
 
-	_, _, _, _, _, _, unstakingHeight, _, _, err := db.GetApp(app.Address)
+	_, _, _, _, _, _, unstakingHeight, _, _, err := db.GetApp(app.Address, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, unstakingHeight, unstakingHeightSet, "unstaking height was not set correctly")
 }
@@ -161,7 +139,7 @@ func TestSetAppPauseHeight(t *testing.T) {
 	err = db.SetAppPauseHeight(app.Address, int64(PauseHeightToSet))
 	require.NoError(t, err)
 
-	_, _, _, _, _, pausedHeight, _, _, _, err := db.GetApp(app.Address)
+	_, _, _, _, _, pausedHeight, _, _, _, err := db.GetApp(app.Address, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, pausedHeight, int64(PauseHeightToSet), "pause height not updated")
 }
