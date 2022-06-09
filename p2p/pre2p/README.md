@@ -60,7 +60,7 @@ p2p/pre2p
 │           └── raintree.proto
 ├── raintree_integration_test.go            # RainTree unit tests
 ├── raintree_integration_utils_test.go      # Test suite for RainTree
-├── stdnetwork
+├── stdnetwork                  # This can eventually be deprecated once raintree is verified.
 │   └── network.go              # Implementation of the Network interface using Golang's std networking lib
 ├── types
 │   ├── network.go              # Network Interface definition
