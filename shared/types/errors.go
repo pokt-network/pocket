@@ -101,13 +101,14 @@ const (
 	CodeUnequalHeightsError      Code = 116
 	CodeSetMissedBlocksError     Code = 117
 
-	CodeMissingRequiredArgError    Code = 118 // TODO(derrandz): revisit whether this is needed
-	CodeSocketRequestTimedOutError Code = 119
-	CodeUndefinedSocketTypeError   Code = 120
-	CodePeerHangUpError            Code = 121
-	CodeUnexpectedSocketError      Code = 122
-	CodePayloadTooBigError         Code = 123
-	CodeSocketIOStartFailedError   Code = 124
+	CodeMissingRequiredArgError              Code = 118 // TODO(derrandz): revisit whether this is needed
+	CodeSocketRequestTimedOutError           Code = 119
+	CodeUndefinedSocketTypeError             Code = 120
+	CodePeerHangUpError                      Code = 121
+	CodeUnexpectedSocketError                Code = 122
+	CodePayloadTooBigError                   Code = 123
+	CodeSocketIOStartFailedError             Code = 124
+	CodeDiffieHellmanKeyCreationFailureError Code = 125
 
 	GetValidatorStakedTokensError     = "an error occurred getting the validator staked tokens"
 	SetValidatorStakedTokensError     = "an error occurred setting the validator staked tokens"
@@ -201,6 +202,8 @@ const (
 	UnexpectedSocketError      = "socket error: Unexpected peer error."
 	PayloadTooBigError         = "socket error: payload size is too big. "
 	SocketIOStartFailedError   = "socket error: failed to start socket reading/writing (io)"
+
+	DiffieHellmanKeyCreationFailureError = "an error occurred during the derivation of the shared key"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -566,4 +569,8 @@ func ErrPayloadTooBig(bodyLength, acceptedLength uint) error {
 
 func ErrSocketIOStartFailed(socketType string) error {
 	return NewError(CodeSocketIOStartFailedError, fmt.Sprintf("%s: (%s socket)", SocketIOStartFailedError, socketType))
+}
+
+func ErrDiffieHellmanKeyCreationFailed(err error) Error {
+	return NewError(CodeDiffieHellmanKeyCreationFailureError, fmt.Sprintf("%s: %s", DiffieHellmanKeyCreationFailureError, err))
 }

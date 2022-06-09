@@ -117,7 +117,7 @@ func NewSocket(readBufferSize, packetHeaderLength, readTimeoutInMs uint) *socket
 
 		// sends new input to signal the encoutering of an error in running routines
 		// closes when the socket closes.
-		// Bufferred to 1 to allow non-blocking signaling of types. and blocking awaiting of error signals.
+		// Bufferred to 1 to allow non-blocking signaling of errors, and blocking awaiting of error signals.
 		// (We are handling 1 error at most, so not more than one signal is expected to be received at a time, establishing a queue of exactly 1 error...)
 		errored: make(chan struct{}, 1),
 
@@ -204,7 +204,7 @@ func (s *socket) startIO(ctx context.Context, kind types.SocketType, addr string
 	s.writer = bufio.NewWriter(conn)
 
 	if err := onOpened(ctx, s); err != nil {
-		s.error(err)
+		s.reportError(err)
 		close(s.writing)
 		close(s.reading)
 		return
@@ -245,16 +245,11 @@ func (s *socket) startIO(ctx context.Context, kind types.SocketType, addr string
 	s.logger.Info("Closing the socket")
 
 	if err := onClosed(ctx, s); err != nil {
-		s.error(err)
+		s.reportError(err)
 		return
 	}
 
 	s.logger.Info("Closed")
-}
-
-// The TLS handshake algorithm to establish encrypted connections
-func (s *socket) handshake() {
-	panic("Not implemented")
 }
 
 // Reads a chunk (of size `readbufferSize`) out of the TCP connection using `s.reader`.
@@ -325,15 +320,15 @@ reader:
 				if err != nil {
 					switch err {
 					case io.EOF:
-						s.error(sharedTypes.ErrPeerHangUp(err))
+						s.reportError(ErrPeerHangUp(err))
 						break reader
 
 					case io.ErrUnexpectedEOF:
-						s.error(sharedTypes.ErrPeerHangUp(err))
+						s.reportError(ErrPeerHangUp(err))
 						break reader
 
 					default:
-						s.error(sharedTypes.ErrUnexpected(err))
+						s.reportError(ErrUnexpected(err))
 						break reader
 					}
 				}
@@ -345,7 +340,7 @@ reader:
 
 				nonce, _, data, wrapped, err := s.codec.decode(buf)
 				if err != nil {
-					s.error(err)
+					s.reportError(err)
 					break reader
 				}
 
@@ -448,12 +443,12 @@ writer:
 				buff := s.buffers.write.DumpBytes()
 
 				if _, err := s.writer.Write(buff); err != nil {
-					s.error(err)
+					s.reportError(err)
 					break writer
 				}
 
 				if err := s.writer.Flush(); err != nil {
-					s.error(err)
+					s.reportError(err)
 					break writer
 				}
 			}
@@ -462,7 +457,7 @@ writer:
 }
 
 // Tracks and stores the encountered error
-func (s *socket) error(err error) {
+func (s *socket) reportError(err error) {
 	defer s.err.Unlock()
 	s.err.Lock()
 

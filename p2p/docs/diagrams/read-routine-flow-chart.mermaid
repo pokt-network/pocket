@@ -1,0 +1,17 @@
+graph TD
+    A[The Read Routine] --> B(signal reading started)
+    B --> C{Received new input?}
+    C -->|No| D[Wait]
+    D --> C
+    C -->|Yes| E{Encountered read error?}
+    E -->|No| F[Decode Wire Payload]
+    E -->|Yes| H{Is Unexpected Err or EOF?}
+    H --> |Yes| N[Stop routing]
+    H --> |No| M[Report]
+    N --> Q[Close]
+    M --> C
+    F --> I{Is Request?}
+    I --> |Yes| J[Push down to the routing waiting for the response]
+    I --> |No| K[Push down the runner's sink]
+    J --> C
+    K --> C

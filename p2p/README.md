@@ -43,38 +43,60 @@ Now the main question is, how do we achieve this and how do we write it in code,
 
 ## 2. Architecture
 
-### 2.1 Separating Concerns
+The p2p module is composed of two main sub-modules, the network module and the socket module in a hierarchical manner such that the network module controls, runs and commands the socket module.
 
-It's of no use to re-introduce you to the concept of "Separation of Concerns" or remind you what benefits will divide-and-conquer bring to the world of architecture, so let's go straight into what we think should be separated.
+The network module is responsible for:
+  - listening for incoming connections
+  - dialing outgoing connections
+  - broadcasting to the network
+  - sending to specific peers
 
-We think that the operations of a given peer, in regards to itself and its behavior within the network **should be separated** from the operations its having or performing with the peers its connected to. Meaning, what this given peer wants to do as a singular entity should be separated from what the peer is doing with its active neighbors to either maintain their connection or facilitate connectivity or IO. In clear terms:
+The network module abstract away the connections it establishes using the socket module. In turn, the socket module takes care of the established connections' authentication, IO and error handling.
 
-- Operations of a peer:
+The network module keeps all opened sockets (_i.e: established connections_) mapped in a an "active connections pool".
+The network module also stores a map of all network participants' addresses.
 
-  - listen for new inbound connections
-  - establish new outbound connections
-  - store/map/index established connections
-  - do something with a connection (send, ack, ping...)
+### **2.1 Socket**
 
-- Operations of a peer that is having/performing with its active neighbors:
-  - authenticate the connection in between
-  - perform continual reads and writes to the connection
-  - handle connectivity issues (timeouts, errors)
-  - close the connection
+A socket has the following attributes:
+* a type (_inbound or outbound_)
+* an address (_the address of the peer at the other end of the socket_)
+* an ID (_the ID of the peer at the other end of the socket_)
+* a reference to the TCP socket (_net.Conn_)
+* general IO parameters (_timeouts, buffer sizes_)
 
-By **"should be separated"** we mean that the two should be overlooked by different components.
+A socket has the following possible states:
 
-The component to manage peer-related operations will be named **Peer** and will live under `p2p/peer.go` whereas the component to manage inter-peer operations will be named **Socket** and will under `p2p/socket.go`.
 
-## 2.2 Concerns breakdown
 
-### **2.3.1 Peer**
+[![](https://mermaid.ink/img/pako:eNp9kLEKwjAQhl-l3Cjt4tjBRTsLOjgYh9Bca6BJ5HoRpPTdTZtUxII3_Xz38cPdALVTCCX0LBkPWrYkTfHcCpuFuW5uWVHssn3nelSRxTzj4wNthFOa0Qml0rb9oRfS_KFJWRV_84rIUcRzXMmp8S9PJXGxDORgkIzUKhw9TDsBfEeDAsoQFTbSdyxA2DGo_qHCWyql2RGUjex6zEF6dueXraFk8rhI6XfJGt8fuWrI)](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNp9kLEKwjAQhl-l3Cjt4tjBRTsLOjgYh9Bca6BJ5HoRpPTdTZtUxII3_Xz38cPdALVTCCX0LBkPWrYkTfHcCpuFuW5uWVHssn3nelSRxTzj4wNthFOa0Qml0rb9oRfS_KFJWRV_84rIUcRzXMmp8S9PJXGxDORgkIzUKhw9TDsBfEeDAsoQFTbSdyxA2DGo_qHCWyql2RGUjex6zEF6dueXraFk8rhI6XfJGt8fuWrI)
+_Socket states (_state diagram_)_
 
-_TODO(derrandz): Write this part._
+A socket achieves IO by running two main IO routines:
+* A read routine.
+* A write routine.
 
-#### **2.3.2 Socket**
+#### 2.1.1 The Socket's Read Routine
 
-_TODO(derrandz): Write this part._
+The socket 'read' routine performs buffered read operations in incoming data.
+To achieve this, the socket makes available a byte slice representing the buffer, and reads into it using an `io.Reader` off of the underlying TCP connection (_net.Conn_).
+
+The read routine continually waits on new data to be received, and reads it in a buffer manner by relying on the `readChunk` operation. We can say that the read routine reads in chunks of size `BufferSize`. This is configurable.
+The `readChunk` operation performs minimal validation against the read chunk to make sure it is of an acceptable size, and whether it's not corrupted (_decoding does not fail_).
+If this validation fails, the chunk is rejected and socket is kept open.
+
+The read routine will not close on faulty chunks, but will close on:
+ - `io.EOF` error
+ - Unexpected errors
+ - Graceful shutdown caused by:
+   - The closing of the socket's context
+   - The runner has stopped (_i.e: the network module_)
+   - The socket has been terminated using the `Close` operation.
+   - 
+
+Here is a flow diagram summarizing the read routien operations:
+
+[![](https://mermaid.ink/img/pako:eNpVkttuwjAMhl_Fys02ib0AF5sGLeIgGCtMaGq5iBoD0UrSOckYKrz70hPrctPE_vL7t5uCpVog67M98fwA6yBR4NdLvD4gRMgFRNpZqXALj49PMLg3cq94BuRTUu3BWE4WxUN9bVBBwyLCFOU3ClB4AqlyZ5-vNTEsictCXyCIN1zabR0O6otd5gPNBcIiVKl2yiJ5tbIoIJGmVi68yY3iAMtWYCMJYcnPmeZi26UqwXExMfCu8CfH1PuGkAg0Qfg6aiXHlZWaXsQrq3OgagT77T-gLDqPI8w1tV0sqsxbPMy0wSY273Y2qg6T0kOEXw7NbS6TTtVpvHTmAEKfFFgN1v-JxgGc_MjK7857ruJocq1uxSZ_1mZdkZJ0SiHdGTBSfTb4tOtt1h5Yjx2RjlwK_yyKMpkwr3DEhPX9VuCOu8wmLFFXj7pccIuhkFYT6-94ZrDHuLN6dVYp61ty2EKB5P6VHRvq-gseTMfY)](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNpVkttuwjAMhl_Fys02ib0AF5sGLeIgGCtMaGq5iBoD0UrSOckYKrz70hPrctPE_vL7t5uCpVog67M98fwA6yBR4NdLvD4gRMgFRNpZqXALj49PMLg3cq94BuRTUu3BWE4WxUN9bVBBwyLCFOU3ClB4AqlyZ5-vNTEsictCXyCIN1zabR0O6otd5gPNBcIiVKl2yiJ5tbIoIJGmVi68yY3iAMtWYCMJYcnPmeZi26UqwXExMfCu8CfH1PuGkAg0Qfg6aiXHlZWaXsQrq3OgagT77T-gLDqPI8w1tV0sqsxbPMy0wSY273Y2qg6T0kOEXw7NbS6TTtVpvHTmAEKfFFgN1v-JxgGc_MjK7857ruJocq1uxSZ_1mZdkZJ0SiHdGTBSfTb4tOtt1h5Yjx2RjlwK_yyKMpkwr3DEhPX9VuCOu8wmLFFXj7pccIuhkFYT6-94ZrDHuLN6dVYp61ty2EKB5P6VHRvq-gseTMfY) _A Socket's read routine (_flow diagram_)_
 
 ### 2.3 The Glue
 
