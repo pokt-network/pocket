@@ -12,9 +12,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
+	mocksPre2P "github.com/pokt-network/pocket/p2p/pre2p/types/mocks"
 	"github.com/pokt-network/pocket/shared/config"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
