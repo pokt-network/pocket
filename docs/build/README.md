@@ -4,7 +4,7 @@
 
 We follow Go's [Module Version Numbering](https://go.dev/doc/modules/version-numbers) for software releases along with typical [Software release life cycles](https://en.wikipedia.org/wiki/Software_release_life_cycle).
 
-For example, `v0.0.1-pre-alpha.1` is the tag used for the first milestone merge.
+For example, `v0.0.1-alpha.pre.1` is the tag used for the first milestone merge and `v0.0.1-alpha.1` can be used for the first official alpha release.
 
 ## [WIP] Build Versioning
 
@@ -14,7 +14,7 @@ Automatic development / test / production builds are still a work in progress, b
 - `-version` flag that can be injected or defaults to `UNKNOWN`
 - `branch_name` and a shortened `commit_hash` shold be included
 
-For example, `0.0.0-branch_name/commit_hash+dirty` is the name of a potential build we will release in the future.
+For example, `X.Y.Z[-<pre_release_tag][+branch_name][+short_hash][+dirty]` is the name of a potential build we will release in the future.
 
 ## [TODO] Magefile build system
 
