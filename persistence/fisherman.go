@@ -3,309 +3,82 @@ package persistence
 import (
 	"encoding/hex"
 
-	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
-func (p PostgresContext) GetFishermanExists(address []byte) (exists bool, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return
-	}
-	if err = conn.QueryRow(ctx, schema.FishermanExistsQuery(hex.EncodeToString(address))).Scan(&exists); err != nil {
-		return
-	}
-	return
+func (p PostgresContext) GetFishermanExists(address []byte, height int64) (exists bool, err error) {
+	return p.GetExists(address, height, schema.FishermanExistsQuery)
 }
 
-func (p PostgresContext) GetFisherman(address []byte) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight, height int64, chains []string, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return
-	}
-	row, err := conn.Query(ctx, schema.FishermanQuery(hex.EncodeToString(address)))
-	if err != nil {
-		return
-	}
-	for row.Next() {
-		err = row.Scan(&operator, &publicKey, &stakedTokens, &serviceURL, &outputAddress, &pausedHeight, &unstakingHeight, &height)
-		if err != nil {
-			return
-		}
-	}
-	row.Close()
-	row, err = conn.Query(ctx, schema.FishermanChainsQuery(hex.EncodeToString(address)))
-	if err != nil {
-		return
-	}
-	var chainID string
-	var chainEndHeight int64
-	defer row.Close()
-	for row.Next() {
-		err = row.Scan(&operator, &chainID, &chainEndHeight)
-		if err != nil {
-			return
-		}
-		chains = append(chains, chainID)
-	}
+func (p PostgresContext) GetFisherman(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, err error) {
+	actor, err := p.GetActor(address, height, schema.FishermanQuery, schema.FishermanChainsQuery)
+	operator = actor.Address
+	publicKey = actor.PublicKey
+	stakedTokens = actor.StakedTokens
+	serviceURL = actor.GenericParam
+	outputAddress = actor.OutputAddress
+	pausedHeight = actor.PausedHeight
+	unstakingHeight = actor.UnstakingHeight
+	chains = actor.Chains
 	return
 }
 
 // TODO(Andrew): remove paused and status from the interface
 func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return err
-	}
-	height, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	_, err = conn.Exec(ctx, schema.InsertFishermanQuery(
-		hex.EncodeToString(address),
-		hex.EncodeToString(publicKey),
-		stakedTokens,
-		serviceURL,
-		hex.EncodeToString(output),
-		pausedHeight,
-		unstakingHeight,
-		height,
-		chains,
-	))
-	return err
+	return p.InsertActor(schema.GenericActor{
+		Address:         hex.EncodeToString(address),
+		PublicKey:       hex.EncodeToString(publicKey),
+		StakedTokens:    stakedTokens,
+		GenericParam:    serviceURL,
+		OutputAddress:   hex.EncodeToString(output),
+		PausedHeight:    pausedHeight,
+		UnstakingHeight: unstakingHeight,
+		Chains:          chains,
+	}, schema.InsertFishermanQuery)
 }
 
 // TODO(Andrew): change amount to add, to the amount to be SET
-func (p PostgresContext) UpdateFisherman(address []byte, serviceURL string, amountToAdd string, chainsToUpdate []string) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return err
-	}
-	height, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return err
-	}
-	addrString := hex.EncodeToString(address)
-	if chainsToUpdate != nil {
-		if _, err = tx.Exec(ctx, schema.NullifyFishermanChainsQuery(addrString, height)); err != nil {
-			return err
-		}
-		if _, err = tx.Exec(ctx, schema.UpdateFishermanChainsQuery(addrString, chainsToUpdate, height)); err != nil {
-			return err
-		}
-	}
-	if serviceURL != "" || amountToAdd != "" {
-		if _, err = tx.Exec(ctx, schema.NullifyFishermanQuery(addrString, height)); err != nil {
-			return err
-		}
-		if _, err = tx.Exec(ctx, schema.UpdateFishermanQuery(addrString, amountToAdd, serviceURL, height)); err != nil {
-			return err
-		}
-	}
-	return tx.Commit(ctx)
+func (p PostgresContext) UpdateFisherman(address []byte, serviceURL string, stakedTokens string, chains []string) error {
+	return p.UpdateActor(schema.GenericActor{
+		Address:      hex.EncodeToString(address),
+		StakedTokens: stakedTokens,
+		GenericParam: serviceURL,
+		Chains:       chains,
+	}, schema.UpdateFishermanQuery, schema.UpdateFishermanChainsQuery, schema.FishChainsTableName)
 }
 
-func (p PostgresContext) DeleteFisherman(address []byte) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return err
-	}
-	height, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return err
-	}
-	addrString := hex.EncodeToString(address)
-	if _, err = tx.Exec(ctx, schema.NullifyFishermanQuery(addrString, height)); err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.NullifyFishermanChainsQuery(addrString, height)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+func (p PostgresContext) DeleteFisherman(_ []byte) error {
+	return nil // no op
 }
 
 // TODO(Andrew): remove status - not needed
-func (p PostgresContext) GetFishermanReadyToUnstake(height int64, status int) (Fishermans []*types.UnstakingActor, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return nil, err
-	}
-	rows, err := conn.Query(ctx, schema.FishermanReadyToUnstakeQuery(height))
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		unstakingActor := types.UnstakingActor{}
-		addr, output := "", ""
-		err = rows.Scan(&addr, &unstakingActor.StakeAmount, &output)
-		if err != nil {
-			return nil, err
-		}
-		unstakingActor.Address, err = hex.DecodeString(addr)
-		if err != nil {
-			return nil, err
-		}
-		unstakingActor.OutputAddress, err = hex.DecodeString(output)
-		if err != nil {
-			return nil, err
-		}
-		Fishermans = append(Fishermans, &unstakingActor)
-	}
-	return
+func (p PostgresContext) GetFishermanReadyToUnstake(height int64, _ int) (Fishermans []*types.UnstakingActor, err error) {
+	return p.ActorReadyToUnstakeWithChains(height, schema.FishermanReadyToUnstakeQuery)
 }
 
-func (p PostgresContext) GetFishermanStatus(address []byte) (status int, err error) {
-	var unstakingHeight int64
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return 0, err
-	}
-	height, err := p.GetHeight()
-	if err != nil {
-		return 0, err
-	}
-	row, err := conn.Query(ctx, schema.FishermanUnstakingHeightQuery(hex.EncodeToString(address), height))
-	if err != nil {
-		return 0, err
-	}
-	defer row.Close()
-	for row.Next() {
-		if err = row.Scan(&unstakingHeight); err != nil {
-			return 0, err
-		}
-	}
-	switch {
-	case unstakingHeight == schema.DefaultUnstakingHeight:
-		return StakedStatus, nil
-	case unstakingHeight > height:
-		return UnstakingStatus, nil
-	default:
-		return UnstakedStatus, nil
-	}
+func (p PostgresContext) GetFishermanStatus(address []byte, height int64) (status int, err error) {
+	return p.GetActorStatus(address, height, schema.FishermanUnstakingHeightQuery)
 }
 
 // TODO(Andrew): remove status - no longer needed
-func (p PostgresContext) SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return err
-	}
-	height, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return err
-	}
-	_, err = tx.Exec(ctx, schema.NullifyFishermanQuery(hex.EncodeToString(address), height))
-	if err != nil {
-		return err
-	}
-	_, err = tx.Exec(ctx, schema.UpdateFishermanUnstakingHeightQuery(hex.EncodeToString(address), unstakingHeight, height))
-	if err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+func (p PostgresContext) SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, _ int) error {
+	return p.SetActorUnstakingHeightAndStatus(address, unstakingHeight, schema.UpdateFishermanUnstakingHeightQuery)
 }
 
-func (p PostgresContext) GetFishermanPauseHeightIfExists(address []byte) (int64, error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return 0, err
-	}
-	height, err := p.GetHeight()
-	if err != nil {
-		return 0, err
-	}
-	var pausedHeight int64
-	row, err := conn.Query(ctx, schema.FishermanPauseHeightQuery(hex.EncodeToString(address), height))
-	if err != nil {
-		return 0, err
-	}
-	defer row.Close()
-	for row.Next() {
-		err = row.Scan(&pausedHeight)
-		if err != nil {
-			return 0, err
-		}
-	}
-	return pausedHeight, nil
+func (p PostgresContext) GetFishermanPauseHeightIfExists(address []byte, height int64) (int64, error) {
+	return p.GetActorPauseHeightIfExists(address, height, schema.FishermanPauseHeightQuery)
 }
 
 // TODO(Andrew): remove status - it's not needed
-func (p PostgresContext) SetFishermansStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return err
-	}
-	currentHeight, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return err
-	}
-	_, err = tx.Exec(ctx, schema.NullifyFishermansPausedBeforeQuery(pausedBeforeHeight, currentHeight))
-	if err != nil {
-		return err
-	}
-	_, err = tx.Exec(ctx, schema.UpdateFishermansPausedBefore(pausedBeforeHeight, unstakingHeight, currentHeight))
-	if err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+func (p PostgresContext) SetFishermansStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
+	return p.SetActorStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, schema.UpdateFishermansPausedBefore)
 }
 
 func (p PostgresContext) SetFishermanPauseHeight(address []byte, height int64) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return err
-	}
-	currentHeight, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.NullifyFishermanQuery(hex.EncodeToString(address), currentHeight)); err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.UpdateFishermanPausedHeightQuery(hex.EncodeToString(address), height, currentHeight)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+	return p.SetActorPauseHeight(address, height, schema.UpdateFishermanPausedHeightQuery)
 }
 
-func (p PostgresContext) GetFishermanOutputAddress(operator []byte) (output []byte, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return nil, err
-	}
-	var outputAddr string
-	row, err := conn.Query(ctx, schema.FishermanOutputAddressQuery(hex.EncodeToString(operator)))
-	if err != nil {
-		return nil, err
-	}
-	defer row.Close()
-	for row.Next() {
-		err = row.Scan(&outputAddr)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return hex.DecodeString(outputAddr)
+func (p PostgresContext) GetFishermanOutputAddress(operator []byte, height int64) (output []byte, err error) {
+	return p.GetActorOutputAddress(operator, height, schema.FishermanOutputAddressQuery)
 }

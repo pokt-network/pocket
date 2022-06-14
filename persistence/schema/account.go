@@ -1,52 +1,29 @@
 package schema
 
-import "fmt"
-
 const (
-	AccountTableName   = "account"
-	AccountTableSchema = `(
-			address    TEXT NOT NULL,
-			balance    TEXT NOT NULL,
-			height 	   BIGINT NOT NULL,
-		    CONSTRAINT account_create_height UNIQUE (address, height)
-		)`
+	AccountTableName      = "account"
+	PoolTableName         = "pool"
+	AccountConstraintName = "account_create_height"
+	PoolConstraintName    = "pool_create_height"
+)
+
+var (
+	AccountTableSchema = AccTableSchema(Address, AccountConstraintName)
+	PoolTableSchema    = AccTableSchema(Name, PoolConstraintName)
 )
 
 func GetAccountAmountQuery(address string, height int64) string {
-	return fmt.Sprintf(`SELECT balance FROM %s WHERE address='%s' AND height=%d ORDER BY height DESC LIMIT 1`,
-		AccountTableName, address, height)
+	return SelectBalance(Address, address, height, AccountTableName)
 }
 
 func InsertAccountAmountQuery(address, amount string, height int64) string {
-	return fmt.Sprintf(`
-		INSERT INTO %s (address, balance, height)
-			VALUES ('%s','%s',%d)
-			ON CONFLICT ON CONSTRAINT account_create_height
-			DO UPDATE SET balance=EXCLUDED.balance, height=EXCLUDED.height
-		`, AccountTableName, address, amount, height)
+	return InsertAcc(Address, address, amount, height, AccountTableName, AccountConstraintName)
 }
 
-const (
-	PoolTableName   = "pool"
-	PoolTableSchema = `(
-		name       TEXT NOT NULL,
-		balance    TEXT NOT NULL,
-		height 	   BIGINT NOT NULL,
-
-		CONSTRAINT pool_create_height UNIQUE (name, height)
-	)`
-)
-
 func GetPoolAmountQuery(name string, height int64) string {
-	return fmt.Sprintf(`SELECT balance FROM %s WHERE name='%s' AND height<=%d ORDER BY height DESC LIMIT 1`,
-		PoolTableName, name, height)
+	return SelectBalance(Name, name, height, PoolTableName)
 }
 
 func InsertPoolAmountQuery(name, amount string, height int64) string {
-	return fmt.Sprintf(`
-		INSERT INTO %s (name, balance, height)
-			VALUES ('%s','%s',%d)
-			ON CONFLICT ON CONSTRAINT pool_create_height
-			DO UPDATE SET balance=EXCLUDED.balance, height=EXCLUDED.height
-		`, PoolTableName, name, amount, height)
+	return InsertAcc(Name, name, amount, height, PoolTableName, PoolConstraintName)
 }

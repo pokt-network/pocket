@@ -65,6 +65,10 @@ func FuzzAccountAmount(f *testing.F) {
 	})
 }
 
+// 1) Fuzz tests - takes all the CRU operations that any actor may have and fuzz's all of them and verifying functionality
+// Change height in operations for each fuzz test
+// 2) User story testing - create a few examples per function
+
 func TestSetAccountAmount(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,

@@ -39,7 +39,7 @@ func TestUpdateApp(t *testing.T) {
 	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultMaxRelays, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, _, chains, err := db.GetApp(app.Address, db.Height)
+	_, _, stakedTokens, _, _, _, _, chains, err := db.GetApp(app.Address, db.Height)
 	require.NoError(t, err)
 
 	require.Equal(t, chains, DefaultChains, "default chains incorrect")
@@ -48,11 +48,25 @@ func TestUpdateApp(t *testing.T) {
 	err = db.UpdateApp(app.Address, app.MaxRelays, StakeToUpdate, ChainsToUpdate)
 	require.NoError(t, err)
 
-	_, _, stakedTokens, _, _, _, _, _, chains, err = db.GetApp(app.Address, db.Height)
+	_, _, stakedTokens, _, _, _, _, chains, err = db.GetApp(app.Address, db.Height)
 	require.NoError(t, err)
 
 	require.Equal(t, chains, ChainsToUpdate, "chains not updated")
 	require.Equal(t, stakedTokens, StakeToUpdate, "stake not updated")
+
+	/// Constraint is unique app (height + address)
+	/// Scenario 1
+	/// Block 1
+	/// Stake App Chain = [0001]
+	/// Edit Stake App Chain = [0002]
+	/// What you want (replace record [x] constraint wins!!)
+	///
+	/// Scenario 2
+	/// Block 1
+	/// Stake App Chain = [0001]
+	/// Edit Stake App Chain = [0001, 0002] -> height=1,address=a,chain=0001 || replacing the previous change height=1,address=a,chain=0002
+	/// What you want (replace record [x] constraint doesn't work!!)
+
 }
 
 func TestGetAppsReadyToUnstake(t *testing.T) {
@@ -87,7 +101,7 @@ func TestGetAppStatus(t *testing.T) {
 	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
-	status, err := db.GetAppStatus(app.Address)
+	status, err := db.GetAppStatus(app.Address, 0)
 	require.NoError(t, err)
 	require.Equal(t, status, DefaultStakeStatus, "unexpected status: got %d expected %d", status, DefaultStakeStatus)
 }
@@ -101,7 +115,7 @@ func TestGetPauseHeightIfExists(t *testing.T) {
 	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
-	height, err := db.GetAppPauseHeightIfExists(app.Address)
+	height, err := db.GetAppPauseHeightIfExists(app.Address, 0)
 	require.NoError(t, err)
 	require.Equal(t, height, DefaultPauseHeight, "unexpected pause height")
 }
@@ -121,7 +135,7 @@ func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	err = db.SetAppsStatusAndUnstakingHeightPausedBefore(1, unstakingHeightSet, 1)
 	require.NoError(t, err)
 
-	_, _, _, _, _, _, unstakingHeight, _, _, err := db.GetApp(app.Address, db.Height)
+	_, _, _, _, _, unstakingHeight, _, _, err := db.GetApp(app.Address, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, unstakingHeight, unstakingHeightSet, "unstaking height was not set correctly")
 }
@@ -139,7 +153,7 @@ func TestSetAppPauseHeight(t *testing.T) {
 	err = db.SetAppPauseHeight(app.Address, int64(PauseHeightToSet))
 	require.NoError(t, err)
 
-	_, _, _, _, _, pausedHeight, _, _, _, err := db.GetApp(app.Address, db.Height)
+	_, _, _, _, _, pausedHeight, _, _, err := db.GetApp(app.Address, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, pausedHeight, int64(PauseHeightToSet), "pause height not updated")
 }
@@ -155,7 +169,7 @@ func TestGetAppOutputAddress(t *testing.T) {
 	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
-	output, err := db.GetAppOutputAddress(app.Address)
+	output, err := db.GetAppOutputAddress(app.Address, 0)
 	require.NoError(t, err)
 	require.Equal(t, output, app.Output, "unexpected output address")
 }
