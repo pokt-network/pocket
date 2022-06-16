@@ -49,7 +49,7 @@ The `Network Module` is where RainTree (or the simpler basic approach) is implem
 ```bash
 p2p/pre2p
 ├── README.md                    # Self link to this README
-├── conn.go                      # Varying implementations of the `TransportLayerConn` (e.g. TCP, Passthrough) for network communication
+├── transport.go                 # Varying implementations of the `TransportLayerConn` (e.g. TCP, Passthrough) for network communication
 ├── module.go                    # The implementation of the P2P Interface
 ├── raintree
 │   ├── addrbook_utils.go        # AddrBook utilities
