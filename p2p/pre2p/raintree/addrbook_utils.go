@@ -21,7 +21,7 @@ const (
 )
 
 // Whenever `addrBook` changes, we also need to update `addrBookMap` and `addrList`
-func (n *rainTreeNetwork) handleAddrBookUpdates() error {
+func (n *rainTreeNetwork) processAddrBookUpdates() error {
 	// OPTIMIZE(olshansky): This is a very naive approach for now that recomputes everything every time that we can optimize later
 	n.addrBookMap = make(map[string]*typesPre2P.NetworkPeer, len(n.addrBook))
 	n.addrList = make([]string, len(n.addrBook))

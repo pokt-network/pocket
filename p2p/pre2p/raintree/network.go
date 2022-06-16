@@ -38,7 +38,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook,
 	n := &rainTreeNetwork{
 		selfAddr: addr,
 		addrBook: addrBook,
-		// This subset of fields are initialized by `handleAddrBookUpdates` below
+		// This subset of fields are initialized by `processAddrBookUpdates` below
 		addrBookMap:  make(typesPre2P.AddrBookMap),
 		addrList:     make([]string, 0),
 		maxNumLevels: 0,
@@ -46,7 +46,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook,
 		mempool: types.NewMempool(1000000, 1000),
 	}
 
-	if err := n.handleAddrBookUpdates(); err != nil {
+	if err := n.processAddrBookUpdates(); err != nil {
 		// DISCUSS(drewsky): if this errors, the node could still function but not participate in
 		// message propagation. Should we return an error or just log?
 		log.Println("[ERROR] Error initializing rainTreeNetwork: ", err)
@@ -182,7 +182,7 @@ func (n *rainTreeNetwork) GetAddrBook() typesPre2P.AddrBook {
 
 func (n *rainTreeNetwork) AddPeerToAddrBook(peer *typesPre2P.NetworkPeer) error {
 	n.addrBook = append(n.addrBook, peer)
-	if err := n.handleAddrBookUpdates(); err != nil {
+	if err := n.processAddrBookUpdates(); err != nil {
 		return nil
 	}
 	return nil

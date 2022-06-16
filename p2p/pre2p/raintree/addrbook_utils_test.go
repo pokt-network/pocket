@@ -73,7 +73,7 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
 			network := NewRainTreeNetwork(addr, addrBook, cfg).(*rainTreeNetwork)
 
-			err = network.handleAddrBookUpdates()
+			err = network.processAddrBookUpdates()
 			require.NoError(t, err)
 
 			require.Equal(t, len(network.addrList), n)
@@ -105,7 +105,7 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
 			network := NewRainTreeNetwork(addr, addrBook, cfg).(*rainTreeNetwork)
 
-			err = network.handleAddrBookUpdates()
+			err = network.processAddrBookUpdates()
 			require.NoError(b, err)
 
 			require.Equal(b, len(network.addrList), n)
@@ -173,7 +173,7 @@ func TestRainTreeAddrBookTargetsTwentySevenNodes(t *testing.T) {
 func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeMessageProp) {
 	addrBook := getAlphabetAddrBook(expectedMsgProp.numNodes)
 	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, addrBook, &config.Config{}).(*rainTreeNetwork)
-	network.handleAddrBookUpdates()
+	network.processAddrBookUpdates()
 
 	require.Equal(t, strings.Join(network.addrList, ""), strToAddrList(expectedMsgProp.addrList))
 
