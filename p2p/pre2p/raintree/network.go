@@ -56,10 +56,10 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook,
 }
 
 func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
-	return n.networkBroadcastInternal(data, n.maxNumLevels, getNonce())
+	return n.networkBroadcastAtLevel(data, n.maxNumLevels, getNonce())
 }
 
-func (n *rainTreeNetwork) networkBroadcastInternal(data []byte, level uint32, nonce uint64) error {
+func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, nonce uint64) error {
 	// This is handled either by the cleanup layer or redundancy layer
 	if level == 0 {
 		return nil
@@ -96,7 +96,7 @@ func (n *rainTreeNetwork) networkBroadcastInternal(data []byte, level uint32, no
 
 func (n *rainTreeNetwork) demote(rainTreeMsg *typesPre2P.RainTreeMessage) error {
 	if rainTreeMsg.Level > 0 {
-		if err := n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
+		if err := n.networkBroadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return err
 		}
 	}
@@ -151,7 +151,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	// Continue RainTree propagation
 	if rainTreeMsg.Level > 0 {
-		if err := n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
+		if err := n.networkBroadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return nil, err
 		}
 	}
