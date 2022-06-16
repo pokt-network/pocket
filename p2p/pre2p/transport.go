@@ -13,7 +13,7 @@ const (
 	TCPNetworkLayerProtocol = "tcp4"
 )
 
-func CreateListener(cfg *config.Pre2PConfig) (typesPre2P.TransportLayerConn, error) {
+func CreateListener(cfg *config.Pre2PConfig) (typesPre2P.Transport, error) {
 	switch cfg.ConnectionType {
 	case config.TCPConnection:
 		return createTCPListener(cfg)
@@ -24,7 +24,7 @@ func CreateListener(cfg *config.Pre2PConfig) (typesPre2P.TransportLayerConn, err
 	}
 }
 
-func CreateDialer(cfg *config.Pre2PConfig, url string) (typesPre2P.TransportLayerConn, error) {
+func CreateDialer(cfg *config.Pre2PConfig, url string) (typesPre2P.Transport, error) {
 	switch cfg.ConnectionType {
 	case config.TCPConnection:
 		return createTCPDialer(cfg, url)
@@ -35,7 +35,7 @@ func CreateDialer(cfg *config.Pre2PConfig, url string) (typesPre2P.TransportLaye
 	}
 }
 
-var _ typesPre2P.TransportLayerConn = &tcpConn{}
+var _ typesPre2P.Transport = &tcpConn{}
 
 type tcpConn struct {
 	address  *net.TCPAddr
@@ -114,16 +114,16 @@ func (c *tcpConn) Close() error {
 	return nil
 }
 
-var _ typesPre2P.TransportLayerConn = &emptyConn{}
+var _ typesPre2P.Transport = &emptyConn{}
 
 type emptyConn struct {
 }
 
-func createEmptyListener(_ *config.Pre2PConfig) (typesPre2P.TransportLayerConn, error) {
+func createEmptyListener(_ *config.Pre2PConfig) (typesPre2P.Transport, error) {
 	return &emptyConn{}, nil
 }
 
-func createEmptyDialer(_ *config.Pre2PConfig, _ string) (typesPre2P.TransportLayerConn, error) {
+func createEmptyDialer(_ *config.Pre2PConfig, _ string) (typesPre2P.Transport, error) {
 	return &emptyConn{}, nil
 }
 

@@ -190,7 +190,7 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 	}
 
 	// Network initialization
-	connMocks := make(map[string]typesPre2P.TransportLayerConn)
+	connMocks := make(map[string]typesPre2P.Transport)
 	busMocks := make(map[string]modules.Bus)
 	for valId, expectedCall := range testCommConfig {
 		connMocks[valId] = prepareConnMock(t, expectedCall.numNetworkReads, expectedCall.numNetworkWrites)
@@ -289,10 +289,10 @@ func prepareBusMock(t *testing.T, wg *sync.WaitGroup) *modulesMock.MockBus {
 // on the number of expected messages propagated.
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
 //                         expectation with RainTree by comparing with Telemetry after updating specs.
-func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesPre2P.TransportLayerConn {
+func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesPre2P.Transport {
 	testChannel := make(chan []byte, testChannelSize)
 	ctrl := gomock.NewController(t)
-	connMock := mocksPre2P.NewMockTransportLayerConn(ctrl)
+	connMock := mocksPre2P.NewMockTransport(ctrl)
 
 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
 		data := <-testChannel

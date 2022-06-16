@@ -26,13 +26,13 @@ type Network interface {
 }
 
 type NetworkPeer struct {
-	Dialer     TransportLayerConn
+	Dialer     Transport
 	PublicKey  cryptoPocket.PublicKey
 	Address    cryptoPocket.Address
 	ServiceUrl string // This is only included because it's a more human-friendly differentiator between peers
 }
 
-type TransportLayerConn interface {
+type Transport interface {
 	IsListener() bool
 	Read() ([]byte, error)
 	Write([]byte) error

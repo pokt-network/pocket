@@ -25,7 +25,7 @@ var _ modules.P2PModule = &p2pModule{}
 type p2pModule struct {
 	bus modules.Bus
 
-	listener typesPre2P.TransportLayerConn
+	listener typesPre2P.Transport
 	address  cryptoPocket.Address
 
 	network typesPre2P.Network
