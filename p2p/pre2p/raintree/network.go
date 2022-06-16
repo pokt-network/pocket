@@ -162,6 +162,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	hashString := hex.EncodeToString(hash)
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
+	// TODO(team): Add more tests to verify this is sufficient for deduping purposes.
 	if n.mempool.Contains(hashString) {
 		return nil, nil
 	}
