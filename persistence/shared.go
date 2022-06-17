@@ -9,8 +9,7 @@ import (
 
 // TODO(team): get rid of status and/or move to shared and/or create an enum
 const (
-	UnknownStakingStatus int = iota
-	UnstakedStatus
+	UnstakedStatus int = iota
 	UnstakingStatus
 	StakedStatus
 )
@@ -92,12 +91,14 @@ func (p *PostgresContext) UpdateActor(actor schema.GenericActor, updateQuery fun
 	if _, err = tx.Exec(ctx, updateQuery(actor.Address, actor.StakedTokens, actor.GenericParam, height)); err != nil {
 		return err
 	}
-	if updateChainsQuery != nil {
-		if _, err = tx.Exec(ctx, schema.NullifyChains(actor.Address, height, chainsTableName)); err != nil {
-			return err
-		}
-		if _, err = tx.Exec(ctx, updateChainsQuery(actor.Address, actor.Chains, height)); err != nil {
-			return err
+	if actor.Chains != nil {
+		if updateChainsQuery != nil {
+			if _, err = tx.Exec(ctx, schema.NullifyChains(actor.Address, height, chainsTableName)); err != nil {
+				return err
+			}
+			if _, err = tx.Exec(ctx, updateChainsQuery(actor.Address, actor.Chains, height)); err != nil {
+				return err
+			}
 		}
 	}
 	return tx.Commit(ctx)
@@ -134,10 +135,10 @@ func (p *PostgresContext) GetActorStatus(address []byte, height int64, query fun
 	var unstakingHeight int64
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
-		return UnknownStakingStatus, err
+		return -1, err
 	}
 	if err := conn.QueryRow(ctx, query(hex.EncodeToString(address), height)).Scan(&unstakingHeight); err != nil {
-		return UnknownStakingStatus, err
+		return -1, err
 	}
 	switch {
 	case unstakingHeight == schema.DefaultUnstakingHeight:

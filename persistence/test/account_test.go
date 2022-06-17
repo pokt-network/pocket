@@ -13,51 +13,47 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// --- Account Tests ---
-
 func FuzzAccountAmount(f *testing.F) {
 	// Setup
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-
-	// TODO(team): We can create a map of functions once the following is answered:
-	// https://stackoverflow.com/questions/72496074/golang-1-18-map-of-functions is answered
-	ops := []string{"Get", "Add", "Sub", "Set"}
-
-	// IMPROVE(team): See the documentation in `persistence/README.md` for more information on
-	// why we need to call this initialization.
+	ops := []string{"Add", "Sub", "Set", "NextHeight"}
 	acc := NewTestAccount(nil)
 	db.SetAccountAmount(acc.Address, DefaultAccountAmount)
 	expectedAmount := big.NewInt(DefaultAccountBig.Int64())
-
+	var delta *big.Int
 	numOptions := len(ops)
 	numOperations := 20
 	for i := 0; i < numOperations; i++ {
 		f.Add(ops[rand.Intn(numOptions)])
 	}
-
-	// IMPROVE(team): Randomize the amounts
-	// IMPROVE(team): Assert negative balances never happen
 	f.Fuzz(func(t *testing.T, op string) {
+		delta = big.NewInt(int64(rand.Intn(1000)))
 		switch op {
-		case "Get":
-			amount, err := db.GetAccountAmount(acc.Address, db.Height)
-			require.NoError(t, err)
-			require.Equal(t, types.BigIntToString(expectedAmount), amount, "unexpected retrieved amount")
 		case "Add":
-			err := db.AddAccountAmount(acc.Address, DefaultDeltaAmount)
+			originalAmountBig, err := db.GetAccountAmount(acc.Address, db.Height)
 			require.NoError(t, err)
-			expectedAmount.Add(expectedAmount, DefaultDeltaBig)
+			originalAmount, err := types.StringToBigInt(originalAmountBig)
+			require.NoError(t, err)
+			err = db.AddAccountAmount(acc.Address, types.BigIntToString(delta))
+			require.NoError(t, err)
+			expectedAmount.Add(originalAmount, delta)
 		case "Sub":
-			err := db.SubtractAccountAmount(acc.Address, DefaultDeltaAmount)
+			originalAmountBig, err := db.GetAccountAmount(acc.Address, db.Height)
 			require.NoError(t, err)
-			expectedAmount.Sub(expectedAmount, DefaultDeltaBig)
+			originalAmount, err := types.StringToBigInt(originalAmountBig)
+			require.NoError(t, err)
+			err = db.SubtractAccountAmount(acc.Address, types.BigIntToString(delta))
+			require.NoError(t, err)
+			expectedAmount.Sub(originalAmount, delta)
 		case "Set":
-			err := db.SetAccountAmount(acc.Address, DefaultAccountAmount)
+			err := db.SetAccountAmount(acc.Address, types.BigIntToString(delta))
 			require.NoError(t, err)
-			expectedAmount = big.NewInt(DefaultAccountBig.Int64())
+			expectedAmount = delta
+		case "NextHeight":
+			db.Height++
 		}
 		currentAmount, err := db.GetAccountAmount(acc.Address, db.Height)
 		require.NoError(t, err)
@@ -65,27 +61,19 @@ func FuzzAccountAmount(f *testing.F) {
 	})
 }
 
-// 1) Fuzz tests - takes all the CRU operations that any actor may have and fuzz's all of them and verifying functionality
-// Change height in operations for each fuzz test
-// 2) User story testing - create a few examples per function
-
 func TestSetAccountAmount(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
 	acc := NewTestAccount(t)
-
 	err := db.SetAccountAmount(acc.Address, DefaultStake)
 	require.NoError(t, err)
-
 	am, err := db.GetAccountAmount(acc.Address, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, DefaultStake, am, "unexpected amount")
-
 	db.SetAccountAmount(acc.Address, StakeToUpdate)
 	require.NoError(t, err)
-
 	am, err = db.GetAccountAmount(acc.Address, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, StakeToUpdate, am, "unexpected amount after second set")
@@ -97,17 +85,13 @@ func TestAddAccountAmount(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	acc := NewTestAccount(t)
-
 	err := db.SetAccountAmount(acc.Address, DefaultStake)
 	require.NoError(t, err)
-
 	amountToAddBig := big.NewInt(100)
 	err = db.AddAccountAmount(acc.Address, types.BigIntToString(amountToAddBig))
 	require.NoError(t, err)
-
 	am, err := db.GetAccountAmount(acc.Address, db.Height)
 	require.NoError(t, err)
-
 	resultBig := (&big.Int{}).Add(DefaultStakeBig, amountToAddBig)
 	expectedResult := types.BigIntToString(resultBig)
 	require.Equal(t, expectedResult, am, "unexpected amount after add")
@@ -119,23 +103,17 @@ func TestSubAccountAmount(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	acc := NewTestAccount(t)
-
 	err := db.SetAccountAmount(acc.Address, DefaultStake)
 	require.NoError(t, err)
-
 	amountToSubBig := big.NewInt(100)
 	db.SubtractAccountAmount(acc.Address, types.BigIntToString(amountToSubBig))
 	require.NoError(t, err)
-
 	am, err := db.GetAccountAmount(acc.Address, db.Height)
 	require.NoError(t, err)
-
 	resultBig := (&big.Int{}).Sub(DefaultStakeBig, amountToSubBig)
 	expectedResult := types.BigIntToString(resultBig)
 	require.Equal(t, expectedResult, am, "unexpected amount after sub")
 }
-
-// --- Pool Tests ---
 
 func FuzzPoolAmount(f *testing.F) {
 	// Setup
@@ -143,66 +121,63 @@ func FuzzPoolAmount(f *testing.F) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-
-	// TODO(team): We can create a map of functions once the following is answered:
-	// https://stackoverflow.com/questions/72496074/golang-1-18-map-of-functions is answered
-	ops := []string{"Get", "Add", "Sub", "Set"}
-
+	ops := []string{"Add", "Sub", "Set", "NextHeight"}
 	// IMPROVE(team): See the documentation in `persistence/README.md` for more information on
 	// why we need to call this initialization.
-	pool := NewTestPool(nil)
-	db.SetPoolAmount(pool.Name, DefaultAccountAmount)
+	acc := NewTestPool(nil)
+	db.SetPoolAmount(acc.Name, DefaultAccountAmount)
 	expectedAmount := big.NewInt(DefaultAccountBig.Int64())
-
+	var delta *big.Int
 	numOptions := len(ops)
 	numOperations := 20
 	for i := 0; i < numOperations; i++ {
 		f.Add(ops[rand.Intn(numOptions)])
 	}
-
-	// IMPROVE(team): Randomize the amounts
-	// IMPROVE(team): Assert negative balances never happen
 	f.Fuzz(func(t *testing.T, op string) {
+		delta = big.NewInt(int64(rand.Intn(1000)))
 		switch op {
-		case "Get":
-			amount, err := db.GetPoolAmount(pool.Name, db.Height)
-			require.NoError(t, err)
-			require.Equal(t, types.BigIntToString(expectedAmount), amount, "unexpected retrieved amount")
 		case "Add":
-			err := db.AddPoolAmount(pool.Name, DefaultDeltaAmount)
+			originalAmountBig, err := db.GetPoolAmount(acc.Name, db.Height)
 			require.NoError(t, err)
-			expectedAmount.Add(expectedAmount, DefaultDeltaBig)
+			originalAmount, err := types.StringToBigInt(originalAmountBig)
+			require.NoError(t, err)
+			err = db.AddPoolAmount(acc.Name, types.BigIntToString(delta))
+			require.NoError(t, err)
+			expectedAmount.Add(originalAmount, delta)
 		case "Sub":
-			err := db.SubtractPoolAmount(pool.Name, DefaultDeltaAmount)
+			originalAmountBig, err := db.GetPoolAmount(acc.Name, db.Height)
 			require.NoError(t, err)
-			expectedAmount.Sub(expectedAmount, DefaultDeltaBig)
+			originalAmount, err := types.StringToBigInt(originalAmountBig)
+			require.NoError(t, err)
+			err = db.SubtractPoolAmount(acc.Name, types.BigIntToString(delta))
+			require.NoError(t, err)
+			expectedAmount.Sub(originalAmount, delta)
 		case "Set":
-			err := db.SetPoolAmount(pool.Name, DefaultAccountAmount)
+			err := db.SetPoolAmount(acc.Name, types.BigIntToString(delta))
 			require.NoError(t, err)
-			expectedAmount = big.NewInt(DefaultAccountBig.Int64())
+			expectedAmount = delta
+		case "NextHeight":
+			db.Height++
 		}
-		currentAmount, err := db.GetPoolAmount(pool.Name, db.Height)
+		currentAmount, err := db.GetPoolAmount(acc.Name, db.Height)
 		require.NoError(t, err)
 		require.Equal(t, types.BigIntToString(expectedAmount), currentAmount, fmt.Sprintf("unexpected amount after %s", op))
 	})
 }
+
 func TestSetPoolAmount(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
 	pool := NewTestPool(t)
-
 	err := db.SetPoolAmount(pool.Name, DefaultStake)
 	require.NoError(t, err)
-
 	am, err := db.GetPoolAmount(pool.Name, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, DefaultStake, am, "unexpected amount")
-
 	err = db.SetPoolAmount(pool.Name, StakeToUpdate)
 	require.NoError(t, err)
-
 	am, err = db.GetPoolAmount(pool.Name, db.Height)
 	require.NoError(t, err)
 	require.Equal(t, StakeToUpdate, am, "unexpected amount after second set")
@@ -214,17 +189,13 @@ func TestAddPoolAmount(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	pool := NewTestPool(t)
-
 	err := db.SetPoolAmount(pool.Name, DefaultStake)
 	require.NoError(t, err)
-
 	amountToAddBig := big.NewInt(100)
 	err = db.AddPoolAmount(pool.Name, types.BigIntToString(amountToAddBig))
 	require.NoError(t, err)
-
 	am, err := db.GetPoolAmount(pool.Name, db.Height)
 	require.NoError(t, err)
-
 	resultBig := (&big.Int{}).Add(DefaultStakeBig, amountToAddBig)
 	expectedResult := types.BigIntToString(resultBig)
 	require.Equal(t, expectedResult, am, "unexpected amount after add")
@@ -236,17 +207,13 @@ func TestSubPoolAmount(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	pool := NewTestPool(t)
-
 	err := db.SetPoolAmount(pool.Name, DefaultStake)
 	require.NoError(t, err)
-
 	amountToSubBig := big.NewInt(100)
 	err = db.SubtractPoolAmount(pool.Name, types.BigIntToString(amountToSubBig))
 	require.NoError(t, err)
-
 	am, err := db.GetPoolAmount(pool.Name, db.Height)
 	require.NoError(t, err)
-
 	resultBig := (&big.Int{}).Sub(DefaultStakeBig, amountToSubBig)
 	expectedResult := types.BigIntToString(resultBig)
 	require.Equal(t, expectedResult, am, "unexpected amount after sub")
@@ -259,7 +226,6 @@ func NewTestAccount(t *testing.T) typesGenesis.Account {
 	if t != nil {
 		require.NoError(t, err)
 	}
-
 	return typesGenesis.Account{
 		Address: addr,
 		Amount:  DefaultAccountAmount,
@@ -271,7 +237,6 @@ func NewTestPool(t *testing.T) typesGenesis.Pool {
 	if t != nil {
 		require.NoError(t, err)
 	}
-
 	return typesGenesis.Pool{
 		Name: DefaultPoolName,
 		Account: &typesGenesis.Account{

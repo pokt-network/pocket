@@ -20,7 +20,7 @@ func FishermanQuery(address string, height int64) string {
 }
 
 func FishermanChainsQuery(address string, height int64) string {
-	return Select(AllSelector, address, height, FishChainsTableName)
+	return SelectChains(AllSelector, address, height, FishTableName, FishChainsTableName)
 }
 
 func FishermanExistsQuery(address string, height int64) string {
@@ -67,7 +67,7 @@ func UpdateFishermanPausedHeightQuery(address string, pausedHeight, height int64
 	return UpdatePausedHeight(address, ServiceURL, pausedHeight, height, FishTableName, FishConstraintName)
 }
 
-func UpdateFishermansPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight int64) string {
+func UpdateFishermenPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight int64) string {
 	return UpdatePausedBefore(ServiceURL, unstakingHeight, pauseBeforeHeight, currentHeight, FishTableName, FishConstraintName)
 }
 
@@ -80,5 +80,5 @@ func ClearAllFishermanQuery() string {
 }
 
 func ClearAllFishermanChainsQuery() string {
-	return ClearAll(FishTableSchema)
+	return ClearAll(FishChainsTableName)
 }

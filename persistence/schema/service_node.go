@@ -17,7 +17,7 @@ func ServiceNodeQuery(address string, height int64) string {
 }
 
 func ServiceNodeChainsQuery(address string, height int64) string {
-	return Select(AllSelector, address, height, ServiceNodeChainsTableName)
+	return SelectChains(AllSelector, address, height, ServiceNodeTableName, ServiceNodeChainsTableName)
 }
 
 func ServiceNodeExistsQuery(address string, height int64) string {
@@ -77,5 +77,5 @@ func ClearAllServiceNodesQuery() string {
 }
 
 func ClearAllServiceNodesChainsQuery() string {
-	return ClearAll(ServiceNodeTableSchema)
+	return ClearAll(ServiceNodeChainsTableName)
 }

@@ -1,13 +1,22 @@
 package test
 
 import (
-	"testing"
-
+	"encoding/hex"
 	"github.com/pokt-network/pocket/persistence"
+	query "github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
+
+func FuzzApplication(f *testing.F) {
+	fuzzActor(f, newTestGenericApp, query.InsertAppQuery, GetGenericApp, false, query.UpdateAppQuery,
+		query.UpdateAppChainsQuery, query.AppChainsTableName, query.AppReadyToUnstakeQuery,
+		query.AppUnstakingHeightQuery, query.AppPauseHeightQuery, query.AppQuery, query.AppChainsQuery,
+		query.UpdateAppUnstakingHeightQuery, query.UpdateAppPausedHeightQuery, query.UpdateAppsPausedBefore,
+		query.AppOutputAddressQuery)
+}
 
 func TestInsertAppAndExists(t *testing.T) {
 	db := persistence.PostgresContext{
@@ -53,20 +62,6 @@ func TestUpdateApp(t *testing.T) {
 
 	require.Equal(t, chains, ChainsToUpdate, "chains not updated")
 	require.Equal(t, stakedTokens, StakeToUpdate, "stake not updated")
-
-	/// Constraint is unique app (height + address)
-	/// Scenario 1
-	/// Block 1
-	/// Stake App Chain = [0001]
-	/// Edit Stake App Chain = [0002]
-	/// What you want (replace record [x] constraint wins!!)
-	///
-	/// Scenario 2
-	/// Block 1
-	/// Stake App Chain = [0001]
-	/// Edit Stake App Chain = [0001, 0002] -> height=1,address=a,chain=0001 || replacing the previous change height=1,address=a,chain=0002
-	/// What you want (replace record [x] constraint doesn't work!!)
-
 }
 
 func TestGetAppsReadyToUnstake(t *testing.T) {
@@ -76,6 +71,7 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 		Height: height,
 		DB:     *PostgresDB,
 	}
+	db.ClearAllDebug()
 	app := NewTestApp(t)
 
 	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
@@ -86,7 +82,6 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 
 	apps, err := db.GetAppsReadyToUnstake(height, persistence.UnstakingStatus)
 	require.NoError(t, err)
-
 	require.Equal(t, 1, len(apps), "wrong number of actors: apps should be 1 but are not")
 	require.Equal(t, app.Address, apps[0].Address, "unexpected application actor returned")
 }
@@ -175,13 +170,22 @@ func TestGetAppOutputAddress(t *testing.T) {
 }
 
 func NewTestApp(t *testing.T) typesGenesis.App {
-	pub1, err := crypto.GeneratePublicKey()
+	app, err := newTestApp()
 	require.NoError(t, err)
+	return app
+}
+
+func newTestApp() (typesGenesis.App, error) {
+	pub1, err := crypto.GeneratePublicKey()
+	if err != nil {
+		return typesGenesis.App{}, err
+	}
 	addr1 := pub1.Address()
 
 	addr2, err := crypto.GenerateAddress()
-	require.NoError(t, err)
-
+	if err != nil {
+		return typesGenesis.App{}, err
+	}
 	return typesGenesis.App{
 		Address:         addr1,
 		PublicKey:       pub1.Bytes(),
@@ -193,5 +197,83 @@ func NewTestApp(t *testing.T) typesGenesis.App {
 		PausedHeight:    uint64(DefaultPauseHeight),
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          addr2,
+	}, nil
+}
+
+func newTestGenericApp() (query.GenericActor, error) {
+	app, err := newTestApp()
+	if err != nil {
+		return query.GenericActor{}, err
 	}
+	return query.GenericActor{
+		Address:         hex.EncodeToString(app.Address),
+		PublicKey:       hex.EncodeToString(app.PublicKey),
+		StakedTokens:    app.StakedTokens,
+		GenericParam:    app.MaxRelays,
+		OutputAddress:   hex.EncodeToString(app.Output),
+		PausedHeight:    int64(app.PausedHeight),
+		UnstakingHeight: app.UnstakingHeight,
+		Chains:          app.Chains,
+	}, nil
+}
+
+func GetGenericApp(db persistence.PostgresContext, address string) (*query.GenericActor, error) {
+	addr, err := hex.DecodeString(address)
+	if err != nil {
+		return nil, err
+	}
+	app, err := GetTestApp(db, addr)
+	if err != nil {
+		return nil, err
+	}
+	return &query.GenericActor{
+		Address:         hex.EncodeToString(app.Address),
+		PublicKey:       hex.EncodeToString(app.PublicKey),
+		StakedTokens:    app.StakedTokens,
+		GenericParam:    app.MaxRelays,
+		OutputAddress:   hex.EncodeToString(app.Output),
+		PausedHeight:    int64(app.PausedHeight),
+		UnstakingHeight: app.UnstakingHeight,
+		Chains:          app.Chains,
+	}, nil
+}
+
+func GetTestApp(db persistence.PostgresContext, address []byte) (*typesGenesis.App, error) {
+	operator, publicKey, stakedTokens, maxRelays, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetApp(address, db.Height)
+	if err != nil {
+		return nil, err
+	}
+	addr, err := hex.DecodeString(operator)
+	if err != nil {
+		return nil, err
+	}
+	pubKey, err := hex.DecodeString(publicKey)
+	if err != nil {
+		return nil, err
+	}
+	outputAddr, err := hex.DecodeString(outputAddress)
+	if err != nil {
+		return nil, err
+	}
+	status := -1
+	switch unstakingHeight {
+	case -1:
+		status = persistence.StakedStatus
+	case unstakingHeight:
+		status = persistence.UnstakingStatus
+	default:
+		status = persistence.UnstakedStatus
+	}
+	return &typesGenesis.App{
+		Address:         addr,
+		PublicKey:       pubKey,
+		Paused:          false,
+		Status:          int32(status),
+		Chains:          chains,
+		MaxRelays:       maxRelays,
+		StakedTokens:    stakedTokens,
+		PausedHeight:    uint64(pauseHeight),
+		UnstakingHeight: unstakingHeight,
+		Output:          outputAddr,
+	}, nil
 }

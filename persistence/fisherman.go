@@ -72,7 +72,7 @@ func (p PostgresContext) GetFishermanPauseHeightIfExists(address []byte, height 
 
 // TODO(Andrew): remove status - it's not needed
 func (p PostgresContext) SetFishermansStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
-	return p.SetActorStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, schema.UpdateFishermansPausedBefore)
+	return p.SetActorStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, schema.UpdateFishermenPausedBefore)
 }
 
 func (p PostgresContext) SetFishermanPauseHeight(address []byte, height int64) error {

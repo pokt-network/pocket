@@ -2,6 +2,8 @@ package test
 
 import (
 	"bytes"
+	"encoding/hex"
+	query "github.com/pokt-network/pocket/persistence/schema"
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence"
@@ -10,13 +12,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func FuzzFishermen(f *testing.F) {
+	fuzzActor(f, newTestGenericFisherman, query.InsertFishermanQuery, GetGenericFisherman, true, query.UpdateFishermanQuery,
+		query.UpdateFishermanChainsQuery, query.FishChainsTableName, query.FishermanReadyToUnstakeQuery,
+		query.FishermanUnstakingHeightQuery, query.FishermanPauseHeightQuery, query.FishermanQuery, query.FishermanChainsQuery,
+		query.UpdateFishermanUnstakingHeightQuery, query.UpdateFishermanPausedHeightQuery, query.UpdateFishermenPausedBefore,
+		query.FishermanOutputAddressQuery)
+}
+
 func TestInsertFishermanAndExists(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	fisherman := NewTestFisherman()
-	fisherman2 := NewTestFisherman()
+	fisherman := NewTestFisherman(t)
+	fisherman2 := NewTestFisherman(t)
 	err := db.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 	exists, err := db.GetFishermanExists(fisherman.Address, db.Height)
@@ -36,7 +46,7 @@ func TestUpdateFisherman(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	fisherman := NewTestFisherman()
+	fisherman := NewTestFisherman(t)
 	err := db.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 	_, _, stakedTokens, _, _, _, _, chains, err := db.GetFisherman(fisherman.Address, db.Height)
@@ -58,7 +68,7 @@ func TestDeleteFisherman(t *testing.T) {
 	//	Height: 0,
 	//	DB:     *PostgresDB,
 	//}
-	//fisherman := NewTestFisherman()
+	//fisherman := NewTestFisherman(t)
 	//err := db.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	//require.NoError(t, err)
 	//_, _, _, _, _, _, _, chains, err := db.GetFisherman(fisherman.Address, db.Height)
@@ -77,7 +87,8 @@ func TestGetFishermansReadyToUnstake(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	fisherman := NewTestFisherman()
+	fisherman := NewTestFisherman(t)
+	db.ClearAllDebug()
 	err := db.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 	// test SetFishermanUnstakingHeightAndStatus
@@ -99,7 +110,7 @@ func TestGetFishermanStatus(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	fisherman := NewTestFisherman()
+	fisherman := NewTestFisherman(t)
 	err := db.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 	status, err := db.GetFishermanStatus(fisherman.Address, db.Height)
@@ -114,7 +125,7 @@ func TestGetFishermanPauseHeightIfExists(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	fisherman := NewTestFisherman()
+	fisherman := NewTestFisherman(t)
 	err := db.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 	height, err := db.GetFishermanPauseHeightIfExists(fisherman.Address, db.Height)
@@ -129,7 +140,7 @@ func TestSetFishermansStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	fisherman := NewTestFisherman()
+	fisherman := NewTestFisherman(t)
 	err := db.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
 	err = db.SetFishermansStatusAndUnstakingHeightPausedBefore(1, 0, 1)
@@ -146,7 +157,7 @@ func TestSetFishermanPauseHeight(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	fisherman := NewTestFisherman()
+	fisherman := NewTestFisherman(t)
 	err := db.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
 	err = db.SetFishermanPauseHeight(fisherman.Address, int64(PauseHeightToSet))
@@ -163,7 +174,7 @@ func TestGetFishermanOutputAddress(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	fisherman := NewTestFisherman()
+	fisherman := NewTestFisherman(t)
 	err := db.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
 	output, err := db.GetFishermanOutputAddress(fisherman.Address, db.Height)
@@ -173,10 +184,22 @@ func TestGetFishermanOutputAddress(t *testing.T) {
 	}
 }
 
-func NewTestFisherman() typesGenesis.Fisherman {
-	pub1, _ := crypto.GeneratePublicKey()
+func NewTestFisherman(t *testing.T) typesGenesis.Fisherman {
+	fish, err := newTestFisherman()
+	require.NoError(t, err)
+	return fish
+}
+
+func newTestFisherman() (typesGenesis.Fisherman, error) {
+	pub1, err := crypto.GeneratePublicKey()
+	if err != nil {
+		return typesGenesis.Fisherman{}, nil
+	}
 	addr1 := pub1.Address()
-	addr2, _ := crypto.GenerateAddress()
+	addr2, err := crypto.GenerateAddress()
+	if err != nil {
+		return typesGenesis.Fisherman{}, nil
+	}
 	return typesGenesis.Fisherman{
 		Address:         addr1,
 		PublicKey:       pub1.Bytes(),
@@ -185,8 +208,86 @@ func NewTestFisherman() typesGenesis.Fisherman {
 		Chains:          typesGenesis.DefaultChains,
 		ServiceUrl:      DefaultServiceUrl,
 		StakedTokens:    typesGenesis.DefaultStake,
-		PausedHeight:    0,
-		UnstakingHeight: 0,
+		PausedHeight:    uint64(DefaultPauseHeight),
+		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          addr2,
+	}, nil
+}
+
+func newTestGenericFisherman() (query.GenericActor, error) {
+	fish, err := newTestFisherman()
+	if err != nil {
+		return query.GenericActor{}, err
 	}
+	return query.GenericActor{
+		Address:         hex.EncodeToString(fish.Address),
+		PublicKey:       hex.EncodeToString(fish.PublicKey),
+		StakedTokens:    fish.StakedTokens,
+		GenericParam:    fish.ServiceUrl,
+		OutputAddress:   hex.EncodeToString(fish.Output),
+		PausedHeight:    int64(fish.PausedHeight),
+		UnstakingHeight: fish.UnstakingHeight,
+		Chains:          fish.Chains,
+	}, nil
+}
+
+func GetGenericFisherman(db persistence.PostgresContext, address string) (*query.GenericActor, error) {
+	addr, err := hex.DecodeString(address)
+	if err != nil {
+		return nil, err
+	}
+	fish, err := GetTestFisherman(db, addr)
+	if err != nil {
+		return nil, err
+	}
+	return &query.GenericActor{
+		Address:         hex.EncodeToString(fish.Address),
+		PublicKey:       hex.EncodeToString(fish.PublicKey),
+		StakedTokens:    fish.StakedTokens,
+		GenericParam:    fish.ServiceUrl,
+		OutputAddress:   hex.EncodeToString(fish.Output),
+		PausedHeight:    int64(fish.PausedHeight),
+		UnstakingHeight: fish.UnstakingHeight,
+		Chains:          fish.Chains,
+	}, nil
+}
+
+func GetTestFisherman(db persistence.PostgresContext, address []byte) (*typesGenesis.Fisherman, error) {
+	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetFisherman(address, db.Height)
+	if err != nil {
+		return nil, err
+	}
+	addr, err := hex.DecodeString(operator)
+	if err != nil {
+		return nil, err
+	}
+	pubKey, err := hex.DecodeString(publicKey)
+	if err != nil {
+		return nil, err
+	}
+	outputAddr, err := hex.DecodeString(outputAddress)
+	if err != nil {
+		return nil, err
+	}
+	status := -1
+	switch unstakingHeight {
+	case -1:
+		status = persistence.StakedStatus
+	case unstakingHeight:
+		status = persistence.UnstakingStatus
+	default:
+		status = persistence.UnstakedStatus
+	}
+	return &typesGenesis.Fisherman{
+		Address:         addr,
+		PublicKey:       pubKey,
+		Paused:          false,
+		Status:          int32(status),
+		Chains:          chains,
+		ServiceUrl:      serviceURL,
+		StakedTokens:    stakedTokens,
+		PausedHeight:    uint64(pauseHeight),
+		UnstakingHeight: unstakingHeight,
+		Output:          outputAddr,
+	}, nil
 }

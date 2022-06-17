@@ -1,6 +1,8 @@
 package schema
 
-import "fmt"
+import (
+	"fmt"
+)
 
 const (
 	// We use `-1` with semantic variable names to indicate non-existence or non-validity
@@ -123,7 +125,7 @@ func InsertChains(address string, chains []string, height int64, tableName, cons
 		}
 	}
 	insert += fmt.Sprintf(`
-   ON CONFLICT ON CONSTRAINT %s
+     ON CONFLICT ON CONSTRAINT %s
      DO NOTHING`, constraintName)
 	return insert
 }
@@ -153,7 +155,7 @@ func Update(address, stakedTokens, genericParamName, genericParamValue string, h
 				SELECT address, public_key, '%s', '%s', output_address, paused_height, unstaking_height, %d
 				FROM %s WHERE address='%s' AND height<=%d ORDER BY height DESC LIMIT 1
 			)
-		ON CONFLICT ON CONSTRAINT %s
+		    ON CONFLICT ON CONSTRAINT %s
 			DO UPDATE SET staked_tokens=EXCLUDED.staked_tokens, %s=EXCLUDED.%s, height=EXCLUDED.height`,
 		tableName, genericParamName,
 		stakedTokens, genericParamValue, height,
@@ -196,13 +198,15 @@ func UpdatePausedBefore(genericParamName string, unstakingHeight, pausedBeforeHe
 		INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
 			(
 				SELECT address, public_key, staked_tokens, %s, output_address, paused_height, %d, %d
-				FROM %s WHERE paused_height<%d AND paused_height>=0
-			)
+				FROM %s WHERE paused_height<%d AND paused_height>=-1 AND (height,address) IN (
+        		  SELECT MAX(height),address from %s GROUP BY address
+				)
+		)
 		ON CONFLICT ON CONSTRAINT %s
 			DO UPDATE SET unstaking_height=EXCLUDED.unstaking_height`,
 		tableName, genericParamName, genericParamName,
 		unstakingHeight, height,
-		tableName, pausedBeforeHeight, constraintName)
+		tableName, pausedBeforeHeight, tableName, constraintName)
 }
 
 // Exposed for debugging purposes only
