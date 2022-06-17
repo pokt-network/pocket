@@ -62,9 +62,9 @@ go_doc:
 	fi; \
 	}
 
-.PHONY: go_clean_dep
-## Runs `go mod vendor` && `go mod tidy`
-	go mod vendor && go mod tidy
+.PHONY: go_clean_deps
+## Runs `go mod tidy` && `go mod vendor`
+	go mod tidy && go mod vendor
 
 .PHONY: build
 ## Build Pocket's main entrypoint
@@ -150,7 +150,12 @@ mockgen:
 .PHONY: test_all
 ## Run all go unit tests
 test_all: # generate_mocks
-	go test ./... -p=1
+	go test -p=1 -count=1 ./...
+
+.PHONY: test_race
+## Identify all unit tests that may result in race conditions
+test_race: # generate_mocks
+	go test -race ./...
 
 .PHONY: test_utility_module
 ## Run all go utility module unit tests
@@ -291,12 +296,12 @@ test_p2p:
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)
 todo_list:
-	grep --exclude-dir={.git,vendor,prototype} -r -e "TODO" -e "DISCUSS" -e "REFACTOR" -e "DOCUMENT" -e "CLEANUP" .
+	grep --exclude-dir={.git,vendor,prototype} -r -e "TODO" -e "DISCUSS" -e "REFACTOR" -e "DOCUMENT" -e "CLEANUP" -e "INVESTIGATE"  .
 
 .PHONY: todo_count
 ## Print a count of all the TODOs in the project
 todo_count:
-	grep --exclude-dir={.git,vendor,prototype} -r -e "TODO" -e "DISCUSS" -e "REFACTOR" -e "DOCUMENT" -e "CLEANUP" . | wc -l
+	grep --exclude-dir={.git,vendor,prototype} -r -e "TODO" -e "DISCUSS" -e "REFACTOR" -e "DOCUMENT" -e "CLEANUP" -e "INVESTIGATE"  . | wc -l
 
 .PHONY: develop
 ## Run all of the make commands necessary to develop on the project
