@@ -29,6 +29,9 @@ services:
       - "9081:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
     # Uncomment to enable DLV debugging
     # environment:
     #   - DEBUG_PORT=7081
@@ -50,9 +53,12 @@ services:
       - "9082:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
     # Uncomment to enable DLV debugging
-    # environment:
-    #   - DEBUG_PORT=7082
+    environment:
+      - DEBUG_PORT=7082
 
   node3.consensus:
     container_name: node3.consensus
@@ -71,6 +77,9 @@ services:
       - "9083:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
     # Uncomment to enable DLV debugging
     # environment:
     #   - DEBUG_PORT=7083
@@ -92,6 +101,9 @@ services:
       - "9084:9080"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
+    # Needed for DLV debugging
+    security_opt:
+      - "seccomp:unconfined"
   # Uncomment to enable DLV debugging
   # environment:
   #   - DEBUG_PORT=7084

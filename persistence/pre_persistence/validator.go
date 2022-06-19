@@ -51,8 +51,6 @@ func (m *PrePersistenceContext) GetAllValidators(height int64) (v []*typesGenesi
 	defer it.Release()
 	for valid := it.First(); valid; valid = it.Next() {
 		bz := it.Value()
-		valid := it.Valid()
-		valid = valid
 		if bytes.Contains(bz, DeletedPrefixKey) {
 			continue
 		}

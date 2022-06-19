@@ -56,6 +56,7 @@ client_start:
 client_connect:
 	docker exec -it client /bin/bash -c "go run app/client/*.go"
 
+# TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
 compose_and_watch: db_start
@@ -113,7 +114,12 @@ mockgen:
 	mockgen --source=${modules_dir}/p2p_module.go -destination=${modules_dir}/mocks/p2p_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/bus_module.go -destination=${modules_dir}/mocks/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	echo "Mocks generated in ${modules_dir}/mocks"
+
+	$(eval p2p_types_dir = "p2p/pre2p/types")
+	mockgen --source=${p2p_types_dir}/network.go -destination=${p2p_types_dir}/mocks/network_mock.go
+	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
 
 .PHONY: test_all
 ## Run all go unit tests
@@ -134,11 +140,6 @@ test_utility_module: # generate_mocks
 ## Run all go utility types module unit tests
 test_utility_types: # generate_mocks
 	go test -v ./utility/types/...
-
-.PHONY: test_pre2p
-## Run all go unit tests in the pre2p module
-test_pre2p: # generate_mocks
-	go test ./pre2p/...
 
 .PHONY: test_shared
 ## Run all go unit tests in the shared module
@@ -197,25 +198,11 @@ protogen_clean:
 protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
 
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto         --go_out=./shared/types         ./shared/types/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto              --go_out=./utility/types        ./utility/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto      --go_out=./consensus/types      ./consensus/types/proto/*.proto
-
-	echo "View generated proto files by running: make protogen_show"
-
-# TODO(team): Delete this once the `prototype` directory is removed.
-.PHONY: protogen_local_prototype
-## V1 Integration - Use `protoc` to generate consensus .go files from .proto files.
-protogen_local_prototype:
-	$(eval prefix = "./prototype")
-	$(eval proto_dir = "${prefix}/shared/types/proto/")
-
-	protoc -I=${proto_dir} --go_out=./ ${proto_dir}/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/persistence/pre_persistence/proto --go_out=${prefix} ${prefix}/persistence/pre_persistence/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/p2p/pre_p2p/types/proto --go_out=${prefix} ${prefix}/p2p/pre_p2p/types/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/utility/proto --go_out=${prefix} ${prefix}/utility/proto/*.proto
-	protoc -I=${proto_dir} -I=${prefix}/consensus/types/proto --go_out=${prefix} ${prefix}/consensus/types/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/pre2p/raintree/types/proto --go_out=./p2p/pre2p/types      ./p2p/pre2p/raintree/types/proto/*.proto
 
 	echo "View generated proto files by running: make protogen_show"
 
@@ -256,12 +243,40 @@ test_p2p_types:
 test_p2p:
 	go test -v -race ./p2p
 
+.PHONY: test_pre2p
+## Run all pre2p
+test_pre2p:
+	go test -v -count=1 ./p2p/pre2p/...
+
+.PHONY: test_pre2p_addrbook
+## Run all Pre2P addr book related tests
+test_pre2p_addrbook:
+	go test -run AddrBook -v -count=1 ./p2p/pre2p/...
+
+.PHONY: benchmark_pre2p_addrbook
+## Benchmark all Pre2P addr book related tests
+benchmark_pre2p_addrbook:
+	go test -bench=. -run BenchmarkAddrBook -v -count=1 ./p2p/pre2p/...
+
+# /Users/olshansky/workspace/pocket/pocket/p2p/pre2p/raintree/addrbook_utils_test.go
+# Inspired by: https://goldin.io/blog/stop-using-todo
+# TODO        - General Purpose catch-all.
+# TECHDEBT    - Not a great implementation, but we need to fix it later.
+# IMPROVE     - A nice to have, but not a priority. It's okay if we never get to this.
+# DISCUSS     - Probably requires a lengthy offline discussion to understand next steps.
+# INCOMPLETE  - A change which was out of scope of a specific PR but needed to be documented.
+# INVESTIGATE - TBD what was going on, but needed to continue moving and not get distracted.
+# CLEANUP     - Like TECHDEBT, but not as bad.  It's okay if we never get to this.
+# HACK        - Like TECHDEBT, but much worse. This needs to be prioritized
+# REFACTOR    - Similar to TECHDEBT, but will require a substantial rewrite and change across the codebase
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR"
+
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)
 todo_list:
-	grep --exclude-dir={.git,vendor,prototype} -r -e "TODO" -e "INVESTIGATE" .
+	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS}  .
 
 .PHONY: todo_count
 ## Print a count of all the TODOs in the project
 todo_count:
-	grep --exclude-dir={.git,vendor,prototype} -r -e "TODO" -e "INVESTIGATE" . | wc -l
+	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS} . | wc -l

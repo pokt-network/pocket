@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"log"
@@ -45,6 +46,10 @@ func (a *Address) UnmarshalJSON(data []byte) error {
 
 func (a *Address) ToString() string {
 	return hex.EncodeToString(*a)
+}
+
+func (a Address) Equals(other Address) bool {
+	return bytes.Equal(a, other)
 }
 
 func AddressFromString(s string) Address {

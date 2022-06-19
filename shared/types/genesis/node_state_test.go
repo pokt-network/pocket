@@ -16,6 +16,7 @@ func TestLoadStateFromGenesis(t *testing.T) {
 		Genesis:    genesisJson(),
 		PrivateKey: pk.(cryptoPocket.Ed25519PrivateKey),
 	}
+	ResetNodeState(t)
 	state := GetNodeState(cfg)
 	require.Equal(t, 4, len(state.ValidatorMap))
 }
@@ -27,6 +28,9 @@ func TestLoadStateFrompersistence(t *testing.T) {
 func genesisJson() string {
 	return `
 	{
+		"genesis_state_configs": {
+			"num_validators": 4
+		},
 		"genesis_time": "2022-01-19T00:00:00.000000Z",
 		"app_hash": "genesis_block_or_state_hash",
 		"validators": [
