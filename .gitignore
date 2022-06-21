@@ -1,9 +1,16 @@
 # Binaries for programs and plugins
+
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+
+# Vim swap files
+*.swp**
+
+# Vscode
+.vscode
 
 # Test binary, built with `go test -c`
 *.test
@@ -12,6 +19,27 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
+prototype/vendor/
 
+# MacOS metadata
 .DS_Store
+
+# Intellij / Goland dot files
+.idea/
+
+# Generated Mocks (for testing)
+shared/modules/mocks/
+
+# Proto generated files
+*.pb.go
+
+# TODO(team): Does the `types` directory contain generated or raw type files?
+# types/
+
+# ignore protobuf generated files
+*.pb.go
+
+# Output binaries
+bin/
+build/dist/*
