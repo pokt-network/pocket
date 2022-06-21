@@ -50,6 +50,22 @@ func (m *NoopModule) GetBus() modules.Bus {
 	return m.bus
 }
 
+// Event Metrics functionality implementation
+func (m *NoopModule) GetEventMetricsAgent() modules.EventMetricsAgent {
+	return m
+}
+
+// INFO: At the moment, we are using loki to push log lines per event emission, and then we aggregate these log lines (count them, avg, etc) in grafana.
+// Reliance on logs for event metrics was a temporary solution, and will be removed in the future in favor of more thorough event metrics tooling.
+func (m *NoopModule) EmitEvent(args ...interface{}) {
+
+}
+
+// Time Series metrics functionality implementation
+func (m *NoopModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {
+	return m
+}
+
 func (p *NoopModule) RegisterCounter(name string, description string) { NOOP() }
 
 func (p *NoopModule) IncCounter(name string) { NOOP() }

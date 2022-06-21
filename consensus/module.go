@@ -104,21 +104,10 @@ func (m *consensusModule) Start() error {
 	m.
 		GetBus().
 		GetTelemetryModule().
+		GetTimeSeriesAgent().
 		RegisterCounter(
 			"consensus_blockchain_height",
 			"the counter to track the number of nodes online",
-		)
-
-	// Inc on every new hotpokt message send.
-	m.
-		GetBus().
-		GetTelemetryModule().
-		RegisterGaugeVector(
-			"v1",
-			"consensus",
-			"hotpokt_message",
-			"a gauge to count hotpokt messages generated to produce a new block",
-			[]string{"type", "step", "round", "height"},
 		)
 
 	if err := m.paceMaker.Start(); err != nil {
@@ -220,4 +209,8 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 
 	// Note that the leader also acts as a replica, but this logic is implemented in the underlying code.
 	leaderHandlers[msg.Step](m, msg)
+}
+
+func (m *consensusModule) GetBlockHeight() uint64 {
+	return m.Height
 }

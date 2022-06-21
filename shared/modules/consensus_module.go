@@ -9,4 +9,5 @@ type ConsensusModule interface {
 	Module
 	HandleMessage(*anypb.Any) error
 	HandleDebugMessage(*types.DebugMessage) error
+	GetBlockHeight() uint64
 }

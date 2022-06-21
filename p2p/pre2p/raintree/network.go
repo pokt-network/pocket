@@ -35,6 +35,9 @@ type rainTreeNetwork struct {
 	// DISCUSS(drewsky): What should we use for de-duping messages within P2P?
 	mempool types.Mempool
 
+	// TODO(team): think about proper way to keep track of p2p seen msgs hashes
+	msgspool map[string]bool
+
 	redundancyLayerOn bool
 	cleanupLayerOn    bool
 }
@@ -49,6 +52,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook,
 		maxNumLevels: 0,
 		// TODO: Mempool size should be configurable
 		mempool:           types.NewMempool(1000000, 1000),
+		msgspool:          make(map[string]bool),
 		redundancyLayerOn: config.Pre2P.RainTreeRedundancyLayerOn,
 		cleanupLayerOn:    config.Pre2P.RainTreeCleanupLayerOn,
 	}
@@ -190,6 +194,15 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 }
 
 func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
+	blockHeightInt := n.GetBus().GetConsensusModule().GetBlockHeight()
+	blockHeight := fmt.Sprintf("%d", blockHeightInt)
+
+	n.
+		GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent("p2p", "raintree_messages", "height", blockHeight)
+
 	var rainTreeMsg typesPre2P.RainTreeMessage
 	if err := proto.Unmarshal(data, &rainTreeMsg); err != nil {
 		return nil, err
@@ -201,20 +214,18 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	if rainTreeMsg.Level > 0 {
-		log.Println("Message hash=", rainTreeMsg.Hash)
-		hashString := fmt.Sprintf("%x", rainTreeMsg.Hash)
+	msgHash := fmt.Sprintf("%x", rainTreeMsg.Hash)
+	if _, exists := n.msgspool[msgHash]; !exists {
+		n.msgspool[msgHash] = true
+	} else {
 		n.
 			GetBus().
 			GetTelemetryModule().
-			GetGaugeVec("broadcast_msg_redundancy_total_per_block").
-			WithLabelValues(hashString).
-			Inc()
+			GetEventMetricsAgent().
+			EmitEvent("p2p", "broadcast_message_redundancy_per_block", "hash", msgHash, "height", blockHeight)
+	}
 
-		n.GetBus().
-			GetTelemetryModule().
-			IncGauge("p2p_broadcast_msg_received_total_per_block")
-
+	if rainTreeMsg.Level > 0 {
 		if err := n.networkBroadcastInternal(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return nil, err
 		}

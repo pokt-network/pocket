@@ -59,6 +59,23 @@ func (m *PromModule) GetBus() modules.Bus {
 	return m.bus
 }
 
+// Event Metrics functionality implementation
+func (m *PromModule) GetEventMetricsAgent() modules.EventMetricsAgent {
+	return m
+}
+
+// INFO: At the moment, we are using loki to push log lines per event emission, and then we aggregate these log lines (count them, avg, etc) in grafana.
+// Reliance on logs for event metrics was a temporary solution, and will be removed in the future in favor of more thorough event metrics tooling.
+func (m *PromModule) EmitEvent(args ...interface{}) {
+	logArgs := append([]interface{}{"[EVENT]"}, args...)
+	log.Println(logArgs...)
+}
+
+// Time Series metrics functionality implementation
+func (m *PromModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {
+	return m
+}
+
 func (p *PromModule) RegisterCounter(name string, description string) {
 	if _, exists := p.counters[name]; exists {
 		return
