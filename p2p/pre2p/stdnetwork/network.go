@@ -7,7 +7,6 @@ import (
 
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
 )
 
 var _ typesPre2P.Network = &network{}
@@ -67,8 +66,3 @@ func (n *network) AddPeerToAddrBook(peer *typesPre2P.NetworkPeer) error {
 func (n *network) RemovePeerToAddrBook(peer *typesPre2P.NetworkPeer) error {
 	panic("RemovePeerToAddrBook not implemented")
 }
-
-func (n *network) GetBus() modules.Bus  { return nil }
-func (n *network) SetBus(_ modules.Bus) {}
-func (n *network) Start() error         { return nil }
-func (n *network) Stop() error          { return nil }

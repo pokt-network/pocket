@@ -11,6 +11,7 @@ type (
 		GetEventMetricsAgent() EventMetricsAgent
 	}
 
+	// Interface for time series agent (prometheus)
 	TimeSeriesAgent interface {
 		// Counters
 
@@ -46,6 +47,7 @@ type (
 		GetGaugeVec(name string) *prometheus.GaugeVec
 	}
 
+	// Interface for the event metrics agent (relies on logging ftm)
 	EventMetricsAgent interface {
 		EmitEvent(...interface{})
 	}

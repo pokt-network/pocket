@@ -64,7 +64,10 @@ func main() {
 		log.Fatalf("[ERROR] Failed to create pre2p module: " + err.Error())
 	}
 
-	telemetryMod, err := telemetry.Create(cfg) // will be NOOP because of client config (use_telemetry false) since we don't need to include a dev client in telemetry
+	// INFO: This telemetry module instance will be NOOP
+	// because of the client config 'use_telemetry' key that is set to false.
+	// Since we don't need to include a dev client's metrics in our telemetry dashboards, we have to pass a NOOP telemetry module.
+	telemetryMod, err := telemetry.Create(cfg)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
