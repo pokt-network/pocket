@@ -3,10 +3,12 @@ package genesis
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
 
 	"log"
 	"sync"
 
+	"github.com/matryer/resync"
 	"github.com/pokt-network/pocket/shared/config"
 )
 
@@ -26,12 +28,13 @@ type NodeState struct {
 var state *NodeState
 
 // Used to load the state when the singleton is created.
-var once sync.Once
+var once resync.Once
 
 // Used to update the state. All exported functions should lock this when they are called and defer an unlock.
 var lock = &sync.Mutex{}
 
-// TODO(team): Passing both config and genesis to `GetNodeState` is a hack and only used for integration purposes
+// REFACTOR(pocket/issues/84): look into refactoring this to use a DI framework and delete the use
+// of Singleton's altogether.
 func GetNodeState(cfg *config.Config) *NodeState {
 	once.Do(func() {
 		if state == nil && cfg == nil {
@@ -47,6 +50,16 @@ func GetNodeState(cfg *config.Config) *NodeState {
 	})
 
 	return state
+}
+
+// HACK(olshansky): The NodeState singleton is being complex but is outside the scope of current changes.
+// For testing purposes, it needs to be reset because it exists in a global scope but multiple nodes
+// are configured in parallel.
+func ResetNodeState(_ *testing.T) {
+	lock.Lock()
+	defer lock.Unlock()
+	once.Reset()
+	state = nil
 }
 
 func (ps *NodeState) loadStateFromConfig(cfg *config.Config) {
@@ -76,6 +89,11 @@ func (ps *NodeState) loadStateFromGenesis(cfg *config.Config) {
 		if err != nil {
 			log.Fatalf("Failed to generate genesis: %v", err)
 		}
+
+		if genesis.Validators != nil {
+			genesisState.Validators = GetValidators(genesis.Validators)
+		}
+
 		*ps = NodeState{
 			GenesisState: genesisState,
 			BlockHeight:  0,
@@ -88,7 +106,7 @@ func (ps *NodeState) loadStateFromGenesis(cfg *config.Config) {
 			GenesisState: nil,
 			BlockHeight:  0,
 			AppHash:      genesis.AppHash,
-			ValidatorMap: ValidatorListToMap(genesis.Validators),
+			ValidatorMap: ValidatorListToMap(GetValidators(genesis.Validators)),
 		}
 	}
 

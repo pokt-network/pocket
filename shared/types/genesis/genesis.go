@@ -13,9 +13,9 @@ type Genesis struct {
 	// TODO(olshansky): Discuss this structure with Andrew.
 	GenesisStateConfig *NewGenesisStateConfigs `json:"genesis_state_configs"`
 
-	GenesisTime time.Time    `json:"genesis_time"`
-	AppHash     string       `json:"app_hash"`
-	Validators  []*Validator `json:"validators"`
+	GenesisTime time.Time                         `json:"genesis_time"`
+	AppHash     string                            `json:"app_hash"`
+	Validators  []*ValidatorJsonCompatibleWrapper `json:"validators"`
 }
 
 // TODO: This is a temporary hack that can load Genesis from a single string
@@ -56,8 +56,12 @@ func (genesis *Genesis) Validate() error {
 	}
 
 	// TODO: validate each account.
-	if len(genesis.Validators) == 0 && genesis.GenesisStateConfig == nil {
+	if len(genesis.Validators) == 0 && (genesis.GenesisStateConfig == nil || genesis.GenesisStateConfig.NumValidators == 0) {
 		return fmt.Errorf("genesis must contain at least one validator")
+	}
+
+	if len(genesis.Validators) > 0 && (genesis.GenesisStateConfig == nil || genesis.GenesisStateConfig.NumValidators != uint16(len(genesis.Validators))) {
+		return fmt.Errorf("genesis state validator count is misconfigured")
 	}
 
 	if len(genesis.AppHash) == 0 {
