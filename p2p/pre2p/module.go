@@ -83,28 +83,10 @@ func (m *p2pModule) Start() error {
 	m.
 		GetBus().
 		GetTelemetryModule().
+		GetTimeSeriesAgent().
 		RegisterCounter(
-			"blockchain_nodes_connected",
+			"p2p_nodes_online",
 			"the counter to track the number of nodes online",
-		)
-
-	m.
-		GetBus().
-		GetTelemetryModule().
-		RegisterGauge(
-			"p2p_broadcast_msg_received_total_per_block",
-			"the gauge to track the total number of messages received per block",
-		)
-
-	m.
-		GetBus().
-		GetTelemetryModule().
-		RegisterGaugeVector(
-			"pocket",
-			"p2p",
-			"broadcast_msg_redundancy_total_per_block",
-			"the counter to track the number of messages received per block",
-			[]string{"message_hash"},
 		)
 
 	m.network.SetBus(m.GetBus())
@@ -127,7 +109,8 @@ func (m *p2pModule) Start() error {
 	m.
 		GetBus().
 		GetTelemetryModule().
-		IncCounter("blockchain_nodes_connected")
+		GetTimeSeriesAgent().
+		IncCounter("p2p_nodes_online")
 
 	return nil
 }

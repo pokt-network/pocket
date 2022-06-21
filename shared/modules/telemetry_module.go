@@ -2,8 +2,9 @@ package modules
 
 import "github.com/prometheus/client_golang/prometheus"
 
-type TelemetryModule interface {
-	Module
+type (
+	TelemetryModule interface {
+		Module
 
 	GetTimeSeriesAgent() TimeSeriesAgent
 	GetEventMetricsAgent() EventMetricsAgent
