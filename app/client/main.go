@@ -142,7 +142,6 @@ func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
 
 	// pre2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
-
 	for _, val := range typesGenesis.GetNodeState(nil).ValidatorMap {
 		pre2pMod.Send(val.Address, anyProto, types.PocketTopic_DEBUG_TOPIC)
 	}

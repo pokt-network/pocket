@@ -1,13 +1,12 @@
 module github.com/pokt-network/pocket
 
-go 1.17
+go 1.18
 
 require (
 	github.com/ProtonMail/go-ecvrf v0.0.1
 	github.com/golang/mock v1.6.0
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
-	github.com/magefile/mage v1.12.1
 	github.com/manifoldco/promptui v0.9.0
 	github.com/stretchr/testify v1.7.0
 	github.com/syndtr/goleveldb v1.0.0
@@ -19,7 +18,7 @@ require (
 
 require (
 	github.com/matryer/resync v0.0.0-20161211202428-d39c09a11215
-	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_golang v1.12.2
 )
 
 require (

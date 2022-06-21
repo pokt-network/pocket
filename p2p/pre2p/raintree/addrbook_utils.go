@@ -17,11 +17,11 @@ const (
 	secondMsgTargetPercentage = float64(2) / float64(3)
 	shrinkagePercentage       = float64(2) / float64(3)
 	maxLevelsLogBase          = float64(3)
-	floatPrecision            = float64(0.001)
+	floatPrecision            = float64(0.0000001)
 )
 
 // Whenever `addrBook` changes, we also need to update `addrBookMap` and `addrList`
-func (n *rainTreeNetwork) handleAddrBookUpdates() error {
+func (n *rainTreeNetwork) processAddrBookUpdates() error {
 	// OPTIMIZE(olshansky): This is a very naive approach for now that recomputes everything every time that we can optimize later
 	n.addrBookMap = make(map[string]*typesPre2P.NetworkPeer, len(n.addrBook))
 	n.addrList = make([]string, len(n.addrBook))
@@ -62,10 +62,13 @@ func (n *rainTreeNetwork) getSecondTargetAddr(level uint32) (cryptoPocket.Addres
 }
 
 func (n *rainTreeNetwork) getTarget(level uint32, targetPercentage float64) (cryptoPocket.Address, bool) {
+	// OPTIMIZE(olshansky): We are computing this twice for each message, but it's not that expensive.
 	l := n.getAddrBookLengthAtHeight(level)
+
 	i := int(targetPercentage * float64(l))
 
-	// Demotes are handeled separately
+	// If the target is 0, it is a reference to self, which is a `Demote` in RainTree terms.
+	// This is handled separately.
 	if i == 0 {
 		return nil, false
 	}
@@ -79,6 +82,29 @@ func (n *rainTreeNetwork) getTarget(level uint32, targetPercentage float64) (cry
 	return nil, false
 }
 
+// TODO(team): Need to integrate with persistence layer so we are storing this on a per height basis.
+// We can easily hit an issue where we are propagating a message from an older height (e.g. before
+// the addr book was updated), but we're using `maxNumLevels` associated with the number of
+// validators at the current height.
+func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level uint32) int {
+	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(n.maxNumLevels-level))
+	return int(float64(len(n.addrList)) * (shrinkageCoefficient))
+}
+
+func (n *rainTreeNetwork) getMaxAddrBookLevels() uint32 {
+	addrBookSize := float64(len(n.addrBook))
+	return uint32(math.Ceil(logBase(addrBookSize)))
+}
+
+func logBase(x float64) float64 {
+	return round(math.Log(x)/math.Log(maxLevelsLogBase), floatPrecision)
+}
+
+func round(value, precision float64) float64 {
+	return math.Round(value/precision) * precision
+}
+
+// Only used for debug logging to understand what RainTree is doing under the hood
 func (n *rainTreeNetwork) debugMsgTargetString(len, idx int) string {
 	s := strings.Builder{}
 	s.WriteString("[")
@@ -99,41 +125,4 @@ func (n *rainTreeNetwork) debugMsgTargetString(len, idx int) string {
 	}
 	s.WriteString("]")
 	return s.String()
-}
-
-// DISCUSS(drewsky): Need to integrate with persistence so we are storing this on a per height basis.
-// We hit an issue where we are propagating a message from an older height (e.g. before the addr book
-// was updated), but we're using `maxNumLevels` associated with the number of validators at the
-// current height.
-func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level uint32) int {
-	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(n.maxNumLevels-level))
-	return int(float64(len(n.addrList)) * shrinkageCoefficient)
-}
-
-func (n *rainTreeNetwork) getCleanupTargets() (targetA, targetB cryptoPocket.Address, err error) {
-	addrListLen := len(n.addrList)
-	if addrListLen < 3 {
-		return nil, nil, fmt.Errorf("the address book is too small to get cleanup targets")
-	}
-	targetAAddressString := n.addrList[1]
-	targetBAddressString := n.addrList[addrListLen-1]
-	peerA, ok1 := n.addrBookMap[targetAAddressString]
-	peerB, ok2 := n.addrBookMap[targetBAddressString]
-	if !ok1 || !ok2 {
-		return nil, nil, fmt.Errorf("addrBook not in sync with the addrList")
-	}
-	return peerA.Address, peerB.Address, nil
-}
-
-func (n *rainTreeNetwork) getMaxAddrBookLevels() uint32 {
-	addrBookSize := float64(len(n.addrBook))
-	return uint32(math.Ceil(logBase(addrBookSize)))
-}
-
-func logBase(x float64) float64 {
-	return round(math.Log(x)/math.Log(maxLevelsLogBase), floatPrecision)
-}
-
-func round(value, precision float64) float64 {
-	return math.Round(value/precision) * precision
 }

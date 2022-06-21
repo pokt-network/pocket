@@ -27,7 +27,7 @@ type p2pModule struct {
 	// this allows the p2pModule to have fine-grain control over its own telemetry, using the shared telemetry module.
 	bus modules.Bus
 
-	listener typesPre2P.TransportLayerConn
+	listener typesPre2P.Transport
 	address  cryptoPocket.Address
 
 	network typesPre2P.Network
@@ -98,7 +98,6 @@ func (m *p2pModule) Start() error {
 				log.Println("Error reading data from connection: ", err)
 				continue
 			}
-
 			go m.handleNetworkMessage(data)
 		}
 	}()
@@ -162,20 +161,19 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	appMsgData, err := m.network.HandleNetworkData(networkMsgData)
 	if err != nil {
 		log.Println("Error handling raw data: ", err)
-
 		return
 	}
 
 	// There was no error, but we don't need to forward this to the app-specific bus.
 	// For example, the message has already been handled by the application.
 	if appMsgData == nil {
+		// log.Println("[DEBUG] No app-specific message to forward from the network")
 		return
 	}
 
 	networkMessage := types.PocketEvent{}
 	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
 		log.Println("Error decoding network message: ", err)
-
 		return
 	}
 

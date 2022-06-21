@@ -13,29 +13,29 @@ const (
 	TCPNetworkLayerProtocol = "tcp4"
 )
 
-func CreateListener(cfg *config.Pre2PConfig) (typesPre2P.TransportLayerConn, error) {
+func CreateListener(cfg *config.Pre2PConfig) (typesPre2P.Transport, error) {
 	switch cfg.ConnectionType {
 	case config.TCPConnection:
 		return createTCPListener(cfg)
 	case config.EmptyConnection:
-		return createPipeListener(cfg)
+		return createEmptyListener(cfg)
 	default:
-		return nil, fmt.Errorf("unknown connection type: %s", cfg.ConnectionType)
+		return nil, fmt.Errorf("unsupported connection type for listener: %s", cfg.ConnectionType)
 	}
 }
 
-func CreateDialer(cfg *config.Pre2PConfig, url string) (typesPre2P.TransportLayerConn, error) {
+func CreateDialer(cfg *config.Pre2PConfig, url string) (typesPre2P.Transport, error) {
 	switch cfg.ConnectionType {
 	case config.TCPConnection:
 		return createTCPDialer(cfg, url)
 	case config.EmptyConnection:
-		return createPipeDialer(cfg, url)
+		return createEmptyDialer(cfg, url)
 	default:
-		return nil, fmt.Errorf("unknown connection type: %s", cfg.ConnectionType)
+		return nil, fmt.Errorf("unsupported connection type for dialer: %s", cfg.ConnectionType)
 	}
 }
 
-var _ typesPre2P.TransportLayerConn = &tcpConn{}
+var _ typesPre2P.Transport = &tcpConn{}
 
 type tcpConn struct {
 	address  *net.TCPAddr
@@ -114,16 +114,16 @@ func (c *tcpConn) Close() error {
 	return nil
 }
 
-var _ typesPre2P.TransportLayerConn = &emptyConn{}
+var _ typesPre2P.Transport = &emptyConn{}
 
 type emptyConn struct {
 }
 
-func createPipeListener(_ *config.Pre2PConfig) (typesPre2P.TransportLayerConn, error) {
+func createEmptyListener(_ *config.Pre2PConfig) (typesPre2P.Transport, error) {
 	return &emptyConn{}, nil
 }
 
-func createPipeDialer(_ *config.Pre2PConfig, _ string) (typesPre2P.TransportLayerConn, error) {
+func createEmptyDialer(_ *config.Pre2PConfig, _ string) (typesPre2P.Transport, error) {
 	return &emptyConn{}, nil
 }
 

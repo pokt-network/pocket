@@ -33,8 +33,8 @@ var once resync.Once
 // Used to update the state. All exported functions should lock this when they are called and defer an unlock.
 var lock = &sync.Mutex{}
 
-// REFACTOR(olshansky): look into refactoring this to use dependency injection with `uber-go/dig` or `uber-go/fx`
-// because this singleton needs to be deleted altogether.
+// REFACTOR(pocket/issues/84): look into refactoring this to use a DI framework and delete the use
+// of Singleton's altogether.
 func GetNodeState(cfg *config.Config) *NodeState {
 	once.Do(func() {
 		if state == nil && cfg == nil {

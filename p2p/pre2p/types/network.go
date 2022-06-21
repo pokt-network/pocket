@@ -5,11 +5,11 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// TODO(olshansky): See if we can deprecate one of these structures.
+// CLEANUP(olshansky): See if we can deprecate one of these structures.
 type AddrBook []*NetworkPeer
 type AddrBookMap map[string]*NetworkPeer
 
-// TODO(olshansky): When we delete `stdnetwork` and only go with `raintree`, this interface
+// TECHDEBT(olshansky): When we delete `stdnetwork` and only go with `raintree`, this interface
 // can be simplified greatly.
 type Network interface {
 	modules.Module // to allow passing down telemetry through the bus
@@ -19,21 +19,23 @@ type Network interface {
 
 	// Address book helpers
 	GetAddrBook() AddrBook
-	AddPeerToAddrBook(peer *NetworkPeer) error
-	RemovePeerToAddrBook(peer *NetworkPeer) error
+	AddPeerToAddrBook(peer *NetworkPeer) error    // TODO(team): Not used yet
+	RemovePeerToAddrBook(peer *NetworkPeer) error // TODO(team): Not used yet
 
-	// This function was added to support the raintree implementation.
+	// This function was added to specifically support the RainTree implementation.
+	// Handles the raw data received from the network and returns the data to be processed
+	// by the application layer.
 	HandleNetworkData(data []byte) ([]byte, error)
 }
 
 type NetworkPeer struct {
-	Dialer     TransportLayerConn
+	Dialer     Transport
 	PublicKey  cryptoPocket.PublicKey
 	Address    cryptoPocket.Address
 	ServiceUrl string // This is only included because it's a more human-friendly differentiator between peers
 }
 
-type TransportLayerConn interface {
+type Transport interface {
 	IsListener() bool
 	Read() ([]byte, error)
 	Write([]byte) error

@@ -1,4 +1,4 @@
-<div align="center">
+****<div align="center">
   <a href="https://www.pokt.network">
     <img src="https://user-images.githubusercontent.com/2219004/151564884-212c0e40-3bfa-412e-a341-edb54b5f1498.jpeg" alt="Pocket Network logo" width="340"/>
   </a>
@@ -16,9 +16,9 @@ The official implementation of the [V1 Pocket Network Protocol Specification](ht
 
 All the links you'll need are listed below. If you'd like to contribute to the Pocket V1 Protocol, start by:
 
-1. Reading the **Contribution Guide**
-2. Get things running by reading the **Development Guide**
-3. Dive into any of the other guides or modules depending on what your interests are
+1. Reading the [Contribution Guide](docs/contributing/CONTRIBUTING.md)
+2. Get things running by reading the [Development Guide](docs/development/README.md)
+3. Dive into any of the other guides or modules depending on where your interests lie
 
 <!--
   The list of documents below was created by manually curating the output of the following command:
@@ -31,6 +31,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Development Guide](docs/development/README.md)
 - [Testing Guide](docs/testing/README.md)
 - [Dependencies Guide](docs/deps/README.md)
+- [Build Guide](docs/build/README.md)
 
 ### Architectures
 
@@ -44,6 +45,8 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 
 - [Consensus Changelog](consensus/CHANGELOG.md)
 - [Utility Changelog](utility/CHANGELOG.md)
+- _Coming Soon: P2P Changelog_
+- _Coming Soon: Persistence Changelog_
 
 ## Support & Contact
 

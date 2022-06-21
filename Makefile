@@ -1,5 +1,3 @@
-# TODO(pocket/issues/43): Delete this files after moving the necessary helpers to mage.go.
-
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
 # This flag is useful when running the consensus unit tests. It causes the test to wait up to the
@@ -50,6 +48,10 @@ refresh:
 .PHONY: build
 ## Build Pocket's main entrypoint
 build:
+.PHONY: go_clean_deps
+## Runs `go mod tidy` && `go mod vendor`
+go_clean_deps:
+	go mod tidy && go mod vendor
 
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
@@ -67,7 +69,6 @@ client_connect:
 	docker exec -it client /bin/bash -c "go run app/client/*.go"
 
 # TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
-
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
 compose_and_watch: db_start monitoring_start
@@ -138,11 +139,15 @@ mockgen:
 	mockgen --source=${p2p_types_dir}/network.go -destination=${p2p_types_dir}/mocks/network_mock.go
 	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
 
-
 .PHONY: test_all
 ## Run all go unit tests
 test_all: # generate_mocks
-	go test ./... -p=1
+	go test -p=1 -count=1 ./...
+
+.PHONY: test_race
+## Identify all unit tests that may result in race conditions
+test_race: # generate_mocks
+	go test -race ./...
 
 .PHONY: test_utility_module
 ## Run all go utility module unit tests
@@ -212,12 +217,11 @@ protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
 	$(eval shared_flags = "--experimental_allow_proto3_optional")
 
-
-	protoc ${shared_flags} --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto
-	protoc ${shared_flags} --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto
-	protoc ${shared_flags} --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto
-	protoc ${shared_flags} --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto
-	protoc ${shared_flags} --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/pre2p/raintree/types/proto --go_out=./p2p/pre2p/types      ./p2p/pre2p/raintree/types/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/pre2p/raintree/types/proto --go_out=./p2p/pre2p/types      ./p2p/pre2p/raintree/types/proto/*.proto
 
 	echo "View generated proto files by running: make protogen_show"
 
@@ -258,18 +262,40 @@ test_p2p_types:
 test_p2p:
 	go test -v -race ./p2p
 
-.PHONY: test_p2p
+.PHONY: test_pre2p
 ## Run all pre2p
 test_pre2p:
-# go test -v -count=1 ./p2p/pre2p
-	go test -v -race -count=1 ./p2p/pre2p
+	go test -v -count=1 ./p2p/pre2p/...
+
+.PHONY: test_pre2p_addrbook
+## Run all Pre2P addr book related tests
+test_pre2p_addrbook:
+	go test -run AddrBook -v -count=1 ./p2p/pre2p/...
+
+.PHONY: benchmark_pre2p_addrbook
+## Benchmark all Pre2P addr book related tests
+benchmark_pre2p_addrbook:
+	go test -bench=. -run BenchmarkAddrBook -v -count=1 ./p2p/pre2p/...
+
+# /Users/olshansky/workspace/pocket/pocket/p2p/pre2p/raintree/addrbook_utils_test.go
+# Inspired by: https://goldin.io/blog/stop-using-todo
+# TODO        - General Purpose catch-all.
+# TECHDEBT    - Not a great implementation, but we need to fix it later.
+# IMPROVE     - A nice to have, but not a priority. It's okay if we never get to this.
+# DISCUSS     - Probably requires a lengthy offline discussion to understand next steps.
+# INCOMPLETE  - A change which was out of scope of a specific PR but needed to be documented.
+# INVESTIGATE - TBD what was going on, but needed to continue moving and not get distracted.
+# CLEANUP     - Like TECHDEBT, but not as bad.  It's okay if we never get to this.
+# HACK        - Like TECHDEBT, but much worse. This needs to be prioritized
+# REFACTOR    - Similar to TECHDEBT, but will require a substantial rewrite and change across the codebase
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR"
 
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)
 todo_list:
-	grep --exclude-dir={.git,vendor,prototype} -r "TODO" .
+	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS}  .
 
 .PHONY: todo_count
 ## Print a count of all the TODOs in the project
 todo_count:
-	grep --exclude-dir={.git,vendor,prototype} -r "TODO" . | wc -l
+	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS} . | wc -l

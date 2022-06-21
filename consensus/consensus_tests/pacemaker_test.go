@@ -16,6 +16,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// INVESTIGATE(team): Investigate why this test occasionally fails due to a race condition.
 func TestTinyPacemakerTimeouts(t *testing.T) {
 	// There can be race conditions related to having a small paceMaker time out, so we skip this test
 	// when `failOnExtraMessages` is set to true to simplify things for now. However, we still validate

@@ -10,7 +10,7 @@ import (
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
-// TODO(drewsky): These functions will turn into more of a "ActorToAddrBook" when we have a closer
+// CLEANUP(drewsky): These functions will turn into more of a "ActorToAddrBook" when we have a closer
 // integration with utility.
 func ValidatorMapToAddrBook(cfg *config.Pre2PConfig, validators map[string]*typesGenesis.Validator) (typesPre2P.AddrBook, error) {
 	book := make(typesPre2P.AddrBook, 0)
@@ -25,7 +25,7 @@ func ValidatorMapToAddrBook(cfg *config.Pre2PConfig, validators map[string]*type
 	return book, nil
 }
 
-// TODO(drewsky): These functions will turn into more of a "ActorToAddrBook" when we have a closer
+// CLEANUP(drewsky): These functions will turn into more of a "ActorToAddrBook" when we have a closer
 // integration with utility.
 func ValidatorToNetworkPeer(cfg *config.Pre2PConfig, v *typesGenesis.Validator) (*typesPre2P.NetworkPeer, error) {
 	conn, err := CreateDialer(cfg, v.ServiceUrl)

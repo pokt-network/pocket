@@ -7,8 +7,8 @@ Please note that this repository is under very active development and breaking c
     - [Install Dependencies](#install-dependencies)
     - [Prepare Local Environment](#prepare-local-environment)
     - [View Available Commands](#view-available-commands)
+    - [Running Unit Tests](#running-unit-tests)
     - [Running LocalNet](#running-localnet)
-    - [Running Tests](#running-tests)
   - [Code Organization](#code-organization)
 
 ## LFG - Development
@@ -17,19 +17,48 @@ Please note that this repository is under very active development and breaking c
 
 - Install [Docker](https://docs.docker.com/get-docker/)
 - Install [Docker Compose](https://docs.docker.com/compose/install/)
-- Install [Golang](https://go.dev/doc/install)
 - Install [protoc-gen-go](https://pkg.go.dev/google.golang.org/protobuf/cmd/protoc-gen-go)
-- Install [mockgen](https://github.com/golang/mock#installation=)
+- Install [Golang](https://go.dev/doc/install)
+- Install [mockgen](https://github.com/golang/mock)
+
+_Note to the reader: Please update this list if you found anything missing._
+
+Last tested by with:
+
+```bash
+$ docker --version
+Docker version 20.10.14, build a224086
+
+$ protoc --version
+libprotoc 3.19.4
+
+$ protoc --version
+libprotoc 3.19.4
+
+$ go version
+go version go1.18.1 darwin/arm64
+
+$ mockgen --version
+v1.6.0
+
+$ system_profiler SPSoftwareDataType
+Software:
+
+    System Software Overview:
+
+      System Version: macOS 12.3.1 (21E258)
+      Kernel Version: Darwin 21.4.0
+```
 
 ### Prepare Local Environment
 
 Generate local files
 
 ```bash
-$ make protogen_clean
-$ make protogen_local
+$ git clone git@github.com:pokt-network/pocket.git  && cd pocket
+$ make protogen_clean && make protogen_local
 $ make mockgen
-$ go mod vendor && go mod tidy
+$ make go_clean_deps
 ```
 
 ### View Available Commands
@@ -38,42 +67,72 @@ $ go mod vendor && go mod tidy
 $ make
 ```
 
+### Running Unit Tests
+
+```bash
+$ make test_all
+```
+
+Note that there are a few tests in the library that are prone to race conditions and we are working on improving them. This can be checked with `make test_race`.
+
 ### Running LocalNet
 
 ![V1 Localnet Demo](./v1_localnet.gif)
 
-Delete any previous docker state
+1. Delete any previous docker state
 
 ```bash
 $ make docker_wipe
 ```
 
-In one shell, run:
+2. In one shell, run the 4 nodes setup:
 
 ```bash
 $ make compose_and_watch
 ```
 
-In another shell, run:
+4. In another shell, run the development client:
 
 ```bash
-$ make client_start
-$ make client_connect
-
-> ResetToGenesis
-> PrintNodeState # Check committed height is 0
-> TriggerNextView
-> PrintNodeState # Check committed height is 1
-> TriggerNextView
-> PrintNodeState # Check committed height is 2
-> TogglePacemakerMode # Check that it’s automatic now
-> TriggerNextView # Let it rip!
+$ make client_start && make client_connect
 ```
 
-### Running Tests
+4. Check the state of each node:
 
 ```bash
-$ make test_all
+✔ PrintNodeState
+```
+
+5. Trigger the next view to ensure everything is working:
+
+```bash
+✔ TriggerNextView
+```
+
+6. Reset the ResetToGenesis if you want to:
+
+```bash
+✔ ResetToGenesis
+```
+
+7. Set the client to automatic and watch it go:
+
+```bash
+✔ TogglePacemakerMode
+✔ TriggerNextView
+```
+
+8. [Optional] Common manual set of verification steps
+
+```bash
+✔ ResetToGenesis
+✔ PrintNodeState # Check committed height is 0
+✔ TriggerNextView
+✔ PrintNodeState # Check committed height is 1
+✔ TriggerNextView
+✔ PrintNodeState # Check committed height is 2
+✔ TogglePacemakerMode # Check that it’s automatic now
+✔ TriggerNextView # Let it rip!
 ```
 
 ## Code Organization
@@ -87,15 +146,13 @@ Pocket
 ├── build            # Build related source files including Docker, scripts, etc
 |   ├── config       # Configuration files for to run nodes in development
 |   ├── deployments  # Docker-compose to run different cluster of services for development
-|   ├── Docker*      # Various Dockerfiles
+|   ├── Docker*      # Various Dockerfile(s)
 ├── consensus        # Implementation of the Consensus module
 ├── core             # [currently-unused]
-├── docs             # Links to V1 Protocol documentation (except the protocol specification)
+├── docs             # Links to V1 Protocol implementation documentation (excluding the protocol specification)
 ├── p2p              # Implementation of the P2P module
 ├── persistence      # Implementation of the Persistence module
-├── prototype        # [to-be-deleted] A snapshot of the very first v1 prototype
 ├── shared           # [to-be-refactored] Shared types, modules and utils
-├── utility          # Implementation of the Persistence module
+├── utility          # Implementation of the Utility module
 ├── Makefile         # [to-be-deleted] The source of targets used to develop, build and test
-├── mage.go          # [currently-unused] The future source of targets used to develop, build and test
 ```
