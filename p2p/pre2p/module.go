@@ -79,18 +79,6 @@ func (m *p2pModule) GetBus() modules.Bus {
 func (m *p2pModule) Start() error {
 	log.Println("Starting network module")
 
-	// TODO(derrandz): find a way to reset gauges at new consensus height
-	m.
-		GetBus().
-		GetTelemetryModule().
-		GetTimeSeriesAgent().
-		RegisterCounter(
-			"p2p_nodes_online",
-			"the counter to track the number of nodes online",
-		)
-
-	m.network.SetBus(m.GetBus())
-
 	go func() {
 		for {
 			data, err := m.listener.Read()
@@ -102,15 +90,6 @@ func (m *p2pModule) Start() error {
 			go m.handleNetworkMessage(data)
 		}
 	}()
-
-	// TODO(tema):
-	// No way to know if the node has actually properly started as of the current implementation of m.listener
-	// Make sure to do this after the node has started if the implementation allowed for this in the future.
-	m.
-		GetBus().
-		GetTelemetryModule().
-		GetTimeSeriesAgent().
-		IncCounter("p2p_nodes_online")
 
 	return nil
 }

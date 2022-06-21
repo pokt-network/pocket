@@ -28,8 +28,7 @@
       "timeout_msec": 5000,
       "manual": true,
       "debug_time_between_steps_msec": 1000
-    },
-    "enable_telemetry": true
+    }
   },
   "pre_persistence": {
     "capacity": 99999,

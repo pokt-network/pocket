@@ -23,12 +23,6 @@ type HotstuffLeaderMessageHandler struct{}
 /*** Prepare Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	m.
-		GetBus().
-		GetTelemetryModule().
-		GetEventMetricsAgent().
-		EmitEvent("consensus", "hotpokt_messages", "HEIGHT", m.GetBlockHeight(), "NEW_ROUND", "LEADER")
-
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
@@ -83,12 +77,6 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 /*** PreCommit Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	m.
-		GetBus().
-		GetTelemetryModule().
-		GetEventMetricsAgent().
-		EmitEvent("consensus", "hotpokt_messages", "HEIGHT", m.GetBlockHeight(), "PREPARE", "LEADER")
-
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
@@ -131,12 +119,6 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 /*** Commit Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	m.
-		GetBus().
-		GetTelemetryModule().
-		GetEventMetricsAgent().
-		EmitEvent("consensus", "hotpokt_messages", "HEIGHT", m.GetBlockHeight(), "PRECOMMIT", "LEADER")
-
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
@@ -179,12 +161,6 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 /*** Decide Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	m.
-		GetBus().
-		GetTelemetryModule().
-		GetEventMetricsAgent().
-		EmitEvent("consensus", "hotpokt_messages", "HEIGHT", m.GetBlockHeight(), "COMMIT", "LEADER")
-
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
@@ -223,20 +199,9 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	// There is no "replica behavior" to imitate here
 
 	m.paceMaker.NewHeight()
-
-	m.
-		GetBus().
-		GetTelemetryModule().
-		GetTimeSeriesAgent().
-		IncCounter("consensus_blockchain_height")
 }
 
 func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	m.
-		GetBus().
-		GetTelemetryModule().
-		GetEventMetricsAgent().
-		EmitEvent("consensus", "hotpokt_messages", "HEIGHT", m.GetBlockHeight(), "DECIDE", "LEADER")
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
