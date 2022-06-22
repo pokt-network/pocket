@@ -199,6 +199,11 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	// There is no "replica behavior" to imitate here
 
 	m.paceMaker.NewHeight()
+	m.
+		GetBus().
+		GetTelemetryModule().
+		GetTimeSeriesAgent().
+		IncCounter("consensus_blockchain_height")
 }
 
 func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
