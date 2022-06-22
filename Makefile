@@ -313,10 +313,10 @@ todo_list:
 todo_count:
 	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS} . | wc -l
 
-.PHONY: develop
-## Run all of the make commands necessary to develop on the project
-develop:
-	make protogen_clean && make protogen_local
-	make mockgen
-	go mod vendor && go mod tidy
-	make test_all
+.PHONY: develop_and_test
+## Run all of the make commands necessary to develop on the project and verify the tests pass
+develop_test:
+	make protogen_clean && make protogen_local && \
+		make go_clean_deps && \
+		make mockgen && \
+		make test_all
