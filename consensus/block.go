@@ -23,7 +23,6 @@ func (m *consensusModule) prepareBlock() (*types.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
-
 	if err := m.updateUtilityContext(); err != nil {
 		return nil, err
 	}

@@ -5,10 +5,10 @@ package pre2p
 // to be a "real" replacement for now.
 
 import (
-	"fmt"
 	"log"
-	"net"
 
+	"github.com/pokt-network/pocket/p2p/pre2p/raintree"
+	"github.com/pokt-network/pocket/p2p/pre2p/stdnetwork"
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 
 	"github.com/pokt-network/pocket/shared/config"
@@ -25,22 +25,33 @@ var _ modules.P2PModule = &p2pModule{}
 type p2pModule struct {
 	bus modules.Bus
 
-	listener *net.TCPListener
-	network  typesPre2P.Network
+	listener typesPre2P.Transport
 	address  cryptoPocket.Address
+
+	network typesPre2P.Network
 }
 
 func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 	log.Println("Creating network module")
 
-	tcpAddr, _ := net.ResolveTCPAddr(NetworkProtocol, fmt.Sprintf(":%d", cfg.Pre2P.ConsensusPort))
-	l, err := net.ListenTCP(NetworkProtocol, tcpAddr)
+	l, err := CreateListener(cfg.Pre2P)
 	if err != nil {
 		return nil, err
 	}
 
 	testState := typesGenesis.GetNodeState(nil)
-	network := ConnectToValidatorNetwork(testState.ValidatorMap)
+	addrBook, err := ValidatorMapToAddrBook(cfg.Pre2P, testState.ValidatorMap)
+	if err != nil {
+		return nil, err
+	}
+
+	var network typesPre2P.Network
+	if cfg.Pre2P.UseRainTree {
+		selfAddr := cfg.PrivateKey.Address()
+		network = raintree.NewRainTreeNetwork(selfAddr, addrBook, cfg)
+	} else {
+		network = stdnetwork.NewNetwork(addrBook)
+	}
 
 	m = &p2pModule{
 		listener: l,
@@ -67,12 +78,12 @@ func (m *p2pModule) Start() error {
 
 	go func() {
 		for {
-			conn, err := m.listener.AcceptTCP()
+			data, err := m.listener.Read()
 			if err != nil {
-				log.Println("Error accepting connection: ", err)
+				log.Println("Error reading data from connection: ", err)
 				continue
 			}
-			go m.handleNetworkMessage(conn)
+			go m.handleNetworkMessage(data)
 		}
 	}()
 
@@ -113,6 +124,30 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 	return m.network.NetworkSend(data, addr)
 }
 
-func (m *p2pModule) GetAddrBook() []*typesPre2P.NetworkPeer {
-	return m.network.GetAddrBook()
+func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
+	appMsgData, err := m.network.HandleNetworkData(networkMsgData)
+	if err != nil {
+		log.Println("Error handling raw data: ", err)
+		return
+	}
+
+	// There was no error, but we don't need to forward this to the app-specific bus.
+	// For example, the message has already been handled by the application.
+	if appMsgData == nil {
+		// log.Println("[DEBUG] No app-specific message to forward from the network")
+		return
+	}
+
+	networkMessage := types.PocketEvent{}
+	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
+		log.Println("Error decoding network message: ", err)
+		return
+	}
+
+	event := types.PocketEvent{
+		Topic: networkMessage.Topic,
+		Data:  networkMessage.Data,
+	}
+
+	m.GetBus().PublishEventToBus(&event)
 }

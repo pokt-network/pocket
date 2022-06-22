@@ -7,7 +7,6 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
-	github.com/magefile/mage v1.12.1
 	github.com/manifoldco/promptui v0.9.0
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/stretchr/testify v1.7.0
@@ -17,6 +16,10 @@ require (
 	gonum.org/v1/gonum v0.9.3
 	google.golang.org/protobuf v1.27.1
 )
+
+require github.com/matryer/resync v0.0.0-20161211202428-d39c09a11215
+
+require github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect

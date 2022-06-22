@@ -7,7 +7,6 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
@@ -96,9 +95,7 @@ func getThresholdSignature(
 	partialSigs []*typesCons.PartialSignature) (*typesCons.ThresholdSignature, error) {
 	thresholdSig := new(typesCons.ThresholdSignature)
 	thresholdSig.Signatures = make([]*typesCons.PartialSignature, len(partialSigs))
-	for i, parpartialSig := range partialSigs {
-		thresholdSig.Signatures[i] = parpartialSig
-	}
+	copy(thresholdSig.Signatures, partialSigs)
 	return thresholdSig, nil
 }
 
@@ -152,7 +149,7 @@ func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 		return
 	}
 
-	if err := m.GetBus().GetP2PModule().Send(crypto.AddressFromString(m.IdToValAddrMap[*m.LeaderId]), anyConsensusMessage, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
+	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.IdToValAddrMap[*m.LeaderId]), anyConsensusMessage, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return
 	}
@@ -207,10 +204,10 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 
 	if m.LeaderId != nil && *m.LeaderId == m.NodeId {
 		m.logPrefix = "LEADER"
-		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId))
+		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	} else {
 		m.logPrefix = "REPLICA"
-		m.nodeLog(typesCons.ElectedNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId))
+		m.nodeLog(typesCons.ElectedNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	}
 }
 
