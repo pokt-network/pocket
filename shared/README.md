@@ -28,6 +28,8 @@ shared             # [to-be-refactored] All of this is bound to change
 |   ├── p2p_module.go
 |   ├── utility_module.go
 |   ├── persistence_module.go
+|   ├── telemetry_module.go
+├── telemetry      # Cross-module telemetry
 ├── tests          # Cross-module and shared-utility tests
 ├── types          # Types (structs & protos) shared across modules
 |   ├──            # Please reach out to the team if you need a walk-through for these
