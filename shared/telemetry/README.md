@@ -29,6 +29,8 @@ By leveraging:
 
 # Usage
 
+### Time Series Metrics
+
 ## Node Configuration
 
 It is necessary to provide a telemetry configuration to your node in `config.json`:
