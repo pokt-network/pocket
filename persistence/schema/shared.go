@@ -32,11 +32,11 @@ type GenericActor struct {
 	Address         string
 	PublicKey       string
 	StakedTokens    string
-	GenericParam    string
+	GenericParam    string //
 	OutputAddress   string
 	PausedHeight    int64
 	UnstakingHeight int64
-	Chains          []string
+	Chains          []string // IMPROVE: Consider creating a `type Chain string` for chains
 }
 
 func GenericActorTableSchema(actorSpecificColName, constraintName string) string {
@@ -110,12 +110,9 @@ func ReadyToUnstake(unstakingHeight int64, tableName string) string {
 
 func Insert(
 	actor GenericActor,
-	genericParamName,
-	genericParamValue,
-	constraintName,
-	chainsConstraintName,
-	tableName,
-	chainsTableName string,
+	genericParamName, genericParamValue,
+	constraintName, chainsConstraintName,
+	tableName, chainsTableName string,
 	height int64) string {
 	// base table
 	insertStatement := fmt.Sprintf(
@@ -217,9 +214,8 @@ func UpdatePausedBefore(genericParamName string, unstakingHeight, pausedBeforeHe
 		INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
 			(
 				SELECT address, public_key, staked_tokens, %s, output_address, paused_height, %d, %d
-				FROM %s WHERE paused_height<%d AND paused_height>=-1 AND (height,address) IN (
-        		  SELECT MAX(height),address from %s GROUP BY address
-				)
+				FROM %s WHERE paused_height<%d AND paused_height>=-1
+					AND (height,address) IN (SELECT MAX(height),address from %s GROUP BY address)
 		)
 		ON CONFLICT ON CONSTRAINT %s
 			DO UPDATE SET unstaking_height=EXCLUDED.unstaking_height`,

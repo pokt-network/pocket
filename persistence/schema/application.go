@@ -52,8 +52,9 @@ func AppChainsQuery(address string, height int64) string {
 	return SelectChains(AllColsSelector, address, height, AppTableName, AppChainsTableName)
 }
 
-/* Create / Update Queries */
+/* Create Queries */
 
+// Returns a query to create a new application with all of the necessary data.
 func InsertAppQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string {
 	return Insert(GenericActor{
 		Address:         address,
@@ -63,34 +64,48 @@ func InsertAppQuery(address, publicKey, stakedTokens, maxRelays, outputAddress s
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Chains:          chains,
-	}, MaxRelaysCol, maxRelays, AppHeightConstraintName, AppChainsHeightConstraintName, AppTableName, AppChainsTableName, height)
+	},
+		MaxRelaysCol, maxRelays,
+		AppHeightConstraintName, AppChainsHeightConstraintName,
+		AppTableName, AppChainsTableName,
+		height)
 }
 
+/* Update Queries */
+
+// Returns a query to update an application's stake and/or max relays.
 func UpdateAppQuery(address, stakedTokens, maxRelays string, height int64) string {
 	return Update(address, stakedTokens, MaxRelaysCol, maxRelays, height, AppTableName, AppHeightConstraintName)
 }
 
+// Returns a query to update the chains an application is staked for.
 func UpdateAppChainsQuery(address string, chains []string, height int64) string {
 	return InsertChains(address, chains, height, AppChainsTableName, AppChainsHeightConstraintName)
 }
 
+// Returns a query to update the height at which an application is unstaking.
 func UpdateAppUnstakingHeightQuery(address string, unstakingHeight, height int64) string {
 	return UpdateUnstakingHeight(address, MaxRelaysCol, unstakingHeight, height, AppTableName, AppHeightConstraintName)
-
 }
 
+// Returns a query to update the height at which an application is paused.
 func UpdateAppPausedHeightQuery(address string, pausedHeight, height int64) string {
 	return UpdatePausedHeight(address, MaxRelaysCol, pausedHeight, height, AppTableName, AppHeightConstraintName)
 }
 
+// Returns a query to start unstaking applications which have been paused.
 func UpdateAppsPausedBefore(pauseBeforeHeight, unstakingHeight, height int64) string {
 	return UpdatePausedBefore(MaxRelaysCol, unstakingHeight, pauseBeforeHeight, height, AppTableName, AppHeightConstraintName)
 }
 
+/* Delete Queries - used debugging only */
+
+// Deletes all the applications.
 func ClearAllAppsQuery() string {
 	return ClearAll(AppTableName)
 }
 
+// Deletes all the data associated with the chains that applications are staked for.
 func ClearAllAppChainsQuery() string {
 	return ClearAll(AppChainsTableName)
 }
