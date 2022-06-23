@@ -107,10 +107,13 @@ $ make test_persistence
 **Q**: Why are amounts strings?
 **A**: A lesson from Tendermint in order to enforce the use of BigInts throughout and avoid floating point issues when storing data on disk.
 
+Q: Why not use an ORM?
+
 ## Implementation TODO(team)
 
 These are major TODOs spanning the entire repo so they are documented here instead.
 
+- [ ] Benchmark the queries (especially the ones that need to do sorting
 - [ ] Consider converting all address params from bytes to string to avoid unnecessary encoding
 - [ ] Look into `address` being a computed field in most Postgres tables
 - [ ] Figure out how to handle conflicts while having multiple constraints with Postgres

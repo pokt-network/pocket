@@ -13,10 +13,12 @@ var (
 	AppChainsTableSchema = ChainsTableSchema(AppChainsHeightConstraintName)
 )
 
+// Returns a query for all of the Application's attributes given its address at some height.
 func AppQuery(address string, height int64) string {
 	return Select(AllSelector, address, height, AppTableName)
 }
 
+// Returns a query for the existence of an Application given its address at some height.
 func AppExistsQuery(address string, height int64) string {
 	return Exists(address, height, AppTableName)
 }

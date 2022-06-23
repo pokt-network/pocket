@@ -84,11 +84,11 @@ func AccountOrPoolSchema(mainColName, constraintName string) string {
 		)`, mainColName, BalanceCol, HeightCol, constraintName, mainColName, HeightCol)
 }
 
-func Select(selector string, address string, height int64, tableName string) string {
+func Select(selector, address string, height int64, tableName string) string {
 	return fmt.Sprintf(`SELECT %s FROM %s WHERE address='%s' AND height<=%d ORDER BY height DESC LIMIT 1`, selector, tableName, address, height)
 }
 
-func SelectChains(selector string, address string, height int64, baseTableName, chainsTableName string) string {
+func SelectChains(selector, address string, height int64, baseTableName, chainsTableName string) string {
 	return fmt.Sprintf(`SELECT %s FROM %s WHERE address='%s' AND height=
 (%s);`,
 		selector, chainsTableName, address, Select(HeightCol, address, height, baseTableName))
