@@ -1,8 +1,8 @@
 package schema
 
 const (
-	AccountsTableName        = "accounts"
-	AccountsHeightConstraint = "accounts_create_height"
+	AccountTableName        = "account"
+	AccountHeightConstraint = "account_create_height"
 
 	/*
 		From the utility specification:
@@ -12,27 +12,27 @@ const (
 			tokens are able to be directly minted to and burned from ModulePools. Examples of ModuleAccounts
 			include StakingPools and the FeeCollector
 	*/
-	PoolsTableName        = "pool"
-	PoolsHeightConstraint = "pools_create_height"
+	PoolTableName        = "pool"
+	PoolHeightConstraint = "pool_create_height"
 )
 
 var (
-	AccountsTableSchema = AccountTableSchema(AddressCol, AccountsHeightConstraint)
-	PoolsTableSchema    = AccountTableSchema(NameCol, PoolsHeightConstraint)
+	AccountTableSchema = AccountOrPoolSchema(AddressCol, AccountHeightConstraint)
+	PoolTableSchema    = AccountOrPoolSchema(NameCol, PoolHeightConstraint)
 )
 
 func GetAccountAmountQuery(address string, height int64) string {
-	return SelectBalance(AddressCol, address, height, AccountsTableName)
+	return SelectBalance(AddressCol, address, height, AccountTableName)
 }
 
 func InsertAccountAmountQuery(address, amount string, height int64) string {
-	return InsertAcc(AddressCol, address, amount, height, AccountsTableName, AccountsHeightConstraint)
+	return InsertAcc(AddressCol, address, amount, height, AccountTableName, AccountHeightConstraint)
 }
 
 func GetPoolAmountQuery(name string, height int64) string {
-	return SelectBalance(NameCol, name, height, PoolsTableName)
+	return SelectBalance(NameCol, name, height, PoolTableName)
 }
 
 func InsertPoolAmountQuery(name, amount string, height int64) string {
-	return InsertAcc(NameCol, name, amount, height, PoolsTableName, PoolsHeightConstraint)
+	return InsertAcc(NameCol, name, amount, height, PoolTableName, PoolHeightConstraint)
 }

@@ -105,10 +105,10 @@ func InitializeTables(ctx context.Context, db *pgx.Conn) error {
 }
 
 func InitializeAccountTables(ctx context.Context, db *pgx.Conn) error {
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.AccountsTableName, schema.AccountsTableSchema)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.AccountTableName, schema.AccountTableSchema)); err != nil {
 		return err
 	}
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.PoolsTableName, schema.PoolsTableSchema)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.PoolTableName, schema.PoolTableSchema)); err != nil {
 		return err
 	}
 	return nil
