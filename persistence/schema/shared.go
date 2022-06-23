@@ -62,7 +62,7 @@ func ChainsTableSchema(constraintName string) string {
 		)`, Address, ChainID, Height, constraintName, Address, ChainID, Height)
 }
 
-func AccTableSchema(genericParamName, constraintName string) string {
+func AccountTableSchema(genericParamName, constraintName string) string {
 	return fmt.Sprintf(`(
 			%s TEXT NOT NULL,
 			%s TEXT NOT NULL,

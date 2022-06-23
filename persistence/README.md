@@ -111,11 +111,11 @@ $ make test_persistence
 
 These are major TODOs spanning the entire repo so they are documented here instead.
 
+- [ ] Consider converting all address params from bytes to string to avoid unnecessary encoding
 - [ ] Look into `address` being a computed field in most Postgres tables
 - [ ] Figure out how to handle conflicts while having multiple constraints with Postgres
 - [ ] Remove all the SQL strings and use a proper query builder
 - [ ] Remove all the SQL strings and consider using prepared statements
 - [ ] Convert all queries to use 'height' in the interface for historical lookups
-- [ ] Consider converting all address params from bytes to string to avoid unnecessary encoding
 - [ ] Consider removing all `Set` methods (e.g. `SetAccountAmount`) and replace with `Add` (e.g. `AddAccountAmount`) by having it leverage a "default zero".
 - [ ] Use proper SQL migration methodoligies
