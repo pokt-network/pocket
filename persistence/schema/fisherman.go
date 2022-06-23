@@ -28,7 +28,7 @@ func FishermanExistsQuery(address string, height int64) string {
 }
 
 func FishermanReadyToUnstakeQuery(unstakingHeight int64) string {
-	return ReadyToUnstake(FishTableName, unstakingHeight)
+	return ReadyToUnstake(unstakingHeight, FishTableName)
 }
 
 func FishermanOutputAddressQuery(operatorAddress string, height int64) string {

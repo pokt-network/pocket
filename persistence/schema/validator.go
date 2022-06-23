@@ -33,7 +33,7 @@ func ValidatorExistsQuery(address string, height int64) string {
 }
 
 func ValidatorReadyToUnstakeQuery(unstakingHeight int64) string {
-	return ReadyToUnstake(ValTableName, unstakingHeight)
+	return ReadyToUnstake(unstakingHeight, ValTableName)
 }
 
 func InsertValidatorQuery(address, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, _ []string, height int64) string {

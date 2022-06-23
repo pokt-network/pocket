@@ -85,12 +85,12 @@ func AccountOrPoolSchema(mainColName, constraintName string) string {
 }
 
 func Select(selector, address string, height int64, tableName string) string {
-	return fmt.Sprintf(`SELECT %s FROM %s WHERE address='%s' AND height<=%d ORDER BY height DESC LIMIT 1`, selector, tableName, address, height)
+	return fmt.Sprintf(`SELECT %s FROM %s WHERE address='%s' AND height<=%d ORDER BY height DESC LIMIT 1`,
+		selector, tableName, address, height)
 }
 
 func SelectChains(selector, address string, height int64, baseTableName, chainsTableName string) string {
-	return fmt.Sprintf(`SELECT %s FROM %s WHERE address='%s' AND height=
-(%s);`,
+	return fmt.Sprintf(`SELECT %s FROM %s WHERE address='%s' AND height=(%s);`,
 		selector, chainsTableName, address, Select(HeightCol, address, height, baseTableName))
 }
 
@@ -98,10 +98,12 @@ func Exists(address string, height int64, tableName string) string {
 	return fmt.Sprintf(`SELECT EXISTS(%s)`, Select(AnyValueSelector, address, height, tableName))
 }
 
-func ReadyToUnstake(tableName string, unstakingHeight int64) string {
-	return fmt.Sprintf(`SELECT address, staked_tokens, output_address FROM %s WHERE unstaking_height=%d AND (height,address) IN (
-        select MAX(height),address from %s GROUP BY address
-)`, tableName, unstakingHeight, tableName)
+func ReadyToUnstake(unstakingHeight int64, tableName string) string {
+	return fmt.Sprintf(`
+		SELECT address, staked_tokens, output_address
+		FROM %s WHERE unstaking_height=%d AND (height,address)
+		IN (select MAX(height), address from %s GROUP BY address)`,
+		tableName, unstakingHeight, tableName)
 }
 
 func Insert(

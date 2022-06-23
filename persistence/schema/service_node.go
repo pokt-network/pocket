@@ -25,7 +25,7 @@ func ServiceNodeExistsQuery(address string, height int64) string {
 }
 
 func ServiceNodeReadyToUnstakeQuery(unstakingHeight int64) string {
-	return ReadyToUnstake(ServiceNodeTableName, unstakingHeight)
+	return ReadyToUnstake(unstakingHeight, ServiceNodeTableName)
 }
 
 func ServiceNodeOutputAddressQuery(operatorAddress string, height int64) string {

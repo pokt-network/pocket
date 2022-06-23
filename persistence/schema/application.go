@@ -13,7 +13,7 @@ var (
 	AppChainsTableSchema = ChainsTableSchema(AppChainsHeightConstraintName)
 )
 
-// Returns a query for all of the Application's attributes given its address at some height.
+// Returns a query to retrieve all of the Application's attributes given its address at some height.
 func AppQuery(address string, height int64) string {
 	return Select(AllColsSelector, address, height, AppTableName)
 }
@@ -24,7 +24,7 @@ func AppExistsQuery(address string, height int64) string {
 }
 
 func AppsReadyToUnstakeQuery(unstakingHeight int64) string {
-	return ReadyToUnstake(AppTableName, unstakingHeight)
+	return ReadyToUnstake(unstakingHeight, AppTableName)
 }
 
 func AppOutputAddressQuery(operatorAddress string, height int64) string {
