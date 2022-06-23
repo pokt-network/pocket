@@ -71,7 +71,7 @@ func (p PostgresContext) SetAppUnstakingHeightAndStatus(address []byte, unstakin
 
 // DISCUSS(drewsky): Need to create a semantic constant for an error return value, but should it be 0 or -1?
 func (p PostgresContext) GetAppPauseHeightIfExists(address []byte, height int64) (pausedHeight int64, err error) {
-	return p.GetActorPauseHeightIfExists(address, height, schema.AppPauseHeightQuery)
+	return p.GetActorPauseHeightIfExists(address, height, schema.AppPausedHeightQuery)
 }
 
 // TODO(Andrew): remove status (third parameter) - it's not needed

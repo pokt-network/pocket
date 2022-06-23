@@ -14,7 +14,7 @@ import (
 func FuzzApplication(f *testing.F) {
 	fuzzActor(f, newTestGenericApp, query.InsertAppQuery, GetGenericApp, false, query.UpdateAppQuery,
 		query.UpdateAppChainsQuery, query.AppChainsTableName, query.AppsReadyToUnstakeQuery,
-		query.AppUnstakingHeightQuery, query.AppPauseHeightQuery, query.AppQuery, query.AppChainsQuery,
+		query.AppUnstakingHeightQuery, query.AppPausedHeightQuery, query.AppQuery, query.AppChainsQuery,
 		query.UpdateAppUnstakingHeightQuery, query.UpdateAppPausedHeightQuery, query.UpdateAppsPausedBefore,
 		query.AppOutputAddressQuery)
 }

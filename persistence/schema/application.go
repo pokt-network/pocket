@@ -34,7 +34,7 @@ func AppOutputAddressQuery(operatorAddress string, height int64) string {
 	return Select(OutputAddressCol, operatorAddress, height, AppTableName)
 }
 
-func AppPauseHeightQuery(address string, height int64) string {
+func AppPausedHeightQuery(address string, height int64) string {
 	return Select(PausedHeightCol, address, height, AppTableName)
 }
 
