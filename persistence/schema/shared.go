@@ -11,8 +11,8 @@ const (
 	DefaultUnstakingHeight = -1
 	DefaultEndHeight       = -1
 	// Common SQL selectors
-	AllSelector = "*"
-	OneSelector = "1"
+	AllColsSelector  = "*"
+	AnyValueSelector = "1"
 	// Common column names
 	AddressCol         = "address"
 	BalanceCol         = "balance"
@@ -95,7 +95,7 @@ func SelectChains(selector, address string, height int64, baseTableName, chainsT
 }
 
 func Exists(address string, height int64, tableName string) string {
-	return fmt.Sprintf(`SELECT EXISTS(%s)`, Select(OneSelector, address, height, tableName))
+	return fmt.Sprintf(`SELECT EXISTS(%s)`, Select(AnyValueSelector, address, height, tableName))
 }
 
 func ReadyToUnstake(tableName string, unstakingHeight int64) string {

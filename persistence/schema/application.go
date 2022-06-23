@@ -15,7 +15,7 @@ var (
 
 // Returns a query for all of the Application's attributes given its address at some height.
 func AppQuery(address string, height int64) string {
-	return Select(AllSelector, address, height, AppTableName)
+	return Select(AllColsSelector, address, height, AppTableName)
 }
 
 // Returns a query for the existence of an Application given its address at some height.
@@ -42,7 +42,7 @@ func AppUnstakingHeightQuery(address string, height int64) string {
 }
 
 func AppChainsQuery(address string, height int64) string {
-	return SelectChains(AllSelector, address, height, AppTableName, AppChainsTableName)
+	return SelectChains(AllColsSelector, address, height, AppTableName, AppChainsTableName)
 }
 
 func InsertAppQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string {

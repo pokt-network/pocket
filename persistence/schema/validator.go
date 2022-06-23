@@ -13,7 +13,7 @@ var (
 )
 
 func ValidatorQuery(address string, height int64) string {
-	return Select(AllSelector, address, height, ValTableName)
+	return Select(AllColsSelector, address, height, ValTableName)
 }
 
 func ValidatorOutputAddressQuery(operatorAddress string, height int64) string {

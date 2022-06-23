@@ -13,11 +13,11 @@ var (
 )
 
 func ServiceNodeQuery(address string, height int64) string {
-	return Select(AllSelector, address, height, ServiceNodeTableName)
+	return Select(AllColsSelector, address, height, ServiceNodeTableName)
 }
 
 func ServiceNodeChainsQuery(address string, height int64) string {
-	return SelectChains(AllSelector, address, height, ServiceNodeTableName, ServiceNodeChainsTableName)
+	return SelectChains(AllColsSelector, address, height, ServiceNodeTableName, ServiceNodeChainsTableName)
 }
 
 func ServiceNodeExistsQuery(address string, height int64) string {

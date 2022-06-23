@@ -16,11 +16,11 @@ var (
 )
 
 func FishermanQuery(address string, height int64) string {
-	return Select(AllSelector, address, height, FishTableName)
+	return Select(AllColsSelector, address, height, FishTableName)
 }
 
 func FishermanChainsQuery(address string, height int64) string {
-	return SelectChains(AllSelector, address, height, FishTableName, FishChainsTableName)
+	return SelectChains(AllColsSelector, address, height, FishTableName, FishChainsTableName)
 }
 
 func FishermanExistsQuery(address string, height int64) string {
