@@ -23,7 +23,7 @@ func AppExistsQuery(address string, height int64) string {
 	return Exists(address, height, AppTableName)
 }
 
-func AppReadyToUnstakeQuery(unstakingHeight int64) string {
+func AppsReadyToUnstakeQuery(unstakingHeight int64) string {
 	return ReadyToUnstake(AppTableName, unstakingHeight)
 }
 

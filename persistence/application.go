@@ -57,7 +57,7 @@ func (p PostgresContext) DeleteApp(_ []byte) error {
 
 // TODO(Andrew): remove status (second parameter) - not needed
 func (p PostgresContext) GetAppsReadyToUnstake(height int64, _ int) (apps []*types.UnstakingActor, err error) {
-	return p.ActorReadyToUnstakeWithChains(height, schema.AppReadyToUnstakeQuery)
+	return p.ActorReadyToUnstakeWithChains(height, schema.AppsReadyToUnstakeQuery)
 }
 
 func (p PostgresContext) GetAppStatus(address []byte, height int64) (status int, err error) {

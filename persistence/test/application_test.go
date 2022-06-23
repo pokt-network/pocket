@@ -2,17 +2,18 @@ package test
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/pokt-network/pocket/persistence"
 	query "github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func FuzzApplication(f *testing.F) {
 	fuzzActor(f, newTestGenericApp, query.InsertAppQuery, GetGenericApp, false, query.UpdateAppQuery,
-		query.UpdateAppChainsQuery, query.AppChainsTableName, query.AppReadyToUnstakeQuery,
+		query.UpdateAppChainsQuery, query.AppChainsTableName, query.AppsReadyToUnstakeQuery,
 		query.AppUnstakingHeightQuery, query.AppPauseHeightQuery, query.AppQuery, query.AppChainsQuery,
 		query.UpdateAppUnstakingHeightQuery, query.UpdateAppPausedHeightQuery, query.UpdateAppsPausedBefore,
 		query.AppOutputAddressQuery)
