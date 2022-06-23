@@ -12,18 +12,18 @@ const (
 	DefaultEndHeight       = -1
 	AllSelector            = "*"
 	OneSelector            = "1"
-	Address                = "address"
-	Balance                = "balance"
-	PublicKey              = "public_key"
-	Name                   = "name"
-	StakedTokens           = "staked_tokens"
-	ServiceURL             = "service_url"
-	OutputAddress          = "output_address"
-	UnstakingHeight        = "unstaking_height"
-	PausedHeight           = "paused_height"
-	ChainID                = "chain_id"
-	MaxRelays              = "max_relays"
-	Height                 = "height"
+	AddressCol             = "address"
+	BalanceCol             = "balance"
+	PublicKeyCol           = "public_key"
+	NameCol                = "name"
+	StakedTokensCol        = "staked_tokens"
+	ServiceURLCol          = "service_url"
+	OutputAddressCol       = "output_address"
+	UnstakingHeightCol     = "unstaking_height"
+	PausedHeightCol        = "paused_height"
+	ChainIDCol             = "chain_id"
+	MaxRelaysCol           = "max_relays"
+	HeightCol              = "height"
 )
 
 type GenericActor struct {
@@ -49,7 +49,7 @@ func TableSchema(genericParamName, constraintName string) string {
 			%s BIGINT NOT NULL default -1,
 
 			CONSTRAINT %s UNIQUE (%s, %s)
-		)`, Address, PublicKey, StakedTokens, genericParamName, OutputAddress, PausedHeight, UnstakingHeight, Height, constraintName, Address, Height)
+		)`, AddressCol, PublicKeyCol, StakedTokensCol, genericParamName, OutputAddressCol, PausedHeightCol, UnstakingHeightCol, HeightCol, constraintName, AddressCol, HeightCol)
 }
 
 func ChainsTableSchema(constraintName string) string {
@@ -59,7 +59,7 @@ func ChainsTableSchema(constraintName string) string {
 			%s BIGINT NOT NULL default -1,
 
 			CONSTRAINT %s UNIQUE (%s, %s, %s)
-		)`, Address, ChainID, Height, constraintName, Address, ChainID, Height)
+		)`, AddressCol, ChainIDCol, HeightCol, constraintName, AddressCol, ChainIDCol, HeightCol)
 }
 
 func AccountTableSchema(genericParamName, constraintName string) string {
@@ -68,7 +68,7 @@ func AccountTableSchema(genericParamName, constraintName string) string {
 			%s TEXT NOT NULL,
 			%s BIGINT NOT NULL,
 		    CONSTRAINT %s UNIQUE (%s, %s)
-		)`, genericParamName, Balance, Height, constraintName, genericParamName, Height)
+		)`, genericParamName, BalanceCol, HeightCol, constraintName, genericParamName, HeightCol)
 }
 
 func Select(selector string, address string, height int64, tableName string) string {
@@ -78,7 +78,7 @@ func Select(selector string, address string, height int64, tableName string) str
 func SelectChains(selector string, address string, height int64, baseTableName, chainsTableName string) string {
 	return fmt.Sprintf(`SELECT %s FROM %s WHERE address='%s' AND height=
 (%s);`,
-		selector, chainsTableName, address, Select(Height, address, height, baseTableName))
+		selector, chainsTableName, address, Select(HeightCol, address, height, baseTableName))
 }
 
 func Exists(address string, height int64, tableName string) string {

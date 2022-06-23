@@ -9,7 +9,7 @@ const (
 )
 
 var (
-	ValTableSchema = TableSchema(ServiceURL, ValidatorConstraintName)
+	ValTableSchema = TableSchema(ServiceURLCol, ValidatorConstraintName)
 )
 
 func ValidatorQuery(address string, height int64) string {
@@ -17,15 +17,15 @@ func ValidatorQuery(address string, height int64) string {
 }
 
 func ValidatorOutputAddressQuery(operatorAddress string, height int64) string {
-	return Select(OutputAddress, operatorAddress, height, ValTableName)
+	return Select(OutputAddressCol, operatorAddress, height, ValTableName)
 }
 
 func ValidatorUnstakingHeightQuery(address string, height int64) string {
-	return Select(UnstakingHeight, address, height, ValTableName)
+	return Select(UnstakingHeightCol, address, height, ValTableName)
 }
 
 func ValidatorPauseHeightQuery(address string, height int64) string {
-	return Select(PausedHeight, address, height, ValTableName)
+	return Select(PausedHeightCol, address, height, ValTableName)
 }
 
 func ValidatorExistsQuery(address string, height int64) string {
@@ -44,23 +44,23 @@ func InsertValidatorQuery(address, publicKey, stakedTokens, serviceURL, outputAd
 		OutputAddress:   outputAddress,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
-	}, ServiceURL, serviceURL, ValidatorConstraintName, "", ValTableName, "", height)
+	}, ServiceURLCol, serviceURL, ValidatorConstraintName, "", ValTableName, "", height)
 }
 
 func UpdateValidatorQuery(address, stakedTokens, serviceURL string, height int64) string {
-	return Update(address, stakedTokens, ServiceURL, serviceURL, height, ValTableName, ValidatorConstraintName)
+	return Update(address, stakedTokens, ServiceURLCol, serviceURL, height, ValTableName, ValidatorConstraintName)
 }
 
 func UpdateValidatorUnstakingHeightQuery(address string, unstakingHeight, height int64) string {
-	return UpdateUnstakingHeight(address, ServiceURL, unstakingHeight, height, ValTableName, ValidatorConstraintName)
+	return UpdateUnstakingHeight(address, ServiceURLCol, unstakingHeight, height, ValTableName, ValidatorConstraintName)
 }
 
 func UpdateValidatorPausedHeightQuery(address string, pausedHeight, height int64) string {
-	return UpdatePausedHeight(address, ServiceURL, pausedHeight, height, ValTableName, ValidatorConstraintName)
+	return UpdatePausedHeight(address, ServiceURLCol, pausedHeight, height, ValTableName, ValidatorConstraintName)
 }
 
 func UpdateValidatorsPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight int64) string {
-	return UpdatePausedBefore(ServiceURL, unstakingHeight, pauseBeforeHeight, currentHeight, ValTableName, ValidatorConstraintName)
+	return UpdatePausedBefore(ServiceURLCol, unstakingHeight, pauseBeforeHeight, currentHeight, ValTableName, ValidatorConstraintName)
 }
 
 func ClearAllValidatorsQuery() string {

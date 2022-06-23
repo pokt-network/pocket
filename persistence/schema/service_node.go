@@ -8,7 +8,7 @@ const (
 )
 
 var (
-	ServiceNodeTableSchema       = TableSchema(ServiceURL, ServiceNodeConstraintName)
+	ServiceNodeTableSchema       = TableSchema(ServiceURLCol, ServiceNodeConstraintName)
 	ServiceNodeChainsTableSchema = ChainsTableSchema(ServiceNodeChainsConstraintName)
 )
 
@@ -29,15 +29,15 @@ func ServiceNodeReadyToUnstakeQuery(unstakingHeight int64) string {
 }
 
 func ServiceNodeOutputAddressQuery(operatorAddress string, height int64) string {
-	return Select(OutputAddress, operatorAddress, height, ServiceNodeTableName)
+	return Select(OutputAddressCol, operatorAddress, height, ServiceNodeTableName)
 }
 
 func ServiceNodeUnstakingHeightQuery(address string, height int64) string {
-	return Select(UnstakingHeight, address, height, ServiceNodeTableName)
+	return Select(UnstakingHeightCol, address, height, ServiceNodeTableName)
 }
 
 func ServiceNodePauseHeightQuery(address string, height int64) string {
-	return Select(PausedHeight, address, height, ServiceNodeTableName)
+	return Select(PausedHeightCol, address, height, ServiceNodeTableName)
 }
 
 func InsertServiceNodeQuery(address, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string {
@@ -49,23 +49,23 @@ func InsertServiceNodeQuery(address, publicKey, stakedTokens, serviceURL, output
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Chains:          chains,
-	}, ServiceURL, serviceURL, ServiceNodeConstraintName, ServiceNodeChainsConstraintName, ServiceNodeTableName, ServiceNodeChainsTableName, height)
+	}, ServiceURLCol, serviceURL, ServiceNodeConstraintName, ServiceNodeChainsConstraintName, ServiceNodeTableName, ServiceNodeChainsTableName, height)
 }
 
 func UpdateServiceNodeQuery(address, stakedTokens, serviceURL string, height int64) string {
-	return Update(address, stakedTokens, ServiceURL, serviceURL, height, ServiceNodeTableName, ServiceNodeConstraintName)
+	return Update(address, stakedTokens, ServiceURLCol, serviceURL, height, ServiceNodeTableName, ServiceNodeConstraintName)
 }
 
 func UpdateServiceNodeUnstakingHeightQuery(address string, unstakingHeight, height int64) string {
-	return UpdateUnstakingHeight(address, ServiceURL, unstakingHeight, height, ServiceNodeTableName, ServiceNodeConstraintName)
+	return UpdateUnstakingHeight(address, ServiceURLCol, unstakingHeight, height, ServiceNodeTableName, ServiceNodeConstraintName)
 }
 
 func UpdateServiceNodePausedHeightQuery(address string, pausedHeight, height int64) string {
-	return UpdatePausedHeight(address, ServiceURL, pausedHeight, height, ServiceNodeTableName, ServiceNodeConstraintName)
+	return UpdatePausedHeight(address, ServiceURLCol, pausedHeight, height, ServiceNodeTableName, ServiceNodeConstraintName)
 }
 
 func UpdateServiceNodesPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight int64) string {
-	return UpdatePausedBefore(ServiceURL, unstakingHeight, pauseBeforeHeight, currentHeight, ServiceNodeTableName, ServiceNodeConstraintName)
+	return UpdatePausedBefore(ServiceURLCol, unstakingHeight, pauseBeforeHeight, currentHeight, ServiceNodeTableName, ServiceNodeConstraintName)
 }
 
 func UpdateServiceNodeChainsQuery(address string, chains []string, height int64) string {

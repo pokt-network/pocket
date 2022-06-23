@@ -8,7 +8,7 @@ const (
 )
 
 var (
-	AppTableSchema       = TableSchema(MaxRelays, AppConstraintName)
+	AppTableSchema       = TableSchema(MaxRelaysCol, AppConstraintName)
 	AppChainsTableSchema = ChainsTableSchema(AppChainsConstraintName)
 )
 
@@ -25,17 +25,17 @@ func AppReadyToUnstakeQuery(unstakingHeight int64) string {
 }
 
 func AppOutputAddressQuery(operatorAddress string, height int64) string {
-	return Select(OutputAddress, operatorAddress, height, AppTableName)
+	return Select(OutputAddressCol, operatorAddress, height, AppTableName)
 }
 
 func AppPauseHeightQuery(address string, height int64) string {
-	return Select(PausedHeight, address, height, AppTableName)
+	return Select(PausedHeightCol, address, height, AppTableName)
 }
 
 // DISCUSS(team): if current_height == unstaking_height - is the actor unstaking or unstaked
 // (i.e. did we process the block yet => yes if you're a replica and no if you're a proposer)?
 func AppUnstakingHeightQuery(address string, height int64) string {
-	return Select(UnstakingHeight, address, height, AppTableName)
+	return Select(UnstakingHeightCol, address, height, AppTableName)
 }
 
 func AppChainsQuery(address string, height int64) string {
@@ -51,11 +51,11 @@ func InsertAppQuery(address, publicKey, stakedTokens, maxRelays, outputAddress s
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Chains:          chains,
-	}, MaxRelays, maxRelays, AppConstraintName, AppChainsConstraintName, AppTableName, AppChainsTableName, height)
+	}, MaxRelaysCol, maxRelays, AppConstraintName, AppChainsConstraintName, AppTableName, AppChainsTableName, height)
 }
 
 func UpdateAppQuery(address, stakedTokens, maxRelays string, height int64) string {
-	return Update(address, stakedTokens, MaxRelays, maxRelays, height, AppTableName, AppConstraintName)
+	return Update(address, stakedTokens, MaxRelaysCol, maxRelays, height, AppTableName, AppConstraintName)
 }
 
 func UpdateAppChainsQuery(address string, chains []string, height int64) string {
@@ -63,16 +63,16 @@ func UpdateAppChainsQuery(address string, chains []string, height int64) string 
 }
 
 func UpdateAppUnstakingHeightQuery(address string, unstakingHeight, height int64) string {
-	return UpdateUnstakingHeight(address, MaxRelays, unstakingHeight, height, AppTableName, AppConstraintName)
+	return UpdateUnstakingHeight(address, MaxRelaysCol, unstakingHeight, height, AppTableName, AppConstraintName)
 
 }
 
 func UpdateAppPausedHeightQuery(address string, pausedHeight, height int64) string {
-	return UpdatePausedHeight(address, MaxRelays, pausedHeight, height, AppTableName, AppConstraintName)
+	return UpdatePausedHeight(address, MaxRelaysCol, pausedHeight, height, AppTableName, AppConstraintName)
 }
 
 func UpdateAppsPausedBefore(pauseBeforeHeight, unstakingHeight, height int64) string {
-	return UpdatePausedBefore(MaxRelays, unstakingHeight, pauseBeforeHeight, height, AppTableName, AppConstraintName)
+	return UpdatePausedBefore(MaxRelaysCol, unstakingHeight, pauseBeforeHeight, height, AppTableName, AppConstraintName)
 }
 
 func ClearAllAppsQuery() string {

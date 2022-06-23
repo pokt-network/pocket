@@ -17,22 +17,22 @@ const (
 )
 
 var (
-	AccountsTableSchema = AccountTableSchema(Address, AccountsHeightConstraint)
-	PoolsTableSchema    = AccountTableSchema(Name, PoolsHeightConstraint)
+	AccountsTableSchema = AccountTableSchema(AddressCol, AccountsHeightConstraint)
+	PoolsTableSchema    = AccountTableSchema(NameCol, PoolsHeightConstraint)
 )
 
 func GetAccountAmountQuery(address string, height int64) string {
-	return SelectBalance(Address, address, height, AccountsTableName)
+	return SelectBalance(AddressCol, address, height, AccountsTableName)
 }
 
 func InsertAccountAmountQuery(address, amount string, height int64) string {
-	return InsertAcc(Address, address, amount, height, AccountsTableName, AccountsHeightConstraint)
+	return InsertAcc(AddressCol, address, amount, height, AccountsTableName, AccountsHeightConstraint)
 }
 
 func GetPoolAmountQuery(name string, height int64) string {
-	return SelectBalance(Name, name, height, PoolsTableName)
+	return SelectBalance(NameCol, name, height, PoolsTableName)
 }
 
 func InsertPoolAmountQuery(name, amount string, height int64) string {
-	return InsertAcc(Name, name, amount, height, PoolsTableName, PoolsHeightConstraint)
+	return InsertAcc(NameCol, name, amount, height, PoolsTableName, PoolsHeightConstraint)
 }

@@ -11,7 +11,7 @@ const (
 )
 
 var (
-	FishTableSchema       = TableSchema(ServiceURL, FishConstraintName)
+	FishTableSchema       = TableSchema(ServiceURLCol, FishConstraintName)
 	FishChainsTableSchema = ChainsTableSchema(FishChainsConstraintName)
 )
 
@@ -32,15 +32,15 @@ func FishermanReadyToUnstakeQuery(unstakingHeight int64) string {
 }
 
 func FishermanOutputAddressQuery(operatorAddress string, height int64) string {
-	return Select(OutputAddress, operatorAddress, height, FishTableName)
+	return Select(OutputAddressCol, operatorAddress, height, FishTableName)
 }
 
 func FishermanUnstakingHeightQuery(address string, height int64) string { // TODO (Team) if current_height == unstaking_height - is the actor unstaking or unstaked? IE did we process the block yet?
-	return Select(UnstakingHeight, address, height, FishTableName)
+	return Select(UnstakingHeightCol, address, height, FishTableName)
 }
 
 func FishermanPauseHeightQuery(address string, height int64) string {
-	return Select(PausedHeight, address, height, FishTableName)
+	return Select(PausedHeightCol, address, height, FishTableName)
 }
 
 func InsertFishermanQuery(address, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string {
@@ -52,23 +52,23 @@ func InsertFishermanQuery(address, publicKey, stakedTokens, serviceURL, outputAd
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Chains:          chains,
-	}, ServiceURL, serviceURL, FishConstraintName, FishChainsConstraintName, FishTableName, FishChainsTableName, height)
+	}, ServiceURLCol, serviceURL, FishConstraintName, FishChainsConstraintName, FishTableName, FishChainsTableName, height)
 }
 
 func UpdateFishermanQuery(address, stakedTokens, serviceURL string, height int64) string {
-	return Update(address, stakedTokens, ServiceURL, serviceURL, height, FishTableName, FishConstraintName)
+	return Update(address, stakedTokens, ServiceURLCol, serviceURL, height, FishTableName, FishConstraintName)
 }
 
 func UpdateFishermanUnstakingHeightQuery(address string, unstakingHeight, height int64) string {
-	return UpdateUnstakingHeight(address, ServiceURL, unstakingHeight, height, FishTableName, FishConstraintName)
+	return UpdateUnstakingHeight(address, ServiceURLCol, unstakingHeight, height, FishTableName, FishConstraintName)
 }
 
 func UpdateFishermanPausedHeightQuery(address string, pausedHeight, height int64) string {
-	return UpdatePausedHeight(address, ServiceURL, pausedHeight, height, FishTableName, FishConstraintName)
+	return UpdatePausedHeight(address, ServiceURLCol, pausedHeight, height, FishTableName, FishConstraintName)
 }
 
 func UpdateFishermenPausedBefore(pauseBeforeHeight, unstakingHeight, currentHeight int64) string {
-	return UpdatePausedBefore(ServiceURL, unstakingHeight, pauseBeforeHeight, currentHeight, FishTableName, FishConstraintName)
+	return UpdatePausedBefore(ServiceURLCol, unstakingHeight, pauseBeforeHeight, currentHeight, FishTableName, FishConstraintName)
 }
 
 func UpdateFishermanChainsQuery(address string, chains []string, height int64) string {
