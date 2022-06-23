@@ -10,20 +10,22 @@ const (
 	// optimization purposes.
 	DefaultUnstakingHeight = -1
 	DefaultEndHeight       = -1
-	AllSelector            = "*"
-	OneSelector            = "1"
-	AddressCol             = "address"
-	BalanceCol             = "balance"
-	PublicKeyCol           = "public_key"
-	NameCol                = "name"
-	StakedTokensCol        = "staked_tokens"
-	ServiceURLCol          = "service_url"
-	OutputAddressCol       = "output_address"
-	UnstakingHeightCol     = "unstaking_height"
-	PausedHeightCol        = "paused_height"
-	ChainIDCol             = "chain_id"
-	MaxRelaysCol           = "max_relays"
-	HeightCol              = "height"
+	// Common SQL selectors
+	AllSelector = "*"
+	OneSelector = "1"
+	// Common column names
+	AddressCol         = "address"
+	BalanceCol         = "balance"
+	PublicKeyCol       = "public_key"
+	NameCol            = "name"
+	StakedTokensCol    = "staked_tokens"
+	ServiceURLCol      = "service_url"
+	OutputAddressCol   = "output_address"
+	UnstakingHeightCol = "unstaking_height"
+	PausedHeightCol    = "paused_height"
+	ChainIDCol         = "chain_id"
+	MaxRelaysCol       = "max_relays"
+	HeightCol          = "height"
 )
 
 type GenericActor struct {
@@ -37,7 +39,7 @@ type GenericActor struct {
 	Chains          []string
 }
 
-func TableSchema(genericParamName, constraintName string) string {
+func GenericActorTableSchema(actorSpecificColName, constraintName string) string {
 	return fmt.Sprintf(`(
 			%s TEXT NOT NULL,
 			%s TEXT NOT NULL,
@@ -49,7 +51,18 @@ func TableSchema(genericParamName, constraintName string) string {
 			%s BIGINT NOT NULL default -1,
 
 			CONSTRAINT %s UNIQUE (%s, %s)
-		)`, AddressCol, PublicKeyCol, StakedTokensCol, genericParamName, OutputAddressCol, PausedHeightCol, UnstakingHeightCol, HeightCol, constraintName, AddressCol, HeightCol)
+		)`,
+		AddressCol,
+		PublicKeyCol,
+		StakedTokensCol,
+		actorSpecificColName,
+		OutputAddressCol,
+		PausedHeightCol,
+		UnstakingHeightCol,
+		HeightCol,
+		constraintName,
+		AddressCol,
+		HeightCol)
 }
 
 func ChainsTableSchema(constraintName string) string {

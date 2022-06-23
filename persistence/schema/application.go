@@ -2,14 +2,15 @@ package schema
 
 const (
 	AppTableName            = "app"
-	AppChainsTableName      = "app_chains"
-	AppConstraintName       = "app_height"
-	AppChainsConstraintName = "app_chain_height"
+	AppHeightConstraintName = "app_height"
+
+	AppChainsTableName            = "app_chains"
+	AppChainsHeightConstraintName = "app_chain_height"
 )
 
 var (
-	AppTableSchema       = TableSchema(MaxRelaysCol, AppConstraintName)
-	AppChainsTableSchema = ChainsTableSchema(AppChainsConstraintName)
+	AppTableSchema       = GenericActorTableSchema(MaxRelaysCol, AppHeightConstraintName)
+	AppChainsTableSchema = ChainsTableSchema(AppChainsHeightConstraintName)
 )
 
 func AppQuery(address string, height int64) string {
@@ -51,28 +52,28 @@ func InsertAppQuery(address, publicKey, stakedTokens, maxRelays, outputAddress s
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Chains:          chains,
-	}, MaxRelaysCol, maxRelays, AppConstraintName, AppChainsConstraintName, AppTableName, AppChainsTableName, height)
+	}, MaxRelaysCol, maxRelays, AppHeightConstraintName, AppChainsHeightConstraintName, AppTableName, AppChainsTableName, height)
 }
 
 func UpdateAppQuery(address, stakedTokens, maxRelays string, height int64) string {
-	return Update(address, stakedTokens, MaxRelaysCol, maxRelays, height, AppTableName, AppConstraintName)
+	return Update(address, stakedTokens, MaxRelaysCol, maxRelays, height, AppTableName, AppHeightConstraintName)
 }
 
 func UpdateAppChainsQuery(address string, chains []string, height int64) string {
-	return InsertChains(address, chains, height, AppChainsTableName, AppChainsConstraintName)
+	return InsertChains(address, chains, height, AppChainsTableName, AppChainsHeightConstraintName)
 }
 
 func UpdateAppUnstakingHeightQuery(address string, unstakingHeight, height int64) string {
-	return UpdateUnstakingHeight(address, MaxRelaysCol, unstakingHeight, height, AppTableName, AppConstraintName)
+	return UpdateUnstakingHeight(address, MaxRelaysCol, unstakingHeight, height, AppTableName, AppHeightConstraintName)
 
 }
 
 func UpdateAppPausedHeightQuery(address string, pausedHeight, height int64) string {
-	return UpdatePausedHeight(address, MaxRelaysCol, pausedHeight, height, AppTableName, AppConstraintName)
+	return UpdatePausedHeight(address, MaxRelaysCol, pausedHeight, height, AppTableName, AppHeightConstraintName)
 }
 
 func UpdateAppsPausedBefore(pauseBeforeHeight, unstakingHeight, height int64) string {
-	return UpdatePausedBefore(MaxRelaysCol, unstakingHeight, pauseBeforeHeight, height, AppTableName, AppConstraintName)
+	return UpdatePausedBefore(MaxRelaysCol, unstakingHeight, pauseBeforeHeight, height, AppTableName, AppHeightConstraintName)
 }
 
 func ClearAllAppsQuery() string {

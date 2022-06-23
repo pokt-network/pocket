@@ -11,7 +11,7 @@ const (
 )
 
 var (
-	FishTableSchema       = TableSchema(ServiceURLCol, FishConstraintName)
+	FishTableSchema       = GenericActorTableSchema(ServiceURLCol, FishConstraintName)
 	FishChainsTableSchema = ChainsTableSchema(FishChainsConstraintName)
 )
 
