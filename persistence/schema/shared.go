@@ -62,13 +62,13 @@ func ChainsTableSchema(constraintName string) string {
 		)`, AddressCol, ChainIDCol, HeightCol, constraintName, AddressCol, ChainIDCol, HeightCol)
 }
 
-func AccountTableSchema(genericParamName, constraintName string) string {
+func AccountTableSchema(mainColName, constraintName string) string {
 	return fmt.Sprintf(`(
 			%s TEXT NOT NULL,
 			%s TEXT NOT NULL,
 			%s BIGINT NOT NULL,
 		    CONSTRAINT %s UNIQUE (%s, %s)
-		)`, genericParamName, BalanceCol, HeightCol, constraintName, genericParamName, HeightCol)
+		)`, mainColName, BalanceCol, HeightCol, constraintName, mainColName, HeightCol)
 }
 
 func Select(selector string, address string, height int64, tableName string) string {
