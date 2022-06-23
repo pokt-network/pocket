@@ -13,40 +13,46 @@ var (
 	AppChainsTableSchema = ChainsTableSchema(AppChainsHeightConstraintName)
 )
 
-// Returns a query to retrieve all of the Application's attributes given its address at some height.
+/* Read Queries */
+
+// Returns a query to retrieve all of a single Application's attributes.
 func AppQuery(address string, height int64) string {
 	return Select(AllColsSelector, address, height, AppTableName)
 }
 
-// Returns a query for the existence of an Application given its address at some height.
+// Returns a query for the existence of an Application given its address.
 func AppExistsQuery(address string, height int64) string {
 	return Exists(address, height, AppTableName)
 }
 
-// Returns a query to retrieve data associated with all the apps ready to unstake at the given height.
+// Returns a query to retrieve data associated with all the apps ready to unstake.
 func AppsReadyToUnstakeQuery(unstakingHeight int64) string {
 	return ReadyToUnstake(unstakingHeight, AppTableName)
 }
 
-// TODO(drewsky): Discuss why/how we even need this. What is an output & operator for an app?
 // Returns a query to retrieve the output address of an application given its operator address.
+// DISCUSS(drewsky): Why/how we even need this. What is an output & operator for an app?
 func AppOutputAddressQuery(operatorAddress string, height int64) string {
 	return Select(OutputAddressCol, operatorAddress, height, AppTableName)
 }
 
+// Returns a query to retrieve the height at which an application was paused.
 func AppPausedHeightQuery(address string, height int64) string {
 	return Select(PausedHeightCol, address, height, AppTableName)
 }
 
-// DISCUSS(team): if current_height == unstaking_height - is the actor unstaking or unstaked
-// (i.e. did we process the block yet => yes if you're a replica and no if you're a proposer)?
+// Returns a query to retrieve the height at which an application started unstaking.
+// DISCUSS(team): if current_height == unstaking_height - is the actor unstaking or unstaked (i.e. did we process the block yet => yes if you're a replica and no if you're a proposer)?
 func AppUnstakingHeightQuery(address string, height int64) string {
 	return Select(UnstakingHeightCol, address, height, AppTableName)
 }
 
+// Returns a query to retrieve all the data associated with the chains an application is staked for.
 func AppChainsQuery(address string, height int64) string {
 	return SelectChains(AllColsSelector, address, height, AppTableName, AppChainsTableName)
 }
+
+/* Create / Update Queries */
 
 func InsertAppQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string {
 	return Insert(GenericActor{

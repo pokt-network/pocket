@@ -89,16 +89,17 @@ func Select(selector, address string, height int64, tableName string) string {
 		selector, tableName, address, height)
 }
 
-func SelectChains(selector, address string, height int64, baseTableName, chainsTableName string) string {
+func SelectChains(selector, address string, height int64, actorTableName, chainsTableName string) string {
 	return fmt.Sprintf(`SELECT %s FROM %s WHERE address='%s' AND height=(%s);`,
-		selector, chainsTableName, address, Select(HeightCol, address, height, baseTableName))
+		selector, chainsTableName, address, Select(HeightCol, address, height, actorTableName))
 }
 
 func Exists(address string, height int64, tableName string) string {
 	return fmt.Sprintf(`SELECT EXISTS(%s)`, Select(AnyValueSelector, address, height, tableName))
 }
 
-// TODO(drewsky): discuss `AND (height, address) IN (SELECT MAX(height), address FROM %s GROUP BY address` since Olshansky doesn't get it.
+// DISCUSS(drewsky): Olshansky doesn't get it: `AND (height, address) IN (SELECT MAX(height), address FROM %s GROUP BY address`.
+//                   Should this include some sort of greater or less than?
 func ReadyToUnstake(unstakingHeight int64, tableName string) string {
 	return fmt.Sprintf(`
 		SELECT address, staked_tokens, output_address
