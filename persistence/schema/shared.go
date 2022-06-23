@@ -98,11 +98,12 @@ func Exists(address string, height int64, tableName string) string {
 	return fmt.Sprintf(`SELECT EXISTS(%s)`, Select(AnyValueSelector, address, height, tableName))
 }
 
+// TODO(drewsky): discuss `AND (height, address) IN (SELECT MAX(height), address FROM %s GROUP BY address` since Olshansky doesn't get it.
 func ReadyToUnstake(unstakingHeight int64, tableName string) string {
 	return fmt.Sprintf(`
 		SELECT address, staked_tokens, output_address
-		FROM %s WHERE unstaking_height=%d AND (height,address)
-		IN (select MAX(height), address from %s GROUP BY address)`,
+		FROM %s WHERE unstaking_height=%d
+			AND (height, address) IN (SELECT MAX(height), address FROM %s GROUP BY address)`,
 		tableName, unstakingHeight, tableName)
 }
 

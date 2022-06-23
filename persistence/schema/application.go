@@ -23,10 +23,13 @@ func AppExistsQuery(address string, height int64) string {
 	return Exists(address, height, AppTableName)
 }
 
+// Returns a query to retrieve data associated with all the apps ready to unstake at the given height.
 func AppsReadyToUnstakeQuery(unstakingHeight int64) string {
 	return ReadyToUnstake(unstakingHeight, AppTableName)
 }
 
+// TODO(drewsky): Discuss why/how we even need this. What is an output & operator for an app?
+// Returns a query to retrieve the output address of an application given its operator address.
 func AppOutputAddressQuery(operatorAddress string, height int64) string {
 	return Select(OutputAddressCol, operatorAddress, height, AppTableName)
 }
