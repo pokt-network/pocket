@@ -14,7 +14,6 @@ import (
 )
 
 func FuzzAccountAmount(f *testing.F) {
-	// Setup
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
@@ -122,8 +121,6 @@ func FuzzPoolAmount(f *testing.F) {
 		DB:     *PostgresDB,
 	}
 	ops := []string{"Add", "Sub", "Set", "NextHeight"}
-	// IMPROVE(team): See the documentation in `persistence/README.md` for more information on
-	// why we need to call this initialization.
 	acc := NewTestPool(nil)
 	db.SetPoolAmount(acc.Name, DefaultAccountAmount)
 	expectedAmount := big.NewInt(DefaultAccountBig.Int64())

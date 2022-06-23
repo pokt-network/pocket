@@ -36,8 +36,9 @@ func (p PostgresContext) SubtractAccountAmount(address []byte, amount string) er
 	})
 }
 
-// DISCUSS(team): If we are okay with `GetAccountAmount` return 0 as a default, this function
-// can leverage `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
+// DISCUSS(team): If we are okay with `GetAccountAmount` return 0 as a default, this function can leverage
+//                `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
+// DISCUSS(team): Do we have a use-case for this function?
 func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -51,7 +52,7 @@ func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	if err != nil {
 		return err
 	}
-	// DISCUSS(team): Do we want to enforce `amount > 0` here? Ditto below for the pool.
+	// DISCUSS(team): Do we want to panic if `amount < 0` here?
 	if _, err = tx.Exec(ctx, schema.InsertAccountAmountQuery(hex.EncodeToString(address), amount, height)); err != nil {
 		return err
 	}
@@ -86,7 +87,7 @@ func (p *PostgresContext) operationAccountAmount(address []byte, deltaAmount str
 	if err != nil {
 		return err
 	}
-	// DISCUSS(team): Do we want to enforce `accountAmountBig > 0` here? Ditto below for the pool.
+	// DISCUSS(team): Do we want to panic if `accountAmountBig < 0` here?
 	if _, err := tx.Exec(ctx, schema.InsertAccountAmountQuery(hex.EncodeToString(address), shared.BigIntToString(accountAmountBig), height)); err != nil {
 		return err
 	}
@@ -139,8 +140,9 @@ func (p PostgresContext) SubtractPoolAmount(name string, amount string) error {
 	})
 }
 
-// DISCUSS(team): If we are okay with `GetPoolAmount` return 0 as a default, this function
-// can leverage `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
+// DISCUSS(team): If we are okay with `GetPoolAmount` return 0 as a default, this function can leverage
+//                `operationPoolAmount` with `*orig = *delta` and make everything much simpler.
+// DISCUSS(team): Do we have a use-case for this function?
 func (p PostgresContext) SetPoolAmount(name string, amount string) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -160,8 +162,9 @@ func (p PostgresContext) SetPoolAmount(name string, amount string) error {
 	return tx.Commit(ctx)
 }
 
-// DISCUSS(team): I'm not a fan of how similar the functionality is here to operationAccountAmount.
-// Do we want to keep the verbosity?
+// DISCUSS(team): Olshansky is not a fan of how similar the functionality is here to
+//                operationAccountAmount. There is an easy way to refactor it, but we'd be losing
+//                verbosity in exchange for less code, and the tradeoff is not clear here.
 func (p *PostgresContext) operationPoolAmount(name string, amount string, op func(*big.Int, *big.Int) error) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
