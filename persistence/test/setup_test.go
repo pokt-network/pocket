@@ -3,8 +3,6 @@ package test
 import (
 	"encoding/hex"
 	"fmt"
-	schema2 "github.com/pokt-network/pocket/persistence/schema"
-	"github.com/stretchr/testify/require"
 	"log"
 	"math/big"
 	"math/rand"
@@ -12,6 +10,9 @@ import (
 	"os/signal"
 	"testing"
 	"time"
+
+	schema2 "github.com/pokt-network/pocket/persistence/schema"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"

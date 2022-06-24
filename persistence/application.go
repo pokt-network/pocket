@@ -8,11 +8,11 @@ import (
 )
 
 func (p PostgresContext) GetAppExists(address []byte, height int64) (exists bool, err error) {
-	return p.GetExists(address, height, schema.AppExistsQuery)
+	return p.GetExists(address, height, schema.ApplicationActor.GetExistsQuery)
 }
 
 func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicKey, stakedTokens, maxRelays, outputAddress string, pauseHeight, unstakingHeight int64, chains []string, err error) {
-	actor, err := p.GetActor(address, height, schema.AppQuery, schema.AppChainsQuery)
+	actor, err := p.GetActor(address, height, schema.ApplicationActor.GetQuery, schema.ApplicationActor.GetChainsQuery)
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedTokens
@@ -35,7 +35,7 @@ func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []by
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Chains:          chains,
-	}, schema.InsertAppQuery)
+	}, schema.ApplicationActor.InsertQuery)
 }
 
 // TODO(Andrew): change `amountToAdd` to`amountToSET`
@@ -47,7 +47,7 @@ func (p PostgresContext) UpdateApp(address []byte, maxRelays string, stakedToken
 		StakedTokens: stakedTokens,
 		GenericParam: maxRelays,
 		Chains:       chains,
-	}, schema.UpdateAppQuery, schema.UpdateAppChainsQuery, schema.AppChainsTableName)
+	}, schema.ApplicationActor.UpdateQuery, schema.ApplicationActor.UpdateChainsQuery, schema.ApplicationActor.GetChainsTableName())
 }
 
 func (p PostgresContext) DeleteApp(_ []byte) error {
@@ -57,33 +57,33 @@ func (p PostgresContext) DeleteApp(_ []byte) error {
 
 // TODO(Andrew): remove status (second parameter) - not needed
 func (p PostgresContext) GetAppsReadyToUnstake(height int64, _ int) (apps []*types.UnstakingActor, err error) {
-	return p.ActorReadyToUnstakeWithChains(height, schema.AppsReadyToUnstakeQuery)
+	return p.ActorReadyToUnstakeWithChains(height, schema.ApplicationActor.GetReadyToUnstakeQuery)
 }
 
 func (p PostgresContext) GetAppStatus(address []byte, height int64) (status int, err error) {
-	return p.GetActorStatus(address, height, schema.AppUnstakingHeightQuery)
+	return p.GetActorStatus(address, height, schema.ApplicationActor.GetUnstakingHeightQuery)
 }
 
 // TODO(Andrew): remove status (third parameter) - no longer needed
 func (p PostgresContext) SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, _ int) error {
-	return p.SetActorUnstakingHeightAndStatus(address, unstakingHeight, schema.UpdateAppUnstakingHeightQuery)
+	return p.SetActorUnstakingHeightAndStatus(address, unstakingHeight, schema.ApplicationActor.UpdateUnstakingHeightQuery)
 }
 
 // DISCUSS(drewsky): Need to create a semantic constant for an error return value, but should it be 0 or -1?
 func (p PostgresContext) GetAppPauseHeightIfExists(address []byte, height int64) (pausedHeight int64, err error) {
-	return p.GetActorPauseHeightIfExists(address, height, schema.AppPausedHeightQuery)
+	return p.GetActorPauseHeightIfExists(address, height, schema.ApplicationActor.GetPausedHeightQuery)
 }
 
 // TODO(Andrew): remove status (third parameter) - it's not needed
 // DISCUSS(drewsky): This function seems to be doing too much from a naming perspective. Perhaps `SetPausedAppsToStartUnstaking`?
 func (p PostgresContext) SetAppsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
-	return p.SetActorStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, schema.UpdateAppsPausedBefore)
+	return p.SetActorStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, schema.ApplicationActor.UpdatePausedBefore)
 }
 
 func (p PostgresContext) SetAppPauseHeight(address []byte, height int64) error {
-	return p.SetActorPauseHeight(address, height, schema.UpdateAppPausedHeightQuery)
+	return p.SetActorPauseHeight(address, height, schema.ApplicationActor.UpdatePausedHeightQuery)
 }
 
 func (p PostgresContext) GetAppOutputAddress(operator []byte, height int64) (output []byte, err error) {
-	return p.GetActorOutputAddress(operator, height, schema.AppOutputAddressQuery)
+	return p.GetActorOutputAddress(operator, height, schema.ApplicationActor.GetOutputAddressQuery)
 }

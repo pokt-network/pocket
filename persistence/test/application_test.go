@@ -2,6 +2,7 @@ package test
 
 import (
 	"encoding/hex"
+	"log"
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence"
@@ -12,14 +13,26 @@ import (
 )
 
 func FuzzApplication(f *testing.F) {
-	fuzzActor(f, newTestGenericApp, query.InsertAppQuery, GetGenericApp, false, query.UpdateAppQuery,
-		query.UpdateAppChainsQuery, query.AppChainsTableName, query.AppsReadyToUnstakeQuery,
-		query.AppUnstakingHeightQuery, query.AppPausedHeightQuery, query.AppQuery, query.AppChainsQuery,
-		query.UpdateAppUnstakingHeightQuery, query.UpdateAppPausedHeightQuery, query.UpdateAppsPausedBefore,
-		query.AppOutputAddressQuery)
+	fuzzActor(f, newTestGenericApp,
+		query.ApplicationActor.InsertQuery,
+		GetGenericApp,
+		false,
+		query.ApplicationActor.UpdateQuery,
+		query.ApplicationActor.UpdateChainsQuery,
+		query.ApplicationActor.GetChainsTableName(),
+		query.ApplicationActor.GetReadyToUnstakeQuery,
+		query.ApplicationActor.GetUnstakingHeightQuery,
+		query.ApplicationActor.GetPausedHeightQuery,
+		query.ApplicationActor.GetQuery,
+		query.ApplicationActor.GetChainsQuery,
+		query.ApplicationActor.UpdateUnstakingHeightQuery,
+		query.ApplicationActor.UpdatePausedHeightQuery,
+		query.ApplicationActor.UpdatePausedBefore,
+		query.ApplicationActor.GetOutputAddressQuery)
 }
 
 func TestInsertAppAndExists(t *testing.T) {
+	log.Println("OLSH")
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,

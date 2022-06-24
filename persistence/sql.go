@@ -123,11 +123,11 @@ func InitializeValidatorTables(ctx context.Context, db *pgx.Conn) error {
 }
 
 func InitializeAppTables(ctx context.Context, db *pgx.Conn) error {
-	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.AppTableName, schema.AppTableSchema))
+	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.ApplicationActor.GetTableName(), schema.ApplicationActor.GetTableSchema()))
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.AppChainsTableName, schema.AppChainsTableSchema))
+	_, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.ApplicationActor.GetChainsTableName(), schema.ApplicationActor.GetChainsTableSchema()))
 	if err != nil {
 		return err
 	}
@@ -174,8 +174,8 @@ var clearFunctions = []func() string{
 	schema.ClearAllFishermanChainsQuery,
 	schema.ClearAllServiceNodesChainsQuery,
 	schema.ClearAllServiceNodesQuery,
-	schema.ClearAllAppsQuery,
-	schema.ClearAllAppChainsQuery,
+	schema.ApplicationActor.ClearAllQuery,
+	schema.ApplicationActor.ClearAllChainsQuery,
 	schema.ClearAllGovQuery,
 }
 
