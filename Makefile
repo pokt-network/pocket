@@ -106,6 +106,10 @@ compose_and_watch: docker_check db_start monitoring_start
 rebuild_and_compose_and_watch: db_start monitoring_start
 	docker-compose -f build/deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
+.PHONY: rebuild_and_compose_and_watch
+rebuild_and_compose_and_watch: db_start monitoring_start
+	docker-compose -f build/deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus 
+
 .PHONY: db_start
 ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
 db_start: docker_check

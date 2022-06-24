@@ -51,7 +51,7 @@ func (m *NoopTelemetryModule) GetEventMetricsAgent() modules.EventMetricsAgent {
 	return m
 }
 
-func (m *NoopTelemetryModule) EmitEvent(args ...interface{}) {
+func (m *NoopTelemetryModule) EmitEvent(namespace, event_name string, labels ...any) {
 
 }
 
@@ -61,40 +61,47 @@ func (m *NoopTelemetryModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {
 
 func (p *NoopTelemetryModule) CounterRegister(name string, description string) { NOOP() }
 
-func (p *NoopTelemetryModule) IncCounter(name string) { NOOP() }
+func (p *NoopTelemetryModule) CounterIncrement(name string) { NOOP() }
 
 func (p *NoopTelemetryModule) GaugeRegister(name string, description string) {
 	NOOP()
 }
 
 // Set sets the Gauge to an arbitrary value.
-func (p *NoopTelemetryModule) GaugeSet(name string, value float64) prometheus.Gauge {
+func (p *NoopTelemetryModule) GaugeSet(name string, value float64) (prometheus.Gauge, error) {
 	NOOP()
-	return nil
+	return nil, nil
 }
 
 // Increments the Gauge by 1. Use Add to increment it by arbitrary values.
-func (p *NoopTelemetryModule) GaugeIncrement(name string) prometheus.Gauge {
+func (p *NoopTelemetryModule) GaugeIncrement(name string) (prometheus.Gauge, error) {
 	NOOP()
-	return nil
+	return nil, nil
 }
 
 // Decrements the Gauge by 1. Use Sub to decrement it by arbitrary
-func (p *NoopTelemetryModule) GaugeDecrement(name string) prometheus.Gauge { NOOP(); return nil }
+func (p *NoopTelemetryModule) GaugeDecrement(name string) (prometheus.Gauge, error) {
+	NOOP()
+	return nil, nil
+}
 
 // Add adds the given value to the Gauge. (The value can be negative, resulting in a decrease of the Gauge.)
-func (p *NoopTelemetryModule) GaugeAdd(name string, value float64) prometheus.Gauge {
+func (p *NoopTelemetryModule) GaugeAdd(name string, value float64) (prometheus.Gauge, error) {
 	NOOP()
-	return nil
+	return nil, nil
 }
 
 // Subtracts the given value from the Gauge. (The value can be negative, resulting in an increase of the Gauge.)
-func (p *NoopTelemetryModule) GaugeSubstract(name string, value float64) prometheus.Gauge {
+func (p *NoopTelemetryModule) GaugeSub(name string, value float64) (prometheus.Gauge, error) {
 	NOOP()
-	return nil
+	return nil, nil
 }
 
-func (p *NoopTelemetryModule) GetGaugeVec(name string) *prometheus.GaugeVec { NOOP(); return nil }
+func (p *NoopTelemetryModule) GetGaugeVec(name string) (prometheus.GaugeVec, error) {
+	NOOP()
+	return *&prometheus.GaugeVec{}, nil
+}
+
 func (p *NoopTelemetryModule) GaugeVecRegister(namespace, module, name, description string, labels []string) {
 	NOOP()
 }
