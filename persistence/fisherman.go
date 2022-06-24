@@ -8,11 +8,11 @@ import (
 )
 
 func (p PostgresContext) GetFishermanExists(address []byte, height int64) (exists bool, err error) {
-	return p.GetExists(address, height, schema.FishermanExistsQuery)
+	return p.GetExists(address, height, schema.FishermanActor.GetExistsQuery)
 }
 
 func (p PostgresContext) GetFisherman(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, err error) {
-	actor, err := p.GetActor(address, height, schema.FishermanQuery, schema.FishermanChainsQuery)
+	actor, err := p.GetActor(address, height, schema.FishermanActor.GetQuery, schema.FishermanActor.GetChainsQuery)
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedTokens
@@ -35,7 +35,7 @@ func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, outpu
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Chains:          chains,
-	}, schema.InsertFishermanQuery)
+	}, schema.FishermanActor.InsertQuery)
 }
 
 // TODO(Andrew): change amount to add, to the amount to be SET
@@ -45,7 +45,7 @@ func (p PostgresContext) UpdateFisherman(address []byte, serviceURL string, stak
 		StakedTokens: stakedTokens,
 		GenericParam: serviceURL,
 		Chains:       chains,
-	}, schema.UpdateFishermanQuery, schema.UpdateFishermanChainsQuery, schema.FishChainsTableName)
+	}, schema.FishermanActor.UpdateQuery, schema.FishermanActor.UpdateChainsQuery, schema.FishermanActor.GetChainsTableName())
 }
 
 func (p PostgresContext) DeleteFisherman(_ []byte) error {
@@ -54,31 +54,31 @@ func (p PostgresContext) DeleteFisherman(_ []byte) error {
 
 // TODO(Andrew): remove status - not needed
 func (p PostgresContext) GetFishermanReadyToUnstake(height int64, _ int) (Fishermans []*types.UnstakingActor, err error) {
-	return p.ActorReadyToUnstakeWithChains(height, schema.FishermanReadyToUnstakeQuery)
+	return p.ActorReadyToUnstakeWithChains(height, schema.FishermanActor.GetReadyToUnstakeQuery)
 }
 
 func (p PostgresContext) GetFishermanStatus(address []byte, height int64) (status int, err error) {
-	return p.GetActorStatus(address, height, schema.FishermanUnstakingHeightQuery)
+	return p.GetActorStatus(address, height, schema.FishermanActor.GetUnstakingHeightQuery)
 }
 
 // TODO(Andrew): remove status - no longer needed
 func (p PostgresContext) SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, _ int) error {
-	return p.SetActorUnstakingHeightAndStatus(address, unstakingHeight, schema.UpdateFishermanUnstakingHeightQuery)
+	return p.SetActorUnstakingHeightAndStatus(address, unstakingHeight, schema.FishermanActor.UpdateUnstakingHeightQuery)
 }
 
 func (p PostgresContext) GetFishermanPauseHeightIfExists(address []byte, height int64) (int64, error) {
-	return p.GetActorPauseHeightIfExists(address, height, schema.FishermanPauseHeightQuery)
+	return p.GetActorPauseHeightIfExists(address, height, schema.FishermanActor.GetPausedHeightQuery)
 }
 
 // TODO(Andrew): remove status - it's not needed
 func (p PostgresContext) SetFishermansStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
-	return p.SetActorStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, schema.UpdateFishermenPausedBefore)
+	return p.SetActorStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, schema.FishermanActor.UpdatePausedBefore)
 }
 
 func (p PostgresContext) SetFishermanPauseHeight(address []byte, height int64) error {
-	return p.SetActorPauseHeight(address, height, schema.UpdateFishermanPausedHeightQuery)
+	return p.SetActorPauseHeight(address, height, schema.FishermanActor.UpdatePausedHeightQuery)
 }
 
 func (p PostgresContext) GetFishermanOutputAddress(operator []byte, height int64) (output []byte, err error) {
-	return p.GetActorOutputAddress(operator, height, schema.FishermanOutputAddressQuery)
+	return p.GetActorOutputAddress(operator, height, schema.FishermanActor.GetOutputAddressQuery)
 }

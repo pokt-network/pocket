@@ -3,8 +3,9 @@ package test
 import (
 	"bytes"
 	"encoding/hex"
-	query "github.com/pokt-network/pocket/persistence/schema"
 	"testing"
+
+	query "github.com/pokt-network/pocket/persistence/schema"
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -16,7 +17,7 @@ func FuzzValidator(f *testing.F) {
 	fuzzActor(f, newTestGenericValidator, query.InsertValidatorQuery, GetGenericValidator, true, query.UpdateValidatorQuery,
 		nil, "", query.ValidatorReadyToUnstakeQuery,
 		query.ValidatorUnstakingHeightQuery, query.ValidatorPauseHeightQuery, query.ValidatorQuery, nil,
-		query.UpdateValidatorUnstakingHeightQuery, query.UpdateValidatorPausedHeightQuery, query.UpdateFishermenPausedBefore,
+		query.UpdateValidatorUnstakingHeightQuery, query.UpdateValidatorPausedHeightQuery, query.FishermanActor.UpdatePausedBefore,
 		query.ValidatorOutputAddressQuery)
 }
 

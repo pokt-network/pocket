@@ -3,8 +3,9 @@ package test
 import (
 	"bytes"
 	"encoding/hex"
-	query "github.com/pokt-network/pocket/persistence/schema"
 	"testing"
+
+	query "github.com/pokt-network/pocket/persistence/schema"
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -13,11 +14,23 @@ import (
 )
 
 func FuzzFishermen(f *testing.F) {
-	fuzzActor(f, newTestGenericFisherman, query.InsertFishermanQuery, GetGenericFisherman, true, query.UpdateFishermanQuery,
-		query.UpdateFishermanChainsQuery, query.FishChainsTableName, query.FishermanReadyToUnstakeQuery,
-		query.FishermanUnstakingHeightQuery, query.FishermanPauseHeightQuery, query.FishermanQuery, query.FishermanChainsQuery,
-		query.UpdateFishermanUnstakingHeightQuery, query.UpdateFishermanPausedHeightQuery, query.UpdateFishermenPausedBefore,
-		query.FishermanOutputAddressQuery)
+	fuzzActor(f,
+		newTestGenericFisherman,
+		query.FishermanActor.InsertQuery,
+		GetGenericFisherman,
+		true,
+		query.FishermanActor.UpdateQuery,
+		query.FishermanActor.UpdateChainsQuery,
+		query.FishermanActor.GetChainsTableName(),
+		query.FishermanActor.GetReadyToUnstakeQuery,
+		query.FishermanActor.GetUnstakingHeightQuery,
+		query.FishermanActor.GetPausedHeightQuery,
+		query.FishermanActor.GetQuery,
+		query.FishermanActor.GetChainsQuery,
+		query.FishermanActor.UpdateUnstakingHeightQuery,
+		query.FishermanActor.UpdatePausedHeightQuery,
+		query.FishermanActor.UpdatePausedBefore,
+		query.FishermanActor.GetOutputAddressQuery)
 }
 
 func TestInsertFishermanAndExists(t *testing.T) {

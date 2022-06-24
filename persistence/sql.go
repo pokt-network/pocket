@@ -135,11 +135,11 @@ func InitializeAppTables(ctx context.Context, db *pgx.Conn) error {
 }
 
 func InitializeFishTables(ctx context.Context, db *pgx.Conn) error {
-	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.FishTableName, schema.FishTableSchema))
+	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.FishermanActor.GetTableName(), schema.FishermanActor.GetTableSchema()))
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.FishChainsTableName, schema.FishChainsTableSchema))
+	_, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.FishermanActor.GetChainsTableName(), schema.FishermanActor.GetChainsTableSchema()))
 	if err != nil {
 		return err
 	}
@@ -170,8 +170,8 @@ func InitializeGovTables(ctx context.Context, db *pgx.Conn) error {
 
 var clearFunctions = []func() string{
 	schema.ClearAllValidatorsQuery,
-	schema.ClearAllFishermanQuery,
-	schema.ClearAllFishermanChainsQuery,
+	schema.FishermanActor.ClearAllQuery,
+	schema.FishermanActor.ClearAllChainsQuery,
 	schema.ClearAllServiceNodesChainsQuery,
 	schema.ClearAllServiceNodesQuery,
 	schema.ApplicationActor.ClearAllQuery,
