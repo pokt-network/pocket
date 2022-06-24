@@ -6,9 +6,10 @@ import (
 )
 
 func Create(cfg *config.Config) (modules.TelemetryModule, error) {
-	if cfg.UseTelemetry {
+	// TODO(team): Add a switch statement and configuration variable when support for other telemetry modules is added.
+	if cfg.EnableTelemetry {
 		return CreatePromModule(cfg)
 	} else {
-		return CreateNoopModule(cfg)
+		return CreateNoopTelemetryModule(cfg)
 	}
 }

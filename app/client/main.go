@@ -53,7 +53,7 @@ func main() {
 			UseRainTree:    true,
 			ConnectionType: config.TCPConnection,
 		},
-		UseTelemetry: false,
+		EnableTelemetry: false,
 	}
 
 	// Initialize the state singleton
@@ -64,7 +64,7 @@ func main() {
 		log.Fatalf("[ERROR] Failed to create pre2p module: " + err.Error())
 	}
 
-	// INFO: This telemetry module instance will be NOOP
+	// This telemetry module instance will be NOOP
 	// because of the client config 'use_telemetry' key that is set to false.
 	// Since we don't need to include a dev client's metrics in our telemetry dashboards, we have to pass a NOOP telemetry module.
 	telemetryMod, err := telemetry.Create(cfg)

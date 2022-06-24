@@ -17,9 +17,9 @@ type Config struct {
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 
-	UseTelemetry bool `json:"use_telemetry"`
+	EnableTelemetry bool `json:"enable_telemetry"`
 
-	Pre2P          *Pre2PConfig          `json:"pre2p"` // TODO(derrandz): delete this once P2P is ready.
+	Pre2P          *Pre2PConfig          `json:"pre2p"` // TECHDEBT(team): consolidate/replace this with P2P configs depending on next steps
 	P2P            *P2PConfig            `json:"p2p"`
 	Consensus      *ConsensusConfig      `json:"consensus"`
 	PrePersistence *PrePersistenceConfig `json:"pre_persistence"`
@@ -89,8 +89,8 @@ type UtilityConfig struct {
 }
 
 type TelemetryConfig struct {
-	Address  string
-	Endpoint string
+	Address  string // The address that the telemetry module will use to listen for scrape requests (e.g: 0.0.0.0:9000 for proemetheus)
+	Endpoint string // the endpoint that will be provided to scrapers to fetch recorded metrics (e.g: /metrics for prometheus)
 }
 
 // TODO(insert tooling issue # here): Re-evaluate how load configs should be handeled.

@@ -11,9 +11,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var _ modules.TelemetryModule = &PromModule{}
+var (
+	_ modules.TelemetryModule   = &PromModule{}
+	_ modules.EventMetricsAgent = &PromModule{}
+	_ modules.TimeSeriesAgent   = &PromModule{}
+)
 
-// Prometheus struct
 type PromModule struct {
 	bus modules.Bus
 
@@ -22,14 +25,14 @@ type PromModule struct {
 
 	counters     map[string]prometheus.Counter
 	gauges       map[string]prometheus.Gauge
-	gaugeVectors map[string]*prometheus.GaugeVec
+	gaugeVectors map[string]prometheus.GaugeVec
 }
 
 func CreatePromModule(cfg *config.Config) (*PromModule, error) {
 	return &PromModule{
 		counters:     map[string]prometheus.Counter{},
 		gauges:       map[string]prometheus.Gauge{},
-		gaugeVectors: map[string]*prometheus.GaugeVec{},
+		gaugeVectors: map[string]prometheus.GaugeVec{},
 
 		address:  cfg.Telemetry.Address,
 		endpoint: cfg.Telemetry.Endpoint,
@@ -37,10 +40,13 @@ func CreatePromModule(cfg *config.Config) (*PromModule, error) {
 }
 
 func (m *PromModule) Start() error {
-	log.Println("Started the metrics exporter...")
+	log.Printf("\nPrometheus metrics exporter: Starting at %s/%s...\n", m.address, m.endpoint)
+
 	http.Handle(m.endpoint, promhttp.Handler())
 	go http.ListenAndServe(m.address, nil)
-	log.Println("Started OK")
+
+	log.Println("Prometheus metrics exporter started: OK")
+
 	return nil
 }
 
@@ -61,22 +67,23 @@ func (m *PromModule) GetBus() modules.Bus {
 
 // Event Metrics functionality implementation
 func (m *PromModule) GetEventMetricsAgent() modules.EventMetricsAgent {
-	return m
+	return m.(modules.EventMetricsAgent)
 }
 
-// INFO: At the moment, we are using loki to push log lines per event emission, and then we aggregate these log lines (count them, avg, etc) in grafana.
-// Reliance on logs for event metrics was a temporary solution, and will be removed in the future in favor of more thorough event metrics tooling.
-func (m *PromModule) EmitEvent(args ...interface{}) {
-	logArgs := append([]interface{}{"[EVENT]"}, args...)
+// At the moment, we are using loki to push log lines per event emission, and
+// then we aggregate these log lines (count them, avg, etc) in grafana.
+// Reliance on logs for event metrics was a temporary solution, and
+// will be removed in the future in favor of more thorough event metrics tooling.
+func (m *PromModule) EmitEvent(namespace, event string, labels ...any{}) {
+	logArgs := append([]interface{}{"[EVENT]", namespace, event}, labels...)
 	log.Println(logArgs...)
 }
 
-// Time Series metrics functionality implementation
 func (m *PromModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {
-	return m
+	return m.(modules.TimeSeriesAgent)
 }
 
-func (p *PromModule) RegisterCounter(name string, description string) {
+func (p *PromModule) CounterRegister(name string, description string) {
 	if _, exists := p.counters[name]; exists {
 		return
 	}
@@ -95,7 +102,7 @@ func (p *PromModule) IncCounter(name string) {
 	p.counters[name].Inc()
 }
 
-func (p *PromModule) RegisterGauge(name string, description string) {
+func (p *PromModule) GaugeRegister(name string, description string) {
 	if _, exists := p.gauges[name]; exists {
 		return
 	}
@@ -106,10 +113,10 @@ func (p *PromModule) RegisterGauge(name string, description string) {
 	})
 }
 
-// Set sets the Gauge to an arbitrary value.
-func (p *PromModule) SetGauge(name string, value float64) prometheus.Gauge {
+// Sets the Gauge to an arbitrary value.
+func (p *PromModule) GaugeSet(name string, value float64) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil
+		return nil, NonExistantMetric("gauge", name, "set")
 	}
 
 	gg := p.gauges[name]
@@ -118,11 +125,10 @@ func (p *PromModule) SetGauge(name string, value float64) prometheus.Gauge {
 	return gg
 }
 
-// Inc increments the Gauge by 1. Use Add to increment it by arbitrary
-// values.
-func (p *PromModule) IncGauge(name string) prometheus.Gauge {
+// Increments the Gauge by 1. Use Add to increment it by arbitrary values.
+func (p *PromModule) GaugeIncrement(name string) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil
+		return nil, NonExistentErr("gauge", name, "increment")
 	}
 
 	gg := p.gauges[name]
@@ -131,13 +137,10 @@ func (p *PromModule) IncGauge(name string) prometheus.Gauge {
 	return gg
 }
 
-// IncGauge(name string)
-
-// // Dec decrements the Gauge by 1. Use Sub to decrement it by arbitrary
-// // values.
-func (p *PromModule) DecGauge(name string) prometheus.Gauge {
+// Decrements the Gauge by 1. Use Sub to decrement it by arbitrary values.
+func (p *PromModule) GaugeDecrement(name string) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil
+		return nil, NonExistantMetric("gauge", name, "decrement")
 	}
 
 	gg := p.gauges[name]
@@ -146,11 +149,10 @@ func (p *PromModule) DecGauge(name string) prometheus.Gauge {
 	return gg
 }
 
-// // Add adds the given value to the Gauge. (The value can be negative,
-// // resulting in a decrease of the Gauge.)
-func (p *PromModule) AddToGauge(name string, value float64) prometheus.Gauge {
+// Adds the given value to the Gauge. (The value can be negative, resulting in a decrease of the Gauge.)
+func (p *PromModule) GaugeAdd(name string, value float64) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil
+		return nil, NonExistantMetric("gauge", name, "add to")
 	}
 
 	gg := p.gauges[name]
@@ -159,11 +161,10 @@ func (p *PromModule) AddToGauge(name string, value float64) prometheus.Gauge {
 	return gg
 }
 
-// // Sub subtracts the given value from the Gauge. (The value can be
-// // negative, resulting in an increase of the Gauge.)
-func (p *PromModule) SubFromGauge(name string, value float64) prometheus.Gauge {
+// Subtracts the given value from the Gauge. (The value can be negative, resulting in an increase of the Gauge.)
+func (p *PromModule) GaugeSubstract(name string, value float64) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil
+		return nil, NonExistantMetric("gauge", name, "substract from")
 	}
 
 	gg := p.gauges[name]
@@ -171,8 +172,8 @@ func (p *PromModule) SubFromGauge(name string, value float64) prometheus.Gauge {
 	return gg
 }
 
-// Register a gauge vector by name and provide labels
-func (p *PromModule) RegisterGaugeVector(namespace, module, name, description string, labels []string) {
+// Registers a gauge vector by name and provide labels
+func (p *PromModule) GaugeVecRegister(namespace, module, name, description string, labels []string) {
 	if _, exists := p.counters[name]; exists {
 		return
 	}
@@ -189,10 +190,10 @@ func (p *PromModule) RegisterGaugeVector(namespace, module, name, description st
 	p.gaugeVectors[name] = gg
 }
 
-// Retrieve a gauge vector by name
-func (p *PromModule) GetGaugeVec(name string) *prometheus.GaugeVec {
+// Retrieves a gauge vector by name
+func (p *PromModule) GetGaugeVec(name string)( prometheus.GaugeVec, error) {
 	if gv, exists := p.gaugeVectors[name]; exists {
-		return gv
+		return gv, NonExistantMetric("gauge vector", name, "get")
 	}
 	return nil
 }

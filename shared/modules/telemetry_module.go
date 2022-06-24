@@ -2,53 +2,52 @@ package modules
 
 import "github.com/prometheus/client_golang/prometheus"
 
-type (
-	TelemetryModule interface {
-		Module
+type TelemetryModule interface {
+	Module
 
-		// Time series
-		GetTimeSeriesAgent() TimeSeriesAgent
-		GetEventMetricsAgent() EventMetricsAgent
-	}
+	GetTimeSeriesAgent() TimeSeriesAgent
+	GetEventMetricsAgent() EventMetricsAgent
+}
 
-	// Interface for time series agent (prometheus)
-	TimeSeriesAgent interface {
-		// Counters
+// Interface for time series agent (prometheus)
+type TimeSeriesAgent interface {
+	// Counters
 
-		// Register a counter by name
-		RegisterCounter(name string, description string)
-		// Increment the counter
-		IncCounter(name string)
+	// Registers a counter by name
+	CounterRegister(name string, description string)
+	// Increments the counter
+	IncrementCounter(name string)
 
-		// Gauges
+	// Gauges
 
-		// Register a gauge by name
-		RegisterGauge(name string, description string)
-		// Set sets the Gauge to an arbitrary value.
-		SetGauge(name string, value float64) prometheus.Gauge
-		// Inc increments the Gauge by 1. Use Add to increment it by arbitrary
-		// values.
-		IncGauge(name string) prometheus.Gauge
-		// Dec decrements the Gauge by 1. Use Sub to decrement it by arbitrary
-		// values.
-		DecGauge(name string) prometheus.Gauge
-		// Add adds the given value to the Gauge. (The value can be negative,
-		// resulting in a decrease of the Gauge.)
-		AddToGauge(name string, value float64) prometheus.Gauge
-		// Sub subtracts the given value from the Gauge. (The value can be
-		// negative, resulting in an increase of the Gauge.)
-		SubFromGauge(name string, value float64) prometheus.Gauge
+	// Register a gauge by name
+	GaugeRegister(name string, description string)
 
-		// Gauge Vectors
+	// Sets the Gauge to an arbitrary value.
+	GaugeSet(name string, value float64) (prometheus.Gauge, error)
 
-		// Register a gauge vector by name and provide labels
-		RegisterGaugeVector(namespace, module, name, description string, labels []string)
-		// Retrieve a gauge vector by name
-		GetGaugeVec(name string) *prometheus.GaugeVec
-	}
+	// Increments the Gauge by 1. Use Add to increment it by arbitrary values.
+	GaugeIncrement(name string) (prometheus.Gauge, error)
 
-	// Interface for the event metrics agent (relies on logging ftm)
-	EventMetricsAgent interface {
-		EmitEvent(...interface{})
-	}
-)
+	// Dec decrements the Gauge by 1. Use Sub to decrement it by arbitrary values.
+	GaugeDecrement(name string) (prometheus.Gauge, error)
+
+	// Adds the given value to the Gauge. (The value can be negative, resulting in a decrease of the Gauge.)
+	GaugeAdd(name string, value float64) (prometheus.Gauge, error)
+
+	// Subtracts the given value from the Gauge. (The value can be negative, resulting in an increase of the Gauge.)
+	GaugeSub(name string, value float64) (prometheus.Gauge, error)
+
+	// Gauge Vectors
+
+	// Registers a gauge vector by name and provide labels
+	GaugeVecRegister(namespace, module, name, description string, labels []string)
+
+	// Retrieves a gauge vector by name
+	GetGaugeVec(name string) (prometheus.GaugeVec, error)
+}
+
+// Interface for the event metrics agent (relies on logging ftm)
+type EventMetricsAgent interface {
+	EmitEvent(...any{})
+}

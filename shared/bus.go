@@ -1,6 +1,8 @@
 package shared
 
 import (
+	"log"
+
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 )
@@ -21,6 +23,63 @@ const (
 	DefaultPocketBusBufferSize = 100
 )
 
+func CreateBus(
+	persistence modules.PersistenceModule,
+	p2p modules.P2PModule,
+	utility modules.UtilityModule,
+	consensus modules.ConsensusModule,
+	telemetry modules.TelemetryModule,
+) (modules.Bus, error) {
+	bus := &bus{
+		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
+		persistence: persistence,
+		p2p:         p2p,
+		utility:     utility,
+		consensus:   consensus,
+		telemetry:   telemetry,
+	}
+
+	if persistence == nil {
+		log.Fatalf("Bus Error: the provided persistence module is nil, Please use CreateBusWithOptionalModules if you intended it to be nil.")
+	}
+
+	if p2p == nil {
+		log.Fatalf("Bus Error: the provided p2p module is nil, Please use CreateBusWithOptionalModules if you intended it to be nil.")
+	}
+
+	if utility == nil {
+		log.Fatalf("Bus Error: the provided utility module is nil, Please use CreateBusWithOptionalModules if you intended it to be nil.")
+	}
+
+	if consensus == nil {
+		log.Fatalf("Bus Error: the provided consensuss module is nil, Please use CreateBusWithOptionalModules if you intended it to be nil.")
+	}
+
+	if telemetry == nil {
+
+		log.Fatalf("Bus Error: the provided telemetry module is nil, Please use CreateBusWithOptionalModules if you intended it to be nil.")
+	}
+
+	persistence.SetBus(bus)
+	consensus.SetBus(bus)
+	p2p.SetBus(bus)
+	utility.SetBus(bus)
+	telemetry.SetBus(bus)
+
+	return bus, nil
+}
+
+// This is a version of CreateBus that accepts nil modules.
+// This function allows you to use a specific module in isolation of other modules but providing a bus with nil modules or otherwise.
+//
+// Example of usage(app/client/main.go):
+//
+//    We want to use the pre2p module in isolation to communicate with nodes in the network.
+//    The pre2p module expects to retrieve a telemetry module through the bus to perform instrumentation, thus we need to inject a bus that can retrieve a telemetry module.
+//    However, we don't need telemetry for the dev client.
+//    Using CreateBusWithOptionalModules, we can create a bus with only pre2p and a NOOP telemetry module
+//    so that we can the pre2p module without any issues.
+//
 func CreateBusWithOptionalModules(
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
@@ -63,31 +122,6 @@ func CreateBusWithOptionalModules(
 	}
 
 	return bus
-}
-
-func CreateBus(
-	persistence modules.PersistenceModule,
-	p2p modules.P2PModule,
-	utility modules.UtilityModule,
-	consensus modules.ConsensusModule,
-	telemetry modules.TelemetryModule,
-) (modules.Bus, error) {
-	bus := &bus{
-		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
-		persistence: persistence,
-		p2p:         p2p,
-		utility:     utility,
-		consensus:   consensus,
-		telemetry:   telemetry,
-	}
-
-	persistence.SetBus(bus)
-	consensus.SetBus(bus)
-	p2p.SetBus(bus)
-	utility.SetBus(bus)
-	telemetry.SetBus(bus)
-
-	return bus, nil
 }
 
 func (m *bus) PublishEventToBus(e *types.PocketEvent) {

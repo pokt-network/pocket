@@ -201,7 +201,3 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	// Note that the leader also acts as a replica, but this logic is implemented in the underlying code.
 	leaderHandlers[msg.Step](m, msg)
 }
-
-func (m *consensusModule) GetBlockHeight() uint64 {
-	return m.Height
-}

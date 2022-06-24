@@ -43,7 +43,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook,
 		addrBookMap:  make(typesPre2P.AddrBookMap),
 		addrList:     make([]string, 0),
 		maxNumLevels: 0,
-		// TODO: Mempool size should be configurable
+		// TODO(team): Mempool size should be configurable
 		mempool: types.NewMempool(1000000, 1000),
 	}
 

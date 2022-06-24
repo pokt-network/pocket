@@ -36,22 +36,15 @@ go_vet:
 go_staticcheck:
 	@if builtin type -P "staticcheck"; then staticcheck ./... ; else echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; fi
 
-.PHONY: refresh
-## Removes vendor, installs deps, generates mocks and protobuf files. Perform after a new pull or a branch switch
-refresh:
-	go mod tidy && go mod vendor && make protogen_clean && make protogen_local
-
-.PHONY: go_clean_dep
-## Runs `go mod vendor` && `go mod tidy`
-	go mod vendor && go mod tidy
-
-.PHONY: build
-## Build Pocket's main entrypoint
-build:
 .PHONY: go_clean_deps
 ## Runs `go mod tidy` && `go mod vendor`
 go_clean_deps:
 	go mod tidy && go mod vendor
+
+.PHONY: refresh
+## Removes vendor, installs deps, generates mocks and protobuf files. Perform after a new pull or a branch switch
+refresh: go_clean_deps
+	go mod tidy && go mod vendor && make protogen_clean && make protogen_local
 
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
@@ -122,6 +115,10 @@ docker_wipe: prompt_user
 ## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
 monitoring_start:
 	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d grafana loki vm
+
+.PHONY: make docker_loki_install
+## Installs the loki docker driver
+	docker plugin install grafana/loki-docker-driver:latest --alais loki --grant-all-permissions
 
 .PHONY: mockgen
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
@@ -215,7 +212,6 @@ protogen_clean:
 ## Generate go structures for all of the protobufs
 protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
-	$(eval shared_flags = "--experimental_allow_proto3_optional")
 
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto
