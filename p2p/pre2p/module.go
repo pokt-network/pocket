@@ -23,8 +23,6 @@ import (
 var _ modules.P2PModule = &p2pModule{}
 
 type p2pModule struct {
-	// p2pModule is a telemetryModule, that will use the shared telemetry module in the bus
-	// this allows the p2pModule to have fine-grain control over its own telemetry, using the shared telemetry module.
 	bus modules.Bus
 
 	listener typesPre2P.TransportLayerConn
@@ -113,11 +111,7 @@ func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
 	}
 	log.Println("broadcasting message to network")
 
-	if err := m.network.NetworkBroadcast(data); err != nil {
-		return err
-	}
-
-	return nil
+	return m.network.NetworkBroadcast(data)
 }
 
 func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.PocketTopic) error {
@@ -130,11 +124,7 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 		return err
 	}
 
-	if err := m.network.NetworkSend(data, addr); err != nil {
-		return err
-	}
-
-	return nil
+	return m.network.NetworkSend(data, addr)
 }
 
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
