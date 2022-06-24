@@ -16,7 +16,7 @@ type TimeSeriesAgent interface {
 	// Registers a counter by name
 	CounterRegister(name string, description string)
 	// Increments the counter
-	IncrementCounter(name string)
+	CounterIncrement(name string)
 
 	// Gauges
 
@@ -49,5 +49,5 @@ type TimeSeriesAgent interface {
 
 // Interface for the event metrics agent (relies on logging ftm)
 type EventMetricsAgent interface {
-	EmitEvent(...any{})
+	EmitEvent(namespace, event_name string, labels ...any)
 }

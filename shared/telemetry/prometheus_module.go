@@ -67,20 +67,20 @@ func (m *PromModule) GetBus() modules.Bus {
 
 // Event Metrics functionality implementation
 func (m *PromModule) GetEventMetricsAgent() modules.EventMetricsAgent {
-	return m.(modules.EventMetricsAgent)
+	return modules.EventMetricsAgent(m)
 }
 
 // At the moment, we are using loki to push log lines per event emission, and
 // then we aggregate these log lines (count them, avg, etc) in grafana.
 // Reliance on logs for event metrics was a temporary solution, and
 // will be removed in the future in favor of more thorough event metrics tooling.
-func (m *PromModule) EmitEvent(namespace, event string, labels ...any{}) {
+func (m *PromModule) EmitEvent(namespace, event string, labels ...any) {
 	logArgs := append([]interface{}{"[EVENT]", namespace, event}, labels...)
 	log.Println(logArgs...)
 }
 
 func (m *PromModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {
-	return m.(modules.TimeSeriesAgent)
+	return modules.TimeSeriesAgent(m)
 }
 
 func (p *PromModule) CounterRegister(name string, description string) {
@@ -94,7 +94,7 @@ func (p *PromModule) CounterRegister(name string, description string) {
 	})
 }
 
-func (p *PromModule) IncCounter(name string) {
+func (p *PromModule) CounterIncrement(name string) {
 	if _, exists := p.counters[name]; !exists {
 		return
 	}
@@ -116,60 +116,60 @@ func (p *PromModule) GaugeRegister(name string, description string) {
 // Sets the Gauge to an arbitrary value.
 func (p *PromModule) GaugeSet(name string, value float64) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil, NonExistantMetric("gauge", name, "set")
+		return nil, NonExistantMetricErr("gauge", name, "set")
 	}
 
 	gg := p.gauges[name]
 	gg.Set(value)
 
-	return gg
+	return gg, nil
 }
 
 // Increments the Gauge by 1. Use Add to increment it by arbitrary values.
 func (p *PromModule) GaugeIncrement(name string) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil, NonExistentErr("gauge", name, "increment")
+		return nil, NonExistantMetricErr("gauge", name, "increment")
 	}
 
 	gg := p.gauges[name]
 	gg.Inc()
 
-	return gg
+	return gg, nil
 }
 
 // Decrements the Gauge by 1. Use Sub to decrement it by arbitrary values.
 func (p *PromModule) GaugeDecrement(name string) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil, NonExistantMetric("gauge", name, "decrement")
+		return nil, NonExistantMetricErr("gauge", name, "decrement")
 	}
 
 	gg := p.gauges[name]
 	gg.Dec()
 
-	return gg
+	return gg, nil
 }
 
 // Adds the given value to the Gauge. (The value can be negative, resulting in a decrease of the Gauge.)
 func (p *PromModule) GaugeAdd(name string, value float64) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil, NonExistantMetric("gauge", name, "add to")
+		return nil, NonExistantMetricErr("gauge", name, "add to")
 	}
 
 	gg := p.gauges[name]
 	gg.Add(value)
 
-	return gg
+	return gg, nil
 }
 
 // Subtracts the given value from the Gauge. (The value can be negative, resulting in an increase of the Gauge.)
-func (p *PromModule) GaugeSubstract(name string, value float64) (prometheus.Gauge, error) {
+func (p *PromModule) GaugeSub(name string, value float64) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil, NonExistantMetric("gauge", name, "substract from")
+		return nil, NonExistantMetricErr("gauge", name, "substract from")
 	}
 
 	gg := p.gauges[name]
 	gg.Sub(value)
-	return gg
+	return gg, nil
 }
 
 // Registers a gauge vector by name and provide labels
@@ -187,13 +187,13 @@ func (p *PromModule) GaugeVecRegister(namespace, module, name, description strin
 		},
 		labels,
 	)
-	p.gaugeVectors[name] = gg
+	p.gaugeVectors[name] = *gg
 }
 
 // Retrieves a gauge vector by name
-func (p *PromModule) GetGaugeVec(name string)( prometheus.GaugeVec, error) {
+func (p *PromModule) GetGaugeVec(name string) (prometheus.GaugeVec, error) {
 	if gv, exists := p.gaugeVectors[name]; exists {
-		return gv, NonExistantMetric("gauge vector", name, "get")
+		return gv, NonExistantMetricErr("gauge vector", name, "get")
 	}
-	return nil
+	return prometheus.GaugeVec{}, nil
 }
