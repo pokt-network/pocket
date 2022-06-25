@@ -14,23 +14,11 @@ import (
 )
 
 func FuzzFishermen(f *testing.F) {
-	fuzzActor(f,
+	fuzzProtocolActor(f,
 		newTestGenericFisherman,
-		query.FishermanActor.InsertQuery,
 		GetGenericFisherman,
-		true,
-		query.FishermanActor.UpdateQuery,
-		query.FishermanActor.UpdateChainsQuery,
-		query.FishermanActor.GetChainsTableName(),
-		query.FishermanActor.GetReadyToUnstakeQuery,
-		query.FishermanActor.GetUnstakingHeightQuery,
-		query.FishermanActor.GetPausedHeightQuery,
-		query.FishermanActor.GetQuery,
-		query.FishermanActor.GetChainsQuery,
-		query.FishermanActor.UpdateUnstakingHeightQuery,
-		query.FishermanActor.UpdatePausedHeightQuery,
-		query.FishermanActor.UpdatePausedBefore,
-		query.FishermanActor.GetOutputAddressQuery)
+		query.FishermanActor)
+
 }
 
 func TestInsertFishermanAndExists(t *testing.T) {

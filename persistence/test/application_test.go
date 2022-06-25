@@ -13,22 +13,10 @@ import (
 )
 
 func FuzzApplication(f *testing.F) {
-	fuzzActor(f, newTestGenericApp,
-		query.ApplicationActor.InsertQuery,
+	fuzzProtocolActor(f,
+		newTestGenericApp,
 		GetGenericApp,
-		false,
-		query.ApplicationActor.UpdateQuery,
-		query.ApplicationActor.UpdateChainsQuery,
-		query.ApplicationActor.GetChainsTableName(),
-		query.ApplicationActor.GetReadyToUnstakeQuery,
-		query.ApplicationActor.GetUnstakingHeightQuery,
-		query.ApplicationActor.GetPausedHeightQuery,
-		query.ApplicationActor.GetQuery,
-		query.ApplicationActor.GetChainsQuery,
-		query.ApplicationActor.UpdateUnstakingHeightQuery,
-		query.ApplicationActor.UpdatePausedHeightQuery,
-		query.ApplicationActor.UpdatePausedBefore,
-		query.ApplicationActor.GetOutputAddressQuery)
+		query.ApplicationActor)
 }
 
 func TestInsertAppAndExists(t *testing.T) {
