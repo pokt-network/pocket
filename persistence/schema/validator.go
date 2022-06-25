@@ -9,7 +9,7 @@ const (
 )
 
 var (
-	ValTableSchema = GenericActorTableSchema(ServiceURLCol, ValidatorConstraintName)
+	ValTableSchema = ActorTableSchema(ServiceURLCol, ValidatorConstraintName)
 )
 
 func ValidatorQuery(address string, height int64) string {

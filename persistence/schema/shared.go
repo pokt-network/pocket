@@ -28,18 +28,7 @@ const (
 	HeightCol          = "height"
 )
 
-type GenericActor struct {
-	Address         string
-	PublicKey       string
-	StakedTokens    string
-	GenericParam    string //
-	OutputAddress   string
-	PausedHeight    int64
-	UnstakingHeight int64
-	Chains          []string // IMPROVE: Consider creating a `type Chain string` for chains
-}
-
-func GenericActorTableSchema(actorSpecificColName, constraintName string) string {
+func ActorTableSchema(actorSpecificColName, constraintName string) string {
 	return fmt.Sprintf(`(
 			%s TEXT NOT NULL,
 			%s TEXT NOT NULL,

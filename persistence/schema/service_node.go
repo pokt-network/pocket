@@ -8,7 +8,7 @@ const (
 )
 
 var (
-	ServiceNodeTableSchema       = GenericActorTableSchema(ServiceURLCol, ServiceNodeConstraintName)
+	ServiceNodeTableSchema       = ActorTableSchema(ServiceURLCol, ServiceNodeConstraintName)
 	ServiceNodeChainsTableSchema = ChainsTableSchema(ServiceNodeChainsConstraintName)
 )
 
