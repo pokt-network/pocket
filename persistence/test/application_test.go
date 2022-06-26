@@ -13,8 +13,8 @@ import (
 
 func FuzzApplication(f *testing.F) {
 	fuzzProtocolActor(f,
-		newTestGenericApp,
-		GetGenericApp,
+		NewTestGenericActor(newTestApp),
+		GetGenericActor(GetTestApp),
 		query.ApplicationActor)
 }
 
@@ -197,44 +197,6 @@ func newTestApp() (typesGenesis.App, error) {
 		PausedHeight:    uint64(DefaultPauseHeight),
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          addr2,
-	}, nil
-}
-
-func newTestGenericApp() (query.GenericActor, error) {
-	app, err := newTestApp()
-	if err != nil {
-		return query.GenericActor{}, err
-	}
-	return query.GenericActor{
-		Address:         hex.EncodeToString(app.Address),
-		PublicKey:       hex.EncodeToString(app.PublicKey),
-		StakedTokens:    app.StakedTokens,
-		GenericParam:    app.MaxRelays,
-		OutputAddress:   hex.EncodeToString(app.Output),
-		PausedHeight:    int64(app.PausedHeight),
-		UnstakingHeight: app.UnstakingHeight,
-		Chains:          app.Chains,
-	}, nil
-}
-
-func GetGenericApp(db persistence.PostgresContext, address string) (*query.GenericActor, error) {
-	addr, err := hex.DecodeString(address)
-	if err != nil {
-		return nil, err
-	}
-	app, err := GetTestApp(db, addr)
-	if err != nil {
-		return nil, err
-	}
-	return &query.GenericActor{
-		Address:         hex.EncodeToString(app.Address),
-		PublicKey:       hex.EncodeToString(app.PublicKey),
-		StakedTokens:    app.StakedTokens,
-		GenericParam:    app.MaxRelays,
-		OutputAddress:   hex.EncodeToString(app.Output),
-		PausedHeight:    int64(app.PausedHeight),
-		UnstakingHeight: app.UnstakingHeight,
-		Chains:          app.Chains,
 	}, nil
 }
 
