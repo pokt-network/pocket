@@ -15,8 +15,8 @@ import (
 
 func FuzzFishermen(f *testing.F) {
 	fuzzProtocolActor(f,
-		newTestGenericFisherman,
-		GetGenericFisherman,
+		NewTestGenericActor(newTestFisherman),
+		GetGenericActor(GetTestFisherman),
 		query.FishermanActor)
 
 }
@@ -192,18 +192,17 @@ func NewTestFisherman(t *testing.T) typesGenesis.Fisherman {
 }
 
 func newTestFisherman() (typesGenesis.Fisherman, error) {
-	pub1, err := crypto.GeneratePublicKey()
+	pubKey, err := crypto.GeneratePublicKey()
 	if err != nil {
-		return typesGenesis.Fisherman{}, nil
+		return typesGenesis.Fisherman{}, err
 	}
-	addr1 := pub1.Address()
-	addr2, err := crypto.GenerateAddress()
+	outputAddr, err := crypto.GenerateAddress()
 	if err != nil {
-		return typesGenesis.Fisherman{}, nil
+		return typesGenesis.Fisherman{}, err
 	}
 	return typesGenesis.Fisherman{
-		Address:         addr1,
-		PublicKey:       pub1.Bytes(),
+		Address:         pubKey.Address(),
+		PublicKey:       pubKey.Bytes(),
 		Paused:          false,
 		Status:          typesGenesis.DefaultStakeStatus,
 		Chains:          typesGenesis.DefaultChains,
@@ -211,45 +210,7 @@ func newTestFisherman() (typesGenesis.Fisherman, error) {
 		StakedTokens:    typesGenesis.DefaultStake,
 		PausedHeight:    uint64(DefaultPauseHeight),
 		UnstakingHeight: DefaultUnstakingHeight,
-		Output:          addr2,
-	}, nil
-}
-
-func newTestGenericFisherman() (query.GenericActor, error) {
-	fish, err := newTestFisherman()
-	if err != nil {
-		return query.GenericActor{}, err
-	}
-	return query.GenericActor{
-		Address:         hex.EncodeToString(fish.Address),
-		PublicKey:       hex.EncodeToString(fish.PublicKey),
-		StakedTokens:    fish.StakedTokens,
-		GenericParam:    fish.ServiceUrl,
-		OutputAddress:   hex.EncodeToString(fish.Output),
-		PausedHeight:    int64(fish.PausedHeight),
-		UnstakingHeight: fish.UnstakingHeight,
-		Chains:          fish.Chains,
-	}, nil
-}
-
-func GetGenericFisherman(db persistence.PostgresContext, address string) (*query.GenericActor, error) {
-	addr, err := hex.DecodeString(address)
-	if err != nil {
-		return nil, err
-	}
-	fish, err := GetTestFisherman(db, addr)
-	if err != nil {
-		return nil, err
-	}
-	return &query.GenericActor{
-		Address:         hex.EncodeToString(fish.Address),
-		PublicKey:       hex.EncodeToString(fish.PublicKey),
-		StakedTokens:    fish.StakedTokens,
-		GenericParam:    fish.ServiceUrl,
-		OutputAddress:   hex.EncodeToString(fish.Output),
-		PausedHeight:    int64(fish.PausedHeight),
-		UnstakingHeight: fish.UnstakingHeight,
-		Chains:          fish.Chains,
+		Output:          outputAddr,
 	}, nil
 }
 

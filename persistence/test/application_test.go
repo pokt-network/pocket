@@ -2,7 +2,6 @@ package test
 
 import (
 	"encoding/hex"
-	"log"
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence"
@@ -20,7 +19,6 @@ func FuzzApplication(f *testing.F) {
 }
 
 func TestInsertAppAndExists(t *testing.T) {
-	log.Println("OLSH")
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,

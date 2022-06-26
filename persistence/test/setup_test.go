@@ -326,7 +326,7 @@ func fuzzActor(f *testing.F, newActor func() (schema2.GenericActor, error),
 
 func fuzzProtocolActor(
 	f *testing.F,
-	newActor func() (schema2.GenericActor, error),
+	newTestActor func() (schema2.GenericActor, error),
 	getTestActor func(db persistence.PostgresContext, address string) (*schema2.GenericActor, error),
 	protocolActor schema2.ProtocolActor) {
 	db := persistence.PostgresContext{
@@ -340,7 +340,7 @@ func fuzzProtocolActor(
 	ops := []string{"Update", "GetReadyToUnstake",
 		"GetStatus", "GetPauseHeight", "SetUnstakingHeight", "SetPauseHeight",
 		"SetPausedToUnstaking", "GetOutput", "NextHeight"}
-	actor, err := newActor()
+	actor, err := newTestActor()
 	if err != nil {
 		panic(err)
 	}
