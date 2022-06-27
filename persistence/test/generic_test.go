@@ -29,7 +29,7 @@ func NewTestGenericActor[T any](newActor func() (T, error)) func() (query.Generi
 		if err != nil {
 			return query.GenericActor{}, err
 		}
-		return getActorValues(reflect.ValueOf(actor)), nil
+		return getActorValues(reflect.Indirect(reflect.ValueOf(actor))), nil
 	}
 }
 

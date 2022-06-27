@@ -176,8 +176,8 @@ func UpdateUnstakingHeight(address, genericParamName string, unstakingHeight, he
 			)
 		ON CONFLICT ON CONSTRAINT %s
 			DO UPDATE SET unstaking_height=EXCLUDED.unstaking_height, height=EXCLUDED.height`,
-		tableName, genericParamName, genericParamName,
-		unstakingHeight, height,
+		tableName, genericParamName,
+		genericParamName, unstakingHeight, height,
 		tableName, address, height, constraintName)
 
 }

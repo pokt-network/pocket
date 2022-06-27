@@ -38,9 +38,6 @@ func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []by
 	}, schema.ApplicationActor.InsertQuery)
 }
 
-// TODO(Andrew): change `amountToAdd` to`amountToSET`
-// NOTE: originally, we thought we could do arithmetic operations quite easily to just 'bump' the max relays - but since
-// it's a bigint (TEXT in Postgres) I don't believe this optimization is possible. Best use new amounts for 'Update'
 func (p PostgresContext) UpdateApp(address []byte, maxRelays string, stakedTokens string, chains []string) error {
 	return p.UpdateActor(schema.GenericActor{
 		Address:      hex.EncodeToString(address),
@@ -51,7 +48,7 @@ func (p PostgresContext) UpdateApp(address []byte, maxRelays string, stakedToken
 }
 
 func (p PostgresContext) DeleteApp(_ []byte) error {
-	// No op
+	// NOOP
 	return nil
 }
 

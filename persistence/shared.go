@@ -2,14 +2,16 @@ package persistence
 
 import (
 	"encoding/hex"
+
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
-// TODO(team): get rid of status and/or move to shared and/or create an enum
+// IMPROVE(team): Move this into a proto enum
 const (
-	UnstakedStatus int = iota
+	UndefinedStakingStatus = iota
+	UnstakedStatus
 	UnstakingStatus
 	StakedStatus
 )
@@ -109,11 +111,13 @@ func (p *PostgresContext) ActorReadyToUnstakeWithChains(height int64, query func
 	if err != nil {
 		return nil, err
 	}
+
 	rows, err := conn.Query(ctx, query(height))
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		unstakingActor := types.UnstakingActor{}
 		var addr, output string
@@ -155,17 +159,21 @@ func (p *PostgresContext) SetActorUnstakingHeightAndStatus(address []byte, unsta
 	if err != nil {
 		return err
 	}
+
 	height, err := p.GetHeight()
 	if err != nil {
 		return err
 	}
+
 	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return err
 	}
+
 	if _, err = tx.Exec(ctx, query(hex.EncodeToString(address), unstakingHeight, height)); err != nil {
 		return err
 	}
+
 	return tx.Commit(ctx)
 }
 
