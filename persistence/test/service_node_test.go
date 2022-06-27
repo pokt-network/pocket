@@ -3,8 +3,9 @@ package test
 import (
 	"bytes"
 	"encoding/hex"
-	query "github.com/pokt-network/pocket/persistence/schema"
 	"testing"
+
+	query "github.com/pokt-network/pocket/persistence/schema"
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -13,11 +14,10 @@ import (
 )
 
 func FuzzServiceNode(f *testing.F) {
-	fuzzActor(f, newTestGenericServiceNode, query.InsertServiceNodeQuery, GetGenericServiceNode, true, query.UpdateServiceNodeQuery,
-		query.UpdateServiceNodeChainsQuery, query.ServiceNodeChainsTableName, query.ServiceNodeReadyToUnstakeQuery,
-		query.ServiceNodeUnstakingHeightQuery, query.ServiceNodePauseHeightQuery, query.ServiceNodeQuery, query.ServiceNodeChainsQuery,
-		query.UpdateServiceNodeUnstakingHeightQuery, query.UpdateServiceNodePausedHeightQuery, query.UpdateServiceNodesPausedBefore,
-		query.ServiceNodeOutputAddressQuery)
+	fuzzProtocolActor(f,
+		NewTestGenericActor(newTestServiceNode),
+		GetGenericActor(GetTestServiceNode),
+		query.ServiceNodeActor)
 }
 
 func TestInsertServiceNodeAndExists(t *testing.T) {
@@ -214,44 +214,6 @@ func newTestServiceNode() (typesGenesis.ServiceNode, error) {
 		PausedHeight:    uint64(DefaultPauseHeight),
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          addr2,
-	}, nil
-}
-
-func newTestGenericServiceNode() (query.GenericActor, error) {
-	sn, err := newTestServiceNode()
-	if err != nil {
-		return query.GenericActor{}, err
-	}
-	return query.GenericActor{
-		Address:         hex.EncodeToString(sn.Address),
-		PublicKey:       hex.EncodeToString(sn.PublicKey),
-		StakedTokens:    sn.StakedTokens,
-		GenericParam:    sn.ServiceUrl,
-		OutputAddress:   hex.EncodeToString(sn.Output),
-		PausedHeight:    int64(sn.PausedHeight),
-		UnstakingHeight: sn.UnstakingHeight,
-		Chains:          sn.Chains,
-	}, nil
-}
-
-func GetGenericServiceNode(db persistence.PostgresContext, address string) (*query.GenericActor, error) {
-	addr, err := hex.DecodeString(address)
-	if err != nil {
-		return nil, err
-	}
-	sn, err := GetTestServiceNode(db, addr)
-	if err != nil {
-		return nil, err
-	}
-	return &query.GenericActor{
-		Address:         hex.EncodeToString(sn.Address),
-		PublicKey:       hex.EncodeToString(sn.PublicKey),
-		StakedTokens:    sn.StakedTokens,
-		GenericParam:    sn.ServiceUrl,
-		OutputAddress:   hex.EncodeToString(sn.Output),
-		PausedHeight:    int64(sn.PausedHeight),
-		UnstakingHeight: sn.UnstakingHeight,
-		Chains:          sn.Chains,
 	}, nil
 }
 

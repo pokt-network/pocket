@@ -8,11 +8,11 @@ import (
 )
 
 func (p PostgresContext) GetServiceNodeExists(address []byte, height int64) (exists bool, err error) {
-	return p.GetExists(address, height, schema.ServiceNodeExistsQuery)
+	return p.GetExists(address, height, schema.ServiceNodeActor.GetExistsQuery)
 }
 
 func (p PostgresContext) GetServiceNode(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, err error) {
-	actor, err := p.GetActor(address, height, schema.ServiceNodeQuery, schema.ServiceNodeChainsQuery)
+	actor, err := p.GetActor(address, height, schema.ServiceNodeActor.GetQuery, schema.ServiceNodeActor.GetChainsQuery)
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedTokens
@@ -35,7 +35,7 @@ func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, out
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Chains:          chains,
-	}, schema.InsertServiceNodeQuery)
+	}, schema.ServiceNodeActor.InsertQuery)
 }
 
 // TODO(Andrew): change amount to add, to the amount to be SET
@@ -45,7 +45,7 @@ func (p PostgresContext) UpdateServiceNode(address []byte, serviceURL string, st
 		StakedTokens: stakedTokens,
 		GenericParam: serviceURL,
 		Chains:       chains,
-	}, schema.UpdateServiceNodeQuery, schema.UpdateServiceNodeChainsQuery, schema.ServiceNodeChainsTableName)
+	}, schema.ServiceNodeActor.UpdateQuery, schema.ServiceNodeActor.UpdateChainsQuery, schema.ServiceNodeActor.GetChainsTableName())
 }
 
 func (p PostgresContext) DeleteServiceNode(address []byte) error {
@@ -58,31 +58,31 @@ func (p PostgresContext) GetServiceNodeCount(chain string, height int64) (int, e
 
 // TODO(Andrew): remove status - not needed
 func (p PostgresContext) GetServiceNodesReadyToUnstake(height int64, status int) (ServiceNodes []*types.UnstakingActor, err error) {
-	return p.ActorReadyToUnstakeWithChains(height, schema.ServiceNodeReadyToUnstakeQuery)
+	return p.ActorReadyToUnstakeWithChains(height, schema.ServiceNodeActor.GetReadyToUnstakeQuery)
 }
 
 func (p PostgresContext) GetServiceNodeStatus(address []byte, height int64) (status int, err error) {
-	return p.GetActorStatus(address, height, schema.ServiceNodeUnstakingHeightQuery)
+	return p.GetActorStatus(address, height, schema.ServiceNodeActor.GetUnstakingHeightQuery)
 }
 
 // TODO(Andrew): remove status - no longer needed
 func (p PostgresContext) SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error {
-	return p.SetActorUnstakingHeightAndStatus(address, unstakingHeight, schema.UpdateServiceNodeUnstakingHeightQuery)
+	return p.SetActorUnstakingHeightAndStatus(address, unstakingHeight, schema.ServiceNodeActor.UpdateUnstakingHeightQuery)
 }
 
 func (p PostgresContext) GetServiceNodePauseHeightIfExists(address []byte, height int64) (int64, error) {
-	return p.GetActorPauseHeightIfExists(address, height, schema.ServiceNodePauseHeightQuery)
+	return p.GetActorPauseHeightIfExists(address, height, schema.ServiceNodeActor.GetPausedHeightQuery)
 }
 
 // TODO(Andrew): remove status - it's not needed
 func (p PostgresContext) SetServiceNodesStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
-	return p.SetActorStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, schema.UpdateServiceNodesPausedBefore)
+	return p.SetActorStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, schema.ServiceNodeActor.UpdatePausedBefore)
 }
 
 func (p PostgresContext) SetServiceNodePauseHeight(address []byte, height int64) error {
-	return p.SetActorPauseHeight(address, height, schema.UpdateServiceNodePausedHeightQuery)
+	return p.SetActorPauseHeight(address, height, schema.ServiceNodeActor.UpdatePausedHeightQuery)
 }
 
 func (p PostgresContext) GetServiceNodeOutputAddress(operator []byte, height int64) (output []byte, err error) {
-	return p.GetActorOutputAddress(operator, height, schema.ServiceNodeOutputAddressQuery)
+	return p.GetActorOutputAddress(operator, height, schema.ServiceNodeActor.GetOutputAddressQuery)
 }

@@ -56,6 +56,7 @@ func (pg *PostgresDB) GetContext() (context.Context, error) {
 var protocolActorSchemas = []schema.ProtocolActor{
 	schema.ApplicationActor,
 	schema.FishermanActor,
+	schema.ServiceNodeActor,
 }
 
 func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
@@ -92,9 +93,6 @@ func InitializeTables(ctx context.Context, db *pgx.Conn) error {
 		return err
 	}
 	if err := InitializeValidatorTables(ctx, db); err != nil {
-		return err
-	}
-	if err := InitializeServiceTables(ctx, db); err != nil {
 		return err
 	}
 	if err := InitializeGovTables(ctx, db); err != nil {
@@ -135,18 +133,6 @@ func InitializeValidatorTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func InitializeServiceTables(ctx context.Context, db *pgx.Conn) error {
-	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.ServiceNodeTableName, schema.ServiceNodeTableSchema))
-	if err != nil {
-		return err
-	}
-	_, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.ServiceNodeChainsTableName, schema.ServiceNodeChainsTableSchema))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func InitializeGovTables(ctx context.Context, db *pgx.Conn) error {
 	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.ParamsTableName, schema.ParamsTableSchema))
 	if err != nil {
@@ -159,8 +145,6 @@ func InitializeGovTables(ctx context.Context, db *pgx.Conn) error {
 
 var clearFunctions = []func() string{
 	schema.ClearAllValidatorsQuery,
-	schema.ClearAllServiceNodesChainsQuery,
-	schema.ClearAllServiceNodesQuery,
 	schema.ClearAllGovQuery,
 }
 
