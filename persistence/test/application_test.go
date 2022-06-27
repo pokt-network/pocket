@@ -9,7 +9,7 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
-)                                                                      
+)
 
 func FuzzApplication(f *testing.F) {
 	fuzzProtocolActor(f,
@@ -23,10 +23,12 @@ func TestInsertAppAndExists(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	app := NewTestApp(t)
-	app2 := NewTestApp(t)
+	app, err := newTestApp()
+	require.NoError(t, err)
+	app2, err := newTestApp()
+	require.NoError(t, err)
 
-	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultMaxRelays, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	err = db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultMaxRelays, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
 	exists, err := db.GetAppExists(app.Address, db.Height)
@@ -43,9 +45,10 @@ func TestUpdateApp(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	app := NewTestApp(t)
+	app, err := newTestApp()
+	require.NoError(t, err)
 
-	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultMaxRelays, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	err = db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultMaxRelays, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
 	_, _, stakedTokens, _, _, _, _, chains, err := db.GetApp(app.Address, db.Height)
@@ -72,9 +75,10 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 	db.ClearAllDebug()
-	app := NewTestApp(t)
+	app, err := newTestApp()
+	require.NoError(t, err)
 
-	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	err = db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
 	err = db.SetAppUnstakingHeightAndStatus(app.Address, height, persistence.UnstakingStatus)
@@ -91,9 +95,10 @@ func TestGetAppStatus(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	app := NewTestApp(t)
+	app, err := newTestApp()
+	require.NoError(t, err)
 
-	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	err = db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
 	status, err := db.GetAppStatus(app.Address, 0)
@@ -106,8 +111,9 @@ func TestGetPauseHeightIfExists(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	app := NewTestApp(t)
-	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	app, err := newTestApp()
+	require.NoError(t, err)
+	err = db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
 	height, err := db.GetAppPauseHeightIfExists(app.Address, 0)
@@ -120,10 +126,11 @@ func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	app := NewTestApp(t)
+	app, err := newTestApp()
+	require.NoError(t, err)
 
 	// DISCUS(drewsky): Why are we not using `DefaultPauseHeight` here?
-	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
+	err = db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
 	unstakingHeightSet := int64(0)
@@ -140,9 +147,10 @@ func TestSetAppPauseHeight(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	app := NewTestApp(t)
+	app, err := newTestApp()
+	require.NoError(t, err)
 
-	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+	err = db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
 	err = db.SetAppPauseHeight(app.Address, int64(PauseHeightToSet))
@@ -158,21 +166,16 @@ func TestGetAppOutputAddress(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	app := NewTestApp(t)
+	app, err := newTestApp()
+	require.NoError(t, err)
 
 	// DISCUS(drewsky): Why are we not using `DefaultPauseHeight` here?
-	err := db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
+	err = db.InsertApp(app.Address, app.PublicKey, app.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
 
 	output, err := db.GetAppOutputAddress(app.Address, 0)
 	require.NoError(t, err)
 	require.Equal(t, output, app.Output, "unexpected output address")
-}
-
-func NewTestApp(t *testing.T) typesGenesis.App {
-	app, err := newTestApp()
-	require.NoError(t, err)
-	return app
 }
 
 func newTestApp() (typesGenesis.App, error) {
