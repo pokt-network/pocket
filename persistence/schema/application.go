@@ -1,5 +1,7 @@
 package schema
 
+var _ ProtocolActor = &ApplicationSchema{}
+
 type ApplicationSchema struct {
 	GenericProtocolActor
 }

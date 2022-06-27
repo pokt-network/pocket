@@ -19,7 +19,7 @@ type GenericProtocolActor struct {
 	chainsTableName string
 
 	// SQL Columns
-	actorSpecificColName string // NOTE: If actor specific behaviour expands, this may need to be a list.
+	actorSpecificColName string // CONSIDERATION: If actor specific behaviour expands, this will need to be refactored to be a list.
 
 	// SQL Constraints
 	heightConstraintName       string

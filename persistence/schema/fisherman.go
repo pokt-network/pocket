@@ -1,5 +1,7 @@
 package schema
 
+var _ ProtocolActor = &FishermanSchema{}
+
 type FishermanSchema struct {
 	GenericProtocolActor
 }

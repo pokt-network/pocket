@@ -9,7 +9,7 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
-)
+)                                                                      
 
 func FuzzApplication(f *testing.F) {
 	fuzzProtocolActor(f,

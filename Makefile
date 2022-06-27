@@ -292,16 +292,17 @@ benchmark_pre2p_addrbook:
 
 # /Users/olshansky/workspace/pocket/pocket/p2p/pre2p/raintree/addrbook_utils_test.go
 # Inspired by: https://goldin.io/blog/stop-using-todo
-# TODO        - General Purpose catch-all.
-# TECHDEBT    - Not a great implementation, but we need to fix it later.
-# IMPROVE     - A nice to have, but not a priority. It's okay if we never get to this.
-# DISCUSS     - Probably requires a lengthy offline discussion to understand next steps.
-# INCOMPLETE  - A change which was out of scope of a specific PR but needed to be documented.
-# INVESTIGATE - TBD what was going on, but needed to continue moving and not get distracted.
-# CLEANUP     - Like TECHDEBT, but not as bad.  It's okay if we never get to this.
-# HACK        - Like TECHDEBT, but much worse. This needs to be prioritized
-# REFACTOR    - Similar to TECHDEBT, but will require a substantial rewrite and change across the codebase
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR"
+# TODO          - General Purpose catch-all.
+# TECHDEBT      - Not a great implementation, but we need to fix it later.
+# IMPROVE       - A nice to have, but not a priority. It's okay if we never get to this.
+# DISCUSS       - Probably requires a lengthy offline discussion to understand next steps.
+# INCOMPLETE    - A change which was out of scope of a specific PR but needed to be documented.
+# INVESTIGATE   - TBD what was going on, but needed to continue moving and not get distracted.
+# CLEANUP       - Like TECHDEBT, but not as bad.  It's okay if we never get to this.
+# HACK          - Like TECHDEBT, but much worse. This needs to be prioritized
+# REFACTOR      - Similar to TECHDEBT, but will require a substantial rewrite and change across the codebase
+# CONSIDERATION - A comment that involves extra work but was thoughts / considered as part of some implementation
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION"
 
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)

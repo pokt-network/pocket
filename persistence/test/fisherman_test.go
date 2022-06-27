@@ -18,7 +18,6 @@ func FuzzFishermen(f *testing.F) {
 		NewTestGenericActor(newTestFisherman),
 		GetGenericActor(GetTestFisherman),
 		query.FishermanActor)
-
 }
 
 func TestInsertFishermanAndExists(t *testing.T) {
