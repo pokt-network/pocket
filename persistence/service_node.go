@@ -26,7 +26,7 @@ func (p PostgresContext) GetServiceNode(address []byte, height int64) (operator,
 }
 
 // TODO(Andrew): remove paused and status from the interface
-func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(schema.ServiceNodeActor, schema.GenericActor{
 		Address:         hex.EncodeToString(address),
 		PublicKey:       hex.EncodeToString(publicKey),
@@ -53,17 +53,16 @@ func (p PostgresContext) DeleteServiceNode(address []byte) error {
 	return nil
 }
 
+// TODO(andrew): implement this
 func (p PostgresContext) GetServiceNodeCount(chain string, height int64) (int, error) {
-	// TODO(andrew): implement
 	panic("GetServiceNodeCount not implemented")
 }
 
-// TODO(Andrew): remove status - not needed
-func (p PostgresContext) GetServiceNodesReadyToUnstake(height int64, status int) ([]*types.UnstakingActor, error) {
+func (p PostgresContext) GetServiceNodesReadyToUnstake(height int64, _ int) ([]*types.UnstakingActor, error) {
 	return p.ActorReadyToUnstakeWithChains(schema.ServiceNodeActor, height)
 }
 
-func (p PostgresContext) GetServiceNodeStatus(address []byte, height int64) (status int, err error) {
+func (p PostgresContext) GetServiceNodeStatus(address []byte, height int64) (int, error) {
 	return p.GetActorStatus(schema.ServiceNodeActor, address, height)
 }
 

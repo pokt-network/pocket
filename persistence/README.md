@@ -113,6 +113,7 @@ Q: Why not use an ORM?
 
 These are major TODOs spanning the entire repo so they are documented here instead.
 
+- [ ] DOCUMENT(team): Need to do a better job at documenting the process of paused apps being turned into unstaking apps.
 - [ ] Remove unused parameters from the PostgresContext interface (see where \_ is used in the implementation e.g. `InsertFisherman`)
 - [ ] Benchmark the queries (especially the ones that need to do sorting
 - [ ] Consider converting all address params from bytes to string to avoid unnecessary encoding

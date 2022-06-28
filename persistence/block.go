@@ -12,7 +12,7 @@ func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error)
 	if err != nil {
 		return 0, err
 	}
-	err = conn.QueryRow(ctx, schema.LatestBlockHeightQuery()).Scan(&latestHeight)
+	err = conn.QueryRow(ctx, schema.GetLatestBlockHeightQuery()).Scan(&latestHeight)
 	return
 }
 
@@ -22,7 +22,7 @@ func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
 		return nil, err
 	}
 	var hexHash string
-	err = conn.QueryRow(ctx, schema.BlockHashQuery(height)).Scan(&hexHash)
+	err = conn.QueryRow(ctx, schema.GetBlockHashQuery(height)).Scan(&hexHash)
 	if err != nil {
 		return nil, err
 	}

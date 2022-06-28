@@ -44,11 +44,11 @@ func (actor *GenericProtocolActor) GetActorSpecificColName() string {
 }
 
 func (actor *GenericProtocolActor) GetTableSchema() string {
-	return ActorTableSchema(actor.actorSpecificColName, actor.heightConstraintName)
+	return ProtocolActorTableSchema(actor.actorSpecificColName, actor.heightConstraintName)
 }
 
 func (actor *GenericProtocolActor) GetChainsTableSchema() string {
-	return ChainsTableSchema(actor.chainsHeightConstraintName)
+	return ProtocolActorChainsTableSchema(actor.chainsHeightConstraintName)
 }
 
 func (actor *GenericProtocolActor) GetQuery(address string, height int64) string {

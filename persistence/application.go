@@ -52,11 +52,11 @@ func (p PostgresContext) DeleteApp(_ []byte) error {
 	return nil
 }
 
-func (p PostgresContext) GetAppsReadyToUnstake(height int64, _ int) (apps []*types.UnstakingActor, err error) {
+func (p PostgresContext) GetAppsReadyToUnstake(height int64, _ int) ([]*types.UnstakingActor, error) {
 	return p.ActorReadyToUnstakeWithChains(schema.ApplicationActor, height)
 }
 
-func (p PostgresContext) GetAppStatus(address []byte, height int64) (status int, err error) {
+func (p PostgresContext) GetAppStatus(address []byte, height int64) (int, error) {
 	return p.GetActorStatus(schema.ApplicationActor, address, height)
 }
 
@@ -64,7 +64,7 @@ func (p PostgresContext) SetAppUnstakingHeightAndStatus(address []byte, unstakin
 	return p.SetActorUnstakingHeightAndStatus(schema.ApplicationActor, address, unstakingHeight)
 }
 
-func (p PostgresContext) GetAppPauseHeightIfExists(address []byte, height int64) (pausedHeight int64, err error) {
+func (p PostgresContext) GetAppPauseHeightIfExists(address []byte, height int64) (int64, error) {
 	return p.GetActorPauseHeightIfExists(schema.ApplicationActor, address, height)
 }
 
@@ -76,6 +76,6 @@ func (p PostgresContext) SetAppPauseHeight(address []byte, height int64) error {
 	return p.SetActorPauseHeight(schema.ApplicationActor, address, height)
 }
 
-func (p PostgresContext) GetAppOutputAddress(operator []byte, height int64) (output []byte, err error) {
+func (p PostgresContext) GetAppOutputAddress(operator []byte, height int64) ([]byte, error) {
 	return p.GetActorOutputAddress(schema.ApplicationActor, operator, height)
 }

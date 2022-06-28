@@ -49,11 +49,11 @@ func (p PostgresContext) DeleteValidator(address []byte) error {
 	return nil
 }
 
-func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, _ int) (Validators []*types.UnstakingActor, err error) {
+func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, _ int) ([]*types.UnstakingActor, error) {
 	return p.ActorReadyToUnstakeWithChains(schema.ValidatorActor, height)
 }
 
-func (p PostgresContext) GetValidatorStatus(address []byte, height int64) (status int, err error) {
+func (p PostgresContext) GetValidatorStatus(address []byte, height int64) (int, error) {
 	return p.GetActorStatus(schema.ValidatorActor, address, height)
 }
 
@@ -74,7 +74,8 @@ func (p PostgresContext) SetValidatorPauseHeight(address []byte, height int64) e
 }
 
 // TODO(team): The Get & Update operations need to be made atomic
-func (p PostgresContext) SetValidatorStakedTokens(address []byte, tokens string) error { // TODO deprecate and use update validator
+// TODO(team): Deprecate this functiona altogether and use UpdateValidator where applicable
+func (p PostgresContext) SetValidatorStakedTokens(address []byte, tokens string) error { //
 	height, err := p.GetHeight()
 	if err != nil {
 		return err

@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"bytes"
 	"fmt"
 )
 
@@ -28,7 +29,7 @@ const (
 	HeightCol          = "height"
 )
 
-func ActorTableSchema(actorSpecificColName, constraintName string) string {
+func ProtocolActorTableSchema(actorSpecificColName, constraintName string) string {
 	return fmt.Sprintf(`(
 			%s TEXT NOT NULL,
 			%s TEXT NOT NULL,
@@ -54,7 +55,7 @@ func ActorTableSchema(actorSpecificColName, constraintName string) string {
 		HeightCol)
 }
 
-func ChainsTableSchema(constraintName string) string {
+func ProtocolActorChainsTableSchema(constraintName string) string {
 	return fmt.Sprintf(`(
 			%s TEXT NOT NULL,
 			%s CHAR(4) NOT NULL,
@@ -62,15 +63,6 @@ func ChainsTableSchema(constraintName string) string {
 
 			CONSTRAINT %s UNIQUE (%s, %s, %s)
 		)`, AddressCol, ChainIDCol, HeightCol, constraintName, AddressCol, ChainIDCol, HeightCol)
-}
-
-func AccountOrPoolSchema(mainColName, constraintName string) string {
-	return fmt.Sprintf(`(
-			%s TEXT NOT NULL,
-			%s TEXT NOT NULL,
-			%s BIGINT NOT NULL,
-		    CONSTRAINT %s UNIQUE (%s, %s)
-		)`, mainColName, BalanceCol, HeightCol, constraintName, mainColName, HeightCol)
 }
 
 func Select(selector, address string, height int64, tableName string) string {
@@ -87,8 +79,8 @@ func Exists(address string, height int64, tableName string) string {
 	return fmt.Sprintf(`SELECT EXISTS(%s)`, Select(AnyValueSelector, address, height, tableName))
 }
 
-// DISCUSS(drewsky): Olshansky doesn't get it: `AND (height, address) IN (SELECT MAX(height), address FROM %s GROUP BY address`.
-//                   Should this include some sort of greater or less than?
+// DOCUMENT(andrew): Olshansky doesn't fully understand `AND (height, address) IN (SELECT MAX(height), address FROM %s GROUP BY address)`.
+//                   Need to discuss & document.
 func ReadyToUnstake(unstakingHeight int64, tableName string) string {
 	return fmt.Sprintf(`
 		SELECT address, staked_tokens, output_address
@@ -103,55 +95,43 @@ func Insert(
 	constraintName, chainsConstraintName,
 	tableName, chainsTableName string,
 	height int64) string {
-	// base table
 	insertStatement := fmt.Sprintf(
-		`INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
-				VALUES('%s','%s','%s','%s','%s',%d,%d,%d)
+		`INSERT INTO %s (address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
+				VALUES('%s', '%s', '%s', '%s', '%s', %d, %d, %d)
 				ON CONFLICT ON CONSTRAINT %s
-					DO UPDATE SET staked_tokens=EXCLUDED.staked_tokens, %s=EXCLUDED.%s, paused_height=EXCLUDED.paused_height, unstaking_height=EXCLUDED.unstaking_height, height=EXCLUDED.height`,
+				DO UPDATE SET staked_tokens=EXCLUDED.staked_tokens, %s=EXCLUDED.%s,
+							  paused_height=EXCLUDED.paused_height, unstaking_height=EXCLUDED.unstaking_height,
+							  height=EXCLUDED.height`,
 		tableName, genericParamName,
 		actor.Address, actor.PublicKey, actor.StakedTokens, genericParamValue,
-		actor.OutputAddress, actor.PausedHeight, actor.UnstakingHeight,
-		height, constraintName, genericParamName, genericParamName)
+		actor.OutputAddress, actor.PausedHeight, actor.UnstakingHeight, height,
+		constraintName,
+		genericParamName, genericParamName)
+
 	if actor.Chains == nil {
 		return insertStatement
 	}
-	return fmt.Sprintf("WITH ins1 AS (%s)\n%s",
+
+	return fmt.Sprintf("WITH baseTableInsert AS (%s)\n%s",
 		insertStatement, InsertChains(actor.Address, actor.Chains, height, chainsTableName, chainsConstraintName))
 }
 
 func InsertChains(address string, chains []string, height int64, tableName, constraintName string) string {
-	insert := fmt.Sprintf("INSERT INTO %s (address, chain_id, height) VALUES", tableName)
+	var buffer bytes.Buffer
+
+	buffer.WriteString(fmt.Sprintf("INSERT INTO %s (address, chain_id, height) VALUES", tableName))
+
 	maxIndex := len(chains) - 1
 	for i, chain := range chains {
-		insert += fmt.Sprintf("\n('%s', '%s', %d)", address, chain, height)
+		buffer.WriteString(fmt.Sprintf("\n('%s', '%s', %d)", address, chain, height))
 		if i < maxIndex {
-			insert += ","
+			buffer.WriteString(",")
 		}
 	}
-	insert += fmt.Sprintf(`
-     ON CONFLICT ON CONSTRAINT %s
-     DO NOTHING`, constraintName)
-	return insert
-}
 
-// TODO(olshansky): Consider create this as part of the protocol actor interface
-func NullifyChains(address string, height int64, tableName string) string {
-	return fmt.Sprintf("DELETE FROM %s WHERE address='%s' AND height=%d", tableName, address, height)
-}
+	buffer.WriteString(fmt.Sprintf("\nON CONFLICT ON CONSTRAINT %s DO NOTHING", constraintName))
 
-func InsertAcc(genericParamName, genericParamValue, amount string, height int64, tableName, constraintName string) string {
-	return fmt.Sprintf(`
-		INSERT INTO %s (%s, balance, height)
-			VALUES ('%s','%s',%d)
-			ON CONFLICT ON CONSTRAINT %s
-			DO UPDATE SET balance=EXCLUDED.balance, height=EXCLUDED.height
-		`, tableName, genericParamName, genericParamValue, amount, height, constraintName)
-}
-
-func SelectBalance(genericParamName, genericParamValue string, height int64, tableName string) string {
-	return fmt.Sprintf(`SELECT balance FROM %s WHERE %s='%s' AND height<=%d ORDER BY height DESC LIMIT 1`,
-		tableName, genericParamName, genericParamValue, height)
+	return buffer.String()
 }
 
 func Update(address, stakedTokens, genericParamName, genericParamValue string, height int64, tableName, constraintName string) string {
@@ -165,7 +145,9 @@ func Update(address, stakedTokens, genericParamName, genericParamValue string, h
 			DO UPDATE SET staked_tokens=EXCLUDED.staked_tokens, %s=EXCLUDED.%s, height=EXCLUDED.height`,
 		tableName, genericParamName,
 		stakedTokens, genericParamValue, height,
-		tableName, address, height, constraintName, genericParamName, genericParamName)
+		tableName, address, height,
+		constraintName,
+		genericParamName, genericParamName)
 }
 
 func UpdateUnstakingHeight(address, genericParamName string, unstakingHeight, height int64, tableName, constraintName string) string {
@@ -179,7 +161,8 @@ func UpdateUnstakingHeight(address, genericParamName string, unstakingHeight, he
 			DO UPDATE SET unstaking_height=EXCLUDED.unstaking_height, height=EXCLUDED.height`,
 		tableName, genericParamName,
 		genericParamName, unstakingHeight, height,
-		tableName, address, height, constraintName)
+		tableName, address, height,
+		constraintName)
 
 }
 
@@ -197,21 +180,25 @@ func UpdatePausedHeight(address, genericParamName string, pausedHeight, height i
 		tableName, address, height, constraintName)
 }
 
-// DOCUMENT(team): Need to do a better job at documenting the process of paused apps being turned into unstaking apps.
-//                 This pertains to all instances in the codebase, not just here.
 func UpdatePausedBefore(genericParamName string, unstakingHeight, pausedBeforeHeight, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
-		INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
+		INSERT INTO %s (address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
 			(
 				SELECT address, public_key, staked_tokens, %s, output_address, paused_height, %d, %d
-				FROM %s WHERE paused_height<%d AND paused_height>=-1
+				FROM %s WHERE paused_height<%d
 					AND (height,address) IN (SELECT MAX(height),address from %s GROUP BY address)
 		)
 		ON CONFLICT ON CONSTRAINT %s
 			DO UPDATE SET unstaking_height=EXCLUDED.unstaking_height`,
-		tableName, genericParamName, genericParamName,
-		unstakingHeight, height,
-		tableName, pausedBeforeHeight, tableName, constraintName)
+		tableName, genericParamName,
+		genericParamName, unstakingHeight, height,
+		tableName, pausedBeforeHeight,
+		tableName,
+		constraintName)
+}
+
+func NullifyChains(address string, height int64, tableName string) string {
+	return fmt.Sprintf("DELETE FROM %s WHERE address='%s' AND height=%d", tableName, address, height)
 }
 
 // Exposed for debugging purposes only

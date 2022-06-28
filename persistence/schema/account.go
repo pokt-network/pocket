@@ -1,9 +1,11 @@
 package schema
 
+import "fmt"
+
+// DISCUSS(team): To improve readability, should we split `account` and `pool` into smaller pieces?
 const (
 	AccountTableName        = "account"
 	AccountHeightConstraint = "account_create_height"
-
 	/*
 		From the utility specification:
 			A ModulePool is a particular type that though similar in structure to an Account, the
@@ -35,4 +37,28 @@ func GetPoolAmountQuery(name string, height int64) string {
 
 func InsertPoolAmountQuery(name, amount string, height int64) string {
 	return InsertAcc(NameCol, name, amount, height, PoolTableName, PoolHeightConstraint)
+}
+
+func AccountOrPoolSchema(mainColName, constraintName string) string {
+	return fmt.Sprintf(`(
+			%s TEXT NOT NULL,
+			%s TEXT NOT NULL,
+			%s BIGINT NOT NULL,
+
+		    CONSTRAINT %s UNIQUE (%s, %s)
+		)`, mainColName, BalanceCol, HeightCol, constraintName, mainColName, HeightCol)
+}
+
+func InsertAcc(genericParamName, genericParamValue, amount string, height int64, tableName, constraintName string) string {
+	return fmt.Sprintf(`
+		INSERT INTO %s (%s, balance, height)
+			VALUES ('%s','%s',%d)
+			ON CONFLICT ON CONSTRAINT %s
+			DO UPDATE SET balance=EXCLUDED.balance, height=EXCLUDED.height
+		`, tableName, genericParamName, genericParamValue, amount, height, constraintName)
+}
+
+func SelectBalance(genericParamName, genericParamValue string, height int64, tableName string) string {
+	return fmt.Sprintf(`SELECT balance FROM %s WHERE %s='%s' AND height<=%d ORDER BY height DESC LIMIT 1`,
+		tableName, genericParamName, genericParamValue, height)
 }

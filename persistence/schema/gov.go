@@ -14,10 +14,10 @@ const ( // TODO (Team) - I'm sure there's obvious optimizations here
 		app_minimum_stake TEXT NOT NULL,
 		app_max_chains SMALLINT  NOT NULL,
 		app_baseline_stake_rate	 INT NOT NULL,
-		app_staking_adjustment	 INT NOT NULL,
-		app_unstaking_blocks	 SMALLINT NOT NULL,
+		app_staking_adjustment INT NOT NULL,
+		app_unstaking_blocks SMALLINT NOT NULL,
 		app_minimum_pause_blocks SMALLINT NOT NULL,
-		app_max_pause_blocks     INT NOT NULL,
+		app_max_pause_blocks INT NOT NULL,
 
 		service_node_minimum_stake    TEXT NOT NULL,
 		service_node_max_chains       SMALLINT NOT NULL,

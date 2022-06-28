@@ -2,7 +2,7 @@ package schema
 
 import "fmt"
 
-// TODO(olshansk): needs to be implemented (and tests obviously), only height is here because it's the MVP requirement for utility
+// TODO(olshansky/team): Implement this for consensus. Block height was only added for MVP purposes.
 const (
 	BlockTableName   = "block"
 	BlockTableSchema = `(
@@ -11,10 +11,10 @@ const (
 		)`
 )
 
-func BlockHashQuery(height int64) string {
+func GetBlockHashQuery(height int64) string {
 	return fmt.Sprintf(`SELECT hash FROM %s WHERE height=%d`, BlockTableName, height)
 }
 
-func LatestBlockHeightQuery() string {
+func GetLatestBlockHeightQuery() string {
 	return fmt.Sprintf(`SELECT MAX(height) FROM %s`, BlockTableName)
 }
