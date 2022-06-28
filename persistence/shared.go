@@ -9,8 +9,6 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 )
 
-// p.DB.Conn.Exec()
-
 // IMPROVE(team): Move this into a proto enum
 const (
 	UndefinedStakingStatus = iota
@@ -69,7 +67,7 @@ func (p *PostgresContext) GetActor(actorSchema schema.ProtocolActor, address []b
 			return
 		}
 		if chainAddr != actor.Address {
-			return actor, fmt.Errorf("Unexpected address %s, expected %s when reading chains", chainAddr, address)
+			return actor, fmt.Errorf("unexpected address %s, expected %s when reading chains", chainAddr, address)
 		}
 		actor.Chains = append(actor.Chains, chainID)
 	}
@@ -190,16 +188,8 @@ func (p *PostgresContext) SetActorUnstakingHeightAndStatus(actorSchema schema.Pr
 		return err
 	}
 
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return err
-	}
-
-	if _, err = tx.Exec(ctx, actorSchema.UpdateUnstakingHeightQuery(hex.EncodeToString(address), unstakingHeight, height)); err != nil {
-		return err
-	}
-
-	return tx.Commit(ctx)
+	_, err = conn.Exec(ctx, actorSchema.UpdateUnstakingHeightQuery(hex.EncodeToString(address), unstakingHeight, height))
+	return err
 }
 
 func (p *PostgresContext) GetActorPauseHeightIfExists(actorSchema schema.ProtocolActor, address []byte, height int64) (pausedHeight int64, err error) {
@@ -207,9 +197,11 @@ func (p *PostgresContext) GetActorPauseHeightIfExists(actorSchema schema.Protoco
 	if err != nil {
 		return 0, err
 	}
+
 	if err := conn.QueryRow(ctx, actorSchema.GetPausedHeightQuery(hex.EncodeToString(address), height)).Scan(&pausedHeight); err != nil {
 		return 0, err
 	}
+
 	return pausedHeight, nil
 }
 
@@ -224,14 +216,8 @@ func (p PostgresContext) SetActorStatusAndUnstakingHeightPausedBefore(actorSchem
 		return err
 	}
 
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, actorSchema.UpdatePausedBefore(pausedBeforeHeight, unstakingHeight, currentHeight)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+	_, err = conn.Exec(ctx, actorSchema.UpdatePausedBefore(pausedBeforeHeight, unstakingHeight, currentHeight))
+	return err
 }
 
 func (p PostgresContext) SetActorPauseHeight(actorSchema schema.ProtocolActor, address []byte, pauseHeight int64) error {
@@ -245,14 +231,8 @@ func (p PostgresContext) SetActorPauseHeight(actorSchema schema.ProtocolActor, a
 		return err
 	}
 
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, actorSchema.UpdatePausedHeightQuery(hex.EncodeToString(address), pauseHeight, currentHeight)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+	_, err = conn.Exec(ctx, actorSchema.UpdatePausedHeightQuery(hex.EncodeToString(address), pauseHeight, currentHeight))
+	return err
 }
 
 func (p PostgresContext) GetActorOutputAddress(actorSchema schema.ProtocolActor, operatorAddr []byte, height int64) ([]byte, error) {
