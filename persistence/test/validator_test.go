@@ -5,20 +5,18 @@ import (
 	"encoding/hex"
 	"testing"
 
-	query "github.com/pokt-network/pocket/persistence/schema"
-
 	"github.com/pokt-network/pocket/persistence"
+	query "github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
 
 func FuzzValidator(f *testing.F) {
-	fuzzActor(f, newTestGenericValidator, query.InsertValidatorQuery, GetGenericValidator, true, query.UpdateValidatorQuery,
-		nil, "", query.ValidatorReadyToUnstakeQuery,
-		query.ValidatorUnstakingHeightQuery, query.ValidatorPauseHeightQuery, query.ValidatorQuery, nil,
-		query.UpdateValidatorUnstakingHeightQuery, query.UpdateValidatorPausedHeightQuery, query.FishermanActor.UpdatePausedBefore,
-		query.ValidatorOutputAddressQuery)
+	fuzzProtocolActor(f,
+		NewTestGenericActor(query.ValidatorActor, newTestValidator),
+		GetGenericActor(query.ValidatorActor, GetTestValidator),
+		query.ValidatorActor)
 }
 
 func TestInsertValidatorAndExists(t *testing.T) {
@@ -189,42 +187,6 @@ func newTestValidator() (typesGenesis.Validator, error) {
 		PausedHeight:    uint64(DefaultPauseHeight),
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          addr2,
-	}, nil
-}
-
-func newTestGenericValidator() (query.GenericActor, error) {
-	v, err := newTestValidator()
-	if err != nil {
-		return query.GenericActor{}, err
-	}
-	return query.GenericActor{
-		Address:         hex.EncodeToString(v.Address),
-		PublicKey:       hex.EncodeToString(v.PublicKey),
-		StakedTokens:    v.StakedTokens,
-		GenericParam:    v.ServiceUrl,
-		OutputAddress:   hex.EncodeToString(v.Output),
-		PausedHeight:    int64(v.PausedHeight),
-		UnstakingHeight: v.UnstakingHeight,
-	}, nil
-}
-
-func GetGenericValidator(db persistence.PostgresContext, address string) (*query.GenericActor, error) {
-	addr, err := hex.DecodeString(address)
-	if err != nil {
-		return nil, err
-	}
-	v, err := GetTestValidator(db, addr)
-	if err != nil {
-		return nil, err
-	}
-	return &query.GenericActor{
-		Address:         hex.EncodeToString(v.Address),
-		PublicKey:       hex.EncodeToString(v.PublicKey),
-		StakedTokens:    v.StakedTokens,
-		GenericParam:    v.ServiceUrl,
-		OutputAddress:   hex.EncodeToString(v.Output),
-		PausedHeight:    int64(v.PausedHeight),
-		UnstakingHeight: v.UnstakingHeight,
 	}, nil
 }
 

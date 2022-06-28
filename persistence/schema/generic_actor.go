@@ -34,6 +34,10 @@ func (actor *GenericProtocolActor) GetChainsTableName() string {
 	return actor.chainsTableName
 }
 
+func (actor *GenericProtocolActor) GetActorSpecificColName() string {
+	return actor.actorSpecificColName
+}
+
 func (actor *GenericProtocolActor) GetTableSchema() string {
 	return ActorTableSchema(actor.actorSpecificColName, actor.heightConstraintName)
 }

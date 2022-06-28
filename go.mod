@@ -17,7 +17,10 @@ require (
 	google.golang.org/protobuf v1.27.1
 )
 
-require github.com/matryer/resync v0.0.0-20161211202428-d39c09a11215
+require (
+	github.com/iancoleman/strcase v0.2.0
+	github.com/matryer/resync v0.0.0-20161211202428-d39c09a11215
+)
 
 require github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
 

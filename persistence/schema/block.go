@@ -2,8 +2,8 @@ package schema
 
 import "fmt"
 
+// TODO(olshansk): needs to be implemented (and tests obviously), only height is here because it's the MVP requirement for utility
 const (
-	// TODO(olshansk): needs to be implemented (and tests obviously), only height is here because it's the MVP requirement for utility
 	BlockTableName   = "block"
 	BlockTableSchema = `(
 			height  BIGINT PRIMARY KEY,

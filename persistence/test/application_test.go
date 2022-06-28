@@ -13,8 +13,8 @@ import (
 
 func FuzzApplication(f *testing.F) {
 	fuzzProtocolActor(f,
-		NewTestGenericActor(newTestApp),
-		GetGenericActor(GetTestApp),
+		NewTestGenericActor(query.ApplicationActor, newTestApp),
+		GetGenericActor(query.ApplicationActor, GetTestApp),
 		query.ApplicationActor)
 }
 

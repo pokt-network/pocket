@@ -9,6 +9,8 @@ type ProtocolActor interface {
 	// SQL Table Schemas
 	GetTableSchema() string
 	GetChainsTableSchema() string
+	// SQL Column Names
+	GetActorSpecificColName() string
 
 	/*** Read/Get Queries ***/
 

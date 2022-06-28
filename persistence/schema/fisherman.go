@@ -13,7 +13,7 @@ var FishermanActor ProtocolActor = &FishermanSchema{
 
 		actorSpecificColName: ServiceURLCol,
 
-		heightConstraintName:       "fish_height",
-		chainsHeightConstraintName: "fish_chain_height",
+		heightConstraintName:       "fisherman_height",
+		chainsHeightConstraintName: "fisherman_chain_height",
 	},
 }

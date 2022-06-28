@@ -15,8 +15,8 @@ import (
 
 func FuzzServiceNode(f *testing.F) {
 	fuzzProtocolActor(f,
-		NewTestGenericActor(newTestServiceNode),
-		GetGenericActor(GetTestServiceNode),
+		NewTestGenericActor(query.ServiceNodeActor, newTestServiceNode),
+		GetGenericActor(query.ServiceNodeActor, GetTestServiceNode),
 		query.ServiceNodeActor)
 }
 

@@ -22,7 +22,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-//var _ modules.PersistenceContext = PostgresContext{}
+// var _ modules.PersistenceContext = &PostgresContext{}
 
 type PostgresContext struct {
 	Height int64
@@ -57,11 +57,12 @@ var protocolActorSchemas = []schema.ProtocolActor{
 	schema.ApplicationActor,
 	schema.FishermanActor,
 	schema.ServiceNodeActor,
+	schema.ValidatorActor,
 }
 
 func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
 	// TODO(drewsky): Rethink how `connectAndInitializeDatabase` should be implemented in small
-	// subcomponents, but this curent implementation is more than sufficient for the time being.
+	// subcomponents, but this current implementation is more than sufficient for the time being.
 	ctx := context.TODO()
 	// Connect to the DB
 	db, err := pgx.Connect(context.Background(), postgresUrl)
@@ -92,9 +93,6 @@ func InitializeTables(ctx context.Context, db *pgx.Conn) error {
 	if err := InitializeAccountTables(ctx, db); err != nil {
 		return err
 	}
-	if err := InitializeValidatorTables(ctx, db); err != nil {
-		return err
-	}
 	if err := InitializeGovTables(ctx, db); err != nil {
 		return err
 	}
@@ -109,8 +107,10 @@ func InitializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor sche
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, actor.GetTableName(), actor.GetTableSchema())); err != nil {
 		return err
 	}
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, actor.GetChainsTableName(), actor.GetChainsTableSchema())); err != nil {
-		return err
+	if actor.GetChainsTableName() != "" {
+		if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, actor.GetChainsTableName(), actor.GetChainsTableSchema())); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -120,14 +120,6 @@ func InitializeAccountTables(ctx context.Context, db *pgx.Conn) error {
 		return err
 	}
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.PoolTableName, schema.PoolTableSchema)); err != nil {
-		return err
-	}
-	return nil
-}
-
-func InitializeValidatorTables(ctx context.Context, db *pgx.Conn) error {
-	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.ValTableName, schema.ValTableSchema))
-	if err != nil {
 		return err
 	}
 	return nil
@@ -144,7 +136,6 @@ func InitializeGovTables(ctx context.Context, db *pgx.Conn) error {
 // Only exposed for testing purposes.
 
 var clearFunctions = []func() string{
-	schema.ClearAllValidatorsQuery,
 	schema.ClearAllGovQuery,
 }
 
@@ -167,8 +158,10 @@ func (p PostgresContext) ClearAllDebug() error {
 		if _, err = tx.Exec(ctx, actor.ClearAllQuery()); err != nil {
 			return err
 		}
-		if _, err = tx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
-			return err
+		if actor.GetChainsTableName() != "" {
+			if _, err = tx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

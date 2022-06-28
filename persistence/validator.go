@@ -8,11 +8,11 @@ import (
 )
 
 func (p PostgresContext) GetValidatorExists(address []byte, height int64) (exists bool, err error) {
-	return p.GetExists(address, height, schema.ValidatorExistsQuery)
+	return p.GetExists(address, height, schema.ValidatorActor.GetExistsQuery)
 }
 
 func (p PostgresContext) GetValidator(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, err error) {
-	actor, err := p.GetActor(address, height, schema.ValidatorQuery, nil)
+	actor, err := p.GetActor(address, height, schema.ValidatorActor.GetQuery, nil)
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedTokens
@@ -33,7 +33,7 @@ func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, outpu
 		OutputAddress:   hex.EncodeToString(output),
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
-	}, schema.InsertValidatorQuery)
+	}, schema.ValidatorActor.InsertQuery)
 }
 
 // TODO(Andrew): change amount to add, to the amount to be SET
@@ -42,7 +42,7 @@ func (p PostgresContext) UpdateValidator(address []byte, serviceURL string, stak
 		Address:      hex.EncodeToString(address),
 		StakedTokens: stakedTokens,
 		GenericParam: serviceURL,
-	}, schema.UpdateValidatorQuery, nil, "")
+	}, schema.ValidatorActor.UpdateQuery, nil, "")
 }
 
 // NOTE: Leaving as transaction as I anticipate we'll need more ops in the future
@@ -52,29 +52,29 @@ func (p PostgresContext) DeleteValidator(address []byte) error {
 
 // TODO(Andrew): remove status - not needed
 func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, status int) (Validators []*types.UnstakingActor, err error) {
-	return p.ActorReadyToUnstakeWithChains(height, schema.ValidatorReadyToUnstakeQuery)
+	return p.ActorReadyToUnstakeWithChains(height, schema.ValidatorActor.GetReadyToUnstakeQuery)
 }
 
 func (p PostgresContext) GetValidatorStatus(address []byte, height int64) (status int, err error) {
-	return p.GetActorStatus(address, height, schema.ValidatorUnstakingHeightQuery)
+	return p.GetActorStatus(address, height, schema.ValidatorActor.GetUnstakingHeightQuery)
 }
 
 // TODO(Andrew): remove status - no longer needed
 func (p PostgresContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error {
-	return p.SetActorUnstakingHeightAndStatus(address, unstakingHeight, schema.UpdateValidatorUnstakingHeightQuery)
+	return p.SetActorUnstakingHeightAndStatus(address, unstakingHeight, schema.ValidatorActor.UpdateUnstakingHeightQuery)
 }
 
 func (p PostgresContext) GetValidatorPauseHeightIfExists(address []byte, height int64) (int64, error) {
-	return p.GetActorPauseHeightIfExists(address, height, schema.ValidatorPauseHeightQuery)
+	return p.GetActorPauseHeightIfExists(address, height, schema.ValidatorActor.GetPausedHeightQuery)
 }
 
 // TODO(Andrew): remove status - it's not needed
 func (p PostgresContext) SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
-	return p.SetActorStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, schema.UpdateValidatorsPausedBefore)
+	return p.SetActorStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, schema.ValidatorActor.UpdatePausedBefore)
 }
 
 func (p PostgresContext) SetValidatorPauseHeight(address []byte, height int64) error {
-	return p.SetActorPauseHeight(address, height, schema.UpdateValidatorPausedHeightQuery)
+	return p.SetActorPauseHeight(address, height, schema.ValidatorActor.UpdatePausedHeightQuery)
 }
 
 func (p PostgresContext) SetValidatorStakedTokens(address []byte, tokens string) error { // TODO deprecate and use update validator
@@ -100,7 +100,7 @@ func (p PostgresContext) GetValidatorStakedTokens(address []byte, height int64) 
 }
 
 func (p PostgresContext) GetValidatorOutputAddress(operator []byte, height int64) (output []byte, err error) {
-	return p.GetActorOutputAddress(operator, height, schema.ValidatorOutputAddressQuery)
+	return p.GetActorOutputAddress(operator, height, schema.ValidatorActor.GetOutputAddressQuery)
 }
 
 func (p PostgresContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, pausedHeight int64, missedBlocks int) error {
