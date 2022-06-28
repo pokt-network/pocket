@@ -8,7 +8,7 @@ import (
 func Create(cfg *config.Config) (modules.TelemetryModule, error) {
 	// TODO(team): Add a switch statement and configuration variable when support for other telemetry modules is added.
 	if cfg.EnableTelemetry {
-		return CreatePromModule(cfg)
+		return CreatePrometheusTelemetryModule(cfg)
 	} else {
 		return CreateNoopTelemetryModule(cfg)
 	}

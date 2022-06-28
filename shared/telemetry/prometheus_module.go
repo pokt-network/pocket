@@ -12,12 +12,12 @@ import (
 )
 
 var (
-	_ modules.TelemetryModule   = &PromModule{}
-	_ modules.EventMetricsAgent = &PromModule{}
-	_ modules.TimeSeriesAgent   = &PromModule{}
+	_ modules.TelemetryModule   = &PrometheusTelemetryModule{}
+	_ modules.EventMetricsAgent = &PrometheusTelemetryModule{}
+	_ modules.TimeSeriesAgent   = &PrometheusTelemetryModule{}
 )
 
-type PromModule struct {
+type PrometheusTelemetryModule struct {
 	bus modules.Bus
 
 	address  string
@@ -28,8 +28,8 @@ type PromModule struct {
 	gaugeVectors map[string]prometheus.GaugeVec
 }
 
-func CreatePromModule(cfg *config.Config) (*PromModule, error) {
-	return &PromModule{
+func CreatePrometheusTelemetryModule(cfg *config.Config) (*PrometheusTelemetryModule, error) {
+	return &PrometheusTelemetryModule{
 		counters:     map[string]prometheus.Counter{},
 		gauges:       map[string]prometheus.Gauge{},
 		gaugeVectors: map[string]prometheus.GaugeVec{},
@@ -39,7 +39,7 @@ func CreatePromModule(cfg *config.Config) (*PromModule, error) {
 	}, nil
 }
 
-func (m *PromModule) Start() error {
+func (m *PrometheusTelemetryModule) Start() error {
 	log.Printf("\nPrometheus metrics exporter: Starting at %s/%s...\n", m.address, m.endpoint)
 
 	http.Handle(m.endpoint, promhttp.Handler())
@@ -50,41 +50,44 @@ func (m *PromModule) Start() error {
 	return nil
 }
 
-func (m *PromModule) Stop() error {
+func (m *PrometheusTelemetryModule) Stop() error {
 	return nil
 }
 
-func (m *PromModule) SetBus(bus modules.Bus) {
+func (m *PrometheusTelemetryModule) SetBus(bus modules.Bus) {
 	m.bus = bus
 }
 
-func (m *PromModule) GetBus() modules.Bus {
+func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
 	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
 }
 
-// Event Metrics functionality implementation
-func (m *PromModule) GetEventMetricsAgent() modules.EventMetricsAgent {
+// EventMetricsAgent interface implementation
+func (m *PrometheusTelemetryModule) GetEventMetricsAgent() modules.EventMetricsAgent {
 	return modules.EventMetricsAgent(m)
 }
 
 // At the moment, we are using loki to push log lines per event emission, and
-// then we aggregate these log lines (count them, avg, etc) in grafana.
-// Reliance on logs for event metrics was a temporary solution, and
+// then we aggregate these log lines (count, avg, etc) in Grafana.
+// Reliance on logs for event metrics is a temporary solution, and
 // will be removed in the future in favor of more thorough event metrics tooling.
-func (m *PromModule) EmitEvent(namespace, event string, labels ...any) {
+// TODO(team): Deprecate using logs for event metrics for a more sophisticated and durable solution
+func (m *PrometheusTelemetryModule) EmitEvent(namespace, event string, labels ...any) {
 	logArgs := append([]interface{}{"[EVENT]", namespace, event}, labels...)
 	log.Println(logArgs...)
 }
 
-func (m *PromModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {
+func (m *PrometheusTelemetryModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {
 	return modules.TimeSeriesAgent(m)
 }
 
-func (p *PromModule) CounterRegister(name string, description string) {
+func (p *PrometheusTelemetryModule) CounterRegister(name string, description string) {
 	if _, exists := p.counters[name]; exists {
+		// TODO(team): Should we handle these in a better way than logging warnings?
+		log.Println("[WARNING]: Trying to register and already registered counter.")
 		return
 	}
 
@@ -94,7 +97,7 @@ func (p *PromModule) CounterRegister(name string, description string) {
 	})
 }
 
-func (p *PromModule) CounterIncrement(name string) {
+func (p *PrometheusTelemetryModule) CounterIncrement(name string) {
 	if _, exists := p.counters[name]; !exists {
 		return
 	}
@@ -102,7 +105,7 @@ func (p *PromModule) CounterIncrement(name string) {
 	p.counters[name].Inc()
 }
 
-func (p *PromModule) GaugeRegister(name string, description string) {
+func (p *PrometheusTelemetryModule) GaugeRegister(name string, description string) {
 	if _, exists := p.gauges[name]; exists {
 		return
 	}
@@ -114,9 +117,9 @@ func (p *PromModule) GaugeRegister(name string, description string) {
 }
 
 // Sets the Gauge to an arbitrary value.
-func (p *PromModule) GaugeSet(name string, value float64) (prometheus.Gauge, error) {
+func (p *PrometheusTelemetryModule) GaugeSet(name string, value float64) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil, NonExistantMetricErr("gauge", name, "set")
+		return nil, NonExistentMetricErr("gauge", name, "set")
 	}
 
 	gg := p.gauges[name]
@@ -126,9 +129,9 @@ func (p *PromModule) GaugeSet(name string, value float64) (prometheus.Gauge, err
 }
 
 // Increments the Gauge by 1. Use Add to increment it by arbitrary values.
-func (p *PromModule) GaugeIncrement(name string) (prometheus.Gauge, error) {
+func (p *PrometheusTelemetryModule) GaugeIncrement(name string) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil, NonExistantMetricErr("gauge", name, "increment")
+		return nil, NonExistentMetricErr("gauge", name, "increment")
 	}
 
 	gg := p.gauges[name]
@@ -138,9 +141,9 @@ func (p *PromModule) GaugeIncrement(name string) (prometheus.Gauge, error) {
 }
 
 // Decrements the Gauge by 1. Use Sub to decrement it by arbitrary values.
-func (p *PromModule) GaugeDecrement(name string) (prometheus.Gauge, error) {
+func (p *PrometheusTelemetryModule) GaugeDecrement(name string) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil, NonExistantMetricErr("gauge", name, "decrement")
+		return nil, NonExistentMetricErr("gauge", name, "decrement")
 	}
 
 	gg := p.gauges[name]
@@ -150,9 +153,9 @@ func (p *PromModule) GaugeDecrement(name string) (prometheus.Gauge, error) {
 }
 
 // Adds the given value to the Gauge. (The value can be negative, resulting in a decrease of the Gauge.)
-func (p *PromModule) GaugeAdd(name string, value float64) (prometheus.Gauge, error) {
+func (p *PrometheusTelemetryModule) GaugeAdd(name string, value float64) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil, NonExistantMetricErr("gauge", name, "add to")
+		return nil, NonExistentMetricErr("gauge", name, "add to")
 	}
 
 	gg := p.gauges[name]
@@ -162,9 +165,9 @@ func (p *PromModule) GaugeAdd(name string, value float64) (prometheus.Gauge, err
 }
 
 // Subtracts the given value from the Gauge. (The value can be negative, resulting in an increase of the Gauge.)
-func (p *PromModule) GaugeSub(name string, value float64) (prometheus.Gauge, error) {
+func (p *PrometheusTelemetryModule) GaugeSub(name string, value float64) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
-		return nil, NonExistantMetricErr("gauge", name, "substract from")
+		return nil, NonExistentMetricErr("gauge", name, "substract from")
 	}
 
 	gg := p.gauges[name]
@@ -173,7 +176,7 @@ func (p *PromModule) GaugeSub(name string, value float64) (prometheus.Gauge, err
 }
 
 // Registers a gauge vector by name and provide labels
-func (p *PromModule) GaugeVecRegister(namespace, module, name, description string, labels []string) {
+func (p *PrometheusTelemetryModule) GaugeVecRegister(namespace, module, name, description string, labels []string) {
 	if _, exists := p.counters[name]; exists {
 		return
 	}
@@ -191,9 +194,9 @@ func (p *PromModule) GaugeVecRegister(namespace, module, name, description strin
 }
 
 // Retrieves a gauge vector by name
-func (p *PromModule) GetGaugeVec(name string) (prometheus.GaugeVec, error) {
+func (p *PrometheusTelemetryModule) GetGaugeVec(name string) (prometheus.GaugeVec, error) {
 	if gv, exists := p.gaugeVectors[name]; exists {
-		return gv, NonExistantMetricErr("gauge vector", name, "get")
+		return gv, NonExistentMetricErr("gauge vector", name, "get")
 	}
 	return prometheus.GaugeVec{}, nil
 }

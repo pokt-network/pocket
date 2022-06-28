@@ -65,8 +65,10 @@ func main() {
 	}
 
 	// This telemetry module instance will be NOOP
-	// because of the client config 'use_telemetry' key that is set to false.
-	// Since we don't need to include a dev client's metrics in our telemetry dashboards, we have to pass a NOOP telemetry module.
+	// because of the client config 'enable_telemetry' key that is set to false.
+	// Since this client mimics partial (networking only) functionality of a full node, some of the telemetry-related
+	// code paths are executed. To avoid those messages interfering with the data collected, a non-nil telemetry
+	// module that NOOPs (per the configs above) is injected.
 	telemetryMod, err := telemetry.Create(cfg)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())

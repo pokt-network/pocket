@@ -4,8 +4,9 @@ This module is used to collect telemetry data from the node.
 
 At the moment, we are using two types of metrics:
 
-- Time series metrics: collected periodically and are stored in a database.
-- Event series metrics: events that occur and are tracked and stored in a database.
+- **Time Series metrics**: Metrics collected at regular intervals and stored in a database. 
+[//]: # TODO/INVESTIGATE(team): Replacing logs with a proper events solution for recording Event Metrics.
+- **Event series metrics**: Event-driven (i.e. not time-driven) metrics that are stored in a databse.
 
 
 At the moment, we are using:
@@ -17,7 +18,7 @@ At the moment, we are using:
 
 ## Node Configuration
 
-It is necessary to provide a telemetry configuration to your node:
+It is necessary to provide a telemetry configuration to your node in `config.json`:
 
 ```json
  "enable_telemetry": true,
@@ -27,15 +28,14 @@ It is necessary to provide a telemetry configuration to your node:
   }
 ```
 
-`enable_telemetry`: is a boolean json entry defined at the root of the document that tells the node whether to use the telemetry module or use a NOOP version.
+`enable_telemetry`: configures node to expose telemetry if true.
 `address`: is the prometheus server's address that the telemetry module will listen on.
-`endpoint`: the scraping endpoint that prometheus exposes through the telemetry module.
+`endpoint`: the endpoint that prometheus exposes through the telemetry module for other serivces to pull the metrics (_usually referred to as the scraping endpoint_).
 
 
 ## Time Series Metrics
 
-If you aren't familiar with time series metrics that Prometheus offers, please check out [Prometheus Metrics](https://prometheus.io/docs/concepts/metric_types/)
-
+If you are not familiar with the time-series concepts related to Prometheus, you can review [Prometheus Metrics](https://prometheus.io/docs/concepts/metric_types/).
 
 We are primarily using:
 
@@ -44,7 +44,7 @@ We are primarily using:
 We use Gauges to keep track of:
 
 - Blockheight
-- Nodes Online
+- # of Nodes Online
 
 ### How to use the time series metrics in your code
 
@@ -67,8 +67,7 @@ Using Loki and Grafana, we parse the logs and generate the desired graphs.
 
 In your module, make sure you have access to the bus, then use the metrics you need as follows:
 ```go
-
-timeseriesTelemetry := module.GetBus().GetTelemetryModule().GetTimeSeriesAgent()
+eventMetricsTelemetry := module.GetBus().GetTelemetryModule().GetEventMetricsAgent()
 // explore the methods you can use in shared/modules/telemetry_module.go
 
 eventMetricsTelemetry.EmitEvent(
@@ -78,7 +77,7 @@ eventMetricsTelemetry.EmitEvent(
 )
 ```
 
-### Consuming logs on loki
+### Consuming logs in Loki
 
 To test this out, [track an event in your code](#event-metrics), and then go to your [Grafana's local setup's link](#using-grafana), and to the the explore page.
 
@@ -87,12 +86,18 @@ Run the following LogQL query:
 ```
 {host="desktop-docker"} |= "[EVENT] your_namespace your_event" | pattern `<datetime> <_> <time> <type> <event_name> <any> <aditional> <whitespaced> <items>` | logfmt
 ```
-TODO(derrandz): add screenshot in here
+An example of how to use the `Explore` functionality is available in:
+
+Go to the explore page:
+![](./docs/explore-loki-on-grafana-pt-1.gif)
+
+Type in your query and play with the results:
+![](./docs/explore-loki-on-grafana-pt-2.gif)
 
 You should see a log stream coming out, click a line to explore how you've used the `pattern` keyword in LogQL to parse the log line. Now you can reference your parsed fields as you like. Example:
 
 Counting how many events we've seen by type over 5m:
-```
+```logql
 sum by (type) (count_over_time(
     {host="desktop-docker"}
     |= "[EVENT] your_namespace"
@@ -100,7 +105,7 @@ sum by (type) (count_over_time(
 ))
 ```
 Counting how many events of a certain type have we seen over 5m:
-```
+```logql
 sum (count_over_time(
     {host="desktop-docker"}
     |= "[EVENT] your_namespace your_event"
@@ -113,9 +118,11 @@ sum (count_over_time(
 To launch and start using Grafana, do the following:
 
 1. Spin up the stack
-```
+```bash
 $ make compose_and_watch
 ```
 
 2. Wait a few seconds and then visit: `https://localhost:3000`.
-3. Voila! You are there. You can browse existing dashbaords by (x)s (TODO(derrandz): Add screenshot)
+3. Voila! You are there. You can browse existing dashbaords by navigating to the sidebar on Grafana and clicking on `Search Dashboards`:
+
+![](./docs/browsing-existing-dashboards.gif)

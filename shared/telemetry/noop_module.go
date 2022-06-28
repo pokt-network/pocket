@@ -67,31 +67,26 @@ func (p *NoopTelemetryModule) GaugeRegister(name string, description string) {
 	NOOP()
 }
 
-// Set sets the Gauge to an arbitrary value.
 func (p *NoopTelemetryModule) GaugeSet(name string, value float64) (prometheus.Gauge, error) {
 	NOOP()
 	return nil, nil
 }
 
-// Increments the Gauge by 1. Use Add to increment it by arbitrary values.
 func (p *NoopTelemetryModule) GaugeIncrement(name string) (prometheus.Gauge, error) {
 	NOOP()
 	return nil, nil
 }
 
-// Decrements the Gauge by 1. Use Sub to decrement it by arbitrary
 func (p *NoopTelemetryModule) GaugeDecrement(name string) (prometheus.Gauge, error) {
 	NOOP()
 	return nil, nil
 }
 
-// Add adds the given value to the Gauge. (The value can be negative, resulting in a decrease of the Gauge.)
 func (p *NoopTelemetryModule) GaugeAdd(name string, value float64) (prometheus.Gauge, error) {
 	NOOP()
 	return nil, nil
 }
 
-// Subtracts the given value from the Gauge. (The value can be negative, resulting in an increase of the Gauge.)
 func (p *NoopTelemetryModule) GaugeSub(name string, value float64) (prometheus.Gauge, error) {
 	NOOP()
 	return nil, nil
