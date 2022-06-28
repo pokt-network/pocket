@@ -1,5 +1,7 @@
 package schema
 
+// Interface common to all protocol actors at the persistence schema layer. This exposes SQL specific
+// attributes and queries.
 type ProtocolActor interface {
 	/*** Protocol Actor Attributes ***/
 

@@ -215,7 +215,7 @@ func fuzzProtocolActor(
 			nActor, err := getTestActor(db, originalActor.Address)
 			require.NoError(t, err)
 			require.Equal(t, nActor.GenericParam, genericParam, "update maxRelays")
-			require.True(t, isUnorderedEqual(nActor.Chains, newChains), "update newChains: "+fmt.Sprintf("%s, %s", nActor.Chains, newChains))
+			require.ElementsMatch(t, nActor.Chains, newChains, "update chains")
 			require.Equal(t, nActor.StakedTokens, newStakedTokens, "update stakedTokens")
 		case "GetReadyToUnstake":
 			readyToUnstake := false
@@ -343,24 +343,4 @@ func GetRandomChains() (chains []string) {
 		chains = append(chains, string(b))
 	}
 	return
-}
-
-func isUnorderedEqual(slice1, slice2 []string) (isEqual bool) {
-	if len(slice1) != len(slice2) {
-		return false
-	}
-	compare := make(map[string]int)
-	for _, s := range slice1 {
-		compare[s]++
-	}
-	for _, s := range slice2 {
-		if _, ok := compare[s]; !ok {
-			return false
-		}
-		compare[s] = compare[s] - 1
-		if compare[s] == 0 {
-			delete(compare, s)
-		}
-	}
-	return len(compare) == 0
 }

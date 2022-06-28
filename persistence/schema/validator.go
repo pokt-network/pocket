@@ -6,12 +6,45 @@ type ValidatorSchema struct {
 	GenericProtocolActor
 }
 
-var ValidatorActor ProtocolActor = &ServiceNodeSchema{
+var ValidatorActor ProtocolActor = &ValidatorSchema{
 	GenericProtocolActor: GenericProtocolActor{
-		tableName: "validator",
+		tableName:       "validator",
+		chainsTableName: "", // intentionally empty
 
 		actorSpecificColName: ServiceURLCol,
 
-		heightConstraintName: "validator_node_height",
+		heightConstraintName:       "validator_node_height",
+		chainsHeightConstraintName: "", // intentionally empty
 	},
+}
+
+func (actor *ValidatorSchema) GetChainsTableSchema() string {
+	return ""
+}
+
+func (actor *ValidatorSchema) GetChainsQuery(address string, height int64) string {
+	return ""
+}
+
+func (actor *ValidatorSchema) InsertQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string {
+	return Insert(GenericActor{
+		Address:         address,
+		PublicKey:       publicKey,
+		StakedTokens:    stakedTokens,
+		OutputAddress:   outputAddress,
+		PausedHeight:    pausedHeight,
+		UnstakingHeight: unstakingHeight,
+	},
+		actor.actorSpecificColName, maxRelays,
+		actor.heightConstraintName, "",
+		actor.tableName, "",
+		height)
+}
+
+func (actor *ValidatorSchema) UpdateChainsQuery(address string, chains []string, height int64) string {
+	return ""
+}
+
+func (actor *ValidatorSchema) ClearAllChainsQuery() string {
+	return ""
 }

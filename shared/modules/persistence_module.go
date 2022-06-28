@@ -12,10 +12,13 @@ type PersistenceModule interface {
 	GetCommitDB() *memdb.DB
 }
 
-type PersistenceContext interface {
-	GetLatestBlockHeight() (uint64, error)
-	GetBlockHash(height int64) ([]byte, error)
+// The interface defining the context within which the node can operate with the persistence layer
+// regarding any protocol actor or the state of the blockchain.
 
+// By design, the interface is made very verbose and explicit. This highlights the fact that Pocket
+// is an application specific blockchain and improves readability throughout the rest of the codebase
+// by limiting the use of abstractions.
+type PersistenceContext interface {
 	// Context Operations
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
@@ -25,10 +28,15 @@ type PersistenceContext interface {
 	Release()
 	GetHeight() (int64, error)
 
-	// Indexer
+	// Block Operations
+	GetLatestBlockHeight() (uint64, error)
+	GetBlockHash(height int64) ([]byte, error)
+	GetBlocksPerSession() (int, error)
+
+	// Indexer Operations
 	TransactionExists(transactionHash string) bool
 
-	//Account
+	// Account Operations
 	AddPoolAmount(name string, amount string) error
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error
@@ -39,7 +47,7 @@ type PersistenceContext interface {
 	GetAccountAmount(address []byte) (string, error)
 	SetAccountAmount(address []byte, amount string) error // TECHDEBT(team): Delete this function
 
-	// App
+	// App Operations
 	GetAppExists(address []byte) (exists bool, err error)
 	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateApp(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error
@@ -52,7 +60,7 @@ type PersistenceContext interface {
 	SetAppPauseHeight(address []byte, height int64) error
 	GetAppOutputAddress(operator []byte) (output []byte, err error)
 
-	// ServiceNode
+	// ServiceNode Operations
 	GetServiceNodeExists(address []byte) (exists bool, err error)
 	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateServiceNode(address []byte, serviceURL string, amountToAdd string, chains []string) error
@@ -67,7 +75,7 @@ type PersistenceContext interface {
 	GetServiceNodeCount(chain string, height int64) (int, error)
 	GetServiceNodeOutputAddress(operator []byte) (output []byte, err error)
 
-	// Fisherman
+	// Fisherman Operations
 	GetFishermanExists(address []byte) (exists bool, err error)
 	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateFisherman(address []byte, serviceURL string, amountToAdd string, chains []string) error
@@ -80,7 +88,7 @@ type PersistenceContext interface {
 	SetFishermanPauseHeight(address []byte, height int64) error
 	GetFishermanOutputAddress(operator []byte) (output []byte, err error)
 
-	// Validator
+	// Validator Operations
 	GetValidatorExists(address []byte) (exists bool, err error)
 	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error
 	UpdateValidator(address []byte, serviceURL string, amountToAdd string) error
@@ -100,8 +108,6 @@ type PersistenceContext interface {
 
 	// Params
 	InitParams() error
-
-	GetBlocksPerSession() (int, error)
 
 	GetParamAppMinimumStake() (string, error)
 	GetMaxAppChains() (int, error)
@@ -249,7 +255,7 @@ type PersistenceContext interface {
 	SetMessageUnpauseServiceNodeFeeOwner([]byte) error
 	SetMessageChangeParameterFeeOwner([]byte) error
 
-	// ACL
+	// ACL Operations
 	GetAclOwner() ([]byte, error)
 	SetAclOwner(owner []byte) error
 	SetBlocksPerSessionOwner(owner []byte) error

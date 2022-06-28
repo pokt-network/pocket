@@ -1,7 +1,5 @@
 package schema
 
-var _ ProtocolActor = &GenericProtocolActor{}
-
 type GenericActor struct {
 	Address         string
 	PublicKey       string
@@ -13,6 +11,13 @@ type GenericActor struct {
 	Chains          []string // IMPROVE: Consider creating a `type Chain string` for chains
 }
 
+var _ ProtocolActor = &GenericProtocolActor{}
+
+// Implements the ProtocolActor with behaviour that can be embedded (i.e. inherited) by other protocol
+// actors for a share implementation.
+//
+// Note that this implementation assumes the protocol actor is chain dependant, so that behaviour needs
+// to be overridden if the actor (e.g. Validator) is chain independent.
 type GenericProtocolActor struct {
 	// SQL Tables
 	tableName       string
