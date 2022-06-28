@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"encoding/hex"
+	"log"
 
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
@@ -23,8 +24,7 @@ func (p PostgresContext) GetValidator(address []byte, height int64) (operator, p
 	return
 }
 
-// TODO(Andrew): remove paused and status from the interface
-func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error {
+func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(schema.ValidatorActor, schema.GenericActor{
 		Address:         hex.EncodeToString(address),
 		PublicKey:       hex.EncodeToString(publicKey),
@@ -36,7 +36,6 @@ func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, outpu
 	})
 }
 
-// TODO(Andrew): change amount to add, to the amount to be SET
 func (p PostgresContext) UpdateValidator(address []byte, serviceURL string, stakedTokens string) error {
 	return p.UpdateActor(schema.ValidatorActor, schema.GenericActor{
 		Address:      hex.EncodeToString(address),
@@ -45,13 +44,12 @@ func (p PostgresContext) UpdateValidator(address []byte, serviceURL string, stak
 	})
 }
 
-// NOTE: Leaving as transaction as I anticipate we'll need more ops in the future
 func (p PostgresContext) DeleteValidator(address []byte) error {
-	return nil // no op
+	log.Println("[DEBUG] DeleteValidator is a NOOP")
+	return nil
 }
 
-// TODO(Andrew): remove status - not needed
-func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, status int) (Validators []*types.UnstakingActor, err error) {
+func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, _ int) (Validators []*types.UnstakingActor, err error) {
 	return p.ActorReadyToUnstakeWithChains(schema.ValidatorActor, height)
 }
 
@@ -59,8 +57,7 @@ func (p PostgresContext) GetValidatorStatus(address []byte, height int64) (statu
 	return p.GetActorStatus(schema.ValidatorActor, address, height)
 }
 
-// TODO(Andrew): remove status - no longer needed
-func (p PostgresContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error {
+func (p PostgresContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, _ int) error {
 	return p.SetActorUnstakingHeightAndStatus(schema.ValidatorActor, address, unstakingHeight)
 }
 
@@ -68,8 +65,7 @@ func (p PostgresContext) GetValidatorPauseHeightIfExists(address []byte, height 
 	return p.GetActorPauseHeightIfExists(schema.ValidatorActor, address, height)
 }
 
-// TODO(Andrew): remove status - it's not needed
-func (p PostgresContext) SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
+func (p PostgresContext) SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
 	return p.SetActorStatusAndUnstakingHeightPausedBefore(schema.ValidatorActor, pausedBeforeHeight, unstakingHeight)
 }
 
@@ -77,12 +73,12 @@ func (p PostgresContext) SetValidatorPauseHeight(address []byte, height int64) e
 	return p.SetActorPauseHeight(schema.ValidatorActor, address, height)
 }
 
+// TODO(team): The Get & Update operations need to be made atomic
 func (p PostgresContext) SetValidatorStakedTokens(address []byte, tokens string) error { // TODO deprecate and use update validator
 	height, err := p.GetHeight()
 	if err != nil {
 		return err
 	}
-	// TODO make atomic
 	operator, _, _, serviceURL, _, _, _, err := p.GetValidator(address, height)
 	if err != nil {
 		return err
@@ -94,7 +90,6 @@ func (p PostgresContext) SetValidatorStakedTokens(address []byte, tokens string)
 	return p.UpdateValidator(addr, serviceURL, tokens)
 }
 
-// TODO(team): deprecate and use update validator
 func (p PostgresContext) GetValidatorStakedTokens(address []byte, height int64) (tokens string, err error) {
 	_, _, tokens, _, _, _, _, err = p.GetValidator(address, height)
 	return
@@ -104,17 +99,17 @@ func (p PostgresContext) GetValidatorOutputAddress(operator []byte, height int64
 	return p.GetActorOutputAddress(schema.ValidatorActor, operator, height)
 }
 
+// TODO(team): implement missed blocks
 func (p PostgresContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, pausedHeight int64, missedBlocks int) error {
-	// TODO implement missed blocks
 	return nil
 }
 
+// TODO(team): implement missed blocks
 func (p PostgresContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) error {
-	// TODO implement missed blocks
 	return nil
 }
 
+// TODO(team): implement missed blocks
 func (p PostgresContext) GetValidatorMissedBlocks(address []byte) (int, error) {
-	// TODO implement missed blocks
 	return 0, nil
 }
