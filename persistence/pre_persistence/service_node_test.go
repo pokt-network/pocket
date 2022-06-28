@@ -183,7 +183,7 @@ func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 	}
 }
 
-func TestSetServiceNodesStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+func TestSetServiceNodeStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestServiceNode()
 	if err := ctx.InsertServiceNode(actor.Address, actor.PublicKey, actor.Output, true, int(actor.Status),
@@ -191,7 +191,7 @@ func TestSetServiceNodesStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 		t.Fatal(err)
 	}
 	pauseBeforeHeight, unstakingHeight, status := int64(1), int64(10), 1
-	err := ctx.SetServiceNodesStatusAndUnstakingHeightPausedBefore(pauseBeforeHeight, unstakingHeight, status)
+	err := ctx.SetServiceNodeStatusAndUnstakingHeightPausedBefore(pauseBeforeHeight, unstakingHeight, status)
 	require.NoError(t, err)
 	got, _, err := ctx.(*PrePersistenceContext).GetServiceNode(actor.Address)
 	require.NoError(t, err)

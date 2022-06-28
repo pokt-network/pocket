@@ -313,7 +313,7 @@ func (u *UtilityContext) UnstakeAppsPausedBefore(pausedBeforeHeight int64) types
 	if err != nil {
 		return err
 	}
-	er := store.SetAppsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
+	er := store.SetAppStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return types.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}

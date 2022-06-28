@@ -146,7 +146,7 @@ func (m *PrePersistenceContext) DeleteFisherman(address []byte) error {
 	return db.Put(key, DeletedPrefixKey)
 }
 
-func (m *PrePersistenceContext) GetFishermanReadyToUnstake(height int64, status int) (fisherman []*types.UnstakingActor, err error) {
+func (m *PrePersistenceContext) GetFishermenReadyToUnstake(height int64, status int) (fisherman []*types.UnstakingActor, err error) {
 	db := m.Store()
 	unstakingKey := append(UnstakingFishermanPrefixKey, types.Int64ToBytes(height)...)
 	if has := db.Contains(unstakingKey); !has {
@@ -232,8 +232,8 @@ func (m *PrePersistenceContext) GetFishermanPauseHeightIfExists(address []byte) 
 	return int64(fish.PausedHeight), nil
 }
 
-// SetFishermansStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
-func (m *PrePersistenceContext) SetFishermansStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
+// SetFishermanStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
+func (m *PrePersistenceContext) SetFishermanStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	db := m.Store()
 	codec := types.GetCodec()
 	it := db.NewIterator(&util.Range{

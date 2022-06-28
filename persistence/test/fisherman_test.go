@@ -95,7 +95,7 @@ func TestGetFishermansReadyToUnstake(t *testing.T) {
 	err = db.SetFishermanUnstakingHeightAndStatus(fisherman.Address, 0, 1)
 	require.NoError(t, err)
 	// test GetFishermansReadyToUnstake
-	fishermans, err := db.GetFishermanReadyToUnstake(0, 1)
+	fishermans, err := db.GetFishermenReadyToUnstake(0, 1)
 	require.NoError(t, err)
 	if len(fishermans) != 1 {
 		t.Fatal("wrong number of actors")
@@ -135,7 +135,7 @@ func TestGetFishermanPauseHeightIfExists(t *testing.T) {
 	}
 }
 
-func TestSetFishermansStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+func TestSetFishermanStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
@@ -143,7 +143,7 @@ func TestSetFishermansStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	fisherman := NewTestFisherman(t)
 	err := db.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
-	err = db.SetFishermansStatusAndUnstakingHeightPausedBefore(1, 0, 1)
+	err = db.SetFishermanStatusAndUnstakingHeightPausedBefore(1, 0, 1)
 	require.NoError(t, err)
 	_, _, _, _, _, _, unstakingHeight, _, err := db.GetFisherman(fisherman.Address, db.Height)
 	require.NoError(t, err)

@@ -234,8 +234,8 @@ func (m *PrePersistenceContext) GetServiceNodePauseHeightIfExists(address []byte
 	return int64(sn.PausedHeight), nil
 }
 
-// SetServiceNodesStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
-func (m *PrePersistenceContext) SetServiceNodesStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
+// SetServiceNodeStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
+func (m *PrePersistenceContext) SetServiceNodeStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	db := m.Store()
 	codec := types.GetCodec()
 	it := db.NewIterator(&util.Range{

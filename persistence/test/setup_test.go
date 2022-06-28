@@ -158,7 +158,7 @@ func fuzzProtocolActor(
 	if err != nil {
 		panic(err)
 	}
-	err = db.InsertActor(actor, protocolActor.InsertQuery)
+	err = db.InsertActor(protocolActor, actor)
 	if err != nil {
 		panic(err)
 	}
@@ -206,11 +206,7 @@ func fuzzProtocolActor(
 				UnstakingHeight: originalActor.UnstakingHeight,
 				Chains:          newChains,
 			}
-			var updateChainsQuery func(string, []string, int64) string = nil
-			if protocolActor.GetChainsTableName() != "" {
-				updateChainsQuery = protocolActor.UpdateChainsQuery
-			}
-			err = db.UpdateActor(updatedActor, protocolActor.UpdateQuery, updateChainsQuery, protocolActor.GetChainsTableName())
+			err = db.UpdateActor(protocolActor, updatedActor)
 			require.NoError(t, err)
 			nActor, err := getTestActor(db, originalActor.Address)
 			require.NoError(t, err)
@@ -224,7 +220,7 @@ func fuzzProtocolActor(
 			if originalActor.UnstakingHeight == db.Height && originalActor.UnstakingHeight != DefaultUnstakingHeight {
 				readyToUnstake = true
 			}
-			actors, err := db.ActorReadyToUnstakeWithChains(db.Height, protocolActor.GetReadyToUnstakeQuery)
+			actors, err := db.ActorReadyToUnstakeWithChains(protocolActor, db.Height)
 			require.NoError(t, err)
 			if readyToUnstake {
 				found := false
@@ -248,7 +244,7 @@ func fuzzProtocolActor(
 			require.NoError(t, err)
 			addr, err := hex.DecodeString(originalActor.Address)
 			require.NoError(t, err)
-			status, err := db.GetActorStatus(addr, db.Height, protocolActor.GetUnstakingHeightQuery)
+			status, err := db.GetActorStatus(protocolActor, addr, db.Height)
 			require.NoError(t, err)
 			expectedStatus := 0
 			switch {
@@ -265,13 +261,9 @@ func fuzzProtocolActor(
 			require.NoError(t, err)
 			addr, err := hex.DecodeString(originalActor.Address)
 			require.NoError(t, err)
-			pauseHeight, err := db.GetActorPauseHeightIfExists(addr, db.Height, protocolActor.GetPausedHeightQuery)
+			pauseHeight, err := db.GetActorPauseHeightIfExists(protocolActor, addr, db.Height)
 			require.NoError(t, err)
-			var getChainsQuery func(address string, height int64) string = nil
-			if protocolActor.GetChainsTableName() != "" {
-				getChainsQuery = protocolActor.GetChainsQuery
-			}
-			genericActor, err := db.GetActor(addr, db.Height, protocolActor.GetQuery, getChainsQuery)
+			genericActor, err := db.GetActor(protocolActor, addr, db.Height)
 			require.NoError(t, err)
 			require.Equal(t, int(originalActor.PausedHeight), int(pauseHeight), "getPauseHeight "+fmt.Sprintf("%d", genericActor.UnstakingHeight))
 		case "SetUnstakingHeight":
@@ -280,7 +272,7 @@ func fuzzProtocolActor(
 			newUnstakingHeight := rand.Int63()
 			addr, err := hex.DecodeString(originalActor.Address)
 			require.NoError(t, err)
-			err = db.SetActorUnstakingHeightAndStatus(addr, newUnstakingHeight, protocolActor.UpdateUnstakingHeightQuery)
+			err = db.SetActorUnstakingHeightAndStatus(protocolActor, addr, newUnstakingHeight)
 			require.NoError(t, err)
 			nActor, err := getTestActor(db, originalActor.Address)
 			require.NoError(t, err)
@@ -291,7 +283,7 @@ func fuzzProtocolActor(
 			newPauseHeight := rand.Int63()
 			addr, err := hex.DecodeString(originalActor.Address)
 			require.NoError(t, err)
-			err = db.SetActorPauseHeight(addr, newPauseHeight, protocolActor.UpdatePausedHeightQuery)
+			err = db.SetActorPauseHeight(protocolActor, addr, newPauseHeight)
 			require.NoError(t, err)
 			nActor, err := getTestActor(db, actor.Address)
 			require.NoError(t, err)
@@ -304,7 +296,7 @@ func fuzzProtocolActor(
 			if originalActor.PausedHeight != DefaultPauseHeight && db.Height > originalActor.PausedHeight {
 				isPausedAndReadyToUnstake = true
 			}
-			err = db.SetActorStatusAndUnstakingHeightPausedBefore(db.Height, randomUnstakingHeight, protocolActor.UpdatePausedBefore)
+			err = db.SetActorStatusAndUnstakingHeightPausedBefore(protocolActor, db.Height, randomUnstakingHeight)
 			require.NoError(t, err)
 			nActor, err := getTestActor(db, originalActor.Address)
 			require.NoError(t, err)
@@ -316,7 +308,7 @@ func fuzzProtocolActor(
 			require.NoError(t, err)
 			addr, err := hex.DecodeString(originalActor.Address)
 			require.NoError(t, err)
-			outputAddr, err := db.GetActorOutputAddress(addr, db.Height, protocolActor.GetOutputAddressQuery)
+			outputAddr, err := db.GetActorOutputAddress(protocolActor, addr, db.Height)
 			require.NoError(t, err)
 			require.Equal(t, originalActor.OutputAddress, hex.EncodeToString(outputAddr), "getOutput")
 		case "NextHeight":

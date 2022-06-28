@@ -235,7 +235,7 @@ func TestGetPauseHeightIfExists(t *testing.T) {
 	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
 }
 
-func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+func TestSetAppStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
@@ -257,7 +257,7 @@ func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	require.NoError(t, err)
 
 	unstakingHeightSet := int64(0)
-	err = db.SetAppsStatusAndUnstakingHeightPausedBefore(1, unstakingHeightSet, 1)
+	err = db.SetAppStatusAndUnstakingHeightPausedBefore(1, unstakingHeightSet, 1)
 	require.NoError(t, err)
 
 	_, _, _, _, _, unstakingHeight, _, _, err := db.GetApp(app.Address, db.Height)

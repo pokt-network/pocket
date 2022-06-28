@@ -184,7 +184,7 @@ func TestGetAppPauseHeightIfExists(t *testing.T) {
 	}
 }
 
-func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+func TestSetAppStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
 	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, true, int(actor.Status),
@@ -192,7 +192,7 @@ func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 		t.Fatal(err)
 	}
 	pauseBeforeHeight, unstakingHeight, status := int64(1), int64(10), 1
-	err := ctx.SetAppsStatusAndUnstakingHeightPausedBefore(pauseBeforeHeight, unstakingHeight, status)
+	err := ctx.SetAppStatusAndUnstakingHeightPausedBefore(pauseBeforeHeight, unstakingHeight, status)
 	require.NoError(t, err)
 	got, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
 	require.NoError(t, err)

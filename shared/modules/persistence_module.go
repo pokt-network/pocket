@@ -56,7 +56,7 @@ type PersistenceContext interface {
 	GetAppStatus(address []byte) (status int, err error)
 	SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
 	GetAppPauseHeightIfExists(address []byte) (int64, error)
-	SetAppsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
+	SetAppStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetAppPauseHeight(address []byte, height int64) error
 	GetAppOutputAddress(operator []byte) (output []byte, err error)
 
@@ -69,7 +69,7 @@ type PersistenceContext interface {
 	GetServiceNodeStatus(address []byte) (status int, err error)
 	SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
 	GetServiceNodePauseHeightIfExists(address []byte) (int64, error)
-	SetServiceNodesStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
+	SetServiceNodeStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetServiceNodePauseHeight(address []byte, height int64) error
 	GetServiceNodesPerSessionAt(height int64) (int, error)
 	GetServiceNodeCount(chain string, height int64) (int, error)
@@ -80,11 +80,11 @@ type PersistenceContext interface {
 	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateFisherman(address []byte, serviceURL string, amountToAdd string, chains []string) error
 	DeleteFisherman(address []byte) error
-	GetFishermanReadyToUnstake(Height int64, status int) (Fishermans []*types.UnstakingActor, err error)
+	GetFishermenReadyToUnstake(Height int64, status int) (Fishermans []*types.UnstakingActor, err error)
 	GetFishermanStatus(address []byte) (status int, err error)
 	SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
 	GetFishermanPauseHeightIfExists(address []byte) (int64, error)
-	SetFishermansStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
+	SetFishermanStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetFishermanPauseHeight(address []byte, height int64) error
 	GetFishermanOutputAddress(operator []byte) (output []byte, err error)
 

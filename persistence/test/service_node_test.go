@@ -116,7 +116,7 @@ func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 	}
 }
 
-func TestSetServiceNodesStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+func TestSetServiceNodeStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
@@ -124,7 +124,7 @@ func TestSetServiceNodesStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	serviceNode := NewTestServiceNode(t)
 	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
-	err = db.SetServiceNodesStatusAndUnstakingHeightPausedBefore(1, 0, 1)
+	err = db.SetServiceNodeStatusAndUnstakingHeightPausedBefore(1, 0, 1)
 	require.NoError(t, err)
 	_, _, _, _, _, _, unstakingHeight, _, err := db.GetServiceNode(serviceNode.Address, db.Height)
 	require.NoError(t, err)

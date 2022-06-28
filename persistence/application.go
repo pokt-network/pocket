@@ -2,17 +2,18 @@ package persistence
 
 import (
 	"encoding/hex"
+	"log"
 
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
 func (p PostgresContext) GetAppExists(address []byte, height int64) (exists bool, err error) {
-	return p.GetExists(address, height, schema.ApplicationActor.GetExistsQuery)
+	return p.GetExists(schema.ApplicationActor, address, height)
 }
 
 func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicKey, stakedTokens, maxRelays, outputAddress string, pauseHeight, unstakingHeight int64, chains []string, err error) {
-	actor, err := p.GetActor(address, height, schema.ApplicationActor.GetQuery, schema.ApplicationActor.GetChainsQuery)
+	actor, err := p.GetActor(schema.ApplicationActor, address, height)
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedTokens
@@ -24,9 +25,8 @@ func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicK
 	return
 }
 
-// TODO(Andrew): remove paused and status from the interface
 func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []byte, _ bool, _ int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
-	return p.InsertActor(schema.GenericActor{
+	return p.InsertActor(schema.ApplicationActor, schema.GenericActor{
 		Address:         hex.EncodeToString(address),
 		PublicKey:       hex.EncodeToString(publicKey),
 		StakedTokens:    stakedTokens,
@@ -35,52 +35,47 @@ func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []by
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Chains:          chains,
-	}, schema.ApplicationActor.InsertQuery)
+	})
 }
 
 func (p PostgresContext) UpdateApp(address []byte, maxRelays string, stakedTokens string, chains []string) error {
-	return p.UpdateActor(schema.GenericActor{
+	return p.UpdateActor(schema.ApplicationActor, schema.GenericActor{
 		Address:      hex.EncodeToString(address),
 		StakedTokens: stakedTokens,
 		GenericParam: maxRelays,
 		Chains:       chains,
-	}, schema.ApplicationActor.UpdateQuery, schema.ApplicationActor.UpdateChainsQuery, schema.ApplicationActor.GetChainsTableName())
+	})
 }
 
 func (p PostgresContext) DeleteApp(_ []byte) error {
-	// NOOP
+	log.Println("[DEBUG] DeleteApp is a NOOP")
 	return nil
 }
 
-// TODO(Andrew): remove status (second parameter) - not needed
 func (p PostgresContext) GetAppsReadyToUnstake(height int64, _ int) (apps []*types.UnstakingActor, err error) {
-	return p.ActorReadyToUnstakeWithChains(height, schema.ApplicationActor.GetReadyToUnstakeQuery)
+	return p.ActorReadyToUnstakeWithChains(schema.ApplicationActor, height)
 }
 
 func (p PostgresContext) GetAppStatus(address []byte, height int64) (status int, err error) {
-	return p.GetActorStatus(address, height, schema.ApplicationActor.GetUnstakingHeightQuery)
+	return p.GetActorStatus(schema.ApplicationActor, address, height)
 }
 
-// TODO(Andrew): remove status (third parameter) - no longer needed
 func (p PostgresContext) SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, _ int) error {
-	return p.SetActorUnstakingHeightAndStatus(address, unstakingHeight, schema.ApplicationActor.UpdateUnstakingHeightQuery)
+	return p.SetActorUnstakingHeightAndStatus(schema.ApplicationActor, address, unstakingHeight)
 }
 
-// DISCUSS(drewsky): Need to create a semantic constant for an error return value, but should it be 0 or -1?
 func (p PostgresContext) GetAppPauseHeightIfExists(address []byte, height int64) (pausedHeight int64, err error) {
-	return p.GetActorPauseHeightIfExists(address, height, schema.ApplicationActor.GetPausedHeightQuery)
+	return p.GetActorPauseHeightIfExists(schema.ApplicationActor, address, height)
 }
 
-// TODO(Andrew): remove status (third parameter) - it's not needed
-// DISCUSS(drewsky): This function seems to be doing too much from a naming perspective. Perhaps `SetPausedAppsToStartUnstaking`?
-func (p PostgresContext) SetAppsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
-	return p.SetActorStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, schema.ApplicationActor.UpdatePausedBefore)
+func (p PostgresContext) SetAppStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
+	return p.SetActorStatusAndUnstakingHeightPausedBefore(schema.ApplicationActor, pausedBeforeHeight, unstakingHeight)
 }
 
 func (p PostgresContext) SetAppPauseHeight(address []byte, height int64) error {
-	return p.SetActorPauseHeight(address, height, schema.ApplicationActor.UpdatePausedHeightQuery)
+	return p.SetActorPauseHeight(schema.ApplicationActor, address, height)
 }
 
 func (p PostgresContext) GetAppOutputAddress(operator []byte, height int64) (output []byte, err error) {
-	return p.GetActorOutputAddress(operator, height, schema.ApplicationActor.GetOutputAddressQuery)
+	return p.GetActorOutputAddress(schema.ApplicationActor, operator, height)
 }

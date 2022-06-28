@@ -135,6 +135,7 @@ func InsertChains(address string, chains []string, height int64, tableName, cons
 	return insert
 }
 
+// TODO(olshansky): Consider create this as part of the protocol actor interface
 func NullifyChains(address string, height int64, tableName string) string {
 	return fmt.Sprintf("DELETE FROM %s WHERE address='%s' AND height=%d", tableName, address, height)
 }

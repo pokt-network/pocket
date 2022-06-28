@@ -248,8 +248,8 @@ func (m *PrePersistenceContext) GetAppPauseHeightIfExists(address []byte) (int64
 	return int64(app.PausedHeight), nil
 }
 
-// SetAppsStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
-func (m *PrePersistenceContext) SetAppsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
+// SetAppStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
+func (m *PrePersistenceContext) SetAppStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	db := m.Store()
 	codec := types.GetCodec()
 	it := db.NewIterator(&util.Range{

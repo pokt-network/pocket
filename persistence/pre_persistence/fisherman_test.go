@@ -145,7 +145,7 @@ func TestGetFishermansReadyToUnstake(t *testing.T) {
 	if err := ctx.SetFishermanUnstakingHeightAndStatus(actor.Address, 0, 1); err != nil {
 		t.Fatal(err)
 	}
-	unstakingFishermans, err := ctx.(*PrePersistenceContext).GetFishermanReadyToUnstake(0, 1)
+	unstakingFishermans, err := ctx.(*PrePersistenceContext).GetFishermenReadyToUnstake(0, 1)
 	require.NoError(t, err)
 	if !bytes.Equal(unstakingFishermans[0].Address, actor.Address) {
 		t.Fatalf("wrong actor returned, expected addr %v, got %v", unstakingFishermans[0].Address, actor.Address)
@@ -183,7 +183,7 @@ func TestGetFishermanPauseHeightIfExists(t *testing.T) {
 	}
 }
 
-func TestSetFishermansStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+func TestSetFishermanStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestFisherman()
 	if err := ctx.InsertFisherman(actor.Address, actor.PublicKey, actor.Output, true, int(actor.Status),
@@ -191,7 +191,7 @@ func TestSetFishermansStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 		t.Fatal(err)
 	}
 	pauseBeforeHeight, unstakingHeight, status := int64(1), int64(10), 1
-	err := ctx.SetFishermansStatusAndUnstakingHeightPausedBefore(pauseBeforeHeight, unstakingHeight, status)
+	err := ctx.SetFishermanStatusAndUnstakingHeightPausedBefore(pauseBeforeHeight, unstakingHeight, status)
 	require.NoError(t, err)
 	got, _, err := ctx.(*PrePersistenceContext).GetFisherman(actor.Address)
 	require.NoError(t, err)

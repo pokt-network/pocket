@@ -281,7 +281,7 @@ func (u *UtilityContext) GetFishermenReadyToUnstake() ([]*types.UnstakingActor, 
 	if err != nil {
 		return nil, err
 	}
-	unstakingFishermans, er := store.GetFishermanReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
+	unstakingFishermans, er := store.GetFishermenReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return nil, types.ErrGetReadyToUnstake(er)
 	}
@@ -294,7 +294,7 @@ func (u *UtilityContext) UnstakeFishermenPausedBefore(pausedBeforeHeight int64) 
 	if err != nil {
 		return err
 	}
-	er := store.SetFishermansStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
+	er := store.SetFishermanStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return types.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}
