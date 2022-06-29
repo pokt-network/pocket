@@ -77,6 +77,17 @@ func (m *p2pModule) GetBus() modules.Bus {
 func (m *p2pModule) Start() error {
 	log.Println("Starting network module")
 
+	m.
+		GetBus().
+		GetTelemetryModule().
+		GetTimeSeriesAgent().
+		CounterRegister(
+			"p2p_nodes_online",
+			"the counter to track the number of nodes online",
+		)
+
+	m.network.SetBus(m.GetBus())
+
 	go func() {
 		for {
 			data, err := m.listener.Read()
@@ -87,6 +98,12 @@ func (m *p2pModule) Start() error {
 			go m.handleNetworkMessage(data)
 		}
 	}()
+
+	m.
+		GetBus().
+		GetTelemetryModule().
+		GetTimeSeriesAgent().
+		CounterIncrement("p2p_nodes_online")
 
 	return nil
 }
