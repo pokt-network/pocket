@@ -25,7 +25,6 @@ func Create(c *config.Config) (modules.PersistenceModule, error) {
 }
 
 func (p *persistenceModule) Start() error {
-	// TODO(olshansky): Add a test that bus is set
 	log.Println("Starting persistence module...")
 	return nil
 }

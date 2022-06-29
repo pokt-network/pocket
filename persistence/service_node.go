@@ -25,7 +25,6 @@ func (p PostgresContext) GetServiceNode(address []byte, height int64) (operator,
 	return
 }
 
-// TODO(Andrew): remove paused and status from the interface
 func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(schema.ServiceNodeActor, schema.GenericActor{
 		Address:         hex.EncodeToString(address),
@@ -53,7 +52,6 @@ func (p PostgresContext) DeleteServiceNode(address []byte) error {
 	return nil
 }
 
-// TODO(andrew): implement this
 func (p PostgresContext) GetServiceNodeCount(chain string, height int64) (int, error) {
 	panic("GetServiceNodeCount not implemented")
 }

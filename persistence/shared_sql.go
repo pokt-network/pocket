@@ -17,10 +17,6 @@ const (
 	StakedStatus
 )
 
-type GenericActor struct {
-	schema.ProtocolActor
-}
-
 func (p *PostgresContext) GetExists(actorSchema schema.ProtocolActor, address []byte, height int64) (exists bool, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
