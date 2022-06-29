@@ -2,12 +2,16 @@ package pre2p
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net"
 
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	"github.com/pokt-network/pocket/shared/config"
 )
+
+type AcceptedConn struct {
+	net.Conn
+	err error
+}
 
 const (
 	TCPNetworkLayerProtocol = "tcp4"
@@ -71,22 +75,23 @@ func (c *tcpConn) IsListener() bool {
 	return c.listener != nil
 }
 
-func (c *tcpConn) Read() ([]byte, error) {
+func (c *tcpConn) AcceptIncomingConnections() (chan AcceptedConn, error) {
 	if !c.IsListener() {
 		return nil, fmt.Errorf("connection is not a listener")
 	}
-	conn, err := c.listener.Accept()
-	if err != nil {
-		return nil, fmt.Errorf("error accepting connection: %v", err)
-	}
-	defer conn.Close()
 
-	data, err := ioutil.ReadAll(conn)
-	if err != nil {
-		return nil, fmt.Errorf("error reading from conn: %v", err)
-	}
+	connCh := make(chan AcceptedConn)
 
-	return data, nil
+	go func() {
+		conn, err := c.listener.Accept()
+		if err != nil {
+			fmt.Println("[ERROR]: error accepting connection: %v", err)
+			connCh <- AcceptedConn{Conn: nil, err: err}
+		}
+		connCh <- AcceptedConn{Conn: conn, err: nil}
+	}()
+
+	return connCh, nil
 }
 
 func (c *tcpConn) Write(data []byte) error {

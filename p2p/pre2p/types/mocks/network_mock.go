@@ -10,7 +10,6 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	types "github.com/pokt-network/pocket/p2p/pre2p/types"
 	crypto "github.com/pokt-network/pocket/shared/crypto"
-	modules "github.com/pokt-network/pocket/shared/modules"
 )
 
 // MockNetwork is a mock of Network interface.
@@ -62,20 +61,6 @@ func (m *MockNetwork) GetAddrBook() types.AddrBook {
 func (mr *MockNetworkMockRecorder) GetAddrBook() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAddrBook", reflect.TypeOf((*MockNetwork)(nil).GetAddrBook))
-}
-
-// GetBus mocks base method.
-func (m *MockNetwork) GetBus() modules.Bus {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBus")
-	ret0, _ := ret[0].(modules.Bus)
-	return ret0
-}
-
-// GetBus indicates an expected call of GetBus.
-func (mr *MockNetworkMockRecorder) GetBus() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBus", reflect.TypeOf((*MockNetwork)(nil).GetBus))
 }
 
 // HandleNetworkData mocks base method.
@@ -135,71 +120,31 @@ func (mr *MockNetworkMockRecorder) RemovePeerToAddrBook(peer interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePeerToAddrBook", reflect.TypeOf((*MockNetwork)(nil).RemovePeerToAddrBook), peer)
 }
 
-// SetBus mocks base method.
-func (m *MockNetwork) SetBus(arg0 modules.Bus) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetBus", arg0)
-}
-
-// SetBus indicates an expected call of SetBus.
-func (mr *MockNetworkMockRecorder) SetBus(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBus", reflect.TypeOf((*MockNetwork)(nil).SetBus), arg0)
-}
-
-// Start mocks base method.
-func (m *MockNetwork) Start() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Start")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Start indicates an expected call of Start.
-func (mr *MockNetworkMockRecorder) Start() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockNetwork)(nil).Start))
-}
-
-// Stop mocks base method.
-func (m *MockNetwork) Stop() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Stop")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Stop indicates an expected call of Stop.
-func (mr *MockNetworkMockRecorder) Stop() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockNetwork)(nil).Stop))
-}
-
-// MockTransportLayerConn is a mock of TransportLayerConn interface.
-type MockTransportLayerConn struct {
+// MockTransport is a mock of Transport interface.
+type MockTransport struct {
 	ctrl     *gomock.Controller
-	recorder *MockTransportLayerConnMockRecorder
+	recorder *MockTransportMockRecorder
 }
 
-// MockTransportLayerConnMockRecorder is the mock recorder for MockTransportLayerConn.
-type MockTransportLayerConnMockRecorder struct {
-	mock *MockTransportLayerConn
+// MockTransportMockRecorder is the mock recorder for MockTransport.
+type MockTransportMockRecorder struct {
+	mock *MockTransport
 }
 
-// NewMockTransportLayerConn creates a new mock instance.
-func NewMockTransportLayerConn(ctrl *gomock.Controller) *MockTransportLayerConn {
-	mock := &MockTransportLayerConn{ctrl: ctrl}
-	mock.recorder = &MockTransportLayerConnMockRecorder{mock}
+// NewMockTransport creates a new mock instance.
+func NewMockTransport(ctrl *gomock.Controller) *MockTransport {
+	mock := &MockTransport{ctrl: ctrl}
+	mock.recorder = &MockTransportMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockTransportLayerConn) EXPECT() *MockTransportLayerConnMockRecorder {
+func (m *MockTransport) EXPECT() *MockTransportMockRecorder {
 	return m.recorder
 }
 
 // Close mocks base method.
-func (m *MockTransportLayerConn) Close() error {
+func (m *MockTransport) Close() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Close")
 	ret0, _ := ret[0].(error)
@@ -207,13 +152,13 @@ func (m *MockTransportLayerConn) Close() error {
 }
 
 // Close indicates an expected call of Close.
-func (mr *MockTransportLayerConnMockRecorder) Close() *gomock.Call {
+func (mr *MockTransportMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockTransportLayerConn)(nil).Close))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockTransport)(nil).Close))
 }
 
 // IsListener mocks base method.
-func (m *MockTransportLayerConn) IsListener() bool {
+func (m *MockTransport) IsListener() bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsListener")
 	ret0, _ := ret[0].(bool)
@@ -221,13 +166,13 @@ func (m *MockTransportLayerConn) IsListener() bool {
 }
 
 // IsListener indicates an expected call of IsListener.
-func (mr *MockTransportLayerConnMockRecorder) IsListener() *gomock.Call {
+func (mr *MockTransportMockRecorder) IsListener() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsListener", reflect.TypeOf((*MockTransportLayerConn)(nil).IsListener))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsListener", reflect.TypeOf((*MockTransport)(nil).IsListener))
 }
 
 // Read mocks base method.
-func (m *MockTransportLayerConn) Read() ([]byte, error) {
+func (m *MockTransport) Read() ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Read")
 	ret0, _ := ret[0].([]byte)
@@ -236,13 +181,13 @@ func (m *MockTransportLayerConn) Read() ([]byte, error) {
 }
 
 // Read indicates an expected call of Read.
-func (mr *MockTransportLayerConnMockRecorder) Read() *gomock.Call {
+func (mr *MockTransportMockRecorder) Read() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockTransportLayerConn)(nil).Read))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockTransport)(nil).Read))
 }
 
 // Write mocks base method.
-func (m *MockTransportLayerConn) Write(arg0 []byte) error {
+func (m *MockTransport) Write(arg0 []byte) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Write", arg0)
 	ret0, _ := ret[0].(error)
@@ -250,7 +195,7 @@ func (m *MockTransportLayerConn) Write(arg0 []byte) error {
 }
 
 // Write indicates an expected call of Write.
-func (mr *MockTransportLayerConnMockRecorder) Write(arg0 interface{}) *gomock.Call {
+func (mr *MockTransportMockRecorder) Write(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockTransportLayerConn)(nil).Write), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockTransport)(nil).Write), arg0)
 }

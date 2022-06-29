@@ -5,7 +5,12 @@ package pre2p
 // to be a "real" replacement for now.
 
 import (
+	"context"
+	"fmt"
+	"io/ioutil"
 	"log"
+	"net"
+	"sync"
 
 	"github.com/pokt-network/pocket/p2p/pre2p/raintree"
 	"github.com/pokt-network/pocket/p2p/pre2p/stdnetwork"
@@ -29,6 +34,15 @@ type p2pModule struct {
 	address  cryptoPocket.Address
 
 	network typesPre2P.Network
+
+	// TODO(team): (it's a map for now) replace with a sophisticated and more capable connections pool
+	connectionsPool map[string]connContext
+}
+
+type connContext struct {
+	ctx    context.Context
+	conn   net.Conn
+	closer func()
 }
 
 func Create(cfg *config.Config) (m modules.P2PModule, err error) {
@@ -76,14 +90,20 @@ func (m *p2pModule) GetBus() modules.Bus {
 func (m *p2pModule) Start() error {
 	log.Println("Starting network module")
 
+	connCh, err := m.listener.AcceptIncomingConnections()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	go func() {
 		for {
-			data, err := m.listener.Read()
-			if err != nil {
-				log.Println("Error reading data from connection: ", err)
+			aConn := <-connCh
+			if aConn.err != nil {
+				log.Println("Error accepting new connections: ", aConn.err)
 				continue
 			}
-			go m.handleNetworkMessage(data)
+
+			go m.handleNewConnection(aConn.conn)
 		}
 	}()
 
@@ -122,6 +142,43 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 	}
 
 	return m.network.NetworkSend(data, addr)
+}
+
+func (m *p2pModule) handleNewConnection(conn net.Conn) {
+	connCtx, cancelConnCtx := context.WithCancel(context.Background())
+
+	wg := &sync.WaitGroup{}
+
+	wg.Add(1)
+	go func() {
+	reader:
+		for {
+			select {
+			case <-ctx.Done():
+				wg.Done()
+				break reader
+			default:
+				data, err := ioutil.ReadAll(conn)
+				if err != nil {
+					fmt.Println("[ERROR]:", err)
+				}
+
+				m.handleNetworkMessage(data)
+			}
+		}
+	}()
+
+	closer := func() {
+		cancelConnCtx()
+		wg.Wait()
+	}
+
+	// TODO(team): replace the remote address with the peer's ID when the handshaking process is implemented
+	m.connectionsPool[conn.RemoteAddr().String()] = connContext{
+		ctx:    connCtx,
+		conn:   conn,
+		closer: closer,
+	}
 }
 
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
