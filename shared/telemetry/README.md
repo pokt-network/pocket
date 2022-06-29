@@ -1,18 +1,30 @@
-# Welcome to the Telemetry Module
+# Welcome to the Telemetry Module <!-- omit in toc -->
+
+- [Introduction](#introduction)
+- [Usage](#usage)
+  - [Node Configuration](#node-configuration)
+  - [Time Series Metrics](#time-series-metrics)
+    - [How to collect time-series metrics?](#how-to-collect-time-series-metrics)
+  - [Event Metrics](#event-metrics)
+    - [How to use event metrics?](#how-to-use-event-metrics)
+    - [Consuming logs in Loki](#consuming-logs-in-loki)
+    - [Using Grafana](#using-grafana)
+
+# Introduction
 
 This module is used to collect telemetry data from the node.
 
-At the moment, we are using two types of metrics:
+We use two types of metrics:
 
-- **Time Series metrics**: Metrics collected at regular intervals and stored in a database. 
-[//]: # TODO/INVESTIGATE(team): Replacing logs with a proper events solution for recording Event Metrics.
-- **Event series metrics**: Event-driven (i.e. not time-driven) metrics that are stored in a databse.
+- **Time Series metrics**: Metrics collected at regular intervals and stored in a database.
+- **Event series metrics**: Event-driven (i.e. not time-driven) metrics that are stored in a database.
+  - _INVESTIGATE(team): Replacing logs with a proper events solution for recording Event Metrics._
 
+By leveraging:
 
-At the moment, we are using:
-- Prometheus: for timeseries
-- Plain Logs: for event metrics (_Might be subsituted in the future with an events database_)
-
+- **Prometheus**: for time-series metrics
+- **Plain Logs**: for event metrics
+  - _INVESTIGATE(team): Might be substituted in the future with an events database._
 
 # Usage
 
@@ -28,53 +40,63 @@ It is necessary to provide a telemetry configuration to your node in `config.jso
   }
 ```
 
-`enable_telemetry`: configures node to expose telemetry if true.
-`address`: is the prometheus server's address that the telemetry module will listen on.
-`endpoint`: the endpoint that prometheus exposes through the telemetry module for other serivces to pull the metrics (_usually referred to as the scraping endpoint_).
-
+- `enable_telemetry`: configures node to expose telemetry if true.
+- `address`: is the Prometheus server's address that the telemetry module will listen on.
+- `endpoint`: the endpoint that Prometheus exposes through the telemetry module for other services to pull the metrics (i.e. usually referred to as the _scraping endpoint_).
 
 ## Time Series Metrics
 
 If you are not familiar with the time-series concepts related to Prometheus, you can review [Prometheus Metrics](https://prometheus.io/docs/concepts/metric_types/).
 
-We are primarily using:
+Primarily, we use:
 
 - Gauges
 
-We use Gauges to keep track of:
+To keep track of:
 
-- Blockheight
-- # of Nodes Online
+- Block height
+- Number of nodes online
 
-### How to use the time series metrics in your code
+### How to collect time-series metrics?
 
 In your module, make sure you have access to the bus, then use the metrics you need as follows:
+
 ```go
+// Retrieve the time-series agent:
+timeSeriesTelemetry := module.GetBus().GetTelemetryModule().GetTimeSeriesAgent()
 
-timeseriesTelemetry := module.GetBus().GetTelemetryModule().GetTimeSeriesAgent()
-// explore the methods you can use in shared/modules/telemetry_module.go
+/* explore the methods you can use in shared/modules/telemetry_module.go */
 
-// To increment a gauge
-timeseriesTelemetry.GaugeIncrement("gauge_name", 1)
-// etc...
+// Increment a gauge by:
+timeSeriesTelemetry.GaugeIncrement("gauge_name", 1)
+
+/* ... */
 ```
 
 ## Event Metrics
 
 In the current implementation, we are recording events through logs.
 
-Using Loki and Grafana, we parse the logs and generate the desired graphs.
+Loki and Grafana are used to parse the logs and generate the desired graphs.
+
+### How to use event metrics?
 
 In your module, make sure you have access to the bus, then use the metrics you need as follows:
-```go
-eventMetricsTelemetry := module.GetBus().GetTelemetryModule().GetEventMetricsAgent()
-// explore the methods you can use in shared/modules/telemetry_module.go
 
+```go
+// Retrieve the event metrics agent:
+eventMetricsTelemetry := module.GetBus().GetTelemetryModule().GetEventMetricsAgent()
+
+/* explore the methods you can use in shared/modules/telemetry_module.go */
+
+// Emit an event by:
 eventMetricsTelemetry.EmitEvent(
     "namespace",
     "event_name",
     ... // any other fields you want to include
 )
+
+/* ... */
 ```
 
 ### Consuming logs in Loki
@@ -83,33 +105,39 @@ To test this out, [track an event in your code](#event-metrics), and then go to 
 
 Run the following LogQL query:
 
-```
+```sql
 {host="desktop-docker"} |= "[EVENT] your_namespace your_event" | pattern `<datetime> <_> <time> <type> <event_name> <any> <aditional> <whitespaced> <items>` | logfmt
 ```
-An example of how to use the `Explore` functionality is available in:
+
+See the images below for an example of how to use the `Explore` functionality.
 
 Go to the explore page:
+
 ![](./docs/explore-loki-on-grafana-pt-1.gif)
 
 Type in your query and play with the results:
+
 ![](./docs/explore-loki-on-grafana-pt-2.gif)
 
-You should see a log stream coming out, click a line to explore how you've used the `pattern` keyword in LogQL to parse the log line. Now you can reference your parsed fields as you like. Example:
+You should see a log stream coming out where you can click a line to explore how you've used the `pattern` keyword in LogQL to parse the log line. Now you can reference your parsed fields per your needs.
 
-Counting how many events we've seen by type over 5m:
-```logql
+**Example**: Counting how many events we've seen by type over 5m:
+
+```sql
 sum by (type) (count_over_time(
     {host="desktop-docker"}
     |= "[EVENT] your_namespace"
     | pattern `<datetime> <_> <time> <type> <event_name> <any> <aditional> <whitespaced> <items>`[5m]
 ))
 ```
-Counting how many events of a certain type have we seen over 5m:
-```logql
+
+**Example**: Counting how many events of a certain type have we seen over 5m:
+
+```sql
 sum (count_over_time(
-    {host="desktop-docker"}
-    |= "[EVENT] your_namespace your_event"
-    | pattern `<datetime> <_> <time> <type> <event_name> <any> <aditional> <whitespaced> <items>`[5m]
+  {host="desktop-docker"}
+  |= "[EVENT] your_namespace your_event"
+  | pattern `<datetime> <_> <time> <type> <event_name> <any> <aditional> <whitespaced> <items>`[5m]
 ))
 ```
 
@@ -117,12 +145,26 @@ sum (count_over_time(
 
 To launch and start using Grafana, do the following:
 
+0. Prepare environment (one-time setup)
+
+If you haven't already, make sure you install all necessary pre-requisites in the [Development README](docs/development/README.md).
+Make sure you've installed the docker Loki dependencies:
+
+```bash
+$ make docker_loki_install
+```
+
 1. Spin up the stack
+
 ```bash
 $ make compose_and_watch
 ```
 
-2. Wait a few seconds and then visit: `https://localhost:3000`.
-3. Voila! You are there. You can browse existing dashbaords by navigating to the sidebar on Grafana and clicking on `Search Dashboards`:
+2. Wait a few seconds and **Voila!**
+3. **Grafana**: Visit: `http://localhost:3000` and browse pre-configured dashboards by navigating to the sidebar on Grafana and clicking on `Search Dashboards` as shown below.
+4. **Victoria Metrics**: Visit `http://localhost:8428/vmui`
+5. Check to see if Victoria Metrics detects the Prometheus endpoint by checking [VM targets](http://localhost:8428/targets). You should see a section named: `pocket-nodes` with the Prometheus endpoint details and status underneath.
+
+_NOTE: Make sure you use `http` and not `https` when developing locally._
 
 ![](./docs/browsing-existing-dashboards.gif)

@@ -42,7 +42,7 @@ func CreatePrometheusTelemetryModule(cfg *config.Config) (*PrometheusTelemetryMo
 }
 
 func (m *PrometheusTelemetryModule) Start() error {
-	log.Printf("\nPrometheus metrics exporter: Starting at %s/%s...\n", m.address, m.endpoint)
+	log.Printf("\nPrometheus metrics exporter: Starting at %s%s...\n", m.address, m.endpoint)
 
 	http.Handle(m.endpoint, promhttp.Handler())
 	go http.ListenAndServe(m.address, nil)
