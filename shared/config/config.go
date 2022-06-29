@@ -89,8 +89,8 @@ type UtilityConfig struct {
 }
 
 type TelemetryConfig struct {
-	Address  string // The address that the telemetry module will use to listen for metrics pulling requests (e.g: 0.0.0.0:9000 for prometheus)
-	Endpoint string // the endpoint that will be provided to scrapers to fetch recorded metrics (e.g: /metrics for prometheus)
+	Address  string // The address the telemetry module will use to listen for metrics PULL requests (e.g. 0.0.0.0:9000 for prometheus)
+	Endpoint string // The endpoint available to fetch recorded metrics (e.g. /metrics for prometheus)
 }
 
 // TODO(insert tooling issue # here): Re-evaluate how load configs should be handeled.
