@@ -7,6 +7,7 @@ type TelemetryModule interface {
 
 	GetTimeSeriesAgent() TimeSeriesAgent
 	GetEventMetricsAgent() EventMetricsAgent
+	//GetLoggingAgent() LogAgent
 }
 
 // Interface for the time series agent (prometheus)
@@ -52,3 +53,27 @@ type TimeSeriesAgent interface {
 type EventMetricsAgent interface {
 	EmitEvent(namespace, event_name string, labels ...any)
 }
+
+// Interface for logging
+type LogAgent interface {
+	SetLevel(LogLevel)
+
+	Info(namespace string, args ...any)  // level = info
+	Error(namespace string, args ...any) // level = error
+	Warn(namespace string, args ...any)  // level = warn
+	Debug(namespace string, args ...any) // level = debug
+	Fatal(namepsace string, args ...any) // level = fatal
+	Log(namespace string, args ...any)   // level = all
+}
+
+type LogLevel string
+
+const (
+	LOG_LEVEL_NONE  LogLevel = "NONE"
+	LOG_LEVEL_INFO           = "INFO"
+	LOG_LEVEL_ERROR          = "ERROR"
+	LOG_LEVEL_DEBUG          = "DEBUG"
+	LOG_LEVEL_WARN           = "WARN"
+	LOG_LEVEL_FATAL          = "FATAL"
+	LOG_LEVEL_ALL            = "LOG"
+)
