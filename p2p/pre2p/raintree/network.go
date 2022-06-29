@@ -46,7 +46,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook,
 	n := &rainTreeNetwork{
 		selfAddr: addr,
 		addrBook: addrBook,
-		// This subset of fields are initialized by `handleAddrBookUpdates` below
+		// This subset of fields are initialized by `processAddrBookUpdates` below
 		addrBookMap:  make(typesPre2P.AddrBookMap),
 		addrList:     make([]string, 0),
 		maxNumLevels: 0,
