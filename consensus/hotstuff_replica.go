@@ -23,6 +23,12 @@ var (
 /*** NewRound Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+	m.
+		GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent("consensus", "hotpokt_messages", "HEIGHT", m.GetBlockHeight(), "NEW_ROUND", "REPLICA")
+
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
@@ -35,6 +41,12 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 /*** Prepare Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+	m.
+		GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent("consensus", "hotpokt_messages", "HEIGHT", m.GetBlockHeight(), "PREPARE", "REPLICA")
+
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
@@ -66,6 +78,12 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 /*** PreCommit Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+	m.
+		GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent("consensus", "hotpokt_messages", "HEIGHT", m.GetBlockHeight(), "PRECOMMIT", "REPLICA")
+
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
@@ -92,6 +110,12 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 /*** Commit Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+	m.
+		GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent("consensus", "hotpokt_messages", "HEIGHT", m.GetBlockHeight(), "COMMIT", "REPLICA")
+
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
@@ -118,6 +142,12 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 /*** Decide Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+	m.
+		GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent("consensus", "hotpokt_messages", "HEIGHT", m.GetBlockHeight(), "DECIDE", "REPLICA")
+
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
@@ -140,7 +170,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 		GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
-		IncCounter("consensus_blockchain_height")
+		CounterIncrement("consensus_blockchain_height")
 }
 
 // anteHandle is the handler called on every replica message before specific handler

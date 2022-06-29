@@ -105,7 +105,7 @@ func (m *consensusModule) Start() error {
 		GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
-		RegisterCounter(
+		CounterRegister(
 			"consensus_blockchain_height",
 			"the counter to track the number of nodes online",
 		)
