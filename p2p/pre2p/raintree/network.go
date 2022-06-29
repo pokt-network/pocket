@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/modules"
 
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -20,6 +21,9 @@ import (
 var _ typesPre2P.Network = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
+	modules.Module
+	bus modules.Bus
+
 	// TODO(olshansky): still thinking through these structures
 	selfAddr cryptoPocket.Address
 	addrBook typesPre2P.AddrBook
@@ -33,6 +37,9 @@ type rainTreeNetwork struct {
 
 	// TECHDEBT(drewsky): What should we use for de-duping messages within P2P?
 	mempool types.Mempool
+
+	// TODO(team): think about proper way to keep track of p2p seen msgs hashes
+	msgspool map[string]bool
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook, config *config.Config) typesPre2P.Network {
@@ -43,8 +50,9 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook,
 		addrBookMap:  make(typesPre2P.AddrBookMap),
 		addrList:     make([]string, 0),
 		maxNumLevels: 0,
-		// TODO(team): Mempool size should be configurable
-		mempool: types.NewMempool(1000000, 1000),
+		// TODO: Mempool size should be configurable
+		mempool:  types.NewMempool(1000000, 1000),
+		msgspool: make(map[string]bool),
 	}
 
 	if err := n.processAddrBookUpdates(); err != nil {
@@ -70,6 +78,7 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 		Level: level,
 		Data:  data,
 		Nonce: nonce,
+		Hash:  GenerateRandInt(),
 	}
 	bz, err := proto.Marshal(msg)
 	if err != nil {
@@ -139,6 +148,15 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 }
 
 func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
+	blockHeightInt := n.GetBus().GetConsensusModule().GetBlockHeight()
+	blockHeight := fmt.Sprintf("%d", blockHeightInt)
+
+	n.
+		GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent("p2p", "raintree_messages", "height", blockHeight)
+
 	var rainTreeMsg typesPre2P.RainTreeMessage
 	if err := proto.Unmarshal(data, &rainTreeMsg); err != nil {
 		return nil, err
@@ -148,6 +166,17 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
 		log.Println("Error decoding network message: ", err)
 		return nil, err
+	}
+
+	msgHash := fmt.Sprintf("%x", rainTreeMsg.Hash)
+	if _, exists := n.msgspool[msgHash]; !exists {
+		n.msgspool[msgHash] = true
+	} else {
+		n.
+			GetBus().
+			GetTelemetryModule().
+			GetEventMetricsAgent().
+			EmitEvent("p2p", "broadcast_message_redundancy_per_block", "hash", msgHash, "height", blockHeight)
 	}
 
 	// Continue RainTree propagation
@@ -191,6 +220,14 @@ func (n *rainTreeNetwork) AddPeerToAddrBook(peer *typesPre2P.NetworkPeer) error 
 
 func (n *rainTreeNetwork) RemovePeerToAddrBook(peer *typesPre2P.NetworkPeer) error {
 	panic("Not implemented")
+}
+
+func (n *rainTreeNetwork) SetBus(bus modules.Bus) {
+	n.bus = bus
+}
+
+func (n *rainTreeNetwork) GetBus() modules.Bus {
+	return n.bus
 }
 
 func getNonce() uint64 {
