@@ -39,12 +39,6 @@ func CreateBus(
 		telemetry:   telemetry,
 	}
 
-	panicOnMissingMod := func(name string, module modules.Module) {
-		if module == nil {
-			log.Fatalf("Bus Error: the provided %s module is nil, Please use CreateBusWithOptionalModules if you intended it to be nil.", name)
-		}
-	}
-
 	modules := map[string]modules.Module{
 		"persistence": persistence,
 		"consensus":   consensus,
@@ -56,7 +50,9 @@ func CreateBus(
 	// checks if modules are not nil and sets their bus to this bus instance.
 	// will not carry forward if one of the modules is nil
 	for modName, mod := range modules {
-		panicOnMissingMod(modName, mod)
+		if mod == nil {
+			log.Fatalf("Bus Error: the provided %s module is nil, Please use CreateBusWithOptionalModules if you intended it to be nil.", modName)
+		}
 		mod.SetBus(bus)
 	}
 
