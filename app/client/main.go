@@ -64,10 +64,9 @@ func main() {
 		log.Fatalf("[ERROR] Failed to create pre2p module: " + err.Error())
 	}
 
-	// This telemetry module instance will be NOOP
-	// because of the client config 'enable_telemetry' key that is set to false.
-	// Since this client mimics partial (networking only) functionality of a full node, some of the telemetry-related
-	// code paths are executed. To avoid those messages interfering with the data collected, a non-nil telemetry
+	// This telemetry module instance is a NOOP because the 'enable_telemetry' flag in the `cfg` above is set to false.
+	// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
+	// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
 	// module that NOOPs (per the configs above) is injected.
 	telemetryMod, err := telemetry.Create(cfg)
 	if err != nil {
