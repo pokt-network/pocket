@@ -44,7 +44,7 @@ go_clean_deps:
 .PHONY: refresh
 ## Removes vendor, installs deps, generates mocks and protobuf files. Perform after a new pull or a branch switch
 refresh: go_clean_deps
-	go mod tidy && go mod vendor && make protogen_clean && make protogen_local
+	make protogen_clean && make protogen_local
 
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
