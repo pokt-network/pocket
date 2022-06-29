@@ -48,20 +48,24 @@ func (m *NoopTelemetryModule) GetBus() modules.Bus {
 }
 
 func (m *NoopTelemetryModule) GetEventMetricsAgent() modules.EventMetricsAgent {
-	return m
+	return modules.EventMetricsAgent(m)
 }
 
 func (m *NoopTelemetryModule) EmitEvent(namespace, event_name string, labels ...any) {
-
+	NOOP()
 }
 
 func (m *NoopTelemetryModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {
-	return m
+	return modules.TimeSeriesAgent(m)
 }
 
-func (p *NoopTelemetryModule) CounterRegister(name string, description string) { NOOP() }
+func (p *NoopTelemetryModule) CounterRegister(name string, description string) {
+	NOOP()
+}
 
-func (p *NoopTelemetryModule) CounterIncrement(name string) { NOOP() }
+func (p *NoopTelemetryModule) CounterIncrement(name string) {
+	NOOP()
+}
 
 func (p *NoopTelemetryModule) GaugeRegister(name string, description string) {
 	NOOP()
@@ -94,7 +98,7 @@ func (p *NoopTelemetryModule) GaugeSub(name string, value float64) (prometheus.G
 
 func (p *NoopTelemetryModule) GetGaugeVec(name string) (prometheus.GaugeVec, error) {
 	NOOP()
-	return *&prometheus.GaugeVec{}, nil
+	return prometheus.GaugeVec{}, nil
 }
 
 func (p *NoopTelemetryModule) GaugeVecRegister(namespace, module, name, description string, labels []string) {

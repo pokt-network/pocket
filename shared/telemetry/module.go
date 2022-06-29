@@ -5,8 +5,8 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
+// TODO(pocket/issues/99): Add a switch statement and configuration variable when support for other telemetry modules is added.
 func Create(cfg *config.Config) (modules.TelemetryModule, error) {
-	// TODO(team): Add a switch statement and configuration variable when support for other telemetry modules is added.
 	if cfg.EnableTelemetry {
 		return CreatePrometheusTelemetryModule(cfg)
 	} else {

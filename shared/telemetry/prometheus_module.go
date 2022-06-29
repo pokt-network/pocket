@@ -17,6 +17,8 @@ var (
 	_ modules.TimeSeriesAgent   = &PrometheusTelemetryModule{}
 )
 
+// DISCUSS(team): Should the warning logs in this module be handled differently?
+
 type PrometheusTelemetryModule struct {
 	bus modules.Bus
 
@@ -74,7 +76,7 @@ func (m *PrometheusTelemetryModule) GetEventMetricsAgent() modules.EventMetricsA
 // then we aggregate these log lines (count, avg, etc) in Grafana.
 // Reliance on logs for event metrics is a temporary solution, and
 // will be removed in the future in favor of more thorough event metrics tooling.
-// TODO(team): Deprecate using logs for event metrics for a more sophisticated and durable solution
+// TECHDEBT(team): Deprecate using logs for event metrics for a more sophisticated and durable solution
 func (m *PrometheusTelemetryModule) EmitEvent(namespace, event string, labels ...any) {
 	logArgs := append([]interface{}{"[EVENT]", namespace, event}, labels...)
 	log.Println(logArgs...)
@@ -86,8 +88,7 @@ func (m *PrometheusTelemetryModule) GetTimeSeriesAgent() modules.TimeSeriesAgent
 
 func (p *PrometheusTelemetryModule) CounterRegister(name string, description string) {
 	if _, exists := p.counters[name]; exists {
-		// TODO(team): Should we handle these in a better way than logging warnings?
-		log.Println("[WARNING]: Trying to register and already registered counter.")
+		log.Printf("[WARNING] Trying to register and already registered counter: %s\n", name)
 		return
 	}
 
@@ -99,6 +100,7 @@ func (p *PrometheusTelemetryModule) CounterRegister(name string, description str
 
 func (p *PrometheusTelemetryModule) CounterIncrement(name string) {
 	if _, exists := p.counters[name]; !exists {
+		log.Printf("[WARNING] Trying to increment a non-existent counter: %s\n", name)
 		return
 	}
 
@@ -107,6 +109,7 @@ func (p *PrometheusTelemetryModule) CounterIncrement(name string) {
 
 func (p *PrometheusTelemetryModule) GaugeRegister(name string, description string) {
 	if _, exists := p.gauges[name]; exists {
+		log.Printf("[WARNING] Trying to register and already registered gauge: %s\n", name)
 		return
 	}
 
@@ -140,7 +143,6 @@ func (p *PrometheusTelemetryModule) GaugeIncrement(name string) (prometheus.Gaug
 	return gg, nil
 }
 
-// Decrements the Gauge by 1. Use Sub to decrement it by arbitrary values.
 func (p *PrometheusTelemetryModule) GaugeDecrement(name string) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
 		return nil, NonExistentMetricErr("gauge", name, "decrement")
@@ -152,7 +154,6 @@ func (p *PrometheusTelemetryModule) GaugeDecrement(name string) (prometheus.Gaug
 	return gg, nil
 }
 
-// Adds the given value to the Gauge. (The value can be negative, resulting in a decrease of the Gauge.)
 func (p *PrometheusTelemetryModule) GaugeAdd(name string, value float64) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
 		return nil, NonExistentMetricErr("gauge", name, "add to")
@@ -164,7 +165,6 @@ func (p *PrometheusTelemetryModule) GaugeAdd(name string, value float64) (promet
 	return gg, nil
 }
 
-// Subtracts the given value from the Gauge. (The value can be negative, resulting in an increase of the Gauge.)
 func (p *PrometheusTelemetryModule) GaugeSub(name string, value float64) (prometheus.Gauge, error) {
 	if _, exists := p.gauges[name]; !exists {
 		return nil, NonExistentMetricErr("gauge", name, "substract from")
@@ -175,9 +175,9 @@ func (p *PrometheusTelemetryModule) GaugeSub(name string, value float64) (promet
 	return gg, nil
 }
 
-// Registers a gauge vector by name and provide labels
 func (p *PrometheusTelemetryModule) GaugeVecRegister(namespace, module, name, description string, labels []string) {
 	if _, exists := p.counters[name]; exists {
+		log.Printf("[WARNING] Trying to register and already registered vector gauge: %s\n", name)
 		return
 	}
 
@@ -193,7 +193,6 @@ func (p *PrometheusTelemetryModule) GaugeVecRegister(namespace, module, name, de
 	p.gaugeVectors[name] = *gg
 }
 
-// Retrieves a gauge vector by name
 func (p *PrometheusTelemetryModule) GetGaugeVec(name string) (prometheus.GaugeVec, error) {
 	if gv, exists := p.gaugeVectors[name]; exists {
 		return gv, NonExistentMetricErr("gauge vector", name, "get")

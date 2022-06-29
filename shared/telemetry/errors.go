@@ -4,6 +4,6 @@ import "fmt"
 
 var (
 	NonExistentMetricErr = func(metricType, name, action string) error {
-		return fmt.Errorf("Tried to %s a non-existant %s: %s", action, name, metricType)
+		return fmt.Errorf("tried to %s a non-existent %s: %s", action, name, metricType)
 	}
 )

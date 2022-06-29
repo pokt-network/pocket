@@ -9,6 +9,8 @@ type TelemetryModule interface {
 	GetEventMetricsAgent() EventMetricsAgent
 }
 
+// IMPROVE: Determine if the register function could (should?) return an error.
+
 // Interface for the time series agent (prometheus)
 type TimeSeriesAgent interface {
 	/*** Counters ***/
@@ -17,7 +19,7 @@ type TimeSeriesAgent interface {
 	CounterRegister(name string, description string)
 
 	// Increments the counter
-	CounterIncrement(name string)
+	CounterIncrement(name string) // DISCUSS(team): Should this return an error if the counter does not exist?
 
 	/*** Gauges ***/
 
@@ -36,7 +38,7 @@ type TimeSeriesAgent interface {
 	// Adds the given value to the Gauge. A negative value results in a decrease of the Gauge.
 	GaugeAdd(name string, value float64) (prometheus.Gauge, error)
 
-	// Subtracts the given value from the Gauge. (The value can be negative, resulting in an increase of the Gauge.)
+	// Subtracts the given value from the Gauge. A negative value results in a increase of the Gauge.
 	GaugeSub(name string, value float64) (prometheus.Gauge, error)
 
 	/*** Gauge Vectors ***/
@@ -48,7 +50,8 @@ type TimeSeriesAgent interface {
 	GetGaugeVec(name string) (prometheus.GaugeVec, error)
 }
 
-// Interface for the event metrics agent (relies on logging ftm)
+// Interface for the event metrics agent
+// IMPROVE: This relies on logging at the moment and can be improved in the future
 type EventMetricsAgent interface {
 	EmitEvent(namespace, event_name string, labels ...any)
 }
