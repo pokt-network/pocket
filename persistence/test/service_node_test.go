@@ -1,7 +1,6 @@
 package test
 
 import (
-	"bytes"
 	"encoding/hex"
 	"testing"
 
@@ -20,191 +19,243 @@ func FuzzServiceNode(f *testing.F) {
 }
 
 func TestInsertServiceNodeAndExists(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	serviceNode := NewTestServiceNode(t)
-	serviceNode2 := NewTestServiceNode(t)
-	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+
+	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
-	exists, err := db.GetServiceNodeExists(serviceNode.Address, db.Height)
+
+	db.Height = 1
+
+	serviceNode2, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
-	if !exists {
-		t.Fatal("actor that should exist does not")
-	}
-	exists, err = db.GetServiceNodeExists(serviceNode2.Address, db.Height)
+
+	exists, err := db.GetServiceNodeExists(serviceNode.Address, 0)
 	require.NoError(t, err)
-	if exists {
-		t.Fatal("actor that should not exist, appears to")
-	}
+	require.True(t, exists, "actor that should exist at previous height does not")
+	exists, err = db.GetServiceNodeExists(serviceNode.Address, 1)
+	require.NoError(t, err)
+	require.True(t, exists, "actor that should exist at current height does not")
+
+	exists, err = db.GetServiceNodeExists(serviceNode2.Address, 0)
+	require.NoError(t, err)
+	require.False(t, exists, "actor that should not exist at previous height serviceNodeears to")
+	exists, err = db.GetServiceNodeExists(serviceNode2.Address, 1)
+	require.NoError(t, err)
+	require.True(t, exists, "actor that should exist at current height does not")
 }
 
 func TestUpdateServiceNode(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	serviceNode := NewTestServiceNode(t)
-	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+
+	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
-	_, _, stakedTokens, _, _, _, _, chains, err := db.GetServiceNode(serviceNode.Address, db.Height)
+
+	_, _, stakedTokens, _, _, _, _, chains, err := db.GetServiceNode(serviceNode.Address, 0)
 	require.NoError(t, err)
+	require.Equal(t, DefaultChains, chains, "default chains incorrect for current height")
+	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for current height")
+
+	db.Height = 1
+
+	require.NotEqual(t, DefaultStake, StakeToUpdate)   // sanity check to make sure the tests are correct
+	require.NotEqual(t, DefaultChains, ChainsToUpdate) // sanity check to make sure the tests are correct
 	err = db.UpdateServiceNode(serviceNode.Address, serviceNode.ServiceUrl, StakeToUpdate, ChainsToUpdate)
 	require.NoError(t, err)
-	_, _, stakedTokens, _, _, _, _, chains, err = db.GetServiceNode(serviceNode.Address, db.Height)
+
+	_, _, stakedTokens, _, _, _, _, chains, err = db.GetServiceNode(serviceNode.Address, 0)
 	require.NoError(t, err)
-	if chains[0] != ChainsToUpdate[0] {
-		t.Fatal("chains not updated")
-	}
-	if stakedTokens != StakeToUpdate {
-		t.Fatal("stake not updated")
-	}
+	require.Equal(t, DefaultChains, chains, "default chains incorrect for previous height")
+	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for previous height")
+
+	_, _, stakedTokens, _, _, _, _, chains, err = db.GetServiceNode(serviceNode.Address, 1)
+	require.NoError(t, err)
+	require.Equal(t, ChainsToUpdate, chains, "chains not updated for current height")
+	require.Equal(t, StakeToUpdate, stakedTokens, "stake not updated for current height")
 }
 
 func TestGetServiceNodesReadyToUnstake(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	db.ClearAllDebug()
-	serviceNode := NewTestServiceNode(t)
-	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+
+	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
-	// test SetServiceNodeUnstakingHeightAndStatus
-	err = db.SetServiceNodeUnstakingHeightAndStatus(serviceNode.Address, 0, 1)
+
+	serviceNode2, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
-	// test GetServiceNodesReadyToUnstake
-	serviceNodes, err := db.GetServiceNodesReadyToUnstake(0, 1)
+
+	serviceNode3, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
-	if len(serviceNodes) != 1 {
-		t.Fatal("wrong number of actors")
-	}
-	if !bytes.Equal(serviceNode.Address, serviceNodes[0].Address) {
-		t.Fatal("unexpected actor returned")
-	}
+
+	// Unstake serviceNode at height 0
+	err = db.SetServiceNodeUnstakingHeightAndStatus(serviceNode.Address, 0, persistence.UnstakingStatus)
+	require.NoError(t, err)
+
+	// Unstake serviceNode2 and serviceNode3 at height 1
+	err = db.SetServiceNodeUnstakingHeightAndStatus(serviceNode2.Address, 1, persistence.UnstakingStatus)
+	require.NoError(t, err)
+	err = db.SetServiceNodeUnstakingHeightAndStatus(serviceNode3.Address, 1, persistence.UnstakingStatus)
+	require.NoError(t, err)
+
+	// Check unstaking serviceNodes at height 0
+	unstakingServiceNodes, err := db.GetServiceNodesReadyToUnstake(0, persistence.UnstakingStatus)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(unstakingServiceNodes), "wrong number of actors ready to unstake at height 0")
+	require.Equal(t, serviceNode.Address, unstakingServiceNodes[0].Address, "unexpected serviceNodelication actor returned")
+
+	// Check unstaking serviceNodes at height 1
+	unstakingServiceNodes, err = db.GetServiceNodesReadyToUnstake(1, persistence.UnstakingStatus)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(unstakingServiceNodes), "wrong number of actors ready to unstake at height 1")
+	require.ElementsMatch(t, [][]byte{serviceNode2.Address, serviceNode3.Address}, [][]byte{unstakingServiceNodes[0].Address, unstakingServiceNodes[1].Address})
 }
 
 func TestGetServiceNodeStatus(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
+	db := &persistence.PostgresContext{
+		Height: 1, // intentionally set to a non-zero height
 		DB:     *PostgresDB,
 	}
-	serviceNode := NewTestServiceNode(t)
-	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+
+	serviceNode, err := newTestServiceNode()
 	require.NoError(t, err)
-	status, err := db.GetServiceNodeStatus(serviceNode.Address, db.Height)
+
+	err = db.InsertServiceNode(
+		serviceNode.Address,
+		serviceNode.PublicKey,
+		serviceNode.Output,
+		false,
+		DefaultStakeStatus,
+		DefaultMaxRelays,
+		DefaultStake,
+		DefaultChains,
+		DefaultPauseHeight,
+		DefaultUnstakingHeight)
 	require.NoError(t, err)
-	if status != DefaultStakeStatus {
-		t.Fatalf("unexpected status: got %d expected %d", status, DefaultStakeStatus)
-	}
+
+	// Check status before the serviceNode exists
+	status, err := db.GetServiceNodeStatus(serviceNode.Address, 0)
+	require.Error(t, err)
+	require.Equal(t, status, persistence.UndefinedStakingStatus, "unexpected status")
+
+	// Check status after the serviceNode exists
+	status, err = db.GetServiceNodeStatus(serviceNode.Address, 1)
+	require.NoError(t, err)
+	require.Equal(t, status, DefaultStakeStatus, "unexpected status")
 }
 
 func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
+	db := &persistence.PostgresContext{
+		Height: 1, // intentionally set to a non-zero height
 		DB:     *PostgresDB,
 	}
-	serviceNode := NewTestServiceNode(t)
-	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, DefaultPauseHeight, DefaultUnstakingHeight)
+
+	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
-	height, err := db.GetServiceNodePauseHeightIfExists(serviceNode.Address, db.Height)
+
+	// Check pause height when serviceNode does not exist
+	pauseHeight, err := db.GetServiceNodePauseHeightIfExists(serviceNode.Address, 0)
+	require.Error(t, err)
+	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
+
+	// Check pause height when serviceNode does not exist
+	pauseHeight, err = db.GetServiceNodePauseHeightIfExists(serviceNode.Address, 1)
 	require.NoError(t, err)
-	if height != DefaultPauseHeight {
-		t.Fatalf("unexpected pausedHeight: got %d expected %d", DefaultPauseHeight, DefaultStakeStatus)
-	}
+	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
 }
 
 func TestSetServiceNodeStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	serviceNode := NewTestServiceNode(t)
-	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
+
+	serviceNode, err := newTestServiceNode()
 	require.NoError(t, err)
-	err = db.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(1, 0, 1)
+
+	err = db.InsertServiceNode(
+		serviceNode.Address,
+		serviceNode.PublicKey,
+		serviceNode.Output,
+		false,
+		DefaultStakeStatus,
+		DefaultMaxRelays,
+		DefaultStake,
+		DefaultChains,
+		0,
+		DefaultUnstakingHeight)
 	require.NoError(t, err)
-	_, _, _, _, _, _, unstakingHeight, _, err := db.GetServiceNode(serviceNode.Address, db.Height)
+
+	unstakingHeightSet := int64(0)
+	err = db.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(1, unstakingHeightSet, -1)
 	require.NoError(t, err)
-	if unstakingHeight != 0 {
-		t.Fatal("unexpected unstaking height")
-	}
+
+	_, _, _, _, _, unstakingHeight, _, _, err := db.GetServiceNode(serviceNode.Address, db.Height)
+	require.NoError(t, err)
+	require.Equal(t, unstakingHeightSet, unstakingHeight, "unstaking height was not set correctly")
 }
 
-func TestSetServiceNodePauseHeight(t *testing.T) {
-	db := persistence.PostgresContext{
+func TestSetServiceNodePauseHeightAndUnstake(t *testing.T) {
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	serviceNode := NewTestServiceNode(t)
-	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
+
+	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
-	err = db.SetServiceNodePauseHeight(serviceNode.Address, 1)
+
+	pauseHeight := int64(1)
+	unstakingHeight := pauseHeight + 10
+
+	err = db.SetServiceNodePauseHeight(serviceNode.Address, pauseHeight)
 	require.NoError(t, err)
-	_, _, _, _, _, pausedHeight, _, _, err := db.GetServiceNode(serviceNode.Address, db.Height)
+
+	_, _, _, _, _, serviceNodePausedHeight, _, _, err := db.GetServiceNode(serviceNode.Address, db.Height)
 	require.NoError(t, err)
-	if pausedHeight != 1 {
-		t.Fatal("unexpected pause height")
-	}
+	require.Equal(t, pauseHeight, serviceNodePausedHeight, "pause height not updated")
+
+	err = db.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pauseHeight+1, unstakingHeight, -1 /*unused*/)
+	require.NoError(t, err)
+
+	_, _, _, _, _, _, serviceNodeUnstakingHeight, _, err := db.GetServiceNode(serviceNode.Address, db.Height)
+	require.NoError(t, err)
+	require.Equal(t, unstakingHeight, serviceNodeUnstakingHeight, "unstaking height was not set correctly")
 }
 
 func TestGetServiceNodeOutputAddress(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	serviceNode := NewTestServiceNode(t)
-	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
+
+	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
-	output, err := db.GetServiceNodeOutputAddress(serviceNode.Address, db.Height)
+
+	output, err := db.GetServiceNodeOutputAddress(serviceNode.Address, 0)
 	require.NoError(t, err)
-	if !bytes.Equal(output, serviceNode.Output) {
-		t.Fatal("unexpected output address")
-	}
+	require.Equal(t, output, serviceNode.Output, "unexpected output address")
 }
 
-func TestServiceNodeCount(t *testing.T) {
-	//db := persistence.PostgresContext{ TODO implement
-	//	Height: 0,
-	//	DB:     *PostgresDB,
-	//}
-	//err := db.ClearAllDebug()
-	//require.NoError(t, err)
-	//count, err := db.GetServiceNodeCount(DefaultChains[0], 0)
-	//require.NoError(t, err)
-	//if count != 0 {
-	//	t.Fatal("unexpected service node count")
-	//}
-	//serviceNode := NewTestServiceNode(t)
-	//err = db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, -1, DefaultUnstakingHeight)
-	//require.NoError(t, err)
-	//count, err = db.GetServiceNodeCount(DefaultChains[0], 0)
-	//require.NoError(t, err)
-	//if count != 1 {
-	//	t.Fatal("unexpected service node count")
-	//}
-}
-
-func NewTestServiceNode(t *testing.T) typesGenesis.ServiceNode {
-	sn, err := newTestServiceNode()
-	require.NoError(t, err)
-	return sn
-}
-
-func newTestServiceNode() (typesGenesis.ServiceNode, error) {
-	pub1, err := crypto.GeneratePublicKey()
+func newTestServiceNode() (*typesGenesis.ServiceNode, error) {
+	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
-		return typesGenesis.ServiceNode{}, nil
+		return nil, err
 	}
-	addr1 := pub1.Address()
-	addr2, err := crypto.GenerateAddress()
+
+	outputAddr, err := crypto.GenerateAddress()
 	if err != nil {
-		return typesGenesis.ServiceNode{}, nil
+		return nil, err
 	}
-	return typesGenesis.ServiceNode{
-		Address:         addr1,
-		PublicKey:       pub1.Bytes(),
+
+	return &typesGenesis.ServiceNode{
+		Address:         operatorKey.Address(),
+		PublicKey:       operatorKey.Bytes(),
 		Paused:          false,
 		Status:          typesGenesis.DefaultStakeStatus,
 		Chains:          typesGenesis.DefaultChains,
@@ -212,8 +263,27 @@ func newTestServiceNode() (typesGenesis.ServiceNode, error) {
 		StakedTokens:    typesGenesis.DefaultStake,
 		PausedHeight:    uint64(DefaultPauseHeight),
 		UnstakingHeight: DefaultUnstakingHeight,
-		Output:          addr2,
+		Output:          outputAddr,
 	}, nil
+}
+
+func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*typesGenesis.ServiceNode, error) {
+	serviceNode, err := newTestServiceNode()
+	if err != nil {
+		return nil, err
+	}
+
+	return serviceNode, db.InsertServiceNode(
+		serviceNode.Address,
+		serviceNode.PublicKey,
+		serviceNode.Output,
+		false,
+		DefaultStakeStatus,
+		DefaultServiceUrl,
+		DefaultStake,
+		DefaultChains,
+		DefaultPauseHeight,
+		DefaultUnstakingHeight)
 }
 
 func GetTestServiceNode(db persistence.PostgresContext, address []byte) (*typesGenesis.ServiceNode, error) {
@@ -221,32 +291,27 @@ func GetTestServiceNode(db persistence.PostgresContext, address []byte) (*typesG
 	if err != nil {
 		return nil, err
 	}
-	addr, err := hex.DecodeString(operator)
+
+	operatorAddr, err := hex.DecodeString(operator)
 	if err != nil {
 		return nil, err
 	}
-	pubKey, err := hex.DecodeString(publicKey)
+
+	operatorPubKey, err := hex.DecodeString(publicKey)
 	if err != nil {
 		return nil, err
 	}
+
 	outputAddr, err := hex.DecodeString(outputAddress)
 	if err != nil {
 		return nil, err
 	}
-	status := -1
-	switch unstakingHeight {
-	case -1:
-		status = persistence.StakedStatus
-	case unstakingHeight:
-		status = persistence.UnstakingStatus
-	default:
-		status = persistence.UnstakedStatus
-	}
+
 	return &typesGenesis.ServiceNode{
-		Address:         addr,
-		PublicKey:       pubKey,
+		Address:         operatorAddr,
+		PublicKey:       operatorPubKey,
 		Paused:          false,
-		Status:          int32(status),
+		Status:          persistence.UnstakingHeightToStatus(unstakingHeight),
 		Chains:          chains,
 		ServiceUrl:      serviceURL,
 		StakedTokens:    stakedTokens,
