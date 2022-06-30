@@ -34,21 +34,22 @@ const (
 )
 
 var (
-	DefaultChains        = []string{"0001"}
-	ChainsToUpdate       = []string{"0002"}
-	DefaultServiceUrl    = "https://foo.bar"
-	DefaultPoolName      = "TESTING_POOL"
-	DefaultDeltaBig      = big.NewInt(100)
-	DefaultAccountBig    = big.NewInt(1000000)
-	DefaultStakeBig      = big.NewInt(1000000000000000)
-	DefaultMaxRelaysBig  = big.NewInt(1000000)
+	DefaultChains     = []string{"0001"}
+	ChainsToUpdate    = []string{"0002"}
+	DefaultServiceUrl = "https://foo.bar"
+	DefaultPoolName   = "TESTING_POOL"
+
+	DefaultDeltaBig     = big.NewInt(100)
+	DefaultAccountBig   = big.NewInt(1000000)
+	DefaultStakeBig     = big.NewInt(1000000000000000)
+	DefaultMaxRelaysBig = big.NewInt(1000000)
+
 	DefaultAccountAmount = types.BigIntToString(DefaultAccountBig)
 	DefaultStake         = types.BigIntToString(DefaultStakeBig)
 	DefaultMaxRelays     = types.BigIntToString(DefaultMaxRelaysBig)
 	StakeToUpdate        = types.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
-	ParamToUpdate        = 2
-	DefaultStakeStatus   = persistence.StakedStatus
-	// DISCUSS(drewsky): Not a fan of using `Default` as something that has semantic meaning (i.e. currently active). Pick a better name together.
+
+	DefaultStakeStatus     = persistence.StakedStatus
 	DefaultPauseHeight     = int64(-1)
 	DefaultUnstakingHeight = int64(-1)
 )
@@ -150,28 +151,19 @@ func fuzzSingleProtocolActor(
 	err = db.InsertActor(protocolActorSchema, actor)
 	require.NoError(f, err)
 
-	// GetAppExists
-
-	// UpdateApp
-	// DeleteApp
-	// GetAppsReadyToUnstake
-	// GetAppStatus
-	// SetAppUnstakingHeightAndStatus
-	// GetAppPauseHeightIfExists
-	// SetAppStatusAndUnstakingHeightIfPausedBefore
-	// SetAppPauseHeight
-	// GetAppOutputAddress
-
 	operations := []string{
-		"Update",
-		"GetReadyToUnstake",
-		"GetStatus",
-		"GetPauseHeight",
-		"SetUnstakingHeight",
-		"SetPauseHeight",
-		"SetPausedToUnstaking",
-		"GetOutputAddr",
-		"NextHeight"}
+		"UpdateActor",
+
+		"GetActorsReadyToUnstake",
+		"GetActorStatus",
+		"GetActorPauseHeight",
+		"GetActorOutputAddr",
+
+		"SetActorUnstakingHeight",
+		"SetActorPauseHeight",
+		"SetPausedActorToUnstaking",
+
+		"IncrementHeight"}
 	numOperationTypes := len(operations)
 
 	numDbOperations := 100
@@ -187,7 +179,7 @@ func fuzzSingleProtocolActor(
 		require.NoError(t, err)
 
 		switch op {
-		case "Update":
+		case "UpdateActor":
 			numParamUpdatesSupported := 3
 			newStakedTokens := originalActor.StakedTokens
 			newChains := originalActor.Chains
@@ -232,7 +224,7 @@ func fuzzSingleProtocolActor(
 			require.ElementsMatch(t, newActor.Chains, newChains, "staked chains not updated")
 			require.Equal(t, newActor.StakedTokens, newStakedTokens, "staked tokens not updated")
 			require.Equal(t, newActor.ActorSpecificParam, newActorSpecificParam, "actor specific param not updated")
-		case "GetReadyToUnstake":
+		case "GetActorsReadyToUnstake":
 			unstakingActors, err := db.GetActorsReadyToUnstake(protocolActorSchema, db.Height)
 			require.NoError(t, err)
 
@@ -244,7 +236,7 @@ func fuzzSingleProtocolActor(
 				})
 				require.NotEqual(t, idx, -1, fmt.Sprintf("actor that is unstaking was not found %+v", originalActor))
 			}
-		case "GetStatus":
+		case "GetActorStatus":
 			status, err := db.GetActorStatus(protocolActorSchema, addr, db.Height)
 			require.NoError(t, err)
 
@@ -256,12 +248,12 @@ func fuzzSingleProtocolActor(
 			default:
 				require.Equal(t, persistence.UnstakedStatus, status, "actor status should be unstaked")
 			}
-		case "GetPauseHeight":
+		case "GetActorPauseHeight":
 			pauseHeight, err := db.GetActorPauseHeightIfExists(protocolActorSchema, addr, db.Height)
 			require.NoError(t, err)
 
 			require.Equal(t, originalActor.PausedHeight, pauseHeight, "pause height incorrect")
-		case "SetUnstakingHeight":
+		case "SetActorUnstakingHeight":
 			newUnstakingHeight := rand.Int63()
 
 			err = db.SetActorUnstakingHeightAndStatus(protocolActorSchema, addr, newUnstakingHeight)
@@ -271,7 +263,7 @@ func fuzzSingleProtocolActor(
 			require.NoError(t, err)
 
 			require.Equal(t, newUnstakingHeight, newActor.UnstakingHeight, "setUnstakingHeight")
-		case "SetPauseHeight":
+		case "SetActorPauseHeight":
 			newPauseHeight := rand.Int63()
 
 			err = db.SetActorPauseHeight(protocolActorSchema, addr, newPauseHeight)
@@ -281,7 +273,7 @@ func fuzzSingleProtocolActor(
 			require.NoError(t, err)
 
 			require.Equal(t, newPauseHeight, newActor.PausedHeight, "setPauseHeight")
-		case "SetPausedToUnstaking":
+		case "SetPausedActorToUnstaking":
 			newUnstakingHeight := db.Height + int64(rand.Intn(15))
 			err = db.SetActorStatusAndUnstakingHeightIfPausedBefore(protocolActorSchema, db.Height, newUnstakingHeight)
 			require.NoError(t, err)
@@ -292,12 +284,12 @@ func fuzzSingleProtocolActor(
 			if db.Height > originalActor.PausedHeight { // isPausedAndReadyToUnstake
 				require.Equal(t, newActor.UnstakingHeight, newUnstakingHeight, "setPausedToUnstaking")
 			}
-		case "GetOutputAddr":
+		case "GetActorOutputAddr":
 			outputAddr, err := db.GetActorOutputAddress(protocolActorSchema, addr, db.Height)
 			require.NoError(t, err)
 
 			require.Equal(t, originalActor.OutputAddress, hex.EncodeToString(outputAddr), "output address incorrect")
-		case "NextHeight":
+		case "IncrementHeight":
 			db.Height++
 		default:
 			t.Errorf("Unexpected operation fuzzing operation %s", op)
@@ -307,19 +299,21 @@ func fuzzSingleProtocolActor(
 
 func getRandomChains() (chains []string) {
 	setRandomSeed()
-	letterBytes := "ABCDEF0123456789"
-	iterations := rand.Intn(14) + 1
-	dupMap := make(map[string]struct{})
-	for i := 0; i < iterations; i++ {
+
+	charOptions := "ABCDEF0123456789"
+	numCharOptions := len(charOptions)
+
+	chainsMap := make(map[string]struct{})
+	for i := 0; i < rand.Intn(14)+1; i++ {
 		b := make([]byte, 4)
 		for i := range b {
-			b[i] = letterBytes[rand.Intn(len(letterBytes))]
+			b[i] = charOptions[rand.Intn(numCharOptions)]
 		}
-		if _, found := dupMap[string(b)]; found {
+		if _, found := chainsMap[string(b)]; found {
 			i--
 			continue
 		}
-		dupMap[string(b)] = struct{}{}
+		chainsMap[string(b)] = struct{}{}
 		chains = append(chains, string(b))
 	}
 	return
@@ -327,12 +321,16 @@ func getRandomChains() (chains []string) {
 
 func getRandomServiceURL() string {
 	setRandomSeed()
-	letterBytes := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	charOptions := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	numCharOptions := len(charOptions)
+
 	b := make([]byte, rand.Intn(12))
 	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+		b[i] = charOptions[rand.Intn(numCharOptions)]
 	}
-	return "https://" + string(b) + ".com"
+
+	return fmt.Sprintf("https://%s.com", string(b))
 }
 
 func getRandomBigIntString() string {

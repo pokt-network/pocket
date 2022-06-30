@@ -22,13 +22,19 @@ func TestGetSetParam(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
+
 	err := db.InitParams()
 	require.NoError(t, err)
-	err = db.SetParam(types.AppMaxChainsParamName, ParamToUpdate)
+
+	newMaxChains := 42
+
+	err = db.SetParam(types.AppMaxChainsParamName, newMaxChains)
 	require.NoError(t, err)
+
 	maxChains, err := db.GetMaxAppChains()
 	require.NoError(t, err)
-	if maxChains != ParamToUpdate {
+
+	if maxChains != newMaxChains {
 		t.Fatal("unexpected param value")
 	}
 }
