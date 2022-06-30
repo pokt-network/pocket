@@ -8,6 +8,11 @@ CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 #		                        seconds, and fail if any additional messages are received.
 EXTRA_MSG_FAIL ?= false
 
+# An easy way to turn off verbose test output for some of the test targets. For example
+#  `$ make test_persistence` by default enables verbose testing
+#  `VERBOSE_TEST="" make test_persistence` is an easy way to run the same tests without verbose output
+VERBOSE_TEST ?= -v
+
 .SILENT:
 
 help:
@@ -161,12 +166,12 @@ test_race: # generate_mocks
 .PHONY: test_utility_module
 ## Run all go utility module unit tests
 test_utility_module: # generate_mocks
-	go test -v ./shared/tests/utility_module/...
+	go test ${VERBOSE_TEST} ./shared/tests/utility_module/...
 
 .PHONY: test_utility_types
 ## Run all go utility types module unit tests
 test_utility_types: # generate_mocks
-	go test -v ./utility/types/...
+	go test ${VERBOSE_TEST} ./utility/types/...
 
 .PHONY: test_shared
 ## Run all go unit tests in the shared module
@@ -176,7 +181,7 @@ test_shared: # generate_mocks
 .PHONY: test_consensus
 ## Run all go unit tests in the Consensus module
 test_consensus: # mockgen
-	go test -v ./consensus/...
+	go test ${VERBOSE_TEST} ./consensus/...
 
 .PHONY: test_pre_persistence
 ## Run all go per persistence unit tests
@@ -186,32 +191,32 @@ test_pre_persistence: # generate_mocks
 .PHONY: test_hotstuff
 ## Run all go unit tests related to hotstuff consensus
 test_hotstuff: # mockgen
-	go test -v ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
+	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
 .PHONY: test_pacemaker
 ## Run all go unit tests related to the hotstuff pacemaker
 test_pacemaker: # mockgen
-	go test -v ./consensus/consensus_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
+	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
 .PHONY: test_vrf
 ## Run all go unit tests in the VRF library
 test_vrf:
-	go test -v ./consensus/leader_election/vrf
+	go test ${VERBOSE_TEST} ./consensus/leader_election/vrf
 
 .PHONY: test_sortition
 ## Run all go unit tests in the Sortition library
 test_sortition:
-	go test -v ./consensus/leader_election/sortition
+	go test ${VERBOSE_TEST} ./consensus/leader_election/sortition
 
 .PHONY: test_persistence
 ## Run all go unit tests in the Persistence module
 test_persistence:
-	go test -v -p=1 ./persistence/...
+	go test ${VERBOSE_TEST} -p=1 ./persistence/...
 
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library
 benchmark_sortition:
-	go test -v ./consensus/leader_election/sortition -bench=.
+	go test ${VERBOSE_TEST} ./consensus/leader_election/sortition -bench=.
 
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
@@ -268,17 +273,17 @@ test_p2p_socket:
 .PHONY: test_p2p_types
 ## Run p2p subcomponents' tests
 test_p2p_types:
-	go test -v -race ./p2p/types
+	go test ${VERBOSE_TEST} -race ./p2p/types
 
 .PHONY: test_p2p
 ## Run all p2p tests
 test_p2p:
-	go test -v -race ./p2p
+	go test ${VERBOSE_TEST} -race ./p2p
 
 .PHONY: test_pre2p
 ## Run all pre2p
 test_pre2p:
-	go test -v -count=1 ./p2p/pre2p/...
+	go test ${VERBOSE_TEST} -count=1 ./p2p/pre2p/...
 
 .PHONY: test_pre2p_addrbook
 ## Run all Pre2P addr book related tests
