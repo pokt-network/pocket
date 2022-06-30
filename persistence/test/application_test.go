@@ -150,7 +150,7 @@ func TestGetAppStatus(t *testing.T) {
 	require.Equal(t, status, DefaultStakeStatus, "unexpected status")
 }
 
-func TestGetPauseHeightIfExists(t *testing.T) {
+func TestGetAppPauseHeightIfExists(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 1, // intentionally set to a non-zero height
 		DB:     *PostgresDB,
