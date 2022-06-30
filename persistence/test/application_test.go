@@ -379,12 +379,12 @@ func GetTestApp(db persistence.PostgresContext, address []byte) (*typesGenesis.A
 		return nil, err
 	}
 
-	addr, err := hex.DecodeString(operator)
+	operatorAddr, err := hex.DecodeString(operator)
 	if err != nil {
 		return nil, err
 	}
 
-	pubKey, err := hex.DecodeString(publicKey)
+	operatorPubKey, err := hex.DecodeString(publicKey)
 	if err != nil {
 		return nil, err
 	}
@@ -394,21 +394,11 @@ func GetTestApp(db persistence.PostgresContext, address []byte) (*typesGenesis.A
 		return nil, err
 	}
 
-	status := persistence.UndefinedStakingStatus
-	switch unstakingHeight {
-	case -1:
-		status = persistence.StakedStatus
-	case unstakingHeight:
-		status = persistence.UnstakingStatus
-	default:
-		status = persistence.UnstakedStatus
-	}
-
 	return &typesGenesis.App{
-		Address:         addr,
-		PublicKey:       pubKey,
+		Address:         operatorAddr,
+		PublicKey:       operatorPubKey,
 		Paused:          false,
-		Status:          int32(status),
+		Status:          persistence.UnstakingHeightToStatus(unstakingHeight),
 		Chains:          chains,
 		MaxRelays:       maxRelays,
 		StakedTokens:    stakedTokens,

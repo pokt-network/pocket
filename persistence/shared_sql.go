@@ -17,6 +17,17 @@ const (
 	StakedStatus
 )
 
+func UnstakingHeightToStatus(unstakingHeight int64) int32 {
+	switch unstakingHeight {
+	case -1:
+		return StakedStatus
+	case 0:
+		return UnstakedStatus
+	default:
+		return UnstakingStatus
+	}
+}
+
 func (p *PostgresContext) GetExists(actorSchema schema.ProtocolActorSchema, address []byte, height int64) (exists bool, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
