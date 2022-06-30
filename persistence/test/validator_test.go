@@ -1,7 +1,6 @@
 package test
 
 import (
-	"bytes"
 	"encoding/hex"
 	"testing"
 
@@ -20,174 +19,267 @@ func FuzzValidator(f *testing.F) {
 }
 
 func TestInsertValidatorAndExists(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	validator := NewTestValidator(t)
-	validator2 := NewTestValidator(t)
-	err := db.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultPauseHeight, DefaultUnstakingHeight)
+
+	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
-	exists, err := db.GetValidatorExists(validator.Address, db.Height)
+
+	db.Height = 1
+
+	validator2, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
-	if !exists {
-		t.Fatal("actor that should exist does not")
-	}
-	exists, err = db.GetValidatorExists(validator2.Address, db.Height)
+
+	exists, err := db.GetValidatorExists(validator.Address, 0)
 	require.NoError(t, err)
-	if exists {
-		t.Fatal("actor that should not exist, appears to")
-	}
+	require.True(t, exists, "actor that should exist at previous height does not")
+	exists, err = db.GetValidatorExists(validator.Address, 1)
+	require.NoError(t, err)
+	require.True(t, exists, "actor that should exist at current height does not")
+
+	exists, err = db.GetValidatorExists(validator2.Address, 0)
+	require.NoError(t, err)
+	require.False(t, exists, "actor that should not exist at previous height validatorears to")
+	exists, err = db.GetValidatorExists(validator2.Address, 1)
+	require.NoError(t, err)
+	require.True(t, exists, "actor that should exist at current height does not")
 }
 
 func TestUpdateValidator(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	validator := NewTestValidator(t)
-	err := db.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, DefaultStakeStatus, DefaultStake, DefaultStake, DefaultPauseHeight, DefaultUnstakingHeight)
+
+	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
-	_, _, stakedTokens, _, _, _, _, err := db.GetValidator(validator.Address, db.Height)
+
+	// operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, err := db.GetValidator(validator.Address, 0)
+
+	_, _, stakedTokens, _, _, _, _, err := db.GetValidator(validator.Address, 0)
 	require.NoError(t, err)
+	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for current height")
+
+	db.Height = 1
+
+	require.NotEqual(t, DefaultStake, StakeToUpdate) // sanity check to make sure the tests are correct
 	err = db.UpdateValidator(validator.Address, validator.ServiceUrl, StakeToUpdate)
 	require.NoError(t, err)
-	_, _, stakedTokens, _, _, _, _, err = db.GetValidator(validator.Address, db.Height)
+
+	_, _, stakedTokens, _, _, _, _, err = db.GetValidator(validator.Address, 0)
 	require.NoError(t, err)
-	if stakedTokens != StakeToUpdate {
-		t.Fatal("stake not updated")
-	}
+	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for previous height")
+
+	_, _, stakedTokens, _, _, _, _, err = db.GetValidator(validator.Address, 1)
+	require.NoError(t, err)
+	require.Equal(t, StakeToUpdate, stakedTokens, "stake not updated for current height")
 }
 
 func TestGetValidatorsReadyToUnstake(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	db.ClearAllDebug()
-	validator := NewTestValidator(t)
-	err := db.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 1, DefaultStake, DefaultStake, DefaultPauseHeight, DefaultUnstakingHeight)
+
+	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
-	// test SetValidatorUnstakingHeightAndStatus
-	err = db.SetValidatorUnstakingHeightAndStatus(validator.Address, 0, 1)
+
+	validator2, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
-	// test GetValidatorsReadyToUnstake
-	validators, err := db.GetValidatorsReadyToUnstake(0, 1)
+
+	validator3, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
-	if len(validators) != 1 {
-		t.Fatal("wrong number of actors")
-	}
-	if !bytes.Equal(validator.Address, validators[0].Address) {
-		t.Fatal("unexpected actor returned")
-	}
+
+	// Unstake validator at height 0
+	err = db.SetValidatorUnstakingHeightAndStatus(validator.Address, 0, persistence.UnstakingStatus)
+	require.NoError(t, err)
+
+	// Unstake validator2 and validator3 at height 1
+	err = db.SetValidatorUnstakingHeightAndStatus(validator2.Address, 1, persistence.UnstakingStatus)
+	require.NoError(t, err)
+	err = db.SetValidatorUnstakingHeightAndStatus(validator3.Address, 1, persistence.UnstakingStatus)
+	require.NoError(t, err)
+
+	// Check unstaking validators at height 0
+	unstakingValidators, err := db.GetValidatorsReadyToUnstake(0, persistence.UnstakingStatus)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(unstakingValidators), "wrong number of actors ready to unstake at height 0")
+	require.Equal(t, validator.Address, unstakingValidators[0].Address, "unexpected validatorlication actor returned")
+
+	// Check unstaking validators at height 1
+	unstakingValidators, err = db.GetValidatorsReadyToUnstake(1, persistence.UnstakingStatus)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(unstakingValidators), "wrong number of actors ready to unstake at height 1")
+	require.ElementsMatch(t, [][]byte{validator2.Address, validator3.Address}, [][]byte{unstakingValidators[0].Address, unstakingValidators[1].Address})
 }
 
 func TestGetValidatorStatus(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
+	db := &persistence.PostgresContext{
+		Height: 1, // intentionally set to a non-zero height
 		DB:     *PostgresDB,
 	}
-	validator := NewTestValidator(t)
-	err := db.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 1, DefaultStake, DefaultStake, DefaultPauseHeight, DefaultUnstakingHeight)
+
+	validator, err := newTestValidator()
 	require.NoError(t, err)
-	status, err := db.GetValidatorStatus(validator.Address, db.Height)
+
+	err = db.InsertValidator(
+		validator.Address,
+		validator.PublicKey,
+		validator.Output,
+		false,
+		DefaultStakeStatus,
+		DefaultMaxRelays,
+		DefaultStake,
+		DefaultPauseHeight,
+		DefaultUnstakingHeight)
 	require.NoError(t, err)
-	if status != DefaultStakeStatus {
-		t.Fatalf("unexpected status: got %d expected %d", status, DefaultStakeStatus)
-	}
+
+	// Check status before the validator exists
+	status, err := db.GetValidatorStatus(validator.Address, 0)
+	require.Error(t, err)
+	require.Equal(t, status, persistence.UndefinedStakingStatus, "unexpected status")
+
+	// Check status after the validator exists
+	status, err = db.GetValidatorStatus(validator.Address, 1)
+	require.NoError(t, err)
+	require.Equal(t, status, DefaultStakeStatus, "unexpected status")
 }
 
 func TestGetValidatorPauseHeightIfExists(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
+	db := &persistence.PostgresContext{
+		Height: 1, // intentionally set to a non-zero height
 		DB:     *PostgresDB,
 	}
-	validator := NewTestValidator(t)
-	err := db.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 1, DefaultStake, DefaultStake, DefaultPauseHeight, DefaultUnstakingHeight)
+
+	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
-	height, err := db.GetValidatorPauseHeightIfExists(validator.Address, db.Height)
+
+	// Check pause height when validator does not exist
+	pauseHeight, err := db.GetValidatorPauseHeightIfExists(validator.Address, 0)
+	require.Error(t, err)
+	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
+
+	// Check pause height when validator does not exist
+	pauseHeight, err = db.GetValidatorPauseHeightIfExists(validator.Address, 1)
 	require.NoError(t, err)
-	if height != DefaultPauseHeight {
-		t.Fatalf("unexpected pausedHeight: got %d expected %d", DefaultPauseHeight, DefaultStakeStatus)
-	}
+	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
 }
 
-func TestSetValidatorsStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
-	db := persistence.PostgresContext{
+func TestSetValidatorStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	validator := NewTestValidator(t)
-	err := db.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 1, DefaultStake, DefaultStake, 0, DefaultUnstakingHeight)
+
+	validator, err := newTestValidator()
 	require.NoError(t, err)
-	err = db.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(1, 0, 1)
+
+	// address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight
+
+	err = db.InsertValidator(
+		validator.Address,
+		validator.PublicKey,
+		validator.Output,
+		false,
+		DefaultStakeStatus,
+		DefaultServiceUrl,
+		DefaultStake,
+		0,
+		DefaultUnstakingHeight)
 	require.NoError(t, err)
+
+	unstakingHeightSet := int64(0)
+	err = db.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(1, unstakingHeightSet, -1)
+	require.NoError(t, err)
+
 	_, _, _, _, _, unstakingHeight, _, err := db.GetValidator(validator.Address, db.Height)
 	require.NoError(t, err)
-	if unstakingHeight != 0 {
-		t.Fatal("unexpected unstaking height")
-	}
+	require.Equal(t, unstakingHeightSet, unstakingHeight, "unstaking height was not set correctly")
 }
 
-func TestSetValidatorPauseHeight(t *testing.T) {
-	db := persistence.PostgresContext{
+func TestSetValidatorPauseHeightAndUnstake(t *testing.T) {
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	validator := NewTestValidator(t)
-	err := db.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 1, DefaultStake, DefaultStake, 0, DefaultUnstakingHeight)
+
+	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
-	err = db.SetValidatorPauseHeight(validator.Address, 1)
+
+	pauseHeight := int64(1)
+	unstakingHeight := pauseHeight + 10
+
+	err = db.SetValidatorPauseHeight(validator.Address, pauseHeight)
 	require.NoError(t, err)
-	_, _, _, _, _, pausedHeight, _, err := db.GetValidator(validator.Address, db.Height)
+
+	_, _, _, _, _, validatorPausedHeight, _, err := db.GetValidator(validator.Address, db.Height)
 	require.NoError(t, err)
-	if pausedHeight != 1 {
-		t.Fatal("unexpected pause height")
-	}
+	require.Equal(t, pauseHeight, validatorPausedHeight, "pause height not updated")
+
+	err = db.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pauseHeight+1, unstakingHeight, -1 /*unused*/)
+	require.NoError(t, err)
+
+	_, _, _, _, _, _, validatorUnstakingHeight, err := db.GetValidator(validator.Address, db.Height)
+	require.NoError(t, err)
+	require.Equal(t, unstakingHeight, validatorUnstakingHeight, "unstaking height was not set correctly")
 }
 
 func TestGetValidatorOutputAddress(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	validator := NewTestValidator(t)
-	err := db.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 1, DefaultStake, DefaultStake, 0, DefaultUnstakingHeight)
+
+	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
-	output, err := db.GetValidatorOutputAddress(validator.Address, db.Height)
+
+	output, err := db.GetValidatorOutputAddress(validator.Address, 0)
 	require.NoError(t, err)
-	if !bytes.Equal(output, validator.Output) {
-		t.Fatal("unexpected output address")
-	}
+	require.Equal(t, output, validator.Output, "unexpected output address")
 }
 
-func NewTestValidator(t *testing.T) typesGenesis.Validator {
-	v, err := newTestValidator()
-	require.NoError(t, err)
-	return v
-}
+func newTestValidator() (*typesGenesis.Validator, error) {
+	operatorKey, err := crypto.GeneratePublicKey()
+	if err != nil {
+		return nil, err
+	}
 
-func newTestValidator() (typesGenesis.Validator, error) {
-	pub1, err := crypto.GeneratePublicKey()
+	outputAddr, err := crypto.GenerateAddress()
 	if err != nil {
-		return typesGenesis.Validator{}, nil
+		return nil, err
 	}
-	addr1 := pub1.Address()
-	addr2, err := crypto.GenerateAddress()
-	if err != nil {
-		return typesGenesis.Validator{}, nil
-	}
-	return typesGenesis.Validator{
-		Address:         addr1,
-		PublicKey:       pub1.Bytes(),
+
+	return &typesGenesis.Validator{
+		Address:         operatorKey.Address(),
+		PublicKey:       operatorKey.Bytes(),
 		Paused:          false,
 		Status:          typesGenesis.DefaultStakeStatus,
 		ServiceUrl:      DefaultServiceUrl,
 		StakedTokens:    typesGenesis.DefaultStake,
 		PausedHeight:    uint64(DefaultPauseHeight),
 		UnstakingHeight: DefaultUnstakingHeight,
-		Output:          addr2,
+		Output:          outputAddr,
 	}, nil
+}
+
+func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*typesGenesis.Validator, error) {
+	validator, err := newTestValidator()
+	if err != nil {
+		return nil, err
+	}
+
+	return validator, db.InsertValidator(
+		validator.Address,
+		validator.PublicKey,
+		validator.Output,
+		false,
+		DefaultStakeStatus,
+		DefaultServiceUrl,
+		DefaultStake,
+		DefaultPauseHeight,
+		DefaultUnstakingHeight)
 }
 
 func GetTestValidator(db persistence.PostgresContext, address []byte) (*typesGenesis.Validator, error) {
@@ -195,32 +287,27 @@ func GetTestValidator(db persistence.PostgresContext, address []byte) (*typesGen
 	if err != nil {
 		return nil, err
 	}
-	addr, err := hex.DecodeString(operator)
+
+	operatorAddr, err := hex.DecodeString(operator)
 	if err != nil {
 		return nil, err
 	}
-	pubKey, err := hex.DecodeString(publicKey)
+
+	operatorPubKey, err := hex.DecodeString(publicKey)
 	if err != nil {
 		return nil, err
 	}
+
 	outputAddr, err := hex.DecodeString(outputAddress)
 	if err != nil {
 		return nil, err
 	}
-	status := -1
-	switch unstakingHeight {
-	case -1:
-		status = persistence.StakedStatus
-	case unstakingHeight:
-		status = persistence.UnstakingStatus
-	default:
-		status = persistence.UnstakedStatus
-	}
+
 	return &typesGenesis.Validator{
-		Address:         addr,
-		PublicKey:       pubKey,
+		Address:         operatorAddr,
+		PublicKey:       operatorPubKey,
 		Paused:          false,
-		Status:          int32(status),
+		Status:          persistence.UnstakingHeightToStatus(unstakingHeight),
 		ServiceUrl:      serviceURL,
 		StakedTokens:    stakedTokens,
 		PausedHeight:    uint64(pauseHeight),

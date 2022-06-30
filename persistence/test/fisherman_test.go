@@ -132,7 +132,7 @@ func TestGetFishermanStatus(t *testing.T) {
 		fisherman.Output,
 		false,
 		DefaultStakeStatus,
-		DefaultMaxRelays,
+		DefaultServiceUrl,
 		DefaultStake,
 		DefaultChains,
 		DefaultPauseHeight,

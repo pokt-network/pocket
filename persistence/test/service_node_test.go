@@ -132,7 +132,7 @@ func TestGetServiceNodeStatus(t *testing.T) {
 		serviceNode.Output,
 		false,
 		DefaultStakeStatus,
-		DefaultMaxRelays,
+		DefaultServiceUrl,
 		DefaultStake,
 		DefaultChains,
 		DefaultPauseHeight,
