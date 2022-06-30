@@ -181,7 +181,7 @@ func UpdatePausedHeight(address, actorSpecificParam string, pausedHeight, height
 		tableName, address, height, constraintName)
 }
 
-func UpdatePausedBefore(actorSpecificParam string, unstakingHeight, pausedBeforeHeight, height int64, tableName, constraintName string) string {
+func UpdateUnstakedHeightIfPausedBefore(actorSpecificParam string, unstakingHeight, pausedBeforeHeight, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s (address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
 			(

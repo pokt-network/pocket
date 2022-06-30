@@ -48,7 +48,7 @@ type ProtocolActorSchema interface {
 	// Returns a query to update the height at which an Actor is paused.
 	UpdatePausedHeightQuery(address string, pausedHeight, height int64) string
 	// Returns a query to start unstaking Actors which have been paused.
-	UpdatePausedBefore(pauseBeforeHeight, unstakingHeight, height int64) string
+	UpdateUnstakedHeightIfPausedBeforeQuery(pauseBeforeHeight, unstakingHeight, height int64) string
 
 	/*** Delete Queries - used debugging only /***/
 

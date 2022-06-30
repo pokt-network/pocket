@@ -223,7 +223,7 @@ func (p PostgresContext) SetActorStatusAndUnstakingHeightPausedBefore(actorSchem
 		return err
 	}
 
-	_, err = conn.Exec(ctx, actorSchema.UpdatePausedBefore(pausedBeforeHeight, unstakingHeight, currentHeight))
+	_, err = conn.Exec(ctx, actorSchema.UpdateUnstakedHeightIfPausedBeforeQuery(pausedBeforeHeight, unstakingHeight, currentHeight))
 	return err
 }
 

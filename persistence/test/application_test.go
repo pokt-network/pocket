@@ -19,43 +19,17 @@ func FuzzApplication(f *testing.F) {
 }
 
 func TestInsertAppAndExists(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
 
-	app, err := newTestApp()
-	require.NoError(t, err)
-
-	err = db.InsertApp(
-		app.Address,
-		app.PublicKey,
-		app.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultMaxRelays,
-		DefaultStake,
-		DefaultChains,
-		DefaultPauseHeight,
-		DefaultUnstakingHeight)
+	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
 
 	db.Height = 1
 
-	app2, err := newTestApp()
-	require.NoError(t, err)
-
-	err = db.InsertApp(
-		app2.Address,
-		app2.PublicKey,
-		app2.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultMaxRelays,
-		DefaultStake,
-		DefaultChains,
-		DefaultPauseHeight,
-		DefaultUnstakingHeight)
+	app2, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
 
 	exists, err := db.GetAppExists(app.Address, 0)
@@ -74,24 +48,12 @@ func TestInsertAppAndExists(t *testing.T) {
 }
 
 func TestUpdateApp(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	app, err := newTestApp()
-	require.NoError(t, err)
 
-	err = db.InsertApp(
-		app.Address,
-		app.PublicKey,
-		app.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultMaxRelays,
-		DefaultStake,
-		DefaultChains,
-		DefaultPauseHeight,
-		DefaultUnstakingHeight)
+	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
 
 	_, _, stakedTokens, _, _, _, _, chains, err := db.GetApp(app.Address, 0)
@@ -118,57 +80,18 @@ func TestUpdateApp(t *testing.T) {
 }
 
 func TestGetAppsReadyToUnstake(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
 
-	app, err := newTestApp()
+	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
 
-	app2, err := newTestApp()
+	app2, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
 
-	app3, err := newTestApp()
-	require.NoError(t, err)
-
-	err = db.InsertApp(
-		app.Address,
-		app.PublicKey,
-		app.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultMaxRelays,
-		DefaultStake,
-		DefaultChains,
-		DefaultPauseHeight,
-		DefaultUnstakingHeight)
-	require.NoError(t, err)
-
-	err = db.InsertApp(
-		app2.Address,
-		app2.PublicKey,
-		app2.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultMaxRelays,
-		DefaultStake,
-		DefaultChains,
-		DefaultPauseHeight,
-		DefaultUnstakingHeight)
-	require.NoError(t, err)
-
-	err = db.InsertApp(
-		app3.Address,
-		app3.PublicKey,
-		app3.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultMaxRelays,
-		DefaultStake,
-		DefaultChains,
-		DefaultPauseHeight,
-		DefaultUnstakingHeight)
+	app3, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
 
 	// Unstake app at height 0
@@ -195,7 +118,7 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 }
 
 func TestGetAppStatus(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 1, // intentionally set to a non-zero height
 		DB:     *PostgresDB,
 	}
@@ -228,25 +151,12 @@ func TestGetAppStatus(t *testing.T) {
 }
 
 func TestGetPauseHeightIfExists(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 1, // intentionally set to a non-zero height
 		DB:     *PostgresDB,
 	}
 
-	app, err := newTestApp()
-	require.NoError(t, err)
-
-	err = db.InsertApp(
-		app.Address,
-		app.PublicKey,
-		app.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultMaxRelays,
-		DefaultStake,
-		DefaultChains,
-		DefaultPauseHeight,
-		DefaultUnstakingHeight)
+	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
 
 	// Check pause height when app does not exist
@@ -261,7 +171,7 @@ func TestGetPauseHeightIfExists(t *testing.T) {
 }
 
 func TestSetAppStatusAndUnstakingHeightPausedBefore(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
@@ -291,56 +201,40 @@ func TestSetAppStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	require.Equal(t, unstakingHeightSet, unstakingHeight, "unstaking height was not set correctly")
 }
 
-func TestSetAppPauseHeight(t *testing.T) {
-	db := persistence.PostgresContext{
+func TestSetAppPauseHeightAndUnstake(t *testing.T) {
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
 
-	app, err := newTestApp()
+	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
 
-	err = db.InsertApp(
-		app.Address,
-		app.PublicKey,
-		app.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultMaxRelays,
-		DefaultStake,
-		DefaultChains,
-		DefaultPauseHeight,
-		DefaultUnstakingHeight)
+	pauseHeight := int64(1)
+	unstakingHeight := pauseHeight + 10
+
+	err = db.SetAppPauseHeight(app.Address, pauseHeight)
 	require.NoError(t, err)
 
-	err = db.SetAppPauseHeight(app.Address, 1)
+	_, _, _, _, _, appPausedHeight, _, _, err := db.GetApp(app.Address, db.Height)
+	require.NoError(t, err)
+	require.Equal(t, pauseHeight, appPausedHeight, "pause height not updated")
+
+	err = db.SetAppStatusAndUnstakingHeightPausedBefore(pauseHeight+1, unstakingHeight, -1 /*unused*/)
 	require.NoError(t, err)
 
-	_, _, _, _, _, pausedHeight, _, _, err := db.GetApp(app.Address, db.Height)
+	_, _, _, _, _, _, appUnstakingHeight, _, err := db.GetApp(app.Address, db.Height)
 	require.NoError(t, err)
-	require.Equal(t, int64(1), pausedHeight, "pause height not updated")
+	require.Equal(t, unstakingHeight, appUnstakingHeight, "unstaking height was not set correctly")
 }
 
 func TestGetAppOutputAddress(t *testing.T) {
-	db := persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
 
-	app, err := newTestApp()
-	require.NoError(t, err)
-
-	err = db.InsertApp(
-		app.Address,
-		app.PublicKey,
-		app.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultMaxRelays,
-		DefaultStake,
-		DefaultChains,
-		DefaultPauseHeight,
-		DefaultUnstakingHeight)
+	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
 
 	output, err := db.GetAppOutputAddress(app.Address, 0)
@@ -371,6 +265,25 @@ func newTestApp() (*typesGenesis.App, error) {
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          outputAddr,
 	}, nil
+}
+
+func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*typesGenesis.App, error) {
+	app, err := newTestApp()
+	if err != nil {
+		return nil, err
+	}
+
+	return app, db.InsertApp(
+		app.Address,
+		app.PublicKey,
+		app.Output,
+		false,
+		DefaultStakeStatus,
+		DefaultMaxRelays,
+		DefaultStake,
+		DefaultChains,
+		DefaultPauseHeight,
+		DefaultUnstakingHeight)
 }
 
 func GetTestApp(db persistence.PostgresContext, address []byte) (*typesGenesis.App, error) {

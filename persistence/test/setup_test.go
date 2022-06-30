@@ -53,13 +53,14 @@ var (
 	DefaultUnstakingHeight = int64(-1)
 )
 
-// TODO:(team) make these tests thread safe
 var PostgresDB *persistence.PostgresDB
 
+// TODO(team): make these tests thread safe
 func init() {
 	PostgresDB = new(persistence.PostgresDB)
 }
 
+// See https://github.com/ory/dockertest as reference for the template of this code
 func TestMain(m *testing.M) {
 	opts := dockertest.RunOptions{
 		Repository: "postgres",
@@ -96,9 +97,9 @@ func TestMain(m *testing.M) {
 		log.Fatalf("***Make sure your docker daemon is running!!*** Could not start resource: %s\n", err.Error())
 	}
 
-	// DISCUSS(drewsky): Is this some sort of cleanup?
+	// DOCUMENT: Why do we not call `syscall.SIGTERM` here
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill) // Why not syscall.SIGTERM?
+	signal.Notify(c, os.Interrupt, os.Kill)
 	go func() {
 		for sig := range c {
 			log.Printf("exit signal %d received\n", sig)
@@ -122,7 +123,7 @@ func TestMain(m *testing.M) {
 	}
 	code := m.Run()
 
-	// You can't defer this because os.Exit doesn't care for defer
+	// You can't defer this because `os.Exit`` doesn't care for defer
 	if err := pool.Purge(resource); err != nil {
 		log.Fatalf("could not purge resource: %s", err)
 	}
@@ -157,7 +158,7 @@ func fuzzProtocolActor(
 		"SetUnstakingHeight",
 		"SetPauseHeight",
 		"SetPausedToUnstaking",
-		"GetOutputAddrAddr",
+		"GetOutputAddr",
 		"NextHeight"}
 	numOperationTypes := len(operations)
 
@@ -286,6 +287,8 @@ func fuzzProtocolActor(
 			require.Equal(t, originalActor.OutputAddress, hex.EncodeToString(outputAddr), "output address incorrect")
 		case "NextHeight":
 			db.Height++
+		default:
+			t.Errorf("Unexpected operation fuzzing operation %s", op)
 		}
 	})
 }

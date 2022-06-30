@@ -111,8 +111,8 @@ func (actor *GenericProtocolActor) UpdatePausedHeightQuery(address string, pause
 	return UpdatePausedHeight(address, actor.actorSpecificColName, pausedHeight, height, actor.tableName, actor.heightConstraintName)
 }
 
-func (actor *GenericProtocolActor) UpdatePausedBefore(pauseBeforeHeight, unstakingHeight, height int64) string {
-	return UpdatePausedBefore(actor.actorSpecificColName, unstakingHeight, pauseBeforeHeight, height, actor.tableName, actor.heightConstraintName)
+func (actor *GenericProtocolActor) UpdateUnstakedHeightIfPausedBeforeQuery(pauseBeforeHeight, unstakingHeight, height int64) string {
+	return UpdateUnstakedHeightIfPausedBefore(actor.actorSpecificColName, unstakingHeight, pauseBeforeHeight, height, actor.tableName, actor.heightConstraintName)
 }
 
 func (actor *GenericProtocolActor) ClearAllQuery() string {
