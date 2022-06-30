@@ -51,7 +51,6 @@ var (
 	// DISCUSS(drewsky): Not a fan of using `Default` as something that has semantic meaning (i.e. currently active). Pick a better name together.
 	DefaultPauseHeight     = int64(-1)
 	DefaultUnstakingHeight = int64(-1)
-	PauseHeightToSet       = 1
 )
 
 // TODO:(team) make these tests thread safe

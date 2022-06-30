@@ -137,11 +137,11 @@ func TestSetValidatorPauseHeight(t *testing.T) {
 	validator := NewTestValidator(t)
 	err := db.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 1, DefaultStake, DefaultStake, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
-	err = db.SetValidatorPauseHeight(validator.Address, int64(PauseHeightToSet))
+	err = db.SetValidatorPauseHeight(validator.Address, 1)
 	require.NoError(t, err)
 	_, _, _, _, _, pausedHeight, _, err := db.GetValidator(validator.Address, db.Height)
 	require.NoError(t, err)
-	if pausedHeight != int64(PauseHeightToSet) {
+	if pausedHeight != 1 {
 		t.Fatal("unexpected pause height")
 	}
 }

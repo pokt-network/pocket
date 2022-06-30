@@ -63,7 +63,6 @@ func (p PostgresContext) Release() {
 }
 
 func (p PostgresContext) GetHeight() (int64, error) {
-	log.Println("OLSH", p.Height)
 	return p.Height, nil
 }
 

@@ -96,8 +96,8 @@ func TestUpdateApp(t *testing.T) {
 
 	_, _, stakedTokens, _, _, _, _, chains, err := db.GetApp(app.Address, 0)
 	require.NoError(t, err)
-	require.Equal(t, chains, DefaultChains, "default chains incorrect for current height")
-	require.Equal(t, stakedTokens, DefaultStake, "default stake incorrect for current height")
+	require.Equal(t, DefaultChains, chains, "default chains incorrect for current height")
+	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for current height")
 
 	db.Height = 1
 
@@ -108,13 +108,13 @@ func TestUpdateApp(t *testing.T) {
 
 	_, _, stakedTokens, _, _, _, _, chains, err = db.GetApp(app.Address, 0)
 	require.NoError(t, err)
-	require.Equal(t, chains, DefaultChains, "default chains incorrect for previous height")
-	require.Equal(t, stakedTokens, DefaultStake, "default stake incorrect for previous height")
+	require.Equal(t, DefaultChains, chains, "default chains incorrect for previous height")
+	require.Equal(t, DefaultStake, stakedTokens, "default stake incorrect for previous height")
 
 	_, _, stakedTokens, _, _, _, _, chains, err = db.GetApp(app.Address, 1)
 	require.NoError(t, err)
-	require.Equal(t, chains, ChainsToUpdate, "chains not updated for current height")
-	require.Equal(t, stakedTokens, StakeToUpdate, "stake not updated for current height")
+	require.Equal(t, ChainsToUpdate, chains, "chains not updated for current height")
+	require.Equal(t, StakeToUpdate, stakedTokens, "stake not updated for current height")
 }
 
 func TestGetAppsReadyToUnstake(t *testing.T) {
@@ -127,6 +127,9 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 	require.NoError(t, err)
 
 	app2, err := newTestApp()
+	require.NoError(t, err)
+
+	app3, err := newTestApp()
 	require.NoError(t, err)
 
 	err = db.InsertApp(
@@ -155,29 +158,48 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 		DefaultUnstakingHeight)
 	require.NoError(t, err)
 
+	err = db.InsertApp(
+		app3.Address,
+		app3.PublicKey,
+		app3.Output,
+		false,
+		DefaultStakeStatus,
+		DefaultMaxRelays,
+		DefaultStake,
+		DefaultChains,
+		DefaultPauseHeight,
+		DefaultUnstakingHeight)
+	require.NoError(t, err)
+
+	// Unstake app at height 0
 	err = db.SetAppUnstakingHeightAndStatus(app.Address, 0, persistence.UnstakingStatus)
 	require.NoError(t, err)
 
+	// Unstake app2 and app3 at height 1
 	err = db.SetAppUnstakingHeightAndStatus(app2.Address, 1, persistence.UnstakingStatus)
 	require.NoError(t, err)
-
-	apps, err := db.GetAppsReadyToUnstake(0, persistence.UnstakingStatus)
+	err = db.SetAppUnstakingHeightAndStatus(app3.Address, 1, persistence.UnstakingStatus)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(apps), "wrong number of actors ready to unstake")
-	require.Equal(t, app.Address, apps[0].Address, "unexpected application actor returned")
 
-	apps, err = db.GetAppsReadyToUnstake(1, persistence.UnstakingStatus)
+	// Check unstaking apps at height 0
+	unstakingApps, err := db.GetAppsReadyToUnstake(0, persistence.UnstakingStatus)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(apps), "wrong number of actors ready to unstake")
+	require.Equal(t, 1, len(unstakingApps), "wrong number of actors ready to unstake at height 0")
+	require.Equal(t, app.Address, unstakingApps[0].Address, "unexpected application actor returned")
 
-	require.Equal(t, app2.Address, apps[0].Address, "unexpected application actor returned")
+	// Check unstaking apps at height 1
+	unstakingApps, err = db.GetAppsReadyToUnstake(1, persistence.UnstakingStatus)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(unstakingApps), "wrong number of actors ready to unstake at height 1")
+	require.ElementsMatch(t, [][]byte{app2.Address, app3.Address}, [][]byte{unstakingApps[0].Address, unstakingApps[1].Address})
 }
 
 func TestGetAppStatus(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height: 0,
+		Height: 1, // intentionally set to a non-zero height
 		DB:     *PostgresDB,
 	}
+
 	app, err := newTestApp()
 	require.NoError(t, err)
 
@@ -194,11 +216,12 @@ func TestGetAppStatus(t *testing.T) {
 		DefaultUnstakingHeight)
 	require.NoError(t, err)
 
+	// Check status before the app exists
 	status, err := db.GetAppStatus(app.Address, 0)
-	require.NoError(t, err)
-	require.Equal(t, status, DefaultStakeStatus, "unexpected status")
+	require.Error(t, err)
+	require.Equal(t, status, persistence.UndefinedStakingStatus, "unexpected status")
 
-	// WTF
+	// Check status after the app exists
 	status, err = db.GetAppStatus(app.Address, 1)
 	require.NoError(t, err)
 	require.Equal(t, status, DefaultStakeStatus, "unexpected status")
@@ -206,9 +229,10 @@ func TestGetAppStatus(t *testing.T) {
 
 func TestGetPauseHeightIfExists(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height: 0,
+		Height: 1, // intentionally set to a non-zero height
 		DB:     *PostgresDB,
 	}
+
 	app, err := newTestApp()
 	require.NoError(t, err)
 
@@ -225,10 +249,12 @@ func TestGetPauseHeightIfExists(t *testing.T) {
 		DefaultUnstakingHeight)
 	require.NoError(t, err)
 
+	// Check pause height when app does not exist
 	pauseHeight, err := db.GetAppPauseHeightIfExists(app.Address, 0)
-	require.NoError(t, err)
+	require.Error(t, err)
 	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
 
+	// Check pause height when app does not exist
 	pauseHeight, err = db.GetAppPauseHeightIfExists(app.Address, 1)
 	require.NoError(t, err)
 	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
@@ -239,6 +265,7 @@ func TestSetAppStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
+
 	app, err := newTestApp()
 	require.NoError(t, err)
 
@@ -256,12 +283,12 @@ func TestSetAppStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	require.NoError(t, err)
 
 	unstakingHeightSet := int64(0)
-	err = db.SetAppStatusAndUnstakingHeightPausedBefore(1, unstakingHeightSet, 1)
+	err = db.SetAppStatusAndUnstakingHeightPausedBefore(1, unstakingHeightSet, -1)
 	require.NoError(t, err)
 
 	_, _, _, _, _, unstakingHeight, _, _, err := db.GetApp(app.Address, db.Height)
 	require.NoError(t, err)
-	require.Equal(t, unstakingHeight, unstakingHeightSet, "unstaking height was not set correctly")
+	require.Equal(t, unstakingHeightSet, unstakingHeight, "unstaking height was not set correctly")
 }
 
 func TestSetAppPauseHeight(t *testing.T) {
@@ -269,6 +296,7 @@ func TestSetAppPauseHeight(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
+
 	app, err := newTestApp()
 	require.NoError(t, err)
 
@@ -285,12 +313,12 @@ func TestSetAppPauseHeight(t *testing.T) {
 		DefaultUnstakingHeight)
 	require.NoError(t, err)
 
-	err = db.SetAppPauseHeight(app.Address, int64(PauseHeightToSet))
+	err = db.SetAppPauseHeight(app.Address, 1)
 	require.NoError(t, err)
 
 	_, _, _, _, _, pausedHeight, _, _, err := db.GetApp(app.Address, db.Height)
 	require.NoError(t, err)
-	require.Equal(t, pausedHeight, int64(PauseHeightToSet), "pause height not updated")
+	require.Equal(t, int64(1), pausedHeight, "pause height not updated")
 }
 
 func TestGetAppOutputAddress(t *testing.T) {
@@ -298,6 +326,7 @@ func TestGetAppOutputAddress(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
+
 	app, err := newTestApp()
 	require.NoError(t, err)
 
@@ -310,7 +339,7 @@ func TestGetAppOutputAddress(t *testing.T) {
 		DefaultMaxRelays,
 		DefaultStake,
 		DefaultChains,
-		0, //DefaultPauseHeight, DISCUS(drewsky): Why are we not using `DefaultPauseHeight` here?
+		DefaultPauseHeight,
 		DefaultUnstakingHeight)
 	require.NoError(t, err)
 

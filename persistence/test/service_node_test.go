@@ -140,11 +140,11 @@ func TestSetServiceNodePauseHeight(t *testing.T) {
 	serviceNode := NewTestServiceNode(t)
 	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
-	err = db.SetServiceNodePauseHeight(serviceNode.Address, int64(PauseHeightToSet))
+	err = db.SetServiceNodePauseHeight(serviceNode.Address, 1)
 	require.NoError(t, err)
 	_, _, _, _, _, pausedHeight, _, _, err := db.GetServiceNode(serviceNode.Address, db.Height)
 	require.NoError(t, err)
-	if pausedHeight != int64(PauseHeightToSet) {
+	if pausedHeight != 1 {
 		t.Fatal("unexpected pause height")
 	}
 }

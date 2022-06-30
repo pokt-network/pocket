@@ -159,11 +159,11 @@ func TestSetFishermanPauseHeight(t *testing.T) {
 	fisherman := NewTestFisherman(t)
 	err := db.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
-	err = db.SetFishermanPauseHeight(fisherman.Address, int64(PauseHeightToSet))
+	err = db.SetFishermanPauseHeight(fisherman.Address, 1)
 	require.NoError(t, err)
 	_, _, _, _, _, pausedHeight, _, _, err := db.GetFisherman(fisherman.Address, db.Height)
 	require.NoError(t, err)
-	if pausedHeight != int64(PauseHeightToSet) {
+	if pausedHeight != 1 {
 		t.Fatal("unexpected pause height")
 	}
 }
