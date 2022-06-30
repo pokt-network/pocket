@@ -13,7 +13,7 @@ import (
 )
 
 func FuzzServiceNode(f *testing.F) {
-	fuzzProtocolActor(f,
+	fuzzSingleProtocolActor(f,
 		NewTestGenericActor(schema.ServiceNodeActor, newTestServiceNode),
 		GetGenericActor(schema.ServiceNodeActor, GetTestServiceNode),
 		schema.ServiceNodeActor)
@@ -115,7 +115,7 @@ func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 	}
 }
 
-func TestSetServiceNodeStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+func TestSetServiceNodeStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
@@ -123,7 +123,7 @@ func TestSetServiceNodeStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	serviceNode := NewTestServiceNode(t)
 	err := db.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
-	err = db.SetServiceNodeStatusAndUnstakingHeightPausedBefore(1, 0, 1)
+	err = db.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(1, 0, 1)
 	require.NoError(t, err)
 	_, _, _, _, _, _, unstakingHeight, _, err := db.GetServiceNode(serviceNode.Address, db.Height)
 	require.NoError(t, err)

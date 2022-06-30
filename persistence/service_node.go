@@ -72,8 +72,8 @@ func (p PostgresContext) GetServiceNodePauseHeightIfExists(address []byte, heigh
 	return p.GetActorPauseHeightIfExists(schema.ServiceNodeActor, address, height)
 }
 
-func (p PostgresContext) SetServiceNodeStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
-	return p.SetActorStatusAndUnstakingHeightPausedBefore(schema.ServiceNodeActor, pausedBeforeHeight, unstakingHeight)
+func (p PostgresContext) SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
+	return p.SetActorStatusAndUnstakingHeightIfPausedBefore(schema.ServiceNodeActor, pausedBeforeHeight, unstakingHeight)
 }
 
 func (p PostgresContext) SetServiceNodePauseHeight(address []byte, height int64) error {

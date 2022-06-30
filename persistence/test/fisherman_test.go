@@ -13,7 +13,7 @@ import (
 )
 
 func FuzzFishermen(f *testing.F) {
-	fuzzProtocolActor(f,
+	fuzzSingleProtocolActor(f,
 		NewTestGenericActor(schema.FishermanActor, newTestFisherman),
 		GetGenericActor(schema.FishermanActor, GetTestFisherman),
 		schema.FishermanActor)
@@ -134,7 +134,7 @@ func TestGetFishermanPauseHeightIfExists(t *testing.T) {
 	}
 }
 
-func TestSetFishermanStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+func TestSetFishermanStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
@@ -142,7 +142,7 @@ func TestSetFishermanStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	fisherman := NewTestFisherman(t)
 	err := db.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 1, DefaultStake, DefaultStake, DefaultChains, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
-	err = db.SetFishermanStatusAndUnstakingHeightPausedBefore(1, 0, 1)
+	err = db.SetFishermanStatusAndUnstakingHeightIfPausedBefore(1, 0, 1)
 	require.NoError(t, err)
 	_, _, _, _, _, _, unstakingHeight, _, err := db.GetFisherman(fisherman.Address, db.Height)
 	require.NoError(t, err)

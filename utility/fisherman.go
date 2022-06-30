@@ -294,7 +294,7 @@ func (u *UtilityContext) UnstakeFishermenPausedBefore(pausedBeforeHeight int64) 
 	if err != nil {
 		return err
 	}
-	er := store.SetFishermanStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
+	er := store.SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return types.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}

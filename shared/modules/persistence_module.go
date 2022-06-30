@@ -61,7 +61,7 @@ type PersistenceContext interface {
 	GetAppStatus(address []byte) (status int, err error)
 	SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
 	GetAppPauseHeightIfExists(address []byte) (int64, error)
-	SetAppStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
+	SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetAppPauseHeight(address []byte, height int64) error
 	GetAppOutputAddress(operator []byte) (output []byte, err error)
 
@@ -74,7 +74,7 @@ type PersistenceContext interface {
 	GetServiceNodeStatus(address []byte) (status int, err error)
 	SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
 	GetServiceNodePauseHeightIfExists(address []byte) (int64, error)
-	SetServiceNodeStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
+	SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetServiceNodePauseHeight(address []byte, height int64) error
 	GetServiceNodeOutputAddress(operator []byte) (output []byte, err error)
 
@@ -90,7 +90,7 @@ type PersistenceContext interface {
 	GetFishermanStatus(address []byte) (status int, err error)
 	SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
 	GetFishermanPauseHeightIfExists(address []byte) (int64, error)
-	SetFishermanStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
+	SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetFishermanPauseHeight(address []byte, height int64) error
 	GetFishermanOutputAddress(operator []byte) (output []byte, err error)
 
@@ -103,7 +103,7 @@ type PersistenceContext interface {
 	GetValidatorStatus(address []byte) (status int, err error)
 	SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
 	GetValidatorPauseHeightIfExists(address []byte) (int64, error)
-	SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
+	SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetValidatorPauseHeight(address []byte, height int64) error
 	GetValidatorOutputAddress(operator []byte) (output []byte, err error)
 

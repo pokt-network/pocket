@@ -181,7 +181,7 @@ func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 	}
 }
 
-func TestSetValidatorsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+func TestSetValidatorsStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestValidator()
 	if err := ctx.InsertValidator(actor.Address, actor.PublicKey, actor.Output, true, int(actor.Status),
@@ -189,7 +189,7 @@ func TestSetValidatorsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 		t.Fatal(err)
 	}
 	pauseBeforeHeight, unstakingHeight, status := int64(1), int64(10), 1
-	err := ctx.SetValidatorsStatusAndUnstakingHeightPausedBefore(pauseBeforeHeight, unstakingHeight, status)
+	err := ctx.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pauseBeforeHeight, unstakingHeight, status)
 	require.NoError(t, err)
 	got, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address)
 	require.NoError(t, err)

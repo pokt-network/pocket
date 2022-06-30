@@ -261,7 +261,7 @@ func (u *UtilityContext) UnstakeServiceNodesPausedBefore(pausedBeforeHeight int6
 	if err != nil {
 		return err
 	}
-	er := store.SetServiceNodeStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
+	er := store.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return types.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}

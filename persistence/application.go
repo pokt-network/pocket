@@ -68,8 +68,8 @@ func (p PostgresContext) GetAppPauseHeightIfExists(address []byte, height int64)
 	return p.GetActorPauseHeightIfExists(schema.ApplicationActor, address, height)
 }
 
-func (p PostgresContext) SetAppStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
-	return p.SetActorStatusAndUnstakingHeightPausedBefore(schema.ApplicationActor, pausedBeforeHeight, unstakingHeight)
+func (p PostgresContext) SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
+	return p.SetActorStatusAndUnstakingHeightIfPausedBefore(schema.ApplicationActor, pausedBeforeHeight, unstakingHeight)
 }
 
 func (p PostgresContext) SetAppPauseHeight(address []byte, height int64) error {

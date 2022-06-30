@@ -12,7 +12,7 @@ import (
 )
 
 func FuzzApplication(f *testing.F) {
-	fuzzProtocolActor(f,
+	fuzzSingleProtocolActor(f,
 		NewTestGenericActor(schema.ApplicationActor, newTestApp),
 		GetGenericActor(schema.ApplicationActor, GetTestApp),
 		schema.ApplicationActor)
@@ -170,7 +170,7 @@ func TestGetPauseHeightIfExists(t *testing.T) {
 	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
 }
 
-func TestSetAppStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+func TestSetAppStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
@@ -193,7 +193,7 @@ func TestSetAppStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	require.NoError(t, err)
 
 	unstakingHeightSet := int64(0)
-	err = db.SetAppStatusAndUnstakingHeightPausedBefore(1, unstakingHeightSet, -1)
+	err = db.SetAppStatusAndUnstakingHeightIfPausedBefore(1, unstakingHeightSet, -1)
 	require.NoError(t, err)
 
 	_, _, _, _, _, unstakingHeight, _, _, err := db.GetApp(app.Address, db.Height)
@@ -220,7 +220,7 @@ func TestSetAppPauseHeightAndUnstake(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, pauseHeight, appPausedHeight, "pause height not updated")
 
-	err = db.SetAppStatusAndUnstakingHeightPausedBefore(pauseHeight+1, unstakingHeight, -1 /*unused*/)
+	err = db.SetAppStatusAndUnstakingHeightIfPausedBefore(pauseHeight+1, unstakingHeight, -1 /*unused*/)
 	require.NoError(t, err)
 
 	_, _, _, _, _, _, appUnstakingHeight, _, err := db.GetApp(app.Address, db.Height)

@@ -233,8 +233,8 @@ func (m *PrePersistenceContext) GetValidatorPauseHeightIfExists(address []byte) 
 	return int64(val.PausedHeight), nil
 }
 
-// SetValidatorsStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
-func (m *PrePersistenceContext) SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
+// SetValidatorsStatusAndUnstakingHeightIfPausedBefore : This unstakes the actors that have reached max pause height
+func (m *PrePersistenceContext) SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	db := m.Store()
 	codec := types.GetCodec()
 	it := db.NewIterator(&util.Range{

@@ -65,8 +65,8 @@ func (p PostgresContext) GetValidatorPauseHeightIfExists(address []byte, height 
 	return p.GetActorPauseHeightIfExists(schema.ValidatorActor, address, height)
 }
 
-func (p PostgresContext) SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
-	return p.SetActorStatusAndUnstakingHeightPausedBefore(schema.ValidatorActor, pausedBeforeHeight, unstakingHeight)
+func (p PostgresContext) SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
+	return p.SetActorStatusAndUnstakingHeightIfPausedBefore(schema.ValidatorActor, pausedBeforeHeight, unstakingHeight)
 }
 
 func (p PostgresContext) SetValidatorPauseHeight(address []byte, height int64) error {

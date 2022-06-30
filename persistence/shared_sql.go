@@ -212,7 +212,7 @@ func (p *PostgresContext) GetActorPauseHeightIfExists(actorSchema schema.Protoco
 	return pausedHeight, nil
 }
 
-func (p PostgresContext) SetActorStatusAndUnstakingHeightPausedBefore(actorSchema schema.ProtocolActorSchema, pausedBeforeHeight, unstakingHeight int64) error {
+func (p PostgresContext) SetActorStatusAndUnstakingHeightIfPausedBefore(actorSchema schema.ProtocolActorSchema, pausedBeforeHeight, unstakingHeight int64) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err

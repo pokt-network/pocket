@@ -183,7 +183,7 @@ func TestGetFishermanPauseHeightIfExists(t *testing.T) {
 	}
 }
 
-func TestSetFishermanStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+func TestSetFishermanStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestFisherman()
 	if err := ctx.InsertFisherman(actor.Address, actor.PublicKey, actor.Output, true, int(actor.Status),
@@ -191,7 +191,7 @@ func TestSetFishermanStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 		t.Fatal(err)
 	}
 	pauseBeforeHeight, unstakingHeight, status := int64(1), int64(10), 1
-	err := ctx.SetFishermanStatusAndUnstakingHeightPausedBefore(pauseBeforeHeight, unstakingHeight, status)
+	err := ctx.SetFishermanStatusAndUnstakingHeightIfPausedBefore(pauseBeforeHeight, unstakingHeight, status)
 	require.NoError(t, err)
 	got, _, err := ctx.(*PrePersistenceContext).GetFisherman(actor.Address)
 	require.NoError(t, err)

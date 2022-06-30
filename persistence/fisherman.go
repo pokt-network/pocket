@@ -68,8 +68,8 @@ func (p PostgresContext) GetFishermanPauseHeightIfExists(address []byte, height 
 	return p.GetActorPauseHeightIfExists(schema.FishermanActor, address, height)
 }
 
-func (p PostgresContext) SetFishermanStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
-	return p.SetActorStatusAndUnstakingHeightPausedBefore(schema.FishermanActor, pausedBeforeHeight, unstakingHeight)
+func (p PostgresContext) SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
+	return p.SetActorStatusAndUnstakingHeightIfPausedBefore(schema.FishermanActor, pausedBeforeHeight, unstakingHeight)
 }
 
 func (p PostgresContext) SetFishermanPauseHeight(address []byte, height int64) error {

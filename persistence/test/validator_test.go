@@ -13,7 +13,7 @@ import (
 )
 
 func FuzzValidator(f *testing.F) {
-	fuzzProtocolActor(f,
+	fuzzSingleProtocolActor(f,
 		NewTestGenericActor(schema.ValidatorActor, newTestValidator),
 		GetGenericActor(schema.ValidatorActor, GetTestValidator),
 		schema.ValidatorActor)
@@ -112,7 +112,7 @@ func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 	}
 }
 
-func TestSetValidatorsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+func TestSetValidatorsStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
@@ -120,7 +120,7 @@ func TestSetValidatorsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 	validator := NewTestValidator(t)
 	err := db.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 1, DefaultStake, DefaultStake, 0, DefaultUnstakingHeight)
 	require.NoError(t, err)
-	err = db.SetValidatorsStatusAndUnstakingHeightPausedBefore(1, 0, 1)
+	err = db.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(1, 0, 1)
 	require.NoError(t, err)
 	_, _, _, _, _, unstakingHeight, _, err := db.GetValidator(validator.Address, db.Height)
 	require.NoError(t, err)

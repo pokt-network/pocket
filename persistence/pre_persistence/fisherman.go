@@ -232,8 +232,8 @@ func (m *PrePersistenceContext) GetFishermanPauseHeightIfExists(address []byte) 
 	return int64(fish.PausedHeight), nil
 }
 
-// SetFishermanStatusAndUnstakingHeightPausedBefore : This unstakes the actors that have reached max pause height
-func (m *PrePersistenceContext) SetFishermanStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
+// SetFishermanStatusAndUnstakingHeightIfPausedBefore : This unstakes the actors that have reached max pause height
+func (m *PrePersistenceContext) SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error {
 	db := m.Store()
 	codec := types.GetCodec()
 	it := db.NewIterator(&util.Range{

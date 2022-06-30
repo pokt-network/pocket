@@ -384,7 +384,7 @@ func (u *UtilityContext) UnstakeValidatorsPausedBefore(pausedBeforeHeight int64)
 	if err != nil {
 		return err
 	}
-	er := store.SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
+	er := store.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return types.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}

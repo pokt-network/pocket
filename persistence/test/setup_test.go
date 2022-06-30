@@ -130,7 +130,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func fuzzProtocolActor(
+func fuzzSingleProtocolActor(
 	f *testing.F,
 	newTestActor func() (schema.GenericActor, error),
 	getTestActor func(db persistence.PostgresContext, address string) (*schema.GenericActor, error),
@@ -149,6 +149,18 @@ func fuzzProtocolActor(
 
 	err = db.InsertActor(protocolActorSchema, actor)
 	require.NoError(f, err)
+
+	// GetAppExists
+
+	// UpdateApp
+	// DeleteApp
+	// GetAppsReadyToUnstake
+	// GetAppStatus
+	// SetAppUnstakingHeightAndStatus
+	// GetAppPauseHeightIfExists
+	// SetAppStatusAndUnstakingHeightIfPausedBefore
+	// SetAppPauseHeight
+	// GetAppOutputAddress
 
 	operations := []string{
 		"Update",
@@ -271,7 +283,7 @@ func fuzzProtocolActor(
 			require.Equal(t, newPauseHeight, newActor.PausedHeight, "setPauseHeight")
 		case "SetPausedToUnstaking":
 			newUnstakingHeight := db.Height + int64(rand.Intn(15))
-			err = db.SetActorStatusAndUnstakingHeightPausedBefore(protocolActorSchema, db.Height, newUnstakingHeight)
+			err = db.SetActorStatusAndUnstakingHeightIfPausedBefore(protocolActorSchema, db.Height, newUnstakingHeight)
 			require.NoError(t, err)
 
 			newActor, err := getTestActor(db, originalActor.Address)
