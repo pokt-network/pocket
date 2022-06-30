@@ -41,10 +41,15 @@ go_staticcheck:
 go_clean_deps:
 	go mod tidy && go mod vendor
 
+.PHONY: refresh
+## Removes vendor, installs deps, generates mocks and protobuf files. Perform after a new pull or a branch switch
+refresh: go_clean_deps
+	make protogen_clean && make protogen_local
+
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
 build_and_watch:
-	/bin/sh ${PWD}/scripts/watch_build.sh
+	/bin/sh ${PWD}/build/scripts/watch_build.sh
 
 .PHONY: client_start
 ## Run a client daemon which is only used for debugging purposes
@@ -59,8 +64,13 @@ client_connect:
 # TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-compose_and_watch: db_start
+compose_and_watch: db_start monitoring_start
 	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
+
+.PHONY: rebuild_and_compose_and_watch
+## Rebuilds the container from scratch and launches compose_and_watch
+rebuild_and_compose_and_watch: db_start monitoring_start
+	docker-compose -f build/deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: db_start
 ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
@@ -106,6 +116,16 @@ docker_wipe: prompt_user
 	docker images -q | xargs -r -I {} docker rmi {}
 	docker volume ls -q | xargs -r -I {} docker volume rm {}
 
+.PHONY: monitoring_start
+## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
+monitoring_start:
+	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d grafana loki vm
+
+.PHONY: make docker_loki_install
+## Installs the loki docker driver
+docker_loki_install:
+	docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
+
 .PHONY: mockgen
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
@@ -115,6 +135,7 @@ mockgen:
 	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	mockgen --source=${modules_dir}/bus_module.go -destination=${modules_dir}/mocks/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/telemetry_module.go -destination=${modules_dir}/mocks/telemetry_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	echo "Mocks generated in ${modules_dir}/mocks"
 
 	$(eval p2p_types_dir = "p2p/pre2p/types")

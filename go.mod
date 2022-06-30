@@ -13,12 +13,24 @@ require (
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	golang.org/x/exp v0.0.0-20220301223727-77fc55f9b6c1
 	gonum.org/v1/gonum v0.9.3
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/protobuf v1.28.0
 )
 
-require github.com/matryer/resync v0.0.0-20161211202428-d39c09a11215
+require (
+	github.com/golang/protobuf v1.5.2
+	github.com/matryer/resync v0.0.0-20161211202428-d39c09a11215
+	github.com/prometheus/client_golang v1.12.2
+)
 
-require github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
+require (
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/common v0.32.1 // indirect
+	github.com/prometheus/procfs v0.7.3 // indirect
+)
 
 require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect

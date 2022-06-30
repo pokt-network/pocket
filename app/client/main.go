@@ -8,9 +8,11 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/pokt-network/pocket/p2p/pre2p"
+	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/telemetry"
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -51,6 +53,7 @@ func main() {
 			UseRainTree:    true,
 			ConnectionType: config.TCPConnection,
 		},
+		EnableTelemetry: false,
 	}
 
 	// Initialize the state singleton
@@ -60,6 +63,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create pre2p module: " + err.Error())
 	}
+
+	// This telemetry module instance is a NOOP because the 'enable_telemetry' flag in the `cfg` above is set to false.
+	// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
+	// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
+	// module that NOOPs (per the configs above) is injected.
+	telemetryMod, err := telemetry.Create(cfg)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
+	}
+
+	_ = shared.CreateBusWithOptionalModules(nil, pre2pMod, nil, nil, telemetryMod)
 
 	for {
 		selection, err := promptGetInput()

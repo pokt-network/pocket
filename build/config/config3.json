@@ -2,6 +2,7 @@
   "root_dir": "/go/src/github.com/pocket-network",
   "genesis": "build/config/genesis.json",
   "private_key": "2b000000000000000000000000000000000000000000000000000000000000001ba66c6751506850ae0787244c69476b6d45fb857a914a5a0445a24253f7b810",
+  "enable_telemetry": true,
   "pre2p": {
     "consensus_port": 8080,
     "use_raintree": true,
@@ -9,8 +10,8 @@
   },
   "p2p": {
     "protocol": "tcp",
-    "address": "0.0.0.0:8082",
-    "external_ip": "172.18.0.1:8082",
+    "address": "0.0.0.0:8083",
+    "external_ip": "172.18.0.1:8083",
     "peers": [
       "172.18.0.1:8081",
       "172.18.0.1:8082",
@@ -36,5 +37,9 @@
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
     "schema": "node3"
   },
-  "utility": {}
+  "utility": {},
+  "telemetry": {
+    "address": "0.0.0.0:9000",
+    "endpoint": "/metrics"
+  }
 }

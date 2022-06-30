@@ -1,7 +1,8 @@
-****<div align="center">
-  <a href="https://www.pokt.network">
-    <img src="https://user-images.githubusercontent.com/2219004/151564884-212c0e40-3bfa-412e-a341-edb54b5f1498.jpeg" alt="Pocket Network logo" width="340"/>
-  </a>
+<div align="center">
+<a href="https://www.pokt.network">
+<img src="https://user-images.githubusercontent.com/2219004/151564884-212c0e40-3bfa-412e-a341-edb54b5f1498.jpeg" alt="Pocket Network logo" width="340"/>
+</a>
+
 </div>
 
 # Pocket
@@ -32,6 +33,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Testing Guide](docs/testing/README.md)
 - [Dependencies Guide](docs/deps/README.md)
 - [Build Guide](docs/build/README.md)
+- [Telemetry Guide](shared/telemetry/README.md)
 
 ### Architectures
 
@@ -47,6 +49,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Utility Changelog](utility/CHANGELOG.md)
 - _Coming Soon: P2P Changelog_
 - _Coming Soon: Persistence Changelog_
+- _Coming Soon: Telemetry Changelog_
 
 ## Support & Contact
 

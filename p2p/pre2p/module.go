@@ -68,7 +68,8 @@ func (m *p2pModule) SetBus(bus modules.Bus) {
 
 func (m *p2pModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		log.Printf("[WARN]: PocketBus is not initialized")
+		return nil
 	}
 	return m.bus
 }
@@ -108,6 +109,7 @@ func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
 		return err
 	}
 	log.Println("broadcasting message to network")
+
 	return m.network.NetworkBroadcast(data)
 }
 

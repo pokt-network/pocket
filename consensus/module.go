@@ -68,7 +68,8 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	valIdMap, idValMap := typesCons.GetValAddrToIdMap(typesGenesis.GetNodeState(nil).ValidatorMap)
 
 	m := &consensusModule{
-		bus:        nil,
+		bus: nil,
+
 		privateKey: cfg.PrivateKey,
 		consCfg:    cfg.Consensus,
 
