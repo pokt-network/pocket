@@ -6,6 +6,7 @@
     }
   },
   "private_key": "2e00000000000000000000000000000000000000000000000000000000000000264a0707979e0d6691f74b055429b5f318d39c2883bb509310b67424252e9ef2",
+  "enable_telemetry": true,
   "p2p": {
     "consensus_port": 8080,
     "use_raintree": true,
@@ -38,5 +39,9 @@
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
     "schema": "node1"
   },
-  "utility": {}
+  "utility": {},
+  "telemetry": {
+    "address": "0.0.0.0:9000",
+    "endpoint": "/metrics"
+  }
 }

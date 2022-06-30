@@ -32,6 +32,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Testing Guide](docs/testing/README.md)
 - [Dependencies Guide](docs/deps/README.md)
 - [Build Guide](docs/build/README.md)
+- [Telemetry Guide](shared/telemetry/README.md)
 
 ### Architectures
 
@@ -48,6 +49,8 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Utility Changelog](utility/doc/CHANGELOG.md)
 - [Persistence Changelog](persistence/CHANGELOG.md)
 - _Coming Soon: P2P Changelog_
+- _Coming Soon: Persistence Changelog_
+- _Coming Soon: Telemetry Changelog_
 
 ## Support & Contact
 

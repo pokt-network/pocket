@@ -15,13 +15,13 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/telemetry"
 )
 
 var _ modules.Module = &Node{}
 
 type Node struct {
-	bus modules.Bus
-
+	bus     modules.Bus
 	Address cryptoPocket.Address
 }
 
@@ -55,7 +55,12 @@ func Create(cfg *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(prePersistenceMod, p2pMod, utilityMod, consensusMod)
+	telemetryMod, err := telemetry.Create(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	bus, err := CreateBus(prePersistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod)
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +75,10 @@ func (node *Node) Start() error {
 	log.Println("Starting pocket node...")
 
 	// IMPORTANT: Order of module startup here matters
+
+	if err := node.GetBus().GetTelemetryModule().Start(); err != nil {
+		return err
+	}
 
 	if err := node.GetBus().GetPersistenceModule().Start(); err != nil {
 		return err

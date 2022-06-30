@@ -75,7 +75,8 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	valIdMap, idValMap := typesCons.GetValAddrToIdMap(valMap)
 
 	m := &consensusModule{
-		bus:        nil,
+		bus: nil,
+
 		privateKey: cfg.PrivateKey,
 		consCfg:    cfg.Consensus,
 

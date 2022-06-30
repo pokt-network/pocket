@@ -18,6 +18,7 @@ import (
 var _ typesP2P.Network = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
+	// TODO(olshansky): still thinking through these structures
 	selfAddr cryptoPocket.Address
 	addrBook typesP2P.AddrBook
 
@@ -176,7 +177,6 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 func (n *rainTreeNetwork) GetAddrBook() typesP2P.AddrBook {
 	return n.addrBook
-
 }
 
 func (n *rainTreeNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {
