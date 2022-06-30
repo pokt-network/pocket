@@ -5,9 +5,8 @@ import (
 	"encoding/hex"
 	"testing"
 
-	query "github.com/pokt-network/pocket/persistence/schema"
-
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
@@ -15,9 +14,9 @@ import (
 
 func FuzzFishermen(f *testing.F) {
 	fuzzProtocolActor(f,
-		NewTestGenericActor(query.FishermanActor, newTestFisherman),
-		GetGenericActor(query.FishermanActor, GetTestFisherman),
-		query.FishermanActor)
+		NewTestGenericActor(schema.FishermanActor, newTestFisherman),
+		GetGenericActor(schema.FishermanActor, GetTestFisherman),
+		schema.FishermanActor)
 }
 
 func TestInsertFishermanAndExists(t *testing.T) {

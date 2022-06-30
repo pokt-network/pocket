@@ -17,7 +17,7 @@ const (
 	StakedStatus
 )
 
-func (p *PostgresContext) GetExists(actorSchema schema.ProtocolActor, address []byte, height int64) (exists bool, err error) {
+func (p *PostgresContext) GetExists(actorSchema schema.ProtocolActorSchema, address []byte, height int64) (exists bool, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return
@@ -30,14 +30,14 @@ func (p *PostgresContext) GetExists(actorSchema schema.ProtocolActor, address []
 	return
 }
 
-func (p *PostgresContext) GetActor(actorSchema schema.ProtocolActor, address []byte, height int64) (actor schema.GenericActor, err error) {
+func (p *PostgresContext) GetActor(actorSchema schema.ProtocolActorSchema, address []byte, height int64) (actor schema.GenericActor, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return
 	}
 
 	if err = conn.QueryRow(ctx, actorSchema.GetQuery(hex.EncodeToString(address), height)).Scan(
-		&actor.Address, &actor.PublicKey, &actor.StakedTokens, &actor.GenericParam,
+		&actor.Address, &actor.PublicKey, &actor.StakedTokens, &actor.ActorSpecificParam,
 		&actor.OutputAddress, &actor.PausedHeight, &actor.UnstakingHeight,
 		&height,
 	); err != nil {
@@ -71,7 +71,7 @@ func (p *PostgresContext) GetActor(actorSchema schema.ProtocolActor, address []b
 	return
 }
 
-func (p *PostgresContext) InsertActor(actorSchema schema.ProtocolActor, actor schema.GenericActor) error {
+func (p *PostgresContext) InsertActor(actorSchema schema.ProtocolActorSchema, actor schema.GenericActor) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err
@@ -83,13 +83,13 @@ func (p *PostgresContext) InsertActor(actorSchema schema.ProtocolActor, actor sc
 	}
 
 	_, err = conn.Exec(ctx, actorSchema.InsertQuery(
-		actor.Address, actor.PublicKey, actor.StakedTokens, actor.GenericParam,
+		actor.Address, actor.PublicKey, actor.StakedTokens, actor.ActorSpecificParam,
 		actor.OutputAddress, actor.PausedHeight, actor.UnstakingHeight, actor.Chains,
 		height))
 	return err
 }
 
-func (p *PostgresContext) UpdateActor(actorSchema schema.ProtocolActor, actor schema.GenericActor) error {
+func (p *PostgresContext) UpdateActor(actorSchema schema.ProtocolActorSchema, actor schema.GenericActor) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err
@@ -105,7 +105,7 @@ func (p *PostgresContext) UpdateActor(actorSchema schema.ProtocolActor, actor sc
 		return err
 	}
 
-	if _, err = tx.Exec(ctx, actorSchema.UpdateQuery(actor.Address, actor.StakedTokens, actor.GenericParam, height)); err != nil {
+	if _, err = tx.Exec(ctx, actorSchema.UpdateQuery(actor.Address, actor.StakedTokens, actor.ActorSpecificParam, height)); err != nil {
 		return err
 	}
 
@@ -122,7 +122,7 @@ func (p *PostgresContext) UpdateActor(actorSchema schema.ProtocolActor, actor sc
 	return tx.Commit(ctx)
 }
 
-func (p *PostgresContext) ActorReadyToUnstakeWithChains(actorSchema schema.ProtocolActor, height int64) (actors []*types.UnstakingActor, err error) {
+func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema schema.ProtocolActorSchema, height int64) (actors []*types.UnstakingActor, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func (p *PostgresContext) ActorReadyToUnstakeWithChains(actorSchema schema.Proto
 	return
 }
 
-func (p *PostgresContext) GetActorStatus(actorSchema schema.ProtocolActor, address []byte, height int64) (int, error) {
+func (p *PostgresContext) GetActorStatus(actorSchema schema.ProtocolActorSchema, address []byte, height int64) (int, error) {
 	var unstakingHeight int64
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -173,7 +173,7 @@ func (p *PostgresContext) GetActorStatus(actorSchema schema.ProtocolActor, addre
 	}
 }
 
-func (p *PostgresContext) SetActorUnstakingHeightAndStatus(actorSchema schema.ProtocolActor, address []byte, unstakingHeight int64) error {
+func (p *PostgresContext) SetActorUnstakingHeightAndStatus(actorSchema schema.ProtocolActorSchema, address []byte, unstakingHeight int64) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err
@@ -188,7 +188,7 @@ func (p *PostgresContext) SetActorUnstakingHeightAndStatus(actorSchema schema.Pr
 	return err
 }
 
-func (p *PostgresContext) GetActorPauseHeightIfExists(actorSchema schema.ProtocolActor, address []byte, height int64) (pausedHeight int64, err error) {
+func (p *PostgresContext) GetActorPauseHeightIfExists(actorSchema schema.ProtocolActorSchema, address []byte, height int64) (pausedHeight int64, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return 0, err
@@ -201,7 +201,7 @@ func (p *PostgresContext) GetActorPauseHeightIfExists(actorSchema schema.Protoco
 	return pausedHeight, nil
 }
 
-func (p PostgresContext) SetActorStatusAndUnstakingHeightPausedBefore(actorSchema schema.ProtocolActor, pausedBeforeHeight, unstakingHeight int64) error {
+func (p PostgresContext) SetActorStatusAndUnstakingHeightPausedBefore(actorSchema schema.ProtocolActorSchema, pausedBeforeHeight, unstakingHeight int64) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err
@@ -216,7 +216,7 @@ func (p PostgresContext) SetActorStatusAndUnstakingHeightPausedBefore(actorSchem
 	return err
 }
 
-func (p PostgresContext) SetActorPauseHeight(actorSchema schema.ProtocolActor, address []byte, pauseHeight int64) error {
+func (p PostgresContext) SetActorPauseHeight(actorSchema schema.ProtocolActorSchema, address []byte, pauseHeight int64) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err
@@ -231,7 +231,7 @@ func (p PostgresContext) SetActorPauseHeight(actorSchema schema.ProtocolActor, a
 	return err
 }
 
-func (p PostgresContext) GetActorOutputAddress(actorSchema schema.ProtocolActor, operatorAddr []byte, height int64) ([]byte, error) {
+func (p PostgresContext) GetActorOutputAddress(actorSchema schema.ProtocolActorSchema, operatorAddr []byte, height int64) ([]byte, error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return nil, err

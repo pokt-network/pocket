@@ -5,9 +5,8 @@ import (
 	"encoding/hex"
 	"testing"
 
-	query "github.com/pokt-network/pocket/persistence/schema"
-
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
@@ -15,9 +14,9 @@ import (
 
 func FuzzServiceNode(f *testing.F) {
 	fuzzProtocolActor(f,
-		NewTestGenericActor(query.ServiceNodeActor, newTestServiceNode),
-		GetGenericActor(query.ServiceNodeActor, GetTestServiceNode),
-		query.ServiceNodeActor)
+		NewTestGenericActor(schema.ServiceNodeActor, newTestServiceNode),
+		GetGenericActor(schema.ServiceNodeActor, GetTestServiceNode),
+		schema.ServiceNodeActor)
 }
 
 func TestInsertServiceNodeAndExists(t *testing.T) {

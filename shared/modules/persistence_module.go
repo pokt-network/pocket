@@ -22,10 +22,12 @@ type PersistenceContext interface {
 	// Context Operations
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
-	AppHash() ([]byte, error)
+
 	Reset() error
 	Commit() error
 	Release()
+
+	AppHash() ([]byte, error)
 	GetHeight() (int64, error)
 
 	// Block Operations
@@ -36,12 +38,15 @@ type PersistenceContext interface {
 	// Indexer Operations
 	TransactionExists(transactionHash string) bool
 
-	// Account Operations
+	// Pool Operations
 	AddPoolAmount(name string, amount string) error
 	SubtractPoolAmount(name string, amount string) error
-	SetPoolAmount(name string, amount string) error
-	InsertPool(name string, address []byte, amount string) error
 	GetPoolAmount(name string) (amount string, err error)
+	SetPoolAmount(name string, amount string) error
+
+	InsertPool(name string, address []byte, amount string) error
+
+	// Account Operations
 	AddAccountAmount(address []byte, amount string) error
 	SubtractAccountAmount(address []byte, amount string) error
 	GetAccountAmount(address []byte) (string, error)
@@ -71,9 +76,10 @@ type PersistenceContext interface {
 	GetServiceNodePauseHeightIfExists(address []byte) (int64, error)
 	SetServiceNodeStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetServiceNodePauseHeight(address []byte, height int64) error
-	GetServiceNodesPerSessionAt(height int64) (int, error)
-	GetServiceNodeCount(chain string, height int64) (int, error)
 	GetServiceNodeOutputAddress(operator []byte) (output []byte, err error)
+
+	GetServiceNodeCount(chain string, height int64) (int, error)
+	GetServiceNodesPerSessionAt(height int64) (int, error)
 
 	// Fisherman Operations
 	GetFishermanExists(address []byte) (exists bool, err error)
@@ -98,13 +104,18 @@ type PersistenceContext interface {
 	SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
 	GetValidatorPauseHeightIfExists(address []byte) (int64, error)
 	SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
+	SetValidatorPauseHeight(address []byte, height int64) error
+	GetValidatorOutputAddress(operator []byte) (output []byte, err error)
+
 	SetValidatorPauseHeightAndMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) error
+
 	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
 	GetValidatorMissedBlocks(address []byte) (int, error)
-	SetValidatorPauseHeight(address []byte, height int64) error
+
 	SetValidatorStakedTokens(address []byte, tokens string) error
 	GetValidatorStakedTokens(address []byte) (tokens string, err error)
-	GetValidatorOutputAddress(operator []byte) (output []byte, err error)
+
+	/* TODO(olshansky): review/revisit this in more details */
 
 	// Params
 	InitParams() error

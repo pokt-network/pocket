@@ -290,8 +290,7 @@ test_pre2p_addrbook:
 benchmark_pre2p_addrbook:
 	go test -bench=. -run BenchmarkAddrBook -v -count=1 ./p2p/pre2p/...
 
-# /Users/olshansky/workspace/pocket/pocket/p2p/pre2p/raintree/addrbook_utils_test.go
-# Inspired by: https://goldin.io/blog/stop-using-todo
+### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
 # TODO          - General Purpose catch-all.
 # TECHDEBT      - Not a great implementation, but we need to fix it later.
 # IMPROVE       - A nice to have, but not a priority. It's okay if we never get to this.
@@ -302,7 +301,8 @@ benchmark_pre2p_addrbook:
 # HACK          - Like TECHDEBT, but much worse. This needs to be prioritized
 # REFACTOR      - Similar to TECHDEBT, but will require a substantial rewrite and change across the codebase
 # CONSIDERATION - A comment that involves extra work but was thoughts / considered as part of some implementation
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION"
+# INTHISCOMMIT  - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the review of a PR to start / reply to a discussion.
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "INTHISCOMMIT"
 
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)

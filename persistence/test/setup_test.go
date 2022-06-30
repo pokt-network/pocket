@@ -11,12 +11,14 @@ import (
 	"testing"
 	"time"
 
-	schema2 "github.com/pokt-network/pocket/persistence/schema"
+	"golang.org/x/exp/slices"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
@@ -24,7 +26,7 @@ const (
 	user             = "postgres"
 	password         = "secret"
 	db               = "postgres"
-	schema           = "test_schema"
+	sql_schema       = "test_schema"
 	localhost        = "0.0.0.0"
 	port             = "5432"
 	dialect          = "postgres"
@@ -109,7 +111,7 @@ func TestMain(m *testing.M) {
 
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	if err = pool.Retry(func() error {
-		conn, err := persistence.ConnectAndInitializeDatabase(connString, schema)
+		conn, err := persistence.ConnectAndInitializeDatabase(connString, sql_schema)
 		if err != nil {
 			log.Println(err.Error())
 			return err
@@ -128,197 +130,169 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func GetRandomServiceURL() string {
-	rand.Seed(time.Now().UnixNano())
-	letterBytes := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	b := make([]byte, rand.Intn(12))
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-	return "https://" + string(b) + ".com"
-}
-
 func fuzzProtocolActor(
 	f *testing.F,
-	newTestActor func() (schema2.GenericActor, error),
-	getTestActor func(db persistence.PostgresContext, address string) (*schema2.GenericActor, error),
-	protocolActor schema2.ProtocolActor) {
+	newTestActor func() (schema.GenericActor, error),
+	getTestActor func(db persistence.PostgresContext, address string) (*schema.GenericActor, error),
+	protocolActorSchema schema.ProtocolActorSchema) {
+
 	db := persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
 	}
+
 	err := db.ClearAllDebug()
-	if err != nil {
-		panic(err)
-	}
-	ops := []string{"Update", "GetReadyToUnstake",
-		"GetStatus", "GetPauseHeight", "SetUnstakingHeight", "SetPauseHeight",
-		"SetPausedToUnstaking", "GetOutput", "NextHeight"}
+	require.NoError(f, err)
+
 	actor, err := newTestActor()
-	if err != nil {
-		panic(err)
+	require.NoError(f, err)
+
+	err = db.InsertActor(protocolActorSchema, actor)
+	require.NoError(f, err)
+
+	operations := []string{
+		"Update",
+		"GetReadyToUnstake",
+		"GetStatus",
+		"GetPauseHeight",
+		"SetUnstakingHeight",
+		"SetPauseHeight",
+		"SetPausedToUnstaking",
+		"GetOutputAddrAddr",
+		"NextHeight"}
+	numOperationTypes := len(operations)
+
+	numDbOperations := 100
+	for i := 0; i < numDbOperations; i++ {
+		f.Add(operations[rand.Intn(numOperationTypes)])
 	}
-	err = db.InsertActor(protocolActor, actor)
-	if err != nil {
-		panic(err)
-	}
-	numOptions := len(ops)
-	numOperations := 100
-	for i := 0; i < numOperations; i++ {
-		f.Add(ops[rand.Intn(numOptions)])
-	}
+
 	f.Fuzz(func(t *testing.T, op string) {
+		originalActor, err := getTestActor(db, actor.Address)
+		require.NoError(t, err)
+
+		addr, err := hex.DecodeString(originalActor.Address)
+		require.NoError(t, err)
+
 		switch op {
 		case "Update":
-			originalActor, err := getTestActor(db, actor.Address)
-			require.NoError(t, err)
+			numParamUpdatesSupported := 3
 			newStakedTokens := originalActor.StakedTokens
 			newChains := originalActor.Chains
-			genericParam := originalActor.GenericParam
+			newActorSpecificParam := originalActor.ActorSpecificParam
+
 			iterations := rand.Intn(2)
 			for i := 0; i < iterations; i++ {
-				switch rand.Intn(3) {
+				switch rand.Intn(numParamUpdatesSupported) {
 				case 0:
-					newStakedTokens = types.BigIntToString(big.NewInt(rand.Int63()))
+					newStakedTokens = getRandomBigIntString()
 				case 1:
-					switch protocolActor.GetActorSpecificColName() {
-					case schema2.ServiceURLCol:
-						genericParam = GetRandomServiceURL()
-					case schema2.MaxRelaysCol:
-						genericParam = types.BigIntToString(big.NewInt(rand.Int63()))
+					switch protocolActorSchema.GetActorSpecificColName() {
+					case schema.ServiceURLCol:
+						newActorSpecificParam = getRandomServiceURL()
+					case schema.MaxRelaysCol:
+						newActorSpecificParam = getRandomBigIntString()
 					default:
-						t.Error("Unexpected genericParam randomization")
+						t.Error("Unexpected actor specific column name")
 					}
 				case 2:
-					if protocolActor.GetChainsTableName() != "" {
-						newChains = GetRandomChains()
+					if protocolActorSchema.GetChainsTableName() != "" {
+						newChains = getRandomChains()
 					}
-				default: // do nothing
 				}
 			}
-			updatedActor := schema2.GenericActor{
-				Address:         originalActor.Address,
-				PublicKey:       originalActor.PublicKey,
-				StakedTokens:    newStakedTokens,
-				GenericParam:    genericParam,
-				OutputAddress:   originalActor.OutputAddress,
-				PausedHeight:    originalActor.PausedHeight,
-				UnstakingHeight: originalActor.UnstakingHeight,
-				Chains:          newChains,
+			updatedActor := schema.GenericActor{
+				Address:            originalActor.Address,
+				PublicKey:          originalActor.PublicKey,
+				StakedTokens:       newStakedTokens,
+				ActorSpecificParam: newActorSpecificParam,
+				OutputAddress:      originalActor.OutputAddress,
+				PausedHeight:       originalActor.PausedHeight,
+				UnstakingHeight:    originalActor.UnstakingHeight,
+				Chains:             newChains,
 			}
-			err = db.UpdateActor(protocolActor, updatedActor)
+			err = db.UpdateActor(protocolActorSchema, updatedActor)
 			require.NoError(t, err)
-			nActor, err := getTestActor(db, originalActor.Address)
+
+			newActor, err := getTestActor(db, originalActor.Address)
 			require.NoError(t, err)
-			require.Equal(t, nActor.GenericParam, genericParam, "update maxRelays")
-			require.ElementsMatch(t, nActor.Chains, newChains, "update chains")
-			require.Equal(t, nActor.StakedTokens, newStakedTokens, "update stakedTokens")
+
+			require.ElementsMatch(t, newActor.Chains, newChains, "staked chains not updated")
+			require.Equal(t, newActor.StakedTokens, newStakedTokens, "staked tokens not updated")
+			require.Equal(t, newActor.ActorSpecificParam, newActorSpecificParam, "actor specific param not updated")
 		case "GetReadyToUnstake":
-			readyToUnstake := false
-			originalActor, err := getTestActor(db, actor.Address)
+			unstakingActors, err := db.GetActorsReadyToUnstake(protocolActorSchema, db.Height)
 			require.NoError(t, err)
-			if originalActor.UnstakingHeight == db.Height && originalActor.UnstakingHeight != DefaultUnstakingHeight {
-				readyToUnstake = true
-			}
-			actors, err := db.ActorReadyToUnstakeWithChains(protocolActor, db.Height)
-			require.NoError(t, err)
-			if readyToUnstake {
-				found := false
-				for _, a := range actors {
-					if originalActor.Address == hex.EncodeToString(a.Address) {
-						found = true
-						break
-					}
-				}
-				if !found {
-					fmt.Println(originalActor)
-					fmt.Println(actors)
-					fmt.Println(originalActor.UnstakingHeight, db.Height)
-				}
-				require.True(t, found, "readyToUnstake")
+
+			if originalActor.UnstakingHeight != db.Height { // Not ready to unstake
+				require.Nil(t, unstakingActors)
 			} else {
-				require.Nil(t, actors)
+				idx := slices.IndexFunc(unstakingActors, func(a *types.UnstakingActor) bool {
+					return originalActor.Address == hex.EncodeToString(a.Address)
+				})
+				require.NotEqual(t, idx, -1, fmt.Sprintf("actor that is unstaking was not found %+v", originalActor))
 			}
 		case "GetStatus":
-			originalActor, err := getTestActor(db, actor.Address)
+			status, err := db.GetActorStatus(protocolActorSchema, addr, db.Height)
 			require.NoError(t, err)
-			addr, err := hex.DecodeString(originalActor.Address)
-			require.NoError(t, err)
-			status, err := db.GetActorStatus(protocolActor, addr, db.Height)
-			require.NoError(t, err)
-			expectedStatus := 0
+
 			switch {
 			case originalActor.UnstakingHeight == DefaultUnstakingHeight:
-				expectedStatus = persistence.StakedStatus
+				require.Equal(t, persistence.StakedStatus, status, "actor status should be staked")
 			case originalActor.UnstakingHeight > db.Height:
-				expectedStatus = persistence.UnstakingStatus
+				require.Equal(t, persistence.UnstakingStatus, status, "actor status should be unstaking")
 			default:
-				expectedStatus = persistence.UnstakedStatus
+				require.Equal(t, persistence.UnstakedStatus, status, "actor status should be unstaked")
 			}
-			require.Equal(t, expectedStatus, status, "getStatus")
 		case "GetPauseHeight":
-			originalActor, err := getTestActor(db, actor.Address)
+			pauseHeight, err := db.GetActorPauseHeightIfExists(protocolActorSchema, addr, db.Height)
 			require.NoError(t, err)
-			addr, err := hex.DecodeString(originalActor.Address)
-			require.NoError(t, err)
-			pauseHeight, err := db.GetActorPauseHeightIfExists(protocolActor, addr, db.Height)
-			require.NoError(t, err)
-			genericActor, err := db.GetActor(protocolActor, addr, db.Height)
-			require.NoError(t, err)
-			require.Equal(t, int(originalActor.PausedHeight), int(pauseHeight), "getPauseHeight "+fmt.Sprintf("%d", genericActor.UnstakingHeight))
+
+			require.Equal(t, originalActor.PausedHeight, pauseHeight, "pause height incorrect")
 		case "SetUnstakingHeight":
-			originalActor, err := getTestActor(db, actor.Address)
-			require.NoError(t, err)
 			newUnstakingHeight := rand.Int63()
-			addr, err := hex.DecodeString(originalActor.Address)
+
+			err = db.SetActorUnstakingHeightAndStatus(protocolActorSchema, addr, newUnstakingHeight)
 			require.NoError(t, err)
-			err = db.SetActorUnstakingHeightAndStatus(protocolActor, addr, newUnstakingHeight)
+
+			newActor, err := getTestActor(db, originalActor.Address)
 			require.NoError(t, err)
-			nActor, err := getTestActor(db, originalActor.Address)
-			require.NoError(t, err)
-			require.Equal(t, int(newUnstakingHeight), int(nActor.UnstakingHeight), "setUnstakingHeight")
+
+			require.Equal(t, newUnstakingHeight, newActor.UnstakingHeight, "setUnstakingHeight")
 		case "SetPauseHeight":
-			originalActor, err := getTestActor(db, actor.Address)
-			require.NoError(t, err)
 			newPauseHeight := rand.Int63()
-			addr, err := hex.DecodeString(originalActor.Address)
+
+			err = db.SetActorPauseHeight(protocolActorSchema, addr, newPauseHeight)
 			require.NoError(t, err)
-			err = db.SetActorPauseHeight(protocolActor, addr, newPauseHeight)
+
+			newActor, err := getTestActor(db, actor.Address)
 			require.NoError(t, err)
-			nActor, err := getTestActor(db, actor.Address)
-			require.NoError(t, err)
-			require.Equal(t, int(newPauseHeight), int(nActor.PausedHeight), "setPauseHeight")
+
+			require.Equal(t, newPauseHeight, newActor.PausedHeight, "setPauseHeight")
 		case "SetPausedToUnstaking":
-			randomUnstakingHeight := db.Height + int64(rand.Intn(15))
-			isPausedAndReadyToUnstake := false
-			originalActor, err := getTestActor(db, actor.Address)
+			newUnstakingHeight := db.Height + int64(rand.Intn(15))
+			err = db.SetActorStatusAndUnstakingHeightPausedBefore(protocolActorSchema, db.Height, newUnstakingHeight)
 			require.NoError(t, err)
-			if originalActor.PausedHeight != DefaultPauseHeight && db.Height > originalActor.PausedHeight {
-				isPausedAndReadyToUnstake = true
+
+			newActor, err := getTestActor(db, originalActor.Address)
+			require.NoError(t, err)
+
+			if db.Height > originalActor.PausedHeight { // isPausedAndReadyToUnstake
+				require.Equal(t, newActor.UnstakingHeight, newUnstakingHeight, "setPausedToUnstaking")
 			}
-			err = db.SetActorStatusAndUnstakingHeightPausedBefore(protocolActor, db.Height, randomUnstakingHeight)
+		case "GetOutputAddr":
+			outputAddr, err := db.GetActorOutputAddress(protocolActorSchema, addr, db.Height)
 			require.NoError(t, err)
-			nActor, err := getTestActor(db, originalActor.Address)
-			require.NoError(t, err)
-			if isPausedAndReadyToUnstake {
-				require.Equal(t, int(nActor.UnstakingHeight), int(randomUnstakingHeight), "setPausedToUnstaking")
-			}
-		case "GetOutput":
-			originalActor, err := getTestActor(db, actor.Address)
-			require.NoError(t, err)
-			addr, err := hex.DecodeString(originalActor.Address)
-			require.NoError(t, err)
-			outputAddr, err := db.GetActorOutputAddress(protocolActor, addr, db.Height)
-			require.NoError(t, err)
-			require.Equal(t, originalActor.OutputAddress, hex.EncodeToString(outputAddr), "getOutput")
+
+			require.Equal(t, originalActor.OutputAddress, hex.EncodeToString(outputAddr), "output address incorrect")
 		case "NextHeight":
 			db.Height++
 		}
 	})
 }
 
-func GetRandomChains() (chains []string) {
-	rand.Seed(time.Now().UnixNano())
+func getRandomChains() (chains []string) {
+	setRandomSeed()
 	letterBytes := "ABCDEF0123456789"
 	iterations := rand.Intn(14) + 1
 	dupMap := make(map[string]struct{})
@@ -335,4 +309,22 @@ func GetRandomChains() (chains []string) {
 		chains = append(chains, string(b))
 	}
 	return
+}
+
+func getRandomServiceURL() string {
+	setRandomSeed()
+	letterBytes := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	b := make([]byte, rand.Intn(12))
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return "https://" + string(b) + ".com"
+}
+
+func getRandomBigIntString() string {
+	return types.BigIntToString(big.NewInt(rand.Int63()))
+}
+
+func setRandomSeed() {
+	rand.Seed(time.Now().UnixNano())
 }

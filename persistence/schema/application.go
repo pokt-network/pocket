@@ -1,12 +1,12 @@
 package schema
 
-var _ ProtocolActor = &ApplicationSchema{}
+var _ ProtocolActorSchema = &ApplicationSchema{}
 
 type ApplicationSchema struct {
 	GenericProtocolActor
 }
 
-var ApplicationActor ProtocolActor = &ApplicationSchema{
+var ApplicationActor ProtocolActorSchema = &ApplicationSchema{
 	GenericProtocolActor: GenericProtocolActor{
 		tableName:       "app",
 		chainsTableName: "app_chains",

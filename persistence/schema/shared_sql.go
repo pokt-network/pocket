@@ -9,7 +9,7 @@ const (
 	// We use `-1` with semantic variable names to indicate non-existence or non-validity
 	// in various contexts to avoid the usage of nullability in columns and for performance
 	// optimization purposes.
-	DefaultUnstakingHeight = -1
+	DefaultUnstakingHeight = -1 // INTHISCOMMIT: Can we delete these because we no longer use end_height = 1?
 	DefaultEndHeight       = -1
 	// Common SQL selectors
 	AllColsSelector  = "*"
@@ -91,7 +91,7 @@ func ReadyToUnstake(unstakingHeight int64, tableName string) string {
 
 func Insert(
 	actor GenericActor,
-	genericParamName, genericParamValue,
+	actorSpecificParam, actorSpecificParamValue,
 	constraintName, chainsConstraintName,
 	tableName, chainsTableName string,
 	height int64) string {
@@ -102,11 +102,11 @@ func Insert(
 				DO UPDATE SET staked_tokens=EXCLUDED.staked_tokens, %s=EXCLUDED.%s,
 							  paused_height=EXCLUDED.paused_height, unstaking_height=EXCLUDED.unstaking_height,
 							  height=EXCLUDED.height`,
-		tableName, genericParamName,
-		actor.Address, actor.PublicKey, actor.StakedTokens, genericParamValue,
+		tableName, actorSpecificParam,
+		actor.Address, actor.PublicKey, actor.StakedTokens, actorSpecificParamValue,
 		actor.OutputAddress, actor.PausedHeight, actor.UnstakingHeight, height,
 		constraintName,
-		genericParamName, genericParamName)
+		actorSpecificParam, actorSpecificParam)
 
 	if actor.Chains == nil {
 		return insertStatement
@@ -134,7 +134,7 @@ func InsertChains(address string, chains []string, height int64, tableName, cons
 	return buffer.String()
 }
 
-func Update(address, stakedTokens, genericParamName, genericParamValue string, height int64, tableName, constraintName string) string {
+func Update(address, stakedTokens, actorSpecificParam, actorSpecificParamValue string, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(
 		`INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
 			(
@@ -143,14 +143,14 @@ func Update(address, stakedTokens, genericParamName, genericParamValue string, h
 			)
 		    ON CONFLICT ON CONSTRAINT %s
 			DO UPDATE SET staked_tokens=EXCLUDED.staked_tokens, %s=EXCLUDED.%s, height=EXCLUDED.height`,
-		tableName, genericParamName,
-		stakedTokens, genericParamValue, height,
+		tableName, actorSpecificParam,
+		stakedTokens, actorSpecificParamValue, height,
 		tableName, address, height,
 		constraintName,
-		genericParamName, genericParamName)
+		actorSpecificParam, actorSpecificParam)
 }
 
-func UpdateUnstakingHeight(address, genericParamName string, unstakingHeight, height int64, tableName, constraintName string) string {
+func UpdateUnstakingHeight(address, actorSpecificParam string, unstakingHeight, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
 			(
@@ -159,14 +159,14 @@ func UpdateUnstakingHeight(address, genericParamName string, unstakingHeight, he
 			)
 		ON CONFLICT ON CONSTRAINT %s
 			DO UPDATE SET unstaking_height=EXCLUDED.unstaking_height, height=EXCLUDED.height`,
-		tableName, genericParamName,
-		genericParamName, unstakingHeight, height,
+		tableName, actorSpecificParam,
+		actorSpecificParam, unstakingHeight, height,
 		tableName, address, height,
 		constraintName)
 
 }
 
-func UpdatePausedHeight(address, genericParamName string, pausedHeight, height int64, tableName, constraintName string) string {
+func UpdatePausedHeight(address, actorSpecificParam string, pausedHeight, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
 			(
@@ -175,12 +175,12 @@ func UpdatePausedHeight(address, genericParamName string, pausedHeight, height i
 			)
 		ON CONFLICT ON CONSTRAINT %s
 			DO UPDATE SET paused_height=EXCLUDED.paused_height, height=EXCLUDED.height`,
-		tableName, genericParamName, genericParamName,
+		tableName, actorSpecificParam, actorSpecificParam,
 		pausedHeight, height,
 		tableName, address, height, constraintName)
 }
 
-func UpdatePausedBefore(genericParamName string, unstakingHeight, pausedBeforeHeight, height int64, tableName, constraintName string) string {
+func UpdatePausedBefore(actorSpecificParam string, unstakingHeight, pausedBeforeHeight, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s (address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
 			(
@@ -190,8 +190,8 @@ func UpdatePausedBefore(genericParamName string, unstakingHeight, pausedBeforeHe
 		)
 		ON CONFLICT ON CONSTRAINT %s
 			DO UPDATE SET unstaking_height=EXCLUDED.unstaking_height`,
-		tableName, genericParamName,
-		genericParamName, unstakingHeight, height,
+		tableName, actorSpecificParam,
+		actorSpecificParam, unstakingHeight, height,
 		tableName, pausedBeforeHeight,
 		tableName,
 		constraintName)

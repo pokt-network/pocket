@@ -1,12 +1,12 @@
 package schema
 
-var _ ProtocolActor = &FishermanSchema{}
+var _ ProtocolActorSchema = &FishermanSchema{}
 
 type FishermanSchema struct {
 	GenericProtocolActor
 }
 
-var FishermanActor ProtocolActor = &FishermanSchema{
+var FishermanActor ProtocolActorSchema = &FishermanSchema{
 	GenericProtocolActor: GenericProtocolActor{
 		tableName:       "fisherman",
 		chainsTableName: "fisherman_chains",

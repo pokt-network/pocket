@@ -1,12 +1,12 @@
 package schema
 
-var _ ProtocolActor = &ServiceNodeSchema{}
+var _ ProtocolActorSchema = &ServiceNodeSchema{}
 
 type ServiceNodeSchema struct {
 	GenericProtocolActor
 }
 
-var ServiceNodeActor ProtocolActor = &ServiceNodeSchema{
+var ServiceNodeActor ProtocolActorSchema = &ServiceNodeSchema{
 	GenericProtocolActor: GenericProtocolActor{
 		tableName:       "service_node",
 		chainsTableName: "service_node_chains",

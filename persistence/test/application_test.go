@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence"
-	query "github.com/pokt-network/pocket/persistence/schema"
+	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
@@ -13,9 +13,9 @@ import (
 
 func FuzzApplication(f *testing.F) {
 	fuzzProtocolActor(f,
-		NewTestGenericActor(query.ApplicationActor, newTestApp),
-		GetGenericActor(query.ApplicationActor, GetTestApp),
-		query.ApplicationActor)
+		NewTestGenericActor(schema.ApplicationActor, newTestApp),
+		GetGenericActor(schema.ApplicationActor, GetTestApp),
+		schema.ApplicationActor)
 }
 
 func TestInsertAppAndExists(t *testing.T) {
@@ -229,7 +229,6 @@ func TestGetPauseHeightIfExists(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
 
-	// WTF
 	pauseHeight, err = db.GetAppPauseHeightIfExists(app.Address, 1)
 	require.NoError(t, err)
 	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")

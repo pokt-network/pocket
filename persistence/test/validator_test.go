@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence"
-	query "github.com/pokt-network/pocket/persistence/schema"
+	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
@@ -14,9 +14,9 @@ import (
 
 func FuzzValidator(f *testing.F) {
 	fuzzProtocolActor(f,
-		NewTestGenericActor(query.ValidatorActor, newTestValidator),
-		GetGenericActor(query.ValidatorActor, GetTestValidator),
-		query.ValidatorActor)
+		NewTestGenericActor(schema.ValidatorActor, newTestValidator),
+		GetGenericActor(schema.ValidatorActor, GetTestValidator),
+		schema.ValidatorActor)
 }
 
 func TestInsertValidatorAndExists(t *testing.T) {

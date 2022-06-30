@@ -17,7 +17,7 @@ func (p PostgresContext) GetServiceNode(address []byte, height int64) (operator,
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedTokens
-	serviceURL = actor.GenericParam
+	serviceURL = actor.ActorSpecificParam
 	outputAddress = actor.OutputAddress
 	pausedHeight = actor.PausedHeight
 	unstakingHeight = actor.UnstakingHeight
@@ -27,23 +27,23 @@ func (p PostgresContext) GetServiceNode(address []byte, height int64) (operator,
 
 func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(schema.ServiceNodeActor, schema.GenericActor{
-		Address:         hex.EncodeToString(address),
-		PublicKey:       hex.EncodeToString(publicKey),
-		StakedTokens:    stakedTokens,
-		GenericParam:    serviceURL,
-		OutputAddress:   hex.EncodeToString(output),
-		PausedHeight:    pausedHeight,
-		UnstakingHeight: unstakingHeight,
-		Chains:          chains,
+		Address:            hex.EncodeToString(address),
+		PublicKey:          hex.EncodeToString(publicKey),
+		StakedTokens:       stakedTokens,
+		ActorSpecificParam: serviceURL,
+		OutputAddress:      hex.EncodeToString(output),
+		PausedHeight:       pausedHeight,
+		UnstakingHeight:    unstakingHeight,
+		Chains:             chains,
 	})
 }
 
 func (p PostgresContext) UpdateServiceNode(address []byte, serviceURL string, stakedTokens string, chains []string) error {
 	return p.UpdateActor(schema.ServiceNodeActor, schema.GenericActor{
-		Address:      hex.EncodeToString(address),
-		StakedTokens: stakedTokens,
-		GenericParam: serviceURL,
-		Chains:       chains,
+		Address:            hex.EncodeToString(address),
+		StakedTokens:       stakedTokens,
+		ActorSpecificParam: serviceURL,
+		Chains:             chains,
 	})
 }
 
@@ -57,7 +57,7 @@ func (p PostgresContext) GetServiceNodeCount(chain string, height int64) (int, e
 }
 
 func (p PostgresContext) GetServiceNodesReadyToUnstake(height int64, _ int) ([]*types.UnstakingActor, error) {
-	return p.ActorReadyToUnstakeWithChains(schema.ServiceNodeActor, height)
+	return p.GetActorsReadyToUnstake(schema.ServiceNodeActor, height)
 }
 
 func (p PostgresContext) GetServiceNodeStatus(address []byte, height int64) (int, error) {

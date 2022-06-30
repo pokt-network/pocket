@@ -2,7 +2,7 @@ package schema
 
 // Interface common to all protocol actors at the persistence schema layer. This exposes SQL specific
 // attributes and queries.
-type ProtocolActor interface {
+type ProtocolActorSchema interface {
 	/*** Protocol Actor Attributes ***/
 
 	// SQL Table Names

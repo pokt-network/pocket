@@ -17,7 +17,7 @@ func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicK
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedTokens
-	maxRelays = actor.GenericParam
+	maxRelays = actor.ActorSpecificParam
 	outputAddress = actor.OutputAddress
 	pauseHeight = actor.PausedHeight
 	unstakingHeight = actor.UnstakingHeight
@@ -27,23 +27,23 @@ func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicK
 
 func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []byte, _ bool, _ int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(schema.ApplicationActor, schema.GenericActor{
-		Address:         hex.EncodeToString(address),
-		PublicKey:       hex.EncodeToString(publicKey),
-		StakedTokens:    stakedTokens,
-		GenericParam:    maxRelays,
-		OutputAddress:   hex.EncodeToString(output),
-		PausedHeight:    pausedHeight,
-		UnstakingHeight: unstakingHeight,
-		Chains:          chains,
+		Address:            hex.EncodeToString(address),
+		PublicKey:          hex.EncodeToString(publicKey),
+		StakedTokens:       stakedTokens,
+		ActorSpecificParam: maxRelays,
+		OutputAddress:      hex.EncodeToString(output),
+		PausedHeight:       pausedHeight,
+		UnstakingHeight:    unstakingHeight,
+		Chains:             chains,
 	})
 }
 
 func (p PostgresContext) UpdateApp(address []byte, maxRelays string, stakedTokens string, chains []string) error {
 	return p.UpdateActor(schema.ApplicationActor, schema.GenericActor{
-		Address:      hex.EncodeToString(address),
-		StakedTokens: stakedTokens,
-		GenericParam: maxRelays,
-		Chains:       chains,
+		Address:            hex.EncodeToString(address),
+		StakedTokens:       stakedTokens,
+		ActorSpecificParam: maxRelays,
+		Chains:             chains,
 	})
 }
 
@@ -53,7 +53,7 @@ func (p PostgresContext) DeleteApp(_ []byte) error {
 }
 
 func (p PostgresContext) GetAppsReadyToUnstake(height int64, _ int) ([]*types.UnstakingActor, error) {
-	return p.ActorReadyToUnstakeWithChains(schema.ApplicationActor, height)
+	return p.GetActorsReadyToUnstake(schema.ApplicationActor, height)
 }
 
 func (p PostgresContext) GetAppStatus(address []byte, height int64) (int, error) {

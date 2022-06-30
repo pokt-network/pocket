@@ -892,7 +892,7 @@ func (p PostgresContext) InitParams() error {
 	return err
 }
 
-// TODO(team): Switch to generics
+// IMPROVE(team): Switch to generics
 func (p PostgresContext) SetParam(paramName string, paramValue interface{}) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {

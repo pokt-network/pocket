@@ -1,12 +1,12 @@
 package schema
 
-var _ ProtocolActor = &ValidatorSchema{}
+var _ ProtocolActorSchema = &ValidatorSchema{}
 
 type ValidatorSchema struct {
 	GenericProtocolActor
 }
 
-var ValidatorActor ProtocolActor = &ValidatorSchema{
+var ValidatorActor ProtocolActorSchema = &ValidatorSchema{
 	GenericProtocolActor: GenericProtocolActor{
 		tableName:       "validator",
 		chainsTableName: "", // intentionally empty

@@ -49,16 +49,16 @@ func AccountOrPoolSchema(mainColName, constraintName string) string {
 		)`, mainColName, BalanceCol, HeightCol, constraintName, mainColName, HeightCol)
 }
 
-func InsertAcc(genericParamName, genericParamValue, amount string, height int64, tableName, constraintName string) string {
+func InsertAcc(actorSpecificParam, actorSpecificParamValue, amount string, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s (%s, balance, height)
 			VALUES ('%s','%s',%d)
 			ON CONFLICT ON CONSTRAINT %s
 			DO UPDATE SET balance=EXCLUDED.balance, height=EXCLUDED.height
-		`, tableName, genericParamName, genericParamValue, amount, height, constraintName)
+		`, tableName, actorSpecificParam, actorSpecificParamValue, amount, height, constraintName)
 }
 
-func SelectBalance(genericParamName, genericParamValue string, height int64, tableName string) string {
+func SelectBalance(actorSpecificParam, actorSpecificParamValue string, height int64, tableName string) string {
 	return fmt.Sprintf(`SELECT balance FROM %s WHERE %s='%s' AND height<=%d ORDER BY height DESC LIMIT 1`,
-		tableName, genericParamName, genericParamValue, height)
+		tableName, actorSpecificParam, actorSpecificParamValue, height)
 }

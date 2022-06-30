@@ -51,7 +51,7 @@ func (pg *PostgresDB) GetContext() (context.Context, error) {
 	return context.TODO(), nil
 }
 
-var protocolActorSchemas = []schema.ProtocolActor{
+var protocolActorSchemas = []schema.ProtocolActorSchema{
 	schema.ApplicationActor,
 	schema.FishermanActor,
 	schema.ServiceNodeActor,
@@ -106,7 +106,7 @@ func InitializeAllTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func InitializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor schema.ProtocolActor) error {
+func InitializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor schema.ProtocolActorSchema) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, actor.GetTableName(), actor.GetTableSchema())); err != nil {
 		return err
 	}

@@ -1,17 +1,17 @@
 package schema
 
 type GenericActor struct {
-	Address         string
-	PublicKey       string
-	StakedTokens    string
-	GenericParam    string //
-	OutputAddress   string
-	PausedHeight    int64
-	UnstakingHeight int64
-	Chains          []string // IMPROVE: Consider creating a `type Chain string` for chains
+	Address            string
+	PublicKey          string
+	StakedTokens       string
+	ActorSpecificParam string // IMPROVE: May need to be refactored or converted to a list
+	OutputAddress      string
+	PausedHeight       int64
+	UnstakingHeight    int64
+	Chains             []string // IMPROVE: Consider creating a `type Chain string` for chains
 }
 
-var _ ProtocolActor = &GenericProtocolActor{}
+var _ ProtocolActorSchema = &GenericProtocolActor{}
 
 // Implements the ProtocolActor with behaviour that can be embedded (i.e. inherited) by other protocol
 // actors for a share implementation.

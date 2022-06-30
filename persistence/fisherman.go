@@ -17,7 +17,7 @@ func (p PostgresContext) GetFisherman(address []byte, height int64) (operator, p
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedTokens
-	serviceURL = actor.GenericParam
+	serviceURL = actor.ActorSpecificParam
 	outputAddress = actor.OutputAddress
 	pausedHeight = actor.PausedHeight
 	unstakingHeight = actor.UnstakingHeight
@@ -27,23 +27,23 @@ func (p PostgresContext) GetFisherman(address []byte, height int64) (operator, p
 
 func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(schema.FishermanActor, schema.GenericActor{
-		Address:         hex.EncodeToString(address),
-		PublicKey:       hex.EncodeToString(publicKey),
-		StakedTokens:    stakedTokens,
-		GenericParam:    serviceURL,
-		OutputAddress:   hex.EncodeToString(output),
-		PausedHeight:    pausedHeight,
-		UnstakingHeight: unstakingHeight,
-		Chains:          chains,
+		Address:            hex.EncodeToString(address),
+		PublicKey:          hex.EncodeToString(publicKey),
+		StakedTokens:       stakedTokens,
+		ActorSpecificParam: serviceURL,
+		OutputAddress:      hex.EncodeToString(output),
+		PausedHeight:       pausedHeight,
+		UnstakingHeight:    unstakingHeight,
+		Chains:             chains,
 	})
 }
 
 func (p PostgresContext) UpdateFisherman(address []byte, serviceURL string, stakedTokens string, chains []string) error {
 	return p.UpdateActor(schema.FishermanActor, schema.GenericActor{
-		Address:      hex.EncodeToString(address),
-		StakedTokens: stakedTokens,
-		GenericParam: serviceURL,
-		Chains:       chains,
+		Address:            hex.EncodeToString(address),
+		StakedTokens:       stakedTokens,
+		ActorSpecificParam: serviceURL,
+		Chains:             chains,
 	})
 }
 
@@ -53,7 +53,7 @@ func (p PostgresContext) DeleteFisherman(_ []byte) error {
 }
 
 func (p PostgresContext) GetFishermenReadyToUnstake(height int64, _ int) ([]*types.UnstakingActor, error) {
-	return p.ActorReadyToUnstakeWithChains(schema.FishermanActor, height)
+	return p.GetActorsReadyToUnstake(schema.FishermanActor, height)
 }
 
 func (p PostgresContext) GetFishermanStatus(address []byte, height int64) (status int, err error) {
