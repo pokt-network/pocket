@@ -13,9 +13,12 @@ import (
 
 type Config struct {
 	RootDir string `json:"root_dir"`
-	Genesis string `json:"genesis"` // TECHDEBT(olshansky): we should be able to pass the struct in here.
+	Genesis string `json:"genesis"` // FIXME(olshansky): we should be able to pass the struct in here.
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
+
+	EnableTelemetry bool   `json:"enable_telemetry"`
+	GlobalLogLevel  string `json:"global_log_level"`
 
 	Pre2P          *Pre2PConfig          `json:"pre2p"` // TECHDEBT(team): consolidate/replace this with P2P configs depending on next steps
 	P2P            *P2PConfig            `json:"p2p"`
@@ -23,6 +26,7 @@ type Config struct {
 	PrePersistence *PrePersistenceConfig `json:"pre_persistence"`
 	Persistence    *PersistenceConfig    `json:"persistence"`
 	Utility        *UtilityConfig        `json:"utility"`
+	Telemetry      *TelemetryConfig      `json:"telemetry"`
 }
 
 type ConnectionType string
@@ -37,12 +41,14 @@ type Pre2PConfig struct {
 	ConsensusPort  uint32         `json:"consensus_port"`
 	UseRainTree    bool           `json:"use_raintree"`
 	ConnectionType ConnectionType `json:"connection_type"`
+	LogLevel       string         `json:"log_level"`
 }
 
 type PrePersistenceConfig struct {
-	Capacity        int `json:"capacity"`
-	MempoolMaxBytes int `json:"mempool_max_bytes"`
-	MempoolMaxTxs   int `json:"mempool_max_txs"`
+	Capacity        int    `json:"capacity"`
+	MempoolMaxBytes int    `json:"mempool_max_bytes"`
+	MempoolMaxTxs   int    `json:"mempool_max_txs"`
+	LogLevel        string `json:"log_level"`
 }
 
 type P2PConfig struct {
@@ -57,6 +63,7 @@ type P2PConfig struct {
 	BufferSize       uint     `json:"connection_buffer_size"`
 	WireHeaderLength uint     `json:"max_wire_header_length"`
 	TimeoutInMs      uint     `json:"timeout_in_ms"`
+	LogLevel         string   `json:"log_level"`
 }
 
 type PacemakerConfig struct {
@@ -74,15 +81,24 @@ type ConsensusConfig struct {
 
 	// Pacemaker
 	Pacemaker *PacemakerConfig `json:"pacemaker"`
+
+	// The Log level for the consensus module
+	LogLevel string `json:"log_level"`
 }
 
 type PersistenceConfig struct {
 	DataDir     string `json:"datadir"`
 	PostgresUrl string `json:"postgres_url"`
 	NodeSchema  string `json:"schema"`
+	LogLevel    string `json:"log_level"`
 }
 
 type UtilityConfig struct {
+}
+
+type TelemetryConfig struct {
+	Address  string // The address that the telemetry module will use to listen for metrics pulling requests (e.g: 0.0.0.0:9000 for prometheus)
+	Endpoint string // the endpoint that will be provided to scrapers to fetch recorded metrics (e.g: /metrics for prometheus)
 }
 
 // TODO(insert tooling issue # here): Re-evaluate how load configs should be handeled.

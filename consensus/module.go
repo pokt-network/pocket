@@ -68,7 +68,8 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 	valIdMap, idValMap := typesCons.GetValAddrToIdMap(typesGenesis.GetNodeState(nil).ValidatorMap)
 
 	m := &consensusModule{
-		bus:        nil,
+		bus: nil,
+
 		privateKey: cfg.PrivateKey,
 		consCfg:    cfg.Consensus,
 
@@ -100,6 +101,15 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 }
 
 func (m *consensusModule) Start() error {
+	m.
+		GetBus().
+		GetTelemetryModule().
+		GetTimeSeriesAgent().
+		CounterRegister(
+			"consensus_blockchain_height",
+			"the counter to track the number of nodes online",
+		)
+
 	if err := m.paceMaker.Start(); err != nil {
 		return err
 	}
@@ -199,4 +209,8 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 
 	// Note that the leader also acts as a replica, but this logic is implemented in the underlying code.
 	leaderHandlers[msg.Step](m, msg)
+}
+
+func (m *consensusModule) GetBlockHeight() uint64 {
+	return m.Height
 }
