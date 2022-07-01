@@ -123,20 +123,7 @@ func TestGetFishermanStatus(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 
-	fisherman, err := newTestFisherman()
-	require.NoError(t, err)
-
-	err = db.InsertFisherman(
-		fisherman.Address,
-		fisherman.PublicKey,
-		fisherman.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultServiceUrl,
-		DefaultStake,
-		DefaultChains,
-		DefaultPauseHeight,
-		DefaultUnstakingHeight)
+	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
 
 	// Check status before the fisherman exists
@@ -170,38 +157,7 @@ func TestGetFishermanPauseHeightIfExists(t *testing.T) {
 	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
 }
 
-func TestSetFishermanStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *PostgresDB,
-	}
-
-	fisherman, err := newTestFisherman()
-	require.NoError(t, err)
-
-	err = db.InsertFisherman(
-		fisherman.Address,
-		fisherman.PublicKey,
-		fisherman.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultMaxRelays,
-		DefaultStake,
-		DefaultChains,
-		0,
-		DefaultUnstakingHeight)
-	require.NoError(t, err)
-
-	unstakingHeightSet := int64(0)
-	err = db.SetFishermanStatusAndUnstakingHeightIfPausedBefore(1, unstakingHeightSet, -1)
-	require.NoError(t, err)
-
-	_, _, _, _, _, unstakingHeight, _, _, err := db.GetFisherman(fisherman.Address, db.Height)
-	require.NoError(t, err)
-	require.Equal(t, unstakingHeightSet, unstakingHeight, "unstaking height was not set correctly")
-}
-
-func TestSetFishermanPauseHeightAndUnstake(t *testing.T) {
+func TestSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,

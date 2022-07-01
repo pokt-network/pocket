@@ -119,19 +119,7 @@ func TestGetValidatorStatus(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 
-	validator, err := newTestValidator()
-	require.NoError(t, err)
-
-	err = db.InsertValidator(
-		validator.Address,
-		validator.PublicKey,
-		validator.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultMaxRelays,
-		DefaultStake,
-		DefaultPauseHeight,
-		DefaultUnstakingHeight)
+	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
 
 	// Check status before the validator exists
@@ -165,39 +153,7 @@ func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
 }
 
-func TestSetValidatorStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *PostgresDB,
-	}
-
-	validator, err := newTestValidator()
-	require.NoError(t, err)
-
-	// address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight
-
-	err = db.InsertValidator(
-		validator.Address,
-		validator.PublicKey,
-		validator.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultServiceUrl,
-		DefaultStake,
-		0,
-		DefaultUnstakingHeight)
-	require.NoError(t, err)
-
-	unstakingHeightSet := int64(0)
-	err = db.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(1, unstakingHeightSet, -1)
-	require.NoError(t, err)
-
-	_, _, _, _, _, unstakingHeight, _, err := db.GetValidator(validator.Address, db.Height)
-	require.NoError(t, err)
-	require.Equal(t, unstakingHeightSet, unstakingHeight, "unstaking height was not set correctly")
-}
-
-func TestSetValidatorPauseHeightAndUnstake(t *testing.T) {
+func TestSetValidatorPauseHeightAndUnstakeLater(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,

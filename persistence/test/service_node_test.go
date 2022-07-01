@@ -123,20 +123,7 @@ func TestGetServiceNodeStatus(t *testing.T) {
 		DB:     *PostgresDB,
 	}
 
-	serviceNode, err := newTestServiceNode()
-	require.NoError(t, err)
-
-	err = db.InsertServiceNode(
-		serviceNode.Address,
-		serviceNode.PublicKey,
-		serviceNode.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultServiceUrl,
-		DefaultStake,
-		DefaultChains,
-		DefaultPauseHeight,
-		DefaultUnstakingHeight)
+	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
 
 	// Check status before the serviceNode exists
@@ -170,38 +157,7 @@ func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
 }
 
-func TestSetServiceNodeStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *PostgresDB,
-	}
-
-	serviceNode, err := newTestServiceNode()
-	require.NoError(t, err)
-
-	err = db.InsertServiceNode(
-		serviceNode.Address,
-		serviceNode.PublicKey,
-		serviceNode.Output,
-		false,
-		DefaultStakeStatus,
-		DefaultMaxRelays,
-		DefaultStake,
-		DefaultChains,
-		0,
-		DefaultUnstakingHeight)
-	require.NoError(t, err)
-
-	unstakingHeightSet := int64(0)
-	err = db.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(1, unstakingHeightSet, -1)
-	require.NoError(t, err)
-
-	_, _, _, _, _, unstakingHeight, _, _, err := db.GetServiceNode(serviceNode.Address, db.Height)
-	require.NoError(t, err)
-	require.Equal(t, unstakingHeightSet, unstakingHeight, "unstaking height was not set correctly")
-}
-
-func TestSetServiceNodePauseHeightAndUnstake(t *testing.T) {
+func TestSetServiceNodePauseHeightAndUnstakeLater(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
 		DB:     *PostgresDB,
