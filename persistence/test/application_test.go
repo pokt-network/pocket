@@ -14,7 +14,7 @@ import (
 func FuzzApplication(f *testing.F) {
 	fuzzSingleProtocolActor(f,
 		NewTestGenericActor(schema.ApplicationActor, newTestApp),
-		GetGenericActor(schema.ApplicationActor, GetTestApp),
+		GetGenericActor(schema.ApplicationActor, getTestApp),
 		schema.ApplicationActor)
 }
 
@@ -286,7 +286,7 @@ func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*typesGenes
 		DefaultUnstakingHeight)
 }
 
-func GetTestApp(db persistence.PostgresContext, address []byte) (*typesGenesis.App, error) {
+func getTestApp(db persistence.PostgresContext, address []byte) (*typesGenesis.App, error) {
 	operator, publicKey, stakedTokens, maxRelays, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetApp(address, db.Height)
 	if err != nil {
 		return nil, err

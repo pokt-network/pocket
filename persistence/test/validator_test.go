@@ -14,7 +14,7 @@ import (
 func FuzzValidator(f *testing.F) {
 	fuzzSingleProtocolActor(f,
 		NewTestGenericActor(schema.ValidatorActor, newTestValidator),
-		GetGenericActor(schema.ValidatorActor, GetTestValidator),
+		GetGenericActor(schema.ValidatorActor, getTestValidator),
 		schema.ValidatorActor)
 }
 
@@ -55,8 +55,6 @@ func TestUpdateValidator(t *testing.T) {
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
-
-	// operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, err := db.GetValidator(validator.Address, 0)
 
 	_, _, stakedTokens, _, _, _, _, err := db.GetValidator(validator.Address, 0)
 	require.NoError(t, err)
@@ -282,7 +280,7 @@ func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*type
 		DefaultUnstakingHeight)
 }
 
-func GetTestValidator(db persistence.PostgresContext, address []byte) (*typesGenesis.Validator, error) {
+func getTestValidator(db persistence.PostgresContext, address []byte) (*typesGenesis.Validator, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, err := db.GetValidator(address, db.Height)
 	if err != nil {
 		return nil, err

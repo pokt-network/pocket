@@ -125,4 +125,5 @@ These are major TODOs spanning the entire repo so they are documented here inste
 - [ ] Consider removing all `Set` methods (e.g. `SetAccountAmount`) and replace with `Add` (e.g. `AddAccountAmount`) by having it leverage a "default zero".
 - [ ] Use proper SQL migration methodoligies
 - [ ] Split account/pool into two actors sharing an interface & functionality
-- [ ] 
+- [ ] Organize the persistence module and find opportunities to simply
+- [ ] Eventually, expand the testing framework for true "end-to-end" scripts

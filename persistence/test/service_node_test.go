@@ -14,7 +14,7 @@ import (
 func FuzzServiceNode(f *testing.F) {
 	fuzzSingleProtocolActor(f,
 		NewTestGenericActor(schema.ServiceNodeActor, newTestServiceNode),
-		GetGenericActor(schema.ServiceNodeActor, GetTestServiceNode),
+		GetGenericActor(schema.ServiceNodeActor, getTestServiceNode),
 		schema.ServiceNodeActor)
 }
 
@@ -286,7 +286,7 @@ func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*ty
 		DefaultUnstakingHeight)
 }
 
-func GetTestServiceNode(db persistence.PostgresContext, address []byte) (*typesGenesis.ServiceNode, error) {
+func getTestServiceNode(db persistence.PostgresContext, address []byte) (*typesGenesis.ServiceNode, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetServiceNode(address, db.Height)
 	if err != nil {
 		return nil, err

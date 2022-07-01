@@ -19,7 +19,7 @@ func FuzzAccountAmount(f *testing.F) {
 		DB:     *PostgresDB,
 	}
 	ops := []string{"Add", "Sub", "Set", "NextHeight"}
-	acc := NewTestAccount(nil)
+	acc := newTestAccount(nil)
 	db.SetAccountAmount(acc.Address, DefaultAccountAmount)
 	expectedAmount := big.NewInt(DefaultAccountBig.Int64())
 	var delta *big.Int
@@ -65,7 +65,7 @@ func TestSetAccountAmount(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	acc := NewTestAccount(t)
+	acc := newTestAccount(t)
 	err := db.SetAccountAmount(acc.Address, DefaultStake)
 	require.NoError(t, err)
 	am, err := db.GetAccountAmount(acc.Address, db.Height)
@@ -83,7 +83,7 @@ func TestAddAccountAmount(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	acc := NewTestAccount(t)
+	acc := newTestAccount(t)
 	err := db.SetAccountAmount(acc.Address, DefaultStake)
 	require.NoError(t, err)
 	amountToAddBig := big.NewInt(100)
@@ -101,7 +101,7 @@ func TestSubAccountAmount(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	acc := NewTestAccount(t)
+	acc := newTestAccount(t)
 	err := db.SetAccountAmount(acc.Address, DefaultStake)
 	require.NoError(t, err)
 	amountToSubBig := big.NewInt(100)
@@ -121,7 +121,7 @@ func FuzzPoolAmount(f *testing.F) {
 		DB:     *PostgresDB,
 	}
 	ops := []string{"Add", "Sub", "Set", "NextHeight"}
-	acc := NewTestPool(nil)
+	acc := newTestPool(nil)
 	db.SetPoolAmount(acc.Name, DefaultAccountAmount)
 	expectedAmount := big.NewInt(DefaultAccountBig.Int64())
 	var delta *big.Int
@@ -167,7 +167,7 @@ func TestSetPoolAmount(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	pool := NewTestPool(t)
+	pool := newTestPool(t)
 	err := db.SetPoolAmount(pool.Name, DefaultStake)
 	require.NoError(t, err)
 	am, err := db.GetPoolAmount(pool.Name, db.Height)
@@ -185,7 +185,7 @@ func TestAddPoolAmount(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	pool := NewTestPool(t)
+	pool := newTestPool(t)
 	err := db.SetPoolAmount(pool.Name, DefaultStake)
 	require.NoError(t, err)
 	amountToAddBig := big.NewInt(100)
@@ -203,7 +203,7 @@ func TestSubPoolAmount(t *testing.T) {
 		Height: 0,
 		DB:     *PostgresDB,
 	}
-	pool := NewTestPool(t)
+	pool := newTestPool(t)
 	err := db.SetPoolAmount(pool.Name, DefaultStake)
 	require.NoError(t, err)
 	amountToSubBig := big.NewInt(100)
@@ -218,7 +218,7 @@ func TestSubPoolAmount(t *testing.T) {
 
 // --- Helpers ---
 
-func NewTestAccount(t *testing.T) typesGenesis.Account {
+func newTestAccount(t *testing.T) typesGenesis.Account {
 	addr, err := crypto.GenerateAddress()
 	if t != nil {
 		require.NoError(t, err)
@@ -229,7 +229,7 @@ func NewTestAccount(t *testing.T) typesGenesis.Account {
 	}
 }
 
-func NewTestPool(t *testing.T) typesGenesis.Pool {
+func newTestPool(t *testing.T) typesGenesis.Pool {
 	_, err := crypto.GenerateAddress()
 	if t != nil {
 		require.NoError(t, err)
