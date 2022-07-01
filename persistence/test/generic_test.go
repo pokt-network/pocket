@@ -19,8 +19,8 @@ func GetGenericActor[T any](protocolActorSchema schema.ProtocolActorSchema, getA
 		if err != nil {
 			return nil, err
 		}
-		genericActor := getActorValues(protocolActorSchema, reflect.Indirect(reflect.ValueOf(actor)))
-		return &genericActor, nil
+		baseActor := getActorValues(protocolActorSchema, reflect.Indirect(reflect.ValueOf(actor)))
+		return &baseActor, nil
 	}
 }
 
