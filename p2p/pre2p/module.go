@@ -5,14 +5,13 @@ package pre2p
 // to be a "real" replacement for now.
 
 import (
-	"log"
-
 	"github.com/pokt-network/pocket/p2p/pre2p/raintree"
 	"github.com/pokt-network/pocket/p2p/pre2p/stdnetwork"
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 
 	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/logging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
@@ -29,10 +28,14 @@ type p2pModule struct {
 	address  cryptoPocket.Address
 
 	network typesPre2P.Network
+
+	// used to keep around this configuration value until `Start` is called.
+	// That's when a logger is registered for this module, and that's when we need to properly set its level
+	logLevel logging.LogLevel
 }
 
 func Create(cfg *config.Config) (m modules.P2PModule, err error) {
-	log.Println("Creating network module")
+	logging.GetGlobalLogger().Info("pre2p: Creating network module")
 
 	l, err := CreateListener(cfg.Pre2P)
 	if err != nil {
@@ -53,10 +56,17 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 		network = stdnetwork.NewNetwork(addrBook)
 	}
 
+	pre2pLogLevel := logging.GetLevel(cfg.Pre2P.LogLevel)
+
+	if pre2pLogLevel == logging.LOG_LEVEL_NONE {
+		logging.GetGlobalLogger().Warn("pre2p: Configuration error: Invalid log level supplied. Suppressing logs using level=NONE")
+	}
+
 	m = &p2pModule{
 		listener: l,
 		network:  network,
 		address:  cfg.PrivateKey.Address(),
+		logLevel: pre2pLogLevel,
 	}
 
 	return m, nil
@@ -68,14 +78,30 @@ func (m *p2pModule) SetBus(bus modules.Bus) {
 
 func (m *p2pModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Printf("[WARN]: PocketBus is not initialized")
+		logging.GetGlobalLogger().Warn("pre2p: PocketBus is not initialized")
 		return nil
 	}
 	return m.bus
 }
 
+func (m *p2pModule) GetLogger() logging.Logger {
+	if m.bus != nil {
+		m.GetBus().GetTelemetryModule().LoggerGet(logging.P2P_NAMESPACE)
+	}
+
+	logging.GetGlobalLogger().Fatal("pre2p: Cannot retrieve pre2p bus logger. PocketBus is not initialized")
+	return nil
+}
+
 func (m *p2pModule) Start() error {
-	log.Println("Starting network module")
+	// DISCUSSION(team): how about exposing the logger, telemetry, and other modules functionality through injected-context.
+	// I will reduce code footprint and redundancy significantly (ctx.logger.) (ctx.metrics.) (etc...)
+	m.
+		GetBus().
+		GetTelemetryModule().
+		LoggerRegister(logging.P2P_NAMESPACE, m.logLevel)
+
+	m.GetLogger().Info("Starting network module")
 
 	m.
 		GetBus().
@@ -92,7 +118,7 @@ func (m *p2pModule) Start() error {
 		for {
 			data, err := m.listener.Read()
 			if err != nil {
-				log.Println("Error reading data from connection: ", err)
+				m.GetLogger().Error("Error reading data from connection: ", err)
 				continue
 			}
 			go m.handleNetworkMessage(data)
@@ -109,7 +135,7 @@ func (m *p2pModule) Start() error {
 }
 
 func (m *p2pModule) Stop() error {
-	log.Println("Stopping network module")
+	m.GetLogger().Info("Stopping network module")
 	if err := m.listener.Close(); err != nil {
 		return err
 	}
@@ -125,7 +151,8 @@ func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
 	if err != nil {
 		return err
 	}
-	log.Println("broadcasting message to network")
+
+	m.GetLogger().Info("broadcasting message to network")
 
 	return m.network.NetworkBroadcast(data)
 }
@@ -146,20 +173,20 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	appMsgData, err := m.network.HandleNetworkData(networkMsgData)
 	if err != nil {
-		log.Println("Error handling raw data: ", err)
+		m.GetLogger().Error("Error handling raw data: ", err)
 		return
 	}
 
 	// There was no error, but we don't need to forward this to the app-specific bus.
 	// For example, the message has already been handled by the application.
 	if appMsgData == nil {
-		// log.Println("[DEBUG] No app-specific message to forward from the network")
+		m.GetLogger().Debug("No app-specific message to forward from the network")
 		return
 	}
 
 	networkMessage := types.PocketEvent{}
 	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
-		log.Println("Error decoding network message: ", err)
+		m.GetLogger().Error("Error decoding network message: ", err)
 		return
 	}
 

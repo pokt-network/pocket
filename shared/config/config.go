@@ -17,7 +17,8 @@ type Config struct {
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 
-	EnableTelemetry bool `json:"enable_telemetry"`
+	EnableTelemetry bool   `json:"enable_telemetry"`
+	GlobalLogLevel  string `json:"global_log_level"`
 
 	Pre2P          *Pre2PConfig          `json:"pre2p"` // TECHDEBT(team): consolidate/replace this with P2P configs depending on next steps
 	P2P            *P2PConfig            `json:"p2p"`
@@ -40,12 +41,14 @@ type Pre2PConfig struct {
 	ConsensusPort  uint32         `json:"consensus_port"`
 	UseRainTree    bool           `json:"use_raintree"`
 	ConnectionType ConnectionType `json:"connection_type"`
+	LogLevel       string         `json:"log_level"`
 }
 
 type PrePersistenceConfig struct {
-	Capacity        int `json:"capacity"`
-	MempoolMaxBytes int `json:"mempool_max_bytes"`
-	MempoolMaxTxs   int `json:"mempool_max_txs"`
+	Capacity        int    `json:"capacity"`
+	MempoolMaxBytes int    `json:"mempool_max_bytes"`
+	MempoolMaxTxs   int    `json:"mempool_max_txs"`
+	LogLevel        string `json:"log_level"`
 }
 
 type P2PConfig struct {
@@ -60,6 +63,7 @@ type P2PConfig struct {
 	BufferSize       uint     `json:"connection_buffer_size"`
 	WireHeaderLength uint     `json:"max_wire_header_length"`
 	TimeoutInMs      uint     `json:"timeout_in_ms"`
+	LogLevel         string   `json:"log_level"`
 }
 
 type PacemakerConfig struct {
@@ -77,12 +81,16 @@ type ConsensusConfig struct {
 
 	// Pacemaker
 	Pacemaker *PacemakerConfig `json:"pacemaker"`
+
+	// The Log level for the consensus module
+	LogLevel string `json:"log_level"`
 }
 
 type PersistenceConfig struct {
 	DataDir     string `json:"datadir"`
 	PostgresUrl string `json:"postgres_url"`
 	NodeSchema  string `json:"schema"`
+	LogLevel    string `json:"log_level"`
 }
 
 type UtilityConfig struct {

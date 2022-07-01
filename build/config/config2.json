@@ -6,7 +6,8 @@
   "pre2p": {
     "consensus_port": 8080,
     "use_raintree": true,
-    "connection_type": "tcp"
+    "connection_type": "tcp",
+    "log_level": "all"
   },
   "p2p": {
     "protocol": "tcp",
@@ -17,7 +18,8 @@
       "172.18.0.1:8082",
       "172.18.0.1:8083",
       "172.18.0.1:8084"
-    ]
+    ],
+    "log_level": "debug"
   },
   "consensus": {
     "max_mempool_bytes": 500000000,
@@ -26,16 +28,19 @@
       "timeout_msec": 5000,
       "manual": true,
       "debug_time_between_steps_msec": 1000
-    }
+    },
+    "log_level": "debug"
   },
   "pre_persistence": {
     "capacity": 99999,
     "mempool_max_bytes": 99999,
-    "mempool_max_txs": 99999
+    "mempool_max_txs": 99999,
+    "log_level": "info"
   },
   "persistence": {
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
-    "schema": "node2"
+    "schema": "node2",
+    "log_level": "info"
   },
   "utility": {},
   "telemetry": {
