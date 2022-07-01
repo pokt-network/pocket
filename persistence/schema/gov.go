@@ -7,7 +7,8 @@ import (
 	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
-const ( // TODO (Team) - I'm sure there's obvious optimizations here
+// TODO(team): There's obviously a better solution here. Just do it.
+const (
 	ParamsTableName   = "param"
 	ParamsTableSchema = `(
 		blocks_per_session INT NOT NULL,
@@ -132,42 +133,127 @@ const ( // TODO (Team) - I'm sure there's obvious optimizations here
 	)`
 )
 
-func NullifyParamsQuery(height int64) string {
-	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE end_height=%d`, ParamsTableName, height, DefaultEndHeight)
-}
+var (
+	SQLColumnNames = []string{
+		"blocks_per_session",
 
-func SetParam(paramName string, paramValue interface{}, height int64) string {
-	paramNames := GetParamNames()
-	pNamesLen := len(paramNames)
-	var index int
-	// TODO (Team) optimize linear search
-	for i, s := range paramNames {
-		if s == paramName {
-			index = i
-		}
+		"app_minimum_stake",
+		"app_max_chains",
+		"app_baseline_stake_rate",
+		"app_staking_adjustment",
+		"app_unstaking_blocks",
+		"app_minimum_pause_blocks",
+		"app_max_pause_blocks",
+
+		"service_node_minimum_stake",
+		"service_node_max_chains",
+		"service_node_unstaking_blocks",
+		"service_node_minimum_pause_blocks",
+		"service_node_max_pause_blocks",
+		"service_nodes_per_session",
+
+		"fisherman_minimum_stake",
+		"fisherman_max_chains",
+		"fisherman_unstaking_blocks",
+		"fisherman_minimum_pause_blocks",
+		"fisherman_max_pause_blocks",
+
+		"validator_minimum_stake",
+		"validator_unstaking_blocks",
+		"validator_minimum_pause_blocks",
+		"validator_max_pause_blocks",
+		"validator_maximum_missed_blocks",
+
+		"validator_max_evidence_age_in_blocks",
+		"proposer_percentage_of_fees",
+		"missed_blocks_burn_percentage",
+		"double_sign_burn_percentage",
+
+		"message_double_sign_fee",
+		"message_send_fee",
+		"message_stake_fisherman_fee",
+		"message_edit_stake_fisherman_fee",
+		"message_unstake_fisherman_fee",
+		"message_pause_fisherman_fee",
+		"message_unpause_fisherman_fee",
+		"message_fisherman_pause_service_node_fee",
+		"message_test_score_fee",
+		"message_prove_test_score_fee",
+		"message_stake_app_fee",
+		"message_edit_stake_app_fee",
+		"message_unstake_app_fee",
+		"message_pause_app_fee",
+		"message_unpause_app_fee",
+		"message_stake_validator_fee",
+		"message_edit_stake_validator_fee",
+		"message_unstake_validator_fee",
+		"message_pause_validator_fee",
+		"message_unpause_validator_fee",
+		"message_stake_service_node_fee",
+		"message_edit_stake_service_node_fee",
+		"message_unstake_service_node_fee",
+		"message_pause_service_node_fee",
+		"message_unpause_service_node_fee",
+		"message_change_parameter_fee",
+
+		"acl_owner",
+		"blocks_per_session_owner",
+		"app_minimum_stake_owner",
+		"app_max_chains_owner",
+		"app_baseline_stake_rate_owner",
+		"app_staking_adjustment_owner",
+		"app_unstaking_blocks_owner",
+		"app_minimum_pause_blocks_owner",
+		"app_max_paused_blocks_owner",
+		"service_node_minimum_stake_owner",
+		"service_node_max_chains_owner",
+		"service_node_unstaking_blocks_owner",
+		"service_node_minimum_pause_blocks_owner",
+		"service_node_max_paused_blocks_owner",
+		"service_nodes_per_session_owner",
+		"fisherman_minimum_stake_owner",
+		"fisherman_max_chains_owner",
+		"fisherman_unstaking_blocks_owner",
+		"fisherman_minimum_pause_blocks_owner",
+		"fisherman_max_paused_blocks_owner",
+		"validator_minimum_stake_owner",
+		"validator_unstaking_blocks_owner",
+		"validator_minimum_pause_blocks_owner",
+		"validator_max_paused_blocks_owner",
+		"validator_maximum_missed_blocks_owner",
+		"validator_max_evidence_age_in_blocks_owner",
+		"proposer_percentage_of_fees_owner",
+		"missed_blocks_burn_percentage_owner",
+		"double_sign_burn_percentage_owner",
+		"message_double_sign_fee_owner",
+		"message_send_fee_owner",
+		"message_stake_fisherman_fee_owner",
+		"message_edit_stake_fisherman_fee_owner",
+		"message_unstake_fisherman_fee_owner",
+		"message_pause_fisherman_fee_owner",
+		"message_unpause_fisherman_fee_owner",
+		"message_fisherman_pause_service_node_fee_owner",
+		"message_test_score_fee_owner",
+		"message_prove_test_score_fee_owner",
+		"message_stake_app_fee_owner",
+		"message_edit_stake_app_fee_owner",
+		"message_unstake_app_fee_owner",
+		"message_pause_app_fee_owner",
+		"message_unpause_app_fee_owner",
+		"message_stake_validator_fee_owner",
+		"message_edit_stake_validator_fee_owner",
+		"message_unstake_validator_fee_owner",
+		"message_pause_validator_fee_owner",
+		"message_unpause_validator_fee_owner",
+		"message_stake_service_node_fee_owner",
+		"message_edit_stake_service_node_fee_owner",
+		"message_unstake_service_node_fee_owner",
+		"message_pause_service_node_fee_owner",
+		"message_unpause_service_node_fee_owner",
+		"message_change_parameter_fee_owner",
+		"end_height",
 	}
-	switch v := paramValue.(type) {
-	case int, int32, int64:
-		paramNames[index] = fmt.Sprintf("%d", v)
-	case []byte:
-		paramNames[index] = fmt.Sprintf("'%s'", hex.EncodeToString(v))
-	case string:
-		paramNames[index] = fmt.Sprintf("'%s'", v)
-	default:
-		panic("unknown param value")
-	}
-	subQuery := `SELECT `
-	maxIndex := pNamesLen - 1
-	for i, pn := range paramNames {
-		if i == maxIndex {
-			subQuery += "-1"
-		} else {
-			subQuery += fmt.Sprintf("%s,", pn)
-		}
-	}
-	subQuery += fmt.Sprintf(` FROM %s WHERE end_height=%d`, ParamsTableName, height)
-	return fmt.Sprintf(`INSERT INTO %s((%s))`, ParamsTableName, subQuery)
-}
+)
 
 func InsertParams(params *genesis.Params) string {
 	return fmt.Sprintf(`INSERT INTO %s VALUES(%d, '%s', %d, %d, %d, %d, %d, %d,
@@ -313,127 +399,42 @@ func GetParamNames() (paramNames []string) {
 	return
 }
 
-var (
-	SQLColumnNames = []string{
-		"blocks_per_session",
+func NullifyParamsQuery(height int64) string {
+	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE end_height=%d`, ParamsTableName, height, DefaultEndHeight)
+}
 
-		"app_minimum_stake",
-		"app_max_chains",
-		"app_baseline_stake_rate",
-		"app_staking_adjustment",
-		"app_unstaking_blocks",
-		"app_minimum_pause_blocks",
-		"app_max_pause_blocks",
-
-		"service_node_minimum_stake",
-		"service_node_max_chains",
-		"service_node_unstaking_blocks",
-		"service_node_minimum_pause_blocks",
-		"service_node_max_pause_blocks",
-		"service_nodes_per_session",
-
-		"fisherman_minimum_stake",
-		"fisherman_max_chains",
-		"fisherman_unstaking_blocks",
-		"fisherman_minimum_pause_blocks",
-		"fisherman_max_pause_blocks",
-
-		"validator_minimum_stake",
-		"validator_unstaking_blocks",
-		"validator_minimum_pause_blocks",
-		"validator_max_pause_blocks",
-		"validator_maximum_missed_blocks",
-
-		"validator_max_evidence_age_in_blocks",
-		"proposer_percentage_of_fees",
-		"missed_blocks_burn_percentage",
-		"double_sign_burn_percentage",
-
-		"message_double_sign_fee",
-		"message_send_fee",
-		"message_stake_fisherman_fee",
-		"message_edit_stake_fisherman_fee",
-		"message_unstake_fisherman_fee",
-		"message_pause_fisherman_fee",
-		"message_unpause_fisherman_fee",
-		"message_fisherman_pause_service_node_fee",
-		"message_test_score_fee",
-		"message_prove_test_score_fee",
-		"message_stake_app_fee",
-		"message_edit_stake_app_fee",
-		"message_unstake_app_fee",
-		"message_pause_app_fee",
-		"message_unpause_app_fee",
-		"message_stake_validator_fee",
-		"message_edit_stake_validator_fee",
-		"message_unstake_validator_fee",
-		"message_pause_validator_fee",
-		"message_unpause_validator_fee",
-		"message_stake_service_node_fee",
-		"message_edit_stake_service_node_fee",
-		"message_unstake_service_node_fee",
-		"message_pause_service_node_fee",
-		"message_unpause_service_node_fee",
-		"message_change_parameter_fee",
-
-		"acl_owner",
-		"blocks_per_session_owner",
-		"app_minimum_stake_owner",
-		"app_max_chains_owner",
-		"app_baseline_stake_rate_owner",
-		"app_staking_adjustment_owner",
-		"app_unstaking_blocks_owner",
-		"app_minimum_pause_blocks_owner",
-		"app_max_paused_blocks_owner",
-		"service_node_minimum_stake_owner",
-		"service_node_max_chains_owner",
-		"service_node_unstaking_blocks_owner",
-		"service_node_minimum_pause_blocks_owner",
-		"service_node_max_paused_blocks_owner",
-		"service_nodes_per_session_owner",
-		"fisherman_minimum_stake_owner",
-		"fisherman_max_chains_owner",
-		"fisherman_unstaking_blocks_owner",
-		"fisherman_minimum_pause_blocks_owner",
-		"fisherman_max_paused_blocks_owner",
-		"validator_minimum_stake_owner",
-		"validator_unstaking_blocks_owner",
-		"validator_minimum_pause_blocks_owner",
-		"validator_max_paused_blocks_owner",
-		"validator_maximum_missed_blocks_owner",
-		"validator_max_evidence_age_in_blocks_owner",
-		"proposer_percentage_of_fees_owner",
-		"missed_blocks_burn_percentage_owner",
-		"double_sign_burn_percentage_owner",
-		"message_double_sign_fee_owner",
-		"message_send_fee_owner",
-		"message_stake_fisherman_fee_owner",
-		"message_edit_stake_fisherman_fee_owner",
-		"message_unstake_fisherman_fee_owner",
-		"message_pause_fisherman_fee_owner",
-		"message_unpause_fisherman_fee_owner",
-		"message_fisherman_pause_service_node_fee_owner",
-		"message_test_score_fee_owner",
-		"message_prove_test_score_fee_owner",
-		"message_stake_app_fee_owner",
-		"message_edit_stake_app_fee_owner",
-		"message_unstake_app_fee_owner",
-		"message_pause_app_fee_owner",
-		"message_unpause_app_fee_owner",
-		"message_stake_validator_fee_owner",
-		"message_edit_stake_validator_fee_owner",
-		"message_unstake_validator_fee_owner",
-		"message_pause_validator_fee_owner",
-		"message_unpause_validator_fee_owner",
-		"message_stake_service_node_fee_owner",
-		"message_edit_stake_service_node_fee_owner",
-		"message_unstake_service_node_fee_owner",
-		"message_pause_service_node_fee_owner",
-		"message_unpause_service_node_fee_owner",
-		"message_change_parameter_fee_owner",
-		"end_height",
+func SetParam(paramName string, paramValue interface{}, height int64) string {
+	paramNames := GetParamNames()
+	pNamesLen := len(paramNames)
+	var index int
+	// TODO (Team) optimize linear search
+	for i, s := range paramNames {
+		if s == paramName {
+			index = i
+		}
 	}
-)
+	switch v := paramValue.(type) {
+	case int, int32, int64:
+		paramNames[index] = fmt.Sprintf("%d", v)
+	case []byte:
+		paramNames[index] = fmt.Sprintf("'%s'", hex.EncodeToString(v))
+	case string:
+		paramNames[index] = fmt.Sprintf("'%s'", v)
+	default:
+		panic("unknown param value")
+	}
+	subQuery := `SELECT `
+	maxIndex := pNamesLen - 1
+	for i, pn := range paramNames {
+		if i == maxIndex {
+			subQuery += "-1"
+		} else {
+			subQuery += fmt.Sprintf("%s,", pn)
+		}
+	}
+	subQuery += fmt.Sprintf(` FROM %s WHERE end_height=%d`, ParamsTableName, height)
+	return fmt.Sprintf(`INSERT INTO %s((%s))`, ParamsTableName, subQuery)
+}
 
 func ClearAllGovQuery() string {
 	return fmt.Sprintf(`DELETE FROM %s`, ParamsTableName)

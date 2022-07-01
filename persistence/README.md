@@ -127,3 +127,4 @@ These are major TODOs spanning the entire repo so they are documented here inste
 - [ ] Split account/pool into two actors sharing an interface & functionality
 - [ ] Organize the persistence module and find opportunities to simply
 - [ ] Eventually, expand the testing framework for true "end-to-end" scripts
+- [ ] Refactor everything `gov param` related using generics. Code can be easily reduced 10x.
