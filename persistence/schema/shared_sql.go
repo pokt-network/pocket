@@ -12,9 +12,11 @@ const (
 	DefaultUnstakingHeight = -1 // INTHISCOMMIT: Can we delete these because we no longer use end_height = 1?
 	DefaultEndHeight       = -1
 	DefaultPausedHeight    = -1
+
 	// Common SQL selectors
 	AllColsSelector  = "*"
 	AnyValueSelector = "1"
+
 	// Common column names
 	AddressCol         = "address"
 	BalanceCol         = "balance"

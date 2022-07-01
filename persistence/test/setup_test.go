@@ -131,6 +131,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+// IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
 func fuzzSingleProtocolActor(
 	f *testing.F,
 	newTestActor func() (schema.BaseActor, error),
@@ -151,6 +152,7 @@ func fuzzSingleProtocolActor(
 	err = db.InsertActor(protocolActorSchema, actor)
 	require.NoError(f, err)
 
+	// IMPROVE(team): Extend this to make sure we have full code coverage of the persistence context operations.
 	operations := []string{
 		"UpdateActor",
 
