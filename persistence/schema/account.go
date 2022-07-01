@@ -2,7 +2,6 @@ package schema
 
 import "fmt"
 
-// DISCUSS(team): To improve readability, should we split `account` and `pool` into smaller pieces?
 const (
 	AccountTableName        = "account"
 	AccountHeightConstraint = "account_create_height"

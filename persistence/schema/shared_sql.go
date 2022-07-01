@@ -91,7 +91,7 @@ func ReadyToUnstake(unstakingHeight int64, tableName string) string {
 }
 
 func Insert(
-	actor GenericActor,
+	actor BaseActor,
 	actorSpecificParam, actorSpecificParamValue,
 	constraintName, chainsConstraintName,
 	tableName, chainsTableName string,

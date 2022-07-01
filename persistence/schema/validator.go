@@ -3,11 +3,11 @@ package schema
 var _ ProtocolActorSchema = &ValidatorSchema{}
 
 type ValidatorSchema struct {
-	GenericProtocolActor
+	BaseProtocolActorSchema
 }
 
 var ValidatorActor ProtocolActorSchema = &ValidatorSchema{
-	GenericProtocolActor: GenericProtocolActor{
+	BaseProtocolActorSchema: BaseProtocolActorSchema{
 		tableName:       "validator",
 		chainsTableName: "", // intentionally empty
 
@@ -27,7 +27,7 @@ func (actor *ValidatorSchema) GetChainsQuery(address string, height int64) strin
 }
 
 func (actor *ValidatorSchema) InsertQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string {
-	return Insert(GenericActor{
+	return Insert(BaseActor{
 		Address:         address,
 		PublicKey:       publicKey,
 		StakedTokens:    stakedTokens,

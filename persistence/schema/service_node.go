@@ -3,11 +3,11 @@ package schema
 var _ ProtocolActorSchema = &ServiceNodeSchema{}
 
 type ServiceNodeSchema struct {
-	GenericProtocolActor
+	BaseProtocolActorSchema
 }
 
 var ServiceNodeActor ProtocolActorSchema = &ServiceNodeSchema{
-	GenericProtocolActor: GenericProtocolActor{
+	BaseProtocolActorSchema: BaseProtocolActorSchema{
 		tableName:       "service_node",
 		chainsTableName: "service_node_chains",
 

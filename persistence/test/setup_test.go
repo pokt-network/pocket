@@ -133,8 +133,8 @@ func TestMain(m *testing.M) {
 
 func fuzzSingleProtocolActor(
 	f *testing.F,
-	newTestActor func() (schema.GenericActor, error),
-	getTestActor func(db persistence.PostgresContext, address string) (*schema.GenericActor, error),
+	newTestActor func() (schema.BaseActor, error),
+	getTestActor func(db persistence.PostgresContext, address string) (*schema.BaseActor, error),
 	protocolActorSchema schema.ProtocolActorSchema) {
 
 	db := persistence.PostgresContext{
@@ -205,7 +205,7 @@ func fuzzSingleProtocolActor(
 					}
 				}
 			}
-			updatedActor := schema.GenericActor{
+			updatedActor := schema.BaseActor{
 				Address:            originalActor.Address,
 				PublicKey:          originalActor.PublicKey,
 				StakedTokens:       newStakedTokens,

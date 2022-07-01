@@ -3,11 +3,11 @@ package schema
 var _ ProtocolActorSchema = &FishermanSchema{}
 
 type FishermanSchema struct {
-	GenericProtocolActor
+	BaseProtocolActorSchema
 }
 
 var FishermanActor ProtocolActorSchema = &FishermanSchema{
-	GenericProtocolActor: GenericProtocolActor{
+	BaseProtocolActorSchema: BaseProtocolActorSchema{
 		tableName:       "fisherman",
 		chainsTableName: "fisherman_chains",
 

@@ -41,7 +41,7 @@ func (p *PostgresContext) GetExists(actorSchema schema.ProtocolActorSchema, addr
 	return
 }
 
-func (p *PostgresContext) GetActor(actorSchema schema.ProtocolActorSchema, address []byte, height int64) (actor schema.GenericActor, err error) {
+func (p *PostgresContext) GetActor(actorSchema schema.ProtocolActorSchema, address []byte, height int64) (actor schema.BaseActor, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return
@@ -82,7 +82,7 @@ func (p *PostgresContext) GetActor(actorSchema schema.ProtocolActorSchema, addre
 	return
 }
 
-func (p *PostgresContext) InsertActor(actorSchema schema.ProtocolActorSchema, actor schema.GenericActor) error {
+func (p *PostgresContext) InsertActor(actorSchema schema.ProtocolActorSchema, actor schema.BaseActor) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err
@@ -100,7 +100,7 @@ func (p *PostgresContext) InsertActor(actorSchema schema.ProtocolActorSchema, ac
 	return err
 }
 
-func (p *PostgresContext) UpdateActor(actorSchema schema.ProtocolActorSchema, actor schema.GenericActor) error {
+func (p *PostgresContext) UpdateActor(actorSchema schema.ProtocolActorSchema, actor schema.BaseActor) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err

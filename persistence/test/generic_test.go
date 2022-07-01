@@ -9,8 +9,8 @@ import (
 	"github.com/pokt-network/pocket/persistence/schema"
 )
 
-func GetGenericActor[T any](protocolActorSchema schema.ProtocolActorSchema, getActor func(persistence.PostgresContext, []byte) (T, error)) func(persistence.PostgresContext, string) (*schema.GenericActor, error) {
-	return func(db persistence.PostgresContext, address string) (*schema.GenericActor, error) {
+func GetGenericActor[T any](protocolActorSchema schema.ProtocolActorSchema, getActor func(persistence.PostgresContext, []byte) (T, error)) func(persistence.PostgresContext, string) (*schema.BaseActor, error) {
+	return func(db persistence.PostgresContext, address string) (*schema.BaseActor, error) {
 		addr, err := hex.DecodeString(address)
 		if err != nil {
 			return nil, err
@@ -24,17 +24,17 @@ func GetGenericActor[T any](protocolActorSchema schema.ProtocolActorSchema, getA
 	}
 }
 
-func NewTestGenericActor[T any](protocolActorSchema schema.ProtocolActorSchema, newActor func() (T, error)) func() (schema.GenericActor, error) {
-	return func() (schema.GenericActor, error) {
+func NewTestGenericActor[T any](protocolActorSchema schema.ProtocolActorSchema, newActor func() (T, error)) func() (schema.BaseActor, error) {
+	return func() (schema.BaseActor, error) {
 		actor, err := newActor()
 		if err != nil {
-			return schema.GenericActor{}, err
+			return schema.BaseActor{}, err
 		}
 		return getActorValues(protocolActorSchema, reflect.Indirect(reflect.ValueOf(actor))), nil
 	}
 }
 
-func getActorValues(protocolActorSchema schema.ProtocolActorSchema, actorValue reflect.Value) schema.GenericActor {
+func getActorValues(protocolActorSchema schema.ProtocolActorSchema, actorValue reflect.Value) schema.BaseActor {
 	chains := make([]string, 0)
 	if actorValue.FieldByName("Chains").Kind() != 0 {
 		chains = actorValue.FieldByName("Chains").Interface().([]string)
@@ -42,7 +42,7 @@ func getActorValues(protocolActorSchema schema.ProtocolActorSchema, actorValue r
 
 	actorSpecificParam := strcase.ToCamel(protocolActorSchema.GetActorSpecificColName())
 
-	return schema.GenericActor{
+	return schema.BaseActor{
 		Address:            hex.EncodeToString(actorValue.FieldByName("Address").Bytes()),
 		PublicKey:          hex.EncodeToString(actorValue.FieldByName("PublicKey").Bytes()),
 		StakedTokens:       actorValue.FieldByName("StakedTokens").String(),

@@ -3,11 +3,11 @@ package schema
 var _ ProtocolActorSchema = &ApplicationSchema{}
 
 type ApplicationSchema struct {
-	GenericProtocolActor
+	BaseProtocolActorSchema
 }
 
 var ApplicationActor ProtocolActorSchema = &ApplicationSchema{
-	GenericProtocolActor: GenericProtocolActor{
+	BaseProtocolActorSchema: BaseProtocolActorSchema{
 		tableName:       "app",
 		chainsTableName: "app_chains",
 
