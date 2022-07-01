@@ -38,12 +38,16 @@ func TestGetServiceNodeExists(t *testing.T) {
 		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	exists, err := ctx.GetServiceNodeExists(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	exists, err := ctx.GetServiceNodeExists(actor.Address, height)
 	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor that should exists does not")
 	}
-	exists, err = ctx.GetServiceNodeExists(addr2)
+	exists, err = ctx.GetServiceNodeExists(addr2, height)
 	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor that exists should not")
@@ -57,7 +61,11 @@ func TestGetServiceNode(t *testing.T) {
 		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	got, _, err := ctx.(*PrePersistenceContext).GetServiceNode(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, _, err := ctx.(*PrePersistenceContext).GetServiceNode(actor.Address, height)
 	require.NoError(t, err)
 	if !bytes.Equal(actor.Address, got.Address) || !bytes.Equal(actor.PublicKey, got.PublicKey) {
 		t.Fatalf("unexpected actor returned; expected %v got %v", actor, got)
@@ -102,14 +110,18 @@ func TestUpdateServiceNode(t *testing.T) {
 	zero := types.BigIntToString(big.NewInt(0))
 	bigExpectedTokens := big.NewInt(1)
 	one := types.BigIntToString(bigExpectedTokens)
-	before, _, err := ctx.(*PrePersistenceContext).GetServiceNode(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	before, _, err := ctx.(*PrePersistenceContext).GetServiceNode(actor.Address, height)
 	require.NoError(t, err)
 	tokens := before.StakedTokens
 	bigBeforeTokens, err := types.StringToBigInt(tokens)
 	require.NoError(t, err)
 	err = ctx.UpdateServiceNode(actor.Address, zero, one, typesGenesis.DefaultChains)
 	require.NoError(t, err)
-	got, _, err := ctx.(*PrePersistenceContext).GetServiceNode(actor.Address)
+	got, _, err := ctx.(*PrePersistenceContext).GetServiceNode(actor.Address, height)
 	require.NoError(t, err)
 	bigAfterTokens, err := types.StringToBigInt(got.StakedTokens)
 	require.NoError(t, err)
@@ -128,7 +140,11 @@ func TestDeleteServiceNode(t *testing.T) {
 	}
 	err := ctx.DeleteServiceNode(actor.Address)
 	require.NoError(t, err)
-	exists, err := ctx.(*PrePersistenceContext).GetServiceNodeExists(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	exists, err := ctx.(*PrePersistenceContext).GetServiceNodeExists(actor.Address, height)
 	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor exists when it shouldn't")
@@ -159,7 +175,11 @@ func TestGetServiceNodeStatus(t *testing.T) {
 		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	status, err := ctx.GetServiceNodeStatus(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	status, err := ctx.GetServiceNodeStatus(actor.Address, height)
 	require.NoError(t, err)
 	if status != int(actor.Status) {
 		t.Fatal("unequal status")
@@ -176,7 +196,11 @@ func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 	pausedHeight := 1
 	err := ctx.SetServiceNodePauseHeight(actor.Address, int64(pausedHeight))
 	require.NoError(t, err)
-	pauseBeforeHeight, err := ctx.GetServiceNodePauseHeightIfExists(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	pauseBeforeHeight, err := ctx.GetServiceNodePauseHeightIfExists(actor.Address, height)
 	require.NoError(t, err)
 	if pausedHeight != int(pauseBeforeHeight) {
 		t.Fatalf("incorrect pause height: expected %v, got %v", pausedHeight, pauseBeforeHeight)
@@ -193,7 +217,11 @@ func TestSetServiceNodeStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
 	pauseBeforeHeight, unstakingHeight, status := int64(1), int64(10), 1
 	err := ctx.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pauseBeforeHeight, unstakingHeight, status)
 	require.NoError(t, err)
-	got, _, err := ctx.(*PrePersistenceContext).GetServiceNode(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, _, err := ctx.(*PrePersistenceContext).GetServiceNode(actor.Address, height)
 	require.NoError(t, err)
 	if got.UnstakingHeight != unstakingHeight {
 		t.Fatalf("wrong unstaking height: expected %v, got %v", unstakingHeight, got.UnstakingHeight)
@@ -210,7 +238,11 @@ func TestGetServiceNodeOutputAddress(t *testing.T) {
 		actor.ServiceUrl, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	output, err := ctx.GetServiceNodeOutputAddress(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	output, err := ctx.GetServiceNodeOutputAddress(actor.Address, height)
 	require.NoError(t, err)
 	if !bytes.Equal(actor.Output, output) {
 		t.Fatalf("incorrect output address expected %v, got %v", actor.Output, output)

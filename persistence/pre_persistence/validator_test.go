@@ -37,12 +37,16 @@ func TestGetValidatorExists(t *testing.T) {
 		actor.ServiceUrl, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	exists, err := ctx.GetValidatorExists(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	exists, err := ctx.GetValidatorExists(actor.Address, height)
 	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor that should exists does not")
 	}
-	exists, err = ctx.GetValidatorExists(addr2)
+	exists, err = ctx.GetValidatorExists(addr2, height)
 	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor that exists should not")
@@ -56,7 +60,11 @@ func TestGetValidator(t *testing.T) {
 		actor.ServiceUrl, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	got, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address, height)
 	require.NoError(t, err)
 	if !bytes.Equal(actor.Address, got.Address) || !bytes.Equal(actor.PublicKey, got.PublicKey) {
 		t.Fatalf("unexpected actor returned; expected %v got %v", actor, got)
@@ -100,14 +108,18 @@ func TestUpdateValidator(t *testing.T) {
 	}
 	bigExpectedTokens := big.NewInt(1)
 	one := types.BigIntToString(bigExpectedTokens)
-	before, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	before, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address, height)
 	require.NoError(t, err)
 	tokens := before.StakedTokens
 	bigBeforeTokens, err := types.StringToBigInt(tokens)
 	require.NoError(t, err)
 	err = ctx.UpdateValidator(actor.Address, typesGenesis.DefaultServiceUrl, one)
 	require.NoError(t, err)
-	got, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address)
+	got, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address, height)
 	require.NoError(t, err)
 	bigAfterTokens, err := types.StringToBigInt(got.StakedTokens)
 	require.NoError(t, err)
@@ -126,7 +138,11 @@ func TestDeleteValidator(t *testing.T) {
 	}
 	err := ctx.DeleteValidator(actor.Address)
 	require.NoError(t, err)
-	exists, err := ctx.(*PrePersistenceContext).GetValidatorExists(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	exists, err := ctx.(*PrePersistenceContext).GetValidatorExists(actor.Address, height)
 	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor exists when it shouldn't")
@@ -157,7 +173,11 @@ func TestGetValidatorStatus(t *testing.T) {
 		actor.ServiceUrl, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	status, err := ctx.GetValidatorStatus(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	status, err := ctx.GetValidatorStatus(actor.Address, height)
 	require.NoError(t, err)
 	if status != int(actor.Status) {
 		t.Fatal("unequal status")
@@ -174,7 +194,11 @@ func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 	pausedHeight := 1
 	err := ctx.SetValidatorPauseHeight(actor.Address, int64(pausedHeight))
 	require.NoError(t, err)
-	pauseBeforeHeight, err := ctx.GetValidatorPauseHeightIfExists(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	pauseBeforeHeight, err := ctx.GetValidatorPauseHeightIfExists(actor.Address, height)
 	require.NoError(t, err)
 	if pausedHeight != int(pauseBeforeHeight) {
 		t.Fatalf("incorrect pause height: expected %v, got %v", pausedHeight, pauseBeforeHeight)
@@ -191,7 +215,11 @@ func TestSetValidatorsStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
 	pauseBeforeHeight, unstakingHeight, status := int64(1), int64(10), 1
 	err := ctx.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pauseBeforeHeight, unstakingHeight, status)
 	require.NoError(t, err)
-	got, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, _, err := ctx.(*PrePersistenceContext).GetValidator(actor.Address, height)
 	require.NoError(t, err)
 	if got.UnstakingHeight != unstakingHeight {
 		t.Fatalf("wrong unstaking height: expected %v, got %v", unstakingHeight, got.UnstakingHeight)
@@ -208,7 +236,11 @@ func TestGetValidatorOutputAddress(t *testing.T) {
 		actor.ServiceUrl, actor.StakedTokens, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	output, err := ctx.GetValidatorOutputAddress(actor.Address)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	output, err := ctx.GetValidatorOutputAddress(actor.Address, height)
 	require.NoError(t, err)
 	if !bytes.Equal(actor.Output, output) {
 		t.Fatalf("incorrect output address expected %v, got %v", actor.Output, output)

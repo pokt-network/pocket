@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func (m *PrePersistenceContext) GetAppExists(address []byte) (exists bool, err error) {
+func (m *PrePersistenceContext) GetAppExists(address []byte, height int64) (exists bool, err error) {
 	db := m.Store()
 	key := append(AppPrefixKey, address...)
 	if found := db.Contains(key); !found {
@@ -30,7 +30,7 @@ func (m *PrePersistenceContext) GetAppExists(address []byte) (exists bool, err e
 	return true, nil
 }
 
-func (m *PrePersistenceContext) GetApp(address []byte) (app *typesGenesis.App, err error) {
+func (m *PrePersistenceContext) GetApp(address []byte, height int64) (app *typesGenesis.App, err error) {
 	app = &typesGenesis.App{}
 	db := m.Store()
 	key := append(AppPrefixKey, address...)
@@ -83,7 +83,11 @@ func (m *PrePersistenceContext) GetAllApps(height int64) (apps []*typesGenesis.A
 }
 
 func (m *PrePersistenceContext) InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
-	if exists, _ := m.GetAppExists(address); exists {
+	height, err := m.GetHeight()
+	if err != nil {
+		return err
+	}
+	if exists, _ := m.GetAppExists(address, height); exists {
 		return fmt.Errorf("already exists in world state")
 	}
 	codec := types.GetCodec()
@@ -109,7 +113,11 @@ func (m *PrePersistenceContext) InsertApp(address []byte, publicKey []byte, outp
 }
 
 func (m *PrePersistenceContext) UpdateApp(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error {
-	app, err := m.GetApp(address)
+	height, err := m.GetHeight()
+	if err != nil {
+		return err
+	}
+	app, err := m.GetApp(address, height)
 	if err != nil {
 		return err
 	}
@@ -148,7 +156,11 @@ func (m *PrePersistenceContext) UpdateApp(address []byte, maxRelaysToAdd string,
 }
 
 func (m *PrePersistenceContext) DeleteApp(address []byte) error {
-	exists, err := m.GetAppExists(address)
+	height, err := m.GetHeight()
+	if err != nil {
+		return err
+	}
+	exists, err := m.GetAppExists(address, height)
 	if err != nil {
 		return err
 	}
@@ -183,8 +195,8 @@ func (m *PrePersistenceContext) GetAppsReadyToUnstake(height int64, _ int) (apps
 	return
 }
 
-func (m *PrePersistenceContext) GetAppStatus(address []byte) (status int, err error) {
-	app, err := m.GetApp(address)
+func (m *PrePersistenceContext) GetAppStatus(address []byte, height int64) (status int, err error) {
+	app, err := m.GetApp(address, height)
 	if err != nil {
 		return types.ZeroInt, err
 	}
@@ -195,7 +207,11 @@ func (m *PrePersistenceContext) GetAppStatus(address []byte) (status int, err er
 }
 
 func (m *PrePersistenceContext) SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error {
-	app, err := m.GetApp(address)
+	height, err := m.GetHeight()
+	if err != nil {
+		return err
+	}
+	app, err := m.GetApp(address, height)
 	if err != nil {
 		return err
 	}
@@ -237,8 +253,8 @@ func (m *PrePersistenceContext) SetAppUnstakingHeightAndStatus(address []byte, u
 	return db.Put(unstakingKey, unstakingBz)
 }
 
-func (m *PrePersistenceContext) GetAppPauseHeightIfExists(address []byte) (int64, error) {
-	app, err := m.GetApp(address)
+func (m *PrePersistenceContext) GetAppPauseHeightIfExists(address []byte, height int64) (int64, error) {
+	app, err := m.GetApp(address, height)
 	if err != nil {
 		return types.ZeroInt, err
 	}
@@ -287,7 +303,7 @@ func (m *PrePersistenceContext) SetAppStatusAndUnstakingHeightIfPausedBefore(pau
 func (m *PrePersistenceContext) SetAppPauseHeight(address []byte, height int64) error {
 	codec := types.GetCodec()
 	db := m.Store()
-	app, err := m.GetApp(address)
+	app, err := m.GetApp(address, height)
 	if err != nil {
 		return err
 	}
@@ -307,8 +323,8 @@ func (m *PrePersistenceContext) SetAppPauseHeight(address []byte, height int64) 
 	return db.Put(append(AppPrefixKey, address...), bz)
 }
 
-func (m *PrePersistenceContext) GetAppOutputAddress(operator []byte) (output []byte, err error) {
-	app, err := m.GetApp(operator)
+func (m *PrePersistenceContext) GetAppOutputAddress(operator []byte, height int64) (output []byte, err error) {
+	app, err := m.GetApp(operator, height)
 	if err != nil {
 		return nil, err
 	}

@@ -111,6 +111,6 @@ func (p PostgresContext) SetValidatorMissedBlocks(address []byte, missedBlocks i
 }
 
 // TODO(team): implement missed blocks
-func (p PostgresContext) GetValidatorMissedBlocks(address []byte) (int, error) {
+func (p PostgresContext) GetValidatorMissedBlocks(address []byte, height int64) (int, error) {
 	return 0, nil
 }

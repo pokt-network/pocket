@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func (m *PrePersistenceContext) GetFishermanExists(address []byte) (exists bool, err error) {
+func (m *PrePersistenceContext) GetFishermanExists(address []byte, height int64) (exists bool, err error) {
 	db := m.Store()
 	key := append(FishermanPrefixKey, address...)
 	if found := db.Contains(key); !found {
@@ -30,7 +30,7 @@ func (m *PrePersistenceContext) GetFishermanExists(address []byte) (exists bool,
 	return true, nil
 }
 
-func (m *PrePersistenceContext) GetFisherman(address []byte) (fish *typesGenesis.Fisherman, exists bool, err error) {
+func (m *PrePersistenceContext) GetFisherman(address []byte, height int64) (fish *typesGenesis.Fisherman, exists bool, err error) {
 	fish = &typesGenesis.Fisherman{}
 	db := m.Store()
 	key := append(FishermanPrefixKey, address...)
@@ -83,7 +83,11 @@ func (m *PrePersistenceContext) GetAllFishermen(height int64) (fishermen []*type
 }
 
 func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
-	if _, exists, _ := m.GetFisherman(address); exists {
+	height, err := m.GetHeight()
+	if err != nil {
+		return err
+	}
+	if _, exists, _ := m.GetFisherman(address, height); exists {
 		return fmt.Errorf("already exists in world state")
 	}
 	codec := types.GetCodec()
@@ -109,7 +113,11 @@ func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte
 }
 
 func (m *PrePersistenceContext) UpdateFisherman(address []byte, serviceURL string, amountToAdd string, chains []string) error {
-	fish, exists, _ := m.GetFisherman(address)
+	height, err := m.GetHeight()
+	if err != nil {
+		return err
+	}
+	fish, exists, _ := m.GetFisherman(address, height)
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
@@ -138,7 +146,11 @@ func (m *PrePersistenceContext) UpdateFisherman(address []byte, serviceURL strin
 }
 
 func (m *PrePersistenceContext) DeleteFisherman(address []byte) error {
-	if exists, _ := m.GetFishermanExists(address); !exists {
+	height, err := m.GetHeight()
+	if err != nil {
+		return err
+	}
+	if exists, _ := m.GetFishermanExists(address, height); !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
 	db := m.Store()
@@ -167,8 +179,8 @@ func (m *PrePersistenceContext) GetFishermenReadyToUnstake(height int64, status 
 	return
 }
 
-func (m *PrePersistenceContext) GetFishermanStatus(address []byte) (status int, err error) {
-	fish, exists, err := m.GetFisherman(address)
+func (m *PrePersistenceContext) GetFishermanStatus(address []byte, height int64) (status int, err error) {
+	fish, exists, err := m.GetFisherman(address, height)
 	if err != nil {
 		return types.ZeroInt, err
 	}
@@ -179,7 +191,11 @@ func (m *PrePersistenceContext) GetFishermanStatus(address []byte) (status int, 
 }
 
 func (m *PrePersistenceContext) SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error {
-	fish, exists, err := m.GetFisherman(address)
+	height, err := m.GetHeight()
+	if err != nil {
+		return err
+	}
+	fish, exists, err := m.GetFisherman(address, height)
 	if err != nil {
 		return err
 	}
@@ -221,8 +237,8 @@ func (m *PrePersistenceContext) SetFishermanUnstakingHeightAndStatus(address []b
 	return db.Put(unstakingKey, unstakingBz)
 }
 
-func (m *PrePersistenceContext) GetFishermanPauseHeightIfExists(address []byte) (int64, error) {
-	fish, exists, err := m.GetFisherman(address)
+func (m *PrePersistenceContext) GetFishermanPauseHeightIfExists(address []byte, height int64) (int64, error) {
+	fish, exists, err := m.GetFisherman(address, height)
 	if err != nil {
 		return types.ZeroInt, err
 	}
@@ -271,7 +287,7 @@ func (m *PrePersistenceContext) SetFishermanStatusAndUnstakingHeightIfPausedBefo
 func (m *PrePersistenceContext) SetFishermanPauseHeight(address []byte, height int64) error {
 	codec := types.GetCodec()
 	db := m.Store()
-	fish, exists, err := m.GetFisherman(address)
+	fish, exists, err := m.GetFisherman(address, height)
 	if err != nil {
 		return err
 	}
@@ -291,8 +307,8 @@ func (m *PrePersistenceContext) SetFishermanPauseHeight(address []byte, height i
 	return db.Put(append(FishermanPrefixKey, address...), bz)
 }
 
-func (m *PrePersistenceContext) GetFishermanOutputAddress(operator []byte) (output []byte, err error) {
-	fish, exists, err := m.GetFisherman(operator)
+func (m *PrePersistenceContext) GetFishermanOutputAddress(operator []byte, height int64) (output []byte, err error) {
+	fish, exists, err := m.GetFisherman(operator, height)
 	if err != nil {
 		return nil, err
 	}

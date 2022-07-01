@@ -41,7 +41,7 @@ type PersistenceContext interface {
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error
 	SubtractPoolAmount(name string, amount string) error
-	GetPoolAmount(name string) (amount string, err error)
+	GetPoolAmount(name string, height int64) (amount string, err error)
 	SetPoolAmount(name string, amount string) error
 
 	InsertPool(name string, address []byte, amount string) error
@@ -49,71 +49,71 @@ type PersistenceContext interface {
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error
 	SubtractAccountAmount(address []byte, amount string) error
-	GetAccountAmount(address []byte) (string, error)
+	GetAccountAmount(address []byte, height int64) (string, error)
 	SetAccountAmount(address []byte, amount string) error // TECHDEBT(team): Delete this function
 
 	// App Operations
-	GetAppExists(address []byte) (exists bool, err error)
+	GetAppExists(address []byte, height int64) (exists bool, err error)
 	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateApp(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error
 	DeleteApp(address []byte) error
-	GetAppsReadyToUnstake(Height int64, status int) (apps []*types.UnstakingActor, err error)
-	GetAppStatus(address []byte) (status int, err error)
+	GetAppsReadyToUnstake(height int64, status int) (apps []*types.UnstakingActor, err error)
+	GetAppStatus(address []byte, height int64) (status int, err error)
 	SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
-	GetAppPauseHeightIfExists(address []byte) (int64, error)
+	GetAppPauseHeightIfExists(address []byte, height int64) (int64, error)
 	SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetAppPauseHeight(address []byte, height int64) error
-	GetAppOutputAddress(operator []byte) (output []byte, err error)
+	GetAppOutputAddress(operator []byte, height int64) (output []byte, err error)
 
 	// ServiceNode Operations
-	GetServiceNodeExists(address []byte) (exists bool, err error)
+	GetServiceNodeExists(address []byte, height int64) (exists bool, err error)
 	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateServiceNode(address []byte, serviceURL string, amountToAdd string, chains []string) error
 	DeleteServiceNode(address []byte) error
-	GetServiceNodesReadyToUnstake(Height int64, status int) (ServiceNodes []*types.UnstakingActor, err error)
-	GetServiceNodeStatus(address []byte) (status int, err error)
+	GetServiceNodesReadyToUnstake(height int64, status int) (serviceNodes []*types.UnstakingActor, err error)
+	GetServiceNodeStatus(address []byte, height int64) (status int, err error)
 	SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
-	GetServiceNodePauseHeightIfExists(address []byte) (int64, error)
+	GetServiceNodePauseHeightIfExists(address []byte, height int64) (int64, error)
 	SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetServiceNodePauseHeight(address []byte, height int64) error
-	GetServiceNodeOutputAddress(operator []byte) (output []byte, err error)
+	GetServiceNodeOutputAddress(operator []byte, height int64) (output []byte, err error)
 
 	GetServiceNodeCount(chain string, height int64) (int, error)
 	GetServiceNodesPerSessionAt(height int64) (int, error)
 
 	// Fisherman Operations
-	GetFishermanExists(address []byte) (exists bool, err error)
+	GetFishermanExists(address []byte, height int64) (exists bool, err error)
 	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateFisherman(address []byte, serviceURL string, amountToAdd string, chains []string) error
 	DeleteFisherman(address []byte) error
-	GetFishermenReadyToUnstake(Height int64, status int) (Fishermans []*types.UnstakingActor, err error)
-	GetFishermanStatus(address []byte) (status int, err error)
+	GetFishermenReadyToUnstake(height int64, status int) (fishermen []*types.UnstakingActor, err error)
+	GetFishermanStatus(address []byte, height int64) (status int, err error)
 	SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
-	GetFishermanPauseHeightIfExists(address []byte) (int64, error)
+	GetFishermanPauseHeightIfExists(address []byte, height int64) (int64, error)
 	SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetFishermanPauseHeight(address []byte, height int64) error
-	GetFishermanOutputAddress(operator []byte) (output []byte, err error)
+	GetFishermanOutputAddress(operator []byte, height int64) (output []byte, err error)
 
 	// Validator Operations
-	GetValidatorExists(address []byte) (exists bool, err error)
+	GetValidatorExists(address []byte, height int64) (exists bool, err error)
 	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error
 	UpdateValidator(address []byte, serviceURL string, amountToAdd string) error
 	DeleteValidator(address []byte) error
-	GetValidatorsReadyToUnstake(Height int64, status int) (Validators []*types.UnstakingActor, err error)
-	GetValidatorStatus(address []byte) (status int, err error)
+	GetValidatorsReadyToUnstake(height int64, status int) (validators []*types.UnstakingActor, err error)
+	GetValidatorStatus(address []byte, height int64) (status int, err error)
 	SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
-	GetValidatorPauseHeightIfExists(address []byte) (int64, error)
+	GetValidatorPauseHeightIfExists(address []byte, height int64) (int64, error)
 	SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetValidatorPauseHeight(address []byte, height int64) error
-	GetValidatorOutputAddress(operator []byte) (output []byte, err error)
+	GetValidatorOutputAddress(operator []byte, height int64) (output []byte, err error)
 
 	SetValidatorPauseHeightAndMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) error
 
 	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
-	GetValidatorMissedBlocks(address []byte) (int, error)
+	GetValidatorMissedBlocks(address []byte, height int64) (int, error)
 
 	SetValidatorStakedTokens(address []byte, tokens string) error
-	GetValidatorStakedTokens(address []byte) (tokens string, err error)
+	GetValidatorStakedTokens(address []byte, height int64) (tokens string, err error)
 
 	/* TODO(olshansky): review/revisit this in more details */
 

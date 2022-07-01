@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func (m *PrePersistenceContext) GetServiceNode(address []byte) (sn *typesGenesis.ServiceNode, exists bool, err error) {
+func (m *PrePersistenceContext) GetServiceNode(address []byte, height int64) (sn *typesGenesis.ServiceNode, exists bool, err error) {
 	sn = &typesGenesis.ServiceNode{}
 	db := m.Store()
 	key := append(ServiceNodePrefixKey, address...)
@@ -64,7 +64,11 @@ func (m *PrePersistenceContext) GetAllServiceNodes(height int64) (sns []*typesGe
 }
 
 func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
-	if _, exists, _ := m.GetServiceNode(address); exists {
+	height, err := m.GetHeight()
+	if err != nil {
+		return err
+	}
+	if _, exists, _ := m.GetServiceNode(address, height); exists {
 		return fmt.Errorf("already exists in world state")
 	}
 	codec := types.GetCodec()
@@ -90,7 +94,11 @@ func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []by
 }
 
 func (m *PrePersistenceContext) UpdateServiceNode(address []byte, serviceURL string, amountToAdd string, chains []string) error {
-	sn, exists, _ := m.GetServiceNode(address)
+	height, err := m.GetHeight()
+	if err != nil {
+		return err
+	}
+	sn, exists, _ := m.GetServiceNode(address, height)
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
@@ -119,7 +127,11 @@ func (m *PrePersistenceContext) UpdateServiceNode(address []byte, serviceURL str
 }
 
 func (m *PrePersistenceContext) DeleteServiceNode(address []byte) error {
-	if exists, _ := m.GetServiceNodeExists(address); !exists {
+	height, err := m.GetHeight()
+	if err != nil {
+		return err
+	}
+	if exists, _ := m.GetServiceNodeExists(address, height); !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
 	db := m.Store()
@@ -127,7 +139,7 @@ func (m *PrePersistenceContext) DeleteServiceNode(address []byte) error {
 	return db.Put(key, DeletedPrefixKey)
 }
 
-func (m *PrePersistenceContext) GetServiceNodeExists(address []byte) (exists bool, err error) {
+func (m *PrePersistenceContext) GetServiceNodeExists(address []byte, height int64) (exists bool, err error) {
 	db := m.Store()
 	key := append(ServiceNodePrefixKey, address...)
 	if found := db.Contains(key); !found {
@@ -169,8 +181,8 @@ func (m *PrePersistenceContext) GetServiceNodesReadyToUnstake(height int64, stat
 	return
 }
 
-func (m *PrePersistenceContext) GetServiceNodeStatus(address []byte) (status int, err error) {
-	sn, exists, err := m.GetServiceNode(address)
+func (m *PrePersistenceContext) GetServiceNodeStatus(address []byte, height int64) (status int, err error) {
+	sn, exists, err := m.GetServiceNode(address, height)
 	if err != nil {
 		return types.ZeroInt, err
 	}
@@ -181,7 +193,11 @@ func (m *PrePersistenceContext) GetServiceNodeStatus(address []byte) (status int
 }
 
 func (m *PrePersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error {
-	sn, exists, err := m.GetServiceNode(address)
+	height, err := m.GetHeight()
+	if err != nil {
+		return err
+	}
+	sn, exists, err := m.GetServiceNode(address, height)
 	if err != nil {
 		return err
 	}
@@ -223,8 +239,8 @@ func (m *PrePersistenceContext) SetServiceNodeUnstakingHeightAndStatus(address [
 	return db.Put(unstakingKey, unstakingBz)
 }
 
-func (m *PrePersistenceContext) GetServiceNodePauseHeightIfExists(address []byte) (int64, error) {
-	sn, exists, err := m.GetServiceNode(address)
+func (m *PrePersistenceContext) GetServiceNodePauseHeightIfExists(address []byte, height int64) (int64, error) {
+	sn, exists, err := m.GetServiceNode(address, height)
 	if err != nil {
 		return types.ZeroInt, err
 	}
@@ -273,7 +289,7 @@ func (m *PrePersistenceContext) SetServiceNodeStatusAndUnstakingHeightIfPausedBe
 func (m *PrePersistenceContext) SetServiceNodePauseHeight(address []byte, height int64) error {
 	codec := types.GetCodec()
 	db := m.Store()
-	sn, exists, err := m.GetServiceNode(address)
+	sn, exists, err := m.GetServiceNode(address, height)
 	if err != nil {
 		return err
 	}
@@ -337,8 +353,8 @@ func (m *PrePersistenceContext) GetServiceNodeCount(chain string, height int64) 
 	return count, nil
 }
 
-func (m *PrePersistenceContext) GetServiceNodeOutputAddress(operator []byte) (output []byte, err error) {
-	sn, exists, err := m.GetServiceNode(operator)
+func (m *PrePersistenceContext) GetServiceNodeOutputAddress(operator []byte, height int64) (output []byte, err error) {
+	sn, exists, err := m.GetServiceNode(operator, height)
 	if err != nil {
 		return nil, err
 	}

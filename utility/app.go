@@ -260,7 +260,11 @@ func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.
 
 func (u *UtilityContext) GetAppExists(address []byte) (bool, types.Error) {
 	store := u.Store()
-	exists, er := store.GetAppExists(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return false, types.ErrGetExists(er)
+	}
+	exists, er := store.GetAppExists(address, height)
 	if er != nil {
 		return false, types.ErrGetExists(er)
 	}
@@ -322,7 +326,11 @@ func (u *UtilityContext) UnstakeAppsPausedBefore(pausedBeforeHeight int64) types
 
 func (u *UtilityContext) GetAppStatus(address []byte) (int, types.Error) {
 	store := u.Store()
-	status, er := store.GetAppStatus(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return typesUtil.ZeroInt, types.ErrGetStatus(er)
+	}
+	status, er := store.GetAppStatus(address, height)
 	if er != nil {
 		return typesUtil.ZeroInt, types.ErrGetStatus(er)
 	}
@@ -339,7 +347,11 @@ func (u *UtilityContext) SetAppUnstakingHeightAndStatus(address []byte, unstakin
 
 func (u *UtilityContext) GetAppPauseHeightIfExists(address []byte) (int64, types.Error) {
 	store := u.Store()
-	appPauseHeight, er := store.GetAppPauseHeightIfExists(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
+	}
+	appPauseHeight, er := store.GetAppPauseHeightIfExists(address, height)
 	if er != nil {
 		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
 	}
@@ -423,7 +435,11 @@ func (u *UtilityContext) GetMessagePauseAppSignerCandidates(msg *typesUtil.Messa
 
 func (u *UtilityContext) GetAppOutputAddress(operator []byte) ([]byte, types.Error) {
 	store := u.Store()
-	output, er := store.GetAppOutputAddress(operator)
+	height, er := store.GetHeight()
+	if er != nil {
+		return nil, types.ErrGetOutputAddress(operator, er)
+	}
+	output, er := store.GetAppOutputAddress(operator, height)
 	if er != nil {
 		return nil, types.ErrGetOutputAddress(operator, er)
 	}

@@ -103,7 +103,7 @@ func (m *PrePersistenceContext) SetPoolAmount(name string, amount string) error 
 	return db.Put(key, bz)
 }
 
-func (m *PrePersistenceContext) GetPoolAmount(name string) (amount string, err error) {
+func (m *PrePersistenceContext) GetPoolAmount(name string, height int64) (amount string, err error) {
 	codec := types.GetCodec()
 	p := typesGenesis.Pool{}
 	db := m.Store()
@@ -202,7 +202,7 @@ func (m *PrePersistenceContext) SubtractAccountAmount(address []byte, amount str
 	return m.operationAccountAmount(address, amount, sub)
 }
 
-func (m *PrePersistenceContext) GetAccountAmount(address []byte) (string, error) {
+func (m *PrePersistenceContext) GetAccountAmount(address []byte, height int64) (string, error) {
 	codec := types.GetCodec()
 	account := typesGenesis.Account{}
 	db := m.Store()

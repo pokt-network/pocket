@@ -28,7 +28,11 @@ func TestAddPoolAmount(t *testing.T) {
 	if err := ctx.AddPoolAmount(testPoolName, addedBalance); err != nil {
 		t.Fatal(err)
 	}
-	actualBalance, err := ctx.GetPoolAmount(testPoolName)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	actualBalance, err := ctx.GetPoolAmount(testPoolName, height)
 	require.NoError(t, err)
 	if actualBalance != expectedBalance {
 		t.Fatalf("not equal balances, expected: %s got %s", expectedBalance, actualBalance)
@@ -49,7 +53,11 @@ func TestSubtractPoolAmount(t *testing.T) {
 	if err := ctx.SubtractPoolAmount(testPoolName, subBalance); err != nil {
 		t.Fatal(err)
 	}
-	actualBalance, err := ctx.GetPoolAmount(testPoolName)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	actualBalance, err := ctx.GetPoolAmount(testPoolName, height)
 	require.NoError(t, err)
 	if actualBalance != expectedBalance {
 		t.Fatalf("not equal balances, expected: %s got %s", expectedBalance, actualBalance)
@@ -68,7 +76,11 @@ func TestSetPoolAmount(t *testing.T) {
 	if err := ctx.SetPoolAmount(testPoolName, setBalance); err != nil {
 		t.Fatal(err)
 	}
-	actualBalance, err := ctx.GetPoolAmount(testPoolName)
+	height, err := ctx.GetHeight()
+	if err != nil {
+		t.Fatal(err)
+	}
+	actualBalance, err := ctx.GetPoolAmount(testPoolName, height)
 	require.NoError(t, err)
 	if actualBalance != setBalance {
 		t.Fatalf("not equal balances, expected: %s got %s", setBalance, actualBalance)
