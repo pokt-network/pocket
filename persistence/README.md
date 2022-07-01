@@ -16,7 +16,7 @@ This document is meant to be a supplement to the living specification of [1.0 Po
     - [Setup Issue - Docker Daemon is not Running](#setup-issue---docker-daemon-is-not-running-1)
   - [Unit Tests](#unit-tests)
 - [Implementation FAQ](#implementation-faq)
-- [Implementation TODO(team)](#implementation-todoteam)
+- [Implementation TODOs](#implementation-todos)
 
 ## Database Migrations
 
@@ -109,22 +109,29 @@ $ make test_persistence
 
 Q: Why not use an ORM?
 
-## Implementation TODO(team)
+## Implementation TODOs
 
-These are major TODOs spanning the entire repo so they are documented here instead.
+These are major TODOs spanning the entire repo so they are documented in one place instead.
 
-- [ ] DOCUMENT(team): Need to do a better job at documenting the process of paused apps being turned into unstaking apps.
-- [ ] Remove unused parameters from the PostgresContext interface (see where \_ is used in the implementation e.g. `InsertFisherman`)
-- [ ] Benchmark the queries (especially the ones that need to do sorting
-- [ ] Consider converting all address params from bytes to string to avoid unnecessary encoding
-- [ ] Look into `address` being a computed field in most Postgres tables
-- [ ] Figure out how to handle conflicts while having multiple constraints with Postgres
-- [ ] Remove all the SQL strings and use a proper query builder
-- [ ] Remove all the SQL strings and consider using prepared statements
-- [ ] Convert all queries to use 'height' in the interface for historical lookups
-- [ ] Consider removing all `Set` methods (e.g. `SetAccountAmount`) and replace with `Add` (e.g. `AddAccountAmount`) by having it leverage a "default zero".
-- [ ] Use proper SQL migration methodoligies
-- [ ] Split account/pool into two actors sharing an interface & functionality
-- [ ] Organize the persistence module and find opportunities to simply
-- [ ] Eventually, expand the testing framework for true "end-to-end" scripts
-- [ ] Refactor everything `gov param` related using generics. Code can be easily reduced 10x.
+Short-term (i.e. simpler starter) tasks:
+
+- [ ] DOCUMENT: Need to do a better job at documenting the process of paused apps being turned into unstaking apps.
+- [ ] CLEANUP: Remove unused parameters from `the PostgresContext` interface (i.e. see where \_ is used in the implementation such as in `InsertFisherman`)
+- [ ] IMPROVE: Consider converting all address params from bytes to string to avoid unnecessary encoding
+- [ ] CLEANUP: Review all the `gov_*.go` related files and simplify the code
+- [ ] REFACTOR/DISCUSS: Should we prefix the functions in the `PersistenceModule` with the Param / Actor it's impacting to make autocomplete in implementation better?
+- [ ] DISCUSS: Consider removing all `Set` methods (e.g. `SetAccountAmount`) and replace with `Add` (e.g. `AddAccountAmount`) by having it leverage a "default zero".
+- [ ] REFACTOR: Split `account` and `pool` into a shared actor (e.g. like fisherman/validator/serviceNode/application) and simplify the code in half
+
+Mid-term (i.e. new feature or major refactor) tasks:
+
+- [ ] IMPROVE: Consider using prepare statements and/or a proper query builder
+- [ ] TODO: Implement proper DB SQL migrations
+- [ ] INVESTIGATE: Benchmark the queries (especially the ones that need to do sorting)
+- [ ] DISCUSS: Look into `address` is being computed (string <-> hex) and determine if we could/should avoid it
+-
+
+Long-term (i.e. design) tasks
+
+- [ ] INVESTIGATE: Expand the existing fuzzing approach to push random changes in state transitions to its limit.
+- [ ] INVESTIGATE: Use a DSL-like approach to design complex "user stories" for state transitions between protocol actors in different situations.
