@@ -385,12 +385,12 @@ func InsertParams(params *genesis.Params) string {
 		hex.EncodeToString(params.MessagePauseServiceNodeFeeOwner),
 		hex.EncodeToString(params.MessageUnpauseServiceNodeFeeOwner),
 		hex.EncodeToString(params.MessageChangeParameterFeeOwner),
-		DefaultEndHeight,
+		DefaultBigInt,
 	)
 }
 
 func GetParamQuery(paramName string) string {
-	return fmt.Sprintf(`SELECT %s FROM %s WHERE end_height=%d`, paramName, ParamsTableName, DefaultEndHeight)
+	return fmt.Sprintf(`SELECT %s FROM %s WHERE end_height=%d`, paramName, ParamsTableName, DefaultBigInt)
 }
 
 func GetParamNames() (paramNames []string) {
@@ -400,7 +400,7 @@ func GetParamNames() (paramNames []string) {
 }
 
 func NullifyParamsQuery(height int64) string {
-	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE end_height=%d`, ParamsTableName, height, DefaultEndHeight)
+	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE end_height=%d`, ParamsTableName, height, DefaultBigInt)
 }
 
 func SetParam(paramName string, paramValue interface{}, height int64) string {

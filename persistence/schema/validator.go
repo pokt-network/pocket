@@ -2,31 +2,30 @@ package schema
 
 var _ ProtocolActorSchema = &ValidatorSchema{}
 
+const (
+	ValidatorTableName        = "validator"
+	ValidatorHeightConstraint = "validator_node_height"
+	ValPan                    = "not implemented for validator schema"
+	NullString                = ""
+)
+
 type ValidatorSchema struct {
 	BaseProtocolActorSchema
 }
 
 var ValidatorActor ProtocolActorSchema = &ValidatorSchema{
 	BaseProtocolActorSchema: BaseProtocolActorSchema{
-		tableName:       "validator",
-		chainsTableName: "", // intentionally empty
+		tableName:       ValidatorTableName,
+		chainsTableName: NullString,
 
 		actorSpecificColName: ServiceURLCol,
 
-		heightConstraintName:       "validator_node_height",
-		chainsHeightConstraintName: "", // intentionally empty
+		heightConstraintName:       ValidatorHeightConstraint,
+		chainsHeightConstraintName: NullString,
 	},
 }
 
-func (actor *ValidatorSchema) GetChainsTableSchema() string {
-	return ""
-}
-
-func (actor *ValidatorSchema) GetChainsQuery(address string, height int64) string {
-	return ""
-}
-
-func (actor *ValidatorSchema) InsertQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string {
+func (actor *ValidatorSchema) InsertQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, _ []string, height int64) string {
 	return Insert(BaseActor{
 		Address:         address,
 		PublicKey:       publicKey,
@@ -36,15 +35,12 @@ func (actor *ValidatorSchema) InsertQuery(address, publicKey, stakedTokens, maxR
 		UnstakingHeight: unstakingHeight,
 	},
 		actor.actorSpecificColName, maxRelays,
-		actor.heightConstraintName, "",
-		actor.tableName, "",
+		actor.heightConstraintName, NullString,
+		actor.tableName, NullString,
 		height)
 }
 
-func (actor *ValidatorSchema) UpdateChainsQuery(address string, chains []string, height int64) string {
-	return ""
-}
-
-func (actor *ValidatorSchema) ClearAllChainsQuery() string {
-	return ""
-}
+func (actor *ValidatorSchema) UpdateChainsQuery(_ string, _ []string, _ int64) string { panic(ValPan) }
+func (actor *ValidatorSchema) GetChainsTableSchema() string                           { panic(ValPan) }
+func (actor *ValidatorSchema) GetChainsQuery(_ string, _ int64) string                { panic(ValPan) }
+func (actor *ValidatorSchema) ClearAllChainsQuery() string                            { panic(ValPan) }

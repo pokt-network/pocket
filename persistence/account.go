@@ -12,11 +12,15 @@ import (
 // --- Account Functions ---
 
 func (p PostgresContext) GetAccountAmount(address []byte, height int64) (amount string, err error) {
+	return p.getAccountAmountStr(hex.EncodeToString(address), height)
+}
+
+func (p PostgresContext) getAccountAmountStr(address string, height int64) (amount string, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return
 	}
-	if err = conn.QueryRow(ctx, schema.GetAccountAmountQuery(hex.EncodeToString(address), height)).Scan(&amount); err != nil {
+	if err = conn.QueryRow(ctx, schema.GetAccountAmountQuery(address, height)).Scan(&amount); err != nil {
 		return
 	}
 	return
@@ -38,7 +42,6 @@ func (p PostgresContext) SubtractAccountAmount(address []byte, amount string) er
 
 // DISCUSS(team): If we are okay with `GetAccountAmount` return 0 as a default, this function can leverage
 //                `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
-// DISCUSS(team): Do we have a use-case for this function?
 func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
@@ -60,38 +63,7 @@ func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 }
 
 func (p *PostgresContext) operationAccountAmount(address []byte, deltaAmount string, op func(*big.Int, *big.Int) error) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
-	if err != nil {
-		return err
-	}
-	height, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	accountAmount, err := p.GetAccountAmount(address, height)
-	if err != nil {
-		return err
-	}
-	accountAmountBig, err := shared.StringToBigInt(accountAmount)
-	if err != nil {
-		return err
-	}
-	deltaAmountBig, err := shared.StringToBigInt(deltaAmount)
-	if err != nil {
-		return err
-	}
-	if err := op(accountAmountBig, deltaAmountBig); err != nil {
-		return err
-	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return err
-	}
-	// DISCUSS(team): Do we want to panic if `accountAmountBig < 0` here?
-	if _, err := tx.Exec(ctx, schema.InsertAccountAmountQuery(hex.EncodeToString(address), shared.BigIntToString(accountAmountBig), height)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+	return p.operationPoolOrAccAmount(hex.EncodeToString(address), deltaAmount, op, p.getAccountAmountStr, schema.InsertAccountAmountQuery)
 }
 
 // --- Pool Functions ---
@@ -162,10 +134,14 @@ func (p PostgresContext) SetPoolAmount(name string, amount string) error {
 	return tx.Commit(ctx)
 }
 
-// DISCUSS(team): Olshansky is not a fan of how similar the functionality is here to
-//                operationAccountAmount. There is an easy way to refactor it, but we'd be losing
-//                verbosity in exchange for less code, and the tradeoff is not clear here.
 func (p *PostgresContext) operationPoolAmount(name string, amount string, op func(*big.Int, *big.Int) error) error {
+	return p.operationPoolOrAccAmount(name, amount, op, p.GetPoolAmount, schema.InsertPoolAmountQuery)
+}
+
+func (p *PostgresContext) operationPoolOrAccAmount(name, amount string,
+	op func(*big.Int, *big.Int) error,
+	getAmount func(string, int64) (string, error),
+	insert func(name, amount string, height int64) string) error {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err
@@ -174,7 +150,7 @@ func (p *PostgresContext) operationPoolAmount(name string, amount string, op fun
 	if err != nil {
 		return err
 	}
-	originalAmount, err := p.GetPoolAmount(name, height)
+	originalAmount, err := getAmount(name, height)
 	if err != nil {
 		return err
 	}
@@ -193,7 +169,7 @@ func (p *PostgresContext) operationPoolAmount(name string, amount string, op fun
 	if err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.InsertPoolAmountQuery(name, shared.BigIntToString(originalAmountBig), height)); err != nil {
+	if _, err = tx.Exec(ctx, insert(name, shared.BigIntToString(originalAmountBig), height)); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)

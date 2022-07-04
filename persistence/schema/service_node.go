@@ -6,14 +6,21 @@ type ServiceNodeSchema struct {
 	BaseProtocolActorSchema
 }
 
+const (
+	ServiceNodeTableName            = "service_node"
+	ServiceNodeChainsTableName      = "service_node_chains"
+	ServiceNodeHeightConstraintName = "service_node_height"
+	ServiceNodeChainsConstraintName = "service_node_chain_height"
+)
+
 var ServiceNodeActor ProtocolActorSchema = &ServiceNodeSchema{
 	BaseProtocolActorSchema: BaseProtocolActorSchema{
-		tableName:       "service_node",
-		chainsTableName: "service_node_chains",
+		tableName:       ServiceNodeTableName,
+		chainsTableName: ServiceNodeChainsTableName,
 
 		actorSpecificColName: ServiceURLCol,
 
-		heightConstraintName:       "service_node_height",
-		chainsHeightConstraintName: "service_node_chain_height",
+		heightConstraintName:       ServiceNodeHeightConstraintName,
+		chainsHeightConstraintName: ServiceNodeChainsConstraintName,
 	},
 }

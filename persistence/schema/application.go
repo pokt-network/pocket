@@ -6,14 +6,21 @@ type ApplicationSchema struct {
 	BaseProtocolActorSchema
 }
 
+const (
+	AppTableName            = "app"
+	AppChainsTableName      = "app_chains"
+	AppHeightConstraintName = "app_height"
+	AppChainsConstraintName = "app_chain_height"
+)
+
 var ApplicationActor ProtocolActorSchema = &ApplicationSchema{
 	BaseProtocolActorSchema: BaseProtocolActorSchema{
-		tableName:       "app",
-		chainsTableName: "app_chains",
+		tableName:       AppTableName,
+		chainsTableName: AppChainsTableName,
 
 		actorSpecificColName: MaxRelaysCol,
 
-		heightConstraintName:       "app_height",
-		chainsHeightConstraintName: "app_chain_height",
+		heightConstraintName:       AppHeightConstraintName,
+		chainsHeightConstraintName: AppChainsConstraintName,
 	},
 }

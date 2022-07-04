@@ -9,10 +9,7 @@ const (
 	// We use `-1` with semantic variable names to indicate non-existence or non-validity
 	// in various contexts to avoid the usage of nullability in columns and for performance
 	// optimization purposes.
-	DefaultUnstakingHeight = -1 // INTHISCOMMIT: Can we delete these because we no longer use end_height = 1?
-	DefaultEndHeight       = -1
-	DefaultPausedHeight    = -1
-
+	DefaultBigInt = -1
 	// Common SQL selectors
 	AllColsSelector  = "*"
 	AnyValueSelector = "1"
@@ -39,9 +36,9 @@ func ProtocolActorTableSchema(actorSpecificColName, constraintName string) strin
 			%s TEXT NOT NULL,
 			%s TEXT NOT NULL,
 			%s TEXT NOT NULL,
-			%s BIGINT NOT NULL default -1,
-			%s BIGINT NOT NULL default -1,
-			%s BIGINT NOT NULL default -1,
+			%s BIGINT NOT NULL default %d,
+			%s BIGINT NOT NULL default %d,
+			%s BIGINT NOT NULL default %d,
 
 			CONSTRAINT %s UNIQUE (%s, %s)
 		)`,
@@ -51,8 +48,11 @@ func ProtocolActorTableSchema(actorSpecificColName, constraintName string) strin
 		actorSpecificColName,
 		OutputAddressCol,
 		PausedHeightCol,
+		DefaultBigInt,
 		UnstakingHeightCol,
+		DefaultBigInt,
 		HeightCol,
+		DefaultBigInt,
 		constraintName,
 		AddressCol,
 		HeightCol)
@@ -62,10 +62,10 @@ func ProtocolActorChainsTableSchema(constraintName string) string {
 	return fmt.Sprintf(`(
 			%s TEXT NOT NULL,
 			%s CHAR(4) NOT NULL,
-			%s BIGINT NOT NULL default -1,
+			%s BIGINT NOT NULL default %d,
 
 			CONSTRAINT %s UNIQUE (%s, %s, %s)
-		)`, AddressCol, ChainIDCol, HeightCol, constraintName, AddressCol, ChainIDCol, HeightCol)
+		)`, AddressCol, ChainIDCol, HeightCol, DefaultBigInt, constraintName, AddressCol, ChainIDCol, HeightCol)
 }
 
 func Select(selector, address string, height int64, tableName string) string {
@@ -82,8 +82,11 @@ func Exists(address string, height int64, tableName string) string {
 	return fmt.Sprintf(`SELECT EXISTS(%s)`, Select(AnyValueSelector, address, height, tableName))
 }
 
-// DOCUMENT(andrew): Olshansky doesn't fully understand `AND (height, address) IN (SELECT MAX(height), address FROM %s GROUP BY address)`.
-//                   Need to discuss & document.
+// Explainer:
+//   (SELECT MAX(height), address FROM %s GROUP BY address) ->
+//       returns latest/max height for each address
+//   (height, address) IN (SELECT MAX(height), address FROM %s GROUP BY address) ->
+//       ensures the query is acting on max height for the addresses
 func ReadyToUnstake(unstakingHeight int64, tableName string) string {
 	return fmt.Sprintf(`
 		SELECT address, staked_tokens, output_address
@@ -156,10 +159,10 @@ func Update(address, stakedTokens, actorSpecificParam, actorSpecificParamValue s
 func UpdateUnstakingHeight(address, actorSpecificParam string, unstakingHeight, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
-			(
-				SELECT address, public_key, staked_tokens, %s, output_address, paused_height, %d, %d
-				FROM %s WHERE address='%s' AND height<=%d ORDER BY height DESC LIMIT 1
-			)
+		(
+			SELECT address, public_key, staked_tokens, %s, output_address, paused_height, %d, %d
+			FROM %s WHERE address='%s' AND height<=%d ORDER BY height DESC LIMIT 1
+		)
 		ON CONFLICT ON CONSTRAINT %s
 			DO UPDATE SET unstaking_height=EXCLUDED.unstaking_height, height=EXCLUDED.height`,
 		tableName, actorSpecificParam,
@@ -172,10 +175,10 @@ func UpdateUnstakingHeight(address, actorSpecificParam string, unstakingHeight, 
 func UpdatePausedHeight(address, actorSpecificParam string, pausedHeight, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
-			(
-				SELECT address, public_key, staked_tokens, %s, output_address, %d, unstaking_height, %d
-				FROM %s WHERE address='%s' AND height<=%d ORDER BY height DESC LIMIT 1
-			)
+		(
+			SELECT address, public_key, staked_tokens, %s, output_address, %d, unstaking_height, %d
+			FROM %s WHERE address='%s' AND height<=%d ORDER BY height DESC LIMIT 1
+		)
 		ON CONFLICT ON CONSTRAINT %s
 			DO UPDATE SET paused_height=EXCLUDED.paused_height, height=EXCLUDED.height`,
 		tableName, actorSpecificParam, actorSpecificParam,
@@ -186,11 +189,11 @@ func UpdatePausedHeight(address, actorSpecificParam string, pausedHeight, height
 func UpdateUnstakedHeightIfPausedBefore(actorSpecificParam string, unstakingHeight, pausedBeforeHeight, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s (address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
-			(
-				SELECT address, public_key, staked_tokens, %s, output_address, paused_height, %d, %d
-				FROM %s WHERE paused_height<%d
-					AND (height,address) IN (SELECT MAX(height),address from %s GROUP BY address)
-		)
+		(
+			SELECT address, public_key, staked_tokens, %s, output_address, paused_height, %d, %d
+			FROM %s WHERE paused_height<%d
+				AND (height,address) IN (SELECT MAX(height),address from %s GROUP BY address)
+        )
 		ON CONFLICT ON CONSTRAINT %s
 			DO UPDATE SET unstaking_height=EXCLUDED.unstaking_height`,
 		tableName, actorSpecificParam,

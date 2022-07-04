@@ -1,8 +1,18 @@
 package schema
 
 // TECHDEBT: Consider moving this to a protobuf. This struct was created to make testing simple of protocol actors that
-//           share most of there schema. We need to investigate if there's a better solution, or document this more appropriately and generalize
+//           share most of the schema. We need to investigate if there's a better solution, or document this more appropriately and generalize
 //           across the entire codebase.
+//
+// TODO (Team) -> convert to interface
+// type BaseActor interface
+// GetAddress() string
+// SetAddress(string)
+// GetPublicKey() string
+// SetPublicKey(string)
+// ...
+// NOTE: requires modifying shared, so better to leave it alone until we reach some stability
+
 type BaseActor struct {
 	Address            string
 	PublicKey          string
