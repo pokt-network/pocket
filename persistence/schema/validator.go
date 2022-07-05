@@ -5,7 +5,7 @@ var _ ProtocolActorSchema = &ValidatorSchema{}
 const (
 	ValidatorTableName        = "validator"
 	ValidatorHeightConstraint = "validator_node_height"
-	ValPan                    = "not implemented for validator schema"
+	ValidatorPanicMsg         = "not implemented for validator schema"
 	NullString                = ""
 )
 
@@ -40,7 +40,9 @@ func (actor *ValidatorSchema) InsertQuery(address, publicKey, stakedTokens, maxR
 		height)
 }
 
-func (actor *ValidatorSchema) UpdateChainsQuery(_ string, _ []string, _ int64) string { panic(ValPan) }
-func (actor *ValidatorSchema) GetChainsTableSchema() string                           { panic(ValPan) }
-func (actor *ValidatorSchema) GetChainsQuery(_ string, _ int64) string                { panic(ValPan) }
-func (actor *ValidatorSchema) ClearAllChainsQuery() string                            { panic(ValPan) }
+func (actor *ValidatorSchema) UpdateChainsQuery(_ string, _ []string, _ int64) string {
+	panic(ValidatorPanicMsg)
+}
+func (actor *ValidatorSchema) GetChainsTableSchema() string            { panic(ValidatorPanicMsg) }
+func (actor *ValidatorSchema) GetChainsQuery(_ string, _ int64) string { panic(ValidatorPanicMsg) }
+func (actor *ValidatorSchema) ClearAllChainsQuery() string             { panic(ValidatorPanicMsg) }
