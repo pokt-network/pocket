@@ -7,6 +7,8 @@ import (
 	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
+// TODO(https://github.com/pokt-network/pocket/issues/76): Optimize gov parameters implementation & schema.
+
 func (p PostgresContext) GetBlocksPerSession() (int, error) {
 	return p.GetIntParam(types.BlocksPerSessionParamName)
 }

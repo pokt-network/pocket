@@ -7,7 +7,8 @@ import (
 	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
-// TODO(team): There's obviously a better solution here. Just do it.
+// TODO(https://github.com/pokt-network/pocket/issues/76): Optimize gov parameters implementation & schema.
+
 const (
 	ParamsTableName   = "param"
 	ParamsTableSchema = `(
