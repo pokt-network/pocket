@@ -10,6 +10,7 @@ const (
 	// in various contexts to avoid the usage of nullability in columns and for performance
 	// optimization purposes.
 	DefaultBigInt = -1
+
 	// Common SQL selectors
 	AllColsSelector  = "*"
 	AnyValueSelector = "1"

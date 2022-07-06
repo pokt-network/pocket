@@ -202,11 +202,11 @@ func (p *PostgresContext) SetActorUnstakingHeightAndStatus(actorSchema schema.Pr
 func (p *PostgresContext) GetActorPauseHeightIfExists(actorSchema schema.ProtocolActorSchema, address []byte, height int64) (pausedHeight int64, err error) {
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
-		return 0, err
+		return schema.DefaultBigInt, err
 	}
 
 	if err := conn.QueryRow(ctx, actorSchema.GetPausedHeightQuery(hex.EncodeToString(address), height)).Scan(&pausedHeight); err != nil {
-		return 0, err
+		return schema.DefaultBigInt, err
 	}
 
 	return pausedHeight, nil
