@@ -22,7 +22,7 @@ This document is meant to be a supplement to the living specification of [1.0 Po
 
 ### Configuration
 
-The persistence specific configuration within `config.json` looks like this:
+The persistence-specific configuration within `config.json` looks like this:
 
 ```
   "persistence": {
