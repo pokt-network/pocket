@@ -242,7 +242,11 @@ func (u *UtilityContext) HandleMessageUnpauseFisherman(message *typesUtil.Messag
 
 func (u *UtilityContext) GetFishermanExists(address []byte) (bool, types.Error) {
 	store := u.Store()
-	exists, er := store.GetFishermanExists(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return false, types.ErrGetStatus(er)
+	}
+	exists, er := store.GetFishermanExists(address, height)
 	if er != nil {
 		return false, types.ErrGetExists(er)
 	}
@@ -281,7 +285,7 @@ func (u *UtilityContext) GetFishermenReadyToUnstake() ([]*types.UnstakingActor, 
 	if err != nil {
 		return nil, err
 	}
-	unstakingFishermans, er := store.GetFishermanReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
+	unstakingFishermans, er := store.GetFishermenReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return nil, types.ErrGetReadyToUnstake(er)
 	}
@@ -294,7 +298,7 @@ func (u *UtilityContext) UnstakeFishermenPausedBefore(pausedBeforeHeight int64) 
 	if err != nil {
 		return err
 	}
-	er := store.SetFishermansStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
+	er := store.SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return types.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}
@@ -303,7 +307,11 @@ func (u *UtilityContext) UnstakeFishermenPausedBefore(pausedBeforeHeight int64) 
 
 func (u *UtilityContext) GetFishermanStatus(address []byte) (int, types.Error) {
 	store := u.Store()
-	status, er := store.GetFishermanStatus(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return typesUtil.ZeroInt, types.ErrGetStatus(er)
+	}
+	status, er := store.GetFishermanStatus(address, height)
 	if er != nil {
 		return typesUtil.ZeroInt, types.ErrGetStatus(er)
 	}
@@ -320,7 +328,11 @@ func (u *UtilityContext) SetFishermanUnstakingHeightAndStatus(address []byte, un
 
 func (u *UtilityContext) GetFishermanPauseHeightIfExists(address []byte) (int64, types.Error) {
 	store := u.Store()
-	fishermanPauseHeight, er := store.GetFishermanPauseHeightIfExists(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
+	}
+	fishermanPauseHeight, er := store.GetFishermanPauseHeightIfExists(address, height)
 	if er != nil {
 		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
 	}
@@ -415,7 +427,11 @@ func (u *UtilityContext) GetMessageFishermanPauseServiceNodeSignerCandidates(msg
 
 func (u *UtilityContext) GetFishermanOutputAddress(operator []byte) ([]byte, types.Error) {
 	store := u.Store()
-	output, er := store.GetFishermanOutputAddress(operator)
+	height, er := store.GetHeight()
+	if er != nil {
+		return nil, types.ErrGetOutputAddress(operator, er)
+	}
+	output, er := store.GetFishermanOutputAddress(operator, height)
 	if er != nil {
 		return nil, types.ErrGetOutputAddress(operator, er)
 	}
