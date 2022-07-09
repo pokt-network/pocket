@@ -1,11 +1,12 @@
 package raintree
 
 import (
-	"math/rand"
-	"time"
+	hex "encoding/hex"
+
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
-func GenerateRandInt() int32 {
-	rand.Seed(time.Now().Unix())
-	return rand.Int31()
+func GetHashStringFromBytes(b []byte) string {
+	hash := cryptoPocket.SHA3Hash(b)
+	return hex.EncodeToString(hash)
 }
