@@ -77,8 +77,7 @@ func (m *p2pModule) GetBus() modules.Bus {
 func (m *p2pModule) Start() error {
 	log.Println("Starting network module")
 
-	m.
-		GetBus().
+	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
 		CounterRegister(
