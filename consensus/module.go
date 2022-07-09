@@ -202,6 +202,8 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	leaderHandlers[msg.Step](m, msg)
 }
 
+// Please reference shared/modules/consensus_modules to learn more about why this method
+// is exposed for the moment.
 func (m *consensusModule) GetBlockHeight() uint64 {
 	return m.Height
 }
