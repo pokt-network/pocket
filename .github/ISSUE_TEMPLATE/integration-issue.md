@@ -1,7 +1,7 @@
 ---
 name: Integration Issue
 about: This is an integration issue and it's the main issue of a milestone
-title: '[REPLACE ME] with a descriptive title'
+title: "[REPLACE ME] with a descriptive title"
 labels: integration
 assignees: ''
 
