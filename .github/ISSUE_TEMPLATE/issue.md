@@ -34,8 +34,10 @@ assignees: ''
 - *Make sure to update the testing methodology appropriately*
 - **Task specific tests**: `make ...` 
 - **All tests**: `make test_all`
- - **LocalNet**: verify a `LocalNet` is still functioning correctly by following the instructions at [docs/development/README.md](https://github.com/pokt-network/pocket/tree/main/docs/development)
+- **LocalNet**: verify a `LocalNet` is still functioning correctly by following the instructions at [docs/development/README.md](https://github.com/pokt-network/pocket/tree/main/docs/development)
 Remove
 
+---
+
 Creator: [github username of the creator]
-Co-Owners: [optional - github usernames of the owner]
+Co-Owners: [optional - github usernames of the co-owner(s)]
