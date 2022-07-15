@@ -34,7 +34,7 @@ type NetworkPeer struct {
 
 type Transport interface {
 	IsListener() bool
-	Read() ([]byte, error)
+	AcceptIncomingConnections() (chan AcceptedConn, error)
 	Write([]byte) error
 	Close() error
 }
