@@ -15,7 +15,7 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/nodestate"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -39,7 +39,7 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 		return nil, err
 	}
 
-	testState := typesGenesis.GetNodeState(nil)
+	testState := nodestate.GetNodeState(nil)
 	addrBook, err := ValidatorMapToAddrBook(cfg.Pre2P, testState.ValidatorMap)
 	if err != nil {
 		return nil, err

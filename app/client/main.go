@@ -12,7 +12,8 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/nodestate"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -40,7 +41,13 @@ func main() {
 	}
 
 	cfg := &config.Config{
-		Genesis: "build/config/genesis.json",
+		GenesisSource: &genesis.GenesisSource{
+			Source: &genesis.GenesisSource_File{
+				File: &genesis.GenesisFile{
+					Path: "build/config/genesis.json",
+				},
+			},
+		},
 
 		// Not used - only set to avoid `GetNodeState(_)` from crashing
 		PrivateKey: pk.(crypto.Ed25519PrivateKey),
@@ -54,7 +61,7 @@ func main() {
 	}
 
 	// Initialize the state singleton
-	_ = typesGenesis.GetNodeState(cfg)
+	_ = nodestate.GetNodeState(cfg)
 
 	pre2pMod, err = pre2p.Create(cfg)
 	if err != nil {
@@ -132,7 +139,7 @@ func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
 
 	// pre2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
-	for _, val := range typesGenesis.GetNodeState(nil).ValidatorMap {
+	for _, val := range nodestate.GetNodeState(nil).ValidatorMap {
 		pre2pMod.Send(val.Address, anyProto, types.PocketTopic_DEBUG_TOPIC)
 	}
 

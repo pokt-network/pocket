@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"sort"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -18,7 +17,8 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/types"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/nodestate"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -312,13 +312,13 @@ func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWr
 func prepareP2PModules(t *testing.T, configs []*config.Config) (p2pModules map[string]*p2pModule) {
 	p2pModules = make(map[string]*p2pModule, len(configs))
 	for i, config := range configs {
-		_ = typesGenesis.GetNodeState(config)
+		_ = nodestate.GetNodeState(config)
 		p2pMod, err := Create(config)
 		require.NoError(t, err)
 		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
 		// HACK(olshansky): I hate that we have to do this, but it is outside the scope of this change...
 		// Cleanup once we get rid of the singleton
-		typesGenesis.ResetNodeState(t)
+		nodestate.ResetNodeState(t)
 	}
 	return
 }
@@ -327,12 +327,15 @@ func createConfigs(t *testing.T, numValidators int) (configs []*config.Config) {
 	configs = make([]*config.Config, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
 	copy(valKeys[:], keys[:numValidators])
-	validatorConfigs := genesisValidatorConfig(t, valKeys)
+	genesisState := createGenesisState(t, valKeys)
 
 	for i := range configs {
 		configs[i] = &config.Config{
-			RootDir: "",
-			Genesis: genesisJson(t, numValidators, validatorConfigs),
+			GenesisSource: &genesis.GenesisSource{
+				Source: &genesis.GenesisSource_State{
+					State: genesisState,
+				},
+			},
 
 			PrivateKey: valKeys[i].(cryptoPocket.Ed25519PrivateKey),
 
@@ -355,38 +358,26 @@ func validatorId(_ *testing.T, i int) string {
 	return fmt.Sprintf(serviceUrlFormat, i)
 }
 
-// TECHDEBT(olshansky): The fact that we are passing in a genesis string rather than a properly
-// configured struct is a bit of legacy. Need to fix this sooner rather than later.
-func genesisJson(_ *testing.T, numValidators int, validatorConfigs string) string {
-	return fmt.Sprintf(`{
-		"genesis_state_configs": {
-			"num_validators": %d,
-			"num_applications": 0,
-			"num_fisherman": 0,
-			"num_servicers": 0,
-			"keys_seed_start": %d
-		},
-		"genesis_time": "2022-01-19T00:00:00.000000Z",
-		"app_hash": "genesis_block_or_state_hash",
-		"validators": [%s]
-	}`, numValidators, genesisConfigSeedStart, validatorConfigs)
-}
-
-func genesisValidatorConfig(t *testing.T, valKeys []cryptoPocket.PrivateKey) string {
-	s := strings.Builder{}
+func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
+	validators := make([]*genesis.Validator, len(valKeys))
 	for i, valKey := range valKeys {
-		if i != 0 {
-			s.WriteString(",")
+		addr := valKey.Address()
+		fmt.Println(addr)
+		val := &genesis.Validator{
+			Address:         addr,
+			PublicKey:       valKey.PublicKey().Bytes(),
+			Paused:          false,
+			Status:          2,
+			ServiceUrl:      validatorId(t, i+1),
+			StakedTokens:    "1000000000000000",
+			MissedBlocks:    0,
+			PausedHeight:    0,
+			UnstakingHeight: 0,
+			Output:          addr,
 		}
-		addr := valKey.Address().String()
-		s.WriteString(fmt.Sprintf(`{
-			"status": 2,
-			"service_url": "%s",
-			"staked_tokens": "1000000000000000",
-			"address": "%s",
-			"output": "%s",
-			"public_key": "%s"
-		}`, validatorId(t, i+1), addr, addr, valKey.PublicKey().String()))
+		validators[i] = val
 	}
-	return s.String()
+	return &genesis.GenesisState{
+		Validators: validators,
+	}
 }

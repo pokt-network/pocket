@@ -14,7 +14,7 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/pokt-network/pocket/shared/types"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/nodestate"
 
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -29,7 +29,7 @@ type Node struct {
 
 func Create(cfg *config.Config) (n *Node, err error) {
 	// TODO(design): initialize the state singleton until we have a proper solution for this.
-	_ = typesGenesis.GetNodeState(cfg)
+	_ = nodestate.GetNodeState(cfg)
 
 	// TODO(drewsky): The module is initialized to run background processes during development
 	// to make sure it's part of the node's lifecycle, but is not referenced YET byt the app specific

@@ -6,7 +6,7 @@ import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/nodestate"
 )
 
 type LeaderElectionModule interface {
@@ -51,7 +51,7 @@ func (m *leaderElectionModule) ElectNextLeader(message *typesCons.HotstuffMessag
 }
 
 func (m *leaderElectionModule) electNextLeaderDeterministicRoundRobin(message *typesCons.HotstuffMessage) typesCons.NodeId {
-	valMap := typesGenesis.GetNodeState(nil).ValidatorMap
+	valMap := nodestate.GetNodeState(nil).ValidatorMap
 	value := int64(message.Height) + int64(message.Round) + int64(message.Step) - 1
 	return typesCons.NodeId(value%int64(len(valMap)) + 1)
 }

@@ -1,8 +1,9 @@
-package genesis
+package nodestate
 
 import (
 	"encoding/hex"
 	"fmt"
+	"os"
 	"testing"
 
 	"log"
@@ -10,18 +11,19 @@ import (
 
 	"github.com/matryer/resync"
 	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 // TODO(team): This structure is a proxy into the current / active state of the network
 // containing information such as the current validator map. As a next step, we can move
 // all of this data over into the persistence module.
 type NodeState struct {
-	GenesisState *GenesisState
+	GenesisState *genesis.GenesisState
 
 	BlockHeight      uint64
-	AppHash          string                // TODO: Why not call this a BlockHash or StateHash? SHould it be a []byte or string?
-	ValidatorMap     map[string]*Validator // TODO: Need to update this on every validator pause/stake/unstake/etc.
-	TotalVotingPower uint64                // TODO: Need to update this on every send transaction.
+	AppHash          string                        // TODO: Why not call this a BlockHash or StateHash? SHould it be a []byte or string?
+	ValidatorMap     map[string]*genesis.Validator // TODO: Need to update this on every validator pause/stake/unstake/etc.
+	TotalVotingPower uint64                        // TODO: Need to update this on every send transaction.
 }
 
 // The pocket state singleton.
@@ -68,56 +70,57 @@ func (ps *NodeState) loadStateFromConfig(cfg *config.Config) {
 
 	if cfg.Persistence != nil && len(cfg.Persistence.DataDir) > 0 {
 		panic("[TODO] Load p2p state from persistence not supported. Only supporting loading p2p state from genesis file for now.")
-	} else if len(cfg.Genesis) > 0 {
+	} else if cfg.GenesisSource != nil {
 		log.Println("Loading state from Genesis")
-		ps.loadStateFromGenesis(cfg)
+		ps.loadStateFromGenesis(cfg.GenesisSource)
 		return
 	}
 
 	log.Fatalf("[TODO] Config must not be nil when initializing the pocket state. ...")
 }
 
-func (ps *NodeState) loadStateFromGenesis(cfg *config.Config) {
-	genesis, err := PocketGenesisFromFileOrJSON(cfg.Genesis)
-	if err != nil {
-		log.Fatalf("Failed to load genesis: %v", err)
-	}
+func (ps *NodeState) loadStateFromGenesis(genesisSource *genesis.GenesisSource) {
 
-	if genesis.GenesisStateConfig != nil {
+	var genesisState *genesis.GenesisState
+	switch genesisSource.Source.(type) {
+	case *genesis.GenesisSource_Config:
 		log.Println("Loading state from `genesis_state_configs`")
-		genesisState, _, _, _, _, err := NewGenesisState(genesis.GenesisStateConfig)
+		genesisConfig := genesisSource.GetConfig()
+		var err error
+		genesisState, _, _, _, _, err = genesis.NewGenesisState(genesisConfig)
 		if err != nil {
 			log.Fatalf("Failed to generate genesis: %v", err)
 		}
-
-		if genesis.Validators != nil {
-			genesisState.Validators = GetValidators(genesis.Validators)
+	case *genesis.GenesisSource_File:
+		genesisFilePath := genesisSource.GetFile().Path
+		if _, err := os.Stat(genesisFilePath); err != nil {
+			panic(fmt.Sprintf("Genesis file specified but not found %s", genesisFilePath))
 		}
-
-		*ps = NodeState{
-			GenesisState: genesisState,
-			BlockHeight:  0,
-			AppHash:      genesis.AppHash,
-			ValidatorMap: ValidatorListToMap(genesisState.Validators),
+		var err error
+		genesisState, err = genesis.PocketGenesisFromFile(genesisFilePath)
+		if err != nil {
+			log.Fatalf("Failed to load genesis: %v", err)
 		}
-	} else {
+	case *genesis.GenesisSource_State:
+		genesisState = genesisSource.GetState()
 		log.Println("Loading state from json file data")
-		*ps = NodeState{
-			GenesisState: nil,
-			BlockHeight:  0,
-			AppHash:      genesis.AppHash,
-			ValidatorMap: ValidatorListToMap(GetValidators(genesis.Validators)),
-		}
 	}
 
+	*ps = NodeState{
+		GenesisState: genesisState,
+		BlockHeight:  0,
+		AppHash:      "",
+		ValidatorMap: ValidatorListToMap(genesisState.Validators),
+	}
 	ps.recomputeTotalVotingPower()
 }
 
-func ValidatorListToMap(validators []*Validator) (m map[string]*Validator) {
-	m = make(map[string]*Validator, len(validators))
+func ValidatorListToMap(validators []*genesis.Validator) (m map[string]*genesis.Validator) {
+	m = make(map[string]*genesis.Validator, len(validators))
 	for _, v := range validators {
 		m[hex.EncodeToString(v.Address)] = v
 	}
+	fmt.Println(m)
 	return
 }
 

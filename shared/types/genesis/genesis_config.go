@@ -60,11 +60,11 @@ type NewGenesisStateConfigs struct {
 }
 
 // NewGenesisState IMPORTANT NOTE: Not using numOfValidators param, as Validators are now read from the test_state json file
-func NewGenesisState(genesisConfig *NewGenesisStateConfigs) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
+func NewGenesisState(genesisConfig *GenesisConfig) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
 	// create the genesis state object
 	state = &GenesisState{}
 	validatorKeys = make([]crypto.PrivateKey, genesisConfig.NumValidators)
-	appKeys = make([]crypto.PrivateKey, genesisConfig.NumAppplications)
+	appKeys = make([]crypto.PrivateKey, genesisConfig.NumApplications)
 	fishKeys = make([]crypto.PrivateKey, genesisConfig.NumFisherman)
 	serviceNodeKeys = make([]crypto.PrivateKey, genesisConfig.NumServicers)
 	seedNum := genesisConfig.SeedStart

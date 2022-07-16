@@ -6,28 +6,27 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"time"
 )
 
-type Genesis struct {
-	// TODO(olshansky): Discuss this structure with Andrew.
-	GenesisStateConfig *NewGenesisStateConfigs `json:"genesis_state_configs"`
+// type Genesis struct {
+// 	// TODO(olshansky): Discuss this structure with Andrew.
+// 	GenesisStateConfig *NewGenesisStateConfigs `json:"genesis_state_configs"`
 
-	GenesisTime time.Time                         `json:"genesis_time"`
-	AppHash     string                            `json:"app_hash"`
-	Validators  []*ValidatorJsonCompatibleWrapper `json:"validators"`
-}
+// 	GenesisTime time.Time                         `json:"genesis_time"`
+// 	AppHash     string                            `json:"app_hash"`
+// 	Validators  []*ValidatorJsonCompatibleWrapper `json:"validators"`
+// }
 
 // TODO: This is a temporary hack that can load Genesis from a single string
 // that may be either a JSON blob or a file.
-func PocketGenesisFromFileOrJSON(fileOrJson string) (*Genesis, error) {
+func PocketGenesisFromFileOrJSON(fileOrJson string) (*GenesisState, error) {
 	if _, err := os.Stat(fileOrJson); err == nil {
 		return PocketGenesisFromFile(fileOrJson)
 	}
 	return PocketGenesisFromJSON([]byte(fileOrJson))
 }
 
-func PocketGenesisFromFile(file string) (*Genesis, error) {
+func PocketGenesisFromFile(file string) (*GenesisState, error) {
 	jsonBlob, err := os.ReadFile(file)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't read Genesis file: %w", err)
@@ -39,8 +38,8 @@ func PocketGenesisFromFile(file string) (*Genesis, error) {
 	return genesis, nil
 }
 
-func PocketGenesisFromJSON(jsonBlob []byte) (*Genesis, error) {
-	genesis := Genesis{}
+func PocketGenesisFromJSON(jsonBlob []byte) (*GenesisState, error) {
+	genesis := GenesisState{}
 	if err := json.Unmarshal(jsonBlob, &genesis); err != nil {
 		return nil, err
 	}
@@ -50,29 +49,29 @@ func PocketGenesisFromJSON(jsonBlob []byte) (*Genesis, error) {
 	return &genesis, nil
 }
 
-func (genesis *Genesis) Validate() error {
-	if genesis.GenesisTime.IsZero() {
-		return fmt.Errorf("GenesisTime cannot be zero")
-	}
+func (genesis *GenesisState) Validate() error {
+	// if genesis.GenesisTime.IsZero() {
+	// 	return fmt.Errorf("GenesisTime cannot be zero")
+	// }
 
 	// TODO: validate each account.
-	if len(genesis.Validators) == 0 && (genesis.GenesisStateConfig == nil || genesis.GenesisStateConfig.NumValidators == 0) {
-		return fmt.Errorf("genesis must contain at least one validator")
-	}
+	// if len(genesis.Validators) == 0 && (genesis.GenesisStateConfig == nil || genesis.GenesisStateConfig.NumValidators == 0) {
+	// 	return fmt.Errorf("genesis must contain at least one validator")
+	// }
 
-	if len(genesis.Validators) > 0 && (genesis.GenesisStateConfig == nil || genesis.GenesisStateConfig.NumValidators != uint16(len(genesis.Validators))) {
-		return fmt.Errorf("genesis state validator count is misconfigured")
-	}
+	// if len(genesis.Validators) > 0 && (genesis.GenesisStateConfig == nil || genesis.GenesisStateConfig.NumValidators != uint16(len(genesis.Validators))) {
+	// 	return fmt.Errorf("genesis state validator count is misconfigured")
+	// }
 
-	if len(genesis.AppHash) == 0 {
-		return fmt.Errorf("Genesis app hash cannot be zero")
-	}
+	// if len(genesis.AppHash) == 0 {
+	// 	return fmt.Errorf("Genesis app hash cannot be zero")
+	// }
 
-	for _, validator := range genesis.Validators {
-		if err := validator.ValidateBasic(); err != nil {
-			return fmt.Errorf("validator in genesis is invalid: %w", err)
-		}
-	}
+	// for _, validator := range genesis.Validators {
+	// 	if err := validator.ValidateBasic(); err != nil {
+	// 		return fmt.Errorf("validator in genesis is invalid: %w", err)
+	// 	}
+	// }
 
 	return nil
 }

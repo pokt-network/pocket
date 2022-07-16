@@ -9,11 +9,15 @@ import (
 	"path/filepath"
 
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
+// Genesis JSON File -> GenesisState
+// Genesis configurations -> GenesisState
+
 type Config struct {
-	RootDir string `json:"root_dir"`
-	Genesis string `json:"genesis"` // TECHDEBT(olshansky): we should be able to pass the struct in here.
+	RootDir       string                      `json:"root_dir"`
+	GenesisSource *typesGenesis.GenesisSource `json:"genesis_source"` // TECHDEBT(olshansky): we should be able to pass the struct in here.
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 
@@ -115,10 +119,10 @@ func (c *Config) ValidateAndHydrate() error {
 		return fmt.Errorf("private key in config file cannot be empty")
 	}
 
-	if len(c.Genesis) == 0 {
-		return fmt.Errorf("must specify a genesis file or string")
-	}
-	c.Genesis = rootify(c.Genesis, c.RootDir)
+	// if len(c.Genesis) == 0 {
+	// 	return fmt.Errorf("must specify a genesis file or string")
+	// }
+	// c.Genesis = rootify(c.Genesis, c.RootDir)
 
 	if err := c.Consensus.ValidateAndHydrate(); err != nil {
 		log.Fatalln("Error validating or completing consensus config: ", err)

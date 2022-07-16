@@ -5,7 +5,7 @@ import (
 	"unsafe"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/nodestate"
 )
 
 var (
@@ -246,7 +246,7 @@ func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 		return typesCons.ErrNilPartialSigOrSourceNotSpecified
 	}
 
-	valMap := typesGenesis.GetNodeState(nil).ValidatorMap
+	valMap := nodestate.GetNodeState(nil).ValidatorMap
 	address := msg.GetPartialSignature().Address
 	validator, ok := valMap[address]
 	if !ok {
