@@ -1,7 +1,6 @@
 package nodestate
 
 import (
-	"encoding/hex"
 	"os"
 	"testing"
 
@@ -19,8 +18,7 @@ import (
 type NodeState struct {
 	GenesisState *genesis.GenesisState
 
-	ValidatorMap     map[string]*genesis.Validator // TODO: Need to update this on every validator pause/stake/unstake/etc.
-	TotalVotingPower uint64                        // TODO: Need to update this on every send transaction.
+	ValidatorMap map[string]*genesis.Validator // TODO: Need to update this on every validator pause/stake/unstake/etc.
 }
 
 // The pocket state singleton.
@@ -67,15 +65,15 @@ func (ps *NodeState) loadStateFromConfig(cfg *config.Config) {
 	defer lock.Unlock()
 
 	if cfg.GenesisSource != nil {
-		log.Println("Loading state from Genesis")
-		ps.loadStateFromGenesisSource(cfg.GenesisSource)
+		log.Println("Loading state from Genesis source")
+		ps.genesisStateFromGenesisSource(cfg.GenesisSource)
 		return
 	}
 
 	log.Fatalf("Unsupported case to load state from config...")
 }
 
-func (ps *NodeState) loadStateFromGenesisSource(genesisSource *genesis.GenesisSource) {
+func (ps *NodeState) genesisStateFromGenesisSource(genesisSource *genesis.GenesisSource) {
 	var genesisState *genesis.GenesisState
 	var err error
 
@@ -101,23 +99,6 @@ func (ps *NodeState) loadStateFromGenesisSource(genesisSource *genesis.GenesisSo
 
 	*ps = NodeState{
 		GenesisState: genesisState,
-		ValidatorMap: ValidatorListToMap(genesisState.Validators),
+		// ValidatorMap: ValidatorListToMap(genesisState.Validators),
 	}
-	ps.recomputeTotalVotingPower()
-}
-
-func ValidatorListToMap(validators []*genesis.Validator) (m map[string]*genesis.Validator) {
-	m = make(map[string]*genesis.Validator, len(validators))
-	for _, v := range validators {
-		m[hex.EncodeToString(v.Address)] = v
-	}
-	return
-}
-
-// TODO(olshansky): Re-implement this when properly implementing leader election
-func (ps *NodeState) recomputeTotalVotingPower() {
-	ps.TotalVotingPower = 0
-	// for _, v := range ps.ValidatorMap {
-	// 	ps.TotalVotingPower += v.UPokt
-	// }
 }

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
@@ -119,6 +120,14 @@ func (c *Config) ValidateAndHydrate() error {
 		return fmt.Errorf("private key in config file cannot be empty")
 	}
 
+	if c.GenesisSource == nil {
+		return fmt.Errorf("Genesis source cannot be nil in config")
+	}
+
+	if err := c.hydrateGenesisState(c.GenesisSource); err != nil {
+
+	}
+
 	if err := c.Consensus.ValidateAndHydrate(); err != nil {
 		log.Fatalln("Error validating or completing consensus config: ", err)
 	}
@@ -127,6 +136,36 @@ func (c *Config) ValidateAndHydrate() error {
 		log.Fatalln("Error validating or completing P2P config: ", err)
 	}
 
+	return nil
+}
+
+func (c *Config) hydrateGenesisState(genesisSource *genesis.GenesisSource) error {
+	var genesisState *genesis.GenesisState
+	var err error
+
+	switch genesisSource.Source.(type) {
+	case *genesis.GenesisSource_Config:
+		genesisConfig := genesisSource.GetConfig()
+		if genesisState, _, _, _, _, err = genesis.NewGenesisState(genesisConfig); err != nil {
+			return fmt.Errorf("failed to generate genesis state from configuration: %v", err)
+		}
+	case *genesis.GenesisSource_File:
+		genesisFilePath := genesisSource.GetFile().Path
+		if _, err := os.Stat(genesisFilePath); err != nil {
+			return fmt.Errorf("genesis file specified but not found %s", genesisFilePath)
+		}
+		if genesisState, err = genesis.GenesisStateFromFile(genesisFilePath); err != nil {
+			return fmt.Errorf("failed to load genesis state from file: %v", err)
+		}
+	case *genesis.GenesisSource_State:
+		genesisState = genesisSource.GetState()
+	default:
+		return fmt.Errorf("unsupported genesis source type: %v", genesisSource.Source)
+	}
+
+	c.GenesisSource.Source = &genesis.GenesisSource_State{
+		State: genesisState,
+	}
 	return nil
 }
 

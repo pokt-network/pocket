@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/p2p/pre2p/types"
-	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
@@ -32,8 +31,6 @@ type ExpectedRainTreeMessageProp struct {
 // IMPROVE(team): Looking into adding more tests and accounting for more edge cases.
 
 func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
-	cfg := &config.Config{}
-
 	addr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
 
@@ -71,7 +68,7 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 		t.Run(fmt.Sprintf("n=%d", n), func(t *testing.T) {
 			addrBook := getAddrBook(t, n-1)
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
-			network := NewRainTreeNetwork(addr, addrBook, cfg).(*rainTreeNetwork)
+			network := NewRainTreeNetwork(addr, addrBook).(*rainTreeNetwork)
 
 			err = network.processAddrBookUpdates()
 			require.NoError(t, err)
@@ -84,8 +81,6 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 }
 
 func BenchmarkAddrBookUpdates(b *testing.B) {
-	cfg := &config.Config{}
-
 	addr, err := cryptoPocket.GenerateAddress()
 	require.NoError(b, err)
 
@@ -103,7 +98,7 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 		b.Run(fmt.Sprintf("n=%d", n), func(b *testing.B) {
 			addrBook := getAddrBook(nil, n-1)
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
-			network := NewRainTreeNetwork(addr, addrBook, cfg).(*rainTreeNetwork)
+			network := NewRainTreeNetwork(addr, addrBook).(*rainTreeNetwork)
 
 			err = network.processAddrBookUpdates()
 			require.NoError(b, err)
@@ -172,7 +167,7 @@ func TestRainTreeAddrBookTargetsTwentySevenNodes(t *testing.T) {
 
 func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeMessageProp) {
 	addrBook := getAlphabetAddrBook(expectedMsgProp.numNodes)
-	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, addrBook, &config.Config{}).(*rainTreeNetwork)
+	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, addrBook).(*rainTreeNetwork)
 	network.processAddrBookUpdates()
 
 	require.Equal(t, strings.Join(network.addrList, ""), strToAddrList(expectedMsgProp.addrList))
