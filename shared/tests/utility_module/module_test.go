@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
+	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
-	"github.com/pokt-network/pocket/shared/types/nodestate"
 	"github.com/pokt-network/pocket/utility"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
@@ -43,7 +43,9 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 			},
 		},
 	}
-	_ = nodestate.GetNodeState(cfg)
+	err := cfg.HydrateGenesisState()
+	require.NoError(t, err)
+
 	persistenceModule := pre_persistence.NewPrePersistenceModule(memdb.New(comparer.DefaultComparer, 10000000), mempool, cfg)
 	if err := persistenceModule.Start(); err != nil {
 		t.Fatal(err)

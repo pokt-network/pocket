@@ -7,12 +7,12 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
-	"github.com/pokt-network/pocket/shared/types/nodestate"
+	"github.com/stretchr/testify/require"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 )
 
-func NewTestingPrePersistenceModule(_ *testing.T) *PrePersistenceModule {
+func NewTestingPrePersistenceModule(t *testing.T) *PrePersistenceModule {
 	db := memdb.New(comparer.DefaultComparer, 10000000)
 	cfg := &config.Config{
 		GenesisSource: &genesis.GenesisSource{
@@ -21,8 +21,9 @@ func NewTestingPrePersistenceModule(_ *testing.T) *PrePersistenceModule {
 			},
 		},
 	}
+	err := cfg.HydrateGenesisState()
+	require.NoError(t, err)
 
-	_ = nodestate.GetNodeState(cfg)
 	return NewPrePersistenceModule(db, types.NewMempool(10000, 10000), cfg)
 }
 

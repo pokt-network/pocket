@@ -23,7 +23,6 @@ import (
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
-	"github.com/pokt-network/pocket/shared/types/nodestate"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -125,8 +124,6 @@ func CreateTestConsensusPocketNode(
 	cfg *config.Config,
 	testChannel modules.EventsChannel,
 ) *shared.Node {
-	_ = nodestate.GetNodeState(cfg)
-
 	consensusMod, err := consensus.Create(cfg)
 	require.NoError(t, err)
 

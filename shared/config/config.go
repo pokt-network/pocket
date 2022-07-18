@@ -121,36 +121,36 @@ func (c *Config) ValidateAndHydrate() error {
 	}
 
 	if c.GenesisSource == nil {
-		return fmt.Errorf("Genesis source cannot be nil in config")
+		return fmt.Errorf("genesis source cannot be nil in config")
 	}
 
-	if err := c.hydrateGenesisState(c.GenesisSource); err != nil {
-
+	if err := c.HydrateGenesisState(); err != nil {
+		return fmt.Errorf("error hydrating genesis state: %v", err)
 	}
 
 	if err := c.Consensus.ValidateAndHydrate(); err != nil {
-		log.Fatalln("Error validating or completing consensus config: ", err)
+		return fmt.Errorf("error validating or completing consensus config: %v", err)
 	}
 
 	if err := c.P2P.ValidateAndHydrate(); err != nil {
-		log.Fatalln("Error validating or completing P2P config: ", err)
+		return fmt.Errorf("error validating or completing P2P config: %v", err)
 	}
 
 	return nil
 }
 
-func (c *Config) hydrateGenesisState(genesisSource *genesis.GenesisSource) error {
+func (c *Config) HydrateGenesisState() error {
 	var genesisState *genesis.GenesisState
 	var err error
 
-	switch genesisSource.Source.(type) {
+	switch c.GenesisSource.Source.(type) {
 	case *genesis.GenesisSource_Config:
-		genesisConfig := genesisSource.GetConfig()
+		genesisConfig := c.GenesisSource.GetConfig()
 		if genesisState, _, _, _, _, err = genesis.NewGenesisState(genesisConfig); err != nil {
 			return fmt.Errorf("failed to generate genesis state from configuration: %v", err)
 		}
 	case *genesis.GenesisSource_File:
-		genesisFilePath := genesisSource.GetFile().Path
+		genesisFilePath := c.GenesisSource.GetFile().Path
 		if _, err := os.Stat(genesisFilePath); err != nil {
 			return fmt.Errorf("genesis file specified but not found %s", genesisFilePath)
 		}
@@ -158,9 +158,9 @@ func (c *Config) hydrateGenesisState(genesisSource *genesis.GenesisSource) error
 			return fmt.Errorf("failed to load genesis state from file: %v", err)
 		}
 	case *genesis.GenesisSource_State:
-		genesisState = genesisSource.GetState()
+		genesisState = c.GenesisSource.GetState()
 	default:
-		return fmt.Errorf("unsupported genesis source type: %v", genesisSource.Source)
+		return fmt.Errorf("unsupported genesis source type: %v", c.GenesisSource.Source)
 	}
 
 	c.GenesisSource.Source = &genesis.GenesisSource_State{

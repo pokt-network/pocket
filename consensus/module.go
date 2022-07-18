@@ -223,8 +223,8 @@ func (m *consensusModule) ValidatorMap() modules.ValidatorMap {
 	return m.validatorMap
 }
 
-func validatorListToMap(validators []*genesis.Validator) (m map[string]*genesis.Validator) {
-	m = make(map[string]*genesis.Validator, len(validators))
+func validatorListToMap(validators []*genesis.Validator) (m modules.ValidatorMap) {
+	m = make(modules.ValidatorMap, len(validators))
 	for _, v := range validators {
 		m[hex.EncodeToString(v.Address)] = v
 	}

@@ -6,7 +6,6 @@ import (
 	"math/big"
 
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
-	"github.com/pokt-network/pocket/shared/types/nodestate"
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -25,13 +24,9 @@ func (p *PrePersistenceModule) Start() error {
 	if err != nil {
 		return err
 	}
-	genesisState := nodestate.GetNodeState(nil).GenesisState
-	if genesisState == nil {
-		panic("THe genesis state must be specified to initiate the pre-persistence module")
-	}
 	c := pCtx.(*PrePersistenceContext)
 	// TODO(team): Load saved state from disk instead of genesis
-	err = InitGenesis(c, genesisState)
+	err = InitGenesis(c, p.Cfg.GenesisSource.GetState())
 	if err != nil {
 		return err
 	}

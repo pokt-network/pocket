@@ -15,7 +15,6 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/nodestate"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -66,8 +65,7 @@ func (m *p2pModule) GetBus() modules.Bus {
 func (m *p2pModule) Start() error {
 	log.Println("Starting network module")
 
-	testState := nodestate.GetNodeState(nil)
-	addrBook, err := ValidatorMapToAddrBook(m.p2pConfig, testState.ValidatorMap)
+	addrBook, err := ValidatorMapToAddrBook(m.p2pConfig, m.bus.GetConsensusModule().ValidatorMap())
 	if err != nil {
 		return err
 	}
