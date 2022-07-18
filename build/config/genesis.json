@@ -1,46 +1,58 @@
 {
-  "genesis_state_configs": {
-    "num_validators": 4,
-    "num_applications": 0,
-    "num_fisherman": 0,
-    "num_servicers": 0,
-    "validator_url_format": "node%d.consensus:8080",
-    "keys_seed_start": 42
-  },
-  "genesis_time": "2022-01-19T00:00:00.000000Z",
-  "app_hash": "genesis_block_or_state_hash",
   "validators": [
     {
+      "address": "0157a1d82da437eb6b2d0a612ebf934c3a54fb19",
+      "public_key": "264a0707979e0d6691f74b055429b5f318d39c2883bb509310b67424252e9ef2",
+      "paused": false,
       "status": 2,
       "service_url": "node1.consensus:8080",
       "staked_tokens": "1000000000000000",
-      "address": "0157a1d82da437eb6b2d0a612ebf934c3a54fb19",
-      "output": "0157a1d82da437eb6b2d0a612ebf934c3a54fb19",
-      "public_key": "264a0707979e0d6691f74b055429b5f318d39c2883bb509310b67424252e9ef2"
+      "missed_blocks": 0,
+      "paused_height": 0,
+      "unstaking_height": 0,
+      "output": "0157a1d82da437eb6b2d0a612ebf934c3a54fb19"
     },
     {
+      "address": "4cda991a51da75acf50e966c2716a7a2837d72eb",
+      "public_key": "ee37d8c8e9cf42a34cfa75ff1141e2bc0ff2f37483f064dce47cb4d5e69db1d4",
+      "paused": false,
       "status": 2,
       "service_url": "node2.consensus:8080",
       "staked_tokens": "1000000000000000",
-      "address": "4cda991a51da75acf50e966c2716a7a2837d72eb",
-      "output": "4cda991a51da75acf50e966c2716a7a2837d72eb",
-      "public_key": "ee37d8c8e9cf42a34cfa75ff1141e2bc0ff2f37483f064dce47cb4d5e69db1d4"
+      "missed_blocks": 0,
+      "paused_height": 0,
+      "unstaking_height": 0,
+      "output": "4cda991a51da75acf50e966c2716a7a2837d72eb"
     },
     {
+      "address": "67f6e8c48c62dc62a3706e7a8ba2164ca345d762",
+      "public_key": "1ba66c6751506850ae0787244c69476b6d45fb857a914a5a0445a24253f7b810",
+      "paused": false,
       "status": 2,
       "service_url": "node3.consensus:8080",
       "staked_tokens": "1000000000000000",
-      "address": "67f6e8c48c62dc62a3706e7a8ba2164ca345d762",
-      "output": "67f6e8c48c62dc62a3706e7a8ba2164ca345d762",
-      "public_key": "1ba66c6751506850ae0787244c69476b6d45fb857a914a5a0445a24253f7b810"
+      "missed_blocks": 0,
+      "paused_height": 0,
+      "unstaking_height": 0,
+      "output": "67f6e8c48c62dc62a3706e7a8ba2164ca345d762"
     },
     {
+      "address": "b0cca84843f6f5a274150a98da66d78f0273f64e",
+      "public_key": "f868bcc508133899cc47b612e4f7d9d5dacc90ce1f28214a97b651baa00bf6e4",
+      "paused": false,
       "status": 2,
       "service_url": "node4.consensus:8080",
       "staked_tokens": "1000000000000000",
-      "address": "b0cca84843f6f5a274150a98da66d78f0273f64e",
-      "output": "b0cca84843f6f5a274150a98da66d78f0273f64e",
-      "public_key": "f868bcc508133899cc47b612e4f7d9d5dacc90ce1f28214a97b651baa00bf6e4"
+      "missed_blocks": 0,
+      "paused_height": 0,
+      "unstaking_height": 0,
+      "output": "b0cca84843f6f5a274150a98da66d78f0273f64e"
     }
-  ]
+  ],
+  "accounts": [],
+  "pools": [],
+  "fisherman": [],
+  "service_nodes": [],
+  "apps": [],
+  "params": {}
 }

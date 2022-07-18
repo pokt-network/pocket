@@ -362,7 +362,6 @@ func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesi
 	validators := make([]*genesis.Validator, len(valKeys))
 	for i, valKey := range valKeys {
 		addr := valKey.Address()
-		fmt.Println(addr)
 		val := &genesis.Validator{
 			Address:         addr,
 			PublicKey:       valKey.PublicKey().Bytes(),

@@ -119,11 +119,6 @@ func (c *Config) ValidateAndHydrate() error {
 		return fmt.Errorf("private key in config file cannot be empty")
 	}
 
-	// if len(c.Genesis) == 0 {
-	// 	return fmt.Errorf("must specify a genesis file or string")
-	// }
-	// c.Genesis = rootify(c.Genesis, c.RootDir)
-
 	if err := c.Consensus.ValidateAndHydrate(); err != nil {
 		log.Fatalln("Error validating or completing consensus config: ", err)
 	}

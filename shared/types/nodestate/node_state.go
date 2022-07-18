@@ -64,46 +64,42 @@ func ResetNodeState(_ *testing.T) {
 	state = nil
 }
 
+// TODO: Load state from persistent storage
 func (ps *NodeState) loadStateFromConfig(cfg *config.Config) {
 	lock.Lock()
 	defer lock.Unlock()
 
-	if cfg.Persistence != nil && len(cfg.Persistence.DataDir) > 0 {
-		panic("[TODO] Load p2p state from persistence not supported. Only supporting loading p2p state from genesis file for now.")
-	} else if cfg.GenesisSource != nil {
+	if cfg.GenesisSource != nil {
 		log.Println("Loading state from Genesis")
-		ps.loadStateFromGenesis(cfg.GenesisSource)
+		ps.loadStateFromGenesisSource(cfg.GenesisSource)
 		return
 	}
 
-	log.Fatalf("[TODO] Config must not be nil when initializing the pocket state. ...")
+	log.Fatalf("Unsupported case to load state from config...")
 }
 
-func (ps *NodeState) loadStateFromGenesis(genesisSource *genesis.GenesisSource) {
-
+func (ps *NodeState) loadStateFromGenesisSource(genesisSource *genesis.GenesisSource) {
 	var genesisState *genesis.GenesisState
+	var err error
+
 	switch genesisSource.Source.(type) {
 	case *genesis.GenesisSource_Config:
-		log.Println("Loading state from `genesis_state_configs`")
 		genesisConfig := genesisSource.GetConfig()
-		var err error
-		genesisState, _, _, _, _, err = genesis.NewGenesisState(genesisConfig)
-		if err != nil {
-			log.Fatalf("Failed to generate genesis: %v", err)
+		if genesisState, _, _, _, _, err = genesis.NewGenesisState(genesisConfig); err != nil {
+			log.Fatalf("Failed to generate genesis state from configuration: %v", err)
 		}
 	case *genesis.GenesisSource_File:
 		genesisFilePath := genesisSource.GetFile().Path
 		if _, err := os.Stat(genesisFilePath); err != nil {
-			panic(fmt.Sprintf("Genesis file specified but not found %s", genesisFilePath))
+			log.Fatalf("Genesis file specified but not found %s", genesisFilePath)
 		}
-		var err error
-		genesisState, err = genesis.PocketGenesisFromFile(genesisFilePath)
-		if err != nil {
-			log.Fatalf("Failed to load genesis: %v", err)
+		if genesisState, err = genesis.GenesisStateFromFile(genesisFilePath); err != nil {
+			log.Fatalf("Failed to load genesis state from file: %v", err)
 		}
 	case *genesis.GenesisSource_State:
 		genesisState = genesisSource.GetState()
-		log.Println("Loading state from json file data")
+	default:
+		log.Fatalf("Unsupported genesis source type: %v", genesisSource.Source)
 	}
 
 	*ps = NodeState{
@@ -120,7 +116,6 @@ func ValidatorListToMap(validators []*genesis.Validator) (m map[string]*genesis.
 	for _, v := range validators {
 		m[hex.EncodeToString(v.Address)] = v
 	}
-	fmt.Println(m)
 	return
 }
 
