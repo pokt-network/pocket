@@ -7,7 +7,6 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/types/nodestate"
 )
 
 // TODO(olshansky): Sync with Andrew on the type of validation we need here.
@@ -41,7 +40,7 @@ func (m *consensusModule) prepareBlock() (*types.Block, error) {
 		Height:            int64(m.Height),
 		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            uint32(len(txs)),
-		LastBlockHash:     nodestate.GetNodeState(nil).AppHash, // testing temporary
+		LastBlockHash:     m.appHash,
 		ProposerAddress:   m.privateKey.Address(),
 		QuorumCertificate: nil,
 	}
@@ -108,9 +107,8 @@ func (m *consensusModule) commitBlock(block *types.Block) error {
 	m.utilityContext.ReleaseContext()
 	m.utilityContext = nil
 
-	state := nodestate.GetNodeState(nil)
-	state.UpdateAppHash(block.BlockHeader.Hash)
-	state.UpdateBlockHeight(uint64(block.BlockHeader.Height))
+	// m.Height = uint64(block.BlockHeader.Height)
+	m.appHash = block.BlockHeader.Hash
 
 	return nil
 }

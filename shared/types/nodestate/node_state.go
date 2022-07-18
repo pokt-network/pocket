@@ -2,7 +2,6 @@ package nodestate
 
 import (
 	"encoding/hex"
-	"fmt"
 	"os"
 	"testing"
 
@@ -20,8 +19,6 @@ import (
 type NodeState struct {
 	GenesisState *genesis.GenesisState
 
-	BlockHeight      uint64
-	AppHash          string                        // TODO: Why not call this a BlockHash or StateHash? SHould it be a []byte or string?
 	ValidatorMap     map[string]*genesis.Validator // TODO: Need to update this on every validator pause/stake/unstake/etc.
 	TotalVotingPower uint64                        // TODO: Need to update this on every send transaction.
 }
@@ -104,8 +101,6 @@ func (ps *NodeState) loadStateFromGenesisSource(genesisSource *genesis.GenesisSo
 
 	*ps = NodeState{
 		GenesisState: genesisState,
-		BlockHeight:  0,
-		AppHash:      "",
 		ValidatorMap: ValidatorListToMap(genesisState.Validators),
 	}
 	ps.recomputeTotalVotingPower()
@@ -125,16 +120,4 @@ func (ps *NodeState) recomputeTotalVotingPower() {
 	// for _, v := range ps.ValidatorMap {
 	// 	ps.TotalVotingPower += v.UPokt
 	// }
-}
-
-func (ps *NodeState) PrintGlobalState() {
-	fmt.Printf("\tGLOBAL STATE: (BlockHeight, PrevAppHash, # Validators, TotalVotingPower) is: (%d, %s, %d, %d)\n", ps.BlockHeight, ps.AppHash, len(ps.ValidatorMap), ps.TotalVotingPower)
-}
-
-func (ps *NodeState) UpdateAppHash(appHash string) {
-	ps.AppHash = appHash
-}
-
-func (ps *NodeState) UpdateBlockHeight(blockHeight uint64) {
-	ps.BlockHeight = blockHeight
 }

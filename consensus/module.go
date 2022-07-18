@@ -43,6 +43,9 @@ type consensusModule struct {
 	ValAddrToIdMap typesCons.ValAddrToIdMap // TODO(design): This needs to be updated every time the ValMap is modified
 	IdToValAddrMap typesCons.IdToValAddrMap // TODO(design): This needs to be updated every time the ValMap is modified
 
+	// Consensus State
+	appHash string
+
 	// Module Dependencies
 	utilityContext    modules.UtilityContext
 	paceMaker         Pacemaker
@@ -84,6 +87,8 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		LeaderId:       nil,
 		ValAddrToIdMap: valIdMap,
 		IdToValAddrMap: idValMap,
+
+		appHash: "",
 
 		utilityContext:    nil,
 		paceMaker:         paceMaker,
@@ -199,4 +204,12 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 
 	// Note that the leader also acts as a replica, but this logic is implemented in the underlying code.
 	leaderHandlers[msg.Step](m, msg)
+}
+
+func (m *consensusModule) AppHash() string {
+	return m.appHash
+}
+
+func (m *consensusModule) BlockHeight() uint64 {
+	return m.Height
 }
