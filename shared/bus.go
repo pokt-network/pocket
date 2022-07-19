@@ -42,6 +42,34 @@ func CreateBus(
 	return bus, nil
 }
 
+func CreateBusWithOptionalModules(
+	persistence modules.PersistenceModule,
+	p2p modules.P2PModule,
+	utility modules.UtilityModule,
+	consensus modules.ConsensusModule,
+) modules.Bus {
+	bus := &bus{
+		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
+		persistence: persistence,
+		p2p:         p2p,
+		utility:     utility,
+		consensus:   consensus,
+	}
+
+	maybeSetModuleBus := func(mod modules.Module) {
+		if mod != nil {
+			mod.SetBus(bus)
+		}
+	}
+
+	maybeSetModuleBus(persistence)
+	maybeSetModuleBus(p2p)
+	maybeSetModuleBus(utility)
+	maybeSetModuleBus(consensus)
+
+	return bus
+}
+
 func (m *bus) PublishEventToBus(e *types.PocketEvent) {
 	m.channel <- *e
 }

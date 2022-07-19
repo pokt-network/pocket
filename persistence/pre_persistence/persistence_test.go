@@ -42,8 +42,6 @@ func genesisConfig() *genesis.GenesisConfig {
 		NumApplications: 1,
 		NumFisherman:    1,
 		NumServicers:    5,
-		// ValidatorUrlFormat: "",
-		SeedStart: 42,
 	}
 	return config
 }

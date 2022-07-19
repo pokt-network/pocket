@@ -9,6 +9,7 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p/pre2p"
+	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -54,7 +55,9 @@ func main() {
 		PrivateKey: pk.(crypto.Ed25519PrivateKey),
 
 		// Used to access the validator map
-		Consensus: &config.ConsensusConfig{},
+		Consensus: &config.ConsensusConfig{
+			Pacemaker: &config.PacemakerConfig{},
+		},
 
 		// Not used - only set to avoid `pre2p.Create()` from crashing
 		Pre2P: &config.Pre2PConfig{
@@ -62,6 +65,9 @@ func main() {
 			UseRainTree:    true,
 			ConnectionType: config.TCPConnection,
 		},
+	}
+	if err := cfg.HydrateGenesisState(); err != nil {
+		log.Fatalf("[ERROR] Failed to hydrate the genesis state: %v", err.Error())
 	}
 
 	consensusMod, err = consensus.Create(cfg)
@@ -73,6 +79,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create pre2p module: %v", err.Error())
 	}
+
+	_ = shared.CreateBusWithOptionalModules(nil, pre2pMod, nil, consensusMod)
+
+	pre2pMod.Start()
 
 	for {
 		selection, err := promptGetInput()
@@ -143,10 +153,9 @@ func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
 	// broadcast. The reason it cannot be done right now is because this client is not in the
 	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
-
 	// pre2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
+
 	for _, val := range consensusMod.ValidatorMap() {
 		pre2pMod.Send(val.Address, anyProto, types.PocketTopic_DEBUG_TOPIC)
 	}
-
 }

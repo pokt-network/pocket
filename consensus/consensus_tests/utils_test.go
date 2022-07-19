@@ -351,8 +351,6 @@ func genesisConfig() *genesis.GenesisConfig {
 		NumApplications: 0,
 		NumFisherman:    0,
 		NumServicers:    0,
-		// ValidatorUrlFormat: "",
-		SeedStart: genesisConfigSeedStart,
 	}
 	return config
 }

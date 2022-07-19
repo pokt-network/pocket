@@ -51,8 +51,6 @@ func TestGenesisStateFromConfigSource(t *testing.T) {
 				NumApplications: 0,
 				NumFisherman:    0,
 				NumServicers:    0,
-				// ValidatorUrlFormat: "",
-				// SeedStart: genesisConfigSeedStart,
 			},
 		},
 	}

@@ -5,7 +5,6 @@ package genesis
 import (
 	"crypto/ed25519"
 	"encoding/binary"
-	"fmt"
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/types"
@@ -42,12 +41,6 @@ type NewGenesisStateConfigs struct {
 	NumAppplications uint16 `json:"num_applications"`
 	NumFisherman     uint16 `json:"num_fisherman"`
 	NumServicers     uint16 `json:"num_servicers"`
-
-	// HACK(olshansky): We should remove `SeedStart` and `ValidatorUrlFormat` altogether.
-	// They just enabled prototype integration faster but will lead to configuration confusion even
-	// in the short-term.
-	ValidatorUrlFormat string `json:"validator_url_format"`
-	SeedStart          uint32 `json:"keys_seed_start"`
 }
 
 // DISCUSS: Do we need to create an `Account` for every pool and/or every actor?
@@ -59,7 +52,7 @@ func NewGenesisState(genesisConfig *GenesisConfig) (state *GenesisState, validat
 	appKeys = make([]crypto.PrivateKey, genesisConfig.NumApplications)
 	fishKeys = make([]crypto.PrivateKey, genesisConfig.NumFisherman)
 	serviceNodeKeys = make([]crypto.PrivateKey, genesisConfig.NumServicers)
-	seedNum := genesisConfig.SeedStart
+	seedNum := uint32(42)
 	seed := make([]byte, ed25519.PrivateKeySize)
 	// create state objects for each key type
 
@@ -70,15 +63,9 @@ func NewGenesisState(genesisConfig *GenesisConfig) (state *GenesisState, validat
 		if err != nil {
 			return nil, nil, nil, nil, nil, err
 		}
-		var serviceUrl string
-		if len(genesisConfig.ValidatorUrlFormat) > 0 {
-			serviceUrl = fmt.Sprintf(genesisConfig.ValidatorUrlFormat, i+1)
-		} else {
-			serviceUrl = DefaultServiceUrl
-		}
 		v := &Validator{
-			Status:       2, // TODO: What does this status mean?
-			ServiceUrl:   serviceUrl,
+			Status:       2, // TODO: Change this to an enum so it is self descriptive
+			ServiceUrl:   DefaultServiceUrl,
 			StakedTokens: DefaultStake,
 		}
 		v.Address = pk.Address()
