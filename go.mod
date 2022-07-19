@@ -16,10 +16,6 @@ require (
 	google.golang.org/protobuf v1.28.0
 )
 
-require github.com/matryer/resync v0.0.0-20161211202428-d39c09a11215
-
-require github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
-
 require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
