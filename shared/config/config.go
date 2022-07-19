@@ -122,7 +122,7 @@ func (c *Config) ValidateAndHydrate() error {
 	}
 
 	if err := c.HydrateGenesisState(); err != nil {
-		return fmt.Errorf("error hydrating genesis state: %v", err)
+		return fmt.Errorf("error getting genesis state: %v", err)
 	}
 
 	if err := c.Consensus.ValidateAndHydrate(); err != nil {
@@ -137,29 +137,10 @@ func (c *Config) ValidateAndHydrate() error {
 }
 
 func (c *Config) HydrateGenesisState() error {
-	var genesisState *genesis.GenesisState
-	var err error
-
-	switch c.GenesisSource.Source.(type) {
-	case *genesis.GenesisSource_Config:
-		genesisConfig := c.GenesisSource.GetConfig()
-		if genesisState, _, _, _, _, err = genesis.NewGenesisState(genesisConfig); err != nil {
-			return fmt.Errorf("failed to generate genesis state from configuration: %v", err)
-		}
-	case *genesis.GenesisSource_File:
-		genesisFilePath := c.GenesisSource.GetFile().Path
-		if _, err := os.Stat(genesisFilePath); err != nil {
-			return fmt.Errorf("genesis file specified but not found %s", genesisFilePath)
-		}
-		if genesisState, err = genesis.GenesisStateFromFile(genesisFilePath); err != nil {
-			return fmt.Errorf("failed to load genesis state from file: %v", err)
-		}
-	case *genesis.GenesisSource_State:
-		genesisState = c.GenesisSource.GetState()
-	default:
-		return fmt.Errorf("unsupported genesis source type: %v", c.GenesisSource.Source)
+	genesisState, err := genesis.GenesisStateFromGenesisSource(c.GenesisSource)
+	if err != nil {
+		return fmt.Errorf("error getting genesis state: %v", err)
 	}
-
 	c.GenesisSource.Source = &genesis.GenesisSource_State{
 		State: genesisState,
 	}

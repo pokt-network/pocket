@@ -13,15 +13,6 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
-const ( // Names for each 'pool' (specialized accounts)
-	ServiceNodeStakePoolName = "SERVICE_NODE_STAKE_POOL"
-	AppStakePoolName         = "APP_STAKE_POOL"
-	ValidatorStakePoolName   = "VALIDATOR_STAKE_POOL"
-	FishermanStakePoolName   = "FISHERMAN_STAKE_POOL"
-	DAOPoolName              = "DAO_POOL"
-	FeePoolName              = "FEE_POOL"
-)
-
 var (
 	// NOTE: this is for fun illustration purposes... The addresses begin with DA0, DA0, and FEE :)
 	// Of course, in a production network the params / owners must be set in the genesis file
@@ -59,6 +50,7 @@ type NewGenesisStateConfigs struct {
 	SeedStart          uint32 `json:"keys_seed_start"`
 }
 
+// DISCUSS: Do we need to create an `Account` for every pool and/or every actor?
 // NewGenesisState IMPORTANT NOTE: Not using numOfValidators param, as Validators are now read from the test_state json file
 func NewGenesisState(genesisConfig *GenesisConfig) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
 	// create the genesis state object
