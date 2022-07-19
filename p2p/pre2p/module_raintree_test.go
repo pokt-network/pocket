@@ -207,7 +207,6 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 		for _, peer := range p2pMod.network.GetAddrBook() {
 			peer.Dialer = connMocks[peer.ServiceUrl]
 		}
-		// p2pMod.Start()
 		defer p2pMod.Stop()
 	}
 
@@ -317,8 +316,7 @@ func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWr
 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
 		data := <-testChannel
 		return data, nil
-	}).AnyTimes()
-	// }).MaxTimes(int(expectedNumNetworkReads + 1)) // INVESTIGATE(olshansky): The +1 is necessary because there is one extra read of empty data by every channel...
+	}).MaxTimes(int(expectedNumNetworkReads + 1)) // INVESTIGATE(olshansky): The +1 is necessary because there is one extra read of empty data by every channel...
 
 	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) error {
 		testChannel <- data

@@ -107,7 +107,6 @@ func (m *consensusModule) commitBlock(block *types.Block) error {
 	m.utilityContext.ReleaseContext()
 	m.utilityContext = nil
 
-	// m.Height = uint64(block.BlockHeader.Height)
 	m.appHash = block.BlockHeader.Hash
 
 	return nil
