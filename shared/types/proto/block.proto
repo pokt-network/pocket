@@ -4,6 +4,7 @@ package shared;
 option go_package = "github.com/pokt-network/pocket/shared/types";
 
 import "google/protobuf/timestamp.proto";
+
 // TODO (Team) Discuss all tendermint legacy
 message BlockHeader {
   int64 height = 1;

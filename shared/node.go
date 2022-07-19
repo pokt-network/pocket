@@ -34,21 +34,19 @@ func Create(cfg *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	// TODO(drewsky): deprecate pre-persistence
+	// TODO(drewsky): deprecate pre-persistence and move persistence into its place
 	prePersistenceMod, err := pre_persistence.Create(cfg)
 	if err != nil {
 		return nil, err
 	}
-	// TODO(derrandz): Replace with real P2P module
-	// p2pMod, err := p2p.Create(cfg)
+
+	// TODO(derrandz): Deprecate `p2p` and replace `pre2p` into its place
 	pre2pMod, err := pre2p.Create(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO(andrew): Replace with real Utility module
 	utilityMod, err := utility.Create(cfg)
-	// mockedUtilityMod, err := utility.CreateMockedModule(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +70,7 @@ func Create(cfg *config.Config) (n *Node, err error) {
 func (node *Node) Start() error {
 	log.Println("Starting pocket node...")
 
-	// NOTE: Order of module startup here matters.
+	// IMPORTANT: Order of module startup here matters
 
 	if err := node.GetBus().GetPersistenceModule().Start(); err != nil {
 		return err
@@ -90,11 +88,11 @@ func (node *Node) Start() error {
 		return err
 	}
 
-	// TODO(olshansky): discuss if we need a special type/event for this.
+	// The first event signaling that the node has started
 	signalNodeStartedEvent := &types.PocketEvent{Topic: types.PocketTopic_POCKET_NODE_TOPIC, Data: nil}
 	node.GetBus().PublishEventToBus(signalNodeStartedEvent)
 
-	// While loop lasting throughout the entire lifecycle of the node.
+	// While loop lasting throughout the entire lifecycle of the node to handle asynchronous events
 	for {
 		event := node.GetBus().GetBusEvent()
 		if err := node.handleEvent(event); err != nil {
@@ -126,7 +124,7 @@ func (node *Node) handleEvent(event *types.PocketEvent) error {
 	case types.PocketTopic_DEBUG_TOPIC:
 		return node.handleDebugEvent(event.Data)
 	case types.PocketTopic_POCKET_NODE_TOPIC:
-		log.Println("NOOP - Received pocket node topic signal")
+		log.Println("[NOOP] Received pocket node topic signal")
 	default:
 		log.Printf("[WARN] Unsupported PocketEvent topic: %s \n", event.Topic)
 	}

@@ -6,25 +6,22 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types/genesis"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
-// Genesis JSON File -> GenesisState
-// Genesis configurations -> GenesisState
-
 type Config struct {
-	RootDir       string                      `json:"root_dir"`
-	GenesisSource *typesGenesis.GenesisSource `json:"genesis_source"` // TECHDEBT(olshansky): we should be able to pass the struct in here.
+	RootDir       string                 `json:"root_dir"`
+	GenesisSource *genesis.GenesisSource `json:"genesis_source"` // TECHDEBT(olshansky): we should be able to pass the struct in here.
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 
-	Pre2P          *Pre2PConfig          `json:"pre2p"` // TECHDEBT(team): consolidate/replace this with P2P configs depending on next steps
-	P2P            *P2PConfig            `json:"p2p"`
-	Consensus      *ConsensusConfig      `json:"consensus"`
+	// TECHDEBT(team): Consolidate `Pre2P` and `P2P`
+	Pre2P     *Pre2PConfig     `json:"pre2p"`
+	P2P       *P2PConfig       `json:"p2p"`
+	Consensus *ConsensusConfig `json:"consensus"`
+	// TECHDEBT(team): Consolidate `Persistence` and `PrePersistence`
 	PrePersistence *PrePersistenceConfig `json:"pre_persistence"`
 	Persistence    *PersistenceConfig    `json:"persistence"`
 	Utility        *UtilityConfig        `json:"utility"`
@@ -90,7 +87,6 @@ type PersistenceConfig struct {
 type UtilityConfig struct {
 }
 
-// TODO(insert tooling issue # here): Re-evaluate how load configs should be handeled.
 func LoadConfig(file string) (c *Config) {
 	c = &Config{}
 
@@ -115,6 +111,7 @@ func LoadConfig(file string) (c *Config) {
 	return
 }
 
+// TODO: Exhaust all the configuration validation checks
 func (c *Config) ValidateAndHydrate() error {
 	if len(c.PrivateKey) == 0 {
 		return fmt.Errorf("private key in config file cannot be empty")
@@ -191,12 +188,4 @@ func (c *ConsensusConfig) ValidateAndHydrate() error {
 
 func (c *PacemakerConfig) ValidateAndHydrate() error {
 	return nil
-}
-
-// Helper function to make config creation independent of root dir
-func rootify(path, root string) string {
-	if filepath.IsAbs(path) {
-		return path
-	}
-	return filepath.Join(root, path)
 }
