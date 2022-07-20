@@ -1,6 +1,7 @@
 package consensus
 
 import (
+	"encoding/hex"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/types"
@@ -8,7 +9,7 @@ import (
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -43,6 +44,10 @@ type consensusModule struct {
 	ValAddrToIdMap typesCons.ValAddrToIdMap // TODO(design): This needs to be updated every time the ValMap is modified
 	IdToValAddrMap typesCons.IdToValAddrMap // TODO(design): This needs to be updated every time the ValMap is modified
 
+	// Consensus State
+	appHash      string
+	validatorMap map[string]*genesis.Validator
+
 	// Module Dependencies
 	utilityContext    modules.UtilityContext
 	paceMaker         Pacemaker
@@ -64,8 +69,10 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		return nil, err
 	}
 
+	valMap := validatorListToMap(cfg.GenesisSource.GetState().Validators)
+
 	address := cfg.PrivateKey.Address().String()
-	valIdMap, idValMap := typesCons.GetValAddrToIdMap(typesGenesis.GetNodeState(nil).ValidatorMap)
+	valIdMap, idValMap := typesCons.GetValAddrToIdMap(valMap)
 
 	m := &consensusModule{
 		bus:        nil,
@@ -84,6 +91,9 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		LeaderId:       nil,
 		ValAddrToIdMap: valIdMap,
 		IdToValAddrMap: idValMap,
+
+		appHash:      "",
+		validatorMap: valMap,
 
 		utilityContext:    nil,
 		paceMaker:         paceMaker,
@@ -199,4 +209,24 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 
 	// Note that the leader also acts as a replica, but this logic is implemented in the underlying code.
 	leaderHandlers[msg.Step](m, msg)
+}
+
+func (m *consensusModule) AppHash() string {
+	return m.appHash
+}
+
+func (m *consensusModule) BlockHeight() uint64 {
+	return m.Height
+}
+
+func (m *consensusModule) ValidatorMap() modules.ValidatorMap {
+	return m.validatorMap
+}
+
+func validatorListToMap(validators []*genesis.Validator) (m modules.ValidatorMap) {
+	m = make(modules.ValidatorMap, len(validators))
+	for _, v := range validators {
+		m[hex.EncodeToString(v.Address)] = v
+	}
+	return
 }

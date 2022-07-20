@@ -101,7 +101,7 @@ func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte
 		Chains:          chains,
 		ServiceUrl:      serviceURL,
 		StakedTokens:    stakedTokens,
-		PausedHeight:    uint64(pausedHeight),
+		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Output:          output,
 	}
@@ -266,7 +266,7 @@ func (m *PrePersistenceContext) SetFishermanStatusAndUnstakingHeightIfPausedBefo
 		if err := codec.Unmarshal(bz, &fish); err != nil {
 			return err
 		}
-		if fish.PausedHeight < uint64(pausedBeforeHeight) {
+		if fish.PausedHeight < pausedBeforeHeight && fish.PausedHeight != types.HeightNotUsed {
 			fish.UnstakingHeight = unstakingHeight
 			fish.Status = int32(status)
 			if err := m.SetFishermanUnstakingHeightAndStatus(fish.Address, fish.UnstakingHeight, status); err != nil {
@@ -299,7 +299,7 @@ func (m *PrePersistenceContext) SetFishermanPauseHeight(address []byte, height i
 	} else {
 		fish.Paused = true
 	}
-	fish.PausedHeight = uint64(height)
+	fish.PausedHeight = height
 	bz, err := codec.Marshal(fish)
 	if err != nil {
 		return err

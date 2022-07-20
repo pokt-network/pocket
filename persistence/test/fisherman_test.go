@@ -217,7 +217,7 @@ func newTestFisherman() (*typesGenesis.Fisherman, error) {
 		Chains:          typesGenesis.DefaultChains,
 		ServiceUrl:      DefaultServiceUrl,
 		StakedTokens:    typesGenesis.DefaultStake,
-		PausedHeight:    uint64(DefaultPauseHeight),
+		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          outputAddr,
 	}, nil
@@ -271,7 +271,7 @@ func getTestFisherman(db persistence.PostgresContext, address []byte) (*typesGen
 		Chains:          chains,
 		ServiceUrl:      serviceURL,
 		StakedTokens:    stakedTokens,
-		PausedHeight:    uint64(pauseHeight),
+		PausedHeight:    pauseHeight,
 		UnstakingHeight: unstakingHeight,
 		Output:          outputAddr,
 	}, nil

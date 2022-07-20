@@ -54,14 +54,14 @@ func TestUtilityContext_HandleMessageStakeApp(t *testing.T) {
 	if actor.Paused != false {
 		t.Fatalf("incorrect paused status, expected %v, got %v", false, actor.Paused)
 	}
-	if actor.PausedHeight != 0 {
-		t.Fatalf("incorrect paused status, expected %v, got %v", actor.PausedHeight, 0)
+	if actor.PausedHeight != types.HeightNotUsed {
+		t.Fatalf("incorrect paused height, expected %v, got %v", types.HeightNotUsed, actor.PausedHeight)
 	}
 	if actor.StakedTokens != defaultAmountString {
-		t.Fatalf("incorrect paused status, expected %v, got %v", actor.StakedTokens, defaultAmountString)
+		t.Fatalf("incorrect stake amount, expected %v, got %v", defaultAmountString, actor.StakedTokens)
 	}
-	if actor.UnstakingHeight != 0 {
-		t.Fatalf("incorrect unstaking height, expected %v, got %v", 0, actor.UnstakingHeight)
+	if actor.UnstakingHeight != types.HeightNotUsed {
+		t.Fatalf("incorrect unstaking height, expected %v, got %v", types.HeightNotUsed, actor.UnstakingHeight)
 	}
 	if !bytes.Equal(actor.Output, out) {
 		t.Fatalf("incorrect output address, expected %v, got %v", actor.Output, out)
@@ -89,8 +89,8 @@ func TestUtilityContext_HandleMessageEditStakeApp(t *testing.T) {
 	if actor.Paused != false {
 		t.Fatalf("incorrect paused status, expected %v, got %v", false, actor.Paused)
 	}
-	if actor.PausedHeight != 0 {
-		t.Fatalf("incorrect paused status, expected %v, got %v", actor.PausedHeight, 0)
+	if actor.PausedHeight != types.HeightNotUsed {
+		t.Fatalf("incorrect paused height, expected %v, got %v", types.HeightNotUsed, actor.PausedHeight)
 	}
 	if !reflect.DeepEqual(actor.Chains, msgChainsEdited.Chains) {
 		t.Fatalf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains)
@@ -98,8 +98,8 @@ func TestUtilityContext_HandleMessageEditStakeApp(t *testing.T) {
 	if actor.StakedTokens != defaultAmountString {
 		t.Fatalf("incorrect staked tokens, expected %v, got %v", defaultAmountString, actor.StakedTokens)
 	}
-	if actor.UnstakingHeight != 0 {
-		t.Fatalf("incorrect unstaking height, expected %v, got %v", 0, actor.UnstakingHeight)
+	if actor.UnstakingHeight != types.HeightNotUsed {
+		t.Fatalf("incorrect unstaking height, expected %v, got %v", types.HeightNotUsed, actor.UnstakingHeight)
 	}
 	if !bytes.Equal(actor.Output, actor.Output) {
 		t.Fatalf("incorrect output address, expected %v, got %v", actor.Output, actor.Output)
@@ -422,27 +422,31 @@ func TestUtilityContext_UnstakeAppsPausedBefore(t *testing.T) {
 
 func TestUtilityContext_UnstakeAppsThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
-	ctx.SetPoolAmount(typesUtil.AppStakePoolName, big.NewInt(math.MaxInt64))
+	ctx.SetPoolAmount(genesis.AppStakePoolName, big.NewInt(math.MaxInt64))
 	if err := ctx.Context.SetAppUnstakingBlocks(0); err != nil {
 		t.Fatal(err)
 	}
-	actor := GetAllTestingApps(t, ctx)[0]
-	if actor.Status != typesUtil.StakedStatus {
-		t.Fatal("wrong starting status")
-	}
 	err := ctx.Context.SetAppMaxPausedBlocks(0)
-	require.NoError(t, err)
-	if err := ctx.SetAppPauseHeight(actor.Address, 0); err != nil {
+	if err != nil {
 		t.Fatal(err)
 	}
-	if err := ctx.UnstakeAppsPausedBefore(1); err != nil {
+	actors := GetAllTestingApps(t, ctx)
+	for _, actor := range actors {
+		if actor.Status != typesUtil.StakedStatus {
+			t.Fatal("wrong starting status")
+		}
+		if err := ctx.SetAppPauseHeight(actor.Address, 1); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := ctx.UnstakeAppsPausedBefore(2); err != nil {
 		t.Fatal(err)
 	}
 	if err := ctx.UnstakeAppsThatAreReady(); err != nil {
 		t.Fatal(err)
 	}
 	if len(GetAllTestingApps(t, ctx)) != 0 {
-		t.Fatal("actor still exists after unstake that are ready() call")
+		t.Fatal("apps still exists after unstake that are ready() call")
 	}
 }
 

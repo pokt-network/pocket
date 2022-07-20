@@ -22,7 +22,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/types"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -71,9 +71,13 @@ func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
 		c := config.Config{
 			RootDir:    "",                                  // left empty intentionally
 			PrivateKey: pk.(cryptoPocket.Ed25519PrivateKey), // deterministic key based on `i`
-			Genesis:    genesisJson(t),
-			Pre2P:      nil,
-			P2P:        nil,
+			GenesisSource: &genesis.GenesisSource{
+				Source: &genesis.GenesisSource_Config{
+					Config: genesisConfig(),
+				},
+			},
+			Pre2P: nil,
+			P2P:   nil,
 			Consensus: &config.ConsensusConfig{
 				MaxMempoolBytes: 500000000,
 				MaxBlockBytes:   4000000,
@@ -120,8 +124,6 @@ func CreateTestConsensusPocketNode(
 	cfg *config.Config,
 	testChannel modules.EventsChannel,
 ) *shared.Node {
-	_ = typesGenesis.GetNodeState(cfg)
-
 	consensusMod, err := consensus.Create(cfg)
 	require.NoError(t, err)
 
@@ -344,24 +346,12 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 
 /*** Genesis Helpers ***/
 
-// The genesis file is hardcoded for test purposes, but is also
-// validated before returning the string in case changes in the
-// configurations are made.
-func genesisJson(t *testing.T) string {
-	genesisJsonStr := fmt.Sprintf(`{
-		"genesis_state_configs": {
-			"num_validators": 4,
-			"num_applications": 0,
-			"num_fisherman": 0,
-			"num_servicers": 0,
-			"keys_seed_start": %d
-		},
-		"genesis_time": "2022-01-19T00:00:00.000000Z",
-		"app_hash": "genesis_block_or_state_hash"
-	}`, genesisConfigSeedStart)
-
-	_, err := typesGenesis.PocketGenesisFromJSON([]byte(genesisJsonStr))
-	require.NoError(t, err)
-
-	return genesisJsonStr
+func genesisConfig() *genesis.GenesisConfig {
+	config := &genesis.GenesisConfig{
+		NumValidators:   4,
+		NumApplications: 0,
+		NumFisherman:    0,
+		NumServicers:    0,
+	}
+	return config
 }

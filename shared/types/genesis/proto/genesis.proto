@@ -9,14 +9,37 @@ import "app.proto";
 import "fisherman.proto";
 import "service_node.proto";
 import "gov.proto";
+import "google/protobuf/timestamp.proto";
+
+message GenesisSource {
+  oneof source {
+    GenesisFile file = 1; // Genesis state is in a separate file - useful for production
+    GenesisState state = 2; // Genesis state is embedded directly in the config - useful for testing
+    GenesisConfig config = 3; // Genesis configuration is structurally defined but composed at runtime - useful for development & testing
+  }
+}
+
+message GenesisFile {
+  string path = 1;
+}
 
 // TODO(team): Consolidate this into a shared genesis proto.
 message GenesisState {
-  repeated Validator validators = 1;
-  repeated Account accounts = 2;
-  repeated Pool pools = 3;
-  repeated Fisherman fishermen = 4;
-  repeated ServiceNode service_nodes = 5;
-  repeated App apps = 6;
-  Params params = 7;
+  google.protobuf.Timestamp genesis_time = 1;
+
+  repeated Validator validators = 2;
+  repeated Account accounts = 3;
+  repeated Pool pools = 4;
+  repeated Fisherman fishermen = 5;
+  repeated ServiceNode service_nodes = 6;
+  repeated App apps = 7;
+
+  Params params = 8;
+}
+
+message GenesisConfig {
+  uint64 num_validators = 1;
+	uint64 num_applications = 2;
+	uint64 num_fisherman = 3;
+	uint64 num_servicers = 4;
 }

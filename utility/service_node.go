@@ -3,6 +3,7 @@ package utility
 import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -45,7 +46,7 @@ func (u *UtilityContext) HandleMessageStakeServiceNode(message *typesUtil.Messag
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(typesUtil.ServiceNodeStakePoolName, amount); err != nil {
+	if err := u.AddPoolAmount(typesGenesis.ServiceNodeStakePoolName, amount); err != nil {
 		return err
 	}
 	// ensure ServiceNode doesn't already exist
@@ -97,7 +98,7 @@ func (u *UtilityContext) HandleMessageEditStakeServiceNode(message *typesUtil.Me
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(typesUtil.ServiceNodeStakePoolName, amountToAdd); err != nil {
+	if err := u.AddPoolAmount(typesGenesis.ServiceNodeStakePoolName, amountToAdd); err != nil {
 		return err
 	}
 	// insert the serviceNode structure
@@ -132,7 +133,7 @@ func (u *UtilityContext) UnstakeServiceNodesThatAreReady() types.Error {
 		return err
 	}
 	for _, serviceNode := range serviceNodesReadyToUnstake {
-		if err := u.SubPoolAmount(typesUtil.ServiceNodeStakePoolName, serviceNode.GetStakeAmount()); err != nil {
+		if err := u.SubPoolAmount(typesGenesis.ServiceNodeStakePoolName, serviceNode.GetStakeAmount()); err != nil {
 			return err
 		}
 		if err := u.AddAccountAmountString(serviceNode.GetOutputAddress(), serviceNode.GetStakeAmount()); err != nil {
@@ -155,7 +156,8 @@ func (u *UtilityContext) BeginUnstakingMaxPausedServiceNodes() types.Error {
 		return err
 	}
 	beforeHeight := latestHeight - int64(maxPausedBlocks)
-	if beforeHeight < 0 { // genesis edge case
+	// genesis edge case
+	if beforeHeight < 0 {
 		beforeHeight = 0
 	}
 	if err := u.UnstakeServiceNodesPausedBefore(beforeHeight); err != nil {
@@ -201,7 +203,7 @@ func (u *UtilityContext) HandleMessageUnpauseServiceNode(message *typesUtil.Mess
 	if latestHeight < int64(minPauseBlocks)+pausedHeight {
 		return types.ErrNotReadyToUnpause()
 	}
-	if err := u.SetServiceNodePauseHeight(message.Address, typesUtil.ZeroInt); err != nil {
+	if err := u.SetServiceNodePauseHeight(message.Address, typesUtil.HeightNotUsed); err != nil {
 		return err
 	}
 	return nil
@@ -222,7 +224,7 @@ func (u *UtilityContext) GetServiceNodeExists(address []byte) (bool, types.Error
 
 func (u *UtilityContext) InsertServiceNode(address, publicKey, output []byte, serviceURL, amount string, chains []string) types.Error {
 	store := u.Store()
-	err := store.InsertServiceNode(address, publicKey, output, false, typesUtil.StakedStatus, serviceURL, amount, chains, typesUtil.ZeroInt, typesUtil.ZeroInt)
+	err := store.InsertServiceNode(address, publicKey, output, false, typesUtil.StakedStatus, serviceURL, amount, chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	if err != nil {
 		return types.ErrInsert(err)
 	}

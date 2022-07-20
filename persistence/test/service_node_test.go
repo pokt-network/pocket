@@ -217,7 +217,7 @@ func newTestServiceNode() (*typesGenesis.ServiceNode, error) {
 		Chains:          typesGenesis.DefaultChains,
 		ServiceUrl:      DefaultServiceUrl,
 		StakedTokens:    typesGenesis.DefaultStake,
-		PausedHeight:    uint64(DefaultPauseHeight),
+		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          outputAddr,
 	}, nil
@@ -271,7 +271,7 @@ func getTestServiceNode(db persistence.PostgresContext, address []byte) (*typesG
 		Chains:          chains,
 		ServiceUrl:      serviceURL,
 		StakedTokens:    stakedTokens,
-		PausedHeight:    uint64(pauseHeight),
+		PausedHeight:    pauseHeight,
 		UnstakingHeight: unstakingHeight,
 		Output:          outputAddr,
 	}, nil

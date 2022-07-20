@@ -6,6 +6,7 @@ import (
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -48,7 +49,7 @@ func (u *UtilityContext) HandleMessageStakeApp(message *typesUtil.MessageStakeAp
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(typesUtil.AppStakePoolName, amount); err != nil {
+	if err := u.AddPoolAmount(typesGenesis.AppStakePoolName, amount); err != nil {
 		return err
 	}
 	// calculate maximum relays from stake amount
@@ -105,7 +106,7 @@ func (u *UtilityContext) HandleMessageEditStakeApp(message *typesUtil.MessageEdi
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(typesUtil.AppStakePoolName, amountToAdd); err != nil {
+	if err := u.AddPoolAmount(typesGenesis.AppStakePoolName, amountToAdd); err != nil {
 		return err
 	}
 	// calculate maximum relays from stake amount
@@ -145,7 +146,7 @@ func (u *UtilityContext) UnstakeAppsThatAreReady() types.Error {
 		return err
 	}
 	for _, app := range appsReadyToUnstake {
-		if err := u.SubPoolAmount(typesUtil.AppStakePoolName, app.GetStakeAmount()); err != nil {
+		if err := u.SubPoolAmount(typesGenesis.AppStakePoolName, app.GetStakeAmount()); err != nil {
 			return err
 		}
 		if err := u.AddAccountAmountString(app.GetOutputAddress(), app.GetStakeAmount()); err != nil {
@@ -168,7 +169,8 @@ func (u *UtilityContext) BeginUnstakingMaxPausedApps() types.Error {
 		return err
 	}
 	beforeHeight := latestHeight - int64(maxPausedBlocks)
-	if beforeHeight < 0 { // genesis edge case
+	// genesis edge case
+	if beforeHeight < 0 {
 		beforeHeight = 0
 	}
 	if err := u.UnstakeAppsPausedBefore(beforeHeight); err != nil {

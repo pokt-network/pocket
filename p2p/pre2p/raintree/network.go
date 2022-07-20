@@ -8,8 +8,6 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/pokt-network/pocket/shared/config"
-
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
@@ -34,7 +32,7 @@ type rainTreeNetwork struct {
 	mempool types.Mempool
 }
 
-func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook, config *config.Config) typesPre2P.Network {
+func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesPre2P.AddrBook) typesPre2P.Network {
 	n := &rainTreeNetwork{
 		selfAddr: addr,
 		addrBook: addrBook,

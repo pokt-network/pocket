@@ -11,7 +11,7 @@ message App {
   repeated string chains = 5;
   string max_relays = 6;
   string staked_tokens = 7;
-  uint64 paused_height = 8;
+  int64 paused_height = 8;
   int64 unstaking_height = 9; // DISCUSS: Why is this int64 but the above is a uint64?
   bytes output = 10;
 }

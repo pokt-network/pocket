@@ -217,7 +217,7 @@ func newTestApp() (*typesGenesis.App, error) {
 		Chains:          typesGenesis.DefaultChains,
 		MaxRelays:       DefaultMaxRelays,
 		StakedTokens:    typesGenesis.DefaultStake,
-		PausedHeight:    uint64(DefaultPauseHeight),
+		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          outputAddr,
 	}, nil
@@ -271,7 +271,7 @@ func getTestApp(db persistence.PostgresContext, address []byte) (*typesGenesis.A
 		Chains:          chains,
 		MaxRelays:       maxRelays,
 		StakedTokens:    stakedTokens,
-		PausedHeight:    uint64(pauseHeight),
+		PausedHeight:    pauseHeight,
 		UnstakingHeight: unstakingHeight,
 		Output:          outputAddr,
 	}, nil

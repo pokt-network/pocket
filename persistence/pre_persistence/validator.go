@@ -101,7 +101,7 @@ func (m *PrePersistenceContext) InsertValidator(address []byte, publicKey []byte
 		ServiceUrl:      serviceURL,
 		StakedTokens:    stakedTokens,
 		MissedBlocks:    0,
-		PausedHeight:    uint64(pausedHeight),
+		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Output:          output,
 	}
@@ -157,7 +157,7 @@ func (m *PrePersistenceContext) DeleteValidator(address []byte) error {
 	return db.Put(key, DeletedPrefixKey)
 }
 
-func (m *PrePersistenceContext) GetValidatorsReadyToUnstake(height int64, status int) (fishermen []*types.UnstakingActor, err error) {
+func (m *PrePersistenceContext) GetValidatorsReadyToUnstake(height int64, status int) (validators []*types.UnstakingActor, err error) {
 	db := m.Store()
 	unstakingKey := append(UnstakingValidatorPrefixKey, types.Int64ToBytes(height)...)
 	if has := db.Contains(unstakingKey); !has {
@@ -174,9 +174,7 @@ func (m *PrePersistenceContext) GetValidatorsReadyToUnstake(height int64, status
 	if err := proto.Unmarshal(val, &unstakingActors); err != nil {
 		return nil, err
 	}
-	for _, sn := range unstakingActors.UnstakingActors {
-		fishermen = append(fishermen, sn)
-	}
+	validators = append(validators, unstakingActors.UnstakingActors...)
 	return
 }
 
@@ -267,7 +265,7 @@ func (m *PrePersistenceContext) SetValidatorsStatusAndUnstakingHeightIfPausedBef
 		if err := codec.Unmarshal(bz, &validator); err != nil {
 			return err
 		}
-		if validator.PausedHeight < uint64(pausedBeforeHeight) {
+		if validator.PausedHeight < pausedBeforeHeight && validator.PausedHeight != types.HeightNotUsed {
 			validator.UnstakingHeight = unstakingHeight
 			validator.Status = int32(status)
 			if err := m.SetValidatorUnstakingHeightAndStatus(validator.Address, validator.UnstakingHeight, status); err != nil {
@@ -299,7 +297,7 @@ func (m *PrePersistenceContext) SetValidatorPauseHeightAndMissedBlocks(address [
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	val.PausedHeight = uint64(pausedHeight)
+	val.PausedHeight = pausedHeight
 	val.Paused = true
 	val.MissedBlocks = uint32(missedBlocks)
 	bz, err := codec.Marshal(val)
@@ -357,7 +355,7 @@ func (m *PrePersistenceContext) SetValidatorPauseHeight(address []byte, height i
 	} else {
 		val.Paused = true
 	}
-	val.PausedHeight = uint64(height)
+	val.PausedHeight = height
 	bz, err := codec.Marshal(val)
 	if err != nil {
 		return err

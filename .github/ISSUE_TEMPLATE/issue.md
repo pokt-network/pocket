@@ -1,28 +1,43 @@
 ---
 name: Issue
-about: This is a general purpose issue, which should have a milestone attached
-title: '[REPLACE ME] with a descriptive title'
+about: A general purpose issue - should be attached to a milestone
+title: "[REPLACE ME] with a descriptive title"
 labels: ''
 assignees: ''
 
 ---
 
 # Objective
-[ Issue description - What]
+[ Issue description - What?]
 
 # Origin Document
-[ Issue of the origin or link to a document - Planning and Justification for the issue]
+[ Issue justification and/or link to another document - Why?]
 
-# Goals
-## Deliverables
-- [ ] List of deliverables
+# Goals / Deliverables
+- [ ] Goal / deliverable #1
+- [ ] Goal / deliverable #2
+- [ ] ...
 
-## [Optional] Testing Methodology
-How to properly test this issue
+## General issue checklist
+- [ ] Update the appropriate CHANGELOG
+- [ ] Update the README
+- [ ] If applicable, update the source code tree explanation
+- [ ] If applicable, add or update a state, sequence or flowchart diagram using [mermaid](https://mermaid-js.github.io/mermaid/)
+- [ ] Update any relevant global documentation & references
+- [ ] Document small issues / TODOs along the way
 
-## Non-goals
-- List of goals that this issue won't address
+# Non-goals
+- *List of tasks / goals this issue SHOULD NOT address since they are out of scope*
+- ...
+
+# [Optional] Testing Methodology
+- *Make sure to update the testing methodology appropriately*
+- **Task specific tests**: `make ...` 
+- **All tests**: `make test_all`
+- **LocalNet**: verify a `LocalNet` is still functioning correctly by following the instructions at [docs/development/README.md](https://github.com/pokt-network/pocket/tree/main/docs/development)
+Remove
+
+---
 
 Creator: [github username of the creator]
-Co-Owners: [github usernames of the owner - Optional]
-Deliverables: [List of deliverables besides the PR - Optional]
+Co-Owners: [optional - github usernames of the co-owner(s)]

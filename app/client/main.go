@@ -7,12 +7,14 @@ import (
 	"os"
 
 	"github.com/manifoldco/promptui"
+	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p/pre2p"
+	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -32,6 +34,7 @@ var items = []string{
 
 // A P2P module is initialized in order to broadcast a message to the local network
 var pre2pMod modules.P2PModule
+var consensusMod modules.ConsensusModule
 
 func main() {
 	pk, err := crypto.GeneratePrivateKey()
@@ -40,10 +43,21 @@ func main() {
 	}
 
 	cfg := &config.Config{
-		Genesis: "build/config/genesis.json",
+		GenesisSource: &genesis.GenesisSource{
+			Source: &genesis.GenesisSource_File{
+				File: &genesis.GenesisFile{
+					Path: "build/config/genesis.json",
+				},
+			},
+		},
 
 		// Not used - only set to avoid `GetNodeState(_)` from crashing
 		PrivateKey: pk.(crypto.Ed25519PrivateKey),
+
+		// Used to access the validator map
+		Consensus: &config.ConsensusConfig{
+			Pacemaker: &config.PacemakerConfig{},
+		},
 
 		// Not used - only set to avoid `pre2p.Create()` from crashing
 		Pre2P: &config.Pre2PConfig{
@@ -52,14 +66,23 @@ func main() {
 			ConnectionType: config.TCPConnection,
 		},
 	}
+	if err := cfg.HydrateGenesisState(); err != nil {
+		log.Fatalf("[ERROR] Failed to hydrate the genesis state: %v", err.Error())
+	}
 
-	// Initialize the state singleton
-	_ = typesGenesis.GetNodeState(cfg)
+	consensusMod, err = consensus.Create(cfg)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
+	}
 
 	pre2pMod, err = pre2p.Create(cfg)
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to create pre2p module: " + err.Error())
+		log.Fatalf("[ERROR] Failed to create pre2p module: %v", err.Error())
 	}
+
+	_ = shared.CreateBusWithOptionalModules(nil, pre2pMod, nil, consensusMod)
+
+	pre2pMod.Start()
 
 	for {
 		selection, err := promptGetInput()
@@ -130,10 +153,9 @@ func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
 	// broadcast. The reason it cannot be done right now is because this client is not in the
 	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
-
 	// pre2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
-	for _, val := range typesGenesis.GetNodeState(nil).ValidatorMap {
+
+	for _, val := range consensusMod.ValidatorMap() {
 		pre2pMod.Send(val.Address, anyProto, types.PocketTopic_DEBUG_TOPIC)
 	}
-
 }

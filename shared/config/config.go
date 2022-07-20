@@ -6,20 +6,22 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 type Config struct {
-	RootDir string `json:"root_dir"`
-	Genesis string `json:"genesis"` // TECHDEBT(olshansky): we should be able to pass the struct in here.
+	RootDir       string                 `json:"root_dir"`
+	GenesisSource *genesis.GenesisSource `json:"genesis_source"` // TECHDEBT(olshansky): we should be able to pass the struct in here.
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 
-	Pre2P          *Pre2PConfig          `json:"pre2p"` // TECHDEBT(team): consolidate/replace this with P2P configs depending on next steps
-	P2P            *P2PConfig            `json:"p2p"`
-	Consensus      *ConsensusConfig      `json:"consensus"`
+	// TECHDEBT(team): Consolidate `Pre2P` and `P2P`
+	Pre2P     *Pre2PConfig     `json:"pre2p"`
+	P2P       *P2PConfig       `json:"p2p"`
+	Consensus *ConsensusConfig `json:"consensus"`
+	// TECHDEBT(team): Consolidate `Persistence` and `PrePersistence`
 	PrePersistence *PrePersistenceConfig `json:"pre_persistence"`
 	Persistence    *PersistenceConfig    `json:"persistence"`
 	Utility        *UtilityConfig        `json:"utility"`
@@ -85,7 +87,6 @@ type PersistenceConfig struct {
 type UtilityConfig struct {
 }
 
-// TODO(insert tooling issue # here): Re-evaluate how load configs should be handeled.
 func LoadConfig(file string) (c *Config) {
 	c = &Config{}
 
@@ -110,24 +111,39 @@ func LoadConfig(file string) (c *Config) {
 	return
 }
 
+// TODO: Exhaust all the configuration validation checks
 func (c *Config) ValidateAndHydrate() error {
 	if len(c.PrivateKey) == 0 {
 		return fmt.Errorf("private key in config file cannot be empty")
 	}
 
-	if len(c.Genesis) == 0 {
-		return fmt.Errorf("must specify a genesis file or string")
+	if c.GenesisSource == nil {
+		return fmt.Errorf("genesis source cannot be nil in config")
 	}
-	c.Genesis = rootify(c.Genesis, c.RootDir)
+
+	if err := c.HydrateGenesisState(); err != nil {
+		return fmt.Errorf("error getting genesis state: %v", err)
+	}
 
 	if err := c.Consensus.ValidateAndHydrate(); err != nil {
-		log.Fatalln("Error validating or completing consensus config: ", err)
+		return fmt.Errorf("error validating or completing consensus config: %v", err)
 	}
 
 	if err := c.P2P.ValidateAndHydrate(); err != nil {
-		log.Fatalln("Error validating or completing P2P config: ", err)
+		return fmt.Errorf("error validating or completing P2P config: %v", err)
 	}
 
+	return nil
+}
+
+func (c *Config) HydrateGenesisState() error {
+	genesisState, err := genesis.GenesisStateFromGenesisSource(c.GenesisSource)
+	if err != nil {
+		return fmt.Errorf("error getting genesis state: %v", err)
+	}
+	c.GenesisSource.Source = &genesis.GenesisSource_State{
+		State: genesisState,
+	}
 	return nil
 }
 
@@ -153,12 +169,4 @@ func (c *ConsensusConfig) ValidateAndHydrate() error {
 
 func (c *PacemakerConfig) ValidateAndHydrate() error {
 	return nil
-}
-
-// Helper function to make config creation independent of root dir
-func rootify(path, root string) string {
-	if filepath.IsAbs(path) {
-		return path
-	}
-	return filepath.Join(root, path)
 }

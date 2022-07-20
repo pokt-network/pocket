@@ -6,14 +6,13 @@ import (
 
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func DefaultTestingParams(_ *testing.T) *genesis.Params {
-	return typesGenesis.DefaultParams()
+	return genesis.DefaultParams()
 }
 
 func TestUtilityContext_GetAppMaxChains(t *testing.T) {
@@ -619,7 +618,7 @@ func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
 		t.Fatalf("unexpected param value: expected %v got %v", defaultParam, gotParam)
 	}
 	newParamValue := int32(2)
-	paramOwnerPK := typesGenesis.DefaultParamsOwner
+	paramOwnerPK := genesis.DefaultParamsOwner
 	any, err := cdc.ToAny(&wrapperspb.Int32Value{
 		Value: newParamValue,
 	})

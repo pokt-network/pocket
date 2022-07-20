@@ -44,3 +44,6 @@ p2p/pre2p/types/mocks/
 # Output binaries
 bin/
 build/dist/*
+
+# Local debugging
+temp_test.go

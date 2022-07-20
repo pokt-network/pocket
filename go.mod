@@ -14,15 +14,10 @@ require (
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	golang.org/x/exp v0.0.0-20220301223727-77fc55f9b6c1
 	gonum.org/v1/gonum v0.9.3
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/protobuf v1.28.0
 )
 
-require (
-	github.com/iancoleman/strcase v0.2.0
-	github.com/matryer/resync v0.0.0-20161211202428-d39c09a11215
-)
-
-require github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
+require github.com/iancoleman/strcase v0.2.0
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect

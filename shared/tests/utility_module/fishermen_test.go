@@ -54,14 +54,14 @@ func TestUtilityContext_HandleMessageStakeFisherman(t *testing.T) {
 	if actor.Paused != false {
 		t.Fatalf("incorrect paused status, expected %v, got %v", false, actor.Paused)
 	}
-	if actor.PausedHeight != 0 {
-		t.Fatalf("incorrect paused status, expected %v, got %v", actor.PausedHeight, 0)
+	if actor.PausedHeight != types.HeightNotUsed {
+		t.Fatalf("incorrect paused height, expected %v, got %v", types.HeightNotUsed, actor.PausedHeight)
 	}
 	if actor.StakedTokens != defaultAmountString {
-		t.Fatalf("incorrect paused status, expected %v, got %v", actor.StakedTokens, defaultAmountString)
+		t.Fatalf("incorrect staked amount, expected %v, got %v", actor.StakedTokens, defaultAmountString)
 	}
-	if actor.UnstakingHeight != 0 {
-		t.Fatalf("incorrect unstaking height, expected %v, got %v", 0, actor.UnstakingHeight)
+	if actor.UnstakingHeight != types.HeightNotUsed {
+		t.Fatalf("incorrect unstaking height, expected %v, got %v", types.HeightNotUsed, actor.UnstakingHeight)
 	}
 	if !bytes.Equal(actor.Output, out) {
 		t.Fatalf("incorrect output address, expected %v, got %v", actor.Output, out)
@@ -89,8 +89,8 @@ func TestUtilityContext_HandleMessageEditStakeFisherman(t *testing.T) {
 	if actor.Paused != false {
 		t.Fatalf("incorrect paused status, expected %v, got %v", false, actor.Paused)
 	}
-	if actor.PausedHeight != 0 {
-		t.Fatalf("incorrect paused status, expected %v, got %v", actor.PausedHeight, 0)
+	if actor.PausedHeight != types.HeightNotUsed {
+		t.Fatalf("incorrect paused height, expected %v, got %v", types.HeightNotUsed, actor.PausedHeight)
 	}
 	if !reflect.DeepEqual(actor.Chains, msgChainsEdited.Chains) {
 		t.Fatalf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains)
@@ -98,8 +98,8 @@ func TestUtilityContext_HandleMessageEditStakeFisherman(t *testing.T) {
 	if actor.StakedTokens != defaultAmountString {
 		t.Fatalf("incorrect staked tokens, expected %v, got %v", defaultAmountString, actor.StakedTokens)
 	}
-	if actor.UnstakingHeight != 0 {
-		t.Fatalf("incorrect unstaking height, expected %v, got %v", 0, actor.UnstakingHeight)
+	if actor.UnstakingHeight != types.HeightNotUsed {
+		t.Fatalf("incorrect unstaking height, expected %v, got %v", types.HeightNotUsed, actor.UnstakingHeight)
 	}
 	if !bytes.Equal(actor.Output, actor.Output) {
 		t.Fatalf("incorrect output address, expected %v, got %v", actor.Output, actor.Output)
@@ -412,27 +412,31 @@ func TestUtilityContext_UnstakeFishermenPausedBefore(t *testing.T) {
 
 func TestUtilityContext_UnstakeFishermenThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
-	ctx.SetPoolAmount(typesUtil.FishermanStakePoolName, big.NewInt(math.MaxInt64))
+	ctx.SetPoolAmount(genesis.FishermanStakePoolName, big.NewInt(math.MaxInt64))
 	if err := ctx.Context.SetFishermanUnstakingBlocks(0); err != nil {
 		t.Fatal(err)
 	}
-	actor := GetAllTestingFishermen(t, ctx)[0]
-	if actor.Status != typesUtil.StakedStatus {
-		t.Fatal("wrong starting status")
-	}
 	err := ctx.Context.SetFishermanMaxPausedBlocks(0)
-	require.NoError(t, err)
-	if err := ctx.SetFishermanPauseHeight(actor.Address, 0); err != nil {
+	if err != nil {
 		t.Fatal(err)
 	}
-	if err := ctx.UnstakeFishermenPausedBefore(1); err != nil {
+	actors := GetAllTestingFishermen(t, ctx)
+	for _, actor := range actors {
+		if actor.Status != typesUtil.StakedStatus {
+			t.Fatal("wrong starting status")
+		}
+		if err := ctx.SetFishermanPauseHeight(actor.Address, 1); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := ctx.UnstakeFishermenPausedBefore(2); err != nil {
 		t.Fatal(err)
 	}
 	if err := ctx.UnstakeFishermenThatAreReady(); err != nil {
 		t.Fatal(err)
 	}
 	if len(GetAllTestingFishermen(t, ctx)) != 0 {
-		t.Fatal("actor still exists after unstake that are ready() call")
+		t.Fatal("fishermen still exists after unstake that are ready() call")
 	}
 }
 

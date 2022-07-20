@@ -212,7 +212,7 @@ func newTestValidator() (*typesGenesis.Validator, error) {
 		Status:          typesGenesis.DefaultStakeStatus,
 		ServiceUrl:      DefaultServiceUrl,
 		StakedTokens:    typesGenesis.DefaultStake,
-		PausedHeight:    uint64(DefaultPauseHeight),
+		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          outputAddr,
 	}, nil
@@ -264,7 +264,7 @@ func getTestValidator(db persistence.PostgresContext, address []byte) (*typesGen
 		Status:          persistence.UnstakingHeightToStatus(unstakingHeight),
 		ServiceUrl:      serviceURL,
 		StakedTokens:    stakedTokens,
-		PausedHeight:    uint64(pauseHeight),
+		PausedHeight:    pauseHeight,
 		UnstakingHeight: unstakingHeight,
 		Output:          outputAddr,
 	}, nil

@@ -3,9 +3,9 @@ package pre2p
 import (
 	"crypto/ed25519"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"sort"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -18,7 +18,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/types"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -179,7 +179,7 @@ func TestRainTreeCompleteTwentySevenNodes(t *testing.T) {
 func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTreeCommConfig, isOriginatorPinged bool) {
 	// Network configurations
 	numValidators := len(testCommConfig)
-	configs := createConfigs(t, numValidators)
+	configs, genesisState := createConfigs(t, numValidators)
 
 	// Test configurations
 	var messageHandeledWaitGroup sync.WaitGroup
@@ -190,23 +190,24 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 	}
 
 	// Network initialization
+	consensusMock := prepareConsensusMock(t, genesisState)
 	connMocks := make(map[string]typesPre2P.Transport)
 	busMocks := make(map[string]modules.Bus)
 	for valId, expectedCall := range testCommConfig {
 		connMocks[valId] = prepareConnMock(t, expectedCall.numNetworkReads, expectedCall.numNetworkWrites)
-		busMocks[valId] = prepareBusMock(t, &messageHandeledWaitGroup)
+		busMocks[valId] = prepareBusMock(t, &messageHandeledWaitGroup, consensusMock)
 	}
 
 	// Module injection
 	p2pModules := prepareP2PModules(t, configs)
-	for validatorId, mod := range p2pModules {
-		mod.listener = connMocks[validatorId]
-		mod.SetBus(busMocks[validatorId])
-		for _, peer := range mod.network.GetAddrBook() {
+	for validatorId, p2pMod := range p2pModules {
+		p2pMod.listener = connMocks[validatorId]
+		p2pMod.SetBus(busMocks[validatorId])
+		p2pMod.Start()
+		for _, peer := range p2pMod.network.GetAddrBook() {
 			peer.Dialer = connMocks[peer.ServiceUrl]
 		}
-		mod.Start()
-		defer mod.Stop()
+		defer p2pMod.Stop()
 	}
 
 	// Trigger originator message
@@ -273,14 +274,32 @@ func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
 // A mock of the application specific to know if a message was sent to be handled by the application
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
 //                         expectation with RainTree by comparing with Telemetry after updating specs.
-func prepareBusMock(t *testing.T, wg *sync.WaitGroup) *modulesMock.MockBus {
+func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock.MockConsensusModule) *modulesMock.MockBus {
 	ctrl := gomock.NewController(t)
 	busMock := modulesMock.NewMockBus(ctrl)
+
 	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(func(e *types.PocketEvent) {
 		wg.Done()
 		fmt.Println("App specific bus mock publishing event to bus")
 	}).MaxTimes(1) // Using `MaxTimes` rather than `Times` because originator node implicitly handles the message
+
+	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+
 	return busMock
+}
+
+func prepareConsensusMock(t *testing.T, genesisState *genesis.GenesisState) *modulesMock.MockConsensusModule {
+	ctrl := gomock.NewController(t)
+	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
+
+	validators := genesisState.Validators
+	m := make(modules.ValidatorMap, len(validators))
+	for _, v := range validators {
+		m[hex.EncodeToString(v.Address)] = v
+	}
+
+	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
+	return consensusMock
 }
 
 // The reason with use `MaxTimes` instead of `Times` here is because we could have gotten full coverage
@@ -312,27 +331,26 @@ func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWr
 func prepareP2PModules(t *testing.T, configs []*config.Config) (p2pModules map[string]*p2pModule) {
 	p2pModules = make(map[string]*p2pModule, len(configs))
 	for i, config := range configs {
-		_ = typesGenesis.GetNodeState(config)
 		p2pMod, err := Create(config)
 		require.NoError(t, err)
 		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
-		// HACK(olshansky): I hate that we have to do this, but it is outside the scope of this change...
-		// Cleanup once we get rid of the singleton
-		typesGenesis.ResetNodeState(t)
 	}
 	return
 }
 
-func createConfigs(t *testing.T, numValidators int) (configs []*config.Config) {
+func createConfigs(t *testing.T, numValidators int) (configs []*config.Config, genesisState *genesis.GenesisState) {
 	configs = make([]*config.Config, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
 	copy(valKeys[:], keys[:numValidators])
-	validatorConfigs := genesisValidatorConfig(t, valKeys)
+	genesisState = createGenesisState(t, valKeys)
 
 	for i := range configs {
 		configs[i] = &config.Config{
-			RootDir: "",
-			Genesis: genesisJson(t, numValidators, validatorConfigs),
+			GenesisSource: &genesis.GenesisSource{
+				Source: &genesis.GenesisSource_State{
+					State: genesisState,
+				},
+			},
 
 			PrivateKey: valKeys[i].(cryptoPocket.Ed25519PrivateKey),
 
@@ -355,38 +373,25 @@ func validatorId(_ *testing.T, i int) string {
 	return fmt.Sprintf(serviceUrlFormat, i)
 }
 
-// TECHDEBT(olshansky): The fact that we are passing in a genesis string rather than a properly
-// configured struct is a bit of legacy. Need to fix this sooner rather than later.
-func genesisJson(_ *testing.T, numValidators int, validatorConfigs string) string {
-	return fmt.Sprintf(`{
-		"genesis_state_configs": {
-			"num_validators": %d,
-			"num_applications": 0,
-			"num_fisherman": 0,
-			"num_servicers": 0,
-			"keys_seed_start": %d
-		},
-		"genesis_time": "2022-01-19T00:00:00.000000Z",
-		"app_hash": "genesis_block_or_state_hash",
-		"validators": [%s]
-	}`, numValidators, genesisConfigSeedStart, validatorConfigs)
-}
-
-func genesisValidatorConfig(t *testing.T, valKeys []cryptoPocket.PrivateKey) string {
-	s := strings.Builder{}
+func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
+	validators := make([]*genesis.Validator, len(valKeys))
 	for i, valKey := range valKeys {
-		if i != 0 {
-			s.WriteString(",")
+		addr := valKey.Address()
+		val := &genesis.Validator{
+			Address:         addr,
+			PublicKey:       valKey.PublicKey().Bytes(),
+			Paused:          false,
+			Status:          2,
+			ServiceUrl:      validatorId(t, i+1),
+			StakedTokens:    "1000000000000000",
+			MissedBlocks:    0,
+			PausedHeight:    0,
+			UnstakingHeight: 0,
+			Output:          addr,
 		}
-		addr := valKey.Address().String()
-		s.WriteString(fmt.Sprintf(`{
-			"status": 2,
-			"service_url": "%s",
-			"staked_tokens": "1000000000000000",
-			"address": "%s",
-			"output": "%s",
-			"public_key": "%s"
-		}`, validatorId(t, i+1), addr, addr, valKey.PublicKey().String()))
+		validators[i] = val
 	}
-	return s.String()
+	return &genesis.GenesisState{
+		Validators: validators,
+	}
 }

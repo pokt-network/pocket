@@ -1,11 +1,32 @@
 package genesis
 
 import (
+	"encoding/json"
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	"google.golang.org/protobuf/encoding/protojson"
 )
+
+// HACK: Similar to the code and more extensive description in
+// `validator.go`, this is a wrapper so we can load a string from json into a bytes field.
+type PoolJsonBytesLoaderHelper struct {
+	Account AccountJsonBytesLoaderHelper `json:"account,omitempty"`
+}
+type AccountJsonBytesLoaderHelper struct {
+	Address HexData `json:"address,omitempty"`
+}
+
+func (p *Pool) UnmarshalJSON(data []byte) error {
+	var poolTemp PoolJsonBytesLoaderHelper
+	json.Unmarshal(data, &poolTemp)
+
+	protojson.Unmarshal(data, p)
+	p.Account.Address = poolTemp.Account.Address
+
+	return nil
+}
 
 func (a *Account) ValidateBasic() types.Error {
 	if a == nil {
