@@ -218,7 +218,8 @@ func WaitForNetworkConsensusMessages(
 	return waitForNetworkConsensusMessagesInternal(t, testChannel, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, includeFilter, errorMessage)
 }
 
-func waitForNetworkConsensusMessagesInternal( // TODO(olshansky): Translate this to use generics.
+// IMPROVE(olshansky): Translate this to use generics.
+func waitForNetworkConsensusMessagesInternal(
 	_ *testing.T,
 	testChannel modules.EventsChannel,
 	topic types.PocketTopic,

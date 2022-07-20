@@ -8,6 +8,11 @@ CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 #		                        seconds, and fail if any additional messages are received.
 EXTRA_MSG_FAIL ?= false
 
+# An easy way to turn off verbose test output for some of the test targets. For example
+#  `$ make test_persistence` by default enables verbose testing
+#  `VERBOSE_TEST="" make test_persistence` is an easy way to run the same tests without verbose output
+VERBOSE_TEST ?= -v
+
 .SILENT:
 
 help:
@@ -22,6 +27,13 @@ help:
 	} \
 	{ lastLine = $$0 }' $(MAKEFILE_LIST)
 
+docker_check:
+	{ \
+	if ! builtin type -P "docker" > /dev/null || ! builtin type -P "docker-compose" > /dev/null; then \
+		echo "Seems like you don't have Docker or docker-compose installed. Make sure you review docs/development/README.md before continuing"; \
+		exit 1; \
+	fi; \
+	}
 
 prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
@@ -34,7 +46,25 @@ go_vet:
 .PHONY: go_staticcheck
 ## Run `go staticcheck` on all files in the current project
 go_staticcheck:
-	@if builtin type -P "staticcheck"; then staticcheck ./... ; else echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; fi
+	{ \
+	if builtin type -P "staticcheck"; then \
+		staticcheck ./...; \
+	else \
+		echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; \
+	fi; \
+	}
+
+.PHONY: go_doc
+## Generate documentation for the current project using `godo`
+go_doc:
+	{ \
+	if builtin type "godoc"; then \
+		echo "Visit http://localhost:6060/pocket"; \
+		godoc -http=localhost:6060  -goroot=${PWD}/..; \
+	else \
+		echo "Install with 'go install golang.org/x/tools/cmd/godoc@latest'"; \
+	fi; \
+	}
 
 .PHONY: go_clean_deps
 ## Runs `go mod tidy` && `go mod vendor`
@@ -48,23 +78,23 @@ build_and_watch:
 
 .PHONY: client_start
 ## Run a client daemon which is only used for debugging purposes
-client_start:
+client_start: docker_check
 	docker-compose -f build/deployments/docker-compose.yaml up -d client
 
 .PHONY: client_connect
 ## Connect to the running client debugging daemon
-client_connect:
+client_connect: docker_check
 	docker exec -it client /bin/bash -c "go run app/client/*.go"
 
 # TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-compose_and_watch: db_start
+compose_and_watch: docker_check db_start
 	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: db_start
 ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
-db_start:
+db_start: docker_check
 	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d db pgadmin
 
 .PHONY: db_cli
@@ -75,17 +105,17 @@ db_cli:
 
 .PHONY: db_drop
 ## Drop all schemas used for LocalNet development matching `node%`
-db_drop:
+db_drop: docker_check
 	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/drop_all_schemas.sql"
 
 .PHONY: db_bench_init
 ## Initialize pgbench on local postgres - needs to be called once after container is created.
-db_bench_init:
+db_bench_init: docker_check
 	docker exec -it pocket-db bash -c "pgbench -i -U postgres -d postgres"
 
 .PHONY: db_bench
 ## Run a local benchmark against the local postgres instance - TODO(olshansky): visualize results
-db_bench:
+db_bench: docker_check
 	docker exec -it pocket-db bash -c "pgbench -U postgres -d postgres"
 
 .PHONY: db_admin
@@ -93,18 +123,20 @@ db_bench:
 db_admin:
 	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
 
-.PHONY: compose_and_watch
+.PHONY: docker_kill_all
 ## Kill all containers started by the docker-compose file
-docker_kill_all:
+docker_kill_all: docker_check
 	docker-compose -f build/deployments/docker-compose.yaml down
 
 .PHONY: docker_wipe
 ## [WARNING] Remove all the docker containers, images and volumes.
-docker_wipe: prompt_user
+docker_wipe: docker_check prompt_user
 	docker ps -a -q | xargs -r -I {} docker stop {}
 	docker ps -a -q | xargs -r -I {} docker rm {}
 	docker images -q | xargs -r -I {} docker rmi {}
 	docker volume ls -q | xargs -r -I {} docker volume rm {}
+
+# Reference the following for mockgen with 1.18: https://github.com/golang/mock/issues/621
 
 .PHONY: mockgen
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
@@ -134,12 +166,12 @@ test_race: # generate_mocks
 .PHONY: test_utility_module
 ## Run all go utility module unit tests
 test_utility_module: # generate_mocks
-	go test -v ./shared/tests/utility_module/...
+	go test ${VERBOSE_TEST} ./shared/tests/utility_module/...
 
 .PHONY: test_utility_types
 ## Run all go utility types module unit tests
 test_utility_types: # generate_mocks
-	go test -v ./utility/types/...
+	go test ${VERBOSE_TEST} ./utility/types/...
 
 .PHONY: test_shared
 ## Run all go unit tests in the shared module
@@ -149,7 +181,7 @@ test_shared: # generate_mocks
 .PHONY: test_consensus
 ## Run all go unit tests in the Consensus module
 test_consensus: # mockgen
-	go test -v ./consensus/...
+	go test ${VERBOSE_TEST} ./consensus/...
 
 .PHONY: test_pre_persistence
 ## Run all go per persistence unit tests
@@ -159,27 +191,32 @@ test_pre_persistence: # generate_mocks
 .PHONY: test_hotstuff
 ## Run all go unit tests related to hotstuff consensus
 test_hotstuff: # mockgen
-	go test -v ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
+	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
 .PHONY: test_pacemaker
 ## Run all go unit tests related to the hotstuff pacemaker
 test_pacemaker: # mockgen
-	go test -v ./consensus/consensus_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
+	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
 .PHONY: test_vrf
 ## Run all go unit tests in the VRF library
 test_vrf:
-	go test -v ./consensus/leader_election/vrf
+	go test ${VERBOSE_TEST} ./consensus/leader_election/vrf
 
 .PHONY: test_sortition
 ## Run all go unit tests in the Sortition library
 test_sortition:
-	go test -v ./consensus/leader_election/sortition
+	go test ${VERBOSE_TEST} ./consensus/leader_election/sortition
+
+.PHONY: test_persistence
+## Run all go unit tests in the Persistence module
+test_persistence:
+	go test ${VERBOSE_TEST} -p=1 ./persistence/...
 
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library
 benchmark_sortition:
-	go test -v ./consensus/leader_election/sortition -bench=.
+	go test ${VERBOSE_TEST} ./consensus/leader_election/sortition -bench=.
 
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
@@ -208,12 +245,12 @@ protogen_local:
 
 .PHONY: protogen_docker_m1
 ## TODO(derrandz): Test, validate & update.
-protogen_docker_m1:
+protogen_docker_m1: docker_check
 	docker build  -t pocket/proto-generator -f ./build/Dockerfile.m1.proto . && docker run --platform=linux/amd64 -it -v $(CWD)/shared:/usr/src/app/shared pocket/proto-generator
 
 .PHONY: protogen_docker
 ## TODO(derrandz): Test, validate & update.
-protogen_docker:
+protogen_docker: docker_check
 	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it pocket/proto-generator
 
 .PHONY: gofmt
@@ -236,17 +273,17 @@ test_p2p_socket:
 .PHONY: test_p2p_types
 ## Run p2p subcomponents' tests
 test_p2p_types:
-	go test -v -race ./p2p/types
+	go test ${VERBOSE_TEST} -race ./p2p/types
 
 .PHONY: test_p2p
 ## Run all p2p tests
 test_p2p:
-	go test -v -race ./p2p
+	go test ${VERBOSE_TEST} -race ./p2p
 
 .PHONY: test_pre2p
 ## Run all pre2p
 test_pre2p:
-	go test -v -count=1 ./p2p/pre2p/...
+	go test ${VERBOSE_TEST} -count=1 ./p2p/pre2p/...
 
 .PHONY: test_pre2p_addrbook
 ## Run all Pre2P addr book related tests
@@ -258,18 +295,19 @@ test_pre2p_addrbook:
 benchmark_pre2p_addrbook:
 	go test -bench=. -run BenchmarkAddrBook -v -count=1 ./p2p/pre2p/...
 
-# /Users/olshansky/workspace/pocket/pocket/p2p/pre2p/raintree/addrbook_utils_test.go
-# Inspired by: https://goldin.io/blog/stop-using-todo
-# TODO        - General Purpose catch-all.
-# TECHDEBT    - Not a great implementation, but we need to fix it later.
-# IMPROVE     - A nice to have, but not a priority. It's okay if we never get to this.
-# DISCUSS     - Probably requires a lengthy offline discussion to understand next steps.
-# INCOMPLETE  - A change which was out of scope of a specific PR but needed to be documented.
-# INVESTIGATE - TBD what was going on, but needed to continue moving and not get distracted.
-# CLEANUP     - Like TECHDEBT, but not as bad.  It's okay if we never get to this.
-# HACK        - Like TECHDEBT, but much worse. This needs to be prioritized
-# REFACTOR    - Similar to TECHDEBT, but will require a substantial rewrite and change across the codebase
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR"
+### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
+# TODO          - General Purpose catch-all.
+# TECHDEBT      - Not a great implementation, but we need to fix it later.
+# IMPROVE       - A nice to have, but not a priority. It's okay if we never get to this.
+# DISCUSS       - Probably requires a lengthy offline discussion to understand next steps.
+# INCOMPLETE    - A change which was out of scope of a specific PR but needed to be documented.
+# INVESTIGATE   - TBD what was going on, but needed to continue moving and not get distracted.
+# CLEANUP       - Like TECHDEBT, but not as bad.  It's okay if we never get to this.
+# HACK          - Like TECHDEBT, but much worse. This needs to be prioritized
+# REFACTOR      - Similar to TECHDEBT, but will require a substantial rewrite and change across the codebase
+# CONSIDERATION - A comment that involves extra work but was thoughts / considered as part of some implementation
+# INTHISCOMMIT  - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the review of a PR to start / reply to a discussion.
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "INTHISCOMMIT"
 
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)
@@ -280,3 +318,11 @@ todo_list:
 ## Print a count of all the TODOs in the project
 todo_count:
 	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS} . | wc -l
+
+.PHONY: develop_and_test
+## Run all of the make commands necessary to develop on the project and verify the tests pass
+develop_test:
+		make mockgen && \
+		make protogen_clean && make protogen_local && \
+		make go_clean_deps && \
+		make test_all

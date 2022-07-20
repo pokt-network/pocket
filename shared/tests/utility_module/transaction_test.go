@@ -10,6 +10,7 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUtilityContext_AnteHandleMessage(t *testing.T) {
@@ -19,14 +20,10 @@ func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 		t.Fatal(err)
 	}
 	feeBig, err := ctx.GetMessageSendFee()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	expectedAfterBalance := big.NewInt(0).Sub(startingBalance, feeBig)
 	amount, err := ctx.GetAccountAmount(signer.Address())
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if amount.Cmp(expectedAfterBalance) != 0 {
 		t.Fatalf("unexpected after balance; expected %v got %v", expectedAfterBalance, amount)
 	}
@@ -39,15 +36,11 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 		t.Fatal(err)
 	}
 	feeBig, err := ctx.GetMessageSendFee()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	expectedAmountSubtracted := amount.Add(amount, feeBig)
 	expectedAfterBalance := big.NewInt(0).Sub(startingBalance, expectedAmountSubtracted)
 	amount, err = ctx.GetAccountAmount(signer.Address())
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if amount.Cmp(expectedAfterBalance) != 0 {
 		t.Fatalf("unexpected after balance; expected %v got %v", expectedAfterBalance, amount)
 	}
@@ -57,16 +50,12 @@ func TestUtilityContext_CheckTransaction(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := NewTestingTransaction(t, ctx)
 	txBz, err := tx.Bytes()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if err := ctx.CheckTransaction(txBz); err != nil {
 		t.Fatal(err)
 	}
 	hash, err := tx.Hash()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !ctx.Mempool.Contains(hash) {
 		t.Fatal("the transaction was unable to be checked")
 	}
@@ -82,9 +71,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	sendAmountString := types.BigIntToString(sendAmount)
 	msg := NewTestingSendMessage(t, accs[0].Address, accs[1].Address, sendAmountString)
 	candidates, err := ctx.GetSignerCandidates(&msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if len(candidates) != 1 {
 		t.Fatalf("wrong number of candidates, expected %d, got %d", 1, len(candidates))
 	}
@@ -98,9 +85,7 @@ func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
 	tx, _, _, _ := NewTestingTransaction(t, ctx)
 	proposer := GetAllTestingValidators(t, ctx)[0]
 	txBz, err := tx.Bytes()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if err := ctx.CheckTransaction(txBz); err != nil {
 		t.Fatal(err)
 	}
@@ -122,26 +107,18 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := types.BigIntToString(sendAmount)
 	senderBalanceBefore, err := types.StringToBigInt(accs[0].Amount)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	recipientBalanceBefore, err := types.StringToBigInt(accs[1].Amount)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	msg := NewTestingSendMessage(t, accs[0].Address, accs[1].Address, sendAmountString)
 	if err := ctx.HandleMessageSend(&msg); err != nil {
 		t.Fatal(err)
 	}
 	accs = GetAllTestingAccounts(t, ctx)
 	senderBalanceAfter, err := types.StringToBigInt(accs[0].Amount)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	recipientBalanceAfter, err := types.StringToBigInt(accs[1].Amount)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter).Cmp(sendAmount) != 0 {
 		t.Fatal("unexpected sender balance")
 	}
@@ -155,9 +132,7 @@ func NewTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transactio
 	cdc := types.GetCodec()
 	recipient := GetAllTestingAccounts(t, ctx)[1]
 	signer, err = crypto.GeneratePrivateKey()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	startingAmount = defaultAmount
 	signerAddr := signer.Address()
 	if err = ctx.SetAccountAmount(signerAddr, defaultAmount); err != nil {
@@ -166,13 +141,9 @@ func NewTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transactio
 	amountSent = defaultSendAmount
 	msg := NewTestingSendMessage(t, signerAddr, recipient.Address, defaultSendAmountString)
 	any, err := cdc.ToAny(&msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	feeBig, err := ctx.GetMessageSendFee()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	fee := types.BigIntToString(feeBig)
 	transaction = &typesUtil.Transaction{
 		Msg:   any,

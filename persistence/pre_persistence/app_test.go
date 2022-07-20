@@ -2,9 +2,11 @@ package pre_persistence
 
 import (
 	"bytes"
-	"github.com/pokt-network/pocket/shared/types"
 	"math/big"
 	"testing"
+
+	"github.com/pokt-network/pocket/shared/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
@@ -33,21 +35,21 @@ func TestGetAppExists(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
 	addr2, _ := crypto.GenerateAddress()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	exists, err := ctx.GetAppExists(actor.Address)
+	height, err := ctx.GetHeight()
 	if err != nil {
 		t.Fatal(err)
 	}
+	exists, err := ctx.GetAppExists(actor.Address, height)
+	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor that should exists does not")
 	}
-	exists, err = ctx.GetAppExists(addr2)
-	if err != nil {
-		t.Fatal(err)
-	}
+	exists, err = ctx.GetAppExists(addr2, height)
+	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor that exists should not")
 	}
@@ -56,14 +58,16 @@ func TestGetAppExists(t *testing.T) {
 func TestGetApp(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	got, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
+	height, err := ctx.GetHeight()
 	if err != nil {
 		t.Fatal(err)
 	}
+	got, err := ctx.(*PrePersistenceContext).GetApp(actor.Address, height)
+	require.NoError(t, err)
 	if !bytes.Equal(actor.Address, got.Address) || !bytes.Equal(actor.PublicKey, got.PublicKey) {
 		t.Fatalf("unexpected actor returned; expected %v got %v", actor, got)
 	}
@@ -73,18 +77,16 @@ func TestGetAllApps(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor1 := NewTestApp()
 	actor2 := NewTestApp()
-	if err := ctx.InsertApplication(actor1.Address, actor1.PublicKey, actor1.Output, actor1.Paused, int(actor1.Status),
+	if err := ctx.InsertApp(actor1.Address, actor1.PublicKey, actor1.Output, actor1.Paused, int(actor1.Status),
 		actor1.MaxRelays, actor1.StakedTokens, actor1.Chains, int64(actor1.PausedHeight), actor1.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	if err := ctx.InsertApplication(actor2.Address, actor2.PublicKey, actor2.Output, actor2.Paused, int(actor2.Status),
+	if err := ctx.InsertApp(actor2.Address, actor2.PublicKey, actor2.Output, actor2.Paused, int(actor2.Status),
 		actor2.MaxRelays, actor2.StakedTokens, actor2.Chains, int64(actor2.PausedHeight), actor2.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	apps, err := ctx.(*PrePersistenceContext).GetAllApps(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	got1, got2 := false, false
 	for _, a := range apps {
 		if bytes.Equal(a.Address, actor1.Address) {
@@ -99,58 +101,52 @@ func TestGetAllApps(t *testing.T) {
 	}
 }
 
-func TestUpdateApplication(t *testing.T) {
+func TestUpdateApp(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	zero := types.BigIntToString(&big.Int{})
 	bigExpectedTokens := big.NewInt(1)
 	one := types.BigIntToString(bigExpectedTokens)
-	before, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
+	height, err := ctx.GetHeight()
 	if err != nil {
 		t.Fatal(err)
 	}
+	before, err := ctx.(*PrePersistenceContext).GetApp(actor.Address, height)
+	require.NoError(t, err)
 	tokens := before.StakedTokens
 	bigBeforeTokens, err := types.StringToBigInt(tokens)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = ctx.UpdateApplication(actor.Address, zero, one, typesGenesis.DefaultChains)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+	err = ctx.UpdateApp(actor.Address, zero, one, typesGenesis.DefaultChains)
+	require.NoError(t, err)
+	got, err := ctx.(*PrePersistenceContext).GetApp(actor.Address, height)
+	require.NoError(t, err)
 	bigAfterTokens, err := types.StringToBigInt(got.StakedTokens)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	bigAfterTokens.Sub(bigAfterTokens, bigBeforeTokens)
 	if bigAfterTokens.Cmp(bigExpectedTokens) != 0 {
 		t.Fatal("incorrect after balance")
 	}
 }
 
-func TestDeleteApplication(t *testing.T) {
+func TestDeleteApp(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	err := ctx.DeleteApplication(actor.Address)
+	err := ctx.DeleteApp(actor.Address)
+	require.NoError(t, err)
+	height, err := ctx.GetHeight()
 	if err != nil {
 		t.Fatal(err)
 	}
-	exists, err := ctx.(*PrePersistenceContext).GetAppExists(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	exists, err := ctx.(*PrePersistenceContext).GetAppExists(actor.Address, height)
+	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor exists when it shouldn't")
 	}
@@ -159,7 +155,7 @@ func TestDeleteApplication(t *testing.T) {
 func TestGetAppsReadyToUnstake(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
@@ -167,9 +163,7 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 		t.Fatal(err)
 	}
 	unstakingApps, err := ctx.(*PrePersistenceContext).GetAppsReadyToUnstake(0, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(unstakingApps[0].Address, actor.Address) {
 		t.Fatalf("wrong actor returned, expected addr %v, got %v", unstakingApps[0].Address, actor.Address)
 	}
@@ -178,14 +172,16 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 func TestGetAppStatus(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	status, err := ctx.GetAppStatus(actor.Address)
+	height, err := ctx.GetHeight()
 	if err != nil {
 		t.Fatal(err)
 	}
+	status, err := ctx.GetAppStatus(actor.Address, height)
+	require.NoError(t, err)
 	if status != int(actor.Status) {
 		t.Fatal("unequal status")
 	}
@@ -194,40 +190,40 @@ func TestGetAppStatus(t *testing.T) {
 func TestGetAppPauseHeightIfExists(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	pauseHeight := 1
-	err := ctx.SetAppPauseHeight(actor.Address, int64(pauseHeight))
+	pausedHeight := 1
+	err := ctx.SetAppPauseHeight(actor.Address, int64(pausedHeight))
+	require.NoError(t, err)
+	height, err := ctx.GetHeight()
 	if err != nil {
 		t.Fatal(err)
 	}
-	pauseBeforeHeight, err := ctx.GetAppPauseHeightIfExists(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if pauseHeight != int(pauseBeforeHeight) {
-		t.Fatalf("incorrect pause height: expected %v, got %v", pauseHeight, pauseBeforeHeight)
+	pauseBeforeHeight, err := ctx.GetAppPauseHeightIfExists(actor.Address, height)
+	require.NoError(t, err)
+	if pausedHeight != int(pauseBeforeHeight) {
+		t.Fatalf("incorrect pause height: expected %v, got %v", pausedHeight, pauseBeforeHeight)
 	}
 }
 
-func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
+func TestSetAppStatusAndUnstakingHeightIfPausedBefore(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, true, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, true, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
 	pauseBeforeHeight, unstakingHeight, status := int64(1), int64(10), 1
-	err := ctx.SetAppsStatusAndUnstakingHeightPausedBefore(pauseBeforeHeight, unstakingHeight, status)
+	err := ctx.SetAppStatusAndUnstakingHeightIfPausedBefore(pauseBeforeHeight, unstakingHeight, status)
+	require.NoError(t, err)
+	height, err := ctx.GetHeight()
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := ctx.(*PrePersistenceContext).GetApp(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	got, err := ctx.(*PrePersistenceContext).GetApp(actor.Address, height)
+	require.NoError(t, err)
 	if got.UnstakingHeight != unstakingHeight {
 		t.Fatalf("wrong unstaking height: expected %v, got %v", unstakingHeight, got.UnstakingHeight)
 	}
@@ -239,14 +235,16 @@ func TestSetAppsStatusAndUnstakingHeightPausedBefore(t *testing.T) {
 func TestGetAppOutputAddress(t *testing.T) {
 	ctx := NewTestingPrePersistenceContext(t)
 	actor := NewTestApp()
-	if err := ctx.InsertApplication(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
+	if err := ctx.InsertApp(actor.Address, actor.PublicKey, actor.Output, actor.Paused, int(actor.Status),
 		actor.MaxRelays, actor.StakedTokens, actor.Chains, int64(actor.PausedHeight), actor.UnstakingHeight); err != nil {
 		t.Fatal(err)
 	}
-	output, err := ctx.GetAppOutputAddress(actor.Address)
+	height, err := ctx.GetHeight()
 	if err != nil {
 		t.Fatal(err)
 	}
+	output, err := ctx.GetAppOutputAddress(actor.Address, height)
+	require.NoError(t, err)
 	if !bytes.Equal(actor.Output, output) {
 		t.Fatalf("incorrect output address expected %v, got %v", actor.Output, output)
 	}

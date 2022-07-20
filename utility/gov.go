@@ -20,7 +20,7 @@ func (u *UtilityContext) HandleMessageChangeParameter(message *typesUtil.Message
 func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.Error {
 	store := u.Store()
 	switch paramName {
-	case typesUtil.BlocksPerSessionParamName:
+	case types.BlocksPerSessionParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -30,7 +30,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ServiceNodesPerSessionParamName:
+	case types.ServiceNodesPerSessionParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -40,7 +40,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppMaxChainsParamName:
+	case types.AppMaxChainsParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -50,7 +50,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppMinimumStakeParamName:
+	case types.AppMinimumStakeParamName:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -60,7 +60,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppBaselineStakeRateParamName:
+	case types.AppBaselineStakeRateParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -70,7 +70,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppStabilityAdjustmentParamName:
+	case types.AppStakingAdjustmentParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -80,7 +80,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppUnstakingBlocksParamName:
+	case types.AppUnstakingBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -90,7 +90,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppMinimumPauseBlocksParamName:
+	case types.AppMinimumPauseBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -100,7 +100,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppMaxPauseBlocksParamName:
+	case types.AppMaxPauseBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -110,7 +110,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ServiceNodeMinimumStakeParamName:
+	case types.ServiceNodeMinimumStakeParamName:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -120,7 +120,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ServiceNodeMaxChainsParamName:
+	case types.ServiceNodeMaxChainsParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -130,7 +130,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ServiceNodeUnstakingBlocksParamName:
+	case types.ServiceNodeUnstakingBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -140,7 +140,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ServiceNodeMinimumPauseBlocksParamName:
+	case types.ServiceNodeMinimumPauseBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -150,7 +150,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ServiceNodeMaxPauseBlocksParamName:
+	case types.ServiceNodeMaxPauseBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -160,7 +160,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.FishermanMinimumStakeParamName:
+	case types.FishermanMinimumStakeParamName:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -170,7 +170,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.FishermanMaxChainsParamName:
+	case types.FishermanMaxChainsParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -180,7 +180,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.FishermanUnstakingBlocksParamName:
+	case types.FishermanUnstakingBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -190,7 +190,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.FishermanMinimumPauseBlocksParamName:
+	case types.FishermanMinimumPauseBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -200,7 +200,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.FishermanMaxPauseBlocksParamName:
+	case types.FishermanMaxPauseBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -210,7 +210,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ValidatorMinimumStakeParamName:
+	case types.ValidatorMinimumStakeParamName:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -220,7 +220,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ValidatorUnstakingBlocksParamName:
+	case types.ValidatorUnstakingBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -230,7 +230,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ValidatorMinimumPauseBlocksParamName:
+	case types.ValidatorMinimumPauseBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -240,7 +240,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ValidatorMaxPausedBlocksParamName:
+	case types.ValidatorMaxPausedBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -250,7 +250,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ValidatorMaximumMissedBlocksParamName:
+	case types.ValidatorMaximumMissedBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -260,7 +260,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ProposerPercentageOfFeesParamName:
+	case types.ProposerPercentageOfFeesParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -270,7 +270,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ValidatorMaxEvidenceAgeInBlocksParamName:
+	case types.ValidatorMaxEvidenceAgeInBlocksParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -280,7 +280,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MissedBlocksBurnPercentageParamName:
+	case types.MissedBlocksBurnPercentageParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -290,7 +290,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.DoubleSignBurnPercentageParamName:
+	case types.DoubleSignBurnPercentageParamName:
 		i, ok := value.(*wrapperspb.Int32Value)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -300,7 +300,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AclOwner:
+	case types.AclOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -310,7 +310,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.BlocksPerSessionOwner:
+	case types.BlocksPerSessionOwner:
 		i, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -320,7 +320,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ServiceNodesPerSessionOwner:
+	case types.ServiceNodesPerSessionOwner:
 		i, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -330,7 +330,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppMaxChainsOwner:
+	case types.AppMaxChainsOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -340,7 +340,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppMinimumStakeOwner:
+	case types.AppMinimumStakeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -350,7 +350,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppBaselineStakeRateOwner:
+	case types.AppBaselineStakeRateOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -360,7 +360,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppStakingAdjustmentOwner:
+	case types.AppStakingAdjustmentOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -370,7 +370,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppUnstakingBlocksOwner:
+	case types.AppUnstakingBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -380,7 +380,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppMinimumPauseBlocksOwner:
+	case types.AppMinimumPauseBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -390,7 +390,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.AppMaxPausedBlocksOwner:
+	case types.AppMaxPausedBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -400,17 +400,17 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ServiceNodeMinimumStakeOwner:
+	case types.ServiceNodeMinimumStakeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
 		}
-		err := store.SetParamServiceNodeMinimumStakeOwner(owner.Value)
+		err := store.SetServiceNodeMinimumStakeOwner(owner.Value)
 		if err != nil {
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ServiceNodeMaxChainsOwner:
+	case types.ServiceNodeMaxChainsOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -420,7 +420,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ServiceNodeUnstakingBlocksOwner:
+	case types.ServiceNodeUnstakingBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -430,7 +430,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ServiceNodeMinimumPauseBlocksOwner:
+	case types.ServiceNodeMinimumPauseBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -440,7 +440,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ServiceNodeMaxPausedBlocksOwner:
+	case types.ServiceNodeMaxPausedBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -450,7 +450,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.FishermanMinimumStakeOwner:
+	case types.FishermanMinimumStakeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -460,7 +460,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.FishermanMaxChainsOwner:
+	case types.FishermanMaxChainsOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -470,7 +470,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.FishermanUnstakingBlocksOwner:
+	case types.FishermanUnstakingBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -480,7 +480,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.FishermanMinimumPauseBlocksOwner:
+	case types.FishermanMinimumPauseBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -490,7 +490,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.FishermanMaxPausedBlocksOwner:
+	case types.FishermanMaxPausedBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -500,17 +500,17 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ValidatorMinimumStakeOwner:
+	case types.ValidatorMinimumStakeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
 		}
-		err := store.SetParamValidatorMinimumStakeOwner(owner.Value)
+		err := store.SetValidatorMinimumStakeOwner(owner.Value)
 		if err != nil {
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ValidatorUnstakingBlocksOwner:
+	case types.ValidatorUnstakingBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -520,7 +520,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ValidatorMinimumPauseBlocksOwner:
+	case types.ValidatorMinimumPauseBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -530,7 +530,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ValidatorMaxPausedBlocksOwner:
+	case types.ValidatorMaxPausedBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -540,7 +540,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ValidatorMaximumMissedBlocksOwner:
+	case types.ValidatorMaximumMissedBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -550,7 +550,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ProposerPercentageOfFeesOwner:
+	case types.ProposerPercentageOfFeesOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -560,7 +560,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.ValidatorMaxEvidenceAgeInBlocksOwner:
+	case types.ValidatorMaxEvidenceAgeInBlocksOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -570,7 +570,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MissedBlocksBurnPercentageOwner:
+	case types.MissedBlocksBurnPercentageOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -580,7 +580,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.DoubleSignBurnPercentageOwner:
+	case types.DoubleSignBurnPercentageOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -591,7 +591,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 		}
 		return nil
 
-	case typesUtil.MessageSendFeeOwner:
+	case types.MessageSendFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -601,7 +601,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageStakeFishermanFeeOwner:
+	case types.MessageStakeFishermanFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -611,7 +611,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageEditStakeFishermanFeeOwner:
+	case types.MessageEditStakeFishermanFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -621,7 +621,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnstakeFishermanFeeOwner:
+	case types.MessageUnstakeFishermanFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -631,7 +631,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessagePauseFishermanFeeOwner:
+	case types.MessagePauseFishermanFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -641,7 +641,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnpauseFishermanFeeOwner:
+	case types.MessageUnpauseFishermanFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -651,7 +651,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageFishermanPauseServiceNodeFeeOwner:
+	case types.MessageFishermanPauseServiceNodeFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -661,7 +661,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageTestScoreFeeOwner:
+	case types.MessageTestScoreFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -671,7 +671,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageProveTestScoreFeeOwner:
+	case types.MessageProveTestScoreFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -681,7 +681,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageStakeAppFeeOwner:
+	case types.MessageStakeAppFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -691,7 +691,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageEditStakeAppFeeOwner:
+	case types.MessageEditStakeAppFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -701,7 +701,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnstakeAppFeeOwner:
+	case types.MessageUnstakeAppFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -711,7 +711,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessagePauseAppFeeOwner:
+	case types.MessagePauseAppFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -721,7 +721,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnpauseAppFeeOwner:
+	case types.MessageUnpauseAppFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -731,7 +731,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageStakeValidatorFeeOwner:
+	case types.MessageStakeValidatorFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -741,7 +741,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageEditStakeValidatorFeeOwner:
+	case types.MessageEditStakeValidatorFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -751,7 +751,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnstakeValidatorFeeOwner:
+	case types.MessageUnstakeValidatorFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -761,7 +761,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessagePauseValidatorFeeOwner:
+	case types.MessagePauseValidatorFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -771,7 +771,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnpauseValidatorFeeOwner:
+	case types.MessageUnpauseValidatorFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -781,7 +781,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageStakeServiceNodeFeeOwner:
+	case types.MessageStakeServiceNodeFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -791,7 +791,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageEditStakeServiceNodeFeeOwner:
+	case types.MessageEditStakeServiceNodeFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -801,7 +801,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnstakeServiceNodeFeeOwner:
+	case types.MessageUnstakeServiceNodeFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -811,7 +811,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessagePauseServiceNodeFeeOwner:
+	case types.MessagePauseServiceNodeFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -821,7 +821,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnpauseServiceNodeFeeOwner:
+	case types.MessageUnpauseServiceNodeFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -831,7 +831,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageChangeParameterFeeOwner:
+	case types.MessageChangeParameterFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -841,7 +841,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageSendFee:
+	case types.MessageSendFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -851,7 +851,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageStakeFishermanFee:
+	case types.MessageStakeFishermanFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -861,7 +861,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageEditStakeFishermanFee:
+	case types.MessageEditStakeFishermanFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -871,7 +871,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnstakeFishermanFee:
+	case types.MessageUnstakeFishermanFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -881,7 +881,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessagePauseFishermanFee:
+	case types.MessagePauseFishermanFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -891,7 +891,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnpauseFishermanFee:
+	case types.MessageUnpauseFishermanFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -901,7 +901,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageFishermanPauseServiceNodeFee:
+	case types.MessageFishermanPauseServiceNodeFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -911,7 +911,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageTestScoreFee:
+	case types.MessageTestScoreFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -921,7 +921,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageProveTestScoreFee:
+	case types.MessageProveTestScoreFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -931,7 +931,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageStakeAppFee:
+	case types.MessageStakeAppFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -941,7 +941,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageEditStakeAppFee:
+	case types.MessageEditStakeAppFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -951,7 +951,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnstakeAppFee:
+	case types.MessageUnstakeAppFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -961,7 +961,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessagePauseAppFee:
+	case types.MessagePauseAppFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -971,7 +971,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnpauseAppFee:
+	case types.MessageUnpauseAppFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -981,7 +981,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageStakeValidatorFee:
+	case types.MessageStakeValidatorFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -991,7 +991,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageEditStakeValidatorFee:
+	case types.MessageEditStakeValidatorFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -1001,7 +1001,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnstakeValidatorFee:
+	case types.MessageUnstakeValidatorFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -1011,7 +1011,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessagePauseValidatorFee:
+	case types.MessagePauseValidatorFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -1021,7 +1021,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnpauseValidatorFee:
+	case types.MessageUnpauseValidatorFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -1031,7 +1031,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageStakeServiceNodeFee:
+	case types.MessageStakeServiceNodeFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -1041,7 +1041,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageEditStakeServiceNodeFee:
+	case types.MessageEditStakeServiceNodeFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -1051,7 +1051,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnstakeServiceNodeFee:
+	case types.MessageUnstakeServiceNodeFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -1061,7 +1061,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessagePauseServiceNodeFee:
+	case types.MessagePauseServiceNodeFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -1071,7 +1071,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageUnpauseServiceNodeFee:
+	case types.MessageUnpauseServiceNodeFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -1081,7 +1081,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageChangeParameterFee:
+	case types.MessageChangeParameterFee:
 		i, ok := value.(*wrapperspb.StringValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, i)
@@ -1091,7 +1091,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 			return types.ErrUpdateParam(err)
 		}
 		return nil
-	case typesUtil.MessageDoubleSignFeeOwner:
+	case types.MessageDoubleSignFeeOwner:
 		owner, ok := value.(*wrapperspb.BytesValue)
 		if !ok {
 			return types.ErrInvalidParamValue(value, owner)
@@ -1110,7 +1110,7 @@ func (u *UtilityContext) GetBlocksPerSession() (int, types.Error) {
 	store := u.Store()
 	blocksPerSession, err := store.GetBlocksPerSession()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.BlocksPerSessionParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.BlocksPerSessionParamName, err)
 	}
 	return blocksPerSession, nil
 }
@@ -1119,7 +1119,7 @@ func (u *UtilityContext) GetAppMinimumStake() (*big.Int, types.Error) {
 	store := u.Store()
 	appMininimumStake, err := store.GetParamAppMinimumStake()
 	if err != nil {
-		return nil, types.ErrGetParam(typesUtil.AppMinimumStakeParamName, err)
+		return nil, types.ErrGetParam(types.AppMinimumStakeParamName, err)
 	}
 	return types.StringToBigInt(appMininimumStake)
 }
@@ -1128,7 +1128,7 @@ func (u *UtilityContext) GetAppMaxChains() (int, types.Error) {
 	store := u.Store()
 	maxChains, err := store.GetMaxAppChains()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.AppMaxChainsParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.AppMaxChainsParamName, err)
 	}
 	return maxChains, nil
 }
@@ -1137,7 +1137,7 @@ func (u *UtilityContext) GetBaselineAppStakeRate() (int, types.Error) {
 	store := u.Store()
 	baselineRate, err := store.GetBaselineAppStakeRate()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.AppBaselineStakeRateParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.AppBaselineStakeRateParamName, err)
 	}
 	return baselineRate, nil
 }
@@ -1146,7 +1146,7 @@ func (u *UtilityContext) GetStabilityAdjustment() (int, types.Error) {
 	store := u.Store()
 	adjustment, err := store.GetStabilityAdjustment()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.AppStabilityAdjustmentParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.AppStakingAdjustmentParamName, err)
 	}
 	return adjustment, nil
 }
@@ -1155,7 +1155,7 @@ func (u *UtilityContext) GetAppUnstakingBlocks() (int64, types.Error) {
 	store := u.Store()
 	unstakingHeight, err := store.GetAppUnstakingBlocks()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.AppUnstakingBlocksParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.AppUnstakingBlocksParamName, err)
 	}
 	return int64(unstakingHeight), nil
 }
@@ -1164,7 +1164,7 @@ func (u *UtilityContext) GetAppMinimumPauseBlocks() (int, types.Error) {
 	store := u.Store()
 	minPauseBlocks, err := store.GetAppMinimumPauseBlocks()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.AppMinimumPauseBlocksParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.AppMinimumPauseBlocksParamName, err)
 	}
 	return minPauseBlocks, nil
 }
@@ -1173,7 +1173,7 @@ func (u *UtilityContext) GetAppMaxPausedBlocks() (maxPausedBlocks int, err types
 	store := u.Store()
 	maxPausedBlocks, er := store.GetAppMaxPausedBlocks()
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.AppMaxPauseBlocksParamName, er)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.AppMaxPauseBlocksParamName, er)
 	}
 	return maxPausedBlocks, nil
 }
@@ -1182,7 +1182,7 @@ func (u *UtilityContext) GetServiceNodeMinimumStake() (*big.Int, types.Error) {
 	store := u.Store()
 	serviceNodeMininimumStake, err := store.GetParamServiceNodeMinimumStake()
 	if err != nil {
-		return nil, types.ErrGetParam(typesUtil.ServiceNodeMinimumStakeParamName, err)
+		return nil, types.ErrGetParam(types.ServiceNodeMinimumStakeParamName, err)
 	}
 	return types.StringToBigInt(serviceNodeMininimumStake)
 }
@@ -1191,7 +1191,7 @@ func (u *UtilityContext) GetServiceNodeMaxChains() (int, types.Error) {
 	store := u.Store()
 	maxChains, err := store.GetServiceNodeMaxChains()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.ServiceNodeMaxChainsParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.ServiceNodeMaxChainsParamName, err)
 	}
 	return maxChains, nil
 }
@@ -1200,7 +1200,7 @@ func (u *UtilityContext) GetServiceNodeUnstakingBlocks() (int64, types.Error) {
 	store := u.Store()
 	unstakingHeight, err := store.GetServiceNodeUnstakingBlocks()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.ServiceNodeUnstakingBlocksParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.ServiceNodeUnstakingBlocksParamName, err)
 	}
 	return int64(unstakingHeight), nil
 }
@@ -1209,7 +1209,7 @@ func (u *UtilityContext) GetServiceNodeMinimumPauseBlocks() (int, types.Error) {
 	store := u.Store()
 	minPauseBlocks, err := store.GetServiceNodeMinimumPauseBlocks()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.ServiceNodeMinimumPauseBlocksParamName, err)
 	}
 	return minPauseBlocks, nil
 }
@@ -1218,7 +1218,7 @@ func (u *UtilityContext) GetServiceNodeMaxPausedBlocks() (maxPausedBlocks int, e
 	store := u.Store()
 	maxPausedBlocks, er := store.GetServiceNodeMaxPausedBlocks()
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, er)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.ServiceNodeMaxPauseBlocksParamName, er)
 	}
 	return maxPausedBlocks, nil
 }
@@ -1227,7 +1227,7 @@ func (u *UtilityContext) GetValidatorMinimumStake() (*big.Int, types.Error) {
 	store := u.Store()
 	validatorMininimumStake, err := store.GetParamValidatorMinimumStake()
 	if err != nil {
-		return nil, types.ErrGetParam(typesUtil.ValidatorMinimumStakeParamName, err)
+		return nil, types.ErrGetParam(types.ValidatorMinimumStakeParamName, err)
 	}
 	return types.StringToBigInt(validatorMininimumStake)
 }
@@ -1236,7 +1236,7 @@ func (u *UtilityContext) GetValidatorUnstakingBlocks() (int64, types.Error) {
 	store := u.Store()
 	unstakingHeight, err := store.GetValidatorUnstakingBlocks()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.ValidatorUnstakingBlocksParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.ValidatorUnstakingBlocksParamName, err)
 	}
 	return int64(unstakingHeight), nil
 }
@@ -1245,7 +1245,7 @@ func (u *UtilityContext) GetValidatorMinimumPauseBlocks() (int, types.Error) {
 	store := u.Store()
 	minPauseBlocks, err := store.GetValidatorMinimumPauseBlocks()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.ValidatorMinimumPauseBlocksParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.ValidatorMinimumPauseBlocksParamName, err)
 	}
 	return minPauseBlocks, nil
 }
@@ -1254,7 +1254,7 @@ func (u *UtilityContext) GetValidatorMaxPausedBlocks() (maxPausedBlocks int, err
 	store := u.Store()
 	maxPausedBlocks, er := store.GetValidatorMaxPausedBlocks()
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.ValidatorMaxPausedBlocksParamName, er)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.ValidatorMaxPausedBlocksParamName, er)
 	}
 	return maxPausedBlocks, nil
 }
@@ -1263,7 +1263,7 @@ func (u *UtilityContext) GetProposerPercentageOfFees() (proposerPercentage int, 
 	store := u.Store()
 	proposerPercentage, er := store.GetProposerPercentageOfFees()
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.ProposerPercentageOfFeesParamName, er)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.ProposerPercentageOfFeesParamName, er)
 	}
 	return proposerPercentage, nil
 }
@@ -1272,7 +1272,7 @@ func (u *UtilityContext) GetValidatorMaxMissedBlocks() (maxMissedBlocks int, err
 	store := u.Store()
 	maxMissedBlocks, er := store.GetValidatorMaximumMissedBlocks()
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.ValidatorMaximumMissedBlocksParamName, er)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.ValidatorMaximumMissedBlocksParamName, er)
 	}
 	return maxMissedBlocks, nil
 }
@@ -1281,7 +1281,7 @@ func (u *UtilityContext) GetMaxEvidenceAgeInBlocks() (maxMissedBlocks int, err t
 	store := u.Store()
 	maxMissedBlocks, er := store.GetMaxEvidenceAgeInBlocks()
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.ValidatorMaxEvidenceAgeInBlocksParamName, er)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.ValidatorMaxEvidenceAgeInBlocksParamName, er)
 	}
 	return maxMissedBlocks, nil
 }
@@ -1290,7 +1290,7 @@ func (u *UtilityContext) GetDoubleSignBurnPercentage() (burnPercentage int, err 
 	store := u.Store()
 	burnPercentage, er := store.GetDoubleSignBurnPercentage()
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.DoubleSignBurnPercentageParamName, er)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.DoubleSignBurnPercentageParamName, er)
 	}
 	return burnPercentage, nil
 }
@@ -1299,7 +1299,7 @@ func (u *UtilityContext) GetMissedBlocksBurnPercentage() (burnPercentage int, er
 	store := u.Store()
 	burnPercentage, er := store.GetMissedBlocksBurnPercentage()
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.MissedBlocksBurnPercentageParamName, er)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.MissedBlocksBurnPercentageParamName, er)
 	}
 	return burnPercentage, nil
 }
@@ -1308,7 +1308,7 @@ func (u *UtilityContext) GetFishermanMinimumStake() (*big.Int, types.Error) {
 	store := u.Store()
 	FishermanMininimumStake, err := store.GetParamFishermanMinimumStake()
 	if err != nil {
-		return nil, types.ErrGetParam(typesUtil.FishermanMinimumStakeParamName, err)
+		return nil, types.ErrGetParam(types.FishermanMinimumStakeParamName, err)
 	}
 	return types.StringToBigInt(FishermanMininimumStake)
 }
@@ -1317,7 +1317,7 @@ func (u *UtilityContext) GetFishermanMaxChains() (int, types.Error) {
 	store := u.Store()
 	maxChains, err := store.GetFishermanMaxChains()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.FishermanMaxChainsParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.FishermanMaxChainsParamName, err)
 	}
 	return maxChains, nil
 }
@@ -1326,7 +1326,7 @@ func (u *UtilityContext) GetFishermanUnstakingBlocks() (int64, types.Error) {
 	store := u.Store()
 	unstakingHeight, err := store.GetFishermanUnstakingBlocks()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.FishermanUnstakingBlocksParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.FishermanUnstakingBlocksParamName, err)
 	}
 	return int64(unstakingHeight), nil
 }
@@ -1335,7 +1335,7 @@ func (u *UtilityContext) GetFishermanMinimumPauseBlocks() (int, types.Error) {
 	store := u.Store()
 	minPauseBlocks, err := store.GetFishermanMinimumPauseBlocks()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.FishermanMinimumPauseBlocksParamName, err)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.FishermanMinimumPauseBlocksParamName, err)
 	}
 	return minPauseBlocks, nil
 }
@@ -1344,7 +1344,7 @@ func (u *UtilityContext) GetFishermanMaxPausedBlocks() (maxPausedBlocks int, err
 	store := u.Store()
 	maxPausedBlocks, er := store.GetFishermanMaxPausedBlocks()
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(typesUtil.FishermanMaxPauseBlocksParamName, er)
+		return typesUtil.ZeroInt, types.ErrGetParam(types.FishermanMaxPauseBlocksParamName, er)
 	}
 	return maxPausedBlocks, nil
 }
@@ -1353,7 +1353,7 @@ func (u *UtilityContext) GetMessageDoubleSignFee() (*big.Int, types.Error) {
 	store := u.Store()
 	fee, er := store.GetMessageDoubleSignFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageDoubleSignFee, er)
+		return nil, types.ErrGetParam(types.MessageDoubleSignFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1362,7 +1362,7 @@ func (u *UtilityContext) GetMessageSendFee() (*big.Int, types.Error) {
 	store := u.Store()
 	fee, er := store.GetMessageSendFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageSendFee, er)
+		return nil, types.ErrGetParam(types.MessageSendFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1371,7 +1371,7 @@ func (u *UtilityContext) GetMessageStakeFishermanFee() (*big.Int, types.Error) {
 	store := u.Store()
 	fee, er := store.GetMessageStakeFishermanFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageStakeFishermanFee, er)
+		return nil, types.ErrGetParam(types.MessageStakeFishermanFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1380,7 +1380,7 @@ func (u *UtilityContext) GetMessageEditStakeFishermanFee() (*big.Int, types.Erro
 	store := u.Store()
 	fee, er := store.GetMessageEditStakeFishermanFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageEditStakeFishermanFee, er)
+		return nil, types.ErrGetParam(types.MessageEditStakeFishermanFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1389,7 +1389,7 @@ func (u *UtilityContext) GetMessageUnstakeFishermanFee() (*big.Int, types.Error)
 	store := u.Store()
 	fee, er := store.GetMessageUnstakeFishermanFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageUnstakeFishermanFee, er)
+		return nil, types.ErrGetParam(types.MessageUnstakeFishermanFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1398,7 +1398,7 @@ func (u *UtilityContext) GetMessagePauseFishermanFee() (*big.Int, types.Error) {
 	store := u.Store()
 	fee, er := store.GetMessagePauseFishermanFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessagePauseFishermanFee, er)
+		return nil, types.ErrGetParam(types.MessagePauseFishermanFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1407,7 +1407,7 @@ func (u *UtilityContext) GetMessageUnpauseFishermanFee() (*big.Int, types.Error)
 	store := u.Store()
 	fee, er := store.GetMessageUnpauseFishermanFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageUnpauseFishermanFee, er)
+		return nil, types.ErrGetParam(types.MessageUnpauseFishermanFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1416,7 +1416,7 @@ func (u *UtilityContext) GetMessageFishermanPauseServiceNodeFee() (*big.Int, typ
 	store := u.Store()
 	fee, er := store.GetMessageFishermanPauseServiceNodeFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageFishermanPauseServiceNodeFee, er)
+		return nil, types.ErrGetParam(types.MessageFishermanPauseServiceNodeFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1425,7 +1425,7 @@ func (u *UtilityContext) GetMessageTestScoreFee() (*big.Int, types.Error) {
 	store := u.Store()
 	fee, er := store.GetMessageTestScoreFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageTestScoreFee, er)
+		return nil, types.ErrGetParam(types.MessageTestScoreFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1434,7 +1434,7 @@ func (u *UtilityContext) GetMessageProveTestScoreFee() (*big.Int, types.Error) {
 	store := u.Store()
 	fee, er := store.GetMessageProveTestScoreFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageProveTestScoreFee, er)
+		return nil, types.ErrGetParam(types.MessageProveTestScoreFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1443,7 +1443,7 @@ func (u *UtilityContext) GetMessageStakeAppFee() (*big.Int, types.Error) {
 	store := u.Store()
 	fee, er := store.GetMessageStakeAppFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageStakeAppFee, er)
+		return nil, types.ErrGetParam(types.MessageStakeAppFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1452,7 +1452,7 @@ func (u *UtilityContext) GetMessageEditStakeAppFee() (*big.Int, types.Error) {
 	store := u.Store()
 	fee, er := store.GetMessageEditStakeAppFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageEditStakeAppFee, er)
+		return nil, types.ErrGetParam(types.MessageEditStakeAppFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1461,7 +1461,7 @@ func (u *UtilityContext) GetMessageUnstakeAppFee() (*big.Int, types.Error) {
 	store := u.Store()
 	fee, er := store.GetMessageUnstakeAppFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageUnstakeAppFee, er)
+		return nil, types.ErrGetParam(types.MessageUnstakeAppFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1470,7 +1470,7 @@ func (u *UtilityContext) GetMessagePauseAppFee() (*big.Int, types.Error) {
 	store := u.Store()
 	fee, er := store.GetMessagePauseAppFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessagePauseAppFee, er)
+		return nil, types.ErrGetParam(types.MessagePauseAppFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1479,7 +1479,7 @@ func (u *UtilityContext) GetMessageUnpauseAppFee() (*big.Int, types.Error) {
 	store := u.Store()
 	fee, er := store.GetMessageUnpauseAppFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageUnpauseAppFee, er)
+		return nil, types.ErrGetParam(types.MessageUnpauseAppFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1488,7 +1488,7 @@ func (u *UtilityContext) GetMessageStakeValidatorFee() (*big.Int, types.Error) {
 	store := u.Store()
 	fee, er := store.GetMessageStakeValidatorFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageStakeValidatorFee, er)
+		return nil, types.ErrGetParam(types.MessageStakeValidatorFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1497,7 +1497,7 @@ func (u *UtilityContext) GetMessageEditStakeValidatorFee() (*big.Int, types.Erro
 	store := u.Store()
 	fee, er := store.GetMessageEditStakeValidatorFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageEditStakeValidatorFee, er)
+		return nil, types.ErrGetParam(types.MessageEditStakeValidatorFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1506,7 +1506,7 @@ func (u *UtilityContext) GetMessageUnstakeValidatorFee() (*big.Int, types.Error)
 	store := u.Store()
 	fee, er := store.GetMessageUnstakeValidatorFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageUnstakeValidatorFee, er)
+		return nil, types.ErrGetParam(types.MessageUnstakeValidatorFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1515,7 +1515,7 @@ func (u *UtilityContext) GetMessagePauseValidatorFee() (*big.Int, types.Error) {
 	store := u.Store()
 	fee, er := store.GetMessagePauseValidatorFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessagePauseValidatorFee, er)
+		return nil, types.ErrGetParam(types.MessagePauseValidatorFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1524,7 +1524,7 @@ func (u *UtilityContext) GetMessageUnpauseValidatorFee() (*big.Int, types.Error)
 	store := u.Store()
 	fee, er := store.GetMessageUnpauseValidatorFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageUnpauseValidatorFee, er)
+		return nil, types.ErrGetParam(types.MessageUnpauseValidatorFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1533,7 +1533,7 @@ func (u *UtilityContext) GetMessageStakeServiceNodeFee() (*big.Int, types.Error)
 	store := u.Store()
 	fee, er := store.GetMessageStakeServiceNodeFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageStakeServiceNodeFee, er)
+		return nil, types.ErrGetParam(types.MessageStakeServiceNodeFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1542,7 +1542,7 @@ func (u *UtilityContext) GetMessageEditStakeServiceNodeFee() (*big.Int, types.Er
 	store := u.Store()
 	fee, er := store.GetMessageEditStakeServiceNodeFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageEditStakeServiceNodeFee, er)
+		return nil, types.ErrGetParam(types.MessageEditStakeServiceNodeFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1551,7 +1551,7 @@ func (u *UtilityContext) GetMessageUnstakeServiceNodeFee() (*big.Int, types.Erro
 	store := u.Store()
 	fee, er := store.GetMessageUnstakeServiceNodeFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageUnstakeServiceNodeFee, er)
+		return nil, types.ErrGetParam(types.MessageUnstakeServiceNodeFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1560,7 +1560,7 @@ func (u *UtilityContext) GetMessagePauseServiceNodeFee() (*big.Int, types.Error)
 	store := u.Store()
 	fee, er := store.GetMessagePauseServiceNodeFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessagePauseServiceNodeFee, er)
+		return nil, types.ErrGetParam(types.MessagePauseServiceNodeFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1569,7 +1569,7 @@ func (u *UtilityContext) GetMessageUnpauseServiceNodeFee() (*big.Int, types.Erro
 	store := u.Store()
 	fee, er := store.GetMessageUnpauseServiceNodeFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageUnpauseServiceNodeFee, er)
+		return nil, types.ErrGetParam(types.MessageUnpauseServiceNodeFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1578,7 +1578,7 @@ func (u *UtilityContext) GetMessageChangeParameterFee() (*big.Int, types.Error) 
 	store := u.Store()
 	fee, er := store.GetMessageChangeParameterFee()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.MessageChangeParameterFee, er)
+		return nil, types.ErrGetParam(types.MessageChangeParameterFee, er)
 	}
 	return types.StringToBigInt(fee)
 }
@@ -1587,7 +1587,7 @@ func (u *UtilityContext) GetDoubleSignFeeOwner() (owner []byte, err types.Error)
 	store := u.Store()
 	owner, er := store.GetMessageDoubleSignFeeOwner()
 	if er != nil {
-		return nil, types.ErrGetParam(typesUtil.DoubleSignBurnPercentageParamName, er)
+		return nil, types.ErrGetParam(types.DoubleSignBurnPercentageParamName, er)
 	}
 	return owner, nil
 }
@@ -1595,221 +1595,221 @@ func (u *UtilityContext) GetDoubleSignFeeOwner() (owner []byte, err types.Error)
 func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
 	store := u.Store()
 	switch paramName {
-	case typesUtil.AclOwner:
+	case types.AclOwner:
 		return store.GetAclOwner()
-	case typesUtil.BlocksPerSessionParamName:
+	case types.BlocksPerSessionParamName:
 		return store.GetBlocksPerSessionOwner()
-	case typesUtil.AppMaxChainsParamName:
+	case types.AppMaxChainsParamName:
 		return store.GetMaxAppChainsOwner()
-	case typesUtil.AppMinimumStakeParamName:
+	case types.AppMinimumStakeParamName:
 		return store.GetAppMinimumStakeOwner()
-	case typesUtil.AppBaselineStakeRateParamName:
+	case types.AppBaselineStakeRateParamName:
 		return store.GetBaselineAppOwner()
-	case typesUtil.AppStabilityAdjustmentParamName:
+	case types.AppStakingAdjustmentParamName:
 		return store.GetStakingAdjustmentOwner()
-	case typesUtil.AppUnstakingBlocksParamName:
+	case types.AppUnstakingBlocksParamName:
 		return store.GetAppUnstakingBlocksOwner()
-	case typesUtil.AppMinimumPauseBlocksParamName:
+	case types.AppMinimumPauseBlocksParamName:
 		return store.GetAppMinimumPauseBlocksOwner()
-	case typesUtil.AppMaxPauseBlocksParamName:
+	case types.AppMaxPauseBlocksParamName:
 		return store.GetAppMaxPausedBlocksOwner()
-	case typesUtil.ServiceNodesPerSessionParamName:
+	case types.ServiceNodesPerSessionParamName:
 		return store.GetServiceNodesPerSessionOwner()
-	case typesUtil.ServiceNodeMinimumStakeParamName:
+	case types.ServiceNodeMinimumStakeParamName:
 		return store.GetParamServiceNodeMinimumStakeOwner()
-	case typesUtil.ServiceNodeMaxChainsParamName:
+	case types.ServiceNodeMaxChainsParamName:
 		return store.GetServiceNodeMaxChainsOwner()
-	case typesUtil.ServiceNodeUnstakingBlocksParamName:
+	case types.ServiceNodeUnstakingBlocksParamName:
 		return store.GetServiceNodeUnstakingBlocksOwner()
-	case typesUtil.ServiceNodeMinimumPauseBlocksParamName:
+	case types.ServiceNodeMinimumPauseBlocksParamName:
 		return store.GetServiceNodeMinimumPauseBlocksOwner()
-	case typesUtil.ServiceNodeMaxPauseBlocksParamName:
+	case types.ServiceNodeMaxPauseBlocksParamName:
 		return store.GetServiceNodeMaxPausedBlocksOwner()
-	case typesUtil.FishermanMinimumStakeParamName:
+	case types.FishermanMinimumStakeParamName:
 		return store.GetFishermanMinimumStakeOwner()
-	case typesUtil.FishermanMaxChainsParamName:
+	case types.FishermanMaxChainsParamName:
 		return store.GetMaxFishermanChainsOwner()
-	case typesUtil.FishermanUnstakingBlocksParamName:
+	case types.FishermanUnstakingBlocksParamName:
 		return store.GetFishermanUnstakingBlocksOwner()
-	case typesUtil.FishermanMinimumPauseBlocksParamName:
+	case types.FishermanMinimumPauseBlocksParamName:
 		return store.GetFishermanMinimumPauseBlocksOwner()
-	case typesUtil.FishermanMaxPauseBlocksParamName:
+	case types.FishermanMaxPauseBlocksParamName:
 		return store.GetFishermanMaxPausedBlocksOwner()
-	case typesUtil.ValidatorMinimumStakeParamName:
-		return store.GetParamValidatorMinimumStakeOwner()
-	case typesUtil.ValidatorUnstakingBlocksParamName:
+	case types.ValidatorMinimumStakeParamName:
+		return store.GetValidatorMinimumStakeOwner()
+	case types.ValidatorUnstakingBlocksParamName:
 		return store.GetValidatorUnstakingBlocksOwner()
-	case typesUtil.ValidatorMinimumPauseBlocksParamName:
+	case types.ValidatorMinimumPauseBlocksParamName:
 		return store.GetValidatorMinimumPauseBlocksOwner()
-	case typesUtil.ValidatorMaxPausedBlocksParamName:
+	case types.ValidatorMaxPausedBlocksParamName:
 		return store.GetValidatorMaxPausedBlocksOwner()
-	case typesUtil.ValidatorMaximumMissedBlocksParamName:
+	case types.ValidatorMaximumMissedBlocksParamName:
 		return store.GetValidatorMaximumMissedBlocksOwner()
-	case typesUtil.ProposerPercentageOfFeesParamName:
+	case types.ProposerPercentageOfFeesParamName:
 		return store.GetProposerPercentageOfFeesOwner()
-	case typesUtil.ValidatorMaxEvidenceAgeInBlocksParamName:
+	case types.ValidatorMaxEvidenceAgeInBlocksParamName:
 		return store.GetMaxEvidenceAgeInBlocksOwner()
-	case typesUtil.MissedBlocksBurnPercentageParamName:
+	case types.MissedBlocksBurnPercentageParamName:
 		return store.GetMissedBlocksBurnPercentageOwner()
-	case typesUtil.DoubleSignBurnPercentageParamName:
+	case types.DoubleSignBurnPercentageParamName:
 		return store.GetDoubleSignBurnPercentageOwner()
-	case typesUtil.MessageDoubleSignFee:
+	case types.MessageDoubleSignFee:
 		return store.GetMessageDoubleSignFeeOwner()
-	case typesUtil.MessageSendFee:
+	case types.MessageSendFee:
 		return store.GetMessageSendFeeOwner()
-	case typesUtil.MessageStakeFishermanFee:
+	case types.MessageStakeFishermanFee:
 		return store.GetMessageStakeFishermanFeeOwner()
-	case typesUtil.MessageEditStakeFishermanFee:
+	case types.MessageEditStakeFishermanFee:
 		return store.GetMessageEditStakeFishermanFeeOwner()
-	case typesUtil.MessageUnstakeFishermanFee:
+	case types.MessageUnstakeFishermanFee:
 		return store.GetMessageUnstakeFishermanFeeOwner()
-	case typesUtil.MessagePauseFishermanFee:
+	case types.MessagePauseFishermanFee:
 		return store.GetMessagePauseFishermanFeeOwner()
-	case typesUtil.MessageUnpauseFishermanFee:
+	case types.MessageUnpauseFishermanFee:
 		return store.GetMessageUnpauseFishermanFeeOwner()
-	case typesUtil.MessageFishermanPauseServiceNodeFee:
+	case types.MessageFishermanPauseServiceNodeFee:
 		return store.GetMessageFishermanPauseServiceNodeFeeOwner()
-	case typesUtil.MessageTestScoreFee:
+	case types.MessageTestScoreFee:
 		return store.GetMessageTestScoreFeeOwner()
-	case typesUtil.MessageProveTestScoreFee:
+	case types.MessageProveTestScoreFee:
 		return store.GetMessageProveTestScoreFeeOwner()
-	case typesUtil.MessageStakeAppFee:
+	case types.MessageStakeAppFee:
 		return store.GetMessageStakeAppFeeOwner()
-	case typesUtil.MessageEditStakeAppFee:
+	case types.MessageEditStakeAppFee:
 		return store.GetMessageEditStakeAppFeeOwner()
-	case typesUtil.MessageUnstakeAppFee:
+	case types.MessageUnstakeAppFee:
 		return store.GetMessageUnstakeAppFeeOwner()
-	case typesUtil.MessagePauseAppFee:
+	case types.MessagePauseAppFee:
 		return store.GetMessagePauseAppFeeOwner()
-	case typesUtil.MessageUnpauseAppFee:
+	case types.MessageUnpauseAppFee:
 		return store.GetMessageUnpauseAppFeeOwner()
-	case typesUtil.MessageStakeValidatorFee:
+	case types.MessageStakeValidatorFee:
 		return store.GetMessageStakeValidatorFeeOwner()
-	case typesUtil.MessageEditStakeValidatorFee:
+	case types.MessageEditStakeValidatorFee:
 		return store.GetMessageEditStakeValidatorFeeOwner()
-	case typesUtil.MessageUnstakeValidatorFee:
+	case types.MessageUnstakeValidatorFee:
 		return store.GetMessageUnstakeValidatorFeeOwner()
-	case typesUtil.MessagePauseValidatorFee:
+	case types.MessagePauseValidatorFee:
 		return store.GetMessagePauseValidatorFeeOwner()
-	case typesUtil.MessageUnpauseValidatorFee:
+	case types.MessageUnpauseValidatorFee:
 		return store.GetMessageUnpauseValidatorFeeOwner()
-	case typesUtil.MessageStakeServiceNodeFee:
+	case types.MessageStakeServiceNodeFee:
 		return store.GetMessageStakeServiceNodeFeeOwner()
-	case typesUtil.MessageEditStakeServiceNodeFee:
+	case types.MessageEditStakeServiceNodeFee:
 		return store.GetMessageEditStakeServiceNodeFeeOwner()
-	case typesUtil.MessageUnstakeServiceNodeFee:
+	case types.MessageUnstakeServiceNodeFee:
 		return store.GetMessageUnstakeServiceNodeFeeOwner()
-	case typesUtil.MessagePauseServiceNodeFee:
+	case types.MessagePauseServiceNodeFee:
 		return store.GetMessagePauseServiceNodeFeeOwner()
-	case typesUtil.MessageUnpauseServiceNodeFee:
+	case types.MessageUnpauseServiceNodeFee:
 		return store.GetMessageUnpauseServiceNodeFeeOwner()
-	case typesUtil.MessageChangeParameterFee:
+	case types.MessageChangeParameterFee:
 		return store.GetMessageChangeParameterFeeOwner()
-	case typesUtil.BlocksPerSessionOwner:
+	case types.BlocksPerSessionOwner:
 		return store.GetAclOwner()
-	case typesUtil.AppMaxChainsOwner:
+	case types.AppMaxChainsOwner:
 		return store.GetAclOwner()
-	case typesUtil.AppMinimumStakeOwner:
+	case types.AppMinimumStakeOwner:
 		return store.GetAclOwner()
-	case typesUtil.AppBaselineStakeRateOwner:
+	case types.AppBaselineStakeRateOwner:
 		return store.GetAclOwner()
-	case typesUtil.AppStakingAdjustmentOwner:
+	case types.AppStakingAdjustmentOwner:
 		return store.GetAclOwner()
-	case typesUtil.AppUnstakingBlocksOwner:
+	case types.AppUnstakingBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.AppMinimumPauseBlocksOwner:
+	case types.AppMinimumPauseBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.AppMaxPausedBlocksOwner:
+	case types.AppMaxPausedBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.ServiceNodeMinimumStakeOwner:
+	case types.ServiceNodeMinimumStakeOwner:
 		return store.GetAclOwner()
-	case typesUtil.ServiceNodeMaxChainsOwner:
+	case types.ServiceNodeMaxChainsOwner:
 		return store.GetAclOwner()
-	case typesUtil.ServiceNodeUnstakingBlocksOwner:
+	case types.ServiceNodeUnstakingBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.ServiceNodeMinimumPauseBlocksOwner:
+	case types.ServiceNodeMinimumPauseBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.ServiceNodeMaxPausedBlocksOwner:
+	case types.ServiceNodeMaxPausedBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.ServiceNodesPerSessionOwner:
+	case types.ServiceNodesPerSessionOwner:
 		return store.GetAclOwner()
-	case typesUtil.FishermanMinimumStakeOwner:
+	case types.FishermanMinimumStakeOwner:
 		return store.GetAclOwner()
-	case typesUtil.FishermanMaxChainsOwner:
+	case types.FishermanMaxChainsOwner:
 		return store.GetAclOwner()
-	case typesUtil.FishermanUnstakingBlocksOwner:
+	case types.FishermanUnstakingBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.FishermanMinimumPauseBlocksOwner:
+	case types.FishermanMinimumPauseBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.FishermanMaxPausedBlocksOwner:
+	case types.FishermanMaxPausedBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.ValidatorMinimumStakeOwner:
+	case types.ValidatorMinimumStakeOwner:
 		return store.GetAclOwner()
-	case typesUtil.ValidatorUnstakingBlocksOwner:
+	case types.ValidatorUnstakingBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.ValidatorMinimumPauseBlocksOwner:
+	case types.ValidatorMinimumPauseBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.ValidatorMaxPausedBlocksOwner:
+	case types.ValidatorMaxPausedBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.ValidatorMaximumMissedBlocksOwner:
+	case types.ValidatorMaximumMissedBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.ProposerPercentageOfFeesOwner:
+	case types.ProposerPercentageOfFeesOwner:
 		return store.GetAclOwner()
-	case typesUtil.ValidatorMaxEvidenceAgeInBlocksOwner:
+	case types.ValidatorMaxEvidenceAgeInBlocksOwner:
 		return store.GetAclOwner()
-	case typesUtil.MissedBlocksBurnPercentageOwner:
+	case types.MissedBlocksBurnPercentageOwner:
 		return store.GetAclOwner()
-	case typesUtil.DoubleSignBurnPercentageOwner:
+	case types.DoubleSignBurnPercentageOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageSendFeeOwner:
+	case types.MessageSendFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageStakeFishermanFeeOwner:
+	case types.MessageStakeFishermanFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageEditStakeFishermanFeeOwner:
+	case types.MessageEditStakeFishermanFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageUnstakeFishermanFeeOwner:
+	case types.MessageUnstakeFishermanFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessagePauseFishermanFeeOwner:
+	case types.MessagePauseFishermanFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageUnpauseFishermanFeeOwner:
+	case types.MessageUnpauseFishermanFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageFishermanPauseServiceNodeFeeOwner:
+	case types.MessageFishermanPauseServiceNodeFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageTestScoreFeeOwner:
+	case types.MessageTestScoreFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageProveTestScoreFeeOwner:
+	case types.MessageProveTestScoreFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageStakeAppFeeOwner:
+	case types.MessageStakeAppFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageEditStakeAppFeeOwner:
+	case types.MessageEditStakeAppFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageUnstakeAppFeeOwner:
+	case types.MessageUnstakeAppFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessagePauseAppFeeOwner:
+	case types.MessagePauseAppFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageUnpauseAppFeeOwner:
+	case types.MessageUnpauseAppFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageStakeValidatorFeeOwner:
+	case types.MessageStakeValidatorFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageEditStakeValidatorFeeOwner:
+	case types.MessageEditStakeValidatorFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageUnstakeValidatorFeeOwner:
+	case types.MessageUnstakeValidatorFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessagePauseValidatorFeeOwner:
+	case types.MessagePauseValidatorFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageUnpauseValidatorFeeOwner:
+	case types.MessageUnpauseValidatorFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageStakeServiceNodeFeeOwner:
+	case types.MessageStakeServiceNodeFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageEditStakeServiceNodeFeeOwner:
+	case types.MessageEditStakeServiceNodeFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageUnstakeServiceNodeFeeOwner:
+	case types.MessageUnstakeServiceNodeFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessagePauseServiceNodeFeeOwner:
+	case types.MessagePauseServiceNodeFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageUnpauseServiceNodeFeeOwner:
+	case types.MessageUnpauseServiceNodeFeeOwner:
 		return store.GetAclOwner()
-	case typesUtil.MessageChangeParameterFeeOwner:
+	case types.MessageChangeParameterFeeOwner:
 		return store.GetAclOwner()
 	default:
 		return nil, types.ErrUnknownParam(paramName)

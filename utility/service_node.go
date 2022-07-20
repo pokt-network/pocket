@@ -211,7 +211,11 @@ func (u *UtilityContext) HandleMessageUnpauseServiceNode(message *typesUtil.Mess
 
 func (u *UtilityContext) GetServiceNodeExists(address []byte) (bool, types.Error) {
 	store := u.Store()
-	exists, er := store.GetServiceNodeExists(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return false, types.ErrGetExists(er)
+	}
+	exists, er := store.GetServiceNodeExists(address, height)
 	if er != nil {
 		return false, types.ErrGetExists(er)
 	}
@@ -263,7 +267,7 @@ func (u *UtilityContext) UnstakeServiceNodesPausedBefore(pausedBeforeHeight int6
 	if err != nil {
 		return err
 	}
-	er := store.SetServiceNodesStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
+	er := store.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return types.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}
@@ -272,7 +276,11 @@ func (u *UtilityContext) UnstakeServiceNodesPausedBefore(pausedBeforeHeight int6
 
 func (u *UtilityContext) GetServiceNodeStatus(address []byte) (int, types.Error) {
 	store := u.Store()
-	status, er := store.GetServiceNodeStatus(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return typesUtil.ZeroInt, types.ErrGetStatus(er)
+	}
+	status, er := store.GetServiceNodeStatus(address, height)
 	if er != nil {
 		return typesUtil.ZeroInt, types.ErrGetStatus(er)
 	}
@@ -289,7 +297,11 @@ func (u *UtilityContext) SetServiceNodeUnstakingHeightAndStatus(address []byte, 
 
 func (u *UtilityContext) GetServiceNodePauseHeightIfExists(address []byte) (int64, types.Error) {
 	store := u.Store()
-	ServiceNodePauseHeight, er := store.GetServiceNodePauseHeightIfExists(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
+	}
+	ServiceNodePauseHeight, er := store.GetServiceNodePauseHeightIfExists(address, height)
 	if er != nil {
 		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
 	}
@@ -391,7 +403,11 @@ func (u *UtilityContext) GetMessagePauseServiceNodeSignerCandidates(msg *typesUt
 
 func (u *UtilityContext) GetServiceNodeOutputAddress(operator []byte) ([]byte, types.Error) {
 	store := u.Store()
-	output, er := store.GetServiceNodeOutputAddress(operator)
+	height, er := store.GetHeight()
+	if er != nil {
+		return nil, types.ErrGetOutputAddress(operator, er)
+	}
+	output, er := store.GetServiceNodeOutputAddress(operator, height)
 	if er != nil {
 		return nil, types.ErrGetOutputAddress(operator, er)
 	}

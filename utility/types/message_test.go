@@ -6,6 +6,7 @@ import (
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -25,9 +26,7 @@ func TestMessageChangeParameter_ValidateBasic(t *testing.T) {
 	paramKey := "key"
 	paramValueRaw := wrapperspb.Int32(1)
 	paramValueAny, err := codec.ToAny(paramValueRaw)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	msg := MessageChangeParameter{
 		Owner:          owner,
 		ParameterKey:   paramKey,

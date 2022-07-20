@@ -105,7 +105,7 @@ func InitGenesis(u *PrePersistenceContext, genesisState *typesGenesis.GenesisSta
 		if err != nil {
 			return err
 		}
-		err = u.InsertApplication(application.Address, application.PublicKey, application.Output, false, 2, maxRelays, application.StakedTokens, application.Chains, -1, -1)
+		err = u.InsertApp(application.Address, application.PublicKey, application.Output, false, 2, maxRelays, application.StakedTokens, application.Chains, -1, -1)
 		if err != nil {
 			return err
 		}

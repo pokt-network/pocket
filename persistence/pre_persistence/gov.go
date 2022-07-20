@@ -195,7 +195,7 @@ func InsertPersistenceParams(store *PrePersistenceContext, params *typesGenesis.
 	if err != nil {
 		return types.ErrUpdateParam(err)
 	}
-	err = store.SetParamServiceNodeMinimumStakeOwner(params.ServiceNodeMinimumStakeOwner)
+	err = store.SetServiceNodeMinimumStakeOwner(params.ServiceNodeMinimumStakeOwner)
 	if err != nil {
 		return types.ErrUpdateParam(err)
 	}
@@ -235,7 +235,7 @@ func InsertPersistenceParams(store *PrePersistenceContext, params *typesGenesis.
 	if err != nil {
 		return types.ErrUpdateParam(err)
 	}
-	err = store.SetParamValidatorMinimumStakeOwner(params.ValidatorMinimumStakeOwner)
+	err = store.SetValidatorMinimumStakeOwner(params.ValidatorMinimumStakeOwner)
 	if err != nil {
 		return types.ErrUpdateParam(err)
 	}
@@ -1797,7 +1797,7 @@ func (m *PrePersistenceContext) GetParamServiceNodeMinimumStakeOwner() ([]byte, 
 	return params.ServiceNodeMinimumStakeOwner, nil
 }
 
-func (m *PrePersistenceContext) SetParamServiceNodeMinimumStakeOwner(owner []byte) error {
+func (m *PrePersistenceContext) SetServiceNodeMinimumStakeOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
 		return err
@@ -1959,7 +1959,7 @@ func (m *PrePersistenceContext) SetFishermanMaxPausedBlocksOwner(owner []byte) e
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetParamValidatorMinimumStakeOwner() ([]byte, error) {
+func (m *PrePersistenceContext) GetValidatorMinimumStakeOwner() ([]byte, error) {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
 		return nil, err
@@ -1967,7 +1967,7 @@ func (m *PrePersistenceContext) GetParamValidatorMinimumStakeOwner() ([]byte, er
 	return params.ValidatorMinimumStakeOwner, nil
 }
 
-func (m *PrePersistenceContext) SetParamValidatorMinimumStakeOwner(owner []byte) error {
+func (m *PrePersistenceContext) SetValidatorMinimumStakeOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
 		return err

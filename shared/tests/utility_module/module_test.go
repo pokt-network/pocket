@@ -51,9 +51,7 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 		t.Fatal(err)
 	}
 	persistenceContext, err := persistenceModule.NewContext(height)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return utility.UtilityContext{
 		LatestHeight: height,
 		Mempool:      mempool,
