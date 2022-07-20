@@ -19,13 +19,21 @@ func TestGenesisStateFromJson(t *testing.T) {
 			"service_url": "validator.com",
 			"staked_tokens": "42",
 			"missed_blocks": 0,
-			"paused_height": 0,
-			"unstaking_height": 0,
+			"paused_height": -1,
+			"unstaking_height": -1,
 			"output": "71f8be163036c0da94f188bb817d77691869ccff5932059f3c398f2fb92fa08b"
 		  }
 		],
 		"accounts": [],
-		"pools": [],
+		"pools": [
+			{
+			  "name": "SERVICE_NODE_STAKE_POOL",
+			  "account": {
+				"address": "97a8cc38033822da010422851062ae6b21b8e29d4c34193b7d8fa0f37b6593b6",
+				"amount": "0"
+			  }
+			}
+		],
 		"fisherman": [],
 		"service_nodes": [],
 		"apps": [],
@@ -37,7 +45,7 @@ func TestGenesisStateFromJson(t *testing.T) {
 
 	require.Equal(t, len(genesisState.Validators), 1)
 	require.Equal(t, len(genesisState.Accounts), 0)
-	require.Equal(t, len(genesisState.Pools), 0)
+	require.Equal(t, len(genesisState.Pools), 1)
 	require.Equal(t, len(genesisState.Fishermen), 0)
 	require.Equal(t, len(genesisState.ServiceNodes), 0)
 	require.Equal(t, len(genesisState.Apps), 0)
@@ -82,7 +90,7 @@ func TestGenesisStateFromFileSource(t *testing.T) {
 
 	require.Equal(t, len(genesisState.Validators), 4)
 	require.Equal(t, len(genesisState.Accounts), 0)
-	require.Equal(t, len(genesisState.Pools), 0)
+	require.Equal(t, len(genesisState.Pools), 1)
 	require.Equal(t, len(genesisState.Fishermen), 0)
 	require.Equal(t, len(genesisState.ServiceNodes), 0)
 	require.Equal(t, len(genesisState.Apps), 0)

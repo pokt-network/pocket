@@ -10,7 +10,10 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-// Specialized accounts. See the utility specification for more details.
+// TODO(team): Consider refactoring PoolNames and statuses to an enum
+// with appropriate enum <-> string mappers where appropriate.
+// This can make it easier to track all the different states
+// available.
 const (
 	ServiceNodeStakePoolName = "SERVICE_NODE_STAKE_POOL"
 	AppStakePoolName         = "APP_STAKE_POOL"
@@ -24,7 +27,7 @@ func GenesisStateFromGenesisSource(genesisSource *GenesisSource) (genesisState *
 	switch genesisSource.Source.(type) {
 	case *GenesisSource_Config:
 		genesisConfig := genesisSource.GetConfig()
-		if genesisState, _, _, _, _, err = NewGenesisState(genesisConfig); err != nil {
+		if genesisState, _, _, _, _, err = GenesisStateFromGenesisConfig(genesisConfig); err != nil {
 			return nil, fmt.Errorf("failed to generate genesis state from configuration: %v", err)
 		}
 	case *GenesisSource_File:
@@ -49,26 +52,26 @@ func GenesisStateFromFile(file string) (*GenesisState, error) {
 	if err != nil {
 		return nil, fmt.Errorf("couldn't read genesis file: %w", err)
 	}
-	genesis, err := GenesisStateFromJson(jsonBlob)
+	genesisState, err := GenesisStateFromJson(jsonBlob)
 	if err != nil {
 		return nil, fmt.Errorf("error generating genesis state from json: %w", err)
 	}
-	return genesis, nil
+	return genesisState, nil
 }
 
 func GenesisStateFromJson(jsonBlob []byte) (*GenesisState, error) {
-	genesis := GenesisState{}
-	if err := json.Unmarshal(jsonBlob, &genesis); err != nil {
+	genesisState := GenesisState{}
+	if err := json.Unmarshal(jsonBlob, &genesisState); err != nil {
 		return nil, err
 	}
-	if err := genesis.Validate(); err != nil {
+	if err := genesisState.Validate(); err != nil {
 		return nil, err
 	}
-	return &genesis, nil
+	return &genesisState, nil
 }
 
 // TODO: Validate each field in GenesisState
-func (genesis *GenesisState) Validate() error {
+func (genesisState *GenesisState) Validate() error {
 	return nil
 }
 

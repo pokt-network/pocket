@@ -8,8 +8,8 @@
       "service_url": "node1.consensus:8080",
       "staked_tokens": "1000000000000000",
       "missed_blocks": 0,
-      "paused_height": 0,
-      "unstaking_height": 0,
+      "paused_height": -1,
+      "unstaking_height": -1,
       "output": "0157a1d82da437eb6b2d0a612ebf934c3a54fb19"
     },
     {
@@ -20,8 +20,8 @@
       "service_url": "node2.consensus:8080",
       "staked_tokens": "1000000000000000",
       "missed_blocks": 0,
-      "paused_height": 0,
-      "unstaking_height": 0,
+      "paused_height": -1,
+      "unstaking_height": -1,
       "output": "4cda991a51da75acf50e966c2716a7a2837d72eb"
     },
     {
@@ -32,8 +32,8 @@
       "service_url": "node3.consensus:8080",
       "staked_tokens": "1000000000000000",
       "missed_blocks": 0,
-      "paused_height": 0,
-      "unstaking_height": 0,
+      "paused_height": -1,
+      "unstaking_height": -1,
       "output": "67f6e8c48c62dc62a3706e7a8ba2164ca345d762"
     },
     {
@@ -44,13 +44,21 @@
       "service_url": "node4.consensus:8080",
       "staked_tokens": "1000000000000000",
       "missed_blocks": 0,
-      "paused_height": 0,
-      "unstaking_height": 0,
+      "paused_height": -1,
+      "unstaking_height": -1,
       "output": "b0cca84843f6f5a274150a98da66d78f0273f64e"
     }
   ],
   "accounts": [],
-  "pools": [],
+  "pools": [
+    {
+      "name": "SERVICE_NODE_STAKE_POOL",
+      "account": {
+        "address": "97a8cc38033822da010422851062ae6b21b8e29d4c34193b7d8fa0f37b6593b6",
+        "amount": "0"
+      }
+    }
+  ],
   "fisherman": [],
   "service_nodes": [],
   "apps": [],

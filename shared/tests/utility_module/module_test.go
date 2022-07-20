@@ -70,7 +70,7 @@ func genesisConfig() *genesis.GenesisConfig {
 		NumValidators:   5,
 		NumApplications: 1,
 		NumFisherman:    1,
-		NumServicers:    5,
+		NumServicers:    1,
 	}
 	return config
 }

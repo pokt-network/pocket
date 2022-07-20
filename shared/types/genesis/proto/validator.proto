@@ -11,7 +11,7 @@ message Validator {
   string service_url = 5;
   string staked_tokens = 6;
   uint32 missed_blocks = 7;
-  uint64 paused_height = 8;
+  int64 paused_height = 8;
   int64 unstaking_height = 9; // DISCUSS: Should we make this an unsigned int?
   bytes output = 10;
 }

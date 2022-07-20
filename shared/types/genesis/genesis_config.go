@@ -25,12 +25,13 @@ var (
 )
 
 var ( // TODO these are needed placeholders to pass validation checks. Until we have a real genesis implementation & testing environment, this will suffice
-	DefaultChains         = []string{"0001"}
-	DefaultServiceUrl     = "https://foo.bar"
-	DefaultStakeBig       = big.NewInt(1000000000000000)
-	DefaultStake          = types.BigIntToString(DefaultStakeBig)
-	DefaultAccountBalance = DefaultStake
-	DefaultStakeStatus    = int32(2)
+	DefaultChains            = []string{"0001"}
+	DefaultServiceUrl        = "https://foo.bar"
+	DefaultStakeBig          = big.NewInt(1000000000000000)
+	DefaultStake             = types.BigIntToString(DefaultStakeBig)
+	DefaultAccountBalanceBig = DefaultStakeBig
+	DefaultAccountBalance    = DefaultStake
+	DefaultStakeStatus       = int32(2)
 )
 
 // TODO(team): NewGenesisStateConfigs is ONLY used for development purposes and disregards the
@@ -44,18 +45,18 @@ type NewGenesisStateConfigs struct {
 }
 
 // DISCUSS: Do we need to create an `Account` for every pool and/or every actor?
-// NewGenesisState IMPORTANT NOTE: Not using numOfValidators param, as Validators are now read from the test_state json file
-func NewGenesisState(genesisConfig *GenesisConfig) (state *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
+// GenesisStateFromGenesisConfig IMPORTANT NOTE: Not using numOfValidators param, as Validators are now read from the test_state json file
+func GenesisStateFromGenesisConfig(genesisConfig *GenesisConfig) (genesisState *GenesisState, validatorKeys, appKeys, serviceNodeKeys, fishKeys []crypto.PrivateKey, err error) {
 	// create the genesis state object
-	state = &GenesisState{}
+	genesisState = &GenesisState{}
 	validatorKeys = make([]crypto.PrivateKey, genesisConfig.NumValidators)
 	appKeys = make([]crypto.PrivateKey, genesisConfig.NumApplications)
 	fishKeys = make([]crypto.PrivateKey, genesisConfig.NumFisherman)
 	serviceNodeKeys = make([]crypto.PrivateKey, genesisConfig.NumServicers)
 	seedNum := uint32(42)
 	seed := make([]byte, ed25519.PrivateKeySize)
-	// create state objects for each key type
 
+	valPoolAmount := big.NewInt(0)
 	for i := range validatorKeys {
 		seedNum++
 		binary.LittleEndian.PutUint32(seed, seedNum)
@@ -71,13 +72,16 @@ func NewGenesisState(genesisConfig *GenesisConfig) (state *GenesisState, validat
 		v.Address = pk.Address()
 		v.PublicKey = pk.PublicKey().Bytes()
 		v.Output = v.Address
-		state.Validators = append(state.Validators, v)
-		state.Accounts = append(state.Accounts, &Account{
+		genesisState.Validators = append(genesisState.Validators, v)
+		genesisState.Accounts = append(genesisState.Accounts, &Account{
 			Address: v.Address,
 			Amount:  DefaultAccountBalance,
 		})
+		valPoolAmount.Add(valPoolAmount, DefaultAccountBalanceBig)
 		validatorKeys[i] = pk
 	}
+
+	appPoolAmount := big.NewInt(0)
 	for i := range appKeys {
 		seedNum++
 		binary.LittleEndian.PutUint32(seed, seedNum)
@@ -93,13 +97,16 @@ func NewGenesisState(genesisConfig *GenesisConfig) (state *GenesisState, validat
 		app.Address = pk.Address()
 		app.PublicKey = pk.PublicKey().Bytes()
 		app.Output = app.Address
-		state.Apps = append(state.Apps, app)
-		state.Accounts = append(state.Accounts, &Account{
+		genesisState.Apps = append(genesisState.Apps, app)
+		genesisState.Accounts = append(genesisState.Accounts, &Account{
 			Address: app.Address,
 			Amount:  DefaultAccountBalance,
 		})
+		appPoolAmount.Add(appPoolAmount, DefaultAccountBalanceBig)
 		appKeys[i] = pk
 	}
+
+	serviceNodePoolAmount := big.NewInt(0)
 	for i := range serviceNodeKeys {
 		seedNum++
 		binary.LittleEndian.PutUint32(seed, seedNum)
@@ -116,13 +123,16 @@ func NewGenesisState(genesisConfig *GenesisConfig) (state *GenesisState, validat
 		sn.Address = pk.Address()
 		sn.PublicKey = pk.PublicKey().Bytes()
 		sn.Output = sn.Address
-		state.ServiceNodes = append(state.ServiceNodes, sn)
-		state.Accounts = append(state.Accounts, &Account{
+		genesisState.ServiceNodes = append(genesisState.ServiceNodes, sn)
+		genesisState.Accounts = append(genesisState.Accounts, &Account{
 			Address: sn.Address,
 			Amount:  DefaultAccountBalance,
 		})
+		serviceNodePoolAmount.Add(serviceNodePoolAmount, DefaultAccountBalanceBig)
 		serviceNodeKeys[i] = pk
 	}
+
+	fishermanPoolAmount := big.NewInt(0)
 	for i := range fishKeys {
 		seedNum++
 		binary.LittleEndian.PutUint32(seed, seedNum)
@@ -139,40 +149,41 @@ func NewGenesisState(genesisConfig *GenesisConfig) (state *GenesisState, validat
 		fish.Address = pk.Address()
 		fish.PublicKey = pk.PublicKey().Bytes()
 		fish.Output = fish.Address
-		state.Fishermen = append(state.Fishermen, fish)
-		state.Accounts = append(state.Accounts, &Account{
+		genesisState.Fishermen = append(genesisState.Fishermen, fish)
+		genesisState.Accounts = append(genesisState.Accounts, &Account{
 			Address: fish.Address,
 			Amount:  DefaultAccountBalance,
 		})
+		fishermanPoolAmount.Add(fishermanPoolAmount, DefaultAccountBalanceBig)
 		fishKeys[i] = pk
 	}
 	// populate the state with default parameters
-	state.Params = DefaultParams()
+	genesisState.Params = DefaultParams()
 	// create appropriate 'stake' pools for each actor type
 	valStakePool, err := NewPool(ValidatorStakePoolName, &Account{
 		Address: DefaultValidatorStakePool.Address(),
-		Amount:  types.BigIntToString(&big.Int{}),
+		Amount:  types.BigIntToString(valPoolAmount),
 	})
 	if err != nil {
 		return
 	}
 	appStakePool, err := NewPool(AppStakePoolName, &Account{
 		Address: DefaultAppStakePool.Address(),
-		Amount:  types.BigIntToString(&big.Int{}),
+		Amount:  types.BigIntToString(appPoolAmount),
 	})
 	if err != nil {
 		return
 	}
 	fishStakePool, err := NewPool(FishermanStakePoolName, &Account{
 		Address: DefaultFishermanStakePool.Address(),
-		Amount:  types.BigIntToString(&big.Int{}),
+		Amount:  types.BigIntToString(fishermanPoolAmount),
 	})
 	if err != nil {
 		return
 	}
 	serNodeStakePool, err := NewPool(ServiceNodeStakePoolName, &Account{
 		Address: DefaultServiceNodeStakePool.Address(),
-		Amount:  types.BigIntToString(&big.Int{}),
+		Amount:  types.BigIntToString(serviceNodePoolAmount),
 	})
 	if err != nil {
 		return
@@ -195,17 +206,18 @@ func NewGenesisState(genesisConfig *GenesisConfig) (state *GenesisState, validat
 	}
 	// create an account for the DAO / Param owner
 	pOwnerAddress := DefaultParamsOwner.Address()
-	state.Accounts = append(state.Accounts, &Account{
+	genesisState.Accounts = append(genesisState.Accounts, &Account{
 		Address: pOwnerAddress,
 		Amount:  DefaultAccountBalance,
 	})
 	// populate the state pools with the previously created
-	state.Pools = append(state.Pools, dao)
-	state.Pools = append(state.Pools, fee)
-	state.Pools = append(state.Pools, serNodeStakePool)
-	state.Pools = append(state.Pools, fishStakePool)
-	state.Pools = append(state.Pools, appStakePool)
-	state.Pools = append(state.Pools, valStakePool)
+	genesisState.Pools = append(genesisState.Pools, dao)
+	genesisState.Pools = append(genesisState.Pools, fee)
+	genesisState.Pools = append(genesisState.Pools, serNodeStakePool)
+	genesisState.Pools = append(genesisState.Pools, fishStakePool)
+	genesisState.Pools = append(genesisState.Pools, appStakePool)
+	genesisState.Pools = append(genesisState.Pools, valStakePool)
+
 	return
 }
 

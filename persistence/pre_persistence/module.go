@@ -52,45 +52,65 @@ func (m *PrePersistenceModule) GetBus() modules.Bus {
 	return m.bus
 }
 
-func InitGenesis(u *PrePersistenceContext, state *typesGenesis.GenesisState) error {
-	if err := InsertPersistenceParams(u, state.Params); err != nil {
+func InitGenesis(u *PrePersistenceContext, genesisState *typesGenesis.GenesisState) error {
+	if err := InsertPersistenceParams(u, genesisState.Params); err != nil {
 		return err
 	}
-	for _, account := range state.Accounts {
+	for _, account := range genesisState.Accounts {
 		if err := u.SetAccountAmount(account.Address, account.Amount); err != nil {
 			return err
 		}
 	}
-	for _, p := range state.Pools {
+	for _, p := range genesisState.Pools {
 		if err := u.InsertPool(p.Name, p.Account.Address, p.Account.Amount); err != nil {
 			return err
 		}
-	}
-	for _, validator := range state.Validators {
-		err := u.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 2, validator.ServiceUrl, validator.StakedTokens, 0, 0)
-		if err != nil {
+		// HACK/DISCUSS: The value of the pool may be different than what the sum of all the actors in that pool are staking.
+		if err := u.SetAccountAmount(p.Account.Address, p.Account.Amount); err != nil {
 			return err
 		}
 	}
-	for _, fisherman := range state.Fishermen {
-		err := u.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 2, fisherman.ServiceUrl, fisherman.StakedTokens, fisherman.Chains, 0, 0)
+	for _, validator := range genesisState.Validators {
+		err := u.InsertValidator(validator.Address, validator.PublicKey, validator.Output, false, 2, validator.ServiceUrl, validator.StakedTokens, -1, -1)
 		if err != nil {
 			return err
 		}
-	}
-	for _, serviceNode := range state.ServiceNodes {
-		err := u.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 2, serviceNode.ServiceUrl, serviceNode.StakedTokens, serviceNode.Chains, 0, 0)
-		if err != nil {
+		// DISCUSS: Is this additional account needed?
+		if err := u.SetAccountAmount(validator.Address, validator.StakedTokens); err != nil {
 			return err
 		}
 	}
-	for _, application := range state.Apps {
+	for _, fisherman := range genesisState.Fishermen {
+		err := u.InsertFisherman(fisherman.Address, fisherman.PublicKey, fisherman.Output, false, 2, fisherman.ServiceUrl, fisherman.StakedTokens, fisherman.Chains, -1, -1)
+		if err != nil {
+			return err
+		}
+		// DISCUSS: Is this additional account needed?
+		if err := u.SetAccountAmount(fisherman.Address, fisherman.StakedTokens); err != nil {
+			return err
+		}
+	}
+	for _, serviceNode := range genesisState.ServiceNodes {
+		err := u.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, false, 2, serviceNode.ServiceUrl, serviceNode.StakedTokens, serviceNode.Chains, -1, -1)
+		if err != nil {
+			return err
+		}
+		// DISCUSS: Is this additional account needed?
+		if err := u.SetAccountAmount(serviceNode.Address, serviceNode.StakedTokens); err != nil {
+			return err
+		}
+	}
+	for _, application := range genesisState.Apps {
 		maxRelays, err := CalculateAppRelays(u, 0, application.StakedTokens)
 		if err != nil {
 			return err
 		}
-		err = u.InsertApplication(application.Address, application.PublicKey, application.Output, false, 2, maxRelays, application.StakedTokens, application.Chains, 0, 0)
+		err = u.InsertApplication(application.Address, application.PublicKey, application.Output, false, 2, maxRelays, application.StakedTokens, application.Chains, -1, -1)
 		if err != nil {
+			return err
+		}
+		// DISCUSS: Is this additional account needed?
+		if err := u.SetAccountAmount(application.Address, application.StakedTokens); err != nil {
 			return err
 		}
 	}

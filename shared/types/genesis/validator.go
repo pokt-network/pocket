@@ -7,7 +7,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-// DISCUSS: Since the protocol actor protobufs (e.g. validator, fisherman, etc) use `bytes` for some
+// HACK: Since the protocol actor protobufs (e.g. validator, fisherman, etc) use `bytes` for some
 // fields (e.g. `address`, `output`, `publicKey`), we need to use a helper struct to unmarshal the
 // the types when they are defined via json (e.g. genesis file, testing configurations, etc...).
 // Alternative solutions could include whole wrapper structs (i.e. duplication of schema definition),
