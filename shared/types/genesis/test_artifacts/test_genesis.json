@@ -55,42 +55,7 @@
       "name": "SERVICE_NODE_STAKE_POOL",
       "account": {
         "address": "97a8cc38033822da010422851062ae6b21b8e29d4c34193b7d8fa0f37b6593b6",
-        "amount": "1000000000000000"
-      }
-    },
-    {
-      "name": "APP_STAKE_POOL",
-      "account": {
-        "address": "0834e9575c19d9d7d664ec460a98abb2435ece93440eb482c87d5b7259a8d271",
-        "amount": "1000000000000000"
-      }
-    },
-    {
-      "name": "VALIDATOR_STAKE_POOL",
-      "account": {
-        "address": "664b5b682e40ee218e5feea05c2a1bb595ec15f3850c92b571cdf950b4d9ba23",
-        "amount": "1000000000000000"
-      }
-    },
-    {
-      "name": "FISHERMAN_STAKE_POOL",
-      "account": {
-        "address": "733a711adb6fc8fbef6a3e2ac2db7842433053a23c751d19573ab85b52316f67",
-        "amount": "1000000000000000"
-      }
-    },
-    {
-      "name": "DAO_POOL",
-      "account": {
-        "address": "aacaa24a69bcf2819ed97ab5ed8d1e490041e5c7ef9e1eddba8b5678f997ae58",
-        "amount": "1000000000000000"
-      }
-    },
-    {
-      "name": "FEE_POOL",
-      "account": {
-        "address": "826f8e7911fa89b4bd6659c3175114d714c60bac63acc63817c0d3a4ed2fdab8",
-        "amount": "1000000000000000"
+        "amount": "0"
       }
     }
   ],

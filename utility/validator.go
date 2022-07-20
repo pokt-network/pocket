@@ -5,6 +5,7 @@ import (
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -39,7 +40,7 @@ func (u *UtilityContext) HandleMessageStakeValidator(message *typesUtil.MessageS
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(typesUtil.ValidatorStakePoolName, amount); err != nil {
+	if err := u.AddPoolAmount(typesGenesis.ValidatorStakePoolName, amount); err != nil {
 		return err
 	}
 	// ensure Validator doesn't already exist
@@ -83,7 +84,7 @@ func (u *UtilityContext) HandleMessageEditStakeValidator(message *typesUtil.Mess
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(typesUtil.ValidatorStakePoolName, amountToAdd); err != nil {
+	if err := u.AddPoolAmount(typesGenesis.ValidatorStakePoolName, amountToAdd); err != nil {
 		return err
 	}
 	// insert the validator structure
@@ -113,13 +114,14 @@ func (u *UtilityContext) HandleMessageUnstakeValidator(message *typesUtil.Messag
 }
 
 func (u *UtilityContext) UnstakeValidatorsThatAreReady() types.Error {
+
 	validatorsReadyToUnstake, err := u.GetValidatorsReadyToUnstake()
 	if err != nil {
 		return err
 	}
 	// If unstaking even a single validator fails, the whole operation falls through.
 	for _, validator := range validatorsReadyToUnstake {
-		if err := u.SubPoolAmount(typesUtil.ValidatorStakePoolName, validator.GetStakeAmount()); err != nil {
+		if err := u.SubPoolAmount(typesGenesis.ValidatorStakePoolName, validator.GetStakeAmount()); err != nil {
 			return err
 		}
 		if err := u.AddAccountAmountString(validator.GetOutputAddress(), validator.GetStakeAmount()); err != nil {
@@ -142,7 +144,8 @@ func (u *UtilityContext) BeginUnstakingMaxPausedValidators() types.Error {
 		return err
 	}
 	beforeHeight := latestHeight - int64(maxPausedBlocks)
-	if beforeHeight < 0 { // genesis edge case
+	// genesis edge case
+	if beforeHeight < 0 {
 		beforeHeight = 0
 	}
 	if err := u.UnstakeValidatorsPausedBefore(beforeHeight); err != nil {
@@ -232,11 +235,11 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 }
 
 func (u *UtilityContext) HandleProposalRewards(proposer []byte) types.Error {
-	feesAndRewardsCollected, err := u.GetPoolAmount(typesUtil.FeePoolName)
+	feesAndRewardsCollected, err := u.GetPoolAmount(typesGenesis.FeePoolName)
 	if err != nil {
 		return err
 	}
-	if err := u.SetPoolAmount(typesUtil.FeePoolName, big.NewInt(0)); err != nil {
+	if err := u.SetPoolAmount(typesGenesis.FeePoolName, big.NewInt(0)); err != nil {
 		return err
 	}
 	proposerCutPercentage, err := u.GetProposerPercentageOfFees()
@@ -255,7 +258,7 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) types.Error {
 	if err := u.AddAccountAmount(proposer, amountToProposer); err != nil {
 		return err
 	}
-	if err := u.AddPoolAmount(typesUtil.DAOPoolName, amountToDAO); err != nil {
+	if err := u.AddPoolAmount(typesGenesis.DAOPoolName, amountToDAO); err != nil {
 		return err
 	}
 	return nil
@@ -305,7 +308,7 @@ func (u *UtilityContext) BurnValidator(address []byte, percentage int) types.Err
 	}
 	newTokensAfterBurn := big.NewInt(0).Sub(tokens, truncatedTokens)
 	// remove from pool
-	if err := u.SubPoolAmount(typesUtil.ValidatorStakePoolName, types.BigIntToString(truncatedTokens)); err != nil {
+	if err := u.SubPoolAmount(typesGenesis.ValidatorStakePoolName, types.BigIntToString(truncatedTokens)); err != nil {
 		return err
 	}
 	// remove from validator

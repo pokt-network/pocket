@@ -3,6 +3,7 @@ package genesis;
 
 option go_package = "github.com/pokt-network/pocket/shared/types/genesis";
 
+// DISCUSS(drewskey): Explore a more general purpose "feature flag" like approach for this.
 message Params {
   int32 blocks_per_session = 1;
 

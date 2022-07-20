@@ -51,14 +51,14 @@ func TestUtilityContext_HandleMessageStakeValidator(t *testing.T) {
 	if actor.Paused != false {
 		t.Fatalf("incorrect paused status, expected %v, got %v", false, actor.Paused)
 	}
-	if actor.PausedHeight != 0 {
-		t.Fatalf("incorrect paused status, expected %v, got %v", actor.PausedHeight, 0)
+	if actor.PausedHeight != types.HeightNotUsed {
+		t.Fatalf("incorrect paused height, expected %v, got %v", types.HeightNotUsed, actor.PausedHeight)
 	}
 	if actor.StakedTokens != defaultAmountString {
-		t.Fatalf("incorrect paused status, expected %v, got %v", actor.StakedTokens, defaultAmountString)
+		t.Fatalf("incorrect staked amount, expected %v, got %v", actor.StakedTokens, defaultAmountString)
 	}
-	if actor.UnstakingHeight != 0 {
-		t.Fatalf("incorrect unstaking height, expected %v, got %v", 0, actor.UnstakingHeight)
+	if actor.UnstakingHeight != types.HeightNotUsed {
+		t.Fatalf("incorrect unstaking height, expected %v, got %v", types.HeightNotUsed, actor.UnstakingHeight)
 	}
 	if !bytes.Equal(actor.Output, out) {
 		t.Fatalf("incorrect output address, expected %v, got %v", actor.Output, out)
@@ -83,8 +83,8 @@ func TestUtilityContext_HandleMessageEditStakeValidator(t *testing.T) {
 	if actor.Paused != false {
 		t.Fatalf("incorrect paused status, expected %v, got %v", false, actor.Paused)
 	}
-	if actor.PausedHeight != 0 {
-		t.Fatalf("incorrect paused status, expected %v, got %v", actor.PausedHeight, 0)
+	if actor.PausedHeight != types.HeightNotUsed {
+		t.Fatalf("incorrect paused height, expected %v, got %v", types.HeightNotUsed, actor.PausedHeight)
 	}
 	if actor.ServiceUrl != defaultServiceUrlEdited {
 		t.Fatalf("incorrect serviceurl, expected %v, got %v", defaultServiceUrlEdited, actor.ServiceUrl)
@@ -92,8 +92,8 @@ func TestUtilityContext_HandleMessageEditStakeValidator(t *testing.T) {
 	if actor.StakedTokens != defaultAmountString {
 		t.Fatalf("incorrect staked tokens, expected %v, got %v", defaultAmountString, actor.StakedTokens)
 	}
-	if actor.UnstakingHeight != 0 {
-		t.Fatalf("incorrect unstaking height, expected %v, got %v", 0, actor.UnstakingHeight)
+	if actor.UnstakingHeight != types.HeightNotUsed {
+		t.Fatalf("incorrect unstaking height, expected %v, got %v", types.HeightNotUsed, actor.UnstakingHeight)
 	}
 	if !bytes.Equal(actor.Output, actor.Output) {
 		t.Fatalf("incorrect output address, expected %v, got %v", actor.Output, actor.Output)
@@ -437,29 +437,31 @@ func TestUtilityContext_UnstakeValidatorsPausedBefore(t *testing.T) {
 
 func TestUtilityContext_UnstakeValidatorsThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
-	ctx.SetPoolAmount(typesUtil.ValidatorStakePoolName, big.NewInt(100000000000000000))
+	ctx.SetPoolAmount(genesis.ValidatorStakePoolName, big.NewInt(100000000000000000))
 	if err := ctx.Context.SetValidatorUnstakingBlocks(0); err != nil {
 		t.Fatal(err)
-	}
-	actor := GetAllTestingValidators(t, ctx)[0]
-	if actor.Status != typesUtil.StakedStatus {
-		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetValidatorMaxPausedBlocks(0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := ctx.SetValidatorPauseHeight(actor.Address, 0); err != nil {
-		t.Fatal(err)
+	actors := GetAllTestingValidators(t, ctx)
+	for _, actor := range actors {
+		if actor.Status != typesUtil.StakedStatus {
+			t.Fatal("wrong starting status")
+		}
+		if err := ctx.SetValidatorPauseHeight(actor.Address, 1); err != nil {
+			t.Fatal(err)
+		}
 	}
-	if err := ctx.UnstakeValidatorsPausedBefore(1); err != nil {
+	if err := ctx.UnstakeValidatorsPausedBefore(2); err != nil {
 		t.Fatal(err)
 	}
 	if err := ctx.UnstakeValidatorsThatAreReady(); err != nil {
 		t.Fatal(err)
 	}
 	if len(GetAllTestingValidators(t, ctx)) != 0 {
-		t.Fatal("actor still exists after unstake that are ready() call")
+		t.Fatal("validators still exists after unstake that are ready() call")
 	}
 }
 
@@ -486,7 +488,7 @@ func TestUtilityContext_UpdateValidator(t *testing.T) {
 
 func TestUtilityContext_BurnValidator(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	ctx.SetPoolAmount(typesUtil.ValidatorStakePoolName, big.NewInt(100000000000000))
+	ctx.SetPoolAmount(genesis.ValidatorStakePoolName, big.NewInt(100000000000000))
 	actor := GetAllTestingValidators(t, ctx)[0]
 	burnPercentage := big.NewFloat(10)
 	tokens, err := types.StringToBigInt(actor.StakedTokens)
@@ -525,7 +527,7 @@ func TestUtilityContext_GetMessageDoubleSignSignerCandidates(t *testing.T) {
 
 func TestUtilityContext_HandleMessageDoubleSign(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	ctx.SetPoolAmount(typesUtil.ValidatorStakePoolName, big.NewInt(100000000000000))
+	ctx.SetPoolAmount(genesis.ValidatorStakePoolName, big.NewInt(100000000000000))
 	actors := GetAllTestingValidators(t, ctx)
 	reporter := actors[0]
 	byzVal := actors[1]
@@ -617,7 +619,7 @@ func TestUtilityContext_GetValidatorStatus(t *testing.T) {
 
 func TestUtilityContext_HandleByzantineValidators(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	ctx.SetPoolAmount(typesUtil.ValidatorStakePoolName, big.NewInt(100000000000000))
+	ctx.SetPoolAmount(genesis.ValidatorStakePoolName, big.NewInt(100000000000000))
 	actor := GetAllTestingValidators(t, ctx)[0]
 	stakedTokensBeforeBig, err := types.StringToBigInt(actor.StakedTokens)
 	if err != nil {
@@ -670,7 +672,7 @@ func TestUtilityContext_HandleProposalRewards(t *testing.T) {
 		t.Fatal(err)
 	}
 	feeAndRewardsCollected := big.NewInt(100)
-	err = ctx.SetPoolAmount(typesUtil.FeePoolName, feeAndRewardsCollected)
+	err = ctx.SetPoolAmount(genesis.FeePoolName, feeAndRewardsCollected)
 	if err != nil {
 		t.Fatal(err)
 	}

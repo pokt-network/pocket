@@ -5,6 +5,7 @@ import (
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -117,7 +118,7 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil
 	if err := u.SetAccountAmount(address, accountAmount); err != nil {
 		return nil, err
 	}
-	if err := u.AddPoolAmount(typesUtil.FeePoolName, fee); err != nil {
+	if err := u.AddPoolAmount(typesGenesis.FeePoolName, fee); err != nil {
 		return nil, err
 	}
 	msg.SetSigner(address)

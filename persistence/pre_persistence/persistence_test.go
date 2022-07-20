@@ -1,21 +1,29 @@
 package pre_persistence
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/stretchr/testify/require"
 	"github.com/syndtr/goleveldb/leveldb/comparer"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 )
 
-func NewTestingPrePersistenceModule(_ *testing.T) *PrePersistenceModule {
+func NewTestingPrePersistenceModule(t *testing.T) *PrePersistenceModule {
 	db := memdb.New(comparer.DefaultComparer, 10000000)
-	cfg := &config.Config{Genesis: genesisJson()}
-	_ = typesGenesis.GetNodeState(cfg)
+	cfg := &config.Config{
+		GenesisSource: &genesis.GenesisSource{
+			Source: &genesis.GenesisSource_Config{
+				Config: genesisConfig(),
+			},
+		},
+	}
+	err := cfg.HydrateGenesisState()
+	require.NoError(t, err)
+
 	return NewPrePersistenceModule(db, types.NewMempool(10000, 10000), cfg)
 }
 
@@ -28,16 +36,12 @@ func NewTestingPrePersistenceContext(t *testing.T) modules.PersistenceContext {
 	return persistenceContext
 }
 
-func genesisJson() string {
-	return fmt.Sprintf(`{
-		"genesis_state_configs": {
-			"num_validators": 5,
-			"num_applications": 1,
-			"num_fisherman": 1,
-			"num_servicers": 5,
-			"keys_seed_start": %d
-		},
-		"genesis_time": "2022-01-19T00:00:00.000000Z",
-		"app_hash": "genesis_block_or_state_hash"
-	}`, 42)
+func genesisConfig() *genesis.GenesisConfig {
+	config := &genesis.GenesisConfig{
+		NumValidators:   5,
+		NumApplications: 1,
+		NumFisherman:    1,
+		NumServicers:    5,
+	}
+	return config
 }

@@ -8,7 +8,7 @@ import (
 
 const (
 	ZeroInt       = 0
-	HeightNotUsed = 0 // TODO (Andrew) update design, could use -1
+	HeightNotUsed = -1
 	EmptyString   = ""
 )
 

@@ -78,7 +78,7 @@ func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []by
 		Chains:          chains,
 		ServiceUrl:      serviceURL,
 		StakedTokens:    stakedTokens,
-		PausedHeight:    uint64(pausedHeight),
+		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Output:          output,
 	}
@@ -252,7 +252,7 @@ func (m *PrePersistenceContext) SetServiceNodesStatusAndUnstakingHeightPausedBef
 		if err := codec.Unmarshal(bz, &sn); err != nil {
 			return err
 		}
-		if sn.PausedHeight < uint64(pausedBeforeHeight) {
+		if sn.PausedHeight < pausedBeforeHeight && sn.PausedHeight != types.HeightNotUsed {
 			sn.UnstakingHeight = unstakingHeight
 			sn.Status = int32(status)
 			if err := m.SetServiceNodeUnstakingHeightAndStatus(sn.Address, sn.UnstakingHeight, status); err != nil {
@@ -285,7 +285,7 @@ func (m *PrePersistenceContext) SetServiceNodePauseHeight(address []byte, height
 	} else {
 		sn.Paused = true
 	}
-	sn.PausedHeight = uint64(height)
+	sn.PausedHeight = height
 	bz, err := codec.Marshal(sn)
 	if err != nil {
 		return err

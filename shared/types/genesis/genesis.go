@@ -6,73 +6,77 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"time"
+
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
-type Genesis struct {
-	// TODO(olshansky): Discuss this structure with Andrew.
-	GenesisStateConfig *NewGenesisStateConfigs `json:"genesis_state_configs"`
+// TODO(team): Consider refactoring PoolNames and statuses to an enum
+// with appropriate enum <-> string mappers where appropriate.
+// This can make it easier to track all the different states
+// available.
+const (
+	ServiceNodeStakePoolName = "SERVICE_NODE_STAKE_POOL"
+	AppStakePoolName         = "APP_STAKE_POOL"
+	ValidatorStakePoolName   = "VALIDATOR_STAKE_POOL"
+	FishermanStakePoolName   = "FISHERMAN_STAKE_POOL"
+	DAOPoolName              = "DAO_POOL"
+	FeePoolName              = "FEE_POOL"
+)
 
-	GenesisTime time.Time                         `json:"genesis_time"`
-	AppHash     string                            `json:"app_hash"`
-	Validators  []*ValidatorJsonCompatibleWrapper `json:"validators"`
-}
-
-// TODO: This is a temporary hack that can load Genesis from a single string
-// that may be either a JSON blob or a file.
-func PocketGenesisFromFileOrJSON(fileOrJson string) (*Genesis, error) {
-	if _, err := os.Stat(fileOrJson); err == nil {
-		return PocketGenesisFromFile(fileOrJson)
+func GenesisStateFromGenesisSource(genesisSource *GenesisSource) (genesisState *GenesisState, err error) {
+	switch genesisSource.Source.(type) {
+	case *GenesisSource_Config:
+		genesisConfig := genesisSource.GetConfig()
+		if genesisState, _, _, _, _, err = GenesisStateFromGenesisConfig(genesisConfig); err != nil {
+			return nil, fmt.Errorf("failed to generate genesis state from configuration: %v", err)
+		}
+	case *GenesisSource_File:
+		genesisFilePath := genesisSource.GetFile().Path
+		if _, err := os.Stat(genesisFilePath); err != nil {
+			return nil, fmt.Errorf("genesis file specified but not found %s", genesisFilePath)
+		}
+		if genesisState, err = GenesisStateFromFile(genesisFilePath); err != nil {
+			return nil, fmt.Errorf("failed to load genesis state from file: %v", err)
+		}
+	case *GenesisSource_State:
+		genesisState = genesisSource.GetState()
+	default:
+		return nil, fmt.Errorf("unsupported genesis source type: %v", genesisSource.Source)
 	}
-	return PocketGenesisFromJSON([]byte(fileOrJson))
+
+	return
 }
 
-func PocketGenesisFromFile(file string) (*Genesis, error) {
+func GenesisStateFromFile(file string) (*GenesisState, error) {
 	jsonBlob, err := os.ReadFile(file)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't read Genesis file: %w", err)
+		return nil, fmt.Errorf("couldn't read genesis file: %w", err)
 	}
-	genesis, err := PocketGenesisFromJSON(jsonBlob)
+	genesisState, err := GenesisStateFromJson(jsonBlob)
 	if err != nil {
-		return nil, fmt.Errorf("error reading Genesis at %s: %w", file, err)
+		return nil, fmt.Errorf("error generating genesis state from json: %w", err)
 	}
-	return genesis, nil
+	return genesisState, nil
 }
 
-func PocketGenesisFromJSON(jsonBlob []byte) (*Genesis, error) {
-	genesis := Genesis{}
-	if err := json.Unmarshal(jsonBlob, &genesis); err != nil {
+func GenesisStateFromJson(jsonBlob []byte) (*GenesisState, error) {
+	genesisState := GenesisState{}
+	if err := json.Unmarshal(jsonBlob, &genesisState); err != nil {
 		return nil, err
 	}
-	if err := genesis.Validate(); err != nil {
+	if err := genesisState.Validate(); err != nil {
 		return nil, err
 	}
-	return &genesis, nil
+	return &genesisState, nil
 }
 
-func (genesis *Genesis) Validate() error {
-	if genesis.GenesisTime.IsZero() {
-		return fmt.Errorf("GenesisTime cannot be zero")
-	}
+// TODO: Validate each field in GenesisState
+func (genesisState *GenesisState) Validate() error {
+	return nil
+}
 
-	// TODO: validate each account.
-	if len(genesis.Validators) == 0 && (genesis.GenesisStateConfig == nil || genesis.GenesisStateConfig.NumValidators == 0) {
-		return fmt.Errorf("genesis must contain at least one validator")
-	}
-
-	if len(genesis.Validators) > 0 && (genesis.GenesisStateConfig == nil || genesis.GenesisStateConfig.NumValidators != uint16(len(genesis.Validators))) {
-		return fmt.Errorf("genesis state validator count is misconfigured")
-	}
-
-	if len(genesis.AppHash) == 0 {
-		return fmt.Errorf("Genesis app hash cannot be zero")
-	}
-
-	for _, validator := range genesis.Validators {
-		if err := validator.ValidateBasic(); err != nil {
-			return fmt.Errorf("validator in genesis is invalid: %w", err)
-		}
-	}
-
+// See the explanation here for the need of this function: https://stackoverflow.com/a/73015992/768439
+func (source *GenesisSource) UnmarshalJSON(data []byte) error {
+	protojson.Unmarshal(data, source)
 	return nil
 }

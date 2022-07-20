@@ -3,6 +3,7 @@ package utility
 import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -53,7 +54,7 @@ func (u *UtilityContext) HandleMessageStakeFisherman(message *typesUtil.MessageS
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(typesUtil.FishermanStakePoolName, amount); err != nil {
+	if err := u.AddPoolAmount(typesGenesis.FishermanStakePoolName, amount); err != nil {
 		return err
 	}
 	// ensure Fisherman doesn't already exist
@@ -105,7 +106,7 @@ func (u *UtilityContext) HandleMessageEditStakeFisherman(message *typesUtil.Mess
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(typesUtil.FishermanStakePoolName, amountToAdd); err != nil {
+	if err := u.AddPoolAmount(typesGenesis.FishermanStakePoolName, amountToAdd); err != nil {
 		return err
 	}
 	// insert the Fisherman structure
@@ -140,7 +141,7 @@ func (u *UtilityContext) UnstakeFishermenThatAreReady() types.Error {
 		return err
 	}
 	for _, fisherman := range fishermansReadyToUnstake {
-		if err := u.SubPoolAmount(typesUtil.FishermanStakePoolName, fisherman.GetStakeAmount()); err != nil {
+		if err := u.SubPoolAmount(typesGenesis.FishermanStakePoolName, fisherman.GetStakeAmount()); err != nil {
 			return err
 		}
 		if err := u.AddAccountAmountString(fisherman.GetOutputAddress(), fisherman.GetStakeAmount()); err != nil {
@@ -163,7 +164,8 @@ func (u *UtilityContext) BeginUnstakingMaxPausedFishermen() types.Error {
 		return err
 	}
 	beforeHeight := latestHeight - int64(maxPausedBlocks)
-	if beforeHeight < 0 { // genesis edge case
+	// genesis edge case
+	if beforeHeight < 0 {
 		beforeHeight = 0
 	}
 	if err := u.UnstakeFishermenPausedBefore(beforeHeight); err != nil {

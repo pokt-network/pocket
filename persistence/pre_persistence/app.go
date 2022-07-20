@@ -97,7 +97,7 @@ func (m *PrePersistenceContext) InsertApplication(address []byte, publicKey []by
 		Chains:          chains,
 		MaxRelays:       maxRelays,
 		StakedTokens:    stakedTokens,
-		PausedHeight:    uint64(pausedHeight),
+		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Output:          output,
 	}
@@ -266,7 +266,7 @@ func (m *PrePersistenceContext) SetAppsStatusAndUnstakingHeightPausedBefore(paus
 		if err := codec.Unmarshal(bz, &app); err != nil {
 			return err
 		}
-		if app.PausedHeight < uint64(pausedBeforeHeight) {
+		if app.PausedHeight < pausedBeforeHeight && app.PausedHeight != types.HeightNotUsed {
 			app.UnstakingHeight = unstakingHeight
 			app.Status = int32(status)
 			if err := m.SetAppUnstakingHeightAndStatus(app.Address, app.UnstakingHeight, status); err != nil {
@@ -299,7 +299,7 @@ func (m *PrePersistenceContext) SetAppPauseHeight(address []byte, height int64) 
 	} else {
 		app.Paused = false
 	}
-	app.PausedHeight = uint64(height)
+	app.PausedHeight = height
 	bz, err := codec.Marshal(app)
 	if err != nil {
 		return err
