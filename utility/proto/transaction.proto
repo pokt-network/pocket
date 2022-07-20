@@ -7,9 +7,8 @@ import "google/protobuf/any.proto";
 
 message Transaction {
   google.protobuf.Any msg = 1;
-  string fee = 2;
-  Signature signature = 3;
-  string nonce = 4;
+  Signature signature = 2;
+  string nonce = 3;
 }
 
 message TransactionResult {

@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0] - 2021-03-15
+## [0.0.1] - 2022-07-20
+
+### Code cleanup
+- Removed transaction fees from the transaction structure as fees will be enforced at the state level
+
+## [Unreleased]
+
+## [0.0.0] - 2022-03-15
 
 ### Added
 

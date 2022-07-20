@@ -7,6 +7,10 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
+// 'Accounts' are structures in the utility module that closely resemble currency holding vehicles: like a bank account.
+//  Accounts enable the 'ownership' or 'custody' over uPOKT tokens. These structures are fundamental to enabling
+//  the utility economy.
+
 func (u *UtilityContext) HandleMessageSend(message *typesUtil.MessageSend) types.Error {
 	// convert the amount to big.Int
 	amount, err := types.StringToBigInt(message.Amount)
@@ -26,11 +30,11 @@ func (u *UtilityContext) HandleMessageSend(message *typesUtil.MessageSend) types
 		return types.ErrInsufficientAmountError()
 	}
 	// add the amount to the recipient's account
-	if err := u.AddAccountAmount(message.ToAddress, amount); err != nil {
+	if err = u.AddAccountAmount(message.ToAddress, amount); err != nil {
 		return err
 	}
 	// set the sender's account amount
-	if err := u.SetAccountAmount(message.FromAddress, fromAccountAmount); err != nil {
+	if err = u.SetAccountAmount(message.FromAddress, fromAccountAmount); err != nil {
 		return err
 	}
 	return nil

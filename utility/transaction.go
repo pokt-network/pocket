@@ -84,7 +84,7 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil
 	if err != nil {
 		return nil, err
 	}
-	fee, err := u.GetFee(msg) // TODO this enforces exact fee spent regardless of what's put in field... should we remove the fee field from transaction?
+	fee, err := u.GetFee(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -143,10 +143,6 @@ func (u *UtilityContext) HandleMessage(msg typesUtil.Message) types.Error {
 		return u.HandleMessageUnpauseFisherman(x)
 	case *typesUtil.MessageFishermanPauseServiceNode:
 		return u.HandleMessageFishermanPauseServiceNode(x)
-	//case *types.MessageTestScore:
-	//	return u.HandleMessageTestScore(x)
-	//case *types.MessageProveTestScore:
-	//	return u.HandleMessageProveTestScore(x)
 	case *typesUtil.MessageStakeApp:
 		return u.HandleMessageStakeApp(x)
 	case *typesUtil.MessageEditStakeApp:
@@ -202,10 +198,6 @@ func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, t
 		return u.GetMessageUnpauseFishermanSignerCandidates(x)
 	case *typesUtil.MessageFishermanPauseServiceNode:
 		return u.GetMessageFishermanPauseServiceNodeSignerCandidates(x)
-	//case *types.MessageTestScore:
-	//	return u.GetMessageTestScoreSignerCandidates(x)
-	//case *types.MessageProveTestScore:
-	//	return u.GetMessageProveTestScoreSignerCandidates(x)
 	case *typesUtil.MessageStakeApp:
 		return u.GetMessageStakeAppSignerCandidates(x)
 	case *typesUtil.MessageEditStakeApp:
