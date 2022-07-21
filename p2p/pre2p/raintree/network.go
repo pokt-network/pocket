@@ -19,9 +19,9 @@ import (
 )
 
 var _ typesPre2P.Network = &rainTreeNetwork{}
+var _ modules.IntegratableModule = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
-	modules.Module
 	bus modules.Bus
 
 	selfAddr cryptoPocket.Address
