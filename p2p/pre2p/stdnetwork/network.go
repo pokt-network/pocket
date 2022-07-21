@@ -11,6 +11,7 @@ import (
 )
 
 var _ typesPre2P.Network = &network{}
+var _ modules.IntegratableModule = &network{}
 
 type network struct {
 	addrBook typesPre2P.AddrBook
@@ -68,10 +69,5 @@ func (n *network) RemovePeerToAddrBook(peer *typesPre2P.NetworkPeer) error {
 	panic("RemovePeerToAddrBook not implemented")
 }
 
-// DISCUSS(team): We dont really need to `Start` or `Stop` this, but we need to access things through the bus
-// We should think about splitting the module interface into Runnable (Start,Stop) and Accessible (GetBus, SetBus)
-// so that we'd only limit ourselve to `Accessible` for cases like this.
 func (n *network) GetBus() modules.Bus  { return nil }
 func (n *network) SetBus(_ modules.Bus) {}
-func (n *network) Start() error         { return nil }
-func (n *network) Stop() error          { return nil }
