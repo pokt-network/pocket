@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
+	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
@@ -186,9 +187,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedApps(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingApps(t, ctx)[0]
 	err := ctx.Context.SetAppMaxPausedBlocks(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if err := ctx.SetAppPauseHeight(actor.Address, 0); err != nil {
 		t.Fatal(err)
 	}
@@ -205,9 +204,7 @@ func TestUtilityContext_CalculateAppRelays(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingApps(t, ctx)[0]
 	newMaxRelays, err := ctx.CalculateAppRelays(actor.StakedTokens)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if actor.MaxRelays != newMaxRelays {
 		t.Fatalf("unexpected max relay calculation; got %v wanted %v", actor.MaxRelays, newMaxRelays)
 	}
@@ -216,22 +213,18 @@ func TestUtilityContext_CalculateAppRelays(t *testing.T) {
 func TestUtilityContext_CalculateAppUnstakingHeight(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	unstakingBlocks, err := ctx.GetAppUnstakingBlocks()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	unstakingHeight, err := ctx.CalculateAppUnstakingHeight()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if unstakingBlocks != unstakingHeight {
 		t.Fatalf("unexpected unstakingHeight; got %d expected %d", unstakingBlocks, unstakingHeight)
 	}
 }
 
-func TestUtilityContext_DeleteApplication(t *testing.T) {
+func TestUtilityContext_DeleteApp(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingApps(t, ctx)[0]
-	if err := ctx.DeleteApplication(actor.Address); err != nil {
+	if err := ctx.DeleteApp(actor.Address); err != nil {
 		t.Fatal(err)
 	}
 	if len(GetAllTestingApps(t, ctx)) > 0 {
@@ -244,16 +237,12 @@ func TestUtilityContext_GetAppExists(t *testing.T) {
 	randAddr, _ := crypto.GenerateAddress()
 	actor := GetAllTestingApps(t, ctx)[0]
 	exists, err := ctx.GetAppExists(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor that should exist does not")
 	}
 	exists, err = ctx.GetAppExists(randAddr)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor that shouldn't exist does")
 	}
@@ -263,9 +252,7 @@ func TestUtilityContext_GetAppOutputAddress(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingApps(t, ctx)[0]
 	outputAddress, err := ctx.GetAppOutputAddress(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(outputAddress, actor.Output) {
 		t.Fatalf("unexpected output address, expected %v got %v", actor.Output, outputAddress)
 	}
@@ -279,9 +266,7 @@ func TestUtilityContext_GetAppPauseHeightIfExists(t *testing.T) {
 		t.Fatal(err)
 	}
 	gotPauseHeight, err := ctx.GetAppPauseHeightIfExists(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if pauseHeight != gotPauseHeight {
 		t.Fatal("unable to get pause height from the actor")
 	}
@@ -299,9 +284,7 @@ func TestUtilityContext_GetAppsReadyToUnstake(t *testing.T) {
 		t.Fatal(err)
 	}
 	actors, err := ctx.GetAppsReadyToUnstake()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(actors[0].Address, actor.Address) {
 		t.Fatalf("unexpected actor ready to unstake: expected %s, got %s", actor.Address, actors[0].Address)
 	}
@@ -316,9 +299,7 @@ func TestUtilityContext_GetMessageEditStakeAppSignerCandidates(t *testing.T) {
 		AmountToAdd: defaultAmountString,
 	}
 	candidates, err := ctx.GetMessageEditStakeAppSignerCandidates(msgEditStake)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -331,9 +312,7 @@ func TestUtilityContext_GetMessagePauseAppSignerCandidates(t *testing.T) {
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessagePauseAppSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -351,9 +330,7 @@ func TestUtilityContext_GetMessageStakeAppSignerCandidates(t *testing.T) {
 		OutputAddress: out,
 	}
 	candidates, err := ctx.GetMessageStakeAppSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], out) || !bytes.Equal(candidates[1], addr) {
 		t.Fatal(err)
 	}
@@ -366,9 +343,7 @@ func TestUtilityContext_GetMessageUnpauseAppSignerCandidates(t *testing.T) {
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnpauseAppSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -381,25 +356,21 @@ func TestUtilityContext_GetMessageUnstakeAppSignerCandidates(t *testing.T) {
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnstakeAppSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
 }
 
-func TestUtilityContext_InsertApplication(t *testing.T) {
+func TestUtilityContext_InsertApp(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	pubKey, _ := crypto.GeneratePublicKey()
 	addr := pubKey.Address()
-	if err := ctx.InsertApplication(addr, pubKey.Bytes(), addr, defaultAmountString, defaultAmountString, defaultTestingChains); err != nil {
+	if err := ctx.InsertApp(addr, pubKey.Bytes(), addr, defaultAmountString, defaultAmountString, defaultTestingChains); err != nil {
 		t.Fatal(err)
 	}
 	exists, err := ctx.GetAppExists(addr)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor does not exist after insert")
 	}
@@ -431,9 +402,7 @@ func TestUtilityContext_UnstakeAppsPausedBefore(t *testing.T) {
 		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetAppMaxPausedBlocks(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if err := ctx.SetAppPauseHeight(actor.Address, 0); err != nil {
 		t.Fatal(err)
 	}
@@ -445,9 +414,7 @@ func TestUtilityContext_UnstakeAppsPausedBefore(t *testing.T) {
 		t.Fatal("status does not equal unstaking")
 	}
 	unstakingBlocks, err := ctx.GetAppUnstakingBlocks()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if actor.UnstakingHeight != unstakingBlocks+1 {
 		t.Fatal("incorrect unstaking height")
 	}
@@ -483,19 +450,17 @@ func TestUtilityContext_UnstakeAppsThatAreReady(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_UpdateApplication(t *testing.T) {
+func TestUtilityContext_UpdateApp(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingApps(t, ctx)[0]
 	newAmountBig := big.NewInt(9999999999999999)
 	newAmount := types.BigIntToString(newAmountBig)
 	oldAmount := actor.StakedTokens
 	oldAmountBig, err := types.StringToBigInt(oldAmount)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	expectedAmountBig := newAmountBig.Add(newAmountBig, oldAmountBig)
 	expectedAmount := types.BigIntToString(expectedAmountBig)
-	if err := ctx.UpdateApplication(actor.Address, actor.MaxRelays, newAmount, actor.Chains); err != nil {
+	if err := ctx.UpdateApp(actor.Address, actor.MaxRelays, newAmount, actor.Chains); err != nil {
 		t.Fatal(err)
 	}
 	actor = GetAllTestingApps(t, ctx)[0]
@@ -506,8 +471,6 @@ func TestUtilityContext_UpdateApplication(t *testing.T) {
 
 func GetAllTestingApps(t *testing.T, ctx utility.UtilityContext) []*genesis.App {
 	actors, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllApps(ctx.LatestHeight)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return actors
 }

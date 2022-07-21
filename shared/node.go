@@ -1,8 +1,6 @@
 package shared
 
 import (
-	"log"
-
 	"github.com/pokt-network/pocket/p2p/pre2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/config"
@@ -10,6 +8,7 @@ import (
 	"github.com/pokt-network/pocket/utility"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+	"log"
 
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/persistence/pre_persistence"

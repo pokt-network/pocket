@@ -43,7 +43,11 @@ func (u *UtilityContext) GetMessageSendSignerCandidates(msg *typesUtil.MessageSe
 
 func (u *UtilityContext) GetAccountAmount(address []byte) (*big.Int, types.Error) {
 	store := u.Store()
-	amount, err := store.GetAccountAmount(address)
+	height, err := store.GetHeight()
+	if err != nil {
+		return nil, types.ErrGetAccountAmount(err)
+	}
+	amount, err := store.GetAccountAmount(address, height)
 	if err != nil {
 		return nil, types.ErrGetAccountAmount(err)
 	}
@@ -84,7 +88,11 @@ func (u *UtilityContext) SubPoolAmount(name string, amountToSub string) types.Er
 
 func (u *UtilityContext) GetPoolAmount(name string) (*big.Int, types.Error) {
 	store := u.Store()
-	tokens, er := store.GetPoolAmount(name)
+	height, er := store.GetHeight()
+	if er != nil {
+		return nil, types.ErrGetPoolAmount(name, er)
+	}
+	tokens, er := store.GetPoolAmount(name, height)
 	if er != nil {
 		return nil, types.ErrGetPoolAmount(name, er)
 	}

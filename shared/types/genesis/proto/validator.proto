@@ -12,6 +12,6 @@ message Validator {
   string staked_tokens = 6;
   uint32 missed_blocks = 7;
   int64 paused_height = 8;
-  int64 unstaking_height = 9; // DISCUSS: Should we make this an unsigned int?
+  int64 unstaking_height = 9; // DISCUSS: Why is this int64 but the above is a uint64?
   bytes output = 10;
 }

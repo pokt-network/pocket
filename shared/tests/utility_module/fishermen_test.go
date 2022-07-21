@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
+	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
@@ -186,9 +187,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedFishermen(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingFishermen(t, ctx)[0]
 	err := ctx.Context.SetFishermanMaxPausedBlocks(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if err := ctx.SetFishermanPauseHeight(actor.Address, 0); err != nil {
 		t.Fatal(err)
 	}
@@ -204,13 +203,9 @@ func TestUtilityContext_BeginUnstakingMaxPausedFishermen(t *testing.T) {
 func TestUtilityContext_CalculateFishermanUnstakingHeight(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	unstakingBlocks, err := ctx.GetFishermanUnstakingBlocks()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	unstakingHeight, err := ctx.CalculateFishermanUnstakingHeight()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if unstakingBlocks != unstakingHeight {
 		t.Fatalf("unexpected unstakingHeight; got %d expected %d", unstakingBlocks, unstakingHeight)
 	}
@@ -232,16 +227,12 @@ func TestUtilityContext_GetFishermanExists(t *testing.T) {
 	randAddr, _ := crypto.GenerateAddress()
 	actor := GetAllTestingFishermen(t, ctx)[0]
 	exists, err := ctx.GetFishermanExists(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor that should exist does not")
 	}
 	exists, err = ctx.GetFishermanExists(randAddr)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor that shouldn't exist does")
 	}
@@ -251,9 +242,7 @@ func TestUtilityContext_GetFishermanOutputAddress(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingFishermen(t, ctx)[0]
 	outputAddress, err := ctx.GetFishermanOutputAddress(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(outputAddress, actor.Output) {
 		t.Fatalf("unexpected output address, expected %v got %v", actor.Output, outputAddress)
 	}
@@ -267,9 +256,7 @@ func TestUtilityContext_GetFishermanPauseHeightIfExists(t *testing.T) {
 		t.Fatal(err)
 	}
 	gotPauseHeight, err := ctx.GetFishermanPauseHeightIfExists(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if pauseHeight != gotPauseHeight {
 		t.Fatal("unable to get pause height from the actor")
 	}
@@ -287,9 +274,7 @@ func TestUtilityContext_GetFishermenReadyToUnstake(t *testing.T) {
 		t.Fatal(err)
 	}
 	actors, err := ctx.GetFishermenReadyToUnstake()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(actors[0].Address, actor.Address) {
 		t.Fatalf("unexpected actor ready to unstake: expected %s, got %s", actor.Address, actors[0].Address)
 	}
@@ -304,9 +289,7 @@ func TestUtilityContext_GetMessageEditStakeFishermanSignerCandidates(t *testing.
 		AmountToAdd: defaultAmountString,
 	}
 	candidates, err := ctx.GetMessageEditStakeFishermanSignerCandidates(msgEditStake)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -319,9 +302,7 @@ func TestUtilityContext_GetMessagePauseFishermanSignerCandidates(t *testing.T) {
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessagePauseFishermanSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -339,9 +320,7 @@ func TestUtilityContext_GetMessageStakeFishermanSignerCandidates(t *testing.T) {
 		OutputAddress: out,
 	}
 	candidates, err := ctx.GetMessageStakeFishermanSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], out) || !bytes.Equal(candidates[1], addr) {
 		t.Fatal(err)
 	}
@@ -354,9 +333,7 @@ func TestUtilityContext_GetMessageUnpauseFishermanSignerCandidates(t *testing.T)
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnpauseFishermanSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -369,9 +346,7 @@ func TestUtilityContext_GetMessageUnstakeFishermanSignerCandidates(t *testing.T)
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnstakeFishermanSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -385,9 +360,7 @@ func TestUtilityContext_InsertFisherman(t *testing.T) {
 		t.Fatal(err)
 	}
 	exists, err := ctx.GetFishermanExists(addr)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor does not exist after insert")
 	}
@@ -419,9 +392,7 @@ func TestUtilityContext_UnstakeFishermenPausedBefore(t *testing.T) {
 		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetFishermanMaxPausedBlocks(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if err := ctx.SetFishermanPauseHeight(actor.Address, 0); err != nil {
 		t.Fatal(err)
 	}
@@ -433,9 +404,7 @@ func TestUtilityContext_UnstakeFishermenPausedBefore(t *testing.T) {
 		t.Fatal("status does not equal unstaking")
 	}
 	unstakingBlocks, err := ctx.GetFishermanUnstakingBlocks()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if actor.UnstakingHeight != unstakingBlocks+1 {
 		t.Fatal("incorrect unstaking height")
 	}
@@ -478,9 +447,7 @@ func TestUtilityContext_UpdateFisherman(t *testing.T) {
 	newAmount := types.BigIntToString(newAmountBig)
 	oldAmount := actor.StakedTokens
 	oldAmountBig, err := types.StringToBigInt(oldAmount)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	expectedAmountBig := newAmountBig.Add(newAmountBig, oldAmountBig)
 	expectedAmount := types.BigIntToString(expectedAmountBig)
 	if err := ctx.UpdateFisherman(actor.Address, actor.ServiceUrl, newAmount, actor.Chains); err != nil {
@@ -494,9 +461,7 @@ func TestUtilityContext_UpdateFisherman(t *testing.T) {
 
 func GetAllTestingFishermen(t *testing.T, ctx utility.UtilityContext) []*genesis.Fisherman {
 	actors, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllFishermen(ctx.LatestHeight)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return actors
 }
 
@@ -506,9 +471,7 @@ func TestUtilityContext_GetMessageFishermanPauseServiceNodeSignerCandidates(t *t
 	candidates, err := ctx.GetMessageFishermanPauseServiceNodeSignerCandidates(&typesUtil.MessageFishermanPauseServiceNode{
 		Reporter: actor.Address,
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actor.Output) {
 		t.Fatal("output address is not a signer candidate")
 	}

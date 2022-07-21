@@ -66,7 +66,7 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 		}
 		err = u.ApplyTransaction(transaction)
 		if err != nil {
-			if err := u.RevertLastSavePoint(); err != nil { // TODO (Andrew) Properly implement 'unhappy path' for save points
+			if err := u.RevertLastSavePoint(); err != nil { // TODO(Andrew): Properly implement 'unhappy path' for save points
 				return nil, err
 			}
 			totalSizeInBytes -= txSizeInBytes

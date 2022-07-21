@@ -30,9 +30,7 @@ func NewTestingPrePersistenceModule(t *testing.T) *PrePersistenceModule {
 func NewTestingPrePersistenceContext(t *testing.T) modules.PersistenceContext {
 	persistenceModule := NewTestingPrePersistenceModule(t)
 	persistenceContext, err := persistenceModule.NewContext(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return persistenceContext
 }
 

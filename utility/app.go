@@ -66,7 +66,7 @@ func (u *UtilityContext) HandleMessageStakeApp(message *typesUtil.MessageStakeAp
 		return types.ErrAlreadyExists()
 	}
 	// insert the app structure
-	if err := u.InsertApplication(publicKey.Address(), message.PublicKey, message.OutputAddress, maxRelays, message.Amount, message.Chains); err != nil {
+	if err := u.InsertApp(publicKey.Address(), message.PublicKey, message.OutputAddress, maxRelays, message.Amount, message.Chains); err != nil {
 		return err
 	}
 	return nil
@@ -115,7 +115,7 @@ func (u *UtilityContext) HandleMessageEditStakeApp(message *typesUtil.MessageEdi
 		return err
 	}
 	// insert the app structure
-	if err := u.UpdateApplication(message.Address, maxRelaysToAdd, message.AmountToAdd, message.Chains); err != nil {
+	if err := u.UpdateApp(message.Address, maxRelaysToAdd, message.AmountToAdd, message.Chains); err != nil {
 		return err
 	}
 	return nil
@@ -152,7 +152,7 @@ func (u *UtilityContext) UnstakeAppsThatAreReady() types.Error {
 		if err := u.AddAccountAmountString(app.GetOutputAddress(), app.GetStakeAmount()); err != nil {
 			return err
 		}
-		if err := u.DeleteApplication(app.GetAddress()); err != nil {
+		if err := u.DeleteApp(app.GetAddress()); err != nil {
 			return err
 		}
 	}
@@ -262,16 +262,20 @@ func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.
 
 func (u *UtilityContext) GetAppExists(address []byte) (bool, types.Error) {
 	store := u.Store()
-	exists, er := store.GetAppExists(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return false, types.ErrGetExists(er)
+	}
+	exists, er := store.GetAppExists(address, height)
 	if er != nil {
 		return false, types.ErrGetExists(er)
 	}
 	return exists, nil
 }
 
-func (u *UtilityContext) InsertApplication(address, publicKey, output []byte, maxRelays, amount string, chains []string) types.Error {
+func (u *UtilityContext) InsertApp(address, publicKey, output []byte, maxRelays, amount string, chains []string) types.Error {
 	store := u.Store()
-	err := store.InsertApplication(address, publicKey, output, false, typesUtil.StakedStatus, maxRelays, amount, chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+	err := store.InsertApp(address, publicKey, output, false, typesUtil.StakedStatus, maxRelays, amount, chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	if err != nil {
 		return types.ErrInsert(err)
 	}
@@ -279,18 +283,18 @@ func (u *UtilityContext) InsertApplication(address, publicKey, output []byte, ma
 }
 
 // TODO (Team) re-evaluate whether the delta should be here or the updated value
-func (u *UtilityContext) UpdateApplication(address []byte, maxRelays, amount string, chains []string) types.Error {
+func (u *UtilityContext) UpdateApp(address []byte, maxRelays, amount string, chains []string) types.Error {
 	store := u.Store()
-	err := store.UpdateApplication(address, maxRelays, amount, chains)
+	err := store.UpdateApp(address, maxRelays, amount, chains)
 	if err != nil {
 		return types.ErrInsert(err)
 	}
 	return nil
 }
 
-func (u *UtilityContext) DeleteApplication(address []byte) types.Error {
+func (u *UtilityContext) DeleteApp(address []byte) types.Error {
 	store := u.Store()
-	if err := store.DeleteApplication(address); err != nil {
+	if err := store.DeleteApp(address); err != nil {
 		return types.ErrDelete(err)
 	}
 	return nil
@@ -315,7 +319,7 @@ func (u *UtilityContext) UnstakeAppsPausedBefore(pausedBeforeHeight int64) types
 	if err != nil {
 		return err
 	}
-	er := store.SetAppsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
+	er := store.SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return types.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}
@@ -324,7 +328,11 @@ func (u *UtilityContext) UnstakeAppsPausedBefore(pausedBeforeHeight int64) types
 
 func (u *UtilityContext) GetAppStatus(address []byte) (int, types.Error) {
 	store := u.Store()
-	status, er := store.GetAppStatus(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return typesUtil.ZeroInt, types.ErrGetStatus(er)
+	}
+	status, er := store.GetAppStatus(address, height)
 	if er != nil {
 		return typesUtil.ZeroInt, types.ErrGetStatus(er)
 	}
@@ -333,7 +341,7 @@ func (u *UtilityContext) GetAppStatus(address []byte) (int, types.Error) {
 
 func (u *UtilityContext) SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64) types.Error {
 	store := u.Store()
-	if er := store.SetAppUnstakingHeightAndStatus(address, unstakingHeight, typesUtil.UnstakingStatus); er != nil { // TODO (Andrew) remove unstaking status from prepersistence
+	if er := store.SetAppUnstakingHeightAndStatus(address, unstakingHeight, typesUtil.UnstakingStatus); er != nil { // TODO(Andrew): remove unstaking status from prepersistence
 		return types.ErrSetUnstakingHeightAndStatus(er)
 	}
 	return nil
@@ -341,7 +349,11 @@ func (u *UtilityContext) SetAppUnstakingHeightAndStatus(address []byte, unstakin
 
 func (u *UtilityContext) GetAppPauseHeightIfExists(address []byte) (int64, types.Error) {
 	store := u.Store()
-	appPauseHeight, er := store.GetAppPauseHeightIfExists(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
+	}
+	appPauseHeight, er := store.GetAppPauseHeightIfExists(address, height)
 	if er != nil {
 		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
 	}
@@ -425,7 +437,11 @@ func (u *UtilityContext) GetMessagePauseAppSignerCandidates(msg *typesUtil.Messa
 
 func (u *UtilityContext) GetAppOutputAddress(operator []byte) ([]byte, types.Error) {
 	store := u.Store()
-	output, er := store.GetAppOutputAddress(operator)
+	height, er := store.GetHeight()
+	if er != nil {
+		return nil, types.ErrGetOutputAddress(operator, er)
+	}
+	output, er := store.GetAppOutputAddress(operator, height)
 	if er != nil {
 		return nil, types.ErrGetOutputAddress(operator, er)
 	}

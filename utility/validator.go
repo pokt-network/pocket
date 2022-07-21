@@ -335,7 +335,11 @@ func (u *UtilityContext) BurnValidator(address []byte, percentage int) types.Err
 
 func (u *UtilityContext) GetValidatorExists(address []byte) (bool, types.Error) {
 	store := u.Store()
-	exists, er := store.GetValidatorExists(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return false, types.ErrGetExists(er)
+	}
+	exists, er := store.GetValidatorExists(address, height)
 	if er != nil {
 		return false, types.ErrGetExists(er)
 	}
@@ -387,7 +391,7 @@ func (u *UtilityContext) UnstakeValidatorsPausedBefore(pausedBeforeHeight int64)
 	if err != nil {
 		return err
 	}
-	er := store.SetValidatorsStatusAndUnstakingHeightPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
+	er := store.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
 	if er != nil {
 		return types.ErrSetStatusPausedBefore(er, pausedBeforeHeight)
 	}
@@ -396,7 +400,11 @@ func (u *UtilityContext) UnstakeValidatorsPausedBefore(pausedBeforeHeight int64)
 
 func (u *UtilityContext) GetValidatorStatus(address []byte) (int, types.Error) {
 	store := u.Store()
-	status, er := store.GetValidatorStatus(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return typesUtil.ZeroInt, types.ErrGetStatus(er)
+	}
+	status, er := store.GetValidatorStatus(address, height)
 	if er != nil {
 		return typesUtil.ZeroInt, types.ErrGetStatus(er)
 	}
@@ -422,7 +430,11 @@ func (u *UtilityContext) SetValidatorUnstakingHeightAndStatus(address []byte, un
 
 func (u *UtilityContext) GetValidatorPauseHeightIfExists(address []byte) (int64, types.Error) {
 	store := u.Store()
-	ValidatorPauseHeight, er := store.GetValidatorPauseHeightIfExists(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
+	}
+	ValidatorPauseHeight, er := store.GetValidatorPauseHeightIfExists(address, height)
 	if er != nil {
 		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
 	}
@@ -451,7 +463,11 @@ func (u *UtilityContext) CalculateValidatorUnstakingHeight() (int64, types.Error
 
 func (u *UtilityContext) GetValidatorMissedBlocks(address []byte) (int, types.Error) {
 	store := u.Store()
-	missedBlocks, er := store.GetValidatorMissedBlocks(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return typesUtil.ZeroInt, types.ErrGetMissedBlocks(er)
+	}
+	missedBlocks, er := store.GetValidatorMissedBlocks(address, height)
 	if er != nil {
 		return typesUtil.ZeroInt, types.ErrGetMissedBlocks(er)
 	}
@@ -460,7 +476,11 @@ func (u *UtilityContext) GetValidatorMissedBlocks(address []byte) (int, types.Er
 
 func (u *UtilityContext) GetValidatorStakedTokens(address []byte) (*big.Int, types.Error) {
 	store := u.Store()
-	validatorStakedTokens, er := store.GetValidatorStakedTokens(address)
+	height, er := store.GetHeight()
+	if er != nil {
+		return nil, types.ErrGetValidatorStakedTokens(er)
+	}
+	validatorStakedTokens, er := store.GetValidatorStakedTokens(address, height)
 	if er != nil {
 		return nil, types.ErrGetValidatorStakedTokens(er)
 	}
@@ -549,7 +569,11 @@ func (u *UtilityContext) GetMessageDoubleSignSignerCandidates(msg *typesUtil.Mes
 
 func (u *UtilityContext) GetValidatorOutputAddress(operator []byte) ([]byte, types.Error) {
 	store := u.Store()
-	output, er := store.GetValidatorOutputAddress(operator)
+	height, er := store.GetHeight()
+	if er != nil {
+		return nil, types.ErrGetOutputAddress(operator, er)
+	}
+	output, er := store.GetValidatorOutputAddress(operator, height)
 	if er != nil {
 		return nil, types.ErrGetOutputAddress(operator, er)
 	}

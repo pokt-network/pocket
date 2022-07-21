@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
+	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
@@ -181,9 +182,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedValidators(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingValidators(t, ctx)[0]
 	err := ctx.Context.SetValidatorMaxPausedBlocks(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if err := ctx.SetValidatorPauseHeight(actor.Address, 0); err != nil {
 		t.Fatal(err)
 	}
@@ -199,13 +198,9 @@ func TestUtilityContext_BeginUnstakingMaxPausedValidators(t *testing.T) {
 func TestUtilityContext_CalculateValidatorUnstakingHeight(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	unstakingBlocks, err := ctx.GetValidatorUnstakingBlocks()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	unstakingHeight, err := ctx.CalculateValidatorUnstakingHeight()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if unstakingBlocks != unstakingHeight {
 		t.Fatalf("unexpected unstakingHeight; got %d expected %d", unstakingBlocks, unstakingHeight)
 	}
@@ -228,16 +223,12 @@ func TestUtilityContext_GetValidatorExists(t *testing.T) {
 	randAddr, _ := crypto.GenerateAddress()
 	actor := GetAllTestingValidators(t, ctx)[0]
 	exists, err := ctx.GetValidatorExists(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor that should exist does not")
 	}
 	exists, err = ctx.GetValidatorExists(randAddr)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if exists {
 		t.Fatal("actor that shouldn't exist does")
 	}
@@ -247,9 +238,7 @@ func TestUtilityContext_GetValidatorOutputAddress(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingValidators(t, ctx)[0]
 	outputAddress, err := ctx.GetValidatorOutputAddress(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(outputAddress, actor.Output) {
 		t.Fatalf("unexpected output address, expected %v got %v", actor.Output, outputAddress)
 	}
@@ -263,9 +252,7 @@ func TestUtilityContext_GetValidatorPauseHeightIfExists(t *testing.T) {
 		t.Fatal(err)
 	}
 	gotPauseHeight, err := ctx.GetValidatorPauseHeightIfExists(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if pauseHeight != gotPauseHeight {
 		t.Fatal("unable to get pause height from the actor")
 	}
@@ -283,9 +270,7 @@ func TestUtilityContext_GetValidatorsReadyToUnstake(t *testing.T) {
 		t.Fatal(err)
 	}
 	actors, err := ctx.GetValidatorsReadyToUnstake()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(actors[0].Address, actor.Address) {
 		t.Fatalf("unexpected actor ready to unstake: expected %s, got %s", actor.Address, actors[0].Address)
 	}
@@ -300,9 +285,7 @@ func TestUtilityContext_GetMessageEditStakeValidatorSignerCandidates(t *testing.
 		AmountToAdd: defaultAmountString,
 	}
 	candidates, err := ctx.GetMessageEditStakeValidatorSignerCandidates(msgEditStake)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -315,9 +298,7 @@ func TestUtilityContext_GetMessagePauseValidatorSignerCandidates(t *testing.T) {
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessagePauseValidatorSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -336,9 +317,7 @@ func TestUtilityContext_GetMessageStakeValidatorSignerCandidates(t *testing.T) {
 		Signer:        nil,
 	}
 	candidates, err := ctx.GetMessageStakeValidatorSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], out) || !bytes.Equal(candidates[1], addr) {
 		t.Fatal(err)
 	}
@@ -351,9 +330,7 @@ func TestUtilityContext_GetMessageUnpauseValidatorSignerCandidates(t *testing.T)
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnpauseValidatorSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -366,9 +343,7 @@ func TestUtilityContext_GetMessageUnstakeValidatorSignerCandidates(t *testing.T)
 		Address: actors[0].Address,
 	}
 	candidates, err := ctx.GetMessageUnstakeValidatorSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
 		t.Fatal(err)
 	}
@@ -382,9 +357,7 @@ func TestUtilityContext_InsertValidator(t *testing.T) {
 		t.Fatal(err)
 	}
 	exists, err := ctx.GetValidatorExists(addr)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !exists {
 		t.Fatal("actor does not exist after insert")
 	}
@@ -413,9 +386,7 @@ func TestUtilityContext_UnstakeValidatorsPausedBefore(t *testing.T) {
 		t.Fatal("wrong starting status")
 	}
 	err := ctx.Context.SetValidatorMaxPausedBlocks(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if err := ctx.SetValidatorPauseHeight(actor.Address, 0); err != nil {
 		t.Fatal(err)
 	}
@@ -427,9 +398,7 @@ func TestUtilityContext_UnstakeValidatorsPausedBefore(t *testing.T) {
 		t.Fatal("status does not equal unstaking")
 	}
 	unstakingBlocks, err := ctx.GetValidatorUnstakingBlocks()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if actor.UnstakingHeight != unstakingBlocks+1 {
 		t.Fatal("incorrect unstaking height")
 	}
@@ -472,9 +441,7 @@ func TestUtilityContext_UpdateValidator(t *testing.T) {
 	newAmount := types.BigIntToString(newAmountBig)
 	oldAmount := actor.StakedTokens
 	oldAmountBig, err := types.StringToBigInt(oldAmount)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	expectedAmountBig := newAmountBig.Add(newAmountBig, oldAmountBig)
 	expectedAmount := types.BigIntToString(expectedAmountBig)
 	if err := ctx.UpdateValidator(actor.Address, actor.ServiceUrl, newAmount); err != nil {
@@ -492,9 +459,7 @@ func TestUtilityContext_BurnValidator(t *testing.T) {
 	actor := GetAllTestingValidators(t, ctx)[0]
 	burnPercentage := big.NewFloat(10)
 	tokens, err := types.StringToBigInt(actor.StakedTokens)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	tokensFloat := big.NewFloat(0).SetInt(tokens)
 	tokensFloat.Mul(tokensFloat, burnPercentage)
 	tokensFloat.Quo(tokensFloat, big.NewFloat(100))
@@ -517,9 +482,7 @@ func TestUtilityContext_GetMessageDoubleSignSignerCandidates(t *testing.T) {
 		ReporterAddress: actor.Address,
 	}
 	candidates, err := ctx.GetMessageDoubleSignSignerCandidates(msg)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if !bytes.Equal(candidates[0], actor.Address) {
 		t.Fatalf("unexpected signer candidate: expected %v got %v", actor.Address, candidates[1])
 	}
@@ -549,18 +512,12 @@ func TestUtilityContext_HandleMessageDoubleSign(t *testing.T) {
 		t.Fatal(err)
 	}
 	stakedTokensAfterBig, err := ctx.GetValidatorStakedTokens(byzVal.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	stakedTokensAfter := types.BigIntToString(stakedTokensAfterBig)
 	burnPercentage, err := ctx.GetDoubleSignBurnPercentage()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	stakedTokensBeforeBig, err := types.StringToBigInt(byzVal.StakedTokens)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	stakedTokensBeforeFloat := big.NewFloat(0).SetInt(stakedTokensBeforeBig)
 	stakedTokensBeforeFloat.Mul(stakedTokensBeforeFloat, big.NewFloat(float64(burnPercentage)))
 	stakedTokensBeforeFloat.Quo(stakedTokensBeforeFloat, big.NewFloat(100))
@@ -584,9 +541,7 @@ func TestUtilityContext_GetValidatorMissedBlocks(t *testing.T) {
 		t.Fatal(err)
 	}
 	gotMissedBlocks, err := ctx.GetValidatorMissedBlocks(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if gotMissedBlocks != missedBlocks {
 		t.Fatalf("unexpected missed blocks: expected %v got %v", missedBlocks, gotMissedBlocks)
 	}
@@ -596,9 +551,7 @@ func TestUtilityContext_GetValidatorStakedTokens(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingValidators(t, ctx)[0]
 	tokensBig, err := ctx.GetValidatorStakedTokens(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	tokens := types.BigIntToString(tokensBig)
 	if actor.StakedTokens != tokens {
 		t.Fatalf("unexpected staked tokens: expected %v got %v ", actor.StakedTokens, tokens)
@@ -609,9 +562,7 @@ func TestUtilityContext_GetValidatorStatus(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingValidators(t, ctx)[0]
 	status, err := ctx.GetValidatorStatus(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if int(actor.Status) != status {
 		t.Fatalf("unexpected staked tokens: expected %v got %v ", int(actor.Status), status)
 	}
@@ -622,13 +573,9 @@ func TestUtilityContext_HandleByzantineValidators(t *testing.T) {
 	ctx.SetPoolAmount(genesis.ValidatorStakePoolName, big.NewInt(100000000000000))
 	actor := GetAllTestingValidators(t, ctx)[0]
 	stakedTokensBeforeBig, err := types.StringToBigInt(actor.StakedTokens)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	maxMissed, err := ctx.GetValidatorMaxMissedBlocks()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	if err := ctx.SetValidatorMissedBlocks(actor.Address, maxMissed); err != nil {
 		t.Fatal(err)
 	}
@@ -642,14 +589,10 @@ func TestUtilityContext_HandleByzantineValidators(t *testing.T) {
 		t.Fatal("actor should be paused after byzantine handling")
 	}
 	stakedTokensAfterBig, err := types.StringToBigInt(actor.StakedTokens)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	stakedTokensAfter := types.BigIntToString(stakedTokensAfterBig)
 	burnPercentage, err := ctx.GetMissedBlocksBurnPercentage()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	stakedTokensBeforeFloat := big.NewFloat(0).SetInt(stakedTokensBeforeBig)
 	stakedTokensBeforeFloat.Mul(stakedTokensBeforeFloat, big.NewFloat(float64(burnPercentage)))
 	stakedTokensBeforeFloat.Quo(stakedTokensBeforeFloat, big.NewFloat(100))
@@ -665,21 +608,13 @@ func TestUtilityContext_HandleProposalRewards(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingValidators(t, ctx)[0]
 	actorTokensBeforeBig, err := ctx.GetAccountAmount(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
+	require.NoError(t, err)
 	feeAndRewardsCollected := big.NewInt(100)
 	err = ctx.SetPoolAmount(genesis.FeePoolName, feeAndRewardsCollected)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	proposerCutPercentage, err := ctx.GetProposerPercentageOfFees()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	daoCutPercentage := 100 - proposerCutPercentage
 	if daoCutPercentage < 0 {
 		t.Fatal("dao cut percentage negative")
@@ -694,9 +629,7 @@ func TestUtilityContext_HandleProposalRewards(t *testing.T) {
 		t.Fatal(err)
 	}
 	actorTokensAfterBig, err := ctx.GetAccountAmount(actor.Address)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	actorTokensAfter := types.BigIntToString(actorTokensAfterBig)
 	if actorTokensAfter != expectedResult {
 		t.Fatalf("unexpected token amount after; expected %v got %v", expectedResult, actorTokensAfter)
@@ -722,8 +655,6 @@ func TestUtilityContext_SetValidatorStakedTokens(t *testing.T) {
 
 func GetAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []*genesis.Validator {
 	actors, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllValidators(ctx.LatestHeight)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	return actors
 }
