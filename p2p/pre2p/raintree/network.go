@@ -10,6 +10,7 @@ import (
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 
+	pre2pTelemetry "github.com/pokt-network/pocket/p2p/pre2p/telemetry"
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
@@ -148,7 +149,11 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	n.GetBus().
 		GetTelemetryModule().
 		GetEventMetricsAgent().
-		EmitEvent("p2p", "raintree_messages", "height", blockHeight)
+		EmitEvent(
+			pre2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
+			pre2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_NAME,
+			"height", blockHeight,
+		)
 
 	var rainTreeMsg typesPre2P.RainTreeMessage
 	if err := proto.Unmarshal(data, &rainTreeMsg); err != nil {
@@ -181,7 +186,12 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		n.GetBus().
 			GetTelemetryModule().
 			GetEventMetricsAgent().
-			EmitEvent("p2p", "broadcast_message_redundancy_per_block", "hash", hashString, "height", blockHeight)
+			EmitEvent(
+				pre2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
+				pre2pTelemetry.BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME,
+				"hash", hashString,
+				"height", blockHeight,
+			)
 
 		return nil, nil
 	}

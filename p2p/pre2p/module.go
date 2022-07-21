@@ -9,6 +9,7 @@ import (
 
 	"github.com/pokt-network/pocket/p2p/pre2p/raintree"
 	"github.com/pokt-network/pocket/p2p/pre2p/stdnetwork"
+	pre2pTelemetry "github.com/pokt-network/pocket/p2p/pre2p/telemetry"
 	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 
 	"github.com/pokt-network/pocket/shared/config"
@@ -81,8 +82,8 @@ func (m *p2pModule) Start() error {
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
 		CounterRegister(
-			"p2p_nodes_online",
-			"the counter to track the number of nodes online",
+			pre2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME,
+			pre2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
 	m.network.SetBus(m.GetBus())
@@ -102,7 +103,7 @@ func (m *p2pModule) Start() error {
 		GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
-		CounterIncrement("p2p_nodes_online")
+		CounterIncrement(pre2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME)
 
 	return nil
 }

@@ -80,7 +80,7 @@
             "type": "prometheus",
             "uid": "P4169E866C3094E38"
           },
-          "expr": "sum(p2p_nodes_online)",
+          "expr": "sum(p2p_nodes_started_counter)",
           "refId": "A"
         }
       ],
@@ -136,7 +136,7 @@
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "expr": "avg by (blockheight, instance) (sum by (blockheight) (count_over_time({host=\"docker-desktop\"}\n    |= \"[EVENT] p2p raintree_messages\"\n    | pattern `<datetime> <_> <time> <type> <namespace> <metric> <_> <blockheight>`[6s])))",
+          "expr": "avg by (blockheight, instance) (sum by (blockheight) (count_over_time({host=\"docker-desktop\"}\n    |= \"[EVENT] event_metrics_namespace_p2p raintree_message_event_metric \"\n    | pattern `<datetime> <_> <time> <type> <namespace> <metric> <_> <blockheight>`[6s])))",
           "queryType": "range",
           "refId": "A"
         }
@@ -233,7 +233,7 @@
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "expr": "avg by (blockheight, instance) (sum by (blockheight) (count_over_time({host=\"docker-desktop\"}\n    |= \"[EVENT] p2p broadcast_message_redundancy_per_block\"\n    | pattern `<datetime> <_> <time> <type> <_> <redundancy> <_> <hashstring> <_> <blockheight>`[6s])))",
+          "expr": "avg by (blockheight, instance) (sum by (blockheight) (count_over_time({host=\"docker-desktop\"}\n    |= \"[EVENT] event_metrics_namespace_p2p broadcast_message_redundancy_per_block_event_metric\"\n    | pattern `<datetime> <_> <time> <type> <_> <redundancy> <_> <hashstring> <_> <blockheight>`[6s])))",
           "queryType": "range",
           "refId": "A"
         }
