@@ -31,7 +31,6 @@ func NewUnsignedTestingTransaction(t *testing.T) Transaction {
 	require.NoError(t, err)
 	return Transaction{
 		Msg:   anyMsg,
-		Fee:   defaultFee,
 		Nonce: types.BigIntToString(types.RandBigInt()),
 	}
 }

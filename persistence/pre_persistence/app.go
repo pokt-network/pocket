@@ -82,6 +82,32 @@ func (m *PrePersistenceContext) GetAllApps(height int64) (apps []*typesGenesis.A
 	return
 }
 
+func (m *PrePersistenceContext) GetAppStakeAmount(height int64, address []byte) (string, error) {
+	app, err := m.GetApp(address, height)
+	if err != nil {
+		return "", err
+	}
+	return app.StakedTokens, nil
+}
+
+func (m *PrePersistenceContext) SetAppStakeAmount(address []byte, stakeAmount string) error {
+	codec := types.GetCodec()
+	db := m.Store()
+	app, err := m.GetApp(address, m.Height)
+	if err != nil {
+		return err
+	}
+	if app == nil {
+		return fmt.Errorf("does not exist in world state: %v", address)
+	}
+	app.StakedTokens = stakeAmount
+	bz, err := codec.Marshal(app)
+	if err != nil {
+		return err
+	}
+	return db.Put(append(AppPrefixKey, address...), bz)
+}
+
 func (m *PrePersistenceContext) InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	height, err := m.GetHeight()
 	if err != nil {
@@ -112,7 +138,7 @@ func (m *PrePersistenceContext) InsertApp(address []byte, publicKey []byte, outp
 	return db.Put(key, bz)
 }
 
-func (m *PrePersistenceContext) UpdateApp(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error {
+func (m *PrePersistenceContext) UpdateApp(address []byte, maxRelaysToAdd string, amount string, chainsToUpdate []string) error {
 	height, err := m.GetHeight()
 	if err != nil {
 		return err
@@ -125,15 +151,15 @@ func (m *PrePersistenceContext) UpdateApp(address []byte, maxRelaysToAdd string,
 	db := m.Store()
 	key := append(AppPrefixKey, address...)
 	// compute new values
-	stakedTokens, err := types.StringToBigInt(app.StakedTokens)
-	if err != nil {
-		return err
-	}
-	stakedTokensToAddI, err := types.StringToBigInt(amountToAdd)
-	if err != nil {
-		return err
-	}
-	stakedTokens.Add(stakedTokens, stakedTokensToAddI)
+	//stakedTokens, err := types.StringToBigInt(app.StakedTokens)
+	//if err != nil {
+	//	return err
+	//}
+	stakedTokens, err := types.StringToBigInt(amount)
+	//if err != nil {
+	//	return err
+	//}
+	//stakedTokens.Add(stakedTokens, stakedTokensToAddI)
 	maxRelays, err := types.StringToBigInt(app.MaxRelays)
 	if err != nil {
 		return err
@@ -310,7 +336,7 @@ func (m *PrePersistenceContext) SetAppPauseHeight(address []byte, height int64) 
 	if app == nil {
 		return fmt.Errorf("does not exist in world state: %v", address)
 	}
-	if app.PausedHeight == types.HeightNotUsed {
+	if app.PausedHeight != types.HeightNotUsed {
 		app.Paused = true
 	} else {
 		app.Paused = false

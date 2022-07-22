@@ -80,16 +80,16 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 
 func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
-	actor := GetAllTestingValidators(t, ctx)[0]
-	err := ctx.Context.SetValidatorMaxPausedBlocks(0)
+	actor := GetAllTestingApps(t, ctx)[0]
+	err := ctx.Context.SetAppMaxPausedBlocks(0)
 	require.NoError(t, err)
-	if err := ctx.SetValidatorPauseHeight(actor.Address, 0); err != nil {
+	if err := ctx.SetActorPauseHeight(actor.Address, typesUtil.ActorType_App, 0); err != nil {
 		t.Fatal(err)
 	}
-	if err := ctx.BeginUnstakingMaxPausedActors(); err != nil {
+	if err := ctx.BeginUnstakingMaxPaused(); err != nil {
 		t.Fatal(err)
 	}
-	status, err := ctx.GetValidatorStatus(actor.Address)
+	status, err := ctx.GetActorStatus(actor.Address, typesUtil.ActorType_App)
 	if status != 1 {
 		t.Fatalf("incorrect status; expected %d got %d", 1, actor.Status)
 	}
@@ -144,30 +144,30 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
-	ctx.SetPoolAmount(typesGenesis.ValidatorStakePoolName, big.NewInt(math.MaxInt64))
-	if err := ctx.Context.SetValidatorUnstakingBlocks(0); err != nil {
+	ctx.SetPoolAmount(typesGenesis.AppStakePoolName, big.NewInt(math.MaxInt64))
+	if err := ctx.Context.SetAppUnstakingBlocks(0); err != nil {
 		t.Fatal(err)
 	}
-	err := ctx.Context.SetValidatorMaxPausedBlocks(0)
+	err := ctx.Context.SetAppMaxPausedBlocks(0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	actors := GetAllTestingValidators(t, ctx)
+	actors := GetAllTestingApps(t, ctx)
 	for _, actor := range actors {
 		if actor.Status != typesUtil.StakedStatus {
 			t.Fatal("wrong starting status")
 		}
-		if err := ctx.SetValidatorPauseHeight(actor.Address, 1); err != nil {
+		if err := ctx.SetActorPauseHeight(actor.Address, typesUtil.ActorType_App, 1); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err := ctx.UnstakeValidatorsPausedBefore(2); err != nil {
+	if err := ctx.UnstakeActorPausedBefore(2, typesUtil.ActorType_App); err != nil {
 		t.Fatal(err)
 	}
 	if err := ctx.UnstakeActorsThatAreReady(); err != nil {
 		t.Fatal(err)
 	}
-	if len(GetAllTestingValidators(t, ctx)) != 0 {
+	if len(GetAllTestingApps(t, ctx)) != 0 {
 		t.Fatal("validators still exists after unstake that are ready() call")
 	}
 }

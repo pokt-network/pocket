@@ -127,23 +127,23 @@ func TestMessageDoubleSign_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMessageEditStakeApp_ValidateBasic(t *testing.T) {
+func TestMessageEditStake_ValidateBasic(t *testing.T) {
 	addr, _ := crypto.GenerateAddress()
-	msg := MessageEditStakeApp{
-		Address:     addr,
-		Chains:      defaultTestingChains,
-		AmountToAdd: defaultAmount,
+	msg := MessageEditStake{
+		Address: addr,
+		Chains:  defaultTestingChains,
+		Amount:  defaultAmount,
 	}
 	if err := msg.ValidateBasic(); err != nil {
 		t.Fatal(err)
 	}
 	msgMissingAmount := msg
-	msgMissingAmount.AmountToAdd = ""
+	msgMissingAmount.Amount = ""
 	if err := msgMissingAmount.ValidateBasic(); err.Code() != types.ErrEmptyAmount().Code() {
 		t.Fatal(err)
 	}
 	msgInvalidAmount := msg
-	msgInvalidAmount.AmountToAdd = "sdk"
+	msgInvalidAmount.Amount = "sdk"
 	if err := msgInvalidAmount.ValidateBasic(); err.Code() != types.ErrStringToBigInt().Code() {
 		t.Fatal(err)
 	}
@@ -165,220 +165,6 @@ func TestMessageEditStakeApp_ValidateBasic(t *testing.T) {
 	msgInvalidRelayChains := msg
 	msgInvalidRelayChains.Chains = []string{"notAValidRelayChain"}
 	if err := msgInvalidRelayChains.ValidateBasic(); err.Code() != types.ErrInvalidRelayChainLength(0, RelayChainLength).Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessageEditStakeFisherman_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessageEditStakeFisherman{
-		Address:     addr,
-		Chains:      defaultTestingChains,
-		AmountToAdd: defaultAmount,
-		ServiceUrl:  defaultServiceUrl,
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgMissingAmount := msg
-	msgMissingAmount.AmountToAdd = ""
-	if err := msgMissingAmount.ValidateBasic(); err.Code() != types.ErrEmptyAmount().Code() {
-		t.Fatal(err)
-	}
-	msgInvalidAmount := msg
-	msgInvalidAmount.AmountToAdd = "sdk"
-	if err := msgInvalidAmount.ValidateBasic(); err.Code() != types.ErrStringToBigInt().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyAddress := msg
-	msgEmptyAddress.Address = nil
-	if err := msgEmptyAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
-		t.Fatal(err)
-	}
-	msgInvalidAddress := msg
-	msgInvalidAddress.Address = []byte("badAddr")
-	if err := msgInvalidAddress.ValidateBasic(); err.Code() != types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen(defaultUnusedLength)).Code() {
-		t.Fatal(err)
-	}
-	msgEmptyRelayChains := msg
-	msgEmptyRelayChains.Chains = nil
-	if err := msgEmptyRelayChains.ValidateBasic(); err.Code() != types.ErrEmptyRelayChains().Code() {
-		t.Fatal(err)
-	}
-	msgInvalidRelayChains := msg
-	msgInvalidRelayChains.Chains = []string{"notAValidRelayChain"}
-	if err := msgInvalidRelayChains.ValidateBasic(); err.Code() != types.ErrInvalidRelayChainLength(0, RelayChainLength).Code() {
-		t.Fatal(err)
-	}
-	msgEmptyServiceUrl := msg
-	msgEmptyServiceUrl.ServiceUrl = ""
-	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceUrl("").Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessageEditStakeServiceNode_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessageEditStakeServiceNode{
-		Address:     addr,
-		Chains:      defaultTestingChains,
-		AmountToAdd: defaultAmount,
-		ServiceUrl:  defaultServiceUrl,
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgMissingAmount := msg
-	msgMissingAmount.AmountToAdd = ""
-	if err := msgMissingAmount.ValidateBasic(); err.Code() != types.ErrEmptyAmount().Code() {
-		t.Fatal(err)
-	}
-	msgInvalidAmount := msg
-	msgInvalidAmount.AmountToAdd = "sdk"
-	if err := msgInvalidAmount.ValidateBasic(); err.Code() != types.ErrStringToBigInt().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyAddress := msg
-	msgEmptyAddress.Address = nil
-	if err := msgEmptyAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
-		t.Fatal(err)
-	}
-	msgInvalidAddress := msg
-	msgInvalidAddress.Address = []byte("badAddr")
-	if err := msgInvalidAddress.ValidateBasic(); err.Code() != types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen(defaultUnusedLength)).Code() {
-		t.Fatal(err)
-	}
-	msgEmptyRelayChains := msg
-	msgEmptyRelayChains.Chains = nil
-	if err := msgEmptyRelayChains.ValidateBasic(); err.Code() != types.ErrEmptyRelayChains().Code() {
-		t.Fatal(err)
-	}
-	msgInvalidRelayChains := msg
-	msgInvalidRelayChains.Chains = []string{"notAValidRelayChain"}
-	if err := msgInvalidRelayChains.ValidateBasic(); err.Code() != types.ErrInvalidRelayChainLength(0, RelayChainLength).Code() {
-		t.Fatal(err)
-	}
-	msgEmptyServiceUrl := msg
-	msgEmptyServiceUrl.ServiceUrl = ""
-	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceUrl("").Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessageEditStakeValidator_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessageEditStakeValidator{
-		Address:     addr,
-		AmountToAdd: defaultAmount,
-		ServiceUrl:  defaultServiceUrl,
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgMissingAmount := msg
-	msgMissingAmount.AmountToAdd = ""
-	if err := msgMissingAmount.ValidateBasic(); err.Code() != types.ErrEmptyAmount().Code() {
-		t.Fatal(err)
-	}
-	msgInvalidAmount := msg
-	msgInvalidAmount.AmountToAdd = "sdk"
-	if err := msgInvalidAmount.ValidateBasic(); err.Code() != types.ErrStringToBigInt().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyAddress := msg
-	msgEmptyAddress.Address = nil
-	if err := msgEmptyAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
-		t.Fatal(err)
-	}
-	msgInvalidAddress := msg
-	msgInvalidAddress.Address = []byte("badAddr")
-	if err := msgInvalidAddress.ValidateBasic(); err.Code() != types.ErrInvalidAddressLen(crypto.ErrInvalidAddressLen(defaultUnusedLength)).Code() {
-		t.Fatal(err)
-	}
-	msgEmptyServiceUrl := msg
-	msgEmptyServiceUrl.ServiceUrl = ""
-	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceUrl("").Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessageFishermanPauseServiceNode_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessageFishermanPauseServiceNode{
-		Address:  addr,
-		Reporter: addr,
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgMissingReporter := msg
-	msgMissingReporter.Reporter = nil
-	if err := msgMissingReporter.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
-		t.Fatal(err)
-	}
-	msgMissingAddress := msg
-	msgMissingAddress.Address = nil
-	if err := msgMissingAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessagePauseApp_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessagePauseApp{
-		Address: addr,
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgMissingAddress := msg
-	msgMissingAddress.Address = nil
-	if err := msgMissingAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessagePauseFisherman_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessagePauseFisherman{
-		Address: addr,
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgMissingAddress := msg
-	msgMissingAddress.Address = nil
-	if err := msgMissingAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessagePauseServiceNode_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessagePauseServiceNode{
-		Address: addr,
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgMissingAddress := msg
-	msgMissingAddress.Address = nil
-	if err := msgMissingAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessagePauseValidator_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessagePauseValidator{
-		Address: addr,
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgMissingAddress := msg
-	msgMissingAddress.Address = nil
-	if err := msgMissingAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
 		t.Fatal(err)
 	}
 }
@@ -416,9 +202,9 @@ func TestMessageSend_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMessageStakeApp_ValidateBasic(t *testing.T) {
+func TestMessageStake_ValidateBasic(t *testing.T) {
 	pk, _ := crypto.GeneratePublicKey()
-	msg := MessageStakeApp{
+	msg := MessageStake{
 		PublicKey:     pk.Bytes(),
 		Chains:        defaultTestingChains,
 		Amount:        defaultAmount,
@@ -449,120 +235,9 @@ func TestMessageStakeApp_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMessageStakeFisherman_ValidateBasic(t *testing.T) {
-	pk, _ := crypto.GeneratePublicKey()
-	msg := MessageStakeFisherman{
-		PublicKey:     pk.Bytes(),
-		Chains:        defaultTestingChains,
-		Amount:        defaultAmount,
-		ServiceUrl:    defaultServiceUrl,
-		OutputAddress: pk.Address(),
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgEmptyPubKey := msg
-	msgEmptyPubKey.PublicKey = nil
-	if err := msgEmptyPubKey.ValidateBasic(); err.Code() != types.ErrEmptyPublicKey().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyChains := msg
-	msgEmptyChains.Chains = nil
-	if err := msgEmptyChains.ValidateBasic(); err.Code() != types.ErrEmptyRelayChains().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyAmount := msg
-	msgEmptyAmount.Amount = ""
-	if err := msgEmptyAmount.ValidateBasic(); err.Code() != types.ErrEmptyAmount().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyOutputAddress := msg
-	msgEmptyOutputAddress.OutputAddress = nil
-	if err := msgEmptyOutputAddress.ValidateBasic(); err.Code() != types.ErrNilOutputAddress().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyServiceUrl := msg
-	msgEmptyServiceUrl.ServiceUrl = ""
-	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceUrl("").Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessageStakeServiceNode_ValidateBasic(t *testing.T) {
-	pk, _ := crypto.GeneratePublicKey()
-	msg := MessageStakeServiceNode{
-		PublicKey:     pk.Bytes(),
-		Chains:        defaultTestingChains,
-		Amount:        defaultAmount,
-		ServiceUrl:    defaultServiceUrl,
-		OutputAddress: pk.Address(),
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgEmptyPubKey := msg
-	msgEmptyPubKey.PublicKey = nil
-	if err := msgEmptyPubKey.ValidateBasic(); err.Code() != types.ErrEmptyPublicKey().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyChains := msg
-	msgEmptyChains.Chains = nil
-	if err := msgEmptyChains.ValidateBasic(); err.Code() != types.ErrEmptyRelayChains().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyAmount := msg
-	msgEmptyAmount.Amount = ""
-	if err := msgEmptyAmount.ValidateBasic(); err.Code() != types.ErrEmptyAmount().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyOutputAddress := msg
-	msgEmptyOutputAddress.OutputAddress = nil
-	if err := msgEmptyOutputAddress.ValidateBasic(); err.Code() != types.ErrNilOutputAddress().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyServiceUrl := msg
-	msgEmptyServiceUrl.ServiceUrl = ""
-	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceUrl("").Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessageStakeValidator_ValidateBasic(t *testing.T) {
-	pk, _ := crypto.GeneratePublicKey()
-	msg := MessageStakeValidator{
-		PublicKey:     pk.Bytes(),
-		Amount:        defaultAmount,
-		ServiceUrl:    defaultServiceUrl,
-		OutputAddress: pk.Address(),
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgEmptyPubKey := msg
-	msgEmptyPubKey.PublicKey = nil
-	if err := msgEmptyPubKey.ValidateBasic(); err.Code() != types.ErrEmptyPublicKey().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyAmount := msg
-	msgEmptyAmount.Amount = ""
-	if err := msgEmptyAmount.ValidateBasic(); err.Code() != types.ErrEmptyAmount().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyOutputAddress := msg
-	msgEmptyOutputAddress.OutputAddress = nil
-	if err := msgEmptyOutputAddress.ValidateBasic(); err.Code() != types.ErrNilOutputAddress().Code() {
-		t.Fatal(err)
-	}
-	msgEmptyServiceUrl := msg
-	msgEmptyServiceUrl.ServiceUrl = ""
-	if err := msgEmptyServiceUrl.ValidateBasic(); err.Code() != types.ErrInvalidServiceUrl("").Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessageUnpauseApp_ValidateBasic(t *testing.T) {
+func TestMessageUnpause_ValidateBasic(t *testing.T) {
 	addr, _ := crypto.GenerateAddress()
-	msg := MessageUnpauseApp{
+	msg := MessageUnpause{
 		Address: addr,
 	}
 	if err := msg.ValidateBasic(); err != nil {
@@ -575,9 +250,9 @@ func TestMessageUnpauseApp_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMessageUnpauseFisherman_ValidateBasic(t *testing.T) {
+func TestMessageUnstake_ValidateBasic(t *testing.T) {
 	addr, _ := crypto.GenerateAddress()
-	msg := MessageUnpauseFisherman{
+	msg := MessageUnstake{
 		Address: addr,
 	}
 	if err := msg.ValidateBasic(); err != nil {
@@ -590,92 +265,17 @@ func TestMessageUnpauseFisherman_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMessageUnpauseServiceNode_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessageUnpauseServiceNode{
-		Address: addr,
-	}
-	if err := msg.ValidateBasic(); err != nil {
+func TestRelayChain_Validate(t *testing.T) {
+	relayChainValid := RelayChain("0001")
+	relayChainInvalidLength := RelayChain("001")
+	relayChainEmpty := RelayChain("")
+	if err := relayChainValid.Validate(); err != nil {
 		t.Fatal(err)
 	}
-	msgMissingAddress := msg
-	msgMissingAddress.Address = nil
-	if err := msgMissingAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
+	if err := relayChainInvalidLength.Validate(); err.Code() != types.ErrInvalidRelayChainLength(0, RelayChainLength).Code() {
 		t.Fatal(err)
 	}
-}
-
-func TestMessageUnpauseValidator_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessageUnpauseValidator{
-		Address: addr,
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgMissingAddress := msg
-	msgMissingAddress.Address = nil
-	if err := msgMissingAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessageUnstakeApp_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessageUnstakeApp{
-		Address: addr,
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgMissingAddress := msg
-	msgMissingAddress.Address = nil
-	if err := msgMissingAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessageUnstakeFisherman_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessageUnstakeFisherman{
-		Address: addr,
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgMissingAddress := msg
-	msgMissingAddress.Address = nil
-	if err := msgMissingAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessageUnstakeServiceNode_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessageUnstakeServiceNode{
-		Address: addr,
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgMissingAddress := msg
-	msgMissingAddress.Address = nil
-	if err := msgMissingAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
-		t.Fatal(err)
-	}
-}
-
-func TestMessageUnstakeValidator_ValidateBasic(t *testing.T) {
-	addr, _ := crypto.GenerateAddress()
-	msg := MessageUnstakeValidator{
-		Address: addr,
-	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
-	msgMissingAddress := msg
-	msgMissingAddress.Address = nil
-	if err := msgMissingAddress.ValidateBasic(); err.Code() != types.ErrEmptyAddress().Code() {
+	if err := relayChainEmpty.Validate(); err.Code() != types.ErrEmptyRelayChain().Code() {
 		t.Fatal(err)
 	}
 }

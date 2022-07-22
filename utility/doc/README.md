@@ -22,18 +22,12 @@ The current implementation does add the fundamental Pocket Network 1.0 actors:
 
 And implement the basic transaction functionality:
 
-- Send-Tx
+- Send
 - Stake
 - Unstake
 - EditStake
 - Pause
 - Unpause
-
-And a few additional skeleton implementations for pocket specific transactions:
-
-- FishermanPauseServiceNode [x] Implemented
-- TestScore [x] Placeholder // requires sessions & report card structures
-- ProveTestScore [x] Placeholder // requires sessions & report card structures
 
 Added governance params:
 

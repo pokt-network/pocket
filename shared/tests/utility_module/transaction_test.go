@@ -142,12 +142,8 @@ func NewTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transactio
 	msg := NewTestingSendMessage(t, signerAddr, recipient.Address, defaultSendAmountString)
 	any, err := cdc.ToAny(&msg)
 	require.NoError(t, err)
-	feeBig, err := ctx.GetMessageSendFee()
-	require.NoError(t, err)
-	fee := types.BigIntToString(feeBig)
 	transaction = &typesUtil.Transaction{
 		Msg:   any,
-		Fee:   fee,
 		Nonce: defaultNonceString,
 	}
 	if err = transaction.Sign(signer); err != nil {

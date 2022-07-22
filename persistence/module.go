@@ -10,6 +10,47 @@ import (
 )
 
 var _ modules.PersistenceModule = &persistenceModule{}
+var _ modules.PersistenceContext = &PostgresContext{}
+
+func (p PostgresContext) GetAppStakeAmount(height int64, address []byte) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p PostgresContext) SetAppStakeAmount(address []byte, stakeAmount string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p PostgresContext) GetServiceNodeStakeAmount(height int64, address []byte) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p PostgresContext) SetServiceNodeStakeAmount(address []byte, stakeAmount string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p PostgresContext) GetFishermanStakeAmount(height int64, address []byte) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p PostgresContext) SetFishermanStakeAmount(address []byte, stakeAmount string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p PostgresContext) GetValidatorStakeAmount(height int64, address []byte) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (p PostgresContext) SetValidatorStakeAmount(address []byte, stakeAmount string) error {
+	//TODO implement me
+	panic("implement me")
+}
 
 type persistenceModule struct {
 	bus modules.Bus
