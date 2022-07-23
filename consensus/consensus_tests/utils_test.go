@@ -133,7 +133,7 @@ func CreateTestConsensusPocketNode(
 	p2pMock := baseP2PMock(t, testChannel)
 	utilityMock := baseUtilityMock(t, testChannel)
 
-	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod)
+	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, cfg)
 	require.NoError(t, err)
 
 	pocketNode := &shared.Node{
@@ -330,12 +330,12 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
 	utilityContextMock.EXPECT().ReleaseContext().Return().AnyTimes()
 	utilityContextMock.EXPECT().
-		GetTransactionsForProposal(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
+		GetProposalTransactions(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
 		Return(make([][]byte, 0), nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().
-		// ApplyBlock(int64(1), gomock.Any(), gomock.AssignableToTypeOf(emptyTxs), gomock.AssignableToTypeOf(emptyByzValidators)).
-		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		// ApplyProposalTransactions(int64(1), gomock.Any(), gomock.AssignableToTypeOf(emptyTxs), gomock.AssignableToTypeOf(emptyByzValidators)).
+		ApplyProposalTransactions(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(appHash, nil).
 		AnyTimes()
 

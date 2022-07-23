@@ -39,7 +39,7 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 	return u.Mempool.AddTransaction(transactionProtoBytes)
 }
 
-func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) ([][]byte, error) {
+func (u *UtilityContext) GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) ([][]byte, error) {
 	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {
 		return nil, err
 	}

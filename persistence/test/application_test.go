@@ -21,7 +21,7 @@ func FuzzApplication(f *testing.F) {
 func TestInsertAppAndExists(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	app, err := createAndInsertDefaultTestApp(db)
@@ -50,7 +50,7 @@ func TestInsertAppAndExists(t *testing.T) {
 func TestUpdateApp(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	app, err := createAndInsertDefaultTestApp(db)
@@ -82,7 +82,7 @@ func TestUpdateApp(t *testing.T) {
 func TestGetAppsReadyToUnstake(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	app, err := createAndInsertDefaultTestApp(db)
@@ -120,7 +120,7 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 func TestGetAppStatus(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 1, // intentionally set to a non-zero height
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	app, err := createAndInsertDefaultTestApp(db)
@@ -140,7 +140,7 @@ func TestGetAppStatus(t *testing.T) {
 func TestGetAppPauseHeightIfExists(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 1, // intentionally set to a non-zero height
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	app, err := createAndInsertDefaultTestApp(db)
@@ -160,7 +160,7 @@ func TestGetAppPauseHeightIfExists(t *testing.T) {
 func TestSetAppPauseHeightAndUnstakeLater(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	app, err := createAndInsertDefaultTestApp(db)
@@ -187,7 +187,7 @@ func TestSetAppPauseHeightAndUnstakeLater(t *testing.T) {
 func TestGetAppOutputAddress(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	app, err := createAndInsertDefaultTestApp(db)

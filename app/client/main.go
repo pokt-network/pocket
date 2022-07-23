@@ -80,7 +80,7 @@ func main() {
 		log.Fatalf("[ERROR] Failed to create pre2p module: %v", err.Error())
 	}
 
-	_ = shared.CreateBusWithOptionalModules(nil, pre2pMod, nil, consensusMod)
+	_ = shared.CreateBusWithOptionalModules(nil, pre2pMod, nil, consensusMod, nil)
 
 	pre2pMod.Start()
 

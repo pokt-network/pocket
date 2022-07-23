@@ -21,7 +21,7 @@ func FuzzValidator(f *testing.F) {
 func TestInsertValidatorAndExists(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	validator, err := createAndInsertDefaultTestValidator(db)
@@ -50,7 +50,7 @@ func TestInsertValidatorAndExists(t *testing.T) {
 func TestUpdateValidator(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	validator, err := createAndInsertDefaultTestValidator(db)
@@ -78,7 +78,7 @@ func TestUpdateValidator(t *testing.T) {
 func TestGetValidatorsReadyToUnstake(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	validator, err := createAndInsertDefaultTestValidator(db)
@@ -116,7 +116,7 @@ func TestGetValidatorsReadyToUnstake(t *testing.T) {
 func TestGetValidatorStatus(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 1, // intentionally set to a non-zero height
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	validator, err := createAndInsertDefaultTestValidator(db)
@@ -136,7 +136,7 @@ func TestGetValidatorStatus(t *testing.T) {
 func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 1, // intentionally set to a non-zero height
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	validator, err := createAndInsertDefaultTestValidator(db)
@@ -156,7 +156,7 @@ func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 func TestSetValidatorPauseHeightAndUnstakeLater(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	validator, err := createAndInsertDefaultTestValidator(db)
@@ -183,7 +183,7 @@ func TestSetValidatorPauseHeightAndUnstakeLater(t *testing.T) {
 func TestGetValidatorOutputAddress(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	validator, err := createAndInsertDefaultTestValidator(db)

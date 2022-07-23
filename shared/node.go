@@ -1,17 +1,18 @@
 package shared
 
 import (
+	"log"
+
 	"github.com/pokt-network/pocket/p2p/pre2p"
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	"log"
 
 	"github.com/pokt-network/pocket/consensus"
-	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/pokt-network/pocket/shared/types"
 
 	"github.com/pokt-network/pocket/shared/modules"
@@ -29,12 +30,13 @@ func Create(cfg *config.Config) (n *Node, err error) {
 	// TODO(drewsky): The module is initialized to run background processes during development
 	// to make sure it's part of the node's lifecycle, but is not referenced YET byt the app specific
 	// bus.
-	if _, err := persistence.Create(cfg); err != nil {
+	persistenceMod, err := persistence.Create(cfg)
+	if err != nil {
 		return nil, err
 	}
 
 	// TODO(drewsky): deprecate pre-persistence and move persistence into its place
-	prePersistenceMod, err := pre_persistence.Create(cfg)
+	_, err = pre_persistence.Create(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +57,7 @@ func Create(cfg *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(prePersistenceMod, pre2pMod, utilityMod, consensusMod)
+	bus, err := CreateBus(persistenceMod, pre2pMod, utilityMod, consensusMod, cfg)
 	if err != nil {
 		return nil, err
 	}

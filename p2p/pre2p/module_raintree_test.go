@@ -193,9 +193,11 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 	consensusMock := prepareConsensusMock(t, genesisState)
 	connMocks := make(map[string]typesPre2P.Transport)
 	busMocks := make(map[string]modules.Bus)
+	idx := 0
 	for valId, expectedCall := range testCommConfig {
 		connMocks[valId] = prepareConnMock(t, expectedCall.numNetworkReads, expectedCall.numNetworkWrites)
 		busMocks[valId] = prepareBusMock(t, &messageHandeledWaitGroup, consensusMock)
+		idx++
 	}
 
 	// Module injection

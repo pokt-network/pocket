@@ -147,7 +147,7 @@ func fuzzSingleProtocolActor(
 
 	db := persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     PostgresDB,
 	}
 
 	err := db.ClearAllDebug()

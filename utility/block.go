@@ -5,7 +5,7 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
+func (u *UtilityContext) ApplyProposalTransactions(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
 	u.LatestHeight = latestHeight
 	// begin block lifecycle phase
 	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {

@@ -27,11 +27,11 @@ func CreateMockedModule(_ *config.Config) (modules.UtilityModule, error) {
 	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
 	utilityContextMock.EXPECT().ReleaseContext().Return().AnyTimes()
 	utilityContextMock.EXPECT().
-		GetTransactionsForProposal(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
+		GetProposalTransactions(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
 		Return(make([][]byte, 0), nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().
-		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		ApplyProposalTransactions(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(appHash, nil).
 		AnyTimes()
 

@@ -18,20 +18,21 @@ func (m *consensusModule) validateBlock(block *types.Block) error {
 }
 
 // This is a helper function intended to be called by a leader/validator during a view change
-func (m *consensusModule) prepareBlock() (*types.Block, error) {
+func (m *consensusModule) prepareBlockAsLeader() (*types.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
+
 	if err := m.updateUtilityContext(); err != nil {
 		return nil, err
 	}
 
-	txs, err := m.utilityContext.GetTransactionsForProposal(m.privateKey.Address(), maxTxBytes, lastByzValidators)
+	txs, err := m.utilityContext.GetProposalTransactions(m.privateKey.Address(), maxTxBytes, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}
 
-	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
+	appHash, err := m.utilityContext.ApplyProposalTransactions(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +55,7 @@ func (m *consensusModule) prepareBlock() (*types.Block, error) {
 }
 
 // This is a helper function intended to be called by a replica/voter during a view change
-func (m *consensusModule) applyBlock(block *types.Block) error {
+func (m *consensusModule) applyBlockAsReplica(block *types.Block) error {
 	if m.isLeader() {
 		return typesCons.ErrLeaderApplyBLock
 	}
@@ -68,7 +69,7 @@ func (m *consensusModule) applyBlock(block *types.Block) error {
 		return err
 	}
 
-	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), block.Transactions, lastByzValidators)
+	appHash, err := m.utilityContext.ApplyProposalTransactions(int64(m.Height), m.privateKey.Address(), block.Transactions, lastByzValidators)
 	if err != nil {
 		return err
 	}

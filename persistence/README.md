@@ -29,7 +29,8 @@ The persistence specific configuration within a node's `config.json` looks like 
 ```
   "persistence": {
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
-    "schema": "node1"
+    "schema": "node1",
+    "block_store_path": "/tmp/blockstore"
   }
 ```
 

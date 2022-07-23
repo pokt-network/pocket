@@ -3,12 +3,15 @@ package persistence
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"math/rand"
 	"time"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 const (
@@ -23,9 +26,10 @@ func init() {
 
 var _ modules.PersistenceContext = &PostgresContext{}
 
+// DISCUSS: Can we avoid externalizing these fields?
 type PostgresContext struct {
 	Height int64
-	DB     PostgresDB
+	DB     *PostgresDB
 }
 
 type PostgresDB struct {
@@ -60,7 +64,7 @@ var protocolActorSchemas = []schema.ProtocolActorSchema{
 }
 
 // TODO(pokt-network/pocket/issues/77): Enable proper up and down migrations
-// TODO(team): Split `connect` and `initialize` into two separate compnents
+// TODO: Split `connect` and `initialize` into two separate compnents
 func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
 	ctx := context.TODO()
 
@@ -80,7 +84,7 @@ func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn,
 		return nil, err
 	}
 
-	if err := InitializeAllTables(ctx, db); err != nil {
+	if err := initializeAllTables(ctx, db); err != nil {
 		return nil, fmt.Errorf("unable to initialize tables: %v", err)
 	}
 
@@ -88,18 +92,18 @@ func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn,
 
 }
 
-// TODO(pokt-network/pocket/issues/77): Delete all the `InitializeAllTables` calls once proper migrations are implemented.
-func InitializeAllTables(ctx context.Context, db *pgx.Conn) error {
-	if err := InitializeAccountTables(ctx, db); err != nil {
+// TODO(pokt-network/pocket/issues/77): Delete all the `initializeAllTables` calls once proper migrations are implemented.
+func initializeAllTables(ctx context.Context, db *pgx.Conn) error {
+	if err := initializeAccountTables(ctx, db); err != nil {
 		return err
 	}
 
-	if err := InitializeGovTables(ctx, db); err != nil {
+	if err := initializeGovTables(ctx, db); err != nil {
 		return err
 	}
 
 	for _, actor := range protocolActorSchemas {
-		if err := InitializeProtocolActorTables(ctx, db, actor); err != nil {
+		if err := initializeProtocolActorTables(ctx, db, actor); err != nil {
 			return err
 		}
 	}
@@ -107,7 +111,7 @@ func InitializeAllTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func InitializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor schema.ProtocolActorSchema) error {
+func initializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor schema.ProtocolActorSchema) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, actor.GetTableName(), actor.GetTableSchema())); err != nil {
 		return err
 	}
@@ -119,7 +123,7 @@ func InitializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor sche
 	return nil
 }
 
-func InitializeAccountTables(ctx context.Context, db *pgx.Conn) error {
+func initializeAccountTables(ctx context.Context, db *pgx.Conn) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.AccountTableName, schema.AccountTableSchema)); err != nil {
 		return err
 	}
@@ -129,11 +133,119 @@ func InitializeAccountTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func InitializeGovTables(ctx context.Context, db *pgx.Conn) error {
+func initializeGovTables(ctx context.Context, db *pgx.Conn) error {
 	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.ParamsTableName, schema.ParamsTableSchema))
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (m *persistenceModule) hydrateGenesisDbState() error {
+	state := m.GetBus().GetConfig().GenesisSource.GetState()
+	if nil == state {
+		return fmt.Errorf("unable to hydrate genesis DB state because genesis source is misconfigured")
+	}
+
+	ctx, err := m.NewContext(0)
+	if err != nil {
+		return err
+	}
+	// ServiceNodeStakePoolName
+	// AppStakePoolName
+	// ValidatorStakePoolName
+	// FishermanStakePoolName
+	// DAOPoolName
+	// FeePoolName
+
+	poolValues := make(map[string]*big.Int, 0)
+
+	addValueToPool := func(poolName string, valueToAdd string) error {
+		value, err := types.StringToBigInt(valueToAdd)
+		if err != nil {
+			return err
+		}
+		if present := poolValues[poolName]; present == nil {
+			poolValues[poolName] = big.NewInt(0)
+		}
+		fmt.Println("OLSH", poolValues[poolName], value)
+		poolValues[poolName].Add(poolValues[poolName], value)
+		return nil
+	}
+
+	for _, v := range state.Validators {
+		if err := ctx.SetAccountAmount(v.Address, "0"); err != nil {
+			return err
+		}
+		if err := ctx.InsertValidator(v.Address, v.PublicKey, v.Output, v.Paused, int(v.Status), v.ServiceUrl, v.StakedTokens, v.PausedHeight, v.UnstakingHeight); err != nil {
+			return err
+		}
+		if err := addValueToPool(genesis.ValidatorStakePoolName, v.StakedTokens); err != nil {
+			return err
+		}
+	}
+
+	for _, f := range state.Fishermen {
+		if err := ctx.InsertFisherman(f.Address, f.PublicKey, f.Output, f.Paused, int(f.Status), f.ServiceUrl, f.StakedTokens, f.Chains, f.PausedHeight, f.UnstakingHeight); err != nil {
+			return err
+		}
+		if err := ctx.SetAccountAmount(f.Address, "0"); err != nil {
+			return err
+		}
+		if err := addValueToPool(genesis.FishermanStakePoolName, f.StakedTokens); err != nil {
+			return err
+		}
+	}
+
+	for _, sn := range state.ServiceNodes {
+		if err := ctx.InsertServiceNode(sn.Address, sn.PublicKey, sn.Output, sn.Paused, int(sn.Status), sn.ServiceUrl, sn.StakedTokens, sn.Chains, sn.PausedHeight, sn.UnstakingHeight); err != nil {
+			return err
+		}
+		if err := ctx.SetAccountAmount(sn.Address, "0"); err != nil {
+			return err
+		}
+		if err := addValueToPool(genesis.ServiceNodeStakePoolName, sn.StakedTokens); err != nil {
+			return err
+		}
+	}
+
+	for _, app := range state.Apps {
+		if err := ctx.InsertApp(app.Address, app.PublicKey, app.Output, app.Paused, int(app.Status), app.MaxRelays, app.StakedTokens, app.Chains, app.PausedHeight, app.UnstakingHeight); err != nil {
+			return err
+		}
+		if err := ctx.SetAccountAmount(app.Address, "0"); err != nil {
+			return err
+		}
+		if err := addValueToPool(genesis.AppStakePoolName, app.StakedTokens); err != nil {
+			return err
+		}
+	}
+
+	for _, acc := range state.Accounts {
+		if err := ctx.AddAccountAmount(acc.Address, acc.Amount); err != nil {
+			return err
+		}
+	}
+
+	for _, pool := range state.Pools {
+		if err := ctx.InsertPool(pool.Name, pool.Account.Address, pool.Account.Amount); err != nil {
+			return err
+		}
+		// DISCUSS: Should we use `pool.Account.Amount` here?
+		if err := ctx.SetAccountAmount(pool.Account.Address, pool.Account.Amount); err != nil {
+			return err
+		}
+	}
+
+	// DISCUSS_IN_THIS_COMMIT: Not practical.
+	if err := ctx.InitParams(); err != nil {
+		return err
+	}
+	if err := ctx.SetValidatorMaximumMissedBlocks(int(state.Params.ValidatorMaximumMissedBlocks)); err != nil {
+		return err
+	}
+	fmt.Println("OLSH 2")
+
 	return nil
 }
 

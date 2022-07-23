@@ -80,7 +80,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
+func TestUtilityContext_GetProposalTransactions(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := NewTestingTransaction(t, ctx)
 	proposer := GetAllTestingValidators(t, ctx)[0]
@@ -89,7 +89,7 @@ func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
 	if err := ctx.CheckTransaction(txBz); err != nil {
 		t.Fatal(err)
 	}
-	txs, er := ctx.GetTransactionsForProposal(proposer.Address, 10000, nil)
+	txs, er := ctx.GetProposalTransactions(proposer.Address, 10000, nil)
 	if er != nil {
 		t.Fatal(er)
 	}

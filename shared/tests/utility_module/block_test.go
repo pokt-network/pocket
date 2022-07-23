@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUtilityContext_ApplyBlock(t *testing.T) {
+func TestUtilityContext_ApplyProposalTransactions(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, startingBalance, amount, signer := NewTestingTransaction(t, ctx)
 	vals := GetAllTestingValidators(t, ctx)
@@ -22,7 +22,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	proposerBeforeBalance, err := ctx.GetAccountAmount(proposer.Address)
 	require.NoError(t, err)
 	// apply block
-	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
+	if _, err := ctx.ApplyProposalTransactions(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
 		t.Fatal(err)
 	}
 	// beginBlock logic verify
@@ -67,7 +67,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
 	// apply block
-	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
+	if _, err := ctx.ApplyProposalTransactions(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
 		t.Fatal(err)
 	}
 	// beginBlock logic verify
@@ -106,7 +106,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	proposerBeforeBalance, err := ctx.GetAccountAmount(proposer.Address)
 	require.NoError(t, err)
 	// apply block
-	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
+	if _, err := ctx.ApplyProposalTransactions(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
 		t.Fatal(err)
 	}
 	// deliverTx logic verify

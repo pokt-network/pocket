@@ -130,7 +130,7 @@ const (
 		message_pause_service_node_fee_owner TEXT NOT NULL,
 		message_unpause_service_node_fee_owner TEXT NOT NULL,
 		message_change_parameter_fee_owner TEXT NOT NULL,
-		end_height BIGINT NOT NULL
+		height BIGINT NOT NULL
 	)`
 )
 
@@ -252,7 +252,7 @@ var (
 		"message_pause_service_node_fee_owner",
 		"message_unpause_service_node_fee_owner",
 		"message_change_parameter_fee_owner",
-		"end_height",
+		"height",
 	}
 )
 
@@ -391,7 +391,7 @@ func InsertParams(params *genesis.Params) string {
 }
 
 func GetParamQuery(paramName string) string {
-	return fmt.Sprintf(`SELECT %s FROM %s WHERE end_height=%d`, paramName, ParamsTableName, DefaultBigInt)
+	return fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d`, paramName, ParamsTableName, DefaultBigInt)
 }
 
 func GetParamNames() (paramNames []string) {
@@ -401,7 +401,7 @@ func GetParamNames() (paramNames []string) {
 }
 
 func NullifyParamsQuery(height int64) string {
-	return fmt.Sprintf(`UPDATE %s SET end_height=%d WHERE end_height=%d`, ParamsTableName, height, DefaultBigInt)
+	return fmt.Sprintf(`UPDATE %s SET height=%d WHERE height=%d`, ParamsTableName, height, DefaultBigInt)
 }
 
 func SetParam(paramName string, paramValue interface{}, height int64) string {
@@ -433,7 +433,7 @@ func SetParam(paramName string, paramValue interface{}, height int64) string {
 			subQuery += fmt.Sprintf("%s,", pn)
 		}
 	}
-	subQuery += fmt.Sprintf(` FROM %s WHERE end_height=%d`, ParamsTableName, height)
+	subQuery += fmt.Sprintf(` FROM %s WHERE height=%d`, ParamsTableName, height)
 	return fmt.Sprintf(`INSERT INTO %s((%s))`, ParamsTableName, subQuery)
 }
 

@@ -18,6 +18,10 @@ type PersistenceModule interface {
 // By design, the interface is made very verbose and explicit. This highlights the fact that Pocket
 // is an application specific blockchain and improves readability throughout the rest of the codebase
 // by limiting the use of abstractions.
+
+// TODO: Consider if this should be an interface or not per the suggestion here: https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces
+// DISCUSS General purpose method: `ActorOperation(enum_actor_type, ...)` such as `Insert(FISHERMAN, ...)`
+// DISCUSS General purpose method: `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
 type PersistenceContext interface {
 	// Context Operations
 	NewSavePoint([]byte) error
@@ -25,7 +29,7 @@ type PersistenceContext interface {
 
 	Reset() error
 	Commit() error
-	Release()
+	Release() // Return an error?
 
 	AppHash() ([]byte, error)
 	GetHeight() (int64, error)
