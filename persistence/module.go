@@ -69,40 +69,17 @@ func (m *persistenceModule) GetBus() modules.Bus {
 }
 
 func (m *persistenceModule) NewContext(height int64) (modules.PersistenceContext, error) {
-	// persistenceContext, err := CreatePersistenceContext()
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	persistenceContext := PostgresContext{
 		Height: height,
 		DB: &PostgresDB{
 			Conn: m.postgresConn,
 		},
+		BlockStore:   m.blockStore,
+		ContextStore: kvstore.NewMemKVStore(),
 	}
 
 	m.contexts[uint64(height)] = persistenceContext
 
-	// return CreatePersistenceContext()
-
-	// newDB := NewMemDB()
-	// it := m.CommitDB.NewIterator(&util.Range{
-	// 	Start: HeightKey(height, nil),
-	// 	Limit: HeightKey(height+1, nil),
-	// })
-	// defer it.Release()
-	// for valid := it.First(); valid; valid = it.Next() {
-	// 	err := newDB.Put(KeyFromHeightKey(it.Key()), it.Value())
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// }
-	// context := &PrePersistenceContext{
-	// 	Height: height,
-	// 	Parent: m,
-	// 	DBs:    make([]*memdb.DB, 0),
-	// }
-	// context.DBs = append(context.DBs, newDB)
 	return persistenceContext, nil
 }
 

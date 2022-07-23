@@ -23,7 +23,7 @@ func (m *consensusModule) prepareBlockAsLeader() (*types.Block, error) {
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
 
-	if err := m.updateUtilityContext(); err != nil {
+	if err := m.refreshUtilityContext(); err != nil {
 		return nil, err
 	}
 
@@ -65,7 +65,7 @@ func (m *consensusModule) applyBlockAsReplica(block *types.Block) error {
 		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.consCfg.MaxBlockBytes)
 	}
 
-	if err := m.updateUtilityContext(); err != nil {
+	if err := m.refreshUtilityContext(); err != nil {
 		return err
 	}
 
@@ -83,7 +83,7 @@ func (m *consensusModule) applyBlockAsReplica(block *types.Block) error {
 }
 
 // Creates a new Utility context and clears/nullifies any previous contexts if they exist
-func (m *consensusModule) updateUtilityContext() error {
+func (m *consensusModule) refreshUtilityContext() error {
 	if m.utilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
 		m.utilityContext.ReleaseContext()

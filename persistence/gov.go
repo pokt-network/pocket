@@ -1,8 +1,6 @@
 package persistence
 
 import (
-	"fmt"
-
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
@@ -898,7 +896,6 @@ func (p PostgresContext) InitParams() error {
 
 // IMPROVE(team): Switch to generics
 func (p PostgresContext) SetParam(paramName string, paramValue interface{}) error {
-	fmt.Println("OLSH3")
 	ctx, conn, err := p.DB.GetCtxAndConnection()
 	if err != nil {
 		return err
@@ -917,7 +914,6 @@ func (p PostgresContext) SetParam(paramName string, paramValue interface{}) erro
 	if _, err = tx.Exec(ctx, schema.SetParam(paramName, paramValue, height)); err != nil {
 		return err
 	}
-	fmt.Println("OLSH4", schema.SetParam(paramName, paramValue, height))
 	return tx.Commit(ctx)
 }
 

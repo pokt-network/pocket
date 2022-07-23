@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
@@ -26,12 +27,15 @@ func init() {
 
 var _ modules.PersistenceContext = &PostgresContext{}
 
-// DISCUSS: Can we avoid externalizing these fields?
+// DISCUSS_IN_THIS_COMMIT: Why are these externalized?
 type PostgresContext struct {
-	Height int64
-	DB     *PostgresDB
+	Height       int64
+	DB           *PostgresDB
+	BlockStore   kvstore.KVStore
+	ContextStore kvstore.KVStore
 }
 
+// DISCUSS_IN_THIS_COMMIT: If we have a `PostgresContext`, why do we need this extra wrapper struct?
 type PostgresDB struct {
 	Conn *pgx.Conn // TODO (TEAM) use pool of connections
 }
@@ -151,13 +155,6 @@ func (m *persistenceModule) hydrateGenesisDbState() error {
 	if err != nil {
 		return err
 	}
-	// ServiceNodeStakePoolName
-	// AppStakePoolName
-	// ValidatorStakePoolName
-	// FishermanStakePoolName
-	// DAOPoolName
-	// FeePoolName
-
 	poolValues := make(map[string]*big.Int, 0)
 
 	addValueToPool := func(poolName string, valueToAdd string) error {
@@ -168,7 +165,6 @@ func (m *persistenceModule) hydrateGenesisDbState() error {
 		if present := poolValues[poolName]; present == nil {
 			poolValues[poolName] = big.NewInt(0)
 		}
-		fmt.Println("OLSH", poolValues[poolName], value)
 		poolValues[poolName].Add(poolValues[poolName], value)
 		return nil
 	}
@@ -244,7 +240,6 @@ func (m *persistenceModule) hydrateGenesisDbState() error {
 	if err := ctx.SetValidatorMaximumMissedBlocks(int(state.Params.ValidatorMaximumMissedBlocks)); err != nil {
 		return err
 	}
-	fmt.Println("OLSH 2")
 
 	return nil
 }

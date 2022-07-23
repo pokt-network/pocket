@@ -55,6 +55,8 @@ func (p PostgresContext) Reset() error {
 
 func (p PostgresContext) Commit() error {
 	log.Println("TODO: Block - Commit not implemented")
+	// DISCUSS_IN_THIS_COMMIT: This is where we need to do a p.BlockStore.Write
+	// p.BlockStore
 	return nil
 }
 
