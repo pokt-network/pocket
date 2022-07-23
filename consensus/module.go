@@ -27,11 +27,11 @@ type consensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
         // For BLS signature aggregation
-	secretKey, publicKey = bls.GenerateRandomKey()
-	signature            = secretKey.Sign(message)
-	pubBytes             = publicKey.Marshal()
-	sigBytes             = signature.Marshal()
-	allVerify := signature.Verify(publickey, message)
+        var sec bls.SecretKey
+        sec.SetByCSPRNG()
+        msg := []byte("abc")
+        pub := sec.GetPublicKey()
+        sig := sec.SignByte(msg)
 	consCfg    *config.ConsensusConfig
 
 
