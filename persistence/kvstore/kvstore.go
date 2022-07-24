@@ -6,13 +6,7 @@ import (
 	badger "github.com/dgraph-io/badger/v3"
 )
 
-// type KVStoreConfig struct {
-// 	opt := badger.DefaultOptions("").WithInMemory(true)
-// }
-
 type KVStore interface {
-	// Create(name string, inMemory bool)
-
 	// Start() error
 	Stop() error
 
@@ -22,18 +16,7 @@ type KVStore interface {
 
 type badgerKVStore struct {
 	db *badger.DB
-
-	name     string
-	inMemory bool
 }
-
-// func Create() {
-// 	db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer db.Close()
-// }
 
 func NewMemKVStore() KVStore {
 	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(true))

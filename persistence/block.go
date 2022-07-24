@@ -55,8 +55,13 @@ func (p PostgresContext) Reset() error {
 
 func (p PostgresContext) Commit() error {
 	log.Println("TODO: Block - Commit not implemented")
-	// DISCUSS_IN_THIS_COMMIT: This is where we need to do a p.BlockStore.Write
-	// p.BlockStore
+	// DISCUSS_IN_THIS_COMMIT: See `consensus/block.go` where we apply the transactions and call this
+	// commit. THe two questions I have are:
+	// 1. Should we be commiting the persistence context directly or proxying via the utility context?
+	// 2. The data has already been written to the postgres DB, so what should we do here? The idea I have is:
+	// - Call commit on the utility context
+	// - Utility context maintains list of transactions to be applied
+	// - Create a protobuf with the transactions -> serialized -> insert in the keystore
 	return nil
 }
 

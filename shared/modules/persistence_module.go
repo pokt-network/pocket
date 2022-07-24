@@ -20,8 +20,8 @@ type PersistenceModule interface {
 // by limiting the use of abstractions.
 
 // TODO: Consider if this should be an interface or not per the suggestion here: https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces
-// DISCUSS General purpose method: `ActorOperation(enum_actor_type, ...)` such as `Insert(FISHERMAN, ...)`
-// DISCUSS General purpose method: `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
+// DISCUSS_IN_THIS_COMMIT: Thoughts on general purpose method: `ActorOperation(enum_actor_type, ...)` such as `Insert(FISHERMAN, ...)`
+// DISCUSS_IN_THIS_COMMIT: Thoughts on general purpose method: `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
 type PersistenceContext interface {
 	// Context Operations
 	NewSavePoint([]byte) error

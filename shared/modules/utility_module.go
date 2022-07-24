@@ -5,7 +5,9 @@ type UtilityModule interface {
 	NewContext(height int64) (UtilityContext, error)
 }
 
-// DOCUMENT_IN_THIS_COMMIT: Explain the relationship between a utility module and the utility context
+// DISCUSS_IN_THIS_COMMIT:
+// 1. Explain the relationship between a utility module and the utility context and document it.
+// 2. Thoughts on renaming the functions to what we have below. The idea is to make the code readable to anyone.
 type UtilityContext interface {
 	// Block operations
 	GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error)

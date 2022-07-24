@@ -18,7 +18,8 @@ type persistenceModule struct {
 
 	postgresConn *pgx.Conn
 	blockStore   kvstore.KVStore
-	contexts     map[uint64]modules.PersistenceContext
+	// DISCUSS_IN_THIS_COMMIT: Discuss if we are going to have a 1:1 mapping from each context to each height?
+	contexts map[uint64]modules.PersistenceContext
 }
 
 func Create(c *config.Config) (modules.PersistenceModule, error) {
