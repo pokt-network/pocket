@@ -48,7 +48,7 @@ func getActorValues(protocolActorSchema schema.ProtocolActorSchema, actorValue r
 		StakedTokens:       actorValue.FieldByName("StakedTokens").String(),
 		ActorSpecificParam: actorValue.FieldByName(actorSpecificParam).String(),
 		OutputAddress:      hex.EncodeToString(actorValue.FieldByName("Output").Bytes()),
-		PausedHeight:       int64(actorValue.FieldByName("PausedHeight").Uint()),
+		PausedHeight:       int64(actorValue.FieldByName("PausedHeight").Int()),
 		UnstakingHeight:    int64(actorValue.FieldByName("UnstakingHeight").Int()),
 		Chains:             chains,
 	}

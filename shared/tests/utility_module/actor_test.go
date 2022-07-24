@@ -381,3 +381,9 @@ func GetAllTestingApps(t *testing.T, ctx utility.UtilityContext) []*genesis.App 
 	require.NoError(t, err)
 	return actors
 }
+
+func GetAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []*genesis.Validator {
+	actors, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllValidators(ctx.LatestHeight)
+	require.NoError(t, err)
+	return actors
+}

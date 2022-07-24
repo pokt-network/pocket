@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"syscall"
 	"testing"
 	"time"
 
@@ -27,10 +28,9 @@ const (
 	password         = "secret"
 	db               = "postgres"
 	sql_schema       = "test_schema"
-	localhost        = "0.0.0.0"
-	port             = "5432"
+	port             = "5431" // Intentionally not `5432` so as not to interfere with local settings
 	dialect          = "postgres"
-	connStringFormat = "postgres://%s:%s@localhost:%s/%s?sslmode=disable"
+	connStringFormat = "postgres://%s:%s@%s/%s?sslmode=disable"
 )
 
 var (
@@ -62,6 +62,7 @@ func init() {
 }
 
 // See https://github.com/ory/dockertest as reference for the template of this code
+// Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
 func TestMain(m *testing.M) {
 	opts := dockertest.RunOptions{
 		Repository: "postgres",
@@ -71,14 +72,7 @@ func TestMain(m *testing.M) {
 			"POSTGRES_PASSWORD=" + password,
 			"POSTGRES_DB=" + db,
 		},
-		ExposedPorts: []string{port},
-		PortBindings: map[docker.Port][]docker.PortBinding{
-			port: {
-				{HostIP: localhost, HostPort: port},
-			},
-		},
 	}
-	connString := fmt.Sprintf(connStringFormat, user, password, port, db)
 
 	defer func() {
 		ctx, _ := PostgresDB.GetContext()
@@ -93,14 +87,25 @@ func TestMain(m *testing.M) {
 	}
 
 	// pulls an image, creates a container based on it and runs it
-	resource, err := pool.RunWithOptions(&opts)
+	resource, err := pool.RunWithOptions(&opts, func(config *docker.HostConfig) {
+		// set AutoRemove to true so that stopped container goes away by itself
+		config.AutoRemove = true
+		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
+	})
 	if err != nil {
 		log.Fatalf("***Make sure your docker daemon is running!!*** Could not start resource: %s\n", err.Error())
 	}
 
+	// Example: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
+	// Reasoning: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
+	hostAndPort := resource.GetHostPort("5432/tcp")
+	databaseUrl := fmt.Sprintf(connStringFormat, user, password, hostAndPort, db)
+
+	log.Println("Connecting to database on url: ", databaseUrl)
+
 	// DOCUMENT: Why do we not call `syscall.SIGTERM` here
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		for sig := range c {
 			log.Printf("exit signal %d received\n", sig)
@@ -110,9 +115,11 @@ func TestMain(m *testing.M) {
 		}
 	}()
 
+	resource.Expire(120) // Tell docker to hard kill the container in 120 seconds
+
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	if err = pool.Retry(func() error {
-		conn, err := persistence.ConnectAndInitializeDatabase(connString, sql_schema)
+		conn, err := persistence.ConnectAndInitializeDatabase(databaseUrl, sql_schema)
 		if err != nil {
 			log.Println(err.Error())
 			return err
