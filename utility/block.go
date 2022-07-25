@@ -12,19 +12,25 @@ func (u *UtilityContext) ApplyProposalTransactions(latestHeight int64, proposerA
 		return nil, err
 	}
 	// deliver txs lifecycle phase
-	for _, transaction := range transactions {
-		tx, err := typesUtil.TransactionFromBytes(transaction)
+	for _, transactionProtoBytes := range transactions {
+		tx, err := typesUtil.TransactionFromBytes(transactionProtoBytes)
 		if err != nil {
 			return nil, err
 		}
 		if err := tx.ValidateBasic(); err != nil {
 			return nil, err
 		}
+		// Validate and apply the transaction to the Postgres database
 		if err := u.ApplyTransaction(tx); err != nil {
 			return nil, err
 		}
+		if err := u.GetPersistenceContext().StoreTransaction(transactionProtoBytes); err != nil {
+			return nil, err
+		}
+
 		// TODO: if found, remove transaction from mempool
-		// if err := u.Mempool.DeleteTransaction(tx); err != nil {
+		// DISCUSS: What if the context is rolled back or cancelled. Do we add it back to the mempool?
+		// if err := u.Mempool.DeleteTransaction(transaction); err != nil {
 		// 	return nil, err
 		// }
 	}

@@ -270,9 +270,13 @@ func (m *PrePersistenceContext) GetBlockHash(height int64) ([]byte, error) {
 	return []byte(block.BlockHeader.Hash), nil
 }
 
-func (m *PrePersistenceContext) TransactionExists(transactionHash string) bool {
+func (m *PrePersistenceContext) TransactionExists(transactionHash string) (bool, error) {
 	db := m.Store()
-	return db.Contains(append(TransactionKeyPrefix, []byte(transactionHash)...))
+	return db.Contains(append(TransactionKeyPrefix, []byte(transactionHash)...)), nil
+}
+
+func (m *PrePersistenceContext) StoreTransaction(transactionProtoBytes []byte) error {
+	return m.Store().Put(append(TransactionKeyPrefix, transactionProtoBytes...), nil)
 }
 
 func NewMemDB() *memdb.DB {
