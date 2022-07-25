@@ -7,7 +7,7 @@ import (
 	"github.com/pokt-network/pocket/persistence/schema"
 )
 
-// OPTIMIZE(team): get from blockstore or keep in memory
+// OPTIMIZE(team): get from blockstore or keep in cache/memory
 func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
 	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
@@ -18,6 +18,7 @@ func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error)
 	return
 }
 
+// OPTIMIZE(team): get from blockstore or keep in cache/memory
 func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
 	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
@@ -31,39 +32,6 @@ func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
 	}
 
 	return hex.DecodeString(hexHash)
-}
-
-func (p PostgresContext) NewSavePoint(bytes []byte) error {
-	log.Println("Block - NewSavePoint not implemented")
-	return nil
-}
-
-func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
-	log.Println("TODO: Block - RollbackToSavePoint not implemented")
-	return nil
-}
-
-func (p PostgresContext) AppHash() ([]byte, error) {
-	log.Println("TODO: Block - AppHash not implemented")
-	return []byte("A real app hash, I am not"), nil
-}
-
-func (p PostgresContext) Reset() error {
-	log.Println("TODO: Block - Reset not implemented")
-	return nil
-}
-
-func (p PostgresContext) Commit() error {
-	log.Println("TODO: We have not implemented postgres based commits - it happens automatically")
-	// 2. The data has already been written to the postgres DB, so what should we do here? The idea I have is:
-	// - Call commit on the utility context
-	// - Utility context maintains list of transactions to be applied
-	// - Create a protobuf with the transactions -> serialized -> insert in the keystore
-	return nil
-}
-
-func (p PostgresContext) Release() {
-	log.Println("TODO:Block - Release not implemented")
 }
 
 func (p PostgresContext) GetHeight() (int64, error) {

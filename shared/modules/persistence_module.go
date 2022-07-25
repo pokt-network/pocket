@@ -12,16 +12,17 @@ type PersistenceModule interface {
 	GetCommitDB() *memdb.DB
 }
 
-// The interface defining the context within which the node can operate with the persistence layer
-// regarding any protocol actor or the state of the blockchain.
+// Interface defining the context within which the node can operate with the persistence layer.
+// Operations in the context of a PersistenceContext are isolated from other operations and
+// other persistence contexts until committed, enabling parallelizability along other operations.
 
 // By design, the interface is made very verbose and explicit. This highlights the fact that Pocket
 // is an application specific blockchain and improves readability throughout the rest of the codebase
 // by limiting the use of abstractions.
 
-// TODO: Consider if this should be an interface or not per the suggestion here: https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces
-// DISCUSS_IN_THIS_COMMIT: Thoughts on general purpose method: `ActorOperation(enum_actor_type, ...)` such as `Insert(FISHERMAN, ...)`
-// DISCUSS_IN_THIS_COMMIT: Thoughts on general purpose method: `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
+// TODO: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
+// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
+// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
 type PersistenceContext interface {
 	// Context Operations
 	NewSavePoint([]byte) error

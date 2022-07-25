@@ -16,11 +16,16 @@ var _ modules.PersistenceModule = &persistenceModule{}
 type persistenceModule struct {
 	bus modules.Bus
 
+	// The connection to the PostgreSQL database
 	postgresConn *pgx.Conn
-	blockStore   kvstore.KVStore
-	// DISCUSS_IN_THIS_COMMIT: Discuss if we are going to have a 1:1 mapping from each context to each height?
-	contexts map[uint64]modules.PersistenceContext
+	// A reference to the block key-value store
+	// INVESTIGATE: We may need to create a custom `BlockStore` package in the future.
+	blockStore kvstore.KVStore
+	// A mapping of context IDs to persistence contexts
+	contexts map[contextId]modules.PersistenceContext
 }
+
+type contextId uint64
 
 func Create(c *config.Config) (modules.PersistenceModule, error) {
 	postgresDb, err := ConnectAndInitializeDatabase(c.Persistence.PostgresUrl, c.Persistence.NodeSchema)
@@ -38,7 +43,7 @@ func Create(c *config.Config) (modules.PersistenceModule, error) {
 
 		postgresConn: postgresDb,
 		blockStore:   blockStore,
-		contexts:     make(map[uint64]modules.PersistenceContext),
+		contexts:     make(map[contextId]modules.PersistenceContext),
 	}, nil
 }
 
@@ -77,11 +82,16 @@ func (m *persistenceModule) NewContext(height int64) (modules.PersistenceContext
 		ContextStore: kvstore.NewMemKVStore(),
 	}
 
-	m.contexts[uint64(height)] = persistenceContext
+	m.contexts[createContextId(height)] = persistenceContext
 
 	return persistenceContext, nil
 }
 
 func (m *persistenceModule) GetCommitDB() *memdb.DB {
 	panic("GetCommitDB not implemented")
+}
+
+// INCOMPLETE: We will need to support multiple contexts at the same height in.
+func createContextId(height int64) contextId {
+	return contextId(height)
 }
