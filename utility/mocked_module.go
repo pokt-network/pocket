@@ -25,6 +25,7 @@ func CreateMockedModule(_ *config.Config) (modules.UtilityModule, error) {
 		AnyTimes()
 
 	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
+	utilityContextMock.EXPECT().CommitPersistenceContext().Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().ReleaseContext().Return().AnyTimes()
 	utilityContextMock.EXPECT().
 		GetProposalTransactions(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).

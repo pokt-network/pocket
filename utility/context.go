@@ -46,6 +46,10 @@ func (u *UtilityContext) GetPersistenceContext() modules.PersistenceContext {
 	return u.Context.PersistenceContext
 }
 
+func (u *UtilityContext) CommitPersistenceContext() error {
+	return u.Context.PersistenceContext.Commit()
+}
+
 func (u *UtilityContext) ReleaseContext() {
 	u.Context.Release()
 	u.Context = nil

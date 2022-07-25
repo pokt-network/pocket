@@ -102,7 +102,7 @@ func (m *consensusModule) refreshUtilityContext() error {
 func (m *consensusModule) commitBlock(block *types.Block) error {
 	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
 
-	if err := m.utilityContext.GetPersistenceContext().Commit(); err != nil {
+	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
 		return err
 	}
 	m.utilityContext.ReleaseContext()

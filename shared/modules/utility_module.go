@@ -16,6 +16,7 @@ type UtilityContext interface {
 	// Context operations
 	ReleaseContext()
 	GetPersistenceContext() PersistenceContext
+	CommitPersistenceContext() error
 
 	// Validation operations
 	CheckTransaction(tx []byte) error
