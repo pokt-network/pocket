@@ -27,20 +27,16 @@ func init() {
 
 var _ modules.PersistenceContext = &PostgresContext{}
 
-// DISCUSS_IN_THIS_COMMIT: Why are these externalized?
+// TODO: These are only externalized for testing purposes, so they should be made private and
+// it is trivial to create a helper to initial a context with some values.
 type PostgresContext struct {
 	Height       int64
-	DB           *PostgresDB
+	PostgresDB   *pgx.Conn
 	BlockStore   kvstore.KVStore
 	ContextStore kvstore.KVStore
 }
 
-// DISCUSS_IN_THIS_COMMIT: If we have a `PostgresContext`, why do we need this extra wrapper struct?
-type PostgresDB struct {
-	Conn *pgx.Conn // TODO (TEAM) use pool of connections
-}
-
-func (pg *PostgresDB) GetCtxAndConnection() (context.Context, *pgx.Conn, error) {
+func (pg *PostgresContext) GetCtxAndConnection() (context.Context, *pgx.Conn, error) {
 	conn, err := pg.GetConnection()
 	if err != nil {
 		return nil, nil, err
@@ -52,11 +48,11 @@ func (pg *PostgresDB) GetCtxAndConnection() (context.Context, *pgx.Conn, error) 
 	return ctx, conn, nil
 }
 
-func (pg *PostgresDB) GetConnection() (*pgx.Conn, error) {
-	return pg.Conn, nil
+func (pg *PostgresContext) GetConnection() (*pgx.Conn, error) {
+	return pg.PostgresDB, nil
 }
 
-func (pg *PostgresDB) GetContext() (context.Context, error) {
+func (pg *PostgresContext) GetContext() (context.Context, error) {
 	return context.TODO(), nil
 }
 
@@ -248,7 +244,7 @@ func (m *persistenceModule) hydrateGenesisDbState() error {
 
 // Exposed for debugging purposes only
 func (p PostgresContext) ClearAllDebug() error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return err
 	}

@@ -71,10 +71,8 @@ func (m *persistenceModule) GetBus() modules.Bus {
 
 func (m *persistenceModule) NewContext(height int64) (modules.PersistenceContext, error) {
 	persistenceContext := PostgresContext{
-		Height: height,
-		DB: &PostgresDB{
-			Conn: m.postgresConn,
-		},
+		Height:       height,
+		PostgresDB:   m.postgresConn,
 		BlockStore:   m.blockStore,
 		ContextStore: kvstore.NewMemKVStore(),
 	}

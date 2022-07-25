@@ -9,7 +9,7 @@ import (
 
 // OPTIMIZE(team): get from blockstore or keep in memory
 func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return 0, err
 	}
@@ -19,7 +19,7 @@ func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error)
 }
 
 func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -54,10 +54,7 @@ func (p PostgresContext) Reset() error {
 }
 
 func (p PostgresContext) Commit() error {
-	log.Println("TODO: Block - Commit not implemented")
-	// DISCUSS_IN_THIS_COMMIT: See `consensus/block.go` where we apply the transactions and call this
-	// commit. THe two questions I have are:
-	// 1. Should we be commiting the persistence context directly or proxying via the utility context?
+	log.Println("TODO: We have not implemented postgres based commits - it happens automatically")
 	// 2. The data has already been written to the postgres DB, so what should we do here? The idea I have is:
 	// - Call commit on the utility context
 	// - Utility context maintains list of transactions to be applied
