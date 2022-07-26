@@ -18,7 +18,7 @@ services:
     command: "build/scripts/watch.sh build/config/config1.json"
     build:
       context: ../..
-      dockerfile: ./build/Dockerfile
+      dockerfile: ./build/Dockerfile.localdev
     expose:
       - "7080" # dlv debug
       - "8080"
@@ -42,7 +42,7 @@ services:
     command: "build/scripts/watch.sh build/config/config2.json"
     build:
       context: ../..
-      dockerfile: ./build/Dockerfile
+      dockerfile: ./build/Dockerfile.localdev
     expose:
       - "7082" # dlv debug
       - "8080"
@@ -66,7 +66,7 @@ services:
     command: "build/scripts/watch.sh build/config/config3.json"
     build:
       context: ../..
-      dockerfile: ./build/Dockerfile
+      dockerfile: ./build/Dockerfile.localdev
     expose:
       - "7083" # dlv debug
       - "8080"
@@ -90,7 +90,7 @@ services:
     command: "build/scripts/watch.sh build/config/config4.json"
     build:
       context: ../..
-      dockerfile: ./build/Dockerfile
+      dockerfile: ./build/Dockerfile.localdev
     expose:
       - "7084" # dlv debug
       - "8080"
