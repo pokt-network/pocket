@@ -3,6 +3,7 @@ package persistence
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/schema"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -49,7 +50,15 @@ func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
 }
 
 func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
+	fmt.Println("committing height", p.Height)
+	// TODO: Need to use the ContextStore and transfer over the data on commit
+	return p.BlockStore.Put(heightToBytes(p.Height), blockProtoBytes)
+	// return p.ContextStore.Put(heightToBytes(p.Height), blockProtoBytes)
+}
+
+// IMPROVE: Should this be moved to a shared directory?
+func heightToBytes(height int64) []byte {
 	heightBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(heightBytes, uint64(p.Height))
-	return p.ContextStore.Put(heightBytes, blockProtoBytes)
+	binary.LittleEndian.PutUint64(heightBytes, uint64(height))
+	return heightBytes
 }

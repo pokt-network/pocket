@@ -91,6 +91,10 @@ func (m *persistenceModule) GetCommitDB() *memdb.DB {
 	panic("GetCommitDB not implemented")
 }
 
+func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
+	return m.blockStore
+}
+
 // INCOMPLETE: We will need to support multiple contexts at the same height in.
 func createContextId(height int64) contextId {
 	return contextId(height)

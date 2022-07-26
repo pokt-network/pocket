@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/jordanorelli/lexnum"
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -92,6 +93,14 @@ func (m *PrePersistenceModule) NewContext(height int64) (modules.PersistenceCont
 
 func (m *PrePersistenceModule) GetCommitDB() *memdb.DB {
 	return m.CommitDB
+}
+
+func (m *PrePersistenceModule) GetBlockStore() kvstore.KVStore {
+	panic("PrePersistenceModule not implementing block store")
+}
+
+func (p *PrePersistenceModule) HandleDebugMessage(debugMessage *types.DebugMessage) error {
+	panic("PrePersistenceModule not implementing HandleDebugMessage")
 }
 
 type PrePersistenceContext struct {

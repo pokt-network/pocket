@@ -149,6 +149,8 @@ func (node *Node) handleDebugEvent(anyMessage *anypb.Any) error {
 		fallthrough
 	case types.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
 		return node.GetBus().GetConsensusModule().HandleDebugMessage(&debugMessage)
+	case types.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
+		return node.GetBus().GetPersistenceModule().HandleDebugMessage(&debugMessage)
 	default:
 		log.Printf("Debug message: %s \n", debugMessage.Message)
 	}

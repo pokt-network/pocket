@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 )
@@ -10,6 +11,10 @@ type PersistenceModule interface {
 
 	NewContext(height int64) (PersistenceContext, error)
 	GetCommitDB() *memdb.DB
+	GetBlockStore() kvstore.KVStore
+
+	// Debugging / development only
+	HandleDebugMessage(*types.DebugMessage) error
 }
 
 // Interface defining the context within which the node can operate with the persistence layer.
