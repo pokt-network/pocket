@@ -2,12 +2,12 @@ package raintree
 
 import (
 	"fmt"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"log"
 	"math"
 	"sort"
 	"strings"
 
-	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
@@ -23,7 +23,7 @@ const (
 // Whenever `addrBook` changes, we also need to update `addrBookMap` and `addrList`
 func (n *rainTreeNetwork) processAddrBookUpdates() error {
 	// OPTIMIZE(olshansky): This is a very naive approach for now that recomputes everything every time that we can optimize later
-	n.addrBookMap = make(map[string]*typesPre2P.NetworkPeer, len(n.addrBook))
+	n.addrBookMap = make(map[string]*typesP2P.NetworkPeer, len(n.addrBook))
 	n.addrList = make([]string, len(n.addrBook))
 	for i, peer := range n.addrBook {
 		addr := peer.Address.String()

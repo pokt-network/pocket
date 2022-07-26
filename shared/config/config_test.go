@@ -18,12 +18,11 @@ func TestLoadConfigFromJson(t *testing.T) {
 			}
 		},
 		"private_key": "2e00000000000000000000000000000000000000000000000000000000000000264a0707979e0d6691f74b055429b5f318d39c2883bb509310b67424252e9ef2",
-		"pre2p": {
+
+		"p2p": {
 		  "consensus_port": 8080,
 		  "use_raintree": true,
-		  "connection_type": "tcp"
-		},
-		"p2p": {
+		  "connection_type": "tcp",
 		  "protocol": "tcp",
 		  "address": "0.0.0.0:8081",
 		  "external_ip": "172.18.0.1:8081",

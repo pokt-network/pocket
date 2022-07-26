@@ -1,7 +1,7 @@
 syntax = "proto3";
 package raintree;
 
-option go_package = "github.com/pokt-network/pocket/p2p/pre2p/types";
+option go_package = "github.com/pokt-network/pocket/p2p/types";
 
 message RainTreeMessage {
     uint32 level = 1;

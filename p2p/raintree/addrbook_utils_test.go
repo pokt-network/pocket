@@ -3,10 +3,10 @@ package raintree
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/pokt-network/pocket/p2p/types"
 	"strings"
 	"testing"
 
-	"github.com/pokt-network/pocket/p2p/pre2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
