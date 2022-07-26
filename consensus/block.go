@@ -69,12 +69,12 @@ func (m *consensusModule) applyBlockAsReplica(block *types.Block) error {
 		return err
 	}
 
-	appHash, err := m.utilityContext.ApplyProposalTransactions(int64(m.Height), m.privateKey.Address(), block.Transactions, lastByzValidators)
+	appHash, err := m.utilityContext.ApplyProposalTransactions(int64(m.Height), block.BlockHeader.ProposerAddress, block.Transactions, lastByzValidators)
 	if err != nil {
 		return err
 	}
 
-	// TODO(olshansky) blockhash is not the appHash. Discuss offline with Andrew
+	// DISCUSS_IN_THIS_COMMIT: Is `ApplyProposalTransactions` going to return blockHash or appHash?
 	if block.BlockHeader.Hash != hex.EncodeToString(appHash) {
 		return typesCons.ErrInvalidAppHash(block.BlockHeader.Hash, hex.EncodeToString(appHash))
 	}
@@ -102,6 +102,17 @@ func (m *consensusModule) refreshUtilityContext() error {
 func (m *consensusModule) commitBlock(block *types.Block) error {
 	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
 
+	// Store the block in the KV store
+	codec := types.GetCodec()
+	blockProtoBytes, err := codec.Marshal(block)
+	if err != nil {
+		return err
+	}
+	if err := m.utilityContext.StoreBlock(blockProtoBytes); err != nil {
+		return err
+	}
+
+	// Commit and release the context
 	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
 		return err
 	}

@@ -24,9 +24,10 @@ func (p PostgresContext) Reset() error {
 	return nil
 }
 
-// HACK: The data has already been written to the postgres DB, so what should we do here? The idea I have is:
 func (p PostgresContext) Commit() error {
-	log.Println("TODO: We have not implemented postgres based commits - it happens automatically")
+	// HACK: The data has already been written to the postgres DB, so what should we do here? The idea I have is:
+	log.Println("TODO: We have not implemented postgres based persistence context commits - it happens throughout the rest of the flow")
+
 	return nil
 }
 

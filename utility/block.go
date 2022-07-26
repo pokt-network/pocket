@@ -110,3 +110,7 @@ func (u *UtilityContext) GetBlockHash(height int64) ([]byte, types.Error) {
 	}
 	return hash, nil
 }
+
+func (u *UtilityContext) StoreBlock(blockProtoBytes []byte) error {
+	return u.GetPersistenceContext().StoreBlock(blockProtoBytes)
+}

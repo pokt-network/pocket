@@ -8,12 +8,10 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-// TODO (Team) Protocol hour discussion about contexts. We need to better understand the intermodule relationship here
-
 type UtilityContext struct {
 	LatestHeight int64
 	Mempool      types.Mempool
-	Context      *Context
+	Context      *Context //
 }
 
 type Context struct {

@@ -69,7 +69,7 @@ func Create(cfg *config.Config) (n *Node, err error) {
 }
 
 func (node *Node) Start() error {
-	log.Println("Starting pocket node...")
+	log.Println("About to start pocket node modules...")
 
 	// IMPORTANT: Order of module startup here matters
 
@@ -92,6 +92,8 @@ func (node *Node) Start() error {
 	// The first event signaling that the node has started
 	signalNodeStartedEvent := &types.PocketEvent{Topic: types.PocketTopic_POCKET_NODE_TOPIC, Data: nil}
 	node.GetBus().PublishEventToBus(signalNodeStartedEvent)
+
+	log.Println("About to start pocket node main loop...")
 
 	// While loop lasting throughout the entire lifecycle of the node to handle asynchronous events
 	for {

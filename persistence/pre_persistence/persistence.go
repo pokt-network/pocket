@@ -279,6 +279,10 @@ func (m *PrePersistenceContext) StoreTransaction(transactionProtoBytes []byte) e
 	return m.Store().Put(append(TransactionKeyPrefix, transactionProtoBytes...), nil)
 }
 
+func (p *PrePersistenceContext) StoreBlock(blockProtoBytes []byte) error {
+	panic("PrePersistenceContext does not implement StoreBlock")
+}
+
 func NewMemDB() *memdb.DB {
 	return memdb.New(comparer.DefaultComparer, 100000)
 }

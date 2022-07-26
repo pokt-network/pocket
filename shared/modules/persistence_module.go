@@ -43,6 +43,7 @@ type PersistenceContext interface {
 	// Indexer Operations
 	TransactionExists(transactionHash string) (bool, error)
 	StoreTransaction(transactionProtoBytes []byte) error
+	StoreBlock(blockProtoBytes []byte) error
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error

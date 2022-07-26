@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 
 	"github.com/pokt-network/pocket/persistence/schema"
@@ -45,4 +46,10 @@ func (p PostgresContext) TransactionExists(transactionHash string) (bool, error)
 func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
 	txHash := typesUtil.TransactionHash(transactionProtoBytes)
 	return p.ContextStore.Put([]byte(txHash), transactionProtoBytes)
+}
+
+func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
+	heightBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(heightBytes, uint64(p.Height))
+	return p.ContextStore.Put(heightBytes, blockProtoBytes)
 }
