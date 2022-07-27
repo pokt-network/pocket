@@ -391,7 +391,7 @@ func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, t
 	case *typesUtil.MessageUnstake:
 		return u.GetMessageUnstakeSignerCandidates(x)
 	case *typesUtil.MessageUnpause:
-		return u.GetMessageUnpauseSignercandidates(x)
+		return u.GetMessageUnpauseSignerCandidates(x)
 	case *typesUtil.MessageChangeParameter:
 		return u.GetMessageChangeParameterSignerCandidates(x)
 	default:
@@ -432,7 +432,7 @@ func (u *UtilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.Messag
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnpauseSignercandidates(msg *typesUtil.MessageUnpause) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageUnpauseSignerCandidates(msg *typesUtil.MessageUnpause) ([][]byte, types.Error) {
 	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
