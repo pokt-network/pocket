@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-	"reflect"
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
@@ -20,18 +20,24 @@ import (
 
 func TestUtilityContext_HandleMessageStake(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	pubKey, _ := crypto.GeneratePublicKey()
-	out, _ := crypto.GenerateAddress()
-	err := ctx.SetAccountAmount(out, defaultAmount)
-	require.NoError(t, err, "set account amount")
+
+	pubKey, err := crypto.GeneratePublicKey()
+	require.NoError(t, err)
+
+	outputAddress, err := crypto.GenerateAddress()
+	require.NoError(t, err)
+
+	err = ctx.SetAccountAmount(outputAddress, defaultAmount)
+	require.NoError(t, err, "set account amount error")
 
 	msg := &typesUtil.MessageStake{
 		PublicKey:     pubKey.Bytes(),
 		Chains:        defaultTestingChains,
 		Amount:        defaultAmountString,
-		OutputAddress: out,
-		Signer:        out,
+		OutputAddress: outputAddress,
+		Signer:        outputAddress,
 	}
+
 	er := ctx.HandleStakeMessage(msg)
 	require.NoError(t, er, "handle stake message")
 
@@ -43,19 +49,22 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 			break
 		}
 	}
-	require.True(t, bytes.Equal(actor.Address, pubKey.Address()), fmt.Sprintf("incorrect address, expected %v, got %v", pubKey.Address(), actor.Address))
-	require.True(t, actor.Status == typesUtil.StakedStatus, fmt.Sprintf("incorrect status, expected %v, got %v", typesUtil.StakedStatus, actor.Status))
-	require.Equal(t, actor.Chains, msg.Chains, fmt.Sprintf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains))
-	require.False(t, actor.Paused, fmt.Sprintf("incorrect paused status, expected %v, got %v", false, actor.Paused))
-	require.True(t, actor.PausedHeight == types.HeightNotUsed, fmt.Sprintf("incorrect paused height, expected %v, got %v", types.HeightNotUsed, actor.PausedHeight))
-	require.True(t, actor.StakedTokens == defaultAmountString, fmt.Sprintf("incorrect stake amount, expected %v, got %v", defaultAmountString, actor.StakedTokens))
-	require.True(t, actor.UnstakingHeight == types.HeightNotUsed, fmt.Sprintf("incorrect unstaking height, expected %v, got %v", types.HeightNotUsed, actor.UnstakingHeight))
-	require.True(t, bytes.Equal(actor.Output, out), fmt.Sprintf("incorrect output address, expected %v, got %v", actor.Output, out))
+
+	require.Equal(t, actor.Address, pubKey.Address().Bytes(), "incorrect actor address")
+	require.Equal(t, actor.Status, int32(typesUtil.StakedStatus), "incorrect actor  status")
+	require.Equal(t, actor.Chains, msg.Chains, "incorrect actor chains")
+	require.False(t, actor.Paused, "incorrect actor paused status")
+	require.Equal(t, actor.PausedHeight, types.HeightNotUsed, "incorrect actor height")
+	require.Equal(t, actor.StakedTokens, defaultAmountString, "incorrect actor stake amount")
+	require.Equal(t, actor.UnstakingHeight, types.HeightNotUsed, "incorrect actor unstaking height")
+	require.Equal(t, actor.Output, outputAddress.Bytes(), "incorrect actor output address")
 }
 
 func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
+
 	actor := GetAllTestingApps(t, ctx)[0]
+
 	msg := &typesUtil.MessageEditStake{
 		Address:   actor.Address,
 		Chains:    defaultTestingChains,
@@ -63,18 +72,19 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 		Signer:    actor.Address,
 		ActorType: typesUtil.ActorType_App,
 	}
-	msgChainsEdited := msg
+	msgChainsEdited := proto.Clone(msg).(*typesUtil.MessageEditStake)
 	msgChainsEdited.Chains = defaultTestingChainsEdited
+
 	err := ctx.HandleEditStakeMessage(msgChainsEdited)
 	require.NoError(t, err, "handle edit stake message")
 
 	actor = GetAllTestingApps(t, ctx)[0]
-	require.True(t, reflect.DeepEqual(actor.Chains, msg.Chains), fmt.Sprintf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains))
-	require.True(t, actor.Paused == false, fmt.Sprintf("incorrect paused status, expected %v, got %v", false, actor.Paused))
-	require.True(t, actor.PausedHeight == types.HeightNotUsed, fmt.Sprintf("incorrect paused height, expected %v, got %v", types.HeightNotUsed, actor.PausedHeight))
-	require.True(t, reflect.DeepEqual(actor.Chains, msgChainsEdited.Chains), fmt.Sprintf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains))
-	require.True(t, actor.StakedTokens == defaultAmountString, fmt.Sprintf("incorrect staked tokens, expected %v, got %v", defaultAmountString, actor.StakedTokens))
-	require.True(t, actor.UnstakingHeight == types.HeightNotUsed, fmt.Sprintf("incorrect unstaking height, expected %v, got %v", types.HeightNotUsed, actor.UnstakingHeight))
+	require.False(t, actor.Paused, "incorrect paused status")
+	require.Equal(t, actor.PausedHeight, types.HeightNotUsed, "incorrect paused height")
+	require.Equal(t, actor.Chains, msgChainsEdited.Chains, "incorrect edited chains")
+	require.Equal(t, actor.StakedTokens, defaultAmountString, "incorrect staked tokens")
+	require.Equal(t, actor.UnstakingHeight, types.HeightNotUsed, "incorrect unstaking height")
+
 	amountEdited := defaultAmount.Add(defaultAmount, big.NewInt(1))
 	amountEditedString := types.BigIntToString(amountEdited)
 	msgAmountEdited := msg
@@ -88,6 +98,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 
 func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
+
 	err := ctx.Context.SetAppMinimumPauseBlocks(0)
 	require.NoError(t, err, "set minimum pause blocks")
 
@@ -96,7 +107,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 	require.NoError(t, err, "set pause height")
 
 	actor = GetAllTestingApps(t, ctx)[0]
-	require.True(t, actor.Paused, fmt.Sprintf("actor isn't paused after"))
+	require.True(t, actor.Paused, "actor isn't paused after")
 	msgU := &typesUtil.MessageUnpause{
 		Address:   actor.Address,
 		Signer:    actor.Address,
@@ -106,7 +117,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 	require.NoError(t, err, "handle unpause message")
 
 	actor = GetAllTestingApps(t, ctx)[0]
-	require.True(t, !actor.Paused, fmt.Sprintf("actor is paused after"))
+	require.True(t, !actor.Paused, "actor is paused after")
 }
 
 func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
@@ -218,9 +229,13 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 
 func TestUtilityContext_GetMessageStakeSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	pubKey, _ := crypto.GeneratePublicKey()
+	pubKey, err := crypto.GeneratePublicKey()
+	require.NoError(t, err)
+
 	addr := pubKey.Address()
-	out, _ := crypto.GenerateAddress()
+	out, err := crypto.GenerateAddress()
+	require.NoError(t, err)
+
 	msg := &typesUtil.MessageStake{
 		PublicKey:     pubKey.Bytes(),
 		Chains:        defaultTestingChains,
