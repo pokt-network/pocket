@@ -13,43 +13,35 @@ var _ modules.PersistenceModule = &persistenceModule{}
 var _ modules.PersistenceContext = &PostgresContext{}
 
 func (p PostgresContext) GetAppStakeAmount(height int64, address []byte) (string, error) {
-	//TODO implement me
-	panic("implement me")
+	panic("TODO: implement PostgresContext.GetAppStakeAmount")
 }
 
 func (p PostgresContext) SetAppStakeAmount(address []byte, stakeAmount string) error {
-	//TODO implement me
-	panic("implement me")
+	panic("TODO: implement PostgresContext.SetAppStakeAmount")
 }
 
 func (p PostgresContext) GetServiceNodeStakeAmount(height int64, address []byte) (string, error) {
-	//TODO implement me
-	panic("implement me")
+	panic("TODO: implement PostgresContext.GetServiceNodeStakeAmount")
 }
 
 func (p PostgresContext) SetServiceNodeStakeAmount(address []byte, stakeAmount string) error {
-	//TODO implement me
-	panic("implement me")
+	panic("TODO: implement PostgresContext.SetServiceNodeStakeAmount")
 }
 
 func (p PostgresContext) GetFishermanStakeAmount(height int64, address []byte) (string, error) {
-	//TODO implement me
-	panic("implement me")
+	panic("TODO: implement PostgresContext.SetServiceNodeStakeAmount")
 }
 
 func (p PostgresContext) SetFishermanStakeAmount(address []byte, stakeAmount string) error {
-	//TODO implement me
-	panic("implement me")
+	panic("TODO: implement PostgresContext.SetFishermanStakeAmount")
 }
 
 func (p PostgresContext) GetValidatorStakeAmount(height int64, address []byte) (string, error) {
-	//TODO implement me
-	panic("implement me")
+	panic("TODO: implement PostgresContext.GetValidatorStakeAmount")
 }
 
 func (p PostgresContext) SetValidatorStakeAmount(address []byte, stakeAmount string) error {
-	//TODO implement me
-	panic("implement me")
+	panic("TODO: implement PostgresContext.SetValidatorStakeAmount")
 }
 
 type persistenceModule struct {
