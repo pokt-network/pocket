@@ -84,7 +84,7 @@ func (u *UtilityContext) GetProposalTransactions(proposer []byte, maxTransaction
 	return transactions, nil
 }
 
-// Exposed for testing purposes only
+// CLEANUP: Exposed for testing purposes only
 func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil.Message, types.Error) {
 	msg, err := tx.Message()
 	if err != nil {

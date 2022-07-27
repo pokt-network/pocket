@@ -50,7 +50,7 @@ func Create(c *config.Config) (modules.PersistenceModule, error) {
 func (p *persistenceModule) Start() error {
 	log.Println("Starting persistence module...")
 
-	// TODO: Load from previous state
+	// TODO_IN_THIS_COMMIT: Load from previous state in the postgres database and KV Store
 	if err := p.hydrateGenesisDbState(); err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
 	return m.blockStore
 }
 
-// INCOMPLETE: We will need to support multiple contexts at the same height in.
+// INCOMPLETE: We will need to suport multiple contexts at the same height in the future
 func createContextId(height int64) contextId {
 	return contextId(height)
 }

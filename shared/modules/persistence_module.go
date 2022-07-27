@@ -35,7 +35,7 @@ type PersistenceContext interface {
 
 	Reset() error
 	Commit() error
-	Release() // Return an error?
+	Release() // IMPROVE: Return an error?
 
 	AppHash() ([]byte, error)
 	GetHeight() (int64, error)

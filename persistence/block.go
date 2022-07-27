@@ -51,12 +51,12 @@ func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
 
 func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
 	fmt.Println("committing height", p.Height)
-	// TODO: Need to use the ContextStore and transfer over the data on commit
+	// TODO_IN_THIS_COMMIT: Need to use the ContextStore and transfer over the data from the temp KV Store
 	return p.BlockStore.Put(heightToBytes(p.Height), blockProtoBytes)
 	// return p.ContextStore.Put(heightToBytes(p.Height), blockProtoBytes)
 }
 
-// IMPROVE: Should this be moved to a shared directory?
+// CLEANUP: Should this be moved to a shared directory?
 func heightToBytes(height int64) []byte {
 	heightBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(heightBytes, uint64(height))

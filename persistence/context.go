@@ -32,5 +32,5 @@ func (p PostgresContext) Commit() error {
 }
 
 func (p PostgresContext) Release() {
-	log.Println("TODO:Block - Release not implemented")
+	log.Println("TODO: - Release not implemented")
 }

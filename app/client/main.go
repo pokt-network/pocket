@@ -169,7 +169,7 @@ func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 	}
 }
 
-// Send to just a single (first) validator in the set
+// Send to just a single (i.e. first) validator in the set
 func sendDebugMessage(debugMsg *types.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {

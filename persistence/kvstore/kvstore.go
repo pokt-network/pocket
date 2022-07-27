@@ -14,7 +14,6 @@ type KVStore interface {
 	Put(key []byte, value []byte) error
 	Get(key []byte) ([]byte, error)
 	Exists(key []byte) (bool, error)
-	// GetIterator() (KVIterator, error)
 }
 
 var _ KVStore = &badgerKVStore{}
@@ -53,7 +52,6 @@ func (store badgerKVStore) Put(key []byte, value []byte) error {
 	}
 
 	return nil
-
 }
 
 func (store badgerKVStore) Get(key []byte) ([]byte, error) {

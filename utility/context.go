@@ -11,7 +11,7 @@ import (
 type UtilityContext struct {
 	LatestHeight int64
 	Mempool      types.Mempool
-	Context      *Context //
+	Context      *Context // IMPROVE: Consider renmaming to PersistenceContext
 }
 
 type Context struct {

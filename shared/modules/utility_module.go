@@ -2,11 +2,14 @@ package modules
 
 type UtilityModule interface {
 	Module
+
 	NewContext(height int64) (UtilityContext, error)
 }
 
-// DISCUSS_IN_THIS_COMMIT:
-// 1. Explain the relationship between a utility module and the utility context and document it.
+// Interface defining the context within which the node can operate with the utility layer.
+// Operations in the context of a UtilityContext are isolated from other operations and
+// other utility contexts until committed and released, enabling parallelizability along other
+// operations.
 type UtilityContext interface {
 	// Block operations
 	GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error)
