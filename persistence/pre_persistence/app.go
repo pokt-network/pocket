@@ -108,7 +108,7 @@ func (m *PrePersistenceContext) SetAppStakeAmount(address []byte, stakeAmount st
 	return db.Put(append(AppPrefixKey, address...), bz)
 }
 
-func (m *PrePersistenceContext) InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (m *PrePersistenceContext) InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	height, err := m.GetHeight()
 	if err != nil {
 		return err
@@ -126,7 +126,7 @@ func (m *PrePersistenceContext) InsertApp(address []byte, publicKey []byte, outp
 		Status:          int32(status),
 		Chains:          chains,
 		MaxRelays:       maxRelays,
-		StakedTokens:    stakedTokens,
+		StakedTokens:    stakedAmount,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Output:          output,

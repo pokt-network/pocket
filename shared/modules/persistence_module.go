@@ -54,8 +54,8 @@ type PersistenceContext interface {
 
 	// App Operations
 	GetAppExists(address []byte, height int64) (exists bool, err error)
-	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-	UpdateApp(address []byte, maxRelaysToAdd string, amount string, chainsToUpdate []string) error
+	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	UpdateApp(address []byte, maxRelays string, stakedAmount string, chainsToUpdate []string) error
 	DeleteApp(address []byte) error
 	GetAppStakeAmount(height int64, address []byte) (string, error)
 	SetAppStakeAmount(address []byte, stakeAmount string) error
@@ -69,8 +69,8 @@ type PersistenceContext interface {
 
 	// ServiceNode Operations
 	GetServiceNodeExists(address []byte, height int64) (exists bool, err error)
-	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-	UpdateServiceNode(address []byte, serviceURL string, amount string, chains []string) error
+	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	UpdateServiceNode(address []byte, serviceURL string, stakedAmount string, chains []string) error
 	DeleteServiceNode(address []byte) error
 	GetServiceNodeStakeAmount(height int64, address []byte) (string, error)
 	SetServiceNodeStakeAmount(address []byte, stakeAmount string) error
@@ -87,8 +87,8 @@ type PersistenceContext interface {
 
 	// Fisherman Operations
 	GetFishermanExists(address []byte, height int64) (exists bool, err error)
-	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-	UpdateFisherman(address []byte, serviceURL string, amount string, chains []string) error
+	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	UpdateFisherman(address []byte, serviceURL string, stakedAmount string, chains []string) error
 	DeleteFisherman(address []byte) error
 	GetFishermanStakeAmount(height int64, address []byte) (string, error)
 	SetFishermanStakeAmount(address []byte, stakeAmount string) error
@@ -102,8 +102,8 @@ type PersistenceContext interface {
 
 	// Validator Operations
 	GetValidatorExists(address []byte, height int64) (exists bool, err error)
-	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error
-	UpdateValidator(address []byte, serviceURL string, amount string) error
+	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, pausedHeight int64, unstakingHeight int64) error
+	UpdateValidator(address []byte, serviceURL string, stakedAmount string) error
 	DeleteValidator(address []byte) error
 	GetValidatorStakeAmount(height int64, address []byte) (string, error)
 	SetValidatorStakeAmount(address []byte, stakeAmount string) error

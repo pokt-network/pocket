@@ -89,7 +89,7 @@ func (m *PrePersistenceContext) SetServiceNodeStakeAmount(address []byte, stakeA
 	return db.Put(append(ServiceNodePrefixKey, address...), bz)
 }
 
-func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	height, err := m.GetHeight()
 	if err != nil {
 		return err
@@ -107,7 +107,7 @@ func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []by
 		Status:          int32(status),
 		Chains:          chains,
 		ServiceUrl:      serviceURL,
-		StakedTokens:    stakedTokens,
+		StakedTokens:    stakedAmount,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Output:          output,

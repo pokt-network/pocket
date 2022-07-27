@@ -112,7 +112,7 @@ func (m *PrePersistenceContext) SetFishermanStakeAmount(address []byte, stakeAmo
 	return db.Put(append(FishermanPrefixKey, address...), bz)
 }
 
-func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	height, err := m.GetHeight()
 	if err != nil {
 		return err
@@ -130,7 +130,7 @@ func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte
 		Status:          int32(status),
 		Chains:          chains,
 		ServiceUrl:      serviceURL,
-		StakedTokens:    stakedTokens,
+		StakedTokens:    stakedAmount,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Output:          output,

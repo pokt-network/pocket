@@ -108,7 +108,7 @@ func (m *PrePersistenceContext) GetValidatorExists(address []byte, height int64)
 	return true, nil
 }
 
-func (m *PrePersistenceContext) InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error {
+func (m *PrePersistenceContext) InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, pausedHeight int64, unstakingHeight int64) error {
 	height, err := m.GetHeight()
 	if err != nil {
 		return err
@@ -125,7 +125,7 @@ func (m *PrePersistenceContext) InsertValidator(address []byte, publicKey []byte
 		Paused:          paused,
 		Status:          int32(status),
 		ServiceUrl:      serviceURL,
-		StakedTokens:    stakedTokens,
+		StakedTokens:    stakedAmount,
 		MissedBlocks:    0,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
