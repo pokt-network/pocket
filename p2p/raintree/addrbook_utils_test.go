@@ -132,6 +132,8 @@ func TestRainTreeAddrBookTargetsSixNodes(t *testing.T) {
 	prop := &ExpectedRainTreeMessageProp{'A', 6, "ABCDEF", []ExpectedRainTreeMessageTarget{
 		{2, "C", "E"},
 		{1, "B", "C"},
+		{0, "C", "E"},  // redundancy
+		{-1, "F", "B"}, // cleanup
 	}}
 	testRainTreeMessageTargets(t, prop)
 }
@@ -145,9 +147,12 @@ func TestRainTreeAddrBookTargetsNineNodes(t *testing.T) {
 	prop := &ExpectedRainTreeMessageProp{'A', 9, "ABCDEFGHI", []ExpectedRainTreeMessageTarget{
 		{2, "D", "G"},
 		{1, "C", "E"},
+		{0, "D", "G"},  // redundancy
+		{-1, "I", "B"}, // cleanup
 	}}
 	testRainTreeMessageTargets(t, prop)
 }
+
 func TestRainTreeAddrBookTargetsTwentySevenNodes(t *testing.T) {
 
 	// 		                                                             O
@@ -161,6 +166,8 @@ func TestRainTreeAddrBookTargetsTwentySevenNodes(t *testing.T) {
 		{3, "X", "F"},
 		{2, "U", "["},
 		{1, "S", "W"},
+		{0, "X", "F"},  // redundancy
+		{-1, "N", "P"}, // cleanup
 	}}
 	testRainTreeMessageTargets(t, prop)
 }
@@ -172,18 +179,33 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 
 	require.Equal(t, strings.Join(network.addrList, ""), strToAddrList(expectedMsgProp.addrList))
 
-	i, found := network.getSelfIndexInAddrBook()
+	addrList, addrBookMap, err := network.addrBook.ToListAndMap(network.selfAddr.String())
+	require.NoError(t, err)
+	require.NotNil(t, addrList)
+	require.NotNil(t, addrBookMap)
+
+	i, found := addrList.Find(network.selfAddr.String())
 	require.True(t, found)
-	require.Equal(t, i, 0)
+	require.Equal(t, 0, i)
 
 	for _, target := range expectedMsgProp.targets {
-		addr, found := network.getFirstTargetAddr(uint32(target.level))
-		require.True(t, found)
-		require.Equal(t, addr, cryptoPocket.Address(target.left))
+		var addr1, addr2 cryptoPocket.Address
+		level := int32(target.level)
+		if level == 0 {
+			level = getMaxAddrBookLevels(addrBook)
+		}
+		if level == -1 {
+			addr1, addr2, _ = getLeftAndRight(addrList, addrBookMap)
+		}
+		if addr1 == nil {
+			addr1 = network.getFirstTargetAddr(level)
+		}
+		require.Equal(t, addr1, cryptoPocket.Address(target.left))
 
-		addr, found = network.getSecondTargetAddr(uint32(target.level))
-		require.True(t, found)
-		require.Equal(t, addr, cryptoPocket.Address(target.right))
+		if addr2 == nil {
+			addr2 = network.getSecondTargetAddr(level)
+		}
+		require.Equal(t, addr2, cryptoPocket.Address(target.right))
 	}
 }
 
@@ -201,5 +223,4 @@ func getAlphabetAddrBook(n int) (addrBook types.AddrBook) {
 
 func strToAddrList(s string) string {
 	return hex.EncodeToString([]byte(s))
-
 }
