@@ -519,7 +519,9 @@ func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
 		ParameterKey:   types.MissedBlocksBurnPercentageParamName,
 		ParameterValue: any,
 	}
-	require.NoError(t, ctx.HandleMessageChangeParameter(msg), "handle message change param")
+	err = ctx.HandleMessageChangeParameter(msg)
+	require.NoError(t, err, "handle message change param")
+
 	gotParam, err = ctx.GetMissedBlocksBurnPercentage()
 	require.NoError(t, err)
 	require.False(t, int(newParamValue) != gotParam, fmt.Sprintf("wrong param value after handling, expected %v got %v", newParamValue, gotParam))

@@ -24,7 +24,9 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	require.NoError(t, err)
 	// apply block
 	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
+		err = err
 		require.NoError(t, err, "apply block")
+
 	}
 	// beginBlock logic verify
 	missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)
