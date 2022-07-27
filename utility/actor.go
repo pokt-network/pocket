@@ -18,7 +18,7 @@ import (
 
 // setters
 
-func (u *UtilityContext) SetActorStakedTokens(address []byte, tokens *big.Int, actorType typesUtil.ActorType) types.Error {
+func (u *UtilityContext) SetActorStakedTokens(actorType typesUtil.ActorType, tokens *big.Int, address []byte) types.Error {
 	var er error
 	store := u.Store()
 	switch actorType {
@@ -37,7 +37,7 @@ func (u *UtilityContext) SetActorStakedTokens(address []byte, tokens *big.Int, a
 	return nil
 }
 
-func (u *UtilityContext) SetActorUnstaking(address []byte, unstakingHeight int64, actorType typesUtil.ActorType) types.Error {
+func (u *UtilityContext) SetActorUnstaking(actorType typesUtil.ActorType, unstakingHeight int64, address []byte) types.Error {
 	store := u.Store()
 	var er error
 	switch actorType {
@@ -56,7 +56,7 @@ func (u *UtilityContext) SetActorUnstaking(address []byte, unstakingHeight int64
 	return nil
 }
 
-func (u *UtilityContext) DeleteActor(address []byte, actorType typesUtil.ActorType) types.Error {
+func (u *UtilityContext) DeleteActor(actorType typesUtil.ActorType, address []byte) types.Error {
 	var err error
 	store := u.Store()
 	switch actorType {
@@ -75,7 +75,7 @@ func (u *UtilityContext) DeleteActor(address []byte, actorType typesUtil.ActorTy
 	return nil
 }
 
-func (u *UtilityContext) SetActorPauseHeight(address []byte, actorType typesUtil.ActorType, height int64) types.Error {
+func (u *UtilityContext) SetActorPauseHeight(actorType typesUtil.ActorType, address []byte, height int64) types.Error {
 	var err error
 	store := u.Store()
 	if err := store.SetAppPauseHeight(address, height); err != nil {
@@ -99,7 +99,7 @@ func (u *UtilityContext) SetActorPauseHeight(address []byte, actorType typesUtil
 
 // getters
 
-func (u *UtilityContext) GetActorStakedTokens(address []byte, actorType typesUtil.ActorType) (*big.Int, types.Error) {
+func (u *UtilityContext) GetActorStakedTokens(actorType typesUtil.ActorType, address []byte) (*big.Int, types.Error) {
 	store := u.Store()
 	height, er := store.GetHeight()
 	if er != nil {
@@ -174,7 +174,7 @@ func (u *UtilityContext) GetMinimumPauseBlocks(actorType typesUtil.ActorType) (m
 	return
 }
 
-func (u *UtilityContext) GetPauseHeight(address []byte, actorType typesUtil.ActorType) (pauseHeight int64, err types.Error) {
+func (u *UtilityContext) GetPauseHeight(actorType typesUtil.ActorType, address []byte) (pauseHeight int64, err types.Error) {
 	store := u.Store()
 	height, er := store.GetHeight()
 	if er != nil {
@@ -196,7 +196,7 @@ func (u *UtilityContext) GetPauseHeight(address []byte, actorType typesUtil.Acto
 	return
 }
 
-func (u *UtilityContext) GetActorStatus(address []byte, actorType typesUtil.ActorType) (status int, err types.Error) {
+func (u *UtilityContext) GetActorStatus(actorType typesUtil.ActorType, address []byte) (status int, err types.Error) {
 	store := u.Store()
 	height, er := store.GetHeight()
 	if er != nil {
@@ -242,7 +242,7 @@ func (u *UtilityContext) GetMinimumStake(actorType typesUtil.ActorType) (*big.In
 	return types.StringToBigInt(minStake)
 }
 
-func (u *UtilityContext) GetStakeAmount(address []byte, actorType typesUtil.ActorType) (*big.Int, types.Error) {
+func (u *UtilityContext) GetStakeAmount(actorType typesUtil.ActorType, address []byte) (*big.Int, types.Error) {
 	var stakeAmount string
 	store := u.Store()
 	height, err := store.GetHeight()
@@ -310,7 +310,7 @@ func (u *UtilityContext) GetMaxChains(actorType typesUtil.ActorType) (maxChains 
 	return
 }
 
-func (u *UtilityContext) GetActorExists(address []byte, actorType typesUtil.ActorType) (bool, types.Error) {
+func (u *UtilityContext) GetActorExists(actorType typesUtil.ActorType, address []byte) (bool, types.Error) {
 	var exists bool
 	store := u.Store()
 	height, err := store.GetHeight()
@@ -333,7 +333,7 @@ func (u *UtilityContext) GetActorExists(address []byte, actorType typesUtil.Acto
 	return exists, nil
 }
 
-func (u *UtilityContext) GetActorOutputAddress(operator []byte, actorType typesUtil.ActorType) (output []byte, err types.Error) {
+func (u *UtilityContext) GetActorOutputAddress(actorType typesUtil.ActorType, operator []byte) (output []byte, err types.Error) {
 	var er error
 	store := u.Store()
 	height, er := store.GetHeight()
@@ -358,8 +358,8 @@ func (u *UtilityContext) GetActorOutputAddress(operator []byte, actorType typesU
 
 // calculators
 
-func (u *UtilityContext) BurnActor(address []byte, percentage int, actorType typesUtil.ActorType) types.Error {
-	tokens, err := u.GetActorStakedTokens(address, actorType)
+func (u *UtilityContext) BurnActor(actorType typesUtil.ActorType, percentage int, address []byte) types.Error {
+	tokens, err := u.GetActorStakedTokens(actorType, address)
 	if err != nil {
 		return err
 	}
@@ -377,7 +377,7 @@ func (u *UtilityContext) BurnActor(address []byte, percentage int, actorType typ
 		return err
 	}
 	// remove from validator
-	if err := u.SetActorStakedTokens(address, newTokensAfterBurn, actorType); err != nil {
+	if err := u.SetActorStakedTokens(actorType, newTokensAfterBurn, address); err != nil {
 		return err
 	}
 	// check to see if they fell below minimum stake
@@ -391,7 +391,7 @@ func (u *UtilityContext) BurnActor(address []byte, percentage int, actorType typ
 		if err != nil {
 			return err
 		}
-		if err := u.SetActorUnstaking(address, unstakingHeight, actorType); err != nil {
+		if err := u.SetActorUnstaking(actorType, unstakingHeight, address); err != nil {
 			return err
 		}
 	}
@@ -436,7 +436,7 @@ func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.
 	return types.BigIntToString(result), nil
 }
 
-func (u *UtilityContext) CheckAboveMinStake(amount string, actorType typesUtil.ActorType) (a *big.Int, err types.Error) {
+func (u *UtilityContext) CheckAboveMinStake(actorType typesUtil.ActorType, amount string) (a *big.Int, err types.Error) {
 	minStake, er := u.GetMinimumStake(actorType)
 	if er != nil {
 		return nil, err
@@ -451,7 +451,7 @@ func (u *UtilityContext) CheckAboveMinStake(amount string, actorType typesUtil.A
 	return // for convenience this returns amount as a big.Int
 }
 
-func (u *UtilityContext) CheckBelowMaxChains(chains []string, actorType typesUtil.ActorType) types.Error {
+func (u *UtilityContext) CheckBelowMaxChains(actorType typesUtil.ActorType, chains []string) types.Error {
 	// validators don't have chains field
 	if actorType != typesUtil.ActorType_Val {
 		maxChains, err := u.GetMaxChains(actorType)

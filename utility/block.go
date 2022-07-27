@@ -114,7 +114,7 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 			if err != nil {
 				return err
 			}
-			if err = u.BurnActor(address, burnPercentage, typesUtil.ActorType_Val); err != nil {
+			if err = u.BurnActor(typesUtil.ActorType_Val, burnPercentage, address); err != nil {
 				return err
 			}
 		} else if err := u.SetValidatorMissedBlocks(address, numberOfMissedBlocks); err != nil {
@@ -158,7 +158,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err types.Error) {
 			if err = u.AddAccountAmountString(actor.GetOutputAddress(), actor.GetStakeAmount()); err != nil {
 				return err
 			}
-			if err = u.DeleteActor(actor.GetAddress(), actorType); err != nil {
+			if err = u.DeleteActor(actorType, actor.GetAddress()); err != nil {
 				return err
 			}
 		}

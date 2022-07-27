@@ -47,9 +47,7 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	require.NoError(t, err)
 
 	persistenceModule := pre_persistence.NewPrePersistenceModule(memdb.New(comparer.DefaultComparer, 10000000), mempool, cfg)
-	if err := persistenceModule.Start(); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, persistenceModule.Start(), "start persistence mod")
 	persistenceContext, err := persistenceModule.NewContext(height)
 	require.NoError(t, err)
 	return utility.UtilityContext{

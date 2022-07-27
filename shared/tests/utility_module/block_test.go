@@ -2,6 +2,7 @@ package utility_module
 
 import (
 	"bytes"
+	"fmt"
 	"math"
 	"math/big"
 	"testing"
@@ -23,14 +24,12 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	require.NoError(t, err)
 	// apply block
 	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
-		t.Fatal(err)
+		require.NoError(t, err, "apply block")
 	}
 	// beginBlock logic verify
 	missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)
 	require.NoError(t, err)
-	if missed != 1 {
-		t.Fatalf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks)
-	}
+	require.True(t, missed == 1, fmt.Sprintf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks))
 	// deliverTx logic verify
 	feeBig, err := ctx.GetMessageSendFee()
 	require.NoError(t, err)
@@ -38,9 +37,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	expectedAfterBalance := big.NewInt(0).Sub(startingBalance, expectedAmountSubtracted)
 	amountAfter, err := ctx.GetAccountAmount(signer.Address())
 	require.NoError(t, err)
-	if amountAfter.Cmp(expectedAfterBalance) != 0 {
-		t.Fatalf("unexpected after balance; expected %v got %v", expectedAfterBalance, amountAfter)
-	}
+	require.True(t, amountAfter.Cmp(expectedAfterBalance) == 0, fmt.Sprintf("unexpected after balance; expected %v got %v", expectedAfterBalance, amountAfter))
 	// end-block logic verify
 	proposerCutPercentage, err := ctx.GetProposerPercentageOfFees()
 	require.NoError(t, err)
@@ -53,9 +50,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	proposerAfterBalance, err := ctx.GetAccountAmount(proposer.Address)
 	require.NoError(t, err)
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
-	if proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0 {
-		t.Fatalf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference)
-	}
+	require.False(t, proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0, fmt.Sprintf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference))
 }
 
 func TestUtilityContext_BeginBlock(t *testing.T) {
@@ -68,14 +63,12 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	require.NoError(t, err)
 	// apply block
 	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
-		t.Fatal(err)
+		require.NoError(t, err)
 	}
 	// beginBlock logic verify
 	missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)
 	require.NoError(t, err)
-	if missed != 1 {
-		t.Fatalf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks)
-	}
+	require.False(t, missed != 1, fmt.Sprintf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks))
 }
 
 func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
@@ -83,16 +76,14 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 	actor := GetAllTestingApps(t, ctx)[0]
 	err := ctx.Context.SetAppMaxPausedBlocks(0)
 	require.NoError(t, err)
-	if err := ctx.SetActorPauseHeight(actor.Address, typesUtil.ActorType_App, 0); err != nil {
-		t.Fatal(err)
+	if err := ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, 0); err != nil {
+		require.NoError(t, err)
 	}
 	if err := ctx.BeginUnstakingMaxPaused(); err != nil {
-		t.Fatal(err)
+		require.NoError(t, err)
 	}
-	status, err := ctx.GetActorStatus(actor.Address, typesUtil.ActorType_App)
-	if status != 1 {
-		t.Fatalf("incorrect status; expected %d got %d", 1, actor.Status)
-	}
+	status, err := ctx.GetActorStatus(typesUtil.ActorType_App, actor.Address)
+	require.False(t, status != 1, fmt.Sprintf("incorrect status; expected %d got %d", 1, actor.Status))
 }
 
 func TestUtilityContext_EndBlock(t *testing.T) {
@@ -107,7 +98,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	require.NoError(t, err)
 	// apply block
 	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
-		t.Fatal(err)
+		require.NoError(t, err)
 	}
 	// deliverTx logic verify
 	feeBig, err := ctx.GetMessageSendFee()
@@ -124,9 +115,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	proposerAfterBalance, err := ctx.GetAccountAmount(proposer.Address)
 	require.NoError(t, err)
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
-	if proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0 {
-		t.Fatalf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference)
-	}
+	require.False(t, proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0, fmt.Sprintf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference))
 }
 
 func TestUtilityContext_GetAppHash(t *testing.T) {
@@ -134,40 +123,32 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 	appHashTest, err := ctx.GetAppHash()
 	require.NoError(t, err)
 	appHashSource, er := ctx.Context.AppHash()
-	if er != nil {
-		t.Fatal(er)
-	}
-	if !bytes.Equal(appHashSource, appHashTest) {
-		t.Fatalf("unexpected appHash, expected %v got %v", appHashSource, appHashTest)
-	}
+	require.NoError(t, er)
+	require.False(t, !bytes.Equal(appHashSource, appHashTest), fmt.Sprintf("unexpected appHash, expected %v got %v", appHashSource, appHashTest))
 }
 
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	ctx.SetPoolAmount(typesGenesis.AppStakePoolName, big.NewInt(math.MaxInt64))
 	if err := ctx.Context.SetAppUnstakingBlocks(0); err != nil {
-		t.Fatal(err)
+		require.NoError(t, err)
 	}
 	err := ctx.Context.SetAppMaxPausedBlocks(0)
 	if err != nil {
-		t.Fatal(err)
+		require.NoError(t, err)
 	}
 	actors := GetAllTestingApps(t, ctx)
 	for _, actor := range actors {
-		if actor.Status != typesUtil.StakedStatus {
-			t.Fatal("wrong starting status")
-		}
-		if err := ctx.SetActorPauseHeight(actor.Address, typesUtil.ActorType_App, 1); err != nil {
-			t.Fatal(err)
+		require.False(t, actor.Status != typesUtil.StakedStatus, fmt.Sprintf("wrong starting status"))
+		if err := ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, 1); err != nil {
+			require.NoError(t, err)
 		}
 	}
 	if err := ctx.UnstakeActorPausedBefore(2, typesUtil.ActorType_App); err != nil {
-		t.Fatal(err)
+		require.NoError(t, err)
 	}
 	if err := ctx.UnstakeActorsThatAreReady(); err != nil {
-		t.Fatal(err)
+		require.NoError(t, err)
 	}
-	if len(GetAllTestingApps(t, ctx)) != 0 {
-		t.Fatal("validators still exists after unstake that are ready() call")
-	}
+	require.False(t, len(GetAllTestingApps(t, ctx)) != 0, fmt.Sprintf("validators still exists after unstake that are ready() call"))
 }

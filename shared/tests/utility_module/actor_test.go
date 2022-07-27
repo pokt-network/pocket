@@ -2,6 +2,7 @@ package utility_module
 
 import (
 	"bytes"
+	"fmt"
 	"math"
 	"math/big"
 	"reflect"
@@ -17,13 +18,11 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-func TestUtilityContext_HandleMessageStakeApp(t *testing.T) {
+func TestUtilityContext_HandleMessageStake(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	pubKey, _ := crypto.GeneratePublicKey()
 	out, _ := crypto.GenerateAddress()
-	if err := ctx.SetAccountAmount(out, defaultAmount); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.SetAccountAmount(out, defaultAmount), "set account amount")
 	msg := &typesUtil.MessageStake{
 		PublicKey:     pubKey.Bytes(),
 		Chains:        defaultTestingChains,
@@ -31,9 +30,7 @@ func TestUtilityContext_HandleMessageStakeApp(t *testing.T) {
 		OutputAddress: out,
 		Signer:        out,
 	}
-	if err := ctx.HandleStakeMessage(msg); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.HandleStakeMessage(msg), "handle stake message")
 	actors := GetAllTestingApps(t, ctx)
 	var actor *genesis.App
 	for _, a := range actors {
@@ -42,33 +39,17 @@ func TestUtilityContext_HandleMessageStakeApp(t *testing.T) {
 			break
 		}
 	}
-	if !bytes.Equal(actor.Address, pubKey.Address()) {
-		t.Fatalf("incorrect address, expected %v, got %v", pubKey.Address(), actor.Address)
-	}
-	if actor.Status != typesUtil.StakedStatus {
-		t.Fatalf("incorrect status, expected %v, got %v", typesUtil.StakedStatus, actor.Status)
-	}
-	if !reflect.DeepEqual(actor.Chains, msg.Chains) {
-		t.Fatalf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains)
-	}
-	if actor.Paused != false {
-		t.Fatalf("incorrect paused status, expected %v, got %v", false, actor.Paused)
-	}
-	if actor.PausedHeight != types.HeightNotUsed {
-		t.Fatalf("incorrect paused height, expected %v, got %v", types.HeightNotUsed, actor.PausedHeight)
-	}
-	if actor.StakedTokens != defaultAmountString {
-		t.Fatalf("incorrect stake amount, expected %v, got %v", defaultAmountString, actor.StakedTokens)
-	}
-	if actor.UnstakingHeight != types.HeightNotUsed {
-		t.Fatalf("incorrect unstaking height, expected %v, got %v", types.HeightNotUsed, actor.UnstakingHeight)
-	}
-	if !bytes.Equal(actor.Output, out) {
-		t.Fatalf("incorrect output address, expected %v, got %v", actor.Output, out)
-	}
+	require.True(t, bytes.Equal(actor.Address, pubKey.Address()), fmt.Sprintf("incorrect address, expected %v, got %v", pubKey.Address(), actor.Address))
+	require.True(t, actor.Status == typesUtil.StakedStatus, fmt.Sprintf("incorrect status, expected %v, got %v", typesUtil.StakedStatus, actor.Status))
+	require.Equal(t, actor.Chains, msg.Chains, fmt.Sprintf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains))
+	require.False(t, actor.Paused, fmt.Sprintf("incorrect paused status, expected %v, got %v", false, actor.Paused))
+	require.True(t, actor.PausedHeight == types.HeightNotUsed, fmt.Sprintf("incorrect paused height, expected %v, got %v", types.HeightNotUsed, actor.PausedHeight))
+	require.True(t, actor.StakedTokens == defaultAmountString, fmt.Sprintf("incorrect stake amount, expected %v, got %v", defaultAmountString, actor.StakedTokens))
+	require.True(t, actor.UnstakingHeight == types.HeightNotUsed, fmt.Sprintf("incorrect unstaking height, expected %v, got %v", types.HeightNotUsed, actor.UnstakingHeight))
+	require.True(t, bytes.Equal(actor.Output, out), fmt.Sprintf("incorrect output address, expected %v, got %v", actor.Output, out))
 }
 
-func TestUtilityContext_HandleMessageEditStakeApp(t *testing.T) {
+func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingApps(t, ctx)[0]
 	msg := &typesUtil.MessageEditStake{
@@ -80,186 +61,123 @@ func TestUtilityContext_HandleMessageEditStakeApp(t *testing.T) {
 	}
 	msgChainsEdited := msg
 	msgChainsEdited.Chains = defaultTestingChainsEdited
-	if err := ctx.HandleEditStakeMessage(msgChainsEdited); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.HandleEditStakeMessage(msgChainsEdited), "handle edit stake message")
 	actor = GetAllTestingApps(t, ctx)[0]
-	if !reflect.DeepEqual(actor.Chains, msg.Chains) {
-		t.Fatalf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains)
-	}
-	if actor.Paused != false {
-		t.Fatalf("incorrect paused status, expected %v, got %v", false, actor.Paused)
-	}
-	if actor.PausedHeight != types.HeightNotUsed {
-		t.Fatalf("incorrect paused height, expected %v, got %v", types.HeightNotUsed, actor.PausedHeight)
-	}
-	if !reflect.DeepEqual(actor.Chains, msgChainsEdited.Chains) {
-		t.Fatalf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains)
-	}
-	if actor.StakedTokens != defaultAmountString {
-		t.Fatalf("incorrect staked tokens, expected %v, got %v", defaultAmountString, actor.StakedTokens)
-	}
-	if actor.UnstakingHeight != types.HeightNotUsed {
-		t.Fatalf("incorrect unstaking height, expected %v, got %v", types.HeightNotUsed, actor.UnstakingHeight)
-	}
-	if !bytes.Equal(actor.Output, actor.Output) {
-		t.Fatalf("incorrect output address, expected %v, got %v", actor.Output, actor.Output)
-	}
+	require.True(t, reflect.DeepEqual(actor.Chains, msg.Chains), fmt.Sprintf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains))
+	require.True(t, actor.Paused == false, fmt.Sprintf("incorrect paused status, expected %v, got %v", false, actor.Paused))
+	require.True(t, actor.PausedHeight == types.HeightNotUsed, fmt.Sprintf("incorrect paused height, expected %v, got %v", types.HeightNotUsed, actor.PausedHeight))
+	require.True(t, reflect.DeepEqual(actor.Chains, msgChainsEdited.Chains), fmt.Sprintf("incorrect chains, expected %v, got %v", msg.Chains, actor.Chains))
+	require.True(t, actor.StakedTokens == defaultAmountString, fmt.Sprintf("incorrect staked tokens, expected %v, got %v", defaultAmountString, actor.StakedTokens))
+	require.True(t, actor.UnstakingHeight == types.HeightNotUsed, fmt.Sprintf("incorrect unstaking height, expected %v, got %v", types.HeightNotUsed, actor.UnstakingHeight))
 	amountEdited := defaultAmount.Add(defaultAmount, big.NewInt(1))
 	amountEditedString := types.BigIntToString(amountEdited)
 	msgAmountEdited := msg
 	msgAmountEdited.Amount = amountEditedString
-	if err := ctx.HandleEditStakeMessage(msgAmountEdited); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.HandleEditStakeMessage(msgAmountEdited), "handle edit stake message")
 	actor = GetAllTestingApps(t, ctx)[0]
-	if actor.StakedTokens != types.BigIntToString(amountEdited) {
-		t.Fatalf("incorrect amount status, expected %v, got %v", amountEdited, actor.StakedTokens)
-	}
+	require.True(t, actor.StakedTokens == types.BigIntToString(amountEdited), fmt.Sprintf("incorrect amount status, expected %v, got %v", amountEdited, actor.StakedTokens))
 }
 
-func TestUtilityContext_HandleMessageUnpauseApp(t *testing.T) {
+func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
-	if err := ctx.Context.SetAppMinimumPauseBlocks(0); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.Context.SetAppMinimumPauseBlocks(0), "set minimum pause blocks")
 	actor := GetAllTestingApps(t, ctx)[0]
-	if err := ctx.SetActorPauseHeight(actor.Address, typesUtil.ActorType_App, 1); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, 1), "set pause height")
 	actor = GetAllTestingApps(t, ctx)[0]
-	if !actor.Paused {
-		t.Fatal("actor isn't paused after")
-	}
+	require.True(t, actor.Paused, fmt.Sprintf("actor isn't paused after"))
 	msgU := &typesUtil.MessageUnpause{
 		Address:   actor.Address,
 		Signer:    actor.Address,
 		ActorType: typesUtil.ActorType_App,
 	}
-	if err := ctx.HandleUnpauseMessage(msgU); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.HandleUnpauseMessage(msgU), "handle unpause message")
 	actor = GetAllTestingApps(t, ctx)[0]
-	if actor.Paused {
-		t.Fatal("actor is paused after")
-	}
+	require.True(t, !actor.Paused, fmt.Sprintf("actor is paused after"))
 }
 
-func TestUtilityContext_HandleMessageUnstakeApp(t *testing.T) {
+func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
-	if err := ctx.Context.SetAppMinimumPauseBlocks(0); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.Context.SetAppMinimumPauseBlocks(0), "set min pause blocks")
 	actor := GetAllTestingApps(t, ctx)[0]
 	msg := &typesUtil.MessageUnstake{
 		Address:   actor.Address,
 		Signer:    actor.Address,
 		ActorType: typesUtil.ActorType_App,
 	}
-	if err := ctx.HandleUnstakeMessage(msg); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.HandleUnstakeMessage(msg), "handle unstake message")
 	actor = GetAllTestingApps(t, ctx)[0]
-	if actor.Status != typesUtil.UnstakingStatus {
-		t.Fatal("actor isn't unstaking")
-	}
+	require.True(t, actor.Status == typesUtil.UnstakingStatus, "actor isn't unstaking")
 }
 
-func TestUtilityContext_BeginUnstakingMaxPausedApps(t *testing.T) {
+func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingApps(t, ctx)[0]
 	err := ctx.Context.SetAppMaxPausedBlocks(0)
 	require.NoError(t, err)
-	if err = ctx.SetActorPauseHeight(actor.Address, typesUtil.ActorType_App, 0); err != nil {
-		t.Fatal(err)
-	}
-	if err = ctx.BeginUnstakingMaxPaused(); err != nil {
-		t.Fatal(err)
-	}
-	status, err := ctx.GetActorStatus(actor.Address, typesUtil.ActorType_App)
-	if status != 1 {
-		t.Fatalf("incorrect status; expected %d got %d", 1, actor.Status)
-	}
+	require.NoError(t, ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, 0), "set actor pause height")
+	require.NoError(t, ctx.BeginUnstakingMaxPaused(), "begin unstaking max paused")
+	status, err := ctx.GetActorStatus(typesUtil.ActorType_App, actor.Address)
+	require.True(t, status == 1, fmt.Sprintf("incorrect status; expected %d got %d", 1, actor.Status))
 }
 
-func TestUtilityContext_CalculateAppRelays(t *testing.T) {
+func TestUtilityContext_CalculateRelays(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingApps(t, ctx)[0]
 	newMaxRelays, err := ctx.CalculateAppRelays(actor.StakedTokens)
 	require.NoError(t, err)
-	if actor.MaxRelays != newMaxRelays {
-		t.Fatalf("unexpected max relay calculation; got %v wanted %v", actor.MaxRelays, newMaxRelays)
-	}
+	require.True(t, actor.MaxRelays == newMaxRelays, fmt.Sprintf("unexpected max relay calculation; got %v wanted %v", actor.MaxRelays, newMaxRelays))
 }
 
-func TestUtilityContext_CalculateAppUnstakingHeight(t *testing.T) {
+func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	unstakingBlocks, err := ctx.GetAppUnstakingBlocks()
 	require.NoError(t, err)
 	unstakingHeight, err := ctx.GetUnstakingHeight(typesUtil.ActorType_App)
 	require.NoError(t, err)
-	if unstakingBlocks != unstakingHeight {
-		t.Fatalf("unexpected unstakingHeight; got %d expected %d", unstakingBlocks, unstakingHeight)
-	}
+	require.True(t, unstakingBlocks == unstakingHeight, fmt.Sprintf("unexpected unstakingHeight; got %d expected %d", unstakingBlocks, unstakingHeight))
 }
 
-func TestUtilityContext_DeleteApp(t *testing.T) {
+func TestUtilityContext_Delete(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingApps(t, ctx)[0]
-	if err := ctx.DeleteActor(actor.Address, typesUtil.ActorType_App); err != nil {
-		t.Fatal(err)
-	}
-	if len(GetAllTestingApps(t, ctx)) > 0 {
-		t.Fatal("deletion unsuccessful")
-	}
+	require.NoError(t, ctx.DeleteActor(typesUtil.ActorType_App, actor.Address), "delete actor")
+	require.False(t, len(GetAllTestingApps(t, ctx)) > 0, fmt.Sprintf("deletion unsuccessful"))
 }
 
-func TestUtilityContext_GetAppExists(t *testing.T) {
+func TestUtilityContext_GetExists(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	randAddr, _ := crypto.GenerateAddress()
 	actor := GetAllTestingApps(t, ctx)[0]
-	exists, err := ctx.GetActorExists(actor.Address, typesUtil.ActorType_App)
+	exists, err := ctx.GetActorExists(typesUtil.ActorType_App, actor.Address)
 	require.NoError(t, err)
-	if !exists {
-		t.Fatal("actor that should exist does not")
-	}
-	exists, err = ctx.GetActorExists(randAddr, typesUtil.ActorType_App)
+	require.True(t, exists, fmt.Sprintf("actor that should exist does not"))
+	exists, err = ctx.GetActorExists(typesUtil.ActorType_App, randAddr)
 	require.NoError(t, err)
-	if exists {
-		t.Fatal("actor that shouldn't exist does")
-	}
+	require.True(t, !exists, fmt.Sprintf("actor that shouldn't exist does"))
 }
 
-func TestUtilityContext_GetAppOutputAddress(t *testing.T) {
+func TestUtilityContext_GetOutputAddress(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingApps(t, ctx)[0]
-	outputAddress, err := ctx.GetActorOutputAddress(actor.Address, typesUtil.ActorType_App)
+	outputAddress, err := ctx.GetActorOutputAddress(typesUtil.ActorType_App, actor.Address)
 	require.NoError(t, err)
-	if !bytes.Equal(outputAddress, actor.Output) {
-		t.Fatalf("unexpected output address, expected %v got %v", actor.Output, outputAddress)
-	}
+	require.True(t, bytes.Equal(outputAddress, actor.Output), fmt.Sprintf("unexpected output address, expected %v got %v", actor.Output, outputAddress))
 }
 
-func TestUtilityContext_GetAppPauseHeightIfExists(t *testing.T) {
+func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actor := GetAllTestingApps(t, ctx)[0]
 	pauseHeight := int64(100)
-	if err := ctx.SetActorPauseHeight(actor.Address, typesUtil.ActorType_App, pauseHeight); err != nil {
-		t.Fatal(err)
-	}
-	gotPauseHeight, err := ctx.GetPauseHeight(actor.Address, typesUtil.ActorType_App)
+	require.NoError(t, ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, pauseHeight), "set actor pause height")
+	gotPauseHeight, err := ctx.GetPauseHeight(typesUtil.ActorType_App, actor.Address)
 	require.NoError(t, err)
-	if pauseHeight != gotPauseHeight {
-		t.Fatal("unable to get pause height from the actor")
-	}
+	require.True(t, pauseHeight == gotPauseHeight, fmt.Sprintf("unable to get pause height from the actor"))
 	addr, _ := crypto.GenerateAddress()
-	_, err = ctx.GetPauseHeight(addr, typesUtil.ActorType_App)
-	if err == nil {
-		t.Fatal("no error on non-existent actor pause height")
-	}
+	_, err = ctx.GetPauseHeight(typesUtil.ActorType_App, addr)
+	require.Error(t, err, "no error on non-existent actor pause height")
 }
 
-func TestUtilityContext_GetMessageEditStakeAppSignerCandidates(t *testing.T) {
+func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingApps(t, ctx)
 	msgEditStake := &typesUtil.MessageEditStake{
@@ -269,12 +187,10 @@ func TestUtilityContext_GetMessageEditStakeAppSignerCandidates(t *testing.T) {
 	}
 	candidates, err := ctx.GetMessageEditStakeSignerCandidates(msgEditStake)
 	require.NoError(t, err)
-	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
-		t.Fatal(err)
-	}
+	require.False(t, !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address), "incorrect signer candidates")
 }
 
-func TestUtilityContext_GetMessageStakeAppSignerCandidates(t *testing.T) {
+func TestUtilityContext_GetMessageStakeSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	pubKey, _ := crypto.GeneratePublicKey()
 	addr := pubKey.Address()
@@ -287,12 +203,10 @@ func TestUtilityContext_GetMessageStakeAppSignerCandidates(t *testing.T) {
 	}
 	candidates, err := ctx.GetMessageStakeSignerCandidates(msg)
 	require.NoError(t, err)
-	if !bytes.Equal(candidates[0], out) || !bytes.Equal(candidates[1], addr) {
-		t.Fatal(err)
-	}
+	require.False(t, !bytes.Equal(candidates[0], out) || !bytes.Equal(candidates[1], addr), "incorrect signer candidates")
 }
 
-func TestUtilityContext_GetMessageUnpauseAppSignerCandidates(t *testing.T) {
+func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingApps(t, ctx)
 	msg := &typesUtil.MessageUnpause{
@@ -300,12 +214,10 @@ func TestUtilityContext_GetMessageUnpauseAppSignerCandidates(t *testing.T) {
 	}
 	candidates, err := ctx.GetMessageUnpauseSignercandidates(msg)
 	require.NoError(t, err)
-	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
-		t.Fatal(err)
-	}
+	require.False(t, !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address), "incorrect signer candidates")
 }
 
-func TestUtilityContext_GetMessageUnstakeAppSignerCandidates(t *testing.T) {
+func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	actors := GetAllTestingApps(t, ctx)
 	msg := &typesUtil.MessageUnstake{
@@ -313,67 +225,38 @@ func TestUtilityContext_GetMessageUnstakeAppSignerCandidates(t *testing.T) {
 	}
 	candidates, err := ctx.GetMessageUnstakeSignerCandidates(msg)
 	require.NoError(t, err)
-	if !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address) {
-		t.Fatal(err)
-	}
+	require.False(t, !bytes.Equal(candidates[0], actors[0].Output) || !bytes.Equal(candidates[1], actors[0].Address), "incorrect signer candidates")
 }
 
-func TestUtilityContext_UnstakeAppsPausedBefore(t *testing.T) {
+func TestUtilityContext_UnstakesPausedBefore(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingApps(t, ctx)[0]
-	if actor.Status != typesUtil.StakedStatus {
-		t.Fatal("wrong starting status")
-	}
-	if err := ctx.SetActorPauseHeight(actor.Address, typesUtil.ActorType_App, 0); err != nil {
-		t.Fatal(err)
-	}
+	require.True(t, actor.Status == typesUtil.StakedStatus, fmt.Sprintf("wrong starting status"))
+	require.NoError(t, ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, 0), "set actor pause height")
 	err := ctx.Context.SetAppMaxPausedBlocks(0)
 	require.NoError(t, err)
-	if err := ctx.UnstakeActorPausedBefore(0, typesUtil.ActorType_App); err != nil {
-		t.Fatal(err)
-	}
-	if err := ctx.UnstakeActorPausedBefore(1, typesUtil.ActorType_App); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.UnstakeActorPausedBefore(0, typesUtil.ActorType_App), "unstake actor pause before")
+	require.NoError(t, ctx.UnstakeActorPausedBefore(1, typesUtil.ActorType_App), "unstake actor pause before height 1")
 	actor = GetAllTestingApps(t, ctx)[0]
-	if actor.Status != typesUtil.UnstakingStatus {
-		t.Fatal("status does not equal unstaking")
-	}
+	require.True(t, actor.Status == typesUtil.UnstakingStatus, fmt.Sprintf("status does not equal unstaking"))
 	unstakingBlocks, err := ctx.GetAppUnstakingBlocks()
 	require.NoError(t, err)
-	if actor.UnstakingHeight != unstakingBlocks+1 {
-		t.Fatal("incorrect unstaking height")
-	}
+	require.True(t, actor.UnstakingHeight == unstakingBlocks+1, fmt.Sprintf("incorrect unstaking height"))
 }
 
-func TestUtilityContext_UnstakeAppsThatAreReady(t *testing.T) {
+func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	ctx.SetPoolAmount(genesis.AppStakePoolName, big.NewInt(math.MaxInt64))
-	if err := ctx.Context.SetAppUnstakingBlocks(0); err != nil {
-		t.Fatal(err)
-	}
-	err := ctx.Context.SetAppMaxPausedBlocks(0)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.Context.SetAppUnstakingBlocks(0), "set unstaking blocks")
+	require.NoError(t, ctx.Context.SetAppMaxPausedBlocks(0), "set max pause blocks")
 	actors := GetAllTestingApps(t, ctx)
 	for _, actor := range actors {
-		if actor.Status != typesUtil.StakedStatus {
-			t.Fatal("wrong starting status")
-		}
-		if err := ctx.SetActorPauseHeight(actor.Address, typesUtil.ActorType_App, 1); err != nil {
-			t.Fatal(err)
-		}
+		require.True(t, actor.Status == typesUtil.StakedStatus, fmt.Sprintf("wrong starting status"))
+		require.NoError(t, ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, 1), "set actor pause height")
 	}
-	if err := ctx.UnstakeActorPausedBefore(2, typesUtil.ActorType_App); err != nil {
-		t.Fatal(err)
-	}
-	if err := ctx.UnstakeActorsThatAreReady(); err != nil {
-		t.Fatal(err)
-	}
-	if len(GetAllTestingApps(t, ctx)) != 0 {
-		t.Fatal("apps still exists after unstake that are ready() call")
-	}
+	require.NoError(t, ctx.UnstakeActorPausedBefore(2, typesUtil.ActorType_App), "set actor pause before")
+	require.NoError(t, ctx.UnstakeActorsThatAreReady(), "unstake actors that are ready")
+	require.True(t, len(GetAllTestingApps(t, ctx)) == 0, fmt.Sprintf("apps still exists after unstake that are ready() call"))
 }
 
 func GetAllTestingApps(t *testing.T, ctx utility.UtilityContext) []*genesis.App {

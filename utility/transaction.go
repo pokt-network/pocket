@@ -181,7 +181,7 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 	// ensure above minimum stake
-	amount, err := u.CheckAboveMinStake(message.Amount, message.ActorType)
+	amount, err := u.CheckAboveMinStake(message.ActorType, message.Amount)
 	if err != nil {
 		return err
 	}
@@ -196,11 +196,11 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 		return types.ErrInsufficientAmount()
 	}
 	// validators don't have chains field
-	if err = u.CheckBelowMaxChains(message.Chains, message.ActorType); err != nil {
+	if err = u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
 		return err
 	}
 	// ensure actor doesn't already exist
-	if exists, err := u.GetActorExists(publicKey.Address(), message.ActorType); err != nil || exists {
+	if exists, err := u.GetActorExists(message.ActorType, publicKey.Address()); err != nil || exists {
 		if exists {
 			return types.ErrAlreadyExists()
 		}
@@ -239,13 +239,13 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 
 func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditStake) types.Error {
 	// ensure actor exists
-	if exists, err := u.GetActorExists(message.Address, message.ActorType); err != nil || !exists {
+	if exists, err := u.GetActorExists(message.ActorType, message.Address); err != nil || !exists {
 		if !exists {
 			return types.ErrNotExists()
 		}
 		return err
 	}
-	currentStakeAmount, err := u.GetStakeAmount(message.Address, message.ActorType)
+	currentStakeAmount, err := u.GetStakeAmount(message.ActorType, message.Address)
 	if err != nil {
 		return err
 	}
@@ -267,7 +267,7 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 	if signerAccountAmount.Sign() == -1 {
 		return types.ErrInsufficientAmount()
 	}
-	if err = u.CheckBelowMaxChains(message.Chains, message.ActorType); err != nil {
+	if err = u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
 		return err
 	}
 	// update account amount
@@ -301,7 +301,7 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 }
 
 func (u *UtilityContext) HandleUnstakeMessage(message *typesUtil.MessageUnstake) types.Error {
-	if status, err := u.GetActorStatus(message.Address, message.ActorType); err != nil || status != typesUtil.StakedStatus {
+	if status, err := u.GetActorStatus(message.ActorType, message.Address); err != nil || status != typesUtil.StakedStatus {
 		if status != typesUtil.StakedStatus {
 			return types.ErrInvalidStatus(status, typesUtil.StakedStatus)
 		}
@@ -311,14 +311,14 @@ func (u *UtilityContext) HandleUnstakeMessage(message *typesUtil.MessageUnstake)
 	if err != nil {
 		return err
 	}
-	if err = u.SetActorUnstaking(message.Address, unstakingHeight, message.ActorType); err != nil {
+	if err = u.SetActorUnstaking(message.ActorType, unstakingHeight, message.Address); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause) types.Error {
-	pausedHeight, err := u.GetPauseHeight(message.Address, message.ActorType)
+	pausedHeight, err := u.GetPauseHeight(message.ActorType, message.Address)
 	if err != nil {
 		return err
 	}
@@ -336,7 +336,7 @@ func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause)
 	if latestHeight < int64(minPauseBlocks)+pausedHeight {
 		return types.ErrNotReadyToUnpause()
 	}
-	if err = u.SetActorPauseHeight(message.Address, message.ActorType, types.HeightNotUsed); err != nil {
+	if err = u.SetActorPauseHeight(message.ActorType, message.Address, types.HeightNotUsed); err != nil {
 		return err
 	}
 	return nil
@@ -365,7 +365,7 @@ func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubl
 	if err != nil {
 		return err
 	}
-	if err := u.BurnActor(doubleSigner, burnPercentage, typesUtil.ActorType_Val); err != nil {
+	if err := u.BurnActor(typesUtil.ActorType_Val, burnPercentage, doubleSigner); err != nil {
 		return err
 	}
 	return nil
@@ -411,7 +411,7 @@ func (u *UtilityContext) GetMessageStakeSignerCandidates(msg *typesUtil.MessageS
 }
 
 func (u *UtilityContext) GetMessageEditStakeSignerCandidates(msg *typesUtil.MessageEditStake) ([][]byte, types.Error) {
-	output, err := u.GetActorOutputAddress(msg.Address, msg.ActorType)
+	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -422,7 +422,7 @@ func (u *UtilityContext) GetMessageEditStakeSignerCandidates(msg *typesUtil.Mess
 }
 
 func (u *UtilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.MessageUnstake) ([][]byte, types.Error) {
-	output, err := u.GetActorOutputAddress(msg.Address, msg.ActorType)
+	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -433,7 +433,7 @@ func (u *UtilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.Messag
 }
 
 func (u *UtilityContext) GetMessageUnpauseSignercandidates(msg *typesUtil.MessageUnpause) ([][]byte, types.Error) {
-	output, err := u.GetActorOutputAddress(msg.Address, msg.ActorType)
+	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
 	}

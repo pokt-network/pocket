@@ -115,10 +115,6 @@ func TestUpdateApp(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	//before, err := ctx.(*PrePersistenceContext).GetApp(actor.Address, height)
-	//require.NoError(t, err)
-	//tokens := before.StakedTokens
-	//bigBeforeTokens, err := types.StringToBigInt(tokens)
 	require.NoError(t, err)
 	err = ctx.UpdateApp(actor.Address, zero, one, typesGenesis.DefaultChains)
 	require.NoError(t, err)

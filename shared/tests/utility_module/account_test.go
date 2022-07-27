@@ -2,6 +2,7 @@ package utility_module
 
 import (
 	"bytes"
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -20,15 +21,11 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	initialAmount, err := types.StringToBigInt(acc.Amount)
 	require.NoError(t, err)
 	addAmount := big.NewInt(1)
-	if err := ctx.AddAccountAmount(acc.Address, addAmount); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.AddAccountAmount(acc.Address, addAmount), "add account amount")
 	afterAmount, err := ctx.GetAccountAmount(acc.Address)
 	require.NoError(t, err)
 	expected := initialAmount.Add(initialAmount, addAmount)
-	if afterAmount.Cmp(expected) != 0 {
-		t.Fatalf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount)
-	}
+	require.True(t, afterAmount.Cmp(expected) == 0, fmt.Sprintf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount))
 }
 
 func TestUtilityContext_AddAccountAmountString(t *testing.T) {
@@ -38,15 +35,11 @@ func TestUtilityContext_AddAccountAmountString(t *testing.T) {
 	require.NoError(t, err)
 	addAmount := big.NewInt(1)
 	addAmountString := types.BigIntToString(addAmount)
-	if err := ctx.AddAccountAmountString(acc.Address, addAmountString); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.AddAccountAmountString(acc.Address, addAmountString), "add account amount string")
 	afterAmount, err := ctx.GetAccountAmount(acc.Address)
 	require.NoError(t, err)
 	expected := initialAmount.Add(initialAmount, addAmount)
-	if afterAmount.Cmp(expected) != 0 {
-		t.Fatalf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount)
-	}
+	require.True(t, afterAmount.Cmp(expected) == 0, fmt.Sprintf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount))
 }
 
 func TestUtilityContext_AddPoolAmount(t *testing.T) {
@@ -55,15 +48,11 @@ func TestUtilityContext_AddPoolAmount(t *testing.T) {
 	initialAmount, err := types.StringToBigInt(pool.Account.Amount)
 	require.NoError(t, err)
 	addAmount := big.NewInt(1)
-	if err := ctx.AddPoolAmount(pool.Name, addAmount); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.AddPoolAmount(pool.Name, addAmount), "add pool amount")
 	afterAmount, err := ctx.GetPoolAmount(pool.Name)
 	require.NoError(t, err)
 	expected := initialAmount.Add(initialAmount, addAmount)
-	if afterAmount.Cmp(expected) != 0 {
-		t.Fatalf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount)
-	}
+	require.True(t, afterAmount.Cmp(expected) == 0, fmt.Sprintf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount))
 }
 
 func TestUtilityContext_HandleMessageSend(t *testing.T) {
@@ -76,20 +65,14 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 	recipientBalanceBefore, err := types.StringToBigInt(accs[1].Amount)
 	require.NoError(t, err)
 	msg := NewTestingSendMessage(t, accs[0].Address, accs[1].Address, sendAmountString)
-	if err := ctx.HandleMessageSend(&msg); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.HandleMessageSend(&msg), "handle message send")
 	accs = GetAllTestingAccounts(t, ctx)
 	senderBalanceAfter, err := types.StringToBigInt(accs[0].Amount)
 	require.NoError(t, err)
 	recipientBalanceAfter, err := types.StringToBigInt(accs[1].Amount)
 	require.NoError(t, err)
-	if big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter).Cmp(sendAmount) != 0 {
-		t.Fatal("unexpected sender balance")
-	}
-	if big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore).Cmp(sendAmount) != 0 {
-		t.Fatal("unexpected recipient balance")
-	}
+	require.True(t, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter).Cmp(sendAmount) == 0, fmt.Sprintf("unexpected sender balance"))
+	require.True(t, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore).Cmp(sendAmount) == 0, fmt.Sprintf("unexpected recipient balance"))
 }
 
 func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
@@ -100,12 +83,8 @@ func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
 	msg := NewTestingSendMessage(t, accs[0].Address, accs[1].Address, sendAmountString)
 	candidates, err := ctx.GetMessageSendSignerCandidates(&msg)
 	require.NoError(t, err)
-	if len(candidates) != 1 {
-		t.Fatalf("wrong number of candidates, expected %d, got %d", 1, len(candidates))
-	}
-	if !bytes.Equal(candidates[0], accs[0].Address) {
-		t.Fatal("unexpected signer candidate")
-	}
+	require.True(t, len(candidates) == 1, fmt.Sprintf("wrong number of candidates, expected %d, got %d", 1, len(candidates)))
+	require.True(t, bytes.Equal(candidates[0], accs[0].Address), fmt.Sprintf("unexpected signer candidate"))
 }
 
 func TestUtilityContext_InsertPool(t *testing.T) {
@@ -113,29 +92,21 @@ func TestUtilityContext_InsertPool(t *testing.T) {
 	testPoolName := "TEST_POOL"
 	addr, _ := crypto.GenerateAddress()
 	amount := types.BigIntToString(big.NewInt(1000))
-	if err := ctx.InsertPool(testPoolName, addr, amount); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.InsertPool(testPoolName, addr, amount), "insert pool")
 	gotAmount, err := ctx.GetPoolAmount(testPoolName)
 	require.NoError(t, err)
 	gotAmountString := types.BigIntToString(gotAmount)
-	if amount != gotAmountString {
-		t.Fatalf("unexpected amount, expected %s got %s", amount, gotAmountString)
-	}
+	require.True(t, amount == gotAmountString, fmt.Sprintf("unexpected amount, expected %s got %s", amount, gotAmountString))
 }
 
 func TestUtilityContext_SetAccountAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	addr, _ := crypto.GenerateAddress()
 	amount := big.NewInt(100)
-	if err := ctx.SetAccountAmount(addr, amount); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.SetAccountAmount(addr, amount), "set account amount")
 	gotAmount, err := ctx.GetAccountAmount(addr)
 	require.NoError(t, err)
-	if gotAmount.Cmp(amount) != 0 {
-		t.Fatalf("unexpected amounts: expected %v, got %v", amount, gotAmount)
-	}
+	require.True(t, gotAmount.Cmp(amount) == 0, fmt.Sprintf("unexpected amounts: expected %v, got %v", amount, gotAmount))
 }
 
 func TestUtilityContext_SetAccountWithAmountString(t *testing.T) {
@@ -143,14 +114,10 @@ func TestUtilityContext_SetAccountWithAmountString(t *testing.T) {
 	addr, _ := crypto.GenerateAddress()
 	amount := big.NewInt(100)
 	amountString := types.BigIntToString(amount)
-	if err := ctx.SetAccountWithAmountString(addr, amountString); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.SetAccountWithAmountString(addr, amountString), "set account amount string")
 	gotAmount, err := ctx.GetAccountAmount(addr)
 	require.NoError(t, err)
-	if gotAmount.Cmp(amount) != 0 {
-		t.Fatalf("unexpected amounts: expected %v, got %v", amount, gotAmount)
-	}
+	require.True(t, gotAmount.Cmp(amount) == 0, fmt.Sprintf("unexpected amounts: expected %v, got %v", amount, gotAmount))
 }
 
 func TestUtilityContext_SetPoolAmount(t *testing.T) {
@@ -160,17 +127,11 @@ func TestUtilityContext_SetPoolAmount(t *testing.T) {
 	beforeAmountBig, err := types.StringToBigInt(beforeAmount)
 	require.NoError(t, err)
 	expectedAfterAmount := big.NewInt(100)
-	if err := ctx.SetPoolAmount(pool.Name, expectedAfterAmount); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.SetPoolAmount(pool.Name, expectedAfterAmount), "set pool amount")
 	amount, err := ctx.GetPoolAmount(pool.Name)
 	require.NoError(t, err)
-	if beforeAmountBig.Cmp(amount) == 0 {
-		t.Fatal("no amount change in pool")
-	}
-	if expectedAfterAmount.Cmp(amount) != 0 {
-		t.Fatalf("unexpected pool amount; expected %v got %v", expectedAfterAmount, amount)
-	}
+	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
+	require.True(t, expectedAfterAmount.Cmp(amount) == 0, fmt.Sprintf("unexpected pool amount; expected %v got %v", expectedAfterAmount, amount))
 }
 
 func TestUtilityContext_SubPoolAmount(t *testing.T) {
@@ -180,18 +141,12 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 	ctx.SetPoolAmount(pool.Name, beforeAmountBig)
 	subAmountBig := big.NewInt(100)
 	subAmount := types.BigIntToString(subAmountBig)
-	if err := ctx.SubPoolAmount(pool.Name, subAmount); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.SubPoolAmount(pool.Name, subAmount), "sub pool amount")
 	amount, err := ctx.GetPoolAmount(pool.Name)
 	require.NoError(t, err)
-	if beforeAmountBig.Cmp(amount) == 0 {
-		t.Fatal("no amount change in pool")
-	}
+	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
-	if expected.Cmp(amount) != 0 {
-		t.Fatalf("unexpected pool amount; expected %v got %v", expected, amount)
-	}
+	require.True(t, expected.Cmp(amount) == 0, fmt.Sprintf("unexpected pool amount; expected %v got %v", expected, amount))
 }
 
 func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
@@ -201,18 +156,12 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	beforeAmountBig, err := types.StringToBigInt(beforeAmount)
 	require.NoError(t, err)
 	subAmountBig := big.NewInt(100)
-	if err := ctx.SubtractAccountAmount(acc.Address, subAmountBig); err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, ctx.SubtractAccountAmount(acc.Address, subAmountBig), "sub account amount")
 	amount, err := ctx.GetAccountAmount(acc.Address)
 	require.NoError(t, err)
-	if beforeAmountBig.Cmp(amount) == 0 {
-		t.Fatal("no amount change in pool")
-	}
+	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
-	if expected.Cmp(amount) != 0 {
-		t.Fatalf("unexpected acc amount; expected %v got %v", expected, amount)
-	}
+	require.True(t, expected.Cmp(amount) == 0, fmt.Sprintf("unexpected acc amount; expected %v got %v", expected, amount))
 }
 
 func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []*genesis.Account {
