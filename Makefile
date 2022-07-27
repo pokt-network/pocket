@@ -27,6 +27,8 @@ help:
 	} \
 	{ lastLine = $$0 }' $(MAKEFILE_LIST)
 
+# Internal helper target - check if docker is installed
+.PHONY: docker_check
 docker_check:
 	{ \
 	if ! builtin type -P "docker" > /dev/null || ! builtin type -P "docker-compose" > /dev/null; then \
@@ -35,6 +37,8 @@ docker_check:
 	fi; \
 	}
 
+# Internal helper target - prompt the user before continuing
+.PHONY: prompt_user
 prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 
