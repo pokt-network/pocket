@@ -29,7 +29,7 @@ help:
 
 docker_check:
 	{ \
-	if ! builtin type -P "docker" > /dev/null || ! builtin type -P "docker-compose" > /dev/null; then \
+	if ( ! ( command -v docker >/dev/null && command -v docker-compose >/dev/null )); then \
 		echo "Seems like you don't have Docker or docker-compose installed. Make sure you review docs/development/README.md before continuing"; \
 		exit 1; \
 	fi; \
@@ -47,7 +47,7 @@ go_vet:
 ## Run `go staticcheck` on all files in the current project
 go_staticcheck:
 	{ \
-	if builtin type -P "staticcheck"; then \
+	if command -v staticcheck >/dev/null; then \
 		staticcheck ./...; \
 	else \
 		echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; \
@@ -58,7 +58,7 @@ go_staticcheck:
 ## Generate documentation for the current project using `godo`
 go_doc:
 	{ \
-	if builtin type "godoc"; then \
+	if command -v godoc >/dev/null; then \
 		echo "Visit http://localhost:6060/pocket"; \
 		godoc -http=localhost:6060  -goroot=${PWD}/..; \
 	else \
