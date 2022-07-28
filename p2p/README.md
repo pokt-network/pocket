@@ -1,7 +1,5 @@
 # P2P Module
 
-_Note: This module will likely be upgraded to the official P2P module implementation in the near future._
-
 This document is meant to be a supplement to the living specification of [1.0 Pocket's P2P Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p) primarily focused on the implementation, and additional details related to the design of the codebase and information related to development.
 
 ## Interface

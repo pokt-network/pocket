@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/pokt-network/pocket/p2p/types"
+	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 
@@ -124,11 +125,11 @@ func getAddrBook(t *testing.T, n int) (addrBook types.AddrBook) {
 }
 
 func TestRainTreeAddrBookTargetsSixNodes(t *testing.T) {
-	// 		                  A
-	// 		   ┌──────────────┴────────┬────────────────────┐
-	// 		   C                       A                    E
-	//   ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐
-	//   D        C     E        B        A     C     F        E     A
+	// 		                     A
+	// 		   ┌─────────────────┬─────────────────┐
+	// 		   C                 A                 E
+	//   ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐
+	//   D     C     E     B     A     C     F     E     A
 	prop := &ExpectedRainTreeMessageProp{'A', 6, "ABCDEF", []ExpectedRainTreeMessageTarget{
 		{2, "C", "E"},
 		{1, "B", "C"},
@@ -139,11 +140,11 @@ func TestRainTreeAddrBookTargetsSixNodes(t *testing.T) {
 }
 
 func TestRainTreeAddrBookTargetsNineNodes(t *testing.T) {
-	//                      A
-	//       ┌──────────────┴────────┬────────────────────┐
-	//       D                       A                    G
-	// ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐
-	// F        D     H        C        A     E     I        G     B
+	//                         A
+	//       ┌─────────────────┬─────────────────┐
+	//       D                 A                 G
+	// ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐
+	// F     D     H     C     A     E     I     G     B
 	prop := &ExpectedRainTreeMessageProp{'A', 9, "ABCDEFGHI", []ExpectedRainTreeMessageTarget{
 		{2, "D", "G"},
 		{1, "C", "E"},
@@ -155,19 +156,35 @@ func TestRainTreeAddrBookTargetsNineNodes(t *testing.T) {
 
 func TestRainTreeAddrBookTargetsTwentySevenNodes(t *testing.T) {
 
-	// 		                                                             O
-	// 		                ┌────────────────────────────────────────────┴───────────────────────┬─────────────────────────────────────────────────────────────────┐
-	// 		                X                                                                    O                                                                 F
-	//       ┌──────────────┴────────┬────────────────────┐                       ┌──────────────┴────────┬────────────────────┐                    ┌──────────────┴────────┬────────────────────┐
-	//       C                       X                    I                       U                       O                    [                    L                       F                    R
-	// ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐        ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐     ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐
-	// G        C     K        A        X     E     M        I     Z        Y        U     B        S        O     W     D        [     Q     P        L     T        J        F     N     V        R     H
+	// 		                                                                         O
+	// 		                  ┌──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐
+	// 		                  X                                                      O                                                     F
+	//       ┌────────────────┬────────────────┐                    ┌────────────────┬─────────────────┐                 ┌─────────────────┬────────────────────┐
+	//       C                X                I                    U                O                 [                 L                 F                    R
+	// ┌─────┬─────┐    ┌─────┬─────┐    ┌─────┬─────┐        ┌─────┬─────┐    ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐
+	// G     C     K    A     X     E    M     I     Z        Y     U     B    S     O     W     D     [     Q     P     L     T     J     F     N     V     R     H
 	prop := &ExpectedRainTreeMessageProp{'O', 27, "OPQRSTUVWXYZ[ABCDEFGHIJKLMN", []ExpectedRainTreeMessageTarget{
 		{3, "X", "F"},
 		{2, "U", "["},
 		{1, "S", "W"},
-		{0, "X", "F"},  // redundancy
-		{-1, "N", "P"}, // cleanup
+		{0, "X", "F"}, // redundancy layer
+		// 		                                                                         O
+		// 		                  ┌──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐
+		// 		                  X                                                      O                                                     F
+		//       ┌────────────────┬────────────────┐                    ┌────────────────┬─────────────────┐                 ┌─────────────────┬────────────────────┐
+		//       C                X                I                    U                O                 [                 L                 F                    R
+		// ┌─────┬─────┐    ┌─────┬─────┐    ┌─────┬─────┐        ┌─────┬─────┐    ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐
+		// G     C     K    A    *X*    E    M     I     Z        Y     U     B    S    *O*    W     D     [     Q     P     L     T     J    *F*    N     V     R     H
+		//                        ^                                                      |                                                     ^
+		//                        |    <─      <─      <─     <─     <─     <─     <─   <──>    ─>      ─>      ─>      ─>      ─>      ─>     |
+		{-1, "N", "P"}, // cleanup  layer
+		// 		                                                                         O
+		// 		                  ┌──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐
+		// 		                  X                                                      O                                                     F
+		//       ┌────────────────┬────────────────┐                    ┌────────────────┬─────────────────┐                 ┌─────────────────┬────────────────────┐
+		//       C                X                I                    U                O                 [                 L                 F                    R
+		// ┌─────┬─────┐    ┌─────┬─────┐    ┌─────┬─────┐        ┌─────┬─────┐    ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐
+		// G     C     K    A    *X*    E    M     I     Z        Y     U     B   *S* <-*O*-> *W*     D     [     Q     P     L     T     J    *F*    N     V     R     H
 	}}
 	testRainTreeMessageTargets(t, prop)
 }
@@ -195,7 +212,9 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 			level = getMaxAddrBookLevels(addrBook)
 		}
 		if level == -1 {
-			addr1, addr2, _ = getLeftAndRight(addrList, addrBookMap)
+			var ok bool
+			addr1, addr2, ok = getLeftAndRight(addrList, addrBookMap)
+			assert.True(t, ok)
 		}
 		if addr1 == nil {
 			addr1 = network.getFirstTargetAddr(level)

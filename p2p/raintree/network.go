@@ -71,10 +71,7 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level int32, nonc
 	// This is handled either by the redundancy layer
 	if level == 0 {
 		if n.redundancyLayerEnabled {
-			// redundancy layer is simply one final send to the original +1/3 && -1/3
-			level = n.maxNumLevels
-			// ensure not an echo-chamber
-			msg.Level = -1
+			level, msg.Level = n.RedundancyLayer()
 		} else {
 			if err := n.demote(msg); err != nil {
 				log.Println("Error demoting self during RainTree message propagation: ", err)
@@ -84,10 +81,7 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level int32, nonc
 
 	// This is handled by the cleanup layer
 	if level == -1 {
-		// cleanup layer is just send left / right
-		// TODO (Team) unhappy path where the left / right nodes are down
-		// (continue to search left and right until you have a hit)
-		addr1, addr2, ok = n.getLeftAndRight()
+		addr1, addr2, ok = n.CleanupLayer()
 		if !ok {
 			return nil
 		}
@@ -117,6 +111,18 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level int32, nonc
 	}
 
 	return nil
+}
+
+func (n *rainTreeNetwork) CleanupLayer() (addr1, addr2 []byte, ok bool) {
+	// cleanup layer is just send left / right
+	// TODO (Team) unhappy path where the left / right nodes are down
+	// (continue to search left and right until you have a hit)
+	return n.getLeftAndRight()
+}
+
+func (n *rainTreeNetwork) RedundancyLayer() (level int32, msgLevel int32) {
+	// redundancy layer is simply one final send to the original +1/3 && -1/3
+	return n.maxNumLevels, -1 // -1 ensures not an echo chamber
 }
 
 func (n *rainTreeNetwork) demote(rainTreeMsg *types2.RainTreeMessage) error {

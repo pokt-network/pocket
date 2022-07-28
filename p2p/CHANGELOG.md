@@ -9,5 +9,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.0] - 2022-07-26
 
-- Raintree first iteration (no redundancy or cleanup layer)
+- Raintree first iteration
 - Deprecated old p2p for pre2p raintree

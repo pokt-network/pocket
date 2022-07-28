@@ -1,9 +1,5 @@
 package p2p
 
-// TODO(team): This is a a temporary parallel to the real `p2p` module.
-// It should be removed once the real `p2p` module is ready but is meant
-// to be a "real" replacement for now.
-
 import (
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
@@ -22,7 +18,7 @@ var _ modules.P2PModule = &p2pModule{}
 
 type p2pModule struct {
 	bus       modules.Bus
-	p2pConfig *config.P2PConfig
+	p2pConfig *config.P2PConfig // TODO (Olshansk) to remove this since it'll be available via the bus
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
