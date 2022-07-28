@@ -64,9 +64,7 @@ func TestTransaction_Message(t *testing.T) {
 	expected := NewTestingMsg(t)
 	require.NotEqual(t, expected, msg)
 
-	if msg.ProtoReflect().Type() != expected.ProtoReflect().Type() {
-		t.Fatal("invalid message type")
-	}
+	require.Equal(t, msg.ProtoReflect().Type(), expected.ProtoReflect().Type())
 	message := msg.(*MessageSend)
 	expectedMessage := expected.(*MessageSend)
 	if message.Amount != expectedMessage.Amount ||
@@ -103,7 +101,7 @@ func TestTransaction_ValidateBasic(t *testing.T) {
 	txInvalidMessageAny := proto.Clone(&tx).(*Transaction)
 	txInvalidMessageAny.Msg = nil
 	if err := txInvalidMessageAny.ValidateBasic(); err.Code() != types.ErrProtoFromAny(err).Code() {
-		t.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	txEmptySig := proto.Clone(&tx).(*Transaction)
@@ -119,7 +117,7 @@ func TestTransaction_ValidateBasic(t *testing.T) {
 	txInvalidPublicKey := proto.Clone(&tx).(*Transaction)
 	txInvalidPublicKey.Signature.PublicKey = []byte("publickey")
 	if err := txInvalidPublicKey.ValidateBasic(); err.Code() != types.ErrNewPublicKeyFromBytes(err).Code() {
-		t.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	txInvalidSignature := proto.Clone(&tx).(*Transaction)
