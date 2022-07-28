@@ -102,6 +102,10 @@ func initializeAllTables(ctx context.Context, db *pgx.Conn) error {
 		return err
 	}
 
+	if err := initializeBlockTables(ctx, db); err != nil {
+		return err
+	}
+
 	for _, actor := range protocolActorSchemas {
 		if err := initializeProtocolActorTables(ctx, db, actor); err != nil {
 			return err
@@ -135,6 +139,14 @@ func initializeAccountTables(ctx context.Context, db *pgx.Conn) error {
 
 func initializeGovTables(ctx context.Context, db *pgx.Conn) error {
 	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.ParamsTableName, schema.ParamsTableSchema))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
+	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.BlockTableName, schema.BlockTableSchema))
 	if err != nil {
 		return err
 	}

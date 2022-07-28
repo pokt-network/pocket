@@ -292,6 +292,10 @@ func (p *PrePersistenceContext) StoreBlock(blockProtoBytes []byte) error {
 	panic("PrePersistenceContext does not implement StoreBlock")
 }
 
+func (p *PrePersistenceContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) error {
+	panic("PrePersistenceContext does not implement InsertBlock")
+}
+
 func NewMemDB() *memdb.DB {
 	return memdb.New(comparer.DefaultComparer, 100000)
 }

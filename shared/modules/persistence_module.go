@@ -48,7 +48,13 @@ type PersistenceContext interface {
 	// Indexer Operations
 	TransactionExists(transactionHash string) (bool, error)
 	StoreTransaction(transactionProtoBytes []byte) error
-	StoreBlock(blockProtoBytes []byte) error
+
+	// Block Operations
+	// TODO_TEMPORARY: Including two functions for the SQL and KV Store as an interim solution
+	//                 until we include the schema as part of the SQL Store because persistence
+	//                 currently has no access to the protobuf schema which is the source of truth.
+	StoreBlock(blockProtoBytes []byte) error                                                                     // Store the block in the KV Store
+	InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) error // Writes the block in the SQL database
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error

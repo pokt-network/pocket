@@ -56,6 +56,16 @@ func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
 	// return p.ContextStore.Put(heightToBytes(p.Height), blockProtoBytes)
 }
 
+func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) error {
+	ctx, conn, err := p.GetCtxAndConnection()
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Exec(ctx, schema.InsertBlockQuery(height, hash, proposerAddr, quorumCert, transactions))
+	return err
+}
+
 // CLEANUP: Should this be moved to a shared directory?
 func heightToBytes(height int64) []byte {
 	heightBytes := make([]byte, 8)
