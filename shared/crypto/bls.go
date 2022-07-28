@@ -15,7 +15,8 @@ func main() {
 
         // Declare string and byte versions of variables
         n := "Pokt"
-        m := []byte("Pokt")       
+        m := []byte("Pokt")
+        // BLS operations
         var aggSig *bls.Sign
         var aggPub *bls.PublicKey
         //start timer for BLS throughput test
