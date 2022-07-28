@@ -2,8 +2,9 @@ package utility
 
 import (
 	"encoding/hex"
-	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"log"
+
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"

@@ -76,9 +76,9 @@ func TestMessage_DoubleSign_ValidateBasic(t *testing.T) {
 		VoteB:           voteB,
 		ReporterAddress: reporter,
 	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
+	er := msg.ValidateBasic()
+	require.NoError(t, er)
+
 	msgUnequalPubKeys := new(MessageDoubleSign)
 	msgUnequalPubKeys.VoteA = new(Vote)
 	msgUnequalPubKeys.VoteB = new(Vote)
@@ -86,8 +86,8 @@ func TestMessage_DoubleSign_ValidateBasic(t *testing.T) {
 	*msgUnequalPubKeys.VoteB = *msg.VoteB
 	pk2, _ := crypto.GeneratePublicKey()
 	msgUnequalPubKeys.VoteA.PublicKey = pk2.Bytes()
-	er := msgUnequalPubKeys.ValidateBasic()
-	require.Equal(t, types.ErrUnequalPublicKeys(), er.Code())
+	er = msgUnequalPubKeys.ValidateBasic()
+	require.Equal(t, types.ErrUnequalPublicKeys().Code(), er.Code())
 
 	msgUnequalHeights := new(MessageDoubleSign)
 	msgUnequalHeights.VoteA = new(Vote)
@@ -96,7 +96,7 @@ func TestMessage_DoubleSign_ValidateBasic(t *testing.T) {
 	*msgUnequalHeights.VoteB = *msg.VoteB
 	msgUnequalHeights.VoteA.Height = 2
 	er = msgUnequalHeights.ValidateBasic()
-	require.Equal(t, types.ErrUnequalHeights(), er.Code())
+	require.Equal(t, types.ErrUnequalHeights().Code(), er.Code())
 
 	msgUnequalRounds := new(MessageDoubleSign)
 	msgUnequalRounds.VoteA = new(Vote)
@@ -105,7 +105,7 @@ func TestMessage_DoubleSign_ValidateBasic(t *testing.T) {
 	*msgUnequalRounds.VoteB = *msg.VoteB
 	msgUnequalRounds.VoteA.Round = 1
 	er = msgUnequalRounds.ValidateBasic()
-	require.Equal(t, types.ErrUnequalRounds(), er.Code())
+	require.Equal(t, types.ErrUnequalRounds().Code(), er.Code())
 
 	//msgUnequalVoteTypes := new(MessageDoubleSign) TODO only one type of evidence right now
 	//msgUnequalVoteTypes.VoteA = new(Vote)
@@ -123,7 +123,7 @@ func TestMessage_DoubleSign_ValidateBasic(t *testing.T) {
 	*msgEqualVoteHash.VoteB = *msg.VoteB
 	msgEqualVoteHash.VoteB.BlockHash = hashA
 	er = msgEqualVoteHash.ValidateBasic()
-	require.Equal(t, types.ErrEqualVotes(), er.Code())
+	require.Equal(t, types.ErrEqualVotes().Code(), er.Code())
 
 }
 
@@ -142,17 +142,17 @@ func TestMessage_EditStake_ValidateBasic(t *testing.T) {
 	msgMissingAmount := proto.Clone(&msg).(*MessageEditStake)
 	msgMissingAmount.Amount = ""
 	er := msgMissingAmount.ValidateBasic()
-	require.Equal(t, types.ErrEmptyAmount(), er.Code())
+	require.Equal(t, types.ErrEmptyAmount().Code(), er.Code())
 
 	msgInvalidAmount := proto.Clone(&msg).(*MessageEditStake)
 	msgInvalidAmount.Amount = "sdk"
 	er = msgInvalidAmount.ValidateBasic()
-	require.Equal(t, types.ErrStringToBigInt(), er.Code())
+	require.Equal(t, types.ErrStringToBigInt().Code(), er.Code())
 
 	msgEmptyAddress := proto.Clone(&msg).(*MessageEditStake)
 	msgEmptyAddress.Address = nil
 	er = msgEmptyAddress.ValidateBasic()
-	require.Equal(t, types.ErrEmptyAddress(), er.Code())
+	require.Equal(t, types.ErrEmptyAddress().Code(), er.Code())
 
 	msgInvalidAddress := proto.Clone(&msg).(*MessageEditStake)
 	msgInvalidAddress.Address = []byte("badAddr")
@@ -163,7 +163,7 @@ func TestMessage_EditStake_ValidateBasic(t *testing.T) {
 	msgEmptyRelayChains := proto.Clone(&msg).(*MessageEditStake)
 	msgEmptyRelayChains.Chains = nil
 	er = msgEmptyRelayChains.ValidateBasic()
-	require.Equal(t, types.ErrEmptyRelayChains(), er.Code())
+	require.Equal(t, types.ErrEmptyRelayChains().Code(), er.Code())
 
 	msgInvalidRelayChains := proto.Clone(&msg).(*MessageEditStake)
 	msgInvalidRelayChains.Chains = []string{"notAValidRelayChain"}
@@ -184,29 +184,28 @@ func TestMessageSend_ValidateBasic(t *testing.T) {
 		ToAddress:   addr2,
 		Amount:      defaultAmount,
 	}
-	if err := msg.ValidateBasic(); err != nil {
-		t.Fatal(err)
-	}
+	er := msg.ValidateBasic()
+	require.NoError(t, er)
 
 	msgMissingAddress := proto.Clone(&msg).(*MessageSend)
 	msgMissingAddress.FromAddress = nil
-	er := msgMissingAddress.ValidateBasic()
-	require.Equal(t, types.ErrEmptyAddress(), er.Code())
+	er = msgMissingAddress.ValidateBasic()
+	require.Equal(t, types.ErrEmptyAddress().Code(), er.Code())
 
 	msgMissingToAddress := proto.Clone(&msg).(*MessageSend)
 	msgMissingToAddress.ToAddress = nil
 	er = msgMissingToAddress.ValidateBasic()
-	require.Equal(t, types.ErrEmptyAddress(), er.Code())
+	require.Equal(t, types.ErrEmptyAddress().Code(), er.Code())
 
 	msgMissingAmount := proto.Clone(&msg).(*MessageSend)
 	msgMissingAmount.Amount = ""
 	er = msgMissingAmount.ValidateBasic()
-	require.Equal(t, types.ErrEmptyAmount(), er.Code())
+	require.Equal(t, types.ErrEmptyAmount().Code(), er.Code())
 
 	msgInvalidAmount := proto.Clone(&msg).(*MessageSend)
 	msgInvalidAmount.Amount = ""
 	er = msgInvalidAmount.ValidateBasic()
-	require.Equal(t, types.ErrEmptyAmount(), er.Code())
+	require.Equal(t, types.ErrEmptyAmount().Code(), er.Code())
 }
 
 func TestMessageStake_ValidateBasic(t *testing.T) {
@@ -220,27 +219,27 @@ func TestMessageStake_ValidateBasic(t *testing.T) {
 		OutputAddress: pk.Address(),
 	}
 	er := msg.ValidateBasic()
-	require.NoError(t, err)
+	require.NoError(t, er)
 
 	msgEmptyPubKey := proto.Clone(&msg).(*MessageStake)
 	msgEmptyPubKey.PublicKey = nil
 	er = msgEmptyPubKey.ValidateBasic()
-	require.Equal(t, types.ErrEmptyPublicKey(), er.Code())
+	require.Equal(t, types.ErrEmptyPublicKey().Code(), er.Code())
 
 	msgEmptyChains := proto.Clone(&msg).(*MessageStake)
 	msgEmptyChains.Chains = nil
 	er = msgEmptyChains.ValidateBasic()
-	require.Equal(t, types.ErrEmptyRelayChains(), er.Code())
+	require.Equal(t, types.ErrEmptyRelayChains().Code(), er.Code())
 
 	msgEmptyAmount := proto.Clone(&msg).(*MessageStake)
 	msgEmptyAmount.Amount = ""
 	er = msgEmptyAmount.ValidateBasic()
-	require.Equal(t, types.ErrEmptyAmount(), er.Code())
+	require.Equal(t, types.ErrEmptyAmount().Code(), er.Code())
 
 	msgEmptyOutputAddress := proto.Clone(&msg).(*MessageStake)
 	msgEmptyOutputAddress.OutputAddress = nil
 	er = msgEmptyOutputAddress.ValidateBasic()
-	require.Equal(t, types.ErrNilOutputAddress(), er.Code())
+	require.Equal(t, types.ErrNilOutputAddress().Code(), er.Code())
 }
 
 func TestMessageUnpause_ValidateBasic(t *testing.T) {
@@ -251,12 +250,12 @@ func TestMessageUnpause_ValidateBasic(t *testing.T) {
 		Address: addr,
 	}
 	er := msg.ValidateBasic()
-	require.NoError(t, err)
+	require.NoError(t, er)
 
 	msgMissingAddress := proto.Clone(&msg).(*MessageUnpause)
 	msgMissingAddress.Address = nil
 	er = msgMissingAddress.ValidateBasic()
-	require.Equal(t, types.ErrEmptyAddress(), er.Code())
+	require.Equal(t, types.ErrEmptyAddress().Code(), er.Code())
 
 }
 
@@ -273,7 +272,7 @@ func TestMessageUnstake_ValidateBasic(t *testing.T) {
 	msgMissingAddress := proto.Clone(&msg).(*MessageUnstake)
 	msgMissingAddress.Address = nil
 	er = msgMissingAddress.ValidateBasic()
-	require.Equal(t, types.ErrEmptyAddress(), er.Code())
+	require.Equal(t, types.ErrEmptyAddress().Code(), er.Code())
 }
 
 func TestRelayChain_Validate(t *testing.T) {
