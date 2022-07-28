@@ -225,11 +225,11 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 		}
 		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case typesUtil.ActorType_Fish:
-		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, *message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case typesUtil.ActorType_Node:
-		er = store.InsertServiceNode(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, *message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = store.InsertServiceNode(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case typesUtil.ActorType_Val:
-		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, *message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	}
 	if er != nil {
 		return types.ErrInsert(er)
@@ -288,11 +288,11 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 		}
 		er = store.UpdateApp(message.Address, maxRelays, message.Amount, message.Chains)
 	case typesUtil.ActorType_Fish:
-		er = store.UpdateFisherman(message.Address, *message.ServiceUrl, message.Amount, message.Chains)
+		er = store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case typesUtil.ActorType_Node:
-		er = store.UpdateServiceNode(message.Address, *message.ServiceUrl, message.Amount, message.Chains)
+		er = store.UpdateServiceNode(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case typesUtil.ActorType_Val:
-		er = store.UpdateValidator(message.Address, *message.ServiceUrl, message.Amount)
+		er = store.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
 	}
 	if er != nil {
 		return types.ErrInsert(er)

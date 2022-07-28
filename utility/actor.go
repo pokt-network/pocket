@@ -78,9 +78,6 @@ func (u *UtilityContext) DeleteActor(actorType typesUtil.ActorType, address []by
 func (u *UtilityContext) SetActorPauseHeight(actorType typesUtil.ActorType, address []byte, height int64) types.Error {
 	var err error
 	store := u.Store()
-	if err := store.SetAppPauseHeight(address, height); err != nil {
-		return types.ErrSetPauseHeight(err)
-	}
 	switch actorType {
 	case typesUtil.ActorType_App:
 		err = store.SetAppPauseHeight(address, height)

@@ -195,3 +195,5 @@ utility
 |- gov.go              // utility context for dao & parameters
 |- module.go           // module implementation and interfaces
 |- transaction.go      // utility context for transactions including handlers
+
+// TODO (Olshansk) still opportunity to simplify actor.go but I don't have an idea for it yet

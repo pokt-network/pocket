@@ -108,7 +108,7 @@ func TestMessage_DoubleSign_ValidateBasic(t *testing.T) {
 	require.Equal(t, types.ErrUnequalRounds().Code(), er.Code())
 
 	//msgUnequalVoteTypes := new(MessageDoubleSign) TODO only one type of evidence right now
-	
+
 	msgEqualVoteHash := new(MessageDoubleSign)
 	msgEqualVoteHash.VoteA = new(Vote)
 	msgEqualVoteHash.VoteB = new(Vote)

@@ -78,7 +78,7 @@ func (u *UtilityContext) GetAppHash() ([]byte, types.Error) {
 }
 
 var (
-	actorTypes = []typesUtil.ActorType{
+	ActorTypes = []typesUtil.ActorType{
 		typesUtil.ActorType_App,
 		typesUtil.ActorType_Node,
 		typesUtil.ActorType_Fish,
@@ -131,7 +131,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err types.Error) {
 	if err != nil {
 		return err
 	}
-	for _, actorType := range actorTypes {
+	for _, actorType := range ActorTypes {
 		var readyToUnstake []*types.UnstakingActor
 		var poolName string
 		switch actorType {
@@ -171,7 +171,7 @@ func (u *UtilityContext) BeginUnstakingMaxPaused() (err types.Error) {
 	if err != nil {
 		return err
 	}
-	for _, actorType := range actorTypes {
+	for _, actorType := range ActorTypes {
 		maxPausedBlocks, err := u.GetMaxPausedBlocks(actorType)
 		if err != nil {
 			return err

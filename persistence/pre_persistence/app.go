@@ -336,7 +336,7 @@ func (m *PrePersistenceContext) SetAppPauseHeight(address []byte, height int64) 
 	if app == nil {
 		return fmt.Errorf("does not exist in world state: %v", address)
 	}
-	if app.PausedHeight != types.HeightNotUsed {
+	if height != types.HeightNotUsed {
 		app.Paused = true
 	} else {
 		app.Paused = false

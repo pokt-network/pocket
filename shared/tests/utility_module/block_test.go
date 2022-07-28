@@ -3,6 +3,7 @@ package utility_module
 import (
 	"bytes"
 	"fmt"
+	"github.com/pokt-network/pocket/utility"
 	"math"
 	"math/big"
 	"testing"
@@ -74,18 +75,30 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 }
 
 func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 1)
-	actor := GetAllTestingApps(t, ctx)[0]
-	err := ctx.Context.SetAppMaxPausedBlocks(0)
-	require.NoError(t, err)
-	if err := ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, 0); err != nil {
+	for _, actorType := range utility.ActorTypes {
+		ctx := NewTestingUtilityContext(t, 1)
+		actor := GetFirstActor(t, ctx, actorType)
+		var err error
+		switch actorType {
+		case typesUtil.ActorType_App:
+			err = ctx.Context.SetAppMaxPausedBlocks(0)
+		case typesUtil.ActorType_Val:
+			err = ctx.Context.SetValidatorMaxPausedBlocks(0)
+		case typesUtil.ActorType_Fish:
+			err = ctx.Context.SetFishermanMaxPausedBlocks(0)
+		case typesUtil.ActorType_Node:
+			err = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
+		}
 		require.NoError(t, err)
+		if err := ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 0); err != nil {
+			require.NoError(t, err)
+		}
+		if err := ctx.BeginUnstakingMaxPaused(); err != nil {
+			require.NoError(t, err)
+		}
+		status, err := ctx.GetActorStatus(actorType, actor.GetAddress())
+		require.False(t, status != 1, fmt.Sprintf("incorrect status; expected %d got %d", 1, actor.GetStatus()))
 	}
-	if err := ctx.BeginUnstakingMaxPaused(); err != nil {
-		require.NoError(t, err)
-	}
-	status, err := ctx.GetActorStatus(typesUtil.ActorType_App, actor.Address)
-	require.False(t, status != 1, fmt.Sprintf("incorrect status; expected %d got %d", 1, actor.Status))
 }
 
 func TestUtilityContext_EndBlock(t *testing.T) {
@@ -130,27 +143,40 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 }
 
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 1)
-	ctx.SetPoolAmount(typesGenesis.AppStakePoolName, big.NewInt(math.MaxInt64))
-	if err := ctx.Context.SetAppUnstakingBlocks(0); err != nil {
-		require.NoError(t, err)
-	}
-	err := ctx.Context.SetAppMaxPausedBlocks(0)
-	if err != nil {
-		require.NoError(t, err)
-	}
-	actors := GetAllTestingApps(t, ctx)
-	for _, actor := range actors {
-		require.False(t, actor.Status != typesUtil.StakedStatus, fmt.Sprintf("wrong starting status"))
-		if err := ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, 1); err != nil {
+	for _, actorType := range utility.ActorTypes {
+		ctx := NewTestingUtilityContext(t, 1)
+		var poolName string
+		switch actorType {
+		case typesUtil.ActorType_App:
+			poolName = typesGenesis.AppStakePoolName
+		case typesUtil.ActorType_Val:
+			poolName = typesGenesis.ValidatorStakePoolName
+		case typesUtil.ActorType_Fish:
+			poolName = typesGenesis.FishermanStakePoolName
+		case typesUtil.ActorType_Node:
+			poolName = typesGenesis.ServiceNodeStakePoolName
+		}
+		ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
+		if err := ctx.Context.SetAppUnstakingBlocks(0); err != nil {
 			require.NoError(t, err)
 		}
+		err := ctx.Context.SetAppMaxPausedBlocks(0)
+		if err != nil {
+			require.NoError(t, err)
+		}
+		actors := GetAllTestingActors(t, ctx, actorType)
+		for _, actor := range actors {
+			require.False(t, actor.GetStatus() != typesUtil.StakedStatus, fmt.Sprintf("wrong starting status"))
+			if err := ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 1); err != nil {
+				require.NoError(t, err)
+			}
+		}
+		if err := ctx.UnstakeActorPausedBefore(2, actorType); err != nil {
+			require.NoError(t, err)
+		}
+		if err := ctx.UnstakeActorsThatAreReady(); err != nil {
+			require.NoError(t, err)
+		}
+		require.False(t, len(GetAllTestingActors(t, ctx, actorType)) != 0, fmt.Sprintf("validators still exists after unstake that are ready() call"))
 	}
-	if err := ctx.UnstakeActorPausedBefore(2, typesUtil.ActorType_App); err != nil {
-		require.NoError(t, err)
-	}
-	if err := ctx.UnstakeActorsThatAreReady(); err != nil {
-		require.NoError(t, err)
-	}
-	require.False(t, len(GetAllTestingApps(t, ctx)) != 0, fmt.Sprintf("validators still exists after unstake that are ready() call"))
 }

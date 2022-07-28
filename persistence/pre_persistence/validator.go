@@ -377,9 +377,9 @@ func (m *PrePersistenceContext) SetValidatorPauseHeight(address []byte, height i
 		return fmt.Errorf("does not exist in world state")
 	}
 	if height != types.HeightNotUsed {
-		val.Paused = false
-	} else {
 		val.Paused = true
+	} else {
+		val.Paused = false
 	}
 	val.PausedHeight = height
 	bz, err := codec.Marshal(val)
