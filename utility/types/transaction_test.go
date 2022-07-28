@@ -96,9 +96,9 @@ func TestTransaction_ValidateBasic(t *testing.T) {
 	}
 	txNoNonce := tx
 	txNoNonce.Nonce = ""
-	if err := txNoNonce.ValidateBasic(); err.Code() != types.ErrEmptyNonce().Code() {
-		t.Fatal(err)
-	}
+	er := txNoNonce.ValidateBasic()
+	require.Equal(t, types.ErrEmptyNonce(), er.Code())
+
 	txInvalidMessageAny := tx
 	txInvalidMessageAny.Msg = nil
 	if err := txInvalidMessageAny.ValidateBasic(); err.Code() != types.ErrProtoFromAny(err).Code() {
@@ -106,14 +106,14 @@ func TestTransaction_ValidateBasic(t *testing.T) {
 	}
 	txEmptySig := tx
 	txEmptySig.Signature = nil
-	if err := txEmptySig.ValidateBasic(); err.Code() != types.ErrEmptySignature().Code() {
-		t.Fatal(err)
-	}
+	er = txEmptySig.ValidateBasic()
+	require.Equal(t, types.ErrEmptySignature(), er.Code())
+
 	txEmptyPublicKey := tx
 	txEmptyPublicKey.Signature.PublicKey = nil
-	if err := txEmptyPublicKey.ValidateBasic(); err.Code() != types.ErrEmptyPublicKey().Code() {
-		t.Fatal(err)
-	}
+	er = txEmptyPublicKey.ValidateBasic()
+	require.Equal(t, types.ErrEmptyPublicKey(), er.Code())
+
 	txInvalidPublicKey := tx
 	txInvalidPublicKey.Signature.PublicKey = []byte("publickey")
 	if err := txInvalidPublicKey.ValidateBasic(); err.Code() != types.ErrNewPublicKeyFromBytes(err).Code() {
@@ -122,7 +122,7 @@ func TestTransaction_ValidateBasic(t *testing.T) {
 	txInvalidSignature := tx
 	tx.Signature.PublicKey = testingSenderPublicKey.Bytes()
 	txInvalidSignature.Signature.Signature = []byte("signature")
-	if err := txInvalidSignature.ValidateBasic(); err.Code() != types.ErrSignatureVerificationFailed().Code() {
-		t.Fatal(err)
-	}
+	er = txInvalidSignature.ValidateBasic()
+	require.Equal(t, types.ErrSignatureVerificationFailed(), er.Code())
+
 }
