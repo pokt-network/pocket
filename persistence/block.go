@@ -50,19 +50,20 @@ func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
 }
 
 func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
-	fmt.Println("committing height", p.Height)
-	// TODO_IN_THIS_COMMIT: Need to use the ContextStore and transfer over the data from the temp KV Store
+	// INVESTIGATE: Note that we are writing this directly to the blockStore. Depending on how
+	// the use of the PostgresContext evolves, we may need to write this to `ContextStore` and copy
+	// over to `BlockStore` when the block is committed.
 	return p.BlockStore.Put(heightToBytes(p.Height), blockProtoBytes)
-	// return p.ContextStore.Put(heightToBytes(p.Height), blockProtoBytes)
 }
 
-func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) error {
+func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {
 	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return err
 	}
-
-	_, err = conn.Exec(ctx, schema.InsertBlockQuery(height, hash, proposerAddr, quorumCert, transactions))
+	fmt.Println("OLSH", hash, proposerAddr, quorumCert)
+	// _, err = conn.Exec(ctx, schema.InsertBlockQuery(height, []byte(hash), proposerAddr, quorumCert))
+	_, err = conn.Exec(ctx, schema.InsertBlockQuery(height, []byte("a"), []byte("b"), []byte("c")))
 	return err
 }
 

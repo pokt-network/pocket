@@ -31,9 +31,12 @@ var _ modules.PersistenceContext = &PostgresContext{}
 //       it is trivial to create a helper to initial a context with some values.
 type PostgresContext struct {
 	Height       int64
-	PostgresDB   *pgx.Conn
-	BlockStore   kvstore.KVStore
 	ContextStore kvstore.KVStore
+
+	// IMPROVE: Depending on how the use of `PostgresContext` evolves, we may be able to get
+	// access to these directly via the postgres module.
+	PostgresDB *pgx.Conn
+	BlockStore kvstore.KVStore
 }
 
 func (pg *PostgresContext) GetCtxAndConnection() (context.Context, *pgx.Conn, error) {

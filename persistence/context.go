@@ -20,17 +20,17 @@ func (p PostgresContext) AppHash() ([]byte, error) {
 }
 
 func (p PostgresContext) Reset() error {
-	log.Println("TODO: Reset not implemented")
-	return nil
+	panic("TODO: PostgresContext Reset not implemented")
 }
 
 func (p PostgresContext) Commit() error {
 	// HACK: The data has already been written to the postgres DB, so what should we do here? The idea I have is:
-	log.Println("TODO: We have not implemented postgres based persistence context commits - it happens throughout the rest of the flow")
-
+	log.Println("TODO: Postgres context commit is currently a NOOP")
 	return nil
 }
 
 func (p PostgresContext) Release() {
-	log.Println("TODO: - Release not implemented")
+	if err := p.ContextStore.Stop(); err != nil {
+		log.Printf("[ERROR] stopping postgres context store: %s", err)
+	}
 }

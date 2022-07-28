@@ -292,7 +292,7 @@ func (p *PrePersistenceContext) StoreBlock(blockProtoBytes []byte) error {
 	panic("PrePersistenceContext does not implement StoreBlock")
 }
 
-func (p *PrePersistenceContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) error {
+func (p *PrePersistenceContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {
 	panic("PrePersistenceContext does not implement InsertBlock")
 }
 

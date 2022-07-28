@@ -9,17 +9,16 @@ const (
 			height             BIGINT PRIMARY KEY,
 			hash 	           TEXT NOT NULL,
 			proposer_address   TEXT NOT NULL,
-			quorum_certificate BYTEA NOT NULL,
-			transactions       BYTEA NOT NULL
+			quorum_certificate TEXT NOT NULL
 		)`
 )
 
-func InsertBlockQuery(height uint64, hash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) string {
+func InsertBlockQuery(height uint64, hash []byte, proposerAddr []byte, quorumCert []byte) string {
 	return fmt.Sprintf(
-		`INSERT INTO %s(height, hash, proposer_address, quorum_certificate, transactions)
-			VALUES(%d, '%s', '%s', '%s', '%s')`,
+		`INSERT INTO %s(height, hash, proposer_address, quorum_certificate)
+			VALUES(%d, '%s', '%s', '%s')`,
 		BlockTableName,
-		height, hash, proposerAddr, quorumCert, transactions)
+		height, hash, proposerAddr, quorumCert)
 }
 
 func GetBlockHashQuery(height int64) string {

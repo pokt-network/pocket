@@ -43,7 +43,7 @@ func (m *consensusModule) prepareBlockAsLeader() (*types.Block, error) {
 		NumTxs:            uint32(len(txs)),
 		LastBlockHash:     m.appHash,
 		ProposerAddress:   m.privateKey.Address(),
-		QuorumCertificate: nil,
+		QuorumCertificate: []byte("HACK: Temporary placeholder"),
 	}
 
 	block := &types.Block{
