@@ -47,6 +47,14 @@ func (p PostgresContext) UpdateApp(address []byte, maxRelays string, stakedToken
 	})
 }
 
+func (p PostgresContext) GetAppStakeAmount(height int64, address []byte) (string, error) {
+	return p.GetActorStakeAmount(schema.ApplicationActor, address, height)
+}
+
+func (p PostgresContext) SetAppStakeAmount(address []byte, stakeAmount string) error {
+	return p.SetActorStakeAmount(schema.ApplicationActor, address, stakeAmount)
+}
+
 func (p PostgresContext) DeleteApp(_ []byte) error {
 	log.Println("[DEBUG] DeleteApp is a NOOP")
 	return nil

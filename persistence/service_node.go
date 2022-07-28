@@ -52,6 +52,14 @@ func (p PostgresContext) DeleteServiceNode(address []byte) error {
 	return nil
 }
 
+func (p PostgresContext) GetServiceNodeStakeAmount(height int64, address []byte) (string, error) {
+	return p.GetActorStakeAmount(schema.ServiceNodeActor, address, height)
+}
+
+func (p PostgresContext) SetServiceNodeStakeAmount(address []byte, stakeAmount string) error {
+	return p.SetActorStakeAmount(schema.ServiceNodeActor, address, stakeAmount)
+}
+
 func (p PostgresContext) GetServiceNodeCount(chain string, height int64) (int, error) {
 	panic("GetServiceNodeCount not implemented")
 }

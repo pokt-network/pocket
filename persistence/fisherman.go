@@ -52,6 +52,14 @@ func (p PostgresContext) DeleteFisherman(_ []byte) error {
 	return nil
 }
 
+func (p PostgresContext) GetFishermanStakeAmount(height int64, address []byte) (string, error) {
+	return p.GetActorStakeAmount(schema.FishermanActor, address, height)
+}
+
+func (p PostgresContext) SetFishermanStakeAmount(address []byte, stakeAmount string) error {
+	return p.SetActorStakeAmount(schema.FishermanActor, address, stakeAmount)
+}
+
 func (p PostgresContext) GetFishermenReadyToUnstake(height int64, _ int) ([]*types.UnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(schema.FishermanActor, height)
 }

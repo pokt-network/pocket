@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"context"
 	"encoding/hex"
 	"log"
 
@@ -9,23 +10,23 @@ import (
 
 // OPTIMIZE(team): get from blockstore or keep in memory
 func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return 0, err
 	}
 
-	err = conn.QueryRow(ctx, schema.GetLatestBlockHeightQuery()).Scan(&latestHeight)
+	err = txn.QueryRow(ctx, schema.GetLatestBlockHeightQuery()).Scan(&latestHeight)
 	return
 }
 
 func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
 
 	var hexHash string
-	err = conn.QueryRow(ctx, schema.GetBlockHashQuery(height)).Scan(&hexHash)
+	err = txn.QueryRow(ctx, schema.GetBlockHashQuery(height)).Scan(&hexHash)
 	if err != nil {
 		return nil, err
 	}
@@ -54,12 +55,12 @@ func (p PostgresContext) Reset() error {
 }
 
 func (p PostgresContext) Commit() error {
-	log.Println("TODO: Block - Commit not implemented")
+	p.DB.Tx.Commit(context.TODO())
 	return nil
 }
 
 func (p PostgresContext) Release() {
-	log.Println("TODO:Block - Release not implemented")
+	p.DB.Tx.Rollback(context.TODO())
 }
 
 func (p PostgresContext) GetHeight() (int64, error) {

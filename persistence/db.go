@@ -21,7 +21,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-var _ modules.PersistenceContext = &PostgresContext{}
+var _ modules.PersistenceRWContext = &PostgresContext{}
 
 type PostgresContext struct {
 	Height int64
@@ -29,11 +29,11 @@ type PostgresContext struct {
 }
 
 type PostgresDB struct {
-	Conn *pgx.Conn // TODO (TEAM) use pool of connections
+	Tx pgx.Tx
 }
 
-func (pg *PostgresDB) GetCtxAndConnection() (context.Context, *pgx.Conn, error) {
-	conn, err := pg.GetConnection()
+func (pg *PostgresDB) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
+	conn, err := pg.GetTxn()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -44,8 +44,8 @@ func (pg *PostgresDB) GetCtxAndConnection() (context.Context, *pgx.Conn, error) 
 	return ctx, conn, nil
 }
 
-func (pg *PostgresDB) GetConnection() (*pgx.Conn, error) {
-	return pg.Conn, nil
+func (pg *PostgresDB) GetTxn() (pgx.Tx, error) {
+	return pg.Tx, nil
 }
 
 func (pg *PostgresDB) GetContext() (context.Context, error) {
@@ -139,12 +139,12 @@ func InitializeGovTables(ctx context.Context, db *pgx.Conn) error {
 
 // Exposed for debugging purposes only
 func (p PostgresContext) ClearAllDebug() error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
 
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	tx, err := conn.Begin(ctx)
 	if err != nil {
 		return err
 	}

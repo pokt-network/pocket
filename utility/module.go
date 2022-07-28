@@ -52,13 +52,13 @@ type UtilityContext struct {
 }
 
 type Context struct {
-	modules.PersistenceContext
+	modules.PersistenceRWContext
 	SavePointsM map[string]struct{}
 	SavePoints  [][]byte
 }
 
 func (u *UtilityModule) NewContext(height int64) (modules.UtilityContext, error) {
-	ctx, err := u.GetBus().GetPersistenceModule().NewContext(height)
+	ctx, err := u.GetBus().GetPersistenceModule().NewRWContext(height)
 	if err != nil {
 		return nil, types.ErrNewPersistenceContext(err)
 	}
@@ -66,9 +66,9 @@ func (u *UtilityModule) NewContext(height int64) (modules.UtilityContext, error)
 		LatestHeight: height,
 		Mempool:      u.Mempool,
 		Context: &Context{
-			PersistenceContext: ctx,
-			SavePoints:         make([][]byte, 0),
-			SavePointsM:        make(map[string]struct{}),
+			PersistenceRWContext: ctx,
+			SavePoints:           make([][]byte, 0),
+			SavePointsM:          make(map[string]struct{}),
 		},
 	}, nil
 }
@@ -77,8 +77,8 @@ func (u *UtilityContext) Store() *Context {
 	return u.Context
 }
 
-func (u *UtilityContext) GetPersistenceContext() modules.PersistenceContext {
-	return u.Context.PersistenceContext
+func (u *UtilityContext) GetPersistenceContext() modules.PersistenceRWContext {
+	return u.Context.PersistenceRWContext
 }
 
 func (u *UtilityContext) ReleaseContext() {
@@ -102,14 +102,14 @@ func (u *UtilityContext) RevertLastSavePoint() types.Error {
 	popIndex := len(u.Context.SavePoints) - 1
 	key, u.Context.SavePoints = u.Context.SavePoints[popIndex], u.Context.SavePoints[:popIndex]
 	delete(u.Context.SavePointsM, hex.EncodeToString(key))
-	if err := u.Context.PersistenceContext.RollbackToSavePoint(key); err != nil {
+	if err := u.Context.PersistenceRWContext.RollbackToSavePoint(key); err != nil {
 		return types.ErrRollbackSavePoint(err)
 	}
 	return nil
 }
 
 func (u *UtilityContext) NewSavePoint(transactionHash []byte) types.Error {
-	if err := u.Context.PersistenceContext.NewSavePoint(transactionHash); err != nil {
+	if err := u.Context.PersistenceRWContext.NewSavePoint(transactionHash); err != nil {
 		return types.ErrNewSavePoint(err)
 	}
 	txHash := hex.EncodeToString(transactionHash)
@@ -122,7 +122,7 @@ func (u *UtilityContext) NewSavePoint(transactionHash []byte) types.Error {
 }
 
 func (c *Context) Reset() types.Error {
-	if err := c.PersistenceContext.Reset(); err != nil {
+	if err := c.PersistenceRWContext.Reset(); err != nil {
 		return types.ErrResetContext(err)
 	}
 	return nil

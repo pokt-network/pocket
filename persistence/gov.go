@@ -1,7 +1,6 @@
 package persistence
 
 import (
-	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
@@ -886,17 +885,17 @@ func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) 
 }
 
 func (p PostgresContext) InitParams() error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
-	_, err = conn.Exec(ctx, schema.InsertParams(genesis.DefaultParams()))
+	_, err = txn.Exec(ctx, schema.InsertParams(genesis.DefaultParams()))
 	return err
 }
 
 // IMPROVE(team): Switch to generics
 func (p PostgresContext) SetParam(paramName string, paramValue interface{}) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
@@ -904,7 +903,7 @@ func (p PostgresContext) SetParam(paramName string, paramValue interface{}) erro
 	if err != nil {
 		return err
 	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	tx, err := txn.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -918,28 +917,28 @@ func (p PostgresContext) SetParam(paramName string, paramValue interface{}) erro
 }
 
 func (p PostgresContext) GetIntParam(paramName string) (i int, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return 0, err
 	}
-	err = conn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&i)
+	err = txn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&i)
 	return
 }
 
 func (p PostgresContext) GetStringParam(paramName string) (s string, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return "", err
 	}
-	err = conn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&s)
+	err = txn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&s)
 	return
 }
 
 func (p PostgresContext) GetBytesParam(paramName string) (param []byte, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
-	err = conn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&param)
+	err = txn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&param)
 	return
 }

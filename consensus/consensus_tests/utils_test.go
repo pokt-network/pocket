@@ -322,7 +322,7 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
 	utilityMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
 	utilityMock.EXPECT().
-		// NewContext(int64(1)).
+		// NewRWContext(int64(1)).
 		NewContext(gomock.Any()).
 		Return(utilityContextMock, nil).
 		MaxTimes(4)

@@ -80,6 +80,10 @@ func (actor *BaseProtocolActorSchema) GetOutputAddressQuery(operatorAddress stri
 	return Select(OutputAddressCol, operatorAddress, height, actor.tableName)
 }
 
+func (actor *BaseProtocolActorSchema) GetStakeAmountQuery(address string, height int64) string {
+	return Select(StakedTokensCol, address, height, actor.tableName)
+}
+
 func (actor *BaseProtocolActorSchema) GetPausedHeightQuery(address string, height int64) string {
 	return Select(PausedHeightCol, address, height, actor.tableName)
 }
@@ -126,6 +130,10 @@ func (actor *BaseProtocolActorSchema) UpdatePausedHeightQuery(address string, pa
 
 func (actor *BaseProtocolActorSchema) UpdateUnstakedHeightIfPausedBeforeQuery(pauseBeforeHeight, unstakingHeight, height int64) string {
 	return UpdateUnstakedHeightIfPausedBefore(actor.actorSpecificColName, unstakingHeight, pauseBeforeHeight, height, actor.tableName, actor.heightConstraintName)
+}
+
+func (actor *BaseProtocolActorSchema) SetStakeAmountQuery(address string, stakedTokens string, height int64) string {
+	return UpdateStakeAmount(address, actor.actorSpecificColName, stakedTokens, height, actor.tableName, actor.heightConstraintName)
 }
 
 func (actor *BaseProtocolActorSchema) ClearAllQuery() string {

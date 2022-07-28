@@ -223,6 +223,29 @@ func newTestApp() (*typesGenesis.App, error) {
 	}, nil
 }
 
+func TestGetSetStakeAmount(t *testing.T) {
+	var newStakeAmount = "new_stake_amount"
+	db := &persistence.PostgresContext{
+		Height: 1, // intentionally set to a non-zero height
+		DB:     *PostgresDB,
+	}
+
+	app, err := createAndInsertDefaultTestApp(db)
+	require.NoError(t, err)
+
+	// Check stake amount before
+	stakeAmount, err := db.GetAppStakeAmount(1, app.Address)
+	require.NoError(t, err)
+	require.Equal(t, DefaultStake, stakeAmount, "unexpected beginning stakeAmount")
+
+	// Check stake amount after
+	err = db.SetAppStakeAmount(app.Address, newStakeAmount)
+	require.NoError(t, err)
+	stakeAmountAfter, err := db.GetAppStakeAmount(1, app.Address)
+	require.NoError(t, err)
+	require.Equal(t, newStakeAmount, stakeAmountAfter, "unexpected status")
+}
+
 func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*typesGenesis.App, error) {
 	app, err := newTestApp()
 	if err != nil {

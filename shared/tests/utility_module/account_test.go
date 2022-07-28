@@ -3,10 +3,10 @@ package utility_module
 import (
 	"bytes"
 	"fmt"
+	"github.com/pokt-network/pocket/persistence"
 	"math/big"
 	"testing"
 
-	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -165,13 +165,13 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 }
 
 func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []*genesis.Account {
-	accs, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllAccounts(0)
+	accs, err := (ctx.Context.PersistenceRWContext).(*persistence.PostgresContext).GetAllAccounts(0)
 	require.NoError(t, err)
 	return accs
 }
 
 func GetAllTestingPools(t *testing.T, ctx utility.UtilityContext) []*genesis.Pool {
-	accs, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllPools(0)
+	accs, err := (ctx.Context.PersistenceRWContext).(*persistence.PostgresContext).GetAllPools(0)
 	require.NoError(t, err)
 	return accs
 }

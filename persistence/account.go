@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"math/big"
 
-	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/schema"
 	shared "github.com/pokt-network/pocket/shared/types"
 )
@@ -18,11 +17,11 @@ func (p PostgresContext) GetAccountAmount(address []byte, height int64) (amount 
 }
 
 func (p PostgresContext) getAccountAmountStr(address string, height int64) (amount string, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return
 	}
-	if err = conn.QueryRow(ctx, schema.GetAccountAmountQuery(address, height)).Scan(&amount); err != nil {
+	if err = txn.QueryRow(ctx, schema.GetAccountAmountQuery(address, height)).Scan(&amount); err != nil {
 		return
 	}
 	return
@@ -45,7 +44,7 @@ func (p PostgresContext) SubtractAccountAmount(address []byte, amount string) er
 // DISCUSS(team): If we are okay with `GetAccountAmount` return 0 as a default, this function can leverage
 //                `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
 func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
@@ -53,7 +52,7 @@ func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	if err != nil {
 		return err
 	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	tx, err := txn.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -71,7 +70,7 @@ func (p *PostgresContext) operationAccountAmount(address []byte, deltaAmount str
 // --- Pool Functions ---
 
 func (p PostgresContext) InsertPool(name string, address []byte, amount string) error { // TODO(Andrew): remove address param
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
@@ -79,7 +78,7 @@ func (p PostgresContext) InsertPool(name string, address []byte, amount string) 
 	if err != nil {
 		return err
 	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	tx, err := txn.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -90,11 +89,11 @@ func (p PostgresContext) InsertPool(name string, address []byte, amount string) 
 }
 
 func (p PostgresContext) GetPoolAmount(name string, height int64) (amount string, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return
 	}
-	if err = conn.QueryRow(ctx, schema.GetPoolAmountQuery(name, height)).Scan(&amount); err != nil {
+	if err = txn.QueryRow(ctx, schema.GetPoolAmountQuery(name, height)).Scan(&amount); err != nil {
 		return
 	}
 	return
@@ -118,7 +117,7 @@ func (p PostgresContext) SubtractPoolAmount(name string, amount string) error {
 //                `operationPoolAmount` with `*orig = *delta` and make everything much simpler.
 // DISCUSS(team): Do we have a use-case for this function?
 func (p PostgresContext) SetPoolAmount(name string, amount string) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
@@ -126,7 +125,7 @@ func (p PostgresContext) SetPoolAmount(name string, amount string) error {
 	if err != nil {
 		return err
 	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	tx, err := txn.Begin(ctx)
 	if err != nil {
 		return err
 	}
@@ -144,7 +143,7 @@ func (p *PostgresContext) operationPoolOrAccAmount(name, amount string,
 	op func(*big.Int, *big.Int) error,
 	getAmount func(string, int64) (string, error),
 	insert func(name, amount string, height int64) string) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
@@ -167,7 +166,7 @@ func (p *PostgresContext) operationPoolOrAccAmount(name, amount string,
 	if err := op(originalAmountBig, amountBig); err != nil {
 		return err
 	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	tx, err := txn.Begin(ctx)
 	if err != nil {
 		return err
 	}

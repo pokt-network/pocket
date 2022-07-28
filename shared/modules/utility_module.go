@@ -9,7 +9,7 @@ type UnstakingActor interface {
 // TODO(andrew): Look into a better way to structure this interface.
 type UtilityContext interface {
 	ReleaseContext()
-	GetPersistenceContext() PersistenceContext
+	GetPersistenceContext() PersistenceRWContext
 	CheckTransaction(tx []byte) error
 	GetTransactionsForProposal(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error)
 	ApplyBlock(Height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)

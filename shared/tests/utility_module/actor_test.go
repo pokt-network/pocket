@@ -3,13 +3,12 @@ package utility_module
 import (
 	"bytes"
 	"fmt"
+	"github.com/pokt-network/pocket/persistence"
+	"github.com/stretchr/testify/require"
 	"math"
 	"math/big"
 	"reflect"
 	"testing"
-
-	"github.com/pokt-network/pocket/persistence/pre_persistence"
-	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
@@ -260,13 +259,13 @@ func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
 }
 
 func GetAllTestingApps(t *testing.T, ctx utility.UtilityContext) []*genesis.App {
-	actors, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllApps(ctx.LatestHeight)
+	actors, err := (ctx.Context.PersistenceRWContext).(*persistence.PostgresContext).GetAllApps(ctx.LatestHeight)
 	require.NoError(t, err)
 	return actors
 }
 
 func GetAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []*genesis.Validator {
-	actors, err := (ctx.Context.PersistenceContext).(*pre_persistence.PrePersistenceContext).GetAllValidators(ctx.LatestHeight)
+	actors, err := (ctx.Context.PersistenceRWContext).(*persistence.PostgresContext).GetAllValidators(ctx.LatestHeight)
 	require.NoError(t, err)
 	return actors
 }

@@ -1,68 +1,34 @@
 package persistence
 
 import (
+	"context"
+	"github.com/jackc/pgx/v4"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
-
-	"github.com/syndtr/goleveldb/leveldb/memdb"
 )
 
 var _ modules.PersistenceModule = &persistenceModule{}
-var _ modules.PersistenceContext = &PostgresContext{}
-
-func (p PostgresContext) GetAppStakeAmount(height int64, address []byte) (string, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p PostgresContext) SetAppStakeAmount(address []byte, stakeAmount string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p PostgresContext) GetServiceNodeStakeAmount(height int64, address []byte) (string, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p PostgresContext) SetServiceNodeStakeAmount(address []byte, stakeAmount string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p PostgresContext) GetFishermanStakeAmount(height int64, address []byte) (string, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p PostgresContext) SetFishermanStakeAmount(address []byte, stakeAmount string) error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p PostgresContext) GetValidatorStakeAmount(height int64, address []byte) (string, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (p PostgresContext) SetValidatorStakeAmount(address []byte, stakeAmount string) error {
-	//TODO implement me
-	panic("implement me")
-}
+var _ modules.PersistenceRWContext = &PostgresContext{}
 
 type persistenceModule struct {
-	bus modules.Bus
+	postgresURL string
+	nodeSchema  string
+	db          *pgx.Conn
+	bus         modules.Bus
+}
+
+func NewPersistenceModule(postgresURL string, nodeSchema string, db *pgx.Conn, bus modules.Bus) *persistenceModule {
+	return &persistenceModule{postgresURL: postgresURL, nodeSchema: nodeSchema, db: db, bus: bus}
 }
 
 func Create(c *config.Config) (modules.PersistenceModule, error) {
-	if _, err := ConnectAndInitializeDatabase(c.Persistence.PostgresUrl, c.Persistence.NodeSchema); err != nil {
+	db, err := ConnectAndInitializeDatabase(c.Persistence.PostgresUrl, c.Persistence.NodeSchema)
+	if err != nil {
 		return nil, err
 	}
-	return &persistenceModule{
-		bus: nil,
-	}, nil
+	return NewPersistenceModule(c.Persistence.PostgresUrl, c.Persistence.NodeSchema, db, nil), nil
 }
 
 func (p *persistenceModule) Start() error {
@@ -86,10 +52,27 @@ func (m *persistenceModule) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (m *persistenceModule) NewContext(height int64) (modules.PersistenceContext, error) {
-	panic("NewContext not implemented")
+func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
+	db, err := ConnectAndInitializeDatabase(m.postgresURL, m.nodeSchema)
+	if err != nil {
+		return nil, err
+	}
+	tx, err := db.BeginTx(context.TODO(), pgx.TxOptions{
+		IsoLevel:       pgx.ReadCommitted,
+		AccessMode:     pgx.ReadWrite,
+		DeferrableMode: pgx.NotDeferrable,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return PostgresContext{
+		Height: height,
+		DB:     PostgresDB{tx},
+	}, nil
 }
 
-func (m *persistenceModule) GetCommitDB() *memdb.DB {
-	panic("GetCommitDB not implemented")
+func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
+	return m.NewRWContext(height)
+	// TODO (Team) this can be completely separate from rw context.
+	// It should not use transactions rather access the db directly
 }
