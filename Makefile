@@ -228,7 +228,7 @@ protogen_show:
 .PHONY: protogen_clean
 ## Remove all the generated protobufs.
 protogen_clean:
-	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs rm
+	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs -r rm
 
 .PHONY: protogen_local
 ## Generate go structures for all of the protobufs
