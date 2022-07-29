@@ -18,7 +18,7 @@ func (p *persistenceModule) HandleDebugMessage(debugMessage *types.DebugMessage)
 
 func (p *persistenceModule) showLatestBlockInStore(_ *types.DebugMessage) {
 	// TODO: Add an iterator to the `kvstore` and use that instead
-	height := p.GetBus().GetConsensusModule().BlockHeight() - 1 // -1 because current height has not been commited yet
+	height := p.GetBus().GetConsensusModule().BlockHeight()
 	blockBytes, err := p.GetBlockStore().Get(heightToBytes(int64(height)))
 	if err != nil {
 		log.Printf("Error getting block %d from block store: %s \n", height, err)

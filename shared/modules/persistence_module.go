@@ -41,7 +41,7 @@ type PersistenceContext interface {
 	GetHeight() (int64, error)
 
 	// Block Operations
-	GetLatestBlockHeight() (uint64, error)
+	GetLatestBlockHeight() (int64, error)
 	GetBlockHash(height int64) ([]byte, error)
 	GetBlocksPerSession() (int, error)
 

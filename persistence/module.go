@@ -50,9 +50,18 @@ func Create(c *config.Config) (modules.PersistenceModule, error) {
 func (p *persistenceModule) Start() error {
 	log.Println("Starting persistence module...")
 
-	// TODO_IN_THIS_COMMIT: Load from previous state in the postgres database and KV Store
-	if err := p.hydrateGenesisDbState(); err != nil {
+	shouldHydrateGenesis, err := p.shouldHydrateGenesisDb()
+	if err != nil {
 		return err
+	}
+
+	if shouldHydrateGenesis {
+		if err := p.hydrateGenesisDbState(); err != nil {
+			return err
+		}
+		log.Println("Hydrating genesis state...")
+	} else {
+		log.Println("Loading state from previous state...")
 	}
 
 	return nil
@@ -95,7 +104,24 @@ func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
 	return m.blockStore
 }
 
-// INCOMPLETE: We will need to suport multiple contexts at the same height in the future
+// INCOMPLETE: We will need to support multiple contexts at the same height in the future
 func createContextId(height int64) contextId {
 	return contextId(height)
+}
+
+// INCOMPLETE: This is not a complete implementation but just a first approach. Approach with
+//             a grain of salt.
+func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
+	checkContext, err := m.NewContext(-1) // Unknown height
+	if err != nil {
+		return false, err
+	}
+	defer checkContext.Release()
+
+	maxHeight, err := checkContext.GetLatestBlockHeight()
+	if err == nil || maxHeight == 0 {
+		return true, nil
+	}
+
+	return m.blockStore.Exists(heightToBytes(int64(maxHeight)))
 }

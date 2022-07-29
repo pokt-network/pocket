@@ -10,7 +10,7 @@ import (
 )
 
 // OPTIMIZE(team): get from blockstore or keep in cache/memory
-func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
+func (p PostgresContext) GetLatestBlockHeight() (latestHeight int64, err error) {
 	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return 0, err
@@ -62,8 +62,11 @@ func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []
 		return err
 	}
 	fmt.Println("OLSH", hash, proposerAddr, quorumCert)
+	// hash := crypto.SHA3Hash(txBz)
+	// hashString := hex.EncodeToString(hash)
+
 	// _, err = conn.Exec(ctx, schema.InsertBlockQuery(height, []byte(hash), proposerAddr, quorumCert))
-	_, err = conn.Exec(ctx, schema.InsertBlockQuery(height, []byte("a"), []byte("b"), []byte("c")))
+	_, err = conn.Exec(ctx, schema.InsertBlockQuery(height, hex.EncodeToString([]byte("a")), []byte("b"), []byte("c")))
 	return err
 }
 

@@ -110,10 +110,6 @@ type PrePersistenceContext struct {
 	DBs        []*memdb.DB
 }
 
-func (m *PrePersistenceContext) GetLatestBlockHeight() (uint64, error) {
-	return uint64(m.Height), nil
-}
-
 // ExportState Unused but high potential for usefulness for telemetry
 func (m *PrePersistenceContext) ExportState() (*typesGenesis.GenesisState, types.Error) {
 	var err error
@@ -263,6 +259,10 @@ func (m *PrePersistenceContext) Store() *memdb.DB {
 
 func (m *PrePersistenceContext) GetHeight() (int64, error) {
 	return m.Height, nil
+}
+
+func (m *PrePersistenceContext) GetLatestBlockHeight() (int64, error) {
+	return m.GetHeight()
 }
 
 func (m *PrePersistenceContext) GetBlockHash(height int64) ([]byte, error) {

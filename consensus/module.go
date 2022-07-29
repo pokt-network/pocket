@@ -110,6 +110,10 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 }
 
 func (m *consensusModule) Start() error {
+	if err := m.maybeLoadState(); err != nil {
+		return err
+	}
+
 	if err := m.paceMaker.Start(); err != nil {
 		return err
 	}
@@ -136,6 +140,32 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
 	m.paceMaker.SetBus(pocketBus)
 	m.leaderElectionMod.SetBus(pocketBus)
+}
+
+func (m *consensusModule) maybeLoadState() error {
+	persistenceContext, err := m.GetBus().GetPersistenceModule().NewContext(-1) // Unknown height
+	if err != nil {
+		return nil
+	}
+	defer persistenceContext.Release()
+
+	latestHeight, err := persistenceContext.GetLatestBlockHeight()
+	if err != nil || latestHeight == 0 {
+		// TODO: State syncronization required
+		return nil
+	}
+
+	appHash, err := persistenceContext.GetBlockHash(latestHeight)
+	if err != nil {
+		return err
+	}
+
+	// TODO: Populate the rest of the state from the persistence module: validator set, quorum cert, last block hash, etc...
+	m.Height = uint64(latestHeight)
+	m.appHash = string(appHash)
+
+	return nil
+
 }
 
 // TODO(discuss): Low priority design: think of a way to make `hotstuff_*` files be a sub-package under consensus.

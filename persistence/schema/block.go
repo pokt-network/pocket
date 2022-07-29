@@ -13,12 +13,12 @@ const (
 		)`
 )
 
-func InsertBlockQuery(height uint64, hash []byte, proposerAddr []byte, quorumCert []byte) string {
+func InsertBlockQuery(height uint64, hashString string, proposerAddr []byte, quorumCert []byte) string {
 	return fmt.Sprintf(
 		`INSERT INTO %s(height, hash, proposer_address, quorum_certificate)
 			VALUES(%d, '%s', '%s', '%s')`,
 		BlockTableName,
-		height, hash, proposerAddr, quorumCert)
+		height, hashString, proposerAddr, quorumCert)
 }
 
 func GetBlockHashQuery(height int64) string {
