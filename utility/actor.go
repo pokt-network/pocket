@@ -1,12 +1,13 @@
 package utility
 
 import (
+	"math"
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	"math"
-	"math/big"
 )
 
 // 'Actor' is the consolidated term for common functionality among the following network actors: app, fish, node, val
@@ -450,14 +451,16 @@ func (u *UtilityContext) CheckAboveMinStake(actorType typesUtil.ActorType, amoun
 
 func (u *UtilityContext) CheckBelowMaxChains(actorType typesUtil.ActorType, chains []string) types.Error {
 	// validators don't have chains field
-	if actorType != typesUtil.ActorType_Val {
-		maxChains, err := u.GetMaxChains(actorType)
-		if err != nil {
-			return err
-		}
-		if len(chains) > maxChains {
-			return types.ErrMaxChains(maxChains)
-		}
+	if actorType == typesUtil.ActorType_Val {
+		return nil
+	}
+
+	maxChains, err := u.GetMaxChains(actorType)
+	if err != nil {
+		return err
+	}
+	if len(chains) > maxChains {
+		return types.ErrMaxChains(maxChains)
 	}
 	return nil
 }

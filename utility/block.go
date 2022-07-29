@@ -1,10 +1,11 @@
 package utility
 
 import (
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	"math/big"
 )
 
 // This 'block' file contains all the lifecycle block operations.
