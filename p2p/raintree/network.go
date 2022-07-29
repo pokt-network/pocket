@@ -8,7 +8,7 @@ import (
 	"math/rand"
 	"time"
 
-	types2 "github.com/pokt-network/pocket/p2p/types"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
@@ -16,16 +16,16 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var _ types2.Network = &rainTreeNetwork{}
+var _ typesP2P.Network = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
 	selfAddr cryptoPocket.Address
-	addrBook types2.AddrBook
+	addrBook typesP2P.AddrBook
 
 	// TECHDEBT(olshansky): Consider optimizing these away if possible.
 	// Helpers / abstractions around `addrBook` for simpler implementation through additional
 	// storage & pre-computation.
-	addrBookMap            types2.AddrBookMap
+	addrBookMap            typesP2P.AddrBookMap
 	addrList               []string
 	maxNumLevels           int32
 	redundancyLayerEnabled bool // debug config only
@@ -34,12 +34,12 @@ type rainTreeNetwork struct {
 	mempool types.Mempool
 }
 
-func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook types2.AddrBook) types2.Network {
+func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) typesP2P.Network {
 	n := &rainTreeNetwork{
 		selfAddr: addr,
 		addrBook: addrBook,
 		// This subset of fields are initialized by `processAddrBookUpdates` below
-		addrBookMap:            make(types2.AddrBookMap),
+		addrBookMap:            make(typesP2P.AddrBookMap),
 		addrList:               make([]string, 0),
 		maxNumLevels:           0,
 		redundancyLayerEnabled: true,
@@ -53,7 +53,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook types2.AddrBook) typ
 		log.Println("[ERROR] Error initializing rainTreeNetwork: ", err)
 	}
 
-	return types2.Network(n)
+	return typesP2P.Network(n)
 }
 
 func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
@@ -64,7 +64,7 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level int32, nonc
 	var addr1, addr2 cryptoPocket.Address
 	var ok bool
 
-	msg := &types2.RainTreeMessage{
+	msg := &typesP2P.RainTreeMessage{
 		Level: level,
 		Data:  data,
 		Nonce: nonce,
@@ -126,7 +126,7 @@ func (n *rainTreeNetwork) RedundancyLayer() (level int32, msgLevel int32) {
 	return n.maxNumLevels, -1 // -1 ensures not an echo chamber
 }
 
-func (n *rainTreeNetwork) demote(rainTreeMsg *types2.RainTreeMessage) error {
+func (n *rainTreeNetwork) demote(rainTreeMsg *typesP2P.RainTreeMessage) error {
 	if rainTreeMsg.Level >= 0 {
 		if err := n.networkBroadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return err
@@ -136,7 +136,7 @@ func (n *rainTreeNetwork) demote(rainTreeMsg *types2.RainTreeMessage) error {
 }
 
 func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address) error {
-	msg := &types2.RainTreeMessage{
+	msg := &typesP2P.RainTreeMessage{
 		Level: 0, // Direct send that does not need to be propagated
 		Data:  data,
 		Nonce: getNonce(),
@@ -173,7 +173,7 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 }
 
 func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
-	var rainTreeMsg types2.RainTreeMessage
+	var rainTreeMsg typesP2P.RainTreeMessage
 	if err := proto.Unmarshal(data, &rainTreeMsg); err != nil {
 		return nil, err
 	}
@@ -211,12 +211,12 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	return rainTreeMsg.Data, nil
 }
 
-func (n *rainTreeNetwork) GetAddrBook() types2.AddrBook {
+func (n *rainTreeNetwork) GetAddrBook() typesP2P.AddrBook {
 	return n.addrBook
 
 }
 
-func (n *rainTreeNetwork) AddPeerToAddrBook(peer *types2.NetworkPeer) error {
+func (n *rainTreeNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {
 	n.addrBook = append(n.addrBook, peer)
 	if err := n.processAddrBookUpdates(); err != nil {
 		return nil
@@ -224,7 +224,7 @@ func (n *rainTreeNetwork) AddPeerToAddrBook(peer *types2.NetworkPeer) error {
 	return nil
 }
 
-func (n *rainTreeNetwork) RemovePeerToAddrBook(peer *types2.NetworkPeer) error {
+func (n *rainTreeNetwork) RemovePeerToAddrBook(peer *typesP2P.NetworkPeer) error {
 	panic("Not implemented")
 }
 
