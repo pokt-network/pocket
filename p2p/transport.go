@@ -1,11 +1,11 @@
-package pre2p
+package p2p
 
 import (
 	"fmt"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"io/ioutil"
 	"net"
 
-	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	"github.com/pokt-network/pocket/shared/config"
 )
 
@@ -13,7 +13,7 @@ const (
 	TCPNetworkLayerProtocol = "tcp4"
 )
 
-func CreateListener(cfg *config.Pre2PConfig) (typesPre2P.Transport, error) {
+func CreateListener(cfg *config.P2PConfig) (typesP2P.Transport, error) {
 	switch cfg.ConnectionType {
 	case config.TCPConnection:
 		return createTCPListener(cfg)
@@ -24,7 +24,7 @@ func CreateListener(cfg *config.Pre2PConfig) (typesPre2P.Transport, error) {
 	}
 }
 
-func CreateDialer(cfg *config.Pre2PConfig, url string) (typesPre2P.Transport, error) {
+func CreateDialer(cfg *config.P2PConfig, url string) (typesP2P.Transport, error) {
 	switch cfg.ConnectionType {
 	case config.TCPConnection:
 		return createTCPDialer(cfg, url)
@@ -35,14 +35,14 @@ func CreateDialer(cfg *config.Pre2PConfig, url string) (typesPre2P.Transport, er
 	}
 }
 
-var _ typesPre2P.Transport = &tcpConn{}
+var _ typesP2P.Transport = &tcpConn{}
 
 type tcpConn struct {
 	address  *net.TCPAddr
 	listener *net.TCPListener
 }
 
-func createTCPListener(cfg *config.Pre2PConfig) (*tcpConn, error) {
+func createTCPListener(cfg *config.P2PConfig) (*tcpConn, error) {
 	addr, err := net.ResolveTCPAddr(TCPNetworkLayerProtocol, fmt.Sprintf(":%d", cfg.ConsensusPort))
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func createTCPListener(cfg *config.Pre2PConfig) (*tcpConn, error) {
 	}, nil
 }
 
-func createTCPDialer(cfg *config.Pre2PConfig, url string) (*tcpConn, error) {
+func createTCPDialer(cfg *config.P2PConfig, url string) (*tcpConn, error) {
 	addr, err := net.ResolveTCPAddr(TCPNetworkLayerProtocol, url)
 	if err != nil {
 		return nil, err
@@ -114,16 +114,16 @@ func (c *tcpConn) Close() error {
 	return nil
 }
 
-var _ typesPre2P.Transport = &emptyConn{}
+var _ typesP2P.Transport = &emptyConn{}
 
 type emptyConn struct {
 }
 
-func createEmptyListener(_ *config.Pre2PConfig) (typesPre2P.Transport, error) {
+func createEmptyListener(_ *config.P2PConfig) (typesP2P.Transport, error) {
 	return &emptyConn{}, nil
 }
 
-func createEmptyDialer(_ *config.Pre2PConfig, _ string) (typesPre2P.Transport, error) {
+func createEmptyDialer(_ *config.P2PConfig, _ string) (typesP2P.Transport, error) {
 	return &emptyConn{}, nil
 }
 
