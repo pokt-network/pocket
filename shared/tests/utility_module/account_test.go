@@ -18,14 +18,17 @@ import (
 func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	acc := GetAllTestingAccounts(t, ctx)[0]
+
 	initialAmount, err := types.StringToBigInt(acc.Amount)
 	require.NoError(t, err)
+
 	addAmount := big.NewInt(1)
 	err = ctx.AddAccountAmount(acc.Address, addAmount)
 	require.NoError(t, err, "add account amount")
 
 	afterAmount, err := ctx.GetAccountAmount(acc.Address)
 	require.NoError(t, err)
+
 	expected := initialAmount.Add(initialAmount, addAmount)
 	require.True(t, afterAmount.Cmp(expected) == 0, fmt.Sprintf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount))
 }
@@ -33,6 +36,7 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 func TestUtilityContext_AddAccountAmountString(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	acc := GetAllTestingAccounts(t, ctx)[0]
+
 	initialAmount, err := types.StringToBigInt(acc.Amount)
 	require.NoError(t, err)
 	addAmount := big.NewInt(1)
