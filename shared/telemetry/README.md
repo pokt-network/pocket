@@ -9,6 +9,7 @@
     - [How to use event metrics?](#how-to-use-event-metrics)
     - [Consuming logs in Loki](#consuming-logs-in-loki)
     - [Using Grafana](#using-grafana)
+- [Defining your own metrics](#defining-your-own-metrics)
 
 # Introduction
 
@@ -168,3 +169,28 @@ $ make compose_and_watch
 _NOTE: Make sure you use `http` and not `https` when developing locally._
 
 ![](./docs/browsing-existing-dashboards.gif)
+
+
+# Defining your own metrics
+
+We follow a specific pattern to define our metrics to guarantee consistency and ease of use.
+Metric definitions for each module/domain/service are stored under a new folder called `telemetry` in the module's folder, in a file named `metrics.go`, and they respect the following rules: 
+
+* Every metric's name and description and any additional information about the metric should be defined as a constant.
+* Constants relative to a metric's definition follow a naming pattern: `<metric_name>_<metric_type>_<metric_attribute>`
+* We keep the actual metric name value open for definition however the developer sees fit.
+
+For example:
+
+We want to define a metric of type: timeseries, with a name: `nodes_alive_counter`,
+
+The constants definition will be as follows:
+```go
+// metric_name=NODES_ALIVE_COUNTER
+// metric_type=TIME_SERIES
+// metric_attribute=NAME
+const NODES_ALIVE_COUNTER_TIME_SERIES_NAME = "nodes_alive_counter"
+const NODES_ALIVE_COUNTER_TIME_SERIES_DESCRIPTION = "Number of nodes online"
+```
+
+This makes referencing the metrics easier, and makes it easy to change the name of the metric later on, in addition to the fact that it gathers metric definitions in a single file.

@@ -216,6 +216,8 @@ func (m *consensusModule) AppHash() string {
 	return m.appHash
 }
 
+// Please reference shared/modules/consensus_modules to learn more about why this method
+// is exposed for the moment.
 func (m *consensusModule) BlockHeight() uint64 {
 	return m.Height
 }

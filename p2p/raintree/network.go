@@ -2,13 +2,16 @@ package raintree
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"math/rand"
 	"time"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/modules"
+
+	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 
@@ -16,8 +19,11 @@ import (
 )
 
 var _ typesP2P.Network = &rainTreeNetwork{}
+var _ modules.IntegratableModule = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
+	bus modules.Bus
+
 	// TODO(olshansky): still thinking through these structures
 	selfAddr cryptoPocket.Address
 	addrBook typesP2P.AddrBook
@@ -41,7 +47,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) t
 		addrBookMap:  make(typesP2P.AddrBookMap),
 		addrList:     make([]string, 0),
 		maxNumLevels: 0,
-		// TODO(team): Mempool size should be configurable
+		// TODO: Mempool size should be configurable
 		mempool: types.NewMempool(1000000, 1000),
 	}
 
@@ -137,6 +143,18 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 }
 
 func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
+	blockHeightInt := n.GetBus().GetConsensusModule().BlockHeight()
+	blockHeight := fmt.Sprintf("%d", blockHeightInt)
+
+	n.GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent(
+			p2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
+			p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_NAME,
+			"height", blockHeight,
+		)
+
 	var rainTreeMsg typesP2P.RainTreeMessage
 	if err := proto.Unmarshal(data, &rainTreeMsg); err != nil {
 		return nil, err
@@ -155,14 +173,26 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		}
 	}
 
+	// DISCUSSION(team): What do you think about turning GetHashStringFromBytes to GetHashString<!-- <T> --> using generics?
+	// I am in favor of that to hide away the logic of converting T to binary.
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, uint64(rainTreeMsg.Nonce))
-	hash := cryptoPocket.SHA3Hash(b)
-	hashString := hex.EncodeToString(hash)
+	hashString := GetHashStringFromBytes(b)
+
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
 	// TODO(team): Add more tests to verify this is sufficient for deduping purposes.
 	if n.mempool.Contains(hashString) {
+		n.GetBus().
+			GetTelemetryModule().
+			GetEventMetricsAgent().
+			EmitEvent(
+				p2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
+				p2pTelemetry.BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME,
+				"hash", hashString,
+				"height", blockHeight,
+			)
+
 		return nil, nil
 	}
 
@@ -189,6 +219,14 @@ func (n *rainTreeNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {
 
 func (n *rainTreeNetwork) RemovePeerToAddrBook(peer *typesP2P.NetworkPeer) error {
 	panic("Not implemented")
+}
+
+func (n *rainTreeNetwork) SetBus(bus modules.Bus) {
+	n.bus = bus
+}
+
+func (n *rainTreeNetwork) GetBus() modules.Bus {
+	return n.bus
 }
 
 func getNonce() uint64 {
