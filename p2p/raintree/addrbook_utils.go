@@ -2,11 +2,12 @@ package raintree
 
 import (
 	"fmt"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"log"
 	"math"
+	"sort"
 	"strings"
 
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
@@ -21,11 +22,23 @@ const (
 
 // Whenever `addrBook` changes, we also need to update `addrBookMap` and `addrList`
 func (n *rainTreeNetwork) processAddrBookUpdates() error {
-	var err error
+	// OPTIMIZE(olshansky): This is a very naive approach for now that recomputes everything every time that we can optimize later
+	n.addrBookMap = make(map[string]*typesP2P.NetworkPeer, len(n.addrBook))
+	n.addrList = make([]string, len(n.addrBook))
+	for i, peer := range n.addrBook {
+		addr := peer.Address.String()
+		n.addrList[i] = addr
+		n.addrBookMap[addr] = peer
+	}
 	n.maxNumLevels = n.getMaxAddrBookLevels()
-	n.addrList, n.addrBookMap, err = n.addrBook.ToListAndMap(n.selfAddr.String()) // TODO (Team) stick to convention, string or bytes
-	if err != nil {
-		return err
+
+	sort.Strings(n.addrList)
+	if i, ok := n.getSelfIndexInAddrBook(); ok {
+		// The list is sorted lexicographically above, but is reformatted below so this addr of this node
+		// is always the first in the list. This makes RainTree propagation easier to compute and interpret.
+		n.addrList = append(n.addrList[i:len(n.addrList)], n.addrList[0:i]...)
+	} else {
+		return fmt.Errorf("self address not found for %s in addrBook so this client can send messages but does not propagate them", n.selfAddr)
 	}
 	return nil
 }
@@ -40,15 +53,15 @@ func (n *rainTreeNetwork) getSelfIndexInAddrBook() (int, bool) {
 	return -1, false
 }
 
-func (n *rainTreeNetwork) getFirstTargetAddr(level int32) cryptoPocket.Address {
+func (n *rainTreeNetwork) getFirstTargetAddr(level uint32) (cryptoPocket.Address, bool) {
 	return n.getTarget(level, firstMsgTargetPercentage)
 }
 
-func (n *rainTreeNetwork) getSecondTargetAddr(level int32) cryptoPocket.Address {
+func (n *rainTreeNetwork) getSecondTargetAddr(level uint32) (cryptoPocket.Address, bool) {
 	return n.getTarget(level, secondMsgTargetPercentage)
 }
 
-func (n *rainTreeNetwork) getTarget(level int32, targetPercentage float64) cryptoPocket.Address {
+func (n *rainTreeNetwork) getTarget(level uint32, targetPercentage float64) (cryptoPocket.Address, bool) {
 	// OPTIMIZE(olshansky): We are computing this twice for each message, but it's not that expensive.
 	l := n.getAddrBookLengthAtHeight(level)
 
@@ -57,48 +70,30 @@ func (n *rainTreeNetwork) getTarget(level int32, targetPercentage float64) crypt
 	// If the target is 0, it is a reference to self, which is a `Demote` in RainTree terms.
 	// This is handled separately.
 	if i == 0 {
-		return nil
+		return nil, false
 	}
 
 	addrStr := n.addrList[i]
 	if addr, ok := n.addrBookMap[addrStr]; ok {
 		// IMPROVE(olshansky): Consolidate so the debug print contains all (i.e. both) targets in one log line
 		log.Printf("[DEBUG] Target (%0.2f) at height (%d): %s", targetPercentage, level, n.debugMsgTargetString(l, i))
-		return addr.Address
+		return addr.Address, true
 	}
-	return nil
-}
-
-func (n *rainTreeNetwork) getLeftAndRight() (left cryptoPocket.Address, right cryptoPocket.Address, ok bool) {
-	return getLeftAndRight(n.addrList, n.addrBookMap)
-}
-
-// TODO (team): should make addrList a type
-func getLeftAndRight(addrList []string, addrBookMap typesP2P.AddrBookMap) (left cryptoPocket.Address, right cryptoPocket.Address, ok bool) {
-	if len(addrList) < 3 {
-		return nil, nil, false
-	}
-	leftAddress := addrList[len(addrList)-1]
-	rightAddress := addrList[1]
-	return addrBookMap[leftAddress].Address, addrBookMap[rightAddress].Address, true
+	return nil, false
 }
 
 // TODO(team): Need to integrate with persistence layer so we are storing this on a per height basis.
 // We can easily hit an issue where we are propagating a message from an older height (e.g. before
 // the addr book was updated), but we're using `maxNumLevels` associated with the number of
 // validators at the current height.
-func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level int32) int {
+func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level uint32) int {
 	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(n.maxNumLevels-level))
 	return int(float64(len(n.addrList)) * (shrinkageCoefficient))
 }
 
-func (n *rainTreeNetwork) getMaxAddrBookLevels() int32 {
-	return getMaxAddrBookLevels(n.addrBook)
-}
-
-func getMaxAddrBookLevels(addrBook typesP2P.AddrBook) int32 {
-	addrBookSize := float64(len(addrBook))
-	return int32(math.Ceil(logBase(addrBookSize)))
+func (n *rainTreeNetwork) getMaxAddrBookLevels() uint32 {
+	addrBookSize := float64(len(n.addrBook))
+	return uint32(math.Ceil(logBase(addrBookSize)))
 }
 
 func logBase(x float64) float64 {

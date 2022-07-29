@@ -5,14 +5,14 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"sort"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -42,8 +42,8 @@ func TestRainTreeCompleteTwoNodes(t *testing.T) {
 	// 	       val_2
 	originatorNode := validatorId(t, 1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(t, 1): {1, 1}, // Originator
-		validatorId(t, 2): {2, 2},
+		validatorId(t, 1): {0, 0}, // Originator
+		validatorId(t, 2): {1, 1},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
@@ -54,9 +54,9 @@ func TestRainTreeCompleteThreeNodes(t *testing.T) {
 	//   val_2        val_1     val_3
 	originatorNode := validatorId(t, 1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(t, 1): {2, 2}, // Originator
-		validatorId(t, 2): {3, 3},
-		validatorId(t, 3): {3, 3},
+		validatorId(t, 1): {0, 0}, // Originator
+		validatorId(t, 2): {1, 1},
+		validatorId(t, 3): {1, 1},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
@@ -70,9 +70,9 @@ func TestRainTreeCompleteFourNodes(t *testing.T) {
 	// 		    val_3                val_2             val_4
 	originatorNode := validatorId(t, 1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(t, 1): {2, 2}, // Originator
-		validatorId(t, 2): {4, 4},
-		validatorId(t, 3): {4, 4},
+		validatorId(t, 1): {0, 0}, // Originator
+		validatorId(t, 2): {2, 2},
+		validatorId(t, 3): {2, 2},
 		validatorId(t, 4): {1, 1},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)

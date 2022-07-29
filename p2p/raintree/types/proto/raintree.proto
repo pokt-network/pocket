@@ -4,7 +4,7 @@ package raintree;
 option go_package = "github.com/pokt-network/pocket/p2p/types";
 
 message RainTreeMessage {
-  int32 level = 1;
+  uint32 level = 1;
   bytes data = 2;
 
   uint64 nonce = 3;

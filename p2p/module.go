@@ -1,10 +1,11 @@
 package p2p
 
 import (
+	"log"
+
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"log"
 
 	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
