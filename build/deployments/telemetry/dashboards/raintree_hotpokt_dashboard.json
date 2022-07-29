@@ -143,7 +143,7 @@
             "uid": "P4169E866C3094E38"
           },
           "editorMode": "code",
-          "expr": "consensus_blockchain_height",
+          "expr": "consensus_blockchain_height_counter",
           "interval": "6s",
           "legendFormat": "{{instance}}",
           "range": true,
@@ -203,7 +203,7 @@
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "expr": "sum by (blockheight) (count_over_time({host=\"docker-desktop\"}\n    |= \"[EVENT] consensus\"\n    | pattern `<datetime> <_> <time> <type> <_> <metric_name> <_> <blockheight> <step> <validator_role>`[6s]))",
+          "expr": "sum by (blockheight) (count_over_time({host=\"docker-desktop\"}\n    |= \"[EVENT] event_metrics_namespace_consensus\"\n    | pattern `<datetime> <_> <time> <type> <_> <metric_name> <_> <blockheight> <step> <validator_role>`[6s]))",
           "queryType": "range",
           "refId": "A"
         }
