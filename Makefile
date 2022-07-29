@@ -142,15 +142,19 @@ docker_wipe: docker_check prompt_user
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
 	$(eval modules_dir = "shared/modules")
-	mockgen --source=${modules_dir}/persistence_module.go -destination=${modules_dir}/mocks/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/p2p_module.go -destination=${modules_dir}/mocks/p2p_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/bus_module.go -destination=${modules_dir}/mocks/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	$(eval mocks_dir = "shared/modules/mocks")
+	rm -rf ${mocks_dir}
+	mockgen --source=${modules_dir}/persistence_module.go -destination=${mocks_dir}/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/p2p_module.go -destination=${mocks_dir}/p2p_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/utility_module.go -destination=${mocks_dir}/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/consensus_module.go -destination=${mocks_dir}/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/bus_module.go -destination=${mocks_dir}/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	echo "Mocks generated in ${modules_dir}/mocks"
 
 	$(eval p2p_types_dir = "p2p/types")
-	mockgen --source=${p2p_types_dir}/network.go -destination=${p2p_types_dir}/mocks/network_mock.go
+	$(eval p2p_type_mocks_dir = "p2p/types/mocks")
+	rm -rf ${p2p_type_mocks_dir}
+	mockgen --source=${p2p_types_dir}/network.go -destination=${p2p_type_mocks_dir}/network_mock.go
 	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
 
 .PHONY: test_all
