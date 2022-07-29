@@ -15,12 +15,6 @@ import (
 // ValidateBasic() is a 'stateless' validation check that should encapsulate all
 // validations possible before even checking the state storage layer
 
-// REFACTOR: Moving this into a proto file enum (impacts everything)
-const (
-	UnstakingStatus = 1
-	StakedStatus    = 2
-)
-
 // DISCUSS(olshansky): Should we move these into a shared file?
 const (
 	MillionInt       = 1000000

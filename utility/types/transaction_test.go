@@ -1,7 +1,6 @@
 package types
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -63,24 +62,24 @@ func TestTransaction_Message(t *testing.T) {
 
 	expected := NewTestingMsg(t)
 	require.NotEqual(t, expected, msg)
-
 	require.Equal(t, msg.ProtoReflect().Type(), expected.ProtoReflect().Type())
+
 	message := msg.(*MessageSend)
 	expectedMessage := expected.(*MessageSend)
-	if message.Amount != expectedMessage.Amount ||
-		!bytes.Equal(message.ToAddress, expectedMessage.ToAddress) ||
-		!bytes.Equal(message.FromAddress, expectedMessage.FromAddress) {
-		t.Fatal("unequal messages")
-	}
+	require.Equal(t, message.Amount, expectedMessage.Amount, "unequal messages")
+	require.Equal(t, message.FromAddress, expectedMessage.FromAddress, "unequal messages")
+	require.Equal(t, message.ToAddress, expectedMessage.ToAddress, "unequal messages")
 }
 
 func TestTransaction_Sign(t *testing.T) {
 	tx := NewUnsignedTestingTransaction(t)
+
 	err := tx.Sign(testingSenderPrivateKey)
 	require.NoError(t, err)
 
 	msg, err := tx.SignBytes()
 	require.NoError(t, err)
+
 	verified := testingSenderPublicKey.Verify(msg, tx.Signature.Signature)
 	require.True(t, verified, "signature should be verified")
 }
@@ -100,9 +99,8 @@ func TestTransaction_ValidateBasic(t *testing.T) {
 
 	txInvalidMessageAny := proto.Clone(&tx).(*Transaction)
 	txInvalidMessageAny.Msg = nil
-	if err := txInvalidMessageAny.ValidateBasic(); err.Code() != types.ErrProtoFromAny(err).Code() {
-		require.NoError(t, err)
-	}
+	er = txInvalidMessageAny.ValidateBasic()
+	require.Equal(t, types.ErrProtoFromAny(er).Code(), er.Code())
 
 	txEmptySig := proto.Clone(&tx).(*Transaction)
 	txEmptySig.Signature = nil
@@ -116,9 +114,8 @@ func TestTransaction_ValidateBasic(t *testing.T) {
 
 	txInvalidPublicKey := proto.Clone(&tx).(*Transaction)
 	txInvalidPublicKey.Signature.PublicKey = []byte("publickey")
-	if err := txInvalidPublicKey.ValidateBasic(); err.Code() != types.ErrNewPublicKeyFromBytes(err).Code() {
-		require.NoError(t, err)
-	}
+	err = txInvalidPublicKey.ValidateBasic()
+	require.Equal(t, types.ErrNewPublicKeyFromBytes(err).Code(), err.Code())
 
 	txInvalidSignature := proto.Clone(&tx).(*Transaction)
 	tx.Signature.PublicKey = testingSenderPublicKey.Bytes()

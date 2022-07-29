@@ -185,18 +185,25 @@ $ make test_utility_types && make test_utility_module
 
 ```bash
 utility
-|---`/doc` // contains the documentation specific to the utility module
-|--- `/proto` // protobuf3 messages that auto-generate into the types directory
-|--- `/types` // stateless (without relying on persistence) library of utility types
-|- message.go // payloads of transactions
-|- transaction.go // the finite unit of the block
-|- vote.go // vote structure for double sign transaction
-|- account.go // utility context for accounts & pools
-|- actor.go // utility context for apps, fish, nodes, and validators
-|- block.go // utility context for blocks
-|- gov.go // utility context for dao & parameters
-|- module.go // module implementation and interfaces
-|- transaction.go // utility context for transactions including handlers
+├── account.go # utility context for accounts & pools
+├── actor.go   # utility context for apps, fish, nodes, and validators
+├── block.go   # utility context for blocks
+├── doc        # contains the documentation and changelog
+├── gov.go     # utility context for dao & parameters
+├── module.go  # module implementation and interfaces
+├── proto      # protobuf3 messages that auto-generate into the types directory
+│   ├── actor.proto
+│   ├── message.proto
+│   ├── transaction.proto
+│   └── vote.proto
+├── test           # utility unit tests
+├── transaction.go # utility context for transactions including handlers
+├── types          # stateless (without relying on persistence) library of utility types
+│   ├── actor.go
+│   ├── message.go     # payloads of transactions
+│   ├── transaction.go # the finite unit of the block
+│   ├── utils.go
+│   ├── vote.go        # vote structure for double sign transaction
+└── utility
+    └── types
 ```
-
-// TODO (Olshansk) still opportunity to simplify actor.go but I don't have an idea for it yet

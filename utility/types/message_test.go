@@ -80,40 +80,34 @@ func TestMessage_DoubleSign_ValidateBasic(t *testing.T) {
 	require.NoError(t, er)
 
 	msgUnequalPubKeys := new(MessageDoubleSign)
-	msgUnequalPubKeys.VoteA = new(Vote)
-	msgUnequalPubKeys.VoteB = new(Vote)
-	*msgUnequalPubKeys.VoteA = *msg.VoteA
-	*msgUnequalPubKeys.VoteB = *msg.VoteB
-	pk2, _ := crypto.GeneratePublicKey()
+	msgUnequalPubKeys.VoteA = proto.Clone(msg.VoteA).(*Vote)
+	msgUnequalPubKeys.VoteB = proto.Clone(msg.VoteB).(*Vote)
+	pk2, err := crypto.GeneratePublicKey()
+	require.NoError(t, err)
 	msgUnequalPubKeys.VoteA.PublicKey = pk2.Bytes()
 	er = msgUnequalPubKeys.ValidateBasic()
 	require.Equal(t, types.ErrUnequalPublicKeys().Code(), er.Code())
 
 	msgUnequalHeights := new(MessageDoubleSign)
-	msgUnequalHeights.VoteA = new(Vote)
-	msgUnequalHeights.VoteB = new(Vote)
-	*msgUnequalHeights.VoteA = *msg.VoteA
-	*msgUnequalHeights.VoteB = *msg.VoteB
+	msgUnequalHeights.VoteA = proto.Clone(msg.VoteA).(*Vote)
+	msgUnequalHeights.VoteB = proto.Clone(msg.VoteB).(*Vote)
 	msgUnequalHeights.VoteA.Height = 2
 	er = msgUnequalHeights.ValidateBasic()
 	require.Equal(t, types.ErrUnequalHeights().Code(), er.Code())
 
 	msgUnequalRounds := new(MessageDoubleSign)
-	msgUnequalRounds.VoteA = new(Vote)
-	msgUnequalRounds.VoteB = new(Vote)
-	*msgUnequalRounds.VoteA = *msg.VoteA
-	*msgUnequalRounds.VoteB = *msg.VoteB
+	msgUnequalPubKeys.VoteA = proto.Clone(msg.VoteA).(*Vote)
+	msgUnequalPubKeys.VoteB = proto.Clone(msg.VoteB).(*Vote)
 	msgUnequalRounds.VoteA.Round = 1
 	er = msgUnequalRounds.ValidateBasic()
 	require.Equal(t, types.ErrUnequalRounds().Code(), er.Code())
 
-	//msgUnequalVoteTypes := new(MessageDoubleSign) TODO only one type of evidence right now
+	// TODO only one type of evidence right now
+	// msgUnequalVoteTypes := new(MessageDoubleSign)
 
 	msgEqualVoteHash := new(MessageDoubleSign)
-	msgEqualVoteHash.VoteA = new(Vote)
-	msgEqualVoteHash.VoteB = new(Vote)
-	*msgEqualVoteHash.VoteA = *msg.VoteA
-	*msgEqualVoteHash.VoteB = *msg.VoteB
+	msgUnequalPubKeys.VoteA = proto.Clone(msg.VoteA).(*Vote)
+	msgUnequalPubKeys.VoteB = proto.Clone(msg.VoteB).(*Vote)
 	msgEqualVoteHash.VoteB.BlockHash = hashA
 	er = msgEqualVoteHash.ValidateBasic()
 	require.Equal(t, types.ErrEqualVotes().Code(), er.Code())

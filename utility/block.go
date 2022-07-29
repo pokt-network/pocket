@@ -78,15 +78,6 @@ func (u *UtilityContext) GetAppHash() ([]byte, types.Error) {
 	return appHash, nil
 }
 
-var (
-	ActorTypes = []typesUtil.ActorType{
-		typesUtil.ActorType_App,
-		typesUtil.ActorType_Node,
-		typesUtil.ActorType_Fish,
-		typesUtil.ActorType_Val,
-	}
-)
-
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
 func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) types.Error {
 	latestBlockHeight, err := u.GetLatestHeight()
@@ -132,22 +123,18 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err types.Error) {
 	if err != nil {
 		return err
 	}
-	for _, actorType := range ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		var readyToUnstake []*types.UnstakingActor
-		var poolName string
+		poolName := typesUtil.GetActorPoolName(actorType)
 		switch actorType {
 		case typesUtil.ActorType_App:
 			readyToUnstake, er = store.GetAppsReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
-			poolName = typesGenesis.AppStakePoolName
 		case typesUtil.ActorType_Fish:
 			readyToUnstake, er = store.GetFishermenReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
-			poolName = typesGenesis.FishermanStakePoolName
 		case typesUtil.ActorType_Node:
 			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
-			poolName = typesGenesis.ServiceNodeStakePoolName
 		case typesUtil.ActorType_Val:
 			readyToUnstake, er = store.GetValidatorsReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
-			poolName = typesGenesis.ValidatorStakePoolName
 		}
 		if er != nil {
 			return types.ErrGetReadyToUnstake(er)
@@ -172,7 +159,7 @@ func (u *UtilityContext) BeginUnstakingMaxPaused() (err types.Error) {
 	if err != nil {
 		return err
 	}
-	for _, actorType := range ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		maxPausedBlocks, err := u.GetMaxPausedBlocks(actorType)
 		if err != nil {
 			return err

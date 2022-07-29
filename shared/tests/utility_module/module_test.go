@@ -16,18 +16,13 @@ import (
 )
 
 var (
-	defaultTestingChains          = []string{"0001"}
-	defaultTestingChainsEdited    = []string{"0002"}
-	defaultServiceUrl             = "https://foo.bar"
-	defaultServiceUrlEdited       = "https://bar.foo"
-	defaultServiceNodesPerSession = 24
-	zeroAmount                    = big.NewInt(0)
-	zeroAmountString              = types.BigIntToString(zeroAmount)
-	defaultAmount                 = big.NewInt(1000000000000000)
-	defaultSendAmount             = big.NewInt(10000)
-	defaultAmountString           = types.BigIntToString(defaultAmount)
-	defaultNonceString            = types.BigIntToString(defaultAmount)
-	defaultSendAmountString       = types.BigIntToString(defaultSendAmount)
+	defaultTestingChains       = []string{"0001"}
+	defaultTestingChainsEdited = []string{"0002"}
+	defaultAmount              = big.NewInt(1000000000000000)
+	defaultSendAmount          = big.NewInt(10000)
+	defaultAmountString        = types.BigIntToString(defaultAmount)
+	defaultNonceString         = types.BigIntToString(defaultAmount)
+	defaultSendAmountString    = types.BigIntToString(defaultSendAmount)
 )
 
 func NewTestingMempool(_ *testing.T) types.Mempool {

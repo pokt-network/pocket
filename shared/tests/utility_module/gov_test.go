@@ -12,6 +12,8 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
+// CLEANUP: cleanup this file as part of https://github.com/pokt-network/pocket/issues/76
+
 func DefaultTestingParams(_ *testing.T) *genesis.Params {
 	return genesis.DefaultParams()
 }

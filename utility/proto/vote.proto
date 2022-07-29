@@ -3,7 +3,7 @@ package utility;
 
 option go_package = "github.com/pokt-network/pocket/utility/types";
 
-// TODO: Deprecate this in favor of consensus
+// TECHDEBT: Consolidate this week consensus
 message Vote {
   bytes public_key = 1;
   int64 height = 2;

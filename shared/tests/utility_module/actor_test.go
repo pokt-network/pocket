@@ -21,7 +21,7 @@ import (
 // INVESTIGATE: Is there a better way to implement this than to simply have an actors forloop in each test?
 
 func TestUtilityContext_HandleMessageStake(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageStake", typesUtil.ActorName(actorType)), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
@@ -64,7 +64,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageEditStake", typesUtil.ActorName(actorType)), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			actor := GetFirstActor(t, ctx, actorType)
@@ -106,7 +106,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageUnpause", typesUtil.ActorName(actorType)), func(t *testing.T) {
 
 			ctx := NewTestingUtilityContext(t, 1)
@@ -148,7 +148,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageUnstake", typesUtil.ActorName(actorType)), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 			var err error
@@ -183,7 +183,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 }
 
 func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPaused", typesUtil.ActorName(actorType)), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
@@ -227,7 +227,7 @@ func TestUtilityContext_CalculateRelays(t *testing.T) {
 }
 
 func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.CalculateUnstakingHeight", typesUtil.ActorName(actorType)), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			var unstakingBlocks int64
@@ -255,7 +255,7 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 }
 
 func TestUtilityContext_Delete(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.Delete", typesUtil.ActorName(actorType)), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
@@ -271,7 +271,7 @@ func TestUtilityContext_Delete(t *testing.T) {
 }
 
 func TestUtilityContext_GetExists(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetExists", typesUtil.ActorName(actorType)), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
@@ -291,7 +291,7 @@ func TestUtilityContext_GetExists(t *testing.T) {
 }
 
 func TestUtilityContext_GetOutputAddress(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetOutputAddress", typesUtil.ActorName(actorType)), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
@@ -306,7 +306,7 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 }
 
 func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetPauseHeightIfExists", typesUtil.ActorName(actorType)), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
@@ -330,7 +330,7 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetMessageEditStakeSignerCandidates", typesUtil.ActorName(actorType)), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
@@ -377,7 +377,7 @@ func TestUtilityContext_GetMessageStakeSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetMessageUnpauseSignerCandidates", typesUtil.ActorName(actorType)), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
@@ -398,7 +398,7 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetMessageUnstakeSignerCandidates", typesUtil.ActorName(actorType)), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
@@ -418,7 +418,7 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.UnstakePausedBefore", typesUtil.ActorName(actorType)), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
@@ -472,26 +472,22 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 }
 
 func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
-	for _, actorType := range utility.ActorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		ctx := NewTestingUtilityContext(t, 1)
 
+		poolName := typesUtil.GetActorPoolName(actorType)
 		var err1, err2 error
-		var poolName string
 		switch actorType {
 		case typesUtil.ActorType_App:
-			poolName = genesis.AppStakePoolName
 			err1 = ctx.Context.SetAppUnstakingBlocks(0)
 			err2 = ctx.Context.SetAppMaxPausedBlocks(0)
 		case typesUtil.ActorType_Val:
-			poolName = genesis.ValidatorStakePoolName
 			err1 = ctx.Context.SetValidatorUnstakingBlocks(0)
 			err2 = ctx.Context.SetValidatorMaxPausedBlocks(0)
 		case typesUtil.ActorType_Fish:
-			poolName = genesis.FishermanStakePoolName
 			err1 = ctx.Context.SetFishermanUnstakingBlocks(0)
 			err2 = ctx.Context.SetFishermanMaxPausedBlocks(0)
 		case typesUtil.ActorType_Node:
-			poolName = genesis.ServiceNodeStakePoolName
 			err1 = ctx.Context.SetServiceNodeUnstakingBlocks(0)
 			err2 = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
 		default:
