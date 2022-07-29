@@ -5,12 +5,13 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"sort"
 	"sync"
 	"testing"
 	"time"
+
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/shared/config"

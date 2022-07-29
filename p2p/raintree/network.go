@@ -4,10 +4,11 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	types2 "github.com/pokt-network/pocket/p2p/types"
 	"log"
 	"math/rand"
 	"time"
+
+	types2 "github.com/pokt-network/pocket/p2p/types"
 
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"

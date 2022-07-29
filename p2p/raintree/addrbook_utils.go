@@ -2,10 +2,11 @@ package raintree
 
 import (
 	"fmt"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"log"
 	"math"
 	"strings"
+
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
