@@ -3,25 +3,25 @@
 package stdnetwork
 
 import (
+	types "github.com/pokt-network/pocket/p2p/types"
 	"log"
 
-	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
-var _ typesPre2P.Network = &network{}
+var _ types.Network = &network{}
 
 type network struct {
-	addrBook typesPre2P.AddrBook
+	addrBook types.AddrBook
 }
 
-func NewNetwork(addrBook typesPre2P.AddrBook) (n typesPre2P.Network) {
+func NewNetwork(addrBook types.AddrBook) (n types.Network) {
 	return &network{
 		addrBook: addrBook,
 	}
 }
 
-// TODO(olshansky): How do we avoid self-broadcasts given that `AddrBook` may contain self in the current pre2p implementation?
+// TODO(olshansky): How do we avoid self-broadcasts given that `AddrBook` may contain self in the current p2p implementation?
 func (n *network) NetworkBroadcast(data []byte) error {
 	for _, peer := range n.GetAddrBook() {
 		if err := peer.Dialer.Write(data); err != nil {
@@ -54,15 +54,15 @@ func (n *network) HandleNetworkData(data []byte) ([]byte, error) {
 	return data, nil // intentional passthrough
 }
 
-func (n *network) GetAddrBook() typesPre2P.AddrBook {
+func (n *network) GetAddrBook() types.AddrBook {
 	return n.addrBook
 }
 
-func (n *network) AddPeerToAddrBook(peer *typesPre2P.NetworkPeer) error {
+func (n *network) AddPeerToAddrBook(peer *types.NetworkPeer) error {
 	n.addrBook = append(n.addrBook, peer)
 	return nil
 }
 
-func (n *network) RemovePeerToAddrBook(peer *typesPre2P.NetworkPeer) error {
+func (n *network) RemovePeerToAddrBook(peer *types.NetworkPeer) error {
 	panic("RemovePeerToAddrBook not implemented")
 }

@@ -1,10 +1,10 @@
-package pre2p
+package p2p
 
 import (
 	"fmt"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"log"
 
-	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
 	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
@@ -12,8 +12,8 @@ import (
 
 // CLEANUP(drewsky): These functions will turn into more of a "ActorToAddrBook" when we have a closer
 // integration with utility.
-func ValidatorMapToAddrBook(cfg *config.Pre2PConfig, validators map[string]*typesGenesis.Validator) (typesPre2P.AddrBook, error) {
-	book := make(typesPre2P.AddrBook, 0)
+func ValidatorMapToAddrBook(cfg *config.P2PConfig, validators map[string]*typesGenesis.Validator) (typesP2P.AddrBook, error) {
+	book := make(typesP2P.AddrBook, 0)
 	for _, v := range validators {
 		networkPeer, err := ValidatorToNetworkPeer(cfg, v)
 		if err != nil {
@@ -27,7 +27,7 @@ func ValidatorMapToAddrBook(cfg *config.Pre2PConfig, validators map[string]*type
 
 // CLEANUP(drewsky): These functions will turn into more of a "ActorToAddrBook" when we have a closer
 // integration with utility.
-func ValidatorToNetworkPeer(cfg *config.Pre2PConfig, v *typesGenesis.Validator) (*typesPre2P.NetworkPeer, error) {
+func ValidatorToNetworkPeer(cfg *config.P2PConfig, v *typesGenesis.Validator) (*typesP2P.NetworkPeer, error) {
 	conn, err := CreateDialer(cfg, v.ServiceUrl)
 	if err != nil {
 		return nil, fmt.Errorf("error resolving addr: %v", err)
@@ -38,7 +38,7 @@ func ValidatorToNetworkPeer(cfg *config.Pre2PConfig, v *typesGenesis.Validator) 
 		return nil, err
 	}
 
-	peer := &typesPre2P.NetworkPeer{
+	peer := &typesP2P.NetworkPeer{
 		Dialer:     conn,
 		PublicKey:  pubKey,
 		Address:    pubKey.Address(),

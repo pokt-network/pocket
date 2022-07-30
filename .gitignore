@@ -30,7 +30,7 @@ prototype/vendor/
 
 # Generated Mocks (for testing)
 shared/modules/mocks/
-p2p/pre2p/types/mocks/
+p2p/types/mocks/
 
 # Proto generated files
 *.pb.go
