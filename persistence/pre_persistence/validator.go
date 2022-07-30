@@ -63,6 +63,32 @@ func (m *PrePersistenceContext) GetAllValidators(height int64) (v []*typesGenesi
 	return
 }
 
+func (m *PrePersistenceContext) GetValidatorStakeAmount(height int64, address []byte) (string, error) {
+	val, _, err := m.GetValidator(address, height)
+	if err != nil {
+		return "", err
+	}
+	return val.StakedTokens, nil
+}
+
+func (m *PrePersistenceContext) SetValidatorStakeAmount(address []byte, stakeAmount string) error {
+	codec := types.GetCodec()
+	db := m.Store()
+	val, _, err := m.GetValidator(address, m.Height)
+	if err != nil {
+		return err
+	}
+	if val == nil {
+		return fmt.Errorf("does not exist in world state: %v", address)
+	}
+	val.StakedTokens = stakeAmount
+	bz, err := codec.Marshal(val)
+	if err != nil {
+		return err
+	}
+	return db.Put(append(ValidatorPrefixKey, address...), bz)
+}
+
 func (m *PrePersistenceContext) GetValidatorExists(address []byte, height int64) (exists bool, err error) {
 	db := m.Store()
 	key := append(ValidatorPrefixKey, address...)
@@ -82,7 +108,7 @@ func (m *PrePersistenceContext) GetValidatorExists(address []byte, height int64)
 	return true, nil
 }
 
-func (m *PrePersistenceContext) InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error {
+func (m *PrePersistenceContext) InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, pausedHeight int64, unstakingHeight int64) error {
 	height, err := m.GetHeight()
 	if err != nil {
 		return err
@@ -99,7 +125,7 @@ func (m *PrePersistenceContext) InsertValidator(address []byte, publicKey []byte
 		Paused:          paused,
 		Status:          int32(status),
 		ServiceUrl:      serviceURL,
-		StakedTokens:    stakedTokens,
+		StakedTokens:    stakedAmount,
 		MissedBlocks:    0,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
@@ -112,7 +138,7 @@ func (m *PrePersistenceContext) InsertValidator(address []byte, publicKey []byte
 	return db.Put(key, bz)
 }
 
-func (m *PrePersistenceContext) UpdateValidator(address []byte, serviceURL string, amountToAdd string) error {
+func (m *PrePersistenceContext) UpdateValidator(address []byte, serviceURL string, amount string) error {
 	height, err := m.GetHeight()
 	if err != nil {
 		return err
@@ -125,15 +151,15 @@ func (m *PrePersistenceContext) UpdateValidator(address []byte, serviceURL strin
 	db := m.Store()
 	key := append(ValidatorPrefixKey, address...)
 	// compute new values
-	stakedTokens, err := types.StringToBigInt(val.StakedTokens)
+	//stakedTokens, err := types.StringToBigInt(val.StakedTokens)
+	//if err != nil {
+	//	return err
+	//}
+	stakedTokens, err := types.StringToBigInt(amount)
 	if err != nil {
 		return err
 	}
-	stakedTokensToAddI, err := types.StringToBigInt(amountToAdd)
-	if err != nil {
-		return err
-	}
-	stakedTokens.Add(stakedTokens, stakedTokensToAddI)
+	//stakedTokens.Add(stakedTokens, stakedTokensToAddI)
 	// update values
 	val.ServiceUrl = serviceURL
 	val.StakedTokens = types.BigIntToString(stakedTokens)
@@ -350,10 +376,10 @@ func (m *PrePersistenceContext) SetValidatorPauseHeight(address []byte, height i
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	if height == types.HeightNotUsed {
-		val.Paused = false
-	} else {
+	if height != types.HeightNotUsed {
 		val.Paused = true
+	} else {
+		val.Paused = false
 	}
 	val.PausedHeight = height
 	bz, err := codec.Marshal(val)

@@ -7,10 +7,10 @@ message App {
   bytes address = 1;
   bytes public_key = 2;
   bool paused = 3;
-  int32 status = 4;
+  int32 status = 4; // REFACTOR: change to an `enum`; ditto for other actors
   repeated string chains = 5;
   string max_relays = 6;
-  string staked_tokens = 7;
+  string staked_tokens = 7; // REFACTOR: rename to `staked_amount`; ditto for other actors
   int64 paused_height = 8;
   int64 unstaking_height = 9; // DISCUSS: Why is this int64 but the above is a uint64?
   bytes output = 10;

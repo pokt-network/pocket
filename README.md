@@ -40,12 +40,12 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Persistence Architecture](persistence/README.md)
 - _(Soon to be deprecated)_ [PrePersistence Architecture](persistence/pre_persistence/README.md)
 - [P2P Architecture](p2p/README.md)
-- [Utility Architecture](utility/README.md)
+- [Utility Architecture](utility/doc/README.md)
 
 ### Changelogs
 
 - [Consensus Changelog](consensus/CHANGELOG.md)
-- [Utility Changelog](utility/CHANGELOG.md)
+- [Utility Changelog](utility/doc/CHANGELOG.md)
 - [Persistence Changelog](persistence/CHANGELOG.md)
 - _Coming Soon: P2P Changelog_
 

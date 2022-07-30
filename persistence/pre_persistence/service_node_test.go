@@ -114,10 +114,6 @@ func TestUpdateServiceNode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	before, _, err := ctx.(*PrePersistenceContext).GetServiceNode(actor.Address, height)
-	require.NoError(t, err)
-	tokens := before.StakedTokens
-	bigBeforeTokens, err := types.StringToBigInt(tokens)
 	require.NoError(t, err)
 	err = ctx.UpdateServiceNode(actor.Address, zero, one, typesGenesis.DefaultChains)
 	require.NoError(t, err)
@@ -125,7 +121,6 @@ func TestUpdateServiceNode(t *testing.T) {
 	require.NoError(t, err)
 	bigAfterTokens, err := types.StringToBigInt(got.StakedTokens)
 	require.NoError(t, err)
-	bigAfterTokens.Sub(bigAfterTokens, bigBeforeTokens)
 	if bigAfterTokens.Cmp(bigExpectedTokens) != 0 {
 		t.Fatal("incorrect after balance")
 	}

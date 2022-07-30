@@ -54,9 +54,11 @@ type PersistenceContext interface {
 
 	// App Operations
 	GetAppExists(address []byte, height int64) (exists bool, err error)
-	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-	UpdateApp(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error
+	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	UpdateApp(address []byte, maxRelays string, stakedAmount string, chainsToUpdate []string) error
 	DeleteApp(address []byte) error
+	GetAppStakeAmount(height int64, address []byte) (string, error)
+	SetAppStakeAmount(address []byte, stakeAmount string) error
 	GetAppsReadyToUnstake(height int64, status int) (apps []*types.UnstakingActor, err error)
 	GetAppStatus(address []byte, height int64) (status int, err error)
 	SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
@@ -67,9 +69,11 @@ type PersistenceContext interface {
 
 	// ServiceNode Operations
 	GetServiceNodeExists(address []byte, height int64) (exists bool, err error)
-	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-	UpdateServiceNode(address []byte, serviceURL string, amountToAdd string, chains []string) error
+	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	UpdateServiceNode(address []byte, serviceURL string, stakedAmount string, chains []string) error
 	DeleteServiceNode(address []byte) error
+	GetServiceNodeStakeAmount(height int64, address []byte) (string, error)
+	SetServiceNodeStakeAmount(address []byte, stakeAmount string) error
 	GetServiceNodesReadyToUnstake(height int64, status int) (serviceNodes []*types.UnstakingActor, err error)
 	GetServiceNodeStatus(address []byte, height int64) (status int, err error)
 	SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
@@ -83,9 +87,11 @@ type PersistenceContext interface {
 
 	// Fisherman Operations
 	GetFishermanExists(address []byte, height int64) (exists bool, err error)
-	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-	UpdateFisherman(address []byte, serviceURL string, amountToAdd string, chains []string) error
+	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	UpdateFisherman(address []byte, serviceURL string, stakedAmount string, chains []string) error
 	DeleteFisherman(address []byte) error
+	GetFishermanStakeAmount(height int64, address []byte) (string, error)
+	SetFishermanStakeAmount(address []byte, stakeAmount string) error
 	GetFishermenReadyToUnstake(height int64, status int) (fishermen []*types.UnstakingActor, err error)
 	GetFishermanStatus(address []byte, height int64) (status int, err error)
 	SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
@@ -96,9 +102,11 @@ type PersistenceContext interface {
 
 	// Validator Operations
 	GetValidatorExists(address []byte, height int64) (exists bool, err error)
-	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error
-	UpdateValidator(address []byte, serviceURL string, amountToAdd string) error
+	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, pausedHeight int64, unstakingHeight int64) error
+	UpdateValidator(address []byte, serviceURL string, stakedAmount string) error
 	DeleteValidator(address []byte) error
+	GetValidatorStakeAmount(height int64, address []byte) (string, error)
+	SetValidatorStakeAmount(address []byte, stakeAmount string) error
 	GetValidatorsReadyToUnstake(height int64, status int) (validators []*types.UnstakingActor, err error)
 	GetValidatorStatus(address []byte, height int64) (status int, err error)
 	SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
@@ -111,9 +119,6 @@ type PersistenceContext interface {
 
 	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
 	GetValidatorMissedBlocks(address []byte, height int64) (int, error)
-
-	SetValidatorStakedTokens(address []byte, tokens string) error
-	GetValidatorStakedTokens(address []byte, height int64) (tokens string, err error)
 
 	/* TODO(olshansky): review/revisit this in more details */
 

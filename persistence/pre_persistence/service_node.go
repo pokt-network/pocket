@@ -63,7 +63,33 @@ func (m *PrePersistenceContext) GetAllServiceNodes(height int64) (sns []*typesGe
 	return
 }
 
-func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (m *PrePersistenceContext) GetServiceNodeStakeAmount(height int64, address []byte) (string, error) {
+	sn, _, err := m.GetServiceNode(address, height)
+	if err != nil {
+		return "", err
+	}
+	return sn.StakedTokens, nil
+}
+
+func (m *PrePersistenceContext) SetServiceNodeStakeAmount(address []byte, stakeAmount string) error {
+	codec := types.GetCodec()
+	db := m.Store()
+	sn, _, err := m.GetServiceNode(address, m.Height)
+	if err != nil {
+		return err
+	}
+	if sn == nil {
+		return fmt.Errorf("does not exist in world state: %v", address)
+	}
+	sn.StakedTokens = stakeAmount
+	bz, err := codec.Marshal(sn)
+	if err != nil {
+		return err
+	}
+	return db.Put(append(ServiceNodePrefixKey, address...), bz)
+}
+
+func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	height, err := m.GetHeight()
 	if err != nil {
 		return err
@@ -81,7 +107,7 @@ func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []by
 		Status:          int32(status),
 		Chains:          chains,
 		ServiceUrl:      serviceURL,
-		StakedTokens:    stakedTokens,
+		StakedTokens:    stakedAmount,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Output:          output,
@@ -93,7 +119,7 @@ func (m *PrePersistenceContext) InsertServiceNode(address []byte, publicKey []by
 	return db.Put(key, bz)
 }
 
-func (m *PrePersistenceContext) UpdateServiceNode(address []byte, serviceURL string, amountToAdd string, chains []string) error {
+func (m *PrePersistenceContext) UpdateServiceNode(address []byte, serviceURL string, amount string, chains []string) error {
 	height, err := m.GetHeight()
 	if err != nil {
 		return err
@@ -106,15 +132,15 @@ func (m *PrePersistenceContext) UpdateServiceNode(address []byte, serviceURL str
 	db := m.Store()
 	key := append(ServiceNodePrefixKey, address...)
 	// compute new values
-	stakedTokens, err := types.StringToBigInt(sn.StakedTokens)
+	//stakedTokens, err := types.StringToBigInt(sn.StakedTokens)
+	//if err != nil {
+	//	return err
+	//}
+	stakedTokens, err := types.StringToBigInt(amount)
 	if err != nil {
 		return err
 	}
-	stakedTokensToAddI, err := types.StringToBigInt(amountToAdd)
-	if err != nil {
-		return err
-	}
-	stakedTokens.Add(stakedTokens, stakedTokensToAddI)
+	//stakedTokens.Add(stakedTokens, stakedTokensToAddI)
 	// update values
 	sn.ServiceUrl = serviceURL
 	sn.StakedTokens = types.BigIntToString(stakedTokens)
@@ -296,10 +322,10 @@ func (m *PrePersistenceContext) SetServiceNodePauseHeight(address []byte, height
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	if height == types.HeightNotUsed {
-		sn.Paused = false
-	} else {
+	if height != types.HeightNotUsed {
 		sn.Paused = true
+	} else {
+		sn.Paused = false
 	}
 	sn.PausedHeight = height
 	bz, err := codec.Marshal(sn)

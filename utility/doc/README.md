@@ -22,18 +22,12 @@ The current implementation does add the fundamental Pocket Network 1.0 actors:
 
 And implement the basic transaction functionality:
 
-- Send-Tx
+- Send
 - Stake
 - Unstake
 - EditStake
 - Pause
 - Unpause
-
-And a few additional skeleton implementations for pocket specific transactions:
-
-- FishermanPauseServiceNode [x] Implemented
-- TestScore [x] Placeholder // requires sessions & report card structures
-- ProveTestScore [x] Placeholder // requires sessions & report card structures
 
 Added governance params:
 
@@ -185,4 +179,31 @@ and use `utilityMod` as desired.
 
 ```
 $ make test_utility_types && make test_utility_module
+```
+
+## Code Organization
+
+```bash
+utility
+├── account.go # utility context for accounts & pools
+├── actor.go   # utility context for apps, fish, nodes, and validators
+├── block.go   # utility context for blocks
+├── doc        # contains the documentation and changelog
+├── gov.go     # utility context for dao & parameters
+├── module.go  # module implementation and interfaces
+├── proto      # protobuf3 messages that auto-generate into the types directory
+│   ├── actor.proto
+│   ├── message.proto
+│   ├── transaction.proto
+│   └── vote.proto
+├── test           # utility unit tests
+├── transaction.go # utility context for transactions including handlers
+├── types          # stateless (without relying on persistence) library of utility types
+│   ├── actor.go
+│   ├── message.go     # payloads of transactions
+│   ├── transaction.go # the finite unit of the block
+│   ├── utils.go
+│   ├── vote.go        # vote structure for double sign transaction
+└── utility
+    └── types
 ```

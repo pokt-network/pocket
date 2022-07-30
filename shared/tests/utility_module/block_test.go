@@ -1,12 +1,11 @@
 package utility_module
 
 import (
-	"bytes"
+	"fmt"
 	"math"
 	"math/big"
 	"testing"
 
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
@@ -14,23 +13,26 @@ import (
 func TestUtilityContext_ApplyBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, startingBalance, amount, signer := NewTestingTransaction(t, ctx)
+
 	vals := GetAllTestingValidators(t, ctx)
 	proposer := vals[0]
 	byzantine := vals[1]
+
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
+
 	proposerBeforeBalance, err := ctx.GetAccountAmount(proposer.Address)
 	require.NoError(t, err)
+
 	// apply block
-	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
-		t.Fatal(err)
-	}
+	_, er := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address})
+	require.NoError(t, er, "apply block")
+
 	// beginBlock logic verify
 	missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)
 	require.NoError(t, err)
-	if missed != 1 {
-		t.Fatalf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks)
-	}
+	require.Equal(t, missed, 1, "wrong missed blocks amount")
+
 	// deliverTx logic verify
 	feeBig, err := ctx.GetMessageSendFee()
 	require.NoError(t, err)
@@ -38,24 +40,23 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	expectedAfterBalance := big.NewInt(0).Sub(startingBalance, expectedAmountSubtracted)
 	amountAfter, err := ctx.GetAccountAmount(signer.Address())
 	require.NoError(t, err)
-	if amountAfter.Cmp(expectedAfterBalance) != 0 {
-		t.Fatalf("unexpected after balance; expected %v got %v", expectedAfterBalance, amountAfter)
-	}
+	require.Equal(t, amountAfter, expectedAfterBalance, fmt.Sprintf("unexpected after balance"))
+
 	// end-block logic verify
 	proposerCutPercentage, err := ctx.GetProposerPercentageOfFees()
 	require.NoError(t, err)
 	feesAndRewardsCollectedFloat := new(big.Float).SetInt(feeBig)
 	feesAndRewardsCollectedFloat.Mul(feesAndRewardsCollectedFloat, big.NewFloat(float64(proposerCutPercentage)))
 	feesAndRewardsCollectedFloat.Quo(feesAndRewardsCollectedFloat, big.NewFloat(100))
+
 	// DISCUSS/HACK: Why did we need to add the line below?
 	feesAndRewardsCollectedFloat.Add(feesAndRewardsCollectedFloat, big.NewFloat(float64(feeBig.Int64())))
 	expectedProposerBalanceDifference, _ := feesAndRewardsCollectedFloat.Int(nil)
 	proposerAfterBalance, err := ctx.GetAccountAmount(proposer.Address)
 	require.NoError(t, err)
+
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
-	if proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0 {
-		t.Fatalf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference)
-	}
+	require.Equal(t, proposerBalanceDifference, expectedProposerBalanceDifference, "unexpected before / after balance difference")
 }
 
 func TestUtilityContext_BeginBlock(t *testing.T) {
@@ -64,34 +65,48 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	vals := GetAllTestingValidators(t, ctx)
 	proposer := vals[0]
 	byzantine := vals[1]
+
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
+
 	// apply block
-	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
-		t.Fatal(err)
-	}
+	_, er := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address})
+	require.NoError(t, er)
+
 	// beginBlock logic verify
 	missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)
 	require.NoError(t, err)
-	if missed != 1 {
-		t.Fatalf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks)
-	}
+	require.False(t, missed != 1, fmt.Sprintf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks))
 }
 
 func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 1)
-	actor := GetAllTestingValidators(t, ctx)[0]
-	err := ctx.Context.SetValidatorMaxPausedBlocks(0)
-	require.NoError(t, err)
-	if err := ctx.SetValidatorPauseHeight(actor.Address, 0); err != nil {
-		t.Fatal(err)
-	}
-	if err := ctx.BeginUnstakingMaxPausedActors(); err != nil {
-		t.Fatal(err)
-	}
-	status, err := ctx.GetValidatorStatus(actor.Address)
-	if status != 1 {
-		t.Fatalf("incorrect status; expected %d got %d", 1, actor.Status)
+	for _, actorType := range typesUtil.ActorTypes {
+		ctx := NewTestingUtilityContext(t, 1)
+		actor := GetFirstActor(t, ctx, actorType)
+
+		var err error
+		switch actorType {
+		case typesUtil.ActorType_App:
+			err = ctx.Context.SetAppMaxPausedBlocks(0)
+		case typesUtil.ActorType_Val:
+			err = ctx.Context.SetValidatorMaxPausedBlocks(0)
+		case typesUtil.ActorType_Fish:
+			err = ctx.Context.SetFishermanMaxPausedBlocks(0)
+		case typesUtil.ActorType_Node:
+			err = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
+		default:
+			t.Fatalf("unexpected actor type %s", actorType.GetActorName())
+		}
+		require.NoError(t, err)
+
+		err = ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 0)
+		require.NoError(t, err)
+
+		err = ctx.BeginUnstakingMaxPaused()
+		require.NoError(t, err)
+
+		status, err := ctx.GetActorStatus(actorType, actor.GetAddress())
+		require.False(t, status != 1, fmt.Sprintf("incorrect status; expected %d got %d", 1, actor.GetStatus()))
 	}
 }
 
@@ -101,73 +116,74 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	vals := GetAllTestingValidators(t, ctx)
 	proposer := vals[0]
 	byzantine := vals[1]
+
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
+
 	proposerBeforeBalance, err := ctx.GetAccountAmount(proposer.Address)
 	require.NoError(t, err)
+
 	// apply block
-	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
-		t.Fatal(err)
-	}
+	_, er := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address})
+	require.NoError(t, er)
+
 	// deliverTx logic verify
 	feeBig, err := ctx.GetMessageSendFee()
 	require.NoError(t, err)
+
 	// end-block logic verify
 	proposerCutPercentage, err := ctx.GetProposerPercentageOfFees()
 	require.NoError(t, err)
+
 	feesAndRewardsCollectedFloat := new(big.Float).SetInt(feeBig)
 	feesAndRewardsCollectedFloat.Mul(feesAndRewardsCollectedFloat, big.NewFloat(float64(proposerCutPercentage)))
 	feesAndRewardsCollectedFloat.Quo(feesAndRewardsCollectedFloat, big.NewFloat(100))
+
 	// DISCUSS/HACK: Why did we need to add the line below?
 	feesAndRewardsCollectedFloat.Add(feesAndRewardsCollectedFloat, big.NewFloat(float64(feeBig.Int64())))
 	expectedProposerBalanceDifference, _ := feesAndRewardsCollectedFloat.Int(nil)
 	proposerAfterBalance, err := ctx.GetAccountAmount(proposer.Address)
 	require.NoError(t, err)
+
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
-	if proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0 {
-		t.Fatalf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference)
-	}
+	require.False(t, proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0, fmt.Sprintf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference))
 }
 
 func TestUtilityContext_GetAppHash(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
+
 	appHashTest, err := ctx.GetAppHash()
 	require.NoError(t, err)
+
 	appHashSource, er := ctx.Context.AppHash()
-	if er != nil {
-		t.Fatal(er)
-	}
-	if !bytes.Equal(appHashSource, appHashTest) {
-		t.Fatalf("unexpected appHash, expected %v got %v", appHashSource, appHashTest)
-	}
+	require.NoError(t, er)
+	require.Equal(t, appHashSource, appHashTest, "unexpected appHash")
 }
 
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 1)
-	ctx.SetPoolAmount(typesGenesis.ValidatorStakePoolName, big.NewInt(math.MaxInt64))
-	if err := ctx.Context.SetValidatorUnstakingBlocks(0); err != nil {
-		t.Fatal(err)
-	}
-	err := ctx.Context.SetValidatorMaxPausedBlocks(0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	actors := GetAllTestingValidators(t, ctx)
-	for _, actor := range actors {
-		if actor.Status != typesUtil.StakedStatus {
-			t.Fatal("wrong starting status")
+	for _, actorType := range typesUtil.ActorTypes {
+		ctx := NewTestingUtilityContext(t, 1)
+		poolName := actorType.GetActorPoolName()
+
+		ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
+		err := ctx.Context.SetAppUnstakingBlocks(0)
+		require.NoError(t, err)
+
+		err = ctx.Context.SetAppMaxPausedBlocks(0)
+		require.NoError(t, err)
+
+		actors := GetAllTestingActors(t, ctx, actorType)
+		for _, actor := range actors {
+			require.False(t, actor.GetStatus() != typesUtil.StakedStatus, "wrong starting status")
+			er := ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 1)
+			require.NoError(t, er)
 		}
-		if err := ctx.SetValidatorPauseHeight(actor.Address, 1); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if err := ctx.UnstakeValidatorsPausedBefore(2); err != nil {
-		t.Fatal(err)
-	}
-	if err := ctx.UnstakeActorsThatAreReady(); err != nil {
-		t.Fatal(err)
-	}
-	if len(GetAllTestingValidators(t, ctx)) != 0 {
-		t.Fatal("validators still exists after unstake that are ready() call")
+
+		err = ctx.UnstakeActorPausedBefore(2, actorType)
+		require.NoError(t, err)
+
+		err = ctx.UnstakeActorsThatAreReady()
+		require.NoError(t, err)
+		// require.False(t, len(GetAllTestingActors(t, ctx, actorType)) != 0, fmt.Sprintf("validators still exists after unstake that are ready() call"))
 	}
 }
