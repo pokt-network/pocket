@@ -25,8 +25,8 @@ func TestUtilityContext_ApplyProposalTransactions(t *testing.T) {
 	require.NoError(t, err)
 
 	// apply block
-	ctx.ApplyProposalTransactions(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address})
-	require.NoError(t, er, "apply block")
+	_, er := ctx.ApplyProposalTransactions(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address})
+	require.NoError(t, er, "error applying proposal transactions")
 
 	// beginBlock logic verify
 	missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)

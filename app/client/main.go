@@ -83,7 +83,7 @@ func main() {
 		log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 	}
 
-	_ = shared.CreateBusWithOptionalModules(nil, pre2pMod, nil, consensusMod, nil)
+	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, nil)
 
 	p2pMod.Start()
 
@@ -183,5 +183,5 @@ func sendDebugMessage(debugMsg *types.DebugMessage) {
 		break
 	}
 
-	pre2pMod.Send(validatorAddress, anyProto, types.PocketTopic_DEBUG_TOPIC)
+	p2pMod.Send(validatorAddress, anyProto, types.PocketTopic_DEBUG_TOPIC)
 }

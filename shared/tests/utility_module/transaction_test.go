@@ -81,7 +81,7 @@ func TestUtilityContext_GetProposalTransactions(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, ctx.CheckTransaction(txBz))
 
-	txs, er := ctx.GetTransactionsForProposal(proposer.Address, 10000, nil)
+	txs, er := ctx.GetProposalTransactions(proposer.Address, 10000, nil)
 	require.NoError(t, er)
 	require.Equal(t, len(txs), 1, "incorrect txs amount returned")
 	require.Equal(t, txs[0], txBz, "unexpected transaction returned")

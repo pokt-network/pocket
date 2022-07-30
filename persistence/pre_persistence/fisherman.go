@@ -11,10 +11,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func (m *PrePersistenceContext) GetLatestBlockHeight() (uint64, error) {
-	return uint64(m.Height), nil
-}
-
 func (m *PrePersistenceContext) GetFishermanExists(address []byte, height int64) (exists bool, err error) {
 	db := m.Store()
 	key := append(FishermanPrefixKey, address...)
