@@ -2,7 +2,6 @@ package types
 
 import (
 	"bytes"
-	"log"
 	"net/url"
 	"strconv"
 	"strings"
@@ -12,286 +11,54 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+/*
+`message.go`` contains `ValidateBasic` and `SetSigner`` logic for all message types.
+
+`ValidateBasic` is a **stateless** validation check that should encapsulate all
+validations possible before even checking the state storage layer.
+*/
+
+// DISCUSS(olshansky): Should we move these into a shared file?
+const (
+	MillionInt       = 1000000
+	ZeroInt          = 0
+	HeightNotUsed    = -1
+	EmptyString      = ""
+	HttpsPrefix      = "https://"
+	HttpPrefix       = "http://"
+	Colon            = ":"
+	Period           = "."
+	InvalidURLPrefix = "the url must start with http:// or https://"
+	PortRequired     = "a port is required"
+	NonNumberPort    = "invalid port, cant convert to integer"
+	PortOutOfRange   = "invalid port, out of valid port range"
+	NoPeriod         = "must contain one '.'"
+	MaxPort          = 65535
+)
+
 type Message interface {
 	proto.Message
 
 	SetSigner(signer []byte)
 	ValidateBasic() types.Error
+	GetActorType() ActorType
 }
 
-var _ Message = &MessageStakeApp{}
-
-func (msg *MessageStakeApp) ValidateBasic() types.Error {
-	if err := ValidateAmount(msg.Amount); err != nil {
+func (msg *MessageStake) ValidateBasic() types.Error {
+	if err := ValidatePublicKey(msg.GetPublicKey()); err != nil {
 		return err
 	}
-	if err := ValidatePublicKey(msg.PublicKey); err != nil {
+	if err := ValidateOutputAddress(msg.GetOutputAddress()); err != nil {
 		return err
 	}
-	if err := ValidateRelayChains(msg.Chains); err != nil {
+	return ValidateStaker(msg)
+}
+
+func (msg *MessageEditStake) ValidateBasic() types.Error {
+	if err := ValidateAddress(msg.GetAddress()); err != nil {
 		return err
 	}
-	return ValidateOutputAddress(msg.OutputAddress)
-}
-
-func (msg *MessageStakeApp) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageEditStakeApp) ValidateBasic() types.Error {
-	if err := ValidateAmount(msg.AmountToAdd); err != nil {
-		return err
-	}
-	if err := ValidateAddress(msg.Address); err != nil {
-		return err
-	}
-	if err := ValidateRelayChains(msg.Chains); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (msg *MessageEditStakeApp) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageUnstakeApp) ValidateBasic() types.Error {
-	return ValidateAddress(msg.Address)
-}
-
-func (msg *MessageUnstakeApp) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageUnpauseApp) ValidateBasic() types.Error {
-	return ValidateAddress(msg.Address)
-}
-
-func (msg *MessageUnpauseApp) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessagePauseApp) ValidateBasic() types.Error {
-	return ValidateAddress(msg.Address)
-}
-
-func (msg *MessagePauseApp) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageStakeServiceNode) ValidateBasic() types.Error {
-	if err := ValidateAmount(msg.Amount); err != nil {
-		return err
-	}
-	if err := ValidatePublicKey(msg.PublicKey); err != nil {
-		return err
-	}
-	if err := ValidateRelayChains(msg.Chains); err != nil {
-		return err
-	}
-	if err := ValidateServiceUrl(msg.ServiceUrl); err != nil {
-		return err
-	}
-	return ValidateOutputAddress(msg.OutputAddress)
-}
-
-func (msg *MessageStakeServiceNode) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageEditStakeServiceNode) ValidateBasic() types.Error {
-	if err := ValidateAmount(msg.AmountToAdd); err != nil {
-		return err
-	}
-	if err := ValidateAddress(msg.Address); err != nil {
-		return err
-	}
-	if err := ValidateRelayChains(msg.Chains); err != nil {
-		return err
-	}
-	if err := ValidateServiceUrl(msg.ServiceUrl); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (msg *MessageEditStakeServiceNode) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageUnstakeServiceNode) ValidateBasic() types.Error {
-	return ValidateAddress(msg.Address)
-}
-
-func (msg *MessageUnstakeServiceNode) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageUnpauseServiceNode) ValidateBasic() types.Error {
-	return ValidateAddress(msg.Address)
-}
-
-func (msg *MessageUnpauseServiceNode) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessagePauseServiceNode) ValidateBasic() types.Error {
-	return ValidateAddress(msg.Address)
-}
-
-func (msg *MessagePauseServiceNode) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageStakeFisherman) ValidateBasic() types.Error {
-	if err := ValidateAmount(msg.Amount); err != nil {
-		return err
-	}
-	if err := ValidatePublicKey(msg.PublicKey); err != nil {
-		return err
-	}
-	if err := ValidateRelayChains(msg.Chains); err != nil {
-		return err
-	}
-	if err := ValidateServiceUrl(msg.ServiceUrl); err != nil {
-		return err
-	}
-	return ValidateOutputAddress(msg.OutputAddress)
-}
-
-func (msg *MessageChangeParameter) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageChangeParameter) ValidateBasic() types.Error {
-	if msg.ParameterKey == "" {
-		return types.ErrEmptyParamKey()
-	}
-	if msg.ParameterValue == nil {
-		return types.ErrEmptyParamValue()
-	}
-	if err := ValidateAddress(msg.Owner); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (msg *MessageStakeFisherman) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageEditStakeFisherman) ValidateBasic() types.Error {
-	if err := ValidateAmount(msg.AmountToAdd); err != nil {
-		return err
-	}
-	if err := ValidateAddress(msg.Address); err != nil {
-		return err
-	}
-	if err := ValidateRelayChains(msg.Chains); err != nil {
-		return err
-	}
-	if err := ValidateServiceUrl(msg.ServiceUrl); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (msg *MessageEditStakeFisherman) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageUnstakeFisherman) ValidateBasic() types.Error {
-	return ValidateAddress(msg.Address)
-}
-
-func (msg *MessageUnstakeFisherman) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageUnpauseFisherman) ValidateBasic() types.Error {
-	return ValidateAddress(msg.Address)
-}
-
-func (msg *MessageUnpauseFisherman) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessagePauseFisherman) ValidateBasic() types.Error {
-	return ValidateAddress(msg.Address)
-}
-
-func (msg *MessagePauseFisherman) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageFishermanPauseServiceNode) ValidateBasic() types.Error {
-	if err := ValidateAddress(msg.Reporter); err != nil {
-		return err
-	}
-	return ValidateAddress(msg.Address)
-}
-
-func (msg *MessageFishermanPauseServiceNode) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageStakeValidator) ValidateBasic() types.Error {
-	if err := ValidateAmount(msg.Amount); err != nil {
-		return err
-	}
-	if err := ValidatePublicKey(msg.PublicKey); err != nil {
-		return err
-	}
-	if err := ValidateServiceUrl(msg.ServiceUrl); err != nil {
-		return err
-	}
-	return ValidateOutputAddress(msg.OutputAddress)
-}
-
-func (msg *MessageStakeValidator) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageEditStakeValidator) ValidateBasic() types.Error {
-	// validate amount
-	if err := ValidateAmount(msg.AmountToAdd); err != nil {
-		return err
-	}
-	if err := ValidateAddress(msg.Address); err != nil {
-		return err
-	}
-	if err := ValidateServiceUrl(msg.ServiceUrl); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (msg *MessageEditStakeValidator) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageUnstakeValidator) ValidateBasic() types.Error {
-	return ValidateAddress(msg.Address)
-}
-
-func (msg *MessageUnstakeValidator) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessageUnpauseValidator) ValidateBasic() types.Error {
-	return ValidateAddress(msg.Address)
-}
-
-func (msg *MessageUnpauseValidator) SetSigner(signer []byte) {
-	msg.Signer = signer
-}
-
-func (msg *MessagePauseValidator) ValidateBasic() types.Error {
-	return ValidateAddress(msg.Address)
-}
-
-func (msg *MessagePauseValidator) SetSigner(signer []byte) {
-	msg.Signer = signer
+	return ValidateStaker(msg)
 }
 
 func (msg *MessageDoubleSign) ValidateBasic() types.Error {
@@ -319,10 +86,6 @@ func (msg *MessageDoubleSign) ValidateBasic() types.Error {
 	return nil
 }
 
-func (msg *MessageDoubleSign) SetSigner(signer []byte) {
-	msg.ReporterAddress = signer
-}
-
 func (msg *MessageSend) ValidateBasic() types.Error {
 	if err := ValidateAddress(msg.FromAddress); err != nil {
 		return err
@@ -336,9 +99,32 @@ func (msg *MessageSend) ValidateBasic() types.Error {
 	return nil
 }
 
-func (msg *MessageSend) SetSigner(signer []byte) {
-	log.Println("[NOOP] SetSigner on MessageSend")
+func (msg *MessageChangeParameter) ValidateBasic() types.Error {
+	if msg.ParameterKey == "" {
+		return types.ErrEmptyParamKey()
+	}
+	if msg.ParameterValue == nil {
+		return types.ErrEmptyParamValue()
+	}
+	if err := ValidateAddress(msg.Owner); err != nil {
+		return err
+	}
+	return nil
 }
+
+func (msg *MessageUnstake) ValidateBasic() types.Error      { return ValidateAddress(msg.Address) }
+func (msg *MessageUnpause) ValidateBasic() types.Error      { return ValidateAddress(msg.Address) }
+func (msg *MessageStake) SetSigner(signer []byte)           { msg.Signer = signer }
+func (msg *MessageEditStake) SetSigner(signer []byte)       { msg.Signer = signer }
+func (msg *MessageUnstake) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageUnpause) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageDoubleSign) SetSigner(signer []byte)      { msg.ReporterAddress = signer }
+func (msg *MessageSend) SetSigner(signer []byte)            { /*no op*/ }
+func (msg *MessageChangeParameter) SetSigner(signer []byte) { msg.Signer = signer }
+func (x *MessageChangeParameter) GetActorType() ActorType   { return -1 }
+func (x *MessageDoubleSign) GetActorType() ActorType        { return -1 }
+
+// helpers
 
 func ValidateAddress(address []byte) types.Error {
 	if address == nil {
@@ -407,7 +193,15 @@ func ValidateAmount(amount string) types.Error {
 	return nil
 }
 
-func ValidateServiceUrl(uri string) types.Error {
+func ValidateActorType(_ ActorType) types.Error {
+	// TODO (team) not sure if there's anything we can do here
+	return nil
+}
+
+func ValidateServiceUrl(actorType ActorType, uri string) types.Error {
+	if actorType == ActorType_App {
+		return nil
+	}
 	uri = strings.ToLower(uri)
 	_, err := url.ParseRequestURI(uri)
 	if err != nil {
@@ -431,4 +225,45 @@ func ValidateServiceUrl(uri string) types.Error {
 		return types.ErrInvalidServiceUrl(NoPeriod)
 	}
 	return nil
+}
+
+// CLEANUP: Figure out where these other types should be defined.
+//          It's a bit weird that they are hidden at the bottom of the file.
+
+const (
+	RelayChainLength = 4 // pre-determined length that strikes a balance between combination possibilities & storage
+)
+
+type RelayChain string
+
+// TODO: Consider adding a governance parameter for a list of valid relay chains
+func (rc *RelayChain) Validate() types.Error {
+	if rc == nil || *rc == "" {
+		return types.ErrEmptyRelayChain()
+	}
+	rcLen := len(*rc)
+	if rcLen != RelayChainLength {
+		return types.ErrInvalidRelayChainLength(rcLen, RelayChainLength)
+	}
+	return nil
+}
+
+type MessageStaker interface {
+	GetActorType() ActorType
+	GetAmount() string
+	GetChains() []string
+	GetServiceUrl() string
+}
+
+func ValidateStaker(msg MessageStaker) types.Error {
+	if err := ValidateActorType(msg.GetActorType()); err != nil {
+		return err
+	}
+	if err := ValidateAmount(msg.GetAmount()); err != nil {
+		return err
+	}
+	if err := ValidateRelayChains(msg.GetChains()); err != nil {
+		return err
+	}
+	return ValidateServiceUrl(msg.GetActorType(), msg.GetServiceUrl())
 }

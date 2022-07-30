@@ -16,11 +16,8 @@ type Config struct {
 	GenesisSource *genesis.GenesisSource `json:"genesis_source"` // TECHDEBT(olshansky): we should be able to pass the struct in here.
 
 	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
-
-	// TECHDEBT(team): Consolidate `Pre2P` and `P2P`
-	Pre2P     *Pre2PConfig     `json:"pre2p"`
-	P2P       *P2PConfig       `json:"p2p"`
-	Consensus *ConsensusConfig `json:"consensus"`
+	P2P        *P2PConfig                     `json:"p2p"`
+	Consensus  *ConsensusConfig               `json:"consensus"`
 	// TECHDEBT(team): Consolidate `Persistence` and `PrePersistence`
 	PrePersistence *PrePersistenceConfig `json:"pre_persistence"`
 	Persistence    *PersistenceConfig    `json:"persistence"`
@@ -35,7 +32,7 @@ const (
 )
 
 // TECHDEBT(team): consolidate/replace this with P2P configs depending on next steps
-type Pre2PConfig struct {
+type P2PConfig struct {
 	ConsensusPort  uint32         `json:"consensus_port"`
 	UseRainTree    bool           `json:"use_raintree"`
 	ConnectionType ConnectionType `json:"connection_type"`
@@ -45,20 +42,6 @@ type PrePersistenceConfig struct {
 	Capacity        int `json:"capacity"`
 	MempoolMaxBytes int `json:"mempool_max_bytes"`
 	MempoolMaxTxs   int `json:"mempool_max_txs"`
-}
-
-type P2PConfig struct {
-	Protocol string `json:"protocol"`
-	Address  string `json:"address"`
-	// TODO(derrandz): Fix the config imports appropriately
-	// Address          cryptoPocket.Address `json:"address"`
-	ExternalIp       string   `json:"external_ip"`
-	Peers            []string `json:"peers"`
-	MaxInbound       uint32   `json:"max_inbound"`
-	MaxOutbound      uint32   `json:"max_outbound"`
-	BufferSize       uint     `json:"connection_buffer_size"`
-	WireHeaderLength uint     `json:"max_wire_header_length"`
-	TimeoutInMs      uint     `json:"timeout_in_ms"`
 }
 
 type PacemakerConfig struct {
@@ -129,10 +112,6 @@ func (c *Config) ValidateAndHydrate() error {
 		return fmt.Errorf("error validating or completing consensus config: %v", err)
 	}
 
-	if err := c.P2P.ValidateAndHydrate(); err != nil {
-		return fmt.Errorf("error validating or completing P2P config: %v", err)
-	}
-
 	return nil
 }
 
@@ -144,10 +123,6 @@ func (c *Config) HydrateGenesisState() error {
 	c.GenesisSource.Source = &genesis.GenesisSource_State{
 		State: genesisState,
 	}
-	return nil
-}
-
-func (c *P2PConfig) ValidateAndHydrate() error {
 	return nil
 }
 

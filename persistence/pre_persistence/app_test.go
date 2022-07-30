@@ -115,10 +115,6 @@ func TestUpdateApp(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	before, err := ctx.(*PrePersistenceContext).GetApp(actor.Address, height)
-	require.NoError(t, err)
-	tokens := before.StakedTokens
-	bigBeforeTokens, err := types.StringToBigInt(tokens)
 	require.NoError(t, err)
 	err = ctx.UpdateApp(actor.Address, zero, one, typesGenesis.DefaultChains)
 	require.NoError(t, err)
@@ -126,8 +122,7 @@ func TestUpdateApp(t *testing.T) {
 	require.NoError(t, err)
 	bigAfterTokens, err := types.StringToBigInt(got.StakedTokens)
 	require.NoError(t, err)
-	bigAfterTokens.Sub(bigAfterTokens, bigBeforeTokens)
-	if bigAfterTokens.Cmp(bigExpectedTokens) != 0 {
+	if bigExpectedTokens.Cmp(bigAfterTokens) != 0 {
 		t.Fatal("incorrect after balance")
 	}
 }

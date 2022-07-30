@@ -76,8 +76,7 @@ func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
 					Config: genesisConfig(),
 				},
 			},
-			Pre2P: nil,
-			P2P:   nil,
+			P2P: nil,
 			Consensus: &config.ConsensusConfig{
 				MaxMempoolBytes: 500000000,
 				MaxBlockBytes:   4000000,

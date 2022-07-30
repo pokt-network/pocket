@@ -34,7 +34,5 @@ func TestGetSetParam(t *testing.T) {
 	maxChains, err := db.GetMaxAppChains()
 	require.NoError(t, err)
 
-	if maxChains != newMaxChains {
-		t.Fatal("unexpected param value")
-	}
+	require.Equal(t, newMaxChains, maxChains)
 }
