@@ -284,7 +284,6 @@ func (u *UtilityContext) StoreBlock(blockProtoBytes []byte) error {
 	if err := codec.Unmarshal(blockProtoBytes, block); err != nil {
 		return types.ErrProtoUnmarshal(err)
 	}
-
 	header := block.BlockHeader
 	if err := store.InsertBlock(uint64(header.Height), header.Hash, header.ProposerAddress, header.QuorumCertificate); err != nil {
 		return err

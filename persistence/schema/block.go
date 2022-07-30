@@ -8,8 +8,8 @@ const (
 	BlockTableSchema = `(
 			height             BIGINT PRIMARY KEY,
 			hash 	           TEXT NOT NULL,
-			proposer_address   TEXT NOT NULL,
-			quorum_certificate TEXT NOT NULL
+			proposer_address   BYTEA NOT NULL,
+			quorum_certificate BYTEA NOT NULL
 		)`
 )
 

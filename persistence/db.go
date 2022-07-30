@@ -181,7 +181,7 @@ func (m *persistenceModule) hydrateGenesisDbState() error {
 	}
 
 	for _, v := range state.Validators {
-		// DISCUSS_IN_THIS_COMMIT: If the validator (and other actors) have a balance, do we expect that
+		// DISCUSS_IN_THIS_COMMIT(drewskey): If the validator (and other actors) have a balance, do we expect that
 		// to be in the `accounts` type corresponding to the same address?
 		if err := ctx.SetAccountAmount(v.Address, "0"); err != nil {
 			return err
@@ -240,7 +240,7 @@ func (m *persistenceModule) hydrateGenesisDbState() error {
 		if err := ctx.InsertPool(pool.Name, pool.Account.Address, pool.Account.Amount); err != nil {
 			return err
 		}
-		// DISCUSS: What if there's a discrepency between `pool.Account.Amount` and `poolValues`?
+		// DISCUSS_IN_THIS_COMMIT(drewskey): What if there's a discrepency between `pool.Account.Amount` and `poolValues`?
 		if err := ctx.SetAccountAmount(pool.Account.Address, pool.Account.Amount); err != nil {
 			return err
 		}
@@ -249,7 +249,7 @@ func (m *persistenceModule) hydrateGenesisDbState() error {
 	if err := ctx.InitParams(); err != nil {
 		return err
 	}
-	// DISCUSS_IN_THIS_COMMIT: Calling this for each param is not practical. Need someone to refactor the gov paramstable.
+	// TECHDEBT: Calling this for each param is not practical. Need someone to refactor the gov params table.
 	if err := ctx.SetValidatorMaximumMissedBlocks(int(state.Params.ValidatorMaximumMissedBlocks)); err != nil {
 		return err
 	}

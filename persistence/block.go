@@ -3,7 +3,6 @@ package persistence
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/schema"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -61,12 +60,10 @@ func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []
 	if err != nil {
 		return err
 	}
-	fmt.Println("OLSH", hash, proposerAddr, quorumCert)
-	// hash := crypto.SHA3Hash(txBz)
-	// hashString := hex.EncodeToString(hash)
+	hex.EncodeToString(proposerAddr)
+	hex.EncodeToString(quorumCert)
 
-	// _, err = conn.Exec(ctx, schema.InsertBlockQuery(height, []byte(hash), proposerAddr, quorumCert))
-	_, err = conn.Exec(ctx, schema.InsertBlockQuery(height, hex.EncodeToString([]byte("a")), []byte("b"), []byte("c")))
+	_, err = conn.Exec(ctx, schema.InsertBlockQuery(height, hash, proposerAddr, quorumCert))
 	return err
 }
 

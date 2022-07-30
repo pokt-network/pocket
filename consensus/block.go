@@ -42,7 +42,7 @@ func (m *consensusModule) prepareBlockAsLeader() (*types.Block, error) {
 		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            uint32(len(txs)),
 		LastBlockHash:     m.appHash,
-		ProposerAddress:   m.privateKey.Address(),
+		ProposerAddress:   m.privateKey.Address().Bytes(),
 		QuorumCertificate: []byte("HACK: Temporary placeholder"),
 	}
 
@@ -74,7 +74,7 @@ func (m *consensusModule) applyBlockAsReplica(block *types.Block) error {
 		return err
 	}
 
-	// DISCUSS_IN_THIS_COMMIT: Is `ApplyProposalTransactions` going to return blockHash or appHash?
+	// DISCUSS(drewsky): Is `ApplyProposalTransactions` going to return blockHash or appHash?
 	if block.BlockHeader.Hash != hex.EncodeToString(appHash) {
 		return typesCons.ErrInvalidAppHash(block.BlockHeader.Hash, hex.EncodeToString(appHash))
 	}
@@ -108,12 +108,18 @@ func (m *consensusModule) commitBlock(block *types.Block) error {
 	if err != nil {
 		return err
 	}
-	if err := m.utilityContext.StoreBlock(blockProtoBytes); err != nil {
-		return err
-	}
 
 	// Commit and release the context
 	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
+		return err
+	}
+	// IMPROVE(olshansky): temporary solution. `ApplyProposalTransactions` above applies the
+	// transactions to the postgres database, and this stores it in the KV store upon commitment.
+	// Instead of calling this directly, an alternative solution is to store the block metadata in
+	// the persistence context and have `CommitPersistenceContext` do this under the hood. However,
+	// additional `Block` metadata will need to be passed through and may change when we merkle the
+	// state hash.
+	if err := m.utilityContext.StoreBlock(blockProtoBytes); err != nil {
 		return err
 	}
 	m.utilityContext.ReleaseContext()

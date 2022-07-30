@@ -27,9 +27,6 @@ type Node struct {
 }
 
 func Create(cfg *config.Config) (n *Node, err error) {
-	// TODO(drewsky): The module is initialized to run background processes during development
-	// to make sure it's part of the node's lifecycle, but is not referenced YET byt the app specific
-	// bus.
 	persistenceMod, err := persistence.Create(cfg)
 	if err != nil {
 		return nil, err
@@ -41,7 +38,6 @@ func Create(cfg *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	// TODO(derrandz): Deprecate `p2p` and replace `p2p` into its place
 	p2pMod, err := p2p.Create(cfg)
 	if err != nil {
 		return nil, err

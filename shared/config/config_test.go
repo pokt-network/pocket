@@ -50,7 +50,7 @@ func TestLoadConfigFromJson(t *testing.T) {
 		"persistence": {
 		  "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
 		  "schema": "node1",
-		  "block_store_path": "/tmp/blockstore"
+		  "block_store_path": "/var/blockstore"
 		},
 		"utility": {}
 	  }`
