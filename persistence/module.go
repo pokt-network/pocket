@@ -83,10 +83,11 @@ func Create(c *config.Config) (modules.PersistenceModule, error) {
 func (p *persistenceModule) Start() error {
 	log.Println("Starting persistence module...")
 
-	shouldHydrateGenesis, err := p.shouldHydrateGenesisDb()
-	if err != nil {
-		return err
-	}
+	shouldHydrateGenesis := false
+	// shouldHydrateGenesis, err := p.shouldHydrateGenesisDb()
+	// if err != nil {
+	// 	return err
+	// }
 
 	if shouldHydrateGenesis {
 		if err := p.hydrateGenesisDbState(); err != nil {

@@ -110,9 +110,9 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 }
 
 func (m *consensusModule) Start() error {
-	if err := m.maybeLoadState(); err != nil {
-		return err
-	}
+	// if err := m.maybeLoadState(); err != nil {
+	// 	return err
+	// }
 
 	if err := m.paceMaker.Start(); err != nil {
 		return err
