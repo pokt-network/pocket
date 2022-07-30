@@ -79,11 +79,11 @@ func TestMessage_DoubleSign_ValidateBasic(t *testing.T) {
 	er := msg.ValidateBasic()
 	require.NoError(t, er)
 
+	pk2, err := crypto.GeneratePublicKey()
+	require.NoError(t, err)
 	msgUnequalPubKeys := new(MessageDoubleSign)
 	msgUnequalPubKeys.VoteA = proto.Clone(msg.VoteA).(*Vote)
 	msgUnequalPubKeys.VoteB = proto.Clone(msg.VoteB).(*Vote)
-	pk2, err := crypto.GeneratePublicKey()
-	require.NoError(t, err)
 	msgUnequalPubKeys.VoteA.PublicKey = pk2.Bytes()
 	er = msgUnequalPubKeys.ValidateBasic()
 	require.Equal(t, types.ErrUnequalPublicKeys().Code(), er.Code())
@@ -96,22 +96,21 @@ func TestMessage_DoubleSign_ValidateBasic(t *testing.T) {
 	require.Equal(t, types.ErrUnequalHeights().Code(), er.Code())
 
 	msgUnequalRounds := new(MessageDoubleSign)
-	msgUnequalPubKeys.VoteA = proto.Clone(msg.VoteA).(*Vote)
-	msgUnequalPubKeys.VoteB = proto.Clone(msg.VoteB).(*Vote)
+	msgUnequalRounds.VoteA = proto.Clone(msg.VoteA).(*Vote)
+	msgUnequalRounds.VoteB = proto.Clone(msg.VoteB).(*Vote)
 	msgUnequalRounds.VoteA.Round = 1
 	er = msgUnequalRounds.ValidateBasic()
 	require.Equal(t, types.ErrUnequalRounds().Code(), er.Code())
 
-	// TODO only one type of evidence right now
-	// msgUnequalVoteTypes := new(MessageDoubleSign)
-
 	msgEqualVoteHash := new(MessageDoubleSign)
-	msgUnequalPubKeys.VoteA = proto.Clone(msg.VoteA).(*Vote)
-	msgUnequalPubKeys.VoteB = proto.Clone(msg.VoteB).(*Vote)
+	msgEqualVoteHash.VoteA = proto.Clone(msg.VoteA).(*Vote)
+	msgEqualVoteHash.VoteB = proto.Clone(msg.VoteB).(*Vote)
 	msgEqualVoteHash.VoteB.BlockHash = hashA
 	er = msgEqualVoteHash.ValidateBasic()
 	require.Equal(t, types.ErrEqualVotes().Code(), er.Code())
 
+	// TODO only one type of evidence right now
+	// msgUnequalVoteTypes := new(MessageDoubleSign)
 }
 
 func TestMessage_EditStake_ValidateBasic(t *testing.T) {

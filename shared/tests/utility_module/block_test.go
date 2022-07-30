@@ -95,7 +95,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 		case typesUtil.ActorType_Node:
 			err = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
 		default:
-			t.Fatalf("unexpected actor type %s", typesUtil.ActorName(actorType))
+			t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 		}
 		require.NoError(t, err)
 
@@ -163,7 +163,7 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		ctx := NewTestingUtilityContext(t, 1)
-		poolName := typesUtil.GetActorPoolName(actorType)
+		poolName := actorType.GetActorPoolName()
 
 		ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
 		err := ctx.Context.SetAppUnstakingBlocks(0)

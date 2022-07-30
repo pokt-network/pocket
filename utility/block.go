@@ -8,12 +8,14 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-// This 'block' file contains all the lifecycle block operations.
-// The ApplyBlock function is the 'main' operation that executes a 'block' object against the state
-// Pocket Network adpots a Tendermint-like lifecycle of BeginBlock -> DeliverTx -> EndBlock in that order
-// Like the name suggests, BeginBlock is an autonomous state operation that executes at the beginning of every block
-// DeliverTx individually applys each transaction against the state and rolls it back (not yet implemented) if fails.
-// like BeginBlock, EndBlock is an autonomous state oepration that executes at the end of every block.
+/*
+This 'block' file contains all the lifecycle block operations.
+The ApplyBlock function is the 'main' operation that executes a 'block' object against the state
+Pocket Network adpots a Tendermint-like lifecycle of BeginBlock -> DeliverTx -> EndBlock in that order
+Like the name suggests, BeginBlock is an autonomous state operation that executes at the beginning of every block
+DeliverTx individually applys each transaction against the state and rolls it back (not yet implemented) if fails.
+like BeginBlock, EndBlock is an autonomous state oepration that executes at the end of every block.
+*/
 
 func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
 	u.LatestHeight = latestHeight
@@ -125,7 +127,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err types.Error) {
 	}
 	for _, actorType := range typesUtil.ActorTypes {
 		var readyToUnstake []*types.UnstakingActor
-		poolName := typesUtil.GetActorPoolName(actorType)
+		poolName := actorType.GetActorPoolName()
 		switch actorType {
 		case typesUtil.ActorType_App:
 			readyToUnstake, er = store.GetAppsReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)

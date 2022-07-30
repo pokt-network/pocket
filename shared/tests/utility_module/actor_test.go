@@ -22,7 +22,7 @@ import (
 
 func TestUtilityContext_HandleMessageStake(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.HandleMessageStake", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.HandleMessageStake", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			pubKey, err := crypto.GeneratePublicKey()
@@ -65,7 +65,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 
 func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.HandleMessageEditStake", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.HandleMessageEditStake", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			actor := GetFirstActor(t, ctx, actorType)
 			msg := &typesUtil.MessageEditStake{
@@ -107,7 +107,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 
 func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.HandleMessageUnpause", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.HandleMessageUnpause", actorType.GetActorName()), func(t *testing.T) {
 
 			ctx := NewTestingUtilityContext(t, 1)
 			var err error
@@ -121,7 +121,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			case typesUtil.ActorType_Fish:
 				err = ctx.Context.SetFishermanMinimumPauseBlocks(0)
 			default:
-				t.Fatalf("unexpected actor type %s", typesUtil.ActorName(actorType))
+				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
 			require.NoError(t, err, "error setting minimum pause blocks")
 
@@ -149,7 +149,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 
 func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.HandleMessageUnstake", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.HandleMessageUnstake", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 			var err error
 			switch actorType {
@@ -162,7 +162,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			case typesUtil.ActorType_Node:
 				err = ctx.Context.SetServiceNodeMinimumPauseBlocks(0)
 			default:
-				t.Fatalf("unexpected actor type %s", typesUtil.ActorName(actorType))
+				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
 			require.NoError(t, err, "error setting minimum pause blocks")
 
@@ -184,7 +184,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 
 func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPaused", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPaused", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
 			actor := GetFirstActor(t, ctx, actorType)
@@ -199,7 +199,7 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			case typesUtil.ActorType_Node:
 				err = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
 			default:
-				t.Fatalf("unexpected actor type %s", typesUtil.ActorName(actorType))
+				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
 			require.NoError(t, err)
 
@@ -228,7 +228,7 @@ func TestUtilityContext_CalculateRelays(t *testing.T) {
 
 func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.CalculateUnstakingHeight", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.CalculateUnstakingHeight", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			var unstakingBlocks int64
 			var err error
@@ -242,7 +242,7 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 			case typesUtil.ActorType_Fish:
 				unstakingBlocks, err = ctx.GetFishermanUnstakingBlocks()
 			default:
-				t.Fatalf("unexpected actor type %s", typesUtil.ActorName(actorType))
+				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
 			require.NoError(t, err, "error getting unstaking blocks")
 
@@ -256,7 +256,7 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 
 func TestUtilityContext_Delete(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.Delete", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.Delete", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := GetFirstActor(t, ctx, actorType)
@@ -272,7 +272,7 @@ func TestUtilityContext_Delete(t *testing.T) {
 
 func TestUtilityContext_GetExists(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetExists", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.GetExists", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := GetFirstActor(t, ctx, actorType)
@@ -292,7 +292,7 @@ func TestUtilityContext_GetExists(t *testing.T) {
 
 func TestUtilityContext_GetOutputAddress(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetOutputAddress", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.GetOutputAddress", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := GetFirstActor(t, ctx, actorType)
@@ -307,7 +307,7 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 
 func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetPauseHeightIfExists", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.GetPauseHeightIfExists", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			pauseHeight := int64(100)
@@ -331,7 +331,7 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 
 func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetMessageEditStakeSignerCandidates", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.GetMessageEditStakeSignerCandidates", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := GetFirstActor(t, ctx, actorType)
@@ -378,7 +378,7 @@ func TestUtilityContext_GetMessageStakeSignerCandidates(t *testing.T) {
 
 func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetMessageUnpauseSignerCandidates", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.GetMessageUnpauseSignerCandidates", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := GetFirstActor(t, ctx, actorType)
@@ -399,7 +399,7 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 
 func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetMessageUnstakeSignerCandidates", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.GetMessageUnstakeSignerCandidates", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := GetFirstActor(t, ctx, actorType)
@@ -419,7 +419,7 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 
 func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.UnstakePausedBefore", typesUtil.ActorName(actorType)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.UnstakePausedBefore", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
 			actor := GetFirstActor(t, ctx, actorType)
@@ -439,7 +439,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			case typesUtil.ActorType_Node:
 				er = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
 			default:
-				t.Fatalf("unexpected actor type %s", typesUtil.ActorName(actorType))
+				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
 			require.NoError(t, er, "error setting max paused blocks")
 
@@ -463,7 +463,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			case typesUtil.ActorType_Fish:
 				unstakingBlocks, err = ctx.GetFishermanUnstakingBlocks()
 			default:
-				t.Fatalf("unexpected actor type %s", typesUtil.ActorName(actorType))
+				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
 			require.NoError(t, err, "error getting unstaking blocks")
 			require.Equal(t, actor.GetUnstakingHeight(), unstakingBlocks+1, "incorrect unstaking height")
@@ -475,7 +475,7 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		ctx := NewTestingUtilityContext(t, 1)
 
-		poolName := typesUtil.GetActorPoolName(actorType)
+		poolName := actorType.GetActorPoolName()
 		var err1, err2 error
 		switch actorType {
 		case typesUtil.ActorType_App:
@@ -491,7 +491,7 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 			err1 = ctx.Context.SetServiceNodeUnstakingBlocks(0)
 			err2 = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
 		default:
-			t.Fatalf("unexpected actor type %s", typesUtil.ActorName(actorType))
+			t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 		}
 
 		ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
@@ -541,7 +541,7 @@ func GetAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType typ
 			actors = append(actors, a)
 		}
 	default:
-		t.Fatalf("unexpected actor type %s", typesUtil.ActorName(actorType))
+		t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 	}
 
 	return

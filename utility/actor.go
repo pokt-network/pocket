@@ -10,12 +10,16 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-// 'Actor' is the consolidated term for common functionality among the following network actors: app, fish, node, val
-// Within this file, there are all the state based CRUD operations that are shared between these abstractions.
-// The ideology of the separation of the actors is based on the expectation of actor divergence in the near future.
-// The current implementation attempts to simplify code footprint and complexity while enabling future divergence.
-// It is important to note, that as production approaches, the idea is to attempt more consolidation at an architectural
-// multi-module level. Until then, it's a fine line to walk.
+/*
+`Actor` is the consolidated term for common functionality among the following network actors: app, fish, node, val.
+
+This file contains all the state based CRUD operations shared between these abstractions.
+
+The ideology of the separation of the actors is based on the expectation of actor divergence in the near future.
+The current implementation attempts to simplify code footprint and complexity while enabling future divergence.
+It is important to note, that as production approaches, the idea is to attempt more consolidation at an architectural
+multi-module level. Until then, it's a fine line to walk.
+*/
 
 // setters
 
@@ -103,6 +107,7 @@ func (u *UtilityContext) GetActorStakedTokens(actorType typesUtil.ActorType, add
 	if er != nil {
 		return nil, types.ErrGetStakedTokens(er)
 	}
+
 	var stakedTokens string
 	switch actorType {
 	case typesUtil.ActorType_App:
@@ -117,6 +122,7 @@ func (u *UtilityContext) GetActorStakedTokens(actorType typesUtil.ActorType, add
 	if er != nil {
 		return nil, types.ErrGetStakedTokens(er)
 	}
+
 	i, err := types.StringToBigInt(stakedTokens)
 	if err != nil {
 		return nil, err
@@ -127,6 +133,7 @@ func (u *UtilityContext) GetActorStakedTokens(actorType typesUtil.ActorType, add
 func (u *UtilityContext) GetMaxPausedBlocks(actorType typesUtil.ActorType) (maxPausedBlocks int, err types.Error) {
 	var er error
 	var paramName string
+
 	store := u.Store()
 	switch actorType {
 	case typesUtil.ActorType_App:
