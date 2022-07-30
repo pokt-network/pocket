@@ -279,9 +279,14 @@ loop:
 func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
+	persistenceContextMock := modulesMock.NewMockPersistenceContext(ctrl)
 
 	persistenceMock.EXPECT().Start().Do(func() {}).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
+	persistenceMock.EXPECT().NewContext(gomock.Any()).Return(persistenceContextMock, nil).AnyTimes()
+
+	persistenceContextMock.EXPECT().Release().Return().AnyTimes()
+	persistenceContextMock.EXPECT().GetLatestBlockHeight().Return(int64(0), nil).AnyTimes()
 
 	return persistenceMock
 }

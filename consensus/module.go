@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"encoding/hex"
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/types"
@@ -110,9 +111,9 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 }
 
 func (m *consensusModule) Start() error {
-	// if err := m.maybeLoadState(); err != nil {
-	// 	return err
-	// }
+	if err := m.maybeLoadState(); err != nil {
+		return err
+	}
 
 	if err := m.paceMaker.Start(); err != nil {
 		return err
@@ -151,19 +152,20 @@ func (m *consensusModule) maybeLoadState() error {
 
 	latestHeight, err := persistenceContext.GetLatestBlockHeight()
 	if err != nil || latestHeight == 0 {
-		// TODO: State syncronization required
+		m.nodeLog("TODO: State sync not implement")
 		return nil
 	}
 
 	appHash, err := persistenceContext.GetBlockHash(latestHeight)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting block hash for height %d even though it's in the database: %s", latestHeight, err)
 	}
 
 	// TODO: Populate the rest of the state from the persistence module: validator set, quorum cert, last block hash, etc...
 	m.Height = uint64(latestHeight)
 	m.appHash = string(appHash)
 
+	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
 	return nil
 
 }
