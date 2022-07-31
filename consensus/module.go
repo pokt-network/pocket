@@ -162,7 +162,7 @@ func (m *consensusModule) maybeLoadState() error {
 	}
 
 	// TODO: Populate the rest of the state from the persistence module: validator set, quorum cert, last block hash, etc...
-	m.Height = uint64(latestHeight)
+	m.Height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
 	m.appHash = string(appHash)
 
 	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
@@ -184,7 +184,7 @@ handler which has both pros and cons:
 		* Allows for micro-optimizations
 	Cons:
 		* The leader's "replica related logic" requires an additional code path
-		* Code is less "generalizable" and therefore potentially more error prone
+		* Code is less "[gene]ralizable" and therefore potentially more error prone
 */
 
 // TODO(olshansky): Should we just make these singletons or embed them directly in the consensusModule?
@@ -246,7 +246,7 @@ func (m *consensusModule) AppHash() string {
 	return m.appHash
 }
 
-func (m *consensusModule) BlockHeight() uint64 {
+func (m *consensusModule) CurrentHeight() uint64 {
 	return m.Height
 }
 

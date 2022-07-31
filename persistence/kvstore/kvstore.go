@@ -14,6 +14,7 @@ type KVStore interface {
 	Put(key []byte, value []byte) error
 	Get(key []byte) ([]byte, error)
 	Exists(key []byte) (bool, error)
+	ClearAll() error
 }
 
 var _ KVStore = &badgerKVStore{}
@@ -81,6 +82,10 @@ func (store badgerKVStore) Exists(key []byte) (bool, error) {
 		return false, err
 	}
 	return val != nil, nil
+}
+
+func (store badgerKVStore) ClearAll() error {
+	return store.db.DropAll()
 }
 
 func (store badgerKVStore) Stop() error {

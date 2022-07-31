@@ -280,7 +280,13 @@ func (p PostgresContext) ClearAllDebug() error {
 		}
 	}
 
-	tx.Exec(ctx, schema.ClearAllGovQuery())
+	if _, err = tx.Exec(ctx, schema.ClearAllGovQuery()); err != nil {
+		return err
+	}
+
+	if _, err = tx.Exec(ctx, schema.ClearAllBlocksQuery()); err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -60,8 +60,6 @@ func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []
 	if err != nil {
 		return err
 	}
-	hex.EncodeToString(proposerAddr)
-	hex.EncodeToString(quorumCert)
 
 	_, err = conn.Exec(ctx, schema.InsertBlockQuery(height, hash, proposerAddr, quorumCert))
 	return err

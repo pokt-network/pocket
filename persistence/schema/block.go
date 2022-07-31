@@ -16,7 +16,7 @@ const (
 func InsertBlockQuery(height uint64, hashString string, proposerAddr []byte, quorumCert []byte) string {
 	return fmt.Sprintf(
 		`INSERT INTO %s(height, hash, proposer_address, quorum_certificate)
-			VALUES(%d, '%s', '%s', '%s')`,
+			VALUES(%d, '%s', '%b', '%b')`,
 		BlockTableName,
 		height, hashString, proposerAddr, quorumCert)
 }
@@ -27,4 +27,8 @@ func GetBlockHashQuery(height int64) string {
 
 func GetLatestBlockHeightQuery() string {
 	return fmt.Sprintf(`SELECT MAX(height) FROM %s`, BlockTableName)
+}
+
+func ClearAllBlocksQuery() string {
+	return fmt.Sprintf(`DELETE FROM %s`, BlockTableName)
 }
