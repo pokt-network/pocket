@@ -111,7 +111,7 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 }
 
 func (m *consensusModule) Start() error {
-	if err := m.maybeLoadState(); err != nil {
+	if err := m.loadPersistedState(); err != nil {
 		return err
 	}
 
@@ -143,7 +143,7 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	m.leaderElectionMod.SetBus(pocketBus)
 }
 
-func (m *consensusModule) maybeLoadState() error {
+func (m *consensusModule) loadPersistedState() error {
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewContext(-1) // Unknown height
 	if err != nil {
 		return nil
