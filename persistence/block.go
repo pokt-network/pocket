@@ -3,9 +3,9 @@ package persistence
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"log"
 
 	"github.com/pokt-network/pocket/persistence/schema"
-	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 // OPTIMIZE(team): get from blockstore or keep in cache/memory
@@ -40,12 +40,13 @@ func (p PostgresContext) GetHeight() (int64, error) {
 }
 
 func (p PostgresContext) TransactionExists(transactionHash string) (bool, error) {
-	return p.ContextStore.Exists([]byte(transactionHash))
+	log.Println("TODO: TransactionExists not implemented")
+	return false, nil
 }
 
 func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
-	txHash := typesUtil.TransactionHash(transactionProtoBytes)
-	return p.ContextStore.Put([]byte(txHash), transactionProtoBytes)
+	log.Println("TODO: StoreTransaction not implemented")
+	return nil
 }
 
 func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
