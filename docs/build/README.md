@@ -16,6 +16,10 @@ Automatic development / test / production builds are still a work in progress, b
 
 For example, `X.Y.Z[-<pre_release_tag][+branch_name][+short_hash][+dirty]` is the name of a potential build we will release in the future.
 
+## Supplied artifacts
+
+* Docker images as a part of [automatic builds](automatic-builds.md)
+
 ## [TODO] Magefile build system
 
 Once the V1 implementation reaches the stage of testable binaries, we are looking to use [Mage](https://magefile.org/) which is being tracked in [pocket/issues/43](https://github.com/pokt-network/pocket/issues/43) that'll inject a version with the `-version` flag.
