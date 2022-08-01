@@ -46,7 +46,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 	}
 
 	if err := m.applyBlockAsReplica(msg.Block); err != nil {
-		m.nodeLogError(typesCons.ErrApplyProposalTransactions.Error(), err)
+		m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}

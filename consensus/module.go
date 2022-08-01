@@ -184,7 +184,7 @@ handler which has both pros and cons:
 		* Allows for micro-optimizations
 	Cons:
 		* The leader's "replica related logic" requires an additional code path
-		* Code is less "[gene]ralizable" and therefore potentially more error prone
+		* Code is less "generalizable" and therefore potentially more error prone
 */
 
 // TODO(olshansky): Should we just make these singletons or embed them directly in the consensusModule?

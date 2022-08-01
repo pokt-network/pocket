@@ -341,7 +341,7 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 		Return(make([][]byte, 0), nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().
-		ApplyProposalTransactions(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(appHash, nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().StoreBlock(gomock.Any()).AnyTimes().Return(nil)

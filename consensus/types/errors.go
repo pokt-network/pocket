@@ -142,7 +142,7 @@ const (
 	prepareBlockError                           = "could not prepare block"
 	commitBlockError                            = "could not commit block"
 	replicaPrepareBlockError                    = "node should not call `prepareBlock` if it is not a leader"
-	leaderErrApplyProposalTransactions          = "node should not call `applyBlock` if it is leader"
+	leaderErrApplyBlock                         = "node should not call `applyBlock` if it is leader"
 	blockSizeTooLargeError                      = "block size is too large"
 	sendMessageError                            = "error sending message"
 	broadcastMessageError                       = "error broadcasting message"
@@ -173,11 +173,11 @@ var (
 	ErrOlderStepRound                         = errors.New(olderStepRoundError)
 	ErrUnexpectedPacemakerCase                = errors.New(unexpectedPacemakerCaseError)
 	ErrConsensusMempoolFull                   = errors.New(consensusMempoolFullError)
-	ErrApplyProposalTransactions              = errors.New(applyBlockError)
+	ErrApplyBlock                             = errors.New(applyBlockError)
 	ErrPrepareBlock                           = errors.New(prepareBlockError)
 	ErrCommitBlock                            = errors.New(commitBlockError)
 	ErrReplicaPrepareBlock                    = errors.New(replicaPrepareBlockError)
-	ErrLeaderApplyBLock                       = errors.New(leaderErrApplyProposalTransactions)
+	ErrLeaderApplyBLock                       = errors.New(leaderErrApplyBlock)
 	ErrSendMessage                            = errors.New(sendMessageError)
 	ErrBroadcastMessage                       = errors.New(broadcastMessageError)
 	ErrCreateConsensusMessage                 = errors.New(createConsensusMessageError)

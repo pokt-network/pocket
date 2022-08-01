@@ -17,7 +17,7 @@ DeliverTx individually applys each transaction against the state and rolls it ba
 like BeginBlock, EndBlock is an autonomous state oepration that executes at the end of every block.
 */
 
-func (u *UtilityContext) ApplyProposalTransactions(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
+func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
 	u.LatestHeight = latestHeight
 	// begin block lifecycle phase
 	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {

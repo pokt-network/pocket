@@ -240,7 +240,7 @@ func (m *persistenceModule) hydrateGenesisDbState() error {
 		if err := ctx.InsertPool(pool.Name, pool.Account.Address, pool.Account.Amount); err != nil {
 			return err
 		}
-		// DISCUSS_IN_THIS_COMMIT(drewskey): What if there's a discrepency between `pool.Account.Amount` and `poolValues`?
+		// DISCUSS_IN_THIS_COMMIT(drewskey): What if there's a discrepancy between `pool.Account.Amount` and `poolValues`?
 		if err := ctx.SetAccountAmount(pool.Account.Address, pool.Account.Amount); err != nil {
 			return err
 		}
@@ -249,7 +249,8 @@ func (m *persistenceModule) hydrateGenesisDbState() error {
 	if err := ctx.InitParams(); err != nil {
 		return err
 	}
-	// TECHDEBT: Calling this for each param is not practical. Need someone to refactor the gov params table.
+	// TECHDEBT: Calling the setter (e.g. SetValidatorMaximumMissedBlocks, Set_) for this for each param results in a lot
+	// of code bloat and is not practical. This will need to be fixed as part of the gov param refactor task.
 	if err := ctx.SetValidatorMaximumMissedBlocks(int(state.Params.ValidatorMaximumMissedBlocks)); err != nil {
 		return err
 	}

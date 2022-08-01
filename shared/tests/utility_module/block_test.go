@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUtilityContext_ApplyProposalTransactions(t *testing.T) {
+func TestUtilityContext_ApplyBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, startingBalance, amount, signer := NewTestingTransaction(t, ctx)
 
@@ -25,7 +25,7 @@ func TestUtilityContext_ApplyProposalTransactions(t *testing.T) {
 	require.NoError(t, err)
 
 	// apply block
-	_, er := ctx.ApplyProposalTransactions(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address})
+	_, er := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address})
 	require.NoError(t, er, "error applying proposal transactions")
 
 	// beginBlock logic verify
@@ -70,7 +70,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	// apply block
-	_, er := ctx.ApplyProposalTransactions(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address})
+	_, er := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address})
 	require.NoError(t, er)
 
 	// beginBlock logic verify
@@ -124,7 +124,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	// apply block
-	_, er := ctx.ApplyProposalTransactions(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address})
+	_, er := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address})
 	require.NoError(t, er)
 
 	// deliverTx logic verify
