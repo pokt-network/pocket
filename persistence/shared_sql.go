@@ -29,7 +29,7 @@ func UnstakingHeightToStatus(unstakingHeight int64) int32 {
 }
 
 func (p *PostgresContext) GetExists(actorSchema schema.ProtocolActorSchema, address []byte, height int64) (exists bool, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return
 	}
@@ -42,7 +42,7 @@ func (p *PostgresContext) GetExists(actorSchema schema.ProtocolActorSchema, addr
 }
 
 func (p *PostgresContext) GetActor(actorSchema schema.ProtocolActorSchema, address []byte, height int64) (actor schema.BaseActor, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return
 	}
@@ -83,7 +83,7 @@ func (p *PostgresContext) GetActor(actorSchema schema.ProtocolActorSchema, addre
 }
 
 func (p *PostgresContext) InsertActor(actorSchema schema.ProtocolActorSchema, actor schema.BaseActor) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (p *PostgresContext) InsertActor(actorSchema schema.ProtocolActorSchema, ac
 }
 
 func (p *PostgresContext) UpdateActor(actorSchema schema.ProtocolActorSchema, actor schema.BaseActor) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func (p *PostgresContext) UpdateActor(actorSchema schema.ProtocolActorSchema, ac
 }
 
 func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema schema.ProtocolActorSchema, height int64) (actors []*types.UnstakingActor, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema schema.ProtocolAct
 
 func (p *PostgresContext) GetActorStatus(actorSchema schema.ProtocolActorSchema, address []byte, height int64) (int, error) {
 	var unstakingHeight int64
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return UndefinedStakingStatus, err
 	}
@@ -185,7 +185,7 @@ func (p *PostgresContext) GetActorStatus(actorSchema schema.ProtocolActorSchema,
 }
 
 func (p *PostgresContext) SetActorUnstakingHeightAndStatus(actorSchema schema.ProtocolActorSchema, address []byte, unstakingHeight int64) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return err
 	}
@@ -200,7 +200,7 @@ func (p *PostgresContext) SetActorUnstakingHeightAndStatus(actorSchema schema.Pr
 }
 
 func (p *PostgresContext) GetActorPauseHeightIfExists(actorSchema schema.ProtocolActorSchema, address []byte, height int64) (pausedHeight int64, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return schema.DefaultBigInt, err
 	}
@@ -213,7 +213,7 @@ func (p *PostgresContext) GetActorPauseHeightIfExists(actorSchema schema.Protoco
 }
 
 func (p PostgresContext) SetActorStatusAndUnstakingHeightIfPausedBefore(actorSchema schema.ProtocolActorSchema, pausedBeforeHeight, unstakingHeight int64) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return err
 	}
@@ -228,7 +228,7 @@ func (p PostgresContext) SetActorStatusAndUnstakingHeightIfPausedBefore(actorSch
 }
 
 func (p PostgresContext) SetActorPauseHeight(actorSchema schema.ProtocolActorSchema, address []byte, pauseHeight int64) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return err
 	}
@@ -243,7 +243,7 @@ func (p PostgresContext) SetActorPauseHeight(actorSchema schema.ProtocolActorSch
 }
 
 func (p PostgresContext) GetActorOutputAddress(actorSchema schema.ProtocolActorSchema, operatorAddr []byte, height int64) ([]byte, error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return nil, err
 	}

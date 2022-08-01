@@ -36,7 +36,8 @@
   },
   "persistence": {
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
-    "schema": "node2"
+    "schema": "node2",
+    "block_store_path": "/var/blockstore"
   },
   "utility": {}
 }
