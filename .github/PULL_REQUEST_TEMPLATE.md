@@ -1,3 +1,5 @@
+_NOTE: Please make sure to update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the PR for review_
+
 ## Description
 _Summary of the change. Include motivation, reasons, context, dependencies, etc..._
 
