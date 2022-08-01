@@ -66,6 +66,16 @@ go_doc:
 	fi; \
 	}
 
+## //TODO (@deblasis): update docs about this dependency?
+.PHONY: go_protoc-go-inject-tag
+## Run `go staticcheck` on all files in the current project
+go_protoc-go-inject-tag:
+	{ \
+	if ! command -v protoc-go-inject-tag >/dev/null; then \
+		echo "Install with 'github.com/favadi/protoc-go-inject-tag@latest'"; \
+	fi; \
+	}
+
 .PHONY: go_clean_deps
 ## Runs `go mod tidy` && `go mod vendor`
 go_clean_deps:
@@ -232,12 +242,13 @@ protogen_clean:
 
 .PHONY: protogen_local
 ## Generate go structures for all of the protobufs
-protogen_local:
+protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = "./shared/types/proto/")
 
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto
+	protoc-go-inject-tag -input="./shared/types/genesis/*.pb.go"
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/pre2p/raintree/types/proto --go_out=./p2p/pre2p/types      ./p2p/pre2p/raintree/types/proto/*.proto
 
