@@ -2,19 +2,27 @@ package persistence
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
 
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
 const (
-	CreateSchemaIfNotExists = "CREATE SCHEMA IF NOT EXISTS"
-	SetSearchPathTo         = "SET search_path TO"
-	CreateTableIfNotExists  = "CREATE TABLE IF NOT EXISTS"
+	CreateSchema    = "CREATE SCHEMA"
+	SetSearchPathTo = "SET search_path TO"
+	CreateTable     = "CREATE TABLE"
+
+	IfNotExists = "IF NOT EXISTS"
+
+	CreateEnumType = "CREATE TYPE %s AS ENUM"
+
+	DuplicateObjectErrorCode = "42710"
 )
 
 func init() {
@@ -72,7 +80,7 @@ func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn,
 
 	// Creating and setting a new schema so we can running multiple nodes on one postgres instance. See
 	// more details at https://github.com/go-pg/pg/issues/351.
-	if _, err = db.Exec(ctx, fmt.Sprintf("%s %s", CreateSchemaIfNotExists, schema)); err != nil {
+	if _, err = db.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, schema)); err != nil {
 		return nil, err
 	}
 
@@ -108,11 +116,11 @@ func InitializeAllTables(ctx context.Context, db *pgx.Conn) error {
 }
 
 func InitializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor schema.ProtocolActorSchema) error {
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, actor.GetTableName(), actor.GetTableSchema())); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, actor.GetTableName(), actor.GetTableSchema())); err != nil {
 		return err
 	}
 	if actor.GetChainsTableName() != "" {
-		if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, actor.GetChainsTableName(), actor.GetChainsTableSchema())); err != nil {
+		if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, actor.GetChainsTableName(), actor.GetChainsTableSchema())); err != nil {
 			return err
 		}
 	}
@@ -120,20 +128,36 @@ func InitializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor sche
 }
 
 func InitializeAccountTables(ctx context.Context, db *pgx.Conn) error {
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.AccountTableName, schema.AccountTableSchema)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.AccountTableName, schema.AccountTableSchema)); err != nil {
 		return err
 	}
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.PoolTableName, schema.PoolTableSchema)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.PoolTableName, schema.PoolTableSchema)); err != nil {
 		return err
 	}
 	return nil
 }
 
 func InitializeGovTables(ctx context.Context, db *pgx.Conn) error {
-	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.ParamsTableName, schema.ParamsTableSchema))
+
+	//TODO (@deblasis): val_type enum
+	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s`, fmt.Sprintf(CreateEnumType, schema.ValTypeName), schema.ValTypeEnumTypes))
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code != DuplicateObjectErrorCode {
+			return err
+		}
+	}
+	//TODO (@deblasis): params table
+	_, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.ParamsTableName, schema.ParamsTableSchema))
 	if err != nil {
 		return err
 	}
+	//TODO (@deblasis): flags table
+	_, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.FlagsTableName, schema.FlagsTableSchema))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
