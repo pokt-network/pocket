@@ -1,7 +1,7 @@
 package shared
 
 import (
-	"github.com/pokt-network/pocket/p2p/pre2p"
+	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -39,8 +39,8 @@ func Create(cfg *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	// TODO(derrandz): Deprecate `p2p` and replace `pre2p` into its place
-	pre2pMod, err := pre2p.Create(cfg)
+	// TODO(derrandz): Deprecate `p2p` and replace `p2p` into its place
+	p2pMod, err := p2p.Create(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func Create(cfg *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(prePersistenceMod, pre2pMod, utilityMod, consensusMod)
+	bus, err := CreateBus(prePersistenceMod, p2pMod, utilityMod, consensusMod)
 	if err != nil {
 		return nil, err
 	}

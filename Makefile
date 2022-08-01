@@ -27,6 +27,8 @@ help:
 	} \
 	{ lastLine = $$0 }' $(MAKEFILE_LIST)
 
+# Internal helper target - check if docker is installed
+.PHONY: docker_check
 docker_check:
 	{ \
 	if ( ! ( command -v docker >/dev/null && command -v docker-compose >/dev/null )); then \
@@ -35,6 +37,8 @@ docker_check:
 	fi; \
 	}
 
+# Internal helper target - prompt the user before continuing
+.PHONY: prompt_user
 prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 
@@ -152,15 +156,19 @@ docker_wipe: docker_check prompt_user
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
 	$(eval modules_dir = "shared/modules")
-	mockgen --source=${modules_dir}/persistence_module.go -destination=${modules_dir}/mocks/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/p2p_module.go -destination=${modules_dir}/mocks/p2p_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/bus_module.go -destination=${modules_dir}/mocks/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	$(eval mocks_dir = "shared/modules/mocks")
+	rm -rf ${mocks_dir}
+	mockgen --source=${modules_dir}/persistence_module.go -destination=${mocks_dir}/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/p2p_module.go -destination=${mocks_dir}/p2p_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/utility_module.go -destination=${mocks_dir}/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/consensus_module.go -destination=${mocks_dir}/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	mockgen --source=${modules_dir}/bus_module.go -destination=${mocks_dir}/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
 	echo "Mocks generated in ${modules_dir}/mocks"
 
-	$(eval p2p_types_dir = "p2p/pre2p/types")
-	mockgen --source=${p2p_types_dir}/network.go -destination=${p2p_types_dir}/mocks/network_mock.go
+	$(eval p2p_types_dir = "p2p/types")
+	$(eval p2p_type_mocks_dir = "p2p/types/mocks")
+	rm -rf ${p2p_type_mocks_dir}
+	mockgen --source=${p2p_types_dir}/network.go -destination=${p2p_type_mocks_dir}/network_mock.go
 	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
 
 .PHONY: test_all
@@ -244,13 +252,12 @@ protogen_clean:
 ## Generate go structures for all of the protobufs
 protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = "./shared/types/proto/")
-
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto         --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto              --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto --experimental_allow_proto3_optional
 	protoc-go-inject-tag -input="./shared/types/genesis/*.pb.go"
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/pre2p/raintree/types/proto --go_out=./p2p/pre2p/types      ./p2p/pre2p/raintree/types/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto      --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/raintree/types/proto       --go_out=./p2p/types            ./p2p/raintree/types/proto/*.proto   --experimental_allow_proto3_optional
 
 	echo "View generated proto files by running: make protogen_show"
 
@@ -287,24 +294,19 @@ test_p2p_types:
 	go test ${VERBOSE_TEST} -race ./p2p/types
 
 .PHONY: test_p2p
-## Run all p2p tests
+## Run all p2p
 test_p2p:
-	go test ${VERBOSE_TEST} -race ./p2p
+	go test ${VERBOSE_TEST} -count=1 ./p2p/...
 
-.PHONY: test_pre2p
-## Run all pre2p
-test_pre2p:
-	go test ${VERBOSE_TEST} -count=1 ./p2p/pre2p/...
+.PHONY: test_p2p_addrbook
+## Run all P2P addr book related tests
+test_p2p_addrbook:
+	go test -run AddrBook -v -count=1 ./p2p/...
 
-.PHONY: test_pre2p_addrbook
-## Run all Pre2P addr book related tests
-test_pre2p_addrbook:
-	go test -run AddrBook -v -count=1 ./p2p/pre2p/...
-
-.PHONY: benchmark_pre2p_addrbook
-## Benchmark all Pre2P addr book related tests
-benchmark_pre2p_addrbook:
-	go test -bench=. -run BenchmarkAddrBook -v -count=1 ./p2p/pre2p/...
+.PHONY: benchmark_p2p_addrbook
+## Benchmark all P2P addr book related tests
+benchmark_p2p_addrbook:
+	go test -bench=. -run BenchmarkAddrBook -v -count=1 ./p2p/...
 
 ### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
 # TODO          - General Purpose catch-all.

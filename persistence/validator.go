@@ -24,11 +24,11 @@ func (p PostgresContext) GetValidator(address []byte, height int64) (operator, p
 	return
 }
 
-func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error {
+func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedAmount string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(schema.ValidatorActor, schema.BaseActor{
 		Address:            hex.EncodeToString(address),
 		PublicKey:          hex.EncodeToString(publicKey),
-		StakedTokens:       stakedTokens,
+		StakedTokens:       stakedAmount,
 		ActorSpecificParam: serviceURL,
 		OutputAddress:      hex.EncodeToString(output),
 		PausedHeight:       pausedHeight,
@@ -36,10 +36,10 @@ func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, outpu
 	})
 }
 
-func (p PostgresContext) UpdateValidator(address []byte, serviceURL string, stakedTokens string) error {
+func (p PostgresContext) UpdateValidator(address []byte, serviceURL string, stakedAmount string) error {
 	return p.UpdateActor(schema.ValidatorActor, schema.BaseActor{
 		Address:            hex.EncodeToString(address),
-		StakedTokens:       stakedTokens,
+		StakedTokens:       stakedAmount,
 		ActorSpecificParam: serviceURL,
 	})
 }

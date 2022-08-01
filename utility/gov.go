@@ -8,15 +8,6 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func (u *UtilityContext) HandleMessageChangeParameter(message *typesUtil.MessageChangeParameter) types.Error {
-	cdc := u.Codec()
-	v, err := cdc.FromAny(message.ParameterValue)
-	if err != nil {
-		return types.ErrProtoFromAny(err)
-	}
-	return u.UpdateParam(message.ParameterKey, v)
-}
-
 func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.Error {
 	store := u.Store()
 	switch paramName {
@@ -1816,63 +1807,62 @@ func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
 	}
 }
 
-func (u *UtilityContext) GetFee(msg typesUtil.Message) (amount *big.Int, err types.Error) {
+func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.ActorType) (amount *big.Int, err types.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageDoubleSign:
 		return u.GetMessageDoubleSignFee()
 	case *typesUtil.MessageSend:
 		return u.GetMessageSendFee()
-	case *typesUtil.MessageStakeFisherman:
-		return u.GetMessageStakeFishermanFee()
-	case *typesUtil.MessageEditStakeFisherman:
-		return u.GetMessageEditStakeFishermanFee()
-	case *typesUtil.MessageUnstakeFisherman:
-		return u.GetMessageUnstakeFishermanFee()
-	case *typesUtil.MessagePauseFisherman:
-		return u.GetMessagePauseFishermanFee()
-	case *typesUtil.MessageUnpauseFisherman:
-		return u.GetMessageUnpauseFishermanFee()
-	case *typesUtil.MessageFishermanPauseServiceNode:
-		return u.GetMessageFishermanPauseServiceNodeFee()
-	//case *types.MessageTestScore:
-	//	return u.GetMessageTestScoreFee()
-	//case *types.MessageProveTestScore:
-	//	return u.GetMessageProveTestScoreFee()
-	case *typesUtil.MessageStakeApp:
-		return u.GetMessageStakeAppFee()
-	case *typesUtil.MessageEditStakeApp:
-		return u.GetMessageEditStakeAppFee()
-	case *typesUtil.MessageUnstakeApp:
-		return u.GetMessageUnstakeAppFee()
-	case *typesUtil.MessagePauseApp:
-		return u.GetMessagePauseAppFee()
-	case *typesUtil.MessageUnpauseApp:
-		return u.GetMessageUnpauseAppFee()
-	case *typesUtil.MessageStakeValidator:
-		return u.GetMessageStakeValidatorFee()
-	case *typesUtil.MessageEditStakeValidator:
-		return u.GetMessageEditStakeValidatorFee()
-	case *typesUtil.MessageUnstakeValidator:
-		return u.GetMessageUnstakeValidatorFee()
-	case *typesUtil.MessagePauseValidator:
-		return u.GetMessagePauseValidatorFee()
-	case *typesUtil.MessageUnpauseValidator:
-		return u.GetMessageUnpauseValidatorFee()
-	case *typesUtil.MessageStakeServiceNode:
-		return u.GetMessageStakeServiceNodeFee()
-	case *typesUtil.MessageEditStakeServiceNode:
-		return u.GetMessageEditStakeServiceNodeFee()
-	case *typesUtil.MessageUnstakeServiceNode:
-		return u.GetMessageUnstakeServiceNodeFee()
-	case *typesUtil.MessagePauseServiceNode:
-		return u.GetMessagePauseServiceNodeFee()
-	case *typesUtil.MessageUnpauseServiceNode:
-		return u.GetMessageUnpauseServiceNodeFee()
+	case *typesUtil.MessageStake:
+		switch actorType {
+		case typesUtil.ActorType_App:
+			return u.GetMessageStakeAppFee()
+		case typesUtil.ActorType_Fish:
+			return u.GetMessageStakeFishermanFee()
+		case typesUtil.ActorType_Node:
+			return u.GetMessageStakeServiceNodeFee()
+		case typesUtil.ActorType_Val:
+			return u.GetMessageStakeValidatorFee()
+		}
+	case *typesUtil.MessageEditStake:
+		switch actorType {
+		case typesUtil.ActorType_App:
+			return u.GetMessageEditStakeAppFee()
+		case typesUtil.ActorType_Fish:
+			return u.GetMessageEditStakeFishermanFee()
+		case typesUtil.ActorType_Node:
+			return u.GetMessageEditStakeServiceNodeFee()
+		case typesUtil.ActorType_Val:
+			return u.GetMessageEditStakeValidatorFee()
+		}
+	case *typesUtil.MessageUnstake:
+		switch actorType {
+		case typesUtil.ActorType_App:
+			return u.GetMessageUnstakeAppFee()
+		case typesUtil.ActorType_Fish:
+			return u.GetMessageUnstakeFishermanFee()
+		case typesUtil.ActorType_Node:
+			return u.GetMessageUnstakeServiceNodeFee()
+		case typesUtil.ActorType_Val:
+			return u.GetMessageUnstakeValidatorFee()
+		}
+	case *typesUtil.MessageUnpause:
+		switch actorType {
+		case typesUtil.ActorType_App:
+			return u.GetMessageUnpauseAppFee()
+		case typesUtil.ActorType_Fish:
+			return u.GetMessageUnpauseFishermanFee()
+		case typesUtil.ActorType_Node:
+			return u.GetMessageUnpauseServiceNodeFee()
+		case typesUtil.ActorType_Val:
+			return u.GetMessageUnpauseValidatorFee()
+		}
 	case *typesUtil.MessageChangeParameter:
 		return u.GetMessageChangeParameterFee()
 	default:
 		return nil, types.ErrUnknownMessage(x)
 	}
+	return nil, nil
 }
 
 func (u *UtilityContext) GetMessageChangeParameterSignerCandidates(msg *typesUtil.MessageChangeParameter) ([][]byte, types.Error) {
