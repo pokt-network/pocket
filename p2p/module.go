@@ -16,7 +16,6 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -24,7 +23,8 @@ import (
 var _ modules.P2PModule = &p2pModule{}
 
 type p2pModule struct {
-	bus modules.Bus
+	bus       modules.Bus
+	p2pConfig *config.P2PConfig // TODO (Olshansk) to remove this since it'll be available via the bus
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
@@ -40,24 +40,13 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 		return nil, err
 	}
 
-	testState := typesGenesis.GetNodeState(nil)
-	addrBook, err := ValidatorMapToAddrBook(cfg.P2P, testState.ValidatorMap)
-	if err != nil {
-		return nil, err
-	}
-
-	var network typesP2P.Network
-	if cfg.P2P.UseRainTree {
-		selfAddr := cfg.PrivateKey.Address()
-		network = raintree.NewRainTreeNetwork(selfAddr, addrBook, cfg)
-	} else {
-		network = stdnetwork.NewNetwork(addrBook)
-	}
-
 	m = &p2pModule{
+		p2pConfig: cfg.P2P,
+
 		listener: l,
-		network:  network,
 		address:  cfg.PrivateKey.Address(),
+
+		network: nil,
 	}
 
 	return m, nil
@@ -86,6 +75,17 @@ func (m *p2pModule) Start() error {
 			p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
+	addrBook, err := ValidatorMapToAddrBook(m.p2pConfig, m.bus.GetConsensusModule().ValidatorMap())
+	if err != nil {
+		return err
+	}
+
+	if m.p2pConfig.UseRainTree {
+		m.network = raintree.NewRainTreeNetwork(m.address, addrBook)
+	} else {
+		m.network = stdnetwork.NewNetwork(addrBook)
+	}
+
 	m.network.SetBus(m.GetBus())
 
 	go func() {
@@ -98,13 +98,11 @@ func (m *p2pModule) Start() error {
 			go m.handleNetworkMessage(data)
 		}
 	}()
-
 	m.
 		GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
 		CounterIncrement(p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME)
-
 	return nil
 }
 

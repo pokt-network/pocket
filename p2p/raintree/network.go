@@ -8,7 +8,6 @@ import (
 	"time"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 
 	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"

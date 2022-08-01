@@ -3,7 +3,6 @@ package main
 // TODO(team): discuss & design the long-term solution to this client.
 
 import (
-	"github.com/pokt-network/pocket/p2p"
 	"log"
 	"os"
 
@@ -91,7 +90,7 @@ func main() {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
 
-	_ = shared.CreateBusWithOptionalModules(nil, pre2pMod, nil, nil, telemetryMod)
+	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod)
 
 	p2pMod.Start()
 
