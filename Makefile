@@ -70,13 +70,12 @@ go_doc:
 	fi; \
 	}
 
-## //TODO (@deblasis): update docs about this dependency?
 .PHONY: go_protoc-go-inject-tag
 ## Run `go staticcheck` on all files in the current project
 go_protoc-go-inject-tag:
 	{ \
 	if ! command -v protoc-go-inject-tag >/dev/null; then \
-		echo "Install with 'github.com/favadi/protoc-go-inject-tag@latest'"; \
+		echo "Install with 'go install github.com/favadi/protoc-go-inject-tag@latest'"; \
 	fi; \
 	}
 
