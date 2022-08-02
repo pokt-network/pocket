@@ -30,7 +30,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		EmitEvent(
 			consensusTelemetry.CONSENSUS_EVENT_METRICS_NAMESPACE,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_NAME,
-			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.GetBlockHeight(),
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.BlockHeight(),
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_NEW_ROUND,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_LEADER,
 		)
@@ -95,7 +95,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		EmitEvent(
 			consensusTelemetry.CONSENSUS_EVENT_METRICS_NAMESPACE,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_NAME,
-			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.GetBlockHeight(),
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.BlockHeight(),
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_PREPARE,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_LEADER,
 		)
@@ -148,7 +148,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		EmitEvent(
 			consensusTelemetry.CONSENSUS_EVENT_METRICS_NAMESPACE,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_NAME,
-			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.GetBlockHeight(),
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.BlockHeight(),
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_PRECOMMIT,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_LEADER,
 		)
@@ -201,7 +201,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		EmitEvent(
 			consensusTelemetry.CONSENSUS_EVENT_METRICS_NAMESPACE,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_NAME,
-			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.GetBlockHeight(),
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.BlockHeight(),
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_COMMIT,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_LEADER,
 		)
@@ -259,7 +259,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusMod
 		EmitEvent(
 			consensusTelemetry.CONSENSUS_EVENT_METRICS_NAMESPACE,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_NAME,
-			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.GetBlockHeight(),
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.BlockHeight(),
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_DECIDE,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_LEADER,
 		)

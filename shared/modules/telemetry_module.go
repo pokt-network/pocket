@@ -6,9 +6,10 @@ type (
 	TelemetryModule interface {
 		Module
 
-	GetTimeSeriesAgent() TimeSeriesAgent
-	GetEventMetricsAgent() EventMetricsAgent
-}
+		GetTimeSeriesAgent() TimeSeriesAgent
+		GetEventMetricsAgent() EventMetricsAgent
+	}
+)
 
 // IMPROVE: Determine if the register function could (should?) return an error.
 
