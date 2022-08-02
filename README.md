@@ -1,8 +1,7 @@
 <div align="center">
-<a href="https://www.pokt.network">
-<img src="https://user-images.githubusercontent.com/2219004/151564884-212c0e40-3bfa-412e-a341-edb54b5f1498.jpeg" alt="Pocket Network logo" width="340"/>
-</a>
-
+  <a href="https://www.pokt.network">
+    <img src="https://user-images.githubusercontent.com/2219004/151564884-212c0e40-3bfa-412e-a341-edb54b5f1498.jpeg" alt="Pocket Network logo" width="340"/>
+  </a>
 </div>
 
 # Pocket

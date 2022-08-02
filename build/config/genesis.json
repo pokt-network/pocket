@@ -1,14 +1,4 @@
 {
-  "genesis_state_configs": {
-    "num_validators": 4,
-    "num_applications": 0,
-    "num_fisherman": 0,
-    "num_servicers": 0,
-    "validator_url_format": "node%d.consensus:8080",
-    "keys_seed_start": 42
-  },
-  "genesis_time": "2022-01-19T00:00:00.000000Z",
-  "app_hash": "genesis_block_or_state_hash",
   "validators": [
     {
       "address": "0157a1d82da437eb6b2d0a612ebf934c3a54fb19",

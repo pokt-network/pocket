@@ -1,2 +1,0 @@
-- you have added external ip to fix docker networking issues
-- you have added a fake redundancy layer to allow for integration.

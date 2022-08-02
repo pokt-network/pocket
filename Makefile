@@ -106,10 +106,6 @@ compose_and_watch: docker_check db_start monitoring_start
 rebuild_and_compose_and_watch: db_start monitoring_start
 	docker-compose -f build/deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
-.PHONY: rebuild_and_compose_and_watch
-rebuild_and_compose_and_watch: db_start monitoring_start
-	docker-compose -f build/deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus 
-
 .PHONY: db_start
 ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
 db_start: docker_check
@@ -331,12 +327,6 @@ benchmark_p2p_addrbook:
 # CONSIDERATION - A comment that involves extra work but was thoughts / considered as part of some implementation
 # INTHISCOMMIT  - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the review of a PR to start / reply to a discussion.
 TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "INTHISCOMMIT"
-
-.PHONY: test_p2p
-## Run all pre2p
-test_pre2p:
-# go test -v -count=1 ./p2p/pre2p
-	go test -v -race -count=1 ./p2p/pre2p
 
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)

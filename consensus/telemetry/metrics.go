@@ -1,13 +1,7 @@
 package consensus_telemetry
 
 const (
-	// How to define metrics in this file?
-	//
-	// Must define metrics using following template: MetricName_MetricType_Attribute
-	// e.g: type= timeseries, name=nodes_alive_counter, attribute=name
-	// will result in: NODES_COUNT_COUNTER_TIME_SERIES_NAME="nodes_alive_counter"
-	// you can also add: NODES_COUNT_COUNTER_TIME_SERIES_DESCRIPTION="for your description"
-
+	// Please refer to shared/telemetry/README.md, Defining your own metrics section, to understand the convention we are using to define metrics.
 	// Time Series Metrics
 
 	// DISCUSS(team): Dmitry has expressed multiple times that this should be a gauge instead of a counter
