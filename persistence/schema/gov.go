@@ -64,7 +64,7 @@ func InsertParams(params *genesis.Params) string {
 		pVal := val.Elem().FieldByName(pnt.PropertyName)
 
 		subQuery += `(`
-		switch govParamMetadataMap[k].PoktValType {
+		switch govParamMetadataMap[k].PropertyType {
 		case ValTypeString:
 			var stringVal string
 			switch vt := pVal.Interface().(type) {
@@ -73,10 +73,10 @@ func InsertParams(params *genesis.Params) string {
 			case string:
 				stringVal = vt
 			}
-			subQuery += fmt.Sprintf("'%s', %d, true, '%s', '%s'", k, DefaultBigInt, pnt.PoktValType, stringVal)
+			subQuery += fmt.Sprintf("'%s', %d, true, '%s', '%s'", k, DefaultBigInt, pnt.PropertyType, stringVal)
 
 		case ValTypeSmallInt, ValTypeBigInt:
-			subQuery += fmt.Sprintf("'%s', %d, true, '%s', %d", k, DefaultBigInt, pnt.PoktValType, pVal.Interface())
+			subQuery += fmt.Sprintf("'%s', %d, true, '%s', %d", k, DefaultBigInt, pnt.PropertyType, pVal.Interface())
 		}
 		subQuery += `),`
 	}
@@ -112,7 +112,7 @@ func ClearAllGovQuery() string {
 }
 
 type govParamMetadata struct {
-	PoktValType  string
+	PropertyType string
 	PropertyName string
 }
 
@@ -128,7 +128,7 @@ func parseGovProto() (govParamMetadataMap map[string]govParamMetadata) {
 		poktValType := extractStructTag(poktTag, "val_type=")
 		protoName := extractStructTag(protoTag, "name=")
 		govParamMetadataMap[protoName] = govParamMetadata{
-			PoktValType:  poktValType,
+			PropertyType: poktValType,
 			PropertyName: field.Name,
 		}
 		govParamMetadataKeys = append(govParamMetadataKeys, protoName)
