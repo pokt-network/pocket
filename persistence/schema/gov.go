@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"encoding/hex"
 	"fmt"
 	"reflect"
 	"strings"
@@ -65,7 +66,15 @@ func InsertParams(params *genesis.Params) string {
 		subQuery += `(`
 		switch govParamMetadataMap[k].PoktValType {
 		case ValTypeString:
-			subQuery += fmt.Sprintf("'%s', %d, true, '%s', '%s'", k, DefaultBigInt, pnt.PoktValType, pVal.Interface())
+			var stringVal string
+			switch vt := pVal.Interface().(type) {
+			case []byte:
+				stringVal = hex.EncodeToString(vt)
+			case string:
+				stringVal = vt
+			}
+			subQuery += fmt.Sprintf("'%s', %d, true, '%s', '%s'", k, DefaultBigInt, pnt.PoktValType, stringVal)
+
 		case ValTypeSmallInt, ValTypeBigInt:
 			subQuery += fmt.Sprintf("'%s', %d, true, '%s', %d", k, DefaultBigInt, pnt.PoktValType, pVal.Interface())
 		}
@@ -75,12 +84,12 @@ func InsertParams(params *genesis.Params) string {
 }
 
 func GetParamQuery(paramName string) string {
-	//TODO (@deblasis): clarify if and how we should use `enabled` here
-	return fmt.Sprintf(`SELECT value FROM %s WHERE name=%s AND height=%d and enabled=true`, ParamsTableName, paramName, DefaultBigInt)
+	//TODO (@deblasis): Fix this
+	return fmt.Sprintf(`SELECT value FROM %s WHERE name='%s' AND height<=%d and enabled=true order by height desc limit 1`, ParamsTableName, paramName, DefaultBigInt)
 }
 
 func NullifyParamQuery(paramName string, height int64) string {
-	//TODO (@deblasis): clarify if and how we should use `enabled` here
+	//TODO (@deblasis): Fix this
 	return fmt.Sprintf(`UPDATE %s SET height=%d WHERE name='%s' AND height=%d`, ParamsTableName, height, paramName, DefaultBigInt)
 }
 
@@ -89,11 +98,10 @@ type ParamTypes interface {
 }
 
 func SetParam[T ParamTypes](paramName string, paramValue T, height int64) string {
-
+	//TODO (@deblasis): Fix this
 	fields := "name,height,value,enabled,type"
 
 	subQuery := fmt.Sprintf(`SELECT %s`, fields)
-	//TODO (@deblasis): clarify if and how we should use `enabled` here
 	subQuery += fmt.Sprintf(` FROM %s WHERE name='%s' AND height=%d`, ParamsTableName, paramName, height)
 
 	return fmt.Sprintf(`INSERT INTO %s(%s) %s`, ParamsTableName, fields, subQuery)
@@ -132,11 +140,11 @@ func parseGovProto() (govParamMetadataMap map[string]govParamMetadata) {
 func extractStructTag(structTag string, key string) string {
 	for len(structTag) > 0 {
 		i := strings.IndexByte(structTag, ',')
-		if i < 0 {
+		if i < 0 { // not found
 			i = len(structTag)
 		}
-		switch s := structTag[:i]; {
-		case strings.HasPrefix(s, key):
+		s := structTag[:i]
+		if strings.HasPrefix(s, key) {
 			return s[len(key):]
 		}
 		structTag = strings.TrimPrefix(structTag[i:], ",")
