@@ -150,22 +150,18 @@ func initializeAccountTables(ctx context.Context, db *pgx.Conn) error {
 
 func initializeGovTables(ctx context.Context, db *pgx.Conn) error {
 
-	//TODO (@deblasis): val_type enum
-	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s`, fmt.Sprintf(CreateEnumType, schema.ValTypeName), schema.ValTypeEnumTypes))
-	if err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s`, fmt.Sprintf(CreateEnumType, schema.ValTypeName), schema.ValTypeEnumTypes)); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code != DuplicateObjectErrorCode {
 			return err
 		}
 	}
-	//TODO (@deblasis): params table
-	_, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.ParamsTableName, schema.ParamsTableSchema))
-	if err != nil {
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.ParamsTableName, schema.ParamsTableSchema)); err != nil {
 		return err
 	}
-	//TODO (@deblasis): flags table
-	_, err = db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.FlagsTableName, schema.FlagsTableSchema))
-	if err != nil {
+
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.FlagsTableName, schema.FlagsTableSchema)); err != nil {
 		return err
 	}
 
@@ -173,8 +169,7 @@ func initializeGovTables(ctx context.Context, db *pgx.Conn) error {
 }
 
 func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
-	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.BlockTableName, schema.BlockTableSchema))
-	if err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.BlockTableName, schema.BlockTableSchema)); err != nil {
 		return err
 	}
 	return nil
