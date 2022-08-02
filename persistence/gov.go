@@ -910,7 +910,7 @@ func SetParam[T schema.ParamTypes](p PostgresContext, paramName string, paramVal
 	if _, err = tx.Exec(ctx, schema.NullifyParamQuery(paramName, height)); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.SetParam(paramName, paramValue, height)); err != nil {
+	if _, err = tx.Exec(ctx, schema.SetParamQuery(paramName, paramValue, height)); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)

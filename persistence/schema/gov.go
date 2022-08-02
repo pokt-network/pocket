@@ -97,7 +97,7 @@ type ParamTypes interface {
 	int | int32 | int64 | []byte | string
 }
 
-func SetParam[T ParamTypes](paramName string, paramValue T, height int64) string {
+func SetParamQuery[T ParamTypes](paramName string, paramValue T, height int64) string {
 	//TODO (@deblasis): Fix this
 	fields := "name,height,value,enabled,type"
 
