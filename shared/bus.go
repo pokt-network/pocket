@@ -1,19 +1,27 @@
 package shared
 
 import (
+	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
+var _ modules.Bus = &bus{}
+
 type bus struct {
 	modules.Bus
 
+	// Bus events
 	channel modules.EventsChannel
 
+	// Modules
 	persistence modules.PersistenceModule
 	p2p         modules.P2PModule
 	utility     modules.UtilityModule
 	consensus   modules.ConsensusModule
+
+	// Configurations
+	config *config.Config
 }
 
 const (
@@ -25,13 +33,17 @@ func CreateBus(
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
+	config *config.Config,
 ) (modules.Bus, error) {
 	bus := &bus{
-		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
+		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
+
 		persistence: persistence,
 		p2p:         p2p,
 		utility:     utility,
 		consensus:   consensus,
+
+		config: config,
 	}
 
 	persistence.SetBus(bus)
@@ -47,6 +59,7 @@ func CreateBusWithOptionalModules(
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
+	config *config.Config,
 ) modules.Bus {
 	bus := &bus{
 		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -54,6 +67,8 @@ func CreateBusWithOptionalModules(
 		p2p:         p2p,
 		utility:     utility,
 		consensus:   consensus,
+
+		config: config,
 	}
 
 	maybeSetModuleBus := func(mod modules.Module) {
@@ -97,4 +112,8 @@ func (m *bus) GetUtilityModule() modules.UtilityModule {
 
 func (m *bus) GetConsensusModule() modules.ConsensusModule {
 	return m.consensus
+}
+
+func (m *bus) GetConfig() *config.Config {
+	return m.config
 }

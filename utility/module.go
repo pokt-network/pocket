@@ -11,8 +11,7 @@ import (
 var _ modules.UtilityModule = &UtilityModule{}
 
 type UtilityModule struct {
-	bus modules.Bus
-
+	bus     modules.Bus
 	Mempool types.Mempool
 }
 

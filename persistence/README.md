@@ -29,7 +29,8 @@ The persistence specific configuration within a node's `config.json` looks like 
 ```
   "persistence": {
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
-    "schema": "node1"
+    "schema": "node1",
+    "block_store_path": "/var/blockstore"
   }
 ```
 
@@ -157,6 +158,7 @@ Short-term (i.e. simpler starter) tasks:
 - [ ] REFACTOR/DISCUSS: Should we prefix the functions in the `PersistenceModule` with the Param / Actor it's impacting to make autocomplete in implementation better?
 - [ ] DISCUSS: Consider removing all `Set` methods (e.g. `SetAccountAmount`) and replace with `Add` (e.g. `AddAccountAmount`) by having it leverage a "default zero".
 - [ ] REFACTOR(https://github.com/pokt-network/pocket/issues/102): Split `account` and `pool` into a shared actor (e.g. like fisherman/validator/serviceNode/application) and simplify the code in half
+- [ ] CLEANUP: Remove `tokens` or `stakedTokens` in favor of using `amount` everywhere since the denomination is not clear. As a follow up. Consider a massive rename to make the denomination explicit.
 
 Mid-term (i.e. new feature or major refactor) tasks:
 

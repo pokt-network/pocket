@@ -24,7 +24,12 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 		return types.ErrDuplicateTransaction()
 	}
 	store := u.Store()
-	if store.TransactionExists(txHash) { // TODO non-ordered nonce requires non-pruned tx indexer
+	txExists, err := store.TransactionExists(txHash)
+	if err != nil {
+		return err
+	}
+	// TODO non-ordered nonce requires non-pruned tx indexer
+	if txExists {
 		return types.ErrTransactionAlreadyCommitted()
 	}
 	cdc := u.Codec()
@@ -39,7 +44,7 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 	return u.Mempool.AddTransaction(transactionProtoBytes)
 }
 
-func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) ([][]byte, error) {
+func (u *UtilityContext) GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) ([][]byte, error) {
 	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {
 		return nil, err
 	}
@@ -79,12 +84,13 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 	return transactions, nil
 }
 
+// CLEANUP: Exposed for testing purposes only
 func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil.Message, types.Error) {
 	msg, err := tx.Message()
 	if err != nil {
 		return nil, err
 	}
-	fee, err := u.GetFee(msg) // TODO this enforces exact fee spent regardless of what's put in field... should we remove the fee field from transaction?
+	fee, err := u.GetFee(msg, msg.GetActorType())
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +105,7 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil
 	}
 	accountAmount.Sub(accountAmount, fee)
 	if accountAmount.Sign() == -1 {
-		return nil, types.ErrInsufficientAmountError()
+		return nil, types.ErrInsufficientAmount()
 	}
 	signerCandidates, err := u.GetSignerCandidates(msg)
 	if err != nil {
@@ -131,57 +137,253 @@ func (u *UtilityContext) HandleMessage(msg typesUtil.Message) types.Error {
 		return u.HandleMessageDoubleSign(x)
 	case *typesUtil.MessageSend:
 		return u.HandleMessageSend(x)
-	case *typesUtil.MessageStakeFisherman:
-		return u.HandleMessageStakeFisherman(x)
-	case *typesUtil.MessageEditStakeFisherman:
-		return u.HandleMessageEditStakeFisherman(x)
-	case *typesUtil.MessageUnstakeFisherman:
-		return u.HandleMessageUnstakeFisherman(x)
-	case *typesUtil.MessagePauseFisherman:
-		return u.HandleMessagePauseFisherman(x)
-	case *typesUtil.MessageUnpauseFisherman:
-		return u.HandleMessageUnpauseFisherman(x)
-	case *typesUtil.MessageFishermanPauseServiceNode:
-		return u.HandleMessageFishermanPauseServiceNode(x)
-	//case *types.MessageTestScore:
-	//	return u.HandleMessageTestScore(x)
-	//case *types.MessageProveTestScore:
-	//	return u.HandleMessageProveTestScore(x)
-	case *typesUtil.MessageStakeApp:
-		return u.HandleMessageStakeApp(x)
-	case *typesUtil.MessageEditStakeApp:
-		return u.HandleMessageEditStakeApp(x)
-	case *typesUtil.MessageUnstakeApp:
-		return u.HandleMessageUnstakeApp(x)
-	case *typesUtil.MessagePauseApp:
-		return u.HandleMessagePauseApp(x)
-	case *typesUtil.MessageUnpauseApp:
-		return u.HandleMessageUnpauseApp(x)
-	case *typesUtil.MessageStakeValidator:
-		return u.HandleMessageStakeValidator(x)
-	case *typesUtil.MessageEditStakeValidator:
-		return u.HandleMessageEditStakeValidator(x)
-	case *typesUtil.MessageUnstakeValidator:
-		return u.HandleMessageUnstakeValidator(x)
-	case *typesUtil.MessagePauseValidator:
-		return u.HandleMessagePauseValidator(x)
-	case *typesUtil.MessageUnpauseValidator:
-		return u.HandleMessageUnpauseValidator(x)
-	case *typesUtil.MessageStakeServiceNode:
-		return u.HandleMessageStakeServiceNode(x)
-	case *typesUtil.MessageEditStakeServiceNode:
-		return u.HandleMessageEditStakeServiceNode(x)
-	case *typesUtil.MessageUnstakeServiceNode:
-		return u.HandleMessageUnstakeServiceNode(x)
-	case *typesUtil.MessagePauseServiceNode:
-		return u.HandleMessagePauseServiceNode(x)
-	case *typesUtil.MessageUnpauseServiceNode:
-		return u.HandleMessageUnpauseServiceNode(x)
+	case *typesUtil.MessageStake:
+		return u.HandleStakeMessage(x)
+	case *typesUtil.MessageEditStake:
+		return u.HandleEditStakeMessage(x)
+	case *typesUtil.MessageUnstake:
+		return u.HandleUnstakeMessage(x)
+	case *typesUtil.MessageUnpause:
+		return u.HandleUnpauseMessage(x)
 	case *typesUtil.MessageChangeParameter:
 		return u.HandleMessageChangeParameter(x)
 	default:
 		return types.ErrUnknownMessage(x)
 	}
+}
+
+func (u *UtilityContext) HandleMessageSend(message *typesUtil.MessageSend) types.Error {
+	// convert the amount to big.Int
+	amount, err := types.StringToBigInt(message.Amount)
+	if err != nil {
+		return err
+	}
+	// get the sender's account amount
+	fromAccountAmount, err := u.GetAccountAmount(message.FromAddress)
+	if err != nil {
+		return err
+	}
+	// subtract that amount from the sender
+	fromAccountAmount.Sub(fromAccountAmount, amount)
+	// if they go negative, they don't have sufficient funds
+	// NOTE: we don't use the u.SubtractAccountAmount() function because Utility needs to do this check
+	if fromAccountAmount.Sign() == -1 {
+		return types.ErrInsufficientAmount()
+	}
+	// add the amount to the recipient's account
+	if err = u.AddAccountAmount(message.ToAddress, amount); err != nil {
+		return err
+	}
+	// set the sender's account amount
+	if err = u.SetAccountAmount(message.FromAddress, fromAccountAmount); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) types.Error {
+	publicKey, err := u.BytesToPublicKey(message.PublicKey)
+	if err != nil {
+		return err
+	}
+	// ensure above minimum stake
+	amount, err := u.CheckAboveMinStake(message.ActorType, message.Amount)
+	if err != nil {
+		return err
+	}
+	// ensure signer has sufficient funding for the stake
+	signerAccountAmount, err := u.GetAccountAmount(message.Signer)
+	if err != nil {
+		return err
+	}
+	// calculate new signer account amount
+	signerAccountAmount.Sub(signerAccountAmount, amount)
+	if signerAccountAmount.Sign() == -1 {
+		return types.ErrInsufficientAmount()
+	}
+	// validators don't have chains field
+	if err = u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
+		return err
+	}
+	// ensure actor doesn't already exist
+	if exists, err := u.GetActorExists(message.ActorType, publicKey.Address()); err != nil || exists {
+		if exists {
+			return types.ErrAlreadyExists()
+		}
+		return err
+	}
+	// update account amount
+	if err = u.SetAccountAmount(message.Signer, signerAccountAmount); err != nil {
+		return err
+	}
+	// move funds from account to pool
+	if err = u.AddPoolAmount(typesGenesis.AppStakePoolName, amount); err != nil {
+		return err
+	}
+	var er error
+	store := u.Store()
+	// insert actor
+	switch message.ActorType {
+	case typesUtil.ActorType_App:
+		maxRelays, err := u.CalculateAppRelays(message.Amount)
+		if err != nil {
+			return err
+		}
+		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+	case typesUtil.ActorType_Fish:
+		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+	case typesUtil.ActorType_Node:
+		er = store.InsertServiceNode(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+	case typesUtil.ActorType_Val:
+		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+	}
+	if er != nil {
+		return types.ErrInsert(er)
+	}
+	return nil
+}
+
+func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditStake) types.Error {
+	// ensure actor exists
+	if exists, err := u.GetActorExists(message.ActorType, message.Address); err != nil || !exists {
+		if !exists {
+			return types.ErrNotExists()
+		}
+		return err
+	}
+	currentStakeAmount, err := u.GetStakeAmount(message.ActorType, message.Address)
+	if err != nil {
+		return err
+	}
+	amount, err := types.StringToBigInt(message.Amount)
+	if err != nil {
+		return err
+	}
+	// ensure new stake >= current stake
+	amount.Sub(amount, currentStakeAmount)
+	if amount.Sign() == -1 {
+		return types.ErrStakeLess()
+	}
+	// ensure signer has sufficient funding for the stake
+	signerAccountAmount, err := u.GetAccountAmount(message.Signer)
+	if err != nil {
+		return err
+	}
+	signerAccountAmount.Sub(signerAccountAmount, amount)
+	if signerAccountAmount.Sign() == -1 {
+		return types.ErrInsufficientAmount()
+	}
+	if err = u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
+		return err
+	}
+	// update account amount
+	if err := u.SetAccountAmount(message.Signer, signerAccountAmount); err != nil {
+		return err
+	}
+	// move funds from account to pool
+	if err := u.AddPoolAmount(typesGenesis.AppStakePoolName, amount); err != nil {
+		return err
+	}
+	store := u.Store()
+	var er error
+	switch message.ActorType {
+	case typesUtil.ActorType_App:
+		maxRelays, err := u.CalculateAppRelays(message.Amount)
+		if err != nil {
+			return err
+		}
+		er = store.UpdateApp(message.Address, maxRelays, message.Amount, message.Chains)
+	case typesUtil.ActorType_Fish:
+		er = store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
+	case typesUtil.ActorType_Node:
+		er = store.UpdateServiceNode(message.Address, message.ServiceUrl, message.Amount, message.Chains)
+	case typesUtil.ActorType_Val:
+		er = store.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
+	}
+	if er != nil {
+		return types.ErrInsert(er)
+	}
+	return nil
+}
+
+func (u *UtilityContext) HandleUnstakeMessage(message *typesUtil.MessageUnstake) types.Error {
+	if status, err := u.GetActorStatus(message.ActorType, message.Address); err != nil || status != typesUtil.StakedStatus {
+		if status != typesUtil.StakedStatus {
+			return types.ErrInvalidStatus(status, typesUtil.StakedStatus)
+		}
+		return err
+	}
+	unstakingHeight, err := u.GetUnstakingHeight(message.ActorType)
+	if err != nil {
+		return err
+	}
+	if err = u.SetActorUnstaking(message.ActorType, unstakingHeight, message.Address); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause) types.Error {
+	pausedHeight, err := u.GetPauseHeight(message.ActorType, message.Address)
+	if err != nil {
+		return err
+	}
+	if pausedHeight == typesUtil.HeightNotUsed {
+		return types.ErrNotPaused()
+	}
+	minPauseBlocks, err := u.GetMinimumPauseBlocks(message.ActorType)
+	if err != nil {
+		return err
+	}
+	latestHeight, err := u.GetLatestHeight()
+	if err != nil {
+		return err
+	}
+	if latestHeight < int64(minPauseBlocks)+pausedHeight {
+		return types.ErrNotReadyToUnpause()
+	}
+	if err = u.SetActorPauseHeight(message.ActorType, message.Address, types.HeightNotUsed); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubleSign) types.Error {
+	latestHeight, err := u.GetLatestHeight()
+	if err != nil {
+		return err
+	}
+	evidenceAge := latestHeight - message.VoteA.Height
+	maxEvidenceAge, err := u.GetMaxEvidenceAgeInBlocks()
+	if err != nil {
+		return err
+	}
+	if evidenceAge > int64(maxEvidenceAge) {
+		return types.ErrMaxEvidenceAge()
+	}
+	pk, er := crypto.NewPublicKeyFromBytes(message.VoteB.PublicKey)
+	if er != nil {
+		return types.ErrNewPublicKeyFromBytes(er)
+	}
+	doubleSigner := pk.Address()
+	// burn validator for double signing blocks
+	burnPercentage, err := u.GetDoubleSignBurnPercentage()
+	if err != nil {
+		return err
+	}
+	if err := u.BurnActor(typesUtil.ActorType_Val, burnPercentage, doubleSigner); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UtilityContext) HandleMessageChangeParameter(message *typesUtil.MessageChangeParameter) types.Error {
+	cdc := u.Codec()
+	v, err := cdc.FromAny(message.ParameterValue)
+	if err != nil {
+		return types.ErrProtoFromAny(err)
+	}
+	return u.UpdateParam(message.ParameterKey, v)
 }
 
 func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, types.Error) {
@@ -190,55 +392,67 @@ func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, t
 		return u.GetMessageDoubleSignSignerCandidates(x)
 	case *typesUtil.MessageSend:
 		return u.GetMessageSendSignerCandidates(x)
-	case *typesUtil.MessageStakeFisherman:
-		return u.GetMessageStakeFishermanSignerCandidates(x)
-	case *typesUtil.MessageEditStakeFisherman:
-		return u.GetMessageEditStakeFishermanSignerCandidates(x)
-	case *typesUtil.MessageUnstakeFisherman:
-		return u.GetMessageUnstakeFishermanSignerCandidates(x)
-	case *typesUtil.MessagePauseFisherman:
-		return u.GetMessagePauseFishermanSignerCandidates(x)
-	case *typesUtil.MessageUnpauseFisherman:
-		return u.GetMessageUnpauseFishermanSignerCandidates(x)
-	case *typesUtil.MessageFishermanPauseServiceNode:
-		return u.GetMessageFishermanPauseServiceNodeSignerCandidates(x)
-	//case *types.MessageTestScore:
-	//	return u.GetMessageTestScoreSignerCandidates(x)
-	//case *types.MessageProveTestScore:
-	//	return u.GetMessageProveTestScoreSignerCandidates(x)
-	case *typesUtil.MessageStakeApp:
-		return u.GetMessageStakeAppSignerCandidates(x)
-	case *typesUtil.MessageEditStakeApp:
-		return u.GetMessageEditStakeAppSignerCandidates(x)
-	case *typesUtil.MessageUnstakeApp:
-		return u.GetMessageUnstakeAppSignerCandidates(x)
-	case *typesUtil.MessagePauseApp:
-		return u.GetMessagePauseAppSignerCandidates(x)
-	case *typesUtil.MessageUnpauseApp:
-		return u.GetMessageUnpauseAppSignerCandidates(x)
-	case *typesUtil.MessageStakeValidator:
-		return u.GetMessageStakeValidatorSignerCandidates(x)
-	case *typesUtil.MessageEditStakeValidator:
-		return u.GetMessageEditStakeValidatorSignerCandidates(x)
-	case *typesUtil.MessageUnstakeValidator:
-		return u.GetMessageUnstakeValidatorSignerCandidates(x)
-	case *typesUtil.MessagePauseValidator:
-		return u.GetMessagePauseValidatorSignerCandidates(x)
-	case *typesUtil.MessageUnpauseValidator:
-		return u.GetMessageUnpauseValidatorSignerCandidates(x)
-	case *typesUtil.MessageStakeServiceNode:
-		return u.GetMessageStakeServiceNodeSignerCandidates(x)
-	case *typesUtil.MessageEditStakeServiceNode:
-		return u.GetMessageEditStakeServiceNodeSignerCandidates(x)
-	case *typesUtil.MessageUnstakeServiceNode:
-		return u.GetMessageUnstakeServiceNodeSignerCandidates(x)
-	case *typesUtil.MessagePauseServiceNode:
-		return u.GetMessagePauseServiceNodeSignerCandidates(x)
-	case *typesUtil.MessageUnpauseServiceNode:
-		return u.GetMessageUnpauseServiceNodeSignerCandidates(x)
+	case *typesUtil.MessageStake:
+		return u.GetMessageStakeSignerCandidates(x)
+	case *typesUtil.MessageUnstake:
+		return u.GetMessageUnstakeSignerCandidates(x)
+	case *typesUtil.MessageUnpause:
+		return u.GetMessageUnpauseSignerCandidates(x)
 	case *typesUtil.MessageChangeParameter:
 		return u.GetMessageChangeParameterSignerCandidates(x)
 	default:
 		return nil, types.ErrUnknownMessage(x)
 	}
+}
+
+func (u *UtilityContext) GetMessageStakeSignerCandidates(msg *typesUtil.MessageStake) ([][]byte, types.Error) {
+	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
+	if er != nil {
+		return nil, types.ErrNewPublicKeyFromBytes(er)
+	}
+	candidates := make([][]byte, 0)
+	candidates = append(candidates, msg.OutputAddress)
+	candidates = append(candidates, pk.Address())
+	return candidates, nil
+}
+
+func (u *UtilityContext) GetMessageEditStakeSignerCandidates(msg *typesUtil.MessageEditStake) ([][]byte, types.Error) {
+	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
+	if err != nil {
+		return nil, err
+	}
+	candidates := make([][]byte, 0)
+	candidates = append(candidates, output)
+	candidates = append(candidates, msg.Address)
+	return candidates, nil
+}
+
+func (u *UtilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.MessageUnstake) ([][]byte, types.Error) {
+	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
+	if err != nil {
+		return nil, err
+	}
+	candidates := make([][]byte, 0)
+	candidates = append(candidates, output)
+	candidates = append(candidates, msg.Address)
+	return candidates, nil
+}
+
+func (u *UtilityContext) GetMessageUnpauseSignerCandidates(msg *typesUtil.MessageUnpause) ([][]byte, types.Error) {
+	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
+	if err != nil {
+		return nil, err
+	}
+	candidates := make([][]byte, 0)
+	candidates = append(candidates, output)
+	candidates = append(candidates, msg.Address)
+	return candidates, nil
+}
+
+func (u *UtilityContext) GetMessageSendSignerCandidates(msg *typesUtil.MessageSend) ([][]byte, types.Error) {
+	return [][]byte{msg.FromAddress}, nil
+}
+
+func (u *UtilityContext) GetMessageDoubleSignSignerCandidates(msg *typesUtil.MessageDoubleSign) ([][]byte, types.Error) {
+	return [][]byte{msg.ReporterAddress}, nil
 }

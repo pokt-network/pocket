@@ -134,7 +134,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            0,
 		LastBlockHash:     "",
-		ProposerAddress:   []byte(leader.Address),
+		ProposerAddress:   leader.Address.Bytes(),
 		QuorumCertificate: nil,
 	}
 	block := &types.Block{

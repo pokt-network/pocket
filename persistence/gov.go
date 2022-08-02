@@ -886,7 +886,7 @@ func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) 
 }
 
 func (p PostgresContext) InitParams() error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return err
 	}
@@ -896,7 +896,7 @@ func (p PostgresContext) InitParams() error {
 
 // IMPROVE(team): Switch to generics
 func (p PostgresContext) SetParam(paramName string, paramValue interface{}) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return err
 	}
@@ -918,7 +918,7 @@ func (p PostgresContext) SetParam(paramName string, paramValue interface{}) erro
 }
 
 func (p PostgresContext) GetIntParam(paramName string) (i int, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return 0, err
 	}
@@ -927,7 +927,7 @@ func (p PostgresContext) GetIntParam(paramName string) (i int, err error) {
 }
 
 func (p PostgresContext) GetStringParam(paramName string) (s string, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return "", err
 	}
@@ -936,7 +936,7 @@ func (p PostgresContext) GetStringParam(paramName string) (s string, err error) 
 }
 
 func (p PostgresContext) GetBytesParam(paramName string) (param []byte, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return nil, err
 	}

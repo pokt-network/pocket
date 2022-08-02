@@ -3,8 +3,6 @@ package types
 import (
 	"bytes"
 	"encoding/hex"
-	"math/big"
-
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 )
@@ -18,10 +16,6 @@ func TransactionFromBytes(transaction []byte) (*Transaction, types.Error) {
 }
 
 func (tx *Transaction) ValidateBasic() types.Error {
-	fee := big.Int{}
-	if _, ok := fee.SetString(tx.Fee, 10); tx.Fee == "" || !ok {
-		return types.ErrNewFeeFromString(tx.Fee)
-	}
 	if tx.Nonce == "" {
 		return types.ErrEmptyNonce()
 	}

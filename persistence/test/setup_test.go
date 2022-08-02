@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -14,6 +15,7 @@ import (
 
 	"golang.org/x/exp/slices"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/dockertest"
@@ -54,16 +56,13 @@ var (
 	DefaultUnstakingHeight = int64(-1)
 )
 
-var PostgresDB *persistence.PostgresDB
-
-// TODO(team): make these tests thread safe
-func init() {
-	PostgresDB = new(persistence.PostgresDB)
-}
+var testPostgresDB *pgx.Conn
 
 // See https://github.com/ory/dockertest as reference for the template of this code
 // Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
 func TestMain(m *testing.M) {
+	testPostgresDB = new(pgx.Conn)
+
 	opts := dockertest.RunOptions{
 		Repository: "postgres",
 		Tag:        "12.3",
@@ -75,8 +74,8 @@ func TestMain(m *testing.M) {
 	}
 
 	defer func() {
-		ctx, _ := PostgresDB.GetContext()
-		PostgresDB.Conn.Close(ctx)
+		ctx := context.TODO()
+		testPostgresDB.Close(context.TODO())
 		ctx.Done()
 	}()
 
@@ -119,12 +118,11 @@ func TestMain(m *testing.M) {
 
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	if err = pool.Retry(func() error {
-		conn, err := persistence.ConnectAndInitializeDatabase(databaseUrl, sql_schema)
+		testPostgresDB, err = persistence.ConnectAndInitializeDatabase(databaseUrl, sql_schema)
 		if err != nil {
 			log.Println(err.Error())
 			return err
 		}
-		PostgresDB.Conn = conn
 		return nil
 	}); err != nil {
 		log.Fatalf("could not connect to docker: %s", err.Error())
@@ -146,8 +144,8 @@ func fuzzSingleProtocolActor(
 	protocolActorSchema schema.ProtocolActorSchema) {
 
 	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *PostgresDB,
+		Height:     0,
+		PostgresDB: testPostgresDB,
 	}
 
 	err := db.ClearAllDebug()

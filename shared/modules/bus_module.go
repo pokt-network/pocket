@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
@@ -20,4 +21,7 @@ type Bus interface {
 	GetP2PModule() P2PModule
 	GetUtilityModule() UtilityModule
 	GetConsensusModule() ConsensusModule
+
+	// Configuration
+	GetConfig() *config.Config
 }
