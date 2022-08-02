@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/config"
 
@@ -176,6 +177,14 @@ func (p *paceMaker) NewHeight() {
 	p.consensusMod.LockedQC = nil
 
 	p.startNextView(nil, false) // TODO(design): We are omitting CommitQC and TimeoutQC here.
+
+	p.consensusMod.
+		GetBus().
+		GetTelemetryModule().
+		GetTimeSeriesAgent().
+		CounterIncrement(
+			consensusTelemetry.CONSENSUS_BLOCKCHAIN_HEIGHT_COUNTER_NAME,
+		)
 }
 
 func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {

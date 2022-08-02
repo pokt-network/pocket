@@ -191,12 +191,6 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 	}
 
 	m.paceMaker.NewHeight()
-	m.GetBus().
-		GetTelemetryModule().
-		GetTimeSeriesAgent().
-		CounterIncrement(
-			consensusTelemetry.CONSENSUS_BLOCKCHAIN_HEIGHT_COUNTER_NAME,
-		)
 }
 
 // anteHandle is the handler called on every replica message before specific handler
