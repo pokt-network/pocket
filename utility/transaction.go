@@ -24,7 +24,12 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 		return types.ErrDuplicateTransaction()
 	}
 	store := u.Store()
-	if store.TransactionExists(txHash) { // TODO non-ordered nonce requires non-pruned tx indexer
+	txExists, err := store.TransactionExists(txHash)
+	if err != nil {
+		return err
+	}
+	// TODO non-ordered nonce requires non-pruned tx indexer
+	if txExists {
 		return types.ErrTransactionAlreadyCommitted()
 	}
 	cdc := u.Codec()
@@ -39,7 +44,7 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 	return u.Mempool.AddTransaction(transactionProtoBytes)
 }
 
-func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) ([][]byte, error) {
+func (u *UtilityContext) GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) ([][]byte, error) {
 	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {
 		return nil, err
 	}
@@ -79,6 +84,7 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 	return transactions, nil
 }
 
+// CLEANUP: Exposed for testing purposes only
 func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil.Message, types.Error) {
 	msg, err := tx.Message()
 	if err != nil {

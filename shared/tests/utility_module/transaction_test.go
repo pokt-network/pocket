@@ -72,7 +72,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	require.Equal(t, candidates[0], accs[0].Address, "unexpected signer candidate")
 }
 
-func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
+func TestUtilityContext_GetProposalTransactions(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := NewTestingTransaction(t, ctx)
 	proposer := GetAllTestingValidators(t, ctx)[0]
@@ -81,7 +81,7 @@ func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, ctx.CheckTransaction(txBz))
 
-	txs, er := ctx.GetTransactionsForProposal(proposer.Address, 10000, nil)
+	txs, er := ctx.GetProposalTransactions(proposer.Address, 10000, nil)
 	require.NoError(t, er)
 	require.Equal(t, len(txs), 1, "incorrect txs amount returned")
 	require.Equal(t, txs[0], txBz, "unexpected transaction returned")

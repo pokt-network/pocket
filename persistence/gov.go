@@ -886,7 +886,7 @@ func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) 
 }
 
 func (p PostgresContext) InitParams() error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return err
 	}
@@ -895,7 +895,7 @@ func (p PostgresContext) InitParams() error {
 }
 
 func SetParam[T schema.ParamTypes](p PostgresContext, paramName string, paramValue T) error {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return err
 	}
@@ -917,7 +917,7 @@ func SetParam[T schema.ParamTypes](p PostgresContext, paramName string, paramVal
 }
 
 func GetParam[T int | string | []byte](p PostgresContext, paramName string) (i T, err error) {
-	ctx, conn, err := p.DB.GetCtxAndConnection()
+	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return i, err
 	}
