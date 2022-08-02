@@ -28,7 +28,7 @@ func TestGetSetParam(t *testing.T) {
 
 	newMaxChains := 42
 
-	err = db.SetParam(types.AppMaxChainsParamName, newMaxChains)
+	err = persistence.SetParam(db, types.AppMaxChainsParamName, newMaxChains)
 	require.NoError(t, err)
 
 	maxChains, err := db.GetMaxAppChains()

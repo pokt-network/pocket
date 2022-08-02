@@ -24,6 +24,7 @@ require (
 require (
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/iancoleman/strcase v0.2.0
+	github.com/jackc/pgconn v1.11.0
 )
 
 require (
@@ -63,7 +64,6 @@ require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
-	github.com/jackc/pgconn v1.11.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.2.0 // indirect
