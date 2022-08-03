@@ -114,3 +114,22 @@ func Verify(suite pairing.Suite, X kyber.Point, msg, sig []byte) error {
 	s := suite.G1().Point()
 	if err := s.UnmarshalBinary(sig); err != nil {
 		return err
+	}	
+	right := suite.Pair(s, suite.G2().Point().Base())
+	if !left.Equal(right) {
+		return errors.New ("bls: invalid signature")
+	}
+	return nil
+}
+func distinct(msgs [][]byte) bool {
+	m := make(map[[32]byte]bool)
+	for _, msg := range msgs {
+		h := sha256.Sum256(msg)
+		if m[h] {
+			return false
+		}
+		m[h] = true
+	}
+	return true
+}
+
