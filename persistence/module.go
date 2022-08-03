@@ -1,8 +1,10 @@
 package persistence
 
 import (
+	"crypto/sha256"
 	"log"
 
+	"github.com/celestiaorg/smt"
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/config"
@@ -46,6 +48,20 @@ func (p PostgresContext) SetValidatorStakeAmount(address []byte, stakeAmount str
 	panic("TODO: implement PostgresContext.SetValidatorStakeAmount")
 }
 
+type MerkleTree float64
+
+const (
+	AppMerkleTree MerkleTree = iota
+	ValMerkleTree
+	FishMerkleTree
+	ServiceNodeMerkleTree
+	AccountMerkleTree
+	PoolMerkleTree
+	BlocksMerkleTree
+	ParamsMerkleTree
+	FlagsMerkleTree
+)
+
 type persistenceModule struct {
 	bus modules.Bus
 
@@ -56,6 +72,8 @@ type persistenceModule struct {
 	blockStore kvstore.KVStore
 	// A mapping of context IDs to persistence contexts
 	contexts map[contextId]modules.PersistenceContext
+	// Merkle trees
+	trees map[MerkleTree]*smt.SparseMerkleTree
 }
 
 type contextId uint64
@@ -77,6 +95,7 @@ func Create(c *config.Config) (modules.PersistenceModule, error) {
 		postgresConn: postgresDb,
 		blockStore:   blockStore,
 		contexts:     make(map[contextId]modules.PersistenceContext),
+		trees:        make(map[MerkleTree]*smt.SparseMerkleTree),
 	}, nil
 }
 
@@ -96,6 +115,10 @@ func (p *persistenceModule) Start() error {
 		log.Println("Hydrating genesis state...")
 	} else {
 		log.Println("Loading state from previous state...")
+	}
+
+	if err != p.initializeTrees() {
+		return err
 	}
 
 	return nil
@@ -159,3 +182,31 @@ func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 
 	return m.blockStore.Exists(heightToBytes(int64(maxHeight)))
 }
+
+func (m *persistenceModule) initializeTrees() error {
+	// Initialise two new key-value store to store the nodes and values of the tree
+	nodeStore := smt.NewSimpleMap()
+	valueStore := smt.NewSimpleMap()
+
+	// Initialise the tree
+	tree := smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
+
+	m.trees[AppMerkleTree] = tree
+
+	return nil
+}
+
+// 	// Update the key "foo" with the value "bar"
+// 	_, _ = tree.Update([]byte("foo"), []byte("bar"))
+
+// 	// Generate a Merkle proof for foo=bar
+// 	proof, _ := tree.Prove([]byte("foo"))
+// 	root := tree.Root() // We also need the current tree root for the proof
+
+// 	// Verify the Merkle proof for foo=bar
+// 	if smt.VerifyProof(proof, root, []byte("foo"), []byte("bar"), sha256.New()) {
+// 		fmt.Println("Proof verification succeeded.")
+// 	} else {
+// 		fmt.Println("Proof verification failed.")
+// 	}
+// }

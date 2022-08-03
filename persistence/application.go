@@ -15,6 +15,19 @@ func (p PostgresContext) GetAppExists(address []byte, height int64) (exists bool
 	return p.GetExists(schema.ApplicationActor, address, height)
 }
 
+func (p PostgresContext) UpdateAppTree(apps [][]byte) error {
+	for _, app := range apps {
+		appProto := typesGenesis.App{}
+		if err := proto.Unmarshal(app, &appProto); err != nil {
+			return err
+		}
+		if _, err := p.MerkleTrees[AppMerkleTree].Update(appProto.Address, app); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (p PostgresContext) GetAppsUpdated(height int64) (apps [][]byte, err error) {
 	actors, err := p.GetActorsUpdated(schema.ApplicationActor, height)
 	if err != nil {

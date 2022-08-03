@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/celestiaorg/smt"
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/schema"
@@ -35,8 +36,9 @@ type PostgresContext struct {
 
 	// IMPROVE: Depending on how the use of `PostgresContext` evolves, we may be able to get
 	// access to these directly via the postgres module.
-	PostgresDB *pgx.Conn
-	BlockStore kvstore.KVStore
+	PostgresDB  *pgx.Conn
+	BlockStore  kvstore.KVStore
+	MerkleTrees map[MerkleTree]*smt.SparseMerkleTree
 }
 
 func (pg *PostgresContext) GetCtxAndConnection() (context.Context, *pgx.Conn, error) {

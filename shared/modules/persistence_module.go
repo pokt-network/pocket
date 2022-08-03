@@ -71,7 +71,6 @@ type PersistenceContext interface {
 	SetAccountAmount(address []byte, amount string) error // TECHDEBT(team): Delete this function
 
 	// App Operations
-	GetAppsUpdated(height int64) ([][]byte, error) // Returns the apps updates at the given height
 	GetAppExists(address []byte, height int64) (exists bool, err error)
 	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateApp(address []byte, maxRelays string, stakedAmount string, chainsToUpdate []string) error
@@ -85,6 +84,9 @@ type PersistenceContext interface {
 	SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetAppPauseHeight(address []byte, height int64) error
 	GetAppOutputAddress(operator []byte, height int64) (output []byte, err error)
+	// App Operations - For Tree Merkling
+	GetAppsUpdated(height int64) ([][]byte, error) // Returns the apps updates at the given height
+	UpdateAppTree([][]byte) error
 
 	// ServiceNode Operations
 	GetServiceNodeExists(address []byte, height int64) (exists bool, err error)

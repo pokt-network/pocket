@@ -1,7 +1,6 @@
 package utility
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/types"
@@ -18,7 +17,9 @@ func (u *UtilityContext) updateStateCommitment() types.Error {
 			if err != nil {
 				return types.NewError(types.Code(42), "Couldn't figure out apps updated")
 			}
-			fmt.Println("apps: ", apps)
+			if err := u.Context.UpdateAppTree(apps); err != nil {
+				return nil
+			}
 		case typesUtil.ActorType_Val:
 			fallthrough
 		case typesUtil.ActorType_Fish:
