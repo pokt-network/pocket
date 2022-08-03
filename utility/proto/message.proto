@@ -3,157 +3,46 @@ package utility;
 
 option go_package = "github.com/pokt-network/pocket/utility/types";
 
+import "actor.proto";
 import "vote.proto";
-import "session.proto";
 import "google/protobuf/any.proto";
-import "google/protobuf/timestamp.proto";
 
 message MessageSend {
   bytes from_address = 1;
   bytes to_address = 2;
   string amount = 3;
+  ActorType actor_type = 4;
 }
 
-message MessageStakeServiceNode {
+message MessageStake {
   bytes public_key = 1;
   repeated string chains = 2;
   string amount = 3;
   string service_url = 4;
   bytes output_address = 5;
   optional bytes signer = 6;
+  ActorType actor_type = 7;
 }
 
-message MessageEditStakeServiceNode {
+message MessageEditStake {
   bytes address = 1;
-  repeated string chains = 2;
-  string amount_to_add = 3;
-  string service_url = 4;
-  optional bytes signer = 5;
-}
-
-message MessageUnstakeServiceNode {
-  bytes address = 1;
-  optional bytes signer = 2;
-}
-
-message MessageUnpauseServiceNode {
-  bytes address = 1;
-  optional bytes signer = 2;
-}
-
-message MessagePauseServiceNode {
-  bytes address = 1;
-  optional bytes signer = 2;
-}
-
-message MessageStakeApp {
-  bytes public_key = 1;
-  repeated string chains = 2;
-  string amount = 3;
-  bytes output_address = 4;
-  optional bytes signer = 5;
-}
-
-message MessageEditStakeApp {
-  bytes address = 1;
-  repeated string chains = 2;
-  string amount_to_add = 3;
-  optional bytes signer = 4;
-}
-
-message MessageUnstakeApp {
-  bytes address = 1;
-  optional bytes signer = 2;
-}
-
-message MessageUnpauseApp {
-  bytes address = 1;
-  optional bytes signer = 2;
-}
-
-message MessagePauseApp {
-  bytes address = 1;
-  optional bytes signer = 2;
-}
-
-message MessageStakeValidator {
-  bytes public_key = 1;
-  string amount = 2;
-  string service_url = 3;
-  bytes output_address = 4;
-  optional bytes signer = 5;
-}
-
-message MessageEditStakeValidator {
-  bytes address = 1;
-  string amount_to_add = 2;
-  string service_url = 3;
-  optional bytes signer = 4;
-}
-
-message MessageUnstakeValidator {
-  bytes address = 1;
-  optional bytes signer = 2;
-}
-
-message MessageUnpauseValidator {
-  bytes address = 1;
-  optional bytes signer = 2;
-}
-
-message MessagePauseValidator {
-  bytes address = 1;
-  optional bytes signer = 2;
-}
-
-message MessageFishermanPauseServiceNode {
-  bytes address = 1;
-  bytes reporter = 2;
-  optional bytes signer = 3;
-}
-
-message MessageStakeFisherman {
-  bytes public_key = 1;
   repeated string chains = 2;
   string amount = 3;
   string service_url = 4;
-  bytes output_address = 5;
-  optional bytes signer = 6;
-}
-
-message MessageEditStakeFisherman {
-  bytes address = 1;
-  repeated string chains = 2;
-  string amount_to_add = 3;
-  string service_url = 4;
   optional bytes signer = 5;
+  ActorType actor_type = 6;
 }
 
-message MessageUnstakeFisherman {
+message MessageUnstake {
   bytes address = 1;
   optional bytes signer = 2;
+  ActorType actor_type = 3;
 }
 
-message MessageTestScore {
-  utility.SessionHeader session_header = 1;
-  google.protobuf.Timestamp first_sample_time = 2;
-  uint32 number_of_samples = 3;
-  repeated uint32 null_indicies = 4;
-}
-
-message MessageProveTestScore {
-  utility.SessionHeader session_header = 1;
-  google.protobuf.Timestamp leaf = 2;
-}
-
-message MessageUnpauseFisherman {
+message MessageUnpause {
   bytes address = 1;
   optional bytes signer = 2;
-}
-
-message MessagePauseFisherman{
-  bytes address = 1;
-  optional bytes signer = 2;
+  ActorType actor_type = 3;
 }
 
 message MessageChangeParameter {

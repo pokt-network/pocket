@@ -7,8 +7,6 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/p2p/types"
-	"github.com/stretchr/testify/assert"
-
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
@@ -126,66 +124,43 @@ func getAddrBook(t *testing.T, n int) (addrBook types.AddrBook) {
 }
 
 func TestRainTreeAddrBookTargetsSixNodes(t *testing.T) {
-	// 		                     A
-	// 		   ┌─────────────────┬─────────────────┐
-	// 		   C                 A                 E
-	//   ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐
-	//   D     C     E     B     A     C     F     E     A
+	// 		                  A
+	// 		   ┌──────────────┴────────┬────────────────────┐
+	// 		   C                       A                    E
+	//   ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐
+	//   D        C     E        B        A     C     F        E     A
 	prop := &ExpectedRainTreeMessageProp{'A', 6, "ABCDEF", []ExpectedRainTreeMessageTarget{
 		{2, "C", "E"},
 		{1, "B", "C"},
-		{0, "C", "E"},  // redundancy
-		{-1, "F", "B"}, // cleanup
 	}}
 	testRainTreeMessageTargets(t, prop)
 }
 
 func TestRainTreeAddrBookTargetsNineNodes(t *testing.T) {
-	//                         A
-	//       ┌─────────────────┬─────────────────┐
-	//       D                 A                 G
-	// ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐
-	// F     D     H     C     A     E     I     G     B
+	//                      A
+	//       ┌──────────────┴────────┬────────────────────┐
+	//       D                       A                    G
+	// ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐
+	// F        D     H        C        A     E     I        G     B
 	prop := &ExpectedRainTreeMessageProp{'A', 9, "ABCDEFGHI", []ExpectedRainTreeMessageTarget{
 		{2, "D", "G"},
 		{1, "C", "E"},
-		{0, "D", "G"},  // redundancy
-		{-1, "I", "B"}, // cleanup
 	}}
 	testRainTreeMessageTargets(t, prop)
 }
-
 func TestRainTreeAddrBookTargetsTwentySevenNodes(t *testing.T) {
 
-	// 		                                                                         O
-	// 		                  ┌──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐
-	// 		                  X                                                      O                                                     F
-	//       ┌────────────────┬────────────────┐                    ┌────────────────┬─────────────────┐                 ┌─────────────────┬────────────────────┐
-	//       C                X                I                    U                O                 [                 L                 F                    R
-	// ┌─────┬─────┐    ┌─────┬─────┐    ┌─────┬─────┐        ┌─────┬─────┐    ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐
-	// G     C     K    A     X     E    M     I     Z        Y     U     B    S     O     W     D     [     Q     P     L     T     J     F     N     V     R     H
+	// 		                                                             O
+	// 		                ┌────────────────────────────────────────────┴───────────────────────┬─────────────────────────────────────────────────────────────────┐
+	// 		                X                                                                    O                                                                 F
+	//       ┌──────────────┴────────┬────────────────────┐                       ┌──────────────┴────────┬────────────────────┐                    ┌──────────────┴────────┬────────────────────┐
+	//       C                       X                    I                       U                       O                    [                    L                       F                    R
+	// ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐        ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐     ┌─────┴──┬─────┐        ┌─────┴──┬─────┐     ┌─────┴──┬─────┐
+	// G        C     K        A        X     E     M        I     Z        Y        U     B        S        O     W     D        [     Q     P        L     T        J        F     N     V        R     H
 	prop := &ExpectedRainTreeMessageProp{'O', 27, "OPQRSTUVWXYZ[ABCDEFGHIJKLMN", []ExpectedRainTreeMessageTarget{
 		{3, "X", "F"},
 		{2, "U", "["},
 		{1, "S", "W"},
-		{0, "X", "F"}, // redundancy layer
-		// 		                                                                         O
-		// 		                  ┌──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐
-		// 		                  X                                                      O                                                     F
-		//       ┌────────────────┬────────────────┐                    ┌────────────────┬─────────────────┐                 ┌─────────────────┬────────────────────┐
-		//       C                X                I                    U                O                 [                 L                 F                    R
-		// ┌─────┬─────┐    ┌─────┬─────┐    ┌─────┬─────┐        ┌─────┬─────┐    ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐
-		// G     C     K    A    *X*    E    M     I     Z        Y     U     B    S    *O*    W     D     [     Q     P     L     T     J    *F*    N     V     R     H
-		//                        ^                                                      |                                                     ^
-		//                        |    <─      <─      <─     <─     <─     <─     <─   <──>    ─>      ─>      ─>      ─>      ─>      ─>     |
-		{-1, "N", "P"}, // cleanup  layer
-		// 		                                                                         O
-		// 		                  ┌──────────────────────────────────────────────────────┬─────────────────────────────────────────────────────┐
-		// 		                  X                                                      O                                                     F
-		//       ┌────────────────┬────────────────┐                    ┌────────────────┬─────────────────┐                 ┌─────────────────┬────────────────────┐
-		//       C                X                I                    U                O                 [                 L                 F                    R
-		// ┌─────┬─────┐    ┌─────┬─────┐    ┌─────┬─────┐        ┌─────┬─────┐    ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐     ┌─────┬─────┐
-		// G     C     K    A    *X*    E    M     I     Z        Y     U     B   *S* <-*O*-> *W*     D     [     Q     P     L     T     J    *F*    N     V     R     H
 	}}
 	testRainTreeMessageTargets(t, prop)
 }
@@ -197,35 +172,18 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 
 	require.Equal(t, strings.Join(network.addrList, ""), strToAddrList(expectedMsgProp.addrList))
 
-	addrList, addrBookMap, err := network.addrBook.ToListAndMap(network.selfAddr.String())
-	require.NoError(t, err)
-	require.NotNil(t, addrList)
-	require.NotNil(t, addrBookMap)
-
-	i, found := addrList.Find(network.selfAddr.String())
+	i, found := network.getSelfIndexInAddrBook()
 	require.True(t, found)
-	require.Equal(t, 0, i)
+	require.Equal(t, i, 0)
 
 	for _, target := range expectedMsgProp.targets {
-		var addr1, addr2 cryptoPocket.Address
-		level := int32(target.level)
-		if level == 0 {
-			level = getMaxAddrBookLevels(addrBook)
-		}
-		if level == -1 {
-			var ok bool
-			addr1, addr2, ok = getLeftAndRight(addrList, addrBookMap)
-			assert.True(t, ok)
-		}
-		if addr1 == nil {
-			addr1 = network.getFirstTargetAddr(level)
-		}
-		require.Equal(t, addr1, cryptoPocket.Address(target.left))
+		addr, found := network.getFirstTargetAddr(uint32(target.level))
+		require.True(t, found)
+		require.Equal(t, addr, cryptoPocket.Address(target.left))
 
-		if addr2 == nil {
-			addr2 = network.getSecondTargetAddr(level)
-		}
-		require.Equal(t, addr2, cryptoPocket.Address(target.right))
+		addr, found = network.getSecondTargetAddr(uint32(target.level))
+		require.True(t, found)
+		require.Equal(t, addr, cryptoPocket.Address(target.right))
 	}
 }
 
@@ -243,4 +201,5 @@ func getAlphabetAddrBook(n int) (addrBook types.AddrBook) {
 
 func strToAddrList(s string) string {
 	return hex.EncodeToString([]byte(s))
+
 }

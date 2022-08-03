@@ -8,12 +8,10 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-// TODO (Team) Protocol hour discussion about contexts. We need to better understand the intermodule relationship here
-
 type UtilityContext struct {
 	LatestHeight int64
 	Mempool      types.Mempool
-	Context      *Context
+	Context      *Context // IMPROVE: Consider renmaming to PersistenceContext
 }
 
 type Context struct {
@@ -44,6 +42,10 @@ func (u *UtilityContext) Store() *Context {
 
 func (u *UtilityContext) GetPersistenceContext() modules.PersistenceContext {
 	return u.Context.PersistenceContext
+}
+
+func (u *UtilityContext) CommitPersistenceContext() error {
+	return u.Context.PersistenceContext.Commit()
 }
 
 func (u *UtilityContext) ReleaseContext() {

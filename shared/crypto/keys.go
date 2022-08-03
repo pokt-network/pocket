@@ -48,6 +48,10 @@ func (a *Address) ToString() string {
 	return hex.EncodeToString(*a)
 }
 
+func (a Address) Bytes() []byte {
+	return []byte(a)
+}
+
 func (a Address) Equals(other Address) bool {
 	return bytes.Equal(a, other)
 }

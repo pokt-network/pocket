@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/jordanorelli/lexnum"
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -94,15 +95,19 @@ func (m *PrePersistenceModule) GetCommitDB() *memdb.DB {
 	return m.CommitDB
 }
 
+func (m *PrePersistenceModule) GetBlockStore() kvstore.KVStore {
+	panic("PrePersistenceModule not implementing block store")
+}
+
+func (p *PrePersistenceModule) HandleDebugMessage(debugMessage *types.DebugMessage) error {
+	panic("PrePersistenceModule not implementing HandleDebugMessage")
+}
+
 type PrePersistenceContext struct {
 	Height     int64
 	Parent     modules.PersistenceModule
 	SavePoints map[string]int // TODO save points not entirely implemented. Happy path only for now, rollbacks for later
 	DBs        []*memdb.DB
-}
-
-func (m *PrePersistenceContext) GetLatestBlockHeight() (uint64, error) {
-	return uint64(m.Height), nil
 }
 
 // ExportState Unused but high potential for usefulness for telemetry
@@ -256,6 +261,10 @@ func (m *PrePersistenceContext) GetHeight() (int64, error) {
 	return m.Height, nil
 }
 
+func (m *PrePersistenceContext) GetLatestBlockHeight() (int64, error) {
+	return m.GetHeight()
+}
+
 func (m *PrePersistenceContext) GetBlockHash(height int64) ([]byte, error) {
 	db := m.Store()
 	block := types.Block{}
@@ -270,9 +279,21 @@ func (m *PrePersistenceContext) GetBlockHash(height int64) ([]byte, error) {
 	return []byte(block.BlockHeader.Hash), nil
 }
 
-func (m *PrePersistenceContext) TransactionExists(transactionHash string) bool {
+func (m *PrePersistenceContext) TransactionExists(transactionHash string) (bool, error) {
 	db := m.Store()
-	return db.Contains(append(TransactionKeyPrefix, []byte(transactionHash)...))
+	return db.Contains(append(TransactionKeyPrefix, []byte(transactionHash)...)), nil
+}
+
+func (m *PrePersistenceContext) StoreTransaction(transactionProtoBytes []byte) error {
+	return m.Store().Put(append(TransactionKeyPrefix, transactionProtoBytes...), nil)
+}
+
+func (p *PrePersistenceContext) StoreBlock(blockProtoBytes []byte) error {
+	panic("PrePersistenceContext does not implement StoreBlock")
+}
+
+func (p *PrePersistenceContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {
+	panic("PrePersistenceContext does not implement InsertBlock")
 }
 
 func NewMemDB() *memdb.DB {

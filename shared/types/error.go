@@ -126,7 +126,7 @@ func ErrStringToBigInt() Error {
 }
 
 // TODO: We should pass the account address here so it is easier to debug the issue
-func ErrInsufficientAmountError() Error {
+func ErrInsufficientAmount() Error {
 	return NewError(CodeInsufficientAmountError, fmt.Sprintf("%s", InsufficientAmountError))
 }
 

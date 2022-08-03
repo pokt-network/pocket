@@ -37,7 +37,9 @@ func TestGenesisStateFromJson(t *testing.T) {
 		"fisherman": [],
 		"service_nodes": [],
 		"apps": [],
-		"params": {}
+		"params": {
+			"validator_maximum_missed_blocks": 32
+		}
 	  }`
 
 	genesisState, err := GenesisStateFromJson([]byte(genesisJson))

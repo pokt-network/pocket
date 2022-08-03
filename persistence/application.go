@@ -25,11 +25,11 @@ func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicK
 	return
 }
 
-func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []byte, _ bool, _ int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []byte, _ bool, _ int, maxRelays string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(schema.ApplicationActor, schema.BaseActor{
 		Address:            hex.EncodeToString(address),
 		PublicKey:          hex.EncodeToString(publicKey),
-		StakedTokens:       stakedTokens,
+		StakedTokens:       stakedAmount,
 		ActorSpecificParam: maxRelays,
 		OutputAddress:      hex.EncodeToString(output),
 		PausedHeight:       pausedHeight,
@@ -38,10 +38,10 @@ func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []by
 	})
 }
 
-func (p PostgresContext) UpdateApp(address []byte, maxRelays string, stakedTokens string, chains []string) error {
+func (p PostgresContext) UpdateApp(address []byte, maxRelays string, stakedAmount string, chains []string) error {
 	return p.UpdateActor(schema.ApplicationActor, schema.BaseActor{
 		Address:            hex.EncodeToString(address),
-		StakedTokens:       stakedTokens,
+		StakedTokens:       stakedAmount,
 		ActorSpecificParam: maxRelays,
 		Chains:             chains,
 	})

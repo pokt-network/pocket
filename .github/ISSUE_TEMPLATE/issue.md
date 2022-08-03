@@ -7,6 +7,8 @@ assignees: ''
 
 ---
 
+__REPLACE_ME_: Please make sure to update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the issue_
+
 # Objective
 [ Issue description - What?]
 
@@ -27,7 +29,7 @@ assignees: ''
 - [ ] Document small issues / TODOs along the way
 
 # Non-goals
-- *List of tasks / goals this issue SHOULD NOT address since they are out of scope*
+- *__REPLACE_ME_: List of tasks / goals this issue SHOULD NOT address since they are out of scope*
 - ...
 
 # [Optional] Testing Methodology

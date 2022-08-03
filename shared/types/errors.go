@@ -67,7 +67,7 @@ const (
 	CodeEqualVotesError                   Code = 77
 	CodeUnequalRoundsError                Code = 78
 	CodeMaxEvidenceAgeError               Code = 79
-	CodeGetValidatorStakedTokensError     Code = 80
+	CodeGetStakedTokensError              Code = 80
 	CodeSetValidatorStakedTokensError     Code = 81
 	CodeSetPoolAmountError                Code = 82
 	CodeGetPoolAmountError                Code = 83
@@ -108,8 +108,10 @@ const (
 	CodeUnexpectedSocketError      Code = 122
 	CodePayloadTooBigError         Code = 123
 	CodeSocketIOStartFailedError   Code = 124
+	CodeGetStakeAmountError        Code = 125
+	CodeStakeLessError             Code = 126
 
-	GetValidatorStakedTokensError     = "an error occurred getting the validator staked tokens"
+	GetStakedTokensError              = "an error occurred getting the validator staked tokens"
 	SetValidatorStakedTokensError     = "an error occurred setting the validator staked tokens"
 	EqualVotesError                   = "the votes are identical and not equivocating"
 	UnequalRoundsError                = "the round numbers are not equal"
@@ -128,6 +130,8 @@ const (
 	DeleteError                       = "an error occurred when deleting the actor"
 	AlreadyExistsError                = "the actor already exists in the state"
 	GetExistsError                    = "an error occurred when checking if already exists"
+	GetStakeAmountError               = "an error occurred getting the stake amount"
+	StakeLessError                    = "the stake amount cannot be less than current amount"
 	GetReadyToUnstakeError            = "an error occurred getting the 'ready to unstake' group"
 	GetLatestHeightError              = "an error occurred getting the latest height"
 	SetUnstakingHeightAndStatus       = "an error occurred setting the unstaking height and status"
@@ -259,8 +263,8 @@ func ErrGetMissedBlocks(err error) Error {
 	return NewError(CodeGetMissedBlocksError, fmt.Sprintf("%s: %s", GetMissedBlocksError, err.Error()))
 }
 
-func ErrGetValidatorStakedTokens(err error) Error {
-	return NewError(CodeGetValidatorStakedTokensError, fmt.Sprintf("%s", GetValidatorStakedTokensError))
+func ErrGetStakedTokens(err error) Error {
+	return NewError(CodeGetStakedTokensError, fmt.Sprintf("%s", GetStakedTokensError))
 }
 
 func ErrSetValidatorStakedTokens(err error) Error {
@@ -269,6 +273,14 @@ func ErrSetValidatorStakedTokens(err error) Error {
 
 func ErrGetExists(err error) Error {
 	return NewError(CodeGetExistsError, fmt.Sprintf("%s: %s", GetExistsError, err.Error()))
+}
+
+func ErrGetStakeAmount(err error) Error {
+	return NewError(CodeGetStakeAmountError, fmt.Sprintf("%s: %s", GetStakeAmountError, err.Error()))
+}
+
+func ErrStakeLess() Error {
+	return NewError(CodeStakeLessError, StakeLessError)
 }
 
 func ErrSetMissedBlocks(err error) Error {
@@ -567,3 +579,5 @@ func ErrPayloadTooBig(bodyLength, acceptedLength uint) error {
 func ErrSocketIOStartFailed(socketType string) error {
 	return NewError(CodeSocketIOStartFailedError, fmt.Sprintf("%s: (%s socket)", SocketIOStartFailedError, socketType))
 }
+
+// TODO: Consider adding `ErrUnknownActorType` everywhere we do a switch-case on actor type.

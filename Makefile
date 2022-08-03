@@ -27,14 +27,18 @@ help:
 	} \
 	{ lastLine = $$0 }' $(MAKEFILE_LIST)
 
+# Internal helper target - check if docker is installed
+.PHONY: docker_check
 docker_check:
 	{ \
-	if ! builtin type -P "docker" > /dev/null || ! builtin type -P "docker-compose" > /dev/null; then \
+	if ( ! ( command -v docker >/dev/null && command -v docker-compose >/dev/null )); then \
 		echo "Seems like you don't have Docker or docker-compose installed. Make sure you review docs/development/README.md before continuing"; \
 		exit 1; \
 	fi; \
 	}
 
+# Internal helper target - prompt the user before continuing
+.PHONY: prompt_user
 prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 
@@ -47,7 +51,7 @@ go_vet:
 ## Run `go staticcheck` on all files in the current project
 go_staticcheck:
 	{ \
-	if builtin type -P "staticcheck"; then \
+	if command -v staticcheck >/dev/null; then \
 		staticcheck ./...; \
 	else \
 		echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; \
@@ -58,7 +62,7 @@ go_staticcheck:
 ## Generate documentation for the current project using `godo`
 go_doc:
 	{ \
-	if builtin type "godoc"; then \
+	if command -v godoc >/dev/null; then \
 		echo "Visit http://localhost:6060/pocket"; \
 		godoc -http=localhost:6060  -goroot=${PWD}/..; \
 	else \
@@ -232,18 +236,17 @@ protogen_show:
 .PHONY: protogen_clean
 ## Remove all the generated protobufs.
 protogen_clean:
-	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs rm
+	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs -r rm
 
 .PHONY: protogen_local
 ## Generate go structures for all of the protobufs
 protogen_local:
 	$(eval proto_dir = "./shared/types/proto/")
-
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/raintree/types/proto --go_out=./p2p/types      ./p2p/raintree/types/proto/*.proto
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto         --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto              --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto      --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/raintree/types/proto       --go_out=./p2p/types            ./p2p/raintree/types/proto/*.proto   --experimental_allow_proto3_optional
 
 	echo "View generated proto files by running: make protogen_show"
 

@@ -5,11 +5,11 @@ option go_package = "github.com/pokt-network/pocket/utility/types";
 
 import "google/protobuf/any.proto";
 
+// TECHDEBT: Consolidate this week consensus
 message Transaction {
   google.protobuf.Any msg = 1;
-  string fee = 2;
-  Signature signature = 3;
-  string nonce = 4;
+  Signature signature = 2;
+  string nonce = 3;
 }
 
 message TransactionResult {

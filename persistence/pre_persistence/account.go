@@ -25,7 +25,7 @@ func (m *PrePersistenceContext) SubtractPoolAmount(name string, amount string) e
 	sub := func(s *big.Int, s1 *big.Int) error {
 		s.Sub(s, s1)
 		if s.Sign() == -1 {
-			return types.ErrInsufficientAmountError()
+			return types.ErrInsufficientAmount()
 		}
 		return nil
 	}
@@ -195,7 +195,7 @@ func (m *PrePersistenceContext) SubtractAccountAmount(address []byte, amount str
 	sub := func(s *big.Int, s1 *big.Int) error {
 		s.Sub(s, s1)
 		if s.Sign() == -1 {
-			return types.ErrInsufficientAmountError()
+			return types.ErrInsufficientAmount()
 		}
 		return nil
 	}

@@ -82,7 +82,33 @@ func (m *PrePersistenceContext) GetAllFishermen(height int64) (fishermen []*type
 	return
 }
 
-func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (m *PrePersistenceContext) GetFishermanStakeAmount(height int64, address []byte) (string, error) {
+	fish, _, err := m.GetFisherman(address, height)
+	if err != nil {
+		return "", err
+	}
+	return fish.StakedTokens, nil
+}
+
+func (m *PrePersistenceContext) SetFishermanStakeAmount(address []byte, stakeAmount string) error {
+	codec := types.GetCodec()
+	db := m.Store()
+	fish, _, err := m.GetFisherman(address, m.Height)
+	if err != nil {
+		return err
+	}
+	if fish == nil {
+		return fmt.Errorf("does not exist in world state: %v", address)
+	}
+	fish.StakedTokens = stakeAmount
+	bz, err := codec.Marshal(fish)
+	if err != nil {
+		return err
+	}
+	return db.Put(append(FishermanPrefixKey, address...), bz)
+}
+
+func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	height, err := m.GetHeight()
 	if err != nil {
 		return err
@@ -100,7 +126,7 @@ func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte
 		Status:          int32(status),
 		Chains:          chains,
 		ServiceUrl:      serviceURL,
-		StakedTokens:    stakedTokens,
+		StakedTokens:    stakedAmount,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Output:          output,
@@ -112,7 +138,7 @@ func (m *PrePersistenceContext) InsertFisherman(address []byte, publicKey []byte
 	return db.Put(key, bz)
 }
 
-func (m *PrePersistenceContext) UpdateFisherman(address []byte, serviceURL string, amountToAdd string, chains []string) error {
+func (m *PrePersistenceContext) UpdateFisherman(address []byte, serviceURL string, amount string, chains []string) error {
 	height, err := m.GetHeight()
 	if err != nil {
 		return err
@@ -125,15 +151,15 @@ func (m *PrePersistenceContext) UpdateFisherman(address []byte, serviceURL strin
 	db := m.Store()
 	key := append(FishermanPrefixKey, address...)
 	// compute new values
-	stakedTokens, err := types.StringToBigInt(fish.StakedTokens)
+	//stakedTokens, err := types.StringToBigInt(fish.StakedTokens)
+	//if err != nil {
+	//	return err
+	//}
+	stakedTokens, err := types.StringToBigInt(amount)
 	if err != nil {
 		return err
 	}
-	stakedTokensToAddI, err := types.StringToBigInt(amountToAdd)
-	if err != nil {
-		return err
-	}
-	stakedTokens.Add(stakedTokens, stakedTokensToAddI)
+	//stakedTokens.Add(stakedTokens, stakedTokensToAddI)
 	// update values
 	fish.ServiceUrl = serviceURL
 	fish.StakedTokens = types.BigIntToString(stakedTokens)
@@ -294,10 +320,10 @@ func (m *PrePersistenceContext) SetFishermanPauseHeight(address []byte, height i
 	if !exists {
 		return fmt.Errorf("does not exist in world state")
 	}
-	if height == types.HeightNotUsed {
-		fish.Paused = false
-	} else {
+	if height != types.HeightNotUsed {
 		fish.Paused = true
+	} else {
+		fish.Paused = false
 	}
 	fish.PausedHeight = height
 	bz, err := codec.Marshal(fish)

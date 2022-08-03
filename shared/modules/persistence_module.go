@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 )
@@ -10,14 +11,23 @@ type PersistenceModule interface {
 
 	NewContext(height int64) (PersistenceContext, error)
 	GetCommitDB() *memdb.DB
+	GetBlockStore() kvstore.KVStore
+
+	// Debugging / development only
+	HandleDebugMessage(*types.DebugMessage) error
 }
 
-// The interface defining the context within which the node can operate with the persistence layer
-// regarding any protocol actor or the state of the blockchain.
+// Interface defining the context within which the node can operate with the persistence layer.
+// Operations in the context of a PersistenceContext are isolated from other operations and
+// other persistence contexts until committed, enabling parallelizability along other operations.
 
 // By design, the interface is made very verbose and explicit. This highlights the fact that Pocket
 // is an application specific blockchain and improves readability throughout the rest of the codebase
 // by limiting the use of abstractions.
+
+// TODO: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
+// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
+// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
 type PersistenceContext interface {
 	// Context Operations
 	NewSavePoint([]byte) error
@@ -25,18 +35,26 @@ type PersistenceContext interface {
 
 	Reset() error
 	Commit() error
-	Release()
+	Release() // IMPROVE: Return an error?
 
 	AppHash() ([]byte, error)
 	GetHeight() (int64, error)
 
 	// Block Operations
-	GetLatestBlockHeight() (uint64, error)
+	GetLatestBlockHeight() (int64, error)
 	GetBlockHash(height int64) ([]byte, error)
 	GetBlocksPerSession() (int, error)
 
 	// Indexer Operations
-	TransactionExists(transactionHash string) bool
+	TransactionExists(transactionHash string) (bool, error)
+	StoreTransaction(transactionProtoBytes []byte) error
+
+	// Block Operations
+	// TODO_TEMPORARY: Including two functions for the SQL and KV Store as an interim solution
+	//                 until we include the schema as part of the SQL Store because persistence
+	//                 currently has no access to the protobuf schema which is the source of truth.
+	StoreBlock(blockProtoBytes []byte) error                                              // Store the block in the KV Store
+	InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error // Writes the block in the SQL database
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error
@@ -54,9 +72,11 @@ type PersistenceContext interface {
 
 	// App Operations
 	GetAppExists(address []byte, height int64) (exists bool, err error)
-	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-	UpdateApp(address []byte, maxRelaysToAdd string, amountToAdd string, chainsToUpdate []string) error
+	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	UpdateApp(address []byte, maxRelays string, stakedAmount string, chainsToUpdate []string) error
 	DeleteApp(address []byte) error
+	GetAppStakeAmount(height int64, address []byte) (string, error)
+	SetAppStakeAmount(address []byte, stakeAmount string) error
 	GetAppsReadyToUnstake(height int64, status int) (apps []*types.UnstakingActor, err error)
 	GetAppStatus(address []byte, height int64) (status int, err error)
 	SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
@@ -67,9 +87,11 @@ type PersistenceContext interface {
 
 	// ServiceNode Operations
 	GetServiceNodeExists(address []byte, height int64) (exists bool, err error)
-	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-	UpdateServiceNode(address []byte, serviceURL string, amountToAdd string, chains []string) error
+	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	UpdateServiceNode(address []byte, serviceURL string, stakedAmount string, chains []string) error
 	DeleteServiceNode(address []byte) error
+	GetServiceNodeStakeAmount(height int64, address []byte) (string, error)
+	SetServiceNodeStakeAmount(address []byte, stakeAmount string) error
 	GetServiceNodesReadyToUnstake(height int64, status int) (serviceNodes []*types.UnstakingActor, err error)
 	GetServiceNodeStatus(address []byte, height int64) (status int, err error)
 	SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
@@ -83,9 +105,11 @@ type PersistenceContext interface {
 
 	// Fisherman Operations
 	GetFishermanExists(address []byte, height int64) (exists bool, err error)
-	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-	UpdateFisherman(address []byte, serviceURL string, amountToAdd string, chains []string) error
+	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	UpdateFisherman(address []byte, serviceURL string, stakedAmount string, chains []string) error
 	DeleteFisherman(address []byte) error
+	GetFishermanStakeAmount(height int64, address []byte) (string, error)
+	SetFishermanStakeAmount(address []byte, stakeAmount string) error
 	GetFishermenReadyToUnstake(height int64, status int) (fishermen []*types.UnstakingActor, err error)
 	GetFishermanStatus(address []byte, height int64) (status int, err error)
 	SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
@@ -96,9 +120,11 @@ type PersistenceContext interface {
 
 	// Validator Operations
 	GetValidatorExists(address []byte, height int64) (exists bool, err error)
-	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error
-	UpdateValidator(address []byte, serviceURL string, amountToAdd string) error
+	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedAmount string, pausedHeight int64, unstakingHeight int64) error
+	UpdateValidator(address []byte, serviceURL string, stakedAmount string) error
 	DeleteValidator(address []byte) error
+	GetValidatorStakeAmount(height int64, address []byte) (string, error)
+	SetValidatorStakeAmount(address []byte, stakeAmount string) error
 	GetValidatorsReadyToUnstake(height int64, status int) (validators []*types.UnstakingActor, err error)
 	GetValidatorStatus(address []byte, height int64) (status int, err error)
 	SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
@@ -111,9 +137,6 @@ type PersistenceContext interface {
 
 	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
 	GetValidatorMissedBlocks(address []byte, height int64) (int, error)
-
-	SetValidatorStakedTokens(address []byte, tokens string) error
-	GetValidatorStakedTokens(address []byte, height int64) (tokens string, err error)
 
 	/* TODO(olshansky): review/revisit this in more details */
 

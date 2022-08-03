@@ -9,7 +9,6 @@ import (
 	"time"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 
