@@ -1,7 +1,7 @@
-_NOTE: Please make sure to update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the PR for review_
+__REPLACE_ME_: Please make sure to update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the PR for review_
 
 ## Description
-_Summary of the change. Include motivation, reasons, context, dependencies, etc..._
+__REPLACE_ME_: Summary of the change. Include motivation, reasons, context, dependencies, etc..._
 
 Fixes [issue/_<ISSUE_NUMBER>_](https://github.com/pokt-network/pocket/issues/<ISSUE_NUMBER>)
 
@@ -17,7 +17,7 @@ Please mark the options that are relevant.
 ## How Has This Been Tested?
 _[Not needed for integration PR]_
 
-_Describe the tests and that you ran to verify your changes. If applicable, provide steps to reproduce. Bonus points for images and videos or gifs._
+___REPLACE_ME_: Describe the tests and that you ran to verify your changes. If applicable, provide steps to reproduce. Bonus points for images and videos or gifs._
 
 - [ ] `make test_all`
 - [ ] [LocalNet](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md)
