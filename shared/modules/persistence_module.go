@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/syndtr/goleveldb/leveldb/memdb"
 )
@@ -10,14 +11,23 @@ type PersistenceModule interface {
 
 	NewContext(height int64) (PersistenceContext, error)
 	GetCommitDB() *memdb.DB
+	GetBlockStore() kvstore.KVStore
+
+	// Debugging / development only
+	HandleDebugMessage(*types.DebugMessage) error
 }
 
-// The interface defining the context within which the node can operate with the persistence layer
-// regarding any protocol actor or the state of the blockchain.
+// Interface defining the context within which the node can operate with the persistence layer.
+// Operations in the context of a PersistenceContext are isolated from other operations and
+// other persistence contexts until committed, enabling parallelizability along other operations.
 
 // By design, the interface is made very verbose and explicit. This highlights the fact that Pocket
 // is an application specific blockchain and improves readability throughout the rest of the codebase
 // by limiting the use of abstractions.
+
+// TODO: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
+// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
+// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
 type PersistenceContext interface {
 	// Context Operations
 	NewSavePoint([]byte) error
@@ -25,18 +35,26 @@ type PersistenceContext interface {
 
 	Reset() error
 	Commit() error
-	Release()
+	Release() // IMPROVE: Return an error?
 
 	AppHash() ([]byte, error)
 	GetHeight() (int64, error)
 
 	// Block Operations
-	GetLatestBlockHeight() (uint64, error)
+	GetLatestBlockHeight() (int64, error)
 	GetBlockHash(height int64) ([]byte, error)
 	GetBlocksPerSession() (int, error)
 
 	// Indexer Operations
-	TransactionExists(transactionHash string) bool
+	TransactionExists(transactionHash string) (bool, error)
+	StoreTransaction(transactionProtoBytes []byte) error
+
+	// Block Operations
+	// TODO_TEMPORARY: Including two functions for the SQL and KV Store as an interim solution
+	//                 until we include the schema as part of the SQL Store because persistence
+	//                 currently has no access to the protobuf schema which is the source of truth.
+	StoreBlock(blockProtoBytes []byte) error                                              // Store the block in the KV Store
+	InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error // Writes the block in the SQL database
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error

@@ -7,6 +7,8 @@ assignees: ''
 
 ---
 
+_NOTE: Please make sure to update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the issue_
+
 # Objective
 [ Issue description - What?]
 

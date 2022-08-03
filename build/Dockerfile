@@ -4,6 +4,12 @@ FROM ${GOLANG_IMAGE_VERSION} AS builder
 
 ENV POCKET_ROOT=/go/src/github.com/pocket-network/
 
+# Badger CLI
+# RUN cd /bin && wget https://github.com/dgraph-io/badger/archive/refs/tags/v3.2103.2.tar.gz && \
+#     tar -xvf v3.2103.2.tar.gz && cd badger-3.2103.2/badger go install && \
+#     cd .. && rm -f v3.2103.2.tar.gz
+
+# Source code
 WORKDIR $POCKET_ROOT
 
 COPY . .

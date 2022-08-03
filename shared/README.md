@@ -10,7 +10,7 @@
 ## Where Do I start?
 
 1. Look at the high level architecture diagram below
-2. Inspect `node.go` which is the main entrpoint to the node
+2. Inspect `node.go` which is the main entrypoint to the node
 3. Familiarize yourself with `modules/module.go` and all the other interfaces under module.
 4. Ask a member of the team to walk you through `types`
 5. Dive deep into the module of your choise

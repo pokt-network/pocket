@@ -53,7 +53,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 	// TODO(olshansky): Add more unit tests for these checks...
 	if highPrepareQC == nil || highPrepareQC.Height < m.Height || highPrepareQC.Round < m.Round {
-		block, err := m.prepareBlock()
+		block, err := m.prepareBlockAsLeader()
 		if err != nil {
 			m.nodeLogError(typesCons.ErrPrepareBlock.Error(), err)
 			m.paceMaker.InterruptRound()

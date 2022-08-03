@@ -24,19 +24,25 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 		return nil, err
 	}
 	// deliver txs lifecycle phase
-	for _, transaction := range transactions {
-		tx, err := typesUtil.TransactionFromBytes(transaction)
+	for _, transactionProtoBytes := range transactions {
+		tx, err := typesUtil.TransactionFromBytes(transactionProtoBytes)
 		if err != nil {
 			return nil, err
 		}
 		if err := tx.ValidateBasic(); err != nil {
 			return nil, err
 		}
+		// Validate and apply the transaction to the Postgres database
 		if err := u.ApplyTransaction(tx); err != nil {
 			return nil, err
 		}
+		if err := u.GetPersistenceContext().StoreTransaction(transactionProtoBytes); err != nil {
+			return nil, err
+		}
+
 		// TODO: if found, remove transaction from mempool
-		// if err := u.Mempool.DeleteTransaction(tx); err != nil {
+		// DISCUSS: What if the context is rolled back or cancelled. Do we add it back to the mempool?
+		// if err := u.Mempool.DeleteTransaction(transaction); err != nil {
 		// 	return nil, err
 		// }
 	}
@@ -260,4 +266,29 @@ func (u *UtilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks i
 		return types.ErrSetMissedBlocks(er)
 	}
 	return nil
+}
+
+func (u *UtilityContext) StoreBlock(blockProtoBytes []byte) error {
+	store := u.Store()
+
+	// Store in KV Store
+	if err := store.StoreBlock(blockProtoBytes); err != nil {
+		return err
+	}
+
+	// Store in SQL Store
+	// OPTIMIZE: Ideally we'd pass in the block proto struct to utility so we don't
+	//           have to unmarshal it here, but that's a major design decision for the interfaces.
+	codec := u.Codec()
+	block := &types.Block{}
+	if err := codec.Unmarshal(blockProtoBytes, block); err != nil {
+		return types.ErrProtoUnmarshal(err)
+	}
+	header := block.BlockHeader
+	if err := store.InsertBlock(uint64(header.Height), header.Hash, header.ProposerAddress, header.QuorumCertificate); err != nil {
+		return err
+	}
+
+	return nil
+
 }

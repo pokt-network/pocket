@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"encoding/hex"
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/types"
@@ -120,6 +121,10 @@ func (m *consensusModule) Start() error {
 			consensusTelemetry.CONSENSUS_BLOCKCHAIN_HEIGHT_COUNTER_DESCRIPTION,
 		)
 
+	if err := m.loadPersistedState(); err != nil {
+		return err
+	}
+
 	if err := m.paceMaker.Start(); err != nil {
 		return err
 	}
@@ -146,6 +151,32 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
 	m.paceMaker.SetBus(pocketBus)
 	m.leaderElectionMod.SetBus(pocketBus)
+}
+
+func (m *consensusModule) loadPersistedState() error {
+	persistenceContext, err := m.GetBus().GetPersistenceModule().NewContext(-1) // Unknown height
+	if err != nil {
+		return nil
+	}
+	defer persistenceContext.Release()
+
+	latestHeight, err := persistenceContext.GetLatestBlockHeight()
+	if err != nil || latestHeight == 0 {
+		m.nodeLog("TODO: State sync not implement")
+		return nil
+	}
+
+	appHash, err := persistenceContext.GetBlockHash(latestHeight)
+	if err != nil {
+		return fmt.Errorf("error getting block hash for height %d even though it's in the database: %s", latestHeight, err)
+	}
+
+	// TODO: Populate the rest of the state from the persistence module: validator set, quorum cert, last block hash, etc...
+	m.Height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
+	m.appHash = string(appHash)
+
+	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
+	return nil
 }
 
 // TODO(discuss): Low priority design: think of a way to make `hotstuff_*` files be a sub-package under consensus.
@@ -225,9 +256,7 @@ func (m *consensusModule) AppHash() string {
 	return m.appHash
 }
 
-// Please reference shared/modules/consensus_modules to learn more about why this method
-// is exposed for the moment.
-func (m *consensusModule) BlockHeight() uint64 {
+func (m *consensusModule) CurrentHeight() uint64 {
 	return m.Height
 }
 

@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/pokt-network/pocket/p2p"
+
 	"github.com/manifoldco/promptui"
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
@@ -20,10 +22,11 @@ import (
 )
 
 const (
-	PromptResetToGenesis      string = "ResetToGenesis"
-	PromptPrintNodeState      string = "PrintNodeState"
-	PromptTriggerNextView     string = "TriggerNextView"
-	PromptTogglePacemakerMode string = "TogglePacemakerMode"
+	PromptResetToGenesis         string = "ResetToGenesis"
+	PromptPrintNodeState         string = "PrintNodeState"
+	PromptTriggerNextView        string = "TriggerNextView"
+	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
+	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
 )
 
 var items = []string{
@@ -31,6 +34,7 @@ var items = []string{
 	PromptPrintNodeState,
 	PromptTriggerNextView,
 	PromptTogglePacemakerMode,
+	PromptShowLatestBlockInStore,
 }
 
 // A P2P module is initialized in order to broadcast a message to the local network
@@ -149,11 +153,18 @@ func handleSelect(selection string) {
 			Message: nil,
 		}
 		broadcastDebugMessage(m)
+	case PromptShowLatestBlockInStore:
+		m := &types.DebugMessage{
+			Action:  types.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
+			Message: nil,
+		}
+		sendDebugMessage(m)
 	default:
 		log.Println("Selection not yet implemented...", selection)
 	}
 }
 
+// Broadcast to the entire validator set
 func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
@@ -168,4 +179,20 @@ func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 	for _, val := range consensusMod.ValidatorMap() {
 		p2pMod.Send(val.Address, anyProto, types.PocketTopic_DEBUG_TOPIC)
 	}
+}
+
+// Send to just a single (i.e. first) validator in the set
+func sendDebugMessage(debugMsg *types.DebugMessage) {
+	anyProto, err := anypb.New(debugMsg)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
+	}
+
+	var validatorAddress []byte
+	for _, val := range consensusMod.ValidatorMap() {
+		validatorAddress = val.Address
+		break
+	}
+
+	p2pMod.Send(validatorAddress, anyProto, types.PocketTopic_DEBUG_TOPIC)
 }

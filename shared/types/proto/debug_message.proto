@@ -11,6 +11,8 @@ enum DebugMessageAction {
 	DEBUG_CONSENSUS_PRINT_NODE_STATE = 2;
 	DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW = 3;
 	DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE = 4; // toggle between manual and automatic
+	DEBUG_SHOW_LATEST_BLOCK_IN_STORE = 5; // toggle between manual and automatic
+	DEBUG_CLEAR_STATE = 6;
 }
 
 message DebugMessage {

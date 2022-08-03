@@ -3,20 +3,28 @@ package shared
 import (
 	"log"
 
+	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 )
 
+var _ modules.Bus = &bus{}
+
 type bus struct {
 	modules.Bus
 
+	// Bus events
 	channel modules.EventsChannel
 
+	// Modules
 	persistence modules.PersistenceModule
 	p2p         modules.P2PModule
 	utility     modules.UtilityModule
 	consensus   modules.ConsensusModule
 	telemetry   modules.TelemetryModule
+
+	// Configurations
+	config *config.Config
 }
 
 const (
@@ -29,14 +37,18 @@ func CreateBus(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
+	config *config.Config,
 ) (modules.Bus, error) {
 	bus := &bus{
-		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
+		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
+
 		persistence: persistence,
 		p2p:         p2p,
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
+
+		config: config,
 	}
 
 	modules := map[string]modules.Module{
@@ -76,6 +88,7 @@ func CreateBusWithOptionalModules(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
+	config *config.Config,
 ) modules.Bus {
 	bus := &bus{
 		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -84,6 +97,8 @@ func CreateBusWithOptionalModules(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
+
+		config: config,
 	}
 
 	maybeSetModuleBus := func(mod modules.Module) {
@@ -132,4 +147,8 @@ func (m *bus) GetConsensusModule() modules.ConsensusModule {
 
 func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
+}
+
+func (m *bus) GetConfig() *config.Config {
+	return m.config
 }

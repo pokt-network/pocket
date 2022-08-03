@@ -18,15 +18,16 @@ func (m *consensusModule) validateBlock(block *types.Block) error {
 }
 
 // This is a helper function intended to be called by a leader/validator during a view change
-func (m *consensusModule) prepareBlock() (*types.Block, error) {
+func (m *consensusModule) prepareBlockAsLeader() (*types.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
-	if err := m.updateUtilityContext(); err != nil {
+
+	if err := m.refreshUtilityContext(); err != nil {
 		return nil, err
 	}
 
-	txs, err := m.utilityContext.GetTransactionsForProposal(m.privateKey.Address(), maxTxBytes, lastByzValidators)
+	txs, err := m.utilityContext.GetProposalTransactions(m.privateKey.Address(), maxTxBytes, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +42,8 @@ func (m *consensusModule) prepareBlock() (*types.Block, error) {
 		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            uint32(len(txs)),
 		LastBlockHash:     m.appHash,
-		ProposerAddress:   m.privateKey.Address(),
-		QuorumCertificate: nil,
+		ProposerAddress:   m.privateKey.Address().Bytes(),
+		QuorumCertificate: []byte("HACK: Temporary placeholder"),
 	}
 
 	block := &types.Block{
@@ -54,7 +55,7 @@ func (m *consensusModule) prepareBlock() (*types.Block, error) {
 }
 
 // This is a helper function intended to be called by a replica/voter during a view change
-func (m *consensusModule) applyBlock(block *types.Block) error {
+func (m *consensusModule) applyBlockAsReplica(block *types.Block) error {
 	if m.isLeader() {
 		return typesCons.ErrLeaderApplyBLock
 	}
@@ -64,16 +65,16 @@ func (m *consensusModule) applyBlock(block *types.Block) error {
 		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.consCfg.MaxBlockBytes)
 	}
 
-	if err := m.updateUtilityContext(); err != nil {
+	if err := m.refreshUtilityContext(); err != nil {
 		return err
 	}
 
-	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), block.Transactions, lastByzValidators)
+	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), block.BlockHeader.ProposerAddress, block.Transactions, lastByzValidators)
 	if err != nil {
 		return err
 	}
 
-	// TODO(olshansky) blockhash is not the appHash. Discuss offline with Andrew
+	// DISCUSS(drewsky): Is `ApplyBlock` going to return blockHash or appHash?
 	if block.BlockHeader.Hash != hex.EncodeToString(appHash) {
 		return typesCons.ErrInvalidAppHash(block.BlockHeader.Hash, hex.EncodeToString(appHash))
 	}
@@ -82,7 +83,7 @@ func (m *consensusModule) applyBlock(block *types.Block) error {
 }
 
 // Creates a new Utility context and clears/nullifies any previous contexts if they exist
-func (m *consensusModule) updateUtilityContext() error {
+func (m *consensusModule) refreshUtilityContext() error {
 	if m.utilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
 		m.utilityContext.ReleaseContext()
@@ -101,7 +102,24 @@ func (m *consensusModule) updateUtilityContext() error {
 func (m *consensusModule) commitBlock(block *types.Block) error {
 	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
 
-	if err := m.utilityContext.GetPersistenceContext().Commit(); err != nil {
+	// Store the block in the KV store
+	codec := types.GetCodec()
+	blockProtoBytes, err := codec.Marshal(block)
+	if err != nil {
+		return err
+	}
+
+	// Commit and release the context
+	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
+		return err
+	}
+	// IMPROVE(olshansky): temporary solution. `ApplyBlock` above applies the
+	// transactions to the postgres database, and this stores it in the KV store upon commitment.
+	// Instead of calling this directly, an alternative solution is to store the block metadata in
+	// the persistence context and have `CommitPersistenceContext` do this under the hood. However,
+	// additional `Block` metadata will need to be passed through and may change when we merkle the
+	// state hash.
+	if err := m.utilityContext.StoreBlock(blockProtoBytes); err != nil {
 		return err
 	}
 	m.utilityContext.ReleaseContext()
