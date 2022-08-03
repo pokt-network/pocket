@@ -1,8 +1,6 @@
 package shared
 
 import (
-	"log"
-
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/pre_persistence"

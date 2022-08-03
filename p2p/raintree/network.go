@@ -24,9 +24,10 @@ type rainTreeNetwork struct {
 	// TECHDEBT(olshansky): Consider optimizing these away if possible.
 	// Helpers / abstractions around `addrBook` for simpler implementation through additional
 	// storage & pre-computation.
-	addrBookMap  typesP2P.AddrBookMap
-	addrList     []string
-	maxNumLevels uint32
+	addrBookMap            typesP2P.AddrBookMap
+	addrList               []string
+	maxNumLevels           int32
+	redundancyLayerEnabled bool // debug config only
 
 	// TECHDEBT(drewsky): What should we use for de-duping messages within P2P?
 	mempool types.Mempool
@@ -37,9 +38,10 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) t
 		selfAddr: addr,
 		addrBook: addrBook,
 		// This subset of fields are initialized by `processAddrBookUpdates` below
-		addrBookMap:  make(typesP2P.AddrBookMap),
-		addrList:     make([]string, 0),
-		maxNumLevels: 0,
+		addrBookMap:            make(typesP2P.AddrBookMap),
+		addrList:               make([]string, 0),
+		maxNumLevels:           0,
+		redundancyLayerEnabled: true,
 		// TODO(team): Mempool size should be configurable
 		mempool: types.NewMempool(1000000, 1000),
 	}
@@ -57,32 +59,51 @@ func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
 	return n.networkBroadcastAtLevel(data, n.maxNumLevels, getNonce())
 }
 
-func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, nonce uint64) error {
-	// This is handled either by the cleanup layer or redundancy layer
-	if level == 0 {
-		return nil
-	}
+func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level int32, nonce uint64) error {
+	var addr1, addr2 cryptoPocket.Address
+	var ok bool
 
 	msg := &typesP2P.RainTreeMessage{
 		Level: level,
 		Data:  data,
 		Nonce: nonce,
 	}
+	// This is handled either by the redundancy layer
+	if level == 0 {
+		if n.redundancyLayerEnabled {
+			level, msg.Level = n.RedundancyLayer()
+		} else {
+			if err := n.demote(msg); err != nil {
+				log.Println("Error demoting self during RainTree message propagation: ", err)
+			}
+		}
+	}
+
+	// This is handled by the cleanup layer
+	if level == -1 {
+		addr1, addr2, ok = n.CleanupLayer()
+		if !ok {
+			return nil
+		}
+	}
+
 	bz, err := proto.Marshal(msg)
 	if err != nil {
 		return err
 	}
 
-	if addr1, ok := n.getFirstTargetAddr(level); ok {
-		if err = n.networkSendInternal(bz, addr1); err != nil {
-			log.Println("Error sending to peer during broadcast: ", err)
-		}
+	if addr1 == nil {
+		addr1 = n.getFirstTargetAddr(level)
+	}
+	if addr2 == nil {
+		addr2 = n.getSecondTargetAddr(level)
 	}
 
-	if addr2, ok := n.getSecondTargetAddr(level); ok {
-		if err = n.networkSendInternal(bz, addr2); err != nil {
-			log.Println("Error sending to peer during broadcast: ", err)
-		}
+	if err = n.networkSendInternal(bz, addr1); err != nil {
+		log.Println("Error sending to peer during broadcast: ", err)
+	}
+	if err = n.networkSendInternal(bz, addr2); err != nil {
+		log.Println("Error sending to peer during broadcast: ", err)
 	}
 
 	if err = n.demote(msg); err != nil {
@@ -92,8 +113,20 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 	return nil
 }
 
+func (n *rainTreeNetwork) CleanupLayer() (addr1, addr2 []byte, ok bool) {
+	// cleanup layer is just send left / right
+	// TODO (Team) unhappy path where the left / right nodes are down
+	// (continue to search left and right until you have a hit)
+	return n.getLeftAndRight()
+}
+
+func (n *rainTreeNetwork) RedundancyLayer() (level int32, msgLevel int32) {
+	// redundancy layer is simply one final send to the original +1/3 && -1/3
+	return n.maxNumLevels, -1 // -1 ensures not an echo chamber
+}
+
 func (n *rainTreeNetwork) demote(rainTreeMsg *typesP2P.RainTreeMessage) error {
-	if rainTreeMsg.Level > 0 {
+	if rainTreeMsg.Level >= 0 {
 		if err := n.networkBroadcastAtLevel(rainTreeMsg.Data, rainTreeMsg.Level-1, rainTreeMsg.Nonce); err != nil {
 			return err
 		}
@@ -117,6 +150,9 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 }
 
 func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.Address) error {
+	if address == nil {
+		return fmt.Errorf("address %s is empty, likely not found in addrBookMap", address)
+	}
 	// NOOP: Trying to send a message to self
 	if n.selfAddr.Equals(address) {
 		return nil
