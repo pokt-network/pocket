@@ -11,6 +11,11 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+func (m *PrePersistenceContext) GetAppsUpdated(height int64) ([][]byte, error) {
+	// Not implemented
+	return nil, nil
+}
+
 func (m *PrePersistenceContext) GetAppExists(address []byte, height int64) (exists bool, err error) {
 	db := m.Store()
 	key := append(AppPrefixKey, address...)

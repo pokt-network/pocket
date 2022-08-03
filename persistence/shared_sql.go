@@ -41,6 +41,58 @@ func (p *PostgresContext) GetExists(actorSchema schema.ProtocolActorSchema, addr
 	return
 }
 
+func (p *PostgresContext) GetActorsUpdated(actorSchema schema.ProtocolActorSchema, height int64) (actors []schema.BaseActor, err error) {
+	ctx, conn, err := p.GetCtxAndConnection()
+	if err != nil {
+		return
+	}
+
+	rows, err := conn.Query(ctx, actorSchema.GetUpdatedAtHeightQuery(height))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var actor schema.BaseActor
+	for rows.Next() {
+		if err = rows.Scan(
+			&actor.Address, &actor.PublicKey, &actor.StakedTokens, &actor.ActorSpecificParam,
+			&actor.OutputAddress, &actor.PausedHeight, &actor.UnstakingHeight,
+			&actor.Chains, &height,
+		); err != nil {
+			return
+		}
+
+		if actorSchema.GetChainsTableName() == "" {
+			continue
+		}
+
+		chainRows, chainsErr := conn.Query(ctx, actorSchema.GetChainsQuery(actor.Address, height))
+		if err != nil {
+			return nil, chainsErr // Why couldn't I just `return` here and use `err`?
+		}
+		defer chainRows.Close()
+
+		var chainAddr string
+		var chainID string
+		var chainEndHeight int64 // unused
+		for rows.Next() {
+			err = rows.Scan(&chainAddr, &chainID, &chainEndHeight)
+			if err != nil {
+				return
+			}
+			if chainAddr != actor.Address {
+				return nil, fmt.Errorf("weird")
+			}
+			actor.Chains = append(actor.Chains, chainID)
+		}
+
+		actors = append(actors, actor)
+	}
+
+	return
+}
+
 func (p *PostgresContext) GetActor(actorSchema schema.ProtocolActorSchema, address []byte, height int64) (actor schema.BaseActor, err error) {
 	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {

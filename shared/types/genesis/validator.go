@@ -7,6 +7,9 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+// TODO_IN_THIS_COMMIT: See https://github.com/pokt-network/pocket/pull/139/files to remove this shit
+
+
 // HACK: Since the protocol actor protobufs (e.g. validator, fisherman, etc) use `bytes` for some
 // fields (e.g. `address`, `output`, `publicKey`), we need to use a helper struct to unmarshal the
 // the types when they are defined via json (e.g. genesis file, testing configurations, etc...).

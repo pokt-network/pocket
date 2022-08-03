@@ -64,6 +64,10 @@ func (actor *BaseProtocolActorSchema) GetChainsTableSchema() string {
 	return ProtocolActorChainsTableSchema(actor.chainsHeightConstraintName)
 }
 
+func (actor *BaseProtocolActorSchema) GetUpdatedAtHeightQuery(height int64) string {
+	return SelectAtHeight(AllColsSelector, height, actor.tableName)
+}
+
 func (actor *BaseProtocolActorSchema) GetQuery(address string, height int64) string {
 	return Select(AllColsSelector, address, height, actor.tableName)
 }

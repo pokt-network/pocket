@@ -69,6 +69,11 @@ func ProtocolActorChainsTableSchema(constraintName string) string {
 		)`, AddressCol, ChainIDCol, HeightCol, DefaultBigInt, constraintName, AddressCol, ChainIDCol, HeightCol)
 }
 
+func SelectAtHeight(selector string, height int64, tableName string) string {
+	return fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d`,
+		selector, tableName, height)
+}
+
 func Select(selector, address string, height int64, tableName string) string {
 	return fmt.Sprintf(`SELECT %s FROM %s WHERE address='%s' AND height<=%d ORDER BY height DESC LIMIT 1`,
 		selector, tableName, address, height)

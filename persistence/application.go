@@ -4,16 +4,51 @@ import (
 	"encoding/hex"
 	"log"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
+
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 func (p PostgresContext) GetAppExists(address []byte, height int64) (exists bool, err error) {
 	return p.GetExists(schema.ApplicationActor, address, height)
 }
 
+func (p PostgresContext) GetAppsUpdated(height int64) (apps [][]byte, err error) {
+	actors, err := p.GetActorsUpdated(schema.ApplicationActor, height)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, actor := range actors {
+		// This breaks the pattern of protos in persistence
+		app := typesGenesis.App{
+			Address:   []byte(actor.Address),
+			PublicKey: []byte(actor.PublicKey),
+			// Paused:          actor.Paused,
+			// Status:          actor.Status,
+			Chains:          actor.Chains,
+			MaxRelays:       actor.ActorSpecificParam,
+			StakedTokens:    actor.StakedTokens,
+			PausedHeight:    actor.PausedHeight,
+			UnstakingHeight: actor.UnstakingHeight,
+			Output:          []byte(actor.OutputAddress),
+		}
+		appBytes, err := proto.Marshal(&app)
+		if err != nil {
+			return nil, err
+		}
+		apps = append(apps, appBytes)
+	}
+	return
+}
+
 func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicKey, stakedTokens, maxRelays, outputAddress string, pauseHeight, unstakingHeight int64, chains []string, err error) {
 	actor, err := p.GetActor(schema.ApplicationActor, address, height)
+	if err != nil {
+		return
+	}
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedTokens

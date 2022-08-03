@@ -16,6 +16,8 @@ type ProtocolActorSchema interface {
 
 	/*** Read/Get Queries ***/
 
+	// Returns a query to retrieve all of a Actors updated at that specific height.
+	GetUpdatedAtHeightQuery(height int64) string
 	// Returns a query to retrieve all of a single Actor's attributes.
 	GetQuery(address string, height int64) string
 	// Returns a query for the existence of an Actor given its address.

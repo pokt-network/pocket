@@ -71,6 +71,7 @@ type PersistenceContext interface {
 	SetAccountAmount(address []byte, amount string) error // TECHDEBT(team): Delete this function
 
 	// App Operations
+	GetAppsUpdated(height int64) ([][]byte, error) // Returns the apps updates at the given height
 	GetAppExists(address []byte, height int64) (exists bool, err error)
 	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateApp(address []byte, maxRelays string, stakedAmount string, chainsToUpdate []string) error
