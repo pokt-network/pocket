@@ -1,19 +1,18 @@
-package consensus
+package  consensus
 
 import (
 	"encoding/hex"
 	"fmt"
 	"log"
-
 	"github.com/pokt-network/pocket/shared/types"
-
+        "fmt"
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-
+	"bls"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -29,6 +28,7 @@ type consensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
 	consCfg    *config.ConsensusConfig
+
 
 	// Hotstuff
 	Height uint64
