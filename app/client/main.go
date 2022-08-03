@@ -6,8 +6,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/pokt-network/pocket/p2p"
-
 	"github.com/manifoldco/promptui"
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
@@ -94,7 +92,7 @@ func main() {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
 
-	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod)
+	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod, cfg)
 
 	p2pMod.Start()
 

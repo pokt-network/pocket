@@ -142,7 +142,7 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 }
 
 func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
-	blockHeightInt := n.GetBus().GetConsensusModule().BlockHeight()
+	blockHeightInt := n.GetBus().GetConsensusModule().CurrentHeight()
 	blockHeight := fmt.Sprintf("%d", blockHeightInt)
 
 	n.GetBus().

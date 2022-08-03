@@ -144,6 +144,7 @@
           },
           "editorMode": "code",
           "expr": "consensus_blockchain_height_counter",
+          "interval": "1s",
           "legendFormat": "{{instance}}",
           "range": true,
           "refId": "A"
@@ -460,6 +461,6 @@
   "timezone": "",
   "title": "Pocket Performance and Correctness Graphs",
   "uid": "QwQkEmj7k",
-  "version": 2,
+  "version": 4,
   "weekStart": ""
 }
