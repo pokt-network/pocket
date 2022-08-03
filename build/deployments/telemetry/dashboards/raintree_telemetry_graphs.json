@@ -55,7 +55,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 12,
+        "h": 9,
         "w": 3,
         "x": 0,
         "y": 0
@@ -73,7 +73,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "8.5.2",
+      "pluginVersion": "8.5.5",
       "targets": [
         {
           "datasource": {
@@ -88,6 +88,71 @@
       "type": "gauge"
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 21,
+        "x": 3,
+        "y": 0
+      },
+      "id": 23,
+      "options": {
+        "displayMode": "gradient",
+        "minVizHeight": 10,
+        "minVizWidth": 0,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true
+      },
+      "pluginVersion": "8.5.5",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P4169E866C3094E38"
+          },
+          "editorMode": "code",
+          "expr": "consensus_blockchain_height_counter",
+          "legendFormat": "{{instance}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Block Height / Node",
+      "type": "bargauge"
+    },
+    {
       "aliasColors": {},
       "bars": true,
       "dashLength": 10,
@@ -100,9 +165,9 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 12,
-        "w": 12,
-        "x": 3,
-        "y": 0
+        "w": 13,
+        "x": 0,
+        "y": 9
       },
       "hiddenSeries": false,
       "id": 15,
@@ -122,7 +187,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.5.2",
+      "pluginVersion": "8.5.5",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -197,9 +262,9 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 12,
-        "w": 9,
-        "x": 15,
-        "y": 0
+        "w": 11,
+        "x": 13,
+        "y": 9
       },
       "hiddenSeries": false,
       "id": 12,
@@ -219,7 +284,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.5.2",
+      "pluginVersion": "8.5.5",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -280,6 +345,104 @@
       "yaxis": {
         "align": false
       }
+    },
+    {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": {
+        "type": "loki",
+        "uid": "P8E80F9AEF21F6940"
+      },
+      "description": "",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "hiddenSeries": false,
+      "id": 21,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "8.5.5",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "P8E80F9AEF21F6940"
+          },
+          "expr": "sum by (blockheight) ( count_over_time({host=\"docker-desktop\"} |= \"[EVENT] event_metrics_namespace_consensus\" | pattern `<datetime> <_> <time> <type> <_> <metric_name> <_> <blockheight> <step> <validator_role>`[6s] ) )",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeRegions": [],
+      "title": "# of HotPOKT msgs / Block",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "((\\{)((\\w+)(\\=\\\"))(\\d+)(\\\")(\\}))",
+            "renamePattern": "block $6"
+          }
+        }
+      ],
+      "type": "graph",
+      "xaxis": {
+        "mode": "series",
+        "show": true,
+        "values": [
+          "total"
+        ]
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:47",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        },
+        {
+          "$$hashKey": "object:48",
+          "format": "short",
+          "logBase": 1,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false
+      }
     }
   ],
   "refresh": "5s",
@@ -295,8 +458,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "RainTree Telemetry Graphs",
+  "title": "Pocket Performance and Correctness Graphs",
   "uid": "QwQkEmj7k",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"unsafe"
 
+	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
 
@@ -23,6 +24,17 @@ type HotstuffLeaderMessageHandler struct{}
 /*** Prepare Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+	m.GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent(
+			consensusTelemetry.CONSENSUS_EVENT_METRICS_NAMESPACE,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_NAME,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.BlockHeight(),
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_NEW_ROUND,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_LEADER,
+		)
+
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
@@ -77,6 +89,17 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 /*** PreCommit Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+	m.GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent(
+			consensusTelemetry.CONSENSUS_EVENT_METRICS_NAMESPACE,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_NAME,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.BlockHeight(),
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_PREPARE,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_LEADER,
+		)
+
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
@@ -119,6 +142,17 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 /*** Commit Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+	m.GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent(
+			consensusTelemetry.CONSENSUS_EVENT_METRICS_NAMESPACE,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_NAME,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.BlockHeight(),
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_PRECOMMIT,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_LEADER,
+		)
+
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
@@ -161,6 +195,17 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 /*** Decide Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+	m.GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent(
+			consensusTelemetry.CONSENSUS_EVENT_METRICS_NAMESPACE,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_NAME,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.BlockHeight(),
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_COMMIT,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_LEADER,
+		)
+
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
@@ -199,9 +244,25 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	// There is no "replica behavior" to imitate here
 
 	m.paceMaker.NewHeight()
+	m.GetBus().
+		GetTelemetryModule().
+		GetTimeSeriesAgent().
+		CounterIncrement(
+			consensusTelemetry.CONSENSUS_BLOCKCHAIN_HEIGHT_COUNTER_NAME,
+		)
 }
 
 func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+	m.GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent(
+			consensusTelemetry.CONSENSUS_EVENT_METRICS_NAMESPACE,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_NAME,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.BlockHeight(),
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_DECIDE,
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_LEADER,
+		)
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return

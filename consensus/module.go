@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -111,6 +112,14 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 }
 
 func (m *consensusModule) Start() error {
+	m.GetBus().
+		GetTelemetryModule().
+		GetTimeSeriesAgent().
+		CounterRegister(
+			consensusTelemetry.CONSENSUS_BLOCKCHAIN_HEIGHT_COUNTER_NAME,
+			consensusTelemetry.CONSENSUS_BLOCKCHAIN_HEIGHT_COUNTER_DESCRIPTION,
+		)
+
 	if err := m.paceMaker.Start(); err != nil {
 		return err
 	}
