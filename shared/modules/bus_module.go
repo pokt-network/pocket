@@ -21,6 +21,7 @@ type Bus interface {
 	GetP2PModule() P2PModule
 	GetUtilityModule() UtilityModule
 	GetConsensusModule() ConsensusModule
+	GetTelemetryModule() TelemetryModule
 
 	// Configuration
 	GetConfig() *config.Config

@@ -7,9 +7,11 @@ import (
 	"log"
 
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 var _ types.Network = &network{}
+var _ modules.IntegratableModule = &network{}
 
 type network struct {
 	addrBook types.AddrBook
@@ -66,3 +68,6 @@ func (n *network) AddPeerToAddrBook(peer *types.NetworkPeer) error {
 func (n *network) RemovePeerToAddrBook(peer *types.NetworkPeer) error {
 	panic("RemovePeerToAddrBook not implemented")
 }
+
+func (n *network) GetBus() modules.Bus  { return nil }
+func (n *network) SetBus(_ modules.Bus) {}
