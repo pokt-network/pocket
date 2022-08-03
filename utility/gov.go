@@ -1578,7 +1578,7 @@ func (u *UtilityContext) GetDoubleSignFeeOwner() (owner []byte, err types.Error)
 	store := u.Store()
 	owner, er := store.GetMessageDoubleSignFeeOwner()
 	if er != nil {
-		return nil, types.ErrGetParam(types.DoubleSignBurnPercentageParamName, er)
+		return nil, types.ErrGetParam(types.MessageDoubleSignFeeOwner, er)
 	}
 	return owner, nil
 }

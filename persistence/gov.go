@@ -1,12 +1,15 @@
 package persistence
 
 import (
+	"encoding/hex"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 // TODO(https://github.com/pokt-network/pocket/issues/76): Optimize gov parameters implementation & schema.
+// TODO (Team) BUG setting parameters twice on the same height causes issues. We need to move the schema away from 'end_height' and
+// more towards the height_constraint architecture
 
 func (p PostgresContext) GetBlocksPerSession() (int, error) {
 	return p.GetIntParam(types.BlocksPerSessionParamName)
@@ -161,7 +164,7 @@ func (p PostgresContext) GetMessageProveTestScoreFee() (string, error) {
 }
 
 func (p PostgresContext) GetMessageStakeAppFee() (string, error) {
-	return p.GetStringParam(types.MessageEditStakeAppFeeOwner)
+	return p.GetStringParam(types.MessageStakeAppFee)
 }
 
 func (p PostgresContext) GetMessageEditStakeAppFee() (string, error) {
@@ -903,17 +906,14 @@ func (p PostgresContext) SetParam(paramName string, paramValue interface{}) erro
 	if err != nil {
 		return err
 	}
-	tx, err := txn.Begin(ctx)
-	if err != nil {
+	if _, err = txn.Exec(ctx, schema.NullifyParamsQuery(height)); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.NullifyParamsQuery(height)); err != nil {
+	setParamSchema := schema.SetParam(paramName, paramValue, height)
+	if _, err = txn.Exec(ctx, setParamSchema); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.SetParam(paramName, paramValue, height)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (p PostgresContext) GetIntParam(paramName string) (i int, err error) {
@@ -939,6 +939,8 @@ func (p PostgresContext) GetBytesParam(paramName string) (param []byte, err erro
 	if err != nil {
 		return nil, err
 	}
-	err = txn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&param)
+	var pa string
+	err = txn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&pa)
+	param, err = hex.DecodeString(pa)
 	return
 }

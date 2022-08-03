@@ -183,11 +183,6 @@ test_shared: # generate_mocks
 test_consensus: # mockgen
 	go test ${VERBOSE_TEST} ./consensus/...
 
-.PHONY: test_pre_persistence
-## Run all go per persistence unit tests
-test_pre_persistence: # generate_mocks
-	go test ./persistence/pre_persistence/...
-
 .PHONY: test_hotstuff
 ## Run all go unit tests related to hotstuff consensus
 test_hotstuff: # mockgen

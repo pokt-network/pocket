@@ -74,6 +74,14 @@ func Select(selector, address string, height int64, tableName string) string {
 		selector, tableName, address, height)
 }
 
+func SelectActors(actorSpecificParam string, height int64, tableName string) string {
+	return fmt.Sprintf(`
+			SELECT address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height
+			FROM %s WHERE height<=%d AND (height,address) IN (SELECT MAX(height),address from %s GROUP BY address)
+       `,
+		actorSpecificParam, tableName, height, tableName)
+}
+
 func SelectChains(selector, address string, height int64, actorTableName, chainsTableName string) string {
 	return fmt.Sprintf(`SELECT %s FROM %s WHERE address='%s' AND height=(%s);`,
 		selector, chainsTableName, address, Select(HeightCol, address, height, actorTableName))
@@ -111,7 +119,7 @@ func Insert(
 							  height=EXCLUDED.height`,
 		tableName, actorSpecificParam,
 		actor.Address, actor.PublicKey, actor.StakedTokens, actorSpecificParamValue,
-		actor.OutputAddress, actor.PausedHeight, actor.UnstakingHeight, height,
+		actor.OutputAddress, DefaultBigInt, DefaultBigInt, height,
 		constraintName,
 		actorSpecificParam, actorSpecificParam)
 

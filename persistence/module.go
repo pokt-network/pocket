@@ -28,7 +28,10 @@ func Create(c *config.Config) (modules.PersistenceModule, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewPersistenceModule(c.Persistence.PostgresUrl, c.Persistence.NodeSchema, db, nil), nil
+	pm := NewPersistenceModule(c.Persistence.PostgresUrl, c.Persistence.NodeSchema, db, nil)
+	// populate genesis state
+	pm.PopulateGenesisState(c.GenesisSource.GetState())
+	return pm, nil
 }
 
 func (p *persistenceModule) Start() error {
@@ -74,5 +77,5 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
 	return m.NewRWContext(height)
 	// TODO (Team) this can be completely separate from rw context.
-	// It should not use transactions rather access the db directly
+	// It should access the db directly rather than using transactions
 }

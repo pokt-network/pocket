@@ -317,7 +317,7 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 	ctrl := gomock.NewController(t)
 	utilityMock := modulesMock.NewMockUtilityModule(ctrl)
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
-	persistenceContextMock := modulesMock.NewMockPersistenceContext(ctrl)
+	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 
 	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
 	utilityMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()

@@ -22,9 +22,8 @@ type Config struct {
 	P2P       *P2PConfig       `json:"p2p"`
 	Consensus *ConsensusConfig `json:"consensus"`
 	// TECHDEBT(team): Consolidate `Persistence` and `PrePersistence`
-	PrePersistence *PrePersistenceConfig `json:"pre_persistence"`
-	Persistence    *PersistenceConfig    `json:"persistence"`
-	Utility        *UtilityConfig        `json:"utility"`
+	Persistence *PersistenceConfig `json:"persistence"`
+	Utility     *UtilityConfig     `json:"utility"`
 }
 
 type ConnectionType string
@@ -39,12 +38,6 @@ type Pre2PConfig struct {
 	ConsensusPort  uint32         `json:"consensus_port"`
 	UseRainTree    bool           `json:"use_raintree"`
 	ConnectionType ConnectionType `json:"connection_type"`
-}
-
-type PrePersistenceConfig struct {
-	Capacity        int `json:"capacity"`
-	MempoolMaxBytes int `json:"mempool_max_bytes"`
-	MempoolMaxTxs   int `json:"mempool_max_txs"`
 }
 
 type P2PConfig struct {

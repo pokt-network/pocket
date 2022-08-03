@@ -38,7 +38,6 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Shared Architecture](shared/README.md)
 - _Coming Soon: Consensus Architecture_
 - [Persistence Architecture](persistence/README.md)
-- _(Soon to be deprecated)_ [PrePersistence Architecture](persistence/pre_persistence/README.md)
 - [P2P Architecture](p2p/README.md)
 - [Utility Architecture](utility/doc/README.md)
 

@@ -29,6 +29,7 @@ var ( // TODO these are needed placeholders to pass validation checks. Until we 
 	DefaultServiceUrl        = "https://foo.bar"
 	DefaultStakeBig          = big.NewInt(1000000000000000)
 	DefaultStake             = types.BigIntToString(DefaultStakeBig)
+	DefaultMaxRelays         = "1000000000"
 	DefaultAccountBalanceBig = DefaultStakeBig
 	DefaultAccountBalance    = DefaultStake
 	DefaultStakeStatus       = int32(2)
@@ -93,6 +94,7 @@ func GenesisStateFromGenesisConfig(genesisConfig *GenesisConfig) (genesisState *
 			Status:       DefaultStakeStatus,
 			Chains:       DefaultChains,
 			StakedTokens: DefaultStake,
+			MaxRelays:    DefaultMaxRelays,
 		}
 		app.Address = pk.Address()
 		app.PublicKey = pk.PublicKey().Bytes()

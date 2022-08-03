@@ -15,9 +15,10 @@ type ProtocolActorSchema interface {
 	GetActorSpecificColName() string
 
 	/*** Read/Get Queries ***/
-
 	// Returns a query to retrieve all of a single Actor's attributes.
 	GetQuery(address string, height int64) string
+	// Returns all actors at that height
+	GetAllQuery(height int64) string
 	// Returns a query for the existence of an Actor given its address.
 	GetExistsQuery(address string, height int64) string
 	// Returns a query to retrieve data associated with all the apps ready to unstake.

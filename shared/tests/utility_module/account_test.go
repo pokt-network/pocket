@@ -2,9 +2,11 @@ package utility_module
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"github.com/pokt-network/pocket/persistence"
 	"math/big"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -26,6 +28,7 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	require.NoError(t, err)
 	expected := initialAmount.Add(initialAmount, addAmount)
 	require.True(t, afterAmount.Cmp(expected) == 0, fmt.Sprintf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
 }
 
 func TestUtilityContext_AddAccountAmountString(t *testing.T) {
@@ -40,6 +43,7 @@ func TestUtilityContext_AddAccountAmountString(t *testing.T) {
 	require.NoError(t, err)
 	expected := initialAmount.Add(initialAmount, addAmount)
 	require.True(t, afterAmount.Cmp(expected) == 0, fmt.Sprintf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount))
+	ctx.Context.Release()
 }
 
 func TestUtilityContext_AddPoolAmount(t *testing.T) {
@@ -53,6 +57,7 @@ func TestUtilityContext_AddPoolAmount(t *testing.T) {
 	require.NoError(t, err)
 	expected := initialAmount.Add(initialAmount, addAmount)
 	require.True(t, afterAmount.Cmp(expected) == 0, fmt.Sprintf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount))
+	ctx.Context.Release()
 }
 
 func TestUtilityContext_HandleMessageSend(t *testing.T) {
@@ -73,6 +78,7 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter).Cmp(sendAmount) == 0, fmt.Sprintf("unexpected sender balance"))
 	require.True(t, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore).Cmp(sendAmount) == 0, fmt.Sprintf("unexpected recipient balance"))
+	ctx.Context.Release()
 }
 
 func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
@@ -85,6 +91,7 @@ func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, len(candidates) == 1, fmt.Sprintf("wrong number of candidates, expected %d, got %d", 1, len(candidates)))
 	require.True(t, bytes.Equal(candidates[0], accs[0].Address), fmt.Sprintf("unexpected signer candidate"))
+	ctx.Context.Release()
 }
 
 func TestUtilityContext_InsertPool(t *testing.T) {
@@ -97,6 +104,7 @@ func TestUtilityContext_InsertPool(t *testing.T) {
 	require.NoError(t, err)
 	gotAmountString := types.BigIntToString(gotAmount)
 	require.True(t, amount == gotAmountString, fmt.Sprintf("unexpected amount, expected %s got %s", amount, gotAmountString))
+	ctx.Context.Release()
 }
 
 func TestUtilityContext_SetAccountAmount(t *testing.T) {
@@ -107,6 +115,7 @@ func TestUtilityContext_SetAccountAmount(t *testing.T) {
 	gotAmount, err := ctx.GetAccountAmount(addr)
 	require.NoError(t, err)
 	require.True(t, gotAmount.Cmp(amount) == 0, fmt.Sprintf("unexpected amounts: expected %v, got %v", amount, gotAmount))
+	ctx.Context.Release()
 }
 
 func TestUtilityContext_SetAccountWithAmountString(t *testing.T) {
@@ -118,6 +127,7 @@ func TestUtilityContext_SetAccountWithAmountString(t *testing.T) {
 	gotAmount, err := ctx.GetAccountAmount(addr)
 	require.NoError(t, err)
 	require.True(t, gotAmount.Cmp(amount) == 0, fmt.Sprintf("unexpected amounts: expected %v, got %v", amount, gotAmount))
+	ctx.Context.Release()
 }
 
 func TestUtilityContext_SetPoolAmount(t *testing.T) {
@@ -132,6 +142,7 @@ func TestUtilityContext_SetPoolAmount(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
 	require.True(t, expectedAfterAmount.Cmp(amount) == 0, fmt.Sprintf("unexpected pool amount; expected %v got %v", expectedAfterAmount, amount))
+	ctx.Context.Release()
 }
 
 func TestUtilityContext_SubPoolAmount(t *testing.T) {
@@ -147,6 +158,7 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
 	require.True(t, expected.Cmp(amount) == 0, fmt.Sprintf("unexpected pool amount; expected %v got %v", expected, amount))
+	ctx.Context.Release()
 }
 
 func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
@@ -162,16 +174,23 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
 	require.True(t, expected.Cmp(amount) == 0, fmt.Sprintf("unexpected acc amount; expected %v got %v", expected, amount))
+	ctx.Context.Release()
 }
 
 func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []*genesis.Account {
-	accs, err := (ctx.Context.PersistenceRWContext).(*persistence.PostgresContext).GetAllAccounts(0)
+	accs, err := (ctx.Context.PersistenceRWContext).(persistence.PostgresContext).GetAllAccounts(0)
+	sort.Slice(accs, func(i, j int) bool {
+		return hex.EncodeToString(accs[i].Address) < hex.EncodeToString(accs[j].Address)
+	})
 	require.NoError(t, err)
 	return accs
 }
 
 func GetAllTestingPools(t *testing.T, ctx utility.UtilityContext) []*genesis.Pool {
-	accs, err := (ctx.Context.PersistenceRWContext).(*persistence.PostgresContext).GetAllPools(0)
+	accs, err := (ctx.Context.PersistenceRWContext).(persistence.PostgresContext).GetAllPools(0)
+	sort.Slice(accs, func(i, j int) bool {
+		return accs[i].Name < accs[j].Name
+	})
 	require.NoError(t, err)
 	return accs
 }

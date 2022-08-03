@@ -1,8 +1,10 @@
 package persistence
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/jackc/pgx/v4"
 
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
@@ -10,10 +12,10 @@ import (
 
 // IMPROVE(team): Move this into a proto enum
 const (
-	UndefinedStakingStatus = iota
-	UnstakedStatus
-	UnstakingStatus
-	StakedStatus
+	UndefinedStakingStatus = 3
+	UnstakedStatus         = 0
+	UnstakingStatus        = 1
+	StakedStatus           = 2
 )
 
 func UnstakingHeightToStatus(unstakingHeight int64) int32 {
@@ -45,20 +47,32 @@ func (p *PostgresContext) GetActor(actorSchema schema.ProtocolActorSchema, addre
 	if err != nil {
 		return
 	}
-
-	if err = txn.QueryRow(ctx, actorSchema.GetQuery(hex.EncodeToString(address), height)).Scan(
-		&actor.Address, &actor.PublicKey, &actor.StakedTokens, &actor.ActorSpecificParam,
-		&actor.OutputAddress, &actor.PausedHeight, &actor.UnstakingHeight,
-		&height,
-	); err != nil {
+	actor, height, err = p.GetActorFromRow(txn.QueryRow(ctx, actorSchema.GetQuery(hex.EncodeToString(address), height)))
+	if err != nil {
 		return
 	}
 
+	return p.GetChainsForActor(ctx, txn, actorSchema, actor, height)
+}
+
+func (p *PostgresContext) GetActorFromRow(row pgx.Row) (actor schema.BaseActor, height int64, err error) {
+	err = row.Scan(
+		&actor.Address, &actor.PublicKey, &actor.StakedTokens, &actor.ActorSpecificParam,
+		&actor.OutputAddress, &actor.PausedHeight, &actor.UnstakingHeight,
+		&height)
+	return
+}
+
+func (p *PostgresContext) GetChainsForActor(
+	ctx context.Context,
+	txn pgx.Tx,
+	actorSchema schema.ProtocolActorSchema,
+	actor schema.BaseActor,
+	height int64) (a schema.BaseActor, err error) {
 	if actorSchema.GetChainsTableName() == "" {
 		return
 	}
-
-	rows, err := txn.Query(ctx, actorSchema.GetChainsQuery(hex.EncodeToString(address), height))
+	rows, err := txn.Query(ctx, actorSchema.GetChainsQuery(actor.Address, height))
 	if err != nil {
 		return
 	}
@@ -73,12 +87,11 @@ func (p *PostgresContext) GetActor(actorSchema schema.ProtocolActorSchema, addre
 			return
 		}
 		if chainAddr != actor.Address {
-			return actor, fmt.Errorf("unexpected address %s, expected %s when reading chains", chainAddr, address)
+			return actor, fmt.Errorf("unexpected address %s, expected %s when reading chains", chainAddr, actor.Address)
 		}
 		actor.Chains = append(actor.Chains, chainID)
 	}
-
-	return
+	return actor, nil
 }
 
 func (p *PostgresContext) InsertActor(actorSchema schema.ProtocolActorSchema, actor schema.BaseActor) error {
@@ -110,26 +123,21 @@ func (p *PostgresContext) UpdateActor(actorSchema schema.ProtocolActorSchema, ac
 		return err
 	}
 
-	tx, err := txn.Begin(ctx)
-	if err != nil {
-		return err
-	}
-
-	if _, err = tx.Exec(ctx, actorSchema.UpdateQuery(actor.Address, actor.StakedTokens, actor.ActorSpecificParam, height)); err != nil {
+	if _, err = txn.Exec(ctx, actorSchema.UpdateQuery(actor.Address, actor.StakedTokens, actor.ActorSpecificParam, height)); err != nil {
 		return err
 	}
 
 	chainsTableName := actorSchema.GetChainsTableName()
 	if chainsTableName != "" && actor.Chains != nil {
-		if _, err = tx.Exec(ctx, schema.NullifyChains(actor.Address, height, chainsTableName)); err != nil {
+		if _, err = txn.Exec(ctx, schema.NullifyChains(actor.Address, height, chainsTableName)); err != nil {
 			return err
 		}
-		if _, err = tx.Exec(ctx, actorSchema.UpdateChainsQuery(actor.Address, actor.Chains, height)); err != nil {
+		if _, err = txn.Exec(ctx, actorSchema.UpdateChainsQuery(actor.Address, actor.Chains, height)); err != nil {
 			return err
 		}
 	}
 
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema schema.ProtocolActorSchema, height int64) (actors []*types.UnstakingActor, err error) {

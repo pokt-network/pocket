@@ -21,8 +21,16 @@ func (p PostgresContext) getAccountAmountStr(address string, height int64) (amou
 	if err != nil {
 		return
 	}
-	if err = txn.QueryRow(ctx, schema.GetAccountAmountQuery(address, height)).Scan(&amount); err != nil {
-		return
+	amount = "0"
+	rows, err := txn.Query(ctx, schema.GetAccountAmountQuery(address, height))
+	if err != nil {
+		return "", err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err = rows.Scan(&amount); err != nil {
+			return
+		}
 	}
 	return
 }
@@ -52,15 +60,11 @@ func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	if err != nil {
 		return err
 	}
-	tx, err := txn.Begin(ctx)
-	if err != nil {
-		return err
-	}
 	// DISCUSS(team): Do we want to panic if `amount < 0` here?
-	if _, err = tx.Exec(ctx, schema.InsertAccountAmountQuery(hex.EncodeToString(address), amount, height)); err != nil {
+	if _, err = txn.Exec(ctx, schema.InsertAccountAmountQuery(hex.EncodeToString(address), amount, height)); err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (p *PostgresContext) operationAccountAmount(address []byte, deltaAmount string, op func(*big.Int, *big.Int) error) error {
@@ -78,14 +82,10 @@ func (p PostgresContext) InsertPool(name string, address []byte, amount string) 
 	if err != nil {
 		return err
 	}
-	tx, err := txn.Begin(ctx)
-	if err != nil {
+	if _, err = txn.Exec(ctx, schema.InsertPoolAmountQuery(name, amount, height)); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.InsertPoolAmountQuery(name, amount, height)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (p PostgresContext) GetPoolAmount(name string, height int64) (amount string, err error) {
@@ -93,8 +93,16 @@ func (p PostgresContext) GetPoolAmount(name string, height int64) (amount string
 	if err != nil {
 		return
 	}
-	if err = txn.QueryRow(ctx, schema.GetPoolAmountQuery(name, height)).Scan(&amount); err != nil {
-		return
+	amount = "0"
+	rows, err := txn.Query(ctx, schema.GetPoolAmountQuery(name, height))
+	if err != nil {
+		return "", err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		if err = rows.Scan(&amount); err != nil {
+			return
+		}
 	}
 	return
 }
@@ -125,14 +133,10 @@ func (p PostgresContext) SetPoolAmount(name string, amount string) error {
 	if err != nil {
 		return err
 	}
-	tx, err := txn.Begin(ctx)
-	if err != nil {
+	if _, err = txn.Exec(ctx, schema.InsertPoolAmountQuery(name, amount, height)); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.InsertPoolAmountQuery(name, amount, height)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (p *PostgresContext) operationPoolAmount(name string, amount string, op func(*big.Int, *big.Int) error) error {
@@ -166,12 +170,8 @@ func (p *PostgresContext) operationPoolOrAccAmount(name, amount string,
 	if err := op(originalAmountBig, amountBig); err != nil {
 		return err
 	}
-	tx, err := txn.Begin(ctx)
-	if err != nil {
+	if _, err = txn.Exec(ctx, insert(name, shared.BigIntToString(originalAmountBig), height)); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, insert(name, shared.BigIntToString(originalAmountBig), height)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+	return nil
 }

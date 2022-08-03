@@ -49,7 +49,7 @@ type PersistenceWriteContext interface {
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error
 	SubtractAccountAmount(address []byte, amount string) error
-	SetAccountAmount(address []byte, amount string) error // TECHDEBT(team): Delete this function
+	SetAccountAmount(address []byte, amount string) error // NOTE: same as (insert)
 
 	// App Operations
 	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error

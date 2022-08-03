@@ -31,11 +31,6 @@
       "debug_time_between_steps_msec": 1000
     }
   },
-  "pre_persistence": {
-    "capacity": 99999,
-    "mempool_max_bytes": 99999,
-    "mempool_max_txs": 99999
-  },
   "persistence": {
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
     "schema": "node4"
