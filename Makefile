@@ -71,7 +71,7 @@ go_doc:
 	}
 
 .PHONY: go_protoc-go-inject-tag
-## Run `go staticcheck` on all files in the current project
+### Checks if protoc-go-inject-tag is installed
 go_protoc-go-inject-tag:
 	{ \
 	if ! command -v protoc-go-inject-tag >/dev/null; then \
