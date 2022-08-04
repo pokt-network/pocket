@@ -11,14 +11,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// message.go contains ValidateBasic() and SetSigner logic for all message types
-// ValidateBasic() is a 'stateless' validation check that should encapsulate all
-// validations possible before even checking the state storage layer
+/*
+`message.go`` contains `ValidateBasic` and `SetSigner`` logic for all message types.
 
-const (
-	UnstakingStatus = 1
-	StakedStatus    = 2
-)
+`ValidateBasic` is a **stateless** validation check that should encapsulate all
+validations possible before even checking the state storage layer.
+*/
 
 const (
 	MillionInt       = 1000000
@@ -228,6 +226,9 @@ func ValidateServiceUrl(actorType ActorType, uri string) types.Error {
 	return nil
 }
 
+// CLEANUP: Figure out where these other types should be defined.
+//          It's a bit weird that they are hidden at the bottom of the file.
+
 const (
 	RelayChainLength = 4 // pre-determined length that strikes a balance between combination possibilities & storage
 )
@@ -246,6 +247,13 @@ func (rc *RelayChain) Validate() types.Error {
 	return nil
 }
 
+type MessageStaker interface {
+	GetActorType() ActorType
+	GetAmount() string
+	GetChains() []string
+	GetServiceUrl() string
+}
+
 func ValidateStaker(msg MessageStaker) types.Error {
 	if err := ValidateActorType(msg.GetActorType()); err != nil {
 		return err
@@ -257,11 +265,4 @@ func ValidateStaker(msg MessageStaker) types.Error {
 		return err
 	}
 	return ValidateServiceUrl(msg.GetActorType(), msg.GetServiceUrl())
-}
-
-type MessageStaker interface {
-	GetActorType() ActorType
-	GetAmount() string
-	GetChains() []string
-	GetServiceUrl() string
 }

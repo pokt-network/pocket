@@ -1,4 +1,4 @@
-package pre2p
+package p2p
 
 import (
 	"crypto/ed25519"
@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	typesPre2P "github.com/pokt-network/pocket/p2p/pre2p/types"
-	mocksPre2P "github.com/pokt-network/pocket/p2p/pre2p/types/mocks"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -191,7 +191,7 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 
 	// Network initialization
 	consensusMock := prepareConsensusMock(t, genesisState)
-	connMocks := make(map[string]typesPre2P.Transport)
+	connMocks := make(map[string]typesP2P.Transport)
 	busMocks := make(map[string]modules.Bus)
 	for valId, expectedCall := range testCommConfig {
 		connMocks[valId] = prepareConnMock(t, expectedCall.numNetworkReads, expectedCall.numNetworkWrites)
@@ -308,10 +308,10 @@ func prepareConsensusMock(t *testing.T, genesisState *genesis.GenesisState) *mod
 // on the number of expected messages propagated.
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
 //                         expectation with RainTree by comparing with Telemetry after updating specs.
-func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesPre2P.Transport {
+func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesP2P.Transport {
 	testChannel := make(chan []byte, testChannelSize)
 	ctrl := gomock.NewController(t)
-	connMock := mocksPre2P.NewMockTransport(ctrl)
+	connMock := mocksP2P.NewMockTransport(ctrl)
 
 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
 		data := <-testChannel
@@ -354,12 +354,11 @@ func createConfigs(t *testing.T, numValidators int) (configs []*config.Config, g
 
 			PrivateKey: valKeys[i].(cryptoPocket.Ed25519PrivateKey),
 
-			Pre2P: &config.Pre2PConfig{
+			P2P: &config.P2PConfig{
 				ConsensusPort:  8080,
 				UseRainTree:    true,
 				ConnectionType: config.EmptyConnection,
 			},
-			P2P:         &config.P2PConfig{},
 			Consensus:   &config.ConsensusConfig{},
 			Persistence: &config.PersistenceConfig{},
 			Utility:     &config.UtilityConfig{},

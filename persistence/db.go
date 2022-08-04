@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -23,32 +24,32 @@ func init() {
 
 var _ modules.PersistenceRWContext = &PostgresContext{}
 
+// TODO: These are only externalized for testing purposes, so they should be made private and
+//       it is trivial to create a helper to initial a context with some values.
 type PostgresContext struct {
 	Height int64
 	DB     PostgresDB
 }
 
 type PostgresDB struct {
-	Tx pgx.Tx
+	Tx         pgx.Tx
+	Blockstore kvstore.KVStore
 }
 
 func (pg *PostgresDB) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
-	conn, err := pg.GetTxn()
-	if err != nil {
-		return nil, nil, err
-	}
-	ctx, err := pg.GetContext()
-	if err != nil {
-		return nil, nil, err
-	}
-	return ctx, conn, nil
+	tx, err := pg.GetTxn()
+	// IMPROVE: Depending on how the use of `PostgresContext` evolves, we may be able to get
+	// access to these directly via the postgres module.
+	//PostgresDB *pgx.Conn
+	//BlockStore kvstore.KVStore
+	return context.TODO(), tx, err
 }
 
 func (pg *PostgresDB) GetTxn() (pgx.Tx, error) {
 	return pg.Tx, nil
 }
 
-func (pg *PostgresDB) GetContext() (context.Context, error) {
+func (pg *PostgresContext) GetContext() (context.Context, error) {
 	return context.TODO(), nil
 }
 
@@ -60,7 +61,7 @@ var protocolActorSchemas = []schema.ProtocolActorSchema{
 }
 
 // TODO(pokt-network/pocket/issues/77): Enable proper up and down migrations
-// TODO(team): Split `connect` and `initialize` into two separate compnents
+// TODO: Split `connect` and `initialize` into two separate compnents
 func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
 	ctx := context.TODO()
 
@@ -80,7 +81,7 @@ func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn,
 		return nil, err
 	}
 
-	if err := InitializeAllTables(ctx, db); err != nil {
+	if err = initializeAllTables(ctx, db); err != nil {
 		return nil, fmt.Errorf("unable to initialize tables: %v", err)
 	}
 
@@ -88,18 +89,22 @@ func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn,
 
 }
 
-// TODO(pokt-network/pocket/issues/77): Delete all the `InitializeAllTables` calls once proper migrations are implemented.
-func InitializeAllTables(ctx context.Context, db *pgx.Conn) error {
-	if err := InitializeAccountTables(ctx, db); err != nil {
+// TODO(pokt-network/pocket/issues/77): Delete all the `initializeAllTables` calls once proper migrations are implemented.
+func initializeAllTables(ctx context.Context, db *pgx.Conn) error {
+	if err := initializeAccountTables(ctx, db); err != nil {
 		return err
 	}
 
-	if err := InitializeGovTables(ctx, db); err != nil {
+	if err := initializeGovTables(ctx, db); err != nil {
+		return err
+	}
+
+	if err := initializeBlockTables(ctx, db); err != nil {
 		return err
 	}
 
 	for _, actor := range protocolActorSchemas {
-		if err := InitializeProtocolActorTables(ctx, db, actor); err != nil {
+		if err := initializeProtocolActorTables(ctx, db, actor); err != nil {
 			return err
 		}
 	}
@@ -107,7 +112,7 @@ func InitializeAllTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func InitializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor schema.ProtocolActorSchema) error {
+func initializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor schema.ProtocolActorSchema) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, actor.GetTableName(), actor.GetTableSchema())); err != nil {
 		return err
 	}
@@ -119,7 +124,7 @@ func InitializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor sche
 	return nil
 }
 
-func InitializeAccountTables(ctx context.Context, db *pgx.Conn) error {
+func initializeAccountTables(ctx context.Context, db *pgx.Conn) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.AccountTableName, schema.AccountTableSchema)); err != nil {
 		return err
 	}
@@ -129,8 +134,16 @@ func InitializeAccountTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func InitializeGovTables(ctx context.Context, db *pgx.Conn) error {
+func initializeGovTables(ctx context.Context, db *pgx.Conn) error {
 	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.ParamsTableName, schema.ParamsTableSchema))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
+	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.BlockTableName, schema.BlockTableSchema))
 	if err != nil {
 		return err
 	}
@@ -160,7 +173,13 @@ func (p PostgresContext) ClearAllDebug() error {
 		}
 	}
 
-	tx.Exec(ctx, schema.ClearAllGovQuery())
+	if _, err = tx.Exec(ctx, schema.ClearAllGovQuery()); err != nil {
+		return err
+	}
+
+	if _, err = tx.Exec(ctx, schema.ClearAllBlocksQuery()); err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -43,7 +43,7 @@ var (
 // See https://github.com/ory/dockertest as reference for the template of this code
 // Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
 func TestMain(m *testing.M) {
-	pool, resource := sharedTest.SetupPostgresDocker(m)
+	pool, resource := sharedTest.SetupPostgresDocker()
 	PersistenceModule = sharedTest.PersistenceModule
 	PostgresDB = sharedTest.PostgresDB
 	m.Run()

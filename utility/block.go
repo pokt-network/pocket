@@ -7,12 +7,14 @@ import (
 	"math/big"
 )
 
-// This 'block' file contains all the lifecycle block operations.
-// The ApplyBlock function is the 'main' operation that executes a 'block' object against the state
-// Pocket Network adpots a Tendermint-like lifecycle of BeginBlock -> DeliverTx -> EndBlock in that order
-// Like the name suggests, BeginBlock is an autonomous state operation that executes at the beginning of every block
-// DeliverTx individually applys each transaction against the state and rolls it back (not yet implemented) if fails.
-// like BeginBlock, EndBlock is an autonomous state oepration that executes at the end of every block.
+/*
+This 'block' file contains all the lifecycle block operations.
+The ApplyBlock function is the 'main' operation that executes a 'block' object against the state
+Pocket Network adpots a Tendermint-like lifecycle of BeginBlock -> DeliverTx -> EndBlock in that order
+Like the name suggests, BeginBlock is an autonomous state operation that executes at the beginning of every block
+DeliverTx individually applys each transaction against the state and rolls it back (not yet implemented) if fails.
+like BeginBlock, EndBlock is an autonomous state oepration that executes at the end of every block.
+*/
 
 func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
 	u.LatestHeight = latestHeight
@@ -21,19 +23,25 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 		return nil, err
 	}
 	// deliver txs lifecycle phase
-	for _, transaction := range transactions {
-		tx, err := typesUtil.TransactionFromBytes(transaction)
+	for _, transactionProtoBytes := range transactions {
+		tx, err := typesUtil.TransactionFromBytes(transactionProtoBytes)
 		if err != nil {
 			return nil, err
 		}
 		if err := tx.ValidateBasic(); err != nil {
 			return nil, err
 		}
+		// Validate and apply the transaction to the Postgres database
 		if err := u.ApplyTransaction(tx); err != nil {
 			return nil, err
 		}
+		if err := u.GetPersistenceContext().StoreTransaction(transactionProtoBytes); err != nil {
+			return nil, err
+		}
+
 		// TODO: if found, remove transaction from mempool
-		// if err := u.Mempool.DeleteTransaction(tx); err != nil {
+		// DISCUSS: What if the context is rolled back or cancelled. Do we add it back to the mempool?
+		// if err := u.Mempool.DeleteTransaction(transaction); err != nil {
 		// 	return nil, err
 		// }
 	}
@@ -131,22 +139,19 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err types.Error) {
 	if err != nil {
 		return err
 	}
-	for _, actorType := range actorTypes {
+	for _, actorType := range typesUtil.ActorTypes {
 		var readyToUnstake []*types.UnstakingActor
-		var poolName string
+		poolName := actorType.GetActorPoolName()
 		switch actorType {
 		case typesUtil.ActorType_App:
 			readyToUnstake, er = store.GetAppsReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
-			poolName = typesGenesis.AppStakePoolName
 		case typesUtil.ActorType_Fish:
 			readyToUnstake, er = store.GetFishermenReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
-			poolName = typesGenesis.FishermanStakePoolName
 		case typesUtil.ActorType_Node:
 			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
-			poolName = typesGenesis.ServiceNodeStakePoolName
 		case typesUtil.ActorType_Val:
 			readyToUnstake, er = store.GetValidatorsReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
-			poolName = typesGenesis.ValidatorStakePoolName
+
 		}
 		if er != nil {
 			return types.ErrGetReadyToUnstake(er)
@@ -232,10 +237,10 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) types.Error {
 	amountToProposerFloat.Quo(amountToProposerFloat, big.NewFloat(100))
 	amountToProposer, _ := amountToProposerFloat.Int(nil)
 	amountToDAO := feesAndRewardsCollected.Sub(feesAndRewardsCollected, amountToProposer)
-	if err := u.AddAccountAmount(proposer, amountToProposer); err != nil {
+	if err = u.AddAccountAmount(proposer, amountToProposer); err != nil {
 		return err
 	}
-	if err := u.AddPoolAmount(typesGenesis.DAOPoolName, amountToDAO); err != nil {
+	if err = u.AddPoolAmount(typesGenesis.DAOPoolName, amountToDAO); err != nil {
 		return err
 	}
 	return nil
@@ -269,5 +274,29 @@ func (u *UtilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks i
 	if er != nil {
 		return types.ErrSetMissedBlocks(er)
 	}
+	return nil
+}
+
+func (u *UtilityContext) StoreBlock(blockProtoBytes []byte) error {
+	store := u.Store()
+
+	// Store in KV Store
+	if err := store.StoreBlock(blockProtoBytes); err != nil {
+		return err
+	}
+
+	// Store in SQL Store
+	// OPTIMIZE: Ideally we'd pass in the block proto struct to utility so we don't
+	//           have to unmarshal it here, but that's a major design decision for the interfaces.
+	codec := u.Codec()
+	block := &types.Block{}
+	if err := codec.Unmarshal(blockProtoBytes, block); err != nil {
+		return types.ErrProtoUnmarshal(err)
+	}
+	header := block.BlockHeader
+	if err := store.InsertBlock(uint64(header.Height), header.Hash, header.ProposerAddress, header.QuorumCertificate); err != nil {
+		return err
+	}
+
 	return nil
 }

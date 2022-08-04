@@ -3,15 +3,9 @@ package utility;
 
 option go_package = "github.com/pokt-network/pocket/utility/types";
 
+import "actor.proto";
 import "vote.proto";
 import "google/protobuf/any.proto";
-
-enum ActorType {
-  App = 0;
-  Node = 1;
-  Fish = 2;
-  Val = 3;
-}
 
 message MessageSend {
   bytes from_address = 1;
@@ -24,7 +18,7 @@ message MessageStake {
   bytes public_key = 1;
   repeated string chains = 2;
   string amount = 3;
-  optional string service_url = 4;
+  string service_url = 4;
   bytes output_address = 5;
   optional bytes signer = 6;
   ActorType actor_type = 7;
@@ -34,7 +28,7 @@ message MessageEditStake {
   bytes address = 1;
   repeated string chains = 2;
   string amount = 3;
-  optional string service_url = 4;
+  string service_url = 4;
   optional bytes signer = 5;
   ActorType actor_type = 6;
 }

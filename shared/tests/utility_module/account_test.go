@@ -20,114 +20,150 @@ import (
 func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	acc := GetAllTestingAccounts(t, ctx)[0]
+
 	initialAmount, err := types.StringToBigInt(acc.Amount)
 	require.NoError(t, err)
+
 	addAmount := big.NewInt(1)
 	require.NoError(t, ctx.AddAccountAmount(acc.Address, addAmount), "add account amount")
 	afterAmount, err := ctx.GetAccountAmount(acc.Address)
 	require.NoError(t, err)
+
 	expected := initialAmount.Add(initialAmount, addAmount)
 	require.True(t, afterAmount.Cmp(expected) == 0, fmt.Sprintf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount))
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	CleanupTest()         // TODO (team) need a golang specific solution for teardown
 }
 
 func TestUtilityContext_AddAccountAmountString(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	acc := GetAllTestingAccounts(t, ctx)[0]
+
 	initialAmount, err := types.StringToBigInt(acc.Amount)
 	require.NoError(t, err)
+
 	addAmount := big.NewInt(1)
 	addAmountString := types.BigIntToString(addAmount)
 	require.NoError(t, ctx.AddAccountAmountString(acc.Address, addAmountString), "add account amount string")
 	afterAmount, err := ctx.GetAccountAmount(acc.Address)
 	require.NoError(t, err)
+
 	expected := initialAmount.Add(initialAmount, addAmount)
 	require.True(t, afterAmount.Cmp(expected) == 0, fmt.Sprintf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount))
-	ctx.Context.Release()
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	CleanupTest()
 }
 
 func TestUtilityContext_AddPoolAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	pool := GetAllTestingPools(t, ctx)[0]
+
 	initialAmount, err := types.StringToBigInt(pool.Account.Amount)
 	require.NoError(t, err)
+
 	addAmount := big.NewInt(1)
 	require.NoError(t, ctx.AddPoolAmount(pool.Name, addAmount), "add pool amount")
 	afterAmount, err := ctx.GetPoolAmount(pool.Name)
 	require.NoError(t, err)
+
 	expected := initialAmount.Add(initialAmount, addAmount)
-	require.True(t, afterAmount.Cmp(expected) == 0, fmt.Sprintf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount))
-	ctx.Context.Release()
+	require.Equal(t, afterAmount, expected, "amounts are not equal")
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	CleanupTest()
 }
 
 func TestUtilityContext_HandleMessageSend(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	accs := GetAllTestingAccounts(t, ctx)
+
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := types.BigIntToString(sendAmount)
 	senderBalanceBefore, err := types.StringToBigInt(accs[0].Amount)
 	require.NoError(t, err)
+
 	recipientBalanceBefore, err := types.StringToBigInt(accs[1].Amount)
 	require.NoError(t, err)
+
 	msg := NewTestingSendMessage(t, accs[0].Address, accs[1].Address, sendAmountString)
-	require.NoError(t, ctx.HandleMessageSend(&msg), "handle message send")
+	err = ctx.HandleMessageSend(&msg)
+	require.NoError(t, err, "handle message send")
+
 	accs = GetAllTestingAccounts(t, ctx)
 	senderBalanceAfter, err := types.StringToBigInt(accs[0].Amount)
 	require.NoError(t, err)
+
 	recipientBalanceAfter, err := types.StringToBigInt(accs[1].Amount)
 	require.NoError(t, err)
 	require.True(t, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter).Cmp(sendAmount) == 0, fmt.Sprintf("unexpected sender balance"))
 	require.True(t, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore).Cmp(sendAmount) == 0, fmt.Sprintf("unexpected recipient balance"))
-	ctx.Context.Release()
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	CleanupTest()
 }
 
 func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	accs := GetAllTestingAccounts(t, ctx)
+
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := types.BigIntToString(sendAmount)
+
 	msg := NewTestingSendMessage(t, accs[0].Address, accs[1].Address, sendAmountString)
 	candidates, err := ctx.GetMessageSendSignerCandidates(&msg)
 	require.NoError(t, err)
 	require.True(t, len(candidates) == 1, fmt.Sprintf("wrong number of candidates, expected %d, got %d", 1, len(candidates)))
 	require.True(t, bytes.Equal(candidates[0], accs[0].Address), fmt.Sprintf("unexpected signer candidate"))
-	ctx.Context.Release()
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	CleanupTest()
 }
 
 func TestUtilityContext_InsertPool(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	testPoolName := "TEST_POOL"
-	addr, _ := crypto.GenerateAddress()
+
+	addr, err := crypto.GenerateAddress()
+	require.NoError(t, err)
+
 	amount := types.BigIntToString(big.NewInt(1000))
-	require.NoError(t, ctx.InsertPool(testPoolName, addr, amount), "insert pool")
+	err = ctx.InsertPool(testPoolName, addr, amount)
+	require.NoError(t, err, "insert pool")
 	gotAmount, err := ctx.GetPoolAmount(testPoolName)
 	require.NoError(t, err)
+
 	gotAmountString := types.BigIntToString(gotAmount)
 	require.True(t, amount == gotAmountString, fmt.Sprintf("unexpected amount, expected %s got %s", amount, gotAmountString))
-	ctx.Context.Release()
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	CleanupTest()
 }
 
 func TestUtilityContext_SetAccountAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	addr, _ := crypto.GenerateAddress()
+
+	addr, err := crypto.GenerateAddress()
+	require.NoError(t, err)
+
 	amount := big.NewInt(100)
 	require.NoError(t, ctx.SetAccountAmount(addr, amount), "set account amount")
 	gotAmount, err := ctx.GetAccountAmount(addr)
 	require.NoError(t, err)
 	require.True(t, gotAmount.Cmp(amount) == 0, fmt.Sprintf("unexpected amounts: expected %v, got %v", amount, gotAmount))
-	ctx.Context.Release()
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	CleanupTest()
 }
 
 func TestUtilityContext_SetAccountWithAmountString(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	addr, _ := crypto.GenerateAddress()
+
+	addr, err := crypto.GenerateAddress()
+	require.NoError(t, err)
+
 	amount := big.NewInt(100)
 	amountString := types.BigIntToString(amount)
 	require.NoError(t, ctx.SetAccountWithAmountString(addr, amountString), "set account amount string")
 	gotAmount, err := ctx.GetAccountAmount(addr)
 	require.NoError(t, err)
 	require.True(t, gotAmount.Cmp(amount) == 0, fmt.Sprintf("unexpected amounts: expected %v, got %v", amount, gotAmount))
-	ctx.Context.Release()
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	CleanupTest()
 }
 
 func TestUtilityContext_SetPoolAmount(t *testing.T) {
@@ -142,7 +178,8 @@ func TestUtilityContext_SetPoolAmount(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
 	require.True(t, expectedAfterAmount.Cmp(amount) == 0, fmt.Sprintf("unexpected pool amount; expected %v got %v", expectedAfterAmount, amount))
-	ctx.Context.Release()
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	CleanupTest()
 }
 
 func TestUtilityContext_SubPoolAmount(t *testing.T) {
@@ -158,15 +195,18 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
 	require.True(t, expected.Cmp(amount) == 0, fmt.Sprintf("unexpected pool amount; expected %v got %v", expected, amount))
-	ctx.Context.Release()
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	CleanupTest()
 }
 
 func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	acc := GetAllTestingAccounts(t, ctx)[0]
+
 	beforeAmount := acc.Amount
 	beforeAmountBig, err := types.StringToBigInt(beforeAmount)
 	require.NoError(t, err)
+
 	subAmountBig := big.NewInt(100)
 	require.NoError(t, ctx.SubtractAccountAmount(acc.Address, subAmountBig), "sub account amount")
 	amount, err := ctx.GetAccountAmount(acc.Address)
@@ -174,7 +214,8 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
 	require.True(t, expected.Cmp(amount) == 0, fmt.Sprintf("unexpected acc amount; expected %v got %v", expected, amount))
-	ctx.Context.Release()
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	CleanupTest()
 }
 
 func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []*genesis.Account {

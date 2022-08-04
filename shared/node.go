@@ -1,14 +1,15 @@
 package shared
 
 import (
-	"github.com/pokt-network/pocket/p2p/pre2p"
+	"log"
+
+	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	"log"
 
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/shared/types"
@@ -25,20 +26,12 @@ type Node struct {
 }
 
 func Create(cfg *config.Config) (n *Node, err error) {
-	// TODO(drewsky): The module is initialized to run background processes during development
-	// to make sure it's part of the node's lifecycle, but is not referenced YET byt the app specific
-	// bus.
-	if _, err := persistence.Create(cfg); err != nil {
-		return nil, err
-	}
-
 	persistenceMod, err := persistence.Create(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO(derrandz): Deprecate `p2p` and replace `pre2p` into its place
-	pre2pMod, err := pre2p.Create(cfg)
+	p2pMod, err := p2p.Create(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +46,7 @@ func Create(cfg *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(persistenceMod, pre2pMod, utilityMod, consensusMod)
+	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +58,7 @@ func Create(cfg *config.Config) (n *Node, err error) {
 }
 
 func (node *Node) Start() error {
-	log.Println("Starting pocket node...")
+	log.Println("About to start pocket node modules...")
 
 	// IMPORTANT: Order of module startup here matters
 
@@ -88,6 +81,8 @@ func (node *Node) Start() error {
 	// The first event signaling that the node has started
 	signalNodeStartedEvent := &types.PocketEvent{Topic: types.PocketTopic_POCKET_NODE_TOPIC, Data: nil}
 	node.GetBus().PublishEventToBus(signalNodeStartedEvent)
+
+	log.Println("About to start pocket node main loop...")
 
 	// While loop lasting throughout the entire lifecycle of the node to handle asynchronous events
 	for {
@@ -143,6 +138,8 @@ func (node *Node) handleDebugEvent(anyMessage *anypb.Any) error {
 		fallthrough
 	case types.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
 		return node.GetBus().GetConsensusModule().HandleDebugMessage(&debugMessage)
+	case types.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
+		return node.GetBus().GetPersistenceModule().HandleDebugMessage(&debugMessage)
 	default:
 		log.Printf("Debug message: %s \n", debugMessage.Message)
 	}

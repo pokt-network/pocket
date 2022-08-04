@@ -199,7 +199,7 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []*genesis.Service
 	rows.Close()
 	for _, actor := range actors {
 		var ser *genesis.ServiceNode
-		actor, err = p.GetChainsForActor(ctx, txn, schema.ApplicationActor, actor, height)
+		actor, err = p.GetChainsForActor(ctx, txn, schema.ServiceNodeActor, actor, height)
 		if err != nil {
 			return
 		}

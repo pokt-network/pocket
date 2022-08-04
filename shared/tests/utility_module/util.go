@@ -34,7 +34,7 @@ var PostgresDB *persistence.PostgresDB
 var PersistenceModule modules.PersistenceModule
 var databaseUrl string
 
-func SetupPostgresDocker(_ *testing.M) (*dockertest.Pool, *dockertest.Resource) {
+func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource) {
 	opts := dockertest.RunOptions{
 		Repository: "postgres",
 		Tag:        "12.3",
@@ -86,7 +86,11 @@ func SetupPostgresDocker(_ *testing.M) (*dockertest.Pool, *dockertest.Resource) 
 			log.Println(err.Error())
 			return err
 		}
-		PersistenceModule = persistence.NewPersistenceModule(databaseUrl, sql_schema, conn, nil)
+		PersistenceModule, err = persistence.NewPersistenceModule(databaseUrl, "", sql_schema, conn, nil)
+		if err != nil {
+			log.Println(err.Error())
+			return err
+		}
 		return nil
 	}); err != nil {
 		log.Fatalf("could not connect to docker: %s", err.Error())
@@ -95,15 +99,14 @@ func SetupPostgresDocker(_ *testing.M) (*dockertest.Pool, *dockertest.Resource) 
 }
 
 func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *dockertest.Resource) {
-	defer func() {
-		ctx, _ := PostgresDB.GetContext()
-		PostgresDB.Tx.Rollback(ctx)
-		PostgresDB.Tx = nil
-		ctx.Done()
-	}()
 	// You can't defer this because `os.Exit`` doesn't care for defer
 	if err := pool.Purge(resource); err != nil {
 		log.Fatalf("could not purge resource: %s", err)
 	}
 	os.Exit(0)
+}
+
+func CleanupTest() {
+	PostgresDB.Tx.Rollback(context.TODO())
+	PersistenceModule.Stop()
 }

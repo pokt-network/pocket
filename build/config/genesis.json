@@ -111,5 +111,7 @@
   "fisherman": [],
   "service_nodes": [],
   "apps": [],
-  "params": {}
+  "params": {
+    "validator_maximum_missed_blocks": 32
+  }
 }

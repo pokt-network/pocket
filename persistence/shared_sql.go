@@ -70,11 +70,11 @@ func (p *PostgresContext) GetChainsForActor(
 	actor schema.BaseActor,
 	height int64) (a schema.BaseActor, err error) {
 	if actorSchema.GetChainsTableName() == "" {
-		return
+		return actor, nil
 	}
 	rows, err := txn.Query(ctx, actorSchema.GetChainsQuery(actor.Address, height))
 	if err != nil {
-		return
+		return actor, err
 	}
 	defer rows.Close()
 

@@ -5,6 +5,7 @@ import (
 	"github.com/jackc/pgx/v4"
 	"log"
 
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -17,10 +18,28 @@ type persistenceModule struct {
 	nodeSchema  string
 	db          *pgx.Conn
 	bus         modules.Bus
+	// INVESTIGATE: We may need to create a custom `BlockStore` package in the future.
+	blockStore kvstore.KVStore
 }
 
-func NewPersistenceModule(postgresURL string, nodeSchema string, db *pgx.Conn, bus modules.Bus) *persistenceModule {
-	return &persistenceModule{postgresURL: postgresURL, nodeSchema: nodeSchema, db: db, bus: bus}
+func NewPersistenceModule(postgresURL, blockStorePath string, nodeSchema string, db *pgx.Conn, bus modules.Bus) (*persistenceModule, error) {
+	var blockStore kvstore.KVStore
+	if blockStorePath == "" {
+		blockStore = kvstore.NewMemKVStore()
+	} else {
+		var err error
+		blockStore, err = kvstore.NewKVStore(blockStorePath)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &persistenceModule{
+		postgresURL: postgresURL,
+		nodeSchema:  nodeSchema,
+		db:          db,
+		bus:         bus,
+		blockStore:  blockStore,
+	}, nil
 }
 
 func Create(c *config.Config) (modules.PersistenceModule, error) {
@@ -28,7 +47,10 @@ func Create(c *config.Config) (modules.PersistenceModule, error) {
 	if err != nil {
 		return nil, err
 	}
-	pm := NewPersistenceModule(c.Persistence.PostgresUrl, c.Persistence.NodeSchema, db, nil)
+	pm, err := NewPersistenceModule(c.Persistence.PostgresUrl, c.Persistence.BlockStorePath, c.Persistence.NodeSchema, db, nil)
+	if err != nil {
+		return nil, err
+	}
 	// populate genesis state
 	pm.PopulateGenesisState(c.GenesisSource.GetState())
 	return pm, nil
@@ -40,7 +62,8 @@ func (p *persistenceModule) Start() error {
 }
 
 func (p *persistenceModule) Stop() error {
-	log.Println("Stopping persistence module...")
+	p.blockStore.Stop()
+	p.db.Close(context.TODO())
 	return nil
 }
 
@@ -68,9 +91,13 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	if err != nil {
 		return nil, err
 	}
+
 	return PostgresContext{
 		Height: height,
-		DB:     PostgresDB{tx},
+		DB: PostgresDB{
+			Tx:         tx,
+			Blockstore: m.blockStore,
+		},
 	}, nil
 }
 
@@ -78,4 +105,8 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	return m.NewRWContext(height)
 	// TODO (Team) this can be completely separate from rw context.
 	// It should access the db directly rather than using transactions
+}
+
+func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
+	return m.blockStore
 }

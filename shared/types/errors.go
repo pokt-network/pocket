@@ -579,3 +579,5 @@ func ErrPayloadTooBig(bodyLength, acceptedLength uint) error {
 func ErrSocketIOStartFailed(socketType string) error {
 	return NewError(CodeSocketIOStartFailedError, fmt.Sprintf("%s: (%s socket)", SocketIOStartFailedError, socketType))
 }
+
+// TODO: Consider adding `ErrUnknownActorType` everywhere we do a switch-case on actor type.

@@ -24,7 +24,12 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 		return types.ErrDuplicateTransaction()
 	}
 	store := u.Store()
-	if store.TransactionExists(txHash) { // TODO non-ordered nonce requires non-pruned tx indexer
+	txExists, err := store.TransactionExists(txHash)
+	if err != nil {
+		return err
+	}
+	// TODO non-ordered nonce requires non-pruned tx indexer
+	if txExists {
 		return types.ErrTransactionAlreadyCommitted()
 	}
 	cdc := u.Codec()
@@ -39,7 +44,7 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 	return u.Mempool.AddTransaction(transactionProtoBytes)
 }
 
-func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) ([][]byte, error) {
+func (u *UtilityContext) GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) ([][]byte, error) {
 	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {
 		return nil, err
 	}
@@ -79,6 +84,7 @@ func (u *UtilityContext) GetTransactionsForProposal(proposer []byte, maxTransact
 	return transactions, nil
 }
 
+// CLEANUP: Exposed for testing purposes only
 func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil.Message, types.Error) {
 	msg, err := tx.Message()
 	if err != nil {
@@ -225,11 +231,11 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 		}
 		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case typesUtil.ActorType_Fish:
-		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, *message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case typesUtil.ActorType_Node:
-		er = store.InsertServiceNode(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, *message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = store.InsertServiceNode(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	case typesUtil.ActorType_Val:
-		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, *message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	}
 	if er != nil {
 		return types.ErrInsert(er)
@@ -288,11 +294,11 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 		}
 		er = store.UpdateApp(message.Address, maxRelays, message.Amount, message.Chains)
 	case typesUtil.ActorType_Fish:
-		er = store.UpdateFisherman(message.Address, *message.ServiceUrl, message.Amount, message.Chains)
+		er = store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case typesUtil.ActorType_Node:
-		er = store.UpdateServiceNode(message.Address, *message.ServiceUrl, message.Amount, message.Chains)
+		er = store.UpdateServiceNode(message.Address, message.ServiceUrl, message.Amount, message.Chains)
 	case typesUtil.ActorType_Val:
-		er = store.UpdateValidator(message.Address, *message.ServiceUrl, message.Amount)
+		er = store.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
 	}
 	if er != nil {
 		return types.ErrInsert(er)
@@ -391,7 +397,7 @@ func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, t
 	case *typesUtil.MessageUnstake:
 		return u.GetMessageUnstakeSignerCandidates(x)
 	case *typesUtil.MessageUnpause:
-		return u.GetMessageUnpauseSignercandidates(x)
+		return u.GetMessageUnpauseSignerCandidates(x)
 	case *typesUtil.MessageChangeParameter:
 		return u.GetMessageChangeParameterSignerCandidates(x)
 	default:
@@ -432,7 +438,7 @@ func (u *UtilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.Messag
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnpauseSignercandidates(msg *typesUtil.MessageUnpause) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageUnpauseSignerCandidates(msg *typesUtil.MessageUnpause) ([][]byte, types.Error) {
 	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err

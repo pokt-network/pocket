@@ -14,18 +14,13 @@ import (
 )
 
 var (
-	defaultTestingChains          = []string{"0001"}
-	defaultTestingChainsEdited    = []string{"0002"}
-	defaultServiceUrl             = "https://foo.bar"
-	defaultServiceUrlEdited       = "https://bar.foo"
-	defaultServiceNodesPerSession = 24
-	zeroAmount                    = big.NewInt(0)
-	zeroAmountString              = types.BigIntToString(zeroAmount)
-	defaultAmount                 = big.NewInt(1000000000000000)
-	defaultSendAmount             = big.NewInt(10000)
-	defaultAmountString           = types.BigIntToString(defaultAmount)
-	defaultNonceString            = types.BigIntToString(defaultAmount)
-	defaultSendAmountString       = types.BigIntToString(defaultSendAmount)
+	defaultTestingChains       = []string{"0001"}
+	defaultTestingChainsEdited = []string{"0002"}
+	defaultAmount              = big.NewInt(1000000000000000)
+	defaultSendAmount          = big.NewInt(10000)
+	defaultAmountString        = types.BigIntToString(defaultAmount)
+	defaultNonceString         = types.BigIntToString(defaultAmount)
+	defaultSendAmountString    = types.BigIntToString(defaultSendAmount)
 )
 
 func NewTestingMempool(_ *testing.T) types.Mempool {
@@ -33,7 +28,7 @@ func NewTestingMempool(_ *testing.T) types.Mempool {
 }
 
 func TestMain(m *testing.M) {
-	pool, resource := SetupPostgresDocker(m)
+	pool, resource := SetupPostgresDocker()
 	m.Run()
 	CleanupPostgresDocker(m, pool, resource)
 }
@@ -55,10 +50,10 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	err := cfg.HydrateGenesisState()
 	require.NoError(t, err)
 
-	persistenceModule, err := persistence.Create(cfg)
+	PersistenceModule, err = persistence.Create(cfg)
 	require.NoError(t, err)
-	require.NoError(t, persistenceModule.Start(), "start persistence mod")
-	persistenceContext, err := persistenceModule.NewRWContext(height)
+	require.NoError(t, PersistenceModule.Start(), "start persistence mod")
+	persistenceContext, err := PersistenceModule.NewRWContext(height)
 	require.NoError(t, err)
 	return utility.UtilityContext{
 		LatestHeight: height,

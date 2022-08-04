@@ -76,8 +76,7 @@ func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
 					Config: genesisConfig(),
 				},
 			},
-			Pre2P: nil,
-			P2P:   nil,
+			P2P: nil,
 			Consensus: &config.ConsensusConfig{
 				MaxMempoolBytes: 500000000,
 				MaxBlockBytes:   4000000,
@@ -133,7 +132,7 @@ func CreateTestConsensusPocketNode(
 	p2pMock := baseP2PMock(t, testChannel)
 	utilityMock := baseUtilityMock(t, testChannel)
 
-	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod)
+	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, cfg)
 	require.NoError(t, err)
 
 	pocketNode := &shared.Node{
@@ -280,9 +279,17 @@ loop:
 func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
+	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 
 	persistenceMock.EXPECT().Start().Do(func() {}).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
+	persistenceMock.EXPECT().NewRWContext(int64(-1)).Return(persistenceContextMock, nil).AnyTimes()
+
+	// The persistence context should usually be accessed via the utility module within the context
+	// of the consensus module. This one is only used when loading the initial consensus module
+	// state; hence the `-1` expectation in the call above.
+	persistenceContextMock.EXPECT().Release().Return().AnyTimes()
+	persistenceContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
 
 	return persistenceMock
 }
@@ -328,16 +335,17 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 		MaxTimes(4)
 
 	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
+	utilityContextMock.EXPECT().CommitPersistenceContext().Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().ReleaseContext().Return().AnyTimes()
 	utilityContextMock.EXPECT().
-		GetTransactionsForProposal(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
+		GetProposalTransactions(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
 		Return(make([][]byte, 0), nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().
-		// ApplyBlock(int64(1), gomock.Any(), gomock.AssignableToTypeOf(emptyTxs), gomock.AssignableToTypeOf(emptyByzValidators)).
 		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(appHash, nil).
 		AnyTimes()
+	utilityContextMock.EXPECT().StoreBlock(gomock.Any()).AnyTimes().Return(nil)
 
 	persistenceContextMock.EXPECT().Commit().Return(nil).AnyTimes()
 

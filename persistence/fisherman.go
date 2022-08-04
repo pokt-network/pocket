@@ -25,11 +25,11 @@ func (p PostgresContext) GetFisherman(address []byte, height int64) (operator, p
 	return
 }
 
-func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(schema.FishermanActor, schema.BaseActor{
 		Address:            hex.EncodeToString(address),
 		PublicKey:          hex.EncodeToString(publicKey),
-		StakedTokens:       stakedTokens,
+		StakedTokens:       stakedAmount,
 		ActorSpecificParam: serviceURL,
 		OutputAddress:      hex.EncodeToString(output),
 		PausedHeight:       pausedHeight,
@@ -38,10 +38,10 @@ func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, outpu
 	})
 }
 
-func (p PostgresContext) UpdateFisherman(address []byte, serviceURL string, stakedTokens string, chains []string) error {
+func (p PostgresContext) UpdateFisherman(address []byte, serviceURL string, stakedAmount string, chains []string) error {
 	return p.UpdateActor(schema.FishermanActor, schema.BaseActor{
 		Address:            hex.EncodeToString(address),
-		StakedTokens:       stakedTokens,
+		StakedTokens:       stakedAmount,
 		ActorSpecificParam: serviceURL,
 		Chains:             chains,
 	})
