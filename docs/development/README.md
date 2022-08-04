@@ -153,7 +153,6 @@ Pocket
 ├── p2p              # Implementation of the P2P module
 ├── persistence      # Implementation of the Persistence module
 ├── shared           # [to-be-refactored] Shared types, modules and utils
-|   ├── telemetry    # Implementation of the Telemetry module
 ├── utility          # Implementation of the Utility module
 ├── Makefile         # [to-be-deleted] The source of targets used to develop, build and test
 ```
