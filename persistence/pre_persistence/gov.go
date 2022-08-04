@@ -1498,12 +1498,22 @@ func (p *PrePersistenceContext) InitFlags() error {
 	return fmt.Errorf("Obsolete")
 }
 
-func (p *PrePersistenceContext) GetFlag(flagName string, height int64) (bool, error) {
+func (p *PrePersistenceContext) GetIntFlag(paramName string, height int64) (value int, enabled bool, err error) {
 	//not implemented and it never will 😈 (PrePersistence is sunsetting)
-	return false, fmt.Errorf("Obsolete")
+	return value, enabled, fmt.Errorf("Obsolete")
 }
 
-func (p *PrePersistenceContext) SetFlag(flagName string, value bool) error {
+func (p *PrePersistenceContext) GetStringFlag(paramName string, height int64) (value string, enabled bool, err error) {
+	//not implemented and it never will 😈 (PrePersistence is sunsetting)
+	return value, enabled, fmt.Errorf("Obsolete")
+}
+
+func (p *PrePersistenceContext) GetBytesFlag(paramName string, height int64) (value []byte, enabled bool, err error) {
+	//not implemented and it never will 😈 (PrePersistence is sunsetting)
+	return value, enabled, fmt.Errorf("Obsolete")
+}
+
+func (p *PrePersistenceContext) SetFlag(paramName string, value interface{}, enabled bool) error {
 	//not implemented and it never will 😈 (PrePersistence is sunsetting)
 	return fmt.Errorf("Obsolete")
 }

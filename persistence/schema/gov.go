@@ -35,6 +35,8 @@ const (
 	FlagsTableSchema = `(
 		name VARCHAR(64) NOT NULL,
 		height BIGINT NOT NULL,
+		type val_type NOT NULL,
+		value TEXT NOT NULL,
 		enabled BOOLEAN NOT NULL,
 		PRIMARY KEY(name, height)
 		)`
@@ -91,9 +93,11 @@ func InsertParams(params *genesis.Params, height int64) string {
 }
 
 func GetParamQuery(paramName string, height int64) string {
-	ret := fmt.Sprintf(`SELECT value FROM %s WHERE name='%s' AND height<=%d ORDER BY height DESC LIMIT 1`, ParamsTableName, paramName, height)
-	fmt.Println(ret)
-	return ret
+	return fmt.Sprintf(`SELECT value FROM %s WHERE name='%s' AND height<=%d ORDER BY height DESC LIMIT 1`, ParamsTableName, paramName, height)
+}
+
+func GetFlagQuery(flagName string, height int64) string {
+	return fmt.Sprintf(`SELECT value, enabled FROM %s WHERE name='%s' AND height<=%d ORDER BY height DESC LIMIT 1`, FlagsTableName, flagName, height)
 }
 
 type SupportedParamTypes interface {
@@ -121,7 +125,39 @@ func SetParamQuery[T SupportedParamTypes](paramName string, paramValue T, height
 		log.Fatalf("unhandled type for paramValue %T", tp)
 	}
 
-	return fmt.Sprintf(`INSERT INTO %s(%s) VALUES ('%s', %d, '%s', %s) ON CONFLICT ON CONSTRAINT %s DO UPDATE SET value=EXCLUDED.value, type=EXCLUDED.type`, ParamsTableName, fields, paramName, height, valType, value, "params_pkey")
+	constraint := fmt.Sprintf("%s_pkey", ParamsTableName)
+	return fmt.Sprintf(`INSERT INTO %s(%s) VALUES ('%s', %d, '%s', %s) ON CONFLICT ON CONSTRAINT %s DO UPDATE SET value=EXCLUDED.value, type=EXCLUDED.type`, ParamsTableName, fields, paramName, height, valType, value, constraint)
+}
+
+func SetFlagQuery[T SupportedParamTypes](paramName string, flagValue T, enabled bool, height int64) string {
+	fields := "name,height,type,value,enabled"
+
+	enabledStr := "true"
+	if !enabled {
+		enabledStr = "false"
+	}
+
+	var value, valType string
+	switch tp := any(flagValue).(type) {
+	case int, int32:
+		valType = ValTypeSmallInt
+		value = fmt.Sprintf("%d", tp)
+	case int64:
+		valType = ValTypeBigInt
+		value = fmt.Sprintf("%d", tp)
+	case []byte:
+		valType = ValTypeString
+		value = fmt.Sprintf("'%s'", hex.EncodeToString(tp))
+	case string:
+		valType = ValTypeString
+		value = fmt.Sprintf("'%s'", tp)
+	default:
+		log.Fatalf("unhandled type for paramValue %T", tp)
+	}
+
+	constraint := fmt.Sprintf("%s_pkey", FlagsTableName)
+	fmt.Println(fmt.Sprintf(`INSERT INTO %s(%s) VALUES ('%s', %d, '%s', %s, %s) ON CONFLICT ON CONSTRAINT %s DO UPDATE SET value=EXCLUDED.value, type=EXCLUDED.type, enabled=EXCLUDED.enabled`, FlagsTableName, fields, paramName, height, valType, value, enabledStr, constraint))
+	return fmt.Sprintf(`INSERT INTO %s(%s) VALUES ('%s', %d, '%s', %s, %s) ON CONFLICT ON CONSTRAINT %s DO UPDATE SET value=EXCLUDED.value, type=EXCLUDED.type, enabled=EXCLUDED.enabled`, FlagsTableName, fields, paramName, height, valType, value, enabledStr, constraint)
 }
 
 func ClearAllGovParamsQuery() string {

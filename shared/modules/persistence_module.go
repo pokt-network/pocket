@@ -151,6 +151,8 @@ type PersistenceContext interface {
 	// Flags
 	InitFlags() error
 
-	GetFlag(flagName string, height int64) (bool, error)
-	SetFlag(flagName string, value bool) error
+	GetIntFlag(paramName string, height int64) (int, bool, error)
+	GetStringFlag(paramName string, height int64) (string, bool, error)
+	GetBytesFlag(paramName string, height int64) ([]byte, bool, error)
+	SetFlag(paramName string, value interface{}, enabled bool) error
 }
