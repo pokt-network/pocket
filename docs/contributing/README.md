@@ -1,6 +1,6 @@
 # How to contribute?
 
-We have an [extensive contribution guide](docs/contributing/CONTRIBUTING.md) outlining all the steps to contribute, but if you just want to start writing code, you can: start here.
+We have an [extensive contribution guide](docs/contributing/CONTRIBUTING.md) outlining all the steps to contribute, but if you just want to start writing code, just follow the next two steps:
 
 1. Look at available work on [app.dework.xyz/pokt-network](https://app.dework.xyz/pokt-network) or look at our [starter tasks](https://github.com/pokt-network/pocket/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3A%22starter+task%22) / [community](https://github.com/pokt-network/pocket/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3A%22community%22+) tasks on Github.
 
