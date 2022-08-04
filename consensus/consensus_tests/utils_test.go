@@ -355,11 +355,32 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockTelemetryModule {
 	ctrl := gomock.NewController(t)
 	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
+	timeSeriesAgentMock := baseTelemetryTimeSeriesAgentMock(t)
+	eventMetricsAgentMock := baseTelemetryEventMetricsAgentMock(t)
 
 	telemetryMock.EXPECT().Start().Do(func() {}).AnyTimes()
 	telemetryMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
 
+	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
+	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).MaxTimes(1)
+	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
+
+	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
 	return telemetryMock
+}
+
+func baseTelemetryTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
+	ctrl := gomock.NewController(t)
+	timeseriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
+	return timeseriesAgentMock
+}
+
+func baseTelemetryEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAgent {
+	ctrl := gomock.NewController(t)
+	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
+	return eventMetricsAgentMock
 }
 
 /*** Genesis Helpers ***/
