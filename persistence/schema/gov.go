@@ -156,7 +156,6 @@ func SetFlagQuery[T SupportedParamTypes](paramName string, flagValue T, enabled 
 	}
 
 	constraint := fmt.Sprintf("%s_pkey", FlagsTableName)
-	fmt.Println(fmt.Sprintf(`INSERT INTO %s(%s) VALUES ('%s', %d, '%s', %s, %s) ON CONFLICT ON CONSTRAINT %s DO UPDATE SET value=EXCLUDED.value, type=EXCLUDED.type, enabled=EXCLUDED.enabled`, FlagsTableName, fields, paramName, height, valType, value, enabledStr, constraint))
 	return fmt.Sprintf(`INSERT INTO %s(%s) VALUES ('%s', %d, '%s', %s, %s) ON CONFLICT ON CONSTRAINT %s DO UPDATE SET value=EXCLUDED.value, type=EXCLUDED.type, enabled=EXCLUDED.enabled`, FlagsTableName, fields, paramName, height, valType, value, enabledStr, constraint)
 }
 
