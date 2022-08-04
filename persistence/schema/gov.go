@@ -3,6 +3,7 @@ package schema
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
 	"reflect"
 	"strings"
 
@@ -25,7 +26,6 @@ const (
 	ParamsTableSchema = `(
 		name VARCHAR(64) NOT NULL,
 		height BIGINT NOT NULL,
-		enabled BOOLEAN NOT NULL,
 		type val_type NOT NULL,
 		value TEXT NOT NULL,
 		PRIMARY KEY(name, height)
@@ -36,7 +36,6 @@ const (
 		name VARCHAR(64) NOT NULL,
 		height BIGINT NOT NULL,
 		enabled BOOLEAN NOT NULL,
-		value BOOLEAN NOT NULL,
 		PRIMARY KEY(name, height)
 		)`
 )
@@ -56,7 +55,10 @@ var (
 	)
 )
 
-func InsertParams(params *genesis.Params) string {
+// InsertParams generates the SQL INSERT statement given a *genesis.Params
+//
+// WARNING: reflections in prod
+func InsertParams(params *genesis.Params, height int64) string {
 	val := reflect.ValueOf(params)
 	var subQuery string
 	for _, k := range govParamMetadataKeys {
@@ -64,7 +66,8 @@ func InsertParams(params *genesis.Params) string {
 		pVal := val.Elem().FieldByName(pnt.PropertyName)
 
 		subQuery += `(`
-		switch govParamMetadataMap[k].PropertyType {
+		pType := govParamMetadataMap[k].PropertyType
+		switch pType {
 		case ValTypeString:
 			var stringVal string
 			switch vt := pVal.Interface().(type) {
@@ -72,43 +75,61 @@ func InsertParams(params *genesis.Params) string {
 				stringVal = hex.EncodeToString(vt)
 			case string:
 				stringVal = vt
+			default:
+				log.Fatalf("unhandled type for param: expected []byte or string, got %T", vt)
 			}
-			subQuery += fmt.Sprintf("'%s', %d, true, '%s', '%s'", k, DefaultBigInt, pnt.PropertyType, stringVal)
+			subQuery += fmt.Sprintf("'%s', %d, '%s', '%s'", k, height, pnt.PropertyType, stringVal)
 
 		case ValTypeSmallInt, ValTypeBigInt:
-			subQuery += fmt.Sprintf("'%s', %d, true, '%s', %d", k, DefaultBigInt, pnt.PropertyType, pVal.Interface())
+			subQuery += fmt.Sprintf("'%s', %d, '%s', %d", k, height, pnt.PropertyType, pVal.Interface())
+		default:
+			log.Fatalf("unhandled PropertyType %s", pType)
 		}
 		subQuery += `),`
 	}
-	return fmt.Sprintf(`INSERT INTO %s VALUES %s`, ParamsTableName, subQuery[:len(subQuery)-1])
+	return fmt.Sprintf(`INSERT INTO %s VALUES %s ON CONFLICT ON CONSTRAINT %s DO UPDATE SET value=EXCLUDED.value, type=EXCLUDED.type`, ParamsTableName, subQuery[:len(subQuery)-1], "params_pkey")
 }
 
-func GetParamQuery(paramName string) string {
-	//TODO (@deblasis): Fix this
-	return fmt.Sprintf(`SELECT value FROM %s WHERE name='%s' AND height<=%d and enabled=true order by height desc limit 1`, ParamsTableName, paramName, DefaultBigInt)
+func GetParamQuery(paramName string, height int64) string {
+	ret := fmt.Sprintf(`SELECT value FROM %s WHERE name='%s' AND height<=%d ORDER BY height DESC LIMIT 1`, ParamsTableName, paramName, height)
+	fmt.Println(ret)
+	return ret
 }
 
-func NullifyParamQuery(paramName string, height int64) string {
-	//TODO (@deblasis): Fix this
-	return fmt.Sprintf(`UPDATE %s SET height=%d WHERE name='%s' AND height=%d`, ParamsTableName, height, paramName, DefaultBigInt)
-}
-
-type ParamTypes interface {
+type SupportedParamTypes interface {
 	int | int32 | int64 | []byte | string
 }
 
-func SetParamQuery[T ParamTypes](paramName string, paramValue T, height int64) string {
-	//TODO (@deblasis): Fix this
-	fields := "name,height,value,enabled,type"
+func SetParamQuery[T SupportedParamTypes](paramName string, paramValue T, height int64) string {
+	fields := "name,height,type,value"
 
-	subQuery := fmt.Sprintf(`SELECT %s`, fields)
-	subQuery += fmt.Sprintf(` FROM %s WHERE name='%s' AND height=%d`, ParamsTableName, paramName, height)
+	var value, valType string
+	switch tp := any(paramValue).(type) {
+	case int, int32:
+		valType = ValTypeSmallInt
+		value = fmt.Sprintf("%d", tp)
+	case int64:
+		valType = ValTypeBigInt
+		value = fmt.Sprintf("%d", tp)
+	case []byte:
+		valType = ValTypeString
+		value = fmt.Sprintf("'%s'", hex.EncodeToString(tp))
+	case string:
+		valType = ValTypeString
+		value = fmt.Sprintf("'%s'", tp)
+	default:
+		log.Fatalf("unhandled type for paramValue %T", tp)
+	}
 
-	return fmt.Sprintf(`INSERT INTO %s(%s) %s`, ParamsTableName, fields, subQuery)
+	return fmt.Sprintf(`INSERT INTO %s(%s) VALUES ('%s', %d, '%s', %s) ON CONFLICT ON CONSTRAINT %s DO UPDATE SET value=EXCLUDED.value, type=EXCLUDED.type`, ParamsTableName, fields, paramName, height, valType, value, "params_pkey")
 }
 
-func ClearAllGovQuery() string {
+func ClearAllGovParamsQuery() string {
 	return fmt.Sprintf(`DELETE FROM %s`, ParamsTableName)
+}
+
+func ClearAllGovFlagsQuery() string {
+	return fmt.Sprintf(`DELETE FROM %s`, FlagsTableName)
 }
 
 type govParamMetadata struct {
@@ -116,6 +137,9 @@ type govParamMetadata struct {
 	PropertyName string
 }
 
+// parseGovProto parses genesis.Params{} (generated from gov.proto) in order to extract metadata about its fields
+//
+// WARNING: reflections in prod
 func parseGovProto() (govParamMetadataMap map[string]govParamMetadata) {
 	govParamMetadataMap = make(map[string]govParamMetadata)
 	fields := reflect.VisibleFields(reflect.TypeOf(genesis.Params{}))

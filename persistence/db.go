@@ -26,6 +26,7 @@ const (
 
 	CreateEnumType = "CREATE TYPE %s AS ENUM"
 
+	// DUPLICATE OBJECT error. For reference: https://www.postgresql.org/docs/8.4/errcodes-appendix.html
 	DuplicateObjectErrorCode = "42710"
 )
 
@@ -149,7 +150,6 @@ func initializeAccountTables(ctx context.Context, db *pgx.Conn) error {
 }
 
 func initializeGovTables(ctx context.Context, db *pgx.Conn) error {
-
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s`, fmt.Sprintf(CreateEnumType, schema.ValTypeName), schema.ValTypeEnumTypes)); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code != DuplicateObjectErrorCode {
@@ -265,12 +265,14 @@ func (m *persistenceModule) hydrateGenesisDbState() error {
 		}
 	}
 
+	if err := ctx.InitFlags(); err != nil {
+		return err
+	}
+
 	if err := ctx.InitParams(); err != nil {
 		return err
 	}
-	// TECHDEBT: Calling the setter (e.g. SetValidatorMaximumMissedBlocks, Set_) for this for each param results in a lot
-	// of code bloat and is not practical. This will need to be fixed as part of the gov param refactor task.
-	if err := ctx.SetValidatorMaximumMissedBlocks(int(state.Params.ValidatorMaximumMissedBlocks)); err != nil {
+	if err := ctx.SetParam(types.ValidatorMaximumMissedBlocksParamName, (int(state.Params.ValidatorMaximumMissedBlocks))); err != nil {
 		return err
 	}
 
@@ -300,7 +302,11 @@ func (p PostgresContext) ClearAllDebug() error {
 		}
 	}
 
-	if _, err = tx.Exec(ctx, schema.ClearAllGovQuery()); err != nil {
+	if _, err = tx.Exec(ctx, schema.ClearAllGovParamsQuery()); err != nil {
+		return err
+	}
+
+	if _, err = tx.Exec(ctx, schema.ClearAllGovFlagsQuery()); err != nil {
 		return err
 	}
 

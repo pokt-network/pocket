@@ -1,6 +1,8 @@
 package pre_persistence
 
 import (
+	"fmt"
+
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 
 	"github.com/pokt-network/pocket/shared/types"
@@ -474,436 +476,14 @@ func InsertPersistenceParams(store *PrePersistenceContext, params *typesGenesis.
 	return nil
 }
 
-func (m *PrePersistenceContext) GetBlocksPerSession() (int, error) {
-	params, err := m.GetParams(m.Height)
+// TODO: (@deblasis) added only to allow compilation since I changed the PersistenceContext interface.
+// PrePersistence is about to be deprecated
+func (m *PrePersistenceContext) GetBlocksPerSession(height int64) (int, error) {
+	params, err := m.GetParams(height)
 	if err != nil {
 		return types.ZeroInt, err
 	}
 	return int(params.BlocksPerSession), nil
-}
-
-func (m *PrePersistenceContext) GetParamAppMinimumStake() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.GetAppMinimumStake(), nil
-}
-
-func (m *PrePersistenceContext) GetMaxAppChains() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.AppMaxChains), nil
-}
-
-func (m *PrePersistenceContext) GetBaselineAppStakeRate() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.AppBaselineStakeRate), nil
-}
-
-func (m *PrePersistenceContext) GetStabilityAdjustment() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.AppStakingAdjustment), nil
-}
-
-func (m *PrePersistenceContext) GetAppUnstakingBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.AppUnstakingBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetAppMinimumPauseBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.AppMinimumPauseBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetAppMaxPausedBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.AppMaxPauseBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetParamServiceNodeMinimumStake() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.ServiceNodeMinimumStake, nil
-}
-
-func (m *PrePersistenceContext) GetServiceNodeMaxChains() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.ServiceNodeMaxChains), nil
-}
-
-func (m *PrePersistenceContext) GetServiceNodeUnstakingBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.ServiceNodeUnstakingBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetServiceNodeMinimumPauseBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.ServiceNodeMinimumPauseBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetServiceNodeMaxPausedBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.ServiceNodeMaxPauseBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetServiceNodesPerSession() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.ServiceNodesPerSession), nil
-}
-
-func (m *PrePersistenceContext) GetParamFishermanMinimumStake() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.FishermanMinimumStake, nil
-}
-
-func (m *PrePersistenceContext) GetFishermanMaxChains() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.FishermanMaxChains), nil
-}
-
-func (m *PrePersistenceContext) GetFishermanUnstakingBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.FishermanUnstakingBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetFishermanMinimumPauseBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.FishermanMinimumPauseBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetFishermanMaxPausedBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.FishermanMaxPauseBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetParamValidatorMinimumStake() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.ValidatorMinimumStake, nil
-}
-
-func (m *PrePersistenceContext) GetValidatorUnstakingBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.ValidatorUnstakingBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetValidatorMinimumPauseBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.ValidatorMinimumPauseBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetValidatorMaxPausedBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.ValidatorMaxPauseBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetValidatorMaximumMissedBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.ValidatorMaximumMissedBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetProposerPercentageOfFees() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.ProposerPercentageOfFees), nil
-}
-
-func (m *PrePersistenceContext) GetMaxEvidenceAgeInBlocks() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.ValidatorMaxEvidenceAgeInBlocks), nil
-}
-
-func (m *PrePersistenceContext) GetMissedBlocksBurnPercentage() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.MissedBlocksBurnPercentage), nil
-}
-
-func (m *PrePersistenceContext) GetDoubleSignBurnPercentage() (int, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.ZeroInt, err
-	}
-	return int(params.DoubleSignBurnPercentage), nil
-}
-
-func (m *PrePersistenceContext) GetMessageDoubleSignFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageDoubleSignFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageSendFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageSendFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageStakeFishermanFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageStakeFishermanFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageEditStakeFishermanFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageEditStakeFishermanFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnstakeFishermanFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageUnstakeFishermanFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessagePauseFishermanFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessagePauseFishermanFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnpauseFishermanFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageUnpauseFishermanFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageFishermanPauseServiceNodeFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessagePauseServiceNodeFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageTestScoreFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageProveTestScoreFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageProveTestScoreFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageProveTestScoreFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageStakeAppFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageStakeAppFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageEditStakeAppFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageEditStakeAppFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnstakeAppFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageUnstakeAppFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessagePauseAppFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessagePauseAppFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnpauseAppFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageUnpauseAppFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageStakeValidatorFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageStakeValidatorFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageEditStakeValidatorFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageEditStakeValidatorFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnstakeValidatorFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageUnstakeValidatorFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessagePauseValidatorFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessagePauseValidatorFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnpauseValidatorFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageUnpauseValidatorFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageStakeServiceNodeFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageStakeServiceNodeFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageEditStakeServiceNodeFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageEditStakeServiceNodeFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnstakeServiceNodeFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageUnstakeServiceNodeFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessagePauseServiceNodeFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessagePauseServiceNodeFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnpauseServiceNodeFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageUnpauseServiceNodeFee, nil
-}
-
-func (m *PrePersistenceContext) GetMessageChangeParameterFee() (string, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return types.EmptyString, err
-	}
-	return params.MessageChangeParameterFee, nil
 }
 
 func (m *PrePersistenceContext) SetParams(p *typesGenesis.Params) error {
@@ -1636,14 +1216,6 @@ func (m *PrePersistenceContext) SetMessageChangeParameterFeeOwner(bytes []byte) 
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetAclOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.AclOwner, nil
-}
-
 func (m *PrePersistenceContext) SetAclOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -1662,22 +1234,6 @@ func (m *PrePersistenceContext) SetBlocksPerSessionOwner(owner []byte) error {
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetBlocksPerSessionOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.BlocksPerSessionOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMaxAppChainsOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.AppMaxChainsOwner, nil
-}
-
 func (m *PrePersistenceContext) SetMaxAppChainsOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -1685,14 +1241,6 @@ func (m *PrePersistenceContext) SetMaxAppChainsOwner(owner []byte) error {
 	}
 	params.AppMaxChainsOwner = owner
 	return m.SetParams(params)
-}
-
-func (m *PrePersistenceContext) GetAppMinimumStakeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.AppMinimumStakeOwner, nil
 }
 
 func (m *PrePersistenceContext) SetAppMinimumStakeOwner(owner []byte) error {
@@ -1704,14 +1252,6 @@ func (m *PrePersistenceContext) SetAppMinimumStakeOwner(owner []byte) error {
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetBaselineAppOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.AppBaselineStakeRateOwner, nil
-}
-
 func (m *PrePersistenceContext) SetBaselineAppOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -1719,14 +1259,6 @@ func (m *PrePersistenceContext) SetBaselineAppOwner(owner []byte) error {
 	}
 	params.AppBaselineStakeRateOwner = owner
 	return m.SetParams(params)
-}
-
-func (m *PrePersistenceContext) GetStakingAdjustmentOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.AppStakingAdjustmentOwner, nil
 }
 
 func (m *PrePersistenceContext) SetStakingAdjustmentOwner(owner []byte) error {
@@ -1738,14 +1270,6 @@ func (m *PrePersistenceContext) SetStakingAdjustmentOwner(owner []byte) error {
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetAppUnstakingBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.AppUnstakingBlocksOwner, nil
-}
-
 func (m *PrePersistenceContext) SetAppUnstakingBlocksOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -1753,14 +1277,6 @@ func (m *PrePersistenceContext) SetAppUnstakingBlocksOwner(owner []byte) error {
 	}
 	params.AppUnstakingBlocksOwner = owner
 	return m.SetParams(params)
-}
-
-func (m *PrePersistenceContext) GetAppMinimumPauseBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.AppMinimumPauseBlocksOwner, nil
 }
 
 func (m *PrePersistenceContext) SetAppMinimumPauseBlocksOwner(owner []byte) error {
@@ -1772,14 +1288,6 @@ func (m *PrePersistenceContext) SetAppMinimumPauseBlocksOwner(owner []byte) erro
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetAppMaxPausedBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.AppMaxPausedBlocksOwner, nil
-}
-
 func (m *PrePersistenceContext) SetAppMaxPausedBlocksOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -1787,14 +1295,6 @@ func (m *PrePersistenceContext) SetAppMaxPausedBlocksOwner(owner []byte) error {
 	}
 	params.AppMaxPausedBlocksOwner = owner
 	return m.SetParams(params)
-}
-
-func (m *PrePersistenceContext) GetParamServiceNodeMinimumStakeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.ServiceNodeMinimumStakeOwner, nil
 }
 
 func (m *PrePersistenceContext) SetServiceNodeMinimumStakeOwner(owner []byte) error {
@@ -1806,14 +1306,6 @@ func (m *PrePersistenceContext) SetServiceNodeMinimumStakeOwner(owner []byte) er
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetServiceNodeMaxChainsOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.ServiceNodeMaxChainsOwner, nil
-}
-
 func (m *PrePersistenceContext) SetMaxServiceNodeChainsOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -1821,14 +1313,6 @@ func (m *PrePersistenceContext) SetMaxServiceNodeChainsOwner(owner []byte) error
 	}
 	params.ServiceNodeMaxChainsOwner = owner
 	return m.SetParams(params)
-}
-
-func (m *PrePersistenceContext) GetServiceNodeUnstakingBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.ServiceNodeUnstakingBlocksOwner, nil
 }
 
 func (m *PrePersistenceContext) SetServiceNodeUnstakingBlocksOwner(owner []byte) error {
@@ -1840,14 +1324,6 @@ func (m *PrePersistenceContext) SetServiceNodeUnstakingBlocksOwner(owner []byte)
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetServiceNodeMinimumPauseBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.ServiceNodeMinimumPauseBlocksOwner, nil
-}
-
 func (m *PrePersistenceContext) SetServiceNodeMinimumPauseBlocksOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -1855,14 +1331,6 @@ func (m *PrePersistenceContext) SetServiceNodeMinimumPauseBlocksOwner(owner []by
 	}
 	params.ServiceNodeMinimumStakeOwner = owner
 	return m.SetParams(params)
-}
-
-func (m *PrePersistenceContext) GetServiceNodeMaxPausedBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.ServiceNodeMaxPausedBlocksOwner, nil
 }
 
 func (m *PrePersistenceContext) SetServiceNodeMaxPausedBlocksOwner(owner []byte) error {
@@ -1874,14 +1342,6 @@ func (m *PrePersistenceContext) SetServiceNodeMaxPausedBlocksOwner(owner []byte)
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetFishermanMinimumStakeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.FishermanMinimumStakeOwner, nil
-}
-
 func (m *PrePersistenceContext) SetFishermanMinimumStakeOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -1889,14 +1349,6 @@ func (m *PrePersistenceContext) SetFishermanMinimumStakeOwner(owner []byte) erro
 	}
 	params.FishermanMinimumStakeOwner = owner
 	return m.SetParams(params)
-}
-
-func (m *PrePersistenceContext) GetMaxFishermanChainsOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.FishermanMaxChainsOwner, nil
 }
 
 func (m *PrePersistenceContext) SetMaxFishermanChainsOwner(owner []byte) error {
@@ -1908,14 +1360,6 @@ func (m *PrePersistenceContext) SetMaxFishermanChainsOwner(owner []byte) error {
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetFishermanUnstakingBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.FishermanUnstakingBlocksOwner, nil
-}
-
 func (m *PrePersistenceContext) SetFishermanUnstakingBlocksOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -1923,14 +1367,6 @@ func (m *PrePersistenceContext) SetFishermanUnstakingBlocksOwner(owner []byte) e
 	}
 	params.FishermanUnstakingBlocksOwner = owner
 	return m.SetParams(params)
-}
-
-func (m *PrePersistenceContext) GetFishermanMinimumPauseBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.FishermanMinimumPauseBlocksOwner, nil
 }
 
 func (m *PrePersistenceContext) SetFishermanMinimumPauseBlocksOwner(owner []byte) error {
@@ -1942,14 +1378,6 @@ func (m *PrePersistenceContext) SetFishermanMinimumPauseBlocksOwner(owner []byte
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetFishermanMaxPausedBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.FishermanMaxPausedBlocksOwner, nil
-}
-
 func (m *PrePersistenceContext) SetFishermanMaxPausedBlocksOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -1957,14 +1385,6 @@ func (m *PrePersistenceContext) SetFishermanMaxPausedBlocksOwner(owner []byte) e
 	}
 	params.FishermanMaxPausedBlocksOwner = owner
 	return m.SetParams(params)
-}
-
-func (m *PrePersistenceContext) GetValidatorMinimumStakeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.ValidatorMinimumStakeOwner, nil
 }
 
 func (m *PrePersistenceContext) SetValidatorMinimumStakeOwner(owner []byte) error {
@@ -1976,14 +1396,6 @@ func (m *PrePersistenceContext) SetValidatorMinimumStakeOwner(owner []byte) erro
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetValidatorUnstakingBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.ValidatorUnstakingBlocksOwner, nil
-}
-
 func (m *PrePersistenceContext) SetValidatorUnstakingBlocksOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -1991,14 +1403,6 @@ func (m *PrePersistenceContext) SetValidatorUnstakingBlocksOwner(owner []byte) e
 	}
 	params.ValidatorUnstakingBlocksOwner = owner
 	return m.SetParams(params)
-}
-
-func (m *PrePersistenceContext) GetValidatorMinimumPauseBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.ValidatorMinimumPauseBlocksOwner, nil
 }
 
 func (m *PrePersistenceContext) SetValidatorMinimumPauseBlocksOwner(owner []byte) error {
@@ -2010,14 +1414,6 @@ func (m *PrePersistenceContext) SetValidatorMinimumPauseBlocksOwner(owner []byte
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetValidatorMaxPausedBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.ValidatorMaxPausedBlocksOwner, nil
-}
-
 func (m *PrePersistenceContext) SetValidatorMaxPausedBlocksOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -2025,14 +1421,6 @@ func (m *PrePersistenceContext) SetValidatorMaxPausedBlocksOwner(owner []byte) e
 	}
 	params.ValidatorMaxPausedBlocksOwner = owner
 	return m.SetParams(params)
-}
-
-func (m *PrePersistenceContext) GetValidatorMaximumMissedBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.ValidatorMaximumMissedBlocksOwner, nil
 }
 
 func (m *PrePersistenceContext) SetValidatorMaximumMissedBlocksOwner(owner []byte) error {
@@ -2044,14 +1432,6 @@ func (m *PrePersistenceContext) SetValidatorMaximumMissedBlocksOwner(owner []byt
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetProposerPercentageOfFeesOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.ProposerPercentageOfFeesOwner, nil
-}
-
 func (m *PrePersistenceContext) SetProposerPercentageOfFeesOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -2059,14 +1439,6 @@ func (m *PrePersistenceContext) SetProposerPercentageOfFeesOwner(owner []byte) e
 	}
 	params.ProposerPercentageOfFeesOwner = owner
 	return m.SetParams(params)
-}
-
-func (m *PrePersistenceContext) GetMaxEvidenceAgeInBlocksOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.ValidatorMaxEvidenceAgeInBlocksOwner, nil
 }
 
 func (m *PrePersistenceContext) SetMaxEvidenceAgeInBlocksOwner(owner []byte) error {
@@ -2078,14 +1450,6 @@ func (m *PrePersistenceContext) SetMaxEvidenceAgeInBlocksOwner(owner []byte) err
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetMissedBlocksBurnPercentageOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MissedBlocksBurnPercentageOwner, nil
-}
-
 func (m *PrePersistenceContext) SetMissedBlocksBurnPercentageOwner(owner []byte) error {
 	params, err := m.GetParams(m.Height)
 	if err != nil {
@@ -2093,14 +1457,6 @@ func (m *PrePersistenceContext) SetMissedBlocksBurnPercentageOwner(owner []byte)
 	}
 	params.MissedBlocksBurnPercentageOwner = owner
 	return m.SetParams(params)
-}
-
-func (m *PrePersistenceContext) GetDoubleSignBurnPercentageOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.DoubleSignBurnPercentageOwner, nil
 }
 
 func (m *PrePersistenceContext) SetDoubleSignBurnPercentageOwner(owner []byte) error {
@@ -2121,218 +1477,33 @@ func (m *PrePersistenceContext) SetServiceNodesPerSessionOwner(owner []byte) err
 	return m.SetParams(params)
 }
 
-func (m *PrePersistenceContext) GetServiceNodesPerSessionOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.ServiceNodesPerSessionOwner, nil
+func (m *PrePersistenceContext) GetIntParam(paramName string, height int64) (int, error) {
+	return 0, fmt.Errorf("Obsolete")
 }
 
-func (m *PrePersistenceContext) GetMessageDoubleSignFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageDoubleSignFeeOwner, nil
+func (p *PrePersistenceContext) GetStringParam(paramName string, height int64) (string, error) {
+	return "", fmt.Errorf("Obsolete")
 }
 
-func (m *PrePersistenceContext) GetMessageSendFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageSendFeeOwner, nil
+func (p *PrePersistenceContext) GetBytesParam(paramName string, height int64) (param []byte, err error) {
+	return nil, fmt.Errorf("Obsolete")
 }
 
-func (m *PrePersistenceContext) GetMessageStakeFishermanFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageStakeFishermanFeeOwner, nil
+func (p *PrePersistenceContext) SetParam(paramName string, value interface{}) error {
+	return fmt.Errorf("Obsolete")
 }
 
-func (m *PrePersistenceContext) GetMessageEditStakeFishermanFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageEditStakeFishermanFeeOwner, nil
+func (p *PrePersistenceContext) InitFlags() error {
+	//not implemented and it never will 😈 (PrePersistence is sunsetting)
+	return fmt.Errorf("Obsolete")
 }
 
-func (m *PrePersistenceContext) GetMessageUnstakeFishermanFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageUnstakeFishermanFeeOwner, nil
+func (p *PrePersistenceContext) GetFlag(flagName string, height int64) (bool, error) {
+	//not implemented and it never will 😈 (PrePersistence is sunsetting)
+	return false, fmt.Errorf("Obsolete")
 }
 
-func (m *PrePersistenceContext) GetMessagePauseFishermanFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessagePauseFishermanFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnpauseFishermanFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageUnpauseFishermanFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageFishermanPauseServiceNodeFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageFishermanPauseServiceNodeFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageTestScoreFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageTestScoreFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageProveTestScoreFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageProveTestScoreFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageStakeAppFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageEditStakeAppFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageEditStakeAppFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageEditStakeAppFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnstakeAppFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageUnstakeAppFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessagePauseAppFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessagePauseAppFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnpauseAppFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageUnpauseAppFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageStakeValidatorFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageStakeValidatorFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageEditStakeValidatorFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageEditStakeValidatorFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnstakeValidatorFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageUnstakeValidatorFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessagePauseValidatorFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessagePauseValidatorFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnpauseValidatorFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageUnpauseValidatorFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageStakeServiceNodeFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageStakeServiceNodeFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageEditStakeServiceNodeFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageEditStakeServiceNodeFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnstakeServiceNodeFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageUnstakeServiceNodeFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessagePauseServiceNodeFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessagePauseServiceNodeFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageUnpauseServiceNodeFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageUnpauseServiceNodeFeeOwner, nil
-}
-
-func (m *PrePersistenceContext) GetMessageChangeParameterFeeOwner() ([]byte, error) {
-	params, err := m.GetParams(m.Height)
-	if err != nil {
-		return nil, err
-	}
-	return params.MessageChangeParameterFeeOwner, nil
+func (p *PrePersistenceContext) SetFlag(flagName string, value bool) error {
+	//not implemented and it never will 😈 (PrePersistence is sunsetting)
+	return fmt.Errorf("Obsolete")
 }
