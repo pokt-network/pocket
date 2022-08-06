@@ -21,6 +21,17 @@ type ConsensusNodeState struct {
 	IsLeader bool
 }
 
+type ConsensusCommon struct {
+	PrivKey bls.PrivateKey // private key
+	PubKey  bls.PublicKey  // public key
+
+	//global params of BLS
+	System      bls.System
+	Params      bls.Params
+	Pairing     bls.Pairing
+	Initialized bool
+	
+
 func GetValAddrToIdMap(validatorMap map[string]*typesGenesis.Validator) (ValAddrToIdMap, IdToValAddrMap) {
 	valAddresses := make([]string, 0, len(validatorMap))
 	for addr := range validatorMap {
