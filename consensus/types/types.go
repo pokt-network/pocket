@@ -30,7 +30,7 @@ type ConsensusCommon struct {
 	Params      bls.Params
 	Pairing     bls.Pairing
 	Initialized bool
-	
+}
 
 func GetValAddrToIdMap(validatorMap map[string]*typesGenesis.Validator) (ValAddrToIdMap, IdToValAddrMap) {
 	valAddresses := make([]string, 0, len(validatorMap))
