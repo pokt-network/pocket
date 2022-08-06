@@ -37,8 +37,8 @@ type PostgresContext struct {
 	// IMPROVE: Depending on how the use of `PostgresContext` evolves, we may be able to get
 	// access to these directly via the postgres module.
 	PostgresDB  *pgx.Conn
-	BlockStore  kvstore.KVStore
-	MerkleTrees map[MerkleTree]*smt.SparseMerkleTree
+	BlockStore  kvstore.KVStore                      // REARCHITECT_IN_THIS_COMMIT: This is a passthrough from the module (i.e. not context)
+	MerkleTrees map[MerkleTree]*smt.SparseMerkleTree // REARCHITECT_IN_THIS_COMMIT: This is a passthrough from the module (i.e. not context)
 }
 
 func (pg *PostgresContext) GetCtxAndConnection() (context.Context, *pgx.Conn, error) {

@@ -11,10 +11,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func (m *PrePersistenceContext) GetAppsUpdated(height int64) ([][]byte, error) {
-	// Not implemented
-	return nil, nil
-}
+// func (m *PrePersistenceContext) GetAppsUpdated(height int64) ([][]byte, error) {
+// 	// Not implemented
+// 	return nil, nil
+// }
 
 func (m *PrePersistenceContext) UpdateAppTree([][]byte) error {
 	// Not implemented

@@ -85,7 +85,7 @@ type PersistenceContext interface {
 	SetAppPauseHeight(address []byte, height int64) error
 	GetAppOutputAddress(operator []byte, height int64) (output []byte, err error)
 	// App Operations - For Tree Merkling
-	GetAppsUpdated(height int64) ([][]byte, error) // Returns the apps updates at the given height
+	// GetAppsUpdated(height int64) ([][]byte, error) // Returns the apps updates at the given height
 	UpdateAppTree([][]byte) error
 
 	// ServiceNode Operations

@@ -4,9 +4,17 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"log"
+	"os"
 
 	"github.com/pokt-network/pocket/persistence/schema"
 )
+
+func (p *persistenceModule) shouldLoadBlockStore() bool {
+	if _, err := os.Stat(p.GetBus().GetConfig().Persistence.BlockStorePath); err == nil {
+		return true
+	}
+	return false
+}
 
 // OPTIMIZE(team): get from blockstore or keep in cache/memory
 func (p PostgresContext) GetLatestBlockHeight() (latestHeight int64, err error) {

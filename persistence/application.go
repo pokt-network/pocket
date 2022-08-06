@@ -28,7 +28,9 @@ func (p PostgresContext) UpdateAppTree(apps [][]byte) error {
 	return nil
 }
 
-func (p PostgresContext) GetAppsUpdated(height int64) (apps [][]byte, err error) {
+// TODO_IN_THIS_COMMIT: Not exposed via interface yet
+// func (p PostgresContext) getAppsUpdated(height int64) (apps [][]byte, err error) {
+func (p PostgresContext) getAppsUpdated(height int64) (apps []*typesGenesis.App, err error) {
 	actors, err := p.GetActorsUpdated(schema.ApplicationActor, height)
 	if err != nil {
 		return nil, err
@@ -36,7 +38,7 @@ func (p PostgresContext) GetAppsUpdated(height int64) (apps [][]byte, err error)
 
 	for _, actor := range actors {
 		// This breaks the pattern of protos in persistence
-		app := typesGenesis.App{
+		app := &typesGenesis.App{
 			Address:   []byte(actor.Address),
 			PublicKey: []byte(actor.PublicKey),
 			// Paused:          actor.Paused,
@@ -48,11 +50,12 @@ func (p PostgresContext) GetAppsUpdated(height int64) (apps [][]byte, err error)
 			UnstakingHeight: actor.UnstakingHeight,
 			Output:          []byte(actor.OutputAddress),
 		}
-		appBytes, err := proto.Marshal(&app)
-		if err != nil {
-			return nil, err
-		}
-		apps = append(apps, appBytes)
+		// appBytes, err := proto.Marshal(&app)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// apps = append(apps, appBytes)
+		apps = append(apps, app)
 	}
 	return
 }

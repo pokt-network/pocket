@@ -1,7 +1,6 @@
 package persistence
 
 import (
-	"crypto/sha256"
 	"log"
 
 	"github.com/celestiaorg/smt"
@@ -48,20 +47,6 @@ func (p PostgresContext) SetValidatorStakeAmount(address []byte, stakeAmount str
 	panic("TODO: implement PostgresContext.SetValidatorStakeAmount")
 }
 
-type MerkleTree float64
-
-const (
-	AppMerkleTree MerkleTree = iota
-	ValMerkleTree
-	FishMerkleTree
-	ServiceNodeMerkleTree
-	AccountMerkleTree
-	PoolMerkleTree
-	BlocksMerkleTree
-	ParamsMerkleTree
-	FlagsMerkleTree
-)
-
 type persistenceModule struct {
 	bus modules.Bus
 
@@ -84,7 +69,7 @@ func Create(c *config.Config) (modules.PersistenceModule, error) {
 		return nil, err
 	}
 
-	blockStore, err := kvstore.NewKVStore(c.Persistence.BlockStorePath)
+	blockStore, err := kvstore.OpenKVStore(c.Persistence.BlockStorePath)
 	if err != nil {
 		return nil, err
 	}
@@ -102,24 +87,25 @@ func Create(c *config.Config) (modules.PersistenceModule, error) {
 func (p *persistenceModule) Start() error {
 	log.Println("Starting persistence module...")
 
-	shouldHydrateGenesis := false
-	shouldHydrateGenesis, err := p.shouldHydrateGenesisDb()
-	if err != nil {
-		return err
-	}
-
-	if shouldHydrateGenesis {
+	if shouldHydrateGenesis, err := p.shouldHydrateGenesisDb(); err != nil {
+		return nil
+	} else if shouldHydrateGenesis {
+		log.Println("Hydrating genesis state...")
 		if err := p.hydrateGenesisDbState(); err != nil {
 			return err
 		}
-		log.Println("Hydrating genesis state...")
 	} else {
-		log.Println("Loading state from previous state...")
+		log.Println("TODO: Finish loading previous state...")
+
 	}
 
-	if err != p.initializeTrees() {
+	// DISCUSS_IN_THIS_COMMIT: We've been using the module function pattern, but this is cleaner and easier to test
+	trees, err := initializeTrees()
+	if err != nil {
 		return err
 	}
+	// TODO_IN_THIS_COMMIT: load trees from state
+	p.trees = trees
 
 	return nil
 }
@@ -182,31 +168,3 @@ func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 
 	return m.blockStore.Exists(heightToBytes(int64(maxHeight)))
 }
-
-func (m *persistenceModule) initializeTrees() error {
-	// Initialise two new key-value store to store the nodes and values of the tree
-	nodeStore := smt.NewSimpleMap()
-	valueStore := smt.NewSimpleMap()
-
-	// Initialise the tree
-	tree := smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
-
-	m.trees[AppMerkleTree] = tree
-
-	return nil
-}
-
-// 	// Update the key "foo" with the value "bar"
-// 	_, _ = tree.Update([]byte("foo"), []byte("bar"))
-
-// 	// Generate a Merkle proof for foo=bar
-// 	proof, _ := tree.Prove([]byte("foo"))
-// 	root := tree.Root() // We also need the current tree root for the proof
-
-// 	// Verify the Merkle proof for foo=bar
-// 	if smt.VerifyProof(proof, root, []byte("foo"), []byte("bar"), sha256.New()) {
-// 		fmt.Println("Proof verification succeeded.")
-// 	} else {
-// 		fmt.Println("Proof verification failed.")
-// 	}
-// }

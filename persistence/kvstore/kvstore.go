@@ -1,6 +1,7 @@
 package kvstore
 
 import (
+	"errors"
 	"log"
 
 	badger "github.com/dgraph-io/badger/v3"
@@ -19,11 +20,19 @@ type KVStore interface {
 
 var _ KVStore = &badgerKVStore{}
 
+var (
+	ErrKVStoreExists    = errors.New("kvstore already exists")
+	ErrKVStoreNotExists = errors.New("kvstore does not exist")
+)
+
 type badgerKVStore struct {
 	db *badger.DB
 }
 
-func NewKVStore(path string) (KVStore, error) {
+// REFACTOR: Loads or creates a badgerDb at `path`. This may potentially need to be refactored
+// into `NewKVStore` and `LoadKVStore` depending on how state sync evolves by leveraging `os.Stat`
+// on the file path.
+func OpenKVStore(path string) (KVStore, error) {
 	db, err := badger.Open(badger.DefaultOptions(path))
 	if err != nil {
 		return nil, err
