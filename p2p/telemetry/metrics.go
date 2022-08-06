@@ -10,4 +10,8 @@ const (
 
 	BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME = "broadcast_message_redundancy_per_block_event_metric"
 	RAINTREE_MESSAGE_EVENT_METRIC_NAME                       = "raintree_message_event_metric"
+
+	// Attributes
+	RAINTREE_ATTRIBUTE_NAME_HEIGHT = "height"
+	RAINTREE_ATTRIBUTE_NAME_HASH   = "hash"
 )

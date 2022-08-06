@@ -151,7 +151,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		EmitEvent(
 			p2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
 			p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_NAME,
-			"height", blockHeight,
+			p2pTelemetry.RAINTREE_ATTRIBUTE_NAME_HEIGHT, blockHeight,
 		)
 
 	var rainTreeMsg typesP2P.RainTreeMessage
@@ -188,8 +188,8 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 			EmitEvent(
 				p2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
 				p2pTelemetry.BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME,
-				"hash", hashString,
-				"height", blockHeight,
+				p2pTelemetry.RAINTREE_ATTRIBUTE_NAME_HASH, hashString,
+				p2pTelemetry.RAINTREE_ATTRIBUTE_NAME_HEIGHT, blockHeight,
 			)
 
 		return nil, nil
@@ -225,6 +225,10 @@ func (n *rainTreeNetwork) SetBus(bus modules.Bus) {
 }
 
 func (n *rainTreeNetwork) GetBus() modules.Bus {
+	// if n.bus == nil {
+	// 	log.Printf("[WARN] PocketBus is not initialized in rainTreeNetwork")
+	// 	return nil
+	// }
 	return n.bus
 }
 
@@ -234,6 +238,7 @@ func getNonce() uint64 {
 }
 
 // INVESTIGATE(olshansky): This did not generate a random nonce on every call
+
 // func getNonce() uint64 {
 // 	seed, err := cryptRand.Int(cryptRand.Reader, big.NewInt(math.MaxInt64))
 // 	if err != nil {
