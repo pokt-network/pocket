@@ -1,9 +1,5 @@
 package p2p
 
-// TODO(team): This is a a temporary parallel to the real `p2p` module.
-// It should be removed once the real `p2p` module is ready but is meant
-// to be a "real" replacement for now.
-
 import (
 	"log"
 
@@ -53,6 +49,7 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 }
 
 func (m *p2pModule) SetBus(bus modules.Bus) {
+	m.network.SetBus(m.GetBus())
 	m.bus = bus
 }
 
@@ -67,14 +64,6 @@ func (m *p2pModule) GetBus() modules.Bus {
 func (m *p2pModule) Start() error {
 	log.Println("Starting network module")
 
-	m.GetBus().
-		GetTelemetryModule().
-		GetTimeSeriesAgent().
-		CounterRegister(
-			p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME,
-			p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
-		)
-
 	addrBook, err := ValidatorMapToAddrBook(m.p2pConfig, m.bus.GetConsensusModule().ValidatorMap())
 	if err != nil {
 		return err
@@ -86,8 +75,6 @@ func (m *p2pModule) Start() error {
 		m.network = stdnetwork.NewNetwork(addrBook)
 	}
 
-	m.network.SetBus(m.GetBus())
-
 	go func() {
 		for {
 			data, err := m.listener.Read()
@@ -98,11 +85,15 @@ func (m *p2pModule) Start() error {
 			go m.handleNetworkMessage(data)
 		}
 	}()
-	m.
-		GetBus().
+
+	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
-		CounterIncrement(p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME)
+		CounterRegister(
+			p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME,
+			p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
+		)
+
 	return nil
 }
 
