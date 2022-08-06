@@ -49,8 +49,8 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Utility Changelog](utility/doc/CHANGELOG.md)
 - [Consensus Changelog](consensus/CHANGELOG.md)
 - [Persistence Changelog](persistence/CHANGELOG.md)
-- _Coming Soon: Telemetry Changelog_
 - [P2P Changelog](p2p/CHANGELOG.md)
+- _Coming Soon: Telemetry Changelog_
 
 ## Support & Contact
 
