@@ -24,7 +24,7 @@ var (
 /*** NewRound Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.logConsensusEvent(m, msg)
+	handler.emitConsensusEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -38,7 +38,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 /*** Prepare Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.logConsensusEvent(m, msg)
+	handler.emitConsensusEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -71,7 +71,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 /*** PreCommit Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.logConsensusEvent(m, msg)
+	handler.emitConsensusEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -99,7 +99,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 /*** Commit Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.logConsensusEvent(m, msg)
+	handler.emitConsensusEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -127,7 +127,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 /*** Decide Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.logConsensusEvent(m, msg)
+	handler.emitConsensusEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -156,24 +156,7 @@ func (handler *HotstuffReplicaMessageHandler) anteHandle(m *consensusModule, msg
 	return nil
 }
 
-func (handler *HotstuffReplicaMessageHandler) logConsensusEvent(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	var stepLabel string
-	switch msg.GetStep() {
-	case NewRound:
-		stepLabel = consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_NEW_ROUND
-	case Prepare:
-		stepLabel = consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_PREPARE
-	case PreCommit:
-		stepLabel = consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_PRECOMMIT
-	case Commit:
-		stepLabel = consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_COMMIT
-	case Decide:
-		stepLabel = consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_STEP_DECIDE
-	default:
-		m.nodeLog(fmt.Sprintf("Unknown step: %s", typesCons.StepToString[msg.GetStep()]))
-		return
-	}
-
+func (handler *HotstuffReplicaMessageHandler) emitConsensusEvent(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	m.GetBus().
 		GetTelemetryModule().
 		GetEventMetricsAgent().
@@ -181,7 +164,7 @@ func (handler *HotstuffReplicaMessageHandler) logConsensusEvent(m *consensusModu
 			consensusTelemetry.CONSENSUS_EVENT_METRICS_NAMESPACE,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_NAME,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.CurrentHeight(),
-			stepLabel,
+			typesCons.StepToString[msg.GetStep()],
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_REPLICA,
 		)
 }
