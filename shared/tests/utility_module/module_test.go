@@ -1,9 +1,10 @@
 package utility_module
 
 import (
-	"github.com/pokt-network/pocket/persistence"
 	"math/big"
 	"testing"
+
+	"github.com/pokt-network/pocket/persistence"
 
 	"github.com/stretchr/testify/require"
 
@@ -53,8 +54,10 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	PersistenceModule, err = persistence.Create(cfg)
 	require.NoError(t, err)
 	require.NoError(t, PersistenceModule.Start(), "start persistence mod")
+
 	persistenceContext, err := PersistenceModule.NewRWContext(height)
 	require.NoError(t, err)
+
 	return utility.UtilityContext{
 		LatestHeight: height,
 		Mempool:      mempool,
