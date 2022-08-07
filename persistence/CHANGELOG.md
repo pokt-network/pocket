@@ -9,12 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.2] - 2022-08-03
 
-Pocket Persistence Deprecate Pre-persistence
+Deprecate PrePersistence
+
 - Fix for bytes parameters
 - Accounts / pools default to 0
 - Pre-added accounts to genesis file
 - Separated out Persistence Read Context from Persistence Write Context
-- Added various TODO's inorder to code-complete a working persistence module
+- Added various TODO's in order to code-complete a working persistence module
 - Added genesis level functions to GetAllActors() and GetAllAccounts/Pools() for testing
 - Added PopulateGenesisState function to persistence module
 - Fixed the stake status iota issue
