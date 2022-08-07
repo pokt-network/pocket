@@ -1,20 +1,33 @@
 package utility
 
 import (
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	"math/big"
 )
 
 /*
-This 'block' file contains all the lifecycle block operations.
-The ApplyBlock function is the 'main' operation that executes a 'block' object against the state
-Pocket Network adpots a Tendermint-like lifecycle of BeginBlock -> DeliverTx -> EndBlock in that order
-Like the name suggests, BeginBlock is an autonomous state operation that executes at the beginning of every block
-DeliverTx individually applys each transaction against the state and rolls it back (not yet implemented) if fails.
-like BeginBlock, EndBlock is an autonomous state oepration that executes at the end of every block.
+	This 'block' file contains all the lifecycle block operations.
+
+	The ApplyBlock function is the 'main' operation that executes a 'block' object against the state.
+
+	Pocket Network adopt a Tendermint-like lifecycle of BeginBlock -> DeliverTx -> EndBlock in that
+	order. Like the name suggests, BeginBlock is an autonomous state operation that executes at the
+	beginning of every block DeliverTx individually applies each transaction against the state and
+	rolls it back (not yet implemented) if fails. Like BeginBlock, EndBlock is an autonomous state
+	operation that executes at the end of every block.
 */
+
+var (
+	actorTypes = []typesUtil.ActorType{
+		typesUtil.ActorType_App,
+		typesUtil.ActorType_Node,
+		typesUtil.ActorType_Fish,
+		typesUtil.ActorType_Val,
+	}
+)
 
 func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
 	u.LatestHeight = latestHeight
@@ -84,15 +97,6 @@ func (u *UtilityContext) GetAppHash() ([]byte, types.Error) {
 	}
 	return appHash, nil
 }
-
-var (
-	actorTypes = []typesUtil.ActorType{
-		typesUtil.ActorType_App,
-		typesUtil.ActorType_Node,
-		typesUtil.ActorType_Fish,
-		typesUtil.ActorType_Val,
-	}
-)
 
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
 func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) types.Error {
