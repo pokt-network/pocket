@@ -41,6 +41,7 @@ func (p *PostgresContext) GetExists(actorSchema schema.ProtocolActorSchema, addr
 	return
 }
 
+// TODO_IN_THIS_COMMIT: Consolidate logic with `GetActor` to reduce code footprint
 func (p *PostgresContext) GetActorsUpdated(actorSchema schema.ProtocolActorSchema, height int64) (actors []schema.BaseActor, err error) {
 	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
@@ -56,9 +57,15 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema schema.ProtocolActorSchem
 	var actor schema.BaseActor
 	for rows.Next() {
 		if err = rows.Scan(
-			&actor.Address, &actor.PublicKey, &actor.StakedTokens, &actor.ActorSpecificParam,
-			&actor.OutputAddress, &actor.PausedHeight, &actor.UnstakingHeight,
-			&actor.Chains, &height,
+			&actor.Address,
+			&actor.PublicKey,
+			&actor.StakedTokens,
+			&actor.ActorSpecificParam,
+			&actor.OutputAddress,
+			&actor.PausedHeight,
+			&actor.UnstakingHeight,
+			&actor.Chains,
+			&height,
 		); err != nil {
 			return
 		}

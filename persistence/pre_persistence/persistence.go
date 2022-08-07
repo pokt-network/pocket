@@ -184,6 +184,11 @@ func (m *PrePersistenceContext) RollbackToSavePoint(bytes []byte) error {
 	return nil
 }
 
+func (m *PrePersistenceContext) UpdateAppHash() ([]byte, error) {
+	// log.Fatalf("PrePersistenceContext not implementing UpdateAppHash")
+	return nil, nil
+}
+
 // AppHash creates a unique hash based on the global state object
 // NOTE: AppHash is an inefficient, arbitrary, mock implementation that enables the functionality
 // TODO written for replacement, taking any and all better implementation suggestions - even if a temporary measure

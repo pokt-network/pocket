@@ -74,8 +74,8 @@ func (u *UtilityContext) EndBlock(proposer []byte) types.Error {
 	if err := u.BeginUnstakingMaxPaused(); err != nil {
 		return err
 	}
-	if err := u.updateStateCommitment(); err != nil {
-		return err
+	if _, err := u.Context.UpdateAppHash(); err != nil {
+		return types.ErrAppHash(err)
 	}
 	return nil
 }

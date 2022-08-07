@@ -28,8 +28,6 @@ func (p PostgresContext) UpdateAppTree(apps [][]byte) error {
 	return nil
 }
 
-// TODO_IN_THIS_COMMIT: Not exposed via interface yet
-// func (p PostgresContext) getAppsUpdated(height int64) (apps [][]byte, err error) {
 func (p PostgresContext) getAppsUpdated(height int64) (apps []*typesGenesis.App, err error) {
 	actors, err := p.GetActorsUpdated(schema.ApplicationActor, height)
 	if err != nil {
@@ -37,12 +35,14 @@ func (p PostgresContext) getAppsUpdated(height int64) (apps []*typesGenesis.App,
 	}
 
 	for _, actor := range actors {
-		// This breaks the pattern of protos in persistence
+		// DISCUSS_IN_THIS_COMMIT: This breaks the pattern of protos in persistence.
+		// 	- Is it okay?
+		// 	- Do we embed this logic in `UpdateAppTree`
 		app := &typesGenesis.App{
 			Address:   []byte(actor.Address),
 			PublicKey: []byte(actor.PublicKey),
-			// Paused:          actor.Paused,
-			// Status:          actor.Status,
+			// Paused:          actor.Paused, // DISCUSS_IN_THIS_COMMIT: Is this just a check for pause height = -1?
+			// Status:          actor.Status, // TODO_IN_THIS_COMMIT: Use logic from `GetActorStatus` without an extra query
 			Chains:          actor.Chains,
 			MaxRelays:       actor.ActorSpecificParam,
 			StakedTokens:    actor.StakedTokens,

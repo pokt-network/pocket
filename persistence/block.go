@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/persistence/schema"
 )
 
+// TODO_IN_THIS_COMMIT: Out of scope so we might just need to do this as part of state sync
 func (p *persistenceModule) shouldLoadBlockStore() bool {
 	if _, err := os.Stat(p.GetBus().GetConfig().Persistence.BlockStorePath); err == nil {
 		return true
@@ -61,7 +62,7 @@ func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
 	// INVESTIGATE: Note that we are writing this directly to the blockStore. Depending on how
 	// the use of the PostgresContext evolves, we may need to write this to `ContextStore` and copy
 	// over to `BlockStore` when the block is committed.
-	return p.BlockStore.Put(heightToBytes(p.Height), blockProtoBytes)
+	return p.BlockStore.Set(heightToBytes(p.Height), blockProtoBytes)
 }
 
 func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {

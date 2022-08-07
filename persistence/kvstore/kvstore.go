@@ -4,21 +4,26 @@ import (
 	"errors"
 	"log"
 
+	"github.com/celestiaorg/smt"
 	badger "github.com/dgraph-io/badger/v3"
 )
 
+// TODO_IN_THIS_COMMIT: We might be able to remove the `KVStore` interface altogether if we end up using smt.MapStore
 type KVStore interface {
 	// Lifecycle methods
 	Stop() error
 
-	// Accessors
-	Put(key []byte, value []byte) error
-	Get(key []byte) ([]byte, error)
 	Exists(key []byte) (bool, error)
 	ClearAll() error
+
+	// Same interface as in `smt.MapStore``
+	Set(key []byte, value []byte) error
+	Get(key []byte) ([]byte, error)
+	Delete(key []byte) error
 }
 
 var _ KVStore = &badgerKVStore{}
+var _ smt.MapStore = &badgerKVStore{}
 
 var (
 	ErrKVStoreExists    = errors.New("kvstore already exists")
@@ -48,7 +53,7 @@ func NewMemKVStore() KVStore {
 	return badgerKVStore{db: db}
 }
 
-func (store badgerKVStore) Put(key []byte, value []byte) error {
+func (store badgerKVStore) Set(key []byte, value []byte) error {
 	txn := store.db.NewTransaction(true)
 	defer txn.Discard()
 
@@ -83,6 +88,11 @@ func (store badgerKVStore) Get(key []byte) ([]byte, error) {
 	}
 
 	return value, nil
+}
+
+func (store badgerKVStore) Delete(key []byte) error {
+	log.Fatalf("badgerKVStore.Delete not implemented yet")
+	return nil
 }
 
 func (store badgerKVStore) Exists(key []byte) (bool, error) {

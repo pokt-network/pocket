@@ -243,7 +243,7 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 }
 
 func (m *consensusModule) AppHash() string {
-	return m.appHash
+	return m.appHash // TODO: This is a problem
 }
 
 func (m *consensusModule) CurrentHeight() uint64 {

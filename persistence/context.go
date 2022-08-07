@@ -14,9 +14,17 @@ func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	return nil
 }
 
+func (p PostgresContext) UpdateAppHash() ([]byte, error) {
+	if _, err := p.updateStateHash(); err != nil {
+		return nil, err
+	}
+	return p.StateHash, nil
+}
+
 func (p PostgresContext) AppHash() ([]byte, error) {
-	log.Println("TODO: AppHash not implemented")
-	return []byte("A real app hash, I am not"), nil
+	// log.Println("TODO: AppHash not implemented")
+	// return []byte("A real app hash, I am not"), n
+	return p.StateHash, nil
 }
 
 func (p PostgresContext) Reset() error {
@@ -24,8 +32,11 @@ func (p PostgresContext) Reset() error {
 }
 
 func (p PostgresContext) Commit() error {
-	// HACK: The data has already been written to the postgres DB, so what should we do here? The idea I have is:
 	log.Println("TODO: Postgres context commit is currently a NOOP")
+	// HACK: The data has already been written to the postgres DB, so what should we do here? The idea I have is:
+	// if _, err := p.updateStateHash(); err != nil {
+	// 	return err
+	// }
 	return nil
 }
 

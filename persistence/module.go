@@ -99,8 +99,9 @@ func (p *persistenceModule) Start() error {
 
 	}
 
-	// DISCUSS_IN_THIS_COMMIT: We've been using the module function pattern, but this is cleaner and easier to test
-	trees, err := initializeTrees()
+	// DISCUSS_IN_THIS_COMMIT: We've been using the module function pattern, but this making `initializeTrees`
+	// be able to create and/or load trees outside the scope of the persistence module makes it easier to test.
+	trees, err := newMerkleTrees()
 	if err != nil {
 		return err
 	}
