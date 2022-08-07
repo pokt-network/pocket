@@ -24,6 +24,13 @@ func init() {
 
 var _ modules.PersistenceRWContext = &PostgresContext{}
 
+var protocolActorSchemas = []schema.ProtocolActorSchema{
+	schema.ApplicationActor,
+	schema.FishermanActor,
+	schema.ServiceNodeActor,
+	schema.ValidatorActor,
+}
+
 // TODO: These are only externalized for testing purposes, so they should be made private and
 //       it is trivial to create a helper to initial a context with some values.
 type PostgresContext struct {
@@ -38,10 +45,6 @@ type PostgresDB struct {
 
 func (pg *PostgresDB) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
 	tx, err := pg.GetTxn()
-	// IMPROVE: Depending on how the use of `PostgresContext` evolves, we may be able to get
-	// access to these directly via the postgres module.
-	//PostgresDB *pgx.Conn
-	//BlockStore kvstore.KVStore
 	return context.TODO(), tx, err
 }
 
@@ -53,15 +56,8 @@ func (pg *PostgresContext) GetContext() (context.Context, error) {
 	return context.TODO(), nil
 }
 
-var protocolActorSchemas = []schema.ProtocolActorSchema{
-	schema.ApplicationActor,
-	schema.FishermanActor,
-	schema.ServiceNodeActor,
-	schema.ValidatorActor,
-}
-
 // TODO(pokt-network/pocket/issues/77): Enable proper up and down migrations
-// TODO: Split `connect` and `initialize` into two separate compnents
+// TODO: Split `connect` and `initialize` into two separate components.
 func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
 	ctx := context.TODO()
 

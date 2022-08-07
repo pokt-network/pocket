@@ -3,10 +3,11 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
+
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility/types"
-	"log"
 )
 
 func (pm *persistenceModule) PopulateGenesisState(state *genesis.GenesisState) { // TODO (Andrew) genericize with actors interface once merged with #111

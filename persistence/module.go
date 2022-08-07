@@ -2,8 +2,9 @@ package persistence
 
 import (
 	"context"
-	"github.com/jackc/pgx/v4"
 	"log"
+
+	"github.com/jackc/pgx/v4"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/config"
@@ -51,7 +52,6 @@ func Create(c *config.Config) (modules.PersistenceModule, error) {
 	if err != nil {
 		return nil, err
 	}
-	// populate genesis state
 	pm.PopulateGenesisState(c.GenesisSource.GetState())
 	return pm, nil
 }

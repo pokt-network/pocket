@@ -24,7 +24,8 @@ var (
 	DefaultAppStakePool, _         = crypto.NewPrivateKey("429627bac8dc322f0aeeb2b8f25b329899b7ebb9605d603b5fb74557b13357e50834e9575c19d9d7d664ec460a98abb2435ece93440eb482c87d5b7259a8d271")
 )
 
-var ( // TODO these are needed placeholders to pass validation checks. Until we have a real genesis implementation & testing environment, this will suffice
+// TODO these are needed placeholders to pass validation checks. Until we have a real genesis implementation & testing environment, this will suffice
+var (
 	DefaultChains            = []string{"0001"}
 	DefaultServiceUrl        = "https://foo.bar"
 	DefaultStakeBig          = big.NewInt(1000000000000000)
