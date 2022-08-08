@@ -26,7 +26,7 @@ type TimeSeriesAgent interface {
 	// Register a gauge by name
 	GaugeRegister(name string, description string)
 
-	// Sets the Gauge to an arbitrary value.
+	// Sets the Gauge to an arbitrary value
 	GaugeSet(name string, value float64) (prometheus.Gauge, error)
 
 	// Increments the Gauge by 1. Use Add to increment it by arbitrary values.
