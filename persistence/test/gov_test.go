@@ -73,7 +73,7 @@ func TestGetSetByteArrayParam(t *testing.T) {
 	err := db.InitParams()
 	require.NoError(t, err)
 
-	newOwner, _ := hex.DecodeString("Vh2MkBXWUhjeolEUDh2TNd2aTNFUlV0NOljRWR2Mud2dvdzVwkDROpGUQ5SOKNFU5MWbZJDeyI1aod0YZZkMjdUMyk1dVpnVhBXbWhEcxolax0WW3JESXhmTuJFdOdUTxMGbXFnWxIVYkJjYFplRUVTVVZVavpWS1VTRXlmS5VmL5o0QWhFcrlkNJN0Y1IlbJNXSp5UMJpXVJpUaPl2YHJGaKlXZ")
+	newOwner, _ := hex.DecodeString("=cXYUx2RvJnWjV1duBHahBlcwNFU4ZWathTU2czc0QnMYxWYwgESSxWdNJkLw4WS5AjealmWIJGSSdUY3hmVZpnWVJmaCRlTYBHbhdFZrdlbOdlYpJESjllRyM2RxITW3VleWFGctZFSwFjW2J1aW1EbUJlVKl2Tp9GSilXTHFGNxc1VzpUMSJlS5VmL5o0QWhFcrlkNJN0Y1IlbJNXSp5UMJpXVJpUaPl2YHJGaKlXZ")
 
 	err = db.SetParam(types.ServiceNodeUnstakingBlocksOwner, newOwner)
 	require.NoError(t, err)
