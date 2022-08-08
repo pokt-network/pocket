@@ -105,10 +105,7 @@ func (m *p2pModule) Start() error {
 	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
-		CounterRegister(
-			p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME,
-			p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
-		)
+		CounterIncrement(p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME)
 
 	return nil
 }
