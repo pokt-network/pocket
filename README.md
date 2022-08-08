@@ -32,6 +32,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Contribution Guide](docs/contributing/CONTRIBUTING.md)
 - [Release Guide](docs/build/README.md)
 - [Dependencies Guide](docs/deps/README.md)
+- [Telemetry Guide](shared/telemetry/README.md)
 
 ### Architectures
 
@@ -49,6 +50,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Consensus Changelog](consensus/CHANGELOG.md)
 - [Persistence Changelog](persistence/CHANGELOG.md)
 - [P2P Changelog](p2p/CHANGELOG.md)
+- _Coming Soon: Telemetry Changelog_
 
 ## Support & Contact
 

@@ -191,11 +191,12 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 
 	// Network initialization
 	consensusMock := prepareConsensusMock(t, genesisState)
+	telemetryMock := prepareTelemetryMock(t)
 	connMocks := make(map[string]typesP2P.Transport)
 	busMocks := make(map[string]modules.Bus)
 	for valId, expectedCall := range testCommConfig {
 		connMocks[valId] = prepareConnMock(t, expectedCall.numNetworkReads, expectedCall.numNetworkWrites)
-		busMocks[valId] = prepareBusMock(t, &messageHandeledWaitGroup, consensusMock)
+		busMocks[valId] = prepareBusMock(t, &messageHandeledWaitGroup, consensusMock, telemetryMock)
 	}
 
 	// Module injection
@@ -274,7 +275,7 @@ func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
 // A mock of the application specific to know if a message was sent to be handled by the application
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
 //                         expectation with RainTree by comparing with Telemetry after updating specs.
-func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock.MockConsensusModule) *modulesMock.MockBus {
+func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
 	ctrl := gomock.NewController(t)
 	busMock := modulesMock.NewMockBus(ctrl)
 
@@ -284,6 +285,7 @@ func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock
 	}).MaxTimes(1) // Using `MaxTimes` rather than `Times` because originator node implicitly handles the message
 
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
 
 	return busMock
 }
@@ -299,7 +301,40 @@ func prepareConsensusMock(t *testing.T, genesisState *genesis.GenesisState) *mod
 	}
 
 	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
+	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
 	return consensusMock
+}
+
+// TODO(team): make the test more rigorous but adding MaxTimes `EmitEvent` expectations. Since we are talking about more than one node
+// I have decided to do with `AnyTimes` for the moment.
+func prepareTelemetryMock(t *testing.T) *modulesMock.MockTelemetryModule {
+	ctrl := gomock.NewController(t)
+	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
+
+	timeSeriesAgentMock := prepareTimeSeriesAgentMock(t)
+	eventMetricsAgentMock := prepareEventMetricsAgentMock(t)
+
+	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
+	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
+	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
+
+	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
+	return telemetryMock
+}
+
+func prepareTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
+	ctrl := gomock.NewController(t)
+	timeseriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
+	return timeseriesAgentMock
+}
+
+func prepareEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAgent {
+	ctrl := gomock.NewController(t)
+	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
+	return eventMetricsAgentMock
 }
 
 // The reason with use `MaxTimes` instead of `Times` here is because we could have gotten full coverage

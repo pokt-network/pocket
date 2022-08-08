@@ -131,8 +131,9 @@ func CreateTestConsensusPocketNode(
 	persistenceMock := basePersistenceMock(t, testChannel)
 	p2pMock := baseP2PMock(t, testChannel)
 	utilityMock := baseUtilityMock(t, testChannel)
+	telemetryMock := baseTelemetryMock(t, testChannel)
 
-	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, cfg)
+	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock, cfg)
 	require.NoError(t, err)
 
 	pocketNode := &shared.Node{
@@ -349,6 +350,37 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 	persistenceContextMock.EXPECT().Commit().Return(nil).AnyTimes()
 
 	return utilityMock
+}
+
+func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockTelemetryModule {
+	ctrl := gomock.NewController(t)
+	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
+	timeSeriesAgentMock := baseTelemetryTimeSeriesAgentMock(t)
+	eventMetricsAgentMock := baseTelemetryEventMetricsAgentMock(t)
+
+	telemetryMock.EXPECT().Start().Do(func() {}).AnyTimes()
+	telemetryMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
+
+	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
+	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).MaxTimes(1)
+	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
+
+	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
+	return telemetryMock
+}
+
+func baseTelemetryTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
+	ctrl := gomock.NewController(t)
+	timeseriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
+	return timeseriesAgentMock
+}
+
+func baseTelemetryEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAgent {
+	ctrl := gomock.NewController(t)
+	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
+	return eventMetricsAgentMock
 }
 
 /*** Genesis Helpers ***/
