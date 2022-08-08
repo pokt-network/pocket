@@ -1,5 +1,9 @@
 package p2p
 
+// TODO(team): This is a a temporary parallel to the real `p2p` module.
+// It should be removed once the real `p2p` module is ready but is meant
+// to be a "real" replacement for now.
+
 import (
 	"log"
 
@@ -65,6 +69,14 @@ func (m *p2pModule) GetBus() modules.Bus {
 func (m *p2pModule) Start() error {
 	log.Println("Starting network module")
 
+	m.GetBus().
+		GetTelemetryModule().
+		GetTimeSeriesAgent().
+		CounterRegister(
+			p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME,
+			p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
+		)
+
 	addrBook, err := ValidatorMapToAddrBook(m.p2pConfig, m.bus.GetConsensusModule().ValidatorMap())
 	if err != nil {
 		return err
@@ -75,6 +87,8 @@ func (m *p2pModule) Start() error {
 	} else {
 		m.network = stdnetwork.NewNetwork(addrBook)
 	}
+	m.network.SetBus(m.GetBus())
+
 	m.network.SetBus(m.GetBus())
 
 	go func() {

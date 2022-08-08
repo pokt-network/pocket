@@ -225,6 +225,7 @@ func (n *rainTreeNetwork) SetBus(bus modules.Bus) {
 }
 
 func (n *rainTreeNetwork) GetBus() modules.Bus {
+	// TODO: Do we need this if?
 	// if n.bus == nil {
 	// 	log.Printf("[WARN] PocketBus is not initialized in rainTreeNetwork")
 	// 	return nil
