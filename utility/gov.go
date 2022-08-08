@@ -256,7 +256,7 @@ func (u *UtilityContext) GetDoubleSignFeeOwner() (owner []byte, err types.Error)
 }
 
 func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
-	//DISCUSS (@deblasis): here we could potentially leverage the struct tags in gov.proto by specifying an `owner` key
+	// DISCUSS (@deblasis): here we could potentially leverage the struct tags in gov.proto by specifying an `owner` key
 	// eg: `app_minimum_stake` could have `pokt:"owner=app_minimum_stake_owner"`
 	// in here we would use that map to point to the owner, removing this switch, centralizing the logic and making it declarative
 	store := u.Store()

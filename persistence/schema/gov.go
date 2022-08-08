@@ -12,6 +12,9 @@ import (
 
 // TODO(https://github.com/pokt-network/pocket/issues/76): Optimize gov parameters implementation & schema.
 
+// init initializes a map that contains the metadata extracted from `gov.proto`.
+//
+// Since protobuf files do not change at runtime, it seems efficient to do it here.
 func init() {
 	govParamMetadataMap = parseGovProto()
 }
@@ -59,6 +62,8 @@ var (
 
 // InsertParams generates the SQL INSERT statement given a *genesis.Params
 //
+// It leverages metadata in the form of struct tags (see `parseGovProto` for more information).
+//
 // WARNING: reflections in prod
 func InsertParams(params *genesis.Params, height int64) string {
 	val := reflect.ValueOf(params)
@@ -100,12 +105,12 @@ func InsertParams(params *genesis.Params, height int64) string {
 	return sb.String()
 }
 
-func GetParamQuery(paramName string, height int64) string {
-	return fmt.Sprintf(`SELECT value FROM %s WHERE name='%s' AND height<=%d ORDER BY height DESC LIMIT 1`, ParamsTableName, paramName, height)
-}
-
-func GetFlagQuery(flagName string, height int64) string {
-	return fmt.Sprintf(`SELECT value, enabled FROM %s WHERE name='%s' AND height<=%d ORDER BY height DESC LIMIT 1`, FlagsTableName, flagName, height)
+func GetParamOrFlagQuery(tableName, flagName string, height int64) string {
+	fields := "value"
+	if tableName == FlagsTableName {
+		fields += ",enabled"
+	}
+	return fmt.Sprintf(`SELECT %s FROM %s WHERE name='%s' AND height<=%d ORDER BY height DESC LIMIT 1`, fields, tableName, flagName, height)
 }
 
 // SupportedParamTypes represents the types currently supported for the `value` property in params and flags
@@ -113,52 +118,39 @@ type SupportedParamTypes interface {
 	int | int32 | int64 | []byte | string
 }
 
-// SetParamQuery returns the SQL SQL INSERT (with conflict handling so that it's effectively an "upsert") required to set a parameter
-func SetParamQuery[T SupportedParamTypes](name string, value T, height int64) string {
+// InsertParamOrFlag returns the SQL SQL INSERT (with conflict handling so that it's effectively an "upsert") required to set a parameter/flag
+func InsertParamOrFlag[T SupportedParamTypes](tableName, name string, height int64, value T, enabled *bool) string {
 	fields := "name,height,type,value"
+	upsertFields := "type=EXCLUDED.type,value=EXCLUDED.value"
+	if tableName == FlagsTableName {
+		fields += ",enabled"
+		upsertFields += ",enabled=EXCLUDED.enabled"
+	}
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("INSERT INTO %s(%s) VALUES ('%s', %d, ", ParamsTableName, fields, name, height))
+	sb.WriteString(fmt.Sprintf("INSERT INTO %s(%s) VALUES ('%s', %d, ", tableName, fields, name, height))
+
 	switch tp := any(value).(type) {
 	case int, int32:
-		sb.WriteString(fmt.Sprintf("'%s', %d) ", ValTypeSmallInt, tp))
+		sb.WriteString(fmt.Sprintf("'%s', %d", ValTypeSmallInt, tp))
 	case int64:
-		sb.WriteString(fmt.Sprintf("'%s', %d) ", ValTypeBigInt, tp))
+		sb.WriteString(fmt.Sprintf("'%s', %d", ValTypeBigInt, tp))
 	case []byte:
-		sb.WriteString(fmt.Sprintf("'%s', '%s') ", ValTypeBigInt, hex.EncodeToString(tp)))
+		sb.WriteString(fmt.Sprintf("'%s', '%s'", ValTypeBigInt, hex.EncodeToString(tp)))
 	case string:
-		sb.WriteString(fmt.Sprintf("'%s', '%s') ", ValTypeString, tp))
+		sb.WriteString(fmt.Sprintf("'%s', '%s'", ValTypeString, tp))
 	default:
 		log.Fatalf("unhandled type for paramValue %T", tp)
 	}
 
-	constraint := fmt.Sprintf("%s_pkey", ParamsTableName)
-	sb.WriteString(fmt.Sprintf("ON CONFLICT ON CONSTRAINT %s DO UPDATE SET value=EXCLUDED.value, type=EXCLUDED.type", constraint))
-
-	return sb.String()
-}
-
-// SetFlagQuery returns the SQL INSERT (with conflict handling so that it's effectively an "upsert") required to set a flag
-func SetFlagQuery[T SupportedParamTypes](name string, value T, enabled bool, height int64) string {
-	fields := "name,height,type,value,enabled"
-
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("INSERT INTO %s(%s) VALUES ('%s', %d, ", FlagsTableName, fields, name, height))
-	switch tp := any(value).(type) {
-	case int, int32:
-		sb.WriteString(fmt.Sprintf("'%s', %d, ", ValTypeSmallInt, tp))
-	case int64:
-		sb.WriteString(fmt.Sprintf("'%s', %d, ", ValTypeBigInt, tp))
-	case []byte:
-		sb.WriteString(fmt.Sprintf("'%s', '%s', ", ValTypeBigInt, hex.EncodeToString(tp)))
-	case string:
-		sb.WriteString(fmt.Sprintf("'%s', '%s', ", ValTypeString, tp))
-	default:
-		log.Fatalf("unhandled type for paramValue %T", tp)
+	if enabled != nil {
+		sb.WriteString(fmt.Sprintf(",%t", *enabled))
 	}
 
-	constraint := fmt.Sprintf("%s_pkey", FlagsTableName)
-	sb.WriteString(fmt.Sprintf("%t) ON CONFLICT ON CONSTRAINT %s DO UPDATE SET value=EXCLUDED.value, type=EXCLUDED.type, enabled=EXCLUDED.enabled", enabled, constraint))
+	sb.WriteString(")")
+
+	constraint := fmt.Sprintf("%s_pkey", tableName)
+	sb.WriteString(fmt.Sprintf("ON CONFLICT ON CONSTRAINT %s DO UPDATE SET %s", constraint, upsertFields))
 	return sb.String()
 }
 
@@ -175,7 +167,12 @@ type govParamMetadata struct {
 	PropertyName string
 }
 
-// parseGovProto parses genesis.Params{} (generated from gov.proto) in order to extract metadata about its fields
+// parseGovProto parses genesis.Params{} (generated from gov.proto) in order to extract metadata about its fields.
+//
+// The metadata comes in the form of struct tags that we attached to gov.proto and also from the tags that protoc injects automatically.
+// Since currently we need to specify a mapping between the fields and a custom enum in the database (and potentially other things as well in the future),
+// instead of having to maintain multiple maps, which would lead to having to maintain multiple sources of truth, we centralized the declaration of the fields
+// and related metadata into the protobuf file.
 //
 // WARNING: reflections in prod
 func parseGovProto() (govParamMetadataMap map[string]govParamMetadata) {

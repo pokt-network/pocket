@@ -15,11 +15,11 @@ import (
 // TODO(https://github.com/pokt-network/pocket/issues/76): Optimize gov parameters implementation & schema.
 
 func (p PostgresContext) GetBlocksPerSession(height int64) (int, error) {
-	return GetParam[int](p, types.BlocksPerSessionParamName, height)
+	return p.GetIntParam(types.BlocksPerSessionParamName, height)
 }
 
 func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) {
-	return GetParam[int](p, types.ServiceNodesPerSessionParamName, height)
+	return p.GetIntParam(types.ServiceNodesPerSessionParamName, height)
 }
 
 func (p PostgresContext) InitParams() error {
@@ -32,71 +32,67 @@ func (p PostgresContext) InitParams() error {
 }
 
 func (p PostgresContext) GetIntParam(paramName string, height int64) (int, error) {
-	return GetParam[int](p, paramName, height)
+	v, _, err := getParamOrFlag[int](p, schema.ParamsTableName, paramName, height)
+	return v, err
 }
 
 func (p PostgresContext) GetStringParam(paramName string, height int64) (string, error) {
-	return GetParam[string](p, paramName, height)
+	v, _, err := getParamOrFlag[string](p, schema.ParamsTableName, paramName, height)
+	return v, err
 }
 
 func (p PostgresContext) GetBytesParam(paramName string, height int64) (param []byte, err error) {
-	return GetParam[[]byte](p, paramName, height)
+	v, _, err := getParamOrFlag[[]byte](p, schema.ParamsTableName, paramName, height)
+	return v, err
 }
 
-func (p PostgresContext) SetParam(paramName string, value interface{}) error {
-	switch t := value.(type) {
-	case int:
-		return SetParam(p, paramName, t)
-	case int32:
-		return SetParam(p, paramName, t)
-	case int64:
-		return SetParam(p, paramName, t)
-	case []byte:
-		return SetParam(p, paramName, t)
-	case string:
-		return SetParam(p, paramName, t)
-	default:
-		log.Fatalf("unhandled paramType %T for value %v", t, value)
-	}
-	return fmt.Errorf("how did you get here?")
+func (p PostgresContext) SetParam(paramName string, value any) error {
+	return p.setParamOrFlag(paramName, value, nil)
 }
 
 func (p PostgresContext) InitFlags() error {
-	//TODO: not implemented
+	// TODO: not implemented
 	return nil
 }
 
-func (p PostgresContext) GetIntFlag(paramName string, height int64) (value int, enabled bool, err error) {
-	return GetFlag[int](p, paramName, height)
+func (p PostgresContext) GetIntFlag(flagName string, height int64) (value int, enabled bool, err error) {
+	return getParamOrFlag[int](p, schema.FlagsTableName, flagName, height)
 }
 
-func (p PostgresContext) GetStringFlag(paramName string, height int64) (value string, enabled bool, err error) {
-	return GetFlag[string](p, paramName, height)
+func (p PostgresContext) GetStringFlag(flagName string, height int64) (value string, enabled bool, err error) {
+	return getParamOrFlag[string](p, schema.FlagsTableName, flagName, height)
 }
 
-func (p PostgresContext) GetBytesFlag(paramName string, height int64) (value []byte, enabled bool, err error) {
-	return GetFlag[[]byte](p, paramName, height)
+func (p PostgresContext) GetBytesFlag(flagName string, height int64) (value []byte, enabled bool, err error) {
+	return getParamOrFlag[[]byte](p, schema.FlagsTableName, flagName, height)
 }
 
-func (p PostgresContext) SetFlag(paramName string, value interface{}, enabled bool) error {
+func (p PostgresContext) SetFlag(flagName string, value any, enabled bool) error {
+	return p.setParamOrFlag(flagName, value, &enabled)
+}
+
+// setParamOrFlag simply wraps the call to the generic function with the supplied underlying type
+func (p PostgresContext) setParamOrFlag(name string, value any, enabled *bool) error {
 	switch t := value.(type) {
 	case int:
-		return SetFlag(p, paramName, t, enabled)
+		return setParamOrFlag(p, name, t, enabled)
 	case int32:
-		return SetFlag(p, paramName, t, enabled)
+		return setParamOrFlag(p, name, t, enabled)
 	case int64:
-		return SetFlag(p, paramName, t, enabled)
+		return setParamOrFlag(p, name, t, enabled)
 	case []byte:
-		return SetFlag(p, paramName, t, enabled)
+		return setParamOrFlag(p, name, t, enabled)
 	case string:
-		return SetFlag(p, paramName, t, enabled)
+		return setParamOrFlag(p, name, t, enabled)
 	default:
 		log.Fatalf("unhandled paramType %T for value %v", t, value)
 	}
 	return fmt.Errorf("how did you get here?")
 }
 
-func SetParam[T schema.SupportedParamTypes](p PostgresContext, paramName string, paramValue T) error {
+// setParamOrFlag sets a param or a flag.
+// If `enabled` is nil, we are dealing with a param, otherwise it's a flag
+func setParamOrFlag[T schema.SupportedParamTypes](p PostgresContext, paramName string, paramValue T, enabled *bool) error {
 	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return err
@@ -109,68 +105,34 @@ func SetParam[T schema.SupportedParamTypes](p PostgresContext, paramName string,
 	if err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.SetParamQuery(paramName, paramValue, height)); err != nil {
+
+	tableName := schema.ParamsTableName
+	if enabled != nil {
+		tableName = schema.FlagsTableName
+	}
+
+	if _, err = tx.Exec(ctx, schema.InsertParamOrFlag(tableName, paramName, height, paramValue, enabled)); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
 }
 
-func GetParam[T int | string | []byte](p PostgresContext, paramName string, height int64) (i T, err error) {
-	ctx, conn, err := p.GetCtxAndConnection()
-	if err != nil {
-		return i, err
-	}
-
-	var stringVal string
-	err = conn.QueryRow(ctx, schema.GetParamQuery(paramName, height)).Scan(&stringVal)
-	switch tp := any(i).(type) {
-	case int, int32, int64:
-		iConv, errr := strconv.Atoi(stringVal)
-		if errr != nil {
-			err = errr
-			return
-		}
-		return any(iConv).(T), err
-	case string:
-		return any(stringVal).(T), err
-	case []byte:
-		v, e := hex.DecodeString(stringVal)
-		return any(v).(T), e
-
-	default:
-		log.Fatalf("unhandled type for paramValue %T", tp)
-	}
-
-	return
-}
-
-func SetFlag[T schema.SupportedParamTypes](p PostgresContext, paramName string, paramValue T, enabled bool) error {
-	ctx, conn, err := p.GetCtxAndConnection()
-	if err != nil {
-		return err
-	}
-	height, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
-		return err
-	}
-	if _, err = tx.Exec(ctx, schema.SetFlagQuery(paramName, paramValue, enabled, height)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
-}
-
-func GetFlag[T int | string | []byte](p PostgresContext, paramName string, height int64) (i T, enabled bool, err error) {
+func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, paramName string, height int64) (i T, enabled bool, err error) {
 	ctx, conn, err := p.GetCtxAndConnection()
 	if err != nil {
 		return i, enabled, err
 	}
 
 	var stringVal string
-	err = conn.QueryRow(ctx, schema.GetFlagQuery(paramName, height)).Scan(&stringVal, &enabled)
+	row := conn.QueryRow(ctx, schema.GetParamOrFlagQuery(tableName, paramName, height))
+	if tableName == schema.ParamsTableName {
+		err = row.Scan(&stringVal)
+	} else {
+		err = row.Scan(&stringVal, &enabled)
+	}
+	if err != nil {
+		return
+	}
 	switch tp := any(i).(type) {
 	case int, int32, int64:
 		iConv, errr := strconv.Atoi(stringVal)

@@ -29,13 +29,12 @@ func TestGetSetIntParam(t *testing.T) {
 
 	newMaxChains := 42
 
-	err = persistence.SetParam(db, types.AppMaxChainsParamName, newMaxChains)
+	err = db.SetParam(types.AppMaxChainsParamName, newMaxChains)
 	require.NoError(t, err)
 
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	//maxChains, err := db.GetMaxAppChains(height)
 	maxChains, err := db.GetIntParam(types.AppMaxChainsParamName, height)
 	require.NoError(t, err)
 
@@ -53,13 +52,12 @@ func TestGetSetStringParam(t *testing.T) {
 
 	newServiceNodeMinimumStake := "99999999"
 
-	err = persistence.SetParam(db, types.ServiceNodeMinimumStakeParamName, newServiceNodeMinimumStake)
+	err = db.SetParam(types.ServiceNodeMinimumStakeParamName, newServiceNodeMinimumStake)
 	require.NoError(t, err)
 
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	//serviceNodeMinimumStake, err := db.GetParamServiceNodeMinimumStake(height)
 	serviceNodeMinimumStake, err := db.GetStringParam(types.ServiceNodeMinimumStakeParamName, height)
 	require.NoError(t, err)
 
@@ -75,15 +73,14 @@ func TestGetSetByteArrayParam(t *testing.T) {
 	err := db.InitParams()
 	require.NoError(t, err)
 
-	newOwner, _ := hex.DecodeString("da034209758b78eaea06dd99c07909ab54c99b44")
+	newOwner, _ := hex.DecodeString("Vh2MkBXWUhjeolEUDh2TNd2aTNFUlV0NOljRWR2Mud2dvdzVwkDROpGUQ5SOKNFU5MWbZJDeyI1aod0YZZkMjdUMyk1dVpnVhBXbWhEcxolax0WW3JESXhmTuJFdOdUTxMGbXFnWxIVYkJjYFplRUVTVVZVavpWS1VTRXlmS5VmL5o0QWhFcrlkNJN0Y1IlbJNXSp5UMJpXVJpUaPl2YHJGaKlXZ")
 
-	err = persistence.SetParam(db, types.ServiceNodeUnstakingBlocksOwner, newOwner)
+	err = db.SetParam(types.ServiceNodeUnstakingBlocksOwner, newOwner)
 	require.NoError(t, err)
 
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	//owner, err := db.GetServiceNodeUnstakingBlocksOwner(height)
 	owner, err := db.GetBytesParam(types.ServiceNodeUnstakingBlocksOwner, height)
 	require.NoError(t, err)
 
@@ -102,7 +99,7 @@ func TestGetSetToggleIntFlag(t *testing.T) {
 	newMaxChains := 42
 
 	// insert with false
-	err = persistence.SetFlag(db, types.AppMaxChainsParamName, newMaxChains, false)
+	err = db.SetFlag(types.AppMaxChainsParamName, newMaxChains, false)
 	require.NoError(t, err)
 
 	height, err := db.GetHeight()
@@ -116,7 +113,7 @@ func TestGetSetToggleIntFlag(t *testing.T) {
 	require.Equal(t, false, enabled)
 
 	// toggle to true
-	err = persistence.SetFlag(db, types.AppMaxChainsParamName, newMaxChains, true)
+	err = db.SetFlag(types.AppMaxChainsParamName, newMaxChains, true)
 	require.NoError(t, err)
 
 	height, err = db.GetHeight()
@@ -142,7 +139,7 @@ func TestGetSetToggleStringFlag(t *testing.T) {
 	newServiceNodeMinimumStake := "99999999"
 
 	// insert with false
-	err = persistence.SetFlag(db, types.ServiceNodeMinimumStakeParamName, newServiceNodeMinimumStake, false)
+	err = db.SetFlag(types.ServiceNodeMinimumStakeParamName, newServiceNodeMinimumStake, false)
 	require.NoError(t, err)
 
 	height, err := db.GetHeight()
@@ -155,7 +152,7 @@ func TestGetSetToggleStringFlag(t *testing.T) {
 	require.Equal(t, false, enabled)
 
 	//toggle to true
-	err = persistence.SetFlag(db, types.ServiceNodeMinimumStakeParamName, newServiceNodeMinimumStake, true)
+	err = db.SetFlag(types.ServiceNodeMinimumStakeParamName, newServiceNodeMinimumStake, true)
 	require.NoError(t, err)
 
 	height, err = db.GetHeight()
@@ -178,10 +175,10 @@ func TestGetSetToggleByteArrayFlag(t *testing.T) {
 	err := db.InitParams()
 	require.NoError(t, err)
 
-	newOwner, _ := hex.DecodeString("da034209758b78eaea06dd99c07909ab54c99b44")
+	newOwner, _ := hex.DecodeString("WlhsS2FHSkhZMmxQYVVwSlZYcEpNVTVwU1hOSmJsSTFZME5KTmtscmNGaFdRMG81TG1WNVNXbFBhVXAzWWpKME1FeHROV3hrU0dSMlkyMXphVXhEU2xKU01VcHpWMWN4TkdGSFRYbGlTRzlwVDJsS1RtTnBRa2RKU0dSb1kzbENiMXBZU214SmJqQXVVMW81WlRWSFlUZElZelZ5UzNOV1JsRTVWVk00UW1WamRpMTZRVUp3WjFwUmRtWllWRmgyTlhKTlZR")
 
 	// insert with false
-	err = persistence.SetFlag(db, types.ServiceNodeUnstakingBlocksOwner, newOwner, false)
+	err = db.SetFlag(types.ServiceNodeUnstakingBlocksOwner, newOwner, false)
 	require.NoError(t, err)
 
 	height, err := db.GetHeight()
@@ -194,7 +191,7 @@ func TestGetSetToggleByteArrayFlag(t *testing.T) {
 	require.Equal(t, false, enabled)
 
 	//toggle to true
-	err = persistence.SetFlag(db, types.ServiceNodeUnstakingBlocksOwner, newOwner, true)
+	err = db.SetFlag(types.ServiceNodeUnstakingBlocksOwner, newOwner, true)
 	require.NoError(t, err)
 
 	height, err = db.GetHeight()
