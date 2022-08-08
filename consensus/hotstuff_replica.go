@@ -150,7 +150,6 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 }
 
 // anteHandle is the handler called on every replica message before specific handler
-
 func (handler *HotstuffReplicaMessageHandler) anteHandle(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	log.Println("TODO: Hotstuff replica ante handle not implemented yet")
 	return nil

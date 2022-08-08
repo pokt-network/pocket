@@ -10,7 +10,6 @@
     - [Consuming logs in Loki](#consuming-logs-in-loki)
     - [Using Grafana](#using-grafana)
 - [Defining your own metrics](#defining-your-own-metrics)
-- [Defining your own metrics](#defining-your-own-metrics-1)
 
 # Introduction
 
@@ -170,15 +169,6 @@ $ make compose_and_watch
 _NOTE: Make sure you use `http` and not `https` when developing locally._
 
 ![](./docs/browsing-existing-dashboards.gif)
-
-# Defining your own metrics
-
-We follow a specific pattern to define our metrics to guarantee consistency and ease of use.
-Metric definitions for each module/domain/service are stored under a new folder called `telemetry` in the module's folder, in a file named `metrics.go`, and they respect the following rules:
-
-- Every metric's name and description and any additional information about the metric should be defined as a constant.
-- Constants relative to a metric's definition follow a naming pattern: `<metric_name>_<metric_type>_<metric_attribute>`
-- # We keep the actual metric name value open for definition however the developer sees fit.
 
 # Defining your own metrics
 
