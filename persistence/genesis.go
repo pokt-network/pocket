@@ -16,38 +16,32 @@ func (pm *persistenceModule) PopulateGenesisState(state *genesis.GenesisState) {
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
 	}
 	for _, acc := range state.Accounts {
-		err = rwContext.SetAccountAmount(acc.Address, acc.Amount)
-		if err != nil {
+		if err = rwContext.SetAccountAmount(acc.Address, acc.Amount); err != nil {
 			log.Fatalf("an error occurred inserting an acc in the genesis state: %s", err.Error())
 		}
 	}
 	for _, pool := range state.Pools {
-		err = rwContext.InsertPool(pool.Name, pool.Account.Address, pool.Account.Amount)
-		if err != nil {
+		if err = rwContext.InsertPool(pool.Name, pool.Account.Address, pool.Account.Amount); err != nil {
 			log.Fatalf("an error occurred inserting an pool in the genesis state: %s", err.Error())
 		}
 	}
 	for _, act := range state.Apps {
-		err = rwContext.InsertApp(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.MaxRelays, act.StakedTokens, act.Chains, act.PausedHeight, act.UnstakingHeight)
-		if err != nil {
+		if err = rwContext.InsertApp(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.MaxRelays, act.StakedTokens, act.Chains, act.PausedHeight, act.UnstakingHeight); err != nil {
 			log.Fatalf("an error occurred inserting an app in the genesis state: %s", err.Error())
 		}
 	}
 	for _, act := range state.ServiceNodes {
-		err = rwContext.InsertServiceNode(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.ServiceUrl, act.StakedTokens, act.Chains, act.PausedHeight, act.UnstakingHeight)
-		if err != nil {
+		if err = rwContext.InsertServiceNode(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.ServiceUrl, act.StakedTokens, act.Chains, act.PausedHeight, act.UnstakingHeight); err != nil {
 			log.Fatalf("an error occurred inserting a service node in the genesis state: %s", err.Error())
 		}
 	}
 	for _, act := range state.Fishermen {
-		err = rwContext.InsertFisherman(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.ServiceUrl, act.StakedTokens, act.Chains, act.PausedHeight, act.UnstakingHeight)
-		if err != nil {
+		if err = rwContext.InsertFisherman(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.ServiceUrl, act.StakedTokens, act.Chains, act.PausedHeight, act.UnstakingHeight); err != nil {
 			log.Fatalf("an error occurred inserting a fisherman in the genesis state: %s", err.Error())
 		}
 	}
 	for _, act := range state.Validators {
-		err = rwContext.InsertValidator(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.ServiceUrl, act.StakedTokens, act.PausedHeight, act.UnstakingHeight)
-		if err != nil {
+		if err = rwContext.InsertValidator(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.ServiceUrl, act.StakedTokens, act.PausedHeight, act.UnstakingHeight); err != nil {
 			log.Fatalf("an error occurred inserting a validator in the genesis state: %s", err.Error())
 		}
 	}

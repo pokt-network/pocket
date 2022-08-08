@@ -3,12 +3,13 @@ package test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/modules"
-	sharedTest "github.com/pokt-network/pocket/shared/tests/utility_module"
 	"math/big"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/pokt-network/pocket/shared/modules"
+	sharedTest "github.com/pokt-network/pocket/shared/tests/utility_module"
 
 	"golang.org/x/exp/slices"
 
