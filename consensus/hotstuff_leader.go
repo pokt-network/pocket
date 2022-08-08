@@ -24,7 +24,7 @@ type HotstuffLeaderMessageHandler struct{}
 /*** Prepare Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitConsensusEvent(m, msg)
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -80,7 +80,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 /*** PreCommit Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitConsensusEvent(m, msg)
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -124,7 +124,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 /*** Commit Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitConsensusEvent(m, msg)
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -168,7 +168,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 /*** Decide Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitConsensusEvent(m, msg)
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -217,7 +217,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 }
 
 func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitConsensusEvent(m, msg)
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -234,7 +234,7 @@ func (handler *HotstuffLeaderMessageHandler) anteHandle(m *consensusModule, msg 
 	return nil
 }
 
-func (handler *HotstuffLeaderMessageHandler) emitConsensusEvent(m *consensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) emitTelemetryEvent(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	m.GetBus().
 		GetTelemetryModule().
 		GetEventMetricsAgent().

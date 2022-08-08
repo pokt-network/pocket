@@ -24,7 +24,7 @@ var (
 /*** NewRound Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitConsensusEvent(m, msg)
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -38,7 +38,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 /*** Prepare Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitConsensusEvent(m, msg)
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -71,7 +71,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 /*** PreCommit Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitConsensusEvent(m, msg)
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -99,7 +99,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 /*** Commit Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitConsensusEvent(m, msg)
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -127,7 +127,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 /*** Decide Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitConsensusEvent(m, msg)
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -156,7 +156,7 @@ func (handler *HotstuffReplicaMessageHandler) anteHandle(m *consensusModule, msg
 	return nil
 }
 
-func (handler *HotstuffReplicaMessageHandler) emitConsensusEvent(m *consensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) emitTelemetryEvent(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	m.GetBus().
 		GetTelemetryModule().
 		GetEventMetricsAgent().

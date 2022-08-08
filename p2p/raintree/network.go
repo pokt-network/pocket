@@ -151,7 +151,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		EmitEvent(
 			p2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
 			p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_NAME,
-			p2pTelemetry.RAINTREE_ATTRIBUTE_NAME_HEIGHT, blockHeight,
+			p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
 		)
 
 	var rainTreeMsg typesP2P.RainTreeMessage
@@ -188,8 +188,8 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 			EmitEvent(
 				p2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
 				p2pTelemetry.BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME,
-				p2pTelemetry.RAINTREE_ATTRIBUTE_NAME_HASH, hashString,
-				p2pTelemetry.RAINTREE_ATTRIBUTE_NAME_HEIGHT, blockHeight,
+				p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_HASH_LABEL, hashString,
+				p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
 			)
 
 		return nil, nil
