@@ -21,8 +21,10 @@ const (
 	P2P_NAMESPACE                   = "P2P"
 	UTILITY_NAMESPACE               = "UTILITY"
 	PERSISTENCE_NAMESPACE           = "PERSISTENCE"
-	GLOBAL_NAMESPACE                = "GLOBAL"
+	GLOBAL_NAMESPACE                = "SHARED"
 )
+
+var POCKET_LOGS_PREFIX = "POCKET"
 
 // Interface for logging
 type Logger interface {

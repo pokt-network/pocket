@@ -1,21 +1,25 @@
-package telemetry
+package logging
 
 import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"testing"
 
-	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestStdLogAgent_New(t *testing.T) {
-	logger := NewLogger(
-		modules.LOG_LEVEL_ALL,
-		bufio.NewWriter(
-			bytes.NewBuffer([]byte{}),
-		),
+	var writer io.Writer = bufio.NewWriter(
+		bytes.NewBuffer([]byte{}),
+	)
+
+	logger := CreateStdLogger(
+		LOG_LEVEL_ALL,
+		GLOBAL_NAMESPACE,
+		"POCKET",
+		writer,
 	)
 
 	assert.NotNil(
@@ -26,22 +30,30 @@ func TestStdLogAgent_New(t *testing.T) {
 
 	assert.NotNil(
 		t,
-		logger.SetOutput,
+		logger.SetLevel,
+		"logger: could not retrieve the logger ref",
+	)
+
+	assert.NotNil(
+		t,
+		logger.SetNamespace,
 		"logger: could not retrieve the logger ref",
 	)
 }
 
 func TestStdLogAgent_Debug(t *testing.T) {
-	var logger *StdLogAgent
-	var namespace string = "telemetry"
+	var logger Logger
+	var namespace Namespace = GLOBAL_NAMESPACE
 	var sentence string = "logging lorem ipsum"
-	var level string = "[DEBUG]"
-	var prefix string = "[pocket]"
+	var level LogLevel = LOG_LEVEL_DEBUG
+	var prefix string = "POCKET"
 
 	// initialization
 	{
-		logger = NewLogger(
-			modules.LOG_LEVEL_DEBUG,
+		logger = CreateStdLogger(
+			level,
+			namespace,
+			prefix,
 			bufio.NewWriter(
 				bytes.NewBuffer([]byte{}),
 			),
@@ -60,75 +72,34 @@ func TestStdLogAgent_Debug(t *testing.T) {
 		buffer := bytes.NewBuffer(b)
 		writer := bufio.NewWriter(buffer)
 
-		logger = NewLogger(modules.LOG_LEVEL_DEBUG, writer)
+		logger = CreateStdLogger(level, namespace, prefix, writer)
 
-		logger.Debug(namespace, sentence)
-
-		writer.Flush()
-
-		assert.Equal(
-			t,
-			fmt.Sprintf("%s%s: %s %s\n", prefix, level, namespace, sentence),
-			string(buffer.Bytes()),
-		)
-	}
-
-}
-
-func TestStdLogAgent_Log(t *testing.T) {
-	var logger *StdLogAgent
-	var namespace string = "p2p"
-	var sentence string = "logging lorem ipsum"
-	var level string = "[LOG]"
-	var prefix string = "[pocket]"
-
-	// initialization
-	{
-		logger = NewLogger(
-			modules.LOG_LEVEL_ALL,
-			bufio.NewWriter(
-				bytes.NewBuffer([]byte{}),
-			),
-		)
-
-		assert.NotNil(
-			t,
-			logger.Log,
-			"logger: Log() is nil, check if it's implemented",
-		)
-	}
-
-	// Debug print correction assertion
-	{
-		b := make([]byte, 0)
-		buffer := bytes.NewBuffer(b)
-		writer := bufio.NewWriter(buffer)
-
-		logger = NewLogger(modules.LOG_LEVEL_ALL, writer)
-
-		logger.Log(namespace, sentence)
+		logger.Debug(sentence)
 
 		writer.Flush()
 
-		assert.Equal(
+		// Use contains as log line will contain YYYY/DD/MM HH:MM:SS that we can't predict and assert against
+		assert.Contains(
 			t,
-			fmt.Sprintf("%s%s: %s %s\n", prefix, level, namespace, sentence),
 			string(buffer.Bytes()),
+			fmt.Sprintf("| [%s][%s]: [%s] %s\n", prefix, level, namespace, sentence),
 		)
 	}
 }
 
 func TestStdLogAgent_Info(t *testing.T) {
-	var logger *StdLogAgent
-	var namespace = "utils"
+	var logger Logger
+	var namespace Namespace = GLOBAL_NAMESPACE
 	var sentence string = "logging lorem ipsum"
-	var level string = "[INFO]"
-	var prefix string = "[pocket]"
+	var level LogLevel = LOG_LEVEL_INFO
+	var prefix string = "POCKET"
 
 	// initialization
 	{
-		logger = NewLogger(
-			modules.LOG_LEVEL_INFO,
+		logger = CreateStdLogger(
+			level,
+			namespace,
+			prefix,
 			bufio.NewWriter(
 				bytes.NewBuffer([]byte{}),
 			),
@@ -137,7 +108,7 @@ func TestStdLogAgent_Info(t *testing.T) {
 		assert.NotNil(
 			t,
 			logger.Info,
-			"logger: INFO() is nil, check if it's implemented",
+			"logger: Info() is nil, check if it's implemented",
 		)
 	}
 
@@ -147,31 +118,34 @@ func TestStdLogAgent_Info(t *testing.T) {
 		buffer := bytes.NewBuffer(b)
 		writer := bufio.NewWriter(buffer)
 
-		logger = NewLogger(modules.LOG_LEVEL_INFO, writer)
+		logger = CreateStdLogger(level, namespace, prefix, writer)
 
-		logger.Info(namespace, sentence)
+		logger.Info(sentence)
 
 		writer.Flush()
 
-		assert.Equal(
+		// Use contains as log line will contain YYYY/DD/MM HH:MM:SS that we can't predict and assert against
+		assert.Contains(
 			t,
-			fmt.Sprintf("%s%s: %s %s\n", prefix, level, namespace, sentence),
 			string(buffer.Bytes()),
+			fmt.Sprintf("| [%s][%s]: [%s] %s\n", prefix, level, namespace, sentence),
 		)
 	}
 }
 
 func TestStdLogAgent_Error(t *testing.T) {
-	var logger *StdLogAgent
-	var namespace string = "consensus"
+	var logger Logger
+	var namespace Namespace = GLOBAL_NAMESPACE
 	var sentence string = "logging lorem ipsum"
-	var level string = "[ERROR]"
-	var prefix string = "[pocket]"
+	var level LogLevel = LOG_LEVEL_ERROR
+	var prefix string = "POCKET"
 
 	// initialization
 	{
-		logger = NewLogger(
-			modules.LOG_LEVEL_ERROR,
+		logger = CreateStdLogger(
+			level,
+			namespace,
+			prefix,
 			bufio.NewWriter(
 				bytes.NewBuffer([]byte{}),
 			),
@@ -180,7 +154,7 @@ func TestStdLogAgent_Error(t *testing.T) {
 		assert.NotNil(
 			t,
 			logger.Error,
-			"logger: Error() is nil, check if it's implemented",
+			"logger: Info() is nil, check if it's implemented",
 		)
 	}
 
@@ -190,16 +164,109 @@ func TestStdLogAgent_Error(t *testing.T) {
 		buffer := bytes.NewBuffer(b)
 		writer := bufio.NewWriter(buffer)
 
-		logger = NewLogger(modules.LOG_LEVEL_ERROR, writer)
+		logger = CreateStdLogger(level, namespace, prefix, writer)
 
-		logger.Error(namespace, sentence)
+		logger.Error(sentence)
 
 		writer.Flush()
 
-		assert.Equal(
+		// Use contains as log line will contain YYYY/DD/MM HH:MM:SS that we can't predict and assert against
+		assert.Contains(
 			t,
-			fmt.Sprintf("%s%s: %s %s\n", prefix, level, namespace, sentence),
 			string(buffer.Bytes()),
+			fmt.Sprintf("| [%s][%s]: [%s] %s\n", prefix, level, namespace, sentence),
+		)
+	}
+}
+
+func TestStdLogAgent_Warn(t *testing.T) {
+	var logger Logger
+	var namespace Namespace = GLOBAL_NAMESPACE
+	var sentence string = "logging lorem ipsum"
+	var level LogLevel = LOG_LEVEL_WARN
+	var prefix string = "POCKET"
+
+	// initialization
+	{
+		logger = CreateStdLogger(
+			level,
+			namespace,
+			prefix,
+			bufio.NewWriter(
+				bytes.NewBuffer([]byte{}),
+			),
+		)
+
+		assert.NotNil(
+			t,
+			logger.Warn,
+			"logger: Warn() is nil, check if it's implemented",
+		)
+	}
+
+	// Debug print correction assertion
+	{
+		b := make([]byte, 0)
+		buffer := bytes.NewBuffer(b)
+		writer := bufio.NewWriter(buffer)
+
+		logger = CreateStdLogger(level, namespace, prefix, writer)
+
+		logger.Warn(sentence)
+
+		writer.Flush()
+
+		// Use contains as log line will contain YYYY/DD/MM HH:MM:SS that we can't predict and assert against
+		assert.Contains(
+			t,
+			string(buffer.Bytes()),
+			fmt.Sprintf("| [%s][%s]: [%s] %s\n", prefix, level, namespace, sentence),
+		)
+	}
+}
+
+func TestStdLogAgent_Fatal(t *testing.T) {
+	var logger Logger
+	var namespace Namespace = GLOBAL_NAMESPACE
+	var sentence string = "logging lorem ipsum"
+	var level LogLevel = LOG_LEVEL_FATAL
+	var prefix string = "POCKET"
+
+	// initialization
+	{
+		logger = CreateStdLogger(
+			level,
+			namespace,
+			prefix,
+			bufio.NewWriter(
+				bytes.NewBuffer([]byte{}),
+			),
+		)
+
+		assert.NotNil(
+			t,
+			logger.Fatal,
+			"logger: Warn() is nil, check if it's implemented",
+		)
+	}
+
+	// Debug print correction assertion
+	{
+		b := make([]byte, 0)
+		buffer := bytes.NewBuffer(b)
+		writer := bufio.NewWriter(buffer)
+
+		logger = CreateStdLogger(level, namespace, prefix, writer)
+
+		logger.Fatal(sentence)
+
+		writer.Flush()
+
+		// Use contains as log line will contain YYYY/DD/MM HH:MM:SS that we can't predict and assert against
+		assert.Contains(
+			t,
+			string(buffer.Bytes()),
+			fmt.Sprintf("| [%s][%s]: [%s] %s\n", prefix, level, namespace, sentence),
 		)
 	}
 }
