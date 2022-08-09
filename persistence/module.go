@@ -14,10 +14,10 @@ var _ modules.PersistenceModule = &persistenceModule{}
 var _ modules.PersistenceRWContext = &PostgresContext{}
 
 type persistenceModule struct {
+	bus         modules.Bus
+	db          *pgx.Conn
 	postgresURL string
 	nodeSchema  string
-	db          *pgx.Conn
-	bus         modules.Bus
 	// INVESTIGATE: We may need to create a custom `BlockStore` package in the future.
 	blockStore kvstore.KVStore
 }
