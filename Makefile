@@ -275,7 +275,7 @@ protogen_docker_m1: docker_check
 .PHONY: protogen_docker
 ## TODO(derrandz): Test, validate & update.
 protogen_docker: docker_check
-	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it pocket/proto-generator
+	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it -v $(CWD)/:/usr/src/app/ pocket/proto-generator
 
 .PHONY: gofmt
 ## Format all the .go files in the project in place.

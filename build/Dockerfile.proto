@@ -1,7 +1,7 @@
 FROM golang:latest
 
 # Install grpc
-RUN go get -u github.com/golang/protobuf/protoc-gen-go
+RUN go install github.com/golang/protobuf/protoc-gen-go@latest
 
 
 # update
@@ -19,6 +19,9 @@ RUN apt-get update && apt-get install -y zip && \
 
 ENV PATH=$PATH:$GOPATH/bin:/opt/protoc/bin
 
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
+
 COPY . .
 
-RUN make protogen_local && echo "Done."
+CMD make protogen_local && make protogen_show && echo "Done." && exit 0
