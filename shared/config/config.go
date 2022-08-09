@@ -15,12 +15,14 @@ type Config struct {
 	RootDir       string                 `json:"root_dir"`
 	GenesisSource *genesis.GenesisSource `json:"genesis_source"` // TECHDEBT(olshansky): we should be able to pass the struct in here.
 
-	PrivateKey cryptoPocket.Ed25519PrivateKey `json:"private_key"`
-	P2P        *P2PConfig                     `json:"p2p"`
-	Consensus  *ConsensusConfig               `json:"consensus"`
-	// TECHDEBT(team): Consolidate `Persistence` and `PrePersistence`
+	EnableTelemetry bool                           `json:"enable_telemetry"`
+	PrivateKey      cryptoPocket.Ed25519PrivateKey `json:"private_key"`
+
+	P2P         *P2PConfig         `json:"p2p"`
+	Consensus   *ConsensusConfig   `json:"consensus"`
 	Persistence *PersistenceConfig `json:"persistence"`
 	Utility     *UtilityConfig     `json:"utility"`
+	Telemetry   *TelemetryConfig   `json:"telemetry"`
 }
 
 type ConnectionType string
@@ -63,6 +65,12 @@ type PersistenceConfig struct {
 type UtilityConfig struct {
 }
 
+type TelemetryConfig struct {
+	Address  string // The address the telemetry module will use to listen for metrics PULL requests (e.g. 0.0.0.0:9000 for prometheus)
+	Endpoint string // The endpoint available to fetch recorded metrics (e.g. /metrics for prometheus)
+}
+
+// TODO(insert tooling issue # here): Re-evaluate how load configs should be handeled.
 func LoadConfig(file string) (c *Config) {
 	c = &Config{}
 

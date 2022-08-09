@@ -443,7 +443,7 @@ func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.
 func (u *UtilityContext) CheckAboveMinStake(actorType typesUtil.ActorType, amount string) (a *big.Int, err types.Error) {
 	minStake, er := u.GetMinimumStake(actorType)
 	if er != nil {
-		return nil, err
+		return nil, er
 	}
 	a, err = types.StringToBigInt(amount)
 	if err != nil {
