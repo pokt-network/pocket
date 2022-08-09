@@ -75,6 +75,12 @@ go_doc:
 go_clean_deps:
 	go mod tidy && go mod vendor
 
+.PHONY: install_cli_deps
+## Installs `protoc-gen-go` and `mockgen`
+install_cli_deps:
+	go install "google.golang.org/protobuf/cmd/protoc-gen-go@v1.28" && protoc-gen-go --version
+	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
+
 .PHONY: refresh
 ## Removes vendor, installs deps, generates mocks and protobuf files. Perform after a new pull or a branch switch
 refresh: go_clean_deps

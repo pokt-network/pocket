@@ -17,8 +17,6 @@ on:
 env:
   # Even though we can test against multiple versions, this one is considered a target version.
   TARGET_GOLANG_VERSION: "1.18"
-  GOLANG_PROTOBUF_VERSION: "1.28"
-  MOCKGEN_VERSION: "1.6.0"
   PROTOC_VERSION: "3.19.4"
 
 jobs:
@@ -48,10 +46,8 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           version: ${{ env.PROTOC_VERSION }}
-      - name: install protoc-gen-go
-        run: go install "google.golang.org/protobuf/cmd/protoc-gen-go@v${GOLANG_PROTOBUF_VERSION}" && protoc-gen-go --version
-      - name: install mockgen
-        run: go install github.com/golang/mock/mockgen@v${MOCKGEN_VERSION} && mockgen --version
+      - name: install cli dependencies
+        run: make install_cli_deps
       - name: generate protobufs and mocks
         run: make protogen_local && make mockgen
       - name: run all tests

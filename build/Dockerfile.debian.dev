@@ -6,8 +6,6 @@ ARG TARGET_GOLANG_VERSION=1.18
 FROM golang:${TARGET_GOLANG_VERSION}-bullseye AS builder
 
 ENV PROTOC_VERSION 3.19.4
-ENV GOLANG_PROTOBUF_VERSION 1.28
-ENV MOCKGEN_VERSION 1.6.0
 ENV PATH $PATH:$GOPATH/bin
 
 ### Install dependencies
@@ -35,14 +33,6 @@ RUN set -eux; \
     unzip -q protoc.zip -d /usr/local/; \
     protoc --version
 
-# protoc-gen-go
-RUN go install "google.golang.org/protobuf/cmd/protoc-gen-go@v${GOLANG_PROTOBUF_VERSION}"; \
-    protoc-gen-go --version
-
-# mockgen
-RUN go install "github.com/golang/mock/mockgen@v${MOCKGEN_VERSION}"; \
-    mockgen --version
-
 # dlv 
 RUN go install github.com/go-delve/delve/cmd/dlv@latest; \
     dlv version
@@ -50,6 +40,9 @@ RUN go install github.com/go-delve/delve/cmd/dlv@latest; \
 ## Copy code
 COPY . $GOPATH/src/github.com/pokt-network/pocket
 WORKDIR $GOPATH/src/github.com/pokt-network/pocket
+
+# Install protoc-gen-go and mockgen
+RUN make install_cli_deps
 
 ## Run codegen
 RUN make protogen_local && \
