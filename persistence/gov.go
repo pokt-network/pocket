@@ -85,9 +85,9 @@ func (p PostgresContext) setParamOrFlag(name string, value any, enabled *bool) e
 	case string:
 		return setParamOrFlag(p, name, t, enabled)
 	default:
-		log.Fatalf("unhandled paramType %T for value %v", t, value)
+		break
 	}
-	return fmt.Errorf("how did you get here?")
+	return fmt.Errorf("unhandled paramType %T for value %v", value, value)
 }
 
 // setParamOrFlag sets a param or a flag.
