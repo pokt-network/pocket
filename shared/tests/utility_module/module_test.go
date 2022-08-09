@@ -2,6 +2,7 @@ package utility_module
 
 import (
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/shared/tests"
 	"math/big"
 	"testing"
 
@@ -28,9 +29,9 @@ func NewTestingMempool(_ *testing.T) types.Mempool {
 }
 
 func TestMain(m *testing.M) {
-	pool, resource := SetupPostgresDocker()
+	pool, resource := tests.SetupPostgresDocker()
 	m.Run()
-	CleanupPostgresDocker(m, pool, resource)
+	tests.CleanupPostgresDocker(m, pool, resource)
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
@@ -43,17 +44,17 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 			},
 		},
 		Persistence: &config.PersistenceConfig{
-			PostgresUrl: databaseUrl,
-			NodeSchema:  sql_schema,
+			PostgresUrl: tests.DatabaseUrl,
+			NodeSchema:  tests.SQL_Schema,
 		},
 	}
 	err := cfg.HydrateGenesisState()
 	require.NoError(t, err)
 
-	PersistenceModule, err = persistence.Create(cfg)
+	tests.PersistenceModule, err = persistence.Create(cfg)
 	require.NoError(t, err)
-	require.NoError(t, PersistenceModule.Start(), "start persistence mod")
-	persistenceContext, err := PersistenceModule.NewRWContext(height)
+	require.NoError(t, tests.PersistenceModule.Start(), "start persistence mod")
+	persistenceContext, err := tests.PersistenceModule.NewRWContext(height)
 	require.NoError(t, err)
 	return utility.UtilityContext{
 		LatestHeight: height,

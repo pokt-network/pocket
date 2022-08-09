@@ -12,16 +12,16 @@ func TestContextAndCommit(t *testing.T) {
 	originalAmount := "15"
 	modifiedAmount := "10"
 	// setup two separate contexts
-	contextA, err := PersistenceModule.NewRWContext(0)
+	contextA, err := testPersistenceModule.NewRWContext(0)
 	require.NoError(t, contextA.InsertPool(poolName, poolAddress, originalAmount))
 	require.NoError(t, contextA.Commit())
 	// verify the insert worked
-	contextA, err = PersistenceModule.NewRWContext(0)
+	contextA, err = testPersistenceModule.NewRWContext(0)
 	contextAOriginal, err := contextA.GetPoolAmount(poolName, 0)
 	require.NoError(t, err)
 	require.Equal(t, originalAmount, contextAOriginal)
 	require.NoError(t, err)
-	contextB, err := PersistenceModule.NewRWContext(0)
+	contextB, err := testPersistenceModule.NewRWContext(0)
 	require.NoError(t, err)
 	// modify only in context a and check that modification worked
 	require.NoError(t, contextA.SetPoolAmount(poolName, modifiedAmount))

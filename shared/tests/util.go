@@ -1,4 +1,4 @@
-package utility_module
+package tests
 
 import (
 	"context"
@@ -18,7 +18,7 @@ const (
 	user             = "postgres"
 	password         = "secret"
 	db               = "postgres"
-	sql_schema       = "test_schema"
+	SQL_Schema       = "test_schema"
 	dialect          = "postgres"
 	connStringFormat = "postgres://%s:%s@%s/%s?sslmode=disable"
 )
@@ -32,7 +32,7 @@ func init() {
 
 var PostgresDB *persistence.PostgresDB
 var PersistenceModule modules.PersistenceModule
-var databaseUrl string
+var DatabaseUrl string
 
 func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource) {
 	opts := dockertest.RunOptions{
@@ -57,9 +57,9 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource) {
 		log.Fatalf("***Make sure your docker daemon is running!!*** Could not start resource: %s\n", err.Error())
 	}
 	hostAndPort := resource.GetHostPort("5432/tcp")
-	databaseUrl = fmt.Sprintf(connStringFormat, user, password, hostAndPort, db)
+	DatabaseUrl = fmt.Sprintf(connStringFormat, user, password, hostAndPort, db)
 
-	log.Println("Connecting to database on url: ", databaseUrl)
+	log.Println("Connecting to database on url: ", DatabaseUrl)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -76,7 +76,7 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource) {
 
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	if err = pool.Retry(func() error {
-		conn, err := persistence.ConnectAndInitializeDatabase(databaseUrl, sql_schema)
+		conn, err := persistence.ConnectAndInitializeDatabase(DatabaseUrl, SQL_Schema)
 		if err != nil {
 			log.Println(err.Error())
 			return err
@@ -86,7 +86,7 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource) {
 			log.Println(err.Error())
 			return err
 		}
-		PersistenceModule, err = persistence.NewPersistenceModule(databaseUrl, "", sql_schema, conn, nil)
+		PersistenceModule, err = persistence.NewPersistenceModule(DatabaseUrl, "", SQL_Schema, conn, nil)
 		if err != nil {
 			log.Println(err.Error())
 			return err
