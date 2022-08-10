@@ -41,3 +41,10 @@ p2p/types/mocks/
 # Output binaries
 bin/
 build/dist/*
+
+# Local debugging
+temp_test.go
+
+# Output of the go test results and coverage report (used by CI)
+test_results.json
+coverage.out

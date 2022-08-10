@@ -75,6 +75,12 @@ go_doc:
 go_clean_deps:
 	go mod tidy && go mod vendor
 
+.PHONY: install_cli_deps
+## Installs `protoc-gen-go` and `mockgen`
+install_cli_deps:
+	go install "google.golang.org/protobuf/cmd/protoc-gen-go@v1.28" && protoc-gen-go --version
+	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
+
 .PHONY: refresh
 ## Removes vendor, installs deps, generates mocks and protobuf files. Perform after a new pull or a branch switch
 refresh: go_clean_deps
@@ -182,6 +188,17 @@ mockgen:
 ## Run all go unit tests
 test_all: # generate_mocks
 	go test -p=1 -count=1 ./...
+
+.PHONY: test_all_with_json
+## Run all go unit tests, output results in json file
+test_all_with_json: # generate_mocks
+	go test -p=1 -json ./... > test_results.json
+
+.PHONY: test_all_with_coverage
+## Run all go unit tests, output results & coverage into files
+test_all_with_coverage: # generate_mocks
+	go test -p=1 -v ./... -covermode=count -coverprofile=coverage.out
+	go tool cover -func=coverage.out -o=coverage.out
 
 .PHONY: test_race
 ## Identify all unit tests that may result in race conditions
