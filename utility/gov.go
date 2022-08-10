@@ -12,20 +12,25 @@ import (
 
 func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.Error {
 	store := u.Store()
-
-	i, ok := value.(*wrapperspb.Int32Value)
-	if ok {
-		return types.ErrUpdateParam(store.SetParam(types.BlocksPerSessionParamName, (int(i.Value))))
+	switch t := value.(type) {
+	case *wrapperspb.Int32Value:
+		if err := store.SetParam(types.BlocksPerSessionParamName, (int(t.Value))); err != nil {
+			return types.ErrUpdateParam(err)
+		}
+		return nil
+	case *wrapperspb.StringValue:
+		if err := store.SetParam(types.BlocksPerSessionParamName, t.Value); err != nil {
+			return types.ErrUpdateParam(err)
+		}
+		return nil
+	case *wrapperspb.BytesValue:
+		if err := store.SetParam(types.BlocksPerSessionParamName, t.Value); err != nil {
+			return types.ErrUpdateParam(err)
+		}
+		return nil
+	default:
+		break
 	}
-	s, ok := value.(*wrapperspb.StringValue)
-	if ok {
-		return types.ErrUpdateParam(store.SetParam(types.BlocksPerSessionParamName, s.Value))
-	}
-	b, ok := value.(*wrapperspb.BytesValue)
-	if ok {
-		return types.ErrUpdateParam(store.SetParam(types.BlocksPerSessionParamName, b.Value))
-	}
-
 	log.Fatalf("unhandled value type %T for %v", value, value)
 	return types.ErrUnknownParam(paramName)
 }
