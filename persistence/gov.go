@@ -135,17 +135,13 @@ func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, param
 	}
 	switch tp := any(i).(type) {
 	case int, int32, int64:
-		iConv, errr := strconv.Atoi(stringVal)
-		if errr != nil {
-			err = errr
-			return
-		}
+		iConv, err := strconv.Atoi(stringVal)
 		return any(iConv).(T), enabled, err
 	case string:
 		return any(stringVal).(T), enabled, err
 	case []byte:
-		v, e := hex.DecodeString(stringVal)
-		return any(v).(T), enabled, e
+		v, err := hex.DecodeString(stringVal)
+		return any(v).(T), enabled, err
 
 	default:
 		log.Fatalf("unhandled type for paramValue %T", tp)

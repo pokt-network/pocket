@@ -10,8 +10,6 @@ import (
 	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
-// TODO(https://github.com/pokt-network/pocket/issues/76): Optimize gov parameters implementation & schema.
-
 // init initializes a map that contains the metadata extracted from `gov.proto`.
 //
 // Since protobuf files do not change at runtime, it seems efficient to do it here.
