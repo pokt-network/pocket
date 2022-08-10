@@ -5,6 +5,7 @@ import (
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/logging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -43,6 +44,10 @@ func (m *leaderElectionModule) GetBus() modules.Bus {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
+}
+
+func (m *leaderElectionModule) Logger() logging.Logger {
+	return m.GetBus().GetTelemetryModule().Logger()
 }
 
 func (m *leaderElectionModule) ElectNextLeader(message *typesCons.HotstuffMessage) (typesCons.NodeId, error) {

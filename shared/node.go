@@ -1,8 +1,6 @@
 package shared
 
 import (
-	"log"
-
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/pre_persistence"
@@ -15,6 +13,7 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/shared/types"
 
+	"github.com/pokt-network/pocket/shared/logging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/telemetry"
 )
@@ -78,7 +77,7 @@ func Create(cfg *config.Config) (n *Node, err error) {
 }
 
 func (node *Node) Start() error {
-	log.Println("About to start pocket node modules...")
+	logging.Info("About to start pocket node modules...")
 
 	// IMPORTANT: Order of module startup here matters
 
@@ -106,19 +105,19 @@ func (node *Node) Start() error {
 	signalNodeStartedEvent := &types.PocketEvent{Topic: types.PocketTopic_POCKET_NODE_TOPIC, Data: nil}
 	node.GetBus().PublishEventToBus(signalNodeStartedEvent)
 
-	log.Println("About to start pocket node main loop...")
+	logging.Info("About to start pocket node modules...")
 
 	// While loop lasting throughout the entire lifecycle of the node to handle asynchronous events
 	for {
 		event := node.GetBus().GetBusEvent()
 		if err := node.handleEvent(event); err != nil {
-			log.Println("Error handling event: ", err)
+			logging.Error("Error handling event: %s", err)
 		}
 	}
 }
 
 func (node *Node) Stop() error {
-	log.Println("Stopping pocket node...")
+	logging.Info("Stopping pocket node...")
 	return nil
 }
 
@@ -128,9 +127,13 @@ func (m *Node) SetBus(bus modules.Bus) {
 
 func (m *Node) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		logging.Fatal("PocketBus is not initialized")
 	}
 	return m.bus
+}
+
+func (m *Node) Logger() logging.Logger {
+	return m.GetBus().GetTelemetryModule().Logger()
 }
 
 func (node *Node) handleEvent(event *types.PocketEvent) error {
@@ -140,9 +143,9 @@ func (node *Node) handleEvent(event *types.PocketEvent) error {
 	case types.PocketTopic_DEBUG_TOPIC:
 		return node.handleDebugEvent(event.Data)
 	case types.PocketTopic_POCKET_NODE_TOPIC:
-		log.Println("[NOOP] Received pocket node topic signal")
+		logging.Log("[NOOP] Received pocket node topic signal")
 	default:
-		log.Printf("[WARN] Unsupported PocketEvent topic: %s \n", event.Topic)
+		logging.Warn("Unsupported PocketEvent topic: %s \n", event.Topic)
 	}
 	return nil
 }
@@ -165,7 +168,7 @@ func (node *Node) handleDebugEvent(anyMessage *anypb.Any) error {
 	case types.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		return node.GetBus().GetPersistenceModule().HandleDebugMessage(&debugMessage)
 	default:
-		log.Printf("Debug message: %s \n", debugMessage.Message)
+		logging.Debug("debugMessae.Message: %s \n", debugMessage.Message)
 	}
 
 	return nil

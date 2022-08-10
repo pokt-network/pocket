@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pokt-network/pocket/shared/logging"
 	"github.com/pokt-network/pocket/shared/types"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
@@ -151,6 +152,10 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
 	m.paceMaker.SetBus(pocketBus)
 	m.leaderElectionMod.SetBus(pocketBus)
+}
+
+func (m *consensusModule) Logger() logging.Logger {
+	return m.GetBus().GetTelemetryModule().Logger()
 }
 
 func (m *consensusModule) loadPersistedState() error {

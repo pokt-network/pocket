@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"github.com/pokt-network/pocket/shared/logging"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -10,9 +9,6 @@ type TelemetryModule interface {
 
 	GetTimeSeriesAgent() TimeSeriesAgent
 	GetEventMetricsAgent() EventMetricsAgent
-
-	LoggerGet(namespace logging.Namespace) logging.Logger
-	LoggerRegister(namespace logging.Namespace, level logging.LogLevel) error
 }
 
 // Interface for the time series agent (prometheus)

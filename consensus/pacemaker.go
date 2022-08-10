@@ -8,6 +8,7 @@ import (
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/logging"
 
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -81,6 +82,10 @@ func (m *paceMaker) GetBus() modules.Bus {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
+}
+
+func (m *paceMaker) Logger() logging.Logger {
+	return m.GetBus().GetTelemetryModule().Logger()
 }
 
 func (m *paceMaker) SetConsensusModule(c *consensusModule) {

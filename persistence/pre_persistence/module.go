@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/pokt-network/pocket/shared/logging"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 
 	"github.com/pokt-network/pocket/shared/config"
@@ -50,6 +51,10 @@ func (m *PrePersistenceModule) GetBus() modules.Bus {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
+}
+
+func (m *PrePersistenceModule) Logger() logging.Logger {
+	return m.GetBus().GetTelemetryModule().Logger()
 }
 
 func InitGenesis(u *PrePersistenceContext, genesisState *typesGenesis.GenesisState) error {

@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/logging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 )
@@ -39,4 +40,8 @@ func (u *UtilityModule) GetBus() modules.Bus {
 		log.Fatalf("Bus is not initialized")
 	}
 	return u.bus
+}
+
+func (m *UtilityModule) Logger() logging.Logger {
+	return m.GetBus().GetTelemetryModule().Logger()
 }

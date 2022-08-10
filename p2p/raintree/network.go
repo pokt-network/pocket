@@ -3,11 +3,11 @@ package raintree
 import (
 	"encoding/binary"
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/logging"
 	"github.com/pokt-network/pocket/shared/modules"
 
 	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
@@ -19,6 +19,7 @@ import (
 
 var _ typesP2P.Network = &rainTreeNetwork{}
 var _ modules.IntegratableModule = &rainTreeNetwork{}
+var _ modules.Loggable = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
 	bus modules.Bus
@@ -53,7 +54,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) t
 	if err := n.processAddrBookUpdates(); err != nil {
 		// DISCUSS(drewsky): if this errors, the node could still function but not participate in
 		// message propagation. Should we return an error or just log?
-		log.Println("[ERROR] Error initializing rainTreeNetwork: ", err)
+		logging.Error("Error initializing rainTreeNetwork: ", err)
 	}
 
 	return typesP2P.Network(n)
@@ -81,18 +82,18 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 
 	if addr1, ok := n.getFirstTargetAddr(level); ok {
 		if err = n.networkSendInternal(bz, addr1); err != nil {
-			log.Println("Error sending to peer during broadcast: ", err)
+			n.Logger().Error("Sending to peer during broadcast failed: ", err)
 		}
 	}
 
 	if addr2, ok := n.getSecondTargetAddr(level); ok {
 		if err = n.networkSendInternal(bz, addr2); err != nil {
-			log.Println("Error sending to peer during broadcast: ", err)
+			n.Logger().Error("Sending to peer during broadcast failed: ", err)
 		}
 	}
 
 	if err = n.demote(msg); err != nil {
-		log.Println("Error demoting self during RainTree message propagation: ", err)
+		n.Logger().Error("Demoting self during RainTree message propagation failed: ", err)
 	}
 
 	return nil
@@ -134,7 +135,7 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 	}
 
 	if err := peer.Dialer.Write(data); err != nil {
-		log.Println("Error writing to peer during send: ", err)
+		n.Logger().Error("Writing to peer during send failed: ", err)
 		return err
 	}
 
@@ -161,7 +162,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	networkMessage := types.PocketEvent{}
 	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
-		log.Println("Error decoding network message: ", err)
+		n.Logger().Error("Decoding network message failed:", err)
 		return nil, err
 	}
 
@@ -231,6 +232,10 @@ func (n *rainTreeNetwork) GetBus() modules.Bus {
 func getNonce() uint64 {
 	rand.Seed(time.Now().UTC().UnixNano())
 	return rand.Uint64()
+}
+
+func (n *rainTreeNetwork) Logger() logging.Logger {
+	return n.GetBus().GetTelemetryModule().Logger()
 }
 
 // INVESTIGATE(olshansky): This did not generate a random nonce on every call

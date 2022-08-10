@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/logging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -103,4 +104,8 @@ func (p *NoopTelemetryModule) GetGaugeVec(name string) (prometheus.GaugeVec, err
 
 func (p *NoopTelemetryModule) GaugeVecRegister(namespace, module, name, description string, labels []string) {
 	NOOP()
+}
+
+func (p *NoopTelemetryModule) Logger() logging.Logger {
+	return logging.GetGlobalLogger()
 }

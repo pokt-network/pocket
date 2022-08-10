@@ -13,3 +13,27 @@ func GetGlobalLogger() Logger {
 	}
 	return singletonLogger
 }
+
+func Info(args ...any) {
+	GetGlobalLogger().Info(args...)
+}
+
+func Error(args ...any) {
+	GetGlobalLogger().Error(args...)
+}
+
+func Warn(args ...any) {
+	GetGlobalLogger().Warn(args...)
+}
+
+func Debug(args ...any) {
+	GetGlobalLogger().Debug(args...)
+}
+
+func Fatal(args ...any) {
+	GetGlobalLogger().Fatal(args...)
+}
+
+func Log(args ...any) {
+	GetGlobalLogger().Log(args...)
+}

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/logging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -198,4 +199,8 @@ func (p *PrometheusTelemetryModule) GetGaugeVec(name string) (prometheus.GaugeVe
 		return gv, NonExistentMetricErr("gauge vector", name, "get")
 	}
 	return prometheus.GaugeVec{}, nil
+}
+
+func (p *PrometheusTelemetryModule) Logger() logging.Logger {
+	return logging.GetGlobalLogger()
 }
