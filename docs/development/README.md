@@ -17,9 +17,8 @@ Please note that this repository is under very active development and breaking c
 
 - Install [Docker](https://docs.docker.com/get-docker/)
 - Install [Docker Compose](https://docs.docker.com/compose/install/)
-- Install [protoc-gen-go](https://pkg.go.dev/google.golang.org/protobuf/cmd/protoc-gen-go)
 - Install [Golang](https://go.dev/doc/install)
-- Install [mockgen](https://github.com/golang/mock)
+- `protoc-gen-go` and `mockgen` by running `make install_cli_deps`
 
 _Note to the reader: Please update this list if you found anything missing._
 

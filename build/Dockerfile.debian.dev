@@ -1,0 +1,55 @@
+# Purpose of this container image is to ship pocket binary with additional
+# tools such as dlv, curl, etc.
+
+ARG TARGET_GOLANG_VERSION=1.18
+
+FROM golang:${TARGET_GOLANG_VERSION}-bullseye AS builder
+
+ENV PROTOC_VERSION 3.19.4
+ENV PATH $PATH:$GOPATH/bin
+
+### Install dependencies
+# Debian packages
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential zip wget ca-certificates curl net-tools dnsutils && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt
+
+# protoc
+RUN set -eux; \
+    arch="$(dpkg --print-architecture)"; arch="${arch##*-}"; \
+    url=; \
+    case "$arch" in \
+    'amd64') \
+    url="https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip"; \
+    ;; \
+    'arm64') \
+    url="https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-aarch_64.zip"; \
+    ;; \
+    *) echo >&2 "error: unsupported architecture '$arch' (likely packaging update needed)"; exit 1 ;; \
+    esac; \
+    env; \
+    echo "$url"; \
+    wget -O protoc.zip "$url" --progress=dot:giga; \
+    unzip -q protoc.zip -d /usr/local/; \
+    protoc --version
+
+# dlv 
+RUN go install github.com/go-delve/delve/cmd/dlv@latest; \
+    dlv version
+
+## Copy code
+COPY . $GOPATH/src/github.com/pokt-network/pocket
+WORKDIR $GOPATH/src/github.com/pokt-network/pocket
+
+# Install protoc-gen-go and mockgen
+RUN make install_cli_deps
+
+## Run codegen
+RUN make protogen_local && \
+    make mockgen
+
+RUN go get -d -v ./app/pocket
+RUN go build -o /usr/local/bin/pocket ./app/pocket
+RUN go build -o /usr/local/bin/client ./app/client
+
+CMD ["/usr/local/bin/pocket"]
