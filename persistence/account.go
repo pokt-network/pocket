@@ -22,15 +22,9 @@ func (p PostgresContext) getAccountAmountStr(address string, height int64) (amou
 		return
 	}
 	amount = "0"
-	rows, err := txn.Query(ctx, schema.GetAccountAmountQuery(address, height))
-	if err != nil {
-		return "", err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		if err = rows.Scan(&amount); err != nil {
-			return
-		}
+	row := txn.QueryRow(ctx, schema.GetAccountAmountQuery(address, height))
+	if err = row.Scan(&amount); err != nil {
+		return
 	}
 	return
 }
@@ -94,15 +88,9 @@ func (p PostgresContext) GetPoolAmount(name string, height int64) (amount string
 		return
 	}
 	amount = "0"
-	rows, err := txn.Query(ctx, schema.GetPoolAmountQuery(name, height))
-	if err != nil {
-		return "", err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		if err = rows.Scan(&amount); err != nil {
-			return
-		}
+	row := txn.QueryRow(ctx, schema.GetPoolAmountQuery(name, height))
+	if err = row.Scan(&amount); err != nil {
+		return
 	}
 	return
 }

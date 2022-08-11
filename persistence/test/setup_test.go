@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/shared/modules"
-	sharedTest "github.com/pokt-network/pocket/shared/tests/utility_module"
+	sharedTest "github.com/pokt-network/pocket/shared/tests"
 
 	"golang.org/x/exp/slices"
 
@@ -45,19 +45,19 @@ var (
 // Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
 func TestMain(m *testing.M) {
 	pool, resource := sharedTest.SetupPostgresDocker()
-	PersistenceModule = sharedTest.PersistenceModule
-	PostgresDB = sharedTest.PostgresDB
+	testPersistenceModule = sharedTest.PersistenceModule
+	testPostgresDB = sharedTest.PostgresDB
 	m.Run()
 	sharedTest.CleanupPostgresDocker(m, pool, resource)
 }
 
 var (
-	PersistenceModule modules.PersistenceModule
-	PostgresDB        *persistence.PostgresDB
+	testPersistenceModule modules.PersistenceModule
+	testPostgresDB        *persistence.PostgresDB
 )
 
 func init() {
-	PostgresDB = new(persistence.PostgresDB)
+	testPostgresDB = new(persistence.PostgresDB)
 }
 
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.

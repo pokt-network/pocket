@@ -12,10 +12,10 @@ import (
 
 // IMPROVE(team): Move this into a proto enum
 const (
-	UndefinedStakingStatus = 3
-	UnstakedStatus         = 0
+	UndefinedStakingStatus = 0
 	UnstakingStatus        = 1
 	StakedStatus           = 2
+	UnstakedStatus         = 3
 )
 
 func UnstakingHeightToStatus(unstakingHeight int64) int32 {

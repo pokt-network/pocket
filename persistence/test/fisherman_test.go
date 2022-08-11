@@ -21,7 +21,7 @@ func FuzzFisherman(f *testing.F) {
 func TestInsertFishermanAndExists(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     *testPostgresDB,
 	}
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
@@ -50,7 +50,7 @@ func TestInsertFishermanAndExists(t *testing.T) {
 func TestUpdateFisherman(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     *testPostgresDB,
 	}
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
@@ -82,7 +82,7 @@ func TestUpdateFisherman(t *testing.T) {
 func TestGetFishermenReadyToUnstake(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     *testPostgresDB,
 	}
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
@@ -120,7 +120,7 @@ func TestGetFishermenReadyToUnstake(t *testing.T) {
 func TestGetFishermanStatus(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 1, // intentionally set to a non-zero height
-		DB:     *PostgresDB,
+		DB:     *testPostgresDB,
 	}
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
@@ -140,7 +140,7 @@ func TestGetFishermanStatus(t *testing.T) {
 func TestGetFishermanPauseHeightIfExists(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 1, // intentionally set to a non-zero height
-		DB:     *PostgresDB,
+		DB:     *testPostgresDB,
 	}
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
@@ -160,7 +160,7 @@ func TestGetFishermanPauseHeightIfExists(t *testing.T) {
 func TestSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     *testPostgresDB,
 	}
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
@@ -187,7 +187,7 @@ func TestSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
 func TestGetFishermanOutputAddress(t *testing.T) {
 	db := &persistence.PostgresContext{
 		Height: 0,
-		DB:     *PostgresDB,
+		DB:     *testPostgresDB,
 	}
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)

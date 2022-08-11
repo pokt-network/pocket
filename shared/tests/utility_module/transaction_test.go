@@ -3,6 +3,7 @@ package utility_module
 import (
 	"bytes"
 	"fmt"
+	"github.com/pokt-network/pocket/shared/tests"
 	"math/big"
 	"testing"
 
@@ -27,7 +28,7 @@ func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, amount.Cmp(expectedAfterBalance) == 0, fmt.Sprintf("unexpected after balance; expected %v got %v", expectedAfterBalance, amount))
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	CleanupTest()
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_ApplyTransaction(t *testing.T) {
@@ -44,7 +45,7 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, amount.Cmp(expectedAfterBalance) == 0, fmt.Sprintf("unexpected after balance; expected %v got %v", expectedAfterBalance, amount))
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	CleanupTest()
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_CheckTransaction(t *testing.T) {
@@ -59,7 +60,7 @@ func TestUtilityContext_CheckTransaction(t *testing.T) {
 	//er := ctx.CheckTransaction(txBz)
 	//require.True(t, er.Error() == types.ErrDuplicateTransaction().Error(), fmt.Sprintf("unexpected err, expected %v got %v", types.ErrDuplicateTransaction().Error(), er.Error()))
 	//ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	CleanupTest()
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetSignerCandidates(t *testing.T) {
@@ -75,7 +76,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	require.True(t, len(candidates) == 1, fmt.Sprintf("wrong number of candidates, expected %d, got %d", 1, len(candidates)))
 	require.True(t, bytes.Equal(candidates[0], accs[0].Address), fmt.Sprintf("unexpected signer candidate"))
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	CleanupTest()
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
@@ -90,7 +91,7 @@ func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
 	//require.True(t, len(txs) == 1, fmt.Sprintf("incorrect txs amount returned; expected %v got %v", 1, len(txs)))
 	//require.True(t, bytes.Equal(txs[0], txBz), fmt.Sprintf("unexpected transaction returned; expected tx: %s, got %s", hex.EncodeToString(txBz), hex.EncodeToString(txs[0])))
 	//ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	CleanupTest()
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_HandleMessage(t *testing.T) {
@@ -117,7 +118,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	require.True(t, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter).Cmp(sendAmount) == 0, fmt.Sprintf("unexpected sender balance"))
 	require.True(t, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore).Cmp(sendAmount) == 0, fmt.Sprintf("unexpected recipient balance"))
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	CleanupTest()
+	tests.CleanupTest()
 }
 
 func NewTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingAmount, amountSent *big.Int, signer crypto.PrivateKey) {

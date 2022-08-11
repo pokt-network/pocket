@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/tests"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
@@ -60,7 +61,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 			require.Equal(t, actor.GetUnstakingHeight(), types.HeightNotUsed, "incorrect actor unstaking height")
 			require.Equal(t, actor.GetOutput(), outputAddress.Bytes(), "incorrect actor output address")
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -104,7 +105,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
 			require.Equal(t, actor.GetStakedTokens(), types.BigIntToString(amountEdited), "incorrect staked amount")
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -148,7 +149,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
 			require.False(t, actor.GetPaused(), "actor should not be paused")
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -185,7 +186,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
 			require.Equal(t, actor.GetStatus(), int32(typesUtil.UnstakingStatus), "actor should be unstaking")
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -220,7 +221,7 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			status, err := ctx.GetActorStatus(actorType, actor.GetAddress())
 			require.Equal(t, status, typesUtil.UnstakingStatus, "actor should be unstaking")
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -232,7 +233,7 @@ func TestUtilityContext_CalculateRelays(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, actor.MaxRelays == newMaxRelays, fmt.Sprintf("unexpected max relay calculation; got %v wanted %v", actor.MaxRelays, newMaxRelays))
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	CleanupTest()
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
@@ -260,7 +261,7 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 
 			require.Equal(t, unstakingBlocks, unstakingHeight, "unexpected unstaking height")
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -278,7 +279,7 @@ func TestUtilityContext_Delete(t *testing.T) {
 			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
 			// TODO Delete actor is currently a NO-OP. We need to better define
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -300,7 +301,7 @@ func TestUtilityContext_GetExists(t *testing.T) {
 			require.NoError(t, err)
 			require.False(t, exists, "actor that shouldn't exist does")
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -317,7 +318,7 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 
 			require.Equal(t, outputAddress, actor.GetOutput(), "unexpected output address")
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -343,7 +344,7 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 			_, err = ctx.GetPauseHeight(actorType, randAddr)
 			require.Error(t, err, "non existent actor should error")
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -368,7 +369,7 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 			require.Equal(t, candidates[0], actor.GetOutput(), "incorrect output candidate")
 			require.Equal(t, candidates[1], actor.GetAddress(), "incorrect addr candidate")
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -388,7 +389,7 @@ func TestUtilityContext_UnstakesPausedBefore(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, actor.UnstakingHeight == unstakingBlocks+1, fmt.Sprintf("incorrect unstaking height"))
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	CleanupTest()
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
@@ -407,7 +408,7 @@ func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
 	// TODO (Team) we need to better define what 'deleted' really is in the postgres world.
 	// We might not need to 'unstakeActorsThatAreReady' if we are already filtering by unstakingHeight
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	CleanupTest()
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
@@ -428,7 +429,7 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 			require.Equal(t, candidates[0], actor.GetOutput(), "incorrect output candidate")
 			require.Equal(t, candidates[1], actor.GetAddress(), "incorrect addr candidate")
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -450,7 +451,7 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 			require.Equal(t, candidates[0], actor.GetOutput(), "incorrect output candidate")
 			require.Equal(t, candidates[1], actor.GetAddress(), "incorrect addr candidate")
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -506,7 +507,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			require.NoError(t, err, "error getting unstaking blocks")
 			require.Equal(t, actor.GetUnstakingHeight(), unstakingBlocks+1, "incorrect unstaking height")
 			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			CleanupTest()
+			tests.CleanupTest()
 		})
 	}
 }
@@ -552,7 +553,7 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 		require.NoError(t, err, "error unstaking actors that are ready")
 		// TODO Delete() is no op
 		ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-		CleanupTest()
+		tests.CleanupTest()
 	}
 }
 

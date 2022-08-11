@@ -3,6 +3,7 @@ package utility_module
 import (
 	"bytes"
 	"fmt"
+	"github.com/pokt-network/pocket/shared/tests"
 	"math"
 	"math/big"
 	"testing"
@@ -54,7 +55,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.False(t, proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0, fmt.Sprintf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference))
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	CleanupTest()
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_BeginBlock(t *testing.T) {
@@ -76,7 +77,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	//require.NoError(t, err)
 	//require.False(t, missed != 1, fmt.Sprintf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks))
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	CleanupTest()
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
@@ -108,7 +109,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 		status, err := ctx.GetActorStatus(actorType, actor.GetAddress())
 		require.False(t, status != 1, fmt.Sprintf("incorrect status; expected %d got %d", 1, actor.GetStatus()))
 		ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-		CleanupTest()
+		tests.CleanupTest()
 	}
 }
 
@@ -147,7 +148,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.False(t, proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0, fmt.Sprintf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference))
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	CleanupTest()
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetAppHash(t *testing.T) {
@@ -160,7 +161,7 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 	require.NoError(t, er)
 	require.False(t, !bytes.Equal(appHashSource, appHashTest), fmt.Sprintf("unexpected appHash, expected %v got %v", appHashSource, appHashTest))
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	CleanupTest()
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
@@ -192,6 +193,6 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 		// TODO (Team) we need to better define what 'deleted' really is in the postgres world.
 		// We might not need to 'unstakeActorsThatAreReady' if we are already filtering by unstakingHeight
 		ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-		CleanupTest()
+		tests.CleanupTest()
 	}
 }
