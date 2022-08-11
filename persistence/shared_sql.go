@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/jackc/pgx/v4"
 
 	"github.com/pokt-network/pocket/persistence/schema"
@@ -12,10 +13,10 @@ import (
 
 // IMPROVE(team): Move this into a proto enum
 const (
-	UndefinedStakingStatus = 0
-	UnstakingStatus        = 1
-	StakedStatus           = 2
-	UnstakedStatus         = 3
+	UndefinedStakingStatus = iota
+	UnstakingStatus
+	StakedStatus
+	UnstakedStatus
 )
 
 func UnstakingHeightToStatus(unstakingHeight int64) int32 {
