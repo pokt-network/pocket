@@ -31,13 +31,13 @@ var protocolActorSchemas = []schema.ProtocolActorSchema{
 	schema.ValidatorActor,
 }
 
-// TODO: These are only externalized for testing purposes, so they should be made private and
-//       it is trivial to create a helper to initial a context with some values.
+// TODO(pocket/issues/149): Consolidate `PostgresContext and PostgresDB` into a single struct
+// TODO: These structs are only exposed for testing purposes. A helper with default context values should be created.
+// Consolidate `Postgres`
 type PostgresContext struct {
 	Height int64
 	DB     PostgresDB
 }
-
 type PostgresDB struct {
 	Tx         pgx.Tx
 	Blockstore kvstore.KVStore
