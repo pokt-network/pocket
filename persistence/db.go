@@ -67,8 +67,8 @@ func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn,
 		return nil, fmt.Errorf("unable to connect to database: %v", err)
 	}
 
-	// Creating and setting a new schema so we can running multiple nodes on one postgres instance. See
-	// more details at https://github.com/go-pg/pg/issues/351.
+	// Creating and setting a new schema so we can running multiple nodes on one postgres instance.
+	// See more details at https://github.com/go-pg/pg/issues/351.
 	if _, err = db.Exec(ctx, fmt.Sprintf("%s %s", CreateSchemaIfNotExists, schema)); err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-// Exposed for debugging purposes only
+// Exposed for testing purposes only
 func (p PostgresContext) ClearAllDebug() error {
 	ctx, conn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
