@@ -194,7 +194,7 @@ func TestUtilityContext_SetPoolAmount(t *testing.T) {
 
 	amount, err := ctx.GetPoolAmount(pool.Name)
 	require.NoError(t, err)
-	require.Equal(t, beforeAmountBig, "no amount change in pool")
+	require.Equal(t, beforeAmountBig, defaultAmount, "no amount change in pool")
 	require.Equal(t, expectedAfterAmount, amount, "unexpected pool amount; expected %v got %v", expectedAfterAmount, amount)
 
 	ctx.Context.Release()
@@ -235,7 +235,7 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 
 	amount, err := ctx.GetAccountAmount(acc.Address)
 	require.NoError(t, err)
-	require.Equal(t, beforeAmountBig, amount, "no amount change in pool")
+	require.Equal(t, beforeAmountBig, defaultAmount, "no amount change in pool")
 
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
 	require.Equal(t, expected, amount, "unexpected acc amount; expected %v got %v", expected, amount)

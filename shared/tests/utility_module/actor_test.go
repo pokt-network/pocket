@@ -416,14 +416,14 @@ func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
 
 	actors := GetAllTestingApps(t, ctx)
 	for _, actor := range actors {
-		require.Equal(t, typesUtil.StakedStatus, actor.Status, "wrong starting status")
+		require.Equal(t, int32(typesUtil.StakedStatus), actor.Status, "wrong starting status")
 		require.NoError(t, ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, 1), "set actor pause height")
 	}
 	require.NoError(t, ctx.UnstakeActorPausedBefore(2, typesUtil.ActorType_App), "set actor pause before")
 	require.NoError(t, ctx.UnstakeActorsThatAreReady(), "unstake actors that are ready")
 
 	appAfter := GetAllTestingApps(t, ctx)[0]
-	require.Equal(t, appAfter.UnstakingHeight, 0, "apps still exists after unstake that are ready() call")
+	require.Equal(t, appAfter.UnstakingHeight, int64(0), "apps still exists after unstake that are ready() call")
 	// TODO (Team) we need to better define what 'deleted' really is in the postgres world.
 	// We might not need to 'unstakeActorsThatAreReady' if we are already filtering by unstakingHeight
 

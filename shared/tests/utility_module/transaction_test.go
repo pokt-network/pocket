@@ -1,7 +1,6 @@
 package utility_module
 
 import (
-	"bytes"
 	"math/big"
 	"testing"
 
@@ -77,7 +76,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, len(candidates), 1, "wrong number of candidates")
-	require.Equal(t, bytes.Equal(candidates[0], accs[0].Address), "unexpected signer candidate")
+	require.Equal(t, candidates[0], accs[0].Address, "unexpected signer candidate")
 
 	ctx.Context.Release()
 	tests.CleanupTest()

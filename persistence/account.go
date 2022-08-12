@@ -10,6 +10,13 @@ import (
 
 // TODO(https://github.com/pokt-network/pocket/issues/102): Generalize Pool and Account operations.
 
+// DISCUSS_IN_THIS_COMMIT: if we want to make use of `defaultAccountAmountStr`, then we should
+//                         check if the error returned by the DB is `RowNotFound` and return a nil
+//                         error if that's the case.
+const (
+	defaultAccountAmountStr string = "0"
+)
+
 // --- Account Functions ---
 
 func (p PostgresContext) GetAccountAmount(address []byte, height int64) (amount string, err error) {
@@ -21,9 +28,9 @@ func (p PostgresContext) getAccountAmountStr(address string, height int64) (amou
 	if err != nil {
 		return
 	}
-	amount = "0"
-	row := txn.QueryRow(ctx, schema.GetAccountAmountQuery(address, height))
-	if err = row.Scan(&amount); err != nil {
+
+	amount = defaultAccountAmountStr
+	if err = txn.QueryRow(ctx, schema.GetAccountAmountQuery(address, height)).Scan(&amount); err != nil {
 		return
 	}
 	return
@@ -87,9 +94,9 @@ func (p PostgresContext) GetPoolAmount(name string, height int64) (amount string
 	if err != nil {
 		return
 	}
-	amount = "0"
-	row := txn.QueryRow(ctx, schema.GetPoolAmountQuery(name, height))
-	if err = row.Scan(&amount); err != nil {
+
+	amount = defaultAccountAmountStr
+	if err = txn.QueryRow(ctx, schema.GetPoolAmountQuery(name, height)).Scan(&amount); err != nil {
 		return
 	}
 	return
