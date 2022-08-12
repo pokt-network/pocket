@@ -3,15 +3,16 @@ package tests
 import (
 	"context"
 	"fmt"
-	"github.com/ory/dockertest"
-	"github.com/ory/dockertest/docker"
-	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/shared/modules"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"testing"
+
+	"github.com/ory/dockertest"
+	"github.com/ory/dockertest/docker"
+	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 const (
@@ -106,6 +107,7 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 	os.Exit(0)
 }
 
+// TODO(pocket/issues/149): Golang specific solution for teardown
 func CleanupTest() {
 	PostgresDB.Tx.Rollback(context.TODO())
 	PersistenceModule.Stop()

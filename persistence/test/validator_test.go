@@ -35,13 +35,15 @@ func TestInsertValidatorAndExists(t *testing.T) {
 	exists, err := db.GetValidatorExists(validator.Address, 0)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist at previous height does not")
+
 	exists, err = db.GetValidatorExists(validator.Address, 1)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist at current height does not")
 
 	exists, err = db.GetValidatorExists(validator2.Address, 0)
 	require.NoError(t, err)
-	require.False(t, exists, "actor that should not exist at previous height validatorears to")
+	require.False(t, exists, "actor that should not exist at previous height appears to")
+
 	exists, err = db.GetValidatorExists(validator2.Address, 1)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist at current height does not")
