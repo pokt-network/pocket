@@ -140,7 +140,7 @@ func TestUtilityContext_InsertPool(t *testing.T) {
 	require.NoError(t, err)
 
 	gotAmountString := types.BigIntToString(gotAmount)
-	require.True(t, amount == gotAmountString, fmt.Sprintf("unexpected amount, expected %s got %s", amount, gotAmountString))
+	require.Equal(t, amount, gotAmountString, "unexpected amount")
 
 	ctx.Context.Release()
 	tests.CleanupTest()

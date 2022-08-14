@@ -1,7 +1,6 @@
 package utility_module
 
 import (
-	"bytes"
 	"fmt"
 	"math"
 	"math/big"
@@ -31,10 +30,13 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
 		require.NoError(t, err, "apply block")
 	}
+
+	// DISCUSS_IN_THIS_COMMIT: Why did we comment this part out?
 	// beginBlock logic verify
-	//missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address) TODO not implemented in persistence context yet
-	//require.NoError(t, err)
-	//require.True(t, missed == 1, fmt.Sprintf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks))
+	// missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address) TODO not implemented in persistence context yet
+	// require.NoError(t, err)
+	// require.True(t, missed == 1, fmt.Sprintf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks))
+
 	// deliverTx logic verify
 	feeBig, err := ctx.GetMessageSendFee()
 	require.NoError(t, err)
@@ -57,7 +59,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
-	require.False(t, proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0, fmt.Sprintf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference))
+	require.Equal(t, expectedProposerBalanceDifference, proposerBalanceDifference, "unexpected before / after balance difference")
 
 	ctx.Context.Release()
 	tests.CleanupTest()
@@ -77,10 +79,12 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
 		require.NoError(t, err)
 	}
+
+	// DISCUSS_IN_THIS_COMMIT: Why did we comment this part out?
 	// beginBlock logic verify
-	//missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address) TODO not yet implemented
-	//require.NoError(t, err)
-	//require.False(t, missed != 1, fmt.Sprintf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks))
+	// missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address) TODO not yet implemented
+	// require.NoError(t, err)
+	// require.False(t, missed != 1, fmt.Sprintf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks))
 
 	ctx.Context.Release()
 	tests.CleanupTest()
@@ -113,7 +117,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 		require.NoError(t, err)
 
 		status, err := ctx.GetActorStatus(actorType, actor.GetAddress())
-		require.False(t, status != 1, fmt.Sprintf("incorrect status; expected %d got %d", 1, actor.GetStatus()))
+		require.NotEqual(t, status, 1, "incorrect status")
 
 		ctx.Context.Release()
 		tests.CleanupTest()
@@ -167,7 +171,7 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 
 	appHashSource, er := ctx.Context.AppHash()
 	require.NoError(t, er)
-	require.False(t, !bytes.Equal(appHashSource, appHashTest), fmt.Sprintf("unexpected appHash, expected %v got %v", appHashSource, appHashTest))
+	require.Equal(t, appHashSource, appHashTest, "unexpected appHash")
 
 	ctx.Context.Release()
 	tests.CleanupTest()

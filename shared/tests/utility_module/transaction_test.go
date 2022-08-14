@@ -51,16 +51,16 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 
 // TODO: Fix this test once txIndexer is implemented by postgres context
 func TestUtilityContext_CheckTransaction(t *testing.T) {
-	//ctx := NewTestingUtilityContext(t, 0)
-	//tx, _, _, _ := newTestingTransaction(t, ctx)
-	//txBz, err := tx.Bytes()
-	//require.NoError(t, err)
-	//require.NoError(t, ctx.CheckTransaction(txBz))
-	//hash, err := tx.Hash()
-	//require.NoError(t, err)
-	//require.True(t, ctx.Mempool.Contains(hash), fmt.Sprintf("the transaction was unable to be checked"))
-	//er := ctx.CheckTransaction(txBz)
-	//require.True(t, er.Error() == types.ErrDuplicateTransaction().Error(), fmt.Sprintf("unexpected err, expected %v got %v", types.ErrDuplicateTransaction().Error(), er.Error()))
+	// ctx := NewTestingUtilityContext(t, 0)
+	// tx, _, _, _ := newTestingTransaction(t, ctx)
+	// txBz, err := tx.Bytes()
+	// require.NoError(t, err)
+	// require.NoError(t, ctx.CheckTransaction(txBz))
+	// hash, err := tx.Hash()
+	// require.NoError(t, err)
+	// require.True(t, ctx.Mempool.Contains(hash), fmt.Sprintf("the transaction was unable to be checked"))
+	// er := ctx.CheckTransaction(txBz)
+	// require.True(t, er.Error() == types.ErrDuplicateTransaction().Error(), fmt.Sprintf("unexpected err, expected %v got %v", types.ErrDuplicateTransaction().Error(), er.Error()))
 
 	// ctx.Context.Release()
 	// tests.CleanupTest()
@@ -85,16 +85,16 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 
 // TODO: Fix this test once txIndexer is implemented by postgres context
 func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
-	//ctx := NewTestingUtilityContext(t, 0)
-	//tx, _, _, _ := newTestingTransaction(t, ctx)
-	//proposer := GetAllTestingValidators(t, ctx)[0]
-	//txBz, err := tx.Bytes()
-	//require.NoError(t, err)
-	//require.NoError(t, ctx.CheckTransaction(txBz))
-	//txs, er := ctx.GetTransactionsForProposal(proposer.Address, 10000, nil)
-	//require.NoError(t, er)
-	//require.True(t, len(txs) == 1, fmt.Sprintf("incorrect txs amount returned; expected %v got %v", 1, len(txs)))
-	//require.True(t, bytes.Equal(txs[0], txBz), fmt.Sprintf("unexpected transaction returned; expected tx: %s, got %s", hex.EncodeToString(txBz), hex.EncodeToString(txs[0])))
+	// ctx := NewTestingUtilityContext(t, 0)
+	// tx, _, _, _ := newTestingTransaction(t, ctx)
+	// proposer := GetAllTestingValidators(t, ctx)[0]
+	// txBz, err := tx.Bytes()
+	// require.NoError(t, err)
+	// require.NoError(t, ctx.CheckTransaction(txBz))
+	// txs, er := ctx.GetTransactionsForProposal(proposer.Address, 10000, nil)
+	// require.NoError(t, er)
+	// require.True(t, len(txs) == 1, fmt.Sprintf("incorrect txs amount returned; expected %v got %v", 1, len(txs)))
+	// require.True(t, bytes.Equal(txs[0], txBz), fmt.Sprintf("unexpected transaction returned; expected tx: %s, got %s", hex.EncodeToString(txBz), hex.EncodeToString(txs[0])))
 
 	// ctx.Context.Release()
 	// tests.CleanupTest()

@@ -261,7 +261,7 @@ test_utility_types: # generate_mocks
 .PHONY: test_shared
 ## Run all go unit tests in the shared module
 test_shared: # generate_mocks
-	go test ${VERBOSE_TEST} ./shared/...
+	go test ${VERBOSE_TEST} -p=1 ./shared/...
 
 .PHONY: test_consensus
 ## Run all go unit tests in the Consensus module
