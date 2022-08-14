@@ -404,7 +404,7 @@ func NullifyParamsQuery(height int64) string {
 	return fmt.Sprintf(`UPDATE %s SET height=%d WHERE height=%d`, ParamsTableName, height, DefaultBigInt)
 }
 
-func SetParam(paramName string, paramValue interface{}, height int64) string {
+func SetParamQuery(paramName string, paramValue interface{}, height int64) string {
 	paramNames := GetParamNames()
 	pNamesLen := len(paramNames)
 	var index int

@@ -908,7 +908,7 @@ func (p PostgresContext) SetParam(paramName string, paramValue interface{}) erro
 	if _, err = txn.Exec(ctx, schema.NullifyParamsQuery(height)); err != nil {
 		return err
 	}
-	setParamSchema := schema.SetParam(paramName, paramValue, height)
+	setParamSchema := schema.SetParamQuery(paramName, paramValue, height)
 	if _, err = txn.Exec(ctx, setParamSchema); err != nil {
 		return err
 	}
@@ -938,8 +938,8 @@ func (p PostgresContext) GetBytesParam(paramName string) (param []byte, err erro
 	if err != nil {
 		return nil, err
 	}
-	var pa string
-	err = txn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&pa)
-	param, err = hex.DecodeString(pa)
+	var paramString string
+	err = txn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&paramString)
+	param, err = hex.DecodeString(paramString)
 	return
 }
