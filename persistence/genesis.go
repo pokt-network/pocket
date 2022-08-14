@@ -12,7 +12,7 @@ import (
 )
 
 // TODO(Andrew): generalize with the `actors interface`` once merged with #111
-func (pm *persistenceModule) PopulateGenesisState(state *genesis.GenesisState) {
+func (pm *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	log.Println("Populating genesis state...")
 
 	// REFACTOR: This business logic should probably live in `types/genesis.go`

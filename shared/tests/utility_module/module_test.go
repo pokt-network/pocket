@@ -46,7 +46,7 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 		},
 		Persistence: &config.PersistenceConfig{
 			PostgresUrl: tests.DatabaseUrl,
-			NodeSchema:  tests.SQL_Schema,
+			NodeSchema:  tests.SQLSchema,
 		},
 	}
 	err := cfg.HydrateGenesisState()

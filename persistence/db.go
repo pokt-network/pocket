@@ -58,7 +58,7 @@ func (pg *PostgresContext) GetContext() (context.Context, error) {
 
 // TODO(pokt-network/pocket/issues/77): Enable proper up and down migrations
 // TODO: Split `connect` and `initialize` into two separate components.
-func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
+func connectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
 	ctx := context.TODO()
 
 	// Connect to the DB
@@ -82,7 +82,6 @@ func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn,
 	}
 
 	return db, nil
-
 }
 
 // TODO(pokt-network/pocket/issues/77): Delete all the `initializeAllTables` calls once proper migrations are implemented.

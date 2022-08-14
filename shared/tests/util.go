@@ -12,6 +12,7 @@ import (
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -19,7 +20,7 @@ const (
 	user             = "postgres"
 	password         = "secret"
 	db               = "postgres"
-	SQL_Schema       = "test_schema"
+	SQLSchema        = "test_schema"
 	dialect          = "postgres"
 	connStringFormat = "postgres://%s:%s@%s/%s?sslmode=disable"
 )
@@ -76,26 +77,39 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource) {
 	resource.Expire(120) // Tell docker to hard kill the container in 120 seconds
 
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
+	var persistenceMod modules.PersistenceModule
 	if err = pool.Retry(func() error {
-		conn, err := persistence.ConnectAndInitializeDatabase(DatabaseUrl, SQL_Schema)
+		config := &config.Config{
+			Persistence: &config.PersistenceConfig{
+				PostgresUrl:    DatabaseUrl,
+				NodeSchema:     SQLSchema,
+				BlockStorePath: "",
+			},
+		}
+		persistenceMod, err = persistence.Create(config)
 		if err != nil {
 			log.Println(err.Error())
 			return err
 		}
-		PostgresDB.Tx, err = conn.Begin(context.TODO())
-		if err != nil {
-			log.Println(err.Error())
-			return err
-		}
-		PersistenceModule, err = persistence.NewPersistenceModule(DatabaseUrl, "", SQL_Schema, conn, nil)
-		if err != nil {
-			log.Println(err.Error())
-			return err
-		}
+		persistenceMod.Start()
+		PersistenceModule = persistenceMod
+
+		ctx, _ := persistenceMod.NewRWContext(-1)
+		PostgresDB.Tx = ctx.(persistence.PostgresContext).DB.Tx
+
+		// PostgresDB.Tx, err = conn.Begin(context.TODO())
+		// if err != nil {
+		// 	log.Println(err.Error())
+		// 	return err
+		// }
 		return nil
 	}); err != nil {
 		log.Fatalf("could not connect to docker: %s", err.Error())
 	}
+
+	// fmt.Println(persistenceMod)
+	// persistenceMod.Start()
+	// PersistenceModule = persistenceMod
 	return pool, resource
 }
 

@@ -15,49 +15,36 @@ var _ modules.PersistenceModule = &persistenceModule{}
 var _ modules.PersistenceRWContext = &PostgresContext{}
 
 type persistenceModule struct {
-	bus         modules.Bus
+	bus modules.Bus
+
 	db          *pgx.Conn
 	postgresURL string
 	nodeSchema  string
-	// INVESTIGATE: We may need to create a custom `BlockStore` package in the future.
-	blockStore kvstore.KVStore
+	blockStore  kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
 }
 
-func NewPersistenceModule(postgresURL, blockStorePath string, nodeSchema string, db *pgx.Conn, bus modules.Bus) (*persistenceModule, error) {
-	var blockStore kvstore.KVStore
-	if blockStorePath == "" {
-		blockStore = kvstore.NewMemKVStore()
-	} else {
-		var err error
-		blockStore, err = kvstore.NewKVStore(blockStorePath)
-		if err != nil {
-			return nil, err
-		}
+func Create(c *config.Config) (modules.PersistenceModule, error) {
+	db, err := connectAndInitializeDatabase(c.Persistence.PostgresUrl, c.Persistence.NodeSchema)
+	if err != nil {
+		return nil, err
+	}
+	blockStore, err := initializeBlockStore(c.Persistence.BlockStorePath)
+	if err != nil {
+		return nil, err
 	}
 	return &persistenceModule{
-		postgresURL: postgresURL,
-		nodeSchema:  nodeSchema,
+		postgresURL: c.Persistence.PostgresUrl,
+		nodeSchema:  c.Persistence.NodeSchema,
 		db:          db,
-		bus:         bus,
+		bus:         nil,
 		blockStore:  blockStore,
 	}, nil
 }
 
-func Create(c *config.Config) (modules.PersistenceModule, error) {
-	db, err := ConnectAndInitializeDatabase(c.Persistence.PostgresUrl, c.Persistence.NodeSchema)
-	if err != nil {
-		return nil, err
-	}
-	pm, err := NewPersistenceModule(c.Persistence.PostgresUrl, c.Persistence.BlockStorePath, c.Persistence.NodeSchema, db, nil)
-	if err != nil {
-		return nil, err
-	}
-	pm.PopulateGenesisState(c.GenesisSource.GetState())
-	return pm, nil
-}
-
 func (p *persistenceModule) Start() error {
 	log.Println("Starting persistence module...")
+	// DISCUSS_IN_THIS_COMMIT: When should this run?
+	p.populateGenesisState(p.bus.GetConfig().GenesisSource.GetState())
 	return nil
 }
 
@@ -79,7 +66,7 @@ func (m *persistenceModule) GetBus() modules.Bus {
 }
 
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
-	db, err := ConnectAndInitializeDatabase(m.postgresURL, m.nodeSchema)
+	db, err := connectAndInitializeDatabase(m.postgresURL, m.nodeSchema)
 	if err != nil {
 		return nil, err
 	}
@@ -109,4 +96,11 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 
 func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
 	return m.blockStore
+}
+
+func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
+	if blockStorePath == "" {
+		return kvstore.NewMemKVStore(), nil
+	}
+	return kvstore.NewKVStore(blockStorePath)
 }
