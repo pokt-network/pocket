@@ -2,14 +2,13 @@ package persistence
 
 import (
 	"encoding/hex"
+
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 // TODO(https://github.com/pokt-network/pocket/issues/76): Optimize gov parameters implementation & schema.
-// TODO (Team) BUG setting parameters twice on the same height causes issues. We need to move the schema away from 'end_height' and
-// more towards the height_constraint architecture
 
 func (p PostgresContext) GetBlocksPerSession() (int, error) {
 	return p.GetIntParam(types.BlocksPerSessionParamName)

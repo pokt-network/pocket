@@ -18,18 +18,19 @@ const (
 	CreateTableIfNotExists  = "CREATE TABLE IF NOT EXISTS"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
-var _ modules.PersistenceRWContext = &PostgresContext{}
-
 var protocolActorSchemas = []schema.ProtocolActorSchema{
 	schema.ApplicationActor,
 	schema.FishermanActor,
 	schema.ServiceNodeActor,
 	schema.ValidatorActor,
 }
+
+// DISCUSS_IN_THIS_COMMIT: Do we still need this?
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+var _ modules.PersistenceRWContext = &PostgresContext{}
 
 // TODO(pocket/issues/149): Consolidate `PostgresContext and PostgresDB` into a single struct and
 // avoid exposing it for testing purposes after the consolidation. A helper with default context
@@ -67,16 +68,16 @@ func connectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn,
 		return nil, fmt.Errorf("unable to connect to database: %v", err)
 	}
 
-	// Creating and setting a new schema so we can running multiple nodes on one postgres instance.
+	// Creating and setting a new schema so we can run multiple nodes on one postgres instance.
 	// See more details at https://github.com/go-pg/pg/issues/351.
 	if _, err = db.Exec(ctx, fmt.Sprintf("%s %s", CreateSchemaIfNotExists, schema)); err != nil {
 		return nil, err
 	}
-
 	if _, err = db.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, schema)); err != nil {
 		return nil, err
 	}
 
+	// Initialize the tables if they don't already exist
 	if err = initializeAllTables(ctx, db); err != nil {
 		return nil, fmt.Errorf("unable to initialize tables: %v", err)
 	}

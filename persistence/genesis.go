@@ -12,10 +12,12 @@ import (
 )
 
 // TODO(Andrew): generalize with the `actors interface`` once merged with #111
-func (pm *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
+// WARNING: This function crashes the process if there is an error populating the genesis state.
+func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	log.Println("Populating genesis state...")
 
 	// REFACTOR: This business logic should probably live in `types/genesis.go`
+	//           and we need to add proper unit tests for it.`
 	poolValues := make(map[string]*big.Int, 0)
 	addValueToPool := func(poolName string, valueToAdd string) error {
 		value, err := types.StringToBigInt(valueToAdd)
@@ -29,43 +31,43 @@ func (pm *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 		return nil
 	}
 
-	rwContext, err := pm.NewRWContext(0)
+	rwContext, err := m.NewRWContext(0)
 	if err != nil {
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
 	}
 
-	for _, act := range state.Apps {
-		if err = rwContext.InsertApp(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.MaxRelays, act.StakedTokens, act.Chains, act.PausedHeight, act.UnstakingHeight); err != nil {
+	for _, app := range state.Apps {
+		if err = rwContext.InsertApp(app.Address, app.PublicKey, app.Output, app.Paused, int(app.Status), app.MaxRelays, app.StakedTokens, app.Chains, app.PausedHeight, app.UnstakingHeight); err != nil {
 			log.Fatalf("an error occurred inserting an app in the genesis state: %s", err.Error())
 		}
-		if err = addValueToPool(genesis.AppStakePoolName, act.StakedTokens); err != nil {
+		if err = addValueToPool(genesis.AppStakePoolName, app.StakedTokens); err != nil {
 			log.Fatalf("an error occurred inserting staked tokens into %s pool", genesis.AppStakePoolName)
 		}
 	}
 
-	for _, act := range state.ServiceNodes {
-		if err = rwContext.InsertServiceNode(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.ServiceUrl, act.StakedTokens, act.Chains, act.PausedHeight, act.UnstakingHeight); err != nil {
+	for _, serviceNode := range state.ServiceNodes {
+		if err = rwContext.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, serviceNode.Paused, int(serviceNode.Status), serviceNode.ServiceUrl, serviceNode.StakedTokens, serviceNode.Chains, serviceNode.PausedHeight, serviceNode.UnstakingHeight); err != nil {
 			log.Fatalf("an error occurred inserting a service node in the genesis state: %s", err.Error())
 		}
-		if err = addValueToPool(genesis.ServiceNodeStakePoolName, act.StakedTokens); err != nil {
+		if err = addValueToPool(genesis.ServiceNodeStakePoolName, serviceNode.StakedTokens); err != nil {
 			log.Fatalf("an error occurred inserting staked tokens into %s pool", genesis.ServiceNodeStakePoolName)
 		}
 	}
 
-	for _, act := range state.Fishermen {
-		if err = rwContext.InsertFisherman(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.ServiceUrl, act.StakedTokens, act.Chains, act.PausedHeight, act.UnstakingHeight); err != nil {
+	for _, fish := range state.Fishermen {
+		if err = rwContext.InsertFisherman(fish.Address, fish.PublicKey, fish.Output, fish.Paused, int(fish.Status), fish.ServiceUrl, fish.StakedTokens, fish.Chains, fish.PausedHeight, fish.UnstakingHeight); err != nil {
 			log.Fatalf("an error occurred inserting a fisherman in the genesis state: %s", err.Error())
 		}
-		if err = addValueToPool(genesis.FishermanStakePoolName, act.StakedTokens); err != nil {
+		if err = addValueToPool(genesis.FishermanStakePoolName, fish.StakedTokens); err != nil {
 			log.Fatalf("an error occurred inserting staked tokens into %s pool", genesis.FishermanStakePoolName)
 		}
 	}
 
-	for _, act := range state.Validators {
-		if err = rwContext.InsertValidator(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.ServiceUrl, act.StakedTokens, act.PausedHeight, act.UnstakingHeight); err != nil {
+	for _, val := range state.Validators {
+		if err = rwContext.InsertValidator(val.Address, val.PublicKey, val.Output, val.Paused, int(val.Status), val.ServiceUrl, val.StakedTokens, val.PausedHeight, val.UnstakingHeight); err != nil {
 			log.Fatalf("an error occurred inserting a validator in the genesis state: %s", err.Error())
 		}
-		if err = addValueToPool(genesis.ValidatorStakePoolName, act.StakedTokens); err != nil {
+		if err = addValueToPool(genesis.ValidatorStakePoolName, val.StakedTokens); err != nil {
 			log.Fatalf("an error occurred inserting staked tokens into %s pool", genesis.ValidatorStakePoolName)
 		}
 	}

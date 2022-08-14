@@ -1,18 +1,13 @@
 package schema
 
 // TECHDEBT: Consider moving this to a protobuf. This struct was created to make testing simple of protocol actors that
-//           share most of the schema. We need to investigate if there's a better solution, or document this more appropriately and generalize
-//           across the entire codebase.
-//
-// type BaseActor interface
-// GetAddress() string
-// SetAddress(string)
-// GetPublicKey() string
-// SetPublicKey(string)
-// ...
+//           share most of the schema. We need to investigate if there's a better solution, or document this more appropriately
+//           and generalize across the entire codebase.
+//           See the `Actor` interface in `shared/types/genesis/actor.go`.
 // NOTE: requires modifying shared, so better to leave it alone until we reach some stability
 
-type BaseActor struct { // TODO (team) get rid of this for the interface version in shared (once merged)
+// TODO (team) get rid of this for the interface version in shared (once merged)
+type BaseActor struct {
 	Address            string
 	PublicKey          string
 	StakedTokens       string

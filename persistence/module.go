@@ -23,34 +23,36 @@ type persistenceModule struct {
 	blockStore  kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
 }
 
-func Create(c *config.Config) (modules.PersistenceModule, error) {
-	db, err := connectAndInitializeDatabase(c.Persistence.PostgresUrl, c.Persistence.NodeSchema)
+func Create(cfg *config.Config) (modules.PersistenceModule, error) {
+	db, err := connectAndInitializeDatabase(cfg.Persistence.PostgresUrl, cfg.Persistence.NodeSchema)
 	if err != nil {
 		return nil, err
 	}
-	blockStore, err := initializeBlockStore(c.Persistence.BlockStorePath)
+	blockStore, err := initializeBlockStore(cfg.Persistence.BlockStorePath)
 	if err != nil {
 		return nil, err
 	}
-	return &persistenceModule{
-		postgresURL: c.Persistence.PostgresUrl,
-		nodeSchema:  c.Persistence.NodeSchema,
+	persistenceMod := &persistenceModule{
+		postgresURL: cfg.Persistence.PostgresUrl,
+		nodeSchema:  cfg.Persistence.NodeSchema,
 		db:          db,
 		bus:         nil,
 		blockStore:  blockStore,
-	}, nil
+	}
+	// DISCUSS_IN_THIS_COMMIT: Is `Create` the appropriate location for this or should it be `Start`?
+	persistenceMod.populateGenesisState(cfg.GenesisSource.GetState())
+
+	return persistenceMod, nil
 }
 
-func (p *persistenceModule) Start() error {
+func (m *persistenceModule) Start() error {
 	log.Println("Starting persistence module...")
-	// DISCUSS_IN_THIS_COMMIT: When should this run?
-	p.populateGenesisState(p.bus.GetConfig().GenesisSource.GetState())
 	return nil
 }
 
-func (p *persistenceModule) Stop() error {
-	p.blockStore.Stop()
-	p.db.Close(context.TODO())
+func (m *persistenceModule) Stop() error {
+	m.blockStore.Stop()
+	m.db.Close(context.TODO())
 	return nil
 }
 

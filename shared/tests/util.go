@@ -14,6 +14,7 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 const (
@@ -76,17 +77,27 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource) {
 
 	resource.Expire(120) // Tell docker to hard kill the container in 120 seconds
 
+	cfg := &config.Config{
+		GenesisSource: &genesis.GenesisSource{
+			Source: &genesis.GenesisSource_Config{
+				Config: genesisConfig(),
+			},
+		},
+		Persistence: &config.PersistenceConfig{
+			PostgresUrl:    DatabaseUrl,
+			NodeSchema:     SQLSchema,
+			BlockStorePath: "",
+		},
+	}
+	err = cfg.HydrateGenesisState()
+	if err != nil {
+		log.Fatalf("could not hydrate genesis state during postgres setup: %s", err)
+	}
+
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	var persistenceMod modules.PersistenceModule
 	if err = pool.Retry(func() error {
-		config := &config.Config{
-			Persistence: &config.PersistenceConfig{
-				PostgresUrl:    DatabaseUrl,
-				NodeSchema:     SQLSchema,
-				BlockStorePath: "",
-			},
-		}
-		persistenceMod, err = persistence.Create(config)
+		persistenceMod, err = persistence.Create(cfg)
 		if err != nil {
 			log.Println(err.Error())
 			return err
@@ -97,19 +108,11 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource) {
 		ctx, _ := persistenceMod.NewRWContext(-1)
 		PostgresDB.Tx = ctx.(persistence.PostgresContext).DB.Tx
 
-		// PostgresDB.Tx, err = conn.Begin(context.TODO())
-		// if err != nil {
-		// 	log.Println(err.Error())
-		// 	return err
-		// }
 		return nil
 	}); err != nil {
 		log.Fatalf("could not connect to docker: %s", err.Error())
 	}
 
-	// fmt.Println(persistenceMod)
-	// persistenceMod.Start()
-	// PersistenceModule = persistenceMod
 	return pool, resource
 }
 
@@ -125,4 +128,14 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 func CleanupTest() {
 	PostgresDB.Tx.Rollback(context.TODO())
 	PersistenceModule.Stop()
+}
+
+func genesisConfig() *genesis.GenesisConfig {
+	config := &genesis.GenesisConfig{
+		NumValidators:   5,
+		NumApplications: 1,
+		NumFisherman:    1,
+		NumServicers:    1,
+	}
+	return config
 }
