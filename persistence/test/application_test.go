@@ -226,6 +226,8 @@ func newTestApp() (*typesGenesis.App, error) {
 	}, nil
 }
 
+// DISCUSS_IN_THIS_COMMIT: We are only calling these functions and tests for apps, but need
+// it for everything.
 func TestGetSetStakeAmount(t *testing.T) {
 	var newStakeAmount = "new_stake_amount"
 	db := &persistence.PostgresContext{
