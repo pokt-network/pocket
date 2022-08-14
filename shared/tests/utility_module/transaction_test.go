@@ -16,7 +16,7 @@ import (
 func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 
-	tx, startingBalance, _, signer := NewTestingTransaction(t, ctx)
+	tx, startingBalance, _, signer := newTestingTransaction(t, ctx)
 	_, err := ctx.AnteHandleMessage(tx)
 	require.NoError(t, err)
 	feeBig, err := ctx.GetMessageSendFee()
@@ -34,7 +34,7 @@ func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 
-	tx, startingBalance, amount, signer := NewTestingTransaction(t, ctx)
+	tx, startingBalance, amount, signer := newTestingTransaction(t, ctx)
 	require.NoError(t, ctx.ApplyTransaction(tx))
 	feeBig, err := ctx.GetMessageSendFee()
 	require.NoError(t, err)
@@ -49,9 +49,10 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	tests.CleanupTest()
 }
 
+// TODO: Fix this test once txIndexer is implemented by postgres context
 func TestUtilityContext_CheckTransaction(t *testing.T) {
-	//ctx := NewTestingUtilityContext(t, 0) TODO (Team) txIndexer not implemented by postgres context
-	//tx, _, _, _ := NewTestingTransaction(t, ctx)
+	//ctx := NewTestingUtilityContext(t, 0)
+	//tx, _, _, _ := newTestingTransaction(t, ctx)
 	//txBz, err := tx.Bytes()
 	//require.NoError(t, err)
 	//require.NoError(t, ctx.CheckTransaction(txBz))
@@ -82,9 +83,10 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	tests.CleanupTest()
 }
 
+// TODO: Fix this test once txIndexer is implemented by postgres context
 func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
-	//ctx := NewTestingUtilityContext(t, 0) TODO (Team) txIndexer not implemented by postgres context
-	//tx, _, _, _ := NewTestingTransaction(t, ctx)
+	//ctx := NewTestingUtilityContext(t, 0)
+	//tx, _, _, _ := newTestingTransaction(t, ctx)
 	//proposer := GetAllTestingValidators(t, ctx)[0]
 	//txBz, err := tx.Bytes()
 	//require.NoError(t, err)
@@ -127,7 +129,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	tests.CleanupTest()
 }
 
-func NewTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingAmount, amountSent *big.Int, signer crypto.PrivateKey) {
+func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingAmount, amountSent *big.Int, signer crypto.PrivateKey) {
 	cdc := types.GetCodec()
 	recipient := GetAllTestingAccounts(t, ctx)[1]
 

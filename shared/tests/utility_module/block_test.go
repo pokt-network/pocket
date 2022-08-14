@@ -15,7 +15,7 @@ import (
 
 func TestUtilityContext_ApplyBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	tx, startingBalance, amount, signer := NewTestingTransaction(t, ctx)
+	tx, startingBalance, amount, signer := newTestingTransaction(t, ctx)
 
 	vals := GetAllTestingValidators(t, ctx)
 	proposer := vals[0]
@@ -65,7 +65,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 
 func TestUtilityContext_BeginBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	tx, _, _, _ := NewTestingTransaction(t, ctx)
+	tx, _, _, _ := newTestingTransaction(t, ctx)
 	vals := GetAllTestingValidators(t, ctx)
 	proposer := vals[0]
 	byzantine := vals[1]
@@ -122,7 +122,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 
 func TestUtilityContext_EndBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	tx, _, _, _ := NewTestingTransaction(t, ctx)
+	tx, _, _, _ := newTestingTransaction(t, ctx)
 	vals := GetAllTestingValidators(t, ctx)
 	proposer := vals[0]
 	byzantine := vals[1]
