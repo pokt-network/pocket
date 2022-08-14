@@ -51,15 +51,7 @@ func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (n *Node, err er
 		return nil, err
 	}
 
-	bus, err := CreateBus(
-		persistenceMod,
-		p2pMod,
-		utilityMod,
-		consensusMod,
-		telemetryMod,
-		cfg,
-	)
-
+	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod, cfg)
 	if err != nil {
 		return nil, err
 	}
