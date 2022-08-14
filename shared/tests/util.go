@@ -37,7 +37,7 @@ var PostgresDB *persistence.PostgresDB
 var PersistenceModule modules.PersistenceModule
 var DatabaseUrl string
 
-func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource) {
+func SetupPostgresDockerPersistenceMod() (*dockertest.Pool, *dockertest.Resource, modules.PersistenceModule) {
 	opts := dockertest.RunOptions{
 		Repository: "postgres",
 		Tag:        "12.3",
@@ -95,6 +95,7 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource) {
 	}
 
 	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
+	poolRetryChan := make(chan struct{}, 1)
 	var persistenceMod modules.PersistenceModule
 	if err = pool.Retry(func() error {
 		persistenceMod, err = persistence.Create(cfg)
@@ -108,14 +109,20 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource) {
 		ctx, _ := persistenceMod.NewRWContext(-1)
 		PostgresDB.Tx = ctx.(persistence.PostgresContext).DB.Tx
 
+		poolRetryChan <- struct{}{}
+
 		return nil
 	}); err != nil {
 		log.Fatalf("could not connect to docker: %s", err.Error())
 	}
 
-	return pool, resource
+	// Wait for a successful DB connection
+	<-poolRetryChan
+
+	return pool, resource, persistenceMod
 }
 
+// TODO: Currently exposed only for testing purposes.
 func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *dockertest.Resource) {
 	// You can't defer this because `os.Exit`` doesn't care for defer
 	if err := pool.Purge(resource); err != nil {
@@ -125,6 +132,7 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 }
 
 // TODO(pocket/issues/149): Golang specific solution for teardown
+// TODO: Currently exposed only for testing purposes.
 func CleanupTest() {
 	PostgresDB.Tx.Rollback(context.TODO())
 	PersistenceModule.Stop()

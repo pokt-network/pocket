@@ -4,12 +4,10 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/tests"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
@@ -30,31 +28,32 @@ func NewTestingMempool(_ *testing.T) types.Mempool {
 }
 
 func TestMain(m *testing.M) {
-	pool, resource := tests.SetupPostgresDocker()
+	pool, resource, persistenceMod := tests.SetupPostgresDockerPersistenceMod()
+	tests.PersistenceModule = persistenceMod
 	m.Run()
 	tests.CleanupPostgresDocker(m, pool, resource)
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
 	mempool := NewTestingMempool(t)
-	cfg := &config.Config{
-		RootDir: "",
-		GenesisSource: &genesis.GenesisSource{
-			Source: &genesis.GenesisSource_Config{
-				Config: genesisConfig(),
-			},
-		},
-		Persistence: &config.PersistenceConfig{
-			PostgresUrl: tests.DatabaseUrl,
-			NodeSchema:  tests.SQLSchema,
-		},
-	}
-	err := cfg.HydrateGenesisState()
-	require.NoError(t, err)
+	// cfg := &config.Config{
+	// 	RootDir: "",
+	// 	GenesisSource: &genesis.GenesisSource{
+	// 		Source: &genesis.GenesisSource_Config{
+	// 			Config: genesisConfig(),
+	// 		},
+	// 	},
+	// 	Persistence: &config.PersistenceConfig{
+	// 		PostgresUrl: tests.DatabaseUrl,
+	// 		NodeSchema:  tests.SQLSchema,
+	// 	},
+	// }
+	// err := cfg.HydrateGenesisState()
+	// require.NoError(t, err)
 
-	tests.PersistenceModule, err = persistence.Create(cfg)
-	require.NoError(t, err)
-	require.NoError(t, tests.PersistenceModule.Start(), "start persistence mod")
+	// tests.PersistenceModule, err = persistence.Create(cfg)
+	// require.NoError(t, err)
+	// require.NoError(t, tests.PersistenceModule.Start(), "start persistence mod")
 
 	persistenceContext, err := tests.PersistenceModule.NewRWContext(height)
 	require.NoError(t, err)

@@ -291,7 +291,7 @@ test_sortition:
 .PHONY: test_persistence
 ## Run all go unit tests in the Persistence module
 test_persistence:
-	go test ${VERBOSE_TEST} -p=1 ./persistence/...
+	go test ${VERBOSE_TEST} -p=1 -count=1 ./persistence/...
 
 .PHONY: test_p2p_types
 ## Run p2p subcomponents' tests
