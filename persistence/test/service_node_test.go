@@ -211,7 +211,7 @@ func TestGetAllServiceNodes(t *testing.T) {
 		return db.UpdateServiceNode(sn.Address, "https://olshansky.info", sn.StakedTokens, []string{"OLSH"})
 	}
 
-	getAllActorsTest(t, db, db.GetAllServiceNodes, createAndInsertDefaultTestServiceNode, updateServiceNode)
+	getAllActorsTest(t, db, db.GetAllServiceNodes, createAndInsertDefaultTestServiceNode, updateServiceNode, 1)
 }
 
 func newTestServiceNode() (*typesGenesis.ServiceNode, error) {

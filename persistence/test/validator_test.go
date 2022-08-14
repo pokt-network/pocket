@@ -207,7 +207,7 @@ func TestGetAlValidators(t *testing.T) {
 		return db.UpdateValidator(val.Address, "https://olshansky.info", val.StakedTokens)
 	}
 
-	getAllActorsTest(t, db, db.GetAllValidators, createAndInsertDefaultTestValidator, updateValidator)
+	getAllActorsTest(t, db, db.GetAllValidators, createAndInsertDefaultTestValidator, updateValidator, 5)
 }
 
 func newTestValidator() (*typesGenesis.Validator, error) {

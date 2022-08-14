@@ -42,54 +42,55 @@ func getAllActorsTest[T any](
 	getAllActors func(height int64) ([]*T, error),
 	createTestActor func(*persistence.PostgresContext) (*T, error),
 	updateActor func(*persistence.PostgresContext, *T) error,
+	initialCount int,
 ) {
-	// The default test state contains 1 service node
+	// The default test state contains `initialCount` actors
 	actors, err := getAllActors(0)
 	require.NoError(t, err)
-	require.Len(t, actors, 1)
+	require.Len(t, actors, initialCount)
 
-	// Add 2 services nodes at height 1
+	// Add 2 actors at height 1
 	db.Height++
 	_, err = createTestActor(db)
 	require.NoError(t, err)
 	_, err = createTestActor(db)
 	require.NoError(t, err)
 
-	// 1 services nodes at height 0
+	// Check height 0
 	actors, err = getAllActors(0)
 	require.NoError(t, err)
-	require.Len(t, actors, 1)
+	require.Len(t, actors, initialCount)
 
-	// 3 services nodes at height 1
+	// Check height 1
 	actors, err = getAllActors(1)
 	require.NoError(t, err)
-	require.Len(t, actors, 3)
+	require.Len(t, actors, initialCount+2)
 
-	// Add 1 services nodes at height 3
+	// Add 1 actor at height 3
 	db.Height++
 	db.Height++
 	_, err = createTestActor(db)
 	require.NoError(t, err)
 
-	// 1 services nodes at height 0
+	// Check height 0
 	actors, err = getAllActors(0)
 	require.NoError(t, err)
-	require.Len(t, actors, 1)
+	require.Len(t, actors, initialCount)
 
-	// 3 services nodes at height 1
+	// Check height 1
 	actors, err = getAllActors(1)
 	require.NoError(t, err)
-	require.Len(t, actors, 3)
+	require.Len(t, actors, initialCount+2)
 
-	// 4 services nodes at height 2
+	// Check height 2
 	actors, err = getAllActors(2)
 	require.NoError(t, err)
-	require.Len(t, actors, 3)
+	require.Len(t, actors, initialCount+2)
 
-	// 4 services nodes at height 3
+	// Check height 3
 	actors, err = getAllActors(3)
 	require.NoError(t, err)
-	require.Len(t, actors, 4)
+	require.Len(t, actors, initialCount+3)
 
 	// Update the service nodes at different heights and confirm that count does not change
 	for _, actor := range actors {
@@ -97,21 +98,21 @@ func getAllActorsTest[T any](
 		err = updateActor(db, actor)
 		require.NoError(t, err)
 
-		// 4 service nodes at new height
+		// Check that count did not change
 		actors, err := getAllActors(db.Height)
 		require.NoError(t, err)
-		require.Len(t, actors, 4)
+		require.Len(t, actors, initialCount+3)
 	}
 
-	// 3 services nodes at height 1
+	// Check height 1
 	actors, err = getAllActors(1)
 	require.NoError(t, err)
-	require.Len(t, actors, 3)
+	require.Len(t, actors, initialCount+2)
 
-	// 4 services nodes at height 10
+	// Check height 10
 	actors, err = getAllActors(10)
 	require.NoError(t, err)
-	require.Len(t, actors, 4)
+	require.Len(t, actors, initialCount+3)
 
 	// DISCUSS_IN_THIS_COMMIT: Since we do not support `DeleteActor`, should we filter here based on status? If so, tests need to be updated.
 	// for _, actor := range actors {
