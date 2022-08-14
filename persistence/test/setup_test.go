@@ -7,6 +7,7 @@ import (
 	sharedTest "github.com/pokt-network/pocket/shared/tests"
 	"math/big"
 	"math/rand"
+	"strings"
 	"testing"
 	"time"
 
@@ -152,6 +153,9 @@ func fuzzSingleProtocolActor(
 			require.NoError(t, err)
 
 			require.ElementsMatch(t, newActor.Chains, newChains, "staked chains not updated")
+			if strings.Contains(newActor.StakedTokens, "invalid") {
+				fmt.Println("")
+			}
 			require.Equal(t, newActor.StakedTokens, newStakedTokens, "staked tokens not updated")
 			require.Equal(t, newActor.ActorSpecificParam, newActorSpecificParam, "actor specific param not updated")
 		case "GetActorsReadyToUnstake":

@@ -2,6 +2,7 @@ package utility_module
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"github.com/pokt-network/pocket/shared/tests"
 	"math"
@@ -22,12 +23,14 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
-
-	proposerBeforeBalance, err := ctx.GetAccountAmount(proposer.Address)
+	addrBz, er := hex.DecodeString(proposer.GetAddress())
+	require.NoError(t, er)
+	byzantineAddrBz, er := hex.DecodeString(byzantine.GetAddress())
+	require.NoError(t, er)
+	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
-
 	// apply block
-	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
+	if _, err := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineAddrBz}); err != nil {
 		require.NoError(t, err, "apply block")
 	}
 	// beginBlock logic verify
@@ -49,11 +52,11 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	feesAndRewardsCollectedFloat.Mul(feesAndRewardsCollectedFloat, big.NewFloat(float64(proposerCutPercentage)))
 	feesAndRewardsCollectedFloat.Quo(feesAndRewardsCollectedFloat, big.NewFloat(100))
 	expectedProposerBalanceDifference, _ := feesAndRewardsCollectedFloat.Int(nil)
-	proposerAfterBalance, err := ctx.GetAccountAmount(proposer.Address)
+	proposerAfterBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
-	require.False(t, proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0, fmt.Sprintf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference))
+	require.Equal(t, expectedProposerBalanceDifference, proposerBalanceDifference)
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
 	tests.CleanupTest()
 }
@@ -67,9 +70,12 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
-
+	addrBz, er := hex.DecodeString(proposer.GetAddress())
+	require.NoError(t, er)
+	byzantineAddrBz, er := hex.DecodeString(byzantine.GetAddress())
+	require.NoError(t, er)
 	// apply block
-	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
+	if _, err := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineAddrBz}); err != nil {
 		require.NoError(t, err)
 	}
 	// beginBlock logic verify
@@ -99,15 +105,16 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 		}
 		require.NoError(t, err)
-
-		err = ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 0)
+		addrBz, er := hex.DecodeString(actor.GetAddress())
+		require.NoError(t, er)
+		err = ctx.SetActorPauseHeight(actorType, addrBz, 0)
 		require.NoError(t, err)
 
 		err = ctx.BeginUnstakingMaxPaused()
 		require.NoError(t, err)
 
-		status, err := ctx.GetActorStatus(actorType, actor.GetAddress())
-		require.False(t, status != 1, fmt.Sprintf("incorrect status; expected %d got %d", 1, actor.GetStatus()))
+		status, err := ctx.GetActorStatus(actorType, addrBz)
+		require.False(t, status != 1, fmt.Sprintf("incorrect status; expected %d got %d", 1, actor.UnstakingHeight))
 		ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
 		tests.CleanupTest()
 	}
@@ -122,12 +129,15 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
-
-	proposerBeforeBalance, err := ctx.GetAccountAmount(proposer.Address)
+	addrBz, er := hex.DecodeString(proposer.GetAddress())
+	require.NoError(t, er)
+	byzantineAddrBz, er := hex.DecodeString(byzantine.GetAddress())
+	require.NoError(t, er)
+	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	// apply block
-	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
+	if _, err := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineAddrBz}); err != nil {
 		require.NoError(t, err)
 	}
 	// deliverTx logic verify
@@ -142,11 +152,11 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	feesAndRewardsCollectedFloat.Mul(feesAndRewardsCollectedFloat, big.NewFloat(float64(proposerCutPercentage)))
 	feesAndRewardsCollectedFloat.Quo(feesAndRewardsCollectedFloat, big.NewFloat(100))
 	expectedProposerBalanceDifference, _ := feesAndRewardsCollectedFloat.Int(nil)
-	proposerAfterBalance, err := ctx.GetAccountAmount(proposer.Address)
+	proposerAfterBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
-	require.False(t, proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0, fmt.Sprintf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference))
+	require.Equal(t, proposerBalanceDifference, expectedProposerBalanceDifference)
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
 	tests.CleanupTest()
 }
@@ -178,8 +188,10 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 
 		actors := GetAllTestingActors(t, ctx, actorType)
 		for _, actor := range actors {
-			require.False(t, actor.GetStatus() != typesUtil.StakedStatus, "wrong starting status")
-			er := ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 1)
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
+			require.False(t, actor.UnstakingHeight != -1, "wrong starting status")
+			er := ctx.SetActorPauseHeight(actorType, addrBz, 1)
 			require.NoError(t, er)
 		}
 

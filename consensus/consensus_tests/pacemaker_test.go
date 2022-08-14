@@ -30,14 +30,14 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	numNodes := 4
 	paceMakerTimeoutMsec := uint64(50) // Set a very small pacemaker timeout
 	paceMakerTimeout := 50 * time.Millisecond
-	configs := GenerateNodeConfigs(t, numNodes)
+	configs, genesisStates := GenerateNodeConfigs(t, numNodes)
 	for _, config := range configs {
-		config.Consensus.Pacemaker.TimeoutMsec = paceMakerTimeoutMsec
+		config.Consensus.PacemakerConfig.TimeoutMsec = paceMakerTimeoutMsec
 	}
 
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, configs, testChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, configs, genesisStates, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Debug message to start consensus by triggering next view.
@@ -112,11 +112,11 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 
 func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	numNodes := 4
-	configs := GenerateNodeConfigs(t, numNodes)
+	configs, genesisStates := GenerateNodeConfigs(t, numNodes)
 
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, configs, testChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, configs, genesisStates, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Starting point

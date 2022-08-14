@@ -1,9 +1,9 @@
 package shared
 
 import (
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 )
@@ -24,7 +24,7 @@ type bus struct {
 	telemetry   modules.TelemetryModule
 
 	// Configurations
-	config *config.Config
+	config *genesis.Config
 }
 
 const (
@@ -37,7 +37,7 @@ func CreateBus(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
-	config *config.Config,
+	config *genesis.Config,
 ) (modules.Bus, error) {
 	bus := &bus{
 		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -88,7 +88,7 @@ func CreateBusWithOptionalModules(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
-	config *config.Config,
+	config *genesis.Config,
 ) modules.Bus {
 	bus := &bus{
 		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -149,6 +149,6 @@ func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
 }
 
-func (m *bus) GetConfig() *config.Config {
+func (m *bus) GetConfig() *genesis.Config {
 	return m.config
 }

@@ -61,8 +61,8 @@ func (m *consensusModule) applyBlockAsReplica(block *types.Block) error {
 	}
 
 	// TODO(olshansky): Add unit tests to verify this.
-	if unsafe.Sizeof(*block) > uintptr(m.consCfg.MaxBlockBytes) {
-		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.consCfg.MaxBlockBytes)
+	if unsafe.Sizeof(*block) > uintptr(m.MaxBlockBytes) {
+		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.MaxBlockBytes)
 	}
 
 	if err := m.refreshUtilityContext(); err != nil {

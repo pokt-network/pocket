@@ -1,9 +1,9 @@
 package telemetry
 
 import (
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -22,7 +22,7 @@ func NOOP() {
 	log.Printf("\n[telemetry=noop]\n")
 }
 
-func CreateNoopTelemetryModule(cfg *config.Config) (*NoopTelemetryModule, error) {
+func CreateNoopTelemetryModule(_ *genesis.Config) (*NoopTelemetryModule, error) {
 	return &NoopTelemetryModule{}, nil
 }
 

@@ -3,24 +3,22 @@ package utility_module
 import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/tests"
+	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
 )
 
 var (
-	defaultTestingChains       = []string{"0001"}
 	defaultTestingChainsEdited = []string{"0002"}
-	defaultAmount              = big.NewInt(1000000000000000)
+	defaultUnstaking           = int64(2017)
 	defaultSendAmount          = big.NewInt(10000)
-	defaultAmountString        = types.BigIntToString(defaultAmount)
-	defaultNonceString         = types.BigIntToString(defaultAmount)
+	defaultNonceString         = types.BigIntToString(test_artifacts.DefaultAccountAmount)
 	defaultSendAmountString    = types.BigIntToString(defaultSendAmount)
 )
 
@@ -36,22 +34,21 @@ func TestMain(m *testing.M) {
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
 	mempool := NewTestingMempool(t)
-	cfg := &config.Config{
-		RootDir: "",
-		GenesisSource: &genesis.GenesisSource{
-			Source: &genesis.GenesisSource_Config{
-				Config: genesisConfig(),
-			},
+	cfg := &genesis.Config{
+		Base:      &genesis.BaseConfig{},
+		Consensus: &genesis.ConsensusConfig{},
+		Utility:   &genesis.UtilityConfig{},
+		Persistence: &genesis.PersistenceConfig{
+			PostgresUrl:    tests.DatabaseUrl,
+			NodeSchema:     tests.SQL_Schema,
+			BlockStorePath: "",
 		},
-		Persistence: &config.PersistenceConfig{
-			PostgresUrl: tests.DatabaseUrl,
-			NodeSchema:  tests.SQL_Schema,
-		},
+		P2P:       &genesis.P2PConfig{},
+		Telemetry: &genesis.TelemetryConfig{},
 	}
-	err := cfg.HydrateGenesisState()
-	require.NoError(t, err)
-
-	tests.PersistenceModule, err = persistence.Create(cfg)
+	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
+	var err error
+	tests.PersistenceModule, err = persistence.Create(cfg, genesisState)
 	require.NoError(t, err)
 	require.NoError(t, tests.PersistenceModule.Start(), "start persistence mod")
 	persistenceContext, err := tests.PersistenceModule.NewRWContext(height)
@@ -65,14 +62,4 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 			SavePoints:           make([][]byte, 0),
 		},
 	}
-}
-
-func genesisConfig() *genesis.GenesisConfig {
-	config := &genesis.GenesisConfig{
-		NumValidators:   5,
-		NumApplications: 1,
-		NumFisherman:    1,
-		NumServicers:    1,
-	}
-	return config
 }

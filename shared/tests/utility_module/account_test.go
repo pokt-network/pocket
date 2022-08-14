@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/tests"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"math/big"
 	"sort"
 	"testing"
@@ -14,7 +15,6 @@ import (
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
 )
 
@@ -26,8 +26,10 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	addAmount := big.NewInt(1)
-	require.NoError(t, ctx.AddAccountAmount(acc.Address, addAmount), "add account amount")
-	afterAmount, err := ctx.GetAccountAmount(acc.Address)
+	addrBz, er := hex.DecodeString(acc.Address)
+	require.NoError(t, er)
+	require.NoError(t, ctx.AddAccountAmount(addrBz, addAmount), "add account amount")
+	afterAmount, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	expected := initialAmount.Add(initialAmount, addAmount)
@@ -45,8 +47,10 @@ func TestUtilityContext_AddAccountAmountString(t *testing.T) {
 
 	addAmount := big.NewInt(1)
 	addAmountString := types.BigIntToString(addAmount)
-	require.NoError(t, ctx.AddAccountAmountString(acc.Address, addAmountString), "add account amount string")
-	afterAmount, err := ctx.GetAccountAmount(acc.Address)
+	addrBz, er := hex.DecodeString(acc.Address)
+	require.NoError(t, er)
+	require.NoError(t, ctx.AddAccountAmountString(addrBz, addAmountString), "add account amount string")
+	afterAmount, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	expected := initialAmount.Add(initialAmount, addAmount)
@@ -59,12 +63,12 @@ func TestUtilityContext_AddPoolAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	pool := GetAllTestingPools(t, ctx)[0]
 
-	initialAmount, err := types.StringToBigInt(pool.Account.Amount)
+	initialAmount, err := types.StringToBigInt(pool.Amount)
 	require.NoError(t, err)
 
 	addAmount := big.NewInt(1)
-	require.NoError(t, ctx.AddPoolAmount(pool.Name, addAmount), "add pool amount")
-	afterAmount, err := ctx.GetPoolAmount(pool.Name)
+	require.NoError(t, ctx.AddPoolAmount(pool.Address, addAmount), "add pool amount")
+	afterAmount, err := ctx.GetPoolAmount(pool.Address)
 	require.NoError(t, err)
 
 	expected := initialAmount.Add(initialAmount, addAmount)
@@ -84,8 +88,11 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 
 	recipientBalanceBefore, err := types.StringToBigInt(accs[1].Amount)
 	require.NoError(t, err)
-
-	msg := NewTestingSendMessage(t, accs[0].Address, accs[1].Address, sendAmountString)
+	addrBz, er := hex.DecodeString(accs[0].Address)
+	require.NoError(t, er)
+	addrBz2, er := hex.DecodeString(accs[1].Address)
+	require.NoError(t, er)
+	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
 	err = ctx.HandleMessageSend(&msg)
 	require.NoError(t, err, "handle message send")
 
@@ -107,12 +114,15 @@ func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
 
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := types.BigIntToString(sendAmount)
-
-	msg := NewTestingSendMessage(t, accs[0].Address, accs[1].Address, sendAmountString)
+	addrBz, er := hex.DecodeString(accs[0].Address)
+	require.NoError(t, er)
+	addrBz2, er := hex.DecodeString(accs[1].Address)
+	require.NoError(t, er)
+	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
 	candidates, err := ctx.GetMessageSendSignerCandidates(&msg)
 	require.NoError(t, err)
 	require.True(t, len(candidates) == 1, fmt.Sprintf("wrong number of candidates, expected %d, got %d", 1, len(candidates)))
-	require.True(t, bytes.Equal(candidates[0], accs[0].Address), fmt.Sprintf("unexpected signer candidate"))
+	require.True(t, bytes.Equal(candidates[0], addrBz), fmt.Sprintf("unexpected signer candidate"))
 	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
 	tests.CleanupTest()
 }
@@ -170,12 +180,12 @@ func TestUtilityContext_SetAccountWithAmountString(t *testing.T) {
 func TestUtilityContext_SetPoolAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	pool := GetAllTestingPools(t, ctx)[0]
-	beforeAmount := pool.Account.Amount
+	beforeAmount := pool.Amount
 	beforeAmountBig, err := types.StringToBigInt(beforeAmount)
 	require.NoError(t, err)
 	expectedAfterAmount := big.NewInt(100)
-	require.NoError(t, ctx.SetPoolAmount(pool.Name, expectedAfterAmount), "set pool amount")
-	amount, err := ctx.GetPoolAmount(pool.Name)
+	require.NoError(t, ctx.SetPoolAmount(pool.Address, expectedAfterAmount), "set pool amount")
+	amount, err := ctx.GetPoolAmount(pool.Address)
 	require.NoError(t, err)
 	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
 	require.True(t, expectedAfterAmount.Cmp(amount) == 0, fmt.Sprintf("unexpected pool amount; expected %v got %v", expectedAfterAmount, amount))
@@ -187,11 +197,11 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	pool := GetAllTestingPools(t, ctx)[0]
 	beforeAmountBig := big.NewInt(1000000000000000)
-	ctx.SetPoolAmount(pool.Name, beforeAmountBig)
+	ctx.SetPoolAmount(pool.Address, beforeAmountBig)
 	subAmountBig := big.NewInt(100)
 	subAmount := types.BigIntToString(subAmountBig)
-	require.NoError(t, ctx.SubPoolAmount(pool.Name, subAmount), "sub pool amount")
-	amount, err := ctx.GetPoolAmount(pool.Name)
+	require.NoError(t, ctx.SubPoolAmount(pool.Address, subAmount), "sub pool amount")
+	amount, err := ctx.GetPoolAmount(pool.Address)
 	require.NoError(t, err)
 	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
@@ -209,8 +219,10 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	subAmountBig := big.NewInt(100)
-	require.NoError(t, ctx.SubtractAccountAmount(acc.Address, subAmountBig), "sub account amount")
-	amount, err := ctx.GetAccountAmount(acc.Address)
+	addrBz, er := hex.DecodeString(acc.Address)
+	require.NoError(t, er)
+	require.NoError(t, ctx.SubtractAccountAmount(addrBz, subAmountBig), "sub account amount")
+	amount, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
 	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
@@ -222,16 +234,16 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []*genesis.Account {
 	accs, err := (ctx.Context.PersistenceRWContext).(persistence.PostgresContext).GetAllAccounts(0)
 	sort.Slice(accs, func(i, j int) bool {
-		return hex.EncodeToString(accs[i].Address) < hex.EncodeToString(accs[j].Address)
+		return accs[i].Address < accs[j].Address
 	})
 	require.NoError(t, err)
 	return accs
 }
 
-func GetAllTestingPools(t *testing.T, ctx utility.UtilityContext) []*genesis.Pool {
+func GetAllTestingPools(t *testing.T, ctx utility.UtilityContext) []*genesis.Account {
 	accs, err := (ctx.Context.PersistenceRWContext).(persistence.PostgresContext).GetAllPools(0)
 	sort.Slice(accs, func(i, j int) bool {
-		return accs[i].Name < accs[j].Name
+		return accs[i].Address < accs[j].Address
 	})
 	require.NoError(t, err)
 	return accs

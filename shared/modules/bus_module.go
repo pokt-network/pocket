@@ -1,8 +1,8 @@
 package modules
 
 import (
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 // TODO(design): Discuss if this channel should be of pointers to PocketEvents or not. Pointers
@@ -24,5 +24,5 @@ type Bus interface {
 	GetTelemetryModule() TelemetryModule
 
 	// Configuration
-	GetConfig() *config.Config
+	GetConfig() *genesis.Config
 }

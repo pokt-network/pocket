@@ -3,10 +3,10 @@ package persistence
 import (
 	"context"
 	"github.com/jackc/pgx/v4"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -42,7 +42,7 @@ func NewPersistenceModule(postgresURL, blockStorePath string, nodeSchema string,
 	}, nil
 }
 
-func Create(c *config.Config) (modules.PersistenceModule, error) {
+func Create(c *genesis.Config, genesis *genesis.GenesisState) (modules.PersistenceModule, error) {
 	db, err := ConnectAndInitializeDatabase(c.Persistence.PostgresUrl, c.Persistence.NodeSchema)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func Create(c *config.Config) (modules.PersistenceModule, error) {
 		return nil, err
 	}
 	// populate genesis state
-	pm.PopulateGenesisState(c.GenesisSource.GetState())
+	pm.PopulateGenesisState(genesis)
 	return pm, nil
 }
 

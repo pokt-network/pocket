@@ -1,7 +1,6 @@
 package consensus
 
 import (
-	"encoding/hex"
 	"unsafe"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
@@ -317,7 +316,7 @@ func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 	}
 
 	return typesCons.ErrValidatingPartialSig(
-		address, m.ValAddrToIdMap[address], msg, hex.EncodeToString(pubKey))
+		address, m.ValAddrToIdMap[address], msg, pubKey)
 }
 
 func (m *consensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {

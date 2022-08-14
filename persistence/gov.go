@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 )
 
 // TODO(https://github.com/pokt-network/pocket/issues/76): Optimize gov parameters implementation & schema.
@@ -892,7 +892,7 @@ func (p PostgresContext) InitParams() error {
 	if err != nil {
 		return err
 	}
-	_, err = txn.Exec(ctx, schema.InsertParams(genesis.DefaultParams()))
+	_, err = txn.Exec(ctx, schema.InsertParams(test_artifacts.DefaultParams()))
 	return err
 }
 

@@ -3,6 +3,7 @@ package main
 // TODO(team): discuss & design the long-term solution to this client.
 
 import (
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"log"
 	"os"
 
@@ -10,12 +11,10 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/shared"
-	"github.com/pokt-network/pocket/shared/config"
-	"github.com/pokt-network/pocket/shared/crypto"
+	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/telemetry"
 	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -40,46 +39,19 @@ var p2pMod modules.P2PModule
 var consensusMod modules.ConsensusModule
 
 func main() {
-	pk, err := crypto.GeneratePrivateKey()
+	var err error
+	config, genesis := test_artifacts.ReadConfigAndGenesisFiles("")
+	newPK, err := pocketCrypto.GeneratePrivateKey() // Hack; rain tree will detect if trying to send to addr=self and not send it
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to generate private key: %v", err)
+		log.Fatalf(err.Error())
 	}
-
-	cfg := &config.Config{
-		GenesisSource: &genesis.GenesisSource{
-			Source: &genesis.GenesisSource_File{
-				File: &genesis.GenesisFile{
-					Path: "build/config/genesis.json",
-				},
-			},
-		},
-
-		// Not used - only set to avoid `GetNodeState(_)` from crashing
-		PrivateKey: pk.(crypto.Ed25519PrivateKey),
-
-		// Used to access the validator map
-		Consensus: &config.ConsensusConfig{
-			Pacemaker: &config.PacemakerConfig{},
-		},
-
-		// Not used - only set to avoid `p2p.Create()` from crashing
-		P2P: &config.P2PConfig{
-			ConsensusPort:  9999,
-			UseRainTree:    true,
-			ConnectionType: config.TCPConnection,
-		},
-		EnableTelemetry: false,
-	}
-	if err := cfg.HydrateGenesisState(); err != nil {
-		log.Fatalf("[ERROR] Failed to hydrate the genesis state: %v", err.Error())
-	}
-
-	consensusMod, err = consensus.Create(cfg)
+	config.Base.PrivateKey = newPK.String()
+	consensusMod, err = consensus.Create(config, genesis)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 	}
 
-	p2pMod, err = p2p.Create(cfg)
+	p2pMod, err = p2p.Create(config, genesis)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 	}
@@ -87,12 +59,12 @@ func main() {
 	// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
 	// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
 	// module that NOOPs (per the configs above) is injected.
-	telemetryMod, err := telemetry.Create(cfg)
+	telemetryMod, err := telemetry.Create(config, genesis)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
 
-	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod, cfg)
+	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod, config)
 
 	p2pMod.Start()
 
@@ -175,7 +147,11 @@ func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 	// p2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
 
 	for _, val := range consensusMod.ValidatorMap() {
-		p2pMod.Send(val.Address, anyProto, types.PocketTopic_DEBUG_TOPIC)
+		addr, err := pocketCrypto.NewAddress(val.Address)
+		if err != nil {
+			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
+		}
+		p2pMod.Send(addr, anyProto, types.PocketTopic_DEBUG_TOPIC)
 	}
 }
 
@@ -188,7 +164,10 @@ func sendDebugMessage(debugMsg *types.DebugMessage) {
 
 	var validatorAddress []byte
 	for _, val := range consensusMod.ValidatorMap() {
-		validatorAddress = val.Address
+		validatorAddress, err = pocketCrypto.NewAddress(val.Address)
+		if err != nil {
+			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
+		}
 		break
 	}
 

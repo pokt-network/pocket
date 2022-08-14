@@ -31,6 +31,7 @@ type PersistenceRWContext interface {
 
 // NOTE: There's not really a use case for a write only interface,
 // but it abstracts and contrasts nicely against the read only context
+// TODO (Team) convert address and public key to string not bytes #163
 type PersistenceWriteContext interface {
 	// TODO: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
 	// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
@@ -48,10 +49,6 @@ type PersistenceWriteContext interface {
 	// Block Operations
 
 	// Indexer Operations
-	GetBlockHash(height int64) ([]byte, error)
-	GetBlocksPerSession() (int, error)
-
-	// Indexer Operations
 	StoreTransaction(transactionProtoBytes []byte) error
 
 	// Block Operations
@@ -66,14 +63,14 @@ type PersistenceWriteContext interface {
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error
 
-	InsertPool(name string, address []byte, amount string) error
+	InsertPool(name string, address []byte, amount string) error // TODO (Andrew) remove address from pool #163
 
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error
 	SubtractAccountAmount(address []byte, amount string) error
 	SetAccountAmount(address []byte, amount string) error // NOTE: same as (insert)
 
-	// App Operations
+	// App Operations // TODO (Andrew) convert address, pubkey, and output to string and remove paused and status from all actors #163
 	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateApp(address []byte, maxRelaysToAdd string, amount string, chainsToUpdate []string) error
 	DeleteApp(address []byte) error
