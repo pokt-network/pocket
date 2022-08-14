@@ -246,7 +246,7 @@ test_all_with_coverage: # generate_mocks
 .PHONY: test_race
 ## Identify all unit tests that may result in race conditions
 test_race: # generate_mocks
-	go test -race ./...
+	go test ${VERBOSE_TEST} -race ./...
 
 .PHONY: test_utility_module
 ## Run all go utility module unit tests
@@ -261,7 +261,7 @@ test_utility_types: # generate_mocks
 .PHONY: test_shared
 ## Run all go unit tests in the shared module
 test_shared: # generate_mocks
-	go test ./shared/...
+	go test ${VERBOSE_TEST} ./shared/...
 
 .PHONY: test_consensus
 ## Run all go unit tests in the Consensus module
