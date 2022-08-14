@@ -64,14 +64,18 @@ func SelectBalance(actorSpecificParam, actorSpecificParamValue string, height in
 
 func SelectAccounts(height int64, tableName string) string {
 	return fmt.Sprintf(`
-			SELECT address, balance, height
-			FROM %s WHERE height<=%d AND (height,address) IN (SELECT MAX(height), address from %s GROUP BY address)
-       `, tableName, height, tableName)
+			SELECT DISTINCT ON (address) address, balance, height
+			FROM %s
+			WHERE height<=%d
+			ORDER BY address, height DESC
+       `, tableName, height)
 }
 
 func SelectPools(height int64, tableName string) string {
 	return fmt.Sprintf(`
-			SELECT name, balance, height
-			FROM %s WHERE height<=%d AND (height,name) IN (SELECT MAX(height), name from %s GROUP BY name)
-       `, tableName, height, tableName)
+			SELECT DISTINCT ON (name) name, balance, height
+			FROM %s
+			WHERE height<=%d
+			ORDER BY name, height DESC
+       `, tableName, height)
 }

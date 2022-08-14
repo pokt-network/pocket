@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
@@ -281,7 +282,38 @@ func TestSubPoolAmount(t *testing.T) {
 	require.Equal(t, expectedPoolAmount, poolAmount, "unexpected amount after sub")
 }
 
+func TestGetAllAccounts(t *testing.T) {
+	db := &persistence.PostgresContext{
+		Height: 0,
+		DB:     *testPostgresDB,
+	}
+
+	updateAccount := func(db *persistence.PostgresContext, acc *genesis.Account) error {
+		return db.AddAccountAmount(acc.Address, "10")
+	}
+
+	getAllActorsTest(t, db, db.GetAllAccounts, createAndInsertNewAccount, updateAccount, 9)
+}
+
+func TestGetAllPools(t *testing.T) {
+	db := &persistence.PostgresContext{
+		Height: 0,
+		DB:     *testPostgresDB,
+	}
+
+	updatePool := func(db *persistence.PostgresContext, pool *genesis.Pool) error {
+		return db.AddPoolAmount(pool.Name, "10")
+	}
+
+	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 6)
+}
+
 // --- Helpers ---
+
+func createAndInsertNewAccount(db *persistence.PostgresContext) (*genesis.Account, error) {
+	account := newTestAccount(nil)
+	return &account, db.SetAccountAmount(account.Address, DefaultAccountAmount)
+}
 
 func newTestAccount(t *testing.T) typesGenesis.Account {
 	addr, err := crypto.GenerateAddress()
@@ -292,6 +324,11 @@ func newTestAccount(t *testing.T) typesGenesis.Account {
 		Address: addr,
 		Amount:  DefaultAccountAmount,
 	}
+}
+
+func createAndInsertNewPool(db *persistence.PostgresContext) (*genesis.Pool, error) {
+	pool := newTestPool(nil)
+	return &pool, db.SetPoolAmount(pool.Name, DefaultAccountAmount)
 }
 
 func newTestPool(t *testing.T) typesGenesis.Pool {
