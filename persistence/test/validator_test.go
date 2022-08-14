@@ -20,10 +20,7 @@ func FuzzValidator(f *testing.F) {
 }
 
 func TestInsertValidatorAndExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -51,10 +48,7 @@ func TestInsertValidatorAndExists(t *testing.T) {
 }
 
 func TestUpdateValidator(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -79,10 +73,7 @@ func TestUpdateValidator(t *testing.T) {
 }
 
 func TestGetValidatorsReadyToUnstake(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -157,10 +148,7 @@ func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 }
 
 func TestSetValidatorPauseHeightAndUnstakeLater(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -184,10 +172,7 @@ func TestSetValidatorPauseHeightAndUnstakeLater(t *testing.T) {
 }
 
 func TestGetValidatorOutputAddress(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -197,11 +182,8 @@ func TestGetValidatorOutputAddress(t *testing.T) {
 	require.Equal(t, output, validator.Output, "unexpected output address")
 }
 
-func TestGetAlValidators(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+func TestGetAllValidators(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	updateValidator := func(db *persistence.PostgresContext, val *genesis.Validator) error {
 		return db.UpdateValidator(val.Address, "https://olshansky.info", val.StakedTokens)

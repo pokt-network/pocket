@@ -20,10 +20,7 @@ func FuzzFisherman(f *testing.F) {
 }
 
 func TestInsertFishermanAndExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -51,10 +48,7 @@ func TestInsertFishermanAndExists(t *testing.T) {
 }
 
 func TestUpdateFisherman(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -83,10 +77,7 @@ func TestUpdateFisherman(t *testing.T) {
 }
 
 func TestGetFishermenReadyToUnstake(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -161,10 +152,7 @@ func TestGetFishermanPauseHeightIfExists(t *testing.T) {
 }
 
 func TestSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -188,10 +176,7 @@ func TestSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
 }
 
 func TestGetFishermanOutputAddress(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
