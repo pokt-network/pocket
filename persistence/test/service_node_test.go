@@ -8,7 +8,6 @@ import (
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types/genesis"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,10 +19,7 @@ func FuzzServiceNode(f *testing.F) {
 }
 
 func TestInsertServiceNodeAndExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -51,10 +47,7 @@ func TestInsertServiceNodeAndExists(t *testing.T) {
 }
 
 func TestUpdateServiceNode(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -83,10 +76,7 @@ func TestUpdateServiceNode(t *testing.T) {
 }
 
 func TestGetServiceNodesReadyToUnstake(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -121,10 +111,7 @@ func TestGetServiceNodesReadyToUnstake(t *testing.T) {
 }
 
 func TestGetServiceNodeStatus(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -141,10 +128,7 @@ func TestGetServiceNodeStatus(t *testing.T) {
 }
 
 func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -161,10 +145,7 @@ func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 }
 
 func TestSetServiceNodePauseHeightAndUnstakeLater(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -188,10 +169,7 @@ func TestSetServiceNodePauseHeightAndUnstakeLater(t *testing.T) {
 }
 
 func TestGetServiceNodeOutputAddress(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -202,10 +180,7 @@ func TestGetServiceNodeOutputAddress(t *testing.T) {
 }
 
 func TestGetAllServiceNodes(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	updateServiceNode := func(db *persistence.PostgresContext, sn *genesis.ServiceNode) error {
 		return db.UpdateServiceNode(sn.Address, "https://olshansky.info", sn.StakedTokens, []string{"OLSH"})
@@ -214,7 +189,7 @@ func TestGetAllServiceNodes(t *testing.T) {
 	getAllActorsTest(t, db, db.GetAllServiceNodes, createAndInsertDefaultTestServiceNode, updateServiceNode, 1)
 }
 
-func newTestServiceNode() (*typesGenesis.ServiceNode, error) {
+func newTestServiceNode() (*genesis.ServiceNode, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
 		return nil, err
@@ -225,21 +200,21 @@ func newTestServiceNode() (*typesGenesis.ServiceNode, error) {
 		return nil, err
 	}
 
-	return &typesGenesis.ServiceNode{
+	return &genesis.ServiceNode{
 		Address:         operatorKey.Address(),
 		PublicKey:       operatorKey.Bytes(),
 		Paused:          false,
-		Status:          typesGenesis.DefaultStakeStatus,
-		Chains:          typesGenesis.DefaultChains,
+		Status:          genesis.DefaultStakeStatus,
+		Chains:          genesis.DefaultChains,
 		ServiceUrl:      DefaultServiceUrl,
-		StakedTokens:    typesGenesis.DefaultStake,
+		StakedTokens:    genesis.DefaultStake,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          outputAddr,
 	}, nil
 }
 
-func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*typesGenesis.ServiceNode, error) {
+func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*genesis.ServiceNode, error) {
 	serviceNode, err := newTestServiceNode()
 	if err != nil {
 		return nil, err
@@ -258,7 +233,7 @@ func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*ty
 		DefaultUnstakingHeight)
 }
 
-func getTestServiceNode(db persistence.PostgresContext, address []byte) (*typesGenesis.ServiceNode, error) {
+func getTestServiceNode(db persistence.PostgresContext, address []byte) (*genesis.ServiceNode, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetServiceNode(address, db.Height)
 	if err != nil {
 		return nil, err
@@ -279,7 +254,7 @@ func getTestServiceNode(db persistence.PostgresContext, address []byte) (*typesG
 		return nil, err
 	}
 
-	return &typesGenesis.ServiceNode{
+	return &genesis.ServiceNode{
 		Address:         operatorAddr,
 		PublicKey:       operatorPubKey,
 		Paused:          false,

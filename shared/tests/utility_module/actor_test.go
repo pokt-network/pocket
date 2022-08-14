@@ -390,7 +390,7 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 func TestUtilityContext_UnstakesPausedBefore(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingApps(t, ctx)[0]
-	require.Equal(t, actor.Status, typesUtil.StakedStatus, "wrong starting status")
+	require.Equal(t, actor.Status, int32(typesUtil.StakedStatus), "wrong starting status")
 	require.NoError(t, ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, 0), "set actor pause height")
 
 	err := ctx.Context.SetAppMaxPausedBlocks(0)
@@ -399,7 +399,7 @@ func TestUtilityContext_UnstakesPausedBefore(t *testing.T) {
 	require.NoError(t, ctx.UnstakeActorPausedBefore(1, typesUtil.ActorType_App), "unstake actor pause before height 1")
 
 	actor = GetAllTestingApps(t, ctx)[0]
-	require.Equal(t, actor.Status, typesUtil.UnstakingStatus, "status does not equal unstaking")
+	require.Equal(t, int32(typesUtil.UnstakingStatus), actor.Status, "status does not equal unstaking")
 
 	unstakingBlocks, err := ctx.GetAppUnstakingBlocks()
 	require.NoError(t, err)

@@ -283,10 +283,7 @@ func TestSubPoolAmount(t *testing.T) {
 }
 
 func TestGetAllAccounts(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	updateAccount := func(db *persistence.PostgresContext, acc *genesis.Account) error {
 		return db.AddAccountAmount(acc.Address, "10")
@@ -296,10 +293,7 @@ func TestGetAllAccounts(t *testing.T) {
 }
 
 func TestGetAllPools(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	updatePool := func(db *persistence.PostgresContext, pool *genesis.Pool) error {
 		return db.AddPoolAmount(pool.Name, "10")
@@ -337,7 +331,7 @@ func newTestPool(t *testing.T) typesGenesis.Pool {
 		require.NoError(t, err)
 	}
 	return typesGenesis.Pool{
-		Name: DefaultPoolName,
+		Name: fmt.Sprintf("%s_%d", DefaultPoolName, rand.Int()),
 		Account: &typesGenesis.Account{
 			Amount: DefaultAccountAmount,
 		},

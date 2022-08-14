@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
 )
 
@@ -35,29 +34,10 @@ func TestMain(m *testing.M) {
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
-	mempool := NewTestingMempool(t)
-	// cfg := &config.Config{
-	// 	RootDir: "",
-	// 	GenesisSource: &genesis.GenesisSource{
-	// 		Source: &genesis.GenesisSource_Config{
-	// 			Config: genesisConfig(),
-	// 		},
-	// 	},
-	// 	Persistence: &config.PersistenceConfig{
-	// 		PostgresUrl: tests.DatabaseUrl,
-	// 		NodeSchema:  tests.SQLSchema,
-	// 	},
-	// }
-	// err := cfg.HydrateGenesisState()
-	// require.NoError(t, err)
-
-	// tests.PersistenceModule, err = persistence.Create(cfg)
-	// require.NoError(t, err)
-	// require.NoError(t, tests.PersistenceModule.Start(), "start persistence mod")
-
 	persistenceContext, err := tests.PersistenceModule.NewRWContext(height)
 	require.NoError(t, err)
 
+	mempool := NewTestingMempool(t)
 	return utility.UtilityContext{
 		LatestHeight: height,
 		Mempool:      mempool,
@@ -67,14 +47,4 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 			SavePoints:           make([][]byte, 0),
 		},
 	}
-}
-
-func genesisConfig() *genesis.GenesisConfig {
-	config := &genesis.GenesisConfig{
-		NumValidators:   5,
-		NumApplications: 1,
-		NumFisherman:    1,
-		NumServicers:    1,
-	}
-	return config
 }

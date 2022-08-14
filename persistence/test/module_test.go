@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// IMPROVE: Need to expand contexts to test contexts as the height changes.
 func TestContextAndCommit(t *testing.T) {
 	// variables for testing
 	poolName := "fake"

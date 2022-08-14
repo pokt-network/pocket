@@ -6,7 +6,7 @@ import (
 	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
-// REFACTOR: Moving this into a proto file enum (impacts everything)
+// REFACTOR: Moving this into a proto file enum (impacts everything) and making them `int32` by default
 const (
 	UnstakingStatus = 1
 	StakedStatus    = 2

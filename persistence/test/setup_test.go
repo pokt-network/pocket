@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -41,23 +42,45 @@ var (
 	DefaultUnstakingHeight = int64(-1)
 )
 
-// See https://github.com/ory/dockertest as reference for the template of this code
-// Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
-func TestMain(m *testing.M) {
-	pool, resource, persistenceMod := sharedTest.SetupPostgresDockerPersistenceMod()
-	testPersistenceModule = persistenceMod
-	testPostgresDB = sharedTest.PostgresDB
-	m.Run()
-	sharedTest.CleanupPostgresDocker(m, pool, resource)
-}
-
 var (
 	testPersistenceModule modules.PersistenceModule
 	testPostgresDB        *persistence.PostgresDB
 )
 
-func init() {
-	testPostgresDB = new(persistence.PostgresDB)
+// See https://github.com/ory/dockertest as reference for the template of this code
+// Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
+func TestMain(m *testing.M) {
+	pool, resource, persistenceMod := sharedTest.SetupPostgresDockerPersistenceMod()
+	testPersistenceModule = persistenceMod
+
+	ctx, _ := persistenceMod.NewRWContext(-1)
+	testPostgresDB = &persistence.PostgresDB{
+		Tx: ctx.(persistence.PostgresContext).DB.Tx,
+	}
+
+	m.Run()
+	sharedTest.CleanupPostgresDocker(m, pool, resource)
+}
+
+func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresContext {
+	ctx, err := testPersistenceModule.NewRWContext(height)
+	require.NoError(t, err)
+	db := &persistence.PostgresDB{
+		Tx: ctx.(persistence.PostgresContext).DB.Tx,
+	}
+	dbCtx := &persistence.PostgresContext{
+		Height: height,
+		DB:     *db,
+	}
+
+	t.Cleanup(func() {
+		// require.NoError(t, db.Tx.Rollback(context.TODO()))
+		// require.NoError(t, dbCtx.ClearAllDebug())
+		db.Tx.Rollback(context.TODO())
+		dbCtx.ClearAllDebug()
+	})
+
+	return dbCtx
 }
 
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.

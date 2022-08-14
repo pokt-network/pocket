@@ -21,7 +21,7 @@ const (
 	user             = "postgres"
 	password         = "secret"
 	db               = "postgres"
-	SQLSchema        = "test_schema"
+	sqlSchema        = "test_schema"
 	dialect          = "postgres"
 	connStringFormat = "postgres://%s:%s@%s/%s?sslmode=disable"
 )
@@ -35,7 +35,6 @@ func init() {
 
 var PostgresDB *persistence.PostgresDB
 var PersistenceModule modules.PersistenceModule
-var DatabaseUrl string
 
 func SetupPostgresDockerPersistenceMod() (*dockertest.Pool, *dockertest.Resource, modules.PersistenceModule) {
 	opts := dockertest.RunOptions{
@@ -60,9 +59,9 @@ func SetupPostgresDockerPersistenceMod() (*dockertest.Pool, *dockertest.Resource
 		log.Fatalf("***Make sure your docker daemon is running!!*** Could not start resource: %s\n", err.Error())
 	}
 	hostAndPort := resource.GetHostPort("5432/tcp")
-	DatabaseUrl = fmt.Sprintf(connStringFormat, user, password, hostAndPort, db)
+	databaseUrl := fmt.Sprintf(connStringFormat, user, password, hostAndPort, db)
 
-	log.Println("Connecting to database on url: ", DatabaseUrl)
+	log.Println("Connecting to database on url: ", databaseUrl)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -84,8 +83,8 @@ func SetupPostgresDockerPersistenceMod() (*dockertest.Pool, *dockertest.Resource
 			},
 		},
 		Persistence: &config.PersistenceConfig{
-			PostgresUrl:    DatabaseUrl,
-			NodeSchema:     SQLSchema,
+			PostgresUrl:    databaseUrl,
+			NodeSchema:     sqlSchema,
 			BlockStorePath: "",
 		},
 	}
@@ -106,7 +105,11 @@ func SetupPostgresDockerPersistenceMod() (*dockertest.Pool, *dockertest.Resource
 		persistenceMod.Start()
 		PersistenceModule = persistenceMod
 
-		ctx, _ := persistenceMod.NewRWContext(-1)
+		ctx, err := persistenceMod.NewRWContext(0)
+		if err != nil {
+			log.Println(err.Error())
+			return err
+		}
 		PostgresDB.Tx = ctx.(persistence.PostgresContext).DB.Tx
 
 		poolRetryChan <- struct{}{}

@@ -250,10 +250,7 @@ func TestGetSetStakeAmount(t *testing.T) {
 }
 
 func TestGetAllApps(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	updateApp := func(db *persistence.PostgresContext, app *genesis.App) error {
 		return db.UpdateApp(app.Address, "https://olshansky.info", app.MaxRelays, []string{"OLSH"})
