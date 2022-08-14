@@ -31,9 +31,9 @@ var protocolActorSchemas = []schema.ProtocolActorSchema{
 	schema.ValidatorActor,
 }
 
-// TODO(pocket/issues/149): Consolidate `PostgresContext and PostgresDB` into a single struct
-// TODO: These structs are only exposed for testing purposes. A helper with default context values should be created.
-// Consolidate `Postgres`
+// TODO(pocket/issues/149): Consolidate `PostgresContext and PostgresDB` into a single struct and
+// avoid exposing it for testing purposes after the consolidation. A helper with default context
+// values should be created.
 type PostgresContext struct {
 	Height int64
 	DB     PostgresDB
@@ -52,7 +52,7 @@ func (pg *PostgresDB) GetTxn() (pgx.Tx, error) {
 	return pg.Tx, nil
 }
 
-func (pg *PostgresContext) GetContext() (context.Context, error) {
+func (pg *PostgresContext) GetCtx() (context.Context, error) {
 	return context.TODO(), nil
 }
 

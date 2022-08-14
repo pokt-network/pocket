@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"context"
 	"log"
 )
 
@@ -21,4 +22,13 @@ func (p PostgresContext) AppHash() ([]byte, error) {
 
 func (p PostgresContext) Reset() error {
 	panic("TODO: PostgresContext Reset not implemented")
+}
+
+func (p PostgresContext) Commit() error {
+	p.DB.Tx.Commit(context.TODO())
+	return nil
+}
+
+func (p PostgresContext) Release() {
+	p.DB.Tx.Rollback(context.TODO())
 }
