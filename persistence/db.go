@@ -147,7 +147,7 @@ func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
 }
 
 // Exposed for testing purposes only
-func (p PostgresContext) ClearAllDebug() error {
+func (p PostgresContext) DebugClearAll() error {
 	ctx, conn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err

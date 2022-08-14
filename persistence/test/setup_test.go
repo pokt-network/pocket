@@ -77,7 +77,7 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 		// require.NoError(t, db.Tx.Rollback(context.TODO()))
 		// require.NoError(t, dbCtx.ClearAllDebug())
 		db.Tx.Rollback(context.TODO())
-		dbCtx.ClearAllDebug()
+		dbCtx.DebugClearAll()
 	})
 
 	return dbCtx
@@ -95,7 +95,7 @@ func fuzzSingleProtocolActor(
 		DB:     *sharedTest.PostgresDB,
 	}
 
-	err := db.ClearAllDebug()
+	err := db.DebugClearAll()
 	require.NoError(f, err)
 
 	actor, err := newTestActor()
