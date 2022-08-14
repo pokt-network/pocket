@@ -74,12 +74,14 @@ func Select(selector, address string, height int64, tableName string) string {
 		selector, tableName, address, height)
 }
 
+// DISCUSS_IN_THIS_COMMIT: Since we do not support `DeleteActor`, should we filter here based on status? If so, tests need to be updated.
 func SelectActors(actorSpecificParam string, height int64, tableName string) string {
 	return fmt.Sprintf(`
-			SELECT address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height
-			FROM %s WHERE height<=%d AND (height,address) IN (SELECT MAX(height),address from %s GROUP BY address)
-       `,
-		actorSpecificParam, tableName, height, tableName)
+			SELECT DISTINCT ON (address) address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height
+			FROM %s
+			WHERE height<=%d
+			ORDER BY address, height DESC
+       `, actorSpecificParam, tableName, height)
 }
 
 func SelectChains(selector, address string, height int64, actorTableName, chainsTableName string) string {

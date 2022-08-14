@@ -200,6 +200,90 @@ func TestGetServiceNodeOutputAddress(t *testing.T) {
 	require.Equal(t, output, serviceNode.Output, "unexpected output address")
 }
 
+func TestGetAllServiceNodes(t *testing.T) {
+	db := &persistence.PostgresContext{
+		Height: 0,
+		DB:     *testPostgresDB,
+	}
+
+	// The default test state contains 1 service node
+	serviceNodes, err := db.GetAllServiceNodes(0)
+	require.NoError(t, err)
+	require.Len(t, serviceNodes, 1)
+
+	// Add 2 services nodes at height 1
+	db.Height++
+	_, err = createAndInsertDefaultTestServiceNode(db)
+	require.NoError(t, err)
+	_, err = createAndInsertDefaultTestServiceNode(db)
+	require.NoError(t, err)
+
+	// 1 services nodes at height 0
+	serviceNodes, err = db.GetAllServiceNodes(0)
+	require.NoError(t, err)
+	require.Len(t, serviceNodes, 1)
+
+	// 3 services nodes at height 1
+	serviceNodes, err = db.GetAllServiceNodes(1)
+	require.NoError(t, err)
+	require.Len(t, serviceNodes, 3)
+
+	// Add 1 services nodes at height 3
+	db.Height++
+	db.Height++
+	_, err = createAndInsertDefaultTestServiceNode(db)
+	require.NoError(t, err)
+
+	// 1 services nodes at height 0
+	serviceNodes, err = db.GetAllServiceNodes(0)
+	require.NoError(t, err)
+	require.Len(t, serviceNodes, 1)
+
+	// 3 services nodes at height 1
+	serviceNodes, err = db.GetAllServiceNodes(1)
+	require.NoError(t, err)
+	require.Len(t, serviceNodes, 3)
+
+	// 4 services nodes at height 2
+	serviceNodes, err = db.GetAllServiceNodes(2)
+	require.NoError(t, err)
+	require.Len(t, serviceNodes, 3)
+
+	// 4 services nodes at height 3
+	serviceNodes, err = db.GetAllServiceNodes(3)
+	require.NoError(t, err)
+	require.Len(t, serviceNodes, 4)
+
+	// Update the service nodes at different heights and confirm that count does not change
+	for _, sn := range serviceNodes {
+		db.Height++
+		err = db.UpdateServiceNode(sn.Address, sn.ServiceUrl, sn.StakedTokens, []string{"ABBA"})
+		require.NoError(t, err)
+
+		// 4 service nodes at new height
+		serviceNodes, err := db.GetAllServiceNodes(db.Height)
+		require.NoError(t, err)
+		require.Len(t, serviceNodes, 4)
+	}
+
+	// 3 services nodes at height 1
+	serviceNodes, err = db.GetAllServiceNodes(1)
+	require.NoError(t, err)
+	require.Len(t, serviceNodes, 3)
+
+	// 4 services nodes at height 10
+	serviceNodes, err = db.GetAllServiceNodes(10)
+	require.NoError(t, err)
+	require.Len(t, serviceNodes, 4)
+
+	// DISCUSS_IN_THIS_COMMIT: Since we do not support `DeleteActor`, should we filter here based on status? If so, tests need to be updated.
+	for _, sn := range serviceNodes {
+		db.Height++
+		err = db.DeleteServiceNode(sn.Address)
+		require.NoError(t, err)
+	}
+}
+
 func newTestServiceNode() (*typesGenesis.ServiceNode, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
