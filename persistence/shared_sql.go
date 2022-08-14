@@ -11,12 +11,13 @@ import (
 	"github.com/pokt-network/pocket/shared/types"
 )
 
-// IMPROVE(team): Move this into a proto enum
+// IMPROVE(team): Move this into a proto enum. We are not using `iota` for the time being
+// for the purpose of being explicit: https://github.com/pokt-network/pocket/pull/140#discussion_r939731342
 const (
-	UndefinedStakingStatus = iota
-	UnstakingStatus
-	StakedStatus
-	UnstakedStatus
+	UndefinedStakingStatus = 0
+	UnstakingStatus        = 1
+	StakedStatus           = 2
+	UnstakedStatus         = 3
 )
 
 func UnstakingHeightToStatus(unstakingHeight int64) int32 {

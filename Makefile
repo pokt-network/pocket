@@ -80,7 +80,6 @@ go_clean_deps:
 gofmt:
 	gofmt -w -s .
 
-
 .PHONY: install_cli_deps
 ## Installs `protoc-gen-go` and `mockgen`
 install_cli_deps:
