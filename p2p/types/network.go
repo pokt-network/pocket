@@ -17,6 +17,7 @@ type AddrBookMap map[string]*NetworkPeer
 // can be simplified greatly.
 type Network interface {
 	modules.IntegratableModule
+
 	NetworkBroadcast(data []byte) error
 	NetworkSend(data []byte, address cryptoPocket.Address) error
 
