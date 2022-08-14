@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
@@ -246,6 +247,19 @@ func TestGetSetStakeAmount(t *testing.T) {
 	stakeAmountAfter, err := db.GetAppStakeAmount(1, app.Address)
 	require.NoError(t, err)
 	require.Equal(t, newStakeAmount, stakeAmountAfter, "unexpected status")
+}
+
+func TestGetAllApps(t *testing.T) {
+	db := &persistence.PostgresContext{
+		Height: 0,
+		DB:     *testPostgresDB,
+	}
+
+	updateApp := func(db *persistence.PostgresContext, app *genesis.App) error {
+		return db.UpdateApp(app.Address, "https://olshansky.info", app.MaxRelays, []string{"OLSH"})
+	}
+
+	getAllActorsTest(t, db, db.GetAllApps, createAndInsertDefaultTestApp, updateApp)
 }
 
 func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*typesGenesis.App, error) {

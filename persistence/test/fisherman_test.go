@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
@@ -223,6 +224,19 @@ func newTestFisherman() (*typesGenesis.Fisherman, error) {
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          outputAddr,
 	}, nil
+}
+
+func TestGetAllFish(t *testing.T) {
+	db := &persistence.PostgresContext{
+		Height: 0,
+		DB:     *testPostgresDB,
+	}
+
+	updateFish := func(db *persistence.PostgresContext, fish *genesis.Fisherman) error {
+		return db.UpdateFisherman(fish.Address, "https://olshansky.info", fish.StakedTokens, []string{"OLSH"})
+	}
+
+	getAllActorsTest(t, db, db.GetAllFishermen, createAndInsertDefaultTestFisherman, updateFish)
 }
 
 func createAndInsertDefaultTestFisherman(db *persistence.PostgresContext) (*typesGenesis.Fisherman, error) {

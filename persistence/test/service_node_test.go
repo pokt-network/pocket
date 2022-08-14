@@ -208,7 +208,7 @@ func TestGetAllServiceNodes(t *testing.T) {
 	}
 
 	updateServiceNode := func(db *persistence.PostgresContext, sn *genesis.ServiceNode) error {
-		return db.UpdateServiceNode(sn.Address, sn.ServiceUrl, sn.StakedTokens, []string{"ABBA"})
+		return db.UpdateServiceNode(sn.Address, "https://olshansky.info", sn.StakedTokens, []string{"OLSH"})
 	}
 
 	getAllActorsTest(t, db, db.GetAllServiceNodes, createAndInsertDefaultTestServiceNode, updateServiceNode)

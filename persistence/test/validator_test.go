@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
@@ -194,6 +195,19 @@ func TestGetValidatorOutputAddress(t *testing.T) {
 	output, err := db.GetValidatorOutputAddress(validator.Address, 0)
 	require.NoError(t, err)
 	require.Equal(t, output, validator.Output, "unexpected output address")
+}
+
+func TestGetAlValidators(t *testing.T) {
+	db := &persistence.PostgresContext{
+		Height: 0,
+		DB:     *testPostgresDB,
+	}
+
+	updateValidator := func(db *persistence.PostgresContext, val *genesis.Validator) error {
+		return db.UpdateValidator(val.Address, "https://olshansky.info", val.StakedTokens)
+	}
+
+	getAllActorsTest(t, db, db.GetAllValidators, createAndInsertDefaultTestValidator, updateValidator)
 }
 
 func newTestValidator() (*typesGenesis.Validator, error) {
