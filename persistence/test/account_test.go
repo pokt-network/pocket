@@ -82,10 +82,7 @@ func FuzzAccountAmount(f *testing.F) {
 }
 
 func TestSetAccountAmount(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 	account := newTestAccount(t)
 
 	err := db.SetAccountAmount(account.Address, DefaultStake)
@@ -104,10 +101,7 @@ func TestSetAccountAmount(t *testing.T) {
 }
 
 func TestAddAccountAmount(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 	account := newTestAccount(t)
 
 	err := db.SetAccountAmount(account.Address, DefaultStake)
@@ -127,10 +121,7 @@ func TestAddAccountAmount(t *testing.T) {
 }
 
 func TestSubAccountAmount(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 	account := newTestAccount(t)
 
 	err := db.SetAccountAmount(account.Address, DefaultStake)
@@ -153,6 +144,7 @@ func FuzzPoolAmount(f *testing.F) {
 		Height: 0,
 		DB:     *testPostgresDB,
 	}
+
 	operations := []string{
 		"AddAmount",
 		"SubAmount",
@@ -216,10 +208,7 @@ func FuzzPoolAmount(f *testing.F) {
 }
 
 func TestSetPoolAmount(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 	pool := newTestPool(t)
 
 	err := db.SetPoolAmount(pool.Name, DefaultStake)
@@ -238,10 +227,7 @@ func TestSetPoolAmount(t *testing.T) {
 }
 
 func TestAddPoolAmount(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 	pool := newTestPool(t)
 
 	err := db.SetPoolAmount(pool.Name, DefaultStake)
@@ -261,10 +247,7 @@ func TestAddPoolAmount(t *testing.T) {
 }
 
 func TestSubPoolAmount(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 	pool := newTestPool(t)
 
 	err := db.SetPoolAmount(pool.Name, DefaultStake)

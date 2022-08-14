@@ -251,7 +251,7 @@ test_race: # generate_mocks
 .PHONY: test_utility_module
 ## Run all go utility module unit tests
 test_utility_module: # generate_mocks
-	go test ${VERBOSE_TEST} ./shared/tests/utility_module/...
+	go test ${VERBOSE_TEST} -p=1 -count=1  ./shared/tests/utility_module/...
 
 .PHONY: test_utility_types
 ## Run all go utility types module unit tests

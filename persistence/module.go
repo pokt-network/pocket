@@ -69,6 +69,7 @@ func (m *persistenceModule) GetBus() modules.Bus {
 	return m.bus
 }
 
+// TODO: Only one write context at a time should be allowed
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
 	db, err := connectAndInitializeDatabase(m.postgresURL, m.nodeSchema)
 	if err != nil {
@@ -93,9 +94,9 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 }
 
 func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
+	// TECHDEBT: This can be completely separate from rw context.
+	//           It should access the db directly rather than using transactions
 	return m.NewRWContext(height)
-	// TODO (Team) this can be completely separate from rw context.
-	// It should access the db directly rather than using transactions
 }
 
 func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
