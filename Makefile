@@ -27,8 +27,8 @@ help:
 	} \
 	{ lastLine = $$0 }' $(MAKEFILE_LIST)
 
-# Internal helper target - check if docker is installed
 .PHONY: docker_check
+# Internal helper target - check if docker is installed
 docker_check:
 	{ \
 	if ( ! ( command -v docker >/dev/null && command -v docker-compose >/dev/null )); then \
@@ -37,8 +37,8 @@ docker_check:
 	fi; \
 	}
 
-# Internal helper target - prompt the user before continuing
 .PHONY: prompt_user
+# Internal helper target - prompt the user before continuing
 prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 
@@ -59,7 +59,7 @@ go_staticcheck:
 	}
 
 .PHONY: go_doc
-## Generate documentation for the current project using `godo`
+# INCOMPLETE: Generate documentation for the current project using `godo`
 go_doc:
 	{ \
 	if command -v godoc >/dev/null; then \
@@ -75,21 +75,26 @@ go_doc:
 go_clean_deps:
 	go mod tidy && go mod vendor
 
+.PHONY: gofmt
+## Format all the .go files in the project in place.
+gofmt:
+	gofmt -w -s .
+
+
 .PHONY: install_cli_deps
 ## Installs `protoc-gen-go` and `mockgen`
 install_cli_deps:
 	go install "google.golang.org/protobuf/cmd/protoc-gen-go@v1.28" && protoc-gen-go --version
 	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
 
-.PHONY: refresh
-## Removes vendor, installs deps, generates mocks and protobuf files. Perform after a new pull or a branch switch
-refresh: go_clean_deps
-	make protogen_clean && make protogen_local
+.PHONY: develop_test
+## Run all of the make commands necessary to develop on the project and verify the tests pass
+develop_test: docker_check
+		make mockgen && \
+		make protogen_clean && make protogen_local && \
+		make go_clean_deps && \
+		make test_all
 
-.PHONY: build_and_watch
-## Continous build Pocket's main entrypoint as files change
-build_and_watch:
-	/bin/sh ${PWD}/build/scripts/watch_build.sh
 
 .PHONY: client_start
 ## Run a client daemon which is only used for debugging purposes
@@ -101,6 +106,11 @@ client_start: docker_check
 client_connect: docker_check
 	docker exec -it client /bin/bash -c "go run app/client/*.go"
 
+.PHONY: build_and_watch
+## Continous build Pocket's main entrypoint as files change
+build_and_watch:
+	/bin/sh ${PWD}/build/scripts/watch_build.sh
+
 # TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
 .PHONY: compose_and_watch
 ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
@@ -109,7 +119,7 @@ compose_and_watch: docker_check db_start monitoring_start
 
 .PHONY: rebuild_and_compose_and_watch
 ## Rebuilds the container from scratch and launches compose_and_watch
-rebuild_and_compose_and_watch: db_start monitoring_start
+rebuild_and_compose_and_watch: docker_check db_start monitoring_start
 	docker-compose -f build/deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: db_start
@@ -158,12 +168,12 @@ docker_wipe: docker_check prompt_user
 
 .PHONY: monitoring_start
 ## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
-monitoring_start:
+monitoring_start: docker_check
 	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d grafana loki vm
 
 .PHONY: make docker_loki_install
 ## Installs the loki docker driver
-docker_loki_install:
+docker_loki_install: docker_check
 	docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
 
 .PHONY: mockgen
@@ -183,6 +193,40 @@ mockgen:
 	rm -rf ${p2p_type_mocks_dir}
 	mockgen --source=${p2p_types_dir}/network.go -destination=${p2p_type_mocks_dir}/network_mock.go
 	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
+
+
+# TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
+
+.PHONY: protogen_show
+## A simple `find` command that shows you the generated protobufs.
+protogen_show:
+	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor"
+
+.PHONY: protogen_clean
+## Remove all the generated protobufs.
+protogen_clean:
+	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs -r rm
+
+.PHONY: protogen_local
+## Generate go structures for all of the protobufs
+protogen_local:
+	$(eval proto_dir = "./shared/types/proto/")
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto         --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto              --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto      --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/raintree/types/proto       --go_out=./p2p/types            ./p2p/raintree/types/proto/*.proto   --experimental_allow_proto3_optional
+	echo "View generated proto files by running: make protogen_show"
+
+.PHONY: protogen_docker_m1
+## TODO(derrandz): Test, validate & update.
+protogen_docker_m1: docker_check
+	docker build  -t pocket/proto-generator -f ./build/Dockerfile.m1.proto . && docker run --platform=linux/amd64 -it -v $(CWD)/shared:/usr/src/app/shared pocket/proto-generator
+
+.PHONY: protogen_docker
+## TODO(derrandz): Test, validate & update.
+protogen_docker: docker_check
+	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it -v $(CWD)/:/usr/src/app/ pocket/proto-generator
 
 .PHONY: test_all
 ## Run all go unit tests
@@ -250,61 +294,6 @@ test_sortition:
 test_persistence:
 	go test ${VERBOSE_TEST} -p=1 ./persistence/...
 
-.PHONY: benchmark_sortition
-## Benchmark the Sortition library
-benchmark_sortition:
-	go test ${VERBOSE_TEST} ./consensus/leader_election/sortition -bench=.
-
-# TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
-
-.PHONY: protogen_show
-## A simple `find` command that shows you the generated protobufs.
-protogen_show:
-	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor"
-
-.PHONY: protogen_clean
-## Remove all the generated protobufs.
-protogen_clean:
-	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs -r rm
-
-.PHONY: protogen_local
-## Generate go structures for all of the protobufs
-protogen_local:
-	$(eval proto_dir = "./shared/types/proto/")
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto         --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto              --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto      --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/raintree/types/proto       --go_out=./p2p/types            ./p2p/raintree/types/proto/*.proto   --experimental_allow_proto3_optional
-	echo "View generated proto files by running: make protogen_show"
-
-.PHONY: protogen_docker_m1
-## TODO(derrandz): Test, validate & update.
-protogen_docker_m1: docker_check
-	docker build  -t pocket/proto-generator -f ./build/Dockerfile.m1.proto . && docker run --platform=linux/amd64 -it -v $(CWD)/shared:/usr/src/app/shared pocket/proto-generator
-
-.PHONY: protogen_docker
-## TODO(derrandz): Test, validate & update.
-protogen_docker: docker_check
-	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it -v $(CWD)/:/usr/src/app/ pocket/proto-generator
-
-.PHONY: gofmt
-## Format all the .go files in the project in place.
-gofmt:
-	gofmt -w -s .
-
-## Module commands
-
-.PNONY: test_p2p_wire_codec
-## Run the p2p wire codec behavior test
-test_p2p_wire_codec:
-	go test -run TestWireCodec -v -race ./p2p
-
-.PHONY: test_p2p_socket
-## Run the p2p net IO behaviors test
-test_p2p_socket:
-	go test -run TestSocket -v -race ./p2p
-
 .PHONY: test_p2p_types
 ## Run p2p subcomponents' tests
 test_p2p_types:
@@ -319,6 +308,11 @@ test_p2p:
 ## Run all P2P addr book related tests
 test_p2p_addrbook:
 	go test -run AddrBook -v -count=1 ./p2p/...
+
+.PHONY: benchmark_sortition
+## Benchmark the Sortition library
+benchmark_sortition:
+	go test ${VERBOSE_TEST} ./consensus/leader_election/sortition -bench=.
 
 .PHONY: benchmark_p2p_addrbook
 ## Benchmark all P2P addr book related tests
@@ -349,11 +343,3 @@ todo_list:
 ## Print a count of all the TODOs in the project
 todo_count:
 	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS} . | wc -l
-
-.PHONY: develop_and_test
-## Run all of the make commands necessary to develop on the project and verify the tests pass
-develop_test:
-		make mockgen && \
-		make protogen_clean && make protogen_local && \
-		make go_clean_deps && \
-		make test_all
