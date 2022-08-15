@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -15,6 +14,7 @@ import (
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/utility"
 )
 
 const (
@@ -26,16 +26,7 @@ const (
 	connStringFormat = "postgres://%s:%s@%s/%s?sslmode=disable"
 )
 
-func init() {
-	PersistenceModule = modules.PersistenceModule(nil) // TODO (team) make thread safe
-	PostgresDB = new(persistence.PostgresDB)
-}
-
 // TODO (team) cleanup and simplify
-
-var PostgresDB *persistence.PostgresDB
-var PersistenceModule modules.PersistenceModule
-
 func SetupPostgresDockerPersistenceMod() (*dockertest.Pool, *dockertest.Resource, modules.PersistenceModule) {
 	opts := dockertest.RunOptions{
 		Repository: "postgres",
@@ -93,29 +84,20 @@ func SetupPostgresDockerPersistenceMod() (*dockertest.Pool, *dockertest.Resource
 		log.Fatalf("could not hydrate genesis state during postgres setup: %s", err)
 	}
 
-	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
 	poolRetryChan := make(chan struct{}, 1)
 	var persistenceMod modules.PersistenceModule
-	if err = pool.Retry(func() error {
+	retryConnectFn := func() error {
 		persistenceMod, err = persistence.Create(cfg)
 		if err != nil {
 			log.Println(err.Error())
 			return err
 		}
 		persistenceMod.Start()
-		PersistenceModule = persistenceMod
-
-		ctx, err := persistenceMod.NewRWContext(0)
-		if err != nil {
-			log.Println(err.Error())
-			return err
-		}
-		PostgresDB.Tx = ctx.(persistence.PostgresContext).DB.Tx
-
 		poolRetryChan <- struct{}{}
-
 		return nil
-	}); err != nil {
+	}
+	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
+	if err = pool.Retry(retryConnectFn); err != nil {
 		log.Fatalf("could not connect to docker: %s", err.Error())
 	}
 
@@ -136,10 +118,8 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 
 // TODO(pocket/issues/149): Golang specific solution for teardown
 // TODO: Currently exposed only for testing purposes.
-func CleanupTest() {
-	PostgresDB.Tx.Rollback(context.TODO())
-	// DISCUSS_IN_THIS_COMMIT: Can we remove this?
-	// PersistenceModule.Stop()
+func CleanupTest(u utility.UtilityContext) {
+	u.Context.Release()
 }
 
 func genesisConfig() *genesis.GenesisConfig {

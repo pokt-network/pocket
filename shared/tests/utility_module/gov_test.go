@@ -27,8 +27,7 @@ func TestUtilityContext_GetAppMaxChains(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, int(defaultParams.AppMaxChains) != maxChains, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParams.AppMaxChains, maxChains))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetAppMaxPausedBlocks(t *testing.T) {
@@ -38,8 +37,7 @@ func TestUtilityContext_GetAppMaxPausedBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, int(defaultParams.AppMaxPauseBlocks) != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParams.AppMaxPausedBlocksOwner, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetAppMinimumPauseBlocks(t *testing.T) {
@@ -50,8 +48,7 @@ func TestUtilityContext_GetAppMinimumPauseBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetAppMinimumStake(t *testing.T) {
@@ -62,8 +59,7 @@ func TestUtilityContext_GetAppMinimumStake(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetAppUnstakingBlocks(t *testing.T) {
@@ -74,8 +70,7 @@ func TestUtilityContext_GetAppUnstakingBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetBaselineAppStakeRate(t *testing.T) {
@@ -86,8 +81,7 @@ func TestUtilityContext_GetBaselineAppStakeRate(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
@@ -98,8 +92,7 @@ func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetDoubleSignBurnPercentage(t *testing.T) {
@@ -110,8 +103,7 @@ func TestUtilityContext_GetDoubleSignBurnPercentage(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetDoubleSignFeeOwner(t *testing.T) {
@@ -122,8 +114,7 @@ func TestUtilityContext_GetDoubleSignFeeOwner(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, !bytes.Equal(defaultParam, gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetFishermanMaxChains(t *testing.T) {
@@ -134,8 +125,7 @@ func TestUtilityContext_GetFishermanMaxChains(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetFishermanMaxPausedBlocks(t *testing.T) {
@@ -146,8 +136,7 @@ func TestUtilityContext_GetFishermanMaxPausedBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetFishermanMinimumPauseBlocks(t *testing.T) {
@@ -158,8 +147,7 @@ func TestUtilityContext_GetFishermanMinimumPauseBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetFishermanMinimumStake(t *testing.T) {
@@ -170,8 +158,7 @@ func TestUtilityContext_GetFishermanMinimumStake(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetFishermanUnstakingBlocks(t *testing.T) {
@@ -182,8 +169,7 @@ func TestUtilityContext_GetFishermanUnstakingBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMaxEvidenceAgeInBlocks(t *testing.T) {
@@ -194,8 +180,7 @@ func TestUtilityContext_GetMaxEvidenceAgeInBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageChangeParameterFee(t *testing.T) {
@@ -206,8 +191,7 @@ func TestUtilityContext_GetMessageChangeParameterFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageDoubleSignFee(t *testing.T) {
@@ -218,8 +202,7 @@ func TestUtilityContext_GetMessageDoubleSignFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageEditStakeAppFee(t *testing.T) {
@@ -230,8 +213,7 @@ func TestUtilityContext_GetMessageEditStakeAppFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageEditStakeFishermanFee(t *testing.T) {
@@ -242,8 +224,7 @@ func TestUtilityContext_GetMessageEditStakeFishermanFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageEditStakeServiceNodeFee(t *testing.T) {
@@ -254,8 +235,7 @@ func TestUtilityContext_GetMessageEditStakeServiceNodeFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageEditStakeValidatorFee(t *testing.T) {
@@ -266,8 +246,7 @@ func TestUtilityContext_GetMessageEditStakeValidatorFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageFishermanPauseServiceNodeFee(t *testing.T) {
@@ -278,8 +257,7 @@ func TestUtilityContext_GetMessageFishermanPauseServiceNodeFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessagePauseAppFee(t *testing.T) {
@@ -290,8 +268,7 @@ func TestUtilityContext_GetMessagePauseAppFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessagePauseFishermanFee(t *testing.T) {
@@ -302,8 +279,7 @@ func TestUtilityContext_GetMessagePauseFishermanFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessagePauseServiceNodeFee(t *testing.T) {
@@ -314,8 +290,7 @@ func TestUtilityContext_GetMessagePauseServiceNodeFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessagePauseValidatorFee(t *testing.T) {
@@ -326,8 +301,7 @@ func TestUtilityContext_GetMessagePauseValidatorFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageProveTestScoreFee(t *testing.T) {
@@ -338,8 +312,7 @@ func TestUtilityContext_GetMessageProveTestScoreFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageSendFee(t *testing.T) {
@@ -350,8 +323,7 @@ func TestUtilityContext_GetMessageSendFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageStakeAppFee(t *testing.T) {
@@ -362,8 +334,7 @@ func TestUtilityContext_GetMessageStakeAppFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageStakeFishermanFee(t *testing.T) {
@@ -374,8 +345,7 @@ func TestUtilityContext_GetMessageStakeFishermanFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageStakeServiceNodeFee(t *testing.T) {
@@ -386,8 +356,7 @@ func TestUtilityContext_GetMessageStakeServiceNodeFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageStakeValidatorFee(t *testing.T) {
@@ -398,8 +367,7 @@ func TestUtilityContext_GetMessageStakeValidatorFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageTestScoreFee(t *testing.T) {
@@ -410,8 +378,7 @@ func TestUtilityContext_GetMessageTestScoreFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageUnpauseAppFee(t *testing.T) {
@@ -422,8 +389,7 @@ func TestUtilityContext_GetMessageUnpauseAppFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageUnpauseFishermanFee(t *testing.T) {
@@ -434,8 +400,7 @@ func TestUtilityContext_GetMessageUnpauseFishermanFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageUnpauseServiceNodeFee(t *testing.T) {
@@ -446,8 +411,7 @@ func TestUtilityContext_GetMessageUnpauseServiceNodeFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageUnpauseValidatorFee(t *testing.T) {
@@ -458,8 +422,7 @@ func TestUtilityContext_GetMessageUnpauseValidatorFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageUnstakeAppFee(t *testing.T) {
@@ -470,8 +433,7 @@ func TestUtilityContext_GetMessageUnstakeAppFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageUnstakeFishermanFee(t *testing.T) {
@@ -482,8 +444,7 @@ func TestUtilityContext_GetMessageUnstakeFishermanFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageUnstakeServiceNodeFee(t *testing.T) {
@@ -494,8 +455,7 @@ func TestUtilityContext_GetMessageUnstakeServiceNodeFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageUnstakeValidatorFee(t *testing.T) {
@@ -506,8 +466,7 @@ func TestUtilityContext_GetMessageUnstakeValidatorFee(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMissedBlocksBurnPercentage(t *testing.T) {
@@ -518,8 +477,7 @@ func TestUtilityContext_GetMissedBlocksBurnPercentage(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetProposerPercentageOfFees(t *testing.T) {
@@ -530,8 +488,7 @@ func TestUtilityContext_GetProposerPercentageOfFees(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetServiceNodeMaxChains(t *testing.T) {
@@ -542,8 +499,7 @@ func TestUtilityContext_GetServiceNodeMaxChains(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetServiceNodeMaxPausedBlocks(t *testing.T) {
@@ -554,8 +510,7 @@ func TestUtilityContext_GetServiceNodeMaxPausedBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetServiceNodeMinimumPauseBlocks(t *testing.T) {
@@ -566,8 +521,7 @@ func TestUtilityContext_GetServiceNodeMinimumPauseBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetServiceNodeMinimumStake(t *testing.T) {
@@ -578,8 +532,7 @@ func TestUtilityContext_GetServiceNodeMinimumStake(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetServiceNodeUnstakingBlocks(t *testing.T) {
@@ -590,8 +543,7 @@ func TestUtilityContext_GetServiceNodeUnstakingBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetStakingAdjustment(t *testing.T) {
@@ -602,8 +554,7 @@ func TestUtilityContext_GetStakingAdjustment(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetValidatorMaxMissedBlocks(t *testing.T) {
@@ -614,8 +565,7 @@ func TestUtilityContext_GetValidatorMaxMissedBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetValidatorMaxPausedBlocks(t *testing.T) {
@@ -626,8 +576,7 @@ func TestUtilityContext_GetValidatorMaxPausedBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetValidatorMinimumPauseBlocks(t *testing.T) {
@@ -638,8 +587,7 @@ func TestUtilityContext_GetValidatorMinimumPauseBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetValidatorMinimumStake(t *testing.T) {
@@ -650,8 +598,7 @@ func TestUtilityContext_GetValidatorMinimumStake(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetValidatorUnstakingBlocks(t *testing.T) {
@@ -662,8 +609,7 @@ func TestUtilityContext_GetValidatorUnstakingBlocks(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
@@ -690,8 +636,7 @@ func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, int(newParamValue) != gotParam, fmt.Sprintf("wrong param value after handling, expected %v got %v", newParamValue, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetParamOwner(t *testing.T) {
@@ -1131,6 +1076,5 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, !bytes.Equal(gotParam, defaultParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }

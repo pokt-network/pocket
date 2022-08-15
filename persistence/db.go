@@ -148,34 +148,38 @@ func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
 
 // Exposed for testing purposes only
 func (p PostgresContext) DebugClearAll() error {
-	ctx, conn, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
 
-	tx, err := conn.Begin(ctx)
+	clearTx, err := tx.Begin(ctx)
 	if err != nil {
 		return err
 	}
 
 	for _, actor := range protocolActorSchemas {
-		if _, err = tx.Exec(ctx, actor.ClearAllQuery()); err != nil {
+		if _, err = clearTx.Exec(ctx, actor.ClearAllQuery()); err != nil {
 			return err
 		}
 		if actor.GetChainsTableName() != "" {
-			if _, err = tx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
+			if _, err = clearTx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
 				return err
 			}
 		}
 	}
 
-	if _, err = tx.Exec(ctx, schema.ClearAllGovQuery()); err != nil {
+	if _, err = clearTx.Exec(ctx, schema.ClearAllGovQuery()); err != nil {
 		return err
 	}
 
-	if _, err = tx.Exec(ctx, schema.ClearAllBlocksQuery()); err != nil {
+	if _, err = clearTx.Exec(ctx, schema.ClearAllBlocksQuery()); err != nil {
 		return err
 	}
+
+	// if err = clearTx.Commit(ctx); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

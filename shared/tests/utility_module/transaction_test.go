@@ -27,8 +27,7 @@ func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_ApplyTransaction(t *testing.T) {
@@ -45,8 +44,7 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expectedAfterBalance, amount, "unexpected after balance")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 // TODO: Fix this test once txIndexer is implemented by postgres context
@@ -63,7 +61,7 @@ func TestUtilityContext_CheckTransaction(t *testing.T) {
 	// require.True(t, er.Error() == types.ErrDuplicateTransaction().Error(), fmt.Sprintf("unexpected err, expected %v got %v", types.ErrDuplicateTransaction().Error(), er.Error()))
 
 	// ctx.Context.Release()
-	// tests.CleanupTest()
+	// tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetSignerCandidates(t *testing.T) {
@@ -79,8 +77,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	require.Equal(t, len(candidates), 1, "wrong number of candidates")
 	require.Equal(t, candidates[0], accs[0].Address, "unexpected signer candidate")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 // TODO: Fix this test once txIndexer is implemented by postgres context
@@ -97,7 +94,7 @@ func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
 	// require.True(t, bytes.Equal(txs[0], txBz), fmt.Sprintf("unexpected transaction returned; expected tx: %s, got %s", hex.EncodeToString(txBz), hex.EncodeToString(txs[0])))
 
 	// ctx.Context.Release()
-	// tests.CleanupTest()
+	// tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_HandleMessage(t *testing.T) {
@@ -125,8 +122,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	require.Equal(t, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter), sendAmount, "unexpected sender balance")
 	require.Equal(t, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore), sendAmount, "unexpected recipient balance")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingAmount, amountSent *big.Int, signer crypto.PrivateKey) {

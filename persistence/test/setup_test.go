@@ -1,7 +1,6 @@
 package test
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -43,16 +42,13 @@ var (
 	DefaultUnstakingHeight = int64(-1)
 )
 
-var (
-	testPersistenceModule modules.PersistenceModule
-)
+var testPersistenceModule modules.PersistenceModule
 
 // See https://github.com/ory/dockertest as reference for the template of this code
 // Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
 func TestMain(m *testing.M) {
 	pool, resource, persistenceMod := sharedTest.SetupPostgresDockerPersistenceMod()
 	testPersistenceModule = persistenceMod
-
 	m.Run()
 	sharedTest.CleanupPostgresDocker(m, pool, resource)
 }
@@ -61,25 +57,23 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	ctx, err := testPersistenceModule.NewRWContext(height)
 	require.NoError(t, err)
 
-	db := &persistence.PostgresDB{
-		Tx: ctx.(persistence.PostgresContext).DB.Tx,
-	}
-	dbCtx := &persistence.PostgresContext{
+	db := &persistence.PostgresContext{
 		Height: height,
-		DB:     *db,
+		DB: persistence.PostgresDB{
+			Tx: ctx.(persistence.PostgresContext).DB.Tx,
+		},
 	}
 
 	t.Cleanup(func() {
-		// require.NoError(t, db.Tx.Rollback(context.TODO()))
-		// require.NoError(t, dbCtx.ClearAllDebug())
-		db.Tx.Rollback(context.TODO())
-		dbCtx.DebugClearAll()
+		require.NoError(t, db.Release())
+		// DISCUSS_IN_THIS_COMMIT: Do we need this given that `Release` reverses the changes made to the database?
+		// require.NoError(t, db.DebugClearAll())
 	})
 
-	return dbCtx
+	return db
 }
 
-// TODO: Can we leverage using `NewTestPostgresContext` here?
+// REFACTOR: Can we leverage using `NewTestPostgresContext`here by creating a common interface?
 func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceModule.NewRWContext(height)
 	if err != nil {
@@ -91,6 +85,11 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 			Tx: ctx.(persistence.PostgresContext).DB.Tx,
 		},
 	}
+	f.Cleanup(func() {
+		db.Release()
+		// DISCUSS_IN_THIS_COMMIT: Do we need this given that `Release` reverses the changes made to the database?
+		// db.DebugClearAll()
+	})
 
 	return &db
 }
@@ -101,8 +100,6 @@ func fuzzSingleProtocolActor(
 	newTestActor func() (schema.BaseActor, error),
 	getTestActor func(db *persistence.PostgresContext, address string) (*schema.BaseActor, error),
 	protocolActorSchema schema.ProtocolActorSchema) {
-
-	// TODO: Can we leverage using NewTestPostgresContext here?
 
 	db := NewFuzzTestPostgresContext(f, 0)
 

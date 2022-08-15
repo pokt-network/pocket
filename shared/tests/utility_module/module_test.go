@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/tests"
 
 	"github.com/stretchr/testify/require"
@@ -26,15 +27,17 @@ func NewTestingMempool(_ *testing.T) types.Mempool {
 	return types.NewMempool(1000000, 1000)
 }
 
+var testPersistenceMod modules.PersistenceModule
+
 func TestMain(m *testing.M) {
-	pool, resource, persistenceMod := tests.SetupPostgresDockerPersistenceMod()
-	tests.PersistenceModule = persistenceMod // TODO: Avoiding having this global variable
+	pool, resource, mod := tests.SetupPostgresDockerPersistenceMod()
+	testPersistenceMod = mod
 	m.Run()
 	tests.CleanupPostgresDocker(m, pool, resource)
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
-	persistenceContext, err := tests.PersistenceModule.NewRWContext(height)
+	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
 	mempool := NewTestingMempool(t)

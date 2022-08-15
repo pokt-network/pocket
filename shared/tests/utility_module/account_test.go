@@ -33,8 +33,7 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	expected := initialAmount.Add(initialAmount, addAmount)
 	require.Equal(t, expected, afterAmount, "amounts are not equal")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_AddAccountAmountString(t *testing.T) {
@@ -54,8 +53,7 @@ func TestUtilityContext_AddAccountAmountString(t *testing.T) {
 	expected := initialAmount.Add(initialAmount, addAmount)
 	require.Equal(t, expected, afterAmount, "amounts are not equal")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_AddPoolAmount(t *testing.T) {
@@ -74,8 +72,7 @@ func TestUtilityContext_AddPoolAmount(t *testing.T) {
 	expected := initialAmount.Add(initialAmount, addAmount)
 	require.Equal(t, expected, afterAmount, "amounts are not equal")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_HandleMessageSend(t *testing.T) {
@@ -103,8 +100,7 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter), "unexpected sender balance")
 	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore), "unexpected recipient balance")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
@@ -120,8 +116,7 @@ func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
 	require.Equal(t, len(candidates), 1, "wrong number of candidates")
 	require.Equal(t, candidates[0], accs[0].Address, "unexpected signer candidate")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_InsertPool(t *testing.T) {
@@ -141,8 +136,7 @@ func TestUtilityContext_InsertPool(t *testing.T) {
 	gotAmountString := types.BigIntToString(gotAmount)
 	require.Equal(t, amount, gotAmountString, "unexpected amount")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_SetAccountAmount(t *testing.T) {
@@ -158,8 +152,7 @@ func TestUtilityContext_SetAccountAmount(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, amount, gotAmount, "unexpected amounts")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_SetAccountWithAmountString(t *testing.T) {
@@ -176,8 +169,7 @@ func TestUtilityContext_SetAccountWithAmountString(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, amount, gotAmount, "unexpected amounts")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_SetPoolAmount(t *testing.T) {
@@ -196,8 +188,7 @@ func TestUtilityContext_SetPoolAmount(t *testing.T) {
 	require.Equal(t, beforeAmountBig, defaultAmount, "no amount change in pool")
 	require.Equal(t, expectedAfterAmount, amount, "unexpected pool amount")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_SubPoolAmount(t *testing.T) {
@@ -217,8 +208,7 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
 	require.Equal(t, amount, expected, "unexpected pool amount")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
@@ -239,8 +229,7 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
 	require.Equal(t, expected, amount, "unexpected acc amount")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []*genesis.Account {

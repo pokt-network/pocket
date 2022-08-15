@@ -42,7 +42,7 @@ type PersistenceWriteContext interface {
 
 	Reset() error
 	Commit() error
-	Release() // IMPROVE: Return an error?
+	Release() error
 
 	AppHash() ([]byte, error)
 

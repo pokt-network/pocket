@@ -289,7 +289,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 	// The persistence context should usually be accessed via the utility module within the context
 	// of the consensus module. This one is only used when loading the initial consensus module
 	// state; hence the `-1` expectation in the call above.
-	persistenceContextMock.EXPECT().Release().Return().AnyTimes()
+	persistenceContextMock.EXPECT().Release().Return(nil).AnyTimes()
 	persistenceContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
 
 	return persistenceMock

@@ -61,8 +61,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.Equal(t, expectedProposerBalanceDifference, proposerBalanceDifference, "unexpected before / after balance difference")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_BeginBlock(t *testing.T) {
@@ -86,8 +85,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	// require.NoError(t, err)
 	// require.False(t, missed != 1, fmt.Sprintf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
@@ -120,7 +118,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 		require.Equal(t, typesUtil.UnstakingStatus, status, "incorrect status")
 
 		ctx.Context.Release()
-		tests.CleanupTest()
+		tests.CleanupTest(ctx)
 	}
 }
 
@@ -159,8 +157,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.False(t, proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0, fmt.Sprintf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference))
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetAppHash(t *testing.T) {
@@ -173,8 +170,7 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 	require.NoError(t, er)
 	require.Equal(t, appHashSource, appHashTest, "unexpected appHash")
 
-	ctx.Context.Release()
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
@@ -209,6 +205,6 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 		// We might not need to 'unstakeActorsThatAreReady' if we are already filtering by unstakingHeight
 
 		ctx.Context.Release()
-		tests.CleanupTest()
+		tests.CleanupTest(ctx)
 	}
 }

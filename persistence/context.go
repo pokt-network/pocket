@@ -11,7 +11,8 @@ func (p PostgresContext) NewSavePoint(bytes []byte) error {
 }
 
 func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
-	log.Println("TODO: RollbackToSavePoint not implemented")
+	log.Println("TODO: RollbackToSavePoint not fully implemented")
+	p.DB.Tx.Rollback(context.TODO())
 	return nil
 }
 
@@ -29,6 +30,6 @@ func (p PostgresContext) Commit() error {
 	return nil
 }
 
-func (p PostgresContext) Release() {
-	p.DB.Tx.Rollback(context.TODO())
+func (p PostgresContext) Release() error {
+	return p.DB.Tx.Rollback(context.TODO())
 }
