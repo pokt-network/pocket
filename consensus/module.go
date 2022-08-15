@@ -154,7 +154,7 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 }
 
 func (m *consensusModule) loadPersistedState() error {
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewContext(-1) // Unknown height
+	persistenceContext, err := m.GetBus().GetPersistenceModule().NewRWContext(-1) // Unknown height
 	if err != nil {
 		return nil
 	}
@@ -166,7 +166,7 @@ func (m *consensusModule) loadPersistedState() error {
 		return nil
 	}
 
-	appHash, err := persistenceContext.GetBlockHash(latestHeight)
+	appHash, err := persistenceContext.GetBlockHash(int64(latestHeight))
 	if err != nil {
 		return fmt.Errorf("error getting block hash for height %d even though it's in the database: %s", latestHeight, err)
 	}

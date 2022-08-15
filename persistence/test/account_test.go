@@ -15,8 +15,8 @@ import (
 
 func FuzzAccountAmount(f *testing.F) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 	operations := []string{
 		"AddAmount",
@@ -82,8 +82,8 @@ func FuzzAccountAmount(f *testing.F) {
 
 func TestSetAccountAmount(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 	account := newTestAccount(t)
 
@@ -104,8 +104,8 @@ func TestSetAccountAmount(t *testing.T) {
 
 func TestAddAccountAmount(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 	account := newTestAccount(t)
 
@@ -127,8 +127,8 @@ func TestAddAccountAmount(t *testing.T) {
 
 func TestSubAccountAmount(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 	account := newTestAccount(t)
 
@@ -149,8 +149,8 @@ func TestSubAccountAmount(t *testing.T) {
 
 func FuzzPoolAmount(f *testing.F) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 	operations := []string{
 		"AddAmount",
@@ -216,8 +216,8 @@ func FuzzPoolAmount(f *testing.F) {
 
 func TestSetPoolAmount(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 	pool := newTestPool(t)
 
@@ -238,8 +238,8 @@ func TestSetPoolAmount(t *testing.T) {
 
 func TestAddPoolAmount(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 	pool := newTestPool(t)
 
@@ -261,8 +261,8 @@ func TestAddPoolAmount(t *testing.T) {
 
 func TestSubPoolAmount(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 	pool := newTestPool(t)
 

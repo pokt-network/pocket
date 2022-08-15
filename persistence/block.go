@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"log"
@@ -8,26 +9,26 @@ import (
 	"github.com/pokt-network/pocket/persistence/schema"
 )
 
-// OPTIMIZE(team): get from blockstore or keep in cache/memory
-func (p PostgresContext) GetLatestBlockHeight() (latestHeight int64, err error) {
-	ctx, conn, err := p.GetCtxAndConnection()
+// OPTIMIZE(team): get from blockstore or keep in memory
+func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return 0, err
 	}
 
-	err = conn.QueryRow(ctx, schema.GetLatestBlockHeightQuery()).Scan(&latestHeight)
+	err = txn.QueryRow(ctx, schema.GetLatestBlockHeightQuery()).Scan(&latestHeight)
 	return
 }
 
 // OPTIMIZE(team): get from blockstore or keep in cache/memory
 func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
-	ctx, conn, err := p.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
 
 	var hexHash string
-	err = conn.QueryRow(ctx, schema.GetBlockHashQuery(height)).Scan(&hexHash)
+	err = txn.QueryRow(ctx, schema.GetBlockHashQuery(height)).Scan(&hexHash)
 	if err != nil {
 		return nil, err
 	}
@@ -49,15 +50,24 @@ func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
 	return nil
 }
 
+func (p PostgresContext) Commit() error {
+	p.DB.Tx.Commit(context.TODO())
+	return nil
+}
+
+func (p PostgresContext) Release() {
+	p.DB.Tx.Rollback(context.TODO())
+}
+
 func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
 	// INVESTIGATE: Note that we are writing this directly to the blockStore. Depending on how
 	// the use of the PostgresContext evolves, we may need to write this to `ContextStore` and copy
 	// over to `BlockStore` when the block is committed.
-	return p.BlockStore.Put(heightToBytes(p.Height), blockProtoBytes)
+	return p.DB.Blockstore.Put(heightToBytes(p.Height), blockProtoBytes)
 }
 
 func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {
-	ctx, conn, err := p.GetCtxAndConnection()
+	ctx, conn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}

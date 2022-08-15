@@ -1,11 +1,10 @@
 package utility
 
 import (
-	"math/big"
-
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
+	"math/big"
 )
 
 /*
@@ -86,6 +85,15 @@ func (u *UtilityContext) GetAppHash() ([]byte, types.Error) {
 	return appHash, nil
 }
 
+var (
+	actorTypes = []typesUtil.ActorType{
+		typesUtil.ActorType_App,
+		typesUtil.ActorType_Node,
+		typesUtil.ActorType_Fish,
+		typesUtil.ActorType_Val,
+	}
+)
+
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
 func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) types.Error {
 	latestBlockHeight, err := u.GetLatestHeight()
@@ -143,6 +151,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err types.Error) {
 			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
 		case typesUtil.ActorType_Val:
 			readyToUnstake, er = store.GetValidatorsReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
+
 		}
 		if er != nil {
 			return types.ErrGetReadyToUnstake(er)
@@ -167,7 +176,7 @@ func (u *UtilityContext) BeginUnstakingMaxPaused() (err types.Error) {
 	if err != nil {
 		return err
 	}
-	for _, actorType := range typesUtil.ActorTypes {
+	for _, actorType := range actorTypes {
 		maxPausedBlocks, err := u.GetMaxPausedBlocks(actorType)
 		if err != nil {
 			return err
@@ -228,10 +237,10 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) types.Error {
 	amountToProposerFloat.Quo(amountToProposerFloat, big.NewFloat(100))
 	amountToProposer, _ := amountToProposerFloat.Int(nil)
 	amountToDAO := feesAndRewardsCollected.Sub(feesAndRewardsCollected, amountToProposer)
-	if err := u.AddAccountAmount(proposer, amountToProposer); err != nil {
+	if err = u.AddAccountAmount(proposer, amountToProposer); err != nil {
 		return err
 	}
-	if err := u.AddPoolAmount(typesGenesis.DAOPoolName, amountToDAO); err != nil {
+	if err = u.AddPoolAmount(typesGenesis.DAOPoolName, amountToDAO); err != nil {
 		return err
 	}
 	return nil
@@ -290,5 +299,4 @@ func (u *UtilityContext) StoreBlock(blockProtoBytes []byte) error {
 	}
 
 	return nil
-
 }

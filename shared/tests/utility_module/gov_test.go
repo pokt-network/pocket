@@ -3,6 +3,7 @@ package utility_module
 import (
 	"bytes"
 	"fmt"
+	"github.com/pokt-network/pocket/shared/tests"
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/types"
@@ -24,6 +25,8 @@ func TestUtilityContext_GetAppMaxChains(t *testing.T) {
 	maxChains, err := ctx.GetAppMaxChains()
 	require.NoError(t, err)
 	require.False(t, int(defaultParams.AppMaxChains) != maxChains, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParams.AppMaxChains, maxChains))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetAppMaxPausedBlocks(t *testing.T) {
@@ -32,6 +35,8 @@ func TestUtilityContext_GetAppMaxPausedBlocks(t *testing.T) {
 	gotParam, err := ctx.GetAppMaxPausedBlocks()
 	require.NoError(t, err)
 	require.False(t, int(defaultParams.AppMaxPauseBlocks) != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParams.AppMaxPausedBlocksOwner, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetAppMinimumPauseBlocks(t *testing.T) {
@@ -41,6 +46,8 @@ func TestUtilityContext_GetAppMinimumPauseBlocks(t *testing.T) {
 	gotParam, err := ctx.GetAppMinimumPauseBlocks()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetAppMinimumStake(t *testing.T) {
@@ -50,6 +57,8 @@ func TestUtilityContext_GetAppMinimumStake(t *testing.T) {
 	gotParam, err := ctx.GetAppMinimumStake()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetAppUnstakingBlocks(t *testing.T) {
@@ -59,6 +68,8 @@ func TestUtilityContext_GetAppUnstakingBlocks(t *testing.T) {
 	gotParam, err := ctx.GetAppUnstakingBlocks()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetBaselineAppStakeRate(t *testing.T) {
@@ -68,6 +79,8 @@ func TestUtilityContext_GetBaselineAppStakeRate(t *testing.T) {
 	gotParam, err := ctx.GetBaselineAppStakeRate()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
@@ -77,6 +90,8 @@ func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
 	gotParam, err := ctx.GetBlocksPerSession()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetDoubleSignBurnPercentage(t *testing.T) {
@@ -86,6 +101,8 @@ func TestUtilityContext_GetDoubleSignBurnPercentage(t *testing.T) {
 	gotParam, err := ctx.GetDoubleSignBurnPercentage()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetDoubleSignFeeOwner(t *testing.T) {
@@ -95,6 +112,8 @@ func TestUtilityContext_GetDoubleSignFeeOwner(t *testing.T) {
 	gotParam, err := ctx.GetDoubleSignFeeOwner()
 	require.NoError(t, err)
 	require.False(t, !bytes.Equal(defaultParam, gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetFishermanMaxChains(t *testing.T) {
@@ -104,6 +123,8 @@ func TestUtilityContext_GetFishermanMaxChains(t *testing.T) {
 	gotParam, err := ctx.GetFishermanMaxChains()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetFishermanMaxPausedBlocks(t *testing.T) {
@@ -113,6 +134,8 @@ func TestUtilityContext_GetFishermanMaxPausedBlocks(t *testing.T) {
 	gotParam, err := ctx.GetFishermanMaxPausedBlocks()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetFishermanMinimumPauseBlocks(t *testing.T) {
@@ -122,6 +145,8 @@ func TestUtilityContext_GetFishermanMinimumPauseBlocks(t *testing.T) {
 	gotParam, err := ctx.GetFishermanMinimumPauseBlocks()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetFishermanMinimumStake(t *testing.T) {
@@ -131,6 +156,8 @@ func TestUtilityContext_GetFishermanMinimumStake(t *testing.T) {
 	gotParam, err := ctx.GetFishermanMinimumStake()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetFishermanUnstakingBlocks(t *testing.T) {
@@ -140,6 +167,8 @@ func TestUtilityContext_GetFishermanUnstakingBlocks(t *testing.T) {
 	gotParam, err := ctx.GetFishermanUnstakingBlocks()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMaxEvidenceAgeInBlocks(t *testing.T) {
@@ -149,6 +178,8 @@ func TestUtilityContext_GetMaxEvidenceAgeInBlocks(t *testing.T) {
 	gotParam, err := ctx.GetMaxEvidenceAgeInBlocks()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageChangeParameterFee(t *testing.T) {
@@ -158,6 +189,8 @@ func TestUtilityContext_GetMessageChangeParameterFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageChangeParameterFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageDoubleSignFee(t *testing.T) {
@@ -167,6 +200,8 @@ func TestUtilityContext_GetMessageDoubleSignFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageDoubleSignFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageEditStakeAppFee(t *testing.T) {
@@ -176,6 +211,8 @@ func TestUtilityContext_GetMessageEditStakeAppFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageEditStakeAppFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageEditStakeFishermanFee(t *testing.T) {
@@ -185,6 +222,8 @@ func TestUtilityContext_GetMessageEditStakeFishermanFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageEditStakeFishermanFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageEditStakeServiceNodeFee(t *testing.T) {
@@ -194,6 +233,8 @@ func TestUtilityContext_GetMessageEditStakeServiceNodeFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageEditStakeServiceNodeFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageEditStakeValidatorFee(t *testing.T) {
@@ -203,6 +244,8 @@ func TestUtilityContext_GetMessageEditStakeValidatorFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageEditStakeValidatorFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageFishermanPauseServiceNodeFee(t *testing.T) {
@@ -212,6 +255,8 @@ func TestUtilityContext_GetMessageFishermanPauseServiceNodeFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageFishermanPauseServiceNodeFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessagePauseAppFee(t *testing.T) {
@@ -221,6 +266,8 @@ func TestUtilityContext_GetMessagePauseAppFee(t *testing.T) {
 	gotParam, err := ctx.GetMessagePauseAppFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessagePauseFishermanFee(t *testing.T) {
@@ -230,6 +277,8 @@ func TestUtilityContext_GetMessagePauseFishermanFee(t *testing.T) {
 	gotParam, err := ctx.GetMessagePauseFishermanFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessagePauseServiceNodeFee(t *testing.T) {
@@ -239,6 +288,8 @@ func TestUtilityContext_GetMessagePauseServiceNodeFee(t *testing.T) {
 	gotParam, err := ctx.GetMessagePauseServiceNodeFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessagePauseValidatorFee(t *testing.T) {
@@ -248,6 +299,8 @@ func TestUtilityContext_GetMessagePauseValidatorFee(t *testing.T) {
 	gotParam, err := ctx.GetMessagePauseValidatorFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageProveTestScoreFee(t *testing.T) {
@@ -257,6 +310,8 @@ func TestUtilityContext_GetMessageProveTestScoreFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageProveTestScoreFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageSendFee(t *testing.T) {
@@ -266,6 +321,8 @@ func TestUtilityContext_GetMessageSendFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageSendFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageStakeAppFee(t *testing.T) {
@@ -275,6 +332,8 @@ func TestUtilityContext_GetMessageStakeAppFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageStakeAppFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageStakeFishermanFee(t *testing.T) {
@@ -284,6 +343,8 @@ func TestUtilityContext_GetMessageStakeFishermanFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageStakeFishermanFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageStakeServiceNodeFee(t *testing.T) {
@@ -293,6 +354,8 @@ func TestUtilityContext_GetMessageStakeServiceNodeFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageStakeServiceNodeFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageStakeValidatorFee(t *testing.T) {
@@ -302,6 +365,8 @@ func TestUtilityContext_GetMessageStakeValidatorFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageStakeValidatorFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageTestScoreFee(t *testing.T) {
@@ -311,6 +376,8 @@ func TestUtilityContext_GetMessageTestScoreFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageTestScoreFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageUnpauseAppFee(t *testing.T) {
@@ -320,6 +387,8 @@ func TestUtilityContext_GetMessageUnpauseAppFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageUnpauseAppFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageUnpauseFishermanFee(t *testing.T) {
@@ -329,6 +398,8 @@ func TestUtilityContext_GetMessageUnpauseFishermanFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageUnpauseFishermanFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageUnpauseServiceNodeFee(t *testing.T) {
@@ -338,6 +409,8 @@ func TestUtilityContext_GetMessageUnpauseServiceNodeFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageUnpauseServiceNodeFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageUnpauseValidatorFee(t *testing.T) {
@@ -347,6 +420,8 @@ func TestUtilityContext_GetMessageUnpauseValidatorFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageUnpauseValidatorFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageUnstakeAppFee(t *testing.T) {
@@ -356,6 +431,8 @@ func TestUtilityContext_GetMessageUnstakeAppFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageUnstakeAppFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageUnstakeFishermanFee(t *testing.T) {
@@ -365,6 +442,8 @@ func TestUtilityContext_GetMessageUnstakeFishermanFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageUnstakeFishermanFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageUnstakeServiceNodeFee(t *testing.T) {
@@ -374,6 +453,8 @@ func TestUtilityContext_GetMessageUnstakeServiceNodeFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageUnstakeServiceNodeFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMessageUnstakeValidatorFee(t *testing.T) {
@@ -383,6 +464,8 @@ func TestUtilityContext_GetMessageUnstakeValidatorFee(t *testing.T) {
 	gotParam, err := ctx.GetMessageUnstakeValidatorFee()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetMissedBlocksBurnPercentage(t *testing.T) {
@@ -392,6 +475,8 @@ func TestUtilityContext_GetMissedBlocksBurnPercentage(t *testing.T) {
 	gotParam, err := ctx.GetMissedBlocksBurnPercentage()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetProposerPercentageOfFees(t *testing.T) {
@@ -401,6 +486,8 @@ func TestUtilityContext_GetProposerPercentageOfFees(t *testing.T) {
 	gotParam, err := ctx.GetProposerPercentageOfFees()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetServiceNodeMaxChains(t *testing.T) {
@@ -410,6 +497,8 @@ func TestUtilityContext_GetServiceNodeMaxChains(t *testing.T) {
 	gotParam, err := ctx.GetServiceNodeMaxChains()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetServiceNodeMaxPausedBlocks(t *testing.T) {
@@ -419,6 +508,8 @@ func TestUtilityContext_GetServiceNodeMaxPausedBlocks(t *testing.T) {
 	gotParam, err := ctx.GetServiceNodeMaxPausedBlocks()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetServiceNodeMinimumPauseBlocks(t *testing.T) {
@@ -428,6 +519,8 @@ func TestUtilityContext_GetServiceNodeMinimumPauseBlocks(t *testing.T) {
 	gotParam, err := ctx.GetServiceNodeMinimumPauseBlocks()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetServiceNodeMinimumStake(t *testing.T) {
@@ -437,6 +530,8 @@ func TestUtilityContext_GetServiceNodeMinimumStake(t *testing.T) {
 	gotParam, err := ctx.GetServiceNodeMinimumStake()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetServiceNodeUnstakingBlocks(t *testing.T) {
@@ -446,6 +541,8 @@ func TestUtilityContext_GetServiceNodeUnstakingBlocks(t *testing.T) {
 	gotParam, err := ctx.GetServiceNodeUnstakingBlocks()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetStakingAdjustment(t *testing.T) {
@@ -455,6 +552,8 @@ func TestUtilityContext_GetStakingAdjustment(t *testing.T) {
 	gotParam, err := ctx.GetStabilityAdjustment()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetValidatorMaxMissedBlocks(t *testing.T) {
@@ -464,6 +563,8 @@ func TestUtilityContext_GetValidatorMaxMissedBlocks(t *testing.T) {
 	gotParam, err := ctx.GetValidatorMaxMissedBlocks()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetValidatorMaxPausedBlocks(t *testing.T) {
@@ -473,6 +574,8 @@ func TestUtilityContext_GetValidatorMaxPausedBlocks(t *testing.T) {
 	gotParam, err := ctx.GetValidatorMaxPausedBlocks()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetValidatorMinimumPauseBlocks(t *testing.T) {
@@ -482,6 +585,8 @@ func TestUtilityContext_GetValidatorMinimumPauseBlocks(t *testing.T) {
 	gotParam, err := ctx.GetValidatorMinimumPauseBlocks()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetValidatorMinimumStake(t *testing.T) {
@@ -491,6 +596,8 @@ func TestUtilityContext_GetValidatorMinimumStake(t *testing.T) {
 	gotParam, err := ctx.GetValidatorMinimumStake()
 	require.NoError(t, err)
 	require.False(t, defaultParam != types.BigIntToString(gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetValidatorUnstakingBlocks(t *testing.T) {
@@ -500,6 +607,8 @@ func TestUtilityContext_GetValidatorUnstakingBlocks(t *testing.T) {
 	gotParam, err := ctx.GetValidatorUnstakingBlocks()
 	require.NoError(t, err)
 	require.False(t, defaultParam != gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
@@ -521,12 +630,12 @@ func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
 		ParameterKey:   types.MissedBlocksBurnPercentageParamName,
 		ParameterValue: any,
 	}
-	err = ctx.HandleMessageChangeParameter(msg)
-	require.NoError(t, err, "handle message change param")
-
+	require.NoError(t, ctx.HandleMessageChangeParameter(msg), "handle message change param")
 	gotParam, err = ctx.GetMissedBlocksBurnPercentage()
 	require.NoError(t, err)
 	require.False(t, int(newParamValue) != gotParam, fmt.Sprintf("wrong param value after handling, expected %v got %v", newParamValue, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }
 
 func TestUtilityContext_GetParamOwner(t *testing.T) {
@@ -965,4 +1074,6 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	gotParam, err = ctx.GetParamOwner(types.MessageChangeParameterFeeOwner)
 	require.NoError(t, err)
 	require.False(t, !bytes.Equal(gotParam, defaultParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest()
 }

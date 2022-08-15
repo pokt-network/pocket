@@ -394,10 +394,9 @@ func createConfigs(t *testing.T, numValidators int) (configs []*config.Config, g
 				UseRainTree:    true,
 				ConnectionType: config.EmptyConnection,
 			},
-			Consensus:      &config.ConsensusConfig{},
-			PrePersistence: &config.PrePersistenceConfig{},
-			Persistence:    &config.PersistenceConfig{},
-			Utility:        &config.UtilityConfig{},
+			Consensus:   &config.ConsensusConfig{},
+			Persistence: &config.PersistenceConfig{},
+			Utility:     &config.UtilityConfig{},
 		}
 	}
 	return

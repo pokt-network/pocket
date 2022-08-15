@@ -49,7 +49,21 @@
       "output": "b0cca84843f6f5a274150a98da66d78f0273f64e"
     }
   ],
-  "accounts": [],
+  "accounts": [
+    {
+      "address": "0157a1d82da437eb6b2d0a612ebf934c3a54fb19",
+      "amount": "1000000000000000"
+    },{
+      "address": "4cda991a51da75acf50e966c2716a7a2837d72eb",
+      "amount": "1000000000000000"
+    },{
+      "address": "67f6e8c48c62dc62a3706e7a8ba2164ca345d762",
+      "amount": "1000000000000000"
+    },{
+      "address": "b0cca84843f6f5a274150a98da66d78f0273f64e",
+      "amount": "1000000000000000"
+    }
+  ],
   "pools": [
     {
       "name": "SERVICE_NODE_STAKE_POOL",

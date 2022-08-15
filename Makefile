@@ -225,11 +225,6 @@ test_shared: # generate_mocks
 test_consensus: # mockgen
 	go test ${VERBOSE_TEST} ./consensus/...
 
-.PHONY: test_pre_persistence
-## Run all go per persistence unit tests
-test_pre_persistence: # generate_mocks
-	go test ./persistence/pre_persistence/...
-
 .PHONY: test_hotstuff
 ## Run all go unit tests related to hotstuff consensus
 test_hotstuff: # mockgen
@@ -281,7 +276,6 @@ protogen_local:
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto      --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/raintree/types/proto       --go_out=./p2p/types            ./p2p/raintree/types/proto/*.proto   --experimental_allow_proto3_optional
-
 	echo "View generated proto files by running: make protogen_show"
 
 .PHONY: protogen_docker_m1

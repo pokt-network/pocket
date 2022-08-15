@@ -108,9 +108,6 @@ func TestMessage_DoubleSign_ValidateBasic(t *testing.T) {
 	msgEqualVoteHash.VoteB.BlockHash = hashA
 	er = msgEqualVoteHash.ValidateBasic()
 	require.Equal(t, types.ErrEqualVotes().Code(), er.Code())
-
-	// TODO only one type of evidence right now
-	// msgUnequalVoteTypes := new(MessageDoubleSign)
 }
 
 func TestMessage_EditStake_ValidateBasic(t *testing.T) {
@@ -228,23 +225,6 @@ func TestMessageStake_ValidateBasic(t *testing.T) {
 	require.Equal(t, types.ErrNilOutputAddress().Code(), er.Code())
 }
 
-func TestMessageUnpause_ValidateBasic(t *testing.T) {
-	addr, err := crypto.GenerateAddress()
-	require.NoError(t, err)
-
-	msg := MessageUnpause{
-		Address: addr,
-	}
-	er := msg.ValidateBasic()
-	require.NoError(t, er)
-
-	msgMissingAddress := proto.Clone(&msg).(*MessageUnpause)
-	msgMissingAddress.Address = nil
-	er = msgMissingAddress.ValidateBasic()
-	require.Equal(t, types.ErrEmptyAddress().Code(), er.Code())
-
-}
-
 func TestMessageUnstake_ValidateBasic(t *testing.T) {
 	addr, err := crypto.GenerateAddress()
 	require.NoError(t, err)
@@ -256,6 +236,22 @@ func TestMessageUnstake_ValidateBasic(t *testing.T) {
 	require.NoError(t, er)
 
 	msgMissingAddress := proto.Clone(&msg).(*MessageUnstake)
+	msgMissingAddress.Address = nil
+	er = msgMissingAddress.ValidateBasic()
+	require.Equal(t, types.ErrEmptyAddress().Code(), er.Code())
+}
+
+func TestMessageUnpause_ValidateBasic(t *testing.T) {
+	addr, err := crypto.GenerateAddress()
+	require.NoError(t, err)
+
+	msg := MessageUnpause{
+		Address: addr,
+	}
+	er := msg.ValidateBasic()
+	require.NoError(t, er)
+
+	msgMissingAddress := proto.Clone(&msg).(*MessageUnpause)
 	msgMissingAddress.Address = nil
 	er = msgMissingAddress.ValidateBasic()
 	require.Equal(t, types.ErrEmptyAddress().Code(), er.Code())

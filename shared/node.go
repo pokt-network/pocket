@@ -5,7 +5,6 @@ import (
 
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"
@@ -28,12 +27,6 @@ type Node struct {
 
 func Create(cfg *config.Config) (n *Node, err error) {
 	persistenceMod, err := persistence.Create(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO(drewsky): deprecate pre-persistence and move persistence into its place
-	_, err = pre_persistence.Create(cfg)
 	if err != nil {
 		return nil, err
 	}

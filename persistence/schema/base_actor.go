@@ -4,7 +4,6 @@ package schema
 //           share most of the schema. We need to investigate if there's a better solution, or document this more appropriately and generalize
 //           across the entire codebase.
 //
-// TODO (Team) -> convert to interface
 // type BaseActor interface
 // GetAddress() string
 // SetAddress(string)
@@ -13,7 +12,7 @@ package schema
 // ...
 // NOTE: requires modifying shared, so better to leave it alone until we reach some stability
 
-type BaseActor struct {
+type BaseActor struct { // TODO (team) get rid of this for the interface version in shared (once merged)
 	Address            string
 	PublicKey          string
 	StakedTokens       string
@@ -68,6 +67,10 @@ func (actor *BaseProtocolActorSchema) GetQuery(address string, height int64) str
 	return Select(AllColsSelector, address, height, actor.tableName)
 }
 
+func (actor *BaseProtocolActorSchema) GetAllQuery(height int64) string {
+	return SelectActors(actor.GetActorSpecificColName(), height, actor.tableName)
+}
+
 func (actor *BaseProtocolActorSchema) GetExistsQuery(address string, height int64) string {
 	return Exists(address, height, actor.tableName)
 }
@@ -78,6 +81,10 @@ func (actor *BaseProtocolActorSchema) GetReadyToUnstakeQuery(unstakingHeight int
 
 func (actor *BaseProtocolActorSchema) GetOutputAddressQuery(operatorAddress string, height int64) string {
 	return Select(OutputAddressCol, operatorAddress, height, actor.tableName)
+}
+
+func (actor *BaseProtocolActorSchema) GetStakeAmountQuery(address string, height int64) string {
+	return Select(StakedTokensCol, address, height, actor.tableName)
 }
 
 func (actor *BaseProtocolActorSchema) GetPausedHeightQuery(address string, height int64) string {
@@ -126,6 +133,10 @@ func (actor *BaseProtocolActorSchema) UpdatePausedHeightQuery(address string, pa
 
 func (actor *BaseProtocolActorSchema) UpdateUnstakedHeightIfPausedBeforeQuery(pauseBeforeHeight, unstakingHeight, height int64) string {
 	return UpdateUnstakedHeightIfPausedBefore(actor.actorSpecificColName, unstakingHeight, pauseBeforeHeight, height, actor.tableName, actor.heightConstraintName)
+}
+
+func (actor *BaseProtocolActorSchema) SetStakeAmountQuery(address string, stakedTokens string, height int64) string {
+	return UpdateStakeAmount(address, actor.actorSpecificColName, stakedTokens, height, actor.tableName, actor.heightConstraintName)
 }
 
 func (actor *BaseProtocolActorSchema) ClearAllQuery() string {

@@ -10,8 +10,8 @@ import (
 
 func TestInitParams(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 	err := db.InitParams()
 	require.NoError(t, err)
@@ -19,8 +19,8 @@ func TestInitParams(t *testing.T) {
 
 func TestGetSetParam(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 
 	err := db.InitParams()

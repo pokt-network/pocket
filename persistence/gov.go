@@ -1,13 +1,15 @@
 package persistence
 
 import (
-	"github.com/jackc/pgx/v4"
+	"encoding/hex"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 // TODO(https://github.com/pokt-network/pocket/issues/76): Optimize gov parameters implementation & schema.
+// TODO (Team) BUG setting parameters twice on the same height causes issues. We need to move the schema away from 'end_height' and
+// more towards the height_constraint architecture
 
 func (p PostgresContext) GetBlocksPerSession() (int, error) {
 	return p.GetIntParam(types.BlocksPerSessionParamName)
@@ -162,7 +164,7 @@ func (p PostgresContext) GetMessageProveTestScoreFee() (string, error) {
 }
 
 func (p PostgresContext) GetMessageStakeAppFee() (string, error) {
-	return p.GetStringParam(types.MessageEditStakeAppFeeOwner)
+	return p.GetStringParam(types.MessageStakeAppFee)
 }
 
 func (p PostgresContext) GetMessageEditStakeAppFee() (string, error) {
@@ -886,17 +888,17 @@ func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) 
 }
 
 func (p PostgresContext) InitParams() error {
-	ctx, conn, err := p.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
-	_, err = conn.Exec(ctx, schema.InsertParams(genesis.DefaultParams()))
+	_, err = txn.Exec(ctx, schema.InsertParams(genesis.DefaultParams()))
 	return err
 }
 
 // IMPROVE(team): Switch to generics
 func (p PostgresContext) SetParam(paramName string, paramValue interface{}) error {
-	ctx, conn, err := p.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
@@ -904,42 +906,41 @@ func (p PostgresContext) SetParam(paramName string, paramValue interface{}) erro
 	if err != nil {
 		return err
 	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
+	if _, err = txn.Exec(ctx, schema.NullifyParamsQuery(height)); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.NullifyParamsQuery(height)); err != nil {
+	setParamSchema := schema.SetParam(paramName, paramValue, height)
+	if _, err = txn.Exec(ctx, setParamSchema); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.SetParam(paramName, paramValue, height)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (p PostgresContext) GetIntParam(paramName string) (i int, err error) {
-	ctx, conn, err := p.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return 0, err
 	}
-	err = conn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&i)
+	err = txn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&i)
 	return
 }
 
 func (p PostgresContext) GetStringParam(paramName string) (s string, err error) {
-	ctx, conn, err := p.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return "", err
 	}
-	err = conn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&s)
+	err = txn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&s)
 	return
 }
 
 func (p PostgresContext) GetBytesParam(paramName string) (param []byte, err error) {
-	ctx, conn, err := p.GetCtxAndConnection()
+	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
-	err = conn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&param)
+	var pa string
+	err = txn.QueryRow(ctx, schema.GetParamQuery(paramName)).Scan(&pa)
+	param, err = hex.DecodeString(pa)
 	return
 }
