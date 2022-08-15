@@ -138,7 +138,8 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 // TODO: Currently exposed only for testing purposes.
 func CleanupTest() {
 	PostgresDB.Tx.Rollback(context.TODO())
-	PersistenceModule.Stop()
+	// DISCUSS_IN_THIS_COMMIT: Can we remove this?
+	// PersistenceModule.Stop()
 }
 
 func genesisConfig() *genesis.GenesisConfig {

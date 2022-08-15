@@ -69,13 +69,9 @@ func (m *persistenceModule) GetBus() modules.Bus {
 	return m.bus
 }
 
-// TODO: Only one write context at a time should be allowed
+// TECHDEBT: Only one write context at a time should be allowed
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
-	db, err := connectAndInitializeDatabase(m.postgresURL, m.nodeSchema)
-	if err != nil {
-		return nil, err
-	}
-	tx, err := db.BeginTx(context.TODO(), pgx.TxOptions{
+	tx, err := m.db.BeginTx(context.TODO(), pgx.TxOptions{
 		IsoLevel:       pgx.ReadCommitted,
 		AccessMode:     pgx.ReadWrite,
 		DeferrableMode: pgx.NotDeferrable,

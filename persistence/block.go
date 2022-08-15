@@ -57,12 +57,12 @@ func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
 }
 
 func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {
-	ctx, conn, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
 
-	_, err = conn.Exec(ctx, schema.InsertBlockQuery(height, hash, proposerAddr, quorumCert))
+	_, err = tx.Exec(ctx, schema.InsertBlockQuery(height, hash, proposerAddr, quorumCert))
 	return err
 }
 

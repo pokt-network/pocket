@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -44,7 +45,6 @@ var (
 
 var (
 	testPersistenceModule modules.PersistenceModule
-	testPostgresDB        *persistence.PostgresDB
 )
 
 // See https://github.com/ory/dockertest as reference for the template of this code
@@ -53,11 +53,6 @@ func TestMain(m *testing.M) {
 	pool, resource, persistenceMod := sharedTest.SetupPostgresDockerPersistenceMod()
 	testPersistenceModule = persistenceMod
 
-	ctx, _ := persistenceMod.NewRWContext(-1)
-	testPostgresDB = &persistence.PostgresDB{
-		Tx: ctx.(persistence.PostgresContext).DB.Tx,
-	}
-
 	m.Run()
 	sharedTest.CleanupPostgresDocker(m, pool, resource)
 }
@@ -65,6 +60,7 @@ func TestMain(m *testing.M) {
 func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceModule.NewRWContext(height)
 	require.NoError(t, err)
+
 	db := &persistence.PostgresDB{
 		Tx: ctx.(persistence.PostgresContext).DB.Tx,
 	}
@@ -83,17 +79,32 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	return dbCtx
 }
 
+// TODO: Can we leverage using `NewTestPostgresContext` here?
+func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
+	ctx, err := testPersistenceModule.NewRWContext(height)
+	if err != nil {
+		log.Fatalf("Error creating new context: %s", err)
+	}
+	db := persistence.PostgresContext{
+		Height: height,
+		DB: persistence.PostgresDB{
+			Tx: ctx.(persistence.PostgresContext).DB.Tx,
+		},
+	}
+
+	return &db
+}
+
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
 func fuzzSingleProtocolActor(
 	f *testing.F,
 	newTestActor func() (schema.BaseActor, error),
-	getTestActor func(db persistence.PostgresContext, address string) (*schema.BaseActor, error),
+	getTestActor func(db *persistence.PostgresContext, address string) (*schema.BaseActor, error),
 	protocolActorSchema schema.ProtocolActorSchema) {
 
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *sharedTest.PostgresDB,
-	}
+	// TODO: Can we leverage using NewTestPostgresContext here?
+
+	db := NewFuzzTestPostgresContext(f, 0)
 
 	err := db.DebugClearAll()
 	require.NoError(f, err)

@@ -8,7 +8,6 @@ import (
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types/genesis"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
 
@@ -180,7 +179,7 @@ func TestGetAppOutputAddress(t *testing.T) {
 	require.Equal(t, output, app.Output, "unexpected output address")
 }
 
-func newTestApp() (*typesGenesis.App, error) {
+func newTestApp() (*genesis.App, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
 		return nil, err
@@ -191,14 +190,14 @@ func newTestApp() (*typesGenesis.App, error) {
 		return nil, err
 	}
 
-	return &typesGenesis.App{
+	return &genesis.App{
 		Address:         operatorKey.Address(),
 		PublicKey:       operatorKey.Bytes(),
 		Paused:          false,
-		Status:          typesGenesis.DefaultStakeStatus,
-		Chains:          typesGenesis.DefaultChains,
+		Status:          genesis.DefaultStakeStatus,
+		Chains:          genesis.DefaultChains,
 		MaxRelays:       DefaultMaxRelays,
-		StakedTokens:    typesGenesis.DefaultStake,
+		StakedTokens:    genesis.DefaultStake,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          outputAddr,
@@ -237,7 +236,7 @@ func TestGetAllApps(t *testing.T) {
 	getAllActorsTest(t, db, db.GetAllApps, createAndInsertDefaultTestApp, updateApp, 1)
 }
 
-func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*typesGenesis.App, error) {
+func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*genesis.App, error) {
 	app, err := newTestApp()
 	if err != nil {
 		return nil, err
@@ -256,7 +255,7 @@ func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*typesGenes
 		DefaultUnstakingHeight)
 }
 
-func getTestApp(db persistence.PostgresContext, address []byte) (*typesGenesis.App, error) {
+func getTestApp(db *persistence.PostgresContext, address []byte) (*genesis.App, error) {
 	operator, publicKey, stakedTokens, maxRelays, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetApp(address, db.Height)
 	if err != nil {
 		return nil, err
@@ -277,7 +276,7 @@ func getTestApp(db persistence.PostgresContext, address []byte) (*typesGenesis.A
 		return nil, err
 	}
 
-	return &typesGenesis.App{
+	return &genesis.App{
 		Address:         operatorAddr,
 		PublicKey:       operatorPubKey,
 		Paused:          false,

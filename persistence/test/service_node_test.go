@@ -233,7 +233,7 @@ func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*ge
 		DefaultUnstakingHeight)
 }
 
-func getTestServiceNode(db persistence.PostgresContext, address []byte) (*genesis.ServiceNode, error) {
+func getTestServiceNode(db *persistence.PostgresContext, address []byte) (*genesis.ServiceNode, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetServiceNode(address, db.Height)
 	if err != nil {
 		return nil, err

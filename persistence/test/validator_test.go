@@ -228,7 +228,7 @@ func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*type
 		DefaultUnstakingHeight)
 }
 
-func getTestValidator(db persistence.PostgresContext, address []byte) (*typesGenesis.Validator, error) {
+func getTestValidator(db *persistence.PostgresContext, address []byte) (*typesGenesis.Validator, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, err := db.GetValidator(address, db.Height)
 	if err != nil {
 		return nil, err

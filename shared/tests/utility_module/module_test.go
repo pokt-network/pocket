@@ -28,7 +28,7 @@ func NewTestingMempool(_ *testing.T) types.Mempool {
 
 func TestMain(m *testing.M) {
 	pool, resource, persistenceMod := tests.SetupPostgresDockerPersistenceMod()
-	tests.PersistenceModule = persistenceMod
+	tests.PersistenceModule = persistenceMod // TODO: Avoiding having this global variable
 	m.Run()
 	tests.CleanupPostgresDocker(m, pool, resource)
 }

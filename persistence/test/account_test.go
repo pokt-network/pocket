@@ -15,10 +15,8 @@ import (
 )
 
 func FuzzAccountAmount(f *testing.F) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewFuzzTestPostgresContext(f, 0)
+
 	operations := []string{
 		"AddAmount",
 		"SubAmount",
@@ -140,10 +138,7 @@ func TestSubAccountAmount(t *testing.T) {
 }
 
 func FuzzPoolAmount(f *testing.F) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewFuzzTestPostgresContext(f, 0)
 
 	operations := []string{
 		"AddAmount",

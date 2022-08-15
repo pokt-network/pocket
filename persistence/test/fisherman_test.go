@@ -234,7 +234,7 @@ func createAndInsertDefaultTestFisherman(db *persistence.PostgresContext) (*type
 		DefaultUnstakingHeight)
 }
 
-func getTestFisherman(db persistence.PostgresContext, address []byte) (*typesGenesis.Fisherman, error) {
+func getTestFisherman(db *persistence.PostgresContext, address []byte) (*typesGenesis.Fisherman, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetFisherman(address, db.Height)
 	if err != nil {
 		return nil, err

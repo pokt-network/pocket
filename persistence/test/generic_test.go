@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func GetGenericActor[T any](protocolActorSchema schema.ProtocolActorSchema, getActor func(persistence.PostgresContext, []byte) (T, error)) func(persistence.PostgresContext, string) (*schema.BaseActor, error) {
-	return func(db persistence.PostgresContext, address string) (*schema.BaseActor, error) {
+func GetGenericActor[T any](protocolActorSchema schema.ProtocolActorSchema, getActor func(*persistence.PostgresContext, []byte) (T, error)) func(*persistence.PostgresContext, string) (*schema.BaseActor, error) {
+	return func(db *persistence.PostgresContext, address string) (*schema.BaseActor, error) {
 		addr, err := hex.DecodeString(address)
 		if err != nil {
 			return nil, err
