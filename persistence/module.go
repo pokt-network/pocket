@@ -72,9 +72,9 @@ func (m *persistenceModule) GetBus() modules.Bus {
 // TECHDEBT: Only one write context at a time should be allowed
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
 	tx, err := m.db.BeginTx(context.TODO(), pgx.TxOptions{
-		IsoLevel:       pgx.ReadCommitted,
+		IsoLevel:       pgx.ReadUncommitted,
 		AccessMode:     pgx.ReadWrite,
-		DeferrableMode: pgx.NotDeferrable,
+		DeferrableMode: pgx.NotDeferrable, // DISCUSS_IN_THIS_COMMIT: Should this be Deferrable?
 	})
 	if err != nil {
 		return nil, err
@@ -90,9 +90,22 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 }
 
 func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
-	// TECHDEBT: This can be completely separate from rw context.
-	//           It should access the db directly rather than using transactions
-	return m.NewRWContext(height)
+	tx, err := m.db.BeginTx(context.TODO(), pgx.TxOptions{
+		IsoLevel:       pgx.ReadCommitted,
+		AccessMode:     pgx.ReadOnly,
+		DeferrableMode: pgx.NotDeferrable,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return PostgresContext{
+		Height: height,
+		DB: PostgresDB{
+			Tx:         tx,
+			Blockstore: m.blockStore,
+		},
+	}, nil
 }
 
 func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
