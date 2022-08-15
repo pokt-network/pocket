@@ -18,6 +18,7 @@ import (
 validations possible before even checking the state storage layer.
 */
 
+// DISCUSS_IN_THIS_COMMIT: What's the best location for these shared constants?
 const (
 	MillionInt       = 1000000
 	ZeroInt          = 0

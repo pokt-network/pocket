@@ -20,6 +20,8 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// CLEANUP: Move `App` specific tests to `app_test.go`
+
 func TestUtilityContext_HandleMessageStake(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageStake", actorType.GetActorName()), func(t *testing.T) {

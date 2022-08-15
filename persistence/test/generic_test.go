@@ -114,7 +114,8 @@ func getAllActorsTest[T any](
 	require.NoError(t, err)
 	require.Len(t, actors, initialCount+3)
 
-	// DISCUSS_IN_THIS_COMMIT: Since we do not support `DeleteActor`, should we filter here based on status? If so, tests need to be updated.
+	// INVESTIGATE: Since we do not support `DeleteActor` at the moment and TBD if we will, this
+	// code block is currently left as a reminder for now.
 	// for _, actor := range actors {
 	// 	db.Height++
 	// 	err = deleteActor(actor.Address)

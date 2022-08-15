@@ -31,9 +31,9 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 		require.NoError(t, err, "apply block")
 	}
 
-	// DISCUSS_IN_THIS_COMMIT: Why did we comment this part out?
+	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
-	// missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address) TODO not implemented in persistence context yet
+	// missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)
 	// require.NoError(t, err)
 	// require.True(t, missed == 1, fmt.Sprintf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks))
 
@@ -80,9 +80,9 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// DISCUSS_IN_THIS_COMMIT: Why did we comment this part out?
+	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
-	// missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address) TODO not yet implemented
+	// missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)
 	// require.NoError(t, err)
 	// require.False(t, missed != 1, fmt.Sprintf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks))
 

@@ -342,3 +342,8 @@ todo_list:
 ## Print a count of all the TODOs in the project
 todo_count:
 	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS} . | wc -l
+
+.PHONY: todo_this_commit
+## List all the TODOs needed to be done in this commit
+todo_this_commit:
+	grep --exclude-dir={.git,vendor,prototype} -r -e "INTHISCOMMIT" -e "DISCUSS_IN_THIS_COMMIT"
