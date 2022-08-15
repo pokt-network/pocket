@@ -182,7 +182,6 @@ func UpdateUnstakingHeight(address, actorSpecificParam string, unstakingHeight, 
 		actorSpecificParam, unstakingHeight, height,
 		tableName, address, height,
 		constraintName)
-
 }
 
 func UpdateStakeAmount(address, actorSpecificParam, stakeAmount string, height int64, tableName, constraintName string) string {

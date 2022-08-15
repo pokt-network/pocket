@@ -112,10 +112,7 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 }
 
 func TestGetAppStatus(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -132,10 +129,7 @@ func TestGetAppStatus(t *testing.T) {
 }
 
 func TestGetAppPauseHeightIfExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -211,14 +205,11 @@ func newTestApp() (*typesGenesis.App, error) {
 	}, nil
 }
 
-// DISCUSS_IN_THIS_COMMIT: We are only calling these functions and tests for apps, but need
-// it for everything.
+// DISCUSS_IN_THIS_COMMIT: We are only calling these functions and tests for apps, but need to
+// generalize to other actors.
 func TestGetSetStakeAmount(t *testing.T) {
 	var newStakeAmount = "new_stake_amount"
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
