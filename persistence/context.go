@@ -26,8 +26,7 @@ func (p PostgresContext) Reset() error {
 }
 
 func (p PostgresContext) Commit() error {
-	p.DB.Tx.Commit(context.TODO())
-	return nil
+	return p.DB.Tx.Commit(context.TODO())
 }
 
 func (p PostgresContext) Release() error {
