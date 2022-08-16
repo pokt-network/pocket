@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.3] - 2022-08-16
+
 ## [0.0.0.2] - 2022-08-03
 
 Deprecate PrePersistence

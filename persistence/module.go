@@ -30,7 +30,7 @@ func Create(cfg *config.Config) (modules.PersistenceModule, error) {
 	if err := initializeDatabase(conn); err != nil {
 		return nil, err
 	}
-	// conn.Close(context.TODO())
+	conn.Close(context.TODO())
 
 	blockStore, err := initializeBlockStore(cfg.Persistence.BlockStorePath)
 	if err != nil {
@@ -45,8 +45,8 @@ func Create(cfg *config.Config) (modules.PersistenceModule, error) {
 	}
 
 	// DISCUSS_IN_THIS_COMMIT: Is `Create` the appropriate location for this or should it be `Start`?
-	// DISCUSS_IN_THIS_COMMIT: Thoughts on bringing back `shouldHydrateGenesisDb`? It allowed LocalNet
-	//                         to continue from a previously stored state.
+	// DISCUSS_IN_THIS_COMMIT: Thoughts on bringing back `shouldHydrateGenesisDb` removed in #128?
+	//                         It allowed LocalNet to continue from a previously stored state.
 	persistenceMod.populateGenesisState(cfg.GenesisSource.GetState())
 
 	return persistenceMod, nil

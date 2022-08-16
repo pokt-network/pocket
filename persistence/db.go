@@ -154,7 +154,7 @@ func (p PostgresContext) DebugClearAll() error {
 		return err
 	}
 
-	clearTx, err := tx.Begin(ctx)
+	clearTx, err := tx.Begin(ctx) // creates a pseudo-nested transaction
 	if err != nil {
 		return err
 	}
@@ -178,9 +178,9 @@ func (p PostgresContext) DebugClearAll() error {
 		return err
 	}
 
-	// if err = clearTx.Commit(ctx); err != nil {
-	// 	return err
-	// }
+	if err = clearTx.Commit(ctx); err != nil {
+		return err
+	}
 
 	return nil
 }

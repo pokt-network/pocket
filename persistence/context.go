@@ -12,8 +12,7 @@ func (p PostgresContext) NewSavePoint(bytes []byte) error {
 
 func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	log.Println("TODO: RollbackToSavePoint not fully implemented")
-	p.DB.Tx.Rollback(context.TODO())
-	return nil
+	return p.DB.Tx.Rollback(context.TODO())
 }
 
 func (p PostgresContext) AppHash() ([]byte, error) {
@@ -34,6 +33,9 @@ func (p PostgresContext) Release() error {
 	if err := p.DB.Tx.Rollback(ctx); err != nil {
 		return err
 	}
-	p.DB.conn.Close(ctx)
+	if err := p.DB.conn.Close(ctx); err != nil {
+		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
+
+	}
 	return nil
 }
