@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/tests"
+	"github.com/pokt-network/pocket/utility/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
@@ -185,7 +186,7 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 
 		actors := GetAllTestingActors(t, ctx, actorType)
 		for _, actor := range actors {
-			require.Equal(t, actor.GetStatus(), typesUtil.StakedStatus, "wrong starting status")
+			require.Equal(t, int32(types.StakedStatus), actor.GetStatus(), "wrong starting status")
 			er := ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 1)
 			require.NoError(t, er)
 		}

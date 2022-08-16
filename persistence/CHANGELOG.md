@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.3] - 2022-08-16
 
+**Main persistence module changes:**
+
+- Split `ConnectAndInitializeDatabase` into `connectToDatabase` and `initializeDatabase`
+  - This enables creating multiple contexts in parallel without re-initializing the DB connection
+- Fix the SQL query used in `SelectActors`, `SelectAccounts` & `SelectPools`
+  - Add a generalized unit test for all actors
+- Remove `NewPersistenceModule` and an injected `Config` + `Create`
+  - This improves isolation a a “injection-like” paradigm for unit testing
+- Change `SetupPostgresDocker` to `SetupPostgresDockerPersistenceMod`
+  - This enables more “functional” like testing by returning a persistence module and avoiding global testing variables
+  - Only return once a connection to the DB has been initialized reducing the likelihood of test race conditions
+- Implemented `NewReadContext` with a proper read-only context
+
+**Secondary persistence module changes**
+
+- Improve return values in `Commit` and `Release` (return error, add logging, etc…)
+- Add `pgx.Conn` pointer to `PostgresDB`
+- `s/db/conn/g` and `s/conn/tx/g` in some (not all) places where appropriate
+- Make some exported variables / functions unexported for readability & access purposes
+- Add a few helpers for persistence related unit testing
+
 ## [0.0.0.2] - 2022-08-03
 
 Deprecate PrePersistence
