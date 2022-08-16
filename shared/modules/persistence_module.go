@@ -247,9 +247,13 @@ type PersistenceReadContext interface {
 	TransactionExists(transactionHash string) (bool, error)
 
 	// Pool Queries
+
+	// Returns "0" if the account does not exist
 	GetPoolAmount(name string, height int64) (amount string, err error)
 
 	// Account Queries
+
+	// Returns "0" if the account does not exist
 	GetAccountAmount(address []byte, height int64) (string, error)
 
 	// App Queries

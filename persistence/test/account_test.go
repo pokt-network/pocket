@@ -79,6 +79,16 @@ func FuzzAccountAmount(f *testing.F) {
 	})
 }
 
+func TestDefaultNonExistentAccountAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
+	addr, err := crypto.GenerateAddress()
+	require.NoError(t, err)
+
+	accountAmount, err := db.GetAccountAmount(addr, db.Height)
+	require.NoError(t, err)
+	require.Equal(t, "0", accountAmount)
+}
+
 func TestSetAccountAmount(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 	account := newTestAccount(t)
@@ -200,6 +210,13 @@ func FuzzPoolAmount(f *testing.F) {
 		require.NoError(t, err)
 		require.Equal(t, types.BigIntToString(expectedAmount), currentAmount, fmt.Sprintf("unexpected amount after %s", op))
 	})
+}
+
+func TestDefaultNonExistentPoolAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
+	poolAmount, err := db.GetPoolAmount("some_pool_name", db.Height)
+	require.NoError(t, err)
+	require.Equal(t, "0", poolAmount)
 }
 
 func TestSetPoolAmount(t *testing.T) {

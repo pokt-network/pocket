@@ -4,21 +4,20 @@ import (
 	"encoding/hex"
 	"math/big"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/schema"
 	shared "github.com/pokt-network/pocket/shared/types"
 )
 
 // TODO(https://github.com/pokt-network/pocket/issues/102): Generalize Pool and Account operations.
 
-// DISCUSS_IN_THIS_COMMIT: if we want to make use of `defaultAccountAmountStr`, then we should
-//                         check if the error returned by the DB is `RowNotFound` and return a nil
-//                         error if that's the case.
 const (
 	defaultAccountAmountStr string = "0"
 )
 
 // --- Account Functions ---
 
+//
 func (p PostgresContext) GetAccountAmount(address []byte, height int64) (amount string, err error) {
 	return p.getAccountAmountStr(hex.EncodeToString(address), height)
 }
@@ -30,10 +29,11 @@ func (p PostgresContext) getAccountAmountStr(address string, height int64) (amou
 	}
 
 	amount = defaultAccountAmountStr
-	if err = txn.QueryRow(ctx, schema.GetAccountAmountQuery(address, height)).Scan(&amount); err != nil {
+	if err = txn.QueryRow(ctx, schema.GetAccountAmountQuery(address, height)).Scan(&amount); err != pgx.ErrNoRows {
 		return
 	}
-	return
+
+	return amount, nil
 }
 
 func (p PostgresContext) AddAccountAmount(address []byte, amount string) error {
@@ -96,10 +96,11 @@ func (p PostgresContext) GetPoolAmount(name string, height int64) (amount string
 	}
 
 	amount = defaultAccountAmountStr
-	if err = txn.QueryRow(ctx, schema.GetPoolAmountQuery(name, height)).Scan(&amount); err != nil {
+	if err = txn.QueryRow(ctx, schema.GetPoolAmountQuery(name, height)).Scan(&amount); err != pgx.ErrNoRows {
 		return
 	}
-	return
+
+	return amount, nil
 }
 
 func (p PostgresContext) AddPoolAmount(name string, amount string) error {
