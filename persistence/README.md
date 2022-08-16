@@ -145,6 +145,12 @@ For example, on macOS, you can check for this with `lsof -i:5432` and kill the a
 **Q**: Why not use an ORM?
 **A**: We are trying to keep the module small and lean initially but are ope
 
+**Q**: What is a `Param` in the `Gov` schema?
+**A**: It represents a value associated with a name and a height that we can reference to represent governance settings. These settings have the power of altering the behaviour of various aspects of the network.
+
+**Q**: What is a `Flag` in the `Gov` schema?
+**A**: A flag is very much alike a `Param` with the difference that it also has a boolean flag to specify if that setting is enabled or not at any point in time (height). We are discussing if we should replace the boolean flag and allow multivariate feature flags.
+
 ## Implementation TODOs
 
 These are major TODOs spanning the entire repo so they are documented in one place instead.
