@@ -121,9 +121,7 @@ func Insert(
 							  height=EXCLUDED.height`,
 		tableName, actorSpecificParam,
 		actor.Address, actor.PublicKey, actor.StakedTokens, actorSpecificParamValue,
-		// TODO_IN_THIS_COMMIT: Why did we change this?
-		// actor.OutputAddress, actor.PausedHeight, actor.UnstakingHeight, height,
-		actor.OutputAddress, DefaultBigInt, DefaultBigInt, height,
+		actor.OutputAddress, actor.PausedHeight, actor.UnstakingHeight, height,
 		constraintName,
 		actorSpecificParam, actorSpecificParam)
 

@@ -34,6 +34,7 @@ var (
 	DefaultAccountBalanceBig = DefaultStakeBig
 	DefaultAccountBalance    = DefaultStake
 	DefaultStakeStatus       = int32(2)
+	DefaultHeightUnused      = int64(-1)
 )
 
 // TODO(team): NewGenesisStateConfigs is ONLY used for development purposes and disregards the
@@ -67,9 +68,11 @@ func GenesisStateFromGenesisConfig(genesisConfig *GenesisConfig) (genesisState *
 			return nil, nil, nil, nil, nil, err
 		}
 		v := &Validator{
-			Status:       2, // TODO: Change this to an enum so it is self descriptive
-			ServiceUrl:   DefaultServiceUrl,
-			StakedTokens: DefaultStake,
+			Status:          2, // TODO: Change this to an enum so it is self descriptive
+			ServiceUrl:      DefaultServiceUrl,
+			StakedTokens:    DefaultStake,
+			PausedHeight:    DefaultHeightUnused,
+			UnstakingHeight: DefaultHeightUnused,
 		}
 		v.Address = pk.Address()
 		v.PublicKey = pk.PublicKey().Bytes()
@@ -92,10 +95,12 @@ func GenesisStateFromGenesisConfig(genesisConfig *GenesisConfig) (genesisState *
 			return nil, nil, nil, nil, nil, err
 		}
 		app := &App{
-			Status:       DefaultStakeStatus,
-			Chains:       DefaultChains,
-			StakedTokens: DefaultStake,
-			MaxRelays:    DefaultMaxRelays,
+			Status:          DefaultStakeStatus,
+			Chains:          DefaultChains,
+			StakedTokens:    DefaultStake,
+			MaxRelays:       DefaultMaxRelays,
+			PausedHeight:    DefaultHeightUnused,
+			UnstakingHeight: DefaultHeightUnused,
 		}
 		app.Address = pk.Address()
 		app.PublicKey = pk.PublicKey().Bytes()
@@ -118,10 +123,12 @@ func GenesisStateFromGenesisConfig(genesisConfig *GenesisConfig) (genesisState *
 			return nil, nil, nil, nil, nil, err
 		}
 		sn := &ServiceNode{
-			Status:       DefaultStakeStatus,
-			ServiceUrl:   DefaultServiceUrl,
-			Chains:       DefaultChains,
-			StakedTokens: DefaultStake,
+			Status:          DefaultStakeStatus,
+			ServiceUrl:      DefaultServiceUrl,
+			Chains:          DefaultChains,
+			StakedTokens:    DefaultStake,
+			PausedHeight:    DefaultHeightUnused,
+			UnstakingHeight: DefaultHeightUnused,
 		}
 		sn.Address = pk.Address()
 		sn.PublicKey = pk.PublicKey().Bytes()
@@ -144,10 +151,12 @@ func GenesisStateFromGenesisConfig(genesisConfig *GenesisConfig) (genesisState *
 			return nil, nil, nil, nil, nil, err
 		}
 		fish := &Fisherman{
-			Status:       DefaultStakeStatus,
-			Chains:       DefaultChains,
-			ServiceUrl:   DefaultServiceUrl,
-			StakedTokens: DefaultStake,
+			Status:          DefaultStakeStatus,
+			Chains:          DefaultChains,
+			ServiceUrl:      DefaultServiceUrl,
+			StakedTokens:    DefaultStake,
+			PausedHeight:    DefaultHeightUnused,
+			UnstakingHeight: DefaultHeightUnused,
 		}
 		fish.Address = pk.Address()
 		fish.PublicKey = pk.PublicKey().Bytes()
