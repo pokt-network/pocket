@@ -17,28 +17,33 @@ var _ modules.PersistenceRWContext = &PostgresContext{}
 type persistenceModule struct {
 	bus modules.Bus
 
-	db          *pgx.Conn
 	postgresURL string
 	nodeSchema  string
 	blockStore  kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
 }
 
 func Create(cfg *config.Config) (modules.PersistenceModule, error) {
-	db, err := connectAndInitializeDatabase(cfg.Persistence.PostgresUrl, cfg.Persistence.NodeSchema)
+	conn, err := connectToDatabase(cfg.Persistence.PostgresUrl, cfg.Persistence.NodeSchema)
 	if err != nil {
 		return nil, err
 	}
+	if err := initializeDatabase(conn); err != nil {
+		return nil, err
+	}
+	// conn.Close(context.TODO())
+
 	blockStore, err := initializeBlockStore(cfg.Persistence.BlockStorePath)
 	if err != nil {
 		return nil, err
 	}
+
 	persistenceMod := &persistenceModule{
+		bus:         nil,
 		postgresURL: cfg.Persistence.PostgresUrl,
 		nodeSchema:  cfg.Persistence.NodeSchema,
-		db:          db,
-		bus:         nil,
 		blockStore:  blockStore,
 	}
+
 	// DISCUSS_IN_THIS_COMMIT: Is `Create` the appropriate location for this or should it be `Start`?
 	// DISCUSS_IN_THIS_COMMIT: Thoughts on bringing back `shouldHydrateGenesisDb`? It allowed LocalNet
 	//                         to continue from a previously stored state.
@@ -54,7 +59,6 @@ func (m *persistenceModule) Start() error {
 
 func (m *persistenceModule) Stop() error {
 	m.blockStore.Stop()
-	m.db.Close(context.TODO())
 	return nil
 }
 
@@ -71,7 +75,12 @@ func (m *persistenceModule) GetBus() modules.Bus {
 
 // TECHDEBT: Only one write context at a time should be allowed
 func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
-	tx, err := m.db.BeginTx(context.TODO(), pgx.TxOptions{
+	conn, err := connectToDatabase(m.postgresURL, m.nodeSchema)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err := conn.BeginTx(context.TODO(), pgx.TxOptions{
 		IsoLevel:       pgx.ReadUncommitted,
 		AccessMode:     pgx.ReadWrite,
 		DeferrableMode: pgx.NotDeferrable, // DISCUSS_IN_THIS_COMMIT: Should this be Deferrable?
@@ -83,6 +92,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	return PostgresContext{
 		Height: height,
 		DB: PostgresDB{
+			conn:       conn,
 			Tx:         tx,
 			Blockstore: m.blockStore,
 		},
@@ -90,7 +100,12 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 }
 
 func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
-	tx, err := m.db.BeginTx(context.TODO(), pgx.TxOptions{
+	conn, err := connectToDatabase(m.postgresURL, m.nodeSchema)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err := conn.BeginTx(context.TODO(), pgx.TxOptions{
 		IsoLevel:       pgx.ReadCommitted,
 		AccessMode:     pgx.ReadOnly,
 		DeferrableMode: pgx.NotDeferrable,
@@ -102,6 +117,7 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	return PostgresContext{
 		Height: height,
 		DB: PostgresDB{
+			conn:       conn,
 			Tx:         tx,
 			Blockstore: m.blockStore,
 		},

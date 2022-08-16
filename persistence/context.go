@@ -30,5 +30,10 @@ func (p PostgresContext) Commit() error {
 }
 
 func (p PostgresContext) Release() error {
-	return p.DB.Tx.Rollback(context.TODO())
+	ctx := context.TODO()
+	if err := p.DB.Tx.Rollback(ctx); err != nil {
+		return err
+	}
+	p.DB.conn.Close(ctx)
+	return nil
 }

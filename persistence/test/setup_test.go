@@ -53,14 +53,10 @@ func TestMain(m *testing.M) {
 func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceModule.NewRWContext(height)
 	require.NoError(t, err)
-
 	db := &persistence.PostgresContext{
 		Height: height,
-		DB: persistence.PostgresDB{
-			Tx: ctx.(persistence.PostgresContext).DB.Tx,
-		},
+		DB:     ctx.(persistence.PostgresContext).DB,
 	}
-
 	t.Cleanup(func() {
 		require.NoError(t, db.Release())
 		// DISCUSS_IN_THIS_COMMIT: Do we need this given that `Release` reverses the changes made to the database?
@@ -78,9 +74,7 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 	}
 	db := persistence.PostgresContext{
 		Height: height,
-		DB: persistence.PostgresDB{
-			Tx: ctx.(persistence.PostgresContext).DB.Tx,
-		},
+		DB:     ctx.(persistence.PostgresContext).DB,
 	}
 	f.Cleanup(func() {
 		db.Release()

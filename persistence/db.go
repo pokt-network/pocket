@@ -40,6 +40,7 @@ type PostgresContext struct {
 	DB     PostgresDB
 }
 type PostgresDB struct {
+	conn       *pgx.Conn
 	Tx         pgx.Tx
 	Blockstore kvstore.KVStore
 }
@@ -57,32 +58,34 @@ func (pg *PostgresContext) GetCtx() (context.Context, error) {
 	return context.TODO(), nil
 }
 
-// TODO(pokt-network/pocket/issues/77): Enable proper up and down migrations
-// TODO: Split `connect` and `initialize` into two separate components.
-func connectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
+// TECHDEBT: Implement proper connection pooling
+func connectToDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
 	ctx := context.TODO()
 
-	// Connect to the DB
-	db, err := pgx.Connect(context.Background(), postgresUrl)
+	conn, err := pgx.Connect(context.Background(), postgresUrl)
 	if err != nil {
-		return nil, fmt.Errorf("unable to connect to database: %v", err)
+		return nil, err
 	}
 
 	// Creating and setting a new schema so we can run multiple nodes on one postgres instance.
 	// See more details at https://github.com/go-pg/pg/issues/351.
-	if _, err = db.Exec(ctx, fmt.Sprintf("%s %s", CreateSchemaIfNotExists, schema)); err != nil {
+	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s", CreateSchemaIfNotExists, schema)); err != nil {
 		return nil, err
 	}
-	if _, err = db.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, schema)); err != nil {
+	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, schema)); err != nil {
 		return nil, err
 	}
 
+	return conn, nil
+}
+
+// TODO(pokt-network/pocket/issues/77): Enable proper up and down migrations
+func initializeDatabase(conn *pgx.Conn) error {
 	// Initialize the tables if they don't already exist
-	if err = initializeAllTables(ctx, db); err != nil {
-		return nil, fmt.Errorf("unable to initialize tables: %v", err)
+	if err := initializeAllTables(context.TODO(), conn); err != nil {
+		return fmt.Errorf("unable to initialize tables: %v", err)
 	}
-
-	return db, nil
+	return nil
 }
 
 // TODO(pokt-network/pocket/issues/77): Delete all the `initializeAllTables` calls once proper migrations are implemented.
@@ -131,16 +134,14 @@ func initializeAccountTables(ctx context.Context, db *pgx.Conn) error {
 }
 
 func initializeGovTables(ctx context.Context, db *pgx.Conn) error {
-	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.ParamsTableName, schema.ParamsTableSchema))
-	if err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.ParamsTableName, schema.ParamsTableSchema)); err != nil {
 		return err
 	}
 	return nil
 }
 
 func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
-	_, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.BlockTableName, schema.BlockTableSchema))
-	if err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s`, CreateTableIfNotExists, schema.BlockTableName, schema.BlockTableSchema)); err != nil {
 		return err
 	}
 	return nil
