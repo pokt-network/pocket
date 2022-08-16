@@ -214,6 +214,7 @@ func FuzzPoolAmount(f *testing.F) {
 
 func TestDefaultNonExistentPoolAmount(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
+
 	poolAmount, err := db.GetPoolAmount("some_pool_name", db.Height)
 	require.NoError(t, err)
 	require.Equal(t, "0", poolAmount)

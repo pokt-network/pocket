@@ -19,6 +19,11 @@ func FuzzValidator(f *testing.F) {
 		schema.ValidatorActor)
 }
 
+func TestGetSetValidatorStakeAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
+	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestValidator, db.GetValidatorStakeAmount, db.SetValidatorStakeAmount, 1)
+}
+
 func TestInsertValidatorAndExists(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 

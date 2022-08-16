@@ -19,6 +19,11 @@ func FuzzFisherman(f *testing.F) {
 		schema.FishermanActor)
 }
 
+func TestGetSetFishermanStakeAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
+	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestFisherman, db.GetFishermanStakeAmount, db.SetFishermanStakeAmount, 1)
+}
+
 func TestInsertFishermanAndExists(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 

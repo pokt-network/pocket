@@ -123,6 +123,34 @@ func getAllActorsTest[T any](
 	// }
 }
 
+func getTestGetSetStakeAmountTest[T any](
+	t *testing.T,
+	db *persistence.PostgresContext,
+	createTestActor func(*persistence.PostgresContext) (*T, error),
+	getActorStake func(int64, []byte) (string, error),
+	setActorStake func([]byte, string) error,
+	height int64,
+) {
+	var newStakeAmount = "new_stake_amount"
+
+	actor, err := createTestActor(db)
+	require.NoError(t, err)
+	addr := reflect.ValueOf(*actor).FieldByName("Address").Bytes()
+
+	// Check stake amount before
+	stakeAmount, err := getActorStake(height, addr)
+	require.NoError(t, err)
+	require.Equal(t, DefaultStake, stakeAmount, "unexpected beginning stakeAmount")
+
+	// Check stake amount after
+	err = setActorStake(addr, newStakeAmount)
+	require.NoError(t, err)
+
+	stakeAmountAfter, err := getActorStake(height, addr)
+	require.NoError(t, err)
+	require.Equal(t, newStakeAmount, stakeAmountAfter, "unexpected status")
+}
+
 func getActorValues(protocolActorSchema schema.ProtocolActorSchema, actorValue reflect.Value) schema.BaseActor {
 	chains := make([]string, 0)
 	if actorValue.FieldByName("Chains").Kind() != 0 {

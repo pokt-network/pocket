@@ -18,6 +18,11 @@ func FuzzServiceNode(f *testing.F) {
 		schema.ServiceNodeActor)
 }
 
+func TestGetSetServiceNodeStakeAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
+	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestServiceNode, db.GetServiceNodeStakeAmount, db.SetServiceNodeStakeAmount, 1)
+}
+
 func TestInsertServiceNodeAndExists(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 

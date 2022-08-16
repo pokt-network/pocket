@@ -204,26 +204,9 @@ func newTestApp() (*genesis.App, error) {
 	}, nil
 }
 
-// TODO_IN_THIS_COMMIT: We are only calling these functions and tests for apps, but need to
-// generalize to other actors.
-func TestGetSetStakeAmount(t *testing.T) {
-	var newStakeAmount = "new_stake_amount"
+func TestGetSetAppStakeAmount(t *testing.T) {
 	db := NewTestPostgresContext(t, 1)
-
-	app, err := createAndInsertDefaultTestApp(db)
-	require.NoError(t, err)
-
-	// Check stake amount before
-	stakeAmount, err := db.GetAppStakeAmount(1, app.Address)
-	require.NoError(t, err)
-	require.Equal(t, DefaultStake, stakeAmount, "unexpected beginning stakeAmount")
-
-	// Check stake amount after
-	err = db.SetAppStakeAmount(app.Address, newStakeAmount)
-	require.NoError(t, err)
-	stakeAmountAfter, err := db.GetAppStakeAmount(1, app.Address)
-	require.NoError(t, err)
-	require.Equal(t, newStakeAmount, stakeAmountAfter, "unexpected status")
+	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestApp, db.GetAppStakeAmount, db.SetAppStakeAmount, 1)
 }
 
 func TestGetAllApps(t *testing.T) {
