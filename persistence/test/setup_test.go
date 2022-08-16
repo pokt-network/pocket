@@ -9,16 +9,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pokt-network/pocket/shared/modules"
-	sharedTest "github.com/pokt-network/pocket/shared/tests"
-
-	"golang.org/x/exp/slices"
-
-	"github.com/stretchr/testify/require"
-
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/schema"
+	"github.com/pokt-network/pocket/shared/modules"
+	sharedTest "github.com/pokt-network/pocket/shared/tests"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 )
 
 var (

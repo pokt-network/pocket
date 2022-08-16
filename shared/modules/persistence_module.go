@@ -7,7 +7,6 @@ import (
 
 type PersistenceModule interface {
 	Module
-
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
 	GetBlockStore() kvstore.KVStore

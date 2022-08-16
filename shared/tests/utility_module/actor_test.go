@@ -62,7 +62,6 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 			require.Equal(t, actor.GetUnstakingHeight(), types.HeightNotUsed, "incorrect actor unstaking height")
 			require.Equal(t, actor.GetOutput(), outputAddress.Bytes(), "incorrect actor output address")
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}

@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/tests"
-
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )

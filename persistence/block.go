@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"log"
@@ -47,6 +48,15 @@ func (p PostgresContext) TransactionExists(transactionHash string) (bool, error)
 func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
 	log.Println("TODO: StoreTransaction not implemented")
 	return nil
+}
+
+func (p PostgresContext) Commit() error {
+	p.DB.Tx.Commit(context.TODO())
+	return nil
+}
+
+func (p PostgresContext) Release() {
+	p.DB.Tx.Rollback(context.TODO())
 }
 
 func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {

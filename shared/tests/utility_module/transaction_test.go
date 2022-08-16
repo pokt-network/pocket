@@ -111,7 +111,6 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 
 	msg := NewTestingSendMessage(t, accs[0].Address, accs[1].Address, sendAmountString)
 	require.NoError(t, ctx.HandleMessageSend(&msg))
-
 	accs = GetAllTestingAccounts(t, ctx)
 	senderBalanceAfter, err := types.StringToBigInt(accs[0].Amount)
 	require.NoError(t, err)
@@ -135,11 +134,9 @@ func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transactio
 	startingAmount = defaultAmount
 	signerAddr := signer.Address()
 	require.NoError(t, ctx.SetAccountAmount(signerAddr, defaultAmount))
-
 	amountSent = defaultSendAmount
 	msg := NewTestingSendMessage(t, signerAddr, recipient.Address, defaultSendAmountString)
 	any, err := cdc.ToAny(&msg)
-
 	require.NoError(t, err)
 	transaction = &typesUtil.Transaction{
 		Msg:   any,

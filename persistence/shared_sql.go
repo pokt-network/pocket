@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-
 	"github.com/jackc/pgx/v4"
 
 	"github.com/pokt-network/pocket/persistence/schema"

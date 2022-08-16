@@ -6,11 +6,9 @@ import (
 
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/tests"
-
-	"github.com/stretchr/testify/require"
-
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/utility"
+	"github.com/stretchr/testify/require"
 )
 
 var (

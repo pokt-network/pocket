@@ -7,14 +7,12 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/shared/tests"
-
-	"github.com/stretchr/testify/require"
-
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/tests"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUtilityContext_AddAccountAmount(t *testing.T) {
@@ -26,7 +24,6 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 
 	addAmount := big.NewInt(1)
 	require.NoError(t, ctx.AddAccountAmount(acc.Address, addAmount), "add account amount")
-
 	afterAmount, err := ctx.GetAccountAmount(acc.Address)
 	require.NoError(t, err)
 
@@ -46,7 +43,6 @@ func TestUtilityContext_AddAccountAmountString(t *testing.T) {
 	addAmount := big.NewInt(1)
 	addAmountString := types.BigIntToString(addAmount)
 	require.NoError(t, ctx.AddAccountAmountString(acc.Address, addAmountString), "add account amount string")
-
 	afterAmount, err := ctx.GetAccountAmount(acc.Address)
 	require.NoError(t, err)
 
@@ -65,7 +61,6 @@ func TestUtilityContext_AddPoolAmount(t *testing.T) {
 
 	addAmount := big.NewInt(1)
 	require.NoError(t, ctx.AddPoolAmount(pool.Name, addAmount), "add pool amount")
-
 	afterAmount, err := ctx.GetPoolAmount(pool.Name)
 	require.NoError(t, err)
 
@@ -129,7 +124,6 @@ func TestUtilityContext_InsertPool(t *testing.T) {
 	amount := types.BigIntToString(big.NewInt(1000))
 	err = ctx.InsertPool(testPoolName, addr, amount)
 	require.NoError(t, err, "insert pool")
-
 	gotAmount, err := ctx.GetPoolAmount(testPoolName)
 	require.NoError(t, err)
 

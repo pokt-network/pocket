@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/tests"
-
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"

@@ -98,6 +98,15 @@ func (u *UtilityContext) GetAppHash() ([]byte, types.Error) {
 	return appHash, nil
 }
 
+var (
+	actorTypes = []typesUtil.ActorType{
+		typesUtil.ActorType_App,
+		typesUtil.ActorType_Node,
+		typesUtil.ActorType_Fish,
+		typesUtil.ActorType_Val,
+	}
+)
+
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
 func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) types.Error {
 	latestBlockHeight, err := u.GetLatestHeight()
