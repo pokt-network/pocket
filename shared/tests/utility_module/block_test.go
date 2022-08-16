@@ -116,7 +116,6 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 		status, err := ctx.GetActorStatus(actorType, actor.GetAddress())
 		require.Equal(t, typesUtil.UnstakingStatus, status, "incorrect status")
 
-		ctx.Context.Release()
 		tests.CleanupTest(ctx)
 	}
 }
@@ -186,7 +185,7 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 
 		actors := GetAllTestingActors(t, ctx, actorType)
 		for _, actor := range actors {
-			require.False(t, actor.GetStatus() != typesUtil.StakedStatus, "wrong starting status")
+			require.Equal(t, actor.GetStatus(), typesUtil.StakedStatus, "wrong starting status")
 			er := ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 1)
 			require.NoError(t, er)
 		}
@@ -198,12 +197,11 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 		require.NoError(t, err)
 
 		actors = GetAllTestingActors(t, ctx, actorType)
-		require.False(t, actors[0].GetUnstakingHeight() == -1, fmt.Sprintf("validators still exists after unstake that are ready() call"))
+		require.NotEqual(t, actors[0].GetUnstakingHeight(), -1, "validators still exists after unstake that are ready() call")
 
 		// TODO: We need to better define what 'deleted' really is in the postgres world.
 		// We might not need to 'unstakeActorsThatAreReady' if we are already filtering by unstakingHeight
 
-		ctx.Context.Release()
 		tests.CleanupTest(ctx)
 	}
 }

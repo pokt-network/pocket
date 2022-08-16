@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// IMPROVE: Need to expand contexts to test contexts as the height changes.
+// TODO_IN_THIS_COMMIT: Add tests for multiple read / write contexts.
 func TestContextAndCommit(t *testing.T) {
 	// variables for testing
 	poolName := "fake"

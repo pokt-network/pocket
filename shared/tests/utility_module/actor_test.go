@@ -106,7 +106,6 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
 			require.Equal(t, actor.GetStakedTokens(), types.BigIntToString(amountEdited), "incorrect staked amount")
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}
@@ -151,7 +150,6 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
 			require.False(t, actor.GetPaused(), "actor should not be paused")
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}
@@ -189,7 +187,6 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
 			require.Equal(t, actor.GetStatus(), int32(typesUtil.UnstakingStatus), "actor should be unstaking")
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}
@@ -225,7 +222,6 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			status, err := ctx.GetActorStatus(actorType, actor.GetAddress())
 			require.Equal(t, status, typesUtil.UnstakingStatus, "actor should be unstaking")
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}
@@ -266,7 +262,6 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 
 			require.Equal(t, unstakingBlocks, unstakingHeight, "unexpected unstaking height")
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}
@@ -287,7 +282,6 @@ func TestUtilityContext_Delete(t *testing.T) {
 
 			// TODO: Delete actor is currently a NO-OP. We need to better define
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}
@@ -310,7 +304,6 @@ func TestUtilityContext_GetExists(t *testing.T) {
 			require.NoError(t, err)
 			require.False(t, exists, "actor that shouldn't exist does")
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}
@@ -328,7 +321,6 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 
 			require.Equal(t, outputAddress, actor.GetOutput(), "unexpected output address")
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}
@@ -355,7 +347,6 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 			_, err = ctx.GetPauseHeight(actorType, randAddr)
 			require.Error(t, err, "non existent actor should error")
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}
@@ -381,7 +372,6 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 			require.Equal(t, candidates[0], actor.GetOutput(), "incorrect output candidate")
 			require.Equal(t, candidates[1], actor.GetAddress(), "incorrect addr candidate")
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}
@@ -447,7 +437,6 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 			require.Equal(t, candidates[0], actor.GetOutput(), "incorrect output candidate")
 			require.Equal(t, candidates[1], actor.GetAddress(), "incorrect addr candidate")
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}
@@ -470,7 +459,6 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 			require.Equal(t, candidates[0], actor.GetOutput(), "incorrect output candidate")
 			require.Equal(t, candidates[1], actor.GetAddress(), "incorrect addr candidate")
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}
@@ -527,7 +515,6 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			require.NoError(t, err, "error getting unstaking blocks")
 			require.Equal(t, actor.GetUnstakingHeight(), unstakingBlocks+1, "incorrect unstaking height")
 
-			ctx.Context.Release()
 			tests.CleanupTest(ctx)
 		})
 	}
@@ -572,9 +559,9 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 
 		err = ctx.UnstakeActorsThatAreReady()
 		require.NoError(t, err, "error unstaking actors that are ready")
-		// TODO Delete() is no op
 
-		ctx.Context.Release()
+		// TODO: DELETE is current a NOOP and needs to be discussed & implemented
+
 		tests.CleanupTest(ctx)
 	}
 }
