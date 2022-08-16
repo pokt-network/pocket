@@ -1,24 +1,23 @@
 package utility
 
 import (
-	"math"
-	"math/big"
-
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
+	"math"
+	"math/big"
 )
 
 /*
-`Actor` is the consolidated term for common functionality among the following network actors: app, fish, node, val.
+   `Actor` is the consolidated term for common functionality among the following network actors: app, fish, node, val.
 
-This file contains all the state based CRUD operations shared between these abstractions.
+   This file contains all the state based CRUD operations shared between these abstractions.
 
-The ideology of the separation of the actors is based on the expectation of actor divergence in the near future.
-The current implementation attempts to simplify code footprint and complexity while enabling future divergence.
-It is important to note, that as production approaches, the idea is to attempt more consolidation at an architectural
-multi-module level. Until then, it's a fine line to walk.
+   The ideology of the separation of the actors is based on the expectation of actor divergence in the near future.
+   The current implementation attempts to simplify code footprint and complexity while enabling future divergence.
+   It is important to note, that as production approaches, the idea is to attempt more consolidation at an architectural
+   multi-module level. Until then, it's a fine line to walk.
 */
 
 // setters

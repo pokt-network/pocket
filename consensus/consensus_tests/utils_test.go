@@ -280,17 +280,17 @@ loop:
 func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
-	persistenceContextMock := modulesMock.NewMockPersistenceContext(ctrl)
+	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 
 	persistenceMock.EXPECT().Start().Do(func() {}).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
-	persistenceMock.EXPECT().NewContext(int64(-1)).Return(persistenceContextMock, nil).AnyTimes()
+	persistenceMock.EXPECT().NewRWContext(int64(-1)).Return(persistenceContextMock, nil).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
 	// of the consensus module. This one is only used when loading the initial consensus module
 	// state; hence the `-1` expectation in the call above.
 	persistenceContextMock.EXPECT().Release().Return().AnyTimes()
-	persistenceContextMock.EXPECT().GetLatestBlockHeight().Return(int64(0), nil).AnyTimes()
+	persistenceContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
 
 	return persistenceMock
 }
@@ -325,7 +325,7 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 	ctrl := gomock.NewController(t)
 	utilityMock := modulesMock.NewMockUtilityModule(ctrl)
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
-	persistenceContextMock := modulesMock.NewMockPersistenceContext(ctrl)
+	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 
 	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
 	utilityMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()

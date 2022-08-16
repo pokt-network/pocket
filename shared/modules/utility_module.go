@@ -18,7 +18,7 @@ type UtilityContext interface {
 
 	// Context operations
 	ReleaseContext()
-	GetPersistenceContext() PersistenceContext
+	GetPersistenceContext() PersistenceRWContext
 	CommitPersistenceContext() error
 
 	// Validation operations

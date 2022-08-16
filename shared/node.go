@@ -5,7 +5,6 @@ import (
 
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"
@@ -32,12 +31,6 @@ func Create(cfg *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	// TODO(drewsky): deprecate pre-persistence and move persistence into its place
-	_, err = pre_persistence.Create(cfg)
-	if err != nil {
-		return nil, err
-	}
-
 	p2pMod, err := p2p.Create(cfg)
 	if err != nil {
 		return nil, err
@@ -58,15 +51,7 @@ func Create(cfg *config.Config) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(
-		persistenceMod,
-		p2pMod,
-		utilityMod,
-		consensusMod,
-		telemetryMod,
-		cfg,
-	)
-
+	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod, cfg)
 	if err != nil {
 		return nil, err
 	}

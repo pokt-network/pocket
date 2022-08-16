@@ -1,18 +1,17 @@
 package utility_module
 
 import (
+	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/shared/tests"
 	"math/big"
 	"testing"
 
-	"github.com/pokt-network/pocket/persistence/pre_persistence"
 	"github.com/stretchr/testify/require"
 
 	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
-	"github.com/syndtr/goleveldb/leveldb/comparer"
-	"github.com/syndtr/goleveldb/leveldb/memdb"
 )
 
 var (
@@ -29,31 +28,41 @@ func NewTestingMempool(_ *testing.T) types.Mempool {
 	return types.NewMempool(1000000, 1000)
 }
 
+func TestMain(m *testing.M) {
+	pool, resource := tests.SetupPostgresDocker()
+	m.Run()
+	tests.CleanupPostgresDocker(m, pool, resource)
+}
+
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
 	mempool := NewTestingMempool(t)
 	cfg := &config.Config{
+		RootDir: "",
 		GenesisSource: &genesis.GenesisSource{
 			Source: &genesis.GenesisSource_Config{
 				Config: genesisConfig(),
 			},
 		},
+		Persistence: &config.PersistenceConfig{
+			PostgresUrl: tests.DatabaseUrl,
+			NodeSchema:  tests.SQL_Schema,
+		},
 	}
 	err := cfg.HydrateGenesisState()
 	require.NoError(t, err)
 
-	persistenceModule := pre_persistence.NewPrePersistenceModule(memdb.New(comparer.DefaultComparer, 10000000), mempool, cfg)
-	err = persistenceModule.Start()
-	require.NoError(t, err, "start persistence mod")
-
-	persistenceContext, err := persistenceModule.NewContext(height)
+	tests.PersistenceModule, err = persistence.Create(cfg)
+	require.NoError(t, err)
+	require.NoError(t, tests.PersistenceModule.Start(), "start persistence mod")
+	persistenceContext, err := tests.PersistenceModule.NewRWContext(height)
 	require.NoError(t, err)
 	return utility.UtilityContext{
 		LatestHeight: height,
 		Mempool:      mempool,
 		Context: &utility.Context{
-			PersistenceContext: persistenceContext,
-			SavePointsM:        make(map[string]struct{}),
-			SavePoints:         make([][]byte, 0),
+			PersistenceRWContext: persistenceContext,
+			SavePointsM:          make(map[string]struct{}),
+			SavePoints:           make([][]byte, 0),
 		},
 	}
 }

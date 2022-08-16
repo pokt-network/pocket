@@ -20,8 +20,8 @@ func FuzzServiceNode(f *testing.F) {
 
 func TestInsertServiceNodeAndExists(t *testing.T) {
 	db := &persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
@@ -49,8 +49,8 @@ func TestInsertServiceNodeAndExists(t *testing.T) {
 
 func TestUpdateServiceNode(t *testing.T) {
 	db := &persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
@@ -81,8 +81,8 @@ func TestUpdateServiceNode(t *testing.T) {
 
 func TestGetServiceNodesReadyToUnstake(t *testing.T) {
 	db := &persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
@@ -119,8 +119,8 @@ func TestGetServiceNodesReadyToUnstake(t *testing.T) {
 
 func TestGetServiceNodeStatus(t *testing.T) {
 	db := &persistence.PostgresContext{
-		Height:     1, // intentionally set to a non-zero height
-		PostgresDB: testPostgresDB,
+		Height: 1, // intentionally set to a non-zero height
+		DB:     *testPostgresDB,
 	}
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
@@ -139,8 +139,8 @@ func TestGetServiceNodeStatus(t *testing.T) {
 
 func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 	db := &persistence.PostgresContext{
-		Height:     1, // intentionally set to a non-zero height
-		PostgresDB: testPostgresDB,
+		Height: 1, // intentionally set to a non-zero height
+		DB:     *testPostgresDB,
 	}
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
@@ -159,8 +159,8 @@ func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 
 func TestSetServiceNodePauseHeightAndUnstakeLater(t *testing.T) {
 	db := &persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
@@ -186,8 +186,8 @@ func TestSetServiceNodePauseHeightAndUnstakeLater(t *testing.T) {
 
 func TestGetServiceNodeOutputAddress(t *testing.T) {
 	db := &persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)

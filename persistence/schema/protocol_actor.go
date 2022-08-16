@@ -15,9 +15,10 @@ type ProtocolActorSchema interface {
 	GetActorSpecificColName() string
 
 	/*** Read/Get Queries ***/
-
 	// Returns a query to retrieve all of a single Actor's attributes.
 	GetQuery(address string, height int64) string
+	// Returns all actors at that height
+	GetAllQuery(height int64) string
 	// Returns a query for the existence of an Actor given its address.
 	GetExistsQuery(address string, height int64) string
 	// Returns a query to retrieve data associated with all the apps ready to unstake.
@@ -25,6 +26,8 @@ type ProtocolActorSchema interface {
 	// Returns a query to retrieve the output address of an Actor given its operator address.
 	// DISCUSS(drewsky): Why/how we even need this. What is an output & operator for an app?
 	GetOutputAddressQuery(operatorAddress string, height int64) string
+	// Returns a query to retrieve the stake amount of an actor
+	GetStakeAmountQuery(address string, height int64) string
 	// Returns a query to retrieve the height at which an Actor was paused.
 	GetPausedHeightQuery(address string, height int64) string
 	// Returns a query to retrieve the height at which an Actor started unstaking.
@@ -49,6 +52,8 @@ type ProtocolActorSchema interface {
 	UpdatePausedHeightQuery(address string, pausedHeight, height int64) string
 	// Returns a query to start unstaking Actors which have been paused.
 	UpdateUnstakedHeightIfPausedBeforeQuery(pauseBeforeHeight, unstakingHeight, height int64) string
+	// Returns a query to update the actor's stake amount
+	SetStakeAmountQuery(address string, stakeAmount string, height int64) string
 
 	/*** Delete Queries - used debugging only /***/
 

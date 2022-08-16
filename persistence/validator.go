@@ -49,6 +49,14 @@ func (p PostgresContext) DeleteValidator(address []byte) error {
 	return nil
 }
 
+func (p PostgresContext) GetValidatorStakeAmount(height int64, address []byte) (string, error) {
+	return p.GetActorStakeAmount(schema.ValidatorActor, address, height)
+}
+
+func (p PostgresContext) SetValidatorStakeAmount(address []byte, stakeAmount string) error {
+	return p.SetActorStakeAmount(schema.ValidatorActor, address, stakeAmount)
+}
+
 func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, _ int) ([]*types.UnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(schema.ValidatorActor, height)
 }

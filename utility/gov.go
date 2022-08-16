@@ -257,7 +257,7 @@ func (u *UtilityContext) GetMessageChangeParameterFee() (*big.Int, types.Error) 
 }
 
 func (u *UtilityContext) GetDoubleSignFeeOwner() (owner []byte, err types.Error) {
-	return u.getByteArrayParam(types.DoubleSignBurnPercentageParamName)
+	return u.getByteArrayParam(types.MessageDoubleSignFeeOwner)
 }
 
 func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {

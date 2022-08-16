@@ -53,6 +53,8 @@ func Create(cfg *config.Config) (m modules.P2PModule, err error) {
 }
 
 func (m *p2pModule) SetBus(bus modules.Bus) {
+	// INVESTIGATE: Can the code flow be modified to set the bus here?
+	// m.network.SetBus(m.GetBus())
 	m.bus = bus
 }
 
@@ -85,6 +87,7 @@ func (m *p2pModule) Start() error {
 	} else {
 		m.network = stdnetwork.NewNetwork(addrBook)
 	}
+	m.network.SetBus(m.GetBus())
 
 	m.network.SetBus(m.GetBus())
 
@@ -98,11 +101,12 @@ func (m *p2pModule) Start() error {
 			go m.handleNetworkMessage(data)
 		}
 	}()
-	m.
-		GetBus().
+
+	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
 		CounterIncrement(p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME)
+
 	return nil
 }
 

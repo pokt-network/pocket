@@ -18,7 +18,6 @@ import (
 validations possible before even checking the state storage layer.
 */
 
-// DISCUSS(olshansky): Should we move these into a shared file?
 const (
 	MillionInt       = 1000000
 	ZeroInt          = 0

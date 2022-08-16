@@ -11,8 +11,8 @@ import (
 
 func TestInitParams(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 	err := db.InitParams()
 	require.NoError(t, err)
@@ -20,8 +20,8 @@ func TestInitParams(t *testing.T) {
 
 func TestGetSetIntParam(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 
 	err := db.InitParams()
@@ -43,8 +43,8 @@ func TestGetSetIntParam(t *testing.T) {
 
 func TestGetSetStringParam(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 
 	err := db.InitParams()
@@ -66,8 +66,8 @@ func TestGetSetStringParam(t *testing.T) {
 
 func TestGetSetByteArrayParam(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 
 	err := db.InitParams()
@@ -90,8 +90,8 @@ func TestGetSetByteArrayParam(t *testing.T) {
 
 func TestGetSetToggleIntFlag(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 
 	err := db.InitFlags()
@@ -130,8 +130,8 @@ func TestGetSetToggleIntFlag(t *testing.T) {
 
 func TestGetSetToggleStringFlag(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 
 	err := db.InitParams()
@@ -169,8 +169,8 @@ func TestGetSetToggleStringFlag(t *testing.T) {
 
 func TestGetSetToggleByteArrayFlag(t *testing.T) {
 	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
+		Height: 0,
+		DB:     *testPostgresDB,
 	}
 
 	err := db.InitParams()

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/big"
 	"math/rand"
 	"time"
 
@@ -13,8 +12,6 @@ import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 const (
@@ -34,34 +31,32 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-var _ modules.PersistenceContext = &PostgresContext{}
+var _ modules.PersistenceRWContext = &PostgresContext{}
 
 // TODO: These are only externalized for testing purposes, so they should be made private and
-//       it is trivial to create a helper to initial a context with some values.
+//
+//	it is trivial to create a helper to initial a context with some values.
 type PostgresContext struct {
-	Height       int64
-	ContextStore kvstore.KVStore
+	Height int64
+	DB     PostgresDB
+}
 
+type PostgresDB struct {
+	Tx         pgx.Tx
+	Blockstore kvstore.KVStore
+}
+
+func (pg *PostgresDB) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
+	tx, err := pg.GetTxn()
 	// IMPROVE: Depending on how the use of `PostgresContext` evolves, we may be able to get
 	// access to these directly via the postgres module.
-	PostgresDB *pgx.Conn
-	BlockStore kvstore.KVStore
+	//PostgresDB *pgx.Conn
+	//BlockStore kvstore.KVStore
+	return context.TODO(), tx, err
 }
 
-func (pg *PostgresContext) GetCtxAndConnection() (context.Context, *pgx.Conn, error) {
-	conn, err := pg.GetConnection()
-	if err != nil {
-		return nil, nil, err
-	}
-	ctx, err := pg.GetContext()
-	if err != nil {
-		return nil, nil, err
-	}
-	return ctx, conn, nil
-}
-
-func (pg *PostgresContext) GetConnection() (*pgx.Conn, error) {
-	return pg.PostgresDB, nil
+func (pg *PostgresDB) GetTxn() (pgx.Tx, error) {
+	return pg.Tx, nil
 }
 
 func (pg *PostgresContext) GetContext() (context.Context, error) {
@@ -96,7 +91,7 @@ func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn,
 		return nil, err
 	}
 
-	if err := initializeAllTables(ctx, db); err != nil {
+	if err = initializeAllTables(ctx, db); err != nil {
 		return nil, fmt.Errorf("unable to initialize tables: %v", err)
 	}
 
@@ -175,118 +170,14 @@ func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func (m *persistenceModule) hydrateGenesisDbState() error {
-	state := m.GetBus().GetConfig().GenesisSource.GetState()
-	if nil == state {
-		return fmt.Errorf("unable to hydrate genesis DB state because genesis source is misconfigured")
-	}
-
-	ctx, err := m.NewContext(0)
-	if err != nil {
-		return err
-	}
-	poolValues := make(map[string]*big.Int, 0)
-
-	addValueToPool := func(poolName string, valueToAdd string) error {
-		value, err := types.StringToBigInt(valueToAdd)
-		if err != nil {
-			return err
-		}
-		if present := poolValues[poolName]; present == nil {
-			poolValues[poolName] = big.NewInt(0)
-		}
-		poolValues[poolName].Add(poolValues[poolName], value)
-		return nil
-	}
-
-	for _, v := range state.Validators {
-		// DISCUSS_IN_THIS_COMMIT(drewskey): If the validator (and other actors) have a balance, do we expect that
-		// to be in the `accounts` type corresponding to the same address?
-		if err := ctx.SetAccountAmount(v.Address, "0"); err != nil {
-			return err
-		}
-		if err := ctx.InsertValidator(v.Address, v.PublicKey, v.Output, v.Paused, int(v.Status), v.ServiceUrl, v.StakedTokens, v.PausedHeight, v.UnstakingHeight); err != nil {
-			return err
-		}
-		if err := addValueToPool(genesis.ValidatorStakePoolName, v.StakedTokens); err != nil {
-			return err
-		}
-	}
-
-	for _, f := range state.Fishermen {
-		if err := ctx.InsertFisherman(f.Address, f.PublicKey, f.Output, f.Paused, int(f.Status), f.ServiceUrl, f.StakedTokens, f.Chains, f.PausedHeight, f.UnstakingHeight); err != nil {
-			return err
-		}
-		if err := ctx.SetAccountAmount(f.Address, "0"); err != nil {
-			return err
-		}
-		if err := addValueToPool(genesis.FishermanStakePoolName, f.StakedTokens); err != nil {
-			return err
-		}
-	}
-
-	for _, sn := range state.ServiceNodes {
-		if err := ctx.InsertServiceNode(sn.Address, sn.PublicKey, sn.Output, sn.Paused, int(sn.Status), sn.ServiceUrl, sn.StakedTokens, sn.Chains, sn.PausedHeight, sn.UnstakingHeight); err != nil {
-			return err
-		}
-		if err := ctx.SetAccountAmount(sn.Address, "0"); err != nil {
-			return err
-		}
-		if err := addValueToPool(genesis.ServiceNodeStakePoolName, sn.StakedTokens); err != nil {
-			return err
-		}
-	}
-
-	for _, app := range state.Apps {
-		if err := ctx.InsertApp(app.Address, app.PublicKey, app.Output, app.Paused, int(app.Status), app.MaxRelays, app.StakedTokens, app.Chains, app.PausedHeight, app.UnstakingHeight); err != nil {
-			return err
-		}
-		if err := ctx.SetAccountAmount(app.Address, "0"); err != nil {
-			return err
-		}
-		if err := addValueToPool(genesis.AppStakePoolName, app.StakedTokens); err != nil {
-			return err
-		}
-	}
-
-	for _, acc := range state.Accounts {
-		if err := ctx.AddAccountAmount(acc.Address, acc.Amount); err != nil {
-			return err
-		}
-	}
-
-	for _, pool := range state.Pools {
-		if err := ctx.InsertPool(pool.Name, pool.Account.Address, pool.Account.Amount); err != nil {
-			return err
-		}
-		// DISCUSS_IN_THIS_COMMIT(drewskey): What if there's a discrepancy between `pool.Account.Amount` and `poolValues`?
-		if err := ctx.SetAccountAmount(pool.Account.Address, pool.Account.Amount); err != nil {
-			return err
-		}
-	}
-
-	if err := ctx.InitFlags(); err != nil {
-		return err
-	}
-
-	if err := ctx.InitParams(); err != nil {
-		return err
-	}
-	if err := ctx.SetParam(types.ValidatorMaximumMissedBlocksParamName, (int(state.Params.ValidatorMaximumMissedBlocks))); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // Exposed for debugging purposes only
 func (p PostgresContext) ClearAllDebug() error {
-	ctx, conn, err := p.GetCtxAndConnection()
+	ctx, conn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
 
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
+	tx, err := conn.Begin(ctx)
 	if err != nil {
 		return err
 	}

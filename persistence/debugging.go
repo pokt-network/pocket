@@ -1,9 +1,8 @@
 package persistence
 
 import (
-	"log"
-
 	"github.com/pokt-network/pocket/shared/types"
+	"log"
 )
 
 func (p *persistenceModule) HandleDebugMessage(debugMessage *types.DebugMessage) error {
@@ -34,7 +33,7 @@ func (p *persistenceModule) showLatestBlockInStore(_ *types.DebugMessage) {
 }
 
 func (p *persistenceModule) clearState(_ *types.DebugMessage) {
-	context, err := p.NewContext(-1)
+	context, err := p.NewRWContext(-1)
 	if err != nil {
 		log.Printf("Error creating new context: %s \n", err)
 		return
