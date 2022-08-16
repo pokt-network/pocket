@@ -180,7 +180,7 @@ func TestGetAllValidators(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
 	updateValidator := func(db *persistence.PostgresContext, val *genesis.Validator) error {
-		return db.UpdateValidator(val.Address, "https://olshansky.info", val.StakedTokens)
+		return db.UpdateValidator(val.Address, OlshanskyURL, val.StakedTokens)
 	}
 
 	getAllActorsTest(t, db, db.GetAllValidators, createAndInsertDefaultTestValidator, updateValidator, 5)

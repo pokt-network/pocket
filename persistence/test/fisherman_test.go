@@ -209,7 +209,7 @@ func TestGetAllFish(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
 	updateFish := func(db *persistence.PostgresContext, fish *genesis.Fisherman) error {
-		return db.UpdateFisherman(fish.Address, "https://olshansky.info", fish.StakedTokens, []string{"OLSH"})
+		return db.UpdateFisherman(fish.Address, OlshanskyURL, fish.StakedTokens, OlshanskyChains)
 	}
 
 	getAllActorsTest(t, db, db.GetAllFishermen, createAndInsertDefaultTestFisherman, updateFish, 1)

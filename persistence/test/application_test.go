@@ -230,7 +230,7 @@ func TestGetAllApps(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
 	updateApp := func(db *persistence.PostgresContext, app *genesis.App) error {
-		return db.UpdateApp(app.Address, "https://olshansky.info", app.MaxRelays, []string{"OLSH"})
+		return db.UpdateApp(app.Address, OlshanskyURL, app.MaxRelays, OlshanskyChains)
 	}
 
 	getAllActorsTest(t, db, db.GetAllApps, createAndInsertDefaultTestApp, updateApp, 1)

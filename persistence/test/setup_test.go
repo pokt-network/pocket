@@ -37,6 +37,9 @@ var (
 	DefaultStakeStatus     = persistence.StakedStatus
 	DefaultPauseHeight     = int64(-1)
 	DefaultUnstakingHeight = int64(-1)
+
+	OlshanskyURL    = "https://olshansky.info"
+	OlshanskyChains = []string{"OLSH"}
 )
 
 var testPersistenceModule modules.PersistenceModule

@@ -183,7 +183,7 @@ func TestGetAllServiceNodes(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
 	updateServiceNode := func(db *persistence.PostgresContext, sn *genesis.ServiceNode) error {
-		return db.UpdateServiceNode(sn.Address, "https://olshansky.info", sn.StakedTokens, []string{"OLSH"})
+		return db.UpdateServiceNode(sn.Address, OlshanskyURL, sn.StakedTokens, OlshanskyChains)
 	}
 
 	getAllActorsTest(t, db, db.GetAllServiceNodes, createAndInsertDefaultTestServiceNode, updateServiceNode, 1)
