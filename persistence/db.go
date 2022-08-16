@@ -3,8 +3,6 @@ package persistence
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"time"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -23,11 +21,6 @@ var protocolActorSchemas = []schema.ProtocolActorSchema{
 	schema.FishermanActor,
 	schema.ServiceNodeActor,
 	schema.ValidatorActor,
-}
-
-// DISCUSS_IN_THIS_COMMIT: Do we still need this?
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }
 
 var _ modules.PersistenceRWContext = &PostgresContext{}

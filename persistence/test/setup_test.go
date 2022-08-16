@@ -62,8 +62,6 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	}
 	t.Cleanup(func() {
 		require.NoError(t, db.Release())
-		// DISCUSS_IN_THIS_COMMIT: Do we need this given that `Release` reverses the changes made to the database?
-		// require.NoError(t, db.DebugClearAll())
 	})
 
 	return db
@@ -81,8 +79,6 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 	}
 	f.Cleanup(func() {
 		db.Release()
-		// DISCUSS_IN_THIS_COMMIT: Do we need this given that `Release` reverses the changes made to the database?
-		// db.DebugClearAll()
 	})
 
 	return &db

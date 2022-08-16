@@ -44,9 +44,9 @@ func Create(cfg *config.Config) (modules.PersistenceModule, error) {
 		blockStore:  blockStore,
 	}
 
-	// DISCUSS_IN_THIS_COMMIT: Is `Create` the appropriate location for this or should it be `Start`?
-	// DISCUSS_IN_THIS_COMMIT: Thoughts on bringing back `shouldHydrateGenesisDb` removed in #128?
-	//                         It allowed LocalNet to continue from a previously stored state.
+	// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
+	// this forces the genesis state to be reloaded on every node startup until state sync is
+	// implemented.
 	persistenceMod.populateGenesisState(cfg.GenesisSource.GetState())
 
 	return persistenceMod, nil
@@ -83,7 +83,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	tx, err := conn.BeginTx(context.TODO(), pgx.TxOptions{
 		IsoLevel:       pgx.ReadUncommitted,
 		AccessMode:     pgx.ReadWrite,
-		DeferrableMode: pgx.NotDeferrable, // DISCUSS_IN_THIS_COMMIT: Should this be Deferrable?
+		DeferrableMode: pgx.NotDeferrable, // TODO(andrew): Research if this should be `Deferrable`
 	})
 	if err != nil {
 		return nil, err
@@ -108,7 +108,7 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	tx, err := conn.BeginTx(context.TODO(), pgx.TxOptions{
 		IsoLevel:       pgx.ReadCommitted,
 		AccessMode:     pgx.ReadOnly,
-		DeferrableMode: pgx.NotDeferrable,
+		DeferrableMode: pgx.NotDeferrable, // TODO(andrew): Research if this should be `Deferrable`
 	})
 	if err != nil {
 		return nil, err

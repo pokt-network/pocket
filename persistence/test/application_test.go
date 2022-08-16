@@ -204,7 +204,7 @@ func newTestApp() (*genesis.App, error) {
 	}, nil
 }
 
-// DISCUSS_IN_THIS_COMMIT: We are only calling these functions and tests for apps, but need to
+// TODO_IN_THIS_COMMIT: We are only calling these functions and tests for apps, but need to
 // generalize to other actors.
 func TestGetSetStakeAmount(t *testing.T) {
 	var newStakeAmount = "new_stake_amount"
