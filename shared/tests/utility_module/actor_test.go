@@ -4,6 +4,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"math"
+	"math/big"
+	"sort"
+	"testing"
+
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/tests"
@@ -13,10 +18,6 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
-	"math"
-	"math/big"
-	"sort"
-	"testing"
 )
 
 // INVESTIGATE: Is there a better way to implement this than to simply have an actors forloop in each test?
@@ -379,7 +380,7 @@ func TestUtilityContext_UnstakesPausedBefore(t *testing.T) {
 	actor := GetAllTestingApps(t, ctx)[0]
 	require.True(t, actor.Status == typesUtil.StakedStatus, fmt.Sprintf("wrong starting status"))
 	require.NoError(t, ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, 0), "set actor pause height")
-	err := ctx.Context.SetAppMaxPausedBlocks(0)
+	err := ctx.Context.SetParam(types.AppMaxPauseBlocksParamName, 0)
 	require.NoError(t, err)
 	require.NoError(t, ctx.UnstakeActorPausedBefore(0, typesUtil.ActorType_App), "unstake actor pause before")
 	require.NoError(t, ctx.UnstakeActorPausedBefore(1, typesUtil.ActorType_App), "unstake actor pause before height 1")
@@ -395,7 +396,7 @@ func TestUtilityContext_UnstakesPausedBefore(t *testing.T) {
 func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	ctx.SetPoolAmount(genesis.AppStakePoolName, big.NewInt(math.MaxInt64))
-	require.NoError(t, ctx.Context.SetAppUnstakingBlocks(0), "set unstaking blocks")
+	require.NoError(t, ctx.Context.SetParam(types.AppUnstakingBlocksParamName, 0), "set unstaking blocks")
 	actors := GetAllTestingApps(t, ctx)
 	for _, actor := range actors {
 		require.True(t, actor.Status == typesUtil.StakedStatus, fmt.Sprintf("wrong starting status"))

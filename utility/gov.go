@@ -14,17 +14,17 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.
 	store := u.Store()
 	switch t := value.(type) {
 	case *wrapperspb.Int32Value:
-		if err := store.SetParam(types.BlocksPerSessionParamName, (int(t.Value))); err != nil {
+		if err := store.SetParam(paramName, (int(t.Value))); err != nil {
 			return types.ErrUpdateParam(err)
 		}
 		return nil
 	case *wrapperspb.StringValue:
-		if err := store.SetParam(types.BlocksPerSessionParamName, t.Value); err != nil {
+		if err := store.SetParam(paramName, t.Value); err != nil {
 			return types.ErrUpdateParam(err)
 		}
 		return nil
 	case *wrapperspb.BytesValue:
-		if err := store.SetParam(types.BlocksPerSessionParamName, t.Value); err != nil {
+		if err := store.SetParam(paramName, t.Value); err != nil {
 			return types.ErrUpdateParam(err)
 		}
 		return nil
@@ -61,7 +61,7 @@ func (u *UtilityContext) GetBaselineAppStakeRate() (int, types.Error) {
 }
 
 func (u *UtilityContext) GetStabilityAdjustment() (int, types.Error) {
-	return u.getIntParam(types.AppMaxChainsParamName)
+	return u.getIntParam(types.AppStakingAdjustmentParamName)
 }
 
 func (u *UtilityContext) GetAppUnstakingBlocks() (int64, types.Error) {

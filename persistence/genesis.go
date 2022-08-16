@@ -3,12 +3,13 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
+	"math/big"
+
 	"github.com/pokt-network/pocket/persistence/schema"
 	sharedTypes "github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility/types"
-	"log"
-	"math/big"
 )
 
 func (pm *persistenceModule) PopulateGenesisState(state *genesis.GenesisState) { // TODO (Andrew) genericize with actors interface once merged with #111
@@ -80,6 +81,9 @@ func (pm *persistenceModule) PopulateGenesisState(state *genesis.GenesisState) {
 	}
 	if err = rwContext.InitParams(); err != nil { // TODO (Team) use params from genesis file not hardcoded
 		log.Fatal(fmt.Sprintf("an error occurred initializing params: %s", err.Error()))
+	}
+	if err = rwContext.InitFlags(); err != nil { // TODO (Team) use flags from genesis file not hardcoded
+		log.Fatal(fmt.Sprintf("an error occurred initializing flags: %s", err.Error()))
 	}
 	if err = rwContext.Commit(); err != nil {
 		log.Fatal(fmt.Sprintf("an error occurred during commit() on genesis state %s ", err.Error()))
