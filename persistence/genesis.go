@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"encoding/hex"
-	"fmt"
 	"log"
 	"math/big"
 
@@ -32,6 +31,8 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	}
 
 	rwContext, err := m.NewRWContext(0)
+	defer rwContext.Release()
+
 	if err != nil {
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
 	}
@@ -100,7 +101,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	}
 
 	if err = rwContext.InitFlags(); err != nil { // TODO (Team) use flags from genesis file not hardcoded
-		log.Fatal(fmt.Sprintf("an error occurred initializing flags: %s", err.Error()))
+		log.Fatalf("an error occurred initializing flags: %s", err.Error())
 	}
 
 	if err = rwContext.Commit(); err != nil {

@@ -154,11 +154,11 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 }
 
 func (m *consensusModule) loadPersistedState() error {
-	persistenceContext, err := m.GetBus().GetPersistenceModule().NewRWContext(-1) // Unknown height
+	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
 	if err != nil {
 		return nil
 	}
-	defer persistenceContext.Release()
+	defer persistenceContext.Close()
 
 	latestHeight, err := persistenceContext.GetLatestBlockHeight()
 	if err != nil || latestHeight == 0 {

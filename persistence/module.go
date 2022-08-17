@@ -111,7 +111,6 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	if err != nil {
 		return nil, err
 	}
-
 	tx, err := conn.BeginTx(context.TODO(), pgx.TxOptions{
 		IsoLevel:       pgx.ReadCommitted,
 		AccessMode:     pgx.ReadOnly,
