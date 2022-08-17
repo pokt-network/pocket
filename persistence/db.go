@@ -202,6 +202,10 @@ func (p PostgresContext) DebugClearAll() error {
 		return err
 	}
 
+	if _, err = tx.Exec(ctx, schema.ClearAllBlocksQuery()); err != nil {
+		return err
+	}
+
 	if err = clearTx.Commit(ctx); err != nil {
 		return err
 	}

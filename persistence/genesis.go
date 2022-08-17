@@ -15,6 +15,15 @@ import (
 func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	log.Println("Populating genesis state...")
 
+	// HACK: This is needed to avoid block a previous from interfering with the genesis state hydration
+	// until proper state sync is implemented.
+	deleteContext, err := m.NewRWContext(0)
+	if err != nil {
+		log.Fatalf("an error occurred creating the rwContext to prepare for the genesis state: %s", err.Error())
+	}
+	deleteContext.Close()
+	// END HACK
+
 	// REFACTOR: This business logic should probably live in `types/genesis.go`
 	//           and we need to add proper unit tests for it.`
 	poolValues := make(map[string]*big.Int, 0)
@@ -31,11 +40,10 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	}
 
 	rwContext, err := m.NewRWContext(0)
-	defer rwContext.Commit()
-
 	if err != nil {
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
 	}
+	defer rwContext.Commit()
 
 	for _, app := range state.Apps {
 		if err = rwContext.InsertApp(app.Address, app.PublicKey, app.Output, app.Paused, int(app.Status), app.MaxRelays, app.StakedTokens, app.Chains, app.PausedHeight, app.UnstakingHeight); err != nil {
