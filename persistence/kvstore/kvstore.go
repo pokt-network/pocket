@@ -6,13 +6,15 @@ import (
 	badger "github.com/dgraph-io/badger/v3"
 )
 
-type KVStore interface {
+type KVStore interface { // TODO(Team) move to shared
 	// Lifecycle methods
 	Stop() error
 
 	// Accessors
+	// TODO (Team) need proper iterator interface, can't live on this interface without one
 	Put(key []byte, value []byte) error
 	Get(key []byte) ([]byte, error)
+	GetAll(prefixKey []byte, descending bool) ([][]byte, error)
 	Exists(key []byte) (bool, error)
 	ClearAll() error
 }
@@ -48,11 +50,7 @@ func (store badgerKVStore) Put(key []byte, value []byte) error {
 		return err
 	}
 
-	if err := txn.Commit(); err != nil {
-		return err
-	}
-
-	return nil
+	return txn.Commit()
 }
 
 func (store badgerKVStore) Get(key []byte) ([]byte, error) {
@@ -74,6 +72,30 @@ func (store badgerKVStore) Get(key []byte) ([]byte, error) {
 	}
 
 	return value, nil
+}
+
+func (store badgerKVStore) GetAll(prefix []byte, descending bool) (values [][]byte, err error) {
+	// TODO (Team) research views
+	txn := store.db.NewTransaction(false)
+	defer txn.Discard()
+	opt := badger.DefaultIteratorOptions
+	opt.Prefix = prefix
+	if !descending {
+		opt.Reverse = true
+	}
+	it := txn.NewIterator(opt)
+	defer it.Close()
+	for it.Rewind(); it.Valid(); it.Next() {
+		item := it.Item()
+		err = item.Value(func(v []byte) error {
+			values = append(values, v)
+			return nil
+		})
+		if err != nil {
+			return
+		}
+	}
+	return
 }
 
 func (store badgerKVStore) Exists(key []byte) (bool, error) {

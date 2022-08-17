@@ -1,0 +1,15 @@
+syntax = "proto3";
+package shared;
+
+option go_package = "github.com/pokt-network/pocket/shared/types";
+
+message DefaultTxResult {
+  bytes tx = 1;
+  int64 Height = 2;
+  int32 index = 3;
+  int32 result_code = 4;
+  string error = 5;
+  string signer = 6;
+  string recipient = 7;
+  string message_type = 8;
+}
