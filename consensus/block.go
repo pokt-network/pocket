@@ -109,10 +109,6 @@ func (m *consensusModule) commitBlock(block *types.Block) error {
 		return err
 	}
 
-	// Commit and release the context
-	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
-		return err
-	}
 	// IMPROVE(olshansky): temporary solution. `ApplyBlock` above applies the
 	// transactions to the postgres database, and this stores it in the KV store upon commitment.
 	// Instead of calling this directly, an alternative solution is to store the block metadata in
@@ -122,6 +118,12 @@ func (m *consensusModule) commitBlock(block *types.Block) error {
 	if err := m.utilityContext.StoreBlock(blockProtoBytes); err != nil {
 		return err
 	}
+
+	// Commit and release the context
+	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
+		return err
+	}
+
 	m.utilityContext.ReleaseContext()
 	m.utilityContext = nil
 

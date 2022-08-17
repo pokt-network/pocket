@@ -31,7 +31,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	}
 
 	rwContext, err := m.NewRWContext(0)
-	defer rwContext.Release()
+	defer rwContext.Commit()
 
 	if err != nil {
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
@@ -95,7 +95,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 		}
 	}
 
-	// TODO(team): use params from genesis file not hardcoded
+	// TODO(team): use params from genesis file - not the hardcoded
 	if err = rwContext.InitParams(); err != nil {
 		log.Fatalf("an error occurred initializing params: %s", err.Error())
 	}
