@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/pokt-network/pocket/shared/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
@@ -88,13 +89,13 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 		var err error
 		switch actorType {
 		case typesUtil.ActorType_App:
-			err = ctx.Context.SetAppMaxPausedBlocks(0)
+			err = ctx.Context.SetParam(types.AppMaxPauseBlocksParamName, 0)
 		case typesUtil.ActorType_Val:
-			err = ctx.Context.SetValidatorMaxPausedBlocks(0)
+			err = ctx.Context.SetParam(types.ValidatorMaxPausedBlocksParamName, 0)
 		case typesUtil.ActorType_Fish:
-			err = ctx.Context.SetFishermanMaxPausedBlocks(0)
+			err = ctx.Context.SetParam(types.FishermanMaxPauseBlocksParamName, 0)
 		case typesUtil.ActorType_Node:
-			err = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
+			err = ctx.Context.SetParam(types.ServiceNodeMaxPauseBlocksParamName, 0)
 		default:
 			t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 		}
@@ -170,10 +171,10 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 		poolName := actorType.GetActorPoolName()
 
 		ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
-		err := ctx.Context.SetAppUnstakingBlocks(0)
+		err := ctx.Context.SetParam(types.AppUnstakingBlocksParamName, 0)
 		require.NoError(t, err)
 
-		err = ctx.Context.SetAppMaxPausedBlocks(0)
+		err = ctx.Context.SetParam(types.AppMaxPauseBlocksParamName, 0)
 		require.NoError(t, err)
 
 		actors := GetAllTestingActors(t, ctx, actorType)

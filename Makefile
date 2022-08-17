@@ -70,6 +70,15 @@ go_doc:
 	fi; \
 	}
 
+.PHONY: go_protoc-go-inject-tag
+### Checks if protoc-go-inject-tag is installed
+go_protoc-go-inject-tag:
+	{ \
+	if ! command -v protoc-go-inject-tag >/dev/null; then \
+		echo "Install with 'go install github.com/favadi/protoc-go-inject-tag@latest'"; \
+	fi; \
+	}
+
 .PHONY: go_clean_deps
 ## Runs `go mod tidy` && `go mod vendor`
 go_clean_deps:
@@ -80,6 +89,7 @@ go_clean_deps:
 install_cli_deps:
 	go install "google.golang.org/protobuf/cmd/protoc-gen-go@v1.28" && protoc-gen-go --version
 	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
+	go install "github.com/favadi/protoc-go-inject-tag@latest"
 
 .PHONY: refresh
 ## Removes vendor, installs deps, generates mocks and protobuf files. Perform after a new pull or a branch switch
@@ -269,11 +279,12 @@ protogen_clean:
 
 .PHONY: protogen_local
 ## Generate go structures for all of the protobufs
-protogen_local:
+protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = "./shared/types/proto/")
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto         --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto              --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto --experimental_allow_proto3_optional
+	protoc-go-inject-tag -input="./shared/types/genesis/*.pb.go"
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto      --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/raintree/types/proto       --go_out=./p2p/types            ./p2p/raintree/types/proto/*.proto   --experimental_allow_proto3_optional
 	echo "View generated proto files by running: make protogen_show"
