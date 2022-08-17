@@ -12,6 +12,7 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *types.DebugMessage)
 		m.showLatestBlockInStore(debugMessage)
 	case types.DebugMessageAction_DEBUG_CLEAR_STATE:
 		m.clearState(debugMessage)
+		m.populateGenesisState(m.GetBus().GetConfig().GenesisSource.GetState())
 	default:
 		log.Printf("Debug message not handled by persistence module: %s \n", debugMessage.Message)
 	}
