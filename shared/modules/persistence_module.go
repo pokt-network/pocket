@@ -9,6 +9,7 @@ type PersistenceModule interface {
 	Module
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
+	ResetContext() error
 	GetBlockStore() kvstore.KVStore
 
 	// Debugging / development only
@@ -237,6 +238,9 @@ type PersistenceWriteContext interface {
 
 type PersistenceReadContext interface {
 	GetHeight() (int64, error)
+
+	// Closes the read context
+	Close() error
 
 	// Block Queries
 	GetLatestBlockHeight() (uint64, error)

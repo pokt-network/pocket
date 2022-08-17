@@ -42,6 +42,7 @@ var (
 	OlshanskyChains = []string{"OLSH"}
 )
 
+// TECHDEBT: Avoid using shared / global variables in unit tests so they are fully isolated from each other.
 var testPersistenceModule modules.PersistenceModule
 
 // See https://github.com/ory/dockertest as reference for the template of this code
@@ -62,6 +63,7 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	}
 	t.Cleanup(func() {
 		require.NoError(t, db.Release())
+		testPersistenceModule.ResetContext()
 	})
 
 	return db
@@ -79,6 +81,7 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 	}
 	f.Cleanup(func() {
 		db.Release()
+		testPersistenceModule.ResetContext()
 	})
 
 	return &db

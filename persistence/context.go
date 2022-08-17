@@ -25,7 +25,15 @@ func (p PostgresContext) Reset() error {
 }
 
 func (p PostgresContext) Commit() error {
-	return p.DB.Tx.Commit(context.TODO())
+	ctx := context.TODO()
+	if err := p.DB.Tx.Commit(context.TODO()); err != nil {
+		return err
+	}
+	if err := p.DB.conn.Close(ctx); err != nil {
+		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
+
+	}
+	return nil
 }
 
 func (p PostgresContext) Release() error {
@@ -35,7 +43,10 @@ func (p PostgresContext) Release() error {
 	}
 	if err := p.DB.conn.Close(ctx); err != nil {
 		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
-
 	}
 	return nil
+}
+
+func (p PostgresContext) Close() error {
+	return p.DB.conn.Close(context.TODO())
 }

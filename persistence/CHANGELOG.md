@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - This enables more “functional” like testing by returning a persistence module and avoiding global testing variables
   - Only return once a connection to the DB has been initialized reducing the likelihood of test race conditions
 - Implemented `NewReadContext` with a proper read-only context
+- Add `ResetContext` to the persistence module and `Close` to the read context
 
 **Secondary persistence module changes**
 
