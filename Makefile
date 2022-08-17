@@ -346,4 +346,4 @@ todo_count:
 .PHONY: todo_this_commit
 ## List all the TODOs needed to be done in this commit
 todo_this_commit:
-	grep --exclude-dir={.git,vendor,prototype} --exclude=Makefile -r -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT"
+	grep --exclude-dir={.git,vendor,prototype,.vscode} --exclude=Makefile -r -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT"
