@@ -70,6 +70,15 @@ go_doc:
 	fi; \
 	}
 
+.PHONY: go_protoc-go-inject-tag
+### Checks if protoc-go-inject-tag is installed
+go_protoc-go-inject-tag:
+	{ \
+	if ! command -v protoc-go-inject-tag >/dev/null; then \
+		echo "Install with 'go install github.com/favadi/protoc-go-inject-tag@latest'"; \
+	fi; \
+	}
+
 .PHONY: go_clean_deps
 ## Runs `go mod tidy` && `go mod vendor`
 go_clean_deps:
@@ -85,6 +94,7 @@ gofmt:
 install_cli_deps:
 	go install "google.golang.org/protobuf/cmd/protoc-gen-go@v1.28" && protoc-gen-go --version
 	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
+	go install "github.com/favadi/protoc-go-inject-tag@latest"
 
 .PHONY: develop_test
 ## Run all of the make commands necessary to develop on the project and verify the tests pass
@@ -292,6 +302,63 @@ test_sortition:
 ## Run all go unit tests in the Persistence module
 test_persistence:
 	go test ${VERBOSE_TEST} -p=1 -count=1 ./persistence/...
+
+.PHONY: benchmark_sortition
+## Benchmark the Sortition library
+benchmark_sortition:
+	go test ${VERBOSE_TEST} ./consensus/leader_election/sortition -bench=.
+
+# TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
+
+.PHONY: protogen_show
+## A simple `find` command that shows you the generated protobufs.
+protogen_show:
+	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor"
+
+.PHONY: protogen_clean
+## Remove all the generated protobufs.
+protogen_clean:
+	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs -r rm
+
+.PHONY: protogen_local
+## Generate go structures for all of the protobufs
+protogen_local: go_protoc-go-inject-tag
+	$(eval proto_dir = "./shared/types/proto/")
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto         --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto              --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto --experimental_allow_proto3_optional
+	protoc-go-inject-tag -input="./shared/types/genesis/*.pb.go"
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto      --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/raintree/types/proto       --go_out=./p2p/types            ./p2p/raintree/types/proto/*.proto   --experimental_allow_proto3_optional
+	echo "View generated proto files by running: make protogen_show"
+
+.PHONY: protogen_docker_m1
+## TODO(derrandz): Test, validate & update.
+protogen_docker_m1: docker_check
+	docker build  -t pocket/proto-generator -f ./build/Dockerfile.m1.proto . && docker run --platform=linux/amd64 -it -v $(CWD)/shared:/usr/src/app/shared pocket/proto-generator
+
+.PHONY: protogen_docker
+## TODO(derrandz): Test, validate & update.
+protogen_docker: docker_check
+	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it -v $(CWD)/:/usr/src/app/ pocket/proto-generator
+
+.PHONY: gofmt
+## Format all the .go files in the project in place.
+gofmt:
+	gofmt -w -s .
+
+## Module commands
+
+.PNONY: test_p2p_wire_codec
+## Run the p2p wire codec behavior test
+test_p2p_wire_codec:
+	go test -run TestWireCodec -v -race ./p2p
+
+.PHONY: test_p2p_socket
+## Run the p2p net IO behaviors test
+test_p2p_socket:
+	go test -run TestSocket -v -race ./p2p
+>>>>>>> main
 
 .PHONY: test_p2p_types
 ## Run p2p subcomponents' tests

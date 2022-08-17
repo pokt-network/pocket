@@ -18,7 +18,7 @@ Please note that this repository is under very active development and breaking c
 - Install [Docker](https://docs.docker.com/get-docker/)
 - Install [Docker Compose](https://docs.docker.com/compose/install/)
 - Install [Golang](https://go.dev/doc/install)
-- `protoc-gen-go` and `mockgen` by running `make install_cli_deps`
+- `protoc-gen-go`, `protoc-go-inject-tag` and `mockgen` by running `make install_cli_deps`
 
 _Note to the reader: Please update this list if you found anything missing._
 
@@ -31,8 +31,9 @@ Docker version 20.10.14, build a224086
 $ protoc --version
 libprotoc 3.19.4
 
-$ protoc --version
-libprotoc 3.19.4
+$ which protoc-go-inject-tag && echo "protoc-go-inject-tag Installed"
+/your$HOME/go/bin/protoc-go-inject-tag
+protoc-go-inject-tag Installed
 
 $ go version
 go version go1.18.1 darwin/arm64
