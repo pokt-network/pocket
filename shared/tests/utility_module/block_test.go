@@ -186,7 +186,7 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 
 		actors := GetAllTestingActors(t, ctx, actorType)
 		for _, actor := range actors {
-			require.Equal(t, int32(types.StakedStatus), actor.GetStatus(), "wrong starting status")
+			require.Equal(t, int32(typesUtil.StakedStatus), actor.GetStatus(), "wrong starting status")
 			er := ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 1)
 			require.NoError(t, er)
 		}

@@ -9,7 +9,6 @@ import (
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
-	"github.com/pokt-network/pocket/utility/types"
 )
 
 // TODO(Andrew): generalize with the `actors interface`` once merged with #111
