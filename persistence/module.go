@@ -79,16 +79,14 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	if err != nil {
 		return nil, err
 	}
-
 	tx, err := conn.BeginTx(context.TODO(), pgx.TxOptions{
 		IsoLevel:       pgx.ReadUncommitted,
 		AccessMode:     pgx.ReadWrite,
-		DeferrableMode: pgx.NotDeferrable, // TODO(andrew): Research if this should be `Deferrable`
+		DeferrableMode: pgx.Deferrable, // TODO(andrew): Research if this should be `Deferrable`
 	})
 	if err != nil {
 		return nil, err
 	}
-
 	return PostgresContext{
 		Height: height,
 		DB: PostgresDB{

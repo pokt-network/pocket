@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `s/db/conn/g` and `s/conn/tx/g` in some (not all) places where appropriate
 - Make some exported variables / functions unexported for readability & access purposes
 - Add a few helpers for persistence related unit testing
+- Added unit tests and TODOs for handling multiple read/write contexts
 
 ## [0.0.0.2] - 2022-08-03
 

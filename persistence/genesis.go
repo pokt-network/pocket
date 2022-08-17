@@ -72,8 +72,6 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 		}
 	}
 
-	// DISCUSS_IN_THIS_COMMIT: Do protocol actors need corresponding accounts?
-	// See reference: https://github.com/pokt-network/pocket/pull/140#discussion_r939742930
 	for _, acc := range state.Accounts {
 		if err = rwContext.SetAccountAmount(acc.Address, acc.Amount); err != nil {
 			log.Fatalf("an error occurred inserting an acc in the genesis state: %s", err.Error())
