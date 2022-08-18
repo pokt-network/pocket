@@ -70,6 +70,16 @@ func GenerateNodeConfigs(_ *testing.T, n int) (configs []*genesis.Config, genesi
 	var keys []string
 	genesisState, keys = test_artifacts.NewGenesisState(n, 1, 1, 1)
 	configs = test_artifacts.NewDefaultConfigs(keys)
+	for _, config := range configs {
+		config.Consensus = &genesis.ConsensusConfig{
+			MaxMempoolBytes: 500000000,
+			PacemakerConfig: &genesis.PacemakerConfig{
+				TimeoutMsec:               5000,
+				Manual:                    false,
+				DebugTimeBetweenStepsMsec: 0,
+			},
+		}
+	}
 	return
 }
 
