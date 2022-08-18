@@ -161,7 +161,8 @@ func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 	return kvstore.NewKVStore(blockStorePath)
 }
 
-// INCOMPLETE: This is not a complete implementation but just a first approach to loading a previously stored state
+// TODO(drewsky): Simplify and externalize the logic for whether genesis should be populated and
+// move the if logic out of this file.
 func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	checkContext, err := m.NewReadContext(-1)
 	if err != nil {
