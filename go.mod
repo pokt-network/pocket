@@ -21,7 +21,6 @@ require (
 
 require (
 	github.com/dgraph-io/badger/v3 v3.2103.2
-	github.com/iancoleman/strcase v0.2.0
 	github.com/jackc/pgconn v1.11.0
 )
 

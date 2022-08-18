@@ -1,17 +1,14 @@
 package utility_module
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/tests"
+	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
-
-	"github.com/pokt-network/pocket/shared/tests"
-	"github.com/pokt-network/pocket/shared/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -115,7 +112,11 @@ func TestUtilityContext_GetDoubleSignFeeOwner(t *testing.T) {
 	defaultParam := defaultParams.MessageDoubleSignFeeOwner
 	gotParam, err := ctx.GetDoubleSignFeeOwner()
 	require.NoError(t, err)
-	require.False(t, !bytes.Equal(defaultParam, gotParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+
+	defaultParamTx, er := hex.DecodeString(defaultParam)
+	require.NoError(t, er)
+
+	require.Equal(t, defaultParamTx, gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
 	tests.CleanupTest(ctx)
 }
@@ -1077,7 +1078,9 @@ func TestUtilityContext_GetParamOwner(t *testing.T) {
 	defaultParam = defaultParams.AclOwner
 	gotParam, err = ctx.GetParamOwner(types.MessageChangeParameterFeeOwner)
 	require.NoError(t, err)
-	require.False(t, !bytes.Equal(gotParam, defaultParam), fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
+	defaultParamBz, err := hex.DecodeString(defaultParam)
+	require.NoError(t, err)
+	require.Equal(t, defaultParamBz, gotParam, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParam, gotParam))
 
 	tests.CleanupTest(ctx)
 }
