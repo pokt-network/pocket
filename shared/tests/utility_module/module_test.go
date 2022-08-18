@@ -1,25 +1,16 @@
 package utility_module
 
 import (
-	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/shared/tests"
-	"github.com/pokt-network/pocket/shared/types/genesis"
-	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"math/big"
 	"testing"
 
-<<<<<<< HEAD
-	"github.com/stretchr/testify/require"
-
-	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/utility"
-=======
-	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/tests"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"github.com/pokt-network/pocket/utility"
 	"github.com/stretchr/testify/require"
->>>>>>> main
 )
 
 var (
@@ -34,22 +25,13 @@ func NewTestingMempool(_ *testing.T) types.Mempool {
 	return types.NewMempool(1000000, 1000)
 }
 
-<<<<<<< HEAD
 func TestMain(m *testing.M) {
 	pool, resource := tests.SetupPostgresDocker()
-=======
-var testPersistenceMod modules.PersistenceModule
-
-func TestMain(m *testing.M) {
-	pool, resource, mod := tests.SetupPostgresDockerPersistenceMod()
-	testPersistenceMod = mod
->>>>>>> main
 	m.Run()
 	tests.CleanupPostgresDocker(m, pool, resource)
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
-<<<<<<< HEAD
 	mempool := NewTestingMempool(t)
 	cfg := &genesis.Config{
 		Base:      &genesis.BaseConfig{},
@@ -69,9 +51,6 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	require.NoError(t, err)
 	require.NoError(t, tests.PersistenceModule.Start(), "start persistence mod")
 	persistenceContext, err := tests.PersistenceModule.NewRWContext(height)
-=======
-	persistenceContext, err := testPersistenceMod.NewRWContext(height)
->>>>>>> main
 	require.NoError(t, err)
 
 	mempool := NewTestingMempool(t)

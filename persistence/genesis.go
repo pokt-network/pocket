@@ -170,20 +170,19 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []*genesis.Account, 
 	}
 	for rows.Next() {
 		acc := new(genesis.Account)
-		var address, balance string
-		if err = rows.Scan(&address, &balance, &height); err != nil {
+		if err = rows.Scan(&acc.Address, &acc.Amount, &height); err != nil {
 			return nil, err
 		}
-		acc.Address, err = hex.DecodeString(address)
+		// acc.Address, err = address
 		if err != nil {
 			return nil, err
 		}
-		acc.Amount = balance
 		accs = append(accs, acc)
 	}
 	return
 }
 
+// CLEANUP: Consolidate with GetAllAccounts.
 func (p PostgresContext) GetAllPools(height int64) (accs []*genesis.Account, err error) {
 	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
@@ -194,17 +193,10 @@ func (p PostgresContext) GetAllPools(height int64) (accs []*genesis.Account, err
 		return nil, err
 	}
 	for rows.Next() {
-		pool := new(genesis.Pool)
-		pool.Account = new(genesis.Account)
-		var name, balance string
-		if err = rows.Scan(&name, &balance, &height); err != nil {
+		pool := new(genesis.Account)
+		if err = rows.Scan(&pool.Address, &pool.Amount, &height); err != nil {
 			return nil, err
 		}
-		pool.Address = name
-		if err != nil {
-			return nil, err
-		}
-		pool.Amount = balance
 		accs = append(accs, pool)
 	}
 	return

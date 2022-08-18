@@ -6,11 +6,9 @@ import (
 	"log"
 
 	"github.com/jackc/pgx/v4"
-	"github.com/pokt-network/pocket/shared/types/genesis"
-
-	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 var _ modules.PersistenceModule = &persistenceModule{}

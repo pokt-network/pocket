@@ -198,22 +198,6 @@ func UpdateStakeAmount(address, actorSpecificParam, stakeAmount string, height i
 		constraintName)
 }
 
-func UpdateStakeAmount(address, actorSpecificParam, stakeAmount string, height int64, tableName, constraintName string) string {
-	return fmt.Sprintf(`
-		INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
-		(
-			SELECT address, public_key, '%s', %s, output_address, paused_height, unstaking_height, %d
-			FROM %s WHERE address='%s' AND height<=%d ORDER BY height DESC LIMIT 1
-		)
-		ON CONFLICT ON CONSTRAINT %s
-			DO UPDATE SET staked_tokens=EXCLUDED.staked_tokens, height=EXCLUDED.height`,
-		tableName, actorSpecificParam,
-		stakeAmount, actorSpecificParam, height,
-		tableName, address, height,
-		constraintName)
-
-}
-
 func UpdatePausedHeight(address, actorSpecificParam string, pausedHeight, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
