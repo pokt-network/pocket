@@ -84,6 +84,9 @@ func (m *consensusModule) applyBlockAsReplica(block *types.Block) error {
 
 // Creates a new Utility context and clears/nullifies any previous contexts if they exist
 func (m *consensusModule) refreshUtilityContext() error {
+	// This is a catch-all to release the previous utility context if it wasn't cleaned up
+	// in the proper lifecycle (e.g. catch up, error, network partition, etc...). Ideally, this
+	// should not be called.
 	if m.utilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
 		m.utilityContext.ReleaseContext()
