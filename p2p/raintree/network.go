@@ -7,13 +7,11 @@ import (
 	"math/rand"
 	"time"
 
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/shared/modules"
-
 	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
-
 	"google.golang.org/protobuf/proto"
 )
 

@@ -4,11 +4,12 @@ import (
 	"crypto/ed25519"
 	"encoding/binary"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"sort"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/pokt-network/pocket/shared/types/genesis"
 
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"

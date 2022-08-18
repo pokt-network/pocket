@@ -1,10 +1,11 @@
 package test_artifacts
 
 import (
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
-	"math/big"
 )
 
 var (

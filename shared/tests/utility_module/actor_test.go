@@ -3,6 +3,11 @@ package utility_module
 import (
 	"encoding/hex"
 	"fmt"
+	"math"
+	"math/big"
+	"sort"
+	"testing"
+
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/tests"
@@ -13,13 +18,9 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
-	"math"
-	"math/big"
-	"sort"
-	"testing"
 )
 
-// INVESTIGATE: Is there a better way to implement this than to simply have an actors forloop in each test?
+// CLEANUP: Move `App` specific tests to `app_test.go`
 
 func TestUtilityContext_HandleMessageStake(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
@@ -115,13 +116,13 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			var err error
 			switch actorType {
 			case typesUtil.ActorType_Val:
-				err = ctx.Context.SetValidatorMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.ValidatorMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Node:
-				err = ctx.Context.SetServiceNodeMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.ServiceNodeMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_App:
-				err = ctx.Context.SetAppMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.AppMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Fish:
-				err = ctx.Context.SetFishermanMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.FishermanMinimumPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
@@ -160,13 +161,13 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			var err error
 			switch actorType {
 			case typesUtil.ActorType_App:
-				err = ctx.Context.SetAppMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.AppMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Val:
-				err = ctx.Context.SetValidatorMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.ValidatorMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Fish:
-				err = ctx.Context.SetFishermanMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.FishermanMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Node:
-				err = ctx.Context.SetServiceNodeMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.ServiceNodeMinimumPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
@@ -202,13 +203,13 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			require.NoError(t, err)
 			switch actorType {
 			case typesUtil.ActorType_App:
-				err = ctx.Context.SetAppMaxPausedBlocks(0)
+				err = ctx.Context.SetParam(types.AppMaxPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Val:
-				err = ctx.Context.SetValidatorMaxPausedBlocks(0)
+				err = ctx.Context.SetParam(types.ValidatorMaxPausedBlocksParamName, 0)
 			case typesUtil.ActorType_Fish:
-				err = ctx.Context.SetFishermanMaxPausedBlocks(0)
+				err = ctx.Context.SetParam(types.FishermanMaxPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Node:
-				err = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
+				err = ctx.Context.SetParam(types.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
@@ -484,13 +485,13 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			var er error
 			switch actorType {
 			case typesUtil.ActorType_App:
-				er = ctx.Context.SetAppMaxPausedBlocks(0)
+				er = ctx.Context.SetParam(types.AppMaxPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Val:
-				er = ctx.Context.SetValidatorMaxPausedBlocks(0)
+				er = ctx.Context.SetParam(types.ValidatorMaxPausedBlocksParamName, 0)
 			case typesUtil.ActorType_Fish:
-				er = ctx.Context.SetFishermanMaxPausedBlocks(0)
+				er = ctx.Context.SetParam(types.FishermanMaxPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Node:
-				er = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
+				er = ctx.Context.SetParam(types.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
@@ -534,17 +535,17 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 		var err1, err2 error
 		switch actorType {
 		case typesUtil.ActorType_App:
-			err1 = ctx.Context.SetAppUnstakingBlocks(0)
-			err2 = ctx.Context.SetAppMaxPausedBlocks(0)
+			err1 = ctx.Context.SetParam(types.AppUnstakingBlocksParamName, 0)
+			err2 = ctx.Context.SetParam(types.AppMaxPauseBlocksParamName, 0)
 		case typesUtil.ActorType_Val:
-			err1 = ctx.Context.SetValidatorUnstakingBlocks(0)
-			err2 = ctx.Context.SetValidatorMaxPausedBlocks(0)
+			err1 = ctx.Context.SetParam(types.ValidatorUnstakingBlocksParamName, 0)
+			err2 = ctx.Context.SetParam(types.ValidatorMaxPausedBlocksParamName, 0)
 		case typesUtil.ActorType_Fish:
-			err1 = ctx.Context.SetFishermanUnstakingBlocks(0)
-			err2 = ctx.Context.SetFishermanMaxPausedBlocks(0)
+			err1 = ctx.Context.SetParam(types.FishermanUnstakingBlocksParamName, 0)
+			err2 = ctx.Context.SetParam(types.FishermanMaxPauseBlocksParamName, 0)
 		case typesUtil.ActorType_Node:
-			err1 = ctx.Context.SetServiceNodeUnstakingBlocks(0)
-			err2 = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
+			err1 = ctx.Context.SetParam(types.ServiceNodeUnstakingBlocksParamName, 0)
+			err2 = ctx.Context.SetParam(types.ServiceNodeMaxPauseBlocksParamName, 0)
 		default:
 			t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 		}
@@ -568,8 +569,7 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 		err = ctx.UnstakeActorsThatAreReady()
 		require.NoError(t, err, "error unstaking actors that are ready")
 		// TODO Delete() is no op
-		ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-		tests.CleanupTest()
+		tests.CleanupTest(ctx)
 	}
 }
 

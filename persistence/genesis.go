@@ -3,18 +3,24 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/persistence/schema"
-	sharedTypes "github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 	"math/big"
+
+	"github.com/pokt-network/pocket/persistence/schema"
+	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
-func (pm *persistenceModule) PopulateGenesisState(state *genesis.GenesisState) {
-	poolValues := make(map[string]*big.Int, 0)
+// TODO(Andrew): generalize with the `actors interface`` once merged with #111
+// WARNING: This function crashes the process if there is an error populating the genesis state.
+func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
+	log.Println("Populating genesis state...")
 
+	// REFACTOR: This business logic should probably live in `types/genesis.go`
+	//           and we need to add proper unit tests for it.`
+	poolValues := make(map[string]*big.Int, 0)
 	addValueToPool := func(poolName string, valueToAdd string) error {
-		value, err := sharedTypes.StringToBigInt(valueToAdd)
+		value, err := types.StringToBigInt(valueToAdd)
 		if err != nil {
 			return err
 		}
@@ -24,8 +30,14 @@ func (pm *persistenceModule) PopulateGenesisState(state *genesis.GenesisState) {
 		poolValues[poolName].Add(poolValues[poolName], value)
 		return nil
 	}
+
 	log.Println("Populating genesis state...")
-	rwContext, err := pm.NewRWContext(0)
+	rwContext, err := m.NewRWContext(0)
+	if err != nil {
+		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
+	}
+	defer rwContext.Commit()
+
 	if err != nil {
 		log.Fatal(fmt.Sprintf("an error occurred creating the rwContext for the genesis state: %s", err.Error()))
 	}
@@ -130,14 +142,23 @@ func (pm *persistenceModule) PopulateGenesisState(state *genesis.GenesisState) {
 			log.Fatal(fmt.Sprintf("an error occurred inserting staked tokens into %s pool", genesis.Pool_Names_ValidatorStakePool.String()))
 		}
 	}
-	if err = rwContext.InitParams(); err != nil { // TODO (Team) use params from genesis file not hardcoded
-		log.Fatal(fmt.Sprintf("an error occurred initializing params: %s", err.Error()))
+	// TODO(team): use params from genesis file - not the hardcoded
+	if err = rwContext.InitParams(); err != nil {
+		log.Fatalf("an error occurred initializing params: %s", err.Error())
 	}
+
+	if err = rwContext.InitFlags(); err != nil { // TODO (Team) use flags from genesis file not hardcoded
+		log.Fatalf("an error occurred initializing flags: %s", err.Error())
+	}
+
 	if err = rwContext.Commit(); err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred during commit() on genesis state %s ", err.Error()))
+		log.Fatalf("an error occurred during commit() on genesis state %s ", err.Error())
 	}
 }
 
+// TODO(pocket/issues/149): All of the functions below following a structure similar to `GetAll<Actor>`
+//  can easily be refactored and condensed into a single function using a generic type or a common
+// interface.
 func (p PostgresContext) GetAllAccounts(height int64) (accs []*genesis.Account, err error) {
 	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
@@ -153,7 +174,10 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []*genesis.Account, 
 		if err = rows.Scan(&address, &balance, &height); err != nil {
 			return nil, err
 		}
-		acc.Address = address
+		acc.Address, err = hex.DecodeString(address)
+		if err != nil {
+			return nil, err
+		}
 		acc.Amount = balance
 		accs = append(accs, acc)
 	}
@@ -170,7 +194,8 @@ func (p PostgresContext) GetAllPools(height int64) (accs []*genesis.Account, err
 		return nil, err
 	}
 	for rows.Next() {
-		pool := new(genesis.Account)
+		pool := new(genesis.Pool)
+		pool.Account = new(genesis.Account)
 		var name, balance string
 		if err = rows.Scan(&name, &balance, &height); err != nil {
 			return nil, err

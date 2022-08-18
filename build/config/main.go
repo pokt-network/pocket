@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"io/ioutil"
 	"strconv"
+
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 )
 
 // Utility to generate config and genesis files

@@ -68,9 +68,7 @@
       {
         "address": "3b67d1a6d63c295c312a2f013150f01f15f6d785",
         "public_key": "d1e0ed14f7e5e98560f90cfaecc883e918558c5f458fc6aa37c799096a5045e6",
-        "chains": [
-          "0001"
-        ],
+        "chains": ["0001"],
         "generic_param": "1000000",
         "staked_amount": "1000000000000",
         "paused_height": -1,
@@ -124,9 +122,7 @@
       {
         "address": "4a1226601a0f3cbba852a8086f14f9a00e5a6e82",
         "public_key": "cf05669b65132a6bd1069bcddcf47c349dd84986a03782a55081b438e15aa1bb",
-        "chains": [
-          "0001"
-        ],
+        "chains": ["0001"],
         "generic_param": "node1.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
@@ -139,9 +135,7 @@
       {
         "address": "efaf951a927b323251da5ab92c8927781395ce03",
         "public_key": "2beb3626a95b347057d8df86e5a4fc8b917775bd2f6594f99f0df7f25b6bae0d",
-        "chains": [
-          "0001"
-        ],
+        "chains": ["0001"],
         "generic_param": "node1.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,

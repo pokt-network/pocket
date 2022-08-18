@@ -84,6 +84,9 @@ func (m *consensusModule) applyBlockAsReplica(block *types.Block) error {
 
 // Creates a new Utility context and clears/nullifies any previous contexts if they exist
 func (m *consensusModule) refreshUtilityContext() error {
+	// This is a catch-all to release the previous utility context if it wasn't cleaned up
+	// in the proper lifecycle (e.g. catch up, error, network partition, etc...). Ideally, this
+	// should not be called.
 	if m.utilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
 		m.utilityContext.ReleaseContext()
@@ -109,10 +112,6 @@ func (m *consensusModule) commitBlock(block *types.Block) error {
 		return err
 	}
 
-	// Commit and release the context
-	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
-		return err
-	}
 	// IMPROVE(olshansky): temporary solution. `ApplyBlock` above applies the
 	// transactions to the postgres database, and this stores it in the KV store upon commitment.
 	// Instead of calling this directly, an alternative solution is to store the block metadata in
@@ -122,6 +121,12 @@ func (m *consensusModule) commitBlock(block *types.Block) error {
 	if err := m.utilityContext.StoreBlock(blockProtoBytes); err != nil {
 		return err
 	}
+
+	// Commit and release the context
+	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
+		return err
+	}
+
 	m.utilityContext.ReleaseContext()
 	m.utilityContext = nil
 

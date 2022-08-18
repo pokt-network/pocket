@@ -9,7 +9,6 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,10 +20,7 @@ func FuzzApplication(f *testing.F) {
 }
 
 func TestInsertAppAndExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -55,10 +51,7 @@ func TestInsertAppAndExists(t *testing.T) {
 }
 
 func TestUpdateApp(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -90,10 +83,7 @@ func TestUpdateApp(t *testing.T) {
 }
 
 func TestGetAppsReadyToUnstake(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -179,10 +169,7 @@ func TestGetAppPauseHeightIfExists(t *testing.T) {
 }
 
 func TestSetAppPauseHeightAndUnstakeLater(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -208,10 +195,7 @@ func TestSetAppPauseHeightAndUnstakeLater(t *testing.T) {
 }
 
 func TestGetAppOutputAddress(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)

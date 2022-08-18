@@ -20,11 +20,13 @@ func FuzzValidator(f *testing.F) {
 		schema.ValidatorActor)
 }
 
+func TestGetSetValidatorStakeAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
+	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestValidator, db.GetValidatorStakeAmount, db.SetValidatorStakeAmount, 1)
+}
+
 func TestInsertValidatorAndExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -56,10 +58,7 @@ func TestInsertValidatorAndExists(t *testing.T) {
 }
 
 func TestUpdateValidator(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -87,10 +86,7 @@ func TestUpdateValidator(t *testing.T) {
 }
 
 func TestGetValidatorsReadyToUnstake(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -180,10 +176,7 @@ func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 }
 
 func TestSetValidatorPauseHeightAndUnstakeLater(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -210,10 +203,7 @@ func TestSetValidatorPauseHeightAndUnstakeLater(t *testing.T) {
 }
 
 func TestGetValidatorOutputAddress(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)

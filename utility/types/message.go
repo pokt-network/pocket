@@ -18,6 +18,7 @@ import (
 validations possible before even checking the state storage layer.
 */
 
+// CLEANUP: Move these to a better shared location or inline the vars.
 const (
 	MillionInt       = 1000000
 	ZeroInt          = 0

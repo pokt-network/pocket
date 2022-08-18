@@ -141,7 +141,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 	}
 
 	if err := m.commitBlock(msg.Block); err != nil {
-		m.nodeLogError("Could not commit block: %v", err)
+		m.nodeLogError("Could not commit block", err)
 		m.paceMaker.InterruptRound()
 		return
 	}

@@ -20,11 +20,13 @@ func FuzzFisherman(f *testing.F) {
 		schema.FishermanActor)
 }
 
+func TestGetSetFishermanStakeAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
+	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestFisherman, db.GetFishermanStakeAmount, db.SetFishermanStakeAmount, 1)
+}
+
 func TestInsertFishermanAndExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -55,10 +57,7 @@ func TestInsertFishermanAndExists(t *testing.T) {
 }
 
 func TestUpdateFisherman(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -90,10 +89,7 @@ func TestUpdateFisherman(t *testing.T) {
 }
 
 func TestGetFishermenReadyToUnstake(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -135,10 +131,7 @@ func TestGetFishermenReadyToUnstake(t *testing.T) {
 }
 
 func TestGetFishermanStatus(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -158,10 +151,7 @@ func TestGetFishermanStatus(t *testing.T) {
 }
 
 func TestGetFishermanPauseHeightIfExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -181,10 +171,7 @@ func TestGetFishermanPauseHeightIfExists(t *testing.T) {
 }
 
 func TestSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -211,10 +198,7 @@ func TestSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
 }
 
 func TestGetFishermanOutputAddress(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
