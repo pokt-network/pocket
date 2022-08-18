@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
+	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
 
@@ -125,10 +126,7 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 }
 
 func TestGetAppStatus(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -147,10 +145,7 @@ func TestGetAppStatus(t *testing.T) {
 }
 
 func TestGetAppPauseHeightIfExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -231,10 +226,7 @@ func newTestApp() (*typesGenesis.Actor, error) {
 
 func TestGetSetStakeAmount(t *testing.T) {
 	var newStakeAmount = "new_stake_amount"
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -285,7 +277,7 @@ func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*typesGenes
 		DefaultUnstakingHeight)
 }
 
-func getTestApp(db persistence.PostgresContext, address []byte) (*typesGenesis.Actor, error) {
+func getTestApp(db *persistence.PostgresContext, address []byte) (*typesGenesis.Actor, error) {
 	operator, publicKey, stakedTokens, maxRelays, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetApp(address, db.Height)
 	if err != nil {
 		return nil, err

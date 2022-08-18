@@ -10,7 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func GetGenericActor[T any](protocolActorSchema schema.ProtocolActorSchema, getActor func(*persistence.PostgresContext, []byte) (T, error)) func(*persistence.PostgresContext, string) (*schema.BaseActor, error) {
+func GetGenericActor[T any](
+	protocolActorSchema schema.ProtocolActorSchema,
+	getActor func(*persistence.PostgresContext, []byte) (T, error),
+) func(*persistence.PostgresContext, string) (*schema.BaseActor, error) {
 	return func(db *persistence.PostgresContext, address string) (*schema.BaseActor, error) {
 		addr, err := hex.DecodeString(address)
 		if err != nil {
@@ -134,7 +137,10 @@ func getTestGetSetStakeAmountTest[T any](
 
 	actor, err := createTestActor(db)
 	require.NoError(t, err)
-	addr := reflect.ValueOf(*actor).FieldByName("Address").Bytes()
+	addrStr := reflect.ValueOf(*actor).FieldByName("Address").String()
+
+	addr, err := hex.DecodeString(addrStr)
+	require.NoError(t, err)
 
 	// Check stake amount before
 	stakeAmount, err := getActorStake(height, addr)

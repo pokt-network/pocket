@@ -17,7 +17,7 @@ import (
 )
 
 func FuzzAccountAmount(f *testing.F) {
-	db := NewTestPostgresContext(t, 0)
+	db := NewFuzzTestPostgresContext(f, 0)
 	operations := []string{
 		"AddAmount",
 		"SubAmount",
@@ -161,7 +161,7 @@ func TestSubAccountAmount(t *testing.T) {
 }
 
 func FuzzPoolAmount(f *testing.F) {
-	db := NewTestPostgresContext(t, 0)
+	db := NewFuzzTestPostgresContext(f, 0)
 	operations := []string{
 		"AddAmount",
 		"SubAmount",
@@ -293,29 +293,44 @@ func TestGetAllAccounts(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
 	updateAccount := func(db *persistence.PostgresContext, acc *genesis.Account) error {
-		return db.AddAccountAmount(acc.Address, "10")
+		if addr, err := hex.DecodeString(acc.Address); err == nil {
+			return nil
+		} else {
+			return db.AddAccountAmount(addr, "10")
+		}
+
 	}
 
-	getAllActorsTest(t, db, db.GetAllAccounts, createAndInsertNewAccount, updateAccount, 9)
+	getAllActorsTest(t, db, db.GetAllAccounts, createAndInsertNewAccount, updateAccount, 8)
 }
 
 func TestGetAllPools(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
-	updatePool := func(db *persistence.PostgresContext, pool *genesis.Pool) error {
-		return db.AddPoolAmount(pool.Name, "10")
+	updatePool := func(db *persistence.PostgresContext, pool *genesis.Account) error {
+		return db.AddPoolAmount(pool.Address, "10")
 	}
 
-	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 6)
+	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 7)
 }
 
 // --- Helpers ---
 
 func createAndInsertNewAccount(db *persistence.PostgresContext) (*genesis.Account, error) {
 	account := newTestAccount(nil)
-	return &account, db.SetAccountAmount(account.Address, DefaultAccountAmount)
+	addr, err := hex.DecodeString(account.Address)
+	if err != nil {
+		return nil, err
+	}
+	return &account, db.SetAccountAmount(addr, DefaultAccountAmount)
 }
 
+func createAndInsertNewPool(db *persistence.PostgresContext) (*genesis.Account, error) {
+	pool := newTestPool(nil)
+	return &pool, db.SetPoolAmount(pool.Address, DefaultAccountAmount)
+}
+
+// Note to the reader: lack of consistency between []byte and string in addresses will be consolidated.
 func newTestAccount(t *testing.T) typesGenesis.Account {
 	addr, err := crypto.GenerateAddress()
 	if t != nil {

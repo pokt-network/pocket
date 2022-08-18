@@ -12,7 +12,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
-	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility"
 )
 
@@ -26,7 +25,7 @@ const (
 )
 
 // TODO (team) cleanup and simplify
-func SetupPostgresDockerPersistenceMod() (*dockertest.Pool, *dockertest.Resource, modules.PersistenceModule) {
+func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 	opts := dockertest.RunOptions{
 		Repository: "postgres",
 		Tag:        "12.3",
@@ -67,11 +66,10 @@ func SetupPostgresDockerPersistenceMod() (*dockertest.Pool, *dockertest.Resource
 	resource.Expire(120) // Tell docker to hard kill the container in 120 seconds
 
 	poolRetryChan := make(chan struct{}, 1)
-	var persistenceMod modules.PersistenceModule
 	retryConnectFn := func() error {
 		_, err := pgx.Connect(context.Background(), databaseUrl)
 		if err != nil {
-			return nil, fmt.Errorf("unable to connect to database: %v", err)
+			return fmt.Errorf("unable to connect to database: %v", err)
 		}
 		poolRetryChan <- struct{}{}
 		return nil
@@ -84,7 +82,7 @@ func SetupPostgresDockerPersistenceMod() (*dockertest.Pool, *dockertest.Resource
 	// Wait for a successful DB connection
 	<-poolRetryChan
 
-	return pool, resource, persistenceMod
+	return pool, resource, databaseUrl
 }
 
 // TODO: Currently exposed only for testing purposes.

@@ -11,6 +11,7 @@ import (
 	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
+// TODO(olshansky): Use `log.Fatalf` instead of `log.Fatal(fmt.Sprintf`
 // TODO(Andrew): generalize with the `actors interface`` once merged with #111
 // WARNING: This function crashes the process if there is an error populating the genesis state.
 func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
@@ -36,7 +37,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	if err != nil {
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
 	}
-	defer rwContext.Commit()
+	// defer rwContext.Commit()
 
 	if err != nil {
 		log.Fatal(fmt.Sprintf("an error occurred creating the rwContext for the genesis state: %s", err.Error()))

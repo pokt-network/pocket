@@ -3,14 +3,15 @@ package test_artifacts
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"io/ioutil"
 	"log"
 	"math/big"
 	"strconv"
+
+	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var (
@@ -43,7 +44,7 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 		},
 		Utility: &genesis.UtilityGenesisState{
 			Pools:        NewPools(),
-			Accounts:     NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...),
+			Accounts:     NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...), // TODO(olshansky): clean this up
 			Applications: apps,
 			Validators:   vals,
 			ServiceNodes: serviceNodes,

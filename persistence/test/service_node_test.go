@@ -133,10 +133,7 @@ func TestGetServiceNodesReadyToUnstake(t *testing.T) {
 }
 
 func TestGetServiceNodeStatus(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -156,10 +153,7 @@ func TestGetServiceNodeStatus(t *testing.T) {
 }
 
 func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -272,7 +266,7 @@ func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*ty
 		DefaultUnstakingHeight)
 }
 
-func getTestServiceNode(db persistence.PostgresContext, address []byte) (*typesGenesis.Actor, error) {
+func getTestServiceNode(db *persistence.PostgresContext, address []byte) (*typesGenesis.Actor, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetServiceNode(address, db.Height)
 	if err != nil {
 		return nil, err

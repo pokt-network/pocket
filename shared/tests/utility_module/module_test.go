@@ -19,14 +19,17 @@ var (
 	defaultSendAmount          = big.NewInt(10000)
 	defaultNonceString         = types.BigIntToString(test_artifacts.DefaultAccountAmount)
 	defaultSendAmountString    = types.BigIntToString(defaultSendAmount)
+	testSchema                 = "test_schema"
 )
+var databaseUrl string // initialized in TestMain
 
 func NewTestingMempool(_ *testing.T) types.Mempool {
 	return types.NewMempool(1000000, 1000)
 }
 
 func TestMain(m *testing.M) {
-	pool, resource := tests.SetupPostgresDocker()
+	pool, resource, dbUrl := tests.SetupPostgresDocker()
+	databaseUrl = dbUrl
 	m.Run()
 	tests.CleanupPostgresDocker(m, pool, resource)
 }
@@ -38,8 +41,8 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 		Consensus: &genesis.ConsensusConfig{},
 		Utility:   &genesis.UtilityConfig{},
 		Persistence: &genesis.PersistenceConfig{
-			PostgresUrl:    tests.DatabaseUrl,
-			NodeSchema:     tests.SQL_Schema,
+			PostgresUrl:    databaseUrl,
+			NodeSchema:     testSchema,
 			BlockStorePath: "",
 		},
 		P2P:       &genesis.P2PConfig{},
@@ -47,10 +50,10 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	var err error
-	tests.PersistenceModule, err = persistence.Create(cfg, genesisState)
+	persistenceMod, err := persistence.Create(cfg, genesisState)
 	require.NoError(t, err)
-	require.NoError(t, tests.PersistenceModule.Start(), "start persistence mod")
-	persistenceContext, err := tests.PersistenceModule.NewRWContext(height)
+	require.NoError(t, persistenceMod.Start(), "start persistence mod")
+	persistenceContext, err := persistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
 	mempool := NewTestingMempool(t)

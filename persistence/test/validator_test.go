@@ -130,10 +130,7 @@ func TestGetValidatorsReadyToUnstake(t *testing.T) {
 }
 
 func TestGetValidatorStatus(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -153,10 +150,7 @@ func TestGetValidatorStatus(t *testing.T) {
 }
 
 func TestGetValidatorPauseHeightIfExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -267,7 +261,7 @@ func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*type
 		DefaultUnstakingHeight)
 }
 
-func getTestValidator(db persistence.PostgresContext, address []byte) (*typesGenesis.Actor, error) {
+func getTestValidator(db *persistence.PostgresContext, address []byte) (*typesGenesis.Actor, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, err := db.GetValidator(address, db.Height)
 	if err != nil {
 		return nil, err
