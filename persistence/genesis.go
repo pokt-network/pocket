@@ -15,15 +15,6 @@ import (
 func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	log.Println("Populating genesis state...")
 
-	// HACK: This is needed to avoid block a previous from interfering with the genesis state hydration
-	// until proper state sync is implemented.
-	deleteContext, err := m.NewRWContext(0)
-	if err != nil {
-		log.Fatalf("an error occurred creating the rwContext to prepare for the genesis state: %s", err.Error())
-	}
-	deleteContext.Close()
-	// END HACK
-
 	// REFACTOR: This business logic should probably live in `types/genesis.go`
 	//           and we need to add proper unit tests for it.`
 	poolValues := make(map[string]*big.Int, 0)

@@ -27,7 +27,6 @@ func (p PostgresContext) InitParams() error {
 	if err != nil {
 		return err
 	}
-
 	_, err = txn.Exec(ctx, schema.InsertParams(genesis.DefaultParams(), p.Height))
 	return err
 }

@@ -49,10 +49,18 @@ func Create(cfg *config.Config) (modules.PersistenceModule, error) {
 		writeContext: nil,
 	}
 
-	// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
-	// this forces the genesis state to be reloaded on every node startup until state sync is
-	// implemented.
-	persistenceMod.populateGenesisState(cfg.GenesisSource.GetState())
+	// Determine if we should hydrate the genesis db or use the current state of the DB attached
+	if shouldHydrateGenesis, err := persistenceMod.shouldHydrateGenesisDb(); err != nil {
+		return nil, err
+	} else if shouldHydrateGenesis {
+		// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
+		// 		     this forces the genesis state to be reloaded on every node startup until state sync is
+		//           implemented.
+		// NOTE: `populateGenesisState` does not return an error but logs a fatal error if there's a problem
+		persistenceMod.populateGenesisState(cfg.GenesisSource.GetState())
+	} else {
+		log.Println("Loading state from previous state...")
+	}
 
 	return persistenceMod, nil
 }
@@ -129,6 +137,7 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 		},
 	}, nil
 }
+
 func (m *persistenceModule) ResetContext() error {
 	if m.writeContext != nil {
 		if !m.writeContext.DB.Tx.Conn().IsClosed() {
@@ -150,4 +159,20 @@ func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 		return kvstore.NewMemKVStore(), nil
 	}
 	return kvstore.NewKVStore(blockStorePath)
+}
+
+// INCOMPLETE: This is not a complete implementation but just a first approach to loading a previously stored state
+func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
+	checkContext, err := m.NewReadContext(-1)
+	if err != nil {
+		return false, err
+	}
+	defer checkContext.Close()
+
+	maxHeight, err := checkContext.GetLatestBlockHeight()
+	if err == nil || maxHeight == 0 {
+		return true, nil
+	}
+
+	return m.blockStore.Exists(heightToBytes(int64(maxHeight)))
 }

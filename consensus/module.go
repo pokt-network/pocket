@@ -172,9 +172,8 @@ func (m *consensusModule) loadPersistedState() error {
 	}
 
 	// TODO: Populate the rest of the state from the persistence module: validator set, quorum cert, last block hash, etc...
-	// m.Height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
-	// m.appHash = string(appHash)
-	fmt.Printf("[TODO] Load persisted state. Not loading state at height %d with hash %s.\n", latestHeight, string(appHash))
+	m.Height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
+	m.appHash = string(appHash)
 
 	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
 	return nil

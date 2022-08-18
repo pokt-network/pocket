@@ -9,6 +9,12 @@ type PersistenceModule interface {
 	Module
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
+
+	// TODO(drewsky): Make this a context function only and do not expose it at the module level.
+	//                The reason `Olshansky` originally made it a module level function is because
+	//                the module was responsible for maintaining a single write context and assuring
+	//                that a second can't be created (or a previous one is cleaned up) but there is
+	//                likely a better and cleaner approach that simplifies the interface.
 	ResetContext() error
 	GetBlockStore() kvstore.KVStore
 
