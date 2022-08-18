@@ -311,7 +311,7 @@ func TestGetAllPools(t *testing.T) {
 		return db.AddPoolAmount(pool.Address, "10")
 	}
 
-	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 7)
+	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 6)
 }
 
 // --- Helpers ---
@@ -330,6 +330,8 @@ func createAndInsertNewPool(db *persistence.PostgresContext) (*genesis.Account, 
 	return &pool, db.SetPoolAmount(pool.Address, DefaultAccountAmount)
 }
 
+// TODO(olshansky): consolidate newTestAccount and newTestPool into one function
+
 // Note to the reader: lack of consistency between []byte and string in addresses will be consolidated.
 func newTestAccount(t *testing.T) typesGenesis.Account {
 	addr, err := crypto.GenerateAddress()
@@ -343,12 +345,12 @@ func newTestAccount(t *testing.T) typesGenesis.Account {
 }
 
 func newTestPool(t *testing.T) typesGenesis.Account {
-	_, err := crypto.GenerateAddress()
+	addr, err := crypto.GenerateAddress()
 	if t != nil {
 		require.NoError(t, err)
 	}
 	return typesGenesis.Account{
-		Address: DefaultPoolName,
+		Address: hex.EncodeToString(addr),
 		Amount:  DefaultAccountAmount,
 	}
 }

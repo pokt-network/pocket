@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"context"
-	"fmt"
 	"log"
 )
 
@@ -43,7 +42,6 @@ func (p PostgresContext) Release() error {
 	log.Printf("About to release context at height %d.\n", p.Height)
 
 	ctx := context.TODO()
-	fmt.Println("OLSH")
 	if err := p.DB.Tx.Rollback(ctx); err != nil {
 		return err
 	}

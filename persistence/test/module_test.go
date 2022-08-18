@@ -7,8 +7,6 @@ import (
 )
 
 func TestPersistenceContextParallelReadWrite(t *testing.T) {
-	// testPersistenceMod := newTestPersistenceModule()
-
 	// Cleanup previous contexts
 	testPersistenceMod.ResetContext()
 	t.Cleanup(func() {
@@ -54,8 +52,6 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 }
 
 func TestPersistenceContextTwoWritesErrors(t *testing.T) {
-	// testPersistenceMod := newTestPersistenceModule()
-
 	// Cleanup previous contexts
 	testPersistenceMod.ResetContext()
 	t.Cleanup(func() {
@@ -76,8 +72,6 @@ func TestPersistenceContextTwoWritesErrors(t *testing.T) {
 }
 
 func TestPersistenceContextSequentialWrites(t *testing.T) {
-	// testPersistenceMod := newTestPersistenceModule()
-
 	// Opening up first write context succeeds
 	writeContext1, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
@@ -101,8 +95,6 @@ func TestPersistenceContextSequentialWrites(t *testing.T) {
 }
 
 func TestPersistenceContextMultipleParallelReads(t *testing.T) {
-	// testPersistenceMod := newTestPersistenceModule()
-
 	// Opening up first read context succeeds
 	readContext1, err := testPersistenceMod.NewReadContext(0)
 	require.NoError(t, err)
