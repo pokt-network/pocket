@@ -1,8 +1,9 @@
 package shared
 
 import (
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
+
+	"github.com/pokt-network/pocket/shared/types/genesis"
 
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
@@ -25,6 +26,10 @@ type bus struct {
 
 	// Configurations
 	config *genesis.Config
+
+	// TECHDEBT(olshansky): We're only storing the `genesis` in the bus so we can access it for debug purposes.
+	// Ideally, we can restart the entire lifecycle.
+	genesis *genesis.GenesisState
 }
 
 const (
@@ -38,6 +43,7 @@ func CreateBus(
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
 	config *genesis.Config,
+	genesis *genesis.GenesisState,
 ) (modules.Bus, error) {
 	bus := &bus{
 		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -48,7 +54,8 @@ func CreateBus(
 		consensus:   consensus,
 		telemetry:   telemetry,
 
-		config: config,
+		config:  config,
+		genesis: genesis,
 	}
 
 	modules := map[string]modules.Module{
@@ -89,6 +96,7 @@ func CreateBusWithOptionalModules(
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
 	config *genesis.Config,
+	genesis *genesis.GenesisState,
 ) modules.Bus {
 	bus := &bus{
 		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -98,7 +106,8 @@ func CreateBusWithOptionalModules(
 		consensus:   consensus,
 		telemetry:   telemetry,
 
-		config: config,
+		config:  config,
+		genesis: genesis,
 	}
 
 	maybeSetModuleBus := func(mod modules.Module) {
@@ -151,4 +160,8 @@ func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 
 func (m *bus) GetConfig() *genesis.Config {
 	return m.config
+}
+
+func (m *bus) GetGenesis() *genesis.GenesisState {
+	return m.genesis
 }

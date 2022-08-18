@@ -25,4 +25,5 @@ type Bus interface {
 
 	// Configuration
 	GetConfig() *genesis.Config
+	GetGenesis() *genesis.GenesisState
 }

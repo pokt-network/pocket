@@ -122,7 +122,7 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 
-	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock, cfg)
+	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock, cfg, genesisState)
 	require.NoError(t, err)
 	pk, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
 	require.NoError(t, err)

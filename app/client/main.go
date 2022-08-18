@@ -3,9 +3,10 @@ package main
 // TODO(team): discuss & design the long-term solution to this client.
 
 import (
-	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"log"
 	"os"
+
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 
 	"github.com/manifoldco/promptui"
 	"github.com/pokt-network/pocket/consensus"
@@ -64,7 +65,7 @@ func main() {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
 
-	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod, config)
+	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod, config, genesis)
 
 	p2pMod.Start()
 
