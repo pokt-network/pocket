@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/rand"
-	"time"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
@@ -27,42 +25,6 @@ const (
 	DuplicateObjectErrorCode = "42710"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
-var _ modules.PersistenceRWContext = &PostgresContext{}
-
-// TODO: These are only externalized for testing purposes, so they should be made private and
-//
-//	it is trivial to create a helper to initial a context with some values.
-type PostgresContext struct {
-	Height int64
-	DB     PostgresDB
-}
-
-type PostgresDB struct {
-	Tx         pgx.Tx
-	Blockstore kvstore.KVStore
-}
-
-func (pg *PostgresDB) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
-	tx, err := pg.GetTxn()
-	// IMPROVE: Depending on how the use of `PostgresContext` evolves, we may be able to get
-	// access to these directly via the postgres module.
-	//PostgresDB *pgx.Conn
-	//BlockStore kvstore.KVStore
-	return context.TODO(), tx, err
-}
-
-func (pg *PostgresDB) GetTxn() (pgx.Tx, error) {
-	return pg.Tx, nil
-}
-
-func (pg *PostgresContext) GetContext() (context.Context, error) {
-	return context.TODO(), nil
-}
-
 var protocolActorSchemas = []schema.ProtocolActorSchema{
 	schema.ApplicationActor,
 	schema.FishermanActor,
@@ -70,33 +32,72 @@ var protocolActorSchemas = []schema.ProtocolActorSchema{
 	schema.ValidatorActor,
 }
 
-// TODO(pokt-network/pocket/issues/77): Enable proper up and down migrations
-// TODO: Split `connect` and `initialize` into two separate compnents
-func ConnectAndInitializeDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
+var _ modules.PersistenceRWContext = &PostgresContext{}
+
+// TODO(pocket/issues/149): Consolidate `PostgresContext and PostgresDB` into a single struct and
+//                          avoid exposing it for testing purposes after the consolidation. A helper
+//                          with default context values should be created.
+// TODO: These are only externalized for testing purposes, so they should be made private and
+//       it is trivial to create a helper to initial a context with some values.
+type PostgresContext struct {
+	Height int64
+	DB     PostgresDB
+}
+type PostgresDB struct {
+	conn       *pgx.Conn
+	Tx         pgx.Tx
+	Blockstore kvstore.KVStore
+}
+
+func (pg *PostgresDB) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
+	tx, err := pg.GetTxn()
+	// ctx, _ := context.WithTimeout(context.TODO(), 5*time.Second)
+	// return ctx, tx, err
+	return context.TODO(), tx, err
+}
+
+func (pg *PostgresDB) GetTxn() (pgx.Tx, error) {
+	return pg.Tx, nil
+}
+
+func (pg *PostgresContext) GetCtx() (context.Context, error) {
+	return context.TODO(), nil
+}
+
+// TECHDEBT: Implement proper connection pooling
+func connectToDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
 	ctx := context.TODO()
 
-	// Connect to the DB
-	db, err := pgx.Connect(context.Background(), postgresUrl)
+	conn, err := pgx.Connect(context.Background(), postgresUrl)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to database: %v", err)
 	}
 
 	// Creating and setting a new schema so we can running multiple nodes on one postgres instance. See
 	// more details at https://github.com/go-pg/pg/issues/351.
-	if _, err = db.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, schema)); err != nil {
+	if _, err = conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, schema)); err != nil {
 		return nil, err
 	}
 
-	if _, err = db.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, schema)); err != nil {
+	// Creating and setting a new schema so we can run multiple nodes on one postgres instance.
+	// See more details at https://github.com/go-pg/pg/issues/351.
+	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, schema)); err != nil {
+		return nil, err
+	}
+	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, schema)); err != nil {
 		return nil, err
 	}
 
-	if err = initializeAllTables(ctx, db); err != nil {
-		return nil, fmt.Errorf("unable to initialize tables: %v", err)
+	return conn, nil
+}
+
+// TODO(pokt-network/pocket/issues/77): Enable proper up and down migrations
+func initializeDatabase(conn *pgx.Conn) error {
+	// Initialize the tables if they don't already exist
+	if err := initializeAllTables(context.TODO(), conn); err != nil {
+		return fmt.Errorf("unable to initialize tables: %v", err)
 	}
-
-	return db, nil
-
+	return nil
 }
 
 // TODO(pokt-network/pocket/issues/77): Delete all the `initializeAllTables` calls once proper migrations are implemented.
@@ -170,24 +171,24 @@ func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-// Exposed for debugging purposes only
-func (p PostgresContext) ClearAllDebug() error {
-	ctx, conn, err := p.DB.GetCtxAndTxn()
+// Exposed for testing purposes only
+func (p PostgresContext) DebugClearAll() error {
+	ctx, tx, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
 
-	tx, err := conn.Begin(ctx)
+	clearTx, err := tx.Begin(ctx) // creates a pseudo-nested transaction
 	if err != nil {
 		return err
 	}
 
 	for _, actor := range protocolActorSchemas {
-		if _, err = tx.Exec(ctx, actor.ClearAllQuery()); err != nil {
+		if _, err = clearTx.Exec(ctx, actor.ClearAllQuery()); err != nil {
 			return err
 		}
 		if actor.GetChainsTableName() != "" {
-			if _, err = tx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
+			if _, err = clearTx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
 				return err
 			}
 		}
@@ -202,6 +203,10 @@ func (p PostgresContext) ClearAllDebug() error {
 	}
 
 	if _, err = tx.Exec(ctx, schema.ClearAllBlocksQuery()); err != nil {
+		return err
+	}
+
+	if err = clearTx.Commit(ctx); err != nil {
 		return err
 	}
 

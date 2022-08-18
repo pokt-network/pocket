@@ -140,6 +140,5 @@ func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, param
 	default:
 		log.Fatalf("unhandled type for paramValue %T", tp)
 	}
-
 	return
 }

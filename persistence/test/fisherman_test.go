@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
@@ -18,11 +19,13 @@ func FuzzFisherman(f *testing.F) {
 		schema.FishermanActor)
 }
 
+func TestGetSetFishermanStakeAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
+	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestFisherman, db.GetFishermanStakeAmount, db.SetFishermanStakeAmount, 1)
+}
+
 func TestInsertFishermanAndExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -35,23 +38,22 @@ func TestInsertFishermanAndExists(t *testing.T) {
 	exists, err := db.GetFishermanExists(fisherman.Address, 0)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist at previous height does not")
+
 	exists, err = db.GetFishermanExists(fisherman.Address, 1)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist at current height does not")
 
 	exists, err = db.GetFishermanExists(fisherman2.Address, 0)
 	require.NoError(t, err)
-	require.False(t, exists, "actor that should not exist at previous height fishermanears to")
+	require.False(t, exists, "actor that should not exist at previous height appears to")
+
 	exists, err = db.GetFishermanExists(fisherman2.Address, 1)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist at current height does not")
 }
 
 func TestUpdateFisherman(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -80,10 +82,7 @@ func TestUpdateFisherman(t *testing.T) {
 }
 
 func TestGetFishermenReadyToUnstake(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -118,10 +117,7 @@ func TestGetFishermenReadyToUnstake(t *testing.T) {
 }
 
 func TestGetFishermanStatus(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -138,10 +134,7 @@ func TestGetFishermanStatus(t *testing.T) {
 }
 
 func TestGetFishermanPauseHeightIfExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -158,10 +151,7 @@ func TestGetFishermanPauseHeightIfExists(t *testing.T) {
 }
 
 func TestSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -185,10 +175,7 @@ func TestSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
 }
 
 func TestGetFishermanOutputAddress(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -223,6 +210,16 @@ func newTestFisherman() (*typesGenesis.Fisherman, error) {
 	}, nil
 }
 
+func TestGetAllFish(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
+
+	updateFish := func(db *persistence.PostgresContext, fish *genesis.Fisherman) error {
+		return db.UpdateFisherman(fish.Address, OlshanskyURL, fish.StakedTokens, OlshanskyChains)
+	}
+
+	getAllActorsTest(t, db, db.GetAllFishermen, createAndInsertDefaultTestFisherman, updateFish, 1)
+}
+
 func createAndInsertDefaultTestFisherman(db *persistence.PostgresContext) (*typesGenesis.Fisherman, error) {
 	fisherman, err := newTestFisherman()
 	if err != nil {
@@ -242,7 +239,7 @@ func createAndInsertDefaultTestFisherman(db *persistence.PostgresContext) (*type
 		DefaultUnstakingHeight)
 }
 
-func getTestFisherman(db persistence.PostgresContext, address []byte) (*typesGenesis.Fisherman, error) {
+func getTestFisherman(db *persistence.PostgresContext, address []byte) (*typesGenesis.Fisherman, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetFisherman(address, db.Height)
 	if err != nil {
 		return nil, err

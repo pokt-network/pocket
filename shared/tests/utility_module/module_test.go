@@ -1,17 +1,14 @@
 package utility_module
 
 import (
-	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/shared/tests"
 	"math/big"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/tests"
 	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -28,34 +25,20 @@ func NewTestingMempool(_ *testing.T) types.Mempool {
 	return types.NewMempool(1000000, 1000)
 }
 
+var testPersistenceMod modules.PersistenceModule
+
 func TestMain(m *testing.M) {
-	pool, resource := tests.SetupPostgresDocker()
+	pool, resource, mod := tests.SetupPostgresDockerPersistenceMod()
+	testPersistenceMod = mod
 	m.Run()
 	tests.CleanupPostgresDocker(m, pool, resource)
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
-	mempool := NewTestingMempool(t)
-	cfg := &config.Config{
-		RootDir: "",
-		GenesisSource: &genesis.GenesisSource{
-			Source: &genesis.GenesisSource_Config{
-				Config: genesisConfig(),
-			},
-		},
-		Persistence: &config.PersistenceConfig{
-			PostgresUrl: tests.DatabaseUrl,
-			NodeSchema:  tests.SQL_Schema,
-		},
-	}
-	err := cfg.HydrateGenesisState()
+	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
-	tests.PersistenceModule, err = persistence.Create(cfg)
-	require.NoError(t, err)
-	require.NoError(t, tests.PersistenceModule.Start(), "start persistence mod")
-	persistenceContext, err := tests.PersistenceModule.NewRWContext(height)
-	require.NoError(t, err)
+	mempool := NewTestingMempool(t)
 	return utility.UtilityContext{
 		LatestHeight: height,
 		Mempool:      mempool,
@@ -65,14 +48,4 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 			SavePoints:           make([][]byte, 0),
 		},
 	}
-}
-
-func genesisConfig() *genesis.GenesisConfig {
-	config := &genesis.GenesisConfig{
-		NumValidators:   5,
-		NumApplications: 1,
-		NumFisherman:    1,
-		NumServicers:    1,
-	}
-	return config
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,10 +19,7 @@ func FuzzApplication(f *testing.F) {
 }
 
 func TestInsertAppAndExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -35,6 +32,7 @@ func TestInsertAppAndExists(t *testing.T) {
 	exists, err := db.GetAppExists(app.Address, 0)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist at previous height does not")
+
 	exists, err = db.GetAppExists(app.Address, 1)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist at current height does not")
@@ -42,16 +40,14 @@ func TestInsertAppAndExists(t *testing.T) {
 	exists, err = db.GetAppExists(app2.Address, 0)
 	require.NoError(t, err)
 	require.False(t, exists, "actor that should not exist at previous height appears to")
+
 	exists, err = db.GetAppExists(app2.Address, 1)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist at current height does not")
 }
 
 func TestUpdateApp(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -80,10 +76,7 @@ func TestUpdateApp(t *testing.T) {
 }
 
 func TestGetAppsReadyToUnstake(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -118,10 +111,7 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 }
 
 func TestGetAppStatus(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -138,10 +128,7 @@ func TestGetAppStatus(t *testing.T) {
 }
 
 func TestGetAppPauseHeightIfExists(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -158,10 +145,7 @@ func TestGetAppPauseHeightIfExists(t *testing.T) {
 }
 
 func TestSetAppPauseHeightAndUnstakeLater(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -185,10 +169,7 @@ func TestSetAppPauseHeightAndUnstakeLater(t *testing.T) {
 }
 
 func TestGetAppOutputAddress(t *testing.T) {
-	db := &persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -198,7 +179,7 @@ func TestGetAppOutputAddress(t *testing.T) {
 	require.Equal(t, output, app.Output, "unexpected output address")
 }
 
-func newTestApp() (*typesGenesis.App, error) {
+func newTestApp() (*genesis.App, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
 		return nil, err
@@ -209,44 +190,36 @@ func newTestApp() (*typesGenesis.App, error) {
 		return nil, err
 	}
 
-	return &typesGenesis.App{
+	return &genesis.App{
 		Address:         operatorKey.Address(),
 		PublicKey:       operatorKey.Bytes(),
 		Paused:          false,
-		Status:          typesGenesis.DefaultStakeStatus,
-		Chains:          typesGenesis.DefaultChains,
+		Status:          genesis.DefaultStakeStatus,
+		Chains:          genesis.DefaultChains,
 		MaxRelays:       DefaultMaxRelays,
-		StakedTokens:    typesGenesis.DefaultStake,
+		StakedTokens:    genesis.DefaultStake,
 		PausedHeight:    DefaultPauseHeight,
 		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          outputAddr,
 	}, nil
 }
 
-func TestGetSetStakeAmount(t *testing.T) {
-	var newStakeAmount = "new_stake_amount"
-	db := &persistence.PostgresContext{
-		Height: 1, // intentionally set to a non-zero height
-		DB:     *testPostgresDB,
-	}
-
-	app, err := createAndInsertDefaultTestApp(db)
-	require.NoError(t, err)
-
-	// Check stake amount before
-	stakeAmount, err := db.GetAppStakeAmount(1, app.Address)
-	require.NoError(t, err)
-	require.Equal(t, DefaultStake, stakeAmount, "unexpected beginning stakeAmount")
-
-	// Check stake amount after
-	err = db.SetAppStakeAmount(app.Address, newStakeAmount)
-	require.NoError(t, err)
-	stakeAmountAfter, err := db.GetAppStakeAmount(1, app.Address)
-	require.NoError(t, err)
-	require.Equal(t, newStakeAmount, stakeAmountAfter, "unexpected status")
+func TestGetSetAppStakeAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
+	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestApp, db.GetAppStakeAmount, db.SetAppStakeAmount, 1)
 }
 
-func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*typesGenesis.App, error) {
+func TestGetAllApps(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
+
+	updateApp := func(db *persistence.PostgresContext, app *genesis.App) error {
+		return db.UpdateApp(app.Address, OlshanskyURL, app.MaxRelays, OlshanskyChains)
+	}
+
+	getAllActorsTest(t, db, db.GetAllApps, createAndInsertDefaultTestApp, updateApp, 1)
+}
+
+func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*genesis.App, error) {
 	app, err := newTestApp()
 	if err != nil {
 		return nil, err
@@ -265,7 +238,7 @@ func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*typesGenes
 		DefaultUnstakingHeight)
 }
 
-func getTestApp(db persistence.PostgresContext, address []byte) (*typesGenesis.App, error) {
+func getTestApp(db *persistence.PostgresContext, address []byte) (*genesis.App, error) {
 	operator, publicKey, stakedTokens, maxRelays, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetApp(address, db.Height)
 	if err != nil {
 		return nil, err
@@ -286,7 +259,7 @@ func getTestApp(db persistence.PostgresContext, address []byte) (*typesGenesis.A
 		return nil, err
 	}
 
-	return &typesGenesis.App{
+	return &genesis.App{
 		Address:         operatorAddr,
 		PublicKey:       operatorPubKey,
 		Paused:          false,

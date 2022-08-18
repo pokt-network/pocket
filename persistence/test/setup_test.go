@@ -3,20 +3,19 @@ package test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/modules"
-	sharedTest "github.com/pokt-network/pocket/shared/tests"
+	"log"
 	"math/big"
 	"math/rand"
 	"testing"
 	"time"
 
-	"golang.org/x/exp/slices"
-
-	"github.com/stretchr/testify/require"
-
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/schema"
+	"github.com/pokt-network/pocket/shared/modules"
+	sharedTest "github.com/pokt-network/pocket/shared/tests"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -38,40 +37,66 @@ var (
 	DefaultStakeStatus     = persistence.StakedStatus
 	DefaultPauseHeight     = int64(-1)
 	DefaultUnstakingHeight = int64(-1)
+
+	OlshanskyURL    = "https://olshansky.info"
+	OlshanskyChains = []string{"OLSH"}
 )
+
+// TECHDEBT: Avoid using shared / global variables in unit tests so they are fully isolated from each other.
+var testPersistenceModule modules.PersistenceModule
 
 // See https://github.com/ory/dockertest as reference for the template of this code
 // Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
 func TestMain(m *testing.M) {
-	pool, resource := sharedTest.SetupPostgresDocker()
-	testPersistenceModule = sharedTest.PersistenceModule
-	testPostgresDB = sharedTest.PostgresDB
+	pool, resource, persistenceMod := sharedTest.SetupPostgresDockerPersistenceMod()
+	testPersistenceModule = persistenceMod
 	m.Run()
 	sharedTest.CleanupPostgresDocker(m, pool, resource)
 }
 
-var (
-	testPersistenceModule modules.PersistenceModule
-	testPostgresDB        *persistence.PostgresDB
-)
+func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresContext {
+	ctx, err := testPersistenceModule.NewRWContext(height)
+	require.NoError(t, err)
+	db := &persistence.PostgresContext{
+		Height: height,
+		DB:     ctx.(persistence.PostgresContext).DB,
+	}
+	t.Cleanup(func() {
+		require.NoError(t, db.Release())
+		testPersistenceModule.ResetContext()
+	})
 
-func init() {
-	testPostgresDB = new(persistence.PostgresDB)
+	return db
+}
+
+// REFACTOR: Can we leverage using `NewTestPostgresContext`here by creating a common interface?
+func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
+	ctx, err := testPersistenceModule.NewRWContext(height)
+	if err != nil {
+		log.Fatalf("Error creating new context: %s", err)
+	}
+	db := persistence.PostgresContext{
+		Height: height,
+		DB:     ctx.(persistence.PostgresContext).DB,
+	}
+	f.Cleanup(func() {
+		db.Release()
+		testPersistenceModule.ResetContext()
+	})
+
+	return &db
 }
 
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
 func fuzzSingleProtocolActor(
 	f *testing.F,
 	newTestActor func() (schema.BaseActor, error),
-	getTestActor func(db persistence.PostgresContext, address string) (*schema.BaseActor, error),
+	getTestActor func(db *persistence.PostgresContext, address string) (*schema.BaseActor, error),
 	protocolActorSchema schema.ProtocolActorSchema) {
 
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *sharedTest.PostgresDB,
-	}
+	db := NewFuzzTestPostgresContext(f, 0)
 
-	err := db.ClearAllDebug()
+	err := db.DebugClearAll()
 	require.NoError(f, err)
 
 	actor, err := newTestActor()

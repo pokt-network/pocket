@@ -9,6 +9,13 @@ type PersistenceModule interface {
 	Module
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
+
+	// TODO(drewsky): Make this a context function only and do not expose it at the module level.
+	//                The reason `Olshansky` originally made it a module level function is because
+	//                the module was responsible for maintaining a single write context and assuring
+	//                that a second can't be created (or a previous one is cleaned up) but there is
+	//                likely a better and cleaner approach that simplifies the interface.
+	ResetContext() error
 	GetBlockStore() kvstore.KVStore
 
 	// Debugging / development only
@@ -41,7 +48,7 @@ type PersistenceWriteContext interface {
 
 	Reset() error
 	Commit() error
-	Release() // IMPROVE: Return an error?
+	Release() error
 
 	AppHash() ([]byte, error)
 
@@ -121,6 +128,9 @@ type PersistenceWriteContext interface {
 type PersistenceReadContext interface {
 	GetHeight() (int64, error)
 
+	// Closes the read context
+	Close() error
+
 	// Block Queries
 	GetLatestBlockHeight() (uint64, error)
 	GetBlockHash(height int64) ([]byte, error)
@@ -130,9 +140,13 @@ type PersistenceReadContext interface {
 	TransactionExists(transactionHash string) (bool, error)
 
 	// Pool Queries
+
+	// Returns "0" if the account does not exist
 	GetPoolAmount(name string, height int64) (amount string, err error)
 
 	// Account Queries
+
+	// Returns "0" if the account does not exist
 	GetAccountAmount(address []byte, height int64) (string, error)
 
 	// App Queries

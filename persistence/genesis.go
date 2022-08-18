@@ -2,21 +2,24 @@ package persistence
 
 import (
 	"encoding/hex"
-	"fmt"
 	"log"
 	"math/big"
 
 	"github.com/pokt-network/pocket/persistence/schema"
-	sharedTypes "github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
-	"github.com/pokt-network/pocket/utility/types"
 )
 
-func (pm *persistenceModule) PopulateGenesisState(state *genesis.GenesisState) { // TODO (Andrew) genericize with actors interface once merged with #111
-	poolValues := make(map[string]*big.Int, 0)
+// TODO(Andrew): generalize with the `actors interface`` once merged with #111
+// WARNING: This function crashes the process if there is an error populating the genesis state.
+func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
+	log.Println("Populating genesis state...")
 
+	// REFACTOR: This business logic should probably live in `types/genesis.go`
+	//           and we need to add proper unit tests for it.`
+	poolValues := make(map[string]*big.Int, 0)
 	addValueToPool := func(poolName string, valueToAdd string) error {
-		value, err := sharedTypes.StringToBigInt(valueToAdd)
+		value, err := types.StringToBigInt(valueToAdd)
 		if err != nil {
 			return err
 		}
@@ -26,70 +29,88 @@ func (pm *persistenceModule) PopulateGenesisState(state *genesis.GenesisState) {
 		poolValues[poolName].Add(poolValues[poolName], value)
 		return nil
 	}
-	log.Println("Populating genesis state...")
-	rwContext, err := pm.NewRWContext(0)
+
+	rwContext, err := m.NewRWContext(0)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred creating the rwContext for the genesis state: %s", err.Error()))
+		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
 	}
+	defer rwContext.Commit()
+
+	for _, app := range state.Apps {
+		if err = rwContext.InsertApp(app.Address, app.PublicKey, app.Output, app.Paused, int(app.Status), app.MaxRelays, app.StakedTokens, app.Chains, app.PausedHeight, app.UnstakingHeight); err != nil {
+			log.Fatalf("an error occurred inserting an app in the genesis state: %s", err.Error())
+		}
+		if err = addValueToPool(genesis.AppStakePoolName, app.StakedTokens); err != nil {
+			log.Fatalf("an error occurred inserting staked tokens into %s pool", genesis.AppStakePoolName)
+		}
+	}
+
+	for _, serviceNode := range state.ServiceNodes {
+		if err = rwContext.InsertServiceNode(serviceNode.Address, serviceNode.PublicKey, serviceNode.Output, serviceNode.Paused, int(serviceNode.Status), serviceNode.ServiceUrl, serviceNode.StakedTokens, serviceNode.Chains, serviceNode.PausedHeight, serviceNode.UnstakingHeight); err != nil {
+			log.Fatalf("an error occurred inserting a service node in the genesis state: %s", err.Error())
+		}
+		if err = addValueToPool(genesis.ServiceNodeStakePoolName, serviceNode.StakedTokens); err != nil {
+			log.Fatalf("an error occurred inserting staked tokens into %s pool", genesis.ServiceNodeStakePoolName)
+		}
+	}
+
+	for _, fish := range state.Fishermen {
+		if err = rwContext.InsertFisherman(fish.Address, fish.PublicKey, fish.Output, fish.Paused, int(fish.Status), fish.ServiceUrl, fish.StakedTokens, fish.Chains, fish.PausedHeight, fish.UnstakingHeight); err != nil {
+			log.Fatalf("an error occurred inserting a fisherman in the genesis state: %s", err.Error())
+		}
+		if err = addValueToPool(genesis.FishermanStakePoolName, fish.StakedTokens); err != nil {
+			log.Fatalf("an error occurred inserting staked tokens into %s pool", genesis.FishermanStakePoolName)
+		}
+	}
+
+	for _, val := range state.Validators {
+		if err = rwContext.InsertValidator(val.Address, val.PublicKey, val.Output, val.Paused, int(val.Status), val.ServiceUrl, val.StakedTokens, val.PausedHeight, val.UnstakingHeight); err != nil {
+			log.Fatalf("an error occurred inserting a validator in the genesis state: %s", err.Error())
+		}
+		if err = addValueToPool(genesis.ValidatorStakePoolName, val.StakedTokens); err != nil {
+			log.Fatalf("an error occurred inserting staked tokens into %s pool", genesis.ValidatorStakePoolName)
+		}
+	}
+
 	for _, acc := range state.Accounts {
-		err = rwContext.SetAccountAmount(acc.Address, acc.Amount)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting an acc in the genesis state: %s", err.Error()))
+		if err = rwContext.SetAccountAmount(acc.Address, acc.Amount); err != nil {
+			log.Fatalf("an error occurred inserting an acc in the genesis state: %s", err.Error())
 		}
 	}
+
 	for _, pool := range state.Pools {
-		err = rwContext.InsertPool(pool.Name, pool.Account.Address, pool.Account.Amount)
+		// REFACTOR(pocket/issues/154): This validation logic needs to live in `types/genesis.go` and
+		// we need to add unit tests for it too.
+		poolAmount, err := types.StringToBigInt(pool.Account.Amount)
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting an pool in the genesis state: %s", err.Error()))
+			log.Fatalf("an error occurred converting the pool amount to a big.Int: %s", err.Error())
+		}
+		if poolValues[pool.Name] != poolAmount {
+			log.Printf("[WARNING] The pool amount computed for %s does not match the amount in the pool", pool.Name)
+		}
+
+		if err := rwContext.InsertPool(pool.Name, pool.Account.Address, pool.Account.Amount); err != nil {
+			log.Fatalf("an error occurred inserting an pool in the genesis state: %s", err.Error())
 		}
 	}
-	for _, act := range state.Apps {
-		err = rwContext.InsertApp(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.MaxRelays, act.StakedTokens, act.Chains, act.PausedHeight, act.UnstakingHeight)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting an app in the genesis state: %s", err.Error()))
-		}
-		if err = addValueToPool(genesis.AppStakePoolName, act.StakedTokens); err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting staked tokens into %s pool", genesis.AppStakePoolName))
-		}
+
+	// TODO(team): use params from genesis file - not the hardcoded
+	if err = rwContext.InitParams(); err != nil {
+		log.Fatalf("an error occurred initializing params: %s", err.Error())
 	}
-	for _, act := range state.ServiceNodes {
-		err = rwContext.InsertServiceNode(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.ServiceUrl, act.StakedTokens, act.Chains, act.PausedHeight, act.UnstakingHeight)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting a service node in the genesis state: %s", err.Error()))
-		}
-		if err = addValueToPool(genesis.ServiceNodeStakePoolName, act.StakedTokens); err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting staked tokens into %s pool", genesis.ServiceNodeStakePoolName))
-		}
-	}
-	for _, act := range state.Fishermen {
-		err = rwContext.InsertFisherman(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.ServiceUrl, act.StakedTokens, act.Chains, act.PausedHeight, act.UnstakingHeight)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting a fisherman in the genesis state: %s", err.Error()))
-		}
-		if err = addValueToPool(genesis.FishermanStakePoolName, act.StakedTokens); err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting staked tokens into %s pool", genesis.FishermanStakePoolName))
-		}
-	}
-	for _, act := range state.Validators {
-		err = rwContext.InsertValidator(act.Address, act.PublicKey, act.Output, act.Paused, int(act.Status), act.ServiceUrl, act.StakedTokens, act.PausedHeight, act.UnstakingHeight)
-		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting a validator in the genesis state: %s", err.Error()))
-		}
-		if err = addValueToPool(genesis.ValidatorStakePoolName, act.StakedTokens); err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting staked tokens into %s pool", genesis.ValidatorStakePoolName))
-		}
-	}
-	if err = rwContext.InitParams(); err != nil { // TODO (Team) use params from genesis file not hardcoded
-		log.Fatal(fmt.Sprintf("an error occurred initializing params: %s", err.Error()))
-	}
+
 	if err = rwContext.InitFlags(); err != nil { // TODO (Team) use flags from genesis file not hardcoded
-		log.Fatal(fmt.Sprintf("an error occurred initializing flags: %s", err.Error()))
+		log.Fatalf("an error occurred initializing flags: %s", err.Error())
 	}
+
 	if err = rwContext.Commit(); err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred during commit() on genesis state %s ", err.Error()))
+		log.Fatalf("an error occurred during commit() on genesis state %s ", err.Error())
 	}
 }
 
+// TODO(pocket/issues/149): All of the functions below following a structure similar to `GetAll<Actor>`
+//  can easily be refactored and condensed into a single function using a generic type or a common
+// interface.
 func (p PostgresContext) GetAllAccounts(height int64) (accs []*genesis.Account, err error) {
 	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {

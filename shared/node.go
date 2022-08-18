@@ -3,19 +3,17 @@ package shared
 import (
 	"log"
 
+	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/telemetry"
+	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/utility"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-
-	"github.com/pokt-network/pocket/consensus"
-	"github.com/pokt-network/pocket/shared/types"
-
-	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/telemetry"
 )
 
 var _ modules.Module = &Node{}

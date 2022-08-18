@@ -89,7 +89,7 @@ func InsertParams(params *genesis.Params, height int64) string {
 		case ValTypeSmallInt, ValTypeBigInt:
 			sb.WriteString(fmt.Sprintf("%d)", pVal.Interface()))
 		default:
-			log.Fatalf("unhandled PropertyType %s", pType)
+			log.Fatalf("unhandled PropertyType: %s.", pType)
 		}
 
 		if i < l-1 {

@@ -9,15 +9,14 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
 
 func FuzzAccountAmount(f *testing.F) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewFuzzTestPostgresContext(f, 0)
+
 	operations := []string{
 		"AddAmount",
 		"SubAmount",
@@ -80,11 +79,18 @@ func FuzzAccountAmount(f *testing.F) {
 	})
 }
 
+func TestDefaultNonExistentAccountAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
+	addr, err := crypto.GenerateAddress()
+	require.NoError(t, err)
+
+	accountAmount, err := db.GetAccountAmount(addr, db.Height)
+	require.NoError(t, err)
+	require.Equal(t, "0", accountAmount)
+}
+
 func TestSetAccountAmount(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 	account := newTestAccount(t)
 
 	err := db.SetAccountAmount(account.Address, DefaultStake)
@@ -103,10 +109,7 @@ func TestSetAccountAmount(t *testing.T) {
 }
 
 func TestAddAccountAmount(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 	account := newTestAccount(t)
 
 	err := db.SetAccountAmount(account.Address, DefaultStake)
@@ -126,10 +129,7 @@ func TestAddAccountAmount(t *testing.T) {
 }
 
 func TestSubAccountAmount(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 	account := newTestAccount(t)
 
 	err := db.SetAccountAmount(account.Address, DefaultStake)
@@ -148,10 +148,8 @@ func TestSubAccountAmount(t *testing.T) {
 }
 
 func FuzzPoolAmount(f *testing.F) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewFuzzTestPostgresContext(f, 0)
+
 	operations := []string{
 		"AddAmount",
 		"SubAmount",
@@ -214,11 +212,16 @@ func FuzzPoolAmount(f *testing.F) {
 	})
 }
 
+func TestDefaultNonExistentPoolAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
+
+	poolAmount, err := db.GetPoolAmount("some_pool_name", db.Height)
+	require.NoError(t, err)
+	require.Equal(t, "0", poolAmount)
+}
+
 func TestSetPoolAmount(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 	pool := newTestPool(t)
 
 	err := db.SetPoolAmount(pool.Name, DefaultStake)
@@ -237,10 +240,7 @@ func TestSetPoolAmount(t *testing.T) {
 }
 
 func TestAddPoolAmount(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 	pool := newTestPool(t)
 
 	err := db.SetPoolAmount(pool.Name, DefaultStake)
@@ -260,10 +260,7 @@ func TestAddPoolAmount(t *testing.T) {
 }
 
 func TestSubPoolAmount(t *testing.T) {
-	db := persistence.PostgresContext{
-		Height: 0,
-		DB:     *testPostgresDB,
-	}
+	db := NewTestPostgresContext(t, 0)
 	pool := newTestPool(t)
 
 	err := db.SetPoolAmount(pool.Name, DefaultStake)
@@ -281,7 +278,32 @@ func TestSubPoolAmount(t *testing.T) {
 	require.Equal(t, expectedPoolAmount, poolAmount, "unexpected amount after sub")
 }
 
+func TestGetAllAccounts(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
+
+	updateAccount := func(db *persistence.PostgresContext, acc *genesis.Account) error {
+		return db.AddAccountAmount(acc.Address, "10")
+	}
+
+	getAllActorsTest(t, db, db.GetAllAccounts, createAndInsertNewAccount, updateAccount, 9)
+}
+
+func TestGetAllPools(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
+
+	updatePool := func(db *persistence.PostgresContext, pool *genesis.Pool) error {
+		return db.AddPoolAmount(pool.Name, "10")
+	}
+
+	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 6)
+}
+
 // --- Helpers ---
+
+func createAndInsertNewAccount(db *persistence.PostgresContext) (*genesis.Account, error) {
+	account := newTestAccount(nil)
+	return &account, db.SetAccountAmount(account.Address, DefaultAccountAmount)
+}
 
 func newTestAccount(t *testing.T) typesGenesis.Account {
 	addr, err := crypto.GenerateAddress()
@@ -294,13 +316,18 @@ func newTestAccount(t *testing.T) typesGenesis.Account {
 	}
 }
 
+func createAndInsertNewPool(db *persistence.PostgresContext) (*genesis.Pool, error) {
+	pool := newTestPool(nil)
+	return &pool, db.SetPoolAmount(pool.Name, DefaultAccountAmount)
+}
+
 func newTestPool(t *testing.T) typesGenesis.Pool {
 	_, err := crypto.GenerateAddress()
 	if t != nil {
 		require.NoError(t, err)
 	}
 	return typesGenesis.Pool{
-		Name: DefaultPoolName,
+		Name: fmt.Sprintf("%s_%d", DefaultPoolName, rand.Int()),
 		Account: &typesGenesis.Account{
 			Amount: DefaultAccountAmount,
 		},
