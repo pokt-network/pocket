@@ -73,7 +73,7 @@ func main() {
 	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod, config, genesis)
 
 	p2pMod.Start()
-	consensusMod.Start()
+	// We are explicitly not calling `Start` on the consensus module
 
 	for {
 		selection, err := promptGetInput()
