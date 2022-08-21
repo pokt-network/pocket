@@ -194,3 +194,5 @@ func ReadConfigAndGenesisFiles(configPath string) (config *genesis.Config, g *ge
 	}
 	return
 }
+
+// pocketCrypto.NewAddress

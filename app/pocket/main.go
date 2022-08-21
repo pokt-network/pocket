@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
-	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"log"
 
 	"github.com/pokt-network/pocket/shared"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 )
 
 // See `docs/build/README.md` for details on how this is injected via mage.
