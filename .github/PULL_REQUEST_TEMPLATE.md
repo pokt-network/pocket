@@ -1,5 +1,6 @@
 \__DELETE_ME_: Please make sure to update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the PR for review\_
 \__DELETE_ME_: Please make sure to add labels for the purpose (e.g. `persistence`) and priority (e.g. `low`) of this PR\_
+\__DELETE_ME_: Please make sure the title of the PR is descriptive and follows this format: `[<TOPIC>] <DESCRIPTION> (<ISSUE_NUMBEr>)`\_
 
 ## Description
 
