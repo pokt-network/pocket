@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if builtin type -P "reflex"
+if command -v reflex >/dev/null
 then
   reflex -r '\.go$' -s -- sh -c "go build -v app/pocket/main.go"
 else
