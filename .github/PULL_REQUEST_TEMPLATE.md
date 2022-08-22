@@ -18,8 +18,15 @@ Please mark the options that are relevant.
 - [ ] Documentation
 - [ ] Other: <REPLACE_ME>
 
+## List of changes
+
+- ...
+
+## Testing
+
 _\_\_REPLACE_ME_: Describe the tests and that you ran to verify your changes. If applicable, provide steps to reproduce. Bonus points for images and videos or gifs.\_
 
+- [ ] Testing not applicable
 - [ ] `make test_all`
 - [ ] [LocalNet](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md) w/ all of the steps outlined in the `README`
 
