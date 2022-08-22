@@ -35,6 +35,7 @@ assignees: ""
 
 _\_*REPLACE_ME*: List of tasks / goals this issue SHOULD NOT address since they are out of scope_
 
+- Not a goal
 - ...
 
 # [Optional] Testing Methodology
@@ -44,7 +45,6 @@ _\_*REPLACE_ME*: List of tasks / goals this issue SHOULD NOT address since they 
 - **Task specific tests**: `make ...`
 - **All tests**: `make test_all`
 - **LocalNet**: verify a `LocalNet` is still functioning correctly by following the instructions at [docs/development/README.md](https://github.com/pokt-network/pocket/tree/main/docs/development)
-  Remove
 
 ---
 
