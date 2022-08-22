@@ -15,6 +15,10 @@ type Config struct {
 	RootDir       string                 `json:"root_dir"`
 	GenesisSource *genesis.GenesisSource `json:"genesis_source"` // TECHDEBT(olshansky): we should be able to pass the struct in here.
 
+	// DISCUSS(deblasis): should we scope this into, let's say, RPCConfig?
+	RPCPort      string `json:"rpc_port"`       // TODO(deblasis): still unused, need to define default value, "8081" ?
+	RemoteCLIURL string `json:"remote_cli_url"` // TODO(deblasis): need to define default value as const somewhere, "http://localhost:8081" ?
+
 	EnableTelemetry bool                           `json:"enable_telemetry"`
 	PrivateKey      cryptoPocket.Ed25519PrivateKey `json:"private_key"`
 
