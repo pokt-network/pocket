@@ -1,7 +1,7 @@
 #!/bin/sh
 
 config=$1
-genesis=$1
+genesis=$2
 
 # TODO(olshansky): Make sure this works on everyone's workstations with Docker & Goland debugging.
 

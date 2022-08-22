@@ -2,14 +2,13 @@ package consensus
 
 import (
 	"context"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 	"time"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 type Pacemaker interface {

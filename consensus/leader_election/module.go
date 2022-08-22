@@ -1,11 +1,11 @@
 package leader_election
 
 import (
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 type LeaderElectionModule interface {
@@ -19,9 +19,7 @@ type leaderElectionModule struct {
 	bus modules.Bus
 }
 
-func Create(
-	_ *genesis.Config,
-) (LeaderElectionModule, error) {
+func Create(_ *genesis.Config, _ *genesis.GenesisState) (LeaderElectionModule, error) {
 	return &leaderElectionModule{}, nil
 }
 
