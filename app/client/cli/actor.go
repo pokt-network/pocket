@@ -72,6 +72,17 @@ func newActorCommands(cmdDef actorCmdDef) (cmds []*cobra.Command) {
 	}
 	cmds = append(cmds, unstakeCmd)
 
+	unpauseCmd := &cobra.Command{
+		Use:   "Unpause <from>",
+		Short: "Unpause <from>",
+		Long:  fmt.Sprintf(`Unpauses the %s actor with address <from>`, cmdDef.Name),
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return sendRPC("unpause", cmdDef.ActorType, args)(cmd, args)
+		},
+	}
+	cmds = append(cmds, unpauseCmd)
+
 	return cmds
 }
 
