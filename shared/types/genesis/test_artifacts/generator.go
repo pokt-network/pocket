@@ -171,28 +171,30 @@ func GenerateNewKeysStrings() (privateKey, publicKey, address string) {
 	return
 }
 
-func ReadConfigAndGenesisFiles(configPath string) (config *genesis.Config, g *genesis.GenesisState) {
-	config = new(genesis.Config)
-	g = new(genesis.GenesisState)
+func ReadConfigAndGenesisFiles(configPath string, genesisPath string) (config *genesis.Config, genesisState *genesis.GenesisState) {
 	if configPath == "" {
-		configPath = "build/config/config1.json"
+		log.Fatalf("config path cannot be empty")
 	}
-	genesisPath := "build/config/genesis.json"
+	if genesisPath == "" {
+		log.Fatalf("genesis path cannot be empty")
+	}
+
+	config = new(genesis.Config)
 	configFile, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		log.Fatalf("[ERROR] an error occurred reading config.json file: %v", err.Error())
 	}
+	if err = json.Unmarshal(configFile, config); err != nil {
+		log.Fatalf("[ERROR] an error occurred unmarshalling the config.json file: %v", err.Error())
+	}
+
+	genesisState = new(genesis.GenesisState)
 	genesisFile, err := ioutil.ReadFile(genesisPath)
 	if err != nil {
 		log.Fatalf("[ERROR] an error occurred reading genesis.json file: %v", err.Error())
 	}
-	if err = json.Unmarshal(configFile, config); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the config.json file: %v", err.Error())
-	}
-	if err = json.Unmarshal(genesisFile, g); err != nil {
+	if err = json.Unmarshal(genesisFile, genesisState); err != nil {
 		log.Fatalf("[ERROR] an error occurred unmarshalling the genesis.json file: %v", err.Error())
 	}
 	return
 }
-
-// pocketCrypto.NewAddress

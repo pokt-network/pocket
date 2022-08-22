@@ -24,6 +24,9 @@ const (
 	PromptTriggerNextView        string = "TriggerNextView"
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
+
+	configPath  string = "build/config/config1.json"
+	genesisPath string = "build/config/genesis.json"
 )
 
 var items = []string{
@@ -48,7 +51,7 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	config, genesis := test_artifacts.ReadConfigAndGenesisFiles("")
+	config, genesis := test_artifacts.ReadConfigAndGenesisFiles(configPath, genesisPath)
 	config.Base.PrivateKey = clientPrivateKey.String()
 
 	consensusMod, err = consensus.Create(config, genesis)
