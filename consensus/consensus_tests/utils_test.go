@@ -87,8 +87,10 @@ func CreateTestConsensusPocketNodes(
 	// TODO(design): The order here is important in order for NodeId to be set correctly below.
 	// This logic will need to change once proper leader election is implemented.
 	sort.Slice(configs, func(i, j int) bool {
-		pk, _ := cryptoPocket.NewPrivateKey(configs[i].Base.PrivateKey)
-		pk2, _ := cryptoPocket.NewPrivateKey(configs[j].Base.PrivateKey)
+		pk, err := cryptoPocket.NewPrivateKey(configs[i].Base.PrivateKey)
+		require.NoError(t, err)
+		pk2, err := cryptoPocket.NewPrivateKey(configs[j].Base.PrivateKey)
+		require.NoError(t, err)
 		return pk.Address().String() < pk2.Address().String()
 	})
 	for i, cfg := range configs {
