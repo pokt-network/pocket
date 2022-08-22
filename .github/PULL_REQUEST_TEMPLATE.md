@@ -37,5 +37,5 @@ _\_\_REPLACE_ME_: Describe the tests and that you ran to verify your changes. If
 - [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] I have tested my changes using the available tooling
 - [ ] If applicable, I have made corresponding changes to related local or global README
-- [ ] If applicable, I have added added new diagrams using [mermaid.js](https://mermaid-js.github.io)
+- [ ] If applicable, I have added new diagrams using [mermaid.js](https://mermaid-js.github.io)
 - [ ] If applicable, I have added tests that prove my fix is effective or that my feature works
