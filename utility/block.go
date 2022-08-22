@@ -20,6 +20,7 @@ import (
 	operation that executes at the end of every block.
 */
 
+// TODO(andrew): consolidate with `utility/types/actor.go`
 var (
 	actorTypes = []typesUtil.ActorType{
 		typesUtil.ActorType_App,

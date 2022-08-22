@@ -16,6 +16,7 @@ message Actor {
   string address = 1;
   string public_key = 2;
   repeated string chains = 3;
+  // TODO(andrew): Rename `generic_param` to `actor_specific_param`
   string generic_param = 4;
   string staked_amount = 5;
   int64 paused_height = 6;

@@ -1,12 +1,13 @@
 package utility
 
 import (
+	"math"
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	"math"
-	"math/big"
 )
 
 /*
@@ -19,6 +20,9 @@ import (
    It is important to note, that as production approaches, the idea is to attempt more consolidation at an architectural
    multi-module level. Until then, it's a fine line to walk.
 */
+
+// TODO(andrew): Make sure the `er` value in all the functions here is used. E.g. It is not used in `GetMinimumPauseBlocks`.
+// TODO(andrew): Remove code that is unnecessarily repeated in this file. E.g. The number of times `store.GetHeight()` can be reduced in the entire file.
 
 // setters
 
@@ -141,6 +145,9 @@ func (u *UtilityContext) GetMaxPausedBlocks(actorType typesUtil.ActorType) (maxP
 			return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
 		}
 		maxPausedBlocks, er = store.GetIntParam(types.AppMaxPauseBlocksParamName, height)
+		if er != nil {
+			return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
+		}
 		paramName = types.AppMaxPauseBlocksParamName
 	case typesUtil.ActorType_Fish:
 		height, er := store.GetHeight()

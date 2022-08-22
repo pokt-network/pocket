@@ -9,6 +9,8 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
+
+	// TODO(andrew): Remove all `typesGenesis` imports and use `genesis` instead.
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
@@ -241,6 +243,7 @@ func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*ty
 	if err != nil {
 		return nil, err
 	}
+	// TODO(andrew): Use `require.NoError`
 	addrBz, err := hex.DecodeString(serviceNode.Address)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", serviceNode.Address))

@@ -36,6 +36,7 @@ func TestInsertFishermanAndExists(t *testing.T) {
 	fisherman2, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
 
+	// TODO(andrew): Rename `addrBz` to `fishAddrBz` so tests are easier to read and understand. Ditto in all other locations.
 	addrBz, err := hex.DecodeString(fisherman.Address)
 	require.NoError(t, err)
 	addrBz2, err := hex.DecodeString(fisherman2.Address)
@@ -116,6 +117,8 @@ func TestGetFishermenReadyToUnstake(t *testing.T) {
 	require.NoError(t, err)
 	err = db.SetFishermanUnstakingHeightAndStatus(addrBz3, 1, persistence.UnstakingStatus)
 	require.NoError(t, err)
+
+	// TODO(andrew): Replace `fisherman` with `fishermans` for grammatic correctness
 
 	// Check unstaking fishermans at height 0
 	unstakingFishermen, err := db.GetFishermenReadyToUnstake(0, persistence.UnstakingStatus)

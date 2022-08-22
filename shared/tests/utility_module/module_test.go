@@ -23,6 +23,8 @@ var (
 	defaultSendAmountString    = types.BigIntToString(defaultSendAmount)
 	testSchema                 = "test_schema"
 )
+
+// TODO(olshansky): Find a way to avoid this global test variable
 var testPersistenceMod modules.PersistenceModule
 
 func NewTestingMempool(_ *testing.T) types.Mempool {

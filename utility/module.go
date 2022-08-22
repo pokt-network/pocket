@@ -1,11 +1,11 @@
 package utility
 
 import (
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 var _ modules.UtilityModule = &UtilityModule{}

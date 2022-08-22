@@ -1,18 +1,20 @@
 package types
 
 import (
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
+
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
-// REFACTOR: Moving this into a proto file enum (impacts everything) and making them `int32` by default
+// TODO(andrew): Moving this into a proto file enum (impacts everything) and making them `int32` by default
 const (
 	UnstakingStatus = 1
 	StakedStatus    = 2
 )
 
+// TODO(andrew): consolidate with genesis and `types/block.go`
 var (
-	ActorTypes = []ActorType{ // TODO (andrew) consolidate with genesis
+	ActorTypes = []ActorType{
 		ActorType_App,
 		ActorType_Node,
 		ActorType_Fish,

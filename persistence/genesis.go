@@ -11,8 +11,9 @@ import (
 	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
-// TODO(olshansky): Use `log.Fatalf` instead of `log.Fatal(fmt.Sprintf`
-// TODO(Andrew): generalize with the `actors interface`` once merged with #111
+// TODO(andrew): Use `log.Fatalf` instead of `log.Fatal(fmt.Sprintf())`.
+// TODO(andrew): generalize with the `actors interface`
+
 // WARNING: This function crashes the process if there is an error populating the genesis state.
 func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	log.Println("Populating genesis state...")
@@ -37,11 +38,8 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	if err != nil {
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
 	}
-	// defer rwContext.Commit()
+	// We commit the context at the end
 
-	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred creating the rwContext for the genesis state: %s", err.Error()))
-	}
 	for _, acc := range state.Utility.Accounts {
 		addrBz, err := hex.DecodeString(acc.Address)
 		if err != nil {
@@ -59,7 +57,8 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			log.Fatal(fmt.Sprintf("an error occurred inserting an pool in the genesis state: %s", err.Error()))
 		}
 	}
-	for _, act := range state.Utility.Applications { // TODO (Andrew) genericize the genesis population logic for actors #163
+	// TODO(andrew): genericize the genesis population logic for actors; pocket/issues/163
+	for _, act := range state.Utility.Applications {
 		addrBz, err := hex.DecodeString(act.Address)
 		if err != nil {
 			log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", act.Address))
@@ -174,7 +173,6 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []*genesis.Account, 
 		if err = rows.Scan(&acc.Address, &acc.Amount, &height); err != nil {
 			return nil, err
 		}
-		// acc.Address, err = address
 		if err != nil {
 			return nil, err
 		}
@@ -183,7 +181,7 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []*genesis.Account, 
 	return
 }
 
-// CLEANUP: Consolidate with GetAllAccounts.
+// TODO(andrew): Consolidate with `GetAllAccounts`
 func (p PostgresContext) GetAllPools(height int64) (accs []*genesis.Account, err error) {
 	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {

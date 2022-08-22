@@ -163,9 +163,10 @@ func getActorValues(_ schema.ProtocolActorSchema, actorValue reflect.Value) sche
 	}
 
 	return schema.BaseActor{
-		Address:            actorValue.FieldByName("Address").String(),
-		PublicKey:          actorValue.FieldByName("PublicKey").String(),
-		StakedTokens:       actorValue.FieldByName("StakedAmount").String(),
+		Address:      actorValue.FieldByName("Address").String(),
+		PublicKey:    actorValue.FieldByName("PublicKey").String(),
+		StakedTokens: actorValue.FieldByName("StakedAmount").String(),
+		// TODO(andrew): Be consistent with `GenericParam` and `ActorSpecificParam` throughout the codebase; preferably the latter.
 		ActorSpecificParam: actorValue.FieldByName("GenericParam").String(),
 		OutputAddress:      actorValue.FieldByName("Output").String(),
 		PausedHeight:       int64(actorValue.FieldByName("PausedHeight").Int()),
