@@ -15,7 +15,7 @@ const (
 )
 
 // Utility to generate config and genesis files
-// TODO_IN_THIS_COMMIT: Add a make target to help trigger this from cmdline
+// TODO(andrew): Add a make target to help trigger this from cmdline
 func main() {
 	genesis, validatorPrivateKeys := test_artifacts.NewGenesisState(4, 1, 1, 1)
 	configs := test_artifacts.NewDefaultConfigs(validatorPrivateKeys)

@@ -74,7 +74,8 @@ func (p *PostgresContext) operationAccountAmount(address []byte, deltaAmount str
 
 // --- Pool Functions ---
 
-func (p PostgresContext) InsertPool(name string, address []byte, amount string) error { // TODO(Andrew): remove address param
+// TODO(andrew): remove address param
+func (p PostgresContext) InsertPool(name string, address []byte, amount string) error {
 	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err

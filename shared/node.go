@@ -44,7 +44,7 @@ func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (n *Node, err er
 		return nil, err
 	}
 
-	telemetryMod, err := telemetry.Create(cfg, genesis) // TODO (team; discuss) is telemetry a proper module or not?
+	telemetryMod, err := telemetry.Create(cfg, genesis)
 	if err != nil {
 		return nil, err
 	}

@@ -46,6 +46,7 @@ type paceMaker struct {
 	paceMakerDebug
 }
 
+// TODO(drewskey): Pass in `genesis` and `config` here for consistency.
 func CreatePacemaker(cfg *genesis.Config) (m *paceMaker, err error) {
 	return &paceMaker{
 		bus:          nil,

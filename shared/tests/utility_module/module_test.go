@@ -57,7 +57,7 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	}
 }
 
-// TODO_IN_THIS_COMMIT: Take in `t` or return an error
+// TODO(andrew): Take in `t` and fail the test if there's an error
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	cfg := &genesis.Config{
 		Base:      &genesis.BaseConfig{},
