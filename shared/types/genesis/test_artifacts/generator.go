@@ -56,38 +56,42 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 
 func NewDefaultConfigs(privateKeys []string) (configs []*genesis.Config) {
 	for i, pk := range privateKeys {
-		configs = append(configs, &genesis.Config{
-			Base: &genesis.BaseConfig{
-				RootDirectory: "/go/src/github.com/pocket-network",
-				PrivateKey:    pk,
-			},
-			Consensus: &genesis.ConsensusConfig{
-				MaxMempoolBytes: 500000000,
-				PacemakerConfig: &genesis.PacemakerConfig{
-					TimeoutMsec:               5000,
-					Manual:                    true,
-					DebugTimeBetweenStepsMsec: 1000,
-				},
-			},
-			Utility: &genesis.UtilityConfig{},
-			Persistence: &genesis.PersistenceConfig{
-				PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
-				NodeSchema:     "node" + strconv.Itoa(i+1),
-				BlockStorePath: "/var/blockstore",
-			},
-			P2P: &genesis.P2PConfig{
-				ConsensusPort:  8080,
-				UseRainTree:    true,
-				ConnectionType: genesis.ConnectionType_TCPConnection,
-			},
-			Telemetry: &genesis.TelemetryConfig{
-				Enabled:  true,
-				Address:  "0.0.0.0:9000",
-				Endpoint: "/metrics",
-			},
-		})
+		configs = append(configs, NewDefaultConfig(i, pk))
 	}
 	return
+}
+
+func NewDefaultConfig(nodeNum int, privateKey string) *genesis.Config {
+	return &genesis.Config{
+		Base: &genesis.BaseConfig{
+			RootDirectory: "/go/src/github.com/pocket-network",
+			PrivateKey:    privateKey,
+		},
+		Consensus: &genesis.ConsensusConfig{
+			MaxMempoolBytes: 500000000,
+			PacemakerConfig: &genesis.PacemakerConfig{
+				TimeoutMsec:               5000,
+				Manual:                    true,
+				DebugTimeBetweenStepsMsec: 1000,
+			},
+		},
+		Utility: &genesis.UtilityConfig{},
+		Persistence: &genesis.PersistenceConfig{
+			PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
+			NodeSchema:     "node" + strconv.Itoa(nodeNum+1),
+			BlockStorePath: "/var/blockstore",
+		},
+		P2P: &genesis.P2PConfig{
+			ConsensusPort:  8080,
+			UseRainTree:    true,
+			ConnectionType: genesis.ConnectionType_TCPConnection,
+		},
+		Telemetry: &genesis.TelemetryConfig{
+			Enabled:  true,
+			Address:  "0.0.0.0:9000",
+			Endpoint: "/metrics",
+		},
+	}
 }
 
 func NewPools() (pools []*genesis.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
