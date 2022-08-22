@@ -58,6 +58,7 @@ func GetRoutes() Routes {
 		Route{Name: "Stake", Method: "POST", Path: "/v1/client/stake", HandlerFunc: TODOHandler},
 		Route{Name: "EditStake", Method: "POST", Path: "/v1/client/editstake", HandlerFunc: TODOHandler},
 		Route{Name: "UnStake", Method: "POST", Path: "/v1/client/unstake", HandlerFunc: TODOHandler},
+		Route{Name: "Unpause", Method: "POST", Path: "/v1/client/unpause", HandlerFunc: TODOHandler},
 		Route{Name: "SendRaw", Method: "POST", Path: "/v1/client/sendraw", HandlerFunc: TODOHandler},
 		Route{Name: "ChangeParameter", Method: "POST", Path: "/v1/gov/changeparam", HandlerFunc: TODOHandler},
 	}

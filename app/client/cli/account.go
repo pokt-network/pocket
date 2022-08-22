@@ -6,10 +6,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	privateKeyFilePath string
-)
-
 func NewAccountCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "Account",
@@ -38,8 +34,6 @@ func accountCommands() (cmds []*cobra.Command) {
 			return nil
 		},
 	}
-
-	sendCmd.PersistentFlags().StringVar(&privateKeyFilePath, "path_to_private_key_file", "./pk.json", "Path to private key to use when signing")
 
 	cmds = append(cmds, sendCmd)
 

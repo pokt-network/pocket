@@ -10,11 +10,13 @@ import (
 const CLIExecutableName = "client"
 
 var (
-	remoteCLIURL string
+	remoteCLIURL       string
+	privateKeyFilePath string
 )
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remoteCLIURL", "", "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
+	rootCmd.PersistentFlags().StringVar(&privateKeyFilePath, "path_to_private_key_file", "./pk.json", "Path to private key to use when signing")
 
 	rootCmd.AddCommand(NewAccountCommand())
 	rootCmd.AddCommand(NewActorCommands()...)
