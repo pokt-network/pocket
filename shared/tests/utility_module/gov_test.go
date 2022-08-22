@@ -14,7 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-// CLEANUP: cleanup this file as part of https://github.com/pokt-network/pocket/issues/76
+// TODO(andrew): Remove the use of `require.True` and `require.False` in all cases.
 
 func DefaultTestingParams(_ *testing.T) *genesis.Params {
 	return test_artifacts.DefaultParams()
@@ -25,6 +25,7 @@ func TestUtilityContext_GetAppMaxChains(t *testing.T) {
 	defaultParams := DefaultTestingParams(t)
 	maxChains, err := ctx.GetAppMaxChains()
 	require.NoError(t, err)
+	// TODO(andrew): Use require.Equal and avoid the use of formatted strings. Ditto elsewhere.
 	require.False(t, int(defaultParams.AppMaxChains) != maxChains, fmt.Sprintf("unexpected param value: expected %v got %v", defaultParams.AppMaxChains, maxChains))
 
 	tests.CleanupTest(ctx)
@@ -643,6 +644,7 @@ func TestUtilityContext_HandleMessageChangeParameter(t *testing.T) {
 	tests.CleanupTest(ctx)
 }
 
+// TODO(andrew): Use reflection to iterate over all the params and test them.
 func TestUtilityContext_GetParamOwner(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)

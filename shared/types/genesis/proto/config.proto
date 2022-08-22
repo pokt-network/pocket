@@ -14,7 +14,8 @@ message Config {
 
 message BaseConfig {
   string root_directory = 1;
-  string private_key = 2; // TODO (team) better architecture for key management (keybase, keyfiles, etc.)
+  // TODO: better architecture for key management (keybase, keyfiles, etc.)
+  string private_key = 2;
 }
 
 message ConsensusConfig {// TODO (team) move to consensus module #163

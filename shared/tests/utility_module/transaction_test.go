@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO(olshansky): Clean up these tests.
+// TODO: Clean up the readability (e.g. spacing, naming, etc) of these tests and extend them to cover the entire context.
 
 func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
@@ -87,7 +87,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	tests.CleanupTest(ctx)
 }
 
-// TODO: Fix this test once txIndexer is implemented by postgres context
+// TODO(andrew): Fix this test once txIndexer is implemented by postgres context
 func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
 	// ctx := NewTestingUtilityContext(t, 0)
 	// tx, _, _, _ := newTestingTransaction(t, ctx)

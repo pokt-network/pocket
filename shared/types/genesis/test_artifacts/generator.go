@@ -29,8 +29,8 @@ var (
 	DefaultMaxBlockBytes       = uint64(4000000)
 )
 
-// TODO (Team) this is meant to be a **temporary** replacement for the recently deprecated
-// 'genesis config' option. We need to implement a real suite soon!
+// TODO(drewsky): this is meant to be a **temporary** replacement for the recently deprecated
+//                'genesis config' option. We need to implement a real suite soon!
 func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (genesisState *genesis.GenesisState, validatorPrivateKeys []string) {
 	apps, appsPrivateKeys := NewActors(genesis.ActorType_App, numApplications)
 	vals, validatorPrivateKeys := NewActors(genesis.ActorType_Val, numValidators)
@@ -94,7 +94,8 @@ func NewDefaultConfig(nodeNum int, privateKey string) *genesis.Config {
 	}
 }
 
-func NewPools() (pools []*genesis.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
+// TODO: in the real testing suite, we need to populate the pool amounts dependent on the actors
+func NewPools() (pools []*genesis.Account) {
 	for _, name := range genesis.Pool_Names_name {
 		if name == genesis.Pool_Names_FeeCollector.String() {
 			pools = append(pools, &genesis.Account{
