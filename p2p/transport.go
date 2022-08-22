@@ -2,10 +2,11 @@ package p2p
 
 import (
 	"fmt"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"io/ioutil"
 	"net"
+
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 const (

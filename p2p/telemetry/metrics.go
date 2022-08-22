@@ -1,7 +1,5 @@
 package p2p_telemetry
 
-// TODO (Team) move to telemetry module
-
 const (
 	// Time Series Metrics
 	P2P_NODE_STARTED_TIMESERIES_METRIC_NAME        = "p2p_nodes_started_counter"
