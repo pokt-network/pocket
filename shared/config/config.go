@@ -18,6 +18,7 @@ type Config struct {
 	// DISCUSS(deblasis): should we scope this into, let's say, RPCConfig?
 	RPCPort      string `json:"rpc_port"`       // TODO(deblasis): still unused, need to define default value, "8081" ?
 	RemoteCLIURL string `json:"remote_cli_url"` // TODO(deblasis): need to define default value as const somewhere, "http://localhost:8081" ?
+	RPCTimeout   int64  `json:"rpc_timeout"`    // TODO(deblasis): need to define default value as const somewhere, "30000" ?
 
 	EnableTelemetry bool                           `json:"enable_telemetry"`
 	PrivateKey      cryptoPocket.Ed25519PrivateKey `json:"private_key"`
@@ -76,7 +77,7 @@ type TelemetryConfig struct {
 
 // TODO(insert tooling issue # here): Re-evaluate how load configs should be handeled.
 func LoadConfig(file string) (c *Config) {
-	c = &Config{}
+	c = defaultConfig(c)
 
 	jsonFile, err := os.Open(file)
 	if err != nil {
@@ -149,4 +150,14 @@ func (c *ConsensusConfig) ValidateAndHydrate() error {
 
 func (c *PacemakerConfig) ValidateAndHydrate() error {
 	return nil
+}
+
+// defaultConfig simply returns the initialized struct with default values
+func defaultConfig(c *Config) *Config {
+	c = &Config{
+		RPCPort:      DefaultRPCPort,
+		RemoteCLIURL: DefaultRemoteCLIURL,
+		RPCTimeout:   DefaultRPCTimeout,
+	}
+	return c
 }

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 
+	"github.com/pokt-network/pocket/app/client/rpc"
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/config"
 )
@@ -22,6 +23,12 @@ func main() {
 	}
 
 	cfg := config.LoadConfig(*config_filename)
+	// DISCUSS(deblasis): poor man's feature flag: no port => no RPC
+	if cfg.RPCPort != "" {
+		go rpc.StartRPC(cfg.RPCPort, cfg.RPCTimeout)
+	} else {
+		log.Println("RPC server: OFFLINE")
+	}
 
 	pocketNode, err := shared.Create(cfg)
 	if err != nil {
@@ -31,4 +38,5 @@ func main() {
 	if err = pocketNode.Start(); err != nil {
 		log.Fatalf("Failed to start pocket node: %s", err)
 	}
+
 }
