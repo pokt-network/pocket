@@ -8,6 +8,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func init() {
+	rootCmd.AddCommand(NewActorCommands()...)
+}
+
 type actorCmdDef struct {
 	Name      string
 	ActorType types.ActorType
@@ -45,7 +49,26 @@ func newActorCommands(cmdDef actorCmdDef) (cmds []*cobra.Command) {
 		Long:  fmt.Sprintf(`Stakes <amount> for the %s actot with address <from>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return sendRPC("stake", cmdDef.ActorType, args)(cmd, args)
+			// TODO(deblasis): update when we have keybase
+			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
+			if err != nil {
+				return err
+			}
+			// currently ignored since we are using the address from the PrivateKey
+			// fromAddr := crypto.AddressFromString(args[0])
+			amount := args[1]
+
+			_ = &types.MessageStake{
+				PublicKey:     pk.PublicKey().Bytes(),
+				Chains:        []string{}, // TODO(deblasis): 👀
+				Amount:        amount,
+				ServiceUrl:    "",       // TODO(deblasis): 👀
+				OutputAddress: []byte{}, // TODO(deblasis): 👀
+				Signer:        []byte{}, // TODO(deblasis): 👀 pk.Address() ?
+				ActorType:     cmdDef.ActorType,
+			}
+
+			return nil
 		},
 	}
 	cmds = append(cmds, stakeCmd)
@@ -56,7 +79,24 @@ func newActorCommands(cmdDef actorCmdDef) (cmds []*cobra.Command) {
 		Long:  fmt.Sprintf(`Stakes a new <amount> for the %s actor with address <from>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return sendRPC("editstake", cmdDef.ActorType, args)(cmd, args)
+			// TODO(deblasis): update when we have keybase
+			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
+			if err != nil {
+				return err
+			}
+
+			amount := args[1]
+
+			_ = &types.MessageEditStake{
+				Address:    pk.Address(),
+				Chains:     []string{}, // TODO(deblasis): 👀
+				Amount:     amount,
+				ServiceUrl: "",       // TODO(deblasis): 👀
+				Signer:     []byte{}, // TODO(deblasis): 👀
+				ActorType:  cmdDef.ActorType,
+			}
+
+			return nil
 		},
 	}
 	cmds = append(cmds, editStakeCmd)
@@ -67,7 +107,19 @@ func newActorCommands(cmdDef actorCmdDef) (cmds []*cobra.Command) {
 		Long:  fmt.Sprintf(`Unstakes the prevously staked tokens for the %s actor with address <from>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return sendRPC("unstake", cmdDef.ActorType, args)(cmd, args)
+			// TODO(deblasis): update when we have keybase
+			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
+			if err != nil {
+				return err
+			}
+
+			_ = &types.MessageUnstake{
+				Address:   pk.Address(),
+				Signer:    []byte{}, // TODO(deblasis): 👀
+				ActorType: cmdDef.ActorType,
+			}
+
+			return nil
 		},
 	}
 	cmds = append(cmds, unstakeCmd)
@@ -78,18 +130,22 @@ func newActorCommands(cmdDef actorCmdDef) (cmds []*cobra.Command) {
 		Long:  fmt.Sprintf(`Unpauses the %s actor with address <from>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return sendRPC("unpause", cmdDef.ActorType, args)(cmd, args)
+			// TODO(deblasis): update when we have keybase
+			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
+			if err != nil {
+				return err
+			}
+
+			_ = &types.MessageUnpause{
+				Address:   pk.Address(),
+				Signer:    []byte{}, // TODO(deblasis): 👀
+				ActorType: cmdDef.ActorType,
+			}
+
+			return nil
 		},
 	}
 	cmds = append(cmds, unpauseCmd)
 
 	return cmds
-}
-
-func sendRPC(rpcType string, actorType types.ActorType, args []string) func(cmd *cobra.Command, args []string) error {
-	// TODO(deblasis): refactor this placeholder
-	// TODO(deblasis): implement RPC client, route and handler
-	return func(cmd *cobra.Command, args []string) error {
-		return nil
-	}
 }
