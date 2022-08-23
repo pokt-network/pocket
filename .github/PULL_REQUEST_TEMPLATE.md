@@ -1,10 +1,12 @@
+\__DELETE_ME_: Please make sure the title of the PR is descriptive and follows this format: `[<Module>] <DESCRIPTION>(Issue#<ISSUE_NUMBEr>)`\_
 \__DELETE_ME_: Please make sure to update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the PR for review\_
 \__DELETE_ME_: Please make sure to add labels for the purpose (e.g. `persistence`) and priority (e.g. `low`) of this PR\_
-\__DELETE_ME_: Please make sure the title of the PR is descriptive and follows this format: `[<Module>] <DESCRIPTION> (Issue#<ISSUE_NUMBEr>)`\_
 
 ## Description
 
 \__REPLACE_ME_: Summary of the change. Include motivation, reasons, context, dependencies, etc...\_
+
+## Issue
 
 Fixes [issue/_<ISSUE_NUMBER>_](https://github.com/pokt-network/pocket/issues/<ISSUE_NUMBER>)
 
@@ -21,13 +23,12 @@ Please mark the options that are relevant.
 
 ## List of changes
 
-- ...
+- \__REPLACE_ME_: List of actual changes\_
+-
 
 ## Testing
 
-_\_\_REPLACE_ME_: Describe the tests and that you ran to verify your changes. If applicable, provide steps to reproduce. Bonus points for images and videos or gifs.\_
-
-- [ ] Testing not applicable
+- _\_\_REPLACE_ME_: Describe the tests and steps that you ran to verify your changes. Bonus points for images and videos or gifs.\_
 - [ ] `make test_all`
 - [ ] [LocalNet](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md) w/ all of the steps outlined in the `README`
 
