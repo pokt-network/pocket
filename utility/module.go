@@ -1,7 +1,6 @@
 package utility
 
 import (
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/modules"

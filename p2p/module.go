@@ -7,8 +7,6 @@ package p2p
 import (
 	"log"
 
-	"github.com/pokt-network/pocket/shared/types/genesis"
-
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
