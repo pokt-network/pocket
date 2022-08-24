@@ -27,6 +27,10 @@ var items = []string{
 	PromptShowLatestBlockInStore,
 }
 
+func init() {
+	rootCmd.AddCommand(NewDebug())
+}
+
 func NewDebug() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "debug",
