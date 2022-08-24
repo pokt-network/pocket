@@ -3,10 +3,9 @@ package shared
 import (
 	"log"
 
-	"github.com/pokt-network/pocket/shared/types/genesis"
-
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 var _ modules.Bus = &bus{}
@@ -27,8 +26,8 @@ type bus struct {
 	// Configurations
 	config *genesis.Config
 
-	// TECHDEBT(olshansky): We're only storing the `genesis` in the bus so we can access it for debug purposes.
-	// Ideally, we can restart the entire lifecycle.
+	// TECHDEBT(drewsky): We're only storing the `genesis` in the bus so we can access it for
+	// debug purposes. Ideally, we can restart the entire lifecycle.
 	genesis *genesis.GenesisState
 }
 

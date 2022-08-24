@@ -85,8 +85,7 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 	return pool, resource, databaseUrl
 }
 
-// TODO: Currently exposed only for testing purposes.
-// >>>>>>> main
+// TODO(drewsky): Currently exposed only for testing purposes.
 func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *dockertest.Resource) {
 	// You can't defer this because `os.Exit`` doesn't care for defer
 	if err := pool.Purge(resource); err != nil {
@@ -95,6 +94,7 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 	os.Exit(0)
 }
 
+// TODO(drewsky): Remove this in favor of a golang specific solution
 func CleanupTest(u utility.UtilityContext) {
 	u.Context.Release()
 }

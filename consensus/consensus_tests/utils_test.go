@@ -12,9 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pokt-network/pocket/shared/types/genesis"
-	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
-
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -23,14 +20,12 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
-
-// The number at which to start incrementing the seeds
-// used for random key generation.
-const genesisConfigSeedStart = uint32(42)
 
 // If this is set to true, consensus unit tests will fail if additional unexpected messages are received.
 // This slows down the tests because we always fail until the timeout specified by the test before continuing
@@ -61,14 +56,13 @@ type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
 var (
 	DefaultServiceURL    = "https://foo.bar" // TODO (team) cleanup consensus testing module with centralization of utilities
-	DefaultChainID       = "mainnet"
+	DefaultChainID       = "unittest_net"
 	DefaultStakeAmount   = types.BigIntToString(big.NewInt(1000000000))
 	DefaultAccountAmount = types.BigIntToString(big.NewInt(1000000000))
 )
 
-func GenerateNodeConfigs(_ *testing.T, n int) (configs []*genesis.Config, genesisState *genesis.GenesisState) {
-	var keys []string
-	genesisState, keys = test_artifacts.NewGenesisState(n, 1, 1, 1)
+func GenerateNodeConfigs(_ *testing.T, numValidators int) (configs []*genesis.Config, genesisState *genesis.GenesisState) {
+	genesisState, keys := test_artifacts.NewGenesisState(numValidators, 1, 1, 1)
 	configs = test_artifacts.NewDefaultConfigs(keys)
 	for _, config := range configs {
 		config.Consensus = &genesis.ConsensusConfig{
@@ -93,8 +87,10 @@ func CreateTestConsensusPocketNodes(
 	// TODO(design): The order here is important in order for NodeId to be set correctly below.
 	// This logic will need to change once proper leader election is implemented.
 	sort.Slice(configs, func(i, j int) bool {
-		pk, _ := cryptoPocket.NewPrivateKey(configs[i].Base.PrivateKey)
-		pk2, _ := cryptoPocket.NewPrivateKey(configs[j].Base.PrivateKey)
+		pk, err := cryptoPocket.NewPrivateKey(configs[i].Base.PrivateKey)
+		require.NoError(t, err)
+		pk2, err := cryptoPocket.NewPrivateKey(configs[j].Base.PrivateKey)
+		require.NoError(t, err)
 		return pk.Address().String() < pk2.Address().String()
 	})
 	for i, cfg := range configs {

@@ -2,17 +2,19 @@ package main
 
 import (
 	"flag"
-	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"log"
 
 	"github.com/pokt-network/pocket/shared"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 )
 
 // See `docs/build/README.md` for details on how this is injected via mage.
 var version = "UNKNOWN"
 
 func main() {
-	config_filename := flag.String("config", "", "Relative or absolute path to config file.")
+	configFilename := flag.String("config", "", "Relative or absolute path to the config file.")
+	genesisFilename := flag.String("genesis", "", "Relative or absolute path to the genesis file.")
+
 	v := flag.Bool("version", false, "")
 	flag.Parse()
 
@@ -21,7 +23,7 @@ func main() {
 		return
 	}
 
-	cfg, genesis := test_artifacts.ReadConfigAndGenesisFiles(*config_filename)
+	cfg, genesis := test_artifacts.ReadConfigAndGenesisFiles(*configFilename, *genesisFilename)
 
 	pocketNode, err := shared.Create(cfg, genesis)
 	if err != nil {

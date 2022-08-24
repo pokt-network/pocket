@@ -1,9 +1,10 @@
 package telemetry
 
 import (
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 	"net/http"
+
+	"github.com/pokt-network/pocket/shared/types/genesis"
 
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/prometheus/client_golang/prometheus"

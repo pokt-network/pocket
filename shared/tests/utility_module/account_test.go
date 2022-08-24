@@ -17,6 +17,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO(andrew): Remove all `require.True` in test files unless we're checking the value of a boolean
+// TODO(andrew): Remove all `fmt.Sprintf(`
+
 func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	acc := GetAllTestingAccounts(t, ctx)[0]
@@ -33,7 +36,7 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 
 	expected := initialAmount.Add(initialAmount, addAmount)
 	require.True(t, afterAmount.Cmp(expected) == 0, fmt.Sprintf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount))
-	tests.CleanupTest(ctx) // TODO (team) need a golang specific solution for teardown
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_AddAccountAmountString(t *testing.T) {

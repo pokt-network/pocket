@@ -2,14 +2,13 @@ package consensus
 
 import (
 	"context"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 	"time"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 type Pacemaker interface {
@@ -47,6 +46,7 @@ type paceMaker struct {
 	paceMakerDebug
 }
 
+// TODO(drewskey): Pass in `genesis` and `config` here for consistency.
 func CreatePacemaker(cfg *genesis.Config) (m *paceMaker, err error) {
 	return &paceMaker{
 		bus:          nil,

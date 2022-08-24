@@ -11,6 +11,8 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
+
+	// TODO(andrew): Find all places where we import genesis twice (like below) and update the imports appropriately.
 	"github.com/pokt-network/pocket/shared/types/genesis"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
@@ -29,6 +31,7 @@ func FuzzAccountAmount(f *testing.F) {
 
 	account := newTestAccount(nil)
 	addrBz, err := hex.DecodeString(account.Address)
+	// TODO(andrew): All `log.Fatal` calls should be converted to `require.NoError` calls.
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -330,7 +333,7 @@ func createAndInsertNewPool(db *persistence.PostgresContext) (*genesis.Account, 
 	return &pool, db.SetPoolAmount(pool.Address, DefaultAccountAmount)
 }
 
-// TODO(olshansky): consolidate newTestAccount and newTestPool into one function
+// TODO(andrew): consolidate newTestAccount and newTestPool into one function
 
 // Note to the reader: lack of consistency between []byte and string in addresses will be consolidated.
 func newTestAccount(t *testing.T) typesGenesis.Account {

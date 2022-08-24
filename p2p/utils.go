@@ -2,10 +2,11 @@ package p2p
 
 import (
 	"fmt"
+	"log"
+
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types/genesis"
-	"log"
 )
 
 // CLEANUP(drewsky): These functions will turn into more of a "ActorToAddrBook" when we have a closer

@@ -20,6 +20,9 @@ import (
    multi-module level. Until then, it's a fine line to walk.
 */
 
+// TODO(andrew): Make sure the `er` value in all the functions here is used. E.g. It is not used in `GetMinimumPauseBlocks`.
+// TODO(andrew): Remove code that is unnecessarily repeated in this file. E.g. The number of times `store.GetHeight()` can be reduced in the entire file.
+
 // setters
 
 func (u *UtilityContext) SetActorStakedTokens(actorType typesUtil.ActorType, tokens *big.Int, address []byte) types.Error {
@@ -141,6 +144,9 @@ func (u *UtilityContext) GetMaxPausedBlocks(actorType typesUtil.ActorType) (maxP
 			return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
 		}
 		maxPausedBlocks, er = store.GetIntParam(types.AppMaxPauseBlocksParamName, height)
+		if er != nil {
+			return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
+		}
 		paramName = types.AppMaxPauseBlocksParamName
 	case typesUtil.ActorType_Fish:
 		height, er := store.GetHeight()

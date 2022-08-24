@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// TODO (Team) move errors to respective modules #163
-// TODO(Andrew) consolidate errors into one file after recovery
+// TODO(andrew): move errors to respective modules; pocket/issues/163
+// TODO(andrew): consolidate errors into one file after recovery; pocket/issues/163
 
 type Error interface {
 	Code() Code

@@ -29,8 +29,8 @@ var (
 	DefaultMaxBlockBytes       = uint64(4000000)
 )
 
-// TODO (Team) this is meant to be a **temporary** replacement for the recently deprecated
-// 'genesis config' option. We need to implement a real suite soon!
+// TODO(drewsky): this is meant to be a **temporary** replacement for the recently deprecated
+//                'genesis config' option. We need to implement a real suite soon!
 func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (genesisState *genesis.GenesisState, validatorPrivateKeys []string) {
 	apps, appsPrivateKeys := NewActors(genesis.ActorType_App, numApplications)
 	vals, validatorPrivateKeys := NewActors(genesis.ActorType_Val, numValidators)
@@ -56,41 +56,46 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 
 func NewDefaultConfigs(privateKeys []string) (configs []*genesis.Config) {
 	for i, pk := range privateKeys {
-		configs = append(configs, &genesis.Config{
-			Base: &genesis.BaseConfig{
-				RootDirectory: "/go/src/github.com/pocket-network",
-				PrivateKey:    pk,
-			},
-			Consensus: &genesis.ConsensusConfig{
-				MaxMempoolBytes: 500000000,
-				PacemakerConfig: &genesis.PacemakerConfig{
-					TimeoutMsec:               5000,
-					Manual:                    true,
-					DebugTimeBetweenStepsMsec: 1000,
-				},
-			},
-			Utility: &genesis.UtilityConfig{},
-			Persistence: &genesis.PersistenceConfig{
-				PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
-				NodeSchema:     "node" + strconv.Itoa(i+1),
-				BlockStorePath: "/var/blockstore",
-			},
-			P2P: &genesis.P2PConfig{
-				ConsensusPort:  8080,
-				UseRainTree:    true,
-				ConnectionType: genesis.ConnectionType_TCPConnection,
-			},
-			Telemetry: &genesis.TelemetryConfig{
-				Enabled:  true,
-				Address:  "0.0.0.0:9000",
-				Endpoint: "/metrics",
-			},
-		})
+		configs = append(configs, NewDefaultConfig(i, pk))
 	}
 	return
 }
 
-func NewPools() (pools []*genesis.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
+func NewDefaultConfig(nodeNum int, privateKey string) *genesis.Config {
+	return &genesis.Config{
+		Base: &genesis.BaseConfig{
+			RootDirectory: "/go/src/github.com/pocket-network",
+			PrivateKey:    privateKey,
+		},
+		Consensus: &genesis.ConsensusConfig{
+			MaxMempoolBytes: 500000000,
+			PacemakerConfig: &genesis.PacemakerConfig{
+				TimeoutMsec:               5000,
+				Manual:                    true,
+				DebugTimeBetweenStepsMsec: 1000,
+			},
+		},
+		Utility: &genesis.UtilityConfig{},
+		Persistence: &genesis.PersistenceConfig{
+			PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
+			NodeSchema:     "node" + strconv.Itoa(nodeNum+1),
+			BlockStorePath: "/var/blockstore",
+		},
+		P2P: &genesis.P2PConfig{
+			ConsensusPort:  8080,
+			UseRainTree:    true,
+			ConnectionType: genesis.ConnectionType_TCPConnection,
+		},
+		Telemetry: &genesis.TelemetryConfig{
+			Enabled:  true,
+			Address:  "0.0.0.0:9000",
+			Endpoint: "/metrics",
+		},
+	}
+}
+
+// TODO: in the real testing suite, we need to populate the pool amounts dependent on the actors
+func NewPools() (pools []*genesis.Account) {
 	for _, name := range genesis.Pool_Names_name {
 		if name == genesis.Pool_Names_FeeCollector.String() {
 			pools = append(pools, &genesis.Account{
@@ -171,25 +176,29 @@ func GenerateNewKeysStrings() (privateKey, publicKey, address string) {
 	return
 }
 
-func ReadConfigAndGenesisFiles(configPath string) (config *genesis.Config, g *genesis.GenesisState) {
-	config = new(genesis.Config)
-	g = new(genesis.GenesisState)
+func ReadConfigAndGenesisFiles(configPath string, genesisPath string) (config *genesis.Config, genesisState *genesis.GenesisState) {
 	if configPath == "" {
-		configPath = "build/config/config1.json"
+		log.Fatalf("config path cannot be empty")
 	}
-	genesisPath := "build/config/genesis.json"
+	if genesisPath == "" {
+		log.Fatalf("genesis path cannot be empty")
+	}
+
+	config = new(genesis.Config)
 	configFile, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		log.Fatalf("[ERROR] an error occurred reading config.json file: %v", err.Error())
 	}
+	if err = json.Unmarshal(configFile, config); err != nil {
+		log.Fatalf("[ERROR] an error occurred unmarshalling the config.json file: %v", err.Error())
+	}
+
+	genesisState = new(genesis.GenesisState)
 	genesisFile, err := ioutil.ReadFile(genesisPath)
 	if err != nil {
 		log.Fatalf("[ERROR] an error occurred reading genesis.json file: %v", err.Error())
 	}
-	if err = json.Unmarshal(configFile, config); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the config.json file: %v", err.Error())
-	}
-	if err = json.Unmarshal(genesisFile, g); err != nil {
+	if err = json.Unmarshal(genesisFile, genesisState); err != nil {
 		log.Fatalf("[ERROR] an error occurred unmarshalling the genesis.json file: %v", err.Error())
 	}
 	return

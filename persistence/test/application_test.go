@@ -252,6 +252,8 @@ func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*typesGenes
 	if err != nil {
 		return nil, err
 	}
+	// TODO(andrew): Avoid the use of `log.Fatal(fmt.Sprintf`
+	// TODO(andrew): Use `require.NoError` instead of `log.Fatal` in tests`
 	addrBz, err := hex.DecodeString(app.Address)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", app.Address))

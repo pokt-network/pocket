@@ -23,6 +23,8 @@ var (
 	defaultSendAmountString    = types.BigIntToString(defaultSendAmount)
 	testSchema                 = "test_schema"
 )
+
+// TODO(olshansky): Find a way to avoid this global test variable
 var testPersistenceMod modules.PersistenceModule
 
 func NewTestingMempool(_ *testing.T) types.Mempool {
@@ -55,7 +57,7 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	}
 }
 
-// TODO_IN_THIS_COMMIT: Take in `t` or return an error
+// TODO(andrew): Take in `t` and fail the test if there's an error
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	cfg := &genesis.Config{
 		Base:      &genesis.BaseConfig{},
@@ -69,11 +71,13 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 		P2P:       &genesis.P2PConfig{},
 		Telemetry: &genesis.TelemetryConfig{},
 	}
+	// TODO(andrew): Move the number of actors into local constants
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	persistenceMod, err := persistence.Create(cfg, genesisState)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
-	persistenceMod.Start() // TODO: Check for error
+	// TODO(andrew): Check for error
+	persistenceMod.Start()
 	return persistenceMod
 }
