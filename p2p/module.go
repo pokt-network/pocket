@@ -91,6 +91,7 @@ func (m *p2pModule) Start() error {
 	}
 	m.network.SetBus(m.GetBus())
 
+	// DISCUSS(deblasis): this seems redundant (see line above)
 	m.network.SetBus(m.GetBus())
 
 	go func() {
