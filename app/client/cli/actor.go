@@ -18,7 +18,6 @@ type actorCmdDef struct {
 }
 
 func NewActorCommands() (cmds []*cobra.Command) {
-
 	actorCmdDefs := []actorCmdDef{
 		{"Application", types.ActorType_App},
 		{"Node", types.ActorType_Node},
@@ -42,14 +41,13 @@ func NewActorCommands() (cmds []*cobra.Command) {
 }
 
 func newActorCommands(cmdDef actorCmdDef) (cmds []*cobra.Command) {
-
 	stakeCmd := &cobra.Command{
 		Use:   "Stake <from> <amount>",
 		Short: "Stake <from> <amount>",
 		Long:  fmt.Sprintf(`Stakes <amount> for the %s actot with address <from>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(deblasis): update when we have keybase
+			// TODO(pocket/issues/150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
@@ -79,7 +77,7 @@ func newActorCommands(cmdDef actorCmdDef) (cmds []*cobra.Command) {
 		Long:  fmt.Sprintf(`Stakes a new <amount> for the %s actor with address <from>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(deblasis): update when we have keybase
+			// TODO(pocket/issues/150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
@@ -107,7 +105,7 @@ func newActorCommands(cmdDef actorCmdDef) (cmds []*cobra.Command) {
 		Long:  fmt.Sprintf(`Unstakes the prevously staked tokens for the %s actor with address <from>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(deblasis): update when we have keybase
+			// TODO(pocket/issues/150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
@@ -130,7 +128,7 @@ func newActorCommands(cmdDef actorCmdDef) (cmds []*cobra.Command) {
 		Long:  fmt.Sprintf(`Unpauses the %s actor with address <from>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(deblasis): update when we have keybase
+			// TODO(pocket/issues/150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
