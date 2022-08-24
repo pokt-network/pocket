@@ -15,7 +15,9 @@ import (
 //TODO(deblasis): still unused, need to gather feedback on RPC routes below before implementing everything, for now I copied some code from v0 over as a blueprint for style
 // currently perhaps only GetRoutes is important in this file
 
-func StartRPC(port string, timeout int64, simulation, debug, allBlockTxs, hotReloadChains bool) {
+func StartRPC(port string, timeout int64) {
+	log.Printf("Starting RPC on port %s...\n", port)
+
 	routes := GetRoutes()
 
 	srv := &http.Server{
