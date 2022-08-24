@@ -27,7 +27,6 @@ func NewGovernanceCommand() *cobra.Command {
 }
 
 func govCommands() (cmds []*cobra.Command) {
-
 	cmds = append(cmds, &cobra.Command{
 		Use:   "ChangeParameter <owner> <key> <value>",
 		Short: "ChangeParameter <owner> <key> <value>",
@@ -39,7 +38,7 @@ func govCommands() (cmds []*cobra.Command) {
 			// TODO(deblasis): implement RPC client, route and handler
 			fmt.Printf("changing parameter %s owned by %s to %s\n", args[1], args[0], args[2])
 
-			// TODO(deblasis): update when we have keybase
+			// TODO(pocket/issues/150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
@@ -61,7 +60,6 @@ func govCommands() (cmds []*cobra.Command) {
 			}
 
 			return nil
-
 		},
 	})
 

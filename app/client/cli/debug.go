@@ -3,9 +3,16 @@ package cli
 import (
 	"log"
 	"os"
+	"sync"
 
 	"github.com/manifoldco/promptui"
-	"github.com/pokt-network/pocket/app"
+	"github.com/pokt-network/pocket/consensus"
+	"github.com/pokt-network/pocket/p2p"
+	"github.com/pokt-network/pocket/shared"
+	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/telemetry"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -19,13 +26,20 @@ const (
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
 )
 
-var items = []string{
-	PromptResetToGenesis,
-	PromptPrintNodeState,
-	PromptTriggerNextView,
-	PromptTogglePacemakerMode,
-	PromptShowLatestBlockInStore,
-}
+var (
+	cfg          *config.Config
+	p2pMod       modules.P2PModule
+	consensusMod modules.ConsensusModule
+	modInitOnce  sync.Once
+
+	items = []string{
+		PromptResetToGenesis,
+		PromptPrintNodeState,
+		PromptTriggerNextView,
+		PromptTogglePacemakerMode,
+		PromptShowLatestBlockInStore,
+	}
+)
 
 func init() {
 	rootCmd.AddCommand(NewDebug())
@@ -36,14 +50,16 @@ func NewDebug() *cobra.Command {
 		Use:   "debug",
 		Short: "Debug utility for rapid development",
 		Args:  cobra.ExactArgs(0),
-		RunE:  runDebug,
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			initDebug(remoteCLIURL)
+		},
+		RunE: runDebug,
 	}
 
 	return c
 }
 
 func runDebug(cmd *cobra.Command, args []string) error {
-
 	for {
 		selection, err := promptGetInput()
 		if err == nil {
@@ -122,8 +138,8 @@ func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
 	// p2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
 
-	for _, val := range app.ConsensusMod.ValidatorMap() {
-		app.P2pMod.Send(val.Address, anyProto, types.PocketTopic_DEBUG_TOPIC)
+	for _, val := range consensusMod.ValidatorMap() {
+		p2pMod.Send(val.Address, anyProto, types.PocketTopic_DEBUG_TOPIC)
 	}
 }
 
@@ -135,10 +151,49 @@ func sendDebugMessage(debugMsg *types.DebugMessage) {
 	}
 
 	var validatorAddress []byte
-	for _, val := range app.ConsensusMod.ValidatorMap() {
+	for _, val := range consensusMod.ValidatorMap() {
 		validatorAddress = val.Address
 		break
 	}
 
-	app.P2pMod.Send(validatorAddress, anyProto, types.PocketTopic_DEBUG_TOPIC)
+	p2pMod.Send(validatorAddress, anyProto, types.PocketTopic_DEBUG_TOPIC)
+}
+
+func initDebug(remoteCLIURL string) {
+	modInitOnce.Do(func() {
+		pk, err := crypto.GeneratePrivateKey()
+		if err != nil {
+			log.Fatalf("[ERROR] Failed to generate private key: %v", err)
+		}
+
+		cfg = config.New(
+			config.WithPrivateKey(pk.(crypto.Ed25519PrivateKey)),
+		)
+
+		if err := cfg.HydrateGenesisState(); err != nil {
+			log.Fatalf("[ERROR] Failed to hydrate the genesis state: %v", err.Error())
+		}
+
+		consensusMod, err = consensus.Create(cfg)
+		if err != nil {
+			log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
+		}
+
+		p2pMod, err = p2p.Create(cfg)
+		if err != nil {
+			log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
+		}
+		// This telemetry module instance is a NOOP because the 'enable_telemetry' flag in the `cfg` above is set to false.
+		// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
+		// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
+		// module that NOOPs (per the configs above) is injected.
+		telemetryMod, err := telemetry.Create(cfg)
+		if err != nil {
+			log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
+		}
+
+		_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod, cfg)
+
+		p2pMod.Start()
+	})
 }

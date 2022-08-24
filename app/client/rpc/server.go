@@ -12,7 +12,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-//TODO(deblasis): still unused, need to gather feedback on RPC routes below before implementing everything, for now I copied some code from v0 over as a blueprint for style
+// TODO(deblasis): still unused, need to gather feedback on RPC routes below before implementing everything, for now I copied some code from v0 over as a blueprint for style
 // currently perhaps only GetRoutes is important in this file
 
 func StartRPC(port string, timeout int64) {

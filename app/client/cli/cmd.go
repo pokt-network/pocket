@@ -3,11 +3,10 @@ package cli
 import (
 	"context"
 
-	"github.com/pokt-network/pocket/app"
 	"github.com/spf13/cobra"
 )
 
-const CLIExecutableName = "client"
+const cliExecutableName = "client"
 
 var (
 	remoteCLIURL       string
@@ -20,13 +19,10 @@ func init() {
 }
 
 var rootCmd = &cobra.Command{
-	Use: CLIExecutableName,
+	Use: cliExecutableName,
 	// TODO(deblasis): document
 	Short: "",
 	Long:  "",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		app.Init(remoteCLIURL)
-	},
 	// TODO(deblasis): do we need some sort of teardown as well?
 
 }

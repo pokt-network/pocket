@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 )
@@ -15,10 +16,7 @@ type Config struct {
 	RootDir       string                 `json:"root_dir"`
 	GenesisSource *genesis.GenesisSource `json:"genesis_source"` // TECHDEBT(olshansky): we should be able to pass the struct in here.
 
-	// DISCUSS(deblasis): should we scope this into, let's say, RPCConfig?
-	RPCPort      string `json:"rpc_port"`       // TODO(deblasis): still unused, need to define default value, "8081" ?
-	RemoteCLIURL string `json:"remote_cli_url"` // TODO(deblasis): need to define default value as const somewhere, "http://localhost:8081" ?
-	RPCTimeout   int64  `json:"rpc_timeout"`    // TODO(deblasis): need to define default value as const somewhere, "30000" ?
+	RPCConfig *RPCConfig `json:"rpc"`
 
 	EnableTelemetry bool                           `json:"enable_telemetry"`
 	PrivateKey      cryptoPocket.Ed25519PrivateKey `json:"private_key"`
@@ -75,9 +73,24 @@ type TelemetryConfig struct {
 	Endpoint string // The endpoint available to fetch recorded metrics (e.g. /metrics for prometheus)
 }
 
+type RPCConfig struct {
+	Enable       bool   `json:"enable"`
+	Port         string `json:"port"`           // TODO(deblasis): still unused, need to define default value, "8081" ?
+	RemoteCLIURL string `json:"remote_cli_url"` // TODO(deblasis): need to define default value as const somewhere, "http://localhost:8081" ?
+	Timeout      int64  `json:"timeout"`        // TODO(deblasis): need to define default value as const somewhere, "30000" ?
+}
+
 // TODO(insert tooling issue # here): Re-evaluate how load configs should be handeled.
 func LoadConfig(file string) (c *Config) {
-	c = defaultConfig(c)
+	// Not used - only set to avoid `GetNodeState(_)` from crashing
+	pk, err := crypto.GeneratePrivateKey()
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to generate private key: %v", err)
+	}
+
+	c = New(
+		WithPrivateKey(pk.(crypto.Ed25519PrivateKey)),
+	)
 
 	jsonFile, err := os.Open(file)
 	if err != nil {
@@ -152,12 +165,45 @@ func (c *PacemakerConfig) ValidateAndHydrate() error {
 	return nil
 }
 
-// defaultConfig simply returns the initialized struct with default values
-func defaultConfig(c *Config) *Config {
-	c = &Config{
-		RPCPort:      DefaultRPCPort,
-		RemoteCLIURL: DefaultRemoteCLIURL,
-		RPCTimeout:   DefaultRPCTimeout,
+// New simply returns the initialized struct with default values
+func New(options ...func(*Config)) *Config {
+	c := &Config{
+		GenesisSource: &genesis.GenesisSource{
+			Source: &genesis.GenesisSource_File{
+				File: &genesis.GenesisFile{
+					Path: "build/config/genesis.json",
+				},
+			},
+		},
+
+		// Used to access the validator map
+		Consensus: &ConsensusConfig{
+			Pacemaker: &PacemakerConfig{},
+		},
+
+		// Not used - only set to avoid `p2p.Create()` from crashing
+		P2P: &P2PConfig{
+			ConsensusPort:  9999,
+			UseRainTree:    true,
+			ConnectionType: TCPConnection,
+		},
+		EnableTelemetry: false,
+
+		RPCConfig: &RPCConfig{
+			Port:         defaultRPCPort,
+			RemoteCLIURL: defaultRemoteCLIURL,
+			Timeout:      defaultRPCTimeout,
+		},
+	}
+	for _, o := range options {
+		o(c)
 	}
 	return c
+}
+
+func WithPrivateKey(pk crypto.PrivateKey) func(c *Config) {
+	return func(c *Config) {
+		// Not used - only set to avoid `GetNodeState(_)` from crashing
+		c.PrivateKey = pk.(crypto.Ed25519PrivateKey)
+	}
 }

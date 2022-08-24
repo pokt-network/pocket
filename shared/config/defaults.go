@@ -1,7 +1,7 @@
 package config
 
 const (
-	DefaultRPCPort      = "8081"
-	DefaultRemoteCLIURL = "http://localhost:8081"
-	DefaultRPCTimeout   = 30000
+	defaultRPCPort      = "26657"
+	defaultRemoteCLIURL = "http://localhost:26657"
+	defaultRPCTimeout   = 30000
 )

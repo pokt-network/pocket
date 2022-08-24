@@ -26,7 +26,6 @@ func NewAccountCommand() *cobra.Command {
 }
 
 func accountCommands() (cmds []*cobra.Command) {
-
 	sendCmd := &cobra.Command{
 		Use:     "Send <from> <to> <amount>",
 		Short:   "Send <from> <to> <amount>",
@@ -34,7 +33,7 @@ func accountCommands() (cmds []*cobra.Command) {
 		Aliases: []string{"send"},
 		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(deblasis): update when we have keybase
+			// TODO(pocket/issues/150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
