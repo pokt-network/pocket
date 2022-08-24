@@ -1,13 +1,12 @@
 package utility
 
 import (
-	"math"
-	"math/big"
-
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
+	"math"
+	"math/big"
 )
 
 /*

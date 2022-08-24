@@ -1,9 +1,8 @@
 package types
 
 import (
-	"log"
-
 	"github.com/pokt-network/pocket/shared/types/genesis"
+	"log"
 )
 
 // TODO(andrew): Moving this into a proto file enum (impacts everything) and making them `int32` by default
@@ -14,7 +13,7 @@ const (
 
 // TODO(andrew): consolidate with genesis and `types/block.go`
 var (
-	ActorTypes = []ActorType{
+	ActorTypes = []ActorType{ // TODO (andrew) consolidate with genesis
 		ActorType_App,
 		ActorType_Node,
 		ActorType_Fish,

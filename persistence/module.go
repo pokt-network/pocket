@@ -112,6 +112,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	}
 
 	return *m.writeContext, nil
+
 }
 
 func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
