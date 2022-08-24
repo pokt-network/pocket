@@ -5,6 +5,7 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 )
 
 func TestInsertParams(t *testing.T) {
@@ -20,7 +21,7 @@ func TestInsertParams(t *testing.T) {
 		{
 			name: "should insert genesis.DefaultParams() as expected",
 			args: args{
-				params: genesis.DefaultParams(),
+				params: test_artifacts.DefaultParams(),
 				height: schema.DefaultBigInt,
 			},
 			want: "INSERT INTO params VALUES ('blocks_per_session', -1, 'BIGINT', 4)," +

@@ -2,27 +2,27 @@ package consensus_tests
 
 import (
 	"context"
-	"crypto/ed25519"
-	"encoding/binary"
 	"encoding/hex"
 	"flag"
 	"fmt"
 	"log"
+	"math/big"
 	"reflect"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared"
-	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -59,58 +59,46 @@ type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
 /*** Node Generation Helpers ***/
 
-func GenerateNodeConfigs(t *testing.T, n int) (configs []*config.Config) {
-	for i := uint32(1); i <= uint32(n); i++ {
-		// Deterministically generate a private key for the node
-		seed := make([]byte, ed25519.PrivateKeySize)
-		binary.LittleEndian.PutUint32(seed, i+genesisConfigSeedStart)
-		pk, err := cryptoPocket.NewPrivateKeyFromSeed(seed)
-		require.NoError(t, err)
+var (
+	DefaultServiceURL    = "https://foo.bar" // TODO (team) cleanup consensus testing module with centralization of utilities
+	DefaultChainID       = "mainnet"
+	DefaultStakeAmount   = types.BigIntToString(big.NewInt(1000000000))
+	DefaultAccountAmount = types.BigIntToString(big.NewInt(1000000000))
+)
 
-		// Generate test config
-		c := config.Config{
-			RootDir:    "",                                  // left empty intentionally
-			PrivateKey: pk.(cryptoPocket.Ed25519PrivateKey), // deterministic key based on `i`
-			GenesisSource: &genesis.GenesisSource{
-				Source: &genesis.GenesisSource_Config{
-					Config: genesisConfig(),
-				},
+func GenerateNodeConfigs(_ *testing.T, n int) (configs []*genesis.Config, genesisState *genesis.GenesisState) {
+	var keys []string
+	genesisState, keys = test_artifacts.NewGenesisState(n, 1, 1, 1)
+	configs = test_artifacts.NewDefaultConfigs(keys)
+	for _, config := range configs {
+		config.Consensus = &genesis.ConsensusConfig{
+			MaxMempoolBytes: 500000000,
+			PacemakerConfig: &genesis.PacemakerConfig{
+				TimeoutMsec:               5000,
+				Manual:                    false,
+				DebugTimeBetweenStepsMsec: 0,
 			},
-			P2P: nil,
-			Consensus: &config.ConsensusConfig{
-				MaxMempoolBytes: 500000000,
-				MaxBlockBytes:   4000000,
-				Pacemaker: &config.PacemakerConfig{
-					TimeoutMsec:               5000,
-					Manual:                    false,
-					DebugTimeBetweenStepsMsec: 0,
-				},
-			},
-			Persistence: nil,
-			Utility:     nil,
 		}
-		err = c.ValidateAndHydrate()
-		require.NoError(t, err)
-
-		// Append the config to the list of configurations used in the test
-		configs = append(configs, &c)
 	}
 	return
 }
 
 func CreateTestConsensusPocketNodes(
 	t *testing.T,
-	configs []*config.Config,
+	configs []*genesis.Config,
+	genesisState *genesis.GenesisState,
 	testChannel modules.EventsChannel,
 ) (pocketNodes IdToNodeMapping) {
 	pocketNodes = make(IdToNodeMapping, len(configs))
 	// TODO(design): The order here is important in order for NodeId to be set correctly below.
 	// This logic will need to change once proper leader election is implemented.
 	sort.Slice(configs, func(i, j int) bool {
-		return configs[i].PrivateKey.Address().String() < configs[j].PrivateKey.Address().String()
+		pk, _ := cryptoPocket.NewPrivateKey(configs[i].Base.PrivateKey)
+		pk2, _ := cryptoPocket.NewPrivateKey(configs[j].Base.PrivateKey)
+		return pk.Address().String() < pk2.Address().String()
 	})
 	for i, cfg := range configs {
-		pocketNode := CreateTestConsensusPocketNode(t, cfg, testChannel)
+		pocketNode := CreateTestConsensusPocketNode(t, cfg, genesisState, testChannel)
 		// TODO(olshansky): Figure this part out.
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
@@ -120,10 +108,11 @@ func CreateTestConsensusPocketNodes(
 // Creates a pocket node where all the primary modules, exception for consensus, are mocked
 func CreateTestConsensusPocketNode(
 	t *testing.T,
-	cfg *config.Config,
+	cfg *genesis.Config,
+	genesisState *genesis.GenesisState,
 	testChannel modules.EventsChannel,
 ) *shared.Node {
-	consensusMod, err := consensus.Create(cfg)
+	consensusMod, err := consensus.Create(cfg, genesisState)
 	require.NoError(t, err)
 
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
@@ -133,11 +122,12 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 
-	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock, cfg)
+	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock, cfg, genesisState)
 	require.NoError(t, err)
-
+	pk, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
+	require.NoError(t, err)
 	pocketNode := &shared.Node{
-		Address: cfg.PrivateKey.Address(),
+		Address: pk.Address(),
 	}
 	pocketNode.SetBus(bus)
 
@@ -381,16 +371,4 @@ func baseTelemetryEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetr
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
 	return eventMetricsAgentMock
-}
-
-/*** Genesis Helpers ***/
-
-func genesisConfig() *genesis.GenesisConfig {
-	config := &genesis.GenesisConfig{
-		NumValidators:   4,
-		NumApplications: 0,
-		NumFisherman:    0,
-		NumServicers:    0,
-	}
-	return config
 }

@@ -5,6 +5,8 @@ import (
 	crypto2 "github.com/pokt-network/pocket/shared/crypto"
 )
 
+// TODO (team) move block to consensus module #163
+
 func (b *Block) ValidateBasic() Error {
 	if err := b.BlockHeader.ValidateBasic(); err != nil {
 		return err

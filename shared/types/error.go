@@ -5,6 +5,9 @@ import (
 	"fmt"
 )
 
+// TODO (Team) move errors to respective modules #163
+// TODO(Andrew) consolidate errors into one file after recovery
+
 type Error interface {
 	Code() Code
 	error
@@ -31,8 +34,6 @@ func NewError(code Code, msg string) Error {
 }
 
 type Code float64
-
-// TODO(Andrew) consolidate errors into one file after recovery
 
 const ( // Explain: using these numbers as it fits nicely with the other error codes in the prototype
 	CodeEmptyTransactionError Code = 2

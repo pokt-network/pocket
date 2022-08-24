@@ -1,9 +1,9 @@
 package utility
 
 import (
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 )
@@ -15,7 +15,7 @@ type UtilityModule struct {
 	Mempool types.Mempool
 }
 
-func Create(_ *config.Config) (modules.UtilityModule, error) {
+func Create(_ *genesis.Config, _ *genesis.GenesisState) (modules.UtilityModule, error) {
 	return &UtilityModule{
 		// TODO: Add `maxTransactionBytes` and `maxTransactions` to cfg.Utility
 		Mempool: types.NewMempool(1000, 1000),

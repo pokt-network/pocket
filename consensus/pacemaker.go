@@ -2,12 +2,12 @@ package consensus
 
 import (
 	"context"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 	"time"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/config"
 
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -39,7 +39,7 @@ type paceMaker struct {
 	// a great idea in production code.
 	consensusMod *consensusModule
 
-	pacemakerConfigs *config.PacemakerConfig
+	pacemakerConfigs *genesis.PacemakerConfig
 
 	stepCancelFunc context.CancelFunc
 
@@ -47,18 +47,18 @@ type paceMaker struct {
 	paceMakerDebug
 }
 
-func CreatePacemaker(cfg *config.Config) (m *paceMaker, err error) {
+func CreatePacemaker(cfg *genesis.Config) (m *paceMaker, err error) {
 	return &paceMaker{
 		bus:          nil,
 		consensusMod: nil,
 
-		pacemakerConfigs: cfg.Consensus.Pacemaker,
+		pacemakerConfigs: cfg.Consensus.PacemakerConfig,
 
 		stepCancelFunc: nil, // Only set on restarts
 
 		paceMakerDebug: paceMakerDebug{
-			manualMode:                cfg.Consensus.Pacemaker.Manual,
-			debugTimeBetweenStepsMsec: cfg.Consensus.Pacemaker.DebugTimeBetweenStepsMsec,
+			manualMode:                cfg.Consensus.PacemakerConfig.Manual,
+			debugTimeBetweenStepsMsec: cfg.Consensus.PacemakerConfig.DebugTimeBetweenStepsMsec,
 			quorumCertificate:         nil,
 		},
 	}, nil

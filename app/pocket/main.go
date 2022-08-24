@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"log"
 
 	"github.com/pokt-network/pocket/shared"
-	"github.com/pokt-network/pocket/shared/config"
 )
 
 // See `docs/build/README.md` for details on how this is injected via mage.
@@ -21,9 +21,9 @@ func main() {
 		return
 	}
 
-	cfg := config.LoadConfig(*config_filename)
+	cfg, genesis := test_artifacts.ReadConfigAndGenesisFiles(*config_filename)
 
-	pocketNode, err := shared.Create(cfg)
+	pocketNode, err := shared.Create(cfg, genesis)
 	if err != nil {
 		log.Fatalf("Failed to create pocket node: %s", err)
 	}

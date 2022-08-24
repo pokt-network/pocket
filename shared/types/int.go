@@ -7,7 +7,6 @@ import (
 )
 
 const (
-	ZeroInt       = 0
 	HeightNotUsed = int64(-1)
 	EmptyString   = ""
 )

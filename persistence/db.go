@@ -51,8 +51,6 @@ type PostgresDB struct {
 
 func (pg *PostgresDB) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
 	tx, err := pg.GetTxn()
-	// ctx, _ := context.WithTimeout(context.TODO(), 5*time.Second)
-	// return ctx, tx, err
 	return context.TODO(), tx, err
 }
 

@@ -1,9 +1,8 @@
 package types
 
 import (
-	"log"
-
 	"github.com/pokt-network/pocket/shared/types/genesis"
+	"log"
 )
 
 // REFACTOR: Moving this into a proto file enum (impacts everything) and making them `int32` by default
@@ -13,7 +12,7 @@ const (
 )
 
 var (
-	ActorTypes = []ActorType{
+	ActorTypes = []ActorType{ // TODO (andrew) consolidate with genesis
 		ActorType_App,
 		ActorType_Node,
 		ActorType_Fish,
@@ -24,13 +23,13 @@ var (
 func (actorType ActorType) GetActorPoolName() string {
 	switch actorType {
 	case ActorType_App:
-		return genesis.AppStakePoolName
+		return genesis.Pool_Names_AppStakePool.String()
 	case ActorType_Val:
-		return genesis.ValidatorStakePoolName
+		return genesis.Pool_Names_ValidatorStakePool.String()
 	case ActorType_Fish:
-		return genesis.FishermanStakePoolName
+		return genesis.Pool_Names_FishermanStakePool.String()
 	case ActorType_Node:
-		return genesis.ServiceNodeStakePoolName
+		return genesis.Pool_Names_ServiceNodeStakePool.String()
 	default:
 		log.Fatalf("unknown actor type: %v", actorType)
 	}

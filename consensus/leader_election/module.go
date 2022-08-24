@@ -1,10 +1,10 @@
 package leader_election
 
 import (
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -20,7 +20,7 @@ type leaderElectionModule struct {
 }
 
 func Create(
-	config *config.Config,
+	_ *genesis.Config,
 ) (LeaderElectionModule, error) {
 	return &leaderElectionModule{}, nil
 }

@@ -1,13 +1,12 @@
 package utility
 
 import (
-	"math"
-	"math/big"
-
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/types"
 	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
+	"math"
+	"math/big"
 )
 
 /*
@@ -437,7 +436,7 @@ func (u *UtilityContext) BurnActor(actorType typesUtil.ActorType, percentage int
 	}
 	newTokensAfterBurn := big.NewInt(0).Sub(tokens, truncatedTokens)
 	// remove from pool
-	if err := u.SubPoolAmount(typesGenesis.ValidatorStakePoolName, types.BigIntToString(truncatedTokens)); err != nil {
+	if err := u.SubPoolAmount(typesGenesis.Pool_Names_ValidatorStakePool.String(), types.BigIntToString(truncatedTokens)); err != nil {
 		return err
 	}
 	// remove from validator

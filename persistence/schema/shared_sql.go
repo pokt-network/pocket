@@ -122,7 +122,7 @@ func Insert(
 							  height=EXCLUDED.height`,
 		tableName, actorSpecificParam,
 		actor.Address, actor.PublicKey, actor.StakedTokens, actorSpecificParamValue,
-		actor.OutputAddress, actor.PausedHeight, actor.UnstakingHeight, height,
+		actor.OutputAddress, DefaultBigInt, DefaultBigInt, height,
 		constraintName,
 		actorSpecificParam, actorSpecificParam)
 

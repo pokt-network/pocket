@@ -110,8 +110,8 @@ func (actor *BaseProtocolActorSchema) InsertQuery(address, publicKey, stakedToke
 		height)
 }
 
-func (actor *BaseProtocolActorSchema) UpdateQuery(address, stakedTokens, maxRelays string, height int64) string {
-	return Update(address, stakedTokens, actor.actorSpecificColName, maxRelays, height, actor.tableName, actor.heightConstraintName)
+func (actor *BaseProtocolActorSchema) UpdateQuery(address, stakedTokens, generic string, height int64) string {
+	return Update(address, stakedTokens, actor.actorSpecificColName, generic, height, actor.tableName, actor.heightConstraintName)
 }
 
 func (actor *BaseProtocolActorSchema) UpdateChainsQuery(address string, chains []string, height int64) string {

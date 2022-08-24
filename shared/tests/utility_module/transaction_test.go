@@ -1,17 +1,20 @@
 package utility_module
 
 import (
+	"encoding/hex"
 	"math/big"
 	"testing"
 
-	"github.com/pokt-network/pocket/shared/tests"
-
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/tests"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
+
+// TODO(olshansky): Clean up these tests.
 
 func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
@@ -70,12 +73,16 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := types.BigIntToString(sendAmount)
-	msg := NewTestingSendMessage(t, accs[0].Address, accs[1].Address, sendAmountString)
+	addrBz, er := hex.DecodeString(accs[0].Address)
+	require.NoError(t, er)
+	addrBz2, er := hex.DecodeString(accs[1].Address)
+	require.NoError(t, er)
+	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
 	candidates, err := ctx.GetSignerCandidates(&msg)
 	require.NoError(t, err)
 
 	require.Equal(t, len(candidates), 1, "wrong number of candidates")
-	require.Equal(t, candidates[0], accs[0].Address, "unexpected signer candidate")
+	require.Equal(t, hex.EncodeToString(candidates[0]), accs[0].Address, "unexpected signer candidate")
 
 	tests.CleanupTest(ctx)
 }
@@ -108,8 +115,11 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 
 	recipientBalanceBefore, err := types.StringToBigInt(accs[1].Amount)
 	require.NoError(t, err)
-
-	msg := NewTestingSendMessage(t, accs[0].Address, accs[1].Address, sendAmountString)
+	addrBz, er := hex.DecodeString(accs[0].Address)
+	require.NoError(t, er)
+	addrBz2, er := hex.DecodeString(accs[1].Address)
+	require.NoError(t, er)
+	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
 	require.NoError(t, ctx.HandleMessageSend(&msg))
 	accs = GetAllTestingAccounts(t, ctx)
 	senderBalanceAfter, err := types.StringToBigInt(accs[0].Amount)
@@ -131,11 +141,13 @@ func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transactio
 	signer, err := crypto.GeneratePrivateKey()
 	require.NoError(t, err)
 
-	startingAmount = defaultAmount
+	startingAmount = test_artifacts.DefaultAccountAmount
 	signerAddr := signer.Address()
-	require.NoError(t, ctx.SetAccountAmount(signerAddr, defaultAmount))
+	require.NoError(t, ctx.SetAccountAmount(signerAddr, startingAmount))
 	amountSent = defaultSendAmount
-	msg := NewTestingSendMessage(t, signerAddr, recipient.Address, defaultSendAmountString)
+	addrBz, err := hex.DecodeString(recipient.Address)
+	require.NoError(t, err)
+	msg := NewTestingSendMessage(t, signerAddr, addrBz, defaultSendAmountString)
 	any, err := cdc.ToAny(&msg)
 	require.NoError(t, err)
 	transaction = &typesUtil.Transaction{

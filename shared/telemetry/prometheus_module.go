@@ -1,10 +1,10 @@
 package telemetry
 
 import (
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 	"net/http"
 
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -30,7 +30,7 @@ type PrometheusTelemetryModule struct {
 	gaugeVectors map[string]prometheus.GaugeVec
 }
 
-func CreatePrometheusTelemetryModule(cfg *config.Config) (*PrometheusTelemetryModule, error) {
+func CreatePrometheusTelemetryModule(cfg *genesis.Config) (*PrometheusTelemetryModule, error) {
 	return &PrometheusTelemetryModule{
 		counters:     map[string]prometheus.Counter{},
 		gauges:       map[string]prometheus.Gauge{},

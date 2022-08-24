@@ -21,7 +21,7 @@ type ConsensusNodeState struct {
 	IsLeader bool
 }
 
-func GetValAddrToIdMap(validatorMap map[string]*typesGenesis.Validator) (ValAddrToIdMap, IdToValAddrMap) {
+func GetValAddrToIdMap(validatorMap map[string]*typesGenesis.Actor) (ValAddrToIdMap, IdToValAddrMap) {
 	valAddresses := make([]string, 0, len(validatorMap))
 	for addr := range validatorMap {
 		valAddresses = append(valAddresses, addr)

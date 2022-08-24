@@ -1,6 +1,6 @@
 package types
 
-const (
+const ( // TODO (Team) move to utility #163
 	BlocksPerSessionParamName = "blocks_per_session"
 
 	AppMinimumStakeParamName       = "app_minimum_stake"

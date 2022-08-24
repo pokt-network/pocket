@@ -6,10 +6,9 @@ import (
 	"log"
 
 	"github.com/jackc/pgx/v4"
-
 	"github.com/pokt-network/pocket/persistence/kvstore"
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 var _ modules.PersistenceModule = &persistenceModule{}
@@ -26,7 +25,7 @@ type persistenceModule struct {
 	writeContext *PostgresContext // only one write context is allowed at a time
 }
 
-func Create(cfg *config.Config) (modules.PersistenceModule, error) {
+func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (modules.PersistenceModule, error) {
 	conn, err := connectToDatabase(cfg.Persistence.PostgresUrl, cfg.Persistence.NodeSchema)
 	if err != nil {
 		return nil, err
@@ -57,7 +56,7 @@ func Create(cfg *config.Config) (modules.PersistenceModule, error) {
 		// 		     this forces the genesis state to be reloaded on every node startup until state sync is
 		//           implemented.
 		// NOTE: `populateGenesisState` does not return an error but logs a fatal error if there's a problem
-		persistenceMod.populateGenesisState(cfg.GenesisSource.GetState())
+		persistenceMod.populateGenesisState(genesis)
 	} else {
 		log.Println("Loading state from previous state...")
 	}
@@ -113,6 +112,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	}
 
 	return *m.writeContext, nil
+
 }
 func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
 	conn, err := connectToDatabase(m.postgresURL, m.nodeSchema)
