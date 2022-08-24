@@ -9,11 +9,11 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/shared"
-	"github.com/pokt-network/pocket/shared/config"
-	"github.com/pokt-network/pocket/shared/crypto"
+	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/telemetry"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -24,10 +24,16 @@ const (
 	PromptTriggerNextView        string = "TriggerNextView"
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
+
+	configPath  string = "build/config/config1.json"
+	genesisPath string = "build/config/genesis.json"
 )
 
 var (
-	p2pMod       modules.P2PModule
+	// A P2P module is initialized in order to broadcast a message to the local network
+	p2pMod modules.P2PModule
+
+	// A consensus module is initialized in order to get a list of the validator network
 	consensusMod modules.ConsensusModule
 	modInitOnce  sync.Once
 
