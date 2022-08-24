@@ -25,11 +25,10 @@ func main() {
 	}
 
 	cfg, genesis := test_artifacts.ReadConfigAndGenesisFiles(*configFilename, *genesisFilename)
-	// DISCUSS(deblasis): poor man's feature flag: no port => no RPC
-	if cfg.RPC.Enable {
-		go rpc.StartRPC(cfg.RPC.Port, cfg.RPC.Timeout)
+	if cfg.Rpc.Enabled {
+		go rpc.StartRPC(cfg.Rpc.Port, cfg.Rpc.Timeout)
 	} else {
-		log.Println("RPC server: OFFLINE")
+		log.Println("[WARN] RPC server: OFFLINE")
 	}
 
 	pocketNode, err := shared.Create(cfg, genesis)

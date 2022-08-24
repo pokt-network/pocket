@@ -10,6 +10,7 @@ message Config {
   PersistenceConfig persistence = 4;
   P2PConfig p2p = 5;
   TelemetryConfig telemetry = 6;
+  RPCConfig rpc = 7;
 }
 
 message BaseConfig {
@@ -54,4 +55,11 @@ message TelemetryConfig {// TODO (team) move to shared/telemetry
   bool enabled = 1;
   string address = 2; // The address the telemetry module will use to listen for metrics PULL requests (e.g. 0.0.0.0:9000 for prometheus)
   string endpoint = 3; // The endpoint available to fetch recorded metrics (e.g. /metrics for prometheus)
+}
+
+message RPCConfig { // DISCUSS (team): with #163 in mind, where should this reside?
+  bool enabled = 1;
+  string port = 2;
+  int64 timeout = 3;
+  string remote_cli_url = 4;
 }
