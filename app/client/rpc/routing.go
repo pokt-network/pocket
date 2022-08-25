@@ -22,8 +22,8 @@ type Routes []Route
 func (s *rpcServer) GetRoutes() Routes {
 	routes := Routes{
 		// System routes
-		Route{Name: "Health", Method: "POST", Path: "/v1/health", HandlerFunc: s.HealthHandler},
-		Route{Name: "Version", Method: "POST", Path: "/v1/version", HandlerFunc: s.VersionHandler},
+		Route{Name: "Health", Method: "GET", Path: "/v1/health", HandlerFunc: s.HealthHandler},
+		Route{Name: "Version", Method: "GET", Path: "/v1/version", HandlerFunc: s.VersionHandler},
 
 		// Commands
 		Route{Name: "BroadcastTxSync", Method: "POST", Path: "/v1/client/broadcast_tx_sync", HandlerFunc: s.BroadcastRawTxSyncHandler},
