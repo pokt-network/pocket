@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 
+	"github.com/pokt-network/pocket/app/client/rpc"
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 )
@@ -28,6 +29,12 @@ func main() {
 	pocketNode, err := shared.Create(cfg, genesis)
 	if err != nil {
 		log.Fatalf("Failed to create pocket node: %s", err)
+	}
+
+	if cfg.Rpc.Enabled {
+		go rpc.NewRPCServer(pocketNode).StartRPC(cfg.Rpc.Port, cfg.Rpc.Timeout)
+	} else {
+		log.Println("[WARN] RPC server: OFFLINE")
 	}
 
 	if err = pocketNode.Start(); err != nil {
