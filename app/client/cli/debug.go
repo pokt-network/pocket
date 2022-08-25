@@ -9,11 +9,11 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/shared"
-	"github.com/pokt-network/pocket/shared/config"
-	"github.com/pokt-network/pocket/shared/crypto"
+	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/telemetry"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -24,11 +24,16 @@ const (
 	PromptTriggerNextView        string = "TriggerNextView"
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
+
+	configPath  string = "build/config/config1.json"
+	genesisPath string = "build/config/genesis.json"
 )
 
 var (
-	cfg          *config.Config
-	p2pMod       modules.P2PModule
+	// A P2P module is initialized in order to broadcast a message to the local network
+	p2pMod modules.P2PModule
+
+	// A consensus module is initialized in order to get a list of the validator network
 	consensusMod modules.ConsensusModule
 	modInitOnce  sync.Once
 
@@ -139,7 +144,11 @@ func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 	// p2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
 
 	for _, val := range consensusMod.ValidatorMap() {
-		p2pMod.Send(val.Address, anyProto, types.PocketTopic_DEBUG_TOPIC)
+		addr, err := pocketCrypto.NewAddress(val.Address)
+		if err != nil {
+			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
+		}
+		p2pMod.Send(addr, anyProto, types.PocketTopic_DEBUG_TOPIC)
 	}
 }
 
@@ -152,7 +161,10 @@ func sendDebugMessage(debugMsg *types.DebugMessage) {
 
 	var validatorAddress []byte
 	for _, val := range consensusMod.ValidatorMap() {
-		validatorAddress = val.Address
+		validatorAddress, err = pocketCrypto.NewAddress(val.Address)
+		if err != nil {
+			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
+		}
 		break
 	}
 
@@ -161,38 +173,36 @@ func sendDebugMessage(debugMsg *types.DebugMessage) {
 
 func initDebug(remoteCLIURL string) {
 	modInitOnce.Do(func() {
-		pk, err := crypto.GeneratePrivateKey()
+		// HACK: rain tree will detect if trying to send to addr=self and not send it
+		var err error
+		clientPrivateKey, err := pocketCrypto.GeneratePrivateKey()
 		if err != nil {
-			log.Fatalf("[ERROR] Failed to generate private key: %v", err)
+			log.Fatalf(err.Error())
 		}
 
-		cfg = config.New(
-			config.WithPrivateKey(pk.(crypto.Ed25519PrivateKey)),
-		)
+		config, genesis := test_artifacts.ReadConfigAndGenesisFiles(configPath, genesisPath)
+		config.Base.PrivateKey = clientPrivateKey.String()
 
-		if err := cfg.HydrateGenesisState(); err != nil {
-			log.Fatalf("[ERROR] Failed to hydrate the genesis state: %v", err.Error())
-		}
-
-		consensusMod, err = consensus.Create(cfg)
+		consensusMod, err = consensus.Create(config, genesis)
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 		}
 
-		p2pMod, err = p2p.Create(cfg)
+		p2pMod, err = p2p.Create(config, genesis)
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 		}
+
 		// This telemetry module instance is a NOOP because the 'enable_telemetry' flag in the `cfg` above is set to false.
 		// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
 		// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
 		// module that NOOPs (per the configs above) is injected.
-		telemetryMod, err := telemetry.Create(cfg)
+		telemetryMod, err := telemetry.Create(config, genesis)
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 		}
 
-		_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod, cfg)
+		_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod, config, genesis)
 
 		p2pMod.Start()
 	})

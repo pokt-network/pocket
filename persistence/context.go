@@ -52,7 +52,7 @@ func (p PostgresContext) Release() error {
 }
 
 func (p PostgresContext) Close() error {
-	log.Printf("About to close  context at height %d.\n", p.Height)
+	log.Printf("About to close context at height %d.\n", p.Height)
 
 	return p.DB.conn.Close(context.TODO())
 }

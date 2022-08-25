@@ -1,0 +1,30 @@
+syntax = "proto3";
+package genesis;
+
+import "google/protobuf/timestamp.proto";
+import "account.proto";
+import "actor.proto";
+import "gov.proto";
+
+option go_package = "github.com/pokt-network/pocket/shared/types/genesis";
+
+message GenesisState {
+  ConsensusGenesisState consensus = 1;
+  UtilityGenesisState utility = 2;
+}
+
+message ConsensusGenesisState { // TODO (team) move to consensus module #163
+  google.protobuf.Timestamp genesis_time = 1;
+  string chain_id = 2;
+  uint64 max_block_bytes = 3;
+}
+
+message UtilityGenesisState {  // TODO (team) move to utility module #163
+  repeated Account pools = 1;
+  repeated Account accounts = 2;
+  repeated Actor applications = 3;
+  repeated Actor validators = 4;
+  repeated Actor service_nodes = 5;
+  repeated Actor fishermen = 6;
+  Params params = 7;
+}

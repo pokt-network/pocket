@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -8,12 +9,9 @@ import (
 	"syscall"
 	"testing"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
-	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/shared/config"
-	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
 )
 
@@ -27,7 +25,7 @@ const (
 )
 
 // TODO (team) cleanup and simplify
-func SetupPostgresDockerPersistenceMod() (*dockertest.Pool, *dockertest.Resource, modules.PersistenceModule) {
+func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 	opts := dockertest.RunOptions{
 		Repository: "postgres",
 		Tag:        "12.3",
@@ -67,32 +65,12 @@ func SetupPostgresDockerPersistenceMod() (*dockertest.Pool, *dockertest.Resource
 
 	resource.Expire(120) // Tell docker to hard kill the container in 120 seconds
 
-	cfg := &config.Config{
-		GenesisSource: &genesis.GenesisSource{
-			Source: &genesis.GenesisSource_Config{
-				Config: genesisConfig(),
-			},
-		},
-		Persistence: &config.PersistenceConfig{
-			PostgresUrl:    databaseUrl,
-			NodeSchema:     sqlSchema,
-			BlockStorePath: "",
-		},
-	}
-	err = cfg.HydrateGenesisState()
-	if err != nil {
-		log.Fatalf("could not hydrate genesis state during postgres setup: %s", err)
-	}
-
 	poolRetryChan := make(chan struct{}, 1)
-	var persistenceMod modules.PersistenceModule
 	retryConnectFn := func() error {
-		persistenceMod, err = persistence.Create(cfg)
+		_, err := pgx.Connect(context.Background(), databaseUrl)
 		if err != nil {
-			log.Println(err.Error())
-			return err
+			return fmt.Errorf("unable to connect to database: %v", err)
 		}
-		persistenceMod.Start()
 		poolRetryChan <- struct{}{}
 		return nil
 	}
@@ -104,10 +82,10 @@ func SetupPostgresDockerPersistenceMod() (*dockertest.Pool, *dockertest.Resource
 	// Wait for a successful DB connection
 	<-poolRetryChan
 
-	return pool, resource, persistenceMod
+	return pool, resource, databaseUrl
 }
 
-// TODO: Currently exposed only for testing purposes.
+// TODO(drewsky): Currently exposed only for testing purposes.
 func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *dockertest.Resource) {
 	// You can't defer this because `os.Exit`` doesn't care for defer
 	if err := pool.Purge(resource); err != nil {
@@ -116,18 +94,7 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 	os.Exit(0)
 }
 
-// TODO(pocket/issues/149): Golang specific solution for teardown
-// TODO: Currently exposed only for testing purposes.
+// TODO(drewsky): Remove this in favor of a golang specific solution
 func CleanupTest(u utility.UtilityContext) {
 	u.Context.Release()
-}
-
-func genesisConfig() *genesis.GenesisConfig {
-	config := &genesis.GenesisConfig{
-		NumValidators:   5,
-		NumApplications: 1,
-		NumFisherman:    1,
-		NumServicers:    1,
-	}
-	return config
 }

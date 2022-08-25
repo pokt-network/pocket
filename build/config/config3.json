@@ -1,42 +1,29 @@
 {
-  "root_dir": "/go/src/github.com/pocket-network",
-  "genesis_source": {
-    "file": {
-      "path": "build/config/genesis.json"
-    }
-  },
-  "private_key": "2b000000000000000000000000000000000000000000000000000000000000001ba66c6751506850ae0787244c69476b6d45fb857a914a5a0445a24253f7b810",
-  "enable_telemetry": true,
-  "p2p": {
-    "consensus_port": 8080,
-    "use_raintree": true,
-    "connection_type": "tcp",
-    "protocol": "tcp",
-    "address": "0.0.0.0:8083",
-    "external_ip": "172.18.0.1:8083",
-    "peers": [
-      "172.18.0.1:8081",
-      "172.18.0.1:8082",
-      "172.18.0.1:8083",
-      "172.18.0.1:8084"
-    ]
+  "base": {
+    "root_directory": "/go/src/github.com/pocket-network",
+    "private_key": "c7bd1bd027e76b31534c3f5226c8e3c3f2a034ba9fa11017b65191f7f9ef0d253e5e4bbed5f98721163bb84445072a9202d213f1e348c5e9e0e2ea83bbb7e3aa"
   },
   "consensus": {
     "max_mempool_bytes": 500000000,
-    "max_block_bytes": 4000000,
-    "pacemaker": {
+    "pacemaker_config": {
       "timeout_msec": 5000,
       "manual": true,
       "debug_time_between_steps_msec": 1000
     }
   },
+  "utility": {},
   "persistence": {
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
-    "schema": "node3",
+    "node_schema": "node3",
     "block_store_path": "/var/blockstore"
   },
-  "utility": {},
+  "p2p": {
+    "consensus_port": 8080,
+    "use_rain_tree": true,
+    "connection_type": 1
+  },
   "telemetry": {
+    "enabled": true,
     "address": "0.0.0.0:9000",
     "endpoint": "/metrics"
   }

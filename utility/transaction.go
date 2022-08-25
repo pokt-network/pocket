@@ -71,7 +71,8 @@ func (u *UtilityContext) GetProposalTransactions(proposer []byte, maxTransaction
 		}
 		err = u.ApplyTransaction(transaction)
 		if err != nil {
-			if err := u.RevertLastSavePoint(); err != nil { // TODO(Andrew): Properly implement 'unhappy path' for save points
+			// TODO: Properly implement 'unhappy path' for save points
+			if err := u.RevertLastSavePoint(); err != nil {
 				return nil, err
 			}
 			totalSizeInBytes -= txSizeInBytes
@@ -124,7 +125,7 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil
 	if err := u.SetAccountAmount(address, accountAmount); err != nil {
 		return nil, err
 	}
-	if err := u.AddPoolAmount(typesGenesis.FeePoolName, fee); err != nil {
+	if err := u.AddPoolAmount(typesGenesis.Pool_Names_FeeCollector.String(), fee); err != nil {
 		return nil, err
 	}
 	msg.SetSigner(address)
@@ -217,7 +218,7 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 	// move funds from account to pool
-	if err = u.AddPoolAmount(typesGenesis.AppStakePoolName, amount); err != nil {
+	if err = u.AddPoolAmount(typesGenesis.Pool_Names_AppStakePool.String(), amount); err != nil {
 		return err
 	}
 	var er error
@@ -281,7 +282,7 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(typesGenesis.AppStakePoolName, amount); err != nil {
+	if err := u.AddPoolAmount(typesGenesis.Pool_Names_AppStakePool.String(), amount); err != nil {
 		return err
 	}
 	store := u.Store()

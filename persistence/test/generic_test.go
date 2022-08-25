@@ -5,13 +5,15 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/iancoleman/strcase"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/stretchr/testify/require"
 )
 
-func GetGenericActor[T any](protocolActorSchema schema.ProtocolActorSchema, getActor func(*persistence.PostgresContext, []byte) (T, error)) func(*persistence.PostgresContext, string) (*schema.BaseActor, error) {
+func GetGenericActor[T any](
+	protocolActorSchema schema.ProtocolActorSchema,
+	getActor func(*persistence.PostgresContext, []byte) (T, error),
+) func(*persistence.PostgresContext, string) (*schema.BaseActor, error) {
 	return func(db *persistence.PostgresContext, address string) (*schema.BaseActor, error) {
 		addr, err := hex.DecodeString(address)
 		if err != nil {
@@ -135,7 +137,10 @@ func getTestGetSetStakeAmountTest[T any](
 
 	actor, err := createTestActor(db)
 	require.NoError(t, err)
-	addr := reflect.ValueOf(*actor).FieldByName("Address").Bytes()
+	addrStr := reflect.ValueOf(*actor).FieldByName("Address").String()
+
+	addr, err := hex.DecodeString(addrStr)
+	require.NoError(t, err)
 
 	// Check stake amount before
 	stakeAmount, err := getActorStake(height, addr)
@@ -151,20 +156,19 @@ func getTestGetSetStakeAmountTest[T any](
 	require.Equal(t, newStakeAmount, stakeAmountAfter, "unexpected status")
 }
 
-func getActorValues(protocolActorSchema schema.ProtocolActorSchema, actorValue reflect.Value) schema.BaseActor {
+func getActorValues(_ schema.ProtocolActorSchema, actorValue reflect.Value) schema.BaseActor {
 	chains := make([]string, 0)
 	if actorValue.FieldByName("Chains").Kind() != 0 {
 		chains = actorValue.FieldByName("Chains").Interface().([]string)
 	}
 
-	actorSpecificParam := strcase.ToCamel(protocolActorSchema.GetActorSpecificColName())
-
 	return schema.BaseActor{
-		Address:            hex.EncodeToString(actorValue.FieldByName("Address").Bytes()),
-		PublicKey:          hex.EncodeToString(actorValue.FieldByName("PublicKey").Bytes()),
-		StakedTokens:       actorValue.FieldByName("StakedTokens").String(),
-		ActorSpecificParam: actorValue.FieldByName(actorSpecificParam).String(),
-		OutputAddress:      hex.EncodeToString(actorValue.FieldByName("Output").Bytes()),
+		Address:      actorValue.FieldByName("Address").String(),
+		PublicKey:    actorValue.FieldByName("PublicKey").String(),
+		StakedTokens: actorValue.FieldByName("StakedAmount").String(),
+		// TODO(andrew): Be consistent with `GenericParam` and `ActorSpecificParam` throughout the codebase; preferably the latter.
+		ActorSpecificParam: actorValue.FieldByName("GenericParam").String(),
+		OutputAddress:      actorValue.FieldByName("Output").String(),
 		PausedHeight:       int64(actorValue.FieldByName("PausedHeight").Int()),
 		UnstakingHeight:    int64(actorValue.FieldByName("UnstakingHeight").Int()),
 		Chains:             chains,

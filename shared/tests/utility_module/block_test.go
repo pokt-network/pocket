@@ -1,6 +1,7 @@
 package utility_module
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math"
 	"math/big"
@@ -22,12 +23,14 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
-
-	proposerBeforeBalance, err := ctx.GetAccountAmount(proposer.Address)
+	addrBz, er := hex.DecodeString(proposer.GetAddress())
+	require.NoError(t, er)
+	byzantineAddrBz, er := hex.DecodeString(byzantine.GetAddress())
+	require.NoError(t, er)
+	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
-
 	// apply block
-	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
+	if _, err := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineAddrBz}); err != nil {
 		require.NoError(t, err, "apply block")
 	}
 
@@ -55,7 +58,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	feesAndRewardsCollectedFloat.Mul(feesAndRewardsCollectedFloat, big.NewFloat(float64(proposerCutPercentage)))
 	feesAndRewardsCollectedFloat.Quo(feesAndRewardsCollectedFloat, big.NewFloat(100))
 	expectedProposerBalanceDifference, _ := feesAndRewardsCollectedFloat.Int(nil)
-	proposerAfterBalance, err := ctx.GetAccountAmount(proposer.Address)
+	proposerAfterBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
@@ -74,8 +77,14 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
 
+	addrBz, er := hex.DecodeString(proposer.Address)
+	require.NoError(t, er)
+
+	byzantineBz, er := hex.DecodeString(byzantine.Address)
+	require.NoError(t, er)
+
 	// apply block
-	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
+	if _, err := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineBz}); err != nil {
 		require.NoError(t, err)
 	}
 
@@ -107,14 +116,15 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 			t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 		}
 		require.NoError(t, err)
-
-		err = ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 0)
+		addrBz, er := hex.DecodeString(actor.GetAddress())
+		require.NoError(t, er)
+		err = ctx.SetActorPauseHeight(actorType, addrBz, 0)
 		require.NoError(t, err)
 
 		err = ctx.BeginUnstakingMaxPaused()
 		require.NoError(t, err)
 
-		status, err := ctx.GetActorStatus(actorType, actor.GetAddress())
+		status, err := ctx.GetActorStatus(actorType, addrBz)
 		require.Equal(t, typesUtil.UnstakingStatus, status, "incorrect status")
 
 		tests.CleanupTest(ctx)
@@ -130,12 +140,15 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
-
-	proposerBeforeBalance, err := ctx.GetAccountAmount(proposer.Address)
+	addrBz, er := hex.DecodeString(proposer.GetAddress())
+	require.NoError(t, er)
+	byzantineAddrBz, er := hex.DecodeString(byzantine.GetAddress())
+	require.NoError(t, er)
+	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	// apply block
-	if _, err := ctx.ApplyBlock(0, proposer.Address, [][]byte{txBz}, [][]byte{byzantine.Address}); err != nil {
+	if _, err := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineAddrBz}); err != nil {
 		require.NoError(t, err)
 	}
 	// deliverTx logic verify
@@ -150,7 +163,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	feesAndRewardsCollectedFloat.Mul(feesAndRewardsCollectedFloat, big.NewFloat(float64(proposerCutPercentage)))
 	feesAndRewardsCollectedFloat.Quo(feesAndRewardsCollectedFloat, big.NewFloat(100))
 	expectedProposerBalanceDifference, _ := feesAndRewardsCollectedFloat.Int(nil)
-	proposerAfterBalance, err := ctx.GetAccountAmount(proposer.Address)
+	proposerAfterBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
@@ -186,8 +199,9 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 
 		actors := GetAllTestingActors(t, ctx, actorType)
 		for _, actor := range actors {
-			require.Equal(t, int32(typesUtil.StakedStatus), actor.GetStatus(), "wrong starting status")
-			er := ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 1)
+			addrBz, er := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, er)
+			er = ctx.SetActorPauseHeight(actorType, addrBz, 1)
 			require.NoError(t, er)
 		}
 

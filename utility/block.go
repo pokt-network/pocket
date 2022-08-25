@@ -20,6 +20,7 @@ import (
 	operation that executes at the end of every block.
 */
 
+// TODO(andrew): consolidate with `utility/types/actor.go`
 var (
 	actorTypes = []typesUtil.ActorType{
 		typesUtil.ActorType_App,
@@ -221,11 +222,12 @@ func (u *UtilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, acto
 }
 
 func (u *UtilityContext) HandleProposalRewards(proposer []byte) types.Error {
-	feesAndRewardsCollected, err := u.GetPoolAmount(typesGenesis.FeePoolName)
+	feePoolName := typesGenesis.Pool_Names_FeeCollector.String()
+	feesAndRewardsCollected, err := u.GetPoolAmount(feePoolName)
 	if err != nil {
 		return err
 	}
-	if err := u.SetPoolAmount(typesGenesis.FeePoolName, big.NewInt(0)); err != nil {
+	if err := u.SetPoolAmount(feePoolName, big.NewInt(0)); err != nil {
 		return err
 	}
 	proposerCutPercentage, err := u.GetProposerPercentageOfFees()
@@ -244,7 +246,7 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) types.Error {
 	if err = u.AddAccountAmount(proposer, amountToProposer); err != nil {
 		return err
 	}
-	if err = u.AddPoolAmount(typesGenesis.DAOPoolName, amountToDAO); err != nil {
+	if err = u.AddPoolAmount(typesGenesis.Pool_Names_DAO.String(), amountToDAO); err != nil {
 		return err
 	}
 	return nil

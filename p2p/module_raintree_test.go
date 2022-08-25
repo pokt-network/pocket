@@ -3,22 +3,21 @@ package p2p
 import (
 	"crypto/ed25519"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"sort"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/pokt-network/pocket/shared/types/genesis"
+
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
-	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -294,10 +293,10 @@ func prepareConsensusMock(t *testing.T, genesisState *genesis.GenesisState) *mod
 	ctrl := gomock.NewController(t)
 	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
 
-	validators := genesisState.Validators
+	validators := genesisState.Utility.Validators
 	m := make(modules.ValidatorMap, len(validators))
 	for _, v := range validators {
-		m[hex.EncodeToString(v.Address)] = v
+		m[v.Address] = v
 	}
 
 	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
@@ -363,40 +362,37 @@ func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWr
 	return connMock
 }
 
-func prepareP2PModules(t *testing.T, configs []*config.Config) (p2pModules map[string]*p2pModule) {
+func prepareP2PModules(t *testing.T, configs []*genesis.Config) (p2pModules map[string]*p2pModule) {
 	p2pModules = make(map[string]*p2pModule, len(configs))
 	for i, config := range configs {
-		p2pMod, err := Create(config)
+		p2pMod, err := Create(config, nil)
 		require.NoError(t, err)
 		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
 	}
 	return
 }
 
-func createConfigs(t *testing.T, numValidators int) (configs []*config.Config, genesisState *genesis.GenesisState) {
-	configs = make([]*config.Config, numValidators)
+func createConfigs(t *testing.T, numValidators int) (configs []*genesis.Config, genesisState *genesis.GenesisState) {
+	configs = make([]*genesis.Config, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
 	copy(valKeys[:], keys[:numValidators])
 	genesisState = createGenesisState(t, valKeys)
 
 	for i := range configs {
-		configs[i] = &config.Config{
-			GenesisSource: &genesis.GenesisSource{
-				Source: &genesis.GenesisSource_State{
-					State: genesisState,
-				},
+		configs[i] = &genesis.Config{
+			Base: &genesis.BaseConfig{
+				RootDirectory: "",
+				PrivateKey:    valKeys[i].String(),
 			},
-
-			PrivateKey: valKeys[i].(cryptoPocket.Ed25519PrivateKey),
-
-			P2P: &config.P2PConfig{
+			Consensus:   &genesis.ConsensusConfig{},
+			Utility:     &genesis.UtilityConfig{},
+			Persistence: &genesis.PersistenceConfig{},
+			P2P: &genesis.P2PConfig{
 				ConsensusPort:  8080,
 				UseRainTree:    true,
-				ConnectionType: config.EmptyConnection,
+				ConnectionType: genesis.ConnectionType_EmptyConnection,
 			},
-			Consensus:   &config.ConsensusConfig{},
-			Persistence: &config.PersistenceConfig{},
-			Utility:     &config.UtilityConfig{},
+			Telemetry: nil,
 		}
 	}
 	return
@@ -407,17 +403,14 @@ func validatorId(_ *testing.T, i int) string {
 }
 
 func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
-	validators := make([]*genesis.Validator, len(valKeys))
+	validators := make([]*genesis.Actor, len(valKeys))
 	for i, valKey := range valKeys {
-		addr := valKey.Address()
-		val := &genesis.Validator{
+		addr := valKey.Address().String()
+		val := &genesis.Actor{
 			Address:         addr,
-			PublicKey:       valKey.PublicKey().Bytes(),
-			Paused:          false,
-			Status:          2,
-			ServiceUrl:      validatorId(t, i+1),
-			StakedTokens:    "1000000000000000",
-			MissedBlocks:    0,
+			PublicKey:       valKey.PublicKey().String(),
+			GenericParam:    validatorId(t, i+1),
+			StakedAmount:    "1000000000000000",
 			PausedHeight:    0,
 			UnstakingHeight: 0,
 			Output:          addr,
@@ -425,6 +418,8 @@ func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesi
 		validators[i] = val
 	}
 	return &genesis.GenesisState{
-		Validators: validators,
+		Utility: &genesis.UtilityGenesisState{
+			Validators: validators,
+		},
 	}
 }

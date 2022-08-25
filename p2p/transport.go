@@ -2,33 +2,33 @@ package p2p
 
 import (
 	"fmt"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"io/ioutil"
 	"net"
 
-	"github.com/pokt-network/pocket/shared/config"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 const (
 	TCPNetworkLayerProtocol = "tcp4"
 )
 
-func CreateListener(cfg *config.P2PConfig) (typesP2P.Transport, error) {
+func CreateListener(cfg *genesis.P2PConfig) (typesP2P.Transport, error) {
 	switch cfg.ConnectionType {
-	case config.TCPConnection:
+	case genesis.ConnectionType_TCPConnection:
 		return createTCPListener(cfg)
-	case config.EmptyConnection:
+	case genesis.ConnectionType_EmptyConnection:
 		return createEmptyListener(cfg)
 	default:
 		return nil, fmt.Errorf("unsupported connection type for listener: %s", cfg.ConnectionType)
 	}
 }
 
-func CreateDialer(cfg *config.P2PConfig, url string) (typesP2P.Transport, error) {
+func CreateDialer(cfg *genesis.P2PConfig, url string) (typesP2P.Transport, error) {
 	switch cfg.ConnectionType {
-	case config.TCPConnection:
+	case genesis.ConnectionType_TCPConnection:
 		return createTCPDialer(cfg, url)
-	case config.EmptyConnection:
+	case genesis.ConnectionType_EmptyConnection:
 		return createEmptyDialer(cfg, url)
 	default:
 		return nil, fmt.Errorf("unsupported connection type for dialer: %s", cfg.ConnectionType)
@@ -42,7 +42,7 @@ type tcpConn struct {
 	listener *net.TCPListener
 }
 
-func createTCPListener(cfg *config.P2PConfig) (*tcpConn, error) {
+func createTCPListener(cfg *genesis.P2PConfig) (*tcpConn, error) {
 	addr, err := net.ResolveTCPAddr(TCPNetworkLayerProtocol, fmt.Sprintf(":%d", cfg.ConsensusPort))
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func createTCPListener(cfg *config.P2PConfig) (*tcpConn, error) {
 	}, nil
 }
 
-func createTCPDialer(cfg *config.P2PConfig, url string) (*tcpConn, error) {
+func createTCPDialer(cfg *genesis.P2PConfig, url string) (*tcpConn, error) {
 	addr, err := net.ResolveTCPAddr(TCPNetworkLayerProtocol, url)
 	if err != nil {
 		return nil, err
@@ -119,11 +119,11 @@ var _ typesP2P.Transport = &emptyConn{}
 type emptyConn struct {
 }
 
-func createEmptyListener(_ *config.P2PConfig) (typesP2P.Transport, error) {
+func createEmptyListener(_ *genesis.P2PConfig) (typesP2P.Transport, error) {
 	return &emptyConn{}, nil
 }
 
-func createEmptyDialer(_ *config.P2PConfig, _ string) (typesP2P.Transport, error) {
+func createEmptyDialer(_ *genesis.P2PConfig, _ string) (typesP2P.Transport, error) {
 	return &emptyConn{}, nil
 }
 

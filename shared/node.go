@@ -6,11 +6,11 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/telemetry"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/utility"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -23,40 +23,45 @@ type Node struct {
 	Address cryptoPocket.Address
 }
 
-func Create(cfg *config.Config) (n *Node, err error) {
-	persistenceMod, err := persistence.Create(cfg)
+func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (n *Node, err error) {
+	persistenceMod, err := persistence.Create(cfg, genesis)
 	if err != nil {
 		return nil, err
 	}
 
-	p2pMod, err := p2p.Create(cfg)
+	p2pMod, err := p2p.Create(cfg, genesis)
 	if err != nil {
 		return nil, err
 	}
 
-	utilityMod, err := utility.Create(cfg)
+	utilityMod, err := utility.Create(cfg, genesis)
 	if err != nil {
 		return nil, err
 	}
 
-	consensusMod, err := consensus.Create(cfg)
+	consensusMod, err := consensus.Create(cfg, genesis)
 	if err != nil {
 		return nil, err
 	}
 
-	telemetryMod, err := telemetry.Create(cfg)
+	telemetryMod, err := telemetry.Create(cfg, genesis)
 	if err != nil {
 		return nil, err
 	}
 
-	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod, cfg)
+	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod, cfg, genesis)
+	if err != nil {
+		return nil, err
+	}
+
+	pk, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Node{
 		bus:     bus,
-		Address: cfg.PrivateKey.Address(),
+		Address: pk.Address(),
 	}, nil
 }
 

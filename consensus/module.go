@@ -1,22 +1,18 @@
 package consensus
 
 import (
-	"encoding/hex"
 	"fmt"
 	"log"
 
-	"github.com/pokt-network/pocket/shared/types"
-
 	"github.com/pokt-network/pocket/consensus/leader_election"
+	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-
-	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
-	"github.com/pokt-network/pocket/shared/config"
-	"github.com/pokt-network/pocket/shared/modules"
 )
 
 const (
@@ -29,7 +25,7 @@ var _ modules.ConsensusModule = &consensusModule{}
 type consensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
-	consCfg    *config.ConsensusConfig
+	consCfg    *genesis.ConsensusConfig
 
 	// Hotstuff
 	Height uint64
@@ -48,7 +44,7 @@ type consensusModule struct {
 
 	// Consensus State
 	appHash      string
-	validatorMap map[string]*genesis.Validator
+	validatorMap map[string]*genesis.Actor
 
 	// Module Dependencies
 	utilityContext    modules.UtilityContext
@@ -57,10 +53,13 @@ type consensusModule struct {
 
 	logPrefix   string                                                  // TODO(design): Remove later when we build a shared/proper/injected logger
 	MessagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage // TODO(design): Move this over to the persistence module or elsewhere?
+	// TODO(andrew): Explain (or remove) why have an explicit `MaxBlockBytes` if we are already storing a reference to `consCfg` above?
+	// TODO(andrew): This needs to be updated every time the utility module changes this value. It can be accessed via the "application specific bus" (mimicking the intermodule interface in ABCI)
+	MaxBlockBytes uint64
 }
 
-func Create(cfg *config.Config) (modules.ConsensusModule, error) {
-	leaderElectionMod, err := leader_election.Create(cfg)
+func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (modules.ConsensusModule, error) {
+	leaderElectionMod, err := leader_election.Create(cfg, genesis)
 	if err != nil {
 		return nil, err
 	}
@@ -71,15 +70,19 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		return nil, err
 	}
 
-	valMap := validatorListToMap(cfg.GenesisSource.GetState().Validators)
+	privateKey, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	address := privateKey.Address().String()
 
-	address := cfg.PrivateKey.Address().String()
+	valMap := validatorListToMap(genesis.Utility.Validators)
 	valIdMap, idValMap := typesCons.GetValAddrToIdMap(valMap)
 
 	m := &consensusModule{
 		bus: nil,
 
-		privateKey: cfg.PrivateKey,
+		privateKey: privateKey.(cryptoPocket.Ed25519PrivateKey),
 		consCfg:    cfg.Consensus,
 
 		Height: 0,
@@ -102,8 +105,9 @@ func Create(cfg *config.Config) (modules.ConsensusModule, error) {
 		paceMaker:         paceMaker,
 		leaderElectionMod: leaderElectionMod,
 
-		logPrefix:   DefaultLogPrefix,
-		MessagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
+		logPrefix:     DefaultLogPrefix,
+		MessagePool:   make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
+		MaxBlockBytes: genesis.Consensus.MaxBlockBytes,
 	}
 
 	// TODO(olshansky): Look for a way to avoid doing this.
@@ -264,10 +268,10 @@ func (m *consensusModule) ValidatorMap() modules.ValidatorMap {
 	return m.validatorMap
 }
 
-func validatorListToMap(validators []*genesis.Validator) (m modules.ValidatorMap) {
+func validatorListToMap(validators []*genesis.Actor) (m modules.ValidatorMap) {
 	m = make(modules.ValidatorMap, len(validators))
 	for _, v := range validators {
-		m[hex.EncodeToString(v.Address)] = v
+		m[v.Address] = v
 	}
 	return
 }

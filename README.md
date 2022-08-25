@@ -17,7 +17,7 @@ The official implementation of the [V1 Pocket Network Protocol Specification](ht
 All the links you'll need are listed below. If you'd like to contribute to the Pocket V1 Protocol, start by:
 
 1. Get up and running by reading the [Development Guide](docs/development/README.md)
-2. Find a task by reading the [Contribution Guide](docs/contributing/CONTRIBUTING.md)
+2. Find a task by reading the [Contribution Guide](docs/contributing/README.md)
 3. Dive into any of the other guides or modules depending on where your interests lie
 
 <!--
@@ -29,7 +29,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 
 - [Development Guide](docs/development/README.md)
 - [Learning Guide](docs/learning/README.md)
-- [Contribution Guide](docs/contributing/CONTRIBUTING.md)
+- [Contribution Guide](docs/contributing/README.md)
 - [Release Guide](docs/build/README.md)
 - [Dependencies Guide](docs/deps/README.md)
 - [Telemetry Guide](shared/telemetry/README.md)

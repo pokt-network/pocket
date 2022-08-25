@@ -2,9 +2,11 @@ package types
 
 import (
 	"encoding/hex"
+
 	crypto2 "github.com/pokt-network/pocket/shared/crypto"
 )
 
+// TODO(andrew): move block to consensus module; pocket/issues/163
 func (b *Block) ValidateBasic() Error {
 	if err := b.BlockHeader.ValidateBasic(); err != nil {
 		return err

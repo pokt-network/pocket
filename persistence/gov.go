@@ -8,7 +8,7 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 )
 
 // TODO (Team) BUG setting parameters twice on the same height causes issues. We need to move the schema away from 'end_height' and
@@ -27,7 +27,7 @@ func (p PostgresContext) InitParams() error {
 	if err != nil {
 		return err
 	}
-	_, err = txn.Exec(ctx, schema.InsertParams(genesis.DefaultParams(), p.Height))
+	_, err = txn.Exec(ctx, schema.InsertParams(test_artifacts.DefaultParams(), p.Height))
 	return err
 }
 
