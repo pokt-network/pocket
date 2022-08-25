@@ -60,6 +60,6 @@ message TelemetryConfig {// TODO (team) move to shared/telemetry
 message RPCConfig { // DISCUSS (team): with #163 in mind, where should this reside?
   bool enabled = 1;
   string port = 2;
-  int64 timeout = 3;
+  uint64 timeout = 3;
   string remote_cli_url = 4;
 }
