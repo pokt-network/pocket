@@ -2,6 +2,7 @@ package utility_module
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -52,19 +53,19 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 
 // TODO: Fix this test once txIndexer is implemented by postgres context
 func TestUtilityContext_CheckTransaction(t *testing.T) {
-	// ctx := NewTestingUtilityContext(t, 0)
-	// tx, _, _, _ := newTestingTransaction(t, ctx)
-	// txBz, err := tx.Bytes()
-	// require.NoError(t, err)
-	// require.NoError(t, ctx.CheckTransaction(txBz))
-	// hash, err := tx.Hash()
-	// require.NoError(t, err)
-	// require.True(t, ctx.Mempool.Contains(hash), fmt.Sprintf("the transaction was unable to be checked"))
-	// er := ctx.CheckTransaction(txBz)
-	// require.True(t, er.Error() == types.ErrDuplicateTransaction().Error(), fmt.Sprintf("unexpected err, expected %v got %v", types.ErrDuplicateTransaction().Error(), er.Error()))
+	ctx := NewTestingUtilityContext(t, 0)
+	tx, _, _, _ := newTestingTransaction(t, ctx)
+	txBz, err := tx.Bytes()
+	require.NoError(t, err)
+	require.NoError(t, ctx.CheckTransaction(txBz))
+	hash, err := tx.Hash()
+	require.NoError(t, err)
+	require.True(t, ctx.Mempool.Contains(hash), fmt.Sprintf("the transaction was unable to be checked"))
+	er := ctx.CheckTransaction(txBz)
+	require.True(t, er.Error() == types.ErrDuplicateTransaction().Error(), fmt.Sprintf("unexpected err, expected %v got %v", types.ErrDuplicateTransaction().Error(), er.Error()))
 
-	// ctx.Context.Release()
-	// tests.CleanupTest(ctx)
+	ctx.Context.Release()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetSignerCandidates(t *testing.T) {

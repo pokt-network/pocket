@@ -25,19 +25,19 @@ func main() {
 	}
 
 	cfg, genesis := test_artifacts.ReadConfigAndGenesisFiles(*configFilename, *genesisFilename)
-	if cfg.Rpc.Enabled {
-		go rpc.StartRPC(cfg.Rpc.Port, cfg.Rpc.Timeout)
-	} else {
-		log.Println("[WARN] RPC server: OFFLINE")
-	}
 
 	pocketNode, err := shared.Create(cfg, genesis)
 	if err != nil {
 		log.Fatalf("Failed to create pocket node: %s", err)
 	}
 
+	if cfg.Rpc.Enabled {
+		go rpc.NewRPCServer(pocketNode).StartRPC(cfg.Rpc.Port, cfg.Rpc.Timeout)
+	} else {
+		log.Println("[WARN] RPC server: OFFLINE")
+	}
+
 	if err = pocketNode.Start(); err != nil {
 		log.Fatalf("Failed to start pocket node: %s", err)
 	}
-
 }
