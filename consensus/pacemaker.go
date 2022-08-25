@@ -2,7 +2,6 @@ package consensus
 
 import (
 	"context"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 	"time"
 
@@ -39,7 +38,7 @@ type paceMaker struct {
 	// a great idea in production code.
 	consensusMod *consensusModule
 
-	pacemakerConfigs *genesis.PacemakerConfig
+	pacemakerConfigs modules.PacemakerConfig
 
 	stepCancelFunc context.CancelFunc
 
@@ -47,18 +46,18 @@ type paceMaker struct {
 	paceMakerDebug
 }
 
-func CreatePacemaker(cfg *genesis.Config) (m *paceMaker, err error) {
+func CreatePacemaker(cfg *typesCons.ConsensusConfig) (m *paceMaker, err error) {
 	return &paceMaker{
 		bus:          nil,
 		consensusMod: nil,
 
-		pacemakerConfigs: cfg.Consensus.PacemakerConfig,
+		pacemakerConfigs: cfg.GetPaceMakerConfig(),
 
 		stepCancelFunc: nil, // Only set on restarts
 
 		paceMakerDebug: paceMakerDebug{
-			manualMode:                cfg.Consensus.PacemakerConfig.Manual,
-			debugTimeBetweenStepsMsec: cfg.Consensus.PacemakerConfig.DebugTimeBetweenStepsMsec,
+			manualMode:                cfg.GetPaceMakerConfig().GetManual(),
+			debugTimeBetweenStepsMsec: cfg.GetPaceMakerConfig().GetDebugTimeBetweenStepsMsec(),
 			quorumCertificate:         nil,
 		},
 	}, nil
@@ -218,7 +217,7 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 }
 
 // TODO(olshansky): Increase timeout using exponential backoff.
-func (p *paceMaker) getStepTimeout(round uint64) time.Duration {
-	baseTimeout := time.Duration(int64(time.Millisecond) * int64(p.pacemakerConfigs.TimeoutMsec))
+func (p *paceMaker) getStepTimeout(_ uint64) time.Duration {
+	baseTimeout := time.Duration(int64(time.Millisecond) * int64(p.pacemakerConfigs.GetTimeoutMsec()))
 	return baseTimeout
 }

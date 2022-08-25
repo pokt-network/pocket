@@ -2,13 +2,13 @@ package consensus
 
 import (
 	"encoding/base64"
+	"github.com/pokt-network/pocket/shared/debug"
 	"log"
 
 	"google.golang.org/protobuf/proto"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -148,7 +148,7 @@ func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 		return
 	}
 
-	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.IdToValAddrMap[*m.LeaderId]), anyConsensusMessage, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
+	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.IdToValAddrMap[*m.LeaderId]), anyConsensusMessage, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return
 	}
@@ -162,7 +162,7 @@ func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 		return
 	}
 
-	if err := m.GetBus().GetP2PModule().Broadcast(anyConsensusMessage, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
+	if err := m.GetBus().GetP2PModule().Broadcast(anyConsensusMessage, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
 		return
 	}

@@ -232,7 +232,7 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 		}
 		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
 		// just serialize `Message` once and verify each signature without re-serializing every time.
-		if !isSignatureValid(msgToJustify, validator.PublicKey, partialSig.Signature) {
+		if !isSignatureValid(msgToJustify, validator.GetPublicKey(), partialSig.Signature) {
 			m.nodeLog(typesCons.WarnInvalidPartialSigInQC(partialSig.Address, m.ValAddrToIdMap[partialSig.Address]))
 			continue
 		}

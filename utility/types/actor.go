@@ -1,7 +1,6 @@
 package types
 
 import (
-	"github.com/pokt-network/pocket/shared/types/genesis"
 	"log"
 )
 
@@ -12,30 +11,30 @@ const (
 )
 
 var (
-	ActorTypes = []ActorType{ // TODO (andrew) consolidate with genesis
-		ActorType_App,
-		ActorType_Node,
-		ActorType_Fish,
-		ActorType_Val,
+	ActorTypes = []UtilActorType{ // TODO (andrew) consolidate with genesis
+		UtilActorType_App,
+		UtilActorType_Node,
+		UtilActorType_Fish,
+		UtilActorType_Val,
 	}
 )
 
-func (actorType ActorType) GetActorPoolName() string {
-	switch actorType {
-	case ActorType_App:
-		return genesis.Pool_Names_AppStakePool.String()
-	case ActorType_Val:
-		return genesis.Pool_Names_ValidatorStakePool.String()
-	case ActorType_Fish:
-		return genesis.Pool_Names_FishermanStakePool.String()
-	case ActorType_Node:
-		return genesis.Pool_Names_ServiceNodeStakePool.String()
+func (x UtilActorType) GetActorPoolName() string {
+	switch x {
+	case UtilActorType_App:
+		return "AppStakePool"
+	case UtilActorType_Val:
+		return "ValidatorStakePool"
+	case UtilActorType_Fish:
+		return "FishermanStakePool"
+	case UtilActorType_Node:
+		return "ServiceNodeStakePool"
 	default:
-		log.Fatalf("unknown actor type: %v", actorType)
+		log.Fatalf("unknown actor type: %v", x)
 	}
 	return ""
 }
 
-func (at ActorType) GetActorName() string {
-	return ActorType_name[int32(at)]
+func (x UtilActorType) GetActorName() string {
+	return UtilActorType_name[int32(x)]
 }

@@ -1,11 +1,11 @@
 package shared
 
 import (
-	"github.com/pokt-network/pocket/shared/types/genesis"
+	"encoding/json"
+	"github.com/pokt-network/pocket/shared/debug"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types"
 )
 
 var _ modules.Bus = &bus{}
@@ -24,7 +24,7 @@ type bus struct {
 	telemetry   modules.TelemetryModule
 
 	// Configurations
-	config *genesis.Config
+	config modules.Config
 }
 
 const (
@@ -37,7 +37,6 @@ func CreateBus(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
-	config *genesis.Config,
 ) (modules.Bus, error) {
 	bus := &bus{
 		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -47,8 +46,6 @@ func CreateBus(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
-
-		config: config,
 	}
 
 	modules := map[string]modules.Module{
@@ -88,7 +85,7 @@ func CreateBusWithOptionalModules(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
-	config *genesis.Config,
+	_ map[string]json.RawMessage,
 ) modules.Bus {
 	bus := &bus{
 		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -97,8 +94,6 @@ func CreateBusWithOptionalModules(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
-
-		config: config,
 	}
 
 	maybeSetModuleBus := func(mod modules.Module) {
@@ -116,11 +111,11 @@ func CreateBusWithOptionalModules(
 	return bus
 }
 
-func (m *bus) PublishEventToBus(e *types.PocketEvent) {
+func (m *bus) PublishEventToBus(e *debug.PocketEvent) {
 	m.channel <- *e
 }
 
-func (m *bus) GetBusEvent() *types.PocketEvent {
+func (m *bus) GetBusEvent() *debug.PocketEvent {
 	e := <-m.channel
 	return &e
 }
@@ -147,8 +142,4 @@ func (m *bus) GetConsensusModule() modules.ConsensusModule {
 
 func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
-}
-
-func (m *bus) GetConfig() *genesis.Config {
-	return m.config
 }

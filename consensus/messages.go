@@ -3,8 +3,6 @@ package consensus
 import (
 	"log"
 
-	"github.com/pokt-network/pocket/shared/types"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
@@ -46,7 +44,7 @@ func CreateProposeMessage(
 func CreateVoteMessage(
 	m *consensusModule,
 	step typesCons.HotstuffStep, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
-	block *types.Block,
+	block *typesCons.Block,
 ) (*typesCons.HotstuffMessage, error) {
 	if block == nil {
 		return nil, typesCons.ErrNilBlockVote

@@ -1,12 +1,9 @@
 package consensus
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
-
-	"github.com/pokt-network/pocket/shared/types/genesis"
-
-	"github.com/pokt-network/pocket/shared/types"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -22,19 +19,22 @@ const (
 	DefaultLogPrefix string = "NODE" // Just a default that'll be replaced during consensus operations.
 )
 
+var _ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
+var _ modules.PacemakerConfig = &typesCons.PacemakerConfig{}
+var _ modules.ConsensusConfig = &typesCons.ConsensusConfig{}
 var _ modules.ConsensusModule = &consensusModule{}
 
 // TODO(olshansky): Any reason to make all of these attributes local only (i.e. not exposed outside the struct)?
 type consensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
-	consCfg    *genesis.ConsensusConfig
+	consCfg    modules.ConsensusConfig
 
 	// Hotstuff
 	Height uint64
 	Round  uint64
 	Step   typesCons.HotstuffStep
-	Block  *types.Block // The current block being voted on prior to committing to finality
+	Block  *typesCons.Block // The current block being voted on prior to committing to finality
 
 	HighPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	LockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
@@ -47,7 +47,7 @@ type consensusModule struct {
 
 	// Consensus State
 	appHash      string
-	validatorMap map[string]*genesis.Actor
+	validatorMap typesCons.ValidatorMap
 
 	// Module Dependencies
 	utilityContext    modules.UtilityContext
@@ -59,7 +59,15 @@ type consensusModule struct {
 	MaxBlockBytes uint64                                                  // TODO (design): This needs to be updated every time the utility module changes this value. Need an intermodule interface like ABCI
 }
 
-func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (modules.ConsensusModule, error) {
+func Create(config, gen json.RawMessage) (modules.ConsensusModule, error) {
+	cfg, err := InitConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	genesis, err := InitGenesis(gen)
+	if err != nil {
+		return nil, err
+	}
 	leaderElectionMod, err := leader_election.Create(cfg)
 	if err != nil {
 		return nil, err
@@ -71,8 +79,8 @@ func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (modules.Consens
 		return nil, err
 	}
 
-	valMap := validatorListToMap(genesis.Utility.Validators)
-	privateKey, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
+	valMap := typesCons.ValidatorListToMap(genesis.Validators)
+	privateKey, err := cryptoPocket.NewPrivateKey(cfg.PrivateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +91,7 @@ func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (modules.Consens
 		bus: nil,
 
 		privateKey: privateKey.(cryptoPocket.Ed25519PrivateKey),
-		consCfg:    cfg.Consensus,
+		consCfg:    cfg,
 
 		Height: 0,
 		Round:  0,
@@ -107,13 +115,25 @@ func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (modules.Consens
 
 		logPrefix:     DefaultLogPrefix,
 		MessagePool:   make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
-		MaxBlockBytes: genesis.Consensus.MaxBlockBytes,
+		MaxBlockBytes: genesis.GetMaxBlockBytes(),
 	}
 
 	// TODO(olshansky): Look for a way to avoid doing this.
 	paceMaker.SetConsensusModule(m)
 
 	return m, nil
+}
+
+func InitGenesis(data json.RawMessage) (genesis *typesCons.ConsensusGenesisState, err error) {
+	genesis = new(typesCons.ConsensusGenesisState)
+	err = json.Unmarshal(data, genesis)
+	return
+}
+
+func InitConfig(data json.RawMessage) (config *typesCons.ConsensusConfig, err error) {
+	config = new(typesCons.ConsensusConfig)
+	err = json.Unmarshal(data, config)
+	return
 }
 
 func (m *consensusModule) Start() error {
@@ -265,13 +285,5 @@ func (m *consensusModule) CurrentHeight() uint64 {
 }
 
 func (m *consensusModule) ValidatorMap() modules.ValidatorMap {
-	return m.validatorMap
-}
-
-func validatorListToMap(validators []*genesis.Actor) (m modules.ValidatorMap) {
-	m = make(modules.ValidatorMap, len(validators))
-	for _, v := range validators {
-		m[v.Address] = v
-	}
-	return
+	return typesCons.ValidatorMapToModulesValidatorMap(m.validatorMap)
 }

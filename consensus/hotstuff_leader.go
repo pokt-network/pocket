@@ -279,7 +279,7 @@ func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 	if !ok {
 		return typesCons.ErrMissingValidator(address, m.ValAddrToIdMap[address])
 	}
-	pubKey := validator.PublicKey
+	pubKey := validator.GetPublicKey()
 	if isSignatureValid(msg, pubKey, msg.GetPartialSignature().Signature) {
 		return nil
 	}
@@ -292,7 +292,7 @@ func (m *consensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {
 	// TODO(olshansky): Add proper tests for this when we figure out where the mempool should live.
 	// NOTE: This is just a placeholder at the moment. It doesn't actually work because SizeOf returns
 	// the size of the map pointer, and does not recursively determine the size of all the underlying elements.
-	if m.consCfg.MaxMempoolBytes < uint64(unsafe.Sizeof(m.MessagePool)) {
+	if m.consCfg.GetMaxMempoolBytes() < uint64(unsafe.Sizeof(m.MessagePool)) {
 		m.nodeLogError(typesCons.DisregardHotstuffMessage, typesCons.ErrConsensusMempoolFull)
 		return
 	}

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.2] - 2022-08-25
+**Encapsulate structures previously in shared [#163](github.com/pokt-network/pocket/issues/163)**
+- Ensured proto structures implement shared interfaces
+- ConsensusConfig uses shared interfaces in order to accept MockConsensusConfig in test_artifacts
+- ConsensusGenesisState uses shared interfaces in order to accept MockConsensusGenesisState in test_artifacts
+- Implemented shared validator interface for `validator_map` functionality
+
 ## [0.0.0.1] - 2021-03-31
 
 HotPocket 1st Iteration (https://github.com/pokt-network/pocket/pull/48)

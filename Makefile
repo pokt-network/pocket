@@ -218,13 +218,16 @@ protogen_clean:
 .PHONY: protogen_local
 ## Generate go structures for all of the protobufs
 protogen_local: go_protoc-go-inject-tag
-	$(eval proto_dir = "./shared/types/proto/")
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto         --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto              --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto --experimental_allow_proto3_optional
-	protoc-go-inject-tag -input="./shared/types/genesis/*.pb.go"
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto      --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/raintree/types/proto       --go_out=./p2p/types            ./p2p/raintree/types/proto/*.proto   --experimental_allow_proto3_optional
+	$(eval proto_dir = ".")
+	# TODO (Olshansky) need help fixing the relative paths back. This solution requires a proper $GOPATH variable which is less than ideal
+	protoc -I=${proto_dir} -I=./shared/debug/proto             --go_out=${GOPATH}/src        ./shared/debug/proto/*.proto         --experimental_allow_proto3_optional
+	protoc -I=${proto_dir} -I=./persistence/proto              --go_out=${GOPATH}/src        ./persistence/proto/*.proto          --experimental_allow_proto3_optional
+	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
+	protoc -I=${proto_dir} -I=./utility/types/proto            --go_out=${GOPATH}/src        ./utility/types/proto/*.proto        --experimental_allow_proto3_optional
+	protoc -I=${proto_dir} -I=./consensus/types/proto          --go_out=${GOPATH}/src        ./consensus/types/proto/*.proto      --experimental_allow_proto3_optional
+	protoc -I=${proto_dir} -I=./p2p/raintree/types/proto       --go_out=${GOPATH}/src        ./p2p/raintree/types/proto/*.proto   --experimental_allow_proto3_optional
+	protoc -I=${proto_dir} -I=./p2p/types/proto                --go_out=${GOPATH}/src        ./p2p/types/proto/*.proto            --experimental_allow_proto3_optional
+	protoc -I=${proto_dir} -I=./telemetry/proto                --go_out=${GOPATH}/src        ./telemetry/proto/*.proto            --experimental_allow_proto3_optional
 	echo "View generated proto files by running: make protogen_show"
 
 .PHONY: protogen_docker_m1

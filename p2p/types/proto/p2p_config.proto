@@ -1,0 +1,16 @@
+syntax = "proto3";
+package p2p;
+
+option go_package = "github.com/pokt-network/pocket/p2p/types";
+
+message P2PConfig {
+  string private_key = 1;
+  uint32 consensus_port = 2;
+  bool use_rain_tree = 3;
+  bool IsEmptyConnectionType = 4; // TODO (Drewsky) switch back to enum
+}
+
+enum ConnectionType {
+  EmptyConnection = 0;
+  TCPConnection = 1;
+}

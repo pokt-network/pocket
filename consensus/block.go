@@ -1,16 +1,15 @@
-package consensus
+package consensus // TODO (Olshansk) needs a README file with proper code structure
 
 import (
 	"encoding/hex"
+	"github.com/pokt-network/pocket/shared/codec"
 	"unsafe"
-
-	"github.com/pokt-network/pocket/shared/types"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
 
 // TODO(olshansky): Sync with Andrew on the type of validation we need here.
-func (m *consensusModule) validateBlock(block *types.Block) error {
+func (m *consensusModule) validateBlock(block *typesCons.Block) error {
 	if block == nil {
 		return typesCons.ErrNilBlock
 	}
@@ -18,7 +17,7 @@ func (m *consensusModule) validateBlock(block *types.Block) error {
 }
 
 // This is a helper function intended to be called by a leader/validator during a view change
-func (m *consensusModule) prepareBlockAsLeader() (*types.Block, error) {
+func (m *consensusModule) prepareBlockAsLeader() (*typesCons.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
@@ -37,7 +36,7 @@ func (m *consensusModule) prepareBlockAsLeader() (*types.Block, error) {
 		return nil, err
 	}
 
-	blockHeader := &types.BlockHeader{
+	blockHeader := &typesCons.BlockHeader{
 		Height:            int64(m.Height),
 		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            uint32(len(txs)),
@@ -46,7 +45,7 @@ func (m *consensusModule) prepareBlockAsLeader() (*types.Block, error) {
 		QuorumCertificate: []byte("HACK: Temporary placeholder"),
 	}
 
-	block := &types.Block{
+	block := &typesCons.Block{
 		BlockHeader:  blockHeader,
 		Transactions: txs,
 	}
@@ -55,7 +54,7 @@ func (m *consensusModule) prepareBlockAsLeader() (*types.Block, error) {
 }
 
 // This is a helper function intended to be called by a replica/voter during a view change
-func (m *consensusModule) applyBlockAsReplica(block *types.Block) error {
+func (m *consensusModule) applyBlockAsReplica(block *typesCons.Block) error {
 	if m.isLeader() {
 		return typesCons.ErrLeaderApplyBLock
 	}
@@ -102,11 +101,11 @@ func (m *consensusModule) refreshUtilityContext() error {
 	return nil
 }
 
-func (m *consensusModule) commitBlock(block *types.Block) error {
+func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
 
 	// Store the block in the KV store
-	codec := types.GetCodec()
+	codec := codec.GetCodec()
 	blockProtoBytes, err := codec.Marshal(block)
 	if err != nil {
 		return err

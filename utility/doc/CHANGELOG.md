@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.2] - 2022-08-25
+**Encapsulate structures previously in shared [#163](github.com/pokt-network/pocket/issues/163)**
+- Ensured proto structures implement shared interfaces
+- UtilityConfig uses shared interfaces in order to accept MockUtilityConfig in test_artifacts
+- Moved all utilty tests from shared to tests package
+- Left `TODO` for tests package still importing persistence for `NewTestPersistenceModule`
+  - This is one of the last places where cross-module importing exists
+
 ## [0.0.1] - 2022-07-20
 
 ### Code cleanup

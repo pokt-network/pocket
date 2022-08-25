@@ -1,0 +1,73 @@
+syntax = "proto3";
+package utility;
+
+option go_package = "github.com/pokt-network/pocket/utility/types";
+
+import "google/protobuf/any.proto";
+
+enum UtilActorType { // TODO (team) deprecate for persistence/actorType
+  App = 0;
+  Node = 1;
+  Fish = 2;
+  Val = 3;
+}
+
+message MessageSend {
+  bytes from_address = 1;
+  bytes to_address = 2;
+  string amount = 3;
+  UtilActorType actor_type = 4;
+}
+
+message MessageStake {
+  bytes public_key = 1;
+  repeated string chains = 2;
+  string amount = 3;
+  string service_url = 4;
+  bytes output_address = 5;
+  optional bytes signer = 6;
+  UtilActorType actor_type = 7;
+}
+
+message MessageEditStake {
+  bytes address = 1;
+  repeated string chains = 2;
+  string amount = 3;
+  string service_url = 4;
+  optional bytes signer = 5;
+  UtilActorType actor_type = 6;
+}
+
+message MessageUnstake {
+  bytes address = 1;
+  optional bytes signer = 2;
+  UtilActorType actor_type = 3;
+}
+
+message MessageUnpause {
+  bytes address = 1;
+  optional bytes signer = 2;
+  UtilActorType actor_type = 3;
+}
+
+message MessageChangeParameter {
+  bytes signer = 1;
+  bytes owner = 2;
+  string parameter_key = 3;
+  google.protobuf.Any parameter_value = 4;
+}
+
+message MessageDoubleSign {
+  utility.Vote vote_a = 1;
+  utility.Vote vote_b = 2;
+  optional bytes reporter_address = 3;
+}
+
+// TECHDEBT: Consolidate this week consensus
+message Vote {
+  bytes public_key = 1;
+  int64 height = 2;
+  uint32 round = 3;
+  uint32 type = 4;
+  bytes block_hash = 5;
+}

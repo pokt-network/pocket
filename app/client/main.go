@@ -3,7 +3,10 @@ package main
 // TODO(team): discuss & design the long-term solution to this client.
 
 import (
-	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
+	"encoding/json"
+	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
+	"github.com/pokt-network/pocket/telemetry"
 	"log"
 	"os"
 
@@ -13,8 +16,6 @@ import (
 	"github.com/pokt-network/pocket/shared"
 	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/telemetry"
-	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -41,17 +42,15 @@ var consensusMod modules.ConsensusModule
 func main() {
 	var err error
 	config, genesis := test_artifacts.ReadConfigAndGenesisFiles("")
-	newPK, err := pocketCrypto.GeneratePrivateKey() // Hack; rain tree will detect if trying to send to addr=self and not send it
+	config, err = injectClientPrivateKey(config)
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf("[ERROR] Failed to inject a client private key into p2p and consensus mod: %v", err.Error())
 	}
-	config.Base.PrivateKey = newPK.String()
-	consensusMod, err = consensus.Create(config, genesis)
+	consensusMod, err = consensus.Create(config["Consensus"], genesis["ConsensusGenesisState"])
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 	}
-
-	p2pMod, err = p2p.Create(config, genesis)
+	p2pMod, err = p2p.Create(config["P2P"], genesis["P2PGenesisState"])
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 	}
@@ -59,7 +58,7 @@ func main() {
 	// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
 	// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
 	// module that NOOPs (per the configs above) is injected.
-	telemetryMod, err := telemetry.Create(config, genesis)
+	telemetryMod, err := telemetry.Create(config["Telemetry"], genesis["TelemetryGenesisState"])
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
@@ -74,6 +73,33 @@ func main() {
 			handleSelect(selection)
 		}
 	}
+}
+
+// inject a random private key so the client may send messages without rain-tree rejecting it as a 'self message'
+func injectClientPrivateKey(config map[string]json.RawMessage) (map[string]json.RawMessage, error) {
+	pk, err := pocketCrypto.GeneratePrivateKey()
+	if err != nil {
+		return nil, err
+	}
+	pkString := pk.String()
+
+	mockConsensusConfig := test_artifacts.MockConsensusConfig{}
+	mockP2PConfig := test_artifacts.MockP2PConfig{}
+	if err := json.Unmarshal(config["Consensus"], &mockConsensusConfig); err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(config["P2P"], &mockP2PConfig); err != nil {
+		return nil, err
+	}
+	mockConsensusConfig.PrivateKey = pkString
+	mockP2PConfig.PrivateKey = pkString
+	if config["Consensus"], err = json.Marshal(mockConsensusConfig); err != nil {
+		return nil, err
+	}
+	if config["P2P"], err = json.Marshal(mockP2PConfig); err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 func promptGetInput() (string, error) {
@@ -100,32 +126,32 @@ func promptGetInput() (string, error) {
 func handleSelect(selection string) {
 	switch selection {
 	case PromptResetToGenesis:
-		m := &types.DebugMessage{
-			Action:  types.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
+		m := &debug.DebugMessage{
+			Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
 			Message: nil,
 		}
 		broadcastDebugMessage(m)
 	case PromptPrintNodeState:
-		m := &types.DebugMessage{
-			Action:  types.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
+		m := &debug.DebugMessage{
+			Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
 			Message: nil,
 		}
 		broadcastDebugMessage(m)
 	case PromptTriggerNextView:
-		m := &types.DebugMessage{
-			Action:  types.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
+		m := &debug.DebugMessage{
+			Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
 			Message: nil,
 		}
 		broadcastDebugMessage(m)
 	case PromptTogglePacemakerMode:
-		m := &types.DebugMessage{
-			Action:  types.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
+		m := &debug.DebugMessage{
+			Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
 			Message: nil,
 		}
 		broadcastDebugMessage(m)
 	case PromptShowLatestBlockInStore:
-		m := &types.DebugMessage{
-			Action:  types.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
+		m := &debug.DebugMessage{
+			Action:  debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
 			Message: nil,
 		}
 		sendDebugMessage(m)
@@ -135,7 +161,7 @@ func handleSelect(selection string) {
 }
 
 // Broadcast to the entire validator set
-func broadcastDebugMessage(debugMsg *types.DebugMessage) {
+func broadcastDebugMessage(debugMsg *debug.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
@@ -147,16 +173,16 @@ func broadcastDebugMessage(debugMsg *types.DebugMessage) {
 	// p2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
 
 	for _, val := range consensusMod.ValidatorMap() {
-		addr, err := pocketCrypto.NewAddress(val.Address)
+		addr, err := pocketCrypto.NewAddress(val.GetAddress())
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
 		}
-		p2pMod.Send(addr, anyProto, types.PocketTopic_DEBUG_TOPIC)
+		p2pMod.Send(addr, anyProto, debug.PocketTopic_DEBUG_TOPIC)
 	}
 }
 
 // Send to just a single (i.e. first) validator in the set
-func sendDebugMessage(debugMsg *types.DebugMessage) {
+func sendDebugMessage(debugMsg *debug.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
@@ -164,12 +190,12 @@ func sendDebugMessage(debugMsg *types.DebugMessage) {
 
 	var validatorAddress []byte
 	for _, val := range consensusMod.ValidatorMap() {
-		validatorAddress, err = pocketCrypto.NewAddress(val.Address)
+		validatorAddress, err = pocketCrypto.NewAddress(val.GetAddress())
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
 		}
 		break
 	}
 
-	p2pMod.Send(validatorAddress, anyProto, types.PocketTopic_DEBUG_TOPIC)
+	p2pMod.Send(validatorAddress, anyProto, debug.PocketTopic_DEBUG_TOPIC)
 }

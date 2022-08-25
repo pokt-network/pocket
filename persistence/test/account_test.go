@@ -3,6 +3,8 @@ package test
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/modules"
 	"log"
 	"math/big"
 	"math/rand"
@@ -10,9 +12,6 @@ import (
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
 
@@ -292,8 +291,8 @@ func TestSubPoolAmount(t *testing.T) {
 func TestGetAllAccounts(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
-	updateAccount := func(db *persistence.PostgresContext, acc *genesis.Account) error {
-		if addr, err := hex.DecodeString(acc.Address); err == nil {
+	updateAccount := func(db *persistence.PostgresContext, acc modules.Account) error {
+		if addr, err := hex.DecodeString(acc.GetAddress()); err == nil {
 			return nil
 		} else {
 			return db.AddAccountAmount(addr, "10")
@@ -307,8 +306,8 @@ func TestGetAllAccounts(t *testing.T) {
 func TestGetAllPools(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
-	updatePool := func(db *persistence.PostgresContext, pool *genesis.Account) error {
-		return db.AddPoolAmount(pool.Address, "10")
+	updatePool := func(db *persistence.PostgresContext, pool modules.Account) error {
+		return db.AddPoolAmount(pool.GetAddress(), "10")
 	}
 
 	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 6)
@@ -316,7 +315,7 @@ func TestGetAllPools(t *testing.T) {
 
 // --- Helpers ---
 
-func createAndInsertNewAccount(db *persistence.PostgresContext) (*genesis.Account, error) {
+func createAndInsertNewAccount(db *persistence.PostgresContext) (modules.Account, error) {
 	account := newTestAccount(nil)
 	addr, err := hex.DecodeString(account.Address)
 	if err != nil {
@@ -325,7 +324,7 @@ func createAndInsertNewAccount(db *persistence.PostgresContext) (*genesis.Accoun
 	return &account, db.SetAccountAmount(addr, DefaultAccountAmount)
 }
 
-func createAndInsertNewPool(db *persistence.PostgresContext) (*genesis.Account, error) {
+func createAndInsertNewPool(db *persistence.PostgresContext) (modules.Account, error) {
 	pool := newTestPool(nil)
 	return &pool, db.SetPoolAmount(pool.Address, DefaultAccountAmount)
 }
@@ -333,23 +332,23 @@ func createAndInsertNewPool(db *persistence.PostgresContext) (*genesis.Account, 
 // TODO(olshansky): consolidate newTestAccount and newTestPool into one function
 
 // Note to the reader: lack of consistency between []byte and string in addresses will be consolidated.
-func newTestAccount(t *testing.T) typesGenesis.Account {
+func newTestAccount(t *testing.T) types.Account {
 	addr, err := crypto.GenerateAddress()
 	if t != nil {
 		require.NoError(t, err)
 	}
-	return typesGenesis.Account{
+	return types.Account{
 		Address: hex.EncodeToString(addr),
 		Amount:  DefaultAccountAmount,
 	}
 }
 
-func newTestPool(t *testing.T) typesGenesis.Account {
+func newTestPool(t *testing.T) types.Account {
 	addr, err := crypto.GenerateAddress()
 	if t != nil {
 		require.NoError(t, err)
 	}
-	return typesGenesis.Account{
+	return types.Account{
 		Address: hex.EncodeToString(addr),
 		Amount:  DefaultAccountAmount,
 	}

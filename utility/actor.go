@@ -1,9 +1,9 @@
 package utility
 
 import (
+	typesGenesis "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"math"
 	"math/big"
@@ -22,406 +22,406 @@ import (
 
 // setters
 
-func (u *UtilityContext) SetActorStakedTokens(actorType typesUtil.ActorType, tokens *big.Int, address []byte) types.Error {
+func (u *UtilityContext) SetActorStakedTokens(actorType typesUtil.UtilActorType, tokens *big.Int, address []byte) typesUtil.Error {
 	var er error
 	store := u.Store()
 	switch actorType {
-	case typesUtil.ActorType_App:
-		er = store.SetAppStakeAmount(address, types.BigIntToString(tokens))
-	case typesUtil.ActorType_Fish:
-		er = store.SetFishermanStakeAmount(address, types.BigIntToString(tokens))
-	case typesUtil.ActorType_Node:
-		er = store.SetServiceNodeStakeAmount(address, types.BigIntToString(tokens))
-	case typesUtil.ActorType_Val:
-		er = store.SetValidatorStakeAmount(address, types.BigIntToString(tokens))
+	case typesUtil.UtilActorType_App:
+		er = store.SetAppStakeAmount(address, typesUtil.BigIntToString(tokens))
+	case typesUtil.UtilActorType_Fish:
+		er = store.SetFishermanStakeAmount(address, typesUtil.BigIntToString(tokens))
+	case typesUtil.UtilActorType_Node:
+		er = store.SetServiceNodeStakeAmount(address, typesUtil.BigIntToString(tokens))
+	case typesUtil.UtilActorType_Val:
+		er = store.SetValidatorStakeAmount(address, typesUtil.BigIntToString(tokens))
 	}
 	if er != nil {
-		return types.ErrSetValidatorStakedTokens(er)
+		return typesUtil.ErrSetValidatorStakedTokens(er)
 	}
 	return nil
 }
 
-func (u *UtilityContext) SetActorUnstaking(actorType typesUtil.ActorType, unstakingHeight int64, address []byte) types.Error {
+func (u *UtilityContext) SetActorUnstaking(actorType typesUtil.UtilActorType, unstakingHeight int64, address []byte) typesUtil.Error {
 	store := u.Store()
 	var er error
 	switch actorType {
-	case typesUtil.ActorType_App:
+	case typesUtil.UtilActorType_App:
 		er = store.SetAppUnstakingHeightAndStatus(address, unstakingHeight, typesUtil.UnstakingStatus)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.UtilActorType_Fish:
 		er = store.SetFishermanUnstakingHeightAndStatus(address, unstakingHeight, typesUtil.UnstakingStatus)
-	case typesUtil.ActorType_Node:
+	case typesUtil.UtilActorType_Node:
 		er = store.SetServiceNodeUnstakingHeightAndStatus(address, unstakingHeight, typesUtil.UnstakingStatus)
-	case typesUtil.ActorType_Val:
+	case typesUtil.UtilActorType_Val:
 		er = store.SetValidatorUnstakingHeightAndStatus(address, unstakingHeight, typesUtil.UnstakingStatus)
 	}
 	if er != nil {
-		return types.ErrSetUnstakingHeightAndStatus(er)
+		return typesUtil.ErrSetUnstakingHeightAndStatus(er)
 	}
 	return nil
 }
 
-func (u *UtilityContext) DeleteActor(actorType typesUtil.ActorType, address []byte) types.Error {
+func (u *UtilityContext) DeleteActor(actorType typesUtil.UtilActorType, address []byte) typesUtil.Error {
 	var err error
 	store := u.Store()
 	switch actorType {
-	case typesUtil.ActorType_App:
+	case typesUtil.UtilActorType_App:
 		err = store.DeleteApp(address)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.UtilActorType_Fish:
 		err = store.DeleteFisherman(address)
-	case typesUtil.ActorType_Node:
+	case typesUtil.UtilActorType_Node:
 		err = store.DeleteServiceNode(address)
-	case typesUtil.ActorType_Val:
+	case typesUtil.UtilActorType_Val:
 		err = store.DeleteValidator(address)
 	}
 	if err != nil {
-		return types.ErrDelete(err)
+		return typesUtil.ErrDelete(err)
 	}
 	return nil
 }
 
-func (u *UtilityContext) SetActorPauseHeight(actorType typesUtil.ActorType, address []byte, height int64) types.Error {
+func (u *UtilityContext) SetActorPauseHeight(actorType typesUtil.UtilActorType, address []byte, height int64) typesUtil.Error {
 	var err error
 	store := u.Store()
 	switch actorType {
-	case typesUtil.ActorType_App:
+	case typesUtil.UtilActorType_App:
 		err = store.SetAppPauseHeight(address, height)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.UtilActorType_Fish:
 		err = store.SetFishermanPauseHeight(address, height)
-	case typesUtil.ActorType_Node:
+	case typesUtil.UtilActorType_Node:
 		err = store.SetServiceNodePauseHeight(address, height)
-	case typesUtil.ActorType_Val:
+	case typesUtil.UtilActorType_Val:
 		err = store.SetValidatorPauseHeight(address, height)
 	}
 	if err != nil {
-		return types.ErrSetPauseHeight(err)
+		return typesUtil.ErrSetPauseHeight(err)
 	}
 	return nil
 }
 
 // getters
 
-func (u *UtilityContext) GetActorStakedTokens(actorType typesUtil.ActorType, address []byte) (*big.Int, types.Error) {
+func (u *UtilityContext) GetActorStakedTokens(actorType typesUtil.UtilActorType, address []byte) (*big.Int, typesUtil.Error) {
 	store := u.Store()
 	height, er := store.GetHeight()
 	if er != nil {
-		return nil, types.ErrGetStakedTokens(er)
+		return nil, typesUtil.ErrGetStakedTokens(er)
 	}
 
 	var stakedTokens string
 	switch actorType {
-	case typesUtil.ActorType_App:
+	case typesUtil.UtilActorType_App:
 		stakedTokens, er = store.GetAppStakeAmount(height, address)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.UtilActorType_Fish:
 		stakedTokens, er = store.GetFishermanStakeAmount(height, address)
-	case typesUtil.ActorType_Node:
+	case typesUtil.UtilActorType_Node:
 		stakedTokens, er = store.GetServiceNodeStakeAmount(height, address)
-	case typesUtil.ActorType_Val:
+	case typesUtil.UtilActorType_Val:
 		stakedTokens, er = store.GetValidatorStakeAmount(height, address)
 	}
 	if er != nil {
-		return nil, types.ErrGetStakedTokens(er)
+		return nil, typesUtil.ErrGetStakedTokens(er)
 	}
 
-	i, err := types.StringToBigInt(stakedTokens)
+	i, err := typesUtil.StringToBigInt(stakedTokens)
 	if err != nil {
 		return nil, err
 	}
 	return i, nil
 }
 
-func (u *UtilityContext) GetMaxPausedBlocks(actorType typesUtil.ActorType) (maxPausedBlocks int, err types.Error) {
+func (u *UtilityContext) GetMaxPausedBlocks(actorType typesUtil.UtilActorType) (maxPausedBlocks int, err typesUtil.Error) {
 	var er error
 	var paramName string
 
 	store := u.Store()
 	switch actorType {
-	case typesUtil.ActorType_App:
+	case typesUtil.UtilActorType_App:
 		height, er := store.GetHeight()
 		if er != nil {
-			return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
+			return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 		}
-		maxPausedBlocks, er = store.GetIntParam(types.AppMaxPauseBlocksParamName, height)
-		paramName = types.AppMaxPauseBlocksParamName
-	case typesUtil.ActorType_Fish:
+		maxPausedBlocks, er = store.GetIntParam(modules.AppMaxPauseBlocksParamName, height)
+		paramName = modules.AppMaxPauseBlocksParamName
+	case typesUtil.UtilActorType_Fish:
 		height, er := store.GetHeight()
 		if er != nil {
-			return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
+			return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 		}
-		maxPausedBlocks, er = store.GetIntParam(types.FishermanMaxPauseBlocksParamName, height)
-		paramName = types.FishermanMaxPauseBlocksParamName
-	case typesUtil.ActorType_Node:
+		maxPausedBlocks, er = store.GetIntParam(modules.FishermanMaxPauseBlocksParamName, height)
+		paramName = modules.FishermanMaxPauseBlocksParamName
+	case typesUtil.UtilActorType_Node:
 		height, er := store.GetHeight()
 		if er != nil {
-			return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
+			return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 		}
-		maxPausedBlocks, er = store.GetIntParam(types.ServiceNodeMaxPauseBlocksParamName, height)
-		paramName = types.ServiceNodeMaxPauseBlocksParamName
-	case typesUtil.ActorType_Val:
+		maxPausedBlocks, er = store.GetIntParam(modules.ServiceNodeMaxPauseBlocksParamName, height)
+		paramName = modules.ServiceNodeMaxPauseBlocksParamName
+	case typesUtil.UtilActorType_Val:
 		height, er := store.GetHeight()
 		if er != nil {
-			return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
+			return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 		}
-		maxPausedBlocks, er = store.GetIntParam(types.ValidatorMaxPausedBlocksParamName, height)
-		paramName = types.ValidatorMaxPausedBlocksParamName
+		maxPausedBlocks, er = store.GetIntParam(modules.ValidatorMaxPausedBlocksParamName, height)
+		paramName = modules.ValidatorMaxPausedBlocksParamName
 	}
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
+		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 	}
 	return
 }
 
-func (u *UtilityContext) GetMinimumPauseBlocks(actorType typesUtil.ActorType) (minPauseBlocks int, err types.Error) {
+func (u *UtilityContext) GetMinimumPauseBlocks(actorType typesUtil.UtilActorType) (minPauseBlocks int, err typesUtil.Error) {
 	store := u.Store()
 	var er error
 	var paramName string
 	switch actorType {
-	case typesUtil.ActorType_App:
+	case typesUtil.UtilActorType_App:
 		height, er := store.GetHeight()
 		if er != nil {
-			return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
+			return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 		}
-		minPauseBlocks, er = store.GetIntParam(types.AppMinimumPauseBlocksParamName, height)
-		paramName = types.AppMinimumPauseBlocksParamName
-	case typesUtil.ActorType_Fish:
+		minPauseBlocks, er = store.GetIntParam(modules.AppMinimumPauseBlocksParamName, height)
+		paramName = modules.AppMinimumPauseBlocksParamName
+	case typesUtil.UtilActorType_Fish:
 		height, er := store.GetHeight()
 		if er != nil {
-			return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
+			return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 		}
-		minPauseBlocks, er = store.GetIntParam(types.FishermanMinimumPauseBlocksParamName, height)
-		paramName = types.FishermanMinimumPauseBlocksParamName
-	case typesUtil.ActorType_Node:
+		minPauseBlocks, er = store.GetIntParam(modules.FishermanMinimumPauseBlocksParamName, height)
+		paramName = modules.FishermanMinimumPauseBlocksParamName
+	case typesUtil.UtilActorType_Node:
 		height, er := store.GetHeight()
 		if er != nil {
-			return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
+			return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 		}
-		minPauseBlocks, er = store.GetIntParam(types.ServiceNodeMinimumPauseBlocksParamName, height)
-		paramName = types.ServiceNodeMinimumPauseBlocksParamName
-	case typesUtil.ActorType_Val:
+		minPauseBlocks, er = store.GetIntParam(modules.ServiceNodeMinimumPauseBlocksParamName, height)
+		paramName = modules.ServiceNodeMinimumPauseBlocksParamName
+	case typesUtil.UtilActorType_Val:
 		height, er := store.GetHeight()
 		if er != nil {
-			return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
+			return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 		}
-		minPauseBlocks, er = store.GetIntParam(types.ValidatorMinimumPauseBlocksParamName, height)
-		paramName = types.ValidatorMinimumPauseBlocksParamName
+		minPauseBlocks, er = store.GetIntParam(modules.ValidatorMinimumPauseBlocksParamName, height)
+		paramName = modules.ValidatorMinimumPauseBlocksParamName
 	}
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(paramName, er)
+		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
 	}
 	return
 }
 
-func (u *UtilityContext) GetPauseHeight(actorType typesUtil.ActorType, address []byte) (pauseHeight int64, err types.Error) {
+func (u *UtilityContext) GetPauseHeight(actorType typesUtil.UtilActorType, address []byte) (pauseHeight int64, err typesUtil.Error) {
 	store := u.Store()
 	height, er := store.GetHeight()
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
+		return typesUtil.ZeroInt, typesUtil.ErrGetPauseHeight(er)
 	}
 	switch actorType {
-	case typesUtil.ActorType_App:
+	case typesUtil.UtilActorType_App:
 		pauseHeight, er = store.GetAppPauseHeightIfExists(address, height)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.UtilActorType_Fish:
 		pauseHeight, er = store.GetFishermanPauseHeightIfExists(address, height)
-	case typesUtil.ActorType_Node:
+	case typesUtil.UtilActorType_Node:
 		pauseHeight, er = store.GetServiceNodePauseHeightIfExists(address, height)
-	case typesUtil.ActorType_Val:
+	case typesUtil.UtilActorType_Val:
 		pauseHeight, er = store.GetValidatorPauseHeightIfExists(address, height)
 	}
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetPauseHeight(er)
+		return typesUtil.ZeroInt, typesUtil.ErrGetPauseHeight(er)
 	}
 	return
 }
 
-func (u *UtilityContext) GetActorStatus(actorType typesUtil.ActorType, address []byte) (status int, err types.Error) {
+func (u *UtilityContext) GetActorStatus(actorType typesUtil.UtilActorType, address []byte) (status int, err typesUtil.Error) {
 	store := u.Store()
 	height, er := store.GetHeight()
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetStatus(er)
+		return typesUtil.ZeroInt, typesUtil.ErrGetStatus(er)
 	}
 	switch actorType {
-	case typesUtil.ActorType_App:
+	case typesUtil.UtilActorType_App:
 		status, er = store.GetAppStatus(address, height)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.UtilActorType_Fish:
 		status, er = store.GetFishermanStatus(address, height)
-	case typesUtil.ActorType_Node:
+	case typesUtil.UtilActorType_Node:
 		status, er = store.GetServiceNodeStatus(address, height)
-	case typesUtil.ActorType_Val:
+	case typesUtil.UtilActorType_Val:
 		status, er = store.GetValidatorStatus(address, height)
 	}
 	if er != nil {
-		return typesUtil.ZeroInt, types.ErrGetStatus(er)
+		return typesUtil.ZeroInt, typesUtil.ErrGetStatus(er)
 	}
 	return status, nil
 }
 
-func (u *UtilityContext) GetMinimumStake(actorType typesUtil.ActorType) (*big.Int, types.Error) {
+func (u *UtilityContext) GetMinimumStake(actorType typesUtil.UtilActorType) (*big.Int, typesUtil.Error) {
 	var minStake string
 	var err error
 	var paramName string
 
 	store := u.Store()
 	switch actorType {
-	case typesUtil.ActorType_App:
+	case typesUtil.UtilActorType_App:
 		height, er := store.GetHeight()
 		if er != nil {
-			return nil, types.ErrGetParam(paramName, er)
+			return nil, typesUtil.ErrGetParam(paramName, er)
 		}
-		minStake, err = store.GetStringParam(types.AppMinimumStakeParamName, height)
-		paramName = types.AppMinimumStakeParamName
-	case typesUtil.ActorType_Fish:
+		minStake, err = store.GetStringParam(modules.AppMinimumStakeParamName, height)
+		paramName = modules.AppMinimumStakeParamName
+	case typesUtil.UtilActorType_Fish:
 		height, er := store.GetHeight()
 		if er != nil {
-			return nil, types.ErrGetParam(paramName, er)
+			return nil, typesUtil.ErrGetParam(paramName, er)
 		}
-		minStake, err = store.GetStringParam(types.FishermanMinimumStakeParamName, height)
-		paramName = types.FishermanMinimumStakeParamName
-	case typesUtil.ActorType_Node:
+		minStake, err = store.GetStringParam(modules.FishermanMinimumStakeParamName, height)
+		paramName = modules.FishermanMinimumStakeParamName
+	case typesUtil.UtilActorType_Node:
 		height, er := store.GetHeight()
 		if er != nil {
-			return nil, types.ErrGetParam(paramName, er)
+			return nil, typesUtil.ErrGetParam(paramName, er)
 		}
-		minStake, err = store.GetStringParam(types.ServiceNodeMinimumStakeParamName, height)
-		paramName = types.ServiceNodeMinimumStakeParamName
-	case typesUtil.ActorType_Val:
+		minStake, err = store.GetStringParam(modules.ServiceNodeMinimumStakeParamName, height)
+		paramName = modules.ServiceNodeMinimumStakeParamName
+	case typesUtil.UtilActorType_Val:
 		height, er := store.GetHeight()
 		if er != nil {
-			return nil, types.ErrGetParam(paramName, er)
+			return nil, typesUtil.ErrGetParam(paramName, er)
 		}
-		minStake, err = store.GetStringParam(types.ValidatorMinimumStakeParamName, height)
-		paramName = types.ValidatorMinimumStakeParamName
+		minStake, err = store.GetStringParam(modules.ValidatorMinimumStakeParamName, height)
+		paramName = modules.ValidatorMinimumStakeParamName
 	}
 	if err != nil {
-		return nil, types.ErrGetParam(paramName, err)
+		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
-	return types.StringToBigInt(minStake)
+	return typesUtil.StringToBigInt(minStake)
 }
 
-func (u *UtilityContext) GetStakeAmount(actorType typesUtil.ActorType, address []byte) (*big.Int, types.Error) {
+func (u *UtilityContext) GetStakeAmount(actorType typesUtil.UtilActorType, address []byte) (*big.Int, typesUtil.Error) {
 	var stakeAmount string
 	store := u.Store()
 	height, err := store.GetHeight()
 	if err != nil {
-		return nil, types.ErrGetStakeAmount(err)
+		return nil, typesUtil.ErrGetStakeAmount(err)
 	}
 	switch actorType {
-	case typesUtil.ActorType_App:
+	case typesUtil.UtilActorType_App:
 		stakeAmount, err = store.GetAppStakeAmount(height, address)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.UtilActorType_Fish:
 		stakeAmount, err = store.GetFishermanStakeAmount(height, address)
-	case typesUtil.ActorType_Node:
+	case typesUtil.UtilActorType_Node:
 		stakeAmount, err = store.GetServiceNodeStakeAmount(height, address)
-	case typesUtil.ActorType_Val:
+	case typesUtil.UtilActorType_Val:
 		stakeAmount, err = store.GetValidatorStakeAmount(height, address)
 	}
 	if err != nil {
-		return nil, types.ErrGetStakeAmount(err)
+		return nil, typesUtil.ErrGetStakeAmount(err)
 	}
-	return types.StringToBigInt(stakeAmount)
+	return typesUtil.StringToBigInt(stakeAmount)
 }
 
-func (u *UtilityContext) GetUnstakingHeight(actorType typesUtil.ActorType) (unstakingHeight int64, er types.Error) {
+func (u *UtilityContext) GetUnstakingHeight(actorType typesUtil.UtilActorType) (unstakingHeight int64, er typesUtil.Error) {
 	var err error
 	var paramName string
 	var unstakingBlocks int
 	store := u.Store()
 	height, err := store.GetHeight()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetStakeAmount(err)
+		return typesUtil.ZeroInt, typesUtil.ErrGetStakeAmount(err)
 	}
 	switch actorType {
-	case typesUtil.ActorType_App:
-		unstakingBlocks, err = store.GetIntParam(types.AppUnstakingBlocksParamName, height)
-		paramName = types.AppUnstakingBlocksParamName
-	case typesUtil.ActorType_Fish:
-		unstakingBlocks, err = store.GetIntParam(types.FishermanUnstakingBlocksParamName, height)
-		paramName = types.FishermanUnstakingBlocksParamName
-	case typesUtil.ActorType_Node:
-		unstakingBlocks, err = store.GetIntParam(types.ServiceNodeUnstakingBlocksParamName, height)
-		paramName = types.ServiceNodeUnstakingBlocksParamName
-	case typesUtil.ActorType_Val:
-		unstakingBlocks, err = store.GetIntParam(types.ValidatorUnstakingBlocksParamName, height)
-		paramName = types.ValidatorUnstakingBlocksParamName
+	case typesUtil.UtilActorType_App:
+		unstakingBlocks, err = store.GetIntParam(modules.AppUnstakingBlocksParamName, height)
+		paramName = modules.AppUnstakingBlocksParamName
+	case typesUtil.UtilActorType_Fish:
+		unstakingBlocks, err = store.GetIntParam(modules.FishermanUnstakingBlocksParamName, height)
+		paramName = modules.FishermanUnstakingBlocksParamName
+	case typesUtil.UtilActorType_Node:
+		unstakingBlocks, err = store.GetIntParam(modules.ServiceNodeUnstakingBlocksParamName, height)
+		paramName = modules.ServiceNodeUnstakingBlocksParamName
+	case typesUtil.UtilActorType_Val:
+		unstakingBlocks, err = store.GetIntParam(modules.ValidatorUnstakingBlocksParamName, height)
+		paramName = modules.ValidatorUnstakingBlocksParamName
 	}
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(paramName, err)
+		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
 	}
 	return u.CalculateUnstakingHeight(int64(unstakingBlocks))
 }
 
-func (u *UtilityContext) GetMaxChains(actorType typesUtil.ActorType) (maxChains int, er types.Error) {
+func (u *UtilityContext) GetMaxChains(actorType typesUtil.UtilActorType) (maxChains int, er typesUtil.Error) {
 	var err error
 	var paramName string
 	store := u.Store()
 	height, err := store.GetHeight()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetStakeAmount(err)
+		return typesUtil.ZeroInt, typesUtil.ErrGetStakeAmount(err)
 	}
 	switch actorType {
-	case typesUtil.ActorType_App:
-		maxChains, err = store.GetIntParam(types.AppMaxChainsParamName, height)
-		paramName = types.AppMinimumStakeParamName
-	case typesUtil.ActorType_Fish:
-		maxChains, err = store.GetIntParam(types.FishermanMaxChainsParamName, height)
-		paramName = types.FishermanMinimumStakeParamName
-	case typesUtil.ActorType_Node:
-		maxChains, err = store.GetIntParam(types.ServiceNodeMaxChainsParamName, height)
-		paramName = types.ServiceNodeMinimumStakeParamName
+	case typesUtil.UtilActorType_App:
+		maxChains, err = store.GetIntParam(modules.AppMaxChainsParamName, height)
+		paramName = modules.AppMinimumStakeParamName
+	case typesUtil.UtilActorType_Fish:
+		maxChains, err = store.GetIntParam(modules.FishermanMaxChainsParamName, height)
+		paramName = modules.FishermanMinimumStakeParamName
+	case typesUtil.UtilActorType_Node:
+		maxChains, err = store.GetIntParam(modules.ServiceNodeMaxChainsParamName, height)
+		paramName = modules.ServiceNodeMinimumStakeParamName
 	}
 	if err != nil {
-		return 0, types.ErrGetParam(paramName, err)
+		return 0, typesUtil.ErrGetParam(paramName, err)
 	}
 	return
 }
 
-func (u *UtilityContext) GetActorExists(actorType typesUtil.ActorType, address []byte) (bool, types.Error) {
+func (u *UtilityContext) GetActorExists(actorType typesUtil.UtilActorType, address []byte) (bool, typesUtil.Error) {
 	var exists bool
 	store := u.Store()
 	height, err := store.GetHeight()
 	if err != nil {
-		return false, types.ErrGetExists(err)
+		return false, typesUtil.ErrGetExists(err)
 	}
 	switch actorType {
-	case typesUtil.ActorType_App:
+	case typesUtil.UtilActorType_App:
 		exists, err = store.GetAppExists(address, height)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.UtilActorType_Fish:
 		exists, err = store.GetFishermanExists(address, height)
-	case typesUtil.ActorType_Node:
+	case typesUtil.UtilActorType_Node:
 		exists, err = store.GetServiceNodeExists(address, height)
-	case typesUtil.ActorType_Val:
+	case typesUtil.UtilActorType_Val:
 		exists, err = store.GetValidatorExists(address, height)
 	}
 	if err != nil {
-		return false, types.ErrGetExists(err)
+		return false, typesUtil.ErrGetExists(err)
 	}
 	return exists, nil
 }
 
-func (u *UtilityContext) GetActorOutputAddress(actorType typesUtil.ActorType, operator []byte) (output []byte, err types.Error) {
+func (u *UtilityContext) GetActorOutputAddress(actorType typesUtil.UtilActorType, operator []byte) (output []byte, err typesUtil.Error) {
 	var er error
 	store := u.Store()
 	height, er := store.GetHeight()
 	if er != nil {
-		return nil, types.ErrGetOutputAddress(operator, er)
+		return nil, typesUtil.ErrGetOutputAddress(operator, er)
 	}
 	switch actorType {
-	case typesUtil.ActorType_App:
+	case typesUtil.UtilActorType_App:
 		output, er = store.GetAppOutputAddress(operator, height)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.UtilActorType_Fish:
 		output, er = store.GetFishermanOutputAddress(operator, height)
-	case typesUtil.ActorType_Node:
+	case typesUtil.UtilActorType_Node:
 		output, er = store.GetServiceNodeOutputAddress(operator, height)
-	case typesUtil.ActorType_Val:
+	case typesUtil.UtilActorType_Val:
 		output, er = store.GetValidatorOutputAddress(operator, height)
 	}
 	if er != nil {
-		return nil, types.ErrGetOutputAddress(operator, er)
+		return nil, typesUtil.ErrGetOutputAddress(operator, er)
 	}
 	return output, nil
 }
 
 // calculators
 
-func (u *UtilityContext) BurnActor(actorType typesUtil.ActorType, percentage int, address []byte) types.Error {
+func (u *UtilityContext) BurnActor(actorType typesUtil.UtilActorType, percentage int, address []byte) typesUtil.Error {
 	tokens, err := u.GetActorStakedTokens(actorType, address)
 	if err != nil {
 		return err
@@ -436,7 +436,7 @@ func (u *UtilityContext) BurnActor(actorType typesUtil.ActorType, percentage int
 	}
 	newTokensAfterBurn := big.NewInt(0).Sub(tokens, truncatedTokens)
 	// remove from pool
-	if err := u.SubPoolAmount(typesGenesis.Pool_Names_ValidatorStakePool.String(), types.BigIntToString(truncatedTokens)); err != nil {
+	if err := u.SubPoolAmount(typesGenesis.Pool_Names_ValidatorStakePool.String(), typesUtil.BigIntToString(truncatedTokens)); err != nil {
 		return err
 	}
 	// remove from validator
@@ -461,8 +461,8 @@ func (u *UtilityContext) BurnActor(actorType typesUtil.ActorType, percentage int
 	return nil
 }
 
-func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.Error) {
-	tokens, err := types.StringToBigInt(stakedTokens)
+func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, typesUtil.Error) {
+	tokens, err := typesUtil.StringToBigInt(stakedTokens)
 	if err != nil {
 		return typesUtil.EmptyString, err
 	}
@@ -496,27 +496,27 @@ func (u *UtilityContext) CalculateAppRelays(stakedTokens string) (string, types.
 	if i := result.Cmp(max); i < -1 {
 		result = max
 	}
-	return types.BigIntToString(result), nil
+	return typesUtil.BigIntToString(result), nil
 }
 
-func (u *UtilityContext) CheckAboveMinStake(actorType typesUtil.ActorType, amount string) (a *big.Int, err types.Error) {
+func (u *UtilityContext) CheckAboveMinStake(actorType typesUtil.UtilActorType, amount string) (a *big.Int, err typesUtil.Error) {
 	minStake, er := u.GetMinimumStake(actorType)
 	if er != nil {
 		return nil, er
 	}
-	a, err = types.StringToBigInt(amount)
+	a, err = typesUtil.StringToBigInt(amount)
 	if err != nil {
 		return nil, err
 	}
-	if types.BigIntLessThan(a, minStake) {
-		return nil, types.ErrMinimumStake()
+	if typesUtil.BigIntLessThan(a, minStake) {
+		return nil, typesUtil.ErrMinimumStake()
 	}
 	return // for convenience this returns amount as a big.Int
 }
 
-func (u *UtilityContext) CheckBelowMaxChains(actorType typesUtil.ActorType, chains []string) types.Error {
+func (u *UtilityContext) CheckBelowMaxChains(actorType typesUtil.UtilActorType, chains []string) typesUtil.Error {
 	// validators don't have chains field
-	if actorType == typesUtil.ActorType_Val {
+	if actorType == typesUtil.UtilActorType_Val {
 		return nil
 	}
 
@@ -525,12 +525,12 @@ func (u *UtilityContext) CheckBelowMaxChains(actorType typesUtil.ActorType, chai
 		return err
 	}
 	if len(chains) > maxChains {
-		return types.ErrMaxChains(maxChains)
+		return typesUtil.ErrMaxChains(maxChains)
 	}
 	return nil
 }
 
-func (u *UtilityContext) CalculateUnstakingHeight(unstakingBlocks int64) (int64, types.Error) {
+func (u *UtilityContext) CalculateUnstakingHeight(unstakingBlocks int64) (int64, typesUtil.Error) {
 	latestHeight, err := u.GetLatestHeight()
 	if err != nil {
 		return typesUtil.ZeroInt, err
@@ -540,10 +540,10 @@ func (u *UtilityContext) CalculateUnstakingHeight(unstakingBlocks int64) (int64,
 
 // util
 
-func (u *UtilityContext) BytesToPublicKey(publicKey []byte) (crypto.PublicKey, types.Error) {
+func (u *UtilityContext) BytesToPublicKey(publicKey []byte) (crypto.PublicKey, typesUtil.Error) {
 	pk, er := crypto.NewPublicKeyFromBytes(publicKey)
 	if er != nil {
-		return nil, types.ErrNewPublicKeyFromBytes(er)
+		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)
 	}
 	return pk, nil
 }

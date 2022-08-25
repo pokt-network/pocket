@@ -3,21 +3,20 @@ package test
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/pokt-network/pocket/persistence/types"
 	"log"
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
 
 func FuzzServiceNode(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		NewTestGenericActor(schema.ServiceNodeActor, newTestServiceNode),
-		GetGenericActor(schema.ServiceNodeActor, getTestServiceNode),
-		schema.ServiceNodeActor)
+		NewTestGenericActor(types.ServiceNodeActor, newTestServiceNode),
+		GetGenericActor(types.ServiceNodeActor, getTestServiceNode),
+		types.ServiceNodeActor)
 }
 
 func TestGetSetServiceNodeStakeAmount(t *testing.T) {
@@ -123,13 +122,13 @@ func TestGetServiceNodesReadyToUnstake(t *testing.T) {
 	unstakingServiceNodes, err := db.GetServiceNodesReadyToUnstake(0, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingServiceNodes), "wrong number of actors ready to unstake at height 0")
-	require.Equal(t, serviceNode.Address, hex.EncodeToString(unstakingServiceNodes[0].Address), "unexpected serviceNodelication actor returned")
+	require.Equal(t, serviceNode.Address, hex.EncodeToString(unstakingServiceNodes[0].GetAddress()), "unexpected serviceNodelication actor returned")
 
 	// Check unstaking serviceNodes at height 1
 	unstakingServiceNodes, err = db.GetServiceNodesReadyToUnstake(1, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingServiceNodes), "wrong number of actors ready to unstake at height 1")
-	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingServiceNodes[0].Address, unstakingServiceNodes[1].Address})
+	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingServiceNodes[0].GetAddress(), unstakingServiceNodes[1].GetAddress()})
 }
 
 func TestGetServiceNodeStatus(t *testing.T) {
@@ -213,7 +212,7 @@ func TestGetServiceNodeOutputAddress(t *testing.T) {
 	require.Equal(t, hex.EncodeToString(output), serviceNode.Output, "unexpected output address")
 }
 
-func newTestServiceNode() (*typesGenesis.Actor, error) {
+func newTestServiceNode() (*types.Actor, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
 		return nil, err
@@ -224,7 +223,7 @@ func newTestServiceNode() (*typesGenesis.Actor, error) {
 		return nil, err
 	}
 
-	return &typesGenesis.Actor{
+	return &types.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          DefaultChains,
@@ -236,7 +235,7 @@ func newTestServiceNode() (*typesGenesis.Actor, error) {
 	}, nil
 }
 
-func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*typesGenesis.Actor, error) {
+func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*types.Actor, error) {
 	serviceNode, err := newTestServiceNode()
 	if err != nil {
 		return nil, err
@@ -266,7 +265,7 @@ func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*ty
 		DefaultUnstakingHeight)
 }
 
-func getTestServiceNode(db *persistence.PostgresContext, address []byte) (*typesGenesis.Actor, error) {
+func getTestServiceNode(db *persistence.PostgresContext, address []byte) (*types.Actor, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetServiceNode(address, db.Height)
 	if err != nil {
 		return nil, err
@@ -287,7 +286,7 @@ func getTestServiceNode(db *persistence.PostgresContext, address []byte) (*types
 		return nil, err
 	}
 
-	return &typesGenesis.Actor{
+	return &types.Actor{
 		Address:         hex.EncodeToString(operatorAddr),
 		PublicKey:       hex.EncodeToString(operatorPubKey),
 		Chains:          chains,

@@ -3,17 +3,16 @@ package consensus_tests
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"log"
-	"math/big"
 	"reflect"
 	"sort"
 	"testing"
 	"time"
-
-	"github.com/pokt-network/pocket/shared/types/genesis"
-	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
@@ -22,7 +21,6 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/pokt-network/pocket/shared/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -59,34 +57,29 @@ type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
 /*** Node Generation Helpers ***/
 
-var (
-	DefaultServiceURL    = "https://foo.bar" // TODO (team) cleanup consensus testing module with centralization of utilities
-	DefaultChainID       = "mainnet"
-	DefaultStakeAmount   = types.BigIntToString(big.NewInt(1000000000))
-	DefaultAccountAmount = types.BigIntToString(big.NewInt(1000000000))
-)
-
-func GenerateNodeConfigs(_ *testing.T, n int) (configs []*genesis.Config, genesisState *genesis.GenesisState) {
+func GenerateNodeConfigs(_ *testing.T, n int) (configs []modules.Config, genesisState modules.GenesisState) {
 	var keys []string
 	genesisState, keys = test_artifacts.NewGenesisState(n, 1, 1, 1)
 	configs = test_artifacts.NewDefaultConfigs(keys)
-	for _, config := range configs {
-		config.Consensus = &genesis.ConsensusConfig{
+	for i, config := range configs {
+		config.Consensus = &typesCons.ConsensusConfig{
+			PrivateKey:      config.Base.PrivateKey,
 			MaxMempoolBytes: 500000000,
-			PacemakerConfig: &genesis.PacemakerConfig{
+			PacemakerConfig: &typesCons.PacemakerConfig{
 				TimeoutMsec:               5000,
 				Manual:                    false,
 				DebugTimeBetweenStepsMsec: 0,
 			},
 		}
+		configs[i] = config
 	}
 	return
 }
 
 func CreateTestConsensusPocketNodes(
 	t *testing.T,
-	configs []*genesis.Config,
-	genesisState *genesis.GenesisState,
+	configs []modules.Config,
+	genesisState modules.GenesisState,
 	testChannel modules.EventsChannel,
 ) (pocketNodes IdToNodeMapping) {
 	pocketNodes = make(IdToNodeMapping, len(configs))
@@ -108,11 +101,15 @@ func CreateTestConsensusPocketNodes(
 // Creates a pocket node where all the primary modules, exception for consensus, are mocked
 func CreateTestConsensusPocketNode(
 	t *testing.T,
-	cfg *genesis.Config,
-	genesisState *genesis.GenesisState,
+	cfg modules.Config,
+	genesisState modules.GenesisState,
 	testChannel modules.EventsChannel,
 ) *shared.Node {
-	consensusMod, err := consensus.Create(cfg, genesisState)
+	config, err := json.Marshal(cfg.Consensus)
+	require.NoError(t, err)
+	genesis, err := json.Marshal(genesisState.ConsensusGenesisState)
+	require.NoError(t, err)
+	consensusMod, err := consensus.Create(config, genesis)
 	require.NoError(t, err)
 
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
@@ -122,7 +119,7 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 
-	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock, cfg)
+	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock)
 	require.NoError(t, err)
 	pk, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
 	require.NoError(t, err)
@@ -138,7 +135,7 @@ func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
 	for _, pocketNode := range pocketNodes {
 		go pocketNode.Start()
 		startEvent := pocketNode.GetBus().GetBusEvent()
-		require.Equal(t, startEvent.Topic, types.PocketTopic_POCKET_NODE_TOPIC)
+		require.Equal(t, startEvent.Topic, debug.PocketTopic_POCKET_NODE_TOPIC)
 	}
 }
 
@@ -158,32 +155,32 @@ func GetConsensusModImplementation(node *shared.Node) reflect.Value {
 /*** Debug/Development Message Helpers ***/
 
 func TriggerNextView(t *testing.T, node *shared.Node) {
-	triggerDebugMessage(t, node, types.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW)
+	triggerDebugMessage(t, node, debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW)
 }
 
-func triggerDebugMessage(t *testing.T, node *shared.Node, action types.DebugMessageAction) {
-	debugMessage := &types.DebugMessage{
-		Action:  types.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
+func triggerDebugMessage(t *testing.T, node *shared.Node, action debug.DebugMessageAction) {
+	debugMessage := &debug.DebugMessage{
+		Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
 		Message: nil,
 	}
 	anyProto, err := anypb.New(debugMessage)
 	require.NoError(t, err)
 
-	e := &types.PocketEvent{Topic: types.PocketTopic_DEBUG_TOPIC, Data: anyProto}
+	e := &debug.PocketEvent{Topic: debug.PocketTopic_DEBUG_TOPIC, Data: anyProto}
 	node.GetBus().PublishEventToBus(e)
 }
 
 /*** P2P Helpers ***/
 
 func P2PBroadcast(_ *testing.T, nodes IdToNodeMapping, any *anypb.Any) {
-	e := &types.PocketEvent{Topic: types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, Data: any}
+	e := &debug.PocketEvent{Topic: debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC, Data: any}
 	for _, node := range nodes {
 		node.GetBus().PublishEventToBus(e)
 	}
 }
 
 func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
-	e := &types.PocketEvent{Topic: types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, Data: any}
+	e := &debug.PocketEvent{Topic: debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC, Data: any}
 	node.GetBus().PublishEventToBus(e)
 }
 
@@ -205,14 +202,14 @@ func WaitForNetworkConsensusMessages(
 	}
 
 	errorMessage := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(hotstuffMsgType)])
-	return waitForNetworkConsensusMessagesInternal(t, testChannel, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, includeFilter, errorMessage)
+	return waitForNetworkConsensusMessagesInternal(t, testChannel, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, includeFilter, errorMessage)
 }
 
 // IMPROVE(olshansky): Translate this to use generics.
 func waitForNetworkConsensusMessagesInternal(
 	_ *testing.T,
 	testChannel modules.EventsChannel,
-	topic types.PocketTopic,
+	topic debug.PocketTopic,
 	numMessages int,
 	millis time.Duration,
 	includeFilter func(m *anypb.Any) bool,
@@ -220,7 +217,7 @@ func waitForNetworkConsensusMessagesInternal(
 ) (messages []*anypb.Any, err error) {
 	messages = make([]*anypb.Any, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*millis)
-	unused := make([]*types.PocketEvent, 0) // TODO: Move this into a pool rather than resending back to the eventbus.
+	unused := make([]*debug.PocketEvent, 0) // TODO: Move this into a pool rather than resending back to the eventbus.
 loop:
 	for {
 		select {
@@ -294,15 +291,15 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.M
 	p2pMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
 	p2pMock.EXPECT().
 		Broadcast(gomock.Any(), gomock.Any()).
-		Do(func(msg *anypb.Any, topic types.PocketTopic) {
-			e := &types.PocketEvent{Topic: topic, Data: msg}
+		Do(func(msg *anypb.Any, topic debug.PocketTopic) {
+			e := &debug.PocketEvent{Topic: topic, Data: msg}
 			testChannel <- *e
 		}).
 		AnyTimes()
 	p2pMock.EXPECT().
 		Send(gomock.Any(), gomock.Any(), gomock.Any()).
-		Do(func(addr cryptoPocket.Address, msg *anypb.Any, topic types.PocketTopic) {
-			e := &types.PocketEvent{Topic: topic, Data: msg}
+		Do(func(addr cryptoPocket.Address, msg *anypb.Any, topic debug.PocketTopic) {
+			e := &debug.PocketEvent{Topic: topic, Data: msg}
 			testChannel <- *e
 		}).
 		AnyTimes()

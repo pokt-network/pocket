@@ -3,13 +3,14 @@ package p2p
 import (
 	"crypto/ed25519"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
+	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"sort"
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/pokt-network/pocket/shared/types/genesis"
 
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -17,7 +18,6 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/pokt-network/pocket/shared/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -213,7 +213,7 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 	// Trigger originator message
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
-	p2pMod.Broadcast(p, types.PocketTopic_DEBUG_TOPIC)
+	p2pMod.Broadcast(p, debug.PocketTopic_DEBUG_TOPIC)
 
 	// Wait for completion
 	done := make(chan struct{})
@@ -278,7 +278,7 @@ func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock
 	ctrl := gomock.NewController(t)
 	busMock := modulesMock.NewMockBus(ctrl)
 
-	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(func(e *types.PocketEvent) {
+	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(func(e *debug.PocketEvent) {
 		wg.Done()
 		fmt.Println("App specific bus mock publishing event to bus")
 	}).MaxTimes(1) // Using `MaxTimes` rather than `Times` because originator node implicitly handles the message
@@ -289,14 +289,14 @@ func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock
 	return busMock
 }
 
-func prepareConsensusMock(t *testing.T, genesisState *genesis.GenesisState) *modulesMock.MockConsensusModule {
+func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockConsensusModule {
 	ctrl := gomock.NewController(t)
 	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
 
-	validators := genesisState.Utility.Validators
+	validators := genesisState.PersistenceGenesisState.GetVals()
 	m := make(modules.ValidatorMap, len(validators))
 	for _, v := range validators {
-		m[v.Address] = v
+		m[v.GetAddress()] = v
 	}
 
 	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
@@ -362,37 +362,37 @@ func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWr
 	return connMock
 }
 
-func prepareP2PModules(t *testing.T, configs []*genesis.Config) (p2pModules map[string]*p2pModule) {
+func prepareP2PModules(t *testing.T, configs []modules.Config) (p2pModules map[string]*p2pModule) {
 	p2pModules = make(map[string]*p2pModule, len(configs))
 	for i, config := range configs {
-		p2pMod, err := Create(config, nil)
+		cfg, err := json.Marshal(config.P2P)
+		require.NoError(t, err)
+		genesis, err := json.Marshal(modules.GenesisState{})
+		require.NoError(t, err)
+		p2pMod, err := Create(cfg, genesis)
 		require.NoError(t, err)
 		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
 	}
 	return
 }
 
-func createConfigs(t *testing.T, numValidators int) (configs []*genesis.Config, genesisState *genesis.GenesisState) {
-	configs = make([]*genesis.Config, numValidators)
+func createConfigs(t *testing.T, numValidators int) (configs []modules.Config, genesisState modules.GenesisState) {
+	configs = make([]modules.Config, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
 	copy(valKeys[:], keys[:numValidators])
 	genesisState = createGenesisState(t, valKeys)
-
 	for i := range configs {
-		configs[i] = &genesis.Config{
-			Base: &genesis.BaseConfig{
+		configs[i] = modules.Config{
+			Base: &modules.BaseConfig{
 				RootDirectory: "",
 				PrivateKey:    valKeys[i].String(),
 			},
-			Consensus:   &genesis.ConsensusConfig{},
-			Utility:     &genesis.UtilityConfig{},
-			Persistence: &genesis.PersistenceConfig{},
-			P2P: &genesis.P2PConfig{
-				ConsensusPort:  8080,
-				UseRainTree:    true,
-				ConnectionType: genesis.ConnectionType_EmptyConnection,
+			P2P: &typesP2P.P2PConfig{
+				PrivateKey:            valKeys[i].String(),
+				ConsensusPort:         8080,
+				UseRainTree:           true,
+				IsEmptyConnectionType: true,
 			},
-			Telemetry: nil,
 		}
 	}
 	return
@@ -402,11 +402,11 @@ func validatorId(_ *testing.T, i int) string {
 	return fmt.Sprintf(serviceUrlFormat, i)
 }
 
-func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
-	validators := make([]*genesis.Actor, len(valKeys))
+func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) modules.GenesisState {
+	validators := make([]modules.Actor, len(valKeys))
 	for i, valKey := range valKeys {
 		addr := valKey.Address().String()
-		val := &genesis.Actor{
+		val := &test_artifacts.MockActor{
 			Address:         addr,
 			PublicKey:       valKey.PublicKey().String(),
 			GenericParam:    validatorId(t, i+1),
@@ -417,8 +417,8 @@ func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesi
 		}
 		validators[i] = val
 	}
-	return &genesis.GenesisState{
-		Utility: &genesis.UtilityGenesisState{
+	return modules.GenesisState{
+		PersistenceGenesisState: &test_artifacts.MockPersistenceGenesisState{
 			Validators: validators,
 		},
 	}

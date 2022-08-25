@@ -2,7 +2,10 @@ package test
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"log"
 	"math/big"
 	"math/rand"
@@ -11,12 +14,8 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/modules"
-	sharedTest "github.com/pokt-network/pocket/shared/tests"
-	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
-	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
+	sharedTest "github.com/pokt-network/pocket/shared/test_artifacts"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -94,20 +93,17 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 
 // TODO_IN_THIS_COMMIT: Take in `t` or return an error
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
-	cfg := &genesis.Config{
-		Base:      &genesis.BaseConfig{},
-		Consensus: &genesis.ConsensusConfig{},
-		Utility:   &genesis.UtilityConfig{},
-		Persistence: &genesis.PersistenceConfig{
+	cfg := modules.Config{
+		Persistence: &types.PersistenceConfig{
 			PostgresUrl:    databaseUrl,
 			NodeSchema:     testSchema,
 			BlockStorePath: "",
 		},
-		P2P:       &genesis.P2PConfig{},
-		Telemetry: &genesis.TelemetryConfig{},
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
-	persistenceMod, err := persistence.Create(cfg, genesisState)
+	config, _ := json.Marshal(cfg.Persistence)
+	genesis, _ := json.Marshal(genesisState.PersistenceGenesisState)
+	persistenceMod, err := persistence.Create(config, genesis)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
@@ -117,9 +113,9 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
 func fuzzSingleProtocolActor(
 	f *testing.F,
-	newTestActor func() (schema.BaseActor, error),
-	getTestActor func(db *persistence.PostgresContext, address string) (*schema.BaseActor, error),
-	protocolActorSchema schema.ProtocolActorSchema) {
+	newTestActor func() (types.BaseActor, error),
+	getTestActor func(db *persistence.PostgresContext, address string) (*types.BaseActor, error),
+	protocolActorSchema types.ProtocolActorSchema) {
 
 	db := NewFuzzTestPostgresContext(f, 0)
 
@@ -174,9 +170,9 @@ func fuzzSingleProtocolActor(
 					newStakedTokens = getRandomBigIntString()
 				case 1:
 					switch protocolActorSchema.GetActorSpecificColName() {
-					case schema.ServiceURLCol:
+					case types.ServiceURLCol:
 						newActorSpecificParam = getRandomServiceURL()
-					case schema.MaxRelaysCol:
+					case types.MaxRelaysCol:
 						newActorSpecificParam = getRandomBigIntString()
 					default:
 						t.Error("Unexpected actor specific column name")
@@ -187,7 +183,7 @@ func fuzzSingleProtocolActor(
 					}
 				}
 			}
-			updatedActor := schema.BaseActor{
+			updatedActor := types.BaseActor{
 				Address:            originalActor.Address,
 				PublicKey:          originalActor.PublicKey,
 				StakedTokens:       newStakedTokens,
@@ -216,8 +212,8 @@ func fuzzSingleProtocolActor(
 			if originalActor.UnstakingHeight != db.Height { // Not ready to unstake
 				require.Nil(t, unstakingActors)
 			} else {
-				idx := slices.IndexFunc(unstakingActors, func(a *types.UnstakingActor) bool {
-					return originalActor.Address == hex.EncodeToString(a.Address)
+				idx := slices.IndexFunc(unstakingActors, func(a modules.UnstakingActorI) bool {
+					return originalActor.Address == hex.EncodeToString(a.GetAddress())
 				})
 				require.NotEqual(t, idx, -1, fmt.Sprintf("actor that is unstaking was not found %+v", originalActor))
 			}

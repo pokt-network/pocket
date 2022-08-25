@@ -2,17 +2,20 @@ package persistence
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/pokt-network/pocket/persistence/types"
 	"log"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 var _ modules.PersistenceModule = &persistenceModule{}
 var _ modules.PersistenceRWContext = &PostgresContext{}
+var _ modules.PersistenceGenesisState = &types.PersistenceGenesisState{}
+var _ modules.PersistenceConfig = &types.PersistenceConfig{}
 
 type persistenceModule struct {
 	bus modules.Bus
@@ -25,8 +28,16 @@ type persistenceModule struct {
 	writeContext *PostgresContext // only one write context is allowed at a time
 }
 
-func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (modules.PersistenceModule, error) {
-	conn, err := connectToDatabase(cfg.Persistence.PostgresUrl, cfg.Persistence.NodeSchema)
+func Create(config, gen json.RawMessage) (modules.PersistenceModule, error) {
+	cfg, err := InitConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	genesis, err := InitGenesis(gen)
+	if err != nil {
+		return nil, err
+	}
+	conn, err := connectToDatabase(cfg.GetPostgresUrl(), cfg.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
@@ -35,15 +46,15 @@ func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (modules.Persist
 	}
 	conn.Close(context.TODO())
 
-	blockStore, err := initializeBlockStore(cfg.Persistence.BlockStorePath)
+	blockStore, err := initializeBlockStore(cfg.GetBlockStorePath())
 	if err != nil {
 		return nil, err
 	}
 
 	persistenceMod := &persistenceModule{
 		bus:          nil,
-		postgresURL:  cfg.Persistence.PostgresUrl,
-		nodeSchema:   cfg.Persistence.NodeSchema,
+		postgresURL:  cfg.GetPostgresUrl(),
+		nodeSchema:   cfg.GetNodeSchema(),
 		blockStore:   blockStore,
 		writeContext: nil,
 	}
@@ -62,6 +73,18 @@ func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (modules.Persist
 	}
 
 	return persistenceMod, nil
+}
+
+func InitGenesis(data json.RawMessage) (genesis *types.PersistenceGenesisState, err error) {
+	genesis = new(types.PersistenceGenesisState)
+	err = json.Unmarshal(data, genesis)
+	return
+}
+
+func InitConfig(data json.RawMessage) (config *types.PersistenceConfig, err error) {
+	config = new(types.PersistenceConfig)
+	err = json.Unmarshal(data, config)
+	return
 }
 
 func (m *persistenceModule) Start() error {
