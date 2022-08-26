@@ -22,7 +22,7 @@ type Mempool interface {
 
 var _ Mempool = &FIFOMempool{}
 
-type FIFOMempool struct { // TODO (team) move implementation to utilty #163
+type FIFOMempool struct {
 	l                    sync.RWMutex
 	hashMap              map[string]struct{}
 	pool                 *list.List

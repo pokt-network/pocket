@@ -15,6 +15,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO(andrew): Find all places where we import twice and update the imports appropriately.
+
 func FuzzAccountAmount(f *testing.F) {
 	db := NewFuzzTestPostgresContext(f, 0)
 	operations := []string{
@@ -28,6 +30,7 @@ func FuzzAccountAmount(f *testing.F) {
 
 	account := newTestAccount(nil)
 	addrBz, err := hex.DecodeString(account.Address)
+	// TODO(andrew): All `log.Fatal` calls should be converted to `require.NoError` calls.
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -290,7 +293,6 @@ func TestSubPoolAmount(t *testing.T) {
 
 func TestGetAllAccounts(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
-
 	updateAccount := func(db *persistence.PostgresContext, acc modules.Account) error {
 		if addr, err := hex.DecodeString(acc.GetAddress()); err == nil {
 			return nil

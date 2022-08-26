@@ -154,6 +154,7 @@ func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
 
+	// TODO(andrew): In order to make the tests clearer (here and elsewhere), use `validatorAddrBz` instead of `addrBz`
 	addrBz, err := hex.DecodeString(validator.Address)
 	require.NoError(t, err)
 

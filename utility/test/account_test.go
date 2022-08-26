@@ -16,6 +16,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO(andrew): Remove all `require.True` in test files unless we're checking the value of a boolean
+// TODO(andrew): Remove all `fmt.Sprintf(`
+
 func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	acc := GetAllTestingAccounts(t, ctx)[0]

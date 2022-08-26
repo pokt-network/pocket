@@ -49,7 +49,7 @@ func Create(cfg, genesis map[string]json.RawMessage) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod)
+	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod, cfg, genesis)
 	if err != nil {
 		return nil, err
 	}

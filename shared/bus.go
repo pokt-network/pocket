@@ -24,7 +24,11 @@ type bus struct {
 	telemetry   modules.TelemetryModule
 
 	// Configurations
-	config modules.Config
+	config map[string]json.RawMessage
+
+	// TECHDEBT(drewsky): We're only storing the `genesis` in the bus so we can access it for
+	// debug purposes. Ideally, we can restart the entire lifecycle.
+	genesis map[string]json.RawMessage
 }
 
 const (
@@ -37,6 +41,8 @@ func CreateBus(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
+	config map[string]json.RawMessage,
+	genesis map[string]json.RawMessage,
 ) (modules.Bus, error) {
 	bus := &bus{
 		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -46,6 +52,8 @@ func CreateBus(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
+		config:      config,
+		genesis:     genesis,
 	}
 
 	modules := map[string]modules.Module{
@@ -85,7 +93,8 @@ func CreateBusWithOptionalModules(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
-	_ map[string]json.RawMessage,
+	config map[string]json.RawMessage,
+	genesis map[string]json.RawMessage,
 ) modules.Bus {
 	bus := &bus{
 		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -94,6 +103,9 @@ func CreateBusWithOptionalModules(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
+
+		config:  config,
+		genesis: genesis,
 	}
 
 	maybeSetModuleBus := func(mod modules.Module) {
@@ -142,4 +154,12 @@ func (m *bus) GetConsensusModule() modules.ConsensusModule {
 
 func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
+}
+
+func (m *bus) GetConfig() map[string]json.RawMessage {
+	return m.config
+}
+
+func (m *bus) GetGenesis() map[string]json.RawMessage {
+	return m.genesis
 }

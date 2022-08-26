@@ -41,7 +41,7 @@ var consensusMod modules.ConsensusModule
 
 func main() {
 	var err error
-	config, genesis := test_artifacts.ReadConfigAndGenesisFiles("")
+	config, genesis := test_artifacts.ReadConfigAndGenesisFiles("", "")
 	config, err = injectClientPrivateKey(config)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to inject a client private key into p2p and consensus mod: %v", err.Error())
@@ -63,7 +63,7 @@ func main() {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
 
-	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod, config)
+	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod, config, genesis)
 
 	p2pMod.Start()
 

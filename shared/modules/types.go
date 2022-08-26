@@ -222,7 +222,8 @@ type Params interface {
 	GetMessageChangeParameterFeeOwner() string
 }
 
-const ( // TODO (Team) move to use proto string() and deprecate #147
+// TODO (Team) move to use proto string() and deprecate #147
+const (
 	BlocksPerSessionParamName = "blocks_per_session"
 
 	AppMinimumStakeParamName       = "app_minimum_stake"

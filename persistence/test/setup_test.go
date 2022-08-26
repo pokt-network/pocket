@@ -91,7 +91,7 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 	return &db
 }
 
-// TODO_IN_THIS_COMMIT: Take in `t` or return an error
+// TODO(andrew): Take in `t testing.T` as a parameter and error if there's an issue
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	cfg := modules.Config{
 		Persistence: &types.PersistenceConfig{
@@ -200,6 +200,7 @@ func fuzzSingleProtocolActor(
 			require.NoError(t, err)
 
 			require.ElementsMatch(t, newActor.Chains, newChains, "staked chains not updated")
+			// TODO(andrew): Use `require.Contains` instead
 			if strings.Contains(newActor.StakedTokens, "invalid") {
 				fmt.Println("")
 			}

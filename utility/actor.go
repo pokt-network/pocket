@@ -20,6 +20,9 @@ import (
    multi-module level. Until then, it's a fine line to walk.
 */
 
+// TODO(andrew): Make sure the `er` value in all the functions here is used. E.g. It is not used in `GetMinimumPauseBlocks`.
+// TODO(andrew): Remove code that is unnecessarily repeated in this file. E.g. The number of times `store.GetHeight()` can be reduced in the entire file.
+
 // setters
 
 func (u *UtilityContext) SetActorStakedTokens(actorType typesUtil.UtilActorType, tokens *big.Int, address []byte) typesUtil.Error {

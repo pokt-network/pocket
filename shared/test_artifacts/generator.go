@@ -179,11 +179,13 @@ func GenerateNewKeysStrings() (privateKey, publicKey, address string) {
 	return
 }
 
-func ReadConfigAndGenesisFiles(configPath string) (config, genesis map[string]json.RawMessage) {
+func ReadConfigAndGenesisFiles(configPath, genesisPath string) (config, genesis map[string]json.RawMessage) {
 	if configPath == "" {
 		configPath = "build/config/config1.json"
 	}
-	genesisPath := "build/config/genesis.json"
+	if genesisPath == "" {
+		genesisPath = "build/config/genesis.json"
+	}
 	configFile, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		log.Fatalf("[ERROR] an error occurred reading config.json file: %v", err.Error())

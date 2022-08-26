@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO(andrew): Rename `addrBz` to `fishAddrBz` so tests are easier to read and understand. Ditto in all other locations.
+
 func FuzzFisherman(f *testing.F) {
 	fuzzSingleProtocolActor(f,
 		NewTestGenericActor(types.FishermanActor, newTestFisherman),

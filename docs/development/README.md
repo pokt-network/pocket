@@ -1,6 +1,6 @@
 # Development Overview
 
-Please note that this repository is under very active development and breaking changes are likely to occur. If the documentation falls out of date please see our [guide](./../contributing/CONTRIBUTING.md) on how to contribute!
+Please note that this repository is under very active development and breaking changes are likely to occur. If the documentation falls out of date please see our [guide](./../contributing/README.md) on how to contribute!
 
 - [Development Overview](#development-overview)
   - [LFG - Development](#lfg---development)

@@ -26,7 +26,7 @@ services:
     logging: *loki-logging
     container_name: node1.consensus
     image: pocket/consensus:latest
-    command: "build/scripts/watch.sh build/config/config1.json"
+    command: "build/scripts/watch.sh build/config/config1.json build/config/genesis.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
@@ -52,7 +52,7 @@ services:
     logging: *loki-logging
     container_name: node2.consensus
     image: pocket/consensus:latest
-    command: "build/scripts/watch.sh build/config/config2.json"
+    command: "build/scripts/watch.sh build/config/config2.json build/config/genesis.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
@@ -78,7 +78,7 @@ services:
     logging: *loki-logging
     container_name: node3.consensus
     image: pocket/consensus:latest
-    command: "build/scripts/watch.sh build/config/config3.json"
+    command: "build/scripts/watch.sh build/config/config3.json build/config/genesis.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev
@@ -104,7 +104,7 @@ services:
     logging: *loki-logging
     container_name: node4.consensus
     image: pocket/consensus:latest
-    command: "build/scripts/watch.sh build/config/config4.json"
+    command: "build/scripts/watch.sh build/config/config4.json build/config/genesis.json"
     build:
       context: ../..
       dockerfile: ./build/Dockerfile.localdev

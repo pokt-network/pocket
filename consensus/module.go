@@ -54,9 +54,11 @@ type consensusModule struct {
 	paceMaker         Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-	logPrefix     string                                                  // TODO(design): Remove later when we build a shared/proper/injected logger
-	MessagePool   map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage // TODO(design): Move this over to the persistence module or elsewhere?
-	MaxBlockBytes uint64                                                  // TODO (design): This needs to be updated every time the utility module changes this value. Need an intermodule interface like ABCI
+	logPrefix   string                                                  // TODO(design): Remove later when we build a shared/proper/injected logger
+	MessagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage // TODO(design): Move this over to the persistence module or elsewhere?
+	// TODO(andrew): Explain (or remove) why have an explicit `MaxBlockBytes` if we are already storing a reference to `consCfg` above?
+	// TODO(andrew): This needs to be updated every time the utility module changes this value. It can be accessed via the "application specific bus" (mimicking the intermodule interface in ABCI)
+	MaxBlockBytes uint64
 }
 
 func Create(config, gen json.RawMessage) (modules.ConsensusModule, error) {

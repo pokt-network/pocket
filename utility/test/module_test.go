@@ -54,7 +54,7 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	}
 }
 
-// TODO_IN_THIS_COMMIT: Take in `t` or return an error
+// TODO(andrew): Take in `t` and fail the test if there's an error
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	cfg := modules.Config{
 		Persistence: &test_artifacts.MockPersistenceConfig{
@@ -63,6 +63,7 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 			BlockStorePath: "",
 		},
 	}
+	// TODO(andrew): Move the number of actors into local constants
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	config, _ := json.Marshal(cfg.Persistence)
 	genesis, _ := json.Marshal(genesisState.PersistenceGenesisState)

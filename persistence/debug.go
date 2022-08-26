@@ -1,7 +1,9 @@
 package persistence
 
 import (
+	"encoding/json"
 	types2 "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/debug"
 	"log"
@@ -13,8 +15,13 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 		m.showLatestBlockInStore(debugMessage)
 	case debug.DebugMessageAction_DEBUG_CLEAR_STATE:
 		m.clearState(debugMessage)
-		// TODO_IN_THIS_COMMIT: Figure this out
-		// m.populateGenesisState(m.GetBus().GetConfig().GenesisSource.GetState())
+
+		var persistenceGenesisState *types.PersistenceGenesisState
+		genBz := m.GetBus().GetGenesis()["Persistence"]
+		if err := json.Unmarshal(genBz, persistenceGenesisState); err != nil {
+			return err
+		}
+		m.populateGenesisState(persistenceGenesisState)
 	default:
 		log.Printf("Debug message not handled by persistence module: %s \n", debugMessage.Message)
 	}

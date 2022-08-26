@@ -9,8 +9,9 @@ import (
 	"math/big"
 )
 
-// TODO(olshansky): Use `log.Fatalf` instead of `log.Fatal(fmt.Sprintf`
-// TODO(Andrew): generalize with the `actors interface`` once merged with #111
+// TODO(andrew): Use `log.Fatalf` instead of `log.Fatal(fmt.Sprintf())`.
+// TODO(andrew): generalize with the `actors interface`
+
 // WARNING: This function crashes the process if there is an error populating the genesis state.
 func (m *persistenceModule) populateGenesisState(state *types.PersistenceGenesisState) {
 	log.Println("Populating genesis state...")
