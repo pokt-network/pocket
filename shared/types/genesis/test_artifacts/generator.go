@@ -128,6 +128,7 @@ func NewAccounts(n int, privateKeys ...string) (accounts []*genesis.Account) {
 	return
 }
 
+// TODO(andrew): The current implementation of NewActors  will have overlapping `ServiceUrl` for different types of actors which needs to be fixed.
 func NewActors(actorType genesis.ActorType, n int) (actors []*genesis.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
 		// REFACTOR(drewsky): discuss the generic param / actor specific param / service URL disambiguation
@@ -139,6 +140,7 @@ func NewActors(actorType genesis.ActorType, n int) (actors []*genesis.Actor, pri
 		actors = append(actors, actor)
 		privateKeys = append(privateKeys, pk)
 	}
+
 	return
 }
 

@@ -24,7 +24,7 @@ import (
 
 // IMPROVE(team): Looking into adding more tests and accounting for more edge cases.
 
-// ### RainTree Unit Tests ###
+// ~~~~~~ RainTree Unit Tests ~~~~~~
 
 func TestRainTreeNetworkCompleteOneNodes(t *testing.T) {
 	// val_1
@@ -173,7 +173,17 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
 
-// ### RainTree Unit Helpers - To remove redundancy of code in the unit tests ###
+// ~~~~~~ RainTree Unit Test Helpers ~~~~~~
+
+// TODO(andrew): Add configurations tests for dead and partially visible nodes
+type TestRainTreeCommConfig map[string]struct {
+	numNetworkReads  uint16
+	numNetworkWrites uint16
+}
+
+func validatorId(_ *testing.T, i int) string {
+	return test_artifacts.GetServiceUrl(i)
+}
 
 func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTreeCommConfig, isOriginatorPinged bool) {
 	// Network configurations
@@ -231,45 +241,7 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 	}
 }
 
-// ### RainTree Unit Utils - Configurations & constants and such ###
-
-const (
-	genesisConfigSeedStart = 42
-	maxNumKeys             = 42 // The number of keys generated for all the unit tests. Optimization to avoid regenerating every time.
-	serviceUrlFormat       = "val_%d"
-	testChannelSize        = 10000
-)
-
-// TODO(olshansky): Add configurations tests for dead and partially visible nodes
-type TestRainTreeCommConfig map[string]struct {
-	numNetworkReads  uint16
-	numNetworkWrites uint16
-}
-
-var keys []cryptoPocket.PrivateKey
-
-func init() {
-	keys = generateKeys(nil, maxNumKeys)
-}
-
-func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
-	keys := make([]cryptoPocket.PrivateKey, numValidators)
-
-	for i := range keys {
-		seedInt := genesisConfigSeedStart + i
-		seed := make([]byte, ed25519.PrivateKeySize)
-		binary.LittleEndian.PutUint32(seed, uint32(seedInt))
-		pk, err := cryptoPocket.NewPrivateKeyFromSeed(seed)
-		if err != nil {
-			panic(err)
-		}
-		keys[i] = pk
-	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i].Address().String() < keys[j].Address().String()
-	})
-	return keys
-}
+// ~~~~~~ RainTree Unit Test Mocks ~~~~~~
 
 // A mock of the application specific to know if a message was sent to be handled by the application
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
@@ -344,7 +316,7 @@ func prepareEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAge
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
 //                         expectation with RainTree by comparing with Telemetry after updating specs.
 func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesP2P.Transport {
-	testChannel := make(chan []byte, testChannelSize)
+	testChannel := make(chan []byte, 1000)
 	ctrl := gomock.NewController(t)
 	connMock := mocksP2P.NewMockTransport(ctrl)
 
@@ -373,6 +345,43 @@ func prepareP2PModules(t *testing.T, configs map[string]*genesis.Config) (p2pMod
 	return
 }
 
+// ~~~~~~ RainTree Unit Test Configurations ~~~~~~
+
+// TODO(drewsky): We should leverage the shared `test_artifacts` package and replace the code below.
+//                The reason it is necessary right now is because the funcionality of RainTree is dependant
+//                on the order of the addresses, which is a function of the public key, so we need to make
+//                sure that the validatorId order corresponds to that of the public keys.
+
+const (
+	genesisConfigSeedStart = 42
+	maxNumKeys             = 42 // The number of keys generated for all the unit tests. Optimization to avoid regenerating every time.
+)
+
+var keys []cryptoPocket.PrivateKey
+
+func init() {
+	keys = generateKeys(nil, maxNumKeys)
+}
+
+func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
+	keys := make([]cryptoPocket.PrivateKey, numValidators)
+
+	for i := range keys {
+		seedInt := genesisConfigSeedStart + i
+		seed := make([]byte, ed25519.PrivateKeySize)
+		binary.LittleEndian.PutUint32(seed, uint32(seedInt))
+		pk, err := cryptoPocket.NewPrivateKeyFromSeed(seed)
+		if err != nil {
+			panic(err)
+		}
+		keys[i] = pk
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i].Address().String() < keys[j].Address().String()
+	})
+	return keys
+}
+
 func createConfigs(t *testing.T, numValidators int) (configs map[string]*genesis.Config, genesisState *genesis.GenesisState) {
 	configs = make(map[string]*genesis.Config, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
@@ -397,10 +406,6 @@ func createConfigs(t *testing.T, numValidators int) (configs map[string]*genesis
 		}
 	}
 	return
-}
-
-func validatorId(_ *testing.T, i int) string {
-	return test_artifacts.GetServiceUrl(i)
 }
 
 func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
