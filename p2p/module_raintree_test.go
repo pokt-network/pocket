@@ -9,8 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pokt-network/pocket/shared/types/genesis"
-
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
@@ -18,6 +16,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -26,7 +25,7 @@ import (
 
 // ### RainTree Unit Tests ###
 
-func TestRainTreeCompleteOneNodes(t *testing.T) {
+func TestRainTreeNetworkCompleteOneNodes(t *testing.T) {
 	// val_1
 	originatorNode := validatorId(t, 1)
 	var expectedCalls = TestRainTreeCommConfig{
@@ -35,7 +34,7 @@ func TestRainTreeCompleteOneNodes(t *testing.T) {
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
 
-func TestRainTreeCompleteTwoNodes(t *testing.T) {
+func TestRainTreeNetworkCompleteTwoNodes(t *testing.T) {
 	// val_1
 	//   └───────┐
 	// 	       val_2
@@ -47,7 +46,7 @@ func TestRainTreeCompleteTwoNodes(t *testing.T) {
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
 
-func TestRainTreeCompleteThreeNodes(t *testing.T) {
+func TestRainTreeNetworkCompleteThreeNodes(t *testing.T) {
 	// 	          val_1
 	// 	   ┌───────┴────┬─────────┐
 	//   val_2        val_1     val_3
@@ -60,7 +59,7 @@ func TestRainTreeCompleteThreeNodes(t *testing.T) {
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
 
-func TestRainTreeCompleteFourNodes(t *testing.T) {
+func TestRainTreeNetworkCompleteFourNodes(t *testing.T) {
 	// Test configurations (visualization retrieved from simulator)
 	// 	                val_1
 	// 	  ┌───────────────┴────┬─────────────────┐
@@ -77,7 +76,7 @@ func TestRainTreeCompleteFourNodes(t *testing.T) {
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
 
-func TestRainTreeCompleteNineNodes(t *testing.T) {
+func TestRainTreeNetworkCompleteNineNodes(t *testing.T) {
 	// 	                              val_1
 	// 	         ┌──────────────────────┴────────────┬────────────────────────────────┐
 	//         val_4                               val_1                            val_7
@@ -98,7 +97,7 @@ func TestRainTreeCompleteNineNodes(t *testing.T) {
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
 
-func TestRainTreeCompleteEighteenNodes(t *testing.T) {
+func TestRainTreeNetworkCompleteEighteenNodes(t *testing.T) {
 	// 	                                                                                                              val_1
 	// 	                                      ┌──────────────────────────────────────────────────────────────────────────┴─────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 	//                                      val_7                                                                                                            val_1                                                                                                     val_13
@@ -132,7 +131,7 @@ func TestRainTreeCompleteEighteenNodes(t *testing.T) {
 	testRainTreeCalls(t, originatorNode, expectedCalls, true)
 }
 
-func TestRainTreeCompleteTwentySevenNodes(t *testing.T) {
+func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 	// 	                                                                                                                    val_1
 	// 	                                     ┌────────────────────────────────────────────────────────────────────────────────┴───────────────────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 	//                                    val_10                                                                                                                   val_1                                                                                                       val_19
