@@ -1,9 +1,5 @@
 package p2p
 
-// TODO(team): This is a a temporary parallel to the real `p2p` module.
-// It should be removed once the real `p2p` module is ready but is meant
-// to be a "real" replacement for now.
-
 import (
 	"log"
 
@@ -22,8 +18,7 @@ import (
 var _ modules.P2PModule = &p2pModule{}
 
 type p2pModule struct {
-	bus       modules.Bus
-	p2pConfig *genesis.P2PConfig // TODO (Olshansk) to remove this since it'll be available via the bus
+	bus modules.Bus
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
@@ -43,8 +38,6 @@ func Create(cfg *genesis.Config, _ *genesis.GenesisState) (m modules.P2PModule, 
 		return nil, err
 	}
 	m = &p2pModule{
-		p2pConfig: cfg.P2P,
-
 		listener: l,
 		address:  privateKey.Address(),
 
@@ -79,18 +72,17 @@ func (m *p2pModule) Start() error {
 			p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	addrBook, err := ValidatorMapToAddrBook(m.p2pConfig, m.bus.GetConsensusModule().ValidatorMap())
+	p2pConfig := m.GetBus().GetConfig().P2P
+	addrBook, err := ValidatorMapToAddrBook(p2pConfig, m.bus.GetConsensusModule().ValidatorMap())
 	if err != nil {
 		return err
 	}
 
-	if m.p2pConfig.UseRainTree {
+	if p2pConfig.UseRainTree {
 		m.network = raintree.NewRainTreeNetwork(m.address, addrBook)
 	} else {
 		m.network = stdnetwork.NewNetwork(addrBook)
 	}
-	m.network.SetBus(m.GetBus())
-
 	m.network.SetBus(m.GetBus())
 
 	go func() {

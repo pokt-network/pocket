@@ -195,7 +195,7 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 	busMocks := make(map[string]modules.Bus)
 	for valId, expectedCall := range testCommConfig {
 		connMocks[valId] = prepareConnMock(t, expectedCall.numNetworkReads, expectedCall.numNetworkWrites)
-		busMocks[valId] = prepareBusMock(t, &messageHandeledWaitGroup, consensusMock, telemetryMock)
+		busMocks[valId] = prepareBusMock(t, &messageHandeledWaitGroup, configs[valId], consensusMock, telemetryMock)
 	}
 
 	// Module injection
@@ -274,7 +274,7 @@ func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
 // A mock of the application specific to know if a message was sent to be handled by the application
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
 //                         expectation with RainTree by comparing with Telemetry after updating specs.
-func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
+func prepareBusMock(t *testing.T, wg *sync.WaitGroup, config *genesis.Config, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
 	ctrl := gomock.NewController(t)
 	busMock := modulesMock.NewMockBus(ctrl)
 
@@ -285,6 +285,7 @@ func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock
 
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
 	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
+	busMock.EXPECT().GetConfig().Return(config).Times(1)
 
 	return busMock
 }
@@ -362,24 +363,24 @@ func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWr
 	return connMock
 }
 
-func prepareP2PModules(t *testing.T, configs []*genesis.Config) (p2pModules map[string]*p2pModule) {
+func prepareP2PModules(t *testing.T, configs map[string]*genesis.Config) (p2pModules map[string]*p2pModule) {
 	p2pModules = make(map[string]*p2pModule, len(configs))
-	for i, config := range configs {
+	for valId, config := range configs {
 		p2pMod, err := Create(config, nil)
 		require.NoError(t, err)
-		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
+		p2pModules[valId] = p2pMod.(*p2pModule)
 	}
 	return
 }
 
-func createConfigs(t *testing.T, numValidators int) (configs []*genesis.Config, genesisState *genesis.GenesisState) {
-	configs = make([]*genesis.Config, numValidators)
+func createConfigs(t *testing.T, numValidators int) (configs map[string]*genesis.Config, genesisState *genesis.GenesisState) {
+	configs = make(map[string]*genesis.Config, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
 	copy(valKeys[:], keys[:numValidators])
 	genesisState = createGenesisState(t, valKeys)
 
-	for i := range configs {
-		configs[i] = &genesis.Config{
+	for i := 0; i < numValidators; i++ {
+		configs[validatorId(t, i+1)] = &genesis.Config{
 			Base: &genesis.BaseConfig{
 				RootDirectory: "",
 				PrivateKey:    valKeys[i].String(),
