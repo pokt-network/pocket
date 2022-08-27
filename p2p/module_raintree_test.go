@@ -28,9 +28,9 @@ import (
 
 func TestRainTreeNetworkCompleteOneNodes(t *testing.T) {
 	// val_1
-	originatorNode := validatorId(t, 1)
+	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(t, 1): {0, 0}, // {numReads, numWrites}
+		originatorNode: {0, 0},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
@@ -39,10 +39,10 @@ func TestRainTreeNetworkCompleteTwoNodes(t *testing.T) {
 	// val_1
 	//   └───────┐
 	// 	       val_2
-	originatorNode := validatorId(t, 1)
+	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(t, 1): {0, 0}, // Originator
-		validatorId(t, 2): {1, 1},
+		originatorNode: {0, 0},
+		validatorId(2): {1, 1},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
@@ -51,11 +51,11 @@ func TestRainTreeNetworkCompleteThreeNodes(t *testing.T) {
 	// 	          val_1
 	// 	   ┌───────┴────┬─────────┐
 	//   val_2        val_1     val_3
-	originatorNode := validatorId(t, 1)
+	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(t, 1): {0, 0}, // Originator
-		validatorId(t, 2): {1, 1},
-		validatorId(t, 3): {1, 1},
+		originatorNode: {0, 0},
+		validatorId(2): {1, 1},
+		validatorId(3): {1, 1},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
@@ -67,12 +67,12 @@ func TestRainTreeNetworkCompleteFourNodes(t *testing.T) {
 	//  val_2                val_1             val_3
 	//    └───────┐            └───────┐         └───────┐
 	// 		    val_3                val_2             val_4
-	originatorNode := validatorId(t, 1)
+	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(t, 1): {0, 0}, // Originator
-		validatorId(t, 2): {2, 2},
-		validatorId(t, 3): {2, 2},
-		validatorId(t, 4): {1, 1},
+		originatorNode: {0, 0},
+		validatorId(2): {2, 2},
+		validatorId(3): {2, 2},
+		validatorId(4): {1, 1},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
@@ -83,17 +83,17 @@ func TestRainTreeNetworkCompleteNineNodes(t *testing.T) {
 	//         val_4                               val_1                            val_7
 	//   ┌───────┴────┬─────────┐            ┌───────┴────┬─────────┐         ┌───────┴────┬─────────┐
 	// val_6        val_4     val_8        val_3        val_1     val_5     val_9        val_7     val_2
-	originatorNode := validatorId(t, 1)
+	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(t, 1): {0, 0}, // Originator
-		validatorId(t, 2): {1, 1},
-		validatorId(t, 3): {1, 1},
-		validatorId(t, 4): {1, 1},
-		validatorId(t, 5): {1, 1},
-		validatorId(t, 6): {1, 1},
-		validatorId(t, 7): {1, 1},
-		validatorId(t, 8): {1, 1},
-		validatorId(t, 9): {1, 1},
+		originatorNode: {0, 0},
+		validatorId(2): {1, 1},
+		validatorId(3): {1, 1},
+		validatorId(4): {1, 1},
+		validatorId(5): {1, 1},
+		validatorId(6): {1, 1},
+		validatorId(7): {1, 1},
+		validatorId(8): {1, 1},
+		validatorId(9): {1, 1},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
@@ -106,26 +106,26 @@ func TestRainTreeNetworkCompleteEighteenNodes(t *testing.T) {
 	//           val_11                                   val_7                               val_15                                 val_5                                 val_1                              val_9                           val_17                                  val_13                                val_3
 	//    ┌────────┴─────┬───────────┐             ┌───────┴────┬──────────┐           ┌────────┴─────┬──────────┐            ┌───────┴────┬──────────┐             ┌───────┴────┬─────────┐          ┌────────┴────┬─────────┐         ┌───────┴─────┬──────────┐             ┌────────┴─────┬───────────┐          ┌───────┴────┬──────────┐
 	// val_13         val_11      val_16        val_9        val_7      val_12      val_17         val_15     val_8        val_7        val_5      val_10        val_3        val_1     val_6      val_11        val_9     val_2     val_1         val_17     val_4         val_15         val_13      val_18     val_5        val_3      val_14
-	originatorNode := validatorId(t, 1)
+	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(t, 1):  {1, 1}, // Originator
-		validatorId(t, 2):  {1, 1},
-		validatorId(t, 3):  {2, 2},
-		validatorId(t, 4):  {1, 1},
-		validatorId(t, 5):  {2, 2},
-		validatorId(t, 6):  {1, 1},
-		validatorId(t, 7):  {2, 2},
-		validatorId(t, 8):  {1, 1},
-		validatorId(t, 9):  {2, 2},
-		validatorId(t, 10): {1, 1},
-		validatorId(t, 11): {2, 2},
-		validatorId(t, 12): {1, 1},
-		validatorId(t, 13): {2, 2},
-		validatorId(t, 14): {1, 1},
-		validatorId(t, 15): {2, 2},
-		validatorId(t, 16): {1, 1},
-		validatorId(t, 17): {2, 2},
-		validatorId(t, 18): {1, 1},
+		originatorNode:  {1, 1},
+		validatorId(2):  {1, 1},
+		validatorId(3):  {2, 2},
+		validatorId(4):  {1, 1},
+		validatorId(5):  {2, 2},
+		validatorId(6):  {1, 1},
+		validatorId(7):  {2, 2},
+		validatorId(8):  {1, 1},
+		validatorId(9):  {2, 2},
+		validatorId(10): {1, 1},
+		validatorId(11): {2, 2},
+		validatorId(12): {1, 1},
+		validatorId(13): {2, 2},
+		validatorId(14): {1, 1},
+		validatorId(15): {2, 2},
+		validatorId(16): {1, 1},
+		validatorId(17): {2, 2},
+		validatorId(18): {1, 1},
 	}
 	// Note that the originator, `val_1` is also messaged by `val_17` outside of continuously
 	// demoting itself.
@@ -140,35 +140,35 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 	//          val_16                                    val_10                                 val_22                                     val_7                                 val_1                             val_13                             val_25                                  val_19                                val_4
 	//   ┌────────┴─────┬───────────┐              ┌────────┴─────┬───────────┐           ┌────────┴─────┬───────────┐              ┌────────┴────┬──────────┐             ┌───────┴────┬─────────┐          ┌────────┴─────┬──────────┐         ┌───────┴─────┬──────────┐             ┌────────┴─────┬───────────┐          ┌───────┴────┬──────────┐
 	// val_20         val_16      val_24         val_14         val_10      val_18      val_26         val_22      val_12         val_11        val_7      val_15        val_5        val_1     val_9      val_17         val_13     val_3     val_2         val_25     val_6         val_23         val_19      val_27     val_8        val_4      val_21
-	originatorNode := validatorId(t, 1)
+	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(t, 1):  {0, 0}, // Originator
-		validatorId(t, 2):  {1, 1},
-		validatorId(t, 3):  {1, 1},
-		validatorId(t, 4):  {1, 1},
-		validatorId(t, 5):  {1, 1},
-		validatorId(t, 6):  {1, 1},
-		validatorId(t, 7):  {1, 1},
-		validatorId(t, 8):  {1, 1},
-		validatorId(t, 9):  {1, 1},
-		validatorId(t, 10): {1, 1},
-		validatorId(t, 11): {1, 1},
-		validatorId(t, 12): {1, 1},
-		validatorId(t, 13): {1, 1},
-		validatorId(t, 14): {1, 1},
-		validatorId(t, 15): {1, 1},
-		validatorId(t, 16): {1, 1},
-		validatorId(t, 17): {1, 1},
-		validatorId(t, 18): {1, 1},
-		validatorId(t, 19): {1, 1},
-		validatorId(t, 20): {1, 1},
-		validatorId(t, 21): {1, 1},
-		validatorId(t, 22): {1, 1},
-		validatorId(t, 23): {1, 1},
-		validatorId(t, 24): {1, 1},
-		validatorId(t, 25): {1, 1},
-		validatorId(t, 26): {1, 1},
-		validatorId(t, 27): {1, 1},
+		originatorNode:  {0, 0},
+		validatorId(2):  {1, 1},
+		validatorId(3):  {1, 1},
+		validatorId(4):  {1, 1},
+		validatorId(5):  {1, 1},
+		validatorId(6):  {1, 1},
+		validatorId(7):  {1, 1},
+		validatorId(8):  {1, 1},
+		validatorId(9):  {1, 1},
+		validatorId(10): {1, 1},
+		validatorId(11): {1, 1},
+		validatorId(12): {1, 1},
+		validatorId(13): {1, 1},
+		validatorId(14): {1, 1},
+		validatorId(15): {1, 1},
+		validatorId(16): {1, 1},
+		validatorId(17): {1, 1},
+		validatorId(18): {1, 1},
+		validatorId(19): {1, 1},
+		validatorId(20): {1, 1},
+		validatorId(21): {1, 1},
+		validatorId(22): {1, 1},
+		validatorId(23): {1, 1},
+		validatorId(24): {1, 1},
+		validatorId(25): {1, 1},
+		validatorId(26): {1, 1},
+		validatorId(27): {1, 1},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls, false)
 }
@@ -181,7 +181,7 @@ type TestRainTreeCommConfig map[string]struct {
 	numNetworkWrites uint16
 }
 
-func validatorId(_ *testing.T, i int) string {
+func validatorId(i int) string {
 	return test_artifacts.GetServiceUrl(i)
 }
 
@@ -389,7 +389,7 @@ func createConfigs(t *testing.T, numValidators int) (configs map[string]*genesis
 	genesisState = createGenesisState(t, valKeys)
 
 	for i := 0; i < numValidators; i++ {
-		configs[validatorId(t, i+1)] = &genesis.Config{
+		configs[validatorId(i+1)] = &genesis.Config{
 			Base: &genesis.BaseConfig{
 				RootDirectory: "",
 				PrivateKey:    valKeys[i].String(),
@@ -415,7 +415,7 @@ func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesi
 		val := &genesis.Actor{
 			Address:         addr,
 			PublicKey:       valKey.PublicKey().String(),
-			GenericParam:    validatorId(t, i+1),
+			GenericParam:    validatorId(i + 1),
 			StakedAmount:    "1000000000000000",
 			PausedHeight:    0,
 			UnstakingHeight: 0,
