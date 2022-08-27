@@ -17,6 +17,7 @@ import (
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -399,7 +400,7 @@ func createConfigs(t *testing.T, numValidators int) (configs map[string]*genesis
 }
 
 func validatorId(_ *testing.T, i int) string {
-	return fmt.Sprintf(serviceUrlFormat, i)
+	return test_artifacts.GetServiceUrl(i)
 }
 
 func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {

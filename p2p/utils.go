@@ -41,7 +41,7 @@ func ValidatorToNetworkPeer(cfg *genesis.P2PConfig, v *genesis.Actor) (*typesP2P
 		Dialer:     conn,
 		PublicKey:  pubKey,
 		Address:    pubKey.Address(),
-		ServiceUrl: v.GenericParam, // service url
+		ServiceUrl: v.GenericParam,
 	}
 
 	return peer, nil

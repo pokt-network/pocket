@@ -27,6 +27,7 @@ var (
 	DefaultUnstakingHeight     = int64(-1)
 	DefaultChainID             = "testnet"
 	DefaultMaxBlockBytes       = uint64(4000000)
+	ServiceUrlFormat           = "node%d.consensus:8080"
 )
 
 // TODO(drewsky): this is meant to be a **temporary** replacement for the recently deprecated
@@ -129,7 +130,8 @@ func NewAccounts(n int, privateKeys ...string) (accounts []*genesis.Account) {
 
 func NewActors(actorType genesis.ActorType, n int) (actors []*genesis.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
-		genericParam := fmt.Sprintf("node%d.consensus:8080", i+1)
+		// REFACTOR(drewsky): discuss the generic param / actor specific param / service URL disambiguation
+		genericParam := GetServiceUrl(i + 1)
 		if actorType == genesis.ActorType_App {
 			genericParam = DefaultMaxRelaysString
 		}
@@ -140,9 +142,14 @@ func NewActors(actorType genesis.ActorType, n int) (actors []*genesis.Actor, pri
 	return
 }
 
+func GetServiceUrl(n int) string {
+	return fmt.Sprintf(ServiceUrlFormat, n)
+}
+
 func NewDefaultActor(actorType genesis.ActorType, genericParam string) (actor *genesis.Actor, privateKey string) {
 	privKey, pubKey, addr := GenerateNewKeysStrings()
 	chains := DefaultChains
+	// TODO(andrew): Consider using a switch statement here
 	if actorType == genesis.ActorType_Val {
 		chains = nil
 	} else if actorType == genesis.ActorType_App {
