@@ -136,6 +136,15 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return err
 	}
 
+	n.GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent(
+			p2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
+			p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_NAME,
+			p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL, "send",
+		)
+
 	return nil
 }
 

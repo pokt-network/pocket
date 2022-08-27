@@ -14,6 +14,7 @@ const (
 	RAINTREE_MESSAGE_EVENT_METRIC_NAME                       = "raintree_message_event_metric"
 
 	// Attributes
+	RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL   = "send"
 	RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL = "height"
 	RAINTREE_MESSAGE_EVENT_METRIC_HASH_LABEL   = "hash"
 )

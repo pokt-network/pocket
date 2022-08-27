@@ -67,25 +67,19 @@ p2p
 
 ## Testing
 
-### Testing Suite
-
-The core utilities used for RainTree unit testing live in `raintree_utils_test.go`.
-
-In addition, a lot of RainTree-related helpers (finding the target, etc...) live in `addrbook_utils_test.go`.
-
-### Unit Tests
-
 ```bash
-$ make test_p2p           # All P2P tests
-$ make test_p2p_addrbook  # AddrBook tests
+make test_p2p
 ```
 
-### Benchmarking Tests
+### [WIP] RainTree testing framework
 
-```bash
-$ make benchmark_p2p_addrbook  # AddrBook benchmark
-```
+The testing framework for RainTree is a work-in-progress and can be found in `module_raintree_test.go`.
 
-### DevNet
+The `TestRainTreeCommConfig` struct contains a mapping of `validatorId` to the number of `networkReads` and `networkWrites` it is expected to make during a broadcast. A `demote` does not go over the network and is therefore not considered a `read`.
 
-Pocket's development LocalNet uses RainTree by default, see `docs/development/README.md` on how to run it.
+Given a specific `originatorNode` which initiates the broadcast, the `testRainTreeCalls` helper can be used to configure all the nodes and simulate a broadcast.
+
+Some considerations to keep in mind which are in flux as the codebase evolves are:
+
+- Since RainTree is dependant on the lexicographic order of the addresses, the generation of the private keys (and in turn the public keys and addresses) is important and cannot be randomized for the time being.
+- There is an implicit coupling between `validatorId`, `serviceUrl` and `genericParam` that requires understanding of the codebase. Reach out to @olshansk or @andrewnguyen22 for clarity on this.

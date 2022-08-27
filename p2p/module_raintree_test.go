@@ -3,13 +3,13 @@ package p2p
 import (
 	"crypto/ed25519"
 	"encoding/binary"
-	"fmt"
 	"sort"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -32,7 +32,7 @@ func TestRainTreeNetworkCompleteOneNodes(t *testing.T) {
 	var expectedCalls = TestRainTreeCommConfig{
 		originatorNode: {0, 0},
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls, false)
+	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
 
 func TestRainTreeNetworkCompleteTwoNodes(t *testing.T) {
@@ -41,10 +41,10 @@ func TestRainTreeNetworkCompleteTwoNodes(t *testing.T) {
 	// 	       val_2
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		originatorNode: {0, 0},
-		validatorId(2): {1, 1},
+		originatorNode: {0, 1},
+		validatorId(2): {1, 0},
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls, false)
+	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
 
 func TestRainTreeNetworkCompleteThreeNodes(t *testing.T) {
@@ -53,11 +53,11 @@ func TestRainTreeNetworkCompleteThreeNodes(t *testing.T) {
 	//   val_2        val_1     val_3
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		originatorNode: {0, 0},
-		validatorId(2): {1, 1},
-		validatorId(3): {1, 1},
+		originatorNode: {0, 2},
+		validatorId(2): {1, 0},
+		validatorId(3): {1, 0},
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls, false)
+	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
 
 func TestRainTreeNetworkCompleteFourNodes(t *testing.T) {
@@ -69,12 +69,12 @@ func TestRainTreeNetworkCompleteFourNodes(t *testing.T) {
 	// 		    val_3                val_2             val_4
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		originatorNode: {0, 0},
-		validatorId(2): {2, 2},
-		validatorId(3): {2, 2},
-		validatorId(4): {1, 1},
+		originatorNode: {0, 3},
+		validatorId(2): {2, 1},
+		validatorId(3): {2, 1},
+		validatorId(4): {1, 0},
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls, false)
+	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
 
 func TestRainTreeNetworkCompleteNineNodes(t *testing.T) {
@@ -85,17 +85,17 @@ func TestRainTreeNetworkCompleteNineNodes(t *testing.T) {
 	// val_6        val_4     val_8        val_3        val_1     val_5     val_9        val_7     val_2
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		originatorNode: {0, 0},
-		validatorId(2): {1, 1},
-		validatorId(3): {1, 1},
-		validatorId(4): {1, 1},
-		validatorId(5): {1, 1},
-		validatorId(6): {1, 1},
-		validatorId(7): {1, 1},
-		validatorId(8): {1, 1},
-		validatorId(9): {1, 1},
+		originatorNode: {0, 4},
+		validatorId(2): {1, 0},
+		validatorId(3): {1, 0},
+		validatorId(4): {1, 2},
+		validatorId(5): {1, 0},
+		validatorId(6): {1, 0},
+		validatorId(7): {1, 2},
+		validatorId(8): {1, 0},
+		validatorId(9): {1, 0},
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls, false)
+	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
 
 func TestRainTreeNetworkCompleteEighteenNodes(t *testing.T) {
@@ -108,28 +108,26 @@ func TestRainTreeNetworkCompleteEighteenNodes(t *testing.T) {
 	// val_13         val_11      val_16        val_9        val_7      val_12      val_17         val_15     val_8        val_7        val_5      val_10        val_3        val_1     val_6      val_11        val_9     val_2     val_1         val_17     val_4         val_15         val_13      val_18     val_5        val_3      val_14
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		originatorNode:  {1, 1},
-		validatorId(2):  {1, 1},
+		validatorId(1):  {1, 6},
+		validatorId(2):  {1, 0},
 		validatorId(3):  {2, 2},
-		validatorId(4):  {1, 1},
+		validatorId(4):  {1, 0},
 		validatorId(5):  {2, 2},
-		validatorId(6):  {1, 1},
-		validatorId(7):  {2, 2},
-		validatorId(8):  {1, 1},
+		validatorId(6):  {1, 0},
+		validatorId(7):  {2, 4},
+		validatorId(8):  {1, 0},
 		validatorId(9):  {2, 2},
-		validatorId(10): {1, 1},
+		validatorId(10): {1, 0},
 		validatorId(11): {2, 2},
-		validatorId(12): {1, 1},
-		validatorId(13): {2, 2},
-		validatorId(14): {1, 1},
+		validatorId(12): {1, 0},
+		validatorId(13): {2, 4},
+		validatorId(14): {1, 0},
 		validatorId(15): {2, 2},
-		validatorId(16): {1, 1},
+		validatorId(16): {1, 0},
 		validatorId(17): {2, 2},
-		validatorId(18): {1, 1},
+		validatorId(18): {1, 0},
 	}
-	// Note that the originator, `val_1` is also messaged by `val_17` outside of continuously
-	// demoting itself.
-	testRainTreeCalls(t, originatorNode, expectedCalls, true)
+	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
 
 func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
@@ -142,70 +140,67 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 	// val_20         val_16      val_24         val_14         val_10      val_18      val_26         val_22      val_12         val_11        val_7      val_15        val_5        val_1     val_9      val_17         val_13     val_3     val_2         val_25     val_6         val_23         val_19      val_27     val_8        val_4      val_21
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		originatorNode:  {0, 0},
-		validatorId(2):  {1, 1},
-		validatorId(3):  {1, 1},
-		validatorId(4):  {1, 1},
-		validatorId(5):  {1, 1},
-		validatorId(6):  {1, 1},
-		validatorId(7):  {1, 1},
-		validatorId(8):  {1, 1},
-		validatorId(9):  {1, 1},
-		validatorId(10): {1, 1},
-		validatorId(11): {1, 1},
-		validatorId(12): {1, 1},
-		validatorId(13): {1, 1},
-		validatorId(14): {1, 1},
-		validatorId(15): {1, 1},
-		validatorId(16): {1, 1},
-		validatorId(17): {1, 1},
-		validatorId(18): {1, 1},
-		validatorId(19): {1, 1},
-		validatorId(20): {1, 1},
-		validatorId(21): {1, 1},
-		validatorId(22): {1, 1},
-		validatorId(23): {1, 1},
-		validatorId(24): {1, 1},
-		validatorId(25): {1, 1},
-		validatorId(26): {1, 1},
-		validatorId(27): {1, 1},
+		validatorId(1):  {0, 6},
+		validatorId(2):  {1, 0},
+		validatorId(3):  {1, 0},
+		validatorId(4):  {1, 2},
+		validatorId(5):  {1, 0},
+		validatorId(6):  {1, 0},
+		validatorId(7):  {1, 2},
+		validatorId(8):  {1, 0},
+		validatorId(9):  {1, 0},
+		validatorId(10): {1, 4},
+		validatorId(11): {1, 0},
+		validatorId(12): {1, 0},
+		validatorId(13): {1, 2},
+		validatorId(14): {1, 0},
+		validatorId(15): {1, 0},
+		validatorId(16): {1, 2},
+		validatorId(17): {1, 0},
+		validatorId(18): {1, 0},
+		validatorId(19): {1, 4},
+		validatorId(20): {1, 0},
+		validatorId(21): {1, 0},
+		validatorId(22): {1, 2},
+		validatorId(23): {1, 0},
+		validatorId(24): {1, 0},
+		validatorId(25): {1, 2},
+		validatorId(26): {1, 0},
+		validatorId(27): {1, 0},
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls, false)
+	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
 
 // ~~~~~~ RainTree Unit Test Helpers ~~~~~~
 
-// TODO(andrew): Add configurations tests for dead and partially visible nodes
+// TODO(drewsky): Add configurations tests for dead and partially visible nodes
 type TestRainTreeCommConfig map[string]struct {
-	numNetworkReads  uint16
-	numNetworkWrites uint16
+	// The number of asynchronous reads the node's P2P listener made (i.e. # of messages it received over the network)
+	numNetworkReads int
+	// The number of asynchronous writes the node's P2P listener made (i.e. # of messages it tried to send over the network)
+	numNetworkWrites int
 }
 
 func validatorId(i int) string {
 	return test_artifacts.GetServiceUrl(i)
 }
 
-func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTreeCommConfig, isOriginatorPinged bool) {
+func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTreeCommConfig) {
 	// Network configurations
 	numValidators := len(testCommConfig)
 	configs, genesisState := createConfigs(t, numValidators)
 
-	// Test configurations
-	var messageHandeledWaitGroup sync.WaitGroup
-	if isOriginatorPinged {
-		messageHandeledWaitGroup.Add(numValidators)
-	} else {
-		messageHandeledWaitGroup.Add(numValidators - 1) // -1 because the originator node implicitly handles the message
-	}
-
 	// Network initialization
 	consensusMock := prepareConsensusMock(t, genesisState)
-	telemetryMock := prepareTelemetryMock(t)
 	connMocks := make(map[string]typesP2P.Transport)
 	busMocks := make(map[string]modules.Bus)
+	var messageHandledWaitGroup sync.WaitGroup
 	for valId, expectedCall := range testCommConfig {
-		connMocks[valId] = prepareConnMock(t, expectedCall.numNetworkReads, expectedCall.numNetworkWrites)
-		busMocks[valId] = prepareBusMock(t, &messageHandeledWaitGroup, configs[valId], consensusMock, telemetryMock)
+		messageHandledWaitGroup.Add(expectedCall.numNetworkReads + 1)
+		connMocks[valId] = prepareConnMock(t, &messageHandledWaitGroup, expectedCall.numNetworkReads)
+		messageHandledWaitGroup.Add(expectedCall.numNetworkWrites)
+		telemetryMock := prepareTelemetryMock(t, &messageHandledWaitGroup, expectedCall.numNetworkWrites)
+		busMocks[valId] = prepareBusMock(t, configs[valId], consensusMock, telemetryMock)
 	}
 
 	// Module injection
@@ -228,7 +223,7 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 	// Wait for completion
 	done := make(chan struct{})
 	go func() {
-		messageHandeledWaitGroup.Wait()
+		messageHandledWaitGroup.Wait()
 		close(done)
 	}()
 
@@ -236,7 +231,7 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 	select {
 	case <-done:
 	// All done!
-	case <-time.After(3 * time.Second):
+	case <-time.After(2 * time.Second):
 		t.Fatal("Timeout waiting for message to be handled")
 	}
 }
@@ -244,20 +239,14 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 // ~~~~~~ RainTree Unit Test Mocks ~~~~~~
 
 // A mock of the application specific to know if a message was sent to be handled by the application
-// INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//                         expectation with RainTree by comparing with Telemetry after updating specs.
-func prepareBusMock(t *testing.T, wg *sync.WaitGroup, config *genesis.Config, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
+func prepareBusMock(t *testing.T, config *genesis.Config, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
 	ctrl := gomock.NewController(t)
 	busMock := modulesMock.NewMockBus(ctrl)
 
-	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(func(e *types.PocketEvent) {
-		wg.Done()
-		fmt.Println("App specific bus mock publishing event to bus")
-	}).MaxTimes(1) // Using `MaxTimes` rather than `Times` because originator node implicitly handles the message
-
+	busMock.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
+	busMock.EXPECT().GetConfig().Return(config).Times(1)
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
 	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
-	busMock.EXPECT().GetConfig().Return(config).Times(1)
 
 	return busMock
 }
@@ -277,9 +266,7 @@ func prepareConsensusMock(t *testing.T, genesisState *genesis.GenesisState) *mod
 	return consensusMock
 }
 
-// TODO(team): make the test more rigorous but adding MaxTimes `EmitEvent` expectations. Since we are talking about more than one node
-// I have decided to do with `AnyTimes` for the moment.
-func prepareTelemetryMock(t *testing.T) *modulesMock.MockTelemetryModule {
+func prepareTelemetryMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkWrites int) *modulesMock.MockTelemetryModule {
 	ctrl := gomock.NewController(t)
 	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
 
@@ -291,8 +278,11 @@ func prepareTelemetryMock(t *testing.T) *modulesMock.MockTelemetryModule {
 	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
 
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Eq(p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).Do(func(n, e interface{}, l ...interface{}) {
+		wg.Done()
+	}).Times(expectedNumNetworkWrites)
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).AnyTimes()
 
 	return telemetryMock
 }
@@ -309,26 +299,21 @@ func prepareEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAge
 	return eventMetricsAgentMock
 }
 
-// The reason with use `MaxTimes` instead of `Times` here is because we could have gotten full coverage
-// while a message was still being sent that would have later been dropped due to de-duplication. There
-// is a race condition here, but it is okay because our goal is to achieve max coverage with an upper limit
-// on the number of expected messages propagated.
-// INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//                         expectation with RainTree by comparing with Telemetry after updating specs.
-func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesP2P.Transport {
+func prepareConnMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkReads int) typesP2P.Transport {
 	testChannel := make(chan []byte, 1000)
 	ctrl := gomock.NewController(t)
 	connMock := mocksP2P.NewMockTransport(ctrl)
 
 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
+		wg.Done()
 		data := <-testChannel
 		return data, nil
-	}).MaxTimes(int(expectedNumNetworkReads + 1)) // INVESTIGATE(olshansky): The +1 is necessary because there is one extra read of empty data by every channel...
+	}).Times(expectedNumNetworkReads + 1) // +1 is necessary because there is one extra read of empty data by every channel when it starts
 
 	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) error {
 		testChannel <- data
 		return nil
-	}).MaxTimes(int(expectedNumNetworkWrites))
+	}).Times(expectedNumNetworkReads)
 
 	connMock.EXPECT().Close().Return(nil).Times(1)
 
