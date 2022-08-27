@@ -75,11 +75,18 @@ make test_p2p
 
 The testing framework for RainTree is a work-in-progress and can be found in `module_raintree_test.go`.
 
-The `TestRainTreeCommConfig` struct contains a mapping of `validatorId` to the number of `networkReads` and `networkWrites` it is expected to make during a broadcast. A `demote` does not go over the network and is therefore not considered a `read`.
+The `TestRainTreeCommConfig` struct contains a mapping of `validatorId` to the number of messages it expects to process during a RainTree broadcast:
 
-Given a specific `originatorNode` which initiates the broadcast, the `testRainTreeCalls` helper can be used to configure all the nodes and simulate a broadcast.
+- `numNetworkReads`: the # of asynchronous reads the node's P2P listener made (i.e. # of messages it received over the network)
+- `numNetworkWrites`: the # of asynchronous writes the node's P2P listener made (i.e. # of messages it tried to send over the network)
 
-Some considerations to keep in mind which are in flux as the codebase evolves are:
+Note that a `demote` does not go over the network and is therefore not considered a `read`.
+
+#### Helpers
+
+Given a specific `originatorNode` which initiates the broadcast, the `testRainTreeCalls` helper function can be used to configure all the nodes and simulate a broadcast.
+
+#### Considerations
 
 - Since RainTree is dependant on the lexicographic order of the addresses, the generation of the private keys (and in turn the public keys and addresses) is important and cannot be randomized for the time being.
 - There is an implicit coupling between `validatorId`, `serviceUrl` and `genericParam` that requires understanding of the codebase. Reach out to @olshansk or @andrewnguyen22 for clarity on this.

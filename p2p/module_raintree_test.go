@@ -108,7 +108,7 @@ func TestRainTreeNetworkCompleteEighteenNodes(t *testing.T) {
 	// val_13         val_11      val_16        val_9        val_7      val_12      val_17         val_15     val_8        val_7        val_5      val_10        val_3        val_1     val_6      val_11        val_9     val_2     val_1         val_17     val_4         val_15         val_13      val_18     val_5        val_3      val_14
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(1):  {1, 6},
+		originatorNode:  {1, 6},
 		validatorId(2):  {1, 0},
 		validatorId(3):  {2, 2},
 		validatorId(4):  {1, 0},
@@ -140,7 +140,7 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 	// val_20         val_16      val_24         val_14         val_10      val_18      val_26         val_22      val_12         val_11        val_7      val_15        val_5        val_1     val_9      val_17         val_13     val_3     val_2         val_25     val_6         val_23         val_19      val_27     val_8        val_4      val_21
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeCommConfig{
-		validatorId(1):  {0, 6},
+		originatorNode:  {0, 6},
 		validatorId(2):  {1, 0},
 		validatorId(3):  {1, 0},
 		validatorId(4):  {1, 2},
