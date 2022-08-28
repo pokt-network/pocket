@@ -23,17 +23,17 @@ gantt
     title Pocket V1 Roadmap
     dateFormat  YYYY-MM-DD
     section Milestone 1
-        Pocket PoS       :a1, 2022-06-01, 60d
+        Pocket PoS       :a1, 2022-06-01, 150d
     section Milestone 2
-        Pocket DoS       :a1, 2022-06-01, 120d
+        Pocket DoS       :a1, 2022-07-01, 120d
     section Milestone 3
-        Pocket RoS       :a1, 2022-08-01, 60d
+        Pocket RoS       :a1, 2022-09-15, 120d
     section Milestone 4
-        Pocket CoS       :a1, 2022-10-01, 120d
+        Pocket CoS       :a1, 2022-11-01, 120d
     section Milestone 5
-        Pocket IoS       :a1, 2022-10-01, 60d
+        Pocket IoS       :a1, 2023-01-15, 90d
     section Milestone 6
-        Pocket FoS       :a1, 2023-01-01, 85d
+        Pocket FoS       :a1, 2023-03-01, 120d
 ```
 
 ## Milestones
