@@ -14,7 +14,7 @@ type KVStore interface { // TODO(Team) move to shared
 	// TODO (Team) need proper iterator interface, can't live on this interface without one
 	Put(key []byte, value []byte) error
 	Get(key []byte) ([]byte, error)
-	GetAll(prefixKey []byte, descending bool) ([][]byte, error)
+	GetAll(prefixKey []byte, descending bool) ([][]byte, error) // TODO Pagination for GetAll()
 	Exists(key []byte) (bool, error)
 	ClearAll() error
 }
@@ -75,14 +75,13 @@ func (store badgerKVStore) Get(key []byte) ([]byte, error) {
 }
 
 func (store badgerKVStore) GetAll(prefix []byte, descending bool) (values [][]byte, err error) {
-	// TODO (Team) research views
+	// TODO (INVESTIGATE) research badger.views
 	txn := store.db.NewTransaction(false)
 	defer txn.Discard()
+
 	opt := badger.DefaultIteratorOptions
 	opt.Prefix = prefix
-	if !descending {
-		opt.Reverse = true
-	}
+	opt.Reverse = !descending
 	it := txn.NewIterator(opt)
 	defer it.Close()
 	for it.Rewind(); it.Valid(); it.Next() {

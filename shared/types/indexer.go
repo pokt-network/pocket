@@ -12,21 +12,24 @@ import (
 
 // Interfaces
 
-type TxIndexer interface { // TxIndexer interface defines methods to index and query transactions.
+// TxIndexer interface defines methods to index and query transactions.
+// TODO (Team) follow up tasks
+//   - Connect to bus module
+type TxIndexer interface {
 	// Index analyzes, indexes and stores a single transaction result.
-	// Index, indexes by hash, height, sender, and recipient
+	// Index, indexes by `(hash, height, sender, recipient)`
 	Index(result TxResult) error
 
-	// GetByHash returns the transaction specified by hash or nil if the transaction is not indexed
+	// GetByHash returns all transaction specified by hash or nil if the transaction is not indexed
 	GetByHash(hash []byte) (TxResult, error)
 
-	// GetByHeight returns the transactions specified by height or nil if there are no transactions at that height
+	// GetByHeight returns all transactions specified by height or nil if there are no transactions at that height
 	GetByHeight(height int64) ([]TxResult, error)
 
-	// GetBySender returns the transactions signed by *sender* may be ordered descending/ascending
+	// GetBySender returns all transactions signed by *sender* may be ordered descending/ascending
 	GetBySender(sender string, descending bool) ([]TxResult, error)
 
-	// GetByRecipient returns the transactions *sent to address* may be ordered descending/ascending
+	// GetByRecipient returns all transactions *sent to address* may be ordered descending/ascending
 	GetByRecipient(rec string, descending bool) ([]TxResult, error)
 
 	// Close stops the underlying db connection
@@ -39,7 +42,7 @@ type TxResult interface {
 	GetIndex() int32                      // which index it was within the block-transactions
 	GetResultCode() int32                 // 0 is no error, otherwise corresponds to error object code
 	GetError() string                     // can be empty
-	GetSender() string                    // get the address who signed
+	GetSigner() string                    // get the address who signed
 	GetRecipient() string                 // can be empty
 	GetMessageType() string               // corresponds to type of message (Ex. validator-stake, app-unjail, node-stake) etc.
 	Hash() ([]byte, error)                // the hash of the tx bytes
@@ -49,11 +52,11 @@ type TxResult interface {
 }
 
 var _ TxResult = &DefaultTxResult{}
-var _ TxIndexer = &DefaultTxIndexer{}
+var _ TxIndexer = &txIndexer{}
 
 // Implementation
 
-// DefaultTxIndexer implementation uses a KVStore (interface) to index the transactions
+// txIndexer implementation uses a KVStore (interface) to index the transactions
 //
 // The transaction is indexed in the following formats:
 // - HASHKEY:      "h/SHA3(TxResultProtoBytes)"  VAL: TxResultProtoBytes     // store value by hash
@@ -64,9 +67,6 @@ var _ TxIndexer = &DefaultTxIndexer{}
 // FOOTNOTE: the height/index is store using [ELEN](https://github.com/jordanorelli/lexnum/blob/master/elen.pdf)
 // This is to ensure the results are stored sorted (assuming KVStore uses a byte-wise lexicographical sorting)
 //
-// TODO (Team) follow up tasks
-//   - Pagination for GetAll()
-//   - Connect to bus module
 
 const (
 	HashPrefix            = 'h'
@@ -76,6 +76,8 @@ const (
 	DefaultHeightOrdering = true
 )
 
+// =,- are the default parameters in the example repository.
+// We can research to see if there are more optimal parameters
 var elenEncoder = lexnum.NewEncoder('=', '-')
 
 func (x *DefaultTxResult) Bytes() ([]byte, error) {
@@ -102,28 +104,24 @@ func (x *DefaultTxResult) HashFromBytes(bz []byte) ([]byte, error) {
 	return crypto.SHA3Hash(bz), nil
 }
 
-type DefaultTxIndexer struct {
+type txIndexer struct {
 	db kvstore.KVStore
-}
-
-func (d *DefaultTxIndexer) Close() error {
-	return d.db.Stop()
 }
 
 func NewTxIndexer(databasePath string) (TxIndexer, error) {
 	db, err := kvstore.NewKVStore(databasePath)
-	return &DefaultTxIndexer{
+	return &txIndexer{
 		db: db,
 	}, err
 }
 
 func NewMemTxIndexer() (TxIndexer, error) {
-	return &DefaultTxIndexer{
+	return &txIndexer{
 		db: kvstore.NewMemKVStore(),
 	}, nil
 }
 
-func (d *DefaultTxIndexer) Index(result TxResult) error {
+func (indexer *txIndexer) Index(result TxResult) error {
 	bz, err := result.Bytes()
 	if err != nil {
 		return err
@@ -132,58 +130,62 @@ func (d *DefaultTxIndexer) Index(result TxResult) error {
 	if err != nil {
 		return err
 	}
-	hashKey, err := d.indexByHash(hash, bz)
+	hashKey, err := indexer.indexByHash(hash, bz)
 	if err != nil {
 		return err
 	}
-	if err := d.indexByHeightAndIndex(result.GetHeight(), result.GetIndex(), hashKey); err != nil {
+	if err := indexer.indexByHeightAndIndex(result.GetHeight(), result.GetIndex(), hashKey); err != nil {
 		return err
 	}
-	if err := d.indexBySender(result.GetSender(), hashKey); err != nil {
+	if err := indexer.indexBySender(result.GetSigner(), hashKey); err != nil {
 		return err
 	}
-	if err := d.indexByRecipient(result.GetRecipient(), hashKey); err != nil {
+	if err := indexer.indexByRecipient(result.GetRecipient(), hashKey); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (d *DefaultTxIndexer) GetByHash(hash []byte) (TxResult, error) {
-	return d.get(d.hashKey(hash))
+func (indexer *txIndexer) GetByHash(hash []byte) (TxResult, error) {
+	return indexer.get(indexer.hashKey(hash))
 }
 
-func (d *DefaultTxIndexer) GetByHeight(height int64) ([]TxResult, error) {
-	return d.getAll(d.heightKey(height), DefaultHeightOrdering)
+func (indexer *txIndexer) GetByHeight(height int64) ([]TxResult, error) {
+	return indexer.getAll(indexer.heightKey(height), DefaultHeightOrdering)
 }
 
-func (d *DefaultTxIndexer) GetBySender(sender string, descending bool) ([]TxResult, error) {
-	return d.getAll(d.senderKey(sender), descending)
+func (indexer *txIndexer) GetBySender(sender string, descending bool) ([]TxResult, error) {
+	return indexer.getAll(indexer.senderKey(sender), descending)
 }
 
-func (d *DefaultTxIndexer) GetByRecipient(rec string, descending bool) ([]TxResult, error) {
-	return d.getAll(d.recipientKey(rec), descending)
+func (indexer *txIndexer) GetByRecipient(recipient string, descending bool) ([]TxResult, error) {
+	return indexer.getAll(indexer.recipientKey(recipient), descending)
+}
+
+func (indexer *txIndexer) Close() error {
+	return indexer.db.Stop()
 }
 
 // kv helper functions
 
-func (d *DefaultTxIndexer) getAll(prefix []byte, descending bool) (res []TxResult, err error) {
-	hashKeys, err := d.db.GetAll(prefix, descending)
+func (indexer *txIndexer) getAll(prefix []byte, descending bool) (result []TxResult, err error) {
+	hashKeys, err := indexer.db.GetAll(prefix, descending)
 	if err != nil {
 		return nil, err
 	}
 	for _, hashKey := range hashKeys {
 		var txResult TxResult
-		txResult, err = d.get(hashKey)
+		txResult, err = indexer.get(hashKey)
 		if err != nil {
 			return
 		}
-		res = append(res, txResult)
+		result = append(result, txResult)
 	}
 	return
 }
 
-func (d *DefaultTxIndexer) get(key []byte) (TxResult, error) {
-	bz, err := d.db.Get(key)
+func (indexer *txIndexer) get(key []byte) (TxResult, error) {
+	bz, err := indexer.db.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -192,48 +194,48 @@ func (d *DefaultTxIndexer) get(key []byte) (TxResult, error) {
 
 // index helper functions
 
-func (d *DefaultTxIndexer) indexByHash(hash, bz []byte) (hashKey []byte, err error) {
-	key := d.hashKey(hash)
-	return key, d.db.Put(key, bz)
+func (indexer *txIndexer) indexByHash(hash, bz []byte) (hashKey []byte, err error) {
+	key := indexer.hashKey(hash)
+	return key, indexer.db.Put(key, bz)
 }
 
-func (d *DefaultTxIndexer) indexByHeightAndIndex(height int64, index int32, bz []byte) error {
-	return d.db.Put(d.heightAndIndexKey(height, index), bz)
+func (indexer *txIndexer) indexByHeightAndIndex(height int64, index int32, bz []byte) error {
+	return indexer.db.Put(indexer.heightAndIndexKey(height, index), bz)
 }
 
-func (d *DefaultTxIndexer) indexBySender(sender string, bz []byte) error {
-	return d.db.Put(d.senderKey(sender), bz)
+func (indexer *txIndexer) indexBySender(sender string, bz []byte) error {
+	return indexer.db.Put(indexer.senderKey(sender), bz)
 }
 
-func (d *DefaultTxIndexer) indexByRecipient(recipient string, bz []byte) error {
+func (indexer *txIndexer) indexByRecipient(recipient string, bz []byte) error {
 	if recipient == "" {
 		return nil
 	}
-	return d.db.Put(d.recipientKey(recipient), bz)
+	return indexer.db.Put(indexer.recipientKey(recipient), bz)
 }
 
 // key helper functions
 
-func (d *DefaultTxIndexer) hashKey(hash []byte) []byte {
-	return d.key(HashPrefix, hex.EncodeToString(hash))
+func (indexer *txIndexer) hashKey(hash []byte) []byte {
+	return indexer.key(HashPrefix, hex.EncodeToString(hash))
 }
 
-func (d *DefaultTxIndexer) heightAndIndexKey(height int64, index int32) []byte {
-	return append(d.heightKey(height), []byte(elenEncoder.EncodeInt(int(index)))...)
+func (indexer *txIndexer) heightAndIndexKey(height int64, index int32) []byte {
+	return append(indexer.heightKey(height), []byte(elenEncoder.EncodeInt(int(index)))...)
 }
 
-func (d *DefaultTxIndexer) heightKey(height int64) []byte {
-	return d.key(HeightPrefix, elenEncoder.EncodeInt(int(height))+"/")
+func (indexer *txIndexer) heightKey(height int64) []byte {
+	return indexer.key(HeightPrefix, elenEncoder.EncodeInt(int(height))+"/")
 }
 
-func (d *DefaultTxIndexer) senderKey(address string) []byte {
-	return d.key(SenderPrefix, address)
+func (indexer *txIndexer) senderKey(address string) []byte {
+	return indexer.key(SenderPrefix, address)
 }
 
-func (d *DefaultTxIndexer) recipientKey(address string) []byte {
-	return d.key(RecipientPrefix, address)
+func (indexer *txIndexer) recipientKey(address string) []byte {
+	return indexer.key(RecipientPrefix, address)
 }
 
-func (d *DefaultTxIndexer) key(prefix rune, postfix string) []byte {
+func (indexer *txIndexer) key(prefix rune, postfix string) []byte {
 	return []byte(fmt.Sprintf("%s/%s", string(prefix), postfix))
 }

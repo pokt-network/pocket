@@ -13,11 +13,11 @@ func TestTransactionIndexerIndexAndGetters(t *testing.T) {
 	txIndexer, err := NewMemTxIndexer()
 	defer txIndexer.Close()
 	// setup 3 transactions
-	txResult := NewTestingTransactionResult(0, 0)
+	txResult := NewTestingTransactionResult(t, 0, 0)
 	require.NoError(t, err)
-	txResult2 := NewTestingTransactionResult(0, 1)
+	txResult2 := NewTestingTransactionResult(t, 0, 1)
 	require.NoError(t, err)
-	txResult3 := NewTestingTransactionResult(1, 0)
+	txResult3 := NewTestingTransactionResult(t, 1, 0)
 	require.NoError(t, err)
 	// index all 3 transactions
 	err = txIndexer.Index(txResult)
@@ -43,7 +43,7 @@ func TestTransactionIndexerIndexAndGetters(t *testing.T) {
 	require.True(t, txResultsEqual(t, txResult2, txResultsFromHeight[1]))
 	require.True(t, txResultsEqual(t, txResult3, txResultsFromHeight1[0]))
 	// check indexing by sender / recipient
-	sender := txResult3.GetSender()
+	sender := txResult3.GetSigner()
 	recipient := txResult3.GetRecipient()
 	require.NoError(t, err)
 	txResultsFromSender, err := txIndexer.GetBySender(sender, false)
@@ -73,7 +73,7 @@ func txResultsEqual(t *testing.T, txR1, txR2 TxResult) bool {
 
 // utility helpers
 
-func NewTestingTransactionResult(height, index int) TxResult {
+func NewTestingTransactionResult(t *testing.T, height, index int) TxResult {
 	testingTransaction := randLetterBytes()
 	resultCode, err := randomErr()
 	return &DefaultTxResult{
@@ -82,8 +82,8 @@ func NewTestingTransactionResult(height, index int) TxResult {
 		Index:       int32(index),
 		ResultCode:  resultCode,
 		Error:       err,
-		Signer:      randomAddress(),
-		Recipient:   randomAddress(),
+		Signer:      randomAddress(t),
+		Recipient:   randomAddress(t),
 		MessageType: randomMessageType(),
 	}
 }
@@ -93,11 +93,13 @@ func randomMessageType() string {
 	return msgTypes[rand.Intn(len(msgTypes))]
 }
 
-func randomAddress() string {
-	add, _ := crypto.GenerateAddress()
+func randomAddress(t *testing.T) string {
+	add, err := crypto.GenerateAddress()
+	require.NoError(t, err)
 	return add.String()
 }
 
+// Returns an error 25% of the time
 func randomErr() (code int32, err string) {
 	errors := []string{"insufficient funds", "address not valid", "invalid signature"}
 	code = int32(0)
@@ -109,6 +111,7 @@ func randomErr() (code int32, err string) {
 	return
 }
 
+// Generates a random alphanumeric sequence of exactly 50 characters
 func randLetterBytes() []byte {
 	rand.Seed(int64(time.Now().Nanosecond()))
 	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
