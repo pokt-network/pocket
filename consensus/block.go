@@ -1,4 +1,4 @@
-package consensus // TODO (Olshansk) needs a README file with proper code structure
+package consensus
 
 import (
 	"encoding/hex"

@@ -18,12 +18,12 @@ type BaseConfig struct {
 }
 
 type Config struct {
-	Base        *BaseConfig
-	Consensus   ConsensusConfig
-	Utility     UtilityConfig
-	Persistence PersistenceConfig
-	P2P         P2PConfig
-	Telemetry   TelemetryConfig
+	Base        *BaseConfig       `json:"base"`
+	Consensus   ConsensusConfig   `json:"consensus"`
+	Utility     UtilityConfig     `json:"utility"`
+	Persistence PersistenceConfig `json:"persistence"`
+	P2P         P2PConfig         `json:"p2p"`
+	Telemetry   TelemetryConfig   `json:"telemetry"`
 }
 
 type ConsensusConfig interface {

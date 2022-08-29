@@ -44,7 +44,7 @@ func Create(cfg, genesis map[string]json.RawMessage) (n *Node, err error) {
 		return nil, err
 	}
 
-	telemetryMod, err := telemetry.Create(cfg["Telemetry"], genesis["TelemetryGenesisState"]) // TODO (team; discuss) is telemetry a proper module or not?
+	telemetryMod, err := telemetry.Create(cfg["Telemetry"], genesis["TelemetryGenesisState"])
 	if err != nil {
 		return nil, err
 	}

@@ -70,7 +70,7 @@ func Create(config, gen json.RawMessage) (modules.ConsensusModule, error) {
 	if err != nil {
 		return nil, err
 	}
-	leaderElectionMod, err := leader_election.Create(cfg)
+	leaderElectionMod, err := leader_election.Create(cfg, genesis)
 	if err != nil {
 		return nil, err
 	}

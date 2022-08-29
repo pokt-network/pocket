@@ -26,10 +26,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// The number at which to start incrementing the seeds
-// used for random key generation.
-const genesisConfigSeedStart = uint32(42)
-
 // If this is set to true, consensus unit tests will fail if additional unexpected messages are received.
 // This slows down the tests because we always fail until the timeout specified by the test before continuing
 // but guarantees more correctness.
@@ -57,9 +53,9 @@ type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
 /*** Node Generation Helpers ***/
 
-func GenerateNodeConfigs(_ *testing.T, n int) (configs []modules.Config, genesisState modules.GenesisState) {
+func GenerateNodeConfigs(_ *testing.T, numOfVals int) (configs []modules.Config, genesisState modules.GenesisState) {
 	var keys []string
-	genesisState, keys = test_artifacts.NewGenesisState(n, 1, 1, 1)
+	genesisState, keys = test_artifacts.NewGenesisState(numOfVals, 1, 1, 1)
 	configs = test_artifacts.NewDefaultConfigs(keys)
 	for i, config := range configs {
 		config.Consensus = &typesCons.ConsensusConfig{
@@ -86,8 +82,10 @@ func CreateTestConsensusPocketNodes(
 	// TODO(design): The order here is important in order for NodeId to be set correctly below.
 	// This logic will need to change once proper leader election is implemented.
 	sort.Slice(configs, func(i, j int) bool {
-		pk, _ := cryptoPocket.NewPrivateKey(configs[i].Base.PrivateKey)
-		pk2, _ := cryptoPocket.NewPrivateKey(configs[j].Base.PrivateKey)
+		pk, err := cryptoPocket.NewPrivateKey(configs[i].Base.PrivateKey)
+		require.NoError(t, err)
+		pk2, err := cryptoPocket.NewPrivateKey(configs[j].Base.PrivateKey)
+		require.NoError(t, err)
 		return pk.Address().String() < pk2.Address().String()
 	})
 	for i, cfg := range configs {

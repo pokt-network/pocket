@@ -38,7 +38,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 
 - [Shared Architecture](shared/README.md)
 - [Utility Architecture](utility/doc/README.md)
-- _Coming Soon: Consensus Architecture_
+- _Coming Soon: Consensus Architecture_ // TODO (olshansky): needs a README file with proper code structure
 - [Persistence Architecture](persistence/README.md)
 - [P2P Architecture](p2p/README.md)
 

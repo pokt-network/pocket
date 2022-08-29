@@ -18,9 +18,7 @@ type leaderElectionModule struct {
 	bus modules.Bus
 }
 
-func Create(
-	_ *typesCons.ConsensusConfig,
-) (LeaderElectionModule, error) {
+func Create(_ *typesCons.ConsensusConfig, _ *typesCons.ConsensusGenesisState) (LeaderElectionModule, error) {
 	return &leaderElectionModule{}, nil
 }
 

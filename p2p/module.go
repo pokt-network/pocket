@@ -23,7 +23,7 @@ var _ modules.P2PModule = &p2pModule{}
 
 type p2pModule struct {
 	bus       modules.Bus
-	p2pConfig modules.P2PConfig // TODO (Olshansk) to remove this since it'll be available via the bus
+	p2pConfig modules.P2PConfig // TODO (olshansky): to remove this since it'll be available via the bus
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address

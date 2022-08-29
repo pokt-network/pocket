@@ -12,8 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed schema -> types 
 - Added genesis, config, and unstaking proto files from shared
 - Ensured proto structures implement shared interfaces
-- Populate genesis state uses shared interfaces in order to accept MockPersistenceGenesisState 
-- ^ Same applies for PersistenceConfig
+- Populate `PersistenceGenesisState` uses shared interfaces in order to accept `MockPersistenceGenesisState` 
+- ^ Same applies for `PersistenceConfig`
 - Bumped cleanup TODOs to #147 due to scope size of #163
 
 ## [0.0.0.3] - 2022-08-16
