@@ -5,17 +5,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/pokt-network/pocket/app/client/rpc"
 	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 )
 
-func QueryRPC(path string, jsonArgs []byte) (string, error) {
-	cliURL := remoteCLIURL + path
-	fmt.Println(cliURL)
-	req, err := http.NewRequest("POST", cliURL, bytes.NewBuffer(jsonArgs))
+func QueryRPC(routeKey rpc.RouteKey, jsonArgs []byte) (string, error) {
+	route, ok := rpc.RoutesMap[routeKey]
+	if !ok {
+		log.Fatalf("unable to find route with key %s", routeKey)
+	}
+	cliURL := remoteCLIURL + route.Path
+	fmt.Printf("%s %s", route.Method, cliURL)
+	req, err := http.NewRequest(route.Method, cliURL, bytes.NewBuffer(jsonArgs))
 	if err != nil {
 		return "", err
 	}
