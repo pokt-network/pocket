@@ -27,10 +27,14 @@ var (
 	DefaultUnstakingHeight     = int64(-1)
 	DefaultChainID             = "testnet"
 	DefaultMaxBlockBytes       = uint64(4000000)
+	DefaultRpcPort             = "26657"
+	DefaultRpcTimeout          = uint64(3000)
+	DefaultRemoteCliUrl        = "http://localhost:26657"
 )
 
 // TODO(drewsky): this is meant to be a **temporary** replacement for the recently deprecated
-//                'genesis config' option. We need to implement a real suite soon!
+//
+//	'genesis config' option. We need to implement a real suite soon!
 func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (genesisState *genesis.GenesisState, validatorPrivateKeys []string) {
 	apps, appsPrivateKeys := NewActors(genesis.ActorType_App, numApplications)
 	vals, validatorPrivateKeys := NewActors(genesis.ActorType_Val, numValidators)
@@ -90,6 +94,12 @@ func NewDefaultConfig(nodeNum int, privateKey string) *genesis.Config {
 			Enabled:  true,
 			Address:  "0.0.0.0:9000",
 			Endpoint: "/metrics",
+		},
+		Rpc: &genesis.RPCConfig{
+			Enabled:      true,
+			Port:         DefaultRpcPort,
+			Timeout:      DefaultRpcTimeout,
+			RemoteCliUrl: DefaultRemoteCliUrl,
 		},
 	}
 }

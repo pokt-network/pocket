@@ -1,12 +1,15 @@
 package cli
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/pokt-network/pocket/shared/crypto"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // readEd25519PrivateKeyFromFile returns an Ed25519PrivateKey from a file where the file simply encodes it in a string (for now)
@@ -36,4 +39,39 @@ func parseEd25519PrivateKeyFromReader(reader io.Reader) (pk crypto.Ed25519Privat
 	}
 	pk = priv.Bytes()
 	return
+}
+
+func Credentials(pwd string) string {
+	if pwd != "" && strings.TrimSpace(pwd) != "" {
+		return strings.TrimSpace(pwd)
+	} else {
+		bytePassword, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+		if err != nil {
+			fmt.Println(err)
+		}
+		return strings.TrimSpace(string(bytePassword))
+	}
+}
+
+func Confirmation(pwd string) bool {
+	if pwd != "" && strings.TrimSpace(pwd) != "" {
+		return true
+	} else {
+		reader := bufio.NewReader(os.Stdin)
+
+		for {
+			fmt.Println("yes | no")
+			response, err := reader.ReadString('\n')
+			if err != nil {
+				fmt.Println("Error reading string: ", err.Error())
+				return false
+			}
+			response = strings.ToLower(strings.TrimSpace(response))
+			if response == "y" || response == "yes" {
+				return true
+			} else if response == "n" || response == "no" {
+				return false
+			}
+		}
+	}
 }

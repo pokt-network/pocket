@@ -27,9 +27,9 @@ func NewAccountCommand() *cobra.Command {
 
 func accountCommands() (cmds []*cobra.Command) {
 	sendCmd := &cobra.Command{
-		Use:     "Send <from> <to> <amount>",
-		Short:   "Send <from> <to> <amount>",
-		Long:    "Sends <amount> to address <to> from address <from>",
+		Use:     "Send <fromAddr> <to> <amount>",
+		Short:   "Send <fromAddr> <to> <amount>",
+		Long:    "Sends <amount> to address <to> from address <fromAddr>",
 		Aliases: []string{"send"},
 		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
