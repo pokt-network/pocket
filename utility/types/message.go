@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"log"
 	"net/url"
 	"strconv"
 	"strings"
@@ -42,6 +43,9 @@ type Message interface {
 	SetSigner(signer []byte)
 	ValidateBasic() types.Error
 	GetActorType() ActorType
+
+	// Get the canonical byte representation of the ProtoMsg.
+	GetSignBytes() []byte
 }
 
 func (msg *MessageStake) ValidateBasic() types.Error {
@@ -123,6 +127,13 @@ func (msg *MessageSend) SetSigner(signer []byte)            { /*no op*/ }
 func (msg *MessageChangeParameter) SetSigner(signer []byte) { msg.Signer = signer }
 func (x *MessageChangeParameter) GetActorType() ActorType   { return -1 }
 func (x *MessageDoubleSign) GetActorType() ActorType        { return -1 }
+func (msg *MessageStake) GetSignBytes() []byte              { return getSignBytes(msg) }
+func (msg *MessageEditStake) GetSignBytes() []byte          { return getSignBytes(msg) }
+func (msg *MessageDoubleSign) GetSignBytes() []byte         { return getSignBytes(msg) }
+func (msg *MessageSend) GetSignBytes() []byte               { return getSignBytes(msg) }
+func (msg *MessageChangeParameter) GetSignBytes() []byte    { return getSignBytes(msg) }
+func (msg *MessageUnstake) GetSignBytes() []byte            { return getSignBytes(msg) }
+func (msg *MessageUnpause) GetSignBytes() []byte            { return getSignBytes(msg) }
 
 // helpers
 
@@ -266,4 +277,13 @@ func ValidateStaker(msg MessageStaker) types.Error {
 		return err
 	}
 	return ValidateServiceUrl(msg.GetActorType(), msg.GetServiceUrl())
+}
+
+func getSignBytes(msg Message) []byte {
+	bz, err := types.GetCodec().Marshal(msg)
+	if err != nil {
+		log.Fatalf("must marshal %v", err)
+	}
+	// DISCUSS(team): should we also sort the JSON like in V0?
+	return bz
 }
