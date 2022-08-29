@@ -5,15 +5,15 @@ import (
 )
 
 const (
-	HealthRoute            routeKey = "Health"
-	VersionRoute           routeKey = "Version"
-	BroadcastTxSyncRoute   routeKey = "BroadcastTxSync"
-	BroadcastTxAsyncRoute  routeKey = "BroadcastTxAsync"
-	BroadcastTxCommitRoute routeKey = "BroadcastTxCommit"
-	QueryTxRoute           routeKey = "QueryTx"
+	HealthRoute            RouteKey = "Health"
+	VersionRoute           RouteKey = "Version"
+	BroadcastTxSyncRoute   RouteKey = "BroadcastTxSync"
+	BroadcastTxAsyncRoute  RouteKey = "BroadcastTxAsync"
+	BroadcastTxCommitRoute RouteKey = "BroadcastTxCommit"
+	QueryTxRoute           RouteKey = "QueryTx"
 )
 
-var RoutesMap = map[routeKey]Route{
+var RoutesMap = map[RouteKey]Route{
 	// System routes
 	HealthRoute:  {Method: "GET", Path: "/v1/health", HandlerFunc: func(rs RpcServer) httprouter.Handle { return rs.HealthHandler }},
 	VersionRoute: {Method: "GET", Path: "/v1/version", HandlerFunc: func(rs RpcServer) httprouter.Handle { return rs.VersionHandler }},
@@ -28,7 +28,7 @@ var RoutesMap = map[routeKey]Route{
 }
 
 type (
-	routeKey string
+	RouteKey string
 	Route    struct {
 		Method      string
 		Path        string
