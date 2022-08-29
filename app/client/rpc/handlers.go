@@ -8,6 +8,15 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+type RpcServer interface {
+	TODOHandler(http.ResponseWriter, *http.Request, httprouter.Params)
+	HealthHandler(http.ResponseWriter, *http.Request, httprouter.Params)
+	VersionHandler(http.ResponseWriter, *http.Request, httprouter.Params)
+	BroadcastRawTxSyncHandler(http.ResponseWriter, *http.Request, httprouter.Params)
+}
+
+var _ RpcServer = &rpcServer{}
+
 func (s *rpcServer) TODOHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	WriteErrorResponse(w, 503, "not implemented")
 }
