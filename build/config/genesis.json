@@ -2,31 +2,31 @@
   "PersistenceGenesisState": {
     "accounts": [
       {
-        "address": "5ab50d4fe2e45d3be8a298fe2f9ec0b0c17e6a18",
+        "address": "892ce2814f191a9ccca12654dfc7da896c3a06f6",
         "amount": "100000000000000"
       },
       {
-        "address": "10f053c88a7e87330de34198bd3e19edfa673610",
+        "address": "cb6f1fbd0c69235c6cfa097bea838479c6e647dd",
         "amount": "100000000000000"
       },
       {
-        "address": "314191f07d6dd208b3acc005727f99039533e29c",
+        "address": "a1d6229202d7422988be0499d2d5ef650f580d5b",
         "amount": "100000000000000"
       },
       {
-        "address": "2983b77b4cbd42cd93f203278af8d4da7a7328f2",
+        "address": "e5037e5ea61f3dbe73fefa0bd663cb81f63e8402",
         "amount": "100000000000000"
       },
       {
-        "address": "82233aee4d1b6ed7bf73847e7a74b7af8ff746f8",
+        "address": "27cadfd19a742529c013d141e1f34c815a0d5ae4",
         "amount": "100000000000000"
       },
       {
-        "address": "ed3134be08729bf52b7b16242782541f2730a571",
+        "address": "c7d80b63d874db7d6ceda742aa64e8f93a0ccb68",
         "amount": "100000000000000"
       },
       {
-        "address": "9405c6dca4f155058a9f471998243353559754ef",
+        "address": "f7ae354f82858ed8fa371a430faa767fc98932db",
         "amount": "100000000000000"
       }
     ],
@@ -58,54 +58,54 @@
     ],
     "validators": [
       {
-        "address": "5ab50d4fe2e45d3be8a298fe2f9ec0b0c17e6a18",
-        "public_key": "5018ba45eb24458fc6548fd4bee499ee95c3a93f46e80e38f0b4a08ba42eb0ba",
+        "address": "892ce2814f191a9ccca12654dfc7da896c3a06f6",
+        "public_key": "1b4336d0023a3f7db32975ef7cf629620bbda2712d5238459fea99272fd95fa3",
         "chains": null,
         "generic_param": "node1.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "5ab50d4fe2e45d3be8a298fe2f9ec0b0c17e6a18",
+        "output": "892ce2814f191a9ccca12654dfc7da896c3a06f6",
         "actor_type": 3
       },
       {
-        "address": "10f053c88a7e87330de34198bd3e19edfa673610",
-        "public_key": "e400039de85ca72690ce9d0fb3a488b2395ab4c60b4e8fc3095e556f1cb9fd17",
+        "address": "cb6f1fbd0c69235c6cfa097bea838479c6e647dd",
+        "public_key": "0bb42b3ba700b229a125e7a17824b9a38919f59f9e561a7536aa55f6c0cf06f5",
         "chains": null,
         "generic_param": "node2.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "10f053c88a7e87330de34198bd3e19edfa673610",
+        "output": "cb6f1fbd0c69235c6cfa097bea838479c6e647dd",
         "actor_type": 3
       },
       {
-        "address": "314191f07d6dd208b3acc005727f99039533e29c",
-        "public_key": "a77fd5cd09b91e4d08f6e4ef9f62e228642707a4841264d2a55802b8d42e7e11",
+        "address": "a1d6229202d7422988be0499d2d5ef650f580d5b",
+        "public_key": "417ad60d86203115c17a015412d37c41c70d658a3d7e1823de94ffe903731576",
         "chains": null,
         "generic_param": "node3.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "314191f07d6dd208b3acc005727f99039533e29c",
+        "output": "a1d6229202d7422988be0499d2d5ef650f580d5b",
         "actor_type": 3
       },
       {
-        "address": "2983b77b4cbd42cd93f203278af8d4da7a7328f2",
-        "public_key": "ceb2f29ed7a8984558e3040d1ec44682377ec3f906ab09ec171d1929c609f6d1",
+        "address": "e5037e5ea61f3dbe73fefa0bd663cb81f63e8402",
+        "public_key": "ec01f432e71ebdf9bb887470f2e5ec7149ce6d3cc0b4f0b4606696fe3378fa3a",
         "chains": null,
         "generic_param": "node4.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "2983b77b4cbd42cd93f203278af8d4da7a7328f2",
+        "output": "e5037e5ea61f3dbe73fefa0bd663cb81f63e8402",
         "actor_type": 3
       }
     ],
     "applications": [
       {
-        "address": "9405c6dca4f155058a9f471998243353559754ef",
-        "public_key": "39c898ed8f5e9d348d34b0610fd5e35de2054ca25ea08776b8c2b874e37c565f",
+        "address": "f7ae354f82858ed8fa371a430faa767fc98932db",
+        "public_key": "ef0cc29988dc09f0cbfd62951d073f6e69cdc6221fb78b7184c6aa59d0fb4fc3",
         "chains": [
           "0001"
         ],
@@ -113,14 +113,14 @@
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "9405c6dca4f155058a9f471998243353559754ef",
+        "output": "f7ae354f82858ed8fa371a430faa767fc98932db",
         "actor_type": 0
       }
     ],
     "service_nodes": [
       {
-        "address": "82233aee4d1b6ed7bf73847e7a74b7af8ff746f8",
-        "public_key": "2906977a5021dda4089b01d96742016f2029a4b46f56a6a43d5555bb5a6a3982",
+        "address": "27cadfd19a742529c013d141e1f34c815a0d5ae4",
+        "public_key": "bd0bd7c49c4d0cd9cd84a38da6935ef1f44db123bb451e0cb3ac4c136c374153",
         "chains": [
           "0001"
         ],
@@ -128,14 +128,14 @@
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "82233aee4d1b6ed7bf73847e7a74b7af8ff746f8",
+        "output": "27cadfd19a742529c013d141e1f34c815a0d5ae4",
         "actor_type": 1
       }
     ],
     "fishermen": [
       {
-        "address": "ed3134be08729bf52b7b16242782541f2730a571",
-        "public_key": "8c1f65915d2a3725b9de0469baa9c5abc611e0aeb77bea8772b5714b3b69a742",
+        "address": "c7d80b63d874db7d6ceda742aa64e8f93a0ccb68",
+        "public_key": "8dc9c70808badd577c979323b2f3eac02252d051a5e495d2d3915e06cc6b957f",
         "chains": [
           "0001"
         ],
@@ -143,7 +143,7 @@
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "ed3134be08729bf52b7b16242782541f2730a571",
+        "output": "c7d80b63d874db7d6ceda742aa64e8f93a0ccb68",
         "actor_type": 2
       }
     ],
@@ -260,54 +260,54 @@
   },
   "ConsensusGenesisState": {
     "genesis_time": {
-      "seconds": 1661426821,
-      "nanos": 665689000
+      "seconds": 1661805013,
+      "nanos": 842605000
     },
     "chain_id": "testnet",
     "max_block_bytes": 4000000,
     "validators": [
       {
-        "address": "5ab50d4fe2e45d3be8a298fe2f9ec0b0c17e6a18",
-        "public_key": "5018ba45eb24458fc6548fd4bee499ee95c3a93f46e80e38f0b4a08ba42eb0ba",
+        "address": "892ce2814f191a9ccca12654dfc7da896c3a06f6",
+        "public_key": "1b4336d0023a3f7db32975ef7cf629620bbda2712d5238459fea99272fd95fa3",
         "chains": null,
         "generic_param": "node1.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "5ab50d4fe2e45d3be8a298fe2f9ec0b0c17e6a18",
+        "output": "892ce2814f191a9ccca12654dfc7da896c3a06f6",
         "actor_type": 3
       },
       {
-        "address": "10f053c88a7e87330de34198bd3e19edfa673610",
-        "public_key": "e400039de85ca72690ce9d0fb3a488b2395ab4c60b4e8fc3095e556f1cb9fd17",
+        "address": "cb6f1fbd0c69235c6cfa097bea838479c6e647dd",
+        "public_key": "0bb42b3ba700b229a125e7a17824b9a38919f59f9e561a7536aa55f6c0cf06f5",
         "chains": null,
         "generic_param": "node2.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "10f053c88a7e87330de34198bd3e19edfa673610",
+        "output": "cb6f1fbd0c69235c6cfa097bea838479c6e647dd",
         "actor_type": 3
       },
       {
-        "address": "314191f07d6dd208b3acc005727f99039533e29c",
-        "public_key": "a77fd5cd09b91e4d08f6e4ef9f62e228642707a4841264d2a55802b8d42e7e11",
+        "address": "a1d6229202d7422988be0499d2d5ef650f580d5b",
+        "public_key": "417ad60d86203115c17a015412d37c41c70d658a3d7e1823de94ffe903731576",
         "chains": null,
         "generic_param": "node3.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "314191f07d6dd208b3acc005727f99039533e29c",
+        "output": "a1d6229202d7422988be0499d2d5ef650f580d5b",
         "actor_type": 3
       },
       {
-        "address": "2983b77b4cbd42cd93f203278af8d4da7a7328f2",
-        "public_key": "ceb2f29ed7a8984558e3040d1ec44682377ec3f906ab09ec171d1929c609f6d1",
+        "address": "e5037e5ea61f3dbe73fefa0bd663cb81f63e8402",
+        "public_key": "ec01f432e71ebdf9bb887470f2e5ec7149ce6d3cc0b4f0b4606696fe3378fa3a",
         "chains": null,
         "generic_param": "node4.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "2983b77b4cbd42cd93f203278af8d4da7a7328f2",
+        "output": "e5037e5ea61f3dbe73fefa0bd663cb81f63e8402",
         "actor_type": 3
       }
     ]

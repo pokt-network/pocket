@@ -1,30 +1,30 @@
 {
-  "Base": {
+  "base": {
     "root_directory": "/go/src/github.com/pocket-network",
-    "private_key": "c7833126fa6aa748837e24100a9289e93ac5feff001bc7bb5abba32fcc8e35b7ceb2f29ed7a8984558e3040d1ec44682377ec3f906ab09ec171d1929c609f6d1"
+    "private_key": "46bffb1efa7a952cb791a52d88890fd765eb10d3c4202283ea94021d501f9100ec01f432e71ebdf9bb887470f2e5ec7149ce6d3cc0b4f0b4606696fe3378fa3a"
   },
-  "Consensus": {
+  "consensus": {
     "max_mempool_bytes": 500000000,
     "pacemaker_config": {
       "timeout_msec": 5000,
       "manual": true,
       "debug_time_between_steps_msec": 1000
     },
-    "private_key": "c7833126fa6aa748837e24100a9289e93ac5feff001bc7bb5abba32fcc8e35b7ceb2f29ed7a8984558e3040d1ec44682377ec3f906ab09ec171d1929c609f6d1"
+    "private_key": "46bffb1efa7a952cb791a52d88890fd765eb10d3c4202283ea94021d501f9100ec01f432e71ebdf9bb887470f2e5ec7149ce6d3cc0b4f0b4606696fe3378fa3a"
   },
-  "Utility": {},
-  "Persistence": {
+  "utility": {},
+  "persistence": {
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
     "node_schema": "node4",
     "block_store_path": "/var/blockstore"
   },
-  "P2P": {
+  "p2p": {
     "consensus_port": 8080,
     "use_rain_tree": true,
     "is_empty_connection_type": false,
-    "private_key": "c7833126fa6aa748837e24100a9289e93ac5feff001bc7bb5abba32fcc8e35b7ceb2f29ed7a8984558e3040d1ec44682377ec3f906ab09ec171d1929c609f6d1"
+    "private_key": "46bffb1efa7a952cb791a52d88890fd765eb10d3c4202283ea94021d501f9100ec01f432e71ebdf9bb887470f2e5ec7149ce6d3cc0b4f0b4606696fe3378fa3a"
   },
-  "Telemetry": {
+  "telemetry": {
     "enabled": true,
     "address": "0.0.0.0:9000",
     "endpoint": "/metrics"
