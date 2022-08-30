@@ -15,7 +15,10 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(NewActorCommands()...)
+	subcmdFlags := []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
+	}}
+	rootCmd.AddCommand(NewActorCommands(subcmdFlags)...)
 }
 
 var (
@@ -24,17 +27,21 @@ var (
 	pwd                         string
 )
 
-type actorCmdDef struct {
-	Name      string
-	ActorType types.ActorType
-}
+type (
+	cmdOption   func(*cobra.Command)
+	actorCmdDef struct {
+		Name      string
+		ActorType types.ActorType
+		Options   []cmdOption
+	}
+)
 
-func NewActorCommands() (cmds []*cobra.Command) {
+func NewActorCommands(cmdOptions []cmdOption) (cmds []*cobra.Command) {
 	actorCmdDefs := []actorCmdDef{
-		{"Application", types.ActorType_App},
-		{"Node", types.ActorType_Node},
-		{"Fisherman", types.ActorType_Fish},
-		{"Validator", types.ActorType_Val},
+		{"Application", types.ActorType_App, cmdOptions},
+		{"Node", types.ActorType_Node, cmdOptions},
+		{"Fisherman", types.ActorType_Fish, cmdOptions},
+		{"Validator", types.ActorType_Val, cmdOptions},
 	}
 
 	for _, cmdDef := range actorCmdDefs {
@@ -92,7 +99,11 @@ If no changes are desired for the parameter, just enter the current param value 
 			chains := strings.Split(rawChains, ",")
 			serviceURI := args[3]
 
-			fmt.Println("Enter Passphrase: ")
+			if strings.TrimSpace(pwd) == "" {
+				fmt.Println("Enter Passphrase: ")
+			} else {
+				fmt.Println("Using Passphrase provided via flag")
+			}
 			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 			_ = Credentials(pwd)
 
@@ -212,6 +223,12 @@ If no changes are desired for the parameter, just enter the current param value 
 		},
 	}
 	cmds = append(cmds, unpauseCmd)
+
+	for _, cmd := range cmds {
+		for _, opt := range cmdDef.Options {
+			opt(cmd)
+		}
+	}
 
 	return cmds
 }
