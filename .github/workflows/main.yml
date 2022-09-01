@@ -16,7 +16,7 @@ on:
 
 env:
   # Even though we can test against multiple versions, this one is considered a target version.
-  TARGET_GOLANG_VERSION: "1.18"
+  TARGET_GOLANG_VERSION: "1.19"
   PROTOC_VERSION: "3.19.4"
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ["1.18"] # As we are relying on generics, we can't go lower than 1.18.
+        go: ["1.18", "1.19"] # As we are relying on generics, we can't go lower than 1.18.
       fail-fast: false
     name: Go ${{ matrix.go }} test
     steps:
@@ -58,7 +58,10 @@ jobs:
         uses: guyarb/golang-test-annotations@v0.5.1
         with:
           test-results: test_results.json
-
+      - name: Run static check
+        # Only run if the test failed on target version to avoid duplicated annotations on GitHub.
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        uses: reviewdog/action-staticcheck@v1
       # TODO(@okdas): move coverage to a separate job
       - name: create coverage report
         if: ${{ env.TARGET_GOLANG_VERSION == matrix.go }}
