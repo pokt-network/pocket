@@ -2,17 +2,16 @@ package p2p
 
 import (
 	"fmt"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"log"
 
-	"github.com/pokt-network/pocket/shared/config"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 // CLEANUP(drewsky): These functions will turn into more of a "ActorToAddrBook" when we have a closer
 // integration with utility.
-func ValidatorMapToAddrBook(cfg *config.P2PConfig, validators map[string]*typesGenesis.Validator) (typesP2P.AddrBook, error) {
+func ValidatorMapToAddrBook(cfg *genesis.P2PConfig, validators map[string]*genesis.Actor) (typesP2P.AddrBook, error) {
 	book := make(typesP2P.AddrBook, 0)
 	for _, v := range validators {
 		networkPeer, err := ValidatorToNetworkPeer(cfg, v)
@@ -27,13 +26,13 @@ func ValidatorMapToAddrBook(cfg *config.P2PConfig, validators map[string]*typesG
 
 // CLEANUP(drewsky): These functions will turn into more of a "ActorToAddrBook" when we have a closer
 // integration with utility.
-func ValidatorToNetworkPeer(cfg *config.P2PConfig, v *typesGenesis.Validator) (*typesP2P.NetworkPeer, error) {
-	conn, err := CreateDialer(cfg, v.ServiceUrl)
+func ValidatorToNetworkPeer(cfg *genesis.P2PConfig, v *genesis.Actor) (*typesP2P.NetworkPeer, error) {
+	conn, err := CreateDialer(cfg, v.GenericParam) // service url
 	if err != nil {
 		return nil, fmt.Errorf("error resolving addr: %v", err)
 	}
 
-	pubKey, err := cryptoPocket.NewPublicKeyFromBytes(v.PublicKey)
+	pubKey, err := cryptoPocket.NewPublicKey(v.PublicKey)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +41,7 @@ func ValidatorToNetworkPeer(cfg *config.P2PConfig, v *typesGenesis.Validator) (*
 		Dialer:     conn,
 		PublicKey:  pubKey,
 		Address:    pubKey.Address(),
-		ServiceUrl: v.ServiceUrl,
+		ServiceUrl: v.GenericParam, // service url
 	}
 
 	return peer, nil

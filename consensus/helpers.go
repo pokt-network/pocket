@@ -98,8 +98,8 @@ func getThresholdSignature(
 	return thresholdSig, nil
 }
 
-func isSignatureValid(m *typesCons.HotstuffMessage, pubKeyBz []byte, signature []byte) bool {
-	pubKey, err := cryptoPocket.NewPublicKeyFromBytes(pubKeyBz)
+func isSignatureValid(m *typesCons.HotstuffMessage, pubKeyStr string, signature []byte) bool {
+	pubKey, err := cryptoPocket.NewPublicKey(pubKeyStr)
 	if err != nil {
 		log.Println("[WARN] Error getting PublicKey from bytes:", err)
 		return false

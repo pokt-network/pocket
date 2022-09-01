@@ -7,14 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.3] - 2022-08-16
+
+**Main persistence module changes:**
+
+- Split `ConnectAndInitializeDatabase` into `connectToDatabase` and `initializeDatabase`
+  - This enables creating multiple contexts in parallel without re-initializing the DB connection
+- Fix the SQL query used in `SelectActors`, `SelectAccounts` & `SelectPools`
+  - Add a generalized unit test for all actors
+- Remove `NewPersistenceModule` and an injected `Config` + `Create`
+  - This improves isolation a a “injection-like” paradigm for unit testing
+- Change `SetupPostgresDocker` to `SetupPostgresDockerPersistenceMod`
+  - This enables more “functional” like testing by returning a persistence module and avoiding global testing variables
+  - Only return once a connection to the DB has been initialized reducing the likelihood of test race conditions
+- Implemented `NewReadContext` with a proper read-only context
+- Add `ResetContext` to the persistence module and `Close` to the read context
+
+**Secondary persistence module changes**
+
+- Improve return values in `Commit` and `Release` (return error, add logging, etc…)
+- Add `pgx.Conn` pointer to `PostgresDB`
+- `s/db/conn/g` and `s/conn/tx/g` in some (not all) places where appropriate
+- Make some exported variables / functions unexported for readability & access purposes
+- Add a few helpers for persistence related unit testing
+- Added unit tests and TODOs for handling multiple read/write contexts
+
 ## [0.0.0.2] - 2022-08-03
 
-Pocket Persistence Deprecate Pre-persistence
+Deprecate PrePersistence
+
 - Fix for bytes parameters
 - Accounts / pools default to 0
 - Pre-added accounts to genesis file
 - Separated out Persistence Read Context from Persistence Write Context
-- Added various TODO's inorder to code-complete a working persistence module
+- Added various TODO's in order to code-complete a working persistence module
 - Added genesis level functions to GetAllActors() and GetAllAccounts/Pools() for testing
 - Added PopulateGenesisState function to persistence module
 - Fixed the stake status iota issue

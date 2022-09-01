@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-type ValidatorMap map[string]*typesGenesis.Validator
+type ValidatorMap map[string]*typesGenesis.Actor
 
 type ConsensusModule interface {
 	Module

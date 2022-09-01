@@ -1,0 +1,25 @@
+syntax = "proto3";
+package genesis;
+
+option go_package = "github.com/pokt-network/pocket/shared/types/genesis";
+
+// TODO(andrew): move to utility module; pocket/issues/163
+enum ActorType {
+  App = 0;
+  Node = 1;
+  Fish = 2;
+  Val = 3;
+}
+
+message Actor {
+  string address = 1;
+  string public_key = 2;
+  repeated string chains = 3;
+  // TODO(andrew): Rename `generic_param` to `actor_specific_param`
+  string generic_param = 4;
+  string staked_amount = 5;
+  int64 paused_height = 6;
+  int64 unstaking_height = 7;
+  string output = 8;
+  ActorType actor_type = 9;
+}

@@ -11,11 +11,10 @@ import (
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-
-	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/types/genesis"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -24,7 +23,7 @@ var _ modules.P2PModule = &p2pModule{}
 
 type p2pModule struct {
 	bus       modules.Bus
-	p2pConfig *config.P2PConfig // TODO (Olshansk) to remove this since it'll be available via the bus
+	p2pConfig *genesis.P2PConfig // TODO (Olshansk) to remove this since it'll be available via the bus
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
@@ -32,19 +31,22 @@ type p2pModule struct {
 	network typesP2P.Network
 }
 
-func Create(cfg *config.Config) (m modules.P2PModule, err error) {
+func Create(cfg *genesis.Config, _ *genesis.GenesisState) (m modules.P2PModule, err error) {
 	log.Println("Creating network module")
 
 	l, err := CreateListener(cfg.P2P)
 	if err != nil {
 		return nil, err
 	}
-
+	privateKey, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
+	if err != nil {
+		return nil, err
+	}
 	m = &p2pModule{
 		p2pConfig: cfg.P2P,
 
 		listener: l,
-		address:  cfg.PrivateKey.Address(),
+		address:  privateKey.Address(),
 
 		network: nil,
 	}

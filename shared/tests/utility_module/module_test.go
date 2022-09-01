@@ -1,64 +1,54 @@
 package utility_module
 
 import (
-	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/shared/tests"
+	"log"
 	"math/big"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/pokt-network/pocket/shared/config"
+	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/tests"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"github.com/pokt-network/pocket/utility"
+	"github.com/stretchr/testify/require"
 )
 
 var (
-	defaultTestingChains       = []string{"0001"}
 	defaultTestingChainsEdited = []string{"0002"}
-	defaultAmount              = big.NewInt(1000000000000000)
+	defaultUnstaking           = int64(2017)
 	defaultSendAmount          = big.NewInt(10000)
-	defaultAmountString        = types.BigIntToString(defaultAmount)
-	defaultNonceString         = types.BigIntToString(defaultAmount)
+	defaultNonceString         = types.BigIntToString(test_artifacts.DefaultAccountAmount)
 	defaultSendAmountString    = types.BigIntToString(defaultSendAmount)
+	testSchema                 = "test_schema"
 )
+
+// TODO(olshansky): Find a way to avoid this global test variable
+var testPersistenceMod modules.PersistenceModule
 
 func NewTestingMempool(_ *testing.T) types.Mempool {
 	return types.NewMempool(1000000, 1000)
 }
 
 func TestMain(m *testing.M) {
-	pool, resource := tests.SetupPostgresDocker()
+	pool, resource, dbUrl := tests.SetupPostgresDocker()
+	testPersistenceMod = newTestPersistenceModule(dbUrl)
 	m.Run()
 	tests.CleanupPostgresDocker(m, pool, resource)
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
-	mempool := NewTestingMempool(t)
-	cfg := &config.Config{
-		RootDir: "",
-		GenesisSource: &genesis.GenesisSource{
-			Source: &genesis.GenesisSource_Config{
-				Config: genesisConfig(),
-			},
-		},
-		Persistence: &config.PersistenceConfig{
-			PostgresUrl: tests.DatabaseUrl,
-			NodeSchema:  tests.SQL_Schema,
-		},
-	}
-	err := cfg.HydrateGenesisState()
+	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
-	tests.PersistenceModule, err = persistence.Create(cfg)
-	require.NoError(t, err)
-	require.NoError(t, tests.PersistenceModule.Start(), "start persistence mod")
-	persistenceContext, err := tests.PersistenceModule.NewRWContext(height)
-	require.NoError(t, err)
+	t.Cleanup(func() {
+		testPersistenceMod.ResetContext()
+	})
+
 	return utility.UtilityContext{
 		LatestHeight: height,
-		Mempool:      mempool,
+		Mempool:      NewTestingMempool(t),
 		Context: &utility.Context{
 			PersistenceRWContext: persistenceContext,
 			SavePointsM:          make(map[string]struct{}),
@@ -67,12 +57,27 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	}
 }
 
-func genesisConfig() *genesis.GenesisConfig {
-	config := &genesis.GenesisConfig{
-		NumValidators:   5,
-		NumApplications: 1,
-		NumFisherman:    1,
-		NumServicers:    1,
+// TODO(andrew): Take in `t` and fail the test if there's an error
+func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
+	cfg := &genesis.Config{
+		Base:      &genesis.BaseConfig{},
+		Consensus: &genesis.ConsensusConfig{},
+		Utility:   &genesis.UtilityConfig{},
+		Persistence: &genesis.PersistenceConfig{
+			PostgresUrl:    databaseUrl,
+			NodeSchema:     testSchema,
+			BlockStorePath: "",
+		},
+		P2P:       &genesis.P2PConfig{},
+		Telemetry: &genesis.TelemetryConfig{},
 	}
-	return config
+	// TODO(andrew): Move the number of actors into local constants
+	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
+	persistenceMod, err := persistence.Create(cfg, genesisState)
+	if err != nil {
+		log.Fatalf("Error creating persistence module: %s", err)
+	}
+	// TODO(andrew): Check for error
+	persistenceMod.Start()
+	return persistenceMod
 }

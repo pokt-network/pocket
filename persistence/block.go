@@ -1,7 +1,6 @@
 package persistence
 
 import (
-	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"log"
@@ -50,15 +49,6 @@ func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
 	return nil
 }
 
-func (p PostgresContext) Commit() error {
-	p.DB.Tx.Commit(context.TODO())
-	return nil
-}
-
-func (p PostgresContext) Release() {
-	p.DB.Tx.Rollback(context.TODO())
-}
-
 func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
 	// INVESTIGATE: Note that we are writing this directly to the blockStore. Depending on how
 	// the use of the PostgresContext evolves, we may need to write this to `ContextStore` and copy
@@ -67,12 +57,12 @@ func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
 }
 
 func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {
-	ctx, conn, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
 
-	_, err = conn.Exec(ctx, schema.InsertBlockQuery(height, hash, proposerAddr, quorumCert))
+	_, err = tx.Exec(ctx, schema.InsertBlockQuery(height, hash, proposerAddr, quorumCert))
 	return err
 }
 

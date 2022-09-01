@@ -74,12 +74,15 @@ func Select(selector, address string, height int64, tableName string) string {
 		selector, tableName, address, height)
 }
 
+// INCOMPLETE: Since we do not support `DeleteActor`, we do not filter on status or deletion here.
+//             The onus of filtering is currently on the client but may be changed in the future.
 func SelectActors(actorSpecificParam string, height int64, tableName string) string {
 	return fmt.Sprintf(`
-			SELECT address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height
-			FROM %s WHERE height<=%d AND (height,address) IN (SELECT MAX(height),address from %s GROUP BY address)
-       `,
-		actorSpecificParam, tableName, height, tableName)
+			SELECT DISTINCT ON (address) address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height
+			FROM %s
+			WHERE height<=%d
+			ORDER BY address, height DESC
+       `, actorSpecificParam, tableName, height)
 }
 
 func SelectChains(selector, address string, height int64, actorTableName, chainsTableName string) string {
@@ -119,7 +122,8 @@ func Insert(
 							  height=EXCLUDED.height`,
 		tableName, actorSpecificParam,
 		actor.Address, actor.PublicKey, actor.StakedTokens, actorSpecificParamValue,
-		actor.OutputAddress, DefaultBigInt, DefaultBigInt, height,
+		// actor.OutputAddress, DefaultBigInt, DefaultBigInt, height,
+		actor.OutputAddress, actor.PausedHeight, actor.UnstakingHeight, height,
 		constraintName,
 		actorSpecificParam, actorSpecificParam)
 
@@ -178,7 +182,6 @@ func UpdateUnstakingHeight(address, actorSpecificParam string, unstakingHeight, 
 		actorSpecificParam, unstakingHeight, height,
 		tableName, address, height,
 		constraintName)
-
 }
 
 func UpdateStakeAmount(address, actorSpecificParam, stakeAmount string, height int64, tableName, constraintName string) string {
@@ -194,7 +197,6 @@ func UpdateStakeAmount(address, actorSpecificParam, stakeAmount string, height i
 		stakeAmount, actorSpecificParam, height,
 		tableName, address, height,
 		constraintName)
-
 }
 
 func UpdatePausedHeight(address, actorSpecificParam string, pausedHeight, height int64, tableName, constraintName string) string {

@@ -1,5 +1,6 @@
 package types
 
+// TODO(pocket/issues/163): Move this into utility
 const (
 	BlocksPerSessionParamName = "blocks_per_session"
 

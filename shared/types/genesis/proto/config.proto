@@ -1,0 +1,57 @@
+syntax = "proto3";
+package genesis;
+
+option go_package = "github.com/pokt-network/pocket/shared/types/genesis";
+
+message Config {
+  BaseConfig base = 1;
+  ConsensusConfig consensus = 2;
+  UtilityConfig utility = 3;
+  PersistenceConfig persistence = 4;
+  P2PConfig p2p = 5;
+  TelemetryConfig telemetry = 6;
+}
+
+message BaseConfig {
+  string root_directory = 1;
+  // TODO: better architecture for key management (keybase, keyfiles, etc.)
+  string private_key = 2;
+}
+
+message ConsensusConfig {// TODO (team) move to consensus module #163
+  uint64 max_mempool_bytes = 1; // TODO(olshansky): add unit tests for this
+  PacemakerConfig pacemaker_config = 2;
+}
+
+message PacemakerConfig {// TODO (team) move to consensus module #163
+  uint64 timeout_msec = 1;
+  bool manual = 2;
+  uint64 debug_time_between_steps_msec = 3;
+}
+
+message UtilityConfig {// TODO (team) move to utility module #163
+
+}
+
+message PersistenceConfig {// TODO (team) move to persistence module #163
+  string postgres_url = 1;
+  string node_schema = 2;
+  string block_store_path = 3;
+}
+
+message P2PConfig {// TODO (team) move to p2p module #163
+  uint32 consensus_port = 1;
+  bool use_rain_tree = 2;
+  ConnectionType connection_type = 3;
+}
+
+enum ConnectionType {// TODO (team) move to p2p module #163
+  EmptyConnection = 0;
+  TCPConnection = 1;
+}
+
+message TelemetryConfig {// TODO (team) move to shared/telemetry
+  bool enabled = 1;
+  string address = 2; // The address the telemetry module will use to listen for metrics PULL requests (e.g. 0.0.0.0:9000 for prometheus)
+  string endpoint = 3; // The endpoint available to fetch recorded metrics (e.g. /metrics for prometheus)
+}

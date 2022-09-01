@@ -1,25 +1,26 @@
 package utility_module
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
+	"math"
+	"math/big"
+	"sort"
+	"testing"
+
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/tests"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
-	"math"
-	"math/big"
-	"sort"
-	"testing"
 )
 
-// INVESTIGATE: Is there a better way to implement this than to simply have an actors forloop in each test?
+// CLEANUP: Move `App` specific tests to `app_test.go`
 
 func TestUtilityContext_HandleMessageStake(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
@@ -32,13 +33,13 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 			outputAddress, err := crypto.GenerateAddress()
 			require.NoError(t, err)
 
-			err = ctx.SetAccountAmount(outputAddress, defaultAmount)
+			err = ctx.SetAccountAmount(outputAddress, test_artifacts.DefaultAccountAmount)
 			require.NoError(t, err, "error setting account amount error")
 
 			msg := &typesUtil.MessageStake{
 				PublicKey:     pubKey.Bytes(),
-				Chains:        defaultTestingChains,
-				Amount:        defaultAmountString,
+				Chains:        test_artifacts.DefaultChains,
+				Amount:        test_artifacts.DefaultStakeAmountString,
 				ServiceUrl:    "https://localhost.com",
 				OutputAddress: outputAddress,
 				Signer:        outputAddress,
@@ -50,18 +51,15 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 
 			actor := GetActorByAddr(t, ctx, pubKey.Address().Bytes(), actorType)
 
-			require.Equal(t, actor.GetAddress(), pubKey.Address().Bytes(), "incorrect actor address")
-			require.Equal(t, actor.GetStatus(), int32(typesUtil.StakedStatus), "incorrect actor  status")
+			require.Equal(t, actor.GetAddress(), pubKey.Address().String(), "incorrect actor address")
 			if actorType != typesUtil.ActorType_Val {
 				require.Equal(t, actor.GetChains(), msg.Chains, "incorrect actor chains")
 			}
-			require.False(t, actor.GetPaused(), "incorrect actor paused status")
 			require.Equal(t, actor.GetPausedHeight(), types.HeightNotUsed, "incorrect actor height")
-			require.Equal(t, actor.GetStakedTokens(), defaultAmountString, "incorrect actor stake amount")
+			require.Equal(t, actor.GetStakedAmount(), test_artifacts.DefaultStakeAmountString, "incorrect actor stake amount")
 			require.Equal(t, actor.GetUnstakingHeight(), types.HeightNotUsed, "incorrect actor unstaking height")
-			require.Equal(t, actor.GetOutput(), outputAddress.Bytes(), "incorrect actor output address")
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			require.Equal(t, actor.GetOutput(), outputAddress.String(), "incorrect actor output address")
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -71,30 +69,30 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 		t.Run(fmt.Sprintf("%s.HandleMessageEditStake", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			actor := GetFirstActor(t, ctx, actorType)
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
 			msg := &typesUtil.MessageEditStake{
-				Address:   actor.GetAddress(),
-				Chains:    defaultTestingChains,
-				Amount:    defaultAmountString,
-				Signer:    actor.GetAddress(),
+				Address:   addrBz,
+				Chains:    test_artifacts.DefaultChains,
+				Amount:    test_artifacts.DefaultStakeAmountString,
+				Signer:    addrBz,
 				ActorType: actorType,
 			}
 
 			msgChainsEdited := proto.Clone(msg).(*typesUtil.MessageEditStake)
 			msgChainsEdited.Chains = defaultTestingChainsEdited
 
-			err := ctx.HandleEditStakeMessage(msgChainsEdited)
+			err = ctx.HandleEditStakeMessage(msgChainsEdited)
 			require.NoError(t, err, "handle edit stake message")
 
-			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
-			require.False(t, actor.GetPaused(), "incorrect paused status")
-			require.Equal(t, actor.GetPausedHeight(), types.HeightNotUsed, "incorrect paused height")
+			actor = GetActorByAddr(t, ctx, addrBz, actorType)
 			if actorType != typesUtil.ActorType_Val {
 				require.Equal(t, actor.GetChains(), msgChainsEdited.Chains, "incorrect edited chains")
 			}
-			require.Equal(t, actor.GetStakedTokens(), defaultAmountString, "incorrect staked tokens")
+			require.Equal(t, actor.GetStakedAmount(), test_artifacts.DefaultStakeAmountString, "incorrect staked tokens")
 			require.Equal(t, actor.GetUnstakingHeight(), types.HeightNotUsed, "incorrect unstaking height")
 
-			amountEdited := defaultAmount.Add(defaultAmount, big.NewInt(1))
+			amountEdited := test_artifacts.DefaultAccountAmount.Add(test_artifacts.DefaultAccountAmount, big.NewInt(1))
 			amountEditedString := types.BigIntToString(amountEdited)
 			msgAmountEdited := proto.Clone(msg).(*typesUtil.MessageEditStake)
 			msgAmountEdited.Amount = amountEditedString
@@ -102,10 +100,8 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			err = ctx.HandleEditStakeMessage(msgAmountEdited)
 			require.NoError(t, err, "handle edit stake message")
 
-			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
-			require.Equal(t, actor.GetStakedTokens(), types.BigIntToString(amountEdited), "incorrect staked amount")
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			actor = GetActorByAddr(t, ctx, addrBz, actorType)
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -118,38 +114,39 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			var err error
 			switch actorType {
 			case typesUtil.ActorType_Val:
-				err = ctx.Context.SetValidatorMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.ValidatorMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Node:
-				err = ctx.Context.SetServiceNodeMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.ServiceNodeMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_App:
-				err = ctx.Context.SetAppMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.AppMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Fish:
-				err = ctx.Context.SetFishermanMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.FishermanMinimumPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
 			require.NoError(t, err, "error setting minimum pause blocks")
 
 			actor := GetFirstActor(t, ctx, actorType)
-			err = ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 1)
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
+			err = ctx.SetActorPauseHeight(actorType, addrBz, 1)
 			require.NoError(t, err, "error setting pause height")
 
-			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
-			require.True(t, actor.GetPaused(), "actor should be paused")
+			actor = GetActorByAddr(t, ctx, addrBz, actorType)
+			require.Equal(t, actor.GetPausedHeight(), int64(1))
 
 			msgUnpauseActor := &typesUtil.MessageUnpause{
-				Address:   actor.GetAddress(),
-				Signer:    actor.GetAddress(),
+				Address:   addrBz,
+				Signer:    addrBz,
 				ActorType: actorType,
 			}
 
 			err = ctx.HandleUnpauseMessage(msgUnpauseActor)
 			require.NoError(t, err, "handle unpause message")
 
-			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
-			require.False(t, actor.GetPaused(), "actor should not be paused")
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			actor = GetActorByAddr(t, ctx, addrBz, actorType)
+			require.Equal(t, actor.PausedHeight, int64(-1))
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -161,32 +158,33 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			var err error
 			switch actorType {
 			case typesUtil.ActorType_App:
-				err = ctx.Context.SetAppMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.AppMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Val:
-				err = ctx.Context.SetValidatorMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.ValidatorMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Fish:
-				err = ctx.Context.SetFishermanMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.FishermanMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Node:
-				err = ctx.Context.SetServiceNodeMinimumPauseBlocks(0)
+				err = ctx.Context.SetParam(types.ServiceNodeMinimumPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
 			require.NoError(t, err, "error setting minimum pause blocks")
 
 			actor := GetFirstActor(t, ctx, actorType)
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
 			msg := &typesUtil.MessageUnstake{
-				Address:   actor.GetAddress(),
-				Signer:    actor.GetAddress(),
+				Address:   addrBz,
+				Signer:    addrBz,
 				ActorType: actorType,
 			}
 
 			err = ctx.HandleUnstakeMessage(msg)
 			require.NoError(t, err, "handle unstake message")
 
-			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
-			require.Equal(t, actor.GetStatus(), int32(typesUtil.UnstakingStatus), "actor should be unstaking")
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			actor = GetActorByAddr(t, ctx, addrBz, actorType)
+			require.Equal(t, actor.UnstakingHeight, defaultUnstaking, "actor should be unstaking")
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -197,31 +195,31 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
 			actor := GetFirstActor(t, ctx, actorType)
-			var err error
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
 			switch actorType {
 			case typesUtil.ActorType_App:
-				err = ctx.Context.SetAppMaxPausedBlocks(0)
+				err = ctx.Context.SetParam(types.AppMaxPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Val:
-				err = ctx.Context.SetValidatorMaxPausedBlocks(0)
+				err = ctx.Context.SetParam(types.ValidatorMaxPausedBlocksParamName, 0)
 			case typesUtil.ActorType_Fish:
-				err = ctx.Context.SetFishermanMaxPausedBlocks(0)
+				err = ctx.Context.SetParam(types.FishermanMaxPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Node:
-				err = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
+				err = ctx.Context.SetParam(types.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
 			require.NoError(t, err)
 
-			err = ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 0)
+			err = ctx.SetActorPauseHeight(actorType, addrBz, 0)
 			require.NoError(t, err, "error setting actor pause height")
 
 			err = ctx.BeginUnstakingMaxPaused()
 			require.NoError(t, err, "error beginning unstaking max paused actors")
 
-			status, err := ctx.GetActorStatus(actorType, actor.GetAddress())
+			status, err := ctx.GetActorStatus(actorType, addrBz)
 			require.Equal(t, status, typesUtil.UnstakingStatus, "actor should be unstaking")
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -229,11 +227,10 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 func TestUtilityContext_CalculateRelays(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingApps(t, ctx)[0]
-	newMaxRelays, err := ctx.CalculateAppRelays(actor.StakedTokens)
+	newMaxRelays, err := ctx.CalculateAppRelays(actor.StakedAmount)
 	require.NoError(t, err)
-	require.True(t, actor.MaxRelays == newMaxRelays, fmt.Sprintf("unexpected max relay calculation; got %v wanted %v", actor.MaxRelays, newMaxRelays))
-	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	tests.CleanupTest()
+	require.True(t, actor.GenericParam == newMaxRelays, fmt.Sprintf("unexpected max relay calculation; got %v wanted %v", actor.GenericParam, newMaxRelays))
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
@@ -260,8 +257,7 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 			require.NoError(t, err)
 
 			require.Equal(t, unstakingBlocks, unstakingHeight, "unexpected unstaking height")
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -272,14 +268,14 @@ func TestUtilityContext_Delete(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := GetFirstActor(t, ctx, actorType)
-
-			err := ctx.DeleteActor(actorType, actor.GetAddress())
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
+			err = ctx.DeleteActor(actorType, addrBz)
 			require.NoError(t, err, "error deleting actor")
 
-			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
+			actor = GetActorByAddr(t, ctx, addrBz, actorType)
 			// TODO Delete actor is currently a NO-OP. We need to better define
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -292,16 +288,16 @@ func TestUtilityContext_GetExists(t *testing.T) {
 			actor := GetFirstActor(t, ctx, actorType)
 			randAddr, err := crypto.GenerateAddress()
 			require.NoError(t, err)
-
-			exists, err := ctx.GetActorExists(actorType, actor.GetAddress())
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
+			exists, err := ctx.GetActorExists(actorType, addrBz)
 			require.NoError(t, err)
 			require.True(t, exists, "actor that should exist does not")
 
 			exists, err = ctx.GetActorExists(actorType, randAddr)
 			require.NoError(t, err)
 			require.False(t, exists, "actor that shouldn't exist does")
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -312,13 +308,13 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := GetFirstActor(t, ctx, actorType)
-
-			outputAddress, err := ctx.GetActorOutputAddress(actorType, actor.GetAddress())
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
+			outputAddress, err := ctx.GetActorOutputAddress(actorType, addrBz)
 			require.NoError(t, err)
 
-			require.Equal(t, outputAddress, actor.GetOutput(), "unexpected output address")
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			require.Equal(t, hex.EncodeToString(outputAddress), actor.GetOutput(), "unexpected output address")
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -330,11 +326,12 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 
 			pauseHeight := int64(100)
 			actor := GetFirstActor(t, ctx, actorType)
-
-			err := ctx.SetActorPauseHeight(actorType, actor.GetAddress(), pauseHeight)
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
+			err = ctx.SetActorPauseHeight(actorType, addrBz, pauseHeight)
 			require.NoError(t, err, "error setting actor pause height")
 
-			gotPauseHeight, err := ctx.GetPauseHeight(actorType, actor.GetAddress())
+			gotPauseHeight, err := ctx.GetPauseHeight(actorType, addrBz)
 			require.NoError(t, err)
 			require.Equal(t, pauseHeight, gotPauseHeight, "unable to get pause height from the actor")
 
@@ -343,8 +340,7 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 
 			_, err = ctx.GetPauseHeight(actorType, randAddr)
 			require.Error(t, err, "non existent actor should error")
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -355,21 +351,21 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := GetFirstActor(t, ctx, actorType)
-
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
 			msgEditStake := &typesUtil.MessageEditStake{
-				Address:   actor.GetAddress(),
-				Chains:    defaultTestingChains,
-				Amount:    defaultAmountString,
+				Address:   addrBz,
+				Chains:    test_artifacts.DefaultChains,
+				Amount:    test_artifacts.DefaultStakeAmountString,
 				ActorType: actorType,
 			}
 
 			candidates, err := ctx.GetMessageEditStakeSignerCandidates(msgEditStake)
 			require.NoError(t, err)
 			require.Equal(t, len(candidates), 2, "unexpected number of candidates")
-			require.Equal(t, candidates[0], actor.GetOutput(), "incorrect output candidate")
-			require.Equal(t, candidates[1], actor.GetAddress(), "incorrect addr candidate")
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			require.Equal(t, hex.EncodeToString(candidates[0]), actor.GetOutput(), "incorrect output candidate")
+			require.Equal(t, hex.EncodeToString(candidates[1]), actor.GetAddress(), "incorrect addr candidate")
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -377,29 +373,33 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 func TestUtilityContext_UnstakesPausedBefore(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
 	actor := GetAllTestingApps(t, ctx)[0]
-	require.True(t, actor.Status == typesUtil.StakedStatus, fmt.Sprintf("wrong starting status"))
-	require.NoError(t, ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, 0), "set actor pause height")
-	err := ctx.Context.SetAppMaxPausedBlocks(0)
+	addrBz, err := hex.DecodeString(actor.GetAddress())
+	require.NoError(t, err)
+	require.True(t, actor.UnstakingHeight == -1, fmt.Sprintf("wrong starting status"))
+	require.NoError(t, ctx.SetActorPauseHeight(typesUtil.ActorType_App, addrBz, 0), "set actor pause height")
+	err = ctx.Context.SetParam(types.AppMaxPauseBlocksParamName, 0)
 	require.NoError(t, err)
 	require.NoError(t, ctx.UnstakeActorPausedBefore(0, typesUtil.ActorType_App), "unstake actor pause before")
 	require.NoError(t, ctx.UnstakeActorPausedBefore(1, typesUtil.ActorType_App), "unstake actor pause before height 1")
 	actor = GetAllTestingApps(t, ctx)[0]
-	require.True(t, actor.Status == typesUtil.UnstakingStatus, fmt.Sprintf("status does not equal unstaking"))
+	require.True(t, actor.UnstakingHeight != -1, fmt.Sprintf("status does not equal unstaking"))
 	unstakingBlocks, err := ctx.GetAppUnstakingBlocks()
 	require.NoError(t, err)
 	require.True(t, actor.UnstakingHeight == unstakingBlocks+1, fmt.Sprintf("incorrect unstaking height"))
-	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	ctx.SetPoolAmount(genesis.AppStakePoolName, big.NewInt(math.MaxInt64))
-	require.NoError(t, ctx.Context.SetAppUnstakingBlocks(0), "set unstaking blocks")
+	ctx.SetPoolAmount(genesis.Pool_Names_AppStakePool.String(), big.NewInt(math.MaxInt64))
+	err := ctx.Context.SetParam(types.AppUnstakingBlocksParamName, 0)
+	require.NoError(t, err)
 	actors := GetAllTestingApps(t, ctx)
 	for _, actor := range actors {
-		require.True(t, actor.Status == typesUtil.StakedStatus, fmt.Sprintf("wrong starting status"))
-		require.NoError(t, ctx.SetActorPauseHeight(typesUtil.ActorType_App, actor.Address, 1), "set actor pause height")
+		addrBz, err := hex.DecodeString(actor.GetAddress())
+		require.NoError(t, err)
+		require.True(t, actor.UnstakingHeight == -1, fmt.Sprintf("wrong starting status"))
+		require.NoError(t, ctx.SetActorPauseHeight(typesUtil.ActorType_App, addrBz, 1), "set actor pause height")
 	}
 	require.NoError(t, ctx.UnstakeActorPausedBefore(2, typesUtil.ActorType_App), "set actor pause before")
 	require.NoError(t, ctx.UnstakeActorsThatAreReady(), "unstake actors that are ready")
@@ -407,8 +407,7 @@ func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
 	require.True(t, appAfter.UnstakingHeight == 0, fmt.Sprintf("apps still exists after unstake that are ready() call"))
 	// TODO (Team) we need to better define what 'deleted' really is in the postgres world.
 	// We might not need to 'unstakeActorsThatAreReady' if we are already filtering by unstakingHeight
-	ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-	tests.CleanupTest()
+	tests.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
@@ -417,19 +416,19 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := GetFirstActor(t, ctx, actorType)
-
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
 			msg := &typesUtil.MessageUnpause{
-				Address:   actor.GetAddress(),
+				Address:   addrBz,
 				ActorType: actorType,
 			}
 
 			candidates, err := ctx.GetMessageUnpauseSignerCandidates(msg)
 			require.NoError(t, err)
 			require.Equal(t, len(candidates), 2, "unexpected number of candidates")
-			require.Equal(t, candidates[0], actor.GetOutput(), "incorrect output candidate")
-			require.Equal(t, candidates[1], actor.GetAddress(), "incorrect addr candidate")
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			require.Equal(t, hex.EncodeToString(candidates[0]), actor.GetOutput(), "incorrect output candidate")
+			require.Equal(t, hex.EncodeToString(candidates[1]), actor.GetAddress(), "incorrect addr candidate")
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -440,18 +439,18 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := GetFirstActor(t, ctx, actorType)
-
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
 			msg := &typesUtil.MessageUnstake{
-				Address:   actor.GetAddress(),
+				Address:   addrBz,
 				ActorType: actorType,
 			}
 			candidates, err := ctx.GetMessageUnstakeSignerCandidates(msg)
 			require.NoError(t, err)
 			require.Equal(t, len(candidates), 2, "unexpected number of candidates")
-			require.Equal(t, candidates[0], actor.GetOutput(), "incorrect output candidate")
-			require.Equal(t, candidates[1], actor.GetAddress(), "incorrect addr candidate")
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			require.Equal(t, hex.EncodeToString(candidates[0]), actor.GetOutput(), "incorrect output candidate")
+			require.Equal(t, hex.EncodeToString(candidates[1]), actor.GetAddress(), "incorrect addr candidate")
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -462,21 +461,22 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
 			actor := GetFirstActor(t, ctx, actorType)
-			require.Equal(t, actor.GetStatus(), int32(typesUtil.StakedStatus), "wrong starting status")
-
-			err := ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 0)
+			require.Equal(t, actor.UnstakingHeight, int64(-1), "wrong starting status")
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
+			err = ctx.SetActorPauseHeight(actorType, addrBz, 0)
 			require.NoError(t, err, "error setting actor pause height")
 
 			var er error
 			switch actorType {
 			case typesUtil.ActorType_App:
-				er = ctx.Context.SetAppMaxPausedBlocks(0)
+				er = ctx.Context.SetParam(types.AppMaxPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Val:
-				er = ctx.Context.SetValidatorMaxPausedBlocks(0)
+				er = ctx.Context.SetParam(types.ValidatorMaxPausedBlocksParamName, 0)
 			case typesUtil.ActorType_Fish:
-				er = ctx.Context.SetFishermanMaxPausedBlocks(0)
+				er = ctx.Context.SetParam(types.FishermanMaxPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Node:
-				er = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
+				er = ctx.Context.SetParam(types.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
@@ -488,8 +488,8 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			err = ctx.UnstakeActorPausedBefore(1, actorType)
 			require.NoError(t, err, "error unstaking actor pause before height 1")
 
-			actor = GetActorByAddr(t, ctx, actor.GetAddress(), actorType)
-			require.Equal(t, actor.GetStatus(), int32(typesUtil.UnstakingStatus), "status does not equal unstaking")
+			actor = GetActorByAddr(t, ctx, addrBz, actorType)
+			require.Equal(t, actor.UnstakingHeight, defaultUnstaking, "status does not equal unstaking")
 
 			var unstakingBlocks int64
 			switch actorType {
@@ -506,8 +506,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			}
 			require.NoError(t, err, "error getting unstaking blocks")
 			require.Equal(t, actor.GetUnstakingHeight(), unstakingBlocks+1, "incorrect unstaking height")
-			ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-			tests.CleanupTest()
+			tests.CleanupTest(ctx)
 		})
 	}
 }
@@ -520,17 +519,17 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 		var err1, err2 error
 		switch actorType {
 		case typesUtil.ActorType_App:
-			err1 = ctx.Context.SetAppUnstakingBlocks(0)
-			err2 = ctx.Context.SetAppMaxPausedBlocks(0)
+			err1 = ctx.Context.SetParam(types.AppUnstakingBlocksParamName, 0)
+			err2 = ctx.Context.SetParam(types.AppMaxPauseBlocksParamName, 0)
 		case typesUtil.ActorType_Val:
-			err1 = ctx.Context.SetValidatorUnstakingBlocks(0)
-			err2 = ctx.Context.SetValidatorMaxPausedBlocks(0)
+			err1 = ctx.Context.SetParam(types.ValidatorUnstakingBlocksParamName, 0)
+			err2 = ctx.Context.SetParam(types.ValidatorMaxPausedBlocksParamName, 0)
 		case typesUtil.ActorType_Fish:
-			err1 = ctx.Context.SetFishermanUnstakingBlocks(0)
-			err2 = ctx.Context.SetFishermanMaxPausedBlocks(0)
+			err1 = ctx.Context.SetParam(types.FishermanUnstakingBlocksParamName, 0)
+			err2 = ctx.Context.SetParam(types.FishermanMaxPauseBlocksParamName, 0)
 		case typesUtil.ActorType_Node:
-			err1 = ctx.Context.SetServiceNodeUnstakingBlocks(0)
-			err2 = ctx.Context.SetServiceNodeMaxPausedBlocks(0)
+			err1 = ctx.Context.SetParam(types.ServiceNodeUnstakingBlocksParamName, 0)
+			err2 = ctx.Context.SetParam(types.ServiceNodeMaxPauseBlocksParamName, 0)
 		default:
 			t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 		}
@@ -541,8 +540,10 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 
 		actors := GetAllTestingActors(t, ctx, actorType)
 		for _, actor := range actors {
-			require.Equal(t, actor.GetStatus(), int32(typesUtil.StakedStatus), "wrong starting staked status")
-			err := ctx.SetActorPauseHeight(actorType, actor.GetAddress(), 1)
+			addrBz, err := hex.DecodeString(actor.GetAddress())
+			require.NoError(t, err)
+			require.Equal(t, actor.UnstakingHeight, int64(-1), "wrong starting staked status")
+			err = ctx.SetActorPauseHeight(actorType, addrBz, 1)
 			require.NoError(t, err, "error setting actor pause height")
 		}
 
@@ -552,15 +553,14 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 		err = ctx.UnstakeActorsThatAreReady()
 		require.NoError(t, err, "error unstaking actors that are ready")
 		// TODO Delete() is no op
-		ctx.Context.Release() // TODO (team) need a golang specific solution for teardown
-		tests.CleanupTest()
+		tests.CleanupTest(ctx)
 	}
 }
 
 // Helpers
 
-func GetAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.ActorType) (actors []genesis.Actor) {
-	actors = make([]genesis.Actor, 0)
+func GetAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.ActorType) (actors []*genesis.Actor) {
+	actors = make([]*genesis.Actor, 0)
 	switch actorType {
 	case typesUtil.ActorType_App:
 		apps := GetAllTestingApps(t, ctx)
@@ -589,42 +589,42 @@ func GetAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType typ
 	return
 }
 
-func GetFirstActor(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.ActorType) genesis.Actor {
+func GetFirstActor(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.ActorType) *genesis.Actor {
 	return GetAllTestingActors(t, ctx, actorType)[0]
 }
 
-func GetActorByAddr(t *testing.T, ctx utility.UtilityContext, addr []byte, actorType typesUtil.ActorType) (actor genesis.Actor) {
+func GetActorByAddr(t *testing.T, ctx utility.UtilityContext, addr []byte, actorType typesUtil.ActorType) (actor *genesis.Actor) {
 	actors := GetAllTestingActors(t, ctx, actorType)
 	for _, a := range actors {
-		if bytes.Equal(a.GetAddress(), addr) {
+		if a.GetAddress() == hex.EncodeToString(addr) {
 			return a
 		}
 	}
 	return
 }
 
-func GetAllTestingApps(t *testing.T, ctx utility.UtilityContext) []*genesis.App {
+func GetAllTestingApps(t *testing.T, ctx utility.UtilityContext) []*genesis.Actor {
 	actors, err := (ctx.Context.PersistenceRWContext).(persistence.PostgresContext).GetAllApps(ctx.LatestHeight)
 	require.NoError(t, err)
 	return actors
 }
 
-func GetAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []*genesis.Validator {
+func GetAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []*genesis.Actor {
 	actors, err := (ctx.Context.PersistenceRWContext).(persistence.PostgresContext).GetAllValidators(ctx.LatestHeight)
 	require.NoError(t, err)
 	sort.Slice(actors, func(i, j int) bool {
-		return hex.EncodeToString(actors[i].Address) < hex.EncodeToString(actors[j].Address)
+		return actors[i].Address < actors[j].Address
 	})
 	return actors
 }
 
-func GetAllTestingFish(t *testing.T, ctx utility.UtilityContext) []*genesis.Fisherman {
+func GetAllTestingFish(t *testing.T, ctx utility.UtilityContext) []*genesis.Actor {
 	actors, err := (ctx.Context.PersistenceRWContext).(persistence.PostgresContext).GetAllFishermen(ctx.LatestHeight)
 	require.NoError(t, err)
 	return actors
 }
 
-func GetAllTestingNodes(t *testing.T, ctx utility.UtilityContext) []*genesis.ServiceNode {
+func GetAllTestingNodes(t *testing.T, ctx utility.UtilityContext) []*genesis.Actor {
 	actors, err := (ctx.Context.PersistenceRWContext).(persistence.PostgresContext).GetAllServiceNodes(ctx.LatestHeight)
 	require.NoError(t, err)
 	return actors
