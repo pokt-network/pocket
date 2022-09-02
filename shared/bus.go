@@ -123,43 +123,43 @@ func CreateBusWithOptionalModules(
 	return bus
 }
 
-func (m *bus) PublishEventToBus(e *debug.PocketEvent) {
+func (m bus) PublishEventToBus(e *debug.PocketEvent) {
 	m.channel <- *e
 }
 
-func (m *bus) GetBusEvent() *debug.PocketEvent {
+func (m bus) GetBusEvent() *debug.PocketEvent {
 	e := <-m.channel
 	return &e
 }
 
-func (m *bus) GetEventBus() modules.EventsChannel {
+func (m bus) GetEventBus() modules.EventsChannel {
 	return m.channel
 }
 
-func (m *bus) GetPersistenceModule() modules.PersistenceModule {
+func (m bus) GetPersistenceModule() modules.PersistenceModule {
 	return m.persistence
 }
 
-func (m *bus) GetP2PModule() modules.P2PModule {
+func (m bus) GetP2PModule() modules.P2PModule {
 	return m.p2p
 }
 
-func (m *bus) GetUtilityModule() modules.UtilityModule {
+func (m bus) GetUtilityModule() modules.UtilityModule {
 	return m.utility
 }
 
-func (m *bus) GetConsensusModule() modules.ConsensusModule {
+func (m bus) GetConsensusModule() modules.ConsensusModule {
 	return m.consensus
 }
 
-func (m *bus) GetTelemetryModule() modules.TelemetryModule {
+func (m bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
 }
 
-func (m *bus) GetConfig() map[string]json.RawMessage {
+func (m bus) GetConfig() map[string]json.RawMessage {
 	return m.config
 }
 
-func (m *bus) GetGenesis() map[string]json.RawMessage {
+func (m bus) GetGenesis() map[string]json.RawMessage {
 	return m.genesis
 }

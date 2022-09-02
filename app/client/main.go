@@ -44,13 +44,13 @@ func main() {
 	config, genesis := test_artifacts.ReadConfigAndGenesisFiles("", "")
 	config, err = injectClientPrivateKey(config)
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to inject a client private key into p2p and consensus mod: %v", err.Error())
+		log.Fatalf("[ERROR] Failed to inject a client private key into p2p and consensus module: %v", err.Error())
 	}
-	consensusMod, err = consensus.Create(config["Consensus"], genesis["ConsensusGenesisState"])
+	consensusMod, err = consensus.Create(config["consensus"], genesis["consensusGenesisState"])
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 	}
-	p2pMod, err = p2p.Create(config["P2P"], genesis["P2PGenesisState"])
+	p2pMod, err = p2p.Create(config["p2p"], genesis["p2PGenesisState"])
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 	}
@@ -58,7 +58,7 @@ func main() {
 	// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
 	// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
 	// module that NOOPs (per the configs above) is injected.
-	telemetryMod, err := telemetry.Create(config["Telemetry"], genesis["TelemetryGenesisState"])
+	telemetryMod, err := telemetry.Create(config["telemetry"], genesis["telemetryGenesisState"])
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
@@ -85,18 +85,18 @@ func injectClientPrivateKey(config map[string]json.RawMessage) (map[string]json.
 
 	mockConsensusConfig := test_artifacts.MockConsensusConfig{}
 	mockP2PConfig := test_artifacts.MockP2PConfig{}
-	if err := json.Unmarshal(config["Consensus"], &mockConsensusConfig); err != nil {
+	if err := json.Unmarshal(config["consensus"], &mockConsensusConfig); err != nil {
 		return nil, err
 	}
-	if err := json.Unmarshal(config["P2P"], &mockP2PConfig); err != nil {
+	if err := json.Unmarshal(config["p2p"], &mockP2PConfig); err != nil {
 		return nil, err
 	}
 	mockConsensusConfig.PrivateKey = pkString
 	mockP2PConfig.PrivateKey = pkString
-	if config["Consensus"], err = json.Marshal(mockConsensusConfig); err != nil {
+	if config["consensus"], err = json.Marshal(mockConsensusConfig); err != nil {
 		return nil, err
 	}
-	if config["P2P"], err = json.Marshal(mockP2PConfig); err != nil {
+	if config["p2p"], err = json.Marshal(mockP2PConfig); err != nil {
 		return nil, err
 	}
 	return config, nil

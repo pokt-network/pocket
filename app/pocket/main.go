@@ -24,7 +24,6 @@ func main() {
 	}
 
 	cfg, genesis := test_artifacts.ReadConfigAndGenesisFiles(*configFilename, *genesisFilename)
-
 	pocketNode, err := shared.Create(cfg, genesis)
 	if err != nil {
 		log.Fatalf("Failed to create pocket node: %s", err)

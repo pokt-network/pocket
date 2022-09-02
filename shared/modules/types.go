@@ -8,8 +8,8 @@ import (
 // the main purpose of this structure is to ensure the ownership of the
 
 type GenesisState struct {
-	PersistenceGenesisState PersistenceGenesisState
-	ConsensusGenesisState   ConsensusGenesisState
+	PersistenceGenesisState PersistenceGenesisState `json:"persistenceGenesisState"`
+	ConsensusGenesisState   ConsensusGenesisState   `json:"consensusGenesisState"`
 }
 
 type BaseConfig struct {

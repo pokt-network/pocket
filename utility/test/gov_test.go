@@ -15,7 +15,7 @@ import (
 
 // TODO(andrew): Remove the use of `require.True` and `require.False` in all cases.
 // TODO(andrew): Use require.Equal and avoid the use of formatted strings. Ditto elsewhere.
-// TODO(andrew): Use reflection to iterate over all the params and test them.
+// TODO(andrew): Use reflection to iterate over all the params and test them. Suggestion: [Google's go-cmp] (https://github.com/google/go-cmp)
 // CLEANUP: cleanup this file as part of https://github.com/pokt-network/pocket/issues/76
 
 func DefaultTestingParams(_ *testing.T) modules.Params {

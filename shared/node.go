@@ -24,27 +24,27 @@ type Node struct {
 }
 
 func Create(cfg, genesis map[string]json.RawMessage) (n *Node, err error) {
-	persistenceMod, err := persistence.Create(cfg["Persistence"], genesis["PersistenceGenesisState"])
+	persistenceMod, err := persistence.Create(cfg["persistence"], genesis["persistenceGenesisState"])
 	if err != nil {
 		return nil, err
 	}
 
-	p2pMod, err := p2p.Create(cfg["P2P"], genesis["P2PGenesisState"])
+	p2pMod, err := p2p.Create(cfg["p2p"], genesis["p2PGenesisState"])
 	if err != nil {
 		return nil, err
 	}
 
-	utilityMod, err := utility.Create(cfg["Utility"], genesis["UtilityGenesisState"])
+	utilityMod, err := utility.Create(cfg["utility"], genesis["utilityGenesisState"])
 	if err != nil {
 		return nil, err
 	}
 
-	consensusMod, err := consensus.Create(cfg["Consensus"], genesis["ConsensusGenesisState"])
+	consensusMod, err := consensus.Create(cfg["consensus"], genesis["consensusGenesisState"])
 	if err != nil {
 		return nil, err
 	}
 
-	telemetryMod, err := telemetry.Create(cfg["Telemetry"], genesis["TelemetryGenesisState"])
+	telemetryMod, err := telemetry.Create(cfg["telemetry"], genesis["telemetryGenesisState"])
 	if err != nil {
 		return nil, err
 	}
