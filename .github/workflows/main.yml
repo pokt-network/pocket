@@ -62,12 +62,19 @@ jobs:
         # Only run if the test failed on target version to avoid duplicated annotations on GitHub.
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: reviewdog/action-staticcheck@v1
+        with:
+          # TODO: pick filter https://github.com/reviewdog/reviewdog#filter-mode
+          filter_mode: nofilter
+      - name: Run golangci-lint
+        # Only run if the test failed on target version to avoid duplicated annotations on GitHub.
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        uses: golangci/golangci-lint-action@v3
       # TODO(@okdas): move coverage to a separate job
       - name: create coverage report
-        if: ${{ env.TARGET_GOLANG_VERSION == matrix.go }}
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         run: make test_all_with_coverage
       - name: Upload coverage to Codecov
-        if: ${{ env.TARGET_GOLANG_VERSION == matrix.go }}
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: codecov/codecov-action@v3
 
   # TODO(@okdas): reuse artifacts built by the previous job instead
