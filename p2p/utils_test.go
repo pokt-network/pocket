@@ -43,7 +43,7 @@ func init() {
 
 // A configuration helper used to specify how many messages are expected to be sent or read by the
 // P2P module over the network.
-type TestNetworkCommsConfig map[string]struct {
+type TestNetworkSimulationConfig map[string]struct {
 	// The number of asynchronous reads the node's P2P listener made (i.e. # of messages it received over the network)
 	numNetworkReads int
 	// The number of asynchronous writes the node's P2P listener made (i.e. # of messages it tried to send over the network)
@@ -52,15 +52,15 @@ type TestNetworkCommsConfig map[string]struct {
 	//                   node IDs the specific read or write is coming from or going to.
 }
 
-func prepareP2PModulesWithMocks(t *testing.T, networkCommsConfig TestNetworkCommsConfig, wg *sync.WaitGroup) map[string]*p2pModule {
+func prepareP2PModulesWithMocks(t *testing.T, networkSimulationConfig TestNetworkSimulationConfig, wg *sync.WaitGroup) map[string]*p2pModule {
 	// Network configurations
-	numValidators := len(networkCommsConfig)
+	numValidators := len(networkSimulationConfig)
 	configs, genesisState := createConfigs(t, numValidators)
 
 	// Network & module mocks
 	connMocks := make(map[string]typesP2P.Transport)
 	busMocks := make(map[string]modules.Bus)
-	for valId, expectedCall := range networkCommsConfig {
+	for valId, expectedCall := range networkSimulationConfig {
 		wg.Add(expectedCall.numNetworkReads + 1)
 		connMocks[valId] = prepareConnMock(t, wg, expectedCall.numNetworkReads)
 
@@ -93,11 +93,11 @@ func prepareP2PModulesWithMocks(t *testing.T, networkCommsConfig TestNetworkComm
 	return p2pModules
 }
 
-func cleanupP2PModulesAndWaitGroup(t *testing.T, p2pModules map[string]*p2pModule, messageHandledWaitGroup *sync.WaitGroup) {
-	// Wait for completion
+func waitForNetworkSimulationCompletion(t *testing.T, p2pModules map[string]*p2pModule, wg *sync.WaitGroup) {
+	// Wait for all messages to be transmitted
 	done := make(chan struct{})
 	go func() {
-		messageHandledWaitGroup.Wait()
+		wg.Wait()
 		close(done)
 	}()
 
@@ -108,6 +108,8 @@ func cleanupP2PModulesAndWaitGroup(t *testing.T, p2pModules map[string]*p2pModul
 	case <-time.After(2 * time.Second):
 		t.Fatal("Timeout waiting for message to be handled")
 	}
+
+	// Stop all the P2P modules
 	for _, p2pModule := range p2pModules {
 		p2pModule.Stop()
 	}
