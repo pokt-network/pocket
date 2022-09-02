@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/types"
@@ -165,8 +166,10 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 // Attempt: This function tests the rain tree implementation against the theoretical truth which is documented [HERE}(?)
 func testRainTreeCalls(t *testing.T, origNode string, networkCommsConfig TestNetworkCommsConfig) {
 	// Network configurations
-	messageHandledWaitGroup, p2pModules := prepareP2PModulesWithWaitGroup(t, networkCommsConfig)
-	defer cleanupP2PModulesAndWaitGroup(t, p2pModules, messageHandledWaitGroup)
+	var messageHandledWaitGroup sync.WaitGroup
+	p2pModules := prepareP2PModulesWithMocks(t, networkCommsConfig, &messageHandledWaitGroup)
+
+	defer cleanupP2PModulesAndWaitGroup(t, p2pModules, &messageHandledWaitGroup)
 
 	// Send first message by the originator to trigger RainTree broadcast
 	p := &anypb.Any{}

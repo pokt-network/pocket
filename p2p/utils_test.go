@@ -52,27 +52,45 @@ type TestNetworkCommsConfig map[string]struct {
 	//                   node IDs the specific read or write is coming from or going to.
 }
 
-func prepareP2PModulesWithWaitGroup(t *testing.T, networkCommsConfig TestNetworkCommsConfig) (*sync.WaitGroup, map[string]*p2pModule) {
+func prepareP2PModulesWithMocks(t *testing.T, networkCommsConfig TestNetworkCommsConfig, wg *sync.WaitGroup) map[string]*p2pModule {
 	// Network configurations
 	numValidators := len(networkCommsConfig)
 	configs, genesisState := createConfigs(t, numValidators)
 
-	// Network initialization
-	consensusMock := prepareConsensusMock(t, genesisState)
+	// Network & module mocks
 	connMocks := make(map[string]typesP2P.Transport)
 	busMocks := make(map[string]modules.Bus)
-	var messageHandledWaitGroup sync.WaitGroup
 	for valId, expectedCall := range networkCommsConfig {
-		messageHandledWaitGroup.Add(expectedCall.numNetworkReads + 1)
-		connMocks[valId] = prepareConnMock(t, &messageHandledWaitGroup, expectedCall.numNetworkReads)
-		messageHandledWaitGroup.Add(expectedCall.numNetworkWrites)
-		telemetryMock := prepareTelemetryMock(t, &messageHandledWaitGroup, expectedCall.numNetworkWrites)
+		wg.Add(expectedCall.numNetworkReads + 1)
+		connMocks[valId] = prepareConnMock(t, wg, expectedCall.numNetworkReads)
+
+		wg.Add(expectedCall.numNetworkWrites)
+		consensusMock := prepareConsensusMock(t, genesisState)
+		telemetryMock := prepareTelemetryMock(t, wg, expectedCall.numNetworkWrites)
 		busMocks[valId] = prepareBusMock(t, configs[valId], consensusMock, telemetryMock)
 	}
-	// TODO (Olshansk) explain why we need multiple p2p modules - but only one respective consensus and telemetry module
-	// Attempt: Because we are simulating a combination of nodes inside of rain tree, we create a P2P instance for each node
-	// consensus, telemetry, and bus for these tests nodes are identical, while the p2p instance requires unique listener configuration
-	return &messageHandledWaitGroup, prepareTestP2PModules(t, configs, connMocks, busMocks)
+
+	// Create test P2P Modules
+	p2pModules := make(map[string]*p2pModule, len(configs))
+	for valId, config := range configs {
+		// Create a real P2P module
+		p2pMod, err := Create(config, nil)
+		require.NoError(t, err)
+
+		// Configure the module's listener's and bus
+		p2pModule := p2pMod.(*p2pModule)
+		p2pModule.listener = connMocks[valId]
+		p2pModule.SetBus(busMocks[valId])
+
+		// Configure how the P2P module communicates "over the network" by setting the appropriate connection mocks
+		require.NoError(t, p2pModule.Start()) // Needs to be started before the AddrBook is accessible
+		for _, peer := range p2pModule.network.GetAddrBook() {
+			peer.Dialer = connMocks[peer.ServiceUrl]
+		}
+		p2pModules[valId] = p2pModule
+
+	}
+	return p2pModules
 }
 
 func cleanupP2PModulesAndWaitGroup(t *testing.T, p2pModules map[string]*p2pModule, messageHandledWaitGroup *sync.WaitGroup) {
@@ -255,22 +273,4 @@ func prepareConnMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkReads i
 	connMock.EXPECT().Close().Return(nil).Times(1)
 
 	return connMock
-}
-
-func prepareTestP2PModules(t *testing.T, configs map[string]*genesis.Config, connMocks map[string]typesP2P.Transport,
-	busMocks map[string]modules.Bus) (p2pModules map[string]*p2pModule) {
-	p2pModules = make(map[string]*p2pModule, len(configs))
-	for valId, config := range configs {
-		p2pMod, err := Create(config, nil)
-		require.NoError(t, err)
-		p2pModule := p2pMod.(*p2pModule)
-		p2pModule.listener = connMocks[valId]
-		p2pModule.SetBus(busMocks[valId])
-		require.NoError(t, p2pModule.Start())
-		for _, peer := range p2pModule.network.GetAddrBook() {
-			peer.Dialer = connMocks[peer.ServiceUrl]
-		}
-		p2pModules[valId] = p2pModule
-	}
-	return
 }
