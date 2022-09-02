@@ -41,18 +41,20 @@ func init() {
 	keys = generateKeys(nil, maxNumKeys)
 }
 
-// IMPROVE(drewsky): A future improvement of these tests could be to specify specifically which
-//                   node IDs the specific read or write is coming from or going to.
-type TestRainTreeConfig map[string]struct {
+// A configuration helper used to specify how many messages are expected to be sent or read by the
+// P2P module over the network.
+type TestNetworkCommsConfig map[string]struct {
 	// The number of asynchronous reads the node's P2P listener made (i.e. # of messages it received over the network)
 	numNetworkReads int
 	// The number of asynchronous writes the node's P2P listener made (i.e. # of messages it tried to send over the network)
 	numNetworkWrites int
+	// IMPROVE(drewsky): A future improvement of these tests could be to specify specifically which
+	//                   node IDs the specific read or write is coming from or going to.
 }
 
-func prepareP2PModulesWithWaitGroup(t *testing.T, rainTreeConfig TestRainTreeConfig) (*sync.WaitGroup, map[string]*p2pModule) {
+func prepareP2PModulesWithWaitGroup(t *testing.T, networkCommsConfig TestNetworkCommsConfig) (*sync.WaitGroup, map[string]*p2pModule) {
 	// Network configurations
-	numValidators := len(rainTreeConfig)
+	numValidators := len(networkCommsConfig)
 	configs, genesisState := createConfigs(t, numValidators)
 
 	// Network initialization
@@ -60,7 +62,7 @@ func prepareP2PModulesWithWaitGroup(t *testing.T, rainTreeConfig TestRainTreeCon
 	connMocks := make(map[string]typesP2P.Transport)
 	busMocks := make(map[string]modules.Bus)
 	var messageHandledWaitGroup sync.WaitGroup
-	for valId, expectedCall := range rainTreeConfig {
+	for valId, expectedCall := range networkCommsConfig {
 		messageHandledWaitGroup.Add(expectedCall.numNetworkReads + 1)
 		connMocks[valId] = prepareConnMock(t, &messageHandledWaitGroup, expectedCall.numNetworkReads)
 		messageHandledWaitGroup.Add(expectedCall.numNetworkWrites)
