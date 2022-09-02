@@ -1,10 +1,11 @@
 package p2p
 
 import (
+	"testing"
+
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
-	"testing"
 )
 
 // IMPROVE(team): Looking into adding more tests and accounting for more edge cases.
@@ -15,9 +16,7 @@ func TestRainTreeNetworkCompleteOneNodes(t *testing.T) {
 	// val_1
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeConfig{
-		// TODO (Olshansk) explain how these expected values are derived
-		// TODO (Olshansk) explain what is happening here in this first test
-		originatorNode: {0, 0},
+		originatorNode: {0, 0}, // val_1, the originator, does 0 network reads or writes
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
@@ -27,11 +26,13 @@ func TestRainTreeNetworkCompleteTwoNodes(t *testing.T) {
 	//   └───────┐
 	// 	       val_2
 	originatorNode := validatorId(1)
+	// Per the diagram above, in the case of a 2 node network, the originator node (val_1) does a
+	// single write to another node (val_2),  also the
+	// originator node and never performs any reads or writes during a RainTree broadcast.
 	var expectedCalls = TestRainTreeConfig{
-		// TODO (Olshansk) explain what is happening here in this second test
 		// Attempt: I think Validator 1 is sending a message in a 2 (including self) node network
-		originatorNode: {0, 1}, // TODO (Olshansk) why did these values change in between commits?
-		validatorId(2): {1, 0},
+		originatorNode: {0, 1}, // val_1 does a single network write (to val_2)
+		validatorId(2): {1, 0}, // val_2 does a single network read (from val_1)
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
@@ -42,9 +43,9 @@ func TestRainTreeNetworkCompleteThreeNodes(t *testing.T) {
 	//   val_2        val_1     val_3
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeConfig{
-		originatorNode: {0, 2},
-		validatorId(2): {1, 0},
-		validatorId(3): {1, 0},
+		originatorNode: {0, 2}, // val_1 does two network writes (to val_2 and val_3)
+		validatorId(2): {1, 0}, // val_2 does a single network read (from val_1)
+		validatorId(3): {1, 0}, // val_2 does a single network read (from val_3)
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
@@ -58,10 +59,10 @@ func TestRainTreeNetworkCompleteFourNodes(t *testing.T) {
 	// 		    val_3                val_2             val_4
 	originatorNode := validatorId(1)
 	var expectedCalls = TestRainTreeConfig{
-		originatorNode: {0, 3},
-		validatorId(2): {2, 1},
-		validatorId(3): {2, 1},
-		validatorId(4): {1, 0},
+		originatorNode: {0, 3}, // val_1 does 3 network writes (two to val_2 and 1 to val_3)
+		validatorId(2): {2, 1}, // val_2 does 2 network reads (both from val_1) and 1 network write (to val_3)
+		validatorId(3): {2, 1}, // val_2 does 2 network reads (from val_1 and val_2) and 1 network write (to val_4)
+		validatorId(4): {1, 0}, // val_2 does 1 network read (from val_3)
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
@@ -166,7 +167,8 @@ func testRainTreeCalls(t *testing.T, origNode string, rainTreeConfig TestRainTre
 	// Network configurations
 	messageHandledWaitGroup, p2pModules := prepareP2PModulesWithWaitGroup(t, rainTreeConfig)
 	defer cleanupP2PModulesAndWaitGroup(t, p2pModules, messageHandledWaitGroup)
-	// Trigger originator message
+
+	// Send first message by the originator to trigger RainTree broadcast
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
 	require.NoError(t, p2pMod.Broadcast(p, types.PocketTopic_DEBUG_TOPIC))

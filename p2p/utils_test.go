@@ -3,6 +3,11 @@ package p2p
 import (
 	"crypto/ed25519"
 	"encoding/binary"
+	"sort"
+	"sync"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -13,10 +18,6 @@ import (
 	"github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"github.com/stretchr/testify/require"
-	"sort"
-	"sync"
-	"testing"
-	"time"
 )
 
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
@@ -40,6 +41,8 @@ func init() {
 	keys = generateKeys(nil, maxNumKeys)
 }
 
+// IMPROVE(drewsky): A future improvement of these tests could be to specify specifically which
+//                   node IDs the specific read or write is coming from or going to.
 type TestRainTreeConfig map[string]struct {
 	// The number of asynchronous reads the node's P2P listener made (i.e. # of messages it received over the network)
 	numNetworkReads int
