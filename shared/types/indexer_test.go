@@ -2,11 +2,12 @@ package types
 
 import (
 	"bytes"
-	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/stretchr/testify/require"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTransactionIndexerIndexAndGetters(t *testing.T) {

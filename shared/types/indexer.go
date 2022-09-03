@@ -6,6 +6,7 @@ package types
 import (
 	"encoding/hex"
 	"fmt"
+
 	"github.com/jordanorelli/lexnum"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/crypto"

@@ -22,6 +22,7 @@ require (
 require (
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/jackc/pgconn v1.11.0
+	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
 )
 
 require (
@@ -74,7 +75,6 @@ require (
 	github.com/jackc/pgproto3/v2 v2.2.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jackc/pgtype v1.10.0 // indirect
-	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/sys v0.0.0-20220405210540-1e041c57c461 // indirect
