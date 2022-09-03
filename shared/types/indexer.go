@@ -8,7 +8,7 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
-// TODO (Team) this is only going here in shared temporarily. It should go where the mepool goes (likely Utility module) in #163
+// TECHDEBT(andrew): Move this out of shared and alongside the mempool.
 
 // Interfaces
 
@@ -39,7 +39,7 @@ type TxIndexer interface {
 type TxResult interface {
 	GetTx() []byte                        // the transaction object primitive
 	GetHeight() int64                     // height it was sent
-	GetIndex() int32                      // which index it was within the block-transactions
+	GetIndex() int32                      // which index it was within the block-transactions; ordered by when the proposer received it in the mempool
 	GetResultCode() int32                 // 0 is no error, otherwise corresponds to error object code
 	GetError() string                     // can be empty
 	GetSigner() string                    // get the address who signed

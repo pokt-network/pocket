@@ -4,12 +4,12 @@ package shared;
 option go_package = "github.com/pokt-network/pocket/shared/types";
 
 message DefaultTxResult {
-  bytes tx = 1;
-  int64 height = 2;
-  int32 index = 3;
-  int32 result_code = 4; // TODO could have a type for utility.Code after #163
-  string error = 5; // TODO could use utility.Error after #163
+  bytes tx = 1;      // The bytes of the indexed transaction
+  int64 height = 2;  // The block height at which the transaction was included
+  int32 index = 3;   // The order (within a block) where the proposer included the transaction
+  int32 result_code = 4; // INVESTIGATE(andrew): look into having a `utility.Code` enum for this
+  string error = 5; // INVESTIGATE(andrew): look into having a `utility.Error` enum for this
   string signer = 6;
   string recipient = 7;
-  string message_type = 8; // TODO could be converted to enum once in the utility module
+  string message_type = 8; // TODO: Add an enum for the different message types
 }

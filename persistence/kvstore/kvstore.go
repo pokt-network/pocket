@@ -6,7 +6,8 @@ import (
 	badger "github.com/dgraph-io/badger/v3"
 )
 
-type KVStore interface { // TODO(Team) move to shared
+// TODO: move to shared
+type KVStore interface {
 	// Lifecycle methods
 	Stop() error
 
