@@ -48,6 +48,7 @@ func (p *ProtoCodec) FromAny(any *anypb.Any) (proto.Message, Error) {
 	return msg, nil
 }
 
+// TODO(andrew): Retrieve this from the utility module via the application specific bus
 func GetCodec() Codec {
 	return &ProtoCodec{}
 }

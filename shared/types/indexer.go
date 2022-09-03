@@ -12,24 +12,26 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
-// TxIndexer interface defines methods to index and query transactions.
+// Interface
+
+// `TxIndexer` interface defines methods to index and query transactions.
 // TODO: Link to the `bus` module
 type TxIndexer interface {
-	// Index analyzes, indexes and stores a single transaction result.
-	// Index indexes by `(hash, height, sender, recipient)`
+	// `Index` analyzes, indexes and stores a single transaction result.
+	// `Index` indexes by `(hash, height, sender, recipient)`
 	Index(result TxResult) error
 
-	// GetByHash returns all transaction specified by hash or nil if the transaction is not indexed
+	// `GetByHash` returns all transaction specified by hash or nil if the transaction is not indexed
 	GetByHash(hash []byte) (TxResult, error)
 
-	// GetByHeight returns all transactions specified by height or nil if there are no transactions at that height
+	// `GetByHeight` returns all transactions specified by height or nil if there are no transactions at that height
 	GetByHeight(height int64) ([]TxResult, error)
 
-	// GetBySender returns all transactions signed by *sender* may be ordered descending/ascending
+	// `GetBySender` returns all transactions signed by *sender*; may be ordered descending/ascending
 	GetBySender(sender string, descending bool) ([]TxResult, error)
 
-	// GetByRecipient returns all transactions *sent to address* may be ordered descending/ascending
-	GetByRecipient(rec string, descending bool) ([]TxResult, error)
+	// GetByRecipient returns all transactions *sent to address*; may be ordered descending/ascending
+	GetByRecipient(recipient string, descending bool) ([]TxResult, error)
 
 	// Close stops the underlying db connection
 	Close() error
@@ -37,25 +39,27 @@ type TxIndexer interface {
 
 type TxResult interface {
 	GetTx() []byte                        // the transaction object primitive
-	GetHeight() int64                     // height it was sent
-	GetIndex() int32                      // which index it was within the block-transactions; ordered by when the proposer received it in the mempool
-	GetResultCode() int32                 // 0 is no error, otherwise corresponds to error object code
-	GetError() string                     // can be empty
-	GetSigner() string                    // get the address who signed
-	GetRecipient() string                 // can be empty
-	GetMessageType() string               // corresponds to type of message (Ex. validator-stake, app-unjail, node-stake) etc.
+	GetHeight() int64                     // the height at which the tx was applied
+	GetIndex() int32                      // the transaction's index within the block (i.e. ordered by when the proposer received it in the mempool)
+	GetResultCode() int32                 // 0 is no error, otherwise corresponds to error object code; // IMPROVE: Add a specific type fot he result code
+	GetError() string                     // can be empty; IMPROVE: Add a specific type fot he error code
+	GetSigner() string                    // get the address of who signed (i.e. sent) the transaction
+	GetRecipient() string                 // get the address of who received the transaction; may be empty
+	GetMessageType() string               // corresponds to type of message (validator-stake, app-unjail, node-stake, etc) // IMPROVE: Add an enum for message types
 	Hash() ([]byte, error)                // the hash of the tx bytes
-	HashFromBytes([]byte) ([]byte, error) // the hash of the tx bytes, avoids re-marshalling
-	Bytes() ([]byte, error)               // proto marshalled bytes
-	FromBytes([]byte) (TxResult, error)   // from proto marshalled bytes
+	HashFromBytes([]byte) ([]byte, error) // same operation as `Hash`, but avoid re-serializing the tx
+	Bytes() ([]byte, error)               // returns the serialized transaction bytes
+	FromBytes([]byte) (TxResult, error)   // returns the deserialized transaction result
 }
+
+// Implementation
 
 var _ TxResult = &DefaultTxResult{}
 var _ TxIndexer = &txIndexer{}
 
-// Implementation
+// TODO(andrew): Move this documentation to a README.
 
-// txIndexer implementation uses a KVStore (interface) to index the transactions
+// `txIndexer` implementation uses a `KVStore` (interface) to index the transactions
 //
 // The transaction is indexed in the following formats:
 // - HASHKEY:      "h/SHA3(TxResultProtoBytes)"  VAL: TxResultProtoBytes     // store value by hash
@@ -63,9 +67,8 @@ var _ TxIndexer = &txIndexer{}
 // - SENDERKEY:    "s/height/index"              VAL: HASHKEY                // store hashKey by sender
 // - RECIPIENTKEY: "r/height/index"              VAL: HASHKEY                // store hashKey by recipient (if not empty)
 //
-// FOOTNOTE: the height/index is store using [ELEN](https://github.com/jordanorelli/lexnum/blob/master/elen.pdf)
-// This is to ensure the results are stored sorted (assuming KVStore uses a byte-wise lexicographical sorting)
-//
+// FOOTNOTE: the height/index store is using [ELEN](https://github.com/jordanorelli/lexnum/blob/master/elen.pdf)
+// This is to ensure the results are stored sorted (assuming the `KVStore`` uses a byte-wise lexicographical sorting)
 
 const (
 	HashPrefix            = 'h'
