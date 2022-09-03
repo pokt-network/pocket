@@ -219,7 +219,7 @@ protogen_clean:
 ## Generate go structures for all of the protobufs
 protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = ".")
-	# TODO (Olshansky) need help fixing the relative paths back. This solution requires a proper $GOPATH variable which is less than ideal
+	# TODO_IN_THIS_COMMIT(drewsky): need help fixing the relative paths back. This solution requires a proper $GOPATH variable which is less than ideal
 	protoc -I=${proto_dir} -I=./shared/debug/proto             --go_out=${GOPATH}/src        ./shared/debug/proto/*.proto         --experimental_allow_proto3_optional
 	protoc -I=${proto_dir} -I=./persistence/proto              --go_out=${GOPATH}/src        ./persistence/proto/*.proto          --experimental_allow_proto3_optional
 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
