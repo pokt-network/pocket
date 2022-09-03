@@ -1,3 +1,6 @@
+// DISCUSS_IN_THIS_COMMIT: Create a separate indexer package for this
+// TECHDEBT(andrew): Move this out of shared and alongside the mempool.
+
 package types
 
 import (
@@ -8,16 +11,11 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
-// TECHDEBT(andrew): Move this out of shared and alongside the mempool.
-
-// Interfaces
-
 // TxIndexer interface defines methods to index and query transactions.
-// TODO (Team) follow up tasks
-//   - Connect to bus module
+// TODO: Link to the `bus` module
 type TxIndexer interface {
 	// Index analyzes, indexes and stores a single transaction result.
-	// Index, indexes by `(hash, height, sender, recipient)`
+	// Index indexes by `(hash, height, sender, recipient)`
 	Index(result TxResult) error
 
 	// GetByHash returns all transaction specified by hash or nil if the transaction is not indexed

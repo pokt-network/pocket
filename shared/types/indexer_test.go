@@ -89,6 +89,7 @@ func NewTestingTransactionResult(t *testing.T, height, index int) TxResult {
 }
 
 func randomMessageType() string {
+	// TODO(andrew): Add an enum for the different message types
 	msgTypes := []string{"send", "stake", "unstake", "editStake", "unjail"}
 	return msgTypes[rand.Intn(len(msgTypes))]
 }
