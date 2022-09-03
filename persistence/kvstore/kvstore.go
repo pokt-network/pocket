@@ -6,16 +6,17 @@ import (
 	badger "github.com/dgraph-io/badger/v3"
 )
 
-// TODO: move to shared
+// CLEANUP: move this structure to a shared module
 type KVStore interface {
 	// Lifecycle methods
 	Stop() error
 
 	// Accessors
-	// TODO (Team) need proper iterator interface, can't live on this interface without one
+	// TODO: Add a proper iterator interface
 	Put(key []byte, value []byte) error
 	Get(key []byte) ([]byte, error)
-	GetAll(prefixKey []byte, descending bool) ([][]byte, error) // TODO Pagination for GetAll()
+	// TODO: Add pagination for `GetAll`
+	GetAll(prefixKey []byte, descending bool) ([][]byte, error)
 	Exists(key []byte) (bool, error)
 	ClearAll() error
 }
@@ -76,7 +77,7 @@ func (store badgerKVStore) Get(key []byte) ([]byte, error) {
 }
 
 func (store badgerKVStore) GetAll(prefix []byte, descending bool) (values [][]byte, err error) {
-	// TODO (INVESTIGATE) research badger.views
+	// INVESTIGATE: research `badger.views` for further improvements and optimizations
 	txn := store.db.NewTransaction(false)
 	defer txn.Discard()
 
