@@ -31,14 +31,35 @@ const (
 	// TODO (olshansk) explain these values
 	// Attempt: Since we simulate up to a 27 node network, we will pre-generate a n >= 27 number of keys to avoid generation everytime
 	// The genesis config seed start must begin at the max_keys value because...? and 42 is chosen because...?
+	 // Arbitrary value to use as the seed for deterministic private key generation since RainTree is dependant on lexographic address order
 	genesisConfigSeedStart = 42
-	maxNumKeys             = 42 // The number of keys generated for all the unit tests. Optimization to avoid regenerating every time.
+	// Arbitrary value of the number of private keys we should generate during tests so it is only done once 
+	maxNumKeys             = 42 // Arbitrary number
 )
 
 var keys []cryptoPocket.PrivateKey
 
 func init() {
 	keys = generateKeys(nil, maxNumKeys)
+}
+
+func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
+	keys := make([]cryptoPocket.PrivateKey, numValidators)
+
+	for i := range keys {
+		seedInt := genesisConfigSeedStart + i
+		seed := make([]byte, ed25519.PrivateKeySize)
+		binary.LittleEndian.PutUint32(seed, uint32(seedInt))
+		pk, err := cryptoPocket.NewPrivateKeyFromSeed(seed)
+		if err != nil {
+			panic(err)
+		}
+		keys[i] = pk
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i].Address().String() < keys[j].Address().String()
+	})
+	return keys
 }
 
 // A configuration helper used to specify how many messages are expected to be sent or read by the
@@ -50,6 +71,11 @@ type TestNetworkSimulationConfig map[string]struct {
 	numNetworkWrites int
 	// IMPROVE(drewsky): A future improvement of these tests could be to specify specifically which
 	//                   node IDs the specific read or write is coming from or going to.
+}
+
+// CLEANUP: This could (should?) be a codebase-wide shared test helper
+func validatorId(i int) string {
+	return test_artifacts.GetServiceUrl(i)
 }
 
 func prepareP2PModulesWithMocks(t *testing.T, networkSimulationConfig TestNetworkSimulationConfig, wg *sync.WaitGroup) map[string]*p2pModule {
@@ -115,29 +141,8 @@ func waitForNetworkSimulationCompletion(t *testing.T, p2pModules map[string]*p2p
 	}
 }
 
-func validatorId(i int) string {
-	return test_artifacts.GetServiceUrl(i)
-}
-
-func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
-	keys := make([]cryptoPocket.PrivateKey, numValidators)
-
-	for i := range keys {
-		seedInt := genesisConfigSeedStart + i
-		seed := make([]byte, ed25519.PrivateKeySize)
-		binary.LittleEndian.PutUint32(seed, uint32(seedInt))
-		pk, err := cryptoPocket.NewPrivateKeyFromSeed(seed)
-		if err != nil {
-			panic(err)
-		}
-		keys[i] = pk
-	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i].Address().String() < keys[j].Address().String()
-	})
-	return keys
-}
-
+// CLEANUP: Delete this function and use the helpers in `test_artifacts` once we have support for
+//          deterministic or injected (for the purpose of ordering) private keys.
 func createConfigs(t *testing.T, numValidators int) (configs map[string]*genesis.Config, genesisState *genesis.GenesisState) {
 	configs = make(map[string]*genesis.Config, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
@@ -164,6 +169,8 @@ func createConfigs(t *testing.T, numValidators int) (configs map[string]*genesis
 	return
 }
 
+// CLEANUP: Delete this function and use the helpers in `test_artifacts` once we have support for
+//          deterministic or injected (for the purpose of ordering) private keys.
 func createGenesisState(_ *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
 	validators := make([]*genesis.Actor, len(valKeys))
 	for i, valKey := range valKeys {
