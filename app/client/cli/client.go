@@ -15,12 +15,13 @@ import (
 )
 
 func QueryRPC(routeKey rpc.RouteKey, jsonArgs []byte) (string, error) {
+	// preparing the request
 	route, ok := rpc.RoutesMap[routeKey]
 	if !ok {
 		log.Fatalf("unable to find route with key %s", routeKey)
 	}
 	cliURL := remoteCLIURL + route.Path
-	fmt.Printf("%s %s", route.Method, cliURL)
+	log.Printf("%s %s", route.Method, cliURL)
 	req, err := http.NewRequest(route.Method, cliURL, bytes.NewBuffer(jsonArgs))
 	if err != nil {
 		return "", err
@@ -29,19 +30,26 @@ func QueryRPC(routeKey rpc.RouteKey, jsonArgs []byte) (string, error) {
 	client := &http.Client{
 		Timeout: time.Duration(test_artifacts.DefaultRpcTimeout) * time.Millisecond,
 	}
+
+	// executing the request
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
+
+	// reading the response
 	bz, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
 	res, err := strconv.Unquote(string(bz))
-	if err == nil {
-		bz = []byte(res)
+	if err != nil {
+		return "", err
 	}
+	bz = []byte(res)
+
+	// returning OK / KO
 	if resp.StatusCode == http.StatusOK {
 		var prettyJSON bytes.Buffer
 		err = json.Indent(&prettyJSON, bz, "", "    ")

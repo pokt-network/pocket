@@ -28,9 +28,8 @@ func NewGovernanceCommand() *cobra.Command {
 
 func govCommands() (cmds []*cobra.Command) {
 	cmds = append(cmds, &cobra.Command{
-		Use:   "ChangeParameter <owner> <key> <value>",
-		Short: "ChangeParameter <owner> <key> <value>",
-		// DISCUSS(deblasis): do we need some sort of validation on the backend?
+		Use:     "ChangeParameter <owner> <key> <value>",
+		Short:   "ChangeParameter <owner> <key> <value>",
 		Long:    "Changes the Governance parameter with <key> owned by <owner> to <value>",
 		Aliases: []string{},
 		Args:    cobra.ExactArgs(3),
@@ -53,7 +52,7 @@ func govCommands() (cmds []*cobra.Command) {
 			}
 
 			_ = &types.MessageChangeParameter{
-				Signer:         []byte{}, // TODO(deblasis): 👀 same as owner?
+				Signer:         pk.Address(),
 				Owner:          pk.Address(),
 				ParameterKey:   key,
 				ParameterValue: pbValue,

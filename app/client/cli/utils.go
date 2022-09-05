@@ -3,12 +3,17 @@ package cli
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pokt-network/pocket/shared/crypto"
+	sharedTypes "github.com/pokt-network/pocket/shared/types"
+	utilityTypes "github.com/pokt-network/pocket/utility/types"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -41,6 +46,9 @@ func parseEd25519PrivateKeyFromReader(reader io.Reader) (pk crypto.Ed25519Privat
 	return
 }
 
+// Credentials reads a password from the prompt and returns the trimmed version
+//
+// If pwd is provided (via flag to the command), it uses that one instead of asking via prompt
 func Credentials(pwd string) string {
 	if pwd != "" && strings.TrimSpace(pwd) != "" {
 		return strings.TrimSpace(pwd)
@@ -53,6 +61,9 @@ func Credentials(pwd string) string {
 	}
 }
 
+// Confirmation asks the user for a yes/no answer via interactive prompt.
+//
+// If pwd is provided (via flag to the command), it returns true since it's assumed that a user that provides a password via flag knows what they are doing
 func Confirmation(pwd string) bool {
 	if pwd != "" && strings.TrimSpace(pwd) != "" {
 		return true
@@ -74,4 +85,38 @@ func Confirmation(pwd string) bool {
 			}
 		}
 	}
+}
+
+func prepareTx(msg utilityTypes.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
+	var err error
+	codec := sharedTypes.GetCodec()
+	anyMsg, err := codec.ToAny(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	signature, err := pk.Sign(msg.GetSignBytes())
+	if err != nil {
+		return nil, err
+	}
+
+	tx := &utilityTypes.Transaction{
+		Msg: anyMsg,
+		Signature: &utilityTypes.Signature{
+			Signature: signature,
+			PublicKey: pk.PublicKey().Bytes(),
+		},
+		Nonce: getNonce(),
+	}
+
+	j, err := json.Marshal(tx)
+	if err != nil {
+		return nil, err
+	}
+	return j, nil
+}
+
+func getNonce() string {
+	rand.Seed(time.Now().UTC().UnixNano())
+	return fmt.Sprintf("%d", rand.Uint64())
 }
