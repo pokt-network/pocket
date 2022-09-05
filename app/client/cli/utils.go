@@ -3,6 +3,7 @@ package cli
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math/rand"
@@ -11,6 +12,8 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/shared/crypto"
+	sharedTypes "github.com/pokt-network/pocket/shared/types"
+	utilityTypes "github.com/pokt-network/pocket/utility/types"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -82,6 +85,35 @@ func Confirmation(pwd string) bool {
 			}
 		}
 	}
+}
+
+func prepareTx(msg utilityTypes.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
+	var err error
+	codec := sharedTypes.GetCodec()
+	anyMsg, err := codec.ToAny(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	signature, err := pk.Sign(msg.GetSignBytes())
+	if err != nil {
+		return nil, err
+	}
+
+	tx := &utilityTypes.Transaction{
+		Msg: anyMsg,
+		Signature: &utilityTypes.Signature{
+			Signature: signature,
+			PublicKey: pk.PublicKey().Bytes(),
+		},
+		Nonce: getNonce(),
+	}
+
+	j, err := json.Marshal(tx)
+	if err != nil {
+		return nil, err
+	}
+	return j, nil
 }
 
 func getNonce() string {
