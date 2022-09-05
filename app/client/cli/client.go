@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -13,9 +14,10 @@ import (
 )
 
 func QueryRPC(path string, jsonArgs []byte) (string, error) {
+	// preparing the request
 	cliURL := remoteCLIURL + path
-	fmt.Println(cliURL)
-	req, err := http.NewRequest("POST", cliURL, bytes.NewBuffer(jsonArgs))
+	log.Println(cliURL)
+	req, err := http.NewRequest(http.MethodPost, cliURL, bytes.NewBuffer(jsonArgs))
 	if err != nil {
 		return "", err
 	}
@@ -23,19 +25,26 @@ func QueryRPC(path string, jsonArgs []byte) (string, error) {
 	client := &http.Client{
 		Timeout: time.Duration(test_artifacts.DefaultRpcTimeout) * time.Millisecond,
 	}
+
+	// executing the request
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
+
+	// reading the response
 	bz, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
 	res, err := strconv.Unquote(string(bz))
-	if err == nil {
-		bz = []byte(res)
+	if err != nil {
+		return "", err
 	}
+	bz = []byte(res)
+
+	// returning OK / KO
 	if resp.StatusCode == http.StatusOK {
 		var prettyJSON bytes.Buffer
 		err = json.Indent(&prettyJSON, bz, "", "    ")

@@ -2,13 +2,14 @@ package cli
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_parseEd25519PrivateKeyFromReader(t *testing.T) {
@@ -16,9 +17,13 @@ func Test_parseEd25519PrivateKeyFromReader(t *testing.T) {
 		reader io.Reader
 	}
 
-	validPKString := "e7760141c2672178b28360a8cf80ff3a9d5fd579990317b9afcb2091426ffe75dc12b26584c057be33fcc8e891a483250581e38fe2bc9d62c1a1341c5e85b667"
+	validPKString := `"e7760141c2672178b28360a8cf80ff3a9d5fd579990317b9afcb2091426ffe75dc12b26584c057be33fcc8e891a483250581e38fe2bc9d62c1a1341c5e85b667"`
 
-	validPk, _ := crypto.NewPrivateKey(validPKString)
+	pk, err := strconv.Unquote(validPKString)
+	require.NoError(t, err)
+
+	validPk, err := crypto.NewPrivateKey(pk)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name    string
@@ -45,7 +50,7 @@ func Test_parseEd25519PrivateKeyFromReader(t *testing.T) {
 		{
 			name: "should return valid private key",
 			args: args{
-				reader: strings.NewReader(fmt.Sprintf(`"%s"`, validPKString)),
+				reader: strings.NewReader(validPKString),
 			},
 			wantPk:  validPk.Bytes(),
 			wantErr: false,

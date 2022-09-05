@@ -33,7 +33,6 @@ var (
 )
 
 // TODO(drewsky): this is meant to be a **temporary** replacement for the recently deprecated
-//
 //	'genesis config' option. We need to implement a real suite soon!
 func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (genesisState *genesis.GenesisState, validatorPrivateKeys []string) {
 	apps, appsPrivateKeys := NewActors(genesis.ActorType_App, numApplications)

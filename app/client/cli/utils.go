@@ -5,8 +5,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"golang.org/x/crypto/ssh/terminal"
@@ -80,4 +82,9 @@ func Confirmation(pwd string) bool {
 			}
 		}
 	}
+}
+
+func getNonce() string {
+	rand.Seed(time.Now().UTC().UnixNano())
+	return fmt.Sprintf("%d", rand.Uint64())
 }
