@@ -120,7 +120,7 @@ If no changes are desired for the parameter, just enter the current param value 
 				Chains:        chains,
 				Amount:        amount,
 				ServiceUrl:    serviceURI,
-				OutputAddress: []byte{}, // TODO(deblasis): 👀
+				OutputAddress: pk.Address(),
 				Signer:        pk.Address(),
 				ActorType:     cmdDef.ActorType,
 			}
