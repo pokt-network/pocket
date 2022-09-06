@@ -1,0 +1,89 @@
+openapi: 3.0.3
+servers:
+  - url: 'http://localhost:50832'
+info:
+  description: >-
+    This is the API definition Pocket Network core RPC call.
+
+
+    Pocket is a distributed network that relays data requests and responses to and from any blockchain system.
+
+
+    Pocket verifies all relayed data and proportionally rewards the participating nodes with native cryptographic tokens.
+  version: 1.0.0
+  title: Pocket Network
+  termsOfService: 'https://pokt.network/terms/'
+  contact:
+    email: hola@pokt.network
+  license:
+    name: MIT License
+    url: 'https://github.com/pokt-network/pocket/blob/main/LICENSE'
+tags:
+  - name: version
+    description: Version of the Pocket API
+  - name: health
+    description: Liveness of the Pocket API node
+  - name: client
+    description: Dispatch and relay services
+paths:
+  /v1/health:
+    get:
+      tags:
+        - health
+      summary: Get the liveness of the Pocket API node
+      responses:
+        '200':
+          description: Healthy
+        '404':
+          description: Unhealthy - Unreachable
+        '500':
+          description: Unhealthy - Server Error
+  /v1/version:
+    get:
+      tags:
+        - version
+      summary: Get the current version of the Pocket Network API
+      responses:
+        default:
+          description: Default response
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: 1.0.0
+  /v1/client/broadcast_tx_sync:
+    post:
+      tags:
+        - client
+      summary: Broadcasts a Transaction synchronously, ultimately adding it to the mempool
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendRawTxParams'
+      responses:
+          # DISCUSS (team): define response schemas, for now "CheckTransaction" returns only an Error (nil if successfull)
+        '200':
+          description: Transaction broadcasted successfully
+        '500':
+          description: Server Error
+externalDocs:
+  description: Find out more about Pocket Network
+  url: 'https://pokt.network'
+components:
+  schemas:
+    SendRawTxParams:
+      required:
+        - address
+        - raw_hex_bytes
+      properties:
+        address:
+          type: string
+        raw_hex_bytes:
+          type: string
+  requestBodies: {}
+  securitySchemes: {}
+  links: {}
+  callbacks: {}
+security: []
