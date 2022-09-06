@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/pokt-network/pocket/app/client/rpc"
+	"github.com/pokt-network/pocket/app/pocket/rpc"
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 )

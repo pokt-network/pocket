@@ -61,5 +61,4 @@ message RPCConfig { // DISCUSS (team): with #163 in mind, where should this resi
   bool enabled = 1;
   string port = 2;
   uint64 timeout = 3;
-  string remote_cli_url = 4;
 }
