@@ -36,28 +36,50 @@ This is a general set of steps we have found to help new core team members onboa
 - If you don't need help, **when you’re about 33% of the way done**, show your draft work and get some feedback, so **jump on a call!**
 - Just leave a message in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel and someone from the core team will respond.
 
-## Technical Links
+## Technical References
 
 This is a general set of technical links and recommended reading our team has found useful to review and study for core technical concepts.
 
 ### Pocket Specific
 
-- Pocket V0 Whitepaper: https://pocket-network-assets.s3-us-west-2.amazonaws.com/pdfs/Pocket-Network-Whitepaper-v0.3.0.pdf
-- Pocket Glossary: https://docs.pokt.network/home/learn/glossary
-- Operating Trustless Fisherman: https://docs.pokt.network/v1/utility#3.3-fisherman-protocol
+- [Pocket V0 Whitepaper](https://pocket-network-assets.s3-us-west-2.amazonaws.com/pdfs/Pocket-Network-Whitepaper-v0.3.0.pdf)
+  - This is the OG Pocket whitepaper if you want to go down memory lane
+- [Pocket easy-to-learn Documents](https://docs.pokt.network/learn/)
+  - This is a great starting point for anyone who is not technical or who has a very basic foundation
+- [Pocket YouTube Channel](https://www.youtube.com/c/PocketNetwork/videos)
+  - Contains everything from infracon presentations, to contributor hour calls, etc...
+- [Pocket Network V1 Specifications](https://github.com/pokt-network/pocket-network-protocol)
 
 ### Consensus
 
-- Hotstuff whitepaper: https://arxiv.org/abs/1803.05069
-- Attacks on BFT Algorithms: https://arxiv.org/pdf/1904.04098.pdf
+- [Hotstuff whitepaper](https://arxiv.org/abs/1803.05069)
+  - The original hotstuff whitepaper does a great job at explaining the algorithm on which HotPOKT is built
+- [Attacks on BFT Algorithms](https://arxiv.org/pdf/1904.04098.pdf)
 
 ### Merkle Trees
 
-- Jellyfish Merkle Tree: https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf
-- Discussion about Storage and IAVL in Cosmos: https://github.com/cosmos/cosmos-sdk/issues/7100
-- Verkle Trees: https://math.mit.edu/research/highschool/primes/materials/2018/Kuszmaul.pdf
+- [Jellyfish Merkle Tree](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
+- Verkle Trees
+  - [Verkle Tree Whitepaper](https://math.mit.edu/research/highschool/primes/materials/2018/Kuszmaul.pdf)
+    -
+  - [Vitalik's Verkle Tree Review](https://vitalik.ca/general/2021/06/18/verkle.html)
+    -
+- [Comos Discussion about Storage and IAVL](https://github.com/cosmos/cosmos-sdk/issues/7100)
 
-### Cryptograph
 
-- Threshold signatures presentation: https://docs.google.com/presentation/d/1G4XGqrBLwqMyDQce_xpPQUEMOK4lFrneuvGYU3MVDsI/edit#slide=id.g1246936523c_0_26
+### Cryptography
+
+- [Threshold signatures presentation](https://docs.google.com/presentation/d/1G4XGqrBLwqMyDQce_xpPQUEMOK4lFrneuvGYU3MVDsI/edit#slide=id.g1246936523c_0_26)
+  - A great presentation by Alin Tomescu (founding engineer) that builds intuition around threshold signatures, signature aggregation, etc
 - BLS Signatures: https://en.wikipedia.org/wiki/BLS_digital_signature
+
+### Blogs
+- Aptos
+
+### Blogs
+- Pocket engineering blog
+  - New
+  - Old
+- Aptos engineering blog
+- Mike's blog
+- Olshansky's blog
