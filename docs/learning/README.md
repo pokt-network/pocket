@@ -38,6 +38,8 @@ This is a general set of steps we have found to help new core team members onboa
 
 ## Technical References
 
+_We're trying not to make this a link dump, so please only add more references if it was actually helpful in clarifying your understanding._
+
 This is a general set of technical links and recommended reading our team has found useful to review and study for core technical concepts.
 
 ### Pocket Specific
