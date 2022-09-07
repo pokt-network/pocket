@@ -45,45 +45,61 @@ This is a general set of technical links and recommended reading our team has fo
 - [Pocket V0 Whitepaper](https://pocket-network-assets.s3-us-west-2.amazonaws.com/pdfs/Pocket-Network-Whitepaper-v0.3.0.pdf)
   - This is the OG Pocket whitepaper if you want to go down memory lane
 - [Pocket easy-to-learn Documents](https://docs.pokt.network/learn/)
-  - This is a great starting point for anyone who is not technical or who has a very basic foundation
-- [Pocket YouTube Channel](https://www.youtube.com/c/PocketNetwork/videos)
-  - Contains everything from infracon presentations, to contributor hour calls, etc...
+  - This is the best starting point for anyone who is non-technical or very new to the project
 - [Pocket Network V1 Specifications](https://github.com/pokt-network/pocket-network-protocol)
+
+- First Pocket Network V1 Presentations: The original presentations for Pocket V1 presented at the Mexico 2021 offsite
+
+  - [Utility](https://docs.google.com/presentation/d/1NU0PnegtBm5ioLu0VQMiluWT4usHnavDKrGvS3p8QdM/edit?usp=sharing)
+  - [Persistence](https://docs.google.com/presentation/d/1qDA-pRMT1KV9byUAU49bvd_5seaILPAh6i3vA7j5l8o/edit?usp=sharing)
+  - [P2P](https://docs.google.com/presentation/d/1CLeAcGJbM_iP76vnCoHreU1chB9vFWIYWAwQHa-MPbc/edit?usp=sharing)
+  - [Consensus](https://docs.google.com/presentation/d/18CtSxxLLHY1N7HEJtja633mVF1_a9blaE2fe2-WgGAo/edit?usp=sharing)
+
+- [Pocket YouTube Channel](https://www.youtube.com/c/PocketNetwork/videos)
+  - Contains everything from Infracon presentations, to contributor hour calls, etc...
+  -
 
 ### Consensus
 
 - [Hotstuff whitepaper](https://arxiv.org/abs/1803.05069)
   - The original hotstuff whitepaper does a great job at explaining the algorithm on which HotPOKT is built
 - [Attacks on BFT Algorithms](https://arxiv.org/pdf/1904.04098.pdf)
+  - Covers various attacks on different BFT algorithms
 
 ### Merkle Trees
 
 - [Jellyfish Merkle Tree](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
+  - An easy-to-read paper on JMT's that contains a good amount of background of how Merkle Trees work
 - Verkle Trees
-  - ## [Verkle Tree Whitepaper](https://math.mit.edu/research/highschool/primes/materials/2018/Kuszmaul.pdf)
-  - ## [Vitalik's Verkle Tree Review](https://vitalik.ca/general/2021/06/18/verkle.html)
+  - [Verkle Tree Whitepaper](https://math.mit.edu/research/highschool/primes/materials/2018/Kuszmaul.pdf)
+    - The Verkle Tree whitepaper provides a good background on Merkle trees and some details on polynomial commitments
+  - [Vitalik's Verkle Tree Review](https://vitalik.ca/general/2021/06/18/verkle.html)
+    - Vitalik's analysis dives deeper into the math behind Verkle Trees with an alternative
 - [Comos Discussion about Storage and IAVL](https://github.com/cosmos/cosmos-sdk/issues/7100)
+
+### Ethereum
+
+- [Paths toward single-slot finality](https://notes.ethereum.org/@vbuterin/single_slot_finality)
+  - An ethereum-pov explanation on the difficulty of having large validator networks
 
 ### Cryptography
 
 - [Threshold signatures presentation](https://docs.google.com/presentation/d/1G4XGqrBLwqMyDQce_xpPQUEMOK4lFrneuvGYU3MVDsI/edit#slide=id.g1246936523c_0_26)
   - A great presentation by Alin Tomescu (founding engineer) that builds intuition around threshold signatures, signature aggregation, etc
-- BLS Signatures: https://en.wikipedia.org/wiki/BLS_digital_signature
+- [ECDSA is not that bad: two-party signing without Schnorr or BLS](https://medium.com/cryptoadvance/ecdsa-is-not-that-bad-two-party-signing-without-schnorr-or-bls-1941806ec36f)
+  - A gentle introduction to BLS aggregation
+- [How Schnorr signatures may improve Bitcoin](https://medium.com/cryptoadvance/how-schnorr-signatures-may-improve-bitcoin-91655bcb4744)
+  - A gentle introduction to Schnorr signatures
 
 ### Blogs
 
-- Aptos
-
-### Blogs
-
-- Pocket engineering blog
-  - New
-  - Old
-- Aptos engineering blog
-- Mike's blog
-- Olshansky's blog
-
-TODO:
-
-- V1 Mexico decks
--
+- [Pocket Network Blog](https://www.blog.pokt.network/)
+- [OG Pocket Network Blog](https://medium.com/@POKTnetwork)
+- [Aptos engineering blog](https://aptoslabs.medium.com/)
+  - [The Evolution of State Sync](https://medium.com/aptoslabs/the-evolution-of-state-sync-the-path-to-100k-transactions-per-second-with-sub-second-latency-at-52e25a2c6f10)
+- [Vitalik's blog](https://vitalik.ca/categories/blockchains.html)
+- [Mike's blog](https://morourke.org/)
+- [Olshansky's blog](https://olshansky.substack.com/)
+  - [5P;1R - Celestia (LazyLedger) White Paper](https://olshansky.substack.com/p/5p1r-celestia-lazyledger-white-paper)
+  - [5P;1R - Ethereum's Modified Merkle Patricia Trie](https://olshansky.substack.com/p/5p1r-ethereums-modified-merkle-patricia)
+  - [5P;1R - Bitcoin's Elliptic Curve Cryptography](https://olshansky.substack.com/p/5p1r-bitcoins-elliptic-curve-cryptography)
