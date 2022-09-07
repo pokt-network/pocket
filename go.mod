@@ -24,6 +24,7 @@ require (
 	github.com/getkin/kin-openapi v0.100.0
 	github.com/jackc/pgconn v1.11.0
 	github.com/labstack/echo/v4 v4.9.0
+	github.com/spf13/cobra v1.5.0
 )
 
 require (
