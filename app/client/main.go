@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,13 +13,12 @@ func main() {
 	ctx := newCLIContext()
 	err := cli.ExecuteContext(ctx)
 	if ctx.Err() == context.Canceled || err == context.Canceled {
-		log.Fatalf("aborted")
+		cli.PrintFatal("aborted\n")
 		return
 	}
 
 	if err != nil {
-		log.Fatalf(err.Error())
-		os.Exit(1)
+		cli.PrintFatal("err: %v\n", err)
 	}
 }
 

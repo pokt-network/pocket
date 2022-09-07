@@ -24,8 +24,6 @@ var rootCmd = &cobra.Command{
 	// TODO(deblasis): document
 	Short: "",
 	Long:  "",
-	// TODO(deblasis): do we need some sort of teardown as well?
-
 }
 
 func ExecuteContext(ctx context.Context) error {
