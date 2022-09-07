@@ -55,25 +55,34 @@ paths:
     post:
       tags:
         - client
-      summary: Broadcasts a Transaction synchronously, ultimately adding it to the mempool
+      summary: Relays a raw transaction
       requestBody:
+        description: Raw transaction to be relayed
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SendRawTxParams'
+              $ref: '#/components/schemas/RawTXRequest'
       responses:
-          # DISCUSS (team): define response schemas, for now "CheckTransaction" returns only an Error (nil if successfull)
         '200':
-          description: Transaction broadcasted successfully
+          description: Transaction added to the mempool without errors
+        '400':
+          description: Bad request
+          content:
+            text/plain:
+              example: "description of failure"
         '500':
-          description: Server Error
+          description: An error occurred while adding the transaction to the mempool
+          content:
+            text/plain:
+              example: "description of failure"
 externalDocs:
   description: Find out more about Pocket Network
   url: 'https://pokt.network'
 components:
   schemas:
-    SendRawTxParams:
+    RawTXRequest:
+      type: object
       required:
         - address
         - raw_hex_bytes
