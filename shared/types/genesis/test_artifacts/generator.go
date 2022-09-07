@@ -14,6 +14,12 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+const (
+	defaultRPCPort    = "50832"
+	defaultRPCHost    = "localhost"
+	defaultRPCTimeout = 30000
+)
+
 var (
 	DefaultChains              = []string{"0001"}
 	DefaultServiceURL          = ""
@@ -27,6 +33,9 @@ var (
 	DefaultUnstakingHeight     = int64(-1)
 	DefaultChainID             = "testnet"
 	DefaultMaxBlockBytes       = uint64(4000000)
+	DefaultRpcPort             = defaultRPCPort
+	DefaultRpcTimeout          = uint64(defaultRPCTimeout)
+	DefaultRemoteCLIURL        = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaultRPCPort)
 )
 
 // TODO(drewsky): this is meant to be a **temporary** replacement for the recently deprecated
@@ -90,6 +99,11 @@ func NewDefaultConfig(nodeNum int, privateKey string) *genesis.Config {
 			Enabled:  true,
 			Address:  "0.0.0.0:9000",
 			Endpoint: "/metrics",
+		},
+		Rpc: &genesis.RPCConfig{
+			Enabled: true,
+			Port:    DefaultRpcPort,
+			Timeout: DefaultRpcTimeout,
 		},
 	}
 }
