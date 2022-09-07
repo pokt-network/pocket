@@ -14,6 +14,12 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+const (
+	defaultRPCPort    = "50832"
+	defaultRPCHost    = "localhost"
+	defaultRPCTimeout = 30000
+)
+
 var (
 	DefaultChains              = []string{"0001"}
 	DefaultServiceURL          = ""
@@ -27,9 +33,9 @@ var (
 	DefaultUnstakingHeight     = int64(-1)
 	DefaultChainID             = "testnet"
 	DefaultMaxBlockBytes       = uint64(4000000)
-	DefaultRpcPort             = "26657"
-	DefaultRpcTimeout          = uint64(3000)
-	DefaultRemoteCliUrl        = "http://localhost:26657"
+	DefaultRpcPort             = defaultRPCPort
+	DefaultRpcTimeout          = uint64(defaultRPCTimeout)
+	DefaultRemoteCLIURL 	   = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaultRPCPort)
 )
 
 // TODO(drewsky): this is meant to be a **temporary** replacement for the recently deprecated
