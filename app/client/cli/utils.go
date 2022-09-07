@@ -3,14 +3,17 @@ package cli
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math/rand"
+	"net/http"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/pokt-network/pocket/app/pocket/rpc"
 	"github.com/pokt-network/pocket/shared/crypto"
 	sharedTypes "github.com/pokt-network/pocket/shared/types"
 	utilityTypes "github.com/pokt-network/pocket/utility/types"
@@ -87,6 +90,9 @@ func Confirmation(pwd string) bool {
 	}
 }
 
+// prepareTX wraps a Message into a Transaction and signs it with the provided pk
+//
+// returns the JSON bytes of the signed transaction
 func prepareTx(msg utilityTypes.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
 	var err error
 	codec := sharedTypes.GetCodec()
@@ -114,6 +120,24 @@ func prepareTx(msg utilityTypes.Message, pk crypto.Ed25519PrivateKey) ([]byte, e
 		return nil, err
 	}
 	return j, nil
+}
+
+// postRawTx posts a signed transaction
+func postRawTx(ctx context.Context, pk crypto.Ed25519PrivateKey, j []byte) (*http.Response, error) {
+	client, err := rpc.NewClient(remoteCLIURL)
+	if err != nil {
+		return nil, err
+	}
+	req := rpc.RawTXRequest{
+		Address:     pk.Address().String(),
+		RawHexBytes: string(j),
+	}
+
+	resp, err := client.PostV1ClientBroadcastTxSync(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 func getNonce() string {

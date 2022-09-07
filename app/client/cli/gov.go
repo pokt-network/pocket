@@ -28,7 +28,7 @@ func NewGovernanceCommand() *cobra.Command {
 
 func govCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
-		&cobra.Command{
+		{
 			Use:     "ChangeParameter <owner> <key> <value>",
 			Short:   "ChangeParameter <owner> <key> <value>",
 			Long:    "Changes the Governance parameter with <key> owned by <owner> to <value>",
@@ -52,12 +52,24 @@ func govCommands() []*cobra.Command {
 					return err
 				}
 
-				_ = &types.MessageChangeParameter{
+				msg := &types.MessageChangeParameter{
 					Signer:         pk.Address(),
 					Owner:          pk.Address(),
 					ParameterKey:   key,
 					ParameterValue: pbValue,
 				}
+
+				j, err := prepareTx(msg, pk)
+				if err != nil {
+					return err
+				}
+
+				resp, err := postRawTx(cmd.Context(), pk, j)
+				if err != nil {
+					return err
+				}
+				// DISCUSS(team): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
+				fmt.Println(resp)
 
 				return nil
 			},
