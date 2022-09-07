@@ -60,12 +60,9 @@ This is a general set of technical links and recommended reading our team has fo
 
 - [Jellyfish Merkle Tree](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
 - Verkle Trees
-  - [Verkle Tree Whitepaper](https://math.mit.edu/research/highschool/primes/materials/2018/Kuszmaul.pdf)
-    -
-  - [Vitalik's Verkle Tree Review](https://vitalik.ca/general/2021/06/18/verkle.html)
-    -
+  - ## [Verkle Tree Whitepaper](https://math.mit.edu/research/highschool/primes/materials/2018/Kuszmaul.pdf)
+  - ## [Vitalik's Verkle Tree Review](https://vitalik.ca/general/2021/06/18/verkle.html)
 - [Comos Discussion about Storage and IAVL](https://github.com/cosmos/cosmos-sdk/issues/7100)
-
 
 ### Cryptography
 
@@ -74,12 +71,19 @@ This is a general set of technical links and recommended reading our team has fo
 - BLS Signatures: https://en.wikipedia.org/wiki/BLS_digital_signature
 
 ### Blogs
+
 - Aptos
 
 ### Blogs
+
 - Pocket engineering blog
   - New
   - Old
 - Aptos engineering blog
 - Mike's blog
 - Olshansky's blog
+
+TODO:
+
+- V1 Mexico decks
+-
