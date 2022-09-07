@@ -144,3 +144,8 @@ func getNonce() string {
 	rand.Seed(time.Now().UTC().UnixNano())
 	return fmt.Sprintf("%d", rand.Uint64())
 }
+
+func PrintFatal(format string, a ...any) {
+	fmt.Printf(format, a...)
+	os.Exit(1)
+}
