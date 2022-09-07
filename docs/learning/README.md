@@ -93,13 +93,16 @@ This is a general set of technical links and recommended reading our team has fo
 
 ### Blogs
 
-- [Pocket Network Blog](https://www.blog.pokt.network/)
-- [OG Pocket Network Blog](https://medium.com/@POKTnetwork)
 - [Aptos engineering blog](https://aptoslabs.medium.com/)
   - [The Evolution of State Sync](https://medium.com/aptoslabs/the-evolution-of-state-sync-the-path-to-100k-transactions-per-second-with-sub-second-latency-at-52e25a2c6f10)
-- [Vitalik's blog](https://vitalik.ca/categories/blockchains.html)
-- [Mike's blog](https://morourke.org/)
 - [Olshansky's blog](https://olshansky.substack.com/)
   - [5P;1R - Celestia (LazyLedger) White Paper](https://olshansky.substack.com/p/5p1r-celestia-lazyledger-white-paper)
   - [5P;1R - Ethereum's Modified Merkle Patricia Trie](https://olshansky.substack.com/p/5p1r-ethereums-modified-merkle-patricia)
   - [5P;1R - Bitcoin's Elliptic Curve Cryptography](https://olshansky.substack.com/p/5p1r-bitcoins-elliptic-curve-cryptography)
+
+#### General Blogs
+
+- [Pocket Network Blog](https://www.blog.pokt.network/)
+- [OG Pocket Network Blog](https://medium.com/@POKTnetwork)
+- [Vitalik's blog](https://vitalik.ca/categories/blockchains.html)
+- [Mike's blog](https://morourke.org/)
