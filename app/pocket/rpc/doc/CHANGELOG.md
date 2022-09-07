@@ -11,4 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-# TODO
+- First iteration of the RPC
+  - Endpoint: Node liveness
+  - Endpoint: Node version
+  - Endpoint Synchronous signed transaction broadcast
+  - Spec: basic Openapi.yaml
+  - Codegen: code generation for the Server + DTOs
+  - Codegen: code generation for the Client

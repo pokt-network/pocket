@@ -8,6 +8,20 @@ Pocket V0 has inspired a lot the first iteration but then we converged towards a
 
 This approach will allow us to focus on the features and less on the boilerpate and ultimately to iterate more quickly as we discover the way ahead of us.
 
+## Code generation
+
+The current implementation uses code generation for ease of development.
+
+The source of truth is the the [OpenAPI3.0 yaml file](../v1/openapi.yaml).
+
+Anytime we make changes to the yaml file, we need to regenerate the boilerplate code by running
+
+```bash
+$ make generate_rpc_openapi
+```
+
+The compilation errors should guide towards the next steps.
+
 ## Transports
 
 Currently, the API is in its simplest form. Basically a **REST API**.
