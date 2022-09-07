@@ -46,14 +46,27 @@ func accountCommands() []*cobra.Command {
 				toAddr := crypto.AddressFromString(args[1])
 				amount := args[2]
 
-				_ = &types.MessageSend{
+				msg := &types.MessageSend{
 					FromAddress: pk.Address(),
 					ToAddress:   toAddr,
 					Amount:      amount,
 				}
 
-				// TODO(deblasis): implement RPC client, route and handler
-				fmt.Printf("sending %s from %s to %s\n", args[2], args[0], args[1])
+				j, err := prepareTx(msg, pk)
+				if err != nil {
+					return err
+				}
+
+				// TODO(deblasis): we need a single source of truth for routes, the empty string should be replaced with something like a constant that can be used to point to a specific route
+				// perhaps the routes could be centralized into a map[string]Route in #176 and accessed here
+				// I will do this in #169 since it has commits from #176 and #177
+				resp, err := QueryRPC("", j)
+				if err != nil {
+					return err
+				}
+				// DISCUSS(team): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
+				fmt.Println(resp)
+
 				return nil
 			},
 		},
