@@ -11,4 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-# TODO
+- Basic implementation with Utility commands
+  - Account
+    - Send
+  - Actor (Application, Node, Fisherman, Validator)
+    - Stake (Custodial)
+    - EditStake
+    - Unstake
+    - Unpause
+  - Governance
+    - ChangeParameter
+  - Debug
+    - Refactored previous CLI into a subcommand
+- Functionally mocked a keybase in the form of a json file (default: pk.json) that will contain the privatekey
+- CLI calling RPC via generated client
+- Default configuration handling/overrides
