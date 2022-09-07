@@ -1,0 +1,59 @@
+# RPC
+
+This document is meant to be a starting point/placeholder for a full-fledged RPC specification that allows interaction with the nodes.
+
+## Inspiration
+
+Pocket V0 has inspired a lot the first iteration but then we converged towards a spec-centric approach, where the boilerplate code (serialization, routing, etc) is derived from an [OpenAPI 3.0](../v1/openapi.yaml) specification.
+
+This approach will allow us to focus on the features and less on the boilerpate and ultimately to iterate more quickly as we discover the way ahead of us.
+
+## Transports
+
+Currently, the API is in its simplest form. Basically a **REST API**.
+
+As the codebase matures, we'll consider other transports such as [**JSON RPC 2.0**](https://www.jsonrpc.org/specification) and [**GRPC**](https://grpc.io/).
+
+## Spec
+
+<!-- TODO (deblasis): add link when merged to `main` -->
+
+The Swagger Editor with preview is available here.
+
+This first iteration includes the bare minimum:
+
+### Node related
+
+- Node liveness check (**GET /v1/health**)
+- Node version check (**GET /v1/version**)
+
+These are pretty self-explanatory.
+
+### Transaction related
+
+- Sync signed transaction submission (**POST /v1/client/broadcast_tx_sync**)
+
+  #### Payload:
+
+  ```json
+  {
+    "address": "string",
+    "raw_hex_bytes": "string"
+  }
+  ```
+
+  `address`: specifies the address the transaction originates from.
+
+  `raw_hex_bytes`: hex encoded JSON of a signed transaction.
+
+  #### Return:
+
+  Currently only **OK** (HTTP Status code 200) or **KO** (HTTP Status code 4xx/5xx)
+
+  This API might be extended to return potentially useful information such as the transaction hash which is known at the moment of submission and can be used to query the blockchain.
+
+#### What's next?
+
+Definitely we'll need ways to retrieve transactions as well so we can envisage:
+
+- Get a transaction by hash (**GET /v1/client/tx**)
