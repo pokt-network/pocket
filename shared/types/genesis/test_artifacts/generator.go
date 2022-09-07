@@ -35,11 +35,11 @@ var (
 	DefaultMaxBlockBytes       = uint64(4000000)
 	DefaultRpcPort             = defaultRPCPort
 	DefaultRpcTimeout          = uint64(defaultRPCTimeout)
-	DefaultRemoteCLIURL 	   = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaultRPCPort)
+	DefaultRemoteCLIURL        = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaultRPCPort)
 )
 
 // TODO(drewsky): this is meant to be a **temporary** replacement for the recently deprecated
-//	'genesis config' option. We need to implement a real suite soon!
+//                'genesis config' option. We need to implement a real suite soon!
 func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (genesisState *genesis.GenesisState, validatorPrivateKeys []string) {
 	apps, appsPrivateKeys := NewActors(genesis.ActorType_App, numApplications)
 	vals, validatorPrivateKeys := NewActors(genesis.ActorType_Val, numValidators)
@@ -101,9 +101,9 @@ func NewDefaultConfig(nodeNum int, privateKey string) *genesis.Config {
 			Endpoint: "/metrics",
 		},
 		Rpc: &genesis.RPCConfig{
-			Enabled:      true,
-			Port:         DefaultRpcPort,
-			Timeout:      DefaultRpcTimeout,
+			Enabled: true,
+			Port:    DefaultRpcPort,
+			Timeout: DefaultRpcTimeout,
 		},
 	}
 }
