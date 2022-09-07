@@ -98,7 +98,6 @@ func NewDefaultConfig(nodeNum int, privateKey string) *genesis.Config {
 			Enabled:      true,
 			Port:         DefaultRpcPort,
 			Timeout:      DefaultRpcTimeout,
-			RemoteCliUrl: DefaultRemoteCliUrl,
 		},
 	}
 }
