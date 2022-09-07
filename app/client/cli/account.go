@@ -57,10 +57,7 @@ func accountCommands() []*cobra.Command {
 					return err
 				}
 
-				// TODO(deblasis): we need a single source of truth for routes, the empty string should be replaced with something like a constant that can be used to point to a specific route
-				// perhaps the routes could be centralized into a map[string]Route in #176 and accessed here
-				// I will do this in #169 since it has commits from #176 and #177
-				resp, err := QueryRPC("", j)
+				resp, err := postRawTx(cmd.Context(), pk, j)
 				if err != nil {
 					return err
 				}
