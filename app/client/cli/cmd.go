@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remoteCLIURL", test_artifacts.DefaultRemoteCliUrl, "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
+	rootCmd.PersistentFlags().StringVar(&remoteCLIURL, "remoteCLIURL", test_artifacts.DefaultRemoteCLIURL, "takes a remote endpoint in the form of <protocol>://<host> (uses RPC Port)")
 	rootCmd.PersistentFlags().StringVar(&privateKeyFilePath, "path_to_private_key_file", "./pk.json", "Path to private key to use when signing")
 }
 

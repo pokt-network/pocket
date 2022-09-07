@@ -35,7 +35,7 @@ var (
 	DefaultMaxBlockBytes       = uint64(4000000)
 	DefaultRpcPort             = defaultRPCPort
 	DefaultRpcTimeout          = uint64(defaultRPCTimeout)
-	DefaultRemoteCLIURL        = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaultRPCPort)
+	DefaultRemoteCLIURL 	   = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaultRPCPort)
 )
 
 // TODO(drewsky): this is meant to be a **temporary** replacement for the recently deprecated
