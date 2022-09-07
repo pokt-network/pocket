@@ -35,12 +35,12 @@ services:
       - "8080"
       - "9080"
       - "9000"
-      - "26657"
+      - "50832"
     ports:
       - "7081:7081"
       - "8081:8080"
       - "9081:9080"
-      - "26657:26657"
+      - "50832:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Needed for DLV debugging
@@ -63,12 +63,12 @@ services:
       - "8080"
       - "9080"
       - "9000"
-      - "26657"
+      - "50832"
     ports:
       - "7082:7082"
       - "8082:8080"
       - "9082:9080"
-      - "26658:26657"
+      - "50833:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Needed for DLV debugging
@@ -91,12 +91,12 @@ services:
       - "8080"
       - "9080"
       - "9000"
-      - "26657"
+      - "50832"
     ports:
       - "7083:7083"
       - "8083:8080"
       - "9083:9080"
-      - "26659:26657"
+      - "50834:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Needed for DLV debugging
@@ -119,12 +119,12 @@ services:
       - "8080"
       - "9080"
       - "9000"
-      - "26657"
+      - "50832"
     ports:
       - "7084:7084"
       - "8084:8080"
       - "9084:9080"
-      - "26660:26657"
+      - "50835:50832"
     volumes:
       - ${PWD}:/go/src/github.com/pocket-network
     # Needed for DLV debugging

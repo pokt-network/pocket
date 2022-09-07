@@ -29,8 +29,7 @@
   },
   "rpc": {
     "enabled": true,
-    "port": "26657",
-    "timeout": 30000,
-    "remote_cli_url": "http://localhost:26657"
+    "port": "50832",
+    "timeout": 30000
   }
 }
