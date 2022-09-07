@@ -342,7 +342,6 @@ func (r GetV1HealthResponse) StatusCode() int {
 type GetV1VersionResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSONDefault  *StringResult
 }
 
 // Status returns HTTPResponse.Status
@@ -439,16 +438,6 @@ func ParseGetV1VersionResponse(rsp *http.Response) (*GetV1VersionResponse, error
 	response := &GetV1VersionResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest StringResult
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
 	}
 
 	return response, nil

@@ -18,13 +18,13 @@ func (s *rpcServer) GetV1Version(ctx echo.Context) error {
 }
 
 func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
-	params := new(SendRawTxParams)
+	params := new(RawTXRequest)
 	if err := ctx.Bind(params); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
 	bz, err := hex.DecodeString(params.RawHexBytes)
 	if err != nil {
-		return ctx.String(http.StatusBadRequest, "cannot decode")
+		return ctx.String(http.StatusBadRequest, "cannot decode tx bytes")
 	}
 	bus := s.node.GetBus()
 	height := bus.GetConsensusModule().CurrentHeight()

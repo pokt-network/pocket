@@ -16,30 +16,27 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// SendRawTxParams defines model for SendRawTxParams.
-type SendRawTxParams struct {
+// RawTXRequest defines model for RawTXRequest.
+type RawTXRequest struct {
 	Address     string `json:"address"`
 	RawHexBytes string `json:"raw_hex_bytes"`
 }
 
-// StringResult defines model for StringResult.
-type StringResult = string
-
 // PostV1ClientBroadcastTxSyncJSONBody defines parameters for PostV1ClientBroadcastTxSync.
-type PostV1ClientBroadcastTxSyncJSONBody = SendRawTxParams
+type PostV1ClientBroadcastTxSyncJSONBody = RawTXRequest
 
 // PostV1ClientBroadcastTxSyncJSONRequestBody defines body for PostV1ClientBroadcastTxSync for application/json ContentType.
 type PostV1ClientBroadcastTxSyncJSONRequestBody = PostV1ClientBroadcastTxSyncJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-
+	// Relays a raw transaction
 	// (POST /v1/client/broadcast_tx_sync)
 	PostV1ClientBroadcastTxSync(ctx echo.Context) error
-
+	// Get the liveness of the Pocket API node
 	// (GET /v1/health)
 	GetV1Health(ctx echo.Context) error
-
+	// Get the current version of the Pocket Network API
 	// (GET /v1/version)
 	GetV1Version(ctx echo.Context) error
 }
@@ -113,18 +110,22 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
