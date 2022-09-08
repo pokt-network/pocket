@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/pokt-network/pocket/shared/modules"
+	typesTelemetry "github.com/pokt-network/pocket/telemetry/types"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -21,7 +22,7 @@ func NOOP() {
 	log.Printf("\n[telemetry=noop]\n")
 }
 
-func CreateNoopTelemetryModule(_ *TelemetryConfig) (*NoopTelemetryModule, error) {
+func CreateNoopTelemetryModule(_ *typesTelemetry.TelemetryConfig) (*NoopTelemetryModule, error) {
 	return &NoopTelemetryModule{}, nil
 }
 

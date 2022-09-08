@@ -2,10 +2,11 @@ package raintree
 
 import (
 	"fmt"
-	"github.com/pokt-network/pocket/shared/debug"
 	"log"
 	"math/rand"
 	"time"
+
+	"github.com/pokt-network/pocket/shared/debug"
 
 	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"

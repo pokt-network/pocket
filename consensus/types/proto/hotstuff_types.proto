@@ -5,7 +5,7 @@ package consensus;
 
 option go_package = "github.com/pokt-network/pocket/consensus/types";
 
-import "consensus/types/proto/block.proto";
+import "block.proto";
 
 enum HotstuffStep {
     HOTSTUFF_STEP_UNKNOWN = 0;

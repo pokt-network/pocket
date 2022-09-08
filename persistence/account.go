@@ -2,8 +2,9 @@ package persistence
 
 import (
 	"encoding/hex"
-	"github.com/pokt-network/pocket/persistence/types"
 	"math/big"
+
+	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/jackc/pgx/v4"
 )

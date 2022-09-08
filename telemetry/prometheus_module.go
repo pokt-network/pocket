@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/pokt-network/pocket/shared/modules"
+	typesTelemetry "github.com/pokt-network/pocket/telemetry/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -29,7 +30,7 @@ type PrometheusTelemetryModule struct {
 	gaugeVectors map[string]prometheus.GaugeVec
 }
 
-func CreatePrometheusTelemetryModule(cfg *TelemetryConfig) (*PrometheusTelemetryModule, error) {
+func CreatePrometheusTelemetryModule(cfg *typesTelemetry.TelemetryConfig) (*PrometheusTelemetryModule, error) {
 	return &PrometheusTelemetryModule{
 		counters:     map[string]prometheus.Counter{},
 		gauges:       map[string]prometheus.Gauge{},
