@@ -33,7 +33,7 @@ RUN set -eux; \
     unzip -q protoc.zip -d /usr/local/; \
     protoc --version
 
-# dlv 
+# dlv
 RUN go install github.com/go-delve/delve/cmd/dlv@latest; \
     dlv version
 
@@ -46,7 +46,8 @@ RUN make install_cli_deps
 
 ## Run codegen
 RUN make protogen_local && \
-    make mockgen
+    make mockgen && \
+    make generate_rpc_openapi
 
 RUN go get -d -v ./app/pocket
 RUN go build -o /usr/local/bin/pocket ./app/pocket
