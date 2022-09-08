@@ -172,12 +172,14 @@ func (p *paceMaker) InterruptRound() {
 func (p *paceMaker) NewHeight() {
 	p.consensusMod.nodeLog(typesCons.PacemakerNewHeight(p.consensusMod.Height + 1))
 
+	p.consensusMod.m.Lock()
 	p.consensusMod.Height++
 	p.consensusMod.Round = 0
 	p.consensusMod.Block = nil
 
 	p.consensusMod.HighPrepareQC = nil
 	p.consensusMod.LockedQC = nil
+	p.consensusMod.m.Unlock()
 
 	p.startNextView(nil, false) // TODO(design): We are omitting CommitQC and TimeoutQC here.
 
