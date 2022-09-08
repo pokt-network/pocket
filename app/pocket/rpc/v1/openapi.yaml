@@ -9,7 +9,7 @@ info:
     Pocket is a distributed network that relays data requests and responses to and from any blockchain system.
 
 
-    Pocket verifies all relayed data and proportionally rewards the participating nodes with native cryptographic tokens.
+    Pocket verifies all relayed data and proportionally rewards the participating nodes with POKT.
   version: 1.0.0
   title: Pocket Network
   termsOfService: 'https://pokt.network/terms/'
