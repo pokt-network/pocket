@@ -87,6 +87,7 @@ go_oapi-codegen:
 		echo "Install with 'go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0'"; \
 	fi; \
 	}
+
 .PHONY: go_clean_deps
 ## Runs `go mod tidy` && `go mod vendor`
 go_clean_deps:
@@ -118,7 +119,6 @@ develop_start:
 develop_test: docker_check
 		make develop_start && \
 		make test_all
-
 
 .PHONY: client_start
 ## Run a client daemon which is only used for debugging purposes

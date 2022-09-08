@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -21,7 +22,7 @@ import (
 )
 
 // readEd25519PrivateKeyFromFile returns an Ed25519PrivateKey from a file where the file simply encodes it in a string (for now)
-// TODO(pocket/issues/150): this is a temporary hack since we don't have yet a keybase, the next step would be to read from an "ArmoredJson" like in V0
+// HACK(pocket/issues/150): this is a temporary hack since we don't have yet a keybase, the next step would be to read from an "ArmoredJson" like in V0
 func readEd25519PrivateKeyFromFile(pkPath string) (pk crypto.Ed25519PrivateKey, err error) {
 	pkFile, err := os.Open(pkPath)
 	if err != nil {
@@ -55,13 +56,12 @@ func parseEd25519PrivateKeyFromReader(reader io.Reader) (pk crypto.Ed25519Privat
 func Credentials(pwd string) string {
 	if pwd != "" && strings.TrimSpace(pwd) != "" {
 		return strings.TrimSpace(pwd)
-	} else {
-		bytePassword, err := terminal.ReadPassword(int(os.Stdin.Fd()))
-		if err != nil {
-			fmt.Println(err)
-		}
-		return strings.TrimSpace(string(bytePassword))
 	}
+	bytePassword, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	return strings.TrimSpace(string(bytePassword))
 }
 
 // Confirmation asks the user for a yes/no answer via interactive prompt.
@@ -70,22 +70,21 @@ func Credentials(pwd string) string {
 func Confirmation(pwd string) bool {
 	if pwd != "" && strings.TrimSpace(pwd) != "" {
 		return true
-	} else {
-		reader := bufio.NewReader(os.Stdin)
+	}
+	reader := bufio.NewReader(os.Stdin)
 
-		for {
-			fmt.Println("yes | no")
-			response, err := reader.ReadString('\n')
-			if err != nil {
-				fmt.Println("Error reading string: ", err.Error())
-				return false
-			}
-			response = strings.ToLower(strings.TrimSpace(response))
-			if response == "y" || response == "yes" {
-				return true
-			} else if response == "n" || response == "no" {
-				return false
-			}
+	for {
+		fmt.Println("yes | no")
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println("Error reading string: ", err.Error())
+			return false
+		}
+		response = strings.ToLower(strings.TrimSpace(response))
+		if response == "y" || response == "yes" {
+			return true
+		} else if response == "n" || response == "no" {
+			return false
 		}
 	}
 }
@@ -143,9 +142,4 @@ func postRawTx(ctx context.Context, pk crypto.Ed25519PrivateKey, j []byte) (*htt
 func getNonce() string {
 	rand.Seed(time.Now().UTC().UnixNano())
 	return fmt.Sprintf("%d", rand.Uint64())
-}
-
-func PrintFatal(format string, a ...any) {
-	fmt.Printf(format, a...)
-	os.Exit(1)
 }

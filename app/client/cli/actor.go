@@ -12,10 +12,7 @@ import (
 )
 
 func init() {
-	subcmdFlags := []cmdOption{func(c *cobra.Command) {
-		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
-	}}
-	rootCmd.AddCommand(NewActorCommands(subcmdFlags)...)
+	rootCmd.AddCommand(NewActorCommands(attachPwdFlagToSubcommands())...)
 
 	rawChainCleanupRegex = regexp.MustCompile(rawChainCleanupExpr)
 }
@@ -109,7 +106,7 @@ If no changes are desired for the parameter, just enter the current param value 
 			serviceURI := args[3]
 
 			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
-			readPassphrase()
+			pwd = readPassphrase(pwd)
 
 			msg := &utilityTypes.MessageStake{
 				PublicKey:     pk.PublicKey().Bytes(),
@@ -168,7 +165,7 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			serviceURI := args[3]
 
 			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
-			readPassphrase()
+			pwd = readPassphrase(pwd)
 
 			msg := &utilityTypes.MessageEditStake{
 				Address:    pk.Address(),
@@ -211,7 +208,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			}
 
 			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
-			readPassphrase()
+			pwd = readPassphrase(pwd)
 
 			msg := &utilityTypes.MessageUnstake{
 				Address:   pk.Address(),
@@ -251,7 +248,7 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 			}
 
 			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
-			readPassphrase()
+			pwd = readPassphrase(pwd)
 
 			msg := &utilityTypes.MessageUnpause{
 				Address:   pk.Address(),
@@ -277,14 +274,14 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 	return unpauseCmd
 }
 
-func readPassphrase() {
-	if strings.TrimSpace(pwd) == "" {
+func readPassphrase(currPwd string) string {
+	if strings.TrimSpace(currPwd) == "" {
 		fmt.Println("Enter Passphrase: ")
 	} else {
 		fmt.Println("Using Passphrase provided via flag")
 	}
 
-	_ = Credentials(pwd)
+	return Credentials(currPwd)
 }
 
 func validateStakeAmount(amount string) error {
@@ -309,4 +306,10 @@ func applySubcommandOptions(cmds []*cobra.Command, cmdDef actorCmdDef) {
 			opt(cmd)
 		}
 	}
+}
+
+func attachPwdFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
+	}}
 }
