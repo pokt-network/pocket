@@ -3,7 +3,7 @@ package consensus
 import (
 	"context"
 	"log"
-	"time"
+	timePkg "time"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -139,11 +139,14 @@ func (p *paceMaker) RestartTimer() {
 	if p.stepCancelFunc != nil {
 		p.stepCancelFunc()
 	}
-	p.debugSleep()
+	//p.debugSleep()
 
 	// NOTE: Not defering a cancel call because this function is asynchronous.
 	stepTimeout := p.getStepTimeout(p.consensusMod.Round)
-	ctx, cancel := context.WithTimeout(context.TODO(), stepTimeout)
+
+	clock := p.bus.GetClock()
+
+	ctx, cancel := clock.WithTimeout(context.TODO(), stepTimeout)
 	p.stepCancelFunc = cancel
 
 	go func() {
@@ -153,7 +156,7 @@ func (p *paceMaker) RestartTimer() {
 				p.consensusMod.nodeLog(typesCons.PacemakerTimeout(p.consensusMod.Height, p.consensusMod.Step, p.consensusMod.Round))
 				p.InterruptRound()
 			}
-		case <-time.After(stepTimeout + 30*time.Millisecond): // Adding 30ms to the context timeout to avoid race condition.
+		case <-clock.After(stepTimeout + 30*timePkg.Millisecond): // Adding 30ms to the context timeout to avoid race condition.
 			return
 		}
 	}()
@@ -218,7 +221,7 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 }
 
 // TODO(olshansky): Increase timeout using exponential backoff.
-func (p *paceMaker) getStepTimeout(round uint64) time.Duration {
-	baseTimeout := time.Duration(int64(time.Millisecond) * int64(p.pacemakerConfigs.TimeoutMsec))
+func (p *paceMaker) getStepTimeout(round uint64) timePkg.Duration {
+	baseTimeout := timePkg.Duration(int64(timePkg.Millisecond) * int64(p.pacemakerConfigs.TimeoutMsec))
 	return baseTimeout
 }

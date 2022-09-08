@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -79,6 +80,7 @@ func GenerateNodeConfigs(_ *testing.T, numValidators int) (configs []*genesis.Co
 
 func CreateTestConsensusPocketNodes(
 	t *testing.T,
+	clock clock.Clock,
 	configs []*genesis.Config,
 	genesisState *genesis.GenesisState,
 	testChannel modules.EventsChannel,
@@ -94,7 +96,7 @@ func CreateTestConsensusPocketNodes(
 		return pk.Address().String() < pk2.Address().String()
 	})
 	for i, cfg := range configs {
-		pocketNode := CreateTestConsensusPocketNode(t, cfg, genesisState, testChannel)
+		pocketNode := CreateTestConsensusPocketNode(t, cfg, genesisState, testChannel, clock)
 		// TODO(olshansky): Figure this part out.
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
@@ -107,6 +109,7 @@ func CreateTestConsensusPocketNode(
 	cfg *genesis.Config,
 	genesisState *genesis.GenesisState,
 	testChannel modules.EventsChannel,
+	clock clock.Clock,
 ) *shared.Node {
 	consensusMod, err := consensus.Create(cfg, genesisState)
 	require.NoError(t, err)
@@ -118,13 +121,14 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 
-	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock, cfg, genesisState)
+	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock, cfg, genesisState, clock)
 	require.NoError(t, err)
 	pk, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
 	require.NoError(t, err)
 	pocketNode := &shared.Node{
 		Address: pk.Address(),
 	}
+	pocketNode.SetClock(clock)
 	pocketNode.SetBus(bus)
 
 	return pocketNode
@@ -185,6 +189,7 @@ func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 
 func WaitForNetworkConsensusMessages(
 	t *testing.T,
+	clock clock.Clock,
 	testChannel modules.EventsChannel,
 	step typesCons.HotstuffStep,
 	hotstuffMsgType typesCons.HotstuffMessageType,
@@ -201,12 +206,13 @@ func WaitForNetworkConsensusMessages(
 	}
 
 	errorMessage := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(hotstuffMsgType)])
-	return waitForNetworkConsensusMessagesInternal(t, testChannel, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, includeFilter, errorMessage)
+	return waitForNetworkConsensusMessagesInternal(t, clock, testChannel, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, includeFilter, errorMessage)
 }
 
 // IMPROVE(olshansky): Translate this to use generics.
 func waitForNetworkConsensusMessagesInternal(
 	_ *testing.T,
+	clock clock.Clock,
 	testChannel modules.EventsChannel,
 	topic types.PocketTopic,
 	numMessages int,
@@ -215,7 +221,7 @@ func waitForNetworkConsensusMessagesInternal(
 	errorMessage string,
 ) (messages []*anypb.Any, err error) {
 	messages = make([]*anypb.Any, 0)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*millis)
+	ctx, cancel := clock.WithTimeout(context.Background(), time.Millisecond*millis)
 	unused := make([]*types.PocketEvent, 0) // TODO: Move this into a pool rather than resending back to the eventbus.
 loop:
 	for {
@@ -367,4 +373,28 @@ func baseTelemetryEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetr
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
 	return eventMetricsAgentMock
+}
+
+func logTime(clock *clock.Mock) {
+	log.Printf("[⌚ CLOCK ⌚] the time is: %v ms from UNIX Epoch [%v]", clock.Now().UTC().UnixMilli(), clock.Now().UTC())
+}
+
+func advanceTime(clock *clock.Mock, duration time.Duration) {
+	clock.Add(duration)
+	log.Printf("[⌚ CLOCK ⏩] advanced by %v", duration)
+	logTime(clock)
+}
+
+func sleep(clock *clock.Mock, duration time.Duration) {
+	log.Printf("[⌚ CLOCK 💤] sleeping for %v", duration)
+	clock.Sleep(duration)
+}
+
+// timeReminder simply prints, at a given interval, the current mocked time to help with debug
+func timeReminder(clock *clock.Mock, frequency time.Duration) {
+	tick := time.NewTicker(frequency)
+	for {
+		<-tick.C
+		logTime(clock)
+	}
 }

@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
 )
@@ -26,4 +27,7 @@ type Bus interface {
 	// Configuration
 	GetConfig() *genesis.Config
 	GetGenesis() *genesis.GenesisState
+
+	// Time
+	GetClock() clock.Clock
 }

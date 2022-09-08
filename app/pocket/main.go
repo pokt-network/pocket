@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 
+	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 )
@@ -25,7 +26,7 @@ func main() {
 
 	cfg, genesis := test_artifacts.ReadConfigAndGenesisFiles(*configFilename, *genesisFilename)
 
-	pocketNode, err := shared.Create(cfg, genesis)
+	pocketNode, err := shared.Create(cfg, genesis, clock.New())
 	if err != nil {
 		log.Fatalf("Failed to create pocket node: %s", err)
 	}

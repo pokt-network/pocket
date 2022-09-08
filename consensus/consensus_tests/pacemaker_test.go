@@ -4,9 +4,12 @@ import (
 	"encoding/hex"
 	"log"
 	"reflect"
+	"runtime"
 	"testing"
 	"time"
+	timePkg "time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/shared/types"
 
 	"github.com/pokt-network/pocket/consensus"
@@ -27,10 +30,13 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 		t.Skip()
 	}
 
+	clockMock := clock.NewMock()
+	go timeReminder(clockMock, 100*time.Millisecond)
+
 	// Test configs
 	numNodes := 4
 	paceMakerTimeoutMsec := uint64(50) // Set a very small pacemaker timeout
-	paceMakerTimeout := 50 * time.Millisecond
+	paceMakerTimeout := 50 * timePkg.Millisecond
 	configs, genesisStates := GenerateNodeConfigs(t, numNodes)
 	for _, config := range configs {
 		config.Consensus.PacemakerConfig.TimeoutMsec = paceMakerTimeoutMsec
@@ -38,7 +44,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, configs, genesisStates, testChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, clockMock, configs, genesisStates, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Debug message to start consensus by triggering next view.
@@ -46,8 +52,10 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 		TriggerNextView(t, pocketNode)
 	}
 
+	advanceTime(clockMock, 600*time.Millisecond)
+
 	// paceMakerTimeout
-	_, err := WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	_, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
 	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -56,11 +64,16 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 		require.Equal(t, uint8(0), nodeState.Round)
 	}
 
-	// Cause the pacemaker to timeout
-	time.Sleep(paceMakerTimeout)
+	go func() {
+		// Cause the pacemaker to timeout
+		sleep(clockMock, paceMakerTimeout)
+	}()
+	runtime.Gosched()
+	advanceTime(clockMock, 200*time.Millisecond)
+	advanceTime(clockMock, 200*time.Millisecond)
 
 	// Check that a new round starts at the same height.
-	_, err = WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
 	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -69,11 +82,14 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 		require.Equal(t, uint8(1), nodeState.Round)
 	}
 
-	// Cause the pacemaker to timeout
-	time.Sleep(paceMakerTimeout)
-
+	go func() {
+		// Cause the pacemaker to timeout
+		sleep(clockMock, paceMakerTimeout)
+	}()
+	advanceTime(clockMock, 600*time.Millisecond)
+	runtime.Gosched()
 	// // Check that a new round starts at the same height
-	_, err = WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
 	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -82,11 +98,15 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 		require.Equal(t, uint8(2), nodeState.Round)
 	}
 
-	// Cause the pacemaker to timeout
-	time.Sleep(paceMakerTimeout)
+	go func() {
+		// Cause the pacemaker to timeout
+		sleep(clockMock, paceMakerTimeout)
+	}()
+	advanceTime(clockMock, 600*time.Millisecond)
+	runtime.Gosched()
 
 	// Check that a new round starts at the same height.
-	newRoundMessages, err := WaitForNetworkConsensusMessages(t, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	newRoundMessages, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
 	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -100,8 +120,10 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 		P2PBroadcast(t, pocketNodes, message)
 	}
 
+	advanceTime(clockMock, 600*time.Millisecond)
+
 	// Confirm we are at the next step
-	_, err = WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Propose, 1, 500)
+	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Prepare, consensus.Propose, 1, 500)
 	require.NoError(t, err)
 	for _, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -115,9 +137,12 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	numNodes := 4
 	configs, genesisStates := GenerateNodeConfigs(t, numNodes)
 
+	clockMock := clock.NewMock()
+	go timeReminder(clockMock, 100*time.Millisecond)
+
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, configs, genesisStates, testChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, clockMock, configs, genesisStates, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Starting point
@@ -174,10 +199,16 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	P2PBroadcast(t, pocketNodes, anyMsg)
 
 	// numNodes-1 because one of the messages is a self-proposal that is not passed through the network
-	_, err = WaitForNetworkConsensusMessages(t, testChannel, consensus.Prepare, consensus.Vote, numNodes-1, 2000)
+	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Prepare, consensus.Vote, numNodes-1, 2000)
 	require.NoError(t, err)
 
-	time.Sleep(50 * time.Millisecond)
+	go func() {
+		// Cause the pacemaker to timeout
+		sleep(clockMock, 50*timePkg.Millisecond)
+	}()
+	advanceTime(clockMock, 600*time.Millisecond)
+	runtime.Gosched()
+
 	// Check that the leader is in the latest round.
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)

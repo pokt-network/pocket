@@ -3,6 +3,7 @@ package shared
 import (
 	"log"
 
+	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
@@ -19,11 +20,12 @@ import (
 var _ modules.Module = &Node{}
 
 type Node struct {
+	clock   clock.Clock
 	bus     modules.Bus
 	Address cryptoPocket.Address
 }
 
-func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (n *Node, err error) {
+func Create(cfg *genesis.Config, genesis *genesis.GenesisState, clock clock.Clock) (n *Node, err error) {
 	persistenceMod, err := persistence.Create(cfg, genesis)
 	if err != nil {
 		return nil, err
@@ -49,7 +51,7 @@ func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (n *Node, err er
 		return nil, err
 	}
 
-	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod, cfg, genesis)
+	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod, cfg, genesis, clock)
 	if err != nil {
 		return nil, err
 	}
@@ -62,6 +64,7 @@ func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (n *Node, err er
 	return &Node{
 		bus:     bus,
 		Address: pk.Address(),
+		clock:   clock,
 	}, nil
 }
 
@@ -157,4 +160,12 @@ func (node *Node) handleDebugEvent(anyMessage *anypb.Any) error {
 	}
 
 	return nil
+}
+
+func (m *Node) SetClock(clock clock.Clock) {
+	m.clock = clock
+}
+
+func (m *Node) GetClock() clock.Clock {
+	return m.clock
 }

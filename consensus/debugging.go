@@ -2,7 +2,7 @@ package consensus
 
 import (
 	"log"
-	"time"
+	timePkg "time"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/types"
@@ -116,6 +116,7 @@ func (p *paceMaker) ForceNextView() {
 }
 
 // This is a hack only used to slow down the progress of the blockchain during development.
+// INVESTIGATE (deblasis): this is now potentially obsolete with clock.Clock
 func (p *paceMaker) debugSleep() {
-	time.Sleep(time.Duration(int64(time.Millisecond) * int64(p.debugTimeBetweenStepsMsec)))
+	p.bus.GetClock().Sleep(timePkg.Duration(int64(timePkg.Millisecond) * int64(p.debugTimeBetweenStepsMsec)))
 }

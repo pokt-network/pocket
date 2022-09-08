@@ -20,6 +20,7 @@ require (
 )
 
 require (
+	github.com/benbjohnson/clock v1.3.0
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/jackc/pgconn v1.11.0
 )

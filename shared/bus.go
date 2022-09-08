@@ -3,6 +3,7 @@ package shared
 import (
 	"log"
 
+	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/types"
 	"github.com/pokt-network/pocket/shared/types/genesis"
@@ -29,6 +30,8 @@ type bus struct {
 	// TECHDEBT(drewsky): We're only storing the `genesis` in the bus so we can access it for
 	// debug purposes. Ideally, we can restart the entire lifecycle.
 	genesis *genesis.GenesisState
+
+	clock clock.Clock
 }
 
 const (
@@ -43,6 +46,7 @@ func CreateBus(
 	telemetry modules.TelemetryModule,
 	config *genesis.Config,
 	genesis *genesis.GenesisState,
+	clock clock.Clock,
 ) (modules.Bus, error) {
 	bus := &bus{
 		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -55,6 +59,8 @@ func CreateBus(
 
 		config:  config,
 		genesis: genesis,
+
+		clock: clock,
 	}
 
 	modules := map[string]modules.Module{
@@ -82,12 +88,11 @@ func CreateBus(
 //
 // Example of usage: `app/client/main.go`
 //
-//    We want to use the pre2p module in isolation to communicate with nodes in the network.
-//    The pre2p module expects to retrieve a telemetry module through the bus to perform instrumentation, thus we need to inject a bus that can retrieve a telemetry module.
-//    However, we don't need telemetry for the dev client.
-//    Using `CreateBusWithOptionalModules`, we can create a bus with only pre2p and a NOOP telemetry module
-//    so that we can the pre2p module without any issues.
-//
+//	We want to use the pre2p module in isolation to communicate with nodes in the network.
+//	The pre2p module expects to retrieve a telemetry module through the bus to perform instrumentation, thus we need to inject a bus that can retrieve a telemetry module.
+//	However, we don't need telemetry for the dev client.
+//	Using `CreateBusWithOptionalModules`, we can create a bus with only pre2p and a NOOP telemetry module
+//	so that we can the pre2p module without any issues.
 func CreateBusWithOptionalModules(
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
@@ -163,4 +168,8 @@ func (m *bus) GetConfig() *genesis.Config {
 
 func (m *bus) GetGenesis() *genesis.GenesisState {
 	return m.genesis
+}
+
+func (m *bus) GetClock() clock.Clock {
+	return m.clock
 }
