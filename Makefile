@@ -106,12 +106,18 @@ install_cli_deps:
 	go install "github.com/favadi/protoc-go-inject-tag@latest"
 	go install "github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0"
 
+.PHONY: develop_start
+## Run all of the make commands necessary to develop on the project
+develop_start:
+		make protogen_clean && make protogen_local && \
+		make mockgen && \
+		make generate_rpc_openapi && \
+		make go_clean_deps
+
 .PHONY: develop_test
 ## Run all of the make commands necessary to develop on the project and verify the tests pass
 develop_test: docker_check
-		make mockgen && \
-		make protogen_clean && make protogen_local && \
-		make go_clean_deps && \
+		make develop_start && \
 		make test_all
 
 .PHONY: client_start
