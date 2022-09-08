@@ -77,7 +77,10 @@ This is a general set of technical links and recommended reading our team has fo
     - The Verkle Tree whitepaper provides a good background on Merkle trees and some details on polynomial commitments
   - [Vitalik's Verkle Tree Review](https://vitalik.ca/general/2021/06/18/verkle.html)
     - Vitalik's analysis dives deeper into the math behind Verkle Trees with an alternative
-- [Comos Discussion about Storage and IAVL](https://github.com/cosmos/cosmos-sdk/issues/7100)
+- [Cosmos Discussion about Storage and IAVL](https://github.com/cosmos/cosmos-sdk/issues/7100)
+  - This is a Github discussion between various Cosmos contributors of why and how to deprecate IAVL and goes into an intensive discussion of Merkle Tree alternatives
+- [State commitment and storage review](https://paper.dropbox.com/doc/State-commitments-and-storage-review--Box9ruOvLDPaPc6ykc5XDnVmAg-wKl2RINZWD9I0DUmZIFwQ)
+  - This research report was a result of the discussion above and goes in depth into state commitments and storage alternatives
 
 ### Ethereum
 
