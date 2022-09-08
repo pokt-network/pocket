@@ -187,6 +187,8 @@ func (m *consensusModule) isReplica() bool {
 }
 
 func (m *consensusModule) clearLeader() {
+	m.m.Lock()
+	defer m.m.Unlock()
 	m.logPrefix = DefaultLogPrefix
 	m.LeaderId = nil
 }

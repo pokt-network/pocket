@@ -32,6 +32,8 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 	}
 	// TODO(olshansky): add step specific validation
 	m.paceMaker.RestartTimer()
+	m.m.Lock()
+	defer m.m.Unlock()
 	m.Step = Prepare
 }
 

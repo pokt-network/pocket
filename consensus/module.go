@@ -3,6 +3,7 @@ package consensus
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
@@ -26,6 +27,8 @@ type consensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
 	consCfg    *genesis.ConsensusConfig
+
+	m sync.RWMutex
 
 	// Hotstuff
 	Height uint64

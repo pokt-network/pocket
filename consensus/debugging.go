@@ -26,6 +26,8 @@ func (m *consensusModule) HandleDebugMessage(debugMessage *types.DebugMessage) e
 
 func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	leaderId := typesCons.NodeId(0)
+	m.m.RLock()
+	defer m.m.RUnlock()
 	if m.LeaderId != nil {
 		leaderId = *m.LeaderId
 	}
