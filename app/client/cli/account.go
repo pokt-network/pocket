@@ -29,7 +29,7 @@ func NewAccountCommand() *cobra.Command {
 
 func accountCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
-		&cobra.Command{
+		{
 			Use:     "Send <fromAddr> <to> <amount>",
 			Short:   "Send <fromAddr> <to> <amount>",
 			Long:    "Sends <amount> to address <to> from address <fromAddr>",
