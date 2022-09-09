@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"log"
 
 	"github.com/pokt-network/pocket/shared"
@@ -22,9 +21,7 @@ func main() {
 		log.Printf("Version flag currently unused %s\n", version)
 		return
 	}
-
-	cfg, genesis := test_artifacts.ReadConfigAndGenesisFiles(*configFilename, *genesisFilename)
-	pocketNode, err := shared.Create(cfg, genesis)
+	pocketNode, err := shared.Create(*configFilename, *genesisFilename)
 	if err != nil {
 		log.Fatalf("Failed to create pocket node: %s", err)
 	}

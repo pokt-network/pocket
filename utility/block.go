@@ -1,7 +1,7 @@
 package utility
 
 import (
-	types2 "github.com/pokt-network/pocket/consensus/types"
+	typesCons "github.com/pokt-network/pocket/consensus/types" // TODO (andrew) importing consensus and persistence in this file?
 	typesGenesis "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"math/big"
@@ -145,10 +145,10 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	if err != nil {
 		return err
 	}
-	for _, UtilActorType := range typesUtil.ActorTypes {
+	for _, utilActorType := range typesUtil.ActorTypes {
 		var readyToUnstake []modules.UnstakingActorI
-		poolName := UtilActorType.GetActorPoolName()
-		switch UtilActorType {
+		poolName := utilActorType.GetActorPoolName()
+		switch utilActorType {
 		case typesUtil.UtilActorType_App:
 			readyToUnstake, er = store.GetAppsReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
 		case typesUtil.UtilActorType_Fish:
@@ -169,7 +169,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 			if err = u.AddAccountAmountString(actor.GetOutputAddress(), actor.GetStakeAmount()); err != nil {
 				return err
 			}
-			if err = u.DeleteActor(UtilActorType, actor.GetAddress()); err != nil {
+			if err = u.DeleteActor(utilActorType, actor.GetAddress()); err != nil {
 				return err
 			}
 		}
@@ -296,7 +296,7 @@ func (u *UtilityContext) StoreBlock(blockProtoBytes []byte) error {
 	// OPTIMIZE: Ideally we'd pass in the block proto struct to utility so we don't
 	//           have to unmarshal it here, but that's a major design decision for the interfaces.
 	codec := u.Codec()
-	block := &types2.Block{}
+	block := &typesCons.Block{}
 	if err := codec.Unmarshal(blockProtoBytes, block); err != nil {
 		return typesUtil.ErrProtoUnmarshal(err)
 	}

@@ -7,6 +7,7 @@ package p2p
 import (
 	"encoding/json"
 	"github.com/pokt-network/pocket/shared/debug"
+	"io/ioutil"
 	"log"
 
 	"github.com/pokt-network/pocket/p2p/raintree"
@@ -20,6 +21,10 @@ import (
 )
 
 var _ modules.P2PModule = &p2pModule{}
+
+const (
+	P2PModuleName = "p2p"
+)
 
 type p2pModule struct {
 	bus       modules.Bus
@@ -35,17 +40,23 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
 }
 
-func Create(config, gen json.RawMessage) (m modules.P2PModule, err error) {
+func Create(configPath, genesisPath string, useRandomPK bool) (m modules.P2PModule, err error) {
 	log.Println("Creating network module")
-	cfg, err := InitConfig(config)
+	c, err := new(p2pModule).InitConfig(configPath)
 	if err != nil {
 		return nil, err
 	}
+	cfg := c.(*typesP2P.P2PConfig)
 	l, err := CreateListener(cfg)
 	if err != nil {
 		return nil, err
 	}
-	privateKey, err := cryptoPocket.NewPrivateKey(cfg.PrivateKey)
+	var privateKey cryptoPocket.PrivateKey
+	if useRandomPK {
+		privateKey, err = cryptoPocket.GeneratePrivateKey()
+	} else {
+		privateKey, err = cryptoPocket.NewPrivateKey(cfg.PrivateKey)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -54,22 +65,28 @@ func Create(config, gen json.RawMessage) (m modules.P2PModule, err error) {
 
 		listener: l,
 		address:  privateKey.Address(),
-
-		network: nil,
 	}
-
 	return m, nil
 }
 
-func InitGenesis(data json.RawMessage) {
-	// TODO (Team) add genesis if necessary
+func (m *p2pModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+	data, err := ioutil.ReadFile(pathToConfigJSON)
+	if err != nil {
+		return
+	}
+	// over arching configuration file
+	rawJSON := make(map[string]json.RawMessage)
+	if err = json.Unmarshal(data, &rawJSON); err != nil {
+		log.Fatalf("[ERROR] an error occurred unmarshalling the config.json file: %v", err.Error())
+	}
+	// p2p specific configuration file
+	config = new(typesP2P.P2PConfig)
+	err = json.Unmarshal(rawJSON[m.GetModuleName()], config)
 	return
 }
 
-func InitConfig(data json.RawMessage) (config *typesP2P.P2PConfig, err error) {
-	config = new(typesP2P.P2PConfig)
-	err = json.Unmarshal(data, config)
-	return
+func (m *p2pModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+	return // TODO (Team) add genesis if necessary
 }
 
 func (m *p2pModule) SetBus(bus modules.Bus) {
@@ -84,6 +101,10 @@ func (m *p2pModule) GetBus() modules.Bus {
 		return nil
 	}
 	return m.bus
+}
+
+func (m *p2pModule) GetModuleName() string {
+	return P2PModuleName
 }
 
 func (m *p2pModule) Start() error {

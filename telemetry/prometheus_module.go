@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/pokt-network/pocket/shared/modules"
-	typesTelemetry "github.com/pokt-network/pocket/telemetry/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -30,7 +29,11 @@ type PrometheusTelemetryModule struct {
 	gaugeVectors map[string]prometheus.GaugeVec
 }
 
-func CreatePrometheusTelemetryModule(cfg *typesTelemetry.TelemetryConfig) (*PrometheusTelemetryModule, error) {
+const (
+	PrometheusModuleName = "prometheus"
+)
+
+func CreatePrometheusTelemetryModule(cfg *TelemetryConfig) (*PrometheusTelemetryModule, error) {
 	return &PrometheusTelemetryModule{
 		counters:     map[string]prometheus.Counter{},
 		gauges:       map[string]prometheus.Gauge{},
@@ -56,8 +59,20 @@ func (m *PrometheusTelemetryModule) Stop() error {
 	return nil
 }
 
+func (m *PrometheusTelemetryModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+	return // TODO (team) add config if necessary
+}
+
+func (m *PrometheusTelemetryModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+	return // TODO (team) add genesis if necessary
+}
+
 func (m *PrometheusTelemetryModule) SetBus(bus modules.Bus) {
 	m.bus = bus
+}
+
+func (m *PrometheusTelemetryModule) GetModuleName() string {
+	return PrometheusModuleName
 }
 
 func (m *PrometheusTelemetryModule) GetBus() modules.Bus {

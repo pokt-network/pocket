@@ -7,7 +7,7 @@ message P2PConfig {
   string private_key = 1;
   uint32 consensus_port = 2;
   bool use_rain_tree = 3;
-  bool IsEmptyConnectionType = 4; // TODO (Drewsky) switch back to enum
+  bool is_empty_connection_type = 4; // TODO (Drewsky) switch back to enum
 }
 
 enum ConnectionType {

@@ -2,10 +2,13 @@ package test
 
 import (
 	"encoding/json"
+	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
-	types2 "github.com/pokt-network/pocket/utility/types"
+	utilTypes "github.com/pokt-network/pocket/utility/types"
+	"io/ioutil"
 	"log"
 	"math/big"
+	"os"
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence"
@@ -18,20 +21,22 @@ var (
 	defaultTestingChainsEdited = []string{"0002"}
 	defaultUnstaking           = int64(2017)
 	defaultSendAmount          = big.NewInt(10000)
-	defaultNonceString         = types2.BigIntToString(test_artifacts.DefaultAccountAmount)
-	defaultSendAmountString    = types2.BigIntToString(defaultSendAmount)
+	defaultNonceString         = utilTypes.BigIntToString(test_artifacts.DefaultAccountAmount)
+	defaultSendAmountString    = utilTypes.BigIntToString(defaultSendAmount)
 	testSchema                 = "test_schema"
 )
 var testPersistenceMod modules.PersistenceModule
 
-func NewTestingMempool(_ *testing.T) types2.Mempool {
-	return types2.NewMempool(1000000, 1000)
+func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
+	return utilTypes.NewMempool(1000000, 1000)
 }
 
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	testPersistenceMod = newTestPersistenceModule(dbUrl)
 	m.Run()
+	os.Remove(testingConfigFilePath)
+	os.Remove(testingGenesisFilePath)
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
 }
 
@@ -65,12 +70,46 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	}
 	// TODO(andrew): Move the number of actors into local constants
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
-	config, _ := json.Marshal(cfg.Persistence)
-	genesis, _ := json.Marshal(genesisState.PersistenceGenesisState)
-	persistenceMod, err := persistence.Create(config, genesis) // TODO (Drewsky) this is the last remaining cross module import and needs a fix...
+	createTestingGenesisAndConfigFiles(cfg, genesisState)
+	persistenceMod, err := persistence.Create(testingConfigFilePath, testingGenesisFilePath) // TODO (Drewsky) this is the last remaining cross module import and needs a fix...
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
 	persistenceMod.Start() // TODO: Check for error
 	return persistenceMod
+}
+
+const (
+	testingGenesisFilePath = "genesis.json"
+	testingConfigFilePath  = "config.json"
+)
+
+func createTestingGenesisAndConfigFiles(cfg modules.Config, genesisState modules.GenesisState) {
+	config, err := json.Marshal(cfg.Persistence)
+	if err != nil {
+		log.Fatal(err)
+	}
+	genesis, err := json.Marshal(genesisState.PersistenceGenesisState)
+	if err != nil {
+		log.Fatal(err)
+	}
+	genesisFile := make(map[string]json.RawMessage)
+	configFile := make(map[string]json.RawMessage)
+	persistenceModuleName := new(persistence.PersistenceModule).GetModuleName()
+	genesisFile[persistenceModuleName+consensus.GenesisStatePosfix] = genesis
+	configFile[persistenceModuleName] = config
+	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	configFileBz, err := json.MarshalIndent(configFile, "", "    ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := ioutil.WriteFile(testingGenesisFilePath, genesisFileBz, 0777); err != nil {
+		log.Fatal(err)
+	}
+	if err := ioutil.WriteFile(testingConfigFilePath, configFileBz, 0777); err != nil {
+		log.Fatal(err)
+	}
 }

@@ -1,7 +1,6 @@
 package shared
 
 import (
-	"encoding/json"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/telemetry"
 	"log"
@@ -18,38 +17,42 @@ import (
 
 var _ modules.Module = &Node{}
 
+const (
+	MainModuleName = "main"
+)
+
 type Node struct {
 	bus     modules.Bus
 	Address cryptoPocket.Address
 }
 
-func Create(cfg, genesis map[string]json.RawMessage) (n *Node, err error) {
-	persistenceMod, err := persistence.Create(cfg["persistence"], genesis["persistenceGenesisState"])
+func Create(configPath, genesisPath string) (n *Node, err error) {
+	persistenceMod, err := persistence.Create(configPath, genesisPath)
 	if err != nil {
 		return nil, err
 	}
 
-	p2pMod, err := p2p.Create(cfg["p2p"], genesis["p2PGenesisState"])
+	p2pMod, err := p2p.Create(configPath, genesisPath, false)
 	if err != nil {
 		return nil, err
 	}
 
-	utilityMod, err := utility.Create(cfg["utility"], genesis["utilityGenesisState"])
+	utilityMod, err := utility.Create(configPath, genesisPath)
 	if err != nil {
 		return nil, err
 	}
 
-	consensusMod, err := consensus.Create(cfg["consensus"], genesis["consensusGenesisState"])
+	consensusMod, err := consensus.Create(configPath, genesisPath, false)
 	if err != nil {
 		return nil, err
 	}
 
-	telemetryMod, err := telemetry.Create(cfg["telemetry"], genesis["telemetryGenesisState"])
+	telemetryMod, err := telemetry.Create(configPath, genesisPath)
 	if err != nil {
 		return nil, err
 	}
 
-	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod, cfg, genesis)
+	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod)
 	if err != nil {
 		return nil, err
 	}
@@ -155,4 +158,16 @@ func (node *Node) handleDebugEvent(anyMessage *anypb.Any) error {
 	}
 
 	return nil
+}
+
+func (node *Node) GetModuleName() string {
+	return MainModuleName
+}
+
+func (node *Node) InitConfig(pathToConfigJSON string) (modules.ConfigI, error) {
+	return nil, nil
+}
+
+func (node *Node) InitGenesis(pathToGenesisJSON string) (modules.GenesisI, error) {
+	return nil, nil
 }

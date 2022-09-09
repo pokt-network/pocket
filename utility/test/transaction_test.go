@@ -49,7 +49,7 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-// TODO: Fix this test once txIndexer is implemented by postgres context
+// TODO: (#168) Fix this test once txIndexer is implemented by postgres context
 func TestUtilityContext_CheckTransaction(t *testing.T) {
 	// ctx := NewTestingUtilityContext(t, 0)
 	// tx, _, _, _ := newTestingTransaction(t, ctx)
@@ -86,7 +86,7 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-// TODO: Fix this test once txIndexer is implemented by postgres context
+// TODO: (#168) Fix this test once txIndexer is implemented by postgres context
 func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
 	// ctx := NewTestingUtilityContext(t, 0)
 	// tx, _, _, _ := newTestingTransaction(t, ctx)

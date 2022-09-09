@@ -7,6 +7,10 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
+const (
+	LeaderElectionModuleName = "leader_election"
+)
+
 type LeaderElectionModule interface {
 	modules.Module
 	ElectNextLeader(*typesCons.HotstuffMessage) (typesCons.NodeId, error)
@@ -29,6 +33,18 @@ func (m *leaderElectionModule) Start() error {
 
 func (m *leaderElectionModule) Stop() error {
 	return nil
+}
+
+func (m *leaderElectionModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+	return // TODO (team) add config if necessary
+}
+
+func (m *leaderElectionModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+	return // TODO (team) add genesis if necessary
+}
+
+func (m *leaderElectionModule) GetModuleName() string {
+	return LeaderElectionModuleName
 }
 
 func (m *leaderElectionModule) SetBus(pocketBus modules.Bus) {

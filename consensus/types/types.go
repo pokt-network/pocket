@@ -9,6 +9,7 @@ type NodeId uint64
 
 type ValAddrToIdMap map[string]NodeId // Mapping from hex encoded address to an integer node id.
 type IdToValAddrMap map[NodeId]string // Mapping from node id to a hex encoded string address.
+type ValidatorMap map[string]modules.Actor
 
 type ConsensusNodeState struct {
 	NodeId NodeId
@@ -45,8 +46,6 @@ func (x *ConsensusConfig) GetPaceMakerConfig() modules.PacemakerConfig {
 func (x *PacemakerConfig) SetTimeoutMsec(u uint64) {
 	x.TimeoutMsec = u
 }
-
-type ValidatorMap map[string]modules.Actor
 
 func ValidatorMapToModulesValidatorMap(validatorMap ValidatorMap) (vm modules.ValidatorMap) {
 	vm = make(modules.ValidatorMap)

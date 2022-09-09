@@ -24,7 +24,7 @@ const (
 	connStringFormat = "postgres://%s:%s@%s/%s?sslmode=disable"
 )
 
-// TODO (team) both the persistence module and the utility module share this code which is less than ideal
+// DISCUSS (team) both the persistence module and the utility module share this code which is less than ideal
 //   (see call to action in generator.go to try to remove the cross module testing code)
 func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 	opts := dockertest.RunOptions{

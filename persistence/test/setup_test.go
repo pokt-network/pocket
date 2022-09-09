@@ -4,11 +4,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"math/rand"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -53,6 +56,8 @@ func TestMain(m *testing.M) {
 	pool, resource, dbUrl := sharedTest.SetupPostgresDocker()
 	testPersistenceMod = newTestPersistenceModule(dbUrl)
 	m.Run()
+	os.Remove(testingConfigFilePath)
+	os.Remove(testingGenesisFilePath)
 	sharedTest.CleanupPostgresDocker(m, pool, resource)
 }
 
@@ -101,9 +106,8 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 		},
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
-	config, _ := json.Marshal(cfg.Persistence)
-	genesis, _ := json.Marshal(genesisState.PersistenceGenesisState)
-	persistenceMod, err := persistence.Create(config, genesis)
+	createTestingGenesisAndConfigFiles(cfg, genesisState)
+	persistenceMod, err := persistence.Create(testingConfigFilePath, testingGenesisFilePath)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
@@ -277,6 +281,41 @@ func fuzzSingleProtocolActor(
 			t.Errorf("Unexpected operation fuzzing operation %s", op)
 		}
 	})
+}
+
+const (
+	testingGenesisFilePath = "genesis.json"
+	testingConfigFilePath  = "config.json"
+)
+
+func createTestingGenesisAndConfigFiles(cfg modules.Config, genesisState modules.GenesisState) {
+	config, err := json.Marshal(cfg.Persistence)
+	if err != nil {
+		log.Fatal(err)
+	}
+	genesis, err := json.Marshal(genesisState.PersistenceGenesisState)
+	if err != nil {
+		log.Fatal(err)
+	}
+	genesisFile := make(map[string]json.RawMessage)
+	configFile := make(map[string]json.RawMessage)
+	persistenceModuleName := new(persistence.PersistenceModule).GetModuleName()
+	genesisFile[persistenceModuleName+consensus.GenesisStatePosfix] = genesis
+	configFile[persistenceModuleName] = config
+	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	configFileBz, err := json.MarshalIndent(configFile, "", "    ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := ioutil.WriteFile(testingGenesisFilePath, genesisFileBz, 0777); err != nil {
+		log.Fatal(err)
+	}
+	if err := ioutil.WriteFile(testingConfigFilePath, configFileBz, 0777); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func getRandomChains() (chains []string) {

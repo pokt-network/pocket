@@ -3,9 +3,7 @@ package main
 // TODO(team): discuss & design the long-term solution to this client.
 
 import (
-	"encoding/json"
 	"github.com/pokt-network/pocket/shared/debug"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"github.com/pokt-network/pocket/telemetry"
 	"log"
 	"os"
@@ -25,6 +23,9 @@ const (
 	PromptTriggerNextView        string = "TriggerNextView"
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
+
+	DefaultConfigPath  = "build/config/config1.json"
+	DefaultGenesisPath = "build/config/genesis.json"
 )
 
 var items = []string{
@@ -37,20 +38,17 @@ var items = []string{
 
 // A P2P module is initialized in order to broadcast a message to the local network
 var p2pMod modules.P2PModule
+
+// A consensus module is initialized in order to get a list of the validator network
 var consensusMod modules.ConsensusModule
 
 func main() {
 	var err error
-	config, genesis := test_artifacts.ReadConfigAndGenesisFiles("", "")
-	config, err = injectClientPrivateKey(config)
-	if err != nil {
-		log.Fatalf("[ERROR] Failed to inject a client private key into p2p and consensus module: %v", err.Error())
-	}
-	consensusMod, err = consensus.Create(config["consensus"], genesis["consensusGenesisState"])
+	consensusMod, err = consensus.Create(DefaultConfigPath, DefaultGenesisPath, true) // TODO (TechDebt) extra param required for injecting private key hack for debug client
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 	}
-	p2pMod, err = p2p.Create(config["p2p"], genesis["p2PGenesisState"])
+	p2pMod, err = p2p.Create(DefaultConfigPath, DefaultGenesisPath, true) // TODO (TechDebt) extra param required for injecting private key hack for debug client
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 	}
@@ -58,12 +56,12 @@ func main() {
 	// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
 	// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
 	// module that NOOPs (per the configs above) is injected.
-	telemetryMod, err := telemetry.Create(config["telemetry"], genesis["telemetryGenesisState"])
+	telemetryMod, err := telemetry.Create(DefaultConfigPath, DefaultGenesisPath)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
 
-	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod, config, genesis)
+	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod)
 
 	p2pMod.Start()
 
@@ -73,33 +71,6 @@ func main() {
 			handleSelect(selection)
 		}
 	}
-}
-
-// inject a random private key so the client may send messages without rain-tree rejecting it as a 'self message'
-func injectClientPrivateKey(config map[string]json.RawMessage) (map[string]json.RawMessage, error) {
-	pk, err := pocketCrypto.GeneratePrivateKey()
-	if err != nil {
-		return nil, err
-	}
-	pkString := pk.String()
-
-	mockConsensusConfig := test_artifacts.MockConsensusConfig{}
-	mockP2PConfig := test_artifacts.MockP2PConfig{}
-	if err := json.Unmarshal(config["consensus"], &mockConsensusConfig); err != nil {
-		return nil, err
-	}
-	if err := json.Unmarshal(config["p2p"], &mockP2PConfig); err != nil {
-		return nil, err
-	}
-	mockConsensusConfig.PrivateKey = pkString
-	mockP2PConfig.PrivateKey = pkString
-	if config["consensus"], err = json.Marshal(mockConsensusConfig); err != nil {
-		return nil, err
-	}
-	if config["p2p"], err = json.Marshal(mockP2PConfig); err != nil {
-		return nil, err
-	}
-	return config, nil
 }
 
 func promptGetInput() (string, error) {

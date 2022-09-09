@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
+	"io/ioutil"
 	"log"
+	"os"
 	"reflect"
 	"sort"
 	"testing"
@@ -25,6 +27,12 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
+
+func TestMain(m *testing.M) {
+	m.Run()
+	os.Remove(testingConfigFilePath)
+	os.Remove(testingGenesisFilePath)
+}
 
 // If this is set to true, consensus unit tests will fail if additional unexpected messages are received.
 // This slows down the tests because we always fail until the timeout specified by the test before continuing
@@ -96,6 +104,11 @@ func CreateTestConsensusPocketNodes(
 	return
 }
 
+const (
+	testingGenesisFilePath = "genesis.json"
+	testingConfigFilePath  = "config.json"
+)
+
 // Creates a pocket node where all the primary modules, exception for consensus, are mocked
 func CreateTestConsensusPocketNode(
 	t *testing.T,
@@ -103,13 +116,9 @@ func CreateTestConsensusPocketNode(
 	genesisState modules.GenesisState,
 	testChannel modules.EventsChannel,
 ) *shared.Node {
-	config, err := json.Marshal(cfg.Consensus)
+	createTestingGenesisAndConfigFiles(t, cfg, genesisState)
+	consensusMod, err := consensus.Create(testingConfigFilePath, testingGenesisFilePath, false)
 	require.NoError(t, err)
-	genesis, err := json.Marshal(genesisState.ConsensusGenesisState)
-	require.NoError(t, err)
-	consensusMod, err := consensus.Create(config, genesis)
-	require.NoError(t, err)
-
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
 	persistenceMock := basePersistenceMock(t, testChannel)
@@ -117,7 +126,7 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 
-	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock, nil, nil)
+	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock)
 	require.NoError(t, err)
 	pk, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
 	require.NoError(t, err)
@@ -127,6 +136,24 @@ func CreateTestConsensusPocketNode(
 	pocketNode.SetBus(bus)
 
 	return pocketNode
+}
+
+func createTestingGenesisAndConfigFiles(t *testing.T, cfg modules.Config, genesisState modules.GenesisState) {
+	config, err := json.Marshal(cfg.Consensus)
+	require.NoError(t, err)
+	genesis, err := json.Marshal(genesisState.ConsensusGenesisState)
+	require.NoError(t, err)
+	genesisFile := make(map[string]json.RawMessage)
+	configFile := make(map[string]json.RawMessage)
+	consensusModName := new(consensus.ConsensusModule).GetModuleName()
+	genesisFile[consensusModName+consensus.GenesisStatePosfix] = genesis
+	configFile[consensusModName] = config
+	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
+	require.NoError(t, err)
+	consensusFileBz, err := json.MarshalIndent(configFile, "", "    ")
+	require.NoError(t, err)
+	require.NoError(t, ioutil.WriteFile(testingGenesisFilePath, genesisFileBz, 0777))
+	require.NoError(t, ioutil.WriteFile(testingConfigFilePath, consensusFileBz, 0777))
 }
 
 func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {

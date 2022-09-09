@@ -1,7 +1,7 @@
 {
   "base": {
     "root_directory": "/go/src/github.com/pocket-network",
-    "private_key": "381d39147214d3126176ca20271a034a6a2d7d08fdd98c2587689b87eb0ebb3eb8d8bb70dbae9c1962af8a3bef4cbbff07cf13e9eebece5596cd326db98729b3"
+    "private_key": "458e94c056e0163c72752ebbd6df92a35fb6b30958d824be54af694f8ede4c7e06cc58d8c3ee9e463b4cfe680696a0b3eeed786bc3de1fa0268dfb4e4e1e9c68"
   },
   "consensus": {
     "max_mempool_bytes": 500000000,
@@ -10,7 +10,7 @@
       "manual": true,
       "debug_time_between_steps_msec": 1000
     },
-    "private_key": "381d39147214d3126176ca20271a034a6a2d7d08fdd98c2587689b87eb0ebb3eb8d8bb70dbae9c1962af8a3bef4cbbff07cf13e9eebece5596cd326db98729b3"
+    "private_key": "458e94c056e0163c72752ebbd6df92a35fb6b30958d824be54af694f8ede4c7e06cc58d8c3ee9e463b4cfe680696a0b3eeed786bc3de1fa0268dfb4e4e1e9c68"
   },
   "utility": {},
   "persistence": {
@@ -22,7 +22,7 @@
     "consensus_port": 8080,
     "use_rain_tree": true,
     "is_empty_connection_type": false,
-    "private_key": "381d39147214d3126176ca20271a034a6a2d7d08fdd98c2587689b87eb0ebb3eb8d8bb70dbae9c1962af8a3bef4cbbff07cf13e9eebece5596cd326db98729b3"
+    "private_key": "458e94c056e0163c72752ebbd6df92a35fb6b30958d824be54af694f8ede4c7e06cc58d8c3ee9e463b4cfe680696a0b3eeed786bc3de1fa0268dfb4e4e1e9c68"
   },
   "telemetry": {
     "enabled": true,

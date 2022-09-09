@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [0.0.0.1] - 2022-08-21
-- Minimized shared module with #163
+- Minimized shared module with [#163](https://github.com/pokt-network/pocket/issues/163)
 - Deprecated shared/types, moved remaining interfaces to shared/modules
 - Most GenesisTypes moved to persistence
 

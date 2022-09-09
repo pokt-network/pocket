@@ -9,7 +9,7 @@ import (
 )
 
 // TODO(olshansky): Sync with Andrew on the type of validation we need here.
-func (m *consensusModule) validateBlock(block *typesCons.Block) error {
+func (m *ConsensusModule) validateBlock(block *typesCons.Block) error {
 	if block == nil {
 		return typesCons.ErrNilBlock
 	}
@@ -17,7 +17,7 @@ func (m *consensusModule) validateBlock(block *typesCons.Block) error {
 }
 
 // This is a helper function intended to be called by a leader/validator during a view change
-func (m *consensusModule) prepareBlockAsLeader() (*typesCons.Block, error) {
+func (m *ConsensusModule) prepareBlockAsLeader() (*typesCons.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
@@ -54,7 +54,7 @@ func (m *consensusModule) prepareBlockAsLeader() (*typesCons.Block, error) {
 }
 
 // This is a helper function intended to be called by a replica/voter during a view change
-func (m *consensusModule) applyBlockAsReplica(block *typesCons.Block) error {
+func (m *ConsensusModule) applyBlockAsReplica(block *typesCons.Block) error {
 	if m.isLeader() {
 		return typesCons.ErrLeaderApplyBLock
 	}
@@ -82,7 +82,7 @@ func (m *consensusModule) applyBlockAsReplica(block *typesCons.Block) error {
 }
 
 // Creates a new Utility context and clears/nullifies any previous contexts if they exist
-func (m *consensusModule) refreshUtilityContext() error {
+func (m *ConsensusModule) refreshUtilityContext() error {
 	// This is a catch-all to release the previous utility context if it wasn't cleaned up
 	// in the proper lifecycle (e.g. catch up, error, network partition, etc...). Ideally, this
 	// should not be called.
@@ -101,7 +101,7 @@ func (m *consensusModule) refreshUtilityContext() error {
 	return nil
 }
 
-func (m *consensusModule) commitBlock(block *typesCons.Block) error {
+func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
 
 	// Store the block in the KV store

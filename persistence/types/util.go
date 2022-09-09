@@ -5,9 +5,13 @@ import (
 	"math/big"
 )
 
+const (
+	DefaultDenomination = 10
+)
+
 func StringToBigInt(s string) (*big.Int, error) {
 	b := big.Int{}
-	i, ok := b.SetString(s, 10)
+	i, ok := b.SetString(s, DefaultDenomination)
 	if !ok {
 		return nil, fmt.Errorf("unable to SetString() with base 10")
 	}
@@ -15,5 +19,5 @@ func StringToBigInt(s string) (*big.Int, error) {
 }
 
 func BigIntToString(b *big.Int) string {
-	return b.Text(10)
+	return b.Text(DefaultDenomination)
 }

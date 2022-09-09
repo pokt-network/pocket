@@ -15,10 +15,10 @@ type Pacemaker interface {
 	modules.Module
 	PacemakerDebug
 
-	// TODO(olshansky): Rather than exposing the underlying `consensusModule` struct,
+	// TODO(olshansky): Rather than exposing the underlying `ConsensusModule` struct,
 	// we could create a `ConsensusModuleDebug` interface that'll expose setters/getters
 	// for the height/round/step/etc, and interface with the module that way.
-	SetConsensusModule(module *consensusModule)
+	SetConsensusModule(module *ConsensusModule)
 
 	ValidateMessage(message *typesCons.HotstuffMessage) error
 	RestartTimer()
@@ -33,10 +33,10 @@ type paceMaker struct {
 	bus modules.Bus
 
 	// TODO(olshansky): The reason `pacemaker_*` files are not a sub-package under consensus
-	// due to it's dependency on the underlying implementation of `consensusModule`. Think
+	// due to it's dependency on the underlying implementation of `ConsensusModule`. Think
 	// through a way to decouple these. This could be fixed with reflection but that's not
 	// a great idea in production code.
-	consensusMod *consensusModule
+	consensusMod *ConsensusModule
 
 	pacemakerConfigs modules.PacemakerConfig
 
@@ -44,6 +44,14 @@ type paceMaker struct {
 
 	// Only used for development and debugging.
 	paceMakerDebug
+}
+
+func (p *paceMaker) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+	return // TODO (team) add config if necessary
+}
+
+func (p *paceMaker) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+	return // TODO (team) add genesis if necessary
 }
 
 func CreatePacemaker(cfg *typesCons.ConsensusConfig) (m *paceMaker, err error) {
@@ -71,6 +79,10 @@ func (p *paceMaker) Stop() error {
 	return nil
 }
 
+func (p *paceMaker) GetModuleName() string {
+	return PacemakerModuleName
+}
+
 func (m *paceMaker) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
 }
@@ -82,7 +94,7 @@ func (m *paceMaker) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (m *paceMaker) SetConsensusModule(c *consensusModule) {
+func (m *paceMaker) SetConsensusModule(c *ConsensusModule) {
 	m.consensusMod = c
 }
 

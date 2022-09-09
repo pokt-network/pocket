@@ -137,35 +137,24 @@ func (u *UtilityContext) GetMaxPausedBlocks(actorType typesUtil.UtilActorType) (
 	var paramName string
 
 	store := u.Store()
+	height, er := store.GetHeight()
+	if er != nil {
+		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
+	}
+
 	switch actorType {
 	case typesUtil.UtilActorType_App:
-		height, er := store.GetHeight()
-		if er != nil {
-			return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
-		}
-		maxPausedBlocks, er = store.GetIntParam(modules.AppMaxPauseBlocksParamName, height)
 		paramName = modules.AppMaxPauseBlocksParamName
+		maxPausedBlocks, er = store.GetIntParam(modules.AppMaxPauseBlocksParamName, height)
 	case typesUtil.UtilActorType_Fish:
-		height, er := store.GetHeight()
-		if er != nil {
-			return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
-		}
-		maxPausedBlocks, er = store.GetIntParam(modules.FishermanMaxPauseBlocksParamName, height)
 		paramName = modules.FishermanMaxPauseBlocksParamName
+		maxPausedBlocks, er = store.GetIntParam(modules.FishermanMaxPauseBlocksParamName, height)
 	case typesUtil.UtilActorType_Node:
-		height, er := store.GetHeight()
-		if er != nil {
-			return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
-		}
-		maxPausedBlocks, er = store.GetIntParam(modules.ServiceNodeMaxPauseBlocksParamName, height)
 		paramName = modules.ServiceNodeMaxPauseBlocksParamName
+		maxPausedBlocks, er = store.GetIntParam(modules.ServiceNodeMaxPauseBlocksParamName, height)
 	case typesUtil.UtilActorType_Val:
-		height, er := store.GetHeight()
-		if er != nil {
-			return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
-		}
-		maxPausedBlocks, er = store.GetIntParam(modules.ValidatorMaxPausedBlocksParamName, height)
 		paramName = modules.ValidatorMaxPausedBlocksParamName
+		maxPausedBlocks, er = store.GetIntParam(modules.ValidatorMaxPausedBlocksParamName, height)
 	}
 	if er != nil {
 		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)

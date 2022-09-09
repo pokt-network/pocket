@@ -5,13 +5,16 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"sort"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/pokt-network/pocket/shared/debug"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -239,6 +242,9 @@ const (
 	maxNumKeys             = 42 // The number of keys generated for all the unit tests. Optimization to avoid regenerating every time.
 	serviceUrlFormat       = "val_%d"
 	testChannelSize        = 10000
+	testingGenesisFilePath = "genesis"
+	testingConfigFilePath  = "config"
+	jsonPosfix             = ".json"
 )
 
 // TODO(olshansky): Add configurations tests for dead and partially visible nodes
@@ -366,15 +372,30 @@ func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWr
 func prepareP2PModules(t *testing.T, configs []modules.Config) (p2pModules map[string]*p2pModule) {
 	p2pModules = make(map[string]*p2pModule, len(configs))
 	for i, config := range configs {
-		cfg, err := json.Marshal(config.P2P)
-		require.NoError(t, err)
-		genesis, err := json.Marshal(modules.GenesisState{})
-		require.NoError(t, err)
-		p2pMod, err := Create(cfg, genesis)
+		createTestingGenesisAndConfigFiles(t, config, modules.GenesisState{}, i)
+		p2pMod, err := Create(testingConfigFilePath+strconv.Itoa(i)+jsonPosfix, testingGenesisFilePath+jsonPosfix, false)
 		require.NoError(t, err)
 		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
 	}
 	return
+}
+
+func createTestingGenesisAndConfigFiles(t *testing.T, cfg modules.Config, genesisState modules.GenesisState, n int) {
+	config, err := json.Marshal(cfg.P2P)
+	require.NoError(t, err)
+	genesis, err := json.Marshal(genesisState.ConsensusGenesisState)
+	require.NoError(t, err)
+	genesisFile := make(map[string]json.RawMessage)
+	configFile := make(map[string]json.RawMessage)
+	moduleNam := new(p2pModule).GetModuleName()
+	genesisFile[moduleNam+"_genesis_state"] = genesis
+	configFile[moduleNam] = config
+	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
+	require.NoError(t, err)
+	P2PFileBz, err := json.MarshalIndent(configFile, "", "    ")
+	require.NoError(t, err)
+	require.NoError(t, ioutil.WriteFile(testingGenesisFilePath+jsonPosfix, genesisFileBz, 0777))
+	require.NoError(t, ioutil.WriteFile(testingConfigFilePath+strconv.Itoa(n)+jsonPosfix, P2PFileBz, 0777))
 }
 
 func createConfigs(t *testing.T, numValidators int) (configs []modules.Config, genesisState modules.GenesisState) {
@@ -422,5 +443,13 @@ func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) modules
 		PersistenceGenesisState: &test_artifacts.MockPersistenceGenesisState{
 			Validators: validators,
 		},
+	}
+}
+
+func TestMain(m *testing.M) {
+	m.Run()
+	files, _ := filepath.Glob("*.json")
+	for _, f := range files {
+		os.Remove(f)
 	}
 }

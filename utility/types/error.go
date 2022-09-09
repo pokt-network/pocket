@@ -6,8 +6,6 @@ import (
 	"fmt"
 )
 
-// TODO (Team) move errors to respective modules #163
-
 type Error interface {
 	Code() Code
 	error
@@ -666,7 +664,7 @@ func ErrDuplicateTransaction() Error {
 }
 
 func ErrStringToBigInt() Error {
-	return NewError(CodeStringToBigIntError, fmt.Sprintf("%s", StringToBigIntError))
+	return NewError(CodeStringToBigIntError, StringToBigIntError)
 }
 
 // TODO: We should pass the account address here so it is easier to debug the issue

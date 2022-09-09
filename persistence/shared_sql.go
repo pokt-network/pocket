@@ -7,7 +7,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
-	types2 "github.com/pokt-network/pocket/utility/types"
 )
 
 // IMPROVE(team): Move this into a proto enum. We are not using `iota` for the time being
@@ -278,12 +277,12 @@ func (p PostgresContext) GetActorOutputAddress(actorSchema types.ProtocolActorSc
 func (p PostgresContext) GetActorStakeAmount(actorSchema types.ProtocolActorSchema, address []byte, height int64) (string, error) {
 	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
-		return types2.EmptyString, err
+		return "", err
 	}
 
 	var stakeAmount string
 	if err := txn.QueryRow(ctx, actorSchema.GetStakeAmountQuery(hex.EncodeToString(address), height)).Scan(&stakeAmount); err != nil {
-		return types2.EmptyString, err
+		return "", err
 	}
 	return stakeAmount, nil
 }

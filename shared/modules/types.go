@@ -8,13 +8,13 @@ import (
 // the main purpose of this structure is to ensure the ownership of the
 
 type GenesisState struct {
-	PersistenceGenesisState PersistenceGenesisState `json:"persistenceGenesisState"`
-	ConsensusGenesisState   ConsensusGenesisState   `json:"consensusGenesisState"`
+	PersistenceGenesisState PersistenceGenesisState `json:"persistence_genesis_state"`
+	ConsensusGenesisState   ConsensusGenesisState   `json:"consensus_genesis_state"`
 }
 
 type BaseConfig struct {
 	RootDirectory string `json:"root_directory"`
-	PrivateKey    string `json:"private_key"` // TODO (team) better architecture for key management (keybase, keyfiles, etc.)
+	PrivateKey    string `json:"private_key"` // TODO (pocket/issues/150) better architecture for key management (keybase, keyfiles, etc.)
 }
 
 type Config struct {
@@ -221,6 +221,19 @@ type Params interface {
 	GetMessageUnpauseServiceNodeFeeOwner() string
 	GetMessageChangeParameterFeeOwner() string
 }
+
+var _ ConfigI = PacemakerConfig(nil)
+var _ ConfigI = PersistenceConfig(nil)
+var _ ConfigI = P2PConfig(nil)
+var _ ConfigI = TelemetryConfig(nil)
+var _ ConfigI = UtilityConfig(nil)
+
+var _ GenesisI = PersistenceGenesisState(nil)
+var _ GenesisI = ConsensusGenesisState(nil)
+
+// TODO think of a way to enforce these configuration interfaces as true configs/genesis, this is merely decorative at this point
+type ConfigI interface{}
+type GenesisI interface{}
 
 // TODO (Team) move to use proto string() and deprecate #147
 const (

@@ -13,7 +13,7 @@ const (
 )
 
 func CreateListener(cfg modules.P2PConfig) (typesP2P.Transport, error) {
-	switch cfg.IsEmptyConnType() { // TODO (team) kept in switch format because this should be an enum not a bool
+	switch cfg.IsEmptyConnType() { // TODO (TECHDEBT) kept in switch format because this should be an enum not a bool
 	case true:
 		return createEmptyListener(cfg)
 	case false:

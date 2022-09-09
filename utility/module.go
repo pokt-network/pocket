@@ -1,7 +1,6 @@
 package utility
 
 import (
-	"encoding/json"
 	"github.com/pokt-network/pocket/utility/types"
 	"log"
 
@@ -16,22 +15,23 @@ type UtilityModule struct {
 	Mempool types.Mempool
 }
 
-func Create(config, genesis json.RawMessage) (modules.UtilityModule, error) {
+const (
+	UtilityModuleName = "utility"
+)
+
+func Create(configPath, genesisPath string) (modules.UtilityModule, error) {
 	return &UtilityModule{
 		// TODO: Add `maxTransactionBytes` and `maxTransactions` to cfg.Utility
 		Mempool: types.NewMempool(1000, 1000),
 	}, nil
 }
 
-func InitGenesis(data json.RawMessage) {
-	// TODO (Team) add genesis state if necessary
+func (u *UtilityModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+	return // TODO (Team) add config if necessary
 }
 
-func InitConfig(data json.RawMessage) (config *types.UtilityConfig, err error) {
-	// TODO (Team) add config if necessary
-	config = new(types.UtilityConfig)
-	err = json.Unmarshal(data, config)
-	return
+func (u *UtilityModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+	return // TODO (Team) add genesis if necessary
 }
 
 func (u *UtilityModule) Start() error {
@@ -40,6 +40,10 @@ func (u *UtilityModule) Start() error {
 
 func (u *UtilityModule) Stop() error {
 	return nil
+}
+
+func (u *UtilityModule) GetModuleName() string {
+	return UtilityModuleName
 }
 
 func (u *UtilityModule) SetBus(bus modules.Bus) {

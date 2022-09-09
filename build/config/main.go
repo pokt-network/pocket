@@ -8,7 +8,7 @@ import (
 )
 
 // Utility to generate config and genesis files
-// TODO(andrew): Add a make target to help trigger this from cmdline
+// TODO(pocket/issues/182): Add a make target to help trigger this from cmdline
 
 const (
 	DefaultGenesisFilePath = "build/config/genesis.json"
@@ -20,12 +20,18 @@ const (
 func main() {
 	genesis, validatorPrivateKeys := test_artifacts.NewGenesisState(4, 1, 1, 1)
 	configs := test_artifacts.NewDefaultConfigs(validatorPrivateKeys)
-	genesisJson, _ := json.MarshalIndent(genesis, "", "  ")
+	genesisJson, err := json.MarshalIndent(genesis, "", "  ")
+	if err != nil {
+		panic(err)
+	}
 	if err := ioutil.WriteFile(DefaultGenesisFilePath, genesisJson, RWOPerm); err != nil {
 		panic(err)
 	}
 	for i, config := range configs {
-		configJson, _ := json.MarshalIndent(config, "", "  ")
+		configJson, err := json.MarshalIndent(config, "", "  ")
+		if err != nil {
+			panic(err)
+		}
 		if err := ioutil.WriteFile(DefaultConfigFilePath+strconv.Itoa(i+1)+JSONSubfix, configJson, RWOPerm); err != nil {
 			panic(err)
 		}

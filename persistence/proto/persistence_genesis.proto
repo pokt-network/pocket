@@ -35,15 +35,15 @@ enum ActorType {
 }
 
 message Actor {
-  string address = 1;
-  string public_key = 2;
-  repeated string chains = 3;
-  string generic_param = 4;
-  string staked_amount = 5;
-  int64 paused_height = 6;
-  int64 unstaking_height = 7;
-  string output = 8;
-  ActorType actor_type = 9;
+  ActorType actor_type = 1;
+  string address = 2;
+  string public_key = 3;
+  repeated string chains = 4;
+  string generic_param = 5;
+  string staked_amount = 6;
+  int64 paused_height = 7;
+  int64 unstaking_height = 8;
+  string output = 9;
 }
 
 // DISCUSS(drewskey): Explore a more general purpose "feature flag" like approach for this.

@@ -1,13 +1,10 @@
 package test_artifacts
 
 import (
-	"encoding/json"
 	"fmt"
-	types2 "github.com/pokt-network/pocket/persistence/types"
+	typesPersistence "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
-	"io/ioutil"
-	"log"
 	"math/big"
 	"strconv"
 
@@ -15,7 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// TODO (Team) It seems improperly scoped that the modules have to have shared 'testing' code
+// TODO (Team)/INVESTIGATE(olshansy) It seems improperly scoped that the modules have to have shared 'testing' code
 //  It might be an inevitability to have shared testing code, but would like more eyes on it.
 //  Look for opportunities to make testing completely modular
 
@@ -37,10 +34,10 @@ var (
 // TODO (Team) this is meant to be a **temporary** replacement for the recently deprecated
 // 'genesis config' option. We need to implement a real suite soon!
 func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (genesisState modules.GenesisState, validatorPrivateKeys []string) {
-	apps, appsPrivateKeys := NewActors(int32(MockActorType_App), numApplications)
-	vals, validatorPrivateKeys := NewActors(int32(MockActorType_Val), numValidators)
-	serviceNodes, snPrivateKeys := NewActors(int32(MockActorType_Node), numServiceNodes)
-	fish, fishPrivateKeys := NewActors(int32(MockActorType_Fish), numFisherman)
+	apps, appsPrivateKeys := NewActors(MockActorType_App, numApplications)
+	vals, validatorPrivateKeys := NewActors(MockActorType_Val, numValidators)
+	serviceNodes, snPrivateKeys := NewActors(MockActorType_Node, numServiceNodes)
+	fish, fishPrivateKeys := NewActors(MockActorType_Fish, numFisherman)
 	return modules.GenesisState{
 		ConsensusGenesisState: &MockConsensusGenesisState{
 			GenesisTime:   timestamppb.Now(),
@@ -62,45 +59,49 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 
 func NewDefaultConfigs(privateKeys []string) (configs []modules.Config) {
 	for i, pk := range privateKeys {
-		configs = append(configs, modules.Config{
-			Base: &modules.BaseConfig{
-				RootDirectory: "/go/src/github.com/pocket-network",
-				PrivateKey:    pk,
-			},
-			Consensus: &MockConsensusConfig{
-				MaxMempoolBytes: 500000000,
-				PacemakerConfig: &MockPacemakerConfig{
-					TimeoutMsec:               5000,
-					Manual:                    true,
-					DebugTimeBetweenStepsMsec: 1000,
-				},
-				PrivateKey: pk,
-			},
-			Utility: &MockUtilityConfig{},
-			Persistence: &types2.PersistenceConfig{
-				PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
-				NodeSchema:     "node" + strconv.Itoa(i+1),
-				BlockStorePath: "/var/blockstore",
-			},
-			P2P: &MockP2PConfig{
-				ConsensusPort:         8080,
-				UseRainTree:           true,
-				IsEmptyConnectionType: false,
-				PrivateKey:            pk,
-			},
-			Telemetry: &MockTelemetryConfig{
-				Enabled:  true,
-				Address:  "0.0.0.0:9000",
-				Endpoint: "/metrics",
-			},
-		})
+		configs = append(configs, NewDefaultConfig(i, pk))
 	}
 	return
 }
 
+func NewDefaultConfig(i int, pk string) modules.Config {
+	return modules.Config{
+		Base: &modules.BaseConfig{
+			RootDirectory: "/go/src/github.com/pocket-network",
+			PrivateKey:    pk,
+		},
+		Consensus: &MockConsensusConfig{
+			MaxMempoolBytes: 500000000,
+			PacemakerConfig: &MockPacemakerConfig{
+				TimeoutMsec:               5000,
+				Manual:                    true,
+				DebugTimeBetweenStepsMsec: 1000,
+			},
+			PrivateKey: pk,
+		},
+		Utility: &MockUtilityConfig{},
+		Persistence: &typesPersistence.PersistenceConfig{
+			PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
+			NodeSchema:     "node" + strconv.Itoa(i+1),
+			BlockStorePath: "/var/blockstore",
+		},
+		P2P: &MockP2PConfig{
+			ConsensusPort:         8080,
+			UseRainTree:           true,
+			IsEmptyConnectionType: false,
+			PrivateKey:            pk,
+		},
+		Telemetry: &MockTelemetryConfig{
+			Enabled:  true,
+			Address:  "0.0.0.0:9000",
+			Endpoint: "/metrics",
+		},
+	}
+}
+
 func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
-	for _, name := range types2.Pool_Names_name {
-		if name == types2.Pool_Names_FeeCollector.String() {
+	for _, name := range typesPersistence.Pool_Names_name {
+		if name == typesPersistence.Pool_Names_FeeCollector.String() {
 			pools = append(pools, &MockAcc{
 				Address: name,
 				Amount:  "0",
@@ -130,13 +131,13 @@ func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
 	return
 }
 
-func NewActors(actorType int32, n int) (actors []modules.Actor, privateKeys []string) {
+func NewActors(actorType MockActorType, n int) (actors []modules.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
 		genericParam := fmt.Sprintf("node%d.consensus:8080", i+1)
-		if actorType == int32(MockActorType_App) {
+		if int32(actorType) == int32(MockActorType_App) {
 			genericParam = DefaultMaxRelaysString
 		}
-		actor, pk := NewDefaultActor(actorType, genericParam)
+		actor, pk := NewDefaultActor(int32(actorType), genericParam)
 		actors = append(actors, actor)
 		privateKeys = append(privateKeys, pk)
 	}
@@ -146,7 +147,7 @@ func NewActors(actorType int32, n int) (actors []modules.Actor, privateKeys []st
 func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor, privateKey string) {
 	privKey, pubKey, addr := GenerateNewKeysStrings()
 	chains := DefaultChains
-	if actorType == int32(types2.ActorType_Val) {
+	if actorType == int32(typesPersistence.ActorType_Val) {
 		chains = nil
 	} else if actorType == int32(MockActorType_App) {
 		genericParam = DefaultMaxRelaysString
@@ -176,29 +177,5 @@ func GenerateNewKeysStrings() (privateKey, publicKey, address string) {
 	privateKey = privKey.String()
 	publicKey = pubKey.String()
 	address = addr.String()
-	return
-}
-
-func ReadConfigAndGenesisFiles(configPath, genesisPath string) (config, genesis map[string]json.RawMessage) {
-	if configPath == "" {
-		configPath = "build/config/config1.json"
-	}
-	if genesisPath == "" {
-		genesisPath = "build/config/genesis.json"
-	}
-	configFile, err := ioutil.ReadFile(configPath)
-	if err != nil {
-		log.Fatalf("[ERROR] an error occurred reading config.json file: %v", err.Error())
-	}
-	genesisFile, err := ioutil.ReadFile(genesisPath)
-	if err != nil {
-		log.Fatalf("[ERROR] an error occurred reading genesis.json file: %v", err.Error())
-	}
-	if err = json.Unmarshal(configFile, &config); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the config.json file: %v", err.Error())
-	}
-	if err = json.Unmarshal(genesisFile, &genesis); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the genesis.json file: %v", err.Error())
-	}
 	return
 }

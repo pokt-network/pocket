@@ -58,13 +58,13 @@ message MessageChangeParameter {
 }
 
 message MessageDoubleSign {
-  utility.Vote vote_a = 1;
-  utility.Vote vote_b = 2;
+  utility.LegacyVote vote_a = 1;
+  utility.LegacyVote vote_b = 2;
   optional bytes reporter_address = 3;
 }
 
-// TECHDEBT: Consolidate this week consensus
-message Vote {
+// TECHDEBT: Consolidate this with consensus
+message LegacyVote {
   bytes public_key = 1;
   int64 height = 2;
   uint32 round = 3;

@@ -5,6 +5,10 @@ import (
 	"math/big"
 )
 
+const (
+	DefaultDenomination = 10
+)
+
 var max *big.Int
 
 func init() {
@@ -19,7 +23,7 @@ func RandBigInt() *big.Int {
 
 func StringToBigInt(s string) (*big.Int, Error) {
 	b := big.Int{}
-	i, ok := b.SetString(s, 10)
+	i, ok := b.SetString(s, DefaultDenomination)
 	if !ok {
 		return nil, ErrStringToBigInt()
 	}
@@ -27,7 +31,7 @@ func StringToBigInt(s string) (*big.Int, Error) {
 }
 
 func BigIntToString(b *big.Int) string {
-	return b.Text(10)
+	return b.Text(DefaultDenomination)
 }
 
 func BigIntLessThan(a, b *big.Int) bool {

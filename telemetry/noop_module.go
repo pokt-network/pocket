@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/pokt-network/pocket/shared/modules"
-	typesTelemetry "github.com/pokt-network/pocket/telemetry/types"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -18,11 +17,15 @@ type NoopTelemetryModule struct {
 	bus modules.Bus
 }
 
+const (
+	NoOpModuleName = "noOP"
+)
+
 func NOOP() {
 	log.Printf("\n[telemetry=noop]\n")
 }
 
-func CreateNoopTelemetryModule(_ *typesTelemetry.TelemetryConfig) (*NoopTelemetryModule, error) {
+func CreateNoopTelemetryModule(_ *TelemetryConfig) (*NoopTelemetryModule, error) {
 	return &NoopTelemetryModule{}, nil
 }
 
@@ -34,6 +37,18 @@ func (m *NoopTelemetryModule) Start() error {
 func (m *NoopTelemetryModule) Stop() error {
 	NOOP()
 	return nil
+}
+
+func (m *NoopTelemetryModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+	return // TODO (team) add config if necessary
+}
+
+func (m *NoopTelemetryModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+	return // TODO (team) add genesis if necessary
+}
+
+func (m *NoopTelemetryModule) GetModuleName() string {
+	return NoOpModuleName
 }
 
 func (m *NoopTelemetryModule) SetBus(bus modules.Bus) {
