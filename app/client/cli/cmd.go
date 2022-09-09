@@ -20,12 +20,15 @@ func init() {
 }
 
 var rootCmd = &cobra.Command{
-	Use: cliExecutableName,
-	// TODO(deblasis): document
-	Short: "",
-	Long:  "",
+	Use:   cliExecutableName,
+	Short: "Pocket Network Command Line Interface (CLI)",
+	Long:  "The CLI is meant to be an user but also a machine friendly way for interacting with Pocket Network.",
 }
 
 func ExecuteContext(ctx context.Context) error {
 	return rootCmd.ExecuteContext(ctx)
+}
+
+func GetRootCmd() *cobra.Command {
+	return rootCmd
 }

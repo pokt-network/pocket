@@ -259,6 +259,14 @@ generate_rpc_openapi: go_oapi-codegen
 	oapi-codegen  --config ./app/pocket/rpc/client.gen.config.yml ./app/pocket/rpc/v1/openapi.yaml > ./app/pocket/rpc/client.gen.go
 	echo "OpenAPI client and server generated"
 
+.PHONY: generate_cli_commands_docs
+### (Re)generates the CLI commands docs (this is meant to be called by CI)
+generate_cli_commands_docs:
+	$(eval cli_docs_dir = "app/client/cli/doc/commands")
+	rm ${cli_docs_dir}/*.md >/dev/null 2>&1 || true
+	cd app/client/cli/docgen && go run .
+	echo "CLI commands docs generated in ${cli_docs_dir}"
+
 .PHONY: test_all
 ## Run all go unit tests
 test_all: # generate_mocks
