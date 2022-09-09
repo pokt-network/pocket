@@ -86,7 +86,7 @@ func (m *p2pModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI,
 }
 
 func (m *p2pModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
-	return // TODO (Team) add genesis if necessary
+	return // No op
 }
 
 func (m *p2pModule) SetBus(bus modules.Bus) {
