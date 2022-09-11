@@ -60,11 +60,11 @@ func (m *PrometheusTelemetryModule) Stop() error {
 }
 
 func (m *PrometheusTelemetryModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
-	return // No op
+	return // No-op
 }
 
 func (m *PrometheusTelemetryModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
-	return // No op
+	return // No-op
 }
 
 func (m *PrometheusTelemetryModule) SetBus(bus modules.Bus) {

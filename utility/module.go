@@ -1,8 +1,9 @@
 package utility
 
 import (
-	"github.com/pokt-network/pocket/utility/types"
 	"log"
+
+	"github.com/pokt-network/pocket/utility/types"
 
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -27,11 +28,11 @@ func Create(configPath, genesisPath string) (modules.UtilityModule, error) {
 }
 
 func (u *UtilityModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
-	return // No op
+	return // No-op
 }
 
 func (u *UtilityModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
-	return // No op
+	return // No-op
 }
 
 func (u *UtilityModule) Start() error {

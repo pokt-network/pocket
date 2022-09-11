@@ -36,11 +36,11 @@ func (m *leaderElectionModule) Stop() error {
 }
 
 func (m *leaderElectionModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
-	return // No op
+	return // No-op
 }
 
 func (m *leaderElectionModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
-	return // No op
+	return // No-op
 }
 
 func (m *leaderElectionModule) GetModuleName() string {

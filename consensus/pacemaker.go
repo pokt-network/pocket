@@ -47,11 +47,11 @@ type paceMaker struct {
 }
 
 func (p *paceMaker) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
-	return // No op
+	return // No-op
 }
 
 func (p *paceMaker) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
-	return // No op
+	return // No-op
 }
 
 func CreatePacemaker(cfg *typesCons.ConsensusConfig) (m *paceMaker, err error) {

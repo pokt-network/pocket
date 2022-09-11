@@ -6,9 +6,10 @@ package p2p
 
 import (
 	"encoding/json"
-	"github.com/pokt-network/pocket/shared/debug"
 	"io/ioutil"
 	"log"
+
+	"github.com/pokt-network/pocket/shared/debug"
 
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
@@ -86,7 +87,7 @@ func (m *p2pModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI,
 }
 
 func (m *p2pModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
-	return // No op
+	return // No-op
 }
 
 func (m *p2pModule) SetBus(bus modules.Bus) {

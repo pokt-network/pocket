@@ -40,11 +40,11 @@ func (m *NoopTelemetryModule) Stop() error {
 }
 
 func (m *NoopTelemetryModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
-	return // No op
+	return // No-op
 }
 
 func (m *NoopTelemetryModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
-	return // No op
+	return // No-op
 }
 
 func (m *NoopTelemetryModule) GetModuleName() string {
