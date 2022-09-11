@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
+	"fmt"
 	"io/ioutil"
-	"strconv"
+
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 )
 
 // Utility to generate config and genesis files
@@ -32,7 +33,8 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		if err := ioutil.WriteFile(DefaultConfigFilePath+strconv.Itoa(i+1)+JSONSubfix, configJson, RWOPerm); err != nil {
+		filePath := fmt.Sprintf("%s%d%s", DefaultConfigFilePath, i+1, JSONSubfix)
+		if err := ioutil.WriteFile(filePath, configJson, RWOPerm); err != nil {
 			panic(err)
 		}
 	}
