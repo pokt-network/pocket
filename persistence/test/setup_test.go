@@ -4,9 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/pokt-network/pocket/consensus"
-	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"io/ioutil"
 	"log"
 	"math/big"
@@ -15,6 +12,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/pokt-network/pocket/consensus"
+	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -283,6 +284,8 @@ func fuzzSingleProtocolActor(
 	})
 }
 
+// TODO(olshansky): Make these functions & variables more functional to avoid having "unexpected"
+//                  side effects and making it clearer to the reader.
 const (
 	testingGenesisFilePath = "genesis.json"
 	testingConfigFilePath  = "config.json"
