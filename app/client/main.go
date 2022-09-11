@@ -3,10 +3,11 @@ package main
 // TODO(team): discuss & design the long-term solution to this client.
 
 import (
-	"github.com/pokt-network/pocket/shared/debug"
-	"github.com/pokt-network/pocket/telemetry"
 	"log"
 	"os"
+
+	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/telemetry"
 
 	"github.com/manifoldco/promptui"
 	"github.com/pokt-network/pocket/consensus"
@@ -16,6 +17,8 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	"google.golang.org/protobuf/types/known/anypb"
 )
+
+// TODO(olshansky): Lowercase variables / constants that do not need to be exported.
 
 const (
 	PromptResetToGenesis         string = "ResetToGenesis"
@@ -44,11 +47,11 @@ var consensusMod modules.ConsensusModule
 
 func main() {
 	var err error
-	consensusMod, err = consensus.Create(DefaultConfigPath, DefaultGenesisPath, true) // TODO (TechDebt) extra param required for injecting private key hack for debug client
+	consensusMod, err = consensus.Create(DefaultConfigPath, DefaultGenesisPath, true) // TECHDEBT: extra param required for injecting private key hack for debug client
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 	}
-	p2pMod, err = p2p.Create(DefaultConfigPath, DefaultGenesisPath, true) // TODO (TechDebt) extra param required for injecting private key hack for debug client
+	p2pMod, err = p2p.Create(DefaultConfigPath, DefaultGenesisPath, true) // TECHDEBT: extra param required for injecting private key hack for debug client
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 	}
