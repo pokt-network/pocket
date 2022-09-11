@@ -37,6 +37,7 @@ type p2pModule struct {
 	network typesP2P.Network
 }
 
+// TECHDEBT(drewsky): Discuss how to best expose/access `Address` throughout the codebase.
 func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
 }

@@ -2,10 +2,11 @@ package test
 
 import (
 	"encoding/hex"
-	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"math/big"
 	"testing"
+
+	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"
@@ -13,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO(olshansky): Clean up these tests.
+// TODO(olshansky): Clean up the readability (e.g. spacing, naming, etc) of these tests and extend them to cover the entire context
 
 func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
