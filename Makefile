@@ -231,12 +231,12 @@ protogen_local: go_protoc-go-inject-tag
 	echo "View generated proto files by running: make protogen_show"
 
 .PHONY: protogen_docker_m1
-## TODO(TECHDEBT): Test, validate & update.
+## TECHDEBT: Test, validate & update.
 protogen_docker_m1: docker_check
 	docker build  -t pocket/proto-generator -f ./build/Dockerfile.m1.proto . && docker run --platform=linux/amd64 -it -v $(CWD)/shared:/usr/src/app/shared pocket/proto-generator
 
 .PHONY: protogen_docker
-## TODO(TECHDEBT): Test, validate & update.
+## TECHDEBT: Test, validate & update.
 protogen_docker: docker_check
 	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it -v $(CWD)/:/usr/src/app/ pocket/proto-generator
 
