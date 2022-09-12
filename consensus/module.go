@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	DefaultLogPrefix    string = "NODE" // Just a default that'll be replaced during consensus operations.
-	ConsensusModuleName        = "consensus"
-	GenesisStatePostfix        = "_genesis_state"
+	DefaultLogPrefix    = "NODE" // Just a default that'll be replaced during consensus operations.
+	ConsensusModuleName = "consensus"
+	GenesisStatePostfix = "_genesis_state"
 )
 
 var _ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
