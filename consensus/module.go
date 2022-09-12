@@ -137,7 +137,7 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 	return m, nil
 }
 
-func (m *ConsensusModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+func (m *ConsensusModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
 	data, err := ioutil.ReadFile(pathToConfigJSON)
 	if err != nil {
 		return
@@ -153,7 +153,7 @@ func (m *ConsensusModule) InitConfig(pathToConfigJSON string) (config modules.Co
 	return
 }
 
-func (m *ConsensusModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+func (m *ConsensusModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
 	data, err := ioutil.ReadFile(pathToGenesisJSON)
 	if err != nil {
 		return

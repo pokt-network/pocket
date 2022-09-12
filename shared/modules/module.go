@@ -21,6 +21,6 @@ type InterruptableModule interface {
 
 type InitializableModule interface {
 	GetModuleName() string
-	InitConfig(pathToConfigJSON string) (ConfigI, error)
-	InitGenesis(pathToGenesisJSON string) (GenesisI, error)
+	InitConfig(pathToConfigJSON string) (IConfig, error)
+	InitGenesis(pathToGenesisJSON string) (IGenesis, error)
 }

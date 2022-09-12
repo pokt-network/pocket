@@ -35,11 +35,11 @@ func (m *leaderElectionModule) Stop() error {
 	return nil
 }
 
-func (m *leaderElectionModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+func (m *leaderElectionModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
 	return // No-op
 }
 
-func (m *leaderElectionModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+func (m *leaderElectionModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
 	return // No-op
 }
 

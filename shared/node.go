@@ -1,9 +1,10 @@
 package shared
 
 import (
+	"log"
+
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/telemetry"
-	"log"
 
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
@@ -164,10 +165,10 @@ func (node *Node) GetModuleName() string {
 	return MainModuleName
 }
 
-func (node *Node) InitConfig(pathToConfigJSON string) (modules.ConfigI, error) {
+func (node *Node) InitConfig(pathToConfigJSON string) (modules.IConfig, error) {
 	return nil, nil
 }
 
-func (node *Node) InitGenesis(pathToGenesisJSON string) (modules.GenesisI, error) {
+func (node *Node) InitGenesis(pathToGenesisJSON string) (modules.IGenesis, error) {
 	return nil, nil
 }

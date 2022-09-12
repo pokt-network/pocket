@@ -222,18 +222,18 @@ type Params interface {
 	GetMessageChangeParameterFeeOwner() string
 }
 
-var _ ConfigI = PacemakerConfig(nil)
-var _ ConfigI = PersistenceConfig(nil)
-var _ ConfigI = P2PConfig(nil)
-var _ ConfigI = TelemetryConfig(nil)
-var _ ConfigI = UtilityConfig(nil)
+var _ IConfig = PacemakerConfig(nil)
+var _ IConfig = PersistenceConfig(nil)
+var _ IConfig = P2PConfig(nil)
+var _ IConfig = TelemetryConfig(nil)
+var _ IConfig = UtilityConfig(nil)
 
-var _ GenesisI = PersistenceGenesisState(nil)
-var _ GenesisI = ConsensusGenesisState(nil)
+var _ IGenesis = PersistenceGenesisState(nil)
+var _ IGenesis = ConsensusGenesisState(nil)
 
 // TODO think of a way to enforce these configuration interfaces as true configs/genesis, this is merely decorative at this point
-type ConfigI interface{}
-type GenesisI interface{}
+type IConfig interface{}
+type IGenesis interface{}
 
 // TODO (Team) move to use proto string() and deprecate #149
 const (

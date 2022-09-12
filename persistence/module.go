@@ -87,7 +87,7 @@ func Create(configPath, genesisPath string) (modules.PersistenceModule, error) {
 	return persistenceMod, nil
 }
 
-func (m *PersistenceModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+func (m *PersistenceModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
 	data, err := ioutil.ReadFile(pathToConfigJSON)
 	if err != nil {
 		return
@@ -103,7 +103,7 @@ func (m *PersistenceModule) InitConfig(pathToConfigJSON string) (config modules.
 	return
 }
 
-func (m *PersistenceModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+func (m *PersistenceModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
 	data, err := ioutil.ReadFile(pathToGenesisJSON)
 	if err != nil {
 		return

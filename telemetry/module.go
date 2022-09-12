@@ -2,9 +2,10 @@ package telemetry
 
 import (
 	"encoding/json"
-	"github.com/pokt-network/pocket/shared/modules"
 	"io/ioutil"
 	"log"
+
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 var _ modules.Module = &telemetryModule{}
@@ -31,7 +32,7 @@ func Create(configPath, genesisPath string) (modules.TelemetryModule, error) {
 
 type telemetryModule struct{}
 
-func (t *telemetryModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+func (t *telemetryModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
 	data, err := ioutil.ReadFile(pathToConfigJSON)
 	if err != nil {
 		return
@@ -48,7 +49,7 @@ func (t *telemetryModule) InitConfig(pathToConfigJSON string) (config modules.Co
 }
 
 func (t *telemetryModule) GetModuleName() string                                      { return TelemetryModuleName }
-func (t *telemetryModule) InitGenesis(_ string) (genesis modules.GenesisI, err error) { return }
+func (t *telemetryModule) InitGenesis(_ string) (genesis modules.IGenesis, err error) { return }
 func (t *telemetryModule) SetBus(bus modules.Bus)                                     {}
 func (t *telemetryModule) GetBus() modules.Bus                                        { return nil }
 func (t *telemetryModule) Start() error                                               { return nil }

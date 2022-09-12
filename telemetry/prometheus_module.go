@@ -59,11 +59,11 @@ func (m *PrometheusTelemetryModule) Stop() error {
 	return nil
 }
 
-func (m *PrometheusTelemetryModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+func (m *PrometheusTelemetryModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
 	return // No-op
 }
 
-func (m *PrometheusTelemetryModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+func (m *PrometheusTelemetryModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
 	return // No-op
 }
 

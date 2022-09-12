@@ -27,11 +27,11 @@ func Create(configPath, genesisPath string) (modules.UtilityModule, error) {
 	}, nil
 }
 
-func (u *UtilityModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+func (u *UtilityModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
 	return // No-op
 }
 
-func (u *UtilityModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+func (u *UtilityModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
 	return // No-op
 }
 

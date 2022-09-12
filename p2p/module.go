@@ -71,7 +71,7 @@ func Create(configPath, genesisPath string, useRandomPK bool) (m modules.P2PModu
 	return m, nil
 }
 
-func (m *p2pModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+func (m *p2pModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
 	data, err := ioutil.ReadFile(pathToConfigJSON)
 	if err != nil {
 		return
@@ -87,7 +87,7 @@ func (m *p2pModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI,
 	return
 }
 
-func (m *p2pModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+func (m *p2pModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
 	return // No-op
 }
 

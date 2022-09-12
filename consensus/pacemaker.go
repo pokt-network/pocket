@@ -50,11 +50,11 @@ type paceMaker struct {
 	paceMakerDebug
 }
 
-func (p *paceMaker) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+func (p *paceMaker) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
 	return // No-op
 }
 
-func (p *paceMaker) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+func (p *paceMaker) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
 	return // No-op
 }
 

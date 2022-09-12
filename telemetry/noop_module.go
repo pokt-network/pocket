@@ -39,11 +39,11 @@ func (m *NoopTelemetryModule) Stop() error {
 	return nil
 }
 
-func (m *NoopTelemetryModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI, err error) {
+func (m *NoopTelemetryModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
 	return // No-op
 }
 
-func (m *NoopTelemetryModule) InitGenesis(pathToGenesisJSON string) (genesis modules.GenesisI, err error) {
+func (m *NoopTelemetryModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
 	return // No-op
 }
 
