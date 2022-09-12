@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ensured proto structures implement shared interfaces
 - Populate `PersistenceGenesisState` uses shared interfaces in order to accept `MockPersistenceGenesisState` 
 - ^ Same applies for `PersistenceConfig`
-- Bumped cleanup TODOs to #147 due to scope size of #163
+- Bumped cleanup TODOs to #149 due to scope size of #163
 
 ## [0.0.0.3] - 2022-08-16
 
