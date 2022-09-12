@@ -1,11 +1,12 @@
 package persistence
 
 import (
+	"log"
+
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/debug"
-	"log"
 )
 
 func (m *PersistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
@@ -25,6 +26,7 @@ func (m *PersistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 	return nil
 }
 
+// TODO(olshansky): Create a shared interface `Block` to avoid the use of typesCons here.
 func (m *PersistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 	// TODO: Add an iterator to the `kvstore` and use that instead
 	height := m.GetBus().GetConsensusModule().CurrentHeight() - 1 // -1 because we want the latest committed height
@@ -34,7 +36,7 @@ func (m *PersistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 		return
 	}
 	codec := codec.GetCodec()
-	block := &typesCons.Block{} // TODO in_this_commit PREVENT THIS IMPORT
+	block := &typesCons.Block{}
 	codec.Unmarshal(blockBytes, block)
 
 	log.Printf("Block at height %d with %d transactions: %+v \n", height, len(block.Transactions), block)

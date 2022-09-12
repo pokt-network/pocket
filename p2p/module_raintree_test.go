@@ -384,19 +384,23 @@ func prepareP2PModules(t *testing.T, configs []modules.Config) (p2pModules map[s
 func createTestingGenesisAndConfigFiles(t *testing.T, cfg modules.Config, genesisState modules.GenesisState, n int) {
 	config, err := json.Marshal(cfg.P2P)
 	require.NoError(t, err)
+
 	genesis, err := json.Marshal(genesisState.ConsensusGenesisState)
 	require.NoError(t, err)
+
 	genesisFile := make(map[string]json.RawMessage)
 	configFile := make(map[string]json.RawMessage)
 	moduleName := new(p2pModule).GetModuleName()
+
 	genesisFile[test_artifacts.GetGenesisFileName(moduleName)] = genesis
 	configFile[moduleName] = config
 	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
 	require.NoError(t, err)
-	P2PFileBz, err := json.MarshalIndent(configFile, "", "    ")
+
+	p2pFileBz, err := json.MarshalIndent(configFile, "", "    ")
 	require.NoError(t, err)
 	require.NoError(t, ioutil.WriteFile(testingGenesisFilePath+jsonPosfix, genesisFileBz, 0777))
-	require.NoError(t, ioutil.WriteFile(testingConfigFilePath+strconv.Itoa(n)+jsonPosfix, P2PFileBz, 0777))
+	require.NoError(t, ioutil.WriteFile(testingConfigFilePath+strconv.Itoa(n)+jsonPosfix, p2pFileBz, 0777))
 }
 
 func createConfigs(t *testing.T, numValidators int) (configs []modules.Config, genesisState modules.GenesisState) {

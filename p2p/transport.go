@@ -2,10 +2,11 @@ package p2p
 
 import (
 	"fmt"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/shared/modules"
 	"io/ioutil"
 	"net"
+
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 const (
@@ -13,7 +14,7 @@ const (
 )
 
 func CreateListener(cfg modules.P2PConfig) (typesP2P.Transport, error) {
-	switch cfg.IsEmptyConnType() { // TODO (TECHDEBT) kept in switch format because this should be an enum not a bool
+	switch cfg.IsEmptyConnType() { // TECHDEBT kept in switch format because this should be an enum not a bool
 	case true:
 		return createEmptyListener(cfg)
 	case false:

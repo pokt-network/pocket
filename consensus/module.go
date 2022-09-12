@@ -28,6 +28,7 @@ var _ modules.ConsensusConfig = &typesCons.ConsensusConfig{}
 var _ modules.ConsensusModule = &ConsensusModule{}
 
 // TODO(olshansky): Any reason to make all of these attributes local only (i.e. not exposed outside the struct)?
+// TODO(olshansky): Look for a way to not externalize the `ConsensusModule` struct
 type ConsensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
