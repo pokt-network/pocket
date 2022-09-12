@@ -235,7 +235,7 @@ var _ GenesisI = ConsensusGenesisState(nil)
 type ConfigI interface{}
 type GenesisI interface{}
 
-// TODO (Team) move to use proto string() and deprecate #147
+// TODO (Team) move to use proto string() and deprecate #149
 const (
 	BlocksPerSessionParamName = "blocks_per_session"
 

@@ -79,7 +79,7 @@ func (m *p2pModule) InitConfig(pathToConfigJSON string) (config modules.ConfigI,
 	// over arching configuration file
 	rawJSON := make(map[string]json.RawMessage)
 	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the config.json file: %v", err.Error())
+		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToConfigJSON, err.Error())
 	}
 	// p2p specific configuration file
 	config = new(typesP2P.P2PConfig)

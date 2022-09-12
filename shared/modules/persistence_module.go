@@ -38,7 +38,7 @@ type PersistenceRWContext interface {
 
 // NOTE: There's not really a use case for a write only interface,
 // but it abstracts and contrasts nicely against the read only context
-// TODO (andrew) convert address and public key to string not bytes #147
+// TODO (andrew) convert address and public key to string not bytes #149
 type PersistenceWriteContext interface {
 	// TODO: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
 	// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
@@ -70,7 +70,7 @@ type PersistenceWriteContext interface {
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error
 
-	InsertPool(name string, address []byte, amount string) error // TODO (Andrew) remove address from pool #147
+	InsertPool(name string, address []byte, amount string) error // TODO (Andrew) remove address from pool #149
 
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error

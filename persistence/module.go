@@ -94,7 +94,7 @@ func (m *PersistenceModule) InitConfig(pathToConfigJSON string) (config modules.
 	// over arching configuration file
 	rawJSON := make(map[string]json.RawMessage)
 	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the config.json file: %v", err.Error())
+		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToConfigJSON, err.Error())
 	}
 	// persistence specific configuration file
 	config = new(types.PersistenceConfig)
@@ -110,7 +110,7 @@ func (m *PersistenceModule) InitGenesis(pathToGenesisJSON string) (genesis modul
 	// over arching configuration file
 	rawJSON := make(map[string]json.RawMessage)
 	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the gensis.json file: %v", err.Error())
+		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToGenesisJSON, err.Error())
 	}
 	// persistence specific configuration file
 	genesis = new(types.PersistenceGenesisState)

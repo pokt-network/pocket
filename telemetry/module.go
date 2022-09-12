@@ -39,9 +39,9 @@ func (t *telemetryModule) InitConfig(pathToConfigJSON string) (config modules.Co
 	// over arching configuration file
 	rawJSON := make(map[string]json.RawMessage)
 	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the config.json file: %v", err.Error())
+		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToConfigJSON, err.Error())
 	}
-	// persistence specific configuration file
+	// telemetry specific configuration file
 	config = new(TelemetryConfig)
 	err = json.Unmarshal(rawJSON[t.GetModuleName()], config)
 	return

@@ -11,6 +11,10 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
+const (
+	PacemakerModuleName = "pacemaker"
+)
+
 type Pacemaker interface {
 	modules.Module
 	PacemakerDebug

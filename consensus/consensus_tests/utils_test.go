@@ -61,9 +61,9 @@ type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
 /*** Node Generation Helpers ***/
 
-func GenerateNodeConfigs(_ *testing.T, numOfVals int) (configs []modules.Config, genesisState modules.GenesisState) {
+func GenerateNodeConfigs(_ *testing.T, validatorCount int) (configs []modules.Config, genesisState modules.GenesisState) {
 	var keys []string
-	genesisState, keys = test_artifacts.NewGenesisState(numOfVals, 1, 1, 1)
+	genesisState, keys = test_artifacts.NewGenesisState(validatorCount, 1, 1, 1)
 	configs = test_artifacts.NewDefaultConfigs(keys)
 	for i, config := range configs {
 		config.Consensus = &typesCons.ConsensusConfig{
