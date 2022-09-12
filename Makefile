@@ -345,6 +345,17 @@ benchmark_p2p_addrbook:
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
 TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT"
 
+# How do I use TODOs?
+# 1. <KEYWORD>: <Description of follow up work>;
+# 	e.g. HACK: This is a hack, we need to fix it later
+# 2. If there's a specific issue, or specific person, add that in paranthesiss
+#   e.g. TODO(@Olshansk): Automatically link to the Github user https://github.com/olshansk
+#   e.g. INVESTIGATE(#420): Automatically link this to github issue https://github.com/pokt-network/pocket/issues/420
+#   e.g. DISCUSS(@Olshansk, #420): Specific individual should tend to the action item in the specific ticket
+#   e.g. CLEANUP(core): This is not tied to an issue, or a person, but should only be done by the core team.
+#   e.g. CLEANUP: This is not tied to an issue, or a person, and can be done by the core team or external contributors.
+# 3. Feel free to add additional keywords to the list above
+
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)
 todo_list:

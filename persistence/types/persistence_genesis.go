@@ -1,10 +1,11 @@
 package types
 
 import (
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
-	"math/big"
 )
 
 // TODO (Research) is there anyway to not have to name these protobuf files uniquely?
@@ -38,7 +39,7 @@ func (x *PersistenceGenesisState) GetParameters() modules.Params {
 	return x.GetParams()
 }
 
-// TODO (research) AFAIK this is the only way to convert slice of structs into interface - O(n)
+// RESEARCH(olshansky): AFAIK this is the only way to convert slice of structs into interface - O(n)
 // https://stackoverflow.com/questions/12753805/type-converting-slices-of-interfaces
 func ActorsToActorsInterface(a []*Actor) (actorI []modules.Actor) {
 	for _, actor := range a {

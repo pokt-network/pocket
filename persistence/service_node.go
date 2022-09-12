@@ -2,9 +2,10 @@ package persistence
 
 import (
 	"encoding/hex"
+	"log"
+
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
-	"log"
 )
 
 func (p PostgresContext) GetServiceNodeExists(address []byte, height int64) (exists bool, err error) {
@@ -63,7 +64,7 @@ func (p PostgresContext) GetServiceNodeCount(chain string, height int64) (int, e
 	panic("GetServiceNodeCount not implemented")
 }
 
-func (p PostgresContext) GetServiceNodesReadyToUnstake(height int64, _ int) ([]modules.UnstakingActorI, error) {
+func (p PostgresContext) GetServiceNodesReadyToUnstake(height int64, _ int) ([]modules.IUnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.ServiceNodeActor, height)
 }
 

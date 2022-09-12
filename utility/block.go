@@ -1,10 +1,11 @@
 package utility
 
 import (
+	"math/big"
+
 	typesCons "github.com/pokt-network/pocket/consensus/types" // TODO (andrew) importing consensus and persistence in this file?
 	typesGenesis "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
-	"math/big"
 
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
@@ -146,7 +147,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 		return err
 	}
 	for _, utilActorType := range typesUtil.ActorTypes {
-		var readyToUnstake []modules.UnstakingActorI
+		var readyToUnstake []modules.IUnstakingActor
 		poolName := utilActorType.GetActorPoolName()
 		switch utilActorType {
 		case typesUtil.UtilActorType_App:

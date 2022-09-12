@@ -2,9 +2,10 @@ package persistence
 
 import (
 	"encoding/hex"
+	"log"
+
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
-	"log"
 )
 
 func (p PostgresContext) GetAppExists(address []byte, height int64) (exists bool, err error) {
@@ -59,7 +60,7 @@ func (p PostgresContext) DeleteApp(_ []byte) error {
 	return nil
 }
 
-func (p PostgresContext) GetAppsReadyToUnstake(height int64, _ int) ([]modules.UnstakingActorI, error) {
+func (p PostgresContext) GetAppsReadyToUnstake(height int64, _ int) ([]modules.IUnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.ApplicationActor, height)
 }
 

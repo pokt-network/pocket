@@ -2,9 +2,10 @@ package persistence
 
 import (
 	"encoding/hex"
+	"log"
+
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
-	"log"
 )
 
 func (p PostgresContext) GetValidatorExists(address []byte, height int64) (exists bool, err error) {
@@ -56,7 +57,7 @@ func (p PostgresContext) SetValidatorStakeAmount(address []byte, stakeAmount str
 	return p.SetActorStakeAmount(types.ValidatorActor, address, stakeAmount)
 }
 
-func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, _ int) ([]modules.UnstakingActorI, error) {
+func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, _ int) ([]modules.IUnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.ValidatorActor, height)
 }
 

@@ -2,9 +2,10 @@ package persistence
 
 import (
 	"encoding/hex"
+	"log"
+
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
-	"log"
 )
 
 func (p PostgresContext) GetFishermanExists(address []byte, height int64) (exists bool, err error) {
@@ -59,7 +60,7 @@ func (p PostgresContext) SetFishermanStakeAmount(address []byte, stakeAmount str
 	return p.SetActorStakeAmount(types.FishermanActor, address, stakeAmount)
 }
 
-func (p PostgresContext) GetFishermenReadyToUnstake(height int64, _ int) ([]modules.UnstakingActorI, error) {
+func (p PostgresContext) GetFishermenReadyToUnstake(height int64, _ int) ([]modules.IUnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.FishermanActor, height)
 }
 

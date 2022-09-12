@@ -217,7 +217,7 @@ func fuzzSingleProtocolActor(
 			if originalActor.UnstakingHeight != db.Height { // Not ready to unstake
 				require.Nil(t, unstakingActors)
 			} else {
-				idx := slices.IndexFunc(unstakingActors, func(a modules.UnstakingActorI) bool {
+				idx := slices.IndexFunc(unstakingActors, func(a modules.IUnstakingActor) bool {
 					return originalActor.Address == hex.EncodeToString(a.GetAddress())
 				})
 				require.NotEqual(t, idx, -1, fmt.Sprintf("actor that is unstaking was not found %+v", originalActor))

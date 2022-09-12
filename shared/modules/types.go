@@ -95,7 +95,7 @@ type ActorType interface {
 	String() string
 }
 
-type UnstakingActorI interface {
+type IUnstakingActor interface {
 	GetAddress() []byte
 	SetAddress(address string)
 	GetStakeAmount() string
