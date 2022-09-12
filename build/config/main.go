@@ -12,10 +12,10 @@ import (
 // TODO(pocket/issues/182): Add a make target to help trigger this from cmdline
 
 const (
-	DefaultGenesisFilePath = "build/config/genesis.json"
-	DefaultConfigFilePath  = "build/config/config"
-	JSONSubfix             = ".json"
-	RWOPerm                = 0777
+	defaultGenesisFilePath = "build/config/genesis.json"
+	defaultConfigFilePath  = "build/config/config"
+	jsonSubfix             = ".json"
+	rwoPerm                = 0777
 )
 
 func main() {
@@ -25,7 +25,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if err := ioutil.WriteFile(DefaultGenesisFilePath, genesisJson, RWOPerm); err != nil {
+	if err := ioutil.WriteFile(defaultGenesisFilePath, genesisJson, rwoPerm); err != nil {
 		panic(err)
 	}
 	for i, config := range configs {
@@ -33,8 +33,8 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		filePath := fmt.Sprintf("%s%d%s", DefaultConfigFilePath, i+1, JSONSubfix)
-		if err := ioutil.WriteFile(filePath, configJson, RWOPerm); err != nil {
+		filePath := fmt.Sprintf("%s%d%s", defaultConfigFilePath, i+1, jsonSubfix)
+		if err := ioutil.WriteFile(filePath, configJson, rwoPerm); err != nil {
 			panic(err)
 		}
 	}
