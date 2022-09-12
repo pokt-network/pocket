@@ -5,8 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/debug"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -15,6 +13,9 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -387,9 +388,9 @@ func createTestingGenesisAndConfigFiles(t *testing.T, cfg modules.Config, genesi
 	require.NoError(t, err)
 	genesisFile := make(map[string]json.RawMessage)
 	configFile := make(map[string]json.RawMessage)
-	moduleNam := new(p2pModule).GetModuleName()
-	genesisFile[moduleNam+"_genesis_state"] = genesis
-	configFile[moduleNam] = config
+	moduleName := new(p2pModule).GetModuleName()
+	genesisFile[test_artifacts.GetGenesisFileName(moduleName)] = genesis
+	configFile[moduleName] = config
 	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
 	require.NoError(t, err)
 	P2PFileBz, err := json.MarshalIndent(configFile, "", "    ")

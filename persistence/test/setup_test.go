@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
 
@@ -303,7 +302,7 @@ func createTestingGenesisAndConfigFiles(cfg modules.Config, genesisState modules
 	genesisFile := make(map[string]json.RawMessage)
 	configFile := make(map[string]json.RawMessage)
 	persistenceModuleName := new(persistence.PersistenceModule).GetModuleName()
-	genesisFile[persistenceModuleName+consensus.GenesisStatePostfix] = genesis
+	genesisFile[test_artifacts.GetGenesisFileName(persistenceModuleName)] = genesis
 	configFile[persistenceModuleName] = config
 	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
 	if err != nil {

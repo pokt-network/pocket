@@ -9,6 +9,7 @@ import (
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -19,7 +20,6 @@ import (
 const (
 	DefaultLogPrefix    = "NODE" // Just a default that'll be replaced during consensus operations.
 	ConsensusModuleName = "consensus"
-	GenesisStatePostfix = "_genesis_state"
 )
 
 var _ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
@@ -165,7 +165,8 @@ func (m *ConsensusModule) InitGenesis(pathToGenesisJSON string) (genesis modules
 	}
 	// consensus specific configuration file
 	genesis = new(typesCons.ConsensusGenesisState)
-	err = json.Unmarshal(rawJSON[m.GetModuleName()+GenesisStatePostfix], genesis)
+
+	err = json.Unmarshal(rawJSON[test_artifacts.GetGenesisFileName(m.GetModuleName())], genesis)
 	return
 }
 

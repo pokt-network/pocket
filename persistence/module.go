@@ -4,13 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pokt-network/pocket/persistence/types"
 	"io/ioutil"
 	"log"
+
+	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 )
 
 var _ modules.PersistenceModule = &PersistenceModule{}
@@ -32,7 +34,6 @@ type PersistenceModule struct {
 
 const (
 	PersistenceModuleName = "persistence"
-	GenesisStatePosfix    = "_genesis_state"
 )
 
 func Create(configPath, genesisPath string) (modules.PersistenceModule, error) {
@@ -114,7 +115,7 @@ func (m *PersistenceModule) InitGenesis(pathToGenesisJSON string) (genesis modul
 	}
 	// persistence specific configuration file
 	genesis = new(types.PersistenceGenesisState)
-	err = json.Unmarshal(rawJSON[m.GetModuleName()+GenesisStatePosfix], genesis)
+	err = json.Unmarshal(rawJSON[test_artifacts.GetGenesisFileName(m.GetModuleName())], genesis)
 	return
 }
 
