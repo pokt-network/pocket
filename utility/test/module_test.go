@@ -2,14 +2,15 @@ package test
 
 import (
 	"encoding/json"
-	"github.com/pokt-network/pocket/consensus"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"io/ioutil"
 	"log"
 	"math/big"
 	"os"
 	"testing"
+
+	"github.com/pokt-network/pocket/consensus"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
+	utilTypes "github.com/pokt-network/pocket/utility/types"
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -96,7 +97,7 @@ func createTestingGenesisAndConfigFiles(cfg modules.Config, genesisState modules
 	genesisFile := make(map[string]json.RawMessage)
 	configFile := make(map[string]json.RawMessage)
 	persistenceModuleName := new(persistence.PersistenceModule).GetModuleName()
-	genesisFile[persistenceModuleName+consensus.GenesisStatePosfix] = genesis
+	genesisFile[persistenceModuleName+consensus.GenesisStatePostfix] = genesis
 	configFile[persistenceModuleName] = config
 	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
 	if err != nil {

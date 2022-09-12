@@ -19,7 +19,7 @@ import (
 const (
 	DefaultLogPrefix    string = "NODE" // Just a default that'll be replaced during consensus operations.
 	ConsensusModuleName        = "consensus"
-	GenesisStatePosfix         = "_genesis_state"
+	GenesisStatePostfix        = "_genesis_state"
 )
 
 var _ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
@@ -165,7 +165,7 @@ func (m *ConsensusModule) InitGenesis(pathToGenesisJSON string) (genesis modules
 	}
 	// consensus specific configuration file
 	genesis = new(typesCons.ConsensusGenesisState)
-	err = json.Unmarshal(rawJSON[m.GetModuleName()+GenesisStatePosfix], genesis)
+	err = json.Unmarshal(rawJSON[m.GetModuleName()+GenesisStatePostfix], genesis)
 	return
 }
 

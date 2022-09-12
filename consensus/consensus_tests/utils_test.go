@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/debug"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"io/ioutil"
 	"log"
 	"os"
@@ -15,6 +13,9 @@ import (
 	"sort"
 	"testing"
 	"time"
+
+	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
@@ -141,15 +142,19 @@ func CreateTestConsensusPocketNode(
 func createTestingGenesisAndConfigFiles(t *testing.T, cfg modules.Config, genesisState modules.GenesisState) {
 	config, err := json.Marshal(cfg.Consensus)
 	require.NoError(t, err)
+
 	genesis, err := json.Marshal(genesisState.ConsensusGenesisState)
 	require.NoError(t, err)
+
 	genesisFile := make(map[string]json.RawMessage)
 	configFile := make(map[string]json.RawMessage)
 	consensusModName := new(consensus.ConsensusModule).GetModuleName()
-	genesisFile[consensusModName+consensus.GenesisStatePosfix] = genesis
+	genesisFile[consensusModName+consensus.GenesisStatePostfix] = genesis
 	configFile[consensusModName] = config
+
 	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
 	require.NoError(t, err)
+
 	consensusFileBz, err := json.MarshalIndent(configFile, "", "    ")
 	require.NoError(t, err)
 	require.NoError(t, ioutil.WriteFile(testingGenesisFilePath, genesisFileBz, 0777))
