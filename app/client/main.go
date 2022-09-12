@@ -27,8 +27,8 @@ const (
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
 
-	DefaultConfigPath  = "build/config/config1.json"
-	DefaultGenesisPath = "build/config/genesis.json"
+	defaultConfigPath  = "build/config/config1.json"
+	defaultGenesisPath = "build/config/genesis.json"
 )
 
 var items = []string{
@@ -47,11 +47,11 @@ var consensusMod modules.ConsensusModule
 
 func main() {
 	var err error
-	consensusMod, err = consensus.Create(DefaultConfigPath, DefaultGenesisPath, true) // TECHDEBT: extra param required for injecting private key hack for debug client
+	consensusMod, err = consensus.Create(defaultConfigPath, defaultGenesisPath, true) // TECHDEBT: extra param required for injecting private key hack for debug client
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 	}
-	p2pMod, err = p2p.Create(DefaultConfigPath, DefaultGenesisPath, true) // TECHDEBT: extra param required for injecting private key hack for debug client
+	p2pMod, err = p2p.Create(defaultConfigPath, defaultGenesisPath, true) // TECHDEBT: extra param required for injecting private key hack for debug client
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 	}
@@ -59,7 +59,7 @@ func main() {
 	// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
 	// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
 	// module that NOOPs (per the configs above) is injected.
-	telemetryMod, err := telemetry.Create(DefaultConfigPath, DefaultGenesisPath)
+	telemetryMod, err := telemetry.Create(defaultConfigPath, defaultGenesisPath)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
