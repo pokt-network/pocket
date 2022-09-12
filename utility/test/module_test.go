@@ -25,6 +25,7 @@ var (
 	defaultSendAmountString    = utilTypes.BigIntToString(defaultSendAmount)
 	testSchema                 = "test_schema"
 )
+
 var testPersistenceMod modules.PersistenceModule
 
 func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
