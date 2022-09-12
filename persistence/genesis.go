@@ -3,10 +3,11 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/modules"
 	"log"
 	"math/big"
+
+	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // TODO(andrew): Use `log.Fatalf` instead of `log.Fatal(fmt.Sprintf())`.
@@ -36,7 +37,6 @@ func (m *PersistenceModule) populateGenesisState(state *types.PersistenceGenesis
 	if err != nil {
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
 	}
-	// defer rwContext.Commit()
 
 	if err != nil {
 		log.Fatal(fmt.Sprintf("an error occurred creating the rwContext for the genesis state: %s", err.Error()))
