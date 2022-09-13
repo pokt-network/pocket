@@ -25,7 +25,7 @@ type TxIndexer interface {
 	GetByHash(hash []byte) (TxResult, error)
 
 	// `GetByHeight` returns all transactions specified by height or nil if there are no transactions at that height
-	GetByHeight(height int64) ([]TxResult, error)
+	GetByHeight(height int64, descending bool) ([]TxResult, error)
 
 	// `GetBySender` returns all transactions signed by *sender*; may be ordered descending/ascending
 	GetBySender(sender string, descending bool) ([]TxResult, error)
@@ -43,8 +43,8 @@ type TxResult interface {
 	GetIndex() int32                      // the transaction's index within the block (i.e. ordered by when the proposer received it in the mempool)
 	GetResultCode() int32                 // 0 is no error, otherwise corresponds to error object code; // IMPROVE: Add a specific type fot he result code
 	GetError() string                     // can be empty; IMPROVE: Add a specific type fot he error code
-	GetSigner() string                    // get the address of who signed (i.e. sent) the transaction
-	GetRecipient() string                 // get the address of who received the transaction; may be empty
+	GetSignerAddr() string                // get the address of who signed (i.e. sent) the transaction
+	GetRecipientAddr() string             // get the address of who received the transaction; may be empty
 	GetMessageType() string               // corresponds to type of message (validator-stake, app-unjail, node-stake, etc) // IMPROVE: Add an enum for message types
 	Hash() ([]byte, error)                // the hash of the tx bytes
 	HashFromBytes([]byte) ([]byte, error) // same operation as `Hash`, but avoid re-serializing the tx
@@ -71,11 +71,10 @@ var _ TxIndexer = &txIndexer{}
 // This is to ensure the results are stored sorted (assuming the `KVStore`` uses a byte-wise lexicographical sorting)
 
 const (
-	HashPrefix            = 'h'
-	HeightPrefix          = 'b' // b for block
-	SenderPrefix          = 's'
-	RecipientPrefix       = 'r'
-	DefaultHeightOrdering = true
+	HashPrefix      = 'h'
+	HeightPrefix    = 'b' // b for block
+	SenderPrefix    = 's'
+	RecipientPrefix = 'r'
 )
 
 // =,- are the default parameters in the example repository.
@@ -139,10 +138,10 @@ func (indexer *txIndexer) Index(result TxResult) error {
 	if err := indexer.indexByHeightAndIndex(result.GetHeight(), result.GetIndex(), hashKey); err != nil {
 		return err
 	}
-	if err := indexer.indexBySender(result.GetSigner(), hashKey); err != nil {
+	if err := indexer.indexBySender(result.GetSignerAddr(), hashKey); err != nil {
 		return err
 	}
-	if err := indexer.indexByRecipient(result.GetRecipient(), hashKey); err != nil {
+	if err := indexer.indexByRecipient(result.GetRecipientAddr(), hashKey); err != nil {
 		return err
 	}
 	return nil
@@ -152,8 +151,8 @@ func (indexer *txIndexer) GetByHash(hash []byte) (TxResult, error) {
 	return indexer.get(indexer.hashKey(hash))
 }
 
-func (indexer *txIndexer) GetByHeight(height int64) ([]TxResult, error) {
-	return indexer.getAll(indexer.heightKey(height), DefaultHeightOrdering)
+func (indexer *txIndexer) GetByHeight(height int64, descending bool) ([]TxResult, error) {
+	return indexer.getAll(indexer.heightKey(height), descending)
 }
 
 func (indexer *txIndexer) GetBySender(sender string, descending bool) ([]TxResult, error) {

@@ -83,13 +83,18 @@ func (store badgerKVStore) GetAll(prefix []byte, descending bool) (values [][]by
 
 	opt := badger.DefaultIteratorOptions
 	opt.Prefix = prefix
-	opt.Reverse = !descending
+	opt.Reverse = descending
+	if descending {
+		prefix = prefixEndBytes(prefix)
+	}
 	it := txn.NewIterator(opt)
 	defer it.Close()
-	for it.Rewind(); it.Valid(); it.Next() {
+	for it.Seek(prefix); it.Valid(); it.Next() {
 		item := it.Item()
 		err = item.Value(func(v []byte) error {
-			values = append(values, v)
+			b := make([]byte, len(v))
+			copy(b, v)
+			values = append(values, b)
 			return nil
 		})
 		if err != nil {
@@ -113,4 +118,30 @@ func (store badgerKVStore) ClearAll() error {
 
 func (store badgerKVStore) Stop() error {
 	return store.db.Close()
+}
+
+// prefixEndBytes returns the []byte that would end a
+// range query for all []byte with a certain prefix
+// Deals with last byte of prefix being FF without overflowing
+func prefixEndBytes(prefix []byte) []byte {
+	if len(prefix) == 0 {
+		return nil
+	}
+
+	end := make([]byte, len(prefix))
+	copy(end, prefix)
+
+	for {
+		if end[len(end)-1] != byte(255) {
+			end[len(end)-1]++
+			break
+		} else {
+			end = end[:len(end)-1]
+			if len(end) == 0 {
+				end = nil
+				break
+			}
+		}
+	}
+	return end
 }
