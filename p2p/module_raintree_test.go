@@ -166,13 +166,49 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 // where all the other components of the node are mocked. It then triggers a single message and waits
 // for all of the expected messages transmission to complete before announcing failure.
 func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig TestNetworkSimulationConfig) {
-	// Test preparation
+	// 1. Configure & prepare test module
 	var messagesHandledWg sync.WaitGroup
 	p2pModules := prepareP2PModulesWithMocks(t, networkSimulationConfig, &messagesHandledWg)
 	defer waitForNetworkSimulationCompletion(t, p2pModules, &messagesHandledWg)
 
-	// Send first message by the originator to trigger RainTree broadcast
+	// 2. Send the first message (by the originator) to trigger a RainTree broadcast
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
 	require.NoError(t, p2pMod.Broadcast(p, types.PocketTopic_DEBUG_TOPIC))
 }
+
+
+// FuzzTest; 0 -> N; dynamic network; expected validator ID w/ expected
+// 1. HardCoded values - good for baseline sanity checking
+// 2. Test Generators - very good to have productionized and in the code
+
+
+// FuzzTest
+
+// Expected range of expected networks; 1 -> 1000; use python for expected values
+//   Python simulator generates a dynamic hardcoded value?
+
+
+// Questions:
+// 1. Where'd you get the values?
+// 2. How'd you pick the numbers?
+// 3. How do we get better coverage?
+
+// WHat is the source of truth?
+// 	Simulator?
+//  Generator? -> black box; no magic
+//  The implementation?
+
+// Double down: test generator
+// Verbosity
+
+// Issues:
+// 1. Cleanup layer (extra read & write)
+// 2. Redundancy layer (extra read & write)
+// 3. Down nodes (more complex modifications)
+//  - Ephemeral
+//  - Down
+
+// [Research] Make no-op mocks easier to understand w/o comments (goal is to reduce cognitive load and reuse)
+
+// Turn off telemetry

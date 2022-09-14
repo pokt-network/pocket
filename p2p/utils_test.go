@@ -31,10 +31,10 @@ const (
 	// TODO (olshansk) explain these values
 	// Attempt: Since we simulate up to a 27 node network, we will pre-generate a n >= 27 number of keys to avoid generation everytime
 	// The genesis config seed start must begin at the max_keys value because...? and 42 is chosen because...?
-	 // Arbitrary value to use as the seed for deterministic private key generation since RainTree is dependant on lexographic address order
+	// Arbitrary value to use as the seed for deterministic private key generation since RainTree is dependant on lexographic address order
 	genesisConfigSeedStart = 42
-	// Arbitrary value of the number of private keys we should generate during tests so it is only done once 
-	maxNumKeys             = 42 // Arbitrary number
+	// Arbitrary value of the number of private keys we should generate during tests so it is only done once
+	maxNumKeys = 42 // Arbitrary number
 )
 
 var keys []cryptoPocket.PrivateKey
@@ -212,6 +212,8 @@ func prepareBusMock(t *testing.T, config *genesis.Config, consensusMock *modules
 // TODO (Olshansk) explain what the consensus mock does (ditto for all mocks below)
 // Attempt: the consensus mock returns the genesis validator map anytime the .ValidatorMap() function is called
 // the consensus mock also returns '1' when the current height is called
+
+// Consensus mocked - only needed for validatorMap access
 func prepareConsensusMock(t *testing.T, genesisState *genesis.GenesisState) *modulesMock.MockConsensusModule {
 	ctrl := gomock.NewController(t)
 	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
@@ -238,8 +240,8 @@ func prepareTelemetryMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkWr
 	eventMetricsAgentMock := prepareEventMetricsAgentMock(t)
 
 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
-	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
-	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
+	// timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
+	// timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
 
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
@@ -251,9 +253,13 @@ func prepareTelemetryMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkWr
 	return telemetryMock
 }
 
-func prepareTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
+// Noop mock - no specific business logic to tend to
+func prepareNoopTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
 	ctrl := gomock.NewController(t)
 	timeseriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
+
+	timeseriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
+	timeseriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
 	return timeseriesAgentMock
 }
 
