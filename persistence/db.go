@@ -35,13 +35,8 @@ var protocolActorSchemas = []types.ProtocolActorSchema{
 
 var _ modules.PersistenceRWContext = &PostgresContext{}
 
-// TODO(pocket/issues/149): Consolidate `PostgresContext and PostgresDB` into a single struct and
-//                          avoid exposing it for testing purposes after the consolidation. A helper
-//                          with default context values should be created.
-// TODO: These are only externalized for testing purposes, so they should be made private and
-//       it is trivial to create a helper to initial a context with some values.
 type PostgresContext struct {
-	Height     int64 // TODO(olshansky): Should not externalize this variable
+	Height     int64 // TODO(olshansky): `Height` is only externalized for testing purposes. Replace with helpers...
 	conn       *pgx.Conn
 	tx         pgx.Tx
 	blockstore kvstore.KVStore
