@@ -9,7 +9,6 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// TODO(andrew): Use `log.Fatalf` instead of `log.Fatalf()`.
 // TODO(andrew): generalize with the `actors interface`
 
 // WARNING: This function crashes the process if there is an error populating the genesis state.
