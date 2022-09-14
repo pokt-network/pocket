@@ -1,21 +1,21 @@
 package consensus
 
 import (
+	"github.com/pokt-network/pocket/shared/debug"
 	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/types"
 )
 
-func (m *consensusModule) HandleDebugMessage(debugMessage *types.DebugMessage) error {
+func (m *ConsensusModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
 	switch debugMessage.Action {
-	case types.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
+	case debug.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
 		m.resetToGenesis(debugMessage)
-	case types.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
+	case debug.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
 		m.printNodeState(debugMessage)
-	case types.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
+	case debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
 		m.triggerNextView(debugMessage)
-	case types.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
+	case debug.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
 		m.togglePacemakerManualMode(debugMessage)
 	default:
 		log.Printf("Debug message: %s \n", debugMessage.Message)
@@ -23,7 +23,7 @@ func (m *consensusModule) HandleDebugMessage(debugMessage *types.DebugMessage) e
 	return nil
 }
 
-func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
+func (m *ConsensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	leaderId := typesCons.NodeId(0)
 	m.m.RLock()
 	defer m.m.RUnlock()
@@ -40,7 +40,7 @@ func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	}
 }
 
-func (m *consensusModule) resetToGenesis(_ *types.DebugMessage) {
+func (m *ConsensusModule) resetToGenesis(_ *debug.DebugMessage) {
 	m.nodeLog(typesCons.DebugResetToGenesis)
 
 	m.Height = 0
@@ -53,19 +53,19 @@ func (m *consensusModule) resetToGenesis(_ *types.DebugMessage) {
 
 	m.clearLeader()
 	m.clearMessagesPool()
-	m.GetBus().GetPersistenceModule().HandleDebugMessage(&types.DebugMessage{
-		Action:  types.DebugMessageAction_DEBUG_CLEAR_STATE,
+	m.GetBus().GetPersistenceModule().HandleDebugMessage(&debug.DebugMessage{
+		Action:  debug.DebugMessageAction_DEBUG_CLEAR_STATE,
 		Message: nil,
 	})
 	m.GetBus().GetPersistenceModule().Start() // reload genesis state
 }
 
-func (m *consensusModule) printNodeState(_ *types.DebugMessage) {
+func (m *ConsensusModule) printNodeState(_ *debug.DebugMessage) {
 	state := m.GetNodeState()
 	m.nodeLog(typesCons.DebugNodeState(state))
 }
 
-func (m *consensusModule) triggerNextView(_ *types.DebugMessage) {
+func (m *ConsensusModule) triggerNextView(_ *debug.DebugMessage) {
 	m.nodeLog(typesCons.DebugTriggerNextView)
 
 	if m.Height == 0 || (m.Step == Decide && m.paceMaker.IsManualMode()) {
@@ -79,7 +79,7 @@ func (m *consensusModule) triggerNextView(_ *types.DebugMessage) {
 	}
 }
 
-func (m *consensusModule) togglePacemakerManualMode(_ *types.DebugMessage) {
+func (m *ConsensusModule) togglePacemakerManualMode(_ *debug.DebugMessage) {
 	newMode := !m.paceMaker.IsManualMode()
 	if newMode {
 		m.nodeLog(typesCons.DebugTogglePacemakerManualMode("MANUAL"))

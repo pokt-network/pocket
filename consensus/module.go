@@ -1,32 +1,39 @@
 package consensus
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
-	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 const (
-	DefaultLogPrefix string = "NODE" // Just a default that'll be replaced during consensus operations.
+	DefaultLogPrefix    = "NODE" // Just a default that'll be replaced during consensus operations.
+	ConsensusModuleName = "consensus"
 )
 
-var _ modules.ConsensusModule = &consensusModule{}
+var _ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
+var _ modules.PacemakerConfig = &typesCons.PacemakerConfig{}
+var _ modules.ConsensusConfig = &typesCons.ConsensusConfig{}
+var _ modules.ConsensusModule = &ConsensusModule{}
 
 // TODO(olshansky): Any reason to make all of these attributes local only (i.e. not exposed outside the struct)?
-type consensusModule struct {
+// TODO(olshansky): Look for a way to not externalize the `ConsensusModule` struct
+type ConsensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
-	consCfg    *genesis.ConsensusConfig
+	consCfg    modules.ConsensusConfig
 
 	m sync.RWMutex
 
@@ -34,7 +41,7 @@ type consensusModule struct {
 	Height uint64
 	Round  uint64
 	Step   typesCons.HotstuffStep
-	Block  *types.Block // The current block being voted on prior to committing to finality
+	Block  *typesCons.Block // The current block being voted on prior to committing to finality
 
 	HighPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	LockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
@@ -47,7 +54,7 @@ type consensusModule struct {
 
 	// Consensus State
 	appHash      string
-	validatorMap map[string]*genesis.Actor
+	validatorMap typesCons.ValidatorMap
 
 	// Module Dependencies
 	utilityContext    modules.UtilityContext
@@ -61,7 +68,18 @@ type consensusModule struct {
 	MaxBlockBytes uint64
 }
 
-func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (modules.ConsensusModule, error) {
+func Create(configPath, genesisPath string, useRandomPK bool) (modules.ConsensusModule, error) {
+	cm := new(ConsensusModule)
+	c, err := cm.InitConfig(configPath)
+	if err != nil {
+		return nil, err
+	}
+	g, err := cm.InitGenesis(genesisPath)
+	if err != nil {
+		return nil, err
+	}
+	cfg := c.(*typesCons.ConsensusConfig)
+	genesis := g.(*typesCons.ConsensusGenesisState)
 	leaderElectionMod, err := leader_election.Create(cfg, genesis)
 	if err != nil {
 		return nil, err
@@ -73,20 +91,24 @@ func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (modules.Consens
 		return nil, err
 	}
 
-	privateKey, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
+	valMap := typesCons.ValidatorListToMap(genesis.Validators)
+	var privateKey cryptoPocket.PrivateKey
+	if useRandomPK {
+		privateKey, err = cryptoPocket.GeneratePrivateKey()
+	} else {
+		privateKey, err = cryptoPocket.NewPrivateKey(cfg.PrivateKey)
+	}
 	if err != nil {
 		return nil, err
 	}
 	address := privateKey.Address().String()
-
-	valMap := validatorListToMap(genesis.Utility.Validators)
 	valIdMap, idValMap := typesCons.GetValAddrToIdMap(valMap)
 
-	m := &consensusModule{
+	m := &ConsensusModule{
 		bus: nil,
 
 		privateKey: privateKey.(cryptoPocket.Ed25519PrivateKey),
-		consCfg:    cfg.Consensus,
+		consCfg:    cfg,
 
 		Height: 0,
 		Round:  0,
@@ -110,7 +132,7 @@ func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (modules.Consens
 
 		logPrefix:     DefaultLogPrefix,
 		MessagePool:   make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
-		MaxBlockBytes: genesis.Consensus.MaxBlockBytes,
+		MaxBlockBytes: genesis.GetMaxBlockBytes(),
 	}
 
 	// TODO(olshansky): Look for a way to avoid doing this.
@@ -119,7 +141,40 @@ func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (modules.Consens
 	return m, nil
 }
 
-func (m *consensusModule) Start() error {
+func (m *ConsensusModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
+	data, err := ioutil.ReadFile(pathToConfigJSON)
+	if err != nil {
+		return
+	}
+	// over arching configuration file
+	rawJSON := make(map[string]json.RawMessage)
+	if err = json.Unmarshal(data, &rawJSON); err != nil {
+		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToConfigJSON, err.Error())
+	}
+	// consensus specific configuration file
+	config = new(typesCons.ConsensusConfig)
+	err = json.Unmarshal(rawJSON[m.GetModuleName()], config)
+	return
+}
+
+func (m *ConsensusModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
+	data, err := ioutil.ReadFile(pathToGenesisJSON)
+	if err != nil {
+		return
+	}
+	// over arching configuration file
+	rawJSON := make(map[string]json.RawMessage)
+	if err = json.Unmarshal(data, &rawJSON); err != nil {
+		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToGenesisJSON, err.Error())
+	}
+	// consensus specific configuration file
+	genesis = new(typesCons.ConsensusGenesisState)
+
+	err = json.Unmarshal(rawJSON[test_artifacts.GetGenesisFileName(m.GetModuleName())], genesis)
+	return
+}
+
+func (m *ConsensusModule) Start() error {
 	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
@@ -143,24 +198,28 @@ func (m *consensusModule) Start() error {
 	return nil
 }
 
-func (m *consensusModule) Stop() error {
+func (m *ConsensusModule) Stop() error {
 	return nil
 }
 
-func (m *consensusModule) GetBus() modules.Bus {
+func (m *ConsensusModule) GetModuleName() string {
+	return ConsensusModuleName
+}
+
+func (m *ConsensusModule) GetBus() modules.Bus {
 	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
 }
 
-func (m *consensusModule) SetBus(pocketBus modules.Bus) {
+func (m *ConsensusModule) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
 	m.paceMaker.SetBus(pocketBus)
 	m.leaderElectionMod.SetBus(pocketBus)
 }
 
-func (m *consensusModule) loadPersistedState() error {
+func (m *ConsensusModule) loadPersistedState() error {
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
 	if err != nil {
 		return nil
@@ -187,7 +246,7 @@ func (m *consensusModule) loadPersistedState() error {
 }
 
 // TODO(discuss): Low priority design: think of a way to make `hotstuff_*` files be a sub-package under consensus.
-// This is currently not possible because functions tied to the `consensusModule`
+// This is currently not possible because functions tied to the `ConsensusModule`
 // struct (implementing the ConsensusModule module), which spans multiple files.
 /*
 TODO(discuss): The reason we do not assign both the leader and the replica handlers
@@ -204,16 +263,16 @@ handler which has both pros and cons:
 		* Code is less "generalizable" and therefore potentially more error prone
 */
 
-// TODO(olshansky): Should we just make these singletons or embed them directly in the consensusModule?
+// TODO(olshansky): Should we just make these singletons or embed them directly in the ConsensusModule?
 type HotstuffMessageHandler interface {
-	HandleNewRoundMessage(*consensusModule, *typesCons.HotstuffMessage)
-	HandlePrepareMessage(*consensusModule, *typesCons.HotstuffMessage)
-	HandlePrecommitMessage(*consensusModule, *typesCons.HotstuffMessage)
-	HandleCommitMessage(*consensusModule, *typesCons.HotstuffMessage)
-	HandleDecideMessage(*consensusModule, *typesCons.HotstuffMessage)
+	HandleNewRoundMessage(*ConsensusModule, *typesCons.HotstuffMessage)
+	HandlePrepareMessage(*ConsensusModule, *typesCons.HotstuffMessage)
+	HandlePrecommitMessage(*ConsensusModule, *typesCons.HotstuffMessage)
+	HandleCommitMessage(*ConsensusModule, *typesCons.HotstuffMessage)
+	HandleDecideMessage(*ConsensusModule, *typesCons.HotstuffMessage)
 }
 
-func (m *consensusModule) HandleMessage(message *anypb.Any) error {
+func (m *ConsensusModule) HandleMessage(message *anypb.Any) error {
 	switch message.MessageName() {
 	case HotstuffMessage:
 		var hotstuffMessage typesCons.HotstuffMessage
@@ -231,7 +290,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	return nil
 }
 
-func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) {
+func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) {
 	m.nodeLog(typesCons.DebugHandlingHotstuffMessage(msg))
 
 	// Liveness & safety checks
@@ -259,26 +318,18 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	leaderHandlers[msg.Step](m, msg)
 }
 
-func (m *consensusModule) AppHash() string {
+func (m *ConsensusModule) AppHash() string {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.appHash
 }
 
-func (m *consensusModule) CurrentHeight() uint64 {
+func (m *ConsensusModule) CurrentHeight() uint64 {
 	return m.getHeight()
 }
 
-func (m *consensusModule) ValidatorMap() modules.ValidatorMap {
+func (m *ConsensusModule) ValidatorMap() modules.ValidatorMap {
 	m.m.RLock()
 	defer m.m.RUnlock()
-	return m.validatorMap
-}
-
-func validatorListToMap(validators []*genesis.Actor) (m modules.ValidatorMap) {
-	m = make(modules.ValidatorMap, len(validators))
-	for _, v := range validators {
-		m[v.Address] = v
-	}
-	return
+	return typesCons.ValidatorMapToModulesValidatorMap(m.validatorMap)
 }

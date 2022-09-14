@@ -218,22 +218,24 @@ protogen_clean:
 .PHONY: protogen_local
 ## Generate go structures for all of the protobufs
 protogen_local: go_protoc-go-inject-tag
-	$(eval proto_dir = "./shared/types/proto/")
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/proto             --go_out=./shared/types         ./shared/types/proto/*.proto         --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./utility/proto                  --go_out=./utility/types        ./utility/proto/*.proto              --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./shared/types/genesis/proto     --go_out=./shared/types/genesis ./shared/types/genesis/proto/*.proto --experimental_allow_proto3_optional
-	protoc-go-inject-tag -input="./shared/types/genesis/*.pb.go"
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./consensus/types/proto          --go_out=./consensus/types      ./consensus/types/proto/*.proto      --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative -I=${proto_dir} -I=./p2p/raintree/types/proto       --go_out=./p2p/types            ./p2p/raintree/types/proto/*.proto   --experimental_allow_proto3_optional
+	$(eval proto_dir = ".")
+	protoc --go_opt=paths=source_relative  -I=./shared/debug/proto        --go_out=./shared/debug       ./shared/debug/proto/*.proto        --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  ./persistence/proto/*.proto         --experimental_allow_proto3_optional
+	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
+	protoc --go_opt=paths=source_relative  -I=./utility/types/proto       --go_out=./utility/types      ./utility/types/proto/*.proto       --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./consensus/types/proto     --go_out=./consensus/types    ./consensus/types/proto/*.proto     --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./p2p/raintree/types/proto  --go_out=./p2p/types          ./p2p/raintree/types/proto/*.proto  --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./p2p/types/proto           --go_out=./p2p/types          ./p2p/types/proto/*.proto           --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./telemetry/proto           --go_out=./telemetry          ./telemetry/proto/*.proto           --experimental_allow_proto3_optional
 	echo "View generated proto files by running: make protogen_show"
 
 .PHONY: protogen_docker_m1
-## TODO(derrandz): Test, validate & update.
+## TECHDEBT: Test, validate & update.
 protogen_docker_m1: docker_check
 	docker build  -t pocket/proto-generator -f ./build/Dockerfile.m1.proto . && docker run --platform=linux/amd64 -it -v $(CWD)/shared:/usr/src/app/shared pocket/proto-generator
 
 .PHONY: protogen_docker
-## TODO(derrandz): Test, validate & update.
+## TECHDEBT: Test, validate & update.
 protogen_docker: docker_check
 	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it -v $(CWD)/:/usr/src/app/ pocket/proto-generator
 
@@ -342,6 +344,17 @@ benchmark_p2p_addrbook:
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
 TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT"
+
+# How do I use TODOs?
+# 1. <KEYWORD>: <Description of follow up work>;
+# 	e.g. HACK: This is a hack, we need to fix it later
+# 2. If there's a specific issue, or specific person, add that in paranthesiss
+#   e.g. TODO(@Olshansk): Automatically link to the Github user https://github.com/olshansk
+#   e.g. INVESTIGATE(#420): Automatically link this to github issue https://github.com/pokt-network/pocket/issues/420
+#   e.g. DISCUSS(@Olshansk, #420): Specific individual should tend to the action item in the specific ticket
+#   e.g. CLEANUP(core): This is not tied to an issue, or a person, but should only be done by the core team.
+#   e.g. CLEANUP: This is not tied to an issue, or a person, and can be done by the core team or external contributors.
+# 3. Feel free to add additional keywords to the list above
 
 .PHONY: todo_list
 ## List all the TODOs in the project (excludes vendor and prototype directories)

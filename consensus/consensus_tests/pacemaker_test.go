@@ -9,7 +9,6 @@ import (
 	timePkg "time"
 
 	"github.com/benbjohnson/clock"
-	"github.com/pokt-network/pocket/shared/types"
 
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -28,7 +27,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	paceMakerTimeout := 50 * timePkg.Millisecond
 	configs, genesisStates := GenerateNodeConfigs(t, numNodes)
 	for _, config := range configs {
-		config.Consensus.PacemakerConfig.TimeoutMsec = paceMakerTimeoutMsec
+		config.Consensus.GetPaceMakerConfig().SetTimeoutMsec(paceMakerTimeoutMsec)
 	}
 
 	// Create & start test pocket nodes
@@ -163,7 +162,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	leaderRound := uint64(6)
 
 	// Placeholder block
-	blockHeader := &types.BlockHeader{
+	blockHeader := &typesCons.BlockHeader{
 		Height:            int64(testHeight),
 		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            0,
@@ -171,7 +170,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		ProposerAddress:   leader.Address.Bytes(),
 		QuorumCertificate: nil,
 	}
-	block := &types.Block{
+	block := &typesCons.Block{
 		BlockHeader:  blockHeader,
 		Transactions: emptyTxs,
 	}

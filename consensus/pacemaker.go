@@ -8,18 +8,22 @@ import (
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types/genesis"
+)
+
+const (
+	PacemakerModuleName = "pacemaker"
 )
 
 type Pacemaker interface {
 	modules.Module
 	PacemakerDebug
 
-	// TODO(olshansky): Rather than exposing the underlying `consensusModule` struct,
+	// TODO(olshansky): Rather than exposing the underlying `ConsensusModule` struct,
 	// we could create a `ConsensusModuleDebug` interface that'll expose setters/getters
 	// for the height/round/step/etc, and interface with the module that way.
-	SetConsensusModule(module *consensusModule)
+	SetConsensusModule(module *ConsensusModule)
 
 	ValidateMessage(message *typesCons.HotstuffMessage) error
 	RestartTimer()
@@ -36,12 +40,12 @@ type paceMaker struct {
 	m sync.RWMutex
 
 	// TODO(olshansky): The reason `pacemaker_*` files are not a sub-package under consensus
-	// due to it's dependency on the underlying implementation of `consensusModule`. Think
+	// due to it's dependency on the underlying implementation of `ConsensusModule`. Think
 	// through a way to decouple these. This could be fixed with reflection but that's not
 	// a great idea in production code.
-	consensusMod *consensusModule
+	consensusMod *ConsensusModule
 
-	pacemakerConfigs *genesis.PacemakerConfig
+	pacemakerConfigs modules.PacemakerConfig
 
 	stepCancelFunc context.CancelFunc
 
@@ -49,19 +53,26 @@ type paceMaker struct {
 	paceMakerDebug
 }
 
-// TODO(drewskey): Pass in `genesis` and `config` here for consistency.
-func CreatePacemaker(cfg *genesis.Config) (m *paceMaker, err error) {
+func (p *paceMaker) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
+	return // No-op
+}
+
+func (p *paceMaker) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
+	return // No-op
+}
+
+func CreatePacemaker(cfg *typesCons.ConsensusConfig) (m *paceMaker, err error) {
 	return &paceMaker{
 		bus:          nil,
 		consensusMod: nil,
 
-		pacemakerConfigs: cfg.Consensus.PacemakerConfig,
+		pacemakerConfigs: cfg.GetPaceMakerConfig(),
 
 		stepCancelFunc: nil, // Only set on restarts
 
 		paceMakerDebug: paceMakerDebug{
-			manualMode:                cfg.Consensus.PacemakerConfig.Manual,
-			debugTimeBetweenStepsMsec: cfg.Consensus.PacemakerConfig.DebugTimeBetweenStepsMsec,
+			manualMode:                cfg.GetPaceMakerConfig().GetManual(),
+			debugTimeBetweenStepsMsec: cfg.GetPaceMakerConfig().GetDebugTimeBetweenStepsMsec(),
 			quorumCertificate:         nil,
 		},
 	}, nil
@@ -75,6 +86,10 @@ func (p *paceMaker) Stop() error {
 	return nil
 }
 
+func (p *paceMaker) GetModuleName() string {
+	return PacemakerModuleName
+}
+
 func (m *paceMaker) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
 }
@@ -86,7 +101,7 @@ func (m *paceMaker) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (m *paceMaker) SetConsensusModule(c *consensusModule) {
+func (m *paceMaker) SetConsensusModule(c *ConsensusModule) {
 	m.consensusMod = c
 }
 
@@ -230,6 +245,6 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 
 // TODO(olshansky): Increase timeout using exponential backoff.
 func (p *paceMaker) getStepTimeout(round uint64) timePkg.Duration {
-	baseTimeout := timePkg.Duration(int64(timePkg.Millisecond) * int64(p.pacemakerConfigs.TimeoutMsec))
+	baseTimeout := timePkg.Duration(int64(timePkg.Millisecond) * int64(p.pacemakerConfigs.GetTimeoutMsec()))
 	return baseTimeout
 }

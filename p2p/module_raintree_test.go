@@ -3,13 +3,19 @@ package p2p
 import (
 	"crypto/ed25519"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"sort"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -17,7 +23,6 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/pokt-network/pocket/shared/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -213,7 +218,7 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 	// Trigger originator message
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
-	p2pMod.Broadcast(p, types.PocketTopic_DEBUG_TOPIC)
+	p2pMod.Broadcast(p, debug.PocketTopic_DEBUG_TOPIC)
 
 	// Wait for completion
 	done := make(chan struct{})
@@ -238,6 +243,9 @@ const (
 	maxNumKeys             = 42 // The number of keys generated for all the unit tests. Optimization to avoid regenerating every time.
 	serviceUrlFormat       = "val_%d"
 	testChannelSize        = 10000
+	testingGenesisFilePath = "genesis"
+	testingConfigFilePath  = "config"
+	jsonPosfix             = ".json"
 )
 
 // TODO(olshansky): Add configurations tests for dead and partially visible nodes
@@ -273,12 +281,13 @@ func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
 
 // A mock of the application specific to know if a message was sent to be handled by the application
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//                         expectation with RainTree by comparing with Telemetry after updating specs.
+//
+//	expectation with RainTree by comparing with Telemetry after updating specs.
 func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
 	ctrl := gomock.NewController(t)
 	busMock := modulesMock.NewMockBus(ctrl)
 
-	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(func(e *types.PocketEvent) {
+	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(func(e *debug.PocketEvent) {
 		wg.Done()
 		fmt.Println("App specific bus mock publishing event to bus")
 	}).MaxTimes(1) // Using `MaxTimes` rather than `Times` because originator node implicitly handles the message
@@ -289,14 +298,14 @@ func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock
 	return busMock
 }
 
-func prepareConsensusMock(t *testing.T, genesisState *genesis.GenesisState) *modulesMock.MockConsensusModule {
+func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockConsensusModule {
 	ctrl := gomock.NewController(t)
 	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
 
-	validators := genesisState.Utility.Validators
+	validators := genesisState.PersistenceGenesisState.GetVals()
 	m := make(modules.ValidatorMap, len(validators))
 	for _, v := range validators {
-		m[v.Address] = v
+		m[v.GetAddress()] = v
 	}
 
 	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
@@ -341,7 +350,8 @@ func prepareEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAge
 // is a race condition here, but it is okay because our goal is to achieve max coverage with an upper limit
 // on the number of expected messages propagated.
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//                         expectation with RainTree by comparing with Telemetry after updating specs.
+//
+//	expectation with RainTree by comparing with Telemetry after updating specs.
 func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesP2P.Transport {
 	testChannel := make(chan []byte, testChannelSize)
 	ctrl := gomock.NewController(t)
@@ -362,37 +372,56 @@ func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWr
 	return connMock
 }
 
-func prepareP2PModules(t *testing.T, configs []*genesis.Config) (p2pModules map[string]*p2pModule) {
+func prepareP2PModules(t *testing.T, configs []modules.Config) (p2pModules map[string]*p2pModule) {
 	p2pModules = make(map[string]*p2pModule, len(configs))
 	for i, config := range configs {
-		p2pMod, err := Create(config, nil)
+		createTestingGenesisAndConfigFiles(t, config, modules.GenesisState{}, i)
+		p2pMod, err := Create(testingConfigFilePath+strconv.Itoa(i)+jsonPosfix, testingGenesisFilePath+jsonPosfix, false)
 		require.NoError(t, err)
 		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
 	}
 	return
 }
 
-func createConfigs(t *testing.T, numValidators int) (configs []*genesis.Config, genesisState *genesis.GenesisState) {
-	configs = make([]*genesis.Config, numValidators)
+func createTestingGenesisAndConfigFiles(t *testing.T, cfg modules.Config, genesisState modules.GenesisState, n int) {
+	config, err := json.Marshal(cfg.P2P)
+	require.NoError(t, err)
+
+	genesis, err := json.Marshal(genesisState.ConsensusGenesisState)
+	require.NoError(t, err)
+
+	genesisFile := make(map[string]json.RawMessage)
+	configFile := make(map[string]json.RawMessage)
+	moduleName := new(p2pModule).GetModuleName()
+
+	genesisFile[test_artifacts.GetGenesisFileName(moduleName)] = genesis
+	configFile[moduleName] = config
+	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
+	require.NoError(t, err)
+
+	p2pFileBz, err := json.MarshalIndent(configFile, "", "    ")
+	require.NoError(t, err)
+	require.NoError(t, ioutil.WriteFile(testingGenesisFilePath+jsonPosfix, genesisFileBz, 0777))
+	require.NoError(t, ioutil.WriteFile(testingConfigFilePath+strconv.Itoa(n)+jsonPosfix, p2pFileBz, 0777))
+}
+
+func createConfigs(t *testing.T, numValidators int) (configs []modules.Config, genesisState modules.GenesisState) {
+	configs = make([]modules.Config, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
 	copy(valKeys[:], keys[:numValidators])
 	genesisState = createGenesisState(t, valKeys)
-
 	for i := range configs {
-		configs[i] = &genesis.Config{
-			Base: &genesis.BaseConfig{
+		configs[i] = modules.Config{
+			Base: &modules.BaseConfig{
 				RootDirectory: "",
 				PrivateKey:    valKeys[i].String(),
 			},
-			Consensus:   &genesis.ConsensusConfig{},
-			Utility:     &genesis.UtilityConfig{},
-			Persistence: &genesis.PersistenceConfig{},
-			P2P: &genesis.P2PConfig{
-				ConsensusPort:  8080,
-				UseRainTree:    true,
-				ConnectionType: genesis.ConnectionType_EmptyConnection,
+			P2P: &typesP2P.P2PConfig{
+				PrivateKey:            valKeys[i].String(),
+				ConsensusPort:         8080,
+				UseRainTree:           true,
+				IsEmptyConnectionType: true,
 			},
-			Telemetry: nil,
 		}
 	}
 	return
@@ -402,11 +431,11 @@ func validatorId(_ *testing.T, i int) string {
 	return fmt.Sprintf(serviceUrlFormat, i)
 }
 
-func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
-	validators := make([]*genesis.Actor, len(valKeys))
+func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) modules.GenesisState {
+	validators := make([]modules.Actor, len(valKeys))
 	for i, valKey := range valKeys {
 		addr := valKey.Address().String()
-		val := &genesis.Actor{
+		val := &test_artifacts.MockActor{
 			Address:         addr,
 			PublicKey:       valKey.PublicKey().String(),
 			GenericParam:    validatorId(t, i+1),
@@ -417,9 +446,17 @@ func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesi
 		}
 		validators[i] = val
 	}
-	return &genesis.GenesisState{
-		Utility: &genesis.UtilityGenesisState{
+	return modules.GenesisState{
+		PersistenceGenesisState: &test_artifacts.MockPersistenceGenesisState{
 			Validators: validators,
 		},
+	}
+}
+
+func TestMain(m *testing.M) {
+	m.Run()
+	files, _ := filepath.Glob("*.json")
+	for _, f := range files {
+		os.Remove(f)
 	}
 }

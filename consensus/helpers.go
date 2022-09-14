@@ -4,11 +4,12 @@ import (
 	"encoding/base64"
 	"log"
 
+	"github.com/pokt-network/pocket/shared/debug"
+
 	"google.golang.org/protobuf/proto"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -38,7 +39,7 @@ var (
 
 // ** Hotstuff Helpers ** //
 
-func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
+func (m *ConsensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
 	var pss []*typesCons.PartialSignature
 	for _, msg := range m.MessagePool[step] {
 		// TODO(olshansky): Add tests for this
@@ -78,7 +79,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 	}, nil
 }
 
-func (m *consensusModule) findHighQC(step typesCons.HotstuffStep) (qc *typesCons.QuorumCertificate) {
+func (m *ConsensusModule) findHighQC(step typesCons.HotstuffStep) (qc *typesCons.QuorumCertificate) {
 	for _, m := range m.MessagePool[step] {
 		if m.GetQuorumCertificate() == nil {
 			continue
@@ -98,8 +99,8 @@ func getThresholdSignature(
 	return thresholdSig, nil
 }
 
-func isSignatureValid(m *typesCons.HotstuffMessage, pubKeyStr string, signature []byte) bool {
-	pubKey, err := cryptoPocket.NewPublicKey(pubKeyStr)
+func isSignatureValid(m *typesCons.HotstuffMessage, pubKeyString string, signature []byte) bool {
+	pubKey, err := cryptoPocket.NewPublicKey(pubKeyString)
 	if err != nil {
 		log.Println("[WARN] Error getting PublicKey from bytes:", err)
 		return false
@@ -112,11 +113,11 @@ func isSignatureValid(m *typesCons.HotstuffMessage, pubKeyStr string, signature 
 	return pubKey.Verify(bytesToVerify, signature)
 }
 
-func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
+func (m *ConsensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
 	return m.isOptimisticThresholdMet(len(m.MessagePool[step]))
 }
 
-func (m *consensusModule) isOptimisticThresholdMet(n int) error {
+func (m *ConsensusModule) isOptimisticThresholdMet(n int) error {
 	numValidators := len(m.validatorMap)
 	if !(float64(n) > ByzantineThreshold*float64(numValidators)) {
 		return typesCons.ErrByzantineThresholdCheck(n, ByzantineThreshold*float64(numValidators))
@@ -124,7 +125,7 @@ func (m *consensusModule) isOptimisticThresholdMet(n int) error {
 	return nil
 }
 
-func (m *consensusModule) resetForNewHeight() {
+func (m *ConsensusModule) resetForNewHeight() {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.Round = 0
@@ -143,7 +144,7 @@ func protoHash(m proto.Message) string {
 
 /*** P2P Helpers ***/
 
-func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
+func (m *ConsensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 	// TODO(olshansky): This can happen due to a race condition with the pacemaker.
 	if m.LeaderId == nil {
 		m.nodeLogError(typesCons.ErrNilLeaderId.Error(), nil)
@@ -157,13 +158,13 @@ func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 		return
 	}
 
-	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.IdToValAddrMap[*m.LeaderId]), anyConsensusMessage, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
+	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.IdToValAddrMap[*m.LeaderId]), anyConsensusMessage, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return
 	}
 }
 
-func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
+func (m *ConsensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 	m.nodeLog(typesCons.BroadcastingMessage(msg))
 	anyConsensusMessage, err := anypb.New(msg)
 	if err != nil {
@@ -171,7 +172,7 @@ func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 		return
 	}
 
-	if err := m.GetBus().GetP2PModule().Broadcast(anyConsensusMessage, types.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
+	if err := m.GetBus().GetP2PModule().Broadcast(anyConsensusMessage, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
 		return
 	}
@@ -179,7 +180,7 @@ func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 
 /*** Persistence Helpers ***/
 
-func (m *consensusModule) clearMessagesPool() {
+func (m *ConsensusModule) clearMessagesPool() {
 	m.m.Lock()
 	defer m.m.Unlock()
 	for _, step := range HotstuffSteps {
@@ -189,30 +190,30 @@ func (m *consensusModule) clearMessagesPool() {
 
 /*** Leader Election Helpers ***/
 
-func (m *consensusModule) isLeaderUnknown() bool {
+func (m *ConsensusModule) isLeaderUnknown() bool {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.LeaderId == nil
 }
 
-func (m *consensusModule) isLeader() bool {
+func (m *ConsensusModule) isLeader() bool {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.LeaderId != nil && *m.LeaderId == m.NodeId
 }
 
-func (m *consensusModule) isReplica() bool {
+func (m *ConsensusModule) isReplica() bool {
 	return !m.isLeader()
 }
 
-func (m *consensusModule) clearLeader() {
+func (m *ConsensusModule) clearLeader() {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.logPrefix = DefaultLogPrefix
 	m.LeaderId = nil
 }
 
-func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
+func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 	leaderId, err := m.leaderElectionMod.ElectNextLeader(message)
 	if err != nil || leaderId == 0 {
 		m.nodeLogError(typesCons.ErrLeaderElection(message).Error(), err)
@@ -232,13 +233,13 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 
 }
 
-func (m *consensusModule) setLeaderId(leaderId typesCons.NodeId) {
+func (m *ConsensusModule) setLeaderId(leaderId typesCons.NodeId) {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.LeaderId = &leaderId
 }
 
-func (m *consensusModule) currentNodeIsLeader() bool {
+func (m *ConsensusModule) currentNodeIsLeader() bool {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.LeaderId != nil && *m.LeaderId == m.NodeId
@@ -246,55 +247,55 @@ func (m *consensusModule) currentNodeIsLeader() bool {
 
 /*** General Purpose Getters / Setters ***/
 
-func (m *consensusModule) incrementRound() {
+func (m *ConsensusModule) incrementRound() {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.Round++
 }
 
-func (m *consensusModule) incrementHeight() {
+func (m *ConsensusModule) incrementHeight() {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.Height++
 }
 
-func (m *consensusModule) getHeight() uint64 {
+func (m *ConsensusModule) getHeight() uint64 {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.Height
 }
 
-func (m *consensusModule) getRound() uint64 {
+func (m *ConsensusModule) getRound() uint64 {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.Round
 }
 
-func (m *consensusModule) getStep() typesCons.HotstuffStep {
+func (m *ConsensusModule) getStep() typesCons.HotstuffStep {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.Step
 }
 
-func (m *consensusModule) setStep(step typesCons.HotstuffStep) {
+func (m *ConsensusModule) setStep(step typesCons.HotstuffStep) {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.Step = step
 }
 
-func (m *consensusModule) setRound(round uint64) {
+func (m *ConsensusModule) setRound(round uint64) {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.Round = round
 }
 
-func (m *consensusModule) setHighPrepareQC(qc *typesCons.QuorumCertificate) {
+func (m *ConsensusModule) setHighPrepareQC(qc *typesCons.QuorumCertificate) {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.HighPrepareQC = qc
 }
 
-func (m *consensusModule) setMessagePoolForStep(step typesCons.HotstuffStep, msgs []*typesCons.HotstuffMessage) {
+func (m *ConsensusModule) setMessagePoolForStep(step typesCons.HotstuffStep, msgs []*typesCons.HotstuffMessage) {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.MessagePool[step] = msgs
@@ -302,19 +303,19 @@ func (m *consensusModule) setMessagePoolForStep(step typesCons.HotstuffStep, msg
 
 /*** General Infrastructure Helpers ***/
 
-func (m *consensusModule) nodeLog(s string) {
+func (m *ConsensusModule) nodeLog(s string) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	log.Printf("[%s][%d] %s\n", m.logPrefix, m.NodeId, s)
 }
 
-func (m *consensusModule) nodeLogError(s string, err error) {
+func (m *ConsensusModule) nodeLogError(s string, err error) {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.NodeId, s, err)
 }
 
-func (m *consensusModule) setLogPrefix(logPrefix string) {
+func (m *ConsensusModule) setLogPrefix(logPrefix string) {
 	m.m.Lock()
 	defer m.m.Unlock()
 	m.logPrefix = logPrefix

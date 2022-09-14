@@ -1,17 +1,17 @@
 package raintree
 
 import (
-	"encoding/binary"
 	"fmt"
 	"log"
 	"math/rand"
 	"time"
 
+	"github.com/pokt-network/pocket/shared/debug"
+
 	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -33,7 +33,7 @@ type rainTreeNetwork struct {
 	maxNumLevels uint32
 
 	// TECHDEBT(drewsky): What should we use for de-duping messages within P2P?
-	mempool types.Mempool
+	mempool map[uint64]struct{} // TODO (drewsky) replace map implementation (can grow unbounded)
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) typesP2P.Network {
@@ -44,8 +44,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) t
 		addrBookMap:  make(typesP2P.AddrBookMap),
 		addrList:     make([]string, 0),
 		maxNumLevels: 0,
-		// TODO: Mempool size should be configurable
-		mempool: types.NewMempool(1000000, 1000),
+		mempool:      make(map[uint64]struct{}),
 	}
 
 	if err := n.processAddrBookUpdates(); err != nil {
@@ -66,7 +65,6 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 	if level == 0 {
 		return nil
 	}
-
 	msg := &typesP2P.RainTreeMessage{
 		Level: level,
 		Data:  data,
@@ -157,7 +155,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	networkMessage := types.PocketEvent{}
+	networkMessage := debug.PocketEvent{}
 	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
 		log.Println("Error decoding network message: ", err)
 		return nil, err
@@ -170,33 +168,24 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		}
 	}
 
-	// DISCUSSION(team): What do you think about turning GetHashStringFromBytes to GetHashString<!-- <T> --> using generics?
-	// I am in favor of that to hide away the logic of converting T to binary.
-	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, uint64(rainTreeMsg.Nonce))
-	hashString := GetHashStringFromBytes(b)
-
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
 	// TODO(team): Add more tests to verify this is sufficient for deduping purposes.
-	if n.mempool.Contains(hashString) {
+	if _, contains := n.mempool[rainTreeMsg.Nonce]; contains {
 		n.GetBus().
 			GetTelemetryModule().
 			GetEventMetricsAgent().
 			EmitEvent(
 				p2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
 				p2pTelemetry.BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME,
-				p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_HASH_LABEL, hashString,
+				p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_NONCE_LABEL, rainTreeMsg.Nonce,
 				p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
 			)
 
 		return nil, nil
 	}
 
-	// Error handling the addition transaction to the local mempool
-	if err := n.mempool.AddTransaction(b); err != nil {
-		return nil, fmt.Errorf("error adding transaction to RainTree mempool: %s", err.Error())
-	}
+	n.mempool[rainTreeMsg.Nonce] = struct{}{}
 
 	// Return the data back to the caller so it can be handeled by the app specific bus
 	return rainTreeMsg.Data, nil
