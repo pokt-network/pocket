@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/kvstore"
-	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -25,11 +25,11 @@ const (
 	DuplicateObjectErrorCode = "42710"
 )
 
-var protocolActorSchemas = []schema.ProtocolActorSchema{
-	schema.ApplicationActor,
-	schema.FishermanActor,
-	schema.ServiceNodeActor,
-	schema.ValidatorActor,
+var protocolActorSchemas = []types.ProtocolActorSchema{
+	types.ApplicationActor,
+	types.FishermanActor,
+	types.ServiceNodeActor,
+	types.ValidatorActor,
 }
 
 var _ modules.PersistenceRWContext = &PostgresContext{}
@@ -121,7 +121,7 @@ func initializeAllTables(ctx context.Context, db *pgx.Conn) error {
 	return nil
 }
 
-func initializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor schema.ProtocolActorSchema) error {
+func initializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor types.ProtocolActorSchema) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, actor.GetTableName(), actor.GetTableSchema())); err != nil {
 		return err
 	}
@@ -134,28 +134,28 @@ func initializeProtocolActorTables(ctx context.Context, db *pgx.Conn, actor sche
 }
 
 func initializeAccountTables(ctx context.Context, db *pgx.Conn) error {
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.AccountTableName, schema.AccountTableSchema)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.AccountTableName, types.AccountTableSchema)); err != nil {
 		return err
 	}
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.PoolTableName, schema.PoolTableSchema)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.PoolTableName, types.PoolTableSchema)); err != nil {
 		return err
 	}
 	return nil
 }
 
 func initializeGovTables(ctx context.Context, db *pgx.Conn) error {
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s`, fmt.Sprintf(CreateEnumType, schema.ValTypeName), schema.ValTypeEnumTypes)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s`, fmt.Sprintf(CreateEnumType, types.ValTypeName), types.ValTypeEnumTypes)); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code != DuplicateObjectErrorCode {
 			return err
 		}
 	}
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.ParamsTableName, schema.ParamsTableSchema)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.ParamsTableName, types.ParamsTableSchema)); err != nil {
 		return err
 	}
 
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.FlagsTableName, schema.FlagsTableSchema)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.FlagsTableName, types.FlagsTableSchema)); err != nil {
 		return err
 	}
 
@@ -163,7 +163,7 @@ func initializeGovTables(ctx context.Context, db *pgx.Conn) error {
 }
 
 func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
-	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, schema.BlockTableName, schema.BlockTableSchema)); err != nil {
+	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.BlockTableName, types.BlockTableSchema)); err != nil {
 		return err
 	}
 	return nil
@@ -192,15 +192,15 @@ func (p PostgresContext) DebugClearAll() error {
 		}
 	}
 
-	if _, err = tx.Exec(ctx, schema.ClearAllGovParamsQuery()); err != nil {
+	if _, err = tx.Exec(ctx, types.ClearAllGovParamsQuery()); err != nil {
 		return err
 	}
 
-	if _, err = tx.Exec(ctx, schema.ClearAllGovFlagsQuery()); err != nil {
+	if _, err = tx.Exec(ctx, types.ClearAllGovFlagsQuery()); err != nil {
 		return err
 	}
 
-	if _, err = tx.Exec(ctx, schema.ClearAllBlocksQuery()); err != nil {
+	if _, err = tx.Exec(ctx, types.ClearAllBlocksQuery()); err != nil {
 		return err
 	}
 

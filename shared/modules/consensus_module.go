@@ -1,19 +1,18 @@
 package modules
 
 import (
-	"github.com/pokt-network/pocket/shared/types"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/debug"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-type ValidatorMap map[string]*typesGenesis.Actor
+type ValidatorMap map[string]Actor // TODO (Drewsky) deprecate Validator map or populate from persistence module
 
 type ConsensusModule interface {
 	Module
 
 	// Consensus Engine
 	HandleMessage(*anypb.Any) error
-	HandleDebugMessage(*types.DebugMessage) error
+	HandleDebugMessage(*debug.DebugMessage) error
 
 	// Consensus State
 	CurrentHeight() uint64

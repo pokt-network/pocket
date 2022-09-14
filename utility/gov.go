@@ -2,262 +2,262 @@ package utility
 
 import (
 	"fmt"
+	"github.com/pokt-network/pocket/shared/modules"
 	"log"
 	"math/big"
 
-	"github.com/pokt-network/pocket/shared/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-func (u *UtilityContext) UpdateParam(paramName string, value interface{}) types.Error {
+func (u *UtilityContext) UpdateParam(paramName string, value interface{}) typesUtil.Error {
 	store := u.Store()
 	switch t := value.(type) {
 	case *wrapperspb.Int32Value:
 		if err := store.SetParam(paramName, (int(t.Value))); err != nil {
-			return types.ErrUpdateParam(err)
+			return typesUtil.ErrUpdateParam(err)
 		}
 		return nil
 	case *wrapperspb.StringValue:
 		if err := store.SetParam(paramName, t.Value); err != nil {
-			return types.ErrUpdateParam(err)
+			return typesUtil.ErrUpdateParam(err)
 		}
 		return nil
 	case *wrapperspb.BytesValue:
 		if err := store.SetParam(paramName, t.Value); err != nil {
-			return types.ErrUpdateParam(err)
+			return typesUtil.ErrUpdateParam(err)
 		}
 		return nil
 	default:
 		break
 	}
 	log.Fatalf("unhandled value type %T for %v", value, value)
-	return types.ErrUnknownParam(paramName)
+	return typesUtil.ErrUnknownParam(paramName)
 }
 
-func (u *UtilityContext) GetBlocksPerSession() (int, types.Error) {
+func (u *UtilityContext) GetBlocksPerSession() (int, typesUtil.Error) {
 	store := u.Store()
 	height, err := store.GetHeight()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(types.BlocksPerSessionParamName, err)
+		return typesUtil.ZeroInt, typesUtil.ErrGetParam(modules.BlocksPerSessionParamName, err)
 	}
 	blocksPerSession, err := store.GetBlocksPerSession(height)
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(types.BlocksPerSessionParamName, err)
+		return typesUtil.ZeroInt, typesUtil.ErrGetParam(modules.BlocksPerSessionParamName, err)
 	}
 	return blocksPerSession, nil
 }
 
-func (u *UtilityContext) GetAppMinimumStake() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.AppMinimumStakeParamName)
+func (u *UtilityContext) GetAppMinimumStake() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.AppMinimumStakeParamName)
 }
 
-func (u *UtilityContext) GetAppMaxChains() (int, types.Error) {
-	return u.getIntParam(types.AppMaxChainsParamName)
+func (u *UtilityContext) GetAppMaxChains() (int, typesUtil.Error) {
+	return u.getIntParam(modules.AppMaxChainsParamName)
 }
 
-func (u *UtilityContext) GetBaselineAppStakeRate() (int, types.Error) {
-	return u.getIntParam(types.AppBaselineStakeRateParamName)
+func (u *UtilityContext) GetBaselineAppStakeRate() (int, typesUtil.Error) {
+	return u.getIntParam(modules.AppBaselineStakeRateParamName)
 }
 
-func (u *UtilityContext) GetStabilityAdjustment() (int, types.Error) {
-	return u.getIntParam(types.AppStakingAdjustmentParamName)
+func (u *UtilityContext) GetStabilityAdjustment() (int, typesUtil.Error) {
+	return u.getIntParam(modules.AppStakingAdjustmentParamName)
 }
 
-func (u *UtilityContext) GetAppUnstakingBlocks() (int64, types.Error) {
-	return u.getInt64Param(types.AppUnstakingBlocksParamName)
+func (u *UtilityContext) GetAppUnstakingBlocks() (int64, typesUtil.Error) {
+	return u.getInt64Param(modules.AppUnstakingBlocksParamName)
 }
 
-func (u *UtilityContext) GetAppMinimumPauseBlocks() (int, types.Error) {
-	return u.getIntParam(types.AppMinimumPauseBlocksParamName)
+func (u *UtilityContext) GetAppMinimumPauseBlocks() (int, typesUtil.Error) {
+	return u.getIntParam(modules.AppMinimumPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetAppMaxPausedBlocks() (maxPausedBlocks int, err types.Error) {
-	return u.getIntParam(types.AppMaxPauseBlocksParamName)
+func (u *UtilityContext) GetAppMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
+	return u.getIntParam(modules.AppMaxPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetServiceNodeMinimumStake() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.ServiceNodeMinimumStakeParamName)
+func (u *UtilityContext) GetServiceNodeMinimumStake() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.ServiceNodeMinimumStakeParamName)
 }
 
-func (u *UtilityContext) GetServiceNodeMaxChains() (int, types.Error) {
-	return u.getIntParam(types.ServiceNodeMaxChainsParamName)
+func (u *UtilityContext) GetServiceNodeMaxChains() (int, typesUtil.Error) {
+	return u.getIntParam(modules.ServiceNodeMaxChainsParamName)
 }
 
-func (u *UtilityContext) GetServiceNodeUnstakingBlocks() (int64, types.Error) {
-	return u.getInt64Param(types.ServiceNodeUnstakingBlocksParamName)
+func (u *UtilityContext) GetServiceNodeUnstakingBlocks() (int64, typesUtil.Error) {
+	return u.getInt64Param(modules.ServiceNodeUnstakingBlocksParamName)
 }
 
-func (u *UtilityContext) GetServiceNodeMinimumPauseBlocks() (int, types.Error) {
-	return u.getIntParam(types.ServiceNodeMinimumPauseBlocksParamName)
+func (u *UtilityContext) GetServiceNodeMinimumPauseBlocks() (int, typesUtil.Error) {
+	return u.getIntParam(modules.ServiceNodeMinimumPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetServiceNodeMaxPausedBlocks() (maxPausedBlocks int, err types.Error) {
-	return u.getIntParam(types.ServiceNodeMaxPauseBlocksParamName)
+func (u *UtilityContext) GetServiceNodeMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
+	return u.getIntParam(modules.ServiceNodeMaxPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetValidatorMinimumStake() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.ValidatorMinimumStakeParamName)
+func (u *UtilityContext) GetValidatorMinimumStake() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.ValidatorMinimumStakeParamName)
 }
 
-func (u *UtilityContext) GetValidatorUnstakingBlocks() (int64, types.Error) {
-	return u.getInt64Param(types.ValidatorUnstakingBlocksParamName)
+func (u *UtilityContext) GetValidatorUnstakingBlocks() (int64, typesUtil.Error) {
+	return u.getInt64Param(modules.ValidatorUnstakingBlocksParamName)
 }
 
-func (u *UtilityContext) GetValidatorMinimumPauseBlocks() (int, types.Error) {
-	return u.getIntParam(types.ValidatorMinimumPauseBlocksParamName)
+func (u *UtilityContext) GetValidatorMinimumPauseBlocks() (int, typesUtil.Error) {
+	return u.getIntParam(modules.ValidatorMinimumPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetValidatorMaxPausedBlocks() (maxPausedBlocks int, err types.Error) {
-	return u.getIntParam(types.ValidatorMaxPausedBlocksParamName)
+func (u *UtilityContext) GetValidatorMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
+	return u.getIntParam(modules.ValidatorMaxPausedBlocksParamName)
 }
 
-func (u *UtilityContext) GetProposerPercentageOfFees() (proposerPercentage int, err types.Error) {
-	return u.getIntParam(types.ProposerPercentageOfFeesParamName)
+func (u *UtilityContext) GetProposerPercentageOfFees() (proposerPercentage int, err typesUtil.Error) {
+	return u.getIntParam(modules.ProposerPercentageOfFeesParamName)
 }
 
-func (u *UtilityContext) GetValidatorMaxMissedBlocks() (maxMissedBlocks int, err types.Error) {
-	return u.getIntParam(types.ValidatorMaximumMissedBlocksParamName)
+func (u *UtilityContext) GetValidatorMaxMissedBlocks() (maxMissedBlocks int, err typesUtil.Error) {
+	return u.getIntParam(modules.ValidatorMaximumMissedBlocksParamName)
 }
 
-func (u *UtilityContext) GetMaxEvidenceAgeInBlocks() (maxMissedBlocks int, err types.Error) {
-	return u.getIntParam(types.ValidatorMaxEvidenceAgeInBlocksParamName)
+func (u *UtilityContext) GetMaxEvidenceAgeInBlocks() (maxMissedBlocks int, err typesUtil.Error) {
+	return u.getIntParam(modules.ValidatorMaxEvidenceAgeInBlocksParamName)
 }
 
-func (u *UtilityContext) GetDoubleSignBurnPercentage() (burnPercentage int, err types.Error) {
-	return u.getIntParam(types.DoubleSignBurnPercentageParamName)
+func (u *UtilityContext) GetDoubleSignBurnPercentage() (burnPercentage int, err typesUtil.Error) {
+	return u.getIntParam(modules.DoubleSignBurnPercentageParamName)
 }
 
-func (u *UtilityContext) GetMissedBlocksBurnPercentage() (burnPercentage int, err types.Error) {
-	return u.getIntParam(types.MissedBlocksBurnPercentageParamName)
+func (u *UtilityContext) GetMissedBlocksBurnPercentage() (burnPercentage int, err typesUtil.Error) {
+	return u.getIntParam(modules.MissedBlocksBurnPercentageParamName)
 }
 
-func (u *UtilityContext) GetFishermanMinimumStake() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.FishermanMinimumStakeParamName)
+func (u *UtilityContext) GetFishermanMinimumStake() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.FishermanMinimumStakeParamName)
 }
 
-func (u *UtilityContext) GetFishermanMaxChains() (int, types.Error) {
-	return u.getIntParam(types.FishermanMaxChainsParamName)
+func (u *UtilityContext) GetFishermanMaxChains() (int, typesUtil.Error) {
+	return u.getIntParam(modules.FishermanMaxChainsParamName)
 }
 
-func (u *UtilityContext) GetFishermanUnstakingBlocks() (int64, types.Error) {
-	return u.getInt64Param(types.FishermanUnstakingBlocksParamName)
+func (u *UtilityContext) GetFishermanUnstakingBlocks() (int64, typesUtil.Error) {
+	return u.getInt64Param(modules.FishermanUnstakingBlocksParamName)
 }
 
-func (u *UtilityContext) GetFishermanMinimumPauseBlocks() (int, types.Error) {
-	return u.getIntParam(types.FishermanMinimumPauseBlocksParamName)
+func (u *UtilityContext) GetFishermanMinimumPauseBlocks() (int, typesUtil.Error) {
+	return u.getIntParam(modules.FishermanMinimumPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetFishermanMaxPausedBlocks() (maxPausedBlocks int, err types.Error) {
-	return u.getIntParam(types.FishermanMaxPauseBlocksParamName)
+func (u *UtilityContext) GetFishermanMaxPausedBlocks() (maxPausedBlocks int, err typesUtil.Error) {
+	return u.getIntParam(modules.FishermanMaxPauseBlocksParamName)
 }
 
-func (u *UtilityContext) GetMessageDoubleSignFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageDoubleSignFee)
+func (u *UtilityContext) GetMessageDoubleSignFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageDoubleSignFee)
 }
 
-func (u *UtilityContext) GetMessageSendFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageSendFee)
+func (u *UtilityContext) GetMessageSendFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageSendFee)
 }
 
-func (u *UtilityContext) GetMessageStakeFishermanFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageStakeFishermanFee)
+func (u *UtilityContext) GetMessageStakeFishermanFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageStakeFishermanFee)
 }
 
-func (u *UtilityContext) GetMessageEditStakeFishermanFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageEditStakeFishermanFee)
+func (u *UtilityContext) GetMessageEditStakeFishermanFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageEditStakeFishermanFee)
 }
 
-func (u *UtilityContext) GetMessageUnstakeFishermanFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageUnstakeFishermanFee)
+func (u *UtilityContext) GetMessageUnstakeFishermanFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageUnstakeFishermanFee)
 }
 
-func (u *UtilityContext) GetMessagePauseFishermanFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessagePauseFishermanFee)
+func (u *UtilityContext) GetMessagePauseFishermanFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessagePauseFishermanFee)
 }
 
-func (u *UtilityContext) GetMessageUnpauseFishermanFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageUnpauseFishermanFee)
+func (u *UtilityContext) GetMessageUnpauseFishermanFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageUnpauseFishermanFee)
 }
 
-func (u *UtilityContext) GetMessageFishermanPauseServiceNodeFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageFishermanPauseServiceNodeFee)
+func (u *UtilityContext) GetMessageFishermanPauseServiceNodeFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageFishermanPauseServiceNodeFee)
 }
 
-func (u *UtilityContext) GetMessageTestScoreFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageTestScoreFee)
+func (u *UtilityContext) GetMessageTestScoreFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageTestScoreFee)
 }
 
-func (u *UtilityContext) GetMessageProveTestScoreFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageProveTestScoreFee)
+func (u *UtilityContext) GetMessageProveTestScoreFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageProveTestScoreFee)
 }
 
-func (u *UtilityContext) GetMessageStakeAppFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageStakeAppFee)
+func (u *UtilityContext) GetMessageStakeAppFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageStakeAppFee)
 }
 
-func (u *UtilityContext) GetMessageEditStakeAppFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageEditStakeAppFee)
+func (u *UtilityContext) GetMessageEditStakeAppFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageEditStakeAppFee)
 }
 
-func (u *UtilityContext) GetMessageUnstakeAppFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageUnstakeAppFee)
+func (u *UtilityContext) GetMessageUnstakeAppFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageUnstakeAppFee)
 }
 
-func (u *UtilityContext) GetMessagePauseAppFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessagePauseAppFee)
+func (u *UtilityContext) GetMessagePauseAppFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessagePauseAppFee)
 }
 
-func (u *UtilityContext) GetMessageUnpauseAppFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageUnpauseAppFee)
+func (u *UtilityContext) GetMessageUnpauseAppFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageUnpauseAppFee)
 }
 
-func (u *UtilityContext) GetMessageStakeValidatorFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageStakeValidatorFee)
+func (u *UtilityContext) GetMessageStakeValidatorFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageStakeValidatorFee)
 }
 
-func (u *UtilityContext) GetMessageEditStakeValidatorFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageEditStakeValidatorFee)
+func (u *UtilityContext) GetMessageEditStakeValidatorFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageEditStakeValidatorFee)
 }
 
-func (u *UtilityContext) GetMessageUnstakeValidatorFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageUnstakeValidatorFee)
+func (u *UtilityContext) GetMessageUnstakeValidatorFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageUnstakeValidatorFee)
 }
 
-func (u *UtilityContext) GetMessagePauseValidatorFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessagePauseValidatorFee)
+func (u *UtilityContext) GetMessagePauseValidatorFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessagePauseValidatorFee)
 }
 
-func (u *UtilityContext) GetMessageUnpauseValidatorFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageUnpauseValidatorFee)
+func (u *UtilityContext) GetMessageUnpauseValidatorFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageUnpauseValidatorFee)
 }
 
-func (u *UtilityContext) GetMessageStakeServiceNodeFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageStakeServiceNodeFee)
+func (u *UtilityContext) GetMessageStakeServiceNodeFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageStakeServiceNodeFee)
 }
 
-func (u *UtilityContext) GetMessageEditStakeServiceNodeFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageEditStakeServiceNodeFee)
+func (u *UtilityContext) GetMessageEditStakeServiceNodeFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageEditStakeServiceNodeFee)
 }
 
-func (u *UtilityContext) GetMessageUnstakeServiceNodeFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageUnstakeServiceNodeFee)
+func (u *UtilityContext) GetMessageUnstakeServiceNodeFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageUnstakeServiceNodeFee)
 }
 
-func (u *UtilityContext) GetMessagePauseServiceNodeFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessagePauseServiceNodeFee)
+func (u *UtilityContext) GetMessagePauseServiceNodeFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessagePauseServiceNodeFee)
 }
 
-func (u *UtilityContext) GetMessageUnpauseServiceNodeFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageUnpauseServiceNodeFee)
+func (u *UtilityContext) GetMessageUnpauseServiceNodeFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageUnpauseServiceNodeFee)
 }
 
-func (u *UtilityContext) GetMessageChangeParameterFee() (*big.Int, types.Error) {
-	return u.getBigIntParam(types.MessageChangeParameterFee)
+func (u *UtilityContext) GetMessageChangeParameterFee() (*big.Int, typesUtil.Error) {
+	return u.getBigIntParam(modules.MessageChangeParameterFee)
 }
 
-func (u *UtilityContext) GetDoubleSignFeeOwner() (owner []byte, err types.Error) {
-	return u.getByteArrayParam(types.MessageDoubleSignFeeOwner)
+func (u *UtilityContext) GetDoubleSignFeeOwner() (owner []byte, err typesUtil.Error) {
+	return u.getByteArrayParam(modules.MessageDoubleSignFeeOwner)
 }
 
 func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
@@ -270,228 +270,228 @@ func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
 		return nil, err
 	}
 	switch paramName {
-	case types.AclOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.BlocksPerSessionParamName:
-		return store.GetBytesParam(types.BlocksPerSessionOwner, height)
-	case types.AppMaxChainsParamName:
-		return store.GetBytesParam(types.AppMaxChainsOwner, height)
-	case types.AppMinimumStakeParamName:
-		return store.GetBytesParam(types.AppMinimumStakeOwner, height)
-	case types.AppBaselineStakeRateParamName:
-		return store.GetBytesParam(types.AppBaselineStakeRateOwner, height)
-	case types.AppStakingAdjustmentParamName:
-		return store.GetBytesParam(types.AppStakingAdjustmentOwner, height)
-	case types.AppUnstakingBlocksParamName:
-		return store.GetBytesParam(types.AppUnstakingBlocksOwner, height)
-	case types.AppMinimumPauseBlocksParamName:
-		return store.GetBytesParam(types.AppMinimumPauseBlocksOwner, height)
-	case types.AppMaxPauseBlocksParamName:
-		return store.GetBytesParam(types.AppMaxPausedBlocksOwner, height)
-	case types.ServiceNodesPerSessionParamName:
-		return store.GetBytesParam(types.ServiceNodesPerSessionOwner, height)
-	case types.ServiceNodeMinimumStakeParamName:
-		return store.GetBytesParam(types.ServiceNodeMinimumStakeOwner, height)
-	case types.ServiceNodeMaxChainsParamName:
-		return store.GetBytesParam(types.ServiceNodeMaxChainsOwner, height)
-	case types.ServiceNodeUnstakingBlocksParamName:
-		return store.GetBytesParam(types.ServiceNodeUnstakingBlocksOwner, height)
-	case types.ServiceNodeMinimumPauseBlocksParamName:
-		return store.GetBytesParam(types.ServiceNodeMinimumPauseBlocksOwner, height)
-	case types.ServiceNodeMaxPauseBlocksParamName:
-		return store.GetBytesParam(types.ServiceNodeMaxPausedBlocksOwner, height)
-	case types.FishermanMinimumStakeParamName:
-		return store.GetBytesParam(types.FishermanMinimumStakeOwner, height)
-	case types.FishermanMaxChainsParamName:
-		return store.GetBytesParam(types.FishermanMaxChainsOwner, height)
-	case types.FishermanUnstakingBlocksParamName:
-		return store.GetBytesParam(types.FishermanUnstakingBlocksOwner, height)
-	case types.FishermanMinimumPauseBlocksParamName:
-		return store.GetBytesParam(types.FishermanMinimumPauseBlocksOwner, height)
-	case types.FishermanMaxPauseBlocksParamName:
-		return store.GetBytesParam(types.FishermanMaxPausedBlocksOwner, height)
-	case types.ValidatorMinimumStakeParamName:
-		return store.GetBytesParam(types.ValidatorMinimumStakeOwner, height)
-	case types.ValidatorUnstakingBlocksParamName:
-		return store.GetBytesParam(types.ValidatorUnstakingBlocksOwner, height)
-	case types.ValidatorMinimumPauseBlocksParamName:
-		return store.GetBytesParam(types.ValidatorMinimumPauseBlocksOwner, height)
-	case types.ValidatorMaxPausedBlocksParamName:
-		return store.GetBytesParam(types.ValidatorMaxPausedBlocksOwner, height)
-	case types.ValidatorMaximumMissedBlocksParamName:
-		return store.GetBytesParam(types.ValidatorMaximumMissedBlocksOwner, height)
-	case types.ProposerPercentageOfFeesParamName:
-		return store.GetBytesParam(types.ProposerPercentageOfFeesOwner, height)
-	case types.ValidatorMaxEvidenceAgeInBlocksParamName:
-		return store.GetBytesParam(types.ValidatorMaxEvidenceAgeInBlocksOwner, height)
-	case types.MissedBlocksBurnPercentageParamName:
-		return store.GetBytesParam(types.MissedBlocksBurnPercentageOwner, height)
-	case types.DoubleSignBurnPercentageParamName:
-		return store.GetBytesParam(types.DoubleSignBurnPercentageOwner, height)
-	case types.MessageDoubleSignFee:
-		return store.GetBytesParam(types.MessageDoubleSignFeeOwner, height)
-	case types.MessageSendFee:
-		return store.GetBytesParam(types.MessageSendFeeOwner, height)
-	case types.MessageStakeFishermanFee:
-		return store.GetBytesParam(types.MessageStakeFishermanFeeOwner, height)
-	case types.MessageEditStakeFishermanFee:
-		return store.GetBytesParam(types.MessageEditStakeFishermanFeeOwner, height)
-	case types.MessageUnstakeFishermanFee:
-		return store.GetBytesParam(types.MessageUnstakeFishermanFeeOwner, height)
-	case types.MessagePauseFishermanFee:
-		return store.GetBytesParam(types.MessagePauseFishermanFeeOwner, height)
-	case types.MessageUnpauseFishermanFee:
-		return store.GetBytesParam(types.MessageUnpauseFishermanFeeOwner, height)
-	case types.MessageFishermanPauseServiceNodeFee:
-		return store.GetBytesParam(types.MessageFishermanPauseServiceNodeFeeOwner, height)
-	case types.MessageTestScoreFee:
-		return store.GetBytesParam(types.MessageTestScoreFeeOwner, height)
-	case types.MessageProveTestScoreFee:
-		return store.GetBytesParam(types.MessageProveTestScoreFeeOwner, height)
-	case types.MessageStakeAppFee:
-		return store.GetBytesParam(types.MessageStakeAppFeeOwner, height)
-	case types.MessageEditStakeAppFee:
-		return store.GetBytesParam(types.MessageEditStakeAppFeeOwner, height)
-	case types.MessageUnstakeAppFee:
-		return store.GetBytesParam(types.MessageUnstakeAppFeeOwner, height)
-	case types.MessagePauseAppFee:
-		return store.GetBytesParam(types.MessagePauseAppFeeOwner, height)
-	case types.MessageUnpauseAppFee:
-		return store.GetBytesParam(types.MessageUnpauseAppFeeOwner, height)
-	case types.MessageStakeValidatorFee:
-		return store.GetBytesParam(types.MessageStakeValidatorFeeOwner, height)
-	case types.MessageEditStakeValidatorFee:
-		return store.GetBytesParam(types.MessageEditStakeValidatorFeeOwner, height)
-	case types.MessageUnstakeValidatorFee:
-		return store.GetBytesParam(types.MessageUnstakeValidatorFeeOwner, height)
-	case types.MessagePauseValidatorFee:
-		return store.GetBytesParam(types.MessagePauseValidatorFeeOwner, height)
-	case types.MessageUnpauseValidatorFee:
-		return store.GetBytesParam(types.MessageUnpauseValidatorFeeOwner, height)
-	case types.MessageStakeServiceNodeFee:
-		return store.GetBytesParam(types.MessageStakeServiceNodeFeeOwner, height)
-	case types.MessageEditStakeServiceNodeFee:
-		return store.GetBytesParam(types.MessageEditStakeServiceNodeFeeOwner, height)
-	case types.MessageUnstakeServiceNodeFee:
-		return store.GetBytesParam(types.MessageUnstakeServiceNodeFeeOwner, height)
-	case types.MessagePauseServiceNodeFee:
-		return store.GetBytesParam(types.MessagePauseServiceNodeFeeOwner, height)
-	case types.MessageUnpauseServiceNodeFee:
-		return store.GetBytesParam(types.MessageUnpauseServiceNodeFeeOwner, height)
-	case types.MessageChangeParameterFee:
-		return store.GetBytesParam(types.MessageChangeParameterFeeOwner, height)
-	case types.BlocksPerSessionOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.AppMaxChainsOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.AppMinimumStakeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.AppBaselineStakeRateOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.AppStakingAdjustmentOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.AppUnstakingBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.AppMinimumPauseBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.AppMaxPausedBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.ServiceNodeMinimumStakeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.ServiceNodeMaxChainsOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.ServiceNodeUnstakingBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.ServiceNodeMinimumPauseBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.ServiceNodeMaxPausedBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.ServiceNodesPerSessionOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.FishermanMinimumStakeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.FishermanMaxChainsOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.FishermanUnstakingBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.FishermanMinimumPauseBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.FishermanMaxPausedBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.ValidatorMinimumStakeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.ValidatorUnstakingBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.ValidatorMinimumPauseBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.ValidatorMaxPausedBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.ValidatorMaximumMissedBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.ProposerPercentageOfFeesOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.ValidatorMaxEvidenceAgeInBlocksOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MissedBlocksBurnPercentageOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.DoubleSignBurnPercentageOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageSendFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageStakeFishermanFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageEditStakeFishermanFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageUnstakeFishermanFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessagePauseFishermanFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageUnpauseFishermanFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageFishermanPauseServiceNodeFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageTestScoreFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageProveTestScoreFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageStakeAppFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageEditStakeAppFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageUnstakeAppFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessagePauseAppFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageUnpauseAppFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageStakeValidatorFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageEditStakeValidatorFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageUnstakeValidatorFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessagePauseValidatorFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageUnpauseValidatorFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageStakeServiceNodeFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageEditStakeServiceNodeFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageUnstakeServiceNodeFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessagePauseServiceNodeFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageUnpauseServiceNodeFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
-	case types.MessageChangeParameterFeeOwner:
-		return store.GetBytesParam(types.AclOwner, height)
+	case modules.AclOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.BlocksPerSessionParamName:
+		return store.GetBytesParam(modules.BlocksPerSessionOwner, height)
+	case modules.AppMaxChainsParamName:
+		return store.GetBytesParam(modules.AppMaxChainsOwner, height)
+	case modules.AppMinimumStakeParamName:
+		return store.GetBytesParam(modules.AppMinimumStakeOwner, height)
+	case modules.AppBaselineStakeRateParamName:
+		return store.GetBytesParam(modules.AppBaselineStakeRateOwner, height)
+	case modules.AppStakingAdjustmentParamName:
+		return store.GetBytesParam(modules.AppStakingAdjustmentOwner, height)
+	case modules.AppUnstakingBlocksParamName:
+		return store.GetBytesParam(modules.AppUnstakingBlocksOwner, height)
+	case modules.AppMinimumPauseBlocksParamName:
+		return store.GetBytesParam(modules.AppMinimumPauseBlocksOwner, height)
+	case modules.AppMaxPauseBlocksParamName:
+		return store.GetBytesParam(modules.AppMaxPausedBlocksOwner, height)
+	case modules.ServiceNodesPerSessionParamName:
+		return store.GetBytesParam(modules.ServiceNodesPerSessionOwner, height)
+	case modules.ServiceNodeMinimumStakeParamName:
+		return store.GetBytesParam(modules.ServiceNodeMinimumStakeOwner, height)
+	case modules.ServiceNodeMaxChainsParamName:
+		return store.GetBytesParam(modules.ServiceNodeMaxChainsOwner, height)
+	case modules.ServiceNodeUnstakingBlocksParamName:
+		return store.GetBytesParam(modules.ServiceNodeUnstakingBlocksOwner, height)
+	case modules.ServiceNodeMinimumPauseBlocksParamName:
+		return store.GetBytesParam(modules.ServiceNodeMinimumPauseBlocksOwner, height)
+	case modules.ServiceNodeMaxPauseBlocksParamName:
+		return store.GetBytesParam(modules.ServiceNodeMaxPausedBlocksOwner, height)
+	case modules.FishermanMinimumStakeParamName:
+		return store.GetBytesParam(modules.FishermanMinimumStakeOwner, height)
+	case modules.FishermanMaxChainsParamName:
+		return store.GetBytesParam(modules.FishermanMaxChainsOwner, height)
+	case modules.FishermanUnstakingBlocksParamName:
+		return store.GetBytesParam(modules.FishermanUnstakingBlocksOwner, height)
+	case modules.FishermanMinimumPauseBlocksParamName:
+		return store.GetBytesParam(modules.FishermanMinimumPauseBlocksOwner, height)
+	case modules.FishermanMaxPauseBlocksParamName:
+		return store.GetBytesParam(modules.FishermanMaxPausedBlocksOwner, height)
+	case modules.ValidatorMinimumStakeParamName:
+		return store.GetBytesParam(modules.ValidatorMinimumStakeOwner, height)
+	case modules.ValidatorUnstakingBlocksParamName:
+		return store.GetBytesParam(modules.ValidatorUnstakingBlocksOwner, height)
+	case modules.ValidatorMinimumPauseBlocksParamName:
+		return store.GetBytesParam(modules.ValidatorMinimumPauseBlocksOwner, height)
+	case modules.ValidatorMaxPausedBlocksParamName:
+		return store.GetBytesParam(modules.ValidatorMaxPausedBlocksOwner, height)
+	case modules.ValidatorMaximumMissedBlocksParamName:
+		return store.GetBytesParam(modules.ValidatorMaximumMissedBlocksOwner, height)
+	case modules.ProposerPercentageOfFeesParamName:
+		return store.GetBytesParam(modules.ProposerPercentageOfFeesOwner, height)
+	case modules.ValidatorMaxEvidenceAgeInBlocksParamName:
+		return store.GetBytesParam(modules.ValidatorMaxEvidenceAgeInBlocksOwner, height)
+	case modules.MissedBlocksBurnPercentageParamName:
+		return store.GetBytesParam(modules.MissedBlocksBurnPercentageOwner, height)
+	case modules.DoubleSignBurnPercentageParamName:
+		return store.GetBytesParam(modules.DoubleSignBurnPercentageOwner, height)
+	case modules.MessageDoubleSignFee:
+		return store.GetBytesParam(modules.MessageDoubleSignFeeOwner, height)
+	case modules.MessageSendFee:
+		return store.GetBytesParam(modules.MessageSendFeeOwner, height)
+	case modules.MessageStakeFishermanFee:
+		return store.GetBytesParam(modules.MessageStakeFishermanFeeOwner, height)
+	case modules.MessageEditStakeFishermanFee:
+		return store.GetBytesParam(modules.MessageEditStakeFishermanFeeOwner, height)
+	case modules.MessageUnstakeFishermanFee:
+		return store.GetBytesParam(modules.MessageUnstakeFishermanFeeOwner, height)
+	case modules.MessagePauseFishermanFee:
+		return store.GetBytesParam(modules.MessagePauseFishermanFeeOwner, height)
+	case modules.MessageUnpauseFishermanFee:
+		return store.GetBytesParam(modules.MessageUnpauseFishermanFeeOwner, height)
+	case modules.MessageFishermanPauseServiceNodeFee:
+		return store.GetBytesParam(modules.MessageFishermanPauseServiceNodeFeeOwner, height)
+	case modules.MessageTestScoreFee:
+		return store.GetBytesParam(modules.MessageTestScoreFeeOwner, height)
+	case modules.MessageProveTestScoreFee:
+		return store.GetBytesParam(modules.MessageProveTestScoreFeeOwner, height)
+	case modules.MessageStakeAppFee:
+		return store.GetBytesParam(modules.MessageStakeAppFeeOwner, height)
+	case modules.MessageEditStakeAppFee:
+		return store.GetBytesParam(modules.MessageEditStakeAppFeeOwner, height)
+	case modules.MessageUnstakeAppFee:
+		return store.GetBytesParam(modules.MessageUnstakeAppFeeOwner, height)
+	case modules.MessagePauseAppFee:
+		return store.GetBytesParam(modules.MessagePauseAppFeeOwner, height)
+	case modules.MessageUnpauseAppFee:
+		return store.GetBytesParam(modules.MessageUnpauseAppFeeOwner, height)
+	case modules.MessageStakeValidatorFee:
+		return store.GetBytesParam(modules.MessageStakeValidatorFeeOwner, height)
+	case modules.MessageEditStakeValidatorFee:
+		return store.GetBytesParam(modules.MessageEditStakeValidatorFeeOwner, height)
+	case modules.MessageUnstakeValidatorFee:
+		return store.GetBytesParam(modules.MessageUnstakeValidatorFeeOwner, height)
+	case modules.MessagePauseValidatorFee:
+		return store.GetBytesParam(modules.MessagePauseValidatorFeeOwner, height)
+	case modules.MessageUnpauseValidatorFee:
+		return store.GetBytesParam(modules.MessageUnpauseValidatorFeeOwner, height)
+	case modules.MessageStakeServiceNodeFee:
+		return store.GetBytesParam(modules.MessageStakeServiceNodeFeeOwner, height)
+	case modules.MessageEditStakeServiceNodeFee:
+		return store.GetBytesParam(modules.MessageEditStakeServiceNodeFeeOwner, height)
+	case modules.MessageUnstakeServiceNodeFee:
+		return store.GetBytesParam(modules.MessageUnstakeServiceNodeFeeOwner, height)
+	case modules.MessagePauseServiceNodeFee:
+		return store.GetBytesParam(modules.MessagePauseServiceNodeFeeOwner, height)
+	case modules.MessageUnpauseServiceNodeFee:
+		return store.GetBytesParam(modules.MessageUnpauseServiceNodeFeeOwner, height)
+	case modules.MessageChangeParameterFee:
+		return store.GetBytesParam(modules.MessageChangeParameterFeeOwner, height)
+	case modules.BlocksPerSessionOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.AppMaxChainsOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.AppMinimumStakeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.AppBaselineStakeRateOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.AppStakingAdjustmentOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.AppUnstakingBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.AppMinimumPauseBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.AppMaxPausedBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.ServiceNodeMinimumStakeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.ServiceNodeMaxChainsOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.ServiceNodeUnstakingBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.ServiceNodeMinimumPauseBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.ServiceNodeMaxPausedBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.ServiceNodesPerSessionOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.FishermanMinimumStakeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.FishermanMaxChainsOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.FishermanUnstakingBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.FishermanMinimumPauseBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.FishermanMaxPausedBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.ValidatorMinimumStakeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.ValidatorUnstakingBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.ValidatorMinimumPauseBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.ValidatorMaxPausedBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.ValidatorMaximumMissedBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.ProposerPercentageOfFeesOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.ValidatorMaxEvidenceAgeInBlocksOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MissedBlocksBurnPercentageOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.DoubleSignBurnPercentageOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageSendFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageStakeFishermanFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageEditStakeFishermanFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageUnstakeFishermanFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessagePauseFishermanFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageUnpauseFishermanFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageFishermanPauseServiceNodeFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageTestScoreFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageProveTestScoreFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageStakeAppFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageEditStakeAppFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageUnstakeAppFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessagePauseAppFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageUnpauseAppFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageStakeValidatorFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageEditStakeValidatorFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageUnstakeValidatorFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessagePauseValidatorFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageUnpauseValidatorFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageStakeServiceNodeFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageEditStakeServiceNodeFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageUnstakeServiceNodeFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessagePauseServiceNodeFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageUnpauseServiceNodeFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
+	case modules.MessageChangeParameterFeeOwner:
+		return store.GetBytesParam(modules.AclOwner, height)
 	default:
-		return nil, types.ErrUnknownParam(paramName)
+		return nil, typesUtil.ErrUnknownParam(paramName)
 	}
 }
 
-func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.ActorType) (amount *big.Int, err types.Error) {
+func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.UtilActorType) (amount *big.Int, err typesUtil.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageDoubleSign:
 		return u.GetMessageDoubleSignFee()
@@ -499,113 +499,113 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.Actor
 		return u.GetMessageSendFee()
 	case *typesUtil.MessageStake:
 		switch actorType {
-		case typesUtil.ActorType_App:
+		case typesUtil.UtilActorType_App:
 			return u.GetMessageStakeAppFee()
-		case typesUtil.ActorType_Fish:
+		case typesUtil.UtilActorType_Fish:
 			return u.GetMessageStakeFishermanFee()
-		case typesUtil.ActorType_Node:
+		case typesUtil.UtilActorType_Node:
 			return u.GetMessageStakeServiceNodeFee()
-		case typesUtil.ActorType_Val:
+		case typesUtil.UtilActorType_Val:
 			return u.GetMessageStakeValidatorFee()
 		}
 	case *typesUtil.MessageEditStake:
 		switch actorType {
-		case typesUtil.ActorType_App:
+		case typesUtil.UtilActorType_App:
 			return u.GetMessageEditStakeAppFee()
-		case typesUtil.ActorType_Fish:
+		case typesUtil.UtilActorType_Fish:
 			return u.GetMessageEditStakeFishermanFee()
-		case typesUtil.ActorType_Node:
+		case typesUtil.UtilActorType_Node:
 			return u.GetMessageEditStakeServiceNodeFee()
-		case typesUtil.ActorType_Val:
+		case typesUtil.UtilActorType_Val:
 			return u.GetMessageEditStakeValidatorFee()
 		}
 	case *typesUtil.MessageUnstake:
 		switch actorType {
-		case typesUtil.ActorType_App:
+		case typesUtil.UtilActorType_App:
 			return u.GetMessageUnstakeAppFee()
-		case typesUtil.ActorType_Fish:
+		case typesUtil.UtilActorType_Fish:
 			return u.GetMessageUnstakeFishermanFee()
-		case typesUtil.ActorType_Node:
+		case typesUtil.UtilActorType_Node:
 			return u.GetMessageUnstakeServiceNodeFee()
-		case typesUtil.ActorType_Val:
+		case typesUtil.UtilActorType_Val:
 			return u.GetMessageUnstakeValidatorFee()
 		}
 	case *typesUtil.MessageUnpause:
 		switch actorType {
-		case typesUtil.ActorType_App:
+		case typesUtil.UtilActorType_App:
 			return u.GetMessageUnpauseAppFee()
-		case typesUtil.ActorType_Fish:
+		case typesUtil.UtilActorType_Fish:
 			return u.GetMessageUnpauseFishermanFee()
-		case typesUtil.ActorType_Node:
+		case typesUtil.UtilActorType_Node:
 			return u.GetMessageUnpauseServiceNodeFee()
-		case typesUtil.ActorType_Val:
+		case typesUtil.UtilActorType_Val:
 			return u.GetMessageUnpauseValidatorFee()
 		}
 	case *typesUtil.MessageChangeParameter:
 		return u.GetMessageChangeParameterFee()
 	default:
-		return nil, types.ErrUnknownMessage(x)
+		return nil, typesUtil.ErrUnknownMessage(x)
 	}
 	return nil, nil
 }
 
-func (u *UtilityContext) GetMessageChangeParameterSignerCandidates(msg *typesUtil.MessageChangeParameter) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageChangeParameterSignerCandidates(msg *typesUtil.MessageChangeParameter) ([][]byte, typesUtil.Error) {
 	owner, err := u.GetParamOwner(msg.ParameterKey)
 	if err != nil {
-		return nil, types.ErrGetParam(msg.ParameterKey, err)
+		return nil, typesUtil.ErrGetParam(msg.ParameterKey, err)
 	}
 	return [][]byte{owner}, nil
 }
 
-func (u *UtilityContext) getBigIntParam(paramName string) (*big.Int, types.Error) {
+func (u *UtilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.Error) {
 	store := u.Store()
 	height, err := store.GetHeight()
 	if err != nil {
-		return nil, types.ErrGetParam(paramName, err)
+		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
 	value, err := store.GetStringParam(paramName, height)
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
-		return nil, types.ErrGetParam(paramName, err)
+		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
-	return types.StringToBigInt(value)
+	return typesUtil.StringToBigInt(value)
 }
 
-func (u *UtilityContext) getIntParam(paramName string) (int, types.Error) {
+func (u *UtilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
 	store := u.Store()
 	height, err := store.GetHeight()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(paramName, err)
+		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
 	}
 	value, err := store.GetIntParam(paramName, height)
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(paramName, err)
+		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
 	}
 	return value, nil
 }
 
-func (u *UtilityContext) getInt64Param(paramName string) (int64, types.Error) {
+func (u *UtilityContext) getInt64Param(paramName string) (int64, typesUtil.Error) {
 	store := u.Store()
 	height, err := store.GetHeight()
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(paramName, err)
+		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
 	}
 	value, err := store.GetIntParam(paramName, height)
 	if err != nil {
-		return typesUtil.ZeroInt, types.ErrGetParam(paramName, err)
+		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
 	}
 	return int64(value), nil
 }
 
-func (u *UtilityContext) getByteArrayParam(paramName string) ([]byte, types.Error) {
+func (u *UtilityContext) getByteArrayParam(paramName string) ([]byte, typesUtil.Error) {
 	store := u.Store()
 	height, err := store.GetHeight()
 	if err != nil {
-		return nil, types.ErrGetParam(paramName, err)
+		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
 	value, er := store.GetBytesParam(paramName, height)
 	if er != nil {
-		return nil, types.ErrGetParam(paramName, er)
+		return nil, typesUtil.ErrGetParam(paramName, er)
 	}
 	return value, nil
 }
