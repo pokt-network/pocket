@@ -146,7 +146,6 @@ func (p *paceMaker) RestartTimer() {
 	if p.stepCancelFunc != nil {
 		p.stepCancelFunc()
 	}
-	//p.debugSleep()
 
 	// NOTE: Not defering a cancel call because this function is asynchronous.
 
