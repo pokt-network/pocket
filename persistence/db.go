@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/jackc/pgconn"
@@ -40,21 +41,18 @@ var _ modules.PersistenceRWContext = &PostgresContext{}
 // TODO: These are only externalized for testing purposes, so they should be made private and
 //       it is trivial to create a helper to initial a context with some values.
 type PostgresContext struct {
-	Height int64
-	DB     PostgresDB
-}
-type PostgresDB struct {
+	Height     int64
 	conn       *pgx.Conn
 	Tx         pgx.Tx
 	Blockstore kvstore.KVStore
 }
 
-func (pg *PostgresDB) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
+func (pg *PostgresContext) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
 	tx, err := pg.GetTxn()
 	return context.TODO(), tx, err
 }
 
-func (pg *PostgresDB) GetTxn() (pgx.Tx, error) {
+func (pg *PostgresContext) GetTxn() (pgx.Tx, error) {
 	return pg.Tx, nil
 }
 
@@ -171,7 +169,7 @@ func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
 
 // Exposed for testing purposes only
 func (p PostgresContext) DebugClearAll() error {
-	ctx, tx, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}

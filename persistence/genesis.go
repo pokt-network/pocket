@@ -160,7 +160,7 @@ func (m *PersistenceModule) populateGenesisState(state *types.PersistenceGenesis
 //  can easily be refactored and condensed into a single function using a generic type or a common
 // interface.
 func (p PostgresContext) GetAllAccounts(height int64) (accs []modules.Account, err error) {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, txn, err := p.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []modules.Account, e
 
 // CLEANUP: Consolidate with GetAllAccounts.
 func (p PostgresContext) GetAllPools(height int64) (accs []modules.Account, err error) {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, txn, err := p.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (p PostgresContext) GetAllPools(height int64) (accs []modules.Account, err 
 }
 
 func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err error) {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, txn, err := p.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +232,7 @@ func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err err
 }
 
 func (p PostgresContext) GetAllValidators(height int64) (vals []modules.Actor, err error) {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, txn, err := p.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +261,7 @@ func (p PostgresContext) GetAllValidators(height int64) (vals []modules.Actor, e
 }
 
 func (p PostgresContext) GetAllServiceNodes(height int64) (sn []modules.Actor, err error) {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, txn, err := p.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +290,7 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []modules.Actor, e
 }
 
 func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err error) {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, txn, err := p.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}

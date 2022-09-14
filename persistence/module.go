@@ -145,7 +145,7 @@ func (m *PersistenceModule) GetBus() modules.Bus {
 }
 
 func (m *PersistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
-	if m.writeContext != nil && !m.writeContext.DB.conn.IsClosed() {
+	if m.writeContext != nil && !m.writeContext.conn.IsClosed() {
 		return nil, fmt.Errorf("write context already exists")
 	}
 	conn, err := connectToDatabase(m.postgresURL, m.nodeSchema)
@@ -162,12 +162,10 @@ func (m *PersistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	}
 
 	m.writeContext = &PostgresContext{
-		Height: height,
-		DB: PostgresDB{
-			conn:       conn,
-			Tx:         tx,
-			Blockstore: m.blockStore,
-		},
+		Height:     height,
+		conn:       conn,
+		Tx:         tx,
+		Blockstore: m.blockStore,
 	}
 
 	return *m.writeContext, nil
@@ -189,18 +187,16 @@ func (m *PersistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	}
 
 	return PostgresContext{
-		Height: height,
-		DB: PostgresDB{
-			conn:       conn,
-			Tx:         tx,
-			Blockstore: m.blockStore,
-		},
+		Height:     height,
+		conn:       conn,
+		Tx:         tx,
+		Blockstore: m.blockStore,
 	}, nil
 }
 
 func (m *PersistenceModule) ResetContext() error {
 	if m.writeContext != nil {
-		if !m.writeContext.DB.Tx.Conn().IsClosed() {
+		if !m.writeContext.Tx.Conn().IsClosed() {
 			if err := m.writeContext.Release(); err != nil {
 				log.Println("[TODO][ERROR] Error releasing write context...", err)
 			}

@@ -3,10 +3,11 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/modules"
 	"log"
 	"strconv"
+
+	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // TODO (Team) BUG setting parameters twice on the same height causes issues. We need to move the schema away from 'end_height' and
@@ -21,7 +22,7 @@ func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) 
 }
 
 func (p PostgresContext) InitParams() error {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, txn, err := p.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
@@ -91,7 +92,7 @@ func (p PostgresContext) setParamOrFlag(name string, value any, enabled *bool) e
 // setParamOrFlag sets a param or a flag.
 // If `enabled` is nil, we are dealing with a param, otherwise it's a flag
 func setParamOrFlag[T types.SupportedParamTypes](p PostgresContext, paramName string, paramValue T, enabled *bool) error {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, txn, err := p.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
@@ -110,7 +111,7 @@ func setParamOrFlag[T types.SupportedParamTypes](p PostgresContext, paramName st
 }
 
 func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, paramName string, height int64) (i T, enabled bool, err error) {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, txn, err := p.GetCtxAndTxn()
 	if err != nil {
 		return i, enabled, err
 	}

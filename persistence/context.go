@@ -12,7 +12,7 @@ func (p PostgresContext) NewSavePoint(bytes []byte) error {
 
 func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	log.Println("TODO: RollbackToSavePoint not fully implemented")
-	return p.DB.Tx.Rollback(context.TODO())
+	return p.Tx.Rollback(context.TODO())
 }
 
 func (p PostgresContext) AppHash() ([]byte, error) {
@@ -28,10 +28,10 @@ func (p PostgresContext) Commit() error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
 
 	ctx := context.TODO()
-	if err := p.DB.Tx.Commit(context.TODO()); err != nil {
+	if err := p.Tx.Commit(context.TODO()); err != nil {
 		return err
 	}
-	if err := p.DB.conn.Close(ctx); err != nil {
+	if err := p.conn.Close(ctx); err != nil {
 		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
 
 	}
@@ -42,10 +42,10 @@ func (p PostgresContext) Release() error {
 	log.Printf("About to release context at height %d.\n", p.Height)
 
 	ctx := context.TODO()
-	if err := p.DB.Tx.Rollback(ctx); err != nil {
+	if err := p.Tx.Rollback(ctx); err != nil {
 		return err
 	}
-	if err := p.DB.conn.Close(ctx); err != nil {
+	if err := p.conn.Close(ctx); err != nil {
 		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
 	}
 	return nil
@@ -54,5 +54,5 @@ func (p PostgresContext) Release() error {
 func (p PostgresContext) Close() error {
 	log.Printf("About to close context at height %d.\n", p.Height)
 
-	return p.DB.conn.Close(context.TODO())
+	return p.conn.Close(context.TODO())
 }
