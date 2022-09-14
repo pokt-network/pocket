@@ -164,8 +164,8 @@ func (m *PersistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	m.writeContext = &PostgresContext{
 		Height:     height,
 		conn:       conn,
-		Tx:         tx,
-		Blockstore: m.blockStore,
+		tx:         tx,
+		blockstore: m.blockStore,
 	}
 
 	return *m.writeContext, nil
@@ -189,14 +189,14 @@ func (m *PersistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	return PostgresContext{
 		Height:     height,
 		conn:       conn,
-		Tx:         tx,
-		Blockstore: m.blockStore,
+		tx:         tx,
+		blockstore: m.blockStore,
 	}, nil
 }
 
 func (m *PersistenceModule) ResetContext() error {
 	if m.writeContext != nil {
-		if !m.writeContext.Tx.Conn().IsClosed() {
+		if !m.writeContext.tx.Conn().IsClosed() {
 			if err := m.writeContext.Release(); err != nil {
 				log.Println("[TODO][ERROR] Error releasing write context...", err)
 			}

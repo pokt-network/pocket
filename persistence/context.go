@@ -12,7 +12,7 @@ func (p PostgresContext) NewSavePoint(bytes []byte) error {
 
 func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	log.Println("TODO: RollbackToSavePoint not fully implemented")
-	return p.Tx.Rollback(context.TODO())
+	return p.tx.Rollback(context.TODO())
 }
 
 func (p PostgresContext) AppHash() ([]byte, error) {
@@ -28,7 +28,7 @@ func (p PostgresContext) Commit() error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
 
 	ctx := context.TODO()
-	if err := p.Tx.Commit(context.TODO()); err != nil {
+	if err := p.tx.Commit(context.TODO()); err != nil {
 		return err
 	}
 	if err := p.conn.Close(ctx); err != nil {
@@ -42,7 +42,7 @@ func (p PostgresContext) Release() error {
 	log.Printf("About to release context at height %d.\n", p.Height)
 
 	ctx := context.TODO()
-	if err := p.Tx.Rollback(ctx); err != nil {
+	if err := p.tx.Rollback(ctx); err != nil {
 		return err
 	}
 	if err := p.conn.Close(ctx); err != nil {

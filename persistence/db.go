@@ -43,8 +43,8 @@ var _ modules.PersistenceRWContext = &PostgresContext{}
 type PostgresContext struct {
 	Height     int64
 	conn       *pgx.Conn
-	Tx         pgx.Tx
-	Blockstore kvstore.KVStore
+	tx         pgx.Tx
+	blockstore kvstore.KVStore
 }
 
 func (pg *PostgresContext) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
@@ -53,7 +53,7 @@ func (pg *PostgresContext) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
 }
 
 func (pg *PostgresContext) GetTxn() (pgx.Tx, error) {
-	return pg.Tx, nil
+	return pg.tx, nil
 }
 
 func (pg *PostgresContext) GetCtx() (context.Context, error) {
