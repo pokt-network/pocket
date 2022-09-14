@@ -124,6 +124,15 @@ func (m *consensusModule) isOptimisticThresholdMet(n int) error {
 	return nil
 }
 
+func (m *consensusModule) resetForNewHeight() {
+	m.m.Lock()
+	defer m.m.Unlock()
+	m.Round = 0
+	m.Block = nil
+	m.HighPrepareQC = nil
+	m.LockedQC = nil
+}
+
 func protoHash(m proto.Message) string {
 	b, err := proto.Marshal(m)
 	if err != nil {
@@ -171,6 +180,8 @@ func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 /*** Persistence Helpers ***/
 
 func (m *consensusModule) clearMessagesPool() {
+	m.m.Lock()
+	defer m.m.Unlock()
 	for _, step := range HotstuffSteps {
 		m.MessagePool[step] = make([]*typesCons.HotstuffMessage, 0)
 	}
@@ -178,7 +189,15 @@ func (m *consensusModule) clearMessagesPool() {
 
 /*** Leader Election Helpers ***/
 
+func (m *consensusModule) isLeaderUnknown() bool {
+	m.m.RLock()
+	defer m.m.RUnlock()
+	return m.LeaderId == nil
+}
+
 func (m *consensusModule) isLeader() bool {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	return m.LeaderId != nil && *m.LeaderId == m.NodeId
 }
 
@@ -201,23 +220,102 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 		return
 	}
 
-	m.LeaderId = &leaderId
+	m.setLeaderId(leaderId)
 
-	if m.LeaderId != nil && *m.LeaderId == m.NodeId {
-		m.logPrefix = "LEADER"
+	if m.currentNodeIsLeader() {
+		m.setLogPrefix("LEADER")
 		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	} else {
-		m.logPrefix = "REPLICA"
+		m.setLogPrefix("REPLICA")
 		m.nodeLog(typesCons.ElectedNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	}
+
+}
+
+func (m *consensusModule) setLeaderId(leaderId typesCons.NodeId) {
+	m.m.Lock()
+	defer m.m.Unlock()
+	m.LeaderId = &leaderId
+}
+
+func (m *consensusModule) currentNodeIsLeader() bool {
+	m.m.RLock()
+	defer m.m.RUnlock()
+	return m.LeaderId != nil && *m.LeaderId == m.NodeId
+}
+
+/*** General Purpose Getters / Setters ***/
+
+func (m *consensusModule) incrementRound() {
+	m.m.Lock()
+	defer m.m.Unlock()
+	m.Round++
+}
+
+func (m *consensusModule) incrementHeight() {
+	m.m.Lock()
+	defer m.m.Unlock()
+	m.Height++
+}
+
+func (m *consensusModule) getHeight() uint64 {
+	m.m.RLock()
+	defer m.m.RUnlock()
+	return m.Height
+}
+
+func (m *consensusModule) getRound() uint64 {
+	m.m.RLock()
+	defer m.m.RUnlock()
+	return m.Round
+}
+
+func (m *consensusModule) getStep() typesCons.HotstuffStep {
+	m.m.RLock()
+	defer m.m.RUnlock()
+	return m.Step
+}
+
+func (m *consensusModule) setStep(step typesCons.HotstuffStep) {
+	m.m.Lock()
+	defer m.m.Unlock()
+	m.Step = step
+}
+
+func (m *consensusModule) setRound(round uint64) {
+	m.m.Lock()
+	defer m.m.Unlock()
+	m.Round = round
+}
+
+func (m *consensusModule) setHighPrepareQC(qc *typesCons.QuorumCertificate) {
+	m.m.Lock()
+	defer m.m.Unlock()
+	m.HighPrepareQC = qc
+}
+
+func (m *consensusModule) setMessagePoolForStep(step typesCons.HotstuffStep, msgs []*typesCons.HotstuffMessage) {
+	m.m.Lock()
+	defer m.m.Unlock()
+	m.MessagePool[step] = msgs
 }
 
 /*** General Infrastructure Helpers ***/
 
 func (m *consensusModule) nodeLog(s string) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	log.Printf("[%s][%d] %s\n", m.logPrefix, m.NodeId, s)
 }
 
 func (m *consensusModule) nodeLogError(s string, err error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.NodeId, s, err)
+}
+
+func (m *consensusModule) setLogPrefix(logPrefix string) {
+	m.m.Lock()
+	defer m.m.Unlock()
+	m.logPrefix = logPrefix
 }

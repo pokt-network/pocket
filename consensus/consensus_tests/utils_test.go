@@ -398,3 +398,21 @@ func timeReminder(clock *clock.Mock, frequency time.Duration) {
 		logTime(clock)
 	}
 }
+
+func assertConsensusState(t *testing.T, nodeId typesCons.NodeId, expected, actual typesCons.ConsensusNodeState) {
+	assertHeight(t, nodeId, expected.Height, actual.Height)
+	assertStep(t, nodeId, expected.Step, actual.Step)
+	assertRound(t, nodeId, expected.Round, actual.Round)
+}
+
+func assertHeight(t *testing.T, nodeId typesCons.NodeId, expected, actual uint64) {
+	require.Equal(t, expected, actual, "[NODE][%v] failed assertHeight", nodeId)
+}
+
+func assertStep(t *testing.T, nodeId typesCons.NodeId, expected, actual uint8) {
+	require.Equal(t, expected, actual, "[NODE][%v] failed assertStep", nodeId)
+}
+
+func assertRound(t *testing.T, nodeId typesCons.NodeId, expected, actual uint8) {
+	require.Equal(t, expected, actual, "[NODE][%v] failed assertRound", nodeId)
+}

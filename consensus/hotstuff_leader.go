@@ -55,7 +55,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		m.Block = highPrepareQC.Block
 	}
 
-	m.Step = Prepare
+	m.setStep(Prepare)
 	m.MessagePool[NewRound] = nil
 	m.paceMaker.RestartTimer()
 
@@ -98,9 +98,9 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
-	m.Step = PreCommit
-	m.HighPrepareQC = prepareQC
-	m.MessagePool[Prepare] = nil
+	m.setStep(PreCommit)
+	m.setHighPrepareQC(prepareQC)
+	m.setMessagePoolForStep(Prepare, nil)
 	m.paceMaker.RestartTimer()
 
 	precommitProposeMessages, err := CreateProposeMessage(m, PreCommit, prepareQC)
