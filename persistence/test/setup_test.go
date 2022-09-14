@@ -76,21 +76,26 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	return &db
 }
 
-// REFACTOR: Can we leverage using `NewTestPostgresContext`here by creating a common interface?
 func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
-		log.Fatalf("Error creating new context: %s", err)
+		fmt.Printf("Error creating new context: %v\n", err)
+		f.FailNow()
 	}
 
 	db, ok := ctx.(persistence.PostgresContext)
 	if !ok {
-		log.Fatalf("Error casting RW context to Postgres context")
+		fmt.Println("Error casting RW context to Postgres context")
+		f.FailNow()
 	}
 
 	f.Cleanup(func() {
-		db.Release()
-		testPersistenceMod.ResetContext()
+		if err := db.Release(); err != nil {
+			f.FailNow()
+		}
+		if err := testPersistenceMod.ResetContext(); err != nil {
+			f.FailNow()
+		}
 	})
 
 	return &db

@@ -41,7 +41,7 @@ var _ modules.PersistenceRWContext = &PostgresContext{}
 // TODO: These are only externalized for testing purposes, so they should be made private and
 //       it is trivial to create a helper to initial a context with some values.
 type PostgresContext struct {
-	Height     int64
+	Height     int64 // TODO(olshansky): Should not externalize this variable
 	conn       *pgx.Conn
 	tx         pgx.Tx
 	blockstore kvstore.KVStore
