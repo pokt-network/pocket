@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
-	"github.com/pokt-network/pocket/utility/types"
 	"math/big"
 	"sort"
 	"testing"
+
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
+	"github.com/pokt-network/pocket/utility/types"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"
@@ -223,26 +224,20 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) (acs []modules.Account) {
+func GetAllTestingAccounts(t *testing.T, ctx utility.UtilityContext) []modules.Account {
 	accs, err := (ctx.Context.PersistenceRWContext).GetAllAccounts(0)
 	require.NoError(t, err)
 	sort.Slice(accs, func(i, j int) bool {
 		return accs[i].GetAddress() < accs[j].GetAddress()
 	})
-	for _, acc := range accs {
-		acs = append(acs, acc)
-	}
-	return
+	return accs
 }
 
-func GetAllTestingPools(t *testing.T, ctx utility.UtilityContext) (acs []modules.Account) {
+func GetAllTestingPools(t *testing.T, ctx utility.UtilityContext) []modules.Account {
 	accs, err := (ctx.Context.PersistenceRWContext).GetAllPools(0)
 	require.NoError(t, err)
 	sort.Slice(accs, func(i, j int) bool {
 		return accs[i].GetAddress() < accs[j].GetAddress()
 	})
-	for _, acc := range accs {
-		acs = append(acs, acc)
-	}
-	return
+	return accs
 }
