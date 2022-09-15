@@ -1,6 +1,6 @@
 # Roadmap & Milestones <!-- omit in toc -->
 
-This document was last updated on 06-10-2022.
+This document was last updated on 09-15-2022.
 
 - [V1 Roadmap](#v1-roadmap)
 - [Milestones](#milestones)
@@ -40,72 +40,72 @@ gantt
 
 ### M1. Pocket PoS (Proof of Stake)
 
-## Goals:
+#### Goals:
 
 - Basic LocalNet development environment
 - Tendermint Core equivalent for a proof-of-stake blockchain custom-built for Pocket
 
-## Non-goals:
+#### Non-goals:
 
 - Pocket specific utility
 - Devnet infrastructure
 
-## Deliverables
+#### Deliverables
 
-### General Tooling
+##### General Tooling
   - [ ] Keybase functionality to import/create/export keys
   - [ ] Base CLI 
   - [ ] Base RPC
   - [ ] Logging infrastructure
 
-### Validator-only logic
+##### Validator-only logic
   - [ ] Stake
   - [ ] Unstake
   - [ ] Pause
   - [ ] Unpause
 
-### Validator slashing & rewards
+##### Validator slashing & rewards
   - [ ] Slashing & jailing for not signing blocks
   - [ ] Slashing & jailing for for double signing blocks
   - [ ] Reward Validators for producing a block
 
-### Consensus
+##### Consensus
   - [ ] BFT Hotstuff Consensus implementation
   - [ ] Consistency and liveness guarentees satisfied to the specification
   - [ ] Pacemaker module  
   - [ ] Replica block validation
 
-### Mempool
+##### Mempool
   - [ ] Mempool reaping and block production
   - [ ] Mempool and TxIndexer  
 
-### State sync:
+##### State sync:
   - [ ] Block by block
   - [ ] Block replay  
 
 ### M2. Pocket DoS (Devnet of Servicers)
 
-## Goals
+#### Goals
 
 - [ ] Build supporting infrastructure & automation in conjunction to Milestones 1 & 3
 - [ ] Deploy Pocket V1 to DevNet
 - [ ] Build services to enable visiblity and benchmarking via telemetry and logging
 
-## Deliverables
+#### Deliverables
 
-### Logging
+##### Logging
 
 - [ ] Log dashboards namespaced & filterable by source & target module
 - [ ] Log dashboards namespaced & filterable by log level (error, debug, etc…)
 
-### Telemetry
+##### Telemetry
 
 - [ ] Visibility and insight into HotPOKT algorithm
 - [ ] Visibility and insight into RainTree algorithm
 - [ ] Standard services benchmarking & telemetry
 - [ ] A spec / document / list of metrics being tracked
 
-### Guides
+##### Guides
 
 - [ ] Instructions on how to run a LocalNet for development
 - [ ] Instructions on how to run a DevNet for development
@@ -114,42 +114,42 @@ gantt
 
 ### M3. Pocket RoS (Relay or Slash)
 
-## Goals:
+#### Goals:
 
 - Pocket Network utility-specific business logic including:
   - Devnet supporting ETH relays
   - Initial implementation of reward distribution, report cards, etc...
 
-## Deliverables
+#### Deliverables
 
-### Session Protocol
+##### Session Protocol
   - [ ] GeoZone support
   - [ ] RelayChains implementation
 
-### Service Node Protocol
+##### Service Node Protocol
   - [ ] Report Cards
   - [ ] Salary Protocol
   - [ ] Pause & Unpause
 
-### Relay Protocol
+##### Relay Protocol
   - [ ] In process servicing / validation
   - [ ] Storage and submission of relays
 
-### Fisherman Protocol
+##### Fisherman Protocol
   - [ ] Report Cards
   - [ ] Sampling Protocol
   - [ ] Pause & Unpause
 
-### App Protocol
+##### App Protocol
   - [ ] Application Authentication Tokens
   - [ ] Pause & Unpause
 
-### Gov Protocol
+##### Gov Protocol
   - [ ] DAO approved Fish
 
 ### M4. Pocket CoS (Cloud of Services)
 
-## Goals:
+#### Goals:
 
 *Note: more details will be added to this milestone in the future*
 
@@ -159,7 +159,7 @@ gantt
 
 ### M5. Pocket IoS (Innovate or Skip)
 
-## Goals:
+#### Goals:
 
 *Note: more details will be added to this milestone in the future*
 
@@ -169,7 +169,7 @@ gantt
 
 ### M6. Pocket FoS (Finish or Serve)
 
-## Goals:
+#### Goals:
 
 *Note: more details will be added to this milestone in the future*
 
@@ -178,6 +178,6 @@ gantt
 - Prepare a post-Mainnet launch set of plans
 - Launch V1 Mainnet
 
-### M7. Pocket NoS (North Star)
+## M7. Pocket NoS (North Star)
 
 Shoot for the ✨ and we will land on the 🌕
