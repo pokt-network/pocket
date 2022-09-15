@@ -371,6 +371,7 @@ todo_count:
 todo_this_commit:
 	grep --exclude-dir={.git,vendor,prototype,.vscode} --exclude=Makefile -r -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT"
 
+# Default values for gen_genesis_and_config
 numValidators ?= 4
 numServiceNodes ?= 1
 numApplications ?= 1
