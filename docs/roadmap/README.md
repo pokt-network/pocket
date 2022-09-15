@@ -16,6 +16,8 @@ Note that this is a live document and is subject to change. It is managed by the
 
 This Github repo will be updated to reflect all the Milestones listed here, and smaller milestones, projects, tasks are going to be created and updated on an ongoing basis.
 
+For more detailed information about the progress of V1 development, check out our [project board](https://github.com/orgs/pokt-network/projects/142/views/12).
+
 ## V1 Roadmap
 
 ```mermaid
