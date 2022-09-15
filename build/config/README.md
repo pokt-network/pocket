@@ -1,47 +1,49 @@
-## Genesis and Configuration Generator
+# Genesis and Configuration Generator
 
-The Genesis and Configuration generator creates V1 config and genesis files with coordinated key pairings for `localnet`
-and `devnet` usage.
+The Genesis and Configuration generator creates V1 config and genesis files with coordinated key pairings for `localnet` and `devnet` usage.
 
-The purpose of this utility is to enable efficient and accurate `auto-generation` of configuration/genesis files anytime
-the source structures change during V1 development.
+The purpose of this utility is to enable efficient and accurate `auto-generation` of configuration/genesis files anytime the source structures change during V1 development.
 
-### *Disclaimer*
+## _Disclaimer_
 
 Both the genesis and configuration contents and generation are living WIPs that are subject to rapid, breaking changes.
 
 It is not recommended at this time to build infrastructure components that rely on the generator until it is stable
 
-### Origin Document
+## Origin Document
 
-Currently, the Genesis and Configuration generator is necessary to create development `localnet` environments
-for implementing V1. A current example of this is the `make compose_and_watch` debug utility that generates a localnet
-in a `docker compose` - injecting these appropriate config.json and genesis.json files
+Currently, the Genesis and Configuration generator is necessary to create development `localnet` environments for iterating on V1. A current example (as of 09/2022) of this is the `make compose_and_watch` debug utility that generates a `localnet` using `docker-compose` by injecting the appropriate `config.json` and `genesis.json` files.
 
-### Usage
+## Usage
 
-From source at project root: `go run ./build/config/main.go --numFishermen=1`
+The output files are written to `./build/config/`.
 
-From makefile at project root: `make numValidators=5 numServiceNodes=1 genesis_and_config`
+### Using Source
 
-The files output to the `./build/config/` directory
+From the project's root:
 
-#### Parameters
+```bash
+go run ./build/config/main.go --numFishermen=1
+```
 
-`numValidators` is a string flag that sets the number of validators that will be in the network, this affects the
-contents of the genesis file as well as the number of config files
+### Using Make Target
 
-`numServiceNodes` is a string flag that set the number of service nodes that will be in the network's genesis file
+```bash
+make numValidators=5 numServiceNodes=1 genesis_and_config
+```
 
-`numApplications` is a string flag that set the number of applications that will be in the network's genesis file
+### Parameters
 
-`numFishermen` is a string flag that set the number of fishermen that will be in the network's genesis file
+- `numValidators` is a string flag that sets the number of validators that will be in the network, this affects the
+  contents of the genesis file as well as the number of config files
+- `numServiceNodes` is a string flag that set the number of service nodes that will be in the network's genesis file
+- `numApplications` is a string flag that set the number of applications that will be in the network's genesis file
+- `numFishermen` is a string flag that set the number of fishermen that will be in the network's genesis file
 
-### **NOTE**
+## **WIP NOTE**
 
-The config and genesis files located in the `./build/config/` directory are needed for `make compose_and_watch` 
-and `make client_start && make client_connect`. 
+The config and genesis files located in the `./build/config/` directory are needed for following the local development instructions in `docs/development/README.md`.
 
-These builds expect four (valdiator) config and a single genesis file.
+These builds currently expect four (validator) `config.json` file and a single `genesis.json` file.
 
-Take caution when overwriting / deleting the files with different configurations
+Until #186 is implemented, take caution when overwriting / deleting the files with different configurations.
