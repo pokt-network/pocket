@@ -12,10 +12,10 @@ import (
 // Utility to generate config and genesis files
 
 const (
-	DefaultGenesisFilePath = "build/config/genesis.json"
-	DefaultConfigFilePath  = "build/config/config"
-	JSONSubfix             = ".json"
-	RWOPerm                = 0777
+	defaultGenesisFilePath = "build/config/genesis.json"
+	defaultConfigFilePath  = "build/config/config"
+	jsonSubfix             = ".json"
+	rwoPerm                = 0777
 )
 
 var (
@@ -35,12 +35,12 @@ func main() {
 	genesis, validatorPrivateKeys := test_artifacts.NewGenesisState(nValidators, nServiceNodes, nFishermen, nApplications)
 	configs := test_artifacts.NewDefaultConfigs(validatorPrivateKeys)
 	genesisJson, _ := json.MarshalIndent(genesis, "", "  ")
-	if err := ioutil.WriteFile(DefaultGenesisFilePath, genesisJson, RWOPerm); err != nil {
+	if err := ioutil.WriteFile(defaultGenesisFilePath, genesisJson, rwoPerm); err != nil {
 		panic(err)
 	}
 	for i, config := range configs {
 		configJson, _ := json.MarshalIndent(config, "", "  ")
-		if err := ioutil.WriteFile(DefaultConfigFilePath+strconv.Itoa(i+1)+JSONSubfix, configJson, RWOPerm); err != nil {
+		if err := ioutil.WriteFile(defaultConfigFilePath+strconv.Itoa(i+1)+jsonSubfix, configJson, rwoPerm); err != nil {
 			panic(err)
 		}
 	}
