@@ -43,12 +43,11 @@ type PostgresContext struct {
 }
 
 func (pg *PostgresContext) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
-	tx, err := pg.GetTxn()
-	return context.TODO(), tx, err
+	return context.TODO(), pg.GetTxn(), nil
 }
 
-func (pg *PostgresContext) GetTxn() (pgx.Tx, error) {
-	return pg.tx, nil
+func (pg *PostgresContext) GetTxn() pgx.Tx {
+	return pg.tx
 }
 
 func (pg *PostgresContext) GetCtx() (context.Context, error) {
