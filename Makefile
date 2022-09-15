@@ -371,7 +371,19 @@ todo_count:
 todo_this_commit:
 	grep --exclude-dir={.git,vendor,prototype,.vscode} --exclude=Makefile -r -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT"
 
-.PHONY: genesis_and_config
-## Generate the genesis and config files
-genesis_and_config:
+numValidators ?= 4
+numServiceNodes ?= 1
+numApplications ?= 1
+numFishermen ?= 1
+
+.PHONY: gen_genesis_and_config
+## Generate the genesis and config files for LocalNet
+gen_genesis_and_config:
 	go run ./build/config/main.go --numValidators="$(numValidators)" --numServiceNodes="$(numServiceNodes)" --numApplications="$(numApplications)" --numFishermen="$(numFishermen)"
+
+.PHONY: gen_genesis_and_config
+## Clear the genesis and config files for LocalNet
+clear_genesis_and_config:
+	rm build/config/gen.*.json
+
+rm build/config/gen.*.json

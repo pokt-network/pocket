@@ -29,7 +29,7 @@ go run ./build/config/main.go --numFishermen=1
 ### Using Make Target
 
 ```bash
-make numValidators=5 numServiceNodes=1 genesis_and_config
+make numValidators=5 numServiceNodes=1 gen_genesis_and_config
 ```
 
 ### Parameters
