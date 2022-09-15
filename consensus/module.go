@@ -65,7 +65,7 @@ type ConsensusModule struct {
 	MaxBlockBytes uint64
 }
 
-func Create(configPath, genesisPath string, useRandomPK bool) (modules.ConsensusModule, error) {
+func Create(configPath, genesisPath string, useRandomPK bool, configOptions ...func(*typesCons.ConsensusConfig)) (modules.ConsensusModule, error) {
 	cm := new(ConsensusModule)
 	c, err := cm.InitConfig(configPath)
 	if err != nil {
@@ -76,6 +76,9 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 		return nil, err
 	}
 	cfg := c.(*typesCons.ConsensusConfig)
+	for _, o := range configOptions {
+		o(cfg)
+	}
 	genesis := g.(*typesCons.ConsensusGenesisState)
 	leaderElectionMod, err := leader_election.Create(cfg, genesis)
 	if err != nil {
