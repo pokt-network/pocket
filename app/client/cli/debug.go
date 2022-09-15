@@ -7,7 +7,9 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/pokt-network/pocket/consensus"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/p2p"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared"
 	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/debug"
@@ -179,11 +181,15 @@ func initDebug(remoteCLIURL string) {
 			log.Fatalf(err.Error())
 		}
 
-		consensusMod, err = consensus.Create(defaultConfigPath, defaultGenesisPath, true) // TECHDEBT: extra param required for injecting private key hack for debug client
+		consensusMod, err = consensus.Create(defaultConfigPath, defaultGenesisPath, true, func(cc *typesCons.ConsensusConfig) {
+			cc.PrivateKey = clientPrivateKey.String()
+		})
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 		}
-		p2pMod, err = p2p.Create(defaultConfigPath, defaultGenesisPath, true) // TECHDEBT: extra param required for injecting private key hack for debug client
+		p2pMod, err = p2p.Create(defaultConfigPath, defaultGenesisPath, true, func(pp *typesP2P.P2PConfig) {
+			pp.PrivateKey = clientPrivateKey.String()
+		})
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 		}
