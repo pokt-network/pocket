@@ -13,8 +13,8 @@ import (
 // Utility to generate config and genesis files
 
 const (
-	defaultGenesisFilePath = "build/config/genesis.json"
-	defaultConfigFilePath  = "build/config/config"
+	defaultGenesisFilePath = "build/config/gen.genesis.json"
+	defaultConfigFilePath  = "build/config/gen.config"
 	jsonSuffix             = ".json"
 	rwoPerm                = 0777
 )
