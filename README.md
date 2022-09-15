@@ -39,7 +39,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Shared Architecture](shared/README.md)
 - [Utility Architecture](utility/doc/README.md)
 - _Coming Soon: Consensus Architecture_ // TODO(olshansky): needs a README file with proper code structure
-- [Persistence Architecture](persistence/README.md)
+- [Persistence Architecture](persistence/docs/README.md)
 - [P2P Architecture](p2p/README.md)
 
 ### Changelogs
@@ -47,7 +47,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - _Coming Soon: Shared Changelog_
 - [Utility Changelog](utility/doc/CHANGELOG.md)
 - [Consensus Changelog](consensus/CHANGELOG.md)
-- [Persistence Changelog](persistence/CHANGELOG.md)
+- [Persistence Changelog](persistence/docs/CHANGELOG.md)
 - [P2P Changelog](p2p/CHANGELOG.md)
 - _Coming Soon: Telemetry Changelog_
 
