@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"io/ioutil"
 	"log"
 	"strconv"
+
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 )
 
 // Utility to generate config and genesis files
@@ -14,16 +15,16 @@ import (
 const (
 	defaultGenesisFilePath = "build/config/genesis.json"
 	defaultConfigFilePath  = "build/config/config"
-	jsonSubfix             = ".json"
+	jsonSuffix             = ".json"
 	rwoPerm                = 0777
 )
 
 var (
-	numValidators = flag.String("numValidators", "4", "set the number of validators that will be in the network, "+
+	numValidators = flag.String("numValidators", "4", "number of validators that will be in the network, "+
 		"this affects the contents of the genesis file as well as the # of config files")
-	numServiceNodes = flag.String("numServiceNodes", "1", "set the number of service nodes that will be in the network's genesis file")
-	numApplications = flag.String("numApplications", "1", "set the number of applications that will be in the network's genesis file")
-	numFishermen    = flag.String("numFishermen", "1", "set the number of fishermen that will be in the network's genesis file")
+	numServiceNodes = flag.String("numServiceNodes", "1", "number of service nodes that will be in the network's genesis file")
+	numApplications = flag.String("numApplications", "1", "number of applications that will be in the network's genesis file")
+	numFishermen    = flag.String("numFishermen", "1", "number of fishermen that will be in the network's genesis file")
 )
 
 func init() {
@@ -34,13 +35,19 @@ func main() {
 	nValidators, nServiceNodes, nFishermen, nApplications := catchEmptyFlags()
 	genesis, validatorPrivateKeys := test_artifacts.NewGenesisState(nValidators, nServiceNodes, nFishermen, nApplications)
 	configs := test_artifacts.NewDefaultConfigs(validatorPrivateKeys)
-	genesisJson, _ := json.MarshalIndent(genesis, "", "  ")
-	if err := ioutil.WriteFile(defaultGenesisFilePath, genesisJson, rwoPerm); err != nil {
+	genesisJson, err := json.MarshalIndent(genesis, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	if err = ioutil.WriteFile(defaultGenesisFilePath, genesisJson, rwoPerm); err != nil {
 		panic(err)
 	}
 	for i, config := range configs {
-		configJson, _ := json.MarshalIndent(config, "", "  ")
-		if err := ioutil.WriteFile(defaultConfigFilePath+strconv.Itoa(i+1)+jsonSubfix, configJson, rwoPerm); err != nil {
+		configJson, err := json.MarshalIndent(config, "", "  ")
+		if err != nil {
+			panic(err)
+		}
+		if err := ioutil.WriteFile(defaultConfigFilePath+strconv.Itoa(i+1)+jsonSuffix, configJson, rwoPerm); err != nil {
 			panic(err)
 		}
 	}
