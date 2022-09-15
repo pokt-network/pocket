@@ -94,8 +94,6 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 		// Large
 		{59050, 11},
 		// INVESTIGATE(olshansky/team): Does not scale to 1,000,000,000 nodes
-		{1000000, 13},
-		// INVESTIGATE(olshansky/team): Does not scale to 1,000,000,000 nodes
 		// {1000000000, 19},
 	}
 
