@@ -1,0 +1,15 @@
+syntax = "proto3";
+package shared;
+
+option go_package = "github.com/pokt-network/pocket/shared/indexer";
+
+message DefaultTxResult {
+  bytes tx = 1;      // The bytes of the indexed transaction
+  int64 height = 2;  // The block height at which the transaction was included
+  int32 index = 3;   // The order (within a block) where the proposer included the transaction
+  int32 result_code = 4; // INVESTIGATE(andrew): look into having a `utility.Code` enum for this
+  string error = 5; // INVESTIGATE(andrew): look into having a `utility.Error` enum for this
+  string signer_addr = 6;
+  string recipient_addr = 7;
+  string message_type = 8; // TODO(andrew): Add an enum for the different message types
+}

@@ -5,17 +5,19 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
-)
-
-const (
-	filePermissions    = 0777
-	genesisPath        = "build/config/genesis.json"
-	configPathTemplate = "build/config/config%d.json"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 )
 
 // Utility to generate config and genesis files
-// TODO(andrew): Add a make target to help trigger this from cmdline
+// TODO(pocket/issues/182): Add a make target to help trigger this from cmdline
+
+const (
+	defaultGenesisFilePath = "build/config/genesis.json"
+	defaultConfigFilePath  = "build/config/config"
+	jsonSubfix             = ".json"
+	rwoPerm                = 0777
+)
+
 func main() {
 	genesis, validatorPrivateKeys := test_artifacts.NewGenesisState(4, 1, 1, 1)
 	configs := test_artifacts.NewDefaultConfigs(validatorPrivateKeys)
@@ -23,7 +25,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if err := ioutil.WriteFile(genesisPath, genesisJson, filePermissions); err != nil {
+	if err := ioutil.WriteFile(defaultGenesisFilePath, genesisJson, rwoPerm); err != nil {
 		panic(err)
 	}
 	for i, config := range configs {
@@ -31,7 +33,8 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		if err := ioutil.WriteFile(fmt.Sprintf(configPathTemplate, i+1), configJson, filePermissions); err != nil {
+		filePath := fmt.Sprintf("%s%d%s", defaultConfigFilePath, i+1, jsonSubfix)
+		if err := ioutil.WriteFile(filePath, configJson, rwoPerm); err != nil {
 			panic(err)
 		}
 	}

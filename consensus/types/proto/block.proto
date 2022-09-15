@@ -1,0 +1,24 @@
+syntax = "proto3";
+package consensus;
+
+option go_package = "github.com/pokt-network/pocket/consensus/types";
+
+import "google/protobuf/timestamp.proto";
+
+// TODO (Team) Discuss all tendermint legacy
+message BlockHeader {
+  int64 height = 1;
+  string hash = 2;
+  string networkId = 3; // used to differentiate what network the chain is on (Tendermint legacy)
+  google.protobuf.Timestamp time = 4;
+  uint32 numTxs = 5;
+  int64 totalTxs = 6; // Total = total in the entire chain Num = total in block (Tendermint legacy)
+  string lastBlockHash = 7;
+  bytes proposerAddress = 8;
+  bytes QuorumCertificate = 9;
+}
+
+message Block {
+  BlockHeader blockHeader = 1;
+  repeated bytes transactions = 2;
+}

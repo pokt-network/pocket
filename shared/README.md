@@ -19,6 +19,7 @@
 
 ```bash
 shared             # [to-be-refactored] All of this is bound to change
+├── codec          # App wide encoding (currently protobuf)
 ├── config         # Utilities to load and verify Node configurations
 ├── crypto         # Shared crypto utilities specific to Pocket
 ├── modules        # Interfaces to the core Pocket modules
@@ -29,11 +30,8 @@ shared             # [to-be-refactored] All of this is bound to change
 |   ├── utility_module.go
 |   ├── persistence_module.go
 |   ├── telemetry_module.go
-├── telemetry      # Cross-module telemetry
-├── tests          # Cross-module and shared-utility tests
-├── types          # Types (structs & protos) shared across modules
-|   ├──            # Please reach out to the team if you need a walk-through for these
-├── utils          # Various helper utilities used across the repo
+|   ├── types.go   # Shared interfaces 
+├── tests          # Cross-module and shared testing_artifacts (to be refactored to make testing more modular)
 ├── node.go        # The main entrypoint to the Pocket Node
 ├── bus.go         # Implementation of the Bus module
 ```

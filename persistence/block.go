@@ -3,9 +3,8 @@ package persistence
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"github.com/pokt-network/pocket/persistence/types"
 	"log"
-
-	"github.com/pokt-network/pocket/persistence/schema"
 )
 
 // OPTIMIZE(team): get from blockstore or keep in memory
@@ -15,7 +14,7 @@ func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error)
 		return 0, err
 	}
 
-	err = txn.QueryRow(ctx, schema.GetLatestBlockHeightQuery()).Scan(&latestHeight)
+	err = txn.QueryRow(ctx, types.GetLatestBlockHeightQuery()).Scan(&latestHeight)
 	return
 }
 
@@ -27,7 +26,7 @@ func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
 	}
 
 	var hexHash string
-	err = txn.QueryRow(ctx, schema.GetBlockHashQuery(height)).Scan(&hexHash)
+	err = txn.QueryRow(ctx, types.GetBlockHashQuery(height)).Scan(&hexHash)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +61,7 @@ func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []
 		return err
 	}
 
-	_, err = tx.Exec(ctx, schema.InsertBlockQuery(height, hash, proposerAddr, quorumCert))
+	_, err = tx.Exec(ctx, types.InsertBlockQuery(height, hash, proposerAddr, quorumCert))
 	return err
 }
 

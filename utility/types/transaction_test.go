@@ -1,10 +1,10 @@
 package types
 
 import (
+	"github.com/pokt-network/pocket/shared/codec"
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 )
@@ -25,7 +25,7 @@ func NewTestingMsg(_ *testing.T) Message {
 }
 
 func NewUnsignedTestingTransaction(t *testing.T) Transaction {
-	codec := types.GetCodec()
+	codec := codec.GetCodec()
 	msg := NewTestingMsg(t)
 
 	anyMsg, err := codec.ToAny(msg)
@@ -33,7 +33,7 @@ func NewUnsignedTestingTransaction(t *testing.T) Transaction {
 
 	return Transaction{
 		Msg:   anyMsg,
-		Nonce: types.BigIntToString(types.RandBigInt()),
+		Nonce: BigIntToString(RandBigInt()),
 	}
 }
 
@@ -95,32 +95,32 @@ func TestTransaction_ValidateBasic(t *testing.T) {
 	txNoNonce := proto.Clone(&tx).(*Transaction)
 	txNoNonce.Nonce = ""
 	er = txNoNonce.ValidateBasic()
-	require.Equal(t, types.ErrEmptyNonce().Code(), er.Code())
+	require.Equal(t, ErrEmptyNonce().Code(), er.Code())
 
 	txInvalidMessageAny := proto.Clone(&tx).(*Transaction)
 	txInvalidMessageAny.Msg = nil
 	er = txInvalidMessageAny.ValidateBasic()
-	require.Equal(t, types.ErrProtoFromAny(er).Code(), er.Code())
+	require.Equal(t, ErrProtoFromAny(er).Code(), er.Code())
 
 	txEmptySig := proto.Clone(&tx).(*Transaction)
 	txEmptySig.Signature = nil
 	er = txEmptySig.ValidateBasic()
-	require.Equal(t, types.ErrEmptySignature().Code(), er.Code())
+	require.Equal(t, ErrEmptySignature().Code(), er.Code())
 
 	txEmptyPublicKey := proto.Clone(&tx).(*Transaction)
 	txEmptyPublicKey.Signature.PublicKey = nil
 	er = txEmptyPublicKey.ValidateBasic()
-	require.Equal(t, types.ErrEmptyPublicKey().Code(), er.Code())
+	require.Equal(t, ErrEmptyPublicKey().Code(), er.Code())
 
 	txInvalidPublicKey := proto.Clone(&tx).(*Transaction)
 	txInvalidPublicKey.Signature.PublicKey = []byte("publickey")
 	err = txInvalidPublicKey.ValidateBasic()
-	require.Equal(t, types.ErrNewPublicKeyFromBytes(err).Code(), err.Code())
+	require.Equal(t, ErrNewPublicKeyFromBytes(err).Code(), err.Code())
 
 	txInvalidSignature := proto.Clone(&tx).(*Transaction)
 	tx.Signature.PublicKey = testingSenderPublicKey.Bytes()
 	txInvalidSignature.Signature.Signature = []byte("signature")
 	er = txInvalidSignature.ValidateBasic()
-	require.Equal(t, types.ErrSignatureVerificationFailed().Code(), er.Code())
+	require.Equal(t, ErrSignatureVerificationFailed().Code(), er.Code())
 
 }

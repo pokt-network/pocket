@@ -3,23 +3,36 @@ package utility
 import (
 	"log"
 
+	"github.com/pokt-network/pocket/utility/types"
+
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 var _ modules.UtilityModule = &UtilityModule{}
+var _ modules.UtilityConfig = &types.UtilityConfig{}
 
 type UtilityModule struct {
 	bus     modules.Bus
 	Mempool types.Mempool
 }
 
-func Create(_ *genesis.Config, _ *genesis.GenesisState) (modules.UtilityModule, error) {
+const (
+	UtilityModuleName = "utility"
+)
+
+func Create(configPath, genesisPath string) (modules.UtilityModule, error) {
 	return &UtilityModule{
 		// TODO: Add `maxTransactionBytes` and `maxTransactions` to cfg.Utility
 		Mempool: types.NewMempool(1000, 1000),
 	}, nil
+}
+
+func (u *UtilityModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
+	return // No-op
+}
+
+func (u *UtilityModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
+	return // No-op
 }
 
 func (u *UtilityModule) Start() error {
@@ -28,6 +41,10 @@ func (u *UtilityModule) Start() error {
 
 func (u *UtilityModule) Stop() error {
 	return nil
+}
+
+func (u *UtilityModule) GetModuleName() string {
+	return UtilityModuleName
 }
 
 func (u *UtilityModule) SetBus(bus modules.Bus) {
