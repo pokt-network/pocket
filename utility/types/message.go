@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
 )
@@ -279,7 +280,7 @@ func ValidateStaker(msg MessageStaker) Error {
 }
 
 func getSignBytes(msg Message) []byte {
-	bz, err := types.GetCodec().Marshal(msg)
+	bz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
 		log.Fatalf("must marshal %v", err)
 	}
