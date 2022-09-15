@@ -96,7 +96,7 @@ func (node *Node) Start() error {
 	signalNodeStartedEvent := &debug.PocketEvent{Topic: debug.PocketTopic_POCKET_NODE_TOPIC, Data: nil}
 	node.GetBus().PublishEventToBus(signalNodeStartedEvent)
 
-	log.Println("About to start pocket node main loop..")
+	log.Println("About to start pocket node main loop...")
 
 	// While loop lasting throughout the entire lifecycle of the node to handle asynchronous events
 	for {

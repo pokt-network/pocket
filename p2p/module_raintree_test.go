@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -288,7 +289,7 @@ func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock
 
 	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(func(e *debug.PocketEvent) {
 		wg.Done()
-		fmt.Println("App specific bus mock publishing event to bus")
+		log.Println("App specific bus mock publishing event to bus")
 	}).MaxTimes(1) // Using `MaxTimes` rather than `Times` because originator node implicitly handles the message
 
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()

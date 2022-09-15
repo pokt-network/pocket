@@ -9,7 +9,6 @@ import (
 	"math/big"
 	"math/rand"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -79,14 +78,12 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
-		fmt.Printf("Error creating new context: %v\n", err)
-		f.FailNow()
+		log.Fatalf("Error creating new context: %v\n", err)
 	}
 
 	db, ok := ctx.(persistence.PostgresContext)
 	if !ok {
-		fmt.Println("Error casting RW context to Postgres context")
-		f.FailNow()
+		log.Fatalf("Error casting RW context to Postgres context")
 	}
 
 	f.Cleanup(func() {
@@ -209,10 +206,11 @@ func fuzzSingleProtocolActor(
 			require.NoError(t, err)
 
 			require.ElementsMatch(t, newActor.Chains, newChains, "staked chains not updated")
+			require.NotContains(t, newActor.StakedTokens, "invalid")
 			// TODO(andrew): Use `require.Contains` instead
-			if strings.Contains(newActor.StakedTokens, "invalid") {
-				fmt.Println("")
-			}
+			// if strings.Contains(newActor.StakedTokens, "invalid") {
+			// 	log.Println("")
+			// }
 			require.Equal(t, newActor.StakedTokens, newStakedTokens, "staked tokens not updated")
 			require.Equal(t, newActor.ActorSpecificParam, newActorSpecificParam, "actor specific param not updated")
 		case "GetActorsReadyToUnstake":
