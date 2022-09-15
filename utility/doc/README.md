@@ -185,25 +185,21 @@ $ make test_utility_types && make test_utility_module
 
 ```bash
 utility
-├── account.go # utility context for accounts & pools
-├── actor.go   # utility context for apps, fish, nodes, and validators
-├── block.go   # utility context for blocks
-├── doc        # contains the documentation and changelog
-├── gov.go     # utility context for dao & parameters
-├── module.go  # module implementation and interfaces
-├── proto      # protobuf3 messages that auto-generate into the types directory
-│   ├── actor.proto
-│   ├── message.proto
-│   ├── transaction.proto
-│   └── vote.proto
-├── test           # utility unit tests
+├── account.go     # utility context for accounts & pools
+├── actor.go       # utility context for apps, fish, nodes, and validators
+├── block.go       # utility context for blocks
+├── gov.go         # utility context for dao & parameters
+├── module.go      # module implementation and interfaces
 ├── transaction.go # utility context for transactions including handlers
+├── doc            # contains the documentation and changelog
+├── test           # utility unit tests
 ├── types          # stateless (without relying on persistence) library of utility types
+│   ├── proto          # protobuf3 messages that auto-generate into the types directory
 │   ├── actor.go
+│   ├── error.go
+│   ├── mempool.go
 │   ├── message.go     # payloads of transactions
 │   ├── transaction.go # the finite unit of the block
-│   ├── utils.go
+│   ├── util.go
 │   ├── vote.go        # vote structure for double sign transaction
-└── utility
-    └── types
 ```

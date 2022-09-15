@@ -5,7 +5,10 @@ import (
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types/genesis"
+)
+
+const (
+	LeaderElectionModuleName = "leader_election"
 )
 
 type LeaderElectionModule interface {
@@ -19,7 +22,7 @@ type leaderElectionModule struct {
 	bus modules.Bus
 }
 
-func Create(_ *genesis.Config, _ *genesis.GenesisState) (LeaderElectionModule, error) {
+func Create(_ *typesCons.ConsensusConfig, _ *typesCons.ConsensusGenesisState) (LeaderElectionModule, error) {
 	return &leaderElectionModule{}, nil
 }
 
@@ -30,6 +33,18 @@ func (m *leaderElectionModule) Start() error {
 
 func (m *leaderElectionModule) Stop() error {
 	return nil
+}
+
+func (m *leaderElectionModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
+	return // No-op
+}
+
+func (m *leaderElectionModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
+	return // No-op
+}
+
+func (m *leaderElectionModule) GetModuleName() string {
+	return LeaderElectionModuleName
 }
 
 func (m *leaderElectionModule) SetBus(pocketBus modules.Bus) {
