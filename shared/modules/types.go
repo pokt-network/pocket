@@ -24,6 +24,7 @@ type Config struct {
 	Persistence PersistenceConfig `json:"persistence"`
 	P2P         P2PConfig         `json:"p2p"`
 	Telemetry   TelemetryConfig   `json:"telemetry"`
+	RPC         RPCConfig         `json:"rpc"`
 }
 
 type ConsensusConfig interface {
@@ -57,6 +58,12 @@ type TelemetryConfig interface {
 }
 
 type UtilityConfig interface{}
+
+type RPCConfig interface {
+	GetEnabled() bool
+	GetPort() string
+	GetTimeout() uint64
+}
 
 type PersistenceGenesisState interface {
 	GetAccs() []Account
@@ -227,6 +234,7 @@ var _ IConfig = PersistenceConfig(nil)
 var _ IConfig = P2PConfig(nil)
 var _ IConfig = TelemetryConfig(nil)
 var _ IConfig = UtilityConfig(nil)
+var _ IConfig = RPCConfig(nil)
 
 var _ IGenesis = PersistenceGenesisState(nil)
 var _ IGenesis = ConsensusGenesisState(nil)

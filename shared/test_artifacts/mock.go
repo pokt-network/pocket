@@ -2,6 +2,7 @@ package test_artifacts
 
 import (
 	"fmt"
+
 	"github.com/pokt-network/pocket/shared/modules"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -248,6 +249,26 @@ func (m *MockTelemetryConfig) GetEndpoint() string {
 }
 
 type MockUtilityConfig struct{}
+
+var _ modules.RPCConfig = &MockRPCConfig{}
+
+type MockRPCConfig struct {
+	Enabled bool   `json:"enabled"`
+	Port    string `json:"port"`
+	Timeout uint64 `json:"timeout"`
+}
+
+func (m *MockRPCConfig) GetEnabled() bool {
+	return m.Enabled
+}
+
+func (m *MockRPCConfig) GetPort() string {
+	return m.Port
+}
+
+func (m *MockRPCConfig) GetTimeout() uint64 {
+	return m.Timeout
+}
 
 var _ modules.Params = &MockParams{}
 

@@ -105,7 +105,7 @@ func NewDefaultConfig(i int, pk string) modules.Config {
 			Address:  "0.0.0.0:9000",
 			Endpoint: "/metrics",
 		},
-		Rpc: &genesis.RPCConfig{
+		RPC: &MockRPCConfig{
 			Enabled: true,
 			Port:    DefaultRpcPort,
 			Timeout: DefaultRpcTimeout,
