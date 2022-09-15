@@ -2,13 +2,11 @@ package raintree
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"sort"
 	"strings"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
 // Refer to the P2P specification for a formal description and proof of how the constants are selected
@@ -51,35 +49,6 @@ func (n *rainTreeNetwork) getSelfIndexInAddrBook() (int, bool) {
 		}
 	}
 	return -1, false
-}
-
-func (n *rainTreeNetwork) getFirstTargetAddr(level uint32) (cryptoPocket.Address, bool) {
-	return n.getTarget(level, firstMsgTargetPercentage)
-}
-
-func (n *rainTreeNetwork) getSecondTargetAddr(level uint32) (cryptoPocket.Address, bool) {
-	return n.getTarget(level, secondMsgTargetPercentage)
-}
-
-func (n *rainTreeNetwork) getTarget(level uint32, targetPercentage float64) (cryptoPocket.Address, bool) {
-	// OPTIMIZE(olshansky): We are computing this twice for each message, but it's not that expensive.
-	l := n.getAddrBookLengthAtHeight(level)
-
-	i := int(targetPercentage * float64(l))
-
-	// If the target is 0, it is a reference to self, which is a `Demote` in RainTree terms.
-	// This is handled separately.
-	if i == 0 {
-		return nil, false
-	}
-
-	addrStr := n.addrList[i]
-	if addr, ok := n.addrBookMap[addrStr]; ok {
-		// IMPROVE(olshansky): Consolidate so the debug print contains all (i.e. both) targets in one log line
-		log.Printf("[DEBUG] Target (%0.2f) at height (%d): %s", targetPercentage, level, n.debugMsgTargetString(l, i))
-		return addr.Address, true
-	}
-	return nil, false
 }
 
 // TODO(team): Need to integrate with persistence layer so we are storing this on a per height basis.

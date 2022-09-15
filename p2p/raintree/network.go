@@ -32,6 +32,8 @@ type rainTreeNetwork struct {
 	addrList     []string
 	maxNumLevels uint32
 
+	router *router
+
 	// TECHDEBT(drewsky): What should we use for de-duping messages within P2P?
 	mempool map[uint64]struct{} // TODO (drewsky) replace map implementation (can grow unbounded)
 }
@@ -46,6 +48,8 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) t
 		maxNumLevels: 0,
 		mempool:      make(map[uint64]struct{}),
 	}
+
+	n.router = newRouter(n)
 
 	if err := n.processAddrBookUpdates(); err != nil {
 		// DISCUSS(drewsky): if this errors, the node could still function but not participate in
@@ -75,15 +79,11 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 		return err
 	}
 
-	if addr1, ok := n.getFirstTargetAddr(level); ok {
-		if err = n.networkSendInternal(bz, addr1); err != nil {
-			log.Println("Error sending to peer during broadcast: ", err)
-		}
-	}
-
-	if addr2, ok := n.getSecondTargetAddr(level); ok {
-		if err = n.networkSendInternal(bz, addr2); err != nil {
-			log.Println("Error sending to peer during broadcast: ", err)
+	for _, target := range n.router.GetTargetsAtLevel(level) {
+		if target.ShouldSendInternal() {
+			if err = n.networkSendInternal(bz, target.Address); err != nil {
+				log.Println("Error sending to peer during broadcast: ", err)
+			}
 		}
 	}
 

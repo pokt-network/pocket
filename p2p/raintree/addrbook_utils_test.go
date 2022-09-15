@@ -11,6 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	serviceUrlFormat = "val_%d"
+)
+
 type ExpectedRainTreeNetworkConfig struct {
 	numNodes          int
 	numExpectedLevels int
@@ -89,6 +93,8 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 		{9, 2},
 		// Large
 		{59050, 11},
+		// INVESTIGATE(olshansky/team): Does not scale to 1,000,000,000 nodes
+		{1000000, 13},
 		// INVESTIGATE(olshansky/team): Does not scale to 1,000,000,000 nodes
 		// {1000000000, 19},
 	}
@@ -177,13 +183,13 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 	require.Equal(t, i, 0)
 
 	for _, target := range expectedMsgProp.targets {
-		addr, found := network.getFirstTargetAddr(uint32(target.level))
-		require.True(t, found)
-		require.Equal(t, addr, cryptoPocket.Address(target.left))
+		actualTargets := network.router.GetTargetsAtLevel(uint32(target.level))
 
-		addr, found = network.getSecondTargetAddr(uint32(target.level))
-		require.True(t, found)
-		require.Equal(t, addr, cryptoPocket.Address(target.right))
+		require.True(t, actualTargets[0].ShouldSendInternal())
+		require.Equal(t, actualTargets[0].Address, cryptoPocket.Address(target.left))
+
+		require.True(t, actualTargets[1].ShouldSendInternal())
+		require.Equal(t, actualTargets[1].Address, cryptoPocket.Address(target.right))
 	}
 }
 
@@ -194,7 +200,10 @@ func getAlphabetAddrBook(n int) (addrBook types.AddrBook) {
 		if i >= n {
 			return
 		}
-		addrBook = append(addrBook, &types.NetworkPeer{Address: []byte{byte(ch)}})
+		addrBook = append(addrBook, &types.NetworkPeer{
+			ServiceUrl: fmt.Sprintf(serviceUrlFormat, i),
+			Address:    []byte{byte(ch)},
+		})
 	}
 	return
 }
