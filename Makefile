@@ -379,11 +379,9 @@ numFishermen ?= 1
 .PHONY: gen_genesis_and_config
 ## Generate the genesis and config files for LocalNet
 gen_genesis_and_config:
-	go run ./build/config/main.go --numValidators="$(numValidators)" --numServiceNodes="$(numServiceNodes)" --numApplications="$(numApplications)" --numFishermen="$(numFishermen)"
+	go run ./build/config/main.go --genPrefix="gen." --numValidators=${numValidators} --numServiceNodes=${numServiceNodes} --numApplications=${numApplications} --numFishermen=${numFishermen}
 
 .PHONY: gen_genesis_and_config
 ## Clear the genesis and config files for LocalNet
 clear_genesis_and_config:
 	rm build/config/gen.*.json
-
-rm build/config/gen.*.json
