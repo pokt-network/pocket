@@ -42,13 +42,16 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
 }
 
-func Create(configPath, genesisPath string, useRandomPK bool) (m modules.P2PModule, err error) {
+func Create(configPath, genesisPath string, useRandomPK bool, configOptions ...func(*typesP2P.P2PConfig)) (m modules.P2PModule, err error) {
 	log.Println("Creating network module")
 	c, err := new(p2pModule).InitConfig(configPath)
 	if err != nil {
 		return nil, err
 	}
 	cfg := c.(*typesP2P.P2PConfig)
+	for _, o := range configOptions {
+		o(cfg)
+	}
 	l, err := CreateListener(cfg)
 	if err != nil {
 		return nil, err
