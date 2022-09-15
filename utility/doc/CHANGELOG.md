@@ -7,8 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.3] - 2022-09-15
+
+### Code cleanup
+
+- Consolidated `TransactionHash` to call a single implementation in `shared/crypto/sha3`
+- Extracted function calls from places where we were using the same logic
+
 ## [0.0.0.2] - 2022-08-25
+
 **Encapsulate structures previously in shared [#163](github.com/pokt-network/pocket/issues/163)**
+
 - Ensured proto structures implement shared interfaces
 - `UtilityConfig` uses shared interfaces in order to accept `MockUtilityConfig` in test_artifacts
 - Moved all utilty tests from shared to tests package
@@ -18,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.1] - 2022-07-20
 
 ### Code cleanup
+
 - Removed transaction fees from the transaction structure as fees will be enforced at the state level
 - Removed actor specific messages (besides DoubleSign) and added actorType field to the struct
 - Removed pause messages and functionality as it is out of scope for the current POS iteration
