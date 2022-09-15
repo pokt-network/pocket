@@ -1,0 +1,16 @@
+syntax = "proto3";
+package consensus;
+
+option go_package = "github.com/pokt-network/pocket/consensus/types";
+
+message ConsensusConfig {
+  string private_key = 1;
+  uint64 max_mempool_bytes = 2; // TODO(olshansky): add unit tests for this
+  PacemakerConfig pacemaker_config = 3;
+}
+
+message PacemakerConfig {
+  uint64 timeout_msec = 1;
+  bool manual = 2;
+  uint64 debug_time_between_steps_msec = 3;
+}
