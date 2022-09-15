@@ -81,6 +81,8 @@ This is a general set of technical links and recommended reading our team has fo
   - This is a Github discussion between various Cosmos contributors of why and how to deprecate IAVL and goes into an intensive discussion of Merkle Tree alternatives
 - [State commitment and storage review](https://paper.dropbox.com/doc/State-commitments-and-storage-review--Box9ruOvLDPaPc6ykc5XDnVmAg-wKl2RINZWD9I0DUmZIFwQ)
   - This research report was a result of the discussion above and goes in depth into state commitments and storage alternatives
+- [Plasma Core Merkle Sum Tree](https://plasma-core.readthedocs.io/en/latest/specs/sum-tree.html)
+  - A good reference to understand some of the underlying cryptography in V0's proof/claim lifecycle 9934927 (Add a couple more helpful links)
 
 ### Ethereum
 
@@ -104,6 +106,7 @@ This is a general set of technical links and recommended reading our team has fo
   - [5P;1R - Celestia (LazyLedger) White Paper](https://olshansky.substack.com/p/5p1r-celestia-lazyledger-white-paper)
   - [5P;1R - Ethereum's Modified Merkle Patricia Trie](https://olshansky.substack.com/p/5p1r-ethereums-modified-merkle-patricia)
   - [5P;1R - Bitcoin's Elliptic Curve Cryptography](https://olshansky.substack.com/p/5p1r-bitcoins-elliptic-curve-cryptography)
+  - [5P;1R - Jellyfish Merkle Tree](https://olshansky.substack.com/p/5p1r-jellyfish-merkle-tree)
 
 #### General Blogs
 
