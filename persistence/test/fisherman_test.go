@@ -2,10 +2,10 @@ package test
 
 import (
 	"encoding/hex"
-	"fmt"
-	"github.com/pokt-network/pocket/persistence/types"
 	"log"
 	"testing"
+
+	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -242,15 +242,15 @@ func createAndInsertDefaultTestFisherman(db *persistence.PostgresContext) (*type
 	}
 	addrBz, err := hex.DecodeString(fisherman.Address)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", fisherman.Address))
+		log.Fatalf("an error occurred converting address to bytes %s", fisherman.Address)
 	}
 	pubKeyBz, err := hex.DecodeString(fisherman.PublicKey)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", fisherman.PublicKey))
+		log.Fatalf("an error occurred converting pubKey to bytes %s", fisherman.PublicKey)
 	}
 	outputBz, err := hex.DecodeString(fisherman.Output)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", fisherman.Output))
+		log.Fatalf("an error occurred converting output to bytes %s", fisherman.Output)
 	}
 	return fisherman, db.InsertFisherman(
 		addrBz,
