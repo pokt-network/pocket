@@ -2,21 +2,23 @@ package test
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"math/rand"
+	"os"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
+
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/modules"
-	sharedTest "github.com/pokt-network/pocket/shared/tests"
-	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
-	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
+	sharedTest "github.com/pokt-network/pocket/shared/test_artifacts"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -46,9 +48,7 @@ var (
 
 	testSchema = "test_schema"
 )
-
-// TODO(olshansky): Find a way to avoid this global test variable
-var testPersistenceMod modules.PersistenceModule
+var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 
 // See https://github.com/ory/dockertest as reference for the template of this code
 // Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
@@ -56,6 +56,8 @@ func TestMain(m *testing.M) {
 	pool, resource, dbUrl := sharedTest.SetupPostgresDocker()
 	testPersistenceMod = newTestPersistenceModule(dbUrl)
 	m.Run()
+	os.Remove(testingConfigFilePath)
+	os.Remove(testingGenesisFilePath)
 	sharedTest.CleanupPostgresDocker(m, pool, resource)
 }
 
@@ -96,20 +98,16 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 
 // TODO(andrew): Take in `t testing.T` as a parameter and error if there's an issue
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
-	cfg := &genesis.Config{
-		Base:      &genesis.BaseConfig{},
-		Consensus: &genesis.ConsensusConfig{},
-		Utility:   &genesis.UtilityConfig{},
-		Persistence: &genesis.PersistenceConfig{
+	cfg := modules.Config{
+		Persistence: &types.PersistenceConfig{
 			PostgresUrl:    databaseUrl,
 			NodeSchema:     testSchema,
 			BlockStorePath: "",
 		},
-		P2P:       &genesis.P2PConfig{},
-		Telemetry: &genesis.TelemetryConfig{},
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
-	persistenceMod, err := persistence.Create(cfg, genesisState)
+	createTestingGenesisAndConfigFiles(cfg, genesisState)
+	persistenceMod, err := persistence.Create(testingConfigFilePath, testingGenesisFilePath)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
@@ -119,9 +117,9 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
 func fuzzSingleProtocolActor(
 	f *testing.F,
-	newTestActor func() (schema.BaseActor, error),
-	getTestActor func(db *persistence.PostgresContext, address string) (*schema.BaseActor, error),
-	protocolActorSchema schema.ProtocolActorSchema) {
+	newTestActor func() (types.BaseActor, error),
+	getTestActor func(db *persistence.PostgresContext, address string) (*types.BaseActor, error),
+	protocolActorSchema types.ProtocolActorSchema) {
 
 	db := NewFuzzTestPostgresContext(f, 0)
 
@@ -176,9 +174,9 @@ func fuzzSingleProtocolActor(
 					newStakedTokens = getRandomBigIntString()
 				case 1:
 					switch protocolActorSchema.GetActorSpecificColName() {
-					case schema.ServiceURLCol:
+					case types.ServiceURLCol:
 						newActorSpecificParam = getRandomServiceURL()
-					case schema.MaxRelaysCol:
+					case types.MaxRelaysCol:
 						newActorSpecificParam = getRandomBigIntString()
 					default:
 						t.Error("Unexpected actor specific column name")
@@ -189,7 +187,7 @@ func fuzzSingleProtocolActor(
 					}
 				}
 			}
-			updatedActor := schema.BaseActor{
+			updatedActor := types.BaseActor{
 				Address:            originalActor.Address,
 				PublicKey:          originalActor.PublicKey,
 				StakedTokens:       newStakedTokens,
@@ -219,8 +217,8 @@ func fuzzSingleProtocolActor(
 			if originalActor.UnstakingHeight != db.Height { // Not ready to unstake
 				require.Nil(t, unstakingActors)
 			} else {
-				idx := slices.IndexFunc(unstakingActors, func(a *types.UnstakingActor) bool {
-					return originalActor.Address == hex.EncodeToString(a.Address)
+				idx := slices.IndexFunc(unstakingActors, func(a modules.IUnstakingActor) bool {
+					return originalActor.Address == hex.EncodeToString(a.GetAddress())
 				})
 				require.NotEqual(t, idx, -1, fmt.Sprintf("actor that is unstaking was not found %+v", originalActor))
 			}
@@ -283,6 +281,43 @@ func fuzzSingleProtocolActor(
 			t.Errorf("Unexpected operation fuzzing operation %s", op)
 		}
 	})
+}
+
+// TODO(olshansky): Make these functions & variables more functional to avoid having "unexpected"
+//                  side effects and making it clearer to the reader.
+const (
+	testingGenesisFilePath = "genesis.json"
+	testingConfigFilePath  = "config.json"
+)
+
+func createTestingGenesisAndConfigFiles(cfg modules.Config, genesisState modules.GenesisState) {
+	config, err := json.Marshal(cfg.Persistence)
+	if err != nil {
+		log.Fatal(err)
+	}
+	genesis, err := json.Marshal(genesisState.PersistenceGenesisState)
+	if err != nil {
+		log.Fatal(err)
+	}
+	genesisFile := make(map[string]json.RawMessage)
+	configFile := make(map[string]json.RawMessage)
+	persistenceModuleName := new(persistence.PersistenceModule).GetModuleName()
+	genesisFile[test_artifacts.GetGenesisFileName(persistenceModuleName)] = genesis
+	configFile[persistenceModuleName] = config
+	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	configFileBz, err := json.MarshalIndent(configFile, "", "    ")
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := ioutil.WriteFile(testingGenesisFilePath, genesisFileBz, 0777); err != nil {
+		log.Fatal(err)
+	}
+	if err := ioutil.WriteFile(testingConfigFilePath, configFileBz, 0777); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func getRandomChains() (chains []string) {

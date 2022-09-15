@@ -32,13 +32,13 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Contribution Guide](docs/contributing/README.md)
 - [Release Guide](docs/build/README.md)
 - [Dependencies Guide](docs/deps/README.md)
-- [Telemetry Guide](shared/telemetry/README.md)
+- [Telemetry Guide](telemetry/README.md)
 
 ### Architectures
 
 - [Shared Architecture](shared/README.md)
 - [Utility Architecture](utility/doc/README.md)
-- _Coming Soon: Consensus Architecture_
+- _Coming Soon: Consensus Architecture_ // TODO(olshansky): needs a README file with proper code structure
 - [Persistence Architecture](persistence/README.md)
 - [P2P Architecture](p2p/README.md)
 - [CLI Architecture](app/client/cli/doc/README.md)

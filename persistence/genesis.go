@@ -6,16 +6,15 @@ import (
 	"log"
 	"math/big"
 
-	"github.com/pokt-network/pocket/persistence/schema"
-	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // TODO(andrew): Use `log.Fatalf` instead of `log.Fatal(fmt.Sprintf())`.
 // TODO(andrew): generalize with the `actors interface`
 
 // WARNING: This function crashes the process if there is an error populating the genesis state.
-func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
+func (m *PersistenceModule) populateGenesisState(state *types.PersistenceGenesisState) {
 	log.Println("Populating genesis state...")
 
 	// REFACTOR: This business logic should probably live in `types/genesis.go`
@@ -38,108 +37,109 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	if err != nil {
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
 	}
-	// We commit the context at the end
 
-	for _, acc := range state.Utility.Accounts {
-		addrBz, err := hex.DecodeString(acc.Address)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("an error occurred creating the rwContext for the genesis state: %s", err.Error()))
+	}
+	for _, acc := range state.GetAccs() {
+		addrBz, err := hex.DecodeString(acc.GetAddress())
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", acc.Address))
+			log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", acc.GetAddress()))
 		}
-		err = rwContext.SetAccountAmount(addrBz, acc.Amount)
+		err = rwContext.SetAccountAmount(addrBz, acc.GetAmount())
 		if err != nil {
 			log.Fatal(fmt.Sprintf("an error occurred inserting an acc in the genesis state: %s", err.Error()))
 		}
 	}
-	for _, pool := range state.Utility.Pools {
-		poolNameBytes := []byte(pool.Address)
-		err = rwContext.InsertPool(pool.Address, poolNameBytes, pool.Amount)
+	for _, pool := range state.GetAccPools() {
+		poolNameBytes := []byte(pool.GetAddress())
+		err = rwContext.InsertPool(pool.GetAddress(), poolNameBytes, pool.GetAmount())
 		if err != nil {
 			log.Fatal(fmt.Sprintf("an error occurred inserting an pool in the genesis state: %s", err.Error()))
 		}
 	}
-	// TODO(andrew): genericize the genesis population logic for actors; pocket/issues/163
-	for _, act := range state.Utility.Applications {
-		addrBz, err := hex.DecodeString(act.Address)
+	for _, act := range state.GetApps() { // TODO (Andrew) genericize the genesis population logic for actors #149
+		addrBz, err := hex.DecodeString(act.GetAddress())
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", act.Address))
+			log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", act.GetAddress()))
 		}
-		pubKeyBz, err := hex.DecodeString(act.PublicKey)
+		pubKeyBz, err := hex.DecodeString(act.GetPublicKey())
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", act.PublicKey))
+			log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", act.GetPublicKey()))
 		}
-		outputBz, err := hex.DecodeString(act.Output)
+		outputBz, err := hex.DecodeString(act.GetOutput())
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", act.Output))
+			log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", act.GetOutput()))
 		}
-		err = rwContext.InsertApp(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GenericParam, act.StakedAmount, act.Chains, act.PausedHeight, act.UnstakingHeight)
+		err = rwContext.InsertApp(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GetGenericParam(), act.GetStakedAmount(), act.GetChains(), act.GetPausedHeight(), act.GetUnstakingHeight())
 		if err != nil {
 			log.Fatal(fmt.Sprintf("an error occurred inserting an app in the genesis state: %s", err.Error()))
 		}
-		if err = addValueToPool(genesis.Pool_Names_AppStakePool.String(), act.StakedAmount); err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting staked tokens into %s pool", genesis.Pool_Names_AppStakePool))
+		if err = addValueToPool(types.Pool_Names_AppStakePool.String(), act.GetStakedAmount()); err != nil {
+			log.Fatal(fmt.Sprintf("an error occurred inserting staked tokens into %s pool: %s", types.Pool_Names_AppStakePool, err.Error()))
 		}
 	}
-	for _, act := range state.Utility.ServiceNodes {
-		addrBz, err := hex.DecodeString(act.Address)
+	for _, act := range state.GetNodes() {
+		addrBz, err := hex.DecodeString(act.GetAddress())
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", act.Address))
+			log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", act.GetAddress()))
 		}
-		pubKeyBz, err := hex.DecodeString(act.PublicKey)
+		pubKeyBz, err := hex.DecodeString(act.GetPublicKey())
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", act.PublicKey))
+			log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", act.GetPublicKey()))
 		}
-		outputBz, err := hex.DecodeString(act.Output)
+		outputBz, err := hex.DecodeString(act.GetOutput())
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", act.Output))
+			log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", act.GetOutput()))
 		}
-		err = rwContext.InsertServiceNode(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GenericParam, act.StakedAmount, act.Chains, act.PausedHeight, act.UnstakingHeight)
+		err = rwContext.InsertServiceNode(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GetGenericParam(), act.GetStakedAmount(), act.GetChains(), act.GetPausedHeight(), act.GetUnstakingHeight())
 		if err != nil {
 			log.Fatal(fmt.Sprintf("an error occurred inserting a service node in the genesis state: %s", err.Error()))
 		}
-		if err = addValueToPool(genesis.Pool_Names_ServiceNodeStakePool.String(), act.StakedAmount); err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting staked tokens into %s pool", genesis.Pool_Names_ServiceNodeStakePool.String()))
+		if err = addValueToPool(types.Pool_Names_ServiceNodeStakePool.String(), act.GetStakedAmount()); err != nil {
+			log.Fatal(fmt.Sprintf("an error occurred inserting staked tokens into %s pool: %s", types.Pool_Names_ServiceNodeStakePool.String(), err.Error()))
 		}
 	}
-	for _, act := range state.Utility.Fishermen {
-		addrBz, err := hex.DecodeString(act.Address)
+	for _, act := range state.GetFish() {
+		addrBz, err := hex.DecodeString(act.GetAddress())
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", act.Address))
+			log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", act.GetAddress()))
 		}
-		pubKeyBz, err := hex.DecodeString(act.PublicKey)
+		pubKeyBz, err := hex.DecodeString(act.GetPublicKey())
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", act.PublicKey))
+			log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", act.GetPublicKey()))
 		}
-		outputBz, err := hex.DecodeString(act.Output)
+		outputBz, err := hex.DecodeString(act.GetOutput())
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", act.Output))
+			log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", act.GetOutput()))
 		}
-		err = rwContext.InsertFisherman(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GenericParam, act.StakedAmount, act.Chains, act.PausedHeight, act.UnstakingHeight)
+		err = rwContext.InsertFisherman(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GetGenericParam(), act.GetStakedAmount(), act.GetChains(), act.GetPausedHeight(), act.GetUnstakingHeight())
 		if err != nil {
 			log.Fatal(fmt.Sprintf("an error occurred inserting a fisherman in the genesis state: %s", err.Error()))
 		}
-		if err = addValueToPool(genesis.Pool_Names_FishermanStakePool.String(), act.StakedAmount); err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting staked tokens into %s pool", genesis.Pool_Names_FishermanStakePool.String()))
+		if err = addValueToPool(types.Pool_Names_FishermanStakePool.String(), act.GetStakedAmount()); err != nil {
+			log.Fatal(fmt.Sprintf("an error occurred inserting staked tokens into %s pool: %s", types.Pool_Names_FishermanStakePool.String(), err.Error()))
 		}
 	}
-	for _, act := range state.Utility.Validators {
-		addrBz, err := hex.DecodeString(act.Address)
+	for _, act := range state.GetVals() {
+		addrBz, err := hex.DecodeString(act.GetAddress())
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", act.Address))
+			log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", act.GetAddress()))
 		}
-		pubKeyBz, err := hex.DecodeString(act.PublicKey)
+		pubKeyBz, err := hex.DecodeString(act.GetPublicKey())
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", act.PublicKey))
+			log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", act.GetPublicKey()))
 		}
-		outputBz, err := hex.DecodeString(act.Output)
+		outputBz, err := hex.DecodeString(act.GetOutput())
 		if err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", act.Output))
+			log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", act.GetOutput()))
 		}
-		err = rwContext.InsertValidator(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GenericParam, act.StakedAmount, act.PausedHeight, act.UnstakingHeight)
+		err = rwContext.InsertValidator(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GetGenericParam(), act.GetStakedAmount(), act.GetPausedHeight(), act.GetUnstakingHeight())
 		if err != nil {
 			log.Fatal(fmt.Sprintf("an error occurred inserting a validator in the genesis state: %s", err.Error()))
 		}
-		if err = addValueToPool(genesis.Pool_Names_ValidatorStakePool.String(), act.StakedAmount); err != nil {
-			log.Fatal(fmt.Sprintf("an error occurred inserting staked tokens into %s pool", genesis.Pool_Names_ValidatorStakePool.String()))
+		if err = addValueToPool(types.Pool_Names_ValidatorStakePool.String(), act.GetStakedAmount()); err != nil {
+			log.Fatal(fmt.Sprintf("an error occurred inserting staked tokens into %s pool: %s", types.Pool_Names_ValidatorStakePool.String(), err.Error()))
 		}
 	}
 	// TODO(team): use params from genesis file - not the hardcoded
@@ -159,20 +159,21 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 // TODO(pocket/issues/149): All of the functions below following a structure similar to `GetAll<Actor>`
 //  can easily be refactored and condensed into a single function using a generic type or a common
 // interface.
-func (p PostgresContext) GetAllAccounts(height int64) (accs []*genesis.Account, err error) {
+func (p PostgresContext) GetAllAccounts(height int64) (accs []modules.Account, err error) {
 	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
-	rows, err := txn.Query(ctx, schema.SelectAccounts(height, schema.AccountTableName))
+	rows, err := txn.Query(ctx, types.SelectAccounts(height, types.AccountTableName))
 	if err != nil {
 		return nil, err
 	}
 	for rows.Next() {
-		acc := new(genesis.Account)
+		acc := new(types.Account)
 		if err = rows.Scan(&acc.Address, &acc.Amount, &height); err != nil {
 			return nil, err
 		}
+		// acc.Address, err = address
 		if err != nil {
 			return nil, err
 		}
@@ -181,18 +182,18 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []*genesis.Account, 
 	return
 }
 
-// TODO(andrew): Consolidate with `GetAllAccounts`
-func (p PostgresContext) GetAllPools(height int64) (accs []*genesis.Account, err error) {
+// CLEANUP: Consolidate with GetAllAccounts.
+func (p PostgresContext) GetAllPools(height int64) (accs []modules.Account, err error) {
 	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
-	rows, err := txn.Query(ctx, schema.SelectPools(height, schema.PoolTableName))
+	rows, err := txn.Query(ctx, types.SelectPools(height, types.PoolTableName))
 	if err != nil {
 		return nil, err
 	}
 	for rows.Next() {
-		pool := new(genesis.Account)
+		pool := new(types.Account)
 		if err = rows.Scan(&pool.Address, &pool.Amount, &height); err != nil {
 			return nil, err
 		}
@@ -201,18 +202,18 @@ func (p PostgresContext) GetAllPools(height int64) (accs []*genesis.Account, err
 	return
 }
 
-func (p PostgresContext) GetAllApps(height int64) (apps []*genesis.Actor, err error) {
+func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err error) {
 	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
-	rows, err := txn.Query(ctx, schema.ApplicationActor.GetAllQuery(height))
+	rows, err := txn.Query(ctx, types.ApplicationActor.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}
-	var actors []schema.BaseActor
+	var actors []types.BaseActor
 	for rows.Next() {
-		var actor schema.BaseActor
+		var actor types.BaseActor
 		actor, height, err = p.GetActorFromRow(rows)
 		if err != nil {
 			return
@@ -221,27 +222,27 @@ func (p PostgresContext) GetAllApps(height int64) (apps []*genesis.Actor, err er
 	}
 	rows.Close()
 	for _, actor := range actors {
-		actor, err = p.GetChainsForActor(ctx, txn, schema.ApplicationActor, actor, height)
+		actor, err = p.GetChainsForActor(ctx, txn, types.ApplicationActor, actor, height)
 		if err != nil {
 			return
 		}
-		apps = append(apps, p.BaseActorToActor(actor, genesis.ActorType_App))
+		apps = append(apps, p.BaseActorToActor(actor, types.ActorType_App))
 	}
 	return
 }
 
-func (p PostgresContext) GetAllValidators(height int64) (vals []*genesis.Actor, err error) {
+func (p PostgresContext) GetAllValidators(height int64) (vals []modules.Actor, err error) {
 	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
-	rows, err := txn.Query(ctx, schema.ValidatorActor.GetAllQuery(height))
+	rows, err := txn.Query(ctx, types.ValidatorActor.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}
-	var actors []schema.BaseActor
+	var actors []types.BaseActor
 	for rows.Next() {
-		var actor schema.BaseActor
+		var actor types.BaseActor
 		actor, height, err = p.GetActorFromRow(rows)
 		if err != nil {
 			return
@@ -250,27 +251,27 @@ func (p PostgresContext) GetAllValidators(height int64) (vals []*genesis.Actor, 
 	}
 	rows.Close()
 	for _, actor := range actors {
-		actor, err = p.GetChainsForActor(ctx, txn, schema.ApplicationActor, actor, height)
+		actor, err = p.GetChainsForActor(ctx, txn, types.ApplicationActor, actor, height)
 		if err != nil {
 			return
 		}
-		vals = append(vals, p.BaseActorToActor(actor, genesis.ActorType_Val))
+		vals = append(vals, p.BaseActorToActor(actor, types.ActorType_Val))
 	}
 	return
 }
 
-func (p PostgresContext) GetAllServiceNodes(height int64) (sn []*genesis.Actor, err error) {
+func (p PostgresContext) GetAllServiceNodes(height int64) (sn []modules.Actor, err error) {
 	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
-	rows, err := txn.Query(ctx, schema.ServiceNodeActor.GetAllQuery(height))
+	rows, err := txn.Query(ctx, types.ServiceNodeActor.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}
-	var actors []schema.BaseActor
+	var actors []types.BaseActor
 	for rows.Next() {
-		var actor schema.BaseActor
+		var actor types.BaseActor
 		actor, height, err = p.GetActorFromRow(rows)
 		if err != nil {
 			return
@@ -279,27 +280,27 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []*genesis.Actor, 
 	}
 	rows.Close()
 	for _, actor := range actors {
-		actor, err = p.GetChainsForActor(ctx, txn, schema.ServiceNodeActor, actor, height)
+		actor, err = p.GetChainsForActor(ctx, txn, types.ServiceNodeActor, actor, height)
 		if err != nil {
 			return
 		}
-		sn = append(sn, p.BaseActorToActor(actor, genesis.ActorType_Node))
+		sn = append(sn, p.BaseActorToActor(actor, types.ActorType_Node))
 	}
 	return
 }
 
-func (p PostgresContext) GetAllFishermen(height int64) (f []*genesis.Actor, err error) {
+func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err error) {
 	ctx, txn, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return nil, err
 	}
-	rows, err := txn.Query(ctx, schema.FishermanActor.GetAllQuery(height))
+	rows, err := txn.Query(ctx, types.FishermanActor.GetAllQuery(height))
 	if err != nil {
 		return nil, err
 	}
-	var actors []schema.BaseActor
+	var actors []types.BaseActor
 	for rows.Next() {
-		var actor schema.BaseActor
+		var actor types.BaseActor
 		actor, height, err = p.GetActorFromRow(rows)
 		if err != nil {
 			return
@@ -308,17 +309,18 @@ func (p PostgresContext) GetAllFishermen(height int64) (f []*genesis.Actor, err 
 	}
 	rows.Close()
 	for _, actor := range actors {
-		actor, err = p.GetChainsForActor(ctx, txn, schema.FishermanActor, actor, height)
+		actor, err = p.GetChainsForActor(ctx, txn, types.FishermanActor, actor, height)
 		if err != nil {
 			return
 		}
-		f = append(f, p.BaseActorToActor(actor, genesis.ActorType_Fish))
+		f = append(f, p.BaseActorToActor(actor, types.ActorType_Fish))
 	}
 	return
 }
 
-func (p PostgresContext) BaseActorToActor(ba schema.BaseActor, actorType genesis.ActorType) *genesis.Actor { // TODO (Team) deprecate with interface #163
-	actor := new(genesis.Actor)
+// TODO (Team) deprecate with interface #163 <Bumped to #149> as #163 is getting large
+func (p PostgresContext) BaseActorToActor(ba types.BaseActor, actorType types.ActorType) *types.Actor {
+	actor := new(types.Actor)
 	actor.ActorType = actorType
 	actor.Address = ba.Address
 	actor.PublicKey = ba.PublicKey

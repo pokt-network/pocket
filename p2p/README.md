@@ -46,22 +46,26 @@ The `Network Module` is where RainTree (or the simpler basic approach) is implem
 
 ```bash
 p2p
-├── README.md                    # Self link to this README
-├── transport.go                 # Varying implementations of the `Transport` (e.g. TCP, Passthrough) for network communication
-├── module.go                    # The implementation of the P2P Interface
+├── README.md                               # Self link to this README
+├── transport.go                            # Varying implementations of the `Transport` (e.g. TCP, Passthrough) for network communication
+├── module.go                               # The implementation of the P2P Interface
 ├── raintree
-│   ├── addrbook_utils.go        # AddrBook utilities
-│   ├── addrbook_utils_test.go   # AddrBook utilities unit tests
-│   ├── network.go               # Implementation of the Network interface using RainTree's specification
+│   ├── addrbook_utils.go             # AddrBook utilities
+│   ├── addrbook_utils_test.go        # AddrBook utilities unit tests
+│   ├── network.go                    # Implementation of the Network interface using RainTree's specification
+│   ├── utils.go                    
 │   └── types
 │       └── proto
 │           └── raintree.proto
 ├── raintree_integration_test.go            # RainTree unit tests
 ├── raintree_integration_utils_test.go      # Test suite for RainTree
-├── stdnetwork                  # This can eventually be deprecated once raintree is verified.
-│   └── network.go              # Implementation of the Network interface using Golang's std networking lib
+├── stdnetwork                              # This can eventually be deprecated once raintree is verified.
+│   └── network.go                    # Implementation of the Network interface using Golang's std networking lib
+├── telemetry
+│   ├── metrics.go
 ├── types
-│   ├── network.go              # Network Interface definition
+│   ├── proto                         # Proto3 messages for generated types
+│   ├── network.go                    # Network Interface definition
 └── utils.go
 ```
 

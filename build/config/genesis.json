@@ -1,14 +1,44 @@
 {
-  "consensus": {
-    "genesis_time": {
-      "seconds": 1660514050,
-      "nanos": 296019000
-    },
-    "chain_id": "testnet",
-    "max_block_bytes": 4000000
-  },
-  "utility": {
+  "persistence_genesis_state": {
+    "accounts": [
+      {
+        "address": "0f37b7f1558280dd9655f0e3dcb93328694bdd4c",
+        "amount": "100000000000000"
+      },
+      {
+        "address": "1693f7b09263f46f1b7e9c63687f952c1b0e5dd2",
+        "amount": "100000000000000"
+      },
+      {
+        "address": "cdf887d902a5a95ef8c366fd8cf753aaee8f1821",
+        "amount": "100000000000000"
+      },
+      {
+        "address": "60abc5fcb79b27c69d08f703fe2e48315ad6c604",
+        "amount": "100000000000000"
+      },
+      {
+        "address": "8a442953a3c362d1ef235673fed7f6cd7e3af24e",
+        "amount": "100000000000000"
+      },
+      {
+        "address": "7fec1a29d776cad94e274cd2ff70a146a7a60a68",
+        "amount": "100000000000000"
+      },
+      {
+        "address": "17b999f3220e63a62a8d3926d9857324ac305035",
+        "amount": "100000000000000"
+      }
+    ],
     "pools": [
+      {
+        "address": "FeeCollector",
+        "amount": "0"
+      },
+      {
+        "address": "AppStakePool",
+        "amount": "100000000000000"
+      },
       {
         "address": "ValidatorStakePool",
         "amount": "100000000000000"
@@ -24,123 +54,96 @@
       {
         "address": "DAO",
         "amount": "100000000000000"
-      },
-      {
-        "address": "FeeCollector",
-        "amount": "0"
-      },
-      {
-        "address": "AppStakePool",
-        "amount": "100000000000000"
-      }
-    ],
-    "accounts": [
-      {
-        "address": "22b44cdddc6c3ca5e561cda2cae385a06e609671",
-        "amount": "100000000000000"
-      },
-      {
-        "address": "fe8cd7ca148ff08bcffb84b42d92f6c868980afa",
-        "amount": "100000000000000"
-      },
-      {
-        "address": "386a3b207085a9b44c4e5aaedf101990bea96eed",
-        "amount": "100000000000000"
-      },
-      {
-        "address": "d6990c242da15dddf43fbeb9169de110d5785b18",
-        "amount": "100000000000000"
-      },
-      {
-        "address": "4a1226601a0f3cbba852a8086f14f9a00e5a6e82",
-        "amount": "100000000000000"
-      },
-      {
-        "address": "efaf951a927b323251da5ab92c8927781395ce03",
-        "amount": "100000000000000"
-      },
-      {
-        "address": "3b67d1a6d63c295c312a2f013150f01f15f6d785",
-        "amount": "100000000000000"
-      }
-    ],
-    "applications": [
-      {
-        "address": "3b67d1a6d63c295c312a2f013150f01f15f6d785",
-        "public_key": "d1e0ed14f7e5e98560f90cfaecc883e918558c5f458fc6aa37c799096a5045e6",
-        "chains": ["0001"],
-        "generic_param": "1000000",
-        "staked_amount": "1000000000000",
-        "paused_height": -1,
-        "unstaking_height": -1,
-        "output": "3b67d1a6d63c295c312a2f013150f01f15f6d785"
       }
     ],
     "validators": [
       {
-        "address": "22b44cdddc6c3ca5e561cda2cae385a06e609671",
-        "public_key": "79254a4bc46bf1182826145b0b01b48bab4240cd30e23ba90e4e5e6b56961c6d",
+        "address": "0f37b7f1558280dd9655f0e3dcb93328694bdd4c",
+        "public_key": "030206dd1a85db222a5c641cba61921dfbb1fa6252b728bdcdedfc720f97e10c",
+        "chains": null,
         "generic_param": "node1.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "22b44cdddc6c3ca5e561cda2cae385a06e609671",
+        "output": "0f37b7f1558280dd9655f0e3dcb93328694bdd4c",
         "actor_type": 3
       },
       {
-        "address": "fe8cd7ca148ff08bcffb84b42d92f6c868980afa",
-        "public_key": "91dd4fd53e8e27020d62796fe68b469fad5fa5a7abc61d3eb2bd98ba16af1e29",
+        "address": "1693f7b09263f46f1b7e9c63687f952c1b0e5dd2",
+        "public_key": "f81c19830cb42fa65d216946f230b5ffdc939717db7eb9503bbff97df91aa6a2",
+        "chains": null,
         "generic_param": "node2.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "fe8cd7ca148ff08bcffb84b42d92f6c868980afa",
+        "output": "1693f7b09263f46f1b7e9c63687f952c1b0e5dd2",
         "actor_type": 3
       },
       {
-        "address": "386a3b207085a9b44c4e5aaedf101990bea96eed",
-        "public_key": "3e5e4bbed5f98721163bb84445072a9202d213f1e348c5e9e0e2ea83bbb7e3aa",
+        "address": "cdf887d902a5a95ef8c366fd8cf753aaee8f1821",
+        "public_key": "93f17a5b4afc924fdda6070701c455b4ee7eae43e29324ac9de0b957f031c9c0",
+        "chains": null,
         "generic_param": "node3.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "386a3b207085a9b44c4e5aaedf101990bea96eed",
+        "output": "cdf887d902a5a95ef8c366fd8cf753aaee8f1821",
         "actor_type": 3
       },
       {
-        "address": "d6990c242da15dddf43fbeb9169de110d5785b18",
-        "public_key": "6c207cea1b1bf45dad8f8973d57291d3da31855254d7f1ed83ec3e06cabfe6b7",
+        "address": "60abc5fcb79b27c69d08f703fe2e48315ad6c604",
+        "public_key": "06cc58d8c3ee9e463b4cfe680696a0b3eeed786bc3de1fa0268dfb4e4e1e9c68",
+        "chains": null,
         "generic_param": "node4.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "d6990c242da15dddf43fbeb9169de110d5785b18",
+        "output": "60abc5fcb79b27c69d08f703fe2e48315ad6c604",
         "actor_type": 3
+      }
+    ],
+    "applications": [
+      {
+        "address": "17b999f3220e63a62a8d3926d9857324ac305035",
+        "public_key": "f674286864d7f87175faf0a6c74f506c63c62dbcda58c0001c84e9e028b86ee4",
+        "chains": [
+          "0001"
+        ],
+        "generic_param": "1000000",
+        "staked_amount": "1000000000000",
+        "paused_height": -1,
+        "unstaking_height": -1,
+        "output": "17b999f3220e63a62a8d3926d9857324ac305035",
+        "actor_type": 0
       }
     ],
     "service_nodes": [
       {
-        "address": "4a1226601a0f3cbba852a8086f14f9a00e5a6e82",
-        "public_key": "cf05669b65132a6bd1069bcddcf47c349dd84986a03782a55081b438e15aa1bb",
-        "chains": ["0001"],
+        "address": "8a442953a3c362d1ef235673fed7f6cd7e3af24e",
+        "public_key": "936460bb2c51b79a8aa1e42d1f1d983554fa21a598c20e1fddeb9d4fae8acf1c",
+        "chains": [
+          "0001"
+        ],
         "generic_param": "node1.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "4a1226601a0f3cbba852a8086f14f9a00e5a6e82",
+        "output": "8a442953a3c362d1ef235673fed7f6cd7e3af24e",
         "actor_type": 1
       }
     ],
     "fishermen": [
       {
-        "address": "efaf951a927b323251da5ab92c8927781395ce03",
-        "public_key": "2beb3626a95b347057d8df86e5a4fc8b917775bd2f6594f99f0df7f25b6bae0d",
-        "chains": ["0001"],
+        "address": "7fec1a29d776cad94e274cd2ff70a146a7a60a68",
+        "public_key": "7f971fb0dcc5699fa41149682c03b17939eef53b7d7cae0ab839ac3cbb4ab96c",
+        "chains": [
+          "0001"
+        ],
         "generic_param": "node1.consensus:8080",
         "staked_amount": "1000000000000",
         "paused_height": -1,
         "unstaking_height": -1,
-        "output": "efaf951a927b323251da5ab92c8927781395ce03",
+        "output": "7fec1a29d776cad94e274cd2ff70a146a7a60a68",
         "actor_type": 2
       }
     ],
@@ -254,5 +257,59 @@
       "message_unpause_service_node_fee_owner": "da034209758b78eaea06dd99c07909ab54c99b45",
       "message_change_parameter_fee_owner": "da034209758b78eaea06dd99c07909ab54c99b45"
     }
+  },
+  "consensus_genesis_state": {
+    "genesis_time": {
+      "seconds": 1662740528,
+      "nanos": 935916000
+    },
+    "chain_id": "testnet",
+    "max_block_bytes": 4000000,
+    "validators": [
+      {
+        "address": "0f37b7f1558280dd9655f0e3dcb93328694bdd4c",
+        "public_key": "030206dd1a85db222a5c641cba61921dfbb1fa6252b728bdcdedfc720f97e10c",
+        "chains": null,
+        "generic_param": "node1.consensus:8080",
+        "staked_amount": "1000000000000",
+        "paused_height": -1,
+        "unstaking_height": -1,
+        "output": "0f37b7f1558280dd9655f0e3dcb93328694bdd4c",
+        "actor_type": 3
+      },
+      {
+        "address": "1693f7b09263f46f1b7e9c63687f952c1b0e5dd2",
+        "public_key": "f81c19830cb42fa65d216946f230b5ffdc939717db7eb9503bbff97df91aa6a2",
+        "chains": null,
+        "generic_param": "node2.consensus:8080",
+        "staked_amount": "1000000000000",
+        "paused_height": -1,
+        "unstaking_height": -1,
+        "output": "1693f7b09263f46f1b7e9c63687f952c1b0e5dd2",
+        "actor_type": 3
+      },
+      {
+        "address": "cdf887d902a5a95ef8c366fd8cf753aaee8f1821",
+        "public_key": "93f17a5b4afc924fdda6070701c455b4ee7eae43e29324ac9de0b957f031c9c0",
+        "chains": null,
+        "generic_param": "node3.consensus:8080",
+        "staked_amount": "1000000000000",
+        "paused_height": -1,
+        "unstaking_height": -1,
+        "output": "cdf887d902a5a95ef8c366fd8cf753aaee8f1821",
+        "actor_type": 3
+      },
+      {
+        "address": "60abc5fcb79b27c69d08f703fe2e48315ad6c604",
+        "public_key": "06cc58d8c3ee9e463b4cfe680696a0b3eeed786bc3de1fa0268dfb4e4e1e9c68",
+        "chains": null,
+        "generic_param": "node4.consensus:8080",
+        "staked_amount": "1000000000000",
+        "paused_height": -1,
+        "unstaking_height": -1,
+        "output": "60abc5fcb79b27c69d08f703fe2e48315ad6c604",
+        "actor_type": 3
+      }
+    ]
   }
 }

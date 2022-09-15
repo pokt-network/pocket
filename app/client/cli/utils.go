@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/app/pocket/rpc"
+	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
-	sharedTypes "github.com/pokt-network/pocket/shared/types"
 	utilityTypes "github.com/pokt-network/pocket/utility/types"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -94,7 +94,7 @@ func Confirmation(pwd string) bool {
 // returns the JSON bytes of the signed transaction
 func prepareTx(msg utilityTypes.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
 	var err error
-	codec := sharedTypes.GetCodec()
+	codec := codec.GetCodec()
 	anyMsg, err := codec.ToAny(msg)
 	if err != nil {
 		return nil, err

@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -23,7 +23,7 @@ validations possible before even checking the state storage layer.
 const (
 	MillionInt       = 1000000
 	ZeroInt          = 0
-	HeightNotUsed    = -1
+	HeightNotUsed    = int64(-1)
 	EmptyString      = ""
 	HttpsPrefix      = "https://"
 	HttpPrefix       = "http://"
@@ -41,14 +41,14 @@ type Message interface {
 	proto.Message
 
 	SetSigner(signer []byte)
-	ValidateBasic() types.Error
-	GetActorType() ActorType
+	ValidateBasic() Error
+	GetActorType() UtilActorType
 
 	// Get the canonical byte representation of the ProtoMsg.
 	GetSignBytes() []byte
 }
 
-func (msg *MessageStake) ValidateBasic() types.Error {
+func (msg *MessageStake) ValidateBasic() Error {
 	if err := ValidatePublicKey(msg.GetPublicKey()); err != nil {
 		return err
 	}
@@ -58,14 +58,14 @@ func (msg *MessageStake) ValidateBasic() types.Error {
 	return ValidateStaker(msg)
 }
 
-func (msg *MessageEditStake) ValidateBasic() types.Error {
+func (msg *MessageEditStake) ValidateBasic() Error {
 	if err := ValidateAddress(msg.GetAddress()); err != nil {
 		return err
 	}
 	return ValidateStaker(msg)
 }
 
-func (msg *MessageDoubleSign) ValidateBasic() types.Error {
+func (msg *MessageDoubleSign) ValidateBasic() Error {
 	if err := msg.VoteA.ValidateBasic(); err != nil {
 		return err
 	}
@@ -73,24 +73,24 @@ func (msg *MessageDoubleSign) ValidateBasic() types.Error {
 		return err
 	}
 	if !bytes.Equal(msg.VoteA.PublicKey, msg.VoteB.PublicKey) {
-		return types.ErrUnequalPublicKeys()
+		return ErrUnequalPublicKeys()
 	}
 	if msg.VoteA.Type != msg.VoteB.Type {
-		return types.ErrUnequalVoteTypes()
+		return ErrUnequalVoteTypes()
 	}
 	if msg.VoteA.Height != msg.VoteB.Height {
-		return types.ErrUnequalHeights()
+		return ErrUnequalHeights()
 	}
 	if msg.VoteA.Round != msg.VoteB.Round {
-		return types.ErrUnequalRounds()
+		return ErrUnequalRounds()
 	}
 	if bytes.Equal(msg.VoteA.BlockHash, msg.VoteB.BlockHash) {
-		return types.ErrEqualVotes()
+		return ErrEqualVotes()
 	}
 	return nil
 }
 
-func (msg *MessageSend) ValidateBasic() types.Error {
+func (msg *MessageSend) ValidateBasic() Error {
 	if err := ValidateAddress(msg.FromAddress); err != nil {
 		return err
 	}
@@ -103,12 +103,12 @@ func (msg *MessageSend) ValidateBasic() types.Error {
 	return nil
 }
 
-func (msg *MessageChangeParameter) ValidateBasic() types.Error {
+func (msg *MessageChangeParameter) ValidateBasic() Error {
 	if msg.ParameterKey == "" {
-		return types.ErrEmptyParamKey()
+		return ErrEmptyParamKey()
 	}
 	if msg.ParameterValue == nil {
-		return types.ErrEmptyParamValue()
+		return ErrEmptyParamValue()
 	}
 	if err := ValidateAddress(msg.Owner); err != nil {
 		return err
@@ -116,74 +116,74 @@ func (msg *MessageChangeParameter) ValidateBasic() types.Error {
 	return nil
 }
 
-func (msg *MessageUnstake) ValidateBasic() types.Error      { return ValidateAddress(msg.Address) }
-func (msg *MessageUnpause) ValidateBasic() types.Error      { return ValidateAddress(msg.Address) }
-func (msg *MessageStake) SetSigner(signer []byte)           { msg.Signer = signer }
-func (msg *MessageEditStake) SetSigner(signer []byte)       { msg.Signer = signer }
-func (msg *MessageUnstake) SetSigner(signer []byte)         { msg.Signer = signer }
-func (msg *MessageUnpause) SetSigner(signer []byte)         { msg.Signer = signer }
-func (msg *MessageDoubleSign) SetSigner(signer []byte)      { msg.ReporterAddress = signer }
-func (msg *MessageSend) SetSigner(signer []byte)            { /*no op*/ }
-func (msg *MessageChangeParameter) SetSigner(signer []byte) { msg.Signer = signer }
-func (x *MessageChangeParameter) GetActorType() ActorType   { return -1 }
-func (x *MessageDoubleSign) GetActorType() ActorType        { return -1 }
-func (msg *MessageStake) GetSignBytes() []byte              { return getSignBytes(msg) }
-func (msg *MessageEditStake) GetSignBytes() []byte          { return getSignBytes(msg) }
-func (msg *MessageDoubleSign) GetSignBytes() []byte         { return getSignBytes(msg) }
-func (msg *MessageSend) GetSignBytes() []byte               { return getSignBytes(msg) }
-func (msg *MessageChangeParameter) GetSignBytes() []byte    { return getSignBytes(msg) }
-func (msg *MessageUnstake) GetSignBytes() []byte            { return getSignBytes(msg) }
-func (msg *MessageUnpause) GetSignBytes() []byte            { return getSignBytes(msg) }
+func (msg *MessageUnstake) ValidateBasic() Error              { return ValidateAddress(msg.Address) }
+func (msg *MessageUnpause) ValidateBasic() Error              { return ValidateAddress(msg.Address) }
+func (msg *MessageStake) SetSigner(signer []byte)             { msg.Signer = signer }
+func (msg *MessageEditStake) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageUnstake) SetSigner(signer []byte)           { msg.Signer = signer }
+func (msg *MessageUnpause) SetSigner(signer []byte)           { msg.Signer = signer }
+func (msg *MessageDoubleSign) SetSigner(signer []byte)        { msg.ReporterAddress = signer }
+func (msg *MessageSend) SetSigner(signer []byte)              { /*no op*/ }
+func (msg *MessageChangeParameter) SetSigner(signer []byte)   { msg.Signer = signer }
+func (x *MessageChangeParameter) GetActorType() UtilActorType { return -1 }
+func (x *MessageDoubleSign) GetActorType() UtilActorType      { return -1 }
+func (msg *MessageStake) GetSignBytes() []byte                { return getSignBytes(msg) }
+func (msg *MessageEditStake) GetSignBytes() []byte            { return getSignBytes(msg) }
+func (msg *MessageDoubleSign) GetSignBytes() []byte           { return getSignBytes(msg) }
+func (msg *MessageSend) GetSignBytes() []byte                 { return getSignBytes(msg) }
+func (msg *MessageChangeParameter) GetSignBytes() []byte      { return getSignBytes(msg) }
+func (msg *MessageUnstake) GetSignBytes() []byte              { return getSignBytes(msg) }
+func (msg *MessageUnpause) GetSignBytes() []byte              { return getSignBytes(msg) }
 
 // helpers
 
-func ValidateAddress(address []byte) types.Error {
+func ValidateAddress(address []byte) Error {
 	if address == nil {
-		return types.ErrEmptyAddress()
+		return ErrEmptyAddress()
 	}
 	addrLen := len(address)
 	if addrLen != cryptoPocket.AddressLen {
-		return types.ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
+		return ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
 	}
 	return nil
 }
 
-func ValidateOutputAddress(address []byte) types.Error {
+func ValidateOutputAddress(address []byte) Error {
 	if address == nil {
-		return types.ErrNilOutputAddress()
+		return ErrNilOutputAddress()
 	}
 	addrLen := len(address)
 	if addrLen != cryptoPocket.AddressLen {
-		return types.ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
+		return ErrInvalidAddressLen(cryptoPocket.ErrInvalidAddressLen(addrLen))
 	}
 	return nil
 }
 
-func ValidatePublicKey(publicKey []byte) types.Error {
+func ValidatePublicKey(publicKey []byte) Error {
 	if publicKey == nil {
-		return types.ErrEmptyPublicKey()
+		return ErrEmptyPublicKey()
 	}
 	pubKeyLen := len(publicKey)
 	if pubKeyLen != cryptoPocket.PublicKeyLen {
-		return types.ErrInvalidPublicKeylen(cryptoPocket.ErrInvalidPublicKeyLen(pubKeyLen))
+		return ErrInvalidPublicKeylen(cryptoPocket.ErrInvalidPublicKeyLen(pubKeyLen))
 	}
 	return nil
 }
 
-func ValidateHash(hash []byte) types.Error {
+func ValidateHash(hash []byte) Error {
 	if hash == nil {
-		return types.ErrEmptyHash()
+		return ErrEmptyHash()
 	}
 	hashLen := len(hash)
 	if hashLen != cryptoPocket.SHA3HashLen {
-		return types.ErrInvalidHashLength(cryptoPocket.ErrInvalidHashLen(hashLen))
+		return ErrInvalidHashLength(cryptoPocket.ErrInvalidHashLen(hashLen))
 	}
 	return nil
 }
 
-func ValidateRelayChains(chains []string) types.Error {
+func ValidateRelayChains(chains []string) Error {
 	if chains == nil {
-		return types.ErrEmptyRelayChains()
+		return ErrEmptyRelayChains()
 	}
 	for _, chain := range chains {
 		relayChain := RelayChain(chain)
@@ -194,46 +194,46 @@ func ValidateRelayChains(chains []string) types.Error {
 	return nil
 }
 
-func ValidateAmount(amount string) types.Error {
+func ValidateAmount(amount string) Error {
 	if amount == "" {
-		return types.ErrEmptyAmount()
+		return ErrEmptyAmount()
 	}
-	if _, err := types.StringToBigInt(amount); err != nil {
+	if _, err := StringToBigInt(amount); err != nil {
 		return err
 	}
 	return nil
 }
 
-func ValidateActorType(_ ActorType) types.Error {
+func ValidateActorType(_ UtilActorType) Error {
 	// TODO (team) not sure if there's anything we can do here
 	return nil
 }
 
-func ValidateServiceUrl(actorType ActorType, uri string) types.Error {
-	if actorType == ActorType_App {
+func ValidateServiceUrl(actorType UtilActorType, uri string) Error {
+	if actorType == UtilActorType_App {
 		return nil
 	}
 	uri = strings.ToLower(uri)
 	_, err := url.ParseRequestURI(uri)
 	if err != nil {
-		return types.ErrInvalidServiceUrl(err.Error())
+		return ErrInvalidServiceUrl(err.Error())
 	}
 	if !(uri[:8] == HttpsPrefix || uri[:7] == HttpPrefix) {
-		return types.ErrInvalidServiceUrl(InvalidURLPrefix)
+		return ErrInvalidServiceUrl(InvalidURLPrefix)
 	}
 	temp := strings.Split(uri, Colon)
 	if len(temp) != 3 {
-		return types.ErrInvalidServiceUrl(PortRequired)
+		return ErrInvalidServiceUrl(PortRequired)
 	}
 	port, err := strconv.Atoi(temp[2])
 	if err != nil {
-		return types.ErrInvalidServiceUrl(NonNumberPort)
+		return ErrInvalidServiceUrl(NonNumberPort)
 	}
 	if port > MaxPort || port < 0 {
-		return types.ErrInvalidServiceUrl(PortOutOfRange)
+		return ErrInvalidServiceUrl(PortOutOfRange)
 	}
 	if !strings.Contains(uri, Period) {
-		return types.ErrInvalidServiceUrl(NoPeriod)
+		return ErrInvalidServiceUrl(NoPeriod)
 	}
 	return nil
 }
@@ -248,25 +248,25 @@ const (
 type RelayChain string
 
 // TODO: Consider adding a governance parameter for a list of valid relay chains
-func (rc *RelayChain) Validate() types.Error {
+func (rc *RelayChain) Validate() Error {
 	if rc == nil || *rc == "" {
-		return types.ErrEmptyRelayChain()
+		return ErrEmptyRelayChain()
 	}
 	rcLen := len(*rc)
 	if rcLen != RelayChainLength {
-		return types.ErrInvalidRelayChainLength(rcLen, RelayChainLength)
+		return ErrInvalidRelayChainLength(rcLen, RelayChainLength)
 	}
 	return nil
 }
 
 type MessageStaker interface {
-	GetActorType() ActorType
+	GetActorType() UtilActorType
 	GetAmount() string
 	GetChains() []string
 	GetServiceUrl() string
 }
 
-func ValidateStaker(msg MessageStaker) types.Error {
+func ValidateStaker(msg MessageStaker) Error {
 	if err := ValidateActorType(msg.GetActorType()); err != nil {
 		return err
 	}
@@ -280,7 +280,7 @@ func ValidateStaker(msg MessageStaker) types.Error {
 }
 
 func getSignBytes(msg Message) []byte {
-	bz, err := types.GetCodec().Marshal(msg)
+	bz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
 		log.Fatalf("must marshal %v", err)
 	}

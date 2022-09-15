@@ -12,7 +12,7 @@ type HotstuffReplicaMessageHandler struct{}
 
 var (
 	ReplicaMessageHandler HotstuffMessageHandler = &HotstuffReplicaMessageHandler{}
-	replicaHandlers                              = map[typesCons.HotstuffStep]func(*consensusModule, *typesCons.HotstuffMessage){
+	replicaHandlers                              = map[typesCons.HotstuffStep]func(*ConsensusModule, *typesCons.HotstuffMessage){
 		NewRound:  ReplicaMessageHandler.HandleNewRoundMessage,
 		Prepare:   ReplicaMessageHandler.HandlePrepareMessage,
 		PreCommit: ReplicaMessageHandler.HandlePrecommitMessage,
@@ -23,7 +23,7 @@ var (
 
 /*** NewRound Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -37,7 +37,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 
 /*** Prepare Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -70,7 +70,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 
 /*** PreCommit Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -98,7 +98,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 
 /*** Commit Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -126,7 +126,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 
 /*** Decide Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -150,12 +150,12 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 }
 
 // anteHandle is the handler called on every replica message before specific handler
-func (handler *HotstuffReplicaMessageHandler) anteHandle(m *consensusModule, msg *typesCons.HotstuffMessage) error {
+func (handler *HotstuffReplicaMessageHandler) anteHandle(m *ConsensusModule, msg *typesCons.HotstuffMessage) error {
 	log.Println("TODO: Hotstuff replica ante handle not implemented yet")
 	return nil
 }
 
-func (handler *HotstuffReplicaMessageHandler) emitTelemetryEvent(m *consensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) emitTelemetryEvent(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	m.GetBus().
 		GetTelemetryModule().
 		GetEventMetricsAgent().
@@ -168,7 +168,7 @@ func (handler *HotstuffReplicaMessageHandler) emitTelemetryEvent(m *consensusMod
 		)
 }
 
-func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error {
+func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error {
 	if !(msg.Type == Propose && msg.Step == Prepare) {
 		return typesCons.ErrProposalNotValidInPrepare
 	}
@@ -209,7 +209,7 @@ func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 	return typesCons.ErrUnhandledProposalCase
 }
 
-func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertificate) error {
+func (m *ConsensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertificate) error {
 	if qc == nil {
 		return typesCons.ErrNilQC
 	}
@@ -232,7 +232,7 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 		}
 		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
 		// just serialize `Message` once and verify each signature without re-serializing every time.
-		if !isSignatureValid(msgToJustify, validator.PublicKey, partialSig.Signature) {
+		if !isSignatureValid(msgToJustify, validator.GetPublicKey(), partialSig.Signature) {
 			m.nodeLog(typesCons.WarnInvalidPartialSigInQC(partialSig.Address, m.ValAddrToIdMap[partialSig.Address]))
 			continue
 		}

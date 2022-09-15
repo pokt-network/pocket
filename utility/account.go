@@ -1,9 +1,8 @@
 package utility
 
 import (
+	"github.com/pokt-network/pocket/utility/types"
 	"math/big"
-
-	"github.com/pokt-network/pocket/shared/types"
 )
 
 // 'Accounts' are structures in the utility module that closely resemble currency holding vehicles: like a bank account.

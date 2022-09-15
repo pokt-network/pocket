@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	sharedTypes "github.com/pokt-network/pocket/shared/types"
-	utilityTypes "github.com/pokt-network/pocket/utility/types"
+	typesPersistence "github.com/pokt-network/pocket/persistence/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 )
 
@@ -32,17 +32,17 @@ type (
 	cmdOption   func(*cobra.Command)
 	actorCmdDef struct {
 		Name      string
-		ActorType utilityTypes.ActorType
+		ActorType typesUtil.UtilActorType
 		Options   []cmdOption
 	}
 )
 
 func NewActorCommands(cmdOptions []cmdOption) []*cobra.Command {
 	actorCmdDefs := []actorCmdDef{
-		{"Application", utilityTypes.ActorType_App, cmdOptions},
-		{"Node", utilityTypes.ActorType_Node, cmdOptions},
-		{"Fisherman", utilityTypes.ActorType_Fish, cmdOptions},
-		{"Validator", utilityTypes.ActorType_Val, cmdOptions},
+		{"Application", typesUtil.UtilActorType_App, cmdOptions},
+		{"Node", typesUtil.UtilActorType_Node, cmdOptions},
+		{"Fisherman", typesUtil.UtilActorType_Fish, cmdOptions},
+		{"Validator", typesUtil.UtilActorType_Val, cmdOptions},
 	}
 
 	cmds := make([]*cobra.Command, 0)
@@ -108,7 +108,7 @@ If no changes are desired for the parameter, just enter the current param value 
 			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 			pwd = readPassphrase(pwd)
 
-			msg := &utilityTypes.MessageStake{
+			msg := &typesUtil.MessageStake{
 				PublicKey:     pk.PublicKey().Bytes(),
 				Chains:        chains,
 				Amount:        amount,
@@ -167,7 +167,7 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 			pwd = readPassphrase(pwd)
 
-			msg := &utilityTypes.MessageEditStake{
+			msg := &typesUtil.MessageEditStake{
 				Address:    pk.Address(),
 				Chains:     chains,
 				Amount:     amount,
@@ -210,7 +210,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 			pwd = readPassphrase(pwd)
 
-			msg := &utilityTypes.MessageUnstake{
+			msg := &typesUtil.MessageUnstake{
 				Address:   pk.Address(),
 				Signer:    pk.Address(),
 				ActorType: cmdDef.ActorType,
@@ -250,7 +250,7 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 			// TODO (team): passphrase is currently not used since there's no keybase yet, the prompt is here to mimick the real world UX
 			pwd = readPassphrase(pwd)
 
-			msg := &utilityTypes.MessageUnpause{
+			msg := &typesUtil.MessageUnpause{
 				Address:   pk.Address(),
 				Signer:    pk.Address(),
 				ActorType: cmdDef.ActorType,
@@ -285,13 +285,13 @@ func readPassphrase(currPwd string) string {
 }
 
 func validateStakeAmount(amount string) error {
-	am, err := sharedTypes.StringToBigInt(amount)
+	am, err := typesPersistence.StringToBigInt(amount)
 	if err != nil {
 		return err
 	}
 
 	sr := big.NewInt(stakingRecommendationAmount)
-	if sharedTypes.BigIntLessThan(am, sr) {
+	if typesUtil.BigIntLessThan(am, sr) {
 		fmt.Printf("The amount you are staking for is below the recommendation of %d POKT, would you still like to continue? y|n\n", sr.Div(sr, big.NewInt(1000000)).Int64())
 		if !Confirmation(pwd) {
 			return fmt.Errorf("aborted")
