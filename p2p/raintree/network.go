@@ -6,12 +6,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/pokt-network/pocket/shared/debug"
-
-	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
+	telemetry "github.com/pokt-network/pocket/telemetry"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -145,9 +144,9 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		GetTelemetryModule().
 		GetEventMetricsAgent().
 		EmitEvent(
-			p2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
-			p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_NAME,
-			p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
+			telemetry.P2P_EVENT_METRICS_NAMESPACE,
+			telemetry.RAINTREE_MESSAGE_EVENT_METRIC_NAME,
+			telemetry.RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
 		)
 
 	var rainTreeMsg typesP2P.RainTreeMessage
@@ -176,10 +175,10 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 			GetTelemetryModule().
 			GetEventMetricsAgent().
 			EmitEvent(
-				p2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
-				p2pTelemetry.BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME,
-				p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_NONCE_LABEL, rainTreeMsg.Nonce,
-				p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
+				telemetry.P2P_EVENT_METRICS_NAMESPACE,
+				telemetry.BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME,
+				telemetry.RAINTREE_MESSAGE_EVENT_METRIC_NONCE_LABEL, rainTreeMsg.Nonce,
+				telemetry.RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
 			)
 
 		return nil, nil
