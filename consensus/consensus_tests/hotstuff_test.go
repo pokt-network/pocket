@@ -22,7 +22,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, clockMock, configs, genesisStates, testChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, configs, genesisStates, clockMock, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Debug message to start consensus by triggering first view change

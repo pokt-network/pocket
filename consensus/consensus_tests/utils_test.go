@@ -83,9 +83,9 @@ func GenerateNodeConfigs(_ *testing.T, validatorCount int) (configs []modules.Co
 
 func CreateTestConsensusPocketNodes(
 	t *testing.T,
-	clock clock.Clock,
 	configs []modules.Config,
 	genesisState modules.GenesisState,
+	clock clock.Clock,
 	testChannel modules.EventsChannel,
 ) (pocketNodes IdToNodeMapping) {
 	pocketNodes = make(IdToNodeMapping, len(configs))
