@@ -2,7 +2,6 @@ package test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"math"
@@ -38,7 +37,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	// beginBlock logic verify
 	// missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)
 	// require.NoError(t, err)
-	// require.True(t, missed == 1, fmt.Sprintf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks))
+	// require.Equal(t, missed, 1)
 
 	// deliverTx logic verify
 	feeBig, err := ctx.GetMessageSendFee()
@@ -92,7 +91,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	// beginBlock logic verify
 	// missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)
 	// require.NoError(t, err)
-	// require.False(t, missed != 1, fmt.Sprintf("wrong missed blocks amount; expected %v got %v", 1, byzantine.MissedBlocks))
+	// require.Equal(t, missed, 1)
 
 	test_artifacts.CleanupTest(ctx)
 }
@@ -167,7 +166,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
-	require.False(t, proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0, fmt.Sprintf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference))
+	require.Equal(t, proposerBalanceDifference, expectedProposerBalanceDifference)
 
 	test_artifacts.CleanupTest(ctx)
 }

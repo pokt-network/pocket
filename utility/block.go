@@ -103,7 +103,7 @@ func (u *UtilityContext) GetAppHash() ([]byte, typesUtil.Error) {
 
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
 func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
-	latestBlockHeight, err := u.GetLatestHeight()
+	latestBlockHeight, err := u.GetHeight()
 	if err != nil {
 		return err
 	}
@@ -142,7 +142,7 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	latestHeight, err := u.GetLatestHeight()
+	latestHeight, err := u.GetHeight()
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 }
 
 func (u *UtilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
-	latestHeight, err := u.GetLatestHeight()
+	latestHeight, err := u.GetHeight()
 	if err != nil {
 		return err
 	}
@@ -256,10 +256,9 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error 
 
 // GetValidatorMissedBlocks gets the total blocks that a validator has not signed a certain window of time denominated by blocks
 func (u *UtilityContext) GetValidatorMissedBlocks(address []byte) (int, typesUtil.Error) {
-	store := u.Store()
-	height, er := store.GetHeight()
-	if er != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetMissedBlocks(er)
+	store, height, err := u.GetStoreAndHeight()
+	if err != nil {
+		return 0, err
 	}
 	missedBlocks, er := store.GetValidatorMissedBlocks(address, height)
 	if er != nil {

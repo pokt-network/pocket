@@ -17,6 +17,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	testingValidatorCount   = 5
+	testingServiceNodeCount = 1
+	testingApplicationCount = 1
+	testingFishermenCount   = 1
+)
+
 var (
 	defaultTestingChainsEdited = []string{"0002"}
 	defaultUnstaking           = int64(2017)
@@ -34,7 +41,7 @@ func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
 
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
-	testPersistenceMod = newTestPersistenceModule(dbUrl)
+	testPersistenceMod = newTestPersistenceModule(m, dbUrl)
 	m.Run()
 	os.Remove(testingConfigFilePath)
 	os.Remove(testingGenesisFilePath)
@@ -60,8 +67,7 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	}
 }
 
-// TODO(andrew): Take in `t` and fail the test if there's an error
-func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
+func newTestPersistenceModule(_ *testing.M, databaseUrl string) modules.PersistenceModule {
 	cfg := modules.Config{
 		Persistence: &test_artifacts.MockPersistenceConfig{
 			PostgresUrl:    databaseUrl,
@@ -69,14 +75,16 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 			BlockStorePath: "",
 		},
 	}
-	// TODO(andrew): Move the number of actors into local constants
-	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
+
+	genesisState, _ := test_artifacts.NewGenesisState(testingValidatorCount, testingServiceNodeCount, testingApplicationCount, testingFishermenCount)
 	createTestingGenesisAndConfigFiles(cfg, genesisState)
 	persistenceMod, err := persistence.Create(testingConfigFilePath, testingGenesisFilePath) // TODO (Drewsky) this is the last remaining cross module import and needs a fix...
 	if err != nil {
-		log.Fatalf("Error creating persistence module: %s", err)
+		log.Fatal(err)
 	}
-	persistenceMod.Start() // TODO: Check for error
+	if err = persistenceMod.Start(); err != nil {
+		log.Fatal(err)
+	}
 	return persistenceMod
 }
 

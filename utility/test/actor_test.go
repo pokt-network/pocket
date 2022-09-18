@@ -226,7 +226,7 @@ func TestUtilityContext_CalculateRelays(t *testing.T) {
 	actor := GetAllTestingApps(t, ctx)[0]
 	newMaxRelays, err := ctx.CalculateAppRelays(actor.GetStakedAmount())
 	require.NoError(t, err)
-	require.True(t, actor.GetGenericParam() == newMaxRelays, fmt.Sprintf("unexpected max relay calculation; got %v wanted %v", actor.GetGenericParam(), newMaxRelays))
+	require.Equal(t, actor.GetGenericParam(), newMaxRelays)
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -372,17 +372,17 @@ func TestUtilityContext_UnstakesPausedBefore(t *testing.T) {
 	actor := GetAllTestingApps(t, ctx)[0]
 	addrBz, err := hex.DecodeString(actor.GetAddress())
 	require.NoError(t, err)
-	require.True(t, actor.GetUnstakingHeight() == -1, fmt.Sprintf("wrong starting status"))
+	require.Equal(t, actor.GetUnstakingHeight(), -1)
 	require.NoError(t, ctx.SetActorPauseHeight(typesUtil.UtilActorType_App, addrBz, 0), "set actor pause height")
 	err = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
 	require.NoError(t, err)
 	require.NoError(t, ctx.UnstakeActorPausedBefore(0, typesUtil.UtilActorType_App), "unstake actor pause before")
 	require.NoError(t, ctx.UnstakeActorPausedBefore(1, typesUtil.UtilActorType_App), "unstake actor pause before height 1")
 	actor = GetAllTestingApps(t, ctx)[0]
-	require.True(t, actor.GetUnstakingHeight() != -1, fmt.Sprintf("status does not equal unstaking"))
+	require.Equal(t, actor.GetUnstakingHeight(), -1)
 	unstakingBlocks, err := ctx.GetAppUnstakingBlocks()
 	require.NoError(t, err)
-	require.True(t, actor.GetUnstakingHeight() == unstakingBlocks+1, fmt.Sprintf("incorrect unstaking height"))
+	require.Equal(t, actor.GetUnstakingHeight(), unstakingBlocks+1)
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -395,13 +395,13 @@ func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
 	for _, actor := range actors {
 		addrBz, err := hex.DecodeString(actor.GetAddress())
 		require.NoError(t, err)
-		require.True(t, actor.GetUnstakingHeight() == -1, fmt.Sprintf("wrong starting status"))
+		require.Equal(t, actor.GetUnstakingHeight(), -1)
 		require.NoError(t, ctx.SetActorPauseHeight(typesUtil.UtilActorType_App, addrBz, 1), "set actor pause height")
 	}
 	require.NoError(t, ctx.UnstakeActorPausedBefore(2, typesUtil.UtilActorType_App), "set actor pause before")
 	require.NoError(t, ctx.UnstakeActorsThatAreReady(), "unstake actors that are ready")
 	appAfter := GetAllTestingApps(t, ctx)[0]
-	require.True(t, appAfter.GetUnstakingHeight() == 0, fmt.Sprintf("apps still exists after unstake that are ready() call"))
+	require.Equal(t, appAfter.GetUnstakingHeight(), 0)
 	// TODO (Team) we need to better define what 'deleted' really is in the postgres world.
 	// We might not need to 'unstakeActorsThatAreReady' if we are already filtering by unstakingHeight
 	test_artifacts.CleanupTest(ctx)
