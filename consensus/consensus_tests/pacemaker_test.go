@@ -56,13 +56,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 			GetConsensusNodeState(pocketNode))
 	}
 
-	go func() {
-		// Cause the pacemaker to timeout
-		sleep(clockMock, paceMakerTimeout)
-	}()
-	runtime.Gosched()
-	// advance time by an amount longer than the timeout
-	advanceTime(clockMock, paceMakerTimeout+10*time.Millisecond)
+	forcePacemakerTimeout(clockMock, paceMakerTimeout)
 
 	// Check that a new round starts at the same height.
 	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
@@ -77,13 +71,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 			GetConsensusNodeState(pocketNode))
 	}
 
-	go func() {
-		// Cause the pacemaker to timeout
-		sleep(clockMock, paceMakerTimeout)
-	}()
-	runtime.Gosched()
-	// advance time by an amount longer than the timeout
-	advanceTime(clockMock, paceMakerTimeout+10*time.Millisecond)
+	forcePacemakerTimeout(clockMock, paceMakerTimeout)
 	// // Check that a new round starts at the same height
 	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
 	require.NoError(t, err)
@@ -97,13 +85,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 			GetConsensusNodeState(pocketNode))
 	}
 
-	go func() {
-		// Cause the pacemaker to timeout
-		sleep(clockMock, paceMakerTimeout)
-	}()
-	runtime.Gosched()
-	// advance time by an amount longer than the timeout
-	advanceTime(clockMock, paceMakerTimeout+10*time.Millisecond)
+	forcePacemakerTimeout(clockMock, paceMakerTimeout)
 
 	// Check that a new round starts at the same height.
 	newRoundMessages, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
@@ -209,12 +191,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Prepare, consensus.Vote, numNodes-1, 2000)
 	require.NoError(t, err)
 
-	go func() {
-		// Cause the pacemaker to timeout
-		sleep(clockMock, 50*timePkg.Millisecond)
-	}()
-	advanceTime(clockMock, 600*time.Millisecond)
-	runtime.Gosched()
+	forcePacemakerTimeout(clockMock, 600*time.Millisecond)
 
 	// Check that the leader is in the latest round.
 	for nodeId, pocketNode := range pocketNodes {
@@ -263,3 +240,13 @@ func TestPacemakerExponentialTimeouts(t *testing.T) {
 	t.Skip() // TODO: Implement
 }
 */
+
+func forcePacemakerTimeout(clockMock *clock.Mock, paceMakerTimeout timePkg.Duration) {
+	go func() {
+		// Cause the pacemaker to timeout
+		sleep(clockMock, paceMakerTimeout)
+	}()
+	runtime.Gosched()
+	// advance time by an amount longer than the timeout
+	advanceTime(clockMock, paceMakerTimeout+10*time.Millisecond)
+}
