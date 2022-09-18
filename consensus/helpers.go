@@ -223,7 +223,7 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 
 	m.setLeaderId(leaderId)
 
-	if m.currentNodeIsLeader() {
+	if m.isCurrentNodeLeader() {
 		m.setLogPrefix("LEADER")
 		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	} else {
@@ -239,7 +239,7 @@ func (m *ConsensusModule) setLeaderId(leaderId typesCons.NodeId) {
 	m.LeaderId = &leaderId
 }
 
-func (m *ConsensusModule) currentNodeIsLeader() bool {
+func (m *ConsensusModule) isCurrentNodeLeader() bool {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	return m.LeaderId != nil && *m.LeaderId == m.NodeId
