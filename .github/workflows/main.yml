@@ -18,7 +18,7 @@ env:
   # Even though we can test against multiple versions, this one is considered a target version.
   TARGET_GOLANG_VERSION: "1.18"
   PROTOC_VERSION: "3.19.4"
-  PUSH_TO_DOCKERHUB: true
+  PUSH_TO_DOCKERHUB: false
 
 jobs:
   test-multiple-go-versions:
