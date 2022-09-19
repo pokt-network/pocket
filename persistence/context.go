@@ -28,7 +28,7 @@ func (p PostgresContext) Commit() error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
 
 	ctx := context.TODO()
-	if err := p.tx.Commit(context.TODO()); err != nil {
+	if err := p.GetTx().Commit(context.TODO()); err != nil {
 		return err
 	}
 	if err := p.conn.Close(ctx); err != nil {
@@ -42,7 +42,7 @@ func (p PostgresContext) Release() error {
 	log.Printf("About to release context at height %d.\n", p.Height)
 
 	ctx := context.TODO()
-	if err := p.tx.Rollback(ctx); err != nil {
+	if err := p.GetTx().Rollback(ctx); err != nil {
 		return err
 	}
 	if err := p.conn.Close(ctx); err != nil {
