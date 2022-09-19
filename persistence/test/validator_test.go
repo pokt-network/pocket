@@ -2,10 +2,10 @@ package test
 
 import (
 	"encoding/hex"
-	"fmt"
-	"github.com/pokt-network/pocket/persistence/types"
 	"log"
 	"testing"
+
+	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -239,15 +239,15 @@ func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*type
 	}
 	addrBz, err := hex.DecodeString(validator.Address)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", validator.Address))
+		log.Fatalf("an error occurred converting address to bytes %s", validator.Address)
 	}
 	pubKeyBz, err := hex.DecodeString(validator.PublicKey)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", validator.PublicKey))
+		log.Fatalf("an error occurred converting pubKey to bytes %s", validator.PublicKey)
 	}
 	outputBz, err := hex.DecodeString(validator.Output)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", validator.Output))
+		log.Fatalf("an error occurred converting output to bytes %s", validator.Output)
 	}
 	return validator, db.InsertValidator(
 		addrBz,

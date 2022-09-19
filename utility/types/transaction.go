@@ -2,7 +2,7 @@ package types
 
 import (
 	"bytes"
-	"encoding/hex"
+
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
@@ -109,5 +109,5 @@ func (tx *Transaction) Equals(tx2 *Transaction) bool {
 }
 
 func TransactionHash(transactionProtoBytes []byte) string {
-	return hex.EncodeToString(crypto.SHA3Hash(transactionProtoBytes))
+	return crypto.GetHashStringFromBytes(transactionProtoBytes)
 }
