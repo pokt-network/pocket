@@ -42,11 +42,11 @@ type PostgresContext struct {
 	blockstore kvstore.KVStore
 }
 
-func (pg *PostgresContext) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
-	return context.TODO(), pg.GetTxn(), nil
+func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
+	return context.TODO(), pg.GetTx(), nil
 }
 
-func (pg *PostgresContext) GetTxn() pgx.Tx {
+func (pg *PostgresContext) GetTx() pgx.Tx {
 	return pg.tx
 }
 
@@ -163,7 +163,7 @@ func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
 
 // Exposed for testing purposes only
 func (p PostgresContext) DebugClearAll() error {
-	ctx, tx, err := p.GetCtxAndTxn()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
 	}

@@ -12,7 +12,7 @@ func (p PostgresContext) NewSavePoint(bytes []byte) error {
 
 func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	log.Println("TODO: RollbackToSavePoint not fully implemented")
-	return p.GetTxn().Rollback(context.TODO())
+	return p.GetTx().Rollback(context.TODO())
 }
 
 func (p PostgresContext) AppHash() ([]byte, error) {
