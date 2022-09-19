@@ -426,13 +426,15 @@ func sleep(clock *clock.Mock, duration time.Duration) {
 	clock.Sleep(duration)
 }
 
-// timeReminder simply prints, at a given interval, the current mocked time to help with debug.
+// timeReminder simply prints, at a given interval and in a separate goroutine, the current mocked time to help with debug.
 func timeReminder(clock *clock.Mock, frequency time.Duration) {
-	tick := time.NewTicker(frequency)
-	for {
-		<-tick.C
-		logTime(clock)
-	}
+	go func() {
+		tick := time.NewTicker(frequency)
+		for {
+			<-tick.C
+			logTime(clock)
+		}
+	}()
 }
 
 func assertConsensusState(t *testing.T, nodeId typesCons.NodeId, expected, actual typesCons.ConsensusNodeState) {

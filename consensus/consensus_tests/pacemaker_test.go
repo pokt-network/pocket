@@ -19,7 +19,7 @@ import (
 
 func TestTinyPacemakerTimeouts(t *testing.T) {
 	clockMock := clock.NewMock()
-	go timeReminder(clockMock, 100*time.Millisecond)
+	timeReminder(clockMock, 100*time.Millisecond)
 
 	// Test configs
 	numNodes := 4
@@ -127,7 +127,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	configs, genesisStates := GenerateNodeConfigs(t, numNodes)
 
 	clockMock := clock.NewMock()
-	go timeReminder(clockMock, 100*time.Millisecond)
+	timeReminder(clockMock, 100*time.Millisecond)
 
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
