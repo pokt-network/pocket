@@ -281,8 +281,7 @@ func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
 
 // A mock of the application specific to know if a message was sent to be handled by the application
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//
-//	expectation with RainTree by comparing with Telemetry after updating specs.
+//                         expectation with RainTree by comparing with Telemetry after updating specs.
 func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
 	ctrl := gomock.NewController(t)
 	busMock := modulesMock.NewMockBus(ctrl)
@@ -350,8 +349,7 @@ func prepareEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAge
 // is a race condition here, but it is okay because our goal is to achieve max coverage with an upper limit
 // on the number of expected messages propagated.
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//
-//	expectation with RainTree by comparing with Telemetry after updating specs.
+//                         expectation with RainTree by comparing with Telemetry after updating specs.
 func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesP2P.Transport {
 	testChannel := make(chan []byte, testChannelSize)
 	ctrl := gomock.NewController(t)
