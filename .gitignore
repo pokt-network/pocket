@@ -55,3 +55,6 @@ main
 # generated RPC server and client from openapi.yaml
 app/pocket/rpc/server.gen.go
 app/pocket/rpc/client.gen.go
+
+# Ignored generated files by build/config/main.go
+build/config/gen*.json
