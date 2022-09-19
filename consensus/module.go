@@ -35,6 +35,9 @@ type ConsensusModule struct {
 	privateKey cryptoPocket.Ed25519PrivateKey
 	consCfg    modules.ConsensusConfig
 
+	// m is a mutex used to control synchronization when multiple goroutines are accessing the struct and its fields / properties.
+	//
+	// The idea is that you want to acquire a Lock when you are writing values and a RLock when you want to make sure that no other goroutine is changing the values you are trying to read concurrently.
 	m sync.RWMutex
 
 	// Hotstuff
