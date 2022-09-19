@@ -3,7 +3,6 @@ package consensus
 import (
 	"context"
 	"log"
-	"sync"
 	timePkg "time"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
@@ -36,8 +35,6 @@ var _ PacemakerDebug = &paceMaker{}
 
 type paceMaker struct {
 	bus modules.Bus
-
-	m sync.RWMutex
 
 	// TODO(olshansky): The reason `pacemaker_*` files are not a sub-package under consensus
 	// due to it's dependency on the underlying implementation of `ConsensusModule`. Think
