@@ -126,8 +126,6 @@ func (m *ConsensusModule) isOptimisticThresholdMet(n int) error {
 }
 
 func (m *ConsensusModule) resetForNewHeight() {
-	m.m.Lock()
-	defer m.m.Unlock()
 	m.Round = 0
 	m.Block = nil
 	m.HighPrepareQC = nil
@@ -181,8 +179,6 @@ func (m *ConsensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 /*** Persistence Helpers ***/
 
 func (m *ConsensusModule) clearMessagesPool() {
-	m.m.Lock()
-	defer m.m.Unlock()
 	for _, step := range HotstuffSteps {
 		m.MessagePool[step] = make([]*typesCons.HotstuffMessage, 0)
 	}
@@ -191,14 +187,10 @@ func (m *ConsensusModule) clearMessagesPool() {
 /*** Leader Election Helpers ***/
 
 func (m *ConsensusModule) isLeaderUnknown() bool {
-	m.m.RLock()
-	defer m.m.RUnlock()
 	return m.LeaderId == nil
 }
 
 func (m *ConsensusModule) isLeader() bool {
-	m.m.RLock()
-	defer m.m.RUnlock()
 	return m.LeaderId != nil && *m.LeaderId == m.NodeId
 }
 
@@ -207,8 +199,6 @@ func (m *ConsensusModule) isReplica() bool {
 }
 
 func (m *ConsensusModule) clearLeader() {
-	m.m.Lock()
-	defer m.m.Unlock()
 	m.logPrefix = DefaultLogPrefix
 	m.LeaderId = nil
 }
@@ -221,9 +211,9 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 		return
 	}
 
-	m.setLeaderId(leaderId)
+	m.LeaderId = &leaderId
 
-	if m.isCurrentNodeLeader() {
+	if m.isLeader() {
 		m.setLogPrefix("LEADER")
 		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	} else {
@@ -235,19 +225,13 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 /*** General Infrastructure Helpers ***/
 
 func (m *ConsensusModule) nodeLog(s string) {
-	m.m.RLock()
-	defer m.m.RUnlock()
 	log.Printf("[%s][%d] %s\n", m.logPrefix, m.NodeId, s)
 }
 
 func (m *ConsensusModule) nodeLogError(s string, err error) {
-	m.m.RLock()
-	defer m.m.RUnlock()
 	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.NodeId, s, err)
 }
 
 func (m *ConsensusModule) setLogPrefix(logPrefix string) {
-	m.m.Lock()
-	defer m.m.Unlock()
 	m.logPrefix = logPrefix
 }

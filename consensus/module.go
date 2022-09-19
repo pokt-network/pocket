@@ -305,7 +305,7 @@ func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	}
 
 	// Need to execute leader election if there is no leader and we are in a new round.
-	if m.getStep() == NewRound && m.isLeaderUnknown() {
+	if m.Step == NewRound && m.isLeaderUnknown() {
 		m.electNextLeader(msg)
 	}
 
@@ -319,17 +319,13 @@ func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 }
 
 func (m *ConsensusModule) AppHash() string {
-	m.m.RLock()
-	defer m.m.RUnlock()
 	return m.appHash
 }
 
 func (m *ConsensusModule) CurrentHeight() uint64 {
-	return m.getHeight()
+	return m.Height
 }
 
 func (m *ConsensusModule) ValidatorMap() modules.ValidatorMap {
-	m.m.RLock()
-	defer m.m.RUnlock()
 	return typesCons.ValidatorMapToModulesValidatorMap(m.validatorMap)
 }

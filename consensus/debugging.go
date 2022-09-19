@@ -1,8 +1,9 @@
 package consensus
 
 import (
-	"github.com/pokt-network/pocket/shared/debug"
 	"log"
+
+	"github.com/pokt-network/pocket/shared/debug"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
@@ -24,9 +25,9 @@ func (m *ConsensusModule) HandleDebugMessage(debugMessage *debug.DebugMessage) e
 }
 
 func (m *ConsensusModule) GetNodeState() typesCons.ConsensusNodeState {
-	leaderId := typesCons.NodeId(0)
 	m.m.RLock()
 	defer m.m.RUnlock()
+	leaderId := typesCons.NodeId(0)
 	if m.LeaderId != nil {
 		leaderId = *m.LeaderId
 	}
@@ -44,13 +45,7 @@ func (m *ConsensusModule) resetToGenesis(_ *debug.DebugMessage) {
 	m.nodeLog(typesCons.DebugResetToGenesis)
 
 	m.Height = 0
-	m.Round = 0
-	m.Step = 0
-	m.Block = nil
-
-	m.HighPrepareQC = nil
-	m.LockedQC = nil
-
+	m.resetForNewHeight()
 	m.clearLeader()
 	m.clearMessagesPool()
 	m.GetBus().GetPersistenceModule().HandleDebugMessage(&debug.DebugMessage{
@@ -68,7 +63,9 @@ func (m *ConsensusModule) printNodeState(_ *debug.DebugMessage) {
 func (m *ConsensusModule) triggerNextView(_ *debug.DebugMessage) {
 	m.nodeLog(typesCons.DebugTriggerNextView)
 
-	if m.Height == 0 || (m.Step == Decide && m.paceMaker.IsManualMode()) {
+	currentheight := m.Height
+	currentStep := m.Step
+	if currentheight == 0 || (currentStep == Decide && m.paceMaker.IsManualMode()) {
 		m.paceMaker.NewHeight()
 	} else {
 		m.paceMaker.InterruptRound()
