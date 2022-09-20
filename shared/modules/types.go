@@ -15,6 +15,8 @@ type GenesisState struct {
 type BaseConfig struct {
 	RootDirectory string `json:"root_directory"`
 	PrivateKey    string `json:"private_key"` // TODO (pocket/issues/150) better architecture for key management (keybase, keyfiles, etc.)
+	ConfigPath    string `json:"config_path"`
+	GenesisPath   string `json:"genesis_path"`
 }
 
 type Config struct {

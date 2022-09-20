@@ -5,9 +5,9 @@ func Init(configPath, genesisPath string) (config *Config, genesis *Genesis, err
 	if err != nil {
 		return
 	}
-	config.configPath = configPath
-	config.genesisPath = genesisPath
 
+	config.Base.ConfigPath = configPath
+	config.Base.GenesisPath = genesisPath
 	genesis, err = ParseGenesisJSON(genesisPath)
 	return
 }

@@ -15,7 +15,7 @@ func (m *PersistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 		m.showLatestBlockInStore(debugMessage)
 	case debug.DebugMessageAction_DEBUG_CLEAR_STATE:
 		m.clearState(debugMessage)
-		g, err := runtime.ParseGenesisJSON(m.genesisPath)
+		g, err := runtime.ParseGenesisJSON(m.GetBus().GetConfig().Base.GenesisPath)
 		if err != nil {
 			return err
 		}

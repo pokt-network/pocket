@@ -23,9 +23,6 @@ type Config struct {
 	Persistence *typesPers.PersistenceConfig    `json:"persistence"`
 	P2P         *typesP2P.P2PConfig             `json:"p2p"`
 	Telemetry   *typesTelemetry.TelemetryConfig `json:"telemetry"`
-
-	configPath  string
-	genesisPath string
 }
 
 func (c *Config) ToShared() modules.Config {
@@ -42,6 +39,8 @@ func (c *Config) ToShared() modules.Config {
 type BaseConfig struct {
 	RootDirectory string `json:"root_directory"`
 	PrivateKey    string `json:"private_key"` // TODO (pocket/issues/150) better architecture for key management (keybase, keyfiles, etc.)
+	ConfigPath    string `json:"config_path"`
+	GenesisPath   string `json:"genesis_path"`
 }
 
 func ParseConfigJSON(configPath string) (config *Config, err error) {

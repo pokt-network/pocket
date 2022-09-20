@@ -54,7 +54,6 @@ func Create(cfg modules.PersistenceConfig, genesis modules.PersistenceGenesisSta
 		bus:          nil,
 		postgresURL:  moduleCfg.GetPostgresUrl(),
 		nodeSchema:   moduleCfg.GetNodeSchema(),
-		genesisPath:  "genesisPath",
 		blockStore:   blockStore,
 		writeContext: nil,
 	}
