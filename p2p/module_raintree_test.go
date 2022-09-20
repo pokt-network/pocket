@@ -457,7 +457,7 @@ func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) modules
 	}
 	return modules.GenesisState{
 		PersistenceGenesisState: &typesPers.PersistenceGenesisState{
-			Validators: typesPers.ToPersistanceActors(validators),
+			Validators: typesPers.ToPersistenceActors(validators),
 		},
 	}
 }

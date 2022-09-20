@@ -2,7 +2,7 @@ package types
 
 import "github.com/pokt-network/pocket/shared/modules"
 
-func toPersistanceActor(actor modules.Actor) *Actor {
+func toPersistenceActor(actor modules.Actor) *Actor {
 	return &Actor{
 		Address:      actor.GetAddress(),
 		PublicKey:    actor.GetPublicKey(),
@@ -11,30 +11,30 @@ func toPersistanceActor(actor modules.Actor) *Actor {
 	}
 }
 
-func ToPersistanceActors(actors []modules.Actor) []*Actor {
+func ToPersistenceActors(actors []modules.Actor) []*Actor {
 	r := make([]*Actor, 0)
 	for _, a := range actors {
-		r = append(r, toPersistanceActor(a))
+		r = append(r, toPersistenceActor(a))
 	}
 	return r
 }
 
-func toPersistanceAccount(account modules.Account) *Account {
+func toPersistenceAccount(account modules.Account) *Account {
 	return &Account{
 		Address: account.GetAddress(),
 		Amount:  account.GetAmount(),
 	}
 }
 
-func ToPersistanceAccounts(accounts []modules.Account) []*Account {
+func ToPersistenceAccounts(accounts []modules.Account) []*Account {
 	r := make([]*Account, 0)
 	for _, a := range accounts {
-		r = append(r, toPersistanceAccount(a))
+		r = append(r, toPersistenceAccount(a))
 	}
 	return r
 }
 
-func ToPersistanceParams(params modules.Params) *Params {
+func ToPersistenceParams(params modules.Params) *Params {
 	return &Params{
 		BlocksPerSession:                         params.GetBlocksPerSession(),
 		AppMinimumStake:                          params.GetAppMinimumStake(),

@@ -154,6 +154,7 @@ func (m bus) GetTelemetryModule() modules.TelemetryModule {
 func (m bus) GetConfig() modules.Config {
 	return m.config
 }
+
 func (m bus) GetGenesis() modules.GenesisState {
 	return m.genesis
 }

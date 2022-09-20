@@ -53,13 +53,13 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 			Validators:    typesCons.ToConsensusValidators(vals),
 		},
 		PersistenceGenesisState: &typesPers.PersistenceGenesisState{
-			Pools:        typesPers.ToPersistanceAccounts(NewPools()),
-			Accounts:     typesPers.ToPersistanceAccounts(NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...)), // TODO(olshansky): clean this up
-			Applications: typesPers.ToPersistanceActors(apps),
-			Validators:   typesPers.ToPersistanceActors(vals),
-			ServiceNodes: typesPers.ToPersistanceActors(serviceNodes),
-			Fishermen:    typesPers.ToPersistanceActors(fish),
-			Params:       typesPers.ToPersistanceParams(DefaultParams()),
+			Pools:        typesPers.ToPersistenceAccounts(NewPools()),
+			Accounts:     typesPers.ToPersistenceAccounts(NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...)), // TODO(olshansky): clean this up
+			Applications: typesPers.ToPersistenceActors(apps),
+			Validators:   typesPers.ToPersistenceActors(vals),
+			ServiceNodes: typesPers.ToPersistenceActors(serviceNodes),
+			Fishermen:    typesPers.ToPersistenceActors(fish),
+			Params:       typesPers.ToPersistenceParams(DefaultParams()),
 		},
 	}, validatorPrivateKeys
 }
