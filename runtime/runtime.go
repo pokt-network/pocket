@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/spf13/viper"
 )
@@ -95,4 +96,13 @@ func (b *RuntimeConfig) ShouldUseRandomPK() bool {
 
 func WithRandomPK() func(*RuntimeConfig) {
 	return func(b *RuntimeConfig) { b.useRandomPK = true }
+}
+
+func WithPK(pk string) func(*RuntimeConfig) {
+	return func(b *RuntimeConfig) {
+		if b.config.Consensus == nil {
+			b.config.Consensus = &types.ConsensusConfig{}
+		}
+		b.config.Consensus.PrivateKey = pk
+	}
 }
