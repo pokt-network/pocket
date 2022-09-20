@@ -64,14 +64,14 @@ type ConsensusModule struct {
 	MaxBlockBytes uint64
 }
 
-func Create(builder modules.Runtime) (modules.Module, error) {
+func Create(runtime modules.Runtime) (modules.Module, error) {
 	var m ConsensusModule
-	return m.Create(builder)
+	return m.Create(runtime)
 }
 
-func (*ConsensusModule) Create(builder modules.Runtime) (modules.Module, error) {
-	cfg := builder.GetConfig()
-	genesis := builder.GetGenesis()
+func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) {
+	cfg := runtime.GetConfig()
+	genesis := runtime.GetGenesis()
 
 	moduleCfg := cfg.Consensus.(*typesCons.ConsensusConfig)
 	moduleGenesis := genesis.ConsensusGenesisState.(*typesCons.ConsensusGenesisState)
@@ -89,7 +89,7 @@ func (*ConsensusModule) Create(builder modules.Runtime) (modules.Module, error) 
 
 	valMap := typesCons.ValidatorListToMap(moduleGenesis.Validators)
 	var privateKey cryptoPocket.PrivateKey
-	if builder.ShouldUseRandomPK() {
+	if runtime.ShouldUseRandomPK() {
 		privateKey, err = cryptoPocket.GeneratePrivateKey()
 	} else {
 		privateKey, err = cryptoPocket.NewPrivateKey(moduleCfg.PrivateKey)
