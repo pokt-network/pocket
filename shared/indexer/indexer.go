@@ -1,4 +1,3 @@
-// DISCUSS_IN_THIS_COMMIT: Create a separate indexer package for this
 // TECHDEBT(andrew): Move this out of shared and alongside the mempool.
 
 package indexer
@@ -22,7 +21,7 @@ type TxIndexer interface {
 	// `Index` indexes by `(hash, height, sender, recipient)`
 	Index(result TxResult) error
 
-	// `GetByHash` returns all transaction specified by hash or nil if the transaction is not indexed
+	// `GetByHash` returns the transaction specified by the hash if indexed or nil otherwise
 	GetByHash(hash []byte) (TxResult, error)
 
 	// `GetByHeight` returns all transactions specified by height or nil if there are no transactions at that height
@@ -64,23 +63,23 @@ var _ TxIndexer = &txIndexer{}
 // `txIndexer` implementation uses a `KVStore` (interface) to index the transactions
 //
 // The transaction is indexed in the following formats:
-// - HASHKEY:      "h/SHA3(TxResultProtoBytes)"  VAL: TxResultProtoBytes     // store value by hash
+// - HASHKEY:      "h/SHA3(TxResultProtoBytes)"  VAL: TxResultProtoBytes     // store value by hash (the key here is equivalent to the VALs below)
 // - HEIGHTKEY:    "b/height/index"              VAL: HASHKEY                // store hashKey by height
-// - SENDERKEY:    "s/height/index"              VAL: HASHKEY                // store hashKey by sender
-// - RECIPIENTKEY: "r/height/index"              VAL: HASHKEY                // store hashKey by recipient (if not empty)
+// - SENDERKEY:    "s/senderAddr"                VAL: HASHKEY                // store hashKey by sender
+// - RECIPIENTKEY: "r/recipientAddr"             VAL: HASHKEY                // store hashKey by recipient (if not empty)
 //
 // FOOTNOTE: the height/index store is using [ELEN](https://github.com/jordanorelli/lexnum/blob/master/elen.pdf)
 // This is to ensure the results are stored sorted (assuming the `KVStore`` uses a byte-wise lexicographical sorting)
 
 const (
-	HashPrefix      = 'h'
-	HeightPrefix    = 'b' // b for block
-	SenderPrefix    = 's'
-	RecipientPrefix = 'r'
+	hashPrefix      = 'h'
+	heightPrefix    = 'b' // b for block
+	senderPrefix    = 's'
+	recipientPrefix = 'r'
 )
 
 // =,- are the default parameters in the [example repository](https://github.com/jordanorelli/lexnum#example)
-// INVESTIGATE We can research to see if there are more optimal parameters
+// INVESTIGATE: We can research to see if there are more optimal parameters
 var elenEncoder = lexnum.NewEncoder('=', '-')
 
 func (x *DefaultTxResult) Bytes() ([]byte, error) {
@@ -220,7 +219,7 @@ func (indexer *txIndexer) indexByRecipient(recipient string, bz []byte) error {
 // key helper functions
 
 func (indexer *txIndexer) hashKey(hash []byte) []byte {
-	return indexer.key(HashPrefix, hex.EncodeToString(hash))
+	return indexer.key(hashPrefix, hex.EncodeToString(hash))
 }
 
 func (indexer *txIndexer) heightAndIndexKey(height int64, index int32) []byte {
@@ -228,15 +227,15 @@ func (indexer *txIndexer) heightAndIndexKey(height int64, index int32) []byte {
 }
 
 func (indexer *txIndexer) heightKey(height int64) []byte {
-	return indexer.key(HeightPrefix, elenEncoder.EncodeInt(int(height))+"/")
+	return indexer.key(heightPrefix, elenEncoder.EncodeInt(int(height))+"/")
 }
 
 func (indexer *txIndexer) senderKey(address string) []byte {
-	return indexer.key(SenderPrefix, address)
+	return indexer.key(senderPrefix, address)
 }
 
 func (indexer *txIndexer) recipientKey(address string) []byte {
-	return indexer.key(RecipientPrefix, address)
+	return indexer.key(recipientPrefix, address)
 }
 
 func (indexer *txIndexer) key(prefix rune, postfix string) []byte {

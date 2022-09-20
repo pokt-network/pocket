@@ -1,7 +1,6 @@
 package indexer
 
 import (
-	"bytes"
 	"log"
 	"math/rand"
 	"testing"
@@ -19,8 +18,8 @@ func FuzzTxIndexer(f *testing.F) {
 		"GetByRecipient",
 	}
 	numOperationTypes := len(operations)
-	numberOfOperations := 100
-	for i := 0; i < numberOfOperations; i++ {
+	numOperations := 100
+	for i := 0; i < numOperations; i++ {
 		f.Add(operations[rand.Intn(numOperationTypes)])
 	}
 	indexer, err := NewMemTxIndexer()
@@ -33,15 +32,14 @@ func FuzzTxIndexer(f *testing.F) {
 		// seed random
 		rand.Seed(int64(time.Now().Nanosecond()))
 		// set height ordering to descending 50% of time
-		var descending bool
-		if rand.Intn(2) == 0 {
-			descending = true
-		}
+		isDescending := rand.Intn(2) == 0
 		// select a height 0 - 9 to index
 		height := int64(rand.Intn(10))
 		// get index
-		heightResult, err := indexer.GetByHeight(height, descending)
+		heightResult, err := indexer.GetByHeight(height, isDescending)
 		require.NoError(t, err)
+		// the new txResult is appended to the # of results currently at that height
+		// this means the 'index' of the transaction within the block is len(heightResults)
 		heightIndex := len(heightResult)
 		// create new testing tx
 		tx := NewTestingTransactionResult(t, int(height), heightIndex)
@@ -62,23 +60,23 @@ func FuzzTxIndexer(f *testing.F) {
 		case "GetByHash":
 			txResult, err := indexer.GetByHash(hash)
 			require.NoError(t, err)
-			require.True(t, txResultsEqual(t, tx, txResult), tx, txResult)
+			requireTxResultsEqual(t, tx, txResult)
 		case "GetByHeight":
-			txResult, err := indexer.GetByHeight(height, descending)
+			txResult, err := indexer.GetByHeight(height, isDescending)
 			require.NoError(t, err)
-			if descending {
-				require.True(t, txResultsEqual(t, tx, txResult[0]))
+			if isDescending {
+				requireTxResultsEqual(t, tx, txResult[0])
 			} else {
-				require.True(t, txResultsEqual(t, tx, txResult[heightIndex]))
+				requireTxResultsEqual(t, tx, txResult[heightIndex])
 			}
 		case "GetBySender":
 			txResult, err := indexer.GetBySender(sender, true)
 			require.NoError(t, err)
-			require.True(t, txResultsEqual(t, tx, txResult[senderIndex]))
+			requireTxResultsEqual(t, tx, txResult[senderIndex])
 		case "GetByRecipient":
 			txResult, err := indexer.GetByRecipient(recipient, true)
 			require.NoError(t, err)
-			require.True(t, txResultsEqual(t, tx, txResult[recipientIndex]))
+			requireTxResultsEqual(t, tx, txResult[recipientIndex])
 		default:
 			t.Errorf("Unexpected operation fuzzing operation %s", op)
 		}
@@ -103,13 +101,13 @@ func TestGetByHash(t *testing.T) {
 	require.NoError(t, err)
 	txResultFromHash, err := txIndexer.GetByHash(hash)
 	require.NoError(t, err)
-	require.True(t, txResultsEqual(t, txResult, txResultFromHash))
+	requireTxResultsEqual(t, txResult, txResultFromHash)
 	// check indexing/get by hash 2
 	hash2, err := txResult2.Hash()
 	require.NoError(t, err)
 	txResultFromHash2, err := txIndexer.GetByHash(hash2)
 	require.NoError(t, err)
-	require.True(t, txResultsEqual(t, txResult2, txResultFromHash2))
+	requireTxResultsEqual(t, txResult2, txResultFromHash2)
 }
 
 func TestGetByHeight(t *testing.T) {
@@ -134,8 +132,10 @@ func TestGetByHeight(t *testing.T) {
 	require.NoError(t, err)
 	txResultsFromHeight1, err := txIndexer.GetByHeight(1, false)
 	require.NoError(t, err)
-	require.Equal(t, 2, len(txResultsFromHeight))
-	require.Equal(t, 1, len(txResultsFromHeight1))
+	expectedNumOfTxsAtHeight0 := 2
+	expectedNumOfTxsAtHeight1 := 1
+	require.Equal(t, expectedNumOfTxsAtHeight0, len(txResultsFromHeight))
+	require.Equal(t, expectedNumOfTxsAtHeight1, len(txResultsFromHeight1))
 }
 
 func TestGetBySender(t *testing.T) {
@@ -154,7 +154,7 @@ func TestGetBySender(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(txResultsFromSender))
-	require.True(t, txResultsEqual(t, txResult, txResultsFromSender[0]))
+	requireTxResultsEqual(t, txResult, txResultsFromSender[0])
 	// ensure it's not indexed elsewhere
 	txResultsFromRecipientBad, err := txIndexer.GetByRecipient(sender, false)
 	require.NoError(t, err)
@@ -175,19 +175,19 @@ func TestGetByRecipient(t *testing.T) {
 	txResultsFromRecipient, err := txIndexer.GetByRecipient(recipient, false)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(txResultsFromRecipient))
-	require.True(t, txResultsEqual(t, txResult, txResultsFromRecipient[0]))
+	requireTxResultsEqual(t, txResult, txResultsFromRecipient[0])
 	// ensure it's not indexed elsewhere
 	txResultsFromSenderBad, err := txIndexer.GetBySender(recipient, false)
 	require.NoError(t, err)
 	require.Equal(t, 0, len(txResultsFromSenderBad))
 }
 
-func txResultsEqual(t *testing.T, txR1, txR2 TxResult) bool {
+func requireTxResultsEqual(t *testing.T, txR1, txR2 TxResult) {
 	bz, err := txR1.Bytes()
 	require.NoError(t, err)
 	bz2, err := txR2.Bytes()
 	require.NoError(t, err)
-	return bytes.Equal(bz, bz2)
+	require.Equal(t, bz, bz2)
 }
 
 // utility helpers
@@ -217,6 +217,10 @@ const (
 	UnjailMessage
 )
 
+var (
+	msgTypes = []MessageType{SendMessage, StakeMessage, UnstakeMessage, EditStakeMessage, UnjailMessage}
+)
+
 func (mt MessageType) String() string {
 	switch mt {
 	case SendMessage:
@@ -234,8 +238,6 @@ func (mt MessageType) String() string {
 }
 
 func randomMessageType() string {
-	// TODO(andrew): Add an enum for the different message types
-	msgTypes := []MessageType{SendMessage, StakeMessage, UnstakeMessage, EditStakeMessage, UnjailMessage}
 	return msgTypes[rand.Intn(len(msgTypes))].String()
 }
 
@@ -259,11 +261,7 @@ func randomErr() (code int32, err string) {
 
 // Generates a random alphanumeric sequence of exactly 50 characters
 func randLetterBytes() []byte {
-	rand.Seed(int64(time.Now().Nanosecond()))
-	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	b := make([]rune, rand.Intn(50))
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return []byte(string(b))
+	randBytes := make([]byte, 50)
+	rand.Read(randBytes)
+	return randBytes
 }
