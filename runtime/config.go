@@ -62,18 +62,17 @@ func ParseConfigJSON(configPath string) (config *Config, err error) {
 func (c *Config) GetMaxMempoolBytes() uint64 {
 	return c.Consensus.MaxMempoolBytes
 }
-func (c *Config) GetPaceMakerConfig() modules.PacemakerConfig {
-	return c.Consensus.PacemakerConfig
-}
 
 // modules.P2PConfig
 
 func (c *Config) GetConsensusPort() uint32 {
 	return c.P2P.ConsensusPort
 }
+
 func (c *Config) GetUseRainTree() bool {
 	return c.P2P.UseRainTree
 }
+
 func (c *Config) IsEmptyConnType() bool { // TODO (team) make enum
 	return c.P2P.IsEmptyConnectionType
 }
@@ -83,9 +82,11 @@ func (c *Config) IsEmptyConnType() bool { // TODO (team) make enum
 func (c *Config) GetPostgresUrl() string {
 	return c.Persistence.PostgresUrl
 }
+
 func (c *Config) GetNodeSchema() string {
 	return c.Persistence.NodeSchema
 }
+
 func (c *Config) GetBlockStorePath() string {
 	return c.Persistence.BlockStorePath
 }
@@ -95,9 +96,11 @@ func (c *Config) GetBlockStorePath() string {
 func (c *Config) GetEnabled() bool {
 	return c.Telemetry.Enabled
 }
+
 func (c *Config) GetAddress() string {
 	return c.Telemetry.Address
 }
+
 func (c *Config) GetEndpoint() string {
 	return c.Telemetry.Endpoint
 }

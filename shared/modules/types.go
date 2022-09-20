@@ -30,7 +30,6 @@ type Config struct {
 
 type ConsensusConfig interface {
 	GetMaxMempoolBytes() uint64
-	GetPaceMakerConfig() PacemakerConfig
 }
 
 type PacemakerConfig interface {
