@@ -120,7 +120,7 @@ func CreateTestConsensusPocketNode(
 ) *shared.Node {
 	createTestingGenesisAndConfigFiles(t, cfg, genesisState)
 
-	runtime := runtime.NewBuilder(testingConfigFilePath, testingGenesisFilePath)
+	runtime := runtime.New(testingConfigFilePath, testingGenesisFilePath)
 	config := runtime.GetConfig()
 	genesis := runtime.GetGenesis()
 

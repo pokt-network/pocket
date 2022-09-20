@@ -29,7 +29,7 @@ type Node struct {
 }
 
 func Create(configPath, genesisPath string) (n *Node, err error) {
-	runtime := runtime.NewBuilder(configPath, genesisPath)
+	runtime := runtime.New(configPath, genesisPath)
 	cfg := runtime.GetConfig()
 	genesis := runtime.GetGenesis()
 

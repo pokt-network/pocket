@@ -49,7 +49,7 @@ var consensusMod modules.ConsensusModule
 func main() {
 	var err error
 
-	runtime := runtime.NewBuilder(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
+	runtime := runtime.New(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
 	cfg := runtime.GetConfig()
 	genesis := runtime.GetGenesis()
 

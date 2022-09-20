@@ -382,7 +382,7 @@ func prepareP2PModules(t *testing.T, configs []modules.Config) (p2pModules map[s
 		configFilePath := testingConfigFilePath + strconv.Itoa(i) + jsonPosfix
 		genesisFilePath := testingGenesisFilePath + jsonPosfix
 
-		runtime := runtime.NewBuilder(configFilePath, genesisFilePath)
+		runtime := runtime.New(configFilePath, genesisFilePath)
 		cfg := runtime.GetConfig()
 
 		p2pMod, err := Create(cfg.P2P, false)

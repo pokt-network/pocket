@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-var _ modules.Runtime = &Builder{}
+var _ modules.Runtime = &RuntimeConfig{}
 
-type Builder struct {
+type RuntimeConfig struct {
 	configPath  string
 	genesisPath string
 
@@ -23,8 +23,8 @@ type Builder struct {
 	useRandomPK bool
 }
 
-func NewBuilder(configPath, genesisPath string, options ...func(*Builder)) *Builder {
-	b := &Builder{
+func New(configPath, genesisPath string, options ...func(*RuntimeConfig)) *RuntimeConfig {
+	b := &RuntimeConfig{
 		configPath:  configPath,
 		genesisPath: genesisPath,
 	}
@@ -43,7 +43,7 @@ func NewBuilder(configPath, genesisPath string, options ...func(*Builder)) *Buil
 	return b
 }
 
-func (b *Builder) init() (config *Config, genesis *Genesis, err error) {
+func (b *RuntimeConfig) init() (config *Config, genesis *Genesis, err error) {
 	dir, file := path.Split(b.configPath)
 	filename := strings.TrimSuffix(file, filepath.Ext(file))
 
@@ -81,18 +81,18 @@ func (b *Builder) init() (config *Config, genesis *Genesis, err error) {
 	return
 }
 
-func (b *Builder) GetConfig() modules.Config {
+func (b *RuntimeConfig) GetConfig() modules.Config {
 	return b.config.ToShared()
 }
 
-func (b *Builder) GetGenesis() modules.GenesisState {
+func (b *RuntimeConfig) GetGenesis() modules.GenesisState {
 	return b.genesis.ToShared()
 }
 
-func (b *Builder) ShouldUseRandomPK() bool {
+func (b *RuntimeConfig) ShouldUseRandomPK() bool {
 	return b.useRandomPK
 }
 
-func WithRandomPK() func(*Builder) {
-	return func(b *Builder) { b.useRandomPK = true }
+func WithRandomPK() func(*RuntimeConfig) {
+	return func(b *RuntimeConfig) { b.useRandomPK = true }
 }
