@@ -49,11 +49,11 @@ var consensusMod modules.ConsensusModule
 func main() {
 	var err error
 
-	runtime := runtime.NewBuilder(defaultConfigPath, defaultGenesisPath)
+	runtime := runtime.NewBuilder(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
 	cfg := runtime.GetConfig()
 	genesis := runtime.GetGenesis()
 
-	cons, err := consensus.Create(runtime, false) // TECHDEBT: extra param required for injecting private key hack for debug client
+	cons, err := consensus.Create(runtime) // TECHDEBT: extra param required for injecting private key hack for debug client
 	consensusMod := cons.(modules.ConsensusModule)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())

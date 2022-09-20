@@ -124,7 +124,7 @@ func CreateTestConsensusPocketNode(
 	config := runtime.GetConfig()
 	genesis := runtime.GetGenesis()
 
-	consensusMod, err := consensus.Create(runtime, false)
+	consensusMod, err := consensus.Create(runtime)
 	require.NoError(t, err)
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.

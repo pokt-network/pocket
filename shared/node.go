@@ -48,7 +48,7 @@ func Create(configPath, genesisPath string) (n *Node, err error) {
 		return nil, err
 	}
 
-	consensusMod, err := consensus.Create(runtime, false)
+	consensusMod, err := consensus.Create(runtime)
 	if err != nil {
 		return nil, err
 	}

@@ -20,5 +20,5 @@ type InterruptableModule interface {
 
 type InitializableModule interface {
 	GetModuleName() string
-	Create(builder Runtime, useRandomPK bool) (Module, error)
+	Create(runtime Runtime) (Module, error)
 }
