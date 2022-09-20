@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pokt-network/pocket/shared/types"
-
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -17,6 +15,7 @@ import (
 )
 
 // INVESTIGATE(team): Investigate why this test occasionally fails due to a race condition.
+// TODO(olshansky): Fix this flaky test once and for all.
 func TestTinyPacemakerTimeouts(t *testing.T) {
 	// There can be race conditions related to having a small paceMaker time out, so we skip this test
 	// when `failOnExtraMessages` is set to true to simplify things for now. However, we still validate
@@ -30,14 +29,14 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	numNodes := 4
 	paceMakerTimeoutMsec := uint64(50) // Set a very small pacemaker timeout
 	paceMakerTimeout := 50 * time.Millisecond
-	configs := GenerateNodeConfigs(t, numNodes)
+	configs, genesisStates := GenerateNodeConfigs(t, numNodes)
 	for _, config := range configs {
-		config.Consensus.Pacemaker.TimeoutMsec = paceMakerTimeoutMsec
+		config.Consensus.GetPaceMakerConfig().SetTimeoutMsec(paceMakerTimeoutMsec)
 	}
 
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, configs, testChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, configs, genesisStates, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Debug message to start consensus by triggering next view.
@@ -112,11 +111,11 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 
 func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	numNodes := 4
-	configs := GenerateNodeConfigs(t, numNodes)
+	configs, genesisStates := GenerateNodeConfigs(t, numNodes)
 
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, configs, testChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, configs, genesisStates, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Starting point
@@ -129,7 +128,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	leaderRound := uint64(6)
 
 	// Placeholder block
-	blockHeader := &types.BlockHeader{
+	blockHeader := &typesCons.BlockHeader{
 		Height:            int64(testHeight),
 		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            0,
@@ -137,7 +136,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		ProposerAddress:   leader.Address.Bytes(),
 		QuorumCertificate: nil,
 	}
-	block := &types.Block{
+	block := &typesCons.Block{
 		BlockHeader:  blockHeader,
 		Transactions: emptyTxs,
 	}

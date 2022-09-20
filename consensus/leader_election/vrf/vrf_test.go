@@ -44,7 +44,7 @@ func TestVRFKeygenProveAndVerify(t *testing.T) {
 	vrfOut, vrfProof, err := sk.Prove(msg)
 	require.Nil(t, err)
 
-	// Successfull verification
+	// Successful verification
 	verified, err := vk.Verify(msg, vrfProof, vrfOut)
 	require.Nil(t, err)
 	require.True(t, verified)
@@ -87,7 +87,7 @@ func TestVRFKeygenProveAndVerifyWithSeed(t *testing.T) {
 	require.Equal(t, "d4c95d83e26323ec6e86801d810071aefbface10ac59c250e58096f18a72b56c8d9166cfc8252bbb80def11f438d5ce484373f718261555b59eb6f6d9af9370a", hex.EncodeToString(vrfOut))
 	require.Equal(t, "3d277cbd2d7ecde326e2cd3cf3d7787997c52fe7bf98c18e8417f4b5e2e7d78368ef28822f2e4b3d806ed4e5cbc492c67d9bcb86b09c9c49978712041d2ffd7aa433dc7a326362fe70657a66af3a220d", hex.EncodeToString(vrfProof))
 
-	// Successfull verification
+	// Successful verification
 	verified, err := vk.Verify(msg, vrfProof, vrfOut)
 	require.Nil(t, err)
 	require.True(t, verified)

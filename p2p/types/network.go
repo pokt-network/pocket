@@ -2,8 +2,10 @@ package types
 
 import (
 	"fmt"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"sort"
+
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // CLEANUP(olshansky): See if we can deprecate one of these structures.
@@ -14,6 +16,8 @@ type AddrBookMap map[string]*NetworkPeer
 // TECHDEBT(olshansky): When we delete `stdnetwork` and only go with `raintree`, this interface
 // can be simplified greatly.
 type Network interface {
+	modules.IntegratableModule
+
 	NetworkBroadcast(data []byte) error
 	NetworkSend(data []byte, address cryptoPocket.Address) error
 

@@ -49,25 +49,33 @@ persistence         # Directly contains the persistence module interface for eac
 ├── account.go
 ├── application.go
 ├── block.go
+├── context.go      # Postgres context logic
+├── debug.go        # For temporary localnet
 ├── db.go           # Helpers to connect and initialize the Postgres database
 ├── fisherman.go
+├── genesis.go      # Populate genesis logic
 ├── gov.go
 ├── module.go       # Implementation of the persistence module interface
 ├── service_node.go
 ├── shared_sql.go   # Database implementation helpers shared across all protocol actors
 └── validator.go
 ├── docs
-├── schema         # Directly contains the SQL schema and SQL query builders used by the files above
+├── kvstore         # Key value store for database
+├── proto           # Proto3 message files for generated structures
+├── types           # Directly contains the SQL schema and SQL query builders used by the files above
+│   ├── migrations
 │   ├── account.go
 │   ├── application.go
-│   ├── base_actor.go      # Implementation of the `protocol_actor.go` interface shared across all actors
+│   ├── base_actor.go            # Implementation of the `protocol_actor.go` interface shared across all actors
 │   ├── block.go
 │   ├── fisherman.go
 │   ├── gov.go
-│   ├── migrations
-│   ├── protocol_actor.go   # Interface definition for the schema shared across all actors
+│   ├── persistence_genesis.go   # Implements shared genesis interface
+│   ├── protocol_actor.go        # Interface definition for the schema shared across all actors
 │   ├── service_node.go
-│   ├── shared_sql.go       # Query building implementation helpers shared across all protocol actors
+│   ├── shared_sql.go            # Query building implementation helpers shared across all protocol actors
+│   └── unstaking.go             # Implements shared unstaking interface
+│   └── util.go
 │   └── validator.go
 └── test  # Unit & fuzzing tests
 ```
@@ -144,6 +152,12 @@ For example, on macOS, you can check for this with `lsof -i:5432` and kill the a
 
 **Q**: Why not use an ORM?
 **A**: We are trying to keep the module small and lean initially but are ope
+
+**Q**: What is a `Param` in the `Gov` schema?
+**A**: It represents a value associated with a name and a height that we can reference to represent governance settings. These settings have the power of altering the behaviour of various aspects of the network.
+
+**Q**: What is a `Flag` in the `Gov` schema?
+**A**: A flag is very much alike a `Param` with the difference that it also has a boolean flag to specify if that setting is enabled or not at any point in time (height). We are discussing if we should replace the boolean flag and allow multivariate feature flags.
 
 ## Implementation TODOs
 

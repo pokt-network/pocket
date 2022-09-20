@@ -1,0 +1,125 @@
+# This is a main job that handles tests and builds container images.
+
+name: Test, build and push artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+
+env:
+  # Even though we can test against multiple versions, this one is considered a target version.
+  TARGET_GOLANG_VERSION: "1.18"
+  PROTOC_VERSION: "3.19.4"
+
+jobs:
+  test-multiple-go-versions:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ["1.18"] # As we are relying on generics, we can't go lower than 1.18.
+      fail-fast: false
+    name: Go ${{ matrix.go }} test
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Setup Golang caches
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-${{ matrix.go }}-
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+      - name: install cli dependencies
+        run: make install_cli_deps
+      - name: generate protobufs and mocks
+        run: make protogen_local && make mockgen
+      - name: run all tests
+        run: make test_all_with_json
+      - name: Annotate tests on GitHub
+        # Only annotate if the test failed on target version to avoid duplicated annotations on GitHub.
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        uses: guyarb/golang-test-annotations@v0.5.1
+        with:
+          test-results: test_results.json
+
+      # TODO(@okdas): move coverage to a separate job
+      - name: create coverage report
+        if: ${{ env.TARGET_GOLANG_VERSION == matrix.go }}
+        run: make test_all_with_coverage
+      - name: Upload coverage to Codecov
+        if: ${{ env.TARGET_GOLANG_VERSION == matrix.go }}
+        uses: codecov/codecov-action@v3
+
+  # TODO(@okdas): reuse artifacts built by the previous job instead
+  # of going through the build process in container build job again
+  # - figure out how to handle musl/alpine case if we want to support it
+  build-images:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Build dev & prod images
+        imageType: [dev, prod]
+        osType: [debian] # Protoc maintainers do not supply a binary for alpine, so we either need to build it or use a different version of protoc
+    steps:
+      - uses: actions/checkout@v3
+      - name: Docker Setup QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Docker Setup Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Docker Metadata action
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            poktnetwork/pocket-v1
+            ghcr.io/pokt-network/pocket-v1
+          tags: |
+            type=schedule${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
+            type=semver,pattern={{version}}${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
+            type=semver,pattern={{major}}.{{minor}}${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
+            type=semver,pattern={{major}}${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
+            type=ref,event=branch${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
+            type=ref,event=pr${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
+            type=sha${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
+            type=raw,value=latest,enable={{is_default_branch}}${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
+      # Turned off until we set up docker hub
+      - name: Login to  DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          file: build/Dockerfile.${{ matrix.osType }}.${{ matrix.imageType }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            TARGET_GOLANG_VERSION=${{ env.TARGET_GOLANG_VERSION }}

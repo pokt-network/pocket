@@ -1,23 +1,27 @@
 package raintree
 
 import (
-	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"math/rand"
 	"time"
 
+	"github.com/pokt-network/pocket/shared/debug"
+
+	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
-
+	"github.com/pokt-network/pocket/shared/modules"
 	"google.golang.org/protobuf/proto"
 )
 
 var _ typesP2P.Network = &rainTreeNetwork{}
+var _ modules.IntegratableModule = &rainTreeNetwork{}
 
 type rainTreeNetwork struct {
+	bus modules.Bus
+
+	// TODO(olshansky): still thinking through these structures
 	selfAddr cryptoPocket.Address
 	addrBook typesP2P.AddrBook
 
@@ -29,7 +33,7 @@ type rainTreeNetwork struct {
 	maxNumLevels uint32
 
 	// TECHDEBT(drewsky): What should we use for de-duping messages within P2P?
-	mempool types.Mempool
+	mempool map[uint64]struct{} // TODO (drewsky) replace map implementation (can grow unbounded)
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) typesP2P.Network {
@@ -40,8 +44,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) t
 		addrBookMap:  make(typesP2P.AddrBookMap),
 		addrList:     make([]string, 0),
 		maxNumLevels: 0,
-		// TODO(team): Mempool size should be configurable
-		mempool: types.NewMempool(1000000, 1000),
+		mempool:      make(map[uint64]struct{}),
 	}
 
 	if err := n.processAddrBookUpdates(); err != nil {
@@ -62,7 +65,6 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 	if level == 0 {
 		return nil
 	}
-
 	msg := &typesP2P.RainTreeMessage{
 		Level: level,
 		Data:  data,
@@ -136,12 +138,24 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 }
 
 func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
+	blockHeightInt := n.GetBus().GetConsensusModule().CurrentHeight()
+	blockHeight := fmt.Sprintf("%d", blockHeightInt)
+
+	n.GetBus().
+		GetTelemetryModule().
+		GetEventMetricsAgent().
+		EmitEvent(
+			p2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
+			p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_NAME,
+			p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
+		)
+
 	var rainTreeMsg typesP2P.RainTreeMessage
 	if err := proto.Unmarshal(data, &rainTreeMsg); err != nil {
 		return nil, err
 	}
 
-	networkMessage := types.PocketEvent{}
+	networkMessage := debug.PocketEvent{}
 	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
 		log.Println("Error decoding network message: ", err)
 		return nil, err
@@ -154,21 +168,24 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		}
 	}
 
-	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, uint64(rainTreeMsg.Nonce))
-	hash := cryptoPocket.SHA3Hash(b)
-	hashString := hex.EncodeToString(hash)
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
 	// TODO(team): Add more tests to verify this is sufficient for deduping purposes.
-	if n.mempool.Contains(hashString) {
+	if _, contains := n.mempool[rainTreeMsg.Nonce]; contains {
+		n.GetBus().
+			GetTelemetryModule().
+			GetEventMetricsAgent().
+			EmitEvent(
+				p2pTelemetry.P2P_EVENT_METRICS_NAMESPACE,
+				p2pTelemetry.BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME,
+				p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_NONCE_LABEL, rainTreeMsg.Nonce,
+				p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL, blockHeight,
+			)
+
 		return nil, nil
 	}
 
-	// Error handling the addition transaction to the local mempool
-	if err := n.mempool.AddTransaction(b); err != nil {
-		return nil, fmt.Errorf("error adding transaction to RainTree mempool: %s", err.Error())
-	}
+	n.mempool[rainTreeMsg.Nonce] = struct{}{}
 
 	// Return the data back to the caller so it can be handeled by the app specific bus
 	return rainTreeMsg.Data, nil
@@ -176,7 +193,6 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 func (n *rainTreeNetwork) GetAddrBook() typesP2P.AddrBook {
 	return n.addrBook
-
 }
 
 func (n *rainTreeNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {
@@ -191,12 +207,26 @@ func (n *rainTreeNetwork) RemovePeerToAddrBook(peer *typesP2P.NetworkPeer) error
 	panic("Not implemented")
 }
 
+func (n *rainTreeNetwork) SetBus(bus modules.Bus) {
+	n.bus = bus
+}
+
+func (n *rainTreeNetwork) GetBus() modules.Bus {
+	// TODO: Do we need this if?
+	// if n.bus == nil {
+	// 	log.Printf("[WARN] PocketBus is not initialized in rainTreeNetwork")
+	// 	return nil
+	// }
+	return n.bus
+}
+
 func getNonce() uint64 {
 	rand.Seed(time.Now().UTC().UnixNano())
 	return rand.Uint64()
 }
 
 // INVESTIGATE(olshansky): This did not generate a random nonce on every call
+
 // func getNonce() uint64 {
 // 	seed, err := cryptRand.Int(cryptRand.Reader, big.NewInt(math.MaxInt64))
 // 	if err != nil {
