@@ -16,7 +16,7 @@ func Init(configPath, genesisPath string) (config *Config, genesis *Genesis, err
 	viper.AddConfigPath(".")
 	viper.AddConfigPath(dir)
 	viper.SetConfigName(filename)
-	viper.SetConfigName("config")
+	//viper.SetConfigName("config")
 	viper.SetConfigType("json")
 
 	// The lines below allow for environment variables configuration (12 factor app)
