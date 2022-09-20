@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"encoding/json"
 	"github.com/pokt-network/pocket/shared/debug"
 )
 
@@ -24,6 +23,6 @@ type Bus interface {
 	GetTelemetryModule() TelemetryModule
 
 	// Configuration
-	GetConfig() map[string]json.RawMessage
-	GetGenesis() map[string]json.RawMessage
+	GetConfig() Config
+	GetGenesis() GenesisState
 }

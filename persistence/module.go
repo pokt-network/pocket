@@ -2,9 +2,7 @@ package persistence
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 
 	"github.com/pokt-network/pocket/persistence/types"
@@ -12,7 +10,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 )
 
 var _ modules.PersistenceModule = &PersistenceModule{}
@@ -36,19 +33,10 @@ const (
 	PersistenceModuleName = "persistence"
 )
 
-func Create(configPath, genesisPath string) (modules.PersistenceModule, error) {
-	m := new(PersistenceModule)
-	c, err := m.InitConfig(configPath)
-	if err != nil {
-		return nil, err
-	}
-	cfg := c.(*types.PersistenceConfig)
-	g, err := m.InitGenesis(genesisPath)
-	if err != nil {
-		return nil, err
-	}
-	genesis := g.(*types.PersistenceGenesisState)
-	conn, err := connectToDatabase(cfg.GetPostgresUrl(), cfg.GetNodeSchema())
+func Create(cfg modules.PersistenceConfig, genesis modules.PersistenceGenesisState) (modules.PersistenceModule, error) {
+	moduleCfg := cfg.(*types.PersistenceConfig)
+	moduleGenesis := genesis.(*types.PersistenceGenesisState)
+	conn, err := connectToDatabase(moduleCfg.GetPostgresUrl(), moduleCfg.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
@@ -57,16 +45,16 @@ func Create(configPath, genesisPath string) (modules.PersistenceModule, error) {
 	}
 	conn.Close(context.TODO())
 
-	blockStore, err := initializeBlockStore(cfg.GetBlockStorePath())
+	blockStore, err := initializeBlockStore(moduleCfg.GetBlockStorePath())
 	if err != nil {
 		return nil, err
 	}
 
 	persistenceMod := &PersistenceModule{
 		bus:          nil,
-		postgresURL:  cfg.GetPostgresUrl(),
-		nodeSchema:   cfg.GetNodeSchema(),
-		genesisPath:  genesisPath,
+		postgresURL:  moduleCfg.GetPostgresUrl(),
+		nodeSchema:   moduleCfg.GetNodeSchema(),
+		genesisPath:  "genesisPath",
 		blockStore:   blockStore,
 		writeContext: nil,
 	}
@@ -79,44 +67,12 @@ func Create(configPath, genesisPath string) (modules.PersistenceModule, error) {
 		// 		     this forces the genesis state to be reloaded on every node startup until state sync is
 		//           implemented.
 		// NOTE: `populateGenesisState` does not return an error but logs a fatal error if there's a problem
-		persistenceMod.populateGenesisState(genesis)
+		persistenceMod.populateGenesisState(moduleGenesis)
 	} else {
 		log.Println("Loading state from previous state...")
 	}
 
 	return persistenceMod, nil
-}
-
-func (m *PersistenceModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-	data, err := ioutil.ReadFile(pathToConfigJSON)
-	if err != nil {
-		return
-	}
-	// over arching configuration file
-	rawJSON := make(map[string]json.RawMessage)
-	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToConfigJSON, err.Error())
-	}
-	// persistence specific configuration file
-	config = new(types.PersistenceConfig)
-	err = json.Unmarshal(rawJSON[m.GetModuleName()], config)
-	return
-}
-
-func (m *PersistenceModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
-	data, err := ioutil.ReadFile(pathToGenesisJSON)
-	if err != nil {
-		return
-	}
-	// over arching configuration file
-	rawJSON := make(map[string]json.RawMessage)
-	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToGenesisJSON, err.Error())
-	}
-	// persistence specific configuration file
-	genesis = new(types.PersistenceGenesisState)
-	err = json.Unmarshal(rawJSON[test_artifacts.GetGenesisFileName(m.GetModuleName())], genesis)
-	return
 }
 
 func (m *PersistenceModule) Start() error {

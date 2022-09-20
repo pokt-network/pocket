@@ -14,12 +14,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
 
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
+	typesPers "github.com/pokt-network/pocket/persistence/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -281,7 +283,8 @@ func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
 
 // A mock of the application specific to know if a message was sent to be handled by the application
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//                         expectation with RainTree by comparing with Telemetry after updating specs.
+//
+//	expectation with RainTree by comparing with Telemetry after updating specs.
 func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
 	ctrl := gomock.NewController(t)
 	busMock := modulesMock.NewMockBus(ctrl)
@@ -349,7 +352,8 @@ func prepareEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAge
 // is a race condition here, but it is okay because our goal is to achieve max coverage with an upper limit
 // on the number of expected messages propagated.
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//                         expectation with RainTree by comparing with Telemetry after updating specs.
+//
+//	expectation with RainTree by comparing with Telemetry after updating specs.
 func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesP2P.Transport {
 	testChannel := make(chan []byte, testChannelSize)
 	ctrl := gomock.NewController(t)
@@ -374,7 +378,14 @@ func prepareP2PModules(t *testing.T, configs []modules.Config) (p2pModules map[s
 	p2pModules = make(map[string]*p2pModule, len(configs))
 	for i, config := range configs {
 		createTestingGenesisAndConfigFiles(t, config, modules.GenesisState{}, i)
-		p2pMod, err := Create(testingConfigFilePath+strconv.Itoa(i)+jsonPosfix, testingGenesisFilePath+jsonPosfix, false)
+
+		configFilePath := testingConfigFilePath + strconv.Itoa(i) + jsonPosfix
+		genesisFilePath := testingGenesisFilePath + jsonPosfix
+
+		cfg, _, err := runtime.Init(configFilePath, genesisFilePath)
+		require.NoError(t, err)
+
+		p2pMod, err := Create(cfg.P2P, false)
 		require.NoError(t, err)
 		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
 	}
@@ -433,7 +444,7 @@ func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) modules
 	validators := make([]modules.Actor, len(valKeys))
 	for i, valKey := range valKeys {
 		addr := valKey.Address().String()
-		val := &test_artifacts.MockActor{
+		val := &typesPers.Actor{
 			Address:         addr,
 			PublicKey:       valKey.PublicKey().String(),
 			GenericParam:    validatorId(t, i+1),
@@ -445,8 +456,8 @@ func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) modules
 		validators[i] = val
 	}
 	return modules.GenesisState{
-		PersistenceGenesisState: &test_artifacts.MockPersistenceGenesisState{
-			Validators: validators,
+		PersistenceGenesisState: &typesPers.PersistenceGenesisState{
+			Validators: typesPers.ToPersistanceActors(validators),
 		},
 	}
 }

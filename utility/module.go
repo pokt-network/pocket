@@ -20,19 +20,11 @@ const (
 	UtilityModuleName = "utility"
 )
 
-func Create(configPath, genesisPath string) (modules.UtilityModule, error) {
+func Create(cfg modules.UtilityConfig) (modules.UtilityModule, error) {
 	return &UtilityModule{
 		// TODO: Add `maxTransactionBytes` and `maxTransactions` to cfg.Utility
 		Mempool: types.NewMempool(1000, 1000),
 	}, nil
-}
-
-func (u *UtilityModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-	return // No-op
-}
-
-func (u *UtilityModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
-	return // No-op
 }
 
 func (u *UtilityModule) Start() error {

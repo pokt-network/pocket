@@ -1,15 +1,12 @@
 package consensus
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -65,35 +62,26 @@ type ConsensusModule struct {
 	MaxBlockBytes uint64
 }
 
-func Create(configPath, genesisPath string, useRandomPK bool) (modules.ConsensusModule, error) {
-	cm := new(ConsensusModule)
-	c, err := cm.InitConfig(configPath)
-	if err != nil {
-		return nil, err
-	}
-	g, err := cm.InitGenesis(genesisPath)
-	if err != nil {
-		return nil, err
-	}
-	cfg := c.(*typesCons.ConsensusConfig)
-	genesis := g.(*typesCons.ConsensusGenesisState)
-	leaderElectionMod, err := leader_election.Create(cfg, genesis)
+func Create(cfg modules.ConsensusConfig, genesis modules.ConsensusGenesisState, useRandomPK bool) (modules.ConsensusModule, error) {
+	moduleCfg := cfg.(*typesCons.ConsensusConfig)
+	moduleGenesis := genesis.(*typesCons.ConsensusGenesisState)
+	leaderElectionMod, err := leader_election.Create(moduleCfg, moduleGenesis)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO(olshansky): Can we make this a submodule?
-	paceMaker, err := CreatePacemaker(cfg)
+	paceMaker, err := CreatePacemaker(moduleCfg)
 	if err != nil {
 		return nil, err
 	}
 
-	valMap := typesCons.ValidatorListToMap(genesis.Validators)
+	valMap := typesCons.ValidatorListToMap(moduleGenesis.Validators)
 	var privateKey cryptoPocket.PrivateKey
 	if useRandomPK {
 		privateKey, err = cryptoPocket.GeneratePrivateKey()
 	} else {
-		privateKey, err = cryptoPocket.NewPrivateKey(cfg.PrivateKey)
+		privateKey, err = cryptoPocket.NewPrivateKey(moduleCfg.PrivateKey)
 	}
 	if err != nil {
 		return nil, err
@@ -105,7 +93,7 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 		bus: nil,
 
 		privateKey: privateKey.(cryptoPocket.Ed25519PrivateKey),
-		consCfg:    cfg,
+		consCfg:    moduleCfg,
 
 		Height: 0,
 		Round:  0,
@@ -129,46 +117,13 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 
 		logPrefix:     DefaultLogPrefix,
 		MessagePool:   make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
-		MaxBlockBytes: genesis.GetMaxBlockBytes(),
+		MaxBlockBytes: moduleGenesis.GetMaxBlockBytes(),
 	}
 
 	// TODO(olshansky): Look for a way to avoid doing this.
 	paceMaker.SetConsensusModule(m)
 
 	return m, nil
-}
-
-func (m *ConsensusModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-	data, err := ioutil.ReadFile(pathToConfigJSON)
-	if err != nil {
-		return
-	}
-	// over arching configuration file
-	rawJSON := make(map[string]json.RawMessage)
-	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToConfigJSON, err.Error())
-	}
-	// consensus specific configuration file
-	config = new(typesCons.ConsensusConfig)
-	err = json.Unmarshal(rawJSON[m.GetModuleName()], config)
-	return
-}
-
-func (m *ConsensusModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
-	data, err := ioutil.ReadFile(pathToGenesisJSON)
-	if err != nil {
-		return
-	}
-	// over arching configuration file
-	rawJSON := make(map[string]json.RawMessage)
-	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToGenesisJSON, err.Error())
-	}
-	// consensus specific configuration file
-	genesis = new(typesCons.ConsensusGenesisState)
-
-	err = json.Unmarshal(rawJSON[test_artifacts.GetGenesisFileName(m.GetModuleName())], genesis)
-	return
 }
 
 func (m *ConsensusModule) Start() error {

@@ -59,14 +59,6 @@ func (m *PrometheusTelemetryModule) Stop() error {
 	return nil
 }
 
-func (m *PrometheusTelemetryModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-	return // No-op
-}
-
-func (m *PrometheusTelemetryModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
-	return // No-op
-}
-
 func (m *PrometheusTelemetryModule) SetBus(bus modules.Bus) {
 	m.bus = bus
 }

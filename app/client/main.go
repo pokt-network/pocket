@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/telemetry"
 
@@ -47,11 +48,17 @@ var consensusMod modules.ConsensusModule
 
 func main() {
 	var err error
-	consensusMod, err = consensus.Create(defaultConfigPath, defaultGenesisPath, true) // TECHDEBT: extra param required for injecting private key hack for debug client
+
+	cfg, genesis, err := runtime.Init(defaultConfigPath, defaultGenesisPath)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed parse config and/or genesis: %v", err.Error())
+	}
+
+	consensusMod, err = consensus.Create(cfg.Consensus, genesis.ConsensusGenesisState, true) // TECHDEBT: extra param required for injecting private key hack for debug client
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 	}
-	p2pMod, err = p2p.Create(defaultConfigPath, defaultGenesisPath, true) // TECHDEBT: extra param required for injecting private key hack for debug client
+	p2pMod, err = p2p.Create(cfg, true) // TECHDEBT: extra param required for injecting private key hack for debug client
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 	}
@@ -59,12 +66,12 @@ func main() {
 	// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
 	// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
 	// module that NOOPs (per the configs above) is injected.
-	telemetryMod, err := telemetry.Create(defaultConfigPath, defaultGenesisPath)
+	telemetryMod, err := telemetry.Create(cfg.Telemetry)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
 
-	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod)
+	_ = shared.CreateBusWithOptionalModules(cfg.ToShared(), genesis.ToShared(), nil, p2pMod, nil, consensusMod, telemetryMod)
 
 	p2pMod.Start()
 

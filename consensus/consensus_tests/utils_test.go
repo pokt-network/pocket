@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
 
@@ -62,7 +63,7 @@ type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
 /*** Node Generation Helpers ***/
 
-func GenerateNodeConfigs(_ *testing.T, validatorCount int) (configs []modules.Config, genesisState modules.GenesisState) {
+func GenerateNodeConfigs(_ *testing.T, validatorCount int) (configs []runtime.Config, genesisState modules.GenesisState) {
 	var keys []string
 	genesisState, keys = test_artifacts.NewGenesisState(validatorCount, 1, 1, 1)
 	configs = test_artifacts.NewDefaultConfigs(keys)
@@ -83,7 +84,7 @@ func GenerateNodeConfigs(_ *testing.T, validatorCount int) (configs []modules.Co
 
 func CreateTestConsensusPocketNodes(
 	t *testing.T,
-	configs []modules.Config,
+	configs []runtime.Config,
 	genesisState modules.GenesisState,
 	testChannel modules.EventsChannel,
 ) (pocketNodes IdToNodeMapping) {
@@ -113,12 +114,16 @@ const (
 // Creates a pocket node where all the primary modules, exception for consensus, are mocked
 func CreateTestConsensusPocketNode(
 	t *testing.T,
-	cfg modules.Config,
+	cfg runtime.Config,
 	genesisState modules.GenesisState,
 	testChannel modules.EventsChannel,
 ) *shared.Node {
 	createTestingGenesisAndConfigFiles(t, cfg, genesisState)
-	consensusMod, err := consensus.Create(testingConfigFilePath, testingGenesisFilePath, false)
+
+	config, genesis, err := runtime.Init(testingConfigFilePath, testingGenesisFilePath)
+	require.NoError(t, err)
+
+	consensusMod, err := consensus.Create(config.Consensus, genesis.ConsensusGenesisState, false)
 	require.NoError(t, err)
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
@@ -127,7 +132,7 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 
-	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock)
+	bus, err := shared.CreateBus(config.ToShared(), genesis.ToShared(), persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock)
 	require.NoError(t, err)
 
 	pk, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
@@ -141,7 +146,7 @@ func CreateTestConsensusPocketNode(
 	return pocketNode
 }
 
-func createTestingGenesisAndConfigFiles(t *testing.T, cfg modules.Config, genesisState modules.GenesisState) {
+func createTestingGenesisAndConfigFiles(t *testing.T, cfg runtime.Config, genesisState modules.GenesisState) {
 	config, err := json.Marshal(cfg.Consensus)
 	require.NoError(t, err)
 

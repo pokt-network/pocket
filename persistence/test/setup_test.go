@@ -107,7 +107,7 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	createTestingGenesisAndConfigFiles(cfg, genesisState)
-	persistenceMod, err := persistence.Create(testingConfigFilePath, testingGenesisFilePath)
+	persistenceMod, err := persistence.Create(cfg.Persistence, genesisState.PersistenceGenesisState)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
@@ -284,7 +284,8 @@ func fuzzSingleProtocolActor(
 }
 
 // TODO(olshansky): Make these functions & variables more functional to avoid having "unexpected"
-//                  side effects and making it clearer to the reader.
+//
+//	side effects and making it clearer to the reader.
 const (
 	testingGenesisFilePath = "genesis.json"
 	testingConfigFilePath  = "config.json"

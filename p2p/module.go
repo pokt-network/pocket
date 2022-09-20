@@ -5,8 +5,6 @@ package p2p
 // to be a "real" replacement for now.
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/debug"
@@ -42,14 +40,10 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
 }
 
-func Create(configPath, genesisPath string, useRandomPK bool) (m modules.P2PModule, err error) {
+func Create(cfg modules.P2PConfig, useRandomPK bool) (m modules.P2PModule, err error) {
 	log.Println("Creating network module")
-	c, err := new(p2pModule).InitConfig(configPath)
-	if err != nil {
-		return nil, err
-	}
-	cfg := c.(*typesP2P.P2PConfig)
-	l, err := CreateListener(cfg)
+	moduleCfg := cfg.(*typesP2P.P2PConfig)
+	l, err := CreateListener(moduleCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -57,38 +51,18 @@ func Create(configPath, genesisPath string, useRandomPK bool) (m modules.P2PModu
 	if useRandomPK {
 		privateKey, err = cryptoPocket.GeneratePrivateKey()
 	} else {
-		privateKey, err = cryptoPocket.NewPrivateKey(cfg.PrivateKey)
+		privateKey, err = cryptoPocket.NewPrivateKey(moduleCfg.PrivateKey)
 	}
 	if err != nil {
 		return nil, err
 	}
 	m = &p2pModule{
-		p2pConfig: cfg,
+		p2pConfig: moduleCfg,
 
 		listener: l,
 		address:  privateKey.Address(),
 	}
 	return m, nil
-}
-
-func (m *p2pModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-	data, err := ioutil.ReadFile(pathToConfigJSON)
-	if err != nil {
-		return
-	}
-	// over arching configuration file
-	rawJSON := make(map[string]json.RawMessage)
-	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToConfigJSON, err.Error())
-	}
-	// p2p specific configuration file
-	config = new(typesP2P.P2PConfig)
-	err = json.Unmarshal(rawJSON[m.GetModuleName()], config)
-	return
-}
-
-func (m *p2pModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
-	return // No-op
 }
 
 func (m *p2pModule) SetBus(bus modules.Bus) {
