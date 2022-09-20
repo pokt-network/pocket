@@ -49,12 +49,12 @@ var consensusMod modules.ConsensusModule
 func main() {
 	var err error
 
-	cfg, genesis, err := runtime.Init(defaultConfigPath, defaultGenesisPath)
-	if err != nil {
-		log.Fatalf("[ERROR] Failed parse config and/or genesis: %v", err.Error())
-	}
+	runtime := runtime.NewBuilder(defaultConfigPath, defaultGenesisPath)
+	cfg := runtime.GetConfig()
+	genesis := runtime.GetGenesis()
 
-	consensusMod, err = consensus.Create(cfg.Consensus, genesis.ConsensusGenesisState, true) // TECHDEBT: extra param required for injecting private key hack for debug client
+	cons, err := consensus.Create(runtime, false) // TECHDEBT: extra param required for injecting private key hack for debug client
+	consensusMod := cons.(modules.ConsensusModule)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 	}
@@ -71,7 +71,7 @@ func main() {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
 
-	_ = shared.CreateBusWithOptionalModules(cfg.ToShared(), genesis.ToShared(), nil, p2pMod, nil, consensusMod, telemetryMod)
+	_ = shared.CreateBusWithOptionalModules(cfg, genesis, nil, p2pMod, nil, consensusMod, telemetryMod)
 
 	p2pMod.Start()
 

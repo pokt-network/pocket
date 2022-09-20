@@ -4,8 +4,6 @@ package modules
 // TODO(drewsky): Add `Create` function; pocket/issues/163
 // TODO(drewsky): Do not embed this inside of modules but force it via an implicit cast at compile time
 type Module interface {
-	GetModuleName() string
-
 	IntegratableModule
 	InterruptableModule
 }
@@ -18,4 +16,9 @@ type IntegratableModule interface {
 type InterruptableModule interface {
 	Start() error
 	Stop() error
+}
+
+type InitializableModule interface {
+	GetModuleName() string
+	Create(builder Runtime, useRandomPK bool) (Module, error)
 }

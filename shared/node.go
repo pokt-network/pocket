@@ -29,11 +29,9 @@ type Node struct {
 }
 
 func Create(configPath, genesisPath string) (n *Node, err error) {
-
-	cfg, genesis, err := runtime.Init(configPath, genesisPath)
-	if err != nil {
-		return nil, err
-	}
+	runtime := runtime.NewBuilder(configPath, genesisPath)
+	cfg := runtime.GetConfig()
+	genesis := runtime.GetGenesis()
 
 	persistenceMod, err := persistence.Create(cfg.Persistence, genesis.PersistenceGenesisState)
 	if err != nil {
@@ -50,7 +48,7 @@ func Create(configPath, genesisPath string) (n *Node, err error) {
 		return nil, err
 	}
 
-	consensusMod, err := consensus.Create(cfg.Consensus, genesis.ConsensusGenesisState, false)
+	consensusMod, err := consensus.Create(runtime, false)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +58,7 @@ func Create(configPath, genesisPath string) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(cfg.ToShared(), genesis.ToShared(), persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod)
+	bus, err := CreateBus(cfg, genesis, persistenceMod, p2pMod, utilityMod, consensusMod.(modules.ConsensusModule), telemetryMod)
 	if err != nil {
 		return nil, err
 	}

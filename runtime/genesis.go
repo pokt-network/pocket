@@ -20,8 +20,8 @@ type Genesis struct {
 
 func (g *Genesis) ToShared() modules.GenesisState {
 	return modules.GenesisState{
-		PersistenceGenesisState: g,
-		ConsensusGenesisState:   g,
+		PersistenceGenesisState: g.PersistenceGenesisState,
+		ConsensusGenesisState:   g.ConsensusGenesisState,
 	}
 }
 

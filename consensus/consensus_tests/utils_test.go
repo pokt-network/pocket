@@ -120,10 +120,11 @@ func CreateTestConsensusPocketNode(
 ) *shared.Node {
 	createTestingGenesisAndConfigFiles(t, cfg, genesisState)
 
-	config, genesis, err := runtime.Init(testingConfigFilePath, testingGenesisFilePath)
-	require.NoError(t, err)
+	runtime := runtime.NewBuilder(testingConfigFilePath, testingGenesisFilePath)
+	config := runtime.GetConfig()
+	genesis := runtime.GetGenesis()
 
-	consensusMod, err := consensus.Create(config.Consensus, genesis.ConsensusGenesisState, false)
+	consensusMod, err := consensus.Create(runtime, false)
 	require.NoError(t, err)
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
@@ -132,7 +133,7 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 
-	bus, err := shared.CreateBus(config.ToShared(), genesis.ToShared(), persistenceMock, p2pMock, utilityMock, consensusMod, telemetryMock)
+	bus, err := shared.CreateBus(config, genesis, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock)
 	require.NoError(t, err)
 
 	pk, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)

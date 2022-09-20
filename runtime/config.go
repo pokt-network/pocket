@@ -15,6 +15,8 @@ import (
 var _ modules.ConsensusConfig = &Config{}
 var _ modules.P2PConfig = &Config{}
 var _ modules.PersistenceConfig = &Config{}
+var _ modules.TelemetryConfig = &Config{}
+var _ modules.UtilityConfig = &Config{}
 
 type Config struct {
 	Base        *BaseConfig                     `json:"base"`
@@ -86,4 +88,16 @@ func (c *Config) GetNodeSchema() string {
 }
 func (c *Config) GetBlockStorePath() string {
 	return c.Persistence.BlockStorePath
+}
+
+// modules.TelemetryConfig
+
+func (c *Config) GetEnabled() bool {
+	return c.Telemetry.Enabled
+}
+func (c *Config) GetAddress() string {
+	return c.Telemetry.Address
+}
+func (c *Config) GetEndpoint() string {
+	return c.Telemetry.Endpoint
 }

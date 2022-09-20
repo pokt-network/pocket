@@ -1,22 +1,53 @@
 package runtime
 
 import (
+	"log"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
+	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/spf13/viper"
 )
 
-func Init(configPath, genesisPath string) (config *Config, genesis *Genesis, err error) {
-	dir, file := path.Split(configPath)
+var _ modules.Runtime = &builder{}
+
+type builder struct {
+	configPath  string
+	genesisPath string
+
+	config  *Config
+	genesis *Genesis
+}
+
+func NewBuilder(configPath, genesisPath string, options ...func(*builder)) *builder {
+	b := &builder{
+		configPath:  configPath,
+		genesisPath: genesisPath,
+	}
+
+	cfg, genesis, err := b.init()
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to initialize runtime builder: %v", err)
+	}
+	b.config = cfg
+	b.genesis = genesis
+
+	for _, o := range options {
+		o(b)
+	}
+
+	return b
+}
+
+func (b *builder) init() (config *Config, genesis *Genesis, err error) {
+	dir, file := path.Split(b.configPath)
 	filename := strings.TrimSuffix(file, filepath.Ext(file))
 
 	viper.AddConfigPath(".")
 	viper.AddConfigPath(dir)
 	viper.SetConfigName(filename)
-	//viper.SetConfigName("config")
 	viper.SetConfigType("json")
 
 	// The lines below allow for environment variables configuration (12 factor app)
@@ -41,9 +72,16 @@ func Init(configPath, genesisPath string) (config *Config, genesis *Genesis, err
 	if config.Base == nil {
 		config.Base = &BaseConfig{}
 	}
-	config.Base.ConfigPath = configPath
-	config.Base.GenesisPath = genesisPath
+	config.Base.ConfigPath = b.configPath
+	config.Base.GenesisPath = b.genesisPath
 
-	genesis, err = ParseGenesisJSON(genesisPath)
+	genesis, err = ParseGenesisJSON(b.genesisPath)
 	return
+}
+
+func (b *builder) GetConfig() modules.Config {
+	return b.config.ToShared()
+}
+func (b *builder) GetGenesis() modules.GenesisState {
+	return b.genesis.ToShared()
 }

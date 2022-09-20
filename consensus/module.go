@@ -23,6 +23,8 @@ var _ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
 var _ modules.PacemakerConfig = &typesCons.PacemakerConfig{}
 var _ modules.ConsensusConfig = &typesCons.ConsensusConfig{}
 var _ modules.ConsensusModule = &ConsensusModule{}
+var _ modules.Module = &ConsensusModule{}
+var _ modules.InitializableModule = &ConsensusModule{}
 
 // TODO(olshansky): Any reason to make all of these attributes local only (i.e. not exposed outside the struct)?
 // TODO(olshansky): Look for a way to not externalize the `ConsensusModule` struct
@@ -62,9 +64,18 @@ type ConsensusModule struct {
 	MaxBlockBytes uint64
 }
 
-func Create(cfg modules.ConsensusConfig, genesis modules.ConsensusGenesisState, useRandomPK bool) (modules.ConsensusModule, error) {
-	moduleCfg := cfg.(*typesCons.ConsensusConfig)
-	moduleGenesis := genesis.(*typesCons.ConsensusGenesisState)
+func Create(builder modules.Runtime, useRandomPK bool) (modules.Module, error) {
+	var m ConsensusModule
+	return m.Create(builder, useRandomPK)
+}
+
+func (*ConsensusModule) Create(builder modules.Runtime, useRandomPK bool) (modules.Module, error) {
+	cfg := builder.GetConfig()
+	genesis := builder.GetGenesis()
+
+	moduleCfg := cfg.Consensus.(*typesCons.ConsensusConfig)
+	moduleGenesis := genesis.ConsensusGenesisState.(*typesCons.ConsensusGenesisState)
+
 	leaderElectionMod, err := leader_election.Create(moduleCfg, moduleGenesis)
 	if err != nil {
 		return nil, err
