@@ -3,8 +3,9 @@ package persistence
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"github.com/pokt-network/pocket/persistence/types"
 	"log"
+
+	"github.com/pokt-network/pocket/persistence/types"
 )
 
 // OPTIMIZE(team): get from blockstore or keep in memory
@@ -52,7 +53,7 @@ func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
 	// INVESTIGATE: Note that we are writing this directly to the blockStore. Depending on how
 	// the use of the PostgresContext evolves, we may need to write this to `ContextStore` and copy
 	// over to `BlockStore` when the block is committed.
-	return p.DB.Blockstore.Put(heightToBytes(p.Height), blockProtoBytes)
+	return p.DB.Blockstore.Set(heightToBytes(p.Height), blockProtoBytes)
 }
 
 func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {

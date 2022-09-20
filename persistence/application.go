@@ -5,10 +5,9 @@ import (
 	"log"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/pokt-network/pocket/persistence/schema"
-	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/persistence/types"
 
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 func (p PostgresContext) GetAppExists(address []byte, height int64) (exists bool, err error) {
@@ -17,19 +16,20 @@ func (p PostgresContext) GetAppExists(address []byte, height int64) (exists bool
 
 func (p PostgresContext) UpdateAppTree(apps [][]byte) error {
 	for _, app := range apps {
-		appProto := typesGenesis.App{}
+		appProto := types.Actor{}
 		if err := proto.Unmarshal(app, &appProto); err != nil {
 			return err
 		}
-		if _, err := p.MerkleTrees[AppMerkleTree].Update(appProto.Address, app); err != nil {
+		bzAddr, _ := hex.DecodeString(appProto.Address)
+		if _, err := p.MerkleTrees[AppMerkleTree].Update(bzAddr, app); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (p PostgresContext) getAppsUpdated(height int64) (apps []*typesGenesis.App, err error) {
-	actors, err := p.GetActorsUpdated(schema.ApplicationActor, height)
+func (p PostgresContext) getAppsUpdated(height int64) (apps []*types.Actor, err error) {
+	actors, err := p.GetActorsUpdated(types.ApplicationActor, height)
 	if err != nil {
 		return nil, err
 	}
@@ -38,17 +38,17 @@ func (p PostgresContext) getAppsUpdated(height int64) (apps []*typesGenesis.App,
 		// DISCUSS_IN_THIS_COMMIT: This breaks the pattern of protos in persistence.
 		// 	- Is it okay?
 		// 	- Do we embed this logic in `UpdateAppTree`
-		app := &typesGenesis.App{
-			Address:   []byte(actor.Address),
-			PublicKey: []byte(actor.PublicKey),
+		app := &types.Actor{
+			Address:   actor.Address,
+			PublicKey: actor.PublicKey,
 			// Paused:          actor.Paused, // DISCUSS_IN_THIS_COMMIT: Is this just a check for pause height = -1?
 			// Status:          actor.Status, // TODO_IN_THIS_COMMIT: Use logic from `GetActorStatus` without an extra query
-			Chains:          actor.Chains,
-			MaxRelays:       actor.ActorSpecificParam,
-			StakedTokens:    actor.StakedTokens,
+			Chains: actor.Chains,
+			// MaxRelays:       actor.ActorSpecificParam,
+			// StakedTokens:    actor.StakedTokens,
 			PausedHeight:    actor.PausedHeight,
 			UnstakingHeight: actor.UnstakingHeight,
-			Output:          []byte(actor.OutputAddress),
+			Output:          actor.OutputAddress,
 		}
 		// appBytes, err := proto.Marshal(&app)
 		// if err != nil {
@@ -61,7 +61,7 @@ func (p PostgresContext) getAppsUpdated(height int64) (apps []*typesGenesis.App,
 }
 
 func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicKey, stakedTokens, maxRelays, outputAddress string, pauseHeight, unstakingHeight int64, chains []string, err error) {
-	actor, err := p.GetActor(schema.ApplicationActor, address, height)
+	actor, err := p.GetActor(types.ApplicationActor, address, height)
 	if err != nil {
 		return
 	}

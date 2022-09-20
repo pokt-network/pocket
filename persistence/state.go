@@ -3,11 +3,12 @@ package persistence
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/hex"
 	"log"
 	"sort"
 
 	"github.com/celestiaorg/smt"
-	"github.com/pokt-network/pocket/shared/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -60,7 +61,7 @@ func (p *PostgresContext) updateStateHash() ([]byte, error) {
 		case AppMerkleTree:
 			apps, err := p.getAppsUpdated(p.Height)
 			if err != nil {
-				return nil, types.NewError(types.Code(42), "Couldn't figure out apps updated") // TODO_IN_THIS_COMMIT
+				return nil, typesUtil.NewError(typesUtil.Code(42), "Couldn't figure out apps updated") // TODO_IN_THIS_COMMIT
 			}
 			for _, app := range apps {
 				appBytes, err := proto.Marshal(app)
@@ -68,7 +69,11 @@ func (p *PostgresContext) updateStateHash() ([]byte, error) {
 					return nil, err
 				}
 				// An update results in a create/update that is idempotent
-				if _, err := p.MerkleTrees[treeType].Update(app.Address, appBytes); err != nil {
+				addrBz, err := hex.DecodeString(app.Address)
+				if err != nil {
+					return nil, err
+				}
+				if _, err := p.MerkleTrees[treeType].Update(addrBz, appBytes); err != nil {
 					return nil, err
 				}
 				// TODO_IN_THIS_COMMIT: Add support for `Delete` operations to remove it from the tree

@@ -15,8 +15,6 @@ type KVStore interface {
 
 	// Accessors
 	// TODO: Add a proper iterator interface
-	Put(key []byte, value []byte) error
-	Get(key []byte) ([]byte, error)
 	// TODO: Add pagination for `GetAll`
 	GetAll(prefixKey []byte, descending bool) ([][]byte, error)
 

@@ -45,19 +45,19 @@ func (p *PostgresContext) GetExists(actorSchema types.ProtocolActorSchema, addre
 }
 
 // TODO_IN_THIS_COMMIT: Consolidate logic with `GetActor` to reduce code footprint
-func (p *PostgresContext) GetActorsUpdated(actorSchema schema.ProtocolActorSchema, height int64) (actors []schema.BaseActor, err error) {
-	ctx, conn, err := p.GetCtxAndConnection()
+func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema, height int64) (actors []types.BaseActor, err error) {
+	ctx, tx, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return
 	}
 
-	rows, err := conn.Query(ctx, actorSchema.GetUpdatedAtHeightQuery(height))
+	rows, err := tx.Query(ctx, actorSchema.GetUpdatedAtHeightQuery(height))
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var actor schema.BaseActor
+	var actor types.BaseActor
 	for rows.Next() {
 		if err = rows.Scan(
 			&actor.Address,
@@ -77,7 +77,7 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema schema.ProtocolActorSchem
 			continue
 		}
 
-		chainRows, chainsErr := conn.Query(ctx, actorSchema.GetChainsQuery(actor.Address, height))
+		chainRows, chainsErr := tx.Query(ctx, actorSchema.GetChainsQuery(actor.Address, height))
 		if err != nil {
 			return nil, chainsErr // Why couldn't I just `return` here and use `err`?
 		}

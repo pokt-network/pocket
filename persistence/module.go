@@ -26,7 +26,6 @@ type PersistenceModule struct {
 	postgresURL string
 	nodeSchema  string
 	genesisPath string
-	blockStore  kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
 
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	writeContext *PostgresContext // only one write context is allowed at a time
@@ -37,7 +36,7 @@ type PersistenceModule struct {
 	// INVESTIGATE: We may need to create a custom `BlockStore` package in the future.
 	blockStore kvstore.KVStore
 	// A mapping of context IDs to persistence contexts
-	contexts map[contextId]modules.PersistenceContext
+	// contexts map[contextId]modules.PersistenceRWContext
 	// Merkle trees
 	trees map[MerkleTree]*smt.SparseMerkleTree
 }
@@ -81,9 +80,19 @@ func Create(configPath, genesisPath string) (modules.PersistenceModule, error) {
 		genesisPath:  genesisPath,
 		blockStore:   blockStore,
 		writeContext: nil,
-		contexts:     make(map[contextId]modules.PersistenceContext),
-		trees:        make(map[MerkleTree]*smt.SparseMerkleTree),
+		// contexts:     make(map[contextId]modules.PersistenceContext),
+		trees: make(map[MerkleTree]*smt.SparseMerkleTree),
 	}
+
+	// DISCUSS_IN_THIS_COMMIT: We've been using the module function pattern, but this making `initializeTrees`
+	// be able to create and/or load trees outside the scope of the persistence module makes it easier to test.
+	trees, err := newMerkleTrees()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO_IN_THIS_COMMIT: load trees from state
+	persistenceMod.trees = trees
 
 	// Determine if we should hydrate the genesis db or use the current state of the DB attached
 	if shouldHydrateGenesis, err := persistenceMod.shouldHydrateGenesisDb(); err != nil {
@@ -97,15 +106,6 @@ func Create(configPath, genesisPath string) (modules.PersistenceModule, error) {
 	} else {
 		log.Println("Loading state from previous state...")
 	}
-
-	// DISCUSS_IN_THIS_COMMIT: We've been using the module function pattern, but this making `initializeTrees`
-	// be able to create and/or load trees outside the scope of the persistence module makes it easier to test.
-	trees, err := newMerkleTrees()
-	if err != nil {
-		return err
-	}
-	// TODO_IN_THIS_COMMIT: load trees from state
-	p.trees = trees
 
 	return persistenceMod, nil
 }
@@ -241,7 +241,7 @@ func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 	if blockStorePath == "" {
 		return kvstore.NewMemKVStore(), nil
 	}
-	return kvstore.NewKVStore(blockStorePath)
+	return kvstore.OpenKVStore(blockStorePath)
 }
 
 // TODO(drewsky): Simplify and externalize the logic for whether genesis should be populated and

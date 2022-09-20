@@ -90,7 +90,7 @@ func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
 		return err
 	}
 	if _, err := u.Context.UpdateAppHash(); err != nil {
-		return types.ErrAppHash(err)
+		return typesUtil.ErrAppHash(err)
 	}
 	return nil
 }
