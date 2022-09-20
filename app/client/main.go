@@ -58,7 +58,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 	}
-	p2pMod, err = p2p.Create(cfg, true) // TECHDEBT: extra param required for injecting private key hack for debug client
+	p2pMod, err = p2p.Create(cfg.P2P, true) // TECHDEBT: extra param required for injecting private key hack for debug client
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 	}
