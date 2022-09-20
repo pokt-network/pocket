@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"math/rand"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -207,10 +208,10 @@ func fuzzSingleProtocolActor(
 
 			require.ElementsMatch(t, newActor.Chains, newChains, "staked chains not updated")
 			require.NotContains(t, newActor.StakedTokens, "invalid")
-			// TODO(andrew): Use `require.Contains` instead
-			// if strings.Contains(newActor.StakedTokens, "invalid") {
-			// 	log.Println("")
-			// }
+			// TODO(andrew): Use `require.Contains` instead. E.g. require.NotContains(t, newActor.StakedTokens, "invalid")
+			if strings.Contains(newActor.StakedTokens, "invalid") {
+				log.Println("")
+			}
 			require.Equal(t, newActor.StakedTokens, newStakedTokens, "staked tokens not updated")
 			require.Equal(t, newActor.ActorSpecificParam, newActorSpecificParam, "actor specific param not updated")
 		case "GetActorsReadyToUnstake":
