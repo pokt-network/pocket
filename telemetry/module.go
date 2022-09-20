@@ -6,14 +6,23 @@ import (
 
 var _ modules.Module = &telemetryModule{}
 var _ modules.TelemetryConfig = &TelemetryConfig{}
+var _ modules.InitializableModule = &telemetryModule{}
 
 const (
 	TelemetryModuleName = "telemetry"
 )
 
+func Create(runtime modules.Runtime) (modules.Module, error) {
+	var m telemetryModule
+	return m.Create(runtime)
+}
+
 // TODO(pocket/issues/99): Add a switch statement and configuration variable when support for other telemetry modules is added.
-func Create(cfg modules.TelemetryConfig) (modules.TelemetryModule, error) {
-	moduleCfg := cfg.(*TelemetryConfig)
+func (*telemetryModule) Create(runtime modules.Runtime) (modules.Module, error) {
+	cfg := runtime.GetConfig()
+
+	moduleCfg := cfg.Telemetry.(*TelemetryConfig)
+
 	if moduleCfg.GetEnabled() {
 		return CreatePrometheusTelemetryModule(moduleCfg)
 	} else {

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	typesPers "github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 
@@ -73,12 +74,14 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	// TODO(andrew): Move the number of actors into local constants
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	createTestingGenesisAndConfigFiles(cfg, genesisState)
-	persistenceMod, err := persistence.Create(cfg.Persistence, genesisState.PersistenceGenesisState) // TODO (Drewsky) this is the last remaining cross module import and needs a fix...
+	runtime := runtime.New(testingConfigFilePath, testingGenesisFilePath)
+
+	persistenceMod, err := persistence.Create(runtime) // TODO (Drewsky) this is the last remaining cross module import and needs a fix...
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
 	persistenceMod.Start() // TODO: Check for error
-	return persistenceMod
+	return persistenceMod.(modules.PersistenceModule)
 }
 
 const (

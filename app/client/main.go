@@ -58,18 +58,20 @@ func main() {
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 	}
-	p2pMod, err = p2p.Create(cfg.P2P, true) // TECHDEBT: extra param required for injecting private key hack for debug client
+	p2pm, err := p2p.Create(runtime) // TECHDEBT: extra param required for injecting private key hack for debug client
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 	}
+	p2pMod := p2pm.(modules.P2PModule)
 	// This telemetry module instance is a NOOP because the 'enable_telemetry' flag in the `cfg` above is set to false.
 	// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
 	// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
 	// module that NOOPs (per the configs above) is injected.
-	telemetryMod, err := telemetry.Create(cfg.Telemetry)
+	telemetryM, err := telemetry.Create(runtime)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
+	telemetryMod := telemetryM.(modules.TelemetryModule)
 
 	_ = shared.CreateBusWithOptionalModules(cfg, genesis, nil, p2pMod, nil, consensusMod, telemetryMod)
 

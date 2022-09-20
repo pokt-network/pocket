@@ -20,6 +20,8 @@ import (
 )
 
 var _ modules.P2PModule = &p2pModule{}
+var _ modules.Module = &p2pModule{}
+var _ modules.InitializableModule = &p2pModule{}
 
 const (
 	P2PModuleName = "p2p"
@@ -40,15 +42,23 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
 }
 
-func Create(cfg modules.P2PConfig, useRandomPK bool) (m modules.P2PModule, err error) {
+func Create(runtime modules.Runtime) (modules.Module, error) {
+	var m p2pModule
+	return m.Create(runtime)
+}
+
+func (*p2pModule) Create(runtime modules.Runtime) (m modules.Module, err error) {
 	log.Println("Creating network module")
-	moduleCfg := cfg.(*typesP2P.P2PConfig)
+
+	cfg := runtime.GetConfig()
+	moduleCfg := cfg.P2P.(*typesP2P.P2PConfig)
+
 	l, err := CreateListener(moduleCfg)
 	if err != nil {
 		return nil, err
 	}
 	var privateKey cryptoPocket.PrivateKey
-	if useRandomPK {
+	if runtime.ShouldUseRandomPK() {
 		privateKey, err = cryptoPocket.GeneratePrivateKey()
 	} else {
 		privateKey, err = cryptoPocket.NewPrivateKey(moduleCfg.PrivateKey)

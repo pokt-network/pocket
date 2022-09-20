@@ -33,17 +33,17 @@ func Create(configPath, genesisPath string) (n *Node, err error) {
 	cfg := runtime.GetConfig()
 	genesis := runtime.GetGenesis()
 
-	persistenceMod, err := persistence.Create(cfg.Persistence, genesis.PersistenceGenesisState)
+	persistenceMod, err := persistence.Create(runtime)
 	if err != nil {
 		return nil, err
 	}
 
-	p2pMod, err := p2p.Create(cfg.P2P, false)
+	p2pMod, err := p2p.Create(runtime)
 	if err != nil {
 		return nil, err
 	}
 
-	utilityMod, err := utility.Create(cfg.Utility)
+	utilityMod, err := utility.Create(runtime)
 	if err != nil {
 		return nil, err
 	}
@@ -53,16 +53,22 @@ func Create(configPath, genesisPath string) (n *Node, err error) {
 		return nil, err
 	}
 
-	telemetryMod, err := telemetry.Create(cfg.Telemetry)
+	telemetryMod, err := telemetry.Create(runtime)
 	if err != nil {
 		return nil, err
 	}
 
-	bus, err := CreateBus(cfg, genesis, persistenceMod, p2pMod, utilityMod, consensusMod.(modules.ConsensusModule), telemetryMod)
+	bus, err := CreateBus(cfg, genesis,
+		persistenceMod.(modules.PersistenceModule),
+		p2pMod.(modules.P2PModule),
+		utilityMod.(modules.UtilityModule),
+		consensusMod.(modules.ConsensusModule),
+		telemetryMod.(modules.TelemetryModule),
+	)
 	if err != nil {
 		return nil, err
 	}
-	addr, err := p2pMod.GetAddress()
+	addr, err := p2pMod.(modules.P2PModule).GetAddress()
 	if err != nil {
 		return nil, err
 	}

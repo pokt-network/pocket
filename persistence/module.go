@@ -16,6 +16,9 @@ var _ modules.PersistenceModule = &PersistenceModule{}
 var _ modules.PersistenceRWContext = &PostgresContext{}
 var _ modules.PersistenceGenesisState = &types.PersistenceGenesisState{}
 var _ modules.PersistenceConfig = &types.PersistenceConfig{}
+var _ modules.PersistenceModule = &PersistenceModule{}
+var _ modules.Module = &PersistenceModule{}
+var _ modules.InitializableModule = &PersistenceModule{}
 
 type PersistenceModule struct {
 	bus modules.Bus
@@ -33,9 +36,18 @@ const (
 	PersistenceModuleName = "persistence"
 )
 
-func Create(cfg modules.PersistenceConfig, genesis modules.PersistenceGenesisState) (modules.PersistenceModule, error) {
-	moduleCfg := cfg.(*types.PersistenceConfig)
-	moduleGenesis := genesis.(*types.PersistenceGenesisState)
+func Create(runtime modules.Runtime) (modules.Module, error) {
+	var m PersistenceModule
+	return m.Create(runtime)
+}
+
+func (*PersistenceModule) Create(runtime modules.Runtime) (modules.Module, error) {
+	cfg := runtime.GetConfig()
+	genesis := runtime.GetGenesis()
+
+	moduleCfg := cfg.Persistence.(*types.PersistenceConfig)
+	moduleGenesis := genesis.PersistenceGenesisState.(*types.PersistenceGenesisState)
+
 	conn, err := connectToDatabase(moduleCfg.GetPostgresUrl(), moduleCfg.GetNodeSchema())
 	if err != nil {
 		return nil, err

@@ -10,6 +10,8 @@ import (
 
 var _ modules.UtilityModule = &UtilityModule{}
 var _ modules.UtilityConfig = &types.UtilityConfig{}
+var _ modules.Module = &UtilityModule{}
+var _ modules.InitializableModule = &UtilityModule{}
 
 type UtilityModule struct {
 	bus     modules.Bus
@@ -20,7 +22,12 @@ const (
 	UtilityModuleName = "utility"
 )
 
-func Create(cfg modules.UtilityConfig) (modules.UtilityModule, error) {
+func Create(runtime modules.Runtime) (modules.Module, error) {
+	var m UtilityModule
+	return m.Create(runtime)
+}
+
+func (*UtilityModule) Create(runtime modules.Runtime) (modules.Module, error) {
 	return &UtilityModule{
 		// TODO: Add `maxTransactionBytes` and `maxTransactions` to cfg.Utility
 		Mempool: types.NewMempool(1000, 1000),

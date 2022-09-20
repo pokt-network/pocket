@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
 
 	"github.com/pokt-network/pocket/persistence"
@@ -107,11 +108,14 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	}
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	createTestingGenesisAndConfigFiles(cfg, genesisState)
-	persistenceMod, err := persistence.Create(cfg.Persistence, genesisState.PersistenceGenesisState)
+
+	runtime := runtime.New(testingConfigFilePath, testingGenesisFilePath)
+
+	persistenceMod, err := persistence.Create(runtime)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
-	return persistenceMod
+	return persistenceMod.(modules.PersistenceModule)
 }
 
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
