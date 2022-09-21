@@ -25,27 +25,27 @@ type RuntimeConfig struct {
 }
 
 func New(configPath, genesisPath string, options ...func(*RuntimeConfig)) *RuntimeConfig {
-	b := &RuntimeConfig{
+	rc := &RuntimeConfig{
 		configPath:  configPath,
 		genesisPath: genesisPath,
 	}
 
-	cfg, genesis, err := b.init()
+	cfg, genesis, err := rc.init()
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to initialize runtime builder: %v", err)
 	}
-	b.config = cfg
-	b.genesis = genesis
+	rc.config = cfg
+	rc.genesis = genesis
 
 	for _, o := range options {
-		o(b)
+		o(rc)
 	}
 
-	return b
+	return rc
 }
 
-func (b *RuntimeConfig) init() (config *Config, genesis *Genesis, err error) {
-	dir, file := path.Split(b.configPath)
+func (rc *RuntimeConfig) init() (config *Config, genesis *Genesis, err error) {
+	dir, file := path.Split(rc.configPath)
 	filename := strings.TrimSuffix(file, filepath.Ext(file))
 
 	viper.AddConfigPath(".")
@@ -59,26 +59,26 @@ func (b *RuntimeConfig) init() (config *Config, genesis *Genesis, err error) {
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
-	err = viper.ReadInConfig()
-	if err != nil {
+	if err = viper.ReadInConfig(); err != nil {
 		return
 	}
-	err = viper.Unmarshal(&config, func(dc *mapstructure.DecoderConfig) {
+
+	decoderConfig := func(dc *mapstructure.DecoderConfig) {
 		// This is to leverage the `json` struct tags without having to add `mapstructure` ones.
 		// Until we have complex use cases, this should work just fine.
 		dc.TagName = "json"
-	})
-	if err != nil {
+	}
+	if err = viper.Unmarshal(&config, decoderConfig); err != nil {
 		return
 	}
 
 	if config.Base == nil {
 		config.Base = &BaseConfig{}
 	}
-	config.Base.ConfigPath = b.configPath
-	config.Base.GenesisPath = b.genesisPath
+	config.Base.ConfigPath = rc.configPath
+	config.Base.GenesisPath = rc.genesisPath
 
-	genesis, err = ParseGenesisJSON(b.genesisPath)
+	genesis, err = ParseGenesisJSON(rc.genesisPath)
 	return
 }
 
