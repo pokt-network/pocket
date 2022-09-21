@@ -276,6 +276,8 @@ type HotstuffMessageHandler interface {
 }
 
 func (m *ConsensusModule) HandleMessage(message *anypb.Any) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	switch message.MessageName() {
 	case HotstuffMessage:
 		var hotstuffMessage typesCons.HotstuffMessage

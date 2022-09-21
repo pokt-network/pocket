@@ -24,8 +24,6 @@ var (
 /*** NewRound Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	m.m.Lock()
-	defer m.m.Unlock()
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -40,8 +38,6 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *Consensus
 /*** Prepare Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	m.m.Lock()
-	defer m.m.Unlock()
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -75,8 +71,6 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *ConsensusM
 /*** PreCommit Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	m.m.Lock()
-	defer m.m.Unlock()
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -105,8 +99,6 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *Consensu
 /*** Commit Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	m.m.Lock()
-	defer m.m.Unlock()
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -135,8 +127,6 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *ConsensusMo
 /*** Decide Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	m.m.Lock()
-	defer m.m.Unlock()
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
