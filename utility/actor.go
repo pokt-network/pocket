@@ -70,28 +70,6 @@ func (u *UtilityContext) SetActorUnstaking(actorType typesUtil.UtilActorType, un
 	return nil
 }
 
-func (u *UtilityContext) DeleteActor(actorType typesUtil.UtilActorType, address []byte) typesUtil.Error {
-	var err error
-	store := u.Store()
-
-	switch actorType {
-	case typesUtil.UtilActorType_App:
-		err = store.DeleteApp(address)
-	case typesUtil.UtilActorType_Fish:
-		err = store.DeleteFisherman(address)
-	case typesUtil.UtilActorType_Node:
-		err = store.DeleteServiceNode(address)
-	case typesUtil.UtilActorType_Val:
-		err = store.DeleteValidator(address)
-	}
-
-	if err != nil {
-		return typesUtil.ErrDelete(err)
-	}
-
-	return nil
-}
-
 func (u *UtilityContext) SetActorPauseHeight(actorType typesUtil.UtilActorType, address []byte, height int64) typesUtil.Error {
 	var err error
 	store := u.Store()

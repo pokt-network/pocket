@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2022-09-21
+
+### TECHDEBT
+
+- Removed no-op `DeleteActor` code
+- Improved unit test for `UnstakeActorsThatAreReady()`
+
 ## [0.0.0.3] - 2022-09-15
 
 ### Code cleanup

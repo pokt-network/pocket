@@ -259,24 +259,6 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 	}
 }
 
-func TestUtilityContext_Delete(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.Delete", actorType.GetActorName()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 0)
-
-			actor := GetFirstActor(t, ctx, actorType)
-			addrBz, err := hex.DecodeString(actor.GetAddress())
-			require.NoError(t, err)
-			err = ctx.DeleteActor(actorType, addrBz)
-			require.NoError(t, err, "error deleting actor")
-
-			actor = GetActorByAddr(t, ctx, addrBz, actorType)
-			// TODO Delete actor is currently a NO-OP. We need to better define
-			test_artifacts.CleanupTest(ctx)
-		})
-	}
-}
-
 func TestUtilityContext_GetExists(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetExists", actorType.GetActorName()), func(t *testing.T) {
@@ -531,7 +513,8 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 			t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 		}
 
-		ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
+		err := ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
+		require.NoError(t, err)
 		require.NoError(t, err1, "error setting unstaking blocks")
 		require.NoError(t, err2, "error setting max pause blocks")
 
@@ -544,12 +527,46 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 			require.NoError(t, err, "error setting actor pause height")
 		}
 
-		err := ctx.UnstakeActorPausedBefore(2, actorType)
+		err = ctx.UnstakeActorPausedBefore(2, actorType)
 		require.NoError(t, err, "error setting actor pause before")
+
+		accountAmountsBefore := make([]*big.Int, 0)
+
+		for _, actor := range actors {
+			// get the output address account amount before the 'unstake'
+			outputAddressString := actor.GetOutput()
+			outputAddress, err := hex.DecodeString(outputAddressString)
+			require.NoError(t, err)
+			outputAccountAmount, err := ctx.GetAccountAmount(outputAddress)
+			require.NoError(t, err)
+			// capture the amount before
+			accountAmountsBefore = append(accountAmountsBefore, outputAccountAmount)
+		}
+		// capture the pool amount before
+		poolAmountBefore, err := ctx.GetPoolAmount(poolName)
+		require.NoError(t, err)
 
 		err = ctx.UnstakeActorsThatAreReady()
 		require.NoError(t, err, "error unstaking actors that are ready")
-		// TODO Delete() is no op
+
+		for i, actor := range actors {
+			// get the output address account amount after the 'unstake'
+			outputAddressString := actor.GetOutput()
+			outputAddress, err := hex.DecodeString(outputAddressString)
+			require.NoError(t, err)
+			outputAccountAmount, err := ctx.GetAccountAmount(outputAddress)
+			require.NoError(t, err)
+			// ensure the stake amount went to the output address
+			outputAccountAmountDelta := new(big.Int).Sub(outputAccountAmount, accountAmountsBefore[i])
+			require.Equal(t, outputAccountAmountDelta, test_artifacts.DefaultStakeAmount)
+		}
+		// ensure the staking pool is `# of readyToUnstake actors * default stake` less than before the unstake
+		poolAmountAfter, err := ctx.GetPoolAmount(poolName)
+		require.NoError(t, err)
+		actualPoolDelta := new(big.Int).Sub(poolAmountBefore, poolAmountAfter)
+		expectedPoolDelta := new(big.Int).Mul(big.NewInt(int64(len(actors))), test_artifacts.DefaultStakeAmount)
+		require.Equal(t, expectedPoolDelta, actualPoolDelta)
+
 		test_artifacts.CleanupTest(ctx)
 	}
 }
