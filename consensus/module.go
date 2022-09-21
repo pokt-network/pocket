@@ -25,6 +25,8 @@ var _ modules.ConsensusConfig = &typesCons.ConsensusConfig{}
 var _ modules.ConsensusModule = &ConsensusModule{}
 var _ modules.Module = &ConsensusModule{}
 var _ modules.InitializableModule = &ConsensusModule{}
+var _ modules.ConfigurableModule = &ConsensusModule{}
+var _ modules.GenesisDependentModule = &ConsensusModule{}
 
 // TODO(olshansky): Any reason to make all of these attributes local only (i.e. not exposed outside the struct)?
 // TODO(olshansky): Look for a way to not externalize the `ConsensusModule` struct
@@ -70,10 +72,18 @@ func Create(runtime modules.Runtime) (modules.Module, error) {
 }
 
 func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) {
-	cfg := runtime.GetConfig()
-	genesis := runtime.GetGenesis()
+	var m *ConsensusModule
 
+	cfg := runtime.GetConfig()
+	if err := m.ValidateConfig(cfg); err != nil {
+		log.Fatalf("config validation failed: %v", err)
+	}
 	moduleCfg := cfg.Consensus.(*typesCons.ConsensusConfig)
+
+	genesis := runtime.GetGenesis()
+	if err := m.ValidateGenesis(genesis); err != nil {
+		log.Fatalf("genesis validation failed: %v", err)
+	}
 	moduleGenesis := genesis.ConsensusGenesisState.(*typesCons.ConsensusGenesisState)
 
 	leaderElectionMod, err := leader_election.Create(moduleCfg, moduleGenesis)
@@ -100,7 +110,7 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 	address := privateKey.Address().String()
 	valIdMap, idValMap := typesCons.GetValAddrToIdMap(valMap)
 
-	m := &ConsensusModule{
+	m = &ConsensusModule{
 		bus: nil,
 
 		privateKey: privateKey.(cryptoPocket.Ed25519PrivateKey),
@@ -180,6 +190,20 @@ func (m *ConsensusModule) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
 	m.paceMaker.SetBus(pocketBus)
 	m.leaderElectionMod.SetBus(pocketBus)
+}
+
+func (*ConsensusModule) ValidateConfig(cfg modules.Config) error {
+	if _, ok := cfg.Consensus.(*typesCons.ConsensusConfig); !ok {
+		return fmt.Errorf("cannot cast to ConsensusConfig")
+	}
+	return nil
+}
+
+func (*ConsensusModule) ValidateGenesis(genesis modules.GenesisState) error {
+	if _, ok := genesis.ConsensusGenesisState.(*typesCons.ConsensusGenesisState); !ok {
+		return fmt.Errorf("cannot cast to ConsensusGenesisState")
+	}
+	return nil
 }
 
 func (m *ConsensusModule) loadPersistedState() error {

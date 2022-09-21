@@ -22,3 +22,11 @@ type InitializableModule interface {
 	GetModuleName() string
 	Create(runtime Runtime) (Module, error)
 }
+
+type ConfigurableModule interface {
+	ValidateConfig(Config) error
+}
+
+type GenesisDependentModule interface {
+	ValidateGenesis(GenesisState) error
+}
