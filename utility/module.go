@@ -11,7 +11,6 @@ import (
 var _ modules.UtilityModule = &UtilityModule{}
 var _ modules.UtilityConfig = &types.UtilityConfig{}
 var _ modules.Module = &UtilityModule{}
-var _ modules.InitializableModule = &UtilityModule{}
 
 type UtilityModule struct {
 	bus     modules.Bus

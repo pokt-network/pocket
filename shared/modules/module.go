@@ -6,6 +6,7 @@ import "github.com/pokt-network/pocket/shared/crypto"
 // TODO(drewsky): Add `Create` function; pocket/issues/163
 // TODO(drewsky): Do not embed this inside of modules but force it via an implicit cast at compile time
 type Module interface {
+	InitializableModule
 	IntegratableModule
 	InterruptableModule
 }

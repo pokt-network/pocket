@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -11,9 +12,11 @@ import (
 )
 
 var (
-	_ modules.TelemetryModule   = &PrometheusTelemetryModule{}
-	_ modules.EventMetricsAgent = &PrometheusTelemetryModule{}
-	_ modules.TimeSeriesAgent   = &PrometheusTelemetryModule{}
+	_ modules.Module             = &PrometheusTelemetryModule{}
+	_ modules.ConfigurableModule = &PrometheusTelemetryModule{}
+	_ modules.TelemetryModule    = &PrometheusTelemetryModule{}
+	_ modules.EventMetricsAgent  = &PrometheusTelemetryModule{}
+	_ modules.TimeSeriesAgent    = &PrometheusTelemetryModule{}
 )
 
 // DISCUSS(team): Should the warning logs in this module be handled differently?
@@ -33,14 +36,25 @@ const (
 	PrometheusModuleName = "prometheus"
 )
 
-func CreatePrometheusTelemetryModule(cfg *TelemetryConfig) (*PrometheusTelemetryModule, error) {
+func CreatePrometheusTelemetryModule(runtime modules.Runtime) (modules.Module, error) {
+	var m PrometheusTelemetryModule
+	return m.Create(runtime)
+}
+
+func (m *PrometheusTelemetryModule) Create(runtime modules.Runtime) (modules.Module, error) {
+	cfg := runtime.GetConfig()
+	if err := m.ValidateConfig(cfg); err != nil {
+		log.Fatalf("config validation failed: %v", err)
+	}
+	moduleCfg := cfg.Telemetry.(*TelemetryConfig)
+
 	return &PrometheusTelemetryModule{
 		counters:     map[string]prometheus.Counter{},
 		gauges:       map[string]prometheus.Gauge{},
 		gaugeVectors: map[string]prometheus.GaugeVec{},
 
-		address:  cfg.GetAddress(),
-		endpoint: cfg.GetEndpoint(),
+		address:  moduleCfg.GetAddress(),
+		endpoint: moduleCfg.GetEndpoint(),
 	}, nil
 }
 
@@ -72,6 +86,13 @@ func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
+}
+
+func (*PrometheusTelemetryModule) ValidateConfig(cfg modules.Config) error {
+	if _, ok := cfg.Telemetry.(*TelemetryConfig); !ok {
+		return fmt.Errorf("cannot cast to TelemetryConfig")
+	}
+	return nil
 }
 
 // EventMetricsAgent interface implementation

@@ -28,8 +28,13 @@ type Node struct {
 	Address cryptoPocket.Address
 }
 
-func Create(configPath, genesisPath string) (n *Node, err error) {
+func Create(configPath, genesisPath string) (modules.Module, error) {
+	var m Node
 	runtime := runtime.New(configPath, genesisPath)
+	return m.Create(runtime)
+}
+
+func (m *Node) Create(runtime modules.Runtime) (modules.Module, error) {
 	cfg := runtime.GetConfig()
 	genesis := runtime.GetGenesis()
 

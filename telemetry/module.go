@@ -4,9 +4,10 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var _ modules.Module = &telemetryModule{}
-var _ modules.TelemetryConfig = &TelemetryConfig{}
-var _ modules.InitializableModule = &telemetryModule{}
+var (
+	_ modules.Module          = &telemetryModule{}
+	_ modules.TelemetryConfig = &TelemetryConfig{}
+)
 
 const (
 	TelemetryModuleName = "telemetry"
@@ -24,9 +25,9 @@ func (*telemetryModule) Create(runtime modules.Runtime) (modules.Module, error) 
 	moduleCfg := cfg.Telemetry.(*TelemetryConfig)
 
 	if moduleCfg.GetEnabled() {
-		return CreatePrometheusTelemetryModule(moduleCfg)
+		return CreatePrometheusTelemetryModule(runtime)
 	} else {
-		return CreateNoopTelemetryModule(moduleCfg)
+		return CreateNoopTelemetryModule(runtime)
 	}
 }
 

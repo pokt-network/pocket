@@ -17,8 +17,6 @@ var _ modules.PersistenceRWContext = &PostgresContext{}
 var _ modules.PersistenceGenesisState = &types.PersistenceGenesisState{}
 var _ modules.PersistenceConfig = &types.PersistenceConfig{}
 var _ modules.PersistenceModule = &PersistenceModule{}
-var _ modules.Module = &PersistenceModule{}
-var _ modules.InitializableModule = &PersistenceModule{}
 
 type PersistenceModule struct {
 	bus modules.Bus

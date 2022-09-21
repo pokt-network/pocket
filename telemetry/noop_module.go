@@ -25,7 +25,12 @@ func NOOP() {
 	log.Printf("\n[telemetry=noop]\n")
 }
 
-func CreateNoopTelemetryModule(_ *TelemetryConfig) (*NoopTelemetryModule, error) {
+func CreateNoopTelemetryModule(runtime modules.Runtime) (modules.Module, error) {
+	var m NoopTelemetryModule
+	return m.Create(runtime)
+}
+
+func (m *NoopTelemetryModule) Create(runtime modules.Runtime) (modules.Module, error) {
 	return &NoopTelemetryModule{}, nil
 }
 

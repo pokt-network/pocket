@@ -19,15 +19,17 @@ const (
 	ConsensusModuleName = "consensus"
 )
 
-var _ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
-var _ modules.PacemakerConfig = &typesCons.PacemakerConfig{}
-var _ modules.ConsensusConfig = &typesCons.ConsensusConfig{}
-var _ modules.ConsensusModule = &ConsensusModule{}
-var _ modules.Module = &ConsensusModule{}
-var _ modules.InitializableModule = &ConsensusModule{}
-var _ modules.ConfigurableModule = &ConsensusModule{}
-var _ modules.GenesisDependentModule = &ConsensusModule{}
-var _ modules.KeyholderModule = &ConsensusModule{}
+var (
+	_ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
+
+	_ modules.PacemakerConfig = &typesCons.PacemakerConfig{}
+	_ modules.ConsensusConfig = &typesCons.ConsensusConfig{}
+
+	_ modules.ConsensusModule        = &ConsensusModule{}
+	_ modules.ConfigurableModule     = &ConsensusModule{}
+	_ modules.GenesisDependentModule = &ConsensusModule{}
+	_ modules.KeyholderModule        = &ConsensusModule{}
+)
 
 // TODO(olshansky): Any reason to make all of these attributes local only (i.e. not exposed outside the struct)?
 // TODO(olshansky): Look for a way to not externalize the `ConsensusModule` struct
@@ -87,13 +89,13 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 	}
 	moduleGenesis := genesis.ConsensusGenesisState.(*typesCons.ConsensusGenesisState)
 
-	leaderElectionMod, err := leader_election.Create(moduleCfg, moduleGenesis)
+	leaderElectionMod, err := leader_election.Create(runtime)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO(olshansky): Can we make this a submodule?
-	paceMaker, err := CreatePacemaker(moduleCfg)
+	paceMaker, err := CreatePacemaker(runtime)
 	if err != nil {
 		return nil, err
 	}
@@ -106,6 +108,8 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 	}
 	address := privateKey.Address().String()
 	valIdMap, idValMap := typesCons.GetValAddrToIdMap(valMap)
+
+	pacemakerMod := paceMaker.(Pacemaker)
 
 	m = &ConsensusModule{
 		bus: nil,
@@ -130,8 +134,8 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 		validatorMap: valMap,
 
 		utilityContext:    nil,
-		paceMaker:         paceMaker,
-		leaderElectionMod: leaderElectionMod,
+		paceMaker:         pacemakerMod,
+		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
 
 		logPrefix:     DefaultLogPrefix,
 		MessagePool:   make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
@@ -139,7 +143,7 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 	}
 
 	// TODO(olshansky): Look for a way to avoid doing this.
-	paceMaker.SetConsensusModule(m)
+	pacemakerMod.SetConsensusModule(m)
 
 	return m, nil
 }

@@ -20,8 +20,6 @@ import (
 )
 
 var _ modules.P2PModule = &p2pModule{}
-var _ modules.Module = &p2pModule{}
-var _ modules.InitializableModule = &p2pModule{}
 
 const (
 	P2PModuleName = "p2p"

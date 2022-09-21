@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -30,8 +31,11 @@ type Pacemaker interface {
 	InterruptRound()
 }
 
-var _ modules.Module = &paceMaker{}
-var _ PacemakerDebug = &paceMaker{}
+var (
+	_ modules.Module             = &paceMaker{}
+	_ modules.ConfigurableModule = &paceMaker{}
+	_ PacemakerDebug             = &paceMaker{}
+)
 
 type paceMaker struct {
 	bus modules.Bus
@@ -50,18 +54,30 @@ type paceMaker struct {
 	paceMakerDebug
 }
 
-func CreatePacemaker(cfg *typesCons.ConsensusConfig) (m *paceMaker, err error) {
+func CreatePacemaker(runtime modules.Runtime) (modules.Module, error) {
+	var m paceMaker
+	return m.Create(runtime)
+}
+
+func (m *paceMaker) Create(runtime modules.Runtime) (modules.Module, error) {
+	cfg := runtime.GetConfig()
+	if err := m.ValidateConfig(cfg); err != nil {
+		log.Fatalf("config validation failed: %v", err)
+	}
+
+	pacemakerConfig := cfg.Consensus.(*typesCons.ConsensusConfig).PacemakerConfig
+
 	return &paceMaker{
 		bus:          nil,
 		consensusMod: nil,
 
-		pacemakerConfigs: cfg.GetPaceMakerConfig(),
+		pacemakerConfigs: pacemakerConfig,
 
 		stepCancelFunc: nil, // Only set on restarts
 
 		paceMakerDebug: paceMakerDebug{
-			manualMode:                cfg.GetPaceMakerConfig().GetManual(),
-			debugTimeBetweenStepsMsec: cfg.GetPaceMakerConfig().GetDebugTimeBetweenStepsMsec(),
+			manualMode:                pacemakerConfig.GetManual(),
+			debugTimeBetweenStepsMsec: pacemakerConfig.GetDebugTimeBetweenStepsMsec(),
 			quorumCertificate:         nil,
 		},
 	}, nil
@@ -88,6 +104,18 @@ func (m *paceMaker) GetBus() modules.Bus {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
+}
+
+func (*paceMaker) ValidateConfig(cfg modules.Config) error {
+	consCfg, ok := cfg.Consensus.(*typesCons.ConsensusConfig)
+	if !ok {
+		return fmt.Errorf("cannot cast to TelemetryConfig")
+	}
+
+	if consCfg.PacemakerConfig == nil {
+		return fmt.Errorf("PacemakerConfig is nil")
+	}
+	return nil
 }
 
 func (m *paceMaker) SetConsensusModule(c *ConsensusModule) {

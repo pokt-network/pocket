@@ -16,13 +16,18 @@ type LeaderElectionModule interface {
 	ElectNextLeader(*typesCons.HotstuffMessage) (typesCons.NodeId, error)
 }
 
-var _ leaderElectionModule = leaderElectionModule{}
+var _ LeaderElectionModule = &leaderElectionModule{}
 
 type leaderElectionModule struct {
 	bus modules.Bus
 }
 
-func Create(_ *typesCons.ConsensusConfig, _ *typesCons.ConsensusGenesisState) (LeaderElectionModule, error) {
+func Create(runtime modules.Runtime) (modules.Module, error) {
+	var m leaderElectionModule
+	return m.Create(runtime)
+}
+
+func (*leaderElectionModule) Create(runtime modules.Runtime) (modules.Module, error) {
 	return &leaderElectionModule{}, nil
 }
 
