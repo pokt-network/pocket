@@ -27,6 +27,7 @@ var _ modules.Module = &ConsensusModule{}
 var _ modules.InitializableModule = &ConsensusModule{}
 var _ modules.ConfigurableModule = &ConsensusModule{}
 var _ modules.GenesisDependentModule = &ConsensusModule{}
+var _ modules.KeyholderModule = &ConsensusModule{}
 
 // TODO(olshansky): Any reason to make all of these attributes local only (i.e. not exposed outside the struct)?
 // TODO(olshansky): Look for a way to not externalize the `ConsensusModule` struct
@@ -98,12 +99,8 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 	}
 
 	valMap := typesCons.ValidatorListToMap(moduleGenesis.Validators)
-	var privateKey cryptoPocket.PrivateKey
-	if runtime.ShouldUseRandomPK() {
-		privateKey, err = cryptoPocket.GeneratePrivateKey()
-	} else {
-		privateKey, err = cryptoPocket.NewPrivateKey(moduleCfg.PrivateKey)
-	}
+
+	privateKey, err := m.GetPrivateKey(runtime)
 	if err != nil {
 		return nil, err
 	}
@@ -204,6 +201,13 @@ func (*ConsensusModule) ValidateGenesis(genesis modules.GenesisState) error {
 		return fmt.Errorf("cannot cast to ConsensusGenesisState")
 	}
 	return nil
+}
+
+func (*ConsensusModule) GetPrivateKey(runtime modules.Runtime) (cryptoPocket.PrivateKey, error) {
+	if runtime.ShouldUseRandomPK() {
+		return cryptoPocket.GeneratePrivateKey()
+	}
+	return cryptoPocket.NewPrivateKey(runtime.GetConfig().Consensus.(*typesCons.ConsensusConfig).PrivateKey)
 }
 
 func (m *ConsensusModule) loadPersistedState() error {
