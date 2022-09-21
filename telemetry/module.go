@@ -22,9 +22,9 @@ func Create(runtime modules.Runtime) (modules.Module, error) {
 func (*telemetryModule) Create(runtime modules.Runtime) (modules.Module, error) {
 	cfg := runtime.GetConfig()
 
-	moduleCfg := cfg.Telemetry.(*TelemetryConfig)
+	telemetryCfg := cfg.Telemetry.(*TelemetryConfig)
 
-	if moduleCfg.GetEnabled() {
+	if telemetryCfg.GetEnabled() {
 		return CreatePrometheusTelemetryModule(runtime)
 	} else {
 		return CreateNoopTelemetryModule(runtime)

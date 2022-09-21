@@ -49,9 +49,9 @@ func (*p2pModule) Create(runtime modules.Runtime) (m modules.Module, err error) 
 	log.Println("Creating network module")
 
 	cfg := runtime.GetConfig()
-	moduleCfg := cfg.P2P.(*typesP2P.P2PConfig)
+	p2pCfg := cfg.P2P.(*typesP2P.P2PConfig)
 
-	l, err := CreateListener(moduleCfg)
+	l, err := CreateListener(p2pCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -59,13 +59,13 @@ func (*p2pModule) Create(runtime modules.Runtime) (m modules.Module, err error) 
 	if runtime.ShouldUseRandomPK() {
 		privateKey, err = cryptoPocket.GeneratePrivateKey()
 	} else {
-		privateKey, err = cryptoPocket.NewPrivateKey(moduleCfg.PrivateKey)
+		privateKey, err = cryptoPocket.NewPrivateKey(p2pCfg.PrivateKey)
 	}
 	if err != nil {
 		return nil, err
 	}
 	m = &p2pModule{
-		p2pConfig: moduleCfg,
+		p2pConfig: p2pCfg,
 
 		listener: l,
 		address:  privateKey.Address(),

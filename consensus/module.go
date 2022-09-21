@@ -81,7 +81,7 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 	if err := m.ValidateConfig(cfg); err != nil {
 		log.Fatalf("config validation failed: %v", err)
 	}
-	moduleCfg := cfg.Consensus.(*typesCons.ConsensusConfig)
+	consensusCfg := cfg.Consensus.(*typesCons.ConsensusConfig)
 
 	genesis := runtime.GetGenesis()
 	if err := m.ValidateGenesis(genesis); err != nil {
@@ -115,7 +115,7 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 		bus: nil,
 
 		privateKey: privateKey.(cryptoPocket.Ed25519PrivateKey),
-		consCfg:    moduleCfg,
+		consCfg:    consensusCfg,
 
 		Height: 0,
 		Round:  0,

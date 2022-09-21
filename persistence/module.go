@@ -43,10 +43,10 @@ func (*PersistenceModule) Create(runtime modules.Runtime) (modules.Module, error
 	cfg := runtime.GetConfig()
 	genesis := runtime.GetGenesis()
 
-	moduleCfg := cfg.Persistence.(*types.PersistenceConfig)
+	persistenceCfg := cfg.Persistence.(*types.PersistenceConfig)
 	moduleGenesis := genesis.PersistenceGenesisState.(*types.PersistenceGenesisState)
 
-	conn, err := connectToDatabase(moduleCfg.GetPostgresUrl(), moduleCfg.GetNodeSchema())
+	conn, err := connectToDatabase(persistenceCfg.GetPostgresUrl(), persistenceCfg.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
@@ -55,15 +55,15 @@ func (*PersistenceModule) Create(runtime modules.Runtime) (modules.Module, error
 	}
 	conn.Close(context.TODO())
 
-	blockStore, err := initializeBlockStore(moduleCfg.GetBlockStorePath())
+	blockStore, err := initializeBlockStore(persistenceCfg.GetBlockStorePath())
 	if err != nil {
 		return nil, err
 	}
 
 	persistenceMod := &PersistenceModule{
 		bus:          nil,
-		postgresURL:  moduleCfg.GetPostgresUrl(),
-		nodeSchema:   moduleCfg.GetNodeSchema(),
+		postgresURL:  persistenceCfg.GetPostgresUrl(),
+		nodeSchema:   persistenceCfg.GetNodeSchema(),
 		blockStore:   blockStore,
 		writeContext: nil,
 	}

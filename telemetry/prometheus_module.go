@@ -46,15 +46,15 @@ func (m *PrometheusTelemetryModule) Create(runtime modules.Runtime) (modules.Mod
 	if err := m.ValidateConfig(cfg); err != nil {
 		log.Fatalf("config validation failed: %v", err)
 	}
-	moduleCfg := cfg.Telemetry.(*TelemetryConfig)
+	telemetryCfg := cfg.Telemetry.(*TelemetryConfig)
 
 	return &PrometheusTelemetryModule{
 		counters:     map[string]prometheus.Counter{},
 		gauges:       map[string]prometheus.Gauge{},
 		gaugeVectors: map[string]prometheus.GaugeVec{},
 
-		address:  moduleCfg.GetAddress(),
-		endpoint: moduleCfg.GetEndpoint(),
+		address:  telemetryCfg.GetAddress(),
+		endpoint: telemetryCfg.GetEndpoint(),
 	}, nil
 }
 
