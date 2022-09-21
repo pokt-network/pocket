@@ -36,7 +36,6 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) typesU
 }
 
 func (u *UtilityContext) GetBlocksPerSession() (int, typesUtil.Error) {
-	var err error
 	store, height, er := u.GetStoreAndHeight()
 	if er != nil {
 		return 0, er

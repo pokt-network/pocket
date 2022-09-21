@@ -10,7 +10,6 @@ import (
 //  the utility economy.
 
 func (u *UtilityContext) GetAccountAmount(address []byte) (*big.Int, types.Error) {
-	var err error
 	store, height, er := u.GetStoreAndHeight()
 	if er != nil {
 		return nil, er

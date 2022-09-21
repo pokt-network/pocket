@@ -24,9 +24,9 @@ import (
 // setters
 
 func (u *UtilityContext) SetActorStakedTokens(actorType typesUtil.UtilActorType, tokens *big.Int, address []byte) typesUtil.Error {
-	var er error
 	store := u.Store()
 
+	var er error
 	switch actorType {
 	case typesUtil.UtilActorType_App:
 		er = store.SetAppStakeAmount(address, typesUtil.BigIntToString(tokens))
@@ -47,8 +47,8 @@ func (u *UtilityContext) SetActorStakedTokens(actorType typesUtil.UtilActorType,
 
 func (u *UtilityContext) SetActorUnstaking(actorType typesUtil.UtilActorType, unstakingHeight int64, address []byte) typesUtil.Error {
 	store := u.Store()
-	var er error
 
+	var er error
 	switch actorType {
 	case typesUtil.UtilActorType_App:
 		er = store.SetAppUnstakingHeightAndStatus(address, unstakingHeight, typesUtil.UnstakingStatus)
@@ -68,9 +68,9 @@ func (u *UtilityContext) SetActorUnstaking(actorType typesUtil.UtilActorType, un
 }
 
 func (u *UtilityContext) DeleteActor(actorType typesUtil.UtilActorType, address []byte) typesUtil.Error {
-	var err error
 	store := u.Store()
 
+	var err error
 	switch actorType {
 	case typesUtil.UtilActorType_App:
 		err = store.DeleteApp(address)
@@ -90,9 +90,9 @@ func (u *UtilityContext) DeleteActor(actorType typesUtil.UtilActorType, address 
 }
 
 func (u *UtilityContext) SetActorPauseHeight(actorType typesUtil.UtilActorType, address []byte, height int64) typesUtil.Error {
-	var err error
 	store := u.Store()
 
+	var err error
 	switch actorType {
 	case typesUtil.UtilActorType_App:
 		err = store.SetAppPauseHeight(address, height)
@@ -114,13 +114,13 @@ func (u *UtilityContext) SetActorPauseHeight(actorType typesUtil.UtilActorType, 
 // getters
 
 func (u *UtilityContext) GetActorStakedTokens(actorType typesUtil.UtilActorType, address []byte) (*big.Int, typesUtil.Error) {
-	var er error
 	store, height, err := u.GetStoreAndHeight()
 	if err != nil {
 		return nil, err
 	}
 
 	var stakedTokens string
+	var er error
 	switch actorType {
 	case typesUtil.UtilActorType_App:
 		stakedTokens, er = store.GetAppStakeAmount(height, address)
@@ -146,7 +146,6 @@ func (u *UtilityContext) GetActorStakedTokens(actorType typesUtil.UtilActorType,
 
 func (u *UtilityContext) GetMaxPausedBlocks(actorType typesUtil.UtilActorType) (maxPausedBlocks int, err typesUtil.Error) {
 	var paramName string
-	var er error
 	store, height, err := u.GetStoreAndHeight()
 	if err != nil {
 		return 0, err
@@ -163,6 +162,7 @@ func (u *UtilityContext) GetMaxPausedBlocks(actorType typesUtil.UtilActorType) (
 		paramName = modules.ValidatorMaxPausedBlocksParamName
 	}
 
+	var er error
 	maxPausedBlocks, er = store.GetIntParam(paramName, height)
 	if er != nil {
 		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
@@ -198,12 +198,12 @@ func (u *UtilityContext) GetMinimumPauseBlocks(actorType typesUtil.UtilActorType
 }
 
 func (u *UtilityContext) GetPauseHeight(actorType typesUtil.UtilActorType, address []byte) (pauseHeight int64, err typesUtil.Error) {
-	var er error
 	store, height, err := u.GetStoreAndHeight()
 	if err != nil {
 		return 0, err
 	}
 
+	var er error
 	switch actorType {
 	case typesUtil.UtilActorType_App:
 		pauseHeight, er = store.GetAppPauseHeightIfExists(address, height)
@@ -223,12 +223,12 @@ func (u *UtilityContext) GetPauseHeight(actorType typesUtil.UtilActorType, addre
 }
 
 func (u *UtilityContext) GetActorStatus(actorType typesUtil.UtilActorType, address []byte) (status int, err typesUtil.Error) {
-	var er error
 	store, height, err := u.GetStoreAndHeight()
 	if err != nil {
 		return 0, err
 	}
 
+	var er error
 	switch actorType {
 	case typesUtil.UtilActorType_App:
 		status, er = store.GetAppStatus(address, height)
@@ -275,12 +275,12 @@ func (u *UtilityContext) GetMinimumStake(actorType typesUtil.UtilActorType) (*bi
 
 func (u *UtilityContext) GetStakeAmount(actorType typesUtil.UtilActorType, address []byte) (*big.Int, typesUtil.Error) {
 	var stakeAmount string
-	var err error
 	store, height, er := u.GetStoreAndHeight()
 	if er != nil {
 		return nil, er
 	}
 
+	var err error
 	switch actorType {
 	case typesUtil.UtilActorType_App:
 		stakeAmount, err = store.GetAppStakeAmount(height, address)
@@ -300,7 +300,6 @@ func (u *UtilityContext) GetStakeAmount(actorType typesUtil.UtilActorType, addre
 }
 
 func (u *UtilityContext) GetUnstakingHeight(actorType typesUtil.UtilActorType) (unstakingHeight int64, err typesUtil.Error) {
-	var er error
 	store, height, err := u.GetStoreAndHeight()
 	if err != nil {
 		return 0, err
@@ -319,6 +318,7 @@ func (u *UtilityContext) GetUnstakingHeight(actorType typesUtil.UtilActorType) (
 		paramName = modules.ValidatorUnstakingBlocksParamName
 	}
 
+	var er error
 	unstakingBlocks, er = store.GetIntParam(paramName, height)
 	if er != nil {
 		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, er)
@@ -328,7 +328,6 @@ func (u *UtilityContext) GetUnstakingHeight(actorType typesUtil.UtilActorType) (
 }
 
 func (u *UtilityContext) GetMaxChains(actorType typesUtil.UtilActorType) (maxChains int, err typesUtil.Error) {
-	var er error
 	store, height, err := u.GetStoreAndHeight()
 	if err != nil {
 		return 0, err
@@ -344,6 +343,7 @@ func (u *UtilityContext) GetMaxChains(actorType typesUtil.UtilActorType) (maxCha
 		paramName = modules.ServiceNodeMinimumStakeParamName
 	}
 
+	var er error
 	maxChains, er = store.GetIntParam(paramName, height)
 	if er != nil {
 		return 0, typesUtil.ErrGetParam(paramName, er)
@@ -353,13 +353,13 @@ func (u *UtilityContext) GetMaxChains(actorType typesUtil.UtilActorType) (maxCha
 }
 
 func (u *UtilityContext) GetActorExists(actorType typesUtil.UtilActorType, address []byte) (bool, typesUtil.Error) {
-	var err error
 	store, height, er := u.GetStoreAndHeight()
 	if er != nil {
 		return false, er
 	}
 
 	var exists bool
+	var err error
 	switch actorType {
 	case typesUtil.UtilActorType_App:
 		exists, err = store.GetAppExists(address, height)
@@ -379,12 +379,12 @@ func (u *UtilityContext) GetActorExists(actorType typesUtil.UtilActorType, addre
 }
 
 func (u *UtilityContext) GetActorOutputAddress(actorType typesUtil.UtilActorType, operator []byte) (output []byte, err typesUtil.Error) {
-	var er error
 	store, height, err := u.GetStoreAndHeight()
 	if err != nil {
 		return nil, err
 	}
 
+	var er error
 	switch actorType {
 	case typesUtil.UtilActorType_App:
 		output, er = store.GetAppOutputAddress(operator, height)
@@ -515,7 +515,7 @@ func (u *UtilityContext) CheckBelowMaxChains(actorType typesUtil.UtilActorType, 
 }
 
 func (u *UtilityContext) CalculateUnstakingHeight(unstakingBlocks int64) (int64, typesUtil.Error) {
-	latestHeight, err := u.GetHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return typesUtil.ZeroInt, err
 	}

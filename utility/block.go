@@ -103,7 +103,7 @@ func (u *UtilityContext) GetAppHash() ([]byte, typesUtil.Error) {
 
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
 func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
-	latestBlockHeight, err := u.GetHeight()
+	latestBlockHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -142,7 +142,7 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	latestHeight, err := u.GetHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 }
 
 func (u *UtilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
-	latestHeight, err := u.GetHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}

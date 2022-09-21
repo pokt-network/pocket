@@ -30,7 +30,7 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := initialAmount.Add(initialAmount, addAmount)
-	require.Equal(t, afterAmount, expected)
+	require.Equal(t, expected, afterAmount)
 	// RESEARCH a golang specific solution for after test teardown
 	test_artifacts.CleanupTest(ctx)
 }
@@ -51,7 +51,7 @@ func TestUtilityContext_AddAccountAmountString(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := initialAmount.Add(initialAmount, addAmount)
-	require.Equal(t, afterAmount, expected)
+	require.Equal(t, expected, afterAmount)
 	test_artifacts.CleanupTest(ctx)
 }
 

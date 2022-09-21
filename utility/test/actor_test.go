@@ -372,14 +372,14 @@ func TestUtilityContext_UnstakesPausedBefore(t *testing.T) {
 	actor := GetAllTestingApps(t, ctx)[0]
 	addrBz, err := hex.DecodeString(actor.GetAddress())
 	require.NoError(t, err)
-	require.Equal(t, actor.GetUnstakingHeight(), -1)
+	require.Equal(t, -1, actor.GetUnstakingHeight())
 	require.NoError(t, ctx.SetActorPauseHeight(typesUtil.UtilActorType_App, addrBz, 0), "set actor pause height")
 	err = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
 	require.NoError(t, err)
 	require.NoError(t, ctx.UnstakeActorPausedBefore(0, typesUtil.UtilActorType_App), "unstake actor pause before")
 	require.NoError(t, ctx.UnstakeActorPausedBefore(1, typesUtil.UtilActorType_App), "unstake actor pause before height 1")
 	actor = GetAllTestingApps(t, ctx)[0]
-	require.Equal(t, actor.GetUnstakingHeight(), -1)
+	require.Equal(t, -1, actor.GetUnstakingHeight())
 	unstakingBlocks, err := ctx.GetAppUnstakingBlocks()
 	require.NoError(t, err)
 	require.Equal(t, actor.GetUnstakingHeight(), unstakingBlocks+1)
@@ -395,7 +395,7 @@ func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
 	for _, actor := range actors {
 		addrBz, err := hex.DecodeString(actor.GetAddress())
 		require.NoError(t, err)
-		require.Equal(t, actor.GetUnstakingHeight(), -1)
+		require.Equal(t, -1, actor.GetUnstakingHeight())
 		require.NoError(t, ctx.SetActorPauseHeight(typesUtil.UtilActorType_App, addrBz, 1), "set actor pause height")
 	}
 	require.NoError(t, ctx.UnstakeActorPausedBefore(2, typesUtil.UtilActorType_App), "set actor pause before")

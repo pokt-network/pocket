@@ -335,7 +335,7 @@ func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause)
 	if err != nil {
 		return err
 	}
-	latestHeight, err := u.GetHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -349,7 +349,7 @@ func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause)
 }
 
 func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubleSign) typesUtil.Error {
-	latestHeight, err := u.GetHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}

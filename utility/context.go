@@ -52,7 +52,7 @@ func (u *UtilityContext) ReleaseContext() {
 	u.Context = nil
 }
 
-func (u *UtilityContext) GetHeight() (int64, typesUtil.Error) {
+func (u *UtilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {
 	height, er := u.Store().GetHeight()
 	if er != nil {
 		return 0, typesUtil.ErrGetHeight(er)
