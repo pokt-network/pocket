@@ -22,6 +22,7 @@ require (
 require (
 	github.com/dgraph-io/badger/v3 v3.2103.2
 	github.com/jackc/pgconn v1.11.0
+	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/spf13/viper v1.3.2
 )
