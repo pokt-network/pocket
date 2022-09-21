@@ -53,16 +53,16 @@ func main() {
 	cfg := runtime.GetConfig()
 	genesis := runtime.GetGenesis()
 
-	cons, err := consensus.Create(runtime) // TECHDEBT: extra param required for injecting private key hack for debug client
-	consensusMod := cons.(modules.ConsensusModule)
+	consM, err := consensus.Create(runtime)
+	consensusMod := consM.(modules.ConsensusModule)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 	}
-	p2pm, err := p2p.Create(runtime) // TECHDEBT: extra param required for injecting private key hack for debug client
+	p2pM, err := p2p.Create(runtime)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 	}
-	p2pMod := p2pm.(modules.P2PModule)
+	p2pMod := p2pM.(modules.P2PModule)
 	// This telemetry module instance is a NOOP because the 'enable_telemetry' flag in the `cfg` above is set to false.
 	// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
 	// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
