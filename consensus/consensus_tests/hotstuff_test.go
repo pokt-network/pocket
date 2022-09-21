@@ -37,7 +37,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-		assertConsensusState(t, nodeId,
+		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
 				Height: 1,
 				Step:   uint8(consensus.NewRound),
@@ -62,7 +62,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-		assertConsensusState(t, nodeId,
+		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
 				Height: 1,
 				Step:   uint8(consensus.Prepare),
@@ -90,7 +90,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-		assertConsensusState(t, nodeId,
+		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
 				Height: 1,
 				Step:   uint8(consensus.PreCommit),
@@ -118,7 +118,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-		assertConsensusState(t, nodeId,
+		assertNodeConsensusView(t, nodeId,
 			typesCons.ConsensusNodeState{
 				Height: 1,
 				Step:   uint8(consensus.Commit),
@@ -148,7 +148,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		nodeState := GetConsensusNodeState(pocketNode)
 		// Leader has already committed the block and hence moved to the next height.
 		if pocketId == leaderId {
-			assertConsensusState(t, pocketId,
+			assertNodeConsensusView(t, pocketId,
 				typesCons.ConsensusNodeState{
 					Height: 2,
 					Step:   uint8(consensus.NewRound),
@@ -158,7 +158,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 			require.Equal(t, nodeState.LeaderId, typesCons.NodeId(0), "Leader should be empty")
 			continue
 		}
-		assertConsensusState(t, pocketId,
+		assertNodeConsensusView(t, pocketId,
 			typesCons.ConsensusNodeState{
 				Height: 1,
 				Step:   uint8(consensus.Decide),
@@ -178,7 +178,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
-		assertConsensusState(t, pocketId,
+		assertNodeConsensusView(t, pocketId,
 			typesCons.ConsensusNodeState{
 				Height: 2,
 				Step:   uint8(consensus.NewRound),

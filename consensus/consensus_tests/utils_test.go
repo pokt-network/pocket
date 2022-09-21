@@ -437,7 +437,7 @@ func timeReminder(clock *clock.Mock, frequency time.Duration) {
 	}()
 }
 
-func assertConsensusState(t *testing.T, nodeId typesCons.NodeId, expected, actual typesCons.ConsensusNodeState) {
+func assertNodeConsensusView(t *testing.T, nodeId typesCons.NodeId, expected, actual typesCons.ConsensusNodeState) {
 	assertHeight(t, nodeId, expected.Height, actual.Height)
 	assertStep(t, nodeId, typesCons.HotstuffStep(expected.Step), typesCons.HotstuffStep(actual.Step))
 	assertRound(t, nodeId, expected.Round, actual.Round)

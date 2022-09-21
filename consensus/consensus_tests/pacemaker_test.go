@@ -47,7 +47,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	_, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
-		assertConsensusState(t, pocketId,
+		assertNodeConsensusView(t, pocketId,
 			typesCons.ConsensusNodeState{
 				Height: 1,
 				Step:   uint8(consensus.NewRound),
@@ -62,7 +62,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
-		assertConsensusState(t, pocketId,
+		assertNodeConsensusView(t, pocketId,
 			typesCons.ConsensusNodeState{
 				Height: 1,
 				Step:   uint8(consensus.NewRound),
@@ -76,7 +76,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
-		assertConsensusState(t, pocketId,
+		assertNodeConsensusView(t, pocketId,
 			typesCons.ConsensusNodeState{
 				Height: 1,
 				Step:   uint8(consensus.NewRound),
@@ -91,7 +91,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	newRoundMessages, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
-		assertConsensusState(t, pocketId,
+		assertNodeConsensusView(t, pocketId,
 			typesCons.ConsensusNodeState{
 				Height: 1,
 				Step:   uint8(consensus.NewRound),
@@ -112,7 +112,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Prepare, consensus.Propose, 1, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
-		assertConsensusState(t, pocketId,
+		assertNodeConsensusView(t, pocketId,
 			typesCons.ConsensusNodeState{
 				Height: 1,
 				Step:   uint8(consensus.Prepare),
