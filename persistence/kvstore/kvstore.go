@@ -52,7 +52,7 @@ func (store badgerKVStore) Put(key []byte, value []byte) error {
 		return err
 	}
 
-	return txn.Commit()
+	return tx.Commit()
 }
 
 func (store badgerKVStore) Get(key []byte) ([]byte, error) {
