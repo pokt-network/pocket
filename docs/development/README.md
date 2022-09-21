@@ -10,6 +10,7 @@ Please note that this repository is under very active development and breaking c
     - [Running Unit Tests](#running-unit-tests)
     - [Running LocalNet](#running-localnet)
   - [Code Organization](#code-organization)
+    - [Linters](#linters)
 
 ## LFG - Development
 
@@ -156,3 +157,15 @@ Pocket
 ├── utility          # Implementation of the Utility module
 ├── Makefile         # [to-be-deleted] The source of targets used to develop, build and test
 ```
+
+### Linters
+
+Our CI automation runs some linters and static checks to ensure code quality. You can run them locally with:
+
+```bash
+make lint
+```
+
+You might need to install some of the linters locally, here is a list of them.
+* `staticcheck`. Can be installed via `go install honnef.co/go/tools/cmd/staticcheck@latest` (assuming `$GOPATH/bin` is in your `$PATH`).
+* `golangci-lint`. Installation instructions provided [here](https://golangci-lint.run/usage/install/#local-installation).

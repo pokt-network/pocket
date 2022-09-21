@@ -12,13 +12,25 @@ Automatic development / test / production builds are still a work in progress, b
 
 - `+dirty` for uncommited changes
 - `-version` flag that can be injected or defaults to `UNKNOWN`
-- `branch_name` and a shortened `commit_hash` shold be included
+- `branch_name` and a shortened `commit_hash` should be included
 
 For example, `X.Y.Z[-<pre_release_tag][+branch_name][+short_hash][+dirty]` is the name of a potential build we will release in the future.
 
-## Supplied artifacts
+## Container Images
 
-* Docker images as a part of [automatic builds](automatic-builds.md)
+### Tags
+
+Code built from default branch (i.e. `main`) is tagged as `latest`.
+
+Code built from commits in Pull Requests, is tagged as `pr-<number>`, as well as `sha-<7 digit sha>`.
+
+Once we have a release, we will tag the release with the version number (e.g. `v0.0.1-alpha.pre.1`).
+
+
+### Extended images with additional tooling
+
+We also supply an extended image with tooling for each container tag to help you troubleshoot or investigate issues. The extended image is called `<tag>-dev`. For example, `latest-dev`, or `pr-123-dev`.
+
 
 ## [TODO] Magefile build system
 

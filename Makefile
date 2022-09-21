@@ -317,6 +317,13 @@ test_p2p:
 test_p2p_addrbook:
 	go test -run AddrBook -v -count=1 ./p2p/...
 
+.PHONY: lint
+## Run all P2P addr book related tests
+lint:
+	staticcheck -f stylish ./... || true
+	golangci-lint run ./... || true
+	echo "return code is always successfull, as we want to see all the linting errors"
+
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library
 benchmark_sortition:

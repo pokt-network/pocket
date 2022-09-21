@@ -63,13 +63,12 @@ jobs:
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: reviewdog/action-staticcheck@v1
         with:
-          # TODO(@okdas): pick filter https://github.com/reviewdog/reviewdog#filter-mode
+          # TODO(@okdas): change filter after bug bash to only show annotations on files changed by PR (currently shows all changes) https://github.com/reviewdog/reviewdog#filter-mode
           filter_mode: nofilter
       - name: Run golangci-lint
         # Only run if the test failed on target version to avoid duplicated annotations on GitHub.
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: golangci/golangci-lint-action@v3
-      # TODO(@okdas): move coverage to a separate job
       - name: create coverage report
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         run: make test_all_with_coverage
