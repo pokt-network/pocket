@@ -66,6 +66,7 @@ A: Maybe, but out-of-scope
 
 ---
 
-Consolidations:
+Learnings / Ideas:
+
 - Consolidate `UtilActorType` and `persistence.ActorType`
 - `modules.Actors` interface vs `types.Actor` in persistenceGenesis

@@ -49,13 +49,6 @@ func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
 	return nil
 }
 
-func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
-	// INVESTIGATE: Note that we are writing this directly to the blockStore. Depending on how
-	// the use of the PostgresContext evolves, we may need to write this to `ContextStore` and copy
-	// over to `BlockStore` when the block is committed.
-	return p.DB.Blockstore.Set(heightToBytes(p.Height), blockProtoBytes)
-}
-
 func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {
 	ctx, tx, err := p.DB.GetCtxAndTxn()
 	if err != nil {
@@ -71,4 +64,8 @@ func heightToBytes(height int64) []byte {
 	heightBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(heightBytes, uint64(height))
 	return heightBytes
+}
+
+func (p PostgresContext) storeBlock(blockProtoBytes []byte) error {
+	return p.DB.Blockstore.Put(heightToBytes(p.Height), blockProtoBytes)
 }

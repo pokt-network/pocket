@@ -51,12 +51,7 @@ func loadMerkleTrees(map[MerkleTree]*smt.SparseMerkleTree, error) {
 	log.Fatalf("loadMerkleTrees not implemented yet")
 }
 
-// DISCUSS_IN_THIS_COMMIT(drewskey): Thoughts on this approach?
-// 1. Retrieves all of the actors / data types updated at the current height
-// 2. Updates the Merkle Tree associated with each actor / data type
-//    - This operation is idempotent so you can call `updateStateHash` as often as you want
-// 3. Update the context's "cached" state hash
-// 4. Returns the state hash
+// Question: Is this the right approach?
 func (p *PostgresContext) updateStateHash() ([]byte, error) {
 	// Update all the merkle trees
 	for treeType := MerkleTree(0); treeType < lastMerkleTree; treeType++ {

@@ -2,8 +2,9 @@ package consensus
 
 import (
 	"encoding/hex"
-	"github.com/pokt-network/pocket/shared/codec"
 	"unsafe"
+
+	"github.com/pokt-network/pocket/shared/codec"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
@@ -111,18 +112,8 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 		return err
 	}
 
-	// IMPROVE(olshansky): temporary solution. `ApplyBlock` above applies the
-	// transactions to the postgres database, and this stores it in the KV store upon commitment.
-	// Instead of calling this directly, an alternative solution is to store the block metadata in
-	// the persistence context and have `CommitPersistenceContext` do this under the hood. However,
-	// additional `Block` metadata will need to be passed through and may change when we merkle the
-	// state hash.
-	if err := m.utilityContext.StoreBlock(blockProtoBytes); err != nil {
-		return err
-	}
-
 	// Commit and release the context
-	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
+	if err := m.utilityContext.CommitPersistenceContext(blockProtoBytes); err != nil {
 		return err
 	}
 

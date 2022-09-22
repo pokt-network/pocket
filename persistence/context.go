@@ -23,8 +23,6 @@ func (p PostgresContext) UpdateAppHash() ([]byte, error) {
 }
 
 func (p PostgresContext) AppHash() ([]byte, error) {
-	// log.Println("TODO: AppHash not implemented")
-	// return []byte("A real app hash, I am not"), n
 	return p.StateHash, nil
 }
 
@@ -46,7 +44,6 @@ func (p PostgresContext) Commit() error {
 	}
 	if err := p.DB.conn.Close(ctx); err != nil {
 		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
-
 	}
 	return nil
 }

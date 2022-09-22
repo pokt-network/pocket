@@ -14,7 +14,6 @@ type UtilityContext interface {
 	// Block operations
 	GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error)
 	ApplyBlock(height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
-	StoreBlock(blockProtoBytes []byte) error
 
 	// Context operations
 	ReleaseContext()

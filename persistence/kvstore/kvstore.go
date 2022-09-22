@@ -8,7 +8,6 @@ import (
 	badger "github.com/dgraph-io/badger/v3"
 )
 
-// TODO_IN_THIS_COMMIT: We might be able to remove the `KVStore` interface altogether if we end up using smt.MapStore
 type KVStore interface {
 	// Lifecycle methods
 	Stop() error
@@ -22,7 +21,7 @@ type KVStore interface {
 	ClearAll() error
 
 	// Same interface as in `smt.MapStore``
-	Set(key []byte, value []byte) error
+	Put(key, value []byte) error
 	Get(key []byte) ([]byte, error)
 	Delete(key []byte) error
 }
@@ -58,7 +57,7 @@ func NewMemKVStore() KVStore {
 	return badgerKVStore{db: db}
 }
 
-func (store badgerKVStore) Set(key []byte, value []byte) error {
+func (store badgerKVStore) Put(key, value []byte) error {
 	txn := store.db.NewTransaction(true)
 	defer txn.Discard()
 
@@ -68,6 +67,12 @@ func (store badgerKVStore) Set(key []byte, value []byte) error {
 	}
 
 	return txn.Commit()
+}
+
+// CONSOLIDATE: We might be able to remove the `KVStore` interface altogether if we end up using `smt.MapStore`
+// A wrapper around `Put` to conform to the `smt.MapStore` interface
+func (store *badgerKVStore) Set(key, value []byte) error {
+	return store.Put(key, value)
 }
 
 func (store badgerKVStore) Get(key []byte) ([]byte, error) {

@@ -296,18 +296,7 @@ func (u *UtilityContext) StoreBlock(blockProtoBytes []byte) error {
 		return err
 	}
 
-	// Store in SQL Store
-	// OPTIMIZE: Ideally we'd pass in the block proto struct to utility so we don't
-	//           have to unmarshal it here, but that's a major design decision for the interfaces.
-	codec := u.Codec()
-	block := &typesCons.Block{}
-	if err := codec.Unmarshal(blockProtoBytes, block); err != nil {
-		return typesUtil.ErrProtoUnmarshal(err)
-	}
-	header := block.BlockHeader
-	if err := store.InsertBlock(uint64(header.Height), header.Hash, header.ProposerAddress, header.QuorumCertificate); err != nil {
-		return err
-	}
+
 
 	return nil
 }

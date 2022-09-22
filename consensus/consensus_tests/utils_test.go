@@ -354,7 +354,7 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 		MaxTimes(4)
 
 	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
-	utilityContextMock.EXPECT().CommitPersistenceContext().Return(nil).AnyTimes()
+	utilityContextMock.EXPECT().CommitPersistenceContext(gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().ReleaseContext().Return().AnyTimes()
 	utilityContextMock.EXPECT().
 		GetProposalTransactions(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
@@ -364,7 +364,6 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(appHash, nil).
 		AnyTimes()
-	utilityContextMock.EXPECT().StoreBlock(gomock.Any()).AnyTimes().Return(nil)
 
 	persistenceContextMock.EXPECT().Commit().Return(nil).AnyTimes()
 

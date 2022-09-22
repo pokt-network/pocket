@@ -45,8 +45,7 @@ type PostgresContext struct {
 	Height int64
 	DB     PostgresDB
 
-	ContextStore kvstore.KVStore
-	StateHash    []byte
+	StateHash []byte
 
 	// IMPROVE: Depending on how the use of `PostgresContext` evolves, we may be able to get
 	// access to these directly via the postgres module.

@@ -22,7 +22,8 @@ func (p PostgresContext) UpdateApplicationsTree(apps []modules.Actor) error {
 			return err
 		}
 
-		if _, err := p.MerkleTrees[appMerkleTree].Update(bzAddr, appBz); err != nil { // NOTE: This is the only line unique to `Application`
+		// OPTIMIZE: This is the only line unique to `Application`
+		if _, err := p.MerkleTrees[appMerkleTree].Update(bzAddr, appBz); err != nil {
 			return err
 		}
 	}
@@ -31,7 +32,8 @@ func (p PostgresContext) UpdateApplicationsTree(apps []modules.Actor) error {
 }
 
 func (p PostgresContext) getApplicationsUpdatedAtHeight(height int64) (apps []*types.Actor, err error) {
-	actors, err := p.GetActorsUpdated(types.ApplicationActor, height) // NOTE: This is the only line unique to `Application`
+	// OPTIMIZE: This is the only line unique to `Application`
+	actors, err := p.GetActorsUpdated(types.ApplicationActor, height)
 	if err != nil {
 		return nil, err
 	}
