@@ -11,11 +11,9 @@ import (
 
 // Refer to the P2P specification for a formal description and proof of how the constants are selected
 const (
-	firstMsgTargetPercentage  = float64(1) / float64(3)
-	secondMsgTargetPercentage = float64(2) / float64(3)
-	shrinkagePercentage       = float64(2) / float64(3)
-	maxLevelsLogBase          = float64(3)
-	floatPrecision            = float64(0.0000001)
+	shrinkagePercentage = float64(2) / float64(3)
+	maxLevelsLogBase    = float64(3)
+	floatPrecision      = float64(0.0000001)
 )
 
 // Whenever `addrBook` changes, we also need to update `addrBookMap` and `addrList`
@@ -79,17 +77,17 @@ func (n *rainTreeNetwork) debugMsgTargetString(len, idx int) string {
 	s.WriteString("[")
 	serviceUrl := n.addrBookMap[n.addrList[0]].ServiceUrl
 	if n.addrList[0] == n.selfAddr.String() {
-		s.WriteString(fmt.Sprintf(" (%s) ", serviceUrl))
+		fmt.Fprintf(&s, " (%s) ", serviceUrl)
 	} else {
-		s.WriteString(fmt.Sprintf("(self) %s ", serviceUrl))
+		fmt.Fprintf(&s, "(self) %s ", serviceUrl)
 	}
 
 	for i := 1; i < len; i++ {
 		serviceUrl := n.addrBookMap[n.addrList[i]].ServiceUrl
 		if i == idx {
-			s.WriteString(fmt.Sprintf(" **%s** ", serviceUrl))
+			fmt.Fprintf(&s, " **%s** ", serviceUrl)
 		} else {
-			s.WriteString(fmt.Sprintf(" %s ", serviceUrl))
+			fmt.Fprintf(&s, " %s ", serviceUrl)
 		}
 	}
 	s.WriteString("]")

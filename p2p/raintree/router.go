@@ -5,6 +5,12 @@ import (
 	"strings"
 )
 
+// Refer to the P2P specification for a formal description and proof of how the constants are selected
+const (
+	firstMsgTargetPercentage  = float64(1) / float64(3)
+	secondMsgTargetPercentage = float64(2) / float64(3)
+)
+
 type router struct {
 	network *rainTreeNetwork
 }
@@ -30,24 +36,26 @@ func (r *router) getTarget(targetPercentage float64, len int, level uint32) targ
 	i := int(targetPercentage * float64(len))
 
 	target := target{
-		ServiceUrl:             r.network.addrBookMap[r.network.addrList[i]].ServiceUrl,
-		Percentage:             targetPercentage,
-		Level:                  level,
-		AddrBookLengthAtHeight: len,
-		Index:                  i,
+		serviceUrl:             r.network.addrBookMap[r.network.addrList[i]].ServiceUrl,
+		percentage:             targetPercentage,
+		level:                  level,
+		addrBookLengthAtHeight: len,
+		index:                  i,
 	}
 
 	// If the target is 0, it is a reference to self, which is a `Demote` in RainTree terms.
 	// This is handled separately.
 	if i == 0 {
-		target.IsSelf = true
+		target.isSelf = true
 		return target
 	}
 
 	addrStr := r.network.addrList[i]
 	if addr, ok := r.network.addrBookMap[addrStr]; ok {
-		target.Address = addr.Address
+		target.address = addr.Address
+		return target
 	}
+	log.Printf("[DEBUG] addrStr %s not found in addrBookMap", addrStr)
 	return target
 }
 

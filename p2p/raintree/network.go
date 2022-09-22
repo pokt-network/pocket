@@ -81,7 +81,7 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 
 	for _, target := range n.router.GetTargetsAtLevel(level) {
 		if target.ShouldSendInternal() {
-			if err = n.networkSendInternal(bz, target.Address); err != nil {
+			if err = n.networkSendInternal(bz, target.address); err != nil {
 				log.Println("Error sending to peer during broadcast: ", err)
 			}
 		}

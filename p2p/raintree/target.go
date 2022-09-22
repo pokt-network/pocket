@@ -8,32 +8,32 @@ import (
 )
 
 type target struct {
-	Address    cryptoPocket.Address
-	ServiceUrl string
+	address    cryptoPocket.Address
+	serviceUrl string
 
-	Level                  uint32
-	Percentage             float64
-	AddrBookLengthAtHeight int
-	Index                  int
-	IsSelf                 bool
+	level                  uint32
+	percentage             float64
+	addrBookLengthAtHeight int
+	index                  int
+	isSelf                 bool
 }
 
 func (t target) DebugString(r *router) string {
 	s := strings.Builder{}
 	s.WriteString("[")
-	serviceUrl := t.ServiceUrl
-	if !t.IsSelf {
-		s.WriteString(fmt.Sprintf(" (%s) ", serviceUrl))
+	serviceUrl := t.serviceUrl
+	if !t.isSelf {
+		fmt.Fprintf(&s, " (%s) ", serviceUrl)
 	} else {
-		s.WriteString(fmt.Sprintf("(self) %s ", serviceUrl))
+		fmt.Fprintf(&s, "(self) %s ", serviceUrl)
 	}
 
-	for i := 1; i < t.AddrBookLengthAtHeight; i++ {
+	for i := 1; i < t.addrBookLengthAtHeight; i++ {
 		serviceUrl := r.network.addrBookMap[r.network.addrList[i]].ServiceUrl
-		if i == t.Index {
-			s.WriteString(fmt.Sprintf(" **%s** ", serviceUrl))
+		if i == t.index {
+			fmt.Fprintf(&s, " **%s** ", serviceUrl)
 		} else {
-			s.WriteString(fmt.Sprintf(" %s ", serviceUrl))
+			fmt.Fprintf(&s, " %s ", serviceUrl)
 		}
 	}
 	s.WriteString("]")
@@ -41,5 +41,5 @@ func (t target) DebugString(r *router) string {
 }
 
 func (t target) ShouldSendInternal() bool {
-	return !t.IsSelf
+	return !t.isSelf
 }

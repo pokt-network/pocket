@@ -184,10 +184,10 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 		actualTargets := network.router.GetTargetsAtLevel(uint32(target.level))
 
 		require.True(t, actualTargets[0].ShouldSendInternal())
-		require.Equal(t, actualTargets[0].Address, cryptoPocket.Address(target.left))
+		require.Equal(t, actualTargets[0].address, cryptoPocket.Address(target.left))
 
 		require.True(t, actualTargets[1].ShouldSendInternal())
-		require.Equal(t, actualTargets[1].Address, cryptoPocket.Address(target.right))
+		require.Equal(t, actualTargets[1].address, cryptoPocket.Address(target.right))
 	}
 }
 
