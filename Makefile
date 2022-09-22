@@ -220,6 +220,7 @@ protogen_clean:
 protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = ".")
 	protoc --go_opt=paths=source_relative  -I=./shared/debug/proto        --go_out=./shared/debug       ./shared/debug/proto/*.proto        --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/indexer/proto      --go_out=./shared/indexer/    ./shared/indexer/proto/*.proto      --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  ./persistence/proto/*.proto         --experimental_allow_proto3_optional
 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
 	protoc --go_opt=paths=source_relative  -I=./utility/types/proto       --go_out=./utility/types      ./utility/types/proto/*.proto       --experimental_allow_proto3_optional
@@ -370,3 +371,19 @@ todo_count:
 ## List all the TODOs needed to be done in this commit
 todo_this_commit:
 	grep --exclude-dir={.git,vendor,prototype,.vscode} --exclude=Makefile -r -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT"
+
+# Default values for gen_genesis_and_config
+numValidators ?= 4
+numServiceNodes ?= 1
+numApplications ?= 1
+numFishermen ?= 1
+
+.PHONY: gen_genesis_and_config
+## Generate the genesis and config files for LocalNet
+gen_genesis_and_config:
+	go run ./build/config/main.go --genPrefix="gen." --numValidators=${numValidators} --numServiceNodes=${numServiceNodes} --numApplications=${numApplications} --numFishermen=${numFishermen}
+
+.PHONY: gen_genesis_and_config
+## Clear the genesis and config files for LocalNet
+clear_genesis_and_config:
+	rm build/config/gen.*.json

@@ -2,10 +2,10 @@ package test
 
 import (
 	"encoding/hex"
-	"fmt"
-	"github.com/pokt-network/pocket/persistence/types"
 	"log"
 	"testing"
+
+	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -242,15 +242,15 @@ func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*ty
 	}
 	addrBz, err := hex.DecodeString(serviceNode.Address)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", serviceNode.Address))
+		log.Fatalf("an error occurred converting address to bytes %s", serviceNode.Address)
 	}
 	pubKeyBz, err := hex.DecodeString(serviceNode.PublicKey)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", serviceNode.PublicKey))
+		log.Fatalf("an error occurred converting pubKey to bytes %s", serviceNode.PublicKey)
 	}
 	outputBz, err := hex.DecodeString(serviceNode.Output)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", serviceNode.Output))
+		log.Fatalf("an error occurred converting output to bytes %s", serviceNode.Output)
 	}
 	return serviceNode, db.InsertServiceNode(
 		addrBz,
