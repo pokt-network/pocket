@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/celestiaorg/smt"

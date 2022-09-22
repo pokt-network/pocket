@@ -4,60 +4,58 @@ import (
 	"encoding/hex"
 	"log"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/pokt-network/pocket/persistence/types"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-func (p PostgresContext) GetAppExists(address []byte, height int64) (exists bool, err error) {
-	return p.GetExists(types.ApplicationActor, address, height)
-}
-
-func (p PostgresContext) UpdateAppTree(apps [][]byte) error {
+func (p PostgresContext) UpdateApplicationsTree(apps []modules.Actor) error {
 	for _, app := range apps {
-		appProto := types.Actor{}
-		if err := proto.Unmarshal(app, &appProto); err != nil {
+		bzAddr, err := hex.DecodeString(app.GetAddress())
+		if err != nil {
 			return err
 		}
-		bzAddr, _ := hex.DecodeString(appProto.Address)
-		if _, err := p.MerkleTrees[AppMerkleTree].Update(bzAddr, app); err != nil {
+
+		appBz, err := proto.Marshal(app.(*types.Actor))
+		if err != nil {
+			return err
+		}
+
+		if _, err := p.MerkleTrees[appMerkleTree].Update(bzAddr, appBz); err != nil { // NOTE: This is the only line unique to `Application`
 			return err
 		}
 	}
+
 	return nil
 }
 
-func (p PostgresContext) getAppsUpdated(height int64) (apps []*types.Actor, err error) {
-	actors, err := p.GetActorsUpdated(types.ApplicationActor, height)
+func (p PostgresContext) getApplicationsUpdatedAtHeight(height int64) (apps []*types.Actor, err error) {
+	actors, err := p.GetActorsUpdated(types.ApplicationActor, height) // NOTE: This is the only line unique to `Application`
 	if err != nil {
 		return nil, err
 	}
 
+	apps = make([]*types.Actor, len(actors))
 	for _, actor := range actors {
-		// DISCUSS_IN_THIS_COMMIT: This breaks the pattern of protos in persistence.
-		// 	- Is it okay?
-		// 	- Do we embed this logic in `UpdateAppTree`
 		app := &types.Actor{
-			Address:   actor.Address,
-			PublicKey: actor.PublicKey,
-			// Paused:          actor.Paused, // DISCUSS_IN_THIS_COMMIT: Is this just a check for pause height = -1?
-			// Status:          actor.Status, // TODO_IN_THIS_COMMIT: Use logic from `GetActorStatus` without an extra query
-			Chains: actor.Chains,
-			// MaxRelays:       actor.ActorSpecificParam,
-			// StakedTokens:    actor.StakedTokens,
+			ActorType:       types.ActorType_App,
+			Address:         actor.Address,
+			PublicKey:       actor.PublicKey,
+			Chains:          actor.Chains,
+			GenericParam:    actor.ActorSpecificParam,
+			StakedAmount:    actor.StakedTokens,
 			PausedHeight:    actor.PausedHeight,
 			UnstakingHeight: actor.UnstakingHeight,
 			Output:          actor.OutputAddress,
 		}
-		// appBytes, err := proto.Marshal(&app)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// apps = append(apps, appBytes)
 		apps = append(apps, app)
 	}
 	return
+}
+
+func (p PostgresContext) GetAppExists(address []byte, height int64) (exists bool, err error) {
+	return p.GetExists(types.ApplicationActor, address, height)
 }
 
 func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicKey, stakedTokens, maxRelays, outputAddress string, pauseHeight, unstakingHeight int64, chains []string, err error) {

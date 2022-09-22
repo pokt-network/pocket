@@ -44,7 +44,6 @@ func (p *PostgresContext) GetExists(actorSchema types.ProtocolActorSchema, addre
 	return
 }
 
-// TODO_IN_THIS_COMMIT: Consolidate logic with `GetActor` to reduce code footprint
 func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema, height int64) (actors []types.BaseActor, err error) {
 	ctx, tx, err := p.DB.GetCtxAndTxn()
 	if err != nil {
@@ -57,44 +56,16 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema
 	}
 	defer rows.Close()
 
-	var actor types.BaseActor
+	// OPTIMIZE: Consolidate logic with `GetActor` to reduce code footprint
+	var addr string
 	for rows.Next() {
-		if err = rows.Scan(
-			&actor.Address,
-			&actor.PublicKey,
-			&actor.StakedTokens,
-			&actor.ActorSpecificParam,
-			&actor.OutputAddress,
-			&actor.PausedHeight,
-			&actor.UnstakingHeight,
-			&actor.Chains,
-			&height,
-		); err != nil {
+		if err = rows.Scan(&addr); err != nil {
 			return
 		}
 
-		if actorSchema.GetChainsTableName() == "" {
-			continue
-		}
-
-		chainRows, chainsErr := tx.Query(ctx, actorSchema.GetChainsQuery(actor.Address, height))
+		actor, err := p.GetActor(actorSchema, []byte(addr), height)
 		if err != nil {
-			return nil, chainsErr // Why couldn't I just `return` here and use `err`?
-		}
-		defer chainRows.Close()
-
-		var chainAddr string
-		var chainID string
-		var chainEndHeight int64 // unused
-		for rows.Next() {
-			err = rows.Scan(&chainAddr, &chainID, &chainEndHeight)
-			if err != nil {
-				return
-			}
-			if chainAddr != actor.Address {
-				return nil, fmt.Errorf("weird")
-			}
-			actor.Chains = append(actor.Chains, chainID)
+			return nil, err
 		}
 
 		actors = append(actors, actor)
@@ -116,10 +87,16 @@ func (p *PostgresContext) GetActor(actorSchema types.ProtocolActorSchema, addres
 	return p.GetChainsForActor(ctx, txn, actorSchema, actor, height)
 }
 
+// IMPORTANT: Need to consolidate `persistence/types.BaseActor` with `persistence/genesisTypes.Actor`
 func (p *PostgresContext) GetActorFromRow(row pgx.Row) (actor types.BaseActor, height int64, err error) {
 	err = row.Scan(
-		&actor.Address, &actor.PublicKey, &actor.StakedTokens, &actor.ActorSpecificParam,
-		&actor.OutputAddress, &actor.PausedHeight, &actor.UnstakingHeight,
+		&actor.Address,
+		&actor.PublicKey,
+		&actor.StakedTokens,
+		&actor.ActorSpecificParam,
+		&actor.OutputAddress,
+		&actor.PausedHeight,
+		&actor.UnstakingHeight,
 		&height)
 	return
 }

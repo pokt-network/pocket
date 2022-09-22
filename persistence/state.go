@@ -16,18 +16,21 @@ type MerkleTree float64
 
 // A work-in-progress list of all the trees we need to update to maintain the overall state
 const (
-	// Actors
-	AppMerkleTree MerkleTree = iota
-	ValMerkleTree
-	FishMerkleTree
-	ServiceNodeMerkleTree
-	AccountMerkleTree
-	PoolMerkleTree
-	// Data / state
-	BlocksMerkleTree
-	ParamsMerkleTree
-	FlagsMerkleTree
-	lastMerkleTree // Used for iteration purposes only - see https://stackoverflow.com/a/64178235/768439
+	// Actor  Merkle Trees
+	appMerkleTree MerkleTree = iota
+	valMerkleTree
+	fishMerkleTree
+	serviceNodeMerkleTree
+	accountMerkleTree
+	poolMerkleTree
+
+	// Data / State Merkle Trees
+	blocksMerkleTree
+	paramsMerkleTree
+	flagsMerkleTree
+
+	// Used for iteration purposes only - see https://stackoverflow.com/a/64178235/768439
+	lastMerkleTree
 )
 
 func newMerkleTrees() (map[MerkleTree]*smt.SparseMerkleTree, error) {
@@ -58,8 +61,8 @@ func (p *PostgresContext) updateStateHash() ([]byte, error) {
 	// Update all the merkle trees
 	for treeType := MerkleTree(0); treeType < lastMerkleTree; treeType++ {
 		switch treeType {
-		case AppMerkleTree:
-			apps, err := p.getAppsUpdated(p.Height)
+		case appMerkleTree:
+			apps, err := p.getApplicationsUpdatedAtHeight(p.Height)
 			if err != nil {
 				return nil, typesUtil.NewError(typesUtil.Code(42), "Couldn't figure out apps updated") // TODO_IN_THIS_COMMIT
 			}

@@ -316,7 +316,7 @@ func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err e
 	return
 }
 
-// TODO (Team) deprecate with interface #163 <Bumped to #149> as #163 is getting large
+// CONSOLIDATE: Consolidate `types.BaseActor` with `types.Actor`
 func (p PostgresContext) BaseActorToActor(ba types.BaseActor, actorType types.ActorType) *types.Actor {
 	actor := new(types.Actor)
 	actor.ActorType = actorType

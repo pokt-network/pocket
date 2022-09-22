@@ -61,7 +61,7 @@ func (actor *BaseProtocolActorSchema) GetChainsTableSchema() string {
 }
 
 func (actor *BaseProtocolActorSchema) GetUpdatedAtHeightQuery(height int64) string {
-	return SelectAtHeight(AllColsSelector, height, actor.tableName)
+	return SelectAtHeight(AddressCol, height, actor.tableName)
 }
 
 func (actor *BaseProtocolActorSchema) GetQuery(address string, height int64) string {
@@ -154,5 +154,5 @@ func (x *Actor) GetActorTyp() modules.ActorType {
 	if x != nil {
 		return x.GetActorType()
 	}
-	return ActorType_App
+	return ActorType_App // HACK: Is this a hack?
 }

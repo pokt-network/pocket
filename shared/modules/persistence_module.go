@@ -1,7 +1,7 @@
 package modules
 
 import (
-	"github.com/pokt-network/pocket/persistence/kvstore"
+	"github.com/pokt-network/pocket/persistence/kvstore" // Should be moved to shared
 	"github.com/pokt-network/pocket/shared/debug"
 )
 
@@ -86,10 +86,6 @@ type PersistenceWriteContext interface {
 	SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
 	SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
 	SetAppPauseHeight(address []byte, height int64) error
-	GetAppOutputAddress(operator []byte, height int64) (output []byte, err error)
-	// App Operations - For Tree Merkling
-	// GetAppsUpdated(height int64) ([][]byte, error) // Returns the apps updates at the given height
-	UpdateAppTree([][]byte) error
 
 	// ServiceNode Operations
 	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
@@ -129,6 +125,29 @@ type PersistenceWriteContext interface {
 	// Flag Operations
 	InitFlags() error
 	SetFlag(paramName string, value interface{}, enabled bool) error
+
+	// Tree Operations
+
+	// # Option 1:
+
+	UpdateApplicationsTree([]Actor) error
+	// UpdateValidatorsTree([]Actor) error
+	// UpdateServiceNodesTree([]Actor) error
+	// UpdateFishermanTree([]Actor) error
+	// Update<FutureActors>Tree([]Actor) error
+	// Update<Other>Tree([]Other) error
+
+	// # Option 2:
+	// UpdateActorTree(types.ProtocolActorSchema, []Actor) error
+	// Update<Other>Tree([]Other) error
+
+	// # Option 3:
+	// UpdateApplicationsTree([]Application) error
+	// UpdateValidatorsTree([]Validator) error
+	// UpdateServiceNodesTree([]ServiceNode) error
+	// UpdateFishermanTree([]Fisherman) error
+	// Update<FutureActors>Tree([]FutureActor) error
+	// Update<Other>Tree([]Other) error
 }
 
 type PersistenceReadContext interface {
@@ -207,4 +226,28 @@ type PersistenceReadContext interface {
 	GetIntFlag(paramName string, height int64) (int, bool, error)
 	GetStringFlag(paramName string, height int64) (string, bool, error)
 	GetBytesFlag(paramName string, height int64) ([]byte, bool, error)
+
+	// Tree Operations
+
+	// # Option 1:
+
+	// GetApplicationsUpdatedAtHeight(height int64) ([]Actor, error)
+	// GetValidatorsUpdatedAtHeight(height int64) ([]Actor, error)
+	// GetServiceNodesUpdatedAtHeight(height int64) ([]Actor, error)
+	// GetFishermanUpdatedAtHeight(height int64) ([]Actor, error)
+	// Get<FutureActor>UpdatedAtHeight(height int64) ([]Actor, error)
+	// Get<Other>UpdatedAtHeight(height int64) ([]Actor, error)
+	// Update<Other>Tree(height int64) ([]Actor, error)
+
+	// # Option 2:
+	// Get<FutureActor>UpdatedAtHeight(types.ProtocolActorSchema, height int64) ([]Actor, error)
+	// Get<Other>UpdatedAtHeight(height int64) ([]Other, error)
+
+	// # Option 3:
+	// GetApplicationsUpdatedAtHeight(height int64) ([]Application, error)
+	// GetValidatorsUpdatedAtHeight(height int64) ([]Validator, error)
+	// GetServiceNodesUpdatedAtHeight(height int64) ([]ServiceNode, error)
+	// GetFishermanUpdatedAtHeight(height int64) ([]Fisherman, error)
+	// Get<FutureActor>UpdatedAtHeight(height int64) ([]FutureActor, error)
+	// Get<Other>UpdatedAtHeight(height int64) ([]Other, error)
 }
