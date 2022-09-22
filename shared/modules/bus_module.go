@@ -1,6 +1,10 @@
 package modules
 
+//go:generate mockgen -source=$GOFILE -destination=./mocks/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+
 import (
+	"encoding/json"
+
 	"github.com/pokt-network/pocket/shared/debug"
 )
 
