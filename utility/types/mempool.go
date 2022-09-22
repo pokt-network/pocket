@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"container/list"
-	"encoding/hex"
 	"sync"
 
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -47,8 +46,7 @@ func NewMempool(maxTransactionBytes int, maxTransactions int) Mempool {
 func (f *FIFOMempool) AddTransaction(tx []byte) Error {
 	f.l.Lock()
 	defer f.l.Unlock()
-	hash := crypto.SHA3Hash(tx)
-	hashString := hex.EncodeToString(hash)
+	hashString := crypto.GetHashStringFromBytes(tx)
 	if _, ok := f.hashMap[hashString]; ok {
 		return ErrDuplicateTransaction()
 	}
@@ -129,8 +127,7 @@ func removeTransaction(f *FIFOMempool, e *list.Element) ([]byte, Error) {
 	txBz := e.Value.([]byte)
 	txBzLen := len(txBz)
 	f.pool.Remove(e)
-	hash := crypto.SHA3Hash(txBz)
-	hashString := hex.EncodeToString(hash)
+	hashString := crypto.GetHashStringFromBytes(txBz)
 	delete(f.hashMap, hashString)
 	f.size--
 	f.transactionBytes -= txBzLen
