@@ -55,7 +55,7 @@ type ProtocolActorSchema interface {
 	// Returns a query to update the actor's stake amount
 	SetStakeAmountQuery(address string, stakeAmount string, height int64) string
 
-	/*** Delete Queries - used debugging only /***/
+	/*** Debug Queries Only /***/
 
 	// Deletes all the Actors.
 	ClearAllQuery() string

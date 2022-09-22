@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.0] - 2022-09-22
+
+- Removed no-op `DeleteActor` code
+
 ## [0.0.0.0] - 2022-08-08
 
 // TODO(andrew): Use backticks around variable types to improve readability (e.g. see the first couple of examples)
