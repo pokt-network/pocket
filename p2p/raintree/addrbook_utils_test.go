@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
@@ -93,6 +94,11 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 		// {1000000000, 19},
 	}
 
+	// the test will add this arbitrary number of addresses after the initial initialization (done via NewRainTreeNetwork)
+	// this is to add extra subsequent work that -should- grow linearly and it's actually going to test AddressBook updates
+	// not simply initializations.
+	numAddressessToBeAdded := 1000
+
 	for _, testCase := range testCases {
 		n := testCase.numNodes
 		b.Run(fmt.Sprintf("n=%d", n), func(b *testing.B) {
@@ -103,9 +109,17 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 			err = network.processAddrBookUpdates()
 			require.NoError(b, err)
 
-			require.Equal(b, len(network.addrList), n)
-			require.Equal(b, len(network.addrBookMap), n)
-			require.Equal(b, int(network.maxNumLevels), testCase.numExpectedLevels)
+			require.Equal(b, n, len(network.addrList), n)
+			require.Equal(b, n, len(network.addrBookMap), n)
+			require.Equal(b, testCase.numExpectedLevels, int(network.maxNumLevels))
+
+			for i := 0; i < numAddressessToBeAdded; i++ {
+				newAddr, _ := crypto.GenerateAddress()
+				network.AddPeerToAddrBook(&types.NetworkPeer{Address: newAddr})
+			}
+
+			require.Equal(b, n+numAddressessToBeAdded, len(network.addrList))
+			require.Equal(b, n+numAddressessToBeAdded, len(network.addrBookMap))
 		})
 	}
 }
