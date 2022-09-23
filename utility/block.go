@@ -3,7 +3,7 @@ package utility
 import (
 	"math/big"
 
-	typesCons "github.com/pokt-network/pocket/consensus/types" // TODO (andrew) importing consensus and persistence in this file?
+	// TODO (andrew) importing consensus and persistence in this file?
 	typesGenesis "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
 
@@ -61,11 +61,13 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 		// 	return nil, err
 		// }
 	}
+
 	// end block lifecycle phase
 	if err := u.EndBlock(proposerAddress); err != nil {
 		return nil, err
 	}
-	// return the app hash (consensus module will get the validator set directly
+
+	// return the app hash; consensus module will get the validator set directly
 	return u.GetAppHash()
 }
 
@@ -289,14 +291,12 @@ func (u *UtilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks i
 }
 
 func (u *UtilityContext) StoreBlock(blockProtoBytes []byte) error {
-	store := u.Store()
+	// store := u.Store()
 
 	// Store in KV Store
-	if err := store.StoreBlock(blockProtoBytes); err != nil {
-		return err
-	}
-
-
+	// if err := store.StoreBlock(blockProtoBytes); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }

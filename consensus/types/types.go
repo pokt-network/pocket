@@ -1,8 +1,10 @@
 package types
 
+// TODO: Split this file into multiple types files.
 import (
-	"github.com/pokt-network/pocket/shared/modules"
 	"sort"
+
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 type NodeId uint64

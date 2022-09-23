@@ -1,8 +1,10 @@
 package consensus
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
+	"unsafe"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -25,13 +27,18 @@ var (
 
 func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
+	defer m.paceMaker.RestartTimer()
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
-	// TODO(olshansky): add step specific validation
-	m.paceMaker.RestartTimer()
+
+	// Clear the previous utility context, if it exists, and create a new one
+	if err := m.refreshUtilityContext(); err != nil {
+		return
+	}
+
 	m.Step = Prepare
 }
 
@@ -39,31 +46,33 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *Consensus
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
+	defer m.paceMaker.RestartTimer()
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
-	// TODO(olshansky): add step specific validation
+
 	if err := m.validateProposal(msg); err != nil {
 		m.nodeLogError(fmt.Sprintf("Invalid proposal in %s message", Prepare), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
 
-	if err := m.applyBlockAsReplica(msg.Block); err != nil {
+	block := msg.GetBlock()
+	if err := m.applyBlock(block); err != nil {
 		m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
+	m.Block = block
 
 	m.Step = PreCommit
-	m.paceMaker.RestartTimer()
 
-	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, msg.Block)
+	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, block)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Prepare).Error(), err)
-		return // TODO(olshansky): Should we interrupt the round here?
+		return
 	}
 	m.sendToNode(prepareVoteMessage)
 }
@@ -72,26 +81,27 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *ConsensusM
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
+	defer m.paceMaker.RestartTimer()
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
-	// TODO(olshansky): add step specific validation
-	if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
+
+	quorumCert := msg.GetQuorumCertificate()
+	if err := m.validateQuorumCertificate(quorumCert); err != nil {
 		m.nodeLogError(typesCons.ErrQCInvalid(PreCommit).Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
 
 	m.Step = Commit
-	m.HighPrepareQC = msg.GetQuorumCertificate() // TODO(discuss): Why are we never using this for validation?
-	m.paceMaker.RestartTimer()
+	m.HighPrepareQC = quorumCert // INVESTIGATE: Why are we never using this for validation?
 
 	preCommitVoteMessage, err := CreateVoteMessage(m, PreCommit, msg.Block)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(PreCommit).Error(), err)
-		return // TODO(olshansky): Should we interrupt the round here?
+		return
 	}
 	m.sendToNode(preCommitVoteMessage)
 }
@@ -100,26 +110,27 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *Consensu
 
 func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
+	defer m.paceMaker.RestartTimer()
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
-	// TODO(olshansky): add step specific validation
-	if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
+
+	quorumCert := msg.GetQuorumCertificate()
+	if err := m.validateQuorumCertificate(quorumCert); err != nil {
 		m.nodeLogError(typesCons.ErrQCInvalid(Commit).Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
 
 	m.Step = Decide
-	m.LockedQC = msg.GetQuorumCertificate() // TODO(discuss): How do the replica recover if it's locked? Replica `formally` agrees on the QC while the rest of the network `verbally` agrees on the QC.
-	m.paceMaker.RestartTimer()
+	m.LockedQC = quorumCert // DISCUSS: How does the replica recover if it's locked? Replica `formally` agrees on the QC while the rest of the network `verbally` agrees on the QC.
 
 	commitVoteMessage, err := CreateVoteMessage(m, Commit, msg.Block)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Commit).Error(), err)
-		return // TODO(olshansky): Should we interrupt the round here?
+		return
 	}
 	m.sendToNode(commitVoteMessage)
 }
@@ -128,13 +139,15 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *ConsensusMo
 
 func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
+	defer m.paceMaker.RestartTimer()
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
-	// TODO(olshansky): add step specific validation
-	if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
+
+	quorumCert := msg.GetQuorumCertificate()
+	if err := m.validateQuorumCertificate(quorumCert); err != nil {
 		m.nodeLogError(typesCons.ErrQCInvalid(Decide).Error(), err)
 		m.paceMaker.InterruptRound()
 		return
@@ -169,7 +182,7 @@ func (handler *HotstuffReplicaMessageHandler) emitTelemetryEvent(m *ConsensusMod
 }
 
 func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error {
-	if !(msg.Type == Propose && msg.Step == Prepare) {
+	if !(msg.GetType() == Propose && msg.GetStep() == Prepare) {
 		return typesCons.ErrProposalNotValidInPrepare
 	}
 
@@ -177,8 +190,9 @@ func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 		return err
 	}
 
-	// TODO(discuss): A nil QC implies a successfull CommitQC or TimeoutQC, which have been omitted intentionally since
+	// TODO(discuss): A nil QC implies a successful CommitQC or TimeoutQC, which have been omitted intentionally since
 	// they are not needed for consensus validity. However, if a QC is specified, it must be valid.
+	quorumCert :=
 	if msg.GetQuorumCertificate() != nil {
 		if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
 			return err
@@ -241,6 +255,30 @@ func (m *ConsensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 
 	if err := m.isOptimisticThresholdMet(numValid); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// This is a helper function intended to be called by a replica/voter during a view change
+func (m *ConsensusModule) applyBlock(block *typesCons.Block) error {
+	// TODO: Add unit tests to verify this.
+	if unsafe.Sizeof(*block) > uintptr(m.MaxBlockBytes) {
+		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.MaxBlockBytes)
+	}
+
+	// TECHDEBT: Retrieve this from persistence
+	lastByzValidators := make([][]byte, 0)
+
+	// Apply all the transactions in the block and get the appHash
+	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), block.BlockHeader.ProposerAddress, block.Transactions, lastByzValidators)
+	if err != nil {
+		return err
+	}
+
+	// CONSOLIDATE: Terminology of `blockHash`, `appHash` and `stateHash`
+	if block.BlockHeader.Hash != hex.EncodeToString(appHash) {
+		return typesCons.ErrInvalidAppHash(block.BlockHeader.Hash, hex.EncodeToString(appHash))
 	}
 
 	return nil

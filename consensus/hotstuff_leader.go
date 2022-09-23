@@ -1,11 +1,14 @@
 package consensus
 
 import (
+	"encoding/hex"
 	"unsafe"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
+
+type HotstuffLeaderMessageHandler struct{}
 
 var (
 	LeaderMessageHandler HotstuffMessageHandler = &HotstuffLeaderMessageHandler{}
@@ -18,32 +21,37 @@ var (
 	}
 )
 
-type HotstuffLeaderMessageHandler struct{}
-
 /*** Prepare Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
+	defer m.paceMaker.RestartTimer()
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
-	// TODO(olshansky): add step specific validation
+
+	// DISCUSS: Do we need to pause for `MinBlockFreqMSec` here to let more transactions or should we stick with optimistic responsiveness?
+
 	if err := m.didReceiveEnoughMessageForStep(NewRound); err != nil {
 		m.nodeLog(typesCons.OptimisticVoteCountWaiting(NewRound, err.Error()))
 		return
 	}
-
-	// TODO(olshansky): Do we need to pause for `MinBlockFreqMSec` here to let more transactions come in?
 	m.nodeLog(typesCons.OptimisticVoteCountPassed(NewRound))
 
-	// Likely to be `nil` if blockchain is progressing well.
-	highPrepareQC := m.findHighQC(NewRound)
+	// Clear the previous utility context, if it exists, and create a new one
+	if err := m.refreshUtilityContext(); err != nil {
+		return
+	}
 
-	// TODO(olshansky): Add more unit tests for these checks...
+	// Likely to be `nil` if blockchain is progressing well.
+	highPrepareQC := m.findHighQC(NewRound) // TECHDEBT: How do we validate `highPrepareQC` here?
+
+	// TODO: Add more unit tests for these checks...
 	if highPrepareQC == nil || highPrepareQC.Height < m.Height || highPrepareQC.Round < m.Round {
-		block, err := m.prepareBlockAsLeader()
+		// Leader prepares a new block if `highPrepareQC` is not applicable
+		block, err := m.prepareAndApplyBlock()
 		if err != nil {
 			m.nodeLogError(typesCons.ErrPrepareBlock.Error(), err)
 			m.paceMaker.InterruptRound()
@@ -51,13 +59,17 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 		}
 		m.Block = block
 	} else {
-		// TODO(discuss): Do we need to validate highPrepareQC here?
+		// Leader acts like a replica if `highPrepareQC` is not `nil`
+		if err := m.applyBlock(highPrepareQC.Block); err != nil {
+			m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
+			m.paceMaker.InterruptRound()
+			return
+		}
 		m.Block = highPrepareQC.Block
 	}
 
 	m.Step = Prepare
 	m.MessagePool[NewRound] = nil
-	m.paceMaker.RestartTimer()
 
 	prepareProposeMessage, err := CreateProposeMessage(m, Prepare, highPrepareQC)
 	if err != nil {
@@ -71,7 +83,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, m.Block)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Prepare).Error(), err)
-		return // TODO(olshansky): Should we interrupt the round here?
+		return
 	}
 	m.sendToNode(prepareVoteMessage)
 }
@@ -80,18 +92,20 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
+	defer m.paceMaker.RestartTimer()
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
-	// TODO(olshansky): add step specific validation
+
 	if err := m.didReceiveEnoughMessageForStep(Prepare); err != nil {
 		m.nodeLog(typesCons.OptimisticVoteCountWaiting(Prepare, err.Error()))
 		return
 	}
 	m.nodeLog(typesCons.OptimisticVoteCountPassed(Prepare))
 
+	// DISCUSS: What prevents leader from swapping out the block here?
 	prepareQC, err := m.getQuorumCertificate(m.Height, Prepare, m.Round)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrQCInvalid(Prepare).Error(), err)
@@ -101,7 +115,6 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusMo
 	m.Step = PreCommit
 	m.HighPrepareQC = prepareQC
 	m.MessagePool[Prepare] = nil
-	m.paceMaker.RestartTimer()
 
 	precommitProposeMessages, err := CreateProposeMessage(m, PreCommit, prepareQC)
 	if err != nil {
@@ -115,7 +128,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusMo
 	precommitVoteMessage, err := CreateVoteMessage(m, PreCommit, m.Block)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(PreCommit).Error(), err)
-		return // TODO(olshansky): Should we interrupt the round here?
+		return
 	}
 	m.sendToNode(precommitVoteMessage)
 }
@@ -124,12 +137,13 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusMo
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
+	defer m.paceMaker.RestartTimer()
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
-	// TODO(olshansky): add step specific validation
+
 	if err := m.didReceiveEnoughMessageForStep(PreCommit); err != nil {
 		m.nodeLog(typesCons.OptimisticVoteCountWaiting(PreCommit, err.Error()))
 		return
@@ -145,7 +159,6 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *Consensus
 	m.Step = Commit
 	m.LockedQC = preCommitQC
 	m.MessagePool[PreCommit] = nil
-	m.paceMaker.RestartTimer()
 
 	commitProposeMessage, err := CreateProposeMessage(m, Commit, preCommitQC)
 	if err != nil {
@@ -168,12 +181,13 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *Consensus
 
 func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
+	defer m.paceMaker.RestartTimer()
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
-	// TODO(olshansky): add step specific validation
+
 	if err := m.didReceiveEnoughMessageForStep(Commit); err != nil {
 		m.nodeLog(typesCons.OptimisticVoteCountWaiting(Commit, err.Error()))
 		return
@@ -188,7 +202,6 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusMod
 
 	m.Step = Decide
 	m.MessagePool[Commit] = nil
-	m.paceMaker.RestartTimer()
 
 	decideProposeMessage, err := CreateProposeMessage(m, Decide, commitQC)
 	if err != nil {
@@ -217,6 +230,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusMod
 
 func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
+	defer m.paceMaker.RestartTimer()
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -299,4 +313,46 @@ func (m *ConsensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {
 
 	// Only the leader needs to aggregate consensus related messages.
 	m.MessagePool[msg.Step] = append(m.MessagePool[msg.Step], msg)
+}
+
+// This is a helper function intended to be called by a leader/validator during a view change
+// to prepare a new block that is applied to the new underlying context.
+func (m *ConsensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
+	if m.isReplica() {
+		return nil, typesCons.ErrReplicaPrepareBlock
+	}
+
+	// TECHDEBT: Retrieve this from consensus consensus config
+	maxTxBytes := 90000
+
+	// TECHDEBT: Retrieve this from persistence
+	lastByzValidators := make([][]byte, 0)
+
+	// Reap the mempool for transactions to be applied in this block
+	txs, err := m.utilityContext.GetProposalTransactions(m.privateKey.Address(), maxTxBytes, lastByzValidators)
+	if err != nil {
+		return nil, err
+	}
+
+	// Apply all the transactions in the block
+	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
+	if err != nil {
+		return nil, err
+	}
+
+	// Construct the block
+	blockHeader := &typesCons.BlockHeader{
+		Height:            int64(m.Height),
+		Hash:              hex.EncodeToString(appHash),
+		NumTxs:            uint32(len(txs)),
+		LastBlockHash:     m.lastAppHash,
+		ProposerAddress:   m.privateKey.Address().Bytes(),
+		QuorumCertificate: []byte("HACK: Temporary placeholder"),
+	}
+	block := &typesCons.Block{
+		BlockHeader:  blockHeader,
+		Transactions: txs,
+	}
+
+	return block, nil
 }

@@ -2,8 +2,9 @@ package consensus
 
 import (
 	"encoding/base64"
-	"github.com/pokt-network/pocket/shared/debug"
 	"log"
+
+	"github.com/pokt-network/pocket/shared/debug"
 
 	"google.golang.org/protobuf/proto"
 
@@ -31,13 +32,11 @@ const (
 
 var (
 	HotstuffSteps = [...]typesCons.HotstuffStep{NewRound, Prepare, PreCommit, Commit, Decide}
-
-	maxTxBytes        = 90000             // TODO(olshansky): Move this to config.json.
-	lastByzValidators = make([][]byte, 0) // TODO(olshansky): Retrieve this from persistence
 )
 
 // ** Hotstuff Helpers ** //
 
+// TODO: Make this method functional (i.e. not have the ConsensusModule receiver)
 func (m *ConsensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
 	var pss []*typesCons.PartialSignature
 	for _, msg := range m.MessagePool[step] {
@@ -70,9 +69,9 @@ func (m *ConsensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 	}
 
 	return &typesCons.QuorumCertificate{
-		Height:             m.Height,
+		Height:             height,
 		Step:               step,
-		Round:              m.Round,
+		Round:              round,
 		Block:              m.Block,
 		ThresholdSignature: thresholdSig,
 	}, nil

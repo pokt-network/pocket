@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	DefaultLogPrefix    = "NODE" // Just a default that'll be replaced during consensus operations.
+	DefaultLogPrefix    = "NODE" // TODO(#164): Make implicit when logging is standardized
 	ConsensusModuleName = "consensus"
 )
 
@@ -27,8 +27,7 @@ var _ modules.PacemakerConfig = &typesCons.PacemakerConfig{}
 var _ modules.ConsensusConfig = &typesCons.ConsensusConfig{}
 var _ modules.ConsensusModule = &ConsensusModule{}
 
-// TODO(olshansky): Any reason to make all of these attributes local only (i.e. not exposed outside the struct)?
-// TODO(olshansky): Look for a way to not externalize the `ConsensusModule` struct
+// TODO: Do not export the `ConsensusModule` struct or the fields inside of it.
 type ConsensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
@@ -38,7 +37,7 @@ type ConsensusModule struct {
 	Height uint64
 	Round  uint64
 	Step   typesCons.HotstuffStep
-	Block  *typesCons.Block // The current block being voted on prior to committing to finality
+	Block  *typesCons.Block // The current block being proposed / voted on; it has not been committed to finality
 
 	HighPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	LockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
@@ -46,11 +45,11 @@ type ConsensusModule struct {
 	// Leader Election
 	LeaderId       *typesCons.NodeId
 	NodeId         typesCons.NodeId
-	ValAddrToIdMap typesCons.ValAddrToIdMap // TODO(design): This needs to be updated every time the ValMap is modified
-	IdToValAddrMap typesCons.IdToValAddrMap // TODO(design): This needs to be updated every time the ValMap is modified
+	ValAddrToIdMap typesCons.ValAddrToIdMap // TODO: This needs to be updated every time the ValMap is modified
+	IdToValAddrMap typesCons.IdToValAddrMap // TODO: This needs to be updated every time the ValMap is modified
 
 	// Consensus State
-	appHash      string
+	lastAppHash  string // TODO: Need to make sure this is populated and updated correctly
 	validatorMap typesCons.ValidatorMap
 
 	// Module Dependencies
@@ -58,10 +57,13 @@ type ConsensusModule struct {
 	paceMaker         Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-	logPrefix   string                                                  // TODO(design): Remove later when we build a shared/proper/injected logger
-	MessagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage // TODO(design): Move this over to the persistence module or elsewhere?
-	// TODO(andrew): Explain (or remove) why have an explicit `MaxBlockBytes` if we are already storing a reference to `consCfg` above?
-	// TODO(andrew): This needs to be updated every time the utility module changes this value. It can be accessed via the "application specific bus" (mimicking the intermodule interface in ABCI)
+	// DEPRECATE: Remove later when we build a shared/proper/injected logger
+	logPrefix string
+
+	// TECHDEBT: Move this over to use the txIndexer
+	MessagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
+
+	// CLEANUP: Access this value from the configs
 	MaxBlockBytes uint64
 }
 
@@ -120,7 +122,7 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 		ValAddrToIdMap: valIdMap,
 		IdToValAddrMap: idValMap,
 
-		appHash:      "",
+		lastAppHash:  "",
 		validatorMap: valMap,
 
 		utilityContext:    nil,
@@ -216,6 +218,36 @@ func (m *ConsensusModule) SetBus(pocketBus modules.Bus) {
 	m.leaderElectionMod.SetBus(pocketBus)
 }
 
+func (m *ConsensusModule) HandleMessage(message *anypb.Any) error {
+	switch message.MessageName() {
+	case HotstuffMessage:
+		var hotstuffMessage typesCons.HotstuffMessage
+		if err := anypb.UnmarshalTo(message, &hotstuffMessage, proto.UnmarshalOptions{}); err != nil {
+			return err
+		}
+		m.handleHotstuffMessage(&hotstuffMessage)
+	case UtilityMessage:
+		panic("[WARN] UtilityMessage handling is not implemented by consensus yet...")
+	default:
+		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
+	}
+
+	return nil
+}
+
+func (m *ConsensusModule) AppHash() string {
+	return m.lastAppHash
+}
+
+func (m *ConsensusModule) CurrentHeight() uint64 {
+	return m.Height
+}
+
+func (m *ConsensusModule) ValidatorMap() modules.ValidatorMap {
+	return typesCons.ValidatorMapToModulesValidatorMap(m.validatorMap)
+}
+
+// TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...
 func (m *ConsensusModule) loadPersistedState() error {
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
 	if err != nil {
@@ -234,95 +266,9 @@ func (m *ConsensusModule) loadPersistedState() error {
 		return fmt.Errorf("error getting block hash for height %d even though it's in the database: %s", latestHeight, err)
 	}
 
-	// TODO: Populate the rest of the state from the persistence module: validator set, quorum cert, last block hash, etc...
 	m.Height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
-	m.appHash = string(appHash)
+	m.lastAppHash = string(appHash)
 
 	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
 	return nil
-}
-
-// TODO(discuss): Low priority design: think of a way to make `hotstuff_*` files be a sub-package under consensus.
-// This is currently not possible because functions tied to the `ConsensusModule`
-// struct (implementing the ConsensusModule module), which spans multiple files.
-/*
-TODO(discuss): The reason we do not assign both the leader and the replica handlers
-to the leader (which should also act as a replica when it is a leader) is because it
-can create a weird inconsistent state (e.g. both the replica and leader try to restart
-the Pacemaker timeout). This requires additional "replica-like" logic in the leader
-handler which has both pros and cons:
-	Pros:
-		* The leader can short-circuit and optimize replica related logic
-		* Avoids additional code flowing through the P2P pipeline
-		* Allows for micro-optimizations
-	Cons:
-		* The leader's "replica related logic" requires an additional code path
-		* Code is less "generalizable" and therefore potentially more error prone
-*/
-
-// TODO(olshansky): Should we just make these singletons or embed them directly in the ConsensusModule?
-type HotstuffMessageHandler interface {
-	HandleNewRoundMessage(*ConsensusModule, *typesCons.HotstuffMessage)
-	HandlePrepareMessage(*ConsensusModule, *typesCons.HotstuffMessage)
-	HandlePrecommitMessage(*ConsensusModule, *typesCons.HotstuffMessage)
-	HandleCommitMessage(*ConsensusModule, *typesCons.HotstuffMessage)
-	HandleDecideMessage(*ConsensusModule, *typesCons.HotstuffMessage)
-}
-
-func (m *ConsensusModule) HandleMessage(message *anypb.Any) error {
-	switch message.MessageName() {
-	case HotstuffMessage:
-		var hotstuffMessage typesCons.HotstuffMessage
-		err := anypb.UnmarshalTo(message, &hotstuffMessage, proto.UnmarshalOptions{})
-		if err != nil {
-			return err
-		}
-		m.handleHotstuffMessage(&hotstuffMessage)
-	case UtilityMessage:
-		panic("[WARN] UtilityMessage handling is not implemented by consensus yet...")
-	default:
-		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
-	}
-
-	return nil
-}
-
-func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) {
-	m.nodeLog(typesCons.DebugHandlingHotstuffMessage(msg))
-
-	// Liveness & safety checks
-	if err := m.paceMaker.ValidateMessage(msg); err != nil {
-		// If a replica is not a leader for this round, but has already determined a leader,
-		// and continues to receive NewRound messages, we avoid logging the "message discard"
-		// because it creates unnecessary spam.
-		if !(m.LeaderId != nil && !m.isLeader() && msg.Step == NewRound) {
-			m.nodeLog(typesCons.WarnDiscardHotstuffMessage(msg, err.Error()))
-		}
-		return
-	}
-
-	// Need to execute leader election if there is no leader and we are in a new round.
-	if m.Step == NewRound && m.LeaderId == nil {
-		m.electNextLeader(msg)
-	}
-
-	if m.isReplica() {
-		replicaHandlers[msg.Step](m, msg)
-		return
-	}
-
-	// Note that the leader also acts as a replica, but this logic is implemented in the underlying code.
-	leaderHandlers[msg.Step](m, msg)
-}
-
-func (m *ConsensusModule) AppHash() string {
-	return m.appHash
-}
-
-func (m *ConsensusModule) CurrentHeight() uint64 {
-	return m.Height
-}
-
-func (m *ConsensusModule) ValidatorMap() modules.ValidatorMap {
-	return typesCons.ValidatorMapToModulesValidatorMap(m.validatorMap)
 }

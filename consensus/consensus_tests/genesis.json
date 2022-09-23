@@ -1,0 +1,56 @@
+{
+    "consensus_genesis_state": {
+        "genesis_time": {
+            "seconds": 1663965677,
+            "nanos": 641809000
+        },
+        "chain_id": "testnet",
+        "max_block_bytes": 4000000,
+        "validators": [
+            {
+                "address": "c85045886996fe295a4eaa24a7f07ea74032a0bc",
+                "public_key": "c9356e26cb2987665dc76c2836a1b614646753ab92a517dacecb1a0d472a44fb",
+                "chains": null,
+                "generic_param": "node1.consensus:8080",
+                "staked_amount": "1000000000000",
+                "paused_height": -1,
+                "unstaking_height": -1,
+                "output": "c85045886996fe295a4eaa24a7f07ea74032a0bc",
+                "actor_type": 3
+            },
+            {
+                "address": "e0db8408cea5ed6520e1adc5dc4d1d17239df172",
+                "public_key": "b828c891955f35604500a71b9111bddb7bf9481a15250e9508547ea95057f2e9",
+                "chains": null,
+                "generic_param": "node2.consensus:8080",
+                "staked_amount": "1000000000000",
+                "paused_height": -1,
+                "unstaking_height": -1,
+                "output": "e0db8408cea5ed6520e1adc5dc4d1d17239df172",
+                "actor_type": 3
+            },
+            {
+                "address": "4a1eb7a5787f4c6e556c3b9a3cbfd31a75a4eef4",
+                "public_key": "98762a7038ac4df608200a790ccb5b679d4f720d51a7acf115c5be4a6d0222c0",
+                "chains": null,
+                "generic_param": "node3.consensus:8080",
+                "staked_amount": "1000000000000",
+                "paused_height": -1,
+                "unstaking_height": -1,
+                "output": "4a1eb7a5787f4c6e556c3b9a3cbfd31a75a4eef4",
+                "actor_type": 3
+            },
+            {
+                "address": "3b7500e1509f05533c93c8f6d80af06419901b22",
+                "public_key": "052447ca3b1c8eabb8f5d66d0c34f9ddf466bd03718eb1504ab5a24421a1e5d8",
+                "chains": null,
+                "generic_param": "node4.consensus:8080",
+                "staked_amount": "1000000000000",
+                "paused_height": -1,
+                "unstaking_height": -1,
+                "output": "3b7500e1509f05533c93c8f6d80af06419901b22",
+                "actor_type": 3
+            }
+        ]
+    }
+}
