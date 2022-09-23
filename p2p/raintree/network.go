@@ -21,47 +21,31 @@ var _ modules.IntegratableModule = &rainTreeNetwork{}
 type rainTreeNetwork struct {
 	bus modules.Bus
 
-	// TODO(olshansky): still thinking through these structures
 	selfAddr cryptoPocket.Address
-	addrBook typesP2P.AddrBook
 
-	// TECHDEBT(olshansky): Consider optimizing these away if possible.
-	// Helpers / abstractions around `addrBook` for simpler implementation through additional
-	// storage & pre-computation.
-	addrBookMap  typesP2P.AddrBookMap
-	addrList     []string
-	maxNumLevels uint32
-
-	router *router
+	peersManager *peersManager
 
 	// TECHDEBT(drewsky): What should we use for de-duping messages within P2P?
 	mempool map[uint64]struct{} // TODO (drewsky) replace map implementation (can grow unbounded)
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) typesP2P.Network {
-	n := &rainTreeNetwork{
-		selfAddr: addr,
-		addrBook: addrBook,
-		// This subset of fields are initialized by `processAddrBookUpdates` below
-		addrBookMap:  make(typesP2P.AddrBookMap),
-		addrList:     make([]string, 0),
-		maxNumLevels: 0,
-		mempool:      make(map[uint64]struct{}),
+	pm, err := newPeersManager(addr, addrBook)
+	if err != nil {
+		log.Println("[ERROR] Error initializing rainTreeNetwork peersManager: ", err)
 	}
 
-	n.router = newRouter(n)
-
-	if err := n.processAddrBookUpdates(); err != nil {
-		// DISCUSS(drewsky): if this errors, the node could still function but not participate in
-		// message propagation. Should we return an error or just log?
-		log.Println("[ERROR] Error initializing rainTreeNetwork: ", err)
+	n := &rainTreeNetwork{
+		selfAddr:     addr,
+		peersManager: pm,
+		mempool:      make(map[uint64]struct{}),
 	}
 
 	return typesP2P.Network(n)
 }
 
 func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
-	return n.networkBroadcastAtLevel(data, n.maxNumLevels, getNonce())
+	return n.networkBroadcastAtLevel(data, n.peersManager.getStateView().maxNumLevels, getNonce())
 }
 
 func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, nonce uint64) error {
@@ -79,8 +63,8 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 		return err
 	}
 
-	for _, target := range n.router.GetTargetsAtLevel(level) {
-		if target.ShouldSendInternal() {
+	for _, target := range n.getTargetsAtLevel(level) {
+		if shouldSendToTarget(target) {
 			if err = n.networkSendInternal(bz, target.address); err != nil {
 				log.Println("Error sending to peer during broadcast: ", err)
 			}
@@ -124,7 +108,7 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return nil
 	}
 
-	peer, ok := n.addrBookMap[address.String()]
+	peer, ok := n.peersManager.getStateView().addrBookMap[address.String()]
 	if !ok {
 		return fmt.Errorf("address %s not found in addrBookMap", address.String())
 	}
@@ -192,19 +176,21 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 }
 
 func (n *rainTreeNetwork) GetAddrBook() typesP2P.AddrBook {
-	return n.addrBook
+	return n.peersManager.getStateView().addrBook
 }
 
 func (n *rainTreeNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {
-	n.addrBook = append(n.addrBook, peer)
-	if err := n.processAddrBookUpdates(); err != nil {
-		return nil
-	}
+	n.peersManager.wg.Add(1)
+	n.peersManager.eventCh <- addressBookEvent{addToAddressBook, peer}
+	n.peersManager.wg.Wait()
 	return nil
 }
 
 func (n *rainTreeNetwork) RemovePeerToAddrBook(peer *typesP2P.NetworkPeer) error {
-	panic("Not implemented")
+	n.peersManager.wg.Add(1)
+	n.peersManager.eventCh <- addressBookEvent{removeFromAddressBook, peer}
+	n.peersManager.wg.Wait()
+	return nil
 }
 
 func (n *rainTreeNetwork) SetBus(bus modules.Bus) {
@@ -234,3 +220,7 @@ func getNonce() uint64 {
 // 	}
 // 	rand.Seed(seed.Int64())
 // }
+
+func shouldSendToTarget(target target) bool {
+	return !target.isSelf
+}

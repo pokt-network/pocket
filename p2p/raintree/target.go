@@ -18,7 +18,7 @@ type target struct {
 	isSelf                 bool
 }
 
-func (t target) DebugString(r *router) string {
+func (t target) DebugString(n *rainTreeNetwork) string {
 	s := strings.Builder{}
 	s.WriteString("[")
 	serviceUrl := t.serviceUrl
@@ -28,8 +28,9 @@ func (t target) DebugString(r *router) string {
 		fmt.Fprintf(&s, "(self) %s ", serviceUrl)
 	}
 
+	peersManagerStateView := n.peersManager.getStateView()
 	for i := 1; i < t.addrBookLengthAtHeight; i++ {
-		serviceUrl := r.network.addrBookMap[r.network.addrList[i]].ServiceUrl
+		serviceUrl := peersManagerStateView.addrBookMap[peersManagerStateView.addrList[i]].ServiceUrl
 		if i == t.index {
 			fmt.Fprintf(&s, " **%s** ", serviceUrl)
 		} else {
@@ -38,8 +39,4 @@ func (t target) DebugString(r *router) string {
 	}
 	s.WriteString("]")
 	return s.String()
-}
-
-func (t target) ShouldSendInternal() bool {
-	return !t.isSelf
 }
