@@ -313,7 +313,8 @@ func (m *ConsensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {
 	}
 
 	// Only the leader needs to aggregate consensus related messages.
-	m.MessagePool[msg.Step] = append(m.MessagePool[msg.Step], msg)
+	step := msg.GetStep()
+	m.MessagePool[step] = append(m.MessagePool[step], msg)
 }
 
 // This is a helper function intended to be called by a leader/validator during a view change

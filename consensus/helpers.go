@@ -46,7 +46,7 @@ func (m *ConsensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 			continue
 		}
 		// TODO(olshansky): Add tests for this
-		if msg.Height != height || msg.Step != step || msg.Round != round {
+		if msg.GetHeight() != height || msg.GetStep() != step || msg.GetRound() != round {
 			m.nodeLog(typesCons.WarnUnexpectedMessageInPool(msg, height, step, round))
 			continue
 		}

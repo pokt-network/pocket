@@ -89,10 +89,10 @@ func getMessageSignature(msg *typesCons.HotstuffMessage, privKey crypto.PrivateK
 // Signature only over subset of fields in HotstuffMessage
 func getSignableBytes(msg *typesCons.HotstuffMessage) ([]byte, error) {
 	msgToSign := &typesCons.HotstuffMessage{
-		Height: msg.Height,
-		Step:   msg.Step,
-		Round:  msg.Round,
-		Block:  msg.Block,
+		Height: msg.GetHeight(),
+		Step:   msg.GetStep(),
+		Round:  msg.GetRound(),
+		Block:  msg.GetBlock(),
 	}
 	return proto.Marshal(msgToSign)
 }

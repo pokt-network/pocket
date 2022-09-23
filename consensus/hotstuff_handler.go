@@ -31,12 +31,13 @@ type HotstuffMessageHandler interface {
 func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) {
 	m.nodeLog(typesCons.DebugHandlingHotstuffMessage(msg))
 
+	step := msg.GetStep()
 	// Liveness & safety checks
 	if err := m.paceMaker.ValidateMessage(msg); err != nil {
 		// If a replica is not a leader for this round, but has already determined a leader,
 		// and continues to receive NewRound messages, we avoid logging the "message discard"
 		// because it creates unnecessary spam.
-		if !(m.LeaderId != nil && !m.isLeader() && msg.Step == NewRound) {
+		if !(m.LeaderId != nil && !m.isLeader() && step == NewRound) {
 			m.nodeLog(typesCons.WarnDiscardHotstuffMessage(msg, err.Error()))
 		}
 		return
@@ -48,10 +49,10 @@ func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	}
 
 	if m.isReplica() {
-		replicaHandlers[msg.Step](m, msg)
+		replicaHandlers[step](m, msg)
 		return
 	}
 
 	// Note that the leader also acts as a replica, but this logic is implemented in the underlying code.
-	leaderHandlers[msg.Step](m, msg)
+	leaderHandlers[step](m, msg)
 }
