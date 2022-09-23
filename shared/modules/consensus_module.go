@@ -1,5 +1,7 @@
 package modules
 
+//go:generate mockgen -source=$GOFILE -destination=./mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+
 import (
 	"github.com/pokt-network/pocket/shared/debug"
 	"google.golang.org/protobuf/types/known/anypb"

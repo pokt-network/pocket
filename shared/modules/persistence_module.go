@@ -1,5 +1,7 @@
 package modules
 
+//go:generate mockgen -source=$GOFILE -destination=./mocks/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+
 import (
 	"github.com/pokt-network/pocket/persistence/kvstore" // Should be moved to shared
 	"github.com/pokt-network/pocket/shared/debug"
