@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2022-09-23
+
+- Consolidated `UtilActorType` in `utility` and `utility/types` to `typesUtil.ActorType`
+- Deprecated all code in `actor.go` and replaced with test helpers
+- Converted stake status to proto.enum (int32)
+- Added DISCUSS items around shared code and `StakeStatus`
+
 ## [0.0.0.3] - 2022-09-15
 
 ### Code cleanup
@@ -22,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `UtilityConfig` uses shared interfaces in order to accept `MockUtilityConfig` in test_artifacts
 - Moved all utilty tests from shared to tests package
 - Left `TODO` for tests package still importing persistence for `NewTestPersistenceModule`
-  - This is one of the last places where cross-module importing exists
+    - This is one of the last places where cross-module importing exists
 
 ## [0.0.1] - 2022-07-20
 
@@ -42,18 +49,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added minimal 'proof of stake' implementation with few Pocket Specific terminologies and actors
-  - Structures
-    - Accounts
-    - Validators
-    - Fishermen
-    - Applications
-    - Service Nodes
-    - Pools
-  - Messages
-    - Stake
-    - Unstake
-    - EditStake
-    - Pause
-    - Unpause
-    - Send
+    - Structures
+        - Accounts
+        - Validators
+        - Fishermen
+        - Applications
+        - Service Nodes
+        - Pools
+    - Messages
+        - Stake
+        - Unstake
+        - EditStake
+        - Pause
+        - Unpause
+        - Send
 - Added initial governance params

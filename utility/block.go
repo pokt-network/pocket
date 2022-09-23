@@ -22,16 +22,6 @@ import (
 	operation that executes at the end of every block.
 */
 
-// TODO(andrew): consolidate with `utility/types/actor.go`
-var (
-	UtilActorTypes = []typesUtil.UtilActorType{
-		typesUtil.UtilActorType_App,
-		typesUtil.UtilActorType_Node,
-		typesUtil.UtilActorType_Fish,
-		typesUtil.UtilActorType_Val,
-	}
-)
-
 func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
 	u.LatestHeight = latestHeight
 	// begin block lifecycle phase
@@ -129,7 +119,7 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 			if err != nil {
 				return err
 			}
-			if err = u.BurnActor(typesUtil.UtilActorType_Val, burnPercentage, address); err != nil {
+			if err = u.BurnActor(typesUtil.ActorType_Val, burnPercentage, address); err != nil {
 				return err
 			}
 		} else if err := u.SetValidatorMissedBlocks(address, numberOfMissedBlocks); err != nil {
@@ -146,19 +136,23 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	if err != nil {
 		return err
 	}
-	for _, utilActorType := range typesUtil.ActorTypes {
+	for _, actorTypeInt32 := range typesUtil.ActorType_value {
 		var readyToUnstake []modules.IUnstakingActor
-		poolName := utilActorType.GetActorPoolName()
-		switch utilActorType {
-		case typesUtil.UtilActorType_App:
-			readyToUnstake, er = store.GetAppsReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
-		case typesUtil.UtilActorType_Fish:
-			readyToUnstake, er = store.GetFishermenReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
-		case typesUtil.UtilActorType_Node:
-			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
-		case typesUtil.UtilActorType_Val:
-			readyToUnstake, er = store.GetValidatorsReadyToUnstake(latestHeight, typesUtil.UnstakingStatus)
-
+		actorType := typesUtil.ActorType(actorTypeInt32)
+		poolName := ""
+		switch actorType {
+		case typesUtil.ActorType_App:
+			readyToUnstake, er = store.GetAppsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
+			poolName = typesUtil.Pool_Names_AppStakePool.String()
+		case typesUtil.ActorType_Fish:
+			readyToUnstake, er = store.GetFishermenReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
+			poolName = typesUtil.Pool_Names_FishermanStakePool.String()
+		case typesUtil.ActorType_Node:
+			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
+			poolName = typesUtil.Pool_Names_ServiceNodeStakePool.String()
+		case typesUtil.ActorType_Val:
+			readyToUnstake, er = store.GetValidatorsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
+			poolName = typesUtil.Pool_Names_ValidatorStakePool.String()
 		}
 		if er != nil {
 			return typesUtil.ErrGetReadyToUnstake(er)
@@ -170,7 +164,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 			if err = u.AddAccountAmountString(actor.GetOutputAddress(), actor.GetStakeAmount()); err != nil {
 				return err
 			}
-			if err = u.DeleteActor(utilActorType, actor.GetAddress()); err != nil {
+			if err = u.DeleteActor(actorType, actor.GetAddress()); err != nil {
 				return err
 			}
 		}
@@ -183,8 +177,9 @@ func (u *UtilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
 	if err != nil {
 		return err
 	}
-	for _, UtilActorType := range UtilActorTypes {
-		maxPausedBlocks, err := u.GetMaxPausedBlocks(UtilActorType)
+	for _, actorTypeInt32 := range typesUtil.ActorType_value {
+		actorType := typesUtil.ActorType(actorTypeInt32)
+		maxPausedBlocks, err := u.GetMaxPausedBlocks(actorType)
 		if err != nil {
 			return err
 		}
@@ -193,29 +188,29 @@ func (u *UtilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
 		if beforeHeight < 0 {
 			beforeHeight = 0
 		}
-		if err := u.UnstakeActorPausedBefore(beforeHeight, UtilActorType); err != nil {
+		if err := u.UnstakeActorPausedBefore(beforeHeight, actorType); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (u *UtilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, UtilActorType typesUtil.UtilActorType) (err typesUtil.Error) {
+func (u *UtilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, ActorType typesUtil.ActorType) (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	unstakingHeight, err := u.GetUnstakingHeight(UtilActorType)
+	unstakingHeight, err := u.GetUnstakingHeight(ActorType)
 	if err != nil {
 		return err
 	}
-	switch UtilActorType {
-	case typesUtil.UtilActorType_App:
-		er = store.SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
-	case typesUtil.UtilActorType_Fish:
-		er = store.SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
-	case typesUtil.UtilActorType_Node:
-		er = store.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
-	case typesUtil.UtilActorType_Val:
-		er = store.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, typesUtil.UnstakingStatus)
+	switch ActorType {
+	case typesUtil.ActorType_App:
+		er = store.SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
+	case typesUtil.ActorType_Fish:
+		er = store.SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
+	case typesUtil.ActorType_Node:
+		er = store.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
+	case typesUtil.ActorType_Val:
+		er = store.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
 	}
 	if er != nil {
 		return typesUtil.ErrSetStatusPausedBefore(er, pausedBeforeHeight)

@@ -25,11 +25,11 @@ func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicK
 	return
 }
 
-func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []byte, _ bool, _ int, maxRelays string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int32, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(types.ApplicationActor, types.BaseActor{
 		Address:            hex.EncodeToString(address),
 		PublicKey:          hex.EncodeToString(publicKey),
-		StakedTokens:       stakedAmount,
+		StakedTokens:       stakedTokens,
 		ActorSpecificParam: maxRelays,
 		OutputAddress:      hex.EncodeToString(output),
 		PausedHeight:       pausedHeight,
@@ -60,15 +60,15 @@ func (p PostgresContext) DeleteApp(_ []byte) error {
 	return nil
 }
 
-func (p PostgresContext) GetAppsReadyToUnstake(height int64, _ int) ([]modules.IUnstakingActor, error) {
+func (p PostgresContext) GetAppsReadyToUnstake(height int64, status int32) ([]modules.IUnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.ApplicationActor, height)
 }
 
-func (p PostgresContext) GetAppStatus(address []byte, height int64) (int, error) {
+func (p PostgresContext) GetAppStatus(address []byte, height int64) (int32, error) {
 	return p.GetActorStatus(types.ApplicationActor, address, height)
 }
 
-func (p PostgresContext) SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, _ int) error {
+func (p PostgresContext) SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error {
 	return p.SetActorUnstakingHeightAndStatus(types.ApplicationActor, address, unstakingHeight)
 }
 
@@ -76,7 +76,7 @@ func (p PostgresContext) GetAppPauseHeightIfExists(address []byte, height int64)
 	return p.GetActorPauseHeightIfExists(types.ApplicationActor, address, height)
 }
 
-func (p PostgresContext) SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
+func (p PostgresContext) SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error {
 	return p.SetActorStatusAndUnstakingHeightIfPausedBefore(types.ApplicationActor, pausedBeforeHeight, unstakingHeight)
 }
 

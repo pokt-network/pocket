@@ -491,7 +491,7 @@ func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
 	}
 }
 
-func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.UtilActorType) (amount *big.Int, err typesUtil.Error) {
+func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.ActorType) (amount *big.Int, err typesUtil.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageDoubleSign:
 		return u.GetMessageDoubleSignFee()
@@ -499,46 +499,46 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.UtilA
 		return u.GetMessageSendFee()
 	case *typesUtil.MessageStake:
 		switch actorType {
-		case typesUtil.UtilActorType_App:
+		case typesUtil.ActorType_App:
 			return u.GetMessageStakeAppFee()
-		case typesUtil.UtilActorType_Fish:
+		case typesUtil.ActorType_Fish:
 			return u.GetMessageStakeFishermanFee()
-		case typesUtil.UtilActorType_Node:
+		case typesUtil.ActorType_Node:
 			return u.GetMessageStakeServiceNodeFee()
-		case typesUtil.UtilActorType_Val:
+		case typesUtil.ActorType_Val:
 			return u.GetMessageStakeValidatorFee()
 		}
 	case *typesUtil.MessageEditStake:
 		switch actorType {
-		case typesUtil.UtilActorType_App:
+		case typesUtil.ActorType_App:
 			return u.GetMessageEditStakeAppFee()
-		case typesUtil.UtilActorType_Fish:
+		case typesUtil.ActorType_Fish:
 			return u.GetMessageEditStakeFishermanFee()
-		case typesUtil.UtilActorType_Node:
+		case typesUtil.ActorType_Node:
 			return u.GetMessageEditStakeServiceNodeFee()
-		case typesUtil.UtilActorType_Val:
+		case typesUtil.ActorType_Val:
 			return u.GetMessageEditStakeValidatorFee()
 		}
 	case *typesUtil.MessageUnstake:
 		switch actorType {
-		case typesUtil.UtilActorType_App:
+		case typesUtil.ActorType_App:
 			return u.GetMessageUnstakeAppFee()
-		case typesUtil.UtilActorType_Fish:
+		case typesUtil.ActorType_Fish:
 			return u.GetMessageUnstakeFishermanFee()
-		case typesUtil.UtilActorType_Node:
+		case typesUtil.ActorType_Node:
 			return u.GetMessageUnstakeServiceNodeFee()
-		case typesUtil.UtilActorType_Val:
+		case typesUtil.ActorType_Val:
 			return u.GetMessageUnstakeValidatorFee()
 		}
 	case *typesUtil.MessageUnpause:
 		switch actorType {
-		case typesUtil.UtilActorType_App:
+		case typesUtil.ActorType_App:
 			return u.GetMessageUnpauseAppFee()
-		case typesUtil.UtilActorType_Fish:
+		case typesUtil.ActorType_Fish:
 			return u.GetMessageUnpauseFishermanFee()
-		case typesUtil.UtilActorType_Node:
+		case typesUtil.ActorType_Node:
 			return u.GetMessageUnpauseServiceNodeFee()
-		case typesUtil.UtilActorType_Val:
+		case typesUtil.ActorType_Val:
 			return u.GetMessageUnpauseValidatorFee()
 		}
 	case *typesUtil.MessageChangeParameter:

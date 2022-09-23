@@ -114,3 +114,10 @@ func createTestingGenesisAndConfigFiles(cfg modules.Config, genesisState modules
 		log.Fatal(err)
 	}
 }
+
+var actorTypes = []utilTypes.ActorType{
+	utilTypes.ActorType_App,
+	utilTypes.ActorType_Node,
+	utilTypes.ActorType_Fish,
+	utilTypes.ActorType_Val,
+}

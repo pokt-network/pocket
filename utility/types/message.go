@@ -40,7 +40,7 @@ type Message interface {
 
 	SetSigner(signer []byte)
 	ValidateBasic() Error
-	GetActorType() UtilActorType
+	GetActorType() ActorType
 }
 
 func (msg *MessageStake) ValidateBasic() Error {
@@ -111,17 +111,17 @@ func (msg *MessageChangeParameter) ValidateBasic() Error {
 	return nil
 }
 
-func (msg *MessageUnstake) ValidateBasic() Error              { return ValidateAddress(msg.Address) }
-func (msg *MessageUnpause) ValidateBasic() Error              { return ValidateAddress(msg.Address) }
-func (msg *MessageStake) SetSigner(signer []byte)             { msg.Signer = signer }
-func (msg *MessageEditStake) SetSigner(signer []byte)         { msg.Signer = signer }
-func (msg *MessageUnstake) SetSigner(signer []byte)           { msg.Signer = signer }
-func (msg *MessageUnpause) SetSigner(signer []byte)           { msg.Signer = signer }
-func (msg *MessageDoubleSign) SetSigner(signer []byte)        { msg.ReporterAddress = signer }
-func (msg *MessageSend) SetSigner(signer []byte)              { /*no op*/ }
-func (msg *MessageChangeParameter) SetSigner(signer []byte)   { msg.Signer = signer }
-func (x *MessageChangeParameter) GetActorType() UtilActorType { return -1 }
-func (x *MessageDoubleSign) GetActorType() UtilActorType      { return -1 }
+func (msg *MessageUnstake) ValidateBasic() Error            { return ValidateAddress(msg.Address) }
+func (msg *MessageUnpause) ValidateBasic() Error            { return ValidateAddress(msg.Address) }
+func (msg *MessageStake) SetSigner(signer []byte)           { msg.Signer = signer }
+func (msg *MessageEditStake) SetSigner(signer []byte)       { msg.Signer = signer }
+func (msg *MessageUnstake) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageUnpause) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageDoubleSign) SetSigner(signer []byte)      { msg.ReporterAddress = signer }
+func (msg *MessageSend) SetSigner(signer []byte)            { /*no op*/ }
+func (msg *MessageChangeParameter) SetSigner(signer []byte) { msg.Signer = signer }
+func (x *MessageChangeParameter) GetActorType() ActorType   { return -1 }
+func (x *MessageDoubleSign) GetActorType() ActorType        { return -1 }
 
 // helpers
 
@@ -192,13 +192,13 @@ func ValidateAmount(amount string) Error {
 	return nil
 }
 
-func ValidateActorType(_ UtilActorType) Error {
+func ValidateActorType(_ ActorType) Error {
 	// TODO (team) not sure if there's anything we can do here
 	return nil
 }
 
-func ValidateServiceUrl(actorType UtilActorType, uri string) Error {
-	if actorType == UtilActorType_App {
+func ValidateServiceUrl(actorType ActorType, uri string) Error {
+	if actorType == ActorType_App {
 		return nil
 	}
 	uri = strings.ToLower(uri)
@@ -248,7 +248,7 @@ func (rc *RelayChain) Validate() Error {
 }
 
 type MessageStaker interface {
-	GetActorType() UtilActorType
+	GetActorType() ActorType
 	GetAmount() string
 	GetChains() []string
 	GetServiceUrl() string

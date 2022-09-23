@@ -1,0 +1,30 @@
+syntax = "proto3";
+package utility;
+
+option go_package = "github.com/pokt-network/pocket/utility/types";
+
+enum Pool_Names {
+  DAO = 0;
+  FeeCollector = 1;
+  AppStakePool = 2;
+  ValidatorStakePool = 3;
+  ServiceNodeStakePool = 4;
+  FishermanStakePool = 5;
+}
+
+// DISCUSS: similar code exists in the persistence module.
+// Talk about appropriate balance of shared code / encapsulation
+enum ActorType {
+  App = 0;
+  Node = 1;
+  Fish = 2;
+  Val = 3;
+}
+
+
+// DISCUSS: *Design Decision* deprecating StakeStatus
+enum StakeStatus {
+  UnknownStatus = 0;
+  Unstaking = 1;
+  Staked = 2;
+}

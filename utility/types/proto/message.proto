@@ -4,19 +4,13 @@ package utility;
 option go_package = "github.com/pokt-network/pocket/utility/types";
 
 import "google/protobuf/any.proto";
-
-enum UtilActorType { // TODO (team) deprecate for persistence/actorType
-  App = 0;
-  Node = 1;
-  Fish = 2;
-  Val = 3;
-}
+import "actor.proto";
 
 message MessageSend {
   bytes from_address = 1;
   bytes to_address = 2;
   string amount = 3;
-  UtilActorType actor_type = 4;
+  ActorType actor_type = 4;
 }
 
 message MessageStake {
@@ -26,7 +20,7 @@ message MessageStake {
   string service_url = 4;
   bytes output_address = 5;
   optional bytes signer = 6;
-  UtilActorType actor_type = 7;
+  ActorType actor_type = 7;
 }
 
 message MessageEditStake {
@@ -35,19 +29,19 @@ message MessageEditStake {
   string amount = 3;
   string service_url = 4;
   optional bytes signer = 5;
-  UtilActorType actor_type = 6;
+  ActorType actor_type = 6;
 }
 
 message MessageUnstake {
   bytes address = 1;
   optional bytes signer = 2;
-  UtilActorType actor_type = 3;
+  ActorType actor_type = 3;
 }
 
 message MessageUnpause {
   bytes address = 1;
   optional bytes signer = 2;
-  UtilActorType actor_type = 3;
+  ActorType actor_type = 3;
 }
 
 message MessageChangeParameter {
