@@ -4,5 +4,6 @@ package utility;
 option go_package = "github.com/pokt-network/pocket/utility/types";
 
 message UtilityConfig {
-
+  uint64 max_Mempool_Transaction_Bytes = 1;
+  uint32 max_Mempool_Transactions = 2;
 }

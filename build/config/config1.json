@@ -1,7 +1,7 @@
 {
   "base": {
     "root_directory": "/go/src/github.com/pocket-network",
-    "private_key": "f4f6d5a0001170bc61e3638dc68b5d1f54530e0923a0a1c70e0d39423a53104e030206dd1a85db222a5c641cba61921dfbb1fa6252b728bdcdedfc720f97e10c"
+    "private_key": "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4"
   },
   "consensus": {
     "max_mempool_bytes": 500000000,
@@ -10,9 +10,12 @@
       "manual": true,
       "debug_time_between_steps_msec": 1000
     },
-    "private_key": "f4f6d5a0001170bc61e3638dc68b5d1f54530e0923a0a1c70e0d39423a53104e030206dd1a85db222a5c641cba61921dfbb1fa6252b728bdcdedfc720f97e10c"
+    "private_key": "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4"
   },
-  "utility": {},
+  "utility": {
+    "max_mempool_transaction_bytes": 1073741824,
+    "max_mempool_transactions": 9000
+  },
   "persistence": {
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
     "node_schema": "node1",
@@ -22,7 +25,7 @@
     "consensus_port": 8080,
     "use_rain_tree": true,
     "is_empty_connection_type": false,
-    "private_key": "f4f6d5a0001170bc61e3638dc68b5d1f54530e0923a0a1c70e0d39423a53104e030206dd1a85db222a5c641cba61921dfbb1fa6252b728bdcdedfc720f97e10c"
+    "private_key": "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4"
   },
   "telemetry": {
     "enabled": true,
