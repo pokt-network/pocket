@@ -320,9 +320,7 @@ test_p2p_addrbook:
 .PHONY: lint
 ## Run all P2P addr book related tests
 lint:
-	staticcheck -f stylish ./... || true
-	golangci-lint run ./... || true
-	echo "return code is always successfull, as we want to see all the linting errors"
+	golangci-lint run ./...
 
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library

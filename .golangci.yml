@@ -1,0 +1,59 @@
+linters:
+  enable:
+    # TODO: investigate what linters we want to enable (many disabled by default!)
+    # https://golangci-lint.run/usage/linters/#disabled-by-default
+
+    # Default linters
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+
+    # Additional linters
+    - gosec
+    - gofumpt
+    - misspell
+    - promlinter
+    - unparam
+
+    # Gocritic allows to use ruleguard - custom linting rules
+    - gocritic
+linters-settings:
+  # Gocritic settings
+  # https://go-critic.com/overview
+  gocritic:
+    enabled-checks:
+      - ruleguard
+    settings:
+      ruleguard:
+        # Enable debug to identify which 'Where' condition was rejected.
+        # The value of the parameter is the name of a function in a ruleguard file.
+        #
+        # When a rule is evaluated:
+        # If:
+        #   The Match() clause is accepted; and
+        #   One of the conditions in the Where() clause is rejected,
+        # Then:
+        #   ruleguard prints the specific Where() condition that was rejected.
+        #
+        # The flag is passed to the ruleguard 'debug-group' argument.
+        # Default: ""
+        # debug: "testEq"
+        # Determines the behavior when an error occurs while parsing ruleguard files.
+        # If flag is not set, log error and skip rule files that contain an error.
+        # If flag is set, the value must be a comma-separated list of error conditions.
+        # - 'all':    fail on all errors.
+        # - 'import': ruleguard rule imports a package that cannot be found.
+        # - 'dsl':    gorule file does not comply with the ruleguard DSL.
+        # Default: ""
+        failOn: dsl
+        rules: "misc/linting-rules/*.go"
+run:
+  go: "1.19"
+  skip-dirs:
+    - misc/linting-rules
+  build-tags:
+    - codeanalysis

@@ -58,13 +58,13 @@ jobs:
         uses: guyarb/golang-test-annotations@v0.5.1
         with:
           test-results: test_results.json
-      - name: Run static check
-        # Only run if the test failed on target version to avoid duplicated annotations on GitHub.
-        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
-        uses: reviewdog/action-staticcheck@v1
-        with:
-          # TODO(@okdas): change filter after bug bash to only show annotations on files changed by PR (currently shows all changes) https://github.com/reviewdog/reviewdog#filter-mode
-          filter_mode: nofilter
+      # - name: Run static check
+      #   # Only run if the test failed on target version to avoid duplicated annotations on GitHub.
+      #   if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+      #   uses: reviewdog/action-staticcheck@v1
+      #   with:
+      #     # TODO(@okdas): change filter after bug bash to only show annotations on files changed by PR (currently shows all changes) https://github.com/reviewdog/reviewdog#filter-mode
+      #     filter_mode: nofilter
       - name: Run golangci-lint
         # Only run if the test failed on target version to avoid duplicated annotations on GitHub.
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
