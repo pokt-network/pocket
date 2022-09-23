@@ -71,7 +71,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 	m.Step = Prepare
 	m.MessagePool[NewRound] = nil
 
-	prepareProposeMessage, err := CreateProposeMessage(m, Prepare, highPrepareQC)
+	prepareProposeMessage, err := CreateProposeMessage(m.Height, m.Round, Prepare, m.Block, highPrepareQC)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateProposeMessage(Prepare).Error(), err)
 		m.paceMaker.InterruptRound()
@@ -80,7 +80,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 	m.broadcastToNodes(prepareProposeMessage)
 
 	// Leader also acts like a replica
-	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, m.Block)
+	prepareVoteMessage, err := CreateVoteMessage(m.Height, m.Round, Prepare, m.Block, m.privateKey)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Prepare).Error(), err)
 		return
@@ -116,7 +116,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusMo
 	m.HighPrepareQC = prepareQC
 	m.MessagePool[Prepare] = nil
 
-	precommitProposeMessages, err := CreateProposeMessage(m, PreCommit, prepareQC)
+	precommitProposeMessages, err := CreateProposeMessage(m.Height, m.Round, PreCommit, m.Block, prepareQC)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateProposeMessage(PreCommit).Error(), err)
 		m.paceMaker.InterruptRound()
@@ -125,7 +125,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusMo
 	m.broadcastToNodes(precommitProposeMessages)
 
 	// Leader also acts like a replica
-	precommitVoteMessage, err := CreateVoteMessage(m, PreCommit, m.Block)
+	precommitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, PreCommit, m.Block, m.privateKey)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(PreCommit).Error(), err)
 		return
@@ -160,7 +160,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *Consensus
 	m.LockedQC = preCommitQC
 	m.MessagePool[PreCommit] = nil
 
-	commitProposeMessage, err := CreateProposeMessage(m, Commit, preCommitQC)
+	commitProposeMessage, err := CreateProposeMessage(m.Height, m.Round, Commit, m.Block, preCommitQC)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateProposeMessage(Commit).Error(), err)
 		m.paceMaker.InterruptRound()
@@ -169,7 +169,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *Consensus
 	m.broadcastToNodes(commitProposeMessage)
 
 	// Leader also acts like a replica
-	commitVoteMessage, err := CreateVoteMessage(m, Commit, m.Block)
+	commitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, Commit, m.Block, m.privateKey)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Commit).Error(), err)
 		return // TODO(olshansky): Should we interrupt the round here?
@@ -203,7 +203,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusMod
 	m.Step = Decide
 	m.MessagePool[Commit] = nil
 
-	decideProposeMessage, err := CreateProposeMessage(m, Decide, commitQC)
+	decideProposeMessage, err := CreateProposeMessage(m.Height, m.Round, Decide, m.Block, commitQC)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateProposeMessage(Decide).Error(), err)
 		m.paceMaker.InterruptRound()
@@ -270,12 +270,12 @@ func (handler *HotstuffLeaderMessageHandler) validateBasic(m *ConsensusModule, m
 }
 
 func (m *ConsensusModule) validatePartialSignature(msg *typesCons.HotstuffMessage) error {
-	if msg.Step == NewRound {
+	if msg.GetStep() == NewRound {
 		m.nodeLog(typesCons.ErrUnnecessaryPartialSigForNewRound.Error())
 		return nil
 	}
 
-	if msg.Type == Propose {
+	if msg.GetType() == Propose {
 		m.nodeLog(typesCons.ErrUnnecessaryPartialSigForLeaderProposal.Error())
 		return nil
 	}
@@ -283,18 +283,19 @@ func (m *ConsensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 	if msg.GetPartialSignature() == nil {
 		return typesCons.ErrNilPartialSig
 	}
+	partialSig := msg.GetPartialSignature()
 
-	if msg.GetPartialSignature().Signature == nil || len(msg.GetPartialSignature().Address) == 0 {
+	if partialSig.Signature == nil || len(partialSig.GetAddress()) == 0 {
 		return typesCons.ErrNilPartialSigOrSourceNotSpecified
 	}
 
-	address := msg.GetPartialSignature().Address
+	address := partialSig.GetAddress()
 	validator, ok := m.validatorMap[address]
 	if !ok {
 		return typesCons.ErrMissingValidator(address, m.ValAddrToIdMap[address])
 	}
 	pubKey := validator.GetPublicKey()
-	if isSignatureValid(msg, pubKey, msg.GetPartialSignature().Signature) {
+	if isSignatureValid(msg, pubKey, partialSig.GetSignature()) {
 		return nil
 	}
 

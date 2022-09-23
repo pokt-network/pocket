@@ -69,7 +69,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *ConsensusM
 
 	m.Step = PreCommit
 
-	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, block)
+	prepareVoteMessage, err := CreateVoteMessage(m.Height, m.Round, Prepare, m.Block, m.privateKey)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Prepare).Error(), err)
 		return
@@ -98,7 +98,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *Consensu
 	m.Step = Commit
 	m.HighPrepareQC = quorumCert // INVESTIGATE: Why are we never using this for validation?
 
-	preCommitVoteMessage, err := CreateVoteMessage(m, PreCommit, msg.Block)
+	preCommitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, PreCommit, m.Block, m.privateKey)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(PreCommit).Error(), err)
 		return
@@ -127,7 +127,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *ConsensusMo
 	m.Step = Decide
 	m.LockedQC = quorumCert // DISCUSS: How does the replica recover if it's locked? Replica `formally` agrees on the QC while the rest of the network `verbally` agrees on the QC.
 
-	commitVoteMessage, err := CreateVoteMessage(m, Commit, msg.Block)
+	commitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, Commit, m.Block, m.privateKey)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Commit).Error(), err)
 		return
@@ -153,7 +153,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *ConsensusMo
 		return
 	}
 
-	if err := m.commitBlock(msg.Block); err != nil {
+	if err := m.commitBlock(m.Block); err != nil {
 		m.nodeLogError("Could not commit block", err)
 		m.paceMaker.InterruptRound()
 		return
@@ -186,21 +186,21 @@ func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 		return typesCons.ErrProposalNotValidInPrepare
 	}
 
-	if err := m.validateBlock(msg.Block); err != nil {
+	if err := m.validateBlock(msg.GetBlock()); err != nil {
 		return err
 	}
 
 	// TODO(discuss): A nil QC implies a successful CommitQC or TimeoutQC, which have been omitted intentionally since
 	// they are not needed for consensus validity. However, if a QC is specified, it must be valid.
-	quorumCert :=
-	if msg.GetQuorumCertificate() != nil {
-		if err := m.validateQuorumCertificate(msg.GetQuorumCertificate()); err != nil {
+	quorumCert := msg.GetQuorumCertificate()
+	if quorumCert != nil {
+		if err := m.validateQuorumCertificate(quorumCert); err != nil {
 			return err
 		}
 	}
 
 	lockedQC := m.LockedQC
-	justifyQC := msg.GetQuorumCertificate()
+	justifyQC := quorumCert
 
 	// Safety: not locked
 	if lockedQC == nil {
@@ -210,7 +210,7 @@ func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 
 	// Safety: check the hash of the locked QC
 	// TODO(olshansky): Extend implementation to adopt `ExtendsFrom` as described in the Hotstuff whitepaper.
-	if protoHash(lockedQC.Block) == protoHash(justifyQC.Block) { // && lockedQC.Block.ExtendsFrom(justifyQC.Block)
+	if protoHash(lockedQC.GetBlock()) == protoHash(justifyQC.Block) { // && lockedQC.Block.ExtendsFrom(justifyQC.Block)
 		m.nodeLog(typesCons.ProposalBlockExtends)
 		return nil
 	}

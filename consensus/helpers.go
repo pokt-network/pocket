@@ -97,13 +97,13 @@ func getThresholdSignature(
 	return thresholdSig, nil
 }
 
-func isSignatureValid(m *typesCons.HotstuffMessage, pubKeyString string, signature []byte) bool {
+func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signature []byte) bool {
 	pubKey, err := cryptoPocket.NewPublicKey(pubKeyString)
 	if err != nil {
 		log.Println("[WARN] Error getting PublicKey from bytes:", err)
 		return false
 	}
-	bytesToVerify, err := getSignableBytes(m)
+	bytesToVerify, err := getSignableBytes(msg)
 	if err != nil {
 		log.Println("[WARN] Error getting bytes to verify:", err)
 		return false
@@ -211,10 +211,12 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 
 /*** General Infrastructure Helpers ***/
 
+// TODO(#164): Remove this once we have a proper logging system.
 func (m *ConsensusModule) nodeLog(s string) {
 	log.Printf("[%s][%d] %s\n", m.logPrefix, m.NodeId, s)
 }
 
+// TODO(#164): Remove this once we have a proper logging system.
 func (m *ConsensusModule) nodeLogError(s string, err error) {
 	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.NodeId, s, err)
 }
