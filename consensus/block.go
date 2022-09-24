@@ -1,19 +1,30 @@
 package consensus
 
 import (
+	"log"
 	"unsafe"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
 
 // TODO: Add additional basic block metadata validation w/ unit tests
-func (m *ConsensusModule) validateBlock(block *typesCons.Block) error {
+func (m *ConsensusModule) validateBlockBasic(block *typesCons.Block) error {
 	if block == nil {
 		return typesCons.ErrNilBlock
 	}
 
 	if unsafe.Sizeof(*block) > uintptr(m.MaxBlockBytes) {
 		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.MaxBlockBytes)
+	}
+
+	// If the current block being processed (i.e. voted on) by consensus is non nil, we need to make
+	// sure that the data (height, round, step, txs, etc) is the same before we start validating the signatures
+	if m.Block != nil {
+		// DISCUSS: The only difference between blocks from one step to another is the QC, so we need
+		// to determine where/how to validate this
+		if protoHash(m.Block) != protoHash(block) {
+			log.Println("[TECHDEBT][ERROR] The block being processed is not the same as that received by the consensus module ")
+		}
 	}
 
 	return nil

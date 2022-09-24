@@ -3,7 +3,6 @@ package consensus
 import (
 	"encoding/hex"
 	"fmt"
-	"log"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -163,7 +162,11 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *ConsensusMo
 
 // anteHandle is the handler called on every replica message before specific handler
 func (handler *HotstuffReplicaMessageHandler) anteHandle(m *ConsensusModule, msg *typesCons.HotstuffMessage) error {
-	log.Println("TODO: Hotstuff replica ante handle not implemented yet")
+	// Basic block metadata validation
+	if err := m.validateBlockBasic(msg.GetBlock()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -184,11 +187,6 @@ func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 	// Check if node should be accepting proposals
 	if !(msg.GetType() == Propose && msg.GetStep() == Prepare) {
 		return typesCons.ErrProposalNotValidInPrepare
-	}
-
-	// Basic block metadata validation
-	if err := m.validateBlock(msg.GetBlock()); err != nil {
-		return err
 	}
 
 	quorumCert := msg.GetQuorumCertificate()

@@ -240,9 +240,17 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *ConsensusMod
 
 // anteHandle is the general handler called for every before every specific HotstuffLeaderMessageHandler handler
 func (handler *HotstuffLeaderMessageHandler) anteHandle(m *ConsensusModule, msg *typesCons.HotstuffMessage) error {
-	if err := handler.validateBasic(m, msg); err != nil {
+	// Basic block metadata validation
+	if err := m.validateBlockBasic(msg.GetBlock()); err != nil {
 		return err
 	}
+
+	// Discard messages with invalid partial signatures before storing it in the leader's consensus mempool
+	if err := m.validatePartialSignature(msg); err != nil {
+		return err
+	}
+
+	// TECHDEBT: Until we integrate with the real mempool, this is a makeshift solution
 	m.tempIndexHotstuffMessage(msg)
 	return nil
 }
@@ -258,15 +266,6 @@ func (handler *HotstuffLeaderMessageHandler) emitTelemetryEvent(m *ConsensusModu
 			typesCons.StepToString[msg.GetStep()],
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_LEADER,
 		)
-}
-
-// ValidateBasic general validation checks that apply to every HotstuffLeaderMessage
-func (handler *HotstuffLeaderMessageHandler) validateBasic(m *ConsensusModule, msg *typesCons.HotstuffMessage) error {
-	// Discard messages with invalid partial signatures before storing it in the leader's consensus mempool
-	if err := m.validatePartialSignature(msg); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (m *ConsensusModule) validatePartialSignature(msg *typesCons.HotstuffMessage) error {
@@ -303,9 +302,9 @@ func (m *ConsensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 		address, m.ValAddrToIdMap[address], msg, pubKey)
 }
 
-// TODO: This is just a placeholder at the moment. It doesn't actually work because SizeOf returns
-//       the size of the map pointer, and does not recursively determine the size of all the
-//       underlying elements
+// TODO: This is just a placeholder at the moment for indexing hotstuff messages ONLY.
+//       It doesn't actually work because SizeOf returns the size of the map pointer,
+//       and does not recursively determine the size of all the underlying elements
 //       Add proper tests and implementation once the mempool is implemented.
 func (m *ConsensusModule) tempIndexHotstuffMessage(msg *typesCons.HotstuffMessage) {
 	if m.consCfg.GetMaxMempoolBytes() < uint64(unsafe.Sizeof(m.MessagePool)) {
