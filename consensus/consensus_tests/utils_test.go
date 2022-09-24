@@ -343,8 +343,7 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.M
 func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUtilityModule {
 	ctrl := gomock.NewController(t)
 	utilityMock := modulesMock.NewMockUtilityModule(ctrl)
-	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
-	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
+	utilityContextMock := baseUtilityContextMock(t)
 
 	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
 	utilityMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
@@ -352,6 +351,14 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 		NewContext(gomock.Any()).
 		Return(utilityContextMock, nil).
 		MaxTimes(4)
+
+	return utilityMock
+}
+
+func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
+	ctrl := gomock.NewController(t)
+	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
+	persistenceContextMock := basePersistenceContextMock(t)
 
 	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
 	utilityContextMock.EXPECT().CommitPersistenceContext().Return(nil).AnyTimes()
@@ -365,9 +372,14 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 		Return(appHash, nil).
 		AnyTimes()
 
-	persistenceContextMock.EXPECT().Commit().Return(nil).AnyTimes()
+	return utilityContextMock
+}
 
-	return utilityMock
+func basePersistenceContextMock(t *testing.T) *modulesMock.MockPersistenceRWContext {
+	ctrl := gomock.NewController(t)
+	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
+	persistenceContextMock.EXPECT().Commit().Return(nil).AnyTimes()
+	return persistenceContextMock
 }
 
 func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockTelemetryModule {
@@ -378,25 +390,23 @@ func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockT
 
 	telemetryMock.EXPECT().Start().Do(func() {}).AnyTimes()
 	telemetryMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
-
 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
-	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).MaxTimes(1)
-	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
-
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
 	return telemetryMock
 }
 
 func baseTelemetryTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
 	ctrl := gomock.NewController(t)
-	timeseriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
-	return timeseriesAgentMock
+	timeSeriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
+	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).MaxTimes(1)
+	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
+	return timeSeriesAgentMock
 }
 
 func baseTelemetryEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAgent {
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	return eventMetricsAgentMock
 }

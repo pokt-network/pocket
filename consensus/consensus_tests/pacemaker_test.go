@@ -2,7 +2,6 @@ package consensus_tests
 
 import (
 	"encoding/hex"
-	"fmt"
 	"log"
 	"reflect"
 	"testing"
@@ -150,7 +149,6 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		// utilityContext is only set on new rounds, which is skipped in this test
 		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
 		require.NoError(t, err)
-		fmt.Println("OLSH", utilityContext)
 
 		consensusModImpl := GetConsensusModImplementation(pocketNode)
 		consensusModImpl.FieldByName("Height").SetUint(testHeight)
