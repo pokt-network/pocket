@@ -79,8 +79,8 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	candidates, err := ctx.GetSignerCandidates(&msg)
 	require.NoError(t, err)
 
-	require.Equal(t, len(candidates), 1, "wrong number of candidates")
-	require.Equal(t, hex.EncodeToString(candidates[0]), accs[0].GetAddress(), "unexpected signer candidate")
+	require.Equal(t, 1, len(candidates), "wrong number of candidates")
+	require.Equal(t, accs[0].GetAddress(), hex.EncodeToString(candidates[0]), "unexpected signer candidate")
 
 	test_artifacts.CleanupTest(ctx)
 }
@@ -126,8 +126,8 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	recipientBalanceAfter, err := typesUtil.StringToBigInt(accs[1].GetAmount())
 	require.NoError(t, err)
 
-	require.Equal(t, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter), sendAmount, "unexpected sender balance")
-	require.Equal(t, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore), sendAmount, "unexpected recipient balance")
+	require.Equal(t, sendAmount, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter), "unexpected sender balance")
+	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore), "unexpected recipient balance")
 
 	test_artifacts.CleanupTest(ctx)
 }

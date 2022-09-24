@@ -68,7 +68,7 @@ func TestUtilityContext_AddPoolAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := initialAmount.Add(initialAmount, addAmount)
-	require.Equal(t, afterAmount, expected, "amounts are not equal")
+	require.Equal(t, expected, afterAmount, "amounts are not equal")
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -97,8 +97,8 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 
 	recipientBalanceAfter, err := types.StringToBigInt(accs[1].GetAmount())
 	require.NoError(t, err)
-	require.Equal(t, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter), sendAmount)
-	require.Equal(t, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore), sendAmount)
+	require.Equal(t, sendAmount, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter))
+	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore))
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -115,8 +115,8 @@ func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
 	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
 	candidates, err := ctx.GetMessageSendSignerCandidates(&msg)
 	require.NoError(t, err)
-	require.Equal(t, len(candidates), 1)
-	require.Equal(t, candidates[0], addrBz)
+	require.Equal(t, 1, len(candidates))
+	require.Equal(t, addrBz, candidates[0])
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -148,7 +148,7 @@ func TestUtilityContext_SetAccountAmount(t *testing.T) {
 	require.NoError(t, ctx.SetAccountAmount(addr, amount), "set account amount")
 	gotAmount, err := ctx.GetAccountAmount(addr)
 	require.NoError(t, err)
-	require.Equal(t, gotAmount, amount)
+	require.Equal(t, amount, gotAmount)
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -163,7 +163,7 @@ func TestUtilityContext_SetAccountWithAmountString(t *testing.T) {
 	require.NoError(t, ctx.SetAccountWithAmountString(addr, amountString), "set account amount string")
 	gotAmount, err := ctx.GetAccountAmount(addr)
 	require.NoError(t, err)
-	require.Equal(t, gotAmount, amount)
+	require.Equal(t, amount, gotAmount)
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -179,7 +179,7 @@ func TestUtilityContext_SetPoolAmount(t *testing.T) {
 	amount, err := ctx.GetPoolAmount(pool.GetAddress())
 	require.NoError(t, err)
 	require.NotEqual(t, beforeAmountBig, amount)
-	require.Equal(t, expectedAfterAmount, amount)
+	require.Equal(t, amount, expectedAfterAmount)
 	test_artifacts.CleanupTest(ctx)
 }
 

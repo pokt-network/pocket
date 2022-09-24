@@ -166,7 +166,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
-	require.Equal(t, proposerBalanceDifference, expectedProposerBalanceDifference)
+	require.Equal(t, expectedProposerBalanceDifference, proposerBalanceDifference)
 
 	test_artifacts.CleanupTest(ctx)
 }
@@ -179,7 +179,7 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 
 	appHashSource, er := ctx.Context.AppHash()
 	require.NoError(t, er)
-	require.Equal(t, appHashSource, appHashTest, "unexpected appHash")
+	require.Equal(t, appHashTest, appHashSource, "unexpected appHash")
 
 	test_artifacts.CleanupTest(ctx)
 }

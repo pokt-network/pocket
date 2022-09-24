@@ -556,7 +556,6 @@ func (u *UtilityContext) GetMessageChangeParameterSignerCandidates(msg *typesUti
 }
 
 func (u *UtilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.Error) {
-	var err error
 	store, height, er := u.GetStoreAndHeight()
 	if er != nil {
 		return nil, er

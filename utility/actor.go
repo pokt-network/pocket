@@ -145,12 +145,12 @@ func (u *UtilityContext) GetActorStakedTokens(actorType typesUtil.UtilActorType,
 }
 
 func (u *UtilityContext) GetMaxPausedBlocks(actorType typesUtil.UtilActorType) (maxPausedBlocks int, err typesUtil.Error) {
-	var paramName string
 	store, height, err := u.GetStoreAndHeight()
 	if err != nil {
 		return 0, err
 	}
 
+	var paramName string
 	switch actorType {
 	case typesUtil.UtilActorType_App:
 		paramName = modules.AppMaxPauseBlocksParamName
@@ -172,12 +172,12 @@ func (u *UtilityContext) GetMaxPausedBlocks(actorType typesUtil.UtilActorType) (
 }
 
 func (u *UtilityContext) GetMinimumPauseBlocks(actorType typesUtil.UtilActorType) (minPauseBlocks int, err typesUtil.Error) {
-	var paramName string
 	store, height, err := u.GetStoreAndHeight()
 	if err != nil {
 		return 0, err
 	}
 
+	var paramName string
 	switch actorType {
 	case typesUtil.UtilActorType_App:
 		paramName = modules.AppMinimumPauseBlocksParamName
@@ -248,12 +248,12 @@ func (u *UtilityContext) GetActorStatus(actorType typesUtil.UtilActorType, addre
 }
 
 func (u *UtilityContext) GetMinimumStake(actorType typesUtil.UtilActorType) (*big.Int, typesUtil.Error) {
-	var paramName string
 	store, height, err := u.GetStoreAndHeight()
 	if err != nil {
 		return nil, err
 	}
 
+	var paramName string
 	switch actorType {
 	case typesUtil.UtilActorType_App:
 		paramName = modules.AppMinimumStakeParamName

@@ -50,12 +50,12 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 
 			require.Equal(t, actor.GetAddress(), pubKey.Address().String(), "incorrect actor address")
 			if actorType != typesUtil.UtilActorType_Val {
-				require.Equal(t, actor.GetChains(), msg.Chains, "incorrect actor chains")
+				require.Equal(t, msg.Chains, actor.GetChains(), "incorrect actor chains")
 			}
-			require.Equal(t, actor.GetPausedHeight(), typesUtil.HeightNotUsed, "incorrect actor height")
-			require.Equal(t, actor.GetStakedAmount(), test_artifacts.DefaultStakeAmountString, "incorrect actor stake amount")
-			require.Equal(t, actor.GetUnstakingHeight(), typesUtil.HeightNotUsed, "incorrect actor unstaking height")
-			require.Equal(t, actor.GetOutput(), outputAddress.String(), "incorrect actor output address")
+			require.Equal(t, typesUtil.HeightNotUsed, actor.GetPausedHeight(), "incorrect actor height")
+			require.Equal(t, test_artifacts.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect actor stake amount")
+			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "incorrect actor unstaking height")
+			require.Equal(t, outputAddress.String(), actor.GetOutput(), "incorrect actor output address")
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -84,10 +84,10 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 
 			actor = GetActorByAddr(t, ctx, addrBz, actorType)
 			if actorType != typesUtil.UtilActorType_Val {
-				require.Equal(t, actor.GetChains(), msgChainsEdited.Chains, "incorrect edited chains")
+				require.Equal(t, msgChainsEdited.Chains, actor.GetChains(), "incorrect edited chains")
 			}
-			require.Equal(t, actor.GetStakedAmount(), test_artifacts.DefaultStakeAmountString, "incorrect staked tokens")
-			require.Equal(t, actor.GetUnstakingHeight(), typesUtil.HeightNotUsed, "incorrect unstaking height")
+			require.Equal(t, test_artifacts.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect staked tokens")
+			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "incorrect unstaking height")
 
 			amountEdited := test_artifacts.DefaultAccountAmount.Add(test_artifacts.DefaultAccountAmount, big.NewInt(1))
 			amountEditedString := typesUtil.BigIntToString(amountEdited)
@@ -130,7 +130,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			require.NoError(t, err, "error setting pause height")
 
 			actor = GetActorByAddr(t, ctx, addrBz, actorType)
-			require.Equal(t, actor.GetPausedHeight(), int64(1))
+			require.Equal(t, int64(1), actor.GetPausedHeight())
 
 			msgUnpauseActor := &typesUtil.MessageUnpause{
 				Address:   addrBz,
@@ -142,7 +142,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			require.NoError(t, err, "handle unpause message")
 
 			actor = GetActorByAddr(t, ctx, addrBz, actorType)
-			require.Equal(t, actor.GetPausedHeight(), int64(-1))
+			require.Equal(t, int64(-1), actor.GetPausedHeight())
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -180,7 +180,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			require.NoError(t, err, "handle unstake message")
 
 			actor = GetActorByAddr(t, ctx, addrBz, actorType)
-			require.Equal(t, actor.GetUnstakingHeight(), defaultUnstaking, "actor should be unstaking")
+			require.Equal(t, defaultUnstaking, actor.GetUnstakingHeight(), "actor should be unstaking")
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -215,7 +215,7 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			require.NoError(t, err, "error beginning unstaking max paused actors")
 
 			status, err := ctx.GetActorStatus(actorType, addrBz)
-			require.Equal(t, status, typesUtil.UnstakingStatus, "actor should be unstaking")
+			require.Equal(t, typesUtil.UnstakingStatus, status, "actor should be unstaking")
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -310,7 +310,7 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 			outputAddress, err := ctx.GetActorOutputAddress(actorType, addrBz)
 			require.NoError(t, err)
 
-			require.Equal(t, hex.EncodeToString(outputAddress), actor.GetOutput(), "unexpected output address")
+			require.Equal(t, actor.GetOutput(), hex.EncodeToString(outputAddress), "unexpected output address")
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -360,8 +360,8 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 			candidates, err := ctx.GetMessageEditStakeSignerCandidates(msgEditStake)
 			require.NoError(t, err)
 			require.Equal(t, len(candidates), 2, "unexpected number of candidates")
-			require.Equal(t, hex.EncodeToString(candidates[0]), actor.GetOutput(), "incorrect output candidate")
-			require.Equal(t, hex.EncodeToString(candidates[1]), actor.GetAddress(), "incorrect addr candidate")
+			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
+			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -382,7 +382,7 @@ func TestUtilityContext_UnstakesPausedBefore(t *testing.T) {
 	require.Equal(t, -1, actor.GetUnstakingHeight())
 	unstakingBlocks, err := ctx.GetAppUnstakingBlocks()
 	require.NoError(t, err)
-	require.Equal(t, actor.GetUnstakingHeight(), unstakingBlocks+1)
+	require.Equal(t, unstakingBlocks+1, actor.GetUnstakingHeight())
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -401,7 +401,7 @@ func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
 	require.NoError(t, ctx.UnstakeActorPausedBefore(2, typesUtil.UtilActorType_App), "set actor pause before")
 	require.NoError(t, ctx.UnstakeActorsThatAreReady(), "unstake actors that are ready")
 	appAfter := GetAllTestingApps(t, ctx)[0]
-	require.Equal(t, appAfter.GetUnstakingHeight(), 0)
+	require.Equal(t, 0, appAfter.GetUnstakingHeight())
 	// TODO (Team) we need to better define what 'deleted' really is in the postgres world.
 	// We might not need to 'unstakeActorsThatAreReady' if we are already filtering by unstakingHeight
 	test_artifacts.CleanupTest(ctx)
@@ -423,8 +423,8 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 			candidates, err := ctx.GetMessageUnpauseSignerCandidates(msg)
 			require.NoError(t, err)
 			require.Equal(t, len(candidates), 2, "unexpected number of candidates")
-			require.Equal(t, hex.EncodeToString(candidates[0]), actor.GetOutput(), "incorrect output candidate")
-			require.Equal(t, hex.EncodeToString(candidates[1]), actor.GetAddress(), "incorrect addr candidate")
+			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
+			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -445,8 +445,8 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 			candidates, err := ctx.GetMessageUnstakeSignerCandidates(msg)
 			require.NoError(t, err)
 			require.Equal(t, len(candidates), 2, "unexpected number of candidates")
-			require.Equal(t, hex.EncodeToString(candidates[0]), actor.GetOutput(), "incorrect output candidate")
-			require.Equal(t, hex.EncodeToString(candidates[1]), actor.GetAddress(), "incorrect addr candidate")
+			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
+			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -502,7 +502,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
 			}
 			require.NoError(t, err, "error getting unstaking blocks")
-			require.Equal(t, actor.GetUnstakingHeight(), unstakingBlocks+1, "incorrect unstaking height")
+			require.Equal(t, unstakingBlocks+1, actor.GetUnstakingHeight(), "incorrect unstaking height")
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -539,7 +539,7 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 		for _, actor := range actors {
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
-			require.Equal(t, actor.GetUnstakingHeight(), int64(-1), "wrong starting staked status")
+			require.Equal(t, int64(-1), actor.GetUnstakingHeight(), "wrong starting staked status")
 			err = ctx.SetActorPauseHeight(actorType, addrBz, 1)
 			require.NoError(t, err, "error setting actor pause height")
 		}

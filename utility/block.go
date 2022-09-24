@@ -146,6 +146,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	if err != nil {
 		return err
 	}
+
 	for _, utilActorType := range typesUtil.ActorTypes {
 		var readyToUnstake []modules.IUnstakingActor
 		poolName := utilActorType.GetActorPoolName()
