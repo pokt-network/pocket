@@ -243,7 +243,7 @@ func (handler *HotstuffLeaderMessageHandler) anteHandle(m *ConsensusModule, msg 
 	if err := handler.validateBasic(m, msg); err != nil {
 		return err
 	}
-	m.aggregateMessage(msg)
+	m.tempIndexHotstuffMessage(msg)
 	return nil
 }
 
@@ -262,8 +262,6 @@ func (handler *HotstuffLeaderMessageHandler) emitTelemetryEvent(m *ConsensusModu
 
 // ValidateBasic general validation checks that apply to every HotstuffLeaderMessage
 func (handler *HotstuffLeaderMessageHandler) validateBasic(m *ConsensusModule, msg *typesCons.HotstuffMessage) error {
-	// DISCUSS: What prevents leader from swapping out the block here?
-
 	// Discard messages with invalid partial signatures before storing it in the leader's consensus mempool
 	if err := m.validatePartialSignature(msg); err != nil {
 		return err
@@ -305,10 +303,11 @@ func (m *ConsensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 		address, m.ValAddrToIdMap[address], msg, pubKey)
 }
 
-func (m *ConsensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {
-	// TODO(olshansky): Add proper tests for this when we figure out where the mempool should live.
-	// NOTE: This is just a placeholder at the moment. It doesn't actually work because SizeOf returns
-	// the size of the map pointer, and does not recursively determine the size of all the underlying elements.
+// TODO: This is just a placeholder at the moment. It doesn't actually work because SizeOf returns
+//       the size of the map pointer, and does not recursively determine the size of all the
+//       underlying elements
+//       Add proper tests and implementation once the mempool is implemented.
+func (m *ConsensusModule) tempIndexHotstuffMessage(msg *typesCons.HotstuffMessage) {
 	if m.consCfg.GetMaxMempoolBytes() < uint64(unsafe.Sizeof(m.MessagePool)) {
 		m.nodeLogError(typesCons.DisregardHotstuffMessage, typesCons.ErrConsensusMempoolFull)
 		return
