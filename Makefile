@@ -220,6 +220,7 @@ protogen_clean:
 protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = ".")
 	protoc --go_opt=paths=source_relative  -I=./shared/debug/proto        --go_out=./shared/debug       ./shared/debug/proto/*.proto        --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       ./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  ./persistence/proto/*.proto         --experimental_allow_proto3_optional
 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
 	protoc --go_opt=paths=source_relative  -I=./utility/types/proto       --go_out=./utility/types      ./utility/types/proto/*.proto       --experimental_allow_proto3_optional

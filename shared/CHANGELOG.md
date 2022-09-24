@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.1] - 2022-09-24
+- Add unit test for `UtilityCodec()`
+- Added `TestProtoStructure` for testing
+
 ## [0.0.0] - 2022-08-25
 
 ### [#163](https://github.com/pokt-network/pocket/issues/163) Minimization

@@ -1,0 +1,10 @@
+syntax = "proto3";
+package utility;
+
+option go_package = "github.com/pokt-network/pocket/shared/codec";
+
+message TestProtoStructure {
+  int32 field1 = 1;
+  string field2 = 2;
+  bool field3 = 3;
+}
