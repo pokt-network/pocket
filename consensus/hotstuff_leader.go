@@ -336,7 +336,7 @@ func (m *ConsensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
 		return nil, err
 	}
 
-	// Apply all the transactions in the block
+	// Apply all the transactions in the block - 
 	appHash, err := m.UtilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
 	if err != nil {
 		return nil, err

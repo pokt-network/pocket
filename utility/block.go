@@ -51,7 +51,7 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 		if err := u.ApplyTransaction(tx); err != nil {
 			return nil, err
 		}
-		if err := u.GetPersistenceContext().StoreTransaction(transactionProtoBytes); err != nil {
+		if err := u.Context.PersistenceRWContext.StoreTransaction(transactionProtoBytes); err != nil {
 			return nil, err
 		}
 

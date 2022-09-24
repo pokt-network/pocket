@@ -49,8 +49,9 @@ type PersistenceWriteContext interface {
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
 
-	Reset() error
 	Commit() error
+	// DISCUSS: Can we consolidate `Reset` and `Release`
+	Reset() error
 	Release() error
 
 	// Question:
@@ -61,13 +62,8 @@ type PersistenceWriteContext interface {
 	// Block Operations
 
 	// Indexer Operations
-	StoreTransaction(transactionProtoBytes []byte) error
-
-	// Block Operations
-	// TODO_TEMPORARY: Including two functions for the SQL and KV Store as an interim solution
-	//                 until we include the schema as part of the SQL Store because persistence
-	//                 currently has no access to the protobuf schema which is the source of truth.
-	InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error // Writes the block in the SQL database
+	StoreTransaction(transactionProtoBytes []byte) error                                         // Stores a transaction
+	CommitTransactions(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error // Writes the block in the SQL database
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error

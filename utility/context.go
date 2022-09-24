@@ -2,6 +2,7 @@ package utility
 
 import (
 	"encoding/hex"
+
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -39,12 +40,10 @@ func (u *UtilityContext) Store() *Context {
 	return u.Context
 }
 
-func (u *UtilityContext) GetPersistenceContext() modules.PersistenceRWContext {
-	return u.Context.PersistenceRWContext
-}
-
-func (u *UtilityContext) CommitPersistenceContext() error {
-	return u.Context.PersistenceRWContext.Commit()
+func (u *UtilityContext) CommitContext() error {
+	err := u.Context.PersistenceRWContext.Commit()
+	u.Context = nil
+	return err
 }
 
 func (u *UtilityContext) ReleaseContext() {

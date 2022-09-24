@@ -358,10 +358,10 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 	ctrl := gomock.NewController(t)
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
-	persistenceContextMock := basePersistenceContextMock(t)
+	// persistenceContextMock := basePersistenceContextMock(t)
 
-	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
-	utilityContextMock.EXPECT().CommitPersistenceContext().Return(nil).AnyTimes()
+	// utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
+	utilityContextMock.EXPECT().CommitContext().Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().ReleaseContext().Return().AnyTimes()
 	utilityContextMock.EXPECT().
 		GetProposalTransactions(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
