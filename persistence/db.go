@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/jackc/pgconn"
@@ -34,28 +35,19 @@ var protocolActorSchemas = []types.ProtocolActorSchema{
 
 var _ modules.PersistenceRWContext = &PostgresContext{}
 
-// TODO(pocket/issues/149): Consolidate `PostgresContext and PostgresDB` into a single struct and
-//                          avoid exposing it for testing purposes after the consolidation. A helper
-//                          with default context values should be created.
-// TODO: These are only externalized for testing purposes, so they should be made private and
-//       it is trivial to create a helper to initial a context with some values.
 type PostgresContext struct {
-	Height int64
-	DB     PostgresDB
-}
-type PostgresDB struct {
+	Height     int64 // TODO(olshansky): `Height` is only externalized for testing purposes. Replace with helpers...
 	conn       *pgx.Conn
-	Tx         pgx.Tx
-	Blockstore kvstore.KVStore
+	tx         pgx.Tx
+	blockstore kvstore.KVStore
 }
 
-func (pg *PostgresDB) GetCtxAndTxn() (context.Context, pgx.Tx, error) {
-	tx, err := pg.GetTxn()
-	return context.TODO(), tx, err
+func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
+	return context.TODO(), pg.GetTx(), nil
 }
 
-func (pg *PostgresDB) GetTxn() (pgx.Tx, error) {
-	return pg.Tx, nil
+func (pg *PostgresContext) GetTx() pgx.Tx {
+	return pg.tx
 }
 
 func (pg *PostgresContext) GetCtx() (context.Context, error) {
@@ -171,7 +163,7 @@ func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
 
 // Exposed for testing purposes only
 func (p PostgresContext) DebugClearAll() error {
-	ctx, tx, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
 	}
