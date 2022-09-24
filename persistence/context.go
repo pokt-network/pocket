@@ -30,7 +30,7 @@ func (p PostgresContext) Commit(quorumCert []byte) error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
 
 	ctx := context.TODO()
-	if err := p.DB.Tx.Commit(context.TODO()); err != nil {
+	if err := p.DB.Tx.Commit(ctx); err != nil {
 		return err
 	}
 	if err := p.DB.conn.Close(ctx); err != nil {

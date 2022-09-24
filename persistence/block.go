@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"log"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/pokt-network/pocket/persistence/types"
 )
 
@@ -66,10 +67,26 @@ func heightToBytes(height int64) []byte {
 	return heightBytes
 }
 
-func (p PostgresContext) commitBlock(blockProtoBytes []byte) error {
-	// get current height
-	// get proposer
-	// get hash
-	// get transaction
-	return p.DB.Blockstore.Put(heightToBytes(p.Height), blockProtoBytes)
+func (p PostgresContext) storeBlock(quorumCert []byte) error {
+	prevHash, err := p.GetBlockHash(p.Height - 1)
+	if err != nil {
+		return err
+	}
+
+	block := types.Block{
+		Height:            uint64(p.Height),
+		Hash:              string(p.stateHash),
+		PrevHash:          string(prevHash),
+		ProposerAddress:   []byte("proposer"), // TODO: How should utility context forward this?
+		QuorumCertificate: quorumCert,
+		Transactions:      nil, // TODO: get this from what was stored via `StoreTransaction`
+
+	}
+
+	blockBz, err := proto.Marshal(&block)
+	if err != nil {
+		return err
+	}
+
+	return p.DB.Blockstore.Put(heightToBytes(p.Height), blockBz)
 }

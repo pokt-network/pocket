@@ -1,3 +1,18 @@
+Remaining tasks:
+
+1.  Simplify interfaces in utility & persistence (make it simple and clear)
+2.  How do we revert changes to the merkle trees?
+3.  Draw an end-to-end diagram of everything and the data flow
+
+## References:
+
+- https://github.com/cosmos/cosmos-sdk/discussions/9158
+- https://github.com/cosmos/cosmos-sdk/pull/8012
+- https://github.com/cosmos/cosmos-sdk/discussions/8297
+- https://github.com/cosmos/cosmos-sdk/discussions/8297
+- https://paper.dropbox.com/doc/State-commitments-and-storage-review--BpuF08OSksSkLeErjf66jrOAAg-wKl2RINZWD9I0DUmZIFwQ
+- https://arxiv.org/pdf/1803.05069.pdf
+
 # This discussion is aimed at:
 
 1. Defining how we should compute the state hash

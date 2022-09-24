@@ -1,5 +1,6 @@
 package types
 
+// IMPROVE: Move schema related functions to a separate sub-package
 import "github.com/pokt-network/pocket/shared/modules"
 
 // TECHDEBT: Consider moving this to a protobuf. This struct was created to make testing simple of protocol actors that

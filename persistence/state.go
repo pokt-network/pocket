@@ -51,7 +51,6 @@ func loadMerkleTrees(map[MerkleTree]*smt.SparseMerkleTree, error) {
 	log.Fatalf("loadMerkleTrees not implemented yet")
 }
 
-// Question: Is this the right approach?
 func (p *PostgresContext) updateStateHash() error {
 	// Update all the merkle trees
 	for treeType := MerkleTree(0); treeType < lastMerkleTree; treeType++ {
@@ -76,7 +75,7 @@ func (p *PostgresContext) updateStateHash() error {
 					return err
 				}
 			}
-		// TODO_IN_THIS_COMMIT: re
+		// TODO_IN_THIS_COMMIT: add support for all the other actors as well
 		default:
 			log.Fatalln("Not handled yet in state commitment update", treeType)
 		}
