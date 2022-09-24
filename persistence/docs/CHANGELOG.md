@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed no-op `DeleteActor` code
 - Consolidated CHANGELOGs into one
+- Consolidated READMEs into one
 
 ## [0.0.0.5] - 2022-08-25
 
