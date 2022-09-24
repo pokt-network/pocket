@@ -66,6 +66,10 @@ func heightToBytes(height int64) []byte {
 	return heightBytes
 }
 
-func (p PostgresContext) storeBlock(blockProtoBytes []byte) error {
+func (p PostgresContext) commitBlock(blockProtoBytes []byte) error {
+	// get current height
+	// get proposer
+	// get hash
+	// get transaction
 	return p.DB.Blockstore.Put(heightToBytes(p.Height), blockProtoBytes)
 }

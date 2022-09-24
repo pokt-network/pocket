@@ -52,30 +52,31 @@ func loadMerkleTrees(map[MerkleTree]*smt.SparseMerkleTree, error) {
 }
 
 // Question: Is this the right approach?
-func (p *PostgresContext) updateStateHash() ([]byte, error) {
+func (p *PostgresContext) updateStateHash() error {
 	// Update all the merkle trees
 	for treeType := MerkleTree(0); treeType < lastMerkleTree; treeType++ {
 		switch treeType {
 		case appMerkleTree:
 			apps, err := p.getApplicationsUpdatedAtHeight(p.Height)
 			if err != nil {
-				return nil, typesUtil.NewError(typesUtil.Code(42), "Couldn't figure out apps updated") // TODO_IN_THIS_COMMIT
+				// TODO_IN_THIS_COMMIT: Update this error
+				return typesUtil.NewError(typesUtil.Code(42), "Couldn't figure out apps updated")
 			}
 			for _, app := range apps {
-				appBytes, err := proto.Marshal(app)
+				appBz, err := proto.Marshal(app)
 				if err != nil {
-					return nil, err
+					return err
 				}
 				// An update results in a create/update that is idempotent
 				addrBz, err := hex.DecodeString(app.Address)
 				if err != nil {
-					return nil, err
+					return err
 				}
-				if _, err := p.MerkleTrees[treeType].Update(addrBz, appBytes); err != nil {
-					return nil, err
+				if _, err := p.MerkleTrees[treeType].Update(addrBz, appBz); err != nil {
+					return err
 				}
-				// TODO_IN_THIS_COMMIT: Add support for `Delete` operations to remove it from the tree
 			}
+		// TODO_IN_THIS_COMMIT: re
 		default:
 			log.Fatalln("Not handled yet in state commitment update", treeType)
 		}
@@ -96,6 +97,6 @@ func (p *PostgresContext) updateStateHash() ([]byte, error) {
 	rootsConcat := bytes.Join(roots, []byte{})
 	stateHash := sha256.Sum256(rootsConcat)
 
-	p.StateHash = stateHash[:]
-	return p.StateHash, nil
+	p.stateHash = stateHash[:]
+	return nil
 }

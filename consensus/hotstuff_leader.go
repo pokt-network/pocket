@@ -241,6 +241,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *ConsensusMod
 // anteHandle is the general handler called for every before every specific HotstuffLeaderMessageHandler handler
 func (handler *HotstuffLeaderMessageHandler) anteHandle(m *ConsensusModule, msg *typesCons.HotstuffMessage) error {
 	// Basic block metadata validation
+
 	if err := m.validateBlockBasic(msg.GetBlock()); err != nil {
 		return err
 	}
@@ -336,7 +337,7 @@ func (m *ConsensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
 		return nil, err
 	}
 
-	// Apply all the transactions in the block - 
+	// Apply all the transactions in the block -
 	appHash, err := m.UtilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
 	if err != nil {
 		return nil, err

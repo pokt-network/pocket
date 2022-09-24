@@ -38,32 +38,29 @@ type PersistenceRWContext interface {
 	PersistenceWriteContext
 }
 
+// TODO: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
+// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
+// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
+
 // NOTE: There's not really a use case for a write only interface,
 // but it abstracts and contrasts nicely against the read only context
 // TODO (andrew) convert address and public key to string not bytes #149
 type PersistenceWriteContext interface {
-	// TODO: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
-	// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
-	// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
+
 	// Context Operations
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
 
-	Commit() error
 	// DISCUSS: Can we consolidate `Reset` and `Release`
 	Reset() error
 	Release() error
 
-	// Question:
-
+	// Block / indexer operations
 	UpdateAppHash() ([]byte, error)
-	AppHash() ([]byte, error)
-
-	// Block Operations
-
-	// Indexer Operations
-	StoreTransaction(transactionProtoBytes []byte) error                                         // Stores a transaction
-	CommitTransactions(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error // Writes the block in the SQL database
+	// Commits the current context (height, hash, transactions, etc...) to finality.
+	Commit(quorumCert []byte) error
+	// Indexes the transaction
+	StoreTransaction(transactionProtoBytes []byte) error // Stores a transaction
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error

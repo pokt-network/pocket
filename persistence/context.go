@@ -16,27 +16,18 @@ func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 }
 
 func (p PostgresContext) UpdateAppHash() ([]byte, error) {
-	if _, err := p.updateStateHash(); err != nil {
+	if err := p.updateStateHash(); err != nil {
 		return nil, err
 	}
-	return p.StateHash, nil
-}
-
-func (p PostgresContext) AppHash() ([]byte, error) {
-	return p.StateHash, nil
+	return p.stateHash, nil
 }
 
 func (p PostgresContext) Reset() error {
 	panic("TODO: PostgresContext Reset not implemented")
 }
 
-func (p PostgresContext) Commit() error {
+func (p PostgresContext) Commit(quorumCert []byte) error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
-
-	// HACK: The data has already been written to the postgres DB, so what should we do here? The idea I have is:
-	// if _, err := p.updateStateHash(); err != nil {
-	// 	return err
-	// }
 
 	ctx := context.TODO()
 	if err := p.DB.Tx.Commit(context.TODO()); err != nil {

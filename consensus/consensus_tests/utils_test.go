@@ -360,9 +360,6 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
 	// persistenceContextMock := basePersistenceContextMock(t)
 
-	// utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
-	utilityContextMock.EXPECT().CommitContext().Return(nil).AnyTimes()
-	utilityContextMock.EXPECT().ReleaseContext().Return().AnyTimes()
 	utilityContextMock.EXPECT().
 		GetProposalTransactions(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
 		Return(make([][]byte, 0), nil).
@@ -371,16 +368,18 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(appHash, nil).
 		AnyTimes()
+	utilityContextMock.EXPECT().CommitContext(gomock.Any()).Return(nil).AnyTimes()
+	utilityContextMock.EXPECT().ReleaseContext().Return(nil).AnyTimes()
 
 	return utilityContextMock
 }
 
-func basePersistenceContextMock(t *testing.T) *modulesMock.MockPersistenceRWContext {
-	ctrl := gomock.NewController(t)
-	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
-	persistenceContextMock.EXPECT().Commit().Return(nil).AnyTimes()
-	return persistenceContextMock
-}
+// func basePersistenceContextMock(t *testing.T) *modulesMock.MockPersistenceRWContext {
+// 	ctrl := gomock.NewController(t)
+// 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
+// 	persistenceContextMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
+// 	return persistenceContextMock
+// }
 
 func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockTelemetryModule {
 	ctrl := gomock.NewController(t)

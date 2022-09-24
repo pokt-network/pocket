@@ -114,6 +114,7 @@ func DebugHandlingHotstuffMessage(msg *HotstuffMessage) string {
 // Errors
 const (
 	nilBLockError                               = "block is nil"
+	blockExistsError                            = "block exists but should be nil"
 	nilBLockProposalError                       = "block should never be nil when creating a proposal message"
 	nilBLockVoteError                           = "block should never be nil when creating a vote message for a proposal"
 	proposalNotValidInPrepareError              = "proposal is not valid in the PREPARE step"
@@ -152,6 +153,7 @@ const (
 
 var (
 	ErrNilBlock                               = errors.New(nilBLockError)
+	ErrBlockExists                            = errors.New(blockExistsError)
 	ErrNilBlockProposal                       = errors.New(nilBLockProposalError)
 	ErrNilBlockVote                           = errors.New(nilBLockVoteError)
 	ErrProposalNotValidInPrepare              = errors.New(proposalNotValidInPrepareError)

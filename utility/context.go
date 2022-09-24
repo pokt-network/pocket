@@ -9,13 +9,16 @@ import (
 )
 
 type UtilityContext struct {
-	LatestHeight int64
-	Mempool      typesUtil.Mempool
-	Context      *Context // IMPROVE: Consider renmaming to PersistenceContext
+	LatestHeight    int64 // IMPROVE: Current height?
+	CurrentProposer []byte
+
+	Mempool typesUtil.Mempool
+	Context *Context // IMPROVE: Consider renaming to `PersistenceContext` or `StoreContext`
 }
 
 type Context struct {
 	modules.PersistenceRWContext
+	// TODO: SavePoints have not been implemented yet
 	SavePointsM map[string]struct{}
 	SavePoints  [][]byte
 }
@@ -40,15 +43,16 @@ func (u *UtilityContext) Store() *Context {
 	return u.Context
 }
 
-func (u *UtilityContext) CommitContext() error {
-	err := u.Context.PersistenceRWContext.Commit()
+func (u *UtilityContext) CommitContext(quorumCert []byte) error {
+	err := u.Context.PersistenceRWContext.Commit(quorumCert)
 	u.Context = nil
 	return err
 }
 
-func (u *UtilityContext) ReleaseContext() {
-	u.Context.Release()
+func (u *UtilityContext) ReleaseContext() error {
+	err := u.Context.Release()
 	u.Context = nil
+	return err
 }
 
 func (u *UtilityContext) GetLatestHeight() (int64, typesUtil.Error) {

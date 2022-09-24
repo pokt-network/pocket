@@ -45,7 +45,7 @@ type PostgresContext struct {
 	Height int64
 	DB     PostgresDB
 
-	StateHash []byte
+	stateHash []byte
 
 	// IMPROVE: Depending on how the use of `PostgresContext` evolves, we may be able to get
 	// access to these directly via the postgres module.

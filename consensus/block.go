@@ -9,8 +9,12 @@ import (
 
 // TODO: Add additional basic block metadata validation w/ unit tests
 func (m *ConsensusModule) validateBlockBasic(block *typesCons.Block) error {
-	if block == nil {
+	if block == nil && m.Step != NewRound {
 		return typesCons.ErrNilBlock
+	}
+
+	if block != nil && m.Step == NewRound {
+		return typesCons.ErrBlockExists
 	}
 
 	if unsafe.Sizeof(*block) > uintptr(m.MaxBlockBytes) {
@@ -37,7 +41,10 @@ func (m *ConsensusModule) refreshUtilityContext() error {
 	// should not be called.
 	if m.UtilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
-		m.UtilityContext.ReleaseContext()
+		if err := m.UtilityContext.ReleaseContext(); err != nil {
+			// Logging an error but allowing the consensus lifecycle to continue
+			m.nodeLogError("cannot release existing utility context", err)
+		}
 		m.UtilityContext = nil
 	}
 
@@ -53,18 +60,10 @@ func (m *ConsensusModule) refreshUtilityContext() error {
 func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
 
-	// Store the block in the KV store
-	// codec := codec.GetCodec()
-	// blockProtoBytes, err := codec.Marshal(block)
-	// if err != nil {
-	// 	return err
-	// }
-
 	// Commit and release the context
-	if err := m.UtilityContext.CommitPersistenceContext(); err != nil {
+	if err := m.UtilityContext.CommitContext(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
 	}
-
 	m.UtilityContext.ReleaseContext()
 	m.UtilityContext = nil
 
