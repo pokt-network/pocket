@@ -53,7 +53,7 @@ type ConsensusModule struct {
 	validatorMap typesCons.ValidatorMap
 
 	// Module Dependencies
-	utilityContext    modules.UtilityContext
+	UtilityContext    modules.UtilityContext
 	paceMaker         Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
@@ -125,7 +125,7 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 		lastAppHash:  "",
 		validatorMap: valMap,
 
-		utilityContext:    nil,
+		UtilityContext:    nil,
 		paceMaker:         paceMaker,
 		leaderElectionMod: leaderElectionMod,
 
@@ -225,7 +225,9 @@ func (m *ConsensusModule) HandleMessage(message *anypb.Any) error {
 		if err := anypb.UnmarshalTo(message, &hotstuffMessage, proto.UnmarshalOptions{}); err != nil {
 			return err
 		}
-		m.handleHotstuffMessage(&hotstuffMessage)
+		if err := m.handleHotstuffMessage(&hotstuffMessage); err != nil {
+			return err
+		}
 	case UtilityMessage:
 		panic("[WARN] UtilityMessage handling is not implemented by consensus yet...")
 	default:

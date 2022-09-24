@@ -1,9 +1,10 @@
 package consensus
 
 import (
-	"github.com/pokt-network/pocket/shared/debug"
 	"log"
 	"time"
+
+	"github.com/pokt-network/pocket/shared/debug"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 )

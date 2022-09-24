@@ -59,6 +59,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 		}
 		m.Block = block
 	} else {
+		// DISCUSS: Do we need to call `validateProposal` here?
 		// Leader acts like a replica if `highPrepareQC` is not `nil`
 		if err := m.applyBlock(highPrepareQC.Block); err != nil {
 			m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
@@ -105,7 +106,6 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusMo
 	}
 	m.nodeLog(typesCons.OptimisticVoteCountPassed(Prepare))
 
-	// DISCUSS: What prevents leader from swapping out the block here?
 	prepareQC, err := m.getQuorumCertificate(m.Height, Prepare, m.Round)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrQCInvalid(Prepare).Error(), err)
@@ -116,13 +116,13 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusMo
 	m.HighPrepareQC = prepareQC
 	m.MessagePool[Prepare] = nil
 
-	precommitProposeMessages, err := CreateProposeMessage(m.Height, m.Round, PreCommit, m.Block, prepareQC)
+	preCommitProposeMessage, err := CreateProposeMessage(m.Height, m.Round, PreCommit, m.Block, prepareQC)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateProposeMessage(PreCommit).Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
-	m.broadcastToNodes(precommitProposeMessages)
+	m.broadcastToNodes(preCommitProposeMessage)
 
 	// Leader also acts like a replica
 	precommitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, PreCommit, m.Block, m.privateKey)
@@ -172,7 +172,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *Consensus
 	commitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, Commit, m.Block, m.privateKey)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Commit).Error(), err)
-		return // TODO(olshansky): Should we interrupt the round here?
+		return
 	}
 	m.sendToNode(commitVoteMessage)
 }
@@ -217,7 +217,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusMod
 		return
 	}
 
-	// There is no "replica behavior" to imitate here
+	// There is no "replica behavior" to imitate here because the leader already committed the block proposal.
 
 	m.paceMaker.NewHeight()
 	m.GetBus().
@@ -262,6 +262,8 @@ func (handler *HotstuffLeaderMessageHandler) emitTelemetryEvent(m *ConsensusModu
 
 // ValidateBasic general validation checks that apply to every HotstuffLeaderMessage
 func (handler *HotstuffLeaderMessageHandler) validateBasic(m *ConsensusModule, msg *typesCons.HotstuffMessage) error {
+	// DISCUSS: What prevents leader from swapping out the block here?
+
 	// Discard messages with invalid partial signatures before storing it in the leader's consensus mempool
 	if err := m.validatePartialSignature(msg); err != nil {
 		return err
@@ -331,13 +333,13 @@ func (m *ConsensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
 	lastByzValidators := make([][]byte, 0)
 
 	// Reap the mempool for transactions to be applied in this block
-	txs, err := m.utilityContext.GetProposalTransactions(m.privateKey.Address(), maxTxBytes, lastByzValidators)
+	txs, err := m.UtilityContext.GetProposalTransactions(m.privateKey.Address(), maxTxBytes, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}
 
 	// Apply all the transactions in the block
-	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
+	appHash, err := m.UtilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}

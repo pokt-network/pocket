@@ -190,12 +190,12 @@ func (m *ConsensusModule) clearLeader() {
 	m.LeaderId = nil
 }
 
-func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
+func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) error {
 	leaderId, err := m.leaderElectionMod.ElectNextLeader(message)
 	if err != nil || leaderId == 0 {
 		m.nodeLogError(typesCons.ErrLeaderElection(message).Error(), err)
 		m.clearLeader()
-		return
+		return err
 	}
 
 	m.LeaderId = &leaderId
@@ -207,6 +207,8 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 		m.logPrefix = "REPLICA"
 		m.nodeLog(typesCons.ElectedNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	}
+
+	return nil
 }
 
 /*** General Infrastructure Helpers ***/

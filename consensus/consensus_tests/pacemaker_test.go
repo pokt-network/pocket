@@ -2,6 +2,7 @@ package consensus_tests
 
 import (
 	"encoding/hex"
+	"fmt"
 	"log"
 	"reflect"
 	"testing"
@@ -146,10 +147,16 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 
 	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS
 	for _, pocketNode := range pocketNodes {
+		// utilityContext is only set on new rounds, which is skipped in this test
+		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
+		require.NoError(t, err)
+		fmt.Println("OLSH", utilityContext)
+
 		consensusModImpl := GetConsensusModImplementation(pocketNode)
 		consensusModImpl.FieldByName("Height").SetUint(testHeight)
 		consensusModImpl.FieldByName("Step").SetInt(testStep)
 		consensusModImpl.FieldByName("LeaderId").Set(reflect.Zero(reflect.TypeOf(&leaderId))) // This is re-elected during paceMaker catchup
+		consensusModImpl.FieldByName("UtilityContext").Set(reflect.ValueOf(utilityContext))
 	}
 
 	// Set the leader to be in the highest round.

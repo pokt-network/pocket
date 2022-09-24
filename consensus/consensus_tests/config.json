@@ -1,9 +1,0 @@
-{
-    "consensus": {
-        "private_key": "e8561cc9a8cb6396ceeae0747e8365029fb7772f40ee7e82df906fbd6b329a5a8ae7e70016d48453e3fe173d1457a7426c0479623c6ca5ba042d5303ebb0814b",
-        "max_mempool_bytes": 500000000,
-        "pacemaker_config": {
-            "timeout_msec": 5000
-        }
-    }
-}

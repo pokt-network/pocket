@@ -70,16 +70,18 @@ func CreateVoteMessage(
 	return msg, nil
 }
 
-// Returns "partial" signature of the hotstuff message from one of the validators
+// Returns "partial" signature of the hotstuff message from one of the validators.
+// If there is an error signing the bytes, nil is returned instead.
 func getMessageSignature(msg *typesCons.HotstuffMessage, privKey crypto.PrivateKey) []byte {
 	bytesToSign, err := getSignableBytes(msg)
 	if err != nil {
+		log.Printf("[WARN] error getting bytes to sign: %v\n", err)
 		return nil
 	}
 
 	signature, err := privKey.Sign(bytesToSign)
 	if err != nil {
-		log.Fatalf("Error signing message: %v", err)
+		log.Printf("[WARN] error signing message: %v\n", err)
 		return nil
 	}
 
