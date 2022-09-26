@@ -111,8 +111,8 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 
 			peersManagerStateView := network.peersManager.getStateView()
 
-			require.Equal(b, n, len(peersManagerStateView.addrList), n)
-			require.Equal(b, n, len(peersManagerStateView.addrBookMap), n)
+			require.Equal(b, n, len(peersManagerStateView.addrList))
+			require.Equal(b, n, len(peersManagerStateView.addrBookMap))
 			require.Equal(b, testCase.numExpectedLevels, int(peersManagerStateView.maxNumLevels))
 
 			for i := 0; i < numAddressessToBeAdded; i++ {
