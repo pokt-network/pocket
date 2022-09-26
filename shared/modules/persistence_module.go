@@ -3,14 +3,12 @@ package modules
 //go:generate mockgen -source=$GOFILE -destination=./mocks/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
 
 import (
-	"github.com/pokt-network/pocket/persistence/kvstore" // Should be moved to shared
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/debug"
 )
 
 type PersistenceModule interface {
 	Module
-
-	// Persistence Context Factory Methods
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
 
@@ -40,28 +38,34 @@ type PersistenceRWContext interface {
 	PersistenceWriteContext
 }
 
-// TODO: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
-// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
-// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
-
 // NOTE: There's not really a use case for a write only interface,
 // but it abstracts and contrasts nicely against the read only context
 // TODO (andrew) convert address and public key to string not bytes #149
 type PersistenceWriteContext interface {
+	// TODO: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
+	// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
+	// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
 	// Context Operations
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
 
-	// DISCUSS: Can we consolidate `Reset` and `Release`
 	Reset() error
+	Commit() error
 	Release() error
 
-	// Block / indexer operations
-	UpdateAppHash() ([]byte, error)
-	// Commits the current context (height, hash, transactions, etc...) to finality.
-	Commit(proposerAddr []byte, quorumCert []byte) error
-	// Indexes the transaction
-	StoreTransaction(transactionProtoBytes []byte) error // Stores a transaction
+	AppHash() ([]byte, error)
+
+	// Block Operations
+
+	// Indexer Operations
+	StoreTransaction(transactionProtoBytes []byte) error
+
+	// Block Operations
+	// TODO_TEMPORARY: Including two functions for the SQL and KV Store as an interim solution
+	//                 until we include the schema as part of the SQL Store because persistence
+	//                 currently has no access to the protobuf schema which is the source of truth.
+	StoreBlock(blockProtoBytes []byte) error                                              // Store the block in the KV Store
+	InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error // Writes the block in the SQL database
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error
@@ -122,29 +126,6 @@ type PersistenceWriteContext interface {
 	// Flag Operations
 	InitFlags() error
 	SetFlag(paramName string, value interface{}, enabled bool) error
-
-	// Tree Operations
-
-	// # Option 1:
-
-	UpdateApplicationsTree([]Actor) error
-	// UpdateValidatorsTree([]Actor) error
-	// UpdateServiceNodesTree([]Actor) error
-	// UpdateFishermanTree([]Actor) error
-	// Update<FutureActors>Tree([]Actor) error
-	// Update<Other>Tree([]Other) error
-
-	// # Option 2:
-	// UpdateActorTree(types.ProtocolActorSchema, []Actor) error
-	// Update<Other>Tree([]Other) error
-
-	// # Option 3:
-	// UpdateApplicationsTree([]Application) error
-	// UpdateValidatorsTree([]Validator) error
-	// UpdateServiceNodesTree([]ServiceNode) error
-	// UpdateFishermanTree([]Fisherman) error
-	// Update<FutureActors>Tree([]FutureActor) error
-	// Update<Other>Tree([]Other) error
 }
 
 type PersistenceReadContext interface {
@@ -223,28 +204,4 @@ type PersistenceReadContext interface {
 	GetIntFlag(paramName string, height int64) (int, bool, error)
 	GetStringFlag(paramName string, height int64) (string, bool, error)
 	GetBytesFlag(paramName string, height int64) ([]byte, bool, error)
-
-	// Tree Operations
-
-	// # Option 1:
-
-	// GetApplicationsUpdatedAtHeight(height int64) ([]Actor, error)
-	// GetValidatorsUpdatedAtHeight(height int64) ([]Actor, error)
-	// GetServiceNodesUpdatedAtHeight(height int64) ([]Actor, error)
-	// GetFishermanUpdatedAtHeight(height int64) ([]Actor, error)
-	// Get<FutureActor>UpdatedAtHeight(height int64) ([]Actor, error)
-	// Get<Other>UpdatedAtHeight(height int64) ([]Actor, error)
-	// Update<Other>Tree(height int64) ([]Actor, error)
-
-	// # Option 2:
-	// Get<FutureActor>UpdatedAtHeight(types.ProtocolActorSchema, height int64) ([]Actor, error)
-	// Get<Other>UpdatedAtHeight(height int64) ([]Other, error)
-
-	// # Option 3:
-	// GetApplicationsUpdatedAtHeight(height int64) ([]Application, error)
-	// GetValidatorsUpdatedAtHeight(height int64) ([]Validator, error)
-	// GetServiceNodesUpdatedAtHeight(height int64) ([]ServiceNode, error)
-	// GetFishermanUpdatedAtHeight(height int64) ([]Fisherman, error)
-	// Get<FutureActor>UpdatedAtHeight(height int64) ([]FutureActor, error)
-	// Get<Other>UpdatedAtHeight(height int64) ([]Other, error)
 }
