@@ -4,7 +4,7 @@ import (
 	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/debug"
 )
@@ -15,11 +15,8 @@ func (m *PersistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 		m.showLatestBlockInStore(debugMessage)
 	case debug.DebugMessageAction_DEBUG_CLEAR_STATE:
 		m.clearState(debugMessage)
-		g, err := runtime.ParseGenesisJSON(m.GetBus().GetConfig().Base.GenesisPath)
-		if err != nil {
-			return err
-		}
-		m.populateGenesisState(g.PersistenceGenesisState)
+		g := m.GetBus().GetGenesis().PersistenceGenesisState.(*types.PersistenceGenesisState)
+		m.populateGenesisState(g)
 	default:
 		log.Printf("Debug message not handled by persistence module: %s \n", debugMessage.Message)
 	}
