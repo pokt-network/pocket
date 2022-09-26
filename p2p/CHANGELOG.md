@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `peersManager` and `target` in order to abstract away and eliminate redundant computations
 - refactored debug logging in `getTarget` to print first and second target on the same line
+- Refactored AddPeerToAddrBook to use an event-driven approach in order to leverage sorted data structures
+- Added RemovePeerToAddrBook making use of the same pattern
 
 ## [0.0.0.2] - 2022-08-25
 
