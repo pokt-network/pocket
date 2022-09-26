@@ -99,9 +99,9 @@ install_cli_deps:
 .PHONY: develop_test
 ## Run all of the make commands necessary to develop on the project and verify the tests pass
 develop_test: docker_check
+		make go_clean_deps && \
 		make mockgen && \
 		make protogen_clean && make protogen_local && \
-		make go_clean_deps && \
 		make test_all
 
 
