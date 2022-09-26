@@ -167,5 +167,4 @@ make lint
 ```
 
 You might need to install some of the linters locally, here is a list of them.
-* `staticcheck`. Can be installed via `go install honnef.co/go/tools/cmd/staticcheck@latest` (assuming `$GOPATH/bin` is in your `$PATH`).
 * `golangci-lint`. Installation instructions provided [here](https://golangci-lint.run/usage/install/#local-installation).
