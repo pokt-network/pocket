@@ -33,7 +33,7 @@ func (m *ConsensusModule) validateBlockBasic(block *typesCons.Block) error {
 		return typesCons.ErrBlockExists
 	}
 
-	if unsafe.Sizeof(*block) > uintptr(m.consGenesis.MaxBlockBytes) {
+	if block != nil && unsafe.Sizeof(*block) > uintptr(m.consGenesis.MaxBlockBytes) {
 		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.consGenesis.MaxBlockBytes)
 	}
 
@@ -41,7 +41,7 @@ func (m *ConsensusModule) validateBlockBasic(block *typesCons.Block) error {
 	// sure that the data (height, round, step, txs, etc) is the same before we start validating the signatures
 	if m.Block != nil {
 		// DISCUSS: The only difference between blocks from one step to another is the QC, so we need
-		// to determine where/how to validate this
+		//          to determine where/how to validate this
 		if protoHash(m.Block) != protoHash(block) {
 			log.Println("[TECHDEBT][ERROR] The block being processed is not the same as that received by the consensus module ")
 		}
@@ -52,9 +52,8 @@ func (m *ConsensusModule) validateBlockBasic(block *typesCons.Block) error {
 
 // Creates a new Utility context and clears/nullifies any previous contexts if they exist
 func (m *ConsensusModule) refreshUtilityContext() error {
-	// This is a catch-all to release the previous utility context if it wasn't cleaned up
-	// in the proper lifecycle (e.g. catch up, error, network partition, etc...). Ideally, this
-	// should not be called.
+	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
+	// Ideally, this should not be called.
 	if m.UtilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
 		if err := m.UtilityContext.ReleaseContext(); err != nil {
@@ -68,7 +67,7 @@ func (m *ConsensusModule) refreshUtilityContext() error {
 	if err != nil {
 		return err
 	}
-
 	m.UtilityContext = utilityContext
+
 	return nil
 }
