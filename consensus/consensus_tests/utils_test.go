@@ -367,8 +367,8 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(appHash, nil).
 		AnyTimes()
-	utilityContextMock.EXPECT().CommitContext(gomock.Any()).Return(nil).AnyTimes()
-	utilityContextMock.EXPECT().ReleaseContext().Return(nil).AnyTimes()
+	utilityContextMock.EXPECT().CommitPersistenceContext().Return(nil).AnyTimes()
+	utilityContextMock.EXPECT().ReleaseContext().Return().AnyTimes()
 
 	return utilityContextMock
 }
