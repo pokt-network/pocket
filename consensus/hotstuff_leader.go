@@ -46,7 +46,8 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 	}
 
 	// Likely to be `nil` if blockchain is progressing well.
-	highPrepareQC := m.findHighQC(NewRound) // TECHDEBT: How do we validate `highPrepareQC` here?
+	// TECHDEBT: How do we properly validate `highPrepareQC` here?
+	highPrepareQC := m.findHighQC(m.MessagePool[NewRound])
 
 	// TODO: Add more unit tests for these checks...
 	if highPrepareQC == nil || highPrepareQC.Height < m.Height || highPrepareQC.Round < m.Round {
