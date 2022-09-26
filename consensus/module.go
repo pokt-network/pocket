@@ -82,7 +82,7 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 	if err := m.ValidateGenesis(genesis); err != nil {
 		log.Fatalf("genesis validation failed: %v", err)
 	}
-	moduleGenesis := genesis.ConsensusGenesisState.(*typesCons.ConsensusGenesisState)
+	consensusGenesis := genesis.ConsensusGenesisState.(*typesCons.ConsensusGenesisState)
 
 	leaderElectionMod, err := leader_election.Create(runtime)
 	if err != nil {
@@ -95,7 +95,7 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 		return nil, err
 	}
 
-	valMap := typesCons.ValidatorListToMap(moduleGenesis.Validators)
+	valMap := typesCons.ValidatorListToMap(consensusGenesis.Validators)
 
 	privateKey, err := m.GetPrivateKey(runtime)
 	if err != nil {
@@ -134,7 +134,7 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 
 		logPrefix:     DefaultLogPrefix,
 		MessagePool:   make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
-		MaxBlockBytes: moduleGenesis.GetMaxBlockBytes(),
+		MaxBlockBytes: consensusGenesis.GetMaxBlockBytes(),
 	}
 
 	// TODO(olshansky): Look for a way to avoid doing this.
