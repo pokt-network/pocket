@@ -20,16 +20,16 @@ For example, `X.Y.Z[-<pre_release_tag][+branch_name][+short_hash][+dirty]` is th
 
 ### Tags
 
-Code built from default branch (i.e. `main`) is tagged as `latest`.
+Code built from the default branch (i.e. `main`) is tagged as `latest`.
 
 Code built from commits in Pull Requests, is tagged as `pr-<number>`, as well as `sha-<7 digit sha>`.
 
-Once we have a release, we will tag the release with the version number (e.g. `v0.0.1-alpha.pre.1`).
+Once releases are managed, they will be tagged with the version number (e.g. `v0.0.1-alpha.pre.1`).
 
 
 ### Extended images with additional tooling
 
-We also supply an extended image with tooling for each container tag to help you troubleshoot or investigate issues. The extended image is called `<tag>-dev`. For example, `latest-dev`, or `pr-123-dev`.
+Extended images with additional tooling are built to aid in troubleshoot and debugging. The extended image is formatted as `<tag>-dev`. For example, `latest-dev`, or `pr-123-dev`.
 
 
 ## [TODO] Magefile build system

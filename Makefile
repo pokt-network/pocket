@@ -318,7 +318,7 @@ test_p2p_addrbook:
 	go test -run AddrBook -v -count=1 ./p2p/...
 
 .PHONY: lint
-## Run all P2P addr book related tests
+## Run all linters that are triggered by the CI pipeline
 lint:
 	golangci-lint run ./...
 
