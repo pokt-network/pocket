@@ -14,15 +14,14 @@ type UtilityModule interface {
 // operations.
 type UtilityContext interface {
 	// Block operations
-
-	// Reaps the mempool for transactions that are ready to be proposed in a new block
 	GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error)
-	// Applies the transactions to an ephemeral state in the utility & underlying persistence context;similar to `SafeNode` in the Hotstuff whitepaper.
 	ApplyBlock(height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
+	StoreBlock(blockProtoBytes []byte) error
 
 	// Context operations
-	ReleaseContext() error
-	CommitContext(quorumCert []byte) error
+	ReleaseContext()
+	GetPersistenceContext() PersistenceRWContext
+	CommitPersistenceContext() error
 
 	// Validation operations
 	CheckTransaction(tx []byte) error
