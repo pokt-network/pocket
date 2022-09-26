@@ -47,7 +47,6 @@ type PersistenceConfig interface {
 
 type P2PConfig interface {
 	GetConsensusPort() uint32
-	GetUseRainTree() bool
 	IsEmptyConnType() bool // TODO (team) make enum
 }
 

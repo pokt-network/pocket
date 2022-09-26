@@ -69,10 +69,6 @@ func (c *Config) GetConsensusPort() uint32 {
 	return c.P2P.ConsensusPort
 }
 
-func (c *Config) GetUseRainTree() bool {
-	return c.P2P.UseRainTree
-}
-
 func (c *Config) IsEmptyConnType() bool { // TODO (team) make enum
 	return c.P2P.IsEmptyConnectionType
 }

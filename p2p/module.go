@@ -5,6 +5,7 @@ package p2p
 // to be a "real" replacement for now.
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/debug"
@@ -45,10 +46,14 @@ func Create(runtime modules.Runtime) (modules.Module, error) {
 	return m.Create(runtime)
 }
 
-func (*p2pModule) Create(runtime modules.Runtime) (m modules.Module, err error) {
+func (*p2pModule) Create(runtime modules.Runtime) (modules.Module, error) {
 	log.Println("Creating network module")
+	var m *p2pModule
 
 	cfg := runtime.GetConfig()
+	if err := m.ValidateConfig(cfg); err != nil {
+		log.Fatalf("config validation failed: %v", err)
+	}
 	p2pCfg := cfg.P2P.(*typesP2P.P2PConfig)
 
 	l, err := CreateListener(p2pCfg)
@@ -102,7 +107,7 @@ func (m *p2pModule) Start() error {
 		return err
 	}
 
-	if m.p2pConfig.GetUseRainTree() {
+	if m.p2pConfig.(*typesP2P.P2PConfig).UseRainTree {
 		m.network = raintree.NewRainTreeNetwork(m.address, addrBook)
 	} else {
 		m.network = stdnetwork.NewNetwork(addrBook)
@@ -160,6 +165,13 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic debug.
 	}
 
 	return m.network.NetworkSend(data, addr)
+}
+
+func (*p2pModule) ValidateConfig(cfg modules.Config) error {
+	if _, ok := cfg.P2P.(*typesP2P.P2PConfig); !ok {
+		return fmt.Errorf("cannot cast to P2PConfig")
+	}
+	return nil
 }
 
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
