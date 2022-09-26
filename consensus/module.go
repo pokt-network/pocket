@@ -31,7 +31,9 @@ var _ modules.ConsensusModule = &ConsensusModule{}
 type ConsensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
-	consCfg    modules.ConsensusConfig
+
+	consCfg     *typesCons.ConsensusConfig
+	consGenesis *typesCons.ConsensusGenesisState
 
 	// Hotstuff
 	Height uint64
@@ -49,7 +51,7 @@ type ConsensusModule struct {
 	IdToValAddrMap typesCons.IdToValAddrMap // TODO: This needs to be updated every time the ValMap is modified
 
 	// Consensus State
-	lastAppHash  string // TODO: Need to make sure this is populated and updated correctly
+	lastAppHash  string // TODO: Always retrieve this variable from the persistence module and simplify this struct
 	validatorMap typesCons.ValidatorMap
 
 	// Module Dependencies
@@ -62,9 +64,6 @@ type ConsensusModule struct {
 
 	// TECHDEBT: Move this over to use the txIndexer
 	MessagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
-
-	// CLEANUP: Access this value from the configs
-	MaxBlockBytes uint64
 }
 
 func Create(configPath, genesisPath string, useRandomPK bool) (modules.ConsensusModule, error) {
@@ -106,8 +105,9 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 	m := &ConsensusModule{
 		bus: nil,
 
-		privateKey: privateKey.(cryptoPocket.Ed25519PrivateKey),
-		consCfg:    cfg,
+		privateKey:  privateKey.(cryptoPocket.Ed25519PrivateKey),
+		consCfg:     cfg,
+		consGenesis: genesis,
 
 		Height: 0,
 		Round:  0,
@@ -129,9 +129,8 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 		paceMaker:         paceMaker,
 		leaderElectionMod: leaderElectionMod,
 
-		logPrefix:     DefaultLogPrefix,
-		MessagePool:   make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
-		MaxBlockBytes: genesis.GetMaxBlockBytes(),
+		logPrefix:   DefaultLogPrefix,
+		MessagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
 	}
 
 	// TODO(olshansky): Look for a way to avoid doing this.

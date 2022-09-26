@@ -7,7 +7,23 @@ import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
 
-// TODO: Add additional basic block metadata validation w/ unit tests
+func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
+	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
+
+	// Commit the utility context
+	if err := m.UtilityContext.CommitContext(block.BlockHeader.QuorumCertificate); err != nil {
+		return err
+	}
+	// Release the utility context
+	m.UtilityContext.ReleaseContext()
+	m.UtilityContext = nil
+	// Update the last app hash
+	m.lastAppHash = block.BlockHeader.Hash
+
+	return nil
+}
+
+// TODO: Add unit tests specific to block validation
 func (m *ConsensusModule) validateBlockBasic(block *typesCons.Block) error {
 	if block == nil && m.Step != NewRound {
 		return typesCons.ErrNilBlock
@@ -17,8 +33,8 @@ func (m *ConsensusModule) validateBlockBasic(block *typesCons.Block) error {
 		return typesCons.ErrBlockExists
 	}
 
-	if unsafe.Sizeof(*block) > uintptr(m.MaxBlockBytes) {
-		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.MaxBlockBytes)
+	if unsafe.Sizeof(*block) > uintptr(m.consGenesis.MaxBlockBytes) {
+		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.consGenesis.MaxBlockBytes)
 	}
 
 	// If the current block being processed (i.e. voted on) by consensus is non nil, we need to make
@@ -54,20 +70,5 @@ func (m *ConsensusModule) refreshUtilityContext() error {
 	}
 
 	m.UtilityContext = utilityContext
-	return nil
-}
-
-func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
-	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
-
-	// Commit and release the context
-	if err := m.UtilityContext.CommitContext(block.BlockHeader.QuorumCertificate); err != nil {
-		return err
-	}
-	m.UtilityContext.ReleaseContext()
-	m.UtilityContext = nil
-
-	m.lastAppHash = block.BlockHeader.Hash
-
 	return nil
 }
