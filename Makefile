@@ -189,6 +189,7 @@ docker_loki_install: docker_check
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
 	$(eval modules_dir = "shared/modules")
+	rm -rf ${modules_dir}/mocks
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
