@@ -26,7 +26,7 @@ const (
 	ByzantineThreshold = float64(2) / float64(3)
 	HotstuffMessage    = "consensus.HotstuffMessage"
 	UtilityMessage     = "consensus.UtilityMessage"
-	Propose            = typesCons.HotstuffMessageType_HOTSTUFF_MESAGE_PROPOSE
+	Propose            = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_PROPOSE
 	Vote               = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_VOTE
 )
 
