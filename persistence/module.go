@@ -44,7 +44,7 @@ func (*PersistenceModule) Create(runtime modules.Runtime) (modules.Module, error
 	genesis := runtime.GetGenesis()
 
 	persistenceCfg := cfg.Persistence.(*types.PersistenceConfig)
-	moduleGenesis := genesis.PersistenceGenesisState.(*types.PersistenceGenesisState)
+	persistenceGenesis := genesis.PersistenceGenesisState.(*types.PersistenceGenesisState)
 
 	conn, err := connectToDatabase(persistenceCfg.GetPostgresUrl(), persistenceCfg.GetNodeSchema())
 	if err != nil {
@@ -76,7 +76,7 @@ func (*PersistenceModule) Create(runtime modules.Runtime) (modules.Module, error
 		// 		     this forces the genesis state to be reloaded on every node startup until state sync is
 		//           implemented.
 		// NOTE: `populateGenesisState` does not return an error but logs a fatal error if there's a problem
-		persistenceMod.populateGenesisState(moduleGenesis)
+		persistenceMod.populateGenesisState(persistenceGenesis)
 	} else {
 		log.Println("Loading state from previous state...")
 	}
