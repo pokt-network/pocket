@@ -109,8 +109,8 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 			err = network.processAddrBookUpdates()
 			require.NoError(b, err)
 
-			require.Equal(b, n, len(network.addrList), n)
-			require.Equal(b, n, len(network.addrBookMap), n)
+			require.Equal(b, n, len(network.addrList))
+			require.Equal(b, n, len(network.addrBookMap))
 			require.Equal(b, testCase.numExpectedLevels, int(network.maxNumLevels))
 
 			for i := 0; i < numAddressessToBeAdded; i++ {
