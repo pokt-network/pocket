@@ -2,24 +2,19 @@ package utility
 
 import (
 	"encoding/hex"
-
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 type UtilityContext struct {
-	LatestHeight    int64 // IMPROVE: Rename to `currentHeight?`
-	CurrentProposer []byte
-
-	Mempool typesUtil.Mempool
-	Context *Context // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
+	LatestHeight int64
+	Mempool      typesUtil.Mempool
+	Context      *Context // IMPROVE: Consider renmaming to PersistenceContext
 }
 
-type Context struct { // IMPROVE: Rename to `persistenceContext` or `storeContext`?
-	// TODO: Since `Context` embeds `PersistenceRWContext`, we don't need to do `u.Context.PersistenceRWContext`, but can call `u.Context` directly
+type Context struct {
 	modules.PersistenceRWContext
-	// TODO/DISCUSS: `SavePoints`` have not been implemented yet
 	SavePointsM map[string]struct{}
 	SavePoints  [][]byte
 }
@@ -44,16 +39,17 @@ func (u *UtilityContext) Store() *Context {
 	return u.Context
 }
 
-func (u *UtilityContext) CommitContext(quorumCert []byte) error {
-	err := u.Context.PersistenceRWContext.Commit(u.CurrentProposer, quorumCert)
-	u.Context = nil // DISCUSS: Should we release the context if there was an error here?
-	return err
+func (u *UtilityContext) GetPersistenceContext() modules.PersistenceRWContext {
+	return u.Context.PersistenceRWContext
 }
 
-func (u *UtilityContext) ReleaseContext() error {
-	err := u.Context.Release()
+func (u *UtilityContext) CommitPersistenceContext() error {
+	return u.Context.PersistenceRWContext.Commit()
+}
+
+func (u *UtilityContext) ReleaseContext() {
+	u.Context.Release()
 	u.Context = nil
-	return err
 }
 
 func (u *UtilityContext) GetLatestHeight() (int64, typesUtil.Error) {
