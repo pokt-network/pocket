@@ -54,6 +54,8 @@ func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) 
 	// is always the first in the list. This makes RainTree propagation easier to compute and interpret.
 	pm.addrList = append(pm.addrList[i:len(pm.addrList)], pm.addrList[0:i]...)
 
+	fmt.Printf("[DEBUG] pm.addrList post sort: %v\n", pm.addrList)
+
 	// sorting pm.addrBook as well, leveraging the sort order we just achieved
 	for i := 0; i < len(pm.addrList); i++ {
 		pm.addrBook[i] = pm.addrBookMap[pm.addrList[i]]
@@ -66,28 +68,33 @@ func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) 
 		for evt := range pm.eventCh {
 			pm.m.Lock()
 
+			peerAddress := evt.peer.Address.String()
+
 			switch evt.eventType {
 			case addToAddressBook:
 
-				peerAddress := evt.peer.Address.String()
-
 				pm.addrBookMap[peerAddress] = evt.peer
-				// insert into sorted addrList
-				i := sort.SearchStrings(pm.addrList, peerAddress)
-				pm.addrList = append(pm.addrList, peerAddress)
-				copy(pm.addrList[i+1:], pm.addrList[i:])
+				// insert into sorted addrList and addrBook
+				// searching from index 1 because index 0 is self by convention and the rest of the slice is sorted
+				i := sort.SearchStrings(pm.addrList[1:], peerAddress)
+				pm.addrList = insertElementAtIndex(pm.addrList, peerAddress, i)
+				pm.addrBook = insertElementAtIndex(pm.addrBook, evt.peer, i)
 
-				pm.addrBook = append(pm.addrBook, evt.peer)
-				copy(pm.addrBook[i+1:], pm.addrBook[i:])
-
-				// update maxNumLevels
-				addrBookSize := float64(len(pm.addrBook))
-				pm.maxNumLevels = uint32(math.Ceil(logBase(addrBookSize)))
+				updateMaxNumLevels(pm)
 
 				pm.wg.Done()
 			case removeFromAddressBook:
-				// TODO(deblasis): implement and test this
-				panic("unimplemented")
+				delete(pm.addrBookMap, peerAddress)
+
+				// remove from sorted addrList and addrBook
+				// searching from index 1 because index 0 is self by convention and the rest of the slice is sorted
+				i := sort.SearchStrings(pm.addrList[1:], peerAddress)
+				pm.addrList = removeElementAtIndex(pm.addrList, i)
+				pm.addrBook = removeElementAtIndex(pm.addrBook, i)
+
+				updateMaxNumLevels(pm)
+
+				pm.wg.Done()
 			}
 
 			pm.m.Unlock()
@@ -115,7 +122,7 @@ func (pm *peersManager) getSelfIndexInAddrBook() (int, bool) {
 	if pm.addrList[0] == pm.selfAddr.String() {
 		return 0, true
 	}
-	i := sort.SearchStrings(pm.addrList, pm.selfAddr.String())
+	i := sort.SearchStrings(pm.addrList[1:], pm.selfAddr.String())
 	if i == len(pm.addrList) {
 		return -1, false
 	}
@@ -153,4 +160,22 @@ type peersManagerStateView struct {
 	addrBookMap  typesP2P.AddrBookMap
 	addrList     []string
 	maxNumLevels uint32
+}
+
+func updateMaxNumLevels(pm *peersManager) {
+	addrBookSize := float64(len(pm.addrBook))
+	pm.maxNumLevels = uint32(math.Ceil(logBase(addrBookSize)))
+}
+
+func insertElementAtIndex[T any](slice []T, element T, index int) []T {
+	slice = append(slice, element)
+	copy(slice[index+1:], slice[index:])
+	slice[index] = element
+	return slice
+}
+
+func removeElementAtIndex[T any](slice []T, index int) []T {
+	ret := make([]T, 0)
+	ret = append(ret, slice[:index]...)
+	return append(ret, slice[index+1:]...)
 }
