@@ -302,11 +302,6 @@ test_sortition:
 test_persistence:
 	go test ${VERBOSE_TEST} -p=1 -count=1 ./persistence/...
 
-.PHONY: test_persistence_state_hash
-## Run all go unit tests in the Persistence module
-test_persistence_state_hash:
-	go test -run StateHash ${VERBOSE_TEST} -p=1 ./persistence/...
-
 .PHONY: test_p2p_types
 ## Run p2p subcomponents' tests
 test_p2p_types:
