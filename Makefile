@@ -99,9 +99,9 @@ install_cli_deps:
 .PHONY: develop_test
 ## Run all of the make commands necessary to develop on the project and verify the tests pass
 develop_test: docker_check
+		make go_clean_deps && \
 		make mockgen && \
 		make protogen_clean && make protogen_local && \
-		make go_clean_deps && \
 		make test_all
 
 
@@ -189,18 +189,13 @@ docker_loki_install: docker_check
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
 	$(eval modules_dir = "shared/modules")
-	mockgen --source=${modules_dir}/persistence_module.go -destination=${modules_dir}/mocks/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/p2p_module.go -destination=${modules_dir}/mocks/p2p_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/utility_module.go -destination=${modules_dir}/mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/consensus_module.go -destination=${modules_dir}/mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/bus_module.go -destination=${modules_dir}/mocks/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
-	mockgen --source=${modules_dir}/telemetry_module.go -destination=${modules_dir}/mocks/telemetry_module_mock.go -aux_files=github.com/pokt-network/pocket/${modules_dir}=${modules_dir}/module.go
+	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
 	$(eval p2p_types_dir = "p2p/types")
 	$(eval p2p_type_mocks_dir = "p2p/types/mocks")
 	rm -rf ${p2p_type_mocks_dir}
-	mockgen --source=${p2p_types_dir}/network.go -destination=${p2p_type_mocks_dir}/network_mock.go
+	go generate ./${p2p_types_dir}
 	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
 
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
@@ -220,6 +215,7 @@ protogen_clean:
 protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = ".")
 	protoc --go_opt=paths=source_relative  -I=./shared/debug/proto        --go_out=./shared/debug       ./shared/debug/proto/*.proto        --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/indexer/proto      --go_out=./shared/indexer/    ./shared/indexer/proto/*.proto      --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  ./persistence/proto/*.proto         --experimental_allow_proto3_optional
 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
 	protoc --go_opt=paths=source_relative  -I=./utility/types/proto       --go_out=./utility/types      ./utility/types/proto/*.proto       --experimental_allow_proto3_optional
@@ -370,3 +366,19 @@ todo_count:
 ## List all the TODOs needed to be done in this commit
 todo_this_commit:
 	grep --exclude-dir={.git,vendor,prototype,.vscode} --exclude=Makefile -r -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT"
+
+# Default values for gen_genesis_and_config
+numValidators ?= 4
+numServiceNodes ?= 1
+numApplications ?= 1
+numFishermen ?= 1
+
+.PHONY: gen_genesis_and_config
+## Generate the genesis and config files for LocalNet
+gen_genesis_and_config:
+	go run ./build/config/main.go --genPrefix="gen." --numValidators=${numValidators} --numServiceNodes=${numServiceNodes} --numApplications=${numApplications} --numFishermen=${numFishermen}
+
+.PHONY: gen_genesis_and_config
+## Clear the genesis and config files for LocalNet
+clear_genesis_and_config:
+	rm build/config/gen.*.json
