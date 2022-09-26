@@ -11,24 +11,24 @@ import (
 
 // OPTIMIZE(team): get from blockstore or keep in memory
 func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return 0, err
 	}
 
-	err = txn.QueryRow(ctx, types.GetLatestBlockHeightQuery()).Scan(&latestHeight)
+	err = tx.QueryRow(ctx, types.GetLatestBlockHeightQuery()).Scan(&latestHeight)
 	return
 }
 
 // OPTIMIZE(team): get from blockstore or keep in cache/memory
 func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return nil, err
 	}
 
 	var hexHash string
-	err = txn.QueryRow(ctx, types.GetBlockHashQuery(height)).Scan(&hexHash)
+	err = tx.QueryRow(ctx, types.GetBlockHashQuery(height)).Scan(&hexHash)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
 }
 
 func (p PostgresContext) insertBlock(block *types.Block) error {
-	ctx, tx, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (p PostgresContext) storeBlock(block *types.Block) error {
 		return err
 	}
 
-	return p.DB.Blockstore.Put(heightToBytes(p.Height), blockBz)
+	return p.blockstore.Put(heightToBytes(p.Height), blockBz)
 }
 
 func (p PostgresContext) getBlock(proposerAddr []byte, quorumCert []byte) (*types.Block, error) {

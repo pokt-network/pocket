@@ -58,15 +58,15 @@ func NewMemKVStore() KVStore {
 }
 
 func (store badgerKVStore) Put(key, value []byte) error {
-	txn := store.db.NewTransaction(true)
-	defer txn.Discard()
+	tx := store.db.NewTransaction(true)
+	defer tx.Discard()
 
-	err := txn.Set(key, value)
+	err := tx.Set(key, value)
 	if err != nil {
 		return err
 	}
 
-	return txn.Commit()
+	return tx.Commit()
 }
 
 // CONSOLIDATE: We might be able to remove the `KVStore` interface altogether if we end up using `smt.MapStore`
@@ -76,10 +76,10 @@ func (store *badgerKVStore) Set(key, value []byte) error {
 }
 
 func (store badgerKVStore) Get(key []byte) ([]byte, error) {
-	txn := store.db.NewTransaction(false)
-	defer txn.Discard()
+	tx := store.db.NewTransaction(false)
+	defer tx.Discard()
 
-	item, err := txn.Get(key)
+	item, err := tx.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (store badgerKVStore) Get(key []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	if err := txn.Commit(); err != nil {
+	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 

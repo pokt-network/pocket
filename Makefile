@@ -99,9 +99,9 @@ install_cli_deps:
 .PHONY: develop_test
 ## Run all of the make commands necessary to develop on the project and verify the tests pass
 develop_test: docker_check
+		make go_clean_deps && \
 		make mockgen && \
 		make protogen_clean && make protogen_local && \
-		make go_clean_deps && \
 		make test_all
 
 
@@ -189,6 +189,7 @@ docker_loki_install: docker_check
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
 	$(eval modules_dir = "shared/modules")
+	rm -rf ${modules_dir}/mocks
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
