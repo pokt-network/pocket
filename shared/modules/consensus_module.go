@@ -11,6 +11,9 @@ type ValidatorMap map[string]Actor // TODO (Drewsky) deprecate Validator map or 
 
 type ConsensusModule interface {
 	Module
+	ConfigurableModule
+	GenesisDependentModule
+	KeyholderModule
 
 	// Consensus Engine
 	HandleMessage(*anypb.Any) error

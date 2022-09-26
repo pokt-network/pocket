@@ -35,6 +35,7 @@ var (
 	_ modules.Module             = &paceMaker{}
 	_ modules.ConfigurableModule = &paceMaker{}
 	_ PacemakerDebug             = &paceMaker{}
+	_ modules.PacemakerConfig    = &typesCons.PacemakerConfig{}
 )
 
 type paceMaker struct {

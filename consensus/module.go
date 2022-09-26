@@ -20,15 +20,10 @@ const (
 )
 
 var (
+	_ modules.ConsensusModule = &ConsensusModule{}
+
+	_ modules.ConsensusConfig       = &typesCons.ConsensusConfig{}
 	_ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
-
-	_ modules.PacemakerConfig = &typesCons.PacemakerConfig{}
-	_ modules.ConsensusConfig = &typesCons.ConsensusConfig{}
-
-	_ modules.ConsensusModule        = &ConsensusModule{}
-	_ modules.ConfigurableModule     = &ConsensusModule{}
-	_ modules.GenesisDependentModule = &ConsensusModule{}
-	_ modules.KeyholderModule        = &ConsensusModule{}
 )
 
 // TODO(olshansky): Any reason to make all of these attributes local only (i.e. not exposed outside the struct)?
