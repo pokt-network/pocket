@@ -149,7 +149,7 @@ func (m *PersistenceModule) populateGenesisState(state *types.PersistenceGenesis
 		log.Fatalf("an error occurred initializing flags: %s", err.Error())
 	}
 
-	if err = rwContext.Commit(nil, nil); err != nil {
+	if err = rwContext.Commit(); err != nil {
 		log.Fatalf("an error occurred during commit() on genesis state %s ", err.Error())
 	}
 }
@@ -316,7 +316,7 @@ func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err e
 	return
 }
 
-// CONSOLIDATE: Consolidate `types.BaseActor` with `types.Actor`
+// TODO (Team) deprecate with interface #163 <Bumped to #149> as #163 is getting large
 func (p PostgresContext) BaseActorToActor(ba types.BaseActor, actorType types.ActorType) *types.Actor {
 	actor := new(types.Actor)
 	actor.ActorType = actorType
