@@ -11,7 +11,7 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
 
 	// Commit the utility context
-	if err := m.UtilityContext.CommitContext(block.BlockHeader.QuorumCertificate); err != nil {
+	if err := m.UtilityContext.CommitPersistenceContext(); err != nil {
 		return err
 	}
 	// Release the utility context
@@ -56,10 +56,7 @@ func (m *ConsensusModule) refreshUtilityContext() error {
 	// Ideally, this should not be called.
 	if m.UtilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
-		if err := m.UtilityContext.ReleaseContext(); err != nil {
-			// Logging an error but allowing the consensus lifecycle to continue
-			m.nodeLogError("cannot release existing utility context", err)
-		}
+		m.UtilityContext.ReleaseContext()
 		m.UtilityContext = nil
 	}
 

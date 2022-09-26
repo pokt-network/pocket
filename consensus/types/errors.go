@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pokt-network/pocket/shared/codec"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -235,7 +236,7 @@ func ErrLeaderElection(msg *HotstuffMessage) error {
 }
 
 func protoHash(m proto.Message) string {
-	b, err := proto.Marshal(m)
+	b, err := codec.GetCodec().Marshal(m)
 	if err != nil {
 		log.Fatalf("Could not marshal proto message: %v", err)
 	}

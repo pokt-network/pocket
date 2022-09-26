@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"log"
 
+	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/debug"
 
 	"google.golang.org/protobuf/proto"
@@ -124,7 +125,7 @@ func (m *ConsensusModule) isOptimisticThresholdMet(n int) error {
 }
 
 func protoHash(m proto.Message) string {
-	b, err := proto.Marshal(m)
+	b, err := codec.GetCodec().Marshal(m)
 	if err != nil {
 		log.Fatalf("Could not marshal proto message: %v", err)
 	}
@@ -146,7 +147,6 @@ func (m *ConsensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
 		return
 	}
-
 	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.IdToValAddrMap[*m.LeaderId]), anyConsensusMessage, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return
@@ -160,7 +160,6 @@ func (m *ConsensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
 		return
 	}
-
 	if err := m.GetBus().GetP2PModule().Broadcast(anyConsensusMessage, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
 		return
@@ -169,6 +168,7 @@ func (m *ConsensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 
 /*** Persistence Helpers ***/
 
+// TECHDEBT: Integrate this with the `persistence` module or a real mempool.
 func (m *ConsensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
 		m.MessagePool[step] = make([]*typesCons.HotstuffMessage, 0)

@@ -4,8 +4,8 @@ import (
 	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"google.golang.org/protobuf/proto"
 )
 
 func CreateProposeMessage(
@@ -96,5 +96,5 @@ func getSignableBytes(msg *typesCons.HotstuffMessage) ([]byte, error) {
 		Round:  msg.GetRound(),
 		Block:  msg.GetBlock(),
 	}
-	return proto.Marshal(msgToSign)
+	return codec.GetCodec().Marshal(msgToSign)
 }
