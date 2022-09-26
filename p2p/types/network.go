@@ -1,13 +1,15 @@
 package types
 
+//go:generate mockgen -source=$GOFILE -destination=./mocks/network_mock.go github.com/pokt-network/pocket/p2p/types Network
+
 import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // CLEANUP(olshansky): See if we can deprecate one of these structures.
-type AddrBook []*NetworkPeer
-type AddrList []string
+// type AddrBook []*NetworkPeer
+// type AddrList []string
 type AddrBookMap map[string]*NetworkPeer
 
 // TECHDEBT(olshansky): When we delete `stdnetwork` and only go with `raintree`, this interface
@@ -27,33 +29,4 @@ type Network interface {
 	// Handles the raw data received from the network and returns the data to be processed
 	// by the application layer.
 	HandleNetworkData(data []byte) ([]byte, error)
-}
-
-type NetworkPeer struct {
-	Dialer     Transport
-	PublicKey  cryptoPocket.PublicKey
-	Address    cryptoPocket.Address
-	ServiceUrl string // This is only included because it's a more human-friendly differentiator between peers
-}
-
-type Transport interface {
-	IsListener() bool
-	Read() ([]byte, error)
-	Write([]byte) error
-	Close() error
-}
-
-// TODO (Team) break off these types into diff files
-
-func (ab *AddrList) Find(address string) (index int, found bool) {
-	if ab == nil {
-		return 0, false
-	}
-	addressBook := *ab
-	for i, a := range addressBook {
-		if a == address {
-			return i, true
-		}
-	}
-	return 0, false
 }

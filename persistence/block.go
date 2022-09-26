@@ -3,30 +3,31 @@ package persistence
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"github.com/pokt-network/pocket/persistence/types"
 	"log"
+
+	"github.com/pokt-network/pocket/persistence/types"
 )
 
 // OPTIMIZE(team): get from blockstore or keep in memory
 func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return 0, err
 	}
 
-	err = txn.QueryRow(ctx, types.GetLatestBlockHeightQuery()).Scan(&latestHeight)
+	err = tx.QueryRow(ctx, types.GetLatestBlockHeightQuery()).Scan(&latestHeight)
 	return
 }
 
 // OPTIMIZE(team): get from blockstore or keep in cache/memory
 func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return nil, err
 	}
 
 	var hexHash string
-	err = txn.QueryRow(ctx, types.GetBlockHashQuery(height)).Scan(&hexHash)
+	err = tx.QueryRow(ctx, types.GetBlockHashQuery(height)).Scan(&hexHash)
 	if err != nil {
 		return nil, err
 	}
@@ -52,11 +53,11 @@ func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
 	// INVESTIGATE: Note that we are writing this directly to the blockStore. Depending on how
 	// the use of the PostgresContext evolves, we may need to write this to `ContextStore` and copy
 	// over to `BlockStore` when the block is committed.
-	return p.DB.Blockstore.Put(heightToBytes(p.Height), blockProtoBytes)
+	return p.blockstore.Put(heightToBytes(p.Height), blockProtoBytes)
 }
 
 func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {
-	ctx, tx, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
 	}
