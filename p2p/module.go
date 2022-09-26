@@ -55,12 +55,7 @@ func (*p2pModule) Create(runtime modules.Runtime) (m modules.Module, err error) 
 	if err != nil {
 		return nil, err
 	}
-	var privateKey cryptoPocket.PrivateKey
-	if runtime.ShouldUseRandomPK() {
-		privateKey, err = cryptoPocket.GeneratePrivateKey()
-	} else {
-		privateKey, err = cryptoPocket.NewPrivateKey(p2pCfg.PrivateKey)
-	}
+	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.PrivateKey)
 	if err != nil {
 		return nil, err
 	}

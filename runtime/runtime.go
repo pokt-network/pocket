@@ -8,6 +8,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/pokt-network/pocket/consensus/types"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/spf13/viper"
 )
@@ -20,8 +21,6 @@ type runtimeConfig struct {
 
 	config  *Config
 	genesis *Genesis
-
-	useRandomPK bool
 }
 
 func New(configPath, genesisPath string, options ...func(*runtimeConfig)) *runtimeConfig {
@@ -90,12 +89,13 @@ func (b *runtimeConfig) GetGenesis() modules.GenesisState {
 	return b.genesis.ToShared()
 }
 
-func (b *runtimeConfig) ShouldUseRandomPK() bool {
-	return b.useRandomPK
-}
-
 func WithRandomPK() func(*runtimeConfig) {
-	return func(b *runtimeConfig) { b.useRandomPK = true }
+	privateKey, err := cryptoPocket.GeneratePrivateKey()
+	if err != nil {
+		log.Fatalf("unable to generate private key")
+	}
+
+	return WithPK(privateKey.String())
 }
 
 func WithPK(pk string) func(*runtimeConfig) {
@@ -104,5 +104,6 @@ func WithPK(pk string) func(*runtimeConfig) {
 			b.config.Consensus = &types.ConsensusConfig{}
 		}
 		b.config.Consensus.PrivateKey = pk
+		b.config.P2P.PrivateKey = pk
 	}
 }

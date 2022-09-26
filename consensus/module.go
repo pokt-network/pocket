@@ -208,9 +208,6 @@ func (*ConsensusModule) ValidateGenesis(genesis modules.GenesisState) error {
 }
 
 func (*ConsensusModule) GetPrivateKey(runtime modules.Runtime) (cryptoPocket.PrivateKey, error) {
-	if runtime.ShouldUseRandomPK() {
-		return cryptoPocket.GeneratePrivateKey()
-	}
 	return cryptoPocket.NewPrivateKey(runtime.GetConfig().Consensus.(*typesCons.ConsensusConfig).PrivateKey)
 }
 
