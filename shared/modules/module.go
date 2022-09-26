@@ -1,6 +1,9 @@
 package modules
 
-import "github.com/pokt-network/pocket/shared/crypto"
+import (
+	"github.com/pokt-network/pocket/shared/crypto"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+)
 
 // TODO(olshansky): Show an example of `TypicalUsage`
 // TODO(drewsky): Add `Create` function; pocket/issues/163
@@ -36,4 +39,8 @@ type GenesisDependentModule interface {
 
 type KeyholderModule interface {
 	GetPrivateKey(Runtime) (crypto.PrivateKey, error)
+}
+
+type P2PAddressableModule interface {
+	GetP2PAddress() cryptoPocket.Address
 }

@@ -17,15 +17,19 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-var _ modules.Module = &Node{}
+var _ modules.NodeModule = &Node{}
 
 const (
 	MainModuleName = "main"
 )
 
 type Node struct {
-	bus     modules.Bus
-	Address cryptoPocket.Address
+	bus        modules.Bus
+	p2pAddress cryptoPocket.Address
+}
+
+func NewWithAddress(address cryptoPocket.Address) *Node {
+	return &Node{p2pAddress: address}
 }
 
 func Create(configPath, genesisPath string) (modules.Module, error) {
@@ -78,8 +82,8 @@ func (m *Node) Create(runtime modules.Runtime) (modules.Module, error) {
 		return nil, err
 	}
 	return &Node{
-		bus:     bus,
-		Address: addr,
+		bus:        bus,
+		p2pAddress: addr,
 	}, nil
 }
 
@@ -179,4 +183,8 @@ func (node *Node) handleDebugEvent(anyMessage *anypb.Any) error {
 
 func (node *Node) GetModuleName() string {
 	return MainModuleName
+}
+
+func (node *Node) GetP2PAddress() cryptoPocket.Address {
+	return node.p2pAddress
 }

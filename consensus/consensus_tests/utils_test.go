@@ -59,7 +59,7 @@ func init() {
 	}
 }
 
-type IdToNodeMapping map[typesCons.NodeId]*shared.Node
+type IdToNodeMapping map[typesCons.NodeId]modules.NodeModule
 
 /*** Node Generation Helpers ***/
 
@@ -139,9 +139,8 @@ func CreateTestConsensusPocketNode(
 	pk, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
 	require.NoError(t, err)
 
-	pocketNode := &shared.Node{
-		Address: pk.Address(),
-	}
+	pocketNode := shared.NewWithAddress(pk.Address())
+
 	pocketNode.SetBus(bus)
 
 	return pocketNode
@@ -182,21 +181,21 @@ func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
 // TODO(discuss): Should we use reflections inside the testing module as being done here or explicitly
 // define the interfaces used for debug/development. The latter will probably scale more but will
 // require more effort and pollute the source code with debugging information.
-func GetConsensusNodeState(node *shared.Node) typesCons.ConsensusNodeState {
+func GetConsensusNodeState(node modules.NodeModule) typesCons.ConsensusNodeState {
 	return reflect.ValueOf(node.GetBus().GetConsensusModule()).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(typesCons.ConsensusNodeState)
 }
 
-func GetConsensusModImplementation(node *shared.Node) reflect.Value {
+func GetConsensusModImplementation(node modules.NodeModule) reflect.Value {
 	return reflect.ValueOf(node.GetBus().GetConsensusModule()).Elem()
 }
 
 /*** Debug/Development Message Helpers ***/
 
-func TriggerNextView(t *testing.T, node *shared.Node) {
+func TriggerNextView(t *testing.T, node modules.NodeModule) {
 	triggerDebugMessage(t, node, debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW)
 }
 
-func triggerDebugMessage(t *testing.T, node *shared.Node, action debug.DebugMessageAction) {
+func triggerDebugMessage(t *testing.T, node modules.NodeModule, action debug.DebugMessageAction) {
 	debugMessage := &debug.DebugMessage{
 		Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
 		Message: nil,
@@ -217,7 +216,7 @@ func P2PBroadcast(_ *testing.T, nodes IdToNodeMapping, any *anypb.Any) {
 	}
 }
 
-func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
+func P2PSend(_ *testing.T, node modules.NodeModule, any *anypb.Any) {
 	e := &debug.PocketEvent{Topic: debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC, Data: any}
 	node.GetBus().PublishEventToBus(e)
 }
