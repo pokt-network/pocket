@@ -9,6 +9,8 @@ import (
 
 type PersistenceModule interface {
 	Module
+
+	// Persistence Context Factory Methods
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
 
@@ -46,7 +48,6 @@ type PersistenceRWContext interface {
 // but it abstracts and contrasts nicely against the read only context
 // TODO (andrew) convert address and public key to string not bytes #149
 type PersistenceWriteContext interface {
-
 	// Context Operations
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
@@ -58,7 +59,7 @@ type PersistenceWriteContext interface {
 	// Block / indexer operations
 	UpdateAppHash() ([]byte, error)
 	// Commits the current context (height, hash, transactions, etc...) to finality.
-	Commit(quorumCert []byte) error
+	Commit(proposerAddr []byte, quorumCert []byte) error
 	// Indexes the transaction
 	StoreTransaction(transactionProtoBytes []byte) error // Stores a transaction
 

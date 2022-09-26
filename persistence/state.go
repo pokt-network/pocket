@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"sort"
 
@@ -75,7 +76,24 @@ func (p *PostgresContext) updateStateHash() error {
 					return err
 				}
 			}
-		// TODO_IN_THIS_COMMIT: add support for all the other actors as well
+		case valMerkleTree:
+			fmt.Println("TODO: valMerkleTree not implemented")
+		case fishMerkleTree:
+			fmt.Println("TODO: fishMerkleTree not implemented")
+		case serviceNodeMerkleTree:
+			fmt.Println("TODO: serviceNodeMerkleTree not implemented")
+		case accountMerkleTree:
+			fmt.Println("TODO: accountMerkleTree not implemented")
+		case poolMerkleTree:
+			fmt.Println("TODO: poolMerkleTree not implemented")
+		case blocksMerkleTree:
+			// VERY VERY IMPORTANT DISCUSSION: What do we do here provided that `Commit`, which stores the block in the DB and tree
+			//                                 requires the quorumCert, which we receive at the very end of hotstuff consensus
+			fmt.Println("TODO: blocksMerkleTree not implemented")
+		case paramsMerkleTree:
+			fmt.Println("TODO: paramsMerkleTree not implemented")
+		case flagsMerkleTree:
+			fmt.Println("TODO: flagsMerkleTree not implemented")
 		default:
 			log.Fatalln("Not handled yet in state commitment update", treeType)
 		}

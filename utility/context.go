@@ -9,16 +9,17 @@ import (
 )
 
 type UtilityContext struct {
-	LatestHeight    int64 // IMPROVE: Current height?
+	LatestHeight    int64 // IMPROVE: Rename to `currentHeight?`
 	CurrentProposer []byte
 
 	Mempool typesUtil.Mempool
-	Context *Context // IMPROVE: Consider renaming to `PersistenceContext` or `StoreContext`
+	Context *Context // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
 }
 
-type Context struct {
+type Context struct { // IMPROVE: Rename to `persistenceContext` or `storeContext`?
+	// TODO: Since `Context` embeds `PersistenceRWContext`, we don't need to do `u.Context.PersistenceRWContext`, but can call `u.Context` directly
 	modules.PersistenceRWContext
-	// TODO: SavePoints have not been implemented yet
+	// TODO/DISCUSS: `SavePoints`` have not been implemented yet
 	SavePointsM map[string]struct{}
 	SavePoints  [][]byte
 }
@@ -44,8 +45,8 @@ func (u *UtilityContext) Store() *Context {
 }
 
 func (u *UtilityContext) CommitContext(quorumCert []byte) error {
-	err := u.Context.PersistenceRWContext.Commit(quorumCert)
-	u.Context = nil
+	err := u.Context.PersistenceRWContext.Commit(u.CurrentProposer, quorumCert)
+	u.Context = nil // DISCUSS: Should we release the context if there was an error here?
 	return err
 }
 

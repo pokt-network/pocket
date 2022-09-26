@@ -26,8 +26,21 @@ func (p PostgresContext) Reset() error {
 	panic("TODO: PostgresContext Reset not implemented")
 }
 
-func (p PostgresContext) Commit(quorumCert []byte) error {
+func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
+
+	block, err := p.getBlock(proposerAddr, quorumCert)
+	if err != nil {
+		return err
+	}
+
+	if err := p.insertBlock(block); err != nil {
+		return err
+	}
+
+	if err := p.storeBlock(block); err != nil {
+		return err
+	}
 
 	ctx := context.TODO()
 	if err := p.DB.Tx.Commit(ctx); err != nil {

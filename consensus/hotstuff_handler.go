@@ -17,7 +17,8 @@ func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	m.nodeLog(typesCons.DebugHandlingHotstuffMessage(msg))
 
 	step := msg.GetStep()
-	// Liveness & safety checks
+
+	// Pacemaker - Liveness & safety checks
 	if err := m.paceMaker.ValidateMessage(msg); err != nil {
 		// If a replica is not a leader for this round, but has already determined a leader,
 		// and continues to receive NewRound messages, we avoid logging the "message discard"
@@ -28,13 +29,14 @@ func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 		return err
 	}
 
-	// Need to execute leader election if there is no leader and we are in a new round.
+	// Leader Election - Need to execute leader election if there is no leader and we are in a new round.
 	if m.Step == NewRound && m.LeaderId == nil {
 		if err := m.electNextLeader(msg); err != nil {
 			return err
 		}
 	}
 
+	// Hotstuff - Handle message
 	if m.isReplica() {
 		replicaHandlers[step](m, msg)
 	}

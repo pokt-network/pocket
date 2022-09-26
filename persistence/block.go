@@ -50,14 +50,44 @@ func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
 	return nil
 }
 
-func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {
+func (p PostgresContext) insertBlock(block *types.Block) error {
 	ctx, tx, err := p.DB.GetCtxAndTxn()
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(ctx, types.InsertBlockQuery(height, hash, proposerAddr, quorumCert))
+	_, err = tx.Exec(ctx, types.InsertBlockQuery(block.Height, block.Hash, block.ProposerAddress, block.QuorumCertificate))
 	return err
+}
+
+func (p PostgresContext) storeBlock(block *types.Block) error {
+	blockBz, err := proto.Marshal(block)
+	if err != nil {
+		return err
+	}
+
+	return p.DB.Blockstore.Put(heightToBytes(p.Height), blockBz)
+}
+
+func (p PostgresContext) getBlock(proposerAddr []byte, quorumCert []byte) (*types.Block, error) {
+	prevHash, err := p.GetBlockHash(p.Height - 1)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: get this from the transactions that were store via `StoreTransaction`
+	txs := make([][]byte, 0)
+
+	block := &types.Block{
+		Height:            uint64(p.Height),
+		Hash:              string(p.stateHash),
+		PrevHash:          string(prevHash),
+		ProposerAddress:   proposerAddr,
+		QuorumCertificate: quorumCert,
+		Transactions:      txs,
+	}
+
+	return block, nil
 }
 
 // CLEANUP: Should this be moved to a shared directory?
@@ -65,28 +95,4 @@ func heightToBytes(height int64) []byte {
 	heightBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(heightBytes, uint64(height))
 	return heightBytes
-}
-
-func (p PostgresContext) storeBlock(quorumCert []byte) error {
-	prevHash, err := p.GetBlockHash(p.Height - 1)
-	if err != nil {
-		return err
-	}
-
-	block := types.Block{
-		Height:            uint64(p.Height),
-		Hash:              string(p.stateHash),
-		PrevHash:          string(prevHash),
-		ProposerAddress:   []byte("proposer"), // TODO: How should utility context forward this?
-		QuorumCertificate: quorumCert,
-		Transactions:      nil, // TODO: get this from what was stored via `StoreTransaction`
-
-	}
-
-	blockBz, err := proto.Marshal(&block)
-	if err != nil {
-		return err
-	}
-
-	return p.DB.Blockstore.Put(heightToBytes(p.Height), blockBz)
 }
