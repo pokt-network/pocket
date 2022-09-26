@@ -12,9 +12,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-var _ modules.Runtime = &RuntimeConfig{}
+var _ modules.Runtime = &runtimeConfig{}
 
-type RuntimeConfig struct {
+type runtimeConfig struct {
 	configPath  string
 	genesisPath string
 
@@ -24,8 +24,8 @@ type RuntimeConfig struct {
 	useRandomPK bool
 }
 
-func New(configPath, genesisPath string, options ...func(*RuntimeConfig)) *RuntimeConfig {
-	rc := &RuntimeConfig{
+func New(configPath, genesisPath string, options ...func(*runtimeConfig)) *runtimeConfig {
+	rc := &runtimeConfig{
 		configPath:  configPath,
 		genesisPath: genesisPath,
 	}
@@ -44,7 +44,7 @@ func New(configPath, genesisPath string, options ...func(*RuntimeConfig)) *Runti
 	return rc
 }
 
-func (rc *RuntimeConfig) init() (config *Config, genesis *Genesis, err error) {
+func (rc *runtimeConfig) init() (config *Config, genesis *Genesis, err error) {
 	dir, file := path.Split(rc.configPath)
 	filename := strings.TrimSuffix(file, filepath.Ext(file))
 
@@ -82,24 +82,24 @@ func (rc *RuntimeConfig) init() (config *Config, genesis *Genesis, err error) {
 	return
 }
 
-func (b *RuntimeConfig) GetConfig() modules.Config {
+func (b *runtimeConfig) GetConfig() modules.Config {
 	return b.config.ToShared()
 }
 
-func (b *RuntimeConfig) GetGenesis() modules.GenesisState {
+func (b *runtimeConfig) GetGenesis() modules.GenesisState {
 	return b.genesis.ToShared()
 }
 
-func (b *RuntimeConfig) ShouldUseRandomPK() bool {
+func (b *runtimeConfig) ShouldUseRandomPK() bool {
 	return b.useRandomPK
 }
 
-func WithRandomPK() func(*RuntimeConfig) {
-	return func(b *RuntimeConfig) { b.useRandomPK = true }
+func WithRandomPK() func(*runtimeConfig) {
+	return func(b *runtimeConfig) { b.useRandomPK = true }
 }
 
-func WithPK(pk string) func(*RuntimeConfig) {
-	return func(b *RuntimeConfig) {
+func WithPK(pk string) func(*runtimeConfig) {
+	return func(b *runtimeConfig) {
 		if b.config.Consensus == nil {
 			b.config.Consensus = &types.ConsensusConfig{}
 		}
