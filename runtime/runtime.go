@@ -89,6 +89,8 @@ func (b *runtimeConfig) GetGenesis() modules.GenesisState {
 	return b.genesis.ToShared()
 }
 
+// RuntimeConfig option helpers
+
 func WithRandomPK() func(*runtimeConfig) {
 	privateKey, err := cryptoPocket.GeneratePrivateKey()
 	if err != nil {
