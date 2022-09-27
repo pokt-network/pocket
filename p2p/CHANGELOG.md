@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored AddPeerToAddrBook to use an event-driven approach in order to leverage sorted data structures
 - Added RemovePeerToAddrBook making use of the same pattern
 - Improved performance of AddPeerToAddrBook and RemovePeerToAddrBook by making the implementations O(n)
+- Updated stdnetwork to use a map instead of a slice
 
 ## [0.0.0.2] - 2022-08-25
 
