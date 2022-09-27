@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/modules"
@@ -57,6 +58,13 @@ func (m *NoopTelemetryModule) GetBus() modules.Bus {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
+}
+
+func (*NoopTelemetryModule) ValidateConfig(cfg modules.Config) error {
+	if _, ok := cfg.Telemetry.(*TelemetryConfig); !ok {
+		return fmt.Errorf("cannot cast to TelemetryConfig")
+	}
+	return nil
 }
 
 func (m *NoopTelemetryModule) GetEventMetricsAgent() modules.EventMetricsAgent {

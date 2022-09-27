@@ -1,6 +1,7 @@
 package utility
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/utility/types"
@@ -27,6 +28,13 @@ func Create(runtime modules.Runtime) (modules.Module, error) {
 }
 
 func (*UtilityModule) Create(runtime modules.Runtime) (modules.Module, error) {
+	var m *UtilityModule
+
+	cfg := runtime.GetConfig()
+	if err := m.ValidateConfig(cfg); err != nil {
+		log.Fatalf("config validation failed: %v", err)
+	}
+
 	return &UtilityModule{
 		// TODO: Add `maxTransactionBytes` and `maxTransactions` to cfg.Utility
 		Mempool: types.NewMempool(1000, 1000),
@@ -54,4 +62,11 @@ func (u *UtilityModule) GetBus() modules.Bus {
 		log.Fatalf("Bus is not initialized")
 	}
 	return u.bus
+}
+
+func (*UtilityModule) ValidateConfig(cfg modules.Config) error {
+	if _, ok := cfg.Utility.(*types.UtilityConfig); !ok {
+		return fmt.Errorf("cannot cast to UtilityConfig")
+	}
+	return nil
 }

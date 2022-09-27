@@ -12,11 +12,14 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var _ modules.PersistenceModule = &PersistenceModule{}
-var _ modules.PersistenceRWContext = &PostgresContext{}
-var _ modules.PersistenceGenesisState = &types.PersistenceGenesisState{}
-var _ modules.PersistenceConfig = &types.PersistenceConfig{}
-var _ modules.PersistenceModule = &PersistenceModule{}
+var (
+	_ modules.PersistenceModule = &PersistenceModule{}
+	_ modules.PersistenceModule = &PersistenceModule{}
+
+	_ modules.PersistenceRWContext    = &PostgresContext{}
+	_ modules.PersistenceGenesisState = &types.PersistenceGenesisState{}
+	_ modules.PersistenceConfig       = &types.PersistenceConfig{}
+)
 
 type PersistenceModule struct {
 	bus modules.Bus
@@ -40,10 +43,19 @@ func Create(runtime modules.Runtime) (modules.Module, error) {
 }
 
 func (*PersistenceModule) Create(runtime modules.Runtime) (modules.Module, error) {
-	cfg := runtime.GetConfig()
-	genesis := runtime.GetGenesis()
+	var m *PersistenceModule
 
+	cfg := runtime.GetConfig()
+
+	if err := m.ValidateConfig(cfg); err != nil {
+		log.Fatalf("config validation failed: %v", err)
+	}
 	persistenceCfg := cfg.Persistence.(*types.PersistenceConfig)
+
+	genesis := runtime.GetGenesis()
+	if err := m.ValidateGenesis(genesis); err != nil {
+		log.Fatalf("genesis validation failed: %v", err)
+	}
 	persistenceGenesis := genesis.PersistenceGenesisState.(*types.PersistenceGenesisState)
 
 	conn, err := connectToDatabase(persistenceCfg.GetPostgresUrl(), persistenceCfg.GetNodeSchema())
@@ -60,7 +72,7 @@ func (*PersistenceModule) Create(runtime modules.Runtime) (modules.Module, error
 		return nil, err
 	}
 
-	persistenceMod := &PersistenceModule{
+	m = &PersistenceModule{
 		bus:          nil,
 		postgresURL:  persistenceCfg.GetPostgresUrl(),
 		nodeSchema:   persistenceCfg.GetNodeSchema(),
@@ -69,19 +81,19 @@ func (*PersistenceModule) Create(runtime modules.Runtime) (modules.Module, error
 	}
 
 	// Determine if we should hydrate the genesis db or use the current state of the DB attached
-	if shouldHydrateGenesis, err := persistenceMod.shouldHydrateGenesisDb(); err != nil {
+	if shouldHydrateGenesis, err := m.shouldHydrateGenesisDb(); err != nil {
 		return nil, err
 	} else if shouldHydrateGenesis {
 		// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
 		// 		     this forces the genesis state to be reloaded on every node startup until state sync is
 		//           implemented.
 		// NOTE: `populateGenesisState` does not return an error but logs a fatal error if there's a problem
-		persistenceMod.populateGenesisState(persistenceGenesis)
+		m.populateGenesisState(persistenceGenesis)
 	} else {
 		log.Println("Loading state from previous state...")
 	}
 
-	return persistenceMod, nil
+	return m, nil
 }
 
 func (m *PersistenceModule) Start() error {
@@ -107,6 +119,20 @@ func (m *PersistenceModule) GetBus() modules.Bus {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
+}
+
+func (*PersistenceModule) ValidateConfig(cfg modules.Config) error {
+	if _, ok := cfg.Persistence.(*types.PersistenceConfig); !ok {
+		return fmt.Errorf("cannot cast to PersistenceConfig")
+	}
+	return nil
+}
+
+func (*PersistenceModule) ValidateGenesis(genesis modules.GenesisState) error {
+	if _, ok := genesis.PersistenceGenesisState.(*types.PersistenceGenesisState); !ok {
+		return fmt.Errorf("cannot cast to PersistenceGenesisState")
+	}
+	return nil
 }
 
 func (m *PersistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {

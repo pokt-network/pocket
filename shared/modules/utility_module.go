@@ -4,6 +4,7 @@ package modules
 
 type UtilityModule interface {
 	Module
+	ConfigurableModule
 
 	NewContext(height int64) (UtilityContext, error)
 }
