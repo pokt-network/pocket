@@ -1,5 +1,6 @@
 package types
 
+// IMPROVE: Move schema related functions to a separate sub-package
 import "github.com/pokt-network/pocket/shared/modules"
 
 // TECHDEBT: Consider moving this to a protobuf. This struct was created to make testing simple of protocol actors that
@@ -58,6 +59,10 @@ func (actor *BaseProtocolActorSchema) GetTableSchema() string {
 
 func (actor *BaseProtocolActorSchema) GetChainsTableSchema() string {
 	return ProtocolActorChainsTableSchema(actor.chainsHeightConstraintName)
+}
+
+func (actor *BaseProtocolActorSchema) GetUpdatedAtHeightQuery(height int64) string {
+	return SelectAtHeight(AddressCol, height, actor.tableName)
 }
 
 func (actor *BaseProtocolActorSchema) GetQuery(address string, height int64) string {
@@ -150,5 +155,5 @@ func (x *Actor) GetActorTyp() modules.ActorType {
 	if x != nil {
 		return x.GetActorType()
 	}
-	return ActorType_App
+	return ActorType_App // HACK: Is this a hack?
 }

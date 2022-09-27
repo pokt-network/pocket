@@ -7,10 +7,10 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/pokt-network/pocket/persistence/types"
-
+	"github.com/celestiaorg/smt"
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/kvstore"
+	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
 )
@@ -26,10 +26,19 @@ type PersistenceModule struct {
 	postgresURL string
 	nodeSchema  string
 	genesisPath string
-	blockStore  kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
 
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	writeContext *PostgresContext // only one write context is allowed at a time
+
+	// The connection to the PostgreSQL database
+	postgresConn *pgx.Conn
+	// A reference to the block key-value store
+	// INVESTIGATE: We may need to create a custom `BlockStore` package in the future.
+	blockStore kvstore.KVStore
+	// A mapping of context IDs to persistence contexts
+	// contexts map[contextId]modules.PersistenceRWContext
+	// Merkle trees
+	trees map[MerkleTree]*smt.SparseMerkleTree
 }
 
 const (
@@ -42,8 +51,10 @@ func Create(configPath, genesisPath string) (modules.PersistenceModule, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	cfg := c.(*types.PersistenceConfig)
 	g, err := m.InitGenesis(genesisPath)
+
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +80,19 @@ func Create(configPath, genesisPath string) (modules.PersistenceModule, error) {
 		genesisPath:  genesisPath,
 		blockStore:   blockStore,
 		writeContext: nil,
+		// contexts:     make(map[contextId]modules.PersistenceContext),
+		trees: make(map[MerkleTree]*smt.SparseMerkleTree),
 	}
+
+	// DISCUSS_IN_THIS_COMMIT: We've been using the module function pattern, but this making `initializeTrees`
+	// be able to create and/or load trees outside the scope of the persistence module makes it easier to test.
+	trees, err := newMerkleTrees()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO_IN_THIS_COMMIT: load trees from state
+	persistenceMod.trees = trees
 
 	// Determine if we should hydrate the genesis db or use the current state of the DB attached
 	if shouldHydrateGenesis, err := persistenceMod.shouldHydrateGenesisDb(); err != nil {
@@ -214,7 +237,7 @@ func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 	if blockStorePath == "" {
 		return kvstore.NewMemKVStore(), nil
 	}
-	return kvstore.NewKVStore(blockStorePath)
+	return kvstore.OpenKVStore(blockStorePath)
 }
 
 // TODO(drewsky): Simplify and externalize the logic for whether genesis should be populated and
