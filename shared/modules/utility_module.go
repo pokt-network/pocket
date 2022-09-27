@@ -21,8 +21,8 @@ type UtilityContext interface {
 	ApplyBlock(height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
 
 	// Context operations
-	ReleaseContext() error
-	CommitContext(quorumCert []byte) error
+	Release() error
+	Commit(quorumCert []byte) error
 
 	// Validation operations
 	CheckTransaction(tx []byte) error
