@@ -11,6 +11,11 @@ Please note that this repository is under very active development and breaking c
     - [Running LocalNet](#running-localnet)
   - [Code Organization](#code-organization)
     - [Linters](#linters)
+      - [Installation of golangci-lint](#installation-of-golangci-lint)
+      - [Running linters locally](#running-linters-locally)
+      - [VSCode Integration](#vscode-integration)
+      - [Configuration](#configuration)
+      - [Custom linters](#custom-linters)
 
 ## LFG - Development
 
@@ -160,11 +165,41 @@ Pocket
 
 ### Linters
 
-Our CI automation runs some linters and static checks to ensure code quality. You can run them locally with:
+We are utilizing `golangci-lint` to run the linters. It is a wrapper around a number of linters and is configured to run many of them at once. The linters are configured to run on every commit and pull request via CI, and all code issues are populating as GitHub annotations to let developers and reviewers easily locate an issue.
+
+#### Installation of golangci-lint
+
+Please follow the instructions on the [golangci-lint](https://golangci-lint.run/usage/install/#local-installation) website.
+
+#### Running linters locally
+
+You can run `golangci-lint` locally against all packages with:
 
 ```bash
 make lint
 ```
 
-You might need to install some of the linters locally, here is a list of them.
-* `golangci-lint`. Installation instructions provided [here](https://golangci-lint.run/usage/install/#local-installation).
+If you need to specify any additional flags, you can run `golangci-lint` directly as it picks up the configuration from the `.golangci.yml` file.
+
+#### VSCode Integration
+
+`golangci-lint` has an integration with VSCode. Per [documentation](https://golangci-lint.run/usage/integrations/), recommended settings are:
+
+```json
+"go.lintTool":"golangci-lint",
+"go.lintFlags": [
+  "--fast"
+]
+```
+
+#### Configuration
+
+`golangci-lint` is a sophisticated tool as it includes a lot of linters, including our own custom linting rules. As a result, a configuration file might become quite large. The configuration file is located at [`.golangci.yml`](../../.golangci.yml).
+
+The official documentation includes a list of different linters and their configuration options. Please refer to [this page](https://golangci-lint.run/usage/linters/) for more information.
+
+#### Custom linters
+
+We can write custom linters using [`go-ruleguard`](https://go-ruleguard.github.io/). The rules are located in the [`misc/linting-rules`](../../misc/linting-rules) directory. The rules are written in the [Ruleguard DSL](https://github.com/quasilyte/go-ruleguard/blob/master/_docs/dsl.md), if you've never worked with ruleguard in the past, it makes sense to go through [introduction article](https://quasilyte.dev/blog/post/ruleguard/) and [Ruleguard by example tour](https://go-ruleguard.github.io/by-example/).
+
+Ruleguard is run via `gocritic` linter which is a part of `golangci-lint`, so if you wish to change configuration or debug a particular rule, you can modify the `.golangci.yml` file.
