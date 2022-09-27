@@ -21,22 +21,17 @@ type peersManager struct {
 
 	addrBook typesP2P.AddrBook
 
-	addrBookMap  addrBookMap
+	addrBookMap  typesP2P.AddrBookMap
 	addrList     typesP2P.AddrList
 	maxNumLevels uint32
 }
-
-// addrBookMap maps p2p addresses to their respective NetworkPeer.
-//
-// Since maps cannot be sorted arbitrarily in Go, to achieve sorting, we need to rely on `addrList` which is a slice of addresses/strings and therefore we can sort it the way we want.
-type addrBookMap map[string]*types.NetworkPeer
 
 func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) (*peersManager, error) {
 	pm := &peersManager{
 		selfAddr:     selfAddr,
 		addrBook:     addrBook,
 		eventCh:      make(chan addressBookEvent, 1),
-		addrBookMap:  make(addrBookMap),
+		addrBookMap:  make(typesP2P.AddrBookMap),
 		addrList:     make([]string, 0),
 		maxNumLevels: 0,
 	}
@@ -163,7 +158,7 @@ type addressBookEvent struct {
 
 type peersManagerStateView struct {
 	addrBook     typesP2P.AddrBook
-	addrBookMap  addrBookMap
+	addrBookMap  typesP2P.AddrBookMap
 	addrList     typesP2P.AddrList
 	maxNumLevels uint32
 }
