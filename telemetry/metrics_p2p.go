@@ -8,10 +8,10 @@ const (
 	// Event Metrics
 	P2P_EVENT_METRICS_NAMESPACE = "event_metrics_namespace_p2p"
 
-	BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME = "broadcast_message_redundancy_per_block_event_metric"
-	RAINTREE_MESSAGE_EVENT_METRIC_NAME                       = "raintree_message_event_metric"
+	P2P_BROADCAST_MESSAGE_REDUNDANCY_PER_BLOCK_EVENT_METRIC_NAME = "broadcast_message_redundancy_per_block_event_metric"
+	P2P_RAINTREE_MESSAGE_EVENT_METRIC_NAME                       = "raintree_message_event_metric"
 
 	// Attributes
-	RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL = "height"
-	RAINTREE_MESSAGE_EVENT_METRIC_NONCE_LABEL  = "nonce"
+	P2P_RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL = "height"
+	P2P_RAINTREE_MESSAGE_EVENT_METRIC_NONCE_LABEL  = "nonce"
 )
