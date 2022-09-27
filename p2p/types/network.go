@@ -7,11 +7,6 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// CLEANUP(olshansky): See if we can deprecate one of these structures.
-// type AddrBook []*NetworkPeer
-// type AddrList []string
-type AddrBookMap map[string]*NetworkPeer
-
 // TECHDEBT(olshansky): When we delete `stdnetwork` and only go with `raintree`, this interface
 // can be simplified greatly.
 type Network interface {
