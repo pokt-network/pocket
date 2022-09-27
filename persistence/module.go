@@ -22,12 +22,10 @@ var (
 )
 
 type PersistenceModule struct {
-	bus modules.Bus
+	bus    modules.Bus
+	config *types.PersistenceConfig
 
-	postgresURL string
-	nodeSchema  string
-	genesisPath string
-	blockStore  kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
+	blockStore kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
 
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	writeContext *PostgresContext // only one write context is allowed at a time
@@ -74,8 +72,7 @@ func (*PersistenceModule) Create(runtime modules.Runtime) (modules.Module, error
 
 	m = &PersistenceModule{
 		bus:          nil,
-		postgresURL:  persistenceCfg.GetPostgresUrl(),
-		nodeSchema:   persistenceCfg.GetNodeSchema(),
+		config:       persistenceCfg,
 		blockStore:   blockStore,
 		writeContext: nil,
 	}
@@ -139,7 +136,7 @@ func (m *PersistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	if m.writeContext != nil && !m.writeContext.conn.IsClosed() {
 		return nil, fmt.Errorf("write context already exists")
 	}
-	conn, err := connectToDatabase(m.postgresURL, m.nodeSchema)
+	conn, err := connectToDatabase(m.config.PostgresUrl, m.config.NodeSchema)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +161,7 @@ func (m *PersistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 }
 
 func (m *PersistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
-	conn, err := connectToDatabase(m.postgresURL, m.nodeSchema)
+	conn, err := connectToDatabase(m.config.PostgresUrl, m.config.NodeSchema)
 	if err != nil {
 		return nil, err
 	}

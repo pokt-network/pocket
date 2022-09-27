@@ -292,7 +292,7 @@ func (m *ConsensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {
 	// TODO(olshansky): Add proper tests for this when we figure out where the mempool should live.
 	// NOTE: This is just a placeholder at the moment. It doesn't actually work because SizeOf returns
 	// the size of the map pointer, and does not recursively determine the size of all the underlying elements.
-	if m.consCfg.GetMaxMempoolBytes() < uint64(unsafe.Sizeof(m.MessagePool)) {
+	if m.config.GetMaxMempoolBytes() < uint64(unsafe.Sizeof(m.MessagePool)) {
 		m.nodeLogError(typesCons.DisregardHotstuffMessage, typesCons.ErrConsensusMempoolFull)
 		return
 	}

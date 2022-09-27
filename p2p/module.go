@@ -28,7 +28,7 @@ const (
 
 type p2pModule struct {
 	bus       modules.Bus
-	p2pConfig modules.P2PConfig // TODO (olshansky): to remove this since it'll be available via the bus
+	p2pConfig *typesP2P.P2PConfig // TODO (olshansky): to remove this since it'll be available via the bus
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
@@ -107,7 +107,7 @@ func (m *p2pModule) Start() error {
 		return err
 	}
 
-	if m.p2pConfig.(*typesP2P.P2PConfig).UseRainTree {
+	if m.p2pConfig.UseRainTree {
 		m.network = raintree.NewRainTreeNetwork(m.address, addrBook)
 	} else {
 		m.network = stdnetwork.NewNetwork(addrBook)

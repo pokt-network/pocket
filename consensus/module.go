@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
+	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
@@ -31,7 +32,7 @@ var (
 type ConsensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
-	consCfg    modules.ConsensusConfig
+	config     *types.ConsensusConfig
 
 	// Hotstuff
 	Height uint64
@@ -110,7 +111,7 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 		bus: nil,
 
 		privateKey: privateKey.(cryptoPocket.Ed25519PrivateKey),
-		consCfg:    consensusCfg,
+		config:     consensusCfg,
 
 		Height: 0,
 		Round:  0,

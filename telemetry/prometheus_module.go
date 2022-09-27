@@ -22,10 +22,8 @@ var (
 // DISCUSS(team): Should the warning logs in this module be handled differently?
 
 type PrometheusTelemetryModule struct {
-	bus modules.Bus
-
-	address  string
-	endpoint string
+	bus    modules.Bus
+	config *TelemetryConfig
 
 	counters     map[string]prometheus.Counter
 	gauges       map[string]prometheus.Gauge
@@ -49,20 +47,18 @@ func (m *PrometheusTelemetryModule) Create(runtime modules.Runtime) (modules.Mod
 	telemetryCfg := cfg.Telemetry.(*TelemetryConfig)
 
 	return &PrometheusTelemetryModule{
+		config:       telemetryCfg,
 		counters:     map[string]prometheus.Counter{},
 		gauges:       map[string]prometheus.Gauge{},
 		gaugeVectors: map[string]prometheus.GaugeVec{},
-
-		address:  telemetryCfg.GetAddress(),
-		endpoint: telemetryCfg.GetEndpoint(),
 	}, nil
 }
 
 func (m *PrometheusTelemetryModule) Start() error {
-	log.Printf("\nPrometheus metrics exporter: Starting at %s%s...\n", m.address, m.endpoint)
+	log.Printf("\nPrometheus metrics exporter: Starting at %s%s...\n", m.config.Address, m.config.Endpoint)
 
-	http.Handle(m.endpoint, promhttp.Handler())
-	go http.ListenAndServe(m.address, nil)
+	http.Handle(m.config.Endpoint, promhttp.Handler())
+	go http.ListenAndServe(m.config.Address, nil)
 
 	log.Println("Prometheus metrics exporter started: OK")
 

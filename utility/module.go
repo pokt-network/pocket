@@ -14,7 +14,9 @@ var _ modules.UtilityConfig = &types.UtilityConfig{}
 var _ modules.Module = &UtilityModule{}
 
 type UtilityModule struct {
-	bus     modules.Bus
+	bus    modules.Bus
+	config *types.UtilityConfig
+
 	Mempool types.Mempool
 }
 
@@ -34,8 +36,10 @@ func (*UtilityModule) Create(runtime modules.Runtime) (modules.Module, error) {
 	if err := m.ValidateConfig(cfg); err != nil {
 		log.Fatalf("config validation failed: %v", err)
 	}
+	utilityCfg := cfg.Utility.(*types.UtilityConfig)
 
 	return &UtilityModule{
+		config: utilityCfg,
 		// TODO: Add `maxTransactionBytes` and `maxTransactions` to cfg.Utility
 		Mempool: types.NewMempool(1000, 1000),
 	}, nil
