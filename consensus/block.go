@@ -5,10 +5,28 @@ import (
 	"unsafe"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
 )
 
 func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
+
+	// Store the block in the KV store
+	codec := codec.GetCodec()
+	blockProtoBytes, err := codec.Marshal(block)
+	if err != nil {
+		return err
+	}
+
+	// IMPROVE(olshansky): temporary solution. `ApplyBlock` above applies the
+	// transactions to the postgres database, and this stores it in the KV store upon commitment.
+	// Instead of calling this directly, an alternative solution is to store the block metadata in
+	// the persistence context and have `CommitPersistenceContext` do this under the hood. However,
+	// additional `Block` metadata will need to be passed through and may change when we merkle the
+	// state hash.
+	if err := m.UtilityContext.StoreBlock(blockProtoBytes); err != nil {
+		return err
+	}
 
 	// Commit the utility context
 	if err := m.UtilityContext.CommitPersistenceContext(); err != nil {
