@@ -1,5 +1,13 @@
 # Building & Versioning
 
+- [Building & Versioning](#building--versioning)
+  - [Release Tag Versioning](#release-tag-versioning)
+  - [[WIP] Build Versioning](#wip-build-versioning)
+  - [Container Images](#container-images)
+    - [Tags](#tags)
+    - [Extended images with additional tooling](#extended-images-with-additional-tooling)
+  - [[TODO] Magefile build system](#todo-magefile-build-system)
+
 ## Release Tag Versioning
 
 We follow Go's [Module Version Numbering](https://go.dev/doc/modules/version-numbers) for software releases along with typical [Software release life cycles](https://en.wikipedia.org/wiki/Software_release_life_cycle).
@@ -17,6 +25,8 @@ Automatic development / test / production builds are still a work in progress, b
 For example, `X.Y.Z[-<pre_release_tag][+branch_name][+short_hash][+dirty]` is the name of a potential build we will release in the future.
 
 ## Container Images
+
+Our images are hosted on Github's Container Registry (GHCR) and are available at `ghcr.io/poktnetwork/pocket-v1`. You can find the list of latest images [here](https://github.com/pokt-network/pocket/pkgs/container/pocket-v1).
 
 ### Tags
 
