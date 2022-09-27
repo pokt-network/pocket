@@ -22,7 +22,6 @@ const (
 
 var (
 	_ modules.ConsensusModule = &ConsensusModule{}
-
 	_ modules.ConsensusConfig       = &typesCons.ConsensusConfig{}
 	_ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
 )
