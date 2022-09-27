@@ -3,12 +3,11 @@ package test
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"math"
 	"math/big"
 	"testing"
-
-	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
@@ -169,6 +168,19 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.False(t, proposerBalanceDifference.Cmp(expectedProposerBalanceDifference) != 0, fmt.Sprintf("unexpected before / after balance difference: expected %v got %v", expectedProposerBalanceDifference, proposerBalanceDifference))
+
+	test_artifacts.CleanupTest(ctx)
+}
+
+func TestUtilityContext_GetAppHash(t *testing.T) {
+	ctx := NewTestingUtilityContext(t, 0)
+
+	appHashTest, err := ctx.GetAppHash()
+	require.NoError(t, err)
+
+	appHashSource, er := ctx.Context.AppHash()
+	require.NoError(t, er)
+	require.Equal(t, appHashSource, appHashTest, "unexpected appHash")
 
 	test_artifacts.CleanupTest(ctx)
 }
