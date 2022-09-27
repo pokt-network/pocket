@@ -26,6 +26,17 @@ linters-settings:
   gocritic:
     enabled-checks:
       - ruleguard
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated # This might be too much, but we can try it out
+      - performance
+      - style
+    disabled-checks:
+      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - ifElseChain
+      # - octalLiteral
+      # - whyNoLint
     settings:
       ruleguard:
         # Enable debug to identify which 'Where' condition was rejected.
