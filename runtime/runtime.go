@@ -8,6 +8,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/pokt-network/pocket/consensus/types"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/spf13/viper"
@@ -106,6 +107,10 @@ func WithPK(pk string) func(*runtimeConfig) {
 			b.config.Consensus = &types.ConsensusConfig{}
 		}
 		b.config.Consensus.PrivateKey = pk
+
+		if b.config.P2P == nil {
+			b.config.P2P = &typesP2P.P2PConfig{}
+		}
 		b.config.P2P.PrivateKey = pk
 	}
 }
