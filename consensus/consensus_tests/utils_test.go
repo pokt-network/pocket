@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
 
@@ -25,7 +26,6 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -226,9 +226,11 @@ func WaitForNetworkConsensusMessages(
 ) (messages []*anypb.Any, err error) {
 
 	includeFilter := func(m *anypb.Any) bool {
-		var hotstuffMessage typesCons.HotstuffMessage
-		err := anypb.UnmarshalTo(m, &hotstuffMessage, proto.UnmarshalOptions{})
+		msg, err := codec.GetCodec().FromAny(m)
 		require.NoError(t, err)
+
+		hotstuffMessage, ok := msg.(*typesCons.HotstuffMessage)
+		require.True(t, ok)
 
 		return hotstuffMessage.Type == hotstuffMsgType && hotstuffMessage.Step == step
 	}

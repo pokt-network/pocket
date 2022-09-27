@@ -8,9 +8,9 @@ import (
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
@@ -220,11 +220,15 @@ func (m *ConsensusModule) SetBus(pocketBus modules.Bus) {
 func (m *ConsensusModule) HandleMessage(message *anypb.Any) error {
 	switch message.MessageName() {
 	case HotstuffMessage:
-		var hotstuffMessage typesCons.HotstuffMessage
-		if err := anypb.UnmarshalTo(message, &hotstuffMessage, proto.UnmarshalOptions{}); err != nil {
+		msg, err := codec.GetCodec().FromAny(message)
+		if err != nil {
 			return err
 		}
-		if err := m.handleHotstuffMessage(&hotstuffMessage); err != nil {
+		hotstuffMessage, ok := msg.(*typesCons.HotstuffMessage)
+		if !ok {
+			return fmt.Errorf("failed to cast message to HotstuffMessage")
+		}
+		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
 			return err
 		}
 	case UtilityMessage:
