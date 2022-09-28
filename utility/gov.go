@@ -505,6 +505,8 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.UtilA
 			return u.GetMessageStakeServiceNodeFee()
 		case typesUtil.UtilActorType_Val:
 			return u.GetMessageStakeValidatorFee()
+		default:
+			return nil, typesUtil.ErrUnknownActorType(actorType.String())
 		}
 	case *typesUtil.MessageEditStake:
 		switch actorType {
@@ -516,6 +518,8 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.UtilA
 			return u.GetMessageEditStakeServiceNodeFee()
 		case typesUtil.UtilActorType_Val:
 			return u.GetMessageEditStakeValidatorFee()
+		default:
+			return nil, typesUtil.ErrUnknownActorType(actorType.String())
 		}
 	case *typesUtil.MessageUnstake:
 		switch actorType {
@@ -527,6 +531,8 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.UtilA
 			return u.GetMessageUnstakeServiceNodeFee()
 		case typesUtil.UtilActorType_Val:
 			return u.GetMessageUnstakeValidatorFee()
+		default:
+			return nil, typesUtil.ErrUnknownActorType(actorType.String())
 		}
 	case *typesUtil.MessageUnpause:
 		switch actorType {
@@ -538,6 +544,8 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.UtilA
 			return u.GetMessageUnpauseServiceNodeFee()
 		case typesUtil.UtilActorType_Val:
 			return u.GetMessageUnpauseValidatorFee()
+		default:
+			return nil, typesUtil.ErrUnknownActorType(actorType.String())
 		}
 	case *typesUtil.MessageChangeParameter:
 		return u.GetMessageChangeParameterFee()

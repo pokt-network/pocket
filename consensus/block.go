@@ -117,7 +117,7 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	// the persistence context and have `CommitPersistenceContext` do this under the hood. However,
 	// additional `Block` metadata will need to be passed through and may change when we merkle the
 	// state hash.
-	if err := m.utilityContext.StoreBlock(blockProtoBytes); err != nil {
+	if err := m.StoreBlock(block, blockProtoBytes); err != nil {
 		return err
 	}
 
@@ -131,5 +131,20 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 
 	m.appHash = block.BlockHeader.Hash
 
+	return nil
+}
+
+func (m *ConsensusModule) StoreBlock(block *typesCons.Block, blockProtoBytes []byte) error {
+	store := m.utilityContext.GetPersistenceContext()
+	// Store in KV Store
+	if err := store.StoreBlock(blockProtoBytes); err != nil {
+		return err
+	}
+
+	// Store in SQL Store
+	header := block.BlockHeader
+	if err := store.InsertBlock(uint64(header.Height), header.Hash, header.ProposerAddress, header.QuorumCertificate); err != nil {
+		return err
+	}
 	return nil
 }

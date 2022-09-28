@@ -160,6 +160,7 @@ const (
 	CodeGetStakeAmountError               Code = 127
 	CodeStakeLessError                    Code = 128
 	CodeGetHeightError                    Code = 129
+	CodeUnknownActorType                  Code = 130
 
 	GetStakedTokensError              = "an error occurred getting the validator staked tokens"
 	SetValidatorStakedTokensError     = "an error occurred setting the validator staked tokens"
@@ -286,6 +287,7 @@ const (
 	DuplicateTransactionError         = "the transaction is already found in the mempool"
 	InsufficientAmountError           = "the account has insufficient funds to complete the operation"
 	NegativeAmountError               = "the amount is negative"
+	UnknownActorTypeError             = "the actor type is not recognized"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -789,4 +791,6 @@ func ErrInitParams(err error) Error {
 	return NewError(CodeInitParamsError, fmt.Sprintf("%s: %s", InitParamsError, err.Error()))
 }
 
-// TODO: Consider adding `ErrUnknownActorType` everywhere we do a switch-case on actor type.
+func ErrUnknownActorType(actorType string) Error {
+	return NewError(CodeUnknownActorType, fmt.Sprintf("%s: %s", UnknownActorTypeError, actorType))
+}

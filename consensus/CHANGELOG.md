@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.3] - 2022-09-28
+- `consensusModule` stores block directly to prevent shared structure in the `utilityModule`
+
 ## [0.0.0.2] - 2022-08-25
 **Encapsulate structures previously in shared [#163](github.com/pokt-network/pocket/issues/163)**
 - Ensured proto structures implement shared interfaces
