@@ -153,7 +153,7 @@ func createTestingGenesisAndConfigFiles(t *testing.T, cfg runtime.Config, genesi
 
 	genesisFile := make(map[string]json.RawMessage)
 	configFile := make(map[string]json.RawMessage)
-	consensusModName := new(consensus.ConsensusModule).GetModuleName()
+	consensusModName := consensus.ConsensusModuleName
 	genesisFile[test_artifacts.GetGenesisFileName(consensusModName)] = genesis
 	configFile[consensusModName] = config
 

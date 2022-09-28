@@ -23,8 +23,7 @@ type leaderElectionModule struct {
 }
 
 func Create(runtime modules.Runtime) (modules.Module, error) {
-	var m leaderElectionModule
-	return m.Create(runtime)
+	return new(leaderElectionModule).Create(runtime)
 }
 
 func (*leaderElectionModule) Create(runtime modules.Runtime) (modules.Module, error) {

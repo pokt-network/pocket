@@ -9,7 +9,7 @@ import (
 )
 
 func CreateProposeMessage(
-	m *ConsensusModule,
+	m *consensusModule,
 	step typesCons.HotstuffStep, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
 	qc *typesCons.QuorumCertificate,
 ) (*typesCons.HotstuffMessage, error) {
@@ -42,7 +42,7 @@ func CreateProposeMessage(
 }
 
 func CreateVoteMessage(
-	m *ConsensusModule,
+	m *consensusModule,
 	step typesCons.HotstuffStep, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
 	block *typesCons.Block,
 ) (*typesCons.HotstuffMessage, error) {

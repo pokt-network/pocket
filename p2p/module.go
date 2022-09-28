@@ -42,8 +42,7 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 }
 
 func Create(runtime modules.Runtime) (modules.Module, error) {
-	var m p2pModule
-	return m.Create(runtime)
+	return new(p2pModule).Create(runtime)
 }
 
 func (*p2pModule) Create(runtime modules.Runtime) (modules.Module, error) {

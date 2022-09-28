@@ -9,7 +9,7 @@ import (
 
 var (
 	LeaderMessageHandler HotstuffMessageHandler = &HotstuffLeaderMessageHandler{}
-	leaderHandlers                              = map[typesCons.HotstuffStep]func(*ConsensusModule, *typesCons.HotstuffMessage){
+	leaderHandlers                              = map[typesCons.HotstuffStep]func(*consensusModule, *typesCons.HotstuffMessage){
 		NewRound:  LeaderMessageHandler.HandleNewRoundMessage,
 		Prepare:   LeaderMessageHandler.HandlePrepareMessage,
 		PreCommit: LeaderMessageHandler.HandlePrecommitMessage,
@@ -22,7 +22,7 @@ type HotstuffLeaderMessageHandler struct{}
 
 /*** Prepare Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -78,7 +78,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 
 /*** PreCommit Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -122,7 +122,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusMo
 
 /*** Commit Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -166,7 +166,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *Consensus
 
 /*** Decide Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -215,7 +215,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusMod
 		)
 }
 
-func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -225,7 +225,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *ConsensusMod
 }
 
 // anteHandle is the general handler called for every before every specific HotstuffLeaderMessageHandler handler
-func (handler *HotstuffLeaderMessageHandler) anteHandle(m *ConsensusModule, msg *typesCons.HotstuffMessage) error {
+func (handler *HotstuffLeaderMessageHandler) anteHandle(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	if err := handler.validateBasic(m, msg); err != nil {
 		return err
 	}
@@ -233,7 +233,7 @@ func (handler *HotstuffLeaderMessageHandler) anteHandle(m *ConsensusModule, msg 
 	return nil
 }
 
-func (handler *HotstuffLeaderMessageHandler) emitTelemetryEvent(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) emitTelemetryEvent(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	m.GetBus().
 		GetTelemetryModule().
 		GetEventMetricsAgent().
@@ -247,7 +247,7 @@ func (handler *HotstuffLeaderMessageHandler) emitTelemetryEvent(m *ConsensusModu
 }
 
 // ValidateBasic general validation checks that apply to every HotstuffLeaderMessage
-func (handler *HotstuffLeaderMessageHandler) validateBasic(m *ConsensusModule, msg *typesCons.HotstuffMessage) error {
+func (handler *HotstuffLeaderMessageHandler) validateBasic(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	// Discard messages with invalid partial signatures before storing it in the leader's consensus mempool
 	if err := m.validatePartialSignature(msg); err != nil {
 		return err
@@ -255,7 +255,7 @@ func (handler *HotstuffLeaderMessageHandler) validateBasic(m *ConsensusModule, m
 	return nil
 }
 
-func (m *ConsensusModule) validatePartialSignature(msg *typesCons.HotstuffMessage) error {
+func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessage) error {
 	if msg.Step == NewRound {
 		m.nodeLog(typesCons.ErrUnnecessaryPartialSigForNewRound.Error())
 		return nil
@@ -288,7 +288,7 @@ func (m *ConsensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 		address, m.ValAddrToIdMap[address], msg, pubKey)
 }
 
-func (m *ConsensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {
+func (m *consensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {
 	// TODO(olshansky): Add proper tests for this when we figure out where the mempool should live.
 	// NOTE: This is just a placeholder at the moment. It doesn't actually work because SizeOf returns
 	// the size of the map pointer, and does not recursively determine the size of all the underlying elements.

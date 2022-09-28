@@ -9,7 +9,7 @@ import (
 	"github.com/pokt-network/pocket/shared/debug"
 )
 
-func (m *PersistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
+func (m *persistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
 	switch debugMessage.Action {
 	case debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		m.showLatestBlockInStore(debugMessage)
@@ -24,7 +24,7 @@ func (m *PersistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 }
 
 // TODO(olshansky): Create a shared interface `Block` to avoid the use of typesCons here.
-func (m *PersistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
+func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 	// TODO: Add an iterator to the `kvstore` and use that instead
 	height := m.GetBus().GetConsensusModule().CurrentHeight() - 1 // -1 because we want the latest committed height
 	blockBytes, err := m.GetBlockStore().Get(heightToBytes(int64(height)))
@@ -39,7 +39,7 @@ func (m *PersistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 	log.Printf("Block at height %d with %d transactions: %+v \n", height, len(block.Transactions), block)
 }
 
-func (m *PersistenceModule) clearState(_ *debug.DebugMessage) {
+func (m *persistenceModule) clearState(_ *debug.DebugMessage) {
 	context, err := m.NewRWContext(-1)
 	defer context.Commit()
 	if err != nil {

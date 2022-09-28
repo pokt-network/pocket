@@ -2,8 +2,9 @@ package consensus
 
 import (
 	"encoding/base64"
-	"github.com/pokt-network/pocket/shared/debug"
 	"log"
+
+	"github.com/pokt-network/pocket/shared/debug"
 
 	"google.golang.org/protobuf/proto"
 
@@ -38,7 +39,7 @@ var (
 
 // ** Hotstuff Helpers ** //
 
-func (m *ConsensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
+func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
 	var pss []*typesCons.PartialSignature
 	for _, msg := range m.MessagePool[step] {
 		// TODO(olshansky): Add tests for this
@@ -78,7 +79,7 @@ func (m *ConsensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 	}, nil
 }
 
-func (m *ConsensusModule) findHighQC(step typesCons.HotstuffStep) (qc *typesCons.QuorumCertificate) {
+func (m *consensusModule) findHighQC(step typesCons.HotstuffStep) (qc *typesCons.QuorumCertificate) {
 	for _, m := range m.MessagePool[step] {
 		if m.GetQuorumCertificate() == nil {
 			continue
@@ -112,11 +113,11 @@ func isSignatureValid(m *typesCons.HotstuffMessage, pubKeyString string, signatu
 	return pubKey.Verify(bytesToVerify, signature)
 }
 
-func (m *ConsensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
+func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
 	return m.isOptimisticThresholdMet(len(m.MessagePool[step]))
 }
 
-func (m *ConsensusModule) isOptimisticThresholdMet(n int) error {
+func (m *consensusModule) isOptimisticThresholdMet(n int) error {
 	numValidators := len(m.validatorMap)
 	if !(float64(n) > ByzantineThreshold*float64(numValidators)) {
 		return typesCons.ErrByzantineThresholdCheck(n, ByzantineThreshold*float64(numValidators))
@@ -134,7 +135,7 @@ func protoHash(m proto.Message) string {
 
 /*** P2P Helpers ***/
 
-func (m *ConsensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
+func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 	// TODO(olshansky): This can happen due to a race condition with the pacemaker.
 	if m.LeaderId == nil {
 		m.nodeLogError(typesCons.ErrNilLeaderId.Error(), nil)
@@ -154,7 +155,7 @@ func (m *ConsensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 	}
 }
 
-func (m *ConsensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
+func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 	m.nodeLog(typesCons.BroadcastingMessage(msg))
 	anyConsensusMessage, err := anypb.New(msg)
 	if err != nil {
@@ -170,7 +171,7 @@ func (m *ConsensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 
 /*** Persistence Helpers ***/
 
-func (m *ConsensusModule) clearMessagesPool() {
+func (m *consensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
 		m.MessagePool[step] = make([]*typesCons.HotstuffMessage, 0)
 	}
@@ -178,20 +179,20 @@ func (m *ConsensusModule) clearMessagesPool() {
 
 /*** Leader Election Helpers ***/
 
-func (m *ConsensusModule) isLeader() bool {
+func (m *consensusModule) isLeader() bool {
 	return m.LeaderId != nil && *m.LeaderId == m.NodeId
 }
 
-func (m *ConsensusModule) isReplica() bool {
+func (m *consensusModule) isReplica() bool {
 	return !m.isLeader()
 }
 
-func (m *ConsensusModule) clearLeader() {
+func (m *consensusModule) clearLeader() {
 	m.logPrefix = DefaultLogPrefix
 	m.LeaderId = nil
 }
 
-func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
+func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 	leaderId, err := m.leaderElectionMod.ElectNextLeader(message)
 	if err != nil || leaderId == 0 {
 		m.nodeLogError(typesCons.ErrLeaderElection(message).Error(), err)
@@ -212,10 +213,10 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) {
 
 /*** General Infrastructure Helpers ***/
 
-func (m *ConsensusModule) nodeLog(s string) {
+func (m *consensusModule) nodeLog(s string) {
 	log.Printf("[%s][%d] %s\n", m.logPrefix, m.NodeId, s)
 }
 
-func (m *ConsensusModule) nodeLogError(s string, err error) {
+func (m *consensusModule) nodeLogError(s string, err error) {
 	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.NodeId, s, err)
 }

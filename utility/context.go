@@ -2,6 +2,7 @@ package utility
 
 import (
 	"encoding/hex"
+
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -19,7 +20,7 @@ type Context struct {
 	SavePoints  [][]byte
 }
 
-func (u *UtilityModule) NewContext(height int64) (modules.UtilityContext, error) {
+func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error) {
 	ctx, err := u.GetBus().GetPersistenceModule().NewRWContext(height)
 	if err != nil {
 		return nil, typesUtil.ErrNewPersistenceContext(err)

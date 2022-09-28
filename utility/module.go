@@ -9,11 +9,11 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var _ modules.UtilityModule = &UtilityModule{}
+var _ modules.UtilityModule = &utilityModule{}
 var _ modules.UtilityConfig = &types.UtilityConfig{}
-var _ modules.Module = &UtilityModule{}
+var _ modules.Module = &utilityModule{}
 
-type UtilityModule struct {
+type utilityModule struct {
 	bus    modules.Bus
 	config *types.UtilityConfig
 
@@ -25,12 +25,11 @@ const (
 )
 
 func Create(runtime modules.Runtime) (modules.Module, error) {
-	var m UtilityModule
-	return m.Create(runtime)
+	return new(utilityModule).Create(runtime)
 }
 
-func (*UtilityModule) Create(runtime modules.Runtime) (modules.Module, error) {
-	var m *UtilityModule
+func (*utilityModule) Create(runtime modules.Runtime) (modules.Module, error) {
+	var m *utilityModule
 
 	cfg := runtime.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
@@ -38,37 +37,37 @@ func (*UtilityModule) Create(runtime modules.Runtime) (modules.Module, error) {
 	}
 	utilityCfg := cfg.Utility.(*types.UtilityConfig)
 
-	return &UtilityModule{
+	return &utilityModule{
 		config: utilityCfg,
 		// TODO: Add `maxTransactionBytes` and `maxTransactions` to cfg.Utility
 		Mempool: types.NewMempool(1000, 1000),
 	}, nil
 }
 
-func (u *UtilityModule) Start() error {
+func (u *utilityModule) Start() error {
 	return nil
 }
 
-func (u *UtilityModule) Stop() error {
+func (u *utilityModule) Stop() error {
 	return nil
 }
 
-func (u *UtilityModule) GetModuleName() string {
+func (u *utilityModule) GetModuleName() string {
 	return UtilityModuleName
 }
 
-func (u *UtilityModule) SetBus(bus modules.Bus) {
+func (u *utilityModule) SetBus(bus modules.Bus) {
 	u.bus = bus
 }
 
-func (u *UtilityModule) GetBus() modules.Bus {
+func (u *utilityModule) GetBus() modules.Bus {
 	if u.bus == nil {
 		log.Fatalf("Bus is not initialized")
 	}
 	return u.bus
 }
 
-func (*UtilityModule) ValidateConfig(cfg modules.Config) error {
+func (*utilityModule) ValidateConfig(cfg modules.Config) error {
 	if _, ok := cfg.Utility.(*types.UtilityConfig); !ok {
 		return fmt.Errorf("cannot cast to UtilityConfig")
 	}

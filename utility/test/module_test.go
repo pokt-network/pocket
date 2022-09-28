@@ -100,7 +100,7 @@ func createTestingGenesisAndConfigFiles(cfg modules.Config, genesisState modules
 	}
 	genesisFile := make(map[string]json.RawMessage)
 	configFile := make(map[string]json.RawMessage)
-	persistenceModuleName := new(persistence.PersistenceModule).GetModuleName()
+	persistenceModuleName := persistence.PersistenceModuleName
 	genesisFile[test_artifacts.GetGenesisFileName(persistenceModuleName)] = genesis
 	configFile[persistenceModuleName] = config
 	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")

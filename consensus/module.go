@@ -21,14 +21,14 @@ const (
 )
 
 var (
-	_ modules.ConsensusModule = &ConsensusModule{}
+	_ modules.ConsensusModule       = &consensusModule{}
 	_ modules.ConsensusConfig       = &typesCons.ConsensusConfig{}
 	_ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
 )
 
 // TODO(olshansky): Any reason to make all of these attributes local only (i.e. not exposed outside the struct)?
-// TODO(olshansky): Look for a way to not externalize the `ConsensusModule` struct
-type ConsensusModule struct {
+// TODO(olshansky): Look for a way to not externalize the `consensusModule` struct
+type consensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
 	config     *types.ConsensusConfig
@@ -65,12 +65,11 @@ type ConsensusModule struct {
 }
 
 func Create(runtime modules.Runtime) (modules.Module, error) {
-	var m ConsensusModule
-	return m.Create(runtime)
+	return new(consensusModule).Create(runtime)
 }
 
-func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) {
-	var m *ConsensusModule
+func (*consensusModule) Create(runtime modules.Runtime) (modules.Module, error) {
+	var m *consensusModule
 
 	cfg := runtime.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
@@ -106,7 +105,7 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 
 	pacemakerMod := paceMaker.(Pacemaker)
 
-	m = &ConsensusModule{
+	m = &consensusModule{
 		bus: nil,
 
 		privateKey: privateKey.(cryptoPocket.Ed25519PrivateKey),
@@ -143,7 +142,7 @@ func (*ConsensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 	return m, nil
 }
 
-func (m *ConsensusModule) Start() error {
+func (m *consensusModule) Start() error {
 	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
@@ -167,46 +166,46 @@ func (m *ConsensusModule) Start() error {
 	return nil
 }
 
-func (m *ConsensusModule) Stop() error {
+func (m *consensusModule) Stop() error {
 	return nil
 }
 
-func (m *ConsensusModule) GetModuleName() string {
+func (m *consensusModule) GetModuleName() string {
 	return ConsensusModuleName
 }
 
-func (m *ConsensusModule) GetBus() modules.Bus {
+func (m *consensusModule) GetBus() modules.Bus {
 	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
 }
 
-func (m *ConsensusModule) SetBus(pocketBus modules.Bus) {
+func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
 	m.paceMaker.SetBus(pocketBus)
 	m.leaderElectionMod.SetBus(pocketBus)
 }
 
-func (*ConsensusModule) ValidateConfig(cfg modules.Config) error {
+func (*consensusModule) ValidateConfig(cfg modules.Config) error {
 	if _, ok := cfg.Consensus.(*typesCons.ConsensusConfig); !ok {
 		return fmt.Errorf("cannot cast to ConsensusConfig")
 	}
 	return nil
 }
 
-func (*ConsensusModule) ValidateGenesis(genesis modules.GenesisState) error {
+func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
 	if _, ok := genesis.ConsensusGenesisState.(*typesCons.ConsensusGenesisState); !ok {
 		return fmt.Errorf("cannot cast to ConsensusGenesisState")
 	}
 	return nil
 }
 
-func (*ConsensusModule) GetPrivateKey(runtime modules.Runtime) (cryptoPocket.PrivateKey, error) {
+func (*consensusModule) GetPrivateKey(runtime modules.Runtime) (cryptoPocket.PrivateKey, error) {
 	return cryptoPocket.NewPrivateKey(runtime.GetConfig().Consensus.(*typesCons.ConsensusConfig).PrivateKey)
 }
 
-func (m *ConsensusModule) loadPersistedState() error {
+func (m *consensusModule) loadPersistedState() error {
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
 	if err != nil {
 		return nil
@@ -252,14 +251,14 @@ handler which has both pros and cons:
 
 // TODO(olshansky): Should we just make these singletons or embed them directly in the ConsensusModule?
 type HotstuffMessageHandler interface {
-	HandleNewRoundMessage(*ConsensusModule, *typesCons.HotstuffMessage)
-	HandlePrepareMessage(*ConsensusModule, *typesCons.HotstuffMessage)
-	HandlePrecommitMessage(*ConsensusModule, *typesCons.HotstuffMessage)
-	HandleCommitMessage(*ConsensusModule, *typesCons.HotstuffMessage)
-	HandleDecideMessage(*ConsensusModule, *typesCons.HotstuffMessage)
+	HandleNewRoundMessage(*consensusModule, *typesCons.HotstuffMessage)
+	HandlePrepareMessage(*consensusModule, *typesCons.HotstuffMessage)
+	HandlePrecommitMessage(*consensusModule, *typesCons.HotstuffMessage)
+	HandleCommitMessage(*consensusModule, *typesCons.HotstuffMessage)
+	HandleDecideMessage(*consensusModule, *typesCons.HotstuffMessage)
 }
 
-func (m *ConsensusModule) HandleMessage(message *anypb.Any) error {
+func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	switch message.MessageName() {
 	case HotstuffMessage:
 		var hotstuffMessage typesCons.HotstuffMessage
@@ -277,7 +276,7 @@ func (m *ConsensusModule) HandleMessage(message *anypb.Any) error {
 	return nil
 }
 
-func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) {
+func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) {
 	m.nodeLog(typesCons.DebugHandlingHotstuffMessage(msg))
 
 	// Liveness & safety checks
@@ -305,14 +304,14 @@ func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	leaderHandlers[msg.Step](m, msg)
 }
 
-func (m *ConsensusModule) AppHash() string {
+func (m *consensusModule) AppHash() string {
 	return m.appHash
 }
 
-func (m *ConsensusModule) CurrentHeight() uint64 {
+func (m *consensusModule) CurrentHeight() uint64 {
 	return m.Height
 }
 
-func (m *ConsensusModule) ValidatorMap() modules.ValidatorMap {
+func (m *consensusModule) ValidatorMap() modules.ValidatorMap {
 	return typesCons.ValidatorMapToModulesValidatorMap(m.validatorMap)
 }

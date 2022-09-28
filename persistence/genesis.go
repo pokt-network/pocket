@@ -12,7 +12,7 @@ import (
 // TODO(andrew): generalize with the `actors interface`
 
 // WARNING: This function crashes the process if there is an error populating the genesis state.
-func (m *PersistenceModule) populateGenesisState(state *types.PersistenceGenesisState) {
+func (m *persistenceModule) populateGenesisState(state *types.PersistenceGenesisState) {
 	log.Println("Populating genesis state...")
 
 	// REFACTOR: This business logic should probably live in `types/genesis.go`
@@ -155,7 +155,9 @@ func (m *PersistenceModule) populateGenesisState(state *types.PersistenceGenesis
 }
 
 // TODO(pocket/issues/149): All of the functions below following a structure similar to `GetAll<Actor>`
-//  can easily be refactored and condensed into a single function using a generic type or a common
+//
+//	can easily be refactored and condensed into a single function using a generic type or a common
+//
 // interface.
 func (p PostgresContext) GetAllAccounts(height int64) (accs []modules.Account, err error) {
 	ctx, tx, err := p.GetCtxAndTx()

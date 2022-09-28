@@ -14,8 +14,7 @@ const (
 )
 
 func Create(runtime modules.Runtime) (modules.Module, error) {
-	var m telemetryModule
-	return m.Create(runtime)
+	return new(telemetryModule).Create(runtime)
 }
 
 // TODO(pocket/issues/99): Add a switch statement and configuration variable when support for other telemetry modules is added.

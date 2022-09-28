@@ -23,7 +23,7 @@ type Pacemaker interface {
 	// TODO(olshansky): Rather than exposing the underlying `ConsensusModule` struct,
 	// we could create a `ConsensusModuleDebug` interface that'll expose setters/getters
 	// for the height/round/step/etc, and interface with the module that way.
-	SetConsensusModule(module *ConsensusModule)
+	SetConsensusModule(module *consensusModule)
 
 	ValidateMessage(message *typesCons.HotstuffMessage) error
 	RestartTimer()
@@ -45,7 +45,7 @@ type paceMaker struct {
 	// due to it's dependency on the underlying implementation of `ConsensusModule`. Think
 	// through a way to decouple these. This could be fixed with reflection but that's not
 	// a great idea in production code.
-	consensusMod *ConsensusModule
+	consensusMod *consensusModule
 
 	pacemakerConfigs modules.PacemakerConfig
 
@@ -119,7 +119,7 @@ func (*paceMaker) ValidateConfig(cfg modules.Config) error {
 	return nil
 }
 
-func (m *paceMaker) SetConsensusModule(c *ConsensusModule) {
+func (m *paceMaker) SetConsensusModule(c *consensusModule) {
 	m.consensusMod = c
 }
 
