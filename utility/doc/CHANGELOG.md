@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.4] - 2022-09-23
 - Created UtilityConfig
-- Added `Max_Mempool_Transaction_Bytes` and `Max_Mempool_Transactions` to the utility 
+- Added `max_mempool_transaction_bytes` and `max_mempool_transactions` to the utility 
   config to allow dynamic configuration of the mempool
 - Matched configuration unmarshalling pattern of other modules
 - Added V0 mempool default configurations
