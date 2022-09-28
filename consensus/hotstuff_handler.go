@@ -29,8 +29,7 @@ func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 		return err
 	}
 
-	// Leader Election - Need to execute leader election if there is no leader and we are in a new round.
-	if m.Step == NewRound && m.LeaderId == nil {
+	if m.shouldElectNextLeader() {
 		if err := m.electNextLeader(msg); err != nil {
 			return err
 		}
@@ -44,4 +43,9 @@ func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	leaderHandlers[step](m, msg)
 
 	return nil
+}
+
+func (m *ConsensusModule) shouldElectNextLeader() bool {
+	// Execute leader election if there is no leader and we are in a new round
+	return m.Step == NewRound && m.LeaderId == nil
 }
