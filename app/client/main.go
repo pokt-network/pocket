@@ -50,14 +50,13 @@ func main() {
 	var err error
 
 	runtime := runtime.New(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
-	cfg := runtime.GetConfig()
-	genesis := runtime.GetGenesis()
 
 	consM, err := consensus.Create(runtime)
-	consensusMod := consM.(modules.ConsensusModule)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 	}
+	consensusMod := consM.(modules.ConsensusModule)
+
 	p2pM, err := p2p.Create(runtime)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
@@ -73,7 +72,7 @@ func main() {
 	}
 	telemetryMod := telemetryM.(modules.TelemetryModule)
 
-	_ = shared.CreateBusWithOptionalModules(cfg, genesis, nil, p2pMod, nil, consensusMod, telemetryMod)
+	_ = shared.CreateBusWithOptionalModules(runtime, nil, p2pMod, nil, consensusMod, telemetryMod)
 
 	p2pMod.Start()
 

@@ -39,9 +39,6 @@ func Create(configPath, genesisPath string) (modules.Module, error) {
 }
 
 func (m *Node) Create(runtime modules.Runtime) (modules.Module, error) {
-	cfg := runtime.GetConfig()
-	genesis := runtime.GetGenesis()
-
 	persistenceMod, err := persistence.Create(runtime)
 	if err != nil {
 		return nil, err
@@ -67,7 +64,7 @@ func (m *Node) Create(runtime modules.Runtime) (modules.Module, error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(cfg, genesis,
+	bus, err := CreateBus(runtime,
 		persistenceMod.(modules.PersistenceModule),
 		p2pMod.(modules.P2PModule),
 		utilityMod.(modules.UtilityModule),

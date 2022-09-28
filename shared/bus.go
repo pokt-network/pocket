@@ -32,8 +32,7 @@ const (
 )
 
 func CreateBus(
-	cfg modules.Config,
-	genesis modules.GenesisState,
+	runtime modules.Runtime,
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
@@ -49,8 +48,8 @@ func CreateBus(
 		consensus:   consensus,
 		telemetry:   telemetry,
 
-		config:  cfg,
-		genesis: genesis,
+		config:  runtime.GetConfig(),
+		genesis: runtime.GetGenesis(),
 	}
 
 	modules := map[string]modules.Module{
@@ -84,8 +83,7 @@ func CreateBus(
 //	Using `CreateBusWithOptionalModules`, we can create a bus with only pre2p and a NOOP telemetry module
 //	so that we can the pre2p module without any issues.
 func CreateBusWithOptionalModules(
-	cfg modules.Config,
-	genesis modules.GenesisState,
+	runtime modules.Runtime,
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
@@ -99,8 +97,8 @@ func CreateBusWithOptionalModules(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
-		config:      cfg,
-		genesis:     genesis,
+		config:      runtime.GetConfig(),
+		genesis:     runtime.GetGenesis(),
 	}
 
 	maybeSetModuleBus := func(mod modules.Module) {

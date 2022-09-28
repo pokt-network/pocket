@@ -121,8 +121,6 @@ func CreateTestConsensusPocketNode(
 	createTestingGenesisAndConfigFiles(t, cfg, genesisState)
 
 	runtime := runtime.New(testingConfigFilePath, testingGenesisFilePath)
-	config := runtime.GetConfig()
-	genesis := runtime.GetGenesis()
 
 	consensusMod, err := consensus.Create(runtime)
 	require.NoError(t, err)
@@ -133,7 +131,7 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 
-	bus, err := shared.CreateBus(config, genesis, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock)
+	bus, err := shared.CreateBus(runtime, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock)
 	require.NoError(t, err)
 
 	pk, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
