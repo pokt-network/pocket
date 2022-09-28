@@ -74,9 +74,9 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	// TODO(andrew): Move the number of actors into local constants
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	createTestingGenesisAndConfigFiles(cfg, genesisState)
-	runtime := runtime.New(testingConfigFilePath, testingGenesisFilePath)
+	runtimeCfg := runtime.New(testingConfigFilePath, testingGenesisFilePath)
 
-	persistenceMod, err := persistence.Create(runtime) // TODO (Drewsky) this is the last remaining cross module import and needs a fix...
+	persistenceMod, err := persistence.Create(runtimeCfg) // TODO (Drewsky) this is the last remaining cross module import and needs a fix...
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}

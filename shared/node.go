@@ -33,9 +33,7 @@ func NewNodeWithAddress(address cryptoPocket.Address) *Node {
 }
 
 func Create(configPath, genesisPath string) (modules.Module, error) {
-	var m Node
-	runtime := runtime.New(configPath, genesisPath)
-	return m.Create(runtime)
+	return new(Node).Create(runtime.New(configPath, genesisPath))
 }
 
 func (m *Node) Create(runtime modules.Runtime) (modules.Module, error) {

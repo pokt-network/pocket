@@ -112,9 +112,9 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	createTestingGenesisAndConfigFiles(cfg, genesisState)
 
-	runtime := runtime.New(testingConfigFilePath, testingGenesisFilePath)
+	runtimeCfg := runtime.New(testingConfigFilePath, testingGenesisFilePath)
 
-	persistenceMod, err := persistence.Create(runtime)
+	persistenceMod, err := persistence.Create(runtimeCfg)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}

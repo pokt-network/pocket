@@ -383,9 +383,9 @@ func prepareP2PModules(t *testing.T, configs []modules.Config) (p2pModules map[s
 		configFilePath := testingConfigFilePath + strconv.Itoa(i) + jsonPosfix
 		genesisFilePath := testingGenesisFilePath + jsonPosfix
 
-		runtime := runtime.New(configFilePath, genesisFilePath)
+		runtimeCfg := runtime.New(configFilePath, genesisFilePath)
 
-		p2pMod, err := Create(runtime)
+		p2pMod, err := Create(runtimeCfg)
 		require.NoError(t, err)
 		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
 	}
