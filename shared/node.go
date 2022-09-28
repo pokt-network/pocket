@@ -28,7 +28,7 @@ type Node struct {
 	p2pAddress cryptoPocket.Address
 }
 
-func NewWithAddress(address cryptoPocket.Address) *Node {
+func NewNodeWithAddress(address cryptoPocket.Address) *Node {
 	return &Node{p2pAddress: address}
 }
 
