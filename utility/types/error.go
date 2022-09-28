@@ -159,6 +159,7 @@ const (
 	CodeSocketIOStartFailedError          Code = 126
 	CodeGetStakeAmountError               Code = 127
 	CodeStakeLessError                    Code = 128
+	CodeGetHeightError                    Code = 129
 
 	GetStakedTokensError              = "an error occurred getting the validator staked tokens"
 	SetValidatorStakedTokensError     = "an error occurred setting the validator staked tokens"
@@ -230,6 +231,7 @@ const (
 	EmptyParamKeyError                = "the parameter key is empty"
 	EmptyParamValueError              = "the parameter value is empty"
 	GetOutputAddressError             = "an error occurred getting the output address using operator"
+	GetHeightError                    = "an error occurred when getting the height from the store"
 	TransactionAlreadyCommittedError  = "the transaction is already committed"
 	NewSavePointError                 = "an error occurred creating the save point"
 	RollbackSavePointError            = "an error occurred rolling back to save point"
@@ -336,6 +338,10 @@ func ErrEmptyParamValue() Error {
 
 func ErrGetOutputAddress(operator []byte, err error) Error {
 	return NewError(CodeGetOutputAddressError, fmt.Sprintf("%s: %s; %s", GetOutputAddressError, hex.EncodeToString(operator), err.Error()))
+}
+
+func ErrGetHeight(err error) Error {
+	return NewError(CodeGetHeightError, fmt.Sprintf("%s:%s", GetHeightError, err.Error()))
 }
 
 func ErrGetMissedBlocks(err error) Error {
@@ -667,9 +673,8 @@ func ErrStringToBigInt() Error {
 	return NewError(CodeStringToBigIntError, StringToBigIntError)
 }
 
-// TODO: We should pass the account address here so it is easier to debug the issue
-func ErrInsufficientAmount() Error {
-	return NewError(CodeInsufficientAmountError, fmt.Sprintf("%s", InsufficientAmountError))
+func ErrInsufficientAmount(address string) Error {
+	return NewError(CodeInsufficientAmountError, fmt.Sprintf("%s: with address %s", InsufficientAmountError, address))
 }
 
 func ErrNegativeAmountError() Error {
