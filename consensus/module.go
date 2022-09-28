@@ -89,7 +89,7 @@ func (*consensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 	}
 
 	// TODO(olshansky): Can we make this a submodule?
-	paceMaker, err := CreatePacemaker(runtime)
+	paceMakerMod, err := CreatePacemaker(runtime)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (*consensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 	address := privateKey.Address().String()
 	valIdMap, idValMap := typesCons.GetValAddrToIdMap(valMap)
 
-	pacemakerMod := paceMaker.(Pacemaker)
+	paceMaker := paceMakerMod.(Pacemaker)
 
 	m = &consensusModule{
 		bus: nil,
@@ -128,7 +128,7 @@ func (*consensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 		validatorMap: valMap,
 
 		utilityContext:    nil,
-		paceMaker:         pacemakerMod,
+		paceMaker:         paceMaker,
 		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
 
 		logPrefix:     DefaultLogPrefix,
@@ -137,7 +137,7 @@ func (*consensusModule) Create(runtime modules.Runtime) (modules.Module, error) 
 	}
 
 	// TODO(olshansky): Look for a way to avoid doing this.
-	pacemakerMod.SetConsensusModule(m)
+	paceMaker.SetConsensusModule(m)
 
 	return m, nil
 }
