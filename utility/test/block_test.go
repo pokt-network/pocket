@@ -106,11 +106,11 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 		switch actorType {
 		case typesUtil.ActorType_App:
 			err = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
-		case typesUtil.ActorType_Val:
+		case typesUtil.ActorType_Validator:
 			err = ctx.Context.SetParam(modules.ValidatorMaxPausedBlocksParamName, 0)
-		case typesUtil.ActorType_Fish:
+		case typesUtil.ActorType_Fisherman:
 			err = ctx.Context.SetParam(modules.FishermanMaxPauseBlocksParamName, 0)
-		case typesUtil.ActorType_Node:
+		case typesUtil.ActorType_ServiceNode:
 			err = ctx.Context.SetParam(modules.ServiceNodeMaxPauseBlocksParamName, 0)
 		default:
 			t.Fatalf("unexpected actor type %s", actorType.String())
@@ -192,11 +192,11 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 		switch actorType {
 		case typesUtil.ActorType_App:
 			poolName = typesUtil.Pool_Names_AppStakePool.String()
-		case typesUtil.ActorType_Val:
+		case typesUtil.ActorType_Validator:
 			poolName = typesUtil.Pool_Names_ValidatorStakePool.String()
-		case typesUtil.ActorType_Fish:
+		case typesUtil.ActorType_Fisherman:
 			poolName = typesUtil.Pool_Names_FishermanStakePool.String()
-		case typesUtil.ActorType_Node:
+		case typesUtil.ActorType_ServiceNode:
 			poolName = typesUtil.Pool_Names_ServiceNodeStakePool.String()
 		default:
 			t.Fatalf("unexpected actor type %s", actorType.String())

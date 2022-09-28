@@ -25,7 +25,7 @@ func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicK
 	return
 }
 
-func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int32, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []byte, _ bool, _ int32, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(types.ApplicationActor, types.BaseActor{
 		Address:            hex.EncodeToString(address),
 		PublicKey:          hex.EncodeToString(publicKey),

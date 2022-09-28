@@ -43,6 +43,12 @@ type Message interface {
 	GetActorType() ActorType
 }
 
+var _ Message = &MessageSend{}
+
+func (msg *MessageSend) GetActorType() ActorType {
+	return 0 // there's no actor type for message send, so return zero to allow fee retrieval
+}
+
 func (msg *MessageStake) ValidateBasic() Error {
 	if err := ValidatePublicKey(msg.GetPublicKey()); err != nil {
 		return err

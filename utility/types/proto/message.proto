@@ -10,38 +10,37 @@ message MessageSend {
   bytes from_address = 1;
   bytes to_address = 2;
   string amount = 3;
-  ActorType actor_type = 4;
 }
 
 message MessageStake {
-  bytes public_key = 1;
-  repeated string chains = 2;
-  string amount = 3;
-  string service_url = 4;
-  bytes output_address = 5;
-  optional bytes signer = 6;
-  ActorType actor_type = 7;
+  ActorType actor_type = 1;
+  bytes public_key = 2;
+  repeated string chains = 3;
+  string amount = 4;
+  string service_url = 5;
+  bytes output_address = 6;
+  optional bytes signer = 7;
 }
 
 message MessageEditStake {
-  bytes address = 1;
-  repeated string chains = 2;
-  string amount = 3;
-  string service_url = 4;
-  optional bytes signer = 5;
-  ActorType actor_type = 6;
+  ActorType actor_type = 1;
+  bytes address = 2;
+  repeated string chains = 3;
+  string amount = 4;
+  string service_url = 5;
+  optional bytes signer = 6;
 }
 
 message MessageUnstake {
-  bytes address = 1;
-  optional bytes signer = 2;
-  ActorType actor_type = 3;
+  ActorType actor_type = 1;
+  bytes address = 2;
+  optional bytes signer = 3;
 }
 
 message MessageUnpause {
-  bytes address = 1;
-  optional bytes signer = 2;
-  ActorType actor_type = 3;
+  ActorType actor_type = 1;
+  bytes address = 2;
+  optional bytes signer = 3;
 }
 
 message MessageChangeParameter {

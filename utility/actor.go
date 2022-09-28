@@ -33,11 +33,11 @@ func (u *UtilityContext) SetActorStakedTokens(actorType typesUtil.ActorType, tok
 	switch actorType {
 	case typesUtil.ActorType_App:
 		er = store.SetAppStakeAmount(address, typesUtil.BigIntToString(tokens))
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		er = store.SetFishermanStakeAmount(address, typesUtil.BigIntToString(tokens))
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		er = store.SetServiceNodeStakeAmount(address, typesUtil.BigIntToString(tokens))
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		er = store.SetValidatorStakeAmount(address, typesUtil.BigIntToString(tokens))
 	}
 
@@ -55,11 +55,11 @@ func (u *UtilityContext) SetActorUnstaking(actorType typesUtil.ActorType, unstak
 	switch actorType {
 	case typesUtil.ActorType_App:
 		er = store.SetAppUnstakingHeightAndStatus(address, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		er = store.SetFishermanUnstakingHeightAndStatus(address, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		er = store.SetServiceNodeUnstakingHeightAndStatus(address, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		er = store.SetValidatorUnstakingHeightAndStatus(address, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
 	}
 
@@ -77,11 +77,11 @@ func (u *UtilityContext) DeleteActor(actorType typesUtil.ActorType, address []by
 	switch actorType {
 	case typesUtil.ActorType_App:
 		err = store.DeleteApp(address)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		err = store.DeleteFisherman(address)
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		err = store.DeleteServiceNode(address)
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		err = store.DeleteValidator(address)
 	}
 
@@ -99,11 +99,11 @@ func (u *UtilityContext) SetActorPauseHeight(actorType typesUtil.ActorType, addr
 	switch actorType {
 	case typesUtil.ActorType_App:
 		err = store.SetAppPauseHeight(address, height)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		err = store.SetFishermanPauseHeight(address, height)
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		err = store.SetServiceNodePauseHeight(address, height)
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		err = store.SetValidatorPauseHeight(address, height)
 	}
 
@@ -127,11 +127,11 @@ func (u *UtilityContext) GetActorStakedTokens(actorType typesUtil.ActorType, add
 	switch actorType {
 	case typesUtil.ActorType_App:
 		stakedTokens, er = store.GetAppStakeAmount(height, address)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		stakedTokens, er = store.GetFishermanStakeAmount(height, address)
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		stakedTokens, er = store.GetServiceNodeStakeAmount(height, address)
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		stakedTokens, er = store.GetValidatorStakeAmount(height, address)
 	}
 
@@ -159,11 +159,11 @@ func (u *UtilityContext) GetMaxPausedBlocks(actorType typesUtil.ActorType) (maxP
 	switch actorType {
 	case typesUtil.ActorType_App:
 		paramName = modules.AppMaxPauseBlocksParamName
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		paramName = modules.FishermanMaxPauseBlocksParamName
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		paramName = modules.ServiceNodeMaxPauseBlocksParamName
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		paramName = modules.ValidatorMaxPausedBlocksParamName
 	}
 
@@ -187,11 +187,11 @@ func (u *UtilityContext) GetMinimumPauseBlocks(actorType typesUtil.ActorType) (m
 	switch actorType {
 	case typesUtil.ActorType_App:
 		paramName = modules.AppMinimumPauseBlocksParamName
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		paramName = modules.FishermanMinimumPauseBlocksParamName
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		paramName = modules.ServiceNodeMinimumPauseBlocksParamName
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		paramName = modules.ValidatorMinimumPauseBlocksParamName
 	}
 
@@ -213,11 +213,11 @@ func (u *UtilityContext) GetPauseHeight(actorType typesUtil.ActorType, address [
 	switch actorType {
 	case typesUtil.ActorType_App:
 		pauseHeight, er = store.GetAppPauseHeightIfExists(address, height)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		pauseHeight, er = store.GetFishermanPauseHeightIfExists(address, height)
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		pauseHeight, er = store.GetServiceNodePauseHeightIfExists(address, height)
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		pauseHeight, er = store.GetValidatorPauseHeightIfExists(address, height)
 	}
 
@@ -238,11 +238,11 @@ func (u *UtilityContext) GetActorStatus(actorType typesUtil.ActorType, address [
 	switch actorType {
 	case typesUtil.ActorType_App:
 		status, er = store.GetAppStatus(address, height)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		status, er = store.GetFishermanStatus(address, height)
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		status, er = store.GetServiceNodeStatus(address, height)
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		status, er = store.GetValidatorStatus(address, height)
 	}
 
@@ -266,11 +266,11 @@ func (u *UtilityContext) GetMinimumStake(actorType typesUtil.ActorType) (*big.In
 	switch actorType {
 	case typesUtil.ActorType_App:
 		paramName = modules.AppMinimumStakeParamName
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		paramName = modules.FishermanMinimumStakeParamName
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		paramName = modules.ServiceNodeMinimumStakeParamName
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		paramName = modules.ValidatorMinimumStakeParamName
 	}
 
@@ -293,11 +293,11 @@ func (u *UtilityContext) GetStakeAmount(actorType typesUtil.ActorType, address [
 	switch actorType {
 	case typesUtil.ActorType_App:
 		stakeAmount, err = store.GetAppStakeAmount(height, address)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		stakeAmount, err = store.GetFishermanStakeAmount(height, address)
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		stakeAmount, err = store.GetServiceNodeStakeAmount(height, address)
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		stakeAmount, err = store.GetValidatorStakeAmount(height, address)
 	}
 
@@ -320,11 +320,11 @@ func (u *UtilityContext) GetUnstakingHeight(actorType typesUtil.ActorType) (unst
 	switch actorType {
 	case typesUtil.ActorType_App:
 		paramName = modules.AppUnstakingBlocksParamName
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		paramName = modules.FishermanUnstakingBlocksParamName
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		paramName = modules.ServiceNodeUnstakingBlocksParamName
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		paramName = modules.ValidatorUnstakingBlocksParamName
 	}
 
@@ -347,9 +347,9 @@ func (u *UtilityContext) GetMaxChains(actorType typesUtil.ActorType) (maxChains 
 	switch actorType {
 	case typesUtil.ActorType_App:
 		paramName = modules.AppMinimumStakeParamName
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		paramName = modules.FishermanMinimumStakeParamName
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		paramName = modules.ServiceNodeMinimumStakeParamName
 	}
 
@@ -372,11 +372,11 @@ func (u *UtilityContext) GetActorExists(actorType typesUtil.ActorType, address [
 	switch actorType {
 	case typesUtil.ActorType_App:
 		exists, err = store.GetAppExists(address, height)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		exists, err = store.GetFishermanExists(address, height)
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		exists, err = store.GetServiceNodeExists(address, height)
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		exists, err = store.GetValidatorExists(address, height)
 	}
 
@@ -397,11 +397,11 @@ func (u *UtilityContext) GetActorOutputAddress(actorType typesUtil.ActorType, op
 	switch actorType {
 	case typesUtil.ActorType_App:
 		output, er = store.GetAppOutputAddress(operator, height)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		output, er = store.GetFishermanOutputAddress(operator, height)
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		output, er = store.GetServiceNodeOutputAddress(operator, height)
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		output, er = store.GetValidatorOutputAddress(operator, height)
 	}
 
@@ -509,7 +509,7 @@ func (u *UtilityContext) CheckAboveMinStake(actorType typesUtil.ActorType, amoun
 
 func (u *UtilityContext) CheckBelowMaxChains(actorType typesUtil.ActorType, chains []string) typesUtil.Error {
 	// validators don't have chains field
-	if actorType == typesUtil.ActorType_Val {
+	if actorType == typesUtil.ActorType_Validator {
 		return nil
 	}
 

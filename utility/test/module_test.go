@@ -26,6 +26,13 @@ var (
 	testSchema                 = "test_schema"
 )
 
+var actorTypes = []utilTypes.ActorType{
+	utilTypes.ActorType_App,
+	utilTypes.ActorType_ServiceNode,
+	utilTypes.ActorType_Fisherman,
+	utilTypes.ActorType_Validator,
+}
+
 var testPersistenceMod modules.PersistenceModule
 
 func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
@@ -113,11 +120,4 @@ func createTestingGenesisAndConfigFiles(cfg modules.Config, genesisState modules
 	if err := ioutil.WriteFile(testingConfigFilePath, configFileBz, 0777); err != nil {
 		log.Fatal(err)
 	}
-}
-
-var actorTypes = []utilTypes.ActorType{
-	utilTypes.ActorType_App,
-	utilTypes.ActorType_Node,
-	utilTypes.ActorType_Fish,
-	utilTypes.ActorType_Val,
 }

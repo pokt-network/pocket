@@ -119,7 +119,7 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 			if err != nil {
 				return err
 			}
-			if err = u.BurnActor(typesUtil.ActorType_Val, burnPercentage, address); err != nil {
+			if err = u.BurnActor(typesUtil.ActorType_Validator, burnPercentage, address); err != nil {
 				return err
 			}
 		} else if err := u.SetValidatorMissedBlocks(address, numberOfMissedBlocks); err != nil {
@@ -144,13 +144,13 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 		case typesUtil.ActorType_App:
 			readyToUnstake, er = store.GetAppsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = typesUtil.Pool_Names_AppStakePool.String()
-		case typesUtil.ActorType_Fish:
+		case typesUtil.ActorType_Fisherman:
 			readyToUnstake, er = store.GetFishermenReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = typesUtil.Pool_Names_FishermanStakePool.String()
-		case typesUtil.ActorType_Node:
+		case typesUtil.ActorType_ServiceNode:
 			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = typesUtil.Pool_Names_ServiceNodeStakePool.String()
-		case typesUtil.ActorType_Val:
+		case typesUtil.ActorType_Validator:
 			readyToUnstake, er = store.GetValidatorsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = typesUtil.Pool_Names_ValidatorStakePool.String()
 		}
@@ -205,11 +205,11 @@ func (u *UtilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, Acto
 	switch ActorType {
 	case typesUtil.ActorType_App:
 		er = store.SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		er = store.SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		er = store.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		er = store.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
 	}
 	if er != nil {

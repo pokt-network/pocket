@@ -229,11 +229,11 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 			return err
 		}
 		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		er = store.InsertServiceNode(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	}
 	if er != nil {
@@ -292,11 +292,11 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 			return err
 		}
 		er = store.UpdateApp(message.Address, maxRelays, message.Amount, message.Chains)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		er = store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		er = store.UpdateServiceNode(message.Address, message.ServiceUrl, message.Amount, message.Chains)
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		er = store.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
 	}
 	if er != nil {
@@ -370,7 +370,7 @@ func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubl
 	if err != nil {
 		return err
 	}
-	if err := u.BurnActor(typesUtil.ActorType_Val, burnPercentage, doubleSigner); err != nil {
+	if err := u.BurnActor(typesUtil.ActorType_Validator, burnPercentage, doubleSigner); err != nil {
 		return err
 	}
 	return nil

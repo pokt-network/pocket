@@ -501,44 +501,44 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.Actor
 		switch actorType {
 		case typesUtil.ActorType_App:
 			return u.GetMessageStakeAppFee()
-		case typesUtil.ActorType_Fish:
+		case typesUtil.ActorType_Fisherman:
 			return u.GetMessageStakeFishermanFee()
-		case typesUtil.ActorType_Node:
+		case typesUtil.ActorType_ServiceNode:
 			return u.GetMessageStakeServiceNodeFee()
-		case typesUtil.ActorType_Val:
+		case typesUtil.ActorType_Validator:
 			return u.GetMessageStakeValidatorFee()
 		}
 	case *typesUtil.MessageEditStake:
 		switch actorType {
 		case typesUtil.ActorType_App:
 			return u.GetMessageEditStakeAppFee()
-		case typesUtil.ActorType_Fish:
+		case typesUtil.ActorType_Fisherman:
 			return u.GetMessageEditStakeFishermanFee()
-		case typesUtil.ActorType_Node:
+		case typesUtil.ActorType_ServiceNode:
 			return u.GetMessageEditStakeServiceNodeFee()
-		case typesUtil.ActorType_Val:
+		case typesUtil.ActorType_Validator:
 			return u.GetMessageEditStakeValidatorFee()
 		}
 	case *typesUtil.MessageUnstake:
 		switch actorType {
 		case typesUtil.ActorType_App:
 			return u.GetMessageUnstakeAppFee()
-		case typesUtil.ActorType_Fish:
+		case typesUtil.ActorType_Fisherman:
 			return u.GetMessageUnstakeFishermanFee()
-		case typesUtil.ActorType_Node:
+		case typesUtil.ActorType_ServiceNode:
 			return u.GetMessageUnstakeServiceNodeFee()
-		case typesUtil.ActorType_Val:
+		case typesUtil.ActorType_Validator:
 			return u.GetMessageUnstakeValidatorFee()
 		}
 	case *typesUtil.MessageUnpause:
 		switch actorType {
 		case typesUtil.ActorType_App:
 			return u.GetMessageUnpauseAppFee()
-		case typesUtil.ActorType_Fish:
+		case typesUtil.ActorType_Fisherman:
 			return u.GetMessageUnpauseFishermanFee()
-		case typesUtil.ActorType_Node:
+		case typesUtil.ActorType_ServiceNode:
 			return u.GetMessageUnpauseServiceNodeFee()
-		case typesUtil.ActorType_Val:
+		case typesUtil.ActorType_Validator:
 			return u.GetMessageUnpauseValidatorFee()
 		}
 	case *typesUtil.MessageChangeParameter:

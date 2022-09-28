@@ -25,7 +25,7 @@ func (p PostgresContext) GetFisherman(address []byte, height int64) (operator, p
 	return
 }
 
-func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, output []byte, _ bool, _ int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(types.FishermanActor, types.BaseActor{
 		Address:            hex.EncodeToString(address),
 		PublicKey:          hex.EncodeToString(publicKey),

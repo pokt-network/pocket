@@ -12,13 +12,11 @@ enum Pool_Names {
   FishermanStakePool = 5;
 }
 
-// DISCUSS: similar code exists in the persistence module.
-// Talk about appropriate balance of shared code / encapsulation
 enum ActorType {
   App = 0;
-  Node = 1;
-  Fish = 2;
-  Val = 3;
+  ServiceNode = 1;
+  Fisherman = 2;
+  Validator = 3;
 }
 
 
