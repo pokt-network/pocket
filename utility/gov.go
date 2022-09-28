@@ -1,10 +1,10 @@
 package utility
 
 import (
-	"fmt"
-	"github.com/pokt-network/pocket/shared/modules"
 	"log"
 	"math/big"
+
+	"github.com/pokt-network/pocket/shared/modules"
 
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -570,7 +570,7 @@ func (u *UtilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.E
 	}
 	value, err := store.GetStringParam(paramName, height)
 	if err != nil {
-		fmt.Printf("err: %v\n", err)
+		log.Printf("err: %v\n", err)
 		return nil, typesUtil.ErrGetParam(paramName, err)
 	}
 	return typesUtil.StringToBigInt(value)
