@@ -18,6 +18,7 @@ message Account {
   string amount = 2;
 }
 
+TODO(#258): Follow protobuf best practices
 enum PoolNames {
   PoolNameUnspecified = 0;
   DAO = 1;
