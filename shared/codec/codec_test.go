@@ -39,8 +39,8 @@ func TestUtilityCodec(t *testing.T) {
 
 	// test unmarshalling
 	tpsOneUnmarshalled := &TestProtoStructure{}
-	require.NoError(t, codec.Unmarshal(tpsOneProtoBytes, tpsOneUnmarshalled))
 	require.NoError(t, err)
+	require.NoError(t, codec.Unmarshal(tpsOneProtoBytes, tpsOneUnmarshalled))
 
 	tpsTwoUnmarshalled := &TestProtoStructure{}
 	require.NoError(t, codec.Unmarshal(tpsTwoProtoBytes, tpsTwoUnmarshalled))
