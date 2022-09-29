@@ -135,7 +135,7 @@ func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 	return nil
 }
 
-func (m *ConsensusModule) storeBlock(block *typesCons.Block, blockProtoBytes []byte) error {
+func (m *consensusModule) storeBlock(block *typesCons.Block, blockProtoBytes []byte) error {
 	store := m.utilityContext.GetPersistenceContext()
 	// Store in KV Store
 	if err := store.StoreBlock(blockProtoBytes); err != nil {
