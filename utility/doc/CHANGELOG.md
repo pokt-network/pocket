@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved in-function *literal* arguments for `newTestingPersistenceModule` to private constants
 - Added the address parameter to `ErrInsufficientFunds` function for easier debugging
 - Added unit test for `LegacyVote.ValidateBasic()`
+- Added `ErrUnknownActorType` to all switch statements on `actorType`
+- Removed `import` of `consTypes` (consensus module)
 
 ## [0.0.0.3] - 2022-09-15
 

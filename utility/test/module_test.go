@@ -1,7 +1,6 @@
 package test
 
 import (
-	"log"
 	"math/big"
 	"testing"
 
@@ -84,9 +83,8 @@ func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.Persiste
 	mockRuntimeMgr.EXPECT().GetGenesis().Return(genesisState).AnyTimes()
 
 	persistenceMod, err := persistence.Create(mockRuntimeMgr)
-	if err != nil {
-		log.Fatalf("Error creating persistence module: %s", err)
-	}
+	require.NoError(t, err)
+
 	err = persistenceMod.Start()
 	require.NoError(t, err)
 	return persistenceMod.(modules.PersistenceModule)
