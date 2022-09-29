@@ -5,6 +5,7 @@ package p2p
 // to be a "real" replacement for now.
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/debug"
@@ -50,7 +51,7 @@ func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) 
 
 	cfg := runtimeMgr.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
-		log.Fatalf("config validation failed: %v", err)
+		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
 	p2pCfg := cfg.GetP2PConfig().(*typesP2P.P2PConfig)
 

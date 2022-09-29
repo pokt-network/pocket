@@ -46,13 +46,13 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 	cfg := runtimeMgr.GetConfig()
 
 	if err := m.ValidateConfig(cfg); err != nil {
-		log.Fatalf("config validation failed: %v", err)
+		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
 	persistenceCfg := cfg.GetPersistenceConfig()
 
 	genesis := runtimeMgr.GetGenesis()
 	if err := m.ValidateGenesis(genesis); err != nil {
-		log.Fatalf("genesis validation failed: %v", err)
+		return nil, fmt.Errorf("genesis validation failed: %w", err)
 	}
 	persistenceGenesis := genesis.GetPersistenceGenesisState().(*types.PersistenceGenesisState)
 

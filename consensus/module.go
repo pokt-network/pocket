@@ -72,13 +72,13 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 
 	cfg := runtimeMgr.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
-		log.Fatalf("config validation failed: %v", err)
+		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
 	consensusCfg := cfg.GetConsensusConfig()
 
 	genesis := runtimeMgr.GetGenesis()
 	if err := m.ValidateGenesis(genesis); err != nil {
-		log.Fatalf("genesis validation failed: %v", err)
+		return nil, fmt.Errorf("genesis validation failed: %w", err)
 	}
 	consensusGenesis := genesis.GetConsensusGenesisState()
 

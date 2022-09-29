@@ -1,6 +1,7 @@
 package utility
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/utility/types"
@@ -32,7 +33,7 @@ func (*utilityModule) Create(runtime modules.RuntimeMgr) (modules.Module, error)
 
 	cfg := runtime.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
-		log.Fatalf("config validation failed: %v", err)
+		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
 	utilityCfg := cfg.GetUtilityConfig().(*types.UtilityConfig)
 
