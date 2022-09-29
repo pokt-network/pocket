@@ -33,4 +33,8 @@ sequenceDiagram
 
 ## Block Application
 
+TODO(olshansky): Add a sequenceDiagram here.
+
 ## Block Commit
+
+TODO(olshansky): Add a sequenceDiagram here.
