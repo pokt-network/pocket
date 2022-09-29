@@ -1,9 +1,6 @@
 package runtime
 
 import (
-	"encoding/json"
-	"os"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	typesPers "github.com/pokt-network/pocket/persistence/types"
@@ -12,13 +9,9 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-var _ modules.ConsensusConfig = &Config{}
-var _ modules.P2PConfig = &Config{}
-var _ modules.PersistenceConfig = &Config{}
-var _ modules.TelemetryConfig = &Config{}
-var _ modules.UtilityConfig = &Config{}
+var _ modules.Config = &runtimeConfig{}
 
-type Config struct {
+type runtimeConfig struct {
 	Base        *BaseConfig                     `json:"base"`
 	Consensus   *typesCons.ConsensusConfig      `json:"consensus"`
 	Utility     *typesUtil.UtilityConfig        `json:"utility"`
@@ -27,76 +20,72 @@ type Config struct {
 	Telemetry   *typesTelemetry.TelemetryConfig `json:"telemetry"`
 }
 
-func (c *Config) ToShared() modules.Config {
-	return modules.Config{
-		Base:        (*modules.BaseConfig)(c.Base),
-		Consensus:   c.Consensus,
-		Utility:     c.Utility,
-		Persistence: c.Persistence,
-		P2P:         c.P2P,
-		Telemetry:   c.Telemetry,
+func NewConfig(base *BaseConfig, otherConfigs ...func(modules.Config)) *runtimeConfig {
+	rc := &runtimeConfig{
+		Base: base,
+	}
+	for _, oc := range otherConfigs {
+		oc(rc)
+	}
+	return rc
+}
+
+func WithConsensusConfig(consensusConfig modules.ConsensusConfig) func(modules.Config) {
+	return func(rc modules.Config) {
+		rc.(*runtimeConfig).Consensus = consensusConfig.(*typesCons.ConsensusConfig)
 	}
 }
 
-type BaseConfig struct {
-	RootDirectory string `json:"root_directory"`
-	PrivateKey    string `json:"private_key"` // TODO (pocket/issues/150) better architecture for key management (keybase, keyfiles, etc.)
-	ConfigPath    string `json:"config_path"`
-	GenesisPath   string `json:"genesis_path"`
-}
-
-func ParseConfigJSON(configPath string) (config *Config, err error) {
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		return
+func WithUtilityConfig(utilityConfig modules.UtilityConfig) func(modules.Config) {
+	return func(rc modules.Config) {
+		rc.(*runtimeConfig).Utility = utilityConfig.(*typesUtil.UtilityConfig)
 	}
-
-	// general configuration file
-	config = new(Config)
-	err = json.Unmarshal(data, &config)
-	return
 }
 
-// modules.ConsensusConfig
-
-func (c *Config) GetMaxMempoolBytes() uint64 {
-	return c.Consensus.MaxMempoolBytes
+func WithPersistenceConfig(persistenceConfig modules.UtilityConfig) func(modules.Config) {
+	return func(rc modules.Config) {
+		rc.(*runtimeConfig).Persistence = persistenceConfig.(*typesPers.PersistenceConfig)
+	}
 }
 
-// modules.P2PConfig
-
-func (c *Config) GetConsensusPort() uint32 {
-	return c.P2P.ConsensusPort
+func WithP2PConfig(p2pConfig modules.P2PConfig) func(modules.Config) {
+	return func(rc modules.Config) {
+		rc.(*runtimeConfig).P2P = p2pConfig.(*typesP2P.P2PConfig)
+	}
+}
+func WithTelemetryConfig(telemetryConfig modules.TelemetryConfig) func(modules.Config) {
+	return func(rc modules.Config) {
+		rc.(*runtimeConfig).Telemetry = telemetryConfig.(*typesTelemetry.TelemetryConfig)
+	}
 }
 
-func (c *Config) IsEmptyConnType() bool { // TODO (team) make enum
-	return c.P2P.IsEmptyConnectionType
+func (c *runtimeConfig) GetBaseConfig() modules.BaseConfig {
+	return c.Base
+}
+func (c *runtimeConfig) GetConsensusConfig() modules.ConsensusConfig {
+	return c.Consensus
+}
+func (c *runtimeConfig) GetUtilityConfig() modules.UtilityConfig {
+	return c.Utility
+}
+func (c *runtimeConfig) GetPersistenceConfig() modules.PersistenceConfig {
+	return c.Persistence
+}
+func (c *runtimeConfig) GetP2PConfig() modules.P2PConfig {
+	return c.P2P
+}
+func (c *runtimeConfig) GetTelemetryConfig() modules.TelemetryConfig {
+	return c.Telemetry
 }
 
-// modules.PersistenceConfig
+// func ParseConfigJSON(configPath string) (config *runtimeConfig, err error) {
+// 	data, err := os.ReadFile(configPath)
+// 	if err != nil {
+// 		return
+// 	}
 
-func (c *Config) GetPostgresUrl() string {
-	return c.Persistence.PostgresUrl
-}
-
-func (c *Config) GetNodeSchema() string {
-	return c.Persistence.NodeSchema
-}
-
-func (c *Config) GetBlockStorePath() string {
-	return c.Persistence.BlockStorePath
-}
-
-// modules.TelemetryConfig
-
-func (c *Config) GetEnabled() bool {
-	return c.Telemetry.Enabled
-}
-
-func (c *Config) GetAddress() string {
-	return c.Telemetry.Address
-}
-
-func (c *Config) GetEndpoint() string {
-	return c.Telemetry.Endpoint
-}
+// 	general configuration file
+// 	config = new(runtimeConfig)
+// 	err = json.Unmarshal(data, &config)
+// 	return
+// }

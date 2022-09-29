@@ -34,17 +34,17 @@ const (
 	PrometheusModuleName = "prometheus"
 )
 
-func CreatePrometheusTelemetryModule(runtime modules.Runtime) (modules.Module, error) {
+func CreatePrometheusTelemetryModule(runtime modules.RuntimeMgr) (modules.Module, error) {
 	var m PrometheusTelemetryModule
 	return m.Create(runtime)
 }
 
-func (m *PrometheusTelemetryModule) Create(runtime modules.Runtime) (modules.Module, error) {
+func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	cfg := runtime.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
 		log.Fatalf("config validation failed: %v", err)
 	}
-	telemetryCfg := cfg.Telemetry.(*TelemetryConfig)
+	telemetryCfg := cfg.GetTelemetryConfig().(*TelemetryConfig)
 
 	return &PrometheusTelemetryModule{
 		config:       telemetryCfg,
@@ -85,7 +85,7 @@ func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
 }
 
 func (*PrometheusTelemetryModule) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.Telemetry.(*TelemetryConfig); !ok {
+	if _, ok := cfg.GetTelemetryConfig().(*TelemetryConfig); !ok {
 		return fmt.Errorf("cannot cast to TelemetryConfig")
 	}
 	return nil

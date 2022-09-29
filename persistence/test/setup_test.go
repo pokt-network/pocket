@@ -2,13 +2,10 @@ package test
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/big"
 	"math/rand"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -57,8 +54,8 @@ func TestMain(m *testing.M) {
 	pool, resource, dbUrl := sharedTest.SetupPostgresDocker()
 	testPersistenceMod = newTestPersistenceModule(dbUrl)
 	m.Run()
-	os.Remove(testingConfigFilePath)
-	os.Remove(testingGenesisFilePath)
+	// os.Remove(testingConfigFilePath)
+	// os.Remove(testingGenesisFilePath)
 	sharedTest.CleanupPostgresDocker(m, pool, resource)
 }
 
@@ -102,17 +99,20 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 
 // TODO(andrew): Take in `t testing.T` as a parameter and error if there's an issue
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
-	cfg := modules.Config{
-		Persistence: &types.PersistenceConfig{
-			PostgresUrl:    databaseUrl,
-			NodeSchema:     testSchema,
-			BlockStorePath: "",
-		},
-	}
-	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
-	createTestingGenesisAndConfigFiles(cfg, genesisState)
+	// cfg := runtime.NewRuntimeConfig{nil, nil, nil,
+	// 	&types.PersistenceConfig{
+	// 		PostgresUrl:    databaseUrl,
+	// 		NodeSchema:     testSchema,
+	// 		BlockStorePath: "",
+	// 	},nil, nil)
 
-	runtimeCfg := runtime.New(testingConfigFilePath, testingGenesisFilePath)
+	cfg := runtime.NewConfig(&runtime.BaseConfig{}, runtime.WithPersistenceConfig(&types.PersistenceConfig{
+		PostgresUrl:    databaseUrl,
+		NodeSchema:     testSchema,
+		BlockStorePath: "",
+	}))
+	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
+	runtimeCfg := runtime.NewManager(cfg, genesisState)
 
 	persistenceMod, err := persistence.Create(runtimeCfg)
 	if err != nil {
@@ -294,40 +294,40 @@ func fuzzSingleProtocolActor(
 // TODO(olshansky): Make these functions & variables more functional to avoid having "unexpected"
 //
 //	side effects and making it clearer to the reader.
-const (
-	testingGenesisFilePath = "genesis.json"
-	testingConfigFilePath  = "config.json"
-)
+// const (
+// 	testingGenesisFilePath = "genesis.json"
+// 	testingConfigFilePath  = "config.json"
+// )
 
-func createTestingGenesisAndConfigFiles(cfg modules.Config, genesisState modules.GenesisState) {
-	config, err := json.Marshal(cfg.Persistence)
-	if err != nil {
-		log.Fatal(err)
-	}
-	genesis, err := json.Marshal(genesisState.PersistenceGenesisState)
-	if err != nil {
-		log.Fatal(err)
-	}
-	genesisFile := make(map[string]json.RawMessage)
-	configFile := make(map[string]json.RawMessage)
-	persistenceModuleName := persistence.PersistenceModuleName
-	genesisFile[test_artifacts.GetGenesisFileName(persistenceModuleName)] = genesis
-	configFile[persistenceModuleName] = config
-	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
-	if err != nil {
-		log.Fatal(err)
-	}
-	configFileBz, err := json.MarshalIndent(configFile, "", "    ")
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := ioutil.WriteFile(testingGenesisFilePath, genesisFileBz, 0777); err != nil {
-		log.Fatal(err)
-	}
-	if err := ioutil.WriteFile(testingConfigFilePath, configFileBz, 0777); err != nil {
-		log.Fatal(err)
-	}
-}
+// func createTestingGenesisAndConfigFiles(cfg modules.Config, genesisState modules.GenesisState) {
+// 	config, err := json.Marshal(cfg.GetPersistenceConfig())
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	genesis, err := json.Marshal(genesisState.GetPersistenceGenesisState())
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	genesisFile := make(map[string]json.RawMessage)
+// 	configFile := make(map[string]json.RawMessage)
+// 	persistenceModuleName := persistence.PersistenceModuleName
+// 	genesisFile[test_artifacts.GetGenesisFileName(persistenceModuleName)] = genesis
+// 	configFile[persistenceModuleName] = config
+// 	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	configFileBz, err := json.MarshalIndent(configFile, "", "    ")
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	if err := ioutil.WriteFile(testingGenesisFilePath, genesisFileBz, 0777); err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	if err := ioutil.WriteFile(testingConfigFilePath, configFileBz, 0777); err != nil {
+// 		log.Fatal(err)
+// 	}
+// }
 
 func getRandomChains() (chains []string) {
 	setRandomSeed()

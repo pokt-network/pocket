@@ -64,39 +64,39 @@ type consensusModule struct {
 	MaxBlockBytes uint64
 }
 
-func Create(runtime modules.Runtime) (modules.Module, error) {
-	return new(consensusModule).Create(runtime)
+func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	return new(consensusModule).Create(runtimeMgr)
 }
 
-func (*consensusModule) Create(runtime modules.Runtime) (modules.Module, error) {
+func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 	var m *consensusModule
 
-	cfg := runtime.GetConfig()
+	cfg := runtimeMgr.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
 		log.Fatalf("config validation failed: %v", err)
 	}
-	consensusCfg := cfg.Consensus.(*typesCons.ConsensusConfig)
+	consensusCfg := cfg.GetConsensusConfig().(*typesCons.ConsensusConfig)
 
-	genesis := runtime.GetGenesis()
+	genesis := runtimeMgr.GetGenesis()
 	if err := m.ValidateGenesis(genesis); err != nil {
 		log.Fatalf("genesis validation failed: %v", err)
 	}
-	consensusGenesis := genesis.ConsensusGenesisState.(*typesCons.ConsensusGenesisState)
+	consensusGenesis := genesis.GetConsensusGenesisState().(*typesCons.ConsensusGenesisState)
 
-	leaderElectionMod, err := leader_election.Create(runtime)
+	leaderElectionMod, err := leader_election.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO(olshansky): Can we make this a submodule?
-	paceMakerMod, err := CreatePacemaker(runtime)
+	paceMakerMod, err := CreatePacemaker(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
 	valMap := typesCons.ValidatorListToMap(consensusGenesis.Validators)
 
-	privateKey, err := m.GetPrivateKey(runtime)
+	privateKey, err := m.GetPrivateKey(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
@@ -188,21 +188,21 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 }
 
 func (*consensusModule) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.Consensus.(*typesCons.ConsensusConfig); !ok {
+	if _, ok := cfg.GetConsensusConfig().(*typesCons.ConsensusConfig); !ok {
 		return fmt.Errorf("cannot cast to ConsensusConfig")
 	}
 	return nil
 }
 
 func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
-	if _, ok := genesis.ConsensusGenesisState.(*typesCons.ConsensusGenesisState); !ok {
+	if _, ok := genesis.GetConsensusGenesisState().(*typesCons.ConsensusGenesisState); !ok {
 		return fmt.Errorf("cannot cast to ConsensusGenesisState")
 	}
 	return nil
 }
 
-func (*consensusModule) GetPrivateKey(runtime modules.Runtime) (cryptoPocket.PrivateKey, error) {
-	return cryptoPocket.NewPrivateKey(runtime.GetConfig().Consensus.(*typesCons.ConsensusConfig).PrivateKey)
+func (*consensusModule) GetPrivateKey(runtime modules.RuntimeMgr) (cryptoPocket.PrivateKey, error) {
+	return cryptoPocket.NewPrivateKey(runtime.GetConfig().GetConsensusConfig().(*typesCons.ConsensusConfig).PrivateKey)
 }
 
 func (m *consensusModule) loadPersistedState() error {

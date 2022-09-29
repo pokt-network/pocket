@@ -26,7 +26,7 @@ type InterruptableModule interface {
 
 type InitializableModule interface {
 	GetModuleName() string
-	Create(runtime Runtime) (Module, error)
+	Create(runtime RuntimeMgr) (Module, error)
 }
 
 type ConfigurableModule interface {
@@ -38,7 +38,7 @@ type GenesisDependentModule interface {
 }
 
 type KeyholderModule interface {
-	GetPrivateKey(Runtime) (crypto.PrivateKey, error)
+	GetPrivateKey(RuntimeMgr) (crypto.PrivateKey, error)
 }
 
 type P2PAddressableModule interface {

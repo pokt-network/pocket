@@ -7,74 +7,40 @@ import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	typesPers "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var _ modules.ConsensusGenesisState = &Genesis{}
-var _ modules.PersistenceGenesisState = &Genesis{}
+var _ modules.GenesisState = &runtimeGenesis{}
 
-type Genesis struct {
+type runtimeGenesis struct {
 	ConsensusGenesisState   *typesCons.ConsensusGenesisState   `json:"consensus_genesis_state"`
 	PersistenceGenesisState *typesPers.PersistenceGenesisState `json:"persistence_genesis_state"`
 }
 
-func (g *Genesis) ToShared() modules.GenesisState {
-	return modules.GenesisState{
-		PersistenceGenesisState: g.PersistenceGenesisState,
-		ConsensusGenesisState:   g.ConsensusGenesisState,
+func NewGenesis(
+	consensusGenesisState modules.ConsensusGenesisState,
+	persistenceGenesisState modules.PersistenceGenesisState,
+) *runtimeGenesis {
+	return &runtimeGenesis{
+		ConsensusGenesisState:   consensusGenesisState.(*typesCons.ConsensusGenesisState),
+		PersistenceGenesisState: persistenceGenesisState.(*typesPers.PersistenceGenesisState),
 	}
 }
 
-func ParseGenesisJSON(genesisPath string) (genesis *Genesis, err error) {
+func (g *runtimeGenesis) GetPersistenceGenesisState() modules.PersistenceGenesisState {
+	return g.PersistenceGenesisState
+}
+func (g *runtimeGenesis) GetConsensusGenesisState() modules.ConsensusGenesisState {
+	return g.ConsensusGenesisState
+}
+
+func parseGenesisJSON(genesisPath string) (g *runtimeGenesis, err error) {
 	data, err := os.ReadFile(genesisPath)
 	if err != nil {
 		return
 	}
 
 	// general genesis file
-	genesis = new(Genesis)
-	err = json.Unmarshal(data, &genesis)
+	g = new(runtimeGenesis)
+	err = json.Unmarshal(data, &g)
 	return
-}
-
-// modules.ConsensusGenesisState
-
-func (g *Genesis) GetGenesisTime() *timestamppb.Timestamp {
-	return g.ConsensusGenesisState.GenesisTime
-}
-func (g *Genesis) GetChainId() string {
-	return g.ConsensusGenesisState.ChainId
-}
-func (g *Genesis) GetMaxBlockBytes() uint64 {
-	return g.ConsensusGenesisState.MaxBlockBytes
-}
-
-// modules.PersistenceGenesisState
-
-func (g *Genesis) GetAccs() []modules.Account {
-	return g.PersistenceGenesisState.GetAccs()
-}
-
-func (g *Genesis) GetAccPools() []modules.Account {
-	return g.PersistenceGenesisState.GetAccPools()
-}
-
-func (g *Genesis) GetApps() []modules.Actor {
-	return g.PersistenceGenesisState.GetApps()
-}
-
-func (g *Genesis) GetVals() []modules.Actor {
-	return g.PersistenceGenesisState.GetVals()
-}
-
-func (g *Genesis) GetFish() []modules.Actor {
-	return g.PersistenceGenesisState.GetFish()
-}
-
-func (g *Genesis) GetNodes() []modules.Actor {
-	return g.PersistenceGenesisState.GetNodes()
-}
-
-func (g *Genesis) GetParameters() modules.Params {
-	return g.PersistenceGenesisState.GetParameters()
 }

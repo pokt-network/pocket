@@ -8,6 +8,8 @@ import (
 	"github.com/pokt-network/pocket/utility/types"
 )
 
+var _ modules.PersistenceGenesisState = &PersistenceGenesisState{}
+
 // TODO (Research) is there anyway to not have to name these protobuf files uniquely?
 //	not a fan of <module_name>_config/genesis.go would rather just config/genesis.go
 

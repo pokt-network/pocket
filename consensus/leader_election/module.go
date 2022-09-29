@@ -22,11 +22,11 @@ type leaderElectionModule struct {
 	bus modules.Bus
 }
 
-func Create(runtime modules.Runtime) (modules.Module, error) {
+func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	return new(leaderElectionModule).Create(runtime)
 }
 
-func (*leaderElectionModule) Create(runtime modules.Runtime) (modules.Module, error) {
+func (*leaderElectionModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	return &leaderElectionModule{}, nil
 }
 

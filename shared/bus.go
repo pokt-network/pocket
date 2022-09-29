@@ -32,7 +32,7 @@ const (
 )
 
 func CreateBus(
-	runtime modules.Runtime,
+	runtime modules.RuntimeMgr,
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
@@ -83,7 +83,7 @@ func CreateBus(
 //	Using `CreateBusWithOptionalModules`, we can create a bus with only pre2p and a NOOP telemetry module
 //	so that we can the pre2p module without any issues.
 func CreateBusWithOptionalModules(
-	runtime modules.Runtime,
+	runtime modules.RuntimeMgr,
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,

@@ -41,19 +41,19 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
 }
 
-func Create(runtime modules.Runtime) (modules.Module, error) {
-	return new(p2pModule).Create(runtime)
+func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	return new(p2pModule).Create(runtimeMgr)
 }
 
-func (*p2pModule) Create(runtime modules.Runtime) (modules.Module, error) {
+func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 	log.Println("Creating network module")
 	var m *p2pModule
 
-	cfg := runtime.GetConfig()
+	cfg := runtimeMgr.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
 		log.Fatalf("config validation failed: %v", err)
 	}
-	p2pCfg := cfg.P2P.(*typesP2P.P2PConfig)
+	p2pCfg := cfg.GetP2PConfig().(*typesP2P.P2PConfig)
 
 	l, err := CreateListener(p2pCfg)
 	if err != nil {
@@ -167,7 +167,7 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic debug.
 }
 
 func (*p2pModule) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.P2P.(*typesP2P.P2PConfig); !ok {
+	if _, ok := cfg.GetP2PConfig().(*typesP2P.P2PConfig); !ok {
 		return fmt.Errorf("cannot cast to P2PConfig")
 	}
 	return nil

@@ -26,12 +26,12 @@ func NOOP() {
 	log.Printf("\n[telemetry=noop]\n")
 }
 
-func CreateNoopTelemetryModule(runtime modules.Runtime) (modules.Module, error) {
+func CreateNoopTelemetryModule(runtime modules.RuntimeMgr) (modules.Module, error) {
 	var m NoopTelemetryModule
 	return m.Create(runtime)
 }
 
-func (m *NoopTelemetryModule) Create(runtime modules.Runtime) (modules.Module, error) {
+func (m *NoopTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	return &NoopTelemetryModule{}, nil
 }
 
@@ -61,7 +61,7 @@ func (m *NoopTelemetryModule) GetBus() modules.Bus {
 }
 
 func (*NoopTelemetryModule) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.Telemetry.(*TelemetryConfig); !ok {
+	if _, ok := cfg.GetTelemetryConfig().(*TelemetryConfig); !ok {
 		return fmt.Errorf("cannot cast to TelemetryConfig")
 	}
 	return nil

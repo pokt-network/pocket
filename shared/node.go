@@ -33,10 +33,10 @@ func NewNodeWithAddress(address cryptoPocket.Address) *Node {
 }
 
 func Create(configPath, genesisPath string) (modules.Module, error) {
-	return new(Node).Create(runtime.New(configPath, genesisPath))
+	return new(Node).Create(runtime.NewManagerFromFiles(configPath, genesisPath))
 }
 
-func (m *Node) Create(runtime modules.Runtime) (modules.Module, error) {
+func (m *Node) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	persistenceMod, err := persistence.Create(runtime)
 	if err != nil {
 		return nil, err

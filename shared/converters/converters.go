@@ -1,9 +1,12 @@
-package types
+package converters
 
-import "github.com/pokt-network/pocket/shared/modules"
+import (
+	typesPers "github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/modules"
+)
 
-func toPersistenceActor(actor modules.Actor) *Actor {
-	return &Actor{
+func toPersistenceActor(actor modules.Actor) *typesPers.Actor {
+	return &typesPers.Actor{
 		Address:      actor.GetAddress(),
 		PublicKey:    actor.GetPublicKey(),
 		StakedAmount: actor.GetStakedAmount(),
@@ -11,31 +14,31 @@ func toPersistenceActor(actor modules.Actor) *Actor {
 	}
 }
 
-func ToPersistenceActors(actors []modules.Actor) []*Actor {
-	r := make([]*Actor, 0)
+func ToPersistenceActors(actors []modules.Actor) []*typesPers.Actor {
+	r := make([]*typesPers.Actor, 0)
 	for _, a := range actors {
 		r = append(r, toPersistenceActor(a))
 	}
 	return r
 }
 
-func toPersistenceAccount(account modules.Account) *Account {
-	return &Account{
+func toPersistenceAccount(account modules.Account) *typesPers.Account {
+	return &typesPers.Account{
 		Address: account.GetAddress(),
 		Amount:  account.GetAmount(),
 	}
 }
 
-func ToPersistenceAccounts(accounts []modules.Account) []*Account {
-	r := make([]*Account, 0)
+func ToPersistenceAccounts(accounts []modules.Account) []*typesPers.Account {
+	r := make([]*typesPers.Account, 0)
 	for _, a := range accounts {
 		r = append(r, toPersistenceAccount(a))
 	}
 	return r
 }
 
-func ToPersistenceParams(params modules.Params) *Params {
-	return &Params{
+func ToPersistenceParams(params modules.Params) *typesPers.Params {
+	return &typesPers.Params{
 		BlocksPerSession:                         params.GetBlocksPerSession(),
 		AppMinimumStake:                          params.GetAppMinimumStake(),
 		AppMaxChains:                             params.GetAppMaxChains(),

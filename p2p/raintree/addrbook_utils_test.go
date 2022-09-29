@@ -114,7 +114,8 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 			require.Equal(b, testCase.numExpectedLevels, int(network.maxNumLevels))
 
 			for i := 0; i < numAddressessToBeAdded; i++ {
-				newAddr, _ := crypto.GenerateAddress()
+				newAddr, err := crypto.GenerateAddress()
+				require.NoError(b, err)
 				network.AddPeerToAddrBook(&types.NetworkPeer{Address: newAddr})
 			}
 

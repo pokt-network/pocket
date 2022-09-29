@@ -49,30 +49,30 @@ var consensusMod modules.ConsensusModule
 func main() {
 	var err error
 
-	runtimeCfg := runtime.New(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
+	runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
 
-	consM, err := consensus.Create(runtimeCfg)
+	consM, err := consensus.Create(runtimeMgr)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 	}
-	consensusMod := consM.(modules.ConsensusModule)
+	consensusMod = consM.(modules.ConsensusModule)
 
-	p2pM, err := p2p.Create(runtimeCfg)
+	p2pM, err := p2p.Create(runtimeMgr)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 	}
-	p2pMod := p2pM.(modules.P2PModule)
+	p2pMod = p2pM.(modules.P2PModule)
 	// This telemetry module instance is a NOOP because the 'enable_telemetry' flag in the `cfg` above is set to false.
 	// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
 	// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
 	// module that NOOPs (per the configs above) is injected.
-	telemetryM, err := telemetry.Create(runtimeCfg)
+	telemetryM, err := telemetry.Create(runtimeMgr)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 	}
 	telemetryMod := telemetryM.(modules.TelemetryModule)
 
-	_ = shared.CreateBusWithOptionalModules(runtimeCfg, nil, p2pMod, nil, consensusMod, telemetryMod)
+	_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod)
 
 	p2pMod.Start()
 

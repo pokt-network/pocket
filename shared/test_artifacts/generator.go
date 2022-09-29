@@ -7,6 +7,7 @@ import (
 
 	typesPersistence "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/shared/converters"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
 
@@ -45,65 +46,66 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 	vals, validatorPrivateKeys := NewActors(types.UtilActorType_Val, numValidators)
 	serviceNodes, snPrivateKeys := NewActors(types.UtilActorType_Node, numServiceNodes)
 	fish, fishPrivateKeys := NewActors(types.UtilActorType_Fish, numFisherman)
-	return modules.GenesisState{
-		ConsensusGenesisState: &typesCons.ConsensusGenesisState{
+
+	return runtime.NewGenesis(&typesCons.ConsensusGenesisState{
 			GenesisTime:   timestamppb.Now(),
 			ChainId:       DefaultChainID,
 			MaxBlockBytes: DefaultMaxBlockBytes,
 			Validators:    typesCons.ToConsensusValidators(vals),
 		},
-		PersistenceGenesisState: &typesPers.PersistenceGenesisState{
-			Pools:        typesPers.ToPersistenceAccounts(NewPools()),
-			Accounts:     typesPers.ToPersistenceAccounts(NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...)), // TODO(olshansky): clean this up
-			Applications: typesPers.ToPersistenceActors(apps),
-			Validators:   typesPers.ToPersistenceActors(vals),
-			ServiceNodes: typesPers.ToPersistenceActors(serviceNodes),
-			Fishermen:    typesPers.ToPersistenceActors(fish),
-			Params:       typesPers.ToPersistenceParams(DefaultParams()),
-		},
-	}, validatorPrivateKeys
+			&typesPers.PersistenceGenesisState{
+				Pools:        converters.ToPersistenceAccounts(NewPools()),
+				Accounts:     converters.ToPersistenceAccounts(NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...)), // TODO(olshansky): clean this up
+				Applications: converters.ToPersistenceActors(apps),
+				Validators:   converters.ToPersistenceActors(vals),
+				ServiceNodes: converters.ToPersistenceActors(serviceNodes),
+				Fishermen:    converters.ToPersistenceActors(fish),
+				Params:       converters.ToPersistenceParams(DefaultParams()),
+			}),
+		validatorPrivateKeys
 }
 
-func NewDefaultConfigs(privateKeys []string) (configs []runtime.Config) {
+func NewDefaultConfigs(privateKeys []string) (configs []modules.Config) {
 	for i, pk := range privateKeys {
 		configs = append(configs, NewDefaultConfig(i, pk))
 	}
 	return
 }
 
-func NewDefaultConfig(i int, pk string) runtime.Config {
-	return runtime.Config{
-		Base: &runtime.BaseConfig{
+func NewDefaultConfig(i int, pk string) modules.Config {
+	return runtime.NewConfig(
+		&runtime.BaseConfig{
 			RootDirectory: "/go/src/github.com/pocket-network",
 			PrivateKey:    pk,
 		},
-		Consensus: &typesCons.ConsensusConfig{
-			MaxMempoolBytes: 500000000,
-			PacemakerConfig: &typesCons.PacemakerConfig{
-				TimeoutMsec:               5000,
-				Manual:                    true,
-				DebugTimeBetweenStepsMsec: 1000,
-			},
-			PrivateKey: pk,
-		},
-		Utility: &typesUtil.UtilityConfig{},
-		Persistence: &typesPers.PersistenceConfig{
+		runtime.WithConsensusConfig(
+			&typesCons.ConsensusConfig{
+				MaxMempoolBytes: 500000000,
+				PacemakerConfig: &typesCons.PacemakerConfig{
+					TimeoutMsec:               5000,
+					Manual:                    true,
+					DebugTimeBetweenStepsMsec: 1000,
+				},
+				PrivateKey: pk,
+			}),
+		runtime.WithUtilityConfig(&typesUtil.UtilityConfig{}),
+		runtime.WithPersistenceConfig(&typesPers.PersistenceConfig{
 			PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
 			NodeSchema:     "node" + strconv.Itoa(i+1),
 			BlockStorePath: "/var/blockstore",
-		},
-		P2P: &typesP2P.P2PConfig{
+		}),
+		runtime.WithP2PConfig(&typesP2P.P2PConfig{
 			ConsensusPort:         8080,
 			UseRainTree:           true,
 			IsEmptyConnectionType: false,
 			PrivateKey:            pk,
-		},
-		Telemetry: &typesTelemetry.TelemetryConfig{
+		}),
+		runtime.WithTelemetryConfig(&typesTelemetry.TelemetryConfig{
 			Enabled:  true,
 			Address:  "0.0.0.0:9000",
 			Endpoint: "/metrics",
-		},
-	}
+		}),
+	)
 }
 
 func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors

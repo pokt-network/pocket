@@ -35,25 +35,25 @@ const (
 	PersistenceModuleName = "persistence"
 )
 
-func Create(runtime modules.Runtime) (modules.Module, error) {
-	return new(persistenceModule).Create(runtime)
+func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	return new(persistenceModule).Create(runtimeMgr)
 }
 
-func (*persistenceModule) Create(runtime modules.Runtime) (modules.Module, error) {
+func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 	var m *persistenceModule
 
-	cfg := runtime.GetConfig()
+	cfg := runtimeMgr.GetConfig()
 
 	if err := m.ValidateConfig(cfg); err != nil {
 		log.Fatalf("config validation failed: %v", err)
 	}
-	persistenceCfg := cfg.Persistence.(*types.PersistenceConfig)
+	persistenceCfg := cfg.GetPersistenceConfig().(*types.PersistenceConfig)
 
-	genesis := runtime.GetGenesis()
+	genesis := runtimeMgr.GetGenesis()
 	if err := m.ValidateGenesis(genesis); err != nil {
 		log.Fatalf("genesis validation failed: %v", err)
 	}
-	persistenceGenesis := genesis.PersistenceGenesisState.(*types.PersistenceGenesisState)
+	persistenceGenesis := genesis.GetPersistenceGenesisState().(*types.PersistenceGenesisState)
 
 	conn, err := connectToDatabase(persistenceCfg.GetPostgresUrl(), persistenceCfg.GetNodeSchema())
 	if err != nil {
@@ -118,14 +118,14 @@ func (m *persistenceModule) GetBus() modules.Bus {
 }
 
 func (*persistenceModule) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.Persistence.(*types.PersistenceConfig); !ok {
+	if _, ok := cfg.GetPersistenceConfig().(*types.PersistenceConfig); !ok {
 		return fmt.Errorf("cannot cast to PersistenceConfig")
 	}
 	return nil
 }
 
 func (*persistenceModule) ValidateGenesis(genesis modules.GenesisState) error {
-	if _, ok := genesis.PersistenceGenesisState.(*types.PersistenceGenesisState); !ok {
+	if _, ok := genesis.GetPersistenceGenesisState().(*types.PersistenceGenesisState); !ok {
 		return fmt.Errorf("cannot cast to PersistenceGenesisState")
 	}
 	return nil

@@ -55,18 +55,18 @@ type paceMaker struct {
 	paceMakerDebug
 }
 
-func CreatePacemaker(runtime modules.Runtime) (modules.Module, error) {
+func CreatePacemaker(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 	var m paceMaker
-	return m.Create(runtime)
+	return m.Create(runtimeMgr)
 }
 
-func (m *paceMaker) Create(runtime modules.Runtime) (modules.Module, error) {
-	cfg := runtime.GetConfig()
+func (m *paceMaker) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	cfg := runtimeMgr.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
 		log.Fatalf("config validation failed: %v", err)
 	}
 
-	pacemakerConfig := cfg.Consensus.(*typesCons.ConsensusConfig).PacemakerConfig
+	pacemakerConfig := cfg.GetConsensusConfig().(*typesCons.ConsensusConfig).PacemakerConfig
 
 	return &paceMaker{
 		bus:          nil,
@@ -108,7 +108,7 @@ func (m *paceMaker) GetBus() modules.Bus {
 }
 
 func (*paceMaker) ValidateConfig(cfg modules.Config) error {
-	consCfg, ok := cfg.Consensus.(*typesCons.ConsensusConfig)
+	consCfg, ok := cfg.GetConsensusConfig().(*typesCons.ConsensusConfig)
 	if !ok {
 		return fmt.Errorf("cannot cast to TelemetryConfig")
 	}

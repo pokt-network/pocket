@@ -1,5 +1,7 @@
 package modules
 
+//go:generate mockgen -source=$GOFILE -destination=./mocks/types_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+
 import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -7,25 +9,23 @@ import (
 // This file contains the minimum shared structures (GenesisState) and the many shared interfaces the modules implement
 // the main purpose of this structure is to ensure the ownership of the
 
-type GenesisState struct {
-	PersistenceGenesisState PersistenceGenesisState `json:"persistence_genesis_state"`
-	ConsensusGenesisState   ConsensusGenesisState   `json:"consensus_genesis_state"`
+type GenesisState interface {
+	GetPersistenceGenesisState() PersistenceGenesisState
+	GetConsensusGenesisState() ConsensusGenesisState
 }
 
-type BaseConfig struct {
-	RootDirectory string `json:"root_directory"`
-	PrivateKey    string `json:"private_key"` // TODO (pocket/issues/150) better architecture for key management (keybase, keyfiles, etc.)
-	ConfigPath    string `json:"config_path"`
-	GenesisPath   string `json:"genesis_path"`
+type Config interface {
+	GetBaseConfig() BaseConfig
+	GetConsensusConfig() ConsensusConfig
+	GetUtilityConfig() UtilityConfig
+	GetPersistenceConfig() PersistenceConfig
+	GetP2PConfig() P2PConfig
+	GetTelemetryConfig() TelemetryConfig
 }
 
-type Config struct {
-	Base        *BaseConfig       `json:"base"`
-	Consensus   ConsensusConfig   `json:"consensus"`
-	Utility     UtilityConfig     `json:"utility"`
-	Persistence PersistenceConfig `json:"persistence"`
-	P2P         P2PConfig         `json:"p2p"`
-	Telemetry   TelemetryConfig   `json:"telemetry"`
+type BaseConfig interface {
+	GetRootDirectory() string
+	GetPrivateKey() string // TODO (pocket/issues/150) better architecture for key management (keybase, keyfiles, etc.)
 }
 
 type ConsensusConfig interface {
@@ -221,19 +221,6 @@ type Params interface {
 	GetMessageUnpauseServiceNodeFeeOwner() string
 	GetMessageChangeParameterFeeOwner() string
 }
-
-var _ IConfig = PacemakerConfig(nil)
-var _ IConfig = PersistenceConfig(nil)
-var _ IConfig = P2PConfig(nil)
-var _ IConfig = TelemetryConfig(nil)
-var _ IConfig = UtilityConfig(nil)
-
-var _ IGenesis = PersistenceGenesisState(nil)
-var _ IGenesis = ConsensusGenesisState(nil)
-
-// TODO think of a way to enforce these configuration interfaces as true configs/genesis, this is merely decorative at this point
-type IConfig interface{}
-type IGenesis interface{}
 
 // TODO (Team) move to use proto string() and deprecate #149
 const (

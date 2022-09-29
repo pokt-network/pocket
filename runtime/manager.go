@@ -1,6 +1,8 @@
 package runtime
 
 import (
+	"encoding/json"
+	"io"
 	"log"
 	"path"
 	"path/filepath"
@@ -14,23 +16,17 @@ import (
 	"github.com/spf13/viper"
 )
 
-var _ modules.Runtime = &runtimeConfig{}
+var _ modules.RuntimeMgr = &Manager{}
 
-type runtimeConfig struct {
-	configPath  string
-	genesisPath string
-
-	config  *Config
-	genesis *Genesis
+type Manager struct {
+	config  *runtimeConfig
+	genesis *runtimeGenesis
 }
 
-func New(configPath, genesisPath string, options ...func(*runtimeConfig)) *runtimeConfig {
-	rc := &runtimeConfig{
-		configPath:  configPath,
-		genesisPath: genesisPath,
-	}
+func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manager)) *Manager {
+	rc := &Manager{}
 
-	cfg, genesis, err := rc.init()
+	cfg, genesis, err := rc.init(configPath, genesisPath)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to initialize runtime builder: %v", err)
 	}
@@ -44,8 +40,29 @@ func New(configPath, genesisPath string, options ...func(*runtimeConfig)) *runti
 	return rc
 }
 
-func (rc *runtimeConfig) init() (config *Config, genesis *Genesis, err error) {
-	dir, file := path.Split(rc.configPath)
+func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...func(*Manager)) *Manager {
+	var cfg *runtimeConfig
+	parse(configReader, cfg)
+
+	var genesis *runtimeGenesis
+	parse(genesisReader, genesis)
+
+	rc := &Manager{
+		config:  cfg,
+		genesis: genesis,
+	}
+	return rc
+}
+
+func NewManager(config modules.Config, genesis modules.GenesisState) *Manager {
+	return &Manager{
+		config:  config.(*runtimeConfig),
+		genesis: genesis.(*runtimeGenesis),
+	}
+}
+
+func (rc *Manager) init(configPath, genesisPath string) (config *runtimeConfig, genesis *runtimeGenesis, err error) {
+	dir, file := path.Split(configPath)
 	filename := strings.TrimSuffix(file, filepath.Ext(file))
 
 	viper.AddConfigPath(".")
@@ -75,24 +92,37 @@ func (rc *runtimeConfig) init() (config *Config, genesis *Genesis, err error) {
 	if config.Base == nil {
 		config.Base = &BaseConfig{}
 	}
-	config.Base.ConfigPath = rc.configPath
-	config.Base.GenesisPath = rc.genesisPath
 
-	genesis, err = ParseGenesisJSON(rc.genesisPath)
+	genesis, err = parseGenesisJSON(genesisPath)
 	return
 }
 
-func (b *runtimeConfig) GetConfig() modules.Config {
-	return b.config.ToShared()
+func (b *Manager) GetConfig() modules.Config {
+	return b.config
 }
 
-func (b *runtimeConfig) GetGenesis() modules.GenesisState {
-	return b.genesis.ToShared()
+func (b *Manager) GetGenesis() modules.GenesisState {
+	return b.genesis
 }
 
-// RuntimeConfig option helpers
+type supportedStructs interface {
+	*runtimeConfig | *runtimeGenesis
+}
 
-func WithRandomPK() func(*runtimeConfig) {
+func parse[T supportedStructs](reader io.Reader, target T) {
+	bz, err := io.ReadAll(reader)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to read from reader: %v", err)
+
+	}
+	if err := json.Unmarshal(bz, &target); err != nil {
+		log.Fatalf("[ERROR] Failed to unmarshal: %v", err)
+	}
+}
+
+// Manager option helpers
+
+func WithRandomPK() func(*Manager) {
 	privateKey, err := cryptoPocket.GeneratePrivateKey()
 	if err != nil {
 		log.Fatalf("unable to generate private key")
@@ -101,8 +131,8 @@ func WithRandomPK() func(*runtimeConfig) {
 	return WithPK(privateKey.String())
 }
 
-func WithPK(pk string) func(*runtimeConfig) {
-	return func(b *runtimeConfig) {
+func WithPK(pk string) func(*Manager) {
+	return func(b *Manager) {
 		if b.config.Consensus == nil {
 			b.config.Consensus = &types.ConsensusConfig{}
 		}

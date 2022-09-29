@@ -24,18 +24,18 @@ const (
 	UtilityModuleName = "utility"
 )
 
-func Create(runtime modules.Runtime) (modules.Module, error) {
+func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	return new(utilityModule).Create(runtime)
 }
 
-func (*utilityModule) Create(runtime modules.Runtime) (modules.Module, error) {
+func (*utilityModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	var m *utilityModule
 
 	cfg := runtime.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
 		log.Fatalf("config validation failed: %v", err)
 	}
-	utilityCfg := cfg.Utility.(*types.UtilityConfig)
+	utilityCfg := cfg.GetUtilityConfig().(*types.UtilityConfig)
 
 	return &utilityModule{
 		config: utilityCfg,
@@ -68,7 +68,7 @@ func (u *utilityModule) GetBus() modules.Bus {
 }
 
 func (*utilityModule) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.Utility.(*types.UtilityConfig); !ok {
+	if _, ok := cfg.GetUtilityConfig().(*types.UtilityConfig); !ok {
 		return fmt.Errorf("cannot cast to UtilityConfig")
 	}
 	return nil

@@ -3,10 +3,8 @@ package consensus_tests
 import (
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"reflect"
@@ -63,43 +61,67 @@ type IdToNodeMapping map[typesCons.NodeId]modules.NodeModule
 
 /*** Node Generation Helpers ***/
 
-func GenerateNodeConfigs(_ *testing.T, validatorCount int) (configs []runtime.Config, genesisState modules.GenesisState) {
+func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int) []runtime.Manager {
+	runtimeMgrs := make([]runtime.Manager, 0)
 	var keys []string
-	genesisState, keys = test_artifacts.NewGenesisState(validatorCount, 1, 1, 1)
-	configs = test_artifacts.NewDefaultConfigs(keys)
-	for i, config := range configs {
-		config.Consensus = &typesCons.ConsensusConfig{
-			PrivateKey:      config.Base.PrivateKey,
+	genesisState, keys := test_artifacts.NewGenesisState(validatorCount, 1, 1, 1)
+	configs := test_artifacts.NewDefaultConfigs(keys)
+	for _, config := range configs {
+		runtime.WithConsensusConfig(&typesCons.ConsensusConfig{
+			PrivateKey:      config.GetBaseConfig().GetPrivateKey(),
 			MaxMempoolBytes: 500000000,
 			PacemakerConfig: &typesCons.PacemakerConfig{
 				TimeoutMsec:               5000,
 				Manual:                    false,
 				DebugTimeBetweenStepsMsec: 0,
 			},
-		}
-		configs[i] = config
+		})(config)
+		runtimeMgrs = append(runtimeMgrs, *runtime.NewManager(config, genesisState))
 	}
-	return
+	return runtimeMgrs
 }
 
 func CreateTestConsensusPocketNodes(
 	t *testing.T,
-	configs []runtime.Config,
-	genesisState modules.GenesisState,
+	runtimeMgrs []runtime.Manager,
 	testChannel modules.EventsChannel,
 ) (pocketNodes IdToNodeMapping) {
-	pocketNodes = make(IdToNodeMapping, len(configs))
+	pocketNodes = make(IdToNodeMapping, len(runtimeMgrs))
 	// TODO(design): The order here is important in order for NodeId to be set correctly below.
 	// This logic will need to change once proper leader election is implemented.
-	sort.Slice(configs, func(i, j int) bool {
-		pk, err := cryptoPocket.NewPrivateKey(configs[i].Base.PrivateKey)
+	sort.Slice(runtimeMgrs, func(i, j int) bool {
+		pk, err := cryptoPocket.NewPrivateKey(runtimeMgrs[i].GetConfig().GetBaseConfig().GetPrivateKey())
 		require.NoError(t, err)
-		pk2, err := cryptoPocket.NewPrivateKey(configs[j].Base.PrivateKey)
+		pk2, err := cryptoPocket.NewPrivateKey(runtimeMgrs[j].GetConfig().GetBaseConfig().GetPrivateKey())
 		require.NoError(t, err)
 		return pk.Address().String() < pk2.Address().String()
 	})
-	for i, cfg := range configs {
-		pocketNode := CreateTestConsensusPocketNode(t, cfg, genesisState, testChannel)
+	for i, runtimeConfig := range runtimeMgrs {
+		pocketNode := CreateTestConsensusPocketNode(t, &runtimeConfig, testChannel)
+		// TODO(olshansky): Figure this part out.
+		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
+	}
+	return
+}
+
+func CreateTestConsensusPocketNodesNew(
+	t *testing.T,
+	runtimeMgrs []runtime.Manager,
+	testChannel modules.EventsChannel,
+) (pocketNodes IdToNodeMapping) {
+	pocketNodes = make(IdToNodeMapping, len(runtimeMgrs))
+	// TODO(design): The order here is important in order for NodeId to be set correctly below.
+	// This logic will need to change once proper leader election is implemented.
+	sort.Slice(runtimeMgrs, func(i, j int) bool {
+
+		pk, err := cryptoPocket.NewPrivateKey(runtimeMgrs[i].GetConfig().GetBaseConfig().GetPrivateKey())
+		require.NoError(t, err)
+		pk2, err := cryptoPocket.NewPrivateKey(runtimeMgrs[j].GetConfig().GetBaseConfig().GetPrivateKey())
+		require.NoError(t, err)
+		return pk.Address().String() < pk2.Address().String()
+	})
+	for i, runtimeMgr := range runtimeMgrs {
+		pocketNode := CreateTestConsensusPocketNode(t, &runtimeMgr, testChannel)
 		// TODO(olshansky): Figure this part out.
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
@@ -114,15 +136,12 @@ const (
 // Creates a pocket node where all the primary modules, exception for consensus, are mocked
 func CreateTestConsensusPocketNode(
 	t *testing.T,
-	cfg runtime.Config,
-	genesisState modules.GenesisState,
+	runtimeMgr *runtime.Manager,
 	testChannel modules.EventsChannel,
 ) *shared.Node {
-	createTestingGenesisAndConfigFiles(t, cfg, genesisState)
+	//createTestingGenesisAndConfigFiles(t, cfg, genesisState)
 
-	runtimeCfg := runtime.New(testingConfigFilePath, testingGenesisFilePath)
-
-	consensusMod, err := consensus.Create(runtimeCfg)
+	consensusMod, err := consensus.Create(runtimeMgr)
 	require.NoError(t, err)
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
@@ -131,10 +150,10 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 
-	bus, err := shared.CreateBus(runtimeCfg, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock)
+	bus, err := shared.CreateBus(runtimeMgr, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock)
 	require.NoError(t, err)
 
-	pk, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
+	pk, err := cryptoPocket.NewPrivateKey(runtimeMgr.GetConfig().GetBaseConfig().GetPrivateKey())
 	require.NoError(t, err)
 
 	pocketNode := shared.NewNodeWithAddress(pk.Address())
@@ -142,28 +161,6 @@ func CreateTestConsensusPocketNode(
 	pocketNode.SetBus(bus)
 
 	return pocketNode
-}
-
-func createTestingGenesisAndConfigFiles(t *testing.T, cfg runtime.Config, genesisState modules.GenesisState) {
-	config, err := json.Marshal(cfg.Consensus)
-	require.NoError(t, err)
-
-	genesis, err := json.Marshal(genesisState.ConsensusGenesisState)
-	require.NoError(t, err)
-
-	genesisFile := make(map[string]json.RawMessage)
-	configFile := make(map[string]json.RawMessage)
-	consensusModName := consensus.ConsensusModuleName
-	genesisFile[test_artifacts.GetGenesisFileName(consensusModName)] = genesis
-	configFile[consensusModName] = config
-
-	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
-	require.NoError(t, err)
-
-	consensusFileBz, err := json.MarshalIndent(configFile, "", "    ")
-	require.NoError(t, err)
-	require.NoError(t, ioutil.WriteFile(testingGenesisFilePath, genesisFileBz, 0777))
-	require.NoError(t, ioutil.WriteFile(testingConfigFilePath, consensusFileBz, 0777))
 }
 
 func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
