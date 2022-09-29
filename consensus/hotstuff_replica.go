@@ -35,6 +35,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *Consensus
 
 	// Clear the previous utility context, if it exists, and create a new one
 	if err := m.refreshUtilityContext(); err != nil {
+		m.nodeLogError("Could not refresh utility context", err)
 		return
 	}
 
