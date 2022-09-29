@@ -46,7 +46,7 @@ type Message interface {
 var _ Message = &MessageSend{}
 
 func (msg *MessageSend) GetActorType() ActorType {
-	return 0 // there's no actor type for message send, so return zero to allow fee retrieval
+	return ActorType_Undefined // there's no actor type for message send, so return zero to allow fee retrieval
 }
 
 func (msg *MessageStake) ValidateBasic() Error {

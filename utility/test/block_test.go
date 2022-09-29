@@ -191,13 +191,13 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 		poolName := ""
 		switch actorType {
 		case typesUtil.ActorType_App:
-			poolName = typesUtil.Pool_Names_AppStakePool.String()
+			poolName = typesUtil.PoolNames_AppStakePool.String()
 		case typesUtil.ActorType_Validator:
-			poolName = typesUtil.Pool_Names_ValidatorStakePool.String()
+			poolName = typesUtil.PoolNames_ValidatorStakePool.String()
 		case typesUtil.ActorType_Fisherman:
-			poolName = typesUtil.Pool_Names_FishermanStakePool.String()
+			poolName = typesUtil.PoolNames_FishermanStakePool.String()
 		case typesUtil.ActorType_ServiceNode:
-			poolName = typesUtil.Pool_Names_ServiceNodeStakePool.String()
+			poolName = typesUtil.PoolNames_ServiceNodeStakePool.String()
 		default:
 			t.Fatalf("unexpected actor type %s", actorType.String())
 		}

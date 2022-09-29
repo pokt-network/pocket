@@ -4,7 +4,6 @@ import (
 	"math/big"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types" // TODO (andrew) importing consensus and persistence in this file?
-	typesGenesis "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
 
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -139,20 +138,23 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	for _, actorTypeInt32 := range typesUtil.ActorType_value {
 		var readyToUnstake []modules.IUnstakingActor
 		actorType := typesUtil.ActorType(actorTypeInt32)
+		if actorType == typesUtil.ActorType_Undefined {
+			continue
+		}
 		poolName := ""
 		switch actorType {
 		case typesUtil.ActorType_App:
 			readyToUnstake, er = store.GetAppsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
-			poolName = typesUtil.Pool_Names_AppStakePool.String()
+			poolName = typesUtil.PoolNames_AppStakePool.String()
 		case typesUtil.ActorType_Fisherman:
 			readyToUnstake, er = store.GetFishermenReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
-			poolName = typesUtil.Pool_Names_FishermanStakePool.String()
+			poolName = typesUtil.PoolNames_FishermanStakePool.String()
 		case typesUtil.ActorType_ServiceNode:
 			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
-			poolName = typesUtil.Pool_Names_ServiceNodeStakePool.String()
+			poolName = typesUtil.PoolNames_ServiceNodeStakePool.String()
 		case typesUtil.ActorType_Validator:
 			readyToUnstake, er = store.GetValidatorsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
-			poolName = typesUtil.Pool_Names_ValidatorStakePool.String()
+			poolName = typesUtil.PoolNames_ValidatorStakePool.String()
 		}
 		if er != nil {
 			return typesUtil.ErrGetReadyToUnstake(er)
@@ -179,6 +181,9 @@ func (u *UtilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
 	}
 	for _, actorTypeInt32 := range typesUtil.ActorType_value {
 		actorType := typesUtil.ActorType(actorTypeInt32)
+		if actorType == typesUtil.ActorType_Undefined {
+			continue
+		}
 		maxPausedBlocks, err := u.GetMaxPausedBlocks(actorType)
 		if err != nil {
 			return err
@@ -219,7 +224,7 @@ func (u *UtilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, Acto
 }
 
 func (u *UtilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error {
-	feePoolName := typesGenesis.Pool_Names_FeeCollector.String()
+	feePoolName := typesUtil.PoolNames_FeeCollector.String()
 	feesAndRewardsCollected, err := u.GetPoolAmount(feePoolName)
 	if err != nil {
 		return err
@@ -243,7 +248,7 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error 
 	if err = u.AddAccountAmount(proposer, amountToProposer); err != nil {
 		return err
 	}
-	if err = u.AddPoolAmount(typesGenesis.Pool_Names_DAO.String(), amountToDAO); err != nil {
+	if err = u.AddPoolAmount(typesUtil.PoolNames_DAO.String(), amountToDAO); err != nil {
 		return err
 	}
 	return nil

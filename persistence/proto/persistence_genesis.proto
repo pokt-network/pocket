@@ -29,10 +29,11 @@ enum PoolNames {
 }
 
 enum ActorType {
-  App = 0;
-  Node = 1;
-  Fish = 2;
-  Val = 3;
+  Undefined = 0;
+  App = 1;
+  Node = 2;
+  Fish = 3;
+  Val = 4;
 }
 
 message Actor {
