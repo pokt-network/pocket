@@ -99,9 +99,9 @@ install_cli_deps:
 .PHONY: develop_test
 ## Run all of the make commands necessary to develop on the project and verify the tests pass
 develop_test: docker_check
+		make go_clean_deps && \
 		make mockgen && \
 		make protogen_clean && make protogen_local && \
-		make go_clean_deps && \
 		make test_all
 
 
@@ -189,6 +189,7 @@ docker_loki_install: docker_check
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
 	$(eval modules_dir = "shared/modules")
+	rm -rf ${modules_dir}/mocks
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
@@ -276,6 +277,14 @@ test_shared: # generate_mocks
 ## Run all go unit tests in the Consensus module
 test_consensus: # mockgen
 	go test ${VERBOSE_TEST} ./consensus/...
+
+.PHONY: test_consensus_concurrent_tests
+## Run unit tests in the consensus module that could be prone to race conditions (#192)
+test_consensus_concurrent_tests:
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
 
 .PHONY: test_hotstuff
 ## Run all go unit tests related to hotstuff consensus
