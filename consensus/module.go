@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -34,6 +35,13 @@ type ConsensusModule struct {
 
 	consCfg     *typesCons.ConsensusConfig
 	consGenesis *typesCons.ConsensusGenesisState
+
+	// m is a mutex used to control synchronization when multiple goroutines are accessing the struct and its fields / properties.
+	//
+	// The idea is that you want to acquire a Lock when you are writing values and a RLock when you want to make sure that no other goroutine is changing the values you are trying to read concurrently.
+	//
+	// Locking context should be the smallest possible but not smaller than a single "unit of work".
+	m sync.RWMutex
 
 	// Hotstuff
 	Height uint64
@@ -218,6 +226,8 @@ func (m *ConsensusModule) SetBus(pocketBus modules.Bus) {
 }
 
 func (m *ConsensusModule) HandleMessage(message *anypb.Any) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	switch message.MessageName() {
 	case HotstuffMessage:
 		msg, err := codec.GetCodec().FromAny(message)

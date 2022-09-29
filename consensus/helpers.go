@@ -123,6 +123,13 @@ func (m *ConsensusModule) isOptimisticThresholdMet(n int) error {
 	return nil
 }
 
+func (m *ConsensusModule) resetForNewHeight() {
+	m.Round = 0
+	m.Block = nil
+	m.highPrepareQC = nil
+	m.lockedQC = nil
+}
+
 func protoHash(m proto.Message) string {
 	b, err := codec.GetCodec().Marshal(m)
 	if err != nil {
@@ -176,6 +183,10 @@ func (m *ConsensusModule) clearMessagesPool() {
 
 /*** Leader Election Helpers ***/
 
+func (m *ConsensusModule) isLeaderUnknown() bool {
+	return m.LeaderId == nil
+}
+
 func (m *ConsensusModule) isLeader() bool {
 	return m.LeaderId != nil && *m.LeaderId == m.nodeId
 }
@@ -199,11 +210,11 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 	m.LeaderId = &leaderId
 
-	if m.LeaderId != nil && *m.LeaderId == m.nodeId {
-		m.logPrefix = "LEADER"
+	if m.isLeader() {
+		m.setLogPrefix("LEADER")
 		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.idToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	} else {
-		m.logPrefix = "REPLICA"
+		m.setLogPrefix("REPLICA")
 		m.nodeLog(typesCons.ElectedNewLeader(m.idToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	}
 
@@ -220,4 +231,8 @@ func (m *ConsensusModule) nodeLog(s string) {
 // TODO(#164): Remove this once we have a proper logging system.
 func (m *ConsensusModule) nodeLogError(s string, err error) {
 	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.nodeId, s, err)
+}
+
+func (m *ConsensusModule) setLogPrefix(logPrefix string) {
+	m.logPrefix = logPrefix
 }
