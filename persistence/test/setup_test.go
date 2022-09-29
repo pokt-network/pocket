@@ -54,8 +54,6 @@ func TestMain(m *testing.M) {
 	pool, resource, dbUrl := sharedTest.SetupPostgresDocker()
 	testPersistenceMod = newTestPersistenceModule(dbUrl)
 	m.Run()
-	// os.Remove(testingConfigFilePath)
-	// os.Remove(testingGenesisFilePath)
 	sharedTest.CleanupPostgresDocker(m, pool, resource)
 }
 
@@ -290,44 +288,6 @@ func fuzzSingleProtocolActor(
 		}
 	})
 }
-
-// TODO(olshansky): Make these functions & variables more functional to avoid having "unexpected"
-//
-//	side effects and making it clearer to the reader.
-// const (
-// 	testingGenesisFilePath = "genesis.json"
-// 	testingConfigFilePath  = "config.json"
-// )
-
-// func createTestingGenesisAndConfigFiles(cfg modules.Config, genesisState modules.GenesisState) {
-// 	config, err := json.Marshal(cfg.GetPersistenceConfig())
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	genesis, err := json.Marshal(genesisState.GetPersistenceGenesisState())
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	genesisFile := make(map[string]json.RawMessage)
-// 	configFile := make(map[string]json.RawMessage)
-// 	persistenceModuleName := persistence.PersistenceModuleName
-// 	genesisFile[test_artifacts.GetGenesisFileName(persistenceModuleName)] = genesis
-// 	configFile[persistenceModuleName] = config
-// 	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	configFileBz, err := json.MarshalIndent(configFile, "", "    ")
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	if err := ioutil.WriteFile(testingGenesisFilePath, genesisFileBz, 0777); err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	if err := ioutil.WriteFile(testingConfigFilePath, configFileBz, 0777); err != nil {
-// 		log.Fatal(err)
-// 	}
-// }
 
 func getRandomChains() (chains []string) {
 	setRandomSeed()

@@ -30,6 +30,7 @@ type BaseConfig interface {
 
 type ConsensusConfig interface {
 	GetMaxMempoolBytes() uint64
+	GetPrivateKey() string // TODO (pocket/issues/150) better architecture for key management (keybase, keyfiles, etc.)
 }
 
 type PacemakerConfig interface {
@@ -72,6 +73,7 @@ type ConsensusGenesisState interface {
 	GetGenesisTime() *timestamppb.Timestamp
 	GetChainId() string
 	GetMaxBlockBytes() uint64
+	GetVals() []Actor
 }
 
 type Account interface {

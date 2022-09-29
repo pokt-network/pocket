@@ -23,7 +23,7 @@ var (
 
 type persistenceModule struct {
 	bus    modules.Bus
-	config *types.PersistenceConfig
+	config modules.PersistenceConfig
 
 	blockStore kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
 
@@ -47,7 +47,7 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 	if err := m.ValidateConfig(cfg); err != nil {
 		log.Fatalf("config validation failed: %v", err)
 	}
-	persistenceCfg := cfg.GetPersistenceConfig().(*types.PersistenceConfig)
+	persistenceCfg := cfg.GetPersistenceConfig()
 
 	genesis := runtimeMgr.GetGenesis()
 	if err := m.ValidateGenesis(genesis); err != nil {
@@ -118,16 +118,18 @@ func (m *persistenceModule) GetBus() modules.Bus {
 }
 
 func (*persistenceModule) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.GetPersistenceConfig().(*types.PersistenceConfig); !ok {
-		return fmt.Errorf("cannot cast to PersistenceConfig")
-	}
+	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
+	// if _, ok := cfg.GetPersistenceConfig().(*types.PersistenceConfig); !ok {
+	// 	 return fmt.Errorf("cannot cast to PersistenceConfig")
+	// }
 	return nil
 }
 
 func (*persistenceModule) ValidateGenesis(genesis modules.GenesisState) error {
-	if _, ok := genesis.GetPersistenceGenesisState().(*types.PersistenceGenesisState); !ok {
-		return fmt.Errorf("cannot cast to PersistenceGenesisState")
-	}
+	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
+	// if _, ok := genesis.GetPersistenceGenesisState().(*types.PersistenceGenesisState); !ok {
+	// 	return fmt.Errorf("cannot cast to PersistenceGenesisState")
+	// }
 	return nil
 }
 
@@ -135,7 +137,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	if m.writeContext != nil && !m.writeContext.conn.IsClosed() {
 		return nil, fmt.Errorf("write context already exists")
 	}
-	conn, err := connectToDatabase(m.config.PostgresUrl, m.config.NodeSchema)
+	conn, err := connectToDatabase(m.config.GetPostgresUrl(), m.config.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +162,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 }
 
 func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
-	conn, err := connectToDatabase(m.config.PostgresUrl, m.config.NodeSchema)
+	conn, err := connectToDatabase(m.config.GetPostgresUrl(), m.config.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}

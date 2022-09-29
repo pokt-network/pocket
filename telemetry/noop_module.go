@@ -1,7 +1,6 @@
 package telemetry
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/modules"
@@ -61,9 +60,10 @@ func (m *NoopTelemetryModule) GetBus() modules.Bus {
 }
 
 func (*NoopTelemetryModule) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.GetTelemetryConfig().(*TelemetryConfig); !ok {
-		return fmt.Errorf("cannot cast to TelemetryConfig")
-	}
+	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
+	// if _, ok := cfg.GetTelemetryConfig().(*TelemetryConfig); !ok {
+	// 	return fmt.Errorf("cannot cast to TelemetryConfig")
+	// }
 	return nil
 }
 

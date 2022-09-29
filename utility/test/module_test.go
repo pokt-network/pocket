@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pokt-network/pocket/runtime"
 	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
@@ -43,8 +42,6 @@ func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	persistenceDbUrl = dbUrl
 	m.Run()
-	// os.Remove(testingConfigFilePath)
-	// os.Remove(testingGenesisFilePath)
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
 }
 
@@ -77,10 +74,11 @@ func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.Persiste
 	mockPersistenceConfig.EXPECT().GetNodeSchema().Return(testSchema).AnyTimes()
 	mockPersistenceConfig.EXPECT().GetBlockStorePath().Return("").AnyTimes()
 
+	mockRuntimeConfig := mock_modules.NewMockConfig(ctrl)
+	mockRuntimeConfig.EXPECT().GetPersistenceConfig().Return(mockPersistenceConfig).AnyTimes()
+
 	mockRuntimeMgr := mock_modules.NewMockRuntimeMgr(ctrl)
-	mockRuntimeMgr.EXPECT().GetConfig().Return(runtime.NewConfig(&runtime.BaseConfig{},
-		runtime.WithPersistenceConfig(mockPersistenceConfig),
-	)).AnyTimes()
+	mockRuntimeMgr.EXPECT().GetConfig().Return(mockRuntimeConfig).AnyTimes()
 
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	mockRuntimeMgr.EXPECT().GetGenesis().Return(genesisState).AnyTimes()

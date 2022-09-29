@@ -42,7 +42,7 @@ func WithUtilityConfig(utilityConfig modules.UtilityConfig) func(modules.Config)
 	}
 }
 
-func WithPersistenceConfig(persistenceConfig modules.UtilityConfig) func(modules.Config) {
+func WithPersistenceConfig(persistenceConfig modules.PersistenceConfig) func(modules.Config) {
 	return func(rc modules.Config) {
 		rc.(*runtimeConfig).Persistence = persistenceConfig.(*typesPers.PersistenceConfig)
 	}

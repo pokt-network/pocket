@@ -1,7 +1,6 @@
 package utility
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/utility/types"
@@ -68,8 +67,9 @@ func (u *utilityModule) GetBus() modules.Bus {
 }
 
 func (*utilityModule) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.GetUtilityConfig().(*types.UtilityConfig); !ok {
-		return fmt.Errorf("cannot cast to UtilityConfig")
-	}
+	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
+	// if _, ok := cfg.GetUtilityConfig().(*types.UtilityConfig); !ok {
+	// 	return fmt.Errorf("cannot cast to UtilityConfig")
+	// }
 	return nil
 }

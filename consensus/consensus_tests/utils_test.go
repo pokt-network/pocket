@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"reflect"
 	"sort"
 	"testing"
@@ -30,8 +29,6 @@ import (
 
 func TestMain(m *testing.M) {
 	m.Run()
-	os.Remove(testingConfigFilePath)
-	os.Remove(testingGenesisFilePath)
 }
 
 // If this is set to true, consensus unit tests will fail if additional unexpected messages are received.
@@ -127,11 +124,6 @@ func CreateTestConsensusPocketNodesNew(
 	}
 	return
 }
-
-const (
-	testingGenesisFilePath = "genesis.json"
-	testingConfigFilePath  = "config.json"
-)
 
 // Creates a pocket node where all the primary modules, exception for consensus, are mocked
 func CreateTestConsensusPocketNode(

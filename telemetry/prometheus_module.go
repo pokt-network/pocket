@@ -1,7 +1,6 @@
 package telemetry
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -85,9 +84,10 @@ func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
 }
 
 func (*PrometheusTelemetryModule) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.GetTelemetryConfig().(*TelemetryConfig); !ok {
-		return fmt.Errorf("cannot cast to TelemetryConfig")
-	}
+	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
+	// if _, ok := cfg.GetTelemetryConfig().(*TelemetryConfig); !ok {
+	// 	return fmt.Errorf("cannot cast to TelemetryConfig")
+	// }
 	return nil
 }
 

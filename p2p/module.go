@@ -5,7 +5,6 @@ package p2p
 // to be a "real" replacement for now.
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/debug"
@@ -167,9 +166,10 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic debug.
 }
 
 func (*p2pModule) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.GetP2PConfig().(*typesP2P.P2PConfig); !ok {
-		return fmt.Errorf("cannot cast to P2PConfig")
-	}
+	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
+	// if _, ok := cfg.GetP2PConfig().(*typesP2P.P2PConfig); !ok {
+	// 	return fmt.Errorf("cannot cast to P2PConfig")
+	// }
 	return nil
 }
 

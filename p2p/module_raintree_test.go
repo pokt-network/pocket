@@ -241,9 +241,6 @@ const (
 	maxNumKeys             = 42 // The number of keys generated for all the unit tests. Optimization to avoid regenerating every time.
 	serviceUrlFormat       = "val_%d"
 	testChannelSize        = 10000
-	testingGenesisFilePath = "genesis"
-	testingConfigFilePath  = "config"
-	jsonPosfix             = ".json"
 )
 
 // TODO(olshansky): Add configurations tests for dead and partially visible nodes

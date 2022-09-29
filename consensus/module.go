@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
-	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
@@ -31,7 +30,7 @@ var (
 type consensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
-	config     *types.ConsensusConfig
+	config     modules.ConsensusConfig
 
 	// Hotstuff
 	Height uint64
@@ -75,13 +74,13 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 	if err := m.ValidateConfig(cfg); err != nil {
 		log.Fatalf("config validation failed: %v", err)
 	}
-	consensusCfg := cfg.GetConsensusConfig().(*typesCons.ConsensusConfig)
+	consensusCfg := cfg.GetConsensusConfig()
 
 	genesis := runtimeMgr.GetGenesis()
 	if err := m.ValidateGenesis(genesis); err != nil {
 		log.Fatalf("genesis validation failed: %v", err)
 	}
-	consensusGenesis := genesis.GetConsensusGenesisState().(*typesCons.ConsensusGenesisState)
+	consensusGenesis := genesis.GetConsensusGenesisState()
 
 	leaderElectionMod, err := leader_election.Create(runtimeMgr)
 	if err != nil {
@@ -94,9 +93,9 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 		return nil, err
 	}
 
-	valMap := typesCons.ValidatorListToMap(consensusGenesis.Validators)
+	valMap := typesCons.ActorListToMap(consensusGenesis.GetVals())
 
-	privateKey, err := m.GetPrivateKey(runtimeMgr)
+	privateKey, err := cryptoPocket.NewPrivateKey(consensusCfg.GetPrivateKey())
 	if err != nil {
 		return nil, err
 	}
@@ -188,21 +187,23 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 }
 
 func (*consensusModule) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.GetConsensusConfig().(*typesCons.ConsensusConfig); !ok {
-		return fmt.Errorf("cannot cast to ConsensusConfig")
-	}
+	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
+	// if _, ok := cfg.GetConsensusConfig().(*typesCons.ConsensusConfig); !ok {
+	// 	return fmt.Errorf("cannot cast to ConsensusConfig")
+	// }
 	return nil
 }
 
 func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
-	if _, ok := genesis.GetConsensusGenesisState().(*typesCons.ConsensusGenesisState); !ok {
-		return fmt.Errorf("cannot cast to ConsensusGenesisState")
-	}
+	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
+	// if _, ok := genesis.GetConsensusGenesisState().(*typesCons.ConsensusGenesisState); !ok {
+	// 	return fmt.Errorf("cannot cast to ConsensusGenesisState")
+	// }
 	return nil
 }
 
-func (*consensusModule) GetPrivateKey(runtime modules.RuntimeMgr) (cryptoPocket.PrivateKey, error) {
-	return cryptoPocket.NewPrivateKey(runtime.GetConfig().GetConsensusConfig().(*typesCons.ConsensusConfig).PrivateKey)
+func (m *consensusModule) GetPrivateKey() (cryptoPocket.PrivateKey, error) {
+	return cryptoPocket.NewPrivateKey(m.config.GetPrivateKey())
 }
 
 func (m *consensusModule) loadPersistedState() error {

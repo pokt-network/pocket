@@ -2,7 +2,6 @@ package consensus
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -108,14 +107,15 @@ func (m *paceMaker) GetBus() modules.Bus {
 }
 
 func (*paceMaker) ValidateConfig(cfg modules.Config) error {
-	consCfg, ok := cfg.GetConsensusConfig().(*typesCons.ConsensusConfig)
-	if !ok {
-		return fmt.Errorf("cannot cast to TelemetryConfig")
-	}
+	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
+	// consCfg, ok := cfg.GetConsensusConfig().(*typesCons.ConsensusConfig)
+	// if !ok {
+	// 	return fmt.Errorf("cannot cast to ConsensusConfig")
+	// }
 
-	if consCfg.PacemakerConfig == nil {
-		return fmt.Errorf("PacemakerConfig is nil")
-	}
+	// if consCfg.PacemakerConfig == nil {
+	// 	return fmt.Errorf("PacemakerConfig is nil")
+	// }
 	return nil
 }
 

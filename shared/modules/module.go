@@ -38,7 +38,7 @@ type GenesisDependentModule interface {
 }
 
 type KeyholderModule interface {
-	GetPrivateKey(RuntimeMgr) (crypto.PrivateKey, error)
+	GetPrivateKey() (crypto.PrivateKey, error)
 }
 
 type P2PAddressableModule interface {
