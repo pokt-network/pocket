@@ -47,7 +47,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 
 	// Likely to be `nil` if blockchain is progressing well.
 	// TECHDEBT: How do we properly validate `highPrepareQC` here?
-	highPrepareQC := m.findHighQC(m.MessagePool[NewRound])
+	highPrepareQC := m.findHighQC(m.messagePool[NewRound])
 
 	// TODO: Add more unit tests for these checks...
 	if highPrepareQC == nil || highPrepareQC.Height < m.Height || highPrepareQC.Round < m.Round {
@@ -71,7 +71,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 	}
 
 	m.Step = Prepare
-	m.MessagePool[NewRound] = nil
+	m.messagePool[NewRound] = nil
 
 	prepareProposeMessage, err := CreateProposeMessage(m.Height, m.Round, Prepare, m.Block, highPrepareQC)
 	if err != nil {
@@ -115,7 +115,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusMo
 
 	m.Step = PreCommit
 	m.HighPrepareQC = prepareQC
-	m.MessagePool[Prepare] = nil
+	m.messagePool[Prepare] = nil
 
 	preCommitProposeMessage, err := CreateProposeMessage(m.Height, m.Round, PreCommit, m.Block, prepareQC)
 	if err != nil {
@@ -159,7 +159,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *Consensus
 
 	m.Step = Commit
 	m.LockedQC = preCommitQC
-	m.MessagePool[PreCommit] = nil
+	m.messagePool[PreCommit] = nil
 
 	commitProposeMessage, err := CreateProposeMessage(m.Height, m.Round, Commit, m.Block, preCommitQC)
 	if err != nil {
@@ -202,7 +202,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusMod
 	}
 
 	m.Step = Decide
-	m.MessagePool[Commit] = nil
+	m.messagePool[Commit] = nil
 
 	decideProposeMessage, err := CreateProposeMessage(m.Height, m.Round, Decide, m.Block, commitQC)
 	if err != nil {
@@ -309,14 +309,14 @@ func (m *ConsensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 //       and does not recursively determine the size of all the underlying elements
 //       Add proper tests and implementation once the mempool is implemented.
 func (m *ConsensusModule) tempIndexHotstuffMessage(msg *typesCons.HotstuffMessage) {
-	if m.consCfg.GetMaxMempoolBytes() < uint64(unsafe.Sizeof(m.MessagePool)) {
+	if m.consCfg.GetMaxMempoolBytes() < uint64(unsafe.Sizeof(m.messagePool)) {
 		m.nodeLogError(typesCons.DisregardHotstuffMessage, typesCons.ErrConsensusMempoolFull)
 		return
 	}
 
 	// Only the leader needs to aggregate consensus related messages.
 	step := msg.GetStep()
-	m.MessagePool[step] = append(m.MessagePool[step], msg)
+	m.messagePool[step] = append(m.messagePool[step], msg)
 }
 
 // This is a helper function intended to be called by a leader/validator during a view change

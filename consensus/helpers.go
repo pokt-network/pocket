@@ -42,7 +42,7 @@ var (
 // TODO: Add unit tests for quorumCert creation & validation.
 func (m *ConsensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
 	var pss []*typesCons.PartialSignature
-	for _, msg := range m.MessagePool[step] {
+	for _, msg := range m.messagePool[step] {
 		if msg.GetPartialSignature() == nil {
 			m.nodeLog(typesCons.WarnMissingPartialSig(msg))
 			continue
@@ -112,7 +112,7 @@ func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signa
 }
 
 func (m *ConsensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
-	return m.isOptimisticThresholdMet(len(m.MessagePool[step]))
+	return m.isOptimisticThresholdMet(len(m.messagePool[step]))
 }
 
 func (m *ConsensusModule) isOptimisticThresholdMet(n int) error {
@@ -170,7 +170,7 @@ func (m *ConsensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 // TECHDEBT: Integrate this with the `persistence` module or a real mempool.
 func (m *ConsensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
-		m.MessagePool[step] = make([]*typesCons.HotstuffMessage, 0)
+		m.messagePool[step] = make([]*typesCons.HotstuffMessage, 0)
 	}
 }
 

@@ -63,7 +63,7 @@ type ConsensusModule struct {
 	logPrefix string
 
 	// TECHDEBT: Move this over to use the txIndexer
-	MessagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
+	messagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
 }
 
 func Create(configPath, genesisPath string, useRandomPK bool) (modules.ConsensusModule, error) {
@@ -130,7 +130,7 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 		leaderElectionMod: leaderElectionMod,
 
 		logPrefix:   DefaultLogPrefix,
-		MessagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
+		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
 	}
 
 	// TODO(olshansky): Look for a way to avoid doing this.
