@@ -27,7 +27,7 @@ var _ modules.PacemakerConfig = &typesCons.PacemakerConfig{}
 var _ modules.ConsensusConfig = &typesCons.ConsensusConfig{}
 var _ modules.ConsensusModule = &ConsensusModule{}
 
-// TODO: Do not export the `ConsensusModule` struct or the fields inside of it.
+// TODO(#256): Do not export the `ConsensusModule` struct or the fields inside of it.
 type ConsensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey

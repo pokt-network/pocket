@@ -39,7 +39,7 @@ var (
 // ** Hotstuff Helpers ** //
 
 // IMPROVE: Avoid having the `ConsensusModule` be a receiver of this; making it more functional.
-// TODO: Add unit tests for quorumCert creation & validation.
+// TODO: Add unit tests for all quorumCert creation & validation logic...
 func (m *ConsensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
 	var pss []*typesCons.PartialSignature
 	for _, msg := range m.messagePool[step] {
