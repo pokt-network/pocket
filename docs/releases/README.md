@@ -40,7 +40,6 @@ Once releases are managed, they will be tagged with the version number (e.g. `v0
 
 Extended images with additional tooling are built to aid in troubleshoot and debugging. The extended image is formatted as `<tag>-dev`. For example, `latest-dev`, or `pr-123-dev`.
 
-
 ## [TODO] Magefile build system
 
 Once the V1 implementation reaches the stage of testable binaries, we are looking to use [Mage](https://magefile.org/) which is being tracked in [pocket/issues/43](https://github.com/pokt-network/pocket/issues/43) that'll inject a version with the `-version` flag.
