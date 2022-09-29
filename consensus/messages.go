@@ -15,6 +15,10 @@ func CreateProposeMessage(
 	block *typesCons.Block,
 	qc *typesCons.QuorumCertificate,
 ) (*typesCons.HotstuffMessage, error) {
+	if block == nil {
+		return nil, typesCons.ErrNilBlockVote
+	}
+
 	msg := &typesCons.HotstuffMessage{
 		Type:          Propose,
 		Height:        height,
