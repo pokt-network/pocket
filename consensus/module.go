@@ -47,7 +47,7 @@ type ConsensusModule struct {
 	// Leader Election
 	LeaderId       *typesCons.NodeId
 	NodeId         typesCons.NodeId
-	ValAddrToIdMap typesCons.ValAddrToIdMap // TODO: This needs to be updated every time the ValMap is modified
+	valAddrToIdMap typesCons.ValAddrToIdMap // TODO: This needs to be updated every time the ValMap is modified
 	idToValAddrMap typesCons.IdToValAddrMap // TODO: This needs to be updated every time the ValMap is modified
 
 	// Consensus State
@@ -119,7 +119,7 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 
 		NodeId:         valIdMap[address],
 		LeaderId:       nil,
-		ValAddrToIdMap: valIdMap,
+		valAddrToIdMap: valIdMap,
 		idToValAddrMap: idValMap,
 
 		lastAppHash:  "",

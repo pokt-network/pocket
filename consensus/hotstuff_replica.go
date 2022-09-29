@@ -262,13 +262,13 @@ func (m *ConsensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 	for _, partialSig := range qc.ThresholdSignature.Signatures {
 		validator, ok := m.validatorMap[partialSig.Address]
 		if !ok {
-			m.nodeLogError(typesCons.ErrMissingValidator(partialSig.Address, m.ValAddrToIdMap[partialSig.Address]).Error(), nil)
+			m.nodeLogError(typesCons.ErrMissingValidator(partialSig.Address, m.valAddrToIdMap[partialSig.Address]).Error(), nil)
 			continue
 		}
 		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
 		// just serialize `Message` once and verify each signature without re-serializing every time.
 		if !isSignatureValid(msgToJustify, validator.GetPublicKey(), partialSig.Signature) {
-			m.nodeLog(typesCons.WarnInvalidPartialSigInQC(partialSig.Address, m.ValAddrToIdMap[partialSig.Address]))
+			m.nodeLog(typesCons.WarnInvalidPartialSigInQC(partialSig.Address, m.valAddrToIdMap[partialSig.Address]))
 			continue
 		}
 		numValid++
