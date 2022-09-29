@@ -17,6 +17,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	testingValidatorCount   = 5
+	testingServiceNodeCount = 1
+	testingApplicationCount = 1
+	testingFishermenCount   = 1
+)
+
 var (
 	defaultTestingChainsEdited = []string{"0002"}
 	defaultUnstaking           = int64(2017)

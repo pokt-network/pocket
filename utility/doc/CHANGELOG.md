@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2022-09-17
+
+### TECHBEBT Cleanup
+- Removed all usages of `fmt.Sprintf()` from the testing package
+- Replaced all usages of `requre.True/require.False` with `require.Equal` unless checking a boolean
+- Added helper function for getting height and store for a readable and consistent `typesUtil.Error` value
+- Added testing.M argument to `newTestingPersistenceModule`
+- Moved in-function *literal* arguments for `newTestingPersistenceModule` to private constants
+- Added the address parameter to `ErrInsufficientFunds` function for easier debugging
+- Added unit test for `LegacyVote.ValidateBasic()`
+
 ## [0.0.0.3] - 2022-09-15
 
 ### Code cleanup
