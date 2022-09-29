@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 	"os"
 
-	typesCons "github.com/pokt-network/pocket/consensus/types"
-	typesPers "github.com/pokt-network/pocket/persistence/types"
+	consTypes "github.com/pokt-network/pocket/consensus/types"
+	persTypes "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
 var _ modules.GenesisState = &runtimeGenesis{}
 
 type runtimeGenesis struct {
-	ConsensusGenesisState   *typesCons.ConsensusGenesisState   `json:"consensus_genesis_state"`
-	PersistenceGenesisState *typesPers.PersistenceGenesisState `json:"persistence_genesis_state"`
+	ConsensusGenesisState   *consTypes.ConsensusGenesisState   `json:"consensus_genesis_state"`
+	PersistenceGenesisState *persTypes.PersistenceGenesisState `json:"persistence_genesis_state"`
 }
 
 func NewGenesis(
@@ -21,8 +21,8 @@ func NewGenesis(
 	persistenceGenesisState modules.PersistenceGenesisState,
 ) *runtimeGenesis {
 	return &runtimeGenesis{
-		ConsensusGenesisState:   consensusGenesisState.(*typesCons.ConsensusGenesisState),
-		PersistenceGenesisState: persistenceGenesisState.(*typesPers.PersistenceGenesisState),
+		ConsensusGenesisState:   consensusGenesisState.(*consTypes.ConsensusGenesisState),
+		PersistenceGenesisState: persistenceGenesisState.(*persTypes.PersistenceGenesisState),
 	}
 }
 
