@@ -89,6 +89,8 @@ func getMessageSignature(msg *typesCons.HotstuffMessage, privKey crypto.PrivateK
 }
 
 // Signature only over subset of fields in HotstuffMessage
+// For reference, see section 4.3 of the the hotstuff whitepaper, partial signatures are
+// computed over `tsignr(hm.type, m.viewNumber , m.nodei)`. https://arxiv.org/pdf/1803.05069.pdf
 func getSignableBytes(msg *typesCons.HotstuffMessage) ([]byte, error) {
 	msgToSign := &typesCons.HotstuffMessage{
 		Height: msg.GetHeight(),
