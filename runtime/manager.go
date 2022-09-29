@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
-	"github.com/pokt-network/pocket/consensus/types"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -134,7 +134,7 @@ func WithRandomPK() func(*Manager) {
 func WithPK(pk string) func(*Manager) {
 	return func(b *Manager) {
 		if b.config.Consensus == nil {
-			b.config.Consensus = &types.ConsensusConfig{}
+			b.config.Consensus = &typesCons.ConsensusConfig{}
 		}
 		b.config.Consensus.PrivateKey = pk
 
