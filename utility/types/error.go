@@ -34,66 +34,66 @@ func NewError(code Code, msg string) Error {
 type Code float64
 
 const (
-	CodeOK                                Code = 0
-	CodeEmptyTransactionError             Code = 2
-	CodeInvalidSignerError                Code = 3
-	CodeDecodeMessageError                Code = 4
-	CodeUnmarshalTransaction              Code = 5
-	CodeUnknownMessageError               Code = 6
-	CodeAppHashError                      Code = 7
-	CodeNewPublicKeyFromBytesError        Code = 8
-	CodeNewAddressFromBytesError          Code = 9
-	CodeSignatureVerificationFailedError  Code = 10
-	CodeHexDecodeFromStringError          Code = 11
-	CodeInvalidHashLengthError            Code = 12
-	CodeEmptyNetworkIDError               Code = 13
-	CodeEmptyProposerError                Code = 14
-	CodeEmptyTimestampError               Code = 15
-	CodeInvalidTransactionCountError      Code = 16
-	CodeEmptyAccountError                 Code = 17
-	CodeNilPoolError                      Code = 18
-	CodeEmptyNameError                    Code = 19
-	CodeEmptyAddressError                 Code = 20
-	CodeInvalidAddressLenError            Code = 21
-	CodeInvalidNonceError                 Code = 22
-	CodeInvalidAmountError                Code = 23
-	CodeProtoMarshalError                 Code = 25
-	CodeProtoUnmarshalError               Code = 26
-	CodeProtoNewAnyError                  Code = 27
-	CodeProtoFromAnyError                 Code = 28
-	CodeNewFeeFromStringError             Code = 29
-	CodeEmptyNonceError                   Code = 30
-	CodeEmptyPublicKeyError               Code = 31
-	CodeEmptySignatureError               Code = 32
-	CodeDuplicateTransactionError         Code = 35
-	CodeTransactionSignError              Code = 36
-	CodeGetAllValidatorsError             Code = 37
-	CodeInterfaceConversionError          Code = 38
-	CodeGetAccountAmountError             Code = 39
-	CodeStringToBigIntError               Code = 40
-	CodeInsufficientAmountError           Code = 41
-	CodeAddAccountAmountError             Code = 42
-	CodeSetAccountError                   Code = 43
-	CodeGetParamError                     Code = 44
-	CodeMinimumStakeError                 Code = 45
-	CodeEmptyRelayChainError              Code = 46
-	CodeEmptyRelayChainsError             Code = 47
-	CodeInvalidRelayChainLengthError      Code = 48
-	CodeNilOutputAddress                  Code = 49
-	CodeInvalidPublicKeyLenError          Code = 50
-	CodeEmptyAmountError                  Code = 51
-	CodeMaxChainsError                    Code = 52
-	CodeInsertError                       Code = 53
-	CodeInvalidStatusError                Code = 54
-	CodeAddPoolAmountError                Code = 55
-	CodeSubPoolAmountError                Code = 56
-	CodeGetStatusError                    Code = 57
-	CodeSetUnstakingHeightAndStatusError  Code = 58
-	CodeGetReadyToUnstakeError            Code = 59
-	CodeAlreadyExistsError                Code = 60
-	CodeGetExistsError                    Code = 61
-	CodeGetLatestHeightError              Code = 62
-	CodeDeleteError                       Code = 63
+	CodeOK                               Code = 0
+	CodeEmptyTransactionError            Code = 2
+	CodeInvalidSignerError               Code = 3
+	CodeDecodeMessageError               Code = 4
+	CodeUnmarshalTransaction             Code = 5
+	CodeUnknownMessageError              Code = 6
+	CodeAppHashError                     Code = 7
+	CodeNewPublicKeyFromBytesError       Code = 8
+	CodeNewAddressFromBytesError         Code = 9
+	CodeSignatureVerificationFailedError Code = 10
+	CodeHexDecodeFromStringError         Code = 11
+	CodeInvalidHashLengthError           Code = 12
+	CodeEmptyNetworkIDError              Code = 13
+	CodeEmptyProposerError               Code = 14
+	CodeEmptyTimestampError              Code = 15
+	CodeInvalidTransactionCountError     Code = 16
+	CodeEmptyAccountError                Code = 17
+	CodeNilPoolError                     Code = 18
+	CodeEmptyNameError                   Code = 19
+	CodeEmptyAddressError                Code = 20
+	CodeInvalidAddressLenError           Code = 21
+	CodeInvalidNonceError                Code = 22
+	CodeInvalidAmountError               Code = 23
+	CodeProtoMarshalError                Code = 25
+	CodeProtoUnmarshalError              Code = 26
+	CodeProtoNewAnyError                 Code = 27
+	CodeProtoFromAnyError                Code = 28
+	CodeNewFeeFromStringError            Code = 29
+	CodeEmptyNonceError                  Code = 30
+	CodeEmptyPublicKeyError              Code = 31
+	CodeEmptySignatureError              Code = 32
+	CodeDuplicateTransactionError        Code = 35
+	CodeTransactionSignError             Code = 36
+	CodeGetAllValidatorsError            Code = 37
+	CodeInterfaceConversionError         Code = 38
+	CodeGetAccountAmountError            Code = 39
+	CodeStringToBigIntError              Code = 40
+	CodeInsufficientAmountError          Code = 41
+	CodeAddAccountAmountError            Code = 42
+	CodeSetAccountError                  Code = 43
+	CodeGetParamError                    Code = 44
+	CodeMinimumStakeError                Code = 45
+	CodeEmptyRelayChainError             Code = 46
+	CodeEmptyRelayChainsError            Code = 47
+	CodeInvalidRelayChainLengthError     Code = 48
+	CodeNilOutputAddress                 Code = 49
+	CodeInvalidPublicKeyLenError         Code = 50
+	CodeEmptyAmountError                 Code = 51
+	CodeMaxChainsError                   Code = 52
+	CodeInsertError                      Code = 53
+	CodeInvalidStatusError               Code = 54
+	CodeAddPoolAmountError               Code = 55
+	CodeSubPoolAmountError               Code = 56
+	CodeGetStatusError                   Code = 57
+	CodeSetUnstakingHeightAndStatusError Code = 58
+	CodeGetReadyToUnstakeError           Code = 59
+	CodeAlreadyExistsError               Code = 60
+	CodeGetExistsError                   Code = 61
+	CodeGetLatestHeightError             Code = 62
+
 	CodeGetPauseHeightError               Code = 64
 	CodeAlreadyPausedError                Code = 65
 	CodeSetPauseHeightError               Code = 66
@@ -178,7 +178,6 @@ const (
 	AlreadyPausedError                = "the actor is already paused"
 	GetPauseHeightError               = "an error occurred getting the pause height"
 	UnmarshalTransactionError         = "an error occurred decoding the transaction"
-	DeleteError                       = "an error occurred when deleting the actor"
 	AlreadyExistsError                = "the actor already exists in the state"
 	GetExistsError                    = "an error occurred when checking if already exists"
 	GetStakeAmountError               = "an error occurred getting the stake amount"
@@ -372,10 +371,6 @@ func ErrStakeLess() Error {
 
 func ErrSetMissedBlocks(err error) Error {
 	return NewError(CodeSetMissedBlocksError, fmt.Sprintf("%s: %s", SetMissedBlocksError, err.Error()))
-}
-
-func ErrDelete(err error) Error {
-	return NewError(CodeDeleteError, fmt.Sprintf("%s: %s", DeleteError, err.Error()))
 }
 
 func ErrUnmarshalTransaction(err error) Error {

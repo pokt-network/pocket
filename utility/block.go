@@ -166,9 +166,6 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 			if err = u.AddAccountAmountString(actor.GetOutputAddress(), actor.GetStakeAmount()); err != nil {
 				return err
 			}
-			if err = u.DeleteActor(actorType, actor.GetAddress()); err != nil {
-				return err
-			}
 		}
 	}
 	return nil

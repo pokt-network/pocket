@@ -82,7 +82,6 @@ type PersistenceWriteContext interface {
 	// App Operations
 	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int32, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateApp(address []byte, maxRelaysToAdd string, amount string, chainsToUpdate []string) error
-	DeleteApp(address []byte) error
 	SetAppStakeAmount(address []byte, stakeAmount string) error
 	SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
 	SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
@@ -91,7 +90,6 @@ type PersistenceWriteContext interface {
 	// ServiceNode Operations
 	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateServiceNode(address []byte, serviceURL string, amount string, chains []string) error
-	DeleteServiceNode(address []byte) error
 	SetServiceNodeStakeAmount(address []byte, stakeAmount string) error
 	SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
 	SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
@@ -100,7 +98,6 @@ type PersistenceWriteContext interface {
 	// Fisherman Operations
 	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateFisherman(address []byte, serviceURL string, amount string, chains []string) error
-	DeleteFisherman(address []byte) error
 	SetFishermanStakeAmount(address []byte, stakeAmount string) error
 	SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
 	SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
@@ -109,7 +106,6 @@ type PersistenceWriteContext interface {
 	// Validator Operations
 	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error
 	UpdateValidator(address []byte, serviceURL string, amount string) error
-	DeleteValidator(address []byte) error
 	SetValidatorStakeAmount(address []byte, stakeAmount string) error
 	SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
 	SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error

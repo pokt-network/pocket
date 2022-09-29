@@ -7,17 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-<<<<<<< HEAD
 ## [0.0.0.4] - 2022-09-23
 
 - Consolidated `UtilActorType` in `utility` and `utility/types` to `typesUtil.ActorType`
 - Deprecated all code in `actor.go` and replaced with test helpers
 - Converted stake status to proto.enum (int32)
 - Added DISCUSS items around shared code and `StakeStatus`
-=======
-## [0.0.0.4] - 2022-09-17
-
-### TECHBEBT Cleanup
+- Removed no-op `DeleteActor` code
+- Improved unit test for `UnstakeActorsThatAreReady()`
 - Removed all usages of `fmt.Sprintf()` from the testing package
 - Replaced all usages of `requre.True/require.False` with `require.Equal` unless checking a boolean
 - Added helper function for getting height and store for a readable and consistent `typesUtil.Error` value
@@ -27,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added unit test for `LegacyVote.ValidateBasic()`
 - Added `ErrUnknownActorType` to all switch statements on `actorType`
 - Removed `import` of `consTypes` (consensus module)
->>>>>>> origin/main
+
 
 ## [0.0.0.3] - 2022-09-15
 
