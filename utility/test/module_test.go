@@ -78,7 +78,7 @@ func newTestPersistenceModule(_ *testing.M, databaseUrl string) modules.Persiste
 
 	genesisState, _ := test_artifacts.NewGenesisState(testingValidatorCount, testingServiceNodeCount, testingApplicationCount, testingFishermenCount)
 	createTestingGenesisAndConfigFiles(cfg, genesisState)
-	persistenceMod, err := persistence.Create(testingConfigFilePath, testingGenesisFilePath) // TODO (Drewsky) this is the last remaining cross module import and needs a fix...
+	persistenceMod, err := persistence.Create(testingConfigFilePath, testingGenesisFilePath) // TODO (Olshansk) this is the last remaining cross module import and needs a fix...
 	if err != nil {
 		log.Fatal(err)
 	}
