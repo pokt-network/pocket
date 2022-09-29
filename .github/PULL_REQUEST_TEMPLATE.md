@@ -44,12 +44,15 @@ If you added additional tests or infrastructure, describe it here.
 Bonus points for images and videos or gifs.
 -->
 
-## Checklist
+## Required Checklist
 
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] I have tested my changes using the available tooling
-- [ ] If applicable, I have made corresponding changes to related local or global README
-- [ ] If applicable, I have updated the corresponding CHANGELOG
-- [ ] If applicable, I have added tests that prove my fix is effective or that my feature works
-- [ ] If applicable, I have added new diagrams using [mermaid.js](https://mermaid-js.github.io)
+- [ ] I have updated the corresponding CHANGELOG
+
+### If Applicable Checklist
+- [ ] I have updated the corresponding README(s); local and/or global
+- [ ] I have added tests that prove my fix is effective or that my feature works
+- [ ] I have added, or updated, [mermaid.js](https://mermaid-js.github.io) diagrams in the corresponding README(s)
+- [ ] I have added, or updated, documentation and [mermaid.js](https://mermaid-js.github.io) diagrams in `shared/docs/*` if I updated `shared/*`README(s)
