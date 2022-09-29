@@ -165,7 +165,7 @@ Pocket
 
 ### Linters
 
-We are utilizing `golangci-lint` to run the linters. It is a wrapper around a number of linters and is configured to run many of them at once. The linters are configured to run on every commit and pull request via CI, and all code issues are populating as GitHub annotations to let developers and reviewers easily locate an issue.
+We utilize `golangci-lint` to run the linters. It is a wrapper around a number of linters and is configured to run many at once. The linters are configured to run on every commit and pull request via CI, and all code issues are populated as GitHub annotations to let developers and reviewers easily locate an issue.
 
 #### Installation of golangci-lint
 
