@@ -58,6 +58,7 @@ func requireTestProtoStructureEqual(t *testing.T, tpsOne, tpsTwo *TestProtoStruc
 }
 
 func requireTestProtoStructureNotEqual(t *testing.T, tpsOne, tpsTwo *TestProtoStructure) {
-	allFieldsEqual := tpsOne.Field1 == tpsTwo.Field1 && tpsOne.Field2 == tpsTwo.Field2 && tpsOne.Field3 == tpsTwo.Field3
-	require.False(t, allFieldsEqual)
+        require.NotEqual(t, tpsOne.Field1, tpsTwo.Field1)
+        require.NotEqual(t, tpsOne.Field2, tpsTwo.Field2)
+        require.NotEqual(t, tpsOne.Field3, tpsTwo.Field3)
 }
