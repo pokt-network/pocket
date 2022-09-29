@@ -43,8 +43,8 @@ func TestUtilityCodec(t *testing.T) {
 	require.NoError(t, codec.Unmarshal(tpsOneProtoBytes, tpsOneUnmarshalled))
 
 	tpsTwoUnmarshalled := &TestProtoStructure{}
-	require.NoError(t, codec.Unmarshal(tpsTwoProtoBytes, tpsTwoUnmarshalled))
 	require.NoError(t, err)
+	require.NoError(t, codec.Unmarshal(tpsTwoProtoBytes, tpsTwoUnmarshalled))
 
 	requireTestProtoStructureEqual(t, tpsOne, tpsOneUnmarshalled)
 	requireTestProtoStructureEqual(t, tpsTwo, tpsTwoUnmarshalled)
