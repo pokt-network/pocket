@@ -141,7 +141,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 		if actorType == typesUtil.ActorType_Undefined {
 			continue
 		}
-		poolName := ""
+		var poolName string
 		switch actorType {
 		case typesUtil.ActorType_App:
 			readyToUnstake, er = store.GetAppsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
