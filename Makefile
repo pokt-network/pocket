@@ -277,6 +277,14 @@ test_shared: # generate_mocks
 test_consensus: # mockgen
 	go test ${VERBOSE_TEST} ./consensus/...
 
+.PHONY: test_consensus_concurrent_tests
+## Run unit tests in the consensus module that could be prone to race conditions (#192)
+test_consensus_concurrent_tests:
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
+
 .PHONY: test_hotstuff
 ## Run all go unit tests related to hotstuff consensus
 test_hotstuff: # mockgen
