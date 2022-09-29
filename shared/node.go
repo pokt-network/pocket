@@ -62,7 +62,7 @@ func (m *Node) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(runtime,
+	bus, err := CreateBus(
 		persistenceMod.(modules.PersistenceModule),
 		p2pMod.(modules.P2PModule),
 		utilityMod.(modules.UtilityModule),

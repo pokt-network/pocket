@@ -22,9 +22,6 @@ type bus struct {
 	utility     modules.UtilityModule
 	consensus   modules.ConsensusModule
 	telemetry   modules.TelemetryModule
-
-	config  modules.Config
-	genesis modules.GenesisState
 }
 
 const (
@@ -32,7 +29,6 @@ const (
 )
 
 func CreateBus(
-	runtime modules.RuntimeMgr,
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
@@ -47,9 +43,6 @@ func CreateBus(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
-
-		config:  runtime.GetConfig(),
-		genesis: runtime.GetGenesis(),
 	}
 
 	modules := map[string]modules.Module{
@@ -83,7 +76,6 @@ func CreateBus(
 //	Using `CreateBusWithOptionalModules`, we can create a bus with only pre2p and a NOOP telemetry module
 //	so that we can the pre2p module without any issues.
 func CreateBusWithOptionalModules(
-	runtime modules.RuntimeMgr,
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
@@ -97,8 +89,6 @@ func CreateBusWithOptionalModules(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
-		config:      runtime.GetConfig(),
-		genesis:     runtime.GetGenesis(),
 	}
 
 	maybeSetModuleBus := func(mod modules.Module) {
@@ -147,12 +137,4 @@ func (m bus) GetConsensusModule() modules.ConsensusModule {
 
 func (m bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
-}
-
-func (m bus) GetConfig() modules.Config {
-	return m.config
-}
-
-func (m bus) GetGenesis() modules.GenesisState {
-	return m.genesis
 }

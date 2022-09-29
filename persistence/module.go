@@ -22,8 +22,9 @@ var (
 )
 
 type persistenceModule struct {
-	bus    modules.Bus
-	config modules.PersistenceConfig
+	bus          modules.Bus
+	config       modules.PersistenceConfig
+	genesisState modules.PersistenceGenesisState
 
 	blockStore kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
 
@@ -72,6 +73,7 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 	m = &persistenceModule{
 		bus:          nil,
 		config:       persistenceCfg,
+		genesisState: persistenceGenesis,
 		blockStore:   blockStore,
 		writeContext: nil,
 	}

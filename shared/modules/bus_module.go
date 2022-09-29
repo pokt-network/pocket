@@ -23,8 +23,4 @@ type Bus interface {
 	GetUtilityModule() UtilityModule
 	GetConsensusModule() ConsensusModule
 	GetTelemetryModule() TelemetryModule
-
-	// Configuration
-	GetConfig() Config
-	GetGenesis() GenesisState
 }
