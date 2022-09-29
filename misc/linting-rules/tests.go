@@ -3,7 +3,7 @@
 // +build !codeanalysis
 
 // This file includes our custom linters.
-// If you want to add/modify an existing linter, please check out ruleguard documentation: https://github.com/quasilyte/go-ruleguard#documentation
+// If you want to add/modify an existing linter, please check out ruleguard's documentation: https://github.com/quasilyte/go-ruleguard#documentation
 
 package gorules
 
