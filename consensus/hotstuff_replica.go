@@ -94,7 +94,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *Consensu
 	}
 
 	m.Step = Commit
-	m.HighPrepareQC = quorumCert // INVESTIGATE: Why are we never using this for validation?
+	m.highPrepareQC = quorumCert // INVESTIGATE: Why are we never using this for validation?
 
 	preCommitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, PreCommit, m.Block, m.privateKey)
 	if err != nil {
@@ -123,7 +123,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *ConsensusMo
 	}
 
 	m.Step = Decide
-	m.LockedQC = quorumCert // DISCUSS: How does the replica recover if it's locked? Replica `formally` agrees on the QC while the rest of the network `verbally` agrees on the QC.
+	m.lockedQC = quorumCert // DISCUSS: How does the replica recover if it's locked? Replica `formally` agrees on the QC while the rest of the network `verbally` agrees on the QC.
 
 	commitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, Commit, m.Block, m.privateKey)
 	if err != nil {
@@ -198,7 +198,7 @@ func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 		}
 	}
 
-	lockedQC := m.LockedQC
+	lockedQC := m.lockedQC
 	justifyQC := quorumCert
 
 	// Safety: not locked

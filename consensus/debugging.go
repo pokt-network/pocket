@@ -27,8 +27,8 @@ func (m *ConsensusModule) HandleDebugMessage(debugMessage *debug.DebugMessage) e
 
 func (m *ConsensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	leaderId := typesCons.NodeId(0)
-	if m.leaderId != nil {
-		leaderId = *m.leaderId
+	if m.LeaderId != nil {
+		leaderId = *m.LeaderId
 	}
 	return typesCons.ConsensusNodeState{
 		NodeId:   m.nodeId,
@@ -48,8 +48,8 @@ func (m *ConsensusModule) resetToGenesis(_ *debug.DebugMessage) {
 	m.Step = 0
 	m.Block = nil
 
-	m.HighPrepareQC = nil
-	m.LockedQC = nil
+	m.highPrepareQC = nil
+	m.lockedQC = nil
 
 	m.clearLeader()
 	m.clearMessagesPool()

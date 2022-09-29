@@ -41,11 +41,11 @@ type ConsensusModule struct {
 	Step   typesCons.HotstuffStep
 	Block  *typesCons.Block // The current block being proposed / voted on; it has not been committed to finality
 
-	HighPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
-	LockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
+	highPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
+	lockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
 	// Leader Election
-	leaderId       *typesCons.NodeId
+	LeaderId       *typesCons.NodeId
 	nodeId         typesCons.NodeId
 	valAddrToIdMap typesCons.ValAddrToIdMap // TODO: This needs to be updated every time the ValMap is modified
 	idToValAddrMap typesCons.IdToValAddrMap // TODO: This needs to be updated every time the ValMap is modified
@@ -114,11 +114,11 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 		Step:   NewRound,
 		Block:  nil,
 
-		HighPrepareQC: nil,
-		LockedQC:      nil,
+		highPrepareQC: nil,
+		lockedQC:      nil,
 
 		nodeId:         valIdMap[address],
-		leaderId:       nil,
+		LeaderId:       nil,
 		valAddrToIdMap: valIdMap,
 		idToValAddrMap: idValMap,
 

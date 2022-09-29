@@ -114,7 +114,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusMo
 	}
 
 	m.Step = PreCommit
-	m.HighPrepareQC = prepareQC
+	m.highPrepareQC = prepareQC
 	m.messagePool[Prepare] = nil
 
 	preCommitProposeMessage, err := CreateProposeMessage(m.Height, m.Round, PreCommit, m.Block, prepareQC)
@@ -158,7 +158,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *Consensus
 	}
 
 	m.Step = Commit
-	m.LockedQC = preCommitQC
+	m.lockedQC = preCommitQC
 	m.messagePool[PreCommit] = nil
 
 	commitProposeMessage, err := CreateProposeMessage(m.Height, m.Round, Commit, m.Block, preCommitQC)

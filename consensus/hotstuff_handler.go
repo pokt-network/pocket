@@ -23,7 +23,7 @@ func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 		// If a replica is not a leader for this round, but has already determined a leader,
 		// and continues to receive NewRound messages, we avoid logging the "message discard"
 		// because it creates unnecessary spam.
-		if !(m.leaderId != nil && !m.isLeader() && step == NewRound) {
+		if !(m.LeaderId != nil && !m.isLeader() && step == NewRound) {
 			m.nodeLog(typesCons.WarnDiscardHotstuffMessage(msg, err.Error()))
 		}
 		return err
@@ -47,5 +47,5 @@ func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 
 func (m *ConsensusModule) shouldElectNextLeader() bool {
 	// Execute leader election if there is no leader and we are in a new round
-	return m.Step == NewRound && m.leaderId == nil
+	return m.Step == NewRound && m.LeaderId == nil
 }

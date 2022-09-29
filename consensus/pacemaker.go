@@ -140,7 +140,7 @@ func (p *paceMaker) ValidateMessage(m *typesCons.HotstuffMessage) error {
 
 		// TODO(olshansky): Add tests for this. When we catch up to a later step, the leader is still the same.
 		// However, when we catch up to a later round, the leader at the same height will be different.
-		if p.consensusMod.Round != m.Round || p.consensusMod.leaderId == nil {
+		if p.consensusMod.Round != m.Round || p.consensusMod.LeaderId == nil {
 			p.consensusMod.electNextLeader(m)
 		}
 
@@ -178,7 +178,7 @@ func (p *paceMaker) InterruptRound() {
 	p.consensusMod.nodeLog(typesCons.PacemakerInterrupt(p.consensusMod.Height, p.consensusMod.Step, p.consensusMod.Round))
 
 	p.consensusMod.Round++
-	p.startNextView(p.consensusMod.HighPrepareQC, false)
+	p.startNextView(p.consensusMod.highPrepareQC, false)
 }
 
 func (p *paceMaker) NewHeight() {
@@ -188,8 +188,8 @@ func (p *paceMaker) NewHeight() {
 	p.consensusMod.Round = 0
 	p.consensusMod.Block = nil
 
-	p.consensusMod.HighPrepareQC = nil
-	p.consensusMod.LockedQC = nil
+	p.consensusMod.highPrepareQC = nil
+	p.consensusMod.lockedQC = nil
 
 	p.startNextView(nil, false) // TODO(design): We are omitting CommitQC and TimeoutQC here.
 
