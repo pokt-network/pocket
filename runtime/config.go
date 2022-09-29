@@ -77,15 +77,3 @@ func (c *runtimeConfig) GetP2PConfig() modules.P2PConfig {
 func (c *runtimeConfig) GetTelemetryConfig() modules.TelemetryConfig {
 	return c.Telemetry
 }
-
-// func ParseConfigJSON(configPath string) (config *runtimeConfig, err error) {
-// 	data, err := os.ReadFile(configPath)
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	general configuration file
-// 	config = new(runtimeConfig)
-// 	err = json.Unmarshal(data, &config)
-// 	return
-// }
