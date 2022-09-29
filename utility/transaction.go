@@ -2,6 +2,7 @@ package utility
 
 import (
 	"bytes"
+	"encoding/hex"
 	typesGenesis "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -104,7 +105,7 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil
 	}
 	accountAmount.Sub(accountAmount, fee)
 	if accountAmount.Sign() == -1 {
-		return nil, typesUtil.ErrInsufficientAmount()
+		return nil, typesUtil.ErrInsufficientAmount(address.String())
 	}
 	signerCandidates, err := u.GetSignerCandidates(msg)
 	if err != nil {
@@ -167,7 +168,7 @@ func (u *UtilityContext) HandleMessageSend(message *typesUtil.MessageSend) types
 	// if they go negative, they don't have sufficient funds
 	// NOTE: we don't use the u.SubtractAccountAmount() function because Utility needs to do this check
 	if fromAccountAmount.Sign() == -1 {
-		return typesUtil.ErrInsufficientAmount()
+		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.FromAddress))
 	}
 	// add the amount to the recipient's account
 	if err = u.AddAccountAmount(message.ToAddress, amount); err != nil {
@@ -198,7 +199,7 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 	// calculate new signer account amount
 	signerAccountAmount.Sub(signerAccountAmount, amount)
 	if signerAccountAmount.Sign() == -1 {
-		return typesUtil.ErrInsufficientAmount()
+		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.Signer))
 	}
 	// validators don't have chains field
 	if err = u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
@@ -270,7 +271,7 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 	}
 	signerAccountAmount.Sub(signerAccountAmount, amount)
 	if signerAccountAmount.Sign() == -1 {
-		return typesUtil.ErrInsufficientAmount()
+		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.Signer))
 	}
 	if err = u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
 		return err
@@ -334,7 +335,7 @@ func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause)
 	if err != nil {
 		return err
 	}
-	latestHeight, err := u.GetLatestHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -348,7 +349,7 @@ func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause)
 }
 
 func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubleSign) typesUtil.Error {
-	latestHeight, err := u.GetLatestHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}

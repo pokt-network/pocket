@@ -18,6 +18,7 @@ env:
   # Even though we can test against multiple versions, this one is considered a target version.
   TARGET_GOLANG_VERSION: "1.19"
   PROTOC_VERSION: "3.19.4"
+  PUSH_TO_DOCKERHUB: false
 
 jobs:
   test-multiple-go-versions:
@@ -89,10 +90,6 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          # poktnetwork/pocket-v1
-          # ^ the name of the repo on docker hub. For some reason, sometimes docker hub does not authenticate the user
-          # resulting in an error when trying to push to the repo.
-          # TODO(@okdas): figure out why that happens, fix or stick to ghcr.io/AWS ECR.
           images: |
             ghcr.io/pokt-network/pocket-v1
           tags: |
@@ -104,19 +101,15 @@ jobs:
             type=ref,event=pr${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
             type=sha${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
             type=raw,value=latest,enable={{is_default_branch}}${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
-      # Turned off until user auth is fixed, see note above.
-      # - name: Login to  DockerHub
-      #   uses: docker/login-action@v2
-      #   with:
-      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Login to GitHub Container Registry
+        if: ${{ env.PUSH_TO_DOCKERHUB != 'false' }}
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push Docker image
+        if: ${{ env.PUSH_TO_DOCKERHUB != 'false' }}
         uses: docker/build-push-action@v3
         with:
           push: true

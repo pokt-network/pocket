@@ -36,10 +36,9 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) typesU
 }
 
 func (u *UtilityContext) GetBlocksPerSession() (int, typesUtil.Error) {
-	store := u.Store()
-	height, err := store.GetHeight()
-	if err != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetParam(modules.BlocksPerSessionParamName, err)
+	store, height, er := u.GetStoreAndHeight()
+	if er != nil {
+		return 0, er
 	}
 	blocksPerSession, err := store.GetBlocksPerSession(height)
 	if err != nil {
@@ -264,10 +263,9 @@ func (u *UtilityContext) GetParamOwner(paramName string) ([]byte, error) {
 	// DISCUSS (@deblasis): here we could potentially leverage the struct tags in gov.proto by specifying an `owner` key
 	// eg: `app_minimum_stake` could have `pokt:"owner=app_minimum_stake_owner"`
 	// in here we would use that map to point to the owner, removing this switch, centralizing the logic and making it declarative
-	store := u.Store()
-	height, err := store.GetHeight()
-	if err != nil {
-		return nil, err
+	store, height, er := u.GetStoreAndHeight()
+	if er != nil {
+		return nil, er
 	}
 	switch paramName {
 	case modules.AclOwner:
@@ -507,6 +505,8 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.UtilA
 			return u.GetMessageStakeServiceNodeFee()
 		case typesUtil.UtilActorType_Val:
 			return u.GetMessageStakeValidatorFee()
+		default:
+			return nil, typesUtil.ErrUnknownActorType(actorType.String())
 		}
 	case *typesUtil.MessageEditStake:
 		switch actorType {
@@ -518,6 +518,8 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.UtilA
 			return u.GetMessageEditStakeServiceNodeFee()
 		case typesUtil.UtilActorType_Val:
 			return u.GetMessageEditStakeValidatorFee()
+		default:
+			return nil, typesUtil.ErrUnknownActorType(actorType.String())
 		}
 	case *typesUtil.MessageUnstake:
 		switch actorType {
@@ -529,6 +531,8 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.UtilA
 			return u.GetMessageUnstakeServiceNodeFee()
 		case typesUtil.UtilActorType_Val:
 			return u.GetMessageUnstakeValidatorFee()
+		default:
+			return nil, typesUtil.ErrUnknownActorType(actorType.String())
 		}
 	case *typesUtil.MessageUnpause:
 		switch actorType {
@@ -540,6 +544,8 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType typesUtil.UtilA
 			return u.GetMessageUnpauseServiceNodeFee()
 		case typesUtil.UtilActorType_Val:
 			return u.GetMessageUnpauseValidatorFee()
+		default:
+			return nil, typesUtil.ErrUnknownActorType(actorType.String())
 		}
 	case *typesUtil.MessageChangeParameter:
 		return u.GetMessageChangeParameterFee()
@@ -558,10 +564,9 @@ func (u *UtilityContext) GetMessageChangeParameterSignerCandidates(msg *typesUti
 }
 
 func (u *UtilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.Error) {
-	store := u.Store()
-	height, err := store.GetHeight()
-	if err != nil {
-		return nil, typesUtil.ErrGetParam(paramName, err)
+	store, height, er := u.GetStoreAndHeight()
+	if er != nil {
+		return nil, er
 	}
 	value, err := store.GetStringParam(paramName, height)
 	if err != nil {
@@ -572,10 +577,9 @@ func (u *UtilityContext) getBigIntParam(paramName string) (*big.Int, typesUtil.E
 }
 
 func (u *UtilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
-	store := u.Store()
-	height, err := store.GetHeight()
-	if err != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
+	store, height, er := u.GetStoreAndHeight()
+	if er != nil {
+		return 0, er
 	}
 	value, err := store.GetIntParam(paramName, height)
 	if err != nil {
@@ -585,10 +589,9 @@ func (u *UtilityContext) getIntParam(paramName string) (int, typesUtil.Error) {
 }
 
 func (u *UtilityContext) getInt64Param(paramName string) (int64, typesUtil.Error) {
-	store := u.Store()
-	height, err := store.GetHeight()
-	if err != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetParam(paramName, err)
+	store, height, er := u.GetStoreAndHeight()
+	if er != nil {
+		return 0, er
 	}
 	value, err := store.GetIntParam(paramName, height)
 	if err != nil {
@@ -598,14 +601,13 @@ func (u *UtilityContext) getInt64Param(paramName string) (int64, typesUtil.Error
 }
 
 func (u *UtilityContext) getByteArrayParam(paramName string) ([]byte, typesUtil.Error) {
-	store := u.Store()
-	height, err := store.GetHeight()
+	store, height, er := u.GetStoreAndHeight()
+	if er != nil {
+		return nil, er
+	}
+	value, err := store.GetBytesParam(paramName, height)
 	if err != nil {
 		return nil, typesUtil.ErrGetParam(paramName, err)
-	}
-	value, er := store.GetBytesParam(paramName, height)
-	if er != nil {
-		return nil, typesUtil.ErrGetParam(paramName, er)
 	}
 	return value, nil
 }
