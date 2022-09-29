@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.0] - 2022-09-22
+## [0.0.0.6] - 2022-09-22
 
 - Removed no-op `DeleteActor` code
-- Consolidated CHANGELOGs into one
-- Consolidated READMEs into one
+- Consolidated `CHANGELOG`s into one under `persistence/docs`
+- Consolidated `README`s into one under `persistence/docs`
 
 ## [0.0.0.5] - 2022-08-25
 
@@ -62,8 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `applications` to `utility_genesis_state`
 - Added `service_nodes` to `utility_genesis_state`
 - Added `fishermen` to `utility_genesis_state`
-- Deprec`ated` sha`red/config/`
-- Added `new` sha`red config proto3 structure`
+- Deprecated `shared/config/`
+- Added new `shared config proto3 structure`
 - Added `base_config` to `config`
 - Added `utility_config` to `config`
 - Added `consensus_config` to `config`
