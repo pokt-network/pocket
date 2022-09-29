@@ -30,7 +30,7 @@ func Create(configPath, genesisPath string) (modules.UtilityModule, error) {
 	}
 	config := (c).(*types.UtilityConfig)
 	return &UtilityModule{
-		Mempool: types.NewMempool(config.Max_Mempool_Transaction_Bytes, config.Max_Mempool_Transactions),
+		Mempool: types.NewMempool(config.MaxMempoolTransactionBytes, config.MaxMempoolTransactions),
 	}, nil
 }
 

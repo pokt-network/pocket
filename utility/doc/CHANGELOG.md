@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Matched configuration unmarshalling pattern of other modules
 - Added V0 mempool default configurations
 - Regenerated build files with new mempool config
+- Removed no-op `DeleteActor` code
+- Improved unit test for `UnstakeActorsThatAreReady()`
 - Removed all usages of `fmt.Sprintf()` from the testing package
 - Replaced all usages of `requre.True/require.False` with `require.Equal` unless checking a boolean
 - Added helper function for getting height and store for a readable and consistent `typesUtil.Error` value
@@ -23,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added unit test for `LegacyVote.ValidateBasic()`
 - Added `ErrUnknownActorType` to all switch statements on `actorType`
 - Removed `import` of `consTypes` (consensus module)
+
 
 ## [0.0.0.3] - 2022-09-15
 
