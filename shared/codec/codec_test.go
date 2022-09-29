@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestUtilityCodec(t *testing.T) {
+func TestSharedCodec(t *testing.T) {
 	expectedField1One := int32(1)
 	expectedField2One := "1"
 	expectedField3One := false
@@ -58,7 +58,7 @@ func requireTestProtoStructureEqual(t *testing.T, tpsOne, tpsTwo *TestProtoStruc
 }
 
 func requireTestProtoStructureNotEqual(t *testing.T, tpsOne, tpsTwo *TestProtoStructure) {
-        require.NotEqual(t, tpsOne.Field1, tpsTwo.Field1)
-        require.NotEqual(t, tpsOne.Field2, tpsTwo.Field2)
-        require.NotEqual(t, tpsOne.Field3, tpsTwo.Field3)
+	require.NotEqual(t, tpsOne.Field1, tpsTwo.Field1)
+	require.NotEqual(t, tpsOne.Field2, tpsTwo.Field2)
+	require.NotEqual(t, tpsOne.Field3, tpsTwo.Field3)
 }
