@@ -146,7 +146,7 @@ func (m *ConsensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
 		return
 	}
-	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.IdToValAddrMap[*m.LeaderId]), anyConsensusMessage, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
+	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.idToValAddrMap[*m.LeaderId]), anyConsensusMessage, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return
 	}
@@ -201,10 +201,10 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 	if m.LeaderId != nil && *m.LeaderId == m.NodeId {
 		m.logPrefix = "LEADER"
-		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
+		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.idToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	} else {
 		m.logPrefix = "REPLICA"
-		m.nodeLog(typesCons.ElectedNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
+		m.nodeLog(typesCons.ElectedNewLeader(m.idToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	}
 
 	return nil

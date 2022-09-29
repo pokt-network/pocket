@@ -48,7 +48,7 @@ type ConsensusModule struct {
 	LeaderId       *typesCons.NodeId
 	NodeId         typesCons.NodeId
 	ValAddrToIdMap typesCons.ValAddrToIdMap // TODO: This needs to be updated every time the ValMap is modified
-	IdToValAddrMap typesCons.IdToValAddrMap // TODO: This needs to be updated every time the ValMap is modified
+	idToValAddrMap typesCons.IdToValAddrMap // TODO: This needs to be updated every time the ValMap is modified
 
 	// Consensus State
 	lastAppHash  string // TODO: Always retrieve this variable from the persistence module and simplify this struct
@@ -120,7 +120,7 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 		NodeId:         valIdMap[address],
 		LeaderId:       nil,
 		ValAddrToIdMap: valIdMap,
-		IdToValAddrMap: idValMap,
+		idToValAddrMap: idValMap,
 
 		lastAppHash:  "",
 		validatorMap: valMap,
