@@ -3,10 +3,9 @@ package utility
 import (
 	"math/big"
 
-	// TODO (andrew) importing consensus and persistence in this file?
+	// TODO (andrew): importing persistence in this file?
 	typesGenesis "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
-
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
