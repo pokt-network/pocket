@@ -36,7 +36,6 @@ Code built from commits in Pull Requests, is tagged as `pr-<number>`, as well as
 
 Once releases are managed, they will be tagged with the version number (e.g. `v0.0.1-alpha.pre.1`).
 
-
 ### Extended images with additional tooling
 
 Extended images with additional tooling are built to aid in troubleshoot and debugging. The extended image is formatted as `<tag>-dev`. For example, `latest-dev`, or `pr-123-dev`.
