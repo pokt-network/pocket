@@ -194,7 +194,7 @@ If you need to specify any additional flags, you can run `golangci-lint` directl
 
 #### Configuration
 
-`golangci-lint` is a sophisticated tool as it includes a lot of linters, including our own custom linting rules. As a result, a configuration file might become quite large. The configuration file is located at [`.golangci.yml`](../../.golangci.yml).
+`golangci-lint` is a sophisticated tool including both default and custom linters. The configuration file, which can grow quite large, is located at [`.golangci.yml`](../../.golangci.yml).
 
 The official documentation includes a list of different linters and their configuration options. Please refer to [this page](https://golangci-lint.run/usage/linters/) for more information.
 
