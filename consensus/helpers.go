@@ -177,7 +177,7 @@ func (m *ConsensusModule) clearMessagesPool() {
 /*** Leader Election Helpers ***/
 
 func (m *ConsensusModule) isLeader() bool {
-	return m.LeaderId != nil && *m.LeaderId == m.NodeId
+	return m.LeaderId != nil && *m.LeaderId == m.nodeId
 }
 
 func (m *ConsensusModule) isReplica() bool {
@@ -199,7 +199,7 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 	m.LeaderId = &leaderId
 
-	if m.LeaderId != nil && *m.LeaderId == m.NodeId {
+	if m.LeaderId != nil && *m.LeaderId == m.nodeId {
 		m.logPrefix = "LEADER"
 		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.idToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	} else {
@@ -214,10 +214,10 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 // TODO(#164): Remove this once we have a proper logging system.
 func (m *ConsensusModule) nodeLog(s string) {
-	log.Printf("[%s][%d] %s\n", m.logPrefix, m.NodeId, s)
+	log.Printf("[%s][%d] %s\n", m.logPrefix, m.nodeId, s)
 }
 
 // TODO(#164): Remove this once we have a proper logging system.
 func (m *ConsensusModule) nodeLogError(s string, err error) {
-	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.NodeId, s, err)
+	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.nodeId, s, err)
 }
