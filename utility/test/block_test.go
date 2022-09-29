@@ -188,7 +188,7 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 	for _, actorType := range actorTypes {
 		ctx := NewTestingUtilityContext(t, 1)
-		poolName := ""
+		var poolName string
 		switch actorType {
 		case typesUtil.ActorType_App:
 			poolName = typesUtil.PoolNames_AppStakePool.String()
