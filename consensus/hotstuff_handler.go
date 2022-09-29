@@ -20,7 +20,7 @@ func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 
 	// Pacemaker - Liveness & safety checks
 	if err := m.paceMaker.ValidateMessage(msg); err != nil {
-		if m.shouldLogHotstuffDiscardMessage() {
+		if m.shouldLogHotstuffDiscardMessage(step) {
 			m.nodeLog(typesCons.WarnDiscardHotstuffMessage(msg, err.Error()))
 		}
 		return err

@@ -51,7 +51,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 	highPrepareQC := m.findHighQC(m.messagePool[NewRound])
 
 	// TODO: Add more unit tests for these checks...
-	if highPrepareQC == nil || highPrepareQC.Height < m.Height || highPrepareQC.Round < m.Round {
+	if m.shouldPrepareNewBlock(highPrepareQC) {
 		// Leader prepares a new block if `highPrepareQC` is not applicable
 		block, err := m.prepareAndApplyBlock()
 		if err != nil {
@@ -361,4 +361,24 @@ func (m *ConsensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
 	}
 
 	return block, nil
+}
+
+// Return true if this node, the leader, should prepare a new block
+func (m *ConsensusModule) shouldPrepareNewBlock(highPrepareQC *typesCons.QuorumCertificate) bool {
+	if highPrepareQC == nil {
+		m.nodeLog("Preparing a new block - no highPrepareQC found")
+		return true
+	} else if m.isHighPrepareQCFromPast(highPrepareQC) {
+		m.nodeLog("Preparing a new block - highPrepareQC is from the past")
+		return true
+	} else if highPrepareQC.Block == nil {
+		m.nodeLog("[WARN] Preparing a new block - highPrepareQC SHOULD be used but block is nil")
+		return true
+	}
+	return false
+}
+
+// The `highPrepareQC` is from the past so we can safely ignore it
+func (m *ConsensusModule) isHighPrepareQCFromPast(highPrepareQC *typesCons.QuorumCertificate) bool {
+	return highPrepareQC.Height < m.Height || highPrepareQC.Round < m.Round
 }
