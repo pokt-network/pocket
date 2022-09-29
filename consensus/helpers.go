@@ -135,18 +135,18 @@ func protoHash(m proto.Message) string {
 
 func (m *ConsensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 	// TODO(olshansky): This can happen due to a race condition with the pacemaker.
-	if m.LeaderId == nil {
+	if m.leaderId == nil {
 		m.nodeLogError(typesCons.ErrNilLeaderId.Error(), nil)
 		return
 	}
 
-	m.nodeLog(typesCons.SendingMessage(msg, *m.LeaderId))
+	m.nodeLog(typesCons.SendingMessage(msg, *m.leaderId))
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
 		return
 	}
-	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.idToValAddrMap[*m.LeaderId]), anyConsensusMessage, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
+	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.idToValAddrMap[*m.leaderId]), anyConsensusMessage, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return
 	}
@@ -177,7 +177,7 @@ func (m *ConsensusModule) clearMessagesPool() {
 /*** Leader Election Helpers ***/
 
 func (m *ConsensusModule) isLeader() bool {
-	return m.LeaderId != nil && *m.LeaderId == m.nodeId
+	return m.leaderId != nil && *m.leaderId == m.nodeId
 }
 
 func (m *ConsensusModule) isReplica() bool {
@@ -186,7 +186,7 @@ func (m *ConsensusModule) isReplica() bool {
 
 func (m *ConsensusModule) clearLeader() {
 	m.logPrefix = DefaultLogPrefix
-	m.LeaderId = nil
+	m.leaderId = nil
 }
 
 func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) error {
@@ -197,14 +197,14 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 		return err
 	}
 
-	m.LeaderId = &leaderId
+	m.leaderId = &leaderId
 
-	if m.LeaderId != nil && *m.LeaderId == m.nodeId {
+	if m.leaderId != nil && *m.leaderId == m.nodeId {
 		m.logPrefix = "LEADER"
-		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.idToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
+		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.idToValAddrMap[*m.leaderId], *m.leaderId, m.Height, m.Round))
 	} else {
 		m.logPrefix = "REPLICA"
-		m.nodeLog(typesCons.ElectedNewLeader(m.idToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
+		m.nodeLog(typesCons.ElectedNewLeader(m.idToValAddrMap[*m.leaderId], *m.leaderId, m.Height, m.Round))
 	}
 
 	return nil

@@ -140,7 +140,7 @@ func (p *paceMaker) ValidateMessage(m *typesCons.HotstuffMessage) error {
 
 		// TODO(olshansky): Add tests for this. When we catch up to a later step, the leader is still the same.
 		// However, when we catch up to a later round, the leader at the same height will be different.
-		if p.consensusMod.Round != m.Round || p.consensusMod.LeaderId == nil {
+		if p.consensusMod.Round != m.Round || p.consensusMod.leaderId == nil {
 			p.consensusMod.electNextLeader(m)
 		}
 

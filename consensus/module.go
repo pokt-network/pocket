@@ -45,7 +45,7 @@ type ConsensusModule struct {
 	LockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
 	// Leader Election
-	LeaderId       *typesCons.NodeId
+	leaderId       *typesCons.NodeId
 	nodeId         typesCons.NodeId
 	valAddrToIdMap typesCons.ValAddrToIdMap // TODO: This needs to be updated every time the ValMap is modified
 	idToValAddrMap typesCons.IdToValAddrMap // TODO: This needs to be updated every time the ValMap is modified
@@ -118,7 +118,7 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 		LockedQC:      nil,
 
 		nodeId:         valIdMap[address],
-		LeaderId:       nil,
+		leaderId:       nil,
 		valAddrToIdMap: valIdMap,
 		idToValAddrMap: idValMap,
 
