@@ -117,7 +117,7 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	// the persistence context and have `CommitPersistenceContext` do this under the hood. However,
 	// additional `Block` metadata will need to be passed through and may change when we merkle the
 	// state hash.
-	if err := m.StoreBlock(block, blockProtoBytes); err != nil {
+	if err := m.storeBlock(block, blockProtoBytes); err != nil {
 		return err
 	}
 
