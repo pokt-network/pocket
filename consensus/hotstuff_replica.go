@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
+	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
 
@@ -214,10 +215,10 @@ func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 		return nil
 	}
 
-	// Liveness: node is locked on a QC from the past.
+	// Liveness: is node is locked on a QC from the past?
 	// DISCUSS: Where should additional logic be added to unlock the node?
-	if justifyQC.Height > lockedQC.Height || (justifyQC.Height == lockedQC.Height && justifyQC.Round > lockedQC.Round) {
-		return typesCons.ErrNodeIsLockedOnPastQC
+	if isLocked, err := isNodeLockedOnPastQC(justifyQC, lockedQC); isLocked {
+		return err
 	}
 
 	return typesCons.ErrUnhandledProposalCase
@@ -278,6 +279,23 @@ func (m *ConsensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 	}
 
 	return nil
+}
+
+func isNodeLockedOnPastQC(justifyQC, lockedQC *types.QuorumCertificate) (bool, error) {
+	if isLockedOnPastHeight(justifyQC, lockedQC) {
+		return true, types.ErrNodeLockedPastHeight
+	} else if isLockedOnCurrHeightAndPastRound(justifyQC, lockedQC) {
+		return true, types.ErrNodeLockedPastHeight
+	}
+	return false, nil
+}
+
+func isLockedOnPastHeight(justifyQC, lockedQC *types.QuorumCertificate) bool {
+	return justifyQC.Height > lockedQC.Height
+}
+
+func isLockedOnCurrHeightAndPastRound(justifyQC, lockedQC *types.QuorumCertificate) bool {
+	return justifyQC.Height == lockedQC.Height && justifyQC.Round > lockedQC.Round
 }
 
 func qcToHotstuffMessage(qc *typesCons.QuorumCertificate) *typesCons.HotstuffMessage {
