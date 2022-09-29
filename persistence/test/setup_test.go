@@ -65,32 +65,35 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
-	db := &persistence.PostgresContext{
-		Height: height,
-		DB:     ctx.(persistence.PostgresContext).DB,
-	}
+	db, ok := ctx.(persistence.PostgresContext)
+	require.True(t, ok)
 
 	t.Cleanup(func() {
 		require.NoError(t, db.Release())
 		require.NoError(t, testPersistenceMod.ResetContext())
 	})
 
-	return db
+	return &db
 }
 
-// REFACTOR: Can we leverage using `NewTestPostgresContext`here by creating a common interface?
 func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
-		log.Fatalf("Error creating new context: %s", err)
+		log.Fatalf("Error creating new context: %v\n", err)
 	}
-	db := persistence.PostgresContext{
-		Height: height,
-		DB:     ctx.(persistence.PostgresContext).DB,
+
+	db, ok := ctx.(persistence.PostgresContext)
+	if !ok {
+		log.Fatalf("Error casting RW context to Postgres context")
 	}
+
 	f.Cleanup(func() {
-		db.Release()
-		testPersistenceMod.ResetContext()
+		if err := db.Release(); err != nil {
+			f.FailNow()
+		}
+		if err := testPersistenceMod.ResetContext(); err != nil {
+			f.FailNow()
+		}
 	})
 
 	return &db
@@ -204,9 +207,10 @@ func fuzzSingleProtocolActor(
 			require.NoError(t, err)
 
 			require.ElementsMatch(t, newActor.Chains, newChains, "staked chains not updated")
-			// TODO(andrew): Use `require.Contains` instead
+			require.NotContains(t, newActor.StakedTokens, "invalid")
+			// TODO(andrew): Use `require.Contains` instead. E.g. require.NotContains(t, newActor.StakedTokens, "invalid")
 			if strings.Contains(newActor.StakedTokens, "invalid") {
-				fmt.Println("")
+				log.Println("")
 			}
 			require.Equal(t, newActor.StakedTokens, newStakedTokens, "staked tokens not updated")
 			require.Equal(t, newActor.ActorSpecificParam, newActorSpecificParam, "actor specific param not updated")

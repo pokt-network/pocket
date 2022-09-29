@@ -1,5 +1,7 @@
 package modules
 
+//go:generate mockgen -source=$GOFILE -destination=./mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+
 type UtilityModule interface {
 	Module
 
