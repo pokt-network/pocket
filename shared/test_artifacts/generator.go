@@ -5,17 +5,14 @@ import (
 	"math/big"
 	"strconv"
 
-	typesPersistence "github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/shared/converters"
-	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/utility/types"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	typesPers "github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
 	typesTelemetry "github.com/pokt-network/pocket/telemetry"
+	"github.com/pokt-network/pocket/utility/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -54,13 +51,13 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 			Validators:    typesCons.ToConsensusValidators(vals),
 		},
 			&typesPers.PersistenceGenesisState{
-				Pools:        converters.ToPersistenceAccounts(NewPools()),
-				Accounts:     converters.ToPersistenceAccounts(NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...)), // TODO(olshansky): clean this up
-				Applications: converters.ToPersistenceActors(apps),
-				Validators:   converters.ToPersistenceActors(vals),
-				ServiceNodes: converters.ToPersistenceActors(serviceNodes),
-				Fishermen:    converters.ToPersistenceActors(fish),
-				Params:       converters.ToPersistenceParams(DefaultParams()),
+				Pools:        typesPers.ToPersistenceAccounts(NewPools()),
+				Accounts:     typesPers.ToPersistenceAccounts(NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...)), // TODO(olshansky): clean this up
+				Applications: typesPers.ToPersistenceActors(apps),
+				Validators:   typesPers.ToPersistenceActors(vals),
+				ServiceNodes: typesPers.ToPersistenceActors(serviceNodes),
+				Fishermen:    typesPers.ToPersistenceActors(fish),
+				Params:       typesPers.ToPersistenceParams(DefaultParams()),
 			}),
 		validatorPrivateKeys
 }
@@ -109,8 +106,8 @@ func NewDefaultConfig(i int, pk string) modules.Config {
 }
 
 func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
-	for _, name := range typesPersistence.Pool_Names_name {
-		if name == typesPersistence.Pool_Names_FeeCollector.String() {
+	for _, name := range typesPers.Pool_Names_name {
+		if name == typesPers.Pool_Names_FeeCollector.String() {
 			pools = append(pools, &typesPers.Account{
 				Address: name,
 				Amount:  "0",
@@ -156,7 +153,7 @@ func NewActors(actorType typesUtil.UtilActorType, n int) (actors []modules.Actor
 func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor, privateKey string) {
 	privKey, pubKey, addr := GenerateNewKeysStrings()
 	chains := DefaultChains
-	if actorType == int32(typesPersistence.ActorType_Val) {
+	if actorType == int32(typesPers.ActorType_Val) {
 		chains = nil
 	} else if actorType == int32(types.UtilActorType_App) {
 		genericParam = DefaultMaxRelaysString
