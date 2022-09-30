@@ -60,10 +60,10 @@ linters-settings:
         # - 'dsl':    gorule file does not comply with the ruleguard DSL.
         # Default: ""
         failOn: dsl
-        rules: "misc/linting-rules/*.go"
+        rules: "build/linters/*.go"
 run:
   go: "1.19"
   skip-dirs:
-    - misc/linting-rules
+    - build/linters
   build-tags:
     - codeanalysis

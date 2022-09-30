@@ -176,7 +176,7 @@ Please follow the instructions on the [golangci-lint](https://golangci-lint.run/
 You can run `golangci-lint` locally against all packages with:
 
 ```bash
-make lint
+make go_lint
 ```
 
 If you need to specify any additional flags, you can run `golangci-lint` directly as it picks up the configuration from the `.golangci.yml` file.
@@ -200,6 +200,6 @@ The official documentation includes a list of different linters and their config
 
 #### Custom linters
 
-We can write custom linters using [`go-ruleguard`](https://go-ruleguard.github.io/). The rules are located in the [`misc/linting-rules`](../../misc/linting-rules) directory. The rules are written in the [Ruleguard DSL](https://github.com/quasilyte/go-ruleguard/blob/master/_docs/dsl.md), if you've never worked with ruleguard in the past, it makes sense to go through [introduction article](https://quasilyte.dev/blog/post/ruleguard/) and [Ruleguard by example tour](https://go-ruleguard.github.io/by-example/).
+We can write custom linters using [`go-ruleguard`](https://go-ruleguard.github.io/). The rules are located in the [`build/linters`](../../build/linters) directory. The rules are written in the [Ruleguard DSL](https://github.com/quasilyte/go-ruleguard/blob/master/_docs/dsl.md), if you've never worked with ruleguard in the past, it makes sense to go through [introduction article](https://quasilyte.dev/blog/post/ruleguard/) and [Ruleguard by example tour](https://go-ruleguard.github.io/by-example/).
 
 Ruleguard is run via `gocritic` linter which is a part of `golangci-lint`, so if you wish to change configuration or debug a particular rule, you can modify the `.golangci.yml` file.
