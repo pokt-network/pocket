@@ -14,8 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO(olshansky): Clean up the readability (e.g. spacing, naming, etc) of these tests and extend them to cover the entire context
-
 func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 
@@ -59,9 +57,9 @@ func TestUtilityContext_CheckTransaction(t *testing.T) {
 	// require.NoError(t, ctx.CheckTransaction(txBz))
 	// hash, err := tx.Hash()
 	// require.NoError(t, err)
-	// require.True(t, ctx.Mempool.Contains(hash), fmt.Sprintf("the transaction was unable to be checked"))
+	// require.True(t, ctx.Mempool.Contains(hash))
 	// er := ctx.CheckTransaction(txBz)
-	// require.True(t, er.Error() == types.ErrDuplicateTransaction().Error(), fmt.Sprintf("unexpected err, expected %v got %v", types.ErrDuplicateTransaction().Error(), er.Error()))
+	// require.Equal(t, er.Error(), types.ErrDuplicateTransaction().Error())
 
 	// ctx.Context.Release()
 	// tests.CleanupTest(ctx)
@@ -81,8 +79,8 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	candidates, err := ctx.GetSignerCandidates(&msg)
 	require.NoError(t, err)
 
-	require.Equal(t, len(candidates), 1, "wrong number of candidates")
-	require.Equal(t, hex.EncodeToString(candidates[0]), accs[0].GetAddress(), "unexpected signer candidate")
+	require.Equal(t, 1, len(candidates), "wrong number of candidates")
+	require.Equal(t, accs[0].GetAddress(), hex.EncodeToString(candidates[0]), "unexpected signer candidate")
 
 	test_artifacts.CleanupTest(ctx)
 }
@@ -97,8 +95,8 @@ func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
 	// require.NoError(t, ctx.CheckTransaction(txBz))
 	// txs, er := ctx.GetTransactionsForProposal(proposer.GetAddress(), 10000, nil)
 	// require.NoError(t, er)
-	// require.True(t, len(txs) == 1, fmt.Sprintf("incorrect txs amount returned; expected %v got %v", 1, len(txs)))
-	// require.True(t, bytes.Equal(txs[0], txBz), fmt.Sprintf("unexpected transaction returned; expected tx: %s, got %s", hex.EncodeToString(txBz), hex.EncodeToString(txs[0])))
+	// require.Equal(t, len(txs), 1)
+	// require.Equal(t, txs[0], txBz)
 
 	// ctx.Context.Release()
 	// tests.CleanupTest(ctx)
@@ -128,8 +126,8 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	recipientBalanceAfter, err := typesUtil.StringToBigInt(accs[1].GetAmount())
 	require.NoError(t, err)
 
-	require.Equal(t, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter), sendAmount, "unexpected sender balance")
-	require.Equal(t, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore), sendAmount, "unexpected recipient balance")
+	require.Equal(t, sendAmount, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter), "unexpected sender balance")
+	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore), "unexpected recipient balance")
 
 	test_artifacts.CleanupTest(ctx)
 }

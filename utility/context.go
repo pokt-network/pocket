@@ -52,8 +52,21 @@ func (u *UtilityContext) ReleaseContext() {
 	u.Context = nil
 }
 
-func (u *UtilityContext) GetLatestHeight() (int64, typesUtil.Error) {
-	return u.LatestHeight, nil
+func (u *UtilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {
+	height, er := u.Store().GetHeight()
+	if er != nil {
+		return 0, typesUtil.ErrGetHeight(er)
+	}
+	return height, nil
+}
+
+func (u *UtilityContext) GetStoreAndHeight() (*Context, int64, typesUtil.Error) {
+	store := u.Store()
+	height, er := store.GetHeight()
+	if er != nil {
+		return nil, 0, typesUtil.ErrGetHeight(er)
+	}
+	return store, height, nil
 }
 
 func (u *UtilityContext) Codec() codec.Codec {
