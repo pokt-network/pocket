@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"encoding/hex"
-	"log"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -45,11 +44,6 @@ func (p PostgresContext) UpdateServiceNode(address []byte, serviceURL string, st
 		ActorSpecificParam: serviceURL,
 		Chains:             chains,
 	})
-}
-
-func (p PostgresContext) DeleteServiceNode(address []byte) error {
-	log.Println("[DEBUG] DeleteServiceNode is a NOOP")
-	return nil
 }
 
 func (p PostgresContext) GetServiceNodeStakeAmount(height int64, address []byte) (string, error) {

@@ -3,8 +3,8 @@ package shared
 import (
 	"log"
 
+	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/shared/debug"
-
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -22,6 +22,8 @@ type bus struct {
 	utility     modules.UtilityModule
 	consensus   modules.ConsensusModule
 	telemetry   modules.TelemetryModule
+
+	clock clock.Clock
 }
 
 const (
@@ -34,6 +36,7 @@ func CreateBus(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
+	clock clock.Clock,
 ) (modules.Bus, error) {
 	bus := &bus{
 		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -43,6 +46,8 @@ func CreateBus(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
+
+		clock: clock,
 	}
 
 	modules := map[string]modules.Module{
@@ -137,4 +142,8 @@ func (m bus) GetConsensusModule() modules.ConsensusModule {
 
 func (m bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
+}
+
+func (m *bus) GetClock() clock.Clock {
+	return m.clock
 }

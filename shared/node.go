@@ -6,12 +6,14 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/telemetry"
-
+	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/telemetry"
 	"github.com/pokt-network/pocket/utility"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -36,7 +38,7 @@ func Create(configPath, genesisPath string) (modules.Module, error) {
 	return new(Node).Create(runtime.NewManagerFromFiles(configPath, genesisPath))
 }
 
-func (m *Node) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
+func (m *Node) Create(runtime modules.RuntimeMgr, clock clock.Clock) (modules.Module, error) {
 	persistenceMod, err := persistence.Create(runtime)
 	if err != nil {
 		return nil, err
@@ -68,6 +70,7 @@ func (m *Node) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 		utilityMod.(modules.UtilityModule),
 		consensusMod.(modules.ConsensusModule),
 		telemetryMod.(modules.TelemetryModule),
+		clock
 	)
 	if err != nil {
 		return nil, err
@@ -182,4 +185,12 @@ func (node *Node) GetModuleName() string {
 
 func (node *Node) GetP2PAddress() cryptoPocket.Address {
 	return node.p2pAddress
+}
+
+func (m *Node) SetClock(clock clock.Clock) {
+	m.clock = clock
+}
+
+func (m *Node) GetClock() clock.Clock {
+	return m.clock
 }

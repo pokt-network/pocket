@@ -11,17 +11,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/shared/debug"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
-
+	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -81,6 +81,7 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int) []runtime.Manager
 func CreateTestConsensusPocketNodes(
 	t *testing.T,
 	runtimeMgrs []runtime.Manager,
+	clock clock.Clock,
 	testChannel modules.EventsChannel,
 ) (pocketNodes IdToNodeMapping) {
 	pocketNodes = make(IdToNodeMapping, len(runtimeMgrs))
@@ -93,8 +94,8 @@ func CreateTestConsensusPocketNodes(
 		require.NoError(t, err)
 		return pk.Address().String() < pk2.Address().String()
 	})
-	for i, runtimeConfig := range runtimeMgrs {
-		pocketNode := CreateTestConsensusPocketNode(t, &runtimeConfig, testChannel)
+	for i, cfg := range configs {
+		pocketNode := CreateTestConsensusPocketNode(t, &runtimeConfig, clock, testChannel)
 		// TODO(olshansky): Figure this part out.
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
@@ -130,6 +131,7 @@ func CreateTestConsensusPocketNode(
 	t *testing.T,
 	runtimeMgr *runtime.Manager,
 	testChannel modules.EventsChannel,
+	clock clock.Clock,
 ) *shared.Node {
 	//createTestingGenesisAndConfigFiles(t, cfg, genesisState)
 
@@ -142,7 +144,7 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 
-	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock)
+	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock, clock)
 	require.NoError(t, err)
 
 	pk, err := cryptoPocket.NewPrivateKey(runtimeMgr.GetConfig().GetBaseConfig().GetPrivateKey())
@@ -150,6 +152,7 @@ func CreateTestConsensusPocketNode(
 
 	pocketNode := shared.NewNodeWithAddress(pk.Address())
 
+	pocketNode.SetClock(clock)
 	pocketNode.SetBus(bus)
 
 	return pocketNode
@@ -210,6 +213,7 @@ func P2PSend(_ *testing.T, node modules.NodeModule, any *anypb.Any) {
 
 func WaitForNetworkConsensusMessages(
 	t *testing.T,
+	clock clock.Clock,
 	testChannel modules.EventsChannel,
 	step typesCons.HotstuffStep,
 	hotstuffMsgType typesCons.HotstuffMessageType,
@@ -226,12 +230,13 @@ func WaitForNetworkConsensusMessages(
 	}
 
 	errorMessage := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(hotstuffMsgType)])
-	return waitForNetworkConsensusMessagesInternal(t, testChannel, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, includeFilter, errorMessage)
+	return waitForNetworkConsensusMessagesInternal(t, clock, testChannel, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, includeFilter, errorMessage)
 }
 
 // IMPROVE(olshansky): Translate this to use generics.
 func waitForNetworkConsensusMessagesInternal(
 	_ *testing.T,
+	clock clock.Clock,
 	testChannel modules.EventsChannel,
 	topic debug.PocketTopic,
 	numMessages int,
@@ -240,7 +245,7 @@ func waitForNetworkConsensusMessagesInternal(
 	errorMessage string,
 ) (messages []*anypb.Any, err error) {
 	messages = make([]*anypb.Any, 0)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*millis)
+	ctx, cancel := clock.WithTimeout(context.Background(), time.Millisecond*millis)
 	unused := make([]*debug.PocketEvent, 0) // TODO: Move this into a pool rather than resending back to the eventbus.
 loop:
 	for {
@@ -394,4 +399,52 @@ func baseTelemetryEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetr
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
 	return eventMetricsAgentMock
+}
+
+func logTime(clock *clock.Mock) {
+	log.Printf("[⌚ CLOCK ⌚] the time is: %v ms from UNIX Epoch [%v]", clock.Now().UTC().UnixMilli(), clock.Now().UTC())
+}
+
+// advanceTime moves the time forward on the mock clock and logs what just happened.
+func advanceTime(clock *clock.Mock, duration time.Duration) {
+	clock.Add(duration)
+	log.Printf("[⌚ CLOCK ⏩] advanced by %v", duration)
+	logTime(clock)
+}
+
+// sleep pauses the goroutine for the given duration on the mock clock and logs what just happened.
+//
+// Note: time has to be moved forward in a separate goroutine, see `advanceTime`.
+func sleep(clock *clock.Mock, duration time.Duration) {
+	log.Printf("[⌚ CLOCK 💤] sleeping for %v", duration)
+	clock.Sleep(duration)
+}
+
+// timeReminder simply prints, at a given interval and in a separate goroutine, the current mocked time to help with debug.
+func timeReminder(clock *clock.Mock, frequency time.Duration) {
+	go func() {
+		tick := time.NewTicker(frequency)
+		for {
+			<-tick.C
+			logTime(clock)
+		}
+	}()
+}
+
+func assertNodeConsensusView(t *testing.T, nodeId typesCons.NodeId, expected, actual typesCons.ConsensusNodeState) {
+	assertHeight(t, nodeId, expected.Height, actual.Height)
+	assertStep(t, nodeId, typesCons.HotstuffStep(expected.Step), typesCons.HotstuffStep(actual.Step))
+	assertRound(t, nodeId, expected.Round, actual.Round)
+}
+
+func assertHeight(t *testing.T, nodeId typesCons.NodeId, expected, actual uint64) {
+	require.Equal(t, expected, actual, "[NODE][%v] failed assertHeight", nodeId)
+}
+
+func assertStep(t *testing.T, nodeId typesCons.NodeId, expected, actual typesCons.HotstuffStep) {
+	require.Equal(t, expected.String(), actual.String(), "[NODE][%v] failed assertStep", nodeId)
+}
+
+func assertRound(t *testing.T, nodeId typesCons.NodeId, expected, actual uint8) {
+	require.Equal(t, expected, actual, "[NODE][%v] failed assertRound", nodeId)
 }
