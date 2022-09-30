@@ -3,13 +3,11 @@ package shared
 import (
 	"log"
 
-	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/shared/debug"
-	"github.com/pokt-network/pocket/telemetry"
 	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/runtime"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -34,43 +32,43 @@ func NewNodeWithAddress(address cryptoPocket.Address) *Node {
 	return &Node{p2pAddress: address}
 }
 
-func Create(configPath, genesisPath string) (modules.Module, error) {
+func Create(configPath, genesisPath string, clock clock.Clock) (modules.Module, error) {
 	return new(Node).Create(runtime.NewManagerFromFiles(configPath, genesisPath))
 }
 
-func (m *Node) Create(runtime modules.RuntimeMgr, clock clock.Clock) (modules.Module, error) {
-	persistenceMod, err := persistence.Create(runtime)
+func (m *Node) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	persistenceMod, err := persistence.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
-	p2pMod, err := p2p.Create(runtime)
+	p2pMod, err := p2p.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
-	utilityMod, err := utility.Create(runtime)
+	utilityMod, err := utility.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
-	consensusMod, err := consensus.Create(runtime)
+	consensusMod, err := consensus.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
-	telemetryMod, err := telemetry.Create(runtime)
+	telemetryMod, err := telemetry.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
 	bus, err := CreateBus(
+		runtimeMgr,
 		persistenceMod.(modules.PersistenceModule),
 		p2pMod.(modules.P2PModule),
 		utilityMod.(modules.UtilityModule),
 		consensusMod.(modules.ConsensusModule),
 		telemetryMod.(modules.TelemetryModule),
-		clock
 	)
 	if err != nil {
 		return nil, err
@@ -185,12 +183,4 @@ func (node *Node) GetModuleName() string {
 
 func (node *Node) GetP2PAddress() cryptoPocket.Address {
 	return node.p2pAddress
-}
-
-func (m *Node) SetClock(clock clock.Clock) {
-	m.clock = clock
-}
-
-func (m *Node) GetClock() clock.Clock {
-	return m.clock
 }

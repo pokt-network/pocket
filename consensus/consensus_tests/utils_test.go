@@ -58,7 +58,7 @@ type IdToNodeMapping map[typesCons.NodeId]modules.NodeModule
 
 /*** Node Generation Helpers ***/
 
-func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int) []runtime.Manager {
+func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Clock) []runtime.Manager {
 	runtimeMgrs := make([]runtime.Manager, 0)
 	var keys []string
 	genesisState, keys := test_artifacts.NewGenesisState(validatorCount, 1, 1, 1)
@@ -73,7 +73,7 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int) []runtime.Manager
 				DebugTimeBetweenStepsMsec: 0,
 			},
 		})(config)
-		runtimeMgrs = append(runtimeMgrs, *runtime.NewManager(config, genesisState))
+		runtimeMgrs = append(runtimeMgrs, *runtime.NewManager(config, genesisState, runtime.WithClock(clockMgr)))
 	}
 	return runtimeMgrs
 }
@@ -81,7 +81,6 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int) []runtime.Manager
 func CreateTestConsensusPocketNodes(
 	t *testing.T,
 	runtimeMgrs []runtime.Manager,
-	clock clock.Clock,
 	testChannel modules.EventsChannel,
 ) (pocketNodes IdToNodeMapping) {
 	pocketNodes = make(IdToNodeMapping, len(runtimeMgrs))
@@ -94,8 +93,8 @@ func CreateTestConsensusPocketNodes(
 		require.NoError(t, err)
 		return pk.Address().String() < pk2.Address().String()
 	})
-	for i, cfg := range configs {
-		pocketNode := CreateTestConsensusPocketNode(t, &runtimeConfig, clock, testChannel)
+	for i, runtimeMgr := range runtimeMgrs {
+		pocketNode := CreateTestConsensusPocketNode(t, &runtimeMgr, testChannel)
 		// TODO(olshansky): Figure this part out.
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
@@ -131,7 +130,6 @@ func CreateTestConsensusPocketNode(
 	t *testing.T,
 	runtimeMgr *runtime.Manager,
 	testChannel modules.EventsChannel,
-	clock clock.Clock,
 ) *shared.Node {
 	//createTestingGenesisAndConfigFiles(t, cfg, genesisState)
 
@@ -144,7 +142,7 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 
-	bus, err := shared.CreateBus(persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock, clock)
+	bus, err := shared.CreateBus(runtimeMgr, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock)
 	require.NoError(t, err)
 
 	pk, err := cryptoPocket.NewPrivateKey(runtimeMgr.GetConfig().GetBaseConfig().GetPrivateKey())
@@ -152,7 +150,6 @@ func CreateTestConsensusPocketNode(
 
 	pocketNode := shared.NewNodeWithAddress(pk.Address())
 
-	pocketNode.SetClock(clock)
 	pocketNode.SetBus(bus)
 
 	return pocketNode

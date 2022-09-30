@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/benbjohnson/clock"
 	"github.com/mitchellh/mapstructure"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -21,23 +22,27 @@ var _ modules.RuntimeMgr = &Manager{}
 type Manager struct {
 	config  *runtimeConfig
 	genesis *runtimeGenesis
+
+	clock clock.Clock
 }
 
 func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manager)) *Manager {
-	rc := &Manager{}
+	mgr := &Manager{
+		clock: clock.New(),
+	}
 
-	cfg, genesis, err := rc.init(configPath, genesisPath)
+	cfg, genesis, err := mgr.init(configPath, genesisPath)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to initialize runtime builder: %v", err)
 	}
-	rc.config = cfg
-	rc.genesis = genesis
+	mgr.config = cfg
+	mgr.genesis = genesis
 
 	for _, o := range options {
-		o(rc)
+		o(mgr)
 	}
 
-	return rc
+	return mgr
 }
 
 func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...func(*Manager)) *Manager {
@@ -47,18 +52,31 @@ func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...fun
 	var genesis *runtimeGenesis
 	parse(genesisReader, genesis)
 
-	rc := &Manager{
+	mgr := &Manager{
 		config:  cfg,
 		genesis: genesis,
+		clock:   clock.New(),
 	}
-	return rc
+
+	for _, o := range options {
+		o(mgr)
+	}
+
+	return mgr
 }
 
-func NewManager(config modules.Config, genesis modules.GenesisState) *Manager {
-	return &Manager{
+func NewManager(config modules.Config, genesis modules.GenesisState, options ...func(*Manager)) *Manager {
+	mgr := &Manager{
 		config:  config.(*runtimeConfig),
 		genesis: genesis.(*runtimeGenesis),
+		clock:   clock.New(),
 	}
+
+	for _, o := range options {
+		o(mgr)
+	}
+
+	return mgr
 }
 
 func (rc *Manager) init(configPath, genesisPath string) (config *runtimeConfig, genesis *runtimeGenesis, err error) {
@@ -105,6 +123,10 @@ func (b *Manager) GetGenesis() modules.GenesisState {
 	return b.genesis
 }
 
+func (b *Manager) GetClock() clock.Clock {
+	return b.clock
+}
+
 type supportedStructs interface {
 	*runtimeConfig | *runtimeGenesis
 }
@@ -142,5 +164,11 @@ func WithPK(pk string) func(*Manager) {
 			b.config.P2P = &typesP2P.P2PConfig{}
 		}
 		b.config.P2P.PrivateKey = pk
+	}
+}
+
+func WithClock(clockMgr clock.Clock) func(*Manager) {
+	return func(b *Manager) {
+		b.clock = clockMgr
 	}
 }

@@ -72,7 +72,7 @@ func main() {
 	}
 	telemetryMod := telemetryM.(modules.TelemetryModule)
 
-	_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod)
+	_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod)
 
 	p2pMod.Start()
 

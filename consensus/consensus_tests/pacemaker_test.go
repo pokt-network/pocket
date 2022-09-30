@@ -25,7 +25,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	numNodes := 4
 	paceMakerTimeoutMsec := uint64(50) // Set a very small pacemaker timeout
 	paceMakerTimeout := 50 * time.Millisecond
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numNodes)
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numNodes, clockMock)
 	for _, runtimeConfig := range runtimeMgrs {
 		if consCfg, ok := runtimeConfig.GetConfig().GetConsensusConfig().(*typesCons.ConsensusConfig); ok {
 			consCfg.GetPaceMakerConfig().SetTimeoutMsec(paceMakerTimeoutMsec)
@@ -34,7 +34,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, clockMock, testChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Debug message to start consensus by triggering next view.
@@ -125,15 +125,15 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 }
 
 func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
-	numNodes := 4
-	runtimeConfigs := GenerateNodeRuntimeMgrs(t, numNodes)
-
 	clockMock := clock.NewMock()
+	numNodes := 4
+	runtimeConfigs := GenerateNodeRuntimeMgrs(t, numNodes, clockMock)
+
 	timeReminder(clockMock, 100*time.Millisecond)
 
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeConfigs, clockMock, testChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeConfigs, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Starting point

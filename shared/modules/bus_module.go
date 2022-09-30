@@ -3,7 +3,6 @@ package modules
 //go:generate mockgen -source=$GOFILE -destination=./mocks/bus_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
 
 import (
-	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/shared/debug"
 )
 
@@ -25,6 +24,6 @@ type Bus interface {
 	GetConsensusModule() ConsensusModule
 	GetTelemetryModule() TelemetryModule
 
-	// Time
-	GetClock() clock.Clock
+	// Runtime
+	GetRuntimeMgr() RuntimeMgr
 }

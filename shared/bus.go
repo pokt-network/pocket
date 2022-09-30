@@ -3,7 +3,6 @@ package shared
 import (
 	"log"
 
-	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -23,7 +22,7 @@ type bus struct {
 	consensus   modules.ConsensusModule
 	telemetry   modules.TelemetryModule
 
-	clock clock.Clock
+	runtimeMgr modules.RuntimeMgr
 }
 
 const (
@@ -31,23 +30,23 @@ const (
 )
 
 func CreateBus(
+	runtimeMgr modules.RuntimeMgr,
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
-	clock clock.Clock,
 ) (modules.Bus, error) {
 	bus := &bus{
 		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
+
+		runtimeMgr: runtimeMgr,
 
 		persistence: persistence,
 		p2p:         p2p,
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
-
-		clock: clock,
 	}
 
 	modules := map[string]modules.Module{
@@ -81,6 +80,7 @@ func CreateBus(
 //	Using `CreateBusWithOptionalModules`, we can create a bus with only pre2p and a NOOP telemetry module
 //	so that we can the pre2p module without any issues.
 func CreateBusWithOptionalModules(
+	runtimeMgr modules.RuntimeMgr,
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
@@ -88,7 +88,10 @@ func CreateBusWithOptionalModules(
 	telemetry modules.TelemetryModule,
 ) modules.Bus {
 	bus := &bus{
-		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
+		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
+
+		runtimeMgr: runtimeMgr,
+
 		persistence: persistence,
 		p2p:         p2p,
 		utility:     utility,
@@ -144,6 +147,6 @@ func (m bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
 }
 
-func (m *bus) GetClock() clock.Clock {
-	return m.clock
+func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {
+	return m.runtimeMgr
 }
