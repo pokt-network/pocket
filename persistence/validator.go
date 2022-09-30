@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"encoding/hex"
-	"log"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -42,11 +41,6 @@ func (p PostgresContext) UpdateValidator(address []byte, serviceURL string, stak
 		StakedTokens:       stakedAmount,
 		ActorSpecificParam: serviceURL,
 	})
-}
-
-func (p PostgresContext) DeleteValidator(address []byte) error {
-	log.Println("[DEBUG] DeleteValidator is a NOOP")
-	return nil
 }
 
 func (p PostgresContext) GetValidatorStakeAmount(height int64, address []byte) (string, error) {
