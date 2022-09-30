@@ -65,15 +65,15 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
-	db, ok := ctx.(persistence.PostgresContext)
+	db, ok := ctx.(*persistence.PostgresContext)
 	require.True(t, ok)
 
 	t.Cleanup(func() {
 		require.NoError(t, db.Release())
-		require.NoError(t, testPersistenceMod.ResetContext())
+		require.NoError(t, db.ResetContext())
 	})
 
-	return &db
+	return db
 }
 
 func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
@@ -82,7 +82,7 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 		log.Fatalf("Error creating new context: %v\n", err)
 	}
 
-	db, ok := ctx.(persistence.PostgresContext)
+	db, ok := ctx.(*persistence.PostgresContext)
 	if !ok {
 		log.Fatalf("Error casting RW context to Postgres context")
 	}
@@ -91,12 +91,12 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 		if err := db.Release(); err != nil {
 			f.FailNow()
 		}
-		if err := testPersistenceMod.ResetContext(); err != nil {
+		if err := db.ResetContext(); err != nil {
 			f.FailNow()
 		}
 	})
 
-	return &db
+	return db
 }
 
 // TODO(andrew): Take in `t testing.T` as a parameter and error if there's an issue

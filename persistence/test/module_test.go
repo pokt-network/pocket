@@ -7,12 +7,9 @@ import (
 )
 
 func TestPersistenceContextParallelReadWrite(t *testing.T) {
-	// Cleanup previous contexts
-	testPersistenceMod.ResetContext()
 	t.Cleanup(func() {
-		testPersistenceMod.ResetContext()
+		require.NoError(t, testPersistenceMod.GetWriteContext().ResetContext())
 	})
-
 	// variables for testing
 	poolName := "fake"
 	poolAddress := []byte("address")
@@ -52,12 +49,9 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 }
 
 func TestPersistenceContextTwoWritesErrors(t *testing.T) {
-	// Cleanup previous contexts
-	testPersistenceMod.ResetContext()
 	t.Cleanup(func() {
-		testPersistenceMod.ResetContext()
+		require.NoError(t, testPersistenceMod.GetWriteContext().ResetContext())
 	})
-
 	// Opening up first write context succeeds
 	_, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)

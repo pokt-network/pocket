@@ -7,7 +7,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-type ValidatorMap map[string]Actor // TODO (Drewsky) deprecate Validator map or populate from persistence module
+type ValidatorMap map[string]Actor // TODO : Validator map should be a shared interface not a structure
 
 type ConsensusModule interface {
 	Module
@@ -18,6 +18,6 @@ type ConsensusModule interface {
 
 	// Consensus State
 	CurrentHeight() uint64
-	AppHash() string            // DISCUSS: Why not call this a BlockHash or StateHash? Should it be a []byte or string?
-	ValidatorMap() ValidatorMap // TODO: This needs to be dynamically updated during various operations and network changes.
+	AppHash() string // DISCUSS: Why not call this a BlockHash or StateHash? Should it be a []byte or string?
+	ValidatorMap() ValidatorMap
 }

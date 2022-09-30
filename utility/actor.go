@@ -6,7 +6,6 @@ import (
 
 	typesGenesis "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -158,13 +157,13 @@ func (u *UtilityContext) GetMaxPausedBlocks(actorType typesUtil.UtilActorType) (
 
 	switch actorType {
 	case typesUtil.UtilActorType_App:
-		paramName = modules.AppMaxPauseBlocksParamName
+		paramName = typesUtil.AppMaxPauseBlocksParamName
 	case typesUtil.UtilActorType_Fish:
-		paramName = modules.FishermanMaxPauseBlocksParamName
+		paramName = typesUtil.FishermanMaxPauseBlocksParamName
 	case typesUtil.UtilActorType_Node:
-		paramName = modules.ServiceNodeMaxPauseBlocksParamName
+		paramName = typesUtil.ServiceNodeMaxPauseBlocksParamName
 	case typesUtil.UtilActorType_Val:
-		paramName = modules.ValidatorMaxPausedBlocksParamName
+		paramName = typesUtil.ValidatorMaxPausedBlocksParamName
 	}
 
 	maxPausedBlocks, er = store.GetIntParam(paramName, height)
@@ -186,13 +185,13 @@ func (u *UtilityContext) GetMinimumPauseBlocks(actorType typesUtil.UtilActorType
 
 	switch actorType {
 	case typesUtil.UtilActorType_App:
-		paramName = modules.AppMinimumPauseBlocksParamName
+		paramName = typesUtil.AppMinimumPauseBlocksParamName
 	case typesUtil.UtilActorType_Fish:
-		paramName = modules.FishermanMinimumPauseBlocksParamName
+		paramName = typesUtil.FishermanMinimumPauseBlocksParamName
 	case typesUtil.UtilActorType_Node:
-		paramName = modules.ServiceNodeMinimumPauseBlocksParamName
+		paramName = typesUtil.ServiceNodeMinimumPauseBlocksParamName
 	case typesUtil.UtilActorType_Val:
-		paramName = modules.ValidatorMinimumPauseBlocksParamName
+		paramName = typesUtil.ValidatorMinimumPauseBlocksParamName
 	}
 
 	minPauseBlocks, er = store.GetIntParam(paramName, height)
@@ -265,13 +264,13 @@ func (u *UtilityContext) GetMinimumStake(actorType typesUtil.UtilActorType) (*bi
 	var minStake string
 	switch actorType {
 	case typesUtil.UtilActorType_App:
-		paramName = modules.AppMinimumStakeParamName
+		paramName = typesUtil.AppMinimumStakeParamName
 	case typesUtil.UtilActorType_Fish:
-		paramName = modules.FishermanMinimumStakeParamName
+		paramName = typesUtil.FishermanMinimumStakeParamName
 	case typesUtil.UtilActorType_Node:
-		paramName = modules.ServiceNodeMinimumStakeParamName
+		paramName = typesUtil.ServiceNodeMinimumStakeParamName
 	case typesUtil.UtilActorType_Val:
-		paramName = modules.ValidatorMinimumStakeParamName
+		paramName = typesUtil.ValidatorMinimumStakeParamName
 	}
 
 	minStake, err = store.GetStringParam(paramName, height)
@@ -319,13 +318,13 @@ func (u *UtilityContext) GetUnstakingHeight(actorType typesUtil.UtilActorType) (
 	var unstakingBlocks int
 	switch actorType {
 	case typesUtil.UtilActorType_App:
-		paramName = modules.AppUnstakingBlocksParamName
+		paramName = typesUtil.AppUnstakingBlocksParamName
 	case typesUtil.UtilActorType_Fish:
-		paramName = modules.FishermanUnstakingBlocksParamName
+		paramName = typesUtil.FishermanUnstakingBlocksParamName
 	case typesUtil.UtilActorType_Node:
-		paramName = modules.ServiceNodeUnstakingBlocksParamName
+		paramName = typesUtil.ServiceNodeUnstakingBlocksParamName
 	case typesUtil.UtilActorType_Val:
-		paramName = modules.ValidatorUnstakingBlocksParamName
+		paramName = typesUtil.ValidatorUnstakingBlocksParamName
 	}
 
 	unstakingBlocks, err = store.GetIntParam(paramName, height)
@@ -346,11 +345,11 @@ func (u *UtilityContext) GetMaxChains(actorType typesUtil.UtilActorType) (maxCha
 	var paramName string
 	switch actorType {
 	case typesUtil.UtilActorType_App:
-		paramName = modules.AppMinimumStakeParamName
+		paramName = typesUtil.AppMinimumStakeParamName
 	case typesUtil.UtilActorType_Fish:
-		paramName = modules.FishermanMinimumStakeParamName
+		paramName = typesUtil.FishermanMinimumStakeParamName
 	case typesUtil.UtilActorType_Node:
-		paramName = modules.ServiceNodeMinimumStakeParamName
+		paramName = typesUtil.ServiceNodeMinimumStakeParamName
 	}
 
 	maxChains, err = store.GetIntParam(paramName, height)
