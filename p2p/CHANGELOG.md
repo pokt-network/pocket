@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.3] - 2022-09-30
+
+### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
+
+- Updated to use `RuntimeMgr`
+- Updated tests and mocks
+- Removed some cross-module dependencies
+
 ## [0.0.0.2] - 2022-08-25
 **Encapsulate structures previously in shared [#163](github.com/pokt-network/pocket/issues/163)**
 - Ensured proto structures implement shared interfaces
