@@ -79,7 +79,10 @@ func NewDefaultConfig(i int, pk string) modules.Config {
 			},
 			PrivateKey: pk,
 		},
-		Utility: &MockUtilityConfig{},
+		Utility: &MockUtilityConfig{
+			MaxMempoolTransactionBytes: 1024 * 1024 * 1024, // 1GB V0 defaults
+			MaxMempoolTransactions:     9000,
+		},
 		Persistence: &typesPersistence.PersistenceConfig{
 			PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
 			NodeSchema:     "node" + strconv.Itoa(i+1),
