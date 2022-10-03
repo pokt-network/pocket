@@ -31,7 +31,7 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 	stateView := network.peersManager.getStateView()
 	require.Equal(t, 2, len(stateView.addrList))
 	require.ElementsMatch(t, []string{selfAddr.String(), peerAddr.String()}, stateView.addrList, "addrList does not match")
-	require.ElementsMatch(t, []*types.NetworkPeer{selfPeer, peer}, stateView.addrBook, "addrBook")
+	require.ElementsMatch(t, []*types.NetworkPeer{selfPeer, peer}, stateView.addrBook, "addrBook does not match")
 
 	require.Contains(t, stateView.addrBookMap, selfAddr.String(), "addrBookMap contains self key")
 	require.Equal(t, selfPeer, stateView.addrBookMap[selfAddr.String()], "addrBookMap contains self")
