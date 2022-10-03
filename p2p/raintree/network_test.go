@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_rainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
+func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 	// starting with an empty address book and only self
 	selfAddr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
@@ -39,7 +39,7 @@ func Test_rainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 	require.Equal(t, peer, stateView.addrBookMap[peerAddr.String()], "addrBookMap contains peer")
 }
 
-func Test_rainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
+func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 	// starting with an address book having only self and an arbitrary number of peers `numAddressesInAddressBook``
 	numAddressesInAddressBook := 3
 	addrBook := getAddrBook(nil, numAddressesInAddressBook)
