@@ -19,7 +19,7 @@ const (
 // We can easily hit an issue where we are propagating a message from an older height (e.g. before
 // the addr book was updated), but we're using `maxNumLevels` associated with the number of
 // validators at the current height.
-func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level uint32) int {
+func (n *rainTreeNetwork) getAddrBookLength(level uint32, _height uint64) int {
 	peersManagerStateView := n.peersManager.getStateView()
 	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(peersManagerStateView.maxNumLevels-level))
 	return int(float64(len(peersManagerStateView.addrList)) * (shrinkageCoefficient))
@@ -27,7 +27,8 @@ func (n *rainTreeNetwork) getAddrBookLengthAtHeight(level uint32) int {
 
 // getTargetsAtLevel returns the targets for a given level
 func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
-	addrBookLenghtAtHeight := n.getAddrBookLengthAtHeight(level)
+	height := n.GetBus().GetConsensusModule().CurrentHeight()
+	addrBookLenghtAtHeight := n.getAddrBookLength(level, height)
 	firstTarget := n.getTarget(firstMsgTargetPercentage, addrBookLenghtAtHeight, level)
 	secondTarget := n.getTarget(secondMsgTargetPercentage, addrBookLenghtAtHeight, level)
 
