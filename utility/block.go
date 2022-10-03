@@ -138,9 +138,6 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	for _, actorTypeInt32 := range typesUtil.ActorType_value {
 		var readyToUnstake []modules.IUnstakingActor
 		actorType := typesUtil.ActorType(actorTypeInt32)
-		if actorType == typesUtil.ActorType_Undefined {
-			continue
-		}
 		var poolName string
 		switch actorType {
 		case typesUtil.ActorType_App:
@@ -155,6 +152,8 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 		case typesUtil.ActorType_Validator:
 			readyToUnstake, er = store.GetValidatorsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = typesUtil.PoolNames_ValidatorStakePool.String()
+		case typesUtil.ActorType_Undefined:
+			continue
 		}
 		if er != nil {
 			return typesUtil.ErrGetReadyToUnstake(er)
