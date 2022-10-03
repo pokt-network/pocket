@@ -36,7 +36,7 @@ func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) 
 		maxNumLevels: 0,
 	}
 
-	// inizializing map and list
+	// initializing map and list
 	pm.addrBookMap = make(map[string]*typesP2P.NetworkPeer, len(addrBook))
 	pm.addrList = make([]string, len(addrBook))
 	for i, peer := range addrBook {
