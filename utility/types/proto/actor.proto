@@ -3,6 +3,7 @@ package utility;
 
 option go_package = "github.com/pokt-network/pocket/utility/types";
 
+// TODO(#258): Follow protobuf best practices
 enum PoolNames {
   Unspecified = 0;
   DAO = 1;
