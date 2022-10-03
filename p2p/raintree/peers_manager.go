@@ -64,7 +64,7 @@ func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) 
 
 	pm.maxNumLevels = pm.getMaxAddrBookLevels()
 
-	// listening and reacting to events
+	// listening and reacting to peer changes (addition/deletion) events
 	go func() {
 		for evt := range pm.eventCh {
 			pm.m.Lock()
