@@ -37,8 +37,8 @@ func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 	return []target{firstTarget, secondTarget}
 }
 
-func (n *rainTreeNetwork) getTarget(targetPercentage float64, len int, level uint32) target {
-	i := int(targetPercentage * float64(len))
+func (n *rainTreeNetwork) getTarget(targetPercentage float64, addrBookLen int, level uint32) target {
+	i := int(targetPercentage * float64(addrBookLen))
 
 	peersManagerStateView := n.peersManager.getStateView()
 
@@ -46,7 +46,7 @@ func (n *rainTreeNetwork) getTarget(targetPercentage float64, len int, level uin
 		serviceUrl:             peersManagerStateView.addrBookMap[peersManagerStateView.addrList[i]].ServiceUrl,
 		percentage:             targetPercentage,
 		level:                  level,
-		addrBookLengthAtHeight: len,
+		addrBookLengthAtHeight: addrBookLen,
 		index:                  i,
 	}
 
