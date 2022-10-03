@@ -73,7 +73,6 @@ func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) 
 
 			switch evt.eventType {
 			case addToAddressBook:
-
 				pm.addrBookMap[peerAddress] = evt.peer
 				// insert into sorted addrList and addrBook
 				// searching from index 1 because index 0 is self by convention and the rest of the slice is sorted
