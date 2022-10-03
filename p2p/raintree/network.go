@@ -57,14 +57,14 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 		Data:  data,
 		Nonce: nonce,
 	}
-	bz, err := proto.Marshal(msg)
+	msgBz, err := proto.Marshal(msg)
 	if err != nil {
 		return err
 	}
 
 	for _, target := range n.getTargetsAtLevel(level) {
 		if shouldSendToTarget(target) {
-			if err = n.networkSendInternal(bz, target.address); err != nil {
+			if err = n.networkSendInternal(msgBz, target.address); err != nil {
 				log.Println("Error sending to peer during broadcast: ", err)
 			}
 		}
