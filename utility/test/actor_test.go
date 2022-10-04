@@ -365,24 +365,6 @@ func TestUtilityContext_CalculateAppRelays(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 1)
-	actor := GetAllTestingApps(t, ctx)[0]
-	addrBz, err := hex.DecodeString(actor.GetAddress())
-	require.NoError(t, err)
-	require.Equal(t, int64(-1), actor.GetUnstakingHeight())
-	require.NoError(t, ctx.SetActorPauseHeight(typesUtil.UtilActorType_App, addrBz, 0), "set actor pause height")
-	err = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
-	require.NoError(t, err)
-	// require.NoError(t, ctx.UnstakeActorPausedBefore(0, typesUtil.UtilActorType_App), "unstake actor pause before height 0")
-	require.NoError(t, ctx.UnstakeActorPausedBefore(1, typesUtil.UtilActorType_App), "unstake actor pause before height 1")
-	actor = GetAllTestingApps(t, ctx)[0]
-	unstakingBlocks, err := ctx.GetAppUnstakingBlocks()
-	require.NoError(t, err)
-	require.Equal(t, unstakingBlocks+1, actor.GetUnstakingHeight())
-	test_artifacts.CleanupTest(ctx)
-}
-
 func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	ctx.SetPoolAmount("AppStakePool", big.NewInt(math.MaxInt64))
