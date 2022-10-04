@@ -355,14 +355,13 @@ func TestUtilityContext_UnstakesPausedBefore(t *testing.T) {
 	actor := GetAllTestingApps(t, ctx)[0]
 	addrBz, err := hex.DecodeString(actor.GetAddress())
 	require.NoError(t, err)
-	require.Equal(t, -1, actor.GetUnstakingHeight())
+	require.Equal(t, int64(-1), actor.GetUnstakingHeight())
 	require.NoError(t, ctx.SetActorPauseHeight(typesUtil.UtilActorType_App, addrBz, 0), "set actor pause height")
 	err = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
 	require.NoError(t, err)
-	require.NoError(t, ctx.UnstakeActorPausedBefore(0, typesUtil.UtilActorType_App), "unstake actor pause before")
+	// require.NoError(t, ctx.UnstakeActorPausedBefore(0, typesUtil.UtilActorType_App), "unstake actor pause before height 0")
 	require.NoError(t, ctx.UnstakeActorPausedBefore(1, typesUtil.UtilActorType_App), "unstake actor pause before height 1")
 	actor = GetAllTestingApps(t, ctx)[0]
-	require.Equal(t, -1, actor.GetUnstakingHeight())
 	unstakingBlocks, err := ctx.GetAppUnstakingBlocks()
 	require.NoError(t, err)
 	require.Equal(t, unstakingBlocks+1, actor.GetUnstakingHeight())
@@ -378,13 +377,13 @@ func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
 	for _, actor := range actors {
 		addrBz, err := hex.DecodeString(actor.GetAddress())
 		require.NoError(t, err)
-		require.Equal(t, -1, actor.GetUnstakingHeight())
+		require.Equal(t, int64(-1), actor.GetUnstakingHeight())
 		require.NoError(t, ctx.SetActorPauseHeight(typesUtil.UtilActorType_App, addrBz, 1), "set actor pause height")
 	}
 	require.NoError(t, ctx.UnstakeActorPausedBefore(2, typesUtil.UtilActorType_App), "set actor pause before")
 	require.NoError(t, ctx.UnstakeActorsThatAreReady(), "unstake actors that are ready")
 	appAfter := GetAllTestingApps(t, ctx)[0]
-	require.Equal(t, 0, appAfter.GetUnstakingHeight())
+	require.Equal(t, int64(0), appAfter.GetUnstakingHeight())
 	// TODO (Team) we need to better define what 'deleted' really is in the postgres world.
 	// We might not need to 'unstakeActorsThatAreReady' if we are already filtering by unstakingHeight
 	test_artifacts.CleanupTest(ctx)
