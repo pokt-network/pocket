@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.6] - 2022-10-04
+
+- Don't ignore the exit code of `m.Run()` in the unit tests
+
 ## [0.0.0.5] - 2022-09-14
 
 - Consolidated `PostgresContext` and `PostgresDb` into a single structure

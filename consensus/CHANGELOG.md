@@ -7,11 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2022-10-04
+
+- Don't ignore the exit code of `m.Run()` in the unit tests
+
 ## [0.0.0.3] - 2022-09-28
+
 - `consensusModule` stores block directly to prevent shared structure in the `utilityModule`
 
 ## [0.0.0.2] - 2022-08-25
+
 **Encapsulate structures previously in shared [#163](github.com/pokt-network/pocket/issues/163)**
+
 - Ensured proto structures implement shared interfaces
 - `ConsensusConfig` uses shared interfaces in order to accept `MockConsensusConfig` in test_artifacts
 - `ConsensusGenesisState` uses shared interfaces in order to accept `MockConsensusGenesisState` in test_artifacts
