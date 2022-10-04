@@ -216,7 +216,7 @@ func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 		return nil
 	}
 
-	// Liveness: is node is locked on a QC from the past?
+	// Liveness: is node locked on a QC from the past?
 	// DISCUSS: Where should additional logic be added to unlock the node?
 	if isLocked, err := isNodeLockedOnPastQC(justifyQC, lockedQC); isLocked {
 		return err
