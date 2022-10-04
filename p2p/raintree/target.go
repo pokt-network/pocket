@@ -12,7 +12,7 @@ type target struct {
 	serviceUrl string
 
 	level                  uint32
-	percentage             float64
+	percentage             float64 // the target percentage within the peer list used to select this as a target
 	addrBookLengthAtHeight int
 	index                  int
 	isSelf                 bool
