@@ -85,7 +85,10 @@ func NewDefaultConfig(i int, pk string) modules.Config {
 				},
 				PrivateKey: pk,
 			}),
-		runtime.WithUtilityConfig(&typesUtil.UtilityConfig{}),
+		runtime.WithUtilityConfig(&typesUtil.UtilityConfig{
+			MaxMempoolTransactionBytes: 1024 * 1024 * 1024, // 1GB V0 defaults
+			MaxMempoolTransactions:     9000,
+		}),
 		runtime.WithPersistenceConfig(&typesPers.PersistenceConfig{
 			PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
 			NodeSchema:     "node" + strconv.Itoa(i+1),

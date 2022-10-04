@@ -38,9 +38,8 @@ func (*utilityModule) Create(runtime modules.RuntimeMgr) (modules.Module, error)
 	utilityCfg := cfg.GetUtilityConfig().(*types.UtilityConfig)
 
 	return &utilityModule{
-		config: utilityCfg,
-		// TODO: Add `maxTransactionBytes` and `maxTransactions` to cfg.Utility
-		Mempool: types.NewMempool(1000, 1000),
+		config:  utilityCfg,
+		Mempool: types.NewMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions),
 	}, nil
 }
 

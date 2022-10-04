@@ -293,7 +293,7 @@ loop:
 func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
-	persistenceContextMock := modulesMock.NewMockPersistenceReadContext(ctrl)
+	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 
 	persistenceMock.EXPECT().Start().Do(func() {}).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
@@ -358,7 +358,6 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(appHash, nil).
 		AnyTimes()
-	utilityContextMock.EXPECT().StoreBlock(gomock.Any()).AnyTimes().Return(nil)
 
 	persistenceContextMock.EXPECT().Commit().Return(nil).AnyTimes()
 	persistenceContextMock.EXPECT().StoreBlock(gomock.Any()).AnyTimes().Return(nil)
