@@ -12,9 +12,9 @@ func actorToValidator(actor modules.Actor) *Validator {
 }
 
 func ToConsensusValidators(actors []modules.Actor) []*Validator {
-	r := make([]*Validator, 0)
-	for _, a := range actors {
-		r = append(r, actorToValidator(a))
+	vals = make([]*Validator, len(actors))
+	for i, actor := range actors {
+		vals[i] = actor
 	}
-	return r
+	return
 }
