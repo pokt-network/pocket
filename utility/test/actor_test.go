@@ -365,27 +365,6 @@ func TestUtilityContext_CalculateAppRelays(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-func TestUtilityContext_UnstakesThatAreReady(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
-	ctx.SetPoolAmount("AppStakePool", big.NewInt(math.MaxInt64))
-	err := ctx.Context.SetParam(modules.AppUnstakingBlocksParamName, 0)
-	require.NoError(t, err)
-	actors := GetAllTestingApps(t, ctx)
-	for _, actor := range actors {
-		addrBz, err := hex.DecodeString(actor.GetAddress())
-		require.NoError(t, err)
-		require.Equal(t, int64(-1), actor.GetUnstakingHeight())
-		require.NoError(t, ctx.SetActorPauseHeight(typesUtil.UtilActorType_App, addrBz, 1), "set actor pause height")
-	}
-	require.NoError(t, ctx.UnstakeActorPausedBefore(2, typesUtil.UtilActorType_App), "set actor pause before")
-	require.NoError(t, ctx.UnstakeActorsThatAreReady(), "unstake actors that are ready")
-	appAfter := GetAllTestingApps(t, ctx)[0]
-	require.Equal(t, int64(0), appAfter.GetUnstakingHeight())
-	// TODO (Team) we need to better define what 'deleted' really is in the postgres world.
-	// We might not need to 'unstakeActorsThatAreReady' if we are already filtering by unstakingHeight
-	test_artifacts.CleanupTest(ctx)
-}
-
 func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetMessageUnpauseSignerCandidates", actorType.GetActorName()), func(t *testing.T) {
