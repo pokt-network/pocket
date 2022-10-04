@@ -1,6 +1,8 @@
 package types
 
-import "github.com/pokt-network/pocket/shared/modules"
+import (
+	"github.com/pokt-network/pocket/shared/modules"
+)
 
 func actorToValidator(actor modules.Actor) *Validator {
 	return &Validator{
@@ -14,7 +16,7 @@ func actorToValidator(actor modules.Actor) *Validator {
 func ToConsensusValidators(actors []modules.Actor) (vals []*Validator) {
 	vals = make([]*Validator, len(actors))
 	for i, actor := range actors {
-		vals[i] = actor
+		vals[i] = actorToValidator(actor)
 	}
 	return
 }
