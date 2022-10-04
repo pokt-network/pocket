@@ -9,8 +9,6 @@ import (
 )
 
 func (m *ConsensusModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
-	m.m.Lock()
-	defer m.m.Unlock()
 	switch debugMessage.Action {
 	case debug.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
 		m.resetToGenesis(debugMessage)
