@@ -60,9 +60,9 @@ type IdToNodeMapping map[typesCons.NodeId]modules.NodeModule
 
 func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Clock) []runtime.Manager {
 	runtimeMgrs := make([]runtime.Manager, 0)
-	var keys []string
-	genesisState, keys := test_artifacts.NewGenesisState(validatorCount, 1, 1, 1)
-	configs := test_artifacts.NewDefaultConfigs(keys)
+	var validatorKeys []string
+	genesisState, validatorKeys := test_artifacts.NewGenesisState(validatorCount, 1, 1, 1)
+	configs := test_artifacts.NewDefaultConfigs(validatorKeys)
 	for _, config := range configs {
 		runtime.WithConsensusConfig(&typesCons.ConsensusConfig{
 			PrivateKey:      config.GetBaseConfig().GetPrivateKey(),
