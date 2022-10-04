@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"encoding/hex"
-	"log"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -53,11 +52,6 @@ func (p PostgresContext) GetAppStakeAmount(height int64, address []byte) (string
 
 func (p PostgresContext) SetAppStakeAmount(address []byte, stakeAmount string) error {
 	return p.SetActorStakeAmount(types.ApplicationActor, address, stakeAmount)
-}
-
-func (p PostgresContext) DeleteApp(_ []byte) error {
-	log.Println("[DEBUG] DeleteApp is a NOOP")
-	return nil
 }
 
 func (p PostgresContext) GetAppsReadyToUnstake(height int64, _ int) ([]modules.IUnstakingActor, error) {

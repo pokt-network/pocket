@@ -4,6 +4,7 @@ import (
 	"log"
 	"unsafe"
 
+
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 )

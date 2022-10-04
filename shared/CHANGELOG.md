@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.1] - 2022-09-21
 
-Flaky tests troubleshooting - https://github.com/pokt-network/pocket/issues/192
-More context here as well: https://github.com/pokt-network/pocket/pull/198
+## [0.0.1] - 2022-09-24
+- Add unit test for `SharedCodec()`
+- Added `TestProtoStructure` for testing
+- Flaky tests troubleshooting - https://github.com/pokt-network/pocket/issues/192
+- More context here as well: https://github.com/pokt-network/pocket/pull/198
 
 ### [#198](https://github.com/pokt-network/pocket/pull/198) Flaky tests
 
