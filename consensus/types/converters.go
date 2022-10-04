@@ -11,7 +11,7 @@ func actorToValidator(actor modules.Actor) *Validator {
 	}
 }
 
-func ToConsensusValidators(actors []modules.Actor) []*Validator {
+func ToConsensusValidators(actors []modules.Actor) (vals []*Validator) {
 	vals = make([]*Validator, len(actors))
 	for i, actor := range actors {
 		vals[i] = actor
