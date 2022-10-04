@@ -13,7 +13,7 @@ EXTRA_MSG_FAIL ?= false
 #  `VERBOSE_TEST="" make test_persistence` is an easy way to run the same tests without verbose output
 VERBOSE_TEST ?= -v
 
-.SILENT:
+# .SILENT:
 
 help:
 	printf "Available targets\n\n"
@@ -396,20 +396,21 @@ clear_genesis_and_config:
 .PHONY: check_cross_module_imports
 ## Lists cross-module imports
 check_cross_module_imports:
+	$(eval exclude_common=--exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime)
 	echo "persistence:\n"
-	grep --exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime --exclude-dir=persistence -r "github.com/pokt-network/pocket/persistence" || echo "✅ OK!"
+	grep ${exclude_common} --exclude-dir=persistence -r "github.com/pokt-network/pocket/persistence" || echo "✅ OK!"
 	echo "-----------------------"
 	echo "utility:\n"
-	grep --exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime --exclude-dir=utility -r "github.com/pokt-network/pocket/utility" || echo "✅ OK!"
+	grep ${exclude_common} --exclude-dir=utility -r "github.com/pokt-network/pocket/utility" || echo "✅ OK!"
 	echo "-----------------------"
 	echo "consensus:\n"
-	grep --exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime --exclude-dir=consensus -r "github.com/pokt-network/pocket/consensus" || echo "✅ OK!"
+	grep ${exclude_common} --exclude-dir=consensus -r "github.com/pokt-network/pocket/consensus" || echo "✅ OK!"
 	echo "-----------------------"
 	echo "telemetry:\n"
-	grep --exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime --exclude-dir=telemetry -r "github.com/pokt-network/pocket/telemetry" || echo "✅ OK!"
+	grep ${exclude_common} --exclude-dir=telemetry -r "github.com/pokt-network/pocket/telemetry" || echo "✅ OK!"
 	echo "-----------------------"
 	echo "p2p:\n"
-	grep --exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime --exclude-dir=p2p -r "github.com/pokt-network/pocket/p2p" || echo "✅ OK!"
+	grep ${exclude_common} --exclude-dir=p2p -r "github.com/pokt-network/pocket/p2p" || echo "✅ OK!"
 	echo "-----------------------"
 	echo "runtime:\n"
-	grep --exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime --exclude-dir=runtime -r "github.com/pokt-network/pocket/runtime" || echo "✅ OK!"
+	grep ${exclude_common} --exclude-dir=runtime -r "github.com/pokt-network/pocket/runtime" || echo "✅ OK!"
