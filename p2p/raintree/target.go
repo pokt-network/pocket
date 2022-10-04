@@ -14,7 +14,7 @@ type target struct {
 	level                  uint32
 	percentage             float64 // the target percentage within the peer list used to select this as a target
 	addrBookLengthAtHeight int
-	index                  int
+	index                  int // the index of this target peer within the addr book at the specific height and level
 	isSelf                 bool
 }
 
