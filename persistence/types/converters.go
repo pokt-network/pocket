@@ -14,11 +14,11 @@ func toPersistenceActor(actor modules.Actor) *Actor {
 }
 
 func ToPersistenceActors(actors []modules.Actor) []*Actor {
-	r := make([]*Actor, 0)
-	for _, a := range actors {
-		r = append(r, toPersistenceActor(a))
+	perActors := make([]*Actor, len(actors))
+	for i, actor := range actors {
+		perActors[i] = toPersistenceActor(actor)
 	}
-	return r
+	return perActors
 }
 
 func toPersistenceAccount(account modules.Account) *Account {
@@ -29,11 +29,11 @@ func toPersistenceAccount(account modules.Account) *Account {
 }
 
 func ToPersistenceAccounts(accounts []modules.Account) []*Account {
-	r := make([]*Account, 0)
-	for _, a := range accounts {
-		r = append(r, toPersistenceAccount(a))
+	perAccounts := make([]*Account, len(accounts))
+	for i, account := range accounts {
+		perAccounts[i] = toPersistenceAccount(account)
 	}
-	return r
+	return perAccounts
 }
 
 func ToPersistenceParams(params modules.Params) *Params {

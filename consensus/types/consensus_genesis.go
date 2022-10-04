@@ -8,9 +8,10 @@ func (x *ConsensusGenesisState) GetVals() []modules.Actor {
 	return ActorsToActorsInterface(x.GetValidators())
 }
 
-func ActorsToActorsInterface(a []*Validator) (actorI []modules.Actor) {
-	for _, actor := range a {
-		actorI = append(actorI, actor)
+func ActorsToActorsInterface(vals []*Validator) (actorI []modules.Actor) {
+	actorI = make([]modules.Actor, len(vals))
+	for i, actor := range vals {
+		actorI[i] = actor
 	}
 	return
 }

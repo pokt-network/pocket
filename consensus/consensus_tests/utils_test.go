@@ -59,11 +59,11 @@ type IdToNodeMapping map[typesCons.NodeId]modules.NodeModule
 /*** Node Generation Helpers ***/
 
 func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Clock) []runtime.Manager {
-	runtimeMgrs := make([]runtime.Manager, 0)
+	runtimeMgrs := make([]runtime.Manager, validatorCount)
 	var validatorKeys []string
 	genesisState, validatorKeys := test_artifacts.NewGenesisState(validatorCount, 1, 1, 1)
 	configs := test_artifacts.NewDefaultConfigs(validatorKeys)
-	for _, config := range configs {
+	for i, config := range configs {
 		runtime.WithConsensusConfig(&typesCons.ConsensusConfig{
 			PrivateKey:      config.GetBaseConfig().GetPrivateKey(),
 			MaxMempoolBytes: 500000000,
@@ -73,7 +73,7 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 				DebugTimeBetweenStepsMsec: 0,
 			},
 		})(config)
-		runtimeMgrs = append(runtimeMgrs, *runtime.NewManager(config, genesisState, runtime.WithClock(clockMgr)))
+		runtimeMgrs[i] = *runtime.NewManager(config, genesisState, runtime.WithClock(clockMgr))
 	}
 	return runtimeMgrs
 }
