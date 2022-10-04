@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -41,7 +42,7 @@ func CreatePrometheusTelemetryModule(runtime modules.RuntimeMgr) (modules.Module
 func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	cfg := runtime.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
-		log.Fatalf("config validation failed: %v", err)
+		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
 	telemetryCfg := cfg.GetTelemetryConfig().(*TelemetryConfig)
 
