@@ -87,5 +87,6 @@ func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.Persiste
 
 	err = persistenceMod.Start()
 	require.NoError(t, err)
+
 	return persistenceMod.(modules.PersistenceModule)
 }
