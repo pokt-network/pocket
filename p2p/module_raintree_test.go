@@ -453,9 +453,13 @@ func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) modules
 }
 
 func TestMain(m *testing.M) {
-	m.Run()
-	files, _ := filepath.Glob("*.json")
+	files, err := filepath.Glob("*.json")
+	if err != nil {
+		log.Fatalf("Error finding json file: %v", err)
+	}
+	exitCode := m.Run()
 	for _, f := range files {
 		os.Remove(f)
 	}
+	os.Exit(exitCode)
 }

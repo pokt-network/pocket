@@ -3,12 +3,13 @@ package test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"math"
 	"math/big"
 	"sort"
 	"testing"
+
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"

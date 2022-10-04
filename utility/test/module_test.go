@@ -42,10 +42,11 @@ func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	testPersistenceMod = newTestPersistenceModule(m, dbUrl)
-	m.Run()
+	exitCode := m.Run()
 	os.Remove(testingConfigFilePath)
 	os.Remove(testingGenesisFilePath)
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
+	os.Exit(exitCode)
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
