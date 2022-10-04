@@ -44,7 +44,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) t
 }
 
 func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
-	return n.networkBroadcastAtLevel(data, n.peersManager.getStateView().maxNumLevels, getNonce())
+	return n.networkBroadcastAtLevel(data, n.peersManager.getNetworkView().maxNumLevels, getNonce())
 }
 
 func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, nonce uint64) error {
@@ -107,7 +107,7 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return nil
 	}
 
-	peer, ok := n.peersManager.getStateView().addrBookMap[address.String()]
+	peer, ok := n.peersManager.getNetworkView().addrBookMap[address.String()]
 	if !ok {
 		return fmt.Errorf("address %s not found in addrBookMap", address.String())
 	}
@@ -175,7 +175,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 }
 
 func (n *rainTreeNetwork) GetAddrBook() typesP2P.AddrBook {
-	return n.peersManager.getStateView().addrBook
+	return n.peersManager.getNetworkView().addrBook
 }
 
 func (n *rainTreeNetwork) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {

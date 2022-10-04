@@ -20,7 +20,7 @@ const (
 // the addr book was updated), but we're using `maxNumLevels` associated with the number of
 // validators at the current height.
 func (n *rainTreeNetwork) getAddrBookLength(level uint32, _height uint64) int {
-	peersManagerStateView := n.peersManager.getStateView()
+	peersManagerStateView := n.peersManager.getNetworkView()
 	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(peersManagerStateView.maxNumLevels-level))
 	return int(float64(len(peersManagerStateView.addrList)) * (shrinkageCoefficient))
 }
@@ -40,7 +40,7 @@ func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 func (n *rainTreeNetwork) getTarget(targetPercentage float64, addrBookLen int, level uint32) target {
 	i := int(targetPercentage * float64(addrBookLen))
 
-	peersManagerStateView := n.peersManager.getStateView()
+	peersManagerStateView := n.peersManager.getNetworkView()
 
 	target := target{
 		serviceUrl:             peersManagerStateView.addrBookMap[peersManagerStateView.addrList[i]].ServiceUrl,

@@ -104,10 +104,10 @@ func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) 
 	return pm, nil
 }
 
-func (pm *peersManager) getStateView() peersManagerStateView {
+func (pm *peersManager) getNetworkView() networkView {
 	pm.m.RLock()
 	defer pm.m.RUnlock()
-	return peersManagerStateView{
+	return networkView{
 		addrBook:     pm.addrBook,
 		addrBookMap:  pm.addrBookMap,
 		addrList:     pm.addrList,
@@ -130,7 +130,7 @@ func (pm *peersManager) getSelfIndexInAddrBook() (int, bool) {
 }
 
 func (pm *peersManager) getMaxAddrBookLevels() uint32 {
-	peersManagerStateView := pm.getStateView()
+	peersManagerStateView := pm.getNetworkView()
 	addrBookSize := float64(len(peersManagerStateView.addrBookMap))
 	return uint32(math.Ceil(logBase(addrBookSize)))
 }
@@ -155,7 +155,7 @@ type addressBookEvent struct {
 	peer      *types.NetworkPeer
 }
 
-type peersManagerStateView struct {
+type networkView struct {
 	addrBook     typesP2P.AddrBook
 	addrBookMap  typesP2P.AddrBookMap
 	addrList     typesP2P.AddrList

@@ -75,7 +75,7 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
 			network := NewRainTreeNetwork(addr, addrBook).(*rainTreeNetwork)
 
-			peersManagerStateView := network.peersManager.getStateView()
+			peersManagerStateView := network.peersManager.getNetworkView()
 
 			require.Equal(t, len(peersManagerStateView.addrList), n)
 			require.Equal(t, len(peersManagerStateView.addrBookMap), n)
@@ -109,7 +109,7 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
 			network := NewRainTreeNetwork(addr, addrBook).(*rainTreeNetwork)
 
-			peersManagerStateView := network.peersManager.getStateView()
+			peersManagerStateView := network.peersManager.getNetworkView()
 
 			require.Equal(b, n, len(peersManagerStateView.addrList))
 			require.Equal(b, n, len(peersManagerStateView.addrBookMap))
@@ -120,7 +120,7 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 				network.AddPeerToAddrBook(&types.NetworkPeer{Address: newAddr})
 			}
 
-			peersManagerStateView = network.peersManager.getStateView()
+			peersManagerStateView = network.peersManager.getNetworkView()
 
 			require.Equal(b, n+numAddressessToBeAdded, len(peersManagerStateView.addrList))
 			require.Equal(b, n+numAddressessToBeAdded, len(peersManagerStateView.addrBookMap))
@@ -187,7 +187,7 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 	addrBook := getAlphabetAddrBook(expectedMsgProp.numNodes)
 	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, addrBook).(*rainTreeNetwork)
 
-	peersManagerStateView := network.peersManager.getStateView()
+	peersManagerStateView := network.peersManager.getNetworkView()
 
 	require.Equal(t, strings.Join(peersManagerStateView.addrList, ""), strToAddrList(expectedMsgProp.addrList))
 
