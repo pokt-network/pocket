@@ -27,7 +27,6 @@ var (
 )
 
 // TODO(olshansky): Any reason to make all of these attributes local only (i.e. not exposed outside the struct)?
-// TODO(olshansky): Look for a way to not externalize the `consensusModule` struct
 type consensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
