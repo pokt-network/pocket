@@ -20,7 +20,6 @@ type peersManager struct {
 	wg sync.WaitGroup
 
 	addrBook typesP2P.AddrBook
-
 	addrBookMap  typesP2P.AddrBookMap
 	addrList     typesP2P.AddrList
 	maxNumLevels uint32
