@@ -334,14 +334,14 @@ func (m *ConsensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
 	lastByzValidators := make([][]byte, 0)
 
 	// Reap the mempool for transactions to be applied in this block
-	txs, err := m.UtilityContext.GetProposalTransactions(m.privateKey.Address(), maxTxBytes, lastByzValidators)
+	txs, err := m.utilityContext.GetProposalTransactions(m.privateKey.Address(), maxTxBytes, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}
 
 	// OPTIMIZE: Determine if we can avoid the `ApplyBlock` call here
 	// Apply all the transactions in the block
-	appHash, err := m.UtilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
+	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
 	if err != nil {
 		return nil, err
 	}

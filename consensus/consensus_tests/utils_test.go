@@ -181,11 +181,15 @@ func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
 // define the interfaces used for debug/development. The latter will probably scale more but will
 // require more effort and pollute the source code with debugging information.
 func GetConsensusNodeState(node *shared.Node) typesCons.ConsensusNodeState {
-	return reflect.ValueOf(node.GetBus().GetConsensusModule()).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(typesCons.ConsensusNodeState)
+	return GetConsensusModImpl(node).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(typesCons.ConsensusNodeState)
 }
 
-func GetConsensusModImplementation(node *shared.Node) reflect.Value {
+func GetConsensusModElem(node *shared.Node) reflect.Value {
 	return reflect.ValueOf(node.GetBus().GetConsensusModule()).Elem()
+}
+
+func GetConsensusModImpl(node *shared.Node) reflect.Value {
+	return reflect.ValueOf(node.GetBus().GetConsensusModule())
 }
 
 /*** Debug/Development Message Helpers ***/

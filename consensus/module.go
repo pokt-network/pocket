@@ -63,7 +63,7 @@ type ConsensusModule struct {
 	validatorMap typesCons.ValidatorMap
 
 	// Module Dependencies
-	UtilityContext    modules.UtilityContext
+	utilityContext    modules.UtilityContext
 	paceMaker         Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
@@ -133,7 +133,7 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 		lastAppHash:  "",
 		validatorMap: valMap,
 
-		UtilityContext:    nil,
+		utilityContext:    nil,
 		paceMaker:         paceMaker,
 		leaderElectionMod: leaderElectionMod,
 
@@ -260,6 +260,11 @@ func (m *ConsensusModule) CurrentHeight() uint64 {
 
 func (m *ConsensusModule) ValidatorMap() modules.ValidatorMap {
 	return typesCons.ValidatorMapToModulesValidatorMap(m.validatorMap)
+}
+
+// TODO(#256): Currently only used for testing purposes
+func (m *ConsensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
+	m.utilityContext = utilityContext
 }
 
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...

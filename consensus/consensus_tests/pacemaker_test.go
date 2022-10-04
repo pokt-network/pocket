@@ -157,7 +157,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		Transactions: emptyTxs,
 	}
 
-	leaderConsensusMod := GetConsensusModImplementation(leader)
+	leaderConsensusMod := GetConsensusModElem(leader)
 	leaderConsensusMod.FieldByName("Block").Set(reflect.ValueOf(block))
 
 	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS
@@ -166,18 +166,20 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
 		require.NoError(t, err)
 
-		consensusModImpl := GetConsensusModImplementation(pocketNode)
-		consensusModImpl.FieldByName("Height").SetUint(testHeight)
-		consensusModImpl.FieldByName("Step").SetInt(testStep)
-		consensusModImpl.FieldByName("LeaderId").Set(reflect.Zero(reflect.TypeOf(&leaderId))) // This is re-elected during paceMaker catchup
-		consensusModImpl.FieldByName("UtilityContext").Set(reflect.ValueOf(utilityContext))
+		consensusModElem := GetConsensusModElem(pocketNode)
+		consensusModElem.FieldByName("Height").SetUint(testHeight)
+		consensusModElem.FieldByName("Step").SetInt(testStep)
+		consensusModElem.FieldByName("LeaderId").Set(reflect.Zero(reflect.TypeOf(&leaderId))) // This is re-elected during paceMaker catchup
+
+		consensusModImpl := GetConsensusModImpl(pocketNode)
+		consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
 	}
 
 	// Set the leader to be in the highest round.
-	GetConsensusModImplementation(pocketNodes[1]).FieldByName("Round").SetUint(uint64(leaderRound - 2))
-	GetConsensusModImplementation(pocketNodes[2]).FieldByName("Round").SetUint(uint64(leaderRound - 3))
-	GetConsensusModImplementation(pocketNodes[leaderId]).FieldByName("Round").SetUint(uint64(leaderRound))
-	GetConsensusModImplementation(pocketNodes[4]).FieldByName("Round").SetUint(uint64(leaderRound - 4))
+	GetConsensusModElem(pocketNodes[1]).FieldByName("Round").SetUint(uint64(leaderRound - 2))
+	GetConsensusModElem(pocketNodes[2]).FieldByName("Round").SetUint(uint64(leaderRound - 3))
+	GetConsensusModElem(pocketNodes[leaderId]).FieldByName("Round").SetUint(uint64(leaderRound))
+	GetConsensusModElem(pocketNodes[4]).FieldByName("Round").SetUint(uint64(leaderRound - 4))
 
 	prepareProposal := &typesCons.HotstuffMessage{
 		Type:          consensus.Propose,

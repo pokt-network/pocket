@@ -4,7 +4,6 @@ import (
 	"log"
 	"unsafe"
 
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 )
@@ -30,12 +29,12 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	}
 
 	// Commit and release the context
-	if err := m.UtilityContext.CommitPersistenceContext(); err != nil {
+	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
 		return err
 	}
 
-	m.UtilityContext.ReleaseContext()
-	m.UtilityContext = nil
+	m.utilityContext.ReleaseContext()
+	m.utilityContext = nil
 
 	m.lastAppHash = block.BlockHeader.Hash
 
@@ -43,7 +42,7 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 }
 
 func (m *ConsensusModule) storeBlock(block *typesCons.Block, blockProtoBytes []byte) error {
-	store := m.UtilityContext.GetPersistenceContext()
+	store := m.utilityContext.GetPersistenceContext()
 	// Store in KV Store
 	if err := store.StoreBlock(blockProtoBytes); err != nil {
 		return err
@@ -88,10 +87,10 @@ func (m *ConsensusModule) validateBlockBasic(block *typesCons.Block) error {
 func (m *ConsensusModule) refreshUtilityContext() error {
 	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
 	// Ideally, this should not be called.
-	if m.UtilityContext != nil {
+	if m.utilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
-		m.UtilityContext.ReleaseContext()
-		m.UtilityContext = nil
+		m.utilityContext.ReleaseContext()
+		m.utilityContext = nil
 	}
 
 	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
@@ -99,6 +98,6 @@ func (m *ConsensusModule) refreshUtilityContext() error {
 		return err
 	}
 
-	m.UtilityContext = utilityContext
+	m.utilityContext = utilityContext
 	return nil
 }

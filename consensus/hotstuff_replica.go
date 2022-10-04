@@ -231,7 +231,7 @@ func (m *ConsensusModule) applyBlock(block *typesCons.Block) error {
 	lastByzValidators := make([][]byte, 0)
 
 	// Apply all the transactions in the block and get the appHash
-	appHash, err := m.UtilityContext.ApplyBlock(int64(m.Height), block.BlockHeader.ProposerAddress, block.Transactions, lastByzValidators)
+	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), block.BlockHeader.ProposerAddress, block.Transactions, lastByzValidators)
 	if err != nil {
 		return err
 	}
