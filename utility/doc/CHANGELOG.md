@@ -7,9 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.5] - 2022-09-29
+## [0.0.0.6] - 2022-09-29
 
 - Remove unused `StoreBlock` function from the utility module interface
+
+## [0.0.0.5] - 2022-09-23
+
+- Created `UtilityConfig`
+- Added `max_mempool_transaction_bytes` and `max_mempool_transactions` to the utility
+  config to allow dynamic configuration of the mempool
+- Matched configuration unmarshalling pattern of other modules
+- Added V0 mempool default configurations
+- Regenerated build files with new mempool config
 
 ## [0.0.0.4] - 2022-09-21
 
