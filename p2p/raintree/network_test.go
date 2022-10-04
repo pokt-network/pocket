@@ -51,7 +51,7 @@ func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 	network := NewRainTreeNetwork(selfAddr, addrBook).(*rainTreeNetwork)
 
 	stateView := network.peersManager.getStateView()
-	require.Equal(t, numAddressesInAddressBook+1, len(stateView.addrList))
+	require.Equal(t, numAddressesInAddressBook+1, len(stateView.addrList)) // +1 to account for self in the addrBook as well
 
 	// removing a peer
 	peer := addrBook[1]
@@ -59,7 +59,7 @@ func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 	require.NoError(t, err)
 
 	stateView = network.peersManager.getStateView()
-	require.Equal(t, numAddressesInAddressBook+1-1, len(stateView.addrList))
+	require.Equal(t, numAddressesInAddressBook+1-1, len(stateView.addrList)) // +1 to account for self and the peer removed
 
 	require.Contains(t, stateView.addrBookMap, selfAddr.String(), "addrBookMap does not contain self key")
 	require.Equal(t, selfPeer, stateView.addrBookMap[selfAddr.String()], "addrBookMap contains self")
