@@ -45,7 +45,7 @@ The key things to keep in mind are:
   - Receive asynchronous events from the **main events channel**
 - The **Persistence** module is the only module that communicates with the local database
 - The **P2P** module is the only one that communicates with the outside world
-- **RuntimeMgr** abstracts the runtime and it's injected in the modules (more details [here](../runtime/docs/README.md))
+- **RuntimeMgr** abstracts the runtime and is injected in the modules (more details [here](../runtime/docs/README.md))
 
 <!-- Though this flowchart could be made more explicit, it was implemented in mermaid to follow the Visualisation-As-Code paradigm and make it easier to maintain and upkeep. -->
 
