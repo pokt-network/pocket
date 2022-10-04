@@ -63,6 +63,7 @@ type ConsensusModule struct {
 	validatorMap typesCons.ValidatorMap
 
 	// Module Dependencies
+	// TODO(#283): Improve how `utilityContext` is managed
 	utilityContext    modules.UtilityContext
 	paceMaker         Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
