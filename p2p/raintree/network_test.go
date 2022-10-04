@@ -33,10 +33,10 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 	require.ElementsMatch(t, []string{selfAddr.String(), peerAddr.String()}, stateView.addrList, "addrList does not match")
 	require.ElementsMatch(t, []*types.NetworkPeer{selfPeer, peer}, stateView.addrBook, "addrBook")
 
-	require.Contains(t, stateView.addrBookMap, selfAddr.String(), "addrBookMap contains self key")
-	require.Equal(t, selfPeer, stateView.addrBookMap[selfAddr.String()], "addrBookMap contains self")
-	require.Contains(t, stateView.addrBookMap, peerAddr.String(), "addrBookMap contains peer key")
-	require.Equal(t, peer, stateView.addrBookMap[peerAddr.String()], "addrBookMap contains peer")
+	require.Contains(t, stateView.addrBookMap, selfAddr.String(), "addrBookMap does not contain self key")
+	require.Equal(t, selfPeer, stateView.addrBookMap[selfAddr.String()], "addrBookMap does not contain self")
+	require.Contains(t, stateView.addrBookMap, peerAddr.String(), "addrBookMap does not contain peer key")
+	require.Equal(t, peer, stateView.addrBookMap[peerAddr.String()], "addrBookMap does not contain peer")
 }
 
 func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
@@ -61,7 +61,7 @@ func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 	stateView = network.peersManager.getStateView()
 	require.Equal(t, numAddressesInAddressBook+1-1, len(stateView.addrList))
 
-	require.Contains(t, stateView.addrBookMap, selfAddr.String(), "addrBookMap contains self key")
+	require.Contains(t, stateView.addrBookMap, selfAddr.String(), "addrBookMap does not contain self key")
 	require.Equal(t, selfPeer, stateView.addrBookMap[selfAddr.String()], "addrBookMap contains self")
 	require.NotContains(t, stateView.addrBookMap, peer.Address.String(), "addrBookMap contains removed peer key")
 }

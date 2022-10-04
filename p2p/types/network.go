@@ -17,8 +17,8 @@ type Network interface {
 
 	// Address book helpers
 	GetAddrBook() AddrBook
-	AddPeerToAddrBook(peer *NetworkPeer) error    // TODO(team): Not used yet
-	RemovePeerToAddrBook(peer *NetworkPeer) error // TODO(team): Not used yet
+	AddPeerToAddrBook(peer *NetworkPeer) error
+	RemovePeerToAddrBook(peer *NetworkPeer) error
 
 	// This function was added to specifically support the RainTree implementation.
 	// Handles the raw data received from the network and returns the data to be processed
