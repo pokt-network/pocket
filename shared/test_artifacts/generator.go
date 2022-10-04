@@ -38,28 +38,31 @@ var (
 
 // TODO (Team) this is meant to be a **temporary** replacement for the recently deprecated
 // 'genesis config' option. We need to implement a real suite soon!
-func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (genesisState modules.GenesisState, validatorPrivateKeys []string) {
+func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (modules.GenesisState, []string) {
 	apps, appsPrivateKeys := NewActors(types.UtilActorType_App, numApplications)
 	vals, validatorPrivateKeys := NewActors(types.UtilActorType_Val, numValidators)
 	serviceNodes, snPrivateKeys := NewActors(types.UtilActorType_Node, numServiceNodes)
 	fish, fishPrivateKeys := NewActors(types.UtilActorType_Fish, numFisherman)
 
-	return runtime.NewGenesis(&typesCons.ConsensusGenesisState{
+	genesisState := runtime.NewGenesis(
+		&typesCons.ConsensusGenesisState{
 			GenesisTime:   timestamppb.Now(),
 			ChainId:       DefaultChainID,
 			MaxBlockBytes: DefaultMaxBlockBytes,
 			Validators:    typesCons.ToConsensusValidators(vals),
 		},
-			&typesPers.PersistenceGenesisState{
-				Pools:        typesPers.ToPersistenceAccounts(NewPools()),
-				Accounts:     typesPers.ToPersistenceAccounts(NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...)), // TODO(olshansky): clean this up
-				Applications: typesPers.ToPersistenceActors(apps),
-				Validators:   typesPers.ToPersistenceActors(vals),
-				ServiceNodes: typesPers.ToPersistenceActors(serviceNodes),
-				Fishermen:    typesPers.ToPersistenceActors(fish),
-				Params:       typesPers.ToPersistenceParams(DefaultParams()),
-			}),
-		validatorPrivateKeys
+		&typesPers.PersistenceGenesisState{
+			Pools:        typesPers.ToPersistenceAccounts(NewPools()),
+			Accounts:     typesPers.ToPersistenceAccounts(NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...)), // TODO(olshansky): clean this up
+			Applications: typesPers.ToPersistenceActors(apps),
+			Validators:   typesPers.ToPersistenceActors(vals),
+			ServiceNodes: typesPers.ToPersistenceActors(serviceNodes),
+			Fishermen:    typesPers.ToPersistenceActors(fish),
+			Params:       typesPers.ToPersistenceParams(DefaultParams()),
+		},
+	)
+
+	return genesisState, validatorPrivateKeys
 }
 
 func NewDefaultConfigs(privateKeys []string) (configs []modules.Config) {
