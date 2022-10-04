@@ -14,12 +14,17 @@ import (
 // peersManager is in charge of handling operations on peers (like adding/removing them) within an AddrBook
 type peersManager struct {
 	selfAddr cryptoPocket.Address
-	eventCh  chan addressBookEvent
+
+	// eventCh provides a way for processing additions and removals from the addrBook in an event-sourced way.
+	//
+	// The idea is that when we receive one of these events, we update the peersManager internal data structures
+	// so that it can present a consistent state but in an optimized way.
+	eventCh chan addressBookEvent
 
 	m  sync.RWMutex
 	wg sync.WaitGroup
 
-	addrBook typesP2P.AddrBook
+	addrBook     typesP2P.AddrBook
 	addrBookMap  typesP2P.AddrBookMap
 	addrList     typesP2P.AddrList
 	maxNumLevels uint32
