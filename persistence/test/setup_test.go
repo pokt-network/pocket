@@ -97,13 +97,6 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 
 // TODO(andrew): Take in `t testing.T` as a parameter and error if there's an issue
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
-	// cfg := runtime.NewRuntimeConfig{nil, nil, nil,
-	// 	&types.PersistenceConfig{
-	// 		PostgresUrl:    databaseUrl,
-	// 		NodeSchema:     testSchema,
-	// 		BlockStorePath: "",
-	// 	},nil, nil)
-
 	cfg := runtime.NewConfig(&runtime.BaseConfig{}, runtime.WithPersistenceConfig(&types.PersistenceConfig{
 		PostgresUrl:    databaseUrl,
 		NodeSchema:     testSchema,
