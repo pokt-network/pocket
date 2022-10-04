@@ -13,7 +13,7 @@ EXTRA_MSG_FAIL ?= false
 #  `VERBOSE_TEST="" make test_persistence` is an easy way to run the same tests without verbose output
 VERBOSE_TEST ?= -v
 
-# .SILENT:
+.SILENT:
 
 help:
 	printf "Available targets\n\n"
