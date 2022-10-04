@@ -130,8 +130,6 @@ func CreateTestConsensusPocketNode(
 	runtimeMgr *runtime.Manager,
 	testChannel modules.EventsChannel,
 ) *shared.Node {
-	//createTestingGenesisAndConfigFiles(t, cfg, genesisState)
-
 	consensusMod, err := consensus.Create(runtimeMgr)
 	require.NoError(t, err)
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
