@@ -56,7 +56,7 @@ func ValidatorMapToModulesValidatorMap(validatorMap ValidatorMap) (vm modules.Va
 	return
 }
 
-func ActorListToMap(actors []modules.Actor) (m ValidatorMap) {
+func ActorListToValidatorMap(actors []modules.Actor) (m ValidatorMap) {
 	m = make(ValidatorMap, len(actors))
 	for _, v := range actors {
 		m[v.GetAddress()] = v

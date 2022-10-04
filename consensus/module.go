@@ -100,7 +100,7 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 		return nil, err
 	}
 
-	valMap := typesCons.ActorListToMap(consensusGenesis.GetVals())
+	valMap := typesCons.ActorListToValidatorMap(consensusGenesis.GetVals())
 
 	privateKey, err := cryptoPocket.NewPrivateKey(consensusCfg.GetPrivateKey())
 	if err != nil {
