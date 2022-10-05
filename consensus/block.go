@@ -1,12 +1,106 @@
 package consensus
 
 import (
-	"log"
+	"encoding/hex"
 	"unsafe"
 
-	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
+
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
+
+// TODO(olshansky): Sync with Andrew on the type of validation we need here.
+func (m *ConsensusModule) validateBlock(block *typesCons.Block) error {
+	if block == nil {
+		return typesCons.ErrNilBlock
+	}
+	return nil
+}
+
+// This is a helper function intended to be called by a leader/validator during a view change
+func (m *ConsensusModule) prepareBlockAsLeader() (*typesCons.Block, error) {
+	if m.isReplica() {
+		return nil, typesCons.ErrReplicaPrepareBlock
+	}
+
+	if err := m.refreshUtilityContext(); err != nil {
+		return nil, err
+	}
+
+	txs, err := m.utilityContext.GetProposalTransactions(m.privateKey.Address(), maxTxBytes, lastByzValidators)
+	if err != nil {
+		return nil, err
+	}
+
+	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
+	if err != nil {
+		return nil, err
+	}
+
+	blockHeader := &typesCons.BlockHeader{
+		Height:            int64(m.Height),
+		Hash:              hex.EncodeToString(appHash),
+		NumTxs:            uint32(len(txs)),
+		LastBlockHash:     m.appHash,
+		ProposerAddress:   m.privateKey.Address().Bytes(),
+		QuorumCertificate: []byte("HACK: Temporary placeholder"),
+	}
+
+	block := &typesCons.Block{
+		BlockHeader:  blockHeader,
+		Transactions: txs,
+	}
+
+	return block, nil
+}
+
+// This is a helper function intended to be called by a replica/voter during a view change
+func (m *ConsensusModule) applyBlockAsReplica(block *typesCons.Block) error {
+	if m.isLeader() {
+		return typesCons.ErrLeaderApplyBLock
+	}
+
+	// TODO(olshansky): Add unit tests to verify this.
+	if unsafe.Sizeof(*block) > uintptr(m.MaxBlockBytes) {
+		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.MaxBlockBytes)
+	}
+
+	if err := m.refreshUtilityContext(); err != nil {
+		return err
+	}
+
+	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), block.BlockHeader.ProposerAddress, block.Transactions, lastByzValidators)
+	if err != nil {
+		return err
+	}
+
+	// DISCUSS(drewsky): Is `ApplyBlock` going to return blockHash or appHash?
+	if block.BlockHeader.Hash != hex.EncodeToString(appHash) {
+		return typesCons.ErrInvalidAppHash(block.BlockHeader.Hash, hex.EncodeToString(appHash))
+	}
+
+	return nil
+}
+
+// Creates a new Utility context and clears/nullifies any previous contexts if they exist
+func (m *ConsensusModule) refreshUtilityContext() error {
+	// This is a catch-all to release the previous utility context if it wasn't cleaned up
+	// in the proper lifecycle (e.g. catch up, error, network partition, etc...). Ideally, this
+	// should not be called.
+	if m.utilityContext != nil {
+		m.nodeLog(typesCons.NilUtilityContextWarning)
+		m.utilityContext.ReleaseContext()
+		m.utilityContext = nil
+	}
+
+	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
+	if err != nil {
+		return err
+	}
+
+	m.utilityContext = utilityContext
+	return nil
+}
 
 func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
@@ -36,7 +130,7 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	m.utilityContext.ReleaseContext()
 	m.utilityContext = nil
 
-	m.lastAppHash = block.BlockHeader.Hash
+	m.appHash = block.BlockHeader.Hash
 
 	return nil
 }
@@ -53,51 +147,5 @@ func (m *ConsensusModule) storeBlock(block *typesCons.Block, blockProtoBytes []b
 	if err := store.InsertBlock(uint64(header.Height), header.Hash, header.ProposerAddress, header.QuorumCertificate); err != nil {
 		return err
 	}
-	return nil
-}
-
-// TODO: Add unit tests specific to block validation
-func (m *ConsensusModule) validateBlockBasic(block *typesCons.Block) error {
-	if block == nil && m.Step != NewRound {
-		return typesCons.ErrNilBlock
-	}
-
-	if block != nil && m.Step == NewRound {
-		return typesCons.ErrBlockExists
-	}
-
-	if block != nil && unsafe.Sizeof(*block) > uintptr(m.consGenesis.MaxBlockBytes) {
-		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.consGenesis.MaxBlockBytes)
-	}
-
-	// If the current block being processed (i.e. voted on) by consensus is non nil, we need to make
-	// sure that the data (height, round, step, txs, etc) is the same before we start validating the signatures
-	if m.Block != nil {
-		// DISCUSS: The only difference between blocks from one step to another is the QC, so we need
-		//          to determine where/how to validate this
-		if protoHash(m.Block) != protoHash(block) {
-			log.Println("[TECHDEBT][ERROR] The block being processed is not the same as that received by the consensus module ")
-		}
-	}
-
-	return nil
-}
-
-// Creates a new Utility context and clears/nullifies any previous contexts if they exist
-func (m *ConsensusModule) refreshUtilityContext() error {
-	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
-	// Ideally, this should not be called.
-	if m.utilityContext != nil {
-		m.nodeLog(typesCons.NilUtilityContextWarning)
-		m.utilityContext.ReleaseContext()
-		m.utilityContext = nil
-	}
-
-	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
-	if err != nil {
-		return err
-	}
-
-	m.utilityContext = utilityContext
 	return nil
 }

@@ -3,8 +3,9 @@ package consensus
 import (
 	"log"
 
-	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/debug"
+
+	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
 
 func (m *ConsensusModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
@@ -31,7 +32,7 @@ func (m *ConsensusModule) GetNodeState() typesCons.ConsensusNodeState {
 		leaderId = *m.LeaderId
 	}
 	return typesCons.ConsensusNodeState{
-		NodeId:   m.nodeId,
+		NodeId:   m.NodeId,
 		Height:   m.Height,
 		Round:    uint8(m.Round),
 		Step:     uint8(m.Step),

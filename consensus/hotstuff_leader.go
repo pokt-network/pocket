@@ -1,14 +1,11 @@
 package consensus
 
 import (
-	"encoding/hex"
 	"unsafe"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
-
-type HotstuffLeaderMessageHandler struct{}
 
 var (
 	LeaderMessageHandler HotstuffMessageHandler = &HotstuffLeaderMessageHandler{}
@@ -21,39 +18,32 @@ var (
 	}
 )
 
+type HotstuffLeaderMessageHandler struct{}
+
 /*** Prepare Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
-
-	// DISCUSS: Do we need to pause for `MinBlockFreqMSec` here to let more transactions or should we stick with optimistic responsiveness?
-
+	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(NewRound); err != nil {
 		m.nodeLog(typesCons.OptimisticVoteCountWaiting(NewRound, err.Error()))
 		return
 	}
+
+	// TODO(olshansky): Do we need to pause for `MinBlockFreqMSec` here to let more transactions come in?
 	m.nodeLog(typesCons.OptimisticVoteCountPassed(NewRound))
 
-	// Clear the previous utility context, if it exists, and create a new one
-	if err := m.refreshUtilityContext(); err != nil {
-		m.nodeLogError("Could not refresh utility context", err)
-		return
-	}
-
 	// Likely to be `nil` if blockchain is progressing well.
-	// TECHDEBT: How do we properly validate `highPrepareQC` here?
-	highPrepareQC := m.findHighQC(m.messagePool[NewRound])
+	highPrepareQC := m.findHighQC(NewRound)
 
-	// TODO: Add more unit tests for these checks...
-	if m.shouldPrepareNewBlock(highPrepareQC) {
-		// Leader prepares a new block if `highPrepareQC` is not applicable
-		block, err := m.prepareAndApplyBlock()
+	// TODO(olshansky): Add more unit tests for these checks...
+	if highPrepareQC == nil || highPrepareQC.Height < m.Height || highPrepareQC.Round < m.Round {
+		block, err := m.prepareBlockAsLeader()
 		if err != nil {
 			m.nodeLogError(typesCons.ErrPrepareBlock.Error(), err)
 			m.paceMaker.InterruptRound()
@@ -61,20 +51,15 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 		}
 		m.Block = block
 	} else {
-		// DISCUSS: Do we need to call `validateProposal` here?
-		// Leader acts like a replica if `highPrepareQC` is not `nil`
-		if err := m.applyBlock(highPrepareQC.Block); err != nil {
-			m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
-			m.paceMaker.InterruptRound()
-			return
-		}
+		// TODO(discuss): Do we need to validate highPrepareQC here?
 		m.Block = highPrepareQC.Block
 	}
 
 	m.Step = Prepare
-	m.messagePool[NewRound] = nil
+	m.MessagePool[NewRound] = nil
+	m.paceMaker.RestartTimer()
 
-	prepareProposeMessage, err := CreateProposeMessage(m.Height, m.Round, Prepare, m.Block, highPrepareQC)
+	prepareProposeMessage, err := CreateProposeMessage(m, Prepare, highPrepareQC)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateProposeMessage(Prepare).Error(), err)
 		m.paceMaker.InterruptRound()
@@ -83,10 +68,10 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 	m.broadcastToNodes(prepareProposeMessage)
 
 	// Leader also acts like a replica
-	prepareVoteMessage, err := CreateVoteMessage(m.Height, m.Round, Prepare, m.Block, m.privateKey)
+	prepareVoteMessage, err := CreateVoteMessage(m, Prepare, m.Block)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Prepare).Error(), err)
-		return
+		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(prepareVoteMessage)
 }
@@ -94,14 +79,13 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 /*** PreCommit Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
-
+	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(Prepare); err != nil {
 		m.nodeLog(typesCons.OptimisticVoteCountWaiting(Prepare, err.Error()))
 		return
@@ -115,22 +99,23 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusMo
 	}
 
 	m.Step = PreCommit
-	m.highPrepareQC = prepareQC
-	m.messagePool[Prepare] = nil
+	m.HighPrepareQC = prepareQC
+	m.MessagePool[Prepare] = nil
+	m.paceMaker.RestartTimer()
 
-	preCommitProposeMessage, err := CreateProposeMessage(m.Height, m.Round, PreCommit, m.Block, prepareQC)
+	precommitProposeMessages, err := CreateProposeMessage(m, PreCommit, prepareQC)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateProposeMessage(PreCommit).Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
-	m.broadcastToNodes(preCommitProposeMessage)
+	m.broadcastToNodes(precommitProposeMessages)
 
 	// Leader also acts like a replica
-	precommitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, PreCommit, m.Block, m.privateKey)
+	precommitVoteMessage, err := CreateVoteMessage(m, PreCommit, m.Block)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(PreCommit).Error(), err)
-		return
+		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(precommitVoteMessage)
 }
@@ -138,14 +123,13 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusMo
 /*** Commit Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
-
+	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(PreCommit); err != nil {
 		m.nodeLog(typesCons.OptimisticVoteCountWaiting(PreCommit, err.Error()))
 		return
@@ -159,10 +143,11 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *Consensus
 	}
 
 	m.Step = Commit
-	m.lockedQC = preCommitQC
-	m.messagePool[PreCommit] = nil
+	m.LockedQC = preCommitQC
+	m.MessagePool[PreCommit] = nil
+	m.paceMaker.RestartTimer()
 
-	commitProposeMessage, err := CreateProposeMessage(m.Height, m.Round, Commit, m.Block, preCommitQC)
+	commitProposeMessage, err := CreateProposeMessage(m, Commit, preCommitQC)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateProposeMessage(Commit).Error(), err)
 		m.paceMaker.InterruptRound()
@@ -171,10 +156,10 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *Consensus
 	m.broadcastToNodes(commitProposeMessage)
 
 	// Leader also acts like a replica
-	commitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, Commit, m.Block, m.privateKey)
+	commitVoteMessage, err := CreateVoteMessage(m, Commit, m.Block)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Commit).Error(), err)
-		return
+		return // TODO(olshansky): Should we interrupt the round here?
 	}
 	m.sendToNode(commitVoteMessage)
 }
@@ -182,14 +167,13 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *Consensus
 /*** Decide Step ***/
 
 func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
 		return
 	}
-
+	// TODO(olshansky): add step specific validation
 	if err := m.didReceiveEnoughMessageForStep(Commit); err != nil {
 		m.nodeLog(typesCons.OptimisticVoteCountWaiting(Commit, err.Error()))
 		return
@@ -203,9 +187,10 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusMod
 	}
 
 	m.Step = Decide
-	m.messagePool[Commit] = nil
+	m.MessagePool[Commit] = nil
+	m.paceMaker.RestartTimer()
 
-	decideProposeMessage, err := CreateProposeMessage(m.Height, m.Round, Decide, m.Block, commitQC)
+	decideProposeMessage, err := CreateProposeMessage(m, Decide, commitQC)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateProposeMessage(Decide).Error(), err)
 		m.paceMaker.InterruptRound()
@@ -219,7 +204,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusMod
 		return
 	}
 
-	// There is no "replica behavior" to imitate here because the leader already committed the block proposal.
+	// There is no "replica behavior" to imitate here
 
 	m.paceMaker.NewHeight()
 	m.GetBus().
@@ -231,7 +216,6 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusMod
 }
 
 func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
@@ -242,19 +226,10 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *ConsensusMod
 
 // anteHandle is the general handler called for every before every specific HotstuffLeaderMessageHandler handler
 func (handler *HotstuffLeaderMessageHandler) anteHandle(m *ConsensusModule, msg *typesCons.HotstuffMessage) error {
-	// Basic block metadata validation
-
-	if err := m.validateBlockBasic(msg.GetBlock()); err != nil {
+	if err := handler.validateBasic(m, msg); err != nil {
 		return err
 	}
-
-	// Discard messages with invalid partial signatures before storing it in the leader's consensus mempool
-	if err := m.validatePartialSignature(msg); err != nil {
-		return err
-	}
-
-	// TECHDEBT: Until we integrate with the real mempool, this is a makeshift solution
-	m.tempIndexHotstuffMessage(msg)
+	m.aggregateMessage(msg)
 	return nil
 }
 
@@ -271,13 +246,22 @@ func (handler *HotstuffLeaderMessageHandler) emitTelemetryEvent(m *ConsensusModu
 		)
 }
 
+// ValidateBasic general validation checks that apply to every HotstuffLeaderMessage
+func (handler *HotstuffLeaderMessageHandler) validateBasic(m *ConsensusModule, msg *typesCons.HotstuffMessage) error {
+	// Discard messages with invalid partial signatures before storing it in the leader's consensus mempool
+	if err := m.validatePartialSignature(msg); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *ConsensusModule) validatePartialSignature(msg *typesCons.HotstuffMessage) error {
-	if msg.GetStep() == NewRound {
+	if msg.Step == NewRound {
 		m.nodeLog(typesCons.ErrUnnecessaryPartialSigForNewRound.Error())
 		return nil
 	}
 
-	if msg.GetType() == Propose {
+	if msg.Type == Propose {
 		m.nodeLog(typesCons.ErrUnnecessaryPartialSigForLeaderProposal.Error())
 		return nil
 	}
@@ -285,100 +269,34 @@ func (m *ConsensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 	if msg.GetPartialSignature() == nil {
 		return typesCons.ErrNilPartialSig
 	}
-	partialSig := msg.GetPartialSignature()
 
-	if partialSig.Signature == nil || len(partialSig.GetAddress()) == 0 {
+	if msg.GetPartialSignature().Signature == nil || len(msg.GetPartialSignature().Address) == 0 {
 		return typesCons.ErrNilPartialSigOrSourceNotSpecified
 	}
 
-	address := partialSig.GetAddress()
+	address := msg.GetPartialSignature().Address
 	validator, ok := m.validatorMap[address]
 	if !ok {
-		return typesCons.ErrMissingValidator(address, m.valAddrToIdMap[address])
+		return typesCons.ErrMissingValidator(address, m.ValAddrToIdMap[address])
 	}
 	pubKey := validator.GetPublicKey()
-	if isSignatureValid(msg, pubKey, partialSig.GetSignature()) {
+	if isSignatureValid(msg, pubKey, msg.GetPartialSignature().Signature) {
 		return nil
 	}
 
 	return typesCons.ErrValidatingPartialSig(
-		address, m.valAddrToIdMap[address], msg, pubKey)
+		address, m.ValAddrToIdMap[address], msg, pubKey)
 }
 
-// TODO: This is just a placeholder at the moment for indexing hotstuff messages ONLY.
-//       It doesn't actually work because SizeOf returns the size of the map pointer,
-//       and does not recursively determine the size of all the underlying elements
-//       Add proper tests and implementation once the mempool is implemented.
-func (m *ConsensusModule) tempIndexHotstuffMessage(msg *typesCons.HotstuffMessage) {
-	if m.consCfg.GetMaxMempoolBytes() < uint64(unsafe.Sizeof(m.messagePool)) {
+func (m *ConsensusModule) aggregateMessage(msg *typesCons.HotstuffMessage) {
+	// TODO(olshansky): Add proper tests for this when we figure out where the mempool should live.
+	// NOTE: This is just a placeholder at the moment. It doesn't actually work because SizeOf returns
+	// the size of the map pointer, and does not recursively determine the size of all the underlying elements.
+	if m.consCfg.GetMaxMempoolBytes() < uint64(unsafe.Sizeof(m.MessagePool)) {
 		m.nodeLogError(typesCons.DisregardHotstuffMessage, typesCons.ErrConsensusMempoolFull)
 		return
 	}
 
 	// Only the leader needs to aggregate consensus related messages.
-	step := msg.GetStep()
-	m.messagePool[step] = append(m.messagePool[step], msg)
-}
-
-// This is a helper function intended to be called by a leader/validator during a view change
-// to prepare a new block that is applied to the new underlying context.
-func (m *ConsensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
-	if m.isReplica() {
-		return nil, typesCons.ErrReplicaPrepareBlock
-	}
-
-	// TECHDEBT: Retrieve this from consensus consensus config
-	maxTxBytes := 90000
-
-	// TECHDEBT: Retrieve this from persistence
-	lastByzValidators := make([][]byte, 0)
-
-	// Reap the mempool for transactions to be applied in this block
-	txs, err := m.utilityContext.GetProposalTransactions(m.privateKey.Address(), maxTxBytes, lastByzValidators)
-	if err != nil {
-		return nil, err
-	}
-
-	// OPTIMIZE: Determine if we can avoid the `ApplyBlock` call here
-	// Apply all the transactions in the block
-	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
-	if err != nil {
-		return nil, err
-	}
-
-	// Construct the block
-	blockHeader := &typesCons.BlockHeader{
-		Height:            int64(m.Height),
-		Hash:              hex.EncodeToString(appHash),
-		NumTxs:            uint32(len(txs)),
-		LastBlockHash:     m.lastAppHash,
-		ProposerAddress:   m.privateKey.Address().Bytes(),
-		QuorumCertificate: []byte("HACK: Temporary placeholder"),
-	}
-	block := &typesCons.Block{
-		BlockHeader:  blockHeader,
-		Transactions: txs,
-	}
-
-	return block, nil
-}
-
-// Return true if this node, the leader, should prepare a new block
-func (m *ConsensusModule) shouldPrepareNewBlock(highPrepareQC *typesCons.QuorumCertificate) bool {
-	if highPrepareQC == nil {
-		m.nodeLog("Preparing a new block - no highPrepareQC found")
-		return true
-	} else if m.isHighPrepareQCFromPast(highPrepareQC) {
-		m.nodeLog("Preparing a new block - highPrepareQC is from the past")
-		return true
-	} else if highPrepareQC.Block == nil {
-		m.nodeLog("[WARN] Preparing a new block - highPrepareQC SHOULD be used but block is nil")
-		return true
-	}
-	return false
-}
-
-// The `highPrepareQC` is from the past so we can safely ignore it
-func (m *ConsensusModule) isHighPrepareQCFromPast(highPrepareQC *typesCons.QuorumCertificate) bool {
-	return highPrepareQC.Height < m.Height || highPrepareQC.Round < m.Round
+	m.MessagePool[msg.Step] = append(m.MessagePool[msg.Step], msg)
 }

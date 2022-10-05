@@ -5,8 +5,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// TODO: Use generics in place of `proto.Message` in the interface below
-//       so every caller does not need to do in place casting.
 type Codec interface { // TODO (Team) move to shared. Possibly rename
 	Marshal(proto.Message) ([]byte, error)
 	Unmarshal([]byte, proto.Message) error
@@ -16,8 +14,6 @@ type Codec interface { // TODO (Team) move to shared. Possibly rename
 
 var _ Codec = &ProtoCodec{}
 
-// TODO: Need to define a type like `type ProtoAny anypb.Any` so that we are
-//       mixing protobufs and a centralized codec structure throughout the codebase.
 type ProtoCodec struct{}
 
 func (p *ProtoCodec) Marshal(message proto.Message) ([]byte, error) {
