@@ -58,7 +58,7 @@ if err != nil {
 }
 ```
 
-##### Set the module `bus`
+#### Set the module `bus`
 
 The `bus` is the specific integration mechanism that enables the greater application.
 
