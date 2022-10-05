@@ -19,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Time mocking abilities via https://github.com/benbjohnson/clock and simple utility wrappers
 - Race conditions and concurrency fixes via sync.Mutex
->>>>>>> origin/main
 
 ## [0.0.0] - 2022-08-25
 
