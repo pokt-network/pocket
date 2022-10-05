@@ -73,7 +73,7 @@ newModule.SetBus(bus)
 
 Starting the module, begins the service and enables operation.
 
-Starting always comes after creation and setting the bus.
+Starting must come after creation and setting the bus.
 
 ```golang
 err := newModule.Start()
