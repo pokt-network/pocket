@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"encoding/hex"
-	"log"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -45,11 +44,6 @@ func (p PostgresContext) UpdateFisherman(address []byte, serviceURL string, stak
 		ActorSpecificParam: serviceURL,
 		Chains:             chains,
 	})
-}
-
-func (p PostgresContext) DeleteFisherman(_ []byte) error {
-	log.Println("[DEBUG] DeleteFisherman is a NOOP")
-	return nil
 }
 
 func (p PostgresContext) GetFishermanStakeAmount(height int64, address []byte) (string, error) {

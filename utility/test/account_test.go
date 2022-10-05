@@ -1,9 +1,7 @@
 package test
 
 import (
-	"bytes"
 	"encoding/hex"
-	"fmt"
 	"math/big"
 	"sort"
 	"testing"
@@ -16,9 +14,6 @@ import (
 	"github.com/pokt-network/pocket/utility"
 	"github.com/stretchr/testify/require"
 )
-
-// TODO(andrew): Remove all `require.True` in test files unless we're checking the value of a boolean
-// TODO(andrew): Remove all `fmt.Sprintf(`
 
 func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
@@ -35,8 +30,9 @@ func TestUtilityContext_AddAccountAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := initialAmount.Add(initialAmount, addAmount)
-	require.True(t, afterAmount.Cmp(expected) == 0, fmt.Sprintf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount))
-	test_artifacts.CleanupTest(ctx) // TODO (team) need a golang specific solution for teardown
+	require.Equal(t, expected, afterAmount)
+	// RESEARCH a golang specific solution for after test teardown
+	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_AddAccountAmountString(t *testing.T) {
@@ -55,7 +51,7 @@ func TestUtilityContext_AddAccountAmountString(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := initialAmount.Add(initialAmount, addAmount)
-	require.True(t, afterAmount.Cmp(expected) == 0, fmt.Sprintf("amounts are not equal, expected %v, got %v", initialAmount, afterAmount))
+	require.Equal(t, expected, afterAmount)
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -72,7 +68,7 @@ func TestUtilityContext_AddPoolAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := initialAmount.Add(initialAmount, addAmount)
-	require.Equal(t, afterAmount, expected, "amounts are not equal")
+	require.Equal(t, expected, afterAmount, "amounts are not equal")
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -101,8 +97,8 @@ func TestUtilityContext_HandleMessageSend(t *testing.T) {
 
 	recipientBalanceAfter, err := types.StringToBigInt(accs[1].GetAmount())
 	require.NoError(t, err)
-	require.True(t, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter).Cmp(sendAmount) == 0, fmt.Sprintf("unexpected sender balance"))
-	require.True(t, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore).Cmp(sendAmount) == 0, fmt.Sprintf("unexpected recipient balance"))
+	require.Equal(t, sendAmount, big.NewInt(0).Sub(senderBalanceBefore, senderBalanceAfter))
+	require.Equal(t, sendAmount, big.NewInt(0).Sub(recipientBalanceAfter, recipientBalanceBefore))
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -119,8 +115,8 @@ func TestUtilityContext_GetMessageSendSignerCandidates(t *testing.T) {
 	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
 	candidates, err := ctx.GetMessageSendSignerCandidates(&msg)
 	require.NoError(t, err)
-	require.True(t, len(candidates) == 1, fmt.Sprintf("wrong number of candidates, expected %d, got %d", 1, len(candidates)))
-	require.True(t, bytes.Equal(candidates[0], addrBz), fmt.Sprintf("unexpected signer candidate"))
+	require.Equal(t, 1, len(candidates))
+	require.Equal(t, addrBz, candidates[0])
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -138,7 +134,7 @@ func TestUtilityContext_InsertPool(t *testing.T) {
 	require.NoError(t, err)
 
 	gotAmountString := types.BigIntToString(gotAmount)
-	require.True(t, amount == gotAmountString, fmt.Sprintf("unexpected amount, expected %s got %s", amount, gotAmountString))
+	require.Equal(t, amount, gotAmountString)
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -152,7 +148,7 @@ func TestUtilityContext_SetAccountAmount(t *testing.T) {
 	require.NoError(t, ctx.SetAccountAmount(addr, amount), "set account amount")
 	gotAmount, err := ctx.GetAccountAmount(addr)
 	require.NoError(t, err)
-	require.True(t, gotAmount.Cmp(amount) == 0, fmt.Sprintf("unexpected amounts: expected %v, got %v", amount, gotAmount))
+	require.Equal(t, amount, gotAmount)
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -167,7 +163,7 @@ func TestUtilityContext_SetAccountWithAmountString(t *testing.T) {
 	require.NoError(t, ctx.SetAccountWithAmountString(addr, amountString), "set account amount string")
 	gotAmount, err := ctx.GetAccountAmount(addr)
 	require.NoError(t, err)
-	require.True(t, gotAmount.Cmp(amount) == 0, fmt.Sprintf("unexpected amounts: expected %v, got %v", amount, gotAmount))
+	require.Equal(t, amount, gotAmount)
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -182,8 +178,8 @@ func TestUtilityContext_SetPoolAmount(t *testing.T) {
 	require.NoError(t, ctx.SetPoolAmount(pool.GetAddress(), expectedAfterAmount), "set pool amount")
 	amount, err := ctx.GetPoolAmount(pool.GetAddress())
 	require.NoError(t, err)
-	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
-	require.True(t, expectedAfterAmount.Cmp(amount) == 0, fmt.Sprintf("unexpected pool amount; expected %v got %v", expectedAfterAmount, amount))
+	require.NotEqual(t, beforeAmountBig, amount)
+	require.Equal(t, amount, expectedAfterAmount)
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -198,9 +194,9 @@ func TestUtilityContext_SubPoolAmount(t *testing.T) {
 	require.NoError(t, ctx.SubPoolAmount(pool.GetAddress(), subAmount), "sub pool amount")
 	amount, err := ctx.GetPoolAmount(pool.GetAddress())
 	require.NoError(t, err)
-	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
+	require.NotEqual(t, beforeAmountBig, amount)
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
-	require.True(t, expected.Cmp(amount) == 0, fmt.Sprintf("unexpected pool amount; expected %v got %v", expected, amount))
+	require.Equal(t, expected, amount)
 	test_artifacts.CleanupTest(ctx)
 }
 
@@ -218,9 +214,9 @@ func TestUtilityContext_SubtractAccountAmount(t *testing.T) {
 	require.NoError(t, ctx.SubtractAccountAmount(addrBz, subAmountBig), "sub account amount")
 	amount, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
-	require.True(t, beforeAmountBig.Cmp(amount) != 0, fmt.Sprintf("no amount change in pool"))
+	require.NotEqual(t, beforeAmountBig, amount)
 	expected := beforeAmountBig.Sub(beforeAmountBig, subAmountBig)
-	require.True(t, expected.Cmp(amount) == 0, fmt.Sprintf("unexpected acc amount; expected %v got %v", expected, amount))
+	require.Equal(t, expected, amount)
 	test_artifacts.CleanupTest(ctx)
 }
 

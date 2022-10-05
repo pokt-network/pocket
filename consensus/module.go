@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -27,7 +28,7 @@ var _ modules.PacemakerConfig = &typesCons.PacemakerConfig{}
 var _ modules.ConsensusConfig = &typesCons.ConsensusConfig{}
 var _ modules.ConsensusModule = &ConsensusModule{}
 
-// TODO: Do not export the `ConsensusModule` struct or the fields inside of it.
+// TODO(#256): Do not export the `ConsensusModule` struct or the fields inside of it.
 type ConsensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
@@ -35,27 +36,35 @@ type ConsensusModule struct {
 	consCfg     *typesCons.ConsensusConfig
 	consGenesis *typesCons.ConsensusGenesisState
 
+	// m is a mutex used to control synchronization when multiple goroutines are accessing the struct and its fields / properties.
+	//
+	// The idea is that you want to acquire a Lock when you are writing values and a RLock when you want to make sure that no other goroutine is changing the values you are trying to read concurrently.
+	//
+	// Locking context should be the smallest possible but not smaller than a single "unit of work".
+	m sync.RWMutex
+
 	// Hotstuff
 	Height uint64
 	Round  uint64
 	Step   typesCons.HotstuffStep
 	Block  *typesCons.Block // The current block being proposed / voted on; it has not been committed to finality
 
-	HighPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
-	LockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
+	highPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
+	lockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
 	// Leader Election
 	LeaderId       *typesCons.NodeId
-	NodeId         typesCons.NodeId
-	ValAddrToIdMap typesCons.ValAddrToIdMap // TODO: This needs to be updated every time the ValMap is modified
-	IdToValAddrMap typesCons.IdToValAddrMap // TODO: This needs to be updated every time the ValMap is modified
+	nodeId         typesCons.NodeId
+	valAddrToIdMap typesCons.ValAddrToIdMap // TODO: This needs to be updated every time the ValMap is modified
+	idToValAddrMap typesCons.IdToValAddrMap // TODO: This needs to be updated every time the ValMap is modified
 
 	// Consensus State
 	lastAppHash  string // TODO: Always retrieve this variable from the persistence module and simplify this struct
 	validatorMap typesCons.ValidatorMap
 
 	// Module Dependencies
-	UtilityContext    modules.UtilityContext
+	// TODO(#283): Improve how `utilityContext` is managed
+	utilityContext    modules.UtilityContext
 	paceMaker         Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
@@ -63,7 +72,7 @@ type ConsensusModule struct {
 	logPrefix string
 
 	// TECHDEBT: Move this over to use the txIndexer
-	MessagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
+	messagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
 }
 
 func Create(configPath, genesisPath string, useRandomPK bool) (modules.ConsensusModule, error) {
@@ -114,23 +123,23 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 		Step:   NewRound,
 		Block:  nil,
 
-		HighPrepareQC: nil,
-		LockedQC:      nil,
+		highPrepareQC: nil,
+		lockedQC:      nil,
 
-		NodeId:         valIdMap[address],
+		nodeId:         valIdMap[address],
 		LeaderId:       nil,
-		ValAddrToIdMap: valIdMap,
-		IdToValAddrMap: idValMap,
+		valAddrToIdMap: valIdMap,
+		idToValAddrMap: idValMap,
 
 		lastAppHash:  "",
 		validatorMap: valMap,
 
-		UtilityContext:    nil,
+		utilityContext:    nil,
 		paceMaker:         paceMaker,
 		leaderElectionMod: leaderElectionMod,
 
 		logPrefix:   DefaultLogPrefix,
-		MessagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
+		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
 	}
 
 	// TODO(olshansky): Look for a way to avoid doing this.
@@ -218,6 +227,8 @@ func (m *ConsensusModule) SetBus(pocketBus modules.Bus) {
 }
 
 func (m *ConsensusModule) HandleMessage(message *anypb.Any) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	switch message.MessageName() {
 	case HotstuffMessage:
 		msg, err := codec.GetCodec().FromAny(message)
@@ -250,6 +261,11 @@ func (m *ConsensusModule) CurrentHeight() uint64 {
 
 func (m *ConsensusModule) ValidatorMap() modules.ValidatorMap {
 	return typesCons.ValidatorMapToModulesValidatorMap(m.validatorMap)
+}
+
+// TODO(#256): Currently only used for testing purposes
+func (m *ConsensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
+	m.utilityContext = utilityContext
 }
 
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...

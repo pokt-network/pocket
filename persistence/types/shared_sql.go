@@ -74,8 +74,6 @@ func Select(selector, address string, height int64, tableName string) string {
 		selector, tableName, address, height)
 }
 
-// INCOMPLETE: Since we do not support `DeleteActor`, we do not filter on status or deletion here.
-//             The onus of filtering is currently on the client but may be changed in the future.
 func SelectActors(actorSpecificParam string, height int64, tableName string) string {
 	return fmt.Sprintf(`
 			SELECT DISTINCT ON (address) address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height

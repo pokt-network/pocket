@@ -9,14 +9,13 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/pokt-network/pocket/shared/debug"
-
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
-	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/telemetry"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -116,8 +115,8 @@ func (m *p2pModule) Start() error {
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
 		CounterRegister(
-			p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME,
-			p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
+			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME,
+			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
 	addrBook, err := ValidatorMapToAddrBook(m.p2pConfig, m.bus.GetConsensusModule().ValidatorMap())
@@ -145,7 +144,7 @@ func (m *p2pModule) Start() error {
 	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
-		CounterIncrement(p2pTelemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME)
+		CounterIncrement(telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME)
 
 	return nil
 }

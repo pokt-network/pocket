@@ -3,10 +3,9 @@ package utility
 import (
 	"math/big"
 
-	typesCons "github.com/pokt-network/pocket/consensus/types" // TODO (andrew) importing consensus and persistence in this file?
+	// TODO(andrew): importing persistence in this file?
 	typesGenesis "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
-
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -103,7 +102,7 @@ func (u *UtilityContext) GetAppHash() ([]byte, typesUtil.Error) {
 
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
 func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
-	latestBlockHeight, err := u.GetLatestHeight()
+	latestBlockHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -142,10 +141,11 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	latestHeight, err := u.GetLatestHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
+
 	for _, utilActorType := range typesUtil.ActorTypes {
 		var readyToUnstake []modules.IUnstakingActor
 		poolName := utilActorType.GetActorPoolName()
@@ -170,16 +170,13 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 			if err = u.AddAccountAmountString(actor.GetOutputAddress(), actor.GetStakeAmount()); err != nil {
 				return err
 			}
-			if err = u.DeleteActor(utilActorType, actor.GetAddress()); err != nil {
-				return err
-			}
 		}
 	}
 	return nil
 }
 
 func (u *UtilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
-	latestHeight, err := u.GetLatestHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -256,10 +253,9 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error 
 
 // GetValidatorMissedBlocks gets the total blocks that a validator has not signed a certain window of time denominated by blocks
 func (u *UtilityContext) GetValidatorMissedBlocks(address []byte) (int, typesUtil.Error) {
-	store := u.Store()
-	height, er := store.GetHeight()
-	if er != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetMissedBlocks(er)
+	store, height, err := u.GetStoreAndHeight()
+	if err != nil {
+		return 0, err
 	}
 	missedBlocks, er := store.GetValidatorMissedBlocks(address, height)
 	if er != nil {
@@ -282,29 +278,5 @@ func (u *UtilityContext) SetValidatorMissedBlocks(address []byte, missedBlocks i
 	if er != nil {
 		return typesUtil.ErrSetMissedBlocks(er)
 	}
-	return nil
-}
-
-func (u *UtilityContext) StoreBlock(blockProtoBytes []byte) error {
-	store := u.Store()
-
-	// Store in KV Store
-	if err := store.StoreBlock(blockProtoBytes); err != nil {
-		return err
-	}
-
-	// Store in SQL Store
-	// OPTIMIZE: Ideally we'd pass in the block proto struct to utility so we don't
-	//           have to unmarshal it here, but that's a major design decision for the interfaces.
-	codec := u.Codec()
-	block := &typesCons.Block{}
-	if err := codec.Unmarshal(blockProtoBytes, block); err != nil {
-		return typesUtil.ErrProtoUnmarshal(err)
-	}
-	header := block.BlockHeader
-	if err := store.InsertBlock(uint64(header.Height), header.Hash, header.ProposerAddress, header.QuorumCertificate); err != nil {
-		return err
-	}
-
 	return nil
 }

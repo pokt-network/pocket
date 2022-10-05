@@ -193,7 +193,7 @@ func ValidateAmount(amount string) Error {
 }
 
 func ValidateActorType(_ UtilActorType) Error {
-	// TODO (team) not sure if there's anything we can do here
+	// DISCUSS if there's anything we can do here
 	return nil
 }
 
@@ -235,7 +235,7 @@ const (
 
 type RelayChain string
 
-// TODO: Consider adding a governance parameter for a list of valid relay chains
+// DISCUSS: adding a governance parameter for a list of valid relay chains
 func (rc *RelayChain) Validate() Error {
 	if rc == nil || *rc == "" {
 		return ErrEmptyRelayChain()

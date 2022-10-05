@@ -124,7 +124,8 @@ const (
 	nilBlockInQCError                           = "QC must contain a non nil block"
 	nilThresholdSigInQCError                    = "QC must contains a non nil threshold signature"
 	notEnoughSignaturesError                    = "did not receive enough partial signature"
-	nodeIsLockedOnPastQCError                   = "node is locked on a QC from the past"
+	nodeIsLockedOnPastHeightQCError             = "node is locked on a QC from a past height"
+	nodeIsLockedOnPastRoundQCError              = "node is locked on a QC from a past round"
 	unhandledProposalCaseError                  = "unhandled proposal validation check"
 	unnecessaryPartialSigForNewRoundError       = "newRound messages do not need a partial signature"
 	unnecessaryPartialSigForLeaderProposalError = "leader proposals do not need a partial signature"
@@ -163,7 +164,8 @@ var (
 	ErrNilBlockInQC                           = errors.New(nilBlockInQCError)
 	ErrNilThresholdSigInQC                    = errors.New(nilThresholdSigInQCError)
 	ErrNotEnoughSignatures                    = errors.New(notEnoughSignaturesError)
-	ErrNodeIsLockedOnPastQC                   = errors.New(nodeIsLockedOnPastQCError)
+	ErrNodeLockedPastHeight                   = errors.New(nodeIsLockedOnPastHeightQCError)
+	ErrNodeLockedPastRound                    = errors.New(nodeIsLockedOnPastRoundQCError)
 	ErrUnhandledProposalCase                  = errors.New(unhandledProposalCaseError)
 	ErrUnnecessaryPartialSigForNewRound       = errors.New(unnecessaryPartialSigForNewRoundError)
 	ErrUnnecessaryPartialSigForLeaderProposal = errors.New(unnecessaryPartialSigForLeaderProposalError)

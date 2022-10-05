@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2022-09-28
+
+- `consensusModule` stores block directly to prevent shared structure in the `utilityModule`
+
 ## [0.0.0.3] - 2022-09-26
 
 Consensus logic
@@ -47,9 +51,7 @@ General
 
 ## [0.0.0.1] - 2021-03-31
 
-HotPocket 1st Iteration (https://github.com/pokt-network/pocket/pull/48)
-
-# Added
+### Added new libraries: HotPocket 1st iteration
 
 - Initial implementation of Basic Hotstuff
 - Initial implementation Hotstuff Pacemaker
@@ -60,9 +62,7 @@ HotPocket 1st Iteration (https://github.com/pokt-network/pocket/pull/48)
 
 ## [0.0.0.0] - 2021-03-31
 
-VRF & Cryptographic Sortition Libraries (https://github.com/pokt-network/pocket/pull/37/files)
-
-### Added
+### Added new libraries: VRF & Cryptographic Sortition Libraries
 
 - Tests with `make test_vrf` and `make test_sortition`
 - Benchmarking via `make benchmark_sortition`

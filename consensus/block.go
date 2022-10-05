@@ -24,20 +24,35 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	// the persistence context and have `CommitPersistenceContext` do this under the hood. However,
 	// additional `Block` metadata will need to be passed through and may change when we merkle the
 	// state hash.
-	if err := m.UtilityContext.StoreBlock(blockProtoBytes); err != nil {
+	if err := m.storeBlock(block, blockProtoBytes); err != nil {
 		return err
 	}
 
-	// Commit the utility context
-	if err := m.UtilityContext.CommitPersistenceContext(); err != nil {
+	// Commit and release the context
+	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
 		return err
 	}
-	// Release the utility context
-	m.UtilityContext.ReleaseContext()
-	m.UtilityContext = nil
-	// Update the last app hash
+
+	m.utilityContext.ReleaseContext()
+	m.utilityContext = nil
+
 	m.lastAppHash = block.BlockHeader.Hash
 
+	return nil
+}
+
+func (m *ConsensusModule) storeBlock(block *typesCons.Block, blockProtoBytes []byte) error {
+	store := m.utilityContext.GetPersistenceContext()
+	// Store in KV Store
+	if err := store.StoreBlock(blockProtoBytes); err != nil {
+		return err
+	}
+
+	// Store in SQL Store
+	header := block.BlockHeader
+	if err := store.InsertBlock(uint64(header.Height), header.Hash, header.ProposerAddress, header.QuorumCertificate); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -72,17 +87,17 @@ func (m *ConsensusModule) validateBlockBasic(block *typesCons.Block) error {
 func (m *ConsensusModule) refreshUtilityContext() error {
 	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
 	// Ideally, this should not be called.
-	if m.UtilityContext != nil {
+	if m.utilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
-		m.UtilityContext.ReleaseContext()
-		m.UtilityContext = nil
+		m.utilityContext.ReleaseContext()
+		m.utilityContext = nil
 	}
 
 	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
 	if err != nil {
 		return err
 	}
-	m.UtilityContext = utilityContext
 
+	m.utilityContext = utilityContext
 	return nil
 }
