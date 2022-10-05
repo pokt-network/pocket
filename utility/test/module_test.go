@@ -8,12 +8,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pokt-network/pocket/shared/test_artifacts"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
-
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"github.com/pokt-network/pocket/utility"
+	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -67,7 +66,19 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	}
 }
 
-func newTestPersistenceModule(_ *testing.M, databaseUrl string) modules.PersistenceModule {
+func newTestingUtilityContextWithPersistenceContext(t *testing.T, height int64, persistenceContext modules.PersistenceRWContext) utility.UtilityContext {
+	return utility.UtilityContext{
+		LatestHeight: height,
+		Mempool:      NewTestingMempool(t),
+		Context: &utility.Context{
+			PersistenceRWContext: persistenceContext,
+			SavePointsM:          make(map[string]struct{}),
+			SavePoints:           make([][]byte, 0),
+		},
+	}
+}
+
+func newTestPersistenceModule(m *testing.M, databaseUrl string) modules.PersistenceModule {
 	cfg := modules.Config{
 		Persistence: &test_artifacts.MockPersistenceConfig{
 			PostgresUrl:    databaseUrl,
