@@ -88,7 +88,12 @@ if err != nil {
 The bus may be accessed by the module object at anytime using the `getter`
 
 ```golang
-bus := newModule.GetBus
+bus := newModule.GetBus()
+
+# The bus enables access to interfaces exposed by other modules in the codebase
+bus.GetP2PModule().<FunctionName>
+bus.GetPersistenceModule().<FunctionName>
+...
 ```
 
 #### Stop the module
