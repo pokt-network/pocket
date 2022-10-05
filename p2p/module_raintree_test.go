@@ -15,15 +15,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pokt-network/pocket/shared/debug"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
-
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
