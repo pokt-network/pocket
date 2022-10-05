@@ -95,7 +95,7 @@ bus := newModule.GetBus
 
 Stopping the module, ends the service and disables operation.
 
-This is the proper way to conclude the lifecycle of the module
+This is the proper way to conclude the lifecycle of the module.
 
 ```golang
 err := newModule.Stop()
