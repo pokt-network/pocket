@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO : Remove these testing_artifacts when we nail down a design for parameter name sharing / owning
+// TODO(#230): Remove these testing_artifacts when we nail down a design for parameter name sharing / owning
 const (
 	AppMaxChainsParamName            = "app_max_chains"
 	ServiceNodeMinimumStakeParamName = "service_node_minimum_stake"
