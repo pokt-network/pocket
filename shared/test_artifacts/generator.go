@@ -6,10 +6,9 @@ import (
 	"strconv"
 
 	typesPersistence "github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
-
-	"github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

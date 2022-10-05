@@ -1,0 +1,13 @@
+syntax = "proto3";
+package persistence;
+
+option go_package = "github.com/pokt-network/pocket/persistence/types";
+
+message Block {
+    uint64 height = 1;
+    string hash = 2;
+    string prevHash = 3;
+    bytes proposerAddress = 4;
+    bytes quorumCertificate = 5;
+    repeated bytes transactions = 6;
+}

@@ -5,6 +5,7 @@ package indexer
 import (
 	"encoding/hex"
 	"fmt"
+
 	"github.com/pokt-network/pocket/shared/codec"
 
 	"github.com/jordanorelli/lexnum"
@@ -111,7 +112,7 @@ type txIndexer struct {
 }
 
 func NewTxIndexer(databasePath string) (TxIndexer, error) {
-	db, err := kvstore.NewKVStore(databasePath)
+	db, err := kvstore.OpenKVStore(databasePath)
 	return &txIndexer{
 		db: db,
 	}, err
