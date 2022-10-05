@@ -89,7 +89,7 @@ func (m *ConsensusModule) refreshUtilityContext() error {
 	// should not be called.
 	if m.utilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
-		m.utilityContext.ReleaseContext()
+		m.utilityContext.Release()
 		m.utilityContext = nil
 	}
 
@@ -123,11 +123,11 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	}
 
 	// Commit and release the context
-	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
+	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
 	}
 
-	m.utilityContext.ReleaseContext()
+	m.utilityContext.Release()
 	m.utilityContext = nil
 
 	m.appHash = block.BlockHeader.Hash
@@ -135,17 +135,20 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	return nil
 }
 
+// DISCUSS_IN_THIS_COMMIT(#284): THIS IS A BREAKING CHANGE. Need to figure out how we should handle
+// interface changes like this moving forward. Consider keeping components of the old interface in place
+// and deleting them in a later commit along with the implementation.
 func (m *ConsensusModule) storeBlock(block *typesCons.Block, blockProtoBytes []byte) error {
-	store := m.utilityContext.GetPersistenceContext()
-	// Store in KV Store
-	if err := store.StoreBlock(blockProtoBytes); err != nil {
-		return err
-	}
+	// 	store := m.utilityContext.GetPersistenceContext()
+	// 	// Store in KV Store
+	// 	if err := store.StoreBlock(blockProtoBytes); err != nil {
+	// 		return err
+	// 	}
 
-	// Store in SQL Store
-	header := block.BlockHeader
-	if err := store.InsertBlock(uint64(header.Height), header.Hash, header.ProposerAddress, header.QuorumCertificate); err != nil {
-		return err
-	}
+	// 	// Store in SQL Store
+	// 	header := block.BlockHeader
+	// 	if err := store.InsertBlock(uint64(header.Height), header.Hash, header.ProposerAddress, header.QuorumCertificate); err != nil {
+	// 		return err
+	// 	}
 	return nil
 }

@@ -2,11 +2,12 @@ package test
 
 import (
 	"encoding/hex"
-	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"math"
 	"math/big"
 	"testing"
+
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
@@ -177,7 +178,7 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 	appHashTest, err := ctx.GetAppHash()
 	require.NoError(t, err)
 
-	appHashSource, er := ctx.Context.AppHash()
+	appHashSource, er := ctx.Context.UpdateAppHash()
 	require.NoError(t, er)
 	require.Equal(t, appHashTest, appHashSource, "unexpected appHash")
 
