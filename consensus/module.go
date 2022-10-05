@@ -58,7 +58,7 @@ type ConsensusModule struct {
 	IdToValAddrMap typesCons.IdToValAddrMap // TODO(design): This needs to be updated every time the ValMap is modified
 
 	// Consensus State
-	appHash      string
+	lastAppHash  string
 	validatorMap typesCons.ValidatorMap
 
 	// Module Dependencies
@@ -128,7 +128,7 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 		ValAddrToIdMap: valIdMap,
 		IdToValAddrMap: idValMap,
 
-		appHash:      "",
+		lastAppHash:  "",
 		validatorMap: valMap,
 
 		utilityContext:    nil,
@@ -244,7 +244,7 @@ func (m *ConsensusModule) loadPersistedState() error {
 
 	// TODO: Populate the rest of the state from the persistence module: validator set, quorum cert, last block hash, etc...
 	m.Height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
-	m.appHash = string(appHash)
+	m.lastAppHash = string(appHash)
 
 	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
 	return nil
@@ -326,7 +326,7 @@ func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 }
 
 func (m *ConsensusModule) AppHash() string {
-	return m.appHash
+	return m.lastAppHash
 }
 
 func (m *ConsensusModule) CurrentHeight() uint64 {

@@ -39,7 +39,7 @@ func (m *ConsensusModule) prepareBlockAsLeader() (*typesCons.Block, error) {
 		Height:            int64(m.Height),
 		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            uint32(len(txs)),
-		LastBlockHash:     m.appHash,
+		LastBlockHash:     m.lastAppHash,
 		ProposerAddress:   m.privateKey.Address().Bytes(),
 		QuorumCertificate: []byte("HACK: Temporary placeholder"),
 	}
@@ -112,7 +112,7 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 
 	if err := m.utilityContext.Release(); err != nil {
 		return err
-	}face
+	}
 	m.utilityContext = nil
 
 	m.lastAppHash = block.BlockHeader.Hash
