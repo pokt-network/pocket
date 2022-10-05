@@ -59,8 +59,6 @@ func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) 
 	// is always the first in the list. This makes RainTree propagation easier to compute and interpret.
 	pm.addrList = append(pm.addrList[i:len(pm.addrList)], pm.addrList[0:i]...)
 
-	fmt.Printf("[DEBUG] pm.addrList post sort: %v\n", pm.addrList)
-
 	// sorting pm.addrBook as well, leveraging the sort order we just achieved
 	for i := 0; i < len(pm.addrList); i++ {
 		pm.addrBook[i] = pm.addrBookMap[pm.addrList[i]]

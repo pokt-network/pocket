@@ -6,9 +6,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
 )
 
@@ -184,8 +186,15 @@ func TestRainTreeAddrBookTargetsTwentySevenNodes(t *testing.T) {
 }
 
 func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeMessageProp) {
+	ctrl := gomock.NewController(t)
+	busMock := modulesMock.NewMockBus(ctrl)
+	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
+	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
+	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+
 	addrBook := getAlphabetAddrBook(expectedMsgProp.numNodes)
 	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, addrBook).(*rainTreeNetwork)
+	network.SetBus(busMock)
 
 	peersManagerStateView := network.peersManager.getNetworkView()
 
