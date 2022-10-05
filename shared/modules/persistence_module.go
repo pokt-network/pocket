@@ -12,7 +12,7 @@ type PersistenceModule interface {
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
 	GetBlockStore() kvstore.KVStore
-	GetWriteContext() PersistenceRWContext
+	NewWriteContext() PersistenceRWContext
 
 	// Debugging / development only
 	HandleDebugMessage(*debug.DebugMessage) error
@@ -42,7 +42,7 @@ type PersistenceWriteContext interface {
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
 
-	ResetContext() error
+	ResetContext() error // TODO consolidate with Reset and Release
 	Reset() error
 	Commit() error
 	Release() error

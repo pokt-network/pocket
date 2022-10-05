@@ -200,7 +200,7 @@ func (m *PersistenceModule) GetBlockStore() kvstore.KVStore {
 	return m.blockStore
 }
 
-func (m *PersistenceModule) GetWriteContext() modules.PersistenceRWContext {
+func (m *PersistenceModule) NewWriteContext() modules.PersistenceRWContext {
 	return m.writeContext
 }
 
