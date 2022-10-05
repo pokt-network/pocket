@@ -84,7 +84,7 @@ if err != nil {
 }
 ```
 
-##### Get the module `bus`
+#### Get the module `bus`
 
 The bus may be accessed by the module object at anytime using the `getter`
 
