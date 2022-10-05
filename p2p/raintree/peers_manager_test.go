@@ -6,10 +6,16 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	serviceUrlFormat = "val_%d"
 )
 
 type ExpectedRainTreeNetworkConfig struct {
@@ -71,12 +77,11 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
 			network := NewRainTreeNetwork(addr, addrBook).(*rainTreeNetwork)
 
-			err = network.processAddrBookUpdates()
-			require.NoError(t, err)
+			peersManagerStateView := network.peersManager.getNetworkView()
 
-			require.Equal(t, len(network.addrList), n)
-			require.Equal(t, len(network.addrBookMap), n)
-			require.Equal(t, int(network.maxNumLevels), testCase.numExpectedLevels)
+			require.Equal(t, len(peersManagerStateView.addrList), n)
+			require.Equal(t, len(peersManagerStateView.addrBookMap), n)
+			require.Equal(t, int(peersManagerStateView.maxNumLevels), testCase.numExpectedLevels)
 		})
 	}
 }
@@ -106,20 +111,21 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
 			network := NewRainTreeNetwork(addr, addrBook).(*rainTreeNetwork)
 
-			err = network.processAddrBookUpdates()
-			require.NoError(b, err)
+			peersManagerStateView := network.peersManager.getNetworkView()
 
-			require.Equal(b, n, len(network.addrList))
-			require.Equal(b, n, len(network.addrBookMap))
-			require.Equal(b, testCase.numExpectedLevels, int(network.maxNumLevels))
+			require.Equal(b, n, len(peersManagerStateView.addrList))
+			require.Equal(b, n, len(peersManagerStateView.addrBookMap))
+			require.Equal(b, testCase.numExpectedLevels, int(peersManagerStateView.maxNumLevels))
 
 			for i := 0; i < numAddressessToBeAdded; i++ {
 				newAddr, _ := crypto.GenerateAddress()
 				network.AddPeerToAddrBook(&types.NetworkPeer{Address: newAddr})
 			}
 
-			require.Equal(b, n+numAddressessToBeAdded, len(network.addrList))
-			require.Equal(b, n+numAddressessToBeAdded, len(network.addrBookMap))
+			peersManagerStateView = network.peersManager.getNetworkView()
+
+			require.Equal(b, n+numAddressessToBeAdded, len(peersManagerStateView.addrList))
+			require.Equal(b, n+numAddressessToBeAdded, len(peersManagerStateView.addrBookMap))
 		})
 	}
 }
@@ -180,24 +186,32 @@ func TestRainTreeAddrBookTargetsTwentySevenNodes(t *testing.T) {
 }
 
 func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeMessageProp) {
+	ctrl := gomock.NewController(t)
+	busMock := modulesMock.NewMockBus(ctrl)
+	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
+	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
+	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+
 	addrBook := getAlphabetAddrBook(expectedMsgProp.numNodes)
 	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, addrBook).(*rainTreeNetwork)
-	network.processAddrBookUpdates()
+	network.SetBus(busMock)
 
-	require.Equal(t, strings.Join(network.addrList, ""), strToAddrList(expectedMsgProp.addrList))
+	peersManagerStateView := network.peersManager.getNetworkView()
 
-	i, found := network.getSelfIndexInAddrBook()
+	require.Equal(t, strings.Join(peersManagerStateView.addrList, ""), strToAddrList(expectedMsgProp.addrList))
+
+	i, found := network.peersManager.getSelfIndexInAddrBook()
 	require.True(t, found)
 	require.Equal(t, i, 0)
 
 	for _, target := range expectedMsgProp.targets {
-		addr, found := network.getFirstTargetAddr(uint32(target.level))
-		require.True(t, found)
-		require.Equal(t, addr, cryptoPocket.Address(target.left))
+		actualTargets := network.getTargetsAtLevel(uint32(target.level))
 
-		addr, found = network.getSecondTargetAddr(uint32(target.level))
-		require.True(t, found)
-		require.Equal(t, addr, cryptoPocket.Address(target.right))
+		require.True(t, shouldSendToTarget(actualTargets[0]))
+		require.Equal(t, actualTargets[0].address, cryptoPocket.Address(target.left))
+
+		require.True(t, shouldSendToTarget(actualTargets[1]))
+		require.Equal(t, actualTargets[1].address, cryptoPocket.Address(target.right))
 	}
 }
 
@@ -208,12 +222,14 @@ func getAlphabetAddrBook(n int) (addrBook types.AddrBook) {
 		if i >= n {
 			return
 		}
-		addrBook = append(addrBook, &types.NetworkPeer{Address: []byte{byte(ch)}})
+		addrBook = append(addrBook, &types.NetworkPeer{
+			ServiceUrl: fmt.Sprintf(serviceUrlFormat, i),
+			Address:    []byte{byte(ch)},
+		})
 	}
 	return
 }
 
 func strToAddrList(s string) string {
 	return hex.EncodeToString([]byte(s))
-
 }

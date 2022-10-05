@@ -3,10 +3,11 @@ package types
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/modules"
 	"log"
 	"reflect"
 	"strings"
+
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // init initializes a map that contains the metadata extracted from `gov.proto`.
@@ -78,15 +79,15 @@ func InsertParams(params modules.Params, height int64) string {
 		case ValTypeString:
 			switch vt := pVal.Interface().(type) {
 			case []byte:
-				sb.WriteString(fmt.Sprintf("'%s')", hex.EncodeToString(vt)))
+				fmt.Fprintf(&sb, "'%s')", hex.EncodeToString(vt))
 			case string:
-				sb.WriteString(fmt.Sprintf("'%s')", vt))
+				fmt.Fprintf(&sb, "'%s')", vt)
 			default:
 				log.Fatalf("unhandled type for param: expected []byte or string, got %T", vt)
 			}
 
 		case ValTypeSmallInt, ValTypeBigInt:
-			sb.WriteString(fmt.Sprintf("%d)", pVal.Interface()))
+			fmt.Fprintf(&sb, "%d)", pVal.Interface())
 		default:
 			log.Fatalf("unhandled PropertyType: %s.", pType)
 		}
@@ -97,7 +98,7 @@ func InsertParams(params modules.Params, height int64) string {
 	}
 
 	constraint := fmt.Sprintf("%s_pkey", ParamsTableName)
-	sb.WriteString(fmt.Sprintf(" ON CONFLICT ON CONSTRAINT %s DO UPDATE SET value=EXCLUDED.value, type=EXCLUDED.type", constraint))
+	fmt.Fprintf(&sb, " ON CONFLICT ON CONSTRAINT %s DO UPDATE SET value=EXCLUDED.value, type=EXCLUDED.type", constraint)
 
 	return sb.String()
 }

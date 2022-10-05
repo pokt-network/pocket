@@ -240,17 +240,17 @@ protogen_docker: docker_check
 .PHONY: test_all
 ## Run all go unit tests
 test_all: # generate_mocks
-	go test -p=1 -count=1 ./...
+	go test -p 1 -count=1 ./...
 
 .PHONY: test_all_with_json
 ## Run all go unit tests, output results in json file
 test_all_with_json: # generate_mocks
-	go test -p=1 -json ./... > test_results.json
+	go test -p 1 -json ./... > test_results.json
 
 .PHONY: test_all_with_coverage
 ## Run all go unit tests, output results & coverage into files
 test_all_with_coverage: # generate_mocks
-	go test -p=1 -v ./... -covermode=count -coverprofile=coverage.out
+	go test -p 1 -v ./... -covermode=count -coverprofile=coverage.out
 	go tool cover -func=coverage.out -o=coverage.out
 
 .PHONY: test_race
@@ -266,7 +266,7 @@ test_utility: # generate_mocks
 .PHONY: test_shared
 ## Run all go unit tests in the shared module
 test_shared: # generate_mocks
-	go test ${VERBOSE_TEST} -p=1 ./shared/...
+	go test ${VERBOSE_TEST} -p 1 ./shared/...
 
 .PHONY: test_consensus
 ## Run all go unit tests in the Consensus module
@@ -304,7 +304,7 @@ test_sortition:
 .PHONY: test_persistence
 ## Run all go unit tests in the Persistence module
 test_persistence:
-	go test ${VERBOSE_TEST} -p=1 -count=1 ./persistence/...
+	go test ${VERBOSE_TEST} -p 1 -count=1 ./persistence/...
 
 .PHONY: test_p2p_types
 ## Run p2p subcomponents' tests
