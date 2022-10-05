@@ -71,7 +71,7 @@ newModule.SetBus(bus)
 
 ##### Start the module
 
-Starting the module, begins the service and enables operation.
+Starting the module begins the service and enables operation.
 
 Starting must come after creation and setting the bus.
 
