@@ -91,7 +91,7 @@ The bus may be accessed by the module object at anytime using the `getter`
 bus := newModule.GetBus
 ```
 
-##### Stop the module
+#### Stop the module
 
 Stopping the module, ends the service and disables operation.
 
