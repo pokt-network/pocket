@@ -231,6 +231,6 @@ var _ IConfig = UtilityConfig(nil)
 var _ IGenesis = PersistenceGenesisState(nil)
 var _ IGenesis = ConsensusGenesisState(nil)
 
-// DISCUSS: need a way to enforce these configuration interfaces as true configs/genesis, this is merely decorative at this point
+// TODO(#235): Remove these interfaces once the runtime config approach is implemented.
 type IConfig interface{}
 type IGenesis interface{}
