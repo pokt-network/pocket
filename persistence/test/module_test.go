@@ -8,9 +8,9 @@ import (
 
 func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	// Cleanup previous contexts
-	testPersistenceMod.ResetContext()
+	testPersistenceMod.ReleaseWriteContext()
 	t.Cleanup(func() {
-		testPersistenceMod.ResetContext()
+		testPersistenceMod.ReleaseWriteContext()
 	})
 
 	// variables for testing
@@ -18,14 +18,14 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	poolAddress := []byte("address")
 	originalAmount := "15"
 	modifiedAmount := "10"
-	proposer := []byte("proposer")
-	quorumCert := []byte("quorumCert")
+	proposerAddr := []byte("placeholderProposerAddr")
+	quorumCert := []byte("placeholderQuorumCert")
 
 	// setup a write context, insert a pool and commit it
 	context, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
 	require.NoError(t, context.InsertPool(poolName, poolAddress, originalAmount))
-	require.NoError(t, context.Commit(proposer, quorumCert))
+	require.NoError(t, context.Commit(proposerAddr, quorumCert))
 
 	// verify the insert in the previously committed context worked
 	contextA, err := testPersistenceMod.NewRWContext(0)
@@ -55,9 +55,9 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 
 func TestPersistenceContextTwoWritesErrors(t *testing.T) {
 	// Cleanup previous contexts
-	testPersistenceMod.ResetContext()
+	testPersistenceMod.ReleaseWriteContext()
 	t.Cleanup(func() {
-		testPersistenceMod.ResetContext()
+		testPersistenceMod.ReleaseWriteContext()
 	})
 
 	// Opening up first write context succeeds

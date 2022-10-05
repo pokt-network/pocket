@@ -112,7 +112,7 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 
 	if err := m.utilityContext.Release(); err != nil {
 		return err
-	}
+	}face
 	m.utilityContext = nil
 
 	m.lastAppHash = block.BlockHeader.Hash

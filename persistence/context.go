@@ -16,6 +16,7 @@ func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 }
 
 func (p PostgresContext) UpdateAppHash() ([]byte, error) {
+
 	if err := p.updateStateHash(); err != nil {
 		return nil, err
 	}

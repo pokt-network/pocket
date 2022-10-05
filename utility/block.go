@@ -101,6 +101,15 @@ func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
 	return nil
 }
 
+func (u *UtilityContext) GetAppHash() ([]byte, typesUtil.Error) {
+	// Get the root hash of the merkle state tree for state consensus integrity
+	appHash, er := u.Context.UpdateAppHash()
+	if er != nil {
+		return nil, typesUtil.ErrAppHash(er)
+	}
+	return appHash, nil
+}
+
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
 func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
 	latestBlockHeight, err := u.GetLatestBlockHeight()

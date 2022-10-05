@@ -44,16 +44,14 @@ func (u *UtilityContext) Store() *Context {
 	return u.Context
 }
 
-func (u *UtilityContext) CommitContext(quorumCert []byte) error {
-	err := u.Context.PersistenceRWContext.Commit(u.CurrentProposer, quorumCert)
-	u.Context = nil // DISCUSS: Should we release the context if there was an error here?
-	return err
+func (u *UtilityContext) Commit(quorumCert []byte) error {
+	return u.Context.PersistenceRWContext.Commit([]byte("TODO: proposerAddr placeholder"), quorumCert)
 }
 
-func (u *UtilityContext) ReleaseContext() error {
-	err := u.Context.Release()
+func (u *UtilityContext) Release() error {
+	u.Context.Release()
 	u.Context = nil
-	return err
+	return nil
 }
 
 func (u *UtilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {
@@ -105,7 +103,7 @@ func (u *UtilityContext) NewSavePoint(transactionHash []byte) typesUtil.Error {
 }
 
 func (c *Context) Reset() typesUtil.Error {
-	if err := c.PersistenceRWContext.Reset(); err != nil {
+	if err := c.PersistenceRWContext.Release(); err != nil {
 		return typesUtil.ErrResetContext(err)
 	}
 	return nil

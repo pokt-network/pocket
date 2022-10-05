@@ -70,7 +70,7 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 
 	t.Cleanup(func() {
 		require.NoError(t, db.Release())
-		require.NoError(t, testPersistenceMod.ResetContext())
+		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
 	})
 
 	return &db
@@ -91,7 +91,7 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 		if err := db.Release(); err != nil {
 			f.FailNow()
 		}
-		if err := testPersistenceMod.ResetContext(); err != nil {
+		if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
 			f.FailNow()
 		}
 	})
