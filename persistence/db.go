@@ -7,7 +7,6 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/types"
 
-	"github.com/celestiaorg/smt"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -41,13 +40,6 @@ type PostgresContext struct {
 	conn       *pgx.Conn
 	tx         pgx.Tx
 	blockstore kvstore.KVStore
-
-	stateHash []byte
-	// IMPROVE: Depending on how the use of `PostgresContext` evolves, we may be able to get
-	// access to these directly via the postgres module.
-	PostgresDB  *pgx.Conn
-	BlockStore  kvstore.KVStore                      // REARCHITECT_IN_THIS_COMMIT: This is a passthrough from the persistence module (i.e. not context)
-	MerkleTrees map[MerkleTree]*smt.SparseMerkleTree // REARCHITECT_IN_THIS_COMMIT: This is a passthrough from the persistence module (i.e. not context)
 }
 
 func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
