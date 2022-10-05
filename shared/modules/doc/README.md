@@ -48,9 +48,7 @@ Module creation uses a typical constructor pattern signature `Create(configPath,
 Currently, module creation is not embedded or enforced in the interface to prevent the initializer from having to use 
 clunky creation syntax -> `modPackage.new(module).Create(configPath, genesisPath)` rather `modPackage.Create(configPath, genesisPath)`
 
-Essentially, we are currently optimizing for code clarity rather than creation signature enforceability.
-
-NOTE: **This may change in the future.**
+This is done to optimize for code clarity rather than creation signature enforceability but **may change in the future**.
 
 ```golang
 newModule, err := newModule.Create(configFilePath, genesisFilePath)
