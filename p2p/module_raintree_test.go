@@ -28,8 +28,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// IMPROVE(team): Looking into adding more tests and accounting for more edge cases.
-
 // ### RainTree Unit Tests ###
 
 func TestRainTreeCompleteOneNodes(t *testing.T) {
@@ -313,8 +311,6 @@ func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modu
 	return consensusMock
 }
 
-// TODO(team): make the test more rigorous but adding MaxTimes `EmitEvent` expectations. Since we are talking about more than one node
-// I have decided to do with `AnyTimes` for the moment.
 func prepareTelemetryMock(t *testing.T) *modulesMock.MockTelemetryModule {
 	ctrl := gomock.NewController(t)
 	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
@@ -359,7 +355,7 @@ func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWr
 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
 		data := <-testChannel
 		return data, nil
-	}).MaxTimes(int(expectedNumNetworkReads + 1)) // INVESTIGATE(olshansky): The +1 is necessary because there is one extra read of empty data by every channel...
+	}).MaxTimes(int(expectedNumNetworkReads + 1))
 
 	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) error {
 		testChannel <- data
