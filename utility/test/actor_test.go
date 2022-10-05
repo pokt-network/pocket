@@ -8,10 +8,9 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
-
-	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
@@ -216,15 +215,16 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			require.NoError(t, err, "error beginning unstaking max paused actors")
 
 			status, err := ctx.GetActorStatus(actorType, addrBz)
+			require.NoError(t, err)
 			require.Equal(t, typesUtil.UnstakingStatus, status, "actor should be unstaking")
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
 }
 
-func TestUtilityContext_CalculateRelays(t *testing.T) {
+func TestUtilityContext_CalculateMaxAppRelays(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
-	actor := getAllTestingApps(t, ctx)[0]
+	actor := getFirstActor(t, ctx, typesUtil.UtilActorType_App)
 	newMaxRelays, err := ctx.CalculateAppRelays(actor.GetStakedAmount())
 	require.NoError(t, err)
 	require.Equal(t, actor.GetGenericParam(), newMaxRelays)
