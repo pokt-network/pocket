@@ -40,7 +40,7 @@ genesis
 
 ### Module Typical Usage Example
 
-##### Create the module
+#### Create the module
 
 Module creation uses a typical constructor pattern signature `Create(configPath, genesisPath string) (module.Interface, error)`
 
