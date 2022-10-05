@@ -15,9 +15,6 @@ type ProtocolActorSchema interface {
 	GetActorSpecificColName() string
 
 	/*** Read/Get Queries ***/
-
-	// Returns a query to retrieve the addresses of all the Actors updated at that specific height
-	GetUpdatedAtHeightQuery(height int64) string
 	// Returns a query to retrieve all of a single Actor's attributes.
 	GetQuery(address string, height int64) string
 	// Returns all actors at that height

@@ -44,36 +44,6 @@ func (p *PostgresContext) GetExists(actorSchema types.ProtocolActorSchema, addre
 	return
 }
 
-func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema, height int64) (actors []types.BaseActor, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
-	if err != nil {
-		return
-	}
-
-	rows, err := tx.Query(ctx, actorSchema.GetUpdatedAtHeightQuery(height))
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	// OPTIMIZE: Consolidate logic with `GetActor` to reduce code footprint
-	var addr string
-	for rows.Next() {
-		if err = rows.Scan(&addr); err != nil {
-			return
-		}
-
-		actor, err := p.GetActor(actorSchema, []byte(addr), height)
-		if err != nil {
-			return nil, err
-		}
-
-		actors = append(actors, actor)
-	}
-
-	return
-}
-
 func (p *PostgresContext) GetActor(actorSchema types.ProtocolActorSchema, address []byte, height int64) (actor types.BaseActor, err error) {
 	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
@@ -87,16 +57,10 @@ func (p *PostgresContext) GetActor(actorSchema types.ProtocolActorSchema, addres
 	return p.GetChainsForActor(ctx, tx, actorSchema, actor, height)
 }
 
-// IMPORTANT: Need to consolidate `persistence/types.BaseActor` with `persistence/genesisTypes.Actor`
 func (p *PostgresContext) GetActorFromRow(row pgx.Row) (actor types.BaseActor, height int64, err error) {
 	err = row.Scan(
-		&actor.Address,
-		&actor.PublicKey,
-		&actor.StakedTokens,
-		&actor.ActorSpecificParam,
-		&actor.OutputAddress,
-		&actor.PausedHeight,
-		&actor.UnstakingHeight,
+		&actor.Address, &actor.PublicKey, &actor.StakedTokens, &actor.ActorSpecificParam,
+		&actor.OutputAddress, &actor.PausedHeight, &actor.UnstakingHeight,
 		&height)
 	return
 }

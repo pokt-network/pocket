@@ -33,8 +33,6 @@ var (
 
 func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
 	u.LatestHeight = latestHeight
-	u.CurrentProposer = proposerAddress
-
 	// begin block lifecycle phase
 	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {
 		return nil, err
@@ -52,30 +50,22 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 		if err := u.ApplyTransaction(tx); err != nil {
 			return nil, err
 		}
-		if err := u.Context.PersistenceRWContext.StoreTransaction(transactionProtoBytes); err != nil {
+		if err := u.GetPersistenceContext().StoreTransaction(transactionProtoBytes); err != nil {
 			return nil, err
 		}
 
-		// DISCUSS: What if the context is rolled back or cancelled. Do we add it back to the mempool?
 		// TODO: if found, remove transaction from mempool
+		// DISCUSS: What if the context is rolled back or cancelled. Do we add it back to the mempool?
 		// if err := u.Mempool.DeleteTransaction(transaction); err != nil {
 		// 	return nil, err
 		// }
 	}
-
 	// end block lifecycle phase
 	if err := u.EndBlock(proposerAddress); err != nil {
 		return nil, err
 	}
-
-	// TODO: What if everything above succeeded but updating the app hash failed?
-	appHash, err := u.Context.UpdateAppHash()
-	if err != nil {
-		return nil, typesUtil.ErrAppHash(err)
-	}
-
-	// return the app hash; consensus module will get the validator set directly
-	return appHash, nil
+	// return the app hash (consensus module will get the validator set directly
+	return u.GetAppHash()
 }
 
 func (u *UtilityContext) BeginBlock(previousBlockByzantineValidators [][]byte) typesUtil.Error {
@@ -99,6 +89,15 @@ func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
 		return err
 	}
 	return nil
+}
+
+func (u *UtilityContext) GetAppHash() ([]byte, typesUtil.Error) {
+	// Get the root hash of the merkle state tree for state consensus integrity
+	appHash, er := u.Context.AppHash()
+	if er != nil {
+		return nil, typesUtil.ErrAppHash(er)
+	}
+	return appHash, nil
 }
 
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority

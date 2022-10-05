@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"unsafe"
 
+	"github.com/pokt-network/pocket/shared/codec"
+
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
 
@@ -87,9 +89,7 @@ func (m *ConsensusModule) refreshUtilityContext() error {
 	// should not be called.
 	if m.utilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
-		if err := m.utilityContext.Release(); err != nil {
-			return err
-		}
+		m.utilityContext.ReleaseContext()
 		m.utilityContext = nil
 	}
 
@@ -105,14 +105,47 @@ func (m *ConsensusModule) refreshUtilityContext() error {
 func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
 
-	// Commit and release the context
-	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
+	// Store the block in the KV store
+	codec := codec.GetCodec()
+	blockProtoBytes, err := codec.Marshal(block)
+	if err != nil {
 		return err
 	}
-	m.utilityContext.Release()
+
+	// IMPROVE(olshansky): temporary solution. `ApplyBlock` above applies the
+	// transactions to the postgres database, and this stores it in the KV store upon commitment.
+	// Instead of calling this directly, an alternative solution is to store the block metadata in
+	// the persistence context and have `CommitPersistenceContext` do this under the hood. However,
+	// additional `Block` metadata will need to be passed through and may change when we merkle the
+	// state hash.
+	if err := m.storeBlock(block, blockProtoBytes); err != nil {
+		return err
+	}
+
+	// Commit and release the context
+	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
+		return err
+	}
+
+	m.utilityContext.ReleaseContext()
 	m.utilityContext = nil
 
-	m.lastAppHash = block.BlockHeader.Hash
+	m.appHash = block.BlockHeader.Hash
 
+	return nil
+}
+
+func (m *ConsensusModule) storeBlock(block *typesCons.Block, blockProtoBytes []byte) error {
+	store := m.utilityContext.GetPersistenceContext()
+	// Store in KV Store
+	if err := store.StoreBlock(blockProtoBytes); err != nil {
+		return err
+	}
+
+	// Store in SQL Store
+	header := block.BlockHeader
+	if err := store.InsertBlock(uint64(header.Height), header.Hash, header.ProposerAddress, header.QuorumCertificate); err != nil {
+		return err
+	}
 	return nil
 }
