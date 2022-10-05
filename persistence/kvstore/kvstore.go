@@ -1,33 +1,47 @@
 package kvstore
 
 import (
+	"errors"
 	"log"
 
+	"github.com/celestiaorg/smt"
 	badger "github.com/dgraph-io/badger/v3"
 )
 
-// CLEANUP: move this structure to a shared module
 type KVStore interface {
 	// Lifecycle methods
 	Stop() error
 
 	// Accessors
 	// TODO: Add a proper iterator interface
-	Put(key []byte, value []byte) error
-	Get(key []byte) ([]byte, error)
 	// TODO: Add pagination for `GetAll`
 	GetAll(prefixKey []byte, descending bool) ([][]byte, error)
+
 	Exists(key []byte) (bool, error)
 	ClearAll() error
+
+	// Same interface as in `smt.MapStore``
+	Put(key, value []byte) error
+	Get(key []byte) ([]byte, error)
+	Delete(key []byte) error
 }
 
 var _ KVStore = &badgerKVStore{}
+var _ smt.MapStore = &badgerKVStore{}
+
+var (
+	ErrKVStoreExists    = errors.New("kvstore already exists")
+	ErrKVStoreNotExists = errors.New("kvstore does not exist")
+)
 
 type badgerKVStore struct {
 	db *badger.DB
 }
 
-func NewKVStore(path string) (KVStore, error) {
+// REFACTOR: Loads or creates a badgerDb at `path`. This may potentially need to be refactored
+// into `NewKVStore` and `LoadKVStore` depending on how state sync evolves by leveraging `os.Stat`
+// on the file path.
+func OpenKVStore(path string) (KVStore, error) {
 	db, err := badger.Open(badger.DefaultOptions(path))
 	if err != nil {
 		return nil, err
@@ -43,7 +57,7 @@ func NewMemKVStore() KVStore {
 	return badgerKVStore{db: db}
 }
 
-func (store badgerKVStore) Put(key []byte, value []byte) error {
+func (store badgerKVStore) Put(key, value []byte) error {
 	tx := store.db.NewTransaction(true)
 	defer tx.Discard()
 
@@ -53,6 +67,12 @@ func (store badgerKVStore) Put(key []byte, value []byte) error {
 	}
 
 	return tx.Commit()
+}
+
+// CONSOLIDATE: We might be able to remove the `KVStore` interface altogether if we end up using `smt.MapStore`
+// A wrapper around `Put` to conform to the `smt.MapStore` interface
+func (store *badgerKVStore) Set(key, value []byte) error {
+	return store.Put(key, value)
 }
 
 func (store badgerKVStore) Get(key []byte) ([]byte, error) {
@@ -74,6 +94,11 @@ func (store badgerKVStore) Get(key []byte) ([]byte, error) {
 	}
 
 	return value, nil
+}
+
+func (store badgerKVStore) Delete(key []byte) error {
+	log.Fatalf("badgerKVStore.Delete not implemented yet")
+	return nil
 }
 
 func (store badgerKVStore) GetAll(prefix []byte, descending bool) (values [][]byte, err error) {
