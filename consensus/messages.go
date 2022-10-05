@@ -4,38 +4,35 @@ import (
 	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"google.golang.org/protobuf/proto"
 )
 
 func CreateProposeMessage(
-	height uint64,
-	round uint64,
-	step typesCons.HotstuffStep,
-	block *typesCons.Block,
+	m *ConsensusModule,
+	step typesCons.HotstuffStep, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
 	qc *typesCons.QuorumCertificate,
 ) (*typesCons.HotstuffMessage, error) {
-	if block == nil {
-		return nil, typesCons.ErrNilBlockVote
+	if m.Block == nil {
+		return nil, typesCons.ErrNilBlockProposal
 	}
 
 	msg := &typesCons.HotstuffMessage{
 		Type:          Propose,
-		Height:        height,
+		Height:        m.Height,
 		Step:          step,
-		Round:         round,
-		Block:         block,
+		Round:         m.Round,
+		Block:         m.Block,
 		Justification: nil, // QC is set below if it is non-nil
 	}
 
-	// TODO: Add unit tests for this
+	// TODO(olshansky): Add unit tests for this
 	if qc == nil && step != Prepare {
 		return nil, typesCons.ErrNilQCProposal
 	}
 
-	// TODO: Add unit tests for this
-	// QC may be nil during NEWROUND if following happy hotstuff path
-	if qc != nil {
+	// TODO(olshansky): Add unit tests for this
+	if qc != nil { // QC may optionally be nil for NEWROUND steps when everything is progressing smoothly
 		msg.Justification = &typesCons.HotstuffMessage_QuorumCertificate{
 			QuorumCertificate: qc,
 		}
@@ -45,11 +42,9 @@ func CreateProposeMessage(
 }
 
 func CreateVoteMessage(
-	height uint64,
-	round uint64,
-	step typesCons.HotstuffStep,
+	m *ConsensusModule,
+	step typesCons.HotstuffStep, // step can be taken from `m` but is specified explicitly via interface to avoid ambiguity
 	block *typesCons.Block,
-	privKey crypto.PrivateKey, // used to sign the vote
 ) (*typesCons.HotstuffMessage, error) {
 	if block == nil {
 		return nil, typesCons.ErrNilBlockVote
@@ -57,50 +52,44 @@ func CreateVoteMessage(
 
 	msg := &typesCons.HotstuffMessage{
 		Type:          Vote,
-		Height:        height,
+		Height:        m.Height,
 		Step:          step,
-		Round:         round,
+		Round:         m.Round,
 		Block:         block,
 		Justification: nil, // signature is computed below
 	}
 
 	msg.Justification = &typesCons.HotstuffMessage_PartialSignature{
 		PartialSignature: &typesCons.PartialSignature{
-			Signature: getMessageSignature(msg, privKey),
-			Address:   privKey.PublicKey().Address().String(),
+			Signature: getMessageSignature(msg, m.privateKey),
+			Address:   m.privateKey.PublicKey().Address().String(),
 		},
 	}
 
 	return msg, nil
 }
 
-// Returns "partial" signature of the hotstuff message from one of the validators.
-// If there is an error signing the bytes, nil is returned instead.
-func getMessageSignature(msg *typesCons.HotstuffMessage, privKey crypto.PrivateKey) []byte {
-	bytesToSign, err := getSignableBytes(msg)
+// Returns a "partial" signature of the hotstuff message from one of the validators
+func getMessageSignature(m *typesCons.HotstuffMessage, privKey crypto.PrivateKey) []byte {
+	bytesToSign, err := getSignableBytes(m)
 	if err != nil {
-		log.Printf("[WARN] error getting bytes to sign: %v\n", err)
 		return nil
 	}
-
 	signature, err := privKey.Sign(bytesToSign)
 	if err != nil {
-		log.Printf("[WARN] error signing message: %v\n", err)
+		log.Fatalf("Error signing message: %v", err)
 		return nil
 	}
-
 	return signature
 }
 
-// Signature only over subset of fields in HotstuffMessage
-// For reference, see section 4.3 of the the hotstuff whitepaper, partial signatures are
-// computed over `tsignr(hm.type, m.viewNumber , m.nodei)`. https://arxiv.org/pdf/1803.05069.pdf
-func getSignableBytes(msg *typesCons.HotstuffMessage) ([]byte, error) {
+// Signature should only be over a subset of the fields in a HotstuffMessage
+func getSignableBytes(m *typesCons.HotstuffMessage) ([]byte, error) {
 	msgToSign := &typesCons.HotstuffMessage{
-		Height: msg.GetHeight(),
-		Step:   msg.GetStep(),
-		Round:  msg.GetRound(),
-		Block:  msg.GetBlock(),
+		Height: m.Height,
+		Step:   m.Step,
+		Round:  m.Round,
+		Block:  m.Block,
 	}
-	return codec.GetCodec().Marshal(msgToSign)
+	return proto.Marshal(msgToSign)
 }

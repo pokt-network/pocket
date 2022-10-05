@@ -15,39 +15,25 @@ func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	return p.GetTx().Rollback(context.TODO())
 }
 
-func (p PostgresContext) UpdateAppHash() ([]byte, error) {
-	if err := p.updateStateHash(); err != nil {
-		return nil, err
-	}
-	return p.stateHash, nil
+func (p PostgresContext) AppHash() ([]byte, error) {
+	log.Println("TODO: AppHash not implemented")
+	return []byte("A real app hash, I am not"), nil
 }
 
 func (p PostgresContext) Reset() error {
 	panic("TODO: PostgresContext Reset not implemented")
 }
 
-func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
+func (p PostgresContext) Commit() error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
 
-	block, err := p.getBlock(proposerAddr, quorumCert)
-	if err != nil {
-		return err
-	}
-
-	if err := p.insertBlock(block); err != nil {
-		return err
-	}
-
-	if err := p.storeBlock(block); err != nil {
-		return err
-	}
-
 	ctx := context.TODO()
-	if err := p.GetTx().Commit(ctx); err != nil {
+	if err := p.GetTx().Commit(context.TODO()); err != nil {
 		return err
 	}
 	if err := p.conn.Close(ctx); err != nil {
 		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
+
 	}
 	return nil
 }
