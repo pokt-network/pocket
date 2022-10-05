@@ -5,6 +5,7 @@ package modules
 import (
 	"encoding/json"
 
+	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/shared/debug"
 )
 
@@ -29,4 +30,7 @@ type Bus interface {
 	// Configuration
 	GetConfig() map[string]json.RawMessage
 	GetGenesis() map[string]json.RawMessage
+
+	// Time
+	GetClock() clock.Clock
 }

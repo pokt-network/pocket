@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
+	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
 
@@ -24,8 +25,8 @@ var (
 /*** NewRound Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitTelemetryEvent(m, msg)
 	defer m.paceMaker.RestartTimer()
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -34,6 +35,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *Consensus
 
 	// Clear the previous utility context, if it exists, and create a new one
 	if err := m.refreshUtilityContext(); err != nil {
+		m.nodeLogError("Could not refresh utility context", err)
 		return
 	}
 
@@ -43,8 +45,8 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *Consensus
 /*** Prepare Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitTelemetryEvent(m, msg)
 	defer m.paceMaker.RestartTimer()
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -78,8 +80,8 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *ConsensusM
 /*** PreCommit Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitTelemetryEvent(m, msg)
 	defer m.paceMaker.RestartTimer()
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -94,7 +96,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *Consensu
 	}
 
 	m.Step = Commit
-	m.HighPrepareQC = quorumCert // INVESTIGATE: Why are we never using this for validation?
+	m.highPrepareQC = quorumCert // INVESTIGATE: Why are we never using this for validation?
 
 	preCommitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, PreCommit, m.Block, m.privateKey)
 	if err != nil {
@@ -107,8 +109,8 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *Consensu
 /*** Commit Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitTelemetryEvent(m, msg)
 	defer m.paceMaker.RestartTimer()
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -123,7 +125,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *ConsensusMo
 	}
 
 	m.Step = Decide
-	m.LockedQC = quorumCert // DISCUSS: How does the replica recover if it's locked? Replica `formally` agrees on the QC while the rest of the network `verbally` agrees on the QC.
+	m.lockedQC = quorumCert // DISCUSS: How does the replica recover if it's locked? Replica `formally` agrees on the QC while the rest of the network `verbally` agrees on the QC.
 
 	commitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, Commit, m.Block, m.privateKey)
 	if err != nil {
@@ -136,8 +138,8 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *ConsensusMo
 /*** Decide Step ***/
 
 func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
-	handler.emitTelemetryEvent(m, msg)
 	defer m.paceMaker.RestartTimer()
+	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
 		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
@@ -198,7 +200,7 @@ func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 		}
 	}
 
-	lockedQC := m.LockedQC
+	lockedQC := m.lockedQC
 	justifyQC := quorumCert
 
 	// Safety: not locked
@@ -214,10 +216,10 @@ func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 		return nil
 	}
 
-	// Liveness: node is locked on a QC from the past.
+	// Liveness: is node locked on a QC from the past?
 	// DISCUSS: Where should additional logic be added to unlock the node?
-	if justifyQC.Height > lockedQC.Height || (justifyQC.Height == lockedQC.Height && justifyQC.Round > lockedQC.Round) {
-		return typesCons.ErrNodeIsLockedOnPastQC
+	if isLocked, err := isNodeLockedOnPastQC(justifyQC, lockedQC); isLocked {
+		return err
 	}
 
 	return typesCons.ErrUnhandledProposalCase
@@ -229,7 +231,7 @@ func (m *ConsensusModule) applyBlock(block *typesCons.Block) error {
 	lastByzValidators := make([][]byte, 0)
 
 	// Apply all the transactions in the block and get the appHash
-	appHash, err := m.UtilityContext.ApplyBlock(int64(m.Height), block.BlockHeader.ProposerAddress, block.Transactions, lastByzValidators)
+	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), block.BlockHeader.ProposerAddress, block.Transactions, lastByzValidators)
 	if err != nil {
 		return err
 	}
@@ -262,13 +264,13 @@ func (m *ConsensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 	for _, partialSig := range qc.ThresholdSignature.Signatures {
 		validator, ok := m.validatorMap[partialSig.Address]
 		if !ok {
-			m.nodeLogError(typesCons.ErrMissingValidator(partialSig.Address, m.ValAddrToIdMap[partialSig.Address]).Error(), nil)
+			m.nodeLogError(typesCons.ErrMissingValidator(partialSig.Address, m.valAddrToIdMap[partialSig.Address]).Error(), nil)
 			continue
 		}
 		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
 		// just serialize `Message` once and verify each signature without re-serializing every time.
 		if !isSignatureValid(msgToJustify, validator.GetPublicKey(), partialSig.Signature) {
-			m.nodeLog(typesCons.WarnInvalidPartialSigInQC(partialSig.Address, m.ValAddrToIdMap[partialSig.Address]))
+			m.nodeLog(typesCons.WarnInvalidPartialSigInQC(partialSig.Address, m.valAddrToIdMap[partialSig.Address]))
 			continue
 		}
 		numValid++
@@ -278,6 +280,23 @@ func (m *ConsensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 	}
 
 	return nil
+}
+
+func isNodeLockedOnPastQC(justifyQC, lockedQC *types.QuorumCertificate) (bool, error) {
+	if isLockedOnPastHeight(justifyQC, lockedQC) {
+		return true, types.ErrNodeLockedPastHeight
+	} else if isLockedOnCurrHeightAndPastRound(justifyQC, lockedQC) {
+		return true, types.ErrNodeLockedPastHeight
+	}
+	return false, nil
+}
+
+func isLockedOnPastHeight(justifyQC, lockedQC *types.QuorumCertificate) bool {
+	return justifyQC.Height > lockedQC.Height
+}
+
+func isLockedOnCurrHeightAndPastRound(justifyQC, lockedQC *types.QuorumCertificate) bool {
+	return justifyQC.Height == lockedQC.Height && justifyQC.Round > lockedQC.Round
 }
 
 func qcToHotstuffMessage(qc *typesCons.QuorumCertificate) *typesCons.HotstuffMessage {

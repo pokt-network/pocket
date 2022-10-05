@@ -3,10 +3,9 @@ package utility
 import (
 	"math/big"
 
-	// TODO (andrew) importing consensus and persistence in this file?
+	// TODO(andrew): importing persistence in this file?
 	typesGenesis "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
-
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -104,7 +103,7 @@ func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
 
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
 func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators [][]byte) typesUtil.Error {
-	latestBlockHeight, err := u.GetLatestHeight()
+	latestBlockHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -143,10 +142,11 @@ func (u *UtilityContext) HandleByzantineValidators(lastBlockByzantineValidators 
 func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 	var er error
 	store := u.Store()
-	latestHeight, err := u.GetLatestHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
+
 	for _, utilActorType := range typesUtil.ActorTypes {
 		var readyToUnstake []modules.IUnstakingActor
 		poolName := utilActorType.GetActorPoolName()
@@ -171,16 +171,13 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 			if err = u.AddAccountAmountString(actor.GetOutputAddress(), actor.GetStakeAmount()); err != nil {
 				return err
 			}
-			if err = u.DeleteActor(utilActorType, actor.GetAddress()); err != nil {
-				return err
-			}
 		}
 	}
 	return nil
 }
 
 func (u *UtilityContext) BeginUnstakingMaxPaused() (err typesUtil.Error) {
-	latestHeight, err := u.GetLatestHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -257,10 +254,9 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error 
 
 // GetValidatorMissedBlocks gets the total blocks that a validator has not signed a certain window of time denominated by blocks
 func (u *UtilityContext) GetValidatorMissedBlocks(address []byte) (int, typesUtil.Error) {
-	store := u.Store()
-	height, er := store.GetHeight()
-	if er != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetMissedBlocks(er)
+	store, height, err := u.GetStoreAndHeight()
+	if err != nil {
+		return 0, err
 	}
 	missedBlocks, er := store.GetValidatorMissedBlocks(address, height)
 	if er != nil {

@@ -39,10 +39,10 @@ var (
 // ** Hotstuff Helpers ** //
 
 // IMPROVE: Avoid having the `ConsensusModule` be a receiver of this; making it more functional.
-// TODO: Add unit tests for quorumCert creation & validation.
+// TODO: Add unit tests for all quorumCert creation & validation logic...
 func (m *ConsensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
 	var pss []*typesCons.PartialSignature
-	for _, msg := range m.MessagePool[step] {
+	for _, msg := range m.messagePool[step] {
 		if msg.GetPartialSignature() == nil {
 			m.nodeLog(typesCons.WarnMissingPartialSig(msg))
 			continue
@@ -112,7 +112,7 @@ func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signa
 }
 
 func (m *ConsensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
-	return m.isOptimisticThresholdMet(len(m.MessagePool[step]))
+	return m.isOptimisticThresholdMet(len(m.messagePool[step]))
 }
 
 func (m *ConsensusModule) isOptimisticThresholdMet(n int) error {
@@ -121,6 +121,13 @@ func (m *ConsensusModule) isOptimisticThresholdMet(n int) error {
 		return typesCons.ErrByzantineThresholdCheck(n, ByzantineThreshold*float64(numValidators))
 	}
 	return nil
+}
+
+func (m *ConsensusModule) resetForNewHeight() {
+	m.Round = 0
+	m.Block = nil
+	m.highPrepareQC = nil
+	m.lockedQC = nil
 }
 
 func protoHash(m proto.Message) string {
@@ -146,7 +153,7 @@ func (m *ConsensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
 		return
 	}
-	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.IdToValAddrMap[*m.LeaderId]), anyConsensusMessage, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
+	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.idToValAddrMap[*m.LeaderId]), anyConsensusMessage, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
 		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return
 	}
@@ -170,14 +177,18 @@ func (m *ConsensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 // TECHDEBT: Integrate this with the `persistence` module or a real mempool.
 func (m *ConsensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
-		m.MessagePool[step] = make([]*typesCons.HotstuffMessage, 0)
+		m.messagePool[step] = make([]*typesCons.HotstuffMessage, 0)
 	}
 }
 
 /*** Leader Election Helpers ***/
 
+func (m *ConsensusModule) isLeaderUnknown() bool {
+	return m.LeaderId == nil
+}
+
 func (m *ConsensusModule) isLeader() bool {
-	return m.LeaderId != nil && *m.LeaderId == m.NodeId
+	return m.LeaderId != nil && *m.LeaderId == m.nodeId
 }
 
 func (m *ConsensusModule) isReplica() bool {
@@ -199,12 +210,12 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 	m.LeaderId = &leaderId
 
-	if m.LeaderId != nil && *m.LeaderId == m.NodeId {
-		m.logPrefix = "LEADER"
-		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
+	if m.isLeader() {
+		m.setLogPrefix("LEADER")
+		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.idToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	} else {
-		m.logPrefix = "REPLICA"
-		m.nodeLog(typesCons.ElectedNewLeader(m.IdToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
+		m.setLogPrefix("REPLICA")
+		m.nodeLog(typesCons.ElectedNewLeader(m.idToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
 	}
 
 	return nil
@@ -214,10 +225,14 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 // TODO(#164): Remove this once we have a proper logging system.
 func (m *ConsensusModule) nodeLog(s string) {
-	log.Printf("[%s][%d] %s\n", m.logPrefix, m.NodeId, s)
+	log.Printf("[%s][%d] %s\n", m.logPrefix, m.nodeId, s)
 }
 
 // TODO(#164): Remove this once we have a proper logging system.
 func (m *ConsensusModule) nodeLogError(s string, err error) {
-	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.NodeId, s, err)
+	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.nodeId, s, err)
+}
+
+func (m *ConsensusModule) setLogPrefix(logPrefix string) {
+	m.logPrefix = logPrefix
 }

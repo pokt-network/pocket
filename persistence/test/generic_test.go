@@ -117,14 +117,6 @@ func getAllActorsTest[T any](
 	actors, err = getAllActors(10)
 	require.NoError(t, err)
 	require.Len(t, actors, initialCount+3)
-
-	// INVESTIGATE: Since we do not support `DeleteActor` at the moment and TBD if we will, this
-	// code block is currently left as a reminder for now.
-	// for _, actor := range actors {
-	// 	db.Height++
-	// 	err = deleteActor(actor.Address)
-	// 	require.NoError(t, err)
-	// }
 }
 
 func getTestGetSetStakeAmountTest[T any](

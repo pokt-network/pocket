@@ -247,7 +247,10 @@ func (m *MockTelemetryConfig) GetEndpoint() string {
 	return m.Endpoint
 }
 
-type MockUtilityConfig struct{}
+type MockUtilityConfig struct {
+	MaxMempoolTransactionBytes uint64 `json:"max_mempool_transaction_bytes"`
+	MaxMempoolTransactions     uint32 `json:"max_mempool_transactions"`
+}
 
 var _ modules.Params = &MockParams{}
 

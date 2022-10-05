@@ -216,6 +216,7 @@ protogen_clean:
 protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = ".")
 	protoc --go_opt=paths=source_relative  -I=./shared/debug/proto        --go_out=./shared/debug       ./shared/debug/proto/*.proto        --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       ./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./shared/indexer/proto      --go_out=./shared/indexer/    ./shared/indexer/proto/*.proto      --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  ./persistence/proto/*.proto         --experimental_allow_proto3_optional
 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
@@ -276,6 +277,14 @@ test_shared: # generate_mocks
 ## Run all go unit tests in the Consensus module
 test_consensus: # mockgen
 	go test ${VERBOSE_TEST} ./consensus/...
+
+.PHONY: test_consensus_concurrent_tests
+## Run unit tests in the consensus module that could be prone to race conditions (#192)
+test_consensus_concurrent_tests:
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
 
 .PHONY: test_hotstuff
 ## Run all go unit tests related to hotstuff consensus

@@ -38,18 +38,18 @@ func (m *ConsensusModule) validateBlockBasic(block *typesCons.Block) error {
 func (m *ConsensusModule) refreshUtilityContext() error {
 	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
 	// Ideally, this should not be called.
-	if m.UtilityContext != nil {
+	if m.utilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
-		m.UtilityContext.ReleaseContext()
-		m.UtilityContext = nil
+		m.utilityContext.ReleaseContext()
+		m.utilityContext = nil
 	}
 
 	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
 	if err != nil {
 		return err
 	}
-	m.UtilityContext = utilityContext
 
+	m.utilityContext = utilityContext
 	return nil
 }
 

@@ -3,14 +3,14 @@ package shared
 import (
 	"log"
 
-	"github.com/pokt-network/pocket/shared/debug"
-	"github.com/pokt-network/pocket/telemetry"
-
+	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/telemetry"
 	"github.com/pokt-network/pocket/utility"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -23,11 +23,12 @@ const (
 )
 
 type Node struct {
+	clock   clock.Clock
 	bus     modules.Bus
 	Address cryptoPocket.Address
 }
 
-func Create(configPath, genesisPath string) (n *Node, err error) {
+func Create(configPath, genesisPath string, clock clock.Clock) (n *Node, err error) {
 	persistenceMod, err := persistence.Create(configPath, genesisPath)
 	if err != nil {
 		return nil, err
@@ -53,7 +54,7 @@ func Create(configPath, genesisPath string) (n *Node, err error) {
 		return nil, err
 	}
 
-	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod)
+	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod, clock)
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +65,7 @@ func Create(configPath, genesisPath string) (n *Node, err error) {
 	return &Node{
 		bus:     bus,
 		Address: addr,
+		clock:   clock,
 	}, nil
 }
 
@@ -171,4 +173,12 @@ func (node *Node) InitConfig(pathToConfigJSON string) (modules.IConfig, error) {
 
 func (node *Node) InitGenesis(pathToGenesisJSON string) (modules.IGenesis, error) {
 	return nil, nil
+}
+
+func (m *Node) SetClock(clock clock.Clock) {
+	m.clock = clock
+}
+
+func (m *Node) GetClock() clock.Clock {
+	return m.clock
 }
