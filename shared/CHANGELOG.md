@@ -7,8 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.2] - 2022-10-04
 
-## [0.0.1] - 2022-09-24
+- Updates to the `PersistenceModule` interface
+  - Added `ReleaseWriteContext`
+  - Removed `ResetContext`
+- Updates to the `PersistenceContext` interface
+  - Removed `Reset`
+  - Changed `AppHash` `UpdateAppHash`
+  - Changed `Commit()` to `Commit(proposerAddr, quorumCert)`
+- Updates to the `UtilityContext` interface
+  - Change `ReleaseContext` to `Release`
+  - Removed `GetPersistenceContext`
+  - Changed `CommitPersistenceContext()` to `Commit(quorumCert)`
+
+## [0.0.0.1] - 2022-09-24
+
 - Add unit test for `SharedCodec()`
 - Added `TestProtoStructure` for testing
 - Flaky tests troubleshooting - https://github.com/pokt-network/pocket/issues/192
