@@ -27,11 +27,11 @@ type FIFOMempool struct {
 	pool                 *list.List
 	size                 int
 	transactionBytes     int
-	maxTransactionsBytes int
-	maxTransactions      int
+	maxTransactionsBytes uint64
+	maxTransactions      uint32
 }
 
-func NewMempool(maxTransactionBytes int, maxTransactions int) Mempool {
+func NewMempool(maxTransactionBytes uint64, maxTransactions uint32) Mempool {
 	return &FIFOMempool{
 		l:                    sync.RWMutex{},
 		hashMap:              make(map[string]struct{}),
@@ -54,7 +54,7 @@ func (f *FIFOMempool) AddTransaction(tx []byte) Error {
 	f.hashMap[hashString] = struct{}{}
 	f.size++
 	f.transactionBytes += len(tx)
-	for f.size >= f.maxTransactions || f.transactionBytes >= f.maxTransactionsBytes {
+	for uint32(f.size) >= f.maxTransactions || uint64(f.transactionBytes) >= f.maxTransactionsBytes {
 		_, err := popTransaction(f)
 		if err != nil {
 			return err
