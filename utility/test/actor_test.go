@@ -48,6 +48,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 			require.NoError(t, er, "handle stake message")
 
 			actor := getActorByAddr(t, ctx, pubKey.Address().Bytes(), actorType)
+
 			require.Equal(t, actor.GetAddress(), pubKey.Address().String(), "incorrect actor address")
 			if actorType != typesUtil.UtilActorType_Val {
 				require.Equal(t, msg.Chains, actor.GetChains(), "incorrect actor chains")
@@ -56,7 +57,6 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 			require.Equal(t, test_artifacts.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect actor stake amount")
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "incorrect actor unstaking height")
 			require.Equal(t, outputAddress.String(), actor.GetOutput(), "incorrect actor output address")
-
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -67,10 +67,8 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 		t.Run(fmt.Sprintf("%s.HandleMessageEditStake", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
-
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
-
 			msg := &typesUtil.MessageEditStake{
 				Address:   addrBz,
 				Chains:    test_artifacts.DefaultChains,
@@ -109,8 +107,8 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageUnpause", actorType.GetActorName()), func(t *testing.T) {
-			ctx := NewTestingUtilityContext(t, 1)
 
+			ctx := NewTestingUtilityContext(t, 1)
 			var err error
 			switch actorType {
 			case typesUtil.UtilActorType_Val:
@@ -146,7 +144,6 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 
 			actor = getActorByAddr(t, ctx, addrBz, actorType)
 			require.Equal(t, int64(-1), actor.GetPausedHeight())
-
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -156,7 +153,6 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageUnstake", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
-
 			var err error
 			switch actorType {
 			case typesUtil.UtilActorType_App:
@@ -175,7 +171,6 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			actor := getFirstActor(t, ctx, actorType)
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
-
 			msg := &typesUtil.MessageUnstake{
 				Address:   addrBz,
 				Signer:    addrBz,
@@ -187,7 +182,6 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 
 			actor = getActorByAddr(t, ctx, addrBz, actorType)
 			require.Equal(t, defaultUnstaking, actor.GetUnstakingHeight(), "actor should be unstaking")
-
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -197,11 +191,10 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPaused", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
-			actor := getFirstActor(t, ctx, actorType)
 
+			actor := getFirstActor(t, ctx, actorType)
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
-
 			switch actorType {
 			case typesUtil.UtilActorType_App:
 				err = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
@@ -223,12 +216,19 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			require.NoError(t, err, "error beginning unstaking max paused actors")
 
 			status, err := ctx.GetActorStatus(actorType, addrBz)
-			require.NoError(t, err)
 			require.Equal(t, typesUtil.UnstakingStatus, status, "actor should be unstaking")
-
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
+}
+
+func TestUtilityContext_CalculateRelays(t *testing.T) {
+	ctx := NewTestingUtilityContext(t, 1)
+	actor := getAllTestingApps(t, ctx)[0]
+	newMaxRelays, err := ctx.CalculateAppRelays(actor.GetStakedAmount())
+	require.NoError(t, err)
+	require.Equal(t, actor.GetGenericParam(), newMaxRelays)
+	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
@@ -264,14 +264,12 @@ func TestUtilityContext_GetExists(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetExists", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
-			actor := getFirstActor(t, ctx, actorType)
 
+			actor := getFirstActor(t, ctx, actorType)
 			randAddr, err := crypto.GenerateAddress()
 			require.NoError(t, err)
-
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
-
 			exists, err := ctx.GetActorExists(actorType, addrBz)
 			require.NoError(t, err)
 			require.True(t, exists, "actor that should exist does not")
@@ -279,7 +277,6 @@ func TestUtilityContext_GetExists(t *testing.T) {
 			exists, err = ctx.GetActorExists(actorType, randAddr)
 			require.NoError(t, err)
 			require.False(t, exists, "actor that shouldn't exist does")
-
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -289,15 +286,14 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetOutputAddress", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
-			actor := getFirstActor(t, ctx, actorType)
 
+			actor := getFirstActor(t, ctx, actorType)
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
-
 			outputAddress, err := ctx.GetActorOutputAddress(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, actor.GetOutput(), hex.EncodeToString(outputAddress), "unexpected output address")
 
+			require.Equal(t, actor.GetOutput(), hex.EncodeToString(outputAddress), "unexpected output address")
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -306,14 +302,12 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetPauseHeightIfExists", actorType.GetActorName()), func(t *testing.T) {
-			pauseHeight := int64(100)
-
 			ctx := NewTestingUtilityContext(t, 0)
-			actor := getFirstActor(t, ctx, actorType)
 
+			pauseHeight := int64(100)
+			actor := getFirstActor(t, ctx, actorType)
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
-
 			err = ctx.SetActorPauseHeight(actorType, addrBz, pauseHeight)
 			require.NoError(t, err, "error setting actor pause height")
 
@@ -326,7 +320,6 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 
 			_, err = ctx.GetPauseHeight(actorType, randAddr)
 			require.Error(t, err, "non existent actor should error")
-
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -336,11 +329,10 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetMessageEditStakeSignerCandidates", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
-			actor := getFirstActor(t, ctx, actorType)
 
+			actor := getFirstActor(t, ctx, actorType)
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
-
 			msgEditStake := &typesUtil.MessageEditStake{
 				Address:   addrBz,
 				Chains:    test_artifacts.DefaultChains,
@@ -353,32 +345,19 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 			require.Equal(t, len(candidates), 2, "unexpected number of candidates")
 			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
 			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
-
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
-}
-
-func TestUtilityContext_CalculateAppRelays(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 1)
-
-	app := getFirstActor(t, ctx, typesUtil.UtilActorType_App)
-	newMaxRelays, err := ctx.CalculateAppRelays(app.GetStakedAmount())
-	require.NoError(t, err)
-	require.Equal(t, app.GetGenericParam(), newMaxRelays)
-
-	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetMessageUnpauseSignerCandidates", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
-			actor := getFirstActor(t, ctx, actorType)
 
+			actor := getFirstActor(t, ctx, actorType)
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
-
 			msg := &typesUtil.MessageUnpause{
 				Address:   addrBz,
 				ActorType: actorType,
@@ -389,7 +368,6 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 			require.Equal(t, len(candidates), 2, "unexpected number of candidates")
 			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
 			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
-
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -399,22 +377,19 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.GetMessageUnstakeSignerCandidates", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
-			actor := getFirstActor(t, ctx, actorType)
 
+			actor := getFirstActor(t, ctx, actorType)
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
-
 			msg := &typesUtil.MessageUnstake{
 				Address:   addrBz,
 				ActorType: actorType,
 			}
-
 			candidates, err := ctx.GetMessageUnstakeSignerCandidates(msg)
 			require.NoError(t, err)
 			require.Equal(t, len(candidates), 2, "unexpected number of candidates")
 			require.Equal(t, actor.GetOutput(), hex.EncodeToString(candidates[0]), "incorrect output candidate")
 			require.Equal(t, actor.GetAddress(), hex.EncodeToString(candidates[1]), "incorrect addr candidate")
-
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -424,12 +399,11 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 	for _, actorType := range typesUtil.ActorTypes {
 		t.Run(fmt.Sprintf("%s.UnstakePausedBefore", actorType.GetActorName()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
+
 			actor := getFirstActor(t, ctx, actorType)
 			require.Equal(t, actor.GetUnstakingHeight(), int64(-1), "wrong starting status")
-
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
-
 			err = ctx.SetActorPauseHeight(actorType, addrBz, 0)
 			require.NoError(t, err, "error setting actor pause height")
 
@@ -472,7 +446,6 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			}
 			require.NoError(t, err, "error getting unstaking blocks")
 			require.Equal(t, unstakingBlocks+1, actor.GetUnstakingHeight(), "incorrect unstaking height")
-
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -551,7 +524,6 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 		// ensure the staking pool is `# of readyToUnstake actors * default stake` less than before the unstake
 		poolAmountAfter, err := ctx.GetPoolAmount(poolName)
 		require.NoError(t, err)
-
 		actualPoolDelta := new(big.Int).Sub(poolAmountBefore, poolAmountAfter)
 		expectedPoolDelta := new(big.Int).Mul(big.NewInt(int64(len(actors))), test_artifacts.DefaultStakeAmount)
 		require.Equal(t, expectedPoolDelta, actualPoolDelta)
