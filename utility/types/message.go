@@ -40,7 +40,13 @@ type Message interface {
 
 	SetSigner(signer []byte)
 	ValidateBasic() Error
-	GetActorType() UtilActorType
+	GetActorType() ActorType
+}
+
+var _ Message = &MessageSend{}
+
+func (msg *MessageSend) GetActorType() ActorType {
+	return ActorType_Undefined // there's no actor type for message send, so return zero to allow fee retrieval
 }
 
 func (msg *MessageStake) ValidateBasic() Error {
@@ -111,17 +117,17 @@ func (msg *MessageChangeParameter) ValidateBasic() Error {
 	return nil
 }
 
-func (msg *MessageUnstake) ValidateBasic() Error              { return ValidateAddress(msg.Address) }
-func (msg *MessageUnpause) ValidateBasic() Error              { return ValidateAddress(msg.Address) }
-func (msg *MessageStake) SetSigner(signer []byte)             { msg.Signer = signer }
-func (msg *MessageEditStake) SetSigner(signer []byte)         { msg.Signer = signer }
-func (msg *MessageUnstake) SetSigner(signer []byte)           { msg.Signer = signer }
-func (msg *MessageUnpause) SetSigner(signer []byte)           { msg.Signer = signer }
-func (msg *MessageDoubleSign) SetSigner(signer []byte)        { msg.ReporterAddress = signer }
-func (msg *MessageSend) SetSigner(signer []byte)              { /*no op*/ }
-func (msg *MessageChangeParameter) SetSigner(signer []byte)   { msg.Signer = signer }
-func (x *MessageChangeParameter) GetActorType() UtilActorType { return -1 }
-func (x *MessageDoubleSign) GetActorType() UtilActorType      { return -1 }
+func (msg *MessageUnstake) ValidateBasic() Error            { return ValidateAddress(msg.Address) }
+func (msg *MessageUnpause) ValidateBasic() Error            { return ValidateAddress(msg.Address) }
+func (msg *MessageStake) SetSigner(signer []byte)           { msg.Signer = signer }
+func (msg *MessageEditStake) SetSigner(signer []byte)       { msg.Signer = signer }
+func (msg *MessageUnstake) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageUnpause) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageDoubleSign) SetSigner(signer []byte)      { msg.ReporterAddress = signer }
+func (msg *MessageSend) SetSigner(signer []byte)            { /*no op*/ }
+func (msg *MessageChangeParameter) SetSigner(signer []byte) { msg.Signer = signer }
+func (x *MessageChangeParameter) GetActorType() ActorType   { return -1 }
+func (x *MessageDoubleSign) GetActorType() ActorType        { return -1 }
 
 // helpers
 
@@ -192,13 +198,13 @@ func ValidateAmount(amount string) Error {
 	return nil
 }
 
-func ValidateActorType(_ UtilActorType) Error {
-	// DISCUSS if there's anything we can do here
+func ValidateActorType(_ ActorType) Error {
+	// TODO (team) not sure if there's anything we can do here
 	return nil
 }
 
-func ValidateServiceUrl(actorType UtilActorType, uri string) Error {
-	if actorType == UtilActorType_App {
+func ValidateServiceUrl(actorType ActorType, uri string) Error {
+	if actorType == ActorType_App {
 		return nil
 	}
 	uri = strings.ToLower(uri)
@@ -235,7 +241,7 @@ const (
 
 type RelayChain string
 
-// DISCUSS: adding a governance parameter for a list of valid relay chains
+// TODO: Consider adding a governance parameter for a list of valid relay chains
 func (rc *RelayChain) Validate() Error {
 	if rc == nil || *rc == "" {
 		return ErrEmptyRelayChain()
@@ -248,7 +254,7 @@ func (rc *RelayChain) Validate() Error {
 }
 
 type MessageStaker interface {
-	GetActorType() UtilActorType
+	GetActorType() ActorType
 	GetAmount() string
 	GetChains() []string
 	GetServiceUrl() string

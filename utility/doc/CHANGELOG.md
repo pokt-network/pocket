@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.6] - 2022-09-29
+## [0.0.0.5] - 2022-09-29
 
 - Remove unused `StoreBlock` function from the utility module interface
 
-## [0.0.0.5] - 2022-09-23
+## [0.0.0.4] - 2022-09-23
 
 - Created `UtilityConfig`
 - Added `max_mempool_transaction_bytes` and `max_mempool_transactions` to the utility
@@ -19,9 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Matched configuration unmarshalling pattern of other modules
 - Added V0 mempool default configurations
 - Regenerated build files with new mempool config
-
-## [0.0.0.4] - 2022-09-21
-
+- Consolidated `UtilActorType` in `utility` and `utility/types` to `typesUtil.ActorType`
+- Deprecated all code in `actor.go` and replaced with test helpers
+- Converted stake status to proto.enum (int32)
+- Added DISCUSS items around shared code and `StakeStatus`
 - Removed no-op `DeleteActor` code
 - Improved unit test for `UnstakeActorsThatAreReady()`
 - Removed all usages of `fmt.Sprintf()` from the testing package
@@ -49,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `UtilityConfig` uses shared interfaces in order to accept `MockUtilityConfig` in test_artifacts
 - Moved all utilty tests from shared to tests package
 - Left `TODO` for tests package still importing persistence for `NewTestPersistenceModule`
-  - This is one of the last places where cross-module importing exists
+    - This is one of the last places where cross-module importing exists
 
 ## [0.0.1] - 2022-07-20
 
@@ -69,18 +70,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added minimal 'proof of stake' implementation with few Pocket Specific terminologies and actors
-  - Structures
-    - Accounts
-    - Validators
-    - Fishermen
-    - Applications
-    - Service Nodes
-    - Pools
-  - Messages
-    - Stake
-    - Unstake
-    - EditStake
-    - Pause
-    - Unpause
-    - Send
+    - Structures
+        - Accounts
+        - Validators
+        - Fishermen
+        - Applications
+        - Service Nodes
+        - Pools
+    - Messages
+        - Stake
+        - Unstake
+        - EditStake
+        - Pause
+        - Unpause
+        - Send
 - Added initial governance params
