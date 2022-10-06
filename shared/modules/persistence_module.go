@@ -16,6 +16,7 @@ type PersistenceModule interface {
 	ReleaseWriteContext() error // Only one write context can exist at a time
 
 	// BlockStore interface
+	ResetContext() error // DEPRECATE(#252): Remove in #284 per the interface changes in #252
 	GetBlockStore() kvstore.KVStore
 
 	// Debugging / development only
