@@ -37,7 +37,7 @@ var (
 	DefaultMaxRelays     = types.BigIntToString(DefaultMaxRelaysBig)
 	StakeToUpdate        = types.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
 
-	DefaultStakeStatus     = persistence.StakedStatus
+	DefaultStakeStatus     = int32(persistence.StakedStatus)
 	DefaultPauseHeight     = int64(-1)
 	DefaultUnstakingHeight = int64(-1)
 

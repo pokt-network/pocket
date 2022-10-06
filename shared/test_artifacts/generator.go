@@ -41,10 +41,10 @@ var (
 // TODO (Team) this is meant to be a **temporary** replacement for the recently deprecated
 // 'genesis config' option. We need to implement a real suite soon!
 func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (modules.GenesisState, []string) {
-	apps, appsPrivateKeys := NewActors(types.UtilActorType_App, numApplications)
-	vals, validatorPrivateKeys := NewActors(types.UtilActorType_Val, numValidators)
-	serviceNodes, snPrivateKeys := NewActors(types.UtilActorType_Node, numServiceNodes)
-	fish, fishPrivateKeys := NewActors(types.UtilActorType_Fish, numFisherman)
+	apps, appsPrivateKeys := NewActors(types.ActorType_App, numApplications)
+	vals, validatorPrivateKeys := NewActors(types.ActorType_Validator, numValidators)
+	serviceNodes, snPrivateKeys := NewActors(types.ActorType_ServiceNode, numServiceNodes)
+	fish, fishPrivateKeys := NewActors(types.ActorType_Fisherman, numFisherman)
 
 	genesisState := runtime.NewGenesis(
 		&typesCons.ConsensusGenesisState{
@@ -114,8 +114,8 @@ func NewDefaultConfig(i int, pk string) modules.Config {
 }
 
 func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
-	for _, name := range typesPers.Pool_Names_name {
-		if name == typesPers.Pool_Names_FeeCollector.String() {
+	for _, name := range typesPers.PoolNames_name {
+		if name == typesPers.PoolNames_FeeCollector.String() {
 			pools = append(pools, &typesPers.Account{
 				Address: name,
 				Amount:  "0",
@@ -145,10 +145,10 @@ func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
 	return
 }
 
-func NewActors(actorType typesUtil.UtilActorType, n int) (actors []modules.Actor, privateKeys []string) {
+func NewActors(actorType typesUtil.ActorType, n int) (actors []modules.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
 		genericParam := fmt.Sprintf("node%d.consensus:8080", i+1)
-		if int32(actorType) == int32(types.UtilActorType_App) {
+		if int32(actorType) == int32(types.ActorType_App) {
 			genericParam = DefaultMaxRelaysString
 		}
 		actor, pk := NewDefaultActor(int32(actorType), genericParam)
@@ -163,7 +163,7 @@ func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor,
 	chains := DefaultChains
 	if actorType == int32(typesPers.ActorType_Val) {
 		chains = nil
-	} else if actorType == int32(types.UtilActorType_App) {
+	} else if actorType == int32(types.ActorType_App) {
 		genericParam = DefaultMaxRelaysString
 	}
 	return &typesPers.Actor{
