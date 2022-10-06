@@ -26,8 +26,8 @@ const (
 )
 
 type p2pModule struct {
-	bus       modules.Bus
-	p2pConfig *typesP2P.P2PConfig // TODO (olshansky): to remove this since it'll be available via the bus
+	bus    modules.Bus
+	p2pCfg *typesP2P.P2PConfig // TODO (olshansky): to remove this since it'll be available via the bus
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
@@ -63,7 +63,7 @@ func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) 
 		return nil, err
 	}
 	m = &p2pModule{
-		p2pConfig: p2pCfg,
+		p2pCfg: p2pCfg,
 
 		listener: l,
 		address:  privateKey.Address(),
@@ -100,12 +100,12 @@ func (m *p2pModule) Start() error {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	addrBook, err := ValidatorMapToAddrBook(m.p2pConfig, m.bus.GetConsensusModule().ValidatorMap())
+	addrBook, err := ValidatorMapToAddrBook(m.p2pCfg, m.bus.GetConsensusModule().ValidatorMap())
 	if err != nil {
 		return err
 	}
 
-	if m.p2pConfig.UseRainTree {
+	if m.p2pCfg.UseRainTree {
 		m.network = raintree.NewRainTreeNetwork(m.address, addrBook)
 	} else {
 		m.network = stdnetwork.NewNetwork(addrBook)
