@@ -168,7 +168,7 @@ func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema types.ProtocolActo
 	return
 }
 
-func (p *PostgresContext) GetActorStatus(actorSchema types.ProtocolActorSchema, address []byte, height int64) (int, error) {
+func (p *PostgresContext) GetActorStatus(actorSchema types.ProtocolActorSchema, address []byte, height int64) (int32, error) {
 	var unstakingHeight int64
 	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {

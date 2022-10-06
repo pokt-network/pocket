@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pokt-network/pocket/shared/codec"
+
 	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
@@ -25,7 +27,6 @@ import (
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -180,11 +181,15 @@ func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
 // define the interfaces used for debug/development. The latter will probably scale more but will
 // require more effort and pollute the source code with debugging information.
 func GetConsensusNodeState(node *shared.Node) typesCons.ConsensusNodeState {
-	return reflect.ValueOf(node.GetBus().GetConsensusModule()).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(typesCons.ConsensusNodeState)
+	return GetConsensusModImpl(node).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(typesCons.ConsensusNodeState)
 }
 
-func GetConsensusModImplementation(node *shared.Node) reflect.Value {
+func GetConsensusModElem(node *shared.Node) reflect.Value {
 	return reflect.ValueOf(node.GetBus().GetConsensusModule()).Elem()
+}
+
+func GetConsensusModImpl(node *shared.Node) reflect.Value {
+	return reflect.ValueOf(node.GetBus().GetConsensusModule())
 }
 
 /*** Debug/Development Message Helpers ***/
@@ -230,9 +235,11 @@ func WaitForNetworkConsensusMessages(
 ) (messages []*anypb.Any, err error) {
 
 	includeFilter := func(m *anypb.Any) bool {
-		var hotstuffMessage typesCons.HotstuffMessage
-		err := anypb.UnmarshalTo(m, &hotstuffMessage, proto.UnmarshalOptions{})
+		msg, err := codec.GetCodec().FromAny(m)
 		require.NoError(t, err)
+
+		hotstuffMessage, ok := msg.(*typesCons.HotstuffMessage)
+		require.True(t, ok)
 
 		return hotstuffMessage.Type == hotstuffMsgType && hotstuffMessage.Step == step
 	}
@@ -348,8 +355,7 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.M
 func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUtilityModule {
 	ctrl := gomock.NewController(t)
 	utilityMock := modulesMock.NewMockUtilityModule(ctrl)
-	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
-	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
+	utilityContextMock := baseUtilityContextMock(t)
 
 	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
 	utilityMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
@@ -358,8 +364,14 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 		Return(utilityContextMock, nil).
 		MaxTimes(4)
 
-	utilityContextMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
-	utilityContextMock.EXPECT().Release().Return(nil).AnyTimes()
+	return utilityMock
+}
+
+func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
+	ctrl := gomock.NewController(t)
+	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
+	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
+
 	utilityContextMock.EXPECT().
 		GetProposalTransactions(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
 		Return(make([][]byte, 0), nil).
@@ -368,10 +380,14 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(appHash, nil).
 		AnyTimes()
+	// utilityContextMock.EXPECT().CommitPersistenceContext().Return(nil).AnyTimes()
+	// utilityContextMock.EXPECT().Release().Return().AnyTimes()
+	// utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
 
 	persistenceContextMock.EXPECT().Commit(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	persistenceContextMock.EXPECT().StoreTransaction(gomock.Any()).Return(nil).AnyTimes()
 
-	return utilityMock
+	return utilityContextMock
 }
 
 func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockTelemetryModule {
@@ -382,26 +398,24 @@ func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockT
 
 	telemetryMock.EXPECT().Start().Do(func() {}).AnyTimes()
 	telemetryMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
-
 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
-	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).MaxTimes(1)
-	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
-
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
 	return telemetryMock
 }
 
 func baseTelemetryTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
 	ctrl := gomock.NewController(t)
-	timeseriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
-	return timeseriesAgentMock
+	timeSeriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
+	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).MaxTimes(1)
+	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
+	return timeSeriesAgentMock
 }
 
 func baseTelemetryEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAgent {
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	return eventMetricsAgentMock
 }
 

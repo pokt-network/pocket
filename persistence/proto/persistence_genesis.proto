@@ -18,20 +18,23 @@ message Account {
   string amount = 2;
 }
 
-enum Pool_Names {
-  DAO = 0;
-  FeeCollector = 1;
-  AppStakePool = 2;
-  ValidatorStakePool = 3;
-  ServiceNodeStakePool = 4;
-  FishermanStakePool = 5;
+// TODO(#258): Follow protobuf best practices
+enum PoolNames {
+  PoolNameUnspecified = 0;
+  DAO = 1;
+  FeeCollector = 2;
+  AppStakePool = 3;
+  ValidatorStakePool = 4;
+  ServiceNodeStakePool = 5;
+  FishermanStakePool = 7;
 }
 
 enum ActorType {
-  App = 0;
-  Node = 1;
-  Fish = 2;
-  Val = 3;
+  Undefined = 0;
+  App = 1;
+  Node = 2;
+  Fish = 3;
+  Val = 4;
 }
 
 message Actor {

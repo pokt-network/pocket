@@ -51,9 +51,11 @@ p2p
 ├── module.go                               # The implementation of the P2P Interface
 ├── raintree
 │   ├── addrbook_utils.go             # AddrBook utilities
-│   ├── addrbook_utils_test.go        # AddrBook utilities unit tests
+│   ├── peers_manager.go              # peersManager implementation
+│   ├── peers_manager_test.go         # peersManager unit tests
+│   ├── network_test.go               # network unit tests
 │   ├── network.go                    # Implementation of the Network interface using RainTree's specification
-│   ├── utils.go                    
+│   ├── utils.go
 │   └── types
 │       └── proto
 │           └── raintree.proto
@@ -64,8 +66,13 @@ p2p
 ├── telemetry
 │   ├── metrics.go
 ├── types
-│   ├── proto                         # Proto3 messages for generated types
+│   ├── addr_book.go                  # addrBook definition
+│   ├── addr_book_map.go              # addrBookMap definition
+│   ├── addr_list.go                  # addrList definition
 │   ├── network.go                    # Network Interface definition
+│   ├── network_peer.go               # networkPeer definition
+│   ├── proto                         # Proto3 messages for generated types
+│   ├── target.go                     # target definition
 └── utils.go
 ```
 

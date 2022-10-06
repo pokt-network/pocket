@@ -2,11 +2,12 @@ package test_artifacts
 
 import (
 	"fmt"
+	"math/big"
+	"strconv"
+
 	typesPersistence "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
-	"math/big"
-	"strconv"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -103,8 +104,8 @@ func NewDefaultConfig(i int, pk string) modules.Config {
 }
 
 func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
-	for _, name := range typesPersistence.Pool_Names_name {
-		if name == typesPersistence.Pool_Names_FeeCollector.String() {
+	for _, name := range typesPersistence.PoolNames_name {
+		if name == typesPersistence.PoolNames_FeeCollector.String() {
 			pools = append(pools, &MockAcc{
 				Address: name,
 				Amount:  "0",
