@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Matched configuration unmarshalling pattern of other modules
 - Added V0 mempool default configurations
 - Regenerated build files with new mempool config
-- Consolidated `ActorType` in `utility` and `utility/types` to `typesUtil.ActorType`
+- Consolidated `UtilActorType` in `utility` and `utility/types` to `typesUtil.ActorType`
 - Deprecated all code in `actor.go` and replaced with test helpers
 - Converted stake status to proto.enum (int32)
 - Added DISCUSS items around shared code and `StakeStatus`
