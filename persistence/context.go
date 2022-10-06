@@ -5,6 +5,14 @@ import (
 	"log"
 )
 
+func (p PostgresContext) UpdateAppHash() ([]byte, error) {
+	panic("INTRODUCE(#284): Add this function in #284 per the interface changes in #252.")
+}
+
+// func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
+// 	panic("INTRODUCE(#284): Add this function in #284 per the interface changes in #252.")
+// }
+
 func (p PostgresContext) NewSavePoint(bytes []byte) error {
 	log.Println("TODO: NewSavePoint not implemented")
 	return nil

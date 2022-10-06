@@ -41,8 +41,7 @@ type PersistenceRWContext interface {
 // - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
 // - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
 
-// NOTE: There's not really a use case for a write only interface,
-//       but it abstracts and contrasts nicely against the read only context
+// NOTE: There's not really a use case for a write only interface, but it abstracts and contrasts nicely against the read only context
 type PersistenceWriteContext interface {
 	// Context Operations
 	NewSavePoint([]byte) error
@@ -52,10 +51,19 @@ type PersistenceWriteContext interface {
 
 	// Block / indexer operations
 	UpdateAppHash() ([]byte, error)
+
 	// Commits the current context (height, hash, transactions, etc...) to finality.
-	Commit(proposerAddr []byte, quorumCert []byte) error
+	// Commit(proposerAddr []byte, quorumCert []byte) error // INTRODUCE(#284): Add this function in #284 per the interface changes in #252.
+
 	// Indexes the transaction
 	StoreTransaction(transactionProtoBytes []byte) error // Stores a transaction
+
+	// DEPRECATED(#252): Remove these functions in #284 per the interface changes in #252.
+	StoreBlock(blockProtoBytes []byte) error
+	InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error
+	AppHash() ([]byte, error)
+	Reset() error
+	Commit() error
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error

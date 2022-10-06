@@ -2,6 +2,7 @@ package utility
 
 import (
 	"encoding/hex"
+
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -10,7 +11,7 @@ import (
 type UtilityContext struct {
 	LatestHeight int64
 	Mempool      typesUtil.Mempool
-	Context      *Context // IMPROVE: Consider renmaming to PersistenceContext
+	Context      *Context // IMPROVE: Consider renaming to PersistenceContext
 }
 
 type Context struct {
@@ -50,6 +51,14 @@ func (u *UtilityContext) CommitPersistenceContext() error {
 func (u *UtilityContext) ReleaseContext() {
 	u.Context.Release()
 	u.Context = nil
+}
+
+func (u *UtilityContext) Release() error {
+	panic("INTRODUCE(#284): Add in #284 per the interface changes in #252.")
+}
+
+func (u *UtilityContext) Commit(quorumCert []byte) error {
+	panic("INTRODUCE(#284): Add in #284 per the interface changes in #252.")
 }
 
 func (u *UtilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {

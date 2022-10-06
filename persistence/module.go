@@ -194,6 +194,10 @@ func (m *PersistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	}, nil
 }
 
+func (m *PersistenceModule) ReleaseWriteContext() error {
+	panic("INTRODUCE(#284): Add this function in #284 per the interface changes in #252.")
+}
+
 func (m *PersistenceModule) ResetContext() error {
 	if m.writeContext != nil {
 		if !m.writeContext.GetTx().Conn().IsClosed() {
