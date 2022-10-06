@@ -9,7 +9,7 @@ import (
 	"sort"
 
 	"github.com/celestiaorg/smt"
-	typesUtil "github.com/pokt-network/pocket/utility/types"
+	"github.com/pokt-network/pocket/persistence/types"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -34,6 +34,27 @@ const (
 	lastMerkleTree
 )
 
+var actorTypeToMerkleTreeName map[types.ActorType]MerkleTree = map[types.ActorType]MerkleTree{
+	types.ActorType_App:  appMerkleTree,
+	types.ActorType_Val:  valMerkleTree,
+	types.ActorType_Fish: fishMerkleTree,
+	types.ActorType_Node: serviceNodeMerkleTree,
+}
+
+var merkleTreeToActorTypeName map[MerkleTree]types.ActorType = map[MerkleTree]types.ActorType{
+	appMerkleTree:         types.ActorType_App,
+	valMerkleTree:         types.ActorType_Val,
+	fishMerkleTree:        types.ActorType_Fish,
+	serviceNodeMerkleTree: types.ActorType_Node,
+}
+
+var actorTypeToSchemaName map[types.ActorType]types.ProtocolActorSchema = map[types.ActorType]types.ProtocolActorSchema{
+	types.ActorType_App:  types.ApplicationActor,
+	types.ActorType_Val:  types.ValidatorActor,
+	types.ActorType_Fish: types.FishermanActor,
+	types.ActorType_Node: types.ServiceNodeActor,
+}
+
 func newMerkleTrees() (map[MerkleTree]*smt.SparseMerkleTree, error) {
 	// We need a separate Merkle tree for each type of actor or storage
 	trees := make(map[MerkleTree]*smt.SparseMerkleTree, int(lastMerkleTree))
@@ -57,43 +78,33 @@ func (p *PostgresContext) updateStateHash() error {
 	for treeType := MerkleTree(0); treeType < lastMerkleTree; treeType++ {
 		switch treeType {
 		case appMerkleTree:
-			apps, err := p.getApplicationsUpdatedAtHeight(p.Height)
-			if err != nil {
-				// TODO_IN_THIS_COMMIT: Update this error
-				return typesUtil.NewError(typesUtil.Code(42), "Couldn't figure out apps updated")
-			}
-			for _, app := range apps {
-				appBz, err := proto.Marshal(app)
-				if err != nil {
-					return err
-				}
-				// An update results in a create/update that is idempotent
-				addrBz, err := hex.DecodeString(app.Address)
-				if err != nil {
-					return err
-				}
-				if _, err := p.MerkleTrees[treeType].Update(addrBz, appBz); err != nil {
-					return err
-				}
-			}
+			fallthrough
 		case valMerkleTree:
-			fmt.Println("TODO: valMerkleTree not implemented")
+			fallthrough
 		case fishMerkleTree:
-			fmt.Println("TODO: fishMerkleTree not implemented")
+			fallthrough
 		case serviceNodeMerkleTree:
-			fmt.Println("TODO: serviceNodeMerkleTree not implemented")
+			actorType, ok := merkleTreeToActorTypeName[treeType]
+			if !ok {
+				return fmt.Errorf("no actor type found for merkle tree: %v\n", treeType)
+			}
+			actors, err := p.getActorsUpdatedAtHeight(actorType, p.Height)
+			if err != nil {
+				return err
+			}
+			if err != p.updateActorsTree(actorType, actors) {
+				return err
+			}
 		case accountMerkleTree:
-			fmt.Println("TODO: accountMerkleTree not implemented")
+			log.Fatalf("TODO: accountMerkleTree not implemented")
 		case poolMerkleTree:
-			fmt.Println("TODO: poolMerkleTree not implemented")
+			log.Fatalf("TODO: poolMerkleTree not implemented")
 		case blocksMerkleTree:
-			// VERY VERY IMPORTANT DISCUSSION: What do we do here provided that `Commit`, which stores the block in the DB and tree
-			//                                 requires the quorumCert, which we receive at the very end of hotstuff consensus
-			fmt.Println("TODO: blocksMerkleTree not implemented")
+			log.Fatalf("TODO: blocksMerkleTree not implemented")
 		case paramsMerkleTree:
-			fmt.Println("TODO: paramsMerkleTree not implemented")
+			log.Fatalf("TODO: paramsMerkleTree not implemented")
 		case flagsMerkleTree:
-			fmt.Println("TODO: flagsMerkleTree not implemented")
+			log.Fatalf("TODO: flagsMerkleTree not implemented")
 		default:
 			log.Fatalln("Not handled yet in state commitment update", treeType)
 		}
@@ -102,7 +113,7 @@ func (p *PostgresContext) updateStateHash() error {
 	// Get the root of each Merkle Tree
 	roots := make([][]byte, 0)
 	for treeType := MerkleTree(0); treeType < lastMerkleTree; treeType++ {
-		roots = append(roots, p.MerkleTrees[treeType].Root())
+		roots = append(roots, p.merkleTrees[treeType].Root())
 	}
 
 	// Sort the merkle roots lexicographically
@@ -114,6 +125,60 @@ func (p *PostgresContext) updateStateHash() error {
 	rootsConcat := bytes.Join(roots, []byte{})
 	stateHash := sha256.Sum256(rootsConcat)
 
-	p.stateHash = stateHash[:]
+	p.currentStateHash = stateHash[:]
 	return nil
+}
+
+func (p PostgresContext) updateActorsTree(actorType types.ActorType, actors []*types.Actor) error {
+	for _, actor := range actors {
+		bzAddr, err := hex.DecodeString(actor.GetAddress())
+		if err != nil {
+			return err
+		}
+
+		appBz, err := proto.Marshal(actor)
+		if err != nil {
+			return err
+		}
+
+		merkleTreeName, ok := actorTypeToMerkleTreeName[actorType]
+		if !ok {
+			return fmt.Errorf("no merkle tree found for actor type: %s", actorType)
+		}
+
+		if _, err := p.merkleTrees[merkleTreeName].Update(bzAddr, appBz); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (p PostgresContext) getActorsUpdatedAtHeight(actorType types.ActorType, height int64) (actors []*types.Actor, err error) {
+	actorSchema, ok := actorTypeToSchemaName[actorType]
+	if !ok {
+		return nil, fmt.Errorf("no schema found for actor type: %s", actorType)
+	}
+
+	schemaActors, err := p.GetActorsUpdated(actorSchema, height)
+	if err != nil {
+		return nil, err
+	}
+
+	actors = make([]*types.Actor, len(schemaActors))
+	for _, actor := range actors {
+		actor := &types.Actor{
+			ActorType:       actorType,
+			Address:         actor.Address,
+			PublicKey:       actor.PublicKey,
+			Chains:          actor.Chains,
+			GenericParam:    actor.GenericParam,
+			StakedAmount:    actor.StakedAmount,
+			PausedHeight:    actor.PausedHeight,
+			UnstakingHeight: actor.UnstakingHeight,
+			Output:          actor.Output,
+		}
+		actors = append(actors, actor)
+	}
+	return
 }

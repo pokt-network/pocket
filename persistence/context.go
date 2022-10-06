@@ -16,11 +16,10 @@ func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 }
 
 func (p PostgresContext) UpdateAppHash() ([]byte, error) {
-
 	if err := p.updateStateHash(); err != nil {
 		return nil, err
 	}
-	return p.stateHash, nil
+	return p.currentStateHash, nil
 }
 
 func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
@@ -30,7 +29,6 @@ func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
 	if err != nil {
 		return err
 	}
-
 	if err := p.insertBlock(block); err != nil {
 		return err
 	}

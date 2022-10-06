@@ -21,7 +21,7 @@ import (
 
 func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
 	u.LatestHeight = latestHeight
-	u.CurrentProposer = proposerAddress
+	u.currentProposer = proposerAddress
 
 	// begin block lifecycle phase
 	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {

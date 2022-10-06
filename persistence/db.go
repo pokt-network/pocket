@@ -37,17 +37,17 @@ var protocolActorSchemas = []types.ProtocolActorSchema{
 var _ modules.PersistenceRWContext = &PostgresContext{}
 
 type PostgresContext struct {
-	Height     int64 // TODO(olshansky): `Height` is only externalized for testing purposes. Replace with helpers...
-	conn       *pgx.Conn
-	tx         pgx.Tx
-	blockstore kvstore.KVStore
+	Height int64 // TODO(olshansky): `Height` is only externalized for testing purposes. Replace with helpers...
+	conn   *pgx.Conn
+	tx     pgx.Tx
 
-	stateHash []byte
-	// IMPROVE: Depending on how the use of `PostgresContext` evolves, we may be able to get
-	// access to these directly via the postgres module.
-	PostgresDB  *pgx.Conn
-	BlockStore  kvstore.KVStore                      // REARCHITECT_IN_THIS_COMMIT: This is a passthrough from the persistence module (i.e. not context)
-	MerkleTrees map[MerkleTree]*smt.SparseMerkleTree // REARCHITECT_IN_THIS_COMMIT: This is a passthrough from the persistence module (i.e. not context)
+	currentBlockTxs  [][]byte
+	currentStateHash []byte
+
+	// REARCHITECT_IN_THIS_COMMIT: This is a passthrough from the persistence module (i.e. not context).
+	// Consider making this accessible via the persistence module interface and accessing it via the bus.
+	blockStore  kvstore.KVStore
+	merkleTrees map[MerkleTree]*smt.SparseMerkleTree
 }
 
 func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {

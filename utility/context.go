@@ -10,14 +10,15 @@ import (
 
 type UtilityContext struct {
 	LatestHeight    int64 // IMPROVE: Rename to `currentHeight?`
-	CurrentProposer []byte
+	currentProposer []byte
 
 	Mempool typesUtil.Mempool
 	Context *Context // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
 }
 
-type Context struct { // IMPROVE: Rename to `persistenceContext` or `storeContext`?
-	// TODO: Since `Context` embeds `PersistenceRWContext`, we don't need to do `u.Context.PersistenceRWContext`, but can call `u.Context` directly
+// IMPROVE: Consider renaming to `persistenceContext` or `storeContext`?
+type Context struct {
+	// CLEANUP: Since `Context` embeds `PersistenceRWContext`, we don't need to do `u.Context.PersistenceRWContext`, but can call `u.Context` directly
 	modules.PersistenceRWContext
 	// TODO/DISCUSS: `SavePoints`` have not been implemented yet
 	SavePointsM map[string]struct{}
@@ -51,7 +52,7 @@ func (u *UtilityContext) Release() error {
 }
 
 func (u *UtilityContext) Commit(quorumCert []byte) error {
-	return nil
+	return u.Context.Commit(u.currentProposer, quorumCert)
 }
 
 func (u *UtilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {

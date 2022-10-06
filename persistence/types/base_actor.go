@@ -155,5 +155,5 @@ func (x *Actor) GetActorTyp() modules.ActorType {
 	if x != nil {
 		return x.GetActorType()
 	}
-	return ActorType_App // HACK: Is this a hack?
+	return ActorType_Undefined
 }

@@ -46,7 +46,7 @@ func (p PostgresContext) TransactionExists(transactionHash string) (bool, error)
 }
 
 func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
-	log.Println("TODO: StoreTransaction not implemented")
+	p.currentBlockTxs = append(p.currentBlockTxs, transactionProtoBytes)
 	return nil
 }
 
@@ -62,29 +62,32 @@ func (p PostgresContext) insertBlock(block *types.Block) error {
 
 func (p PostgresContext) storeBlock(block *types.Block) error {
 	blockBz, err := proto.Marshal(block)
+
 	if err != nil {
 		return err
 	}
-
-	return p.blockstore.Put(heightToBytes(p.Height), blockBz)
+	return p.blockStore.Put(heightToBytes(p.Height), blockBz)
 }
 
 func (p PostgresContext) getBlock(proposerAddr []byte, quorumCert []byte) (*types.Block, error) {
-	prevHash, err := p.GetBlockHash(p.Height - 1)
-	if err != nil {
-		return nil, err
+	var prevHash []byte
+	if p.Height > 0 {
+		var err error
+		prevHash, err = p.GetBlockHash(p.Height - 1)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		prevHash = []byte("HACK: get hash from genesis")
 	}
-
-	// TODO: get this from the transactions that were store via `StoreTransaction`
-	txs := make([][]byte, 0)
 
 	block := &types.Block{
 		Height:            uint64(p.Height),
-		Hash:              string(p.stateHash),
+		Hash:              string(p.currentStateHash),
 		PrevHash:          string(prevHash),
 		ProposerAddress:   proposerAddr,
 		QuorumCertificate: quorumCert,
-		Transactions:      txs,
+		Transactions:      p.currentBlockTxs,
 	}
 
 	return block, nil
