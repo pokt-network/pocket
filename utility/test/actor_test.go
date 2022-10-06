@@ -20,8 +20,8 @@ import (
 // CLEANUP: Move `App` specific tests to `app_test.go`
 
 func TestUtilityContext_HandleMessageStake(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.HandleMessageStake", actorType.GetActorName()), func(t *testing.T) {
+	for _, actorType := range actorTypes {
+		t.Run(fmt.Sprintf("%s.HandleMessageStake", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			pubKey, err := crypto.GeneratePublicKey()
@@ -49,7 +49,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 			actor := getActorByAddr(t, ctx, pubKey.Address().Bytes(), actorType)
 
 			require.Equal(t, actor.GetAddress(), pubKey.Address().String(), "incorrect actor address")
-			if actorType != typesUtil.UtilActorType_Val {
+			if actorType != typesUtil.ActorType_Validator {
 				require.Equal(t, msg.Chains, actor.GetChains(), "incorrect actor chains")
 			}
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetPausedHeight(), "incorrect actor height")
@@ -62,8 +62,8 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.HandleMessageEditStake", actorType.GetActorName()), func(t *testing.T) {
+	for _, actorType := range actorTypes {
+		t.Run(fmt.Sprintf("%s.HandleMessageEditStake", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
 			addrBz, err := hex.DecodeString(actor.GetAddress())
@@ -104,22 +104,22 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.HandleMessageUnpause", actorType.GetActorName()), func(t *testing.T) {
+	for _, actorType := range actorTypes {
+		t.Run(fmt.Sprintf("%s.HandleMessageUnpause", actorType.String()), func(t *testing.T) {
 
 			ctx := NewTestingUtilityContext(t, 1)
 			var err error
 			switch actorType {
-			case typesUtil.UtilActorType_Val:
+			case typesUtil.ActorType_Validator:
 				err = ctx.Context.SetParam(modules.ValidatorMinimumPauseBlocksParamName, 0)
-			case typesUtil.UtilActorType_Node:
+			case typesUtil.ActorType_ServiceNode:
 				err = ctx.Context.SetParam(modules.ServiceNodeMinimumPauseBlocksParamName, 0)
-			case typesUtil.UtilActorType_App:
+			case typesUtil.ActorType_App:
 				err = ctx.Context.SetParam(modules.AppMinimumPauseBlocksParamName, 0)
-			case typesUtil.UtilActorType_Fish:
+			case typesUtil.ActorType_Fisherman:
 				err = ctx.Context.SetParam(modules.FishermanMinimumPauseBlocksParamName, 0)
 			default:
-				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
+				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
 			require.NoError(t, err, "error setting minimum pause blocks")
 
@@ -149,21 +149,21 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 }
 
 func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.HandleMessageUnstake", actorType.GetActorName()), func(t *testing.T) {
+	for _, actorType := range actorTypes {
+		t.Run(fmt.Sprintf("%s.HandleMessageUnstake", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 			var err error
 			switch actorType {
-			case typesUtil.UtilActorType_App:
+			case typesUtil.ActorType_App:
 				err = ctx.Context.SetParam(modules.AppMinimumPauseBlocksParamName, 0)
-			case typesUtil.UtilActorType_Val:
+			case typesUtil.ActorType_Validator:
 				err = ctx.Context.SetParam(modules.ValidatorMinimumPauseBlocksParamName, 0)
-			case typesUtil.UtilActorType_Fish:
+			case typesUtil.ActorType_Fisherman:
 				err = ctx.Context.SetParam(modules.FishermanMinimumPauseBlocksParamName, 0)
-			case typesUtil.UtilActorType_Node:
+			case typesUtil.ActorType_ServiceNode:
 				err = ctx.Context.SetParam(modules.ServiceNodeMinimumPauseBlocksParamName, 0)
 			default:
-				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
+				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
 			require.NoError(t, err, "error setting minimum pause blocks")
 
@@ -187,24 +187,24 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 }
 
 func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPaused", actorType.GetActorName()), func(t *testing.T) {
+	for _, actorType := range actorTypes {
+		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPaused", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
 			actor := getFirstActor(t, ctx, actorType)
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
 			switch actorType {
-			case typesUtil.UtilActorType_App:
+			case typesUtil.ActorType_App:
 				err = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
-			case typesUtil.UtilActorType_Val:
+			case typesUtil.ActorType_Validator:
 				err = ctx.Context.SetParam(modules.ValidatorMaxPausedBlocksParamName, 0)
-			case typesUtil.UtilActorType_Fish:
+			case typesUtil.ActorType_Fisherman:
 				err = ctx.Context.SetParam(modules.FishermanMaxPauseBlocksParamName, 0)
-			case typesUtil.UtilActorType_Node:
+			case typesUtil.ActorType_ServiceNode:
 				err = ctx.Context.SetParam(modules.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
-				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
+				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
 			require.NoError(t, err)
 
@@ -232,22 +232,22 @@ func TestUtilityContext_CalculateMaxAppRelays(t *testing.T) {
 }
 
 func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.CalculateUnstakingHeight", actorType.GetActorName()), func(t *testing.T) {
+	for _, actorType := range actorTypes {
+		t.Run(fmt.Sprintf("%s.CalculateUnstakingHeight", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			var unstakingBlocks int64
 			var err error
 			switch actorType {
-			case typesUtil.UtilActorType_Val:
+			case typesUtil.ActorType_Validator:
 				unstakingBlocks, err = ctx.GetValidatorUnstakingBlocks()
-			case typesUtil.UtilActorType_Node:
+			case typesUtil.ActorType_ServiceNode:
 				unstakingBlocks, err = ctx.GetServiceNodeUnstakingBlocks()
 			case actorType:
 				unstakingBlocks, err = ctx.GetAppUnstakingBlocks()
-			case typesUtil.UtilActorType_Fish:
+			case typesUtil.ActorType_Fisherman:
 				unstakingBlocks, err = ctx.GetFishermanUnstakingBlocks()
 			default:
-				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
+				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
 			require.NoError(t, err, "error getting unstaking blocks")
 
@@ -261,8 +261,8 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 }
 
 func TestUtilityContext_GetExists(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetExists", actorType.GetActorName()), func(t *testing.T) {
+	for _, actorType := range actorTypes {
+		t.Run(fmt.Sprintf("%s.GetExists", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -283,8 +283,8 @@ func TestUtilityContext_GetExists(t *testing.T) {
 }
 
 func TestUtilityContext_GetOutputAddress(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetOutputAddress", actorType.GetActorName()), func(t *testing.T) {
+	for _, actorType := range actorTypes {
+		t.Run(fmt.Sprintf("%s.GetOutputAddress", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -300,8 +300,8 @@ func TestUtilityContext_GetOutputAddress(t *testing.T) {
 }
 
 func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetPauseHeightIfExists", actorType.GetActorName()), func(t *testing.T) {
+	for _, actorType := range actorTypes {
+		t.Run(fmt.Sprintf("%s.GetPauseHeightIfExists", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			pauseHeight := int64(100)
@@ -326,8 +326,8 @@ func TestUtilityContext_GetPauseHeightIfExists(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetMessageEditStakeSignerCandidates", actorType.GetActorName()), func(t *testing.T) {
+	for _, actorType := range actorTypes {
+		t.Run(fmt.Sprintf("%s.GetMessageEditStakeSignerCandidates", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -351,8 +351,8 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetMessageUnpauseSignerCandidates", actorType.GetActorName()), func(t *testing.T) {
+	for _, actorType := range actorTypes {
+		t.Run(fmt.Sprintf("%s.GetMessageUnpauseSignerCandidates", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -374,8 +374,8 @@ func TestUtilityContext_GetMessageUnpauseSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.GetMessageUnstakeSignerCandidates", actorType.GetActorName()), func(t *testing.T) {
+	for _, actorType := range actorTypes {
+		t.Run(fmt.Sprintf("%s.GetMessageUnstakeSignerCandidates", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -396,8 +396,8 @@ func TestUtilityContext_GetMessageUnstakeSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
-		t.Run(fmt.Sprintf("%s.UnstakePausedBefore", actorType.GetActorName()), func(t *testing.T) {
+	for _, actorType := range actorTypes {
+		t.Run(fmt.Sprintf("%s.UnstakePausedBefore", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
 			actor := getFirstActor(t, ctx, actorType)
@@ -409,16 +409,16 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 
 			var er error
 			switch actorType {
-			case typesUtil.UtilActorType_App:
+			case typesUtil.ActorType_App:
 				er = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
-			case typesUtil.UtilActorType_Val:
+			case typesUtil.ActorType_Validator:
 				er = ctx.Context.SetParam(modules.ValidatorMaxPausedBlocksParamName, 0)
-			case typesUtil.UtilActorType_Fish:
+			case typesUtil.ActorType_Fisherman:
 				er = ctx.Context.SetParam(modules.FishermanMaxPauseBlocksParamName, 0)
-			case typesUtil.UtilActorType_Node:
+			case typesUtil.ActorType_ServiceNode:
 				er = ctx.Context.SetParam(modules.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
-				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
+				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
 			require.NoError(t, er, "error setting max paused blocks")
 
@@ -433,16 +433,16 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 
 			var unstakingBlocks int64
 			switch actorType {
-			case typesUtil.UtilActorType_Val:
+			case typesUtil.ActorType_Validator:
 				unstakingBlocks, err = ctx.GetValidatorUnstakingBlocks()
-			case typesUtil.UtilActorType_Node:
+			case typesUtil.ActorType_ServiceNode:
 				unstakingBlocks, err = ctx.GetServiceNodeUnstakingBlocks()
 			case actorType:
 				unstakingBlocks, err = ctx.GetAppUnstakingBlocks()
-			case typesUtil.UtilActorType_Fish:
+			case typesUtil.ActorType_Fisherman:
 				unstakingBlocks, err = ctx.GetFishermanUnstakingBlocks()
 			default:
-				t.Fatalf("unexpected actor type %s", actorType.GetActorName())
+				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
 			require.NoError(t, err, "error getting unstaking blocks")
 			require.Equal(t, unstakingBlocks+1, actor.GetUnstakingHeight(), "incorrect unstaking height")
@@ -452,26 +452,30 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 }
 
 func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
+	for _, actorType := range actorTypes {
 		ctx := NewTestingUtilityContext(t, 1)
 
-		poolName := actorType.GetActorPoolName()
+		poolName := ""
 		var err1, err2 error
 		switch actorType {
-		case typesUtil.UtilActorType_App:
+		case typesUtil.ActorType_App:
 			err1 = ctx.Context.SetParam(modules.AppUnstakingBlocksParamName, 0)
 			err2 = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
-		case typesUtil.UtilActorType_Val:
+			poolName = typesUtil.PoolNames_AppStakePool.String()
+		case typesUtil.ActorType_Validator:
 			err1 = ctx.Context.SetParam(modules.ValidatorUnstakingBlocksParamName, 0)
 			err2 = ctx.Context.SetParam(modules.ValidatorMaxPausedBlocksParamName, 0)
-		case typesUtil.UtilActorType_Fish:
+			poolName = typesUtil.PoolNames_ValidatorStakePool.String()
+		case typesUtil.ActorType_Fisherman:
 			err1 = ctx.Context.SetParam(modules.FishermanUnstakingBlocksParamName, 0)
 			err2 = ctx.Context.SetParam(modules.FishermanMaxPauseBlocksParamName, 0)
-		case typesUtil.UtilActorType_Node:
+			poolName = typesUtil.PoolNames_FishermanStakePool.String()
+		case typesUtil.ActorType_ServiceNode:
 			err1 = ctx.Context.SetParam(modules.ServiceNodeUnstakingBlocksParamName, 0)
 			err2 = ctx.Context.SetParam(modules.ServiceNodeMaxPauseBlocksParamName, 0)
+			poolName = typesUtil.PoolNames_ServiceNodeStakePool.String()
 		default:
-			t.Fatalf("unexpected actor type %s", actorType.GetActorName())
+			t.Fatalf("unexpected actor type %s", actorType.String())
 		}
 
 		err := ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
@@ -558,7 +562,7 @@ func getAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType typ
 			actors = append(actors, a)
 		}
 	default:
-		t.Fatalf("unexpected actor type %s", actorType.GetActorName())
+		t.Fatalf("unexpected actor type %s", actorType.String())
 	}
 
 	return
