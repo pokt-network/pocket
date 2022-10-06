@@ -84,6 +84,11 @@ go_protoc-go-inject-tag:
 go_clean_deps:
 	go mod tidy && go mod vendor
 
+.PHONY: go_lint
+## Run all linters that are triggered by the CI pipeline
+go_lint:
+	golangci-lint run ./...
+
 .PHONY: gofmt
 ## Format all the .go files in the project in place.
 gofmt:
@@ -325,11 +330,6 @@ test_p2p:
 ## Run all P2P addr book related tests
 test_p2p_addrbook:
 	go test -run AddrBook -v -count=1 ./p2p/...
-
-.PHONY: go_lint
-## Run all linters that are triggered by the CI pipeline
-go_lint:
-	golangci-lint run ./...
 
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library
