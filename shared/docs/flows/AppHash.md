@@ -7,6 +7,7 @@
 ## Context Initialization
 
 ```mermaid
+sequenceDiagram
     %% autonumber
     participant N as Node
     participant C as Consensus
@@ -15,7 +16,7 @@
     participant PP as Persistence (PostgresDB)
     participant PM as Persistence (MerkleTree)
     participant P2P as P2P
-    %% Should this be P2P?
+
     N-->>C: HandleMessage(anypb.Any)
     critical NewRound Message
         C->>+U: NewContext(height)
@@ -26,8 +27,10 @@
         C->>C: Store utilityContext
         Note over C, PM: See 'Block Application'
     end
+
     Note over N, P2P: Hotstuff lifecycle
     N-->>C: HandleMessage(anypb.Any)
+
     critical Decide Message
         Note over C, PM: See 'Block Commit'
     end
@@ -53,12 +56,12 @@ sequenceDiagram
         loop Update DB: for each operation in tx
             U->>P: ReadOp | WriteOp
             P->>PP: ReadOp | WriteOp
-            PP->>P: data | ok
-            P->>U: data | ok
+            PP->>P: result, err_code
+            P->>U: result, err_code
             U->>U: validate
             U->>P: StoreTransaction(tx)
             P->>P: store locally
-            P->>U: ok
+            P->>U: result, err_code
         end
         U->>+P: UpdateAppHash()
         loop for each protocol actor type
@@ -66,7 +69,7 @@ sequenceDiagram
             PP->>P: actors
             loop Update Tree: for each actor
                 P->>PM: Update(addr, serialized(actor))
-                PM->>P: ok
+                PM->>P: result, err_code
             end
             P->>PM: GetRoot()
             PM->>P: rootHash
@@ -91,14 +94,14 @@ sequenceDiagram
     U->>P: Commit(proposerAddr, quorumCert)
     P->>P: create typesPer.Block
     P->>PP: insertBlock(block)
-    PP->>P: ok
+    PP->>P: result, err_code
     P->>PK: Put(height, block)
-    PK->>P: ok
+    PK->>P: result, err_code
     P->>P: commit tx
-    P->>U: ok
+    P->>U: result, err_code
     U->>P: Release()
-    P->>U: ok
+    P->>U: result, err_code
     C->>U: Release()
-    U->>C: ok
+    U->>C: result, err_code
     C->>C: release utilityContext
 ```
