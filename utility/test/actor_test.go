@@ -83,7 +83,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			require.NoError(t, err, "handle edit stake message")
 
 			actor = getActorByAddr(t, ctx, addrBz, actorType)
-			if actorType != typesUtil.UtilActorType_Val {
+			if actorType != typesUtil.ActorType_Validator {
 				require.Equal(t, msgChainsEdited.Chains, actor.GetChains(), "incorrect edited chains")
 			}
 			require.Equal(t, test_artifacts.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect staked tokens")
@@ -216,7 +216,7 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 
 			status, err := ctx.GetActorStatus(actorType, addrBz)
 			require.NoError(t, err)
-			require.Equal(t, typesUtil.UnstakingStatus, status, "actor should be unstaking")
+			require.Equal(t, int32(typesUtil.StakeStatus_Unstaking), status, "actor should be unstaking")
 			test_artifacts.CleanupTest(ctx)
 		})
 	}
@@ -224,7 +224,7 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 
 func TestUtilityContext_CalculateMaxAppRelays(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 1)
-	actor := getFirstActor(t, ctx, typesUtil.UtilActorType_App)
+	actor := getFirstActor(t, ctx, typesUtil.ActorType_App)
 	newMaxRelays, err := ctx.CalculateAppRelays(actor.GetStakedAmount())
 	require.NoError(t, err)
 	require.Equal(t, actor.GetGenericParam(), newMaxRelays)
@@ -538,25 +538,25 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 
 // Helpers
 
-func getAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.UtilActorType) (actors []modules.Actor) {
+func getAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.ActorType) (actors []modules.Actor) {
 	actors = make([]modules.Actor, 0)
 	switch actorType {
-	case typesUtil.UtilActorType_App:
+	case typesUtil.ActorType_App:
 		apps := getAllTestingApps(t, ctx)
 		for _, a := range apps {
 			actors = append(actors, a)
 		}
-	case typesUtil.UtilActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		nodes := getAllTestingNodes(t, ctx)
 		for _, a := range nodes {
 			actors = append(actors, a)
 		}
-	case typesUtil.UtilActorType_Val:
+	case typesUtil.ActorType_Validator:
 		vals := getAllTestingValidators(t, ctx)
 		for _, a := range vals {
 			actors = append(actors, a)
 		}
-	case typesUtil.UtilActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		fish := getAllTestingFish(t, ctx)
 		for _, a := range fish {
 			actors = append(actors, a)
@@ -568,11 +568,11 @@ func getAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType typ
 	return
 }
 
-func getFirstActor(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.UtilActorType) modules.Actor {
+func getFirstActor(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.ActorType) modules.Actor {
 	return getAllTestingActors(t, ctx, actorType)[0]
 }
 
-func getActorByAddr(t *testing.T, ctx utility.UtilityContext, addr []byte, actorType typesUtil.UtilActorType) (actor modules.Actor) {
+func getActorByAddr(t *testing.T, ctx utility.UtilityContext, addr []byte, actorType typesUtil.ActorType) (actor modules.Actor) {
 	actors := getAllTestingActors(t, ctx, actorType)
 	for _, a := range actors {
 		if a.GetAddress() == hex.EncodeToString(addr) {
