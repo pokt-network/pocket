@@ -7,7 +7,8 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-type ValidatorMap map[string]Actor // TODO (Drewsky) deprecate Validator map or populate from persistence module
+// TODO(olshansky): deprecate ValidatorMap or populate from persistence module
+type ValidatorMap map[string]Actor
 
 // NOTE: Consensus is the core of the replicated state machine and is driven by various asynchronous events.
 // Consider adding a mutex lock to your implementation that is acquired at the beginning of each entrypoint/function implemented in this interface.
@@ -18,11 +19,11 @@ type ConsensusModule interface {
 	GenesisDependentModule
 	KeyholderModule
 
-	// Consensus Engine
+	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
 	HandleDebugMessage(*debug.DebugMessage) error
 
-	// Consensus State
+	// Consensus State Accessors
 	CurrentHeight() uint64
 	AppHash() string            // DISCUSS: Why not call this a BlockHash or StateHash? Should it be a []byte or string?
 	ValidatorMap() ValidatorMap // TODO: This needs to be dynamically updated during various operations and network changes.

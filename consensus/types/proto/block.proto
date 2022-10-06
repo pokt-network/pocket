@@ -5,7 +5,7 @@ option go_package = "github.com/pokt-network/pocket/consensus/types";
 
 import "google/protobuf/timestamp.proto";
 
-// TODO (Team) Discuss all tendermint legacy
+// TECHDEBT: Re-evaluate some tendermint legacy fields
 message BlockHeader {
   int64 height = 1;
   string hash = 2;

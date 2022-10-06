@@ -18,7 +18,7 @@ enum HotstuffStep {
 
 enum HotstuffMessageType {
     HOTSTUFF_MESSAGE_UNKNOWN = 0;
-    HOTSTUFF_MESAGE_PROPOSE = 1;
+    HOTSTUFF_MESSAGE_PROPOSE = 1;
     HOTSTUFF_MESSAGE_VOTE = 2;
 }
 

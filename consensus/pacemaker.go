@@ -204,7 +204,7 @@ func (p *paceMaker) InterruptRound() {
 	p.consensusMod.nodeLog(typesCons.PacemakerInterrupt(p.consensusMod.CurrentHeight(), p.consensusMod.Step, p.consensusMod.Round))
 
 	p.consensusMod.Round++
-	p.startNextView(p.consensusMod.HighPrepareQC, false)
+	p.startNextView(p.consensusMod.highPrepareQC, false)
 }
 
 func (p *paceMaker) NewHeight() {

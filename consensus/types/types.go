@@ -1,5 +1,6 @@
 package types
 
+// TODO: Split this file into multiple types files.
 import (
 	"sort"
 
