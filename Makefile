@@ -84,6 +84,11 @@ go_protoc-go-inject-tag:
 go_clean_deps:
 	go mod tidy && go mod vendor
 
+.PHONY: go_lint
+## Run all linters that are triggered by the CI pipeline
+go_lint:
+	golangci-lint run ./...
+
 .PHONY: gofmt
 ## Format all the .go files in the project in place.
 gofmt:
@@ -342,9 +347,11 @@ benchmark_p2p_addrbook:
 # HACK          - Like TECHDEBT, but much worse. This needs to be prioritized
 # REFACTOR      - Similar to TECHDEBT, but will require a substantial rewrite and change across the codebase
 # CONSIDERATION - A comment that involves extra work but was thoughts / considered as part of some implementation
+# CONSOLIDATE   - We likely have similar implementations/types of the same thing, and we should consolidate them.
+# DEPRECATE     - Code that should be removed in the future
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT"
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE"
 
 # How do I use TODOs?
 # 1. <KEYWORD>: <Description of follow up work>;
