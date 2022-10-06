@@ -149,7 +149,7 @@ func (m *PersistenceModule) populateGenesisState(state *types.PersistenceGenesis
 		log.Fatalf("an error occurred initializing flags: %s", err.Error())
 	}
 
-	if err = rwContext.Commit(); err != nil {
+	if err = rwContext.Commit([]byte("HACK: genesisProposerPlaceholder"), []byte("HACK: genesisQuorumCertPlaceholder")); err != nil {
 		log.Fatalf("an error occurred during commit() on genesis state %s ", err.Error())
 	}
 }

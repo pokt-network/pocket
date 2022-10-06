@@ -16,7 +16,6 @@ type PersistenceModule interface {
 	ReleaseWriteContext() error // Only one write context can exist at a time
 
 	// BlockStore interface
-	ResetContext() error // DEPRECATE(#252): Remove in #284 per the interface changes in #252
 	GetBlockStore() kvstore.KVStore
 
 	// Debugging / development only
@@ -54,17 +53,10 @@ type PersistenceWriteContext interface {
 	UpdateAppHash() ([]byte, error)
 
 	// Commits the current context (height, hash, transactions, etc...) to finality.
-	// Commit(proposerAddr []byte, quorumCert []byte) error // INTRODUCE(#284): Add this function in #284 per the interface changes in #252.
+	Commit(proposerAddr []byte, quorumCert []byte) error
 
 	// Indexes the transaction
 	StoreTransaction(transactionProtoBytes []byte) error // Stores a transaction
-
-	// DEPRECATED(#252): Remove these functions in #284 per the interface changes in #252.
-	StoreBlock(blockProtoBytes []byte) error
-	InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error
-	AppHash() ([]byte, error)
-	Reset() error
-	Commit() error
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error

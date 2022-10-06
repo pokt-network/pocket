@@ -21,12 +21,8 @@ type UtilityContext interface {
 	ApplyBlock(height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
 
 	// Context operations
-	Release() error                 // INTRODUCE(#284): Add in #284 per the interface changes in #252.
-	Commit(quorumCert []byte) error // INTRODUCE(#284): Add in #284 per the interface changes in #252.
-
-	ReleaseContext()                             // DEPRECATE(#252): Remove in #284 per the interface changes in #252
-	GetPersistenceContext() PersistenceRWContext // DEPRECATE(#252): Remove in #284 per the interface changes in #252
-	CommitPersistenceContext() error             // DEPRECATE(#252): Remove in #284 per the interface changes in #252
+	Release() error
+	Commit(quorumCert []byte) error
 
 	// Validation operations
 	CheckTransaction(tx []byte) error

@@ -44,7 +44,7 @@ func (m *PersistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 
 func (m *PersistenceModule) clearState(_ *debug.DebugMessage) {
 	context, err := m.NewRWContext(-1)
-	defer context.Commit()
+	defer context.Commit([]byte("HACK: debugClearStateProposerPlaceholder"), []byte("HACK: debugClearStateQuorumCertPlaceholder"))
 	if err != nil {
 		log.Printf("Error creating new context: %s \n", err)
 		return

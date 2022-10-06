@@ -5,14 +5,6 @@ import (
 	"log"
 )
 
-func (p PostgresContext) UpdateAppHash() ([]byte, error) {
-	panic("INTRODUCE(#284): Add this function in #284 per the interface changes in #252.")
-}
-
-// func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
-// 	panic("INTRODUCE(#284): Add this function in #284 per the interface changes in #252.")
-// }
-
 func (p PostgresContext) NewSavePoint(bytes []byte) error {
 	log.Println("TODO: NewSavePoint not implemented")
 	return nil
@@ -29,10 +21,6 @@ func (p PostgresContext) UpdateAppHash() ([]byte, error) {
 		return nil, err
 	}
 	return p.stateHash, nil
-}
-
-func (p PostgresContext) Reset() error {
-	panic("TODO: PostgresContext Reset not implemented")
 }
 
 func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
