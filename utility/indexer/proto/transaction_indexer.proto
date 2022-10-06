@@ -11,5 +11,5 @@ message DefaultTxResult {
   string error = 5; // INVESTIGATE(andrew): look into having a `utility.Error` enum for this
   string signer_addr = 6;
   string recipient_addr = 7;
-  string message_type = 8;
+  string message_type = 8; // CONSOLIDATE(M4): Once the message types are well defined and stable, consolidate them into an enum
 }

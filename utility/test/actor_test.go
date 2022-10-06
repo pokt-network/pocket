@@ -354,7 +354,7 @@ func TestUtilityContext_UnstakesPausedBefore(t *testing.T) {
 	actor := GetAllTestingApps(t, ctx)[0]
 	addrBz, err := hex.DecodeString(actor.GetAddress())
 	require.NoError(t, err)
-	require.Equal(t, -1, actor.GetUnstakingHeight())
+	require.Equal(t, int64(-1), actor.GetUnstakingHeight())
 	require.NoError(t, ctx.SetActorPauseHeight(typesUtil.UtilActorType_App, addrBz, 0), "set actor pause height")
 	err = ctx.Context.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
 	require.NoError(t, err)
