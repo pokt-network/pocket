@@ -84,6 +84,11 @@ go_protoc-go-inject-tag:
 go_clean_deps:
 	go mod tidy && go mod vendor
 
+.PHONY: go_lint
+## Run all linters that are triggered by the CI pipeline
+go_lint:
+	golangci-lint run ./...
+
 .PHONY: gofmt
 ## Format all the .go files in the project in place.
 gofmt:
@@ -240,17 +245,17 @@ protogen_docker: docker_check
 .PHONY: test_all
 ## Run all go unit tests
 test_all: # generate_mocks
-	go test -p=1 -count=1 ./...
+	go test -p 1 -count=1 ./...
 
 .PHONY: test_all_with_json
 ## Run all go unit tests, output results in json file
 test_all_with_json: # generate_mocks
-	go test -p=1 -json ./... > test_results.json
+	go test -p 1 -json ./... > test_results.json
 
 .PHONY: test_all_with_coverage
 ## Run all go unit tests, output results & coverage into files
 test_all_with_coverage: # generate_mocks
-	go test -p=1 -v ./... -covermode=count -coverprofile=coverage.out
+	go test -p 1 -v ./... -covermode=count -coverprofile=coverage.out
 	go tool cover -func=coverage.out -o=coverage.out
 
 .PHONY: test_race
@@ -261,7 +266,7 @@ test_race: # generate_mocks
 .PHONY: test_utility_module
 ## Run all go utility module unit tests
 test_utility_module: # generate_mocks
-	go test ${VERBOSE_TEST} -p=1 -count=1  ./shared/tests/utility_module/...
+	go test ${VERBOSE_TEST} -p 1 -count=1  ./shared/tests/utility_module/...
 
 .PHONY: test_utility_types
 ## Run all go utility types module unit tests
@@ -271,7 +276,7 @@ test_utility_types: # generate_mocks
 .PHONY: test_shared
 ## Run all go unit tests in the shared module
 test_shared: # generate_mocks
-	go test ${VERBOSE_TEST} -p=1 ./shared/...
+	go test ${VERBOSE_TEST} -p 1 ./shared/...
 
 .PHONY: test_consensus
 ## Run all go unit tests in the Consensus module
@@ -309,7 +314,7 @@ test_sortition:
 .PHONY: test_persistence
 ## Run all go unit tests in the Persistence module
 test_persistence:
-	go test ${VERBOSE_TEST} -p=1 -count=1 ./persistence/...
+	go test ${VERBOSE_TEST} -p 1 -count=1 ./persistence/...
 
 .PHONY: test_p2p_types
 ## Run p2p subcomponents' tests
@@ -347,9 +352,11 @@ benchmark_p2p_addrbook:
 # HACK          - Like TECHDEBT, but much worse. This needs to be prioritized
 # REFACTOR      - Similar to TECHDEBT, but will require a substantial rewrite and change across the codebase
 # CONSIDERATION - A comment that involves extra work but was thoughts / considered as part of some implementation
+# CONSOLIDATE   - We likely have similar implementations/types of the same thing, and we should consolidate them.
+# DEPRECATE     - Code that should be removed in the future
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT"
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE"
 
 # How do I use TODOs?
 # 1. <KEYWORD>: <Description of follow up work>;

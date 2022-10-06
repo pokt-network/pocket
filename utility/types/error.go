@@ -433,7 +433,7 @@ func ErrNotReadyToUnpause() Error {
 	return NewError(CodeNotReadyToUnpauseError, fmt.Sprintf("%s", NotReadyToUnpauseError))
 }
 
-func ErrInvalidStatus(got, expected int) Error {
+func ErrInvalidStatus(got, expected int32) Error {
 	return NewError(CodeInvalidStatusError, fmt.Sprintf("%s: %d expected %d", InvalidStatusError, got, expected))
 }
 

@@ -96,22 +96,22 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 }
 
 func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
+	for _, actorType := range actorTypes {
 		ctx := NewTestingUtilityContext(t, 1)
 		actor := GetFirstActor(t, ctx, actorType)
 
 		var err error
 		switch actorType {
-		case typesUtil.UtilActorType_App:
+		case typesUtil.ActorType_App:
 			err = ctx.Context.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
-		case typesUtil.UtilActorType_Val:
+		case typesUtil.ActorType_Validator:
 			err = ctx.Context.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
-		case typesUtil.UtilActorType_Fish:
+		case typesUtil.ActorType_Fisherman:
 			err = ctx.Context.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
-		case typesUtil.UtilActorType_Node:
+		case typesUtil.ActorType_ServiceNode:
 			err = ctx.Context.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
 		default:
-			t.Fatalf("unexpected actor type %s", actorType.GetActorName())
+			t.Fatalf("unexpected actor type %s", actorType.String())
 		}
 		require.NoError(t, err)
 		addrBz, er := hex.DecodeString(actor.GetAddress())
@@ -123,7 +123,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 		require.NoError(t, err)
 
 		status, err := ctx.GetActorStatus(actorType, addrBz)
-		require.Equal(t, typesUtil.UnstakingStatus, status, "incorrect status")
+		require.Equal(t, int32(typesUtil.StakeStatus_Unstaking), status, "incorrect status")
 
 		test_artifacts.CleanupTest(ctx)
 	}
@@ -184,9 +184,21 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 }
 
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
+	for _, actorType := range actorTypes {
 		ctx := NewTestingUtilityContext(t, 1)
-		poolName := actorType.GetActorPoolName()
+		var poolName string
+		switch actorType {
+		case typesUtil.ActorType_App:
+			poolName = typesUtil.PoolNames_AppStakePool.String()
+		case typesUtil.ActorType_Validator:
+			poolName = typesUtil.PoolNames_ValidatorStakePool.String()
+		case typesUtil.ActorType_Fisherman:
+			poolName = typesUtil.PoolNames_FishermanStakePool.String()
+		case typesUtil.ActorType_ServiceNode:
+			poolName = typesUtil.PoolNames_ServiceNodeStakePool.String()
+		default:
+			t.Fatalf("unexpected actor type %s", actorType.String())
+		}
 
 		ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
 		err := ctx.Context.SetParam(typesUtil.AppUnstakingBlocksParamName, 0)
