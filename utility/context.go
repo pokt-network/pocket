@@ -44,14 +44,25 @@ func (u *UtilityContext) Store() *Context {
 	return u.Context
 }
 
-func (u *UtilityContext) Commit(quorumCert []byte) error {
-	return u.Context.PersistenceRWContext.Commit([]byte("TODO: proposerAddr placeholder"), quorumCert)
+func (u *UtilityContext) GetPersistenceContext() modules.PersistenceRWContext {
+	return u.Context.PersistenceRWContext
+}
+
+func (u *UtilityContext) CommitPersistenceContext() error {
+	return u.Context.PersistenceRWContext.Commit()
+}
+
+func (u *UtilityContext) ReleaseContext() {
+	u.Context.Release()
+	u.Context = nil
 }
 
 func (u *UtilityContext) Release() error {
-	u.Context.Release()
-	u.Context = nil
-	return nil
+	panic("INTRODUCE(#284): Add in #284 per the interface changes in #252.")
+}
+
+func (u *UtilityContext) Commit(quorumCert []byte) error {
+	panic("INTRODUCE(#284): Add in #284 per the interface changes in #252.")
 }
 
 func (u *UtilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {
@@ -103,7 +114,7 @@ func (u *UtilityContext) NewSavePoint(transactionHash []byte) typesUtil.Error {
 }
 
 func (c *Context) Reset() typesUtil.Error {
-	if err := c.PersistenceRWContext.Release(); err != nil {
+	if err := c.PersistenceRWContext.Reset(); err != nil {
 		return typesUtil.ErrResetContext(err)
 	}
 	return nil

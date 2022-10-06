@@ -171,6 +171,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 
 	test_artifacts.CleanupTest(ctx)
 }
+
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 	for _, actorType := range actorTypes {
 		ctx := NewTestingUtilityContext(t, 1)

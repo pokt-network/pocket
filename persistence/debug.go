@@ -44,7 +44,7 @@ func (m *PersistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 
 func (m *PersistenceModule) clearState(_ *debug.DebugMessage) {
 	context, err := m.NewRWContext(-1)
-	defer context.Commit([]byte("DebugProposerAddr"), []byte("DebugQuorumCert"))
+	defer context.Commit()
 	if err != nil {
 		log.Printf("Error creating new context: %s \n", err)
 		return
