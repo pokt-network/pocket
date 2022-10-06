@@ -63,7 +63,8 @@ jobs:
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: golangci/golangci-lint-action@v3
         with:
-          args: --issues-exit-code=0 # TODO: Remove this once we fix all the issues.
+          only-new-issues: true
+          # args: --issues-exit-code=0 # TODO: Remove this once we fix all the issues.
       - name: create coverage report
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         run: make test_all_with_coverage
