@@ -2,7 +2,6 @@ package utility
 
 import (
 	"encoding/hex"
-
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -40,14 +39,17 @@ func (u *UtilityContext) Store() *Context {
 	return u.Context
 }
 
-func (u *UtilityContext) Commit(quorumCert []byte) error {
-	return u.Context.PersistenceRWContext.Commit([]byte("TODO: proposerAddr placeholder"), quorumCert)
+func (u *UtilityContext) GetPersistenceContext() modules.PersistenceRWContext {
+	return u.Context.PersistenceRWContext
 }
 
-func (u *UtilityContext) Release() error {
+func (u *UtilityContext) CommitPersistenceContext() error {
+	return u.Context.PersistenceRWContext.Commit()
+}
+
+func (u *UtilityContext) ReleaseContext() {
 	u.Context.Release()
 	u.Context = nil
-	return nil
 }
 
 func (u *UtilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {
@@ -99,7 +101,7 @@ func (u *UtilityContext) NewSavePoint(transactionHash []byte) typesUtil.Error {
 }
 
 func (c *Context) Reset() typesUtil.Error {
-	if err := c.PersistenceRWContext.Release(); err != nil {
+	if err := c.PersistenceRWContext.Reset(); err != nil {
 		return typesUtil.ErrResetContext(err)
 	}
 	return nil

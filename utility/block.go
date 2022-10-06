@@ -37,7 +37,7 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 		if err := u.ApplyTransaction(tx); err != nil {
 			return nil, err
 		}
-		if err := u.Context.PersistenceRWContext.StoreTransaction(transactionProtoBytes); err != nil {
+		if err := u.GetPersistenceContext().StoreTransaction(transactionProtoBytes); err != nil {
 			return nil, err
 		}
 
@@ -80,7 +80,7 @@ func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
 
 func (u *UtilityContext) GetAppHash() ([]byte, typesUtil.Error) {
 	// Get the root hash of the merkle state tree for state consensus integrity
-	appHash, er := u.Context.UpdateAppHash()
+	appHash, er := u.Context.AppHash()
 	if er != nil {
 		return nil, typesUtil.ErrAppHash(er)
 	}

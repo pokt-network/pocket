@@ -194,7 +194,7 @@ func (m *PersistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	}, nil
 }
 
-func (m *PersistenceModule) ReleaseWriteContext() error {
+func (m *PersistenceModule) ResetContext() error {
 	if m.writeContext != nil {
 		if !m.writeContext.GetTx().Conn().IsClosed() {
 			if err := m.writeContext.Release(); err != nil {

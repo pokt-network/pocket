@@ -15,12 +15,16 @@ func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	return p.GetTx().Rollback(context.TODO())
 }
 
-func (p PostgresContext) UpdateAppHash() ([]byte, error) {
+func (p PostgresContext) AppHash() ([]byte, error) {
 	log.Println("TODO: AppHash not implemented")
 	return []byte("A real app hash, I am not"), nil
 }
 
-func (p PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
+func (p PostgresContext) Reset() error {
+	panic("TODO: PostgresContext Reset not implemented")
+}
+
+func (p PostgresContext) Commit() error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
 
 	ctx := context.TODO()
