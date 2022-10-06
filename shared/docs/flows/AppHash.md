@@ -6,6 +6,8 @@
 
 ## Context Initialization
 
+This flow shows the process of context initialization between all the modules requirer to apply a block and compute a state hash during the consensus lifecycle.
+
 ```mermaid
 sequenceDiagram
     %% autonumber
@@ -13,8 +15,6 @@ sequenceDiagram
     participant C as Consensus
     participant U as Utility
     participant P as Persistence
-    participant PP as Persistence (PostgresDB)
-    participant PM as Persistence (MerkleTree)
     participant P2P as P2P
 
     N-->>C: HandleMessage(anypb.Any)
@@ -22,17 +22,17 @@ sequenceDiagram
         C->>+U: NewContext(height)
         U->>P: NewRWContext(height)
         P->>U: PersistenceRWContext
-        U->>U: Store persistenceContext
+        U->>U: store context<br>locally
         U->>-C: UtilityContext
-        C->>C: Store utilityContext
-        Note over C, PM: See 'Block Application'
+        C->>C: store context<br>locally
+        Note over C, P: See 'Block Application'
     end
 
     Note over N, P2P: Hotstuff lifecycle
     N-->>C: HandleMessage(anypb.Any)
 
     critical Decide Message
-        Note over C, PM: See 'Block Commit'
+        Note over C, P: See 'Block Commit'
     end
 ```
 
@@ -43,42 +43,30 @@ sequenceDiagram
     participant C as Consensus
     participant U as Utility
     participant P as Persistence
-    participant PP as Persistence (PostgresDB)
-    participant PM as Persistence (MerkleTree)
 
     alt as leader
         C->>+U: GetProposalTransactions(proposer, maxTxBz, [lastVal])
         U->>U: reap mempool
         U->>-C: txs
-        Note over C, U: Perform replica behaviour
+        Note over C, U: fallthrough to replica behaviour
     else as replica
         C->>+U: ApplyBlock(height, proposer, txs, lastVals)
-        loop Update DB: for each operation in tx
-            U->>P: ReadOp | WriteOp
-            P->>PP: ReadOp | WriteOp
-            PP->>P: result, err_code
+        loop for each operation in tx
+            U->>P: Get*/Set*
             P->>U: result, err_code
-            U->>U: validate
+            U->>U: validation<br>logic
             U->>P: StoreTransaction(tx)
-            P->>P: store locally
+            P->>P: store tx<br>locally
             P->>U: result, err_code
         end
         U->>+P: UpdateAppHash()
-        loop for each protocol actor type
-            P->>PP: GetActorsUpdate(height)
-            PP->>P: actors
-            loop Update Tree: for each actor
-                P->>PM: Update(addr, serialized(actor))
-                PM->>P: result, err_code
-            end
-            P->>PM: GetRoot()
-            PM->>P: rootHash
-        end
-        P->>P: computeStateHash(rootHashes)
+        Note over P: Update State Hash
         P->>-U: stateHash
-        U->>-C: hash
+        U->>-C: stateHash
     end
 ```
+
+The [V1 Persistence Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/persistence) outlines the use of a **PostgresDB** and **Merkle Trees** to implement the `Update State Hash` component. This is an internal detail which can be done differently depending on the implementation. For the core V1 implementation, see the flows outlined [here](../../../persistence/docs/AppHash.md).
 
 ## Block Commit
 
@@ -88,16 +76,11 @@ sequenceDiagram
     participant C as Consensus
     participant U as Utility
     participant P as Persistence
-    participant PP as Persistence (PostgresDB)
-    participant PK as Persistence (Key-Value Store)
+
     C->>U: CommitContext(quorumCert)
     U->>P: Commit(proposerAddr, quorumCert)
-    P->>P: create typesPer.Block
-    P->>PP: insertBlock(block)
-    PP->>P: result, err_code
-    P->>PK: Put(height, block)
-    PK->>P: result, err_code
-    P->>P: commit tx
+    P->>P: reap stored transactions
+    Note over P: Create And Store Block
     P->>U: result, err_code
     U->>P: Release()
     P->>U: result, err_code
@@ -105,3 +88,5 @@ sequenceDiagram
     U->>C: result, err_code
     C->>C: release utilityContext
 ```
+
+The [V1 Persistence Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/persistence) outlines the use of a **key-value store** to implement the `Create And Store Block` component. This is an internal detail which can be done differently depending on the implementation. For the core V1 implementation, see the flows outlined [here](../../../persistence/docs/AppHash.md).
