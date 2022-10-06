@@ -23,11 +23,11 @@ func (p PostgresContext) GetValidator(address []byte, height int64) (operator, p
 	return
 }
 
-func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedAmount string, pausedHeight int64, unstakingHeight int64) error {
+func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, output []byte, _ bool, _ int32, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(types.ValidatorActor, types.BaseActor{
 		Address:            hex.EncodeToString(address),
 		PublicKey:          hex.EncodeToString(publicKey),
-		StakedTokens:       stakedAmount,
+		StakedTokens:       stakedTokens,
 		ActorSpecificParam: serviceURL,
 		OutputAddress:      hex.EncodeToString(output),
 		PausedHeight:       pausedHeight,
@@ -51,15 +51,15 @@ func (p PostgresContext) SetValidatorStakeAmount(address []byte, stakeAmount str
 	return p.SetActorStakeAmount(types.ValidatorActor, address, stakeAmount)
 }
 
-func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, _ int) ([]modules.IUnstakingActor, error) {
+func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, status int32) ([]modules.IUnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.ValidatorActor, height)
 }
 
-func (p PostgresContext) GetValidatorStatus(address []byte, height int64) (int, error) {
+func (p PostgresContext) GetValidatorStatus(address []byte, height int64) (int32, error) {
 	return p.GetActorStatus(types.ValidatorActor, address, height)
 }
 
-func (p PostgresContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, _ int) error {
+func (p PostgresContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error {
 	return p.SetActorUnstakingHeightAndStatus(types.ValidatorActor, address, unstakingHeight)
 }
 
@@ -67,7 +67,7 @@ func (p PostgresContext) GetValidatorPauseHeightIfExists(address []byte, height 
 	return p.GetActorPauseHeightIfExists(types.ValidatorActor, address, height)
 }
 
-func (p PostgresContext) SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
+func (p PostgresContext) SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error {
 	return p.SetActorStatusAndUnstakingHeightIfPausedBefore(types.ValidatorActor, pausedBeforeHeight, unstakingHeight)
 }
 

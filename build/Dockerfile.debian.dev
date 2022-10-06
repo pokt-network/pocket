@@ -1,7 +1,7 @@
 # Purpose of this container image is to ship pocket binary with additional
 # tools such as dlv, curl, etc.
 
-ARG TARGET_GOLANG_VERSION=1.18
+ARG TARGET_GOLANG_VERSION=1.19
 
 FROM golang:${TARGET_GOLANG_VERSION}-bullseye AS builder
 
@@ -33,7 +33,7 @@ RUN set -eux; \
     unzip -q protoc.zip -d /usr/local/; \
     protoc --version
 
-# dlv 
+# dlv
 RUN go install github.com/go-delve/delve/cmd/dlv@latest; \
     dlv version
 

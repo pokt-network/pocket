@@ -73,8 +73,8 @@ func (m *PersistenceModule) populateGenesisState(state *types.PersistenceGenesis
 		if err != nil {
 			log.Fatalf("an error occurred inserting an app in the genesis state: %s", err.Error())
 		}
-		if err = addValueToPool(types.Pool_Names_AppStakePool.String(), act.GetStakedAmount()); err != nil {
-			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.Pool_Names_AppStakePool, err.Error())
+		if err = addValueToPool(types.PoolNames_AppStakePool.String(), act.GetStakedAmount()); err != nil {
+			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.PoolNames_AppStakePool, err.Error())
 		}
 	}
 	for _, act := range state.GetNodes() {
@@ -94,8 +94,8 @@ func (m *PersistenceModule) populateGenesisState(state *types.PersistenceGenesis
 		if err != nil {
 			log.Fatalf("an error occurred inserting a service node in the genesis state: %s", err.Error())
 		}
-		if err = addValueToPool(types.Pool_Names_ServiceNodeStakePool.String(), act.GetStakedAmount()); err != nil {
-			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.Pool_Names_ServiceNodeStakePool.String(), err.Error())
+		if err = addValueToPool(types.PoolNames_ServiceNodeStakePool.String(), act.GetStakedAmount()); err != nil {
+			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.PoolNames_ServiceNodeStakePool.String(), err.Error())
 		}
 	}
 	for _, act := range state.GetFish() {
@@ -115,8 +115,8 @@ func (m *PersistenceModule) populateGenesisState(state *types.PersistenceGenesis
 		if err != nil {
 			log.Fatalf("an error occurred inserting a fisherman in the genesis state: %s", err.Error())
 		}
-		if err = addValueToPool(types.Pool_Names_FishermanStakePool.String(), act.GetStakedAmount()); err != nil {
-			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.Pool_Names_FishermanStakePool.String(), err.Error())
+		if err = addValueToPool(types.PoolNames_FishermanStakePool.String(), act.GetStakedAmount()); err != nil {
+			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.PoolNames_FishermanStakePool.String(), err.Error())
 		}
 	}
 	for _, act := range state.GetVals() {
@@ -136,8 +136,8 @@ func (m *PersistenceModule) populateGenesisState(state *types.PersistenceGenesis
 		if err != nil {
 			log.Fatalf("an error occurred inserting a validator in the genesis state: %s", err.Error())
 		}
-		if err = addValueToPool(types.Pool_Names_ValidatorStakePool.String(), act.GetStakedAmount()); err != nil {
-			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.Pool_Names_ValidatorStakePool.String(), err.Error())
+		if err = addValueToPool(types.PoolNames_ValidatorStakePool.String(), act.GetStakedAmount()); err != nil {
+			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.PoolNames_ValidatorStakePool.String(), err.Error())
 		}
 	}
 	// TODO(team): use params from genesis file - not the hardcoded

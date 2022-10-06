@@ -103,8 +103,8 @@ func NewDefaultConfig(i int, pk string) modules.Config {
 }
 
 func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
-	for _, name := range typesPersistence.Pool_Names_name {
-		if name == typesPersistence.Pool_Names_FeeCollector.String() {
+	for _, name := range typesPersistence.PoolNames_name {
+		if name == typesPersistence.PoolNames_FeeCollector.String() {
 			pools = append(pools, &MockAcc{
 				Address: name,
 				Amount:  "0",
