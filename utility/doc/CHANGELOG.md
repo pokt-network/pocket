@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.7] - 2022-10-04
+## [0.0.0.7] - 2022-10-06
 
 - Don't ignore the exit code of `m.Run()` in the unit tests
 - Remove redundant tests (e.g. `TestUtilityContext_UnstakesPausedBefore` which was replaced by `TestUtilityContext_UnstakePausedBefore`)
