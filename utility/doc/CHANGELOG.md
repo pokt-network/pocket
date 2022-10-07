@@ -10,15 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.6] - 2022-10-06
 
 - Don't ignore the exit code of `m.Run()` in the unit tests
-- Remove redundant tests (e.g. `TestUtilityContext_UnstakesPausedBefore` which was replaced by `TestUtilityContext_UnstakePausedBefore`)
-- Improve readability (e.g. whitespace)
+- Fixed several broken unit tests related to type casting
+- Removed some unit tests (e.g. `TestUtilityContext_UnstakesPausedBefore`) that were legacy and replaced by more general ones (e.g. `TestUtilityContext_UnstakePausedBefore`)
 - Avoid exporting unnecessary test helpers
 
 ## [0.0.0.5] - 2022-09-29
 
 - Remove unused `StoreBlock` function from the utility module interface
-- Fixed several broken unit tests related to type casting
-- Removed some unit tests (e.g. `TestUtilityContext_UnstakesPausedBefore`) that were legacy and replaced by more general ones (e.g. `TestUtilityContext_UnstakePausedBefore`)
 
 ## [0.0.0.4] - 2022-09-23
 

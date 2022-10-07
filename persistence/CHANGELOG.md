@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.6] - 2022-10-06
 
 - Don't ignore the exit code of `m.Run()` in the unit tests
+- Fixed several broken unit tests related to type casting
 
 ## [0.0.0.5] - 2022-09-14
 
