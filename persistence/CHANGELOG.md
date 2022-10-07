@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.5] - 2022-09-14
 
 - Consolidated `PostgresContext` and `PostgresDb` into a single structure
+- Fixed several broken unit tests related to type casting
 
 ## [0.0.0.4] - 2022-08-25
 

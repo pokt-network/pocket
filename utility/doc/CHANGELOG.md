@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.5] - 2022-09-29
 
 - Remove unused `StoreBlock` function from the utility module interface
+- Fixed several broken unit tests related to type casting
+- Removed some unit tests (e.g. `TestUtilityContext_UnstakesPausedBefore`) that were legacy and replaced by more general ones (e.g. `TestUtilityContext_UnstakePausedBefore`)
 
 ## [0.0.0.4] - 2022-09-23
 
