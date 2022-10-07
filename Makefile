@@ -263,15 +263,10 @@ test_all_with_coverage: # generate_mocks
 test_race: # generate_mocks
 	go test ${VERBOSE_TEST} -race ./...
 
-.PHONY: test_utility_module
+.PHONY: test_utility
 ## Run all go utility module unit tests
-test_utility_module: # generate_mocks
-	go test ${VERBOSE_TEST} -p 1 -count=1  ./shared/tests/utility_module/...
-
-.PHONY: test_utility_types
-## Run all go utility types module unit tests
-test_utility_types: # generate_mocks
-	go test ${VERBOSE_TEST} ./utility/types/...
+test_utility: # generate_mocks
+	go test ${VERBOSE_TEST} -p=1 -count=1  ./utility/...
 
 .PHONY: test_shared
 ## Run all go unit tests in the shared module

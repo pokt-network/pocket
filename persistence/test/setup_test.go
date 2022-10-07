@@ -55,10 +55,11 @@ var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := sharedTest.SetupPostgresDocker()
 	testPersistenceMod = newTestPersistenceModule(dbUrl)
-	m.Run()
+	exitCode := m.Run()
 	os.Remove(testingConfigFilePath)
 	os.Remove(testingGenesisFilePath)
 	sharedTest.CleanupPostgresDocker(m, pool, resource)
+	os.Exit(exitCode)
 }
 
 func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresContext {
