@@ -24,6 +24,7 @@ type Config struct {
 	Persistence PersistenceConfig `json:"persistence"`
 	P2P         P2PConfig         `json:"p2p"`
 	Telemetry   TelemetryConfig   `json:"telemetry"`
+	Logger      LoggerConfig      `json:"logger"`
 }
 
 type ConsensusConfig interface {
@@ -54,6 +55,11 @@ type TelemetryConfig interface {
 	GetEnabled() bool
 	GetAddress() string
 	GetEndpoint() string
+}
+
+type LoggerConfig interface {
+	GetLevel() string
+	GetFormat() string
 }
 
 type UtilityConfig interface{}

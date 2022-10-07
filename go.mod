@@ -25,6 +25,7 @@ require (
 	github.com/jackc/pgconn v1.11.0
 	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
 	github.com/quasilyte/go-ruleguard/dsl v0.3.21
+	github.com/rs/zerolog v1.15.0
 )
 
 require (

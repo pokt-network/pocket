@@ -1,0 +1,23 @@
+syntax = "proto3";
+package logger;
+
+option go_package = "github.com/pokt-network/pocket/logger";
+
+message LoggerConfig {
+  LogLevel level = 1;
+  LogFormat format = 2;
+}
+
+enum LogLevel {
+  debug = 0;
+  info = 1;
+  warn = 2;
+  error = 3;
+  fatal = 4;
+  panic = 5;
+}
+
+enum LogFormat {
+  json = 0;
+  pretty = 1;
+}
