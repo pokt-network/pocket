@@ -1,7 +1,7 @@
 {
   "base": {
     "root_directory": "/go/src/github.com/pocket-network",
-    "private_key": "c7bd1bd027e76b31534c3f5226c8e3c3f2a034ba9fa11017b65191f7f9ef0d253e5e4bbed5f98721163bb84445072a9202d213f1e348c5e9e0e2ea83bbb7e3aa"
+    "private_key": "b37d3ba2f232060c41ba1177fea6008d885fcccad6826d64ee7d49f94d1dbc49a8b6be75d7551da093f788f7286c3a9cb885cfc8e52710eac5f1d5e5b4bf19b2"
   },
   "consensus": {
     "max_mempool_bytes": 500000000,
@@ -9,9 +9,13 @@
       "timeout_msec": 5000,
       "manual": true,
       "debug_time_between_steps_msec": 1000
-    }
+    },
+    "private_key": "b37d3ba2f232060c41ba1177fea6008d885fcccad6826d64ee7d49f94d1dbc49a8b6be75d7551da093f788f7286c3a9cb885cfc8e52710eac5f1d5e5b4bf19b2"
   },
-  "utility": {},
+  "utility": {
+    "max_mempool_transaction_bytes": 1073741824,
+    "max_mempool_transactions": 9000
+  },
   "persistence": {
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
     "node_schema": "node3",
@@ -20,7 +24,8 @@
   "p2p": {
     "consensus_port": 8080,
     "use_rain_tree": true,
-    "connection_type": 1
+    "is_empty_connection_type": false,
+    "private_key": "b37d3ba2f232060c41ba1177fea6008d885fcccad6826d64ee7d49f94d1dbc49a8b6be75d7551da093f788f7286c3a9cb885cfc8e52710eac5f1d5e5b4bf19b2"
   },
   "telemetry": {
     "enabled": true,

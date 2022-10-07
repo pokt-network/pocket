@@ -3,11 +3,6 @@ package p2p
 import (
 	"crypto/ed25519"
 	"encoding/binary"
-	"sort"
-	"sync"
-	"testing"
-	"time"
-
 	"github.com/golang/mock/gomock"
 	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -15,9 +10,13 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/pokt-network/pocket/shared/types/genesis"
-	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
+	// "github.com/pokt-network/pocket/shared/types/genesis"
+	// "github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 	"github.com/stretchr/testify/require"
+	"sort"
+	"sync"
+	"testing"
+	"time"
 )
 
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
@@ -214,14 +213,14 @@ func prepareBusMock(t *testing.T, config *genesis.Config, consensusMock *modules
 // the consensus mock also returns '1' when the current height is called
 
 // Consensus mocked - only needed for validatorMap access
-func prepareConsensusMock(t *testing.T, genesisState *genesis.GenesisState) *modulesMock.MockConsensusModule {
+func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockConsensusModule {
 	ctrl := gomock.NewController(t)
 	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
 
-	validators := genesisState.Utility.Validators
+	validators := genesisState.PersistenceGenesisState.GetVals()
 	m := make(modules.ValidatorMap, len(validators))
 	for _, v := range validators {
-		m[v.Address] = v
+		m[v.GetAddress()] = v
 	}
 
 	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
@@ -232,7 +231,7 @@ func prepareConsensusMock(t *testing.T, genesisState *genesis.GenesisState) *mod
 // TODO(team): make the test more rigorous but adding MaxTimes `EmitEvent` expectations. Since we are talking about more than one node
 // I have decided to do with `AnyTimes` for the moment.
 // TODO (Olshansk) explain why it's necessary to mock telemetry here and document the sub telemetry package
-func prepareTelemetryMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkWrites int) *modulesMock.MockTelemetryModule {
+func prepareTelemetryMock(t *testing.T) *modulesMock.MockTelemetryModule {
 	ctrl := gomock.NewController(t)
 	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
 
@@ -240,15 +239,12 @@ func prepareTelemetryMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkWr
 	eventMetricsAgentMock := prepareEventMetricsAgentMock(t)
 
 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
-	// timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
-	// timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
+	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
+	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
 
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Eq(p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).Do(func(n, e interface{}, l ...interface{}) {
-		wg.Done()
-	}).Times(expectedNumNetworkWrites)
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(p2pTelemetry.RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).AnyTimes()
 
 	return telemetryMock
 }

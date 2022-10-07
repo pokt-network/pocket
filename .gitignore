@@ -51,3 +51,6 @@ coverage.out
 
 # Output of `make build_and_watch`
 main
+
+# Ignored generated files by build/config/main.go
+build/config/gen*.json

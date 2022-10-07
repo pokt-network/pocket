@@ -3,14 +3,14 @@ package shared
 import (
 	"log"
 
+	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/telemetry"
-	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/telemetry"
 	"github.com/pokt-network/pocket/utility"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -18,50 +18,54 @@ import (
 
 var _ modules.Module = &Node{}
 
+const (
+	MainModuleName = "main"
+)
+
 type Node struct {
+	clock   clock.Clock
 	bus     modules.Bus
 	Address cryptoPocket.Address
 }
 
-func Create(cfg *genesis.Config, genesis *genesis.GenesisState) (n *Node, err error) {
-	persistenceMod, err := persistence.Create(cfg, genesis)
+func Create(configPath, genesisPath string, clock clock.Clock) (n *Node, err error) {
+	persistenceMod, err := persistence.Create(configPath, genesisPath)
 	if err != nil {
 		return nil, err
 	}
 
-	p2pMod, err := p2p.Create(cfg, genesis)
+	p2pMod, err := p2p.Create(configPath, genesisPath, false)
 	if err != nil {
 		return nil, err
 	}
 
-	utilityMod, err := utility.Create(cfg, genesis)
+	utilityMod, err := utility.Create(configPath, genesisPath)
 	if err != nil {
 		return nil, err
 	}
 
-	consensusMod, err := consensus.Create(cfg, genesis)
+	consensusMod, err := consensus.Create(configPath, genesisPath, false)
 	if err != nil {
 		return nil, err
 	}
 
-	telemetryMod, err := telemetry.Create(cfg, genesis)
+	telemetryMod, err := telemetry.Create(configPath, genesisPath)
 	if err != nil {
 		return nil, err
 	}
 
-	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod, cfg, genesis)
+	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod, clock)
 	if err != nil {
 		return nil, err
 	}
-
-	pk, err := cryptoPocket.NewPrivateKey(cfg.Base.PrivateKey)
+	addr, err := p2pMod.GetAddress()
 	if err != nil {
 		return nil, err
 	}
-
 	return &Node{
 		bus:     bus,
-		Address: pk.Address(),
+		Address: addr,
+		clock:   clock,
 	}, nil
 }
 
@@ -91,7 +95,7 @@ func (node *Node) Start() error {
 	}
 
 	// The first event signaling that the node has started
-	signalNodeStartedEvent := &types.PocketEvent{Topic: types.PocketTopic_POCKET_NODE_TOPIC, Data: nil}
+	signalNodeStartedEvent := &debug.PocketEvent{Topic: debug.PocketTopic_POCKET_NODE_TOPIC, Data: nil}
 	node.GetBus().PublishEventToBus(signalNodeStartedEvent)
 
 	log.Println("About to start pocket node main loop...")
@@ -121,13 +125,13 @@ func (m *Node) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (node *Node) handleEvent(event *types.PocketEvent) error {
+func (node *Node) handleEvent(event *debug.PocketEvent) error {
 	switch event.Topic {
-	case types.PocketTopic_CONSENSUS_MESSAGE_TOPIC:
+	case debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC:
 		return node.GetBus().GetConsensusModule().HandleMessage(event.Data)
-	case types.PocketTopic_DEBUG_TOPIC:
+	case debug.PocketTopic_DEBUG_TOPIC:
 		return node.handleDebugEvent(event.Data)
-	case types.PocketTopic_POCKET_NODE_TOPIC:
+	case debug.PocketTopic_POCKET_NODE_TOPIC:
 		log.Println("[NOOP] Received pocket node topic signal")
 	default:
 		log.Printf("[WARN] Unsupported PocketEvent topic: %s \n", event.Topic)
@@ -136,25 +140,45 @@ func (node *Node) handleEvent(event *types.PocketEvent) error {
 }
 
 func (node *Node) handleDebugEvent(anyMessage *anypb.Any) error {
-	var debugMessage types.DebugMessage
+	var debugMessage debug.DebugMessage
 	err := anypb.UnmarshalTo(anyMessage, &debugMessage, proto.UnmarshalOptions{})
 	if err != nil {
 		return err
 	}
 	switch debugMessage.Action {
-	case types.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
+	case debug.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
 		fallthrough
-	case types.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
+	case debug.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
 		fallthrough
-	case types.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
+	case debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
 		fallthrough
-	case types.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
+	case debug.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
 		return node.GetBus().GetConsensusModule().HandleDebugMessage(&debugMessage)
-	case types.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
+	case debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		return node.GetBus().GetPersistenceModule().HandleDebugMessage(&debugMessage)
 	default:
 		log.Printf("Debug message: %s \n", debugMessage.Message)
 	}
 
 	return nil
+}
+
+func (node *Node) GetModuleName() string {
+	return MainModuleName
+}
+
+func (node *Node) InitConfig(pathToConfigJSON string) (modules.IConfig, error) {
+	return nil, nil
+}
+
+func (node *Node) InitGenesis(pathToGenesisJSON string) (modules.IGenesis, error) {
+	return nil, nil
+}
+
+func (m *Node) SetClock(clock clock.Clock) {
+	m.clock = clock
+}
+
+func (m *Node) GetClock() clock.Clock {
+	return m.clock
 }

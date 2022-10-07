@@ -2,22 +2,23 @@ package test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"log"
 	"testing"
 
+	"github.com/pokt-network/pocket/persistence/types"
+
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
 
+// TODO(andrew): Rename `addrBz` to `fishAddrBz` so tests are easier to read and understand. Ditto in all other locations.
+
 func FuzzFisherman(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		NewTestGenericActor(schema.FishermanActor, newTestFisherman),
-		GetGenericActor(schema.FishermanActor, getTestFisherman),
-		schema.FishermanActor)
+		NewTestGenericActor(types.FishermanActor, newTestFisherman),
+		GetGenericActor(types.FishermanActor, getTestFisherman),
+		types.FishermanActor)
 }
 
 func TestGetSetFishermanStakeAmount(t *testing.T) {
@@ -36,7 +37,6 @@ func TestInsertFishermanAndExists(t *testing.T) {
 	fisherman2, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
 
-	// TODO(andrew): Rename `addrBz` to `fishAddrBz` so tests are easier to read and understand. Ditto in all other locations.
 	addrBz, err := hex.DecodeString(fisherman.Address)
 	require.NoError(t, err)
 	addrBz2, err := hex.DecodeString(fisherman2.Address)
@@ -118,19 +118,17 @@ func TestGetFishermenReadyToUnstake(t *testing.T) {
 	err = db.SetFishermanUnstakingHeightAndStatus(addrBz3, 1, persistence.UnstakingStatus)
 	require.NoError(t, err)
 
-	// TODO(andrew): Replace `fisherman` with `fishermans` for grammatic correctness
-
 	// Check unstaking fishermans at height 0
 	unstakingFishermen, err := db.GetFishermenReadyToUnstake(0, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingFishermen), "wrong number of actors ready to unstake at height 0")
-	require.Equal(t, fisherman.Address, hex.EncodeToString(unstakingFishermen[0].Address), "unexpected fishermanlication actor returned")
+	require.Equal(t, fisherman.Address, hex.EncodeToString(unstakingFishermen[0].GetAddress()), "unexpected fishermanlication actor returned")
 
 	// Check unstaking fishermans at height 1
 	unstakingFishermen, err = db.GetFishermenReadyToUnstake(1, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingFishermen), "wrong number of actors ready to unstake at height 1")
-	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingFishermen[0].Address, unstakingFishermen[1].Address})
+	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingFishermen[0].GetAddress(), unstakingFishermen[1].GetAddress()})
 }
 
 func TestGetFishermanStatus(t *testing.T) {
@@ -214,7 +212,7 @@ func TestGetFishermanOutputAddress(t *testing.T) {
 	require.Equal(t, hex.EncodeToString(output), fisherman.Output, "unexpected output address")
 }
 
-func newTestFisherman() (*typesGenesis.Actor, error) {
+func newTestFisherman() (*types.Actor, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
 		return nil, err
@@ -225,7 +223,7 @@ func newTestFisherman() (*typesGenesis.Actor, error) {
 		return nil, err
 	}
 
-	return &typesGenesis.Actor{
+	return &types.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          DefaultChains,
@@ -237,22 +235,22 @@ func newTestFisherman() (*typesGenesis.Actor, error) {
 	}, nil
 }
 
-func createAndInsertDefaultTestFisherman(db *persistence.PostgresContext) (*typesGenesis.Actor, error) {
+func createAndInsertDefaultTestFisherman(db *persistence.PostgresContext) (*types.Actor, error) {
 	fisherman, err := newTestFisherman()
 	if err != nil {
 		return nil, err
 	}
 	addrBz, err := hex.DecodeString(fisherman.Address)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", fisherman.Address))
+		log.Fatalf("an error occurred converting address to bytes %s", fisherman.Address)
 	}
 	pubKeyBz, err := hex.DecodeString(fisherman.PublicKey)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", fisherman.PublicKey))
+		log.Fatalf("an error occurred converting pubKey to bytes %s", fisherman.PublicKey)
 	}
 	outputBz, err := hex.DecodeString(fisherman.Output)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", fisherman.Output))
+		log.Fatalf("an error occurred converting output to bytes %s", fisherman.Output)
 	}
 	return fisherman, db.InsertFisherman(
 		addrBz,
@@ -267,7 +265,7 @@ func createAndInsertDefaultTestFisherman(db *persistence.PostgresContext) (*type
 		DefaultUnstakingHeight)
 }
 
-func getTestFisherman(db *persistence.PostgresContext, address []byte) (*typesGenesis.Actor, error) {
+func getTestFisherman(db *persistence.PostgresContext, address []byte) (*types.Actor, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetFisherman(address, db.Height)
 	if err != nil {
 		return nil, err
@@ -288,7 +286,7 @@ func getTestFisherman(db *persistence.PostgresContext, address []byte) (*typesGe
 		return nil, err
 	}
 
-	return &typesGenesis.Actor{
+	return &types.Actor{
 		Address:         hex.EncodeToString(operatorAddr),
 		PublicKey:       hex.EncodeToString(operatorPubKey),
 		Chains:          chains,

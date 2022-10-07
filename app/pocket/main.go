@@ -4,8 +4,8 @@ import (
 	"flag"
 	"log"
 
+	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/shared"
-	"github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
 )
 
 // See `docs/build/README.md` for details on how this is injected via mage.
@@ -22,10 +22,7 @@ func main() {
 		log.Printf("Version flag currently unused %s\n", version)
 		return
 	}
-
-	cfg, genesis := test_artifacts.ReadConfigAndGenesisFiles(*configFilename, *genesisFilename)
-
-	pocketNode, err := shared.Create(cfg, genesis)
+	pocketNode, err := shared.Create(*configFilename, *genesisFilename, clock.New())
 	if err != nil {
 		log.Fatalf("Failed to create pocket node: %s", err)
 	}

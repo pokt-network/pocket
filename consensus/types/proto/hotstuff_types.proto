@@ -18,7 +18,7 @@ enum HotstuffStep {
 
 enum HotstuffMessageType {
     HOTSTUFF_MESSAGE_UNKNOWN = 0;
-    HOTSTUFF_MESAGE_PROPOSE = 1;
+    HOTSTUFF_MESSAGE_PROPOSE = 1;
     HOTSTUFF_MESSAGE_VOTE = 2;
 }
 
@@ -39,7 +39,7 @@ message QuorumCertificate {
     uint64 height = 1;
     uint64 round = 2;
     HotstuffStep step = 3;
-    shared.Block block = 4;
+    consensus.Block block = 4;
     ThresholdSignature threshold_signature = 5;
 }
 
@@ -48,7 +48,7 @@ message HotstuffMessage  {
     uint64 height = 2;
     HotstuffStep step = 3;
     uint64 round = 4;
-    shared.Block block = 5;
+    consensus.Block block = 5;
 
     oneof justification {
         QuorumCertificate quorum_certificate = 6;  // From NODE -> NODE when new rounds start; one of {HighQC, TimeoutQC, CommitQC}

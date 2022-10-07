@@ -1,9 +1,8 @@
 package utility
 
 import (
+	"github.com/pokt-network/pocket/utility/types"
 	"math/big"
-
-	"github.com/pokt-network/pocket/shared/types"
 )
 
 // 'Accounts' are structures in the utility module that closely resemble currency holding vehicles: like a bank account.
@@ -11,10 +10,9 @@ import (
 //  the utility economy.
 
 func (u *UtilityContext) GetAccountAmount(address []byte) (*big.Int, types.Error) {
-	store := u.Store()
-	height, err := store.GetHeight()
-	if err != nil {
-		return nil, types.ErrGetAccountAmount(err)
+	store, height, er := u.GetStoreAndHeight()
+	if er != nil {
+		return nil, er
 	}
 	amount, err := store.GetAccountAmount(address, height)
 	if err != nil {
@@ -56,10 +54,9 @@ func (u *UtilityContext) SubPoolAmount(name string, amountToSub string) types.Er
 }
 
 func (u *UtilityContext) GetPoolAmount(name string) (*big.Int, types.Error) {
-	store := u.Store()
-	height, er := store.GetHeight()
-	if er != nil {
-		return nil, types.ErrGetPoolAmount(name, er)
+	store, height, err := u.GetStoreAndHeight()
+	if err != nil {
+		return nil, err
 	}
 	tokens, er := store.GetPoolAmount(name, height)
 	if er != nil {

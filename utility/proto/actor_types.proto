@@ -3,9 +3,6 @@ package utility;
 
 option go_package = "github.com/pokt-network/pocket/utility/types";
 
-enum ActorType {
-    App = 0;
-    Node = 1;
-    Fish = 2;
-    Val = 3;
-  }
+message UtilityConfig {
+
+}

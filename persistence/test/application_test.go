@@ -2,22 +2,21 @@ package test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"log"
 	"testing"
 
+	"github.com/pokt-network/pocket/persistence/types"
+
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
 
 func FuzzApplication(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		NewTestGenericActor(schema.ApplicationActor, newTestApp),
-		GetGenericActor(schema.ApplicationActor, getTestApp),
-		schema.ApplicationActor)
+		NewTestGenericActor(types.ApplicationActor, newTestApp),
+		GetGenericActor(types.ApplicationActor, getTestApp),
+		types.ApplicationActor)
 }
 
 func TestInsertAppAndExists(t *testing.T) {
@@ -116,13 +115,13 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 	unstakingApps, err := db.GetAppsReadyToUnstake(0, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingApps), "wrong number of actors ready to unstake at height 0")
-	require.Equal(t, app.Address, hex.EncodeToString(unstakingApps[0].Address), "unexpected application actor returned")
+	require.Equal(t, app.Address, hex.EncodeToString(unstakingApps[0].GetAddress()), "unexpected application actor returned")
 
 	// Check unstaking apps at height 1
 	unstakingApps, err = db.GetAppsReadyToUnstake(1, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingApps), "wrong number of actors ready to unstake at height 1")
-	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingApps[0].Address, unstakingApps[1].Address})
+	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingApps[0].GetAddress(), unstakingApps[1].GetAddress()})
 }
 
 func TestGetAppStatus(t *testing.T) {
@@ -136,12 +135,12 @@ func TestGetAppStatus(t *testing.T) {
 	// Check status before the app exists
 	status, err := db.GetAppStatus(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, status, persistence.UndefinedStakingStatus, "unexpected status")
+	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
 
 	// Check status after the app exists
 	status, err = db.GetAppStatus(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, status, DefaultStakeStatus, "unexpected status")
+	require.Equal(t, DefaultStakeStatus, status, "unexpected status")
 }
 
 func TestGetAppPauseHeightIfExists(t *testing.T) {
@@ -201,7 +200,7 @@ func TestGetAppOutputAddress(t *testing.T) {
 	require.Equal(t, hex.EncodeToString(output), app.Output, "unexpected output address")
 }
 
-func newTestApp() (*typesGenesis.Actor, error) {
+func newTestApp() (*types.Actor, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
 		return nil, err
@@ -212,7 +211,7 @@ func newTestApp() (*typesGenesis.Actor, error) {
 		return nil, err
 	}
 
-	return &typesGenesis.Actor{
+	return &types.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          DefaultChains,
@@ -247,7 +246,7 @@ func TestGetSetStakeAmount(t *testing.T) {
 	require.Equal(t, newStakeAmount, stakeAmountAfter, "unexpected status")
 }
 
-func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*typesGenesis.Actor, error) {
+func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*types.Actor, error) {
 	app, err := newTestApp()
 	if err != nil {
 		return nil, err
@@ -256,15 +255,15 @@ func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*typesGenes
 	// TODO(andrew): Use `require.NoError` instead of `log.Fatal` in tests`
 	addrBz, err := hex.DecodeString(app.Address)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", app.Address))
+		log.Fatalf("an error occurred converting address to bytes %s", app.Address)
 	}
 	pubKeyBz, err := hex.DecodeString(app.PublicKey)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", app.PublicKey))
+		log.Fatalf("an error occurred converting pubKey to bytes %s", app.PublicKey)
 	}
 	outputBz, err := hex.DecodeString(app.Output)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", app.Output))
+		log.Fatalf("an error occurred converting output to bytes %s", app.Output)
 	}
 	return app, db.InsertApp(
 		addrBz,
@@ -279,13 +278,13 @@ func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*typesGenes
 		DefaultUnstakingHeight)
 }
 
-func getTestApp(db *persistence.PostgresContext, address []byte) (*typesGenesis.Actor, error) {
+func getTestApp(db *persistence.PostgresContext, address []byte) (*types.Actor, error) {
 	operator, publicKey, stakedTokens, maxRelays, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetApp(address, db.Height)
 	if err != nil {
 		return nil, err
 	}
 
-	return &typesGenesis.Actor{
+	return &types.Actor{
 		Address:         operator,
 		PublicKey:       publicKey,
 		Chains:          chains,

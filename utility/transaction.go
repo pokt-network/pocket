@@ -2,14 +2,12 @@ package utility
 
 import (
 	"bytes"
-
+	"encoding/hex"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *UtilityContext) ApplyTransaction(tx *typesUtil.Transaction) types.Error {
+func (u *UtilityContext) ApplyTransaction(tx *typesUtil.Transaction) typesUtil.Error {
 	msg, err := u.AnteHandleMessage(tx)
 	if err != nil {
 		return err
@@ -21,7 +19,7 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 	// validate transaction
 	txHash := typesUtil.TransactionHash(transactionProtoBytes)
 	if u.Mempool.Contains(txHash) {
-		return types.ErrDuplicateTransaction()
+		return typesUtil.ErrDuplicateTransaction()
 	}
 	store := u.Store()
 	txExists, err := store.TransactionExists(txHash)
@@ -30,12 +28,12 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 	}
 	// TODO non-ordered nonce requires non-pruned tx indexer
 	if txExists {
-		return types.ErrTransactionAlreadyCommitted()
+		return typesUtil.ErrTransactionAlreadyCommitted()
 	}
 	cdc := u.Codec()
 	transaction := &typesUtil.Transaction{}
 	if err := cdc.Unmarshal(transactionProtoBytes, transaction); err != nil {
-		return types.ErrProtoUnmarshal(err)
+		return typesUtil.ErrProtoUnmarshal(err)
 	}
 	if err := transaction.ValidateBasic(); err != nil {
 		return err
@@ -86,7 +84,7 @@ func (u *UtilityContext) GetProposalTransactions(proposer []byte, maxTransaction
 }
 
 // CLEANUP: Exposed for testing purposes only
-func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil.Message, types.Error) {
+func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil.Message, typesUtil.Error) {
 	msg, err := tx.Message()
 	if err != nil {
 		return nil, err
@@ -97,16 +95,16 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil
 	}
 	pubKey, er := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
 	if er != nil {
-		return nil, types.ErrNewPublicKeyFromBytes(er)
+		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)
 	}
 	address := pubKey.Address()
 	accountAmount, err := u.GetAccountAmount(address)
 	if err != nil {
-		return nil, types.ErrGetAccountAmount(err)
+		return nil, typesUtil.ErrGetAccountAmount(err)
 	}
 	accountAmount.Sub(accountAmount, fee)
 	if accountAmount.Sign() == -1 {
-		return nil, types.ErrInsufficientAmount()
+		return nil, typesUtil.ErrInsufficientAmount(address.String())
 	}
 	signerCandidates, err := u.GetSignerCandidates(msg)
 	if err != nil {
@@ -120,19 +118,19 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil
 		}
 	}
 	if !isValidSigner {
-		return nil, types.ErrInvalidSigner()
+		return nil, typesUtil.ErrInvalidSigner()
 	}
 	if err := u.SetAccountAmount(address, accountAmount); err != nil {
 		return nil, err
 	}
-	if err := u.AddPoolAmount(typesGenesis.Pool_Names_FeeCollector.String(), fee); err != nil {
+	if err := u.AddPoolAmount(typesUtil.PoolNames_FeeCollector.String(), fee); err != nil {
 		return nil, err
 	}
 	msg.SetSigner(address)
 	return msg, nil
 }
 
-func (u *UtilityContext) HandleMessage(msg typesUtil.Message) types.Error {
+func (u *UtilityContext) HandleMessage(msg typesUtil.Message) typesUtil.Error {
 	switch x := msg.(type) {
 	case *typesUtil.MessageDoubleSign:
 		return u.HandleMessageDoubleSign(x)
@@ -149,13 +147,13 @@ func (u *UtilityContext) HandleMessage(msg typesUtil.Message) types.Error {
 	case *typesUtil.MessageChangeParameter:
 		return u.HandleMessageChangeParameter(x)
 	default:
-		return types.ErrUnknownMessage(x)
+		return typesUtil.ErrUnknownMessage(x)
 	}
 }
 
-func (u *UtilityContext) HandleMessageSend(message *typesUtil.MessageSend) types.Error {
+func (u *UtilityContext) HandleMessageSend(message *typesUtil.MessageSend) typesUtil.Error {
 	// convert the amount to big.Int
-	amount, err := types.StringToBigInt(message.Amount)
+	amount, err := typesUtil.StringToBigInt(message.Amount)
 	if err != nil {
 		return err
 	}
@@ -169,7 +167,7 @@ func (u *UtilityContext) HandleMessageSend(message *typesUtil.MessageSend) types
 	// if they go negative, they don't have sufficient funds
 	// NOTE: we don't use the u.SubtractAccountAmount() function because Utility needs to do this check
 	if fromAccountAmount.Sign() == -1 {
-		return types.ErrInsufficientAmount()
+		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.FromAddress))
 	}
 	// add the amount to the recipient's account
 	if err = u.AddAccountAmount(message.ToAddress, amount); err != nil {
@@ -182,7 +180,7 @@ func (u *UtilityContext) HandleMessageSend(message *typesUtil.MessageSend) types
 	return nil
 }
 
-func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) types.Error {
+func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typesUtil.Error {
 	publicKey, err := u.BytesToPublicKey(message.PublicKey)
 	if err != nil {
 		return err
@@ -200,7 +198,7 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 	// calculate new signer account amount
 	signerAccountAmount.Sub(signerAccountAmount, amount)
 	if signerAccountAmount.Sign() == -1 {
-		return types.ErrInsufficientAmount()
+		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.Signer))
 	}
 	// validators don't have chains field
 	if err = u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
@@ -209,7 +207,7 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 	// ensure actor doesn't already exist
 	if exists, err := u.GetActorExists(message.ActorType, publicKey.Address()); err != nil || exists {
 		if exists {
-			return types.ErrAlreadyExists()
+			return typesUtil.ErrAlreadyExists()
 		}
 		return err
 	}
@@ -218,7 +216,7 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 	// move funds from account to pool
-	if err = u.AddPoolAmount(typesGenesis.Pool_Names_AppStakePool.String(), amount); err != nil {
+	if err = u.AddPoolAmount(typesUtil.PoolNames_AppStakePool.String(), amount); err != nil {
 		return err
 	}
 	var er error
@@ -230,25 +228,25 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 		if err != nil {
 			return err
 		}
-		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case typesUtil.ActorType_Fish:
-		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case typesUtil.ActorType_Node:
-		er = store.InsertServiceNode(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case typesUtil.ActorType_Val:
-		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+	case typesUtil.ActorType_Fisherman:
+		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+	case typesUtil.ActorType_ServiceNode:
+		er = store.InsertServiceNode(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+	case typesUtil.ActorType_Validator:
+		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	}
 	if er != nil {
-		return types.ErrInsert(er)
+		return typesUtil.ErrInsert(er)
 	}
 	return nil
 }
 
-func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditStake) types.Error {
+func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditStake) typesUtil.Error {
 	// ensure actor exists
 	if exists, err := u.GetActorExists(message.ActorType, message.Address); err != nil || !exists {
 		if !exists {
-			return types.ErrNotExists()
+			return typesUtil.ErrNotExists()
 		}
 		return err
 	}
@@ -256,14 +254,14 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 	if err != nil {
 		return err
 	}
-	amount, err := types.StringToBigInt(message.Amount)
+	amount, err := typesUtil.StringToBigInt(message.Amount)
 	if err != nil {
 		return err
 	}
 	// ensure new stake >= current stake
 	amount.Sub(amount, currentStakeAmount)
 	if amount.Sign() == -1 {
-		return types.ErrStakeLess()
+		return typesUtil.ErrStakeLess()
 	}
 	// ensure signer has sufficient funding for the stake
 	signerAccountAmount, err := u.GetAccountAmount(message.Signer)
@@ -272,7 +270,7 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 	}
 	signerAccountAmount.Sub(signerAccountAmount, amount)
 	if signerAccountAmount.Sign() == -1 {
-		return types.ErrInsufficientAmount()
+		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.Signer))
 	}
 	if err = u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
 		return err
@@ -282,7 +280,7 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(typesGenesis.Pool_Names_AppStakePool.String(), amount); err != nil {
+	if err := u.AddPoolAmount(typesUtil.PoolNames_AppStakePool.String(), amount); err != nil {
 		return err
 	}
 	store := u.Store()
@@ -294,23 +292,23 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 			return err
 		}
 		er = store.UpdateApp(message.Address, maxRelays, message.Amount, message.Chains)
-	case typesUtil.ActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		er = store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
-	case typesUtil.ActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		er = store.UpdateServiceNode(message.Address, message.ServiceUrl, message.Amount, message.Chains)
-	case typesUtil.ActorType_Val:
+	case typesUtil.ActorType_Validator:
 		er = store.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
 	}
 	if er != nil {
-		return types.ErrInsert(er)
+		return typesUtil.ErrInsert(er)
 	}
 	return nil
 }
 
-func (u *UtilityContext) HandleUnstakeMessage(message *typesUtil.MessageUnstake) types.Error {
-	if status, err := u.GetActorStatus(message.ActorType, message.Address); err != nil || status != typesUtil.StakedStatus {
-		if status != typesUtil.StakedStatus {
-			return types.ErrInvalidStatus(status, typesUtil.StakedStatus)
+func (u *UtilityContext) HandleUnstakeMessage(message *typesUtil.MessageUnstake) typesUtil.Error {
+	if status, err := u.GetActorStatus(message.ActorType, message.Address); err != nil || status != int32(typesUtil.StakeStatus_Staked) {
+		if status != int32(typesUtil.StakeStatus_Staked) {
+			return typesUtil.ErrInvalidStatus(status, int32(typesUtil.StakeStatus_Staked))
 		}
 		return err
 	}
@@ -324,33 +322,33 @@ func (u *UtilityContext) HandleUnstakeMessage(message *typesUtil.MessageUnstake)
 	return nil
 }
 
-func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause) types.Error {
+func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause) typesUtil.Error {
 	pausedHeight, err := u.GetPauseHeight(message.ActorType, message.Address)
 	if err != nil {
 		return err
 	}
 	if pausedHeight == typesUtil.HeightNotUsed {
-		return types.ErrNotPaused()
+		return typesUtil.ErrNotPaused()
 	}
 	minPauseBlocks, err := u.GetMinimumPauseBlocks(message.ActorType)
 	if err != nil {
 		return err
 	}
-	latestHeight, err := u.GetLatestHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
 	if latestHeight < int64(minPauseBlocks)+pausedHeight {
-		return types.ErrNotReadyToUnpause()
+		return typesUtil.ErrNotReadyToUnpause()
 	}
-	if err = u.SetActorPauseHeight(message.ActorType, message.Address, types.HeightNotUsed); err != nil {
+	if err = u.SetActorPauseHeight(message.ActorType, message.Address, typesUtil.HeightNotUsed); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubleSign) types.Error {
-	latestHeight, err := u.GetLatestHeight()
+func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubleSign) typesUtil.Error {
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -360,11 +358,11 @@ func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubl
 		return err
 	}
 	if evidenceAge > int64(maxEvidenceAge) {
-		return types.ErrMaxEvidenceAge()
+		return typesUtil.ErrMaxEvidenceAge()
 	}
 	pk, er := crypto.NewPublicKeyFromBytes(message.VoteB.PublicKey)
 	if er != nil {
-		return types.ErrNewPublicKeyFromBytes(er)
+		return typesUtil.ErrNewPublicKeyFromBytes(er)
 	}
 	doubleSigner := pk.Address()
 	// burn validator for double signing blocks
@@ -372,22 +370,22 @@ func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubl
 	if err != nil {
 		return err
 	}
-	if err := u.BurnActor(typesUtil.ActorType_Val, burnPercentage, doubleSigner); err != nil {
+	if err := u.BurnActor(typesUtil.ActorType_Validator, burnPercentage, doubleSigner); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (u *UtilityContext) HandleMessageChangeParameter(message *typesUtil.MessageChangeParameter) types.Error {
+func (u *UtilityContext) HandleMessageChangeParameter(message *typesUtil.MessageChangeParameter) typesUtil.Error {
 	cdc := u.Codec()
 	v, err := cdc.FromAny(message.ParameterValue)
 	if err != nil {
-		return types.ErrProtoFromAny(err)
+		return typesUtil.ErrProtoFromAny(err)
 	}
 	return u.UpdateParam(message.ParameterKey, v)
 }
 
-func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, types.Error) {
+func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, typesUtil.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageDoubleSign:
 		return u.GetMessageDoubleSignSignerCandidates(x)
@@ -402,14 +400,14 @@ func (u *UtilityContext) GetSignerCandidates(msg typesUtil.Message) ([][]byte, t
 	case *typesUtil.MessageChangeParameter:
 		return u.GetMessageChangeParameterSignerCandidates(x)
 	default:
-		return nil, types.ErrUnknownMessage(x)
+		return nil, typesUtil.ErrUnknownMessage(x)
 	}
 }
 
-func (u *UtilityContext) GetMessageStakeSignerCandidates(msg *typesUtil.MessageStake) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageStakeSignerCandidates(msg *typesUtil.MessageStake) ([][]byte, typesUtil.Error) {
 	pk, er := crypto.NewPublicKeyFromBytes(msg.PublicKey)
 	if er != nil {
-		return nil, types.ErrNewPublicKeyFromBytes(er)
+		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)
 	}
 	candidates := make([][]byte, 0)
 	candidates = append(candidates, msg.OutputAddress)
@@ -417,7 +415,7 @@ func (u *UtilityContext) GetMessageStakeSignerCandidates(msg *typesUtil.MessageS
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageEditStakeSignerCandidates(msg *typesUtil.MessageEditStake) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageEditStakeSignerCandidates(msg *typesUtil.MessageEditStake) ([][]byte, typesUtil.Error) {
 	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
@@ -428,7 +426,7 @@ func (u *UtilityContext) GetMessageEditStakeSignerCandidates(msg *typesUtil.Mess
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.MessageUnstake) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.MessageUnstake) ([][]byte, typesUtil.Error) {
 	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
@@ -439,7 +437,7 @@ func (u *UtilityContext) GetMessageUnstakeSignerCandidates(msg *typesUtil.Messag
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageUnpauseSignerCandidates(msg *typesUtil.MessageUnpause) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageUnpauseSignerCandidates(msg *typesUtil.MessageUnpause) ([][]byte, typesUtil.Error) {
 	output, err := u.GetActorOutputAddress(msg.ActorType, msg.Address)
 	if err != nil {
 		return nil, err
@@ -450,10 +448,10 @@ func (u *UtilityContext) GetMessageUnpauseSignerCandidates(msg *typesUtil.Messag
 	return candidates, nil
 }
 
-func (u *UtilityContext) GetMessageSendSignerCandidates(msg *typesUtil.MessageSend) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageSendSignerCandidates(msg *typesUtil.MessageSend) ([][]byte, typesUtil.Error) {
 	return [][]byte{msg.FromAddress}, nil
 }
 
-func (u *UtilityContext) GetMessageDoubleSignSignerCandidates(msg *typesUtil.MessageDoubleSign) ([][]byte, types.Error) {
+func (u *UtilityContext) GetMessageDoubleSignSignerCandidates(msg *typesUtil.MessageDoubleSign) ([][]byte, typesUtil.Error) {
 	return [][]byte{msg.ReporterAddress}, nil
 }

@@ -1,5 +1,7 @@
 package modules
 
+//go:generate mockgen -source=$GOFILE -destination=./mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+
 type UtilityModule interface {
 	Module
 
@@ -14,7 +16,6 @@ type UtilityContext interface {
 	// Block operations
 	GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error)
 	ApplyBlock(height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
-	StoreBlock(blockProtoBytes []byte) error
 
 	// Context operations
 	ReleaseContext()

@@ -2,24 +2,21 @@ package test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"log"
 	"testing"
 
-	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/schema"
-	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/persistence/types"
 
-	// TODO(andrew): Remove all `typesGenesis` imports and use `genesis` instead.
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
 
 func FuzzServiceNode(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		NewTestGenericActor(schema.ServiceNodeActor, newTestServiceNode),
-		GetGenericActor(schema.ServiceNodeActor, getTestServiceNode),
-		schema.ServiceNodeActor)
+		NewTestGenericActor(types.ServiceNodeActor, newTestServiceNode),
+		GetGenericActor(types.ServiceNodeActor, getTestServiceNode),
+		types.ServiceNodeActor)
 }
 
 func TestGetSetServiceNodeStakeAmount(t *testing.T) {
@@ -125,13 +122,13 @@ func TestGetServiceNodesReadyToUnstake(t *testing.T) {
 	unstakingServiceNodes, err := db.GetServiceNodesReadyToUnstake(0, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingServiceNodes), "wrong number of actors ready to unstake at height 0")
-	require.Equal(t, serviceNode.Address, hex.EncodeToString(unstakingServiceNodes[0].Address), "unexpected serviceNodelication actor returned")
+	require.Equal(t, serviceNode.Address, hex.EncodeToString(unstakingServiceNodes[0].GetAddress()), "unexpected serviceNodelication actor returned")
 
 	// Check unstaking serviceNodes at height 1
 	unstakingServiceNodes, err = db.GetServiceNodesReadyToUnstake(1, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingServiceNodes), "wrong number of actors ready to unstake at height 1")
-	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingServiceNodes[0].Address, unstakingServiceNodes[1].Address})
+	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingServiceNodes[0].GetAddress(), unstakingServiceNodes[1].GetAddress()})
 }
 
 func TestGetServiceNodeStatus(t *testing.T) {
@@ -146,12 +143,12 @@ func TestGetServiceNodeStatus(t *testing.T) {
 	// Check status before the serviceNode exists
 	status, err := db.GetServiceNodeStatus(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, status, persistence.UndefinedStakingStatus, "unexpected status")
+	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
 
 	// Check status after the serviceNode exists
 	status, err = db.GetServiceNodeStatus(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, status, DefaultStakeStatus, "unexpected status")
+	require.Equal(t, DefaultStakeStatus, status, "unexpected status")
 }
 
 func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
@@ -215,7 +212,7 @@ func TestGetServiceNodeOutputAddress(t *testing.T) {
 	require.Equal(t, hex.EncodeToString(output), serviceNode.Output, "unexpected output address")
 }
 
-func newTestServiceNode() (*typesGenesis.Actor, error) {
+func newTestServiceNode() (*types.Actor, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
 		return nil, err
@@ -226,7 +223,7 @@ func newTestServiceNode() (*typesGenesis.Actor, error) {
 		return nil, err
 	}
 
-	return &typesGenesis.Actor{
+	return &types.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          DefaultChains,
@@ -238,23 +235,22 @@ func newTestServiceNode() (*typesGenesis.Actor, error) {
 	}, nil
 }
 
-func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*typesGenesis.Actor, error) {
+func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*types.Actor, error) {
 	serviceNode, err := newTestServiceNode()
 	if err != nil {
 		return nil, err
 	}
-	// TODO(andrew): Use `require.NoError`
 	addrBz, err := hex.DecodeString(serviceNode.Address)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", serviceNode.Address))
+		log.Fatalf("an error occurred converting address to bytes %s", serviceNode.Address)
 	}
 	pubKeyBz, err := hex.DecodeString(serviceNode.PublicKey)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", serviceNode.PublicKey))
+		log.Fatalf("an error occurred converting pubKey to bytes %s", serviceNode.PublicKey)
 	}
 	outputBz, err := hex.DecodeString(serviceNode.Output)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", serviceNode.Output))
+		log.Fatalf("an error occurred converting output to bytes %s", serviceNode.Output)
 	}
 	return serviceNode, db.InsertServiceNode(
 		addrBz,
@@ -269,7 +265,7 @@ func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*ty
 		DefaultUnstakingHeight)
 }
 
-func getTestServiceNode(db *persistence.PostgresContext, address []byte) (*typesGenesis.Actor, error) {
+func getTestServiceNode(db *persistence.PostgresContext, address []byte) (*types.Actor, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetServiceNode(address, db.Height)
 	if err != nil {
 		return nil, err
@@ -290,7 +286,7 @@ func getTestServiceNode(db *persistence.PostgresContext, address []byte) (*types
 		return nil, err
 	}
 
-	return &typesGenesis.Actor{
+	return &types.Actor{
 		Address:         hex.EncodeToString(operatorAddr),
 		PublicKey:       hex.EncodeToString(operatorPubKey),
 		Chains:          chains,

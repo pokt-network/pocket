@@ -1,25 +1,57 @@
 package utility
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
 
+	"github.com/pokt-network/pocket/utility/types"
+
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types"
-	"github.com/pokt-network/pocket/shared/types/genesis"
 )
 
 var _ modules.UtilityModule = &UtilityModule{}
+var _ modules.UtilityConfig = &types.UtilityConfig{}
 
 type UtilityModule struct {
 	bus     modules.Bus
 	Mempool types.Mempool
 }
 
-func Create(_ *genesis.Config, _ *genesis.GenesisState) (modules.UtilityModule, error) {
+const (
+	UtilityModuleName = "utility"
+)
+
+func Create(configPath, genesisPath string) (modules.UtilityModule, error) {
+	u := new(UtilityModule)
+	c, err := u.InitConfig(configPath)
+	if err != nil {
+		return nil, err
+	}
+	config := (c).(*types.UtilityConfig)
 	return &UtilityModule{
-		// TODO: Add `maxTransactionBytes` and `maxTransactions` to cfg.Utility
-		Mempool: types.NewMempool(1000, 1000),
+		Mempool: types.NewMempool(config.MaxMempoolTransactionBytes, config.MaxMempoolTransactions),
 	}, nil
+}
+
+func (u *UtilityModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
+	data, err := ioutil.ReadFile(pathToConfigJSON)
+	if err != nil {
+		return
+	}
+	// over arching configuration file
+	rawJSON := make(map[string]json.RawMessage)
+	if err = json.Unmarshal(data, &rawJSON); err != nil {
+		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToConfigJSON, err.Error())
+	}
+	// persistence specific configuration file
+	config = new(types.UtilityConfig)
+	err = json.Unmarshal(rawJSON[u.GetModuleName()], config)
+	return
+}
+
+func (u *UtilityModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
+	return // No-op
 }
 
 func (u *UtilityModule) Start() error {
@@ -28,6 +60,10 @@ func (u *UtilityModule) Start() error {
 
 func (u *UtilityModule) Stop() error {
 	return nil
+}
+
+func (u *UtilityModule) GetModuleName() string {
+	return UtilityModuleName
 }
 
 func (u *UtilityModule) SetBus(bus modules.Bus) {

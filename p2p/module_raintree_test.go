@@ -1,18 +1,39 @@
 package p2p
 
 import (
+	"crypto/ed25519"
+	"encoding/binary"
+	"log"
+	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
 	"sync"
 	"testing"
+	"time"
 
-	"github.com/pokt-network/pocket/shared/types"
+	"github.com/golang/mock/gomock"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/modules"
+	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// IMPROVE(team): Looking into adding more tests and accounting for more edge cases.
+func TestMain(m *testing.M) {
+	exitCode := m.Run()
+	files, err := filepath.Glob("*.json")
+	if err != nil {
+		log.Fatalf("Error finding json file: %v", err)
+	}
+	for _, f := range files {
+		os.Remove(f)
+	}
+	os.Exit(exitCode)
+}
 
-// ~~~~~~ RainTree Unit Tests ~~~~~~
-
+// ### RainTree Unit Tests ###
 func TestRainTreeNetworkCompleteOneNodes(t *testing.T) {
 	// val_1
 	originatorNode := validatorId(1)
@@ -174,41 +195,99 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	// 2. Send the first message (by the originator) to trigger a RainTree broadcast
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
-	require.NoError(t, p2pMod.Broadcast(p, types.PocketTopic_DEBUG_TOPIC))
+	p2pMod.Broadcast(p, debug.PocketTopic_DEBUG_TOPIC)
+
+	// Wait for completion
+	done := make(chan struct{})
+	go func() {
+		messageHandeledWaitGroup.Wait()
+		close(done)
+	}()
+
+	// Timeout or succeed
+	select {
+	case <-done:
+	// All done!
+	case <-time.After(3 * time.Second):
+		t.Fatal("Timeout waiting for message to be handled")
+	}
 }
 
+// ### RainTree Unit Utils - Configurations & constants and such ###
 
-// FuzzTest; 0 -> N; dynamic network; expected validator ID w/ expected
-// 1. HardCoded values - good for baseline sanity checking
-// 2. Test Generators - very good to have productionized and in the code
+const (
+	genesisConfigSeedStart = 42
+	maxNumKeys             = 42 // The number of keys generated for all the unit tests. Optimization to avoid regenerating every time.
+	serviceUrlFormat       = "val_%d"
+	testChannelSize        = 10000
+	testingGenesisFilePath = "genesis"
+	testingConfigFilePath  = "config"
+	jsonPostfix            = ".json"
+)
 
+// TODO(olshansky): Add configurations tests for dead and partially visible nodes
+type TestRainTreeCommConfig map[string]struct {
+	numNetworkReads  uint16
+	numNetworkWrites uint16
+}
 
-// FuzzTest
+var keys []cryptoPocket.PrivateKey
 
-// Expected range of expected networks; 1 -> 1000; use python for expected values
-//   Python simulator generates a dynamic hardcoded value?
+func init() {
+	keys = generateKeys(nil, maxNumKeys)
+}
 
+func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
+	keys := make([]cryptoPocket.PrivateKey, numValidators)
 
-// Questions:
-// 1. Where'd you get the values?
-// 2. How'd you pick the numbers?
-// 3. How do we get better coverage?
+	for i := range keys {
+		seedInt := genesisConfigSeedStart + i
+		seed := make([]byte, ed25519.PrivateKeySize)
+		binary.LittleEndian.PutUint32(seed, uint32(seedInt))
+		pk, err := cryptoPocket.NewPrivateKeyFromSeed(seed)
+		if err != nil {
+			panic(err)
+		}
+		keys[i] = pk
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i].Address().String() < keys[j].Address().String()
+	})
+	return keys
+}
 
-// WHat is the source of truth?
-// 	Simulator?
-//  Generator? -> black box; no magic
-//  The implementation?
+// A mock of the application specific to know if a message was sent to be handled by the application
+// INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
+//                         expectation with RainTree by comparing with Telemetry after updating specs.
+func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
+	ctrl := gomock.NewController(t)
+	busMock := modulesMock.NewMockBus(ctrl)
 
-// Double down: test generator
-// Verbosity
+	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(func(e *debug.PocketEvent) {
+		wg.Done()
+		log.Println("App specific bus mock publishing event to bus")
+	}).MaxTimes(1) // Using `MaxTimes` rather than `Times` because originator node implicitly handles the message
 
-// Issues:
-// 1. Cleanup layer (extra read & write)
-// 2. Redundancy layer (extra read & write)
-// 3. Down nodes (more complex modifications)
-//  - Ephemeral
-//  - Down
+	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
 
-// [Research] Make no-op mocks easier to understand w/o comments (goal is to reduce cognitive load and reuse)
+	return busMock
+}
 
-// Turn off telemetry
+// =======
+// 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
+// 		data := <-testChannel
+// 		return data, nil
+// 	}).MaxTimes(int(expectedNumNetworkReads + 1))
+// >>>>>>> main
+
+func prepareP2PModules(t *testing.T, configs []modules.Config) (p2pModules map[string]*p2pModule) {
+	p2pModules = make(map[string]*p2pModule, len(configs))
+	for i, config := range configs {
+		createTestingGenesisAndConfigFiles(t, config, modules.GenesisState{}, i)
+		p2pMod, err := Create(testingConfigFilePath+strconv.Itoa(i)+jsonPostfix, testingGenesisFilePath+jsonPostfix, false)
+		require.NoError(t, err)
+		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
+	}
+	return
+}

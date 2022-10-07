@@ -19,6 +19,7 @@
 
 ```bash
 shared             # [to-be-refactored] All of this is bound to change
+├── codec          # App wide encoding (currently protobuf)
 ├── config         # Utilities to load and verify Node configurations
 ├── crypto         # Shared crypto utilities specific to Pocket
 ├── modules        # Interfaces to the core Pocket modules
@@ -29,11 +30,8 @@ shared             # [to-be-refactored] All of this is bound to change
 |   ├── utility_module.go
 |   ├── persistence_module.go
 |   ├── telemetry_module.go
-├── telemetry      # Cross-module telemetry
-├── tests          # Cross-module and shared-utility tests
-├── types          # Types (structs & protos) shared across modules
-|   ├──            # Please reach out to the team if you need a walk-through for these
-├── utils          # Various helper utilities used across the repo
+|   ├── types.go   # Shared interfaces
+├── tests          # Cross-module and shared testing_artifacts (to be refactored to make testing more modular)
 ├── node.go        # The main entrypoint to the Pocket Node
 ├── bus.go         # Implementation of the Bus module
 ```
@@ -47,7 +45,7 @@ The key things to keep in mind are:
   - Receive asynchronous events from the **main events channel**
 - The **Persistence** module is the only module that communicates with the local database
 - The **P2P** module is the only one that communicates with the outside world
-
+- **Clock** is a drop-in replacement for some of the features offered by the `time` package, it acts as an injectable clock implementation used to provide time manipulation while testing.
 <!-- Though this flowchart could be made more explicit, it was implemented in mermaid to follow the Visualisation-As-Code paradigm and make it easier to maintain and upkeep. -->
 
 ```mermaid
@@ -56,7 +54,9 @@ flowchart TD
         subgraph Pocket's Application Specific Bus
             B("Bus")
             E("Main Events Channel")
+            Clock("Clock")
             B <-.-> E
+            B <-.-> Clock
         end
         subgraph Pocket's Core Modules
             P(Persistence) & C(Consensus) & U(Utility) & P2P(P2P)

@@ -2,15 +2,14 @@ package utility
 
 import (
 	"encoding/hex"
-
+	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 type UtilityContext struct {
 	LatestHeight int64
-	Mempool      types.Mempool
+	Mempool      typesUtil.Mempool
 	Context      *Context // IMPROVE: Consider renmaming to PersistenceContext
 }
 
@@ -23,7 +22,7 @@ type Context struct {
 func (u *UtilityModule) NewContext(height int64) (modules.UtilityContext, error) {
 	ctx, err := u.GetBus().GetPersistenceModule().NewRWContext(height)
 	if err != nil {
-		return nil, types.ErrNewPersistenceContext(err)
+		return nil, typesUtil.ErrNewPersistenceContext(err)
 	}
 	return &UtilityContext{
 		LatestHeight: height,
@@ -53,44 +52,57 @@ func (u *UtilityContext) ReleaseContext() {
 	u.Context = nil
 }
 
-func (u *UtilityContext) GetLatestHeight() (int64, types.Error) {
-	return u.LatestHeight, nil
+func (u *UtilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {
+	height, er := u.Store().GetHeight()
+	if er != nil {
+		return 0, typesUtil.ErrGetHeight(er)
+	}
+	return height, nil
 }
 
-func (u *UtilityContext) Codec() types.Codec {
-	return types.GetCodec()
+func (u *UtilityContext) GetStoreAndHeight() (*Context, int64, typesUtil.Error) {
+	store := u.Store()
+	height, er := store.GetHeight()
+	if er != nil {
+		return nil, 0, typesUtil.ErrGetHeight(er)
+	}
+	return store, height, nil
 }
 
-func (u *UtilityContext) RevertLastSavePoint() types.Error {
+func (u *UtilityContext) Codec() codec.Codec {
+	return codec.GetCodec()
+}
+
+func (u *UtilityContext) RevertLastSavePoint() typesUtil.Error {
 	if len(u.Context.SavePointsM) == typesUtil.ZeroInt {
-		return types.ErrEmptySavePoints()
+		return typesUtil.ErrEmptySavePoints()
 	}
 	var key []byte
 	popIndex := len(u.Context.SavePoints) - 1
 	key, u.Context.SavePoints = u.Context.SavePoints[popIndex], u.Context.SavePoints[:popIndex]
 	delete(u.Context.SavePointsM, hex.EncodeToString(key))
 	if err := u.Context.PersistenceRWContext.RollbackToSavePoint(key); err != nil {
-		return types.ErrRollbackSavePoint(err)
+		return typesUtil.ErrRollbackSavePoint(err)
 	}
 	return nil
 }
 
-func (u *UtilityContext) NewSavePoint(transactionHash []byte) types.Error {
+func (u *UtilityContext) NewSavePoint(transactionHash []byte) typesUtil.Error {
 	if err := u.Context.PersistenceRWContext.NewSavePoint(transactionHash); err != nil {
-		return types.ErrNewSavePoint(err)
+		return typesUtil.ErrNewSavePoint(err)
 	}
 	txHash := hex.EncodeToString(transactionHash)
 	if _, exists := u.Context.SavePointsM[txHash]; exists {
-		return types.ErrDuplicateSavePoint()
+		return typesUtil.ErrDuplicateSavePoint()
 	}
 	u.Context.SavePoints = append(u.Context.SavePoints, transactionHash)
 	u.Context.SavePointsM[txHash] = struct{}{}
 	return nil
 }
 
-func (c *Context) Reset() types.Error {
+func (c *Context) Reset() typesUtil.Error {
 	if err := c.PersistenceRWContext.Reset(); err != nil {
-		return types.ErrResetContext(err)
+		return typesUtil.ErrResetContext(err)
 	}
 	return nil
 }

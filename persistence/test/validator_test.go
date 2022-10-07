@@ -2,22 +2,21 @@ package test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"log"
 	"testing"
 
+	"github.com/pokt-network/pocket/persistence/types"
+
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/schema"
 	"github.com/pokt-network/pocket/shared/crypto"
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
 	"github.com/stretchr/testify/require"
 )
 
 func FuzzValidator(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		NewTestGenericActor(schema.ValidatorActor, newTestValidator),
-		GetGenericActor(schema.ValidatorActor, getTestValidator),
-		schema.ValidatorActor)
+		NewTestGenericActor(types.ValidatorActor, newTestValidator),
+		GetGenericActor(types.ValidatorActor, getTestValidator),
+		types.ValidatorActor)
 }
 
 func TestGetSetValidatorStakeAmount(t *testing.T) {
@@ -120,13 +119,13 @@ func TestGetValidatorsReadyToUnstake(t *testing.T) {
 	unstakingValidators, err := db.GetValidatorsReadyToUnstake(0, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(unstakingValidators), "wrong number of actors ready to unstake at height 0")
-	require.Equal(t, validator.Address, hex.EncodeToString(unstakingValidators[0].Address), "unexpected validatorlication actor returned")
+	require.Equal(t, validator.Address, hex.EncodeToString(unstakingValidators[0].GetAddress()), "unexpected validatorlication actor returned")
 
 	// Check unstaking validators at height 1
 	unstakingValidators, err = db.GetValidatorsReadyToUnstake(1, persistence.UnstakingStatus)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(unstakingValidators), "wrong number of actors ready to unstake at height 1")
-	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingValidators[0].Address, unstakingValidators[1].Address})
+	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingValidators[0].GetAddress(), unstakingValidators[1].GetAddress()})
 }
 
 func TestGetValidatorStatus(t *testing.T) {
@@ -141,12 +140,12 @@ func TestGetValidatorStatus(t *testing.T) {
 	// Check status before the validator exists
 	status, err := db.GetValidatorStatus(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, status, persistence.UndefinedStakingStatus, "unexpected status")
+	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
 
 	// Check status after the validator exists
 	status, err = db.GetValidatorStatus(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, status, DefaultStakeStatus, "unexpected status")
+	require.Equal(t, DefaultStakeStatus, status, "unexpected status")
 }
 
 func TestGetValidatorPauseHeightIfExists(t *testing.T) {
@@ -211,7 +210,7 @@ func TestGetValidatorOutputAddress(t *testing.T) {
 	require.Equal(t, hex.EncodeToString(output), validator.Output, "unexpected output address")
 }
 
-func newTestValidator() (*typesGenesis.Actor, error) {
+func newTestValidator() (*types.Actor, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
 		return nil, err
@@ -222,7 +221,7 @@ func newTestValidator() (*typesGenesis.Actor, error) {
 		return nil, err
 	}
 
-	return &typesGenesis.Actor{
+	return &types.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		GenericParam:    DefaultServiceUrl,
@@ -233,22 +232,22 @@ func newTestValidator() (*typesGenesis.Actor, error) {
 	}, nil
 }
 
-func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*typesGenesis.Actor, error) {
+func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*types.Actor, error) {
 	validator, err := newTestValidator()
 	if err != nil {
 		return nil, err
 	}
 	addrBz, err := hex.DecodeString(validator.Address)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", validator.Address))
+		log.Fatalf("an error occurred converting address to bytes %s", validator.Address)
 	}
 	pubKeyBz, err := hex.DecodeString(validator.PublicKey)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", validator.PublicKey))
+		log.Fatalf("an error occurred converting pubKey to bytes %s", validator.PublicKey)
 	}
 	outputBz, err := hex.DecodeString(validator.Output)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", validator.Output))
+		log.Fatalf("an error occurred converting output to bytes %s", validator.Output)
 	}
 	return validator, db.InsertValidator(
 		addrBz,
@@ -262,7 +261,7 @@ func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*type
 		DefaultUnstakingHeight)
 }
 
-func getTestValidator(db *persistence.PostgresContext, address []byte) (*typesGenesis.Actor, error) {
+func getTestValidator(db *persistence.PostgresContext, address []byte) (*types.Actor, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, err := db.GetValidator(address, db.Height)
 	if err != nil {
 		return nil, err
@@ -283,7 +282,7 @@ func getTestValidator(db *persistence.PostgresContext, address []byte) (*typesGe
 		return nil, err
 	}
 
-	return &typesGenesis.Actor{
+	return &types.Actor{
 		Address:         hex.EncodeToString(operatorAddr),
 		PublicKey:       hex.EncodeToString(operatorPubKey),
 		GenericParam:    serviceURL,
