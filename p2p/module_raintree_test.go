@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -274,12 +276,76 @@ func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock
 	return busMock
 }
 
-// =======
-// 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
-// 		data := <-testChannel
-// 		return data, nil
-// 	}).MaxTimes(int(expectedNumNetworkReads + 1))
-// >>>>>>> main
+func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockConsensusModule {
+	ctrl := gomock.NewController(t)
+	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
+
+	validators := genesisState.PersistenceGenesisState.GetVals()
+	m := make(modules.ValidatorMap, len(validators))
+	for _, v := range validators {
+		m[v.GetAddress()] = v
+	}
+
+	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
+	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
+	return consensusMock
+}
+
+func prepareTelemetryMock(t *testing.T) *modulesMock.MockTelemetryModule {
+	ctrl := gomock.NewController(t)
+	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
+
+	timeSeriesAgentMock := prepareTimeSeriesAgentMock(t)
+	eventMetricsAgentMock := prepareEventMetricsAgentMock(t)
+
+	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
+	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
+	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
+
+	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
+	return telemetryMock
+}
+
+func prepareTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
+	ctrl := gomock.NewController(t)
+	timeseriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
+	return timeseriesAgentMock
+}
+
+func prepareEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAgent {
+	ctrl := gomock.NewController(t)
+	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
+	return eventMetricsAgentMock
+}
+
+// The reason with use `MaxTimes` instead of `Times` here is because we could have gotten full coverage
+// while a message was still being sent that would have later been dropped due to de-duplication. There
+// is a race condition here, but it is okay because our goal is to achieve max coverage with an upper limit
+// on the number of expected messages propagated.
+// INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
+//                         expectation with RainTree by comparing with Telemetry after updating specs.
+func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesP2P.Transport {
+	testChannel := make(chan []byte, testChannelSize)
+	ctrl := gomock.NewController(t)
+	connMock := mocksP2P.NewMockTransport(ctrl)
+
+	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
+		data := <-testChannel
+		return data, nil
+	}).MaxTimes(int(expectedNumNetworkReads + 1))
+
+	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) error {
+		testChannel <- data
+		return nil
+	}).MaxTimes(int(expectedNumNetworkWrites))
+
+	connMock.EXPECT().Close().Return(nil).Times(1)
+
+	return connMock
+}
 
 func prepareP2PModules(t *testing.T, configs []modules.Config) (p2pModules map[string]*p2pModule) {
 	p2pModules = make(map[string]*p2pModule, len(configs))

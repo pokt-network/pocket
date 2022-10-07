@@ -115,7 +115,7 @@ func (m *p2pModule) Start() error {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	p2pConfig := m.GetBus().GetConfig().P2P
+	p2pConfig := m.GetBus().GetConfig().GetP2PConfig()
 	addrBook, err := ValidatorMapToAddrBook(p2pConfig, m.bus.GetConsensusModule().ValidatorMap())
 	if err != nil {
 		return err

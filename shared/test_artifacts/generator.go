@@ -137,15 +137,19 @@ func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
 }
 
 // TODO(andrew): The current implementation of NewActors  will have overlapping `ServiceUrl` for different types of actors which needs to be fixed.
-func NewActors(actorType types.ActorType, n int) (actors []*genesis.Actor, privateKeys []string) {
+// func NewActors(actorType types.ActorType, n int) (actors []*genesis.Actor, privateKeys []string) {
+// 	for i := 0; i < n; i++ {
+// 		// REFACTOR(drewsky): discuss the generic param / actor specific param / service URL disambiguation
+// 		genericParam := GetServiceUrl(i + 1)
+// 		if actorType == genesis.ActorType_App {
+// 			// func NewActors(actorType MockActorType, n int) (actors []modules.Actor, privateKeys []string) {
+// 			// 	for i := 0; i < n; i++ {
+// 			// 		genericParam := fmt.Sprintf("node%d.consensus:8080", i+1)
+// 			// 		if int32(actorType) == int32(MockActorType_App) {
+func NewActors(actorType MockActorType, n int) (actors []modules.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
-		// REFACTOR(drewsky): discuss the generic param / actor specific param / service URL disambiguation
-		genericParam := GetServiceUrl(i + 1)
-		if actorType == genesis.ActorType_App {
-			// func NewActors(actorType MockActorType, n int) (actors []modules.Actor, privateKeys []string) {
-			// 	for i := 0; i < n; i++ {
-			// 		genericParam := fmt.Sprintf("node%d.consensus:8080", i+1)
-			// 		if int32(actorType) == int32(MockActorType_App) {
+		genericParam := fmt.Sprintf("node%d.consensus:8080", i+1)
+		if int32(actorType) == int32(MockActorType_App) {
 			genericParam = DefaultMaxRelaysString
 		}
 		actor, pk := NewDefaultActor(int32(actorType), genericParam)
@@ -156,15 +160,19 @@ func NewActors(actorType types.ActorType, n int) (actors []*genesis.Actor, priva
 	return
 }
 
-func GetServiceUrl(n int) string {
-	return fmt.Sprintf(ServiceUrlFormat, n)
-}
+// func GetServiceUrl(n int) string {
+// 	return fmt.Sprintf(ServiceUrlFormat, n)
+// }
 
-func NewDefaultActor(actorType genesis.ActorType, genericParam string) (actor *genesis.Actor, privateKey string) {
+// func NewDefaultActor(actorType genesis.ActorType, genericParam string) (actor *genesis.Actor, privateKey string) {
+// 	privKey, pubKey, addr := GenerateNewKeysStrings()
+// 	chains := DefaultChains
+// 	// TODO(andrew): Consider using a switch statement here
+// 	if actorType == genesis.ActorType_Val {
+func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor, privateKey string) {
 	privKey, pubKey, addr := GenerateNewKeysStrings()
 	chains := DefaultChains
-	// TODO(andrew): Consider using a switch statement here
-	if actorType == genesis.ActorType_Val {
+	if actorType == int32(typesPersistence.ActorType_Val) {
 		chains = nil
 	} else if actorType == int32(MockActorType_App) {
 		genericParam = DefaultMaxRelaysString
