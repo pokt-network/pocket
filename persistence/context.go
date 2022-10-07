@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"context"
-	"fmt"
 	"log"
 )
 
@@ -16,7 +15,7 @@ func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	return p.GetTx().Rollback(context.TODO())
 }
 
-func (p PostgresContext) UpdateAppHash() ([]byte, error) {
+func (p *PostgresContext) UpdateAppHash() ([]byte, error) {
 	if err := p.updateStateHash(); err != nil {
 		return nil, err
 	}
@@ -30,29 +29,24 @@ func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(block.Transactions, "OLSH")
 
-	// if err := p.insertBlock(block); err != nil {
-	// 	return err
-	// }
-
-	fmt.Println("OLSH 0")
-	if err := p.storeBlock(block); err != nil {
-		fmt.Println("OLSH 1")
+	if err := p.insertBlock(block); err != nil {
 		return err
 	}
-	fmt.Println("OLSH 2")
 
-	fmt.Println("OLSH 3")
+	if err := p.storeBlock(block); err != nil {
+		return err
+	}
+
 	ctx := context.TODO()
 	if err := p.GetTx().Commit(ctx); err != nil {
 		return err
 	}
-	fmt.Println("OLSH 4")
+
 	if err := p.conn.Close(ctx); err != nil {
 		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
 	}
-	fmt.Println("OLSH 5")
+
 	return nil
 }
 

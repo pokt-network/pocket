@@ -127,7 +127,7 @@ func (p *PostgresContext) updateStateHash() error {
 	rootsConcat := bytes.Join(roots, []byte{})
 	stateHash := sha256.Sum256(rootsConcat)
 
-	p.currentStateHash = stateHash[:]
+	p.currentStateHash = stateHash[:] //[]byte(fmt.Sprintf("%x", ))
 	return nil
 }
 

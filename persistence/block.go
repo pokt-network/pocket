@@ -83,8 +83,8 @@ func (p *PostgresContext) getBlock(proposerAddr []byte, quorumCert []byte) (*typ
 
 	block := &types.Block{
 		Height:            uint64(p.Height),
-		Hash:              string(p.currentStateHash),
-		PrevHash:          string(prevHash),
+		Hash:              hex.EncodeToString(p.currentStateHash),
+		PrevHash:          hex.EncodeToString(prevHash),
 		ProposerAddress:   proposerAddr,
 		QuorumCertificate: quorumCert,
 		Transactions:      p.currentBlockTxs,

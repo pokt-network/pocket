@@ -2,7 +2,6 @@ package test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/big"
 	"testing"
 
@@ -12,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestStateHash_DeterministicStateHash(t *testing.T) {
+func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	// These hashes were determined manually by running the test, but hardcoded to guarantee
 	// that the business logic doesn't change and that they remain deterministic.
 	encodedAppHash := []string{
@@ -21,11 +20,12 @@ func TestStateHash_DeterministicStateHash(t *testing.T) {
 		"a46c8024472f50a4ab887b8b1e06fdc578f0344eada2d68784325c27e74d6529",
 	}
 
-	// Make sure the app Hash is the same every time
-
 	for i := 0; i < 3; i++ {
+		// Get the context at the new height and retrieve one of the apps
 		height := int64(i + 1)
 		heightBz := persistence.HeightToBytes(height)
+		expectedAppHash := encodedAppHash[i]
+
 		db := NewTestPostgresContext(t, height)
 
 		apps, err := db.GetAllApps(height)
@@ -35,23 +35,25 @@ func TestStateHash_DeterministicStateHash(t *testing.T) {
 		addrBz, err := hex.DecodeString(app.GetAddress())
 		require.NoError(t, err)
 
+		// Update the app's stake
 		newStakeAmount := types.BigIntToString(big.NewInt(height + int64(420000000000)))
 		err = db.SetAppStakeAmount(addrBz, newStakeAmount)
 		require.NoError(t, err)
 
-		appHash, err := db.UpdateAppHash()
-		require.NoError(t, err)
-		require.Equal(t, encodedAppHash[i], hex.EncodeToString(appHash))
-
+		// NOTE: The tx does not currently affect the state hash
 		txBz := []byte("a tx, i am, which set the app stake amount to " + newStakeAmount)
 		err = db.StoreTransaction(txBz)
 		require.NoError(t, err)
 
-		fmt.Println(err, "OLSH1")
+		// Update & commit the state hash
+		appHash, err := db.UpdateAppHash()
+		require.NoError(t, err)
+		require.Equal(t, expectedAppHash, hex.EncodeToString(appHash))
+
 		err = db.Commit([]byte("proposer"), []byte("quorumCert"))
-		fmt.Println(err, "OLSH2")
 		require.NoError(t, err)
 
+		// Verify the block contents
 		blockBz, err := testPersistenceMod.GetBlockStore().Get(heightBz)
 		require.NoError(t, err)
 
@@ -60,11 +62,10 @@ func TestStateHash_DeterministicStateHash(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, block.Transactions, 1)
 		require.Equal(t, txBz, block.Transactions[0])
+		require.Equal(t, expectedAppHash, block.Hash) // block
+		if i > 0 {
+			require.Equal(t, encodedAppHash[i-1], block.PrevHash) // chain
+		}
 
-		// Clear and release the context
-		// db.DebugClearAll()
-		// testPersistenceMod.GetBlockStore().ClearAll()
-		db.Release()
-		testPersistenceMod.ReleaseWriteContext()
 	}
 }

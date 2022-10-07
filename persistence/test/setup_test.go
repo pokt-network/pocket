@@ -68,12 +68,12 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	db, ok := ctx.(*persistence.PostgresContext)
 	require.True(t, ok)
 
-	t.Cleanup(func() {
-		db.Release()
-		testPersistenceMod.ReleaseWriteContext()
-		// require.NoError(t, db.Release())
-		// require.NoError(t, testPersistenceMod.ReleaseWriteContext())
-	})
+	// t.Cleanup(func() {
+	// 	// db.Release()
+	// 	// testPersistenceMod.ReleaseWriteContext()
+	// 	require.NoError(t, db.Release())
+	// 	require.NoError(t, testPersistenceMod.ReleaseWriteContext())
+	// })
 
 	return db
 }
