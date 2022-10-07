@@ -65,11 +65,10 @@ func (p PostgresContext) storeBlock(block *types.Block) error {
 	if err != nil {
 		return err
 	}
-
 	return p.blockStore.Put(HeightToBytes(p.Height), blockBz)
 }
 
-func (p *PostgresContext) getBlock(proposerAddr []byte, quorumCert []byte) (*types.Block, error) {
+func (p *PostgresContext) prepareBlock(proposerAddr []byte, quorumCert []byte) (*types.Block, error) {
 	var prevHash []byte
 	if p.Height > 0 {
 		var err error

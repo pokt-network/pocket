@@ -105,7 +105,7 @@ func (p *PostgresContext) updateStateHash() error {
 		case paramsMerkleTree:
 			fallthrough
 		case flagsMerkleTree:
-			log.Println("TODO: merkle tree not implemented", treeType)
+			// log.Println("TODO: merkle tree not implemented", treeType)
 		default:
 			log.Fatalln("Not handled yet in state commitment update", treeType)
 		}
@@ -117,17 +117,18 @@ func (p *PostgresContext) updateStateHash() error {
 		roots = append(roots, p.merkleTrees[treeType].Root())
 	}
 
-	// Currently using the order of the merkle tree definition (i.e. defined in code)
-	// Sort the merkle roots lexicographically
-	// sort.Slice(roots, func(r1, r2 int) bool {
-	// 	return bytes.Compare(roots[r1], roots[r2]) < 0
-	// })
+	// DISCUSS(drewsky): In #152, we discussed the ordering of the roots
+	// 	Strict Ordering: sha3(app_tree_root + fish_tree_root + service_node_tree_root + validator_tree_root)
+	// 	Value Ordering sha3(app_tree_root <= + fish_tree_root <= + service_node_tree_root <= + validator_tree_root)
+	// If we don't do the lexographic ordering below, then it follows the string ordering of
+	// the merkle trees declared above. I have a feeling you're not a fan of this solution, but curious
+	// to hear your thoughts.
 
 	// Get the state hash
 	rootsConcat := bytes.Join(roots, []byte{})
 	stateHash := sha256.Sum256(rootsConcat)
 
-	p.currentStateHash = stateHash[:] //[]byte(fmt.Sprintf("%x", ))
+	p.currentStateHash = stateHash[:]
 	return nil
 }
 

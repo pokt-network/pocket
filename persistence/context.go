@@ -25,7 +25,7 @@ func (p *PostgresContext) UpdateAppHash() ([]byte, error) {
 func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
 
-	block, err := p.getBlock(proposerAddr, quorumCert)
+	block, err := p.prepareBlock(proposerAddr, quorumCert)
 	if err != nil {
 		return err
 	}
