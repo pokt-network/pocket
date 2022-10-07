@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 )
 
 const (
@@ -52,6 +53,11 @@ func NewPrivateKey(hexString string) (PrivateKey, error) {
 
 func GeneratePrivateKey() (PrivateKey, error) {
 	_, pk, err := ed25519.GenerateKey(nil)
+	return Ed25519PrivateKey(pk), err
+}
+
+func GeneratePrivateKeyWithReader(rand io.Reader) (PrivateKey, error) {
+	_, pk, err := ed25519.GenerateKey(rand)
 	return Ed25519PrivateKey(pk), err
 }
 

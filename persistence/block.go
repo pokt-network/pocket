@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"log"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/codec"
 )
 
 // OPTIMIZE(team): get from blockstore or keep in memory
@@ -45,12 +45,12 @@ func (p PostgresContext) TransactionExists(transactionHash string) (bool, error)
 	return false, nil
 }
 
-func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
+func (p *PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
 	p.currentBlockTxs = append(p.currentBlockTxs, transactionProtoBytes)
 	return nil
 }
 
-func (p PostgresContext) insertBlock(block *types.Block) error {
+func (p *PostgresContext) insertBlock(block *types.Block) error {
 	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
@@ -61,15 +61,15 @@ func (p PostgresContext) insertBlock(block *types.Block) error {
 }
 
 func (p PostgresContext) storeBlock(block *types.Block) error {
-	blockBz, err := proto.Marshal(block)
-
+	blockBz, err := codec.GetCodec().Marshal(block)
 	if err != nil {
 		return err
 	}
-	return p.blockStore.Put(heightToBytes(p.Height), blockBz)
+
+	return p.blockStore.Put(HeightToBytes(p.Height), blockBz)
 }
 
-func (p PostgresContext) getBlock(proposerAddr []byte, quorumCert []byte) (*types.Block, error) {
+func (p *PostgresContext) getBlock(proposerAddr []byte, quorumCert []byte) (*types.Block, error) {
 	var prevHash []byte
 	if p.Height > 0 {
 		var err error
@@ -94,7 +94,8 @@ func (p PostgresContext) getBlock(proposerAddr []byte, quorumCert []byte) (*type
 }
 
 // CLEANUP: Should this be moved to a shared directory?
-func heightToBytes(height int64) []byte {
+// Exposed for testing purposes
+func HeightToBytes(height int64) []byte {
 	heightBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(heightBytes, uint64(height))
 	return heightBytes

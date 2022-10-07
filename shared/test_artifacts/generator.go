@@ -1,6 +1,8 @@
 package test_artifacts
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -121,7 +123,7 @@ func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing s
 
 func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
 	for i := 0; i < n; i++ {
-		_, _, addr := GenerateNewKeysStrings()
+		_, _, addr := GenerateNewKeysDeterministic(69)
 		if privateKeys != nil {
 			pk, _ := crypto.NewPrivateKey(privateKeys[i])
 			addr = pk.Address().String()
@@ -148,7 +150,7 @@ func NewActors(actorType MockActorType, n int) (actors []modules.Actor, privateK
 }
 
 func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor, privateKey string) {
-	privKey, pubKey, addr := GenerateNewKeysStrings()
+	privKey, pubKey, addr := GenerateNewKeysDeterministic(69)
 	chains := DefaultChains
 	if actorType == int32(typesPersistence.ActorType_Val) {
 		chains = nil
@@ -168,6 +170,14 @@ func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor,
 	}, privKey
 }
 
+func GenerateNewKeysStrings() (privateKey, publicKey, address string) {
+	privKey, pubKey, addr := GenerateNewKeys()
+	privateKey = privKey.String()
+	publicKey = pubKey.String()
+	address = addr.String()
+	return
+}
+
 func GenerateNewKeys() (privateKey crypto.PrivateKey, publicKey crypto.PublicKey, address crypto.Address) {
 	privateKey, _ = crypto.GeneratePrivateKey()
 	publicKey = privateKey.PublicKey()
@@ -175,10 +185,19 @@ func GenerateNewKeys() (privateKey crypto.PrivateKey, publicKey crypto.PublicKey
 	return
 }
 
-func GenerateNewKeysStrings() (privateKey, publicKey, address string) {
-	privKey, pubKey, addr := GenerateNewKeys()
-	privateKey = privKey.String()
-	publicKey = pubKey.String()
-	address = addr.String()
+func GenerateNewKeysDeterministic(seed uint32) (privateKey, publicKey, address string) {
+	cryptoSeed := make([]byte, crypto.SeedSize)
+	binary.LittleEndian.PutUint32(cryptoSeed, seed)
+
+	reader := bytes.NewReader(cryptoSeed)
+	privateKeyBz, err := crypto.GeneratePrivateKeyWithReader(reader)
+	if err != nil {
+		panic(err)
+	}
+
+	privateKey = privateKeyBz.String()
+	publicKey = privateKeyBz.PublicKey().String()
+	address = privateKeyBz.PublicKey().Address().String()
+
 	return
 }

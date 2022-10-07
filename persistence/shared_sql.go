@@ -54,21 +54,28 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	addrs := make([][]byte, 0)
+	for rows.Next() {
+		var addr string
+		if err = rows.Scan(&addr); err != nil {
+			return nil, err
+		}
+		addrBz, err := hex.DecodeString(addr)
+		if err != nil {
+			return nil, err
+		}
+		addrs = append(addrs, addrBz)
+	}
+	rows.Close()
 
 	// OPTIMIZE: Consolidate logic with `GetActor` to reduce code footprint
-	var addr string
-	for rows.Next() {
-		if err = rows.Scan(&addr); err != nil {
-			return
-		}
-
+	actors = make([]types.BaseActor, len(addrs))
+	for i, addr := range addrs {
 		actor, err := p.GetActor(actorSchema, []byte(addr), height)
 		if err != nil {
 			return nil, err
 		}
-
-		actors = append(actors, actor)
+		actors[i] = actor
 	}
 
 	return
@@ -106,7 +113,8 @@ func (p *PostgresContext) GetChainsForActor(
 	tx pgx.Tx,
 	actorSchema types.ProtocolActorSchema,
 	actor types.BaseActor,
-	height int64) (a types.BaseActor, err error) {
+	height int64,
+) (a types.BaseActor, err error) {
 	if actorSchema.GetChainsTableName() == "" {
 		return actor, nil
 	}

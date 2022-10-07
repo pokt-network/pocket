@@ -30,7 +30,7 @@ func (m *PersistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 func (m *PersistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 	// TODO: Add an iterator to the `kvstore` and use that instead
 	height := m.GetBus().GetConsensusModule().CurrentHeight() - 1 // -1 because we want the latest committed height
-	blockBytes, err := m.GetBlockStore().Get(heightToBytes(int64(height)))
+	blockBytes, err := m.GetBlockStore().Get(HeightToBytes(int64(height)))
 	if err != nil {
 		log.Printf("Error getting block %d from block store: %s \n", height, err)
 		return
@@ -49,7 +49,7 @@ func (m *PersistenceModule) clearState(_ *debug.DebugMessage) {
 		log.Printf("Error creating new context: %s \n", err)
 		return
 	}
-	if err := context.(PostgresContext).DebugClearAll(); err != nil {
+	if err := context.(*PostgresContext).DebugClearAll(); err != nil {
 		log.Printf("Error clearing state: %s \n", err)
 		return
 	}

@@ -196,7 +196,7 @@ func (m *PersistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		merkleTrees: m.trees,
 	}
 
-	return *m.writeContext, nil
+	return m.writeContext, nil
 
 }
 
@@ -259,5 +259,5 @@ func (m *PersistenceModule) shouldHydrateGenesisDb() (bool, error) {
 		return true, nil
 	}
 
-	return m.blockStore.Exists(heightToBytes(int64(maxHeight)))
+	return m.blockStore.Exists(HeightToBytes(int64(maxHeight)))
 }

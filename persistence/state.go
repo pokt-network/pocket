@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
-	"sort"
 
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/types"
@@ -22,6 +21,8 @@ const (
 	valMerkleTree
 	fishMerkleTree
 	serviceNodeMerkleTree
+
+	// Account Merkle Trees
 	accountMerkleTree
 	poolMerkleTree
 
@@ -96,15 +97,15 @@ func (p *PostgresContext) updateStateHash() error {
 				return err
 			}
 		case accountMerkleTree:
-			log.Fatalf("TODO: accountMerkleTree not implemented")
+			fallthrough
 		case poolMerkleTree:
-			log.Fatalf("TODO: poolMerkleTree not implemented")
+			fallthrough
 		case blocksMerkleTree:
-			log.Fatalf("TODO: blocksMerkleTree not implemented")
+			fallthrough
 		case paramsMerkleTree:
-			log.Fatalf("TODO: paramsMerkleTree not implemented")
+			fallthrough
 		case flagsMerkleTree:
-			log.Fatalf("TODO: flagsMerkleTree not implemented")
+			log.Println("TODO: merkle tree not implemented", treeType)
 		default:
 			log.Fatalln("Not handled yet in state commitment update", treeType)
 		}
@@ -116,10 +117,11 @@ func (p *PostgresContext) updateStateHash() error {
 		roots = append(roots, p.merkleTrees[treeType].Root())
 	}
 
+	// Currently using the order of the merkle tree definition (i.e. defined in code)
 	// Sort the merkle roots lexicographically
-	sort.Slice(roots, func(r1, r2 int) bool {
-		return bytes.Compare(roots[r1], roots[r2]) < 0
-	})
+	// sort.Slice(roots, func(r1, r2 int) bool {
+	// 	return bytes.Compare(roots[r1], roots[r2]) < 0
+	// })
 
 	// Get the state hash
 	rootsConcat := bytes.Join(roots, []byte{})
@@ -166,17 +168,17 @@ func (p PostgresContext) getActorsUpdatedAtHeight(actorType types.ActorType, hei
 	}
 
 	actors = make([]*types.Actor, len(schemaActors))
-	for _, actor := range actors {
+	for _, actor := range schemaActors {
 		actor := &types.Actor{
 			ActorType:       actorType,
 			Address:         actor.Address,
 			PublicKey:       actor.PublicKey,
 			Chains:          actor.Chains,
-			GenericParam:    actor.GenericParam,
-			StakedAmount:    actor.StakedAmount,
+			GenericParam:    actor.ActorSpecificParam,
+			StakedAmount:    actor.StakedTokens,
 			PausedHeight:    actor.PausedHeight,
 			UnstakingHeight: actor.UnstakingHeight,
-			Output:          actor.Output,
+			Output:          actor.OutputAddress,
 		}
 		actors = append(actors, actor)
 	}
