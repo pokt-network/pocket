@@ -40,7 +40,7 @@ gantt
 
 ## Milestones
 
-### M1. Pocket PoS (Proof of Stake)
+### [M1. Pocket PoS (Proof of Stake)](https://github.com/pokt-network/pocket/milestone/7)
 
 #### Goals:
 
@@ -51,41 +51,9 @@ gantt
 
 - Pocket specific utility
 - Devnet infrastructure
+- Extensive E2E automated testing
 
-#### Deliverables
-
-##### General Tooling
-  - [ ] Keybase functionality to import/create/export keys
-  - [ ] Base CLI 
-  - [ ] Base RPC
-  - [ ] Logging infrastructure
-
-##### Validator-only logic
-  - [ ] Stake
-  - [ ] Unstake
-  - [ ] Pause
-  - [ ] Unpause
-
-##### Validator slashing & rewards
-  - [ ] Slashing & jailing for not signing blocks
-  - [ ] Slashing & jailing for for double signing blocks
-  - [ ] Reward Validators for producing a block
-
-##### Consensus
-  - [ ] BFT Hotstuff Consensus implementation
-  - [ ] Consistency and liveness guarentees satisfied to the specification
-  - [ ] Pacemaker module  
-  - [ ] Replica block validation
-
-##### Mempool
-  - [ ] Mempool reaping and block production
-  - [ ] Mempool and TxIndexer  
-
-##### State sync:
-  - [ ] Block by block
-  - [ ] Block replay  
-
-### M2. Pocket DoS (Devnet of Servicers)
+### [M2. Pocket DoS (Devnet of Servicers)](https://github.com/pokt-network/pocket/milestone/8)
 
 #### Goals
 
@@ -93,28 +61,7 @@ gantt
 - [ ] Deploy Pocket V1 to DevNet
 - [ ] Build services to enable visiblity and benchmarking via telemetry and logging
 
-#### Deliverables
-
-##### Logging
-
-- [ ] Log dashboards namespaced & filterable by source & target module
-- [ ] Log dashboards namespaced & filterable by log level (error, debug, etc…)
-
-##### Telemetry
-
-- [ ] Visibility and insight into HotPOKT algorithm
-- [ ] Visibility and insight into RainTree algorithm
-- [ ] Standard services benchmarking & telemetry
-- [ ] A spec / document / list of metrics being tracked
-
-##### Guides
-
-- [ ] Instructions on how to run a LocalNet for development
-- [ ] Instructions on how to run a DevNet for development
-- [ ] Personalized DevNet
-- [ ] Automated build/tag based DevNet
-
-### M3. Pocket RoS (Relay or Slash)
+### [M3. Pocket RoS (Relay or Slash)](https://github.com/pokt-network/pocket/milestone/15)
 
 #### Goals:
 
@@ -122,34 +69,7 @@ gantt
   - Devnet supporting ETH relays
   - Initial implementation of reward distribution, report cards, etc...
 
-#### Deliverables
-
-##### Session Protocol
-  - [ ] GeoZone support
-  - [ ] RelayChains implementation
-
-##### Service Node Protocol
-  - [ ] Report Cards
-  - [ ] Salary Protocol
-  - [ ] Pause & Unpause
-
-##### Relay Protocol
-  - [ ] In process servicing / validation
-  - [ ] Storage and submission of relays
-
-##### Fisherman Protocol
-  - [ ] Report Cards
-  - [ ] Sampling Protocol
-  - [ ] Pause & Unpause
-
-##### App Protocol
-  - [ ] Application Authentication Tokens
-  - [ ] Pause & Unpause
-
-##### Gov Protocol
-  - [ ] DAO approved Fish
-
-### M4. Pocket CoS (Cloud of Services)
+### M4. [Pocket CoS (Cloud of Services)](https://github.com/pokt-network/pocket/milestone/20)
 
 #### Goals:
 
@@ -159,7 +79,7 @@ gantt
 - Testnet load testing, chaos testing, identification of attack vectors, etc...
 - Drive automation from community contributions
 
-### M5. Pocket IoS (Innovate or Skip)
+### [M5. Pocket IoS (Innovate or Skip)](https://github.com/pokt-network/pocket/milestone/16)
 
 #### Goals:
 
@@ -169,7 +89,7 @@ gantt
 - R&D for Pocket specific use cases, as well as sources of innovation and optimization
 - General-purpose relay support
 
-### M6. Pocket FoS (Finish or Serve)
+### [M6. Pocket FoS (Finish or Serve)](https://github.com/pokt-network/pocket/milestone/18)
 
 #### Goals:
 
