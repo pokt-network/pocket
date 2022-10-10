@@ -2,16 +2,14 @@ package test
 
 import (
 	"encoding/hex"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"math"
 	"math/big"
 	"testing"
 
-	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/shared/test_artifacts"
+	"github.com/stretchr/testify/require"
 
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestUtilityContext_ApplyBlock(t *testing.T) {
