@@ -140,12 +140,12 @@ func TestGetValidatorStatus(t *testing.T) {
 	// Check status before the validator exists
 	status, err := db.GetValidatorStatus(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, status, persistence.UndefinedStakingStatus, "unexpected status")
+	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
 
 	// Check status after the validator exists
 	status, err = db.GetValidatorStatus(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, status, DefaultStakeStatus, "unexpected status")
+	require.Equal(t, DefaultStakeStatus, status, "unexpected status")
 }
 
 func TestGetValidatorPauseHeightIfExists(t *testing.T) {

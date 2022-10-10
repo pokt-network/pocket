@@ -92,7 +92,6 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 	if err := pool.Purge(resource); err != nil {
 		log.Fatalf("could not purge resource: %s", err)
 	}
-	os.Exit(0)
 }
 
 // TODO(drewsky): Remove this in favor of a golang specific solution

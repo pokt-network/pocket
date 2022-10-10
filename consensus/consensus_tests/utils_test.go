@@ -31,9 +31,10 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	m.Run()
+	exitCode := m.Run()
 	os.Remove(testingConfigFilePath)
 	os.Remove(testingGenesisFilePath)
+	os.Exit(exitCode)
 }
 
 // If this is set to true, consensus unit tests will fail if additional unexpected messages are received.
