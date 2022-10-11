@@ -5,10 +5,16 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type Logger = zerolog.Logger
+
 type LoggerModule interface {
 	Module
 
-	// GetLogger returns the logger with additional context (module name)
+	// TODO(@okdas): move that to Module interface, so each module has its own logger (with context)
+	// https://github.com/pokt-network/pocket/issues/288
+	ObservableModule
+
+	// CreateLoggerForModule returns the logger with additional context (module name)
 	// https://github.com/rs/zerolog#sub-loggers-let-you-chain-loggers-with-additional-context
-	GetLoggerForModule(string) zerolog.Logger
+	CreateLoggerForModule(string) Logger
 }

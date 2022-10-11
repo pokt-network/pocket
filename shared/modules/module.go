@@ -24,3 +24,11 @@ type InitializableModule interface {
 	InitConfig(pathToConfigJSON string) (IConfig, error)
 	InitGenesis(pathToGenesisJSON string) (IGenesis, error)
 }
+
+// TODO(@okdas): this should also initialize metrics-related stuff, just the logger for now
+// InitMetrics(pathToConfigJSON string)
+// InitTracing(pathToConfigJSON string)
+type ObservableModule interface {
+	InitLogger(pathToConfigJSON string)
+	GetLogger() Logger
+}

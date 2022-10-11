@@ -23,6 +23,7 @@ type bus struct {
 	utility     modules.UtilityModule
 	consensus   modules.ConsensusModule
 	telemetry   modules.TelemetryModule
+	logger      modules.LoggerModule
 
 	clock clock.Clock
 }
@@ -87,6 +88,7 @@ func CreateBusWithOptionalModules(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
+	logger modules.LoggerModule,
 ) modules.Bus {
 	bus := &bus{
 		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -95,6 +97,7 @@ func CreateBusWithOptionalModules(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
+		logger:      logger,
 	}
 
 	maybeSetModuleBus := func(mod modules.Module) {
@@ -143,6 +146,10 @@ func (m bus) GetConsensusModule() modules.ConsensusModule {
 
 func (m bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
+}
+
+func (m bus) GetLoggerModule() modules.LoggerModule {
+	return m.logger
 }
 
 func (m *bus) GetClock() clock.Clock {

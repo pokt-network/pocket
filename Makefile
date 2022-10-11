@@ -113,7 +113,7 @@ develop_test: docker_check
 .PHONY: client_start
 ## Run a client daemon which is only used for debugging purposes
 client_start: docker_check
-	docker-compose -f build/deployments/docker-compose.yaml up -d client
+	docker-compose -f build/deployments/docker-compose.yaml up -d client --build
 
 .PHONY: client_connect
 ## Connect to the running client debugging daemon

@@ -7,32 +7,40 @@ import (
 
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 type LoggerModule struct {
-	bus          modules.Bus
-	GlobalLogger zerolog.Logger
-	ModuleLogger zerolog.Logger
+	bus    modules.Bus
+	logger modules.Logger
+}
+
+// Other loggers - main and ones injected in modules are branched out of mainLogger.
+var mainLogger = zerolog.New(os.Stderr).With().Timestamp().Logger()
+
+// The idea is to create a logger for each module, so that we can easily filter logs by module.
+// Keeping global logger too, because sometimes we need to log outside of modules.
+func GlobalLogger() zerolog.Logger {
+
+	// Should this be "module" = "none" instead?
+	return mainLogger.With().Str("logger", "global").Logger()
 }
 
 var _ modules.LoggerModule = &LoggerModule{}
 
 const (
-	LoggerModuleName = "logger"
+	ModuleName = "logger"
 )
 
-func (l *LoggerModule) GetLoggerForModule(moduleName string) zerolog.Logger {
-	return l.GlobalLogger.With().Str("module", moduleName).Logger()
+func (lm *LoggerModule) CreateLoggerForModule(moduleName string) modules.Logger {
+	return mainLogger.With().Str("module", moduleName).Logger()
 }
 
-// curiosity question: why do we need genesisPath for modules that have no interest in it?
 func Create(configPath, genesisPath string) (modules.LoggerModule, error) {
 	lm := new(LoggerModule)
-	lm.GlobalLogger = zerolog.New(os.Stderr).With().Timestamp().Logger()
-	lm.ModuleLogger = lm.GlobalLogger.With().Str("module", LoggerModuleName).Logger()
 
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix // before or after init?
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+
+	lm.InitLogger(configPath)
 
 	c, err := lm.InitConfig(configPath)
 	if err != nil {
@@ -47,13 +55,13 @@ func Create(configPath, genesisPath string) (modules.LoggerModule, error) {
 	zerolog.SetGlobalLevel(zlLevel)
 
 	if config.GetFormat() == LogFormat_pretty {
-		lm.GlobalLogger = lm.GlobalLogger.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		mainLogger = mainLogger.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
 	return lm, nil
 }
 
-func (l *LoggerModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
+func (lm *LoggerModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
 	data, err := ioutil.ReadFile(pathToConfigJSON)
 	if err != nil {
 		return
@@ -61,37 +69,45 @@ func (l *LoggerModule) InitConfig(pathToConfigJSON string) (config modules.IConf
 	// over arching configuration file
 	rawJSON := make(map[string]json.RawMessage)
 	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatal().Err(err).Str("path", pathToConfigJSON).Msg("an error occurred unmarshalling the config file")
+		lm.logger.Fatal().Err(err).Str("path", pathToConfigJSON).Msg("an error occurred unmarshalling the config file")
 	}
 	// telemetry specific configuration file
 	config = new(LoggerConfig)
-	err = json.Unmarshal(rawJSON[l.GetModuleName()], config)
+	err = json.Unmarshal(rawJSON[lm.GetModuleName()], config)
 	return
 }
 
-func (l *LoggerModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
+func (lm *LoggerModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
 	return // No-op
 }
 
-func (l *LoggerModule) Start() error {
+func (lm *LoggerModule) Start() error {
 	return nil
 }
 
-func (l *LoggerModule) Stop() error {
+func (lm *LoggerModule) Stop() error {
 	return nil
 }
 
-func (l *LoggerModule) GetModuleName() string {
-	return LoggerModuleName
+func (lm *LoggerModule) GetModuleName() string {
+	return ModuleName
 }
 
-func (l *LoggerModule) SetBus(bus modules.Bus) {
-	l.bus = bus
+func (lm *LoggerModule) SetBus(bus modules.Bus) {
+	lm.bus = bus
 }
 
-func (l *LoggerModule) GetBus() modules.Bus {
-	if l.bus == nil {
-		l.ModuleLogger.Fatal().Msg("Bus is not initialized")
+func (lm *LoggerModule) GetBus() modules.Bus {
+	if lm.bus == nil {
+		lm.logger.Fatal().Msg("Bus is not initialized")
 	}
-	return l.bus
+	return lm.bus
+}
+
+func (lm *LoggerModule) InitLogger(pathToConfigJSON string) {
+	lm.logger = lm.CreateLoggerForModule(lm.GetModuleName())
+}
+
+func (lm *LoggerModule) GetLogger() modules.Logger {
+	return lm.logger
 }

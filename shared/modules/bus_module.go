@@ -26,6 +26,7 @@ type Bus interface {
 	GetUtilityModule() UtilityModule
 	GetConsensusModule() ConsensusModule
 	GetTelemetryModule() TelemetryModule
+	GetLoggerModule() LoggerModule
 
 	// Configuration
 	GetConfig() map[string]json.RawMessage
