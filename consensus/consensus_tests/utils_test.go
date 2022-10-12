@@ -57,7 +57,7 @@ func init() {
 	}
 }
 
-type IdToNodeMapping map[typesCons.NodeId]modules.NodeModule
+type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
 /*** Node Generation Helpers ***/
 
@@ -168,25 +168,25 @@ func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
 // TODO(discuss): Should we use reflections inside the testing module as being done here or explicitly
 // define the interfaces used for debug/development. The latter will probably scale more but will
 // require more effort and pollute the source code with debugging information.
-func GetConsensusNodeState(node modules.NodeModule) typesCons.ConsensusNodeState {
+func GetConsensusNodeState(node *shared.Node) typesCons.ConsensusNodeState {
 	return GetConsensusModImpl(node).MethodByName("GetNodeState").Call([]reflect.Value{})[0].Interface().(typesCons.ConsensusNodeState)
 }
 
-func GetConsensusModElem(node modules.NodeModule) reflect.Value {
+func GetConsensusModElem(node *shared.Node) reflect.Value {
 	return reflect.ValueOf(node.GetBus().GetConsensusModule()).Elem()
 }
 
-func GetConsensusModImpl(node modules.NodeModule) reflect.Value {
+func GetConsensusModImpl(node *shared.Node) reflect.Value {
 	return reflect.ValueOf(node.GetBus().GetConsensusModule())
 }
 
 /*** Debug/Development Message Helpers ***/
 
-func TriggerNextView(t *testing.T, node modules.NodeModule) {
+func TriggerNextView(t *testing.T, node *shared.Node) {
 	triggerDebugMessage(t, node, debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW)
 }
 
-func triggerDebugMessage(t *testing.T, node modules.NodeModule, action debug.DebugMessageAction) {
+func triggerDebugMessage(t *testing.T, node *shared.Node, action debug.DebugMessageAction) {
 	debugMessage := &debug.DebugMessage{
 		Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
 		Message: nil,
@@ -207,7 +207,7 @@ func P2PBroadcast(_ *testing.T, nodes IdToNodeMapping, any *anypb.Any) {
 	}
 }
 
-func P2PSend(_ *testing.T, node modules.NodeModule, any *anypb.Any) {
+func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 	e := &debug.PocketEvent{Topic: debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC, Data: any}
 	node.GetBus().PublishEventToBus(e)
 }

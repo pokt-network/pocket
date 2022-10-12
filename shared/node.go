@@ -17,8 +17,6 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-var _ modules.NodeModule = &Node{}
-
 const (
 	MainModuleName = "main"
 )
