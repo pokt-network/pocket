@@ -274,8 +274,7 @@ func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
 
 // A mock of the application specific to know if a message was sent to be handled by the application
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//
-//	expectation with RainTree by comparing with Telemetry after updating specs.
+//                         expectation with RainTree by comparing with Telemetry after updating specs.
 func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
 	ctrl := gomock.NewController(t)
 	busMock := modulesMock.NewMockBus(ctrl)
@@ -341,8 +340,7 @@ func prepareEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAge
 // is a race condition here, but it is okay because our goal is to achieve max coverage with an upper limit
 // on the number of expected messages propagated.
 // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//
-//	expectation with RainTree by comparing with Telemetry after updating specs.
+//                         expectation with RainTree by comparing with Telemetry after updating specs.
 func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesP2P.Transport {
 	testChannel := make(chan []byte, testChannelSize)
 	ctrl := gomock.NewController(t)
@@ -363,6 +361,7 @@ func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWr
 	return connMock
 }
 
+// prepareP2PModules returns a map of configured p2pModules keyed by an incremental naming convention (eg: `val_1`, `val_2`, etc.)
 func prepareP2PModules(t *testing.T, runtimeConfigs []modules.RuntimeMgr) (p2pModules map[string]*p2pModule) {
 	p2pModules = make(map[string]*p2pModule, len(runtimeConfigs))
 	for i, runtimeConfig := range runtimeConfigs {
@@ -373,6 +372,8 @@ func prepareP2PModules(t *testing.T, runtimeConfigs []modules.RuntimeMgr) (p2pMo
 	return
 }
 
+// createMockRuntimeMgrs creates `numValidators` instances of mocked `RuntimeMgr` that are essentially
+// representing the runtime environments of the validators that we will use in our tests
 func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr {
 	ctrl := gomock.NewController(t)
 	mockRuntimeMgrs := make([]modules.RuntimeMgr, numValidators)
@@ -404,6 +405,7 @@ func validatorId(_ *testing.T, i int) string {
 	return fmt.Sprintf(serviceUrlFormat, i)
 }
 
+// createMockGenesisState configures and returns a mocked GenesisState
 func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) modules.GenesisState {
 	ctrl := gomock.NewController(t)
 
