@@ -6,10 +6,9 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/pokt-network/pocket/shared/test_artifacts"
-	"github.com/stretchr/testify/require"
-
+	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUtilityContext_ApplyBlock(t *testing.T) {

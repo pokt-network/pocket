@@ -11,13 +11,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
-
-	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/modules"
-	sharedTest "github.com/pokt-network/pocket/shared/test_artifacts"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -52,10 +50,10 @@ var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 // See https://github.com/ory/dockertest as reference for the template of this code
 // Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
 func TestMain(m *testing.M) {
-	pool, resource, dbUrl := sharedTest.SetupPostgresDocker()
+	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	testPersistenceMod = newTestPersistenceModule(dbUrl)
 	exitCode := m.Run()
-	sharedTest.CleanupPostgresDocker(m, pool, resource)
+	test_artifacts.CleanupPostgresDocker(m, pool, resource)
 	os.Exit(exitCode)
 }
 

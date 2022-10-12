@@ -6,13 +6,12 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
-
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/modules"
+	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/utility"
+	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
 
