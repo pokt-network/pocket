@@ -12,7 +12,7 @@ import (
 // TODO(andrew): generalize with the `actors interface`
 
 // WARNING: This function crashes the process if there is an error populating the genesis state.
-func (m *persistenceModule) populateGenesisState(state *types.PersistenceGenesisState) {
+func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesisState) {
 	log.Println("Populating genesis state...")
 
 	// REFACTOR: This business logic should probably live in `types/genesis.go`

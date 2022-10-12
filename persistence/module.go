@@ -56,7 +56,7 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 	if err := m.ValidateGenesis(genesis); err != nil {
 		return nil, fmt.Errorf("genesis validation failed: %w", err)
 	}
-	persistenceGenesis := genesis.GetPersistenceGenesisState().(*types.PersistenceGenesisState)
+	persistenceGenesis := genesis.GetPersistenceGenesisState()
 
 	conn, err := connectToDatabase(persistenceCfg.GetPostgresUrl(), persistenceCfg.GetNodeSchema())
 	if err != nil {
@@ -126,10 +126,6 @@ func (*persistenceModule) ValidateConfig(cfg modules.Config) error {
 }
 
 func (*persistenceModule) ValidateGenesis(genesis modules.GenesisState) error {
-	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
-	// if _, ok := genesis.GetPersistenceGenesisState().(*types.PersistenceGenesisState); !ok {
-	// 	return fmt.Errorf("cannot cast to PersistenceGenesisState")
-	// }
 	return nil
 }
 
