@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.6] - 2022-09-30
+## [0.0.0.7] - 2022-10-12
 
 ### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
 
@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Made `UtilityModule` struct unexported
 - Updated tests and mocks
 - Removed some cross-module dependencies
+
+## [0.0.0.6] - 2022-10-06
+
+- Don't ignore the exit code of `m.Run()` in the unit tests
+- Fixed several broken unit tests related to type casting
+- Removed some unit tests (e.g. `TestUtilityContext_UnstakesPausedBefore`) that were legacy and replaced by more general ones (e.g. `TestUtilityContext_UnstakePausedBefore`)
+- Avoid exporting unnecessary test helpers
 
 ## [0.0.0.5] - 2022-09-29
 

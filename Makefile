@@ -222,7 +222,7 @@ protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = ".")
 	protoc --go_opt=paths=source_relative  -I=./shared/debug/proto        --go_out=./shared/debug       ./shared/debug/proto/*.proto        --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       ./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./shared/indexer/proto      --go_out=./shared/indexer/    ./shared/indexer/proto/*.proto      --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./utility/indexer/proto     --go_out=./utility/indexer/   ./utility/indexer/proto/*.proto     --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  ./persistence/proto/*.proto         --experimental_allow_proto3_optional
 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
 	protoc --go_opt=paths=source_relative  -I=./utility/types/proto       --go_out=./utility/types      ./utility/types/proto/*.proto       --experimental_allow_proto3_optional
@@ -263,15 +263,10 @@ test_all_with_coverage: # generate_mocks
 test_race: # generate_mocks
 	go test ${VERBOSE_TEST} -race ./...
 
-.PHONY: test_utility_module
+.PHONY: test_utility
 ## Run all go utility module unit tests
-test_utility_module: # generate_mocks
-	go test ${VERBOSE_TEST} -p 1 -count=1  ./shared/tests/utility_module/...
-
-.PHONY: test_utility_types
-## Run all go utility types module unit tests
-test_utility_types: # generate_mocks
-	go test ${VERBOSE_TEST} ./utility/types/...
+test_utility: # generate_mocks
+	go test ${VERBOSE_TEST} -p=1 -count=1  ./utility/...
 
 .PHONY: test_shared
 ## Run all go unit tests in the shared module

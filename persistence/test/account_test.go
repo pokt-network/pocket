@@ -3,12 +3,13 @@ package test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/modules"
 	"log"
 	"math/big"
 	"math/rand"
 	"testing"
+
+	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/modules"
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -312,7 +313,7 @@ func TestGetAllPools(t *testing.T) {
 		return db.AddPoolAmount(pool.GetAddress(), "10")
 	}
 
-	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 6)
+	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 7)
 }
 
 // --- Helpers ---

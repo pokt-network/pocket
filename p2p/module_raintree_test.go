@@ -435,9 +435,13 @@ func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) mod
 }
 
 func TestMain(m *testing.M) {
-	m.Run()
-	files, _ := filepath.Glob("*.json")
+	exitCode := m.Run()
+	files, err := filepath.Glob("*.json")
+	if err != nil {
+		log.Fatalf("Error finding json file: %v", err)
+	}
 	for _, f := range files {
 		os.Remove(f)
 	}
+	os.Exit(exitCode)
 }

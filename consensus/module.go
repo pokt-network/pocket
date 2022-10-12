@@ -249,7 +249,7 @@ func (m *consensusModule) CurrentHeight() uint64 {
 	return m.Height
 }
 
-func (m *consensusModule) ValidatorMap() modules.ValidatorMap {
+func (m *consensusModule) ValidatorMap() modules.ValidatorMap { // TODO: This needs to be dynamically updated during various operations and network changes.
 	return typesCons.ValidatorMapToModulesValidatorMap(m.validatorMap)
 }
 

@@ -6,7 +6,7 @@ import (
 	"github.com/pokt-network/pocket/shared/debug"
 )
 
-// TODO(design): Discuss if this channel should be of pointers to PocketEvents or not. Pointers
+// DISCUSS if this channel should be of pointers to PocketEvents or not. Pointers
 // would avoid doing object copying, but might also be less thread safe if another goroutine changes
 // it, which could potentially be a feature rather than a bug.
 type EventsChannel chan debug.PocketEvent

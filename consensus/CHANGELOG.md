@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.5] - 2022-09-30
+## [0.0.0.6] - 2022-10-12
 
 ### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
 
@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Made `ConsensusModule` struct unexported
 - Updated tests and mocks
 - Removed some cross-module dependencies
+
+## [0.0.0.5] - 2022-10-06
+
+- Don't ignore the exit code of `m.Run()` in the unit tests
 
 ## [0.0.0.4] - 2022-09-28
 

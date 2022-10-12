@@ -5,7 +5,6 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
-// TODO: Show an example of `TypicalUsage`
 type Module interface {
 	InitializableModule
 	IntegratableModule

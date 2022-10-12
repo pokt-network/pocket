@@ -2,6 +2,7 @@ package test
 
 import (
 	"math/big"
+	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -39,8 +40,6 @@ var actorTypes = []utilTypes.ActorType{
 	utilTypes.ActorType_Validator,
 }
 
-var testPersistenceMod modules.PersistenceModule
-
 func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
 	return utilTypes.NewMempool(1000000, 1000)
 }
@@ -48,8 +47,9 @@ func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	persistenceDbUrl = dbUrl
-	m.Run()
+	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
+	os.Exit(exitCode)
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
@@ -59,7 +59,7 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		testPersistenceMod.ResetContext()
+		persistenceContext.ResetContext()
 	})
 
 	return utility.UtilityContext{

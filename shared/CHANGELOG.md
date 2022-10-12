@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.2] - 2022-09-30
+## [0.0.2] - 2022-10-12
 
 ### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
 
@@ -15,7 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Segregate interfaces (eg: `GenesisDependentModule`, `P2PAddressableModule`, etc)
 - Updated tests and mocks
 
-## [0.0.1] - 2022-09-24
+## [0.0.1] - 2022-09-30
+
+- Used proper `TODO/INVESTIGATE/DISCUSS` convention across package
+- Moved TxIndexer Package to Utility to properly encapsulate
 - Add unit test for `SharedCodec()`
 - Added `TestProtoStructure` for testing
 - Flaky tests troubleshooting - https://github.com/pokt-network/pocket/issues/192

@@ -19,7 +19,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// TODO (Team)/INVESTIGATE(olshansy) It seems improperly scoped that the modules have to have shared 'testing' code
+// INVESTIGATE: It seems improperly scoped that the modules have to have shared 'testing' code
 //  It might be an inevitability to have shared testing code, but would like more eyes on it.
 //  Look for opportunities to make testing completely modular
 
