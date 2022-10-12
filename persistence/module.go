@@ -122,10 +122,6 @@ func (m *persistenceModule) GetBus() modules.Bus {
 }
 
 func (*persistenceModule) ValidateConfig(cfg modules.Config) error {
-	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
-	// if _, ok := cfg.GetPersistenceConfig().(*types.PersistenceConfig); !ok {
-	// 	 return fmt.Errorf("cannot cast to PersistenceConfig")
-	// }
 	return nil
 }
 

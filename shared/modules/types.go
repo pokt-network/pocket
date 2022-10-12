@@ -47,9 +47,10 @@ type PersistenceConfig interface {
 }
 
 type P2PConfig interface {
+	GetPrivateKey() string
 	GetConsensusPort() uint32
 	GetUseRainTree() bool
-	IsEmptyConnType() bool // TODO : make enum
+	GetIsEmptyConnectionType() bool // TODO : make enum
 }
 
 type TelemetryConfig interface {
@@ -58,7 +59,10 @@ type TelemetryConfig interface {
 	GetEndpoint() string
 }
 
-type UtilityConfig interface{}
+type UtilityConfig interface {
+	GetMaxMempoolTransactionBytes() uint64
+	GetMaxMempoolTransactions() uint32
+}
 
 type PersistenceGenesisState interface {
 	GetAccs() []Account

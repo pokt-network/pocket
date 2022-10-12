@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"context"
+	"fmt"
 	"log"
 	timePkg "time"
 
@@ -46,7 +47,7 @@ type paceMaker struct {
 	// a great idea in production code.
 	consensusMod *consensusModule
 
-	pacemakerConfigs modules.PacemakerConfig
+	pacemakerCfg modules.PacemakerConfig
 
 	stepCancelFunc context.CancelFunc
 
@@ -65,19 +66,19 @@ func (m *paceMaker) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error
 		log.Fatalf("config validation failed: %v", err)
 	}
 
-	pacemakerConfig := cfg.GetConsensusConfig().(*typesCons.ConsensusConfig).PacemakerConfig
+	pacemakerCfg := cfg.GetConsensusConfig().(HasPacemakerConfig).GetPacemakerConfig()
 
 	return &paceMaker{
 		bus:          nil,
 		consensusMod: nil,
 
-		pacemakerConfigs: pacemakerConfig,
+		pacemakerCfg: pacemakerCfg,
 
 		stepCancelFunc: nil, // Only set on restarts
 
 		paceMakerDebug: paceMakerDebug{
-			manualMode:                pacemakerConfig.GetManual(),
-			debugTimeBetweenStepsMsec: pacemakerConfig.GetDebugTimeBetweenStepsMsec(),
+			manualMode:                pacemakerCfg.GetManual(),
+			debugTimeBetweenStepsMsec: pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
 			quorumCertificate:         nil,
 		},
 	}, nil
@@ -107,15 +108,9 @@ func (m *paceMaker) GetBus() modules.Bus {
 }
 
 func (*paceMaker) ValidateConfig(cfg modules.Config) error {
-	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
-	// consCfg, ok := cfg.GetConsensusConfig().(*typesCons.ConsensusConfig)
-	// if !ok {
-	// 	return fmt.Errorf("cannot cast to ConsensusConfig")
-	// }
-
-	// if consCfg.PacemakerConfig == nil {
-	// 	return fmt.Errorf("PacemakerConfig is nil")
-	// }
+	if _, ok := cfg.GetConsensusConfig().(HasPacemakerConfig); !ok {
+		return fmt.Errorf("cannot cast to PacemakeredConsensus")
+	}
 	return nil
 }
 
@@ -256,6 +251,6 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 
 // TODO(olshansky): Increase timeout using exponential backoff.
 func (p *paceMaker) getStepTimeout(round uint64) timePkg.Duration {
-	baseTimeout := timePkg.Duration(int64(timePkg.Millisecond) * int64(p.pacemakerConfigs.GetTimeoutMsec()))
+	baseTimeout := timePkg.Duration(int64(timePkg.Millisecond) * int64(p.pacemakerCfg.GetTimeoutMsec()))
 	return baseTimeout
 }

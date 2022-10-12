@@ -21,7 +21,7 @@ func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 func (*telemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	cfg := runtime.GetConfig()
 
-	telemetryCfg := cfg.GetTelemetryConfig().(*TelemetryConfig)
+	telemetryCfg := cfg.GetTelemetryConfig()
 
 	if telemetryCfg.GetEnabled() {
 		return CreatePrometheusTelemetryModule(runtime)

@@ -44,7 +44,7 @@ func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.
 	if err := m.ValidateConfig(cfg); err != nil {
 		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
-	telemetryCfg := cfg.GetTelemetryConfig().(*TelemetryConfig)
+	telemetryCfg := cfg.GetTelemetryConfig()
 
 	return &PrometheusTelemetryModule{
 		config:       telemetryCfg,
@@ -85,10 +85,6 @@ func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
 }
 
 func (*PrometheusTelemetryModule) ValidateConfig(cfg modules.Config) error {
-	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
-	// if _, ok := cfg.GetTelemetryConfig().(*TelemetryConfig); !ok {
-	// 	return fmt.Errorf("cannot cast to TelemetryConfig")
-	// }
 	return nil
 }
 

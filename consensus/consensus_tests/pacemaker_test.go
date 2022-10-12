@@ -27,8 +27,8 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	paceMakerTimeout := 50 * time.Millisecond
 	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numNodes, clockMock)
 	for _, runtimeConfig := range runtimeMgrs {
-		if consCfg, ok := runtimeConfig.GetConfig().GetConsensusConfig().(*typesCons.ConsensusConfig); ok {
-			consCfg.GetPaceMakerConfig().SetTimeoutMsec(paceMakerTimeoutMsec)
+		if consCfg, ok := runtimeConfig.GetConfig().GetConsensusConfig().(consensus.HasPacemakerConfig); ok {
+			consCfg.GetPacemakerConfig().SetTimeoutMsec(paceMakerTimeoutMsec)
 		}
 	}
 

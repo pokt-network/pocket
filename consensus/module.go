@@ -118,8 +118,8 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 		bus: nil,
 
 		privateKey:  privateKey.(cryptoPocket.Ed25519PrivateKey),
-		consCfg:     cfg.GetConsensusConfig().(*typesCons.ConsensusConfig),
-		consGenesis: genesis.GetConsensusGenesisState().(*typesCons.ConsensusGenesisState),
+		consCfg:     cfg.GetConsensusConfig(),
+		consGenesis: genesis.GetConsensusGenesisState(),
 
 		Height: 0,
 		Round:  0,
@@ -197,18 +197,10 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 }
 
 func (*consensusModule) ValidateConfig(cfg modules.Config) error {
-	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
-	// if _, ok := cfg.GetConsensusConfig().(*typesCons.ConsensusConfig); !ok {
-	// 	return fmt.Errorf("cannot cast to ConsensusConfig")
-	// }
 	return nil
 }
 
 func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
-	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
-	// if _, ok := genesis.GetConsensusGenesisState().(*typesCons.ConsensusGenesisState); !ok {
-	// 	return fmt.Errorf("cannot cast to ConsensusGenesisState")
-	// }
 	return nil
 }
 
@@ -282,4 +274,10 @@ func (m *consensusModule) loadPersistedState() error {
 
 	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
 	return nil
+}
+
+// HasPacemakerConfig is used to determine if a ConsensusConfig includes a PacemakerConfig without having to cast to the struct
+// (which would break mocks and/or pollute the codebase with mock types casts and checks)
+type HasPacemakerConfig interface {
+	GetPacemakerConfig() *typesCons.PacemakerConfig
 }

@@ -35,11 +35,11 @@ func (*utilityModule) Create(runtime modules.RuntimeMgr) (modules.Module, error)
 	if err := m.ValidateConfig(cfg); err != nil {
 		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
-	utilityCfg := cfg.GetUtilityConfig().(*types.UtilityConfig)
+	utilityCfg := cfg.GetUtilityConfig()
 
 	return &utilityModule{
 		config:  utilityCfg,
-		Mempool: types.NewMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions),
+		Mempool: types.NewMempool(utilityCfg.GetMaxMempoolTransactionBytes(), utilityCfg.GetMaxMempoolTransactions()),
 	}, nil
 }
 
@@ -67,9 +67,5 @@ func (u *utilityModule) GetBus() modules.Bus {
 }
 
 func (*utilityModule) ValidateConfig(cfg modules.Config) error {
-	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
-	// if _, ok := cfg.GetUtilityConfig().(*types.UtilityConfig); !ok {
-	// 	return fmt.Errorf("cannot cast to UtilityConfig")
-	// }
 	return nil
 }

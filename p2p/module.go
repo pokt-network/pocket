@@ -52,13 +52,13 @@ func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) 
 	if err := m.ValidateConfig(cfg); err != nil {
 		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
-	p2pCfg := cfg.GetP2PConfig().(*typesP2P.P2PConfig)
+	p2pCfg := cfg.GetP2PConfig()
 
 	l, err := CreateListener(p2pCfg)
 	if err != nil {
 		return nil, err
 	}
-	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.PrivateKey)
+	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.GetPrivateKey())
 	if err != nil {
 		return nil, err
 	}
@@ -166,10 +166,6 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic debug.
 }
 
 func (*p2pModule) ValidateConfig(cfg modules.Config) error {
-	// DISCUSS (team): we cannot cast if we want to use mocks and rely on interfaces
-	// if _, ok := cfg.GetP2PConfig().(*typesP2P.P2PConfig); !ok {
-	// 	return fmt.Errorf("cannot cast to P2PConfig")
-	// }
 	return nil
 }
 
