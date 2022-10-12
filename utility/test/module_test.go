@@ -61,7 +61,7 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		testPersistenceMod.ResetContext()
+		persistenceContext.ResetContext()
 	})
 
 	return utility.UtilityContext{

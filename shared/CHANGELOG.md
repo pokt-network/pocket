@@ -7,8 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-
-## [0.0.1] - 2022-09-24
+## [0.0.1] - 2022-09-30
+- Used proper `TODO/INVESTIGATE/DISCUSS` convention across package
+- Moved TxIndexer Package to Utility to properly encapsulate
 - Add unit test for `SharedCodec()`
 - Added `TestProtoStructure` for testing
 - Flaky tests troubleshooting - https://github.com/pokt-network/pocket/issues/192

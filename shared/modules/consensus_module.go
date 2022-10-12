@@ -22,6 +22,6 @@ type ConsensusModule interface {
 
 	// Consensus State Accessors
 	CurrentHeight() uint64
-	AppHash() string            // DISCUSS: Why not call this a BlockHash or StateHash? Should it be a []byte or string?
-	ValidatorMap() ValidatorMap // TODO: This needs to be dynamically updated during various operations and network changes.
+	AppHash() string // DISCUSS: Why not call this a BlockHash or StateHash? Should it be a []byte or string?
+	ValidatorMap() ValidatorMap
 }

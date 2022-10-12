@@ -20,6 +20,8 @@ var _ modules.PersistenceRWContext = &PostgresContext{}
 var _ modules.PersistenceGenesisState = &types.PersistenceGenesisState{}
 var _ modules.PersistenceConfig = &types.PersistenceConfig{}
 
+// TODO: convert address and public key to string not bytes in all account and actor functions
+// TODO: remove address parameter from all pool operations
 type PersistenceModule struct {
 	bus modules.Bus
 
@@ -168,7 +170,7 @@ func (m *PersistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		blockstore: m.blockStore,
 	}
 
-	return *m.writeContext, nil
+	return m.writeContext, nil
 
 }
 
@@ -194,20 +196,12 @@ func (m *PersistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	}, nil
 }
 
-func (m *PersistenceModule) ResetContext() error {
-	if m.writeContext != nil {
-		if !m.writeContext.GetTx().Conn().IsClosed() {
-			if err := m.writeContext.Release(); err != nil {
-				log.Println("[TODO][ERROR] Error releasing write context...", err)
-			}
-		}
-		m.writeContext = nil
-	}
-	return nil
-}
-
 func (m *PersistenceModule) GetBlockStore() kvstore.KVStore {
 	return m.blockStore
+}
+
+func (m *PersistenceModule) NewWriteContext() modules.PersistenceRWContext {
+	return m.writeContext
 }
 
 func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
