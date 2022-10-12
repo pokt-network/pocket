@@ -45,6 +45,11 @@ func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manage
 	return mgr
 }
 
+// NewManagerFromReaders returns a *Manager given io.Readers for the config and the genesis.
+//
+// Ideally useful when the user doesn't want to rely on the filesystem and instead intends plugging in different configuration management system.
+//
+// Note: currently unused, here as a reference
 func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...func(*Manager)) *Manager {
 	var cfg *runtimeConfig
 	parse(configReader, cfg)
