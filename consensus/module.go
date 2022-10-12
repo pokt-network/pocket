@@ -31,8 +31,8 @@ type consensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
 
-	consCfg     *typesCons.ConsensusConfig
-	consGenesis *typesCons.ConsensusGenesisState
+	consCfg     modules.ConsensusConfig
+	consGenesis modules.ConsensusGenesisState
 
 	// m is a mutex used to control synchronization when multiple goroutines are accessing the struct and its fields / properties.
 	//

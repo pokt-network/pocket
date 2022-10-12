@@ -15,7 +15,7 @@ var _ modules.Module = &utilityModule{}
 
 type utilityModule struct {
 	bus    modules.Bus
-	config *types.UtilityConfig
+	config modules.UtilityConfig
 
 	Mempool types.Mempool
 }

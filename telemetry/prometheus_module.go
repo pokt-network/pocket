@@ -23,7 +23,7 @@ var (
 
 type PrometheusTelemetryModule struct {
 	bus    modules.Bus
-	config *TelemetryConfig
+	config modules.TelemetryConfig
 
 	counters     map[string]prometheus.Counter
 	gauges       map[string]prometheus.Gauge
@@ -55,10 +55,10 @@ func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.
 }
 
 func (m *PrometheusTelemetryModule) Start() error {
-	log.Printf("\nPrometheus metrics exporter: Starting at %s%s...\n", m.config.Address, m.config.Endpoint)
+	log.Printf("\nPrometheus metrics exporter: Starting at %s%s...\n", m.config.GetAddress(), m.config.GetEndpoint())
 
-	http.Handle(m.config.Endpoint, promhttp.Handler())
-	go http.ListenAndServe(m.config.Address, nil)
+	http.Handle(m.config.GetEndpoint(), promhttp.Handler())
+	go http.ListenAndServe(m.config.GetAddress(), nil)
 
 	log.Println("Prometheus metrics exporter started: OK")
 
