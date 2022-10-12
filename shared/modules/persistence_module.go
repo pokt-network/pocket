@@ -52,7 +52,7 @@ type PersistenceWriteContext interface {
 	// Block Operations
 
 	// Indexer Operations
-	StoreTransaction(transactionProtoBytes []byte) error
+	StoreTransaction(txResult TxResult) error
 
 	// Block Operations
 	// TEMPORARY: Including two functions for the SQL and KV Store as an interim solution

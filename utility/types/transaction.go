@@ -2,9 +2,10 @@ package types
 
 import (
 	"bytes"
-
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
+	"google.golang.org/protobuf/proto"
 )
 
 func TransactionFromBytes(transaction []byte) (*Transaction, Error) {
@@ -106,6 +107,59 @@ func (tx *Transaction) Equals(tx2 *Transaction) bool {
 	b, _ := tx2.Bytes()
 	b1, _ := tx2.Bytes()
 	return bytes.Equal(b, b1)
+}
+
+var _ modules.TxResult = &DefaultTxResult{}
+
+func (x *DefaultTxResult) Bytes() ([]byte, error) {
+	return codec.GetCodec().Marshal(x)
+}
+
+func (*DefaultTxResult) FromBytes(bz []byte) (modules.TxResult, error) {
+	result := new(DefaultTxResult)
+	if err := codec.GetCodec().Unmarshal(bz, result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (x *DefaultTxResult) Hash() ([]byte, error) {
+	bz, err := x.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	return x.HashFromBytes(bz)
+}
+
+func (x *DefaultTxResult) HashFromBytes(bz []byte) ([]byte, error) {
+	return crypto.SHA3Hash(bz), nil
+}
+
+func (tx *Transaction) ToTxResult(height int64, index int, signer, recipient, msgType string, error Error) (*DefaultTxResult, Error) {
+	txBytes, err := tx.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	code, errString := int32(0), ""
+	if error != nil {
+		code = int32(error.Code())
+		errString = err.Error()
+	}
+	return &DefaultTxResult{
+		Tx:            txBytes,
+		Height:        height,
+		Index:         int32(index),
+		ResultCode:    code,
+		Error:         errString,
+		SignerAddr:    signer,
+		RecipientAddr: recipient,
+		MessageType:   msgType,
+	}, nil
+}
+
+func (tx *Transaction) GetMessage() (proto.Message, error) {
+	cdc := codec.GetCodec()
+	return cdc.FromAny(tx.Msg)
 }
 
 func TransactionHash(transactionProtoBytes []byte) string {

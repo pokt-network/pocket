@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.6] - 2022-10-12
+- Stores transactions along side blocks during `commit`
+- Added current block `[]TxResult` to the module
+- 
+
 ## [0.0.0.5] - 2022-10-06
 
 - Don't ignore the exit code of `m.Run()` in the unit tests

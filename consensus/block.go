@@ -41,11 +41,19 @@ func (m *ConsensusModule) commitBlock(block *typesCons.Block) error {
 	return nil
 }
 
+// IMPROVE(olshansky): ensure these persistence operations are atomic, we can't commit block without
+// committing the transactions and metadata at the same time
 func (m *ConsensusModule) storeBlock(block *typesCons.Block, blockProtoBytes []byte) error {
 	store := m.utilityContext.GetPersistenceContext()
 	// Store in KV Store
 	if err := store.StoreBlock(blockProtoBytes); err != nil {
 		return err
+	}
+	// Store transactions in Indexer
+	for _, txResult := range m.TxResults {
+		if err := store.StoreTransaction(txResult); err != nil {
+			return err
+		}
 	}
 
 	// Store in SQL Store
@@ -57,6 +65,7 @@ func (m *ConsensusModule) storeBlock(block *typesCons.Block, blockProtoBytes []b
 }
 
 // TODO: Add unit tests specific to block validation
+// IMPROVE: (olshansky) rename to provide clarity of operation. ValidateBasic() is typically a stateless check not stateful
 func (m *ConsensusModule) validateBlockBasic(block *typesCons.Block) error {
 	if block == nil && m.Step != NewRound {
 		return typesCons.ErrNilBlock

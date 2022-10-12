@@ -126,6 +126,7 @@ func (m *ConsensusModule) isOptimisticThresholdMet(n int) error {
 func (m *ConsensusModule) resetForNewHeight() {
 	m.Round = 0
 	m.Block = nil
+	m.TxResults = nil
 	m.highPrepareQC = nil
 	m.lockedQC = nil
 }

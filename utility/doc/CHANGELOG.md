@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.7] - 2022-10-12
+- Moved TxIndexer package to persistence module
+- Added new proto structure `DefaultTxResult`
+- Integrated the `TxIndexer` into the lifecycle
+  - Captured `TxResult` from each played transaction
+  - Moved the storage of transactions to the Consensus Module
+  - Returned the `TxResults` in the `ApplyBlock()` and `GetProposalTransactions()`
+  - `AnteHandleMessage()` now returns `signer`
+  - `HandleMessage()` now returns `messageType` and `recipient`
+  - `ApplyTransaction()` returns `TxResult`
+
 ## [0.0.0.6] - 2022-10-06
 
 - Don't ignore the exit code of `m.Run()` in the unit tests

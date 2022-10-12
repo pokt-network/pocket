@@ -29,9 +29,11 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
 	// apply block
-	if _, err := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineAddrBz}); err != nil {
-		require.NoError(t, err, "apply block")
+	_, txResults, er := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineAddrBz})
+	if er != nil {
+		require.NoError(t, er, "apply block")
 	}
+	requireValidTestingTxResults(t, tx, txResults)
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
@@ -83,9 +85,11 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	require.NoError(t, er)
 
 	// apply block
-	if _, err := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineBz}); err != nil {
-		require.NoError(t, err)
+	_, txResults, er := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineBz})
+	if er != nil {
+		require.NoError(t, er)
 	}
+	requireValidTestingTxResults(t, tx, txResults)
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
@@ -147,9 +151,11 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	// apply block
-	if _, err := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineAddrBz}); err != nil {
-		require.NoError(t, err)
+	_, txResults, er := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineAddrBz})
+	if er != nil {
+		require.NoError(t, er)
 	}
+	requireValidTestingTxResults(t, tx, txResults)
 	// deliverTx logic verify
 	feeBig, err := ctx.GetMessageSendFee()
 	require.NoError(t, err)

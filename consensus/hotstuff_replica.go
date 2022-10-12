@@ -3,6 +3,7 @@ package consensus
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/pokt-network/pocket/shared/modules"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	"github.com/pokt-network/pocket/consensus/types"
@@ -60,13 +61,14 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *ConsensusM
 	}
 
 	block := msg.GetBlock()
-	if err := m.applyBlock(block); err != nil {
+	txResults, err := m.applyBlock(block)
+	if err != nil {
 		m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
 	m.Block = block
-
+	m.TxResults = txResults
 	m.Step = PreCommit
 
 	prepareVoteMessage, err := CreateVoteMessage(m.Height, m.Round, Prepare, m.Block, m.privateKey)
@@ -226,22 +228,22 @@ func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 }
 
 // This helper applies the block metadata to the utility & persistence layers
-func (m *ConsensusModule) applyBlock(block *typesCons.Block) error {
+func (m *ConsensusModule) applyBlock(block *typesCons.Block) ([]modules.TxResult, error) {
 	// TECHDEBT: Retrieve this from persistence
 	lastByzValidators := make([][]byte, 0)
 
 	// Apply all the transactions in the block and get the appHash
-	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), block.BlockHeader.ProposerAddress, block.Transactions, lastByzValidators)
+	appHash, txResults, err := m.utilityContext.ApplyBlock(int64(m.Height), block.BlockHeader.ProposerAddress, block.Transactions, lastByzValidators)
 	if err != nil {
-		return err
+		return txResults, err
 	}
 
 	// CONSOLIDATE: Terminology of `blockHash`, `appHash` and `stateHash`
 	if block.BlockHeader.Hash != hex.EncodeToString(appHash) {
-		return typesCons.ErrInvalidAppHash(block.BlockHeader.Hash, hex.EncodeToString(appHash))
+		return txResults, typesCons.ErrInvalidAppHash(block.BlockHeader.Hash, hex.EncodeToString(appHash))
 	}
 
-	return nil
+	return txResults, nil
 }
 
 func (m *ConsensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertificate) error {
