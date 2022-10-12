@@ -7,6 +7,7 @@ import (
 
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/rs/zerolog"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type LoggerModule struct {
@@ -28,6 +29,7 @@ func GlobalLogger() zerolog.Logger {
 var _ modules.LoggerModule = &LoggerModule{}
 
 const (
+	// Should this be a "log" module instead, so we can have "log" in the config file? (end envar too: e.g. POCKET_LOG_LEVEL)
 	ModuleName = "logger"
 )
 
@@ -71,10 +73,15 @@ func (lm *LoggerModule) InitConfig(pathToConfigJSON string) (config modules.ICon
 	if err = json.Unmarshal(data, &rawJSON); err != nil {
 		lm.logger.Fatal().Err(err).Str("path", pathToConfigJSON).Msg("an error occurred unmarshalling the config file")
 	}
-	// telemetry specific configuration file
-	config = new(LoggerConfig)
-	err = json.Unmarshal(rawJSON[lm.GetModuleName()], config)
-	return
+
+	loggerConfig := &LoggerConfig{}
+
+	// Protojson is necessary to unmarshal the enum values
+	if err = protojson.Unmarshal(rawJSON[lm.GetModuleName()], loggerConfig); err != nil {
+		lm.logger.Fatal().Err(err).Str("path", pathToConfigJSON).Msg("can't unmarshal logger config")
+	}
+
+	return loggerConfig, err
 }
 
 func (lm *LoggerModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
