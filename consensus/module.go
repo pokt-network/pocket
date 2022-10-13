@@ -1,9 +1,7 @@
 package consensus
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"sync"
 
@@ -11,7 +9,6 @@ import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
@@ -23,18 +20,19 @@ const (
 	ConsensusModuleName = "consensus"
 )
 
-var _ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
-var _ modules.PacemakerConfig = &typesCons.PacemakerConfig{}
-var _ modules.ConsensusConfig = &typesCons.ConsensusConfig{}
-var _ modules.ConsensusModule = &ConsensusModule{}
+var (
+	_ modules.ConsensusModule       = &consensusModule{}
+	_ modules.ConsensusConfig       = &typesCons.ConsensusConfig{}
+	_ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
+)
 
 // TODO(#256): Do not export the `ConsensusModule` struct or the fields inside of it.
-type ConsensusModule struct {
+type consensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
 
-	consCfg     *typesCons.ConsensusConfig
-	consGenesis *typesCons.ConsensusGenesisState
+	consCfg     modules.ConsensusConfig
+	consGenesis modules.ConsensusGenesisState
 
 	// m is a mutex used to control synchronization when multiple goroutines are accessing the struct and its fields / properties.
 	//
@@ -75,48 +73,53 @@ type ConsensusModule struct {
 	messagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
 }
 
-func Create(configPath, genesisPath string, useRandomPK bool) (modules.ConsensusModule, error) {
-	cm := new(ConsensusModule)
-	c, err := cm.InitConfig(configPath)
-	if err != nil {
-		return nil, err
+func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	return new(consensusModule).Create(runtimeMgr)
+}
+
+func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	var m *consensusModule
+
+	cfg := runtimeMgr.GetConfig()
+	if err := m.ValidateConfig(cfg); err != nil {
+		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
-	g, err := cm.InitGenesis(genesisPath)
-	if err != nil {
-		return nil, err
+	consensusCfg := cfg.GetConsensusConfig()
+
+	genesis := runtimeMgr.GetGenesis()
+	if err := m.ValidateGenesis(genesis); err != nil {
+		return nil, fmt.Errorf("genesis validation failed: %w", err)
 	}
-	cfg := c.(*typesCons.ConsensusConfig)
-	genesis := g.(*typesCons.ConsensusGenesisState)
-	leaderElectionMod, err := leader_election.Create(cfg, genesis)
+	consensusGenesis := genesis.GetConsensusGenesisState()
+
+	leaderElectionMod, err := leader_election.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO(olshansky): Can we make this a submodule?
-	paceMaker, err := CreatePacemaker(cfg)
+	paceMakerMod, err := CreatePacemaker(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
-	valMap := typesCons.ValidatorListToMap(genesis.Validators)
-	var privateKey cryptoPocket.PrivateKey
-	if useRandomPK {
-		privateKey, err = cryptoPocket.GeneratePrivateKey()
-	} else {
-		privateKey, err = cryptoPocket.NewPrivateKey(cfg.PrivateKey)
-	}
+	valMap := typesCons.ActorListToValidatorMap(consensusGenesis.GetVals())
+
+	privateKey, err := cryptoPocket.NewPrivateKey(consensusCfg.GetPrivateKey())
 	if err != nil {
 		return nil, err
 	}
 	address := privateKey.Address().String()
 	valIdMap, idValMap := typesCons.GetValAddrToIdMap(valMap)
 
-	m := &ConsensusModule{
+	paceMaker := paceMakerMod.(Pacemaker)
+
+	m = &consensusModule{
 		bus: nil,
 
 		privateKey:  privateKey.(cryptoPocket.Ed25519PrivateKey),
-		consCfg:     cfg,
-		consGenesis: genesis,
+		consCfg:     cfg.GetConsensusConfig(),
+		consGenesis: genesis.GetConsensusGenesisState(),
 
 		Height: 0,
 		Round:  0,
@@ -136,7 +139,7 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 
 		utilityContext:    nil,
 		paceMaker:         paceMaker,
-		leaderElectionMod: leaderElectionMod,
+		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
 
 		logPrefix:   DefaultLogPrefix,
 		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
@@ -148,40 +151,7 @@ func Create(configPath, genesisPath string, useRandomPK bool) (modules.Consensus
 	return m, nil
 }
 
-func (m *ConsensusModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-	data, err := ioutil.ReadFile(pathToConfigJSON)
-	if err != nil {
-		return
-	}
-	// over arching configuration file
-	rawJSON := make(map[string]json.RawMessage)
-	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToConfigJSON, err.Error())
-	}
-	// consensus specific configuration file
-	config = new(typesCons.ConsensusConfig)
-	err = json.Unmarshal(rawJSON[m.GetModuleName()], config)
-	return
-}
-
-func (m *ConsensusModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
-	data, err := ioutil.ReadFile(pathToGenesisJSON)
-	if err != nil {
-		return
-	}
-	// over arching configuration file
-	rawJSON := make(map[string]json.RawMessage)
-	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToGenesisJSON, err.Error())
-	}
-	// consensus specific configuration file
-	genesis = new(typesCons.ConsensusGenesisState)
-
-	err = json.Unmarshal(rawJSON[test_artifacts.GetGenesisFileName(m.GetModuleName())], genesis)
-	return
-}
-
-func (m *ConsensusModule) Start() error {
+func (m *consensusModule) Start() error {
 	m.GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
@@ -205,28 +175,40 @@ func (m *ConsensusModule) Start() error {
 	return nil
 }
 
-func (m *ConsensusModule) Stop() error {
+func (m *consensusModule) Stop() error {
 	return nil
 }
 
-func (m *ConsensusModule) GetModuleName() string {
+func (m *consensusModule) GetModuleName() string {
 	return ConsensusModuleName
 }
 
-func (m *ConsensusModule) GetBus() modules.Bus {
+func (m *consensusModule) GetBus() modules.Bus {
 	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
 }
 
-func (m *ConsensusModule) SetBus(pocketBus modules.Bus) {
+func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	m.bus = pocketBus
 	m.paceMaker.SetBus(pocketBus)
 	m.leaderElectionMod.SetBus(pocketBus)
 }
 
-func (m *ConsensusModule) HandleMessage(message *anypb.Any) error {
+func (*consensusModule) ValidateConfig(cfg modules.Config) error {
+	return nil
+}
+
+func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
+	return nil
+}
+
+func (m *consensusModule) GetPrivateKey() (cryptoPocket.PrivateKey, error) {
+	return cryptoPocket.NewPrivateKey(m.consCfg.GetPrivateKey())
+}
+
+func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 	switch message.MessageName() {
@@ -251,25 +233,25 @@ func (m *ConsensusModule) HandleMessage(message *anypb.Any) error {
 	return nil
 }
 
-func (m *ConsensusModule) AppHash() string {
+func (m *consensusModule) AppHash() string {
 	return m.lastAppHash
 }
 
-func (m *ConsensusModule) CurrentHeight() uint64 {
+func (m *consensusModule) CurrentHeight() uint64 {
 	return m.Height
 }
 
-func (m *ConsensusModule) ValidatorMap() modules.ValidatorMap { // TODO: This needs to be dynamically updated during various operations and network changes.
+func (m *consensusModule) ValidatorMap() modules.ValidatorMap { // TODO: This needs to be dynamically updated during various operations and network changes.
 	return typesCons.ValidatorMapToModulesValidatorMap(m.validatorMap)
 }
 
 // TODO(#256): Currently only used for testing purposes
-func (m *ConsensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
+func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
 	m.utilityContext = utilityContext
 }
 
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...
-func (m *ConsensusModule) loadPersistedState() error {
+func (m *consensusModule) loadPersistedState() error {
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height
 	if err != nil {
 		return nil
@@ -292,4 +274,10 @@ func (m *ConsensusModule) loadPersistedState() error {
 
 	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
 	return nil
+}
+
+// HasPacemakerConfig is used to determine if a ConsensusConfig includes a PacemakerConfig without having to cast to the struct
+// (which would break mocks and/or pollute the codebase with mock types casts and checks)
+type HasPacemakerConfig interface {
+	GetPacemakerConfig() *typesCons.PacemakerConfig
 }

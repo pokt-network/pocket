@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.0.0.7] - 2022-10-12
+
+### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
+
+- Updated to use `RuntimeMgr`
+- Made `PersistenceModule` struct unexported
+- Updated tests and mocks
+- Removed some cross-module dependencies
+
 ## [0.0.0.6] - 2022-09-30
 
 - Removed no-op `DeleteActor` code

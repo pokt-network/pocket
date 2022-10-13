@@ -1,5 +1,7 @@
 package modules
 
+//go:generate mockgen -source=$GOFILE -destination=./mocks/types_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+
 import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -7,28 +9,28 @@ import (
 // This file contains the minimum shared structures (GenesisState) and the many shared interfaces the modules implement
 // the main purpose of this structure is to ensure the ownership of the
 
-type GenesisState struct {
-	PersistenceGenesisState PersistenceGenesisState `json:"persistence_genesis_state"`
-	ConsensusGenesisState   ConsensusGenesisState   `json:"consensus_genesis_state"`
+type GenesisState interface {
+	GetPersistenceGenesisState() PersistenceGenesisState
+	GetConsensusGenesisState() ConsensusGenesisState
 }
 
-type BaseConfig struct {
-	RootDirectory string `json:"root_directory"`
-	PrivateKey    string `json:"private_key"` // TODO (#150) better architecture for key management (keybase, keyfiles, etc.)
+type Config interface {
+	GetBaseConfig() BaseConfig
+	GetConsensusConfig() ConsensusConfig
+	GetUtilityConfig() UtilityConfig
+	GetPersistenceConfig() PersistenceConfig
+	GetP2PConfig() P2PConfig
+	GetTelemetryConfig() TelemetryConfig
 }
 
-type Config struct {
-	Base        *BaseConfig       `json:"base"`
-	Consensus   ConsensusConfig   `json:"consensus"`
-	Utility     UtilityConfig     `json:"utility"`
-	Persistence PersistenceConfig `json:"persistence"`
-	P2P         P2PConfig         `json:"p2p"`
-	Telemetry   TelemetryConfig   `json:"telemetry"`
+type BaseConfig interface {
+	GetRootDirectory() string
+	GetPrivateKey() string // TODO (pocket/issues/150) better architecture for key management (keybase, keyfiles, etc.)
 }
 
 type ConsensusConfig interface {
 	GetMaxMempoolBytes() uint64
-	GetPaceMakerConfig() PacemakerConfig
+	GetPrivateKey() string // TODO (pocket/issues/150) better architecture for key management (keybase, keyfiles, etc.)
 }
 
 type PacemakerConfig interface {
@@ -45,9 +47,10 @@ type PersistenceConfig interface {
 }
 
 type P2PConfig interface {
+	GetPrivateKey() string
 	GetConsensusPort() uint32
 	GetUseRainTree() bool
-	IsEmptyConnType() bool // TODO : make enum
+	GetIsEmptyConnectionType() bool // TODO : make enum
 }
 
 type TelemetryConfig interface {
@@ -56,7 +59,10 @@ type TelemetryConfig interface {
 	GetEndpoint() string
 }
 
-type UtilityConfig interface{}
+type UtilityConfig interface {
+	GetMaxMempoolTransactionBytes() uint64
+	GetMaxMempoolTransactions() uint32
+}
 
 type PersistenceGenesisState interface {
 	GetAccs() []Account
@@ -72,6 +78,7 @@ type ConsensusGenesisState interface {
 	GetGenesisTime() *timestamppb.Timestamp
 	GetChainId() string
 	GetMaxBlockBytes() uint64
+	GetVals() []Actor
 }
 
 type Account interface {
@@ -221,16 +228,3 @@ type Params interface {
 	GetMessageUnpauseServiceNodeFeeOwner() string
 	GetMessageChangeParameterFeeOwner() string
 }
-
-var _ IConfig = PacemakerConfig(nil)
-var _ IConfig = PersistenceConfig(nil)
-var _ IConfig = P2PConfig(nil)
-var _ IConfig = TelemetryConfig(nil)
-var _ IConfig = UtilityConfig(nil)
-
-var _ IGenesis = PersistenceGenesisState(nil)
-var _ IGenesis = ConsensusGenesisState(nil)
-
-// TODO(#235): Remove these interfaces once the runtime config approach is implemented.
-type IConfig interface{}
-type IGenesis interface{}

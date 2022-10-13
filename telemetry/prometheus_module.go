@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -11,18 +12,18 @@ import (
 )
 
 var (
-	_ modules.TelemetryModule   = &PrometheusTelemetryModule{}
-	_ modules.EventMetricsAgent = &PrometheusTelemetryModule{}
-	_ modules.TimeSeriesAgent   = &PrometheusTelemetryModule{}
+	_ modules.Module             = &PrometheusTelemetryModule{}
+	_ modules.ConfigurableModule = &PrometheusTelemetryModule{}
+	_ modules.TelemetryModule    = &PrometheusTelemetryModule{}
+	_ modules.EventMetricsAgent  = &PrometheusTelemetryModule{}
+	_ modules.TimeSeriesAgent    = &PrometheusTelemetryModule{}
 )
 
 // DISCUSS(team): Should the warning logs in this module be handled differently?
 
 type PrometheusTelemetryModule struct {
-	bus modules.Bus
-
-	address  string
-	endpoint string
+	bus    modules.Bus
+	config modules.TelemetryConfig
 
 	counters     map[string]prometheus.Counter
 	gauges       map[string]prometheus.Gauge
@@ -33,22 +34,31 @@ const (
 	PrometheusModuleName = "prometheus"
 )
 
-func CreatePrometheusTelemetryModule(cfg *TelemetryConfig) (*PrometheusTelemetryModule, error) {
+func CreatePrometheusTelemetryModule(runtime modules.RuntimeMgr) (modules.Module, error) {
+	var m PrometheusTelemetryModule
+	return m.Create(runtime)
+}
+
+func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
+	cfg := runtime.GetConfig()
+	if err := m.ValidateConfig(cfg); err != nil {
+		return nil, fmt.Errorf("config validation failed: %w", err)
+	}
+	telemetryCfg := cfg.GetTelemetryConfig()
+
 	return &PrometheusTelemetryModule{
+		config:       telemetryCfg,
 		counters:     map[string]prometheus.Counter{},
 		gauges:       map[string]prometheus.Gauge{},
 		gaugeVectors: map[string]prometheus.GaugeVec{},
-
-		address:  cfg.GetAddress(),
-		endpoint: cfg.GetEndpoint(),
 	}, nil
 }
 
 func (m *PrometheusTelemetryModule) Start() error {
-	log.Printf("\nPrometheus metrics exporter: Starting at %s%s...\n", m.address, m.endpoint)
+	log.Printf("\nPrometheus metrics exporter: Starting at %s%s...\n", m.config.GetAddress(), m.config.GetEndpoint())
 
-	http.Handle(m.endpoint, promhttp.Handler())
-	go http.ListenAndServe(m.address, nil)
+	http.Handle(m.config.GetEndpoint(), promhttp.Handler())
+	go http.ListenAndServe(m.config.GetAddress(), nil)
 
 	log.Println("Prometheus metrics exporter started: OK")
 
@@ -57,14 +67,6 @@ func (m *PrometheusTelemetryModule) Start() error {
 
 func (m *PrometheusTelemetryModule) Stop() error {
 	return nil
-}
-
-func (m *PrometheusTelemetryModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-	return // No-op
-}
-
-func (m *PrometheusTelemetryModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
-	return // No-op
 }
 
 func (m *PrometheusTelemetryModule) SetBus(bus modules.Bus) {
@@ -80,6 +82,10 @@ func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
+}
+
+func (*PrometheusTelemetryModule) ValidateConfig(cfg modules.Config) error {
+	return nil
 }
 
 // EventMetricsAgent interface implementation

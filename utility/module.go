@@ -1,8 +1,7 @@
 package utility
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/utility/types"
@@ -10,11 +9,14 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var _ modules.UtilityModule = &UtilityModule{}
+var _ modules.UtilityModule = &utilityModule{}
 var _ modules.UtilityConfig = &types.UtilityConfig{}
+var _ modules.Module = &utilityModule{}
 
-type UtilityModule struct {
-	bus     modules.Bus
+type utilityModule struct {
+	bus    modules.Bus
+	config modules.UtilityConfig
+
 	Mempool types.Mempool
 }
 
@@ -22,57 +24,48 @@ const (
 	UtilityModuleName = "utility"
 )
 
-func Create(configPath, genesisPath string) (modules.UtilityModule, error) {
-	u := new(UtilityModule)
-	c, err := u.InitConfig(configPath)
-	if err != nil {
-		return nil, err
+func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
+	return new(utilityModule).Create(runtime)
+}
+
+func (*utilityModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
+	var m *utilityModule
+
+	cfg := runtime.GetConfig()
+	if err := m.ValidateConfig(cfg); err != nil {
+		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
-	config := (c).(*types.UtilityConfig)
-	return &UtilityModule{
-		Mempool: types.NewMempool(config.MaxMempoolTransactionBytes, config.MaxMempoolTransactions),
+	utilityCfg := cfg.GetUtilityConfig()
+
+	return &utilityModule{
+		config:  utilityCfg,
+		Mempool: types.NewMempool(utilityCfg.GetMaxMempoolTransactionBytes(), utilityCfg.GetMaxMempoolTransactions()),
 	}, nil
 }
 
-func (u *UtilityModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-	data, err := ioutil.ReadFile(pathToConfigJSON)
-	if err != nil {
-		return
-	}
-	// over arching configuration file
-	rawJSON := make(map[string]json.RawMessage)
-	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToConfigJSON, err.Error())
-	}
-	// persistence specific configuration file
-	config = new(types.UtilityConfig)
-	err = json.Unmarshal(rawJSON[u.GetModuleName()], config)
-	return
-}
-
-func (u *UtilityModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
-	return // No-op
-}
-
-func (u *UtilityModule) Start() error {
+func (u *utilityModule) Start() error {
 	return nil
 }
 
-func (u *UtilityModule) Stop() error {
+func (u *utilityModule) Stop() error {
 	return nil
 }
 
-func (u *UtilityModule) GetModuleName() string {
+func (u *utilityModule) GetModuleName() string {
 	return UtilityModuleName
 }
 
-func (u *UtilityModule) SetBus(bus modules.Bus) {
+func (u *utilityModule) SetBus(bus modules.Bus) {
 	u.bus = bus
 }
 
-func (u *UtilityModule) GetBus() modules.Bus {
+func (u *utilityModule) GetBus() modules.Bus {
 	if u.bus == nil {
 		log.Fatalf("Bus is not initialized")
 	}
 	return u.bus
+}
+
+func (*utilityModule) ValidateConfig(cfg modules.Config) error {
+	return nil
 }

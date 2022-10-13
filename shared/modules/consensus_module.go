@@ -15,6 +15,9 @@ type ValidatorMap map[string]Actor
 // Make sure that you are not locking again within the same call to avoid deadlocks (for example when the methods below call each other in your implementation).
 type ConsensusModule interface {
 	Module
+	ConfigurableModule
+	GenesisDependentModule
+	KeyholderModule
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
