@@ -1,42 +1,58 @@
-\__DELETE_ME_: Please make sure the title of the PR is descriptive and follows this format: `[<Module>] <DESCRIPTION>(Issue#<ISSUE_NUMBEr>)`\_
-\__DELETE_ME_: Please make sure to update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the PR for review\_
-\__DELETE_ME_: Please make sure to add labels for the purpose (e.g. `persistence`) and priority (e.g. `low`) of this PR\_
+<!--
+ 1. Make the title of the PR is descriptive and follows this format: `[<Module>] <DESCRIPTION>`
+ 2. Update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the PR for review.
+ 3. Add label(s) for the purpose (e.g. `persistence`) and, if applicable, priority (e.g. `low`) labels as well.
+-->
 
 ## Description
 
-\__REPLACE_ME_: Summary of the change. Include motivation, reasons, context, dependencies, etc...\_
+<!--
+1. Add a summary of the change including: motivation, reasons, context, dependencies, etc...
+2. If applicable, specify the key files that should be looked at.
+-->
 
 ## Issue
 
-Fixes [issue/_<ISSUE_NUMBER>_](https://github.com/pokt-network/pocket/issues/<ISSUE_NUMBER>)
+Fixes #<issue_number>
 
 ## Type of change
 
-Please mark the options that are relevant.
+Please mark the relevant option(s):
 
 - [ ] New feature, functionality or library
-- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] Bug fix
 - [ ] Code health or cleanup
 - [ ] Major breaking change
 - [ ] Documentation
-- [ ] Other: <REPLACE_ME>
+- [ ] Other <!-- add details here if it a different type of change -->
 
 ## List of changes
 
-- \__REPLACE_ME_: List of actual changes\_
--
+<!-- List out all the changes made-->
+
+- Change #1
+- Change #2
+- ...
 
 ## Testing
 
-- _\_\_REPLACE_ME_: Describe the tests and steps that you ran to verify your changes. Bonus points for images and videos or gifs.\_
-- [ ] `make test_all`
+- [ ] `make develop_test`
 - [ ] [LocalNet](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md) w/ all of the steps outlined in the `README`
+<!--
+If you added additional tests or infrastructure, describe it here.
 
-## Checklist
+Bonus points for images and videos or gifs.
+-->
+
+## Required Checklist
 
 - [ ] I have performed a self-review of my own code
 - [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] I have tested my changes using the available tooling
-- [ ] If applicable, I have made corresponding changes to related local or global README
-- [ ] If applicable, I have added new diagrams using [mermaid.js](https://mermaid-js.github.io)
-- [ ] If applicable, I have added tests that prove my fix is effective or that my feature works
+- [ ] I have updated the corresponding CHANGELOG
+
+### If Applicable Checklist
+- [ ] I have updated the corresponding README(s); local and/or global
+- [ ] I have added tests that prove my fix is effective or that my feature works
+- [ ] I have added, or updated, [mermaid.js](https://mermaid-js.github.io) diagrams in the corresponding README(s)
+- [ ] I have added, or updated, documentation and [mermaid.js](https://mermaid-js.github.io) diagrams in `shared/docs/*` if I updated `shared/*`README(s)

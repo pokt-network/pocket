@@ -30,7 +30,7 @@ shared             # [to-be-refactored] All of this is bound to change
 |   ├── utility_module.go
 |   ├── persistence_module.go
 |   ├── telemetry_module.go
-|   ├── types.go   # Shared interfaces 
+|   ├── types.go   # Shared interfaces
 ├── tests          # Cross-module and shared testing_artifacts (to be refactored to make testing more modular)
 ├── node.go        # The main entrypoint to the Pocket Node
 ├── bus.go         # Implementation of the Bus module
@@ -45,6 +45,7 @@ The key things to keep in mind are:
   - Receive asynchronous events from the **main events channel**
 - The **Persistence** module is the only module that communicates with the local database
 - The **P2P** module is the only one that communicates with the outside world
+- **RuntimeMgr** abstracts the runtime and is injected in the modules (more details [here](../runtime/docs/README.md))
 
 <!-- Though this flowchart could be made more explicit, it was implemented in mermaid to follow the Visualisation-As-Code paradigm and make it easier to maintain and upkeep. -->
 
@@ -57,6 +58,8 @@ flowchart TD
             B <-.-> E
         end
         subgraph Pocket's Core Modules
+            RMGR(RuntimeMgr)
+            RMGR .-
             P(Persistence) & C(Consensus) & U(Utility) & P2P(P2P)
         end
         P <--> B

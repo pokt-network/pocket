@@ -1,8 +1,10 @@
 package types
 
+// TODO: Split this file into multiple types files.
 import (
-	"github.com/pokt-network/pocket/shared/modules"
 	"sort"
+
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 type NodeId uint64
@@ -39,10 +41,6 @@ func GetValAddrToIdMap(validatorMap ValidatorMap) (ValAddrToIdMap, IdToValAddrMa
 	return valToIdMap, idToValMap
 }
 
-func (x *ConsensusConfig) GetPaceMakerConfig() modules.PacemakerConfig {
-	return x.GetPacemakerConfig()
-}
-
 func (x *PacemakerConfig) SetTimeoutMsec(u uint64) {
 	x.TimeoutMsec = u
 }
@@ -55,9 +53,9 @@ func ValidatorMapToModulesValidatorMap(validatorMap ValidatorMap) (vm modules.Va
 	return
 }
 
-func ValidatorListToMap(validators []*Validator) (m ValidatorMap) {
-	m = make(ValidatorMap, len(validators))
-	for _, v := range validators {
+func ActorListToValidatorMap(actors []modules.Actor) (m ValidatorMap) {
+	m = make(ValidatorMap, len(actors))
+	for _, v := range actors {
 		m[v.GetAddress()] = v
 	}
 	return
