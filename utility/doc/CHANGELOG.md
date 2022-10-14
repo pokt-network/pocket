@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.7] - 2022-10-12
+## [0.0.0.7] - 2022-10-14
+
+- Added session interfaces and diagrams
 
 ### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
 
@@ -24,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Avoid exporting unnecessary test helpers
 
 ## [0.0.0.5] - 2022-09-29
+>>>>>>> origin/main
 
 - Remove unused `StoreBlock` function from the utility module interface
 
