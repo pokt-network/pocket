@@ -50,7 +50,7 @@ func NewActorCommands(cmdOptions []cmdOption) []*cobra.Command {
 		cmd := &cobra.Command{
 			Use:     cmdDef.Name,
 			Short:   fmt.Sprintf("%s actor specific commands", cmdDef.Name),
-			Aliases: []string{strings.ToLower(cmdDef.Name), typesUtil.ActorType_name[int32(cmdDef.ActorType)]}, // TODO: create some helper function to convert enum to names and viceversa
+			Aliases: []string{strings.ToLower(cmdDef.Name), typesUtil.GetActorName(cmdDef.ActorType)},
 			Args:    cobra.ExactArgs(0),
 		}
 		cmd.AddCommand(newActorCommands(cmdDef)...)
