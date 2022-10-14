@@ -114,9 +114,9 @@ install_cli_deps:
 .PHONY: develop_start
 ## Run all of the make commands necessary to develop on the project
 develop_start:
+		make protogen_clean && make protogen_local && \
 		make go_clean_deps && \
 		make mockgen && \
-		make protogen_clean && make protogen_local && \
 		make generate_rpc_openapi
 
 .PHONY: develop_test
