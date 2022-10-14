@@ -1,5 +1,7 @@
 package modules
 
+//go:generate mockgen -source=$GOFILE -destination=./mocks/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+
 import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/debug"
@@ -7,16 +9,13 @@ import (
 
 type PersistenceModule interface {
 	Module
+	ConfigurableModule
+	GenesisDependentModule
+
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
-
-	// TODO(drewsky): Make this a context function only and do not expose it at the module level.
-	//                The reason `Olshansky` originally made it a module level function is because
-	//                the module was responsible for maintaining a single write context and assuring
-	//                that a second can't be created (or a previous one is cleaned up) but there is
-	//                likely a better and cleaner approach that simplifies the interface.
-	ResetContext() error
 	GetBlockStore() kvstore.KVStore
+	NewWriteContext() PersistenceRWContext
 
 	// Debugging / development only
 	HandleDebugMessage(*debug.DebugMessage) error
@@ -38,15 +37,15 @@ type PersistenceRWContext interface {
 
 // NOTE: There's not really a use case for a write only interface,
 // but it abstracts and contrasts nicely against the read only context
-// TODO (andrew) convert address and public key to string not bytes #149
 type PersistenceWriteContext interface {
-	// TODO: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
+	// DISCUSS: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
 	// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
 	// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
 	// Context Operations
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
 
+	ResetContext() error // TODO consolidate with Reset and Release
 	Reset() error
 	Commit() error
 	Release() error
@@ -59,7 +58,7 @@ type PersistenceWriteContext interface {
 	StoreTransaction(transactionProtoBytes []byte) error
 
 	// Block Operations
-	// TODO_TEMPORARY: Including two functions for the SQL and KV Store as an interim solution
+	// TEMPORARY: Including two functions for the SQL and KV Store as an interim solution
 	//                 until we include the schema as part of the SQL Store because persistence
 	//                 currently has no access to the protobuf schema which is the source of truth.
 	StoreBlock(blockProtoBytes []byte) error                                              // Store the block in the KV Store
@@ -70,7 +69,7 @@ type PersistenceWriteContext interface {
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error
 
-	InsertPool(name string, address []byte, amount string) error // TODO (Andrew) remove address from pool #149
+	InsertPool(name string, address []byte, amount string) error
 
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error
@@ -78,44 +77,38 @@ type PersistenceWriteContext interface {
 	SetAccountAmount(address []byte, amount string) error // NOTE: same as (insert)
 
 	// App Operations
-	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	InsertApp(address []byte, publicKey []byte, output []byte, paused bool, status int32, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateApp(address []byte, maxRelaysToAdd string, amount string, chainsToUpdate []string) error
-	DeleteApp(address []byte) error
 	SetAppStakeAmount(address []byte, stakeAmount string) error
-	SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
-	SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
+	SetAppUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
+	SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
 	SetAppPauseHeight(address []byte, height int64) error
 
 	// ServiceNode Operations
-	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	InsertServiceNode(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateServiceNode(address []byte, serviceURL string, amount string, chains []string) error
-	DeleteServiceNode(address []byte) error
 	SetServiceNodeStakeAmount(address []byte, stakeAmount string) error
-	SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
-	SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
+	SetServiceNodeUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
+	SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
 	SetServiceNodePauseHeight(address []byte, height int64) error
 
 	// Fisherman Operations
-	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
+	InsertFisherman(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
 	UpdateFisherman(address []byte, serviceURL string, amount string, chains []string) error
-	DeleteFisherman(address []byte) error
 	SetFishermanStakeAmount(address []byte, stakeAmount string) error
-	SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
-	SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
+	SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
+	SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
 	SetFishermanPauseHeight(address []byte, height int64) error
 
 	// Validator Operations
-	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error
+	InsertValidator(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error
 	UpdateValidator(address []byte, serviceURL string, amount string) error
-	DeleteValidator(address []byte) error
 	SetValidatorStakeAmount(address []byte, stakeAmount string) error
-	SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int) error
-	SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int) error
+	SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error
+	SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error
 	SetValidatorPauseHeight(address []byte, height int64) error
 	SetValidatorPauseHeightAndMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) error
 	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
-
-	/* TODO(olshansky): review/revisit this in more details */
 
 	// Param Operations
 	InitParams() error
@@ -156,8 +149,8 @@ type PersistenceReadContext interface {
 	GetAllApps(height int64) ([]Actor, error)
 	GetAppExists(address []byte, height int64) (exists bool, err error)
 	GetAppStakeAmount(height int64, address []byte) (string, error)
-	GetAppsReadyToUnstake(height int64, status int) (apps []IUnstakingActor, err error)
-	GetAppStatus(address []byte, height int64) (status int, err error)
+	GetAppsReadyToUnstake(height int64, status int32) (apps []IUnstakingActor, err error)
+	GetAppStatus(address []byte, height int64) (status int32, err error)
 	GetAppPauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetAppOutputAddress(operator []byte, height int64) (output []byte, err error)
 
@@ -165,8 +158,8 @@ type PersistenceReadContext interface {
 	GetAllServiceNodes(height int64) ([]Actor, error)
 	GetServiceNodeExists(address []byte, height int64) (exists bool, err error)
 	GetServiceNodeStakeAmount(height int64, address []byte) (string, error)
-	GetServiceNodesReadyToUnstake(height int64, status int) (serviceNodes []IUnstakingActor, err error)
-	GetServiceNodeStatus(address []byte, height int64) (status int, err error)
+	GetServiceNodesReadyToUnstake(height int64, status int32) (serviceNodes []IUnstakingActor, err error)
+	GetServiceNodeStatus(address []byte, height int64) (status int32, err error)
 	GetServiceNodePauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetServiceNodeOutputAddress(operator []byte, height int64) (output []byte, err error)
 	GetServiceNodeCount(chain string, height int64) (int, error)
@@ -176,8 +169,8 @@ type PersistenceReadContext interface {
 	GetAllFishermen(height int64) ([]Actor, error)
 	GetFishermanExists(address []byte, height int64) (exists bool, err error)
 	GetFishermanStakeAmount(height int64, address []byte) (string, error)
-	GetFishermenReadyToUnstake(height int64, status int) (fishermen []IUnstakingActor, err error)
-	GetFishermanStatus(address []byte, height int64) (status int, err error)
+	GetFishermenReadyToUnstake(height int64, status int32) (fishermen []IUnstakingActor, err error)
+	GetFishermanStatus(address []byte, height int64) (status int32, err error)
 	GetFishermanPauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetFishermanOutputAddress(operator []byte, height int64) (output []byte, err error)
 
@@ -185,13 +178,11 @@ type PersistenceReadContext interface {
 	GetAllValidators(height int64) ([]Actor, error)
 	GetValidatorExists(address []byte, height int64) (exists bool, err error)
 	GetValidatorStakeAmount(height int64, address []byte) (string, error)
-	GetValidatorsReadyToUnstake(height int64, status int) (validators []IUnstakingActor, err error)
-	GetValidatorStatus(address []byte, height int64) (status int, err error)
+	GetValidatorsReadyToUnstake(height int64, status int32) (validators []IUnstakingActor, err error)
+	GetValidatorStatus(address []byte, height int64) (status int32, err error)
 	GetValidatorPauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetValidatorOutputAddress(operator []byte, height int64) (output []byte, err error)
 	GetValidatorMissedBlocks(address []byte, height int64) (int, error)
-
-	/* TODO(olshansky): review/revisit this in more details */
 
 	// Params
 	GetIntParam(paramName string, height int64) (int, error)

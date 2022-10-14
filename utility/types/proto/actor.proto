@@ -1,0 +1,31 @@
+syntax = "proto3";
+package utility;
+
+option go_package = "github.com/pokt-network/pocket/utility/types";
+
+// TODO(#258): Follow protobuf best practices
+enum PoolNames {
+  Unspecified = 0;
+  DAO = 1;
+  FeeCollector = 2;
+  AppStakePool = 3;
+  ValidatorStakePool = 4;
+  ServiceNodeStakePool = 5;
+  FishermanStakePool = 6;
+}
+
+enum ActorType {
+  Undefined = 0;
+  App = 1;
+  ServiceNode = 2;
+  Fisherman = 3;
+  Validator = 4;
+}
+
+
+// DISCUSS: *Design Decision* deprecating StakeStatus
+enum StakeStatus {
+  UnknownStatus = 0;
+  Unstaking = 1;
+  Staked = 2;
+}

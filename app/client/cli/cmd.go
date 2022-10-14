@@ -3,7 +3,7 @@ package cli
 import (
 	"context"
 
-	"github.com/pokt-network/pocket/shared/test_artifacts"
+	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/spf13/cobra"
 )
 

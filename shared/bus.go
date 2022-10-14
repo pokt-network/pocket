@@ -1,9 +1,9 @@
 package shared
 
 import (
-	"github.com/pokt-network/pocket/shared/debug"
 	"log"
 
+	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -21,6 +21,8 @@ type bus struct {
 	utility     modules.UtilityModule
 	consensus   modules.ConsensusModule
 	telemetry   modules.TelemetryModule
+
+	runtimeMgr modules.RuntimeMgr
 }
 
 const (
@@ -28,6 +30,7 @@ const (
 )
 
 func CreateBus(
+	runtimeMgr modules.RuntimeMgr,
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
@@ -36,6 +39,8 @@ func CreateBus(
 ) (modules.Bus, error) {
 	bus := &bus{
 		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
+
+		runtimeMgr: runtimeMgr,
 
 		persistence: persistence,
 		p2p:         p2p,
@@ -69,13 +74,13 @@ func CreateBus(
 //
 // Example of usage: `app/client/main.go`
 //
-//    We want to use the pre2p module in isolation to communicate with nodes in the network.
-//    The pre2p module expects to retrieve a telemetry module through the bus to perform instrumentation, thus we need to inject a bus that can retrieve a telemetry module.
-//    However, we don't need telemetry for the dev client.
-//    Using `CreateBusWithOptionalModules`, we can create a bus with only pre2p and a NOOP telemetry module
-//    so that we can the pre2p module without any issues.
-//
+//	We want to use the pre2p module in isolation to communicate with nodes in the network.
+//	The pre2p module expects to retrieve a telemetry module through the bus to perform instrumentation, thus we need to inject a bus that can retrieve a telemetry module.
+//	However, we don't need telemetry for the dev client.
+//	Using `CreateBusWithOptionalModules`, we can create a bus with only pre2p and a NOOP telemetry module
+//	so that we can the pre2p module without any issues.
 func CreateBusWithOptionalModules(
+	runtimeMgr modules.RuntimeMgr,
 	persistence modules.PersistenceModule,
 	p2p modules.P2PModule,
 	utility modules.UtilityModule,
@@ -83,7 +88,10 @@ func CreateBusWithOptionalModules(
 	telemetry modules.TelemetryModule,
 ) modules.Bus {
 	bus := &bus{
-		channel:     make(modules.EventsChannel, DefaultPocketBusBufferSize),
+		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
+
+		runtimeMgr: runtimeMgr,
+
 		persistence: persistence,
 		p2p:         p2p,
 		utility:     utility,
@@ -137,4 +145,8 @@ func (m bus) GetConsensusModule() modules.ConsensusModule {
 
 func (m bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
+}
+
+func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {
+	return m.runtimeMgr
 }

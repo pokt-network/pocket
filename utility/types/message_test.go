@@ -115,9 +115,10 @@ func TestMessage_EditStake_ValidateBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	msg := MessageEditStake{
-		Address: addr,
-		Chains:  defaultTestingChains,
-		Amount:  defaultAmount,
+		ActorType: ActorType_App,
+		Address:   addr,
+		Chains:    defaultTestingChains,
+		Amount:    defaultAmount,
 	}
 	err = msg.ValidateBasic()
 	require.NoError(t, err)
@@ -196,10 +197,12 @@ func TestMessageStake_ValidateBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	msg := MessageStake{
+		ActorType:     ActorType_App,
 		PublicKey:     pk.Bytes(),
 		Chains:        defaultTestingChains,
 		Amount:        defaultAmount,
 		OutputAddress: pk.Address(),
+		Signer:        nil,
 	}
 	er := msg.ValidateBasic()
 	require.NoError(t, er)

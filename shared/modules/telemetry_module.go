@@ -1,9 +1,12 @@
 package modules
 
+//go:generate mockgen -source=$GOFILE -destination=./mocks/telemetry_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+
 import "github.com/prometheus/client_golang/prometheus"
 
 type TelemetryModule interface {
 	Module
+	ConfigurableModule
 
 	GetTimeSeriesAgent() TimeSeriesAgent
 	GetEventMetricsAgent() EventMetricsAgent

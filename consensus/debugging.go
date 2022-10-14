@@ -1,14 +1,13 @@
 package consensus
 
 import (
-	"github.com/pokt-network/pocket/shared/debug"
 	"log"
-	"time"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/debug"
 )
 
-func (m *ConsensusModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
+func (m *consensusModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
 	switch debugMessage.Action {
 	case debug.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
 		m.resetToGenesis(debugMessage)
@@ -24,13 +23,15 @@ func (m *ConsensusModule) HandleDebugMessage(debugMessage *debug.DebugMessage) e
 	return nil
 }
 
-func (m *ConsensusModule) GetNodeState() typesCons.ConsensusNodeState {
+func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	leaderId := typesCons.NodeId(0)
 	if m.LeaderId != nil {
 		leaderId = *m.LeaderId
 	}
 	return typesCons.ConsensusNodeState{
-		NodeId:   m.NodeId,
+		NodeId:   m.nodeId,
 		Height:   m.Height,
 		Round:    uint8(m.Round),
 		Step:     uint8(m.Step),
@@ -39,17 +40,11 @@ func (m *ConsensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	}
 }
 
-func (m *ConsensusModule) resetToGenesis(_ *debug.DebugMessage) {
+func (m *consensusModule) resetToGenesis(_ *debug.DebugMessage) {
 	m.nodeLog(typesCons.DebugResetToGenesis)
 
 	m.Height = 0
-	m.Round = 0
-	m.Step = 0
-	m.Block = nil
-
-	m.HighPrepareQC = nil
-	m.LockedQC = nil
-
+	m.resetForNewHeight()
 	m.clearLeader()
 	m.clearMessagesPool()
 	m.GetBus().GetPersistenceModule().HandleDebugMessage(&debug.DebugMessage{
@@ -59,15 +54,17 @@ func (m *ConsensusModule) resetToGenesis(_ *debug.DebugMessage) {
 	m.GetBus().GetPersistenceModule().Start() // reload genesis state
 }
 
-func (m *ConsensusModule) printNodeState(_ *debug.DebugMessage) {
+func (m *consensusModule) printNodeState(_ *debug.DebugMessage) {
 	state := m.GetNodeState()
 	m.nodeLog(typesCons.DebugNodeState(state))
 }
 
-func (m *ConsensusModule) triggerNextView(_ *debug.DebugMessage) {
+func (m *consensusModule) triggerNextView(_ *debug.DebugMessage) {
 	m.nodeLog(typesCons.DebugTriggerNextView)
 
-	if m.Height == 0 || (m.Step == Decide && m.paceMaker.IsManualMode()) {
+	currentheight := m.Height
+	currentStep := m.Step
+	if currentheight == 0 || (currentStep == Decide && m.paceMaker.IsManualMode()) {
 		m.paceMaker.NewHeight()
 	} else {
 		m.paceMaker.InterruptRound()
@@ -78,7 +75,7 @@ func (m *ConsensusModule) triggerNextView(_ *debug.DebugMessage) {
 	}
 }
 
-func (m *ConsensusModule) togglePacemakerManualMode(_ *debug.DebugMessage) {
+func (m *consensusModule) togglePacemakerManualMode(_ *debug.DebugMessage) {
 	newMode := !m.paceMaker.IsManualMode()
 	if newMode {
 		m.nodeLog(typesCons.DebugTogglePacemakerManualMode("MANUAL"))
@@ -113,9 +110,4 @@ func (p *paceMaker) SetManualMode(manualMode bool) {
 func (p *paceMaker) ForceNextView() {
 	lastQC := p.quorumCertificate
 	p.startNextView(lastQC, true)
-}
-
-// This is a hack only used to slow down the progress of the blockchain during development.
-func (p *paceMaker) debugSleep() {
-	time.Sleep(time.Duration(int64(time.Millisecond) * int64(p.debugTimeBetweenStepsMsec)))
 }
