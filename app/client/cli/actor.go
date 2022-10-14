@@ -32,17 +32,17 @@ type (
 	cmdOption   func(*cobra.Command)
 	actorCmdDef struct {
 		Name      string
-		ActorType typesUtil.UtilActorType
+		ActorType typesUtil.ActorType
 		Options   []cmdOption
 	}
 )
 
 func NewActorCommands(cmdOptions []cmdOption) []*cobra.Command {
 	actorCmdDefs := []actorCmdDef{
-		{"Application", typesUtil.UtilActorType_App, cmdOptions},
-		{"Node", typesUtil.UtilActorType_Node, cmdOptions},
-		{"Fisherman", typesUtil.UtilActorType_Fish, cmdOptions},
-		{"Validator", typesUtil.UtilActorType_Val, cmdOptions},
+		{"Application", typesUtil.ActorType_App, cmdOptions},
+		{"Node", typesUtil.ActorType_ServiceNode, cmdOptions},
+		{"Fisherman", typesUtil.ActorType_Fisherman, cmdOptions},
+		{"Validator", typesUtil.ActorType_Validator, cmdOptions},
 	}
 
 	cmds := make([]*cobra.Command, 0)
@@ -50,7 +50,7 @@ func NewActorCommands(cmdOptions []cmdOption) []*cobra.Command {
 		cmd := &cobra.Command{
 			Use:     cmdDef.Name,
 			Short:   fmt.Sprintf("%s actor specific commands", cmdDef.Name),
-			Aliases: []string{strings.ToLower(cmdDef.Name), cmdDef.ActorType.GetActorName()},
+			Aliases: []string{strings.ToLower(cmdDef.Name), typesUtil.ActorType_name[int32(cmdDef.ActorType)]}, // TODO: create some helper function to convert enum to names and viceversa
 			Args:    cobra.ExactArgs(0),
 		}
 		cmd.AddCommand(newActorCommands(cmdDef)...)
