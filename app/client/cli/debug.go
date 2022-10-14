@@ -7,9 +7,8 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/pokt-network/pocket/consensus"
-	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/p2p"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared"
 	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/debug"
@@ -181,28 +180,34 @@ func initDebug(remoteCLIURL string) {
 			log.Fatalf(err.Error())
 		}
 
-		consensusMod, err = consensus.Create(defaultConfigPath, defaultGenesisPath, true, func(cc *typesCons.ConsensusConfig) {
-			cc.PrivateKey = clientPrivateKey.String()
-		})
+		runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithPK(clientPrivateKey.String()))
+
+		consM, err := consensus.Create(runtimeMgr)
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
 		}
-		p2pMod, err = p2p.Create(defaultConfigPath, defaultGenesisPath, true, func(pp *typesP2P.P2PConfig) {
-			pp.PrivateKey = clientPrivateKey.String()
-		})
+		consensusMod = consM.(modules.ConsensusModule)
+
+		p2pM, err := p2p.Create(runtimeMgr)
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 		}
+		p2pMod = p2pM.(modules.P2PModule)
+		if err != nil {
+			log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
+		}
+
 		// This telemetry module instance is a NOOP because the 'enable_telemetry' flag in the `cfg` above is set to false.
 		// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
 		// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
 		// module that NOOPs (per the configs above) is injected.
-		telemetryMod, err := telemetry.Create(defaultConfigPath, defaultGenesisPath)
+		telemetryM, err := telemetry.Create(runtimeMgr)
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
 		}
+		telemetryMod := telemetryM.(modules.TelemetryModule)
 
-		_ = shared.CreateBusWithOptionalModules(nil, p2pMod, nil, consensusMod, telemetryMod)
+		_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod) // TODO: refactor using the `WithXXXModule()` pattern accepting a slice of IntegratableModule
 
 		p2pMod.Start()
 	})
