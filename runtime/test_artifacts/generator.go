@@ -1,6 +1,6 @@
 package test_artifacts
 
-// TODO: Move `root/shared/test_artifacts` to `root/test/test_artifacts`
+// TODO: Move `root/runtime/test_artifacts` to `root/test/test_artifacts`
 // Cross module imports are okay because this is only used for testing and not business logic
 import (
 	"fmt"

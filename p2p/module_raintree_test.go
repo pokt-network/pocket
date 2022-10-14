@@ -4,25 +4,19 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"crypto/ed25519"
-	"encoding/binary"
-	"fmt"
-	"log"
-	"os"
-	"path/filepath"
-	"sort"
+
+	// "os"
+	// "path/filepath"
+
 	"sync"
 	"testing"
-	"time"
-	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/shared/debug"
-	"github.com/stretchr/testify/require"
-	"github.com/golang/mock/gomock"
+
+	// "github.com/pokt-network/pocket/runtime"
+
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
-	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -190,27 +184,26 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 
 // ### RainTree Unit Helpers - To remove redundancy of code in the unit tests ###
 
-func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTreeCommConfig, isOriginatorPinged bool) {
-	// Network configurations
-	numValidators := len(testCommConfig)
+// Helper function that can be used for end-to-end P2P module tests that creates a "real" P2P module
+// where all the other components of the node are mocked. It then triggers a single message and waits
+// for all of the expected messages transmission to complete before announcing failure.
+func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig TestNetworkSimulationConfig) {
+	// Configure & prepare test module
+	numValidators := len(networkSimulationConfig)
 	runtimeConfigs := createMockRuntimeMgrs(t, numValidators)
 
-	// Test configurations
-	var messageHandeledWaitGroup sync.WaitGroup
-	if isOriginatorPinged {
-		messageHandeledWaitGroup.Add(numValidators)
-	} else {
-		messageHandeledWaitGroup.Add(numValidators - 1) // -1 because the originator node implicitly handles the message
-	}
-
-	// Network initialization
-	consensusMock := prepareConsensusMock(t, runtimeConfigs[0].GetGenesis())
-	telemetryMock := prepareTelemetryMock(t)
+	// Network & module mocks
+	var wg sync.WaitGroup
 	connMocks := make(map[string]typesP2P.Transport)
 	busMocks := make(map[string]modules.Bus)
-	for valId, expectedCall := range testCommConfig {
-		connMocks[valId] = prepareConnMock(t, expectedCall.numNetworkReads, expectedCall.numNetworkWrites)
-		busMocks[valId] = prepareBusMock(t, &messageHandeledWaitGroup, consensusMock, telemetryMock)
+	for valId, expectedCall := range networkSimulationConfig {
+		wg.Add(expectedCall.numNetworkReads + 1)
+		connMocks[valId] = prepareConnMock(t, &wg, expectedCall.numNetworkReads)
+
+		wg.Add(expectedCall.numNetworkWrites)
+		consensusMock := prepareConsensusMock(t, runtimeConfigs[0].GetGenesis())
+		telemetryMock := prepareTelemetryMock(t, &wg, expectedCall.numNetworkWrites)
+		busMocks[valId] = prepareBusMock(t, consensusMock, telemetryMock)
 	}
 
 	// Module injection
@@ -225,240 +218,11 @@ func testRainTreeCalls(t *testing.T, origNode string, testCommConfig TestRainTre
 		defer p2pMod.Stop()
 	}
 
-	// Trigger originator message
+	// Wait for completion
+	defer waitForNetworkSimulationCompletion(t, p2pModules, &wg)
+
+	// Send the first message (by the originator) to trigger a RainTree broadcast
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
-	p2pMod.Broadcast(p, debug.PocketTopic_DEBUG_TOPIC)
-
-	// Wait for completion
-	done := make(chan struct{})
-	go func() {
-		messagesHandledWg.Wait()
-		close(done)
-	}()
-
-	// Timeout or succeed
-	select {
-	case <-done:
-	// All done!
-	case <-time.After(3 * time.Second):
-		t.Fatal("Timeout waiting for message to be handled")
-	}
+	require.NoError(t, p2pMod.Broadcast(p, debug.PocketTopic_DEBUG_TOPIC))
 }
-
-// ### RainTree Unit Utils - Configurations & constants and such ###
-
-const (
-	genesisConfigSeedStart = 42
-	maxNumKeys             = 42 // The number of keys generated for all the unit tests. Optimization to avoid regenerating every time.
-	serviceUrlFormat       = "val_%d"
-	testChannelSize        = 10000
-)
-
-// TODO(olshansky): Add configurations tests for dead and partially visible nodes
-type TestRainTreeCommConfig map[string]struct {
-	numNetworkReads  uint16
-	numNetworkWrites uint16
-}
-
-var keys []cryptoPocket.PrivateKey
-
-func init() {
-	keys = generateKeys(nil, maxNumKeys)
-}
-
-func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
-	keys := make([]cryptoPocket.PrivateKey, numValidators)
-
-	for i := range keys {
-		seedInt := genesisConfigSeedStart + i
-		seed := make([]byte, ed25519.PrivateKeySize)
-		binary.LittleEndian.PutUint32(seed, uint32(seedInt))
-		pk, err := cryptoPocket.NewPrivateKeyFromSeed(seed)
-		if err != nil {
-			panic(err)
-		}
-		keys[i] = pk
-	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i].Address().String() < keys[j].Address().String()
-	})
-	return keys
-}
-
-// A mock of the application specific to know if a message was sent to be handled by the application
-// INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//                         expectation with RainTree by comparing with Telemetry after updating specs.
-func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
-	ctrl := gomock.NewController(t)
-	busMock := modulesMock.NewMockBus(ctrl)
-
-	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(func(e *debug.PocketEvent) {
-		wg.Done()
-		log.Println("App specific bus mock publishing event to bus")
-	}).MaxTimes(1) // Using `MaxTimes` rather than `Times` because originator node implicitly handles the message
-
-	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
-	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
-
-	return busMock
-}
-
-func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockConsensusModule {
-	ctrl := gomock.NewController(t)
-	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
-
-	validators := genesisState.GetPersistenceGenesisState().GetVals()
-	m := make(modules.ValidatorMap, len(validators))
-	for _, v := range validators {
-		m[v.GetAddress()] = v
-	}
-
-	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
-	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
-	return consensusMock
-}
-
-func prepareTelemetryMock(t *testing.T) *modulesMock.MockTelemetryModule {
-	ctrl := gomock.NewController(t)
-	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
-
-	timeSeriesAgentMock := prepareTimeSeriesAgentMock(t)
-	eventMetricsAgentMock := prepareEventMetricsAgentMock(t)
-
-	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
-	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
-	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
-
-	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-
-	return telemetryMock
-}
-
-func prepareTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
-	ctrl := gomock.NewController(t)
-	timeseriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
-	return timeseriesAgentMock
-}
-
-func prepareEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAgent {
-	ctrl := gomock.NewController(t)
-	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
-	return eventMetricsAgentMock
-}
-
-// The reason with use `MaxTimes` instead of `Times` here is because we could have gotten full coverage
-// while a message was still being sent that would have later been dropped due to de-duplication. There
-// is a race condition here, but it is okay because our goal is to achieve max coverage with an upper limit
-// on the number of expected messages propagated.
-// INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//                         expectation with RainTree by comparing with Telemetry after updating specs.
-func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesP2P.Transport {
-	testChannel := make(chan []byte, testChannelSize)
-	ctrl := gomock.NewController(t)
-	connMock := mocksP2P.NewMockTransport(ctrl)
-
-	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
-		data := <-testChannel
-		return data, nil
-	}).MaxTimes(int(expectedNumNetworkReads + 1))
-
-	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) error {
-		testChannel <- data
-		return nil
-	}).MaxTimes(int(expectedNumNetworkWrites))
-
-	connMock.EXPECT().Close().Return(nil).Times(1)
-
-	return connMock
-}
-
-// prepareP2PModules returns a map of configured p2pModules keyed by an incremental naming convention (eg: `val_1`, `val_2`, etc.)
-func prepareP2PModules(t *testing.T, runtimeConfigs []modules.RuntimeMgr) (p2pModules map[string]*p2pModule) {
-	p2pModules = make(map[string]*p2pModule, len(runtimeConfigs))
-	for i, runtimeConfig := range runtimeConfigs {
-		p2pMod, err := Create(runtimeConfig)
-		require.NoError(t, err)
-		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
-	}
-	return
-}
-
-// createMockRuntimeMgrs creates `numValidators` instances of mocked `RuntimeMgr` that are essentially
-// representing the runtime environments of the validators that we will use in our tests
-func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr {
-	ctrl := gomock.NewController(t)
-	mockRuntimeMgrs := make([]modules.RuntimeMgr, numValidators)
-	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
-	copy(valKeys[:], keys[:numValidators])
-	mockGenesisState := createMockGenesisState(t, valKeys)
-	for i := range mockRuntimeMgrs {
-		mockConfig := modulesMock.NewMockConfig(ctrl)
-		mockConfig.EXPECT().GetBaseConfig().Return(&runtime.BaseConfig{
-			RootDirectory: "",
-			PrivateKey:    valKeys[i].String(),
-		}).AnyTimes()
-		mockConfig.EXPECT().GetP2PConfig().Return(&typesP2P.P2PConfig{
-			PrivateKey:            valKeys[i].String(),
-			ConsensusPort:         8080,
-			UseRainTree:           true,
-			IsEmptyConnectionType: true,
-		}).AnyTimes()
-
-		mockRuntimeMgr := modulesMock.NewMockRuntimeMgr(ctrl)
-		mockRuntimeMgr.EXPECT().GetConfig().Return(mockConfig).AnyTimes()
-		mockRuntimeMgr.EXPECT().GetGenesis().Return(mockGenesisState).AnyTimes()
-		mockRuntimeMgrs[i] = mockRuntimeMgr
-	}
-	return mockRuntimeMgrs
-}
-
-func validatorId(_ *testing.T, i int) string {
-	return fmt.Sprintf(serviceUrlFormat, i)
-}
-
-// createMockGenesisState configures and returns a mocked GenesisState
-func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) modules.GenesisState {
-	ctrl := gomock.NewController(t)
-
-	validators := make([]modules.Actor, len(valKeys))
-	for i, valKey := range valKeys {
-		addr := valKey.Address().String()
-		mockActor := modulesMock.NewMockActor(ctrl)
-		mockActor.EXPECT().GetAddress().Return(addr).AnyTimes()
-		mockActor.EXPECT().GetPublicKey().Return(valKey.PublicKey().String()).AnyTimes()
-		mockActor.EXPECT().GetGenericParam().Return(validatorId(t, i+1)).AnyTimes()
-		mockActor.EXPECT().GetStakedAmount().Return("1000000000000000").AnyTimes()
-		mockActor.EXPECT().GetPausedHeight().Return(int64(0)).AnyTimes()
-		mockActor.EXPECT().GetUnstakingHeight().Return(int64(0)).AnyTimes()
-		mockActor.EXPECT().GetOutput().Return(addr).AnyTimes()
-		validators[i] = mockActor
-	}
-
-	mockPersistenceGenesisState := modulesMock.NewMockPersistenceGenesisState(ctrl)
-	mockPersistenceGenesisState.EXPECT().
-		GetVals().
-		Return(validators).AnyTimes()
-
-	mockGenesisState := modulesMock.NewMockGenesisState(ctrl)
-	mockGenesisState.EXPECT().
-		GetPersistenceGenesisState().
-		Return(mockPersistenceGenesisState).AnyTimes()
-	return mockGenesisState
-
-}
-
-func TestMain(m *testing.M) {
-	exitCode := m.Run()
-	files, err := filepath.Glob("*.json")
-	if err != nil {
-		log.Fatalf("Error finding json file: %v", err)
-	}
-	for _, f := range files {
-		os.Remove(f)
-	}
-	os.Exit(exitCode)
-}
->>>>>>> main
