@@ -1,5 +1,20 @@
 package p2p
 
+// This file contains helper files related to genesis and config files for P2P testing.
+
+import (
+	"encoding/json"
+	"io/ioutil"
+	"strconv"
+	"testing"
+
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
+	"github.com/stretchr/testify/require"
+)
+
 func createTestingGenesisAndConfigFiles(t *testing.T, cfg modules.Config, genesisState modules.GenesisState, n int) {
 	config, err := json.Marshal(cfg.P2P)
 	require.NoError(t, err)
@@ -22,6 +37,8 @@ func createTestingGenesisAndConfigFiles(t *testing.T, cfg modules.Config, genesi
 	require.NoError(t, ioutil.WriteFile(testingConfigFilePath+strconv.Itoa(n)+jsonPosfix, p2pFileBz, 0777))
 }
 
+// CLEANUP: Delete this function and use the helpers in `test_artifacts` once we have support for
+//          deterministic or injected (for the purpose of ordering) private keys.
 func createConfigs(t *testing.T, numValidators int) (configs []modules.Config, genesisState modules.GenesisState) {
 	configs = make([]modules.Config, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
@@ -51,7 +68,7 @@ func createGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) modules
 		val := &test_artifacts.MockActor{
 			Address:         addr,
 			PublicKey:       valKey.PublicKey().String(),
-			GenericParam:    validatorId(t, i+1),
+			GenericParam:    validatorId(i + 1),
 			StakedAmount:    "1000000000000000",
 			PausedHeight:    0,
 			UnstakingHeight: 0,

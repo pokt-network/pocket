@@ -3,20 +3,19 @@ package p2p
 import (
 	"crypto/ed25519"
 	"encoding/binary"
+	"sort"
+	"sync"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
-	p2pTelemetry "github.com/pokt-network/pocket/p2p/telemetry"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
-	// "github.com/pokt-network/pocket/shared/types/genesis"
-	// "github.com/pokt-network/pocket/shared/types/genesis/test_artifacts"
+	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"github.com/stretchr/testify/require"
-	"sort"
-	"sync"
-	"testing"
-	"time"
 )
 
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
@@ -137,58 +136,6 @@ func waitForNetworkSimulationCompletion(t *testing.T, p2pModules map[string]*p2p
 	// Stop all the P2P modules
 	for _, p2pModule := range p2pModules {
 		p2pModule.Stop()
-	}
-}
-
-// CLEANUP: Delete this function and use the helpers in `test_artifacts` once we have support for
-//          deterministic or injected (for the purpose of ordering) private keys.
-func createConfigs(t *testing.T, numValidators int) (configs map[string]*genesis.Config, genesisState *genesis.GenesisState) {
-	configs = make(map[string]*genesis.Config, numValidators)
-	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
-	copy(valKeys[:], keys[:numValidators])
-	genesisState = createGenesisState(t, valKeys)
-
-	for i := 0; i < numValidators; i++ {
-		configs[validatorId(i+1)] = &genesis.Config{
-			Base: &genesis.BaseConfig{
-				RootDirectory: "",
-				PrivateKey:    valKeys[i].String(),
-			},
-			Consensus:   &genesis.ConsensusConfig{},
-			Utility:     &genesis.UtilityConfig{},
-			Persistence: &genesis.PersistenceConfig{},
-			P2P: &genesis.P2PConfig{
-				ConsensusPort:  8080,
-				UseRainTree:    true,
-				ConnectionType: genesis.ConnectionType_EmptyConnection,
-			},
-			Telemetry: nil,
-		}
-	}
-	return
-}
-
-// CLEANUP: Delete this function and use the helpers in `test_artifacts` once we have support for
-//          deterministic or injected (for the purpose of ordering) private keys.
-func createGenesisState(_ *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
-	validators := make([]*genesis.Actor, len(valKeys))
-	for i, valKey := range valKeys {
-		addr := valKey.Address().String()
-		val := &genesis.Actor{
-			Address:         addr,
-			PublicKey:       valKey.PublicKey().String(),
-			GenericParam:    validatorId(i + 1),
-			StakedAmount:    "1000000000000000",
-			PausedHeight:    0,
-			UnstakingHeight: 0,
-			Output:          addr,
-		}
-		validators[i] = val
-	}
-	return &genesis.GenesisState{
-		Utility: &genesis.UtilityGenesisState{
-			Validators: validators,
-		},
 	}
 }
 

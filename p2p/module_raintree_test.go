@@ -1,25 +1,14 @@
 package p2p
 
 import (
-	"crypto/ed25519"
-	"encoding/binary"
 	"log"
 	"os"
 	"path/filepath"
-	"sort"
-	"strconv"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
-	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/debug"
-	"github.com/pokt-network/pocket/shared/modules"
-	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -202,7 +191,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	// Wait for completion
 	done := make(chan struct{})
 	go func() {
-		messageHandeledWaitGroup.Wait()
+		messagesHandledWg.Wait()
 		close(done)
 	}()
 
@@ -217,143 +206,140 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 
 // ### RainTree Unit Utils - Configurations & constants and such ###
 
-const (
-	genesisConfigSeedStart = 42
-	maxNumKeys             = 42 // The number of keys generated for all the unit tests. Optimization to avoid regenerating every time.
-	serviceUrlFormat       = "val_%d"
-	testChannelSize        = 10000
-	testingGenesisFilePath = "genesis"
-	testingConfigFilePath  = "config"
-	jsonPostfix            = ".json"
-)
+// const (
+// 	testChannelSize        = 10000
+// 	testingGenesisFilePath = "genesis"
+// 	testingConfigFilePath  = "config"
+// 	jsonPostfix            = ".json"
+// )
 
-// TODO(olshansky): Add configurations tests for dead and partially visible nodes
-type TestRainTreeCommConfig map[string]struct {
-	numNetworkReads  uint16
-	numNetworkWrites uint16
-}
+// // TODO(olshansky): Add configurations tests for dead and partially visible nodes
+// type TestRainTreeCommConfig map[string]struct {
+// 	numNetworkReads  uint16
+// 	numNetworkWrites uint16
+// }
 
-var keys []cryptoPocket.PrivateKey
+// var keys []cryptoPocket.PrivateKey
 
-func init() {
-	keys = generateKeys(nil, maxNumKeys)
-}
+// func init() {
+// 	keys = generateKeys(nil, maxNumKeys)
+// }
 
-func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
-	keys := make([]cryptoPocket.PrivateKey, numValidators)
+// func generateKeys(_ *testing.T, numValidators int) []cryptoPocket.PrivateKey {
+// 	keys := make([]cryptoPocket.PrivateKey, numValidators)
 
-	for i := range keys {
-		seedInt := genesisConfigSeedStart + i
-		seed := make([]byte, ed25519.PrivateKeySize)
-		binary.LittleEndian.PutUint32(seed, uint32(seedInt))
-		pk, err := cryptoPocket.NewPrivateKeyFromSeed(seed)
-		if err != nil {
-			panic(err)
-		}
-		keys[i] = pk
-	}
-	sort.Slice(keys, func(i, j int) bool {
-		return keys[i].Address().String() < keys[j].Address().String()
-	})
-	return keys
-}
+// 	for i := range keys {
+// 		seedInt := genesisConfigSeedStart + i
+// 		seed := make([]byte, ed25519.PrivateKeySize)
+// 		binary.LittleEndian.PutUint32(seed, uint32(seedInt))
+// 		pk, err := cryptoPocket.NewPrivateKeyFromSeed(seed)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		keys[i] = pk
+// 	}
+// 	sort.Slice(keys, func(i, j int) bool {
+// 		return keys[i].Address().String() < keys[j].Address().String()
+// 	})
+// 	return keys
+// }
 
-// A mock of the application specific to know if a message was sent to be handled by the application
-// INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//                         expectation with RainTree by comparing with Telemetry after updating specs.
-func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
-	ctrl := gomock.NewController(t)
-	busMock := modulesMock.NewMockBus(ctrl)
+// // A mock of the application specific to know if a message was sent to be handled by the application
+// // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
+// //                         expectation with RainTree by comparing with Telemetry after updating specs.
+// func prepareBusMock(t *testing.T, wg *sync.WaitGroup, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
+// 	ctrl := gomock.NewController(t)
+// 	busMock := modulesMock.NewMockBus(ctrl)
 
-	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(func(e *debug.PocketEvent) {
-		wg.Done()
-		log.Println("App specific bus mock publishing event to bus")
-	}).MaxTimes(1) // Using `MaxTimes` rather than `Times` because originator node implicitly handles the message
+// 	busMock.EXPECT().PublishEventToBus(gomock.Any()).Do(func(e *debug.PocketEvent) {
+// 		wg.Done()
+// 		log.Println("App specific bus mock publishing event to bus")
+// 	}).MaxTimes(1) // Using `MaxTimes` rather than `Times` because originator node implicitly handles the message
 
-	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
-	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
+// 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+// 	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
 
-	return busMock
-}
+// 	return busMock
+// }
 
-func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockConsensusModule {
-	ctrl := gomock.NewController(t)
-	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
+// func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockConsensusModule {
+// 	ctrl := gomock.NewController(t)
+// 	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
 
-	validators := genesisState.PersistenceGenesisState.GetVals()
-	m := make(modules.ValidatorMap, len(validators))
-	for _, v := range validators {
-		m[v.GetAddress()] = v
-	}
+// 	validators := genesisState.PersistenceGenesisState.GetVals()
+// 	m := make(modules.ValidatorMap, len(validators))
+// 	for _, v := range validators {
+// 		m[v.GetAddress()] = v
+// 	}
 
-	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
-	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
-	return consensusMock
-}
+// 	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
+// 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
+// 	return consensusMock
+// }
 
-func prepareTelemetryMock(t *testing.T) *modulesMock.MockTelemetryModule {
-	ctrl := gomock.NewController(t)
-	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
+// func prepareTelemetryMock(t *testing.T) *modulesMock.MockTelemetryModule {
+// 	ctrl := gomock.NewController(t)
+// 	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
 
-	timeSeriesAgentMock := prepareTimeSeriesAgentMock(t)
-	eventMetricsAgentMock := prepareEventMetricsAgentMock(t)
+// 	timeSeriesAgentMock := prepareTimeSeriesAgentMock(t)
+// 	eventMetricsAgentMock := prepareEventMetricsAgentMock(t)
 
-	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
-	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
-	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
+// 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
+// 	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
+// 	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
 
-	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+// 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
+// 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+// 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
-	return telemetryMock
-}
+// 	return telemetryMock
+// }
 
-func prepareTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
-	ctrl := gomock.NewController(t)
-	timeseriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
-	return timeseriesAgentMock
-}
+// func prepareTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
+// 	ctrl := gomock.NewController(t)
+// 	timeseriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
+// 	return timeseriesAgentMock
+// }
 
-func prepareEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAgent {
-	ctrl := gomock.NewController(t)
-	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
-	return eventMetricsAgentMock
-}
+// func prepareEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAgent {
+// 	ctrl := gomock.NewController(t)
+// 	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
+// 	return eventMetricsAgentMock
+// }
 
-// The reason with use `MaxTimes` instead of `Times` here is because we could have gotten full coverage
-// while a message was still being sent that would have later been dropped due to de-duplication. There
-// is a race condition here, but it is okay because our goal is to achieve max coverage with an upper limit
-// on the number of expected messages propagated.
-// INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
-//                         expectation with RainTree by comparing with Telemetry after updating specs.
-func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesP2P.Transport {
-	testChannel := make(chan []byte, testChannelSize)
-	ctrl := gomock.NewController(t)
-	connMock := mocksP2P.NewMockTransport(ctrl)
+// // The reason with use `MaxTimes` instead of `Times` here is because we could have gotten full coverage
+// // while a message was still being sent that would have later been dropped due to de-duplication. There
+// // is a race condition here, but it is okay because our goal is to achieve max coverage with an upper limit
+// // on the number of expected messages propagated.
+// // INVESTIGATE(olshansky): Double check that how the expected calls are counted is accurate per the
+// //                         expectation with RainTree by comparing with Telemetry after updating specs.
+// func prepareConnMock(t *testing.T, expectedNumNetworkReads, expectedNumNetworkWrites uint16) typesP2P.Transport {
+// 	testChannel := make(chan []byte, testChannelSize)
+// 	ctrl := gomock.NewController(t)
+// 	connMock := mocksP2P.NewMockTransport(ctrl)
 
-	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
-		data := <-testChannel
-		return data, nil
-	}).MaxTimes(int(expectedNumNetworkReads + 1))
+// 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
+// 		data := <-testChannel
+// 		return data, nil
+// 	}).MaxTimes(int(expectedNumNetworkReads + 1))
 
-	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) error {
-		testChannel <- data
-		return nil
-	}).MaxTimes(int(expectedNumNetworkWrites))
+// 	connMock.EXPECT().Write(gomock.Any()).DoAndReturn(func(data []byte) error {
+// 		testChannel <- data
+// 		return nil
+// 	}).MaxTimes(int(expectedNumNetworkWrites))
 
-	connMock.EXPECT().Close().Return(nil).Times(1)
+// 	connMock.EXPECT().Close().Return(nil).Times(1)
 
-	return connMock
-}
+// 	return connMock
+// }
 
-func prepareP2PModules(t *testing.T, configs []modules.Config) (p2pModules map[string]*p2pModule) {
-	p2pModules = make(map[string]*p2pModule, len(configs))
-	for i, config := range configs {
-		createTestingGenesisAndConfigFiles(t, config, modules.GenesisState{}, i)
-		p2pMod, err := Create(testingConfigFilePath+strconv.Itoa(i)+jsonPostfix, testingGenesisFilePath+jsonPostfix, false)
-		require.NoError(t, err)
-		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
-	}
-	return
-}
+// func prepareP2PModules(t *testing.T, configs []modules.Config) (p2pModules map[string]*p2pModule) {
+// 	p2pModules = make(map[string]*p2pModule, len(configs))
+// 	for i, config := range configs {
+// 		createTestingGenesisAndConfigFiles(t, config, modules.GenesisState{}, i)
+// 		p2pMod, err := Create(testingConfigFilePath+strconv.Itoa(i)+jsonPostfix, testingGenesisFilePath+jsonPostfix, false)
+// 		require.NoError(t, err)
+// 		p2pModules[validatorId(t, i+1)] = p2pMod.(*p2pModule)
+// 	}
+// 	return
+// }
