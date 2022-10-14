@@ -175,12 +175,7 @@ func initDebug(remoteCLIURL string) {
 	modInitOnce.Do(func() {
 		// HACK: rain tree will detect if trying to send to addr=self and not send it
 		var err error
-		clientPrivateKey, err := pocketCrypto.GeneratePrivateKey()
-		if err != nil {
-			log.Fatalf(err.Error())
-		}
-
-		runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithPK(clientPrivateKey.String()))
+		runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
 
 		consM, err := consensus.Create(runtimeMgr)
 		if err != nil {
