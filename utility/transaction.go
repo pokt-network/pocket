@@ -2,7 +2,7 @@ package utility
 
 import (
 	"bytes"
-	typesGenesis "github.com/pokt-network/pocket/persistence/types"
+	"encoding/hex"
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
@@ -104,7 +104,7 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil
 	}
 	accountAmount.Sub(accountAmount, fee)
 	if accountAmount.Sign() == -1 {
-		return nil, typesUtil.ErrInsufficientAmount()
+		return nil, typesUtil.ErrInsufficientAmount(address.String())
 	}
 	signerCandidates, err := u.GetSignerCandidates(msg)
 	if err != nil {
@@ -123,7 +123,7 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil
 	if err := u.SetAccountAmount(address, accountAmount); err != nil {
 		return nil, err
 	}
-	if err := u.AddPoolAmount(typesGenesis.Pool_Names_FeeCollector.String(), fee); err != nil {
+	if err := u.AddPoolAmount(typesUtil.PoolNames_FeeCollector.String(), fee); err != nil {
 		return nil, err
 	}
 	msg.SetSigner(address)
@@ -167,7 +167,7 @@ func (u *UtilityContext) HandleMessageSend(message *typesUtil.MessageSend) types
 	// if they go negative, they don't have sufficient funds
 	// NOTE: we don't use the u.SubtractAccountAmount() function because Utility needs to do this check
 	if fromAccountAmount.Sign() == -1 {
-		return typesUtil.ErrInsufficientAmount()
+		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.FromAddress))
 	}
 	// add the amount to the recipient's account
 	if err = u.AddAccountAmount(message.ToAddress, amount); err != nil {
@@ -198,7 +198,7 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 	// calculate new signer account amount
 	signerAccountAmount.Sub(signerAccountAmount, amount)
 	if signerAccountAmount.Sign() == -1 {
-		return typesUtil.ErrInsufficientAmount()
+		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.Signer))
 	}
 	// validators don't have chains field
 	if err = u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
@@ -216,25 +216,25 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 	// move funds from account to pool
-	if err = u.AddPoolAmount(typesGenesis.Pool_Names_AppStakePool.String(), amount); err != nil {
+	if err = u.AddPoolAmount(typesUtil.PoolNames_AppStakePool.String(), amount); err != nil {
 		return err
 	}
 	var er error
 	store := u.Store()
 	// insert actor
 	switch message.ActorType {
-	case typesUtil.UtilActorType_App:
+	case typesUtil.ActorType_App:
 		maxRelays, err := u.CalculateAppRelays(message.Amount)
 		if err != nil {
 			return err
 		}
-		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case typesUtil.UtilActorType_Fish:
-		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case typesUtil.UtilActorType_Node:
-		er = store.InsertServiceNode(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case typesUtil.UtilActorType_Val:
-		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, typesUtil.StakedStatus, message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+	case typesUtil.ActorType_Fisherman:
+		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+	case typesUtil.ActorType_ServiceNode:
+		er = store.InsertServiceNode(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
+	case typesUtil.ActorType_Validator:
+		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	}
 	if er != nil {
 		return typesUtil.ErrInsert(er)
@@ -270,7 +270,7 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 	}
 	signerAccountAmount.Sub(signerAccountAmount, amount)
 	if signerAccountAmount.Sign() == -1 {
-		return typesUtil.ErrInsufficientAmount()
+		return typesUtil.ErrInsufficientAmount(hex.EncodeToString(message.Signer))
 	}
 	if err = u.CheckBelowMaxChains(message.ActorType, message.Chains); err != nil {
 		return err
@@ -280,23 +280,23 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(typesGenesis.Pool_Names_AppStakePool.String(), amount); err != nil {
+	if err := u.AddPoolAmount(typesUtil.PoolNames_AppStakePool.String(), amount); err != nil {
 		return err
 	}
 	store := u.Store()
 	var er error
 	switch message.ActorType {
-	case typesUtil.UtilActorType_App:
+	case typesUtil.ActorType_App:
 		maxRelays, err := u.CalculateAppRelays(message.Amount)
 		if err != nil {
 			return err
 		}
 		er = store.UpdateApp(message.Address, maxRelays, message.Amount, message.Chains)
-	case typesUtil.UtilActorType_Fish:
+	case typesUtil.ActorType_Fisherman:
 		er = store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
-	case typesUtil.UtilActorType_Node:
+	case typesUtil.ActorType_ServiceNode:
 		er = store.UpdateServiceNode(message.Address, message.ServiceUrl, message.Amount, message.Chains)
-	case typesUtil.UtilActorType_Val:
+	case typesUtil.ActorType_Validator:
 		er = store.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
 	}
 	if er != nil {
@@ -306,9 +306,9 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 }
 
 func (u *UtilityContext) HandleUnstakeMessage(message *typesUtil.MessageUnstake) typesUtil.Error {
-	if status, err := u.GetActorStatus(message.ActorType, message.Address); err != nil || status != typesUtil.StakedStatus {
-		if status != typesUtil.StakedStatus {
-			return typesUtil.ErrInvalidStatus(status, typesUtil.StakedStatus)
+	if status, err := u.GetActorStatus(message.ActorType, message.Address); err != nil || status != int32(typesUtil.StakeStatus_Staked) {
+		if status != int32(typesUtil.StakeStatus_Staked) {
+			return typesUtil.ErrInvalidStatus(status, int32(typesUtil.StakeStatus_Staked))
 		}
 		return err
 	}
@@ -334,7 +334,7 @@ func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause)
 	if err != nil {
 		return err
 	}
-	latestHeight, err := u.GetLatestHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -348,7 +348,7 @@ func (u *UtilityContext) HandleUnpauseMessage(message *typesUtil.MessageUnpause)
 }
 
 func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubleSign) typesUtil.Error {
-	latestHeight, err := u.GetLatestHeight()
+	latestHeight, err := u.GetLatestBlockHeight()
 	if err != nil {
 		return err
 	}
@@ -370,7 +370,7 @@ func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubl
 	if err != nil {
 		return err
 	}
-	if err := u.BurnActor(typesUtil.UtilActorType_Val, burnPercentage, doubleSigner); err != nil {
+	if err := u.BurnActor(typesUtil.ActorType_Validator, burnPercentage, doubleSigner); err != nil {
 		return err
 	}
 	return nil

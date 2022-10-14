@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 
+	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/shared"
 )
 
@@ -21,7 +22,7 @@ func main() {
 		log.Printf("Version flag currently unused %s\n", version)
 		return
 	}
-	pocketNode, err := shared.Create(*configFilename, *genesisFilename)
+	pocketNode, err := shared.Create(*configFilename, *genesisFilename, clock.New())
 	if err != nil {
 		log.Fatalf("Failed to create pocket node: %s", err)
 	}

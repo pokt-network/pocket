@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"container/list"
-	"encoding/hex"
 	"sync"
 
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -28,11 +27,11 @@ type FIFOMempool struct {
 	pool                 *list.List
 	size                 int
 	transactionBytes     int
-	maxTransactionsBytes int
-	maxTransactions      int
+	maxTransactionsBytes uint64
+	maxTransactions      uint32
 }
 
-func NewMempool(maxTransactionBytes int, maxTransactions int) Mempool {
+func NewMempool(maxTransactionBytes uint64, maxTransactions uint32) Mempool {
 	return &FIFOMempool{
 		l:                    sync.RWMutex{},
 		hashMap:              make(map[string]struct{}),
@@ -47,8 +46,7 @@ func NewMempool(maxTransactionBytes int, maxTransactions int) Mempool {
 func (f *FIFOMempool) AddTransaction(tx []byte) Error {
 	f.l.Lock()
 	defer f.l.Unlock()
-	hash := crypto.SHA3Hash(tx)
-	hashString := hex.EncodeToString(hash)
+	hashString := crypto.GetHashStringFromBytes(tx)
 	if _, ok := f.hashMap[hashString]; ok {
 		return ErrDuplicateTransaction()
 	}
@@ -56,7 +54,7 @@ func (f *FIFOMempool) AddTransaction(tx []byte) Error {
 	f.hashMap[hashString] = struct{}{}
 	f.size++
 	f.transactionBytes += len(tx)
-	for f.size >= f.maxTransactions || f.transactionBytes >= f.maxTransactionsBytes {
+	for uint32(f.size) >= f.maxTransactions || uint64(f.transactionBytes) >= f.maxTransactionsBytes {
 		_, err := popTransaction(f)
 		if err != nil {
 			return err
@@ -129,8 +127,7 @@ func removeTransaction(f *FIFOMempool, e *list.Element) ([]byte, Error) {
 	txBz := e.Value.([]byte)
 	txBzLen := len(txBz)
 	f.pool.Remove(e)
-	hash := crypto.SHA3Hash(txBz)
-	hashString := hex.EncodeToString(hash)
+	hashString := crypto.GetHashStringFromBytes(txBz)
 	delete(f.hashMap, hashString)
 	f.size--
 	f.transactionBytes -= txBzLen

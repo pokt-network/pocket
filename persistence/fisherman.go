@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"encoding/hex"
-	"log"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -25,11 +24,11 @@ func (p PostgresContext) GetFisherman(address []byte, height int64) (operator, p
 	return
 }
 
-func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedAmount string, chains []string, pausedHeight int64, unstakingHeight int64) error {
+func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, output []byte, _ bool, _ int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(types.FishermanActor, types.BaseActor{
 		Address:            hex.EncodeToString(address),
 		PublicKey:          hex.EncodeToString(publicKey),
-		StakedTokens:       stakedAmount,
+		StakedTokens:       stakedTokens,
 		ActorSpecificParam: serviceURL,
 		OutputAddress:      hex.EncodeToString(output),
 		PausedHeight:       pausedHeight,
@@ -47,11 +46,6 @@ func (p PostgresContext) UpdateFisherman(address []byte, serviceURL string, stak
 	})
 }
 
-func (p PostgresContext) DeleteFisherman(_ []byte) error {
-	log.Println("[DEBUG] DeleteFisherman is a NOOP")
-	return nil
-}
-
 func (p PostgresContext) GetFishermanStakeAmount(height int64, address []byte) (string, error) {
 	return p.GetActorStakeAmount(types.FishermanActor, address, height)
 }
@@ -60,15 +54,15 @@ func (p PostgresContext) SetFishermanStakeAmount(address []byte, stakeAmount str
 	return p.SetActorStakeAmount(types.FishermanActor, address, stakeAmount)
 }
 
-func (p PostgresContext) GetFishermenReadyToUnstake(height int64, _ int) ([]modules.IUnstakingActor, error) {
+func (p PostgresContext) GetFishermenReadyToUnstake(height int64, status int32) ([]modules.IUnstakingActor, error) {
 	return p.GetActorsReadyToUnstake(types.FishermanActor, height)
 }
 
-func (p PostgresContext) GetFishermanStatus(address []byte, height int64) (status int, err error) {
+func (p PostgresContext) GetFishermanStatus(address []byte, height int64) (status int32, err error) {
 	return p.GetActorStatus(types.FishermanActor, address, height)
 }
 
-func (p PostgresContext) SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, _ int) error {
+func (p PostgresContext) SetFishermanUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error {
 	return p.SetActorUnstakingHeightAndStatus(types.FishermanActor, address, unstakingHeight)
 }
 
@@ -76,7 +70,7 @@ func (p PostgresContext) GetFishermanPauseHeightIfExists(address []byte, height 
 	return p.GetActorPauseHeightIfExists(types.FishermanActor, address, height)
 }
 
-func (p PostgresContext) SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
+func (p PostgresContext) SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error {
 	return p.SetActorStatusAndUnstakingHeightIfPausedBefore(types.FishermanActor, pausedBeforeHeight, unstakingHeight)
 }
 

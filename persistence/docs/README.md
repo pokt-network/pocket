@@ -44,8 +44,9 @@ See [config.go](./shared/config/config.go) for the specification and [config1.js
 
 ```bash
 persistence         # Directly contains the persistence module interface for each actor
-├── CHANGELOG.md    # Persistence module changelog
-├── README.md       # Persistence module README
+├── docs
+│   ├── CHANGELOG.md    # Persistence module changelog
+│   ├── README.md       # Persistence module README
 ├── account.go
 ├── application.go
 ├── block.go
@@ -62,6 +63,11 @@ persistence         # Directly contains the persistence module interface for eac
 ├── docs
 ├── kvstore         # Key value store for database
 ├── proto           # Proto3 message files for generated structures
+│   ├── account.proto   # account structure
+│   ├── actor.proto     # protocol actor structure (e.g. validator, service node, etc...)
+│   ├── config.proto    # configuration structure
+│   ├── gov.proto       # params structure
+│   ├── state.proto     # genesis state structure
 ├── types           # Directly contains the SQL schema and SQL query builders used by the files above
 │   ├── migrations
 │   ├── account.go

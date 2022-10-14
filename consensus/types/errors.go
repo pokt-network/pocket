@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pokt-network/pocket/shared/codec"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -71,11 +72,11 @@ func ElectedSelfAsNewLeader(address string, nodeId NodeId, height, round uint64)
 }
 
 func SendingMessage(msg *HotstuffMessage, nodeId NodeId) string {
-	return fmt.Sprintf("Sending %s message to %d", StepToString[msg.Step], nodeId)
+	return fmt.Sprintf("Sending %s message to %d", StepToString[msg.GetStep()], nodeId)
 }
 
 func BroadcastingMessage(msg *HotstuffMessage) string {
-	return fmt.Sprintf("Broadcasting message for %s step", StepToString[msg.Step])
+	return fmt.Sprintf("Broadcasting message for %s step", StepToString[msg.GetStep()])
 }
 
 func WarnInvalidPartialSigInQC(address string, nodeId NodeId) string {
@@ -83,7 +84,7 @@ func WarnInvalidPartialSigInQC(address string, nodeId NodeId) string {
 }
 
 func WarnMissingPartialSig(msg *HotstuffMessage) string {
-	return fmt.Sprintf("[WARN] No partial signature found for step %s which should not happen...", StepToString[msg.Step])
+	return fmt.Sprintf("[WARN] No partial signature found for step %s which should not happen...", StepToString[msg.GetStep()])
 }
 
 func WarnDiscardHotstuffMessage(_ *HotstuffMessage, reason string) string {
@@ -95,7 +96,7 @@ func WarnUnexpectedMessageInPool(_ *HotstuffMessage, height uint64, step Hotstuf
 }
 
 func WarnIncompletePartialSig(ps *PartialSignature, msg *HotstuffMessage) string {
-	return fmt.Sprintf("[WARN] Partial signature is incomplete for step %s which should not happen...", StepToString[msg.Step])
+	return fmt.Sprintf("[WARN] Partial signature is incomplete for step %s which should not happen...", StepToString[msg.GetStep()])
 }
 
 func DebugTogglePacemakerManualMode(mode string) string {
@@ -108,12 +109,13 @@ func DebugNodeState(state ConsensusNodeState) string {
 
 func DebugHandlingHotstuffMessage(msg *HotstuffMessage) string {
 	// TODO(olshansky): Add source and destination NodeId of message here
-	return fmt.Sprintf("[DEBUG] Handling message w/ Height: %d; Type: %s; Round: %d.", msg.Height, StepToString[msg.Step], msg.Round)
+	return fmt.Sprintf("[DEBUG] Handling message w/ Height: %d; Type: %s; Round: %d.", msg.Height, StepToString[msg.GetStep()], msg.Round)
 }
 
 // Errors
 const (
 	nilBLockError                               = "block is nil"
+	blockExistsError                            = "block exists but should be nil"
 	nilBLockProposalError                       = "block should never be nil when creating a proposal message"
 	nilBLockVoteError                           = "block should never be nil when creating a vote message for a proposal"
 	proposalNotValidInPrepareError              = "proposal is not valid in the PREPARE step"
@@ -122,7 +124,8 @@ const (
 	nilBlockInQCError                           = "QC must contain a non nil block"
 	nilThresholdSigInQCError                    = "QC must contains a non nil threshold signature"
 	notEnoughSignaturesError                    = "did not receive enough partial signature"
-	nodeIsLockedOnPastQCError                   = "node is locked on a QC from the past"
+	nodeIsLockedOnPastHeightQCError             = "node is locked on a QC from a past height"
+	nodeIsLockedOnPastRoundQCError              = "node is locked on a QC from a past round"
 	unhandledProposalCaseError                  = "unhandled proposal validation check"
 	unnecessaryPartialSigForNewRoundError       = "newRound messages do not need a partial signature"
 	unnecessaryPartialSigForLeaderProposalError = "leader proposals do not need a partial signature"
@@ -142,7 +145,6 @@ const (
 	prepareBlockError                           = "could not prepare block"
 	commitBlockError                            = "could not commit block"
 	replicaPrepareBlockError                    = "node should not call `prepareBlock` if it is not a leader"
-	leaderErrApplyBlock                         = "node should not call `applyBlock` if it is leader"
 	blockSizeTooLargeError                      = "block size is too large"
 	sendMessageError                            = "error sending message"
 	broadcastMessageError                       = "error broadcasting message"
@@ -153,6 +155,7 @@ const (
 
 var (
 	ErrNilBlock                               = errors.New(nilBLockError)
+	ErrBlockExists                            = errors.New(blockExistsError)
 	ErrNilBlockProposal                       = errors.New(nilBLockProposalError)
 	ErrNilBlockVote                           = errors.New(nilBLockVoteError)
 	ErrProposalNotValidInPrepare              = errors.New(proposalNotValidInPrepareError)
@@ -161,7 +164,8 @@ var (
 	ErrNilBlockInQC                           = errors.New(nilBlockInQCError)
 	ErrNilThresholdSigInQC                    = errors.New(nilThresholdSigInQCError)
 	ErrNotEnoughSignatures                    = errors.New(notEnoughSignaturesError)
-	ErrNodeIsLockedOnPastQC                   = errors.New(nodeIsLockedOnPastQCError)
+	ErrNodeLockedPastHeight                   = errors.New(nodeIsLockedOnPastHeightQCError)
+	ErrNodeLockedPastRound                    = errors.New(nodeIsLockedOnPastRoundQCError)
 	ErrUnhandledProposalCase                  = errors.New(unhandledProposalCaseError)
 	ErrUnnecessaryPartialSigForNewRound       = errors.New(unnecessaryPartialSigForNewRoundError)
 	ErrUnnecessaryPartialSigForLeaderProposal = errors.New(unnecessaryPartialSigForLeaderProposalError)
@@ -177,7 +181,6 @@ var (
 	ErrPrepareBlock                           = errors.New(prepareBlockError)
 	ErrCommitBlock                            = errors.New(commitBlockError)
 	ErrReplicaPrepareBlock                    = errors.New(replicaPrepareBlockError)
-	ErrLeaderApplyBLock                       = errors.New(leaderErrApplyBlock)
 	ErrSendMessage                            = errors.New(sendMessageError)
 	ErrBroadcastMessage                       = errors.New(broadcastMessageError)
 	ErrCreateConsensusMessage                 = errors.New(createConsensusMessageError)
@@ -203,7 +206,7 @@ func ErrMissingValidator(address string, nodeId NodeId) error {
 
 func ErrValidatingPartialSig(senderAddr string, senderNodeId NodeId, msg *HotstuffMessage, pubKey string) error {
 	return fmt.Errorf("%s: Sender: %s (%d); Height: %d; Step: %s; Round: %d; SigHash: %s; BlockHash: %s; PubKey: %s",
-		invalidPartialSignatureError, senderAddr, senderNodeId, msg.Height, StepToString[msg.Step], msg.Round, string(msg.GetPartialSignature().Signature), protoHash(msg.Block), pubKey)
+		invalidPartialSignatureError, senderAddr, senderNodeId, msg.Height, StepToString[msg.GetStep()], msg.Round, string(msg.GetPartialSignature().Signature), protoHash(msg.Block), pubKey)
 }
 
 func ErrPacemakerUnexpectedMessageHeight(err error, heightCurrent, heightMessage uint64) error {
@@ -211,7 +214,7 @@ func ErrPacemakerUnexpectedMessageHeight(err error, heightCurrent, heightMessage
 }
 
 func ErrPacemakerUnexpectedMessageStepRound(err error, step HotstuffStep, round uint64, msg *HotstuffMessage) error {
-	return fmt.Errorf("%s: Current (step, round): (%s, %d); Message (step, round): (%s, %d)", err, StepToString[step], round, StepToString[msg.Step], msg.Round)
+	return fmt.Errorf("%s: Current (step, round): (%s, %d); Message (step, round): (%s, %d)", err, StepToString[step], round, StepToString[msg.GetStep()], msg.Round)
 }
 
 func ErrUnknownConsensusMessageType(msg interface{}) error {
@@ -235,7 +238,7 @@ func ErrLeaderElection(msg *HotstuffMessage) error {
 }
 
 func protoHash(m proto.Message) string {
-	b, err := proto.Marshal(m)
+	b, err := codec.GetCodec().Marshal(m)
 	if err != nil {
 		log.Fatalf("Could not marshal proto message: %v", err)
 	}

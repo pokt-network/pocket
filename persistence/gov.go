@@ -3,29 +3,35 @@ package persistence
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/modules"
 	"log"
 	"strconv"
+
+	"github.com/pokt-network/pocket/persistence/types"
+)
+
+// TODO : Deprecate these two constants when we change the persistenceRWContext interface to pass the `paramName`
+const (
+	BlocksPerSessionParamName       = "blocks_per_session"
+	ServiceNodesPerSessionParamName = "service_nodes_per_session"
 )
 
 // TODO (Team) BUG setting parameters twice on the same height causes issues. We need to move the schema away from 'end_height' and
 // more towards the height_constraint architecture
 
 func (p PostgresContext) GetBlocksPerSession(height int64) (int, error) {
-	return p.GetIntParam(modules.BlocksPerSessionParamName, height)
+	return p.GetIntParam(BlocksPerSessionParamName, height)
 }
 
 func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) {
-	return p.GetIntParam(modules.ServiceNodesPerSessionParamName, height)
+	return p.GetIntParam(ServiceNodesPerSessionParamName, height)
 }
 
 func (p PostgresContext) InitParams() error {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
 	}
-	_, err = txn.Exec(ctx, types.InsertParams(types.DefaultParams(), p.Height))
+	_, err = tx.Exec(ctx, types.InsertParams(types.DefaultParams(), p.Height))
 	return err
 }
 
@@ -91,7 +97,7 @@ func (p PostgresContext) setParamOrFlag(name string, value any, enabled *bool) e
 // setParamOrFlag sets a param or a flag.
 // If `enabled` is nil, we are dealing with a param, otherwise it's a flag
 func setParamOrFlag[T types.SupportedParamTypes](p PostgresContext, paramName string, paramValue T, enabled *bool) error {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -103,20 +109,20 @@ func setParamOrFlag[T types.SupportedParamTypes](p PostgresContext, paramName st
 	if enabled != nil {
 		tableName = types.FlagsTableName
 	}
-	if _, err = txn.Exec(ctx, types.InsertParamOrFlag(tableName, paramName, height, paramValue, enabled)); err != nil {
+	if _, err = tx.Exec(ctx, types.InsertParamOrFlag(tableName, paramName, height, paramValue, enabled)); err != nil {
 		return err
 	}
 	return nil
 }
 
 func getParamOrFlag[T int | string | []byte](p PostgresContext, tableName, paramName string, height int64) (i T, enabled bool, err error) {
-	ctx, txn, err := p.DB.GetCtxAndTxn()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return i, enabled, err
 	}
 
 	var stringVal string
-	row := txn.QueryRow(ctx, types.GetParamOrFlagQuery(tableName, paramName, height))
+	row := tx.QueryRow(ctx, types.GetParamOrFlagQuery(tableName, paramName, height))
 	if tableName == types.ParamsTableName {
 		err = row.Scan(&stringVal)
 	} else {

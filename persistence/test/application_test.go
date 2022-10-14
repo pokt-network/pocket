@@ -2,10 +2,10 @@ package test
 
 import (
 	"encoding/hex"
-	"fmt"
-	"github.com/pokt-network/pocket/persistence/types"
 	"log"
 	"testing"
+
+	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -135,12 +135,12 @@ func TestGetAppStatus(t *testing.T) {
 	// Check status before the app exists
 	status, err := db.GetAppStatus(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, status, persistence.UndefinedStakingStatus, "unexpected status")
+	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
 
 	// Check status after the app exists
 	status, err = db.GetAppStatus(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, status, DefaultStakeStatus, "unexpected status")
+	require.Equal(t, DefaultStakeStatus, status, "unexpected status")
 }
 
 func TestGetAppPauseHeightIfExists(t *testing.T) {
@@ -255,15 +255,15 @@ func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*types.Acto
 	// TODO(andrew): Use `require.NoError` instead of `log.Fatal` in tests`
 	addrBz, err := hex.DecodeString(app.Address)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting address to bytes %s", app.Address))
+		log.Fatalf("an error occurred converting address to bytes %s", app.Address)
 	}
 	pubKeyBz, err := hex.DecodeString(app.PublicKey)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting pubKey to bytes %s", app.PublicKey))
+		log.Fatalf("an error occurred converting pubKey to bytes %s", app.PublicKey)
 	}
 	outputBz, err := hex.DecodeString(app.Output)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("an error occurred converting output to bytes %s", app.Output))
+		log.Fatalf("an error occurred converting output to bytes %s", app.Output)
 	}
 	return app, db.InsertApp(
 		addrBz,
