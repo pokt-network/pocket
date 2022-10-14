@@ -4,14 +4,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-
-	// "os"
-	// "path/filepath"
-
 	"sync"
 	"testing"
-
-	// "github.com/pokt-network/pocket/runtime"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/debug"

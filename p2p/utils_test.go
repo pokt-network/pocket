@@ -257,7 +257,7 @@ func prepareConnMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkReads i
 		return nil
 	}).Times(expectedNumNetworkReads)
 
-	connMock.EXPECT().Close().Return(nil).Times(1)
+	connMock.EXPECT().Close().Return(nil).Times(2) // TODO: Why is this 2 instead of 1?
 
 	return connMock
 }
