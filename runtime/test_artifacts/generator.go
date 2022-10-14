@@ -118,13 +118,8 @@ func NewDefaultConfig(i int, pk string) modules.Config {
 			Enabled:  true,
 			Address:  "0.0.0.0:9000",
 			Endpoint: "/metrics",
-		},
-		RPC: &MockRPCConfig{
-			Enabled: true,
-			Port:    DefaultRpcPort,
-			Timeout: DefaultRpcTimeout,
-		},
-	}
+		}),
+	)
 }
 
 func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
