@@ -9,16 +9,13 @@ import (
 
 type PersistenceModule interface {
 	Module
+	ConfigurableModule
+	GenesisDependentModule
+
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
-
-	// TODO(drewsky): Make this a context function only and do not expose it at the module level.
-	//                The reason `Olshansky` originally made it a module level function is because
-	//                the module was responsible for maintaining a single write context and assuring
-	//                that a second can't be created (or a previous one is cleaned up) but there is
-	//                likely a better and cleaner approach that simplifies the interface.
-	ResetContext() error
 	GetBlockStore() kvstore.KVStore
+	NewWriteContext() PersistenceRWContext
 
 	// Debugging / development only
 	HandleDebugMessage(*debug.DebugMessage) error
@@ -40,15 +37,15 @@ type PersistenceRWContext interface {
 
 // NOTE: There's not really a use case for a write only interface,
 // but it abstracts and contrasts nicely against the read only context
-// TODO (andrew) convert address and public key to string not bytes #149
 type PersistenceWriteContext interface {
-	// TODO: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
+	// DISCUSS: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
 	// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
 	// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
 	// Context Operations
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
 
+	ResetContext() error // TODO consolidate with Reset and Release
 	Reset() error
 	Commit() error
 	Release() error
@@ -61,7 +58,7 @@ type PersistenceWriteContext interface {
 	StoreTransaction(transactionProtoBytes []byte) error
 
 	// Block Operations
-	// TODO_TEMPORARY: Including two functions for the SQL and KV Store as an interim solution
+	// TEMPORARY: Including two functions for the SQL and KV Store as an interim solution
 	//                 until we include the schema as part of the SQL Store because persistence
 	//                 currently has no access to the protobuf schema which is the source of truth.
 	StoreBlock(blockProtoBytes []byte) error                                              // Store the block in the KV Store
@@ -72,7 +69,7 @@ type PersistenceWriteContext interface {
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error
 
-	InsertPool(name string, address []byte, amount string) error // TODO (Andrew) remove address from pool #149
+	InsertPool(name string, address []byte, amount string) error
 
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error
@@ -112,8 +109,6 @@ type PersistenceWriteContext interface {
 	SetValidatorPauseHeight(address []byte, height int64) error
 	SetValidatorPauseHeightAndMissedBlocks(address []byte, pauseHeight int64, missedBlocks int) error
 	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
-
-	/* TODO(olshansky): review/revisit this in more details */
 
 	// Param Operations
 	InitParams() error
@@ -188,8 +183,6 @@ type PersistenceReadContext interface {
 	GetValidatorPauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetValidatorOutputAddress(operator []byte, height int64) (output []byte, err error)
 	GetValidatorMissedBlocks(address []byte, height int64) (int, error)
-
-	/* TODO(olshansky): review/revisit this in more details */
 
 	// Params
 	GetIntParam(paramName string, height int64) (int, error)

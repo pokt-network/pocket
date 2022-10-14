@@ -1,8 +1,7 @@
 package p2p
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/p2p/raintree"
@@ -23,8 +22,8 @@ const (
 )
 
 type p2pModule struct {
-	bus       modules.Bus
-	p2pConfig modules.P2PConfig // TODO (olshansky): to remove this since it'll be available via the bus
+	bus    modules.Bus
+	p2pCfg modules.P2PConfig // TODO (olshansky): to remove this since it'll be available via the bus
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
@@ -37,53 +36,35 @@ func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
 }
 
-func Create(configPath, genesisPath string, useRandomPK bool) (m modules.P2PModule, err error) {
+func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	return new(p2pModule).Create(runtimeMgr)
+}
+
+func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 	log.Println("Creating network module")
-	c, err := new(p2pModule).InitConfig(configPath)
+	var m *p2pModule
+
+	cfg := runtimeMgr.GetConfig()
+	if err := m.ValidateConfig(cfg); err != nil {
+		return nil, fmt.Errorf("config validation failed: %w", err)
+	}
+	p2pCfg := cfg.GetP2PConfig()
+
+	l, err := CreateListener(p2pCfg)
 	if err != nil {
 		return nil, err
 	}
-	cfg := c.(*typesP2P.P2PConfig)
-	l, err := CreateListener(cfg)
-	if err != nil {
-		return nil, err
-	}
-	var privateKey cryptoPocket.PrivateKey
-	if useRandomPK {
-		privateKey, err = cryptoPocket.GeneratePrivateKey()
-	} else {
-		privateKey, err = cryptoPocket.NewPrivateKey(cfg.PrivateKey)
-	}
+	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.GetPrivateKey())
 	if err != nil {
 		return nil, err
 	}
 	m = &p2pModule{
-		p2pConfig: cfg,
+		p2pCfg: p2pCfg,
 
 		listener: l,
 		address:  privateKey.Address(),
 	}
 	return m, nil
-}
-
-func (m *p2pModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-	data, err := ioutil.ReadFile(pathToConfigJSON)
-	if err != nil {
-		return
-	}
-	// over arching configuration file
-	rawJSON := make(map[string]json.RawMessage)
-	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToConfigJSON, err.Error())
-	}
-	// p2p specific configuration file
-	config = new(typesP2P.P2PConfig)
-	err = json.Unmarshal(rawJSON[m.GetModuleName()], config)
-	return
-}
-
-func (m *p2pModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
-	return // No-op
 }
 
 func (m *p2pModule) SetBus(bus modules.Bus) {
@@ -115,12 +96,12 @@ func (m *p2pModule) Start() error {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	addrBook, err := ValidatorMapToAddrBook(m.p2pConfig, m.bus.GetConsensusModule().ValidatorMap())
+	addrBook, err := ValidatorMapToAddrBook(m.p2pCfg, m.bus.GetConsensusModule().ValidatorMap())
 	if err != nil {
 		return err
 	}
 
-	if m.p2pConfig.GetUseRainTree() {
+	if m.p2pCfg.GetUseRainTree() {
 		m.network = raintree.NewRainTreeNetwork(m.address, addrBook)
 	} else {
 		m.network = stdnetwork.NewNetwork(addrBook)
@@ -178,6 +159,10 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic debug.
 	}
 
 	return m.network.NetworkSend(data, addr)
+}
+
+func (*p2pModule) ValidateConfig(cfg modules.Config) error {
+	return nil
 }
 
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {

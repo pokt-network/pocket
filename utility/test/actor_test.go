@@ -8,9 +8,9 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
@@ -111,13 +111,13 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			var err error
 			switch actorType {
 			case typesUtil.ActorType_Validator:
-				err = ctx.Context.SetParam(modules.ValidatorMinimumPauseBlocksParamName, 0)
+				err = ctx.Context.SetParam(typesUtil.ValidatorMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_ServiceNode:
-				err = ctx.Context.SetParam(modules.ServiceNodeMinimumPauseBlocksParamName, 0)
+				err = ctx.Context.SetParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_App:
-				err = ctx.Context.SetParam(modules.AppMinimumPauseBlocksParamName, 0)
+				err = ctx.Context.SetParam(typesUtil.AppMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Fisherman:
-				err = ctx.Context.SetParam(modules.FishermanMinimumPauseBlocksParamName, 0)
+				err = ctx.Context.SetParam(typesUtil.FishermanMinimumPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -155,13 +155,13 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			var err error
 			switch actorType {
 			case typesUtil.ActorType_App:
-				err = ctx.Context.SetParam(modules.AppMinimumPauseBlocksParamName, 0)
+				err = ctx.Context.SetParam(typesUtil.AppMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Validator:
-				err = ctx.Context.SetParam(modules.ValidatorMinimumPauseBlocksParamName, 0)
+				err = ctx.Context.SetParam(typesUtil.ValidatorMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Fisherman:
-				err = ctx.Context.SetParam(modules.FishermanMinimumPauseBlocksParamName, 0)
+				err = ctx.Context.SetParam(typesUtil.FishermanMinimumPauseBlocksParamName, 0)
 			case typesUtil.ActorType_ServiceNode:
-				err = ctx.Context.SetParam(modules.ServiceNodeMinimumPauseBlocksParamName, 0)
+				err = ctx.Context.SetParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -196,13 +196,13 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 			require.NoError(t, err)
 			switch actorType {
 			case typesUtil.ActorType_App:
-				err = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
+				err = ctx.Context.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Validator:
-				err = ctx.Context.SetParam(modules.ValidatorMaxPausedBlocksParamName, 0)
+				err = ctx.Context.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
 			case typesUtil.ActorType_Fisherman:
-				err = ctx.Context.SetParam(modules.FishermanMaxPauseBlocksParamName, 0)
+				err = ctx.Context.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
 			case typesUtil.ActorType_ServiceNode:
-				err = ctx.Context.SetParam(modules.ServiceNodeMaxPauseBlocksParamName, 0)
+				err = ctx.Context.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -410,13 +410,13 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			var er error
 			switch actorType {
 			case typesUtil.ActorType_App:
-				er = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
+				er = ctx.Context.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
 			case typesUtil.ActorType_Validator:
-				er = ctx.Context.SetParam(modules.ValidatorMaxPausedBlocksParamName, 0)
+				er = ctx.Context.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
 			case typesUtil.ActorType_Fisherman:
-				er = ctx.Context.SetParam(modules.FishermanMaxPauseBlocksParamName, 0)
+				er = ctx.Context.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
 			case typesUtil.ActorType_ServiceNode:
-				er = ctx.Context.SetParam(modules.ServiceNodeMaxPauseBlocksParamName, 0)
+				er = ctx.Context.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
@@ -459,20 +459,20 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 		var err1, err2 error
 		switch actorType {
 		case typesUtil.ActorType_App:
-			err1 = ctx.Context.SetParam(modules.AppUnstakingBlocksParamName, 0)
-			err2 = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
+			err1 = ctx.Context.SetParam(typesUtil.AppUnstakingBlocksParamName, 0)
+			err2 = ctx.Context.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
 			poolName = typesUtil.PoolNames_AppStakePool.String()
 		case typesUtil.ActorType_Validator:
-			err1 = ctx.Context.SetParam(modules.ValidatorUnstakingBlocksParamName, 0)
-			err2 = ctx.Context.SetParam(modules.ValidatorMaxPausedBlocksParamName, 0)
+			err1 = ctx.Context.SetParam(typesUtil.ValidatorUnstakingBlocksParamName, 0)
+			err2 = ctx.Context.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
 			poolName = typesUtil.PoolNames_ValidatorStakePool.String()
 		case typesUtil.ActorType_Fisherman:
-			err1 = ctx.Context.SetParam(modules.FishermanUnstakingBlocksParamName, 0)
-			err2 = ctx.Context.SetParam(modules.FishermanMaxPauseBlocksParamName, 0)
+			err1 = ctx.Context.SetParam(typesUtil.FishermanUnstakingBlocksParamName, 0)
+			err2 = ctx.Context.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
 			poolName = typesUtil.PoolNames_FishermanStakePool.String()
 		case typesUtil.ActorType_ServiceNode:
-			err1 = ctx.Context.SetParam(modules.ServiceNodeUnstakingBlocksParamName, 0)
-			err2 = ctx.Context.SetParam(modules.ServiceNodeMaxPauseBlocksParamName, 0)
+			err1 = ctx.Context.SetParam(typesUtil.ServiceNodeUnstakingBlocksParamName, 0)
+			err2 = ctx.Context.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
 			poolName = typesUtil.PoolNames_ServiceNodeStakePool.String()
 		default:
 			t.Fatalf("unexpected actor type %s", actorType.String())

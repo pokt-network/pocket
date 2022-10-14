@@ -25,7 +25,8 @@ const (
 )
 
 // DISCUSS(team) both the persistence module and the utility module share this code which is less than ideal
-//   (see call to action in generator.go to try to remove the cross module testing code)
+//
+//	(see call to action in generator.go to try to remove the cross module testing code)
 func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 	opts := dockertest.RunOptions{
 		Repository: "postgres",
@@ -92,6 +93,7 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 	if err := pool.Purge(resource); err != nil {
 		log.Fatalf("could not purge resource: %s", err)
 	}
+	os.Exit(0)
 }
 
 // TODO(drewsky): Remove this in favor of a golang specific solution

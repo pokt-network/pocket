@@ -6,6 +6,7 @@ import "github.com/prometheus/client_golang/prometheus"
 
 type TelemetryModule interface {
 	Module
+	ConfigurableModule
 
 	GetTimeSeriesAgent() TimeSeriesAgent
 	GetEventMetricsAgent() EventMetricsAgent

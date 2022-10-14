@@ -7,11 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.6] - 2022-09-22
+## [0.0.0.7] - 2022-10-12
+
+### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
+
+- Updated to use `RuntimeMgr`
+- Made `PersistenceModule` struct unexported
+- Updated tests and mocks
+- Removed some cross-module dependencies
+
+## [0.0.0.6] - 2022-09-30
 
 - Removed no-op `DeleteActor` code
 - Consolidated `CHANGELOG`s into one under `persistence/docs`
 - Consolidated `README`s into one under `persistence/docs`
+- Deprecated `persMod.ResetContext()` for -> `persRWContext.ResetContext()` for more appropriate encapsulation
+- Added ticks to CHANGELOG.md
+- Removed reference to Utility Mod's `BigIntToString()` and used internal `BigIntToString()`
 
 ## [0.0.0.5] - 2022-08-25
 
