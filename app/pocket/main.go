@@ -25,7 +25,7 @@ func main() {
 
 	runtimeMgr := runtime.NewManagerFromFiles(*configFilename, *genesisFilename)
 
-	pocketNode, err := shared.Create(runtimeMgr)
+	pocketNode, err := shared.CreateNode(runtimeMgr)
 	if err != nil {
 		log.Fatalf("Failed to create pocket node: %s", err)
 	}

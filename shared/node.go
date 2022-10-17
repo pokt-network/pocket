@@ -29,7 +29,7 @@ func NewNodeWithP2PAddress(address cryptoPocket.Address) *Node {
 	return &Node{p2pAddress: address}
 }
 
-func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
+func CreateNode(runtime modules.RuntimeMgr) (modules.Module, error) {
 	return new(Node).Create(runtime)
 }
 
