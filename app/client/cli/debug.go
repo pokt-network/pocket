@@ -54,7 +54,7 @@ func init() {
 }
 
 func NewDebug() *cobra.Command {
-	c := &cobra.Command{
+	return &cobra.Command{
 		Use:   "debug",
 		Short: "Debug utility for rapid development",
 		Args:  cobra.ExactArgs(0),
@@ -63,15 +63,14 @@ func NewDebug() *cobra.Command {
 		},
 		RunE: runDebug,
 	}
-
-	return c
 }
 
-func runDebug(cmd *cobra.Command, args []string) error {
+func runDebug(cmd *cobra.Command, args []string) (err error) {
 	for {
-		selection, err := promptGetInput()
-		if err == nil {
+		if selection, err := promptGetInput(); err == nil {
 			handleSelect(selection)
+		} else {
+			return err
 		}
 	}
 }
