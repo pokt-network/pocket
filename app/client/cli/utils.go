@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pokt-network/pocket/app/pocket/rpc"
+	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
 	utilityTypes "github.com/pokt-network/pocket/utility/types"
