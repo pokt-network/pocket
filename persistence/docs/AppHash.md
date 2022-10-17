@@ -11,16 +11,19 @@ sequenceDiagram
     participant PM as Persistence (MerkleTree)
 
     loop for each protocol actor type
-        P->>PP: GetActorsUpdated(height)
-        PP->>P: actors
-        loop update tree for each actor
-            P->>PM: Update(addr, serialized(actor))
-            PM->>P: result, err_code
+        P->>+PP: GetActorsUpdated(height)
+        PP->>-P: actors
+        loop for each state tree
+            P->>+PM: Update(addr, serialized(actor))
+            PM->>-P: result, err_code
         end
-        P->>PM: GetRoot()
-        PM->>P: rootHash
+        P->>+PM: GetRoot()
+        PM->>-P: rootHash
     end
+
     P->>P: stateHash = hash(aggregated(rootHashes))
+    activate P
+    deactivate P
 ```
 
 ## Store Block
@@ -34,11 +37,13 @@ sequenceDiagram
     participant PP as Persistence (PostgresDB)
     participant PK as Persistence (Key-Value Store)
 
+    activate P
     P->>P: reap stored transactions
-    P->>P: create & serialize<br>`typesPer.Block`
-    P->>PP: insertBlock(height, serialized(block))
-    PP->>P: result, err_code
-    P->>PK: Put(height, serialized(block))
-    PK->>P: result, err_code
+    P->>P: prepare, serialize <br> & store block
+    deactivate P
 
+    P->>+PP: insertBlock(height, serialized(block))
+    PP->>-P: result, err_code
+    P->>+PK: Put(height, serialized(block))
+    PK->>-P: result, err_code
 ```
