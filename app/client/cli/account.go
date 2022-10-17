@@ -52,12 +52,12 @@ func accountCommands() []*cobra.Command {
 					Amount:      amount,
 				}
 
-				j, err := prepareTx(msg, pk)
+				tx, err := prepareTxJson(msg, pk)
 				if err != nil {
 					return err
 				}
 
-				resp, err := postRawTx(cmd.Context(), pk, j)
+				resp, err := postRawTx(cmd.Context(), pk, tx)
 				if err != nil {
 					return err
 				}

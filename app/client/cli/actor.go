@@ -118,12 +118,12 @@ If no changes are desired for the parameter, just enter the current param value 
 				ActorType:     cmdDef.ActorType,
 			}
 
-			j, err := prepareTx(msg, pk)
+			tx, err := prepareTxJson(msg, pk)
 			if err != nil {
 				return err
 			}
 
-			resp, err := postRawTx(cmd.Context(), pk, j)
+			resp, err := postRawTx(cmd.Context(), pk, tx)
 			if err != nil {
 				return err
 			}
@@ -176,12 +176,12 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				ActorType:  cmdDef.ActorType,
 			}
 
-			j, err := prepareTx(msg, pk)
+			tx, err := prepareTxJson(msg, pk)
 			if err != nil {
 				return err
 			}
 
-			resp, err := postRawTx(cmd.Context(), pk, j)
+			resp, err := postRawTx(cmd.Context(), pk, tx)
 			if err != nil {
 				return err
 			}
@@ -216,12 +216,12 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				ActorType: cmdDef.ActorType,
 			}
 
-			j, err := prepareTx(msg, pk)
+			tx, err := prepareTxJson(msg, pk)
 			if err != nil {
 				return err
 			}
 
-			resp, err := postRawTx(cmd.Context(), pk, j)
+			resp, err := postRawTx(cmd.Context(), pk, tx)
 			if err != nil {
 				return err
 			}
@@ -256,12 +256,12 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 				ActorType: cmdDef.ActorType,
 			}
 
-			j, err := prepareTx(msg, pk)
+			tx, err := prepareTxJson(msg, pk)
 			if err != nil {
 				return err
 			}
 
-			resp, err := postRawTx(cmd.Context(), pk, j)
+			resp, err := postRawTx(cmd.Context(), pk, tx)
 			if err != nil {
 				return err
 			}

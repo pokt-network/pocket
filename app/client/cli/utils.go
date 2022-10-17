@@ -89,10 +89,10 @@ func Confirmation(pwd string) bool {
 	}
 }
 
-// prepareTX wraps a Message into a Transaction and signs it with the provided pk
+// prepareTxJson wraps a Message into a Transaction and signs it with the provided pk
 //
 // returns the JSON bytes of the signed transaction
-func prepareTx(msg utilityTypes.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
+func prepareTxJson(msg utilityTypes.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
 	var err error
 	codec := codec.GetCodec()
 	anyMsg, err := codec.ToAny(msg)
