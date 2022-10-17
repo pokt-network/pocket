@@ -8,18 +8,18 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
-	"github.com/pokt-network/pocket/shared"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 type rpcServer struct {
-	node *shared.Node
+	bus modules.Bus
 }
 
 var _ ServerInterface = &rpcServer{}
 
-func NewRPCServer(pocketNode *shared.Node) *rpcServer {
+func NewRPCServer(bus modules.Bus) *rpcServer {
 	return &rpcServer{
-		node: pocketNode,
+		bus: bus,
 	}
 }
 
@@ -27,11 +27,14 @@ func (s *rpcServer) StartRPC(port string, timeout uint64) {
 	log.Printf("Starting RPC on port %s...\n", port)
 
 	e := echo.New()
-	e.Use(middleware.TimeoutWithConfig(middleware.TimeoutConfig{
-		Skipper:      middleware.DefaultSkipper,
-		ErrorMessage: "Request timed out",
-		Timeout:      time.Duration(test_artifacts.DefaultRpcTimeout) * time.Millisecond,
-	}))
+	e.Use(
+		middleware.Logger(),
+		middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+			Skipper:      middleware.DefaultSkipper,
+			ErrorMessage: "Request timed out",
+			Timeout:      time.Duration(test_artifacts.DefaultRpcTimeout) * time.Millisecond,
+		}),
+	)
 	RegisterHandlers(e, s)
 
 	if err := e.Start(":" + port); err != http.ErrServerClosed {

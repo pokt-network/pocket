@@ -3,11 +3,10 @@ package shared
 import (
 	"log"
 
-	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/rpc"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -30,8 +29,8 @@ func NewNodeWithP2PAddress(address cryptoPocket.Address) *Node {
 	return &Node{p2pAddress: address}
 }
 
-func Create(configPath, genesisPath string, clock clock.Clock) (modules.Module, error) {
-	return new(Node).Create(runtime.NewManagerFromFiles(configPath, genesisPath))
+func CreateNode(runtime modules.RuntimeMgr) (modules.Module, error) {
+	return new(Node).Create(runtime)
 }
 
 func (m *Node) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
@@ -60,6 +59,11 @@ func (m *Node) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 		return nil, err
 	}
 
+	rpcMod, err := rpc.Create(runtimeMgr)
+	if err != nil {
+		return nil, err
+	}
+
 	bus, err := CreateBus(
 		runtimeMgr,
 		persistenceMod.(modules.PersistenceModule),
@@ -67,6 +71,7 @@ func (m *Node) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 		utilityMod.(modules.UtilityModule),
 		consensusMod.(modules.ConsensusModule),
 		telemetryMod.(modules.TelemetryModule),
+		rpcMod.(modules.RPCModule),
 	)
 	if err != nil {
 		return nil, err
@@ -103,6 +108,10 @@ func (node *Node) Start() error {
 	}
 
 	if err := node.GetBus().GetConsensusModule().Start(); err != nil {
+		return err
+	}
+
+	if err := node.GetBus().GetRPCModule().Start(); err != nil {
 		return err
 	}
 
