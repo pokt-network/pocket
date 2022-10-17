@@ -183,18 +183,6 @@ func (m *persistenceModule) ReleaseWriteContext() error {
 	panic("INTRODUCE(#284): Add this function in #284 per the interface changes in #252.")
 }
 
-func (m *persistenceModule) ResetContext() error {
-	if m.writeContext != nil {
-		if !m.writeContext.GetTx().Conn().IsClosed() {
-			if err := m.writeContext.Release(); err != nil {
-				log.Println("[TODO][ERROR] Error releasing write context...", err)
-			}
-		}
-		m.writeContext = nil
-	}
-	return nil
-}
-
 func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
 	return m.blockStore
 }
