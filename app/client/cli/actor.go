@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	typesPersistence "github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/converters"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 )
@@ -285,7 +285,7 @@ func readPassphrase(currPwd string) string {
 }
 
 func validateStakeAmount(amount string) error {
-	am, err := typesPersistence.StringToBigInt(amount)
+	am, err := converters.StringToBigInt(amount)
 	if err != nil {
 		return err
 	}

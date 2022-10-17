@@ -15,6 +15,7 @@ import (
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/shared/converters"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -31,10 +32,10 @@ var (
 	DefaultStakeBig     = big.NewInt(1000000000000000)
 	DefaultMaxRelaysBig = big.NewInt(1000000)
 
-	DefaultAccountAmount = types.BigIntToString(DefaultAccountBig)
-	DefaultStake         = types.BigIntToString(DefaultStakeBig)
-	DefaultMaxRelays     = types.BigIntToString(DefaultMaxRelaysBig)
-	StakeToUpdate        = types.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
+	DefaultAccountAmount = converters.BigIntToString(DefaultAccountBig)
+	DefaultStake         = converters.BigIntToString(DefaultStakeBig)
+	DefaultMaxRelays     = converters.BigIntToString(DefaultMaxRelaysBig)
+	StakeToUpdate        = converters.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
 
 	DefaultStakeStatus     = int32(persistence.StakedStatus)
 	DefaultPauseHeight     = int64(-1)
@@ -319,7 +320,7 @@ func getRandomServiceURL() string {
 }
 
 func getRandomBigIntString() string {
-	return types.BigIntToString(big.NewInt(rand.Int63()))
+	return converters.BigIntToString(big.NewInt(rand.Int63()))
 }
 
 func setRandomSeed() {

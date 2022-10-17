@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/converters"
 
 	"github.com/jackc/pgx/v4"
 )
@@ -17,7 +18,6 @@ const (
 
 // --- Account Functions ---
 
-//
 func (p PostgresContext) GetAccountAmount(address []byte, height int64) (amount string, err error) {
 	return p.getAccountAmountStr(hex.EncodeToString(address), height)
 }
@@ -51,7 +51,8 @@ func (p PostgresContext) SubtractAccountAmount(address []byte, amount string) er
 }
 
 // DISCUSS(team): If we are okay with `GetAccountAmount` return 0 as a default, this function can leverage
-//                `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
+//
+//	`operationAccountAmount` with `*orig = *delta` and make everything much simpler.
 func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
@@ -119,7 +120,9 @@ func (p PostgresContext) SubtractPoolAmount(name string, amount string) error {
 }
 
 // DISCUSS(team): If we are okay with `GetPoolAmount` return 0 as a default, this function can leverage
-//                `operationPoolAmount` with `*orig = *delta` and make everything much simpler.
+//
+//	`operationPoolAmount` with `*orig = *delta` and make everything much simpler.
+//
 // DISCUSS(team): Do we have a use-case for this function?
 func (p PostgresContext) SetPoolAmount(name string, amount string) error {
 	ctx, tx, err := p.GetCtxAndTx()
@@ -156,18 +159,18 @@ func (p *PostgresContext) operationPoolOrAccAmount(name, amount string,
 	if err != nil {
 		return err
 	}
-	originalAmountBig, err := types.StringToBigInt(originalAmount)
+	originalAmountBig, err := converters.StringToBigInt(originalAmount)
 	if err != nil {
 		return err
 	}
-	amountBig, err := types.StringToBigInt(amount)
+	amountBig, err := converters.StringToBigInt(amount)
 	if err != nil {
 		return err
 	}
 	if err := op(originalAmountBig, amountBig); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, insert(name, types.BigIntToString(originalAmountBig), height)); err != nil {
+	if _, err = tx.Exec(ctx, insert(name, converters.BigIntToString(originalAmountBig), height)); err != nil {
 		return err
 	}
 	return nil
