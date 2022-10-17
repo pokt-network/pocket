@@ -175,7 +175,6 @@ func sendDebugMessage(debugMsg *debug.DebugMessage) {
 
 func initDebug(remoteCLIURL string) {
 	modInitOnce.Do(func() {
-		// HACK: rain tree will detect if trying to send to addr=self and not send it
 		var err error
 		runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
 
