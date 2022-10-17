@@ -3,6 +3,7 @@ package p2p
 import (
 	"crypto/ed25519"
 	"encoding/binary"
+	"fmt"
 	"sort"
 	"sync"
 	"testing"
@@ -12,7 +13,6 @@ import (
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
 	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -23,7 +23,8 @@ import (
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
 
 const (
-	testChannelSize = 10000
+	serviceUrlFormat = "node%d.consensus:8080"
+	testChannelSize  = 10000
 	// Since we simulate up to a 27 node network, we will pre-generate a n >= 27 number of keys to avoid generation
 	// every time. The genesis config seed start is set for deterministic key generation and 42 was chosen arbitrarily.
 	genesisConfigSeedStart = 42
@@ -70,7 +71,7 @@ type TestNetworkSimulationConfig map[string]struct {
 
 // CLEANUP: This could (should?) be a codebase-wide shared test helper
 func validatorId(i int) string {
-	return test_artifacts.GetServiceUrl(i)
+	return fmt.Sprintf(serviceUrlFormat, i)
 }
 
 func waitForNetworkSimulationCompletion(t *testing.T, p2pModules map[string]*p2pModule, wg *sync.WaitGroup) {

@@ -149,7 +149,7 @@ func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
 //       types of actors which needs to be fixed.
 func NewActors(actorType typesUtil.ActorType, n int) (actors []modules.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
-		genericParam := GetServiceUrl(i + 1)
+		genericParam := getServiceUrl(i + 1)
 		if int32(actorType) == int32(types.ActorType_App) {
 			genericParam = DefaultMaxRelaysString
 		}
@@ -161,7 +161,7 @@ func NewActors(actorType typesUtil.ActorType, n int) (actors []modules.Actor, pr
 	return
 }
 
-func GetServiceUrl(n int) string {
+func getServiceUrl(n int) string {
 	return fmt.Sprintf(ServiceUrlFormat, n)
 }
 
