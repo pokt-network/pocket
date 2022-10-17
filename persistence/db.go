@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/pokt-network/pocket/persistence/types"
 
@@ -60,6 +61,27 @@ func (pg *PostgresContext) GetTx() pgx.Tx {
 
 func (pg *PostgresContext) GetCtx() (context.Context, error) {
 	return context.TODO(), nil
+}
+
+func (pg *PostgresContext) ResetContext() error {
+	if pg == nil {
+		return nil
+	}
+	tx := pg.GetTx()
+	if tx == nil {
+		return nil
+	}
+	conn := tx.Conn()
+	if conn == nil {
+		return nil
+	}
+	if !conn.IsClosed() {
+		if err := pg.Release(); err != nil {
+			log.Println("[TODO][ERROR] Error releasing write context...", err)
+		}
+	}
+	pg.tx = nil
+	return nil
 }
 
 // TECHDEBT: Implement proper connection pooling

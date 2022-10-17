@@ -9,6 +9,8 @@ import (
 
 type PersistenceModule interface {
 	Module
+	ConfigurableModule
+	GenesisDependentModule
 
 	// Context interface
 	NewRWContext(height int64) (PersistenceRWContext, error)
@@ -17,6 +19,7 @@ type PersistenceModule interface {
 
 	// BlockStore interface
 	GetBlockStore() kvstore.KVStore
+	NewWriteContext() PersistenceRWContext
 
 	// Debugging / development only
 	HandleDebugMessage(*debug.DebugMessage) error
@@ -46,7 +49,6 @@ type PersistenceWriteContext interface {
 	// Context Operations
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
-
 	Release() error
 
 	// Block / indexer operations

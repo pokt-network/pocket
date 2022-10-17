@@ -15,6 +15,9 @@ type ValidatorMap map[string]Actor
 // Make sure that you are not locking again within the same call to avoid deadlocks (for example when the methods below call each other in your implementation).
 type ConsensusModule interface {
 	Module
+	ConfigurableModule
+	GenesisDependentModule
+	KeyholderModule
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
@@ -22,6 +25,6 @@ type ConsensusModule interface {
 
 	// Consensus State Accessors
 	CurrentHeight() uint64
-	AppHash() string            // DISCUSS: Why not call this a BlockHash or StateHash? Should it be a []byte or string?
-	ValidatorMap() ValidatorMap // TODO: This needs to be dynamically updated during various operations and network changes.
+	AppHash() string // DISCUSS: Why not call this a BlockHash or StateHash? Should it be a []byte or string?
+	ValidatorMap() ValidatorMap
 }

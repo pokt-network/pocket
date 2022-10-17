@@ -9,17 +9,14 @@ import (
 	"github.com/pokt-network/pocket/shared/debug"
 )
 
-func (m *PersistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
+func (m *persistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
 	switch debugMessage.Action {
 	case debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		m.showLatestBlockInStore(debugMessage)
 	case debug.DebugMessageAction_DEBUG_CLEAR_STATE:
 		m.clearState(debugMessage)
-		g, err := m.InitGenesis(m.genesisPath)
-		if err != nil {
-			return err
-		}
-		m.populateGenesisState(g.(*types.PersistenceGenesisState))
+		g := m.genesisState.(*types.PersistenceGenesisState)
+		m.populateGenesisState(g)
 	default:
 		log.Printf("Debug message not handled by persistence module: %s \n", debugMessage.Message)
 	}
@@ -27,7 +24,7 @@ func (m *PersistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 }
 
 // TODO(olshansky): Create a shared interface `Block` to avoid the use of typesCons here.
-func (m *PersistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
+func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 	// TODO: Add an iterator to the `kvstore` and use that instead
 	height := m.GetBus().GetConsensusModule().CurrentHeight() - 1 // -1 because we want the latest committed height
 	blockBytes, err := m.GetBlockStore().Get(HeightToBytes(int64(height)))
@@ -42,7 +39,7 @@ func (m *PersistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 	log.Printf("Block at height %d with %d transactions: %+v \n", height, len(block.Transactions), block)
 }
 
-func (m *PersistenceModule) clearState(_ *debug.DebugMessage) {
+func (m *persistenceModule) clearState(_ *debug.DebugMessage) {
 	context, err := m.NewRWContext(-1)
 	defer context.Commit([]byte("HACK: debugClearStateProposerPlaceholder"), []byte("HACK: debugClearStateQuorumCertPlaceholder"))
 	if err != nil {

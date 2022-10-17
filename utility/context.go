@@ -25,7 +25,7 @@ type Context struct {
 	SavePoints  [][]byte
 }
 
-func (u *UtilityModule) NewContext(height int64) (modules.UtilityContext, error) {
+func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error) {
 	ctx, err := u.GetBus().GetPersistenceModule().NewRWContext(height)
 	if err != nil {
 		return nil, typesUtil.ErrNewPersistenceContext(err)

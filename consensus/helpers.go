@@ -40,7 +40,7 @@ var (
 
 // IMPROVE: Avoid having the `ConsensusModule` be a receiver of this; making it more functional.
 // TODO: Add unit tests for all quorumCert creation & validation logic...
-func (m *ConsensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
+func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.HotstuffStep, round uint64) (*typesCons.QuorumCertificate, error) {
 	var pss []*typesCons.PartialSignature
 	for _, msg := range m.messagePool[step] {
 		if msg.GetPartialSignature() == nil {
@@ -78,7 +78,7 @@ func (m *ConsensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 	}, nil
 }
 
-func (m *ConsensusModule) findHighQC(msgs []*typesCons.HotstuffMessage) (qc *typesCons.QuorumCertificate) {
+func (m *consensusModule) findHighQC(msgs []*typesCons.HotstuffMessage) (qc *typesCons.QuorumCertificate) {
 	for _, m := range msgs {
 		if m.GetQuorumCertificate() == nil {
 			continue
@@ -111,11 +111,11 @@ func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signa
 	return pubKey.Verify(bytesToVerify, signature)
 }
 
-func (m *ConsensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
+func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
 	return m.isOptimisticThresholdMet(len(m.messagePool[step]))
 }
 
-func (m *ConsensusModule) isOptimisticThresholdMet(n int) error {
+func (m *consensusModule) isOptimisticThresholdMet(n int) error {
 	numValidators := len(m.validatorMap)
 	if !(float64(n) > ByzantineThreshold*float64(numValidators)) {
 		return typesCons.ErrByzantineThresholdCheck(n, ByzantineThreshold*float64(numValidators))
@@ -123,7 +123,7 @@ func (m *ConsensusModule) isOptimisticThresholdMet(n int) error {
 	return nil
 }
 
-func (m *ConsensusModule) resetForNewHeight() {
+func (m *consensusModule) resetForNewHeight() {
 	m.Round = 0
 	m.Block = nil
 	m.highPrepareQC = nil
@@ -140,7 +140,7 @@ func protoHash(m proto.Message) string {
 
 /*** P2P Helpers ***/
 
-func (m *ConsensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
+func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 	// TODO(olshansky): This can happen due to a race condition with the pacemaker.
 	if m.LeaderId == nil {
 		m.nodeLogError(typesCons.ErrNilLeaderId.Error(), nil)
@@ -159,7 +159,7 @@ func (m *ConsensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 	}
 }
 
-func (m *ConsensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
+func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 	m.nodeLog(typesCons.BroadcastingMessage(msg))
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
@@ -175,7 +175,7 @@ func (m *ConsensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
 /*** Persistence Helpers ***/
 
 // TECHDEBT: Integrate this with the `persistence` module or a real mempool.
-func (m *ConsensusModule) clearMessagesPool() {
+func (m *consensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
 		m.messagePool[step] = make([]*typesCons.HotstuffMessage, 0)
 	}
@@ -183,24 +183,24 @@ func (m *ConsensusModule) clearMessagesPool() {
 
 /*** Leader Election Helpers ***/
 
-func (m *ConsensusModule) isLeaderUnknown() bool {
+func (m *consensusModule) isLeaderUnknown() bool {
 	return m.LeaderId == nil
 }
 
-func (m *ConsensusModule) isLeader() bool {
+func (m *consensusModule) isLeader() bool {
 	return m.LeaderId != nil && *m.LeaderId == m.nodeId
 }
 
-func (m *ConsensusModule) isReplica() bool {
+func (m *consensusModule) isReplica() bool {
 	return !m.isLeader()
 }
 
-func (m *ConsensusModule) clearLeader() {
+func (m *consensusModule) clearLeader() {
 	m.logPrefix = DefaultLogPrefix
 	m.LeaderId = nil
 }
 
-func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) error {
+func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) error {
 	leaderId, err := m.leaderElectionMod.ElectNextLeader(message)
 	if err != nil || leaderId == 0 {
 		m.nodeLogError(typesCons.ErrLeaderElection(message).Error(), err)
@@ -224,15 +224,15 @@ func (m *ConsensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 /*** General Infrastructure Helpers ***/
 
 // TODO(#164): Remove this once we have a proper logging system.
-func (m *ConsensusModule) nodeLog(s string) {
+func (m *consensusModule) nodeLog(s string) {
 	log.Printf("[%s][%d] %s\n", m.logPrefix, m.nodeId, s)
 }
 
 // TODO(#164): Remove this once we have a proper logging system.
-func (m *ConsensusModule) nodeLogError(s string, err error) {
+func (m *consensusModule) nodeLogError(s string, err error) {
 	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.nodeId, s, err)
 }
 
-func (m *ConsensusModule) setLogPrefix(logPrefix string) {
+func (m *consensusModule) setLogPrefix(logPrefix string) {
 	m.logPrefix = logPrefix
 }

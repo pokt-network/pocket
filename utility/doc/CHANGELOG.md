@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.7] - 2022-10-12
+
+### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
+
+- Updated to use `RuntimeMgr`
+- Made `UtilityModule` struct unexported
+- Updated tests and mocks
+- Removed some cross-module dependencies
+
+## [0.0.0.6] - 2022-10-06
+
+- Don't ignore the exit code of `m.Run()` in the unit tests
+- Fixed several broken unit tests related to type casting
+- Removed some unit tests (e.g. `TestUtilityContext_UnstakesPausedBefore`) that were legacy and replaced by more general ones (e.g. `TestUtilityContext_UnstakePausedBefore`)
+- Avoid exporting unnecessary test helpers
+
 ## [0.0.0.5] - 2022-09-29
 
 - Remove unused `StoreBlock` function from the utility module interface
@@ -50,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `UtilityConfig` uses shared interfaces in order to accept `MockUtilityConfig` in test_artifacts
 - Moved all utilty tests from shared to tests package
 - Left `TODO` for tests package still importing persistence for `NewTestPersistenceModule`
-    - This is one of the last places where cross-module importing exists
+  - This is one of the last places where cross-module importing exists
 
 ## [0.0.1] - 2022-07-20
 
@@ -70,18 +86,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added minimal 'proof of stake' implementation with few Pocket Specific terminologies and actors
-    - Structures
-        - Accounts
-        - Validators
-        - Fishermen
-        - Applications
-        - Service Nodes
-        - Pools
-    - Messages
-        - Stake
-        - Unstake
-        - EditStake
-        - Pause
-        - Unpause
-        - Send
+  - Structures
+    - Accounts
+    - Validators
+    - Fishermen
+    - Applications
+    - Service Nodes
+    - Pools
+  - Messages
+    - Stake
+    - Unstake
+    - EditStake
+    - Pause
+    - Unpause
+    - Send
 - Added initial governance params

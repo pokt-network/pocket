@@ -313,7 +313,7 @@ func TestGetAllPools(t *testing.T) {
 		return db.AddPoolAmount(pool.GetAddress(), "10")
 	}
 
-	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 6)
+	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 7)
 }
 
 // --- Helpers ---

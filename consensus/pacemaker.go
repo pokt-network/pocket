@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"context"
+	"fmt"
 	"log"
 	timePkg "time"
 
@@ -22,7 +23,7 @@ type Pacemaker interface {
 	// TODO(olshansky): Rather than exposing the underlying `ConsensusModule` struct,
 	// we could create a `ConsensusModuleDebug` interface that'll expose setters/getters
 	// for the height/round/step/etc, and interface with the module that way.
-	SetConsensusModule(module *ConsensusModule)
+	SetConsensusModule(module *consensusModule)
 
 	ValidateMessage(message *typesCons.HotstuffMessage) error
 	RestartTimer()
@@ -30,8 +31,12 @@ type Pacemaker interface {
 	InterruptRound()
 }
 
-var _ modules.Module = &paceMaker{}
-var _ PacemakerDebug = &paceMaker{}
+var (
+	_ modules.Module             = &paceMaker{}
+	_ modules.ConfigurableModule = &paceMaker{}
+	_ PacemakerDebug             = &paceMaker{}
+	_ modules.PacemakerConfig    = &typesCons.PacemakerConfig{}
+)
 
 type paceMaker struct {
 	bus modules.Bus
@@ -40,9 +45,9 @@ type paceMaker struct {
 	// due to it's dependency on the underlying implementation of `ConsensusModule`. Think
 	// through a way to decouple these. This could be fixed with reflection but that's not
 	// a great idea in production code.
-	consensusMod *ConsensusModule
+	consensusMod *consensusModule
 
-	pacemakerConfigs modules.PacemakerConfig
+	pacemakerCfg modules.PacemakerConfig
 
 	stepCancelFunc context.CancelFunc
 
@@ -50,26 +55,30 @@ type paceMaker struct {
 	paceMakerDebug
 }
 
-func (p *paceMaker) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-	return // No-op
+func CreatePacemaker(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	var m paceMaker
+	return m.Create(runtimeMgr)
 }
 
-func (p *paceMaker) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
-	return // No-op
-}
+func (m *paceMaker) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	cfg := runtimeMgr.GetConfig()
+	if err := m.ValidateConfig(cfg); err != nil {
+		log.Fatalf("config validation failed: %v", err)
+	}
 
-func CreatePacemaker(cfg *typesCons.ConsensusConfig) (m *paceMaker, err error) {
+	pacemakerCfg := cfg.GetConsensusConfig().(HasPacemakerConfig).GetPacemakerConfig()
+
 	return &paceMaker{
 		bus:          nil,
 		consensusMod: nil,
 
-		pacemakerConfigs: cfg.GetPaceMakerConfig(),
+		pacemakerCfg: pacemakerCfg,
 
 		stepCancelFunc: nil, // Only set on restarts
 
 		paceMakerDebug: paceMakerDebug{
-			manualMode:                cfg.GetPaceMakerConfig().GetManual(),
-			debugTimeBetweenStepsMsec: cfg.GetPaceMakerConfig().GetDebugTimeBetweenStepsMsec(),
+			manualMode:                pacemakerCfg.GetManual(),
+			debugTimeBetweenStepsMsec: pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
 			quorumCertificate:         nil,
 		},
 	}, nil
@@ -98,7 +107,14 @@ func (m *paceMaker) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (m *paceMaker) SetConsensusModule(c *ConsensusModule) {
+func (*paceMaker) ValidateConfig(cfg modules.Config) error {
+	if _, ok := cfg.GetConsensusConfig().(HasPacemakerConfig); !ok {
+		return fmt.Errorf("cannot cast to PacemakeredConsensus")
+	}
+	return nil
+}
+
+func (m *paceMaker) SetConsensusModule(c *consensusModule) {
 	m.consensusMod = c
 }
 
@@ -161,7 +177,7 @@ func (p *paceMaker) RestartTimer() {
 
 	stepTimeout := p.getStepTimeout(p.consensusMod.Round)
 
-	clock := p.bus.GetClock()
+	clock := p.bus.GetRuntimeMgr().GetClock()
 
 	ctx, cancel := clock.WithTimeout(context.TODO(), stepTimeout)
 	p.stepCancelFunc = cancel
@@ -235,6 +251,6 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 
 // TODO(olshansky): Increase timeout using exponential backoff.
 func (p *paceMaker) getStepTimeout(round uint64) timePkg.Duration {
-	baseTimeout := timePkg.Duration(int64(timePkg.Millisecond) * int64(p.pacemakerConfigs.GetTimeoutMsec()))
+	baseTimeout := timePkg.Duration(int64(timePkg.Millisecond) * int64(p.pacemakerCfg.GetTimeoutMsec()))
 	return baseTimeout
 }
