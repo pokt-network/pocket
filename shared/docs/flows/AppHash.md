@@ -47,26 +47,40 @@ sequenceDiagram
     participant U as Utility
     participant P as Persistence
 
-    alt as leader
-        C->>+U: GetProposalTransactions(proposer, maxTxBz, [lastVal])
+    opt if leader
+        C->>U: GetProposalTransactions(proposer, maxTxBz, [lastVal])
+        activate U
+        alt no quorum for Prepare
         U->>U: reap mempool
-        U->>-C: txs
-        Note over C, U: fallthrough to replica behaviour
-    else as replica
-        C->>+U: ApplyBlock(height, proposer, txs, lastVals)
-        loop for each operation in tx
-            U->>P: Get*/Set*
-            P->>U: result, err_code
-            U->>U: validation<br>logic
-            U->>P: StoreTransaction(tx)
-            P->>P: store tx<br>locally
-            P->>U: result, err_code
+        activate U
+        deactivate U
+        else
+        U->>U: get QC
+        activate U
+        deactivate U
         end
-        U->>+P: UpdateAppHash()
-        Note over P: Update State Hash
-        P->>-U: stateHash
-        U->>-C: stateHash
+        U-->>C: txs
+        deactivate U
     end
+    C->>+U: ApplyBlock(height, proposer, txs, lastVals)
+    loop for each tx in txs
+        U->>+P: Get*/Set*
+        P-->>-U: result, err_code
+        U->>U: Validation logic
+        activate U
+        deactivate U
+        U->>+P: StoreTransaction(tx)
+        P->>P: Store tx locally
+        activate P
+        deactivate P
+        P-->>-U: result, err_code
+    end
+    U->>+P: UpdateAppHash()
+    P->>P: Update state hash
+    activate P
+    deactivate P
+    P-->>-U: stateHash
+    U-->>-C: stateHash
 ```
 
 The [V1 Persistence Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/persistence) outlines the use of a **PostgresDB** and **Merkle Trees** to implement the `Update State Hash` component. This is an internal detail which can be done differently depending on the implementation. For the core V1 implementation, see the flows outlined [here](../../../persistence/docs/AppHash.md).
