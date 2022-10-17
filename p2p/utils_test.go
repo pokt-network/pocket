@@ -87,7 +87,7 @@ func waitForNetworkSimulationCompletion(t *testing.T, p2pModules map[string]*p2p
 	case <-done:
 
 	// All done!
-	case <-time.After(2 * time.Second): // 2 seconds was chosen arbitrarily
+	case <-time.After(2 * time.Second): // 2 seconds was chosen arbitrarily. In a mocked environment, all messages should finish sending in less than one minute.
 		t.Fatal("Timeout waiting for message to be handled")
 	}
 }
