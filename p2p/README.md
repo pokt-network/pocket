@@ -1,6 +1,19 @@
-# P2P Module
+# P2P Module <!-- omit in toc -->
 
 This document is meant to be a supplement to the living specification of [1.0 Pocket's P2P Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p) primarily focused on the implementation, and additional details related to the design of the codebase and information related to development.
+
+## Table of Contents <!-- omit in toc -->
+
+- [Interface](#interface)
+- [Implementation](#implementation)
+  - [Code Architecture - P2P Module](#code-architecture---p2p-module)
+  - [Code Architecture - Network Module](#code-architecture---network-module)
+  - [Code Organization](#code-organization)
+- [Testing](#testing)
+  - [Running Unit Tests](#running-unit-tests)
+  - [RainTree testing framework](#raintree-testing-framework)
+    - [Helpers](#helpers)
+    - [Considerations](#considerations)
 
 ## Interface
 
@@ -78,11 +91,13 @@ p2p
 
 ## Testing
 
+### Running Unit Tests
+
 ```bash
 make test_p2p
 ```
 
-### [WIP] RainTree testing framework
+### RainTree testing framework
 
 The testing framework for RainTree is a work-in-progress and can be found in `module_raintree_test.go`.
 
@@ -100,34 +115,3 @@ Given a specific `originatorNode` which initiates the broadcast, the `testRainTr
 
 - **Deterministic Private Key Generation**: Since RainTree is dependant on the lexicographic order of the addresses, the generation of the private keys (and in turn the public keys and addresses) is important and cannot be randomized for the time being.
 - **Variable Coupling**:There is an implicit coupling between `validatorId`, `serviceUrl` and `genericParam` that requires understanding of the codebase. Reach out to @olshansk or @andrewnguyen22 for clarity on this.
-
-### Notes
-
-// FuzzTest; 0 -> N; dynamic network; expected validator ID w/ expected
-// 1. HardCoded values - good for baseline sanity checking
-// 2. Test Generators - very good to have productionized and in the code
-
-// Expected range of expected networks; 1 -> 1000; use python for expected values
-// Python simulator generates a dynamic hardcoded value?
-
-// [Research] Make no-op mocks easier to understand w/o comments (goal is to reduce cognitive load and reuse)
-
-// Questions:
-// 1. Where'd you get the values?
-// 2. How'd you pick the numbers?
-// 3. How do we get better coverage?
-
-// WHat is the source of truth?
-// Simulator?
-// Generator? -> black box; no magic
-// The implementation?
-
-// Double down: test generator
-// Verbosity
-
-// Issues:
-// 1. Cleanup layer (extra read & write)
-// 2. Redundancy layer (extra read & write)
-// 3. Down nodes (more complex modifications)
-// - Ephemeral
-// - Down
