@@ -258,10 +258,10 @@ protogen_docker: docker_check
 	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it -v $(CWD)/:/usr/src/app/ pocket/proto-generator
 
 .PHONY: generate_rpc_openapi
-## (Re)generates the RPC server and client infra code from the openapi spec file (./app/pocket/rpc/v1/openapi.yaml)
+## (Re)generates the RPC server and client infra code from the openapi spec file (./rpc/v1/openapi.yaml)
 generate_rpc_openapi: go_oapi-codegen
-	oapi-codegen  --config ./app/pocket/rpc/server.gen.config.yml ./app/pocket/rpc/v1/openapi.yaml > ./app/pocket/rpc/server.gen.go
-	oapi-codegen  --config ./app/pocket/rpc/client.gen.config.yml ./app/pocket/rpc/v1/openapi.yaml > ./app/pocket/rpc/client.gen.go
+	oapi-codegen  --config ./rpc/server.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/server.gen.go
+	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
 	echo "OpenAPI client and server generated"
 
 .PHONY: generate_cli_commands_docs
