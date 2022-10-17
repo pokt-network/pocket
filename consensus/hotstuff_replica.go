@@ -13,7 +13,7 @@ type HotstuffReplicaMessageHandler struct{}
 
 var (
 	ReplicaMessageHandler HotstuffMessageHandler = &HotstuffReplicaMessageHandler{}
-	replicaHandlers                              = map[typesCons.HotstuffStep]func(*ConsensusModule, *typesCons.HotstuffMessage){
+	replicaHandlers                              = map[typesCons.HotstuffStep]func(*consensusModule, *typesCons.HotstuffMessage){
 		NewRound:  ReplicaMessageHandler.HandleNewRoundMessage,
 		Prepare:   ReplicaMessageHandler.HandlePrepareMessage,
 		PreCommit: ReplicaMessageHandler.HandlePrecommitMessage,
@@ -24,7 +24,7 @@ var (
 
 /*** NewRound Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
@@ -44,7 +44,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *Consensus
 
 /*** Prepare Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
@@ -79,7 +79,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *ConsensusM
 
 /*** PreCommit Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
@@ -108,7 +108,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *Consensu
 
 /*** Commit Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
@@ -137,7 +137,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *ConsensusMo
 
 /*** Decide Step ***/
 
-func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
@@ -163,7 +163,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *ConsensusMo
 }
 
 // anteHandle is the handler called on every replica message before specific handler
-func (handler *HotstuffReplicaMessageHandler) anteHandle(m *ConsensusModule, msg *typesCons.HotstuffMessage) error {
+func (handler *HotstuffReplicaMessageHandler) anteHandle(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	// Basic block metadata validation
 	if err := m.validateBlockBasic(msg.GetBlock()); err != nil {
 		return err
@@ -172,7 +172,7 @@ func (handler *HotstuffReplicaMessageHandler) anteHandle(m *ConsensusModule, msg
 	return nil
 }
 
-func (handler *HotstuffReplicaMessageHandler) emitTelemetryEvent(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffReplicaMessageHandler) emitTelemetryEvent(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	m.GetBus().
 		GetTelemetryModule().
 		GetEventMetricsAgent().
@@ -185,7 +185,7 @@ func (handler *HotstuffReplicaMessageHandler) emitTelemetryEvent(m *ConsensusMod
 		)
 }
 
-func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error {
+func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error {
 	// Check if node should be accepting proposals
 	if !(msg.GetType() == Propose && msg.GetStep() == Prepare) {
 		return typesCons.ErrProposalNotValidInPrepare
@@ -226,7 +226,7 @@ func (m *ConsensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 }
 
 // This helper applies the block metadata to the utility & persistence layers
-func (m *ConsensusModule) applyBlock(block *typesCons.Block) error {
+func (m *consensusModule) applyBlock(block *typesCons.Block) error {
 	// TECHDEBT: Retrieve this from persistence
 	lastByzValidators := make([][]byte, 0)
 
@@ -244,7 +244,7 @@ func (m *ConsensusModule) applyBlock(block *typesCons.Block) error {
 	return nil
 }
 
-func (m *ConsensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertificate) error {
+func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertificate) error {
 	if qc == nil {
 		return typesCons.ErrNilQC
 	}

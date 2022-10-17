@@ -1,19 +1,17 @@
 package test
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"log"
 	"math/big"
 	"os"
 	"testing"
 
-	"github.com/pokt-network/pocket/shared/test_artifacts"
-	utilTypes "github.com/pokt-network/pocket/utility/types"
-
+	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/modules"
+	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/utility"
+	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,6 +31,7 @@ var (
 	testSchema                 = "test_schema"
 )
 
+var persistenceDbUrl string
 var actorTypes = []utilTypes.ActorType{
 	utilTypes.ActorType_App,
 	utilTypes.ActorType_ServiceNode,
@@ -40,27 +39,26 @@ var actorTypes = []utilTypes.ActorType{
 	utilTypes.ActorType_Validator,
 }
 
-var testPersistenceMod modules.PersistenceModule
-
 func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
 	return utilTypes.NewMempool(1000000, 1000)
 }
 
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
-	testPersistenceMod = newTestPersistenceModule(m, dbUrl)
-	m.Run()
-	os.Remove(testingConfigFilePath)
-	os.Remove(testingGenesisFilePath)
+	persistenceDbUrl = dbUrl
+	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
+	os.Exit(exitCode)
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
+	testPersistenceMod := newTestPersistenceModule(t, persistenceDbUrl)
+
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		testPersistenceMod.ResetContext()
+		persistenceContext.ResetContext()
 	})
 
 	return utility.UtilityContext{
@@ -74,58 +72,28 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	}
 }
 
-func newTestPersistenceModule(_ *testing.M, databaseUrl string) modules.PersistenceModule {
-	cfg := modules.Config{
-		Persistence: &test_artifacts.MockPersistenceConfig{
-			PostgresUrl:    databaseUrl,
-			NodeSchema:     testSchema,
-			BlockStorePath: "",
-		},
-	}
+func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.PersistenceModule {
+	ctrl := gomock.NewController(t)
 
-	genesisState, _ := test_artifacts.NewGenesisState(testingValidatorCount, testingServiceNodeCount, testingApplicationCount, testingFishermenCount)
-	createTestingGenesisAndConfigFiles(cfg, genesisState)
-	persistenceMod, err := persistence.Create(testingConfigFilePath, testingGenesisFilePath) // TODO (Olshansk) this is the last remaining cross module import and needs a fix...
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err = persistenceMod.Start(); err != nil {
-		log.Fatal(err)
-	}
-	return persistenceMod
-}
+	mockPersistenceConfig := mock_modules.NewMockPersistenceConfig(ctrl)
+	mockPersistenceConfig.EXPECT().GetPostgresUrl().Return(databaseUrl).AnyTimes()
+	mockPersistenceConfig.EXPECT().GetNodeSchema().Return(testSchema).AnyTimes()
+	mockPersistenceConfig.EXPECT().GetBlockStorePath().Return("").AnyTimes()
 
-const (
-	testingGenesisFilePath = "genesis.json"
-	testingConfigFilePath  = "config.json"
-)
+	mockRuntimeConfig := mock_modules.NewMockConfig(ctrl)
+	mockRuntimeConfig.EXPECT().GetPersistenceConfig().Return(mockPersistenceConfig).AnyTimes()
 
-func createTestingGenesisAndConfigFiles(cfg modules.Config, genesisState modules.GenesisState) {
-	config, err := json.Marshal(cfg.Persistence)
-	if err != nil {
-		log.Fatal(err)
-	}
-	genesis, err := json.Marshal(genesisState.PersistenceGenesisState)
-	if err != nil {
-		log.Fatal(err)
-	}
-	genesisFile := make(map[string]json.RawMessage)
-	configFile := make(map[string]json.RawMessage)
-	persistenceModuleName := new(persistence.PersistenceModule).GetModuleName()
-	genesisFile[test_artifacts.GetGenesisFileName(persistenceModuleName)] = genesis
-	configFile[persistenceModuleName] = config
-	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
-	if err != nil {
-		log.Fatal(err)
-	}
-	configFileBz, err := json.MarshalIndent(configFile, "", "    ")
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := ioutil.WriteFile(testingGenesisFilePath, genesisFileBz, 0777); err != nil {
-		log.Fatal(err)
-	}
-	if err := ioutil.WriteFile(testingConfigFilePath, configFileBz, 0777); err != nil {
-		log.Fatal(err)
-	}
+	mockRuntimeMgr := mock_modules.NewMockRuntimeMgr(ctrl)
+	mockRuntimeMgr.EXPECT().GetConfig().Return(mockRuntimeConfig).AnyTimes()
+
+	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
+	mockRuntimeMgr.EXPECT().GetGenesis().Return(genesisState).AnyTimes()
+
+	persistenceMod, err := persistence.Create(mockRuntimeMgr)
+	require.NoError(t, err)
+
+	err = persistenceMod.Start()
+	require.NoError(t, err)
+
+	return persistenceMod.(modules.PersistenceModule)
 }

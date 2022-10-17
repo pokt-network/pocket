@@ -143,12 +143,12 @@ func TestGetServiceNodeStatus(t *testing.T) {
 	// Check status before the serviceNode exists
 	status, err := db.GetServiceNodeStatus(addrBz, 0)
 	require.Error(t, err)
-	require.Equal(t, status, persistence.UndefinedStakingStatus, "unexpected status")
+	require.Equal(t, persistence.UndefinedStakingStatus, status, "unexpected status")
 
 	// Check status after the serviceNode exists
 	status, err = db.GetServiceNodeStatus(addrBz, 1)
 	require.NoError(t, err)
-	require.Equal(t, status, DefaultStakeStatus, "unexpected status")
+	require.Equal(t, DefaultStakeStatus, status, "unexpected status")
 }
 
 func TestGetServiceNodePauseHeightIfExists(t *testing.T) {

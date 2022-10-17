@@ -52,7 +52,9 @@ func (p *ProtoCodec) FromAny(any *anypb.Any) (proto.Message, error) {
 	return msg, nil
 }
 
-// TODO(andrew): Retrieve this from the utility module via the application specific bus
+// DISCUSS: Retrieve this from the utility module via the application specific bus?
+// There are some parts of the code that does not have access to the bus;
+// Example: txIndexer
 func GetCodec() Codec {
 	return &ProtoCodec{}
 }

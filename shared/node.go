@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/runtime"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -16,56 +17,67 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-var _ modules.Module = &Node{}
-
 const (
 	MainModuleName = "main"
 )
 
 type Node struct {
-	clock   clock.Clock
-	bus     modules.Bus
-	Address cryptoPocket.Address
+	bus        modules.Bus
+	p2pAddress cryptoPocket.Address
 }
 
-func Create(configPath, genesisPath string, clock clock.Clock) (n *Node, err error) {
-	persistenceMod, err := persistence.Create(configPath, genesisPath)
+func NewNodeWithP2PAddress(address cryptoPocket.Address) *Node {
+	return &Node{p2pAddress: address}
+}
+
+func Create(configPath, genesisPath string, clock clock.Clock) (modules.Module, error) {
+	return new(Node).Create(runtime.NewManagerFromFiles(configPath, genesisPath))
+}
+
+func (m *Node) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	persistenceMod, err := persistence.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
-	p2pMod, err := p2p.Create(configPath, genesisPath, false)
+	p2pMod, err := p2p.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
-	utilityMod, err := utility.Create(configPath, genesisPath)
+	utilityMod, err := utility.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
-	consensusMod, err := consensus.Create(configPath, genesisPath, false)
+	consensusMod, err := consensus.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
-	telemetryMod, err := telemetry.Create(configPath, genesisPath)
+	telemetryMod, err := telemetry.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
-	bus, err := CreateBus(persistenceMod, p2pMod, utilityMod, consensusMod, telemetryMod, clock)
+	bus, err := CreateBus(
+		runtimeMgr,
+		persistenceMod.(modules.PersistenceModule),
+		p2pMod.(modules.P2PModule),
+		utilityMod.(modules.UtilityModule),
+		consensusMod.(modules.ConsensusModule),
+		telemetryMod.(modules.TelemetryModule),
+	)
 	if err != nil {
 		return nil, err
 	}
-	addr, err := p2pMod.GetAddress()
+	addr, err := p2pMod.(modules.P2PModule).GetAddress()
 	if err != nil {
 		return nil, err
 	}
 	return &Node{
-		bus:     bus,
-		Address: addr,
-		clock:   clock,
+		bus:        bus,
+		p2pAddress: addr,
 	}, nil
 }
 
@@ -167,18 +179,6 @@ func (node *Node) GetModuleName() string {
 	return MainModuleName
 }
 
-func (node *Node) InitConfig(pathToConfigJSON string) (modules.IConfig, error) {
-	return nil, nil
-}
-
-func (node *Node) InitGenesis(pathToGenesisJSON string) (modules.IGenesis, error) {
-	return nil, nil
-}
-
-func (m *Node) SetClock(clock clock.Clock) {
-	m.clock = clock
-}
-
-func (m *Node) GetClock() clock.Clock {
-	return m.clock
+func (node *Node) GetP2PAddress() cryptoPocket.Address {
+	return node.p2pAddress
 }

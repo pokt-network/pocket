@@ -24,15 +24,17 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	// Test configs
 	numNodes := 4
 	paceMakerTimeoutMsec := uint64(50) // Set a very small pacemaker timeout
-	paceMakerTimeout := 50 * timePkg.Millisecond
-	configs, genesisStates := GenerateNodeConfigs(t, numNodes)
-	for _, config := range configs {
-		config.Consensus.GetPaceMakerConfig().SetTimeoutMsec(paceMakerTimeoutMsec)
+	paceMakerTimeout := 50 * time.Millisecond
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numNodes, clockMock)
+	for _, runtimeConfig := range runtimeMgrs {
+		if consCfg, ok := runtimeConfig.GetConfig().GetConsensusConfig().(consensus.HasPacemakerConfig); ok {
+			consCfg.GetPacemakerConfig().SetTimeoutMsec(paceMakerTimeoutMsec)
+		}
 	}
 
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, configs, genesisStates, clockMock, testChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Debug message to start consensus by triggering next view.
@@ -123,15 +125,15 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 }
 
 func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
-	numNodes := 4
-	configs, genesisStates := GenerateNodeConfigs(t, numNodes)
-
 	clockMock := clock.NewMock()
+	numNodes := 4
+	runtimeConfigs := GenerateNodeRuntimeMgrs(t, numNodes, clockMock)
+
 	timeReminder(clockMock, 100*time.Millisecond)
 
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, configs, genesisStates, clockMock, testChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeConfigs, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Starting point
@@ -143,13 +145,16 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	leader := pocketNodes[leaderId]
 	leaderRound := uint64(6)
 
+	consensusPK, err := leader.GetBus().GetConsensusModule().GetPrivateKey()
+	require.NoError(t, err)
+
 	// Placeholder block
 	blockHeader := &typesCons.BlockHeader{
 		Height:            int64(testHeight),
 		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            0,
 		LastBlockHash:     "",
-		ProposerAddress:   leader.Address.Bytes(),
+		ProposerAddress:   consensusPK.Address(),
 		QuorumCertificate: nil,
 	}
 	block := &typesCons.Block{

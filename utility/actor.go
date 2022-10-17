@@ -5,7 +5,6 @@ import (
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
@@ -138,13 +137,13 @@ func (u *UtilityContext) GetMaxPausedBlocks(actorType typesUtil.ActorType) (maxP
 	var paramName string
 	switch actorType {
 	case typesUtil.ActorType_App:
-		paramName = modules.AppMaxPauseBlocksParamName
+		paramName = typesUtil.AppMaxPauseBlocksParamName
 	case typesUtil.ActorType_Fisherman:
-		paramName = modules.FishermanMaxPauseBlocksParamName
+		paramName = typesUtil.FishermanMaxPauseBlocksParamName
 	case typesUtil.ActorType_ServiceNode:
-		paramName = modules.ServiceNodeMaxPauseBlocksParamName
+		paramName = typesUtil.ServiceNodeMaxPauseBlocksParamName
 	case typesUtil.ActorType_Validator:
-		paramName = modules.ValidatorMaxPausedBlocksParamName
+		paramName = typesUtil.ValidatorMaxPausedBlocksParamName
 	default:
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -167,13 +166,13 @@ func (u *UtilityContext) GetMinimumPauseBlocks(actorType typesUtil.ActorType) (m
 	var paramName string
 	switch actorType {
 	case typesUtil.ActorType_App:
-		paramName = modules.AppMinimumPauseBlocksParamName
+		paramName = typesUtil.AppMinimumPauseBlocksParamName
 	case typesUtil.ActorType_Fisherman:
-		paramName = modules.FishermanMinimumPauseBlocksParamName
+		paramName = typesUtil.FishermanMinimumPauseBlocksParamName
 	case typesUtil.ActorType_ServiceNode:
-		paramName = modules.ServiceNodeMinimumPauseBlocksParamName
+		paramName = typesUtil.ServiceNodeMinimumPauseBlocksParamName
 	case typesUtil.ActorType_Validator:
-		paramName = modules.ValidatorMinimumPauseBlocksParamName
+		paramName = typesUtil.ValidatorMinimumPauseBlocksParamName
 	default:
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -249,13 +248,13 @@ func (u *UtilityContext) GetMinimumStake(actorType typesUtil.ActorType) (*big.In
 	var paramName string
 	switch actorType {
 	case typesUtil.ActorType_App:
-		paramName = modules.AppMinimumStakeParamName
+		paramName = typesUtil.AppMinimumStakeParamName
 	case typesUtil.ActorType_Fisherman:
-		paramName = modules.FishermanMinimumStakeParamName
+		paramName = typesUtil.FishermanMinimumStakeParamName
 	case typesUtil.ActorType_ServiceNode:
-		paramName = modules.ServiceNodeMinimumStakeParamName
+		paramName = typesUtil.ServiceNodeMinimumStakeParamName
 	case typesUtil.ActorType_Validator:
-		paramName = modules.ValidatorMinimumStakeParamName
+		paramName = typesUtil.ValidatorMinimumStakeParamName
 	default:
 		return nil, typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -306,13 +305,13 @@ func (u *UtilityContext) GetUnstakingHeight(actorType typesUtil.ActorType) (unst
 	var unstakingBlocks int
 	switch actorType {
 	case typesUtil.ActorType_App:
-		paramName = modules.AppUnstakingBlocksParamName
+		paramName = typesUtil.AppUnstakingBlocksParamName
 	case typesUtil.ActorType_Fisherman:
-		paramName = modules.FishermanUnstakingBlocksParamName
+		paramName = typesUtil.FishermanUnstakingBlocksParamName
 	case typesUtil.ActorType_ServiceNode:
-		paramName = modules.ServiceNodeUnstakingBlocksParamName
+		paramName = typesUtil.ServiceNodeUnstakingBlocksParamName
 	case typesUtil.ActorType_Validator:
-		paramName = modules.ValidatorUnstakingBlocksParamName
+		paramName = typesUtil.ValidatorUnstakingBlocksParamName
 	default:
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
@@ -335,11 +334,11 @@ func (u *UtilityContext) GetMaxChains(actorType typesUtil.ActorType) (maxChains 
 	var paramName string
 	switch actorType {
 	case typesUtil.ActorType_App:
-		paramName = modules.AppMinimumStakeParamName
+		paramName = typesUtil.AppMinimumStakeParamName
 	case typesUtil.ActorType_Fisherman:
-		paramName = modules.FishermanMinimumStakeParamName
+		paramName = typesUtil.FishermanMinimumStakeParamName
 	case typesUtil.ActorType_ServiceNode:
-		paramName = modules.ServiceNodeMinimumStakeParamName
+		paramName = typesUtil.ServiceNodeMinimumStakeParamName
 	default:
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}
