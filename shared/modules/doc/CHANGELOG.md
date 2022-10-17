@@ -20,14 +20,14 @@ Interface changes (w/o implementation) to support a StateHash computation.
 
 - Updates to the `PersistenceContext` interface
 
-  - Deprecate `StoreBlock`, `InsertBlock`, `AppHash`, `Reset`, `Commit`
   - Change `Commit()` to `Commit(proposerAddr, quorumCert)`
   - Change `AppHash()` to `UpdateAppHash()`
+  - Deprecate `StoreBlock`, `InsertBlock`, `Reset`
 
 - Updates to the `UtilityContext` interface
-  - Deprecate `GetPersistenceContext`
   - Change `ReleaseContext()` to `Release()`
   - Changed `CommitPersistenceContext()` to `Commit(quorumCert)`
+  - Deprecate `GetPersistenceContext`
 
 ## [0.0.0.2] - 2022-09-17
 
