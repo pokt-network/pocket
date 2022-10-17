@@ -6,7 +6,9 @@
 
 ## Context Initialization
 
-This flow shows the process of context initialization between all the modules requirer to apply a block and compute a state hash during the consensus lifecycle.
+This flow shows the process of context initialization between all the modules required to apply a block and compute a state hash during the consensus lifecycle.
+
+The `Hotstuff lifecycle` part refers to the so-called `PreCommit` and `Commit` phases of the protocol.
 
 ```mermaid
 sequenceDiagram
