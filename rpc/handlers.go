@@ -26,9 +26,8 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, "cannot decode tx bytes")
 	}
-	bus := s.node.GetBus()
-	height := bus.GetConsensusModule().CurrentHeight()
-	uCtx, err := bus.GetUtilityModule().NewContext(int64(height))
+	height := s.bus.GetConsensusModule().CurrentHeight()
+	uCtx, err := s.bus.GetUtilityModule().NewContext(int64(height))
 	if err != nil {
 		defer func() { log.Fatalf("[ERROR] Failed to create UtilityContext: %v", err) }()
 		return ctx.String(http.StatusInternalServerError, err.Error())

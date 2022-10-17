@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/telemetry"
@@ -73,7 +74,13 @@ func main() {
 	}
 	telemetryMod := telemetryM.(modules.TelemetryModule)
 
-	_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod)
+	rpcM, err := rpc.Create(runtimeMgr)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to create rpc module: %v", err.Error())
+	}
+	rpcMod := rpcM.(modules.RPCModule)
+
+	_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod, rpcMod)
 
 	p2pMod.Start()
 
