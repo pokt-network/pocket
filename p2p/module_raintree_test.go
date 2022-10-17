@@ -186,7 +186,8 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	numValidators := len(networkSimulationConfig)
 	runtimeConfigs := createMockRuntimeMgrs(t, numValidators)
 
-	// Network & module mocks
+	// Create connection and bus mocks along with a shared WaitGroup to track the number of expected
+	// reads and writes throughout the mocked local network
 	var wg sync.WaitGroup
 	connMocks := make(map[string]typesP2P.Transport)
 	busMocks := make(map[string]modules.Bus)
@@ -200,7 +201,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		busMocks[valId] = prepareBusMock(t, consensusMock, telemetryMock)
 	}
 
-	// Module injection
+	// Inject the connection and bus mocks into the P2P modules
 	p2pModules := createP2PModules(t, runtimeConfigs)
 	for validatorId, p2pMod := range p2pModules {
 		p2pMod.listener = connMocks[validatorId]

@@ -16,7 +16,7 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
-	telemetry "github.com/pokt-network/pocket/telemetry"
+	"github.com/pokt-network/pocket/telemetry"
 	"github.com/stretchr/testify/require"
 )
 
@@ -84,14 +84,10 @@ func waitForNetworkSimulationCompletion(t *testing.T, p2pModules map[string]*p2p
 	// Timeout or succeed
 	select {
 	case <-done:
-	// All done!
-	case <-time.After(2 * time.Second):
-		t.Fatal("Timeout waiting for message to be handled")
-	}
 
-	// Stop all the P2P modules
-	for _, p2pModule := range p2pModules {
-		p2pModule.Stop()
+	// All done!
+	case <-time.After(2 * time.Second): // 2 seconds was chosen arbitrarily
+		t.Fatal("Timeout waiting for message to be handled")
 	}
 }
 
@@ -167,24 +163,19 @@ func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) mod
 	return mockGenesisState
 }
 
-// TODO (Olshansk) explain what the consensus mock does (ditto for all mocks below)
-// Attempt: the consensus mock returns the genesis validator map anytime the .ValidatorMap() function is called
-// the consensus mock also returns '1' when the current height is called
-
-// A mock of the application specific to know if a message was sent to be handled by the application
+// Bus Mock - needed to return the appropriate modules when accessed
 func prepareBusMock(t *testing.T, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
 	ctrl := gomock.NewController(t)
 	busMock := modulesMock.NewMockBus(ctrl)
 
 	busMock.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
-	// busMock.EXPECT().GetConfig().Return(config).Times(1)
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
 	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
 
 	return busMock
 }
 
-// Consensus mocked - only needed for validatorMap access
+// Consensus mock - only needed for validatorMap access
 func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockConsensusModule {
 	ctrl := gomock.NewController(t)
 	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
@@ -197,47 +188,51 @@ func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modu
 
 	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
+
 	return consensusMock
 }
 
+// Telemetry mock - Needed to help with proper counts for number of expected network writes
 func prepareTelemetryMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkWrites int) *modulesMock.MockTelemetryModule {
 	ctrl := gomock.NewController(t)
 	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
 
 	timeSeriesAgentMock := prepareNoopTimeSeriesAgentMock(t)
-	eventMetricsAgentMock := prepareNoopEventMetricsAgentMock(t)
+	eventMetricsAgentMock := prepareEventMetricsAgentMock(t, wg, expectedNumNetworkWrites)
 
 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
-	// timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
-	// timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
-
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Eq(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).Do(func(n, e interface{}, l ...interface{}) {
-		wg.Done()
-	}).Times(expectedNumNetworkWrites)
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).AnyTimes()
 
 	return telemetryMock
 }
 
-// Noop mock - no specific business logic to tend to
+// Noop mock - no specific business logic to tend to in the timeseries agent mock
 func prepareNoopTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
 	ctrl := gomock.NewController(t)
 	timeseriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
 
 	timeseriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).AnyTimes()
 	timeseriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
+
 	return timeseriesAgentMock
 }
 
-// Noop mock - no specific business logic to tend to
-func prepareNoopEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAgent {
+// Events metric mock - Needed to help with proper counts for number of expected network writes
+func prepareEventMetricsAgentMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkWrites int) *modulesMock.MockEventMetricsAgent {
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
+
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Eq(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).Do(func(n, e interface{}, l ...interface{}) {
+		wg.Done()
+	}).Times(expectedNumNetworkWrites)
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).AnyTimes()
+
 	return eventMetricsAgentMock
 }
 
+// Network transport mock - used to simulate reading to/from the network via the main events channel
+// as well as counting the number of expected reads
 func prepareConnMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkReads int) typesP2P.Transport {
 	testChannel := make(chan []byte, testChannelSize)
 	ctrl := gomock.NewController(t)
@@ -254,7 +249,7 @@ func prepareConnMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkReads i
 		return nil
 	}).Times(expectedNumNetworkReads)
 
-	connMock.EXPECT().Close().Return(nil).Times(2) // TODO: Why is this 2 instead of 1?
+	connMock.EXPECT().Close().Return(nil).Times(1)
 
 	return connMock
 }
