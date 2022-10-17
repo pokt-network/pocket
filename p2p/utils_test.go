@@ -22,10 +22,6 @@ import (
 
 // ~~~~~~ RainTree Unit Test Configurations ~~~~~~
 
-// TODO: We should leverage the shared `test_artifacts` package and replace the code below.
-//       The reason it is necessary right now is because the functionality of RainTree is dependant
-//       on the order of the addresses, which is a function of the public key, so we need to make
-//       sure that the validatorId order corresponds to that of the public keys.
 const (
 	testChannelSize = 10000
 	// Since we simulate up to a 27 node network, we will pre-generate a n >= 27 number of keys to avoid generation
@@ -67,6 +63,7 @@ type TestNetworkSimulationConfig map[string]struct {
 	numNetworkReads int
 	// The number of asynchronous writes the node's P2P listener made (i.e. # of messages it tried to send over the network)
 	numNetworkWrites int
+
 	// IMPROVE: A future improvement of these tests could be to specify specifically which
 	//          node IDs the specific read or write is coming from or going to.
 }
@@ -100,8 +97,8 @@ func waitForNetworkSimulationCompletion(t *testing.T, p2pModules map[string]*p2p
 
 // ~~~~~~ RainTree Unit Test Mocks ~~~~~~
 
-// prepareP2PModules returns a map of configured p2pModules keyed by an incremental naming convention (eg: `val_1`, `val_2`, etc.)
-func prepareP2PModules(t *testing.T, runtimeConfigs []modules.RuntimeMgr) (p2pModules map[string]*p2pModule) {
+// createP2PModules returns a map of configured p2pModules keyed by an incremental naming convention (eg: `val_1`, `val_2`, etc.)
+func createP2PModules(t *testing.T, runtimeConfigs []modules.RuntimeMgr) (p2pModules map[string]*p2pModule) {
 	p2pModules = make(map[string]*p2pModule, len(runtimeConfigs))
 	for i, runtimeConfig := range runtimeConfigs {
 		p2pMod, err := Create(runtimeConfig)

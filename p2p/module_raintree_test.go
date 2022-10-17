@@ -178,9 +178,9 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 
 // ### RainTree Unit Helpers - To remove redundancy of code in the unit tests ###
 
-// Helper function that can be used for end-to-end P2P module tests that creates a "real" P2P module
-// where all the other components of the node are mocked. It then triggers a single message and waits
-// for all of the expected messages transmission to complete before announcing failure.
+// Helper function that can be used for end-to-end P2P module tests that creates a "real" P2P module.
+// 1. It creates and configures a "real" P2P module where all the other components of the node are mocked.
+// 2. It then triggers a single message and waits for all of the expected messages transmission to complete before announcing failure.
 func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig TestNetworkSimulationConfig) {
 	// Configure & prepare test module
 	numValidators := len(networkSimulationConfig)
@@ -201,7 +201,7 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	}
 
 	// Module injection
-	p2pModules := prepareP2PModules(t, runtimeConfigs)
+	p2pModules := createP2PModules(t, runtimeConfigs)
 	for validatorId, p2pMod := range p2pModules {
 		p2pMod.listener = connMocks[validatorId]
 		p2pMod.SetBus(busMocks[validatorId])
