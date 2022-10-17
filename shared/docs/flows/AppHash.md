@@ -40,6 +40,7 @@ sequenceDiagram
 
 ## Block Application
 
+This flow shows how the `leader` and the `replica`s behave in order to apply a `block` and return a `stateHash`.
 ```mermaid
 sequenceDiagram
     participant C as Consensus
