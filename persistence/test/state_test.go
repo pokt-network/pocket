@@ -15,9 +15,9 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	// These hashes were determined manually by running the test, but hardcoded to guarantee
 	// that the business logic doesn't change and that they remain deterministic.
 	encodedAppHash := []string{
-		"a405c3db598c9898c61b76c77f3e1ed94277a2bc683fbc4f9bd502c47633d617",
-		"e431c357c0e0d9ef5999b52bc18d36aa0e1bedbd555a82dd5e8a8130b6b8fa6b",
-		"a46c8024472f50a4ab887b8b1e06fdc578f0344eada2d68784325c27e74d6529",
+		"62adad6925267abe075dc62ffb9b8d960709409b097b75dd6b3ea4cce31d1482",
+		"c1af3fda156bce4162df755f0095ae4f909477fc385f761c6e8d2ef6eb2d9fa6",
+		"e65d0c2cd78f180d774bfe43e52a49fad490bf208fcc6d167f2b6543ab280cb9",
 	}
 
 	for i := 0; i < 3; i++ {

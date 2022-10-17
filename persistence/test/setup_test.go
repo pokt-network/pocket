@@ -65,7 +65,7 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	require.True(t, ok)
 
 	t.Cleanup(func() {
-		require.NoError(t, db.Release())
+		// require.NoError(t, db.Release())
 		require.NoError(t, db.ResetContext())
 	})
 

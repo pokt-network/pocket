@@ -28,20 +28,13 @@ type persistenceModule struct {
 	config       modules.PersistenceConfig
 	genesisState modules.PersistenceGenesisState
 
-	// postgresURL string
-	// nodeSchema  string
-	// genesisPath string
-
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	writeContext *PostgresContext // only one write context is allowed at a time
 
 	// The connection to the PostgreSQL database
 	postgresConn *pgx.Conn
 	// A reference to the block key-value store
-	// INVESTIGATE: We may need to create a custom `BlockStore` package in the future.
-	blockStore kvstore.KVStore
-	// A mapping of context IDs to persistence contexts
-	// contexts map[contextId]modules.PersistenceRWContext
+	blockStore kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future.
 	// Merkle trees
 	trees map[MerkleTree]*smt.SparseMerkleTree
 }
@@ -94,15 +87,12 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 		trees: make(map[MerkleTree]*smt.SparseMerkleTree),
 	}
 
-	// DISCUSS_IN_THIS_COMMIT: We've been using the module function pattern, but this making `initializeTrees`
-	// be able to create and/or load trees outside the scope of the persistence module makes it easier to test.
 	trees, err := newMerkleTrees()
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO_IN_THIS_COMMIT: load trees from state
-	m.trees = trees
+	m.trees = trees // TODO_IN_THIS_COMMIT: load trees from state
 
 	// Determine if we should hydrate the genesis db or use the current state of the DB attached
 	if shouldHydrateGenesis, err := m.shouldHydrateGenesisDb(); err != nil {
