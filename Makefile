@@ -133,7 +133,7 @@ client_start: docker_check
 .PHONY: client_connect
 ## Connect to the running client debugging daemon
 client_connect: docker_check
-	docker exec -it client /bin/bash -c "go run app/client/*.go debug"
+	docker exec -it client /bin/bash -c "go run -tags=debug app/client/*.go debug"
 
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	typesPersistence "github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/converters"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 )
@@ -118,12 +118,12 @@ If no changes are desired for the parameter, just enter the current param value 
 				ActorType:     cmdDef.ActorType,
 			}
 
-			j, err := prepareTx(msg, pk)
+			tx, err := prepareTxJson(msg, pk)
 			if err != nil {
 				return err
 			}
 
-			resp, err := postRawTx(cmd.Context(), pk, j)
+			resp, err := postRawTx(cmd.Context(), pk, tx)
 			if err != nil {
 				return err
 			}
@@ -176,12 +176,12 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				ActorType:  cmdDef.ActorType,
 			}
 
-			j, err := prepareTx(msg, pk)
+			tx, err := prepareTxJson(msg, pk)
 			if err != nil {
 				return err
 			}
 
-			resp, err := postRawTx(cmd.Context(), pk, j)
+			resp, err := postRawTx(cmd.Context(), pk, tx)
 			if err != nil {
 				return err
 			}
@@ -216,12 +216,12 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				ActorType: cmdDef.ActorType,
 			}
 
-			j, err := prepareTx(msg, pk)
+			tx, err := prepareTxJson(msg, pk)
 			if err != nil {
 				return err
 			}
 
-			resp, err := postRawTx(cmd.Context(), pk, j)
+			resp, err := postRawTx(cmd.Context(), pk, tx)
 			if err != nil {
 				return err
 			}
@@ -256,12 +256,12 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 				ActorType: cmdDef.ActorType,
 			}
 
-			j, err := prepareTx(msg, pk)
+			tx, err := prepareTxJson(msg, pk)
 			if err != nil {
 				return err
 			}
 
-			resp, err := postRawTx(cmd.Context(), pk, j)
+			resp, err := postRawTx(cmd.Context(), pk, tx)
 			if err != nil {
 				return err
 			}
@@ -281,11 +281,11 @@ func readPassphrase(currPwd string) string {
 		fmt.Println("Using Passphrase provided via flag")
 	}
 
-	return Credentials(currPwd)
+	return credentials(currPwd)
 }
 
 func validateStakeAmount(amount string) error {
-	am, err := typesPersistence.StringToBigInt(amount)
+	am, err := converters.StringToBigInt(amount)
 	if err != nil {
 		return err
 	}
@@ -293,7 +293,7 @@ func validateStakeAmount(amount string) error {
 	sr := big.NewInt(stakingRecommendationAmount)
 	if typesUtil.BigIntLessThan(am, sr) {
 		fmt.Printf("The amount you are staking for is below the recommendation of %d POKT, would you still like to continue? y|n\n", sr.Div(sr, big.NewInt(1000000)).Int64())
-		if !Confirmation(pwd) {
+		if !confirmation(pwd) {
 			return fmt.Errorf("aborted")
 		}
 	}

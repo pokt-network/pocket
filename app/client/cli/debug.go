@@ -1,3 +1,6 @@
+//go:build debug
+// +build debug
+
 package cli
 
 import (
@@ -51,7 +54,7 @@ func init() {
 }
 
 func NewDebug() *cobra.Command {
-	c := &cobra.Command{
+	return &cobra.Command{
 		Use:   "debug",
 		Short: "Debug utility for rapid development",
 		Args:  cobra.ExactArgs(0),
@@ -60,15 +63,14 @@ func NewDebug() *cobra.Command {
 		},
 		RunE: runDebug,
 	}
-
-	return c
 }
 
-func runDebug(cmd *cobra.Command, args []string) error {
+func runDebug(cmd *cobra.Command, args []string) (err error) {
 	for {
-		selection, err := promptGetInput()
-		if err == nil {
+		if selection, err := promptGetInput(); err == nil {
 			handleSelect(selection)
+		} else {
+			return err
 		}
 	}
 }
@@ -173,7 +175,6 @@ func sendDebugMessage(debugMsg *debug.DebugMessage) {
 
 func initDebug(remoteCLIURL string) {
 	modInitOnce.Do(func() {
-		// HACK: rain tree will detect if trying to send to addr=self and not send it
 		var err error
 		runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
 

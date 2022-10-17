@@ -22,7 +22,7 @@ require (
 require (
 	github.com/benbjohnson/clock v1.3.0
 	github.com/dgraph-io/badger/v3 v3.2103.2
-	github.com/getkin/kin-openapi v0.105.0
+	github.com/getkin/kin-openapi v0.106.0
 	github.com/jackc/pgconn v1.13.0
 	github.com/jordanorelli/lexnum v0.0.0-20141216151731-460eeb125754
 	github.com/labstack/echo/v4 v4.9.1
