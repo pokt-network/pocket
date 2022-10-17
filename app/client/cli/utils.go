@@ -50,10 +50,10 @@ func parseEd25519PrivateKeyFromReader(reader io.Reader) (pk crypto.Ed25519Privat
 	return
 }
 
-// Credentials reads a password from the prompt and returns the trimmed version
+// credentials reads a password from the prompt and returns the trimmed version
 //
 // If pwd is provided (via flag to the command), it uses that one instead of asking via prompt
-func Credentials(pwd string) string {
+func credentials(pwd string) string {
 	if pwd != "" && strings.TrimSpace(pwd) != "" {
 		return strings.TrimSpace(pwd)
 	}
@@ -64,10 +64,10 @@ func Credentials(pwd string) string {
 	return strings.TrimSpace(string(bytePassword))
 }
 
-// Confirmation asks the user for a yes/no answer via interactive prompt.
+// confirmation asks the user for a yes/no answer via interactive prompt.
 //
 // If pwd is provided (via flag to the command), it returns true since it's assumed that a user that provides a password via flag knows what they are doing
-func Confirmation(pwd string) bool {
+func confirmation(pwd string) bool {
 	if pwd != "" && strings.TrimSpace(pwd) != "" {
 		return true
 	}

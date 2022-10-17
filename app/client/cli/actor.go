@@ -281,7 +281,7 @@ func readPassphrase(currPwd string) string {
 		fmt.Println("Using Passphrase provided via flag")
 	}
 
-	return Credentials(currPwd)
+	return credentials(currPwd)
 }
 
 func validateStakeAmount(amount string) error {
@@ -293,7 +293,7 @@ func validateStakeAmount(amount string) error {
 	sr := big.NewInt(stakingRecommendationAmount)
 	if typesUtil.BigIntLessThan(am, sr) {
 		fmt.Printf("The amount you are staking for is below the recommendation of %d POKT, would you still like to continue? y|n\n", sr.Div(sr, big.NewInt(1000000)).Int64())
-		if !Confirmation(pwd) {
+		if !confirmation(pwd) {
 			return fmt.Errorf("aborted")
 		}
 	}
