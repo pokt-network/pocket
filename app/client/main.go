@@ -52,20 +52,19 @@ var globalLogger = logger.GlobalLogger()
 func main() {
 	var err error
 
-	loggerMod, err := logger.Create(defaultConfigPath, defaultGenesisPath)
+	runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
+
+	loggerM, err := logger.Create(runtimeMgr)
 	if err != nil {
 		globalLogger.Fatal().Err(err).Msg("Failed to create logger module")
 	}
-
-	runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
+	loggerMod := loggerM.(modules.LoggerModule)
 
 	consM, err := consensus.Create(runtimeMgr)
 
 	if err != nil {
 		globalLogger.Fatal().Err(err).Msg("Failed to create consensus module")
 	}
-
-	p2pMod, err = p2p.Create(defaultConfigPath, defaultGenesisPath, true) // TECHDEBT: extra param required for injecting private key hack for debug client
 
 	consensusMod = consM.(modules.ConsensusModule)
 

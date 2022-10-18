@@ -43,9 +43,9 @@ type P2PAddressableModule interface {
 }
 
 // TODO(@okdas): this should also initialize metrics-related stuff, just the logger for now
-// InitMetrics(pathToConfigJSON string)
-// InitTracing(pathToConfigJSON string)
+// InitMetrics()
+// InitTracing()
 type ObservableModule interface {
-	InitLogger(pathToConfigJSON string)
+	InitLogger()
 	GetLogger() Logger
 }

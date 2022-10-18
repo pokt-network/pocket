@@ -21,16 +21,7 @@ type Config interface {
 	GetPersistenceConfig() PersistenceConfig
 	GetP2PConfig() P2PConfig
 	GetTelemetryConfig() TelemetryConfig
-}
-
-type Config struct {
-	Base        *BaseConfig       `json:"base"`
-	Consensus   ConsensusConfig   `json:"consensus"`
-	Utility     UtilityConfig     `json:"utility"`
-	Persistence PersistenceConfig `json:"persistence"`
-	P2P         P2PConfig         `json:"p2p"`
-	Telemetry   TelemetryConfig   `json:"telemetry"`
-	Logger      LoggerConfig      `json:"logger"`
+	GetLoggerConfig() LoggerConfig
 }
 
 type BaseConfig interface {

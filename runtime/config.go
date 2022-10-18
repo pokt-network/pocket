@@ -2,6 +2,7 @@ package runtime
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	typesLogger "github.com/pokt-network/pocket/logger"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	typesPers "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -18,6 +19,7 @@ type runtimeConfig struct {
 	Persistence *typesPers.PersistenceConfig    `json:"persistence"`
 	P2P         *typesP2P.P2PConfig             `json:"p2p"`
 	Telemetry   *typesTelemetry.TelemetryConfig `json:"telemetry"`
+	Logger      *typesLogger.LoggerConfig       `json:"logger"`
 }
 
 func NewConfig(base *BaseConfig, otherConfigs ...func(modules.Config)) *runtimeConfig {
@@ -76,4 +78,7 @@ func (c *runtimeConfig) GetP2PConfig() modules.P2PConfig {
 }
 func (c *runtimeConfig) GetTelemetryConfig() modules.TelemetryConfig {
 	return c.Telemetry
+}
+func (c *runtimeConfig) GetLoggerConfig() modules.LoggerConfig {
+	return c.Logger
 }
