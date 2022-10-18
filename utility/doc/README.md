@@ -189,6 +189,8 @@ FAQ:
 - Q) why do we hash to find a newKey between every actor selection?
 - A) pseudo-random selection only works if each iteration is re-randomized or it would be subject to lexicographical proximity bias attacks
 
+- Q) what is `WorldState`?
+- A) it represents a queryable view on the internal state of the network at a certain height.
 Session Flow
 ```mermaid
 sequenceDiagram
