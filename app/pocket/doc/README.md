@@ -34,19 +34,3 @@ The genesis file contains basically the initial state (aka genesis) of the block
 <!-- TODO(team) add link to genesis after we merge #178 -->
 
 For a detailed overview of all the possible settings, please look here.
-
-## Code Organization
-
-```bash
-├── main.go                     # main entrypoint
-└── rpc
-    ├── client.gen.config.yml   # code generation config for the client
-    ├── client.gen.go           # generated client boilerplate code
-    ├── doc                     # folder containing RPC specific docs
-    ├── handlers.go             # concrete implementation of the HTTP handlers invoked by the server
-    ├── server.gen.config.yml   # code generation config for the server + dtos
-    ├── server.gen.go           # generated server boilerplate code
-    ├── server.go               # RPC server configuration and initialization
-    └── v1
-        └── openapi.yaml        # OpenAPI v3.0 spec (source for the generated files above)
-```

@@ -71,3 +71,23 @@ These are pretty self-explanatory.
 Definitely we'll need ways to retrieve transactions as well so we can envisage:
 
 - Get a transaction by hash (**GET /v1/client/tx**)
+
+## Code Organization
+
+```bash
+├── client.gen.config.yml    # code generation config for the client
+├── client.gen.go            # generated client boilerplate code
+├── doc                      # folder containing RPC specific docs
+├── handlers.go              # concrete implementation of the HTTP handlers invoked by the server
+├── module.go                # RPC module
+├── noop_module.go           # noop RPC module (used when the module is disabled)
+├── server.gen.config.yml    # code generation config for the server + dtos
+├── server.gen.go            # generated server boilerplate code
+├── server.go                # RPC server configuration and initialization
+├── types
+│   ├── proto
+│   │   └── rpc_config.proto # protobuf file describing the RPC module configuration
+│   └── rpc_config.pb.go     # protoc generated struct and methods for RPC config
+└── v1
+    └── openapi.yaml         # OpenAPI v3.0 spec (source for the generated files above)
+```
