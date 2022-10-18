@@ -6,10 +6,15 @@ import (
 
 func toPersistenceActor(actor modules.Actor) *Actor {
 	return &Actor{
-		Address:      actor.GetAddress(),
-		PublicKey:    actor.GetPublicKey(),
-		StakedAmount: actor.GetStakedAmount(),
-		GenericParam: actor.GetGenericParam(),
+		ActorType:       ActorType(ActorType_value[actor.GetActorTyp().String()]),
+		Address:         actor.GetAddress(),
+		PublicKey:       actor.GetPublicKey(),
+		Chains:          actor.GetChains(),
+		GenericParam:    actor.GetGenericParam(),
+		StakedAmount:    actor.GetStakedAmount(),
+		PausedHeight:    actor.GetPausedHeight(),
+		UnstakingHeight: actor.GetUnstakingHeight(),
+		Output:          actor.GetOutput(),
 	}
 }
 
