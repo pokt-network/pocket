@@ -16,13 +16,17 @@ type LeaderElectionModule interface {
 	ElectNextLeader(*typesCons.HotstuffMessage) (typesCons.NodeId, error)
 }
 
-var _ leaderElectionModule = leaderElectionModule{}
+var _ LeaderElectionModule = &leaderElectionModule{}
 
 type leaderElectionModule struct {
 	bus modules.Bus
 }
 
-func Create(_ *typesCons.ConsensusConfig, _ *typesCons.ConsensusGenesisState) (LeaderElectionModule, error) {
+func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
+	return new(leaderElectionModule).Create(runtime)
+}
+
+func (*leaderElectionModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	return &leaderElectionModule{}, nil
 }
 
@@ -33,14 +37,6 @@ func (m *leaderElectionModule) Start() error {
 
 func (m *leaderElectionModule) Stop() error {
 	return nil
-}
-
-func (m *leaderElectionModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-	return // No-op
-}
-
-func (m *leaderElectionModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
-	return // No-op
 }
 
 func (m *leaderElectionModule) GetModuleName() string {

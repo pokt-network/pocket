@@ -2,12 +2,11 @@ package test
 
 import (
 	"encoding/hex"
-	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 	"math"
 	"math/big"
 	"testing"
 
+	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 )
@@ -16,7 +15,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, startingBalance, amount, signer := newTestingTransaction(t, ctx)
 
-	vals := GetAllTestingValidators(t, ctx)
+	vals := getAllTestingValidators(t, ctx)
 	proposer := vals[0]
 	byzantine := vals[1]
 
@@ -69,7 +68,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 func TestUtilityContext_BeginBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
-	vals := GetAllTestingValidators(t, ctx)
+	vals := getAllTestingValidators(t, ctx)
 	proposer := vals[0]
 	byzantine := vals[1]
 
@@ -97,22 +96,22 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 }
 
 func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
+	for _, actorType := range actorTypes {
 		ctx := NewTestingUtilityContext(t, 1)
-		actor := GetFirstActor(t, ctx, actorType)
+		actor := getFirstActor(t, ctx, actorType)
 
 		var err error
 		switch actorType {
-		case typesUtil.UtilActorType_App:
-			err = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
-		case typesUtil.UtilActorType_Val:
-			err = ctx.Context.SetParam(modules.ValidatorMaxPausedBlocksParamName, 0)
-		case typesUtil.UtilActorType_Fish:
-			err = ctx.Context.SetParam(modules.FishermanMaxPauseBlocksParamName, 0)
-		case typesUtil.UtilActorType_Node:
-			err = ctx.Context.SetParam(modules.ServiceNodeMaxPauseBlocksParamName, 0)
+		case typesUtil.ActorType_App:
+			err = ctx.Context.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
+		case typesUtil.ActorType_Validator:
+			err = ctx.Context.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
+		case typesUtil.ActorType_Fisherman:
+			err = ctx.Context.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
+		case typesUtil.ActorType_ServiceNode:
+			err = ctx.Context.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
 		default:
-			t.Fatalf("unexpected actor type %s", actorType.GetActorName())
+			t.Fatalf("unexpected actor type %s", actorType.String())
 		}
 		require.NoError(t, err)
 		addrBz, er := hex.DecodeString(actor.GetAddress())
@@ -124,7 +123,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 		require.NoError(t, err)
 
 		status, err := ctx.GetActorStatus(actorType, addrBz)
-		require.Equal(t, typesUtil.UnstakingStatus, status, "incorrect status")
+		require.Equal(t, int32(typesUtil.StakeStatus_Unstaking), status, "incorrect status")
 
 		test_artifacts.CleanupTest(ctx)
 	}
@@ -133,7 +132,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 func TestUtilityContext_EndBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
-	vals := GetAllTestingValidators(t, ctx)
+	vals := getAllTestingValidators(t, ctx)
 	proposer := vals[0]
 	byzantine := vals[1]
 
@@ -185,18 +184,30 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 }
 
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
-	for _, actorType := range typesUtil.ActorTypes {
+	for _, actorType := range actorTypes {
 		ctx := NewTestingUtilityContext(t, 1)
-		poolName := actorType.GetActorPoolName()
+		var poolName string
+		switch actorType {
+		case typesUtil.ActorType_App:
+			poolName = typesUtil.PoolNames_AppStakePool.String()
+		case typesUtil.ActorType_Validator:
+			poolName = typesUtil.PoolNames_ValidatorStakePool.String()
+		case typesUtil.ActorType_Fisherman:
+			poolName = typesUtil.PoolNames_FishermanStakePool.String()
+		case typesUtil.ActorType_ServiceNode:
+			poolName = typesUtil.PoolNames_ServiceNodeStakePool.String()
+		default:
+			t.Fatalf("unexpected actor type %s", actorType.String())
+		}
 
 		ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
-		err := ctx.Context.SetParam(modules.AppUnstakingBlocksParamName, 0)
+		err := ctx.Context.SetParam(typesUtil.AppUnstakingBlocksParamName, 0)
 		require.NoError(t, err)
 
-		err = ctx.Context.SetParam(modules.AppMaxPauseBlocksParamName, 0)
+		err = ctx.Context.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
 		require.NoError(t, err)
 
-		actors := GetAllTestingActors(t, ctx, actorType)
+		actors := getAllTestingActors(t, ctx, actorType)
 		for _, actor := range actors {
 			// require.Equal(t, int32(typesUtil.StakedStatus), actor.GetStatus(), "wrong starting status")
 			addrBz, er := hex.DecodeString(actor.GetAddress())
@@ -211,7 +222,7 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 		err = ctx.UnstakeActorsThatAreReady()
 		require.NoError(t, err)
 
-		actors = GetAllTestingActors(t, ctx, actorType)
+		actors = getAllTestingActors(t, ctx, actorType)
 		require.NotEqual(t, actors[0].GetUnstakingHeight(), -1, "validators still exists after unstake that are ready() call")
 
 		// TODO: We need to better define what 'deleted' really is in the postgres world.

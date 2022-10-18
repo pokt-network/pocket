@@ -14,10 +14,10 @@ import (
 // for the purpose of being explicit: https://github.com/pokt-network/pocket/pull/140#discussion_r939731342
 // TODO Cleanup with #149
 const (
-	UndefinedStakingStatus = 0
-	UnstakingStatus        = 1
-	StakedStatus           = 2
-	UnstakedStatus         = 3
+	UndefinedStakingStatus = int32(0)
+	UnstakingStatus        = int32(1)
+	StakedStatus           = int32(2)
+	UnstakedStatus         = int32(3)
 )
 
 func UnstakingHeightToStatus(unstakingHeight int64) int32 {
@@ -168,7 +168,7 @@ func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema types.ProtocolActo
 	return
 }
 
-func (p *PostgresContext) GetActorStatus(actorSchema types.ProtocolActorSchema, address []byte, height int64) (int, error) {
+func (p *PostgresContext) GetActorStatus(actorSchema types.ProtocolActorSchema, address []byte, height int64) (int32, error) {
 	var unstakingHeight int64
 	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {

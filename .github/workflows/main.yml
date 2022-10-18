@@ -16,16 +16,15 @@ on:
 
 env:
   # Even though we can test against multiple versions, this one is considered a target version.
-  TARGET_GOLANG_VERSION: "1.18"
+  TARGET_GOLANG_VERSION: "1.19"
   PROTOC_VERSION: "3.19.4"
-  PUSH_TO_DOCKERHUB: false
 
 jobs:
   test-multiple-go-versions:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ["1.18"] # As we are relying on generics, we can't go lower than 1.18.
+        go: ["1.19"] # As we are relying on generics, we can't go lower than 1.18.
       fail-fast: false
     name: Go ${{ matrix.go }} test
     steps:
@@ -59,13 +58,17 @@ jobs:
         uses: guyarb/golang-test-annotations@v0.5.1
         with:
           test-results: test_results.json
-
-      # TODO(@okdas): move coverage to a separate job
+      - name: Run golangci-lint
+        # Only run if the test failed on target version to avoid duplicated annotations on GitHub.
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        uses: golangci/golangci-lint-action@v3
+        with:
+          args: --issues-exit-code=0 # TODO: Remove this once we fix all the issues.
       - name: create coverage report
-        if: ${{ env.TARGET_GOLANG_VERSION == matrix.go }}
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         run: make test_all_with_coverage
       - name: Upload coverage to Codecov
-        if: ${{ env.TARGET_GOLANG_VERSION == matrix.go }}
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: codecov/codecov-action@v3
 
   # TODO(@okdas): reuse artifacts built by the previous job instead
@@ -89,7 +92,6 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            poktnetwork/pocket-v1
             ghcr.io/pokt-network/pocket-v1
           tags: |
             type=schedule${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
@@ -100,22 +102,13 @@ jobs:
             type=ref,event=pr${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
             type=sha${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
             type=raw,value=latest,enable={{is_default_branch}}${{ matrix.imageType == 'dev' && ',suffix=-dev' || '' }}
-      # Turned off until we set up docker hub
-      - name: Login to  DockerHub
-        if: ${{ env.PUSH_TO_DOCKERHUB != 'false' }}
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Login to GitHub Container Registry
-        if: ${{ env.PUSH_TO_DOCKERHUB != 'false' }}
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push Docker image
-        if: ${{ env.PUSH_TO_DOCKERHUB != 'false' }}
         uses: docker/build-push-action@v3
         with:
           push: true

@@ -2,9 +2,7 @@ package persistence
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 
 	"github.com/pokt-network/pocket/persistence/types"
@@ -12,21 +10,25 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
 )
 
-var _ modules.PersistenceModule = &PersistenceModule{}
-var _ modules.PersistenceRWContext = &PostgresContext{}
-var _ modules.PersistenceGenesisState = &types.PersistenceGenesisState{}
-var _ modules.PersistenceConfig = &types.PersistenceConfig{}
+var (
+	_ modules.PersistenceModule = &persistenceModule{}
+	_ modules.PersistenceModule = &persistenceModule{}
 
-type PersistenceModule struct {
-	bus modules.Bus
+	_ modules.PersistenceRWContext    = &PostgresContext{}
+	_ modules.PersistenceGenesisState = &types.PersistenceGenesisState{}
+	_ modules.PersistenceConfig       = &types.PersistenceConfig{}
+)
 
-	postgresURL string
-	nodeSchema  string
-	genesisPath string
-	blockStore  kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
+// TODO: convert address and public key to string not bytes in all account and actor functions
+// TODO: remove address parameter from all pool operations
+type persistenceModule struct {
+	bus          modules.Bus
+	config       modules.PersistenceConfig
+	genesisState modules.PersistenceGenesisState
+
+	blockStore kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
 
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	writeContext *PostgresContext // only one write context is allowed at a time
@@ -36,19 +38,27 @@ const (
 	PersistenceModuleName = "persistence"
 )
 
-func Create(configPath, genesisPath string) (modules.PersistenceModule, error) {
-	m := new(PersistenceModule)
-	c, err := m.InitConfig(configPath)
-	if err != nil {
-		return nil, err
+func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	return new(persistenceModule).Create(runtimeMgr)
+}
+
+func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	var m *persistenceModule
+
+	cfg := runtimeMgr.GetConfig()
+
+	if err := m.ValidateConfig(cfg); err != nil {
+		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
-	cfg := c.(*types.PersistenceConfig)
-	g, err := m.InitGenesis(genesisPath)
-	if err != nil {
-		return nil, err
+	persistenceCfg := cfg.GetPersistenceConfig()
+
+	genesis := runtimeMgr.GetGenesis()
+	if err := m.ValidateGenesis(genesis); err != nil {
+		return nil, fmt.Errorf("genesis validation failed: %w", err)
 	}
-	genesis := g.(*types.PersistenceGenesisState)
-	conn, err := connectToDatabase(cfg.GetPostgresUrl(), cfg.GetNodeSchema())
+	persistenceGenesis := genesis.GetPersistenceGenesisState()
+
+	conn, err := connectToDatabase(persistenceCfg.GetPostgresUrl(), persistenceCfg.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
@@ -57,98 +67,73 @@ func Create(configPath, genesisPath string) (modules.PersistenceModule, error) {
 	}
 	conn.Close(context.TODO())
 
-	blockStore, err := initializeBlockStore(cfg.GetBlockStorePath())
+	blockStore, err := initializeBlockStore(persistenceCfg.GetBlockStorePath())
 	if err != nil {
 		return nil, err
 	}
 
-	persistenceMod := &PersistenceModule{
+	m = &persistenceModule{
 		bus:          nil,
-		postgresURL:  cfg.GetPostgresUrl(),
-		nodeSchema:   cfg.GetNodeSchema(),
-		genesisPath:  genesisPath,
+		config:       persistenceCfg,
+		genesisState: persistenceGenesis,
 		blockStore:   blockStore,
 		writeContext: nil,
 	}
 
 	// Determine if we should hydrate the genesis db or use the current state of the DB attached
-	if shouldHydrateGenesis, err := persistenceMod.shouldHydrateGenesisDb(); err != nil {
+	if shouldHydrateGenesis, err := m.shouldHydrateGenesisDb(); err != nil {
 		return nil, err
 	} else if shouldHydrateGenesis {
 		// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
 		// 		     this forces the genesis state to be reloaded on every node startup until state sync is
 		//           implemented.
 		// NOTE: `populateGenesisState` does not return an error but logs a fatal error if there's a problem
-		persistenceMod.populateGenesisState(genesis)
+		m.populateGenesisState(persistenceGenesis)
 	} else {
 		log.Println("Loading state from previous state...")
 	}
 
-	return persistenceMod, nil
+	return m, nil
 }
 
-func (m *PersistenceModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-	data, err := ioutil.ReadFile(pathToConfigJSON)
-	if err != nil {
-		return
-	}
-	// over arching configuration file
-	rawJSON := make(map[string]json.RawMessage)
-	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToConfigJSON, err.Error())
-	}
-	// persistence specific configuration file
-	config = new(types.PersistenceConfig)
-	err = json.Unmarshal(rawJSON[m.GetModuleName()], config)
-	return
-}
-
-func (m *PersistenceModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
-	data, err := ioutil.ReadFile(pathToGenesisJSON)
-	if err != nil {
-		return
-	}
-	// over arching configuration file
-	rawJSON := make(map[string]json.RawMessage)
-	if err = json.Unmarshal(data, &rawJSON); err != nil {
-		log.Fatalf("[ERROR] an error occurred unmarshalling the %s file: %v", pathToGenesisJSON, err.Error())
-	}
-	// persistence specific configuration file
-	genesis = new(types.PersistenceGenesisState)
-	err = json.Unmarshal(rawJSON[test_artifacts.GetGenesisFileName(m.GetModuleName())], genesis)
-	return
-}
-
-func (m *PersistenceModule) Start() error {
+func (m *persistenceModule) Start() error {
 	log.Println("Starting persistence module...")
 	return nil
 }
 
-func (m *PersistenceModule) Stop() error {
+func (m *persistenceModule) Stop() error {
 	m.blockStore.Stop()
 	return nil
 }
 
-func (m *PersistenceModule) GetModuleName() string {
+func (m *persistenceModule) GetModuleName() string {
 	return PersistenceModuleName
 }
 
-func (m *PersistenceModule) SetBus(bus modules.Bus) {
+func (m *persistenceModule) SetBus(bus modules.Bus) {
 	m.bus = bus
 }
 
-func (m *PersistenceModule) GetBus() modules.Bus {
+func (m *persistenceModule) GetBus() modules.Bus {
 	if m.bus == nil {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
 }
 
-func (m *PersistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
+func (*persistenceModule) ValidateConfig(cfg modules.Config) error {
+	return nil
+}
+
+func (*persistenceModule) ValidateGenesis(genesis modules.GenesisState) error {
+	return nil
+}
+
+func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWContext, error) {
 	if m.writeContext != nil && !m.writeContext.conn.IsClosed() {
 		return nil, fmt.Errorf("write context already exists")
 	}
-	conn, err := connectToDatabase(m.postgresURL, m.nodeSchema)
+	conn, err := connectToDatabase(m.config.GetPostgresUrl(), m.config.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
@@ -168,12 +153,12 @@ func (m *PersistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		blockstore: m.blockStore,
 	}
 
-	return *m.writeContext, nil
+	return m.writeContext, nil
 
 }
 
-func (m *PersistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
-	conn, err := connectToDatabase(m.postgresURL, m.nodeSchema)
+func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceReadContext, error) {
+	conn, err := connectToDatabase(m.config.GetPostgresUrl(), m.config.GetNodeSchema())
 	if err != nil {
 		return nil, err
 	}
@@ -194,20 +179,12 @@ func (m *PersistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	}, nil
 }
 
-func (m *PersistenceModule) ResetContext() error {
-	if m.writeContext != nil {
-		if !m.writeContext.GetTx().Conn().IsClosed() {
-			if err := m.writeContext.Release(); err != nil {
-				log.Println("[TODO][ERROR] Error releasing write context...", err)
-			}
-		}
-		m.writeContext = nil
-	}
-	return nil
+func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
+	return m.blockStore
 }
 
-func (m *PersistenceModule) GetBlockStore() kvstore.KVStore {
-	return m.blockStore
+func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
+	return m.writeContext
 }
 
 func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
@@ -219,7 +196,7 @@ func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 
 // TODO(drewsky): Simplify and externalize the logic for whether genesis should be populated and
 // move the if logic out of this file.
-func (m *PersistenceModule) shouldHydrateGenesisDb() (bool, error) {
+func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	checkContext, err := m.NewReadContext(-1)
 	if err != nil {
 		return false, err

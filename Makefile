@@ -84,6 +84,11 @@ go_protoc-go-inject-tag:
 go_clean_deps:
 	go mod tidy && go mod vendor
 
+.PHONY: go_lint
+## Run all linters that are triggered by the CI pipeline
+go_lint:
+	golangci-lint run ./...
+
 .PHONY: gofmt
 ## Format all the .go files in the project in place.
 gofmt:
@@ -217,7 +222,7 @@ protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = ".")
 	protoc --go_opt=paths=source_relative  -I=./shared/debug/proto        --go_out=./shared/debug       ./shared/debug/proto/*.proto        --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       ./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./shared/indexer/proto      --go_out=./shared/indexer/    ./shared/indexer/proto/*.proto      --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./utility/indexer/proto     --go_out=./utility/indexer/   ./utility/indexer/proto/*.proto     --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  ./persistence/proto/*.proto         --experimental_allow_proto3_optional
 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
 	protoc --go_opt=paths=source_relative  -I=./utility/types/proto       --go_out=./utility/types      ./utility/types/proto/*.proto       --experimental_allow_proto3_optional
@@ -258,15 +263,10 @@ test_all_with_coverage: # generate_mocks
 test_race: # generate_mocks
 	go test ${VERBOSE_TEST} -race ./...
 
-.PHONY: test_utility_module
+.PHONY: test_utility
 ## Run all go utility module unit tests
-test_utility_module: # generate_mocks
-	go test ${VERBOSE_TEST} -p 1 -count=1  ./shared/tests/utility_module/...
-
-.PHONY: test_utility_types
-## Run all go utility types module unit tests
-test_utility_types: # generate_mocks
-	go test ${VERBOSE_TEST} ./utility/types/...
+test_utility: # generate_mocks
+	go test ${VERBOSE_TEST} -p=1 -count=1  ./utility/...
 
 .PHONY: test_shared
 ## Run all go unit tests in the shared module
@@ -394,3 +394,25 @@ gen_genesis_and_config:
 ## Clear the genesis and config files for LocalNet
 clear_genesis_and_config:
 	rm build/config/gen.*.json
+
+.PHONY: check_cross_module_imports
+## Lists cross-module imports
+check_cross_module_imports:
+	$(eval exclude_common=--exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime)
+	echo "persistence:\n"
+	grep ${exclude_common} --exclude-dir=persistence -r "github.com/pokt-network/pocket/persistence" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "utility:\n"
+	grep ${exclude_common} --exclude-dir=utility -r "github.com/pokt-network/pocket/utility" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "consensus:\n"
+	grep ${exclude_common} --exclude-dir=consensus -r "github.com/pokt-network/pocket/consensus" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "telemetry:\n"
+	grep ${exclude_common} --exclude-dir=telemetry -r "github.com/pokt-network/pocket/telemetry" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "p2p:\n"
+	grep ${exclude_common} --exclude-dir=p2p -r "github.com/pokt-network/pocket/p2p" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "runtime:\n"
+	grep ${exclude_common} --exclude-dir=runtime -r "github.com/pokt-network/pocket/runtime" || echo "✅ OK!"
