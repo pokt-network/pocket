@@ -7,7 +7,7 @@ import (
 	"github.com/pokt-network/pocket/shared/debug"
 )
 
-func (m *ConsensusModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
+func (m *consensusModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
 	switch debugMessage.Action {
 	case debug.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
 		m.resetToGenesis(debugMessage)
@@ -23,7 +23,7 @@ func (m *ConsensusModule) HandleDebugMessage(debugMessage *debug.DebugMessage) e
 	return nil
 }
 
-func (m *ConsensusModule) GetNodeState() typesCons.ConsensusNodeState {
+func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	leaderId := typesCons.NodeId(0)
@@ -40,7 +40,7 @@ func (m *ConsensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	}
 }
 
-func (m *ConsensusModule) resetToGenesis(_ *debug.DebugMessage) {
+func (m *consensusModule) resetToGenesis(_ *debug.DebugMessage) {
 	m.nodeLog(typesCons.DebugResetToGenesis)
 
 	m.Height = 0
@@ -54,12 +54,12 @@ func (m *ConsensusModule) resetToGenesis(_ *debug.DebugMessage) {
 	m.GetBus().GetPersistenceModule().Start() // reload genesis state
 }
 
-func (m *ConsensusModule) printNodeState(_ *debug.DebugMessage) {
+func (m *consensusModule) printNodeState(_ *debug.DebugMessage) {
 	state := m.GetNodeState()
 	m.nodeLog(typesCons.DebugNodeState(state))
 }
 
-func (m *ConsensusModule) triggerNextView(_ *debug.DebugMessage) {
+func (m *consensusModule) triggerNextView(_ *debug.DebugMessage) {
 	m.nodeLog(typesCons.DebugTriggerNextView)
 
 	currentheight := m.Height
@@ -75,7 +75,7 @@ func (m *ConsensusModule) triggerNextView(_ *debug.DebugMessage) {
 	}
 }
 
-func (m *ConsensusModule) togglePacemakerManualMode(_ *debug.DebugMessage) {
+func (m *consensusModule) togglePacemakerManualMode(_ *debug.DebugMessage) {
 	newMode := !m.paceMaker.IsManualMode()
 	if newMode {
 		m.nodeLog(typesCons.DebugTogglePacemakerManualMode("MANUAL"))

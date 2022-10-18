@@ -7,18 +7,23 @@ import (
 	"strconv"
 
 	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/modules"
+)
+
+// TODO : Deprecate these two constants when we change the persistenceRWContext interface to pass the `paramName`
+const (
+	BlocksPerSessionParamName       = "blocks_per_session"
+	ServiceNodesPerSessionParamName = "service_nodes_per_session"
 )
 
 // TODO (Team) BUG setting parameters twice on the same height causes issues. We need to move the schema away from 'end_height' and
 // more towards the height_constraint architecture
 
 func (p PostgresContext) GetBlocksPerSession(height int64) (int, error) {
-	return p.GetIntParam(modules.BlocksPerSessionParamName, height)
+	return p.GetIntParam(BlocksPerSessionParamName, height)
 }
 
 func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) {
-	return p.GetIntParam(modules.ServiceNodesPerSessionParamName, height)
+	return p.GetIntParam(ServiceNodesPerSessionParamName, height)
 }
 
 func (p PostgresContext) InitParams() error {

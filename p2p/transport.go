@@ -14,24 +14,24 @@ const (
 )
 
 func CreateListener(cfg modules.P2PConfig) (typesP2P.Transport, error) {
-	switch cfg.IsEmptyConnType() { // TECHDEBT kept in switch format because this should be an enum not a bool
+	switch cfg.GetIsEmptyConnectionType() { // TECHDEBT kept in switch format because this should be an enum not a bool
 	case true:
 		return createEmptyListener(cfg)
 	case false:
 		return createTCPListener(cfg)
 	default:
-		return nil, fmt.Errorf("unsupported connection type for listener: %v", cfg.IsEmptyConnType())
+		return nil, fmt.Errorf("unsupported connection type for listener: %v", cfg.GetIsEmptyConnectionType())
 	}
 }
 
 func CreateDialer(cfg modules.P2PConfig, url string) (typesP2P.Transport, error) {
-	switch cfg.IsEmptyConnType() {
+	switch cfg.GetIsEmptyConnectionType() {
 	case true:
 		return createEmptyDialer(cfg, url)
 	case false:
 		return createTCPDialer(cfg, url)
 	default:
-		return nil, fmt.Errorf("unsupported connection type for dialer: %v", cfg.IsEmptyConnType())
+		return nil, fmt.Errorf("unsupported connection type for dialer: %v", cfg.GetIsEmptyConnectionType())
 	}
 }
 

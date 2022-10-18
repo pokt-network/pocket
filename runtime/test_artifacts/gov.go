@@ -1,9 +1,11 @@
 package test_artifacts
 
 import (
+	"math/big"
+
+	typesPers "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
-	"math/big"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 )
@@ -15,7 +17,7 @@ var (
 )
 
 func DefaultParams() modules.Params {
-	return &MockParams{
+	return &typesPers.Params{
 		BlocksPerSession:                         4,
 		AppMinimumStake:                          types.BigIntToString(big.NewInt(15000000000)),
 		AppMaxChains:                             15,
