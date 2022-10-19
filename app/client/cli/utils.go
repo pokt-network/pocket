@@ -94,8 +94,7 @@ func confirmation(pwd string) bool {
 // returns the JSON bytes of the signed transaction
 func prepareTxJson(msg utilityTypes.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
 	var err error
-	codec := codec.GetCodec()
-	anyMsg, err := codec.ToAny(msg)
+	anyMsg, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
 		return nil, err
 	}
