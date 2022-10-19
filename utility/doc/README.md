@@ -158,7 +158,7 @@ ApplyBlock(Height int64, proposer []byte, transactions [][]byte, lastBlockByzant
 
 ## Protocols
 
-##### Session Protocol
+### Session Protocol
 `Pocket` implements the V1 Utility Specification's Session Protocol by satisfying the following interface
 ```golang
 type Session interface {
