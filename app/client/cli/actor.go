@@ -15,6 +15,8 @@ func init() {
 	rootCmd.AddCommand(NewActorCommands(attachPwdFlagToSubcommands())...)
 
 	rawChainCleanupRegex = regexp.MustCompile(rawChainCleanupExpr)
+
+	oneMillion = big.NewInt(1e6)
 }
 
 const (
@@ -26,6 +28,7 @@ const (
 var (
 	pwd                  string
 	rawChainCleanupRegex *regexp.Regexp
+	oneMillion           *big.Int
 )
 
 type (
@@ -292,7 +295,7 @@ func validateStakeAmount(amount string) error {
 
 	sr := big.NewInt(stakingRecommendationAmount)
 	if typesUtil.BigIntLessThan(am, sr) {
-		fmt.Printf("The amount you are staking for is below the recommendation of %d POKT, would you still like to continue? y|n\n", sr.Div(sr, big.NewInt(1000000)).Int64())
+		fmt.Printf("The amount you are staking for is below the recommendation of %d POKT, would you still like to continue? y|n\n", sr.Div(sr, oneMillion).Int64())
 		if !confirmation(pwd) {
 			return fmt.Errorf("aborted")
 		}
