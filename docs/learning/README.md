@@ -14,15 +14,15 @@ _This is a live document on how to get ramped up on all the knowledge you need t
   - [Cryptography](#cryptography)
   - [P2P](#p2p)
   - [Blogs](#blogs)
-    - [Blogs - Specific Articles](#blogs---specific-articles)
-    - [Blogs - General Subscription Suggestions](#blogs---general-subscription-suggestions)
+    - [Specific Article Recommendations](#specific-article-recommendations)
+    - [General Subscription Recommendations](#general-subscription-recommendations)
 - [Non-suggested reads](#non-suggested-reads)
 
 ## Where to Start?
 
 This is a general set of steps we have found to help new core team members onboard to Protocol development.
 
-1. Watch our [2022 Infracon presentation on v1](https://www.youtube.com/watch?v=NJoZyzQuJVc) to get a general idea of how everything works.
+1. (est 43min) Watch our [2022 Infracon presentation on v1](https://www.youtube.com/watch?v=NJoZyzQuJVc) to get a general idea of how everything works.
 2. Run a **LocalNet** by following the [development guide](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md).
 
    _TIP: Run `make` from the root repo to see the different commands available._
@@ -133,7 +133,7 @@ This is a general set of technical links and recommended reading our team has fo
 
 ### Blogs
 
-#### Blogs - Specific Articles
+#### Specific Article Recommendations
 
 - [Aptos engineering blog](https://aptoslabs.medium.com/)
   - [The Evolution of State Sync](https://medium.com/aptoslabs/the-evolution-of-state-sync-the-path-to-100k-transactions-per-second-with-sub-second-latency-at-52e25a2c6f10)
@@ -143,7 +143,7 @@ This is a general set of technical links and recommended reading our team has fo
   - [5P;1R - Bitcoin's Elliptic Curve Cryptography](https://olshansky.substack.com/p/5p1r-bitcoins-elliptic-curve-cryptography)
   - [5P;1R - Jellyfish Merkle Tree](https://olshansky.substack.com/p/5p1r-jellyfish-merkle-tree)
 
-#### Blogs - General Subscription Suggestions
+#### General Subscription Recommendations
 
 - [Pocket Network Blog](https://www.blog.pokt.network/)
 - [OG Pocket Network Blog](https://medium.com/@POKTnetwork)
