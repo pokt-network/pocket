@@ -53,7 +53,7 @@ func NewActorCommands(cmdOptions []cmdOption) []*cobra.Command {
 		cmd := &cobra.Command{
 			Use:     cmdDef.Name,
 			Short:   fmt.Sprintf("%s actor specific commands", cmdDef.Name),
-			Aliases: []string{strings.ToLower(cmdDef.Name), typesUtil.GetActorName(cmdDef.ActorType)},
+			Aliases: []string{strings.ToLower(cmdDef.Name), cmdDef.ActorType.GetName()},
 			Args:    cobra.ExactArgs(0),
 		}
 		cmd.AddCommand(newActorCommands(cmdDef)...)
