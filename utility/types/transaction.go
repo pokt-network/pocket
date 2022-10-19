@@ -158,8 +158,7 @@ func (tx *Transaction) ToTxResult(height int64, index int, signer, recipient, ms
 }
 
 func (tx *Transaction) GetMessage() (proto.Message, error) {
-	cdc := codec.GetCodec()
-	return cdc.FromAny(tx.Msg)
+	return codec.GetCodec().FromAny(tx.Msg)
 }
 
 func TransactionHash(transactionProtoBytes []byte) string {
