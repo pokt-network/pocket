@@ -18,7 +18,8 @@ const (
 	ServiceNodeMaxPauseBlocksParamName     = "service_node_max_pause_blocks"
 	ServiceNodesPerSessionParamName        = "service_nodes_per_session"
 
-	FishermanMinimumStakeParamName       = "fisherman_minimum_stake"
+	FishermanMinimumStakeParamName = "fisherman_minimum_stake"
+	// DISCUSS: Should this parameter be removed?
 	FishermanMaxChainsParamName          = "fisherman_max_chains"
 	FishermanUnstakingBlocksParamName    = "fisherman_unstaking_blocks"
 	FishermanMinimumPauseBlocksParamName = "fisherman_minimum_pause_blocks"
