@@ -177,14 +177,14 @@ type Session interface {
 
 1) Create a session object from the seed data
 2) Create a key concatenating and hashing the seed data
-    - `sessionHeight + blockHash + geoZone + relayChain + appPublicKey`
+    - `key = Hash(sessionHeight + blockHash + geoZone + relayChain + appPublicKey)`
 3) Get an ordered list of the public keys of serviceNodes who are:
     - actively staked
     - staked within geo-zone
     - staked for relay-chain
 4) Pseudo-insert the session `key` string into the list and find the first actor directly below on the list
 5) Determine a new seedKey with the following formula: ` key = Hash( key + actor1PublicKey )` where `actor1PublicKey` is the key determined in step 4
-6) Repeat steps 5 and 6 until all N serviceNodes are found
+6) Repeat steps 4 and 5 until all N serviceNodes are found
 7) Do steps 3 - 6 for Fishermen as well
 
 ### FAQ

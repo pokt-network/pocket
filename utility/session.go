@@ -68,7 +68,7 @@ func (s *session) sessionKey() ([]byte, types.Error) {
 	if err != nil {
 		return nil, types.ErrNewPublicKeyFromBytes(err)
 	}
-	return s.concat(sessionHeightBytes, blockHashBz, s.geoZone.Bytes(), s.relayChain.Bytes(), appPubKey.Bytes()), nil
+	return concat(sessionHeightBytes, blockHashBz, s.geoZone.Bytes(), s.relayChain.Bytes(), appPubKey.Bytes()), nil
 }
 
 // uses the current 'world state' to determine the service nodes in the session
@@ -130,7 +130,7 @@ func (s *session) GetSessionHeight() int64 {
 	return s.sessionHeight
 }
 
-func (s *session) concat(b ...[]byte) (result []byte) {
+func concat(b ...[]byte) (result []byte) {
 	for _, bz := range b {
 		result = append(result, bz...)
 	}
