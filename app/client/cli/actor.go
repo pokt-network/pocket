@@ -45,8 +45,8 @@ func NewActorCommands(cmdOptions []cmdOption) []*cobra.Command {
 		{"Validator", typesUtil.ActorType_Validator, cmdOptions},
 	}
 
-	cmds := make([]*cobra.Command, 0)
-	for _, cmdDef := range actorCmdDefs {
+	cmds := make([]*cobra.Command, len(actorCmdDefs))
+	for i, cmdDef := range actorCmdDefs {
 		cmd := &cobra.Command{
 			Use:     cmdDef.Name,
 			Short:   fmt.Sprintf("%s actor specific commands", cmdDef.Name),
@@ -54,7 +54,7 @@ func NewActorCommands(cmdOptions []cmdOption) []*cobra.Command {
 			Args:    cobra.ExactArgs(0),
 		}
 		cmd.AddCommand(newActorCommands(cmdDef)...)
-		cmds = append(cmds, cmd)
+		cmds[i] = cmd
 	}
 	return cmds
 }
