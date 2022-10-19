@@ -289,6 +289,6 @@ func getSignBytes(msg Message) []byte {
 	if err != nil {
 		log.Fatalf("must marshal %v", err)
 	}
-	// DISCUSS(team): should we also sort the JSON like in V0?
+	// DISCUSS(#142): should we also sort the JSON like in V0?
 	return bz
 }
