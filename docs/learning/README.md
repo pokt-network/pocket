@@ -22,32 +22,49 @@ _This is a live document on how to get ramped up on all the knowledge you need t
 
 This is a general set of steps we have found to help new core team members onboard to Protocol development.
 
-1. (est 43min) Watch our [2022 Infracon presentation on v1](https://www.youtube.com/watch?v=NJoZyzQuJVc) to get a general idea of how everything works.
-2. Run a **LocalNet** by following the [development guide](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md).
+1. Watch our [2022 Infracon presentation on v1](https://www.youtube.com/watch?v=NJoZyzQuJVc) to get a general idea of how everything works. _(43 mins)_
 
-   _TIP: Run `make` from the root repo to see the different commands available._
+   - This will help you understand the core building components of a Pocket V1 Node
 
-3. Get an understanding of the the V1 spec summaries by reading about the [4 modules in our docs](https://docs.pokt.network/home/learn/future).
-4. **Optional**: If you’re interested, you can view the [_OG v0 Pocket whitepaper_](https://pocket-network-assets.s3-us-west-2.amazonaws.com/pdfs/Pocket-Network-Whitepaper-v0.3.0.pdf).
-5. Over time, **and not all at once**, you can start making your way through and updating the [V1 specifications](https://github.com/pokt-network/pocket-network-protocol).
+2. Run a **LocalNet** by following the [development guide](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md). _(1-2 hours)_
 
-   _TIP: We hope to publish it with V1 benchmarks on arxiv one day, so this is your change to contribute 🙂_
+   - This will get you set up to start contributing
+   - Reach out to the core team in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel if you hit any issues
+   - _TIP: Once you clone the Github repo, you can `cd pocket` and run `make` from to see all the available commands._
 
-   5.1 **Optional**: If you're a core team member or heavily involved in the project, reach out to the team about getting access to the V1 specification research documents.
+3. Get an understanding of the the V1 spec summaries by reading about the [4 modules in our docs](https://docs.pokt.network/home/learn/future). _(3-5 hours)_
+
+   - This will get you understand the spec foundations for Pocket V1
+
+4. **Optional**: If you’re interested, you can view the [_OG v0 Pocket whitepaper_](https://pocket-network-assets.s3-us-west-2.amazonaws.com/pdfs/Pocket-Network-Whitepaper-v0.3.0.pdf). _(10-12 hours)_
+
+   - This can provide both valuable and interesting historical context into Pocket
+
+5. Over time, **and not all at once**, you can start making your way through and updating the [V1 specifications](https://github.com/pokt-network/pocket-network-protocol). _(30 hours)_
+
+   - Mastering these concepts won't be easy but will make you an expert on Pocket V1
+   - _TIP: We hope to publish it with V1 benchmarks on arxiv one day, so this is your change to contribute 🙂_
+   - **Optional**: If you're a core team member or heavily involved in the project, reach out to the team about getting access to the V1 specification research documents.
     <!-- For internal use only. If you're external and are reading this, reach out to the team.
-        These decks from October 2021 might also help:
-          - [Utility](https://docs.google.com/presentation/d/1NU0PnegtBm5ioLu0VQMiluWT4usHnavDKrGvS3p8QdM/edit)
-          - [Persistence](https://docs.google.com/presentation/d/1qDA-pRMT1KV9byUAU49bvd_5seaILPAh6i3vA7j5l8o/edit)
-          - [P2p](https://docs.google.com/presentation/d/1CLeAcGJbM_iP76vnCoHreU1chB9vFWIYWAwQHa-MPbc/edit)
-          - [Consensus](https://docs.google.com/presentation/d/18CtSxxLLHY1N7HEJtja633mVF1_a9blaE2fe2-WgGAo/edit)
-    -->
+       These decks from October 2021 might also help:
+         - [Utility](https://docs.google.com/presentation/d/1NU0PnegtBm5ioLu0VQMiluWT4usHnavDKrGvS3p8QdM/edit)
+         - [Persistence](https://docs.google.com/presentation/d/1qDA-pRMT1KV9byUAU49bvd_5seaILPAh6i3vA7j5l8o/edit)
+         - [P2p](https://docs.google.com/presentation/d/1CLeAcGJbM_iP76vnCoHreU1chB9vFWIYWAwQHa-MPbc/edit)
+         - [Consensus](https://docs.google.com/presentation/d/18CtSxxLLHY1N7HEJtja633mVF1_a9blaE2fe2-WgGAo/edit)
+   -->
 
-6. Start getting acquainted with the code structure by looking at the [docs on the shared architecture](https://github.com/pokt-network/pocket/tree/main/shared).
-7. View our [V1 Roadmap](https://github.com/pokt-network/pocket/blob/main/docs/roadmap/README.md).
-8. Get a sense of all the open issues and tickets [in out Github project](https://github.com/orgs/pokt-network/projects/142/views/12).
-9. If you don't already have a starter task, pick one from [Dework](https://app.dework.xyz/pokt-network), our [open issues](https://github.com/pokt-network/pocket/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) or ask the team in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel.
+6. Start getting acquainted with the code structure by looking at the [docs on the shared architecture](https://github.com/pokt-network/pocket/tree/main/shared). _(1 hour)_
 
-10. Jump on a call and pair code!
+   - This will help you understand the code architecture of Pocket V1
+
+7. View our [V1 Roadmap](https://github.com/pokt-network/pocket/blob/main/docs/roadmap/README.md). _(10 mins)_
+
+   - This will give you insight into our development & release timelines
+
+8. Get a sense of all the open issues and tickets [in out Github project](https://github.com/orgs/pokt-network/projects/142/views/12). _(1 hour)_
+9. If you don't already have a starter task, pick one from [Dework](https://app.dework.xyz/pokt-network), our [open issues](https://github.com/pokt-network/pocket/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc) or ask the team in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel. _(1 hour)_
+
+10. Jump on a call and pair code! _(∞ and beyond)_
 
 - If you need a walk-through of the code and some pointers before getting started, **jump on a call!**
 - If you need to take your time to understand the problem and the code first, do so, and then **jump on a call!**
