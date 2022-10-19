@@ -52,5 +52,9 @@ coverage.out
 # Output of `make build_and_watch`
 main
 
+# generated RPC server and client from openapi.yaml
+rpc/server.gen.go
+rpc/client.gen.go
+
 # Ignored generated files by build/config/main.go
 build/config/gen*.json
