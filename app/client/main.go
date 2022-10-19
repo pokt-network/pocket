@@ -3,7 +3,6 @@ package main
 // TODO(team): discuss & design the long-term solution to this client.
 
 import (
-	"log"
 	"os"
 
 	"github.com/pokt-network/pocket/logger"
@@ -47,8 +46,6 @@ var p2pMod modules.P2PModule
 // A consensus module is initialized in order to get a list of the validator network
 var consensusMod modules.ConsensusModule
 
-var globalLogger = logger.GlobalLogger()
-
 func main() {
 	var err error
 
@@ -56,21 +53,21 @@ func main() {
 
 	loggerM, err := logger.Create(runtimeMgr)
 	if err != nil {
-		globalLogger.Fatal().Err(err).Msg("Failed to create logger module")
+		logger.Global.Fatal().Err(err).Msg("Failed to create logger module")
 	}
 	loggerMod := loggerM.(modules.LoggerModule)
 
 	consM, err := consensus.Create(runtimeMgr)
 
 	if err != nil {
-		globalLogger.Fatal().Err(err).Msg("Failed to create consensus module")
+		logger.Global.Fatal().Err(err).Msg("Failed to create consensus module")
 	}
 
 	consensusMod = consM.(modules.ConsensusModule)
 
 	p2pM, err := p2p.Create(runtimeMgr)
 	if err != nil {
-		globalLogger.Fatal().Err(err).Msg("Failed to create p2p module")
+		logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
 	}
 	p2pMod = p2pM.(modules.P2PModule)
 
@@ -80,7 +77,7 @@ func main() {
 	// module that NOOPs (per the configs above) is injected.
 	telemetryM, err := telemetry.Create(runtimeMgr)
 	if err != nil {
-		globalLogger.Fatal().Err(err).Msg("Failed to create NOOP telemetry module")
+		logger.Global.Fatal().Err(err).Msg("Failed to create NOOP telemetry module")
 	}
 	telemetryMod := telemetryM.(modules.TelemetryModule)
 
@@ -110,7 +107,7 @@ func promptGetInput() (string, error) {
 	}
 
 	if err != nil {
-		log.Printf("Prompt failed %v\n", err)
+		logger.Global.Err(err).Msg("Prompt failed")
 		return "", err
 	}
 
@@ -150,7 +147,7 @@ func handleSelect(selection string) {
 		}
 		sendDebugMessage(m)
 	default:
-		log.Println("Selection not yet implemented...", selection)
+		logger.Global.Error().Str("selection", selection).Msg("not yet implemented")
 	}
 }
 
@@ -158,7 +155,7 @@ func handleSelect(selection string) {
 func broadcastDebugMessage(debugMsg *debug.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
+		logger.Global.Fatal().Err(err).Msg("Failed to create Any proto")
 	}
 
 	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
@@ -169,7 +166,7 @@ func broadcastDebugMessage(debugMsg *debug.DebugMessage) {
 	for _, val := range consensusMod.ValidatorMap() {
 		addr, err := pocketCrypto.NewAddress(val.GetAddress())
 		if err != nil {
-			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
+			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 		}
 		p2pMod.Send(addr, anyProto, debug.PocketTopic_DEBUG_TOPIC)
 	}
@@ -179,14 +176,14 @@ func broadcastDebugMessage(debugMsg *debug.DebugMessage) {
 func sendDebugMessage(debugMsg *debug.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
+		logger.Global.Fatal().Err(err).Msg("Failed to create Any proto")
 	}
 
 	var validatorAddress []byte
 	for _, val := range consensusMod.ValidatorMap() {
 		validatorAddress, err = pocketCrypto.NewAddress(val.GetAddress())
 		if err != nil {
-			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
+			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 		}
 		break
 	}

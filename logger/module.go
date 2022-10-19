@@ -13,21 +13,17 @@ type loggerModule struct {
 	config modules.LoggerConfig
 }
 
-// Other loggers - main and ones injected in modules are branched out of mainLogger.
+// All loggers branch out of mainLogger, that way configuration changes to mainLogger propagate to others.
 var mainLogger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 
 // The idea is to create a logger for each module, so that we can easily filter logs by module.
-// Keeping global logger too, because sometimes we need to log outside of modules.
-func GlobalLogger() modules.Logger {
-
-	// Should this be "module" = "none" instead?
-	return mainLogger.With().Str("logger", "global").Logger()
-}
+// But we also need a global logger, because sometimes we need to log outside of modules, e.g. when the process just
+// started, and modules are not initiated yet.
+var Global = new(loggerModule).CreateLoggerForModule("global")
 
 var _ modules.LoggerModule = &loggerModule{}
 
 const (
-	// Should this be a "log" module instead, so we can have "log" in the config file? (end envar too: e.g. POCKET_LOG_LEVEL)
 	ModuleName = "logger"
 )
 
@@ -40,19 +36,12 @@ func (*loggerModule) CreateLoggerForModule(moduleName string) modules.Logger {
 }
 
 func (*loggerModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	var m *loggerModule
-
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-
-	m.InitLogger()
-
 	cfg := runtimeMgr.GetConfig()
-	if err := m.ValidateConfig(cfg); err != nil {
-		m.logger.Err(err).Msg("config validation failed")
-		return nil, err
+	m := loggerModule{
+		config: cfg.GetLoggerConfig(),
 	}
 
-	m.config = cfg.GetLoggerConfig()
+	m.InitLogger()
 
 	zlLevel, err := zerolog.ParseLevel(m.config.GetLevel())
 	if err != nil {
@@ -66,61 +55,36 @@ func (*loggerModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, erro
 		mainLogger.Info().Msg("using pretty log format")
 	}
 
-	return m, nil
+	return &m, nil
 }
 
-// func (lm *loggerModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-// 	data, err := ioutil.ReadFile(pathToConfigJSON)
-// 	if err != nil {
-// 		return
-// 	}
-// 	// over arching configuration file
-// 	rawJSON := make(map[string]json.RawMessage)
-// 	if err = json.Unmarshal(data, &rawJSON); err != nil {
-// 		lm.logger.Fatal().Err(err).Str("path", pathToConfigJSON).Msg("an error occurred unmarshalling the config file")
-// 	}
-
-// 	loggerConfig := &LoggerConfig{}
-
-// 	// Protojson is necessary to unmarshal the enum values
-// 	if err = protojson.Unmarshal(rawJSON[lm.GetModuleName()], loggerConfig); err != nil {
-// 		lm.logger.Fatal().Err(err).Str("path", pathToConfigJSON).Msg("can't unmarshal logger config")
-// 	}
-
-// 	return loggerConfig, err
-// }
-
-func (lm *loggerModule) Start() error {
+func (m *loggerModule) Start() error {
 	return nil
 }
 
-func (lm *loggerModule) Stop() error {
+func (m *loggerModule) Stop() error {
 	return nil
 }
 
-func (lm *loggerModule) GetModuleName() string {
+func (m *loggerModule) GetModuleName() string {
 	return ModuleName
 }
 
-func (lm *loggerModule) SetBus(bus modules.Bus) {
-	lm.bus = bus
+func (m *loggerModule) SetBus(bus modules.Bus) {
+	m.bus = bus
 }
 
-func (lm *loggerModule) GetBus() modules.Bus {
-	if lm.bus == nil {
-		lm.logger.Fatal().Msg("Bus is not initialized")
+func (m *loggerModule) GetBus() modules.Bus {
+	if m.bus == nil {
+		m.logger.Fatal().Msg("Bus is not initialized")
 	}
-	return lm.bus
+	return m.bus
 }
 
-func (*loggerModule) ValidateConfig(cfg modules.Config) error {
-	return nil
+func (m *loggerModule) InitLogger() {
+	m.logger = m.CreateLoggerForModule(m.GetModuleName())
 }
 
-func (lm *loggerModule) InitLogger() {
-	lm.logger = lm.CreateLoggerForModule(lm.GetModuleName())
-}
-
-func (lm *loggerModule) GetLogger() modules.Logger {
-	return lm.logger
+func (m *loggerModule) GetLogger() modules.Logger {
+	return m.logger
 }

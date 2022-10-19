@@ -154,10 +154,6 @@ func (m bus) GetLoggerModule() modules.LoggerModule {
 	return m.logger
 }
 
-func (m *bus) GetClock() clock.Clock {
-	return m.clock
-}
-
 func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {
 	return m.runtimeMgr
 }

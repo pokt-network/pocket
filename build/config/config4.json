@@ -31,5 +31,9 @@
     "enabled": true,
     "address": "0.0.0.0:9000",
     "endpoint": "/metrics"
+  },
+  "logger": {
+    "level": "debug",
+    "format": "pretty"
   }
 }
