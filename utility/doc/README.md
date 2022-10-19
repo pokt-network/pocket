@@ -159,7 +159,8 @@ ApplyBlock(Height int64, proposer []byte, transactions [][]byte, lastBlockByzant
 ## Protocols
 
 ### Session Protocol
-`Pocket` implements the V1 Utility Specification's Session Protocol by satisfying the following interface
+`Pocket` implements the V1 Utility Specification's Session Protocol by satisfying the following interface:
+
 ```golang
 type Session interface {
 	NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application modules.Actor) (Session, types.Error)
