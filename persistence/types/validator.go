@@ -26,11 +26,11 @@ var ValidatorActor ProtocolActorSchema = &ValidatorSchema{
 }
 
 func (actor *ValidatorSchema) InsertQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, _ []string, height int64) string {
-	return Insert(BaseActor{
+	return Insert(&Actor{
 		Address:         address,
 		PublicKey:       publicKey,
-		StakedTokens:    stakedTokens,
-		OutputAddress:   outputAddress,
+		StakedAmount:    stakedTokens,
+		Output:          outputAddress,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 	},
