@@ -127,7 +127,7 @@ If no changes are desired for the parameter, just enter the current param value 
 			if err != nil {
 				return err
 			}
-			// DISCUSS(team): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
+			// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
 			fmt.Println(resp)
 
 			return nil
@@ -185,7 +185,7 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// DISCUSS(team): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
+			// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
 			fmt.Println(resp)
 
 			return nil
@@ -225,7 +225,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// DISCUSS(team): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
+			// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
 			fmt.Println(resp)
 
 			return nil
@@ -265,7 +265,7 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// DISCUSS(team): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
+			// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
 			fmt.Println(resp)
 
 			return nil

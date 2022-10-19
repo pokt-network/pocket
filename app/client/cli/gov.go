@@ -68,7 +68,7 @@ func govCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
-				// DISCUSS(team): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
+				// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
 				fmt.Println(resp)
 
 				return nil
