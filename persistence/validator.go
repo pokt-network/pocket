@@ -15,31 +15,33 @@ func (p PostgresContext) GetValidator(address []byte, height int64) (operator, p
 	actor, err := p.GetActor(types.ValidatorActor, address, height)
 	operator = actor.Address
 	publicKey = actor.PublicKey
-	stakedTokens = actor.StakedTokens
-	serviceURL = actor.ActorSpecificParam
-	outputAddress = actor.OutputAddress
+	stakedTokens = actor.StakedAmount
+	serviceURL = actor.GenericParam
+	outputAddress = actor.Output
 	pausedHeight = actor.PausedHeight
 	unstakingHeight = actor.UnstakingHeight
 	return
 }
 
 func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, output []byte, _ bool, _ int32, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error {
-	return p.InsertActor(types.ValidatorActor, types.BaseActor{
-		Address:            hex.EncodeToString(address),
-		PublicKey:          hex.EncodeToString(publicKey),
-		StakedTokens:       stakedTokens,
-		ActorSpecificParam: serviceURL,
-		OutputAddress:      hex.EncodeToString(output),
-		PausedHeight:       pausedHeight,
-		UnstakingHeight:    unstakingHeight,
+	return p.InsertActor(types.ValidatorActor, &types.Actor{
+		ActorType:       types.ActorType_Val,
+		Address:         hex.EncodeToString(address),
+		PublicKey:       hex.EncodeToString(publicKey),
+		StakedAmount:    stakedTokens,
+		GenericParam:    serviceURL,
+		Output:          hex.EncodeToString(output),
+		PausedHeight:    pausedHeight,
+		UnstakingHeight: unstakingHeight,
 	})
 }
 
 func (p PostgresContext) UpdateValidator(address []byte, serviceURL string, stakedAmount string) error {
-	return p.UpdateActor(types.ValidatorActor, types.BaseActor{
-		Address:            hex.EncodeToString(address),
-		StakedTokens:       stakedAmount,
-		ActorSpecificParam: serviceURL,
+	return p.UpdateActor(types.ValidatorActor, &types.Actor{
+		ActorType:    types.ActorType_Val,
+		Address:      hex.EncodeToString(address),
+		StakedAmount: stakedAmount,
+		GenericParam: serviceURL,
 	})
 }
 
