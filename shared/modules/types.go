@@ -25,12 +25,12 @@ type Config interface {
 
 type BaseConfig interface {
 	GetRootDirectory() string
-	GetPrivateKey() string // TODO (pocket/issues/150) better architecture for key management (keybase, keyfiles, etc.)
+	GetPrivateKey() string // TODO (#150) better architecture for key management (keybase, keyfiles, etc.)
 }
 
 type ConsensusConfig interface {
 	GetMaxMempoolBytes() uint64
-	GetPrivateKey() string // TODO (pocket/issues/150) better architecture for key management (keybase, keyfiles, etc.)
+	GetPrivateKey() string // TODO (#150) better architecture for key management (keybase, keyfiles, etc.)
 }
 
 type PacemakerConfig interface {

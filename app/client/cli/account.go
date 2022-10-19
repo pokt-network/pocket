@@ -36,7 +36,7 @@ func accountCommands() []*cobra.Command {
 			Aliases: []string{"send"},
 			Args:    cobra.ExactArgs(3),
 			RunE: func(cmd *cobra.Command, args []string) error {
-				// TODO(pocket/issues/150): update when we have keybase
+				// TODO(#150): update when we have keybase
 				pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 				if err != nil {
 					return err

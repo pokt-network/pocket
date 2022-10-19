@@ -87,7 +87,7 @@ If the node is currently staked at X and you submit an update with new stake Y. 
 If no changes are desired for the parameter, just enter the current param value just as before.`,
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(pocket/issues/150): update when we have keybase
+			// TODO(#150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
@@ -148,7 +148,7 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Stakes a new <amount> for the %s actor with address <fromAddr> for the specified <RelayChainIDs> and <serviceURI>.`, cmdDef.Name),
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(pocket/issues/150): update when we have keybase
+			// TODO(#150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
@@ -201,7 +201,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Unstakes the prevously staked tokens for the %s actor with address <fromAddr>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(pocket/issues/150): update when we have keybase
+			// TODO(#150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
@@ -241,7 +241,7 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Unpauses the %s actor with address <fromAddr>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(pocket/issues/150): update when we have keybase
+			// TODO(#150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
