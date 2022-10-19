@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -138,7 +139,7 @@ func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transactio
 	signer, err := crypto.GeneratePrivateKey()
 	require.NoError(t, err)
 
-	startingAmount = test_artifacts.DefaultAccountAmount
+	startingAmount = defaults.DefaultAccountAmount
 	signerAddr := signer.Address()
 	require.NoError(t, ctx.SetAccountAmount(signerAddr, startingAmount))
 	amountSent = defaultSendAmount

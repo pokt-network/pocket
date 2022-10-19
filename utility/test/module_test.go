@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/modules"
 	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -26,7 +27,7 @@ var (
 	defaultTestingChainsEdited = []string{"0002"}
 	defaultUnstaking           = int64(2017)
 	defaultSendAmount          = big.NewInt(10000)
-	defaultNonceString         = utilTypes.BigIntToString(test_artifacts.DefaultAccountAmount)
+	defaultNonceString         = utilTypes.BigIntToString(defaults.DefaultAccountAmount)
 	defaultSendAmountString    = utilTypes.BigIntToString(defaultSendAmount)
 	testSchema                 = "test_schema"
 )
