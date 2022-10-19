@@ -81,7 +81,7 @@ func newStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 	}
 
 	custodialStakeCmd := &cobra.Command{
-		Use:   "Custodial <fromAddr> <amount> <RelayChainIDs> <serviceURI>",
+		Use:   "Custodial <fromAddr> <amount> <relayChainIDs> <serviceURI>",
 		Short: "Stake a node in the network. Custodial stake uses the same address as operator/output for rewards/return of staked funds.",
 		Long: `Stake the node into the network, making it available for service.
 Will prompt the user for the <fromAddr> account passphrase. If the node is already staked, this transaction acts as an *update* transaction.
@@ -146,9 +146,9 @@ If no changes are desired for the parameter, just enter the current param value 
 
 func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 	editStakeCmd := &cobra.Command{
-		Use:   "EditStake <fromAddr> <amount> <RelayChainIDs> <serviceURI>",
-		Short: "EditStake <fromAddr> <amount> <RelayChainIDs> <serviceURI>",
-		Long:  fmt.Sprintf(`Stakes a new <amount> for the %s actor with address <fromAddr> for the specified <RelayChainIDs> and <serviceURI>.`, cmdDef.Name),
+		Use:   "EditStake <fromAddr> <amount> <relayChainIDs> <serviceURI>",
+		Short: "EditStake <fromAddr> <amount> <relayChainIDs> <serviceURI>",
+		Long:  fmt.Sprintf(`Stakes a new <amount> for the %s actor with address <fromAddr> for the specified <relayChainIDs> and <serviceURI>.`, cmdDef.Name),
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// TODO(#150): update when we have keybase
