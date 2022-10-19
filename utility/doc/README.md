@@ -164,16 +164,17 @@ ApplyBlock(Height int64, proposer []byte, transactions [][]byte, lastBlockByzant
 ```golang
 type Session interface {
 	NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application modules.Actor) (Session, types.Error)
-	GetServiceNodes() []modules.Actor // the ServiceNodes providing Web3 to the application
-	GetFishermen() []modules.Actor    // the Fishermen monitoring the serviceNodes
-	GetApplication() modules.Actor    // the Application consuming the web3 access
-	GetRelayChain() RelayChain        // the chain identifier of the web3
-	GetGeoZone() GeoZone              // the geolocation zone where all are registered
+	GetServiceNodes() []modules.Actor // the ServiceNodes providing Web3 access to the application
+	GetFishermen() []modules.Actor    // the Fishermen monitoring the ServiceNodes
+	GetApplication() modules.Actor    // the Application consuming Web3 access
+	GetRelayChain() RelayChain        // the identifier of the web3 relay chain
+	GetGeoZone() GeoZone              // the geolocation zone where the application is registered
 	GetSessionHeight() int64          // the block height when the session started
 }
 ```
 
-The general flow is:
+#### Session Creation Flow
+
 1) Create a session object from the seed data
 2) Create a key concatenating and hashing the seed data
     - `sessionHeight + blockHash + geoZone + relayChain + appPublicKey`
@@ -182,17 +183,19 @@ The general flow is:
     - staked within geo-zone
     - staked for relay-chain
 4) Pseudo-insert the session `key` string into the list and find the first actor directly below on the list
-5) Determine a new seedKey with the following formula: `Hash( key + actor1PublicKey )`
+5) Determine a new seedKey with the following formula: ` key = Hash( key + actor1PublicKey )` where `actor1PublicKey` is the key determined in step 4
 6) Repeat steps 5 and 6 until all N serviceNodes are found
 7) Do steps 3 - 6 for Fishermen as well
 
-FAQ:
+### FAQ
+
 - Q) why do we hash to find a newKey between every actor selection?
 - A) pseudo-random selection only works if each iteration is re-randomized or it would be subject to lexicographical proximity bias attacks
 
 - Q) what is `WorldState`?
 - A) it represents a queryable view on the internal state of the network at a certain height.
-Session Flow
+### Session Flow
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -201,7 +204,7 @@ sequenceDiagram
     actor Querier
     Querier->>WorldState: Who are my sessionNodes and sessionFish for [app], [relayChain], and [geoZone]
     WorldState->>Session: seedData = height, blockHash, [geoZone], [relayChain], [app]
-    Session->>Session: sessionKey = hash( concat(seedData) )
+    Session->>Session: sessionKey = hash(concat(seedData))
     WorldState->>Session: nodeList = Ordered list of public keys of applicable serviceNodes
     Session->>Session: sessionNodes = pseudorandomSelect(sessionKey, nodeList, max)
     WorldState->>Session: fishList = Ordered list of public keys of applicable fishermen
@@ -209,7 +212,8 @@ sequenceDiagram
     Session->>Querier: SessionNodes, SessionFish
 ```
 
-Pseudorandom Selection
+### Pseudorandom Selection
+
 ```mermaid
 graph TD
     D[Pseudorandom Selection] -->|Ordered list of actors by pubKey|A
