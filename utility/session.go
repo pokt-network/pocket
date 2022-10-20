@@ -78,7 +78,9 @@ func (s *session) sessionKey() ([]byte, types.Error) {
 //    - staked for relay-chain
 // 2) calls `pseudoRandomSelection(serviceNodes, numberOfNodesPerSession)`
 func (s *session) findClosestXServiceNodes() []modules.Actor {
-	// TODO (@andrewnguyen22) implement me
+	// IMPORTANT:
+	// THIS IS A DEMONSTRABLE FUNCTION THAT WILL NOT BE IMPLEMENTED AS SUCH
+	// IT EXISTS IN THIS COMMIT PURELY TO COMMUNICATE THE EXPECTED BEHAVIOR
 	return nil
 }
 
@@ -89,7 +91,9 @@ func (s *session) findClosestXServiceNodes() []modules.Actor {
 //    - staked for relay-chain
 // 2) calls `pseudoRandomSelection(fishermen, numberOfFishPerSession)`
 func (s *session) findClosestYFishermen() []modules.Actor {
-	// TODO (@andrewnguyen22) implement me
+	// IMPORTANT:
+	// THIS IS A DEMONSTRABLE FUNCTION THAT WILL NOT BE IMPLEMENTED AS SUCH
+	// IT EXISTS IN THIS COMMIT PURELY TO COMMUNICATE THE EXPECTED BEHAVIOR
 	return nil
 }
 
@@ -102,7 +106,9 @@ func (s *session) findClosestYFishermen() []modules.Actor {
 // A) pseudo-random selection only works if each iteration is re-randomized
 //    or it would be subject to lexicographical proximity bias attacks
 func (s *session) pseudoRandomSelection(orderedListOfPublicKeys []string, numberOfActorsInSession int) []modules.Actor {
-	// TODO (@andrewnguyen22) implement me
+	// IMPORTANT:
+	// THIS IS A DEMONSTRABLE FUNCTION THAT WILL NOT BE IMPLEMENTED AS SUCH
+	// IT EXISTS IN THIS COMMIT PURELY TO COMMUNICATE THE EXPECTED BEHAVIOR
 	return nil
 }
 
