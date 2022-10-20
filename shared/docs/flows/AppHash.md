@@ -73,16 +73,20 @@ sequenceDiagram
     %% Apply block as leader or replica
     C->>+U: ApplyBlock(height, proposer, txs, lastVals)
     loop [for each op in tx] for each tx in txs
-        U->>+P: Get*/Set*
-        P-->>-U: result, err_code
-        U->>U: Validation logic
-        activate U
-        deactivate U
-        U->>+P: StoreTransaction(tx)
-        P->>P: Store tx locally
-        activate P
-        deactivate P
-        P-->>-U: result, err_code
+        U->>+P: TransactionExists(txHash)
+        P->>-U: true | false
+        opt if tx is not indexed
+            U->>+P: Get*/Set*
+            P-->>-U: result, err_code
+            U->>U: Validation logic
+            activate U
+            deactivate U
+            U->>+P: StoreTransaction(tx)
+            P->>P: Store tx locally
+            activate P
+            deactivate P
+            P-->>-U: result, err_code
+        end
     end
     U->>+P: UpdateAppHash()
     P->>P: Update state hash
