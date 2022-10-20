@@ -3,6 +3,7 @@ package utility
 import (
 	"bytes"
 	"encoding/hex"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )

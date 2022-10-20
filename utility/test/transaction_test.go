@@ -66,7 +66,7 @@ func TestUtilityContext_CheckTransaction(t *testing.T) {
 
 func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	accs := GetAllTestingAccounts(t, ctx)
+	accs := getAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := typesUtil.BigIntToString(sendAmount)
@@ -103,7 +103,7 @@ func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
 
 func TestUtilityContext_HandleMessage(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
-	accs := GetAllTestingAccounts(t, ctx)
+	accs := getAllTestingAccounts(t, ctx)
 
 	sendAmount := big.NewInt(1000000)
 	sendAmountString := typesUtil.BigIntToString(sendAmount)
@@ -118,7 +118,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	require.NoError(t, er)
 	msg := NewTestingSendMessage(t, addrBz, addrBz2, sendAmountString)
 	require.NoError(t, ctx.HandleMessageSend(&msg))
-	accs = GetAllTestingAccounts(t, ctx)
+	accs = getAllTestingAccounts(t, ctx)
 	senderBalanceAfter, err := typesUtil.StringToBigInt(accs[0].GetAmount())
 	require.NoError(t, err)
 
@@ -133,7 +133,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 
 func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingAmount, amountSent *big.Int, signer crypto.PrivateKey) {
 	cdc := codec.GetCodec()
-	recipient := GetAllTestingAccounts(t, ctx)[1]
+	recipient := getAllTestingAccounts(t, ctx)[1]
 
 	signer, err := crypto.GeneratePrivateKey()
 	require.NoError(t, err)

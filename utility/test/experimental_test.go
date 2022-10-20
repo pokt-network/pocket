@@ -93,10 +93,11 @@ func TestExperimentalAppHashWithPersistenceMock(t *testing.T) {
 
 func newMockablePersistenceContextForAppHashTest(t *testing.T, height int64) modules.PersistenceRWContext {
 	// Create one instance of the real version of the persistence context
+	testPersistenceMod := newTestPersistenceModule(t, persistenceDbUrl)
 	persistenceContext, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
 	t.Cleanup(func() {
-		testPersistenceMod.ResetContext()
+		testPersistenceMod.NewWriteContext().Release()
 	})
 
 	// Create one version of a mock of the persistence context

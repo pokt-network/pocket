@@ -96,7 +96,7 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 	os.Exit(0)
 }
 
-// TODO(drewsky): Remove this in favor of a golang specific solution
+// TODO: Remove this in favor of a golang specific solution for after test teardown
 func CleanupTest(u utility.UtilityContext) {
 	u.Context.Release()
 }

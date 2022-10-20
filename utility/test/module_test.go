@@ -9,8 +9,7 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/modules"
-	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
+	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/utility"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
@@ -88,15 +87,15 @@ func newTestingUtilityContextWithPersistenceContext(t *testing.T, height int64, 
 func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.PersistenceModule {
 	ctrl := gomock.NewController(t)
 
-	mockPersistenceConfig := mock_modules.NewMockPersistenceConfig(ctrl)
+	mockPersistenceConfig := mockModules.NewMockPersistenceConfig(ctrl)
 	mockPersistenceConfig.EXPECT().GetPostgresUrl().Return(databaseUrl).AnyTimes()
 	mockPersistenceConfig.EXPECT().GetNodeSchema().Return(testSchema).AnyTimes()
 	mockPersistenceConfig.EXPECT().GetBlockStorePath().Return("").AnyTimes()
 
-	mockRuntimeConfig := mock_modules.NewMockConfig(ctrl)
+	mockRuntimeConfig := mockModules.NewMockConfig(ctrl)
 	mockRuntimeConfig.EXPECT().GetPersistenceConfig().Return(mockPersistenceConfig).AnyTimes()
 
-	mockRuntimeMgr := mock_modules.NewMockRuntimeMgr(ctrl)
+	mockRuntimeMgr := mockModules.NewMockRuntimeMgr(ctrl)
 	mockRuntimeMgr.EXPECT().GetConfig().Return(mockRuntimeConfig).AnyTimes()
 
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
