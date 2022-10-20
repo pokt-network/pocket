@@ -14,6 +14,8 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// TODO(#314): Add the tooling and instructions on how to generate unit tests in this file.
+
 func TestMain(m *testing.M) {
 	exitCode := m.Run()
 	files, err := filepath.Glob("*.json")
