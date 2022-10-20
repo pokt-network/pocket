@@ -141,19 +141,19 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (msg types
 func (u *UtilityContext) HandleMessage(msg typesUtil.Message) (err typesUtil.Error, messageType, recipient string) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageDoubleSign:
-		return u.HandleMessageDoubleSign(x), string(x.ProtoReflect().Descriptor().Name()), ""
+		return u.HandleMessageDoubleSign(x), x.GetMessageName(), x.GetMessageRecipient()
 	case *typesUtil.MessageSend:
-		return u.HandleMessageSend(x), string(x.ProtoReflect().Descriptor().Name()), hex.EncodeToString(x.ToAddress)
+		return u.HandleMessageSend(x), x.GetMessageName(), x.GetMessageRecipient()
 	case *typesUtil.MessageStake:
-		return u.HandleStakeMessage(x), string(x.ProtoReflect().Descriptor().Name()), ""
+		return u.HandleStakeMessage(x), x.GetMessageName(), x.GetMessageRecipient()
 	case *typesUtil.MessageEditStake:
-		return u.HandleEditStakeMessage(x), string(x.ProtoReflect().Descriptor().Name()), ""
+		return u.HandleEditStakeMessage(x), x.GetMessageName(), x.GetMessageRecipient()
 	case *typesUtil.MessageUnstake:
-		return u.HandleUnstakeMessage(x), string(x.ProtoReflect().Descriptor().Name()), ""
+		return u.HandleUnstakeMessage(x), x.GetMessageName(), x.GetMessageRecipient()
 	case *typesUtil.MessageUnpause:
-		return u.HandleUnpauseMessage(x), string(x.ProtoReflect().Descriptor().Name()), ""
+		return u.HandleUnpauseMessage(x), x.GetMessageName(), x.GetMessageRecipient()
 	case *typesUtil.MessageChangeParameter:
-		return u.HandleMessageChangeParameter(x), string(x.ProtoReflect().Descriptor().Name()), ""
+		return u.HandleMessageChangeParameter(x), x.GetMessageName(), x.GetMessageRecipient()
 	default:
 		return typesUtil.ErrUnknownMessage(x), "", ""
 	}

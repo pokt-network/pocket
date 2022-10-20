@@ -7,5 +7,5 @@ message PersistenceConfig {
   string postgres_url = 1;
   string node_schema = 2;
   string block_store_path = 3;
-  string indexer_path = 4;
+  string tx_indexer_path = 4;
 }

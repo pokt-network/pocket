@@ -66,7 +66,7 @@ func Create(configPath, genesisPath string) (modules.PersistenceModule, error) {
 		return nil, err
 	}
 
-	txIndexer, err := indexer.NewTxIndexer(cfg.GetIndexerPath())
+	txIndexer, err := indexer.NewTxIndexer(cfg.GetTxIndexerPath())
 	if err != nil {
 		return nil, err
 	}
