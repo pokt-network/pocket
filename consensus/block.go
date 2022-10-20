@@ -41,7 +41,7 @@ func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 	return nil
 }
 
-// IMPROVE(olshansky): ensure these persistence operations are atomic, we can't commit block without
+// IMPROVE(#285): ensure these persistence operations are atomic, we can't commit block without
 // committing the transactions and metadata at the same time
 func (m *consensusModule) storeBlock(block *typesCons.Block, blockProtoBytes []byte) error {
 	store := m.utilityContext.GetPersistenceContext()
