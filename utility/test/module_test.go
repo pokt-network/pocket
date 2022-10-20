@@ -72,18 +72,6 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	}
 }
 
-func newTestingUtilityContextWithPersistenceContext(t *testing.T, height int64, persistenceContext modules.PersistenceRWContext) utility.UtilityContext {
-	return utility.UtilityContext{
-		LatestHeight: height,
-		Mempool:      NewTestingMempool(t),
-		Context: &utility.Context{
-			PersistenceRWContext: persistenceContext,
-			SavePointsM:          make(map[string]struct{}),
-			SavePoints:           make([][]byte, 0),
-		},
-	}
-}
-
 func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.PersistenceModule {
 	ctrl := gomock.NewController(t)
 
