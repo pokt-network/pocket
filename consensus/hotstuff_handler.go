@@ -6,14 +6,14 @@ import (
 
 // DISCUSS: Should these functions return an error?
 type HotstuffMessageHandler interface {
-	HandleNewRoundMessage(*ConsensusModule, *typesCons.HotstuffMessage)
-	HandlePrepareMessage(*ConsensusModule, *typesCons.HotstuffMessage)
-	HandlePrecommitMessage(*ConsensusModule, *typesCons.HotstuffMessage)
-	HandleCommitMessage(*ConsensusModule, *typesCons.HotstuffMessage)
-	HandleDecideMessage(*ConsensusModule, *typesCons.HotstuffMessage)
+	HandleNewRoundMessage(*consensusModule, *typesCons.HotstuffMessage)
+	HandlePrepareMessage(*consensusModule, *typesCons.HotstuffMessage)
+	HandlePrecommitMessage(*consensusModule, *typesCons.HotstuffMessage)
+	HandleCommitMessage(*consensusModule, *typesCons.HotstuffMessage)
+	HandleDecideMessage(*consensusModule, *typesCons.HotstuffMessage)
 }
 
-func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) error {
+func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) error {
 	m.nodeLog(typesCons.DebugHandlingHotstuffMessage(msg))
 
 	step := msg.GetStep()
@@ -42,12 +42,12 @@ func (m *ConsensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 	return nil
 }
 
-func (m *ConsensusModule) shouldElectNextLeader() bool {
+func (m *consensusModule) shouldElectNextLeader() bool {
 	// Execute leader election if there is no leader and we are in a new round
 	return m.Step == NewRound && m.LeaderId == nil
 }
 
-func (m *ConsensusModule) shouldLogHotstuffDiscardMessage(step typesCons.HotstuffStep) bool {
+func (m *consensusModule) shouldLogHotstuffDiscardMessage(step typesCons.HotstuffStep) bool {
 	// If a replica is not a leader for this round, but has already determined a leader,
 	// and continues to receive NewRound messages, we avoid logging the "message discard"
 	// because it creates unnecessary spam.

@@ -7,8 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.8] - 2022-10-19
+
+- Fixed `ToPersistenceActors()` by filling all structure fields
+- Deprecated `BaseActor` -> `Actor`
+- Changed default actor type to `ActorType_Undefined`
+
 ## [0.0.0.7] - 2022-10-12
 
+### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
+
+- Updated to use `RuntimeMgr`
+- Made `PersistenceModule` struct unexported
+- Updated tests and mocks
+- Removed some cross-module dependencies
 - Added `TxIndexer` sub-package (previously in Utility Module)
 - Added `TxIndexer` to both `PersistenceModule` and `PersistenceContext`
 - Implemented `TransactionExists` and `StoreTransaction`
@@ -38,14 +50,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Main persistence module changes:**
 
 - Split `ConnectAndInitializeDatabase` into `connectToDatabase` and `initializeDatabase`
-  - This enables creating multiple contexts in parallel without re-initializing the DB connection
+    - This enables creating multiple contexts in parallel without re-initializing the DB connection
 - Fix the SQL query used in `SelectActors`, `SelectAccounts` & `SelectPools`
-  - Add a generalized unit test for all actors
+    - Add a generalized unit test for all actors
 - Remove `NewPersistenceModule` and an injected `Config` + `Create`
-  - This improves isolation a a “injection-like” paradigm for unit testing
+    - This improves isolation a a “injection-like” paradigm for unit testing
 - Change `SetupPostgresDocker` to `SetupPostgresDockerPersistenceMod`
-  - This enables more “functional” like testing by returning a persistence module and avoiding global testing variables
-  - Only return once a connection to the DB has been initialized reducing the likelihood of test race conditions
+    - This enables more “functional” like testing by returning a persistence module and avoiding global testing
+      variables
+    - Only return once a connection to the DB has been initialized reducing the likelihood of test race conditions
 - Implemented `NewReadContext` with a proper read-only context
 - Add `ResetContext` to the persistence module and `Close` to the read context
 
@@ -104,13 +117,15 @@ Deprecate PrePersistence
 
 Pocket Persistence 1st Iteration (https://github.com/pokt-network/pocket/pull/73)
 
-- Base persistence module implementation for the following actors: `Account`, `Pool`, `Validator`, `Fisherman`, `ServiceNode`, `Application`
-- Generalization of common protocol actor behvaiours via the `ProtocolActor` and `BaseActor` interface and implementation
+- Base persistence module implementation for the following actors: `Account`, `Pool`, `Validator`, `Fisherman`
+  , `ServiceNode`, `Application`
+- Generalization of common protocol actor behvaiours via the `ProtocolActor` and `BaseActor` interface and
+  implementation
 - A PostgreSQL based implementation of the persistence middleware including:
-  - SQL query implementation for each actor
-  - SQL schema definition for each actor
-  - SQL execution for common actor behaviours
-  - Golang interface implementation of the Persistence module
+    - SQL query implementation for each actor
+    - SQL schema definition for each actor
+    - SQL execution for common actor behaviours
+    - Golang interface implementation of the Persistence module
 - Update to the Persistence module interface to enable historical height queries
 - Library / infrastructure for persistence unit fuzz testing
 - Tests triggered via `make test_persistence`

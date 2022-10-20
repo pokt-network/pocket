@@ -394,3 +394,25 @@ gen_genesis_and_config:
 ## Clear the genesis and config files for LocalNet
 clear_genesis_and_config:
 	rm build/config/gen.*.json
+
+.PHONY: check_cross_module_imports
+## Lists cross-module imports
+check_cross_module_imports:
+	$(eval exclude_common=--exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime)
+	echo "persistence:\n"
+	grep ${exclude_common} --exclude-dir=persistence -r "github.com/pokt-network/pocket/persistence" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "utility:\n"
+	grep ${exclude_common} --exclude-dir=utility -r "github.com/pokt-network/pocket/utility" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "consensus:\n"
+	grep ${exclude_common} --exclude-dir=consensus -r "github.com/pokt-network/pocket/consensus" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "telemetry:\n"
+	grep ${exclude_common} --exclude-dir=telemetry -r "github.com/pokt-network/pocket/telemetry" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "p2p:\n"
+	grep ${exclude_common} --exclude-dir=p2p -r "github.com/pokt-network/pocket/p2p" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "runtime:\n"
+	grep ${exclude_common} --exclude-dir=runtime -r "github.com/pokt-network/pocket/runtime" || echo "✅ OK!"

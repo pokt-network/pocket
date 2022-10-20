@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/pokt-network/pocket/shared/test_artifacts"
+	"github.com/pokt-network/pocket/runtime/test_artifacts"
 )
 
 // Utility to generate config and genesis files

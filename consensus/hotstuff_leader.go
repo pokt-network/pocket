@@ -13,7 +13,7 @@ type HotstuffLeaderMessageHandler struct{}
 
 var (
 	LeaderMessageHandler HotstuffMessageHandler = &HotstuffLeaderMessageHandler{}
-	leaderHandlers                              = map[typesCons.HotstuffStep]func(*ConsensusModule, *typesCons.HotstuffMessage){
+	leaderHandlers                              = map[typesCons.HotstuffStep]func(*consensusModule, *typesCons.HotstuffMessage){
 		NewRound:  LeaderMessageHandler.HandleNewRoundMessage,
 		Prepare:   LeaderMessageHandler.HandlePrepareMessage,
 		PreCommit: LeaderMessageHandler.HandlePrecommitMessage,
@@ -24,7 +24,7 @@ var (
 
 /*** Prepare Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
@@ -99,7 +99,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *ConsensusM
 
 /*** PreCommit Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
@@ -143,7 +143,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *ConsensusMo
 
 /*** Commit Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
@@ -187,7 +187,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *Consensus
 
 /*** Decide Step ***/
 
-func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
@@ -236,7 +236,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *ConsensusMod
 		)
 }
 
-func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	defer m.paceMaker.RestartTimer()
 	handler.emitTelemetryEvent(m, msg)
 
@@ -247,7 +247,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *ConsensusMod
 }
 
 // anteHandle is the general handler called for every before every specific HotstuffLeaderMessageHandler handler
-func (handler *HotstuffLeaderMessageHandler) anteHandle(m *ConsensusModule, msg *typesCons.HotstuffMessage) error {
+func (handler *HotstuffLeaderMessageHandler) anteHandle(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	// Basic block metadata validation
 
 	if err := m.validateBlockBasic(msg.GetBlock()); err != nil {
@@ -264,7 +264,7 @@ func (handler *HotstuffLeaderMessageHandler) anteHandle(m *ConsensusModule, msg 
 	return nil
 }
 
-func (handler *HotstuffLeaderMessageHandler) emitTelemetryEvent(m *ConsensusModule, msg *typesCons.HotstuffMessage) {
+func (handler *HotstuffLeaderMessageHandler) emitTelemetryEvent(m *consensusModule, msg *typesCons.HotstuffMessage) {
 	m.GetBus().
 		GetTelemetryModule().
 		GetEventMetricsAgent().
@@ -277,7 +277,16 @@ func (handler *HotstuffLeaderMessageHandler) emitTelemetryEvent(m *ConsensusModu
 		)
 }
 
-func (m *ConsensusModule) validatePartialSignature(msg *typesCons.HotstuffMessage) error {
+// ValidateBasic general validation checks that apply to every HotstuffLeaderMessage
+func (handler *HotstuffLeaderMessageHandler) validateBasic(m *consensusModule, msg *typesCons.HotstuffMessage) error {
+	// Discard messages with invalid partial signatures before storing it in the leader's consensus mempool
+	if err := m.validatePartialSignature(msg); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessage) error {
 	if msg.GetStep() == NewRound {
 		m.nodeLog(typesCons.ErrUnnecessaryPartialSigForNewRound.Error())
 		return nil
@@ -315,7 +324,7 @@ func (m *ConsensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 //       It doesn't actually work because SizeOf returns the size of the map pointer,
 //       and does not recursively determine the size of all the underlying elements
 //       Add proper tests and implementation once the mempool is implemented.
-func (m *ConsensusModule) tempIndexHotstuffMessage(msg *typesCons.HotstuffMessage) {
+func (m *consensusModule) tempIndexHotstuffMessage(msg *typesCons.HotstuffMessage) {
 	if m.consCfg.GetMaxMempoolBytes() < uint64(unsafe.Sizeof(m.messagePool)) {
 		m.nodeLogError(typesCons.DisregardHotstuffMessage, typesCons.ErrConsensusMempoolFull)
 		return
@@ -328,7 +337,7 @@ func (m *ConsensusModule) tempIndexHotstuffMessage(msg *typesCons.HotstuffMessag
 
 // This is a helper function intended to be called by a leader/validator during a view change
 // to prepare a new block that is applied to the new underlying context.
-func (m *ConsensusModule) prepareAndApplyBlock() (*typesCons.Block, []modules.TxResult, error) {
+func (m *consensusModule) prepareAndApplyBlock() (*typesCons.Block, []modules.TxResult, error) {
 	if m.isReplica() {
 		return nil, nil, typesCons.ErrReplicaPrepareBlock
 	}
@@ -370,7 +379,7 @@ func (m *ConsensusModule) prepareAndApplyBlock() (*typesCons.Block, []modules.Tx
 }
 
 // Return true if this node, the leader, should prepare a new block
-func (m *ConsensusModule) shouldPrepareNewBlock(highPrepareQC *typesCons.QuorumCertificate) bool {
+func (m *consensusModule) shouldPrepareNewBlock(highPrepareQC *typesCons.QuorumCertificate) bool {
 	if highPrepareQC == nil {
 		m.nodeLog("Preparing a new block - no highPrepareQC found")
 		return true
@@ -385,6 +394,6 @@ func (m *ConsensusModule) shouldPrepareNewBlock(highPrepareQC *typesCons.QuorumC
 }
 
 // The `highPrepareQC` is from the past so we can safely ignore it
-func (m *ConsensusModule) isHighPrepareQCFromPast(highPrepareQC *typesCons.QuorumCertificate) bool {
+func (m *consensusModule) isHighPrepareQCFromPast(highPrepareQC *typesCons.QuorumCertificate) bool {
 	return highPrepareQC.Height < m.Height || highPrepareQC.Round < m.Round
 }

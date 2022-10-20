@@ -2,9 +2,7 @@ package test
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/big"
 	"math/rand"
@@ -13,12 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/test_artifacts"
-
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/modules"
-	sharedTest "github.com/pokt-network/pocket/shared/test_artifacts"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -53,12 +50,10 @@ var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 // See https://github.com/ory/dockertest as reference for the template of this code
 // Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
 func TestMain(m *testing.M) {
-	pool, resource, dbUrl := sharedTest.SetupPostgresDocker()
+	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	testPersistenceMod = newTestPersistenceModule(dbUrl)
 	exitCode := m.Run()
-	os.Remove(testingConfigFilePath)
-	os.Remove(testingGenesisFilePath)
-	sharedTest.CleanupPostgresDocker(m, pool, resource)
+	test_artifacts.CleanupPostgresDocker(m, pool, resource)
 	os.Exit(exitCode)
 }
 
@@ -102,27 +97,26 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 
 // TODO(andrew): Take in `t testing.T` as a parameter and error if there's an issue
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
-	cfg := modules.Config{
-		Persistence: &types.PersistenceConfig{
-			PostgresUrl:    databaseUrl,
-			NodeSchema:     testSchema,
-			BlockStorePath: "",
-		},
-	}
+	cfg := runtime.NewConfig(&runtime.BaseConfig{}, runtime.WithPersistenceConfig(&types.PersistenceConfig{
+		PostgresUrl:    databaseUrl,
+		NodeSchema:     testSchema,
+		BlockStorePath: "",
+	}))
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
-	createTestingGenesisAndConfigFiles(cfg, genesisState)
-	persistenceMod, err := persistence.Create(testingConfigFilePath, testingGenesisFilePath)
+	runtimeCfg := runtime.NewManager(cfg, genesisState)
+
+	persistenceMod, err := persistence.Create(runtimeCfg)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
-	return persistenceMod
+	return persistenceMod.(modules.PersistenceModule)
 }
 
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
 func fuzzSingleProtocolActor(
 	f *testing.F,
-	newTestActor func() (types.BaseActor, error),
-	getTestActor func(db *persistence.PostgresContext, address string) (*types.BaseActor, error),
+	newTestActor func() (*types.Actor, error),
+	getTestActor func(db *persistence.PostgresContext, address string) (*types.Actor, error),
 	protocolActorSchema types.ProtocolActorSchema) {
 
 	db := NewFuzzTestPostgresContext(f, 0)
@@ -167,9 +161,9 @@ func fuzzSingleProtocolActor(
 		switch op {
 		case "UpdateActor":
 			numParamUpdatesSupported := 3
-			newStakedTokens := originalActor.StakedTokens
+			newStakedTokens := originalActor.StakedAmount
 			newChains := originalActor.Chains
-			newActorSpecificParam := originalActor.ActorSpecificParam
+			newActorSpecificParam := originalActor.GenericParam
 
 			iterations := rand.Intn(2)
 			for i := 0; i < iterations; i++ {
@@ -191,15 +185,15 @@ func fuzzSingleProtocolActor(
 					}
 				}
 			}
-			updatedActor := types.BaseActor{
-				Address:            originalActor.Address,
-				PublicKey:          originalActor.PublicKey,
-				StakedTokens:       newStakedTokens,
-				ActorSpecificParam: newActorSpecificParam,
-				OutputAddress:      originalActor.OutputAddress,
-				PausedHeight:       originalActor.PausedHeight,
-				UnstakingHeight:    originalActor.UnstakingHeight,
-				Chains:             newChains,
+			updatedActor := &types.Actor{
+				Address:         originalActor.Address,
+				PublicKey:       originalActor.PublicKey,
+				StakedAmount:    newStakedTokens,
+				GenericParam:    newActorSpecificParam,
+				Output:          originalActor.Output,
+				PausedHeight:    originalActor.PausedHeight,
+				UnstakingHeight: originalActor.UnstakingHeight,
+				Chains:          newChains,
 			}
 			err = db.UpdateActor(protocolActorSchema, updatedActor)
 			require.NoError(t, err)
@@ -208,13 +202,13 @@ func fuzzSingleProtocolActor(
 			require.NoError(t, err)
 
 			require.ElementsMatch(t, newActor.Chains, newChains, "staked chains not updated")
-			require.NotContains(t, newActor.StakedTokens, "invalid")
+			require.NotContains(t, newActor.StakedAmount, "invalid")
 			// TODO(andrew): Use `require.Contains` instead. E.g. require.NotContains(t, newActor.StakedTokens, "invalid")
-			if strings.Contains(newActor.StakedTokens, "invalid") {
+			if strings.Contains(newActor.StakedAmount, "invalid") {
 				log.Println("")
 			}
-			require.Equal(t, newActor.StakedTokens, newStakedTokens, "staked tokens not updated")
-			require.Equal(t, newActor.ActorSpecificParam, newActorSpecificParam, "actor specific param not updated")
+			require.Equal(t, newActor.StakedAmount, newStakedTokens, "staked tokens not updated")
+			require.Equal(t, newActor.GenericParam, newActorSpecificParam, "actor specific param not updated")
 		case "GetActorsReadyToUnstake":
 			unstakingActors, err := db.GetActorsReadyToUnstake(protocolActorSchema, db.Height)
 			require.NoError(t, err)
@@ -279,50 +273,13 @@ func fuzzSingleProtocolActor(
 			outputAddr, err := db.GetActorOutputAddress(protocolActorSchema, addr, db.Height)
 			require.NoError(t, err)
 
-			require.Equal(t, originalActor.OutputAddress, hex.EncodeToString(outputAddr), "output address incorrect")
+			require.Equal(t, originalActor.Output, hex.EncodeToString(outputAddr), "output address incorrect")
 		case "IncrementHeight":
 			db.Height++
 		default:
 			t.Errorf("Unexpected operation fuzzing operation %s", op)
 		}
 	})
-}
-
-// TODO(olshansky): Make these functions & variables more functional to avoid having "unexpected"
-//                  side effects and making it clearer to the reader.
-const (
-	testingGenesisFilePath = "genesis.json"
-	testingConfigFilePath  = "config.json"
-)
-
-func createTestingGenesisAndConfigFiles(cfg modules.Config, genesisState modules.GenesisState) {
-	config, err := json.Marshal(cfg.Persistence)
-	if err != nil {
-		log.Fatal(err)
-	}
-	genesis, err := json.Marshal(genesisState.PersistenceGenesisState)
-	if err != nil {
-		log.Fatal(err)
-	}
-	genesisFile := make(map[string]json.RawMessage)
-	configFile := make(map[string]json.RawMessage)
-	persistenceModuleName := new(persistence.PersistenceModule).GetModuleName()
-	genesisFile[test_artifacts.GetGenesisFileName(persistenceModuleName)] = genesis
-	configFile[persistenceModuleName] = config
-	genesisFileBz, err := json.MarshalIndent(genesisFile, "", "    ")
-	if err != nil {
-		log.Fatal(err)
-	}
-	configFileBz, err := json.MarshalIndent(configFile, "", "    ")
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := ioutil.WriteFile(testingGenesisFilePath, genesisFileBz, 0777); err != nil {
-		log.Fatal(err)
-	}
-	if err := ioutil.WriteFile(testingConfigFilePath, configFileBz, 0777); err != nil {
-		log.Fatal(err)
-	}
 }
 
 func getRandomChains() (chains []string) {

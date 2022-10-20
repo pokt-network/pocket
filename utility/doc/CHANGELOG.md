@@ -18,6 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `HandleMessage()` now returns `messageType` and `recipient`
   - `ApplyTransaction()` returns `TxResult`
 
+### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
+
+- Updated to use `RuntimeMgr`
+- Made `UtilityModule` struct unexported
+- Updated tests and mocks
+- Removed some cross-module dependencies
+
 ## [0.0.0.6] - 2022-10-06
 
 - Don't ignore the exit code of `m.Run()` in the unit tests

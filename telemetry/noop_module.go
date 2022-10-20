@@ -25,7 +25,12 @@ func NOOP() {
 	log.Printf("\n[telemetry=noop]\n")
 }
 
-func CreateNoopTelemetryModule(_ *TelemetryConfig) (*NoopTelemetryModule, error) {
+func CreateNoopTelemetryModule(runtime modules.RuntimeMgr) (modules.Module, error) {
+	var m NoopTelemetryModule
+	return m.Create(runtime)
+}
+
+func (m *NoopTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	return &NoopTelemetryModule{}, nil
 }
 
@@ -37,14 +42,6 @@ func (m *NoopTelemetryModule) Start() error {
 func (m *NoopTelemetryModule) Stop() error {
 	NOOP()
 	return nil
-}
-
-func (m *NoopTelemetryModule) InitConfig(pathToConfigJSON string) (config modules.IConfig, err error) {
-	return // No-op
-}
-
-func (m *NoopTelemetryModule) InitGenesis(pathToGenesisJSON string) (genesis modules.IGenesis, err error) {
-	return // No-op
 }
 
 func (m *NoopTelemetryModule) GetModuleName() string {
@@ -60,6 +57,10 @@ func (m *NoopTelemetryModule) GetBus() modules.Bus {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
+}
+
+func (*NoopTelemetryModule) ValidateConfig(cfg modules.Config) error {
+	return nil
 }
 
 func (m *NoopTelemetryModule) GetEventMetricsAgent() modules.EventMetricsAgent {

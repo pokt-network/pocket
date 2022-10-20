@@ -10,6 +10,8 @@ import (
 
 type P2PModule interface {
 	Module
+	ConfigurableModule
+
 	Broadcast(msg *anypb.Any, topic debug.PocketTopic) error                       // TECHDEBT: get rid of topic
 	Send(addr cryptoPocket.Address, msg *anypb.Any, topic debug.PocketTopic) error // TECHDEBT: get rid of topic
 	GetAddress() (cryptoPocket.Address, error)
