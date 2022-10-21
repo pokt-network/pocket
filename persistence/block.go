@@ -3,9 +3,9 @@ package persistence
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"log"
-
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // OPTIMIZE(team): get from blockstore or keep in memory
@@ -40,13 +40,23 @@ func (p PostgresContext) GetHeight() (int64, error) {
 }
 
 func (p PostgresContext) TransactionExists(transactionHash string) (bool, error) {
-	log.Println("TODO: TransactionExists not implemented")
-	return false, nil
+	hash, err := hex.DecodeString(transactionHash)
+	if err != nil {
+		return false, err
+	}
+	res, err := p.txIndexer.GetByHash(hash)
+	if res == nil {
+		// check for not found
+		if err != nil && err.Error() == kvstore.BadgerKeyNotFoundError {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, err
 }
 
-func (p PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
-	log.Println("TODO: StoreTransaction not implemented")
-	return nil
+func (p PostgresContext) StoreTransaction(txResult modules.TxResult) error {
+	return p.txIndexer.Index(txResult)
 }
 
 func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {

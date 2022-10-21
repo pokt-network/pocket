@@ -58,8 +58,9 @@ type PersistenceWriteContext interface {
 	// Commits the current context (height, hash, transactions, etc...) to finality.
 	// Commit(proposerAddr []byte, quorumCert []byte) error // INTRODUCE(#284): Add this function in #284 per the interface changes in #252.
 
-	// Indexes the transaction
-	StoreTransaction(transactionProtoBytes []byte) error // Stores a transaction
+	// Indexer Operations
+	// TODO(#315): Change `txResult TxResult` to `txBytes []byte`
+	StoreTransaction(txResult TxResult) error // Stores and indexes a transaction
 
 	// DEPRECATED(#252): Remove these functions in #284 per the interface changes in #252.
 	StoreBlock(blockProtoBytes []byte) error
