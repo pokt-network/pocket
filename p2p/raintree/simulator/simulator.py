@@ -4,6 +4,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
+# TODO(olshansky): Consider investigating this library as well since it has custom typing: https://github.com/liwt31/print_tree
 from pptree import Node, print_tree
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -36,7 +37,6 @@ def agg_dicts(d1: Dict[str, int], d2: Dict[str, int]) -> Dict[str, int]:
 
 
 # ~~~ Data Types ~~~
-
 
 @dataclass
 class Counters:
