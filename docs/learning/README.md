@@ -2,11 +2,11 @@
 
 _This is a live document on how to get ramped up on all the knowledge you need to contribute to the Pocket Protocol._
 
-- [Where to Start?](#where-to-start)
-- [Technical Foundation](#technical-foundation)
+- [🏁 Where to Start?](#-where-to-start)
+- [🏗️ Technical Foundation](#️-technical-foundation)
   - [Github Development](#github-development)
   - [Golang](#golang)
-- [Technical References](#technical-references)
+- [📚 Technical References](#-technical-references)
   - [Pocket Specific](#pocket-specific)
   - [Consensus](#consensus)
   - [Merkle Trees](#merkle-trees)
@@ -16,9 +16,9 @@ _This is a live document on how to get ramped up on all the knowledge you need t
   - [Blogs](#blogs)
     - [Specific Article Recommendations](#specific-article-recommendations)
     - [General Subscription Recommendations](#general-subscription-recommendations)
-- [Non-suggested reads](#non-suggested-reads)
+- [❌ Non-suggested reads](#-non-suggested-reads)
 
-## Where to Start?
+## 🏁 Where to Start?
 
 This is a general set of steps we have found to help new core team members onboard to Protocol development.
 
@@ -71,7 +71,7 @@ This is a general set of steps we have found to help new core team members onboa
 - If you don't need help, **when you’re about 33% of the way done**, show your draft work and get some feedback, so **jump on a call!**
 - Just leave a message in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel and someone from the core team will respond.
 
-## Technical Foundation
+## 🏗️ Technical Foundation
 
 ### Github Development
 
@@ -81,7 +81,7 @@ If you're not familiar with the Github workflow, you can reference the [First Co
 
 If you're not familiar with Go, consider taking [The Way To Go](https://www.educative.io/courses/the-way-to-go) course on educative.io
 
-## Technical References
+## 📚 Technical References
 
 _We're trying not to make this a link dump, so please only add more references if it was actually helpful in clarifying your understanding._
 
@@ -169,7 +169,7 @@ This is a general set of technical links and recommended reading our team has fo
 - [Joachim Neu](https://www.jneu.net/)
   - See the articles under the **Technical reports** section
 
-## Non-suggested reads
+## ❌ Non-suggested reads
 
 The papers in this list were read by our team and would not be recommended to become more productive to contributing to Pocket.
 
