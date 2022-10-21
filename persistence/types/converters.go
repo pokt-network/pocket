@@ -6,7 +6,7 @@ import (
 
 func toPersistenceActor(actor modules.Actor) *Actor {
 	return &Actor{
-		ActorType:       ActorType(ActorType_value[actor.GetActorTyp().String()]),
+		ActorType:       actor.GetActorTyp().(ActorType),
 		Address:         actor.GetAddress(),
 		PublicKey:       actor.GetPublicKey(),
 		Chains:          actor.GetChains(),

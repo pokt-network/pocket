@@ -311,20 +311,20 @@ test_sortition:
 test_persistence:
 	go test ${VERBOSE_TEST} -p 1 -count=1 ./persistence/...
 
-.PHONY: test_p2p_types
-## Run p2p subcomponents' tests
-test_p2p_types:
-	go test ${VERBOSE_TEST} -race ./p2p/types
-
 .PHONY: test_p2p
 ## Run all p2p
 test_p2p:
 	go test ${VERBOSE_TEST} -count=1 ./p2p/...
 
-.PHONY: test_p2p_addrbook
-## Run all P2P addr book related tests
-test_p2p_addrbook:
-	go test -run AddrBook -v -count=1 ./p2p/...
+.PHONY: test_p2p_raintree
+## Run all p2p raintree related tests
+test_p2p_raintree:
+	go test -run RainTreeNetwork -v -count=1 ./p2p/...
+
+.PHONY: test_p2p_raintree_addrbook
+## Run all p2p raintree addr book related tests
+test_p2p_raintree_addrbook:
+	go test -run RainTreeAddrBook -v -count=1 ./p2p/...
 
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library
