@@ -5,7 +5,7 @@
 
 ```golang
 type Session interface {
-	NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application modules.Actor) (Session, types.Error)
+    NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application modules.Actor) (Session, types.Error)
     GetServiceNodes() []modules.Actor // the ServiceNodes providing Web3 access to the Application
     GetFishermen() []modules.Actor    // the Fishermen monitoring the Service Nodes
     GetApplication() modules.Actor    // the Application consuming Web3 access
