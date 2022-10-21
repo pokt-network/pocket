@@ -38,6 +38,7 @@ def agg_dicts(d1: Dict[str, int], d2: Dict[str, int]) -> Dict[str, int]:
 
 # ~~~ Data Types ~~~
 
+
 @dataclass
 class Counters:
     msgs_sent: int  # Total num of messages sent by RainTree propagating
@@ -98,6 +99,9 @@ def propagate(
     if len(addr_book) == 0:
         return
 
+    if addr != sender:
+        counters.msgs_rec_map[addr] += 1
+
     # If the theoretical depth was reached and no nodes are missing, return
     if len(counters.nodes_missing) == 0:
         counters.depth_reached_map[depth] += 1
@@ -107,8 +111,6 @@ def propagate(
     # A network message was sent
     counters.nodes_missing.discard(addr)
     counters.nodes_reached.add(addr)
-    if addr != sender:
-        counters.msgs_rec_map[addr] += 1
 
     # Configure who the current node should send messages to
     n = len(addr_book)

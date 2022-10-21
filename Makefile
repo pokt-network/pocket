@@ -327,12 +327,13 @@ test_p2p_raintree_addrbook:
 	go test -run RainTreeAddrBook -v -count=1 ./p2p/...
 
 # Variables for `p2p_test_generator`
-numRainTreeNodes ?= 42 # This is the default value
+numRainTreeNodes ?= 42 # This is the default value with a randomly selected value
+rainTreeTestOutputFilename ?= 42 # This is the default value with a randomly selected value
 
 .PHONY: p2p_test_generator
 ## TODO
 p2p_test_generator:
-	python3 p2p/raintree/simulator/test_generator.py --num_nodes=${numRainTreeNodes}
+	python3 p2p/raintree/simulator/test_generator.py --num_nodes=${numRainTreeNodes} --output_file=${rainTreeTestOutputFilename}
 
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library
