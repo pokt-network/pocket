@@ -5,7 +5,6 @@ Please note that this repository is under very active development and breaking c
 - [Development Overview](#development-overview)
   - [LFG - Development](#lfg---development)
     - [Install Dependencies](#install-dependencies)
-      - [Install Optional Dependencies (mainly for tooling)](#install-optional-dependencies-mainly-for-tooling)
     - [Prepare Local Environment](#prepare-local-environment)
     - [View Available Commands](#view-available-commands)
     - [Running Unit Tests](#running-unit-tests)
@@ -56,11 +55,6 @@ Software:
       System Version: macOS 12.3.1 (21E258)
       Kernel Version: Darwin 21.4.0
 ```
-
-#### Install Optional Dependencies (mainly for tooling)
-
-- [Python]
-- [Pipenv]
 
 ### Prepare Local Environment
 
