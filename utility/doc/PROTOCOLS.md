@@ -34,6 +34,9 @@ type Session interface {
 - Q) why do we hash to find a newKey between every actor selection?
 - A) pseudo-random selection only works if each iteration is re-randomized or it would be subject to lexicographical proximity bias attacks
 
+- Q) Why do we not use Golang's `rand.Intn` with the key as a seed for random node selection?
+- A) A proprietary randomization algorithm makes this approach language & library agnostic, so any client simply has to follow the specifications
+
 - Q) what is `WorldState`?
 - A) it represents a queryable view on the internal state of the network at a certain height.
 
