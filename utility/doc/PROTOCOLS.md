@@ -39,6 +39,10 @@ type Session interface {
 
 - Q) Do Fishermen stake for a specific RelayChain?
 - A) Fishermen are only going to be applicable to Pocket Supported Relay Chains (where the protocol pays out for the relay chain). It is unclear at this time what the limitations and scoping will be for Fishermen RelayChain support.
+
+- Q) What was the reasoning not to allow a list of geozones?
+- A) Each session is mono-chain and mono-geo. This is fundamental as it would create even more possible combinations of sessions and increase computational complexity during block production and servicing
+
 ### Session Flow
 
 ```mermaid
@@ -46,6 +50,7 @@ sequenceDiagram
     autonumber
     participant WorldState
     participant Session
+    %% The `Qurier` is anyone (app or not) that asks to retrieve session information
     actor Querier
     Querier->>WorldState: Who are my sessionNodes and sessionFish for [app], [relayChain], and [geoZone]
     WorldState->>Session: seedData = height, blockHash, [geoZone], [relayChain], [app]
