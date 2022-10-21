@@ -15,7 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Moved the storage of transactions to the Consensus Module
   - Returned the `TxResults` in the `ApplyBlock()` and `GetProposalTransactions()`
   - `AnteHandleMessage()` now returns `signer`
-  - `HandleMessage()` now returns `messageType` and `recipient`
   - `ApplyTransaction()` returns `TxResult`
 
 ### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling

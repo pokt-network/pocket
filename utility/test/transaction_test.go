@@ -134,7 +134,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 
 func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingAmount, amountSent *big.Int, signer crypto.PrivateKey) {
 	cdc := codec.GetCodec()
-	recipient := GetAllTestingAccounts(t, ctx)[2]
+	recipient := GetAllTestingAccounts(t, ctx)[2] // Using index 2 to prevent a collision with the first Validator who is the proposer in tests
 
 	signer, err := crypto.GeneratePrivateKey()
 	require.NoError(t, err)
