@@ -18,28 +18,31 @@ import (
 	operation that executes at the end of every block.
 */
 
-func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) ([]byte, error) {
+func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, txResults []modules.TxResult, err error) {
 	u.LatestHeight = latestHeight
 	// begin block lifecycle phase
 	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	// deliver txs lifecycle phase
-	for _, transactionProtoBytes := range transactions {
+	for index, transactionProtoBytes := range transactions {
 		tx, err := typesUtil.TransactionFromBytes(transactionProtoBytes)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if err := tx.ValidateBasic(); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		// Validate and apply the transaction to the Postgres database
-		if err := u.ApplyTransaction(tx); err != nil {
-			return nil, err
+		// DISCUSS: currently, the pattern is allowing nil err with an error transaction...
+		// Should we terminate applyBlock immediately if there's an invalid transaction?
+		// Or wait until the entire lifecycle is over to evaluate an 'invalid' block
+		txResult, err := u.ApplyTransaction(index, tx)
+		if err != nil {
+			return nil, nil, err
 		}
-		if err := u.GetPersistenceContext().StoreTransaction(transactionProtoBytes); err != nil {
-			return nil, err
-		}
+		// Add the transaction result to the array
+		txResults = append(txResults, txResult)
 
 		// TODO: if found, remove transaction from mempool
 		// DISCUSS: What if the context is rolled back or cancelled. Do we add it back to the mempool?
@@ -49,10 +52,11 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 	}
 	// end block lifecycle phase
 	if err := u.EndBlock(proposerAddress); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	// return the app hash (consensus module will get the validator set directly
-	return u.GetAppHash()
+	appHash, err = u.GetAppHash()
+	return
 }
 
 func (u *UtilityContext) BeginBlock(previousBlockByzantineValidators [][]byte) typesUtil.Error {
