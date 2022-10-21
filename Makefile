@@ -329,8 +329,7 @@ test_p2p_raintree_addrbook:
 .PHONY: p2p_raintree_simulator
 ## TODO
 p2p_raintree_simulator:
-	python3 p2p/raintree/simulator.py
-
+	python3 p2p/raintree/simulator/simulator.py
 
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library
