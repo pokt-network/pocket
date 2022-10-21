@@ -4,28 +4,36 @@ import (
 	"encoding/hex"
 	"math/big"
 
+	"github.com/pokt-network/pocket/persistence/types"
+
 	"github.com/jackc/pgx/v4"
-	"github.com/pokt-network/pocket/persistence/schema"
-	shared "github.com/pokt-network/pocket/shared/types"
 )
 
 // TODO(https://github.com/pokt-network/pocket/issues/102): Generalize Pool and Account operations.
 
+const (
+	defaultAccountAmountStr string = "0"
+)
+
 // --- Account Functions ---
 
+//
 func (p PostgresContext) GetAccountAmount(address []byte, height int64) (amount string, err error) {
 	return p.getAccountAmountStr(hex.EncodeToString(address), height)
 }
 
 func (p PostgresContext) getAccountAmountStr(address string, height int64) (amount string, err error) {
-	ctx, conn, err := p.GetCtxAndConnection()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return
 	}
-	if err = conn.QueryRow(ctx, schema.GetAccountAmountQuery(address, height)).Scan(&amount); err != nil {
+
+	amount = defaultAccountAmountStr
+	if err = tx.QueryRow(ctx, types.GetAccountAmountQuery(address, height)).Scan(&amount); err != pgx.ErrNoRows {
 		return
 	}
-	return
+
+	return amount, nil
 }
 
 func (p PostgresContext) AddAccountAmount(address []byte, amount string) error {
@@ -45,33 +53,30 @@ func (p PostgresContext) SubtractAccountAmount(address []byte, amount string) er
 // DISCUSS(team): If we are okay with `GetAccountAmount` return 0 as a default, this function can leverage
 //                `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
 func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
-	ctx, conn, err := p.GetCtxAndConnection()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
 	}
 	height, err := p.GetHeight()
-	if err != nil {
-		return err
-	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return err
 	}
 	// DISCUSS(team): Do we want to panic if `amount < 0` here?
-	if _, err = tx.Exec(ctx, schema.InsertAccountAmountQuery(hex.EncodeToString(address), amount, height)); err != nil {
+	if _, err = tx.Exec(ctx, types.InsertAccountAmountQuery(hex.EncodeToString(address), amount, height)); err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (p *PostgresContext) operationAccountAmount(address []byte, deltaAmount string, op func(*big.Int, *big.Int) error) error {
-	return p.operationPoolOrAccAmount(hex.EncodeToString(address), deltaAmount, op, p.getAccountAmountStr, schema.InsertAccountAmountQuery)
+	return p.operationPoolOrAccAmount(hex.EncodeToString(address), deltaAmount, op, p.getAccountAmountStr, types.InsertAccountAmountQuery)
 }
 
 // --- Pool Functions ---
 
-func (p PostgresContext) InsertPool(name string, address []byte, amount string) error { // TODO(Andrew): remove address param
-	ctx, conn, err := p.GetCtxAndConnection()
+// TODO(andrew): remove address param
+func (p PostgresContext) InsertPool(name string, address []byte, amount string) error {
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -79,25 +84,24 @@ func (p PostgresContext) InsertPool(name string, address []byte, amount string) 
 	if err != nil {
 		return err
 	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
+	if _, err = tx.Exec(ctx, types.InsertPoolAmountQuery(name, amount, height)); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.InsertPoolAmountQuery(name, amount, height)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (p PostgresContext) GetPoolAmount(name string, height int64) (amount string, err error) {
-	ctx, conn, err := p.GetCtxAndConnection()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return
 	}
-	if err = conn.QueryRow(ctx, schema.GetPoolAmountQuery(name, height)).Scan(&amount); err != nil {
+
+	amount = defaultAccountAmountStr
+	if err = tx.QueryRow(ctx, types.GetPoolAmountQuery(name, height)).Scan(&amount); err != pgx.ErrNoRows {
 		return
 	}
-	return
+
+	return amount, nil
 }
 
 func (p PostgresContext) AddPoolAmount(name string, amount string) error {
@@ -118,7 +122,7 @@ func (p PostgresContext) SubtractPoolAmount(name string, amount string) error {
 //                `operationPoolAmount` with `*orig = *delta` and make everything much simpler.
 // DISCUSS(team): Do we have a use-case for this function?
 func (p PostgresContext) SetPoolAmount(name string, amount string) error {
-	ctx, conn, err := p.GetCtxAndConnection()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -126,25 +130,21 @@ func (p PostgresContext) SetPoolAmount(name string, amount string) error {
 	if err != nil {
 		return err
 	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
+	if _, err = tx.Exec(ctx, types.InsertPoolAmountQuery(name, amount, height)); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, schema.InsertPoolAmountQuery(name, amount, height)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (p *PostgresContext) operationPoolAmount(name string, amount string, op func(*big.Int, *big.Int) error) error {
-	return p.operationPoolOrAccAmount(name, amount, op, p.GetPoolAmount, schema.InsertPoolAmountQuery)
+	return p.operationPoolOrAccAmount(name, amount, op, p.GetPoolAmount, types.InsertPoolAmountQuery)
 }
 
 func (p *PostgresContext) operationPoolOrAccAmount(name, amount string,
 	op func(*big.Int, *big.Int) error,
 	getAmount func(string, int64) (string, error),
 	insert func(name, amount string, height int64) string) error {
-	ctx, conn, err := p.GetCtxAndConnection()
+	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -156,23 +156,19 @@ func (p *PostgresContext) operationPoolOrAccAmount(name, amount string,
 	if err != nil {
 		return err
 	}
-	originalAmountBig, err := shared.StringToBigInt(originalAmount)
+	originalAmountBig, err := types.StringToBigInt(originalAmount)
 	if err != nil {
 		return err
 	}
-	amountBig, err := shared.StringToBigInt(amount)
+	amountBig, err := types.StringToBigInt(amount)
 	if err != nil {
 		return err
 	}
 	if err := op(originalAmountBig, amountBig); err != nil {
 		return err
 	}
-	tx, err := conn.BeginTx(ctx, pgx.TxOptions{})
-	if err != nil {
+	if _, err = tx.Exec(ctx, insert(name, types.BigIntToString(originalAmountBig), height)); err != nil {
 		return err
 	}
-	if _, err = tx.Exec(ctx, insert(name, shared.BigIntToString(originalAmountBig), height)); err != nil {
-		return err
-	}
-	return tx.Commit(ctx)
+	return nil
 }

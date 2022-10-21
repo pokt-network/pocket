@@ -16,8 +16,8 @@ The official implementation of the [V1 Pocket Network Protocol Specification](ht
 
 All the links you'll need are listed below. If you'd like to contribute to the Pocket V1 Protocol, start by:
 
-1. Reading the [Contribution Guide](docs/contributing/CONTRIBUTING.md)
-2. Get things running by reading the [Development Guide](docs/development/README.md)
+1. Get up and running by reading the [Development Guide](docs/development/README.md)
+2. Find a task by reading the [Contribution Guide](docs/contributing/README.md)
 3. Dive into any of the other guides or modules depending on where your interests lie
 
 <!--
@@ -27,27 +27,29 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 
 ### Guides
 
-- [Contribution Guide](docs/contributing/CONTRIBUTING.md)
 - [Development Guide](docs/development/README.md)
-- [Testing Guide](docs/testing/README.md)
+- [Learning Guide](docs/learning/README.md)
+- [Contribution Guide](docs/contributing/README.md)
+- [Release Guide](docs/build/README.md)
 - [Dependencies Guide](docs/deps/README.md)
-- [Build Guide](docs/build/README.md)
+- [Telemetry Guide](telemetry/README.md)
 
 ### Architectures
 
 - [Shared Architecture](shared/README.md)
-- _Coming Soon: Consensus Architecture_
-- [Persistence Architecture](persistence/README.md)
-- _(Soon to be deprecated)_ [PrePersistence Architecture](persistence/pre_persistence/README.md)
-- [P2P Architecture](p2p/README.md)
 - [Utility Architecture](utility/doc/README.md)
+- _Coming Soon: Consensus Architecture_ // TODO(olshansky): needs a README file with proper code structure
+- [Persistence Architecture](persistence/docs/README.md)
+- [P2P Architecture](p2p/README.md)
 
 ### Changelogs
 
-- [Consensus Changelog](consensus/CHANGELOG.md)
+- _Coming Soon: Shared Changelog_
 - [Utility Changelog](utility/doc/CHANGELOG.md)
-- [Persistence Changelog](persistence/CHANGELOG.md)
-- _Coming Soon: P2P Changelog_
+- [Consensus Changelog](consensus/CHANGELOG.md)
+- [Persistence Changelog](persistence/docs/CHANGELOG.md)
+- [P2P Changelog](p2p/CHANGELOG.md)
+- _Coming Soon: Telemetry Changelog_
 
 ## Support & Contact
 

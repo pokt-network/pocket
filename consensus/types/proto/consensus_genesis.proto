@@ -1,0 +1,20 @@
+syntax = "proto3";
+package consensus;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/pokt-network/pocket/consensus/types";
+
+message ConsensusGenesisState {
+  google.protobuf.Timestamp genesis_time = 1;
+  string chain_id = 2; // TODO/DISCUSS re-evaluate naming covention
+  uint64 max_block_bytes = 3;
+  repeated Validator validators = 4;
+}
+
+message Validator {
+  string address = 1;
+  string public_key = 2;
+  string staked_amount = 3;
+  string generic_param = 4; // TODO/DISCUSS re-evaluate naming covention
+}

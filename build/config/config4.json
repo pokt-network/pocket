@@ -1,43 +1,35 @@
 {
-  "root_dir": "/go/src/github.com/pocket-network",
-  "genesis_source": {
-    "file": {
-      "path": "build/config/genesis.json"
-    }
-  },
-  "private_key": "2c00000000000000000000000000000000000000000000000000000000000000f868bcc508133899cc47b612e4f7d9d5dacc90ce1f28214a97b651baa00bf6e4",
-  "p2p": {
-    "consensus_port": 8080,
-    "use_raintree": true,
-    "connection_type": "tcp",
-    "protocol": "tcp",
-    "address": "0.0.0.0:8083",
-    "external_ip": "172.18.0.1:8083",
-    "peers": [
-      "172.18.0.1:8081",
-      "172.18.0.1:8082",
-      "172.18.0.1:8083",
-      "172.18.0.1:8084"
-    ]
+  "base": {
+    "root_directory": "/go/src/github.com/pocket-network",
+    "private_key": "c6c136d010d07d7f5e9944aa3594a10f9210dd3e26ebc1bc1516a6d957fd0df353ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a"
   },
   "consensus": {
     "max_mempool_bytes": 500000000,
-    "max_block_bytes": 4000000,
-    "pacemaker": {
+    "pacemaker_config": {
       "timeout_msec": 5000,
       "manual": true,
       "debug_time_between_steps_msec": 1000
-    }
+    },
+    "private_key": "c6c136d010d07d7f5e9944aa3594a10f9210dd3e26ebc1bc1516a6d957fd0df353ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a"
   },
-  "pre_persistence": {
-    "capacity": 99999,
-    "mempool_max_bytes": 99999,
-    "mempool_max_txs": 99999
+  "utility": {
+    "max_mempool_transaction_bytes": 1073741824,
+    "max_mempool_transactions": 9000
   },
   "persistence": {
     "postgres_url": "postgres://postgres:postgres@pocket-db:5432/postgres",
-    "schema": "node4",
+    "node_schema": "node4",
     "block_store_path": "/var/blockstore"
   },
-  "utility": {}
+  "p2p": {
+    "consensus_port": 8080,
+    "use_rain_tree": true,
+    "is_empty_connection_type": false,
+    "private_key": "c6c136d010d07d7f5e9944aa3594a10f9210dd3e26ebc1bc1516a6d957fd0df353ee26c82826694ffe1773d7b60d5f20dd9e91bdf8745544711bec5ff9c6fb4a"
+  },
+  "telemetry": {
+    "enabled": true,
+    "address": "0.0.0.0:9000",
+    "endpoint": "/metrics"
+  }
 }

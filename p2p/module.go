@@ -1,25 +1,29 @@
 package p2p
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-
-	"github.com/pokt-network/pocket/shared/config"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/telemetry"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
 var _ modules.P2PModule = &p2pModule{}
 
+const (
+	P2PModuleName = "p2p"
+)
+
 type p2pModule struct {
-	bus       modules.Bus
-	p2pConfig *config.P2PConfig // TODO (Olshansk) to remove this since it'll be available via the bus
+	bus    modules.Bus
+	p2pCfg modules.P2PConfig // TODO (olshansky): to remove this since it'll be available via the bus
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
@@ -27,51 +31,82 @@ type p2pModule struct {
 	network typesP2P.Network
 }
 
-func Create(cfg *config.Config) (m modules.P2PModule, err error) {
-	log.Println("Creating network module")
+// TECHDEBT(drewsky): Discuss how to best expose/access `Address` throughout the codebase.
+func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
+	return m.address, nil
+}
 
-	l, err := CreateListener(cfg.P2P)
+func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	return new(p2pModule).Create(runtimeMgr)
+}
+
+func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	log.Println("Creating network module")
+	var m *p2pModule
+
+	cfg := runtimeMgr.GetConfig()
+	if err := m.ValidateConfig(cfg); err != nil {
+		return nil, fmt.Errorf("config validation failed: %w", err)
+	}
+	p2pCfg := cfg.GetP2PConfig()
+
+	l, err := CreateListener(p2pCfg)
 	if err != nil {
 		return nil, err
 	}
-
+	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.GetPrivateKey())
+	if err != nil {
+		return nil, err
+	}
 	m = &p2pModule{
-		p2pConfig: cfg.P2P,
+		p2pCfg: p2pCfg,
 
 		listener: l,
-		address:  cfg.PrivateKey.Address(),
-
-		network: nil,
+		address:  privateKey.Address(),
 	}
-
 	return m, nil
 }
 
 func (m *p2pModule) SetBus(bus modules.Bus) {
+	// INVESTIGATE: Can the code flow be modified to set the bus here?
+	// m.network.SetBus(m.GetBus())
 	m.bus = bus
 }
 
 func (m *p2pModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		log.Printf("[WARN]: PocketBus is not initialized")
+		return nil
 	}
 	return m.bus
+}
+
+func (m *p2pModule) GetModuleName() string {
+	return P2PModuleName
 }
 
 func (m *p2pModule) Start() error {
 	log.Println("Starting network module")
 
-	addrBook, err := ValidatorMapToAddrBook(m.p2pConfig, m.bus.GetConsensusModule().ValidatorMap())
+	m.GetBus().
+		GetTelemetryModule().
+		GetTimeSeriesAgent().
+		CounterRegister(
+			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME,
+			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
+		)
+
+	addrBook, err := ValidatorMapToAddrBook(m.p2pCfg, m.bus.GetConsensusModule().ValidatorMap())
 	if err != nil {
 		return err
 	}
 
-	if m.p2pConfig.UseRainTree {
+	if m.p2pCfg.GetUseRainTree() {
 		m.network = raintree.NewRainTreeNetwork(m.address, addrBook)
 	} else {
 		m.network = stdnetwork.NewNetwork(addrBook)
 	}
-
+	m.network.SetBus(m.GetBus())
 	go func() {
 		for {
 			data, err := m.listener.Read()
@@ -82,6 +117,11 @@ func (m *p2pModule) Start() error {
 			go m.handleNetworkMessage(data)
 		}
 	}()
+
+	m.GetBus().
+		GetTelemetryModule().
+		GetTimeSeriesAgent().
+		CounterIncrement(telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME)
 
 	return nil
 }
@@ -94,8 +134,8 @@ func (m *p2pModule) Stop() error {
 	return nil
 }
 
-func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
-	c := &types.PocketEvent{
+func (m *p2pModule) Broadcast(msg *anypb.Any, topic debug.PocketTopic) error {
+	c := &debug.PocketEvent{
 		Topic: topic,
 		Data:  msg,
 	}
@@ -104,11 +144,12 @@ func (m *p2pModule) Broadcast(msg *anypb.Any, topic types.PocketTopic) error {
 		return err
 	}
 	log.Println("broadcasting message to network")
+
 	return m.network.NetworkBroadcast(data)
 }
 
-func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.PocketTopic) error {
-	c := &types.PocketEvent{
+func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic debug.PocketTopic) error {
+	c := &debug.PocketEvent{
 		Topic: topic,
 		Data:  msg,
 	}
@@ -118,6 +159,10 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic types.
 	}
 
 	return m.network.NetworkSend(data, addr)
+}
+
+func (*p2pModule) ValidateConfig(cfg modules.Config) error {
+	return nil
 }
 
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
@@ -134,13 +179,13 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 		return
 	}
 
-	networkMessage := types.PocketEvent{}
+	networkMessage := debug.PocketEvent{}
 	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
 		log.Println("Error decoding network message: ", err)
 		return
 	}
 
-	event := types.PocketEvent{
+	event := debug.PocketEvent{
 		Topic: networkMessage.Topic,
 		Data:  networkMessage.Data,
 	}

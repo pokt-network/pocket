@@ -1,38 +1,23 @@
 package test
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 	"log"
 	"math/big"
 	"math/rand"
 	"os"
-	"os/signal"
-	"syscall"
+	"strings"
 	"testing"
 	"time"
 
-	"golang.org/x/exp/slices"
-
-	"github.com/jackc/pgx/v4"
-	"github.com/stretchr/testify/require"
-
-	"github.com/ory/dockertest"
-	"github.com/ory/dockertest/docker"
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/schema"
-	"github.com/pokt-network/pocket/shared/types"
-)
-
-const (
-	user             = "postgres"
-	password         = "secret"
-	db               = "postgres"
-	sql_schema       = "test_schema"
-	port             = "5431" // Intentionally not `5432` so as not to interfere with local settings
-	dialect          = "postgres"
-	connStringFormat = "postgres://%s:%s@%s/%s?sslmode=disable"
+	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -51,104 +36,92 @@ var (
 	DefaultMaxRelays     = types.BigIntToString(DefaultMaxRelaysBig)
 	StakeToUpdate        = types.BigIntToString((&big.Int{}).Add(DefaultStakeBig, DefaultDeltaBig))
 
-	DefaultStakeStatus     = persistence.StakedStatus
+	DefaultStakeStatus     = int32(persistence.StakedStatus)
 	DefaultPauseHeight     = int64(-1)
 	DefaultUnstakingHeight = int64(-1)
-)
 
-var testPostgresDB *pgx.Conn
+	OlshanskyURL    = "https://olshansky.info"
+	OlshanskyChains = []string{"OLSH"}
+
+	testSchema = "test_schema"
+)
+var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 
 // See https://github.com/ory/dockertest as reference for the template of this code
 // Postgres example can be found here: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
 func TestMain(m *testing.M) {
-	testPostgresDB = new(pgx.Conn)
+	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
+	testPersistenceMod = newTestPersistenceModule(dbUrl)
+	exitCode := m.Run()
+	test_artifacts.CleanupPostgresDocker(m, pool, resource)
+	os.Exit(exitCode)
+}
 
-	opts := dockertest.RunOptions{
-		Repository: "postgres",
-		Tag:        "12.3",
-		Env: []string{
-			"POSTGRES_USER=" + user,
-			"POSTGRES_PASSWORD=" + password,
-			"POSTGRES_DB=" + db,
-		},
-	}
+func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresContext {
+	ctx, err := testPersistenceMod.NewRWContext(height)
+	require.NoError(t, err)
 
-	defer func() {
-		ctx := context.TODO()
-		testPostgresDB.Close(context.TODO())
-		ctx.Done()
-	}()
+	db, ok := ctx.(*persistence.PostgresContext)
+	require.True(t, ok)
 
-	// uses a sensible default on windows (tcp/http) and linux/osx (socket)
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
-	}
-
-	// pulls an image, creates a container based on it and runs it
-	resource, err := pool.RunWithOptions(&opts, func(config *docker.HostConfig) {
-		// set AutoRemove to true so that stopped container goes away by itself
-		config.AutoRemove = true
-		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
+	t.Cleanup(func() {
+		require.NoError(t, db.Release())
+		require.NoError(t, db.ResetContext())
 	})
+
+	return db
+}
+
+func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
+	ctx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
-		log.Fatalf("***Make sure your docker daemon is running!!*** Could not start resource: %s\n", err.Error())
+		log.Fatalf("Error creating new context: %v\n", err)
 	}
 
-	// Example: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
-	// Reasoning: https://github.com/ory/dockertest/blob/v3/examples/PostgreSQL.md
-	hostAndPort := resource.GetHostPort("5432/tcp")
-	databaseUrl := fmt.Sprintf(connStringFormat, user, password, hostAndPort, db)
+	db, ok := ctx.(*persistence.PostgresContext)
+	if !ok {
+		log.Fatalf("Error casting RW context to Postgres context")
+	}
 
-	log.Println("Connecting to database on url: ", databaseUrl)
-
-	// DOCUMENT: Why do we not call `syscall.SIGTERM` here
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		for sig := range c {
-			log.Printf("exit signal %d received\n", sig)
-			if err := pool.Purge(resource); err != nil {
-				log.Fatalf("could not purge resource: %s", err)
-			}
+	f.Cleanup(func() {
+		if err := db.Release(); err != nil {
+			f.FailNow()
 		}
-	}()
-
-	resource.Expire(120) // Tell docker to hard kill the container in 120 seconds
-
-	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
-	if err = pool.Retry(func() error {
-		testPostgresDB, err = persistence.ConnectAndInitializeDatabase(databaseUrl, sql_schema)
-		if err != nil {
-			log.Println(err.Error())
-			return err
+		if err := db.ResetContext(); err != nil {
+			f.FailNow()
 		}
-		return nil
-	}); err != nil {
-		log.Fatalf("could not connect to docker: %s", err.Error())
-	}
-	code := m.Run()
+	})
 
-	// You can't defer this because `os.Exit`` doesn't care for defer
-	if err := pool.Purge(resource); err != nil {
-		log.Fatalf("could not purge resource: %s", err)
+	return db
+}
+
+// TODO(andrew): Take in `t testing.T` as a parameter and error if there's an issue
+func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
+	cfg := runtime.NewConfig(&runtime.BaseConfig{}, runtime.WithPersistenceConfig(&types.PersistenceConfig{
+		PostgresUrl:    databaseUrl,
+		NodeSchema:     testSchema,
+		BlockStorePath: "",
+	}))
+	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
+	runtimeCfg := runtime.NewManager(cfg, genesisState)
+
+	persistenceMod, err := persistence.Create(runtimeCfg)
+	if err != nil {
+		log.Fatalf("Error creating persistence module: %s", err)
 	}
-	os.Exit(code)
+	return persistenceMod.(modules.PersistenceModule)
 }
 
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
 func fuzzSingleProtocolActor(
 	f *testing.F,
-	newTestActor func() (schema.BaseActor, error),
-	getTestActor func(db persistence.PostgresContext, address string) (*schema.BaseActor, error),
-	protocolActorSchema schema.ProtocolActorSchema) {
+	newTestActor func() (*types.Actor, error),
+	getTestActor func(db *persistence.PostgresContext, address string) (*types.Actor, error),
+	protocolActorSchema types.ProtocolActorSchema) {
 
-	db := persistence.PostgresContext{
-		Height:     0,
-		PostgresDB: testPostgresDB,
-	}
+	db := NewFuzzTestPostgresContext(f, 0)
 
-	err := db.ClearAllDebug()
+	err := db.DebugClearAll()
 	require.NoError(f, err)
 
 	actor, err := newTestActor()
@@ -188,9 +161,9 @@ func fuzzSingleProtocolActor(
 		switch op {
 		case "UpdateActor":
 			numParamUpdatesSupported := 3
-			newStakedTokens := originalActor.StakedTokens
+			newStakedTokens := originalActor.StakedAmount
 			newChains := originalActor.Chains
-			newActorSpecificParam := originalActor.ActorSpecificParam
+			newActorSpecificParam := originalActor.GenericParam
 
 			iterations := rand.Intn(2)
 			for i := 0; i < iterations; i++ {
@@ -199,9 +172,9 @@ func fuzzSingleProtocolActor(
 					newStakedTokens = getRandomBigIntString()
 				case 1:
 					switch protocolActorSchema.GetActorSpecificColName() {
-					case schema.ServiceURLCol:
+					case types.ServiceURLCol:
 						newActorSpecificParam = getRandomServiceURL()
-					case schema.MaxRelaysCol:
+					case types.MaxRelaysCol:
 						newActorSpecificParam = getRandomBigIntString()
 					default:
 						t.Error("Unexpected actor specific column name")
@@ -212,15 +185,15 @@ func fuzzSingleProtocolActor(
 					}
 				}
 			}
-			updatedActor := schema.BaseActor{
-				Address:            originalActor.Address,
-				PublicKey:          originalActor.PublicKey,
-				StakedTokens:       newStakedTokens,
-				ActorSpecificParam: newActorSpecificParam,
-				OutputAddress:      originalActor.OutputAddress,
-				PausedHeight:       originalActor.PausedHeight,
-				UnstakingHeight:    originalActor.UnstakingHeight,
-				Chains:             newChains,
+			updatedActor := &types.Actor{
+				Address:         originalActor.Address,
+				PublicKey:       originalActor.PublicKey,
+				StakedAmount:    newStakedTokens,
+				GenericParam:    newActorSpecificParam,
+				Output:          originalActor.Output,
+				PausedHeight:    originalActor.PausedHeight,
+				UnstakingHeight: originalActor.UnstakingHeight,
+				Chains:          newChains,
 			}
 			err = db.UpdateActor(protocolActorSchema, updatedActor)
 			require.NoError(t, err)
@@ -229,8 +202,13 @@ func fuzzSingleProtocolActor(
 			require.NoError(t, err)
 
 			require.ElementsMatch(t, newActor.Chains, newChains, "staked chains not updated")
-			require.Equal(t, newActor.StakedTokens, newStakedTokens, "staked tokens not updated")
-			require.Equal(t, newActor.ActorSpecificParam, newActorSpecificParam, "actor specific param not updated")
+			require.NotContains(t, newActor.StakedAmount, "invalid")
+			// TODO(andrew): Use `require.Contains` instead. E.g. require.NotContains(t, newActor.StakedTokens, "invalid")
+			if strings.Contains(newActor.StakedAmount, "invalid") {
+				log.Println("")
+			}
+			require.Equal(t, newActor.StakedAmount, newStakedTokens, "staked tokens not updated")
+			require.Equal(t, newActor.GenericParam, newActorSpecificParam, "actor specific param not updated")
 		case "GetActorsReadyToUnstake":
 			unstakingActors, err := db.GetActorsReadyToUnstake(protocolActorSchema, db.Height)
 			require.NoError(t, err)
@@ -238,8 +216,8 @@ func fuzzSingleProtocolActor(
 			if originalActor.UnstakingHeight != db.Height { // Not ready to unstake
 				require.Nil(t, unstakingActors)
 			} else {
-				idx := slices.IndexFunc(unstakingActors, func(a *types.UnstakingActor) bool {
-					return originalActor.Address == hex.EncodeToString(a.Address)
+				idx := slices.IndexFunc(unstakingActors, func(a modules.IUnstakingActor) bool {
+					return originalActor.Address == hex.EncodeToString(a.GetAddress())
 				})
 				require.NotEqual(t, idx, -1, fmt.Sprintf("actor that is unstaking was not found %+v", originalActor))
 			}
@@ -295,7 +273,7 @@ func fuzzSingleProtocolActor(
 			outputAddr, err := db.GetActorOutputAddress(protocolActorSchema, addr, db.Height)
 			require.NoError(t, err)
 
-			require.Equal(t, originalActor.OutputAddress, hex.EncodeToString(outputAddr), "output address incorrect")
+			require.Equal(t, originalActor.Output, hex.EncodeToString(outputAddr), "output address incorrect")
 		case "IncrementHeight":
 			db.Height++
 		default:

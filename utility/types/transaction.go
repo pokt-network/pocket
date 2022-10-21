@@ -2,42 +2,43 @@ package types
 
 import (
 	"bytes"
-	"encoding/hex"
+	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/shared/modules"
+	"google.golang.org/protobuf/proto"
 )
 
-func TransactionFromBytes(transaction []byte) (*Transaction, types.Error) {
+func TransactionFromBytes(transaction []byte) (*Transaction, Error) {
 	tx := &Transaction{}
-	if err := types.GetCodec().Unmarshal(transaction, tx); err != nil {
-		return nil, types.ErrUnmarshalTransaction(err)
+	if err := codec.GetCodec().Unmarshal(transaction, tx); err != nil {
+		return nil, ErrUnmarshalTransaction(err)
 	}
 	return tx, nil
 }
 
-func (tx *Transaction) ValidateBasic() types.Error {
+func (tx *Transaction) ValidateBasic() Error {
 	if tx.Nonce == "" {
-		return types.ErrEmptyNonce()
+		return ErrEmptyNonce()
 	}
-	if _, err := types.GetCodec().FromAny(tx.Msg); err != nil {
-		return types.ErrProtoFromAny(err)
+	if _, err := codec.GetCodec().FromAny(tx.Msg); err != nil {
+		return ErrProtoFromAny(err)
 	}
 	if tx.Signature == nil || tx.Signature.Signature == nil {
-		return types.ErrEmptySignature()
+		return ErrEmptySignature()
 	}
 	if tx.Signature.PublicKey == nil {
-		return types.ErrEmptyPublicKey()
+		return ErrEmptyPublicKey()
 	}
 	publicKey, err := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
 	if err != nil {
-		return types.ErrNewPublicKeyFromBytes(err)
+		return ErrNewPublicKeyFromBytes(err)
 	}
 	signBytes, err := tx.SignBytes()
 	if err != nil {
-		return types.ErrProtoMarshal(err)
+		return ErrProtoMarshal(err)
 	}
 	if ok := publicKey.Verify(signBytes, tx.Signature.Signature); !ok {
-		return types.ErrSignatureVerificationFailed()
+		return ErrSignatureVerificationFailed()
 	}
 	if _, err := tx.Message(); err != nil {
 		return err
@@ -45,20 +46,20 @@ func (tx *Transaction) ValidateBasic() types.Error {
 	return nil
 }
 
-func (tx *Transaction) Message() (Message, types.Error) {
-	codec := types.GetCodec()
+func (tx *Transaction) Message() (Message, Error) {
+	codec := codec.GetCodec()
 	msg, er := codec.FromAny(tx.Msg)
 	if er != nil {
-		return nil, er
+		return nil, ErrProtoMarshal(er)
 	}
 	message, ok := msg.(Message)
 	if !ok {
-		return nil, types.ErrDecodeMessage()
+		return nil, ErrDecodeMessage()
 	}
 	return message, nil
 }
 
-func (tx *Transaction) Sign(privateKey crypto.PrivateKey) types.Error {
+func (tx *Transaction) Sign(privateKey crypto.PrivateKey) Error {
 	publicKey := privateKey.PublicKey()
 	bz, err := tx.SignBytes()
 	if err != nil {
@@ -66,7 +67,7 @@ func (tx *Transaction) Sign(privateKey crypto.PrivateKey) types.Error {
 	}
 	signature, er := privateKey.Sign(bz)
 	if er != nil {
-		return types.ErrTransactionSign(er)
+		return ErrTransactionSign(er)
 	}
 	tx.Signature = &Signature{
 		PublicKey: publicKey.Bytes(),
@@ -75,29 +76,29 @@ func (tx *Transaction) Sign(privateKey crypto.PrivateKey) types.Error {
 	return nil
 }
 
-func (tx *Transaction) Hash() (string, types.Error) {
+func (tx *Transaction) Hash() (string, Error) {
 	b, err := tx.Bytes()
 	if err != nil {
-		return "", types.ErrProtoMarshal(err)
+		return "", ErrProtoMarshal(err)
 	}
 	return TransactionHash(b), nil
 }
 
-func (tx *Transaction) SignBytes() ([]byte, types.Error) {
+func (tx *Transaction) SignBytes() ([]byte, Error) {
 	// transaction := proto.Clone(tx).(*Transaction)
 	transaction := *tx
 	transaction.Signature = nil
-	bz, err := types.GetCodec().Marshal(&transaction)
+	bz, err := codec.GetCodec().Marshal(&transaction)
 	if err != nil {
-		return nil, types.ErrProtoMarshal(err)
+		return nil, ErrProtoMarshal(err)
 	}
 	return bz, nil
 }
 
-func (tx *Transaction) Bytes() ([]byte, types.Error) {
-	bz, err := types.GetCodec().Marshal(tx)
+func (tx *Transaction) Bytes() ([]byte, Error) {
+	bz, err := codec.GetCodec().Marshal(tx)
 	if err != nil {
-		return nil, types.ErrProtoMarshal(err)
+		return nil, ErrProtoMarshal(err)
 	}
 	return bz, nil
 }
@@ -108,6 +109,58 @@ func (tx *Transaction) Equals(tx2 *Transaction) bool {
 	return bytes.Equal(b, b1)
 }
 
+var _ modules.TxResult = &DefaultTxResult{}
+
+func (x *DefaultTxResult) Bytes() ([]byte, error) {
+	return codec.GetCodec().Marshal(x)
+}
+
+func (*DefaultTxResult) FromBytes(bz []byte) (modules.TxResult, error) {
+	result := new(DefaultTxResult)
+	if err := codec.GetCodec().Unmarshal(bz, result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (x *DefaultTxResult) Hash() ([]byte, error) {
+	bz, err := x.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	return x.HashFromBytes(bz)
+}
+
+func (x *DefaultTxResult) HashFromBytes(bz []byte) ([]byte, error) {
+	return crypto.SHA3Hash(bz), nil
+}
+
+func (tx *Transaction) ToTxResult(height int64, index int, signer, recipient, msgType string, error Error) (*DefaultTxResult, Error) {
+	txBytes, err := tx.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	code, errString := int32(0), ""
+	if error != nil {
+		code = int32(error.Code())
+		errString = err.Error()
+	}
+	return &DefaultTxResult{
+		Tx:            txBytes,
+		Height:        height,
+		Index:         int32(index),
+		ResultCode:    code,
+		Error:         errString,
+		SignerAddr:    signer,
+		RecipientAddr: recipient,
+		MessageType:   msgType,
+	}, nil
+}
+
+func (tx *Transaction) GetMessage() (proto.Message, error) {
+	return codec.GetCodec().FromAny(tx.Msg)
+}
+
 func TransactionHash(transactionProtoBytes []byte) string {
-	return hex.EncodeToString(crypto.SHA3Hash(transactionProtoBytes))
+	return crypto.GetHashStringFromBytes(transactionProtoBytes)
 }

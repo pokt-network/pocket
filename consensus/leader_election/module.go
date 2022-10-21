@@ -4,8 +4,11 @@ import (
 	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/config"
 	"github.com/pokt-network/pocket/shared/modules"
+)
+
+const (
+	LeaderElectionModuleName = "leader_election"
 )
 
 type LeaderElectionModule interface {
@@ -13,15 +16,17 @@ type LeaderElectionModule interface {
 	ElectNextLeader(*typesCons.HotstuffMessage) (typesCons.NodeId, error)
 }
 
-var _ leaderElectionModule = leaderElectionModule{}
+var _ LeaderElectionModule = &leaderElectionModule{}
 
 type leaderElectionModule struct {
 	bus modules.Bus
 }
 
-func Create(
-	config *config.Config,
-) (LeaderElectionModule, error) {
+func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
+	return new(leaderElectionModule).Create(runtime)
+}
+
+func (*leaderElectionModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	return &leaderElectionModule{}, nil
 }
 
@@ -32,6 +37,10 @@ func (m *leaderElectionModule) Start() error {
 
 func (m *leaderElectionModule) Stop() error {
 	return nil
+}
+
+func (m *leaderElectionModule) GetModuleName() string {
+	return LeaderElectionModuleName
 }
 
 func (m *leaderElectionModule) SetBus(pocketBus modules.Bus) {

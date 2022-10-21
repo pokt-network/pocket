@@ -1,15 +1,17 @@
 package types
 
+// TODO: Split this file into multiple types files.
 import (
 	"sort"
 
-	typesGenesis "github.com/pokt-network/pocket/shared/types/genesis"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 type NodeId uint64
 
 type ValAddrToIdMap map[string]NodeId // Mapping from hex encoded address to an integer node id.
 type IdToValAddrMap map[NodeId]string // Mapping from node id to a hex encoded string address.
+type ValidatorMap map[string]modules.Actor
 
 type ConsensusNodeState struct {
 	NodeId NodeId
@@ -21,7 +23,7 @@ type ConsensusNodeState struct {
 	IsLeader bool
 }
 
-func GetValAddrToIdMap(validatorMap map[string]*typesGenesis.Validator) (ValAddrToIdMap, IdToValAddrMap) {
+func GetValAddrToIdMap(validatorMap ValidatorMap) (ValAddrToIdMap, IdToValAddrMap) {
 	valAddresses := make([]string, 0, len(validatorMap))
 	for addr := range validatorMap {
 		valAddresses = append(valAddresses, addr)
@@ -38,3 +40,31 @@ func GetValAddrToIdMap(validatorMap map[string]*typesGenesis.Validator) (ValAddr
 
 	return valToIdMap, idToValMap
 }
+
+func (x *PacemakerConfig) SetTimeoutMsec(u uint64) {
+	x.TimeoutMsec = u
+}
+
+func ValidatorMapToModulesValidatorMap(validatorMap ValidatorMap) (vm modules.ValidatorMap) {
+	vm = make(modules.ValidatorMap)
+	for _, v := range validatorMap {
+		vm[v.GetAddress()] = v
+	}
+	return
+}
+
+func ActorListToValidatorMap(actors []modules.Actor) (m ValidatorMap) {
+	m = make(ValidatorMap, len(actors))
+	for _, v := range actors {
+		m[v.GetAddress()] = v
+	}
+	return
+}
+
+var _ modules.Actor = &Validator{}
+
+func (x *Validator) GetPausedHeight() int64         { panic("not implemented on consensus validator") }
+func (x *Validator) GetUnstakingHeight() int64      { panic("not implemented on consensus validator") }
+func (x *Validator) GetOutput() string              { panic("not implemented on consensus validator") }
+func (x *Validator) GetActorTyp() modules.ActorType { panic("not implemented on consensus validator") }
+func (x *Validator) GetChains() []string            { panic("not implemented on consensus validator") }

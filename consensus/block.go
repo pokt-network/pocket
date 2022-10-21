@@ -1,82 +1,92 @@
 package consensus
 
 import (
-	"encoding/hex"
+	"log"
 	"unsafe"
 
-	"github.com/pokt-network/pocket/shared/types"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
 )
 
-// TODO(olshansky): Sync with Andrew on the type of validation we need here.
-func (m *consensusModule) validateBlock(block *types.Block) error {
-	if block == nil {
-		return typesCons.ErrNilBlock
+func (m *consensusModule) commitBlock(block *typesCons.Block) error {
+	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
+
+	// Store the block in the KV store
+	codec := codec.GetCodec()
+	blockProtoBytes, err := codec.Marshal(block)
+	if err != nil {
+		return err
+	}
+
+	// IMPROVE(olshansky): temporary solution. `ApplyBlock` above applies the
+	// transactions to the postgres database, and this stores it in the KV store upon commitment.
+	// Instead of calling this directly, an alternative solution is to store the block metadata in
+	// the persistence context and have `CommitPersistenceContext` do this under the hood. However,
+	// additional `Block` metadata will need to be passed through and may change when we merkle the
+	// state hash.
+	if err := m.storeBlock(block, blockProtoBytes); err != nil {
+		return err
+	}
+
+	// Commit and release the context
+	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
+		return err
+	}
+
+	m.utilityContext.ReleaseContext()
+	m.utilityContext = nil
+
+	m.lastAppHash = block.BlockHeader.Hash
+
+	return nil
+}
+
+// IMPROVE(#285): ensure these persistence operations are atomic, we can't commit block without
+// committing the transactions and metadata at the same time
+func (m *consensusModule) storeBlock(block *typesCons.Block, blockProtoBytes []byte) error {
+	store := m.utilityContext.GetPersistenceContext()
+	// Store in KV Store
+	if err := store.StoreBlock(blockProtoBytes); err != nil {
+		return err
+	}
+	// Store transactions in Indexer
+	for _, txResult := range m.TxResults {
+		if err := store.StoreTransaction(txResult); err != nil {
+			return err
+		}
+	}
+
+	// Store in SQL Store
+	header := block.BlockHeader
+	if err := store.InsertBlock(uint64(header.Height), header.Hash, header.ProposerAddress, header.QuorumCertificate); err != nil {
+		return err
 	}
 	return nil
 }
 
-// This is a helper function intended to be called by a leader/validator during a view change
-func (m *consensusModule) prepareBlockAsLeader() (*types.Block, error) {
-	if m.isReplica() {
-		return nil, typesCons.ErrReplicaPrepareBlock
+// TODO: Add unit tests specific to block validation
+// IMPROVE: (olshansky) rename to provide clarity of operation. ValidateBasic() is typically a stateless check not stateful
+func (m *consensusModule) validateBlockBasic(block *typesCons.Block) error {
+	if block == nil && m.Step != NewRound {
+		return typesCons.ErrNilBlock
 	}
 
-	if err := m.refreshUtilityContext(); err != nil {
-		return nil, err
+	if block != nil && m.Step == NewRound {
+		return typesCons.ErrBlockExists
 	}
 
-	txs, err := m.utilityContext.GetProposalTransactions(m.privateKey.Address(), maxTxBytes, lastByzValidators)
-	if err != nil {
-		return nil, err
+	if block != nil && unsafe.Sizeof(*block) > uintptr(m.consGenesis.GetMaxBlockBytes()) {
+		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.consGenesis.GetMaxBlockBytes())
 	}
 
-	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
-	if err != nil {
-		return nil, err
-	}
-
-	blockHeader := &types.BlockHeader{
-		Height:            int64(m.Height),
-		Hash:              hex.EncodeToString(appHash),
-		NumTxs:            uint32(len(txs)),
-		LastBlockHash:     m.appHash,
-		ProposerAddress:   m.privateKey.Address().Bytes(),
-		QuorumCertificate: []byte("HACK: Temporary placeholder"),
-	}
-
-	block := &types.Block{
-		BlockHeader:  blockHeader,
-		Transactions: txs,
-	}
-
-	return block, nil
-}
-
-// This is a helper function intended to be called by a replica/voter during a view change
-func (m *consensusModule) applyBlockAsReplica(block *types.Block) error {
-	if m.isLeader() {
-		return typesCons.ErrLeaderApplyBLock
-	}
-
-	// TODO(olshansky): Add unit tests to verify this.
-	if unsafe.Sizeof(*block) > uintptr(m.consCfg.MaxBlockBytes) {
-		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.consCfg.MaxBlockBytes)
-	}
-
-	if err := m.refreshUtilityContext(); err != nil {
-		return err
-	}
-
-	appHash, err := m.utilityContext.ApplyBlock(int64(m.Height), block.BlockHeader.ProposerAddress, block.Transactions, lastByzValidators)
-	if err != nil {
-		return err
-	}
-
-	// DISCUSS(drewsky): Is `ApplyBlock` going to return blockHash or appHash?
-	if block.BlockHeader.Hash != hex.EncodeToString(appHash) {
-		return typesCons.ErrInvalidAppHash(block.BlockHeader.Hash, hex.EncodeToString(appHash))
+	// If the current block being processed (i.e. voted on) by consensus is non nil, we need to make
+	// sure that the data (height, round, step, txs, etc) is the same before we start validating the signatures
+	if m.Block != nil {
+		// DISCUSS: The only difference between blocks from one step to another is the QC, so we need
+		//          to determine where/how to validate this
+		if protoHash(m.Block) != protoHash(block) {
+			log.Println("[TECHDEBT][ERROR] The block being processed is not the same as that received by the consensus module ")
+		}
 	}
 
 	return nil
@@ -84,6 +94,8 @@ func (m *consensusModule) applyBlockAsReplica(block *types.Block) error {
 
 // Creates a new Utility context and clears/nullifies any previous contexts if they exist
 func (m *consensusModule) refreshUtilityContext() error {
+	// Catch-all structure to release the previous utility context if it wasn't properly cleaned up.
+	// Ideally, this should not be called.
 	if m.utilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
 		m.utilityContext.ReleaseContext()
@@ -96,36 +108,5 @@ func (m *consensusModule) refreshUtilityContext() error {
 	}
 
 	m.utilityContext = utilityContext
-	return nil
-}
-
-func (m *consensusModule) commitBlock(block *types.Block) error {
-	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
-
-	// Store the block in the KV store
-	codec := types.GetCodec()
-	blockProtoBytes, err := codec.Marshal(block)
-	if err != nil {
-		return err
-	}
-
-	// Commit and release the context
-	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
-		return err
-	}
-	// IMPROVE(olshansky): temporary solution. `ApplyBlock` above applies the
-	// transactions to the postgres database, and this stores it in the KV store upon commitment.
-	// Instead of calling this directly, an alternative solution is to store the block metadata in
-	// the persistence context and have `CommitPersistenceContext` do this under the hood. However,
-	// additional `Block` metadata will need to be passed through and may change when we merkle the
-	// state hash.
-	if err := m.utilityContext.StoreBlock(blockProtoBytes); err != nil {
-		return err
-	}
-	m.utilityContext.ReleaseContext()
-	m.utilityContext = nil
-
-	m.appHash = block.BlockHeader.Hash
-
 	return nil
 }

@@ -1,0 +1,28 @@
+syntax = "proto3";
+package utility;
+
+option go_package = "github.com/pokt-network/pocket/utility/types";
+
+import "google/protobuf/any.proto";
+
+// TECHDEBT: Consolidate this with consensus
+message Transaction {
+  google.protobuf.Any msg = 1;
+  Signature signature = 2;
+  string nonce = 3;
+}
+
+message TransactionResult {
+  uint32 code = 1;
+  bytes signer = 2;
+  bytes recipient = 3;
+  string message_type = 4;
+  int64 height = 5;
+  uint32 index = 6;
+  Transaction transaction = 7;
+}
+
+message Signature {
+  bytes public_key = 1;
+  bytes signature = 2;
+}

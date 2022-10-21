@@ -2,75 +2,79 @@ package persistence
 
 import (
 	"encoding/hex"
-	"log"
 
-	"github.com/pokt-network/pocket/persistence/schema"
-	"github.com/pokt-network/pocket/shared/types"
+	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 func (p PostgresContext) GetValidatorExists(address []byte, height int64) (exists bool, err error) {
-	return p.GetExists(schema.ValidatorActor, address, height)
+	return p.GetExists(types.ValidatorActor, address, height)
 }
 
 func (p PostgresContext) GetValidator(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, err error) {
-	actor, err := p.GetActor(schema.ValidatorActor, address, height)
+	actor, err := p.GetActor(types.ValidatorActor, address, height)
 	operator = actor.Address
 	publicKey = actor.PublicKey
-	stakedTokens = actor.StakedTokens
-	serviceURL = actor.ActorSpecificParam
-	outputAddress = actor.OutputAddress
+	stakedTokens = actor.StakedAmount
+	serviceURL = actor.GenericParam
+	outputAddress = actor.Output
 	pausedHeight = actor.PausedHeight
 	unstakingHeight = actor.UnstakingHeight
 	return
 }
 
-func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, output []byte, _ bool, _ int, serviceURL string, stakedAmount string, pausedHeight int64, unstakingHeight int64) error {
-	return p.InsertActor(schema.ValidatorActor, schema.BaseActor{
-		Address:            hex.EncodeToString(address),
-		PublicKey:          hex.EncodeToString(publicKey),
-		StakedTokens:       stakedAmount,
-		ActorSpecificParam: serviceURL,
-		OutputAddress:      hex.EncodeToString(output),
-		PausedHeight:       pausedHeight,
-		UnstakingHeight:    unstakingHeight,
+func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, output []byte, _ bool, _ int32, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error {
+	return p.InsertActor(types.ValidatorActor, &types.Actor{
+		ActorType:       types.ActorType_Val,
+		Address:         hex.EncodeToString(address),
+		PublicKey:       hex.EncodeToString(publicKey),
+		StakedAmount:    stakedTokens,
+		GenericParam:    serviceURL,
+		Output:          hex.EncodeToString(output),
+		PausedHeight:    pausedHeight,
+		UnstakingHeight: unstakingHeight,
 	})
 }
 
 func (p PostgresContext) UpdateValidator(address []byte, serviceURL string, stakedAmount string) error {
-	return p.UpdateActor(schema.ValidatorActor, schema.BaseActor{
-		Address:            hex.EncodeToString(address),
-		StakedTokens:       stakedAmount,
-		ActorSpecificParam: serviceURL,
+	return p.UpdateActor(types.ValidatorActor, &types.Actor{
+		ActorType:    types.ActorType_Val,
+		Address:      hex.EncodeToString(address),
+		StakedAmount: stakedAmount,
+		GenericParam: serviceURL,
 	})
 }
 
-func (p PostgresContext) DeleteValidator(address []byte) error {
-	log.Println("[DEBUG] DeleteValidator is a NOOP")
-	return nil
+func (p PostgresContext) GetValidatorStakeAmount(height int64, address []byte) (string, error) {
+	return p.GetActorStakeAmount(types.ValidatorActor, address, height)
 }
 
-func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, _ int) ([]*types.UnstakingActor, error) {
-	return p.GetActorsReadyToUnstake(schema.ValidatorActor, height)
+func (p PostgresContext) SetValidatorStakeAmount(address []byte, stakeAmount string) error {
+	return p.SetActorStakeAmount(types.ValidatorActor, address, stakeAmount)
 }
 
-func (p PostgresContext) GetValidatorStatus(address []byte, height int64) (int, error) {
-	return p.GetActorStatus(schema.ValidatorActor, address, height)
+func (p PostgresContext) GetValidatorsReadyToUnstake(height int64, status int32) ([]modules.IUnstakingActor, error) {
+	return p.GetActorsReadyToUnstake(types.ValidatorActor, height)
 }
 
-func (p PostgresContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, _ int) error {
-	return p.SetActorUnstakingHeightAndStatus(schema.ValidatorActor, address, unstakingHeight)
+func (p PostgresContext) GetValidatorStatus(address []byte, height int64) (int32, error) {
+	return p.GetActorStatus(types.ValidatorActor, address, height)
+}
+
+func (p PostgresContext) SetValidatorUnstakingHeightAndStatus(address []byte, unstakingHeight int64, status int32) error {
+	return p.SetActorUnstakingHeightAndStatus(types.ValidatorActor, address, unstakingHeight)
 }
 
 func (p PostgresContext) GetValidatorPauseHeightIfExists(address []byte, height int64) (int64, error) {
-	return p.GetActorPauseHeightIfExists(schema.ValidatorActor, address, height)
+	return p.GetActorPauseHeightIfExists(types.ValidatorActor, address, height)
 }
 
-func (p PostgresContext) SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, _ int) error {
-	return p.SetActorStatusAndUnstakingHeightIfPausedBefore(schema.ValidatorActor, pausedBeforeHeight, unstakingHeight)
+func (p PostgresContext) SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight int64, status int32) error {
+	return p.SetActorStatusAndUnstakingHeightIfPausedBefore(types.ValidatorActor, pausedBeforeHeight, unstakingHeight)
 }
 
 func (p PostgresContext) SetValidatorPauseHeight(address []byte, height int64) error {
-	return p.SetActorPauseHeight(schema.ValidatorActor, address, height)
+	return p.SetActorPauseHeight(types.ValidatorActor, address, height)
 }
 
 // TODO(team): The Get & Update operations need to be made atomic
@@ -97,7 +101,7 @@ func (p PostgresContext) GetValidatorStakedTokens(address []byte, height int64) 
 }
 
 func (p PostgresContext) GetValidatorOutputAddress(operator []byte, height int64) (output []byte, err error) {
-	return p.GetActorOutputAddress(schema.ValidatorActor, operator, height)
+	return p.GetActorOutputAddress(types.ValidatorActor, operator, height)
 }
 
 // TODO(team): implement missed blocks
