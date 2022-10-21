@@ -65,7 +65,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	} else {
 		// DISCUSS: Do we need to call `validateProposal` here?
 		// Leader acts like a replica if `highPrepareQC` is not `nil`
-		// DISCUSS: it seems like if the block was from the past round, it might already have
+		// TODO(olshansky): Add test to make sure same block is not applied twice if round is interrrupted.
 		// been 'Applied'
 		txResults, err := m.applyBlock(highPrepareQC.Block)
 		if err != nil {

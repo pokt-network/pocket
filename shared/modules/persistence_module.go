@@ -55,6 +55,7 @@ type PersistenceWriteContext interface {
 	// Block Operations
 
 	// Indexer Operations
+        TODO(#315): Change `txResult TxResult` to `txBytes []byte`
 	StoreTransaction(txResult TxResult) error
 
 	// Block Operations
