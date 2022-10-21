@@ -13,8 +13,7 @@ func (u *UtilityContext) ApplyTransaction(index int, tx *typesUtil.Transaction) 
 	if err != nil {
 		return nil, err
 	}
-	err, messageType, recipient := u.HandleMessage(msg)
-	return tx.ToTxResult(u.LatestHeight, index, signer, recipient, messageType, err)
+	return tx.ToTxResult(u.LatestHeight, index, signer, msg.GetMessageRecipient(), msg.GetMessageName(), u.HandleMessage(msg))
 }
 
 func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
@@ -138,24 +137,24 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (msg types
 	return msg, signer, nil
 }
 
-func (u *UtilityContext) HandleMessage(msg typesUtil.Message) (err typesUtil.Error, messageType, recipient string) {
+func (u *UtilityContext) HandleMessage(msg typesUtil.Message) (err typesUtil.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageDoubleSign:
-		return u.HandleMessageDoubleSign(x), x.GetMessageName(), x.GetMessageRecipient()
+		return u.HandleMessageDoubleSign(x)
 	case *typesUtil.MessageSend:
-		return u.HandleMessageSend(x), x.GetMessageName(), x.GetMessageRecipient()
+		return u.HandleMessageSend(x)
 	case *typesUtil.MessageStake:
-		return u.HandleStakeMessage(x), x.GetMessageName(), x.GetMessageRecipient()
+		return u.HandleStakeMessage(x)
 	case *typesUtil.MessageEditStake:
-		return u.HandleEditStakeMessage(x), x.GetMessageName(), x.GetMessageRecipient()
+		return u.HandleEditStakeMessage(x)
 	case *typesUtil.MessageUnstake:
-		return u.HandleUnstakeMessage(x), x.GetMessageName(), x.GetMessageRecipient()
+		return u.HandleUnstakeMessage(x)
 	case *typesUtil.MessageUnpause:
-		return u.HandleUnpauseMessage(x), x.GetMessageName(), x.GetMessageRecipient()
+		return u.HandleUnpauseMessage(x)
 	case *typesUtil.MessageChangeParameter:
-		return u.HandleMessageChangeParameter(x), x.GetMessageName(), x.GetMessageRecipient()
+		return u.HandleMessageChangeParameter(x)
 	default:
-		return typesUtil.ErrUnknownMessage(x), "", ""
+		return typesUtil.ErrUnknownMessage(x)
 	}
 }
 

@@ -42,11 +42,11 @@ type consensusModule struct {
 	m sync.RWMutex
 
 	// Hotstuff
-	Height    uint64
-	Round     uint64
-	Step      typesCons.HotstuffStep
-	Block     *typesCons.Block   // The current block being proposed / voted on; it has not been committed to finality
-        TODO(#315):  Move the statefulness of `TxResult` to the persistence module
+	Height uint64
+	Round  uint64
+	Step   typesCons.HotstuffStep
+	Block  *typesCons.Block // The current block being proposed / voted on; it has not been committed to finality
+	//    TODO(#315):  Move the statefulness of `TxResult` to the persistence module
 	TxResults []modules.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
 
 	highPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT

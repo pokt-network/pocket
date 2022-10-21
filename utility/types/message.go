@@ -126,13 +126,14 @@ func (msg *MessageChangeParameter) ValidateBasic() Error {
 	return nil
 }
 
-func (msg *MessageSend) GetMessageName() string                 { return getMessageType(msg) }
-func (msg *MessageUnstake) GetMessageName() string              { return getMessageType(msg) }
-func (msg *MessageUnpause) GetMessageName() string              { return getMessageType(msg) }
-func (msg *MessageEditStake) GetMessageName() string            { return getMessageType(msg) }
-func (msg *MessageStake) GetMessageName() string                { return getMessageType(msg) }
-func (msg *MessageChangeParameter) GetMessageName() string      { return getMessageType(msg) }
-func (msg *MessageDoubleSign) GetMessageName() string           { return getMessageType(msg) }
+func (msg *MessageSend) GetMessageName() string            { return getMessageType(msg) }
+func (msg *MessageUnstake) GetMessageName() string         { return getMessageType(msg) }
+func (msg *MessageUnpause) GetMessageName() string         { return getMessageType(msg) }
+func (msg *MessageEditStake) GetMessageName() string       { return getMessageType(msg) }
+func (msg *MessageStake) GetMessageName() string           { return getMessageType(msg) }
+func (msg *MessageChangeParameter) GetMessageName() string { return getMessageType(msg) }
+func (msg *MessageDoubleSign) GetMessageName() string      { return getMessageType(msg) }
+
 func (msg *MessageSend) GetMessageRecipient() string            { return hex.EncodeToString(msg.ToAddress) }
 func (msg *MessageUnstake) GetMessageRecipient() string         { return "" }
 func (msg *MessageUnpause) GetMessageRecipient() string         { return "" }
@@ -140,17 +141,19 @@ func (msg *MessageEditStake) GetMessageRecipient() string       { return "" }
 func (msg *MessageStake) GetMessageRecipient() string           { return "" }
 func (msg *MessageChangeParameter) GetMessageRecipient() string { return "" }
 func (msg *MessageDoubleSign) GetMessageRecipient() string      { return "" }
-func (msg *MessageUnstake) ValidateBasic() Error                { return ValidateAddress(msg.Address) }
-func (msg *MessageUnpause) ValidateBasic() Error                { return ValidateAddress(msg.Address) }
-func (msg *MessageStake) SetSigner(signer []byte)               { msg.Signer = signer }
-func (msg *MessageEditStake) SetSigner(signer []byte)           { msg.Signer = signer }
-func (msg *MessageUnstake) SetSigner(signer []byte)             { msg.Signer = signer }
-func (msg *MessageUnpause) SetSigner(signer []byte)             { msg.Signer = signer }
-func (msg *MessageDoubleSign) SetSigner(signer []byte)          { msg.ReporterAddress = signer }
-func (msg *MessageSend) SetSigner(signer []byte)                { /*no op*/ }
-func (msg *MessageChangeParameter) SetSigner(signer []byte)     { msg.Signer = signer }
-func (x *MessageChangeParameter) GetActorType() ActorType       { return -1 }
-func (x *MessageDoubleSign) GetActorType() ActorType            { return -1 }
+
+func (msg *MessageUnstake) ValidateBasic() Error { return ValidateAddress(msg.Address) }
+func (msg *MessageUnpause) ValidateBasic() Error { return ValidateAddress(msg.Address) }
+
+func (msg *MessageStake) SetSigner(signer []byte)           { msg.Signer = signer }
+func (msg *MessageEditStake) SetSigner(signer []byte)       { msg.Signer = signer }
+func (msg *MessageUnstake) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageUnpause) SetSigner(signer []byte)         { msg.Signer = signer }
+func (msg *MessageDoubleSign) SetSigner(signer []byte)      { msg.ReporterAddress = signer }
+func (msg *MessageSend) SetSigner(signer []byte)            { /*no op*/ }
+func (msg *MessageChangeParameter) SetSigner(signer []byte) { msg.Signer = signer }
+func (x *MessageChangeParameter) GetActorType() ActorType   { return -1 }
+func (x *MessageDoubleSign) GetActorType() ActorType        { return -1 }
 
 // helpers
 
