@@ -30,6 +30,12 @@ You can specify 2 parameters to the `p2p_test_generator` make target:
 - `rainTreeTestOutputFilename` # the file where the unit test should be written to
 - `numRainTreeNodes`: the number of nodes to run in the RainTree simulation
 
+Example:
+
 ```bash
 rainTreeTestOutputFilename=/tmp/answer.go numRainTreeNodes=12 make p2p_test_generator
 ```
+
+You can then copy pasta the output from `/tmp/answer.go` to `module_raintree_test.go` to add a new unit test.
+
+_NOTE: You must add comments to the tree visualization component manually._
