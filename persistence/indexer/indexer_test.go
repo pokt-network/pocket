@@ -1,6 +1,7 @@
 package indexer
 
 import (
+	shared "github.com/pokt-network/pocket/shared/modules"
 	"log"
 	"math/rand"
 	"testing"
@@ -182,7 +183,7 @@ func TestGetByRecipient(t *testing.T) {
 	require.Equal(t, 0, len(txResultsFromSenderBad))
 }
 
-func requireTxResultsEqual(t *testing.T, txR1, txR2 TxResult) {
+func requireTxResultsEqual(t *testing.T, txR1, txR2 shared.TxResult) {
 	bz, err := txR1.Bytes()
 	require.NoError(t, err)
 	bz2, err := txR2.Bytes()
@@ -192,10 +193,10 @@ func requireTxResultsEqual(t *testing.T, txR1, txR2 TxResult) {
 
 // utility helpers
 
-func NewTestingTransactionResult(t *testing.T, height, index int) TxResult {
+func NewTestingTransactionResult(t *testing.T, height, index int) shared.TxResult {
 	testingTransaction := randLetterBytes()
 	resultCode, err := randomErr()
-	return &DefaultTxResult{
+	return &TxRes{
 		Tx:            testingTransaction,
 		Height:        int64(height),
 		Index:         int32(index),

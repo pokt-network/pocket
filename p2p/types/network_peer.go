@@ -5,8 +5,10 @@ import (
 )
 
 type NetworkPeer struct {
-	Dialer     Transport
-	PublicKey  cryptoPocket.PublicKey
-	Address    cryptoPocket.Address
-	ServiceUrl string // This is only included because it's a more human-friendly differentiator between peers
+	Dialer    Transport
+	PublicKey cryptoPocket.PublicKey
+	Address   cryptoPocket.Address
+
+	// This is only included because it's a more human-friendly differentiator between peers
+	ServiceUrl string
 }

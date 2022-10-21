@@ -15,8 +15,8 @@ import (
 func GetGenericActor[T any](
 	protocolActorSchema types.ProtocolActorSchema,
 	getActor func(*persistence.PostgresContext, []byte) (T, error),
-) func(*persistence.PostgresContext, string) (*types.BaseActor, error) {
-	return func(db *persistence.PostgresContext, address string) (*types.BaseActor, error) {
+) func(*persistence.PostgresContext, string) (*types.Actor, error) {
+	return func(db *persistence.PostgresContext, address string) (*types.Actor, error) {
 		addr, err := hex.DecodeString(address)
 		if err != nil {
 			return nil, err
@@ -26,15 +26,15 @@ func GetGenericActor[T any](
 			return nil, err
 		}
 		baseActor := getActorValues(protocolActorSchema, reflect.Indirect(reflect.ValueOf(actor)))
-		return &baseActor, nil
+		return baseActor, nil
 	}
 }
 
-func NewTestGenericActor[T any](protocolActorSchema types.ProtocolActorSchema, newActor func() (T, error)) func() (types.BaseActor, error) {
-	return func() (types.BaseActor, error) {
+func NewTestGenericActor[T any](protocolActorSchema types.ProtocolActorSchema, newActor func() (T, error)) func() (*types.Actor, error) {
+	return func() (*types.Actor, error) {
 		actor, err := newActor()
 		if err != nil {
-			return types.BaseActor{}, err
+			return nil, err
 		}
 		return getActorValues(protocolActorSchema, reflect.Indirect(reflect.ValueOf(actor))), nil
 	}
@@ -150,20 +150,20 @@ func getTestGetSetStakeAmountTest[T any](
 	require.Equal(t, newStakeAmount, stakeAmountAfter, "unexpected status")
 }
 
-func getActorValues(_ types.ProtocolActorSchema, actorValue reflect.Value) types.BaseActor {
+func getActorValues(_ types.ProtocolActorSchema, actorValue reflect.Value) *types.Actor {
 	chains := make([]string, 0)
 	if actorValue.FieldByName("Chains").Kind() != 0 {
 		chains = actorValue.FieldByName("Chains").Interface().([]string)
 	}
 
-	return types.BaseActor{
-		Address:            actorValue.FieldByName("Address").String(),
-		PublicKey:          actorValue.FieldByName("PublicKey").String(),
-		StakedTokens:       actorValue.FieldByName("StakedAmount").String(),
-		ActorSpecificParam: actorValue.FieldByName("GenericParam").String(),
-		OutputAddress:      actorValue.FieldByName("Output").String(),
-		PausedHeight:       int64(actorValue.FieldByName("PausedHeight").Int()),
-		UnstakingHeight:    int64(actorValue.FieldByName("UnstakingHeight").Int()),
-		Chains:             chains,
+	return &types.Actor{
+		Address:         actorValue.FieldByName("Address").String(),
+		PublicKey:       actorValue.FieldByName("PublicKey").String(),
+		StakedAmount:    actorValue.FieldByName("StakedAmount").String(),
+		GenericParam:    actorValue.FieldByName("GenericParam").String(),
+		Output:          actorValue.FieldByName("Output").String(),
+		PausedHeight:    actorValue.FieldByName("PausedHeight").Int(),
+		UnstakingHeight: actorValue.FieldByName("UnstakingHeight").Int(),
+		Chains:          chains,
 	}
 }

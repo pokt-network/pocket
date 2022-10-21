@@ -1,6 +1,19 @@
-# P2P Module
+# P2P Module <!-- omit in toc -->
 
 This document is meant to be a supplement to the living specification of [1.0 Pocket's P2P Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/p2p) primarily focused on the implementation, and additional details related to the design of the codebase and information related to development.
+
+## Table of Contents <!-- omit in toc -->
+
+- [Interface](#interface)
+- [Implementation](#implementation)
+  - [Code Architecture - P2P Module](#code-architecture---p2p-module)
+  - [Code Architecture - Network Module](#code-architecture---network-module)
+  - [Code Organization](#code-organization)
+- [Testing](#testing)
+  - [Running Unit Tests](#running-unit-tests)
+  - [RainTree testing framework](#raintree-testing-framework)
+    - [Helpers](#helpers)
+    - [Considerations](#considerations)
 
 ## Interface
 
@@ -78,25 +91,29 @@ p2p
 
 ## Testing
 
-### Testing Suite
+_TODO: The work to add the tooling used to help with unit test generation is being tracked in #314._
 
-The core utilities used for RainTree unit testing live in `raintree_utils_test.go`.
-
-In addition, a lot of RainTree-related helpers (finding the target, etc...) live in `addrbook_utils_test.go`.
-
-### Unit Tests
+### Running Unit Tests
 
 ```bash
-$ make test_p2p           # All P2P tests
-$ make test_p2p_addrbook  # AddrBook tests
+make test_p2p
 ```
 
-### Benchmarking Tests
+### RainTree testing framework
 
-```bash
-$ make benchmark_p2p_addrbook  # AddrBook benchmark
-```
+The testing framework for RainTree is a work-in-progress and can be found in `module_raintree_test.go`.
 
-### DevNet
+The `TestRainTreeCommConfig` struct contains a mapping of `validatorId` to the number of messages it expects to process during a RainTree broadcast:
 
-Pocket's development LocalNet uses RainTree by default, see `docs/development/README.md` on how to run it.
+- `numNetworkReads`: the # of asynchronous reads the node's P2P listener made (i.e. # of messages it received over the network)
+- `numNetworkWrites`: the # of asynchronous writes the node's P2P listener made (i.e. # of messages it tried to send over the network)
+- NOTE: A `demote` does not go over the network and is therefore not considered a `read`.
+
+#### Helpers
+
+Given a specific `originatorNode` which initiates the broadcast, the `testRainTreeCalls` helper function can be used to configure all the nodes and simulate a broadcast.
+
+#### Considerations
+
+- **Deterministic Private Key Generation**: Since RainTree is dependant on the lexicographic order of the addresses, the generation of the private keys (and in turn the public keys and addresses) is important and cannot be randomized for the time being.
+- **Variable Coupling**:There is an implicit coupling between `validatorId`, `serviceUrl` and `genericParam` that requires understanding of the codebase. Reach out to @olshansk or @andrewnguyen22 for clarity on this.

@@ -3,6 +3,7 @@ package persistence
 import (
 	"context"
 	"fmt"
+	"github.com/pokt-network/pocket/persistence/indexer"
 	"log"
 
 	"github.com/pokt-network/pocket/persistence/types"
@@ -29,6 +30,7 @@ type persistenceModule struct {
 	genesisState modules.PersistenceGenesisState
 
 	blockStore kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
+	txIndexer  indexer.TxIndexer
 
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	writeContext *PostgresContext // only one write context is allowed at a time
@@ -72,11 +74,17 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 		return nil, err
 	}
 
+	txIndexer, err := indexer.NewTxIndexer(persistenceCfg.GetTxIndexerPath())
+	if err != nil {
+		return nil, err
+	}
+
 	m = &persistenceModule{
 		bus:          nil,
 		config:       persistenceCfg,
 		genesisState: persistenceGenesis,
 		blockStore:   blockStore,
+		txIndexer:    txIndexer,
 		writeContext: nil,
 	}
 
@@ -151,6 +159,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		conn:       conn,
 		tx:         tx,
 		blockstore: m.blockStore,
+		txIndexer:  m.txIndexer,
 	}
 
 	return m.writeContext, nil
@@ -176,6 +185,7 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 		conn:       conn,
 		tx:         tx,
 		blockstore: m.blockStore,
+		txIndexer:  m.txIndexer,
 	}, nil
 }
 
