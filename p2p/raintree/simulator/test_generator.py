@@ -83,7 +83,6 @@ def main(args):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--num_nodes",
@@ -100,5 +99,4 @@ if __name__ == "__main__":
         help="File where the go test should be written to",
     )
     args = parser.parse_args()
-
     main(args)

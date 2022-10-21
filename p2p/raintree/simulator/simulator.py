@@ -46,8 +46,7 @@ class Counters:
     nodes_missing: set[str]  # Nodes not yet reached by current RainTree propagating
     msgs_rec_map: defaultdict[str, int]  # Num messages received by node addr
     msgs_sent_map: defaultdict[str, int]  # Num messages sent by node addr
-    depth_reached_map: defaultdict[str, int]  # Addr -> depth reached by node addr
-
+    depth_reached_map: defaultdict[str, int]  # Max depth reached by node addr
     # Theoretical max depth, used to end propagating early
     max_theoretical_depth: int
 
@@ -63,14 +62,14 @@ class Counters:
 
 @dataclass
 class PropagationQueueElement:
-    addr: str
-    addr_book: List[str]
-    depth: int  # current depth
-    t1: float  # target 1 percentage factor
-    t2: float  # target 2 percentage factor
+    addr: str  # The addr of the node propagating the message
+    addr_book: List[str]  # the addr's current addr book
+    depth: int  # the current depth in the propagations
+    t1: float  # % of location in addr book for target 1
+    t2: float  # % of location in addr book for target 1
     shrinkage: float  # addr book shrinkage coefficient
     node: Node  # current node
-    sender: str  # sender addr
+    sender: str  # sender addr (who sent the message to addr)
 
     def __iter__(self):
         return iter(
@@ -93,12 +92,13 @@ def propagate(
     counters: Counters,
     queue: deque[PropagationQueueElement],
 ) -> None:
-    addr, addr_book, depth, t1, t2, s, node, sender = p
+    addr, addr_book, depth, t1_per, t2_per, s_per, node, sender = p
 
-    # Return if the addr boo is empty
+    # Return if the addr book is empty
     if len(addr_book) == 0:
         return
 
+    # Not a demote - real message over a network
     if addr != sender:
         counters.msgs_rec_map[addr] += 1
 
@@ -115,60 +115,32 @@ def propagate(
     # Configure who the current node should send messages to
     n = len(addr_book)
     i = addr_book.index(addr)
-    x = (i + int(n * t1)) % n
-    y = (i + int(n * t2)) % n
-    z = (i + int(n * s)) % n
+    t1 = (i + int(n * t1_per)) % n
+    t2 = (i + int(n * t2_per)) % n
+    s = (i + int(n * s_per)) % n
 
-    x_addr = addr_book[x]
-    y_addr = addr_book[y]
+    t1_addr = addr_book[t1]
+    t2_addr = addr_book[t2]
 
-    if x_addr == y_addr:
-        y_addr = None
-    if x_addr == addr:
-        x_addr = None
+    if t1_addr == t2_addr:
+        t2_addr = None
+    if t1_addr == addr:
+        t1_addr = None
 
-    # Send a message to the first target
-    if x_addr is not None:
+    def send(t: int, t_addr: str) -> None:
         counters.msgs_sent += 1
-        x_z = (x + int(n * s)) % n
-        x_book_s = shrink_list(addr_book.copy(), x, x_z)
+        t_s = (t + int(n * s_per)) % n
+        t_book_s = shrink_list(addr_book.copy(), t, t_s)
         queue.append(
             (
                 PropagationQueueElement(
-                    x_addr,
-                    x_book_s,
+                    t_addr,
+                    t_book_s,
                     depth + 1,
-                    t1,
-                    t2,
-                    s,
-                    Node(x_addr, node),
-                    addr,
-                ),
-                counters,
-                queue,
-            ),
-        )
-
-        counters.nodes_missing.discard(x_addr)
-        counters.nodes_reached.add(x_addr)
-        counters.msgs_sent_map[addr] += 1
-        print(f"Msg 1: {format_send_message(addr_book, i, x)}")
-
-    # Send a message to the second target
-    if y_addr is not None:
-        counters.msgs_sent += 1
-        y_z = (y + int(n * s)) % n
-        y_book_s = shrink_list(addr_book.copy(), y, y_z)
-        queue.append(
-            (
-                PropagationQueueElement(
-                    y_addr,
-                    y_book_s,
-                    depth + 1,
-                    t1,
-                    t2,
-                    s,
-                    Node(y_addr, node),
+                    t1_per,
+                    t2_per,
+                    s_per,
+                    Node(t_addr, node),
                     addr,
                 ),
                 counters,
@@ -176,13 +148,21 @@ def propagate(
             )
         )
 
-        counters.nodes_missing.discard(y_addr)
-        counters.nodes_reached.add(y_addr)
+        counters.nodes_missing.discard(t_addr)
+        counters.nodes_reached.add(t_addr)
         counters.msgs_sent_map[addr] += 1
-        print(f"Msg 2: {format_send_message(addr_book, i, y)}")
+        print(f"Msg: {format_send_message(addr_book, i, t)}")
+
+    # Send a message to the first target
+    if t1_addr is not None:
+        send(t1, t1_addr)
+
+    # Send a message to the second target
+    if t2_addr is not None:
+        send(t2, t2_addr)
 
     # Demote - not incrementing `msg_send_counter` since it's not a send
-    addr_book_s = shrink_list(addr_book, i, z)
+    addr_book_s = shrink_list(addr_book, i, s)
     if len(addr_book_s) > 1:
         queue.append(
             (
@@ -190,9 +170,9 @@ def propagate(
                     addr,
                     addr_book_s,
                     depth + 1,
-                    t1,
-                    t2,
-                    s,
+                    t1_per,
+                    t2_per,
+                    s_per,
                     Node(addr, node),
                     addr,
                 ),
@@ -214,7 +194,9 @@ def simulate(
 
     # Configure Simulation
     prop_queue = deque()
-    max_allowed_depth = math.log(num_nodes, 3)
+    max_allowed_depth = math.log(
+        num_nodes, 3
+    )  # 3 comes from the fact that we use a ternary tree
     counters = Counters(addr_book, max_allowed_depth)
 
     # Prepare Simulation
