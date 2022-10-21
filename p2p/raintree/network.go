@@ -47,7 +47,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) t
 }
 
 func (n *rainTreeNetwork) NetworkBroadcast(data []byte) error {
-	return n.networkBroadcastAtLevel(data, n.peersManager.getNetworkView().maxNumLevels, getNonce())
+	return n.networkBroadcastAtLevel(data, int32(n.peersManager.getNetworkView().maxNumLevels), getNonce())
 }
 
 func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level int32, nonce uint64) error {
@@ -56,19 +56,16 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level int32, nonc
 		return nil
 	}
 
-	var addr1, addr2 cryptoPocket.Address
-	var ok bool
-
 	msg := &typesP2P.RainTreeMessage{
 		Level: level,
 		Data:  data,
 		Nonce: nonce,
 	}
 
-	// This is handled either by the redundancy layer
+	// Redundancy layer
 	if level == 0 {
 		if n.redundancyLayerEnabled {
-			level, msg.Level = n.RedundancyLayer()
+			level, msg.Level = n.redundancyLayer()
 		} else {
 			if err := n.demote(msg); err != nil {
 				log.Println("Error demoting self during RainTree message propagation: ", err)
@@ -76,12 +73,11 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level int32, nonc
 		}
 	}
 
-	// This is handled by the cleanup layer
+	targets := n.getTargetsAtLevel(uint32(level))
+
+	// Cleanup layer
 	if level == -1 {
-		addr1, addr2, ok = n.CleanupLayer()
-		if !ok {
-			return nil
-		}
+		targets = n.cleanupLayer(level)
 	}
 
 	msgBz, err := proto.Marshal(msg)
@@ -89,7 +85,7 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level int32, nonc
 		return err
 	}
 
-	for _, target := range n.getTargetsAtLevel(level) {
+	for _, target := range targets {
 		if shouldSendToTarget(target) {
 			if err = n.networkSendInternal(msgBz, target.address); err != nil {
 				log.Println("Error sending to peer during broadcast: ", err)
@@ -104,16 +100,16 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level int32, nonc
 	return nil
 }
 
-func (n *rainTreeNetwork) CleanupLayer() (addr1, addr2 []byte, ok bool) {
-	// cleanup layer is just send left / right
+// Cleanup layer is just another send left / right
+func (n *rainTreeNetwork) cleanupLayer(level int32) []target {
 	// TODO (Team) unhappy path where the left / right nodes are down
-	// (continue to search left and right until you have a hit)
-	return n.getLeftAndRight()
+	// 			   (continue to search left and right until you have a hit)
+	return n.getTargetsAtLevel(uint32(level))
 }
 
-func (n *rainTreeNetwork) RedundancyLayer() (level int32, msgLevel int32) {
-	// redundancy layer is simply one final send to the original +1/3 && -1/3
-	return n.maxNumLevels, -1 // -1 ensures not an echo chamber
+// Redundancy layer is simply one final send to the original +1/3 && -1/3
+func (n *rainTreeNetwork) redundancyLayer() (level int32, msgLevel int32) {
+	return int32(n.peersManager.maxNumLevels), -1 // -1 ensures not an echo chamber
 }
 
 func (n *rainTreeNetwork) demote(rainTreeMsg *typesP2P.RainTreeMessage) error {

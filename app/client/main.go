@@ -3,7 +3,6 @@ package main
 // TODO(team): discuss & design the long-term solution to this client.
 
 import (
-	"github.com/pokt-network/pocket/p2p"
 	"log"
 	"os"
 

@@ -28,21 +28,17 @@ func (n *rainTreeNetwork) getAddrBookLength(level uint32, _height uint64) int {
 // getTargetsAtLevel returns the targets for a given level
 func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 	height := n.GetBus().GetConsensusModule().CurrentHeight()
-	addrBookLenghtAtHeight := n.getAddrBookLength(level, height)
-	firstTarget := n.getTarget(firstMsgTargetPercentage, addrBookLenghtAtHeight, level)
-	secondTarget := n.getTarget(secondMsgTargetPercentage, addrBookLenghtAtHeight, level)
+	addrBookLengthAtHeight := n.getAddrBookLength(level, height)
+	firstTarget := n.getTarget(firstMsgTargetPercentage, addrBookLengthAtHeight, level)
+	secondTarget := n.getTarget(secondMsgTargetPercentage, addrBookLengthAtHeight, level)
 
-func (n *rainTreeNetwork) getFirstTargetAddr(level int32) cryptoPocket.Address {
-	return n.getTarget(level, firstMsgTargetPercentage)
+	log.Printf("[DEBUG] Targets at height (%d): %s", level, n.debugMsgTargetString(firstTarget, secondTarget))
+
+	return []target{firstTarget, secondTarget}
 }
 
-func (n *rainTreeNetwork) getSecondTargetAddr(level int32) cryptoPocket.Address {
-	return n.getTarget(level, secondMsgTargetPercentage)
-}
-
-func (n *rainTreeNetwork) getTarget(level int32, targetPercentage float64) cryptoPocket.Address {
-	// OPTIMIZE(olshansky): We are computing this twice for each message, but it's not that expensive.
-	l := n.getAddrBookLengthAtHeight(level)
+func (n *rainTreeNetwork) getTarget(targetPercentage float64, addrBookLen int, level uint32) target {
+	i := int(targetPercentage * float64(addrBookLen))
 
 	peersManagerStateView := n.peersManager.getNetworkView()
 
