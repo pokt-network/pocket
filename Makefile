@@ -37,6 +37,16 @@ docker_check:
 	fi; \
 	}
 
+.PHONY: python_check
+# Internal helper target - check if python is installed
+python_check:
+	{ \
+	if ( ! ( command -v python3 >/dev/null  )); then \
+		echo "Seems like you don't have Python installed. Make sure you review docs/development/README.md before continuing"; \
+		exit 1; \
+	fi; \
+	}
+
 .PHONY: prompt_user
 # Internal helper target - prompt the user before continuing
 prompt_user:
@@ -328,11 +338,12 @@ test_p2p_raintree_addrbook:
 
 # Variables for `p2p_test_generator`
 numRainTreeNodes ?= 42 # This is the default value with a randomly selected value
-rainTreeTestOutputFilename ?= 42 # This is the default value with a randomly selected value
+rainTreeTestOutputFilename ?= "/tmp/answer.go" # This is the default file where the test will be written to
 
 .PHONY: p2p_test_generator
-## TODO
-p2p_test_generator:
+## Generate a RainTree unit test configured for `numRainTreeNodes` and written to `rainTreeTestOutputFilename`
+p2p_test_generator: python_check
+	echo "See p2p/raintree/simulator/README.md for additional details"
 	python3 p2p/raintree/simulator/test_generator.py --num_nodes=${numRainTreeNodes} --output_file=${rainTreeTestOutputFilename}
 
 .PHONY: benchmark_sortition

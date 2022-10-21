@@ -17,13 +17,23 @@ p2p/raintree/simulator
 
 - [x] Basic RainTree implementation
 - [x] Unit Test generation
-- [ ] Fuzz testing
 - [ ] Redundancy Layer
 - [ ] Cleanup Layer
 - [ ] Dead / partially visible nodes
+- [ ] Fuzz testing
 - [ ] Multi-simulation evaluation + plotting
 
 ## Test Generation
+
+### Install Dependencies
+
+Make sure you install the corresponding dependencies
+
+```bash
+    pip3 install -r p2p/raintree/simulator/requirements.txt
+```
+
+### Generate Test
 
 You can specify 2 parameters to the `p2p_test_generator` make target:
 
