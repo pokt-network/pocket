@@ -9,7 +9,6 @@ It uses a Breadth First Search approach to mimic the real implementation of Rain
 ```bash
 p2p/raintree/simulator
 ├── README.md # This file
-├── evaluator.py # WIP - The entrypoint used to collect statistics across many simulations and plot it
 ├── simulator.py # Utility functions used to simulate RainTree
 └── test_generator.py # The entrypoint used by `make p2p_test_generator` to generate RainTree unit tests
 ```
@@ -22,14 +21,15 @@ p2p/raintree/simulator
 - [ ] Redundancy Layer
 - [ ] Cleanup Layer
 - [ ] Dead / partially visible nodes
-- [ ] Multi-simulation aggregation
+- [ ] Multi-simulation evaluation + plotting
 
 ## Test Generation
+
+You can specify 2 parameters to the `p2p_test_generator` make target:
+
+- `rainTreeTestOutputFilename` # the file where the unit test should be written to
+- `numRainTreeNodes`: the number of nodes to run in the RainTree simulation
 
 ```bash
 rainTreeTestOutputFilename=/tmp/answer.go numRainTreeNodes=12 make p2p_test_generator
 ```
-
-## Evaluation
-
-TODO(olshansky)
