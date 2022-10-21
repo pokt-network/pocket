@@ -326,10 +326,10 @@ test_p2p_raintree:
 test_p2p_raintree_addrbook:
 	go test -run RainTreeAddrBook -v -count=1 ./p2p/...
 
-.PHONY: p2p_raintree_simulator
+.PHONY: p2p_test_generator
 ## TODO
-p2p_raintree_simulator:
-	python3 p2p/raintree/simulator/simulator.py
+p2p_test_generator:
+	python3 p2p/raintree/simulator/test_generator.py
 
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library
