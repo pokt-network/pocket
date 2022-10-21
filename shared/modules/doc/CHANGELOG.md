@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.5] - 2022-10-16
+## [0.0.0.3] - 2022-10-20
 
 Interface changes (w/o implementation) to support a StateHash computation.
 
@@ -29,16 +29,11 @@ Interface changes (w/o implementation) to support a StateHash computation.
   - Changed `CommitPersistenceContext()` to `Commit(quorumCert)`
   - Deprecate `GetPersistenceContext`
 
-## [0.0.0.3] - 2022-10-12
+## [0.0.0.2] - 2022-10-12
 
 - Modified interface for Utility Module `ApplyBlock` and `GetProposalTransactions` to return `TxResults`
 - Modified interface for Persistence Module `StoreTransaction` to store the `TxResult`
 - Added shared interface `TxResult` under types.go
-
-## [0.0.0.2] - 2022-09-17
-
-- Minimized shared module with [#163](https://github.com/pokt-network/pocket/issues/163)
-- Deprecated shared/types, moved remaining interfaces to shared/modules
 
 # Most GenesisTypes moved to persistence
 
