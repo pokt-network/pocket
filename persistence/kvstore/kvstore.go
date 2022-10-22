@@ -21,6 +21,10 @@ type KVStore interface {
 	ClearAll() error
 }
 
+const (
+	BadgerKeyNotFoundError = "Key not found"
+)
+
 var _ KVStore = &badgerKVStore{}
 
 type badgerKVStore struct {
