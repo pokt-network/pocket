@@ -26,6 +26,7 @@ func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 }
 
 // TODO: Add unit tests specific to block validation
+// IMPROVE: (olshansky) rename to provide clarity of operation. ValidateBasic() is typically a stateless check not stateful
 func (m *consensusModule) validateBlockBasic(block *typesCons.Block) error {
 	if block == nil && m.Step != NewRound {
 		return typesCons.ErrNilBlock

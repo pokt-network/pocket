@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pokt-network/pocket/persistence/indexer"
+
 	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/celestiaorg/smt"
@@ -42,7 +44,7 @@ type PostgresContext struct {
 	conn   *pgx.Conn
 	tx     pgx.Tx
 
-	currentBlockTxs  [][]byte
+	txIndexer        indexer.TxIndexer
 	currentStateHash []byte
 
 	// REARCHITECT_IN_THIS_COMMIT: This is a passthrough from the persistence module (i.e. not context).

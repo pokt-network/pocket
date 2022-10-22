@@ -57,8 +57,9 @@ type PersistenceWriteContext interface {
 	// Commits the current context (height, hash, transactions, etc...) to finality.
 	Commit(proposerAddr []byte, quorumCert []byte) error
 
-	// Indexes the transaction
-	StoreTransaction(transactionProtoBytes []byte) error // Stores a transaction
+	// Indexer Operations
+	// TODO(#315): Change `txResult TxResult` to `txBytes []byte`
+	StoreTransaction(txResult TxResult) error // Stores and indexes a transaction
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error

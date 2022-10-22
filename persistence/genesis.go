@@ -211,9 +211,9 @@ func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err err
 	if err != nil {
 		return nil, err
 	}
-	var actors []types.BaseActor
+	var actors []*types.Actor
 	for rows.Next() {
-		var actor types.BaseActor
+		var actor *types.Actor
 		actor, height, err = p.GetActorFromRow(rows)
 		if err != nil {
 			return
@@ -222,11 +222,11 @@ func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err err
 	}
 	rows.Close()
 	for _, actor := range actors {
-		actor, err = p.GetChainsForActor(ctx, tx, types.ApplicationActor, actor, height)
-		if err != nil {
-			return
+		actorWithChains, er := p.GetChainsForActor(ctx, tx, types.ApplicationActor, actor, height)
+		if er != nil {
+			return nil, err
 		}
-		apps = append(apps, p.BaseActorToActor(actor, types.ActorType_App))
+		apps = append(apps, actorWithChains)
 	}
 	return
 }
@@ -240,9 +240,9 @@ func (p PostgresContext) GetAllValidators(height int64) (vals []modules.Actor, e
 	if err != nil {
 		return nil, err
 	}
-	var actors []types.BaseActor
+	var actors []*types.Actor
 	for rows.Next() {
-		var actor types.BaseActor
+		var actor *types.Actor
 		actor, height, err = p.GetActorFromRow(rows)
 		if err != nil {
 			return
@@ -255,7 +255,7 @@ func (p PostgresContext) GetAllValidators(height int64) (vals []modules.Actor, e
 		if err != nil {
 			return
 		}
-		vals = append(vals, p.BaseActorToActor(actor, types.ActorType_Val))
+		vals = append(vals, actor)
 	}
 	return
 }
@@ -269,9 +269,9 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []modules.Actor, e
 	if err != nil {
 		return nil, err
 	}
-	var actors []types.BaseActor
+	var actors []*types.Actor
 	for rows.Next() {
-		var actor types.BaseActor
+		var actor *types.Actor
 		actor, height, err = p.GetActorFromRow(rows)
 		if err != nil {
 			return
@@ -284,7 +284,7 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []modules.Actor, e
 		if err != nil {
 			return
 		}
-		sn = append(sn, p.BaseActorToActor(actor, types.ActorType_Node))
+		sn = append(sn, actor)
 	}
 	return
 }
@@ -298,9 +298,9 @@ func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err e
 	if err != nil {
 		return nil, err
 	}
-	var actors []types.BaseActor
+	var actors []*types.Actor
 	for rows.Next() {
-		var actor types.BaseActor
+		var actor *types.Actor
 		actor, height, err = p.GetActorFromRow(rows)
 		if err != nil {
 			return
@@ -313,22 +313,7 @@ func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err e
 		if err != nil {
 			return
 		}
-		f = append(f, p.BaseActorToActor(actor, types.ActorType_Fish))
+		f = append(f, actor)
 	}
 	return
-}
-
-// CONSOLIDATE: Consolidate `types.BaseActor` with `types.Actor`
-func (p PostgresContext) BaseActorToActor(ba types.BaseActor, actorType types.ActorType) *types.Actor {
-	actor := new(types.Actor)
-	actor.ActorType = actorType
-	actor.Address = ba.Address
-	actor.PublicKey = ba.PublicKey
-	actor.StakedAmount = ba.StakedTokens
-	actor.GenericParam = ba.ActorSpecificParam
-	actor.PausedHeight = ba.PausedHeight
-	actor.UnstakingHeight = ba.UnstakingHeight
-	actor.Output = ba.OutputAddress
-	actor.Chains = ba.Chains
-	return actor
 }

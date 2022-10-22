@@ -111,7 +111,7 @@ func ReadyToUnstake(unstakingHeight int64, tableName string) string {
 }
 
 func Insert(
-	actor BaseActor,
+	actor *Actor,
 	actorSpecificParam, actorSpecificParamValue,
 	constraintName, chainsConstraintName,
 	tableName, chainsTableName string,
@@ -124,8 +124,8 @@ func Insert(
 							  paused_height=EXCLUDED.paused_height, unstaking_height=EXCLUDED.unstaking_height,
 							  height=EXCLUDED.height`,
 		tableName, actorSpecificParam,
-		actor.Address, actor.PublicKey, actor.StakedTokens, actorSpecificParamValue,
-		actor.OutputAddress, actor.PausedHeight, actor.UnstakingHeight, height,
+		actor.Address, actor.PublicKey, actor.StakedAmount, actorSpecificParamValue,
+		actor.Output, actor.PausedHeight, actor.UnstakingHeight, height,
 		constraintName,
 		actorSpecificParam, actorSpecificParam)
 

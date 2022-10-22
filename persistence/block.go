@@ -3,10 +3,11 @@ package persistence
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"log"
 
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // OPTIMIZE(team): get from blockstore or keep in memory
@@ -41,13 +42,23 @@ func (p PostgresContext) GetHeight() (int64, error) {
 }
 
 func (p PostgresContext) TransactionExists(transactionHash string) (bool, error) {
-	log.Println("TODO: TransactionExists not implemented")
-	return false, nil
+	hash, err := hex.DecodeString(transactionHash)
+	if err != nil {
+		return false, err
+	}
+	res, err := p.txIndexer.GetByHash(hash)
+	if res == nil {
+		// check for not found
+		if err != nil && err.Error() == kvstore.BadgerKeyNotFoundError {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, err
 }
 
-func (p *PostgresContext) StoreTransaction(transactionProtoBytes []byte) error {
-	p.currentBlockTxs = append(p.currentBlockTxs, transactionProtoBytes)
-	return nil
+func (p PostgresContext) StoreTransaction(txResult modules.TxResult) error {
+	return p.txIndexer.Index(txResult)
 }
 
 func (p *PostgresContext) insertBlock(block *types.Block) error {
@@ -80,13 +91,18 @@ func (p *PostgresContext) prepareBlock(proposerAddr []byte, quorumCert []byte) (
 		prevHash = []byte("HACK: get hash from genesis")
 	}
 
+	_, err := p.txIndexer.GetByHeight(p.Height, false)
+	if err != nil {
+		return nil, err
+	}
+
 	block := &types.Block{
 		Height:            uint64(p.Height),
 		Hash:              hex.EncodeToString(p.currentStateHash),
 		PrevHash:          hex.EncodeToString(prevHash),
 		ProposerAddress:   proposerAddr,
 		QuorumCertificate: quorumCert,
-		Transactions:      p.currentBlockTxs,
+		// Transactions:      []byte(""),
 	}
 
 	return block, nil

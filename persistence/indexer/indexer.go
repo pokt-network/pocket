@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/pokt-network/pocket/shared/codec"
+	shared "github.com/pokt-network/pocket/shared/modules"
 
 	"github.com/jordanorelli/lexnum"
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -19,44 +20,27 @@ import (
 type TxIndexer interface {
 	// `Index` analyzes, indexes and stores a single transaction result.
 	// `Index` indexes by `(hash, height, sender, recipient)`
-	Index(result TxResult) error
+	Index(result shared.TxResult) error
 
 	// `GetByHash` returns the transaction specified by the hash if indexed or nil otherwise
-	GetByHash(hash []byte) (TxResult, error)
+	GetByHash(hash []byte) (shared.TxResult, error)
 
 	// `GetByHeight` returns all transactions specified by height or nil if there are no transactions at that height
-	GetByHeight(height int64, descending bool) ([]TxResult, error)
+	GetByHeight(height int64, descending bool) ([]shared.TxResult, error)
 
 	// `GetBySender` returns all transactions signed by *sender*; may be ordered descending/ascending
-	GetBySender(sender string, descending bool) ([]TxResult, error)
+	GetBySender(sender string, descending bool) ([]shared.TxResult, error)
 
 	// GetByRecipient returns all transactions *sent to address*; may be ordered descending/ascending
-	GetByRecipient(recipient string, descending bool) ([]TxResult, error)
+	GetByRecipient(recipient string, descending bool) ([]shared.TxResult, error)
 
 	// Close stops the underlying db connection
 	Close() error
 }
 
-// The result of executing a transaction against the blockchain state so that it is included in the block
-type TxResult interface {
-	GetTx() []byte                        // the transaction object primitive
-	GetHeight() int64                     // the height at which the tx was applied
-	GetIndex() int32                      // the transaction's index within the block (i.e. ordered by when the proposer received it in the mempool)
-	GetResultCode() int32                 // 0 is no error, otherwise corresponds to error object code; // IMPROVE: Add a specific type fot he result code
-	GetError() string                     // can be empty; IMPROVE: Add a specific type fot he error code
-	GetSignerAddr() string                // get the address of who signed (i.e. sent) the transaction
-	GetRecipientAddr() string             // get the address of who received the transaction; may be empty
-	GetMessageType() string               // corresponds to type of message (validator-stake, app-unjail, node-stake, etc) // IMPROVE: Add an enum for message types
-	Hash() ([]byte, error)                // the hash of the tx bytes
-	HashFromBytes([]byte) ([]byte, error) // same operation as `Hash`, but avoid re-serializing the tx
-	Bytes() ([]byte, error)               // returns the serialized transaction bytes
-	FromBytes([]byte) (TxResult, error)   // returns the deserialized transaction result
-}
-
 // Implementation
-
-var _ TxResult = &DefaultTxResult{}
 var _ TxIndexer = &txIndexer{}
+var _ shared.TxResult = &TxRes{}
 
 const (
 	hashPrefix      = 'h'
@@ -69,19 +53,19 @@ const (
 // INVESTIGATE: We can research to see if there are more optimal parameters
 var elenEncoder = lexnum.NewEncoder('=', '-')
 
-func (x *DefaultTxResult) Bytes() ([]byte, error) {
+func (x *TxRes) Bytes() ([]byte, error) {
 	return codec.GetCodec().Marshal(x)
 }
 
-func (*DefaultTxResult) FromBytes(bz []byte) (TxResult, error) {
-	result := new(DefaultTxResult)
+func (*TxRes) FromBytes(bz []byte) (shared.TxResult, error) {
+	result := new(TxRes)
 	if err := codec.GetCodec().Unmarshal(bz, result); err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func (x *DefaultTxResult) Hash() ([]byte, error) {
+func (x *TxRes) Hash() ([]byte, error) {
 	bz, err := x.Bytes()
 	if err != nil {
 		return nil, err
@@ -89,7 +73,7 @@ func (x *DefaultTxResult) Hash() ([]byte, error) {
 	return x.HashFromBytes(bz)
 }
 
-func (x *DefaultTxResult) HashFromBytes(bz []byte) ([]byte, error) {
+func (x *TxRes) HashFromBytes(bz []byte) ([]byte, error) {
 	return crypto.SHA3Hash(bz), nil
 }
 
@@ -98,6 +82,10 @@ type txIndexer struct {
 }
 
 func NewTxIndexer(databasePath string) (TxIndexer, error) {
+	if databasePath == "" {
+		return NewMemTxIndexer()
+	}
+	// db, err := kvstore.NewKVStore(databasePath)
 	db, err := kvstore.OpenKVStore(databasePath)
 	return &txIndexer{
 		db: db,
@@ -110,7 +98,7 @@ func NewMemTxIndexer() (TxIndexer, error) {
 	}, nil
 }
 
-func (indexer *txIndexer) Index(result TxResult) error {
+func (indexer *txIndexer) Index(result shared.TxResult) error {
 	bz, err := result.Bytes()
 	if err != nil {
 		return err
@@ -135,19 +123,19 @@ func (indexer *txIndexer) Index(result TxResult) error {
 	return nil
 }
 
-func (indexer *txIndexer) GetByHash(hash []byte) (TxResult, error) {
+func (indexer *txIndexer) GetByHash(hash []byte) (shared.TxResult, error) {
 	return indexer.get(indexer.hashKey(hash))
 }
 
-func (indexer *txIndexer) GetByHeight(height int64, descending bool) ([]TxResult, error) {
+func (indexer *txIndexer) GetByHeight(height int64, descending bool) ([]shared.TxResult, error) {
 	return indexer.getAll(indexer.heightKey(height), descending)
 }
 
-func (indexer *txIndexer) GetBySender(sender string, descending bool) ([]TxResult, error) {
+func (indexer *txIndexer) GetBySender(sender string, descending bool) ([]shared.TxResult, error) {
 	return indexer.getAll(indexer.senderKey(sender), descending)
 }
 
-func (indexer *txIndexer) GetByRecipient(recipient string, descending bool) ([]TxResult, error) {
+func (indexer *txIndexer) GetByRecipient(recipient string, descending bool) ([]shared.TxResult, error) {
 	return indexer.getAll(indexer.recipientKey(recipient), descending)
 }
 
@@ -157,13 +145,13 @@ func (indexer *txIndexer) Close() error {
 
 // kv helper functions
 
-func (indexer *txIndexer) getAll(prefix []byte, descending bool) (result []TxResult, err error) {
+func (indexer *txIndexer) getAll(prefix []byte, descending bool) (result []shared.TxResult, err error) {
 	hashKeys, err := indexer.db.GetAll(prefix, descending)
 	if err != nil {
 		return nil, err
 	}
 	for _, hashKey := range hashKeys {
-		var txResult TxResult
+		var txResult shared.TxResult
 		txResult, err = indexer.get(hashKey)
 		if err != nil {
 			return
@@ -173,12 +161,12 @@ func (indexer *txIndexer) getAll(prefix []byte, descending bool) (result []TxRes
 	return
 }
 
-func (indexer *txIndexer) get(key []byte) (TxResult, error) {
+func (indexer *txIndexer) get(key []byte) (shared.TxResult, error) {
 	bz, err := indexer.db.Get(key)
 	if err != nil {
 		return nil, err
 	}
-	return new(DefaultTxResult).FromBytes(bz)
+	return new(TxRes).FromBytes(bz)
 }
 
 // index helper functions

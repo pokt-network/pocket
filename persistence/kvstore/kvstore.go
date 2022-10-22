@@ -26,6 +26,10 @@ type KVStore interface {
 	Delete(key []byte) error
 }
 
+const (
+	BadgerKeyNotFoundError = "Key not found"
+)
+
 var _ KVStore = &badgerKVStore{}
 var _ smt.MapStore = &badgerKVStore{}
 

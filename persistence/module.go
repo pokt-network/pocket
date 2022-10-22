@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pokt-network/pocket/persistence/indexer"
+
 	"github.com/celestiaorg/smt"
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -28,13 +30,15 @@ type persistenceModule struct {
 	config       modules.PersistenceConfig
 	genesisState modules.PersistenceGenesisState
 
+	// A reference to the block key-value store
+	blockStore kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
+	txIndexer  indexer.TxIndexer
+
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	writeContext *PostgresContext // only one write context is allowed at a time
 
 	// The connection to the PostgreSQL database
 	postgresConn *pgx.Conn
-	// A reference to the block key-value store
-	blockStore kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future.
 	// Merkle trees
 	trees map[MerkleTree]*smt.SparseMerkleTree
 }
@@ -77,11 +81,17 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 		return nil, err
 	}
 
+	txIndexer, err := indexer.NewTxIndexer(persistenceCfg.GetTxIndexerPath())
+	if err != nil {
+		return nil, err
+	}
+
 	m = &persistenceModule{
 		bus:          nil,
 		config:       persistenceCfg,
 		genesisState: persistenceGenesis,
 		blockStore:   blockStore,
+		txIndexer:    txIndexer,
 		writeContext: nil,
 		// contexts:     make(map[contextId]modules.PersistenceContext),
 		trees: make(map[MerkleTree]*smt.SparseMerkleTree),
@@ -165,11 +175,11 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		conn:   conn,
 		tx:     tx,
 
-		currentBlockTxs:  make([][]byte, 0),
 		currentStateHash: make([]byte, 0),
 
 		blockStore:  m.blockStore,
 		merkleTrees: m.trees,
+		txIndexer:   m.txIndexer,
 	}
 
 	return m.writeContext, nil
@@ -195,6 +205,7 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 		conn:       conn,
 		tx:         tx,
 		blockStore: m.blockStore,
+		txIndexer:  m.txIndexer,
 	}, nil
 }
 

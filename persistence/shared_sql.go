@@ -44,7 +44,7 @@ func (p *PostgresContext) GetExists(actorSchema types.ProtocolActorSchema, addre
 	return
 }
 
-func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema, height int64) (actors []types.BaseActor, err error) {
+func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema, height int64) (actors []*types.Actor, err error) {
 	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return
@@ -70,7 +70,7 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema
 	rows.Close()
 
 	// OPTIMIZE: Consolidate logic with `GetActor` to reduce code footprint
-	actors = make([]types.BaseActor, len(addrs))
+	actors = make([]*types.Actor, len(addrs))
 	for i, addr := range addrs {
 		actor, err := p.GetActor(actorSchema, []byte(addr), height)
 		if err != nil {
@@ -82,7 +82,7 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema
 	return
 }
 
-func (p *PostgresContext) GetActor(actorSchema types.ProtocolActorSchema, address []byte, height int64) (actor types.BaseActor, err error) {
+func (p *PostgresContext) GetActor(actorSchema types.ProtocolActorSchema, address []byte, height int64) (actor *types.Actor, err error) {
 	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return
@@ -96,13 +96,13 @@ func (p *PostgresContext) GetActor(actorSchema types.ProtocolActorSchema, addres
 }
 
 // IMPORTANT: Need to consolidate `persistence/types.BaseActor` with `persistence/genesisTypes.Actor`
-func (p *PostgresContext) GetActorFromRow(row pgx.Row) (actor types.BaseActor, height int64, err error) {
+func (p *PostgresContext) GetActorFromRow(row pgx.Row) (actor *types.Actor, height int64, err error) {
 	err = row.Scan(
 		&actor.Address,
 		&actor.PublicKey,
-		&actor.StakedTokens,
-		&actor.ActorSpecificParam,
-		&actor.OutputAddress,
+		&actor.StakedAmount,
+		&actor.GenericParam,
+		&actor.Output,
 		&actor.PausedHeight,
 		&actor.UnstakingHeight,
 		&height)
@@ -113,9 +113,9 @@ func (p *PostgresContext) GetChainsForActor(
 	ctx context.Context,
 	tx pgx.Tx,
 	actorSchema types.ProtocolActorSchema,
-	actor types.BaseActor,
+	actor *types.Actor,
 	height int64,
-) (a types.BaseActor, err error) {
+) (a *types.Actor, err error) {
 	if actorSchema.GetChainsTableName() == "" {
 		return actor, nil
 	}
@@ -141,7 +141,7 @@ func (p *PostgresContext) GetChainsForActor(
 	return actor, nil
 }
 
-func (p *PostgresContext) InsertActor(actorSchema types.ProtocolActorSchema, actor types.BaseActor) error {
+func (p *PostgresContext) InsertActor(actorSchema types.ProtocolActorSchema, actor *types.Actor) error {
 	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
@@ -153,13 +153,13 @@ func (p *PostgresContext) InsertActor(actorSchema types.ProtocolActorSchema, act
 	}
 
 	_, err = tx.Exec(ctx, actorSchema.InsertQuery(
-		actor.Address, actor.PublicKey, actor.StakedTokens, actor.ActorSpecificParam,
-		actor.OutputAddress, actor.PausedHeight, actor.UnstakingHeight, actor.Chains,
+		actor.Address, actor.PublicKey, actor.StakedAmount, actor.GenericParam,
+		actor.Output, actor.PausedHeight, actor.UnstakingHeight, actor.Chains,
 		height))
 	return err
 }
 
-func (p *PostgresContext) UpdateActor(actorSchema types.ProtocolActorSchema, actor types.BaseActor) error {
+func (p *PostgresContext) UpdateActor(actorSchema types.ProtocolActorSchema, actor *types.Actor) error {
 	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
@@ -170,7 +170,7 @@ func (p *PostgresContext) UpdateActor(actorSchema types.ProtocolActorSchema, act
 		return err
 	}
 
-	if _, err = tx.Exec(ctx, actorSchema.UpdateQuery(actor.Address, actor.StakedTokens, actor.ActorSpecificParam, height)); err != nil {
+	if _, err = tx.Exec(ctx, actorSchema.UpdateQuery(actor.Address, actor.StakedAmount, actor.GenericParam, height)); err != nil {
 		return err
 	}
 

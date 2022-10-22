@@ -3,24 +3,6 @@ package types
 // IMPROVE: Move schema related functions to a separate sub-package
 import "github.com/pokt-network/pocket/shared/modules"
 
-// TECHDEBT: Consider moving this to a protobuf. This struct was created to make testing simple of protocol actors that
-//           share most of the schema. We need to investigate if there's a better solution, or document this more appropriately
-//           and generalize across the entire codebase.
-//           See the `Actor` interface in `shared/types/genesis/actor.go`.
-// NOTE: requires modifying shared, so better to leave it alone until we reach some stability
-
-// TODO (team) get rid of this for the interface version in shared (once merged)
-type BaseActor struct {
-	Address            string
-	PublicKey          string
-	StakedTokens       string
-	ActorSpecificParam string // IMPROVE: May need to be refactored or converted to a list
-	OutputAddress      string
-	PausedHeight       int64
-	UnstakingHeight    int64
-	Chains             []string // IMPROVE: Consider creating a `type Chain string` for chains
-}
-
 var _ ProtocolActorSchema = &BaseProtocolActorSchema{}
 
 // Implements the ProtocolActorSchema with behaviour that can be embedded (i.e. inherited) by other protocol
@@ -101,17 +83,17 @@ func (actor *BaseProtocolActorSchema) GetChainsQuery(address string, height int6
 	return SelectChains(AllColsSelector, address, height, actor.tableName, actor.chainsTableName)
 }
 
-func (actor *BaseProtocolActorSchema) InsertQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string {
-	return Insert(BaseActor{
+func (actor *BaseProtocolActorSchema) InsertQuery(address, publicKey, stakedTokens, generic, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string {
+	return Insert(&Actor{
 		Address:         address,
 		PublicKey:       publicKey,
-		StakedTokens:    stakedTokens,
-		OutputAddress:   outputAddress,
+		StakedAmount:    stakedTokens,
+		Output:          outputAddress,
 		PausedHeight:    pausedHeight,
 		UnstakingHeight: unstakingHeight,
 		Chains:          chains,
 	},
-		actor.actorSpecificColName, maxRelays,
+		actor.actorSpecificColName, generic,
 		actor.heightConstraintName, actor.chainsHeightConstraintName,
 		actor.tableName, actor.chainsTableName,
 		height)

@@ -362,11 +362,11 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 
 	utilityContextMock.EXPECT().
 		GetProposalTransactions(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
-		Return(make([][]byte, 0), nil).
+		Return(make([][]byte, 0), nil, nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().
 		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		Return(appHash, nil).
+		Return(appHash, nil, nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().Release().Return(nil).AnyTimes()

@@ -175,11 +175,11 @@ func (p PostgresContext) getActorsUpdatedAtHeight(actorType types.ActorType, hei
 			Address:         actor.Address,
 			PublicKey:       actor.PublicKey,
 			Chains:          actor.Chains,
-			GenericParam:    actor.ActorSpecificParam,
-			StakedAmount:    actor.StakedTokens,
+			GenericParam:    actor.GenericParam,
+			StakedAmount:    actor.StakedAmount,
 			PausedHeight:    actor.PausedHeight,
 			UnstakingHeight: actor.UnstakingHeight,
-			Output:          actor.OutputAddress,
+			Output:          actor.Output,
 		}
 		actors = append(actors, actor)
 	}
