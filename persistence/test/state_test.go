@@ -42,8 +42,9 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 
 		// NOTE: The tx does not currently affect the state hash
 		txBz := []byte("a tx, i am, which set the app stake amount to " + newStakeAmount)
-		err = db.StoreTransaction(txBz)
-		require.NoError(t, err)
+		// txResult := types.DefaultTx
+		// err = db.StoreTransaction(txBz)
+		// require.NoError(t, err)
 
 		// Update & commit the state hash
 		appHash, err := db.UpdateAppHash()

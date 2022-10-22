@@ -60,7 +60,7 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		persistenceContext.ReleaseWriteContext()
+		persistenceContext.Release()
 	})
 
 	return utility.UtilityContext{
