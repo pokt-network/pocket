@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.7] - 2022-10-12
+## [0.0.0.7] - 2022-10-14
+
+- Added session interfaces and diagrams
 - Moved `TxIndexer` package to persistence module
 - Added new proto structure `DefaultTxResult`
 - Integrated the `TxIndexer` into the lifecycle
