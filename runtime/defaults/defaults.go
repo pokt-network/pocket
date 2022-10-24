@@ -26,6 +26,7 @@ var (
 	DefaultUnstakingHeight     = int64(-1)
 	DefaultChainID             = "testnet"
 	DefaultMaxBlockBytes       = uint64(4000000)
+	ServiceUrlFormat           = "node%d.consensus:8080"
 	DefaultRpcPort             = defaultRPCPort
 	DefaultRpcTimeout          = uint64(defaultRPCTimeout)
 	DefaultRemoteCLIURL        = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaultRPCPort)
