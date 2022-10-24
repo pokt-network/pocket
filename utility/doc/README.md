@@ -155,7 +155,6 @@ CheckTransaction(tx []byte) error
 GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error)
 ApplyBlock(Height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
 ```
-
 ## How to build
 
 Utility Module does not come with its own cmd executables.
@@ -190,6 +189,7 @@ utility
 ├── block.go       # utility context for blocks
 ├── gov.go         # utility context for dao & parameters
 ├── module.go      # module implementation and interfaces
+├── session.go     # utility context for the session protocol
 ├── transaction.go # utility context for transactions including handlers
 ├── doc            # contains the documentation and changelog
 ├── test           # utility unit tests

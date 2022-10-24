@@ -15,9 +15,9 @@ func (p PostgresContext) GetServiceNode(address []byte, height int64) (operator,
 	actor, err := p.GetActor(types.ServiceNodeActor, address, height)
 	operator = actor.Address
 	publicKey = actor.PublicKey
-	stakedTokens = actor.StakedTokens
-	serviceURL = actor.ActorSpecificParam
-	outputAddress = actor.OutputAddress
+	stakedTokens = actor.StakedAmount
+	serviceURL = actor.GenericParam
+	outputAddress = actor.Output
 	pausedHeight = actor.PausedHeight
 	unstakingHeight = actor.UnstakingHeight
 	chains = actor.Chains
@@ -25,24 +25,26 @@ func (p PostgresContext) GetServiceNode(address []byte, height int64) (operator,
 }
 
 func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, _ bool, _ int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
-	return p.InsertActor(types.ServiceNodeActor, types.BaseActor{
-		Address:            hex.EncodeToString(address),
-		PublicKey:          hex.EncodeToString(publicKey),
-		StakedTokens:       stakedTokens,
-		ActorSpecificParam: serviceURL,
-		OutputAddress:      hex.EncodeToString(output),
-		PausedHeight:       pausedHeight,
-		UnstakingHeight:    unstakingHeight,
-		Chains:             chains,
+	return p.InsertActor(types.ServiceNodeActor, &types.Actor{
+		ActorType:       types.ActorType_Node,
+		Address:         hex.EncodeToString(address),
+		PublicKey:       hex.EncodeToString(publicKey),
+		StakedAmount:    stakedTokens,
+		GenericParam:    serviceURL,
+		Output:          hex.EncodeToString(output),
+		PausedHeight:    pausedHeight,
+		UnstakingHeight: unstakingHeight,
+		Chains:          chains,
 	})
 }
 
 func (p PostgresContext) UpdateServiceNode(address []byte, serviceURL string, stakedAmount string, chains []string) error {
-	return p.UpdateActor(types.ServiceNodeActor, types.BaseActor{
-		Address:            hex.EncodeToString(address),
-		StakedTokens:       stakedAmount,
-		ActorSpecificParam: serviceURL,
-		Chains:             chains,
+	return p.UpdateActor(types.ServiceNodeActor, &types.Actor{
+		ActorType:    types.ActorType_Node,
+		Address:      hex.EncodeToString(address),
+		StakedAmount: stakedAmount,
+		GenericParam: serviceURL,
+		Chains:       chains,
 	})
 }
 

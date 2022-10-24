@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"encoding/hex"
 	"github.com/pokt-network/pocket/shared/crypto"
+	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *UtilityContext) ApplyTransaction(tx *typesUtil.Transaction) typesUtil.Error {
-	msg, err := u.AnteHandleMessage(tx)
+func (u *UtilityContext) ApplyTransaction(index int, tx *typesUtil.Transaction) (modules.TxResult, typesUtil.Error) {
+	msg, signer, err := u.AnteHandleMessage(tx)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return u.HandleMessage(msg)
+	return tx.ToTxResult(u.LatestHeight, index, signer, msg.GetMessageRecipient(), msg.GetMessageName(), u.HandleMessage(msg))
 }
 
 func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
@@ -42,20 +43,22 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 	return u.Mempool.AddTransaction(transactionProtoBytes)
 }
 
-func (u *UtilityContext) GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) ([][]byte, error) {
+func (u *UtilityContext) GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) ([][]byte, []modules.TxResult, error) {
 	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	transactions := make([][]byte, 0)
+	txResults := make([]modules.TxResult, 0)
 	totalSizeInBytes := 0
+	index := 0
 	for u.Mempool.Size() != typesUtil.ZeroInt {
 		txBytes, err := u.Mempool.PopTransaction()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		transaction, err := typesUtil.TransactionFromBytes(txBytes)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		txSizeInBytes := len(txBytes)
 		totalSizeInBytes += txSizeInBytes
@@ -63,74 +66,78 @@ func (u *UtilityContext) GetProposalTransactions(proposer []byte, maxTransaction
 			// Add back popped transaction to be applied in a future block
 			err := u.Mempool.AddTransaction(txBytes)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			break // we've reached our max
 		}
-		err = u.ApplyTransaction(transaction)
+		txResult, err := u.ApplyTransaction(index, transaction)
 		if err != nil {
 			// TODO: Properly implement 'unhappy path' for save points
 			if err := u.RevertLastSavePoint(); err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			totalSizeInBytes -= txSizeInBytes
+			continue
 		}
 		transactions = append(transactions, txBytes)
+		txResults = append(txResults, txResult)
+		index++
 	}
 	if err := u.EndBlock(proposer); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return transactions, nil
+	return transactions, txResults, nil
 }
 
 // CLEANUP: Exposed for testing purposes only
-func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (typesUtil.Message, typesUtil.Error) {
-	msg, err := tx.Message()
+func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (msg typesUtil.Message, signer string, err typesUtil.Error) {
+	msg, err = tx.Message()
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	fee, err := u.GetFee(msg, msg.GetActorType())
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	pubKey, er := crypto.NewPublicKeyFromBytes(tx.Signature.PublicKey)
 	if er != nil {
-		return nil, typesUtil.ErrNewPublicKeyFromBytes(er)
+		return nil, "", typesUtil.ErrNewPublicKeyFromBytes(er)
 	}
 	address := pubKey.Address()
 	accountAmount, err := u.GetAccountAmount(address)
 	if err != nil {
-		return nil, typesUtil.ErrGetAccountAmount(err)
+		return nil, "", typesUtil.ErrGetAccountAmount(err)
 	}
 	accountAmount.Sub(accountAmount, fee)
 	if accountAmount.Sign() == -1 {
-		return nil, typesUtil.ErrInsufficientAmount(address.String())
+		return nil, "", typesUtil.ErrInsufficientAmount(address.String())
 	}
 	signerCandidates, err := u.GetSignerCandidates(msg)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	var isValidSigner bool
 	for _, candidate := range signerCandidates {
 		if bytes.Equal(candidate, address) {
 			isValidSigner = true
+			signer = hex.EncodeToString(candidate)
 			break
 		}
 	}
 	if !isValidSigner {
-		return nil, typesUtil.ErrInvalidSigner()
+		return nil, signer, typesUtil.ErrInvalidSigner()
 	}
 	if err := u.SetAccountAmount(address, accountAmount); err != nil {
-		return nil, err
+		return nil, signer, err
 	}
 	if err := u.AddPoolAmount(typesUtil.PoolNames_FeeCollector.String(), fee); err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	msg.SetSigner(address)
-	return msg, nil
+	return msg, signer, nil
 }
 
-func (u *UtilityContext) HandleMessage(msg typesUtil.Message) typesUtil.Error {
+func (u *UtilityContext) HandleMessage(msg typesUtil.Message) (err typesUtil.Error) {
 	switch x := msg.(type) {
 	case *typesUtil.MessageDoubleSign:
 		return u.HandleMessageDoubleSign(x)

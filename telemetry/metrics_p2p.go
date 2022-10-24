@@ -12,6 +12,7 @@ const (
 	P2P_RAINTREE_MESSAGE_EVENT_METRIC_NAME                       = "raintree_message_event_metric"
 
 	// Attributes
+	P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL   = "send"
 	P2P_RAINTREE_MESSAGE_EVENT_METRIC_HEIGHT_LABEL = "height"
 	P2P_RAINTREE_MESSAGE_EVENT_METRIC_NONCE_LABEL  = "nonce"
 )

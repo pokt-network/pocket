@@ -1,6 +1,5 @@
 package test_artifacts
 
-// TODO: Move `root/shared/test_artifacts` to `root/test/test_artifacts`
 // Cross module imports are okay because this is only used for testing and not business logic
 import (
 	"fmt"
@@ -130,9 +129,12 @@ func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
 	return
 }
 
+// TODO: The current implementation of NewActors  will have overlapping `ServiceUrl` for different
+//
+//	types of actors which needs to be fixed.
 func NewActors(actorType typesUtil.ActorType, n int) (actors []modules.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
-		genericParam := fmt.Sprintf("node%d.consensus:8080", i+1)
+		genericParam := getServiceUrl(i + 1)
 		if int32(actorType) == int32(types.ActorType_App) {
 			genericParam = defaults.DefaultMaxRelaysString
 		}
@@ -140,7 +142,12 @@ func NewActors(actorType typesUtil.ActorType, n int) (actors []modules.Actor, pr
 		actors = append(actors, actor)
 		privateKeys = append(privateKeys, pk)
 	}
+
 	return
+}
+
+func getServiceUrl(n int) string {
+	return fmt.Sprintf(defaults.ServiceUrlFormat, n)
 }
 
 func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor, privateKey string) {
