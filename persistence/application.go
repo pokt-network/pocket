@@ -57,7 +57,7 @@ func (p PostgresContext) SetAppStakeAmount(address []byte, stakeAmount string) e
 	return p.SetActorStakeAmount(types.ApplicationActor, address, stakeAmount)
 }
 
-func (p PostgresContext) DeleteApp(_ []byte) error {
+func (p PostgresContext) deleteApp(_ []byte) error {
 	log.Println("[DEBUG] DeleteApp is a NOOP")
 	return nil
 }
