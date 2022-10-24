@@ -41,7 +41,9 @@ func accountCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
-				// currently ignored since we are using the address from the PrivateKey
+				// NOTE: since we don't have a keybase yet (tracked in #150), we are currently inferring the `fromAddr` from the PrivateKey supplied via the flag `--path_to_private_key_file`
+				// the following line is commented out to show that once we have a keybase, `fromAddr` should come from the command arguments and not the PrivateKey (pk) anymore.
+				//
 				// fromAddr := crypto.AddressFromString(args[0])
 				toAddr := crypto.AddressFromString(args[1])
 				amount := args[2]
