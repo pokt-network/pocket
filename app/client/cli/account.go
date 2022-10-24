@@ -9,9 +9,9 @@ import (
 )
 
 func init() {
-	actorCmd := NewAccountCommand()
-	actorCmd.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
-	rootCmd.AddCommand(actorCmd)
+	accounCmd := NewAccountCommand()
+	accounCmd.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
+	rootCmd.AddCommand(accounCmd)
 }
 
 func NewAccountCommand() *cobra.Command {
