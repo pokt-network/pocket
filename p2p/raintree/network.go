@@ -162,7 +162,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
-	// TODO (#278): Add more tests to verify this is sufficient for deduping purposes.
+	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
 	if _, contains := n.mempool[rainTreeMsg.Nonce]; contains {
 		n.GetBus().
 			GetTelemetryModule().
