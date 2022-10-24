@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pokt-network/pocket/shared/converters"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 )
@@ -277,44 +276,4 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 		},
 	}
 	return unpauseCmd
-}
-
-func readPassphrase(currPwd string) string {
-	if strings.TrimSpace(currPwd) == "" {
-		fmt.Println("Enter Passphrase: ")
-	} else {
-		fmt.Println("Using Passphrase provided via flag")
-	}
-
-	return credentials(currPwd)
-}
-
-func validateStakeAmount(amount string) error {
-	am, err := converters.StringToBigInt(amount)
-	if err != nil {
-		return err
-	}
-
-	sr := big.NewInt(stakingRecommendationAmount)
-	if typesUtil.BigIntLessThan(am, sr) {
-		fmt.Printf("The amount you are staking for is below the recommendation of %d POKT, would you still like to continue? y|n\n", sr.Div(sr, oneMillion).Int64())
-		if !confirmation(pwd) {
-			return fmt.Errorf("aborted")
-		}
-	}
-	return nil
-}
-
-func applySubcommandOptions(cmds []*cobra.Command, cmdDef actorCmdDef) {
-	for _, cmd := range cmds {
-		for _, opt := range cmdDef.Options {
-			opt(cmd)
-		}
-	}
-}
-
-func attachPwdFlagToSubcommands() []cmdOption {
-	return []cmdOption{func(c *cobra.Command) {
-		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
-	}}
 }

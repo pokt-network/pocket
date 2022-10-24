@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/big"
 	"math/rand"
 	"net/http"
 	"os"
@@ -16,8 +17,10 @@ import (
 
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/converters"
 	"github.com/pokt-network/pocket/shared/crypto"
-	utilityTypes "github.com/pokt-network/pocket/utility/types"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
+	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -92,7 +95,7 @@ func confirmation(pwd string) bool {
 // prepareTxJson wraps a Message into a Transaction and signs it with the provided pk
 //
 // returns the JSON bytes of the signed transaction
-func prepareTxJson(msg utilityTypes.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
+func prepareTxJson(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
 	var err error
 	anyMsg, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
@@ -104,9 +107,9 @@ func prepareTxJson(msg utilityTypes.Message, pk crypto.Ed25519PrivateKey) ([]byt
 		return nil, err
 	}
 
-	tx := &utilityTypes.Transaction{
+	tx := &typesUtil.Transaction{
 		Msg: anyMsg,
-		Signature: &utilityTypes.Signature{
+		Signature: &typesUtil.Signature{
 			Signature: signature,
 			PublicKey: pk.PublicKey().Bytes(),
 		},
@@ -141,4 +144,44 @@ func postRawTx(ctx context.Context, pk crypto.Ed25519PrivateKey, j []byte) (*htt
 func getNonce() string {
 	rand.Seed(time.Now().UTC().UnixNano())
 	return fmt.Sprintf("%d", rand.Uint64())
+}
+
+func readPassphrase(currPwd string) string {
+	if strings.TrimSpace(currPwd) == "" {
+		fmt.Println("Enter Passphrase: ")
+	} else {
+		fmt.Println("Using Passphrase provided via flag")
+	}
+
+	return credentials(currPwd)
+}
+
+func validateStakeAmount(amount string) error {
+	am, err := converters.StringToBigInt(amount)
+	if err != nil {
+		return err
+	}
+
+	sr := big.NewInt(stakingRecommendationAmount)
+	if typesUtil.BigIntLessThan(am, sr) {
+		fmt.Printf("The amount you are staking for is below the recommendation of %d POKT, would you still like to continue? y|n\n", sr.Div(sr, oneMillion).Int64())
+		if !confirmation(pwd) {
+			return fmt.Errorf("aborted")
+		}
+	}
+	return nil
+}
+
+func applySubcommandOptions(cmds []*cobra.Command, cmdDef actorCmdDef) {
+	for _, cmd := range cmds {
+		for _, opt := range cmdDef.Options {
+			opt(cmd)
+		}
+	}
+}
+
+func attachPwdFlagToSubcommands() []cmdOption {
+	return []cmdOption{func(c *cobra.Command) {
+		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
+	}}
 }
