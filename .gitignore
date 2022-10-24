@@ -54,6 +54,3 @@ main
 
 # Ignored generated files by build/config/main.go
 build/config/gen*.json
-
-# P2P simulator files
-p2p/raintree/simulator/__pycache__/

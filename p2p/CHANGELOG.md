@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.7] - 2022-10-21
+## [0.0.0.7] - 2022-10-24
 
-- Added scripts and documentation for `p2p/raintree/simulator/test_generator.py`
+- Update README to reference the simulator as a learning references and unit test generation tool
+- Added a RainTree unit test for 12 nodes using the simulator in https://github.com/pokt-network/rain-tree-sim/blob/main/python
 
 ## [0.0.0.6] - 2022-10-20
 
