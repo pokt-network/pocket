@@ -5,6 +5,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/runtime"
@@ -60,6 +61,11 @@ func (m *Node) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 		return nil, err
 	}
 
+	loggerMod, err := logger.Create(runtimeMgr)
+	if err != nil {
+		return nil, err
+	}
+
 	bus, err := CreateBus(
 		runtimeMgr,
 		persistenceMod.(modules.PersistenceModule),
@@ -67,6 +73,7 @@ func (m *Node) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 		utilityMod.(modules.UtilityModule),
 		consensusMod.(modules.ConsensusModule),
 		telemetryMod.(modules.TelemetryModule),
+		loggerMod.(modules.LoggerModule),
 	)
 	if err != nil {
 		return nil, err

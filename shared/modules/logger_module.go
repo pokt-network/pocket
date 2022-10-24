@@ -10,11 +10,10 @@ type Logger = zerolog.Logger
 type LoggerModule interface {
 	Module
 
-	// TODO(@okdas): move that to Module interface, so each module has its own logger (with context)
-	// https://github.com/pokt-network/pocket/issues/288
+	// TODO(#288): Embed `ObservableModule` inside of the `Module` interface so each module has its own context specific logger
 	ObservableModule
 
-	// CreateLoggerForModule returns the logger with additional context (module name)
+	// `CreateLoggerForModule` returns the logger with additional context (e.g. module name)
 	// https://github.com/rs/zerolog#sub-loggers-let-you-chain-loggers-with-additional-context
 	CreateLoggerForModule(string) Logger
 }

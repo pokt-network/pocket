@@ -37,6 +37,7 @@ func CreateBus(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
+	logger modules.LoggerModule,
 ) (modules.Bus, error) {
 	bus := &bus{
 		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -48,6 +49,7 @@ func CreateBus(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
+		logger:      logger,
 	}
 
 	modules := map[string]modules.Module{
@@ -56,6 +58,7 @@ func CreateBus(
 		"p2p":         p2p,
 		"utility":     utility,
 		"telemetry":   telemetry,
+		"logger":      logger,
 	}
 
 	// checks if modules are not nil and sets their bus to this bus instance.
