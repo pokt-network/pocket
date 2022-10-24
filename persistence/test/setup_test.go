@@ -116,8 +116,8 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
 func fuzzSingleProtocolActor(
 	f *testing.F,
-	newTestActor func() (types.BaseActor, error),
-	getTestActor func(db *persistence.PostgresContext, address string) (*types.BaseActor, error),
+	newTestActor func() (*types.Actor, error),
+	getTestActor func(db *persistence.PostgresContext, address string) (*types.Actor, error),
 	protocolActorSchema types.ProtocolActorSchema) {
 
 	db := NewFuzzTestPostgresContext(f, 0)
@@ -162,9 +162,9 @@ func fuzzSingleProtocolActor(
 		switch op {
 		case "UpdateActor":
 			numParamUpdatesSupported := 3
-			newStakedTokens := originalActor.StakedTokens
+			newStakedTokens := originalActor.StakedAmount
 			newChains := originalActor.Chains
-			newActorSpecificParam := originalActor.ActorSpecificParam
+			newActorSpecificParam := originalActor.GenericParam
 
 			iterations := rand.Intn(2)
 			for i := 0; i < iterations; i++ {
@@ -186,15 +186,15 @@ func fuzzSingleProtocolActor(
 					}
 				}
 			}
-			updatedActor := types.BaseActor{
-				Address:            originalActor.Address,
-				PublicKey:          originalActor.PublicKey,
-				StakedTokens:       newStakedTokens,
-				ActorSpecificParam: newActorSpecificParam,
-				OutputAddress:      originalActor.OutputAddress,
-				PausedHeight:       originalActor.PausedHeight,
-				UnstakingHeight:    originalActor.UnstakingHeight,
-				Chains:             newChains,
+			updatedActor := &types.Actor{
+				Address:         originalActor.Address,
+				PublicKey:       originalActor.PublicKey,
+				StakedAmount:    newStakedTokens,
+				GenericParam:    newActorSpecificParam,
+				Output:          originalActor.Output,
+				PausedHeight:    originalActor.PausedHeight,
+				UnstakingHeight: originalActor.UnstakingHeight,
+				Chains:          newChains,
 			}
 			err = db.UpdateActor(protocolActorSchema, updatedActor)
 			require.NoError(t, err)
@@ -203,13 +203,13 @@ func fuzzSingleProtocolActor(
 			require.NoError(t, err)
 
 			require.ElementsMatch(t, newActor.Chains, newChains, "staked chains not updated")
-			require.NotContains(t, newActor.StakedTokens, "invalid")
+			require.NotContains(t, newActor.StakedAmount, "invalid")
 			// TODO(andrew): Use `require.Contains` instead. E.g. require.NotContains(t, newActor.StakedTokens, "invalid")
-			if strings.Contains(newActor.StakedTokens, "invalid") {
+			if strings.Contains(newActor.StakedAmount, "invalid") {
 				log.Println("")
 			}
-			require.Equal(t, newActor.StakedTokens, newStakedTokens, "staked tokens not updated")
-			require.Equal(t, newActor.ActorSpecificParam, newActorSpecificParam, "actor specific param not updated")
+			require.Equal(t, newActor.StakedAmount, newStakedTokens, "staked tokens not updated")
+			require.Equal(t, newActor.GenericParam, newActorSpecificParam, "actor specific param not updated")
 		case "GetActorsReadyToUnstake":
 			unstakingActors, err := db.GetActorsReadyToUnstake(protocolActorSchema, db.Height)
 			require.NoError(t, err)
@@ -274,7 +274,7 @@ func fuzzSingleProtocolActor(
 			outputAddr, err := db.GetActorOutputAddress(protocolActorSchema, addr, db.Height)
 			require.NoError(t, err)
 
-			require.Equal(t, originalActor.OutputAddress, hex.EncodeToString(outputAddr), "output address incorrect")
+			require.Equal(t, originalActor.Output, hex.EncodeToString(outputAddr), "output address incorrect")
 		case "IncrementHeight":
 			db.Height++
 		default:

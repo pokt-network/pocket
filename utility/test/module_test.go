@@ -1,12 +1,14 @@
 package test
 
 import (
+	"encoding/hex"
 	"math/big"
 	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/modules"
 	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -26,9 +28,10 @@ var (
 	defaultTestingChainsEdited = []string{"0002"}
 	defaultUnstaking           = int64(2017)
 	defaultSendAmount          = big.NewInt(10000)
-	defaultNonceString         = utilTypes.BigIntToString(test_artifacts.DefaultAccountAmount)
+	defaultNonceString         = utilTypes.BigIntToString(defaults.DefaultAccountAmount)
 	defaultSendAmountString    = utilTypes.BigIntToString(defaultSendAmount)
 	testSchema                 = "test_schema"
+	testMessageSendType        = "MessageSend"
 )
 
 var persistenceDbUrl string
@@ -96,4 +99,20 @@ func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.Persiste
 	require.NoError(t, err)
 
 	return persistenceMod.(modules.PersistenceModule)
+}
+
+func requireValidTestingTxResults(t *testing.T, tx *utilTypes.Transaction, txResults []modules.TxResult) {
+	for _, txResult := range txResults {
+		msg, err := tx.GetMessage()
+		sendMsg, ok := msg.(*utilTypes.MessageSend)
+		require.True(t, ok)
+		require.NoError(t, err)
+		require.Equal(t, int32(0), txResult.GetResultCode())
+		require.Equal(t, "", txResult.GetError())
+		require.Equal(t, testMessageSendType, txResult.GetMessageType())
+		require.Equal(t, int32(0), txResult.GetIndex())
+		require.Equal(t, int64(0), txResult.GetHeight())
+		require.Equal(t, hex.EncodeToString(sendMsg.ToAddress), txResult.GetRecipientAddr())
+		require.Equal(t, hex.EncodeToString(sendMsg.FromAddress), txResult.GetSignerAddr())
+	}
 }

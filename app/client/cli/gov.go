@@ -38,7 +38,7 @@ func govCommands() []*cobra.Command {
 				// TODO(deblasis): implement RPC client, route and handler
 				fmt.Printf("changing parameter %s owned by %s to %s\n", args[1], args[0], args[2])
 
-				// TODO(pocket/issues/150): update when we have keybase
+				// TODO(#150): update when we have keybase
 				pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 				if err != nil {
 					return err
@@ -68,7 +68,7 @@ func govCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
-				// DISCUSS(team): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
+				// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
 				fmt.Println(resp)
 
 				return nil

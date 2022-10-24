@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pokt-network/pocket/shared/converters"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 )
@@ -15,6 +14,8 @@ func init() {
 	rootCmd.AddCommand(NewActorCommands(attachPwdFlagToSubcommands())...)
 
 	rawChainCleanupRegex = regexp.MustCompile(rawChainCleanupExpr)
+
+	oneMillion = big.NewInt(1e6)
 }
 
 const (
@@ -26,6 +27,7 @@ const (
 var (
 	pwd                  string
 	rawChainCleanupRegex *regexp.Regexp
+	oneMillion           *big.Int
 )
 
 type (
@@ -45,16 +47,16 @@ func NewActorCommands(cmdOptions []cmdOption) []*cobra.Command {
 		{"Validator", typesUtil.ActorType_Validator, cmdOptions},
 	}
 
-	cmds := make([]*cobra.Command, 0)
-	for _, cmdDef := range actorCmdDefs {
+	cmds := make([]*cobra.Command, len(actorCmdDefs))
+	for i, cmdDef := range actorCmdDefs {
 		cmd := &cobra.Command{
 			Use:     cmdDef.Name,
 			Short:   fmt.Sprintf("%s actor specific commands", cmdDef.Name),
-			Aliases: []string{strings.ToLower(cmdDef.Name), typesUtil.GetActorName(cmdDef.ActorType)},
+			Aliases: []string{strings.ToLower(cmdDef.Name), cmdDef.ActorType.GetName()},
 			Args:    cobra.ExactArgs(0),
 		}
 		cmd.AddCommand(newActorCommands(cmdDef)...)
-		cmds = append(cmds, cmd)
+		cmds[i] = cmd
 	}
 	return cmds
 }
@@ -78,7 +80,7 @@ func newStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 	}
 
 	custodialStakeCmd := &cobra.Command{
-		Use:   "Custodial <fromAddr> <amount> <RelayChainIDs> <serviceURI>",
+		Use:   "Custodial <fromAddr> <amount> <relayChainIDs> <serviceURI>",
 		Short: "Stake a node in the network. Custodial stake uses the same address as operator/output for rewards/return of staked funds.",
 		Long: `Stake the node into the network, making it available for service.
 Will prompt the user for the <fromAddr> account passphrase. If the node is already staked, this transaction acts as an *update* transaction.
@@ -87,12 +89,14 @@ If the node is currently staked at X and you submit an update with new stake Y. 
 If no changes are desired for the parameter, just enter the current param value just as before.`,
 		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(pocket/issues/150): update when we have keybase
+			// TODO(#150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
 			}
-			// currently ignored since we are using the address from the PrivateKey
+			// NOTE: since we don't have a keybase yet (tracked in #150), we are currently inferring the `fromAddr` from the PrivateKey supplied via the flag `--path_to_private_key_file`
+			// the following line is commented out to show that once we have a keybase, `fromAddr` should come from the command arguments and not the PrivateKey (pk) anymore.
+			//
 			// fromAddr := crypto.AddressFromString(args[0])
 			amount := args[1]
 			err = validateStakeAmount(amount)
@@ -127,7 +131,7 @@ If no changes are desired for the parameter, just enter the current param value 
 			if err != nil {
 				return err
 			}
-			// DISCUSS(team): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
+			// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
 			fmt.Println(resp)
 
 			return nil
@@ -143,12 +147,12 @@ If no changes are desired for the parameter, just enter the current param value 
 
 func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 	editStakeCmd := &cobra.Command{
-		Use:   "EditStake <fromAddr> <amount> <RelayChainIDs> <serviceURI>",
-		Short: "EditStake <fromAddr> <amount> <RelayChainIDs> <serviceURI>",
-		Long:  fmt.Sprintf(`Stakes a new <amount> for the %s actor with address <fromAddr> for the specified <RelayChainIDs> and <serviceURI>.`, cmdDef.Name),
+		Use:   "EditStake <fromAddr> <amount> <relayChainIDs> <serviceURI>",
+		Short: "EditStake <fromAddr> <amount> <relayChainIDs> <serviceURI>",
+		Long:  fmt.Sprintf(`Stakes a new <amount> for the %s actor with address <fromAddr> for the specified <relayChainIDs> and <serviceURI>.`, cmdDef.Name),
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(pocket/issues/150): update when we have keybase
+			// TODO(#150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
@@ -185,7 +189,7 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// DISCUSS(team): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
+			// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
 			fmt.Println(resp)
 
 			return nil
@@ -201,7 +205,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Unstakes the prevously staked tokens for the %s actor with address <fromAddr>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(pocket/issues/150): update when we have keybase
+			// TODO(#150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
@@ -225,7 +229,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// DISCUSS(team): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
+			// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
 			fmt.Println(resp)
 
 			return nil
@@ -241,7 +245,7 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 		Long:  fmt.Sprintf(`Unpauses the %s actor with address <fromAddr>`, cmdDef.Name),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// TODO(pocket/issues/150): update when we have keybase
+			// TODO(#150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
 			if err != nil {
 				return err
@@ -265,51 +269,11 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// DISCUSS(team): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
+			// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
 			fmt.Println(resp)
 
 			return nil
 		},
 	}
 	return unpauseCmd
-}
-
-func readPassphrase(currPwd string) string {
-	if strings.TrimSpace(currPwd) == "" {
-		fmt.Println("Enter Passphrase: ")
-	} else {
-		fmt.Println("Using Passphrase provided via flag")
-	}
-
-	return credentials(currPwd)
-}
-
-func validateStakeAmount(amount string) error {
-	am, err := converters.StringToBigInt(amount)
-	if err != nil {
-		return err
-	}
-
-	sr := big.NewInt(stakingRecommendationAmount)
-	if typesUtil.BigIntLessThan(am, sr) {
-		fmt.Printf("The amount you are staking for is below the recommendation of %d POKT, would you still like to continue? y|n\n", sr.Div(sr, big.NewInt(1000000)).Int64())
-		if !confirmation(pwd) {
-			return fmt.Errorf("aborted")
-		}
-	}
-	return nil
-}
-
-func applySubcommandOptions(cmds []*cobra.Command, cmdDef actorCmdDef) {
-	for _, cmd := range cmds {
-		for _, opt := range cmdDef.Options {
-			opt(cmd)
-		}
-	}
-}
-
-func attachPwdFlagToSubcommands() []cmdOption {
-	return []cmdOption{func(c *cobra.Command) {
-		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
-	}}
 }

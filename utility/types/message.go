@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"encoding/hex"
 	"log"
 	"net/url"
 	"strconv"
@@ -43,11 +44,19 @@ type Message interface {
 	SetSigner(signer []byte)
 	ValidateBasic() Error
 	// Get the canonical byte representation of the ProtoMsg.
-	GetSignBytes() []byte
+	GetCanonicalBytes() []byte
 	GetActorType() ActorType
+	GetMessageName() string
+	GetMessageRecipient() string
 }
 
 var _ Message = &MessageSend{}
+var _ Message = &MessageStake{}
+var _ Message = &MessageEditStake{}
+var _ Message = &MessageUnstake{}
+var _ Message = &MessageUnpause{}
+var _ Message = &MessageChangeParameter{}
+var _ Message = &MessageDoubleSign{}
 
 func (msg *MessageSend) GetActorType() ActorType {
 	return ActorType_Undefined // there's no actor type for message send, so return zero to allow fee retrieval
@@ -121,8 +130,25 @@ func (msg *MessageChangeParameter) ValidateBasic() Error {
 	return nil
 }
 
-func (msg *MessageUnstake) ValidateBasic() Error            { return ValidateAddress(msg.Address) }
-func (msg *MessageUnpause) ValidateBasic() Error            { return ValidateAddress(msg.Address) }
+func (msg *MessageSend) GetMessageName() string            { return getMessageType(msg) }
+func (msg *MessageUnstake) GetMessageName() string         { return getMessageType(msg) }
+func (msg *MessageUnpause) GetMessageName() string         { return getMessageType(msg) }
+func (msg *MessageEditStake) GetMessageName() string       { return getMessageType(msg) }
+func (msg *MessageStake) GetMessageName() string           { return getMessageType(msg) }
+func (msg *MessageChangeParameter) GetMessageName() string { return getMessageType(msg) }
+func (msg *MessageDoubleSign) GetMessageName() string      { return getMessageType(msg) }
+
+func (msg *MessageSend) GetMessageRecipient() string            { return hex.EncodeToString(msg.ToAddress) }
+func (msg *MessageUnstake) GetMessageRecipient() string         { return "" }
+func (msg *MessageUnpause) GetMessageRecipient() string         { return "" }
+func (msg *MessageEditStake) GetMessageRecipient() string       { return "" }
+func (msg *MessageStake) GetMessageRecipient() string           { return "" }
+func (msg *MessageChangeParameter) GetMessageRecipient() string { return "" }
+func (msg *MessageDoubleSign) GetMessageRecipient() string      { return "" }
+
+func (msg *MessageUnstake) ValidateBasic() Error { return ValidateAddress(msg.Address) }
+func (msg *MessageUnpause) ValidateBasic() Error { return ValidateAddress(msg.Address) }
+
 func (msg *MessageStake) SetSigner(signer []byte)           { msg.Signer = signer }
 func (msg *MessageEditStake) SetSigner(signer []byte)       { msg.Signer = signer }
 func (msg *MessageUnstake) SetSigner(signer []byte)         { msg.Signer = signer }
@@ -132,13 +158,14 @@ func (msg *MessageSend) SetSigner(signer []byte)            { /*no op*/ }
 func (msg *MessageChangeParameter) SetSigner(signer []byte) { msg.Signer = signer }
 func (x *MessageChangeParameter) GetActorType() ActorType   { return -1 }
 func (x *MessageDoubleSign) GetActorType() ActorType        { return -1 }
-func (msg *MessageStake) GetSignBytes() []byte              { return getSignBytes(msg) }
-func (msg *MessageEditStake) GetSignBytes() []byte          { return getSignBytes(msg) }
-func (msg *MessageDoubleSign) GetSignBytes() []byte         { return getSignBytes(msg) }
-func (msg *MessageSend) GetSignBytes() []byte               { return getSignBytes(msg) }
-func (msg *MessageChangeParameter) GetSignBytes() []byte    { return getSignBytes(msg) }
-func (msg *MessageUnstake) GetSignBytes() []byte            { return getSignBytes(msg) }
-func (msg *MessageUnpause) GetSignBytes() []byte            { return getSignBytes(msg) }
+
+func (msg *MessageStake) GetCanonicalBytes() []byte           { return getCanonicalBytes(msg) }
+func (msg *MessageEditStake) GetCanonicalBytes() []byte       { return getCanonicalBytes(msg) }
+func (msg *MessageDoubleSign) GetCanonicalBytes() []byte      { return getCanonicalBytes(msg) }
+func (msg *MessageSend) GetCanonicalBytes() []byte            { return getCanonicalBytes(msg) }
+func (msg *MessageChangeParameter) GetCanonicalBytes() []byte { return getCanonicalBytes(msg) }
+func (msg *MessageUnstake) GetCanonicalBytes() []byte         { return getCanonicalBytes(msg) }
+func (msg *MessageUnpause) GetCanonicalBytes() []byte         { return getCanonicalBytes(msg) }
 
 // helpers
 
@@ -243,6 +270,10 @@ func ValidateServiceUrl(actorType ActorType, uri string) Error {
 	return nil
 }
 
+func getMessageType(msg Message) string {
+	return string(msg.ProtoReflect().Descriptor().Name())
+}
+
 // CLEANUP: Figure out where these other types should be defined.
 //          It's a bit weird that they are hidden at the bottom of the file.
 
@@ -284,11 +315,11 @@ func ValidateStaker(msg MessageStaker) Error {
 	return ValidateServiceUrl(msg.GetActorType(), msg.GetServiceUrl())
 }
 
-func getSignBytes(msg Message) []byte {
+func getCanonicalBytes(msg Message) []byte {
 	bz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
 		log.Fatalf("must marshal %v", err)
 	}
-	// DISCUSS(team): should we also sort the JSON like in V0?
+	// DISCUSS(#142): should we also sort the JSON like in V0?
 	return bz
 }

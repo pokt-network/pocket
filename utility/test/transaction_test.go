@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -17,8 +18,9 @@ func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 
 	tx, startingBalance, _, signer := newTestingTransaction(t, ctx)
-	_, err := ctx.AnteHandleMessage(tx)
+	_, signerString, err := ctx.AnteHandleMessage(tx)
 	require.NoError(t, err)
+	require.Equal(t, signer.Address().String(), signerString)
 	feeBig, err := ctx.GetMessageSendFee()
 	require.NoError(t, err)
 
@@ -34,7 +36,10 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 
 	tx, startingBalance, amount, signer := newTestingTransaction(t, ctx)
-	require.NoError(t, ctx.ApplyTransaction(tx))
+	txResult, err := ctx.ApplyTransaction(0, tx)
+	require.NoError(t, err)
+	require.Equal(t, int32(0), txResult.GetResultCode())
+	require.Equal(t, "", txResult.GetError())
 	feeBig, err := ctx.GetMessageSendFee()
 	require.NoError(t, err)
 
@@ -47,21 +52,19 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-// TODO: (#168) Fix this test once txIndexer is implemented by postgres context
 func TestUtilityContext_CheckTransaction(t *testing.T) {
-	// ctx := NewTestingUtilityContext(t, 0)
-	// tx, _, _, _ := newTestingTransaction(t, ctx)
-	// txBz, err := tx.Bytes()
-	// require.NoError(t, err)
-	// require.NoError(t, ctx.CheckTransaction(txBz))
-	// hash, err := tx.Hash()
-	// require.NoError(t, err)
-	// require.True(t, ctx.Mempool.Contains(hash))
-	// er := ctx.CheckTransaction(txBz)
-	// require.Equal(t, er.Error(), types.ErrDuplicateTransaction().Error())
+	ctx := NewTestingUtilityContext(t, 0)
+	tx, _, _, _ := newTestingTransaction(t, ctx)
+	txBz, err := tx.Bytes()
+	require.NoError(t, err)
+	require.NoError(t, ctx.CheckTransaction(txBz))
+	hash, err := tx.Hash()
+	require.NoError(t, err)
+	require.True(t, ctx.Mempool.Contains(hash))
+	er := ctx.CheckTransaction(txBz)
+	require.Equal(t, er.Error(), typesUtil.ErrDuplicateTransaction().Error())
 
-	// ctx.Context.Release()
-	// tests.CleanupTest(ctx)
+	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_GetSignerCandidates(t *testing.T) {
@@ -84,21 +87,20 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-// TODO: (#168) Fix this test once txIndexer is implemented by postgres context
 func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
-	// ctx := NewTestingUtilityContext(t, 0)
-	// tx, _, _, _ := newTestingTransaction(t, ctx)
-	// proposer := GetAllTestingValidators(t, ctx)[0]
-	// txBz, err := tx.Bytes()
-	// require.NoError(t, err)
-	// require.NoError(t, ctx.CheckTransaction(txBz))
-	// txs, er := ctx.GetTransactionsForProposal(proposer.GetAddress(), 10000, nil)
-	// require.NoError(t, er)
-	// require.Equal(t, len(txs), 1)
-	// require.Equal(t, txs[0], txBz)
+	ctx := NewTestingUtilityContext(t, 0)
+	tx, _, _, _ := newTestingTransaction(t, ctx)
+	proposer := getAllTestingValidators(t, ctx)[0]
+	txBz, err := tx.Bytes()
+	require.NoError(t, err)
+	require.NoError(t, ctx.CheckTransaction(txBz))
+	txs, txResults, er := ctx.GetProposalTransactions([]byte(proposer.GetAddress()), 10000, nil)
+	require.NoError(t, er)
+	require.Equal(t, len(txs), 1)
+	require.Equal(t, txs[0], txBz)
+	requireValidTestingTxResults(t, tx, txResults)
 
-	// ctx.Context.Release()
-	// tests.CleanupTest(ctx)
+	test_artifacts.CleanupTest(ctx)
 }
 
 func TestUtilityContext_HandleMessage(t *testing.T) {
@@ -133,12 +135,12 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 
 func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingAmount, amountSent *big.Int, signer crypto.PrivateKey) {
 	cdc := codec.GetCodec()
-	recipient := GetAllTestingAccounts(t, ctx)[1]
+	recipient := GetAllTestingAccounts(t, ctx)[2] // Using index 2 to prevent a collision with the first Validator who is the proposer in tests
 
 	signer, err := crypto.GeneratePrivateKey()
 	require.NoError(t, err)
 
-	startingAmount = test_artifacts.DefaultAccountAmount
+	startingAmount = defaults.DefaultAccountAmount
 	signerAddr := signer.Address()
 	require.NoError(t, ctx.SetAccountAmount(signerAddr, startingAmount))
 	amountSent = defaultSendAmount

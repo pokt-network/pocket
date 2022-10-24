@@ -1,9 +1,5 @@
 package p2p
 
-// TODO(team): This is a a temporary parallel to the real `p2p` module.
-// It should be removed once the real `p2p` module is ready but is meant
-// to be a "real" replacement for now.
-
 import (
 	"fmt"
 	"log"
