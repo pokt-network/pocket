@@ -50,10 +50,10 @@ var (
 )
 
 func init() {
-	rootCmd.AddCommand(NewDebug())
+	rootCmd.AddCommand(NewDebugCommand())
 }
 
-func NewDebug() *cobra.Command {
+func NewDebugCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "debug",
 		Short: "Debug utility for rapid development",
