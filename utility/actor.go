@@ -334,11 +334,11 @@ func (u *UtilityContext) GetMaxChains(actorType typesUtil.ActorType) (maxChains 
 	var paramName string
 	switch actorType {
 	case typesUtil.ActorType_App:
-		paramName = typesUtil.AppMinimumStakeParamName
+		paramName = typesUtil.AppMaxChainsParamName
 	case typesUtil.ActorType_Fisherman:
-		paramName = typesUtil.FishermanMinimumStakeParamName
+		paramName = typesUtil.FishermanMaxChainsParamName
 	case typesUtil.ActorType_ServiceNode:
-		paramName = typesUtil.ServiceNodeMinimumStakeParamName
+		paramName = typesUtil.ServiceNodeMaxChainsParamName
 	default:
 		return 0, typesUtil.ErrUnknownActorType(actorType.String())
 	}

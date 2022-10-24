@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/pokt-network/pocket/persistence/indexer"
 	"log"
 
 	"github.com/pokt-network/pocket/persistence/types"
@@ -41,6 +42,7 @@ type PostgresContext struct {
 	conn       *pgx.Conn
 	tx         pgx.Tx
 	blockstore kvstore.KVStore
+	txIndexer  indexer.TxIndexer
 }
 
 func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {

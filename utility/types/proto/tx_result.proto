@@ -1,7 +1,7 @@
 syntax = "proto3";
 package shared;
 
-option go_package = "github.com/pokt-network/pocket/shared/indexer";
+option go_package = "github.com/pokt-network/pocket/utility/types";
 
 message DefaultTxResult {
   bytes tx = 1;      // The bytes of the indexed transaction

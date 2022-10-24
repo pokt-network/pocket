@@ -220,10 +220,10 @@ protogen_clean:
 ## Generate go structures for all of the protobufs
 protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = ".")
-	protoc --go_opt=paths=source_relative  -I=./shared/debug/proto        --go_out=./shared/debug       ./shared/debug/proto/*.proto        --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       ./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./utility/indexer/proto     --go_out=./utility/indexer/   ./utility/indexer/proto/*.proto     --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  ./persistence/proto/*.proto         --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/debug/proto        --go_out=./shared/debug       	./shared/debug/proto/*.proto        --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./persistence/indexer/proto --go_out=./persistence/indexer/   ./persistence/indexer/proto/*.proto --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  	./persistence/proto/*.proto         --experimental_allow_proto3_optional
 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
 	protoc --go_opt=paths=source_relative  -I=./utility/types/proto       --go_out=./utility/types      ./utility/types/proto/*.proto       --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./consensus/types/proto     --go_out=./consensus/types    ./consensus/types/proto/*.proto     --experimental_allow_proto3_optional
@@ -312,20 +312,20 @@ test_sortition:
 test_persistence:
 	go test ${VERBOSE_TEST} -p 1 -count=1 ./persistence/...
 
-.PHONY: test_p2p_types
-## Run p2p subcomponents' tests
-test_p2p_types:
-	go test ${VERBOSE_TEST} -race ./p2p/types
-
 .PHONY: test_p2p
 ## Run all p2p
 test_p2p:
 	go test ${VERBOSE_TEST} -count=1 ./p2p/...
 
-.PHONY: test_p2p_addrbook
-## Run all P2P addr book related tests
-test_p2p_addrbook:
-	go test -run AddrBook -v -count=1 ./p2p/...
+.PHONY: test_p2p_raintree
+## Run all p2p raintree related tests
+test_p2p_raintree:
+	go test -run RainTreeNetwork -v -count=1 ./p2p/...
+
+.PHONY: test_p2p_raintree_addrbook
+## Run all p2p raintree addr book related tests
+test_p2p_raintree_addrbook:
+	go test -run RainTreeAddrBook -v -count=1 ./p2p/...
 
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library
