@@ -40,7 +40,7 @@ flowchart TD
 _DISCUSS(team): If you feel this needs a diagram, please reach out to the team for additional details._
 _TODO(olshansky, BenVan): Link to RainTree visualizations once it is complete._
 
-The `Network Module` is where [RainTree](https://drive.google.com/file/d/1PaAWTx47nPSrM798lxfKv0GnhLthZLYm/view) (or the simpler basic approach) is implemented. See `raintree/network.go` for the specific implementation of RainTree, but please refer to the specifications for more details.
+The `Network Module` is where [RainTree](https://github.com/pokt-network/pocket/files/9853354/raintree.pdf) (or the simpler basic approach) is implemented. See `raintree/network.go` for the specific implementation of RainTree, but please refer to the specifications for more details.
 
 ### Code Organization
 
