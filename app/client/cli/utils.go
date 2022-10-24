@@ -99,7 +99,7 @@ func prepareTxJson(msg utilityTypes.Message, pk crypto.Ed25519PrivateKey) ([]byt
 		return nil, err
 	}
 
-	signature, err := pk.Sign(msg.GetSignBytes())
+	signature, err := pk.Sign(msg.GetCanonicalBytes())
 	if err != nil {
 		return nil, err
 	}
