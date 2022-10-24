@@ -24,8 +24,8 @@ type rainTreeNetwork struct {
 
 	peersManager *peersManager
 
-	// TECHDEBT(drewsky): What should we use for de-duping messages within P2P?
-	mempool map[uint64]struct{} // TODO (drewsky) replace map implementation (can grow unbounded)
+	// TODO (#278): What should we use for de-duping messages within P2P?
+	mempool map[uint64]struct{} // TODO (#278) replace map implementation (can grow unbounded)
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) typesP2P.Network {
@@ -162,7 +162,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
-	// TODO(team): Add more tests to verify this is sufficient for deduping purposes.
+	// TODO (#278): Add more tests to verify this is sufficient for deduping purposes.
 	if _, contains := n.mempool[rainTreeMsg.Nonce]; contains {
 		n.GetBus().
 			GetTelemetryModule().
