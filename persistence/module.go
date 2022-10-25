@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/pokt-network/pocket/persistence/indexer"
-
 	"github.com/celestiaorg/smt"
 	"github.com/jackc/pgx/v4"
+	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
