@@ -55,9 +55,9 @@ paths:
     post:
       tags:
         - client
-      summary: Relays a raw transaction
+      summary: Broadcast raw transaction bytes
       requestBody:
-        description: Raw transaction to be relayed
+        description: Raw transaction to be broadcasted
         required: true
         content:
           application/json:
