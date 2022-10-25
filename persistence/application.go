@@ -16,9 +16,9 @@ func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicK
 	actor, err := p.GetActor(types.ApplicationActor, address, height)
 	operator = actor.Address
 	publicKey = actor.PublicKey
-	stakedTokens = actor.StakedTokens
-	maxRelays = actor.ActorSpecificParam
-	outputAddress = actor.OutputAddress
+	stakedTokens = actor.StakedAmount
+	maxRelays = actor.GenericParam
+	outputAddress = actor.Output
 	pauseHeight = actor.PausedHeight
 	unstakingHeight = actor.UnstakingHeight
 	chains = actor.Chains
@@ -26,24 +26,26 @@ func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicK
 }
 
 func (p PostgresContext) InsertApp(address []byte, publicKey []byte, output []byte, _ bool, _ int32, maxRelays string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
-	return p.InsertActor(types.ApplicationActor, types.BaseActor{
-		Address:            hex.EncodeToString(address),
-		PublicKey:          hex.EncodeToString(publicKey),
-		StakedTokens:       stakedTokens,
-		ActorSpecificParam: maxRelays,
-		OutputAddress:      hex.EncodeToString(output),
-		PausedHeight:       pausedHeight,
-		UnstakingHeight:    unstakingHeight,
-		Chains:             chains,
+	return p.InsertActor(types.ApplicationActor, &types.Actor{
+		ActorType:       types.ActorType_App,
+		Address:         hex.EncodeToString(address),
+		PublicKey:       hex.EncodeToString(publicKey),
+		Chains:          chains,
+		GenericParam:    maxRelays,
+		StakedAmount:    stakedTokens,
+		PausedHeight:    pausedHeight,
+		UnstakingHeight: unstakingHeight,
+		Output:          hex.EncodeToString(output),
 	})
 }
 
 func (p PostgresContext) UpdateApp(address []byte, maxRelays string, stakedAmount string, chains []string) error {
-	return p.UpdateActor(types.ApplicationActor, types.BaseActor{
-		Address:            hex.EncodeToString(address),
-		StakedTokens:       stakedAmount,
-		ActorSpecificParam: maxRelays,
-		Chains:             chains,
+	return p.UpdateActor(types.ApplicationActor, &types.Actor{
+		ActorType:    types.ActorType_App,
+		Address:      hex.EncodeToString(address),
+		Chains:       chains,
+		GenericParam: maxRelays,
+		StakedAmount: stakedAmount,
 	})
 }
 
