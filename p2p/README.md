@@ -118,7 +118,7 @@ Given a specific `originatorNode` which initiates the broadcast, the `testRainTr
 
 The [rain-tree-simulator](https://github.com/pokt-network/rain-tree-sim/blob/main/python) library contains an example Golang implementation and a Python implementation of RainTree simulators.
 
-You can read the documentation in the [python simulator](https://github.com/pokt-network/rain-tree-sim/blob/main/python) on how it can be used to generate the unit tests foudn in `module_raintree_test.go`.
+You can read the documentation in the [python simulator](https://github.com/pokt-network/rain-tree-sim/blob/main/python) on how it can be used to generate the unit tests found in `module_raintree_test.go`.
 
 #### Considerations
 
