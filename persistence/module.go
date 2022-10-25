@@ -3,8 +3,9 @@ package persistence
 import (
 	"context"
 	"fmt"
-	"github.com/pokt-network/pocket/persistence/indexer"
 	"log"
+
+	"github.com/pokt-network/pocket/persistence/indexer"
 
 	"github.com/pokt-network/pocket/persistence/types"
 
