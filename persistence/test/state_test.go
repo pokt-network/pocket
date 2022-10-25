@@ -1,11 +1,11 @@
 package test
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"math/big"
 	"testing"
 
-	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/stretchr/testify/require"
@@ -23,7 +23,7 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		// Get the context at the new height and retrieve one of the apps
 		height := int64(i + 1)
-		heightBz := persistence.HeightToBytes(height)
+		heightBz := heightToBytes(height)
 		expectedAppHash := encodedAppHash[i]
 
 		db := NewTestPostgresContext(t, height)
@@ -69,4 +69,17 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		}
 
 	}
+}
+
+// Tests/debug to implement:
+// - Visibility into what's in the tree
+// - Benchmarking many inserts
+// - Release / revert mid block and making sure everything is reverted
+// - Thinking about how it can be synched
+// - Playing back several blocks
+
+func heightToBytes(height int64) []byte {
+	heightBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(heightBytes, uint64(height))
+	return heightBytes
 }

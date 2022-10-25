@@ -9,8 +9,8 @@ import (
 )
 
 type UtilityContext struct {
-	LatestHeight    int64 // IMPROVE: Rename to `currentHeight?`
-	currentProposer []byte
+	LatestHeight    int64  // IMPROVE: Rename to `currentHeight?`
+	currentProposer []byte // REARCHITECT_IN_THIS_COMMIT: Ephemeral block state should only exist in the persistence context
 
 	Mempool typesUtil.Mempool
 	Context *Context // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?

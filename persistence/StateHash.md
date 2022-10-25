@@ -1,4 +1,4 @@
-DO NOT READ YET
+ROUGH NOTES - DELETE LATER
 
 1.  Simplify interfaces in utility & persistence (make it simple and clear)
 2.  How do we revert changes to the merkle trees?

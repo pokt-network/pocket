@@ -54,6 +54,7 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	addrs := make([][]byte, 0)
 	for rows.Next() {
@@ -95,7 +96,6 @@ func (p *PostgresContext) GetActor(actorSchema types.ProtocolActorSchema, addres
 	return p.GetChainsForActor(ctx, tx, actorSchema, actor, height)
 }
 
-// IMPORTANT: Need to consolidate `persistence/types.BaseActor` with `persistence/genesisTypes.Actor`
 func (p *PostgresContext) GetActorFromRow(row pgx.Row) (actor *types.Actor, height int64, err error) {
 	err = row.Scan(
 		&actor.Address,

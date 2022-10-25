@@ -37,8 +37,6 @@ type persistenceModule struct {
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	writeContext *PostgresContext // only one write context is allowed at a time
 
-	// The connection to the PostgreSQL database
-	postgresConn *pgx.Conn
 	// Merkle trees
 	trees map[MerkleTree]*smt.SparseMerkleTree
 }
@@ -93,16 +91,15 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 		blockStore:   blockStore,
 		txIndexer:    txIndexer,
 		writeContext: nil,
-		// contexts:     make(map[contextId]modules.PersistenceContext),
-		trees: make(map[MerkleTree]*smt.SparseMerkleTree),
+		trees:        make(map[MerkleTree]*smt.SparseMerkleTree),
 	}
 
+	// TODO_IN_THIS_COMMIT: load trees from state
 	trees, err := newMerkleTrees()
 	if err != nil {
 		return nil, err
 	}
-
-	m.trees = trees // TODO_IN_THIS_COMMIT: load trees from state
+	m.trees = trees
 
 	// Determine if we should hydrate the genesis db or use the current state of the DB attached
 	if shouldHydrateGenesis, err := m.shouldHydrateGenesisDb(); err != nil {
@@ -175,8 +172,10 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		conn:   conn,
 		tx:     tx,
 
+		// TODO_IN_THIS_COMMIT: Does this tate need to be maintained?
 		currentStateHash: make([]byte, 0),
 
+		// TODO_IN_THIS_COMMIT: Can we access these via the bus?
 		blockStore:  m.blockStore,
 		merkleTrees: m.trees,
 		txIndexer:   m.txIndexer,
@@ -233,7 +232,7 @@ func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 	if blockStorePath == "" {
 		return kvstore.NewMemKVStore(), nil
 	}
-	return kvstore.OpenKVStore(blockStorePath)
+	return kvstore.NewKVStore(blockStorePath)
 }
 
 // TODO(drewsky): Simplify and externalize the logic for whether genesis should be populated and
@@ -250,5 +249,5 @@ func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 		return true, nil
 	}
 
-	return m.blockStore.Exists(HeightToBytes(int64(maxHeight)))
+	return m.blockStore.Exists(heightToBytes(int64(maxHeight)))
 }

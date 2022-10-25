@@ -9,6 +9,8 @@ import (
 )
 
 type KVStore interface {
+	smt.MapStore
+
 	// Lifecycle methods
 	Stop() error
 
@@ -19,11 +21,6 @@ type KVStore interface {
 
 	Exists(key []byte) (bool, error)
 	ClearAll() error
-
-	// Same interface as in `smt.MapStore``
-	Put(key, value []byte) error
-	Get(key []byte) ([]byte, error)
-	Delete(key []byte) error
 }
 
 const (
@@ -42,15 +39,12 @@ type badgerKVStore struct {
 	db *badger.DB
 }
 
-// REFACTOR: Loads or creates a badgerDb at `path`. This may potentially need to be refactored
-// into `NewKVStore` and `LoadKVStore` depending on how state sync evolves by leveraging `os.Stat`
-// on the file path.
-func OpenKVStore(path string) (KVStore, error) {
+func NewKVStore(path string) (KVStore, error) {
 	db, err := badger.Open(badger.DefaultOptions(path))
 	if err != nil {
 		return nil, err
 	}
-	return badgerKVStore{db: db}, nil
+	return &badgerKVStore{db: db}, nil
 }
 
 func NewMemKVStore() KVStore {
@@ -58,10 +52,10 @@ func NewMemKVStore() KVStore {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return badgerKVStore{db: db}
+	return &badgerKVStore{db: db}
 }
 
-func (store badgerKVStore) Put(key, value []byte) error {
+func (store *badgerKVStore) Set(key, value []byte) error {
 	tx := store.db.NewTransaction(true)
 	defer tx.Discard()
 
@@ -73,13 +67,7 @@ func (store badgerKVStore) Put(key, value []byte) error {
 	return tx.Commit()
 }
 
-// CONSOLIDATE: We might be able to remove the `KVStore` interface altogether if we end up using `smt.MapStore`
-// A wrapper around `Put` to conform to the `smt.MapStore` interface
-func (store *badgerKVStore) Set(key, value []byte) error {
-	return store.Put(key, value)
-}
-
-func (store badgerKVStore) Get(key []byte) ([]byte, error) {
+func (store *badgerKVStore) Get(key []byte) ([]byte, error) {
 	tx := store.db.NewTransaction(false)
 	defer tx.Discard()
 
@@ -100,12 +88,12 @@ func (store badgerKVStore) Get(key []byte) ([]byte, error) {
 	return value, nil
 }
 
-func (store badgerKVStore) Delete(key []byte) error {
+func (store *badgerKVStore) Delete(key []byte) error {
 	log.Fatalf("badgerKVStore.Delete not implemented yet")
 	return nil
 }
 
-func (store badgerKVStore) GetAll(prefix []byte, descending bool) (values [][]byte, err error) {
+func (store *badgerKVStore) GetAll(prefix []byte, descending bool) (values [][]byte, err error) {
 	// INVESTIGATE: research `badger.views` for further improvements and optimizations
 	txn := store.db.NewTransaction(false)
 	defer txn.Discard()
@@ -134,7 +122,7 @@ func (store badgerKVStore) GetAll(prefix []byte, descending bool) (values [][]by
 	return
 }
 
-func (store badgerKVStore) Exists(key []byte) (bool, error) {
+func (store *badgerKVStore) Exists(key []byte) (bool, error) {
 	val, err := store.Get(key)
 	if err != nil {
 		return false, err
@@ -142,11 +130,11 @@ func (store badgerKVStore) Exists(key []byte) (bool, error) {
 	return val != nil, nil
 }
 
-func (store badgerKVStore) ClearAll() error {
+func (store *badgerKVStore) ClearAll() error {
 	return store.db.DropAll()
 }
 
-func (store badgerKVStore) Stop() error {
+func (store *badgerKVStore) Stop() error {
 	return store.db.Close()
 }
 

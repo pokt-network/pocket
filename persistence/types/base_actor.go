@@ -1,6 +1,6 @@
 package types
 
-// IMPROVE: Move schema related functions to a separate sub-package
+// CLEANUP: Move schema related functions to a separate sub-package
 import "github.com/pokt-network/pocket/shared/modules"
 
 var _ ProtocolActorSchema = &BaseProtocolActorSchema{}

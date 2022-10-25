@@ -85,8 +85,8 @@ func NewTxIndexer(databasePath string) (TxIndexer, error) {
 	if databasePath == "" {
 		return NewMemTxIndexer()
 	}
-	// db, err := kvstore.NewKVStore(databasePath)
-	db, err := kvstore.OpenKVStore(databasePath)
+
+	db, err := kvstore.NewKVStore(databasePath)
 	return &txIndexer{
 		db: db,
 	}, err
@@ -173,22 +173,22 @@ func (indexer *txIndexer) get(key []byte) (shared.TxResult, error) {
 
 func (indexer *txIndexer) indexByHash(hash, bz []byte) (hashKey []byte, err error) {
 	key := indexer.hashKey(hash)
-	return key, indexer.db.Put(key, bz)
+	return key, indexer.db.Set(key, bz)
 }
 
 func (indexer *txIndexer) indexByHeightAndIndex(height int64, index int32, bz []byte) error {
-	return indexer.db.Put(indexer.heightAndIndexKey(height, index), bz)
+	return indexer.db.Set(indexer.heightAndIndexKey(height, index), bz)
 }
 
 func (indexer *txIndexer) indexBySender(sender string, bz []byte) error {
-	return indexer.db.Put(indexer.senderKey(sender), bz)
+	return indexer.db.Set(indexer.senderKey(sender), bz)
 }
 
 func (indexer *txIndexer) indexByRecipient(recipient string, bz []byte) error {
 	if recipient == "" {
 		return nil
 	}
-	return indexer.db.Put(indexer.recipientKey(recipient), bz)
+	return indexer.db.Set(indexer.recipientKey(recipient), bz)
 }
 
 // key helper functions

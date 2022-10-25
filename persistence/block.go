@@ -76,7 +76,7 @@ func (p PostgresContext) storeBlock(block *types.Block) error {
 	if err != nil {
 		return err
 	}
-	return p.blockStore.Put(HeightToBytes(p.Height), blockBz)
+	return p.blockStore.Set(heightToBytes(p.Height), blockBz)
 }
 
 func (p *PostgresContext) prepareBlock(proposerAddr []byte, quorumCert []byte) (*types.Block, error) {
@@ -91,9 +91,14 @@ func (p *PostgresContext) prepareBlock(proposerAddr []byte, quorumCert []byte) (
 		prevHash = []byte("HACK: get hash from genesis")
 	}
 
-	_, err := p.txIndexer.GetByHeight(p.Height, false)
+	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
 	if err != nil {
 		return nil, err
+	}
+
+	txs := make([][]byte, len(txResults))
+	for i, txResult := range txResults {
+		txs[i] = txResult.GetTx()
 	}
 
 	block := &types.Block{
@@ -102,15 +107,13 @@ func (p *PostgresContext) prepareBlock(proposerAddr []byte, quorumCert []byte) (
 		PrevHash:          hex.EncodeToString(prevHash),
 		ProposerAddress:   proposerAddr,
 		QuorumCertificate: quorumCert,
-		// Transactions:      []byte(""),
+		Transactions:      txs,
 	}
 
 	return block, nil
 }
 
-// CLEANUP: Should this be moved to a shared directory?
-// Exposed for testing purposes
-func HeightToBytes(height int64) []byte {
+func heightToBytes(height int64) []byte {
 	heightBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(heightBytes, uint64(height))
 	return heightBytes
