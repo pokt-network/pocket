@@ -60,7 +60,7 @@ These are pretty self-explanatory.
 
   `raw_hex_bytes`: hex encoded JSON of a signed transaction.
 
-  #### Return:
+#### Return:
 
   Currently only **OK** (HTTP Status code 200) or **KO** (HTTP Status code 4xx/5xx)
 
