@@ -47,7 +47,7 @@ These are pretty self-explanatory.
 
 - Sync signed transaction submission (**POST /v1/client/broadcast_tx_sync**)
 
-  #### Payload:
+#### Payload:
 
   ```json
   {
