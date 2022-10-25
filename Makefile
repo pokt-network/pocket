@@ -274,9 +274,9 @@ test_shared: # generate_mocks
 	go test ${VERBOSE_TEST} -p 1 ./shared/...
 
 .PHONY: test_consensus
-## Run all go unit tests in the Consensus module
+## Run all go unit tests in the consensus module
 test_consensus: # mockgen
-	go test ${VERBOSE_TEST} ./consensus/...
+	go test ${VERBOSE_TEST} -count=1 ./consensus/...
 
 .PHONY: test_consensus_concurrent_tests
 ## Run unit tests in the consensus module that could be prone to race conditions (#192)

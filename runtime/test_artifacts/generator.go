@@ -134,7 +134,8 @@ func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing s
 
 func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
 	for i := 0; i < n; i++ {
-		_, _, addr := GenerateNewKeysDeterministic(69)
+		// _, _, addr := GenerateNewKeysDeterministic(69)
+		_, _, addr := GenerateNewKeysStrings()
 		if privateKeys != nil {
 			pk, _ := crypto.NewPrivateKey(privateKeys[i])
 			addr = pk.Address().String()
@@ -168,7 +169,8 @@ func getServiceUrl(n int) string {
 }
 
 func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor, privateKey string) {
-	privKey, pubKey, addr := GenerateNewKeysDeterministic(69)
+	// privKey, pubKey, addr := GenerateNewKeysDeterministic(69)
+	privKey, pubKey, addr := GenerateNewKeysStrings()
 	chains := DefaultChains
 	if actorType == int32(typesPers.ActorType_Val) {
 		chains = nil

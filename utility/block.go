@@ -97,13 +97,7 @@ func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
 }
 
 func (u *UtilityContext) GetAppHash() ([]byte, typesUtil.Error) {
-	// Get the root hash of the merkle state tree for state consensus integrity
-	// appHash, er := u.Context.UpdateAppHash()
-	// if er != nil {
-	// 	return nil, typesUtil.ErrAppHash(er)
-	// }
-	// return appHash, nil
-	panic("TODO_IN_THIS_COMMIT: Do we need this function in the utility context?")
+	panic("DISCUSS_IN_THIS_COMMIT: Can we remove this function from the utility context?")
 }
 
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority

@@ -2,6 +2,7 @@ package test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"os"
 	"testing"
@@ -54,12 +55,14 @@ func TestMain(m *testing.M) {
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
+	fmt.Println("OLSH HERE")
 	testPersistenceMod := newTestPersistenceModule(t, persistenceDbUrl)
 
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
+		// persistenceContext.DebugClearAll()
 		persistenceContext.Release()
 	})
 
