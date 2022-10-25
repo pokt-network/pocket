@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.6] - 2022-10-20
+
+- Add a telemetry `send` event within the context `RainTree` network module that is triggered during network writes
+- Change the `RainTree` testing framework counting method to simulate real reads/writes from the network
+- Improve documentation related to the `RainTree` testing framework & how the counters are computed
+
 ## [0.0.0.5] - 2022-10-12
 
 ### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling

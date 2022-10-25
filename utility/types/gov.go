@@ -18,7 +18,9 @@ const (
 	ServiceNodeMaxPauseBlocksParamName     = "service_node_max_pause_blocks"
 	ServiceNodesPerSessionParamName        = "service_nodes_per_session"
 
-	FishermanMinimumStakeParamName       = "fisherman_minimum_stake"
+	FishermanMinimumStakeParamName = "fisherman_minimum_stake"
+	// DISCUSS(github.com/pokt-network/pocket-network-protocol/issues/18): Once the spec is updated,
+	// determine if fish should be chain based.
 	FishermanMaxChainsParamName          = "fisherman_max_chains"
 	FishermanUnstakingBlocksParamName    = "fisherman_unstaking_blocks"
 	FishermanMinimumPauseBlocksParamName = "fisherman_minimum_pause_blocks"
