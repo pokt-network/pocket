@@ -116,6 +116,7 @@ develop_test: docker_check
 		make go_clean_deps && \
 		make mockgen && \
 		make protogen_clean && make protogen_local && \
+		make generate_rpc_openapi && \
 		make test_all
 
 
@@ -255,8 +256,8 @@ protogen_docker: docker_check
 .PHONY: generate_rpc_openapi
 ## (Re)generates the RPC server and client infra code from the openapi spec file (./app/pocket/rpc/v1/openapi.yaml)
 generate_rpc_openapi: go_oapi-codegen
-	oapi-codegen  --config ./app/pocket/rpc/server.gen.config.yml ./app/pocket/rpc/v1/openapi.yaml > ./app/pocket/rpc/server.gen.go
-	oapi-codegen  --config ./app/pocket/rpc/client.gen.config.yml ./app/pocket/rpc/v1/openapi.yaml > ./app/pocket/rpc/client.gen.go
+	oapi-codegen  --config ./rpc/server.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/server.gen.go
+	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
 	echo "OpenAPI client and server generated"
 
 .PHONY: test_all
