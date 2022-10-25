@@ -56,9 +56,8 @@ These are pretty self-explanatory.
   }
   ```
 
-  `address`: specifies the address the transaction originates from.
-
-  `raw_hex_bytes`: hex encoded JSON of a signed transaction.
+- `address`: specifies the address the transaction originates from.
+- `raw_hex_bytes`: hex encoded JSON of a signed transaction.
 
 #### Return:
 
