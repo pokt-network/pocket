@@ -13,7 +13,7 @@ var (
 type noopRpcModule struct{}
 
 func (m *noopRpcModule) GetModuleName() string {
-	return ""
+	return "noop_rpc_module"
 }
 
 func (m *noopRpcModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
