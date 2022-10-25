@@ -87,7 +87,7 @@ Will prompt the user for the <fromAddr> account passphrase. If the node is alrea
 A node can update relayChainIDs, serviceURI, and raise the stake amount with this transaction.
 If the node is currently staked at X and you submit an update with new stake Y. Only Y-X will be subtracted from an account
 If no changes are desired for the parameter, just enter the current param value just as before.`,
-		Args: cobra.ExactArgs(4),
+		Args: cobra.ExactArgs(4), // REFACTOR(#150): <fromAddr> not being used at the moment. Update once a keybase is implemented.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// TODO(#150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
@@ -150,7 +150,7 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Use:   "EditStake <fromAddr> <amount> <relayChainIDs> <serviceURI>",
 		Short: "EditStake <fromAddr> <amount> <relayChainIDs> <serviceURI>",
 		Long:  fmt.Sprintf(`Stakes a new <amount> for the %s actor with address <fromAddr> for the specified <relayChainIDs> and <serviceURI>.`, cmdDef.Name),
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(4), // REFACTOR(#150): <fromAddr> not being used at the moment. Update once a keybase is implemented.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// TODO(#150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
@@ -203,7 +203,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Use:   "Unstake <fromAddr>",
 		Short: "Unstake <fromAddr>",
 		Long:  fmt.Sprintf(`Unstakes the prevously staked tokens for the %s actor with address <fromAddr>`, cmdDef.Name),
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1), // REFACTOR(#150): <fromAddr> not being used at the moment. Update once a keybase is implemented.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// TODO(#150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
@@ -243,7 +243,7 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 		Use:   "Unpause <fromAddr>",
 		Short: "Unpause <fromAddr>",
 		Long:  fmt.Sprintf(`Unpauses the %s actor with address <fromAddr>`, cmdDef.Name),
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1), // REFACTOR(#150): Not being used at the moment. Update once a keybase is implemented.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// TODO(#150): update when we have keybase
 			pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)

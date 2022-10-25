@@ -34,7 +34,7 @@ func accountCommands() []*cobra.Command {
 			Short:   "Send <fromAddr> <to> <amount>",
 			Long:    "Sends <amount> to address <to> from address <fromAddr>",
 			Aliases: []string{"send"},
-			Args:    cobra.ExactArgs(3),
+			Args:    cobra.ExactArgs(3), // REFACTOR(#150): <fromAddr> not being used at the moment. Update once a keybase is implemented.
 			RunE: func(cmd *cobra.Command, args []string) error {
 				// TODO(#150): update when we have keybase
 				pk, err := readEd25519PrivateKeyFromFile(privateKeyFilePath)
