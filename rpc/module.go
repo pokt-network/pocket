@@ -28,9 +28,7 @@ func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	return new(rpcModule).Create(runtime)
 }
 
-func (*rpcModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	var m *rpcModule
-
+func (m *rpcModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 	cfg := runtime.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
 		return nil, fmt.Errorf("config validation failed: %w", err)
@@ -71,5 +69,6 @@ func (u *rpcModule) GetBus() modules.Bus {
 }
 
 func (*rpcModule) ValidateConfig(cfg modules.Config) error {
+	// TODO (team): implement this
 	return nil
 }

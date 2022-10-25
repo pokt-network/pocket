@@ -67,5 +67,6 @@ func (u *utilityModule) GetBus() modules.Bus {
 }
 
 func (*utilityModule) ValidateConfig(cfg modules.Config) error {
+	// TODO (team): implement this
 	return nil
 }
