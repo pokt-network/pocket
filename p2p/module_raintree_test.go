@@ -105,6 +105,33 @@ func TestRainTreeNetworkCompleteNineNodes(t *testing.T) {
 	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
 
+//                                                                                                            val_1
+//                                     ┌────────────────────────────────────────────────────────────────────────┴───────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+//                                   val_5                                                                                                        val_1                                                                                                     val_9
+//            ┌────────────────────────┴────────────┬──────────────────────────────────┐                                     ┌──────────────────────┴────────────┬────────────────────────────────┐                                  ┌────────────────────────┴──────────────┬──────────────────────────────────┐
+//          val_7                                 val_5                             val_10                                 val_3                               val_1                            val_6                             val_11                                   val_9                              val_2
+//    ┌───────┴────┬──────────┐             ┌───────┴────┬─────────┐          ┌────────┴─────┬──────────┐            ┌───────┴────┬─────────┐            ┌───────┴────┬─────────┐         ┌───────┴────┬─────────┐          ┌────────┴─────┬──────────┐             ┌────────┴────┬──────────┐          ┌───────┴────┬─────────┐
+//  val_8        val_7      val_10        val_6        val_5     val_8      val_11         val_10     val_5        val_4        val_3     val_6        val_2        val_1     val_4     val_7        val_6     val_1      val_12         val_11     val_2         val_10        val_9      val_12     val_3        val_2     val_9
+
+func TestRainTreeCompleteTwelveNodes(t *testing.T) {
+	originatorNode := validatorId(1)
+	var expectedCalls = TestNetworkSimulationConfig{
+		originatorNode:  {1, 6},
+		validatorId(2):  {3, 2},
+		validatorId(3):  {2, 2},
+		validatorId(4):  {2, 0},
+		validatorId(5):  {2, 4},
+		validatorId(6):  {3, 2},
+		validatorId(7):  {2, 2},
+		validatorId(8):  {2, 0},
+		validatorId(9):  {2, 4},
+		validatorId(10): {3, 2},
+		validatorId(11): {2, 2},
+		validatorId(12): {2, 0},
+	}
+	testRainTreeCalls(t, originatorNode, expectedCalls)
+}
+
 func TestRainTreeNetworkCompleteEighteenNodes(t *testing.T) {
 	// 	                                                                                                              val_1
 	// 	                                      ┌──────────────────────────────────────────────────────────────────────────┴─────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -174,33 +201,6 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 		validatorId(25): {1, 2},
 		validatorId(26): {1, 0},
 		validatorId(27): {1, 0},
-	}
-	testRainTreeCalls(t, originatorNode, expectedCalls)
-}
-
-//                                                                                                            val_1
-//                                     ┌────────────────────────────────────────────────────────────────────────┴───────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-//                                   val_5                                                                                                        val_1                                                                                                     val_9
-//            ┌────────────────────────┴────────────┬──────────────────────────────────┐                                     ┌──────────────────────┴────────────┬────────────────────────────────┐                                  ┌────────────────────────┴──────────────┬──────────────────────────────────┐
-//          val_7                                 val_5                             val_10                                 val_3                               val_1                            val_6                             val_11                                   val_9                              val_2
-//    ┌───────┴────┬──────────┐             ┌───────┴────┬─────────┐          ┌────────┴─────┬──────────┐            ┌───────┴────┬─────────┐            ┌───────┴────┬─────────┐         ┌───────┴────┬─────────┐          ┌────────┴─────┬──────────┐             ┌────────┴────┬──────────┐          ┌───────┴────┬─────────┐
-//  val_8        val_7      val_10        val_6        val_5     val_8      val_11         val_10     val_5        val_4        val_3     val_6        val_2        val_1     val_4     val_7        val_6     val_1      val_12         val_11     val_2         val_10        val_9      val_12     val_3        val_2     val_9
-
-func TestRainTreeCompleteTwelveNodes(t *testing.T) {
-	originatorNode := validatorId(1)
-	var expectedCalls = TestNetworkSimulationConfig{
-		originatorNode:  {1, 6},
-		validatorId(2):  {3, 2},
-		validatorId(3):  {2, 2},
-		validatorId(4):  {2, 0},
-		validatorId(5):  {2, 4},
-		validatorId(6):  {3, 2},
-		validatorId(7):  {2, 2},
-		validatorId(8):  {2, 0},
-		validatorId(9):  {2, 4},
-		validatorId(10): {3, 2},
-		validatorId(11): {2, 2},
-		validatorId(12): {2, 0},
 	}
 	testRainTreeCalls(t, originatorNode, expectedCalls)
 }
