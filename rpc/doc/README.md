@@ -47,7 +47,7 @@ These are pretty self-explanatory.
 
 - Sync signed transaction submission (**POST /v1/client/broadcast_tx_sync**)
 
-  #### Payload:
+#### Payload:
 
   ```json
   {
@@ -56,11 +56,10 @@ These are pretty self-explanatory.
   }
   ```
 
-  `address`: specifies the address the transaction originates from.
+- `address`: specifies the address the transaction originates from.
+- `raw_hex_bytes`: hex encoded JSON of a signed transaction.
 
-  `raw_hex_bytes`: hex encoded JSON of a signed transaction.
-
-  #### Return:
+#### Return:
 
   Currently only **OK** (HTTP Status code 200) or **KO** (HTTP Status code 4xx/5xx)
 
