@@ -105,10 +105,9 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 		return nil, err
 	} else if shouldHydrateGenesis {
 		// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
-		// 		     this forces the genesis state to be reloaded on every node startup until state sync is
-		//           implemented.
-		// NOTE: `populateGenesisState` does not return an error but logs a fatal error if there's a problem
-		m.populateGenesisState(persistenceGenesis)
+		// 		     this forces the genesis state to be reloaded on every node startup until state
+		//           sync is implemented.
+		m.populateGenesisState(persistenceGenesis) // fatal if there's an error
 	} else {
 		log.Println("Loading state from previous state...")
 	}
@@ -209,10 +208,8 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 
 func (m *persistenceModule) ReleaseWriteContext() error {
 	if m.writeContext != nil {
-		if !m.writeContext.GetTx().Conn().IsClosed() {
-			if err := m.writeContext.Release(); err != nil {
-				log.Println("[TODO][ERROR] Error releasing write context...", err)
-			}
+		if err := m.writeContext.resetContext(); err != nil {
+			log.Println("[TODO][ERROR] Error releasing write context...", err)
 		}
 		m.writeContext = nil
 	}
@@ -227,14 +224,7 @@ func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
 	return m.writeContext
 }
 
-func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
-	if blockStorePath == "" {
-		return kvstore.NewMemKVStore(), nil
-	}
-	return kvstore.NewKVStore(blockStorePath)
-}
-
-// TODO(drewsky): Simplify and externalize the logic for whether genesis should be populated and
+// TODO(olshansky): Simplify and externalize the logic for whether genesis should be populated and
 // move the if logic out of this file.
 func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	checkContext, err := m.NewReadContext(-1)
@@ -249,4 +239,11 @@ func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	}
 
 	return m.blockStore.Exists(heightToBytes(int64(maxHeight)))
+}
+
+func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
+	if blockStorePath == "" {
+		return kvstore.NewMemKVStore(), nil
+	}
+	return kvstore.NewKVStore(blockStorePath)
 }

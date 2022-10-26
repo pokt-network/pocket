@@ -97,6 +97,7 @@ func (p *PostgresContext) GetActor(actorSchema types.ProtocolActorSchema, addres
 }
 
 func (p *PostgresContext) GetActorFromRow(row pgx.Row) (actor *types.Actor, height int64, err error) {
+	actor = new(types.Actor)
 	err = row.Scan(
 		&actor.Address,
 		&actor.PublicKey,

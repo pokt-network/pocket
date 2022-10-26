@@ -79,3 +79,11 @@ func SelectPools(height int64, tableName string) string {
 			ORDER BY name, height DESC
        `, tableName, height)
 }
+
+func ClearAllAccounts() string {
+	return fmt.Sprintf(`DELETE FROM %s`, AccountTableName)
+}
+
+func ClearAllPools() string {
+	return fmt.Sprintf(`DELETE FROM %s`, PoolTableName)
+}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/pokt-network/pocket/persistence/indexer"
 
@@ -37,6 +36,15 @@ var protocolActorSchemas = []types.ProtocolActorSchema{
 	types.ValidatorActor,
 }
 
+// A list of functions to clear data from the DB not associated with protocol actors
+var nonActorClearFunctions = []func() string{
+	types.ClearAllAccounts,
+	types.ClearAllPools,
+	types.ClearAllGovParamsQuery,
+	types.ClearAllGovFlagsQuery,
+	types.ClearAllBlocksQuery,
+}
+
 var _ modules.PersistenceRWContext = &PostgresContext{}
 
 type PostgresContext struct {
@@ -53,6 +61,8 @@ type PostgresContext struct {
 	merkleTrees map[MerkleTree]*smt.SparseMerkleTree
 }
 
+// TODO: Reduce the scope of these functions
+
 func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
 	return context.TODO(), pg.GetTx(), nil
 }
@@ -63,27 +73,6 @@ func (pg *PostgresContext) GetTx() pgx.Tx {
 
 func (pg *PostgresContext) GetCtx() (context.Context, error) {
 	return context.TODO(), nil
-}
-
-func (pg *PostgresContext) ResetContext() error {
-	if pg == nil {
-		return nil
-	}
-	tx := pg.GetTx()
-	if tx == nil {
-		return nil
-	}
-	conn := tx.Conn()
-	if conn == nil {
-		return nil
-	}
-	if !conn.IsClosed() {
-		if err := pg.Release(); err != nil {
-			log.Println("[TODO][ERROR] Error releasing write context...", err)
-		}
-	}
-	pg.tx = nil
-	return nil
 }
 
 // TECHDEBT: Implement proper connection pooling
@@ -194,13 +183,8 @@ func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
 }
 
 // Exposed for testing purposes only
-func (p PostgresContext) DebugClearAll() error {
-	ctx, tx, err := p.GetCtxAndTx()
-	if err != nil {
-		return err
-	}
-
-	clearTx, err := tx.Begin(ctx) // creates a pseudo-nested transaction
+func (p *PostgresContext) DebugClearAll() error {
+	ctx, clearTx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -216,16 +200,10 @@ func (p PostgresContext) DebugClearAll() error {
 		}
 	}
 
-	if _, err = tx.Exec(ctx, types.ClearAllGovParamsQuery()); err != nil {
-		return err
-	}
-
-	if _, err = tx.Exec(ctx, types.ClearAllGovFlagsQuery()); err != nil {
-		return err
-	}
-
-	if _, err = tx.Exec(ctx, types.ClearAllBlocksQuery()); err != nil {
-		return err
+	for _, clearFn := range nonActorClearFunctions {
+		if _, err := clearTx.Exec(ctx, clearFn()); err != nil {
+			return err
+		}
 	}
 
 	if err = clearTx.Commit(ctx); err != nil {

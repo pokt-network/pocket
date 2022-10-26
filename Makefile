@@ -162,6 +162,11 @@ db_bench_init: docker_check
 db_bench: docker_check
 	docker exec -it pocket-db bash -c "pgbench -U postgres -d postgres"
 
+.PHONY: db_show_schemas
+## Show all the node schemas in the local DB
+db_show_schemas: docker_check
+	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/show_all_schemas.sql"
+
 .PHONY: db_admin
 ## Helper to access to postgres admin GUI interface
 db_admin:

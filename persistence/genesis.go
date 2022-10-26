@@ -9,8 +9,6 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// TODO(andrew): generalize with the `actors interface`
-
 // WARNING: This function crashes the process if there is an error populating the genesis state.
 func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesisState) {
 	log.Println("Populating genesis state...")
@@ -30,7 +28,6 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		return nil
 	}
 
-	log.Println("Populating genesis state...")
 	rwContext, err := m.NewRWContext(0)
 	if err != nil {
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())

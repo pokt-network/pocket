@@ -1,9 +1,10 @@
 package types
 
 import (
-	"github.com/pokt-network/pocket/shared/codec"
 	"math/big"
 	"testing"
+
+	"github.com/pokt-network/pocket/shared/codec"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"

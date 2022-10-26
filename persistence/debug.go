@@ -14,9 +14,9 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 	case debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		m.showLatestBlockInStore(debugMessage)
 	case debug.DebugMessageAction_DEBUG_CLEAR_STATE:
-		m.clearState(debugMessage)
+		m.ClearState(debugMessage) // TODO: Handle error
 		g := m.genesisState.(*types.PersistenceGenesisState)
-		m.populateGenesisState(g)
+		m.populateGenesisState(g) // fatal if there's an error
 	default:
 		log.Printf("Debug message not handled by persistence module: %s \n", debugMessage.Message)
 	}
@@ -39,19 +39,22 @@ func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 	log.Printf("Block at height %d with %d transactions: %+v \n", height, len(block.Transactions), block)
 }
 
-func (m *persistenceModule) clearState(_ *debug.DebugMessage) {
+func (m *persistenceModule) ClearState(_ *debug.DebugMessage) error {
 	context, err := m.NewRWContext(-1)
-	defer context.Commit([]byte("HACK: debugClearStateProposerPlaceholder"), []byte("HACK: debugClearStateQuorumCertPlaceholder"))
 	if err != nil {
 		log.Printf("Error creating new context: %s \n", err)
-		return
+		return err
 	}
+
 	if err := context.(*PostgresContext).DebugClearAll(); err != nil {
 		log.Printf("Error clearing state: %s \n", err)
-		return
+		return err
 	}
+
 	if err := m.blockStore.ClearAll(); err != nil {
 		log.Printf("Error clearing block store: %s \n", err)
-		return
+		return err
 	}
+
+	return nil
 }

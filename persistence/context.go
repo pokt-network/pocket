@@ -5,6 +5,8 @@ import (
 	"log"
 )
 
+// DISCUSS: Why aren't these receivers pointers?
+
 func (p PostgresContext) NewSavePoint(bytes []byte) error {
 	log.Println("TODO: NewSavePoint not implemented")
 	return nil
@@ -56,19 +58,39 @@ func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
 
 func (p PostgresContext) Release() error {
 	log.Printf("About to release context at height %d.\n", p.Height)
-
 	ctx := context.TODO()
 	if err := p.GetTx().Rollback(ctx); err != nil {
 		return err
 	}
-	if err := p.conn.Close(ctx); err != nil {
-		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
+	if err := p.resetContext(); err != nil {
+		return err
 	}
 	return nil
 }
 
 func (p PostgresContext) Close() error {
 	log.Printf("About to close context at height %d.\n", p.Height)
-
 	return p.conn.Close(context.TODO())
+}
+
+func (pg *PostgresContext) resetContext() (err error) {
+	if pg == nil {
+		return nil
+	}
+	tx := pg.GetTx()
+	if tx == nil {
+		return nil
+	}
+	conn := tx.Conn()
+	if conn == nil {
+		return nil
+	}
+	if !conn.IsClosed() {
+		if err := conn.Close(context.TODO()); err != nil {
+			return err
+		}
+	}
+	pg.conn = nil
+	pg.tx = nil
+	return err
 }

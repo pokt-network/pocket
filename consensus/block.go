@@ -10,10 +10,10 @@ import (
 func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
 
-	// // Commit and release the context
-	// if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
-	// 	return err
-	// }
+	// Commit and release the context
+	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
+		return err
+	}
 
 	if err := m.utilityContext.Release(); err != nil {
 		return err

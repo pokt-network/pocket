@@ -95,7 +95,7 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 	}
 }
 
-// TODO(drewsky): Remove this in favor of a golang specific solution
 func CleanupTest(u utility.UtilityContext) {
-	u.Context.Release()
+	// require.NoError(t, testPersistenceMod.ReleaseWriteContext()) // Release the write context used in the test
+	// require.NoError(t, testPersistenceMod.ClearState(nil))
 }
