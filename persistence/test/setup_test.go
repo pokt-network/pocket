@@ -15,6 +15,7 @@ import (
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -58,6 +59,8 @@ func TestMain(m *testing.M) {
 }
 
 func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresContext {
+	// require.NoError(t, testPersistenceMod.ReleaseWriteContext())
+
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
@@ -65,8 +68,12 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	require.True(t, ok)
 
 	t.Cleanup(func() {
-		require.NoError(t, db.DebugClearAll())
-		require.NoError(t, db.Release())
+		ctx.Release()
+		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
+		require.NoError(t, testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
+			Action:  debug.DebugMessageAction_DEBUG_CLEAR_STATE,
+			Message: nil,
+		}))
 	})
 
 	return db
@@ -84,9 +91,12 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 	}
 
 	f.Cleanup(func() {
-		if err := db.Release(); err != nil {
-			f.FailNow()
-		}
+		testPersistenceMod.ReleaseWriteContext()
+		testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
+			Action:  debug.DebugMessageAction_DEBUG_CLEAR_STATE,
+			Message: nil,
+		})
+
 	})
 
 	return db

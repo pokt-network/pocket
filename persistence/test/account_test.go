@@ -300,7 +300,6 @@ func TestGetAllAccounts(t *testing.T) {
 		} else {
 			return db.AddAccountAmount(addr, "10")
 		}
-
 	}
 
 	getAllActorsTest(t, db, db.GetAllAccounts, createAndInsertNewAccount, updateAccount, 8)
