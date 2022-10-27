@@ -71,7 +71,7 @@ type PersistenceGenesisState interface {
 	GetVals() []Actor
 	GetFish() []Actor
 	GetNodes() []Actor
-	// GetParameters() Params
+	GetParameters() Params
 }
 
 type ConsensusGenesisState interface {
