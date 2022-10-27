@@ -36,7 +36,7 @@ func (x *PersistenceGenesisState) GetNodes() []modules.Actor {
 	return ActorsToActorsInterface(x.GetServiceNodes())
 }
 
-func (x *PersistenceGenesisState) getParameters() modules.Params {
+func (x *PersistenceGenesisState) GetParameters() modules.Params {
 	return x.GetParams()
 }
 
