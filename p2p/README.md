@@ -13,6 +13,7 @@ This document is meant to be a supplement to the living specification of [1.0 Po
   - [Running Unit Tests](#running-unit-tests)
   - [RainTree testing framework](#raintree-testing-framework)
     - [Helpers](#helpers)
+    - [Test Generators](#test-generators)
     - [Considerations](#considerations)
 
 ## Interface
@@ -112,6 +113,12 @@ The `TestRainTreeCommConfig` struct contains a mapping of `validatorId` to the n
 #### Helpers
 
 Given a specific `originatorNode` which initiates the broadcast, the `testRainTreeCalls` helper function can be used to configure all the nodes and simulate a broadcast.
+
+#### Test Generators
+
+The [rain-tree-simulator](https://github.com/pokt-network/rain-tree-sim/blob/main/python) library contains an example Golang implementation and a Python implementation of RainTree simulators.
+
+You can read the documentation in the [python simulator](https://github.com/pokt-network/rain-tree-sim/blob/main/python) on how it can be used to generate the unit tests found in `module_raintree_test.go`.
 
 #### Considerations
 
