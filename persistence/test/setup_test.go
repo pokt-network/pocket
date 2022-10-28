@@ -58,9 +58,8 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
+// TODO_IN_THIS_COMMIT(olshansky): Consider just using `testPersistenceMod` everywhere instead of the underlying context
 func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresContext {
-	// require.NoError(t, testPersistenceMod.ReleaseWriteContext())
-
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
@@ -68,7 +67,6 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	require.True(t, ok)
 
 	t.Cleanup(func() {
-		ctx.Release()
 		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
 		require.NoError(t, testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
 			Action:  debug.DebugMessageAction_DEBUG_CLEAR_STATE,
@@ -79,6 +77,7 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	return db
 }
 
+// TODO_IN_THIS_COMMIT(olshansky): Consider just using `testPersistenceMod` everywhere instead of the underlying context
 func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
@@ -91,11 +90,15 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 	}
 
 	f.Cleanup(func() {
-		testPersistenceMod.ReleaseWriteContext()
-		testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
+		if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
+			log.Fatalf("Error releasing write context: %v\n", err)
+		}
+		if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
 			Action:  debug.DebugMessageAction_DEBUG_CLEAR_STATE,
 			Message: nil,
-		})
+		}); err != nil {
+			log.Fatalf("Error clearing state: %v\n", err)
+		}
 
 	})
 
@@ -126,10 +129,12 @@ func fuzzSingleProtocolActor(
 	getTestActor func(db *persistence.PostgresContext, address string) (*types.Actor, error),
 	protocolActorSchema types.ProtocolActorSchema) {
 
-	db := NewFuzzTestPostgresContext(f, 0)
+	// SELF_REVIEW: Consider if this is the right approach
+	if err := testPersistenceMod.ClearState(nil); err != nil {
+		log.Fatal("Cannot clear state err")
+	}
 
-	err := db.DebugClearAll()
-	require.NoError(f, err)
+	db := NewFuzzTestPostgresContext(f, 0)
 
 	actor, err := newTestActor()
 	require.NoError(f, err)

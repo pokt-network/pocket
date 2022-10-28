@@ -33,9 +33,6 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
 	}
 
-	if err != nil {
-		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
-	}
 	for _, acc := range state.GetAccs() {
 		addrBz, err := hex.DecodeString(acc.GetAddress())
 		if err != nil {

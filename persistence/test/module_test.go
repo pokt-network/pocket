@@ -7,10 +7,8 @@ import (
 )
 
 func TestPersistenceContextParallelReadWrite(t *testing.T) {
-	// Cleanup previous contexts
-	t.Cleanup(func() {
-		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
-	})
+	prepareAndCleanContext(t)
+
 	// variables for testing
 	poolName := "fake"
 	poolAddress := []byte("address")
@@ -52,11 +50,8 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 }
 
 func TestPersistenceContextTwoWritesErrors(t *testing.T) {
-	// Cleanup previous contexts
-	testPersistenceMod.ReleaseWriteContext()
-	t.Cleanup(func() {
-		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
-	})
+	prepareAndCleanContext(t)
+
 	// Opening up first write context succeeds
 	_, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
@@ -71,6 +66,8 @@ func TestPersistenceContextTwoWritesErrors(t *testing.T) {
 }
 
 func TestPersistenceContextSequentialWrites(t *testing.T) {
+	prepareAndCleanContext(t)
+
 	// Opening up first write context succeeds
 	writeContext1, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
@@ -94,6 +91,8 @@ func TestPersistenceContextSequentialWrites(t *testing.T) {
 }
 
 func TestPersistenceContextMultipleParallelReads(t *testing.T) {
+	prepareAndCleanContext(t)
+
 	// Opening up first read context succeeds
 	readContext1, err := testPersistenceMod.NewReadContext(0)
 	require.NoError(t, err)
@@ -109,4 +108,17 @@ func TestPersistenceContextMultipleParallelReads(t *testing.T) {
 	require.NoError(t, readContext1.Close())
 	require.NoError(t, readContext2.Close())
 	require.NoError(t, readContext3.Close())
+}
+
+func prepareAndCleanContext(t *testing.T) {
+	// Cleanup context after the test
+	t.Cleanup(func() {
+		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
+		require.NoError(t, testPersistenceMod.ClearState(nil))
+	})
+
+	// Make sure the db is empty at the start of these tests
+	require.NoError(t, testPersistenceMod.ReleaseWriteContext())
+	require.NoError(t, testPersistenceMod.ClearState(nil))
+
 }
