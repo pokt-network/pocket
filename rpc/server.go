@@ -7,7 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -32,7 +32,7 @@ func (s *rpcServer) StartRPC(port string, timeout uint64) {
 		middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 			Skipper:      middleware.DefaultSkipper,
 			ErrorMessage: "Request timed out",
-			Timeout:      time.Duration(test_artifacts.DefaultRpcTimeout) * time.Millisecond,
+			Timeout:      time.Duration(defaults.DefaultRpcTimeout) * time.Millisecond,
 		}),
 	)
 	RegisterHandlers(e, s)
