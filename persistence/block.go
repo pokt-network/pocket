@@ -21,7 +21,7 @@ func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error)
 	return
 }
 
-// OPTIMIZE(team): get from blockstore or keep in cache/memory
+// OPTIMIZE: get from blockstore or keep in cache/memory
 func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
 	ctx, tx, err := p.GetCtxAndTx()
 	if err != nil {
@@ -61,34 +61,17 @@ func (p PostgresContext) StoreTransaction(txResult modules.TxResult) error {
 	return p.txIndexer.Index(txResult)
 }
 
-func (p *PostgresContext) insertBlock(block *types.Block) error {
-	ctx, tx, err := p.GetCtxAndTx()
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Exec(ctx, types.InsertBlockQuery(block.Height, block.Hash, block.ProposerAddress, block.QuorumCertificate))
-	return err
-}
-
-func (p PostgresContext) storeBlock(block *types.Block) error {
-	blockBz, err := codec.GetCodec().Marshal(block)
-	if err != nil {
-		return err
-	}
-	return p.blockStore.Set(heightToBytes(p.Height), blockBz)
-}
-
+// Creates a block protobuf object using the schema defined in the persistence module
 func (p *PostgresContext) prepareBlock(proposerAddr []byte, quorumCert []byte) (*types.Block, error) {
 	var prevHash []byte
-	if p.Height > 0 {
+	if p.Height == 0 {
+		prevHash = []byte("")
+	} else {
 		var err error
 		prevHash, err = p.GetBlockHash(p.Height - 1)
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		prevHash = []byte("HACK: get hash from genesis")
 	}
 
 	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
@@ -111,6 +94,26 @@ func (p *PostgresContext) prepareBlock(proposerAddr []byte, quorumCert []byte) (
 	}
 
 	return block, nil
+}
+
+// Inserts the block into the postgres database
+func (p *PostgresContext) insertBlock(block *types.Block) error {
+	ctx, tx, err := p.GetCtxAndTx()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(ctx, types.InsertBlockQuery(block.Height, block.Hash, block.ProposerAddress, block.QuorumCertificate))
+	return err
+}
+
+// Stores the block in the key-value store
+func (p PostgresContext) storeBlock(block *types.Block) error {
+	blockBz, err := codec.GetCodec().Marshal(block)
+	if err != nil {
+		return err
+	}
+	return p.blockStore.Set(heightToBytes(p.Height), blockBz)
 }
 
 func heightToBytes(height int64) []byte {

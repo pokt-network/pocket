@@ -37,9 +37,9 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 			return nil, nil, err
 		}
 		// Validate and apply the transaction to the Postgres database
-		// DISCUSS: currently, the pattern is allowing nil err with an error transaction...
-		// Should we terminate applyBlock immediately if there's an invalid transaction?
-		// Or wait until the entire lifecycle is over to evaluate an 'invalid' block
+		// DISCUSS_IN_THIS_COMMIT(#315): currently, the pattern is allowing nil err with an error transaction...
+		//                               Should we terminate applyBlock immediately if there's an invalid transaction?
+		//                               Or wait until the entire lifecycle is over to evaluate an 'invalid' block
 		txResult, err := u.ApplyTransaction(index, tx)
 		if err != nil {
 			return nil, nil, err
@@ -63,9 +63,10 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 		return nil, nil, err
 	}
 
-	// TODO: What if everything above succeeded but updating the app hash failed?
+	// DISCUSS_IN_THIS_COMMIT: What if everything above succeeded but updating the app hash failed?
 	appHash, err = u.Context.UpdateAppHash()
 	if err != nil {
+		// TODO: Rollback the entire block
 		return nil, nil, typesUtil.ErrAppHash(err)
 	}
 

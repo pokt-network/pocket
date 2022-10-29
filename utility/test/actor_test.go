@@ -453,7 +453,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 
 func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 	for _, actorType := range actorTypes {
-		t.Run(string(actorType), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.UnstakeActorsThatAreReady", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 
 			poolName := ""

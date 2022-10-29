@@ -9,7 +9,5 @@ message Block {
     string prevHash = 3;
     bytes proposerAddress = 4;
     bytes quorumCertificate = 5;
-    // REARCHITECT_IN_THIS_COMMIT: Since transactions are stored in the TX Indexer, do we only
-    // need a collective hash here or all the bytes?
-    repeated bytes transactions = 6;
+    repeated bytes transactions = 6; // DISCUSS_IN_THIS_COMMIT(drewskey): Just one hash here?
 }

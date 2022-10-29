@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-// DISCUSS: Why aren't these receivers pointers?
+// CLEANUP: Figure out why the receivers here aren't pointers?
 
 func (p PostgresContext) NewSavePoint(bytes []byte) error {
 	log.Println("TODO: NewSavePoint not implemented")
@@ -76,20 +76,25 @@ func (pg *PostgresContext) resetContext() (err error) {
 	if pg == nil {
 		return nil
 	}
+
 	tx := pg.GetTx()
 	if tx == nil {
 		return nil
 	}
+
 	conn := tx.Conn()
 	if conn == nil {
 		return nil
 	}
+
 	if !conn.IsClosed() {
 		if err := conn.Close(context.TODO()); err != nil {
 			return err
 		}
 	}
+
 	pg.conn = nil
 	pg.tx = nil
+
 	return err
 }

@@ -2,6 +2,7 @@ package test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math"
 	"math/big"
 	"testing"
@@ -101,7 +102,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 
 func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 	for _, actorType := range actorTypes {
-		t.Run(string(actorType), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.BeginUnstakingMaxPausedActors", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 			actor := getFirstActor(t, ctx, actorType)
 
@@ -180,7 +181,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 	for _, actorType := range actorTypes {
-		t.Run(string(actorType), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s.UnstakeValidatorsActorsThatAreReady", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
 			var poolName string
 			switch actorType {

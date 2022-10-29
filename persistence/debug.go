@@ -12,9 +12,13 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 	switch debugMessage.Action {
 	case debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		m.showLatestBlockInStore(debugMessage)
-	case debug.DebugMessageAction_DEBUG_CLEAR_STATE:
-		if err := m.ClearState(debugMessage); err != nil {
-			log.Fatalf("Error clearing state: %s \n", err)
+	case debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE:
+		if err := m.clearState(debugMessage); err != nil {
+			return err
+		}
+	case debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS:
+		if err := m.clearState(debugMessage); err != nil {
+			return err
 		}
 		g := m.genesisState.(*types.PersistenceGenesisState)
 		m.populateGenesisState(g) // fatal if there's an error
@@ -39,7 +43,7 @@ func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 	log.Printf("Block at height %d with %d transactions: %+v \n", height, len(block.Transactions), block)
 }
 
-func (m *persistenceModule) ClearState(_ *debug.DebugMessage) error {
+func (m *persistenceModule) clearState(_ *debug.DebugMessage) error {
 	context, err := m.NewRWContext(-1)
 	if err != nil {
 		return err

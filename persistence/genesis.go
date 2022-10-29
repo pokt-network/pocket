@@ -9,7 +9,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// WARNING: This function crashes the process if there is an error populating the genesis state.
+// DISCUSS: Should we make this return an error and let the caller decide if it should log a fatal error?
 func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesisState) {
 	log.Println("Populating genesis state...")
 
@@ -143,11 +143,8 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		log.Fatalf("an error occurred initializing flags: %s", err.Error())
 	}
 
-	if err = rwContext.Commit(
-		[]byte("HACK_IN_THIS_COMMIT: genesisProposerPlaceholder"),
-		[]byte("HACK_IN_THIS_COMMIT: genesisQuorumCertPlaceholder"),
-	); err != nil {
-		log.Fatalf("error committing populateGenesisState %s ", err.Error())
+	if err = rwContext.Commit([]byte("placeholderGenesisProposer"), []byte("placeholderQuorumCert")); err != nil {
+		log.Fatalf("error committing genesis state to DB %s ", err.Error())
 	}
 }
 
@@ -219,8 +216,8 @@ func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err err
 	}
 	rows.Close()
 	for _, actor := range actors {
-		actorWithChains, er := p.GetChainsForActor(ctx, tx, types.ApplicationActor, actor, height)
-		if er != nil {
+		actorWithChains, err := p.GetChainsForActor(ctx, tx, types.ApplicationActor, actor, height)
+		if err != nil {
 			return nil, err
 		}
 		apps = append(apps, actorWithChains)

@@ -43,13 +43,15 @@ var (
 )
 
 // HACK: This is a hack used to enable deterministic key generation via an environment variable.
-// In order to avoid this, `NewGenesisState` and all downstream functions would need to be
-// refactored, or the seed would need to be passed via the runtime manager. To avoid these large
-// scale changes, this is a temporary approach
-const PrivateKeySeedEnv = "PRIVATE_KEY_SEED"
+//       In order to avoid this, `NewGenesisState` and all downstream functions would need to be
+//       refactored. Alternatively, the seed would need to be passed via the runtime manager.
+//       To avoid these large scale changes, this is a temporary approach to enable deterministic
+//       key generation.
+const PrivateKeySeedEnv = "DEFAULT_PRIVATE_KEY_SEED"
 
 var privateKeySeed int
 
+// Intentionally not using `init` in case the caller sets this before `NewGenesisState` is called.s
 func loadPrivateKeySeed() {
 	privateKeySeedEnvValue := os.Getenv(PrivateKeySeedEnv)
 	if seedInt, err := strconv.Atoi(privateKeySeedEnvValue); err == nil {
@@ -60,7 +62,7 @@ func loadPrivateKeySeed() {
 	}
 }
 
-// IMPROVE: This was initially a temp replacement, so create real genesis suite soon!
+// IMPROVE: Generate a proper genesis suite in the future.
 func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (modules.GenesisState, []string) {
 	loadPrivateKeySeed()
 
@@ -210,14 +212,6 @@ func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor,
 	}, privKey
 }
 
-func generateNewKeysStrings2() (privateKey, publicKey, address string) {
-	privKey, pubKey, addr := generateNewKeys()
-	privateKey = privKey.String()
-	publicKey = pubKey.String()
-	address = addr.String()
-	return
-}
-
 func generateNewKeysStrings() (privateKey, publicKey, address string) {
 	privateKeySeed += 1 // Different on every call but deterministic
 	cryptoSeed := make([]byte, crypto.SeedSize)
@@ -233,12 +227,5 @@ func generateNewKeysStrings() (privateKey, publicKey, address string) {
 	publicKey = privateKeyBz.PublicKey().String()
 	address = privateKeyBz.PublicKey().Address().String()
 
-	return
-}
-
-func generateNewKeys() (privateKey crypto.PrivateKey, publicKey crypto.PublicKey, address crypto.Address) {
-	privateKey, _ = crypto.GeneratePrivateKey()
-	publicKey = privateKey.PublicKey()
-	address = publicKey.Address()
 	return
 }

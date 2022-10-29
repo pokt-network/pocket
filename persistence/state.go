@@ -14,9 +14,9 @@ import (
 
 type MerkleTree float64
 
-// A work-in-progress list of all the trees we need to update to maintain the overall state
+// A list of Merkle Trees used to maintain the state hash
 const (
-	// Actor  Merkle Trees
+	// Actor Merkle Trees
 	appMerkleTree MerkleTree = iota
 	valMerkleTree
 	fishMerkleTree
@@ -26,13 +26,13 @@ const (
 	accountMerkleTree
 	poolMerkleTree
 
-	// Data / State Merkle Trees
+	// Data Merkle Trees
 	blocksMerkleTree
 	paramsMerkleTree
 	flagsMerkleTree
 
 	// Used for iteration purposes only - see https://stackoverflow.com/a/64178235/768439
-	lastMerkleTree
+	numMerkleTrees
 )
 
 var actorTypeToMerkleTreeName map[types.ActorType]MerkleTree = map[types.ActorType]MerkleTree{
@@ -57,10 +57,9 @@ var actorTypeToSchemaName map[types.ActorType]types.ProtocolActorSchema = map[ty
 }
 
 func newMerkleTrees() (map[MerkleTree]*smt.SparseMerkleTree, error) {
-	// We need a separate Merkle tree for each type of actor or storage
-	trees := make(map[MerkleTree]*smt.SparseMerkleTree, int(lastMerkleTree))
+	trees := make(map[MerkleTree]*smt.SparseMerkleTree, int(numMerkleTrees))
 
-	for treeType := MerkleTree(0); treeType < lastMerkleTree; treeType++ {
+	for treeType := MerkleTree(0); treeType < numMerkleTrees; treeType++ {
 		// TODO_IN_THIS_COMMIT: Rather than using `NewSimpleMap`, use a disk based key-value store
 		nodeStore := smt.NewSimpleMap()
 		valueStore := smt.NewSimpleMap()
@@ -71,12 +70,12 @@ func newMerkleTrees() (map[MerkleTree]*smt.SparseMerkleTree, error) {
 }
 
 func loadMerkleTrees(map[MerkleTree]*smt.SparseMerkleTree, error) {
-	log.Fatalf("loadMerkleTrees not implemented yet")
+	log.Fatalf("TODO: loadMerkleTrees not implemented yet")
 }
 
 func (p *PostgresContext) updateStateHash() error {
 	// Update all the merkle trees
-	for treeType := MerkleTree(0); treeType < lastMerkleTree; treeType++ {
+	for treeType := MerkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {
 		case appMerkleTree:
 			fallthrough
@@ -113,7 +112,7 @@ func (p *PostgresContext) updateStateHash() error {
 
 	// Get the root of each Merkle Tree
 	roots := make([][]byte, 0)
-	for treeType := MerkleTree(0); treeType < lastMerkleTree; treeType++ {
+	for treeType := MerkleTree(0); treeType < numMerkleTrees; treeType++ {
 		roots = append(roots, p.merkleTrees[treeType].Root())
 	}
 

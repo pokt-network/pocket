@@ -70,7 +70,6 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema
 	}
 	rows.Close()
 
-	// OPTIMIZE: Consolidate logic with `GetActor` to reduce code footprint
 	actors = make([]*types.Actor, len(addrs))
 	for i, addr := range addrs {
 		actor, err := p.GetActor(actorSchema, []byte(addr), height)

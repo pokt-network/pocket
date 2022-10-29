@@ -23,9 +23,6 @@ type PersistenceModule interface {
 
 	// Debugging / development only
 	HandleDebugMessage(*debug.DebugMessage) error
-
-	// HACK: Until utility has no dependency on the real persistence module
-	ClearState(*debug.DebugMessage) error
 }
 
 // Interface defining the context within which the node can operate with the persistence layer.

@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
 	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/utility"
@@ -54,14 +55,18 @@ func TestMain(m *testing.M) {
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
+	// IMPROVE: Avoid creating a new persistence module with every test
 	testPersistenceMod := newTestPersistenceModule(t, persistenceDbUrl)
 
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		require.NoError(t, testPersistenceMod.ReleaseWriteContext()) // Release the write context used in the test
-		require.NoError(t, testPersistenceMod.ClearState(nil))
+		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
+		require.NoError(t, testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
+			Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+			Message: nil,
+		}))
 	})
 
 	return utility.UtilityContext{

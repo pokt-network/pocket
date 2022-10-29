@@ -5,14 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pokt-network/pocket/persistence/indexer"
-
-	"github.com/pokt-network/pocket/persistence/types"
-
 	"github.com/celestiaorg/smt"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
+	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
+	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -55,13 +53,10 @@ type PostgresContext struct {
 	txIndexer        indexer.TxIndexer
 	currentStateHash []byte
 
-	// REARCHITECT_IN_THIS_COMMIT: This is a passthrough from the persistence module (i.e. not context).
-	// Consider making this accessible via the persistence module interface and accessing it via the bus.
+	// REFACTOR: Access `blockStore` and `merkleTree` from the persistence module via bus.
 	blockStore  kvstore.KVStore
 	merkleTrees map[MerkleTree]*smt.SparseMerkleTree
 }
-
-// TODO: Reduce the scope of these functions
 
 func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
 	return context.TODO(), pg.GetTx(), nil

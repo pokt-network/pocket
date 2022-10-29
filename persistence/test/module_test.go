@@ -3,6 +3,7 @@ package test
 import (
 	"testing"
 
+	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/stretchr/testify/require"
 )
 
@@ -114,11 +115,16 @@ func prepareAndCleanContext(t *testing.T) {
 	// Cleanup context after the test
 	t.Cleanup(func() {
 		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
-		require.NoError(t, testPersistenceMod.ClearState(nil))
+		require.NoError(t, testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
+			Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+			Message: nil,
+		}))
 	})
 
 	// Make sure the db is empty at the start of these tests
 	require.NoError(t, testPersistenceMod.ReleaseWriteContext())
-	require.NoError(t, testPersistenceMod.ClearState(nil))
-
+	require.NoError(t, testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
+		Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+		Message: nil,
+	}))
 }

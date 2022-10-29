@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/codec"
-
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"

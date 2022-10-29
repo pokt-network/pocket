@@ -9,8 +9,9 @@ import (
 )
 
 type UtilityContext struct {
-	LatestHeight    int64  // IMPROVE: Rename to `currentHeight?`
-	currentProposer []byte // REARCHITECT_IN_THIS_COMMIT: Ephemeral block state should only exist in the persistence context
+	// TODO_IN_THIS_COMMIT(#315): Should be removed before this is commited.
+	LatestHeight    int64
+	currentProposer []byte
 
 	Mempool typesUtil.Mempool
 	Context *Context // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
@@ -20,7 +21,7 @@ type UtilityContext struct {
 type Context struct {
 	// CLEANUP: Since `Context` embeds `PersistenceRWContext`, we don't need to do `u.Context.PersistenceRWContext`, but can call `u.Context` directly
 	modules.PersistenceRWContext
-	// TODO/DISCUSS: `SavePoints`` have not been implemented yet
+	// TODO: `SavePoints`` have not been implemented yet
 	SavePointsM map[string]struct{}
 	SavePoints  [][]byte
 }

@@ -58,7 +58,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-// TODO_IN_THIS_COMMIT(olshansky): Consider just using `testPersistenceMod` everywhere instead of the underlying context
+// IMPROVE(olshansky): Look into returning `testPersistenceMod` to avoid exposing underlying abstraction.
 func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
@@ -69,7 +69,7 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	t.Cleanup(func() {
 		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
 		require.NoError(t, testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_CLEAR_STATE,
+			Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
 		}))
 	})
@@ -77,7 +77,7 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	return db
 }
 
-// TODO_IN_THIS_COMMIT(olshansky): Consider just using `testPersistenceMod` everywhere instead of the underlying context
+// IMPROVE(olshansky): Look into returning `testPersistenceMod` to avoid exposing underlying abstraction.
 func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
@@ -94,7 +94,7 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 			log.Fatalf("Error releasing write context: %v\n", err)
 		}
 		if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_CLEAR_STATE,
+			Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
 			Message: nil,
 		}); err != nil {
 			log.Fatalf("Error clearing state: %v\n", err)
@@ -107,7 +107,7 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 
 // TODO(andrew): Take in `t testing.T` as a parameter and error if there's an issue
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
-	// HACK: See `runtime/test_artifacts/generator.go` for why this is needed
+	// HACK: See `runtime/test_artifacts/generator.go` for why we're doing this to get deterministic key generation.
 	os.Setenv(test_artifacts.PrivateKeySeedEnv, "42")
 	defer os.Unsetenv(test_artifacts.PrivateKeySeedEnv)
 
@@ -132,11 +132,6 @@ func fuzzSingleProtocolActor(
 	newTestActor func() (*types.Actor, error),
 	getTestActor func(db *persistence.PostgresContext, address string) (*types.Actor, error),
 	protocolActorSchema types.ProtocolActorSchema) {
-
-	// SELF_REVIEW: Consider if this is the right approach
-	if err := testPersistenceMod.ClearState(nil); err != nil {
-		log.Fatal("Cannot clear state err")
-	}
 
 	db := NewFuzzTestPostgresContext(f, 0)
 

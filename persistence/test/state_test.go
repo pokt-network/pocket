@@ -89,6 +89,7 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 // - Release / revert mid block and making sure everything is reverted
 // - Thinking about how it can be synched
 // - Playing back several blocks
+// - Atomicity - Look into Commit
 
 func heightToBytes(height int64) []byte {
 	heightBytes := make([]byte, 8)

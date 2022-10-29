@@ -29,8 +29,7 @@ type persistenceModule struct {
 	config       modules.PersistenceConfig
 	genesisState modules.PersistenceGenesisState
 
-	// A reference to the block key-value store
-	blockStore kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
+	blockStore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
 
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...

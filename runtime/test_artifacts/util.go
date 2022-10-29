@@ -95,7 +95,6 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 	}
 }
 
+// TODO(olshansky): Remove this since it's no longer used or necessary.
 func CleanupTest(u utility.UtilityContext) {
-	// require.NoError(t, testPersistenceMod.ReleaseWriteContext()) // Release the write context used in the test
-	// require.NoError(t, testPersistenceMod.ClearState(nil))
 }
