@@ -185,3 +185,13 @@ func attachPwdFlagToSubcommands() []cmdOption {
 		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
 	}}
 }
+
+func unableToConnectToRpc(err error) error {
+	fmt.Printf("❌ Unable to connect to the RPC @ \033[1m%s\033[0m\n\nError: %s", remoteCLIURL, err)
+	return nil
+}
+
+func rpcResponseCodeUnhealthy(statusCode int, response []byte) error {
+	fmt.Printf("❌ RPC reporting unhealthy status HTTP %d @ \033[1m%s\033[0m\n\n%s", statusCode, remoteCLIURL, response)
+	return nil
+}
