@@ -302,7 +302,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 
-	persistenceMock.EXPECT().Start().Do(func() {}).AnyTimes()
+	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(int64(-1)).Return(persistenceContextMock, nil).AnyTimes()
 
@@ -320,7 +320,7 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.M
 	ctrl := gomock.NewController(t)
 	p2pMock := modulesMock.NewMockP2PModule(ctrl)
 
-	p2pMock.EXPECT().Start().Do(func() {}).AnyTimes()
+	p2pMock.EXPECT().Start().Return(nil).AnyTimes()
 	p2pMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
 	p2pMock.EXPECT().
 		Broadcast(gomock.Any(), gomock.Any()).
@@ -386,7 +386,7 @@ func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockT
 	timeSeriesAgentMock := baseTelemetryTimeSeriesAgentMock(t)
 	eventMetricsAgentMock := baseTelemetryEventMetricsAgentMock(t)
 
-	telemetryMock.EXPECT().Start().Do(func() {}).AnyTimes()
+	telemetryMock.EXPECT().Start().Return(nil).AnyTimes()
 	telemetryMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
@@ -397,7 +397,7 @@ func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockT
 func baseRpcMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockRPCModule {
 	ctrl := gomock.NewController(t)
 	rpcMock := modulesMock.NewMockRPCModule(ctrl)
-	rpcMock.EXPECT().Start().Do(func() {}).AnyTimes()
+	rpcMock.EXPECT().Start().Return(nil).AnyTimes()
 	rpcMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
 
 	return rpcMock

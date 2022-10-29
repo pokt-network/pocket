@@ -3,8 +3,9 @@ package persistence
 import (
 	"context"
 	"fmt"
-	"github.com/pokt-network/pocket/persistence/indexer"
 	"log"
+
+	"github.com/pokt-network/pocket/persistence/indexer"
 
 	"github.com/pokt-network/pocket/persistence/types"
 
@@ -130,10 +131,12 @@ func (m *persistenceModule) GetBus() modules.Bus {
 }
 
 func (*persistenceModule) ValidateConfig(cfg modules.Config) error {
+	// TODO (team): implement this
 	return nil
 }
 
 func (*persistenceModule) ValidateGenesis(genesis modules.GenesisState) error {
+	// TODO (team): implement this
 	return nil
 }
 

@@ -85,6 +85,7 @@ func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
 }
 
 func (*PrometheusTelemetryModule) ValidateConfig(cfg modules.Config) error {
+	// TODO (team): implement this
 	return nil
 }
 

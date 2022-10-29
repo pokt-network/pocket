@@ -114,9 +114,9 @@ install_cli_deps:
 .PHONY: develop_start
 ## Run all of the make commands necessary to develop on the project
 develop_start:
-		make protogen_clean && make protogen_local && \
 		make go_clean_deps && \
 		make mockgen && \
+		make protogen_clean && make protogen_local && \
 		make generate_rpc_openapi
 
 .PHONY: develop_test
@@ -246,7 +246,6 @@ protogen_local: go_protoc-go-inject-tag
 	protoc --go_opt=paths=source_relative  -I=./p2p/types/proto           --go_out=./p2p/types          	./p2p/types/proto/*.proto           --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./telemetry/proto           --go_out=./telemetry          	./telemetry/proto/*.proto           --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./rpc/types/proto 		  --go_out=./rpc/types          	./rpc/types/proto/*.proto           --experimental_allow_proto3_optional
-
 	echo "View generated proto files by running: make protogen_show"
 
 .PHONY: protogen_docker_m1
@@ -281,12 +280,12 @@ test_all: # generate_mocks
 
 .PHONY: test_all_with_json
 ## Run all go unit tests, output results in json file
-test_all_with_json: # generate_mocks
+test_all_with_json: generate_rpc_openapi # generate_mocks
 	go test -p 1 -json ./... > test_results.json
 
 .PHONY: test_all_with_coverage
 ## Run all go unit tests, output results & coverage into files
-test_all_with_coverage: # generate_mocks
+test_all_with_coverage: generate_rpc_openapi # generate_mocks
 	go test -p 1 -v ./... -covermode=count -coverprofile=coverage.out
 	go tool cover -func=coverage.out -o=coverage.out
 

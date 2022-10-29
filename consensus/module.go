@@ -199,10 +199,12 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 }
 
 func (*consensusModule) ValidateConfig(cfg modules.Config) error {
+	// TODO (team): implement this
 	return nil
 }
 
 func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
+	// TODO (team): implement this
 	return nil
 }
 
