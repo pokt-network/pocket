@@ -48,7 +48,6 @@ func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
 	if err := p.GetTx().Commit(ctx); err != nil {
 		return err
 	}
-
 	if err := p.conn.Close(ctx); err != nil {
 		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
 	}

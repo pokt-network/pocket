@@ -6,6 +6,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
+	"math/rand"
+	"os"
 	"strconv"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -40,9 +42,28 @@ var (
 	ServiceUrlFormat           = "node%d.consensus:8080"
 )
 
-// TODO (Team) this is meant to be a **temporary** replacement for the recently deprecated
-// 'genesis config' option. We need to implement a real suite soon!
+// HACK: This is a hack used to enable deterministic key generation via an environment variable.
+// In order to avoid this, `NewGenesisState` and all downstream functions would need to be
+// refactored, or the seed would need to be passed via the runtime manager. To avoid these large
+// scale changes, this is a temporary approach
+const PrivateKeySeedEnv = "PRIVATE_KEY_SEED"
+
+var privateKeySeed int
+
+func loadPrivateKeySeed() {
+	privateKeySeedEnvValue := os.Getenv(PrivateKeySeedEnv)
+	if seedInt, err := strconv.Atoi(privateKeySeedEnvValue); err == nil {
+		privateKeySeed = seedInt
+	} else {
+		rand.Seed(timestamppb.Now().Seconds)
+		privateKeySeed = rand.Int()
+	}
+}
+
+// IMPROVE: This was initially a temp replacement, so create real genesis suite soon!
 func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (modules.GenesisState, []string) {
+	loadPrivateKeySeed()
+
 	apps, appsPrivateKeys := NewActors(types.ActorType_App, numApplications)
 	vals, validatorPrivateKeys := NewActors(types.ActorType_Validator, numValidators)
 	serviceNodes, snPrivateKeys := NewActors(types.ActorType_ServiceNode, numServiceNodes)
@@ -66,6 +87,7 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 		},
 	)
 
+	// TODO: Generalize this to all actors and not just validators
 	return genesisState, validatorPrivateKeys
 }
 
@@ -134,8 +156,7 @@ func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing s
 
 func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
 	for i := 0; i < n; i++ {
-		// _, _, addr := GenerateNewKeysDeterministic(69)
-		_, _, addr := GenerateNewKeysStrings()
+		_, _, addr := generateNewKeysStrings()
 		if privateKeys != nil {
 			pk, _ := crypto.NewPrivateKey(privateKeys[i])
 			addr = pk.Address().String()
@@ -169,8 +190,7 @@ func getServiceUrl(n int) string {
 }
 
 func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor, privateKey string) {
-	// privKey, pubKey, addr := GenerateNewKeysDeterministic(69)
-	privKey, pubKey, addr := GenerateNewKeysStrings()
+	privKey, pubKey, addr := generateNewKeysStrings()
 	chains := DefaultChains
 	if actorType == int32(typesPers.ActorType_Val) {
 		chains = nil
@@ -190,24 +210,18 @@ func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor,
 	}, privKey
 }
 
-func GenerateNewKeysStrings() (privateKey, publicKey, address string) {
-	privKey, pubKey, addr := GenerateNewKeys()
+func generateNewKeysStrings2() (privateKey, publicKey, address string) {
+	privKey, pubKey, addr := generateNewKeys()
 	privateKey = privKey.String()
 	publicKey = pubKey.String()
 	address = addr.String()
 	return
 }
 
-func GenerateNewKeys() (privateKey crypto.PrivateKey, publicKey crypto.PublicKey, address crypto.Address) {
-	privateKey, _ = crypto.GeneratePrivateKey()
-	publicKey = privateKey.PublicKey()
-	address = publicKey.Address()
-	return
-}
-
-func GenerateNewKeysDeterministic(seed uint32) (privateKey, publicKey, address string) {
+func generateNewKeysStrings() (privateKey, publicKey, address string) {
+	privateKeySeed += 1 // Different on every call but deterministic
 	cryptoSeed := make([]byte, crypto.SeedSize)
-	binary.LittleEndian.PutUint32(cryptoSeed, seed)
+	binary.LittleEndian.PutUint32(cryptoSeed, uint32(privateKeySeed))
 
 	reader := bytes.NewReader(cryptoSeed)
 	privateKeyBz, err := crypto.GeneratePrivateKeyWithReader(reader)
@@ -219,5 +233,12 @@ func GenerateNewKeysDeterministic(seed uint32) (privateKey, publicKey, address s
 	publicKey = privateKeyBz.PublicKey().String()
 	address = privateKeyBz.PublicKey().Address().String()
 
+	return
+}
+
+func generateNewKeys() (privateKey crypto.PrivateKey, publicKey crypto.PublicKey, address crypto.Address) {
+	privateKey, _ = crypto.GeneratePrivateKey()
+	publicKey = privateKey.PublicKey()
+	address = publicKey.Address()
 	return
 }

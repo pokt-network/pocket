@@ -107,6 +107,10 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 
 // TODO(andrew): Take in `t testing.T` as a parameter and error if there's an issue
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
+	// HACK: See `runtime/test_artifacts/generator.go` for why this is needed
+	os.Setenv(test_artifacts.PrivateKeySeedEnv, "42")
+	defer os.Unsetenv(test_artifacts.PrivateKeySeedEnv)
+
 	cfg := runtime.NewConfig(&runtime.BaseConfig{}, runtime.WithPersistenceConfig(&types.PersistenceConfig{
 		PostgresUrl:    databaseUrl,
 		NodeSchema:     testSchema,
