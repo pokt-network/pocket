@@ -19,7 +19,7 @@ import (
 // TODO(andrew): Find all places where we import twice and update the imports appropriately.
 
 func FuzzAccountAmount(f *testing.F) {
-	db := NewFuzzTestPostgresContext(f, 0)
+	db := NewTestPostgresContext(f, 0)
 	operations := []string{
 		"AddAmount",
 		"SubAmount",
@@ -164,7 +164,7 @@ func TestSubAccountAmount(t *testing.T) {
 }
 
 func FuzzPoolAmount(f *testing.F) {
-	db := NewFuzzTestPostgresContext(f, 0)
+	db := NewTestPostgresContext(f, 0)
 	operations := []string{
 		"AddAmount",
 		"SubAmount",

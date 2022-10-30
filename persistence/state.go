@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/celestiaorg/smt"
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
 	"google.golang.org/protobuf/proto"
 )
@@ -66,8 +67,10 @@ func newMerkleTrees() (map[MerkleTree]*smt.SparseMerkleTree, error) {
 
 	for treeType := MerkleTree(0); treeType < numMerkleTrees; treeType++ {
 		// TODO_IN_THIS_COMMIT: Rather than using `NewSimpleMap`, use a disk based key-value store
-		nodeStore := smt.NewSimpleMap()
-		valueStore := smt.NewSimpleMap()
+		// nodeStore := smt.NewSimpleMap()
+		// valueStore := smt.NewSimpleMap()
+		nodeStore := kvstore.NewMemKVStore()
+		valueStore := kvstore.NewMemKVStore()
 
 		trees[treeType] = smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
 	}

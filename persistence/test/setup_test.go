@@ -59,26 +59,7 @@ func TestMain(m *testing.M) {
 }
 
 // IMPROVE(olshansky): Look into returning `testPersistenceMod` to avoid exposing underlying abstraction.
-func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresContext {
-	ctx, err := testPersistenceMod.NewRWContext(height)
-	require.NoError(t, err)
-
-	db, ok := ctx.(*persistence.PostgresContext)
-	require.True(t, ok)
-
-	t.Cleanup(func() {
-		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
-		require.NoError(t, testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
-			Message: nil,
-		}))
-	})
-
-	return db
-}
-
-// IMPROVE(olshansky): Look into returning `testPersistenceMod` to avoid exposing underlying abstraction.
-func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
+func NewTestPostgresContext[T testing.T | testing.B | testing.F](t *T, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
 		log.Fatalf("Error creating new context: %v\n", err)
@@ -89,7 +70,19 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 		log.Fatalf("Error casting RW context to Postgres context")
 	}
 
-	f.Cleanup(func() {
+	var cleanupFn func(func())
+	switch any(t).(type) {
+	case *testing.T:
+		cleanupFn = any(t).(*testing.T).Cleanup
+	case *testing.B:
+		cleanupFn = any(t).(*testing.B).Cleanup
+	case *testing.F:
+		cleanupFn = any(t).(*testing.F).Cleanup
+	default:
+		log.Fatalf("Error: unsupported type %T", t)
+	}
+
+	cleanupFn(func() {
 		if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
 			log.Fatalf("Error releasing write context: %v\n", err)
 		}
@@ -99,7 +92,6 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 		}); err != nil {
 			log.Fatalf("Error clearing state: %v\n", err)
 		}
-
 	})
 
 	return db
@@ -133,7 +125,7 @@ func fuzzSingleProtocolActor(
 	getTestActor func(db *persistence.PostgresContext, address string) (*types.Actor, error),
 	protocolActorSchema types.ProtocolActorSchema) {
 
-	db := NewFuzzTestPostgresContext(f, 0)
+	db := NewTestPostgresContext(f, 0)
 
 	actor, err := newTestActor()
 	require.NoError(f, err)

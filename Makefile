@@ -316,6 +316,11 @@ test_sortition:
 test_persistence:
 	go test ${VERBOSE_TEST} -p 1 -count=1 ./persistence/...
 
+.PHONY: test_persistence_state_hash
+## Run all go unit tests in the Persistence module related to the state hash
+test_persistence_state_hash:
+	go test ${VERBOSE_TEST} -run TestStateHash -count=1 ./persistence/...
+
 .PHONY: test_p2p
 ## Run all p2p
 test_p2p:
@@ -324,22 +329,29 @@ test_p2p:
 .PHONY: test_p2p_raintree
 ## Run all p2p raintree related tests
 test_p2p_raintree:
-	go test -run RainTreeNetwork -v -count=1 ./p2p/...
+	go test ${VERBOSE_TEST} -run RainTreeNetwork -count=1 ./p2p/...
 
 .PHONY: test_p2p_raintree_addrbook
 ## Run all p2p raintree addr book related tests
 test_p2p_raintree_addrbook:
-	go test -run RainTreeAddrBook -v -count=1 ./p2p/...
+	go test ${VERBOSE_TEST} -run RainTreeAddrBook -count=1 ./p2p/...
+
+# For benchmarks, consider appending `-run=^#` to avoid running unit tests in the same package
+
+.PHONY: benchmark_persistence_state_hash
+## Benchmark the State Hash
+benchmark_persistence_state_hash:
+	go test ${VERBOSE_TEST} -bench=. -run BenchmarkStateHash -count=1 ./persistence/...
 
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library
 benchmark_sortition:
-	go test ${VERBOSE_TEST} ./consensus/leader_election/sortition -bench=.
+	go test ${VERBOSE_TEST} -bench=. -run ^# ./consensus/leader_election/sortition
 
 .PHONY: benchmark_p2p_addrbook
 ## Benchmark all P2P addr book related tests
 benchmark_p2p_addrbook:
-	go test -bench=. -run BenchmarkAddrBook -v -count=1 ./p2p/...
+	go test ${VERBOSE_TEST} -bench=. -run BenchmarkAddrBook -count=1 ./p2p/...
 
 ### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
 # TODO          - General Purpose catch-all.

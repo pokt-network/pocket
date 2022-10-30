@@ -66,7 +66,7 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 
 	appHash, err = u.Context.UpdateAppHash()
 	if err != nil {
-		log.Fatalf("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
+		log.Fatalf("Updating the app hash failed. TODO: Look into roll-backing the entire commit...", err)
 		return nil, nil, typesUtil.ErrAppHash(err)
 	}
 

@@ -89,8 +89,10 @@ func (store *badgerKVStore) Get(key []byte) ([]byte, error) {
 }
 
 func (store *badgerKVStore) Delete(key []byte) error {
-	log.Fatalf("badgerKVStore.Delete not implemented yet")
-	return nil
+	tx := store.db.NewTransaction(true)
+	defer tx.Discard()
+
+	return tx.Delete(key)
 }
 
 func (store *badgerKVStore) GetAll(prefix []byte, descending bool) (values [][]byte, err error) {

@@ -3,7 +3,6 @@ package test
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"math/rand"
 	"strconv"
 	"testing"
 
@@ -77,40 +76,33 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 			MessageType:   "TODO",
 		}
 
-		// txResult := mockTxResult(t, height, txBz)
 		err = db.StoreTransaction(modules.TxResult(&txResult))
 		require.NoError(t, err)
 
-		// Update & commit the state hash
+		// Update the state hash
 		appHash, err := db.UpdateAppHash()
 		require.NoError(t, err)
 		require.Equal(t, expectedAppHash, hex.EncodeToString(appHash))
 
+		// Commit the transactions above
 		err = db.Commit([]byte("TODOproposer"), []byte("TODOquorumCert"))
 		require.NoError(t, err)
 
-		// Verify the block contents
+		// Retrieve the block
 		blockBz, err := testPersistenceMod.GetBlockStore().Get(heightBz)
 		require.NoError(t, err)
 
+		// Verify the block contents
 		var block types.Block
 		err = codec.GetCodec().Unmarshal(blockBz, &block)
 		require.NoError(t, err)
 		require.Len(t, block.Transactions, 1)
-		// require.Equal(t, txResult.GetTx(), block.Transactions[0])
-		require.Equal(t, expectedAppHash, block.Hash) // block
+		require.Equal(t, txResult.GetTx(), block.Transactions[0])
+		require.Equal(t, expectedAppHash, block.Hash) // verify block hash
 		if i > 0 {
-			require.Equal(t, encodedAppHash[i-1], block.PrevHash) // chain
+			require.Equal(t, encodedAppHash[i-1], block.PrevHash) // verify chain chain
 		}
-
 	}
-}
-
-func getTxBytes(seed, size int64) []byte {
-	rand.Seed(seed)
-	bz := make([]byte, size)
-	rand.Read(bz)
-	return bz
 }
 
 func heightToBytes(height int64) []byte {
