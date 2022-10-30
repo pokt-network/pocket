@@ -1,6 +1,7 @@
 package utility
 
 import (
+	"log"
 	"math/big"
 
 	"github.com/pokt-network/pocket/shared/modules"
@@ -63,10 +64,9 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 		return nil, nil, err
 	}
 
-	// DISCUSS_IN_THIS_COMMIT: What if everything above succeeded but updating the app hash failed?
 	appHash, err = u.Context.UpdateAppHash()
 	if err != nil {
-		// TODO: Rollback the entire block
+		log.Fatalf("Updating the app hash failed. TODO: Look into roll-backing the entire commit...")
 		return nil, nil, typesUtil.ErrAppHash(err)
 	}
 

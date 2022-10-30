@@ -80,6 +80,14 @@ func SelectPools(height int64, tableName string) string {
        `, tableName, height)
 }
 
+func GetAccountsUpdatedAtHeightQuery(height int64) string {
+	return SelectAtHeight(AllColsSelector, height, AccountTableName)
+}
+
+func GetPoolsUpdatedAtHeightQuery(height int64) string {
+	return SelectAtHeight(AllColsSelector, height, PoolTableName)
+}
+
 func ClearAllAccounts() string {
 	return fmt.Sprintf(`DELETE FROM %s`, AccountTableName)
 }

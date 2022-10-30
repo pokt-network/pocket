@@ -14,8 +14,12 @@ import (
 
 type MerkleTree float64
 
-// A list of Merkle Trees used to maintain the state hash
+// A list of Merkle Trees used to maintain the state hash.
 const (
+	// VERY IMPORTANT: The order in which these trees are defined is important and strict. It implicitly
+	// defines the index of the the root hash each independent as they are concatenated together
+	// to generate the state hash.
+
 	// Actor Merkle Trees
 	appMerkleTree MerkleTree = iota
 	valMerkleTree
@@ -30,8 +34,9 @@ const (
 	blocksMerkleTree
 	paramsMerkleTree
 	flagsMerkleTree
+	// txMerkleTree ??
 
-	// Used for iteration purposes only - see https://stackoverflow.com/a/64178235/768439
+	// Used for iteration purposes only; see https://stackoverflow.com/a/64178235/768439 as a reference
 	numMerkleTrees
 )
 
@@ -42,18 +47,18 @@ var actorTypeToMerkleTreeName map[types.ActorType]MerkleTree = map[types.ActorTy
 	types.ActorType_Node: serviceNodeMerkleTree,
 }
 
-var merkleTreeToActorTypeName map[MerkleTree]types.ActorType = map[MerkleTree]types.ActorType{
-	appMerkleTree:         types.ActorType_App,
-	valMerkleTree:         types.ActorType_Val,
-	fishMerkleTree:        types.ActorType_Fish,
-	serviceNodeMerkleTree: types.ActorType_Node,
-}
-
 var actorTypeToSchemaName map[types.ActorType]types.ProtocolActorSchema = map[types.ActorType]types.ProtocolActorSchema{
 	types.ActorType_App:  types.ApplicationActor,
 	types.ActorType_Val:  types.ValidatorActor,
 	types.ActorType_Fish: types.FishermanActor,
 	types.ActorType_Node: types.ServiceNodeActor,
+}
+
+var merkleTreeToActorTypeName map[MerkleTree]types.ActorType = map[MerkleTree]types.ActorType{
+	appMerkleTree:         types.ActorType_App,
+	valMerkleTree:         types.ActorType_Val,
+	fishMerkleTree:        types.ActorType_Fish,
+	serviceNodeMerkleTree: types.ActorType_Node,
 }
 
 func newMerkleTrees() (map[MerkleTree]*smt.SparseMerkleTree, error) {
@@ -77,6 +82,7 @@ func (p *PostgresContext) updateStateHash() error {
 	// Update all the merkle trees
 	for treeType := MerkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {
+		// Actor Merkle Trees
 		case appMerkleTree:
 			fallthrough
 		case valMerkleTree:
@@ -88,25 +94,31 @@ func (p *PostgresContext) updateStateHash() error {
 			if !ok {
 				return fmt.Errorf("no actor type found for merkle tree: %v\n", treeType)
 			}
-			actors, err := p.getActorsUpdatedAtHeight(actorType, p.Height)
-			if err != nil {
+			if err := p.updateActorsTree(actorType, p.Height); err != nil {
 				return err
 			}
-			if err != p.updateActorsTree(actorType, actors) {
-				return err
-			}
+
+		// Account Merkle Trees
 		case accountMerkleTree:
-			fallthrough
+			if err := p.updateAccountTrees(false, p.Height); err != nil {
+				return err
+			}
 		case poolMerkleTree:
-			fallthrough
+			if err := p.updateAccountTrees(true, p.Height); err != nil {
+				return err
+			}
+
+		// Data Merkle Trees
 		case blocksMerkleTree:
-			fallthrough
+			p.updateBlockTree(p.Height)
 		case paramsMerkleTree:
-			fallthrough
+			log.Printf("TODO: merkle tree not implemented yet. Merkle tree #{%v}\n", treeType)
 		case flagsMerkleTree:
-			// log.Println("TODO: merkle tree not implemented", treeType)
+			log.Printf("TODO: merkle tree not implemented yet. Merkle tree #{%v}\n", treeType)
+
+		// Default
 		default:
-			log.Fatalln("Not handled yet in state commitment update", treeType)
+			log.Fatalf("Not handled yet in state commitment update. Merkle tree #{%v}\n", treeType)
 		}
 	}
 
@@ -116,13 +128,6 @@ func (p *PostgresContext) updateStateHash() error {
 		roots = append(roots, p.merkleTrees[treeType].Root())
 	}
 
-	// DISCUSS(drewsky): In #152, we discussed the ordering of the roots
-	// 	Strict Ordering: sha3(app_tree_root + fish_tree_root + service_node_tree_root + validator_tree_root)
-	// 	Value Ordering sha3(app_tree_root <= + fish_tree_root <= + service_node_tree_root <= + validator_tree_root)
-	// If we don't do the lexographic ordering below, then it follows the string ordering of
-	// the merkle trees declared above. I have a feeling you're not a fan of this solution, but curious
-	// to hear your thoughts.
-
 	// Get the state hash
 	rootsConcat := bytes.Join(roots, []byte{})
 	stateHash := sha256.Sum256(rootsConcat)
@@ -131,14 +136,21 @@ func (p *PostgresContext) updateStateHash() error {
 	return nil
 }
 
-func (p PostgresContext) updateActorsTree(actorType types.ActorType, actors []*types.Actor) error {
+// Actor Tree Helpers
+
+func (p *PostgresContext) updateActorsTree(actorType types.ActorType, height int64) error {
+	actors, err := p.getActorsUpdatedAtHeight(actorType, height)
+	if err != nil {
+		return err
+	}
+
 	for _, actor := range actors {
 		bzAddr, err := hex.DecodeString(actor.GetAddress())
 		if err != nil {
 			return err
 		}
 
-		appBz, err := proto.Marshal(actor)
+		actorBz, err := proto.Marshal(actor)
 		if err != nil {
 			return err
 		}
@@ -148,7 +160,7 @@ func (p PostgresContext) updateActorsTree(actorType types.ActorType, actors []*t
 			return fmt.Errorf("no merkle tree found for actor type: %s", actorType)
 		}
 
-		if _, err := p.merkleTrees[merkleTreeName].Update(bzAddr, appBz); err != nil {
+		if _, err := p.merkleTrees[merkleTreeName].Update(bzAddr, actorBz); err != nil {
 			return err
 		}
 	}
@@ -156,7 +168,7 @@ func (p PostgresContext) updateActorsTree(actorType types.ActorType, actors []*t
 	return nil
 }
 
-func (p PostgresContext) getActorsUpdatedAtHeight(actorType types.ActorType, height int64) (actors []*types.Actor, err error) {
+func (p *PostgresContext) getActorsUpdatedAtHeight(actorType types.ActorType, height int64) (actors []*types.Actor, err error) {
 	actorSchema, ok := actorTypeToSchemaName[actorType]
 	if !ok {
 		return nil, fmt.Errorf("no schema found for actor type: %s", actorType)
@@ -183,4 +195,49 @@ func (p PostgresContext) getActorsUpdatedAtHeight(actorType types.ActorType, hei
 		actors = append(actors, actor)
 	}
 	return
+}
+
+// Account Tree Helpers
+
+// Helper to update both `Pool` and `Account` Merkle Trees. The use of `isPool` is a bit hacky, but
+// but simplifies the code since Pools are just specialized versions of accounts.
+func (p *PostgresContext) updateAccountTrees(isPool bool, height int64) error {
+	var merkleTreeName MerkleTree
+	var accounts []*types.Account
+	var err error
+
+	if isPool {
+		merkleTreeName = poolMerkleTree
+		accounts, err = p.getPoolsUpdated(height)
+	} else {
+		merkleTreeName = accountMerkleTree
+		accounts, err = p.getAccountsUpdated(height)
+	}
+	if err != nil {
+		return err
+	}
+
+	for _, account := range accounts {
+		bzAddr, err := hex.DecodeString(account.GetAddress())
+		if err != nil {
+			return err
+		}
+
+		accBz, err := proto.Marshal(account)
+		if err != nil {
+			return err
+		}
+
+		if _, err := p.merkleTrees[merkleTreeName].Update(bzAddr, accBz); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Data Tree Helpers
+
+func (p *PostgresContext) updateBlockTree(height int64) {
+
 }
