@@ -71,6 +71,9 @@ This is a general set of steps we have found to help new core team members onboa
 - If you don't need help, **when you’re about 33% of the way done**, show your draft work and get some feedback, so **jump on a call!**
 - Just leave a message in the [#v1-dev](https://discord.com/channels/553741558869131266/986789914379186226) discord channel and someone from the core team will respond.
 
+11. Understanding the foundation of Blockchain Engineering: learning [trade-offs between permissionless and sovereign properties on Blockchain](https://davidphelps.substack.com/p/the-case-for-modular-maxis) and understanding state-of-the-art approaches. (45 mins)
+
+
 ## 🏗️ Technical Foundation
 
 ### Github Development
