@@ -74,7 +74,7 @@ func consensusCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Step",
-			Long:    "Step returns the round in the consensus state",
+			Long:    "Step returns the step in the consensus state",
 			Aliases: []string{"step"},
 			RunE: func(cmd *cobra.Command, args []string) error {
 				response, err := getConsensusRoundState(cmd)
