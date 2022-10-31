@@ -25,6 +25,8 @@ tags:
     description: Liveness of the Pocket API node
   - name: client
     description: Dispatch and relay services
+  - name: consensus
+    description: Consensus related methods
 paths:
   /v1/health:
     get:
@@ -51,6 +53,24 @@ paths:
               schema:
                 type: string
                 example: 1.0.0
+  /v1/consensus/round_state:
+    get:
+      tags:
+        - consensus
+      summary: Gets the current height, round and step
+      responses:
+        default:
+          description: Default response
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/RoundState'
+              example:
+                {
+                  "height": 75016,
+                  "round": 0,
+                  "step": 3
+                }
   /v1/client/broadcast_tx_sync:
     post:
       tags:
@@ -91,6 +111,19 @@ components:
           type: string
         raw_hex_bytes:
           type: string
+    RoundState:
+        type: object
+        required:
+          - height
+          - round
+          - step
+        properties:
+          height:
+            type: integer
+          round:
+            type: integer
+          step:
+            type: integer
   requestBodies: {}
   securitySchemes: {}
   links: {}
