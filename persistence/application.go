@@ -2,8 +2,6 @@ package persistence
 
 import (
 	"encoding/hex"
-	"log"
-
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -13,7 +11,7 @@ func (p PostgresContext) GetAppExists(address []byte, height int64) (exists bool
 }
 
 func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicKey, stakedTokens, maxRelays, outputAddress string, pauseHeight, unstakingHeight int64, chains []string, err error) {
-	actor, err := p.GetActor(types.ApplicationActor, address, height)
+	actor, err := p.getActor(types.ApplicationActor, address, height)
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedAmount
@@ -50,11 +48,11 @@ func (p PostgresContext) UpdateApp(address []byte, maxRelays string, stakedAmoun
 }
 
 func (p PostgresContext) GetAppStakeAmount(height int64, address []byte) (string, error) {
-	return p.GetActorStakeAmount(types.ApplicationActor, address, height)
+	return p.getActorStakeAmount(types.ApplicationActor, address, height)
 }
 
 func (p PostgresContext) SetAppStakeAmount(address []byte, stakeAmount string) error {
-	return p.SetActorStakeAmount(types.ApplicationActor, address, stakeAmount)
+	return p.setActorStakeAmount(types.ApplicationActor, address, stakeAmount)
 }
 
 func (p PostgresContext) GetAppsReadyToUnstake(height int64, _ int32) ([]modules.IUnstakingActor, error) {

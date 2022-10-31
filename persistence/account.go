@@ -17,13 +17,12 @@ const (
 
 // --- Account Functions ---
 
-//
 func (p PostgresContext) GetAccountAmount(address []byte, height int64) (amount string, err error) {
 	return p.getAccountAmountStr(hex.EncodeToString(address), height)
 }
 
 func (p PostgresContext) getAccountAmountStr(address string, height int64) (amount string, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return
 	}
@@ -51,9 +50,10 @@ func (p PostgresContext) SubtractAccountAmount(address []byte, amount string) er
 }
 
 // DISCUSS(team): If we are okay with `GetAccountAmount` return 0 as a default, this function can leverage
-//                `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
+//
+//	`operationAccountAmount` with `*orig = *delta` and make everything much simpler.
 func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (p *PostgresContext) operationAccountAmount(address []byte, deltaAmount str
 
 // TODO(andrew): remove address param
 func (p PostgresContext) InsertPool(name string, address []byte, amount string) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (p PostgresContext) InsertPool(name string, address []byte, amount string) 
 }
 
 func (p PostgresContext) GetPoolAmount(name string, height int64) (amount string, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return
 	}
@@ -119,10 +119,12 @@ func (p PostgresContext) SubtractPoolAmount(name string, amount string) error {
 }
 
 // DISCUSS(team): If we are okay with `GetPoolAmount` return 0 as a default, this function can leverage
-//                `operationPoolAmount` with `*orig = *delta` and make everything much simpler.
+//
+//	`operationPoolAmount` with `*orig = *delta` and make everything much simpler.
+//
 // DISCUSS(team): Do we have a use-case for this function?
 func (p PostgresContext) SetPoolAmount(name string, amount string) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -144,7 +146,7 @@ func (p *PostgresContext) operationPoolOrAccAmount(name, amount string,
 	op func(*big.Int, *big.Int) error,
 	getAmount func(string, int64) (string, error),
 	insert func(name, amount string, height int64) string) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
