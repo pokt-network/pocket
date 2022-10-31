@@ -38,3 +38,12 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 	}
 	return nil
 }
+
+func (s *rpcServer) GetV1ConsensusRoundState(ctx echo.Context) error {
+	consensus := s.bus.GetConsensusModule()
+	return ctx.JSON(200, RoundState{
+		Height: int(consensus.CurrentHeight()),
+		Round:  int(consensus.CurrentRound()),
+		Step:   int(consensus.CurrentStep()),
+	})
+}
