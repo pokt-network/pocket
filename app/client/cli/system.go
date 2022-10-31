@@ -30,6 +30,7 @@ func systemCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
 			Use:     "Health",
+			Short:   "RPC endpoint liveness",
 			Long:    "Performs a simple liveness check on the node RPC endpoint",
 			Aliases: []string{"health"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -53,6 +54,7 @@ func systemCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Version",
+			Short:   "Advertised node software version",
 			Long:    "Queries the node RPC to obtain the version of the software currently running",
 			Aliases: []string{"version"},
 			RunE: func(cmd *cobra.Command, args []string) error {

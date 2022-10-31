@@ -29,7 +29,8 @@ func consensusCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
 			Use:     "RoundState",
-			Long:    "RoundState returns the height, round and step in \"height/round/step\" format",
+			Short:   "Returns \"Height/Round/Step\"",
+			Long:    "RoundState returns the height, round and step in \"Height/Round/Step\" format",
 			Aliases: []string{"round_state"},
 			RunE: func(cmd *cobra.Command, args []string) error {
 				response, err := getConsensusRoundState(cmd)
@@ -44,6 +45,7 @@ func consensusCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Height",
+			Short:   "Returns the Height",
 			Long:    "Height returns the height in the consensus state",
 			Aliases: []string{"height"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -59,6 +61,7 @@ func consensusCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Round",
+			Short:   "Returns the Round",
 			Long:    "Round returns the round in the consensus state",
 			Aliases: []string{"round"},
 			RunE: func(cmd *cobra.Command, args []string) error {
@@ -74,6 +77,7 @@ func consensusCommands() []*cobra.Command {
 		},
 		{
 			Use:     "Step",
+			Short:   "Returns the Step",
 			Long:    "Step returns the step in the consensus state",
 			Aliases: []string{"step"},
 			RunE: func(cmd *cobra.Command, args []string) error {
