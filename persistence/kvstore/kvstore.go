@@ -40,7 +40,7 @@ type badgerKVStore struct {
 }
 
 func NewKVStore(path string) (KVStore, error) {
-	db, err := badger.Open(badger.DefaultOptions(path))
+	db, err := badger.Open(badgerOptions(path))
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func NewKVStore(path string) (KVStore, error) {
 }
 
 func NewMemKVStore() KVStore {
-	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(true))
+	db, err := badger.Open(badgerOptions("").WithInMemory(true))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -155,4 +155,11 @@ func prefixEndBytes(prefix []byte) []byte {
 	copy(end, prefix)
 	end[len(end)-1]++
 	return end
+}
+
+// TODO: Propagate persistence configurations to badger
+func badgerOptions(path string) badger.Options {
+	opts := badger.DefaultOptions(path)
+	opts.Logger = nil // disable badger's logger since it's very noisy
+	return opts
 }

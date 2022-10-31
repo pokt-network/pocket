@@ -2,16 +2,22 @@ package test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
+	"os"
+	"reflect"
 	"testing"
 
+	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 func BenchmarkStateHash(b *testing.B) {
-	b.StopTimer()
+	log.SetOutput(ioutil.Discard)
+	defer log.SetOutput(os.Stderr)
 
 	b.Cleanup(func() {
 		if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
@@ -25,13 +31,10 @@ func BenchmarkStateHash(b *testing.B) {
 		}
 	})
 
-	// number of heights
-	// number of txs per height
-	// number of ops per height
-
+	// Rather than using `b.N` and the `-benchtime` flag, we use a fixed number of iterations
 	testCases := []struct {
-		numHeights     int
-		numTxPerHeight int
+		numHeights     int64
+		numTxPerHeight int64
 	}{
 		{1, 1},
 		{100, 1},
@@ -46,45 +49,50 @@ func BenchmarkStateHash(b *testing.B) {
 		numHeights := testCase.numHeights
 		numTxPerHeight := testCase.numTxPerHeight
 		b.Run(fmt.Sprintf("heights=%d;txPerHeight=%d", numHeights, numTxPerHeight), func(b *testing.B) {
-			for h := 0; h < numHeights; h++ {
-				// addrBook := getAddrBook(nil, n-1)
-				// addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
-				// network := NewRainTreeNetwork(addr, addrBook).(*rainTreeNetwork)
-
-				// peersManagerStateView := network.peersManager.getNetworkView()
-
-				// require.Equal(b, n, len(peersManagerStateView.addrList))
-				// require.Equal(b, n, len(peersManagerStateView.addrBookMap))
-				// require.Equal(b, testCase.numExpectedLevels, int(peersManagerStateView.maxNumLevels))
-
-				// for i := 0; i < numAddressessToBeAdded; i++ {
-				// 	newAddr, err := crypto.GenerateAddress()
-				// 	require.NoError(b, err)
-				// 	network.AddPeerToAddrBook(&types.NetworkPeer{Address: newAddr})
-				// }
-
-				// peersManagerStateView = network.peersManager.getNetworkView()
-
-				// require.Equal(b, n+numAddressessToBeAdded, len(peersManagerStateView.addrList))
-				// require.Equal(b, n+numAddressessToBeAdded, len(peersManagerStateView.addrBookMap))
-
-				// db := NewTestPostgresContext(b, height)
-
-				// err = db.StoreTransaction(modules.TxResult(getRandomTxResult(height)))
-				// require.NoError(t, err)
-
-				// // db.
-
-				// // Update the state hash
-				// appHash, err := db.UpdateAppHash()
-				// require.NoError(t, err)
-				// require.Equal(t, expectedAppHash, hex.EncodeToString(appHash))
-
-				// // Commit the transactions above
-				// err = db.Commit([]byte("TODOproposer"), []byte("TODOquorumCert"))
-				// require.NoError(t, err)
+			for h := int64(0); h < numHeights; h++ {
+				db := NewTestPostgresContext(b, h)
+				helper(db)
+				for i := int64(0); i < numTxPerHeight; i++ {
+					// TODO: Perform a random operation
+					db.StoreTransaction(modules.TxResult(getRandomTxResult(h)))
+				}
+				db.UpdateAppHash()
+				db.Commit([]byte("TODOproposer"), []byte("TODOquorumCert"))
 			}
 		})
+	}
+}
+
+func helper(p *persistence.PostgresContext) {
+	v := reflect.ValueOf(p)
+	// t := reflect.TypeOf(p)
+	for m := 0; m < v.NumMethod(); m++ {
+		var callArgs []reflect.Value
+		method := v.Method(m).Type()
+		// methodName := t.Method(m).Name
+		for i := 0; i < method.NumIn(); i++ {
+			arg := method.In(i)
+			switch arg.Kind() {
+			case reflect.String:
+				v = reflect.ValueOf("123")
+			case reflect.Slice:
+				v = reflect.ValueOf([]byte("abc"))
+			case reflect.Bool:
+				v = reflect.ValueOf(false)
+			case reflect.Uint8:
+				fallthrough
+			case reflect.Int32:
+				fallthrough
+			case reflect.Int64:
+				fallthrough
+			case reflect.Int:
+				v = reflect.ValueOf(0)
+			default:
+				log.Println("OLSH, not supported", arg.Kind())
+			}
+			callArgs = append(callArgs, v)
+		}
+		// fmt.Println(methodName, callArgs)
 	}
 }
 
@@ -106,6 +114,3 @@ func getTxBytes(numBytes int64) []byte {
 	rand.Read(bz)
 	return bz
 }
-
-// Random transactions
-// Update state hash
