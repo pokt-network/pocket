@@ -4,13 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 	"math/big"
 	"math/rand"
-	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -102,21 +101,27 @@ func prepareTxJson(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte, 
 		return nil, err
 	}
 
-	signature, err := pk.Sign(msg.GetCanonicalBytes())
+	tx := &typesUtil.Transaction{
+		Msg:   anyMsg,
+		Nonce: getNonce(),
+	}
+
+	signBytes, err := tx.SignBytes()
 	if err != nil {
 		return nil, err
 	}
 
-	tx := &typesUtil.Transaction{
-		Msg: anyMsg,
-		Signature: &typesUtil.Signature{
-			Signature: signature,
-			PublicKey: pk.PublicKey().Bytes(),
-		},
-		Nonce: getNonce(),
+	signature, err := pk.Sign(signBytes)
+	if err != nil {
+		return nil, err
 	}
 
-	j, err := json.Marshal(tx)
+	tx.Signature = &typesUtil.Signature{
+		Signature: signature,
+		PublicKey: pk.PublicKey().Bytes(),
+	}
+
+	j, err := codec.GetCodec().Marshal(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -124,17 +129,17 @@ func prepareTxJson(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte, 
 }
 
 // postRawTx posts a signed transaction
-func postRawTx(ctx context.Context, pk crypto.Ed25519PrivateKey, j []byte) (*http.Response, error) {
-	client, err := rpc.NewClient(remoteCLIURL)
+func postRawTx(ctx context.Context, pk crypto.Ed25519PrivateKey, j []byte) (*rpc.PostV1ClientBroadcastTxSyncResponse, error) {
+	client, err := rpc.NewClientWithResponses(remoteCLIURL)
 	if err != nil {
 		return nil, err
 	}
 	req := rpc.RawTXRequest{
 		Address:     pk.Address().String(),
-		RawHexBytes: string(j),
+		RawHexBytes: hex.EncodeToString(j),
 	}
 
-	resp, err := client.PostV1ClientBroadcastTxSync(ctx, req)
+	resp, err := client.PostV1ClientBroadcastTxSyncWithResponse(ctx, req)
 	if err != nil {
 		return nil, err
 	}
