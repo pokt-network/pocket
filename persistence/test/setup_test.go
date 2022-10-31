@@ -87,7 +87,8 @@ func NewTestPostgresContext[T testing.T | testing.B | testing.F](t *T, height in
 			log.Fatalf("Error releasing write context: %v\n", err)
 		}
 		if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+			// Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+			Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
 		}); err != nil {
 			log.Fatalf("Error clearing state: %v\n", err)
@@ -123,7 +124,15 @@ func fuzzSingleProtocolActor(
 	f *testing.F,
 	newTestActor func() (*types.Actor, error),
 	getTestActor func(db *persistence.PostgresContext, address string) (*types.Actor, error),
-	protocolActorSchema types.ProtocolActorSchema) {
+	protocolActorSchema types.ProtocolActorSchema,
+) {
+	// Clear the genesis state.
+	if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
+		Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+		Message: nil,
+	}); err != nil {
+		log.Fatalf("Error clearing state: %v\n", err)
+	}
 
 	db := NewTestPostgresContext(f, 0)
 

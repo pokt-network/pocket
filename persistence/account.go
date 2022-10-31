@@ -167,7 +167,7 @@ func (p *PostgresContext) getPoolOrAccUpdatedInternal(query string) (accounts []
 	for rows.Next() {
 		account := new(types.Account)
 		var height int64
-		if err = rows.Scan(&account.Address, &account.Amount, height); err != nil {
+		if err = rows.Scan(&account.Address, &account.Amount, &height); err != nil {
 			return nil, err
 		}
 		accounts = append(accounts, account)

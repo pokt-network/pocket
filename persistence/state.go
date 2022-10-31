@@ -103,11 +103,11 @@ func (p *PostgresContext) updateStateHash() error {
 
 		// Account Merkle Trees
 		case accountMerkleTree:
-			if err := p.updateAccountTrees(false, p.Height); err != nil {
+			if err := p.updateAccountTrees(p.Height); err != nil {
 				return err
 			}
 		case poolMerkleTree:
-			if err := p.updateAccountTrees(true, p.Height); err != nil {
+			if err := p.updatePoolTrees(p.Height); err != nil {
 				return err
 			}
 
@@ -202,20 +202,8 @@ func (p *PostgresContext) getActorsUpdatedAtHeight(actorType types.ActorType, he
 
 // Account Tree Helpers
 
-// Helper to update both `Pool` and `Account` Merkle Trees. The use of `isPool` is a bit hacky, but
-// but simplifies the code since Pools are just specialized versions of accounts.
-func (p *PostgresContext) updateAccountTrees(isPool bool, height int64) error {
-	var merkleTreeName MerkleTree
-	var accounts []*types.Account
-	var err error
-
-	if isPool {
-		merkleTreeName = poolMerkleTree
-		accounts, err = p.getPoolsUpdated(height)
-	} else {
-		merkleTreeName = accountMerkleTree
-		accounts, err = p.getAccountsUpdated(height)
-	}
+func (p *PostgresContext) updateAccountTrees(height int64) error {
+	accounts, err := p.getAccountsUpdated(height)
 	if err != nil {
 		return err
 	}
@@ -231,7 +219,28 @@ func (p *PostgresContext) updateAccountTrees(isPool bool, height int64) error {
 			return err
 		}
 
-		if _, err := p.merkleTrees[merkleTreeName].Update(bzAddr, accBz); err != nil {
+		if _, err := p.merkleTrees[accountMerkleTree].Update(bzAddr, accBz); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (p *PostgresContext) updatePoolTrees(height int64) error {
+	pools, err := p.getPoolsUpdated(height)
+	if err != nil {
+		return err
+	}
+
+	for _, pool := range pools {
+		bzAddr := []byte(pool.GetAddress())
+		accBz, err := proto.Marshal(pool)
+		if err != nil {
+			return err
+		}
+
+		if _, err := p.merkleTrees[poolMerkleTree].Update(bzAddr, accBz); err != nil {
 			return err
 		}
 	}
