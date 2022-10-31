@@ -9,5 +9,5 @@ message Block {
     string prevHash = 3;
     bytes proposerAddress = 4;
     bytes quorumCertificate = 5;
-    repeated bytes transactions = 6; // DISCUSS_IN_THIS_COMMIT(drewskey): Just one hash here?
+    repeated bytes transactions = 6; // DISCUSS_IN_THIS_COMMIT: If we can save all the transactions here, why do we need a separate tx trie?
 }

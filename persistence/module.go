@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/celestiaorg/smt"
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
@@ -31,12 +30,10 @@ type persistenceModule struct {
 
 	blockStore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
+	stateTrees *stateTrees
 
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	writeContext *PostgresContext // only one write context is allowed at a time
-
-	// Merkle trees
-	trees map[MerkleTree]*smt.SparseMerkleTree
 }
 
 const (
@@ -72,6 +69,7 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 	}
 	conn.Close(context.TODO())
 
+	// TODO: Follow the same pattern as txIndexer below for initializing the blockStore
 	blockStore, err := initializeBlockStore(persistenceCfg.GetBlockStorePath())
 	if err != nil {
 		return nil, err
@@ -82,22 +80,22 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 		return nil, err
 	}
 
+	stateTrees, err := newStateTrees(persistenceCfg.GetTreesStoreDir())
+	if err != nil {
+		return nil, err
+	}
+
 	m = &persistenceModule{
 		bus:          nil,
 		config:       persistenceCfg,
 		genesisState: persistenceGenesis,
-		blockStore:   blockStore,
-		txIndexer:    txIndexer,
-		writeContext: nil,
-		trees:        make(map[MerkleTree]*smt.SparseMerkleTree),
-	}
 
-	// TODO_IN_THIS_COMMIT: load trees from state
-	trees, err := newMerkleTrees()
-	if err != nil {
-		return nil, err
+		blockStore: blockStore,
+		txIndexer:  txIndexer,
+		stateTrees: stateTrees,
+
+		writeContext: nil,
 	}
-	m.trees = trees
 
 	// Determine if we should hydrate the genesis db or use the current state of the DB attached
 	if shouldHydrateGenesis, err := m.shouldHydrateGenesisDb(); err != nil {
@@ -169,13 +167,13 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		conn:   conn,
 		tx:     tx,
 
-		// TODO_IN_THIS_COMMIT: Does this tate need to be maintained?
+		// TODO(#315): Shouldn't be necessary anymore
 		currentStateHash: make([]byte, 0),
 
 		// TODO_IN_THIS_COMMIT: Can we access these via the bus?
-		blockStore:  m.blockStore,
-		merkleTrees: m.trees,
-		txIndexer:   m.txIndexer,
+		blockStore: m.blockStore,
+		txIndexer:  m.txIndexer,
+		stateTrees: m.stateTrees,
 	}
 
 	return m.writeContext, nil

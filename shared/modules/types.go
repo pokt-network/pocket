@@ -45,6 +45,7 @@ type PersistenceConfig interface {
 	GetNodeSchema() string
 	GetBlockStorePath() string
 	GetTxIndexerPath() string
+	GetTreesStoreDir() string
 }
 
 type P2PConfig interface {

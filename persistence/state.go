@@ -13,7 +13,11 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type MerkleTree float64
+type merkleTree float64
+
+type stateTrees struct {
+	merkleTrees map[merkleTree]*smt.SparseMerkleTree
+}
 
 // A list of Merkle Trees used to maintain the state hash.
 const (
@@ -22,7 +26,7 @@ const (
 	// to generate the state hash.
 
 	// Actor Merkle Trees
-	appMerkleTree MerkleTree = iota
+	appMerkleTree merkleTree = iota
 	valMerkleTree
 	fishMerkleTree
 	serviceNodeMerkleTree
@@ -41,7 +45,21 @@ const (
 	numMerkleTrees
 )
 
-var actorTypeToMerkleTreeName map[types.ActorType]MerkleTree = map[types.ActorType]MerkleTree{
+var merkleTreeToString = map[merkleTree]string{
+	appMerkleTree:         "app",
+	valMerkleTree:         "val",
+	fishMerkleTree:        "fish",
+	serviceNodeMerkleTree: "serviceNode",
+
+	accountMerkleTree: "account",
+	poolMerkleTree:    "pool",
+
+	blocksMerkleTree: "blocks",
+	paramsMerkleTree: "params",
+	flagsMerkleTree:  "flags",
+}
+
+var actorTypeToMerkleTreeName map[types.ActorType]merkleTree = map[types.ActorType]merkleTree{
 	types.ActorType_App:  appMerkleTree,
 	types.ActorType_Val:  valMerkleTree,
 	types.ActorType_Fish: fishMerkleTree,
@@ -55,35 +73,56 @@ var actorTypeToSchemaName map[types.ActorType]types.ProtocolActorSchema = map[ty
 	types.ActorType_Node: types.ServiceNodeActor,
 }
 
-var merkleTreeToActorTypeName map[MerkleTree]types.ActorType = map[MerkleTree]types.ActorType{
+var merkleTreeToActorTypeName map[merkleTree]types.ActorType = map[merkleTree]types.ActorType{
 	appMerkleTree:         types.ActorType_App,
 	valMerkleTree:         types.ActorType_Val,
 	fishMerkleTree:        types.ActorType_Fish,
 	serviceNodeMerkleTree: types.ActorType_Node,
 }
 
-func newMerkleTrees() (map[MerkleTree]*smt.SparseMerkleTree, error) {
-	trees := make(map[MerkleTree]*smt.SparseMerkleTree, int(numMerkleTrees))
-
-	for treeType := MerkleTree(0); treeType < numMerkleTrees; treeType++ {
-		// TODO_IN_THIS_COMMIT: Rather than using `NewSimpleMap`, use a disk based key-value store
-		// nodeStore := smt.NewSimpleMap()
-		// valueStore := smt.NewSimpleMap()
-		nodeStore := kvstore.NewMemKVStore()
-		valueStore := kvstore.NewMemKVStore()
-
-		trees[treeType] = smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
+func newStateTrees(treesStoreDir string) (*stateTrees, error) {
+	if treesStoreDir == "" {
+		return newMemStateTrees()
 	}
-	return trees, nil
+
+	stateTrees := &stateTrees{
+		merkleTrees: make(map[merkleTree]*smt.SparseMerkleTree, int(numMerkleTrees)),
+	}
+
+	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
+		nodeStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_nodes", treesStoreDir, merkleTreeToString[tree]))
+		if err != nil {
+			return nil, err
+		}
+		valueStore, err := kvstore.NewKVStore(fmt.Sprintf("%s/%s_values", treesStoreDir, merkleTreeToString[tree]))
+		if err != nil {
+			return nil, err
+		}
+		stateTrees.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
+	}
+	return stateTrees, nil
 }
 
-func loadMerkleTrees(map[MerkleTree]*smt.SparseMerkleTree, error) {
-	log.Fatalf("TODO: loadMerkleTrees not implemented yet")
+func newMemStateTrees() (*stateTrees, error) {
+	stateTrees := &stateTrees{
+		merkleTrees: make(map[merkleTree]*smt.SparseMerkleTree, int(numMerkleTrees)),
+	}
+	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
+		// For testing, `smt.NewSimpleMap()` can be used as well
+		nodeStore := kvstore.NewMemKVStore()
+		valueStore := kvstore.NewMemKVStore()
+		stateTrees.merkleTrees[tree] = smt.NewSparseMerkleTree(nodeStore, valueStore, sha256.New())
+	}
+	return stateTrees, nil
+}
+
+func (s *stateTrees) getTree(tree merkleTree) *smt.SparseMerkleTree {
+	return s.merkleTrees[tree]
 }
 
 func (p *PostgresContext) updateStateHash() error {
 	// Update all the merkle trees
-	for treeType := MerkleTree(0); treeType < numMerkleTrees; treeType++ {
+	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {
 		// Actor Merkle Trees
 		case appMerkleTree:
@@ -127,8 +166,8 @@ func (p *PostgresContext) updateStateHash() error {
 
 	// Get the root of each Merkle Tree
 	roots := make([][]byte, 0)
-	for treeType := MerkleTree(0); treeType < numMerkleTrees; treeType++ {
-		roots = append(roots, p.merkleTrees[treeType].Root())
+	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
+		roots = append(roots, p.stateTrees.getTree(treeType).Root())
 	}
 
 	// Get the state hash
@@ -163,7 +202,7 @@ func (p *PostgresContext) updateActorsTree(actorType types.ActorType, height int
 			return fmt.Errorf("no merkle tree found for actor type: %s", actorType)
 		}
 
-		if _, err := p.merkleTrees[merkleTreeName].Update(bzAddr, actorBz); err != nil {
+		if _, err := p.stateTrees.getTree(merkleTreeName).Update(bzAddr, actorBz); err != nil {
 			return err
 		}
 	}
@@ -219,7 +258,7 @@ func (p *PostgresContext) updateAccountTrees(height int64) error {
 			return err
 		}
 
-		if _, err := p.merkleTrees[accountMerkleTree].Update(bzAddr, accBz); err != nil {
+		if _, err := p.stateTrees.getTree(accountMerkleTree).Update(bzAddr, accBz); err != nil {
 			return err
 		}
 	}
@@ -240,7 +279,7 @@ func (p *PostgresContext) updatePoolTrees(height int64) error {
 			return err
 		}
 
-		if _, err := p.merkleTrees[poolMerkleTree].Update(bzAddr, accBz); err != nil {
+		if _, err := p.stateTrees.getTree(poolMerkleTree).Update(bzAddr, accBz); err != nil {
 			return err
 		}
 	}

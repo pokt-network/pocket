@@ -9,7 +9,7 @@ import (
 )
 
 type UtilityContext struct {
-	// TODO_IN_THIS_COMMIT(#315): Should be removed before this is commited.
+	// TODO(#315): Should be removed by #315 before this is even done.
 	LatestHeight    int64
 	currentProposer []byte
 
@@ -21,7 +21,7 @@ type UtilityContext struct {
 type Context struct {
 	// CLEANUP: Since `Context` embeds `PersistenceRWContext`, we don't need to do `u.Context.PersistenceRWContext`, but can call `u.Context` directly
 	modules.PersistenceRWContext
-	// TODO: `SavePoints`` have not been implemented yet
+	// TODO(#327): `SavePoints`` have not been implemented yet
 	SavePointsM map[string]struct{}
 	SavePoints  [][]byte
 }

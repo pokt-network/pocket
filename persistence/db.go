@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/celestiaorg/smt"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/indexer"
@@ -50,12 +49,13 @@ type PostgresContext struct {
 	conn   *pgx.Conn
 	tx     pgx.Tx
 
-	txIndexer        indexer.TxIndexer
+	// TODO(#315): Should be
 	currentStateHash []byte
 
-	// REFACTOR: Access `blockStore` and `merkleTree` from the persistence module via bus.
-	blockStore  kvstore.KVStore
-	merkleTrees map[MerkleTree]*smt.SparseMerkleTree
+	// REFACTOR_IN_THIS_COMMIT: Access `blockStore` and `merkleTree` from the persistence module via bus.
+	blockStore kvstore.KVStore
+	txIndexer  indexer.TxIndexer
+	stateTrees *stateTrees
 }
 
 func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {

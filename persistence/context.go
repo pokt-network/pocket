@@ -24,7 +24,8 @@ func (p *PostgresContext) UpdateAppHash() ([]byte, error) {
 	return p.currentStateHash, nil
 }
 
-// TODO_IN_THIS_COMMIT: Make sure that `prepareBlock`, `insertBlock`, and `storeBlock` are all atomic.
+// TODO(#327): When implementing save points and rollbacks, make sure that `prepareBlock`,
+// `insertBlock`, and `storeBlock` are all atomic.
 func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
 

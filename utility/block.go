@@ -37,10 +37,10 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 		if err := tx.ValidateBasic(); err != nil {
 			return nil, nil, err
 		}
+		// DISCUSS(#315): Currently, the pattern is allowing nil err with an error transaction...
+		//                Should we terminate applyBlock immediately if there's an invalid transaction?
+		//                Or wait until the entire lifecycle is over to evaluate an 'invalid' block
 		// Validate and apply the transaction to the Postgres database
-		// DISCUSS_IN_THIS_COMMIT(#315): currently, the pattern is allowing nil err with an error transaction...
-		//                               Should we terminate applyBlock immediately if there's an invalid transaction?
-		//                               Or wait until the entire lifecycle is over to evaluate an 'invalid' block
 		txResult, err := u.ApplyTransaction(index, tx)
 		if err != nil {
 			return nil, nil, err

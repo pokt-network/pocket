@@ -88,6 +88,7 @@ func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.Persiste
 	mockPersistenceConfig.EXPECT().GetNodeSchema().Return(testSchema).AnyTimes()
 	mockPersistenceConfig.EXPECT().GetBlockStorePath().Return("").AnyTimes()
 	mockPersistenceConfig.EXPECT().GetTxIndexerPath().Return("").AnyTimes()
+	mockPersistenceConfig.EXPECT().GetTreesStoreDir().Return("").AnyTimes()
 
 	mockRuntimeConfig := mock_modules.NewMockConfig(ctrl)
 	mockRuntimeConfig.EXPECT().GetPersistenceConfig().Return(mockPersistenceConfig).AnyTimes()
