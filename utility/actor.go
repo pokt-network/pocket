@@ -427,7 +427,7 @@ func (u *UtilityContext) BurnActor(actorType typesUtil.ActorType, percentage int
 	if err := u.SubPoolAmount(typesUtil.PoolNames_ValidatorStakePool.String(), typesUtil.BigIntToString(truncatedTokens)); err != nil {
 		return err
 	}
-	// remove from validator
+	// remove from actor
 	if err := u.SetActorStakedTokens(actorType, newTokensAfterBurn, address); err != nil {
 		return err
 	}
@@ -516,6 +516,11 @@ func (u *UtilityContext) CheckBelowMaxChains(actorType typesUtil.ActorType, chai
 		return typesUtil.ErrMaxChains(maxChains)
 	}
 	return nil
+}
+
+func (u *UtilityContext) GetLastBlockByzantineValidators() ([][]byte, error) {
+	// TODO: Need to retrieve byzantine validators from the persistence module
+	return nil, nil
 }
 
 func (u *UtilityContext) CalculateUnstakingHeight(unstakingBlocks int64) (int64, typesUtil.Error) {

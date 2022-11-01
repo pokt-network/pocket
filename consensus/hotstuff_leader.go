@@ -2,7 +2,7 @@ package consensus
 
 import (
 	"encoding/hex"
-	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/shared/codec"
 	"unsafe"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
@@ -54,27 +54,24 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// TODO: Add more unit tests for these checks...
 	if m.shouldPrepareNewBlock(highPrepareQC) {
 		// Leader prepares a new block if `highPrepareQC` is not applicable
-		block, txResults, err := m.prepareAndApplyBlock()
+		block, err := m.prepareAndApplyBlock()
 		if err != nil {
 			m.nodeLogError(typesCons.ErrPrepareBlock.Error(), err)
 			m.paceMaker.InterruptRound()
 			return
 		}
 		m.Block = block
-		m.TxResults = txResults
 	} else {
 		// DISCUSS: Do we need to call `validateProposal` here?
 		// Leader acts like a replica if `highPrepareQC` is not `nil`
 		// TODO(olshansky): Add test to make sure same block is not applied twice if round is interrrupted.
 		// been 'Applied'
-		txResults, err := m.applyBlock(highPrepareQC.Block)
-		if err != nil {
+		if err := m.applyBlock(highPrepareQC.Block); err != nil {
 			m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
 			m.paceMaker.InterruptRound()
 			return
 		}
 		m.Block = highPrepareQC.Block
-		m.TxResults = txResults
 	}
 
 	m.Step = Prepare
@@ -337,28 +334,23 @@ func (m *consensusModule) tempIndexHotstuffMessage(msg *typesCons.HotstuffMessag
 
 // This is a helper function intended to be called by a leader/validator during a view change
 // to prepare a new block that is applied to the new underlying context.
-func (m *consensusModule) prepareAndApplyBlock() (*typesCons.Block, []modules.TxResult, error) {
+func (m *consensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
 	if m.isReplica() {
-		return nil, nil, typesCons.ErrReplicaPrepareBlock
+		return nil, typesCons.ErrReplicaPrepareBlock
 	}
 
 	// TECHDEBT: Retrieve this from consensus consensus config
 	maxTxBytes := 90000
 
-	// TECHDEBT: Retrieve this from persistence
-	lastByzValidators := make([][]byte, 0)
-
 	// Reap the mempool for transactions to be applied in this block
-	txs, _, err := m.utilityContext.GetProposalTransactions(m.privateKey.Address(), maxTxBytes, lastByzValidators)
+	appHash, txs, err := m.utilityContext.CreateAndApplyBlock(m.privateKey.Address(), maxTxBytes)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	// OPTIMIZE: Determine if we can avoid the `ApplyBlock` call here
-	// Apply all the transactions in the block
-	appHash, txResults, err := m.utilityContext.ApplyBlock(int64(m.Height), m.privateKey.Address(), txs, lastByzValidators)
+	lastAppHash, err := m.utilityContext.GetPersistenceContext().GetLastAppHash()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Construct the block
@@ -366,7 +358,7 @@ func (m *consensusModule) prepareAndApplyBlock() (*typesCons.Block, []modules.Tx
 		Height:            int64(m.Height),
 		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            uint32(len(txs)),
-		LastBlockHash:     m.lastAppHash,
+		LastBlockHash:     lastAppHash, // IMRPROVE: this should be a block hash not the appHash
 		ProposerAddress:   m.privateKey.Address().Bytes(),
 		QuorumCertificate: []byte("HACK: Temporary placeholder"),
 	}
@@ -375,7 +367,18 @@ func (m *consensusModule) prepareAndApplyBlock() (*typesCons.Block, []modules.Tx
 		Transactions: txs,
 	}
 
-	return block, txResults, nil
+	cdc := codec.GetCodec()
+	blockProtoBz, err := cdc.Marshal(block)
+	if err != nil {
+		return nil, err
+	}
+	persistenceContext := m.utilityContext.GetPersistenceContext()
+	// Set the proposal block in the persistence context
+	if err = persistenceContext.SetProposalBlock(block.BlockHeader.Hash, blockProtoBz, block.BlockHeader.ProposerAddress, block.BlockHeader.QuorumCertificate, block.Transactions); err != nil {
+		return nil, err
+	}
+
+	return block, nil
 }
 
 // Return true if this node, the leader, should prepare a new block

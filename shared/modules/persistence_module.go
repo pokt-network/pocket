@@ -55,15 +55,12 @@ type PersistenceWriteContext interface {
 	// Block Operations
 
 	// Indexer Operations
-	// TODO(#315): Change `txResult TxResult` to `txBytes []byte`
-	StoreTransaction(txResult TxResult) error
+	StoreTransactions() error
 
 	// Block Operations
-	// TEMPORARY: Including two functions for the SQL and KV Store as an interim solution
-	//                 until we include the schema as part of the SQL Store because persistence
-	//                 currently has no access to the protobuf schema which is the source of truth.
-	StoreBlock(blockProtoBytes []byte) error                                              // Store the block in the KV Store
-	InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error // Writes the block in the SQL database
+	SetLatestTxResults(txResults []TxResult)
+	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr, qc []byte, transactions [][]byte) error
+	StoreBlock() error // Store the block into persistence
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error
@@ -119,7 +116,6 @@ type PersistenceWriteContext interface {
 	InitFlags() error
 	SetFlag(paramName string, value interface{}, enabled bool) error
 }
-
 type PersistenceReadContext interface {
 	GetHeight() (int64, error)
 
@@ -127,9 +123,14 @@ type PersistenceReadContext interface {
 	Close() error
 
 	// Block Queries
+	GetLastAppHash() (string, error) // app hash from the previous block
 	GetLatestBlockHeight() (uint64, error)
 	GetBlockHash(height int64) ([]byte, error)
 	GetBlocksPerSession(height int64) (int, error)
+	GetLatestProposerAddr() []byte
+	GetLatestBlockProtoBytes() []byte
+	GetLatestBlockHash() string
+	GetLatestBlockTxs() [][]byte
 
 	// Indexer Queries
 	TransactionExists(transactionHash string) (bool, error)
