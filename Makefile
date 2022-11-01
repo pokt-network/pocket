@@ -260,6 +260,11 @@ generate_rpc_openapi: go_oapi-codegen
 	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
 	echo "OpenAPI client and server generated"
 
+## Starts a local Swagger UI instance for the RPC API
+swagger-ui:
+	echo "Attempting to start Swagger UI at http://localhost:8080\n\n"
+	docker run -p 8080:8080 -e SWAGGER_JSON=/v1/openapi.yaml -v $(shell pwd)/rpc/v1:/v1 swaggerapi/swagger-ui
+
 .PHONY: test_all
 ## Run all go unit tests
 test_all: # generate_mocks
