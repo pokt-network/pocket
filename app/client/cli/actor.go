@@ -126,7 +126,8 @@ If no changes are desired for the parameter, just enter the current param value 
 				return err
 			}
 			// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
-			fmt.Println(resp)
+			fmt.Printf("HTTP status code: %d\n", resp.StatusCode())
+			fmt.Println(string(resp.Body))
 
 			return nil
 		},
@@ -180,7 +181,8 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 			// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
-			fmt.Println(resp)
+			fmt.Printf("HTTP status code: %d\n", resp.StatusCode())
+			fmt.Println(string(resp.Body))
 
 			return nil
 		},
@@ -220,7 +222,8 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 			// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
-			fmt.Println(resp)
+			fmt.Printf("HTTP status code: %d\n", resp.StatusCode())
+			fmt.Println(string(resp.Body))
 
 			return nil
 		},
@@ -260,7 +263,8 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 				return err
 			}
 			// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
-			fmt.Println(resp)
+			fmt.Printf("HTTP status code: %d\n", resp.StatusCode())
+			fmt.Println(string(resp.Body))
 
 			return nil
 		},

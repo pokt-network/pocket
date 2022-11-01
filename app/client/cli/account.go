@@ -63,8 +63,10 @@ func accountCommands() []*cobra.Command {
 				if err != nil {
 					return err
 				}
+
 				// DISCUSS(#310): define UX for return values - should we return the raw response or a parsed/human readable response? For now, I am simply printing to stdout
-				fmt.Println(resp)
+				fmt.Printf("HTTP status code: %d\n", resp.StatusCode())
+				fmt.Println(string(resp.Body))
 
 				return nil
 			},
