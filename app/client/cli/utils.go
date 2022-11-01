@@ -91,10 +91,10 @@ func confirmation(pwd string) bool {
 	}
 }
 
-// prepareTxJson wraps a Message into a Transaction and signs it with the provided pk
+// prepareTxBytes wraps a Message into a Transaction and signs it with the provided pk
 //
-// returns the JSON bytes of the signed transaction
-func prepareTxJson(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
+// returns the raw protobuf bytes of the signed transaction
+func prepareTxBytes(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
 	var err error
 	anyMsg, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
@@ -121,11 +121,11 @@ func prepareTxJson(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte, 
 		PublicKey: pk.PublicKey().Bytes(),
 	}
 
-	j, err := codec.GetCodec().Marshal(tx)
+	bz, err := codec.GetCodec().Marshal(tx)
 	if err != nil {
 		return nil, err
 	}
-	return j, nil
+	return bz, nil
 }
 
 // postRawTx posts a signed transaction

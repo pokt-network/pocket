@@ -49,21 +49,21 @@ These are pretty self-explanatory.
 
 #### Payload:
 
-  ```json
-  {
-    "address": "string",
-    "raw_hex_bytes": "string"
-  }
-  ```
+```json
+{
+  "address": "string",
+  "raw_hex_bytes": "string"
+}
+```
 
 - `address`: specifies the address the transaction originates from.
-- `raw_hex_bytes`: hex encoded JSON of a signed transaction.
+- `raw_hex_bytes`: hex encoded raw protobuf bytes of a signed transaction.
 
 #### Return:
 
-  Currently only **OK** (HTTP Status code 200) or **KO** (HTTP Status code 4xx/5xx)
+Currently only **OK** (HTTP Status code 200) or **KO** (HTTP Status code 4xx/5xx)
 
-  This API might be extended to return potentially useful information such as the transaction hash which is known at the moment of submission and can be used to query the blockchain.
+This API might be extended to return potentially useful information such as the transaction hash which is known at the moment of submission and can be used to query the blockchain.
 
 #### What's next?
 
