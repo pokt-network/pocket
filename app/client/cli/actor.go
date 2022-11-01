@@ -74,13 +74,7 @@ func newActorCommands(cmdDef actorCmdDef) []*cobra.Command {
 
 func newStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 	stakeCmd := &cobra.Command{
-		Use:   "Stake",
-		Short: fmt.Sprintf("Stake an actor (%s) in the network.", cmdDef.Name),
-		Long:  fmt.Sprintf("Stake the %s actor into the network, making it available for service.", cmdDef.Name),
-	}
-
-	custodialStakeCmd := &cobra.Command{
-		Use:   "Custodial <fromAddr> <amount> <relayChainIDs> <serviceURI>",
+		Use:   "Stake <fromAddr> <amount> <relayChainIDs> <serviceURI>",
 		Short: "Stake a node in the network. Custodial stake uses the same address as operator/output for rewards/return of staked funds.",
 		Long: `Stake the node into the network, making it available for service.
 Will prompt the user for the <fromAddr> account passphrase. If the node is already staked, this transaction acts as an *update* transaction.
@@ -138,10 +132,6 @@ If no changes are desired for the parameter, just enter the current param value 
 			return nil
 		},
 	}
-
-	stakeCmd.AddCommand(custodialStakeCmd)
-
-	applySubcommandOptions(stakeCmd.Commands(), cmdDef)
 
 	return stakeCmd
 }
