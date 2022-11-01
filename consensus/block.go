@@ -14,10 +14,10 @@ func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
 	}
-
-	if err := m.utilityContext.Release(); err != nil {
-		return err
-	}
+	// TODO_IN_THIS_COMMIT: Should `Commit` implicitly release the context?
+	// if err := m.utilityContext.Release(); err != nil {
+	// 	return err
+	// }
 	m.utilityContext = nil
 
 	m.lastAppHash = block.BlockHeader.Hash
