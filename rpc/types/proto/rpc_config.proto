@@ -8,4 +8,5 @@ message RPCConfig {
   bool enabled = 1;
   string port = 2;
   uint64 timeout = 3;
+  bool use_cors = 4;
 }

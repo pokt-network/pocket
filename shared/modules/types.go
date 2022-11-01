@@ -70,6 +70,7 @@ type RPCConfig interface {
 	GetEnabled() bool
 	GetPort() string
 	GetTimeout() uint64
+	GetUseCors() bool
 }
 
 type PersistenceGenesisState interface {

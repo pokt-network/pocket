@@ -46,8 +46,9 @@ services:
     # Needed for DLV debugging
     security_opt:
       - "seccomp:unconfined"
+    environment:
+      - POCKET_RPC_USE_CORS=true
     # Uncomment to enable DLV debugging
-    # environment:
     #   - DEBUG_PORT=7081
 
   node2.consensus:
