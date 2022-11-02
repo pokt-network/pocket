@@ -43,7 +43,6 @@ type Message interface {
 
 	SetSigner(signer []byte)
 	ValidateBasic() Error
-	// Get the canonical byte representation of the ProtoMsg.
 	GetCanonicalBytes() []byte
 	GetActorType() ActorType
 	GetMessageName() string
