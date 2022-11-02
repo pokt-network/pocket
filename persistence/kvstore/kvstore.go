@@ -9,7 +9,7 @@ import (
 )
 
 type KVStore interface {
-	smt.MapStore
+	smt.MapStore // Get, Set, Delete
 
 	// Lifecycle methods
 	Stop() error
@@ -17,10 +17,14 @@ type KVStore interface {
 	// Accessors
 	// TODO: Add a proper iterator interface
 	// TODO: Add pagination for `GetAll`
-	GetAll(prefixKey []byte, descending bool) ([][]byte, error)
+	GetAll(prefixKey []byte, descending bool) (keys [][]byte, values [][]byte, err error)
 
 	Exists(key []byte) (bool, error)
 	ClearAll() error
+
+	// Get(key []byte) ([]byte, error)     // Get gets the value for a key.
+	// Set(key []byte, value []byte) error // Set updates the value for a key.
+	// Delete(key []byte) error            // Delete deletes a key.
 }
 
 const (
@@ -95,8 +99,9 @@ func (store *badgerKVStore) Delete(key []byte) error {
 	return tx.Delete(key)
 }
 
-func (store *badgerKVStore) GetAll(prefix []byte, descending bool) (values [][]byte, err error) {
+func (store *badgerKVStore) GetAll(prefix []byte, descending bool) (keys [][]byte, values [][]byte, err error) {
 	// INVESTIGATE: research `badger.views` for further improvements and optimizations
+	// Reference https://pkg.go.dev/github.com/dgraph-io/badger#readme-prefix-scans
 	txn := store.db.NewTransaction(false)
 	defer txn.Discard()
 
@@ -109,11 +114,15 @@ func (store *badgerKVStore) GetAll(prefix []byte, descending bool) (values [][]b
 	it := txn.NewIterator(opt)
 	defer it.Close()
 
+	keys = make([][]byte, 0)
+	values = make([][]byte, 0)
+
 	for it.Seek(prefix); it.Valid(); it.Next() {
 		item := it.Item()
 		err = item.Value(func(v []byte) error {
 			b := make([]byte, len(v))
 			copy(b, v)
+			keys = append(keys, item.Key())
 			values = append(values, b)
 			return nil
 		})

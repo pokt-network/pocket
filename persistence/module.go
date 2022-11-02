@@ -97,13 +97,13 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 		writeContext: nil,
 	}
 
+	// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
+	// 		     this forces the genesis state to be reloaded on every node startup until state
+	//           sync is implemented.
 	// Determine if we should hydrate the genesis db or use the current state of the DB attached
 	if shouldHydrateGenesis, err := m.shouldHydrateGenesisDb(); err != nil {
 		return nil, err
 	} else if shouldHydrateGenesis {
-		// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
-		// 		     this forces the genesis state to be reloaded on every node startup until state
-		//           sync is implemented.
 		m.populateGenesisState(persistenceGenesis) // fatal if there's an error
 	} else {
 		log.Println("Loading state from previous state...")
@@ -221,8 +221,8 @@ func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
 	return m.writeContext
 }
 
-// TODO(olshansky): Simplify and externalize the logic for whether genesis should be populated and
-// move the if logic out of this file.
+// HACK(olshansky): Simplify and externalize the logic for whether genesis should be populated and
+//                  move the if logic out of this file.
 func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	checkContext, err := m.NewReadContext(-1)
 	if err != nil {
@@ -230,12 +230,11 @@ func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	}
 	defer checkContext.Close()
 
-	maxHeight, err := checkContext.GetLatestBlockHeight()
-	if err == nil || maxHeight == 0 {
+	_, err = checkContext.GetLatestBlockHeight()
+	if err != nil {
 		return true, nil
 	}
-
-	return m.blockStore.Exists(heightToBytes(int64(maxHeight)))
+	return false, nil
 }
 
 func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {

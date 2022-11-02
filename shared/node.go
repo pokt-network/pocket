@@ -158,6 +158,7 @@ func (node *Node) handleDebugEvent(anyMessage *anypb.Any) error {
 		return err
 	}
 	switch debugMessage.Action {
+	// Consensus Debug
 	case debug.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
 		fallthrough
 	case debug.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
@@ -166,7 +167,10 @@ func (node *Node) handleDebugEvent(anyMessage *anypb.Any) error {
 		fallthrough
 	case debug.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
 		return node.GetBus().GetConsensusModule().HandleDebugMessage(&debugMessage)
+	// Persistence Debug
 	case debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
+		fallthrough
+	case debug.DebugMessageAction_DEBUG_PERSISTENCE_TREE_EXPORT:
 		return node.GetBus().GetPersistenceModule().HandleDebugMessage(&debugMessage)
 	default:
 		log.Printf("Debug message: %s \n", debugMessage.Message)

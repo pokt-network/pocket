@@ -62,9 +62,9 @@ func (m *consensusModule) printNodeState(_ *debug.DebugMessage) {
 func (m *consensusModule) triggerNextView(_ *debug.DebugMessage) {
 	m.nodeLog(typesCons.DebugTriggerNextView)
 
-	currentheight := m.Height
+	currentHeight := m.Height
 	currentStep := m.Step
-	if currentheight == 0 || (currentStep == Decide && m.paceMaker.IsManualMode()) {
+	if currentHeight == 0 || (currentStep == Decide && m.paceMaker.IsManualMode()) {
 		m.paceMaker.NewHeight()
 	} else {
 		m.paceMaker.InterruptRound()

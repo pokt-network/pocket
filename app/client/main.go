@@ -27,6 +27,7 @@ const (
 	PromptTriggerNextView        string = "TriggerNextView"
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
+	PromptExportTrees            string = "ExportTrees"
 
 	defaultConfigPath  = "build/config/config1.json"
 	defaultGenesisPath = "build/config/genesis.json"
@@ -38,6 +39,7 @@ var items = []string{
 	PromptTriggerNextView,
 	PromptTogglePacemakerMode,
 	PromptShowLatestBlockInStore,
+	PromptExportTrees,
 }
 
 // A P2P module is initialized in order to broadcast a message to the local network
@@ -135,6 +137,12 @@ func handleSelect(selection string) {
 	case PromptShowLatestBlockInStore:
 		m := &debug.DebugMessage{
 			Action:  debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
+			Message: nil,
+		}
+		sendDebugMessage(m)
+	case PromptExportTrees:
+		m := &debug.DebugMessage{
+			Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_TREE_EXPORT,
 			Message: nil,
 		}
 		sendDebugMessage(m)

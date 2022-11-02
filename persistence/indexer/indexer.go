@@ -146,7 +146,7 @@ func (indexer *txIndexer) Close() error {
 // kv helper functions
 
 func (indexer *txIndexer) getAll(prefix []byte, descending bool) (result []shared.TxResult, err error) {
-	hashKeys, err := indexer.db.GetAll(prefix, descending)
+	_, hashKeys, err := indexer.db.GetAll(prefix, descending)
 	if err != nil {
 		return nil, err
 	}

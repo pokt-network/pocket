@@ -172,6 +172,11 @@ db_show_schemas: docker_check
 db_admin:
 	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
 
+.PHONY: db_export_trees
+## Helper to export the data in the merkle trees
+db_export_trees:
+	echo "I'm not done yet"
+
 .PHONY: docker_kill_all
 ## Kill all containers started by the docker-compose file
 docker_kill_all: docker_check
@@ -184,6 +189,12 @@ docker_wipe: docker_check prompt_user
 	docker ps -a -q | xargs -r -I {} docker rm {}
 	docker images -q | xargs -r -I {} docker rmi {}
 	docker volume ls -q | xargs -r -I {} docker volume rm {}
+
+.PHONY: docker_wipe_nodes
+## [WARNING] Remove all the node containers
+docker_wipe_nodes: docker_check prompt_user
+	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker stop {}
+	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker rm {}
 
 .PHONY: monitoring_start
 ## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
