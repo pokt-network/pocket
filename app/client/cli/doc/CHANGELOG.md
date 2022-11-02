@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed message signing
 - Reporting RPC StatusCode and body
+- System commands working end-to-end
+- Added Consensus RoundState commands
 
 ## [0.0.1] - 2022-09-09
 
