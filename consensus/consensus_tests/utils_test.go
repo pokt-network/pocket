@@ -398,7 +398,7 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockRPCModu
 	ctrl := gomock.NewController(t)
 	rpcMock := modulesMock.NewMockRPCModule(ctrl)
 	rpcMock.EXPECT().Start().Return(nil).AnyTimes()
-	rpcMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
+	rpcMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 
 	return rpcMock
 }
