@@ -40,7 +40,8 @@ RUN make install_cli_deps
 
 ## Run codegen
 RUN make protogen_local && \
-    make mockgen
+    make mockgen && \
+    make generate_rpc_openapi
 
 RUN go get -d -v ./app/pocket
 RUN go build -o /go/bin/pocket ./app/pocket

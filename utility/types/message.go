@@ -3,10 +3,12 @@ package types
 import (
 	"bytes"
 	"encoding/hex"
+	"log"
 	"net/url"
 	"strconv"
 	"strings"
 
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
 )
@@ -41,6 +43,7 @@ type Message interface {
 
 	SetSigner(signer []byte)
 	ValidateBasic() Error
+	GetCanonicalBytes() []byte
 	GetActorType() ActorType
 	GetMessageName() string
 	GetMessageRecipient() string
@@ -154,6 +157,14 @@ func (msg *MessageSend) SetSigner(signer []byte)            { /*no op*/ }
 func (msg *MessageChangeParameter) SetSigner(signer []byte) { msg.Signer = signer }
 func (x *MessageChangeParameter) GetActorType() ActorType   { return -1 }
 func (x *MessageDoubleSign) GetActorType() ActorType        { return -1 }
+
+func (msg *MessageStake) GetCanonicalBytes() []byte           { return getCanonicalBytes(msg) }
+func (msg *MessageEditStake) GetCanonicalBytes() []byte       { return getCanonicalBytes(msg) }
+func (msg *MessageDoubleSign) GetCanonicalBytes() []byte      { return getCanonicalBytes(msg) }
+func (msg *MessageSend) GetCanonicalBytes() []byte            { return getCanonicalBytes(msg) }
+func (msg *MessageChangeParameter) GetCanonicalBytes() []byte { return getCanonicalBytes(msg) }
+func (msg *MessageUnstake) GetCanonicalBytes() []byte         { return getCanonicalBytes(msg) }
+func (msg *MessageUnpause) GetCanonicalBytes() []byte         { return getCanonicalBytes(msg) }
 
 // helpers
 
@@ -301,4 +312,13 @@ func ValidateStaker(msg MessageStaker) Error {
 		return err
 	}
 	return ValidateServiceUrl(msg.GetActorType(), msg.GetServiceUrl())
+}
+
+func getCanonicalBytes(msg Message) []byte {
+	bz, err := codec.GetCodec().Marshal(msg)
+	if err != nil {
+		log.Fatalf("must marshal %v", err)
+	}
+	// DISCUSS(#142): should we also sort the JSON like in V0?
+	return bz
 }
