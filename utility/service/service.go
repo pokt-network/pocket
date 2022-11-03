@@ -13,7 +13,7 @@ type Relay interface {
 type RelayPayload interface {
 	GetData() string               // the actual data string for the external chain
 	GetMethod() string             // the http CRUD method
-	GetPath() string               // the REST Path
+	GetHTTPPath() string           // the REST Path
 	GetHeaders() map[string]string // http headers
 }
 
@@ -138,7 +138,7 @@ func (r *relay) ReportVolumeMetrics(fishermanServiceURL string, volumeRelays []R
 
 func (r *relay) GetData() string                        { return "" }
 func (r *relay) GetMethod() string                      { return "" }
-func (r *relay) GetPath() string                        { return "" }
+func (r *relay) GetHTTPPath() string                    { return "" }
 func (r *relay) GetHeaders() map[string]string          { return nil }
 func (r *relay) GetBlockHeight() int64                  { return 0 }
 func (r *relay) GetServicerPublicKey() crypto.PublicKey { return nil }
