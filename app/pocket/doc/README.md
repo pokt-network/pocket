@@ -23,7 +23,7 @@ The configuration file provides a structured way for configuring various aspects
 
 Things like "should the RPC server be enabled?", "what port should it be listening to?" are all defined in the config file.
 
-For a detailed overview of all the possible settings, please look `RuntimeMgr` [README.md](../../../runtime/docs/README.md).
+For a detailed overview of all the possible settings, please review `RuntimeMgr` at [README.md](../../../runtime/docs/README.md).
 
 ## Genesis
 
