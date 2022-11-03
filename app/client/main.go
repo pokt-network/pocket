@@ -1,192 +1,42 @@
 package main
 
-// TODO(team): discuss & design the long-term solution to this client.
-
 import (
+	"context"
+	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/pokt-network/pocket/logger"
-	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/shared/debug"
-	"github.com/pokt-network/pocket/telemetry"
-
-	"github.com/manifoldco/promptui"
-	"github.com/pokt-network/pocket/consensus"
-	"github.com/pokt-network/pocket/p2p"
-	"github.com/pokt-network/pocket/shared"
-	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
-	"google.golang.org/protobuf/types/known/anypb"
+	"github.com/pokt-network/pocket/app/client/cli"
 )
-
-// TODO(olshansky): Lowercase variables / constants that do not need to be exported.
-
-const (
-	PromptResetToGenesis         string = "ResetToGenesis"
-	PromptPrintNodeState         string = "PrintNodeState"
-	PromptTriggerNextView        string = "TriggerNextView"
-	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
-	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
-
-	defaultConfigPath  = "build/config/config1.json"
-	defaultGenesisPath = "build/config/genesis.json"
-)
-
-var items = []string{
-	PromptResetToGenesis,
-	PromptPrintNodeState,
-	PromptTriggerNextView,
-	PromptTogglePacemakerMode,
-	PromptShowLatestBlockInStore,
-}
-
-// A P2P module is initialized in order to broadcast a message to the local network
-var p2pMod modules.P2PModule
-
-// A consensus module is initialized in order to get a list of the validator network
-var consensusMod modules.ConsensusModule
 
 func main() {
-	var err error
-
-	runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
-
-	loggerM, err := logger.Create(runtimeMgr)
-	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Failed to create logger module")
-	}
-	loggerMod := loggerM.(modules.LoggerModule)
-
-	consM, err := consensus.Create(runtimeMgr)
-
-	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Failed to create consensus module")
+	ctx := newCLIContext()
+	err := cli.ExecuteContext(ctx)
+	if ctx.Err() == context.Canceled || err == context.Canceled {
+		log.Fatalf("aborted\n")
+		return
 	}
 
-	consensusMod = consM.(modules.ConsensusModule)
-
-	p2pM, err := p2p.Create(runtimeMgr)
 	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
-	}
-	p2pMod = p2pM.(modules.P2PModule)
-
-	// This telemetry module instance is a NOOP because the 'enable_telemetry' flag in the `cfg` above is set to false.
-	// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
-	// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
-	// module that NOOPs (per the configs above) is injected.
-	telemetryM, err := telemetry.Create(runtimeMgr)
-	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Failed to create NOOP telemetry module")
-	}
-	telemetryMod := telemetryM.(modules.TelemetryModule)
-
-	_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod, loggerMod)
-
-	p2pMod.Start()
-
-	for {
-		selection, err := promptGetInput()
-		if err == nil {
-			handleSelect(selection)
-		}
+		log.Fatalf("err: %v\n", err)
 	}
 }
 
-func promptGetInput() (string, error) {
-	prompt := promptui.Select{
-		Label: "Select an action",
-		Items: items,
-		Size:  len(items),
-	}
-
-	_, result, err := prompt.Run()
-
-	if err == promptui.ErrInterrupt {
-		os.Exit(0)
-	}
-
-	if err != nil {
-		logger.Global.Err(err).Msg("Prompt failed")
-		return "", err
-	}
-
-	return result, nil
-}
-
-func handleSelect(selection string) {
-	switch selection {
-	case PromptResetToGenesis:
-		m := &debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
-			Message: nil,
-		}
-		broadcastDebugMessage(m)
-	case PromptPrintNodeState:
-		m := &debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
-			Message: nil,
-		}
-		broadcastDebugMessage(m)
-	case PromptTriggerNextView:
-		m := &debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
-			Message: nil,
-		}
-		broadcastDebugMessage(m)
-	case PromptTogglePacemakerMode:
-		m := &debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
-			Message: nil,
-		}
-		broadcastDebugMessage(m)
-	case PromptShowLatestBlockInStore:
-		m := &debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
-			Message: nil,
-		}
-		sendDebugMessage(m)
-	default:
-		logger.Global.Error().Str("selection", selection).Msg("not yet implemented")
-	}
-}
-
-// Broadcast to the entire validator set
-func broadcastDebugMessage(debugMsg *debug.DebugMessage) {
-	anyProto, err := anypb.New(debugMsg)
-	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Failed to create Any proto")
-	}
-
-	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
-	// broadcast. The reason it cannot be done right now is because this client is not in the
-	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
-	// p2pMod.Broadcast(anyProto, types.PocketTopic_DEBUG_TOPIC)
-
-	for _, val := range consensusMod.ValidatorMap() {
-		addr, err := pocketCrypto.NewAddress(val.GetAddress())
-		if err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
-		}
-		p2pMod.Send(addr, anyProto, debug.PocketTopic_DEBUG_TOPIC)
-	}
-}
-
-// Send to just a single (i.e. first) validator in the set
-func sendDebugMessage(debugMsg *debug.DebugMessage) {
-	anyProto, err := anypb.New(debugMsg)
-	if err != nil {
-		logger.Global.Fatal().Err(err).Msg("Failed to create Any proto")
-	}
-
-	var validatorAddress []byte
-	for _, val := range consensusMod.ValidatorMap() {
-		validatorAddress, err = pocketCrypto.NewAddress(val.GetAddress())
-		if err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
-		}
-		break
-	}
-
-	p2pMod.Send(validatorAddress, anyProto, debug.PocketTopic_DEBUG_TOPIC)
+func newCLIContext() context.Context {
+	var (
+		cancelCtx, cancel = context.WithCancel(context.Background())
+		quit              = make(chan os.Signal, 1)
+	)
+	signal.Notify(quit,
+		syscall.SIGTERM,
+		syscall.SIGINT,
+		syscall.SIGQUIT,
+		os.Kill, //nolint
+		os.Interrupt)
+	go func() {
+		<-quit
+		cancel()
+	}()
+	return cancelCtx
 }

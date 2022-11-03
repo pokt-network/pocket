@@ -48,8 +48,8 @@ jobs:
           version: ${{ env.PROTOC_VERSION }}
       - name: install cli dependencies
         run: make install_cli_deps
-      - name: generate protobufs and mocks
-        run: make protogen_local && make mockgen
+      - name: generate protobufs, RPC server, RPC client and mocks
+        run: make protogen_local && make mockgen && make generate_rpc_openapi
       - name: run all tests
         run: make test_all_with_json
       - name: Annotate tests on GitHub
