@@ -27,6 +27,6 @@ For a detailed overview of all the possible settings, please look `RuntimeMgr` [
 
 ## Genesis
 
-The genesis file contains basically the initial state (aka genesis) of the blockchain, specifically in terms of Consensus and Utility (feel free to dive into the specific modules for more information).
+The genesis file contains the initial state (aka genesis) of the blockchain associated with each module. Feel free to dive into the specific modules and their genesis-specific types for more information.
 
 For a detailed overview of all the possible settings, please look in the `RuntimeMgr` [README.md](../../../runtime/docs/README.md).
