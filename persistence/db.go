@@ -43,7 +43,7 @@ type PostgresContext struct {
 	tx         pgx.Tx
 	blockstore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
-	// DISCUSS: this might be retrieved from the block store - temporarily we will access it directly from the module
+	// DISCUSS(#284): this might be retrieved from the block store - temporarily we will access it directly from the module
 	//       following the pattern of the Consensus Module prior to pocket/issue-#315
 	latestQC              []byte
 	latestProposerAddr    []byte
