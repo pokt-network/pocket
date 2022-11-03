@@ -57,7 +57,7 @@ func (p PostgresContext) GetPrevAppHash() (string, error) {
 }
 
 func (p PostgresContext) GetTxResults() []modules.TxResult {
-	return p.latestTxResults
+	return p.txResults
 }
 
 func (p PostgresContext) TransactionExists(transactionHash string) (bool, error) {
@@ -90,11 +90,11 @@ func (p PostgresContext) IndexTransactions() error {
 //       following the pattern of the Consensus Module prior to pocket/issue-#315
 // TODO(#284): Remove blockProtoBytes from the interface
 func (p *PostgresContext) SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr, qc []byte, transactions [][]byte) error {
-	p.latestBlockHash = blockHash
-	p.latestBlockProtoBytes = blockProtoBytes
-	p.latestProposerAddr = proposerAddr
-	p.latestQC = qc
-	p.latestBlockTxs = transactions
+	p.blockHash = blockHash
+	p.blockProtoBytes = blockProtoBytes
+	p.proposerAddr = proposerAddr
+	p.quorumCertificate = qc
+	p.blockTxs = transactions
 	return nil
 }
 
@@ -103,7 +103,7 @@ func (p *PostgresContext) SetProposalBlock(blockHash string, blockProtoBytes, pr
 //                 currently has no access to the protobuf schema which is the source of truth.
 // TODO: atomic operations needed here - inherited pattern from consensus module
 func (p PostgresContext) StoreBlock() error {
-	if p.latestBlockProtoBytes == nil {
+	if p.blockProtoBytes == nil {
 		// IMPROVE/CLEANUP: HACK - currently tests call Commit() on the same height and it throws a
 		// ERROR: duplicate key value violates unique constraint "block_pkey", because it attempts to
 		// store a block at height 0 for each test. We need a cleanup function to clear the block table
@@ -113,11 +113,11 @@ func (p PostgresContext) StoreBlock() error {
 	// INVESTIGATE: Note that we are writing this directly to the blockStore. Depending on how
 	// the use of the PostgresContext evolves, we may need to write this to `ContextStore` and copy
 	// over to `BlockStore` when the block is committed.
-	if err := p.blockstore.Put(heightToBytes(p.Height), p.latestBlockProtoBytes); err != nil {
+	if err := p.blockstore.Put(heightToBytes(p.Height), p.blockProtoBytes); err != nil {
 		return err
 	}
 	// Store in SQL Store
-	if err := p.InsertBlock(uint64(p.Height), p.latestBlockHash, p.latestProposerAddr, p.latestQC); err != nil {
+	if err := p.InsertBlock(uint64(p.Height), p.blockHash, p.proposerAddr, p.quorumCertificate); err != nil {
 		return err
 	}
 	// Store transactions in indexer

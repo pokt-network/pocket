@@ -21,12 +21,12 @@ func (p PostgresContext) AppHash() ([]byte, error) {
 }
 
 func (p *PostgresContext) Reset() error {
-	p.latestTxResults = nil
-	p.latestBlockHash = ""
-	p.latestQC = nil
-	p.latestProposerAddr = nil
-	p.latestBlockProtoBytes = nil
-	p.latestBlockTxs = nil
+	p.txResults = nil
+	p.blockHash = ""
+	p.quorumCertificate = nil
+	p.proposerAddr = nil
+	p.blockProtoBytes = nil
+	p.blockTxs = nil
 	return nil
 }
 
