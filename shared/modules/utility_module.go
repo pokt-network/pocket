@@ -15,8 +15,8 @@ type UtilityModule interface {
 // operations.
 type UtilityContext interface {
 	// Block operations
-	CreateAndApplyBlock(proposer []byte, maxTransactionBytes int) (appHash []byte, transactions [][]byte, err error)
-	ApplyBlock() (appHash []byte, err error)
+	CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (appHash []byte, transactions [][]byte, err error)
+	ApplyBlock() (appHash []byte, err error) // Apply Block may be used for proposal blocks or (in the future) state sync
 
 	// Context operations
 	ReleaseContext()

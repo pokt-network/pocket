@@ -93,7 +93,7 @@ func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
 	require.NoError(t, ctx.CheckTransaction(txBz))
-	appHash, txs, er := ctx.CreateAndApplyBlock([]byte(proposer.GetAddress()), 10000)
+	appHash, txs, er := ctx.CreateAndApplyProposalBlock([]byte(proposer.GetAddress()), 10000)
 	require.NoError(t, er)
 	require.Equal(t, len(txs), 1)
 	require.Equal(t, txs[0], txBz)

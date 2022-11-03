@@ -116,6 +116,7 @@ type PersistenceWriteContext interface {
 	InitFlags() error
 	SetFlag(paramName string, value interface{}, enabled bool) error
 }
+
 type PersistenceReadContext interface {
 	GetHeight() (int64, error)
 
@@ -123,7 +124,7 @@ type PersistenceReadContext interface {
 	Close() error
 
 	// Block Queries
-	GetLastAppHash() (string, error) // app hash from the previous block
+	GetPrevAppHash() (string, error) // app hash from the previous block
 	GetLatestBlockHeight() (uint64, error)
 	GetBlockHash(height int64) ([]byte, error)
 	GetBlocksPerSession(height int64) (int, error)

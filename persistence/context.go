@@ -42,7 +42,9 @@ func (p PostgresContext) Commit() error {
 	}
 	if err := p.conn.Close(ctx); err != nil {
 		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
-
+	}
+	if err := p.Reset(); err != nil {
+		return err
 	}
 	return nil
 }

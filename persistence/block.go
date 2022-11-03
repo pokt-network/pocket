@@ -40,7 +40,7 @@ func (p PostgresContext) GetHeight() (int64, error) {
 	return p.Height, nil
 }
 
-func (p PostgresContext) GetLastAppHash() (string, error) {
+func (p PostgresContext) GetPrevAppHash() (string, error) {
 	height, err := p.GetHeight()
 	if err != nil {
 		return "", err
@@ -52,7 +52,7 @@ func (p PostgresContext) GetLastAppHash() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error getting block hash for height %d even though it's in the database: %s", height, err)
 	}
-	// IMPROVE/CLEANUP: returning the whole protoblock - should just return hash
+	// IMPROVE/CLEANUP(#284): returning the whole protoblock - should just return hash
 	return hex.EncodeToString(block), nil
 }
 

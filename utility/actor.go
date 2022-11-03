@@ -519,7 +519,7 @@ func (u *UtilityContext) CheckBelowMaxChains(actorType typesUtil.ActorType, chai
 }
 
 func (u *UtilityContext) GetLastBlockByzantineValidators() ([][]byte, error) {
-	// TODO: Need to retrieve byzantine validators from the persistence module
+	// TODO(#271): Need to retrieve byzantine validators from the persistence module
 	return nil, nil
 }
 

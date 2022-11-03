@@ -226,8 +226,7 @@ func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 
 // This helper applies the block metadata to the utility & persistence layers
 func (m *consensusModule) applyBlock(block *typesCons.Block) error {
-	cdc := codec.GetCodec()
-	blockProtoBz, err := cdc.Marshal(block)
+	blockProtoBz, err := codec.GetCodec().Marshal(block)
 	if err != nil {
 		return err
 	}

@@ -28,12 +28,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
-	if er != nil {
-		require.NoError(t, er)
-	}
-	if er != nil {
-		require.NoError(t, er, "apply block")
-	}
+	require.NoError(t, er)
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
@@ -81,9 +76,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
-	if er != nil {
-		require.NoError(t, er)
-	}
+	require.NoError(t, er)
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
@@ -144,9 +137,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
-	if er != nil {
-		require.NoError(t, er)
-	}
+	require.NoError(t, er)
 	// deliverTx logic verify
 	feeBig, err := ctx.GetMessageSendFee()
 	require.NoError(t, err)

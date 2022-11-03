@@ -343,12 +343,14 @@ func (m *consensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
 	maxTxBytes := 90000
 
 	// Reap the mempool for transactions to be applied in this block
-	appHash, txs, err := m.utilityContext.CreateAndApplyBlock(m.privateKey.Address(), maxTxBytes)
+	appHash, txs, err := m.utilityContext.CreateAndApplyProposalBlock(m.privateKey.Address(), maxTxBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	lastAppHash, err := m.utilityContext.GetPersistenceContext().GetLastAppHash()
+	persistenceContext := m.utilityContext.GetPersistenceContext()
+
+	lastAppHash, err := persistenceContext.GetPrevAppHash()
 	if err != nil {
 		return nil, err
 	}
@@ -372,9 +374,9 @@ func (m *consensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
 	if err != nil {
 		return nil, err
 	}
-	persistenceContext := m.utilityContext.GetPersistenceContext()
+
 	// Set the proposal block in the persistence context
-	if err = persistenceContext.SetProposalBlock(block.BlockHeader.Hash, blockProtoBz, block.BlockHeader.ProposerAddress, block.BlockHeader.QuorumCertificate, block.Transactions); err != nil {
+	if err = persistenceContext.SetProposalBlock(blockHeader.Hash, blockProtoBz, blockHeader.ProposerAddress, blockHeader.QuorumCertificate, block.Transactions); err != nil {
 		return nil, err
 	}
 
