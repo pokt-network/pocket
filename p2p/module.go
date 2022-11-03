@@ -107,6 +107,7 @@ func (m *p2pModule) Start() error {
 		m.network = stdnetwork.NewNetwork(addrBook)
 	}
 	m.network.SetBus(m.GetBus())
+
 	go func() {
 		for {
 			data, err := m.listener.Read()
