@@ -1,6 +1,19 @@
-# RPC
+# RPC <!-- omit in toc -->
 
 This document is meant to be a starting point/placeholder for a full-fledged RPC specification that allows interaction with the nodes.
+
+## Contents <!-- omit in toc -->
+
+- [Inspiration](#inspiration)
+- [Code generation](#code-generation)
+- [Transports](#transports)
+- [Spec](#spec)
+  - [Node related](#node-related)
+  - [Transaction related](#transaction-related)
+    - [Payload:](#payload)
+    - [Return:](#return)
+    - [What's next?](#whats-next)
+- [Code Organization](#code-organization)
 
 ## Inspiration
 
