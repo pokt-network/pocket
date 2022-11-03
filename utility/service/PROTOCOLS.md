@@ -105,10 +105,10 @@ Store a submitted `Relay` by a client for volume tracking
 
 ```mermaid
 graph TD
-    A[Relay.Store] -->|Encode `Relay` object|B****
+    A[Relay.Store] -->|Encode `Relay` object| B
     B[RelaycodecBytes] -->|Calculate Hash for Volume Tracking| C
     C[RelaycodecBytes.Hash] -->|Add Hash to `Relay` and Persist| D
-    D[Relay.Persist] --> |Indexing Under Session|E
+    D[Relay.Persist] --> |Indexing Under Session| E
     E[Key:SessionKey Val: Relays.AddNew]
 ```
 
@@ -125,7 +125,7 @@ Execute a submitted `Relay` against the `RelayChain` by a client after validatio
 
 It's important to note, the secret key isn't revealed by the network until the session is over
 to prevent volume based bias. The secret key is usually a pseudorandom selection using the block hash as a seed. 
-(See the session protocol)
+_See the [Session Protocol](https://github.com/pokt-network/pocket/blob/main/utility/doc/PROTOCOLS.md) for more details._
 
 ### Get volume metric applicable `Relays` from store
 
@@ -137,7 +137,7 @@ to prevent volume based bias. The secret key is usually a pseudorandom selection
 
 ### Report volume metric applicable relays to `Fisherman`
 
-1) All volume applicable relays need to be sent to the assigned trusted `Fisherman` (selected by the session protocol) for a proper verification of the volume completed.
+1) All volume applicable relays need to be sent to the assigned trusted `Fisherman` (selected by the [Session Protocol](https://github.com/pokt-network/pocket/blob/main/utility/doc/PROTOCOLS.md)) for a proper verification of the volume completed.
 2) Send `volumeRelays` to `fishermanServiceURL` through http.
 
 ```mermaid
@@ -149,8 +149,6 @@ graph TD
     E[Requester]
 ```
 
-##### Alt Design
-
 ## Alt Design
 
 ### Claim-Proof Lifecycle
@@ -160,7 +158,7 @@ build a Merkle sum index tree from all the relays, submits a root and subsequent
 network via a commit+reveal schema.
 
 * **Pros**: Can report volume metrics directly to the chain in a trustless fashion
-**Cons**: Large chain bloat, non-trivial compute requirement for creation of claim/proof transactions and trees, 
+* **Cons**: Large chain bloat, non-trivial compute requirement for creation of claim/proof transactions and trees, 
 non-trivial compute requirement to process claim / proofs during ApplyBlock()
 
 This algorithm is not yet documented anywhere, so the following links can act as a reference in the interim.

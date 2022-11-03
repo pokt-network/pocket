@@ -93,7 +93,7 @@ func (r *relay) Store() types.Error {
 // Execute a submitted relay by a client after validation
 func (r *relay) Execute() (RelayResponse, types.Error) {
 
-	// retrieve the RelayChain url from chains.json file
+	// retrieve the RelayChain url from the servicer's local configuration file
 
 	// execute http request with the relay payload
 
