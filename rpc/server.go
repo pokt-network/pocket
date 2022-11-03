@@ -16,11 +16,12 @@ type rpcServer struct {
 }
 
 var _ ServerInterface = &rpcServer{}
+var _ modules.IntegratableModule = &rpcServer{}
 
 func NewRPCServer(bus modules.Bus) *rpcServer {
-	return &rpcServer{
-		bus: bus,
-	}
+	s := &rpcServer{}
+	s.SetBus(bus)
+	return s
 }
 
 func (s *rpcServer) StartRPC(port string, timeout uint64) {
@@ -40,4 +41,12 @@ func (s *rpcServer) StartRPC(port string, timeout uint64) {
 	if err := e.Start(":" + port); err != http.ErrServerClosed {
 		log.Fatal(err)
 	}
+}
+
+func (s *rpcServer) SetBus(bus modules.Bus) {
+	s.bus = bus
+}
+
+func (s *rpcServer) GetBus() modules.Bus {
+	return s.bus
 }
