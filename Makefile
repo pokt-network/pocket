@@ -114,9 +114,9 @@ install_cli_deps:
 .PHONY: develop_start
 ## Run all of the make commands necessary to develop on the project
 develop_start:
+		make protogen_clean && make protogen_local && \
 		make go_clean_deps && \
 		make mockgen && \
-		make protogen_clean && make protogen_local && \
 		make generate_rpc_openapi
 
 .PHONY: develop_test
@@ -269,8 +269,8 @@ generate_rpc_openapi: go_oapi-codegen
 swagger-ui:
 	echo "Attempting to start Swagger UI at http://localhost:8080\n\n"
 	docker run -p 8080:8080 -e SWAGGER_JSON=/v1/openapi.yaml -v $(shell pwd)/rpc/v1:/v1 swaggerapi/swagger-ui
-
 .PHONY: generate_cli_commands_docs
+
 ### (Re)generates the CLI commands docs (this is meant to be called by CI)
 generate_cli_commands_docs:
 	$(eval cli_docs_dir = "app/client/cli/doc/commands")
