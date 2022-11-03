@@ -43,9 +43,15 @@ As the codebase matures, we'll consider other transports such as [**JSON RPC 2.0
 
 ## Spec
 
-<!-- TODO (deblasis): add link when merged to `main` -->
+The Swagger Editor with preview is available [here](https://editor.swagger.io/?url=https://raw.githubusercontent.com/pokt-network/pocket/main/rpc/v1/openapi.yaml).
 
-The Swagger Editor with preview is available here.
+Alternatively, you can run:
+
+```bash
+make swagger_ui
+```
+
+and browse/test it locally.
 
 This first iteration includes the bare minimum:
 
