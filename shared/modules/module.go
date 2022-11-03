@@ -42,11 +42,7 @@ type P2PAddressableModule interface {
 	GetP2PAddress() cryptoPocket.Address
 }
 
-// TODO(@okdas): this should also initialize metrics related configs, but only logging is implemented at the moment
 type ObservableModule interface {
 	InitLogger()
 	GetLogger() Logger
-	
-	// InitMetrics()
-        // InitTracing()
 }

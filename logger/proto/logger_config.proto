@@ -11,15 +11,17 @@ message LoggerConfig {
 }
 
 enum LogLevel {
-  debug = 0;
-  info = 1;
-  warn = 2;
-  error = 3;
-  fatal = 4;
-  panic = 5;
+  LOG_LEVEL_UNSPECIFIED = 0;
+  LOG_LEVEL_DEBUG = 1;
+  LOG_LEVEL_INFO = 2;
+  LOG_LEVEL_WARN = 3;
+  LOG_LEVEL_ERROR = 4;
+  LOG_LEVEL_FATAL = 5;
+  LOG_LEVEL_PANIC = 6;
 }
 
 enum LogFormat {
-  json = 0;
-  pretty = 1;
+  LOG_FORMAT_UNSPECIFIED = 0;
+  LOG_FORMAT_JSON = 1;
+  LOG_FORMAT_PRETTY = 2;
 }

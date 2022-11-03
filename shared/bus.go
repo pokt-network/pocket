@@ -116,6 +116,7 @@ func CreateBusWithOptionalModules(
 	maybeSetModuleBus(utility)
 	maybeSetModuleBus(consensus)
 	maybeSetModuleBus(telemetry)
+	maybeSetModuleBus(logger)
 
 	return bus
 }
