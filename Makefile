@@ -110,15 +110,19 @@ install_cli_deps:
 	go install "github.com/favadi/protoc-go-inject-tag@latest"
 	go install "github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0"
 
+.PHONY: develop_start
+## Run all of the make commands necessary to develop on the project
+develop_start:
+		make protogen_clean && make protogen_local && \
+		make go_clean_deps && \
+		make mockgen && \
+		make generate_rpc_openapi
+
 .PHONY: develop_test
 ## Run all of the make commands necessary to develop on the project and verify the tests pass
 develop_test: docker_check
-		make mockgen && \
-		make go_clean_deps && \
-		make protogen_clean && make protogen_local && \
-		make generate_rpc_openapi && \
+		make develop_start && \
 		make test_all
-
 
 .PHONY: client_start
 ## Run a client daemon which is only used for debugging purposes
@@ -128,7 +132,7 @@ client_start: docker_check
 .PHONY: client_connect
 ## Connect to the running client debugging daemon
 client_connect: docker_check
-	docker exec -it client /bin/bash -c "go run app/client/*.go"
+	docker exec -it client /bin/bash -c "go run -tags=debug app/client/*.go debug"
 
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
@@ -254,7 +258,7 @@ protogen_docker: docker_check
 	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it -v $(CWD)/:/usr/src/app/ pocket/proto-generator
 
 .PHONY: generate_rpc_openapi
-## (Re)generates the RPC server and client infra code from the openapi spec file (./app/pocket/rpc/v1/openapi.yaml)
+## (Re)generates the RPC server and client infra code from the openapi spec file (./rpc/v1/openapi.yaml)
 generate_rpc_openapi: go_oapi-codegen
 	oapi-codegen  --config ./rpc/server.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/server.gen.go
 	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
@@ -264,6 +268,14 @@ generate_rpc_openapi: go_oapi-codegen
 swagger-ui:
 	echo "Attempting to start Swagger UI at http://localhost:8080\n\n"
 	docker run -p 8080:8080 -e SWAGGER_JSON=/v1/openapi.yaml -v $(shell pwd)/rpc/v1:/v1 swaggerapi/swagger-ui
+.PHONY: generate_cli_commands_docs
+
+### (Re)generates the CLI commands docs (this is meant to be called by CI)
+generate_cli_commands_docs:
+	$(eval cli_docs_dir = "app/client/cli/doc/commands")
+	rm ${cli_docs_dir}/*.md >/dev/null 2>&1 || true
+	cd app/client/cli/docgen && go run .
+	echo "CLI commands docs generated in ${cli_docs_dir}"
 
 .PHONY: test_all
 ## Run all go unit tests

@@ -3,13 +3,13 @@ package test_artifacts
 // Cross module imports are okay because this is only used for testing and not business logic
 import (
 	"fmt"
-	"math/big"
 	"strconv"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	typesPers "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesTelemetry "github.com/pokt-network/pocket/telemetry"
@@ -22,31 +22,6 @@ import (
 //  It might be an inevitability to have shared testing code, but would like more eyes on it.
 //  Look for opportunities to make testing completely modular
 
-const (
-	defaultRPCPort    = "50832"
-	defaultRPCHost    = "localhost"
-	defaultRPCTimeout = 30000
-)
-
-var (
-	DefaultChains              = []string{"0001"}
-	DefaultServiceURL          = ""
-	DefaultStakeAmount         = big.NewInt(1000000000000)
-	DefaultStakeAmountString   = types.BigIntToString(DefaultStakeAmount)
-	DefaultMaxRelays           = big.NewInt(1000000)
-	DefaultMaxRelaysString     = types.BigIntToString(DefaultMaxRelays)
-	DefaultAccountAmount       = big.NewInt(100000000000000)
-	DefaultAccountAmountString = types.BigIntToString(DefaultAccountAmount)
-	DefaultPauseHeight         = int64(-1)
-	DefaultUnstakingHeight     = int64(-1)
-	DefaultChainID             = "testnet"
-	DefaultMaxBlockBytes       = uint64(4000000)
-	ServiceUrlFormat           = "node%d.consensus:8080"
-	DefaultRpcPort             = defaultRPCPort
-	DefaultRpcTimeout          = uint64(defaultRPCTimeout)
-	DefaultRemoteCLIURL        = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaultRPCPort)
-)
-
 // TODO (Team) this is meant to be a **temporary** replacement for the recently deprecated
 // 'genesis config' option. We need to implement a real suite soon!
 func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (modules.GenesisState, []string) {
@@ -58,8 +33,8 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 	genesisState := runtime.NewGenesis(
 		&typesCons.ConsensusGenesisState{
 			GenesisTime:   timestamppb.Now(),
-			ChainId:       DefaultChainID,
-			MaxBlockBytes: DefaultMaxBlockBytes,
+			ChainId:       defaults.DefaultChainID,
+			MaxBlockBytes: defaults.DefaultMaxBlockBytes,
 			Validators:    typesCons.ToConsensusValidators(vals),
 		},
 		&typesPers.PersistenceGenesisState{
@@ -133,7 +108,7 @@ func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing s
 		}
 		pools = append(pools, &typesPers.Account{
 			Address: name,
-			Amount:  DefaultAccountAmountString,
+			Amount:  defaults.DefaultAccountAmountString,
 		})
 	}
 	return
@@ -148,7 +123,7 @@ func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
 		}
 		accounts = append(accounts, &typesPers.Account{
 			Address: addr,
-			Amount:  DefaultAccountAmountString,
+			Amount:  defaults.DefaultAccountAmountString,
 		})
 	}
 	return
@@ -160,7 +135,7 @@ func NewActors(actorType typesUtil.ActorType, n int) (actors []modules.Actor, pr
 	for i := 0; i < n; i++ {
 		genericParam := getServiceUrl(i + 1)
 		if int32(actorType) == int32(types.ActorType_App) {
-			genericParam = DefaultMaxRelaysString
+			genericParam = defaults.DefaultMaxRelaysString
 		}
 		actor, pk := NewDefaultActor(int32(actorType), genericParam)
 		actors = append(actors, actor)
@@ -171,25 +146,25 @@ func NewActors(actorType typesUtil.ActorType, n int) (actors []modules.Actor, pr
 }
 
 func getServiceUrl(n int) string {
-	return fmt.Sprintf(ServiceUrlFormat, n)
+	return fmt.Sprintf(defaults.ServiceUrlFormat, n)
 }
 
 func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor, privateKey string) {
 	privKey, pubKey, addr := GenerateNewKeysStrings()
-	chains := DefaultChains
+	chains := defaults.DefaultChains
 	if actorType == int32(typesPers.ActorType_Val) {
 		chains = nil
 	} else if actorType == int32(types.ActorType_App) {
-		genericParam = DefaultMaxRelaysString
+		genericParam = defaults.DefaultMaxRelaysString
 	}
 	return &typesPers.Actor{
 		Address:         addr,
 		PublicKey:       pubKey,
 		Chains:          chains,
 		GenericParam:    genericParam,
-		StakedAmount:    DefaultStakeAmountString,
-		PausedHeight:    DefaultPauseHeight,
-		UnstakingHeight: DefaultUnstakingHeight,
+		StakedAmount:    defaults.DefaultStakeAmountString,
+		PausedHeight:    defaults.DefaultPauseHeight,
+		UnstakingHeight: defaults.DefaultUnstakingHeight,
 		Output:          addr,
 		ActorType:       typesPers.ActorType(actorType),
 	}, privKey
