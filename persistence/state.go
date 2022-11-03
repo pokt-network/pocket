@@ -176,9 +176,9 @@ func (p *PostgresContext) updateStateHash() error {
 		case blocksMerkleTree:
 			p.updateBlockTree(p.Height)
 		case paramsMerkleTree:
-			log.Printf("TODO: merkle tree not implemented yet. Merkle tree #{%v}\n", treeType)
+			// log.Printf("TODO: merkle tree not implemented yet. Merkle tree #{%v}\n", treeType)
 		case flagsMerkleTree:
-			log.Printf("TODO: merkle tree not implemented yet. Merkle tree #{%v}\n", treeType)
+			// log.Printf("TODO: merkle tree not implemented yet. Merkle tree #{%v}\n", treeType)
 
 		// Default
 		default:

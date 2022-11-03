@@ -59,7 +59,7 @@ func TestMain(m *testing.M) {
 }
 
 // IMPROVE(olshansky): Look into returning `testPersistenceMod` to avoid exposing underlying abstraction.
-func NewTestPostgresContext[T testing.T | testing.B | testing.F](t *T, height int64) *persistence.PostgresContext {
+func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
 		log.Fatalf("Error creating new context: %v\n", err)
@@ -70,24 +70,12 @@ func NewTestPostgresContext[T testing.T | testing.B | testing.F](t *T, height in
 		log.Fatalf("Error casting RW context to Postgres context")
 	}
 
-	var cleanupFn func(func())
-	switch any(t).(type) {
-	case *testing.T:
-		cleanupFn = any(t).(*testing.T).Cleanup
-	case *testing.B:
-		cleanupFn = any(t).(*testing.B).Cleanup
-	case *testing.F:
-		cleanupFn = any(t).(*testing.F).Cleanup
-	default:
-		log.Fatalf("Error: unsupported type %T", t)
-	}
-
-	cleanupFn(func() {
+	t.Cleanup(func() {
 		if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
 			log.Fatalf("Error releasing write context: %v\n", err)
 		}
 		if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-			// Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+			// Action: debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
 			Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
 		}); err != nil {
@@ -108,6 +96,8 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 		PostgresUrl:    databaseUrl,
 		NodeSchema:     testSchema,
 		BlockStorePath: "",
+		TxIndexerPath:  "",
+		TreesStoreDir:  "",
 	}))
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)

@@ -45,6 +45,8 @@ var nonActorClearFunctions = []func() string{
 var _ modules.PersistenceRWContext = &PostgresContext{}
 
 type PostgresContext struct {
+	// modules.PersistenceRWContext
+
 	Height int64 // TODO(olshansky): `Height` is only externalized for testing purposes. Replace with helpers...
 	conn   *pgx.Conn
 	tx     pgx.Tx

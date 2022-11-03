@@ -70,32 +70,38 @@ func (m *persistenceModule) exportTrees(_ *debug.DebugMessage) error {
 	return nil
 }
 
+// TODO: MAke sure this is atomic
 func (m *persistenceModule) clearState(_ *debug.DebugMessage) error {
 	context, err := m.NewRWContext(-1)
 	if err != nil {
 		return err
 	}
 
+	// Clear the SQL DB
 	if err := context.(*PostgresContext).DebugClearAll(); err != nil {
 		return err
 	}
+
+	if err := m.ReleaseWriteContext(); err != nil {
+		return err
+	}
+
+	// Clear the KV Stores
 
 	if err := m.blockStore.ClearAll(); err != nil {
 		return err
 	}
 
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-		if err := m.stateTrees.nodeStores[treeType].ClearAll(); err != nil {
-			return err
-		}
 		if err := m.stateTrees.valueStores[treeType].ClearAll(); err != nil {
 			return err
 		}
+		// if err := m.stateTrees.nodeStores[treeType].ClearAll(); err != nil {
+		// 	return err
+		// }
 	}
 
-	if err := m.ReleaseWriteContext(); err != nil {
-		return err
-	}
+	log.Println("Cleared all the state")
 
 	return nil
 }
