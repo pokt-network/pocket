@@ -6,7 +6,7 @@ This document is meant to be a starting point/placeholder for a full-fledged RPC
 
 - [Inspiration](#inspiration)
 - [Code generation](#code-generation)
-- [Transports](#transports)
+- [Endpoints](#endpoints)
 - [Spec](#spec)
   - [Node related](#node-related)
   - [Transaction related](#transaction-related)
@@ -35,7 +35,7 @@ $ make generate_rpc_openapi
 
 The compilation errors should guide towards the next steps.
 
-## Transports
+## Endpoints
 
 Currently, the API is in its simplest form. Basically a **REST API**.
 
