@@ -97,7 +97,7 @@ func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	require.NoError(t, er)
 	require.Equal(t, len(txs), 1)
 	require.Equal(t, txs[0], txBz)
-	require.NotEmptyf(t, appHash, "")
+	require.NotEmpty(t, appHash)
 
 	test_artifacts.CleanupTest(ctx)
 }
