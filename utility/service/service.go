@@ -13,7 +13,7 @@ type Relay interface {
 type RelayPayload interface {
 	GetData() string               // the actual data string for the external chain
 	GetMethod() string             // the http CRUD method
-	GetHTTPPath() string           // the REST Path
+	GetHTTPPath() string           // the HTTP Path
 	GetHeaders() map[string]string // http headers
 }
 
