@@ -131,12 +131,12 @@ func (m *persistenceModule) GetBus() modules.Bus {
 }
 
 func (*persistenceModule) ValidateConfig(cfg modules.Config) error {
-	// TODO (team): implement this
+	// TODO (#334): implement this
 	return nil
 }
 
 func (*persistenceModule) ValidateGenesis(genesis modules.GenesisState) error {
-	// TODO (team): implement this
+	// TODO (#334): implement this
 	return nil
 }
 

@@ -1,6 +1,19 @@
-# RPC
+# RPC <!-- omit in toc -->
 
 This document is meant to be a starting point/placeholder for a full-fledged RPC specification that allows interaction with the nodes.
+
+## Contents <!-- omit in toc -->
+
+- [Inspiration](#inspiration)
+- [Code generation](#code-generation)
+- [Endpoints](#endpoints)
+- [Spec](#spec)
+  - [Node related](#node-related)
+  - [Transaction related](#transaction-related)
+    - [Payload:](#payload)
+    - [Return:](#return)
+    - [What's next?](#whats-next)
+- [Code Organization](#code-organization)
 
 ## Inspiration
 
@@ -22,7 +35,7 @@ $ make generate_rpc_openapi
 
 The compilation errors should guide towards the next steps.
 
-## Transports
+## Endpoints
 
 Currently, the API is in its simplest form. Basically a **REST API**.
 
@@ -30,9 +43,15 @@ As the codebase matures, we'll consider other transports such as [**JSON RPC 2.0
 
 ## Spec
 
-<!-- TODO (deblasis): add link when merged to `main` -->
+The Swagger Editor with preview is available [here](https://editor.swagger.io/?url=https://raw.githubusercontent.com/pokt-network/pocket/main/rpc/v1/openapi.yaml).
 
-The Swagger Editor with preview is available here.
+Alternatively, you can run:
+
+```bash
+make swagger_ui
+```
+
+and browse/test it locally.
 
 This first iteration includes the bare minimum:
 

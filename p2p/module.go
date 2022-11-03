@@ -163,7 +163,7 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic debug.
 }
 
 func (*p2pModule) ValidateConfig(cfg modules.Config) error {
-	// TODO (team): implement this
+	// TODO (#334): implement this
 	return nil
 }
 

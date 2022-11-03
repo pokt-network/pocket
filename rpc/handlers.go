@@ -26,8 +26,8 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, "cannot decode tx bytes")
 	}
-	height := s.bus.GetConsensusModule().CurrentHeight()
-	uCtx, err := s.bus.GetUtilityModule().NewContext(int64(height))
+	height := s.GetBus().GetConsensusModule().CurrentHeight()
+	uCtx, err := s.GetBus().GetUtilityModule().NewContext(int64(height))
 	if err != nil {
 		defer func() { log.Fatalf("[ERROR] Failed to create UtilityContext: %v", err) }()
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -40,7 +40,7 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 }
 
 func (s *rpcServer) GetV1ConsensusRoundState(ctx echo.Context) error {
-	consensus := s.bus.GetConsensusModule()
+	consensus := s.GetBus().GetConsensusModule()
 	return ctx.JSON(200, RoundState{
 		Height: int(consensus.CurrentHeight()),
 		Round:  int(consensus.CurrentRound()),

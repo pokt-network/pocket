@@ -23,10 +23,10 @@ The configuration file provides a structured way for configuring various aspects
 
 Things like "should the RPC server be enabled?", "what port should it be listening to?" are all defined in the config file.
 
-For a detailed overview of all the possible settings, please look `RuntimeMgr` [README.md](../../../runtime/docs/README.md).
+For a detailed overview of all the possible settings, please review `RuntimeMgr` at [README.md](../../../runtime/docs/README.md).
 
 ## Genesis
 
-The genesis file contains basically the initial state (aka genesis) of the blockchain, specifically in terms of Consensus and Utility (feel free to dive into the specific modules for more information).
+The genesis file contains the initial state (aka genesis) of the blockchain associated with each module. Feel free to dive into the specific modules and their genesis-specific types for more information.
 
 For a detailed overview of all the possible settings, please look in the `RuntimeMgr` [README.md](../../../runtime/docs/README.md).
