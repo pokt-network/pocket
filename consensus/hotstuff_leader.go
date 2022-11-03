@@ -350,7 +350,7 @@ func (m *consensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
 
 	persistenceContext := m.utilityContext.GetPersistenceContext()
 
-	lastAppHash, err := persistenceContext.GetPrevAppHash()
+	prevAppHash, err := persistenceContext.GetPrevAppHash()
 	if err != nil {
 		return nil, err
 	}
@@ -360,7 +360,7 @@ func (m *consensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
 		Height:            int64(m.Height),
 		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            uint32(len(txs)),
-		LastBlockHash:     lastAppHash, // IMRPROVE: this should be a block hash not the appHash
+		LastBlockHash:     prevAppHash, // IMRPROVE: this should be a block hash not the appHash
 		ProposerAddress:   m.privateKey.Address().Bytes(),
 		QuorumCertificate: []byte("HACK: Temporary placeholder"),
 	}

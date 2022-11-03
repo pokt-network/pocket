@@ -76,7 +76,7 @@ func (p PostgresContext) TransactionExists(transactionHash string) (bool, error)
 	return true, err
 }
 
-func (p PostgresContext) StoreTransactions() error {
+func (p PostgresContext) IndexTransactions() error {
 	// TODO: store in batch
 	for _, txResult := range p.GetLatestTxResults() {
 		if err := p.txIndexer.Index(txResult); err != nil {
@@ -88,6 +88,7 @@ func (p PostgresContext) StoreTransactions() error {
 
 // DISCUSS: this might be retrieved from the block store - temporarily we will access it directly from the module
 //       following the pattern of the Consensus Module prior to pocket/issue-#315
+// TODO(#284): Remove blockProtoBytes from the interface
 func (p *PostgresContext) SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr, qc []byte, transactions [][]byte) error {
 	p.latestBlockHash = blockHash
 	p.latestBlockProtoBytes = blockProtoBytes
@@ -120,7 +121,7 @@ func (p PostgresContext) StoreBlock() error {
 		return err
 	}
 	// Store transactions in indexer
-	return p.StoreTransactions()
+	return p.IndexTransactions()
 }
 
 func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {

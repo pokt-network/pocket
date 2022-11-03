@@ -55,7 +55,7 @@ type PersistenceWriteContext interface {
 	// Block Operations
 
 	// Indexer Operations
-	StoreTransactions() error
+	IndexTransactions() error
 
 	// Block Operations
 	SetLatestTxResults(txResults []TxResult)

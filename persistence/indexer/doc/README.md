@@ -1,6 +1,6 @@
 # Transaction Indexer
 
-`txIndexer` implementation uses a `KVStore` (interface) to txIndex the transactions.
+`txIndexer` implementation uses a `KVStore` (interface) to index the transactions.
 
 ## Index Types
 

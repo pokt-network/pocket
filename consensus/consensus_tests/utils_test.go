@@ -360,10 +360,10 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 	persistenceContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	persistenceContextMock.EXPECT().GetLastAppHash().Return("", nil).AnyTimes()
+	persistenceContextMock.EXPECT().GetPrevAppHash().Return("", nil).AnyTimes()
 
 	utilityContextMock.EXPECT().
-		CreateAndApplyBlock(gomock.Any(), maxTxBytes).
+		CreateAndApplyProposalBlock(gomock.Any(), maxTxBytes).
 		Return(appHash, make([][]byte, 0), nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().
@@ -374,7 +374,7 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 	utilityContextMock.EXPECT().ReleaseContext().Return().AnyTimes()
 	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
 
-	persistenceContextMock.EXPECT().StoreTransactions().Return(nil).AnyTimes()
+	persistenceContextMock.EXPECT().IndexTransactions().Return(nil).AnyTimes()
 	persistenceContextMock.EXPECT().StoreBlock().Return(nil).AnyTimes()
 
 	return utilityContextMock
