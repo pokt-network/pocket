@@ -6,7 +6,6 @@ var _ ProtocolActorSchema = &BaseProtocolActorSchema{}
 
 // Implements the ProtocolActorSchema with behaviour that can be embedded (i.e. inherited) by other protocol
 // actors for a share implementation.
-//
 // Note that this implementation assumes the protocol actor is chain dependant, so that behaviour needs
 // to be overridden if the actor (e.g. Validator) is chain independent.
 type BaseProtocolActorSchema struct {

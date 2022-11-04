@@ -79,7 +79,7 @@ func (p PostgresContext) SetValidatorPauseHeight(address []byte, height int64) e
 
 // TODO(team): The Get & Update operations need to be made atomic
 // TODO(team): Deprecate this functiona altogether and use UpdateValidator where applicable
-func (p PostgresContext) setValidatorStakedTokens(address []byte, tokens string) error { //
+func (p PostgresContext) setValidatorStakedTokens(address []byte, tokens string) error {
 	height, err := p.GetHeight()
 	if err != nil {
 		return err

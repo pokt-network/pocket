@@ -118,9 +118,7 @@ func (p PostgresContext) SubtractPoolAmount(name string, amount string) error {
 }
 
 // DISCUSS(team): If we are okay with `GetPoolAmount` return 0 as a default, this function can leverage
-//
 //	`operationPoolAmount` with `*orig = *delta` and make everything much simpler.
-//
 // DISCUSS(team): Do we have a use-case for this function?
 func (p PostgresContext) SetPoolAmount(name string, amount string) error {
 	ctx, tx, err := p.getCtxAndTx()
