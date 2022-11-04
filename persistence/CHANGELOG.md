@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.7] - 2022-11-01
+
+- Ported over storing blocks and block components to the Persistence module from Consensus and Utility modules
+- Encapsulated `TxIndexer` logic to the persistence context only
+
 ## [0.0.0.6] - 2022-10-06
 
 - Don't ignore the exit code of `m.Run()` in the unit tests

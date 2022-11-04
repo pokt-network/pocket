@@ -3,11 +3,10 @@ package consensus
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/pokt-network/pocket/shared/modules"
-
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
 )
 
 type HotstuffReplicaMessageHandler struct{}
@@ -61,14 +60,12 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 	}
 
 	block := msg.GetBlock()
-	txResults, err := m.applyBlock(block)
-	if err != nil {
+	if err := m.applyBlock(block); err != nil {
 		m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
 		m.paceMaker.InterruptRound()
 		return
 	}
 	m.Block = block
-	m.TxResults = txResults
 	m.Step = PreCommit
 
 	prepareVoteMessage, err := CreateVoteMessage(m.Height, m.Round, Prepare, m.Block, m.privateKey)
@@ -228,22 +225,29 @@ func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 }
 
 // This helper applies the block metadata to the utility & persistence layers
-func (m *consensusModule) applyBlock(block *typesCons.Block) ([]modules.TxResult, error) {
-	// TECHDEBT: Retrieve this from persistence
-	lastByzValidators := make([][]byte, 0)
+func (m *consensusModule) applyBlock(block *typesCons.Block) error {
+	blockProtoBz, err := codec.GetCodec().Marshal(block)
+	if err != nil {
+		return err
+	}
+	persistenceContext := m.utilityContext.GetPersistenceContext()
+	// Set the proposal block in the persistence context
+	if err = persistenceContext.SetProposalBlock(block.BlockHeader.Hash, blockProtoBz, block.BlockHeader.ProposerAddress, block.BlockHeader.QuorumCertificate, block.Transactions); err != nil {
+		return err
+	}
 
 	// Apply all the transactions in the block and get the appHash
-	appHash, txResults, err := m.utilityContext.ApplyBlock(int64(m.Height), block.BlockHeader.ProposerAddress, block.Transactions, lastByzValidators)
+	appHash, err := m.utilityContext.ApplyBlock()
 	if err != nil {
-		return txResults, err
+		return err
 	}
 
-	// CONSOLIDATE: Terminology of `blockHash`, `appHash` and `stateHash`
+	// CONSOLIDATE: Terminology of `appHash` and `stateHash`
 	if block.BlockHeader.Hash != hex.EncodeToString(appHash) {
-		return txResults, typesCons.ErrInvalidAppHash(block.BlockHeader.Hash, hex.EncodeToString(appHash))
+		return typesCons.ErrInvalidAppHash(block.BlockHeader.Hash, hex.EncodeToString(appHash))
 	}
 
-	return txResults, nil
+	return nil
 }
 
 func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertificate) error {
