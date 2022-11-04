@@ -1,6 +1,6 @@
 # FAQ
 
-Common issues shared by the community
+A list of common issues & resolutions shared by the V1 contributors
 
 ## Avoid redundant files from iCloud backup
 
