@@ -50,7 +50,7 @@ func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 	block := &types.Block{}
 	codec.Unmarshal(blockBytes, block)
 
-	log.Printf("Block at height %d with %d transactions: %+v \n", height, len(block.Transactions), block)
+	log.Printf("Block at height %d: %+v \n", height, block)
 }
 
 // Everyone roles their own key-value export: https://www.reddit.com/r/golang/comments/bw08dt/is_there_any_offline_database_viewer_and_editor

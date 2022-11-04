@@ -9,5 +9,11 @@ message Block {
     string prevHash = 3;
     bytes proposerAddress = 4;
     bytes quorumCertificate = 5;
-    repeated bytes transactions = 6; // DISCUSS_IN_THIS_COMMIT: If we can save all the transactions here, why do we need a separate tx trie?
+    bytes transactionsHash = 6; // The has of all the translactions in the block
+}
+
+// DISUCSS: What else do we need here?
+message Transaction {
+    uint64 height = 1;
+    bytes tx = 2;
 }

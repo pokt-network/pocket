@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -74,14 +75,19 @@ func (p *PostgresContext) prepareBlock(proposerAddr []byte, quorumCert []byte) (
 		}
 	}
 
+	// The order (descending) is important here since it is used to comprise the hash in the block
 	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
 	if err != nil {
 		return nil, err
 	}
 
-	txs := make([][]byte, len(txResults))
-	for i, txResult := range txResults {
-		txs[i] = txResult.GetTx()
+	txs := make([]byte, 0)
+	for _, txResult := range txResults {
+		txHash, err := txResult.Hash()
+		if err != nil {
+			return nil, err
+		}
+		txs = append(txs, txHash...)
 	}
 
 	block := &types.Block{
@@ -90,7 +96,7 @@ func (p *PostgresContext) prepareBlock(proposerAddr []byte, quorumCert []byte) (
 		PrevHash:          hex.EncodeToString(prevHash),
 		ProposerAddress:   proposerAddr,
 		QuorumCertificate: quorumCert,
-		Transactions:      txs,
+		TransactionsHash:  crypto.SHA3Hash(txs), // TODO: Externalize this elsewhere?
 	}
 
 	return block, nil

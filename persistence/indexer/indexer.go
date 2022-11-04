@@ -25,7 +25,7 @@ type TxIndexer interface {
 	// `GetByHash` returns the transaction specified by the hash if indexed or nil otherwise
 	GetByHash(hash []byte) (shared.TxResult, error)
 
-	// `GetByHeight` returns all transactions specified by height or nil if there are no transactions at that height
+	// `GetByHeight` returns all transactions specified by height or nil if there are no transactions at that height; may be ordered descending/ascending
 	GetByHeight(height int64, descending bool) ([]shared.TxResult, error)
 
 	// `GetBySender` returns all transactions signed by *sender*; may be ordered descending/ascending

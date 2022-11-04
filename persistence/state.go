@@ -42,9 +42,10 @@ const (
 
 	// Data Merkle Trees
 	blocksMerkleTree
+	transactionsMerkleTree
+
 	paramsMerkleTree
 	flagsMerkleTree
-	// txMerkleTree ??
 
 	// Used for iteration purposes only; see https://stackoverflow.com/a/64178235/768439 as a reference
 	numMerkleTrees
@@ -59,7 +60,9 @@ var merkleTreeToString = map[merkleTree]string{
 	accountMerkleTree: "account",
 	poolMerkleTree:    "pool",
 
-	blocksMerkleTree: "blocks",
+	blocksMerkleTree:       "blocks",
+	transactionsMerkleTree: "transactions",
+
 	paramsMerkleTree: "params",
 	flagsMerkleTree:  "flags",
 }
@@ -94,9 +97,11 @@ var merkleTreeToProtoSchema = map[merkleTree]func() proto.Message{
 	accountMerkleTree: func() proto.Message { return &types.Account{} },
 	poolMerkleTree:    func() proto.Message { return &types.Account{} },
 
-	blocksMerkleTree: func() proto.Message { return &types.Block{} },
-	// paramsMerkleTree: func() proto.Message { return &types.Params{} },
-	// flagsMerkleTree:  func() proto.Message { return &types.Flags{} },
+	blocksMerkleTree:       func() proto.Message { return &types.Block{} },
+	transactionsMerkleTree: func() proto.Message { return &types.Transaction{} },
+
+	paramsMerkleTree: func() proto.Message { return &types.Params{} },
+	flagsMerkleTree:  func() proto.Message { return &types.Params{} },
 }
 
 func newStateTrees(treesStoreDir string) (*stateTrees, error) {
@@ -174,11 +179,16 @@ func (p *PostgresContext) updateStateHash() error {
 
 		// Data Merkle Trees
 		case blocksMerkleTree:
-			p.updateBlockTree(p.Height)
+			continue
+		case transactionsMerkleTree:
+			if err := p.updateTransactionsTree(p.Height); err != nil {
+				return err
+			}
+
 		case paramsMerkleTree:
-			// log.Printf("TODO: merkle tree not implemented yet. Merkle tree #{%v}\n", treeType)
+			// TODO: Implement paramsMerkleTree
 		case flagsMerkleTree:
-			// log.Printf("TODO: merkle tree not implemented yet. Merkle tree #{%v}\n", treeType)
+			// TODO: Implement flagsMerkleTree
 
 		// Default
 		default:
@@ -310,6 +320,21 @@ func (p *PostgresContext) updatePoolTrees(height int64) error {
 
 // Data Tree Helpers
 
-func (p *PostgresContext) updateBlockTree(height int64) {
+func (p *PostgresContext) updateTransactionsTree(height int64) error {
+	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
+	if err != nil {
+		return err
+	}
 
+	for _, txResult := range txResults {
+		txHash, err := txResult.Hash()
+		if err != nil {
+			return err
+		}
+		if _, err := p.stateTrees.merkleTrees[transactionsMerkleTree].Update(txHash, txResult.GetTx()); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
