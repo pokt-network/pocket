@@ -50,7 +50,7 @@ func (p PostgresContext) SubtractAccountAmount(address []byte, amount string) er
 }
 
 // DISCUSS(team): If we are okay with `GetAccountAmount` return 0 as a default, this function can leverage
-//				  `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
+// `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
 func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
