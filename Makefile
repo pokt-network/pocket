@@ -172,10 +172,12 @@ db_show_schemas: docker_check
 db_admin:
 	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
 
+# IMPROVE: Make this part of the CLI
 .PHONY: db_export_trees
-## Helper to export the data in the merkle trees
+## Assuming `ExportTrees` was from the client, this will copy those json files locally from node1 to local
 db_export_trees:
-	echo "I'm not done yet"
+	echo "Copying trees from node1.consensus to /tmp/node1_trees"
+	docker cp node1.consensus:/tmp/trees /tmp/node1_trees
 
 .PHONY: docker_kill_all
 ## Kill all containers started by the docker-compose file
