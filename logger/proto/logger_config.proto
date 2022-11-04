@@ -4,8 +4,6 @@ package logger;
 option go_package = "github.com/pokt-network/pocket/logger";
 
 message LoggerConfig {
-  // LogLevel level = 1;
-  // LogFormat format = 2;
   string level = 1;
   string format = 2;
 }

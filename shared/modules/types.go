@@ -62,8 +62,8 @@ type TelemetryConfig interface {
 }
 
 type LoggerConfig interface {
-	// We have protobuf enums for the following values, but they are represented as
-	// `strings` to avoid circular dependencies.
+	// We have protobuf enums for the following values in `logger/proto` dir, but they are represented as
+	// `string` to avoid circular dependencies between this (`modules`) and `logger` packages.
 	GetLevel() string
 	GetFormat() string
 }

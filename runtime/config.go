@@ -55,6 +55,7 @@ func WithP2PConfig(p2pConfig modules.P2PConfig) func(modules.Config) {
 		rc.(*runtimeConfig).P2P = p2pConfig.(*typesP2P.P2PConfig)
 	}
 }
+
 func WithTelemetryConfig(telemetryConfig modules.TelemetryConfig) func(modules.Config) {
 	return func(rc modules.Config) {
 		rc.(*runtimeConfig).Telemetry = telemetryConfig.(*typesTelemetry.TelemetryConfig)
@@ -64,21 +65,27 @@ func WithTelemetryConfig(telemetryConfig modules.TelemetryConfig) func(modules.C
 func (c *runtimeConfig) GetBaseConfig() modules.BaseConfig {
 	return c.Base
 }
+
 func (c *runtimeConfig) GetConsensusConfig() modules.ConsensusConfig {
 	return c.Consensus
 }
+
 func (c *runtimeConfig) GetUtilityConfig() modules.UtilityConfig {
 	return c.Utility
 }
+
 func (c *runtimeConfig) GetPersistenceConfig() modules.PersistenceConfig {
 	return c.Persistence
 }
+
 func (c *runtimeConfig) GetP2PConfig() modules.P2PConfig {
 	return c.P2P
 }
+
 func (c *runtimeConfig) GetTelemetryConfig() modules.TelemetryConfig {
 	return c.Telemetry
 }
+
 func (c *runtimeConfig) GetLoggerConfig() modules.LoggerConfig {
 	return c.Logger
 }

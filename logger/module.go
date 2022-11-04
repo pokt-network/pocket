@@ -60,8 +60,11 @@ func (*loggerModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, erro
 	m.InitLogger()
 
 	// Mapping config string value to the proto enum
-	pocketLogLevel := LogLevel(LogLevel_value[`LogLevel_LOG_LEVEL_`+strings.ToUpper(m.config.GetLevel())])
-	zerolog.SetGlobalLevel(pocketLogLevelToZeroLog[pocketLogLevel])
+	if pocketLogLevel, ok := LogLevel_value[`LogLevel_LOG_LEVEL_`+strings.ToUpper(m.config.GetLevel())]; ok {
+		zerolog.SetGlobalLevel(pocketLogLevelToZeroLog[LogLevel(pocketLogLevel)])
+	} else {
+		zerolog.SetGlobalLevel(zerolog.NoLevel)
+	}
 
 	if pocketLogFormatToEnum[m.config.GetFormat()] == LogFormat_LOG_FORMAT_PRETTY {
 		mainLogger = mainLogger.Output(zerolog.ConsoleWriter{Out: os.Stderr})

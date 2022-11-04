@@ -413,6 +413,8 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockLogg
 	ctrl := gomock.NewController(t)
 	loggerMock := modulesMock.NewMockLoggerModule(ctrl)
 
+	loggerMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+
 	return loggerMock
 }
 

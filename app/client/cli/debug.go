@@ -207,7 +207,7 @@ func initDebug(remoteCLIURL string) {
 		}
 		loggerMod := loggerM.(modules.LoggerModule)
 
-		_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod, loggerMod) // TODO: refactor using the `WithXXXModule()` pattern accepting a slice of IntegratableModule
+		_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod, loggerMod) // REFACTOR: use the `WithXXXModule()` pattern accepting a slice of IntegratableModule
 
 		p2pMod.Start()
 	})
