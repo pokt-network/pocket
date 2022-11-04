@@ -89,16 +89,11 @@ func FuzzAccountAmount(f *testing.F) {
 
 func TestDefaultNonExistentAccountAmount(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
-	fmt.Println("BEFORE TESTG")
 	addr, err := crypto.GenerateAddress()
 	require.NoError(t, err)
-	fmt.Println("BEFORE TESTG 2")
 	accountAmount, err := db.GetAccountAmount(addr, db.Height)
-	fmt.Println("BEFORE TESTG 3")
 	require.NoError(t, err)
-	fmt.Println("BEFORE TESTG 4")
 	require.Equal(t, "0", accountAmount)
-	fmt.Println("BEFORE TESTG 5")
 }
 
 func TestSetAccountAmount(t *testing.T) {

@@ -22,12 +22,12 @@ import (
 // TODO(olshansky): Lowercase variables / constants that do not need to be exported.
 
 const (
-	PromptResetToGenesis         string = "ResetToGenesis"
-	PromptPrintNodeState         string = "PrintNodeState"
-	PromptTriggerNextView        string = "TriggerNextView"
-	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
-	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
-	PromptExportTrees            string = "ExportTrees"
+	PromptResetToGenesis         string = "ResetToGenesis (broadcast)"
+	PromptPrintNodeState         string = "PrintNodeState (broadcast)"
+	PromptTriggerNextView        string = "TriggerNextView (broadcast)"
+	PromptTogglePacemakerMode    string = "TogglePacemakerMode (broadcast)"
+	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore (send)"
+	PromptExportTrees            string = "ExportTrees (send)"
 
 	defaultConfigPath  = "build/config/config1.json"
 	defaultGenesisPath = "build/config/genesis.json"

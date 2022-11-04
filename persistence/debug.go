@@ -3,10 +3,14 @@ package persistence
 import (
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/debug"
+
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -50,13 +54,20 @@ func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 }
 
 // Everyone roles their own key-value export: https://www.reddit.com/r/golang/comments/bw08dt/is_there_any_offline_database_viewer_and_editor
+// docker exec node4.consensus sh -c "cat /tmp/trees/val.json";
 func (m *persistenceModule) exportTrees(_ *debug.DebugMessage) error {
+	if err := os.Mkdir("/tmp/trees", os.ModePerm); err != nil {
+		return err
+	}
+
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		smtValues := m.stateTrees.valueStores[treeType]
 		_, values, err := smtValues.GetAll(nil, true)
 		if err != nil {
 			return err
 		}
+
+		var sb strings.Builder
 		for i := 0; i < len(values); i++ {
 			vProto := merkleTreeToProtoSchema[treeType]()
 			// vProto := &types.Actor{}
@@ -64,9 +75,16 @@ func (m *persistenceModule) exportTrees(_ *debug.DebugMessage) error {
 				// if err := proto.Unmarshal(values[i], vProto); err != nil {
 				return err
 			}
-			fmt.Println(vProto)
+			sb.WriteString(protojson.Format(vProto))
 		}
+		f, err := os.Create("/tmp/trees/" + merkleTreeToString[treeType] + ".json")
+		if err != nil {
+			return err
+		}
+		f.Write([]byte(sb.String()))
+		f.Close()
 	}
+	fmt.Println("Wrote trees to /tmp/trees/")
 	return nil
 }
 
