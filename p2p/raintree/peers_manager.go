@@ -1,7 +1,7 @@
 package raintree
 
 import (
-	"fmt"
+	"log"
 	"math"
 	"sort"
 	"sync"
@@ -53,7 +53,7 @@ func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) 
 
 	i := sort.SearchStrings(pm.addrList, pm.selfAddr.String())
 	if i == len(pm.addrList) {
-		return nil, fmt.Errorf("self address not found for %s in addrBook so this client can send messages but does not propagate them", pm.selfAddr)
+		log.Printf("[⚠️ client-only mode]: self address not found for %s in addrBook so this client can send messages but does not propagate them", pm.selfAddr)
 	}
 	// The list is sorted lexicographically above, but is reformatted below so this addr of this node
 	// is always the first in the list. This makes RainTree propagation easier to compute and interpret.

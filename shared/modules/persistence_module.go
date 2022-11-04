@@ -59,15 +59,13 @@ type PersistenceWriteContext interface {
 	// Commit(proposerAddr []byte, quorumCert []byte) error // INTRODUCE(#284): Add this function in #284 per the interface changes in #252.
 
 	// Indexer Operations
-	// TODO(#315): Change `txResult TxResult` to `txBytes []byte`
-	StoreTransaction(txResult TxResult) error // Stores and indexes a transaction
+	IndexTransactions() error
 
-	// DEPRECATED(#252): Remove these functions in #284 per the interface changes in #252.
-	StoreBlock(blockProtoBytes []byte) error
-	InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error
-	AppHash() ([]byte, error)
-	Reset() error
-	Commit() error
+	// Block Operations
+	SetLatestTxResults(txResults []TxResult)
+	// TODO_IN_THIS_COMMIT: Remove `blockProtoBytes` in this commit
+	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr, qc []byte, transactions [][]byte) error
+	StoreBlock() error // Store the block into persistence
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error
@@ -130,9 +128,14 @@ type PersistenceReadContext interface {
 	Close() error
 
 	// Block Queries
+	GetPrevAppHash() (string, error) // app hash from the previous block
 	GetLatestBlockHeight() (uint64, error)
 	GetBlockHash(height int64) ([]byte, error)
 	GetBlocksPerSession(height int64) (int, error)
+	GetLatestProposerAddr() []byte
+	GetLatestBlockProtoBytes() []byte
+	GetLatestBlockHash() string
+	GetLatestBlockTxs() [][]byte
 
 	// Indexer Queries
 	TransactionExists(transactionHash string) (bool, error)

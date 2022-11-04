@@ -15,12 +15,10 @@ type UtilityModule interface {
 // operations.
 type UtilityContext interface {
 	// Block operations
-
-	// TODO(#315): Remove `txResults TxResult` from the interface
 	// Reaps the mempool for transactions that are ready to be proposed in a new block
-	GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, txResults []TxResult, err error)
-	// Applies the transactions to an ephemeral state in the utility & underlying persistence context;similar to `SafeNode` in the Hotstuff whitepaper.
-	ApplyBlock(height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, txResults []TxResult, err error)
+	CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (appHash []byte, transactions [][]byte, err error)
+	// Applies the transactions to an ephemeral state in the utility & underlying persistence context; similar to `SafeNode` in the Hotstuff whitepaper.
+	ApplyBlock() (appHash []byte, err error)
 
 	// Context operations
 	Release() error                 // INTRODUCE(#284): Add in #284 per the interface changes in #252.
