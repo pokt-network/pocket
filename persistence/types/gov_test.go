@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestInsertParams(t *testing.T) {
+func testInsertParams(t *testing.T) {
 	type args struct {
 		params *Params
 		height int64

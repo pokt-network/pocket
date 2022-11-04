@@ -13,11 +13,11 @@ var _ modules.PersistenceGenesisState = &PersistenceGenesisState{}
 //	not a fan of <module_name>_config/genesis.go would rather just config/genesis.go
 
 func (x *PersistenceGenesisState) GetAccs() []modules.Account {
-	return AccToAccInterface(x.GetAccounts())
+	return accToAccInterface(x.GetAccounts())
 }
 
 func (x *PersistenceGenesisState) GetAccPools() []modules.Account {
-	return AccToAccInterface(x.GetPools())
+	return accToAccInterface(x.GetPools())
 }
 
 func (x *PersistenceGenesisState) GetApps() []modules.Actor {
@@ -49,7 +49,7 @@ func ActorsToActorsInterface(a []*Actor) (actorI []modules.Actor) {
 	return
 }
 
-func AccToAccInterface(a []*Account) (accI []modules.Account) {
+func accToAccInterface(a []*Account) (accI []modules.Account) {
 	for _, acc := range a {
 		accI = append(accI, acc)
 	}
