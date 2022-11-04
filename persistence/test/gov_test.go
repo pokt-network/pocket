@@ -14,14 +14,14 @@ const (
 	ServiceNodeUnstakingBlocksOwner  = "service_node_unstaking_blocks_owner"
 )
 
-func TestInitParams(t *testing.T) {
-	db := NewTestPostgresContext(t, 0)
+func testInitParams(t *testing.T) {
+	db := newTestPostgresContext(t, 0)
 	err := db.InitParams()
 	require.NoError(t, err)
 }
 
-func TestGetSetIntParam(t *testing.T) {
-	db := NewTestPostgresContext(t, 0)
+func testGetSetIntParam(t *testing.T) {
+	db := newTestPostgresContext(t, 0)
 
 	err := db.InitParams()
 	require.NoError(t, err)
@@ -40,8 +40,8 @@ func TestGetSetIntParam(t *testing.T) {
 	require.Equal(t, newMaxChains, maxChains)
 }
 
-func TestGetSetStringParam(t *testing.T) {
-	db := NewTestPostgresContext(t, 0)
+func testGetSetStringParam(t *testing.T) {
+	db := newTestPostgresContext(t, 0)
 
 	err := db.InitParams()
 	require.NoError(t, err)
@@ -60,8 +60,8 @@ func TestGetSetStringParam(t *testing.T) {
 	require.Equal(t, newServiceNodeMinimumStake, serviceNodeMinimumStake)
 }
 
-func TestGetSetByteArrayParam(t *testing.T) {
-	db := NewTestPostgresContext(t, 0)
+func testGetSetByteArrayParam(t *testing.T) {
+	db := newTestPostgresContext(t, 0)
 
 	err := db.InitParams()
 	require.NoError(t, err)
@@ -81,8 +81,8 @@ func TestGetSetByteArrayParam(t *testing.T) {
 	require.Equal(t, newOwner, owner)
 }
 
-func TestGetSetToggleIntFlag(t *testing.T) {
-	db := NewTestPostgresContext(t, 0)
+func testGetSetToggleIntFlag(t *testing.T) {
+	db := newTestPostgresContext(t, 0)
 
 	err := db.InitFlags()
 	require.NoError(t, err)
@@ -118,8 +118,8 @@ func TestGetSetToggleIntFlag(t *testing.T) {
 	require.Equal(t, true, enabled)
 }
 
-func TestGetSetToggleStringFlag(t *testing.T) {
-	db := NewTestPostgresContext(t, 0)
+func testGetSetToggleStringFlag(t *testing.T) {
+	db := newTestPostgresContext(t, 0)
 
 	err := db.InitParams()
 	require.NoError(t, err)
@@ -154,8 +154,8 @@ func TestGetSetToggleStringFlag(t *testing.T) {
 
 }
 
-func TestGetSetToggleByteArrayFlag(t *testing.T) {
-	db := NewTestPostgresContext(t, 0)
+func testGetSetToggleByteArrayFlag(t *testing.T) {
+	db := newTestPostgresContext(t, 0)
 
 	err := db.InitParams()
 	require.NoError(t, err)
