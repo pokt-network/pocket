@@ -7,18 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.7] - 2022-11-01
-
-- Changed the following exposed functions to lower case non-exported functions
-  - GetActor
-  - GetActorFromRow
-  - GetChainsForActor
-  - SetActorStakeAmount
-  - GetActorStakeAmount
-  - GetCtxAndTx
-  - GetCtx
-  - SetValidatorStakedTokens
-  - GetValidatorStakedTokens 
 
 ## [0.0.0.6] - 2022-10-06
 

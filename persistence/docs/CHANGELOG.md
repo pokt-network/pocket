@@ -7,6 +7,100 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.9] - 2022-11-04
+
+- Changed the following exposed functions to lowercase non-exported functions
+- [./pocket/persistence/]
+  - GetActor
+  - GetActorFromRow
+  - GetChainsForActor
+  - SetActorStakeAmount
+  - GetActorStakeAmount
+  - GetCtxAndTx
+  - GetCtx
+  - SetValidatorStakedTokens
+  - GetValidatorStakedTokens
+- [./pocket/persistence/test/]
+  - FuzzServiceNode
+  - TestGetSetServiceNodeStakeAmount
+  - TestInsertServiceNodeAndExists
+  - TestUpdateServiceNode
+  - TestGetServiceNodesReadyToUnstake
+  - TestGetServiceNodeStatus
+  - TestGetServiceNodePauseHeightIfExists
+  - TestSetServiceNodePauseHeightAndUnstakeLater
+  - TestGetServiceNodeOutputAddress
+  - FuzzApplication
+  - TestInsertAppAndExists
+  - TestUpdateApp
+  - TestGetAppsReadyToUnstake
+  - TestGetAppStatus
+  - TestGetAppPauseHeightIfExists
+  - TestSetAppPauseHeightAndUnstakeLater
+  - TestGetAppOutputAddress
+  - TestGetSetStakeAmount
+  - FuzzFisherman
+  - TestGetSetFishermanStakeAmount
+  - TestInsertFishermanAndExists
+  - TestUpdateFisherman
+  - TestGetFishermenReadyToUnstake
+  - TestGetFishermanStatus
+  - TestGetFishermanPauseHeightIfExists
+  - TestSetFishermanPauseHeightAndUnstakeLater
+  - TestGetFishermanOutputAddress
+  - TestPersistenceContextParallelReadWrite
+  - TestPersistenceContextTwoWritesErrors
+  - TestPersistenceContextSequentialWrites
+  - TestPersistenceContextMultipleParallelReads
+  - FuzzValidator
+  - TestGetSetValidatorStakeAmount
+  - TestInsertValidatorAndExists
+  - TestUpdateValidator
+  - TestGetValidatorsReadyToUnstake
+  - TestGetValidatorStatus
+  - TestGetValidatorPauseHeightIfExists
+  - TestSetValidatorPauseHeightAndUnstakeLater
+  - TestGetValidatorOutputAddress
+  - TestInitParams
+  - TestGetSetIntParam
+  - TestGetSetStringParam
+  - TestGetSetByteArrayParam
+  - TestGetSetToggleIntFlag
+  - TestGetSetToggleStringFlag
+  - TestGetSetToggleByteArrayFlag
+  - GetGenericActor
+  - NewTestGenericActor
+  - FuzzAccountAmount
+  - TestDefaultNonExistentAccountAmount
+  - TestSetAccountAmount
+  - TestAddAccountAmount
+  - TestSubAccountAmount
+  - FuzzPoolAmount
+  - TestDefaultNonExistentPoolAmount
+  - TestSetPoolAmount
+  - TestAddPoolAmount
+  - TestSubPoolAmount
+  - TestGetAllAccounts
+  - TestGetAllPools
+  - NewTestPostgresContext
+  - NewFuzzTestPostgresContext
+- [./pocket/persistence/types]
+  - ProtocolActorTableSchema
+  - ProtocolActorChainsTableSchema
+  - SelectChains
+  - ReadyToUnstake
+  - InsertChains
+  - UpdateUnstakingHeight
+  - UpdateStakeAmount
+  - UpdatePausedHeight
+  - UpdateUnstakedHeightIfPausedBefore
+  - AccToAccInterface
+  - TestInsertParams
+  - AccountOrPoolSchema
+  - InsertAcc
+  - SelectBalance
+
+
 ## [0.0.0.8] - 2022-10-19
 
 - Fixed `ToPersistenceActors()` by filling all structure fields
