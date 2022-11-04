@@ -12,15 +12,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func fuzzApplication(f *testing.F) {
+func FuzzApplication(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		newTestGenericActor(types.ApplicationActor, newTestApp),
-		getGenericActor(types.ApplicationActor, getTestApp),
+		NewTestGenericActor(types.ApplicationActor, newTestApp),
+		GetGenericActor(types.ApplicationActor, getTestApp),
 		types.ApplicationActor)
 }
 
-func testInsertAppAndExists(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestInsertAppAndExists(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -50,8 +50,8 @@ func testInsertAppAndExists(t *testing.T) {
 	require.True(t, exists, "actor that should exist at current height does not")
 }
 
-func testUpdateApp(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestUpdateApp(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -82,8 +82,8 @@ func testUpdateApp(t *testing.T) {
 	require.Equal(t, StakeToUpdate, stakedTokens, "stake not updated for current height")
 }
 
-func testGetAppsReadyToUnstake(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestGetAppsReadyToUnstake(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -124,8 +124,8 @@ func testGetAppsReadyToUnstake(t *testing.T) {
 	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingApps[0].GetAddress(), unstakingApps[1].GetAddress()})
 }
 
-func testGetAppStatus(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+func TestGetAppStatus(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -143,8 +143,8 @@ func testGetAppStatus(t *testing.T) {
 	require.Equal(t, DefaultStakeStatus, status, "unexpected status")
 }
 
-func testGetAppPauseHeightIfExists(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+func TestGetAppPauseHeightIfExists(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -162,8 +162,8 @@ func testGetAppPauseHeightIfExists(t *testing.T) {
 	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
 }
 
-func testSetAppPauseHeightAndUnstakeLater(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestSetAppPauseHeightAndUnstakeLater(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -188,8 +188,8 @@ func testSetAppPauseHeightAndUnstakeLater(t *testing.T) {
 	require.Equal(t, unstakingHeight, appUnstakingHeight, "unstaking height was not set correctly")
 }
 
-func testGetAppOutputAddress(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestGetAppOutputAddress(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -223,9 +223,9 @@ func newTestApp() (*types.Actor, error) {
 	}, nil
 }
 
-func testGetSetStakeAmount(t *testing.T) {
+func TestGetSetStakeAmount(t *testing.T) {
 	var newStakeAmount = "new_stake_amount"
-	db := newTestPostgresContext(t, 1)
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)

@@ -12,20 +12,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func fuzzServiceNode(f *testing.F) {
+func FuzzServiceNode(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		newTestGenericActor(types.ServiceNodeActor, newTestServiceNode),
-		getGenericActor(types.ServiceNodeActor, getTestServiceNode),
+		NewTestGenericActor(types.ServiceNodeActor, newTestServiceNode),
+		GetGenericActor(types.ServiceNodeActor, getTestServiceNode),
 		types.ServiceNodeActor)
 }
 
-func testGetSetServiceNodeStakeAmount(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+func TestGetSetServiceNodeStakeAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
 	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestServiceNode, db.GetServiceNodeStakeAmount, db.SetServiceNodeStakeAmount, 1)
 }
 
-func testInsertServiceNodeAndExists(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestInsertServiceNodeAndExists(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -55,8 +55,8 @@ func testInsertServiceNodeAndExists(t *testing.T) {
 	require.True(t, exists, "actor that should exist at current height does not")
 }
 
-func testUpdateServiceNode(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestUpdateServiceNode(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -87,8 +87,8 @@ func testUpdateServiceNode(t *testing.T) {
 	require.Equal(t, StakeToUpdate, stakedTokens, "stake not updated for current height")
 }
 
-func testGetServiceNodesReadyToUnstake(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestGetServiceNodesReadyToUnstake(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -131,8 +131,8 @@ func testGetServiceNodesReadyToUnstake(t *testing.T) {
 	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingServiceNodes[0].GetAddress(), unstakingServiceNodes[1].GetAddress()})
 }
 
-func testGetServiceNodeStatus(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+func TestGetServiceNodeStatus(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -151,8 +151,8 @@ func testGetServiceNodeStatus(t *testing.T) {
 	require.Equal(t, DefaultStakeStatus, status, "unexpected status")
 }
 
-func testGetServiceNodePauseHeightIfExists(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -171,8 +171,8 @@ func testGetServiceNodePauseHeightIfExists(t *testing.T) {
 	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
 }
 
-func testSetServiceNodePauseHeightAndUnstakeLater(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestSetServiceNodePauseHeightAndUnstakeLater(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -198,8 +198,8 @@ func testSetServiceNodePauseHeightAndUnstakeLater(t *testing.T) {
 	require.Equal(t, unstakingHeight, serviceNodeUnstakingHeight, "unstaking height was not set correctly")
 }
 
-func testGetServiceNodeOutputAddress(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestGetServiceNodeOutputAddress(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)

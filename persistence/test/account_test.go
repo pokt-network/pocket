@@ -18,8 +18,8 @@ import (
 
 // TODO(andrew): Find all places where we import twice and update the imports appropriately.
 
-func fuzzAccountAmount(f *testing.F) {
-	db := newFuzzTestPostgresContext(f, 0)
+func FuzzAccountAmount(f *testing.F) {
+	db := NewFuzzTestPostgresContext(f, 0)
 	operations := []string{
 		"AddAmount",
 		"SubAmount",
@@ -87,8 +87,8 @@ func fuzzAccountAmount(f *testing.F) {
 	})
 }
 
-func testDefaultNonExistentAccountAmount(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestDefaultNonExistentAccountAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 	addr, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
@@ -97,8 +97,8 @@ func testDefaultNonExistentAccountAmount(t *testing.T) {
 	require.Equal(t, "0", accountAmount)
 }
 
-func testSetAccountAmount(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestSetAccountAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 	account := newTestAccount(t)
 	addrBz, err := hex.DecodeString(account.Address)
 	require.NoError(t, err)
@@ -118,8 +118,8 @@ func testSetAccountAmount(t *testing.T) {
 	require.Equal(t, StakeToUpdate, accountAmount, "unexpected amount after second set")
 }
 
-func testAddAccountAmount(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestAddAccountAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 	account := newTestAccount(t)
 
 	addrBz, err := hex.DecodeString(account.Address)
@@ -141,8 +141,8 @@ func testAddAccountAmount(t *testing.T) {
 	require.Equal(t, expectedAccountAmount, accountAmount, "unexpected amount after add")
 }
 
-func testSubAccountAmount(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestSubAccountAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 	account := newTestAccount(t)
 
 	addrBz, err := hex.DecodeString(account.Address)
@@ -163,8 +163,8 @@ func testSubAccountAmount(t *testing.T) {
 	require.Equal(t, expectedAccountAmount, accountAmount, "unexpected amount after sub")
 }
 
-func fuzzPoolAmount(f *testing.F) {
-	db := newFuzzTestPostgresContext(f, 0)
+func FuzzPoolAmount(f *testing.F) {
+	db := NewFuzzTestPostgresContext(f, 0)
 	operations := []string{
 		"AddAmount",
 		"SubAmount",
@@ -227,16 +227,16 @@ func fuzzPoolAmount(f *testing.F) {
 	})
 }
 
-func testDefaultNonExistentPoolAmount(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestDefaultNonExistentPoolAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	poolAmount, err := db.GetPoolAmount("some_pool_name", db.Height)
 	require.NoError(t, err)
 	require.Equal(t, "0", poolAmount)
 }
 
-func testSetPoolAmount(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestSetPoolAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 	pool := newTestPool(t)
 
 	err := db.SetPoolAmount(pool.Address, DefaultStake)
@@ -254,8 +254,8 @@ func testSetPoolAmount(t *testing.T) {
 	require.Equal(t, StakeToUpdate, poolAmount, "unexpected amount after second set")
 }
 
-func testAddPoolAmount(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestAddPoolAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 	pool := newTestPool(t)
 
 	err := db.SetPoolAmount(pool.Address, DefaultStake)
@@ -274,8 +274,8 @@ func testAddPoolAmount(t *testing.T) {
 	require.Equal(t, expectedPoolAmount, poolAmount, "unexpected amount after add")
 }
 
-func testSubPoolAmount(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestSubPoolAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 	pool := newTestPool(t)
 	err := db.SetPoolAmount(pool.Address, DefaultStake)
 	require.NoError(t, err)
@@ -292,8 +292,8 @@ func testSubPoolAmount(t *testing.T) {
 	require.Equal(t, expectedPoolAmount, poolAmount, "unexpected amount after sub")
 }
 
-func testGetAllAccounts(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestGetAllAccounts(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 	updateAccount := func(db *persistence.PostgresContext, acc modules.Account) error {
 		if addr, err := hex.DecodeString(acc.GetAddress()); err == nil {
 			return nil
@@ -306,8 +306,8 @@ func testGetAllAccounts(t *testing.T) {
 	getAllActorsTest(t, db, db.GetAllAccounts, createAndInsertNewAccount, updateAccount, 8)
 }
 
-func testGetAllPools(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestGetAllPools(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	updatePool := func(db *persistence.PostgresContext, pool modules.Account) error {
 		return db.AddPoolAmount(pool.GetAddress(), "10")

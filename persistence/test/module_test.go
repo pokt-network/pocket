@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testPersistenceContextParallelReadWrite(t *testing.T) {
+func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	t.Cleanup(func() {
 		require.NoError(t, testPersistenceMod.NewWriteContext().ResetContext())
 	})
@@ -48,7 +48,7 @@ func testPersistenceContextParallelReadWrite(t *testing.T) {
 	require.Equal(t, contextBOriginalAmount, contextAOriginalAmount)
 }
 
-func testPersistenceContextTwoWritesErrors(t *testing.T) {
+func TestPersistenceContextTwoWritesErrors(t *testing.T) {
 	t.Cleanup(func() {
 		require.NoError(t, testPersistenceMod.NewWriteContext().ResetContext())
 	})
@@ -65,7 +65,7 @@ func testPersistenceContextTwoWritesErrors(t *testing.T) {
 	require.Error(t, err)
 }
 
-func testPersistenceContextSequentialWrites(t *testing.T) {
+func TestPersistenceContextSequentialWrites(t *testing.T) {
 	// Opening up first write context succeeds
 	writeContext1, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
@@ -88,7 +88,7 @@ func testPersistenceContextSequentialWrites(t *testing.T) {
 	require.NoError(t, writeContext3.Release())
 }
 
-func testPersistenceContextMultipleParallelReads(t *testing.T) {
+func TestPersistenceContextMultipleParallelReads(t *testing.T) {
 	// Opening up first read context succeeds
 	readContext1, err := testPersistenceMod.NewReadContext(0)
 	require.NoError(t, err)

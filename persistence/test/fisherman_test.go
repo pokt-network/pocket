@@ -14,20 +14,20 @@ import (
 
 // TODO(andrew): Rename `addrBz` to `fishAddrBz` so tests are easier to read and understand. Ditto in all other locations.
 
-func fuzzFisherman(f *testing.F) {
+func FuzzFisherman(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		newTestGenericActor(types.FishermanActor, newTestFisherman),
-		getGenericActor(types.FishermanActor, getTestFisherman),
+		NewTestGenericActor(types.FishermanActor, newTestFisherman),
+		GetGenericActor(types.FishermanActor, getTestFisherman),
 		types.FishermanActor)
 }
 
-func testGetSetFishermanStakeAmount(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+func TestGetSetFishermanStakeAmount(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
 	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestFisherman, db.GetFishermanStakeAmount, db.SetFishermanStakeAmount, 1)
 }
 
-func testInsertFishermanAndExists(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestInsertFishermanAndExists(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -57,8 +57,8 @@ func testInsertFishermanAndExists(t *testing.T) {
 	require.True(t, exists, "actor that should exist at current height does not")
 }
 
-func testUpdateFisherman(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestUpdateFisherman(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -89,8 +89,8 @@ func testUpdateFisherman(t *testing.T) {
 	require.Equal(t, StakeToUpdate, stakedTokens, "stake not updated for current height")
 }
 
-func testGetFishermenReadyToUnstake(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestGetFishermenReadyToUnstake(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -131,8 +131,8 @@ func testGetFishermenReadyToUnstake(t *testing.T) {
 	require.ElementsMatch(t, [][]byte{addrBz2, addrBz3}, [][]byte{unstakingFishermen[0].GetAddress(), unstakingFishermen[1].GetAddress()})
 }
 
-func testGetFishermanStatus(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+func TestGetFishermanStatus(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -151,8 +151,8 @@ func testGetFishermanStatus(t *testing.T) {
 	require.Equal(t, status, DefaultStakeStatus, "unexpected status")
 }
 
-func testGetFishermanPauseHeightIfExists(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+func TestGetFishermanPauseHeightIfExists(t *testing.T) {
+	db := NewTestPostgresContext(t, 1)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -171,8 +171,8 @@ func testGetFishermanPauseHeightIfExists(t *testing.T) {
 	require.Equal(t, pauseHeight, DefaultPauseHeight, "unexpected pause height")
 }
 
-func testSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
@@ -198,8 +198,8 @@ func testSetFishermanPauseHeightAndUnstakeLater(t *testing.T) {
 	require.Equal(t, unstakingHeight, fishermanUnstakingHeight, "unstaking height was not set correctly")
 }
 
-func testGetFishermanOutputAddress(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+func TestGetFishermanOutputAddress(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
 
 	fisherman, err := createAndInsertDefaultTestFisherman(db)
 	require.NoError(t, err)
