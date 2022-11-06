@@ -41,11 +41,12 @@ func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 
 func (m *persistenceModule) clearState(_ *debug.DebugMessage) {
 	context, err := m.NewRWContext(-1)
-	defer context.Commit(nil)
 	if err != nil {
 		log.Printf("Error creating new context: %s \n", err)
 		return
 	}
+	defer context.Commit(nil)
+
 	if err := context.(*PostgresContext).DebugClearAll(); err != nil {
 		log.Printf("Error clearing state: %s \n", err)
 		return

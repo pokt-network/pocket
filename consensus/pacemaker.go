@@ -220,9 +220,19 @@ func (p *paceMaker) NewHeight() {
 }
 
 func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
+	p.consensusMod.m.Lock()
+	defer p.consensusMod.m.Unlock()
+
 	p.consensusMod.Step = NewRound
 	p.consensusMod.clearLeader()
 	p.consensusMod.clearMessagesPool()
+	// TECHDEBT: This should be avoidable altogether
+	if p.consensusMod.utilityContext != nil {
+		if err := p.consensusMod.utilityContext.Release(); err != nil {
+			log.Println("[WARN] Failed to release utility context: ", err)
+		}
+		p.consensusMod.utilityContext = nil
+	}
 
 	// TODO(olshansky): This if structure for debug purposes only; think of a way to externalize it...
 	if p.manualMode && !forceNextView {
