@@ -39,11 +39,12 @@ type PersistenceRWContext interface {
 	PersistenceWriteContext
 }
 
-// TODO (andrew) convert address and public key to string not bytes #149
-// TODO: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
+// REFACTOR: Simplify the interface
 // - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
 // - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
+// - Reference: https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces
 
+// TOD (#149): convert address and public key to string from bytes
 // NOTE: There's not really a use case for a write only interface, but it abstracts and contrasts nicely against the read only context
 type PersistenceWriteContext interface {
 	// Context Operations
@@ -58,9 +59,12 @@ type PersistenceWriteContext interface {
 	IndexTransactions() error
 
 	// Block Operations
-	SetLatestTxResults(txResults []TxResult)                                                              // DISCUSS_IN_THIS_COMMIT: Can we remove `TxResult` from the public facing interface given that we set transactions in `SetProposalBlock`?
-	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr []byte, transactions [][]byte) error // TODO(#284): Remove `blockProtoBytes`
-	StoreBlock(quorumCert []byte) error                                                                   // Store the block into persistence
+	// DISCUSS_IN_THIS_COMMIT: Can we remove `TxResult` from the public facing interface given that we set transactions in `SetProposalBlock`?
+	SetLatestTxResults(txResults []TxResult)
+	// TODO(#284): Remove `blockProtoBytes`
+	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr []byte, transactions [][]byte) error
+	// Store the block into persistence
+	StoreBlock(quorumCert []byte) error
 	UpdateAppHash() ([]byte, error)
 
 	// Pool Operations
