@@ -86,7 +86,7 @@ func (pg *PostgresContext) ResetContext() error {
 	return nil
 }
 
-// DISCUSS_IN_THIS_COMMIT:
+// DISCUSS:
 // 1. Can we remove `Latest` from these Setter & Getter methods
 // 2. Can we scope that to this package?
 // 3. Is `context.go` more appropriate for these than `db.go`?
