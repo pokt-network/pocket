@@ -3,8 +3,9 @@ package persistence
 import (
 	"context"
 	"fmt"
-	"github.com/pokt-network/pocket/persistence/indexer"
 	"log"
+
+	"github.com/pokt-network/pocket/persistence/indexer"
 
 	"github.com/pokt-network/pocket/persistence/types"
 
@@ -204,8 +205,8 @@ func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 	return kvstore.NewKVStore(blockStorePath)
 }
 
-// TODO(drewsky): Simplify and externalize the logic for whether genesis should be populated and
-// move the if logic out of this file.
+// HACK(olshansky): Simplify and externalize the logic for whether genesis should be populated and
+//                  move the if logic out of this file.
 func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	checkContext, err := m.NewReadContext(-1)
 	if err != nil {
@@ -213,10 +214,9 @@ func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	}
 	defer checkContext.Close()
 
-	maxHeight, err := checkContext.GetLatestBlockHeight()
-	if err == nil || maxHeight == 0 {
+	_, err = checkContext.GetLatestBlockHeight()
+	if err != nil {
 		return true, nil
 	}
-
-	return m.blockStore.Exists(heightToBytes(int64(maxHeight)))
+	return false, nil
 }
