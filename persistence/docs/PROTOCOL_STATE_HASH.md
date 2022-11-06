@@ -1,5 +1,7 @@
 # AppHash <!-- omit in toc -->
 
+This document describes the persistence module internal implementation of how the state hash is updated. Specifically, what happens once the `UpdateStateHash` function in [persistence module interface](../../shared/modules/persistence_module.go) is called.
+
 ## Update State Hash
 
 This flow shows the interaction between the PostgresDB and MerkleTrees to compute the state hash.
@@ -7,7 +9,7 @@ This flow shows the interaction between the PostgresDB and MerkleTrees to comput
 ```mermaid
 sequenceDiagram
     participant P as Persistence Module
-    participant PP as Persistence (PostgresDB)
+    participant PP as Persistence (SQLDatabase)
     participant PM as Persistence (MerkleTree)
 
     loop for each protocol actor type
