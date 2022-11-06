@@ -1,38 +1,43 @@
 # State Hash <!-- omit in toc -->
 
-- [1.Context Management](#1context-management)
+This document describes of the cross-module communication using the interfaces in [../shared/modules](../shared/modules) to compute a new state hash.
+
+See module specific documentation & implementation details inside each module respectively.
+
+- [Context Management](#context-management)
 - [Block Application](#block-application)
-- [Block Commit](#block-commit)
-
-<!-- See if there's an answer in this question to add links to notes: https://stackoverflow.com/questions/74103729/adding-hyperlinks-to-notes-in-mermaid-sequence-diagrams -->
-
-Describes of the cross-module communication using the interfaces in [shared/modules](../shared/modules) to compute a new state hash.
-
-See module specific documentation & implementation details inside each module respecively.their respective modules.
 
 _NOTE: The diagrams below use some [Hotstuff specific](https://arxiv.org/abs/1803.05069) terminology as described in the [HotPOKT Consensus Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/consensus) but can be adapted to other BFT protocols as well._
 
-NOTE:
+<!-- See if there's an answer in this question to add links to notes: https://stackoverflow.com/questions/74103729/adding-hyperlinks-to-notes-in-mermaid-sequence-diagrams -->
 
-## 1.Context Management
+## Context Management
 
-The `Utility` and `Persistence` modules maintain **ephemeral states** driven by the `Consensus` module that can be released & reverted as a result of various (e.g. lack of Validator consensus) before the state is committed and persisted to disk (i.e. the block is finalized).
+The `Utility` and `Persistence` modules maintain a context (i.e. an ephemeral states) driven by the `Consensus` module that can be released & reverted as a result of various (e.g. lack of Validator consensus) before the state is committed and persisted to disk (i.e. the block is finalized).
 
-The `Hotstuff lifecycle` part refers to the so-called `PreCommit` and `Commit` phases of the protocol.
+On every round of every height:
+
+1. The `Consensus` module handle a `NEWROUND` message
+2. A new `UtilityContext` is initialized at the current height
+3. A new `PersistenceRWContext` is initialized at the current height
+4. The [Block Application](#block-application) flow commences
 
 ```mermaid
 sequenceDiagram
-    participant N as Node
+    title Steps 1-4
+    participant B as Bus
     participant C as Consensus
     participant U as Utility
     participant P as Persistence
-    participant P2P as P2P
 
-    N-->>C: HandleMessage(msg)
+    %% Handle New Message
+    B-->>C: HandleMessage(msg)
+
     critical NewRound
+        %% Create Contexts
         C->>+U: NewContext(height)
         U->>+P: NewRWContext(height)
-        P->>-U: PersistenceRWContext
+        P->>-U: PersistenceContext
         U->>U: store context<br>locally
         activate U
         deactivate U
@@ -40,95 +45,130 @@ sequenceDiagram
         C->>C: store context<br>locally
         activate C
         deactivate C
+
+        %% Apply Block
         Note over C, P: See 'Block Application'
     end
+```
 
-    Note over N, P2P: Hotstuff lifecycle
-    N-->>C: HandleMessage(anypb.Any)
+5. The **HotPOKT lifecycle** takes place so Validators achieve consensus; steps `PRECOMMIT` and `COMMIT`
+6. The `Consensus` module handle a `DECIDE` message
+7. The final `quorumCertificate` is propagated to the `UtilityContext` on Commit
+8. The final `quorumCertificate` is propagated to the `PersistenceContext` on Commit
+9. The persistence module's internal implementation for [Store Block](../../persistence/docs/PROTOCOL_STATE_HASH.md) must execute.
+10. Both the `UtilityContext` and `PersistenceContext` are released
 
-    critical Decide Message
-        Note over C, P: See 'Block Commit'
+```mermaid
+sequenceDiagram
+    title Steps 6-10
+    participant B as Bus
+    participant C as Consensus
+    participant U as Utility
+    participant P as Persistence
+
+    %% Handle New Message
+    B-->>C: HandleMessage(msg)
+
+    critical Decide
+        %% Commit Context
+        C->>+U: Context.Commit(quorumCert)
+        U->>+P: Context.Commit(quorumCert)
+        P->>P: Internal Implementation
+        Note over P: Store Block
+        P->>-U: err_code
+        U->>C: err_code
+        deactivate U
+
+        %% Release Context
+        C->>+U: Context.Release()
+        U->>+P: Context.Release()
+        P->>-U: err_code
+        U->>-C: err_code
     end
+
 ```
 
 ## Block Application
 
-This flow shows how the `leader` and the `replica`s behave in order to apply a `block` and return a `stateHash`.
+When applying the block block during the `NEWROUND` message shown above, the majority of the flow is similar between the _leader_ and the _replica_ with one of the major differences being a call to the `Utility` module as seen below.
+
+- `ApplyBlock` - Uses the existing set of transactions to validate & propose.
+- `CreateAndApplyProposalBlock` - Reaps the mempool for a new set of transaction to validate and propose.
+
+```mermaid
+graph TD
+    B[Should I prepare a new block?] --> |Wait for 2/3+ NEWROUND messages| C
+
+    C[Am I the leader?] --> |Yes| D
+    C[Am I the leader?] --> |No| Z
+
+    D[Did I get any prepareQCs?] --> |Find highest valid PrepareQC| E
+    D[Did I get any prepareQCs?] --> |No| Z
+
+    E[Am I ahead of highPrepareQC?] --> |Yes| G
+    E[Am I ahead of highPrepareQC?] --> |No| Z
+
+    G[CreateAndApplyProposalBlock]
+    Z[ApplyBlock]
+```
+
+As either the _leader_ or _replica_, the following steps are followed to apply the proposal transactions in the block.
+
+1.  Retrieve the `PersistenceContext` from the `UtilityContext`
+2.  Update the `PersistenceContext` with the proposed block
+3.  Call either `ApplyBlock` or `CreateAndApplyProposalBlock` based on the flow above
 
 ```mermaid
 sequenceDiagram
+    title Steps 1-3
     participant C as Consensus
     participant U as Utility
     participant P as Persistence
 
-    %% Prepare or get block as leader
-    opt if leader
-        C->>U: GetProposalTransactions(proposer, maxTxBz, [lastVal])
-        activate U
-        alt no QC in NewRound
-        U->>U: reap mempool <br> & prepare block
-        activate U
-        deactivate U
-    else
-        U->>U: find QC <br> & get block
-        activate U
-        deactivate U
-        end
-        U-->>C: txs
-        deactivate U
-    end
+        %% Retrieve the persistence context
+        C->>+U: GetPersistenceContext()
+        U->>-C: PersistenceContext
 
-    %% Apply block as leader or replica
-    C->>+U: ApplyBlock(height, proposer, txs, lastVals)
-    loop [for each op in tx] for each tx in txs
+        %% Update the proposal in the persistence context
+        C->>+P: SetProposalBlock
+        P->>-C: err_code
+
+        %% Apply the block to the local proposal state
+        C->>+U: ApplyBlock / CreateAndApplyProposalBlock
+```
+
+4. Loop over all transactions proposed
+5. Check if the transaction has already been applied to the local state
+6. Perform the CRUD operation(s) corresponding to each transaction
+7. The persistence module's internal implementation for [Updating a State hash](../../persistence/docs/PROTOCOL_STATE_HASH.md) must execute.
+8. Validate that the local state hash computed is the same as that proposed.
+
+```mermaid
+sequenceDiagram
+    title Steps 4-8
+    participant C as Consensus
+    participant U as Utility
+    participant P as Persistence
+
+    loop for each tx in txs
         U->>+P: TransactionExists(txHash)
         P->>-U: true | false
         opt if tx is not indexed
-            U->>+P: Get*/Set*
-            P-->>-U: result, err_code
-            U->>U: Validation logic
-            activate U
-            deactivate U
-            U->>+P: StoreTransaction(tx)
-            P->>P: Store tx locally
-            activate P
-            deactivate P
-            P-->>-U: result, err_code
+            loop for each operation in tx
+                U->>+P: Get*/Set*/Update*/Insert*
+                P-->>-U: err_code
+                U->>U: Validation logic
+                activate U
+                deactivate U
+            end
         end
     end
     U->>+P: UpdateAppHash()
-    P->>P: Update state hash
-    activate P
-    deactivate P
-    P-->>-U: stateHash
-    U-->>-C: stateHash
+    P->>P: Internal Implementation
+    Note over P: Update state hash
+    P->>-U: stateHash
+    U->>C: stateHash
+
+    %% Validate the updated hash
+    C->>C: Compare local hash against proposed hash
 ```
-
-The [V1 Persistence Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/persistence) outlines the use of a **PostgresDB** and **Merkle Trees** to implement the `Update State Hash` component. This is an internal detail which can be done differently depending on the implementation. For the core V1 implementation, see the flows outlined [here](../../../persistence/docs/AppHash.md).
-
-## Block Commit
-
-```mermaid
-sequenceDiagram
-    participant C as Consensus
-    participant U as Utility
-    participant P as Persistence
-
-    %% Commit Context
-    C->>+U: CommitContext(quorumCert)
-    U->>+P: Commit(quorumCert)
-    P->>P: See 'Store Block'
-    P->>-U: result, err_code
-    U->>+P: Release()
-    P->>-U: result, err_code
-    deactivate U
-
-    %% Release Context
-    C->>+U: Release()
-    U->>-C: result, err_code
-    C->>C: release utilityContext
-    activate C
-    deactivate C
-```
-
-The [V1 Persistence Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/persistence) outlines the use of a **key-value store** to implement the `Create And Store Block` component. This is an internal detail which can be done differently depending on the implementation. For the core V1 implementation, see the flows outlined [here](../../../persistence/docs/AppHash.md).

@@ -374,9 +374,6 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 	utilityContextMock.EXPECT().Release().Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
 
-	persistenceContextMock.EXPECT().IndexTransactions().Return(nil).AnyTimes()
-	persistenceContextMock.EXPECT().StoreBlock(gomock.Any()).Return(nil).AnyTimes()
-
 	return utilityContextMock
 }
 

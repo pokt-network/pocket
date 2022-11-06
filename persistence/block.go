@@ -76,7 +76,7 @@ func (p PostgresContext) TransactionExists(transactionHash string) (bool, error)
 	return true, err
 }
 
-func (p PostgresContext) IndexTransactions() error {
+func (p PostgresContext) indexTransactions() error {
 	// TODO: store in batch
 	for _, txResult := range p.GetLatestTxResults() {
 		if err := p.txIndexer.Index(txResult); err != nil {
@@ -101,7 +101,7 @@ func (p *PostgresContext) SetProposalBlock(blockHash string, blockProtoBytes, pr
 //                 until we include the schema as part of the SQL Store because persistence
 //                 currently has no access to the protobuf schema which is the source of truth.
 // TODO: atomic operations needed here - inherited pattern from consensus module
-func (p PostgresContext) StoreBlock(quorumCert []byte) error {
+func (p PostgresContext) storeBlock(quorumCert []byte) error {
 	if p.blockProtoBytes == nil {
 		// IMPROVE/CLEANUP: HACK - currently tests call Commit() on the same height and it throws a
 		// ERROR: duplicate key value violates unique constraint "block_pkey", because it attempts to
@@ -120,7 +120,7 @@ func (p PostgresContext) StoreBlock(quorumCert []byte) error {
 		return err
 	}
 	// Store transactions in indexer
-	return p.IndexTransactions()
+	return p.indexTransactions()
 }
 
 func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {

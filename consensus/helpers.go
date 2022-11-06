@@ -83,6 +83,7 @@ func (m *consensusModule) findHighQC(msgs []*typesCons.HotstuffMessage) (qc *typ
 		if m.GetQuorumCertificate() == nil {
 			continue
 		}
+		// TODO: Make sure to validate the "highest QC" first and add tests
 		if qc == nil || m.GetQuorumCertificate().Height > qc.Height {
 			qc = m.GetQuorumCertificate()
 		}

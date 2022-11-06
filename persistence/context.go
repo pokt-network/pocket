@@ -40,7 +40,7 @@ func (p PostgresContext) Commit(quorumCert []byte) error {
 	if err := p.GetTx().Commit(context.TODO()); err != nil {
 		return err
 	}
-	if err := p.StoreBlock(quorumCert); err != nil {
+	if err := p.storeBlock(quorumCert); err != nil {
 		return err
 	}
 	if err := p.conn.Close(ctx); err != nil {

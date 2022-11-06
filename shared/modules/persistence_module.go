@@ -15,7 +15,7 @@ type PersistenceModule interface {
 	// Context operations
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
-	ReleaseWriteContext() error // Only one write context can exist at a time
+	ReleaseWriteContext() error // The module can maintain many read contexts, but only one write context can exist at a time
 
 	// BlockStore operations
 	GetBlockStore() kvstore.KVStore
@@ -56,15 +56,13 @@ type PersistenceWriteContext interface {
 	Commit(quorumCert []byte) error
 
 	// Indexer Operations
-	IndexTransactions() error
 
 	// Block Operations
-	// DISCUSS_IN_THIS_COMMIT: Can we remove `TxResult` from the public facing interface given that we set transactions in `SetProposalBlock`?
+	// DISCUSS_IN_THIS_COMMIT: Can this function be removed ? If so, could we remove `TxResult` from the public facing interface given that we set transactions in `SetProposalBlock`?
 	SetLatestTxResults(txResults []TxResult)
 	// TODO(#284): Remove `blockProtoBytes`
 	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr []byte, transactions [][]byte) error
 	// Store the block into persistence
-	StoreBlock(quorumCert []byte) error
 	UpdateAppHash() ([]byte, error)
 
 	// Pool Operations
