@@ -359,7 +359,7 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 	ctrl := gomock.NewController(t)
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
-	persistenceContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	persistenceContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	persistenceContextMock.EXPECT().GetPrevAppHash().Return("", nil).AnyTimes()
 
 	utilityContextMock.EXPECT().
@@ -370,8 +370,8 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 		ApplyBlock().
 		Return(appHash, nil).
 		AnyTimes()
-	utilityContextMock.EXPECT().CommitPersistenceContext().Return(nil).AnyTimes()
-	utilityContextMock.EXPECT().ReleaseContext().Return().AnyTimes()
+	utilityContextMock.EXPECT().Commit(nil).Return(nil).AnyTimes()
+	utilityContextMock.EXPECT().Release().Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
 
 	persistenceContextMock.EXPECT().IndexTransactions().Return(nil).AnyTimes()

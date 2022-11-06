@@ -150,7 +150,7 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		log.Fatalf("an error occurred initializing flags: %s", err.Error())
 	}
 
-	if err = rwContext.Commit(); err != nil {
+	if err = rwContext.Commit([]byte("TODO(#284): Genesis QC")); err != nil {
 		log.Fatalf("an error occurred during commit() on genesis state %s ", err.Error())
 	}
 }

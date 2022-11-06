@@ -1,14 +1,22 @@
-# AppHash <!-- omit in toc -->
+# State Hash <!-- omit in toc -->
 
-- [Context Initialization](#context-initialization)
+- [1.Context Management](#1context-management)
 - [Block Application](#block-application)
 - [Block Commit](#block-commit)
 
 <!-- See if there's an answer in this question to add links to notes: https://stackoverflow.com/questions/74103729/adding-hyperlinks-to-notes-in-mermaid-sequence-diagrams -->
 
-## Context Initialization
+Describes of the cross-module communication using the interfaces in [shared/modules](../shared/modules) to compute a new state hash.
 
-This flow shows the process of context initialization between all the modules required to apply a block and compute a state hash during the consensus lifecycle.
+See module specific documentation & implementation details inside each module respecively.their respective modules.
+
+_NOTE: The diagrams below use some [Hotstuff specific](https://arxiv.org/abs/1803.05069) terminology as described in the [HotPOKT Consensus Specification](https://github.com/pokt-network/pocket-network-protocol/tree/main/consensus) but can be adapted to other BFT protocols as well._
+
+NOTE:
+
+## 1.Context Management
+
+The `Utility` and `Persistence` modules maintain **ephemeral states** driven by the `Consensus` module that can be released & reverted as a result of various (e.g. lack of Validator consensus) before the state is committed and persisted to disk (i.e. the block is finalized).
 
 The `Hotstuff lifecycle` part refers to the so-called `PreCommit` and `Commit` phases of the protocol.
 
@@ -20,8 +28,8 @@ sequenceDiagram
     participant P as Persistence
     participant P2P as P2P
 
-    N-->>C: HandleMessage(anypb.Any)
-    critical NewRound Message
+    N-->>C: HandleMessage(msg)
+    critical NewRound
         C->>+U: NewContext(height)
         U->>+P: NewRWContext(height)
         P->>-U: PersistenceRWContext
@@ -108,7 +116,7 @@ sequenceDiagram
 
     %% Commit Context
     C->>+U: CommitContext(quorumCert)
-    U->>+P: Commit(proposerAddr, quorumCert)
+    U->>+P: Commit(quorumCert)
     P->>P: See 'Store Block'
     P->>-U: result, err_code
     U->>+P: Release()

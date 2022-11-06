@@ -3,7 +3,7 @@ package modules
 //go:generate mockgen -source=$GOFILE -destination=./mocks/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
 
 import (
-	"github.com/pokt-network/pocket/persistence/kvstore" // Should be moved to shared
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/debug"
 )
 
@@ -12,13 +12,12 @@ type PersistenceModule interface {
 	ConfigurableModule
 	GenesisDependentModule
 
-	// Context interface
+	// Context operations
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
 	ReleaseWriteContext() error // Only one write context can exist at a time
 
-	// BlockStore interface
-	// ResetContext() error // DEPRECATE(#252): Remove in #284 per the interface changes in #252
+	// BlockStore operations
 	GetBlockStore() kvstore.KVStore
 	NewWriteContext() PersistenceRWContext
 
@@ -56,22 +55,21 @@ type PersistenceWriteContext interface {
 	UpdateAppHash() ([]byte, error)
 
 	// Commits the current context (height, hash, transactions, etc...) to finality.
-	// Commit(proposerAddr []byte, quorumCert []byte) error // INTRODUCE(#284): Add this function in #284 per the interface changes in #252.
+	Commit(quorumCert []byte) error
 
 	// Indexer Operations
 	IndexTransactions() error
 
 	// Block Operations
 	SetLatestTxResults(txResults []TxResult)
-	// TODO_IN_THIS_COMMIT: Remove `blockProtoBytes` in this commit
-	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr, qc []byte, transactions [][]byte) error
-	StoreBlock() error // Store the block into persistence
+	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr []byte, transactions [][]byte) error // TODO(#284): Remove `blockProtoBytes`
+	StoreBlock() error                                                                                    // Store the block into persistence
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error
-	InsertPool(name string, address []byte, amount string) error // TODO (Andrew) remove address from pool #149
+	InsertPool(name string, address []byte, amount string) error // TODO(#149): remove address from pool
 
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error

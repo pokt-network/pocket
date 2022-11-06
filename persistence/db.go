@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pokt-network/pocket/persistence/indexer"
 	"log"
+
+	"github.com/pokt-network/pocket/persistence/indexer"
 
 	"github.com/pokt-network/pocket/persistence/types"
 
@@ -44,21 +45,12 @@ type PostgresContext struct {
 	blockstore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
 	// DISCUSS(#284): this might be retrieved from the block store - temporarily we will access it directly from the module
-	//       following the pattern of the Consensus Module prior to pocket/issue-#315
-	quorumCertificate []byte
-	proposerAddr      []byte
-	blockProtoBytes   []byte
-	blockHash         string
-	blockTxs          [][]byte
-	txResults         []modules.TxResult
-}
-
-func (p PostgresContext) LatestQC() []byte {
-	return p.quorumCertificate
-}
-
-func (p PostgresContext) SetLatestQC(latestQC []byte) {
-	p.quorumCertificate = latestQC
+	//                following the pattern of the Consensus Module prior to pocket/issue-#315
+	proposerAddr    []byte
+	blockProtoBytes []byte
+	blockHash       string
+	blockTxs        [][]byte
+	txResults       []modules.TxResult
 }
 
 func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
@@ -94,6 +86,7 @@ func (pg *PostgresContext) ResetContext() error {
 	return nil
 }
 
+// TODO: Remove `Latest` from these Setter & Getter methods
 func (p PostgresContext) GetLatestProposerAddr() []byte {
 	return p.proposerAddr
 }

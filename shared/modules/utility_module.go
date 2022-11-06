@@ -15,20 +15,21 @@ type UtilityModule interface {
 // operations.
 type UtilityContext interface {
 	// Block operations
-	// Reaps the mempool for transactions that are ready to be proposed in a new block
+
+	// Reaps the mempool for transactions to be proposed in a new block, and applies them to this
+	// context; intended to be used by the block proposer.
 	CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (appHash []byte, transactions [][]byte, err error)
-	// Applies the transactions to an ephemeral state in the utility & underlying persistence context; similar to `SafeNode` in the Hotstuff whitepaper.
+	// Applies the transactions in the local state to the current context; intended to be used by
+	// the block verifiers (i.e. non proposers)..
 	ApplyBlock() (appHash []byte, err error)
 
 	// Context operations
-	Release() error                 // INTRODUCE(#284): Add in #284 per the interface changes in #252.
-	Commit(quorumCert []byte) error // INTRODUCE(#284): Add in #284 per the interface changes in #252.
-
-	ReleaseContext()                             // DEPRECATE(#252): Remove in #284 per the interface changes in #252
-	GetPersistenceContext() PersistenceRWContext // DEPRECATE(#252): Remove in #284 per the interface changes in #252
-	CommitPersistenceContext() error             // DEPRECATE(#252): Remove in #284 per the interface changes in #252
+	Release() error                 // Releases the utility context and any underlying contexts it references
+	Commit(quorumCert []byte) error // State commitment of the current context
+	GetPersistenceContext() PersistenceRWContext
 
 	// Validation operations
+
 	CheckTransaction(tx []byte) error
 }
 

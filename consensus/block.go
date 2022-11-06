@@ -11,11 +11,13 @@ func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
 
 	// Commit and release the context
-	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
+	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
 	}
 
-	m.utilityContext.ReleaseContext()
+	if err := m.utilityContext.Release(); err != nil {
+		return err
+	}
 	m.utilityContext = nil
 
 	return nil
