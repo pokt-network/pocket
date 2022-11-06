@@ -50,7 +50,7 @@ type PostgresContext struct {
 	blockProtoBytes []byte
 	blockHash       string
 	blockTxs        [][]byte
-	txResults       []modules.TxResult
+	txResults       []modules.TxResult // DISCUSS_IN_THIS_COMMIT: Can this be removed and retrieved from `txIndexer` using `height`?
 }
 
 func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
@@ -86,7 +86,10 @@ func (pg *PostgresContext) ResetContext() error {
 	return nil
 }
 
-// TODO: Remove `Latest` from these Setter & Getter methods
+// DISCUSS_IN_THIS_COMMIT:
+// 1. Can we remove `Latest` from these Setter & Getter methods
+// 2. Can we scope that to this package?
+// 3. Is `context.go` more appropriate for these than `db.go`?
 func (p PostgresContext) GetLatestProposerAddr() []byte {
 	return p.proposerAddr
 }

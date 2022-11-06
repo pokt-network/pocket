@@ -57,7 +57,9 @@ func (m *consensusModule) refreshUtilityContext() error {
 	// Ideally, this should not be called.
 	if m.utilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
-		m.utilityContext.ReleaseContext()
+		if err := m.utilityContext.Release(); err != nil {
+			log.Printf("[ERROR] Error releasing utility context: %v\n", err)
+		}
 		m.utilityContext = nil
 	}
 

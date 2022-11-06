@@ -51,9 +51,6 @@ type PersistenceWriteContext interface {
 	RollbackToSavePoint([]byte) error
 	Release() error
 
-	// Block / indexer operations
-	UpdateAppHash() ([]byte, error)
-
 	// Commits the current context (height, hash, transactions, etc...) to finality.
 	Commit(quorumCert []byte) error
 
@@ -61,9 +58,10 @@ type PersistenceWriteContext interface {
 	IndexTransactions() error
 
 	// Block Operations
-	SetLatestTxResults(txResults []TxResult)
+	SetLatestTxResults(txResults []TxResult)                                                              // DISCUSS_IN_THIS_COMMIT: Can we remove `TxResult` from the public facing interface given that we set transactions in `SetProposalBlock`?
 	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr []byte, transactions [][]byte) error // TODO(#284): Remove `blockProtoBytes`
-	StoreBlock() error                                                                                    // Store the block into persistence
+	StoreBlock(quorumCert []byte) error                                                                   // Store the block into persistence
+	UpdateAppHash() ([]byte, error)
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error

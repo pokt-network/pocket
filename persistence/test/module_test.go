@@ -20,7 +20,7 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	context, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
 	require.NoError(t, context.InsertPool(poolName, poolAddress, originalAmount))
-	require.NoError(t, context.Commit())
+	require.NoError(t, context.Commit(nil))
 
 	// verify the insert in the previously committed context worked
 	contextA, err := testPersistenceMod.NewRWContext(0)

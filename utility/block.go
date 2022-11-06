@@ -1,9 +1,10 @@
 package utility
 
 import (
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	"math/big"
 )
 
 /*
@@ -144,7 +145,7 @@ func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
 
 func (u *UtilityContext) GetAppHash() ([]byte, typesUtil.Error) {
 	// Get the root hash of the merkle state tree for state consensus integrity
-	appHash, er := u.Context.AppHash()
+	appHash, er := u.Context.UpdateAppHash()
 	if er != nil {
 		return nil, typesUtil.ErrAppHash(er)
 	}

@@ -6,7 +6,7 @@ import (
 )
 
 func (p PostgresContext) UpdateAppHash() ([]byte, error) {
-	panic("TODO(#284): Implement this function.")
+	return []byte("TODO(#284): Implement this function."), nil
 }
 
 func (p PostgresContext) NewSavePoint(bytes []byte) error {

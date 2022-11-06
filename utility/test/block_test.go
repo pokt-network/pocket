@@ -72,7 +72,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	require.NoError(t, err)
 	addrBz, er := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, er)
-	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, nil, [][]byte{txBz})
+	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
@@ -133,7 +133,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	require.NoError(t, er)
 	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
-	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, nil, [][]byte{txBz})
+	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
@@ -165,7 +165,7 @@ func TestUtilityContext_GetAppHash(t *testing.T) {
 	appHashTest, err := ctx.GetAppHash()
 	require.NoError(t, err)
 
-	appHashSource, er := ctx.Context.AppHash()
+	appHashSource, er := ctx.Context.UpdateAppHash()
 	require.NoError(t, er)
 	require.Equal(t, appHashTest, appHashSource, "unexpected appHash")
 

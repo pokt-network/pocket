@@ -103,7 +103,7 @@ func (u *UtilityContext) NewSavePoint(transactionHash []byte) typesUtil.Error {
 }
 
 func (c *Context) Reset() typesUtil.Error {
-	if err := c.PersistenceRWContext.Reset(); err != nil {
+	if err := c.PersistenceRWContext.Release(); err != nil {
 		return typesUtil.ErrResetContext(err)
 	}
 	return nil
