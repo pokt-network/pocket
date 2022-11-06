@@ -1,8 +1,6 @@
 # State Hash <!-- omit in toc -->
 
-This document describes of the cross-module communication using the interfaces in [../shared/modules](../shared/modules) to compute a new state hash.
-
-See module specific documentation & implementation details inside each module respectively.
+This document describes the cross-module communication using the interfaces in [../shared/modules](../shared/modules) to compute a new state hash. See module specific documentation & implementation details inside each module respectively.
 
 - [Context Management](#context-management)
 - [Block Application](#block-application)
@@ -17,7 +15,7 @@ The `Utility` and `Persistence` modules maintain a context (i.e. an ephemeral st
 
 On every round of every height:
 
-1. The `Consensus` module handle a `NEWROUND` message
+1. The `Consensus` module handles a `NEWROUND` message
 2. A new `UtilityContext` is initialized at the current height
 3. A new `PersistenceRWContext` is initialized at the current height
 4. The [Block Application](#block-application) flow commences
@@ -51,8 +49,8 @@ sequenceDiagram
     end
 ```
 
-5. The **HotPOKT lifecycle** takes place so Validators achieve consensus; steps `PRECOMMIT` and `COMMIT`
-6. The `Consensus` module handle a `DECIDE` message
+5. The **HotPOKT lifecycle** takes place so Validators achieve consensus (i.e. steps `PRECOMMIT` and `COMMIT`)
+6. The `Consensus` module handle the `DECIDE` message
 7. The final `quorumCertificate` is propagated to the `UtilityContext` on Commit
 8. The final `quorumCertificate` is propagated to the `PersistenceContext` on Commit
 9. The persistence module's internal implementation for [Store Block](../../persistence/docs/PROTOCOL_STATE_HASH.md) must execute.
@@ -90,10 +88,10 @@ sequenceDiagram
 
 ## Block Application
 
-When applying the block block during the `NEWROUND` message shown above, the majority of the flow is similar between the _leader_ and the _replica_ with one of the major differences being a call to the `Utility` module as seen below.
+When applying the block during the `NEWROUND` message shown above, the majority of the flow is similar between the _leader_ and the _replica_ with one of the major differences being a call to the `Utility` module as seen below.
 
-- `ApplyBlock` - Uses the existing set of transactions to validate & propose.
-- `CreateAndApplyProposalBlock` - Reaps the mempool for a new set of transaction to validate and propose.
+- `ApplyBlock` - Uses the existing set of transactions to validate & propose
+- `CreateAndApplyProposalBlock` - Reaps the mempool for a new set of transaction to validate and propose
 
 ```mermaid
 graph TD
@@ -135,13 +133,14 @@ sequenceDiagram
 
         %% Apply the block to the local proposal state
         C->>+U: ApplyBlock / CreateAndApplyProposalBlock
+        U->>-C: err_code
 ```
 
 4. Loop over all transactions proposed
 5. Check if the transaction has already been applied to the local state
 6. Perform the CRUD operation(s) corresponding to each transaction
-7. The persistence module's internal implementation for [Updating a State hash](../../persistence/docs/PROTOCOL_STATE_HASH.md) must execute.
-8. Validate that the local state hash computed is the same as that proposed.
+7. The persistence module's internal implementation for [Updating a State hash](../../persistence/docs/PROTOCOL_STATE_HASH.md) must be triggered
+8. Validate that the local state hash computed is the same as that proposed
 
 ```mermaid
 sequenceDiagram
@@ -156,7 +155,7 @@ sequenceDiagram
         opt if tx is not indexed
             loop for each operation in tx
                 U->>+P: Get*/Set*/Update*/Insert*
-                P-->>-U: err_code
+                P->>-U: err_code
                 U->>U: Validation logic
                 activate U
                 deactivate U
@@ -170,5 +169,5 @@ sequenceDiagram
     U->>C: stateHash
 
     %% Validate the updated hash
-    C->>C: Compare local hash against proposed hash
+    C->>C: Compare local hash<br>against proposed hash
 ```
