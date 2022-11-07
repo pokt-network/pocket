@@ -3,6 +3,7 @@ package consensus
 import (
 	"fmt"
 	"log"
+	"sort"
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
@@ -201,6 +202,24 @@ func (*consensusModule) ValidateConfig(cfg modules.Config) error {
 }
 
 func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
+	// Sort the validators by their generic param (i.e. service URL)
+	vals := genesis.GetConsensusGenesisState().GetVals()
+	sort.Slice(vals, func(i, j int) bool {
+		return vals[i].GetGenericParam() < vals[j].GetGenericParam()
+	})
+
+	// Sort the validators by their address
+	vals2 := vals[:]
+	sort.Slice(vals, func(i, j int) bool {
+		return vals[i].GetAddress() < vals[j].GetAddress()
+	})
+
+	for i := 0; i < len(vals); i++ {
+		if vals2[i].GetAddress() != vals[i].GetAddress() {
+			panic("HACK(olshansky): service url and address must be sorted the same way")
+		}
+	}
+
 	return nil
 }
 

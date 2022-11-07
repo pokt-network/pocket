@@ -25,11 +25,11 @@ func (t target) DebugString(n *rainTreeNetwork) string {
 	if !t.isSelf {
 		fmt.Fprintf(&s, " (%s) ", serviceUrl)
 	} else {
-		fmt.Fprintf(&s, "(self) %s ", serviceUrl)
+		fmt.Fprintf(&s, "(self %s) ", serviceUrl)
 	}
 
 	peersManagerStateView := n.peersManager.getNetworkView()
-	for i := 1; i < t.addrBookLengthAtHeight; i++ {
+	for i := 0; i < t.addrBookLengthAtHeight; i++ {
 		serviceUrl := peersManagerStateView.addrBookMap[peersManagerStateView.addrList[i]].ServiceUrl
 		if i == t.index {
 			fmt.Fprintf(&s, " **%s** ", serviceUrl)

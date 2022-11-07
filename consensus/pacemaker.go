@@ -220,8 +220,7 @@ func (p *paceMaker) NewHeight() {
 }
 
 func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
-	p.consensusMod.m.Lock()
-	defer p.consensusMod.m.Unlock()
+	// DISCUSS: Should we lock the consensus module here?
 
 	p.consensusMod.Step = NewRound
 	p.consensusMod.clearLeader()
