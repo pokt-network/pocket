@@ -18,20 +18,79 @@ import (
 	operation that executes at the end of every block.
 */
 
-func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, txResults []modules.TxResult, err error) {
-	u.LatestHeight = latestHeight
-	// begin block lifecycle phase
-	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {
+func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) ([]byte, [][]byte, error) {
+	lastBlockByzantineVals, err := u.GetLastBlockByzantineValidators()
+	if err != nil {
 		return nil, nil, err
 	}
-	// deliver txs lifecycle phase
-	for index, transactionProtoBytes := range transactions {
-		tx, err := typesUtil.TransactionFromBytes(transactionProtoBytes)
+	if err := u.BeginBlock(lastBlockByzantineVals); err != nil {
+		return nil, nil, err
+	}
+	transactions := make([][]byte, 0)
+	txResults := make([]modules.TxResult, 0)
+	totalTxsSizeInBytes := 0
+	txIndex := 0
+	for u.Mempool.Size() != typesUtil.ZeroInt {
+		txBytes, err := u.Mempool.PopTransaction()
 		if err != nil {
 			return nil, nil, err
 		}
-		if err := tx.ValidateBasic(); err != nil {
+		transaction, err := typesUtil.TransactionFromBytes(txBytes)
+		if err != nil {
 			return nil, nil, err
+		}
+		txTxsSizeInBytes := len(txBytes)
+		totalTxsSizeInBytes += txTxsSizeInBytes
+		if totalTxsSizeInBytes >= maxTransactionBytes {
+			// Add back popped transaction to be applied in a future block
+			err := u.Mempool.AddTransaction(txBytes)
+			if err != nil {
+				return nil, nil, err
+			}
+			txTxsSizeInBytes -= txTxsSizeInBytes
+			break // we've reached our max
+		}
+		txResult, err := u.ApplyTransaction(txIndex, transaction)
+		if err != nil {
+			// TODO(#327): Properly implement 'unhappy path' for save points
+			if err := u.RevertLastSavePoint(); err != nil {
+				return nil, nil, err
+			}
+			totalTxsSizeInBytes -= txTxsSizeInBytes
+			continue
+		}
+		transactions = append(transactions, txBytes)
+		txResults = append(txResults, txResult)
+		txIndex++
+	}
+	if err := u.EndBlock(proposer); err != nil {
+		return nil, nil, err
+	}
+	u.GetPersistenceContext().SetLatestTxResults(txResults)
+	// return the app hash (consensus module will get the validator set directly)
+	appHash, err := u.GetAppHash()
+	return appHash, transactions, err
+}
+
+// CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
+func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
+	var txResults []modules.TxResult
+	lastByzantineValidators, err := u.GetLastBlockByzantineValidators()
+	if err != nil {
+		return nil, err
+	}
+	// begin block lifecycle phase
+	if err := u.BeginBlock(lastByzantineValidators); err != nil {
+		return nil, err
+	}
+	// deliver txs lifecycle phase
+	for index, transactionProtoBytes := range u.GetPersistenceContext().GetLatestBlockTxs() {
+		tx, err := typesUtil.TransactionFromBytes(transactionProtoBytes)
+		if err != nil {
+			return nil, err
+		}
+		if err := tx.ValidateBasic(); err != nil {
+			return nil, err
 		}
 		// Validate and apply the transaction to the Postgres database
 		// DISCUSS: currently, the pattern is allowing nil err with an error transaction...
@@ -39,7 +98,7 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 		// Or wait until the entire lifecycle is over to evaluate an 'invalid' block
 		txResult, err := u.ApplyTransaction(index, tx)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		// Add the transaction result to the array
 		txResults = append(txResults, txResult)
@@ -51,10 +110,11 @@ func (u *UtilityContext) ApplyBlock(latestHeight int64, proposerAddress []byte, 
 		// }
 	}
 	// end block lifecycle phase
-	if err := u.EndBlock(proposerAddress); err != nil {
-		return nil, nil, err
+	if err := u.EndBlock(u.GetPersistenceContext().GetLatestProposerAddr()); err != nil {
+		return nil, err
 	}
-	// return the app hash (consensus module will get the validator set directly
+	u.GetPersistenceContext().SetLatestTxResults(txResults)
+	// return the app hash (consensus module will get the validator set directly)
 	appHash, err = u.GetAppHash()
 	return
 }
