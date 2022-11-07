@@ -215,7 +215,10 @@ func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
 	})
 
 	for i := 0; i < len(vals); i++ {
-		if vals2[i].GetAddress() != vals[i].GetAddress() {
+		if vals[i].GetAddress() != vals2[i].GetAddress() {
+			// There is an implicit dependency because of how RainTree works and how the validator map
+			// is currently managed to make sure that the ordering of the address and the service URL
+			// are the same. This will be addressed once the # of validators will scale.
 			panic("HACK(olshansky): service url and address must be sorted the same way")
 		}
 	}
