@@ -43,6 +43,22 @@ type PostgresContext struct {
 	tx         pgx.Tx
 	blockstore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
+	// DISCUSS(#284): this might be retrieved from the block store - temporarily we will access it directly from the module
+	//       following the pattern of the Consensus Module prior to pocket/issue-#315
+	quorumCertificate []byte
+	proposerAddr      []byte
+	blockProtoBytes   []byte
+	blockHash         string
+	blockTxs          [][]byte
+	txResults         []modules.TxResult
+}
+
+func (p PostgresContext) LatestQC() []byte {
+	return p.quorumCertificate
+}
+
+func (p PostgresContext) SetLatestQC(latestQC []byte) {
+	p.quorumCertificate = latestQC
 }
 
 func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
@@ -76,6 +92,30 @@ func (pg *PostgresContext) ResetContext() error {
 	}
 	pg.tx = nil
 	return nil
+}
+
+func (p PostgresContext) GetLatestProposerAddr() []byte {
+	return p.proposerAddr
+}
+
+func (p PostgresContext) GetLatestBlockProtoBytes() []byte {
+	return p.blockProtoBytes
+}
+
+func (p PostgresContext) GetLatestBlockHash() string {
+	return p.blockHash
+}
+
+func (p PostgresContext) GetLatestBlockTxs() [][]byte {
+	return p.blockTxs
+}
+
+func (p PostgresContext) GetLatestTxResults() []modules.TxResult {
+	return p.txResults
+}
+
+func (p *PostgresContext) SetLatestTxResults(txResults []modules.TxResult) {
+	p.txResults = txResults
 }
 
 // TECHDEBT: Implement proper connection pooling

@@ -15,9 +15,8 @@ type UtilityModule interface {
 // operations.
 type UtilityContext interface {
 	// Block operations
-	// TODO(#315): Remove `txResults TxResult` from the interface
-	GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, txResults []TxResult, err error)
-	ApplyBlock(height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, txResults []TxResult, err error)
+	CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (appHash []byte, transactions [][]byte, err error)
+	ApplyBlock() (appHash []byte, err error) // Apply Block may be used for proposal blocks or (in the future) state sync
 
 	// Context operations
 	ReleaseContext()

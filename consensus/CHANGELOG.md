@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.7] - 2022-11-01
+
+- Removed `apphash` and `txResults` from `consensusModule` structure
+- Modified lifecycle to `set` the proposal block within a `PersistenceContext`
+- Allow block and parts to be committed with the persistence context
+
 ## [0.0.0.6] - 2022-10-12
+
 - Stores transactions alongside blocks during `commit`
 - Added current block `[]TxResult` to the module
 

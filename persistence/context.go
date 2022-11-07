@@ -20,8 +20,14 @@ func (p PostgresContext) AppHash() ([]byte, error) {
 	return []byte("A real app hash, I am not"), nil
 }
 
-func (p PostgresContext) Reset() error {
-	panic("TODO: PostgresContext Reset not implemented")
+func (p *PostgresContext) Reset() error {
+	p.txResults = nil
+	p.blockHash = ""
+	p.quorumCertificate = nil
+	p.proposerAddr = nil
+	p.blockProtoBytes = nil
+	p.blockTxs = nil
+	return nil
 }
 
 func (p PostgresContext) Commit() error {
@@ -31,9 +37,14 @@ func (p PostgresContext) Commit() error {
 	if err := p.GetTx().Commit(context.TODO()); err != nil {
 		return err
 	}
+	if err := p.StoreBlock(); err != nil {
+		return err
+	}
 	if err := p.conn.Close(ctx); err != nil {
 		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
-
+	}
+	if err := p.Reset(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -47,6 +58,9 @@ func (p PostgresContext) Release() error {
 	}
 	if err := p.conn.Close(ctx); err != nil {
 		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
+	}
+	if err := p.Reset(); err != nil {
+		return err
 	}
 	return nil
 }

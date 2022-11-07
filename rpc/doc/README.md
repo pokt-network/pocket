@@ -88,7 +88,7 @@ This API might be extended to return potentially useful information such as the 
 
 Definitely we'll need ways to retrieve transactions as well so we can envisage:
 
-- Get a transaction by hash (**GET /v1/client/tx**)
+- Get a transaction by hash (**GET /v1/query/tx **)
 
 ## Code Organization
 

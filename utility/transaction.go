@@ -43,52 +43,6 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 	return u.Mempool.AddTransaction(transactionProtoBytes)
 }
 
-func (u *UtilityContext) GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) ([][]byte, []modules.TxResult, error) {
-	if err := u.BeginBlock(lastBlockByzantineValidators); err != nil {
-		return nil, nil, err
-	}
-	transactions := make([][]byte, 0)
-	txResults := make([]modules.TxResult, 0)
-	totalSizeInBytes := 0
-	index := 0
-	for u.Mempool.Size() != typesUtil.ZeroInt {
-		txBytes, err := u.Mempool.PopTransaction()
-		if err != nil {
-			return nil, nil, err
-		}
-		transaction, err := typesUtil.TransactionFromBytes(txBytes)
-		if err != nil {
-			return nil, nil, err
-		}
-		txSizeInBytes := len(txBytes)
-		totalSizeInBytes += txSizeInBytes
-		if totalSizeInBytes >= maxTransactionBytes {
-			// Add back popped transaction to be applied in a future block
-			err := u.Mempool.AddTransaction(txBytes)
-			if err != nil {
-				return nil, nil, err
-			}
-			break // we've reached our max
-		}
-		txResult, err := u.ApplyTransaction(index, transaction)
-		if err != nil {
-			// TODO: Properly implement 'unhappy path' for save points
-			if err := u.RevertLastSavePoint(); err != nil {
-				return nil, nil, err
-			}
-			totalSizeInBytes -= txSizeInBytes
-			continue
-		}
-		transactions = append(transactions, txBytes)
-		txResults = append(txResults, txResult)
-		index++
-	}
-	if err := u.EndBlock(proposer); err != nil {
-		return nil, nil, err
-	}
-	return transactions, txResults, nil
-}
-
 // CLEANUP: Exposed for testing purposes only
 func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (msg typesUtil.Message, signer string, err typesUtil.Error) {
 	msg, err = tx.Message()
