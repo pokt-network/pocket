@@ -22,14 +22,16 @@ func (t target) DebugString(n *rainTreeNetwork) string {
 	s := strings.Builder{}
 	s.WriteString("[")
 	peersManagerStateView := n.peersManager.getNetworkView()
+	selfAddr := n.selfAddr.String()
 	for i := 0; i < t.addrBookLengthAtHeight; i++ {
-		serviceUrl := peersManagerStateView.addrBookMap[peersManagerStateView.addrList[i]].ServiceUrl
+		addr := peersManagerStateView.addrList[i]
+		serviceUrl := peersManagerStateView.addrBookMap[addr].ServiceUrl
 		switch {
 		case i == t.index && t.isSelf:
 			fmt.Fprintf(&s, " (**%s**) ", serviceUrl)
 		case i == t.index:
 			fmt.Fprintf(&s, " **%s** ", serviceUrl)
-		case t.isSelf:
+		case addr == selfAddr:
 			fmt.Fprintf(&s, " (%s) ", serviceUrl)
 		default:
 			fmt.Fprintf(&s, " %s ", serviceUrl)
