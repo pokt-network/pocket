@@ -5,6 +5,8 @@ All notable changes to this module will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+**TODO:** consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
+
 ## [Unreleased]
 
 ## [0.0.0.9] - 2022-11-04
@@ -20,70 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - GetCtx
   - SetValidatorStakedTokens
   - GetValidatorStakedTokens
-- [./pocket/persistence/test/]
-  - FuzzServiceNode
-  - TestGetSetServiceNodeStakeAmount
-  - TestInsertServiceNodeAndExists
-  - TestUpdateServiceNode
-  - TestGetServiceNodesReadyToUnstake
-  - TestGetServiceNodeStatus
-  - TestGetServiceNodePauseHeightIfExists
-  - TestSetServiceNodePauseHeightAndUnstakeLater
-  - TestGetServiceNodeOutputAddress
-  - FuzzApplication
-  - TestInsertAppAndExists
-  - TestUpdateApp
-  - TestGetAppsReadyToUnstake
-  - TestGetAppStatus
-  - TestGetAppPauseHeightIfExists
-  - TestSetAppPauseHeightAndUnstakeLater
-  - TestGetAppOutputAddress
-  - TestGetSetStakeAmount
-  - FuzzFisherman
-  - TestGetSetFishermanStakeAmount
-  - TestInsertFishermanAndExists
-  - TestUpdateFisherman
-  - TestGetFishermenReadyToUnstake
-  - TestGetFishermanStatus
-  - TestGetFishermanPauseHeightIfExists
-  - TestSetFishermanPauseHeightAndUnstakeLater
-  - TestGetFishermanOutputAddress
-  - TestPersistenceContextParallelReadWrite
-  - TestPersistenceContextTwoWritesErrors
-  - TestPersistenceContextSequentialWrites
-  - TestPersistenceContextMultipleParallelReads
-  - FuzzValidator
-  - TestGetSetValidatorStakeAmount
-  - TestInsertValidatorAndExists
-  - TestUpdateValidator
-  - TestGetValidatorsReadyToUnstake
-  - TestGetValidatorStatus
-  - TestGetValidatorPauseHeightIfExists
-  - TestSetValidatorPauseHeightAndUnstakeLater
-  - TestGetValidatorOutputAddress
-  - TestInitParams
-  - TestGetSetIntParam
-  - TestGetSetStringParam
-  - TestGetSetByteArrayParam
-  - TestGetSetToggleIntFlag
-  - TestGetSetToggleStringFlag
-  - TestGetSetToggleByteArrayFlag
-  - GetGenericActor
-  - NewTestGenericActor
-  - FuzzAccountAmount
-  - TestDefaultNonExistentAccountAmount
-  - TestSetAccountAmount
-  - TestAddAccountAmount
-  - TestSubAccountAmount
-  - FuzzPoolAmount
-  - TestDefaultNonExistentPoolAmount
-  - TestSetPoolAmount
-  - TestAddPoolAmount
-  - TestSubPoolAmount
-  - TestGetAllAccounts
-  - TestGetAllPools
-  - NewTestPostgresContext
-  - NewFuzzTestPostgresContext
 - [./pocket/persistence/types]
   - ProtocolActorTableSchema
   - ProtocolActorChainsTableSchema
