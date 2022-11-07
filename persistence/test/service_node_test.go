@@ -12,20 +12,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func fuzzServiceNode(f *testing.F) {
+func FuzzServiceNode(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		newTestGenericActor(types.ServiceNodeActor, newTestServiceNode),
-		getGenericActor(types.ServiceNodeActor, getTestServiceNode),
+		NewTestGenericActor(types.ServiceNodeActor, newTestServiceNode),
+		GetGenericActor(types.ServiceNodeActor, getTestServiceNode),
 		types.ServiceNodeActor)
 }
 
 func TestGetSetServiceNodeStakeAmount(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+	db := NewTestPostgresContext(t, 1)
 	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestServiceNode, db.GetServiceNodeStakeAmount, db.SetServiceNodeStakeAmount, 1)
 }
 
 func TestInsertServiceNodeAndExists(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -56,7 +56,7 @@ func TestInsertServiceNodeAndExists(t *testing.T) {
 }
 
 func TestUpdateServiceNode(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -88,7 +88,7 @@ func TestUpdateServiceNode(t *testing.T) {
 }
 
 func TestGetServiceNodesReadyToUnstake(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -132,7 +132,7 @@ func TestGetServiceNodesReadyToUnstake(t *testing.T) {
 }
 
 func TestGetServiceNodeStatus(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+	db := NewTestPostgresContext(t, 1)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -152,7 +152,7 @@ func TestGetServiceNodeStatus(t *testing.T) {
 }
 
 func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+	db := NewTestPostgresContext(t, 1)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -172,7 +172,7 @@ func TestGetServiceNodePauseHeightIfExists(t *testing.T) {
 }
 
 func TestSetServiceNodePauseHeightAndUnstakeLater(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)
@@ -199,7 +199,7 @@ func TestSetServiceNodePauseHeightAndUnstakeLater(t *testing.T) {
 }
 
 func TestGetServiceNodeOutputAddress(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	serviceNode, err := createAndInsertDefaultTestServiceNode(db)
 	require.NoError(t, err)

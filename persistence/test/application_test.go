@@ -12,15 +12,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func fuzzApplication(f *testing.F) {
+func FuzzApplication(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		newTestGenericActor(types.ApplicationActor, newTestApp),
-		getGenericActor(types.ApplicationActor, getTestApp),
+		NewTestGenericActor(types.ApplicationActor, newTestApp),
+		GetGenericActor(types.ApplicationActor, getTestApp),
 		types.ApplicationActor)
 }
 
 func TestInsertAppAndExists(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -51,7 +51,7 @@ func TestInsertAppAndExists(t *testing.T) {
 }
 
 func TestUpdateApp(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -83,7 +83,7 @@ func TestUpdateApp(t *testing.T) {
 }
 
 func TestGetAppsReadyToUnstake(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -125,7 +125,7 @@ func TestGetAppsReadyToUnstake(t *testing.T) {
 }
 
 func TestGetAppStatus(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -144,7 +144,7 @@ func TestGetAppStatus(t *testing.T) {
 }
 
 func TestGetAppPauseHeightIfExists(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -163,7 +163,7 @@ func TestGetAppPauseHeightIfExists(t *testing.T) {
 }
 
 func TestSetAppPauseHeightAndUnstakeLater(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -189,7 +189,7 @@ func TestSetAppPauseHeightAndUnstakeLater(t *testing.T) {
 }
 
 func TestGetAppOutputAddress(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)
@@ -225,7 +225,7 @@ func newTestApp() (*types.Actor, error) {
 
 func TestGetSetStakeAmount(t *testing.T) {
 	var newStakeAmount = "new_stake_amount"
-	db := newTestPostgresContext(t, 1)
+	db := NewTestPostgresContext(t, 1)
 
 	app, err := createAndInsertDefaultTestApp(db)
 	require.NoError(t, err)

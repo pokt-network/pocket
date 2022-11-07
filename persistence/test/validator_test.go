@@ -12,20 +12,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func fuzzValidator(f *testing.F) {
+func FuzzValidator(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		newTestGenericActor(types.ValidatorActor, newTestValidator),
-		getGenericActor(types.ValidatorActor, getTestValidator),
+		NewTestGenericActor(types.ValidatorActor, newTestValidator),
+		GetGenericActor(types.ValidatorActor, getTestValidator),
 		types.ValidatorActor)
 }
 
 func TestGetSetValidatorStakeAmount(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+	db := NewTestPostgresContext(t, 1)
 	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestValidator, db.GetValidatorStakeAmount, db.SetValidatorStakeAmount, 1)
 }
 
 func TestInsertValidatorAndExists(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -57,7 +57,7 @@ func TestInsertValidatorAndExists(t *testing.T) {
 }
 
 func TestUpdateValidator(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -85,7 +85,7 @@ func TestUpdateValidator(t *testing.T) {
 }
 
 func TestGetValidatorsReadyToUnstake(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -129,7 +129,7 @@ func TestGetValidatorsReadyToUnstake(t *testing.T) {
 }
 
 func TestGetValidatorStatus(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+	db := NewTestPostgresContext(t, 1)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -149,7 +149,7 @@ func TestGetValidatorStatus(t *testing.T) {
 }
 
 func TestGetValidatorPauseHeightIfExists(t *testing.T) {
-	db := newTestPostgresContext(t, 1)
+	db := NewTestPostgresContext(t, 1)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -170,7 +170,7 @@ func TestGetValidatorPauseHeightIfExists(t *testing.T) {
 }
 
 func TestSetValidatorPauseHeightAndUnstakeLater(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
@@ -197,7 +197,7 @@ func TestSetValidatorPauseHeightAndUnstakeLater(t *testing.T) {
 }
 
 func TestGetValidatorOutputAddress(t *testing.T) {
-	db := newTestPostgresContext(t, 0)
+	db := NewTestPostgresContext(t, 0)
 
 	validator, err := createAndInsertDefaultTestValidator(db)
 	require.NoError(t, err)
