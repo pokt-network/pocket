@@ -12,7 +12,7 @@ import (
 
 // TODO(andrew): Be consistent with `GenericParam` and `ActorSpecificParam` throughout the codebase; preferably the latter.
 
-func GetGenericActor[T any](
+func getGenericActor[T any](
 	protocolActorSchema types.ProtocolActorSchema,
 	getActor func(*persistence.PostgresContext, []byte) (T, error),
 ) func(*persistence.PostgresContext, string) (*types.Actor, error) {
@@ -30,7 +30,7 @@ func GetGenericActor[T any](
 	}
 }
 
-func NewTestGenericActor[T any](protocolActorSchema types.ProtocolActorSchema, newActor func() (T, error)) func() (*types.Actor, error) {
+func newTestGenericActor[T any](protocolActorSchema types.ProtocolActorSchema, newActor func() (T, error)) func() (*types.Actor, error) {
 	return func() (*types.Actor, error) {
 		actor, err := newActor()
 		if err != nil {

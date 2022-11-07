@@ -37,7 +37,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - AccountOrPoolSchema
   - InsertAcc
   - SelectBalance
-
+- [./pocket/persistence/test]
+  - FuzzServiceNode
+  - FuzzApplication
+  - FuzzFisherman
+  - FuzzValidator
+  - GetGenericActor
+  - NewTestGenericActor
+  - FuzzAccountAmount
+  - FuzzPoolAmount
+  - NewTestPostgresContext
+  - NewFuzzTestPostgresContext
 
 ## [0.0.0.8] - 2022-10-19
 

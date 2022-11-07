@@ -57,7 +57,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresContext {
+func newTestPostgresContext(t *testing.T, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
@@ -72,7 +72,7 @@ func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresCon
 	return db
 }
 
-func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
+func newFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
 		log.Fatalf("Error creating new context: %v\n", err)
@@ -119,7 +119,7 @@ func fuzzSingleProtocolActor(
 	getTestActor func(db *persistence.PostgresContext, address string) (*types.Actor, error),
 	protocolActorSchema types.ProtocolActorSchema) {
 
-	db := NewFuzzTestPostgresContext(f, 0)
+	db := newFuzzTestPostgresContext(f, 0)
 
 	err := db.DebugClearAll()
 	require.NoError(f, err)
