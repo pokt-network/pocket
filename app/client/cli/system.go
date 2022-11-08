@@ -34,7 +34,6 @@ func systemCommands() []*cobra.Command {
 			Long:    "Performs a simple liveness check on the node RPC endpoint",
 			Aliases: []string{"health"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-
 				client, err := rpc.NewClientWithResponses(remoteCLIURL)
 				if err != nil {
 					return nil
@@ -58,7 +57,6 @@ func systemCommands() []*cobra.Command {
 			Long:    "Queries the node RPC to obtain the version of the software currently running",
 			Aliases: []string{"version"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-
 				client, err := rpc.NewClientWithResponses(remoteCLIURL)
 				if err != nil {
 					return err
