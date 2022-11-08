@@ -21,7 +21,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// TODO(olshansky): Lowercase variables / constants that do not need to be exported.
+// TECHDEBT: Lowercase variables / constants that do not need to be exported.
 const (
 	PromptResetToGenesis         string = "ResetToGenesis (broadcast)"
 	PromptPrintNodeState         string = "PrintNodeState (broadcast)"

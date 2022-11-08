@@ -104,36 +104,25 @@ func (p *PostgresContext) prepareBlock(quorumCert []byte) (*types.Block, error) 
 	if p.Height == 0 {
 		prevHash = []byte("")
 	} else {
-		prevHash = []byte("11")
-		// var err error
-		// prevHash, err = p.GetBlockHash(p.Height - 1)
-		// if err != nil {
-		// 	return nil, err
-		// }
+		var err error
+		prevHash, err = p.GetBlockHash(p.Height - 1)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	// The order (descending) is important here since it is used to comprise the hash in the block
-	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
+	txsHash, err := p.getTxsHash(p.Height)
 	if err != nil {
 		return nil, err
 	}
 
-	txs := make([]byte, 0)
-	for _, txResult := range txResults {
-		txHash, err := txResult.Hash()
-		if err != nil {
-			return nil, err
-		}
-		txs = append(txs, txHash...)
-	}
-
 	block := &types.Block{
 		Height:            uint64(p.Height),
-		Hash:              "aaa", //hex.EncodeToString(p.currentStateHash),
+		Hash:              hex.EncodeToString(p.currentStateHash),
 		PrevHash:          hex.EncodeToString(prevHash),
-		ProposerAddress:   []byte("abc"),        //p.proposerAddr,
-		QuorumCertificate: []byte("qc"),         //quorumCert,
-		TransactionsHash:  crypto.SHA3Hash(txs), // TODO: Externalize this elsewhere?
+		ProposerAddress:   p.proposerAddr,
+		QuorumCertificate: quorumCert,
+		TransactionsHash:  txsHash,
 	}
 
 	return block, nil
@@ -142,7 +131,6 @@ func (p *PostgresContext) prepareBlock(quorumCert []byte) (*types.Block, error) 
 // Inserts the block into the postgres database
 func (p *PostgresContext) insertBlock(block *types.Block) error {
 	ctx, tx, err := p.GetCtxAndTx()
-	fmt.Println("OLSH", block.Height, block.Hash, block.ProposerAddress, block.QuorumCertificate, tx)
 	if err != nil {
 		return err
 	}
@@ -158,6 +146,25 @@ func (p PostgresContext) storeBlock(block *types.Block) error {
 		return err
 	}
 	return p.blockStore.Set(heightToBytes(p.Height), blockBz)
+}
+
+func (p PostgresContext) getTxsHash(height int64) ([]byte, error) {
+	// The order (descending) is important here since it is used to comprise the hash in the block
+	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
+	if err != nil {
+		return nil, err
+	}
+
+	txs := make([]byte, 0)
+	for _, txResult := range txResults {
+		txHash, err := txResult.Hash()
+		if err != nil {
+			return nil, err
+		}
+		txs = append(txs, txHash...)
+	}
+
+	return crypto.SHA3Hash(txs), nil
 }
 
 func heightToBytes(height int64) []byte {

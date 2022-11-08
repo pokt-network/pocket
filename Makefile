@@ -178,7 +178,7 @@ db_bench: docker_check
 	docker exec -it pocket-db bash -c "pgbench -U postgres -d postgres"
 
 .PHONY: db_show_schemas
-## Show all the node schemas in the local DB
+## Show all the node schemas in the local SQL DB
 db_show_schemas: docker_check
 	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/show_all_schemas.sql"
 
@@ -187,9 +187,9 @@ db_show_schemas: docker_check
 db_admin:
 	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
 
-# IMPROVE: Make this part of the CLI
+# TODO_IN_THIS_COMMIT: Move this out into a separate task
 .PHONY: db_export_trees
-## Assuming `ExportTrees` was from the client, this will copy those json files locally from node1 to local
+## Copy the trees in `node1` from docker to the host machine - assumes `ExportTrees` was executed from the debug client
 db_export_trees:
 	echo "Copying trees from node1.consensus to /tmp/node1_trees"
 	docker cp node1.consensus:/tmp/trees /tmp/node1_trees
@@ -379,10 +379,10 @@ test_p2p_raintree:
 test_p2p_raintree_addrbook:
 	go test ${VERBOSE_TEST} -run RainTreeAddrBook -count=1 ./p2p/...
 
-# For benchmarks, consider appending `-run=^#` to avoid running unit tests in the same package
+# TIP: For benchmarks, consider appending `-run=^#` to avoid running unit tests in the same package
 
 .PHONY: benchmark_persistence_state_hash
-## Benchmark the State Hash
+## Benchmark the state hash computation
 benchmark_persistence_state_hash:
 	go test ${VERBOSE_TEST} -bench=. -run BenchmarkStateHash -count=1 ./persistence/...
 

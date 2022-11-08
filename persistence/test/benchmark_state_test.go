@@ -20,6 +20,8 @@ import (
 // var isModifierRe = regexp.MustCompile(`^(Insert|Update|Set|Add|Subtract)`)
 var isModifierRe = regexp.MustCompile(`^(Insert|Set|Add|Subtract)`)
 
+// INVESTIGATE: This benchmark can be used to experiment with different Merkle Tree implementations
+// and key-value stores.
 func BenchmarkStateHash(b *testing.B) {
 	log.SetOutput(ioutil.Discard)
 	defer log.SetOutput(os.Stderr)

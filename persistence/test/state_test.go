@@ -126,10 +126,10 @@ func TestStateHash_RandomButDeterministic(t *testing.T) {
 	t.Cleanup(clearAllState)
 	clearAllState()
 
-	numHeights := 10
+	numHeights := 1 //10
 	numTxsPerHeight := 2
-	numOpsPerTx := 5
-	numReplays := 5
+	numOpsPerTx := 1 //5
+	numReplays := 1  //5
 
 	replayableBlocks := make([]*TestReplayableBlock, numHeights)
 	for height := int64(0); height < int64(numHeights); height++ {

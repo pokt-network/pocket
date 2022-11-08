@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/pokt-network/pocket/app/client/cli"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/pokt-network/pocket/app/client/cli"
 )
 
 func main() {
