@@ -14,7 +14,6 @@ import (
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/indexer"
-	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -25,18 +24,7 @@ func BenchmarkStateHash(b *testing.B) {
 	log.SetOutput(ioutil.Discard)
 	defer log.SetOutput(os.Stderr)
 
-	b.Cleanup(func() {
-		if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
-			log.Fatalf("Error releasing write context: %v\n", err)
-		}
-		if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
-			Message: nil,
-		}); err != nil {
-			log.Fatalf("Error clearing state: %v\n", err)
-		}
-
-	})
+	b.Cleanup(clearAllState)
 
 	// Rather than using `b.N` and the `-benchtime` flag, we use a fixed number of iterations
 	testCases := []struct {
@@ -130,7 +118,6 @@ MethodLoop:
 		var err error
 		if v := res[0].Interface(); v != nil {
 			if mustSucceed {
-				fmt.Println("OLSH SKIP")
 				continue MethodLoop
 			}
 			err = v.(error)

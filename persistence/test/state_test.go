@@ -3,8 +3,6 @@ package test
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"testing"
@@ -12,7 +10,6 @@ import (
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 )
@@ -119,36 +116,21 @@ type TestReplayableTransaction struct {
 }
 
 type TestReplayableBlock struct {
-	height int64
-	txs    []*TestReplayableTransaction
-	hash   []byte
+	height     int64
+	txs        []*TestReplayableTransaction
+	hash       []byte
+	proposer   []byte
+	quorumCert []byte
 }
 
 func TestStateHash_RandomButDeterministic(t *testing.T) {
-
-	// t.Cleanup(func() {
-	// 	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
-	// 		log.Fatalf("Error releasing write context: %v\n", err)
-	// 	}
-	// 	if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-	// 		Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
-	// 		Message: nil,
-	// 	}); err != nil {
-	// 		log.Fatalf("Error clearing state: %v\n", err)
-	// 	}
-	// })
-
-	if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-		Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
-		Message: nil,
-	}); err != nil {
-		log.Fatalf("Error clearing state: %v\n", err)
-	}
-	testPersistenceMod.ReleaseWriteContext()
+	t.Cleanup(clearAllState)
+	clearAllState()
 
 	numHeights := 10
-	numTxsPerHeight := 1
-	numOpsPerTx := 1
+	numTxsPerHeight := 2
+	numOpsPerTx := 5
+	numReplays := 5
 
 	replayableBlocks := make([]*TestReplayableBlock, numHeights)
 	for height := int64(0); height < int64(numHeights); height++ {
@@ -163,7 +145,6 @@ func TestStateHash_RandomButDeterministic(t *testing.T) {
 					methodName: methodName,
 					args:       args,
 				}
-				fmt.Println("OLSH", methodName, args)
 			}
 			txResult := modules.TxResult(getRandomTxResult(height))
 			err := db.StoreTransaction(txResult)
@@ -177,34 +158,36 @@ func TestStateHash_RandomButDeterministic(t *testing.T) {
 		appHash, err := db.UpdateAppHash()
 		require.NoError(t, err)
 
-		err = db.Commit([]byte("TODOproposer"), []byte("TODOquorumCert"))
+		proposer := getRandomBytes(10)
+		quorumCert := getRandomBytes(10)
+		err = db.Commit(proposer, quorumCert)
 		require.NoError(t, err)
 
 		replayableBlocks[height] = &TestReplayableBlock{
-			height: height,
-			txs:    replayableTxs,
-			hash:   appHash,
+			height:     height,
+			txs:        replayableTxs,
+			hash:       appHash,
+			proposer:   proposer,
+			quorumCert: quorumCert,
 		}
 	}
 
-	verifyReplayableBlocks(t, replayableBlocks)
+	for i := 0; i < numReplays; i++ {
+		t.Run("verify block", func(t *testing.T) {
+			verifyReplayableBlocks(t, replayableBlocks)
+		})
+	}
 }
 
 func verifyReplayableBlocks(t *testing.T, replayableBlocks []*TestReplayableBlock) {
-	if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-		Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
-		Message: nil,
-	}); err != nil {
-		log.Fatalf("Error clearing state: %v\n", err)
-	}
-	testPersistenceMod.ReleaseWriteContext()
+	t.Cleanup(clearAllState)
+	clearAllState()
 
 	for _, block := range replayableBlocks {
 		db := NewTestPostgresContext(t, block.height)
 		for _, tx := range block.txs {
 			for _, op := range tx.operations {
 				require.Nil(t, reflect.ValueOf(db).MethodByName(op.methodName).Call(op.args)[0].Interface())
-				fmt.Println("OLSH", op.methodName, op.args)
 			}
 			require.NoError(t, db.StoreTransaction(tx.txResult))
 		}
@@ -212,7 +195,7 @@ func verifyReplayableBlocks(t *testing.T, replayableBlocks []*TestReplayableBloc
 		require.NoError(t, err)
 		require.Equal(t, block.hash, appHash)
 
-		err = db.Commit([]byte("TODOproposer"), []byte("TODOquorumCert"))
+		err = db.Commit(block.proposer, block.quorumCert)
 		require.NoError(t, err)
 	}
 }

@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"crypto/sha256"
-	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -86,7 +85,7 @@ func (m *persistenceModule) exportTrees(_ *debug.DebugMessage) error {
 		f.Write([]byte(sb.String()))
 		f.Close()
 	}
-	fmt.Println("Wrote trees to /tmp/trees/")
+	log.Println("Trees exported to /tmp/trees/")
 	return nil
 }
 

@@ -70,17 +70,9 @@ func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresCon
 		log.Fatalf("Error casting RW context to Postgres context")
 	}
 
-	// t.Cleanup(func() {
-	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
-		log.Fatalf("Error releasing write context: %v\n", err)
-	}
-	if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-		Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
-		Message: nil,
-	}); err != nil {
-		log.Fatalf("Error clearing state: %v\n", err)
-	}
-	// })
+	// TODO_IN_THIS_COMMIT: This should not be part of `NewTestPostgresContext`. It causes unnecessary resets
+	// if we call `NewTestPostgresContext` more than once in a single test.
+	t.Cleanup(resetStateToGenesis)
 
 	return db
 }
@@ -116,13 +108,7 @@ func fuzzSingleProtocolActor(
 	protocolActorSchema types.ProtocolActorSchema,
 ) {
 	// Clear the genesis state.
-	if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-		Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
-		Message: nil,
-	}); err != nil {
-		log.Fatalf("Error clearing state: %v\n", err)
-	}
-
+	clearAllState()
 	db := NewTestPostgresContext(f, 0)
 
 	actor, err := newTestActor()
@@ -327,7 +313,7 @@ func setRandomSeed() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func resetToGenesis() {
+func resetStateToGenesis() {
 	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
 		log.Fatalf("Error releasing write context: %v\n", err)
 	}

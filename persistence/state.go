@@ -310,7 +310,6 @@ func (p *PostgresContext) updatePoolTrees(height int64) error {
 			return err
 		}
 
-		fmt.Println(pool)
 		if _, err := p.stateTrees.merkleTrees[poolMerkleTree].Update(bzAddr, accBz); err != nil {
 			return err
 		}
