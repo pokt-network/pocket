@@ -5,16 +5,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-package keys
-
 import (
-"bufio"
-
-"github.com/spf13/cobra"
-
-"github.com/cosmos/cosmos-sdk/client"
-"github.com/cosmos/cosmos-sdk/client/input"
-"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 )
 
 const (
@@ -76,4 +70,3 @@ private keys stored in a ledger device cannot be deleted with the CLI.
 
 	return cmd
 }
-
