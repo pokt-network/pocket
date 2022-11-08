@@ -46,7 +46,7 @@ func consensusCommands() []*cobra.Command {
 		{
 			Use:     "Height",
 			Short:   "Returns the Height",
-			Long:    "Height returns the height in the consensus state",
+			Long:    "Height returns the height in the node's current consensus state",
 			Aliases: []string{"height"},
 			RunE: func(cmd *cobra.Command, args []string) error {
 				response, err := getConsensusRoundState(cmd)
