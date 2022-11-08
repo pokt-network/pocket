@@ -3,6 +3,7 @@ package persistence
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
@@ -42,6 +43,25 @@ func (p PostgresContext) GetHeight() (int64, error) {
 	return p.Height, nil
 }
 
+func (p PostgresContext) GetPrevAppHash() (string, error) {
+	height, err := p.GetHeight()
+	if err != nil {
+		return "", err
+	}
+	if height <= 1 {
+		return "TODO: get from genesis", nil
+	}
+	block, err := p.blockStore.Get(heightToBytes(height - 1))
+	if err != nil {
+		return "", fmt.Errorf("error getting block hash for height %d even though it's in the database: %s", height, err)
+	}
+	return hex.EncodeToString(block), nil // TODO(#284): Return `block.Hash` instead of the hex encoded representation of the blockBz
+}
+
+func (p PostgresContext) GetTxResults() []modules.TxResult {
+	return p.txResults
+}
+
 func (p PostgresContext) TransactionExists(transactionHash string) (bool, error) {
 	hash, err := hex.DecodeString(transactionHash)
 	if err != nil {
@@ -58,21 +78,38 @@ func (p PostgresContext) TransactionExists(transactionHash string) (bool, error)
 	return true, err
 }
 
-func (p PostgresContext) StoreTransaction(txResult modules.TxResult) error {
-	return p.txIndexer.Index(txResult)
+func (p PostgresContext) indexTransactions() error {
+	// TODO: store in batch
+	for _, txResult := range p.GetLatestTxResults() {
+		if err := p.txIndexer.Index(txResult); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// DISCUSS: this might be retrieved from the block store - temporarily we will access it directly from the module
+//       following the pattern of the Consensus Module prior to pocket/issue-#315
+// TODO(#284): Remove blockProtoBytes from the interface
+func (p *PostgresContext) SetProposalBlock(blockHash string, proposerAddr []byte, transactions [][]byte) error {
+	p.blockHash = blockHash
+	p.proposerAddr = proposerAddr
+	p.blockTxs = transactions
+	return nil
 }
 
 // Creates a block protobuf object using the schema defined in the persistence module
-func (p *PostgresContext) prepareBlock(proposerAddr []byte, quorumCert []byte) (*types.Block, error) {
+func (p *PostgresContext) prepareBlock(quorumCert []byte) (*types.Block, error) {
 	var prevHash []byte
 	if p.Height == 0 {
 		prevHash = []byte("")
 	} else {
-		var err error
-		prevHash, err = p.GetBlockHash(p.Height - 1)
-		if err != nil {
-			return nil, err
-		}
+		prevHash = []byte("11")
+		// var err error
+		// prevHash, err = p.GetBlockHash(p.Height - 1)
+		// if err != nil {
+		// 	return nil, err
+		// }
 	}
 
 	// The order (descending) is important here since it is used to comprise the hash in the block
@@ -92,10 +129,10 @@ func (p *PostgresContext) prepareBlock(proposerAddr []byte, quorumCert []byte) (
 
 	block := &types.Block{
 		Height:            uint64(p.Height),
-		Hash:              hex.EncodeToString(p.currentStateHash),
+		Hash:              "aaa", //hex.EncodeToString(p.currentStateHash),
 		PrevHash:          hex.EncodeToString(prevHash),
-		ProposerAddress:   proposerAddr,
-		QuorumCertificate: quorumCert,
+		ProposerAddress:   []byte("abc"),        //p.proposerAddr,
+		QuorumCertificate: []byte("qc"),         //quorumCert,
 		TransactionsHash:  crypto.SHA3Hash(txs), // TODO: Externalize this elsewhere?
 	}
 
@@ -105,6 +142,7 @@ func (p *PostgresContext) prepareBlock(proposerAddr []byte, quorumCert []byte) (
 // Inserts the block into the postgres database
 func (p *PostgresContext) insertBlock(block *types.Block) error {
 	ctx, tx, err := p.GetCtxAndTx()
+	fmt.Println("OLSH", block.Height, block.Hash, block.ProposerAddress, block.QuorumCertificate, tx)
 	if err != nil {
 		return err
 	}

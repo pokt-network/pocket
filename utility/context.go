@@ -46,14 +46,27 @@ func (u *UtilityContext) Store() *Context {
 	return u.Context
 }
 
-func (u *UtilityContext) Release() error {
-	err := u.Context.Release()
-	u.Context = nil
-	return err
+func (u *UtilityContext) GetPersistenceContext() modules.PersistenceRWContext {
+	return u.Context.PersistenceRWContext
 }
 
 func (u *UtilityContext) Commit(quorumCert []byte) error {
-	return u.Context.Commit(u.currentProposer, quorumCert)
+	if err := u.Context.PersistenceRWContext.Commit(quorumCert); err != nil {
+		return err
+	}
+	u.Context = nil
+	return nil
+}
+
+func (u *UtilityContext) Release() error {
+	if u.Context == nil {
+		return nil
+	}
+	if err := u.Context.Release(); err != nil {
+		return err
+	}
+	u.Context = nil
+	return nil
 }
 
 func (u *UtilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {

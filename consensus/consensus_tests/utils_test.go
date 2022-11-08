@@ -301,8 +301,8 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 
-	persistenceMock.EXPECT().Start().Do(func() {}).AnyTimes()
-	persistenceMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
+	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
+	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(int64(-1)).Return(persistenceContextMock, nil).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
@@ -319,8 +319,8 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.M
 	ctrl := gomock.NewController(t)
 	p2pMock := modulesMock.NewMockP2PModule(ctrl)
 
-	p2pMock.EXPECT().Start().Do(func() {}).AnyTimes()
-	p2pMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
+	p2pMock.EXPECT().Start().Return(nil).AnyTimes()
+	p2pMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	p2pMock.EXPECT().
 		Broadcast(gomock.Any(), gomock.Any()).
 		Do(func(msg *anypb.Any, topic debug.PocketTopic) {
@@ -346,7 +346,7 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 	utilityContextMock := baseUtilityContextMock(t)
 
 	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
-	utilityMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
+	utilityMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	utilityMock.EXPECT().
 		NewContext(gomock.Any()).
 		Return(utilityContextMock, nil).
@@ -359,19 +359,21 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 	ctrl := gomock.NewController(t)
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
+	persistenceContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	persistenceContextMock.EXPECT().GetPrevAppHash().Return("", nil).AnyTimes()
 
 	utilityContextMock.EXPECT().
-		GetProposalTransactions(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
-		Return(make([][]byte, 0), nil, nil).
+		CreateAndApplyProposalBlock(gomock.Any(), maxTxBytes).
+		Return(appHash, make([][]byte, 0), nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().
-		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		Return(appHash, nil, nil).
+		ApplyBlock().
+		Return(appHash, nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().Release().Return(nil).AnyTimes()
+	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
 
-	persistenceContextMock.EXPECT().StoreTransaction(gomock.Any()).Return(nil).AnyTimes()
 	persistenceContextMock.EXPECT().Release().Return(nil).AnyTimes()
 
 	return utilityContextMock
@@ -383,8 +385,8 @@ func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockT
 	timeSeriesAgentMock := baseTelemetryTimeSeriesAgentMock(t)
 	eventMetricsAgentMock := baseTelemetryEventMetricsAgentMock(t)
 
-	telemetryMock.EXPECT().Start().Do(func() {}).AnyTimes()
-	telemetryMock.EXPECT().SetBus(gomock.Any()).Do(func(modules.Bus) {}).AnyTimes()
+	telemetryMock.EXPECT().Start().Return(nil).AnyTimes()
+	telemetryMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
 

@@ -16,17 +16,21 @@ type UtilityModule interface {
 type UtilityContext interface {
 	// Block operations
 
-	// TODO(#315): Remove `txResults TxResult` from the interface
-	// Reaps the mempool for transactions that are ready to be proposed in a new block
-	GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, txResults []TxResult, err error)
-	// Applies the transactions to an ephemeral state in the utility & underlying persistence context;similar to `SafeNode` in the Hotstuff whitepaper.
-	ApplyBlock(height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, txResults []TxResult, err error)
+	// Reaps the mempool for transactions to be proposed in a new block, and applies them to this
+	// context; intended to be used by the block proposer.
+	CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (appHash []byte, transactions [][]byte, err error)
+	// Applies the transactions in the local state to the current context; intended to be used by
+	// the block verifiers (i.e. non proposers)..
+	ApplyBlock() (appHash []byte, err error)
 
 	// Context operations
-	Release() error
-	Commit(quorumCert []byte) error
+
+	Release() error                 // Releases the utility context and any underlying contexts it references
+	Commit(quorumCert []byte) error // State commitment of the current context
+	GetPersistenceContext() PersistenceRWContext
 
 	// Validation operations
+
 	CheckTransaction(tx []byte) error
 }
 

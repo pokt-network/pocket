@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/converters"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -17,7 +18,7 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 	//           and we need to add proper unit tests for it.`
 	poolValues := make(map[string]*big.Int, 0)
 	addValueToPool := func(poolName string, valueToAdd string) error {
-		value, err := types.StringToBigInt(valueToAdd)
+		value, err := converters.StringToBigInt(valueToAdd)
 		if err != nil {
 			return err
 		}
@@ -149,7 +150,7 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 	}
 
 	// This update the DB, blockstore, and commits the state
-	if err = rwContext.Commit([]byte("placeholderGenesisProposer"), []byte("placeholderQuorumCert")); err != nil {
+	if err = rwContext.Commit([]byte("placeholderQuorumCert")); err != nil {
 		log.Fatalf("error committing genesis state to DB %s ", err.Error())
 	}
 }

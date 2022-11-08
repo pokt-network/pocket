@@ -20,10 +20,11 @@ func (m *consensusModule) handleHotstuffMessage(msg *typesCons.HotstuffMessage) 
 
 	// Pacemaker - Liveness & safety checks
 	if err := m.paceMaker.ValidateMessage(msg); err != nil {
-		if m.shouldLogHotstuffDiscardMessage(step) {
+		if m.shouldHandleHotstuffMessage(step) {
 			m.nodeLog(typesCons.WarnDiscardHotstuffMessage(msg, err.Error()))
+			return err
 		}
-		return err
+		return nil
 	}
 
 	if m.shouldElectNextLeader() {
@@ -47,7 +48,7 @@ func (m *consensusModule) shouldElectNextLeader() bool {
 	return m.Step == NewRound && m.LeaderId == nil
 }
 
-func (m *consensusModule) shouldLogHotstuffDiscardMessage(step typesCons.HotstuffStep) bool {
+func (m *consensusModule) shouldHandleHotstuffMessage(step typesCons.HotstuffStep) bool {
 	// If a replica is not a leader for this round, but has already determined a leader,
 	// and continues to receive NewRound messages, we avoid logging the "message discard"
 	// because it creates unnecessary spam.

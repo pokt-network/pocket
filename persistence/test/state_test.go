@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -65,20 +64,20 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		err = db.SetAppStakeAmount(addrBz, stakeAmountStr)
 		require.NoError(t, err)
 
-		txBz := []byte("a tx, i am, which set the app stake amount to " + stakeAmountStr)
-		txResult := indexer.TxRes{
-			Tx:            txBz,
-			Height:        height,
-			Index:         0,
-			ResultCode:    0,
-			Error:         "TODO",
-			SignerAddr:    "TODO",
-			RecipientAddr: "TODO",
-			MessageType:   "TODO",
-		}
+		// txBz := []byte("a tx, i am, which set the app stake amount to " + stakeAmountStr)
+		// txResult := indexer.TxRes{
+		// 	Tx:            txBz,
+		// 	Height:        height,
+		// 	Index:         0,
+		// 	ResultCode:    0,
+		// 	Error:         "TODO",
+		// 	SignerAddr:    "TODO",
+		// 	RecipientAddr: "TODO",
+		// 	MessageType:   "TODO",
+		// }
 
-		err = db.StoreTransaction(modules.TxResult(&txResult))
-		require.NoError(t, err)
+		// err = db.StoreTransaction(modules.TxResult(&txResult))
+		// require.NoError(t, err)
 
 		// Update the state hash
 		appHash, err := db.UpdateAppHash()
@@ -86,7 +85,7 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		require.Equal(t, expectedAppHash, hex.EncodeToString(appHash))
 
 		// Commit the transactions above
-		err = db.Commit([]byte("TODOproposer"), []byte("TODOquorumCert"))
+		err = db.Commit([]byte("TODOquorumCert"))
 		require.NoError(t, err)
 
 		// Retrieve the block
@@ -147,8 +146,8 @@ func TestStateHash_RandomButDeterministic(t *testing.T) {
 				}
 			}
 			txResult := modules.TxResult(getRandomTxResult(height))
-			err := db.StoreTransaction(txResult)
-			require.NoError(t, err)
+			// err := db.StoreTransaction(txResult)
+			// require.NoError(t, err)
 
 			replayableTxs[txIdx] = &TestReplayableTransaction{
 				operations: replayableOps,
@@ -160,7 +159,7 @@ func TestStateHash_RandomButDeterministic(t *testing.T) {
 
 		proposer := getRandomBytes(10)
 		quorumCert := getRandomBytes(10)
-		err = db.Commit(proposer, quorumCert)
+		err = db.Commit(quorumCert)
 		require.NoError(t, err)
 
 		replayableBlocks[height] = &TestReplayableBlock{
@@ -189,13 +188,13 @@ func verifyReplayableBlocks(t *testing.T, replayableBlocks []*TestReplayableBloc
 			for _, op := range tx.operations {
 				require.Nil(t, reflect.ValueOf(db).MethodByName(op.methodName).Call(op.args)[0].Interface())
 			}
-			require.NoError(t, db.StoreTransaction(tx.txResult))
+			// require.NoError(t, db.StoreTransaction(tx.txResult))
 		}
 		appHash, err := db.UpdateAppHash()
 		require.NoError(t, err)
 		require.Equal(t, block.hash, appHash)
 
-		err = db.Commit(block.proposer, block.quorumCert)
+		err = db.Commit(block.quorumCert)
 		require.NoError(t, err)
 	}
 }

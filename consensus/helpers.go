@@ -83,6 +83,7 @@ func (m *consensusModule) findHighQC(msgs []*typesCons.HotstuffMessage) (qc *typ
 		if m.GetQuorumCertificate() == nil {
 			continue
 		}
+		// TODO: Make sure to validate the "highest QC" first and add tests
 		if qc == nil || m.GetQuorumCertificate().Height > qc.Height {
 			qc = m.GetQuorumCertificate()
 		}
@@ -126,7 +127,6 @@ func (m *consensusModule) isOptimisticThresholdMet(n int) error {
 func (m *consensusModule) resetForNewHeight() {
 	m.Round = 0
 	m.Block = nil
-	m.TxResults = nil
 	m.highPrepareQC = nil
 	m.lockedQC = nil
 }

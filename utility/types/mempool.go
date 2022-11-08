@@ -14,7 +14,7 @@ type Mempool interface {
 	DeleteTransaction(tx []byte) Error
 
 	Clear()
-	Size() int
+	Size() int // TODO: Add IsEmpty() function
 	TxsBytes() int
 	PopTransaction() (tx []byte, err Error)
 }

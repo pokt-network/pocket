@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/converters"
 	"github.com/pokt-network/pocket/shared/modules"
 
 	"github.com/pokt-network/pocket/persistence"
@@ -45,14 +46,14 @@ func FuzzAccountAmount(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, op string) {
 		delta := big.NewInt(int64(rand.Intn(1000)))
-		deltaString := types.BigIntToString(delta)
+		deltaString := converters.BigIntToString(delta)
 
 		switch op {
 		case "AddAmount":
 			originalAmountBig, err := db.GetAccountAmount(addrBz, db.Height)
 			require.NoError(t, err)
 
-			originalAmount, err := types.StringToBigInt(originalAmountBig)
+			originalAmount, err := converters.StringToBigInt(originalAmountBig)
 			require.NoError(t, err)
 
 			err = db.AddAccountAmount(addrBz, deltaString)
@@ -63,7 +64,7 @@ func FuzzAccountAmount(f *testing.F) {
 			originalAmountBig, err := db.GetAccountAmount(addrBz, db.Height)
 			require.NoError(t, err)
 
-			originalAmount, err := types.StringToBigInt(originalAmountBig)
+			originalAmount, err := converters.StringToBigInt(originalAmountBig)
 			require.NoError(t, err)
 
 			err = db.SubtractAccountAmount(addrBz, deltaString)
@@ -83,7 +84,7 @@ func FuzzAccountAmount(f *testing.F) {
 
 		currentAmount, err := db.GetAccountAmount(addrBz, db.Height)
 		require.NoError(t, err)
-		require.Equal(t, types.BigIntToString(expectedAmount), currentAmount, fmt.Sprintf("unexpected amount after %s", op))
+		require.Equal(t, converters.BigIntToString(expectedAmount), currentAmount, fmt.Sprintf("unexpected amount after %s", op))
 	})
 }
 
@@ -128,14 +129,14 @@ func TestAddAccountAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	amountToAddBig := big.NewInt(100)
-	err = db.AddAccountAmount(addrBz, types.BigIntToString(amountToAddBig))
+	err = db.AddAccountAmount(addrBz, converters.BigIntToString(amountToAddBig))
 	require.NoError(t, err)
 
 	accountAmount, err := db.GetAccountAmount(addrBz, db.Height)
 	require.NoError(t, err)
 
 	accountAmountBig := (&big.Int{}).Add(DefaultStakeBig, amountToAddBig)
-	expectedAccountAmount := types.BigIntToString(accountAmountBig)
+	expectedAccountAmount := converters.BigIntToString(accountAmountBig)
 
 	require.Equal(t, expectedAccountAmount, accountAmount, "unexpected amount after add")
 }
@@ -151,14 +152,14 @@ func TestSubAccountAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	amountToSubBig := big.NewInt(100)
-	err = db.SubtractAccountAmount(addrBz, types.BigIntToString(amountToSubBig))
+	err = db.SubtractAccountAmount(addrBz, converters.BigIntToString(amountToSubBig))
 	require.NoError(t, err)
 
 	accountAmount, err := db.GetAccountAmount(addrBz, db.Height)
 	require.NoError(t, err)
 
 	accountAmountBig := (&big.Int{}).Sub(DefaultStakeBig, amountToSubBig)
-	expectedAccountAmount := types.BigIntToString(accountAmountBig)
+	expectedAccountAmount := converters.BigIntToString(accountAmountBig)
 	require.Equal(t, expectedAccountAmount, accountAmount, "unexpected amount after sub")
 }
 
@@ -184,14 +185,14 @@ func FuzzPoolAmount(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, op string) {
 		delta := big.NewInt(int64(rand.Intn(1000)))
-		deltaString := types.BigIntToString(delta)
+		deltaString := converters.BigIntToString(delta)
 
 		switch op {
 		case "AddAmount":
 			originalAmountBig, err := db.GetPoolAmount(pool.Address, db.Height)
 			require.NoError(t, err)
 
-			originalAmount, err := types.StringToBigInt(originalAmountBig)
+			originalAmount, err := converters.StringToBigInt(originalAmountBig)
 			require.NoError(t, err)
 
 			err = db.AddPoolAmount(pool.Address, deltaString)
@@ -202,7 +203,7 @@ func FuzzPoolAmount(f *testing.F) {
 			originalAmountBig, err := db.GetPoolAmount(pool.Address, db.Height)
 			require.NoError(t, err)
 
-			originalAmount, err := types.StringToBigInt(originalAmountBig)
+			originalAmount, err := converters.StringToBigInt(originalAmountBig)
 			require.NoError(t, err)
 
 			err = db.SubtractPoolAmount(pool.Address, deltaString)
@@ -222,7 +223,7 @@ func FuzzPoolAmount(f *testing.F) {
 
 		currentAmount, err := db.GetPoolAmount(pool.Address, db.Height)
 		require.NoError(t, err)
-		require.Equal(t, types.BigIntToString(expectedAmount), currentAmount, fmt.Sprintf("unexpected amount after %s", op))
+		require.Equal(t, converters.BigIntToString(expectedAmount), currentAmount, fmt.Sprintf("unexpected amount after %s", op))
 	})
 }
 
@@ -261,14 +262,14 @@ func TestAddPoolAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	amountToAddBig := big.NewInt(100)
-	err = db.AddPoolAmount(pool.Address, types.BigIntToString(amountToAddBig))
+	err = db.AddPoolAmount(pool.Address, converters.BigIntToString(amountToAddBig))
 	require.NoError(t, err)
 
 	poolAmount, err := db.GetPoolAmount(pool.Address, db.Height)
 	require.NoError(t, err)
 
 	poolAmountBig := (&big.Int{}).Add(DefaultStakeBig, amountToAddBig)
-	expectedPoolAmount := types.BigIntToString(poolAmountBig)
+	expectedPoolAmount := converters.BigIntToString(poolAmountBig)
 
 	require.Equal(t, expectedPoolAmount, poolAmount, "unexpected amount after add")
 }
@@ -280,14 +281,14 @@ func TestSubPoolAmount(t *testing.T) {
 	require.NoError(t, err)
 
 	amountToSubBig := big.NewInt(100)
-	err = db.SubtractPoolAmount(pool.Address, types.BigIntToString(amountToSubBig))
+	err = db.SubtractPoolAmount(pool.Address, converters.BigIntToString(amountToSubBig))
 	require.NoError(t, err)
 
 	poolAmount, err := db.GetPoolAmount(pool.Address, db.Height)
 	require.NoError(t, err)
 
 	poolAmountBig := (&big.Int{}).Sub(DefaultStakeBig, amountToSubBig)
-	expectedPoolAmount := types.BigIntToString(poolAmountBig)
+	expectedPoolAmount := converters.BigIntToString(poolAmountBig)
 	require.Equal(t, expectedPoolAmount, poolAmount, "unexpected amount after sub")
 }
 

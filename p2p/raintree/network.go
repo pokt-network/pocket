@@ -179,7 +179,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	n.mempool[rainTreeMsg.Nonce] = struct{}{}
 
-	// Return the data back to the caller so it can be handeled by the app specific bus
+	// Return the data back to the caller so it can be handled by the app specific bus
 	return rainTreeMsg.Data, nil
 }
 

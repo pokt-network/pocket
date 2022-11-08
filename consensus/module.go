@@ -3,6 +3,7 @@ package consensus
 import (
 	"fmt"
 	"log"
+	"sort"
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
@@ -59,7 +60,6 @@ type consensusModule struct {
 	idToValAddrMap typesCons.IdToValAddrMap // TODO: This needs to be updated every time the ValMap is modified
 
 	// Consensus State
-	lastAppHash  string // TODO: Always retrieve this variable from the persistence module and simplify this struct
 	validatorMap typesCons.ValidatorMap
 
 	// Module Dependencies
@@ -136,7 +136,6 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 		valAddrToIdMap: valIdMap,
 		idToValAddrMap: idValMap,
 
-		lastAppHash:  "",
 		validatorMap: valMap,
 
 		utilityContext:    nil,
@@ -203,6 +202,27 @@ func (*consensusModule) ValidateConfig(cfg modules.Config) error {
 }
 
 func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
+	// Sort the validators by their generic param (i.e. service URL)
+	vals := genesis.GetConsensusGenesisState().GetVals()
+	sort.Slice(vals, func(i, j int) bool {
+		return vals[i].GetGenericParam() < vals[j].GetGenericParam()
+	})
+
+	// Sort the validators by their address
+	vals2 := vals[:]
+	sort.Slice(vals, func(i, j int) bool {
+		return vals[i].GetAddress() < vals[j].GetAddress()
+	})
+
+	for i := 0; i < len(vals); i++ {
+		if vals[i].GetAddress() != vals2[i].GetAddress() {
+			// There is an implicit dependency because of how RainTree works and how the validator map
+			// is currently managed to make sure that the ordering of the address and the service URL
+			// are the same. This will be addressed once the # of validators will scale.
+			panic("HACK(olshansky): service url and address must be sorted the same way")
+		}
+	}
+
 	return nil
 }
 
@@ -235,10 +255,6 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	return nil
 }
 
-func (m *consensusModule) AppHash() string {
-	return m.lastAppHash
-}
-
 func (m *consensusModule) CurrentHeight() uint64 {
 	return m.Height
 }
@@ -266,13 +282,7 @@ func (m *consensusModule) loadPersistedState() error {
 		return nil
 	}
 
-	appHash, err := persistenceContext.GetBlockHash(int64(latestHeight))
-	if err != nil {
-		return fmt.Errorf("error getting block hash for height %d even though it's in the database: %s", latestHeight, err)
-	}
-
 	m.Height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
-	m.lastAppHash = string(appHash)
 
 	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
 	return nil

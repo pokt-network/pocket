@@ -3,7 +3,7 @@ package modules
 //go:generate mockgen -source=$GOFILE -destination=./mocks/persistence_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
 
 import (
-	"github.com/pokt-network/pocket/persistence/kvstore" // Should be moved to shared
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/debug"
 )
 
@@ -12,12 +12,12 @@ type PersistenceModule interface {
 	ConfigurableModule
 	GenesisDependentModule
 
-	// Context interface
+	// Context operations
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
-	ReleaseWriteContext() error // Only one write context can exist at a time
+	ReleaseWriteContext() error // The module can maintain many read contexts, but only one write context can exist at a time
 
-	// BlockStore interface
+	// BlockStore operations
 	GetBlockStore() kvstore.KVStore
 	NewWriteContext() PersistenceRWContext
 
@@ -39,11 +39,12 @@ type PersistenceRWContext interface {
 	PersistenceWriteContext
 }
 
-// TODO (andrew) convert address and public key to string not bytes #149
-// TODO: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
+// REFACTOR: Simplify the interface
 // - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
 // - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
+// - Reference: https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces
 
+// TOD (#149): convert address and public key to string from bytes
 // NOTE: There's not really a use case for a write only interface, but it abstracts and contrasts nicely against the read only context
 type PersistenceWriteContext interface {
 	// Context Operations
@@ -51,21 +52,23 @@ type PersistenceWriteContext interface {
 	RollbackToSavePoint([]byte) error
 	Release() error
 
-	// Block / indexer operations
-	UpdateAppHash() ([]byte, error)
-
 	// Commits the current context (height, hash, transactions, etc...) to finality.
-	Commit(proposerAddr []byte, quorumCert []byte) error
+	Commit(quorumCert []byte) error
 
 	// Indexer Operations
-	// TODO(#315): Change `txResult TxResult` to `txBytes []byte`
-	StoreTransaction(txResult TxResult) error // Stores and indexes a transaction
+
+	// Block Operations
+	// DISCUSS_IN_THIS_COMMIT: Can this function be removed ? If so, could we remove `TxResult` from the public facing interface given that we set transactions in `SetProposalBlock`?
+	SetLatestTxResults(txResults []TxResult)
+	SetProposalBlock(blockHash string, proposerAddr []byte, transactions [][]byte) error
+	// Store the block into persistence
+	UpdateAppHash() ([]byte, error)
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error
-	InsertPool(name string, address []byte, amount string) error // TODO (Andrew) remove address from pool #149
+	InsertPool(name string, address []byte, amount string) error // TODO(#149): remove address from pool
 
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error
@@ -122,9 +125,13 @@ type PersistenceReadContext interface {
 	Close() error
 
 	// Block Queries
+	GetPrevAppHash() (string, error) // app hash from the previous block
 	GetLatestBlockHeight() (uint64, error)
 	GetBlockHash(height int64) ([]byte, error)
 	GetBlocksPerSession(height int64) (int, error)
+	GetLatestProposerAddr() []byte
+	GetLatestBlockHash() string
+	GetLatestBlockTxs() [][]byte
 
 	// Indexer Queries
 	TransactionExists(transactionHash string) (bool, error)

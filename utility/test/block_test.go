@@ -18,22 +18,18 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 
 	vals := getAllTestingValidators(t, ctx)
 	proposer := vals[0]
-	byzantine := vals[1]
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
 	addrBz, er := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, er)
-	byzantineAddrBz, er := hex.DecodeString(byzantine.GetAddress())
-	require.NoError(t, er)
 	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
+	er = ctx.GetPersistenceContext().SetProposalBlock("", addrBz, [][]byte{txBz})
+	require.NoError(t, er)
 	// apply block
-	_, txResults, er := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineAddrBz})
-	if er != nil {
-		require.NoError(t, er, "apply block")
-	}
-	requireValidTestingTxResults(t, tx, txResults)
+	_, er = ctx.ApplyBlock()
+	require.NoError(t, er)
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
@@ -73,23 +69,15 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 	vals := getAllTestingValidators(t, ctx)
 	proposer := vals[0]
-	byzantine := vals[1]
-
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
-
 	addrBz, er := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, er)
-
-	byzantineBz, er := hex.DecodeString(byzantine.GetAddress())
+	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, [][]byte{txBz})
 	require.NoError(t, er)
-
 	// apply block
-	_, txResults, er := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineBz})
-	if er != nil {
-		require.NoError(t, er)
-	}
-	requireValidTestingTxResults(t, tx, txResults)
+	_, er = ctx.ApplyBlock()
+	require.NoError(t, er)
 
 	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
@@ -141,23 +129,18 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 	vals := getAllTestingValidators(t, ctx)
 	proposer := vals[0]
-	byzantine := vals[1]
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
 	addrBz, er := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, er)
-	byzantineAddrBz, er := hex.DecodeString(byzantine.GetAddress())
-	require.NoError(t, er)
 	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
-
+	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, [][]byte{txBz})
+	require.NoError(t, er)
 	// apply block
-	_, txResults, er := ctx.ApplyBlock(0, addrBz, [][]byte{txBz}, [][]byte{byzantineAddrBz})
-	if er != nil {
-		require.NoError(t, er)
-	}
-	requireValidTestingTxResults(t, tx, txResults)
+	_, er = ctx.ApplyBlock()
+	require.NoError(t, er)
 	// deliverTx logic verify
 	feeBig, err := ctx.GetMessageSendFee()
 	require.NoError(t, err)
@@ -178,7 +161,6 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 
 	test_artifacts.CleanupTest(ctx)
 }
-
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 	for _, actorType := range actorTypes {
 		t.Run(fmt.Sprintf("%s.UnstakeValidatorsActorsThatAreReady", actorType.String()), func(t *testing.T) {

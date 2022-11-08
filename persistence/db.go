@@ -57,7 +57,14 @@ type PostgresContext struct {
 	// REFACTOR_IN_THIS_COMMIT: Access `blockStore` and `merkleTree` from the persistence module via bus.
 	blockStore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
+
 	stateTrees *stateTrees
+	// DISCUSS(#284): this might be retrieved from the block store - temporarily we will access it directly from the module
+	//                following the pattern of the Consensus Module prior to pocket/issue-#315
+	proposerAddr []byte
+	blockHash    string
+	blockTxs     [][]byte
+	txResults    []modules.TxResult // DISCUSS_IN_THIS_COMMIT: Can this be removed and retrieved from `txIndexer` using `height`?
 }
 
 func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
@@ -70,6 +77,30 @@ func (pg *PostgresContext) GetTx() pgx.Tx {
 
 func (pg *PostgresContext) GetCtx() (context.Context, error) {
 	return context.TODO(), nil
+}
+
+// DISCUSS:
+// 1. Can we remove `Latest` from these Setter & Getter methods
+// 2. Can we scope that to this package?
+// 3. Is `context.go` more appropriate for these than `db.go`?
+func (p PostgresContext) GetLatestProposerAddr() []byte {
+	return p.proposerAddr
+}
+
+func (p PostgresContext) GetLatestBlockHash() string {
+	return p.blockHash
+}
+
+func (p PostgresContext) GetLatestBlockTxs() [][]byte {
+	return p.blockTxs
+}
+
+func (p PostgresContext) GetLatestTxResults() []modules.TxResult {
+	return p.txResults
+}
+
+func (p *PostgresContext) SetLatestTxResults(txResults []modules.TxResult) {
+	p.txResults = txResults
 }
 
 // TECHDEBT: Implement proper connection pooling

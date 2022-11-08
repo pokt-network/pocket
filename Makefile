@@ -79,6 +79,15 @@ go_protoc-go-inject-tag:
 	fi; \
 	}
 
+.PHONY: go_oapi-codegen
+### Checks if oapi-codegen is installed
+go_oapi-codegen:
+	{ \
+	if ! command -v oapi-codegen >/dev/null; then \
+		echo "Install with 'go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0'"; \
+	fi; \
+	}
+
 .PHONY: go_clean_deps
 ## Runs `go mod tidy` && `go mod vendor`
 go_clean_deps:
@@ -95,20 +104,26 @@ gofmt:
 	gofmt -w -s .
 
 .PHONY: install_cli_deps
-## Installs `protoc-gen-go` and `mockgen`
+## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag' and other tooling
 install_cli_deps:
 	go install "google.golang.org/protobuf/cmd/protoc-gen-go@v1.28" && protoc-gen-go --version
 	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
 	go install "github.com/favadi/protoc-go-inject-tag@latest"
+	go install "github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0"
+
+.PHONY: develop_start
+## Run all of the make commands necessary to develop on the project
+develop_start:
+		make protogen_clean && make protogen_local && \
+		make go_clean_deps && \
+		make mockgen && \
+		make generate_rpc_openapi
 
 .PHONY: develop_test
 ## Run all of the make commands necessary to develop on the project and verify the tests pass
 develop_test: docker_check
-		make go_clean_deps && \
-		make mockgen && \
-		make protogen_clean && make protogen_local && \
+		make develop_start && \
 		make test_all
-
 
 .PHONY: client_start
 ## Run a client daemon which is only used for debugging purposes
@@ -118,7 +133,7 @@ client_start: docker_check
 .PHONY: client_connect
 ## Connect to the running client debugging daemon
 client_connect: docker_check
-	docker exec -it client /bin/bash -c "go run app/client/*.go"
+	docker exec -it client /bin/bash -c "go run -tags=debug app/client/*.go debug"
 
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
@@ -194,7 +209,7 @@ docker_wipe: docker_check prompt_user
 
 .PHONY: docker_wipe_nodes
 ## [WARNING] Remove all the node containers
-docker_wipe_nodes: docker_check prompt_user
+docker_wipe_nodes: docker_check prompt_user db_drop
 	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker stop {}
 	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker rm {}
 
@@ -259,6 +274,21 @@ protogen_docker_m1: docker_check
 ## TECHDEBT: Test, validate & update.
 protogen_docker: docker_check
 	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it -v $(CWD)/:/usr/src/app/ pocket/proto-generator
+
+.PHONY: generate_rpc_openapi
+## (Re)generates the RPC server and client infra code from the openapi spec file (./rpc/v1/openapi.yaml)
+generate_rpc_openapi: go_oapi-codegen
+	oapi-codegen  --config ./rpc/server.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/server.gen.go
+	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
+	echo "OpenAPI client and server generated"
+
+.PHONY: generate_cli_commands_docs
+### (Re)generates the CLI commands docs (this is meant to be called by CI)
+generate_cli_commands_docs:
+	$(eval cli_docs_dir = "app/client/cli/doc/commands")
+	rm ${cli_docs_dir}/*.md >/dev/null 2>&1 || true
+	cd app/client/cli/docgen && go run .
+	echo "CLI commands docs generated in ${cli_docs_dir}"
 
 .PHONY: test_all
 ## Run all go unit tests
@@ -379,10 +409,9 @@ benchmark_p2p_addrbook:
 # CONSIDERATION - A comment that involves extra work but was thoughts / considered as part of some implementation
 # CONSOLIDATE   - We likely have similar implementations/types of the same thing, and we should consolidate them.
 # DEPRECATE     - Code that should be removed in the future
-# INTRODUCE     - Code that should be introduced in the future
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "INTRODUCE"
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE"
 
 # How do I use TODOs?
 # 1. <KEYWORD>: <Description of follow up work>;

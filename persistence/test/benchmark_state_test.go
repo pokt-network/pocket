@@ -49,10 +49,11 @@ func BenchmarkStateHash(b *testing.B) {
 				db := NewTestPostgresContext(b, h)
 				for i := int64(0); i < numTxPerHeight; i++ {
 					callRandomDatabaseModifierFunc(db, h, false)
-					db.StoreTransaction(modules.TxResult(getRandomTxResult(h)))
+					// db.StoreTransaction(modules.TxResult(getRandomTxResult(h)))
+					// db.SetProposalBlock()
 				}
 				db.UpdateAppHash()
-				db.Commit([]byte("TODOproposer"), []byte("TODOquorumCert"))
+				db.Commit([]byte("TODOquorumCert"))
 			}
 		})
 	}

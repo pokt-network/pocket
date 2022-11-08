@@ -1,17 +1,19 @@
 package persistence
 
+// CLEANUP: Figure out why the receivers here aren't pointers?
+
 import (
 	"context"
 	"log"
 )
-
-// CLEANUP: Figure out why the receivers here aren't pointers?
 
 func (p PostgresContext) NewSavePoint(bytes []byte) error {
 	log.Println("TODO: NewSavePoint not implemented")
 	return nil
 }
 
+// TODO(#327): When implementing save points and rollbacks, make sure that `prepareBlock`,
+// `insertBlock`, and `storeBlock` are all atomic.
 func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	log.Println("TODO: RollbackToSavePoint not fully implemented")
 	return p.GetTx().Rollback(context.TODO())
@@ -24,13 +26,24 @@ func (p *PostgresContext) UpdateAppHash() ([]byte, error) {
 	return p.currentStateHash, nil
 }
 
-// TODO(#327): When implementing save points and rollbacks, make sure that `prepareBlock`,
-// `insertBlock`, and `storeBlock` are all atomic.
-func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
+func (p *PostgresContext) Reset() error {
+	p.txResults = nil
+	p.blockHash = ""
+	p.proposerAddr = nil
+	p.blockTxs = nil
+	return nil
+}
+
+func (p PostgresContext) Commit(quorumCert []byte) error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
 
+	// TODO_IN_THIS_COMMIT: Store transactions in indexer - should this be called on `SetProposalBlock`?`
+	if err := p.indexTransactions(); err != nil {
+		return err
+	}
+
 	// Create a persistence block proto
-	block, err := p.prepareBlock(proposerAddr, quorumCert)
+	block, err := p.prepareBlock(quorumCert)
 	if err != nil {
 		return err
 	}
@@ -52,6 +65,9 @@ func (p PostgresContext) Commit(proposerAddr []byte, quorumCert []byte) error {
 	if err := p.conn.Close(ctx); err != nil {
 		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
 	}
+	if err := p.Reset(); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -63,6 +79,9 @@ func (p PostgresContext) Release() error {
 		return err
 	}
 	if err := p.resetContext(); err != nil {
+		return err
+	}
+	if err := p.Reset(); err != nil {
 		return err
 	}
 	return nil
