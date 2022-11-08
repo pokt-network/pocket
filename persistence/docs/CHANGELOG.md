@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.9] - 2022-11-04
+## [0.0.0.9] - 2022-11-08
 
 - Changed the following exposed functions to lowercase non-exported functions
 - [./pocket/persistence/]
