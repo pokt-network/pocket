@@ -1,4 +1,4 @@
-package keybase
+package keybase_test
 
 import (
 	"bytes"

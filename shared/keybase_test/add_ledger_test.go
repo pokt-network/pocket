@@ -1,7 +1,7 @@
 //go:build ledger || test_ledger_mock
 // +build ledger test_ledger_mock
 
-package keybase
+package keybase_test
 
 import (
 	"bytes"
