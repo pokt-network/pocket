@@ -99,10 +99,6 @@ func (p PostgresContext) GetLatestTxResults() []modules.TxResult {
 	return p.txResults
 }
 
-func (p *PostgresContext) SetLatestTxResults(txResults []modules.TxResult) {
-	p.txResults = txResults
-}
-
 // TECHDEBT: Implement proper connection pooling
 func connectToDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
 	ctx := context.TODO()

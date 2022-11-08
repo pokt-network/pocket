@@ -9,12 +9,9 @@ import (
 )
 
 type UtilityContext struct {
-	// TODO(#315): Should be removed by #315 before this is even done.
-	LatestHeight    int64
-	currentProposer []byte
-
-	Mempool typesUtil.Mempool
-	Context *Context // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
+	LatestHeight int64
+	Mempool      typesUtil.Mempool
+	Context      *Context // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
 }
 
 // IMPROVE: Consider renaming to `persistenceContext` or `storeContext`?

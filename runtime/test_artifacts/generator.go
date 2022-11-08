@@ -192,6 +192,8 @@ func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor,
 	}, privKey
 }
 
+// TECHDEBT: This function has the side effect of incrementing the global variable `privateKeySeed`
+// in order to guarantee unique keys, but that are still deterministic for testing purposes.
 func generateNewKeysStrings() (privateKey, publicKey, address string) {
 	privateKeySeed += 1 // Different on every call but deterministic
 	cryptoSeed := make([]byte, crypto.SeedSize)

@@ -58,8 +58,6 @@ type PersistenceWriteContext interface {
 	// Indexer Operations
 
 	// Block Operations
-	// DISCUSS_IN_THIS_COMMIT: Can this function be removed ? If so, could we remove `TxResult` from the public facing interface given that we set transactions in `SetProposalBlock`?
-	SetLatestTxResults(txResults []TxResult)
 	SetProposalBlock(blockHash string, proposerAddr []byte, transactions [][]byte) error
 	// Store the block into persistence
 	UpdateAppHash() ([]byte, error)

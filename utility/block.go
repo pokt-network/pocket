@@ -50,7 +50,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			if err != nil {
 				return nil, nil, err
 			}
-			txTxsSizeInBytes -= txTxsSizeInBytes
+			totalTxsSizeInBytes -= txTxsSizeInBytes
 			break // we've reached our max
 		}
 		txResult, err := u.ApplyTransaction(txIndex, transaction)
@@ -69,23 +69,23 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	if err := u.EndBlock(proposer); err != nil {
 		return nil, nil, err
 	}
-	u.GetPersistenceContext().SetLatestTxResults(txResults)
 	// return the app hash (consensus module will get the validator set directly)
-	appHash, err := u.GetAppHash()
+	appHash, err := u.getAppHash()
 	return appHash, transactions, err
 }
 
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
 func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
-	var txResults []modules.TxResult
 	lastByzantineValidators, err := u.GetLastBlockByzantineValidators()
 	if err != nil {
 		return nil, err
 	}
+
 	// begin block lifecycle phase
 	if err := u.BeginBlock(lastByzantineValidators); err != nil {
 		return nil, err
 	}
+
 	// deliver txs lifecycle phase
 	for index, transactionProtoBytes := range u.GetPersistenceContext().GetLatestBlockTxs() {
 		tx, err := typesUtil.TransactionFromBytes(transactionProtoBytes)
@@ -98,20 +98,15 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 		// DISCUSS(#315): Currently, the pattern is allowing nil err with an error transaction...
 		//                Should we terminate applyBlock immediately if there's an invalid transaction?
 		//                Or wait until the entire lifecycle is over to evaluate an 'invalid' block
+
 		// Validate and apply the transaction to the Postgres database
-		txResult, err := u.ApplyTransaction(index, tx)
+		_, err = u.ApplyTransaction(index, tx)
 		if err != nil {
 			return nil, err
 		}
-		// if err := u.Store().StoreTransaction(txResult); err != nil {
-		// 	return nil, nil, err
-		// }
 
-		// Add the transaction result to the array
-		txResults = append(txResults, txResult)
-
-		// DISCUSS: What if the context is rolled back or cancelled. Do we add it back to the mempool?
 		// TODO: if found, remove transaction from mempool.
+		// DISCUSS: What if the context is rolled back or cancelled. Do we add it back to the mempool?
 		// if err := u.Mempool.DeleteTransaction(transaction); err != nil {
 		// 	return nil, err
 		// }
@@ -122,7 +117,6 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 		return nil, err
 	}
 
-	u.GetPersistenceContext().SetLatestTxResults(txResults)
 	// return the app hash (consensus module will get the validator set directly)
 	appHash, err = u.Context.UpdateAppHash()
 	if err != nil {
@@ -157,8 +151,7 @@ func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
 	return nil
 }
 
-func (u *UtilityContext) GetAppHash() ([]byte, typesUtil.Error) {
-	// DISCUSS_IN_THIS_COMMIT: Can we remove this function from the utility context?
+func (u *UtilityContext) getAppHash() ([]byte, typesUtil.Error) {
 	appHash, er := u.Context.UpdateAppHash()
 	if er != nil {
 		return nil, typesUtil.ErrAppHash(er)
