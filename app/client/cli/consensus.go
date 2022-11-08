@@ -28,12 +28,12 @@ func NewConsensusCommand() *cobra.Command {
 func consensusCommands() []*cobra.Command {
 	cmds := []*cobra.Command{
 		{
-			Use:     "RoundState",
+			Use:     "State",
 			Short:   "Returns \"Height/Round/Step\"",
-			Long:    "RoundState returns the height, round and step in \"Height/Round/Step\" format",
-			Aliases: []string{"round_state"},
+			Long:    "State returns the height, round and step in \"Height/Round/Step\" format",
+			Aliases: []string{"state"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				response, err := getConsensusRoundState(cmd)
+				response, err := getConsensusState(cmd)
 				if err != nil {
 					return err
 				}
@@ -49,7 +49,7 @@ func consensusCommands() []*cobra.Command {
 			Long:    "Height returns the height in the node's current consensus state",
 			Aliases: []string{"height"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				response, err := getConsensusRoundState(cmd)
+				response, err := getConsensusState(cmd)
 				if err != nil {
 					return err
 				}
@@ -65,7 +65,7 @@ func consensusCommands() []*cobra.Command {
 			Long:    "Round returns the round in the node's current consensus state",
 			Aliases: []string{"round"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				response, err := getConsensusRoundState(cmd)
+				response, err := getConsensusState(cmd)
 				if err != nil {
 					return err
 				}
@@ -81,7 +81,7 @@ func consensusCommands() []*cobra.Command {
 			Long:    "Step returns the step in the node's current consensus state",
 			Aliases: []string{"step"},
 			RunE: func(cmd *cobra.Command, args []string) error {
-				response, err := getConsensusRoundState(cmd)
+				response, err := getConsensusState(cmd)
 				if err != nil {
 					return err
 				}
@@ -95,12 +95,12 @@ func consensusCommands() []*cobra.Command {
 	return cmds
 }
 
-func getConsensusRoundState(cmd *cobra.Command) (*rpc.GetV1ConsensusRoundStateResponse, error) {
+func getConsensusState(cmd *cobra.Command) (*rpc.GetV1ConsensusStateResponse, error) {
 	client, err := rpc.NewClientWithResponses(remoteCLIURL)
 	if err != nil {
 		return nil, nil
 	}
-	response, err := client.GetV1ConsensusRoundStateWithResponse(cmd.Context())
+	response, err := client.GetV1ConsensusStateWithResponse(cmd.Context())
 	if err != nil {
 		return nil, unableToConnectToRpc(err)
 	}
