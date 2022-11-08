@@ -1,6 +1,7 @@
 package test
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence"
@@ -16,7 +18,8 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var re = regexp.MustCompile(`^[Insert|Update|Set|Add|Subtract]`)
+// var isModifierRe = regexp.MustCompile(`^(Insert|Update|Set|Add|Subtract)`)
+var isModifierRe = regexp.MustCompile(`^(Insert|Set|Add|Subtract)`)
 
 func BenchmarkStateHash(b *testing.B) {
 	log.SetOutput(ioutil.Discard)
@@ -32,6 +35,7 @@ func BenchmarkStateHash(b *testing.B) {
 		}); err != nil {
 			log.Fatalf("Error clearing state: %v\n", err)
 		}
+
 	})
 
 	// Rather than using `b.N` and the `-benchtime` flag, we use a fixed number of iterations
@@ -56,7 +60,7 @@ func BenchmarkStateHash(b *testing.B) {
 			for h := int64(0); h < numHeights; h++ {
 				db := NewTestPostgresContext(b, h)
 				for i := int64(0); i < numTxPerHeight; i++ {
-					callRandomModifierFunc(db, h)
+					callRandomDatabaseModifierFunc(db, h, false)
 					db.StoreTransaction(modules.TxResult(getRandomTxResult(h)))
 				}
 				db.UpdateAppHash()
@@ -66,25 +70,36 @@ func BenchmarkStateHash(b *testing.B) {
 	}
 }
 
-func callRandomModifierFunc(p *persistence.PostgresContext, height int64) error {
+// Calls a random database modifier function on the given persistence context
+func callRandomDatabaseModifierFunc(
+	p *persistence.PostgresContext,
+	height int64,
+	mustSucceed bool,
+) (string, []reflect.Value, error) {
 	t := reflect.TypeOf(modules.PersistenceWriteContext(p))
+	numMethods := t.NumMethod()
 
+	// Select a random method and loops until a successful invocation takes place
 MethodLoop:
-	for m := 0; m < t.NumMethod(); m++ {
-		method := t.Method(m)
+	for {
+		method := t.Method(rand.Intn(numMethods))
 		methodName := method.Name
+		numArgs := method.Type.NumIn()
 
-		if !re.MatchString(methodName) {
+		// Preliminary filter to determine which functions we're interested in trying to call
+		if !isModifierRe.MatchString(methodName) {
 			continue
 		}
 
+		// Build a random set of arguments to pass to the function being called
 		var callArgs []reflect.Value
-		for i := 1; i < method.Type.NumIn(); i++ {
+		for i := 1; i < numArgs; i++ {
 			var v reflect.Value
 			arg := method.Type.In(i)
 			switch arg.Kind() {
 			case reflect.String:
-				v = reflect.ValueOf(getRandomString(50))
+				// String values in modifier functions are usually amounts
+				v = reflect.ValueOf(getRandomIntString(1000000))
 			case reflect.Slice:
 				switch arg.Elem().Kind() {
 				case reflect.Uint8:
@@ -92,7 +107,7 @@ MethodLoop:
 				case reflect.String:
 					v = reflect.ValueOf([]string{"abc"})
 				default:
-					continue MethodLoop
+					continue MethodLoop // IMPROVE: Slices of other types not supported yet
 				}
 			case reflect.Bool:
 				v = reflect.ValueOf(rand.Intn(2) == 1)
@@ -107,15 +122,21 @@ MethodLoop:
 			case reflect.Pointer:
 				fallthrough
 			default:
-				continue MethodLoop
+				continue MethodLoop // IMPROVE: Other types not supported yet
 			}
 			callArgs = append(callArgs, v)
 		}
-		// fmt.Println(methodName, "~~~", method.Type.NumIn(), callArgs)
-		// return reflect.ValueOf(p).MethodByName(method.Name).Call(callArgs)
-		reflect.ValueOf(p).MethodByName(method.Name).Call(callArgs)
+		res := reflect.ValueOf(p).MethodByName(method.Name).Call(callArgs)
+		var err error
+		if v := res[0].Interface(); v != nil {
+			if mustSucceed {
+				fmt.Println("OLSH SKIP")
+				continue MethodLoop
+			}
+			err = v.(error)
+		}
+		return methodName, callArgs, err
 	}
-	return nil
 }
 
 func getRandomTxResult(height int64) *indexer.TxRes {
@@ -131,6 +152,10 @@ func getRandomTxResult(height int64) *indexer.TxRes {
 	}
 }
 
+func getRandomIntString(n int) string {
+	return strconv.Itoa(rand.Intn(n))
+}
+
 func getRandomString(numChars int64) string {
 	return string(getRandomBytes(numChars))
 }
@@ -138,5 +163,5 @@ func getRandomString(numChars int64) string {
 func getRandomBytes(numBytes int64) []byte {
 	bz := make([]byte, numBytes)
 	rand.Read(bz)
-	return bz
+	return []byte(hex.EncodeToString(bz))
 }

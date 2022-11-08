@@ -70,18 +70,17 @@ func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresCon
 		log.Fatalf("Error casting RW context to Postgres context")
 	}
 
-	t.Cleanup(func() {
-		if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
-			log.Fatalf("Error releasing write context: %v\n", err)
-		}
-		if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-			// Action: debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
-			Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
-			Message: nil,
-		}); err != nil {
-			log.Fatalf("Error clearing state: %v\n", err)
-		}
-	})
+	// t.Cleanup(func() {
+	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
+		log.Fatalf("Error releasing write context: %v\n", err)
+	}
+	if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
+		Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
+		Message: nil,
+	}); err != nil {
+		log.Fatalf("Error clearing state: %v\n", err)
+	}
+	// })
 
 	return db
 }
@@ -326,4 +325,28 @@ func getRandomBigIntString() string {
 
 func setRandomSeed() {
 	rand.Seed(time.Now().UnixNano())
+}
+
+func resetToGenesis() {
+	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
+		log.Fatalf("Error releasing write context: %v\n", err)
+	}
+	if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
+		Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
+		Message: nil,
+	}); err != nil {
+		log.Fatalf("Error clearing state: %v\n", err)
+	}
+}
+
+func clearAllState() {
+	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
+		log.Fatalf("Error releasing write context: %v\n", err)
+	}
+	if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
+		Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+		Message: nil,
+	}); err != nil {
+		log.Fatalf("Error clearing state: %v\n", err)
+	}
 }

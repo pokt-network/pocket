@@ -1,11 +1,13 @@
 package persistence
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"log"
 	"os"
 	"strings"
 
+	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/debug"
@@ -111,12 +113,18 @@ func (m *persistenceModule) clearState(_ *debug.DebugMessage) error {
 	}
 
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-		if err := m.stateTrees.valueStores[treeType].ClearAll(); err != nil {
+		valueStore := m.stateTrees.valueStores[treeType]
+		nodeStore := m.stateTrees.nodeStores[treeType]
+
+		if err := valueStore.ClearAll(); err != nil {
 			return err
 		}
-		// if err := m.stateTrees.nodeStores[treeType].ClearAll(); err != nil {
-		// 	return err
-		// }
+		if err := nodeStore.ClearAll(); err != nil {
+			return err
+		}
+
+		// Needed in order to make sure the root is re-set correctly after clearing
+		m.stateTrees.merkleTrees[treeType] = smt.NewSparseMerkleTree(valueStore, nodeStore, sha256.New())
 	}
 
 	log.Println("Cleared all the state")
