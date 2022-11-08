@@ -45,7 +45,7 @@ func systemCommands() []*cobra.Command {
 				}
 				statusCode := response.StatusCode()
 				if statusCode == http.StatusOK {
-					fmt.Printf("✅ RPC reporting healthy status for node @ \033[1m%s\033[0m\n\n%s", remoteCLIURL, response.Body)
+					fmt.Printf("✅ RPC reporting healthy status for node @ %s\n\n%s", boldText(remoteCLIURL), response.Body)
 					return nil
 				}
 
@@ -69,7 +69,7 @@ func systemCommands() []*cobra.Command {
 				}
 				statusCode := response.StatusCode()
 				if statusCode == http.StatusOK {
-					fmt.Printf("Node @ \033[1m%s\033[0m reports that it's running version: \n\033[1m%s\033[0m\n", remoteCLIURL, response.Body)
+					fmt.Printf("Node @ %s reports that it's running version: \n%s\n", boldText(remoteCLIURL), boldText(response.Body))
 					return nil
 				}
 
