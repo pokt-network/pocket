@@ -45,13 +45,22 @@ func (u *UtilityContext) GetPersistenceContext() modules.PersistenceRWContext {
 }
 
 func (u *UtilityContext) Commit(quorumCert []byte) error {
-	return u.Context.PersistenceRWContext.Commit(quorumCert)
+	if err := u.Context.PersistenceRWContext.Commit(quorumCert); err != nil {
+		return err
+	}
+	u.Context = nil
+	return nil
 }
 
 func (u *UtilityContext) Release() error {
-	err := u.Context.Release()
+	if u.Context == nil {
+		return nil
+	}
+	if err := u.Context.Release(); err != nil {
+		return err
+	}
 	u.Context = nil
-	return err
+	return nil
 }
 
 func (u *UtilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {
