@@ -46,7 +46,7 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 
 - _Coming Soon: Shared Changelog_
 - [Utility Changelog](utility/doc/CHANGELOG.md)
-- [Consensus Changelog](consensus/CHANGELOG.md)
+- [Consensus Changelog](consensus/doc/CHANGELOG.md)
 - [Persistence Changelog](persistence/docs/CHANGELOG.md)
 - [P2P Changelog](p2p/CHANGELOG.md)
 - _Coming Soon: Telemetry Changelog_
