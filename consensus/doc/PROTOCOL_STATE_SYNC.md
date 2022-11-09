@@ -69,21 +69,14 @@ It is important to note, if any blocks processed result in an invalid `AppHash` 
 In the `StateSync` protocol, the Node fields valid `BlockRequests` from its peers to help them `CatchUp` to be `Synced`. This sub-protocol is continuous throughout the lifecycle of StateSync.
 
 ```mermaid
-graph  TD
-
-A[StateSync]  -->|IsCaughtUp|  B(Pacemaker Mode)
-
-B  -->  |Consensus Messages|  C(ConsensusModule.Pacemaker)
-
-A  -->|IsSyncing|  E(Sync Mode)
-
-E  -->|Request Block|  G[Peers]
-
-G-->  |ApplyBlock|  A
-
-A  -->  D[Server Mode]
-
-D  -->  |Serve Blocks Upon Request|  G
+graph TD
+    A[StateSync] -->|IsCaughtUp| B(Pacemaker Mode)
+    B --> |Consensus Messages| C(ConsensusModule.Pacemaker)
+    A -->|IsSyncing| E(Sync Mode)
+    E -->|Request Block| G[Peers]
+    G--> |ApplyBlock| A
+    A --> D[Server Mode]
+    D --> |Serve Blocks Upon Request| G
 ```
 
 ## Follow up tasks
