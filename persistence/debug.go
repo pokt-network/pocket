@@ -3,16 +3,11 @@ package persistence
 import (
 	"crypto/sha256"
 	"log"
-	"os"
-	"strings"
 
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/debug"
-
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 )
 
 func (m *persistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
@@ -29,10 +24,6 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 		}
 		g := m.genesisState.(*types.PersistenceGenesisState)
 		m.populateGenesisState(g) // fatal if there's an error
-	case debug.DebugMessageAction_DEBUG_PERSISTENCE_TREE_EXPORT:
-		if err := m.exportTrees(debugMessage); err != nil {
-			return err
-		}
 	default:
 		log.Printf("Debug message not handled by persistence module: %s \n", debugMessage.Message)
 	}
@@ -52,41 +43,6 @@ func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 	codec.Unmarshal(blockBytes, block)
 
 	log.Printf("Block at height %d: %+v \n", height, block)
-}
-
-// Everyone roles their own key-value export: https://www.reddit.com/r/golang/comments/bw08dt/is_there_any_offline_database_viewer_and_editor
-// docker exec node4.consensus sh -c "cat /tmp/trees/val.json";
-func (m *persistenceModule) exportTrees(_ *debug.DebugMessage) error {
-	if err := os.Mkdir("/tmp/trees", os.ModePerm); err != nil {
-		return err
-	}
-
-	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-		smtValues := m.stateTrees.valueStores[treeType]
-		_, values, err := smtValues.GetAll(nil, true)
-		if err != nil {
-			return err
-		}
-
-		var sb strings.Builder
-		for i := 0; i < len(values); i++ {
-			vProto := merkleTreeToProtoSchema[treeType]()
-			// vProto := &types.Actor{}
-			if err := proto.Unmarshal(values[i], vProto.(proto.Message)); err != nil {
-				// if err := proto.Unmarshal(values[i], vProto); err != nil {
-				return err
-			}
-			sb.WriteString(protojson.Format(vProto))
-		}
-		f, err := os.Create("/tmp/trees/" + merkleTreeToString[treeType] + ".json")
-		if err != nil {
-			return err
-		}
-		f.Write([]byte(sb.String()))
-		f.Close()
-	}
-	log.Println("Trees exported to /tmp/trees/")
-	return nil
 }
 
 // TODO: MAke sure this is atomic

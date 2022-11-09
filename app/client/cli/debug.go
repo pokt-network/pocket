@@ -28,7 +28,6 @@ const (
 	PromptTriggerNextView        string = "TriggerNextView (broadcast)"
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode (broadcast)"
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore (send)"
-	PromptExportTrees            string = "ExportTrees (broadcast)"
 
 	defaultConfigPath  = "build/config/config1.json"
 	defaultGenesisPath = "build/config/genesis.json"
@@ -48,7 +47,6 @@ var (
 		PromptTriggerNextView,
 		PromptTogglePacemakerMode,
 		PromptShowLatestBlockInStore,
-		PromptExportTrees,
 	}
 )
 
@@ -131,12 +129,6 @@ func handleSelect(selection string) {
 			Message: nil,
 		}
 		sendDebugMessage(m)
-	case PromptExportTrees:
-		m := &debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_TREE_EXPORT,
-			Message: nil,
-		}
-		broadcastDebugMessage(m)
 	default:
 		log.Println("Selection not yet implemented...", selection)
 	}

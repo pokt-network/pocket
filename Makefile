@@ -187,13 +187,6 @@ db_show_schemas: docker_check
 db_admin:
 	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
 
-# TODO_IN_THIS_COMMIT: Move this out into a separate task
-.PHONY: db_export_trees
-## Copy the trees in `node1` from docker to the host machine - assumes `ExportTrees` was executed from the debug client
-db_export_trees:
-	echo "Copying trees from node1.consensus to /tmp/node1_trees"
-	docker cp node1.consensus:/tmp/trees /tmp/node1_trees
-
 .PHONY: docker_kill_all
 ## Kill all containers started by the docker-compose file
 docker_kill_all: docker_check

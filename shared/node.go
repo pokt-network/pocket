@@ -170,8 +170,6 @@ func (node *Node) handleDebugEvent(anyMessage *anypb.Any) error {
 	// Persistence Debug
 	case debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		fallthrough
-	case debug.DebugMessageAction_DEBUG_PERSISTENCE_TREE_EXPORT:
-		return node.GetBus().GetPersistenceModule().HandleDebugMessage(&debugMessage)
 	default:
 		log.Printf("Debug message: %s \n", debugMessage.Message)
 	}
