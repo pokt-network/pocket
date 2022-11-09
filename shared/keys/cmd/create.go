@@ -23,8 +23,22 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
+)
+
+const (
+	flagInteractive = "interactive"
+	flagRecover     = "recover"
+	flagNoBackup    = "no-backup"
+	flagCoinType    = "coin-type"
+	flagAccount     = "account"
+	flagIndex       = "index"
+	flagMultisig    = "multisig"
+	flagNoSort      = "nosort"
+	flagHDPath      = "hd-path"
+
+	// DefaultKeyPass contains the default key password for genesis transactions
+	DefaultKeyPass = "12345678"
 )
 
 // createCmd represents the create command
