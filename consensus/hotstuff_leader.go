@@ -374,7 +374,7 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 	}
 
 	// Set the proposal block in the persistence context
-	if err = persistenceContext.SetProposalBlock(blockHeader.Hash, blockHeader.ProposerAddress, block.Transactions); err != nil {
+	if err = persistenceContext.SetProposalBlock(blockHeader.Hash, blockHeader.ProposerAddress, blockHeader.QuorumCertificate, block.Transactions); err != nil {
 		return nil, err
 	}
 

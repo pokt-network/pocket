@@ -227,8 +227,9 @@ func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 // This helper applies the block metadata to the utility & persistence layers
 func (m *consensusModule) applyBlock(block *typesCons.Block) error {
 	persistenceContext := m.utilityContext.GetPersistenceContext()
+	blockHeader := block.BlockHeader
 	// Set the proposal block in the persistence context
-	if err := persistenceContext.SetProposalBlock(block.BlockHeader.Hash, block.BlockHeader.ProposerAddress, block.Transactions); err != nil {
+	if err := persistenceContext.SetProposalBlock(blockHeader.Hash, blockHeader.ProposerAddress, blockHeader.QuorumCertificate, block.Transactions); err != nil {
 		return err
 	}
 
@@ -239,8 +240,8 @@ func (m *consensusModule) applyBlock(block *typesCons.Block) error {
 	}
 
 	// CONSOLIDATE: Terminology of `appHash` and `stateHash`
-	if block.BlockHeader.Hash != hex.EncodeToString(appHash) {
-		return typesCons.ErrInvalidAppHash(block.BlockHeader.Hash, hex.EncodeToString(appHash))
+	if blockHeader.Hash != hex.EncodeToString(appHash) {
+		return typesCons.ErrInvalidAppHash(blockHeader.Hash, hex.EncodeToString(appHash))
 	}
 
 	return nil

@@ -58,7 +58,7 @@ type PersistenceWriteContext interface {
 	// Indexer Operations
 
 	// Block Operations
-	SetProposalBlock(blockHash string, proposerAddr []byte, transactions [][]byte) error
+	SetProposalBlock(blockHash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) error
 	// Store the block into persistence
 	UpdateAppHash() ([]byte, error)
 

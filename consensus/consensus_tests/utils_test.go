@@ -359,7 +359,7 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 	ctrl := gomock.NewController(t)
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
-	persistenceContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	persistenceContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	persistenceContextMock.EXPECT().GetPrevAppHash().Return("", nil).AnyTimes()
 
 	utilityContextMock.EXPECT().
