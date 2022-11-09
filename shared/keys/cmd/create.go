@@ -52,6 +52,11 @@ const (
 	flagNoSort      = "nosort"
 	flagHDPath      = "hd-path"
 
+	// from show.go
+	flagMultiSigThreshold = "multisig-threshold"
+	// FlagPublicKey represents the user's public key on the command line.
+	FlagPublicKey = "pubkey"
+
 	// DefaultKeyPass contains the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
 )
@@ -96,10 +101,11 @@ output
 func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
 	var err error
 
+	// flags and context setup
 	name := args[0]
 	interactive, _ := cmd.Flags().GetBool(flagInteractive)
 	noBackup, _ := cmd.Flags().GetBool(flagNoBackup)
-	showMnemonic := !noBackup
+	showMnemonic := !noBackup // TODO: find out backup address (note here)
 	kb := ctx.Keyring
 	outputFormat := ctx.OutputFormat
 
@@ -110,6 +116,9 @@ func RunAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		return err
 	}
 
+	// Dry run will not store any thing to local keystore
+	// Here we store key in keystore
+	// TODO: link the level.db or badger.db here (Looks like the kb.Key is the one that will access DB
 	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); !dryRun {
 		_, err = kb.Key(name)
 		if err == nil {
@@ -321,8 +330,24 @@ func init() {
 	// and all subcommands, e.g.:
 	// createCmd.PersistentFlags().String("foo", "", "A help for foo")
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// createCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Local Flags
+
+	createCmd.Flags().StringSlice(flagMultisig, nil, "Construct and store a multisig public key (implies --pubkey)")
+	createCmd.Flags().Int(flagMultiSigThreshold, 1, "K out of N required signatures. For use in conjunction with --multisig")
+	createCmd.Flags().Bool(flagNoSort, false, "Keys passed to --multisig are taken in the order they're supplied")
+	createCmd.Flags().String(FlagPublicKey, "", "Parse a public key in bech32 format and save it to disk")
+	createCmd.Flags().BoolP(flagInteractive, "i", false, "Interactively prompt user for BIP39 passphrase and mnemonic")
+	createCmd.Flags().Bool(flags.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
+	createCmd.Flags().Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
+	createCmd.Flags().Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
+	createCmd.Flags().Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
+	createCmd.Flags().String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
+	createCmd.Flags().Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
+	createCmd.Flags().Uint32(flagAccount, 0, "Account number for HD derivation")
+	createCmd.Flags().Uint32(flagIndex, 0, "Address index number for HD derivation")
+	createCmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
+
+	createCmd.SetOut(createCmd.OutOrStdout())
+	createCmd.SetErr(createCmd.ErrOrStderr())
 
 }
