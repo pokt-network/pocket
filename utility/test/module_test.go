@@ -62,6 +62,9 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
+	// TECHDEBT: Move the internal of cleanup into a separate function and call this in the
+	// beginning of every test. This can be problematic if we call `NewTestingUtilityContext` more
+	// than once in a single test.
 	t.Cleanup(func() {
 		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
 		require.NoError(t, testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{

@@ -41,9 +41,7 @@ const (
 	poolMerkleTree
 
 	// Data Merkle Trees
-	blocksMerkleTree
 	transactionsMerkleTree
-
 	paramsMerkleTree
 	flagsMerkleTree
 
@@ -60,11 +58,9 @@ var merkleTreeToString = map[merkleTree]string{
 	accountMerkleTree: "account",
 	poolMerkleTree:    "pool",
 
-	blocksMerkleTree:       "blocks",
 	transactionsMerkleTree: "transactions",
-
-	paramsMerkleTree: "params",
-	flagsMerkleTree:  "flags",
+	paramsMerkleTree:       "params",
+	flagsMerkleTree:        "flags",
 }
 
 var actorTypeToMerkleTreeName map[types.ActorType]merkleTree = map[types.ActorType]merkleTree{
@@ -97,11 +93,9 @@ var merkleTreeToProtoSchema = map[merkleTree]func() proto.Message{
 	accountMerkleTree: func() proto.Message { return &types.Account{} },
 	poolMerkleTree:    func() proto.Message { return &types.Account{} },
 
-	blocksMerkleTree:       func() proto.Message { return &types.Block{} },
 	transactionsMerkleTree: func() proto.Message { return &types.Transaction{} },
-
-	paramsMerkleTree: func() proto.Message { return &types.Params{} },
-	flagsMerkleTree:  func() proto.Message { return &types.Params{} },
+	paramsMerkleTree:       func() proto.Message { return &types.Params{} },
+	flagsMerkleTree:        func() proto.Message { return &types.Params{} },
 }
 
 func newStateTrees(treesStoreDir string) (*stateTrees, error) {
@@ -178,17 +172,18 @@ func (p *PostgresContext) updateMerkleTrees() ([]byte, error) {
 			}
 
 		// Data Merkle Trees
-		case blocksMerkleTree:
-			continue
 		case transactionsMerkleTree:
 			if err := p.updateTransactionsTree(p.Height); err != nil {
 				return nil, err
 			}
-
 		case paramsMerkleTree:
-			// TODO: Implement paramsMerkleTree
+			if err := p.updateParamsTree(p.Height); err != nil {
+				return nil, err
+			}
 		case flagsMerkleTree:
-			// TODO: Implement flagsMerkleTree
+			if err := p.updateFlagsTree(p.Height); err != nil {
+				return nil, err
+			}
 
 		// Default
 		default:
@@ -335,5 +330,15 @@ func (p *PostgresContext) updateTransactionsTree(height int64) error {
 		}
 	}
 
+	return nil
+}
+
+func (p *PostgresContext) updateParamsTree(height int64) error {
+	// TODO_IN_NEXT_COMMIT(olshansky): Implement me
+	return nil
+}
+
+func (p *PostgresContext) updateFlagsTree(height int64) error {
+	// TODO_IN_NEXT_COMMIT(olshansky): Implement me
 	return nil
 }

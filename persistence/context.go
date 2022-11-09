@@ -1,6 +1,6 @@
 package persistence
 
-// CLEANUP: Figure out why the receivers here aren't pointers?
+// TECHDEBT: Figure out why the receivers here aren't pointers?
 
 import (
 	"context"
@@ -22,24 +22,20 @@ func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 }
 
 func (p *PostgresContext) ComputeAppHash() ([]byte, error) {
-	// DISCUSS_IN_THIS_COMMIT: Should we compare the `appHash` returned from `updateMerkleTrees`
-	// to the one set in `SetProposalBlock`. What if they are different?
+	// DISCUSS_IN_THIS_COMMIT:
+	// 1. Should we compare the `appHash` returned from `updateMerkleTrees`?
+	// 2. Should this update the internal state of the context?
+	// Proposal: If the current internal appHash is not set, we update it.
+	//           If the current internal appHash is set, we compare it and return an error if different.
 	return p.updateMerkleTrees()
 }
 
 func (p PostgresContext) Commit(quorumCert []byte) error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
 
-
-
 	// Create a persistence block proto
 	block, err := p.prepareBlock(quorumCert)
 	if err != nil {
-		return err
-	}
-
-	// Insert the block into the postgres DB
-	if err := p.insertBlock(block); err != nil {
 		return err
 	}
 
@@ -48,6 +44,12 @@ func (p PostgresContext) Commit(quorumCert []byte) error {
 		return err
 	}
 
+	// Insert the block into the SQL DB
+	if err := p.insertBlock(block); err != nil {
+		return err
+	}
+
+	// Commit the SQL transaction
 	ctx := context.TODO()
 	if err := p.GetTx().Commit(ctx); err != nil {
 		return err

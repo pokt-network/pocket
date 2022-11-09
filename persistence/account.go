@@ -68,6 +68,7 @@ func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	return nil
 }
 
+// TODO_IN_THIS_COMMIT: Add unit tests for this
 func (p PostgresContext) getAccountsUpdated(height int64) (accounts []*types.Account, err error) {
 	return p.getPoolOrAccUpdatedInternal(types.GetAccountsUpdatedAtHeightQuery(height))
 }
@@ -146,6 +147,7 @@ func (p *PostgresContext) operationPoolAmount(name string, amount string, op fun
 	return p.operationPoolOrAccAmount(name, amount, op, p.GetPoolAmount, types.InsertPoolAmountQuery)
 }
 
+// TODO_IN_THIS_COMMIT: Add unit tests for this
 func (p PostgresContext) getPoolsUpdated(height int64) ([]*types.Account, error) {
 	return p.getPoolOrAccUpdatedInternal(types.GetPoolsUpdatedAtHeightQuery(height))
 }

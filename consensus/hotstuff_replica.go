@@ -240,8 +240,9 @@ func (m *consensusModule) applyBlock(block *typesCons.Block) error {
 	}
 
 	// CONSOLIDATE: Terminology of `appHash` and `stateHash`
-	if blockHeader.Hash != hex.EncodeToString(appHash) {
-		return typesCons.ErrInvalidAppHash(blockHeader.Hash, hex.EncodeToString(appHash))
+	appHashString := hex.EncodeToString(appHash)
+	if blockHeader.Hash != appHashString {
+		return typesCons.ErrInvalidAppHash(blockHeader.Hash, appHashString)
 	}
 
 	return nil

@@ -33,20 +33,9 @@ var protocolActorSchemas = []types.ProtocolActorSchema{
 	types.ValidatorActor,
 }
 
-// A list of functions to clear data from the DB not associated with protocol actors
-var nonActorClearFunctions = []func() string{
-	types.ClearAllAccounts,
-	types.ClearAllPools,
-	types.ClearAllGovParamsQuery,
-	types.ClearAllGovFlagsQuery,
-	types.ClearAllBlocksQuery,
-}
-
 var _ modules.PersistenceRWContext = &PostgresContext{}
 
 type PostgresContext struct {
-	// modules.PersistenceRWContext
-
 	Height int64 // TODO(olshansky): `Height` is only externalized for testing purposes. Replace with helpers...
 	conn   *pgx.Conn
 	tx     pgx.Tx
@@ -193,36 +182,5 @@ func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.BlockTableName, types.BlockTableSchema)); err != nil {
 		return err
 	}
-	return nil
-}
-
-// Exposed for testing purposes only
-func (p *PostgresContext) DebugClearAll() error {
-	ctx, clearTx, err := p.GetCtxAndTx()
-	if err != nil {
-		return err
-	}
-
-	for _, actor := range protocolActorSchemas {
-		if _, err = clearTx.Exec(ctx, actor.ClearAllQuery()); err != nil {
-			return err
-		}
-		if actor.GetChainsTableName() != "" {
-			if _, err = clearTx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
-				return err
-			}
-		}
-	}
-
-	for _, clearFn := range nonActorClearFunctions {
-		if _, err := clearTx.Exec(ctx, clearFn()); err != nil {
-			return err
-		}
-	}
-
-	if err = clearTx.Commit(ctx); err != nil {
-		return err
-	}
-
 	return nil
 }
