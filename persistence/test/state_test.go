@@ -48,9 +48,9 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	// that the business logic doesn't change and that they remain deterministic. Anytime the business
 	// logic changes, these hashes will need to be updated based on the test output.
 	encodedAppHash := []string{
-		"a68dbbcddb69355f893000f9ba07dee1d9615cfd1c5db2a41296bff331b4e99d",
-		// "1e736e8c94c899f9ac6544744a0f12d2ed29d4e611e7c088f14fc338499fb166",
-		// "ce9bf6328228cd8caf138ddc440a8fd512af6a25542c9863562abeb5c793dd82",
+		"b076081d48f6652d2302c974f20e5371b4728c7950735f6617aac7b6be62f581",
+		"171af2b820d2a65861c4e63f0cdd9c8bdde4798e6ace28c47d0e83467848ab02",
+		"b168dff3a83215f12093e548aa22cdf907fbfdb1e12d217ffbb4a07beca065f1",
 	}
 
 	stakeAmount := initialStakeAmount
@@ -96,7 +96,12 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		require.Equal(t, expectedAppHash, hex.EncodeToString(appHash))
 
 		// Commit the transactions above
-		err = db.Commit(getRandomBytes(quorumCertBytesSize))
+		proposer := []byte("placeholderProposer")
+		quorumCert := []byte("placeholderQuorumCert")
+
+		db.SetProposalBlock(hex.EncodeToString(appHash), proposer, quorumCert, [][]byte{txBz})
+
+		err = db.Commit(quorumCert)
 		require.NoError(t, err)
 
 		// Retrieve the block
@@ -107,8 +112,6 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		var block types.Block
 		err = codec.GetCodec().Unmarshal(blockBz, &block)
 		require.NoError(t, err)
-		// require.Len(t, block.Transactions, 1)
-		// require.Equal(t, txResult.GetTx(), block.Transactions[0])
 		require.Equal(t, expectedAppHash, block.Hash) // verify block hash
 		if i > 0 {
 			require.Equal(t, encodedAppHash[i-1], block.PrevHash) // verify chain chain

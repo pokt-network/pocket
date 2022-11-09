@@ -30,7 +30,6 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		return nil, nil, err
 	}
 	transactions := make([][]byte, 0)
-	txResults := make([]modules.TxResult, 0)
 	totalTxsSizeInBytes := 0
 	txIndex := 0
 	for u.Mempool.Size() != typesUtil.ZeroInt {
@@ -62,9 +61,11 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			totalTxsSizeInBytes -= txTxsSizeInBytes
 			continue
 		}
-		
+		if err := u.Context.IndexTransaction(txResult); err != nil {
+			log.Fatalf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
+		}
+
 		transactions = append(transactions, txBytes)
-		txResults = append(txResults, txResult)
 		txIndex++
 	}
 	if err := u.EndBlock(proposer); err != nil {
@@ -101,9 +102,13 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 		//                Or wait until the entire lifecycle is over to evaluate an 'invalid' block
 
 		// Validate and apply the transaction to the Postgres database
-		_, err = u.ApplyTransaction(index, tx)
+		txResult, err := u.ApplyTransaction(index, tx)
 		if err != nil {
 			return nil, err
+		}
+
+		if err := u.Context.IndexTransaction(txResult); err != nil {
+			log.Fatalf("TODO(#327): We can apply the transaction but not index it. Crash the process for now: %v\n", err)
 		}
 
 		// TODO: if found, remove transaction from mempool.

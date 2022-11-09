@@ -104,7 +104,7 @@ func (p *PostgresContext) prepareBlock(quorumCert []byte) (*types.Block, error) 
 
 	block := &types.Block{
 		Height:            uint64(p.Height),
-		Hash:              hex.EncodeToString([]byte(p.blockHash)),
+		Hash:              p.blockHash,
 		PrevHash:          hex.EncodeToString(prevHash),
 		ProposerAddress:   p.proposerAddr,
 		QuorumCertificate: quorumCert,

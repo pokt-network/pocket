@@ -24,7 +24,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	require.NoError(t, er)
 	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
-	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, nil, [][]byte{txBz})
+	er = ctx.GetPersistenceContext().SetProposalBlock("", addrBz, nil, [][]byte{txBz})
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
@@ -72,7 +72,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	require.NoError(t, err)
 	addrBz, er := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, er)
-	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, nil, [][]byte{txBz})
+	er = ctx.GetPersistenceContext().SetProposalBlock("", addrBz, nil, [][]byte{txBz})
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
@@ -133,7 +133,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	require.NoError(t, er)
 	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
-	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, nil, [][]byte{txBz})
+	er = ctx.GetPersistenceContext().SetProposalBlock("", addrBz, nil, [][]byte{txBz})
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
@@ -155,19 +155,6 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 
 	proposerBalanceDifference := big.NewInt(0).Sub(proposerAfterBalance, proposerBeforeBalance)
 	require.Equal(t, expectedProposerBalanceDifference, proposerBalanceDifference)
-
-	test_artifacts.CleanupTest(ctx)
-}
-
-func TestUtilityContext_GetAppHash(t *testing.T) {
-	ctx := NewTestingUtilityContext(t, 0)
-
-	appHashTest, err := ctx.GetAppHash()
-	require.NoError(t, err)
-
-	appHashSource, er := ctx.Context.AppHash()
-	require.NoError(t, er)
-	require.Equal(t, appHashTest, appHashSource, "unexpected appHash")
 
 	test_artifacts.CleanupTest(ctx)
 }

@@ -59,7 +59,8 @@ type PersistenceWriteContext interface {
 
 	// Block Operations
 	SetProposalBlock(blockHash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) error
-	ComputeAppHash() ([]byte, error)
+	GetLatestBlockTxs() [][]byte              // Returns the transactions set by `SetProposalBlock`
+	ComputeAppHash() ([]byte, error)          // Update the merkle trees, computes the new state hash, and returns in
 	IndexTransaction(txResult TxResult) error // DISCUSS_IN_THIS_COMMIT: How can we remove `TxResult` from the public interface?
 
 	// Pool Operations
@@ -126,7 +127,6 @@ type PersistenceReadContext interface {
 	GetPrevAppHash() (string, error)               // Returns the app hash from the previous block relate to the context height
 	GetBlockHash(height int64) ([]byte, error)     // Returns the app hash corresponding to the height provides
 	GetLatestProposerAddr() []byte                 // Returns the proposer set via `SetProposalBlock`
-	GetLatestBlockTxs() [][]byte                   // Returns the transactions set via `SetProposalBlock`
 	GetBlocksPerSession(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
 
 	// Indexer Queries

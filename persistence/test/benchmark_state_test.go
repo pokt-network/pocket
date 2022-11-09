@@ -59,7 +59,10 @@ func BenchmarkStateHash(b *testing.B) {
 				db := NewTestPostgresContext(b, h)
 
 				for i := 0; i < numTxPerHeight; i++ {
-					callRandomDatabaseModifierFunc(db, h, false)
+
+					for op := 0; op < numOpsPerTx; op++ {
+						callRandomDatabaseModifierFunc(db, h, false)
+					}
 					db.IndexTransaction(modules.TxResult(getRandomTxResult(h)))
 				}
 
