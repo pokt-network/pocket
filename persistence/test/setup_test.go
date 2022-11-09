@@ -59,7 +59,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-// IMPROVE(olshansky): Look into returning `testPersistenceMod` to avoid exposing underlying abstraction.
+// IMPROVE: Look into returning `testPersistenceMod` to avoid exposing underlying abstraction.
 func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
@@ -71,7 +71,7 @@ func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresCon
 		log.Fatalf("Error casting RW context to Postgres context")
 	}
 
-	// TODO_IN_THIS_COMMIT: This should not be part of `NewTestPostgresContext`. It causes unnecessary resets
+	// TECHDEBT: This should not be part of `NewTestPostgresContext`. It causes unnecessary resets
 	// if we call `NewTestPostgresContext` more than once in a single test.
 	t.Cleanup(resetStateToGenesis)
 
@@ -314,6 +314,7 @@ func setRandomSeed() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+// This is necessary for unit tests that are dependant on a baseline genesis state
 func resetStateToGenesis() {
 	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
 		log.Fatalf("Error releasing write context: %v\n", err)
@@ -326,6 +327,7 @@ func resetStateToGenesis() {
 	}
 }
 
+// This is necessary for unit tests that are dependant on a completely clear state when starting
 func clearAllState() {
 	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
 		log.Fatalf("Error releasing write context: %v\n", err)

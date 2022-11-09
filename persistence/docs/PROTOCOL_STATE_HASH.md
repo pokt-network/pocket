@@ -1,3 +1,5 @@
+DO_NOT_REVIEW_THIS_YET
+
 # AppHash <!-- omit in toc -->
 
 This document describes the persistence module internal implementation of how the state hash is updated. Specifically, what happens once the `UpdateStateHash` function in [persistence module interface](../../shared/modules/persistence_module.go) is called.

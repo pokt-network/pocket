@@ -62,6 +62,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			totalTxsSizeInBytes -= txTxsSizeInBytes
 			continue
 		}
+		
 		transactions = append(transactions, txBytes)
 		txResults = append(txResults, txResult)
 		txIndex++

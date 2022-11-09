@@ -175,7 +175,7 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		proposerAddr: nil,
 		quorumCert:   nil,
 		blockHash:    "",
-		blockTxs:     make([][]byte, 0),
+		blockTxs:     nil,
 	}
 
 	return m.writeContext, nil

@@ -144,13 +144,13 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		log.Fatalf("an error occurred initializing flags: %s", err.Error())
 	}
 
-	// This populate all the merkle trees
+	// Updates all the merkle trees
 	appHash, err := rwContext.ComputeAppHash()
 	if err != nil {
 		log.Fatalf("an error occurred updating the app hash during genesis: %s", err.Error())
 	}
 
-	// TODO: Figure out what these values for genesis should be
+	// TODO_IN_THIS_COMMIT: Figure out what these values for genesis should be
 	genesisQuorumCert := []byte("placeholderQuorumCert")
 	genesisProposer := []byte("placeholderProposer")
 	if err := rwContext.SetProposalBlock(hex.EncodeToString(appHash), genesisProposer, genesisQuorumCert, nil); err != nil {

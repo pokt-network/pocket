@@ -24,11 +24,11 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 	case debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		m.showLatestBlockInStore(debugMessage)
 	case debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE:
-		if err := m.clearState(debugMessage); err != nil {
+		if err := m.clearAllState(debugMessage); err != nil {
 			return err
 		}
 	case debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS:
-		if err := m.clearState(debugMessage); err != nil {
+		if err := m.clearAllState(debugMessage); err != nil {
 			return err
 		}
 		g := m.genesisState.(*types.PersistenceGenesisState)
@@ -55,27 +55,24 @@ func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 }
 
 // TODO: MAke sure this is atomic
-func (m *persistenceModule) clearState(_ *debug.DebugMessage) error {
+func (m *persistenceModule) clearAllState(_ *debug.DebugMessage) error {
 	context, err := m.NewRWContext(-1)
 	if err != nil {
 		return err
 	}
 
 	// Clear the SQL DB
-	if err := context.(*PostgresContext).DebugClearAll(); err != nil {
+	if err := context.(*PostgresContext).clearAllSQLState(); err != nil {
 		return err
 	}
-
 	if err := m.ReleaseWriteContext(); err != nil {
 		return err
 	}
 
 	// Clear the KV Stores
-
 	if err := m.blockStore.ClearAll(); err != nil {
 		return err
 	}
-
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		valueStore := m.stateTrees.valueStores[treeType]
 		nodeStore := m.stateTrees.nodeStores[treeType]
@@ -92,12 +89,10 @@ func (m *persistenceModule) clearState(_ *debug.DebugMessage) error {
 	}
 
 	log.Println("Cleared all the state")
-
 	return nil
 }
 
-// Exposed for testing purposes only
-func (p *PostgresContext) DebugClearAll() error {
+func (p *PostgresContext) clearAllSQLState() error {
 	ctx, clearTx, err := p.GetCtxAndTx()
 	if err != nil {
 		return err
