@@ -3,6 +3,7 @@ package test
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"reflect"
 	"strconv"
 	"testing"
@@ -18,20 +19,29 @@ const (
 	txBytesRandSeed = "42"
 	txBytesSize     = 42
 
+	proposerBytesSize   = 10
+	quorumCertBytesSize = 10
+
 	// This value is arbitrarily selected, but needs to be a constant to guarantee deterministic tests.
 	initialStakeAmount = 42
 )
 
-// Tests/debug to implement:
-// - Add a tool to easily see what's in the tree (visualize, size, etc...)
-// - Benchmark what happens when we add a shit ton of thins into the trie
-// - Fuzz a test that results in the same final state but uses different ways to get there
-// - Think about:
-//       - Thinking about how it can be synched
-//       - Playing back several blocks
-// - Add TODOs for:
-// 		- Atomicity
-//      - Bad tests
+type TestReplayableOperation struct {
+	methodName string
+	args       []reflect.Value
+}
+type TestReplayableTransaction struct {
+	operations []*TestReplayableOperation
+	txResult   modules.TxResult
+}
+
+type TestReplayableBlock struct {
+	height     int64
+	txs        []*TestReplayableTransaction
+	hash       []byte
+	proposer   []byte
+	quorumCert []byte
+}
 
 func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	// These hashes were determined manually by running the test, but hardcoded to guarantee
@@ -86,7 +96,7 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		require.Equal(t, expectedAppHash, hex.EncodeToString(appHash))
 
 		// Commit the transactions above
-		err = db.Commit([]byte("TODOquorumCert"))
+		err = db.Commit(getRandomBytes(quorumCertBytesSize))
 		require.NoError(t, err)
 
 		// Retrieve the block
@@ -106,82 +116,90 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	}
 }
 
-func TestStateHash_TreeUpdatesAreIdempotent(t *testing.T) {
-}
-
-// Contintously updating the same value at the same height should not result in a delta
-
-type TestReplayableOperation struct {
-	methodName string
-	args       []reflect.Value
-}
-type TestReplayableTransaction struct {
-	operations []*TestReplayableOperation
-	txResult   modules.TxResult
-}
-
-type TestReplayableBlock struct {
-	height     int64
-	txs        []*TestReplayableTransaction
-	hash       []byte
-	proposer   []byte
-	quorumCert []byte
-}
-
-func TestStateHash_RandomButDeterministic(t *testing.T) {
+func TestStateHash_ReplayingRandomTransactionsIsDeterministic(t *testing.T) {
 	t.Cleanup(clearAllState)
 	clearAllState()
 
-	numHeights := 1 //10
-	numTxsPerHeight := 2
-	numOpsPerTx := 1 //5
-	numReplays := 1  //5
+	testCases := []struct {
+		numHeights      int64
+		numTxsPerHeight int
+		numOpsPerTx     int
+		numReplays      int
+	}{
+		{1, 2, 1, 3},
+		// {10, 2, 5, 5},
+	}
 
-	replayableBlocks := make([]*TestReplayableBlock, numHeights)
-	for height := int64(0); height < int64(numHeights); height++ {
-		db := NewTestPostgresContext(t, height)
-		replayableTxs := make([]*TestReplayableTransaction, numTxsPerHeight)
-		for txIdx := 0; txIdx < numTxsPerHeight; txIdx++ {
-			replayableOps := make([]*TestReplayableOperation, numOpsPerTx)
-			for opIdx := 0; opIdx < numOpsPerTx; opIdx++ {
-				methodName, args, err := callRandomDatabaseModifierFunc(db, height, true)
+	for _, testCase := range testCases {
+		numHeights := testCase.numHeights
+		numTxsPerHeight := testCase.numTxsPerHeight
+		numOpsPerTx := testCase.numOpsPerTx
+		numReplays := testCase.numReplays
+
+		t.Run(fmt.Sprintf("ReplayingRandomTransactionsIsDeterministic(%d;%d,%d,%d", numHeights, numTxsPerHeight, numOpsPerTx, numReplays), func(t *testing.T) {
+			replayableBlocks := make([]*TestReplayableBlock, numHeights)
+
+			for height := int64(0); height < int64(numHeights); height++ {
+				db := NewTestPostgresContext(t, height)
+				replayableTxs := make([]*TestReplayableTransaction, numTxsPerHeight)
+
+				for txIdx := 0; txIdx < numTxsPerHeight; txIdx++ {
+					replayableOps := make([]*TestReplayableOperation, numOpsPerTx)
+
+					for opIdx := 0; opIdx < numOpsPerTx; opIdx++ {
+						methodName, args, err := callRandomDatabaseModifierFunc(db, height, true)
+						require.NoError(t, err)
+
+						replayableOps[opIdx] = &TestReplayableOperation{
+							methodName: methodName,
+							args:       args,
+						}
+					}
+
+					txResult := modules.TxResult(getRandomTxResult(height))
+					err := db.IndexTransaction(txResult)
+					require.NoError(t, err)
+
+					replayableTxs[txIdx] = &TestReplayableTransaction{
+						operations: replayableOps,
+						txResult:   txResult,
+					}
+				}
+
+				appHash, err := db.ComputeAppHash()
 				require.NoError(t, err)
-				replayableOps[opIdx] = &TestReplayableOperation{
-					methodName: methodName,
-					args:       args,
+
+				proposer := getRandomBytes(proposerBytesSize)
+				quorumCert := getRandomBytes(quorumCertBytesSize)
+
+				err = db.Commit(quorumCert)
+				require.NoError(t, err)
+
+				replayableBlocks[height] = &TestReplayableBlock{
+					height:     height,
+					txs:        replayableTxs,
+					hash:       appHash,
+					proposer:   proposer,
+					quorumCert: quorumCert,
 				}
 			}
-			txResult := modules.TxResult(getRandomTxResult(height))
-			// err := db.StoreTransaction(txResult)
-			// require.NoError(t, err)
 
-			replayableTxs[txIdx] = &TestReplayableTransaction{
-				operations: replayableOps,
-				txResult:   txResult,
+			for i := 0; i < numReplays; i++ {
+				t.Run("verify block", func(t *testing.T) {
+					verifyReplayableBlocks(t, replayableBlocks)
+				})
 			}
-		}
-		appHash, err := db.ComputeAppHash()
-		require.NoError(t, err)
-
-		proposer := getRandomBytes(10)
-		quorumCert := getRandomBytes(10)
-		err = db.Commit(quorumCert)
-		require.NoError(t, err)
-
-		replayableBlocks[height] = &TestReplayableBlock{
-			height:     height,
-			txs:        replayableTxs,
-			hash:       appHash,
-			proposer:   proposer,
-			quorumCert: quorumCert,
-		}
-	}
-
-	for i := 0; i < numReplays; i++ {
-		t.Run("verify block", func(t *testing.T) {
-			verifyReplayableBlocks(t, replayableBlocks)
 		})
 	}
+}
+
+func TestStateHash_TreeUpdatesAreIdempotent(t *testing.T) {
+	// TODO_IN_THIS_COMMIT: Running the same oepration at the same height should not result in a
+	// a different hash because the final state is still the same.
+}
+
+func TestStateHash_TreeUpdatesNegativeTestCase(t *testing.T) {
+	// TODO_IN_NEXT_COMMIT: Implement me
 }
 
 func verifyReplayableBlocks(t *testing.T, replayableBlocks []*TestReplayableBlock) {
@@ -190,12 +208,14 @@ func verifyReplayableBlocks(t *testing.T, replayableBlocks []*TestReplayableBloc
 
 	for _, block := range replayableBlocks {
 		db := NewTestPostgresContext(t, block.height)
+
 		for _, tx := range block.txs {
 			for _, op := range tx.operations {
 				require.Nil(t, reflect.ValueOf(db).MethodByName(op.methodName).Call(op.args)[0].Interface())
 			}
-			// require.NoError(t, db.StoreTransaction(tx.txResult))
+			require.NoError(t, db.IndexTransaction(tx.txResult))
 		}
+
 		appHash, err := db.ComputeAppHash()
 		require.NoError(t, err)
 		require.Equal(t, block.hash, appHash)

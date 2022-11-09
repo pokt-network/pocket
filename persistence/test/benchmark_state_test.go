@@ -17,8 +17,11 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// var isModifierRe = regexp.MustCompile(`^(Insert|Update|Set|Add|Subtract)`)
-var isModifierRe = regexp.MustCompile(`^(Insert|Set|Add|Subtract)`)
+const (
+	maxStringAmount = 1000000000000000000
+)
+
+var isModifierRe = regexp.MustCompile(`^(Insert|Set|Add|Subtract)`) // Add Update?
 
 // INVESTIGATE: This benchmark can be used to experiment with different Merkle Tree implementations
 // and key-value stores.
@@ -28,17 +31,20 @@ func BenchmarkStateHash(b *testing.B) {
 
 	b.Cleanup(clearAllState)
 
-	// Rather than using `b.N` and the `-benchtime` flag, we use a fixed number of iterations
+	// NOTE: THe idiomatic way to run Go benchmarks is to use `b.N` and the `-benchtime` flag,
+	// to specify how long the benchmark should take. However, the code below is non-idiomatic
+	// since our goal is to test a specific we use a fixed number of iterations
 	testCases := []struct {
 		numHeights     int64
-		numTxPerHeight int64
+		numTxPerHeight int
+		numOpsPerTx    int
 	}{
-		// {1, 1},
-		{1, 100},
-		// {100, 1},
-		// {100, 10},
-		// {1000, 1},
-		// {1000, 10},
+		{1, 1, 1},
+		{1, 100, 1},
+		{100, 1, 1},
+		{100, 10, 1},
+		{1000, 1, 1},
+		{1000, 10, 1},
 		// {10000, 10},
 		// {10000, 1000},
 	}
@@ -46,14 +52,17 @@ func BenchmarkStateHash(b *testing.B) {
 	for _, testCase := range testCases {
 		numHeights := testCase.numHeights
 		numTxPerHeight := testCase.numTxPerHeight
-		b.Run(fmt.Sprintf("heights=%d;txPerHeight=%d", numHeights, numTxPerHeight), func(b *testing.B) {
+		numOpsPerTx := testCase.numOpsPerTx
+
+		b.Run(fmt.Sprintf("BenchmarkStateHash(%d;%d,%d)", numHeights, numTxPerHeight, numOpsPerTx), func(b *testing.B) {
 			for h := int64(0); h < numHeights; h++ {
 				db := NewTestPostgresContext(b, h)
-				for i := int64(0); i < numTxPerHeight; i++ {
+
+				for i := 0; i < numTxPerHeight; i++ {
 					callRandomDatabaseModifierFunc(db, h, false)
 					db.IndexTransaction(modules.TxResult(getRandomTxResult(h)))
-					// db.SetProposalBlock()
 				}
+
 				db.ComputeAppHash()
 				db.Commit([]byte("TODOquorumCert"))
 			}
@@ -90,7 +99,7 @@ MethodLoop:
 			switch arg.Kind() {
 			case reflect.String:
 				// String values in modifier functions are usually amounts
-				v = reflect.ValueOf(getRandomIntString(1000000))
+				v = reflect.ValueOf(getRandomIntString(maxStringAmount))
 			case reflect.Slice:
 				switch arg.Elem().Kind() {
 				case reflect.Uint8:

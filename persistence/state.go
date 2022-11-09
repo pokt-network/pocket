@@ -84,19 +84,19 @@ var merkleTreeToActorTypeName map[merkleTree]types.ActorType = map[merkleTree]ty
 	serviceNodeMerkleTree: types.ActorType_Node,
 }
 
-var merkleTreeToProtoSchema = map[merkleTree]func() proto.Message{
-	appMerkleTree:         func() proto.Message { return &types.Actor{} },
-	valMerkleTree:         func() proto.Message { return &types.Actor{} },
-	fishMerkleTree:        func() proto.Message { return &types.Actor{} },
-	serviceNodeMerkleTree: func() proto.Message { return &types.Actor{} },
+// var merkleTreeToProtoSchema = map[merkleTree]func() proto.Message{
+// 	appMerkleTree:         func() proto.Message { return &types.Actor{} },
+// 	valMerkleTree:         func() proto.Message { return &types.Actor{} },
+// 	fishMerkleTree:        func() proto.Message { return &types.Actor{} },
+// 	serviceNodeMerkleTree: func() proto.Message { return &types.Actor{} },
 
-	accountMerkleTree: func() proto.Message { return &types.Account{} },
-	poolMerkleTree:    func() proto.Message { return &types.Account{} },
+// 	accountMerkleTree: func() proto.Message { return &types.Account{} },
+// 	poolMerkleTree:    func() proto.Message { return &types.Account{} },
 
-	transactionsMerkleTree: func() proto.Message { return &types.Transaction{} },
-	paramsMerkleTree:       func() proto.Message { return &types.Params{} },
-	flagsMerkleTree:        func() proto.Message { return &types.Params{} },
-}
+// 	transactionsMerkleTree: func() proto.Message { return &types.Transaction{} },
+// 	paramsMerkleTree:       func() proto.Message { return &types.Params{} },
+// 	flagsMerkleTree:        func() proto.Message { return &types.Params{} },
+// }
 
 func newStateTrees(treesStoreDir string) (*stateTrees, error) {
 	if treesStoreDir == "" {
