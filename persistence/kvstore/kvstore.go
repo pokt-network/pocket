@@ -18,13 +18,8 @@ type KVStore interface {
 	// TODO: Add a proper iterator interface
 	// TODO: Add pagination for `GetAll`
 	GetAll(prefixKey []byte, descending bool) (keys [][]byte, values [][]byte, err error)
-
 	Exists(key []byte) (bool, error)
 	ClearAll() error
-
-	// Get(key []byte) ([]byte, error)     // Get gets the value for a key.
-	// Set(key []byte, value []byte) error // Set updates the value for a key.
-	// Delete(key []byte) error            // Delete deletes a key.
 }
 
 const (

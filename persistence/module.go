@@ -167,13 +167,15 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		conn:   conn,
 		tx:     tx,
 
-		// TODO(#315): Shouldn't be necessary anymore
-		currentStateHash: make([]byte, 0),
-
 		// TODO_IN_THIS_COMMIT: Can we access these via the bus?
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
 		stateTrees: m.stateTrees,
+
+		proposerAddr: nil,
+		quorumCert:   nil,
+		blockHash:    "",
+		blockTxs:     make([][]byte, 0),
 	}
 
 	return m.writeContext, nil
@@ -221,6 +223,13 @@ func (m *persistenceModule) NewWriteContext() modules.PersistenceRWContext {
 	return m.writeContext
 }
 
+func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
+	if blockStorePath == "" {
+		return kvstore.NewMemKVStore(), nil
+	}
+	return kvstore.NewKVStore(blockStorePath)
+}
+
 // HACK(olshansky): Simplify and externalize the logic for whether genesis should be populated and
 //                  move the if logic out of this file.
 func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
@@ -234,11 +243,4 @@ func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 		return true, nil
 	}
 	return false, nil
-}
-
-func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
-	if blockStorePath == "" {
-		return kvstore.NewMemKVStore(), nil
-	}
-	return kvstore.NewKVStore(blockStorePath)
 }

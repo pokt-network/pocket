@@ -59,8 +59,8 @@ type PersistenceWriteContext interface {
 
 	// Block Operations
 	SetProposalBlock(blockHash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) error
-	// Store the block into persistence
-	UpdateAppHash() ([]byte, error)
+	ComputeAppHash() ([]byte, error)
+	IndexTransaction(txResult TxResult) error // DISCUSS_IN_THIS_COMMIT: How can we remove `TxResult` from the public interface?
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error
@@ -117,19 +117,17 @@ type PersistenceWriteContext interface {
 }
 
 type PersistenceReadContext interface {
-	GetHeight() (int64, error)
-
-	// Closes the read context
-	Close() error
+	// Context Operations
+	GetHeight() (int64, error) // Returns the height of the context
+	Close() error              // Closes the read context
 
 	// Block Queries
-	GetPrevAppHash() (string, error) // app hash from the previous block
-	GetLatestBlockHeight() (uint64, error)
-	GetBlockHash(height int64) ([]byte, error)
-	GetBlocksPerSession(height int64) (int, error)
-	GetLatestProposerAddr() []byte
-	GetLatestBlockHash() string
-	GetLatestBlockTxs() [][]byte
+	GetLatestBlockHeight() (uint64, error)         // Returns the height of the latest block in the persistence layer
+	GetPrevAppHash() (string, error)               // Returns the app hash from the previous block relate to the context height
+	GetBlockHash(height int64) ([]byte, error)     // Returns the app hash corresponding to the height provides
+	GetLatestProposerAddr() []byte                 // Returns the proposer set via `SetProposalBlock`
+	GetLatestBlockTxs() [][]byte                   // Returns the transactions set via `SetProposalBlock`
+	GetBlocksPerSession(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
 
 	// Indexer Queries
 	TransactionExists(transactionHash string) (bool, error)
@@ -164,7 +162,7 @@ type PersistenceReadContext interface {
 	GetServiceNodePauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetServiceNodeOutputAddress(operator []byte, height int64) (output []byte, err error)
 	GetServiceNodeCount(chain string, height int64) (int, error)
-	GetServiceNodesPerSessionAt(height int64) (int, error)
+	GetServiceNodesPerSessionAt(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
 
 	// Fisherman Queries
 	GetAllFishermen(height int64) ([]Actor, error)

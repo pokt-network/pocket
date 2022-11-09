@@ -118,7 +118,7 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 	}
 
 	// return the app hash (consensus module will get the validator set directly)
-	appHash, err = u.Context.UpdateAppHash()
+	appHash, err = u.Context.ComputeAppHash()
 	if err != nil {
 		log.Fatalf("Updating the app hash failed: %v. TODO: Look into roll-backing the entire commit...\n", err)
 		return nil, typesUtil.ErrAppHash(err)
@@ -152,7 +152,7 @@ func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
 }
 
 func (u *UtilityContext) getAppHash() ([]byte, typesUtil.Error) {
-	appHash, er := u.Context.UpdateAppHash()
+	appHash, er := u.Context.ComputeAppHash()
 	if er != nil {
 		return nil, typesUtil.ErrAppHash(er)
 	}

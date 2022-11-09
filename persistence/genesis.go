@@ -145,12 +145,20 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 	}
 
 	// This populate all the merkle trees
-	if _, err = rwContext.UpdateAppHash(); err != nil {
+	appHash, err := rwContext.ComputeAppHash()
+	if err != nil {
 		log.Fatalf("an error occurred updating the app hash during genesis: %s", err.Error())
 	}
 
+	// TODO: Figure out what these values for genesis should be
+	genesisQuorumCert := []byte("placeholderQuorumCert")
+	genesisProposer := []byte("placeholderProposer")
+	if err := rwContext.SetProposalBlock(hex.EncodeToString(appHash), genesisProposer, genesisQuorumCert, nil); err != nil {
+		log.Fatalf("an error occurred setting the proposal block during genesis: %s", err.Error())
+	}
+
 	// This update the DB, blockstore, and commits the state
-	if err = rwContext.Commit([]byte("placeholderQuorumCert")); err != nil {
+	if err = rwContext.Commit(genesisQuorumCert); err != nil {
 		log.Fatalf("error committing genesis state to DB %s ", err.Error())
 	}
 }

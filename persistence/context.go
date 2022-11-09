@@ -5,6 +5,8 @@ package persistence
 import (
 	"context"
 	"log"
+
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 func (p PostgresContext) NewSavePoint(bytes []byte) error {
@@ -19,28 +21,16 @@ func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	return p.GetTx().Rollback(context.TODO())
 }
 
-func (p *PostgresContext) UpdateAppHash() ([]byte, error) {
-	if err := p.updateStateHash(); err != nil {
-		return nil, err
-	}
-	return p.currentStateHash, nil
-}
-
-func (p *PostgresContext) Reset() error {
-	p.txResults = nil
-	p.blockHash = ""
-	p.proposerAddr = nil
-	p.blockTxs = nil
-	return nil
+func (p *PostgresContext) ComputeAppHash() ([]byte, error) {
+	// DISCUSS_IN_THIS_COMMIT: Should we compare the `appHash` returned from `updateMerkleTrees`
+	// to the one set in `SetProposalBlock`. What if they are different?
+	return p.updateMerkleTrees()
 }
 
 func (p PostgresContext) Commit(quorumCert []byte) error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
 
-	// TODO_IN_THIS_COMMIT: Store transactions in indexer - should this be called on `SetProposalBlock`?`
-	if err := p.indexTransactions(); err != nil {
-		return err
-	}
+
 
 	// Create a persistence block proto
 	block, err := p.prepareBlock(quorumCert)
@@ -65,9 +55,6 @@ func (p PostgresContext) Commit(quorumCert []byte) error {
 	if err := p.conn.Close(ctx); err != nil {
 		log.Println("[TODO][ERROR] Implement connection pooling. Error when closing DB connecting...", err)
 	}
-	if err := p.Reset(); err != nil {
-		return err
-	}
 
 	return nil
 }
@@ -81,9 +68,6 @@ func (p PostgresContext) Release() error {
 	if err := p.resetContext(); err != nil {
 		return err
 	}
-	if err := p.Reset(); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -92,12 +76,16 @@ func (p PostgresContext) Close() error {
 	return p.conn.Close(context.TODO())
 }
 
-func (pg *PostgresContext) resetContext() (err error) {
-	if pg == nil {
+func (p PostgresContext) IndexTransaction(txResult modules.TxResult) error {
+	return p.txIndexer.Index(txResult)
+}
+
+func (p *PostgresContext) resetContext() (err error) {
+	if p == nil {
 		return nil
 	}
 
-	tx := pg.GetTx()
+	tx := p.GetTx()
 	if tx == nil {
 		return nil
 	}
@@ -113,8 +101,12 @@ func (pg *PostgresContext) resetContext() (err error) {
 		}
 	}
 
-	pg.conn = nil
-	pg.tx = nil
+	p.conn = nil
+	p.tx = nil
+	p.blockHash = ""
+	p.quorumCert = nil
+	p.proposerAddr = nil
+	p.blockTxs = nil
 
 	return err
 }

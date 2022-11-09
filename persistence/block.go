@@ -9,7 +9,6 @@ import (
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // OPTIMIZE(team): get from blockstore or keep in memory
@@ -58,10 +57,6 @@ func (p PostgresContext) GetPrevAppHash() (string, error) {
 	return hex.EncodeToString(block), nil // TODO(#284): Return `block.Hash` instead of the hex encoded representation of the blockBz
 }
 
-func (p PostgresContext) GetTxResults() []modules.TxResult {
-	return p.txResults
-}
-
 func (p PostgresContext) TransactionExists(transactionHash string) (bool, error) {
 	hash, err := hex.DecodeString(transactionHash)
 	if err != nil {
@@ -78,21 +73,12 @@ func (p PostgresContext) TransactionExists(transactionHash string) (bool, error)
 	return true, err
 }
 
-func (p PostgresContext) indexTransactions() error {
-	// TODO: store in batch
-	for _, txResult := range p.GetLatestTxResults() {
-		if err := p.txIndexer.Index(txResult); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // DISCUSS: this might be retrieved from the block store - temporarily we will access it directly from the module
 //       following the pattern of the Consensus Module prior to pocket/issue-#315
 // TODO(#284): Remove blockProtoBytes from the interface
-func (p *PostgresContext) SetProposalBlock(blockHash string, proposerAddr []byte, transactions [][]byte) error {
+func (p *PostgresContext) SetProposalBlock(blockHash string, proposerAddr, quorumCert []byte, transactions [][]byte) error {
 	p.blockHash = blockHash
+	p.quorumCert = quorumCert
 	p.proposerAddr = proposerAddr
 	p.blockTxs = transactions
 	return nil
@@ -118,7 +104,7 @@ func (p *PostgresContext) prepareBlock(quorumCert []byte) (*types.Block, error) 
 
 	block := &types.Block{
 		Height:            uint64(p.Height),
-		Hash:              hex.EncodeToString(p.currentStateHash),
+		Hash:              hex.EncodeToString([]byte(p.blockHash)),
 		PrevHash:          hex.EncodeToString(prevHash),
 		ProposerAddress:   p.proposerAddr,
 		QuorumCertificate: quorumCert,

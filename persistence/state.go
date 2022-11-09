@@ -147,7 +147,7 @@ func newMemStateTrees() (*stateTrees, error) {
 	return stateTrees, nil
 }
 
-func (p *PostgresContext) updateStateHash() error {
+func (p *PostgresContext) updateMerkleTrees() ([]byte, error) {
 	// Update all the merkle trees
 	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
 		switch treeType {
@@ -161,20 +161,20 @@ func (p *PostgresContext) updateStateHash() error {
 		case serviceNodeMerkleTree:
 			actorType, ok := merkleTreeToActorTypeName[treeType]
 			if !ok {
-				return fmt.Errorf("no actor type found for merkle tree: %v\n", treeType)
+				return nil, fmt.Errorf("no actor type found for merkle tree: %v\n", treeType)
 			}
 			if err := p.updateActorsTree(actorType, p.Height); err != nil {
-				return err
+				return nil, err
 			}
 
 		// Account Merkle Trees
 		case accountMerkleTree:
 			if err := p.updateAccountTrees(p.Height); err != nil {
-				return err
+				return nil, err
 			}
 		case poolMerkleTree:
 			if err := p.updatePoolTrees(p.Height); err != nil {
-				return err
+				return nil, err
 			}
 
 		// Data Merkle Trees
@@ -182,7 +182,7 @@ func (p *PostgresContext) updateStateHash() error {
 			continue
 		case transactionsMerkleTree:
 			if err := p.updateTransactionsTree(p.Height); err != nil {
-				return err
+				return nil, err
 			}
 
 		case paramsMerkleTree:
@@ -206,8 +206,7 @@ func (p *PostgresContext) updateStateHash() error {
 	rootsConcat := bytes.Join(roots, []byte{})
 	stateHash := sha256.Sum256(rootsConcat)
 
-	p.currentStateHash = stateHash[:]
-	return nil
+	return stateHash[:], nil
 }
 
 // Actor Tree Helpers

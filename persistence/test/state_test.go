@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -64,23 +65,23 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		err = db.SetAppStakeAmount(addrBz, stakeAmountStr)
 		require.NoError(t, err)
 
-		// txBz := []byte("a tx, i am, which set the app stake amount to " + stakeAmountStr)
-		// txResult := indexer.TxRes{
-		// 	Tx:            txBz,
-		// 	Height:        height,
-		// 	Index:         0,
-		// 	ResultCode:    0,
-		// 	Error:         "TODO",
-		// 	SignerAddr:    "TODO",
-		// 	RecipientAddr: "TODO",
-		// 	MessageType:   "TODO",
-		// }
+		txBz := []byte("a tx, i am, which set the app stake amount to " + stakeAmountStr)
+		txResult := indexer.TxRes{
+			Tx:            txBz,
+			Height:        height,
+			Index:         0,
+			ResultCode:    0,
+			Error:         "TODO",
+			SignerAddr:    "TODO",
+			RecipientAddr: "TODO",
+			MessageType:   "TODO",
+		}
 
-		// err = db.StoreTransaction(modules.TxResult(&txResult))
-		// require.NoError(t, err)
+		err = db.IndexTransaction(modules.TxResult(&txResult))
+		require.NoError(t, err)
 
 		// Update the state hash
-		appHash, err := db.UpdateAppHash()
+		appHash, err := db.ComputeAppHash()
 		require.NoError(t, err)
 		require.Equal(t, expectedAppHash, hex.EncodeToString(appHash))
 
@@ -104,6 +105,11 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		}
 	}
 }
+
+func TestStateHash_TreeUpdatesAreIdempotent(t *testing.T) {
+}
+
+// Contintously updating the same value at the same height should not result in a delta
 
 type TestReplayableOperation struct {
 	methodName string
@@ -154,7 +160,7 @@ func TestStateHash_RandomButDeterministic(t *testing.T) {
 				txResult:   txResult,
 			}
 		}
-		appHash, err := db.UpdateAppHash()
+		appHash, err := db.ComputeAppHash()
 		require.NoError(t, err)
 
 		proposer := getRandomBytes(10)
@@ -190,7 +196,7 @@ func verifyReplayableBlocks(t *testing.T, replayableBlocks []*TestReplayableBloc
 			}
 			// require.NoError(t, db.StoreTransaction(tx.txResult))
 		}
-		appHash, err := db.UpdateAppHash()
+		appHash, err := db.ComputeAppHash()
 		require.NoError(t, err)
 		require.Equal(t, block.hash, appHash)
 

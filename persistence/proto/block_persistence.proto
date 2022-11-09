@@ -11,9 +11,3 @@ message Block {
     bytes quorumCertificate = 5;
     bytes transactionsHash = 6; // The has of all the translactions in the block
 }
-
-// DISUCSS: What else do we need here?
-message Transaction {
-    uint64 height = 1;
-    bytes tx = 2;
-}

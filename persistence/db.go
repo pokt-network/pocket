@@ -51,20 +51,18 @@ type PostgresContext struct {
 	conn   *pgx.Conn
 	tx     pgx.Tx
 
-	// TODO(#315): Should be
-	currentStateHash []byte
-
 	// REFACTOR_IN_THIS_COMMIT: Access `blockStore` and `merkleTree` from the persistence module via bus.
 	blockStore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
 
 	stateTrees *stateTrees
+
 	// DISCUSS(#284): this might be retrieved from the block store - temporarily we will access it directly from the module
 	//                following the pattern of the Consensus Module prior to pocket/issue-#315
 	proposerAddr []byte
-	blockHash    string
+	quorumCert   []byte
+	blockHash    string // CONSOLIDATE: blockHash / appHash / stateHash
 	blockTxs     [][]byte
-	txResults    []modules.TxResult // DISCUSS_IN_THIS_COMMIT: Can this be removed and retrieved from `txIndexer` using `height`?
 }
 
 func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
@@ -87,16 +85,8 @@ func (p PostgresContext) GetLatestProposerAddr() []byte {
 	return p.proposerAddr
 }
 
-func (p PostgresContext) GetLatestBlockHash() string {
-	return p.blockHash
-}
-
 func (p PostgresContext) GetLatestBlockTxs() [][]byte {
 	return p.blockTxs
-}
-
-func (p PostgresContext) GetLatestTxResults() []modules.TxResult {
-	return p.txResults
 }
 
 // TECHDEBT: Implement proper connection pooling

@@ -126,10 +126,6 @@ func (m *persistenceModule) clearState(_ *debug.DebugMessage) error {
 		m.stateTrees.merkleTrees[treeType] = smt.NewSparseMerkleTree(valueStore, nodeStore, sha256.New())
 	}
 
-	// if _, err := context.UpdateAppHash(); err != nil {
-	// 	return err
-	// }
-
 	log.Println("Cleared all the state")
 
 	return nil
