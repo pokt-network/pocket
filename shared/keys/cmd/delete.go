@@ -22,59 +22,24 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"bufio"
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
-	Use:   "delete <name>...",
-	Short: "Delete the given keys",
-	Long: `Delete keys from the Keybase backend.
+	Use:   "delete",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
 
-Note that removing offline or ledger keys will remove
-only the public key references stored locally, i.e.
-private keys stored in a ledger device cannot be deleted with the CLI.
-`,
-	Args: cobra.MinimumNArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		buf := bufio.NewReader(cmd.InOrStdin())
-		clientCtx, err := client.GetClientQueryContext(cmd)
-		if err != nil {
-			return err
-		}
-
-		for _, name := range args {
-			k, err := clientCtx.Keyring.Key(name)
-			if err != nil {
-				return err
-			}
-
-			// confirm deletion, unless -y is passed
-			if skip, _ := cmd.Flags().GetBool(flagYes); !skip {
-				if yes, err := input.GetConfirmation("Key reference will be deleted. Continue?", buf, cmd.ErrOrStderr()); err != nil {
-					return err
-				} else if !yes {
-					continue
-				}
-			}
-
-			if err := clientCtx.Keyring.Delete(name); err != nil {
-				return err
-			}
-
-			if k.GetType() == keyring.TypeLedger || k.GetType() == keyring.TypeOffline {
-				cmd.PrintErrln("Public key reference deleted")
-				continue
-			}
-			cmd.PrintErrln("Key deleted forever (uh oh!)")
-		}
-
-		return nil
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("delete called")
 	},
-	//Run: func(cmd *cobra.Command, args []string) {
-	//	fmt.Println("delete called")
-	//},
 }
 
 func init() {

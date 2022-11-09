@@ -29,29 +29,14 @@ import (
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
-	Use:   "create <name>",
-	Short: "Add an encrypted private key (either newly generated or recovered), encrypt it, and save to <name> file",
-	Long: `Derive a new private key and encrypt to disk.
-Optionally specify a BIP39 mnemonic, a BIP39 passphrase to further secure the mnemonic,
-and a bip32 HD path to derive a specific account. The key will be stored under the given name
-and encrypted with the given password. The only input that is required is the encryption password.
+	Use:   "create",
+	Short: "A brief description of your command",
+	Long: `A longer description that spans multiple lines and likely contains examples
+and usage of using your command. For example:
 
-If run with -i, it will prompt the user for BIP44 path, BIP39 mnemonic, and passphrase.
-The flag --recover allows one to recover a key from a seed passphrase.
-If run with --dry-run, a key would be generated (or recovered) but not stored to the
-local keystore.
-Use the --pubkey flag to add arbitrary public keys to the keystore for constructing
-multisig transactions.
-
-You can create and store a multisig key by passing the list of key names stored in a keyring
-and the minimum number of signatures required through --multisig-threshold. The keys are
-sorted by address, unless the flag --nosort is set.
-Example:
-
-    keys add mymultisig --multisig "keyname1,keyname2,keyname3" --multisig-threshold 2
-`,
-	Args: cobra.ExactArgs(1),
-	//RunE: runAddCmdPrepare,
+Cobra is a CLI library for Go that empowers applications.
+This application is a tool to generate the needed files
+to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("create called")
 	},
