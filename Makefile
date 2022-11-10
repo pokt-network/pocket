@@ -146,6 +146,12 @@ build_and_watch:
 compose_and_watch: docker_check db_start monitoring_start
 	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
+# TODO (jasonyou): create key and output proper data format and entry point
+.PHONY: create_key
+## build and install the shared/keys module and invoke key creation
+create_key:
+	cd ./shared/keys; go install; cd ../..; keys create test_key
+
 .PHONY: rebuild_and_compose_and_watch
 ## Rebuilds the container from scratch and launches compose_and_watch
 rebuild_and_compose_and_watch: docker_check db_start monitoring_start
