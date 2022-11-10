@@ -105,12 +105,6 @@ var mnemonicCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(mnemonicCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// mnemonicCmd.PersistentFlags().String("foo", "", "A help for foo")
-
 	// Local Flags
 	mnemonicCmd.Flags().BoolP(flagUserEntropy, "u", false, "Prompt the user to supply their own entropy, instead of relying on the system")
 }
