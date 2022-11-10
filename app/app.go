@@ -1,5 +1,5 @@
 package app
 
-const (
-	AppVersion = "v0.0.1-pre-alpha.1" // DISCUSS (team): see app/pocket/main.go, one of the two should be a source of truth, potentially replaced at build-time as described in `docs/build/README.md`
+var (
+	AppVersion = "v0.0.1-pre-alpha.1" // this can be injected at build time with something like: go build -ldflags "-X github.com/pokt-network/pocket/app.AppVersion=v1.0.1" ./app/pocket
 )
