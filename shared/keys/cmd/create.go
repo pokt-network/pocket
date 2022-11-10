@@ -23,7 +23,6 @@ package cmd
 
 import (
 	"bufio"
-	"crypto/ed25519"
 	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -146,6 +145,9 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	}
 
 	// TODO: Using Mnemonic to generate keys
+
+	// TODO: Import the CryptoPocket!
+	ed25519.NewKeyFromSeed()
 
 	defer kb.Close()
 
