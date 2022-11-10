@@ -14,6 +14,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
+	sigs.k8s.io/yaml v1.3.0
 )
 
 require (
@@ -110,5 +111,4 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	sigs.k8s.io/yaml v1.3.0 // indirect
 )
