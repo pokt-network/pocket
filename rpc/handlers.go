@@ -42,8 +42,8 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 func (s *rpcServer) GetV1ConsensusRoundState(ctx echo.Context) error {
 	consensus := s.GetBus().GetConsensusModule()
 	return ctx.JSON(200, RoundState{
-		Height: int(consensus.CurrentHeight()),
-		Round:  int(consensus.CurrentRound()),
-		Step:   int(consensus.CurrentStep()),
+		Height: int64(consensus.CurrentHeight()),
+		Round:  int64(consensus.CurrentRound()),
+		Step:   int64(consensus.CurrentStep()),
 	})
 }
