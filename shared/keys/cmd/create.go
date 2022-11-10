@@ -208,6 +208,8 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	//
 	//return printCreate(cmd, k, showMnemonic, mnemonic, outputFormat)
 
+	defer kb.Close()
+
 	return nil
 }
 
