@@ -24,20 +24,17 @@ package cmd
 import (
 	"bufio"
 	"crypto/ed25519"
+	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
 const (
-	flagInteractive = "interactive"
-	flagRecover     = "recover"
-	flagNoBackup    = "no-backup"
-	flagCoinType    = "coin-type"
-	flagAccount     = "account"
-	flagIndex       = "index"
-	flagHDPath      = "hd-path"
+	flagRecover = "recover"
 
 	// FlagPublicKey represents the user's public key on the command line.
 	FlagPublicKey = "pubkey"
@@ -121,6 +118,35 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 	// TODO: mnemonic key generation and recovery feature
 
+	// Get bip39 mnemonic
+	var mnemonic string
+	var bip39Passphrase string = ""
+
+	recover, _ := cmd.Flags().GetBool(flagRecover)
+	if recover {
+		mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
+		if err != nil {
+			return err
+		}
+
+		if !bip39.IsMnemonicValid(mnemonic) {
+			return errors.New("invalid mnemonic")
+		}
+	} else {
+		// read entropy seed straight from tmcrypto.Rand and convert to mnemonic
+		entropySeed, err := bip39.NewEntropy(mnemonicEntropySize)
+		if err != nil {
+			return err
+		}
+
+		mnemonic, err = bip39.NewMnemonic(entropySeed)
+		if err != nil {
+			return err
+		}
+	}
+
+	// TODO: Using Mnemonic to generate keys
+
 	defer kb.Close()
 
 	return nil
@@ -130,5 +156,6 @@ func init() {
 	rootCmd.AddCommand(createCmd)
 
 	// Local Flags
-	//f := createCmd.Flags()
+	f := createCmd.Flags()
+	f.Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 }
