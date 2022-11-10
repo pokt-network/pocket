@@ -22,38 +22,69 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
+	"bufio"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 
 	"github.com/spf13/cobra"
+)
+
+const (
+	flagYes = "yes"
 )
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
 	Use:   "delete <key> ...",
 	Short: "Delete the given key from the keystore",
-	Long: `Delete the public key from the backend keystore
-
-Note:
-		This CLI does not delete private key
-
-'
+	Long: `Delete the public key from the backend keystore offline
+Note: Delete key does not delete private key stored in a ledger device.
 `,
 	Args: cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("delete called")
-	},
+	RunE: deleteKey,
+}
+
+func deleteKey(cmd *cobra.Command, args []string) error {
+	buf := bufio.NewReader(cmd.InOrStdin())
+	clientCtx, err := client.GetClientQueryContext(cmd)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range args {
+		k, err := clientCtx.Keyring.Key(name)
+		if err != nil {
+			return err
+		}
+
+		// confirm deletion, unless -y is passed
+		if skip, _ := cmd.Flags().GetBool(flagYes); !skip {
+			if yes, err := input.GetConfirmation("Key reference will be deleted. Continue?", buf, cmd.ErrOrStderr()); err != nil {
+				return err
+			} else if !yes {
+				continue
+			}
+		}
+
+		if err := clientCtx.Keyring.Delete(name); err != nil {
+			return err
+		}
+
+		if k.GetType() == keyring.TypeLedger || k.GetType() == keyring.TypeOffline {
+			cmd.PrintErrln("Public key reference deleted")
+			continue
+		}
+		cmd.PrintErrln("Key deleted forever (uh oh!)")
+	}
+
+	return nil
 }
 
 func init() {
 	rootCmd.AddCommand(deleteCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// deleteCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// deleteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// Local flags
+	f := deleteCmd.Flags()
+	f.BoolP(flagYes, "y", false, "Skip confirmation prompt when deleting offline or ledger key references")
 }
