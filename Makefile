@@ -195,6 +195,12 @@ docker_wipe: docker_check prompt_user
 	docker images -q | xargs -r -I {} docker rmi {}
 	docker volume ls -q | xargs -r -I {} docker volume rm {}
 
+.PHONY: docker_wipe_nodes
+## [WARNING] Remove all the node containers
+docker_wipe_nodes: docker_check prompt_user db_drop
+	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker stop {}
+	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker rm {}
+
 .PHONY: monitoring_start
 ## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
 monitoring_start: docker_check

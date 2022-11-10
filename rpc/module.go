@@ -21,7 +21,7 @@ type rpcModule struct {
 }
 
 const (
-	RPCModuleName = "rpc"
+	rpcModuleName = "rpc"
 )
 
 func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
@@ -54,7 +54,7 @@ func (u *rpcModule) Stop() error {
 }
 
 func (u *rpcModule) GetModuleName() string {
-	return RPCModuleName
+	return rpcModuleName
 }
 
 func (u *rpcModule) SetBus(bus modules.Bus) {

@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	LeaderElectionModuleName = "leader_election"
+	leaderElectionModuleName = "leader_election"
 )
 
 type LeaderElectionModule interface {
@@ -40,7 +40,7 @@ func (m *leaderElectionModule) Stop() error {
 }
 
 func (m *leaderElectionModule) GetModuleName() string {
-	return LeaderElectionModuleName
+	return leaderElectionModuleName
 }
 
 func (m *leaderElectionModule) SetBus(pocketBus modules.Bus) {

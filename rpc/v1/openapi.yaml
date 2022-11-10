@@ -120,10 +120,13 @@ components:
         properties:
           height:
             type: integer
+            format: int64
           round:
             type: integer
+            format: int64
           step:
             type: integer
+            format: int64
   requestBodies: {}
   securitySchemes: {}
   links: {}
