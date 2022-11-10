@@ -18,7 +18,7 @@ import (
 var _ modules.P2PModule = &p2pModule{}
 
 const (
-	P2PModuleName = "p2p"
+	p2pModuleName = "p2p"
 )
 
 type p2pModule struct {
@@ -82,7 +82,7 @@ func (m *p2pModule) GetBus() modules.Bus {
 }
 
 func (m *p2pModule) GetModuleName() string {
-	return P2PModuleName
+	return p2pModuleName
 }
 
 func (m *p2pModule) Start() error {

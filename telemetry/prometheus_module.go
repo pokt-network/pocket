@@ -31,7 +31,7 @@ type PrometheusTelemetryModule struct {
 }
 
 const (
-	PrometheusModuleName = "prometheus"
+	prometheusModuleName = "prometheus"
 )
 
 func CreatePrometheusTelemetryModule(runtime modules.RuntimeMgr) (modules.Module, error) {
@@ -74,7 +74,7 @@ func (m *PrometheusTelemetryModule) SetBus(bus modules.Bus) {
 }
 
 func (m *PrometheusTelemetryModule) GetModuleName() string {
-	return PrometheusModuleName
+	return prometheusModuleName
 }
 
 func (m *PrometheusTelemetryModule) GetBus() modules.Bus {

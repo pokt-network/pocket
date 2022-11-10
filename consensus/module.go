@@ -17,7 +17,7 @@ import (
 
 const (
 	DefaultLogPrefix    = "NODE" // TODO(#164): Make implicit when logging is standardized
-	ConsensusModuleName = "consensus"
+	consensusModuleName = "consensus"
 )
 
 var (
@@ -180,7 +180,7 @@ func (m *consensusModule) Stop() error {
 }
 
 func (m *consensusModule) GetModuleName() string {
-	return ConsensusModuleName
+	return consensusModuleName
 }
 
 func (m *consensusModule) GetBus() modules.Bus {

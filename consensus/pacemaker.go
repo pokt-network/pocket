@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	PacemakerModuleName = "pacemaker"
+	pacemakerModuleName = "pacemaker"
 )
 
 type Pacemaker interface {
@@ -93,7 +93,7 @@ func (p *paceMaker) Stop() error {
 }
 
 func (p *paceMaker) GetModuleName() string {
-	return PacemakerModuleName
+	return pacemakerModuleName
 }
 
 func (m *paceMaker) SetBus(pocketBus modules.Bus) {
