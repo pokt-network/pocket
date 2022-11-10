@@ -26,9 +26,6 @@ import (
 	"crypto/ed25519"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb"
 )
@@ -96,19 +93,10 @@ output
 func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
 	var err error
 
-	/* TODO
-	1. Level DB setup
-	2. create keygen (with mnimonic)
-	3. Key delete (from levelDB)
-	4. (option) Key recovery??
-	*/
-
-	// Tried to integrate the Cosmos keyring, but context integration is not clear with POKT.
-	// So just build a miniture keybase
+	// [Miniature Keybase] Using level.db for keybase and ED25519 for public/private key generation
 
 	name := args[0]
 
-	// [miniture Keybase] Keystore keybase with Level.db
 	// TODO: determine proper keystore location later
 	kb, err := leveldb.OpenFile("./.keybase/poktKeys.db", nil)
 
@@ -130,83 +118,8 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	if err != nil {
 		return err
 	}
-	//
-	//// Get bip39 mnemonic
-	//var mnemonic, bip39Passphrase string
-	//
-	//// TODO: Update the key and mnemonic usage interaction
-	//
-	//recover, _ := cmd.Flags().GetBool(flagRecover)
-	//if recover {
-	//	mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//	if !bip39.IsMnemonicValid(mnemonic) {
-	//		return errors.New("invalid mnemonic")
-	//	}
-	//} else if interactive {
-	//	// TODO: input sanitizing for higher security (POKT)
-	//	mnemonic, err = input.GetString("Enter your bip39 mnemonic, or hit enter to generate one.", inBuf)
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//	if mnemonic != "" && !bip39.IsMnemonicValid(mnemonic) {
-	//		return errors.New("invalid mnemonic")
-	//	}
-	//}
-	//
-	//if len(mnemonic) == 0 {
-	//	// read entropy seed straight from tmcrypto.Rand and convert to mnemonic
-	//	entropySeed, err := bip39.NewEntropy(mnemonicEntropySize)
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//	mnemonic, err = bip39.NewMnemonic(entropySeed)
-	//	if err != nil {
-	//		return err
-	//	}
-	//}
-	//
-	//// override bip39 passphrase
-	//if interactive {
-	//	bip39Passphrase, err = input.GetString(
-	//		"Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed. "+
-	//			"(Optional) Use mnemonic without passphrase, just hit 'Enter': \"\"", inBuf)
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//	// if they use one, make them re-enter it
-	//	if len(bip39Passphrase) != 0 {
-	//		p2, err := input.GetString("Repeat the passphrase:", inBuf)
-	//		if err != nil {
-	//			return err
-	//		}
-	//
-	//		if bip39Passphrase != p2 {
-	//			return errors.New("passphrases don't match")
-	//		}
-	//	}
-	//}
-	//
-	//// TODO: consider use ED25519 explicitly with algo (?)
-	//k, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//// Recover key from seed passphrase
-	//if recover {
-	//	// Hide mnemonic from output
-	//	showMnemonic = false
-	//	mnemonic = ""
-	//}
-	//
-	//return printCreate(cmd, k, showMnemonic, mnemonic, outputFormat)
+
+	// TODO: mnemonic key generation and recovery feature
 
 	defer kb.Close()
 
@@ -217,16 +130,5 @@ func init() {
 	rootCmd.AddCommand(createCmd)
 
 	// Local Flags
-	f := createCmd.Flags()
-	f.String(FlagPublicKey, "", "Parse a public key in JSON format and saves key info to <name> file.")
-	f.BoolP(flagInteractive, "i", false, "Interactively prompt user for BIP39 passphrase and mnemonic")
-	f.Bool(flags.FlagUseLedger, false, "Store a local reference to a private key on a Ledger device")
-	f.Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
-	f.Bool(flagNoBackup, false, "Don't print out seed phrase (if others are watching the terminal)")
-	f.Bool(flags.FlagDryRun, false, "Perform action, but don't add key to local keystore")
-	f.String(flagHDPath, "", "Manual HD Path derivation (overrides BIP44 config)")
-	f.Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
-	f.Uint32(flagAccount, 0, "Account number for HD derivation (less than equal 2147483647)")
-	f.Uint32(flagIndex, 0, "Address index number for HD derivation (less than equal 2147483647)")
-	f.String(flags.FlagKeyAlgorithm, string(hd.Ed25519Type), "Key signing algorithm to generate keys for (default: \"ed25519\")")
+	//f := createCmd.Flags()
 }
