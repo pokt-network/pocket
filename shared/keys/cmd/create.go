@@ -23,21 +23,14 @@ package cmd
 
 import (
 	"bufio"
-	"encoding/json"
-	"errors"
+	"crypto/ed25519"
 	"fmt"
-	"github.com/cosmos/go-bip39"
-	"github.com/spf13/cobra"
-	"io"
-	"sigs.k8s.io/yaml"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/cobra"
+	"github.com/syndtr/goleveldb/leveldb"
 )
 
 const (
@@ -52,9 +45,9 @@ const (
 	// FlagPublicKey represents the user's public key on the command line.
 	FlagPublicKey = "pubkey"
 
-	// For output formats
-	OutputFormatText = "text"
-	OutputFormatJSON = "json"
+	//// For output formats
+	//OutputFormatText = "text"
+	//OutputFormatJSON = "json"
 
 	// DefaultKeyPass contains the default key password for genesis transactions
 	DefaultKeyPass = "12345678"
@@ -103,192 +96,117 @@ output
 func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
 	var err error
 
+	/* TODO
+	1. Level DB setup
+	2. create keygen (with mnimonic)
+	3. Key delete (from levelDB)
+	4. (option) Key recovery??
+	*/
+
+	// Tried to integrate the Cosmos keyring, but context integration is not clear with POKT.
+	// So just build a miniture keybase
+
 	name := args[0]
-	interactive, _ := cmd.Flags().GetBool(flagInteractive)
-	noBackup, _ := cmd.Flags().GetBool(flagNoBackup)
-	showMnemonic := !noBackup
-	kb := ctx.Keyring
-	outputFormat := ctx.OutputFormat
 
-	keyringAlgos, _ := kb.SupportedAlgorithms()
-	algoStr, _ := cmd.Flags().GetString(flags.FlagKeyAlgorithm)
-	algo, err := keyring.NewSigningAlgoFromString(algoStr, keyringAlgos)
+	// [miniture Keybase] Keystore keybase with Level.db
+	// TODO: determine proper keystore location later
+	kb, err := leveldb.OpenFile("./.keybase/poktKeys.db", nil)
+
+	// Creating key with ED25519
+	pubKey, privKey, err := ed25519.GenerateKey(nil) // TODO: using mnemonic to generate (read)
+	keyMap := make(map[string][]byte)
+	keyMap["pubKey"] = pubKey
+	keyMap["privKey"] = privKey
+
+	// TODO: bette print function (support Test and JSON)
+	fmt.Printf("Name (KEY UID): %s\n", name)
+	fmt.Printf("Public key: %v\n", pubKey)
+	fmt.Printf("Private key: %v\n", privKey)
+
+	// Store the raw key to keybase (TODO: check if key already exists; user input sanitize)
+
+	// TODO: store JSON formated name -> {pubkey, privkey, ...}
+	err = kb.Put([]byte(name), privKey, nil)
 	if err != nil {
 		return err
 	}
-
-	if dryRun, _ := cmd.Flags().GetBool(flags.FlagDryRun); dryRun {
-		// use in memory keybase
-		kb = keyring.NewInMemory(ctx.Codec)
-	} else {
-		_, err = kb.Key(name)
-		if err == nil {
-			// account exists, ask for user confirmation
-			response, err2 := input.GetConfirmation(fmt.Sprintf("override the existing name %s", name), inBuf, cmd.ErrOrStderr())
-			if err2 != nil {
-				return err2
-			}
-
-			if !response {
-				return errors.New("aborted")
-			}
-
-			err2 = kb.Delete(name)
-			if err2 != nil {
-				return err2
-			}
-		}
-	}
-
-	pubKey, _ := cmd.Flags().GetString(FlagPublicKey)
-	if pubKey != "" {
-		var pk cryptotypes.PubKey
-		if err = ctx.Codec.UnmarshalInterfaceJSON([]byte(pubKey), &pk); err != nil {
-			return err
-		}
-
-		// TODO: using level.db or badger.db (POKT) (?)
-		k, err := kb.SaveOfflineKey(name, pk)
-		if err != nil {
-			return err
-		}
-
-		return printCreate(cmd, k, false, "", outputFormat)
-	}
-
-	coinType, _ := cmd.Flags().GetUint32(flagCoinType)
-	account, _ := cmd.Flags().GetUint32(flagAccount)
-	index, _ := cmd.Flags().GetUint32(flagIndex)
-	hdPath, _ := cmd.Flags().GetString(flagHDPath)
-	useLedger, _ := cmd.Flags().GetBool(flags.FlagUseLedger)
-
-	if len(hdPath) == 0 {
-		hdPath = hd.CreateHDPath(coinType, account, index).String()
-	} else if useLedger {
-		return errors.New("cannot set custom bip32 path with ledger")
-	}
-
-	// If we're using ledger, only thing we need is the path and the bech32 prefix.
-	if useLedger {
-		bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
-		k, err := kb.SaveLedgerKey(name, hd.Secp256k1, bech32PrefixAccAddr, coinType, account, index)
-		if err != nil {
-			return err
-		}
-
-		return printCreate(cmd, k, false, "", outputFormat)
-	}
-
-	// Get bip39 mnemonic
-	var mnemonic, bip39Passphrase string
-
-	recover, _ := cmd.Flags().GetBool(flagRecover)
-	if recover {
-		mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
-		if err != nil {
-			return err
-		}
-
-		if !bip39.IsMnemonicValid(mnemonic) {
-			return errors.New("invalid mnemonic")
-		}
-	} else if interactive {
-		// TODO: input sanitizing for higher security (POKT)
-		mnemonic, err = input.GetString("Enter your bip39 mnemonic, or hit enter to generate one.", inBuf)
-		if err != nil {
-			return err
-		}
-
-		if mnemonic != "" && !bip39.IsMnemonicValid(mnemonic) {
-			return errors.New("invalid mnemonic")
-		}
-	}
-
-	if len(mnemonic) == 0 {
-		// read entropy seed straight from tmcrypto.Rand and convert to mnemonic
-		entropySeed, err := bip39.NewEntropy(mnemonicEntropySize)
-		if err != nil {
-			return err
-		}
-
-		mnemonic, err = bip39.NewMnemonic(entropySeed)
-		if err != nil {
-			return err
-		}
-	}
-
-	// override bip39 passphrase
-	if interactive {
-		bip39Passphrase, err = input.GetString(
-			"Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed. "+
-				"(Optional) Use mnemonic without passphrase, just hit 'Enter': \"\"", inBuf)
-		if err != nil {
-			return err
-		}
-
-		// if they use one, make them re-enter it
-		if len(bip39Passphrase) != 0 {
-			p2, err := input.GetString("Repeat the passphrase:", inBuf)
-			if err != nil {
-				return err
-			}
-
-			if bip39Passphrase != p2 {
-				return errors.New("passphrases don't match")
-			}
-		}
-	}
-
-	// TODO: consider use ED25519 explicitly with algo (?)
-	k, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
-	if err != nil {
-		return err
-	}
-
-	// Recover key from seed passphrase
-	if recover {
-		// Hide mnemonic from output
-		showMnemonic = false
-		mnemonic = ""
-	}
-
-	return printCreate(cmd, k, showMnemonic, mnemonic, outputFormat)
-}
-
-func printCreate(cmd *cobra.Command, k *keyring.Record, showMnemonic bool, mnemonic, outputFormat string) error {
-	switch outputFormat {
-	case OutputFormatText:
-		cmd.PrintErrln()
-		if err := printKeyringRecord(cmd.OutOrStdout(), k, keyring.MkAccKeyOutput, outputFormat); err != nil {
-			return err
-		}
-
-		// print mnemonic unless requested not to.
-		if showMnemonic {
-			if _, err := fmt.Fprintf(cmd.ErrOrStderr(), "\n**Important** write this mnemonic phrase in a safe place.\nIt is the only way to recover your account if you ever forget your password.\n\n%s\n", mnemonic); err != nil {
-				return fmt.Errorf("failed to print mnemonic: %v", err)
-			}
-		}
-	case OutputFormatJSON:
-		out, err := keyring.MkAccKeyOutput(k)
-		if err != nil {
-			return err
-		}
-
-		if showMnemonic {
-			out.Mnemonic = mnemonic
-		}
-
-		jsonString, err := json.Marshal(out)
-		if err != nil {
-			return err
-		}
-
-		cmd.Println(string(jsonString))
-
-	default:
-		return fmt.Errorf("invalid output format %s", outputFormat)
-	}
+	//
+	//// Get bip39 mnemonic
+	//var mnemonic, bip39Passphrase string
+	//
+	//// TODO: Update the key and mnemonic usage interaction
+	//
+	//recover, _ := cmd.Flags().GetBool(flagRecover)
+	//if recover {
+	//	mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	if !bip39.IsMnemonicValid(mnemonic) {
+	//		return errors.New("invalid mnemonic")
+	//	}
+	//} else if interactive {
+	//	// TODO: input sanitizing for higher security (POKT)
+	//	mnemonic, err = input.GetString("Enter your bip39 mnemonic, or hit enter to generate one.", inBuf)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	if mnemonic != "" && !bip39.IsMnemonicValid(mnemonic) {
+	//		return errors.New("invalid mnemonic")
+	//	}
+	//}
+	//
+	//if len(mnemonic) == 0 {
+	//	// read entropy seed straight from tmcrypto.Rand and convert to mnemonic
+	//	entropySeed, err := bip39.NewEntropy(mnemonicEntropySize)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	mnemonic, err = bip39.NewMnemonic(entropySeed)
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
+	//
+	//// override bip39 passphrase
+	//if interactive {
+	//	bip39Passphrase, err = input.GetString(
+	//		"Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed. "+
+	//			"(Optional) Use mnemonic without passphrase, just hit 'Enter': \"\"", inBuf)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	// if they use one, make them re-enter it
+	//	if len(bip39Passphrase) != 0 {
+	//		p2, err := input.GetString("Repeat the passphrase:", inBuf)
+	//		if err != nil {
+	//			return err
+	//		}
+	//
+	//		if bip39Passphrase != p2 {
+	//			return errors.New("passphrases don't match")
+	//		}
+	//	}
+	//}
+	//
+	//// TODO: consider use ED25519 explicitly with algo (?)
+	//k, err := kb.NewAccount(name, mnemonic, bip39Passphrase, hdPath, algo)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//// Recover key from seed passphrase
+	//if recover {
+	//	// Hide mnemonic from output
+	//	showMnemonic = false
+	//	mnemonic = ""
+	//}
+	//
+	//return printCreate(cmd, k, showMnemonic, mnemonic, outputFormat)
 
 	return nil
 }
@@ -308,48 +226,5 @@ func init() {
 	f.Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
 	f.Uint32(flagAccount, 0, "Account number for HD derivation (less than equal 2147483647)")
 	f.Uint32(flagIndex, 0, "Address index number for HD derivation (less than equal 2147483647)")
-	f.String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
-}
-
-// Utility functions
-
-type bechKeyOutFn func(k *keyring.Record) (keyring.KeyOutput, error)
-
-func printKeyringRecord(w io.Writer, k *keyring.Record, bechKeyOut bechKeyOutFn, output string) error {
-	ko, err := bechKeyOut(k)
-	if err != nil {
-		return err
-	}
-
-	switch output {
-	case OutputFormatText:
-		if err := printTextRecords(w, []keyring.KeyOutput{ko}); err != nil {
-			return err
-		}
-
-	case OutputFormatJSON:
-		out, err := json.Marshal(ko)
-		if err != nil {
-			return err
-		}
-
-		if _, err := fmt.Fprintln(w, string(out)); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func printTextRecords(w io.Writer, kos []keyring.KeyOutput) error {
-	out, err := yaml.Marshal(&kos)
-	if err != nil {
-		return err
-	}
-
-	if _, err := fmt.Fprintln(w, string(out)); err != nil {
-		return err
-	}
-
-	return nil
+	f.String(flags.FlagKeyAlgorithm, string(hd.Ed25519Type), "Key signing algorithm to generate keys for (default: \"ed25519\")")
 }
