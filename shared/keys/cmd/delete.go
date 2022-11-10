@@ -23,11 +23,10 @@ package cmd
 
 import (
 	"bufio"
-	"github.com/cosmos/cosmos-sdk/client"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/input"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-
 	"github.com/spf13/cobra"
+	"github.com/syndtr/goleveldb/leveldb"
 )
 
 const (
@@ -46,37 +45,42 @@ Note: Delete key does not delete private key stored in a ledger device.
 }
 
 func deleteKey(cmd *cobra.Command, args []string) error {
-	buf := bufio.NewReader(cmd.InOrStdin())
-	clientCtx, err := client.GetClientQueryContext(cmd)
+	var err error
+
+	// TODO: check if the file exist or not
+
+	// TODO: delete multiple keys
+	name := args[0]
+
+	// Open keybase DB
+	kb, err := leveldb.OpenFile("./.keybase/poktKeys.db", nil)
 	if err != nil {
 		return err
 	}
 
-	for _, name := range args {
-		k, err := clientCtx.Keyring.Key(name)
-		if err != nil {
-			return err
-		}
-
-		// confirm deletion, unless -y is passed
-		if skip, _ := cmd.Flags().GetBool(flagYes); !skip {
-			if yes, err := input.GetConfirmation("Key reference will be deleted. Continue?", buf, cmd.ErrOrStderr()); err != nil {
-				return err
-			} else if !yes {
-				continue
-			}
-		}
-
-		if err := clientCtx.Keyring.Delete(name); err != nil {
-			return err
-		}
-
-		if k.GetType() == keyring.TypeLedger || k.GetType() == keyring.TypeOffline {
-			cmd.PrintErrln("Public key reference deleted")
-			continue
-		}
-		cmd.PrintErrln("Key deleted forever (uh oh!)")
+	// Check if the key name is in the DB
+	_, err = kb.Get([]byte(name), nil)
+	if err != nil {
+		return err
 	}
+
+	// confirm error
+	buf := bufio.NewReader(cmd.InOrStdin())
+	if yes, err := input.GetConfirmation("Key reference will be deleted. Continue?", buf, cmd.ErrOrStderr()); err != nil {
+		return err
+	} else if !yes {
+		return nil
+	}
+
+	// remove key based on name KEY ID
+	err = kb.Delete([]byte(name), nil)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Key deleted!")
+
+	defer kb.Close()
 
 	return nil
 }
@@ -85,6 +89,6 @@ func init() {
 	rootCmd.AddCommand(deleteCmd)
 
 	// Local flags
-	f := deleteCmd.Flags()
-	f.BoolP(flagYes, "y", false, "Skip confirmation prompt when deleting offline or ledger key references")
+	//f := deleteCmd.Flags()
+	//f.BoolP(flagYes, "y", false, "Skip confirmation prompt when deleting offline or ledger key references")
 }
