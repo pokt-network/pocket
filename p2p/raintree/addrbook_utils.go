@@ -28,9 +28,9 @@ func (n *rainTreeNetwork) getAddrBookLength(level uint32, _height uint64) int {
 // getTargetsAtLevel returns the targets for a given level
 func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 	height := n.GetBus().GetConsensusModule().CurrentHeight()
-	addrBookLenghtAtHeight := n.getAddrBookLength(level, height)
-	firstTarget := n.getTarget(firstMsgTargetPercentage, addrBookLenghtAtHeight, level)
-	secondTarget := n.getTarget(secondMsgTargetPercentage, addrBookLenghtAtHeight, level)
+	addrBookLengthAtHeight := n.getAddrBookLength(level, height)
+	firstTarget := n.getTarget(firstMsgTargetPercentage, addrBookLengthAtHeight, level)
+	secondTarget := n.getTarget(secondMsgTargetPercentage, addrBookLengthAtHeight, level)
 
 	log.Printf("[DEBUG] Targets at height (%d): %s", level, n.debugMsgTargetString(firstTarget, secondTarget))
 

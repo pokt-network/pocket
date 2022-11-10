@@ -21,20 +21,21 @@ type target struct {
 func (t target) DebugString(n *rainTreeNetwork) string {
 	s := strings.Builder{}
 	s.WriteString("[")
-	serviceUrl := t.serviceUrl
-	if !t.isSelf {
-		fmt.Fprintf(&s, " (%s) ", serviceUrl)
-	} else {
-		fmt.Fprintf(&s, "(self) %s ", serviceUrl)
-	}
-
 	peersManagerStateView := n.peersManager.getNetworkView()
-	for i := 1; i < t.addrBookLengthAtHeight; i++ {
-		serviceUrl := peersManagerStateView.addrBookMap[peersManagerStateView.addrList[i]].ServiceUrl
-		if i == t.index {
+	selfAddr := n.selfAddr.String()
+	for i := 0; i < t.addrBookLengthAtHeight; i++ {
+		addr := peersManagerStateView.addrList[i]
+		serviceUrl := peersManagerStateView.addrBookMap[addr].ServiceUrl
+		switch {
+		case i == t.index && t.isSelf:
+			fmt.Fprintf(&s, " (**%s**) ", serviceUrl)
+		case i == t.index:
 			fmt.Fprintf(&s, " **%s** ", serviceUrl)
-		} else {
+		case addr == selfAddr:
+			fmt.Fprintf(&s, " (%s) ", serviceUrl)
+		default:
 			fmt.Fprintf(&s, " %s ", serviceUrl)
+
 		}
 	}
 	s.WriteString("]")
