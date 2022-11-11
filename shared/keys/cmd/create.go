@@ -35,6 +35,7 @@ key type
 	- name: the unique ID for the key
 	- publickey: the public key
 	- privatekey: the private key
+	- Address: the address related to the private key
 	- mnemonic: mnemonic used to generated key, empty if not saved
 */
 type key struct {
