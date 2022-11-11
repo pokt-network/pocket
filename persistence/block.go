@@ -3,7 +3,6 @@ package persistence
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
@@ -46,27 +45,6 @@ func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
 
 func (p PostgresContext) GetHeight() (int64, error) {
 	return p.Height, nil
-}
-
-func (p PostgresContext) GetPrevAppHash() (string, error) {
-	height, err := p.GetHeight()
-	if err != nil {
-		return "", err
-	}
-	if height <= 0 {
-		return "", fmt.Errorf("Cannot get previous app hash relative to height %d", height)
-	}
-
-	blockBz, err := p.blockStore.Get(heightToBytes(height - 1))
-	if err != nil {
-		return "", fmt.Errorf("error getting block hash for height %d even though it's in the database: %s", height, err)
-	}
-	var block types.Block
-	if err := codec.GetCodec().Unmarshal(blockBz, &block); err != nil {
-		return "", err
-	}
-
-	return block.Hash, nil
 }
 
 func (p PostgresContext) TransactionExists(transactionHash string) (bool, error) {

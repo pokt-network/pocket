@@ -349,7 +349,7 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 	persistenceContext := m.utilityContext.GetPersistenceContext()
 
 	// CONSOLIDATE: Last/Prev & AppHash/StateHash/BlockHash
-	prevAppHash, err := persistenceContext.GetPrevAppHash()
+	prevAppHash, err := persistenceContext.GetBlockHash(int64(m.Height) - 1)
 	if err != nil {
 		return nil, err
 	}

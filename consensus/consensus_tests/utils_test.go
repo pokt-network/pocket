@@ -361,7 +361,7 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 	persistenceContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	persistenceContextMock.EXPECT().GetPrevAppHash().Return("", nil).AnyTimes()
+	persistenceContextMock.EXPECT().GetBlockHash().Return("", nil).AnyTimes()
 
 	utilityContextMock.EXPECT().
 		CreateAndApplyProposalBlock(gomock.Any(), maxTxBytes).
