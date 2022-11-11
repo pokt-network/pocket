@@ -5,13 +5,13 @@ All notable changes to this module will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-**TODO:** consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
+TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 
 ## [Unreleased]
 
 ## [0.0.0.9] - 2022-11-08
 
-- Changed the following exposed functions to lowercase non-exported functions
+- Changed the following exported functions to lowercase non-exported functions
 - [./pocket/persistence/]
   - GetActor
   - GetActorFromRow
