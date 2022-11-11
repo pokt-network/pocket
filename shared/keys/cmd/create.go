@@ -144,6 +144,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	// Storing keys //
 	//////////////////
 
+	// TODO: confirmation from user for overriding existing key
 	data, err := json.Marshal(keystore)
 	if err != nil {
 		return err
@@ -153,13 +154,12 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	//////////////////
-	// Print Output //
-	//////////////////
-
-	// Print out indented JSON
-	output, err := json.MarshalIndent(keystore, "", "\t")
-	fmt.Printf("%v\n", output)
+	///////////////
+	// Print Key //
+	///////////////
+	if err = printKey(keystore); err != nil {
+		return err
+	}
 
 	defer kb.Close()
 
@@ -172,4 +172,17 @@ func init() {
 	// Local Flags
 	f := createCmd.Flags()
 	f.Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
+}
+
+// Utility functions
+
+// Print out key in indented JSON format
+func printKey(keystore key) error {
+	output, err := json.MarshalIndent(keystore, "", "\t")
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%s\n", output)
+
+	return nil
 }

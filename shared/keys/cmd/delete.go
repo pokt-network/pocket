@@ -35,7 +35,7 @@ const (
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
-	Use:   "delete <key> ...",
+	Use:   "delete <name> ...",
 	Short: "Delete the given key from the keystore",
 	Long: `Delete the public key from the backend keystore offline
 Note: Delete key does not delete private key stored in a ledger device.
@@ -78,7 +78,7 @@ func deleteKey(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Println("Key deleted!")
+	fmt.Printf("Key (%s) deleted!\n", name)
 
 	defer kb.Close()
 
