@@ -21,6 +21,7 @@ type bus struct {
 	utility     modules.UtilityModule
 	consensus   modules.ConsensusModule
 	telemetry   modules.TelemetryModule
+	rpc         modules.RPCModule
 
 	runtimeMgr modules.RuntimeMgr
 }
@@ -36,6 +37,7 @@ func CreateBus(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
+	rpc modules.RPCModule,
 ) (modules.Bus, error) {
 	bus := &bus{
 		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -47,6 +49,7 @@ func CreateBus(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
+		rpc:         rpc,
 	}
 
 	modules := map[string]modules.Module{
@@ -55,6 +58,7 @@ func CreateBus(
 		"p2p":         p2p,
 		"utility":     utility,
 		"telemetry":   telemetry,
+		"rpc":         rpc,
 	}
 
 	// checks if modules are not nil and sets their bus to this bus instance.
@@ -86,6 +90,7 @@ func CreateBusWithOptionalModules(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
+	rpc modules.RPCModule,
 ) modules.Bus {
 	bus := &bus{
 		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -97,6 +102,7 @@ func CreateBusWithOptionalModules(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
+		rpc:         rpc,
 	}
 
 	maybeSetModuleBus := func(mod modules.Module) {
@@ -110,6 +116,7 @@ func CreateBusWithOptionalModules(
 	maybeSetModuleBus(utility)
 	maybeSetModuleBus(consensus)
 	maybeSetModuleBus(telemetry)
+	maybeSetModuleBus(rpc)
 
 	return bus
 }
@@ -145,6 +152,10 @@ func (m bus) GetConsensusModule() modules.ConsensusModule {
 
 func (m bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
+}
+
+func (m bus) GetRPCModule() modules.RPCModule {
+	return m.rpc
 }
 
 func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {

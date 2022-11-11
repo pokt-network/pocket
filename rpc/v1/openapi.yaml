@@ -3,7 +3,7 @@ servers:
   - url: 'http://localhost:50832'
 info:
   description: >-
-    This is the API definition Pocket Network core RPC call.
+    This is the API definition Pocket Network Node RPC interface.
 
 
     Pocket is a distributed network that relays data requests and responses to and from any blockchain system.
@@ -75,9 +75,9 @@ paths:
     post:
       tags:
         - client
-      summary: Relays a raw transaction
+      summary: Broadcast raw transaction bytes
       requestBody:
-        description: Raw transaction to be relayed
+        description: Raw transaction to be broadcasted
         required: true
         content:
           application/json:
@@ -120,10 +120,13 @@ components:
         properties:
           height:
             type: integer
+            format: int64
           round:
             type: integer
+            format: int64
           step:
             type: integer
+            format: int64
   requestBodies: {}
   securitySchemes: {}
   links: {}
