@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -86,18 +87,18 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-func TestUtilityContext_GetTransactionsForProposal(t *testing.T) {
+func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 	proposer := getAllTestingValidators(t, ctx)[0]
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
 	require.NoError(t, ctx.CheckTransaction(txBz))
-	txs, txResults, er := ctx.GetProposalTransactions([]byte(proposer.GetAddress()), 10000, nil)
+	appHash, txs, er := ctx.CreateAndApplyProposalBlock([]byte(proposer.GetAddress()), 10000)
 	require.NoError(t, er)
 	require.Equal(t, len(txs), 1)
 	require.Equal(t, txs[0], txBz)
-	requireValidTestingTxResults(t, tx, txResults)
+	require.NotEmpty(t, appHash)
 
 	test_artifacts.CleanupTest(ctx)
 }
@@ -139,7 +140,7 @@ func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transactio
 	signer, err := crypto.GeneratePrivateKey()
 	require.NoError(t, err)
 
-	startingAmount = test_artifacts.DefaultAccountAmount
+	startingAmount = defaults.DefaultAccountAmount
 	signerAddr := signer.Address()
 	require.NoError(t, ctx.SetAccountAmount(signerAddr, startingAmount))
 	amountSent = defaultSendAmount

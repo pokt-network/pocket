@@ -61,10 +61,8 @@ Software:
 Generate local files
 
 ```bash
-$ git clone git@github.com:pokt-network/pocket.git  && cd pocket
-$ make protogen_clean && make protogen_local
-$ make mockgen
-$ make go_clean_deps
+$ git clone git@github.com:pokt-network/pocket.git && cd pocket
+$ make develop_start
 ```
 
 ### View Available Commands

@@ -25,6 +25,7 @@ type ConsensusModule interface {
 
 	// Consensus State Accessors
 	CurrentHeight() uint64
-	AppHash() string // DISCUSS: Why not call this a BlockHash or StateHash? Should it be a []byte or string?
+	CurrentRound() uint64
+	CurrentStep() uint64
 	ValidatorMap() ValidatorMap
 }

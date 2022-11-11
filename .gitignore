@@ -29,7 +29,8 @@ prototype/vendor/
 .idea/
 
 # Generated Mocks (for testing)
-shared/modules/mocks/
+shared/modules/mocks/*
+!shared/modules/mocks/mocks.go
 p2p/types/mocks/
 
 # TODO(team): Does the `types` directory contain generated or raw type files?
@@ -51,6 +52,10 @@ coverage.out
 
 # Output of `make build_and_watch`
 main
+
+# generated RPC server and client from openapi.yaml
+rpc/server.gen.go
+rpc/client.gen.go
 
 # Ignored generated files by build/config/main.go
 build/config/gen*.json

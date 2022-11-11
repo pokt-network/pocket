@@ -23,6 +23,16 @@ This module includes the following components:
 
   It also has a `Base` configuration that is supposed to contain more cross-functional settings that cannot really find place in module-specific "subconfigs" (as another way to define module-specific configurations).
 
+  Configuration can be supplied via JSON file but also via environment variables ([12 factor app](12factor.net)).
+
+  The naming convention is as follow:
+
+  `POCKET_[module][configuration key]`
+
+  So, for example, if you want to override the default RPC port we would use:
+
+  > POCKET_RPC_PORT=yourport
+
 - **Genesis**
 
   The genesis represents the initial state of the blockchain.

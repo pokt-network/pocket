@@ -8,6 +8,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -30,13 +31,13 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 			outputAddress, err := crypto.GenerateAddress()
 			require.NoError(t, err)
 
-			err = ctx.SetAccountAmount(outputAddress, test_artifacts.DefaultAccountAmount)
+			err = ctx.SetAccountAmount(outputAddress, defaults.DefaultAccountAmount)
 			require.NoError(t, err, "error setting account amount error")
 
 			msg := &typesUtil.MessageStake{
 				PublicKey:     pubKey.Bytes(),
-				Chains:        test_artifacts.DefaultChains,
-				Amount:        test_artifacts.DefaultStakeAmountString,
+				Chains:        defaults.DefaultChains,
+				Amount:        defaults.DefaultStakeAmountString,
 				ServiceUrl:    "https://localhost.com",
 				OutputAddress: outputAddress,
 				Signer:        outputAddress,
@@ -53,7 +54,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 				require.Equal(t, msg.Chains, actor.GetChains(), "incorrect actor chains")
 			}
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetPausedHeight(), "incorrect actor height")
-			require.Equal(t, test_artifacts.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect actor stake amount")
+			require.Equal(t, defaults.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect actor stake amount")
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "incorrect actor unstaking height")
 			require.Equal(t, outputAddress.String(), actor.GetOutput(), "incorrect actor output address")
 			test_artifacts.CleanupTest(ctx)
@@ -70,8 +71,8 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			require.NoError(t, err)
 			msg := &typesUtil.MessageEditStake{
 				Address:   addrBz,
-				Chains:    test_artifacts.DefaultChains,
-				Amount:    test_artifacts.DefaultStakeAmountString,
+				Chains:    defaults.DefaultChains,
+				Amount:    defaults.DefaultStakeAmountString,
 				Signer:    addrBz,
 				ActorType: actorType,
 			}
@@ -86,10 +87,10 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			if actorType != typesUtil.ActorType_Validator {
 				require.Equal(t, msgChainsEdited.Chains, actor.GetChains(), "incorrect edited chains")
 			}
-			require.Equal(t, test_artifacts.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect staked tokens")
+			require.Equal(t, defaults.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect staked tokens")
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "incorrect unstaking height")
 
-			amountEdited := test_artifacts.DefaultAccountAmount.Add(test_artifacts.DefaultAccountAmount, big.NewInt(1))
+			amountEdited := defaults.DefaultAccountAmount.Add(defaults.DefaultAccountAmount, big.NewInt(1))
 			amountEditedString := typesUtil.BigIntToString(amountEdited)
 			msgAmountEdited := proto.Clone(msg).(*typesUtil.MessageEditStake)
 			msgAmountEdited.Amount = amountEditedString
@@ -335,8 +336,8 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 			require.NoError(t, err)
 			msgEditStake := &typesUtil.MessageEditStake{
 				Address:   addrBz,
-				Chains:    test_artifacts.DefaultChains,
-				Amount:    test_artifacts.DefaultStakeAmountString,
+				Chains:    defaults.DefaultChains,
+				Amount:    defaults.DefaultStakeAmountString,
 				ActorType: actorType,
 			}
 
@@ -453,86 +454,89 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 
 func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 	for _, actorType := range actorTypes {
-		ctx := NewTestingUtilityContext(t, 1)
+		t.Run(fmt.Sprintf("%s.UnstakeActorsThatAreReady", actorType.String()), func(t *testing.T) {
+			ctx := NewTestingUtilityContext(t, 1)
 
-		poolName := ""
-		var err1, err2 error
-		switch actorType {
-		case typesUtil.ActorType_App:
-			err1 = ctx.Context.SetParam(typesUtil.AppUnstakingBlocksParamName, 0)
-			err2 = ctx.Context.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
-			poolName = typesUtil.PoolNames_AppStakePool.String()
-		case typesUtil.ActorType_Validator:
-			err1 = ctx.Context.SetParam(typesUtil.ValidatorUnstakingBlocksParamName, 0)
-			err2 = ctx.Context.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
-			poolName = typesUtil.PoolNames_ValidatorStakePool.String()
-		case typesUtil.ActorType_Fisherman:
-			err1 = ctx.Context.SetParam(typesUtil.FishermanUnstakingBlocksParamName, 0)
-			err2 = ctx.Context.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
-			poolName = typesUtil.PoolNames_FishermanStakePool.String()
-		case typesUtil.ActorType_ServiceNode:
-			err1 = ctx.Context.SetParam(typesUtil.ServiceNodeUnstakingBlocksParamName, 0)
-			err2 = ctx.Context.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
-			poolName = typesUtil.PoolNames_ServiceNodeStakePool.String()
-		default:
-			t.Fatalf("unexpected actor type %s", actorType.String())
-		}
+			poolName := ""
+			var err1, err2 error
+			switch actorType {
+			case typesUtil.ActorType_App:
+				err1 = ctx.Context.SetParam(typesUtil.AppUnstakingBlocksParamName, 0)
+				err2 = ctx.Context.SetParam(typesUtil.AppMaxPauseBlocksParamName, 0)
+				poolName = typesUtil.PoolNames_AppStakePool.String()
+			case typesUtil.ActorType_Validator:
+				err1 = ctx.Context.SetParam(typesUtil.ValidatorUnstakingBlocksParamName, 0)
+				err2 = ctx.Context.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
+				poolName = typesUtil.PoolNames_ValidatorStakePool.String()
+			case typesUtil.ActorType_Fisherman:
+				err1 = ctx.Context.SetParam(typesUtil.FishermanUnstakingBlocksParamName, 0)
+				err2 = ctx.Context.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
+				poolName = typesUtil.PoolNames_FishermanStakePool.String()
+			case typesUtil.ActorType_ServiceNode:
+				err1 = ctx.Context.SetParam(typesUtil.ServiceNodeUnstakingBlocksParamName, 0)
+				err2 = ctx.Context.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
+				poolName = typesUtil.PoolNames_ServiceNodeStakePool.String()
+			default:
+				t.Fatalf("unexpected actor type %s", actorType.String())
+			}
 
-		err := ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
-		require.NoError(t, err)
-		require.NoError(t, err1, "error setting unstaking blocks")
-		require.NoError(t, err2, "error setting max pause blocks")
-
-		actors := getAllTestingActors(t, ctx, actorType)
-		for _, actor := range actors {
-			addrBz, err := hex.DecodeString(actor.GetAddress())
+			err := ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
 			require.NoError(t, err)
-			require.Equal(t, int64(-1), actor.GetUnstakingHeight(), "wrong starting staked status")
-			err = ctx.SetActorPauseHeight(actorType, addrBz, 1)
-			require.NoError(t, err, "error setting actor pause height")
-		}
+			require.NoError(t, err1, "error setting unstaking blocks")
+			require.NoError(t, err2, "error setting max pause blocks")
 
-		err = ctx.UnstakeActorPausedBefore(2, actorType)
-		require.NoError(t, err, "error setting actor pause before")
+			actors := getAllTestingActors(t, ctx, actorType)
+			for _, actor := range actors {
+				addrBz, err := hex.DecodeString(actor.GetAddress())
+				require.NoError(t, err)
+				require.Equal(t, int64(-1), actor.GetUnstakingHeight(), "wrong starting staked status")
+				err = ctx.SetActorPauseHeight(actorType, addrBz, 1)
+				require.NoError(t, err, "error setting actor pause height")
+			}
 
-		accountAmountsBefore := make([]*big.Int, 0)
+			err = ctx.UnstakeActorPausedBefore(2, actorType)
+			require.NoError(t, err, "error setting actor pause before")
 
-		for _, actor := range actors {
-			// get the output address account amount before the 'unstake'
-			outputAddressString := actor.GetOutput()
-			outputAddress, err := hex.DecodeString(outputAddressString)
+			accountAmountsBefore := make([]*big.Int, 0)
+
+			for _, actor := range actors {
+				// get the output address account amount before the 'unstake'
+				outputAddressString := actor.GetOutput()
+				outputAddress, err := hex.DecodeString(outputAddressString)
+				require.NoError(t, err)
+				outputAccountAmount, err := ctx.GetAccountAmount(outputAddress)
+				require.NoError(t, err)
+				// capture the amount before
+				accountAmountsBefore = append(accountAmountsBefore, outputAccountAmount)
+			}
+			// capture the pool amount before
+			poolAmountBefore, err := ctx.GetPoolAmount(poolName)
 			require.NoError(t, err)
-			outputAccountAmount, err := ctx.GetAccountAmount(outputAddress)
-			require.NoError(t, err)
-			// capture the amount before
-			accountAmountsBefore = append(accountAmountsBefore, outputAccountAmount)
-		}
-		// capture the pool amount before
-		poolAmountBefore, err := ctx.GetPoolAmount(poolName)
-		require.NoError(t, err)
 
-		err = ctx.UnstakeActorsThatAreReady()
-		require.NoError(t, err, "error unstaking actors that are ready")
+			err = ctx.UnstakeActorsThatAreReady()
+			require.NoError(t, err, "error unstaking actors that are ready")
 
-		for i, actor := range actors {
-			// get the output address account amount after the 'unstake'
-			outputAddressString := actor.GetOutput()
-			outputAddress, err := hex.DecodeString(outputAddressString)
+			for i, actor := range actors {
+				// get the output address account amount after the 'unstake'
+				outputAddressString := actor.GetOutput()
+				outputAddress, err := hex.DecodeString(outputAddressString)
+				require.NoError(t, err)
+				outputAccountAmount, err := ctx.GetAccountAmount(outputAddress)
+				require.NoError(t, err)
+				// ensure the stake amount went to the output address
+				outputAccountAmountDelta := new(big.Int).Sub(outputAccountAmount, accountAmountsBefore[i])
+				require.Equal(t, outputAccountAmountDelta, defaults.DefaultStakeAmount)
+			}
+			// ensure the staking pool is `# of readyToUnstake actors * default stake` less than before the unstake
+			poolAmountAfter, err := ctx.GetPoolAmount(poolName)
 			require.NoError(t, err)
-			outputAccountAmount, err := ctx.GetAccountAmount(outputAddress)
-			require.NoError(t, err)
-			// ensure the stake amount went to the output address
-			outputAccountAmountDelta := new(big.Int).Sub(outputAccountAmount, accountAmountsBefore[i])
-			require.Equal(t, outputAccountAmountDelta, test_artifacts.DefaultStakeAmount)
-		}
-		// ensure the staking pool is `# of readyToUnstake actors * default stake` less than before the unstake
-		poolAmountAfter, err := ctx.GetPoolAmount(poolName)
-		require.NoError(t, err)
-		actualPoolDelta := new(big.Int).Sub(poolAmountBefore, poolAmountAfter)
-		expectedPoolDelta := new(big.Int).Mul(big.NewInt(int64(len(actors))), test_artifacts.DefaultStakeAmount)
-		require.Equal(t, expectedPoolDelta, actualPoolDelta)
 
-		test_artifacts.CleanupTest(ctx)
+			actualPoolDelta := new(big.Int).Sub(poolAmountBefore, poolAmountAfter)
+			expectedPoolDelta := new(big.Int).Mul(big.NewInt(int64(len(actors))), defaults.DefaultStakeAmount)
+			require.Equal(t, expectedPoolDelta, actualPoolDelta)
+
+			test_artifacts.CleanupTest(ctx)
+		})
 	}
 }
 

@@ -3,6 +3,7 @@ package persistence
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -39,6 +40,26 @@ func (p PostgresContext) GetHeight() (int64, error) {
 	return p.Height, nil
 }
 
+func (p PostgresContext) GetPrevAppHash() (string, error) {
+	height, err := p.GetHeight()
+	if err != nil {
+		return "", err
+	}
+	if height <= 1 {
+		return "TODO: get from genesis", nil
+	}
+	block, err := p.blockstore.Get(heightToBytes(height - 1))
+	if err != nil {
+		return "", fmt.Errorf("error getting block hash for height %d even though it's in the database: %s", height, err)
+	}
+	// IMPROVE/CLEANUP(#284): returning the whole protoblock - should just return hash
+	return hex.EncodeToString(block), nil
+}
+
+func (p PostgresContext) GetTxResults() []modules.TxResult {
+	return p.txResults
+}
+
 func (p PostgresContext) TransactionExists(transactionHash string) (bool, error) {
 	hash, err := hex.DecodeString(transactionHash)
 	if err != nil {
@@ -55,15 +76,52 @@ func (p PostgresContext) TransactionExists(transactionHash string) (bool, error)
 	return true, err
 }
 
-func (p PostgresContext) StoreTransaction(txResult modules.TxResult) error {
-	return p.txIndexer.Index(txResult)
+func (p PostgresContext) IndexTransactions() error {
+	// TODO: store in batch
+	for _, txResult := range p.GetLatestTxResults() {
+		if err := p.txIndexer.Index(txResult); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (p PostgresContext) StoreBlock(blockProtoBytes []byte) error {
+// DISCUSS: this might be retrieved from the block store - temporarily we will access it directly from the module
+//       following the pattern of the Consensus Module prior to pocket/issue-#315
+// TODO(#284): Remove blockProtoBytes from the interface
+func (p *PostgresContext) SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr, qc []byte, transactions [][]byte) error {
+	p.blockHash = blockHash
+	p.blockProtoBytes = blockProtoBytes
+	p.proposerAddr = proposerAddr
+	p.quorumCertificate = qc
+	p.blockTxs = transactions
+	return nil
+}
+
+// TEMPORARY: Including two functions for the SQL and KV Store as an interim solution
+//                 until we include the schema as part of the SQL Store because persistence
+//                 currently has no access to the protobuf schema which is the source of truth.
+// TODO: atomic operations needed here - inherited pattern from consensus module
+func (p PostgresContext) StoreBlock() error {
+	if p.blockProtoBytes == nil {
+		// IMPROVE/CLEANUP: HACK - currently tests call Commit() on the same height and it throws a
+		// ERROR: duplicate key value violates unique constraint "block_pkey", because it attempts to
+		// store a block at height 0 for each test. We need a cleanup function to clear the block table
+		// each iteration
+		return nil
+	}
 	// INVESTIGATE: Note that we are writing this directly to the blockStore. Depending on how
 	// the use of the PostgresContext evolves, we may need to write this to `ContextStore` and copy
 	// over to `BlockStore` when the block is committed.
-	return p.blockstore.Put(heightToBytes(p.Height), blockProtoBytes)
+	if err := p.blockstore.Put(heightToBytes(p.Height), p.blockProtoBytes); err != nil {
+		return err
+	}
+	// Store in SQL Store
+	if err := p.InsertBlock(uint64(p.Height), p.blockHash, p.proposerAddr, p.quorumCertificate); err != nil {
+		return err
+	}
+	// Store transactions in indexer
+	return p.IndexTransactions()
 }
 
 func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {

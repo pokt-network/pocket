@@ -21,16 +21,17 @@ type Config interface {
 	GetPersistenceConfig() PersistenceConfig
 	GetP2PConfig() P2PConfig
 	GetTelemetryConfig() TelemetryConfig
+	GetRPCConfig() RPCConfig
 }
 
 type BaseConfig interface {
 	GetRootDirectory() string
-	GetPrivateKey() string // TODO (pocket/issues/150) better architecture for key management (keybase, keyfiles, etc.)
+	GetPrivateKey() string // TODO (#150) better architecture for key management (keybase, keyfiles, etc.)
 }
 
 type ConsensusConfig interface {
 	GetMaxMempoolBytes() uint64
-	GetPrivateKey() string // TODO (pocket/issues/150) better architecture for key management (keybase, keyfiles, etc.)
+	GetPrivateKey() string // TODO (#150) better architecture for key management (keybase, keyfiles, etc.)
 }
 
 type PacemakerConfig interface {
@@ -63,6 +64,13 @@ type TelemetryConfig interface {
 type UtilityConfig interface {
 	GetMaxMempoolTransactionBytes() uint64
 	GetMaxMempoolTransactions() uint32
+}
+
+type RPCConfig interface {
+	GetEnabled() bool
+	GetPort() string
+	GetTimeout() uint64
+	GetUseCors() bool
 }
 
 type PersistenceGenesisState interface {
