@@ -124,6 +124,8 @@ func (p PostgresContext) storeBlock(block *types.Block) error {
 	return p.blockStore.Set(heightToBytes(p.Height), blockBz)
 }
 
+// Returns a digest (a single hash) of all the transactions included in the block.
+// This allows separating the integrity of the transactions from their storage.
 func (p PostgresContext) getTxsHash() (txs []byte, err error) {
 	txResults, err := p.txIndexer.GetByHeight(p.Height, txsOrderInBlockHashDescending)
 	if err != nil {
