@@ -56,7 +56,7 @@ func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 	log.Printf("Block at height %d: %+v \n", height, block)
 }
 
-// TODO: MAke sure this is atomic
+// TODO: Make sure this is atomic
 func (m *persistenceModule) clearAllState(_ *debug.DebugMessage) error {
 	context, err := m.NewRWContext(-1)
 	if err != nil {
