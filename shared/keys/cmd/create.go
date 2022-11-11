@@ -66,6 +66,20 @@ Key file is encrypted with the given password (required).
 	RunE: runAddCmdPrepare,
 }
 
+/*
+key type
+	- name: the unique ID for the key
+	- publickey: the public key
+	- privatekey: the private key
+	- mnemonic: mnemonic used to generated key, empty if not saved
+*/
+type key struct {
+	Name       string `json:"name"`
+	PublicKey  []byte `json:"publickey"`
+	PrivateKey []byte `json:"privatekey"`
+	mnemonic   string `json:"mnemonic"`
+}
+
 func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 	clientCtx, err := client.GetClientQueryContext(cmd)
 	if err != nil {
