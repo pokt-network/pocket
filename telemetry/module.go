@@ -10,7 +10,7 @@ var (
 )
 
 const (
-	TelemetryModuleName = "telemetry"
+	telemetryModuleName = "telemetry"
 )
 
 func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
@@ -32,7 +32,7 @@ func (*telemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, erro
 
 type telemetryModule struct{}
 
-func (t *telemetryModule) GetModuleName() string                                          { return TelemetryModuleName }
+func (t *telemetryModule) GetModuleName() string                                          { return telemetryModuleName }
 func (t *telemetryModule) InitGenesis(_ string) (genesis modules.GenesisState, err error) { return }
 func (t *telemetryModule) SetBus(bus modules.Bus)                                         {}
 func (t *telemetryModule) GetBus() modules.Bus                                            { return nil }

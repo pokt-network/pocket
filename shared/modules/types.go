@@ -21,6 +21,7 @@ type Config interface {
 	GetPersistenceConfig() PersistenceConfig
 	GetP2PConfig() P2PConfig
 	GetTelemetryConfig() TelemetryConfig
+	GetRPCConfig() RPCConfig
 }
 
 type BaseConfig interface {

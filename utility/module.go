@@ -21,7 +21,7 @@ type utilityModule struct {
 }
 
 const (
-	UtilityModuleName = "utility"
+	utilityModuleName = "utility"
 )
 
 func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
@@ -52,7 +52,7 @@ func (u *utilityModule) Stop() error {
 }
 
 func (u *utilityModule) GetModuleName() string {
-	return UtilityModuleName
+	return utilityModuleName
 }
 
 func (u *utilityModule) SetBus(bus modules.Bus) {
@@ -67,5 +67,6 @@ func (u *utilityModule) GetBus() modules.Bus {
 }
 
 func (*utilityModule) ValidateConfig(cfg modules.Config) error {
+	// TODO (#334): implement this
 	return nil
 }

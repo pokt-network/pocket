@@ -87,7 +87,6 @@ go_oapi-codegen:
 		echo "Install with 'go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0'"; \
 	fi; \
 	}
-
 .PHONY: go_clean_deps
 ## Runs `go mod tidy` && `go mod vendor`
 go_clean_deps:
@@ -251,6 +250,7 @@ protogen_local: go_protoc-go-inject-tag
 	protoc --go_opt=paths=source_relative  -I=./p2p/raintree/types/proto  --go_out=./p2p/types          	./p2p/raintree/types/proto/*.proto  --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./p2p/types/proto           --go_out=./p2p/types          	./p2p/types/proto/*.proto           --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./telemetry/proto           --go_out=./telemetry          	./telemetry/proto/*.proto           --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./rpc/types/proto 		  --go_out=./rpc/types          	./rpc/types/proto/*.proto           --experimental_allow_proto3_optional
 	echo "View generated proto files by running: make protogen_show"
 
 .PHONY: protogen_docker_m1
@@ -270,7 +270,12 @@ generate_rpc_openapi: go_oapi-codegen
 	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
 	echo "OpenAPI client and server generated"
 
+## Starts a local Swagger UI instance for the RPC API
+swagger-ui:
+	echo "Attempting to start Swagger UI at http://localhost:8080\n\n"
+	docker run -p 8080:8080 -e SWAGGER_JSON=/v1/openapi.yaml -v $(shell pwd)/rpc/v1:/v1 swaggerapi/swagger-ui
 .PHONY: generate_cli_commands_docs
+
 ### (Re)generates the CLI commands docs (this is meant to be called by CI)
 generate_cli_commands_docs:
 	$(eval cli_docs_dir = "app/client/cli/doc/commands")
@@ -285,12 +290,12 @@ test_all: # generate_mocks
 
 .PHONY: test_all_with_json
 ## Run all go unit tests, output results in json file
-test_all_with_json: # generate_mocks
+test_all_with_json: generate_rpc_openapi # generate_mocks
 	go test -p 1 -json ./... > test_results.json
 
 .PHONY: test_all_with_coverage
 ## Run all go unit tests, output results & coverage into files
-test_all_with_coverage: # generate_mocks
+test_all_with_coverage: generate_rpc_openapi # generate_mocks
 	go test -p 1 -v ./... -covermode=count -coverprofile=coverage.out
 	go tool cover -func=coverage.out -o=coverage.out
 
