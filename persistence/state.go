@@ -143,31 +143,31 @@ func (p *PostgresContext) updateMerkleTrees() ([]byte, error) {
 			if !ok {
 				return nil, fmt.Errorf("no actor type found for merkle tree: %v\n", treeType)
 			}
-			if err := p.updateActorsTree(actorType, p.Height); err != nil {
+			if err := p.updateActorsTree(actorType); err != nil {
 				return nil, err
 			}
 
 		// Account Merkle Trees
 		case accountMerkleTree:
-			if err := p.updateAccountTrees(p.Height); err != nil {
+			if err := p.updateAccountTrees(); err != nil {
 				return nil, err
 			}
 		case poolMerkleTree:
-			if err := p.updatePoolTrees(p.Height); err != nil {
+			if err := p.updatePoolTrees(); err != nil {
 				return nil, err
 			}
 
 		// Data Merkle Trees
 		case transactionsMerkleTree:
-			if err := p.updateTransactionsTree(p.Height); err != nil {
+			if err := p.updateTransactionsTree(); err != nil {
 				return nil, err
 			}
 		case paramsMerkleTree:
-			if err := p.updateParamsTree(p.Height); err != nil {
+			if err := p.updateParamsTree(); err != nil {
 				return nil, err
 			}
 		case flagsMerkleTree:
-			if err := p.updateFlagsTree(p.Height); err != nil {
+			if err := p.updateFlagsTree(); err != nil {
 				return nil, err
 			}
 
@@ -192,8 +192,8 @@ func (p *PostgresContext) updateMerkleTrees() ([]byte, error) {
 
 // Actor Tree Helpers
 
-func (p *PostgresContext) updateActorsTree(actorType types.ActorType, height int64) error {
-	actors, err := p.getActorsUpdatedAtHeight(actorType, height)
+func (p *PostgresContext) updateActorsTree(actorType types.ActorType) error {
+	actors, err := p.getActorsUpdatedAtHeight(actorType, p.Height)
 	if err != nil {
 		return err
 	}
@@ -252,8 +252,8 @@ func (p *PostgresContext) getActorsUpdatedAtHeight(actorType types.ActorType, he
 
 // Account Tree Helpers
 
-func (p *PostgresContext) updateAccountTrees(height int64) error {
-	accounts, err := p.getAccountsUpdated(height)
+func (p *PostgresContext) updateAccountTrees() error {
+	accounts, err := p.getAccountsUpdated(p.Height)
 	if err != nil {
 		return err
 	}
@@ -277,8 +277,8 @@ func (p *PostgresContext) updateAccountTrees(height int64) error {
 	return nil
 }
 
-func (p *PostgresContext) updatePoolTrees(height int64) error {
-	pools, err := p.getPoolsUpdated(height)
+func (p *PostgresContext) updatePoolTrees() error {
+	pools, err := p.getPoolsUpdated(p.Height)
 	if err != nil {
 		return err
 	}
@@ -300,7 +300,7 @@ func (p *PostgresContext) updatePoolTrees(height int64) error {
 
 // Data Tree Helpers
 
-func (p *PostgresContext) updateTransactionsTree(height int64) error {
+func (p *PostgresContext) updateTransactionsTree() error {
 	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
 	if err != nil {
 		return err
@@ -319,12 +319,12 @@ func (p *PostgresContext) updateTransactionsTree(height int64) error {
 	return nil
 }
 
-func (p *PostgresContext) updateParamsTree(height int64) error {
+func (p *PostgresContext) updateParamsTree() error {
 	// TODO_IN_NEXT_COMMIT(olshansky): Implement me
 	return nil
 }
 
-func (p *PostgresContext) updateFlagsTree(height int64) error {
+func (p *PostgresContext) updateFlagsTree() error {
 	// TODO_IN_NEXT_COMMIT(olshansky): Implement me
 	return nil
 }

@@ -97,7 +97,7 @@ func (p *PostgresContext) prepareBlock(quorumCert []byte) (*types.Block, error) 
 		}
 	}
 
-	txsHash, err := p.getTxsHash(p.Height)
+	txsHash, err := p.getTxsHash()
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func (p PostgresContext) storeBlock(block *types.Block) error {
 	return p.blockStore.Set(heightToBytes(p.Height), blockBz)
 }
 
-func (p PostgresContext) getTxsHash(height int64) ([]byte, error) {
+func (p PostgresContext) getTxsHash() ([]byte, error) {
 	// The order (descending) is important here since it is used to comprise the hash in the block
 	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
 	if err != nil {
