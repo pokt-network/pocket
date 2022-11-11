@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/pokt-network/pocket/persistence/types"
-
 	"github.com/pokt-network/pocket/shared/modules"
 )
 

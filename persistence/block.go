@@ -53,14 +53,20 @@ func (p PostgresContext) GetPrevAppHash() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if height <= 1 {
-		return "TODO: get from genesis", nil
+	if height <= 0 {
+		return "", fmt.Errorf("Cannot get previous app hash relative to height %d", height)
 	}
-	block, err := p.blockStore.Get(heightToBytes(height - 1))
+
+	blockBz, err := p.blockStore.Get(heightToBytes(height - 1))
 	if err != nil {
 		return "", fmt.Errorf("error getting block hash for height %d even though it's in the database: %s", height, err)
 	}
-	return hex.EncodeToString(block), nil // TODO(#284): Return `block.Hash` instead of the hex encoded representation of the blockBz
+	var block types.Block
+	if err := codec.GetCodec().Unmarshal(blockBz, &block); err != nil {
+		return "", err
+	}
+
+	return block.Hash, nil
 }
 
 func (p PostgresContext) TransactionExists(transactionHash string) (bool, error) {
