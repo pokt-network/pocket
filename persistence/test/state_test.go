@@ -150,7 +150,7 @@ func TestStateHash_ReplayingRandomTransactionsIsDeterministic(t *testing.T) {
 					replayableOps := make([]*TestReplayableOperation, numOpsPerTx)
 
 					for opIdx := 0; opIdx < numOpsPerTx; opIdx++ {
-						methodName, args, err := callRandomDatabaseModifierFunc(db, height, true)
+						methodName, args, err := callRandomDatabaseModifierFunc(db, true)
 						require.NoError(t, err)
 
 						replayableOps[opIdx] = &TestReplayableOperation{

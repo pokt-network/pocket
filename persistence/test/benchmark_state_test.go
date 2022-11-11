@@ -61,7 +61,7 @@ func BenchmarkStateHash(b *testing.B) {
 				for i := 0; i < numTxPerHeight; i++ {
 
 					for op := 0; op < numOpsPerTx; op++ {
-						callRandomDatabaseModifierFunc(db, h, false)
+						callRandomDatabaseModifierFunc(db, false)
 					}
 					db.IndexTransaction(modules.TxResult(getRandomTxResult(h)))
 				}
@@ -76,7 +76,6 @@ func BenchmarkStateHash(b *testing.B) {
 // Calls a random database modifier function on the given persistence context
 func callRandomDatabaseModifierFunc(
 	p *persistence.PostgresContext,
-	height int64,
 	mustSucceed bool,
 ) (string, []reflect.Value, error) {
 	t := reflect.TypeOf(modules.PersistenceWriteContext(p))
