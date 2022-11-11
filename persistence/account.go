@@ -166,7 +166,8 @@ func (p *PostgresContext) getPoolOrAccUpdatedInternal(query string) (accounts []
 	if err != nil {
 		return nil, err
 	}
-
+	defer rows.Close()
+	
 	accounts = make([]*types.Account, 0)
 	for rows.Next() {
 		account := new(types.Account)
