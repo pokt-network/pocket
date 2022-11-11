@@ -27,27 +27,15 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb"
-
 	cryptoPocket "keys/crypto"
 )
 
 const (
 	flagRecover = "recover"
-
-	// FlagPublicKey represents the user's public key on the command line.
-	FlagPublicKey = "pubkey"
-
-	//// For output formats
-	//OutputFormatText = "text"
-	//OutputFormatJSON = "json"
-
-	// DefaultKeyPass contains the default key password for genesis transactions
-	DefaultKeyPass = "12345678"
 )
 
 // createCmd represents the create command
@@ -56,18 +44,10 @@ var createCmd = &cobra.Command{
 	Short: "Creating an encrypted private key and save to <name> file as the key pair identifier",
 	Long: `Derive a new private key and encrypt to disk.
 
-Allow users to use BIP39 mnemonic and set passphrases to secure the mnemonic. Supports BIP32 Hierarchical
-Deterministic (HD) path to derive a specific account. Take key ID <name> from user and store key under the <name>.
-Key file is encrypted with the given password (required).
-	
-	--dry-run	Generate/Recover a key without stored it to the local keystore.
-
-	-i			Prompt the user for BIP44 path, BIP39 mnemonic, and passphrase.
-
-	--recover 	Recover a key from a seed passphrase.
+Allow users to use BIP39 mnemonic and to secure the mnemonic. Take key ID <name> from user and store key under the <name>.
 `,
 	Args: cobra.ExactArgs(1),
-	RunE: runAddCmdPrepare,
+	RunE: runAddCmd,
 }
 
 /*
@@ -85,16 +65,6 @@ type key struct {
 	Mnemonic   string                  `json:"mnemonic"`
 }
 
-func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
-	clientCtx, err := client.GetClientQueryContext(cmd)
-	if err != nil {
-		return err
-	}
-
-	buf := bufio.NewReader(clientCtx.Input)
-	return runAddCmd(clientCtx, cmd, args, buf)
-}
-
 /*
 [Miniature Keybase] Using level.db and ED25519 for public/private keys generation
 input
@@ -106,13 +76,11 @@ input
 output
   - armor encrypted private key (saved to file)
 */
-func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
+func runAddCmd(cmd *cobra.Command, args []string) error {
 	var err error
+	var inBuf = bufio.NewReader(cmd.InOrStdin())
 
 	name := args[0]
-
-	// TODO: determine safer keystore location later
-	kb, err := leveldb.OpenFile("./.keybase/poktKeys.db", nil)
 
 	//////////////////////////
 	//  Mnemonic Generation //
@@ -120,9 +88,11 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 
 	// Get bip39 mnemonic
 	var mnemonic string
-	var bip39Passphrase string = "" // can be implemented to take pass phrases
+	var bip39Passphrase string = "" // TODO: implement to take pass phrases from user
 
+	// User can recover private key from mnemonic
 	recover, _ := cmd.Flags().GetBool(flagRecover)
+
 	if recover {
 		mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
 		if err != nil {
@@ -145,9 +115,12 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		}
 	}
 
-	///////////////////
-	// Keys Mnemonic //
-	///////////////////
+	/////////////////////
+	// Keys Generation //
+	/////////////////////
+
+	// TODO: determine safer keystore location later
+	kb, err := leveldb.OpenFile("./.keybase/poktKeys.db", nil)
 
 	// Creating key with ED25519 and mnemonic seed phrases
 	privateKey, err := cryptoPocket.NewPrivateKey(mnemonic + bip39Passphrase)
