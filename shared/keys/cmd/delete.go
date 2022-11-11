@@ -44,12 +44,13 @@ Note: Delete key does not delete private key stored in a ledger device.
 	RunE: deleteKey,
 }
 
+// Future updates
+// - Check if the file exist or not
+// - Delete multiple keys
+// - Skip confirmation prompt when deleting offline or ledger key references
 func deleteKey(cmd *cobra.Command, args []string) error {
 	var err error
 
-	// TODO: check if the file exist or not
-
-	// TODO: delete multiple keys
 	name := args[0]
 
 	// Open keybase DB
@@ -89,6 +90,4 @@ func init() {
 	rootCmd.AddCommand(deleteCmd)
 
 	// Local flags
-	//f := deleteCmd.Flags()
-	//f.BoolP(flagYes, "y", false, "Skip confirmation prompt when deleting offline or ledger key references")
 }

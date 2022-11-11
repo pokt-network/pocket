@@ -66,17 +66,9 @@ type key struct {
 	Mnemonic   string                  `json:"mnemonic"`
 }
 
-/*
-[Miniature Keybase] Using level.db and ED25519 for public/private keys generation
-input
-  - bip39 mnemonic
-  - bip39 passphrase
-  - bip44 path
-  - local encryption password
-
-output
-  - armor encrypted private key (saved to file)
-*/
+// Future updates
+// - determine a safer keystore location (team discuss)
+// - confirmation from user for overriding existing key
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	var err error
 	var inBuf = bufio.NewReader(cmd.InOrStdin())
@@ -92,7 +84,10 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	var bip39Passphrase string = "" // TODO: implement to take pass phrases from user
 
 	// User can recover private key from mnemonic
-	recover, _ := cmd.Flags().GetBool(flagRecover)
+	recover, err := cmd.Flags().GetBool(flagRecover)
+	if err != nil {
+		return err
+	}
 
 	if recover {
 		mnemonic, err = input.GetString("Enter your bip39 mnemonic", inBuf)
@@ -120,10 +115,10 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	// Keys Generation //
 	/////////////////////
 
-	// TODO: determine a safer keystore location (team discuss)
 	kb, err := leveldb.OpenFile("./.keybase/poktKeys.db", nil)
-
-	// TODO: is this generating order with the provided ED25519 correct? (team discuss)
+	if err != nil {
+		return err
+	}
 
 	// Creating a private key with ED25519 and mnemonic seed phrases
 	privateKey, err := cryptoPocket.NewPrivateKeyFromSeed([]byte(mnemonic + bip39Passphrase))
@@ -144,7 +139,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	// Storing keys //
 	//////////////////
 
-	// TODO: confirmation from user for overriding existing key
 	data, err := json.Marshal(keystore)
 	if err != nil {
 		return err
