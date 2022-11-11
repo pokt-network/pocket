@@ -162,6 +162,14 @@ db_cli:
 	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
 	docker exec -it pocket-db bash -c "psql -U postgres"
 
+psqlSchema ?= node1
+
+.PHONY: db_cli_node
+## Open a CLI to the local containerized postgres instance for a specific node
+db_cli_node:
+	echo "View all avialable tables by running \dt"
+	docker exec -it pocket-db bash -c "PGOPTIONS=--search_path=${psqlSchema} psql -U postgres"
+
 .PHONY: db_drop
 ## Drop all schemas used for LocalNet development matching `node%`
 db_drop: docker_check
