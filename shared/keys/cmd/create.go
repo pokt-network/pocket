@@ -27,6 +27,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
@@ -119,27 +120,30 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	// Keys Generation //
 	/////////////////////
 
-	// TODO: determine safer keystore location later
+	// TODO: determine a safer keystore location (team discuss)
 	kb, err := leveldb.OpenFile("./.keybase/poktKeys.db", nil)
 
-	// Creating key with ED25519 and mnemonic seed phrases
-	privateKey, err := cryptoPocket.NewPrivateKey(mnemonic + bip39Passphrase)
+	// TODO: is this generating order with the provided ED25519 correct? (team discuss)
+
+	// Creating a private key with ED25519 and mnemonic seed phrases
+	privateKey, err := cryptoPocket.NewPrivateKeyFromSeed([]byte(mnemonic + bip39Passphrase))
 	if err != nil {
 		return err
 	}
-	publicKey, err := cryptoPocket.NewPublicKey(privateKey.String())
-	if err != nil {
-		return err
-	}
-	address, err := cryptoPocket.NewAddress(publicKey.String())
-	if err != nil {
-		return err
-	}
+
+	// Creating a public key
+	publicKey := privateKey.PublicKey()
+
+	// Creating an address
+	address := privateKey.Address()
 
 	// JSON encoding
 	var keystore = key{name, publicKey, privateKey, address, mnemonic}
 
-	// Storing keys to key base
+	//////////////////
+	// Storing keys //
+	//////////////////
+
 	data, err := json.Marshal(keystore)
 	if err != nil {
 		return err
@@ -148,6 +152,14 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	//////////////////
+	// Print Output //
+	//////////////////
+
+	// Print out indented JSON
+	output, err := json.MarshalIndent(keystore, "", "\t")
+	fmt.Printf("%v\n", output)
 
 	defer kb.Close()
 
