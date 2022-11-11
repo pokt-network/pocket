@@ -27,7 +27,7 @@ type stateTrees struct {
 // A list of Merkle Trees used to maintain the state hash.
 const (
 	// VERY IMPORTANT: The order in which these trees are defined is important and strict. It implicitly
-	// defines the index of the the root hash each independent as they are concatenated together
+	// defines the index of the root hash each independent as they are concatenated together
 	// to generate the state hash.
 
 	// Actor Merkle Trees
