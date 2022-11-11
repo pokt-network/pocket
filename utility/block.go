@@ -68,11 +68,17 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		transactions = append(transactions, txBytes)
 		txIndex++
 	}
+
 	if err := u.EndBlock(proposer); err != nil {
 		return nil, nil, err
 	}
+
 	// return the app hash (consensus module will get the validator set directly)
-	appHash, err := u.getAppHash()
+	appHash, err := u.Context.ComputeAppHash()
+	if err != nil {
+		log.Fatalf("Updating the app hash failed: %v. TODO: Look into roll-backing the entire commit...\n", err)
+	}
+
 	return appHash, transactions, err
 }
 
@@ -155,14 +161,6 @@ func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
 		return err
 	}
 	return nil
-}
-
-func (u *UtilityContext) getAppHash() ([]byte, typesUtil.Error) {
-	appHash, er := u.Context.ComputeAppHash()
-	if er != nil {
-		return nil, typesUtil.ErrAppHash(er)
-	}
-	return appHash, nil
 }
 
 // HandleByzantineValidators handles the validators who either didn't sign at all or disagreed with the 2/3+ majority
