@@ -4,6 +4,7 @@ import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	typesPers "github.com/pokt-network/pocket/persistence/types"
+	typesRPC "github.com/pokt-network/pocket/rpc/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesTelemetry "github.com/pokt-network/pocket/telemetry"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -18,6 +19,7 @@ type runtimeConfig struct {
 	Persistence *typesPers.PersistenceConfig    `json:"persistence"`
 	P2P         *typesP2P.P2PConfig             `json:"p2p"`
 	Telemetry   *typesTelemetry.TelemetryConfig `json:"telemetry"`
+	RPC         *typesRPC.RPCConfig             `json:"rpc"`
 }
 
 func NewConfig(base *BaseConfig, otherConfigs ...func(modules.Config)) *runtimeConfig {
@@ -62,18 +64,27 @@ func WithTelemetryConfig(telemetryConfig modules.TelemetryConfig) func(modules.C
 func (c *runtimeConfig) GetBaseConfig() modules.BaseConfig {
 	return c.Base
 }
+
 func (c *runtimeConfig) GetConsensusConfig() modules.ConsensusConfig {
 	return c.Consensus
 }
+
 func (c *runtimeConfig) GetUtilityConfig() modules.UtilityConfig {
 	return c.Utility
 }
+
 func (c *runtimeConfig) GetPersistenceConfig() modules.PersistenceConfig {
 	return c.Persistence
 }
+
 func (c *runtimeConfig) GetP2PConfig() modules.P2PConfig {
 	return c.P2P
 }
+
 func (c *runtimeConfig) GetTelemetryConfig() modules.TelemetryConfig {
 	return c.Telemetry
+}
+
+func (c *runtimeConfig) GetRPCConfig() modules.RPCConfig {
+	return c.RPC
 }

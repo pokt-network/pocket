@@ -37,7 +37,7 @@ type persistenceModule struct {
 }
 
 const (
-	PersistenceModuleName = "persistence"
+	persistenceModuleName = "persistence"
 )
 
 func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
@@ -123,7 +123,7 @@ func (m *persistenceModule) Stop() error {
 }
 
 func (m *persistenceModule) GetModuleName() string {
-	return PersistenceModuleName
+	return persistenceModuleName
 }
 
 func (m *persistenceModule) SetBus(bus modules.Bus) {
@@ -138,10 +138,12 @@ func (m *persistenceModule) GetBus() modules.Bus {
 }
 
 func (*persistenceModule) ValidateConfig(cfg modules.Config) error {
+	// TODO (#334): implement this
 	return nil
 }
 
 func (*persistenceModule) ValidateGenesis(genesis modules.GenesisState) error {
+	// TODO (#334): implement this
 	return nil
 }
 

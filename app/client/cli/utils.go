@@ -91,10 +91,10 @@ func confirmation(pwd string) bool {
 	}
 }
 
-// prepareTxJson wraps a Message into a Transaction and signs it with the provided pk
+// prepareTxBytes wraps a Message into a Transaction and signs it with the provided pk
 //
-// returns the JSON bytes of the signed transaction
-func prepareTxJson(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
+// returns the raw protobuf bytes of the signed transaction
+func prepareTxBytes(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte, error) {
 	var err error
 	anyMsg, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
@@ -121,11 +121,11 @@ func prepareTxJson(msg typesUtil.Message, pk crypto.Ed25519PrivateKey) ([]byte, 
 		PublicKey: pk.PublicKey().Bytes(),
 	}
 
-	j, err := codec.GetCodec().Marshal(tx)
+	bz, err := codec.GetCodec().Marshal(tx)
 	if err != nil {
 		return nil, err
 	}
-	return j, nil
+	return bz, nil
 }
 
 // postRawTx posts a signed transaction
@@ -189,4 +189,18 @@ func attachPwdFlagToSubcommands() []cmdOption {
 	return []cmdOption{func(c *cobra.Command) {
 		c.Flags().StringVar(&pwd, "pwd", "", "passphrase used by the cmd, non empty usage bypass interactive prompt")
 	}}
+}
+
+func unableToConnectToRpc(err error) error {
+	fmt.Printf("❌ Unable to connect to the RPC @ %s\n\nError: %s", boldText(remoteCLIURL), err)
+	return nil
+}
+
+func rpcResponseCodeUnhealthy(statusCode int, response []byte) error {
+	fmt.Printf("❌ RPC reporting unhealthy status HTTP %d @ %s\n\n%s", statusCode, boldText(remoteCLIURL), response)
+	return nil
+}
+
+func boldText[T string | []byte](s T) string {
+	return fmt.Sprintf("\033[1m%s\033[0m", s)
 }

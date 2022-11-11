@@ -18,7 +18,7 @@ import (
 var _ modules.P2PModule = &p2pModule{}
 
 const (
-	P2PModuleName = "p2p"
+	p2pModuleName = "p2p"
 )
 
 type p2pModule struct {
@@ -82,7 +82,7 @@ func (m *p2pModule) GetBus() modules.Bus {
 }
 
 func (m *p2pModule) GetModuleName() string {
-	return P2PModuleName
+	return p2pModuleName
 }
 
 func (m *p2pModule) Start() error {
@@ -140,7 +140,7 @@ func (m *p2pModule) Broadcast(msg *anypb.Any, topic debug.PocketTopic) error {
 		Topic: topic,
 		Data:  msg,
 	}
-	data, err := proto.Marshal(c)
+	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic debug.
 		Topic: topic,
 		Data:  msg,
 	}
-	data, err := proto.Marshal(c)
+	data, err := proto.MarshalOptions{Deterministic: true}.Marshal(c)
 	if err != nil {
 		return err
 	}
@@ -163,6 +163,7 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any, topic debug.
 }
 
 func (*p2pModule) ValidateConfig(cfg modules.Config) error {
+	// TODO (#334): implement this
 	return nil
 }
 

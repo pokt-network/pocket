@@ -25,5 +25,7 @@ type ConsensusModule interface {
 
 	// Consensus State Accessors
 	CurrentHeight() uint64
+	CurrentRound() uint64
+	CurrentStep() uint64
 	ValidatorMap() ValidatorMap
 }
