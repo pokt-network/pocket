@@ -23,10 +23,12 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 	switch debugMessage.Action {
 	case debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		m.showLatestBlockInStore(debugMessage)
+	// Clears all the state (SQL DB, KV Stores, Trees, etc) to nothing
 	case debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE:
 		if err := m.clearAllState(debugMessage); err != nil {
 			return err
 		}
+	// Clears all the state (SQL DB, KV Stores, Trees, etc) to the tate specified in the genesis file provided
 	case debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS:
 		if err := m.clearAllState(debugMessage); err != nil {
 			return err
