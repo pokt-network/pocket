@@ -31,7 +31,7 @@ func BenchmarkStateHash(b *testing.B) {
 
 	b.Cleanup(clearAllState)
 
-	// NOTE: THe idiomatic way to run Go benchmarks is to use `b.N` and the `-benchtime` flag,
+	// NOTE: The idiomatic way to run Go benchmarks is to use `b.N` and the `-benchtime` flag,
 	// to specify how long the benchmark should take. However, the code below is non-idiomatic
 	// since our goal is to test a specific we use a fixed number of iterations
 	testCases := []struct {
