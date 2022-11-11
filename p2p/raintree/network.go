@@ -7,6 +7,7 @@ import (
 	"time"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -57,7 +58,7 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 		Data:  data,
 		Nonce: nonce,
 	}
-	msgBz, err := proto.Marshal(msg)
+	msgBz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
 		return err
 	}
@@ -93,7 +94,7 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 		Nonce: getNonce(),
 	}
 
-	bz, err := proto.Marshal(msg)
+	bz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
 		return err
 	}

@@ -41,6 +41,9 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - _Coming Soon: Consensus Architecture_ // TODO(olshansky): needs a README file with proper code structure
 - [Persistence Architecture](persistence/docs/README.md)
 - [P2P Architecture](p2p/README.md)
+- [CLI Architecture](app/client/cli/doc/README.md)
+- [RPC Architecture](app/pocket/rpc/doc/README.md)
+- [Node binary Architecture](app/pocket/doc/README.md)
 
 ### Changelogs
 
@@ -49,6 +52,10 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 - [Consensus Changelog](consensus/CHANGELOG.md)
 - [Persistence Changelog](persistence/docs/CHANGELOG.md)
 - [P2P Changelog](p2p/CHANGELOG.md)
+- [CLI Changelog](app/client/cli/doc/CHANGELOG.md)
+- [RPC Changelog](app/pocket/rpc/doc/CHANGELOG.md)
+- [Node binary Changelog](app/pocket/doc/CHANGELOG.md)
+
 - _Coming Soon: Telemetry Changelog_
 
 ## Support & Contact
@@ -64,4 +71,4 @@ All the links you'll need are listed below. If you'd like to contribute to the P
 
 ## License
 
-This project is licensed under the MIT License; see the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the MIT License; see the [LICENSE](LICENSE) file for details.

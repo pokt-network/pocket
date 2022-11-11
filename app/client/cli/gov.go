@@ -59,7 +59,7 @@ func govCommands() []*cobra.Command {
 					ParameterValue: pbValue,
 				}
 
-				tx, err := prepareTxJson(msg, pk)
+				tx, err := prepareTxBytes(msg, pk)
 				if err != nil {
 					return err
 				}

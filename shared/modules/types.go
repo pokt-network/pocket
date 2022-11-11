@@ -21,6 +21,7 @@ type Config interface {
 	GetPersistenceConfig() PersistenceConfig
 	GetP2PConfig() P2PConfig
 	GetTelemetryConfig() TelemetryConfig
+	GetRPCConfig() RPCConfig
 }
 
 type BaseConfig interface {
@@ -69,6 +70,7 @@ type RPCConfig interface {
 	GetEnabled() bool
 	GetPort() string
 	GetTimeout() uint64
+	GetUseCors() bool
 }
 
 type PersistenceGenesisState interface {
