@@ -11,6 +11,7 @@ import (
 	"github.com/manifoldco/promptui"
 	"github.com/pokt-network/pocket/consensus"
 	"github.com/pokt-network/pocket/p2p"
+	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared"
 	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
@@ -203,7 +204,13 @@ func initDebug(remoteCLIURL string) {
 		}
 		telemetryMod := telemetryM.(modules.TelemetryModule)
 
-		_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod) // TODO: refactor using the `WithXXXModule()` pattern accepting a slice of IntegratableModule
+		rpcM, err := rpc.Create(runtimeMgr)
+		if err != nil {
+			log.Fatalf("[ERROR] Failed to create rpc module: %v", err.Error())
+		}
+		rpcMod := rpcM.(modules.RPCModule)
+
+		_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod, rpcMod) // TODO: refactor using the `WithXXXModule()` pattern accepting a slice of IntegratableModule
 
 		p2pMod.Start()
 	})

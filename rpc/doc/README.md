@@ -25,7 +25,7 @@ This approach will allow us to focus on the features and less on the boilerpate 
 
 The current implementation uses code generation for ease of development.
 
-The source of truth is the the [OpenAPI3.0 yaml file](../v1/openapi.yaml).
+The source of truth is the the [OpenAPI3.0 yaml file](../v1/openapi.yaml) (also conveniently visible [here](https://editor.swagger.io/?url=https://raw.githubusercontent.com/pokt-network/pocket/main/rpc/v1/openapi.yaml) via the Swagger Editor)
 
 Anytime we make changes to the yaml file, we need to regenerate the boilerplate code by running
 

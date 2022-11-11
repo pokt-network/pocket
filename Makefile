@@ -87,6 +87,7 @@ go_oapi-codegen:
 		echo "Install with 'go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0'"; \
 	fi; \
 	}
+
 .PHONY: go_clean_deps
 ## Runs `go mod tidy` && `go mod vendor`
 go_clean_deps:
@@ -214,7 +215,7 @@ docker_loki_install: docker_check
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
 	$(eval modules_dir = "shared/modules")
-	rm -rf ${modules_dir}/mocks
+	find ${modules_dir}/mocks -maxdepth 1 -type f ! -name "mocks.go" -exec rm {} \;
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
