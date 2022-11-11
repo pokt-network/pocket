@@ -141,6 +141,54 @@ func TestAddAccountAmount(t *testing.T) {
 	require.Equal(t, expectedAccountAmount, accountAmount, "unexpected amount after add")
 }
 
+func TestAccountsUpdatedAtHeight(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
+	numAccsInTestGenesis := 8
+
+	// Check num accounts in genesis
+	accs, err := db.GetAccountsUpdated(0)
+	require.NoError(t, err)
+	require.Equal(t, numAccsInTestGenesis, len(accs))
+
+	// Insert a new account at height 0
+	_, err = createAndInsertNewAccount(db)
+	require.NoError(t, err)
+
+	// Verify that num accounts incremented by 1
+	accs, err = db.GetAccountsUpdated(0)
+	require.NoError(t, err)
+	require.Equal(t, numAccsInTestGenesis+1, len(accs))
+
+	// Close context at height 0 without committing new account
+	require.NoError(t, db.Close())
+	// start a new context at height 1
+	db = NewTestPostgresContext(t, 1)
+
+	// Verify that num accounts at height 0 is genesis because the new one was not committed
+	accs, err = db.GetAccountsUpdated(0)
+	require.NoError(t, err)
+	require.Equal(t, numAccsInTestGenesis, len(accs))
+
+	// Insert a new account at height 1
+	_, err = createAndInsertNewAccount(db)
+	require.NoError(t, err)
+
+	// Verify that num accounts updated height 1 is 1
+	accs, err = db.GetAccountsUpdated(1)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(accs))
+
+	// Commit & close the context at height 1
+	require.NoError(t, db.Commit(nil))
+	// start a new context at height 2
+	db = NewTestPostgresContext(t, 2)
+
+	// Verify only 1 account was updated at height 1
+	accs, err = db.GetAccountsUpdated(1)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(accs))
+}
+
 func TestSubAccountAmount(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 	account := newTestAccount(t)
@@ -313,6 +361,54 @@ func TestGetAllPools(t *testing.T) {
 	}
 
 	getAllActorsTest(t, db, db.GetAllPools, createAndInsertNewPool, updatePool, 7)
+}
+
+func TestPoolsUpdatedAtHeight(t *testing.T) {
+	db := NewTestPostgresContext(t, 0)
+	numPoolsInTestGenesis := 7
+
+	// Check num Pools in genesis
+	accs, err := db.GetPoolsUpdated(0)
+	require.NoError(t, err)
+	require.Equal(t, numPoolsInTestGenesis, len(accs))
+
+	// Insert a new Pool at height 0
+	_, err = createAndInsertNewPool(db)
+	require.NoError(t, err)
+
+	// Verify that num Pools incremented by 1
+	accs, err = db.GetPoolsUpdated(0)
+	require.NoError(t, err)
+	require.Equal(t, numPoolsInTestGenesis+1, len(accs))
+
+	// Close context at height 0 without committing new Pool
+	require.NoError(t, db.Close())
+	// start a new context at height 1
+	db = NewTestPostgresContext(t, 1)
+
+	// Verify that num Pools at height 0 is genesis because the new one was not committed
+	accs, err = db.GetPoolsUpdated(0)
+	require.NoError(t, err)
+	require.Equal(t, numPoolsInTestGenesis, len(accs))
+
+	// Insert a new Pool at height 1
+	_, err = createAndInsertNewPool(db)
+	require.NoError(t, err)
+
+	// Verify that num Pools updated height 1 is 1
+	accs, err = db.GetPoolsUpdated(1)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(accs))
+
+	// Commit & close the context at height 1
+	require.NoError(t, db.Commit(nil))
+	// start a new context at height 2
+	db = NewTestPostgresContext(t, 2)
+
+	// Verify only 1 Pool was updated at height 1
+	accs, err = db.GetPoolsUpdated(1)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(accs))
 }
 
 // --- Helpers ---

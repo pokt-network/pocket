@@ -253,7 +253,7 @@ func (p *PostgresContext) getActorsUpdatedAtHeight(actorType types.ActorType, he
 // Account Tree Helpers
 
 func (p *PostgresContext) updateAccountTrees() error {
-	accounts, err := p.getAccountsUpdated(p.Height)
+	accounts, err := p.GetAccountsUpdated(p.Height)
 	if err != nil {
 		return err
 	}
@@ -278,7 +278,7 @@ func (p *PostgresContext) updateAccountTrees() error {
 }
 
 func (p *PostgresContext) updatePoolTrees() error {
-	pools, err := p.getPoolsUpdated(p.Height)
+	pools, err := p.GetPoolsUpdated(p.Height)
 	if err != nil {
 		return err
 	}
