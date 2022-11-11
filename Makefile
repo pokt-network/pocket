@@ -377,7 +377,7 @@ test_p2p_raintree_addrbook:
 .PHONY: benchmark_persistence_state_hash
 ## Benchmark the state hash computation
 benchmark_persistence_state_hash:
-	go test ${VERBOSE_TEST} -bench=. -run BenchmarkStateHash -count=1 ./persistence/...
+	go test ${VERBOSE_TEST} -cpu 1,2 -benchtime=1s -benchmem -bench=. -run BenchmarkStateHash -count=1 ./persistence/...
 
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library

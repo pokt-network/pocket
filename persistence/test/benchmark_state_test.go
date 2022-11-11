@@ -29,6 +29,7 @@ func BenchmarkStateHash(b *testing.B) {
 	log.SetOutput(ioutil.Discard)
 	defer log.SetOutput(os.Stderr)
 
+	clearAllState()
 	b.Cleanup(clearAllState)
 
 	// NOTE: The idiomatic way to run Go benchmarks is to use `b.N` and the `-benchtime` flag,
@@ -40,13 +41,17 @@ func BenchmarkStateHash(b *testing.B) {
 		numOpsPerTx    int
 	}{
 		{1, 1, 1},
-		{1, 100, 1},
-		{100, 1, 1},
-		{100, 10, 1},
-		{1000, 1, 1},
-		{1000, 10, 1},
-		// {10000, 10},
-		// {10000, 1000},
+		{1, 1, 10},
+		{1, 10, 10},
+
+		{10, 1, 1},
+		{10, 1, 10},
+		{10, 10, 10},
+
+		// This takes a VERY long time to run
+		// {100, 1, 1},
+		// {100, 1, 100},
+		// {100, 100, 100},
 	}
 
 	for _, testCase := range testCases {
@@ -54,20 +59,19 @@ func BenchmarkStateHash(b *testing.B) {
 		numTxPerHeight := testCase.numTxPerHeight
 		numOpsPerTx := testCase.numOpsPerTx
 
-		b.Run(fmt.Sprintf("BenchmarkStateHash(%d;%d,%d)", numHeights, numTxPerHeight, numOpsPerTx), func(b *testing.B) {
-			for h := int64(0); h < numHeights; h++ {
-				db := NewTestPostgresContext(b, h)
-
-				for i := 0; i < numTxPerHeight; i++ {
-
-					for op := 0; op < numOpsPerTx; op++ {
+		// Since this is a benchmark, errors are not
+		b.Run(fmt.Sprintf("height=%d;txs=%d,ops=%d", numHeights, numTxPerHeight, numOpsPerTx), func(b *testing.B) {
+			for height := int64(0); height < numHeights; height++ {
+				db := NewTestPostgresContext(b, height)
+				for txIdx := 0; txIdx < numTxPerHeight; txIdx++ {
+					for opIdx := 0; opIdx < numOpsPerTx; opIdx++ {
 						callRandomDatabaseModifierFunc(db, false)
 					}
-					db.IndexTransaction(modules.TxResult(getRandomTxResult(h)))
+					db.IndexTransaction(modules.TxResult(getRandomTxResult(height)))
 				}
-
 				db.ComputeAppHash()
 				db.Commit([]byte("TODOquorumCert"))
+				db.Release()
 			}
 		})
 	}
@@ -157,6 +161,7 @@ func getRandomIntString(n int) string {
 	return strconv.Itoa(rand.Intn(n))
 }
 
+// NOTE: This is not current used but was added for future usage.
 func getRandomString(numChars int64) string {
 	return string(getRandomBytes(numChars))
 }
