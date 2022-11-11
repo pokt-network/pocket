@@ -21,7 +21,9 @@ THE SOFTWARE.
 */
 package main
 
-import "keys/cmd"
+import (
+	"keys/cmd"
+)
 
 func main() {
 	cmd.Execute()

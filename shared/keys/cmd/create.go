@@ -21,15 +21,19 @@ THE SOFTWARE.
 */
 package cmd
 
+// TODO: modify module structure to prevent crypto/ copy redundancy
+
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb"
+
+	cryptoPocket "keys/crypto"
 )
 
 const (
@@ -74,10 +78,11 @@ key type
 	- mnemonic: mnemonic used to generated key, empty if not saved
 */
 type key struct {
-	Name       string `json:"name"`
-	PublicKey  []byte `json:"publickey"`
-	PrivateKey []byte `json:"privatekey"`
-	mnemonic   string `json:"mnemonic"`
+	Name       string                  `json:"name"`
+	PublicKey  cryptoPocket.PublicKey  `json:"publickey"`
+	PrivateKey cryptoPocket.PrivateKey `json:"privatekey"`
+	Address    cryptoPocket.Address    `json:"address"`
+	Mnemonic   string                  `json:"mnemonic"`
 }
 
 func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
@@ -91,6 +96,7 @@ func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 }
 
 /*
+[Miniature Keybase] Using level.db and ED25519 for public/private keys generation
 input
   - bip39 mnemonic
   - bip39 passphrase
@@ -103,37 +109,18 @@ output
 func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *bufio.Reader) error {
 	var err error
 
-	// [Miniature Keybase] Using level.db for keybase and ED25519 for public/private key generation
-
 	name := args[0]
 
-	// TODO: determine proper keystore location later
+	// TODO: determine safer keystore location later
 	kb, err := leveldb.OpenFile("./.keybase/poktKeys.db", nil)
 
-	// Creating key with ED25519
-	pubKey, privKey, err := ed25519.GenerateKey(nil) // TODO: using mnemonic to generate (read)
-	keyMap := make(map[string][]byte)
-	keyMap["pubKey"] = pubKey
-	keyMap["privKey"] = privKey
-
-	// TODO: bette print function (support Test and JSON)
-	fmt.Printf("Name (KEY UID): %s\n", name)
-	fmt.Printf("Public key: %v\n", pubKey)
-	fmt.Printf("Private key: %v\n", privKey)
-
-	// Store the raw key to keybase (TODO: check if key already exists; user input sanitize)
-
-	// TODO: store JSON formated name -> {pubkey, privkey, ...}
-	err = kb.Put([]byte(name), privKey, nil)
-	if err != nil {
-		return err
-	}
-
-	// TODO: mnemonic key generation and recovery feature
+	//////////////////////////
+	//  Mnemonic Generation //
+	//////////////////////////
 
 	// Get bip39 mnemonic
 	var mnemonic string
-	var bip39Passphrase string = ""
+	var bip39Passphrase string = "" // can be implemented to take pass phrases
 
 	recover, _ := cmd.Flags().GetBool(flagRecover)
 	if recover {
@@ -158,10 +145,36 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 		}
 	}
 
-	// TODO: Using Mnemonic to generate keys
+	///////////////////
+	// Keys Mnemonic //
+	///////////////////
 
-	// TODO: Import the CryptoPocket!
-	ed25519.NewKeyFromSeed()
+	// Creating key with ED25519 and mnemonic seed phrases
+	privateKey, err := cryptoPocket.NewPrivateKey(mnemonic + bip39Passphrase)
+	if err != nil {
+		return err
+	}
+	publicKey, err := cryptoPocket.NewPublicKey(privateKey.String())
+	if err != nil {
+		return err
+	}
+	address, err := cryptoPocket.NewAddress(publicKey.String())
+	if err != nil {
+		return err
+	}
+
+	// JSON encoding
+	var keystore = key{name, publicKey, privateKey, address, mnemonic}
+
+	// Storing keys to key base
+	data, err := json.Marshal(keystore)
+	if err != nil {
+		return err
+	}
+	err = kb.Put([]byte(name), data, nil)
+	if err != nil {
+		return err
+	}
 
 	defer kb.Close()
 
