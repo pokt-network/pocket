@@ -22,11 +22,23 @@ func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 }
 
 func (p *PostgresContext) ComputeAppHash() ([]byte, error) {
-	// DISCUSS_IN_THIS_COMMIT:
+	// !!! DISCUSS_IN_THIS_COMMIT !!!
+
+	// `PostgresContext` contains a `blockHash` in its state set by `SetProposalBlock`.
+	// The caller of `ComputeAppHash` is responsible (given the context) to compare
+	// the return hash with the proposed hash (if that is the case).
+
+	// Situations:
+	// 	1. What if `p.updateMerkleTrees()` != `p.blockHash` && `p.blockHash` != nil?
+	// 	2. Do we set `p.blockHash` =`p.updateMerkleTrees()` if it's nil?
+	// 	3. In `SetProposalBlock`,
+
+	// Future work: Need to implement rollback of the trees (i.e. key-value stores) alongside the SQL DB transaction.
+
 	// 1. Should we compare the `appHash` returned from `updateMerkleTrees`?
 	// 2. Should this update the internal state of the context?
-	// Proposal: If the current internal appHash is not set, we update it.
-	//           If the current internal appHash is set, we compare it and return an error if different.
+	// Idea: If `p.blockHash` is nil => update it
+	//       If `p.blockHash` is nil => compare it with the return value of `updateMerkleTrees` and error if different
 	return p.updateMerkleTrees()
 }
 
