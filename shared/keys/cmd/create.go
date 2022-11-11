@@ -49,6 +49,7 @@ type key struct {
 // Future updates
 // - determine a safer keystore location (team discuss)
 // - confirmation from user for overriding existing key
+// - implement key phrase intput from user secure keys
 func runAddCmd(cmd *cobra.Command, args []string) error {
 	var err error
 	var inBuf = bufio.NewReader(cmd.InOrStdin())
@@ -61,7 +62,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 
 	// Get bip39 mnemonic
 	var mnemonic string
-	var bip39Passphrase string = "" // TODO: implement to take pass phrases from user
+	var bip39Passphrase string = ""
 
 	// User can recover private key from mnemonic
 	recover, err := cmd.Flags().GetBool(flagRecover)
