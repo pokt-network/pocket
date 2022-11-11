@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Consensus RoundState endpoint
+- Consensus State endpoint
 - Added CORS feature flag and config
 - Added dockerized swagger-ui
 
