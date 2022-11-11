@@ -141,7 +141,7 @@ func (p PostgresContext) storeBlock(block *types.Block) error {
 }
 
 func (p PostgresContext) getTxsHash() (txs []byte, err error) {
-	txResults, err := p.txIndexer.GetByHeight(p.Height, txsHashInBlockOrderAscending)
+	txResults, err := p.txIndexer.GetByHeight(p.Height, txsOrderInBlockHashDescending)
 	if err != nil {
 		return nil, err
 	}

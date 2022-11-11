@@ -72,7 +72,7 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema
 
 	actors = make([]*types.Actor, len(addrs))
 	for i, addr := range addrs {
-		actor, err := p.GetActor(actorSchema, []byte(addr), height)
+		actor, err := p.GetActor(actorSchema, addr, height)
 		if err != nil {
 			return nil, err
 		}

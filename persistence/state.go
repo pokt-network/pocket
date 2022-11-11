@@ -63,21 +63,21 @@ var merkleTreeToString = map[merkleTree]string{
 	flagsMerkleTree:        "flags",
 }
 
-var actorTypeToMerkleTreeName map[types.ActorType]merkleTree = map[types.ActorType]merkleTree{
+var actorTypeToMerkleTreeName = map[types.ActorType]merkleTree{
 	types.ActorType_App:  appMerkleTree,
 	types.ActorType_Val:  valMerkleTree,
 	types.ActorType_Fish: fishMerkleTree,
 	types.ActorType_Node: serviceNodeMerkleTree,
 }
 
-var actorTypeToSchemaName map[types.ActorType]types.ProtocolActorSchema = map[types.ActorType]types.ProtocolActorSchema{
+var actorTypeToSchemaName = map[types.ActorType]types.ProtocolActorSchema{
 	types.ActorType_App:  types.ApplicationActor,
 	types.ActorType_Val:  types.ValidatorActor,
 	types.ActorType_Fish: types.FishermanActor,
 	types.ActorType_Node: types.ServiceNodeActor,
 }
 
-var merkleTreeToActorTypeName map[merkleTree]types.ActorType = map[merkleTree]types.ActorType{
+var merkleTreeToActorTypeName = map[merkleTree]types.ActorType{
 	appMerkleTree:         types.ActorType_App,
 	valMerkleTree:         types.ActorType_Val,
 	fishMerkleTree:        types.ActorType_Fish,
