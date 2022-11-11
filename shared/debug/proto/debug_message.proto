@@ -13,12 +13,13 @@ enum DebugMessageAction {
 	DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW = 3;
 	DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE = 4; // toggle between manual and automatic
 
-	DEBUG_SHOW_LATEST_BLOCK_IN_STORE = 5; // toggle between manual and automatic
+	DEBUG_SHOW_LATEST_BLOCK_IN_STORE = 5;
 
 	DEBUG_PERSISTENCE_CLEAR_STATE = 6;
 	DEBUG_PERSISTENCE_RESET_TO_GENESIS = 7;
 }
 
+// IMPROVE(#344): Add a message type for each action
 message DebugMessage {
   DebugMessageAction action = 1;
   google.protobuf.Any message = 2;
