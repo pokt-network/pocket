@@ -11,6 +11,12 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 )
 
+const (
+	// The order (ascending) is important here since it is used to comprise the hash in the block.
+	// If this changes, the txsHash in the block will differ rendering it invalid.
+	txsOrderInBlockHashDescending = false
+)
+
 // OPTIMIZE(team): get from blockstore or keep in memory
 func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
 	ctx, tx, err := p.GetCtxAndTx()
@@ -134,14 +140,12 @@ func (p PostgresContext) storeBlock(block *types.Block) error {
 	return p.blockStore.Set(heightToBytes(p.Height), blockBz)
 }
 
-func (p PostgresContext) getTxsHash() ([]byte, error) {
-	// The order (descending) is important here since it is used to comprise the hash in the block
-	txResults, err := p.txIndexer.GetByHeight(p.Height, false)
+func (p PostgresContext) getTxsHash() (txs []byte, err error) {
+	txResults, err := p.txIndexer.GetByHeight(p.Height, txsHashInBlockOrderAscending)
 	if err != nil {
 		return nil, err
 	}
 
-	txs := make([]byte, 0)
 	for _, txResult := range txResults {
 		txHash, err := txResult.Hash()
 		if err != nil {

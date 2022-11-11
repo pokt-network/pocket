@@ -49,9 +49,8 @@ func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 		log.Printf("Error getting block %d from block store: %s \n", height, err)
 		return
 	}
-	codec := codec.GetCodec()
 	block := &types.Block{}
-	codec.Unmarshal(blockBytes, block)
+	codec.GetCodec().Unmarshal(blockBytes, block)
 
 	log.Printf("Block at height %d: %+v \n", height, block)
 }
