@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pocket-v1-client
+  namespace: default
+spec:
+  containers:
+    - name: pocket
+      image: client-image
+      imagePullPolicy: IfNotPresent
+      command: ["sleep", "infinity"]
+      volumeMounts:
+        - mountPath: /var/pocket/config
+          name: config-volume
+        - mountPath: /var/pocket/genesis
+          name: genesis-volume
+  volumes:
+    - name: config-volume
+      configMap:
+        name: v1-validator1-config
+        defaultMode: 420
+    - name: genesis-volume
+      configMap:
+        name: default-genesis
+        defaultMode: 420

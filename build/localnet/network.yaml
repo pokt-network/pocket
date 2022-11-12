@@ -1,0 +1,16 @@
+apiVersion: nodes.pokt.network/v1alpha1
+kind: PocketSet
+metadata:
+  name: default
+spec: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pocket-validators
+spec:
+  selector:
+    v1-purpose: validator
+  ports:
+    - port: 50832
+      targetPort: 50832

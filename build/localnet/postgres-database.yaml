@@ -1,0 +1,21 @@
+---
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: pocket-database
+  namespace: default
+spec:
+  teamId: pocket
+  volume:
+    size: 1Gi
+  numberOfInstances: 1
+  users:
+    validator: # database owner
+      - superuser
+      - createdb
+  databases:
+    validatordb: validator
+  preparedDatabases:
+    bar: {}
+  postgresql:
+    version: "14"
