@@ -18,6 +18,8 @@ func main() {
 	v := flag.Bool("version", false, "")
 	flag.Parse()
 
+	// log.Println("Starting Pocket Core", version)
+
 	if *v {
 		log.Printf("Version flag currently unused %s\n", version)
 		return
