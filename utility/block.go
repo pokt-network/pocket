@@ -103,7 +103,7 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 		if err := tx.ValidateBasic(); err != nil {
 			return nil, err
 		}
-		// DISCUSS(#315): Currently, the pattern is allowing nil err with an error transaction...
+		// TODO(#346): Currently, the pattern is allowing nil err with an error transaction...
 		//                Should we terminate applyBlock immediately if there's an invalid transaction?
 		//                Or wait until the entire lifecycle is over to evaluate an 'invalid' block
 
