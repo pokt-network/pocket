@@ -124,7 +124,7 @@ type PersistenceReadContext interface {
 
 	// Block Queries
 	GetLatestBlockHeight() (uint64, error)         // Returns the height of the latest block in the persistence layer
-	GetBlockHash(height int64) ([]byte, error)     // Returns the app hash corresponding to the height provides
+	GetBlockHash(height int64) ([]byte, error)     // Returns the app hash corresponding to the height provided
 	GetLatestProposerAddr() []byte                 // Returns the proposer set via `SetProposalBlock`
 	GetBlocksPerSession(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
 

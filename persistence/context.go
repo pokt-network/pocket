@@ -42,6 +42,7 @@ func (p *PostgresContext) ComputeAppHash() ([]byte, error) {
 	return p.updateMerkleTrees()
 }
 
+// TECHDEBT: Make sure these operations are atomic
 func (p PostgresContext) Commit(quorumCert []byte) error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
 
@@ -99,8 +100,13 @@ func (p *PostgresContext) resetContext() (err error) {
 		return nil
 	}
 
+	p.blockHash = ""
+	p.quorumCert = nil
+	p.proposerAddr = nil
+	p.blockTxs = nil
+
 	tx := p.GetTx()
-	if tx == nil {
+	if p.tx == nil {
 		return nil
 	}
 
@@ -117,10 +123,6 @@ func (p *PostgresContext) resetContext() (err error) {
 
 	p.conn = nil
 	p.tx = nil
-	p.blockHash = ""
-	p.quorumCert = nil
-	p.proposerAddr = nil
-	p.blockTxs = nil
 
 	return err
 }

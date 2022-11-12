@@ -169,7 +169,6 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		conn:   conn,
 		tx:     tx,
 
-		// TODO_IN_THIS_COMMIT: Can we access these via the bus?
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
 		stateTrees: m.stateTrees,

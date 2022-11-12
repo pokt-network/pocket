@@ -49,44 +49,42 @@ func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 		log.Printf("Error getting block %d from block store: %s \n", height, err)
 		return
 	}
+
 	block := &types.Block{}
-	codec.GetCodec().Unmarshal(blockBytes, block)
+	if err := codec.GetCodec().Unmarshal(blockBytes, block); err != nil {
+		log.Printf("Error decoding block %d from block store: %s \n", height, err)
+		return
+	}
 
 	log.Printf("Block at height %d: %+v \n", height, block)
 }
 
 // TODO: Make sure this is atomic
 func (m *persistenceModule) clearAllState(_ *debug.DebugMessage) error {
-	context, err := m.NewRWContext(-1)
+	ctx, err := m.NewRWContext(-1)
 	if err != nil {
 		return err
 	}
+	postgresCtx := ctx.(*PostgresContext)
 
 	// Clear the SQL DB
-	if err := context.(*PostgresContext).clearAllSQLState(); err != nil {
+	if err := postgresCtx.clearAllSQLState(); err != nil {
 		return err
 	}
+
+	// Release the SQL context
 	if err := m.ReleaseWriteContext(); err != nil {
 		return err
 	}
 
-	// Clear the KV Stores
+	// Clear the BlockStore
 	if err := m.blockStore.ClearAll(); err != nil {
 		return err
 	}
-	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
-		valueStore := m.stateTrees.valueStores[treeType]
-		nodeStore := m.stateTrees.nodeStores[treeType]
 
-		if err := valueStore.ClearAll(); err != nil {
-			return err
-		}
-		if err := nodeStore.ClearAll(); err != nil {
-			return err
-		}
-
-		// Needed in order to make sure the root is re-set correctly after clearing
-		m.stateTrees.merkleTrees[treeType] = smt.NewSparseMerkleTree(valueStore, nodeStore, sha256.New())
+	// Clear all the Trees
+	if err := postgresCtx.clearAllTreeState(); err != nil {
+		return err
 	}
 
 	log.Println("Cleared all the state")
@@ -118,6 +116,25 @@ func (p *PostgresContext) clearAllSQLState() error {
 
 	if err = clearTx.Commit(ctx); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (p *PostgresContext) clearAllTreeState() error {
+	for treeType := merkleTree(0); treeType < numMerkleTrees; treeType++ {
+		valueStore := p.stateTrees.valueStores[treeType]
+		nodeStore := p.stateTrees.nodeStores[treeType]
+
+		if err := valueStore.ClearAll(); err != nil {
+			return err
+		}
+		if err := nodeStore.ClearAll(); err != nil {
+			return err
+		}
+
+		// Needed in order to make sure the root is re-set correctly after clearing
+		p.stateTrees.merkleTrees[treeType] = smt.NewSparseMerkleTree(valueStore, nodeStore, sha256.New())
 	}
 
 	return nil

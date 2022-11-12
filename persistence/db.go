@@ -36,18 +36,19 @@ var protocolActorSchemas = []types.ProtocolActorSchema{
 var _ modules.PersistenceRWContext = &PostgresContext{}
 
 type PostgresContext struct {
-	Height int64 // TODO(olshansky): `Height` is only externalized for testing purposes. Replace with helpers...
+	Height int64 // TODO: `Height` is only externalized for testing purposes. Replace with helpers...
 	conn   *pgx.Conn
 	tx     pgx.Tx
 
-	// REFACTOR_IN_THIS_COMMIT: Access `blockStore` and `merkleTree` from the persistence module via bus.
+	// TECHDEBT: These three values are pointers to objects maintained by the PersistenceModule,
+	// so there should be a better way to access them (via the bus?) rather than embedding here.
 	blockStore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
-
 	stateTrees *stateTrees
 
-	// DISCUSS(#284): this might be retrieved from the block store - temporarily we will access it directly from the module
-	//                following the pattern of the Consensus Module prior to pocket/issue-#315
+	// DISCUSS_IN_THIS_COMMIT:
+	// 1. Could/should we rename these to proposalXX?
+	// 2. Could/should we move these to the utilityContext?
 	proposerAddr []byte
 	quorumCert   []byte
 	blockHash    string // CONSOLIDATE: blockHash / appHash / stateHash
@@ -66,10 +67,11 @@ func (pg *PostgresContext) GetCtx() (context.Context, error) {
 	return context.TODO(), nil
 }
 
-// DISCUSS:
-// 1. Can we remove `Latest` from these Setter & Getter methods
-// 2. Can we scope that to this package?
-// 3. Is `context.go` more appropriate for these than `db.go`?
+// DISCUSS_IN_THIS_COMMIT:
+// 1. Can we remove these Getters/Setters
+// 2. Can we remove `Latest` from these Setter & Getter methods?
+// 3. Can we downscope them to this package only and remove from the interface?
+// 4. If we keep them, is `context.go` more appropriate for these than `db.go`?
 func (p PostgresContext) GetLatestProposerAddr() []byte {
 	return p.proposerAddr
 }
