@@ -6,12 +6,12 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb"
 	cryptoPocket "keys/crypto"
+	"log"
 )
 
 const (
@@ -51,7 +51,6 @@ type key struct {
 // - confirmation from user for overriding existing key
 // - implement key phrase intput from user secure keys
 func runAddCmd(cmd *cobra.Command, args []string) error {
-	var err error
 	var inBuf = bufio.NewReader(cmd.InOrStdin())
 
 	name := args[0]
@@ -96,10 +95,12 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	// Keys Generation //
 	/////////////////////
 
-	kb, err := leveldb.OpenFile("./.keybase/poktKeys.db", nil)
-	if err != nil {
+	var kb *leveldb.DB
+	if kb, err = leveldb.OpenFile("/.keybase/poktKeys.db", nil); err != nil {
 		return err
 	}
+
+	defer kb.Close() // execute at the conclusion of the function
 
 	// Creating a private key with ED25519 and mnemonic seed phrases
 	privateKey, err := cryptoPocket.NewPrivateKeyFromSeed([]byte(mnemonic + bip39Passphrase))
@@ -107,25 +108,19 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Creating a public key
-	publicKey := privateKey.PublicKey()
-
-	// Creating an address
-	address := privateKey.Address()
-
-	// JSON encoding
-	var keystore = key{name, publicKey, privateKey, address, mnemonic}
+	keystore := key{name, privateKey.PublicKey(), privateKey, privateKey.Address(), mnemonic}
 
 	//////////////////
 	// Storing keys //
 	//////////////////
 
-	data, err := json.Marshal(keystore)
-	if err != nil {
+	// TODO: ask users for passphrase for key protection
+	var data []byte
+	if data, err = json.Marshal(keystore); err != nil {
 		return err
 	}
-	err = kb.Put([]byte(name), data, nil)
-	if err != nil {
+
+	if err = kb.Put([]byte(name), data, nil); err != nil {
 		return err
 	}
 
@@ -135,8 +130,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	if err = printKey(keystore); err != nil {
 		return err
 	}
-
-	defer kb.Close()
 
 	return nil
 }
@@ -157,7 +150,7 @@ func printKey(keystore key) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s\n", output)
+	log.Printf("%s\n", output)
 
 	return nil
 }

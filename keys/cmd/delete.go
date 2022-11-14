@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb"
+	"log"
 )
 
 const (
@@ -19,7 +19,7 @@ var deleteCmd = &cobra.Command{
 	Long: `Delete the public key from the backend keystore offline
 Note: Delete key does not delete private key stored in a ledger device.
 `,
-	Args: cobra.MinimumNArgs(1),
+	Args: cobra.ExactArgs(1),
 	RunE: deleteKey,
 }
 
@@ -38,9 +38,10 @@ func deleteKey(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	defer kb.Close()
+
 	// Check if the key name is in the DB
-	_, err = kb.Get([]byte(name), nil)
-	if err != nil {
+	if _, err = kb.Get([]byte(name), nil); err != nil {
 		return err
 	}
 
@@ -53,14 +54,11 @@ func deleteKey(cmd *cobra.Command, args []string) error {
 	}
 
 	// remove key based on name KEY ID
-	err = kb.Delete([]byte(name), nil)
-	if err != nil {
+	if err = kb.Delete([]byte(name), nil); err != nil {
 		return err
 	}
 
-	fmt.Printf("Key (%s) deleted!\n", name)
-
-	defer kb.Close()
+	log.Printf("Key (%s) deleted!\n", name)
 
 	return nil
 }

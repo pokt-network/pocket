@@ -26,7 +26,13 @@ var mnemonicCmd = &cobra.Command{
 		var entropySeed []byte
 
 		// get entropy from users if --unsafe-entropy flag is passed
-		if userEntropy, _ := cmd.Flags().GetBool(flagUserEntropy); userEntropy {
+		var userEntropy bool
+		var err error
+		if userEntropy, err = cmd.Flags().GetBool(flagUserEntropy); err != nil {
+			return err
+		}
+
+		if userEntropy {
 			// user entropy buffer storage
 			buf := bufio.NewReader(cmd.InOrStdin())
 
