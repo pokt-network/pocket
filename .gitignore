@@ -62,3 +62,4 @@ build/config/gen*.json
 
 # Ignore keybase files
 **/.keybase/*
+keys/keys
