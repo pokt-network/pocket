@@ -16,8 +16,8 @@ import (
 
 func FuzzFisherman(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		NewTestGenericActor(types.FishermanActor, newTestFisherman),
-		GetGenericActor(types.FishermanActor, getTestFisherman),
+		newTestGenericActor(types.FishermanActor, newTestFisherman),
+		getGenericActor(types.FishermanActor, getTestFisherman),
 		types.FishermanActor)
 }
 

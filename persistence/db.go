@@ -53,7 +53,7 @@ type PostgresContext struct {
 	txResults       []modules.TxResult // Not indexed by `txIndexer` until commit.
 }
 
-func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
+func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx, error) {
 	return context.TODO(), pg.GetTx(), nil
 }
 
@@ -61,7 +61,7 @@ func (pg *PostgresContext) GetTx() pgx.Tx {
 	return pg.tx
 }
 
-func (pg *PostgresContext) GetCtx() (context.Context, error) {
+func (pg *PostgresContext) getCtx() (context.Context, error) {
 	return context.TODO(), nil
 }
 
@@ -223,7 +223,7 @@ func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
 
 // Exposed for testing purposes only
 func (p PostgresContext) DebugClearAll() error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
