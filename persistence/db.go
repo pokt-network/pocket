@@ -50,7 +50,7 @@ type PostgresContext struct {
 	blockProtoBytes []byte
 	blockHash       string
 	blockTxs        [][]byte
-	txResults       []modules.TxResult // DISCUSS_IN_THIS_COMMIT: Can this be removed and retrieved from `txIndexer` using `height`?
+	txResults       []modules.TxResult // Not indexed by `txIndexer` until commit.
 }
 
 func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
