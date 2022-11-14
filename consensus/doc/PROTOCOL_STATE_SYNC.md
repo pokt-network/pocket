@@ -1,5 +1,7 @@
 # # State Sync: `BLOCK BY BLOCK` Design
 
+_NOTE: This document makes some assumption of P2P implementation details, so please see [p2p](../../p2p/README.md) for the latest source of truth._
+
 ## Context
 
 State Sync is a protocol within a `Pocket` node that enables the download and maintenance of the latest network-wide state. This protocol enables network actors to participate in network activities (like Consensus and Web3 provisioning and access) in present time, by ensuring the synchronization of the individual node with the collective.
@@ -11,10 +13,10 @@ A node participating in the State Sync protocol will act as both a server and a 
 Example of Peer Metadata:
 
 ```golang
-type PeerSyncMeta struct {
-  PeerID string   // The Public Key associated with the peer
-  MaxHeight int64 // The maximum height the peer has in the blockstore
-  MinHeight int64 // The minimum height the peer has in the blockstore
+type PeerSyncMeta interface {
+  GetPeerID() string   // The Public Key associated with the peer
+  GetMaxHeight() int64 // The maximum height the peer has in the blockstore
+  GetMinHeight() int64 // The minimum height the peer has in the blockstore
   ...
 }
 ```
@@ -40,23 +42,35 @@ end
 ```
 
 The aggregation and consumption of this peer-meta information enables the State Sync protocol by enabling the node to understand the globalized network state by sampling Peer Metadata through its local peer list.
+This gives a view into the data availability layer, with details of what data can be consumed from which peer.
 
 ```golang
-type PeerSyncAggregate struct {
-  Peers []PeerSyncMeta // The current list of peers and the known metadata
-  MaxPeerHeight int64  // The maximum height associated with all known peers
+type PeerSyncAggregate interface {
+  GetPeers() []PeerSyncMeta // The current list of peers and the known metadata
+  GetMaxPeerHeight() int64  // The maximum height associated with all known peers
   ...
 }
 ```
 Using the `PeerSyncAggregate`, a Node is able to understand its local `SyncState` against that of the Global Network.
 
+## State Sync Operation Modes
+
+State sync can be viewed as a state machine that transverses various modes that node can be in, including:
+* Pacemaker Mode
+* Sync Mode
+* Server Mode
+
+The functionality of the node depends on the mode is operating it. 
+
+*NOTE: that the modes are not necessarily mutually exclusive (e.g. the node can be in `Server Mode` and `Pacemaker Mode` at the same time).*
+
 ### Pacemaker Mode
-If the Node is `Synced` or `localSyncState.Height == globalNetworkSyncState.Height` then the `StateSync` protocol is in `PacemakerMode`.
+If the Node is `Synced` or `localSyncState.Height == GlobalSyncMeta.Height` then the `StateSync` protocol is in `PacemakerMode`.
 
 In `PacemakerMode`, the Node is caught up to the latest block and relies on the Consensus Module's Pacemaker to maintain a synchronous state with the global `SyncState`.
 
 ### Sync Mode
-If the Node is `Syncing` or `localSyncState.Height < globalNetworkSyncState.Height` then the `StateSync` protocol is in `SyncMode`.
+If the Node is `Syncing` or `localSyncState.Height < GlobalSyncMeta.Height` then the `StateSync` protocol is in `SyncMode`.
 
 In `SyncMode`, the Node is catching up to the latest block by making `BlockRequests` to its fellow eligible peers. A peer is eligible for a `BlockRequest` if `PeerMeta.MinHeight` <= `BlockHeight` <= `PeerMeta.MaxHeight`.
 
@@ -81,9 +95,13 @@ graph TD
 
 ## Follow up tasks
 
-`Fast Sync Design` - Sync only the last `N` blocks from `Latest Network Height`
+* `Fast Sync Design` - Sync only the last `N` blocks from `Latest Network Height`
 
-`Parallel Sync Design` - Optimize the State Sync protocol by parallelizing requests and computation
+* `Optimistic Sync Design` - Optimize the State Sync protocol by parallelling requests and computation
+
+* `Block Chunk Design` - Update the Block by Block design to be able to receive and provide multiple blocks at a time.
+
+* `Block Stream Design` - Update the Block by Block design to stream blocks via a WebSocket from a single connectable peer.
 
 ## Research Items
 
