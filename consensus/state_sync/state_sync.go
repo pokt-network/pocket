@@ -93,7 +93,7 @@ type BlockResponseMessage interface {
 
 // TODO: needs to be shared between P2P as the Churn Manageent Process updates this information
 type PeerSyncMeta interface {
-	// the Public Key associated with the peer
+	// the unique identifier associated with the peer
 	GetPeerID() string
 	// the maximum height the peer has in the block store
 	GetMaxHeight() int64
