@@ -1,14 +1,14 @@
-# # State Sync: `BLOCK BY BLOCK` Design
+# State Sync: `BLOCK BY BLOCK` Design
 
 _NOTE: This document makes some assumption of P2P implementation details, so please see [p2p](../../p2p/README.md) for the latest source of truth._
 
 ## Context
 
-State Sync is a protocol within a `Pocket` node that enables the download and maintenance of the latest network-wide state. This protocol enables network actors to participate in network activities (like Consensus and Web3 provisioning and access) in present time, by ensuring the synchronization of the individual node with the collective.
+State Sync is a protocol within a `Pocket` node that enables the download and maintenance of the latest world state. This protocol enables network actors to participate in network activities (like Consensus and Web3 provisioning and access) in present time, by ensuring the synchronization of the individual node with the collective.
 
 ## Core Protocol
 
-A node participating in the State Sync protocol will act as both a server and a client to its `Network Peers`. A pre-requisite of the State Sync protocol is for the `P2P` module to maintain a metadata state of the active network peers.
+A node participating in the State Sync protocol will act as both a server and a client to its `Network Peers`. A pre-requisite of the State Sync protocol is for the `P2P` module to maintain an active set of network peers, along with metadata corresponding to the persistence data they have available.
 
 Example of Peer Metadata:
 
@@ -20,25 +20,19 @@ type PeerSyncMeta interface {
   ...
 }
 ```
-This data is collected through the P2P protocol during the `Churn Management Protocol`, but for the sake of demonstration and simplicity, it may be abstracted to an `ask-response` cycle where the node continuously asks this meta-information of its active peers.
+
+This data is collected through the `P2P` protocol during the `Churn Management Protocol`, but for the sake of demonstration and simplicity, it may be abstracted to an `ask-response` cycle where the node continuously asks this meta-information of its active peers.
+
 ```mermaid
 sequenceDiagram
-
-actor  Node
-
-participant  Network  Peer(s)
-
-autonumber
-
-loop  Churn  Management
-
-Node->>Network  Peer(s): Are you alive? If so What is your Peer Metadata?
-
-Network  Peer(s)->>Node: Here's my Peer Metadata, what's yours?
-
-Node->>Network  Peer(s): ACK, I'll ask again in a bit to make sure I'm up to date
-
-end
+    actor  Node
+    participant  Network  Peer(s)
+    autonumber
+    loop  Churn  Management
+        Node->>Network  Peer(s): Are you alive? If so What is your Peer Metadata?
+        Network  Peer(s)->>Node: Here's my Peer Metadata, what's yours?
+        Node->>Network  Peer(s): ACK, I'll ask again in a bit to make sure I'm up to date
+    end
 ```
 
 The aggregation and consumption of this peer-meta information enables the State Sync protocol by enabling the node to understand the globalized network state by sampling Peer Metadata through its local peer list.
@@ -51,7 +45,7 @@ type PeerSyncAggregate interface {
   ...
 }
 ```
-Using the `PeerSyncAggregate`, a Node is able to understand its local `SyncState` against that of the Global Network.
+Using the `PeerSyncAggregate`, a Node is able to compare its local `SyncState` against that of the Global Network.
 
 ## State Sync Operation Modes
 
@@ -72,7 +66,7 @@ In `PacemakerMode`, the Node is caught up to the latest block and relies on the 
 ### Sync Mode
 If the Node is `Syncing` or `localSyncState.Height < GlobalSyncMeta.Height` then the `StateSync` protocol is in `SyncMode`.
 
-In `SyncMode`, the Node is catching up to the latest block by making `BlockRequests` to its fellow eligible peers. A peer is eligible for a `BlockRequest` if `PeerMeta.MinHeight` <= `BlockHeight` <= `PeerMeta.MaxHeight`.
+In `SyncMode`, the Node is catching up to the latest block by making `BlockRequests` to its fellow eligible peers. A peer is eligible for a `BlockRequest` if `PeerMeta.MinHeight` <= `self.MaxBlockHeight` <= `PeerMeta.MaxHeight`.
 
 Though it is `unspecified` whether or not a Node may make the `BlockRequests` in order or parallelize, due to the cryptographic restraints of block processing, the Node must process the blocks sequentially by `ApplyingBlock` 1 by 1 until it is `Synced`.
 
