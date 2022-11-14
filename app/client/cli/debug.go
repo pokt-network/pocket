@@ -15,7 +15,7 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared"
 	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/telemetry"
 	"github.com/spf13/cobra"
@@ -100,32 +100,32 @@ func promptGetInput() (string, error) {
 func handleSelect(selection string) {
 	switch selection {
 	case PromptResetToGenesis:
-		m := &debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
+		m := &messaging.DebugMessage{
+			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS,
 			Message: nil,
 		}
 		broadcastDebugMessage(m)
 	case PromptPrintNodeState:
-		m := &debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
+		m := &messaging.DebugMessage{
+			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE,
 			Message: nil,
 		}
 		broadcastDebugMessage(m)
 	case PromptTriggerNextView:
-		m := &debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
+		m := &messaging.DebugMessage{
+			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
 			Message: nil,
 		}
 		broadcastDebugMessage(m)
 	case PromptTogglePacemakerMode:
-		m := &debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
+		m := &messaging.DebugMessage{
+			Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE,
 			Message: nil,
 		}
 		broadcastDebugMessage(m)
 	case PromptShowLatestBlockInStore:
-		m := &debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
+		m := &messaging.DebugMessage{
+			Action:  messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
 			Message: nil,
 		}
 		sendDebugMessage(m)
@@ -135,7 +135,7 @@ func handleSelect(selection string) {
 }
 
 // Broadcast to the entire validator set
-func broadcastDebugMessage(debugMsg *debug.DebugMessage) {
+func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
@@ -144,19 +144,19 @@ func broadcastDebugMessage(debugMsg *debug.DebugMessage) {
 	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
 	// broadcast. The reason it cannot be done right now is because this client is not in the
 	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
-	// p2pMod.Broadcast(anyProto, debug.PocketTopic_DEBUG_TOPIC)
+	// p2pMod.Broadcast(anyProto, messaging.PocketTopic_DEBUG_TOPIC)
 
 	for _, val := range consensusMod.ValidatorMap() {
 		addr, err := pocketCrypto.NewAddress(val.GetAddress())
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
 		}
-		p2pMod.Send(addr, anyProto, debug.PocketTopic_DEBUG_TOPIC)
+		p2pMod.Send(addr, anyProto)
 	}
 }
 
 // Send to just a single (i.e. first) validator in the set
-func sendDebugMessage(debugMsg *debug.DebugMessage) {
+func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
@@ -171,7 +171,7 @@ func sendDebugMessage(debugMsg *debug.DebugMessage) {
 		break
 	}
 
-	p2pMod.Send(validatorAddress, anyProto, debug.PocketTopic_DEBUG_TOPIC)
+	p2pMod.Send(validatorAddress, anyProto)
 }
 
 func initDebug(remoteCLIURL string) {
