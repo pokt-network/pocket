@@ -241,7 +241,7 @@ protogen_clean:
 ## Generate go structures for all of the protobufs
 protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = ".")
-	protoc --go_opt=paths=source_relative  -I=./shared/debug/proto        --go_out=./shared/debug       	./shared/debug/proto/*.proto        --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/messaging/proto    --go_out=./shared/messaging      	./shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./persistence/indexer/proto --go_out=./persistence/indexer/   ./persistence/indexer/proto/*.proto --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  	./persistence/proto/*.proto         --experimental_allow_proto3_optional
