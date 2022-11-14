@@ -79,8 +79,6 @@ type SyncState interface {
 	GetPeers() []PeerSyncMeta
 	// returns ordered array of missing block heights
 	GetMissingBlockHeights() []int64
-	// set missing block height if an error occurred during processing
-	SetMissingBlockHeight(blockHeight int64) error
 }
 
 type BlockRequestMessage interface {
