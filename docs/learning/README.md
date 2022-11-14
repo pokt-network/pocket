@@ -79,7 +79,12 @@ If you're not familiar with the Github workflow, you can reference the [First Co
 
 ### Golang
 
-If you're not familiar with Go, consider taking [The Way To Go](https://www.educative.io/courses/the-way-to-go) course on educative.io
+A great starting point to learn both the basics, idioms and some advanced parts of go is [The Way To Go](https://www.educative.io/courses/the-way-to-go) course on educative.io.
+
+Afterwards, two great references you can constantly refer to are:
+
+* [Effective Go](https://go.dev/doc/effective_go) by the official Gopher community
+* [Practical Go](https://dave.cheney.net/practical-go) by Dave Cheney
 
 ## 📚 Technical References
 
