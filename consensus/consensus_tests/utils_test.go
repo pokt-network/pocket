@@ -254,7 +254,7 @@ func waitForNetworkConsensusMessagesInternal(
 loop:
 	for {
 		select {
-		case testEvent := <-testChannel: // TODO (deblasis): investigate this
+		case testEvent := <-testChannel:
 			if testEvent.GetContentType() != messageContentType {
 				unused = append(unused, &testEvent)
 				continue
