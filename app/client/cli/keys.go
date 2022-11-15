@@ -37,7 +37,6 @@ func init() {
 	// Adding subcommands
 	keysCmd.AddCommand(keys.CreateCmd)
 	keysCmd.AddCommand(keys.DeleteCmd)
-	keysCmd.AddCommand(keys.MnemonicCmd)
 	rootCmd.AddCommand(keysCmd) // adding keys to CLI
 }
 
