@@ -35,6 +35,7 @@ make db_cli_node # connect to the default node 1
 Query the DB:
 
 ```bash
+show search_path;
 select height, hash from block;
 select * from account;
 select * from pool;
@@ -49,6 +50,7 @@ psqlSchema=node3 make db_cli_node # connect to node 3
 Query the DB:
 
 ```bash
+show search_path;
 select height, hash from block;
 select * from account;
 select * from pool;
@@ -57,11 +59,11 @@ select * from pool;
 ## Trigger command via client (shell 5)
 
 ```bash
-go run app/client/_.go # show all the commands
+go run app/client/*.go # show all the commands
 
-go run app/client/_.go --path_to_private_key_file=/Users/olshansky/workspace/pocket/pocket/pkeys/node1.json Account Send 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 67eb3f0a50ae459fecf666be0e93176e92441317 1000
+go run app/client/*.go --path_to_private_key_file=/Users/olshansky/workspace/pocket/pocket/pkeys/node1.json Account Send 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 67eb3f0a50ae459fecf666be0e93176e92441317 1000
 
-go run app/client/_.go --path_to_private_key_file=/Users/olshansky/workspace/pocket/pocket/pkeys/node2.json Account Send 67eb3f0a50ae459fecf666be0e93176e92441317 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 1000
+go run app/client/*.go --path_to_private_key_file=/Users/olshansky/workspace/pocket/pocket/pkeys/node2.json Account Send 67eb3f0a50ae459fecf666be0e93176e92441317 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 1000
 ```
 
 ## Swagger UI (shell 6)
