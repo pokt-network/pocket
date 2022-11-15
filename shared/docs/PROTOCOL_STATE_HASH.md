@@ -29,24 +29,24 @@ sequenceDiagram
     participant P as Persistence
 
     %% Handle New Message
-    B-->>C: HandleMessage(msg)
+    B-->>C: HandleMessage(NewRound)
 
-    critical NewRound
-        %% Create Contexts
-        C->>+U: NewContext(height)
-        U->>+P: NewRWContext(height)
-        P->>-U: PersistenceContext
-        U->>U: store context<br>locally
-        activate U
-        deactivate U
-        U->>-C: UtilityContext
-        C->>C: store context<br>locally
-        activate C
-        deactivate C
+    %% NewRound
 
-        %% Apply Block
-        Note over C, P: See 'Block Application'
-    end
+    activate C
+    %% Create Contexts
+    C->>+U: NewContext(height)
+    U->>+P: NewRWContext(height)
+    P->>-U: PersistenceContext
+    U->>U: store context<br>locally
+    activate U
+    deactivate U
+    U->>-C: UtilityContext
+    C->>C: store context<br>locally
+    deactivate C
+
+    %% Apply Block
+    Note over C, P: See 'Block Application'
 ```
 
 5. The **HotPOKT lifecycle** takes place so Validators achieve consensus (i.e. steps `PRECOMMIT` and `COMMIT`)
@@ -65,25 +65,24 @@ sequenceDiagram
     participant P as Persistence
 
     %% Handle New Message
-    B-->>C: HandleMessage(msg)
+    B-->>C: HandleMessage(Decide)
 
-    critical Decide
-        %% Commit Context
-        C->>+U: Context.Commit(quorumCert)
-        U->>+P: Context.Commit(quorumCert)
-        P->>P: Internal Implementation
-        Note over P: Store Block
-        P->>-U: err_code
-        U->>C: err_code
-        deactivate U
+    activate C
+    %% Commit Context
+    C->>+U: Context.Commit(quorumCert)
+    U->>+P: Context.Commit(quorumCert)
+    P->>P: Internal Implementation
+    Note over P: Store Block
+    P->>-U: err_code
+    U->>C: err_code
+    deactivate U
 
-        %% Release Context
-        C->>+U: Context.Release()
-        U->>+P: Context.Release()
-        P->>-U: err_code
-        U->>-C: err_code
-    end
-
+    %% Release Context
+    C->>+U: Context.Release()
+    U->>+P: Context.Release()
+    P->>-U: err_code
+    U->>-C: err_code
+    deactivate C
 ```
 
 ## Block Application
