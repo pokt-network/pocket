@@ -29,9 +29,9 @@ sequenceDiagram
     participant P as Persistence
 
     %% Handle New Message
-    B-->>C: HandleMessage(NewRound)
+    B-->>C: HandleMessage(NEWROUND)
 
-    %% NewRound
+    %% NEWROUND
 
     activate C
     %% Create Contexts
@@ -46,26 +46,30 @@ sequenceDiagram
     deactivate C
 
     %% Apply Block
-    Note over C, P: See 'Block Application'
+    Note over C, P: 'Block Application'
 ```
 
-5. The **HotPOKT lifecycle** takes place so Validators achieve consensus (i.e. steps `PRECOMMIT` and `COMMIT`)
-6. The `Consensus` module handle the `DECIDE` message
-7. The final `quorumCertificate` is propagated to the `UtilityContext` on Commit
-8. The final `quorumCertificate` is propagated to the `PersistenceContext` on Commit
-9. The persistence module's internal implementation for [Store Block](../../persistence/docs/PROTOCOL_STATE_HASH.md) must execute.
-10. Both the `UtilityContext` and `PersistenceContext` are released
+---
+
+_The **Proposer** drives the **Validators** to agreement via the **Consensus Lifecycle** (i.e. HotPOKT)_
+
+---
+
+1. The `Consensus` module handles the `DECIDE` message
+2. The final `quorumCertificate` is propagated to the `UtilityContext` & `PersistenceContext` on Commit
+3. The persistence module's internal implementation for [Store Block](../../persistence/docs/PROTOCOL_STATE_HASH.md) must execute.
+4. Both the `UtilityContext` and `PersistenceContext` are released
 
 ```mermaid
 sequenceDiagram
-    title Steps 6-10
+    title Steps 5-8
     participant B as Bus
     participant C as Consensus
     participant U as Utility
     participant P as Persistence
 
     %% Handle New Message
-    B-->>C: HandleMessage(Decide)
+    B-->>C: HandleMessage(DECIDE)
 
     activate C
     %% Commit Context
