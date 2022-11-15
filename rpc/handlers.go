@@ -54,3 +54,33 @@ func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 		Step:   int64(consensus.CurrentStep()),
 	})
 }
+
+
+// Broadcast to the entire validator set
+func (s *rpcServer) broadcastDebugMessage(msgBz []byte) {
+
+	m := &debug.DebugMessage{
+		Action:  debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
+		Message: nil
+	}
+
+	anyProto, err := anypb.New(debugMsg)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
+	}
+
+	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
+	// broadcast. The reason it cannot be done right now is because this client is not in the
+	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
+	// p2pMod.Broadcast(anyProto, debug.PocketTopic_DEBUG_TOPIC)
+
+	for _, val := range consensusMod.ValidatorMap() {
+		addr, err := pocketCrypto.NewAddress(val.GetAddress())
+		if err != nil {
+			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
+		}
+		p2pMod.Send(addr, anyProto, debug.PocketTopic_DEBUG_TOPIC)
+	}
+
+	s.GetBus().GetP2PModule().Broadcast(anyProto, debug.PocketTopic_DEBUG_TOPIC)
+}
