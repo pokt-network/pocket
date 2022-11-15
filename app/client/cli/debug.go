@@ -48,7 +48,7 @@ var (
 		PromptPrintNodeState,
 		PromptTriggerNextView,
 		PromptTogglePacemakerMode,
-		PromptShowLatestBlockInStore,
+		// PromptShowLatestBlockInStore,
 	}
 )
 

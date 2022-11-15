@@ -36,6 +36,13 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	if err := uCtx.Release(); err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	if err := s.GetBus().GetPersistenceModule().ReleaseWriteContext(); err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
 	return nil
 }
 

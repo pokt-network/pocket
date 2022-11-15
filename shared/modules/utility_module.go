@@ -30,7 +30,7 @@ type UtilityContext interface {
 	GetPersistenceContext() PersistenceRWContext
 
 	// Validation operations
-	CheckTransaction(tx []byte) error
+	CheckTransaction(tx []byte) error // Validates the transaction and adds it to the mempool
 }
 
 type UnstakingActor interface {
