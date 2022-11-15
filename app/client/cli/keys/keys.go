@@ -38,7 +38,7 @@ func init() {
 	keysCmd.AddCommand(DeleteCmd)
 	keysCmd.AddCommand(MnemonicCmd)
 
-	keysCmd.AddCommand(keysCmd)
+	rootCmd.AddCommand(keysCmd)
 }
 
 // initConfig reads in config file and ENV variables if set.
