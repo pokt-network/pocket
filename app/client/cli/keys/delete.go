@@ -3,6 +3,8 @@ package keys
 import (
 	"bufio"
 	"log"
+	"os"
+	"path"
 
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/spf13/cobra"
@@ -33,13 +35,20 @@ func deleteKey(cmd *cobra.Command, args []string) error {
 
 	name := args[0]
 
-	// Open keybase DB
+	// Open local key database
 	var kb *leveldb.DB
-	if kb, err = leveldb.OpenFile("./.keybase/poktKeys.db", nil); err != nil {
+	var kbPath string // local keystore path
+	if kbPath, err = os.UserHomeDir(); err != nil {
+		panic(err)
+	}
+	kbPath = path.Join(kbPath, ".keybase", "poktKeys.db")
+	log.Printf("Keys stored in local path: %s\n", kbPath)
+
+	if kb, err = leveldb.OpenFile(kbPath, nil); err != nil {
 		return err
 	}
 
-	defer kb.Close()
+	defer kb.Close() // execute at the conclusion of the function
 
 	// Check if the key name is in the DB
 	if _, err = kb.Get([]byte(name), nil); err != nil {
