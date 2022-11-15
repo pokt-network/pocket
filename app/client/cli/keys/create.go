@@ -1,6 +1,4 @@
-package cmd
-
-// TODO: modify module structure to prevent crypto/ copy redundancy
+package keys
 
 import (
 	"bufio"
@@ -10,13 +8,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"io"
+	"log"
+
+	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
+
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 	"github.com/syndtr/goleveldb/leveldb"
-	"io"
-	cryptoPocket "keys/crypto"
-	"log"
 )
 
 const (
@@ -24,7 +24,7 @@ const (
 )
 
 // createCmd represents the create command
-var createCmd = &cobra.Command{
+var CreateCmd = &cobra.Command{
 	Use:   "create <name>",
 	Short: "Creating an encrypted private key and save to <name> file as the key pair identifier",
 	Long: `Derive a new private key and encrypt to disk.
@@ -37,11 +37,11 @@ Allow users to use BIP39 mnemonic and to secure the mnemonic. Take key ID <name>
 
 /*
 key type
-	- name: the unique ID for the key
-	- publickey: the public key
-	- privatekey: the private key
-	- Address: the address related to the private key
-	- mnemonic: mnemonic used to generated key, empty if not saved
+ - name: the unique ID for the key
+ - publickey: the public key
+ - privatekey: the private key
+ - Address: the address related to the private key
+ - mnemonic: mnemonic used to generated key, empty if not saved
 */
 type key struct {
 	Name       string                  `json:"name"`
@@ -140,10 +140,9 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
-	rootCmd.AddCommand(createCmd)
 
 	// Local Flags
-	f := createCmd.Flags()
+	f := CreateCmd.Flags()
 	f.Bool(flagRecover, false, "Provide seed phrase to recover existing key instead of creating")
 }
 

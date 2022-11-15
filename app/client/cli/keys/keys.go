@@ -1,4 +1,4 @@
-package cmd
+package keys
 
 import (
 	"fmt"
@@ -10,21 +10,15 @@ import (
 
 var cfgFile string
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
+// keysCmd represents the base command when called without any subcommands
+var keysCmd = &cobra.Command{
 	Use:   "keys",
 	Short: "Managing your public and private keys",
-	Long: `This is a key management CLI tool that supports multiple key management functions.
-
-Currently we have the following functions:
-
-	create			Creating a key and string the key locally
-	delete			Delete a stored key
-`,
+	Long:  `This is a key management CLI tool that supports multiple key management functions`,
 }
 
 func Execute() {
-	err := rootCmd.Execute()
+	err := keysCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
@@ -34,10 +28,17 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	// Persistent Flags
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.keys.yaml)")
+	keysCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.keys.yaml)")
 
 	// Local flags
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	keysCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	// Adding subcommands
+	keysCmd.AddCommand(CreateCmd)
+	keysCmd.AddCommand(DeleteCmd)
+	keysCmd.AddCommand(MnemonicCmd)
+
+	keysCmd.AddCommand(keysCmd)
 }
 
 // initConfig reads in config file and ENV variables if set.
