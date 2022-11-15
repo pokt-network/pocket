@@ -83,24 +83,10 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 
 	defer kb.Close() // execute at the conclusion of the function
 
-	// Check if key name already exist
-	if _, err = kb.Get([]byte(name), nil); err == nil {
-		log.Printf("Key \"%s\" alredy exists", name)
-
-		// account exists, ask for user confirmation
-		var response bool
-		var err2 error
-		if response, err2 = input.GetConfirmation(
-			fmt.Sprintf("override the existing name %s", name), inBuf, cmd.ErrOrStderr()); err2 != nil {
-			return err2
-		}
-
-		if !response {
-			return errors.New("aborted")
-		}
-
-		if err2 = kb.Delete([]byte(name), nil); err2 != nil {
-			return err2
+	// Ask user to override existing key if exists
+	if !recover {
+		if err = overrideKey(kb, name, inBuf, cmd); err != nil {
+			return err
 		}
 	}
 
@@ -150,7 +136,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	if interactive {
 		if bip39Passphrase, err = input.GetString(
 			"Enter your bip39 passphrase. This is combined with the mnemonic to derive the seed. "+
-				"Most users should just hit enter to use the default, \"\"", inBuf); err != nil {
+				"(default \"\")", inBuf); err != nil {
 			return err
 		}
 
@@ -212,6 +198,31 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	//////////////
 	if err = logInfo(keystore, mnemonic, recover); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// Check if key name already exists and ask user to override or not
+func overrideKey(kb *leveldb.DB, name string, inBuf *bufio.Reader, cmd *cobra.Command) error {
+	if _, err := kb.Get([]byte(name), nil); err == nil {
+		log.Printf("Key \"%s\" alredy exists", name)
+
+		// account exists, ask for user confirmation
+		var response bool
+		var err2 error
+		if response, err2 = input.GetConfirmation(
+			fmt.Sprintf("override the existing name %s", name), inBuf, cmd.ErrOrStderr()); err2 != nil {
+			return err2
+		}
+
+		if !response {
+			return errors.New("aborted")
+		}
+
+		if err2 = kb.Delete([]byte(name), nil); err2 != nil {
+			return err2
+		}
 	}
 
 	return nil
