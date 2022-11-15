@@ -37,6 +37,57 @@ func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 	return []target{firstTarget, secondTarget}
 }
 
+func (n *rainTreeNetwork) getCleanupTargets() []target {
+	peersManagerStateView := n.peersManager.getNetworkView()
+	addrBook := n.GetAddrBook()
+	addrBookLen := len(addrBook)
+	if addrBookLen == 1 {
+		return nil
+	} else if len(addrBook) == 2 {
+		addrStr1 := peersManagerStateView.addrList[1]
+		np1, ok := peersManagerStateView.addrBookMap[addrStr1]
+		if !ok {
+			log.Printf("[DEBUG] addrStr %s not found in addrBookMap", addrStr1)
+			return nil
+		}
+		return []target{{
+			address:                np1.Address,
+			serviceUrl:             peersManagerStateView.addrBookMap[peersManagerStateView.addrList[1]].ServiceUrl,
+			level:                  0,
+			percentage:             0,
+			addrBookLengthAtHeight: 0,
+			index:                  1,
+		}}
+	} else {
+		addrStr1 := peersManagerStateView.addrList[1]
+		np1, ok := peersManagerStateView.addrBookMap[addrStr1]
+		if !ok {
+			log.Printf("[DEBUG] addrStr %s not found in addrBookMap", addrStr1)
+			return nil
+		}
+		addrStr2 := peersManagerStateView.addrList[addrBookLen-1]
+		np2, ok := peersManagerStateView.addrBookMap[addrStr2]
+		if !ok {
+			log.Printf("[DEBUG] addrStr %s not found in addrBookMap", addrStr1)
+			return nil
+		}
+		return []target{{
+			address:                np1.Address,
+			serviceUrl:             peersManagerStateView.addrBookMap[peersManagerStateView.addrList[1]].ServiceUrl,
+			percentage:             100,
+			addrBookLengthAtHeight: addrBookLen,
+			index:                  1,
+		}, {
+			address:                np2.Address,
+			serviceUrl:             peersManagerStateView.addrBookMap[peersManagerStateView.addrList[addrBookLen-1]].ServiceUrl,
+			percentage:             100,
+			addrBookLengthAtHeight: addrBookLen,
+			index:                  addrBookLen - 1,
+			isSelf:                 false,
+		}}
+	}
+}
+
 func (n *rainTreeNetwork) getTarget(targetPercentage float64, addrBookLen int, level uint32) target {
 	i := int(targetPercentage * float64(addrBookLen))
 

@@ -17,7 +17,7 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 
 	addrBook := getAddrBook(nil, 0)
 	addrBook = append(addrBook, &types.NetworkPeer{Address: selfAddr})
-	network := NewRainTreeNetwork(selfAddr, addrBook).(*rainTreeNetwork)
+	network := NewRainTreeNetwork(selfAddr, addrBook, &typesP2P.P2PConfig{}).(*rainTreeNetwork)
 
 	peerAddr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
@@ -48,7 +48,7 @@ func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 	selfPeer := &typesP2P.NetworkPeer{Address: selfAddr}
 
 	addrBook = append(addrBook, &types.NetworkPeer{Address: selfAddr})
-	network := NewRainTreeNetwork(selfAddr, addrBook).(*rainTreeNetwork)
+	network := NewRainTreeNetwork(selfAddr, addrBook, &typesP2P.P2PConfig{}).(*rainTreeNetwork)
 
 	stateView := network.peersManager.getNetworkView()
 	require.Equal(t, numAddressesInAddressBook+1, len(stateView.addrList)) // +1 to account for self in the addrBook as well

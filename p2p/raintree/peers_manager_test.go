@@ -73,7 +73,7 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 		t.Run(fmt.Sprintf("n=%d", n), func(t *testing.T) {
 			addrBook := getAddrBook(t, n-1)
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
-			network := NewRainTreeNetwork(addr, addrBook).(*rainTreeNetwork)
+			network := NewRainTreeNetwork(addr, addrBook, &types.P2PConfig{}).(*rainTreeNetwork)
 
 			peersManagerStateView := network.peersManager.getNetworkView()
 
@@ -107,7 +107,7 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 		b.Run(fmt.Sprintf("n=%d", n), func(b *testing.B) {
 			addrBook := getAddrBook(nil, n-1)
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
-			network := NewRainTreeNetwork(addr, addrBook).(*rainTreeNetwork)
+			network := NewRainTreeNetwork(addr, addrBook, &types.P2PConfig{}).(*rainTreeNetwork)
 
 			peersManagerStateView := network.peersManager.getNetworkView()
 
@@ -192,7 +192,7 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
 
 	addrBook := getAlphabetAddrBook(expectedMsgProp.numNodes)
-	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, addrBook).(*rainTreeNetwork)
+	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, addrBook, &types.P2PConfig{}).(*rainTreeNetwork)
 	network.SetBus(busMock)
 
 	peersManagerStateView := network.peersManager.getNetworkView()

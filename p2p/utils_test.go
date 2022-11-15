@@ -107,7 +107,7 @@ func createP2PModules(t *testing.T, runtimeConfigs []modules.RuntimeMgr) (p2pMod
 
 // createMockRuntimeMgrs creates `numValidators` instances of mocked `RuntimeMgr` that are essentially
 // representing the runtime environments of the validators that we will use in our tests
-func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr {
+func createMockRuntimeMgrs(t *testing.T, numValidators int, redundancyLayer, cleanupLayer bool) []modules.RuntimeMgr {
 	ctrl := gomock.NewController(t)
 	mockRuntimeMgrs := make([]modules.RuntimeMgr, numValidators)
 	valKeys := make([]cryptoPocket.PrivateKey, numValidators)
@@ -120,10 +120,12 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 			PrivateKey:    valKeys[i].String(),
 		}).AnyTimes()
 		mockConfig.EXPECT().GetP2PConfig().Return(&typesP2P.P2PConfig{
-			PrivateKey:            valKeys[i].String(),
-			ConsensusPort:         8080,
-			UseRainTree:           true,
-			IsEmptyConnectionType: true,
+			PrivateKey:                 valKeys[i].String(),
+			ConsensusPort:              8080,
+			UseRainTree:                true,
+			IsEmptyConnectionType:      true,
+			UseRainTreeRedundancyLayer: redundancyLayer,
+			UseRainTreeCleanupLayer:    cleanupLayer,
 		}).AnyTimes()
 
 		mockRuntimeMgr := modulesMock.NewMockRuntimeMgr(ctrl)

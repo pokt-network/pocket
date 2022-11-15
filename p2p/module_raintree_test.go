@@ -35,7 +35,7 @@ func TestRainTreeNetworkCompleteOneNodes(t *testing.T) {
 	var expectedCalls = TestNetworkSimulationConfig{
 		originatorNode: {0, 0}, // val_1, the originator, does 0 network reads or writes
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls)
+	testRainTreeCalls(t, originatorNode, expectedCalls, false, false)
 }
 
 func TestRainTreeNetworkCompleteTwoNodes(t *testing.T) {
@@ -51,7 +51,56 @@ func TestRainTreeNetworkCompleteTwoNodes(t *testing.T) {
 		originatorNode: {0, 1}, // val_1 does a single network write (to val_2)
 		validatorId(2): {1, 0}, // val_2 does a single network read (from val_1)
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls)
+	testRainTreeCalls(t, originatorNode, expectedCalls, false, false)
+}
+
+func TestRainTreeNetworkCompleteTwoNodesRedundancyLayerEnabled(t *testing.T) {
+	// val_1
+	//   └───────┐
+	// 	       val_2
+	originatorNode := validatorId(1)
+	// Per the diagram above, in the case of a 2 node network, the originator node (val_1) does a
+	// single write to another node (val_2), then both nodes exchange a single read/write due to
+	// the redundancy layer
+	var expectedCalls = TestNetworkSimulationConfig{
+		// Attempt: I think Validator 1 is sending a message in a 2 (including self) node network
+		originatorNode: {1, 2}, // val_1 does a single network write (to val_2) and a redundant message write and read val_2
+		validatorId(2): {2, 1}, // val_2 does a single network read (from val_1) and a redundant message to write and read from/to val_1
+	}
+	testRainTreeCalls(t, originatorNode, expectedCalls, true, false)
+}
+
+func TestRainTreeNetworkCompleteTwoNodesCleanupLayerEnabled(t *testing.T) {
+	// val_1
+	//   └───────┐
+	// 	       val_2
+	originatorNode := validatorId(1)
+	// Per the diagram above, in the case of a 2 node network, the originator node (val_1) does a
+	// single write to another node (val_2), then both nodes exchange a single read/write due to
+	// the cleanup layer
+	var expectedCalls = TestNetworkSimulationConfig{
+		// Attempt: I think Validator 1 is sending a message in a 2 (including self) node network
+		originatorNode: {1, 2}, // val_1 does a single network write (to val_2) and a cleanup message write and read val_2
+		validatorId(2): {2, 1}, // val_2 does a single network read (from val_1) and a cleanup message to write and read from/to val_1
+	}
+	testRainTreeCalls(t, originatorNode, expectedCalls, false, true)
+}
+
+func TestRainTreeNetworkCompleteTwoNodesRedundancyAndCleanupLayerEnabled(t *testing.T) {
+	// val_1
+	//   └───────┐
+	// 	       val_2
+	originatorNode := validatorId(1)
+	// Per the diagram above, in the case of a 2 node network, the originator node (val_1) does a
+	// single write to another node (val_2), then both nodes exchange a single read/write due to
+	//	// the redundancy layer, and then both nodes exchange a single read/write due to
+	// the cleanup layer
+	var expectedCalls = TestNetworkSimulationConfig{
+		// Attempt: I think Validator 1 is sending a message in a 2 (including self) node network
+		originatorNode: {2, 3}, // val_1 does a single network write (to val_2) a redundancy, and a cleanup message write and read val_2
+		validatorId(2): {3, 2}, // val_2 does a single network read (from val_1) a redundancy, and a cleanup message to write and read from/to val_1
+	}
+	testRainTreeCalls(t, originatorNode, expectedCalls, true, true)
 }
 
 func TestRainTreeNetworkCompleteThreeNodes(t *testing.T) {
@@ -64,7 +113,64 @@ func TestRainTreeNetworkCompleteThreeNodes(t *testing.T) {
 		validatorId(2): {1, 0}, // val_2 does a single network read (from val_1)
 		validatorId(3): {1, 0}, // val_2 does a single network read (from val_3)
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls)
+	testRainTreeCalls(t, originatorNode, expectedCalls, false, false)
+}
+
+func TestRainTreeNetworkCompleteThreeNodesRedundancyLayerEnabled(t *testing.T) {
+	// 	          val_1
+	// 	   ┌───────┴────┬─────────┐
+	//   val_2        val_1     val_3
+	originatorNode := validatorId(1)
+	var expectedCalls = TestNetworkSimulationConfig{
+		// val_1 does 2 reads (1 from val_2 and 1 from val_3)
+		// val_1 does 4 writes (2 to val_2 and 2 to val_3)
+		originatorNode: {2, 4},
+		// val_2 does 3 reads (2 from val_1 and 1 from val_2)
+		// val_2 does 2 writes (1 to val_1 and 1 to val_3)
+		validatorId(2): {3, 2},
+		// val_3 does 3 reads (2 from val_1 and 1 from val_2)
+		// val_3 does 2 writes (1 to val_2 and 1 to val_1)
+		validatorId(3): {3, 2},
+	}
+	testRainTreeCalls(t, originatorNode, expectedCalls, true, false)
+}
+
+func TestRainTreeNetworkCompleteThreeNodesCleanupLayerEnabled(t *testing.T) {
+	// 	          val_1
+	// 	   ┌───────┴────┬─────────┐
+	//   val_2        val_1     val_3
+	originatorNode := validatorId(1)
+	var expectedCalls = TestNetworkSimulationConfig{
+		// val_1 does 2 reads (1 from val_2 and 1 from val_3)
+		// val_1 does 4 writes (2 to val_2 and 2 to val_3)
+		originatorNode: {2, 4},
+		// val_2 does 3 reads (2 from val_1 and 1 from val_2)
+		// val_2 does 2 writes (1 to val_1 and 1 to val_3)
+		validatorId(2): {3, 2},
+		// val_3 does 3 reads (2 from val_1 and 1 from val_2)
+		// val_3 does 2 writes (1 to val_2 and 1 to val_1)
+		validatorId(3): {3, 2},
+	}
+	testRainTreeCalls(t, originatorNode, expectedCalls, false, true)
+}
+
+func TestRainTreeNetworkCompleteThreeNodesRedundancyAndCleanupLayerEnabled(t *testing.T) {
+	// 	          val_1
+	// 	   ┌───────┴────┬─────────┐
+	//   val_2        val_1     val_3
+	originatorNode := validatorId(1)
+	var expectedCalls = TestNetworkSimulationConfig{
+		// val_1 does 4 reads (2 from val_2 and 2 from val_3)
+		// val_1 does 6 writes (3 to val_2 and 3 to val_3)
+		originatorNode: {4, 6},
+		// val_2 does 5 reads (3 from val_1 and 2 from val_3)
+		// val_2 does 4 writes (2 to val_1 and 2 to val_3)
+		validatorId(2): {5, 4},
+		// val_3 does 5 reads (3 from val_1 and 2 from val_2)
+		// val_3 does 4 writes (2 to val_1 and 2 to val_2)
+		validatorId(3): {5, 4},
+	}
+	testRainTreeCalls(t, originatorNode, expectedCalls, true, true)
 }
 
 func TestRainTreeNetworkCompleteFourNodes(t *testing.T) {
@@ -81,7 +187,7 @@ func TestRainTreeNetworkCompleteFourNodes(t *testing.T) {
 		validatorId(3): {2, 1}, // val_2 does 2 network reads (from val_1 and val_2) and 1 network write (to val_4)
 		validatorId(4): {1, 0}, // val_2 does 1 network read (from val_3)
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls)
+	testRainTreeCalls(t, originatorNode, expectedCalls, false, false)
 }
 
 func TestRainTreeNetworkCompleteNineNodes(t *testing.T) {
@@ -102,7 +208,7 @@ func TestRainTreeNetworkCompleteNineNodes(t *testing.T) {
 		validatorId(8): {1, 0},
 		validatorId(9): {1, 0},
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls)
+	testRainTreeCalls(t, originatorNode, expectedCalls, false, false)
 }
 
 //                                                                                                            val_1
@@ -129,7 +235,7 @@ func TestRainTreeCompleteTwelveNodes(t *testing.T) {
 		validatorId(11): {2, 2},
 		validatorId(12): {2, 0},
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls)
+	testRainTreeCalls(t, originatorNode, expectedCalls, false, false)
 }
 
 func TestRainTreeNetworkCompleteEighteenNodes(t *testing.T) {
@@ -161,7 +267,7 @@ func TestRainTreeNetworkCompleteEighteenNodes(t *testing.T) {
 		validatorId(17): {2, 2},
 		validatorId(18): {1, 0},
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls)
+	testRainTreeCalls(t, originatorNode, expectedCalls, false, false)
 }
 
 func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
@@ -202,7 +308,7 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 		validatorId(26): {1, 0},
 		validatorId(27): {1, 0},
 	}
-	testRainTreeCalls(t, originatorNode, expectedCalls)
+	testRainTreeCalls(t, originatorNode, expectedCalls, false, false)
 }
 
 // ### RainTree Unit Helpers - To remove redundancy of code in the unit tests ###
@@ -210,10 +316,10 @@ func TestRainTreeNetworkCompleteTwentySevenNodes(t *testing.T) {
 // Helper function that can be used for end-to-end P2P module tests that creates a "real" P2P module.
 // 1. It creates and configures a "real" P2P module where all the other components of the node are mocked.
 // 2. It then triggers a single message and waits for all of the expected messages transmission to complete before announcing failure.
-func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig TestNetworkSimulationConfig) {
+func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig TestNetworkSimulationConfig, redundancyLayer, cleanupLayer bool) {
 	// Configure & prepare test module
 	numValidators := len(networkSimulationConfig)
-	runtimeConfigs := createMockRuntimeMgrs(t, numValidators)
+	runtimeConfigs := createMockRuntimeMgrs(t, numValidators, redundancyLayer, cleanupLayer)
 
 	// Create connection and bus mocks along with a shared WaitGroup to track the number of expected
 	// reads and writes throughout the mocked local network

@@ -102,7 +102,7 @@ func (m *p2pModule) Start() error {
 	}
 
 	if m.p2pCfg.GetUseRainTree() {
-		m.network = raintree.NewRainTreeNetwork(m.address, addrBook)
+		m.network = raintree.NewRainTreeNetwork(m.address, addrBook, m.p2pCfg)
 	} else {
 		m.network = stdnetwork.NewNetwork(addrBook)
 	}

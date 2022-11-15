@@ -51,6 +51,8 @@ type P2PConfig interface {
 	GetPrivateKey() string
 	GetConsensusPort() uint32
 	GetUseRainTree() bool
+	GetUseRainTreeRedundancyLayer() bool
+	GetUseRainTreeCleanupLayer() bool
 	GetIsEmptyConnectionType() bool // TODO : make enum
 }
 

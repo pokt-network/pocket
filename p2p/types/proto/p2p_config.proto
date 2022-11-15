@@ -8,6 +8,8 @@ message P2PConfig {
   uint32 consensus_port = 2;
   bool use_rain_tree = 3;
   bool is_empty_connection_type = 4; // TODO (Drewsky) switch back to enum
+  bool use_rain_tree_redundancy_layer = 5;
+  bool use_rain_tree_cleanup_layer = 6;
 }
 
 enum ConnectionType {
