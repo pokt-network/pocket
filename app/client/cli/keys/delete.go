@@ -34,8 +34,8 @@ func deleteKey(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	// Open keybase DB
-	kb, err := leveldb.OpenFile("./.keybase/poktKeys.db", nil)
-	if err != nil {
+	var kb *leveldb.DB
+	if kb, err = leveldb.OpenFile("./.keybase/poktKeys.db", nil); err != nil {
 		return err
 	}
 

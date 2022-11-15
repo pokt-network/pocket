@@ -13,19 +13,6 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
-// Utility functions
-
-// Print out key in indented JSON format
-func printKey(keystore key) error {
-	output, err := json.MarshalIndent(keystore, "", "\t")
-	if err != nil {
-		return err
-	}
-	log.Printf("%s\n", output)
-
-	return nil
-}
-
 // Encryption function that takes a 32 bytes hex string key
 func encrypt(stringToEncrypt string, keyString string) (string, error) {
 	var err error
@@ -153,17 +140,32 @@ func generateKeyFromPassPhrase(passphrase string) (string, error) {
 }
 
 // Output logs for essential mnemonic and key information
-func logInfo(keystore key, mnemonic string) error {
-	log.Printf("Make sure you have the mnemonic saved in a safe place!")
-	log.Printf("\t%v\n", mnemonic)
-	log.Println("Key information (encrypted private key string)")
-
-	var keyJSON []byte
-	var err error
-	if keyJSON, err = json.MarshalIndent(keystore, "", "\t"); err != nil {
+func logInfo(keystore key, mnemonic string, recover bool) error {
+	if err := printKey(keystore); err != nil {
 		return err
 	}
-	log.Printf("%s\n", keyJSON)
+
+	// Only show mnemonic when new account is created
+	if !recover {
+		printMnemonic(mnemonic)
+	}
 
 	return nil
+}
+
+// Print out keystore type in indented JSON format
+func printKey(keystore key) error {
+	var output []byte
+	var err error
+	if output, err = json.MarshalIndent(keystore, "", "\t"); err != nil {
+		return err
+	}
+	log.Printf("%s\n", output)
+
+	return nil
+}
+
+func printMnemonic(mnemonic string) {
+	log.Printf("Make sure you have the mnemonic saved in a safe place!")
+	log.Printf("\n\n\t\t%v\n\n", mnemonic)
 }

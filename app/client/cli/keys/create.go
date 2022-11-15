@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
+	"fmt"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"log"
 	"os"
@@ -63,6 +64,46 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	////////////////////
+	//  Keybase Setup //
+	////////////////////
+
+	// Open local key database
+	var kb *leveldb.DB
+	var kbPath string // local keystore path
+	if kbPath, err = os.UserHomeDir(); err != nil {
+		panic(err)
+	}
+	kbPath = path.Join(kbPath, ".keybase", "poktKeys.db")
+	log.Printf("Keys stored in local path: %s\n", kbPath)
+
+	if kb, err = leveldb.OpenFile(kbPath, nil); err != nil {
+		return err
+	}
+
+	defer kb.Close() // execute at the conclusion of the function
+
+	// Check if key name already exist
+	if _, err = kb.Get([]byte(name), nil); err == nil {
+		log.Printf("Key \"%s\" alredy exists", name)
+
+		// account exists, ask for user confirmation
+		var response bool
+		var err2 error
+		if response, err2 = input.GetConfirmation(
+			fmt.Sprintf("override the existing name %s", name), inBuf, cmd.ErrOrStderr()); err2 != nil {
+			return err2
+		}
+
+		if !response {
+			return errors.New("aborted")
+		}
+
+		if err2 = kb.Delete([]byte(name), nil); err2 != nil {
+			return err2
+		}
+	}
+
 	//////////////////////////
 	//  Mnemonic Generation //
 	//////////////////////////
@@ -91,13 +132,12 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	// generate new mnemonic when user doesn't have one
 	if len(mnemonic) == 0 {
 		// read entropy seed straight from tmcrypto.Rand and convert to mnemonic
-		entropySeed, err := bip39.NewEntropy(mnemonicEntropySize)
-		if err != nil {
+		var entropySeed []byte
+		if entropySeed, err = bip39.NewEntropy(mnemonicEntropySize); err != nil {
 			return err
 		}
 
-		mnemonic, err = bip39.NewMnemonic(entropySeed)
-		if err != nil {
+		if mnemonic, err = bip39.NewMnemonic(entropySeed); err != nil {
 			return err
 		}
 	}
@@ -126,21 +166,6 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-
-	// Open local key database
-	var kb *leveldb.DB
-	var kbPath string // local keystore path
-	if kbPath, err = os.UserHomeDir(); err != nil {
-		panic(err)
-	}
-	kbPath = path.Join(kbPath, ".keybase", "poktKeys.db")
-	log.Printf("Keys stored in local path: %s\n", kbPath)
-
-	if kb, err = leveldb.OpenFile(kbPath, nil); err != nil {
-		return err
-	}
-
-	defer kb.Close() // execute at the conclusion of the function
 
 	// Creating a private key with ED25519 and mnemonic seed phrases
 	var privateKey cryptoPocket.PrivateKey
@@ -185,7 +210,7 @@ func runAddCmd(cmd *cobra.Command, args []string) error {
 	//////////////
 	// Log Keys //
 	//////////////
-	if err = logInfo(keystore, mnemonic); err != nil {
+	if err = logInfo(keystore, mnemonic, recover); err != nil {
 		return err
 	}
 
