@@ -114,7 +114,10 @@ func (node *Node) Start() error {
 	}
 
 	// The first event signaling that the node has started
-	signalNodeStartedEvent := messaging.MustPackMessage(&messaging.NodeStartedEvent{})
+	signalNodeStartedEvent, err := messaging.PackMessage(&messaging.NodeStartedEvent{})
+	if err != nil {
+		return err
+	}
 	node.GetBus().PublishEventToBus(signalNodeStartedEvent)
 
 	log.Println("About to start pocket node main loop...")

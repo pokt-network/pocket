@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/messaging"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -30,7 +31,8 @@ func TestPocketEnvelope_GetContentType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("GetContentType %T", tt.msg), func(t *testing.T) {
-			packedMsg := messaging.MustPackMessage(tt.msg)
+			packedMsg, err := messaging.PackMessage(tt.msg)
+			require.NoError(t, err)
 			if got := packedMsg.GetContentType(); got != tt.wantContentType {
 				t.Errorf("packedMsg.GetContentType() = %v, want %v", got, tt.wantContentType)
 			}
