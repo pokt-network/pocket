@@ -38,7 +38,7 @@ type persistenceModule struct {
 }
 
 const (
-	PersistenceModuleName = "persistence"
+	persistenceModuleName = "persistence"
 )
 
 func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
@@ -116,7 +116,7 @@ func (m *persistenceModule) Stop() error {
 }
 
 func (m *persistenceModule) GetModuleName() string {
-	return PersistenceModuleName
+	return persistenceModuleName
 }
 
 func (m *persistenceModule) SetBus(bus modules.Bus) {
@@ -207,8 +207,8 @@ func initializeBlockStore(blockStorePath string) (kvstore.KVStore, error) {
 	return kvstore.NewKVStore(blockStorePath)
 }
 
-// TODO(drewsky): Simplify and externalize the logic for whether genesis should be populated and
-// move the if logic out of this file.
+// HACK(olshansky): Simplify and externalize the logic for whether genesis should be populated and
+//                  move the if logic out of this file.
 func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	checkContext, err := m.NewReadContext(-1)
 	if err != nil {
@@ -216,10 +216,8 @@ func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	}
 	defer checkContext.Close()
 
-	maxHeight, err := checkContext.GetLatestBlockHeight()
-	if err == nil || maxHeight == 0 {
+	if _, err = checkContext.GetLatestBlockHeight(); err != nil {
 		return true, nil
 	}
-
-	return m.blockStore.Exists(heightToBytes(int64(maxHeight)))
+	return false, nil
 }

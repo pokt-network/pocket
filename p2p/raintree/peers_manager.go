@@ -117,6 +117,7 @@ func (pm *peersManager) getNetworkView() networkView {
 	}
 }
 
+// DISCUSS: This is only used in tests. Should we remove it?
 func (pm *peersManager) getSelfIndexInAddrBook() (int, bool) {
 	if len(pm.addrList) == 0 {
 		return -1, false

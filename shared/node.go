@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	MainModuleName = "main"
+	mainModuleName = "main"
 )
 
 type Node struct {
@@ -185,7 +185,7 @@ func (node *Node) handleDebugEvent(anyMessage *anypb.Any) error {
 }
 
 func (node *Node) GetModuleName() string {
-	return MainModuleName
+	return mainModuleName
 }
 
 func (node *Node) GetP2PAddress() cryptoPocket.Address {

@@ -14,8 +14,8 @@ import (
 
 func FuzzValidator(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		NewTestGenericActor(types.ValidatorActor, newTestValidator),
-		GetGenericActor(types.ValidatorActor, getTestValidator),
+		newTestGenericActor(types.ValidatorActor, newTestValidator),
+		getGenericActor(types.ValidatorActor, getTestValidator),
 		types.ValidatorActor)
 }
 

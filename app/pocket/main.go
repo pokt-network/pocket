@@ -4,12 +4,10 @@ import (
 	"flag"
 	"log"
 
+	"github.com/pokt-network/pocket/app"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/shared"
 )
-
-// See `docs/build/README.md` for details on how this is injected via mage.
-var version = "UNKNOWN"
 
 func main() {
 	configFilename := flag.String("config", "", "Relative or absolute path to the config file.")
@@ -19,7 +17,7 @@ func main() {
 	flag.Parse()
 
 	if *v {
-		log.Printf("Version flag currently unused %s\n", version)
+		log.Printf("Version flag currently unused %s\n", app.AppVersion)
 		return
 	}
 

@@ -3,6 +3,7 @@ package consensus
 import (
 	"fmt"
 	"log"
+	"sort"
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
@@ -17,7 +18,7 @@ import (
 
 const (
 	DefaultLogPrefix    = "NODE" // TODO(#164): Make implicit when logging is standardized
-	ConsensusModuleName = "consensus"
+	consensusModuleName = "consensus"
 )
 
 var (
@@ -180,7 +181,7 @@ func (m *consensusModule) Stop() error {
 }
 
 func (m *consensusModule) GetModuleName() string {
-	return ConsensusModuleName
+	return consensusModuleName
 }
 
 func (m *consensusModule) GetBus() modules.Bus {
@@ -202,7 +203,27 @@ func (*consensusModule) ValidateConfig(cfg modules.Config) error {
 }
 
 func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
-	// TODO (#334): implement this
+	// Sort the validators by their generic param (i.e. service URL)
+	vals := genesis.GetConsensusGenesisState().GetVals()
+	sort.Slice(vals, func(i, j int) bool {
+		return vals[i].GetGenericParam() < vals[j].GetGenericParam()
+	})
+
+	// Sort the validators by their address
+	vals2 := vals[:]
+	sort.Slice(vals, func(i, j int) bool {
+		return vals[i].GetAddress() < vals[j].GetAddress()
+	})
+
+	for i := 0; i < len(vals); i++ {
+		if vals[i].GetAddress() != vals2[i].GetAddress() {
+			// There is an implicit dependency because of how RainTree works and how the validator map
+			// is currently managed to make sure that the ordering of the address and the service URL
+			// are the same. This will be addressed once the # of validators will scale.
+			panic("HACK(olshansky): service url and address must be sorted the same way")
+		}
+	}
+
 	return nil
 }
 

@@ -59,7 +59,3 @@ rpc/client.gen.go
 
 # Ignored generated files by build/config/main.go
 build/config/gen*.json
-
-# Ignore keybase files
-**/.keybase/*
-keys/keys
