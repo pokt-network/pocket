@@ -1,4 +1,20 @@
-# TODO: add resource dependencies
+# TODO: add resource dependencies https://docs.tilt.dev/resource_dependencies.html#adding-resource_deps-for-startup-order
+
+# List of directories Tilt watches to trigger a hot-reload on changes
+deps = [
+    'app',
+    'build',
+    'consensus',
+    'p2p',
+    'persistance',
+    'rpc',
+    'runtime',
+    'shared',
+    'telemetry',
+    'utility',
+    'vendor',
+    'logger'
+]
 
 # Verify pocket operator is available in the parent directory. We use pocket operator to maintain the workloads.
 if not os.path.exists('../pocket-operator'):
@@ -16,10 +32,12 @@ if is_psql_operator_installed == '0':
   local('kubectl apply -k github.com/zalando/postgres-operator/manifests')
 
 # Builds the pocket binary. Note target OS is linux, because it later will be run in a container.
-local_resource('pocket: Watch & Compile', 'GOOS=linux go build -o bin/pocket-linux app/pocket/main.go', deps=['app/pocket/main.go'])
-local_resource('client: Watch & Compile', 'GOOS=linux go build -o bin/client-linux app/client/main.go', deps=['**/**.go'])
+local_resource('pocket: Watch & Compile', 'GOOS=linux go build -o bin/pocket-linux app/pocket/main.go', deps=deps)
+local_resource('debug client: Watch & Compile', 'GOOS=linux go build -tags=debug -o bin/client-linux app/client/*.go', deps=deps)
+# go run -tags=debug app/client/*.go debug
+# local_resource('client: Watch & Compile', 'GOOS=linux go build -o bin/client-linux app/client/main.go', deps=deps)
 
-# Builds and maintains the container after the binary is built on machine
+# Builds and maintains the validator container image after the binary is built on local machine
 docker_build('validator-image', '.',
     dockerfile_contents='''FROM debian:bullseye
 COPY build/localnet/start.sh /start.sh
@@ -27,15 +45,16 @@ COPY build/localnet/restart.sh /restart.sh
 COPY bin/pocket-linux /usr/local/bin/pocket
 WORKDIR /
 CMD ["/usr/local/bin/pocket"]
-ENTRYPOINT ["/start.sh", "/usr/local/bin/pocket"]
+ENTRYPOINT ["/start.sh", "/usr/local/bin/pocket", "-config=/configs/config.json", "-genesis=/genesis.json"]
 ''',
-    only=['./bin/pocket-linux'],
+    only=['./bin/pocket-linux', './build/'],
     live_update=[
         sync('./bin/pocket-linux', '/usr/local/bin/pocket'),
         run('/restart.sh'),
     ]
 )
 
+# Builds and maintains the client container image after the binary is built on local machine
 docker_build('client-image', '.',
     dockerfile_contents='''FROM debian:bullseye
 WORKDIR /
@@ -48,7 +67,7 @@ CMD ["/usr/local/bin/client"]
     ]
 )
 
-# Makes Tilt aware of our own custom resource, so it can work with our operator.
+# Makes Tilt aware of our own Custom Resource Definition from pocket-operator, so it can work with our operator.
 k8s_kind('PocketValidator', image_json_path='{.spec.pocketImage}')
 
 # Pushes localnet manifests to the cluster.
@@ -59,6 +78,7 @@ k8s_yaml([
     'build/localnet/cli-client.yaml',
     'build/localnet/network.yaml'])
 
+# Exposes postgres port to 5432 on the host machine.
 k8s_resource(new_name='postgres',
              objects=['pocket-database:postgresql'],
              extra_pod_selectors=[{'cluster-name': 'pocket-database'}],

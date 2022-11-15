@@ -27,9 +27,6 @@ const (
 	PromptTriggerNextView        string = "TriggerNextView"
 	PromptTogglePacemakerMode    string = "TogglePacemakerMode"
 	PromptShowLatestBlockInStore string = "ShowLatestBlockInStore"
-
-	defaultConfigPath  = "build/config/config1.json"
-	defaultGenesisPath = "build/config/genesis.json"
 )
 
 var (
@@ -47,6 +44,9 @@ var (
 		PromptTogglePacemakerMode,
 		PromptShowLatestBlockInStore,
 	}
+
+	defaultConfigPath  = getEnv("CONFIG_PATH", "build/config/config1.json")
+	defaultGenesisPath = getEnv("GENESIS_PATH", "build/config/genesis.json")
 )
 
 func init() {
@@ -73,6 +73,13 @@ func runDebug(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 	}
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
 
 func promptGetInput() (string, error) {

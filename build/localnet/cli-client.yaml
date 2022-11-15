@@ -9,6 +9,11 @@ spec:
       image: client-image
       imagePullPolicy: IfNotPresent
       command: ["sleep", "infinity"]
+      env:
+        - name: CONFIG_PATH
+          value: "/var/pocket/config/config.json"
+        - name: GENESIS_PATH
+          value: "/var/pocket/genesis/genesis.json"
       volumeMounts:
         - mountPath: /var/pocket/config
           name: config-volume
