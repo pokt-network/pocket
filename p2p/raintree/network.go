@@ -7,6 +7,7 @@ import (
 	"time"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -81,7 +82,7 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level int32, nonc
 		targets = n.cleanupLayer()
 	}
 
-	msgBz, err := proto.Marshal(msg)
+	msgBz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
 		return err
 	}
@@ -131,7 +132,7 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 		Nonce: getNonce(),
 	}
 
-	bz, err := proto.Marshal(msg)
+	bz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
 		return err
 	}
@@ -220,7 +221,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	n.mempool[rainTreeMsg.Nonce] = struct{}{}
 
-	// Return the data back to the caller so it can be handeled by the app specific bus
+	// Return the data back to the caller so it can be handled by the app specific bus
 	return rainTreeMsg.Data, nil
 }
 

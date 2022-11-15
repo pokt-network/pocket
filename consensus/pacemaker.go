@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	PacemakerModuleName = "pacemaker"
+	pacemakerModuleName = "pacemaker"
 )
 
 type Pacemaker interface {
@@ -93,7 +93,7 @@ func (p *paceMaker) Stop() error {
 }
 
 func (p *paceMaker) GetModuleName() string {
-	return PacemakerModuleName
+	return pacemakerModuleName
 }
 
 func (m *paceMaker) SetBus(pocketBus modules.Bus) {
@@ -220,9 +220,16 @@ func (p *paceMaker) NewHeight() {
 }
 
 func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
+	// DISCUSS: Should we lock the consensus module here?
+
 	p.consensusMod.Step = NewRound
 	p.consensusMod.clearLeader()
 	p.consensusMod.clearMessagesPool()
+	// TECHDEBT: This should be avoidable altogether
+	if p.consensusMod.utilityContext != nil {
+		p.consensusMod.utilityContext.ReleaseContext()
+		p.consensusMod.utilityContext = nil
+	}
 
 	// TODO(olshansky): This if structure for debug purposes only; think of a way to externalize it...
 	if p.manualMode && !forceNextView {

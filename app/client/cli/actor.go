@@ -77,9 +77,13 @@ func newStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 		Use:   "Stake <fromAddr> <amount> <relayChainIDs> <serviceURI>",
 		Short: "Stake a node in the network. Custodial stake uses the same address as operator/output for rewards/return of staked funds.",
 		Long: `Stake the node into the network, making it available for service.
-Will prompt the user for the <fromAddr> account passphrase. If the node is already staked, this transaction acts as an *update* transaction.
+
+Will prompt the user for the *fromAddr* account passphrase. If the node is already staked, this transaction acts as an *update* transaction.
+
 A node can update relayChainIDs, serviceURI, and raise the stake amount with this transaction.
-If the node is currently staked at X and you submit an update with new stake Y. Only Y-X will be subtracted from an account
+
+If the node is currently staked at X and you submit an update with new stake Y. Only Y-X will be subtracted from an account.
+
 If no changes are desired for the parameter, just enter the current param value just as before.`,
 		Args: cobra.ExactArgs(4), // REFACTOR(#150): <fromAddr> not being used at the moment. Update once a keybase is implemented.
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -116,7 +120,7 @@ If no changes are desired for the parameter, just enter the current param value 
 				ActorType:     cmdDef.ActorType,
 			}
 
-			tx, err := prepareTxJson(msg, pk)
+			tx, err := prepareTxBytes(msg, pk)
 			if err != nil {
 				return err
 			}
@@ -171,7 +175,7 @@ func newEditStakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				ActorType:  cmdDef.ActorType,
 			}
 
-			tx, err := prepareTxJson(msg, pk)
+			tx, err := prepareTxBytes(msg, pk)
 			if err != nil {
 				return err
 			}
@@ -212,7 +216,7 @@ func newUnstakeCmd(cmdDef actorCmdDef) *cobra.Command {
 				ActorType: cmdDef.ActorType,
 			}
 
-			tx, err := prepareTxJson(msg, pk)
+			tx, err := prepareTxBytes(msg, pk)
 			if err != nil {
 				return err
 			}
@@ -253,7 +257,7 @@ func newUnpauseCmd(cmdDef actorCmdDef) *cobra.Command {
 				ActorType: cmdDef.ActorType,
 			}
 
-			tx, err := prepareTxJson(msg, pk)
+			tx, err := prepareTxBytes(msg, pk)
 			if err != nil {
 				return err
 			}

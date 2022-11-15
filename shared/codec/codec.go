@@ -21,7 +21,7 @@ var _ Codec = &ProtoCodec{}
 type ProtoCodec struct{}
 
 func (p *ProtoCodec) Marshal(message proto.Message) ([]byte, error) {
-	bz, err := proto.Marshal(message)
+	bz, err := proto.MarshalOptions{Deterministic: true}.Marshal(message)
 	if err != nil {
 		return nil, err
 	}

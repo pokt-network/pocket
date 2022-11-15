@@ -23,6 +23,7 @@ type Bus interface {
 	GetUtilityModule() UtilityModule
 	GetConsensusModule() ConsensusModule
 	GetTelemetryModule() TelemetryModule
+	GetRPCModule() RPCModule
 
 	// Runtime
 	GetRuntimeMgr() RuntimeMgr

@@ -12,7 +12,7 @@ func (p PostgresContext) GetFishermanExists(address []byte, height int64) (exist
 }
 
 func (p PostgresContext) GetFisherman(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, err error) {
-	actor, err := p.GetActor(types.FishermanActor, address, height)
+	actor, err := p.getActor(types.FishermanActor, address, height)
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedAmount
@@ -49,11 +49,11 @@ func (p PostgresContext) UpdateFisherman(address []byte, serviceURL string, stak
 }
 
 func (p PostgresContext) GetFishermanStakeAmount(height int64, address []byte) (string, error) {
-	return p.GetActorStakeAmount(types.FishermanActor, address, height)
+	return p.getActorStakeAmount(types.FishermanActor, address, height)
 }
 
 func (p PostgresContext) SetFishermanStakeAmount(address []byte, stakeAmount string) error {
-	return p.SetActorStakeAmount(types.FishermanActor, address, stakeAmount)
+	return p.setActorStakeAmount(types.FishermanActor, address, stakeAmount)
 }
 
 func (p PostgresContext) GetFishermenReadyToUnstake(height int64, status int32) ([]modules.IUnstakingActor, error) {

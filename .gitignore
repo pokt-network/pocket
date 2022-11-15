@@ -29,7 +29,8 @@ prototype/vendor/
 .idea/
 
 # Generated Mocks (for testing)
-shared/modules/mocks/
+shared/modules/mocks/*
+!shared/modules/mocks/mocks.go
 p2p/types/mocks/
 
 # TODO(team): Does the `types` directory contain generated or raw type files?
