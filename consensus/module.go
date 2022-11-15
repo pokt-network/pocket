@@ -249,7 +249,17 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 			return err
 		}
 	case UtilityMessageContentType:
-		panic("[WARN] UtilityMessage handling is not implemented by consensus yet...")
+		msg, err := codec.GetCodec().FromAny(message)
+		if err != nil {
+			return err
+		}
+		utilityMessage, ok := msg.(*typesCons.UtilityMessage)
+		if !ok {
+			return fmt.Errorf("failed to cast message to UtilityMessage")
+		}
+		if err := m.handleUtilityMessage(utilityMessage); err != nil {
+			return err
+		}
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
 	}

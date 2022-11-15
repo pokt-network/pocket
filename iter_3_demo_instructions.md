@@ -3,26 +3,37 @@
 ## Setup LocalNet (shell 1)
 
 ```
-$̶ ̶m̶a̶k̶e̶ ̶d̶o̶c̶k̶e̶r̶_̶w̶i̶p̶e̶ // Clear everything; takes a long time
-$ make // show all the commands
-$ make docker_wipe_nodes // clear all 4 validator nodes
-$ make db_drop // clear the existing database
-$ make compose_and_watch // Start 4 node LocalNet environment
+m̶a̶k̶e̶ ̶d̶o̶c̶k̶e̶r̶_̶w̶i̶p̶e̶ // Clear everything; takes a long time
+make // show all the commands
+make docker_wipe_nodes // clear all 4 validator nodes
+make db_drop // clear the existing database
+make compose_and_watch // Start 4 node LocalNet environment
 ```
 
 ## Setup LocalNet debugger (shell 2)
 
 ```
-$ make client_start && make client_connect // start the debugger
-$ PrintNodeState
+make client_start && make client_connect // start the debugger
+
+...
+PrintNodeState
+...
+TriggerNextView
+...
+
 ```
 
 ## Inspect the data in the database (shell 3)
 
+Connect to the DB:
+
 ```
-$ make db_show_schemas // show 4 nodes
-$ make db_cli_node // connect to the default node 1
+make db_show_schemas // show 4 nodes
+make db_cli_node // connect to the default node 1
 ```
+
+Query the DB:
+
 
 ## Inspect the data in the database in another node (shell 4)
 

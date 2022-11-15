@@ -1,0 +1,17 @@
+// TODO(olshansky): This encapsulates hotstuff types, hotstuff messages and hotstuff specific crypto primitives. Consider if it's worth splitting into smaller files.
+
+syntax = "proto3";
+package consensus;
+
+option go_package = "github.com/pokt-network/pocket/consensus/types";
+
+
+enum UtilityMessageType {
+    UTILITY_MESSAGE_UNKNOWN = 0;
+    UTILITY_MESSAGE_TRANSACTION = 1;
+}
+
+message UtilityMessage {
+    UtilityMessageType type = 1;
+    bytes data = 2;
+}

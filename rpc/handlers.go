@@ -7,6 +7,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
+	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/debug"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func (s *rpcServer) GetV1Health(ctx echo.Context) error {
@@ -42,6 +45,9 @@ func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
 	if err := s.GetBus().GetPersistenceModule().ReleaseWriteContext(); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+	if err := s.broadcastMessage(bz); err != nil {
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
 
 	return nil
 }
@@ -55,32 +61,21 @@ func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 	})
 }
 
-
 // Broadcast to the entire validator set
-func (s *rpcServer) broadcastDebugMessage(msgBz []byte) {
-
-	m := &debug.DebugMessage{
-		Action:  debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE,
-		Message: nil
+func (s *rpcServer) broadcastMessage(msgBz []byte) error {
+	utilMsg := &typesCons.UtilityMessage{
+		Type: typesCons.UtilityMessageType_UTILITY_MESSAGE_TRANSACTION,
+		Data: msgBz,
 	}
 
-	anyProto, err := anypb.New(debugMsg)
+	anyProto, err := anypb.New(utilMsg)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
 	}
 
-	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
-	// broadcast. The reason it cannot be done right now is because this client is not in the
-	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
-	// p2pMod.Broadcast(anyProto, debug.PocketTopic_DEBUG_TOPIC)
-
-	for _, val := range consensusMod.ValidatorMap() {
-		addr, err := pocketCrypto.NewAddress(val.GetAddress())
-		if err != nil {
-			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
-		}
-		p2pMod.Send(addr, anyProto, debug.PocketTopic_DEBUG_TOPIC)
+	if err := s.GetBus().GetP2PModule().Broadcast(anyProto, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
+		log.Println("[ERROR] Failed to broadcast debug message: ", err)
+		return err
 	}
-
-	s.GetBus().GetP2PModule().Broadcast(anyProto, debug.PocketTopic_DEBUG_TOPIC)
+	return nil
 }
