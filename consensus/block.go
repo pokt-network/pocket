@@ -63,6 +63,8 @@ func (m *consensusModule) refreshUtilityContext() error {
 		m.utilityContext = nil
 	}
 
+	m.GetBus().GetPersistenceModule().ReleaseWriteContext()
+
 	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
 	if err != nil {
 		return err
