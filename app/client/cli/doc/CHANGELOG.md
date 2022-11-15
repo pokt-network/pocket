@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.3] - 2022-11-15
+
+### Added
+
+- Implement keys CLI
+- Implement create and delete
+- Added AES private key encryption with 128-bits security and 32 bytes nonce input
+- Implement local keybase (level.db) storage
+
 ## [0.0.2] - 2022-11-02
 
 ### Added

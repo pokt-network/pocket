@@ -23,7 +23,9 @@ Command tree available [here](./commands/client.md)
 │   ├── docgen
 │   │   └── main.go          # commands specific documentation generator
 │   ├── gov.go               # Governance subcommand
+│   ├── keys.go              # private and public key management
 │   ├── utils.go             # support functions
 │   └── utils_test.go        # tests for the support functions
 └── main.go                  # entrypoint
+
 ```
