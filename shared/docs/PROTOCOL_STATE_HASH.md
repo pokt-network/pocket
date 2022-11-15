@@ -11,7 +11,7 @@ _NOTE: The diagrams below use some [Hotstuff specific](https://arxiv.org/abs/180
 
 ## Context Management
 
-The `Utility` and `Persistence` modules maintain a context (i.e. an ephemeral states) driven by the `Consensus` module that can be released & reverted as a result of various (e.g. lack of Validator consensus) before the state is committed and persisted to disk (i.e. the block is finalized).
+The `Utility` and `Persistence` modules maintain a context (i.e. an ephemeral states) driven by the `Consensus` module that can be `released & reverted` (i.e. the block is invalid / no Validator Consensus reached) or can be `committed & persisted` to disk (i.e. the block is finalized).
 
 On every round of every height:
 
