@@ -151,3 +151,19 @@ func generateKeyFromPassPhrase(passphrase string) (string, error) {
 	// return the 32 bytes key hex string
 	return hex.EncodeToString(h), nil
 }
+
+// Output logs for essential mnemonic and key information
+func logInfo(keystore key, mnemonic string) error {
+	log.Printf("Make sure you have the mnemonic saved in a safe place!")
+	log.Printf("\t%v\n", mnemonic)
+	log.Println("Key information (encrypted private key string)")
+
+	var keyJSON []byte
+	var err error
+	if keyJSON, err = json.MarshalIndent(keystore, "", "\t"); err != nil {
+		return err
+	}
+	log.Printf("%s\n", keyJSON)
+
+	return nil
+}
