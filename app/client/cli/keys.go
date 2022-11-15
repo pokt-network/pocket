@@ -1,9 +1,10 @@
-package keys
+package cli
 
 import (
 	"fmt"
 	"os"
 
+	"github.com/pokt-network/pocket/app/client/cli/keys"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -34,11 +35,10 @@ func init() {
 	keysCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	// Adding subcommands
-	keysCmd.AddCommand(CreateCmd)
-	keysCmd.AddCommand(DeleteCmd)
-	keysCmd.AddCommand(MnemonicCmd)
-
-	rootCmd.AddCommand(keysCmd)
+	keysCmd.AddCommand(keys.CreateCmd)
+	keysCmd.AddCommand(keys.DeleteCmd)
+	keysCmd.AddCommand(keys.MnemonicCmd)
+	rootCmd.AddCommand(keysCmd) // adding keys to CLI
 }
 
 // initConfig reads in config file and ENV variables if set.
