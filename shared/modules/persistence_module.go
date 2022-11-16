@@ -44,7 +44,7 @@ type PersistenceRWContext interface {
 // - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
 // - Reference: https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces
 
-// TOD (#149): convert address and public key to string from bytes
+// TECHDEBT: convert address and public key to string from bytes
 // NOTE: There's not really a use case for a write only interface, but it abstracts and contrasts nicely against the read only context
 type PersistenceWriteContext interface {
 	// Context Operations
@@ -59,7 +59,7 @@ type PersistenceWriteContext interface {
 
 	// Block Operations
 	// DISCUSS_IN_THIS_COMMIT: Can this function be removed ? If so, could we remove `TxResult` from the public facing interface given that we set transactions in `SetProposalBlock`?
-	SetLatestTxResults(txResults []TxResult)
+	SetTxResults(txResults []TxResult)
 	// TODO(#284): Remove `blockProtoBytes`
 	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr []byte, transactions [][]byte) error
 	// Store the block into persistence
@@ -128,12 +128,12 @@ type PersistenceReadContext interface {
 	// Block Queries
 	GetPrevAppHash() (string, error) // app hash from the previous block
 	GetLatestBlockHeight() (uint64, error)
-	GetBlockHash(height int64) ([]byte, error)
+	GetBlockHashAtHeight(height int64) ([]byte, error) // CONSOLIDATE: BlockHash / AppHash / StateHash
 	GetBlocksPerSession(height int64) (int, error)
-	GetLatestProposerAddr() []byte
-	GetLatestBlockProtoBytes() []byte
-	GetLatestBlockHash() string
-	GetLatestBlockTxs() [][]byte
+	GetProposerAddr() []byte
+	GetBlockProtoBytes() []byte
+	GetBlockHash() string
+	GetBlockTxs() [][]byte
 
 	// Indexer Queries
 	TransactionExists(transactionHash string) (bool, error)

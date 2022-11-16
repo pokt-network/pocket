@@ -90,27 +90,27 @@ func (pg *PostgresContext) ResetContext() error {
 // 1. Can we remove `Latest` from these Setter & Getter methods
 // 2. Can we scope that to this package?
 // 3. Is `context.go` more appropriate for these than `db.go`?
-func (p PostgresContext) GetLatestProposerAddr() []byte {
+func (p PostgresContext) GetProposerAddr() []byte {
 	return p.proposerAddr
 }
 
-func (p PostgresContext) GetLatestBlockProtoBytes() []byte {
+func (p PostgresContext) GetBlockProtoBytes() []byte {
 	return p.blockProtoBytes
 }
 
-func (p PostgresContext) GetLatestBlockHash() string {
+func (p PostgresContext) GetBlockHash() string {
 	return p.blockHash
 }
 
-func (p PostgresContext) GetLatestBlockTxs() [][]byte {
+func (p PostgresContext) GetBlockTxs() [][]byte {
 	return p.blockTxs
 }
 
-func (p PostgresContext) GetLatestTxResults() []modules.TxResult {
+func (p PostgresContext) GetTxResults() []modules.TxResult {
 	return p.txResults
 }
 
-func (p *PostgresContext) SetLatestTxResults(txResults []modules.TxResult) {
+func (p *PostgresContext) SetTxResults(txResults []modules.TxResult) {
 	p.txResults = txResults
 }
 

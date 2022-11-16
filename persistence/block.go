@@ -7,7 +7,6 @@ import (
 
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // OPTIMIZE(team): get from blockstore or keep in memory
@@ -22,7 +21,7 @@ func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error)
 }
 
 // OPTIMIZE(team): get from blockstore or keep in cache/memory
-func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
+func (p PostgresContext) GetBlockHashAtHeight(height int64) ([]byte, error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
@@ -56,10 +55,6 @@ func (p PostgresContext) GetPrevAppHash() (string, error) {
 	return hex.EncodeToString(block), nil // TODO(#284): Return `block.Hash` instead of the hex encoded representation of the blockBz
 }
 
-func (p PostgresContext) GetTxResults() []modules.TxResult {
-	return p.txResults
-}
-
 func (p PostgresContext) TransactionExists(transactionHash string) (bool, error) {
 	hash, err := hex.DecodeString(transactionHash)
 	if err != nil {
@@ -78,7 +73,7 @@ func (p PostgresContext) TransactionExists(transactionHash string) (bool, error)
 
 func (p PostgresContext) indexTransactions() error {
 	// TODO: store in batch
-	for _, txResult := range p.GetLatestTxResults() {
+	for _, txResult := range p.GetTxResults() {
 		if err := p.txIndexer.Index(txResult); err != nil {
 			return err
 		}

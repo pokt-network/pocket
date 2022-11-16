@@ -165,6 +165,7 @@ sequenceDiagram
             end
         end
     end
+    %% TODO: Consolidate AppHash and StateHash
     U->>+P: UpdateAppHash()
     P->>P: Internal Implementation
     Note over P: Update state hash
