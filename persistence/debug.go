@@ -92,7 +92,7 @@ func (m *persistenceModule) clearAllState(_ *debug.DebugMessage) error {
 }
 
 func (p *PostgresContext) clearAllSQLState() error {
-	ctx, clearTx, err := p.GetCtxAndTx()
+	ctx, clearTx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}

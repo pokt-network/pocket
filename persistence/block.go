@@ -18,7 +18,7 @@ const (
 
 // OPTIMIZE(team): get from blockstore or keep in memory
 func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return 0, err
 	}
@@ -29,7 +29,7 @@ func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error)
 
 // OPTIMIZE: get from blockstore or keep in cache/memory
 func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (p *PostgresContext) prepareBlock(quorumCert []byte) (*types.Block, error) 
 
 // Inserts the block into the postgres database
 func (p *PostgresContext) insertBlock(block *types.Block) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}

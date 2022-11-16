@@ -14,8 +14,8 @@ import (
 
 func FuzzApplication(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		NewTestGenericActor(types.ApplicationActor, newTestApp),
-		GetGenericActor(types.ApplicationActor, getTestApp),
+		newTestGenericActor(types.ApplicationActor, newTestApp),
+		getGenericActor(types.ApplicationActor, getTestApp),
 		types.ApplicationActor)
 }
 

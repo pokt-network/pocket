@@ -13,7 +13,7 @@ _NOTE: The diagrams below use some [Hotstuff specific](https://arxiv.org/abs/180
 
 ## Context Management
 
-The `Utility` and `Persistence` modules maintain a context (i.e. an ephemeral states) driven by the `Consensus` module that can be released & reverted as a result of various (e.g. lack of Validator consensus) before the state is committed and persisted to disk (i.e. the block is finalized).
+The `Utility` and `Persistence` modules maintain a context (i.e. an ephemeral states) driven by the `Consensus` module that can be `released & reverted` (i.e. the block is invalid / no Validator Consensus reached) or can be `committed & persisted` to disk (i.e. the block is finalized).
 
 On every round of every height:
 
@@ -31,61 +31,64 @@ sequenceDiagram
     participant P as Persistence
 
     %% Handle New Message
-    B-->>C: HandleMessage(msg)
+    B-->>C: HandleMessage(NEWROUND)
 
-    critical NewRound
-        %% Create Contexts
-        C->>+U: NewContext(height)
-        U->>+P: NewRWContext(height)
-        P->>-U: PersistenceContext
-        U->>U: store context<br>locally
-        activate U
-        deactivate U
-        U->>-C: UtilityContext
-        C->>C: store context<br>locally
-        activate C
-        deactivate C
+    %% NEWROUND
 
-        %% Apply Block
-        Note over C, P: See 'Block Application'
-    end
+    activate C
+    %% Create Contexts
+    C->>+U: NewContext(height)
+    U->>+P: NewRWContext(height)
+    P->>-U: PersistenceContext
+    U->>U: store context<br>locally
+    activate U
+    deactivate U
+    U->>-C: UtilityContext
+    C->>C: store context<br>locally
+    deactivate C
+
+    %% Apply Block
+    Note over C, P: 'Block Application'
 ```
 
-5. The **HotPOKT lifecycle** takes place so Validators achieve consensus (i.e. steps `PRECOMMIT` and `COMMIT`)
-6. The `Consensus` module handle the `DECIDE` message
-7. The final `quorumCertificate` is propagated to the `UtilityContext` on Commit
-8. The final `quorumCertificate` is propagated to the `PersistenceContext` on Commit
-9. The persistence module's internal implementation for [Store Block](../../persistence/docs/PROTOCOL_STATE_HASH.md) must execute.
-10. Both the `UtilityContext` and `PersistenceContext` are released
+---
+
+_The **Proposer** drives the **Validators** to agreement via the **Consensus Lifecycle** (i.e. HotPOKT)_
+
+---
+
+5. The `Consensus` module handles the `DECIDE` message
+6. The final `quorumCertificate` is propagated to the `UtilityContext` & `PersistenceContext` on `Commit`
+7. The persistence module's internal implementation for ['Store Block'](../../persistence/docs/PROTOCOL_STORE_BLOCK.md) must execute.
+8. Both the `UtilityContext` and `PersistenceContext` are released
 
 ```mermaid
 sequenceDiagram
-    title Steps 6-10
+    title Steps 5-8
     participant B as Bus
     participant C as Consensus
     participant U as Utility
     participant P as Persistence
 
     %% Handle New Message
-    B-->>C: HandleMessage(msg)
+    B-->>C: HandleMessage(DECIDE)
 
-    critical Decide
-        %% Commit Context
-        C->>+U: Context.Commit(quorumCert)
-        U->>+P: Context.Commit(quorumCert)
-        P->>P: Internal Implementation
-        Note over P: Store Block
-        P->>-U: err_code
-        U->>C: err_code
-        deactivate U
+    activate C
+    %% Commit Context
+    C->>+U: Context.Commit(quorumCert)
+    U->>+P: Context.Commit(quorumCert)
+    P->>P: Internal Implementation
+    Note over P: Store Block
+    P->>-U: err_code
+    U->>C: err_code
+    deactivate U
 
-        %% Release Context
-        C->>+U: Context.Release()
-        U->>+P: Context.Release()
-        P->>-U: err_code
-        U->>-C: err_code
-    end
-
+    %% Release Context
+    C->>+U: Context.Release()
+    U->>+P: Context.Release()
+    P->>-U: err_code
+    U->>-C: err_code
+    deactivate C
 ```
 
 ## Block Application
@@ -141,7 +144,7 @@ sequenceDiagram
 4. Loop over all transactions proposed
 5. Check if the transaction has already been applied to the local state
 6. Perform the CRUD operation(s) corresponding to each transaction
-7. The persistence module's internal implementation for [Updating a State hash](../../persistence/docs/PROTOCOL_STATE_HASH.md) must be triggered
+7. The persistence module's internal implementation for ['Update State Hash'](../../persistence/docs/PROTOCOL_STATE_HASH.md) must be triggered
 8. Validate that the local state hash computed is the same as that proposed
 
 ```mermaid
@@ -153,20 +156,19 @@ sequenceDiagram
 
     loop for each tx in txs
         U->>+P: TransactionExists(txHash)
-        P->>-U: true | false
-        opt if tx is not indexed
-            loop for each operation in tx
-                U->>+P: Get*/Set*/Update*/Insert*
-                P->>-U: err_code
-                U->>U: Validation logic
-                activate U
-                deactivate U
-            end
+        P->>-U: false (does not exist)
+        loop for each operation in tx
+            U->>+P: Get*/Set*/Update*/Insert*
+            P->>-U: err_code
+            U->>U: Validation logic
+            activate U
+            deactivate U
         end
     end
+    %% TODO: Consolidate AppHash and StateHash
     U->>+P: UpdateAppHash()
     P->>P: Internal Implementation
-    Note over P: Update state hash
+    Note over P: Update State Hash
     P->>-U: stateHash
     U->>C: stateHash
 

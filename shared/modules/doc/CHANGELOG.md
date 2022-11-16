@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.3] - 2022-11-15
+
+PersistenceModule
+
+- Added `ReleaseWriteContext`
+- Consolidated `ResetContext`, `Reset` with `Release`
+- Modified `Commit` to accept a `quorumCert`
+- Removed `Latest` prefix from getters related to the proposal block parameters
+
+UtilityModule
+
+- Changed `CommitPersistenceContext()` to `Commit(quorumCert)`
+- Changed `ReleaseContext` to `Release`
+
 ## [0.0.0.2] - 2022-10-12
 
 - Modified interface for Utility Module `ApplyBlock` and `GetProposalTransactions` to return `TxResults`

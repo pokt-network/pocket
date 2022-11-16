@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
@@ -53,9 +54,10 @@ type PostgresContext struct {
 	quorumCert   []byte
 	blockHash    string // CONSOLIDATE: blockHash / appHash / stateHash
 	blockTxs     [][]byte
+	// txResults    []modules.TxResult // TODO_IN_THIS_COMMIT: FIX THIS. Not indexed by `txIndexer` until commit.
 }
 
-func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
+func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx, error) {
 	return context.TODO(), pg.GetTx(), nil
 }
 
@@ -63,22 +65,47 @@ func (pg *PostgresContext) GetTx() pgx.Tx {
 	return pg.tx
 }
 
-func (pg *PostgresContext) GetCtx() (context.Context, error) {
+func (pg *PostgresContext) getCtx() (context.Context, error) {
 	return context.TODO(), nil
 }
 
-// DISCUSS_IN_THIS_COMMIT:
-// 1. Can we remove these Getters/Setters
-// 2. Can we remove `Latest` from these Setter & Getter methods?
-// 3. Can we downscope them to this package only and remove from the interface?
-// 4. If we keep them, is `context.go` more appropriate for these than `db.go`?
-func (p PostgresContext) GetLatestProposerAddr() []byte {
+func (pg *PostgresContext) ResetContext() error {
+	if pg == nil {
+		return nil
+	}
+	tx := pg.GetTx()
+	if tx == nil {
+		return nil
+	}
+	conn := tx.Conn()
+	if conn == nil {
+		return nil
+	}
+	if !conn.IsClosed() {
+		if err := pg.Release(); err != nil {
+			log.Println("[TODO][ERROR] Error releasing write context...", err)
+		}
+	}
+	pg.tx = nil
+	return nil
+}
+
+// DISCUSS: Given that these are context specific setters/getters, is `context.go` a more appropriate location for these than `db.go`?
+func (p PostgresContext) GetProposerAddr() []byte {
 	return p.proposerAddr
 }
 
-func (p PostgresContext) GetLatestBlockTxs() [][]byte {
+func (p PostgresContext) GetBlockTxs() [][]byte {
 	return p.blockTxs
 }
+
+// func (p PostgresContext) GetTxResults() []modules.TxResult {
+// 	return p.txResults
+// }
+
+// func (p *PostgresContext) SetTxResults(txResults []modules.TxResult) {
+// 	p.txResults = txResults
+// }
 
 // TECHDEBT: Implement proper connection pooling
 func connectToDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {

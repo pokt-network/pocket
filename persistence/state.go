@@ -227,7 +227,7 @@ func (p *PostgresContext) getActorsUpdatedAtHeight(actorType types.ActorType, he
 		return nil, fmt.Errorf("no schema found for actor type: %s", actorType)
 	}
 
-	schemaActors, err := p.GetActorsUpdated(actorSchema, height)
+	schemaActors, err := p.getActorsUpdated(actorSchema, height)
 	if err != nil {
 		return nil, err
 	}

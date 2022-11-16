@@ -44,7 +44,7 @@ type PersistenceRWContext interface {
 // - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
 // - Reference: https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces
 
-// TOD (#149): convert address and public key to string from bytes
+// TECHDEBT: convert address and public key to string from bytes
 // NOTE: There's not really a use case for a write only interface, but it abstracts and contrasts nicely against the read only context
 type PersistenceWriteContext interface {
 	// Context Operations
@@ -59,7 +59,7 @@ type PersistenceWriteContext interface {
 
 	// Block Operations
 	SetProposalBlock(blockHash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) error
-	GetLatestBlockTxs() [][]byte              // Returns the transactions set by `SetProposalBlock`
+	GetBlockTxs() [][]byte                    // Returns the transactions set by `SetProposalBlock`
 	ComputeAppHash() ([]byte, error)          // Update the merkle trees, computes the new state hash, and returns in
 	IndexTransaction(txResult TxResult) error // DISCUSS_IN_THIS_COMMIT: How can we remove `TxResult` from the public interface?
 
@@ -122,10 +122,11 @@ type PersistenceReadContext interface {
 	GetHeight() (int64, error) // Returns the height of the context
 	Close() error              // Closes the read context
 
+	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries
 	GetLatestBlockHeight() (uint64, error)         // Returns the height of the latest block in the persistence layer
 	GetBlockHash(height int64) ([]byte, error)     // Returns the app hash corresponding to the height provided
-	GetLatestProposerAddr() []byte                 // Returns the proposer set via `SetProposalBlock`
+	GetProposerAddr() []byte                       // Returns the proposer set via `SetProposalBlock`
 	GetBlocksPerSession(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
 
 	// Indexer Queries

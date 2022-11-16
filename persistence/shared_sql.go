@@ -32,7 +32,7 @@ func UnstakingHeightToStatus(unstakingHeight int64) int32 {
 }
 
 func (p *PostgresContext) GetExists(actorSchema types.ProtocolActorSchema, address []byte, height int64) (exists bool, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return
 	}
@@ -44,8 +44,8 @@ func (p *PostgresContext) GetExists(actorSchema types.ProtocolActorSchema, addre
 	return
 }
 
-func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema, height int64) (actors []*types.Actor, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+func (p *PostgresContext) getActorsUpdated(actorSchema types.ProtocolActorSchema, height int64) (actors []*types.Actor, err error) {
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return
 	}
@@ -72,7 +72,7 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema
 
 	actors = make([]*types.Actor, len(addrs))
 	for i, addr := range addrs {
-		actor, err := p.GetActor(actorSchema, addr, height)
+		actor, err := p.getActor(actorSchema, addr, height)
 		if err != nil {
 			return nil, err
 		}
@@ -82,20 +82,20 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema
 	return
 }
 
-func (p *PostgresContext) GetActor(actorSchema types.ProtocolActorSchema, address []byte, height int64) (actor *types.Actor, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+func (p *PostgresContext) getActor(actorSchema types.ProtocolActorSchema, address []byte, height int64) (actor *types.Actor, err error) {
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return
 	}
-	actor, height, err = p.GetActorFromRow(tx.QueryRow(ctx, actorSchema.GetQuery(hex.EncodeToString(address), height)))
+	actor, height, err = p.getActorFromRow(tx.QueryRow(ctx, actorSchema.GetQuery(hex.EncodeToString(address), height)))
 	if err != nil {
 		return
 	}
 
-	return p.GetChainsForActor(ctx, tx, actorSchema, actor, height)
+	return p.getChainsForActor(ctx, tx, actorSchema, actor, height)
 }
 
-func (p *PostgresContext) GetActorFromRow(row pgx.Row) (actor *types.Actor, height int64, err error) {
+func (p *PostgresContext) getActorFromRow(row pgx.Row) (actor *types.Actor, height int64, err error) {
 	actor = new(types.Actor)
 	err = row.Scan(
 		&actor.Address,
@@ -109,7 +109,7 @@ func (p *PostgresContext) GetActorFromRow(row pgx.Row) (actor *types.Actor, heig
 	return
 }
 
-func (p *PostgresContext) GetChainsForActor(
+func (p *PostgresContext) getChainsForActor(
 	ctx context.Context,
 	tx pgx.Tx,
 	actorSchema types.ProtocolActorSchema,
@@ -142,7 +142,7 @@ func (p *PostgresContext) GetChainsForActor(
 }
 
 func (p *PostgresContext) InsertActor(actorSchema types.ProtocolActorSchema, actor *types.Actor) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func (p *PostgresContext) InsertActor(actorSchema types.ProtocolActorSchema, act
 }
 
 func (p *PostgresContext) UpdateActor(actorSchema types.ProtocolActorSchema, actor *types.Actor) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -188,7 +188,7 @@ func (p *PostgresContext) UpdateActor(actorSchema types.ProtocolActorSchema, act
 }
 
 func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema types.ProtocolActorSchema, height int64) (actors []modules.IUnstakingActor, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func (p *PostgresContext) GetActorsReadyToUnstake(actorSchema types.ProtocolActo
 
 func (p *PostgresContext) GetActorStatus(actorSchema types.ProtocolActorSchema, address []byte, height int64) (int32, error) {
 	var unstakingHeight int64
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return UndefinedStakingStatus, err
 	}
@@ -235,7 +235,7 @@ func (p *PostgresContext) GetActorStatus(actorSchema types.ProtocolActorSchema, 
 }
 
 func (p *PostgresContext) SetActorUnstakingHeightAndStatus(actorSchema types.ProtocolActorSchema, address []byte, unstakingHeight int64) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -250,7 +250,7 @@ func (p *PostgresContext) SetActorUnstakingHeightAndStatus(actorSchema types.Pro
 }
 
 func (p *PostgresContext) GetActorPauseHeightIfExists(actorSchema types.ProtocolActorSchema, address []byte, height int64) (pausedHeight int64, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return types.DefaultBigInt, err
 	}
@@ -263,7 +263,7 @@ func (p *PostgresContext) GetActorPauseHeightIfExists(actorSchema types.Protocol
 }
 
 func (p PostgresContext) SetActorStatusAndUnstakingHeightIfPausedBefore(actorSchema types.ProtocolActorSchema, pausedBeforeHeight, unstakingHeight int64) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -278,7 +278,7 @@ func (p PostgresContext) SetActorStatusAndUnstakingHeightIfPausedBefore(actorSch
 }
 
 func (p PostgresContext) SetActorPauseHeight(actorSchema types.ProtocolActorSchema, address []byte, pauseHeight int64) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -292,8 +292,8 @@ func (p PostgresContext) SetActorPauseHeight(actorSchema types.ProtocolActorSche
 	return err
 }
 
-func (p PostgresContext) SetActorStakeAmount(actorSchema types.ProtocolActorSchema, address []byte, stakeAmount string) error {
-	ctx, tx, err := p.GetCtxAndTx()
+func (p PostgresContext) setActorStakeAmount(actorSchema types.ProtocolActorSchema, address []byte, stakeAmount string) error {
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -307,7 +307,7 @@ func (p PostgresContext) SetActorStakeAmount(actorSchema types.ProtocolActorSche
 }
 
 func (p PostgresContext) GetActorOutputAddress(actorSchema types.ProtocolActorSchema, operatorAddr []byte, height int64) ([]byte, error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
 	}
@@ -320,8 +320,8 @@ func (p PostgresContext) GetActorOutputAddress(actorSchema types.ProtocolActorSc
 	return hex.DecodeString(outputAddr)
 }
 
-func (p PostgresContext) GetActorStakeAmount(actorSchema types.ProtocolActorSchema, address []byte, height int64) (string, error) {
-	ctx, tx, err := p.GetCtxAndTx()
+func (p PostgresContext) getActorStakeAmount(actorSchema types.ProtocolActorSchema, address []byte, height int64) (string, error) {
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return "", err
 	}

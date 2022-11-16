@@ -20,6 +20,7 @@ import (
 	operation that executes at the end of every block.
 */
 
+// TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
 func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) ([]byte, [][]byte, error) {
 	lastBlockByzantineVals, err := u.GetLastBlockByzantineValidators()
 	if err != nil {
@@ -82,6 +83,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	return appHash, transactions, err
 }
 
+// TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
 func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 	lastByzantineValidators, err := u.GetLastBlockByzantineValidators()
@@ -95,7 +97,7 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 	}
 
 	// deliver txs lifecycle phase
-	for index, transactionProtoBytes := range u.GetPersistenceContext().GetLatestBlockTxs() {
+	for index, transactionProtoBytes := range u.GetPersistenceContext().GetBlockTxs() {
 		tx, err := typesUtil.TransactionFromBytes(transactionProtoBytes)
 		if err != nil {
 			return nil, err
@@ -104,8 +106,8 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 			return nil, err
 		}
 		// TODO(#346): Currently, the pattern is allowing nil err with an error transaction...
-		//                Should we terminate applyBlock immediately if there's an invalid transaction?
-		//                Or wait until the entire lifecycle is over to evaluate an 'invalid' block
+		//             Should we terminate applyBlock immediately if there's an invalid transaction?
+		//             Or wait until the entire lifecycle is over to evaluate an 'invalid' block
 
 		// Validate and apply the transaction to the Postgres database
 		txResult, err := u.ApplyTransaction(index, tx)
@@ -125,7 +127,7 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 	}
 
 	// end block lifecycle phase
-	if err := u.EndBlock(u.GetPersistenceContext().GetLatestProposerAddr()); err != nil {
+	if err := u.EndBlock(u.GetPersistenceContext().GetProposerAddr()); err != nil {
 		return nil, err
 	}
 
