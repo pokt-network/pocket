@@ -4,7 +4,7 @@ package modules
 
 import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 )
 
 type PersistenceModule interface {
@@ -18,7 +18,7 @@ type PersistenceModule interface {
 	NewWriteContext() PersistenceRWContext
 
 	// Debugging / development only
-	HandleDebugMessage(*debug.DebugMessage) error
+	HandleDebugMessage(*messaging.DebugMessage) error
 }
 
 // Interface defining the context within which the node can operate with the persistence layer.

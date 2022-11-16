@@ -3,7 +3,7 @@ package shared
 import (
 	"log"
 
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -121,11 +121,11 @@ func CreateBusWithOptionalModules(
 	return bus
 }
 
-func (m bus) PublishEventToBus(e *debug.PocketEvent) {
+func (m bus) PublishEventToBus(e *messaging.PocketEnvelope) {
 	m.channel <- *e
 }
 
-func (m bus) GetBusEvent() *debug.PocketEvent {
+func (m bus) GetBusEvent() *messaging.PocketEnvelope {
 	e := <-m.channel
 	return &e
 }

@@ -8,12 +8,10 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/rpc"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/telemetry"
 	"github.com/pokt-network/pocket/utility"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -116,7 +114,10 @@ func (node *Node) Start() error {
 	}
 
 	// The first event signaling that the node has started
-	signalNodeStartedEvent := &debug.PocketEvent{Topic: debug.PocketTopic_POCKET_NODE_TOPIC, Data: nil}
+	signalNodeStartedEvent, err := messaging.PackMessage(&messaging.NodeStartedEvent{})
+	if err != nil {
+		return err
+	}
 	node.GetBus().PublishEventToBus(signalNodeStartedEvent)
 
 	log.Println("About to start pocket node main loop...")
@@ -146,39 +147,39 @@ func (m *Node) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (node *Node) handleEvent(event *debug.PocketEvent) error {
-	switch event.Topic {
-	case debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC:
-		return node.GetBus().GetConsensusModule().HandleMessage(event.Data)
-	case debug.PocketTopic_DEBUG_TOPIC:
-		return node.handleDebugEvent(event.Data)
-	case debug.PocketTopic_POCKET_NODE_TOPIC:
-		log.Println("[NOOP] Received pocket node topic signal")
+func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
+	contentType := message.GetContentType()
+	switch contentType {
+	case messaging.NodeStartedEventType:
+		log.Println("[NOOP] Received NodeStartedEvent")
+	case consensus.HotstuffMessageContentType:
+		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
+	case messaging.DebugMessageEventType:
+		return node.handleDebugMessage(message)
 	default:
-		log.Printf("[WARN] Unsupported PocketEvent topic: %s \n", event.Topic)
+		log.Printf("[WARN] Unsupported message content type: %s \n", contentType)
 	}
 	return nil
 }
 
-func (node *Node) handleDebugEvent(anyMessage *anypb.Any) error {
-	var debugMessage debug.DebugMessage
-	err := anypb.UnmarshalTo(anyMessage, &debugMessage, proto.UnmarshalOptions{})
+func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
+	debugMessage, err := messaging.UnpackMessage(message)
 	if err != nil {
 		return err
 	}
-	switch debugMessage.Action {
-	case debug.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
+	switch debugMessage.(*messaging.DebugMessage).Action {
+	case messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
 		fallthrough
-	case debug.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
+	case messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
 		fallthrough
-	case debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
+	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
 		fallthrough
-	case debug.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
-		return node.GetBus().GetConsensusModule().HandleDebugMessage(&debugMessage)
-	case debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
-		return node.GetBus().GetPersistenceModule().HandleDebugMessage(&debugMessage)
+	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
+		return node.GetBus().GetConsensusModule().HandleDebugMessage(debugMessage.(*messaging.DebugMessage))
+	case messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
+		return node.GetBus().GetPersistenceModule().HandleDebugMessage(debugMessage.(*messaging.DebugMessage))
 	default:
-		log.Printf("Debug message: %s \n", debugMessage.Message)
+		log.Printf("Debug message: %s \n", debugMessage.(*messaging.DebugMessage).Message)
 	}
 
 	return nil

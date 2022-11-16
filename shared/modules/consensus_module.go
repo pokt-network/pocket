@@ -3,7 +3,7 @@ package modules
 //go:generate mockgen -source=$GOFILE -destination=./mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
 
 import (
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -21,7 +21,7 @@ type ConsensusModule interface {
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
-	HandleDebugMessage(*debug.DebugMessage) error
+	HandleDebugMessage(*messaging.DebugMessage) error
 
 	// Consensus State Accessors
 	CurrentHeight() uint64

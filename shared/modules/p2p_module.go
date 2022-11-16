@@ -4,7 +4,6 @@ package modules
 
 import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/debug"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -12,7 +11,7 @@ type P2PModule interface {
 	Module
 	ConfigurableModule
 
-	Broadcast(msg *anypb.Any, topic debug.PocketTopic) error                       // TECHDEBT: get rid of topic
-	Send(addr cryptoPocket.Address, msg *anypb.Any, topic debug.PocketTopic) error // TECHDEBT: get rid of topic
+	Broadcast(msg *anypb.Any) error
+	Send(addr cryptoPocket.Address, msg *anypb.Any) error
 	GetAddress() (cryptoPocket.Address, error)
 }
