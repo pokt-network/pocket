@@ -86,10 +86,7 @@ func (pg *PostgresContext) ResetContext() error {
 	return nil
 }
 
-// DISCUSS:
-// 1. Can we remove `Latest` from these Setter & Getter methods
-// 2. Can we scope that to this package?
-// 3. Is `context.go` more appropriate for these than `db.go`?
+// DISCUSS: Given that these are context specific setters/getters, is `context.go` a more appropriate location for these than `db.go`?
 func (p PostgresContext) GetProposerAddr() []byte {
 	return p.proposerAddr
 }

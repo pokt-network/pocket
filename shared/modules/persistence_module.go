@@ -125,10 +125,11 @@ type PersistenceReadContext interface {
 	// Closes the read context
 	Close() error
 
+	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries
-	GetPrevAppHash() (string, error) // app hash from the previous block
+	GetPrevAppHash() (string, error) // hash from the previous block relative to the context height
 	GetLatestBlockHeight() (uint64, error)
-	GetBlockHashAtHeight(height int64) ([]byte, error) // CONSOLIDATE: BlockHash / AppHash / StateHash
+	GetBlockHashAtHeight(height int64) ([]byte, error)
 	GetBlocksPerSession(height int64) (int, error)
 	GetProposerAddr() []byte
 	GetBlockProtoBytes() []byte

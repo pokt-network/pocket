@@ -57,7 +57,7 @@ _The **Proposer** drives the **Validators** to agreement via the **Consensus Lif
 
 1. The `Consensus` module handles the `DECIDE` message
 2. The final `quorumCertificate` is propagated to the `UtilityContext` & `PersistenceContext` on Commit
-3. The persistence module's internal implementation for [Store Block](../../persistence/docs/PROTOCOL_STATE_HASH.md) must execute.
+3. The persistence module's internal implementation for ['Store Block'](../../persistence/docs/PROTOCOL_STORE_BLOCK.md) must execute.
 4. Both the `UtilityContext` and `PersistenceContext` are released
 
 ```mermaid
@@ -142,7 +142,7 @@ sequenceDiagram
 4. Loop over all transactions proposed
 5. Check if the transaction has already been applied to the local state
 6. Perform the CRUD operation(s) corresponding to each transaction
-7. The persistence module's internal implementation for [Updating a State hash](../../persistence/docs/PROTOCOL_STATE_HASH.md) must be triggered
+7. The persistence module's internal implementation for ['Update State Hash'](../../persistence/docs/PROTOCOL_STATE_HASH.md) must be triggered
 8. Validate that the local state hash computed is the same as that proposed
 
 ```mermaid
@@ -168,7 +168,7 @@ sequenceDiagram
     %% TODO: Consolidate AppHash and StateHash
     U->>+P: UpdateAppHash()
     P->>P: Internal Implementation
-    Note over P: Update state hash
+    Note over P: Update State Hash
     P->>-U: stateHash
     U->>C: stateHash
 
