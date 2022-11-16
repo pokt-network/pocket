@@ -4,7 +4,7 @@ _NOTE: This document makes some assumption of P2P implementation details, so ple
 
 ## Context
 
-State Sync is a protocol within a `Pocket` node that enables the download and maintenance of the latest world state. This protocol enables network actors to participate in network activities (like Consensus and Web3 provisioning and access) in present time, by ensuring the synchronization of the individual node with the collective.
+State Sync is a protocol within a `Pocket` node that enables the download and maintenance of the latest world state. This protocol enables network actors to participate in network activities (like Consensus or Web3 provisioning and access) in present time, by ensuring the synchronization of the individual node with the collective.
 
 ## Core Protocol
 
@@ -21,7 +21,7 @@ type PeerSyncMeta interface {
 }
 ```
 
-This data is collected through the `P2P` protocol during the `Churn Management Protocol`, but for the sake of demonstration and simplicity, it may be abstracted to an `ask-response` cycle where the node continuously asks this meta-information of its active peers.
+This data is collected through the `P2P` module during the `Churn Management Protocol`, but for the sake of demonstration and simplicity, it may be abstracted to an `ask-response` cycle where the node continuously asks this meta-information of its active peers.
 
 ```mermaid
 sequenceDiagram
@@ -49,12 +49,12 @@ Using the `PeerSyncAggregate`, a Node is able to compare its local `SyncState` a
 
 ## State Sync Operation Modes
 
-State sync can be viewed as a state machine that transverses various modes that node can be in, including:
+State sync can be viewed as a state machine that transverses various modes the node can be in, including:
 * Pacemaker Mode
 * Sync Mode
 * Server Mode
 
-The functionality of the node depends on the mode is operating it. 
+The functionality of the node depends on the mode it is operating it. 
 
 *NOTE: that the modes are not necessarily mutually exclusive (e.g. the node can be in `Server Mode` and `Pacemaker Mode` at the same time).*
 
@@ -68,7 +68,7 @@ If the Node is `Syncing` or `localSyncState.Height < GlobalSyncMeta.Height` then
 
 In `SyncMode`, the Node is catching up to the latest block by making `BlockRequests` to its fellow eligible peers. A peer is eligible for a `BlockRequest` if `PeerMeta.MinHeight` <= `self.MaxBlockHeight` <= `PeerMeta.MaxHeight`.
 
-Though it is `unspecified` whether or not a Node may make the `BlockRequests` in order or parallelize, due to the cryptographic restraints of block processing, the Node must process the blocks sequentially by `ApplyingBlock` 1 by 1 until it is `Synced`.
+Though it is `unspecified` whether or not a Node may make `BlockRequests` in order or in parallel, the cryptographic restraints of block processing require the Node to call `ApplyingBlock` sequentially until it is `Synced`.
 
 It is important to note, if any blocks processed result in an invalid `AppHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found.
 
@@ -80,8 +80,8 @@ In the `StateSync` protocol, the Node fields valid `BlockRequests` from its peer
 graph TD
     A[StateSync] -->|IsCaughtUp| B(Pacemaker Mode)
     B --> |Consensus Messages| C(ConsensusModule.Pacemaker)
-    A -->|IsSyncing| E(Sync Mode)
-    E -->|Request Block| G[Peers]
+    A --> |IsSyncing| E(Sync Mode)
+    E --> |Request Block| G[Peers]
     G--> |ApplyBlock| A
     A --> D[Server Mode]
     D --> |Serve Blocks Upon Request| G
