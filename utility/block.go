@@ -73,7 +73,6 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	if err := u.EndBlock(proposer); err != nil {
 		return nil, nil, err
 	}
-
 	// return the app hash (consensus module will get the validator set directly)
 	appHash, err := u.Context.ComputeAppHash()
 	if err != nil {
@@ -130,7 +129,6 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 	if err := u.EndBlock(u.GetPersistenceContext().GetProposerAddr()); err != nil {
 		return nil, err
 	}
-
 	// return the app hash (consensus module will get the validator set directly)
 	appHash, err = u.Context.ComputeAppHash()
 	if err != nil {
