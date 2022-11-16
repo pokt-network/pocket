@@ -50,18 +50,18 @@ Using the `PeerSyncAggregate`, a Node is able to compare its local `SyncState` a
 ## State Sync Operation Modes
 
 State sync can be viewed as a state machine that transverses various modes the node can be in, including:
-* Pacemaker Mode
+* Synced Mode
 * Sync Mode
 * Server Mode
 
 The functionality of the node depends on the mode it is operating it. 
 
-*NOTE: that the modes are not necessarily mutually exclusive (e.g. the node can be in `Server Mode` and `Pacemaker Mode` at the same time).*
+*NOTE: that the modes are not necessarily mutually exclusive (e.g. the node can be in `Server Mode` and `Synced Mode` at the same time).*
 
-### Pacemaker Mode
-If the Node is `Synced` or `localSyncState.Height == GlobalSyncMeta.Height` then the `StateSync` protocol is in `PacemakerMode`.
+### Synced Mode
+If the Node is `Synced` or `localSyncState.Height == GlobalSyncMeta.Height` then the `StateSync` protocol is in `SyncedMode`.
 
-In `PacemakerMode`, the Node is caught up to the latest block and relies on the Consensus Module's Pacemaker to maintain a synchronous state with the global `SyncState`.
+In `SyncedMode`, the Node is caught up to the latest block and relies on new blocks to be propagated via the P2P network after Validators reach consensus.
 
 ### Sync Mode
 If the Node is `Syncing` or `localSyncState.Height < GlobalSyncMeta.Height` then the `StateSync` protocol is in `SyncMode`.
@@ -78,8 +78,8 @@ In the `StateSync` protocol, the Node fields valid `BlockRequests` from its peer
 
 ```mermaid
 graph TD
-    A[StateSync] -->|IsCaughtUp| B(Pacemaker Mode)
-    B --> |Consensus Messages| C(ConsensusModule.Pacemaker)
+    A[StateSync] -->|IsCaughtUp| B(Synced Mode)
+    B --> |Consensus Messages| C(ConsensusModule.Synced)
     A --> |IsSyncing| E(Sync Mode)
     E --> |Request Block| G[Peers]
     G--> |ApplyBlock| A

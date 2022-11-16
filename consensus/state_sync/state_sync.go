@@ -35,20 +35,20 @@ type StateSyncModule interface {
 	// This sub-protocol is continuous throughout the lifecycle of StateSync.
 	RunServerMode()
 
-	// In PacemakerMode, the Node is caught up to the latest block and relies on the Consensus Module’s Pacemaker
+	// In SyncedMode, the Node is caught up to the latest block and is listening & waiting for the latest block to be passed
 	// to maintain a synchronous state with the global SyncState.
 	// - UpdatePeerMetadata from P2P module
 	// - UpdateSyncState
-	// - Defer Sync to Pacemaker
-	// - If `localSyncState.Height < globalNetworkSyncState.Height` -> RunSyncMode() // careful about race-conditions with Pacemaker
-	RunPacemakerMode()
+	// - Rely on new blocks to be propagated via the P2P network after Validators reach consensus
+	// - If `localSyncState.Height < globalNetworkSyncState.Height` -> RunSyncMode() // careful about race-conditions
+	RunSyncedMode()
 
 	// Runs sync mode 'service' that continuously runs while `localSyncState.Height < globalNetworkSyncState.Height`
 	// - UpdatePeerMetadata from P2P module
 	// - Retrieve missing blocks from peers
 	// - Process retrieved blocks
 	// - UpdateSyncState
-	// - If `localSyncState.Height == globalNetworkSyncState.Height` -> RunPacemakerMode()
+	// - If `localSyncState.Height == globalNetworkSyncState.Height` -> RunSyncedMode()
 	RunSyncMode()
 
 	// Returns the `highest priority aka lowest height` missing block heights up to `max` heights
