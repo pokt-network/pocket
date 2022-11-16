@@ -83,7 +83,7 @@ type SyncState interface {
 
 type BlockRequestMessage interface {
 	// the height the peer wants from the block store
-	GetRequestedHeight() int64
+	GetHeight() int64
 }
 
 type BlockResponseMessage interface {
