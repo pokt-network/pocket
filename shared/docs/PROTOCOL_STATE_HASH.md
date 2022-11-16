@@ -154,15 +154,13 @@ sequenceDiagram
 
     loop for each tx in txs
         U->>+P: TransactionExists(txHash)
-        P->>-U: true | false
-        opt if tx is not indexed
-            loop for each operation in tx
-                U->>+P: Get*/Set*/Update*/Insert*
-                P->>-U: err_code
-                U->>U: Validation logic
-                activate U
-                deactivate U
-            end
+        P->>-U: false (does not exist)
+        loop for each operation in tx
+            U->>+P: Get*/Set*/Update*/Insert*
+            P->>-U: err_code
+            U->>U: Validation logic
+            activate U
+            deactivate U
         end
     end
     %% TODO: Consolidate AppHash and StateHash

@@ -19,6 +19,7 @@ import (
 	operation that executes at the end of every block.
 */
 
+// TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
 func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) ([]byte, [][]byte, error) {
 	lastBlockByzantineVals, err := u.GetLastBlockByzantineValidators()
 	if err != nil {
@@ -73,6 +74,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	return appHash, transactions, err
 }
 
+// TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
 func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 	var txResults []modules.TxResult

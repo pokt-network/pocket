@@ -29,7 +29,6 @@ type UtilityContext interface {
 	GetPersistenceContext() PersistenceRWContext
 
 	// Validation operations
-
 	CheckTransaction(tx []byte) error
 }
 
