@@ -98,6 +98,7 @@ graph TD
 * `Block Stream Design` - Update the Block by Block design to stream blocks via a WebSocket from a single connectable peer.
 
 ## Research Items
+TODO(M5): Create issues to track and discuss these work items.
 
 How the persistence layer design of `pruning` the Merkle Tree affects `StateSync`.
 
