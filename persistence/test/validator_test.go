@@ -24,7 +24,7 @@ func TestGetSetValidatorStakeAmount(t *testing.T) {
 	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestValidator, db.GetValidatorStakeAmount, db.SetValidatorStakeAmount, 1)
 }
 
-func TestGetValidatorUpdateAtHeight(t *testing.T) {
+func TestGetValidatorUpdatedAtHeight(t *testing.T) {
 	getValidatorsUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*types.Actor, error) {
 		return db.GetActorsUpdated(types.ValidatorActor, height)
 	}
