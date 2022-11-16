@@ -55,10 +55,10 @@ _The **Proposer** drives the **Validators** to agreement via the **Consensus Lif
 
 ---
 
-1. The `Consensus` module handles the `DECIDE` message
-2. The final `quorumCertificate` is propagated to the `UtilityContext` & `PersistenceContext` on Commit
-3. The persistence module's internal implementation for ['Store Block'](../../persistence/docs/PROTOCOL_STORE_BLOCK.md) must execute.
-4. Both the `UtilityContext` and `PersistenceContext` are released
+5. The `Consensus` module handles the `DECIDE` message
+6. The final `quorumCertificate` is propagated to the `UtilityContext` & `PersistenceContext` on `Commit`
+7. The persistence module's internal implementation for ['Store Block'](../../persistence/docs/PROTOCOL_STORE_BLOCK.md) must execute.
+8. Both the `UtilityContext` and `PersistenceContext` are released
 
 ```mermaid
 sequenceDiagram
