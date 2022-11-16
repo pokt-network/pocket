@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.9] - 2022-11-16
+
+- Propagate `hightPrepareQC` if available to the block being created
+- Remove `blockProtoBytes` from propagation in `SetProposalBlock`
+- Guarantee that write context is released when refreshing the utility context
+- Use `GetBlockHash(height)` instead of `GetPrevAppHash` to be more explicit
+- Use the real `quorumCert` when preparing a new block
+
 ## [0.0.0.8] - 2022-11-15
 
 - Propagate the `quorumCertificate` on `Block` commit to the `Utility` module
