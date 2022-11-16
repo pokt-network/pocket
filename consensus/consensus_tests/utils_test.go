@@ -12,8 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pokt-network/pocket/shared/codec"
-
 	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
@@ -21,6 +19,7 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared"
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -156,6 +155,7 @@ func CreateTestConsensusPocketNode(
 	return pocketNode
 }
 
+// TODO: Reduce package scope visibility in the consensus test module
 func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
 	for _, pocketNode := range pocketNodes {
 		go pocketNode.Start()
@@ -302,9 +302,11 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 
+	// TODO_IN_THIS_COMMIT(olshansky): figure out why bugs in the non main go channel block rather than fails
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(int64(-1)).Return(persistenceContextMock, nil).AnyTimes()
+	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
 	// of the consensus module. This one is only used when loading the initial consensus module
