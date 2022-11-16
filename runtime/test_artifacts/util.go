@@ -95,6 +95,5 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 	}
 }
 
-func CleanupTest(u utility.UtilityContext) {
-	// CLEANUP: Remove this since it's no longer used or necessary.
-}
+// CLEANUP: Remove this since it's no longer used or necessary.
+func CleanupTest(u utility.UtilityContext) {}

@@ -38,6 +38,8 @@ Supporting StateHash changes
 - Consolidate all `resetContext` related operations into a single function
 - Implemented `ReleaseWriteContext`
 - Implemented ability to `ClearAllState` and `ResetToGenesis` for debugging & testing purposes
+- Added unit tests for all of the supporting SQL functions implemented
+- Some improvements in unit test preparation & cleanup (limited to this PR's functionality)
 
 KVStore changes
 

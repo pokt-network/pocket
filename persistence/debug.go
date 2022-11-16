@@ -41,9 +41,9 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 	return nil
 }
 
+// IMPROVE: Add an iterator to the `kvstore` and use that instead
 func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
-	// TODO: Add an iterator to the `kvstore` and use that instead
-	height := m.GetBus().GetConsensusModule().CurrentHeight()
+	height := m.GetBus().GetConsensusModule().CurrentHeight() - 1
 	blockBytes, err := m.GetBlockStore().Get(heightToBytes(int64(height)))
 	if err != nil {
 		log.Printf("Error getting block %d from block store: %s \n", height, err)
@@ -59,7 +59,7 @@ func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 	log.Printf("Block at height %d: %+v \n", height, block)
 }
 
-// TODO: Make sure this is atomic
+// TECHDEBT: Make sure this is atomic
 func (m *persistenceModule) clearAllState(_ *debug.DebugMessage) error {
 	ctx, err := m.NewRWContext(-1)
 	if err != nil {

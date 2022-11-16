@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetBlockHash(t *testing.T) {
+func TestGetBlockStateHash(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
 	// Cannot get prev hash at height 0
