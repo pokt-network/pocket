@@ -11,7 +11,7 @@ type StateSyncModule interface {
 
 	// -- Constructor Setter Functions --
 
-	// `HandleBlock` function contract:
+	// `HandleStateSync` function:
 	// - Create a Utility Context
 	// - Block.ValidateBasic()
 	// - Consensus Module Replica Path
@@ -19,15 +19,15 @@ type StateSyncModule interface {
 	//   - Apply Block:    utilityContext.ApplyBlock(block)
 	//   - Validate Block: utilityContext.AppHash == Block.AppHash
 	//   - Store Block:    consensusModule.CommitBlock()
-	SetHandleBlock(HandleBlock func(block *typesCons.Block) error)
+	HandleStateSyncMessage(msg BlockResponseMessage)
 
-	// `GetPeerSyncMeta` function contract:
+	// `GetPeerSyncMeta` function:
 	// - Retrieve a list of active peers with their metadata (identified and retrieved through P2P's `Churn Management`)
-	SetGetPeerMetadata(GetPeerSyncMeta func() (peers []PeerSyncMeta, err error))
+	GetPeerMetadata(GetPeerSyncMeta func() (peers []PeerSyncMeta, err error))
 
 	// `NetworkSend` function contract:
 	// - sends data to an address via P2P network
-	SetNetworkSend(NetworkSend func(data []byte, address cryptoPocket.Address) error)
+	NetworkSend(NetworkSend func(data []byte, address cryptoPocket.Address) error)
 
 	// -- Sync modes --
 
@@ -91,7 +91,7 @@ type BlockResponseMessage interface {
 	GetBlockBytes() []byte
 }
 
-// TODO: needs to be shared between P2P as the Churn Manageent Process updates this information
+// TODO: needs to be shared between P2P as the Churn Management Process updates this information
 type PeerSyncMeta interface {
 	// the unique identifier associated with the peer
 	GetPeerID() string
