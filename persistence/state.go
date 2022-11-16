@@ -10,6 +10,7 @@ import (
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -26,7 +27,7 @@ type stateTrees struct {
 
 // A list of Merkle Trees used to maintain the state hash.
 const (
-	// VERY IMPORTANT: The order in which these trees are defined is important and strict. It implicitly
+	// IMPORTANT: The order in which these trees are defined is important and strict. It implicitly
 	// defines the index of the root hash each independent as they are concatenated together
 	// to generate the state hash.
 
@@ -47,6 +48,12 @@ const (
 
 	// Used for iteration purposes only; see https://stackoverflow.com/a/64178235/768439 as a reference
 	numMerkleTrees
+)
+
+const (
+	// IMPORTANT: The order, ascending, is critical since it defines the integrity of `transactionsHash`.
+	// If this changes, the `transactionsHash`` in the block will differ, rendering it invalid.
+	txsOrderInBlockHashDescending = false
 )
 
 var merkleTreeToString = map[merkleTree]string{
@@ -190,6 +197,27 @@ func (p *PostgresContext) updateMerkleTrees() ([]byte, error) {
 	return stateHash[:], nil
 }
 
+// Transactions Hash Helpers
+
+// Returns a digest (a single hash) of all the transactions included in the block.
+// This allows separating the integrity of the transactions from their storage.
+func (p PostgresContext) getTxsHash() (txs []byte, err error) {
+	txResults, err := p.txIndexer.GetByHeight(p.Height, txsOrderInBlockHashDescending)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, txResult := range txResults {
+		txHash, err := txResult.Hash()
+		if err != nil {
+			return nil, err
+		}
+		txs = append(txs, txHash...)
+	}
+
+	return crypto.SHA3Hash(txs), nil
+}
+
 // Actor Tree Helpers
 
 func (p *PostgresContext) updateActorsTree(actorType types.ActorType) error {
@@ -227,7 +255,7 @@ func (p *PostgresContext) getActorsUpdatedAtHeight(actorType types.ActorType, he
 		return nil, fmt.Errorf("no schema found for actor type: %s", actorType)
 	}
 
-	schemaActors, err := p.getActorsUpdated(actorSchema, height)
+	schemaActors, err := p.GetActorsUpdated(actorSchema, height)
 	if err != nil {
 		return nil, err
 	}
@@ -320,11 +348,11 @@ func (p *PostgresContext) updateTransactionsTree() error {
 }
 
 func (p *PostgresContext) updateParamsTree() error {
-	// TODO_IN_NEXT_COMMIT(olshansky): Implement me
+	// TODO(core starter task): Implement `updateParamsTree`
 	return nil
 }
 
 func (p *PostgresContext) updateFlagsTree() error {
-	// TODO_IN_NEXT_COMMIT(olshansky): Implement me
+	// TODO(core starter task): Implement `updateParamsTree`
 	return nil
 }

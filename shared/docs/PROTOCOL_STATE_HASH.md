@@ -144,7 +144,7 @@ sequenceDiagram
 4. Loop over all transactions proposed
 5. Check if the transaction has already been applied to the local state
 6. Perform the CRUD operation(s) corresponding to each transaction
-7. The persistence module's internal implementation for ['Update State Hash'](../../persistence/docs/PROTOCOL_STATE_HASH.md) must be triggered
+7. The persistence module's internal implementation for ['Compute State Hash'](../../persistence/docs/PROTOCOL_STATE_HASH.md) must be triggered
 8. Validate that the local state hash computed is the same as that proposed
 
 ```mermaid
@@ -166,12 +166,12 @@ sequenceDiagram
         end
     end
     %% TODO: Consolidate AppHash and StateHash
-    U->>+P: UpdateAppHash()
+    U->>+P: ComputeAppHash()
     P->>P: Internal Implementation
-    Note over P: Update State Hash
+    Note over P: Compute State Hash
     P->>-U: stateHash
     U->>C: stateHash
 
-    %% Validate the updated hash
+    %% Validate the computed hash
     C->>C: Compare local hash<br>against proposed hash
 ```

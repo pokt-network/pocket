@@ -10,7 +10,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// DISCUSS: Should we make this return an error and let the caller decide if it should log a fatal error?
+// CONSIDERATION: Should this return an error and let the caller decide if it should log a fatal error?
 func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesisState) {
 	log.Println("Populating genesis state...")
 
@@ -150,15 +150,12 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		log.Fatalf("an error occurred updating the app hash during genesis: %s", err.Error())
 	}
 
-	// TODO_IN_THIS_COMMIT: Figure out what these values for genesis should be
-	genesisQuorumCert := []byte("placeholderQuorumCert")
-	genesisProposer := []byte("placeholderProposer")
-	if err := rwContext.SetProposalBlock(hex.EncodeToString(appHash), genesisProposer, genesisQuorumCert, nil); err != nil {
+	if err := rwContext.SetProposalBlock(hex.EncodeToString(appHash), nil, nil, nil); err != nil {
 		log.Fatalf("an error occurred setting the proposal block during genesis: %s", err.Error())
 	}
 
 	// This update the DB, blockstore, and commits the state
-	if err = rwContext.Commit(genesisQuorumCert); err != nil {
+	if err = rwContext.Commit(nil); err != nil {
 		log.Fatalf("error committing genesis state to DB %s ", err.Error())
 	}
 }

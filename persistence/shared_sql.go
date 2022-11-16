@@ -44,7 +44,7 @@ func (p *PostgresContext) GetExists(actorSchema types.ProtocolActorSchema, addre
 	return
 }
 
-func (p *PostgresContext) getActorsUpdated(actorSchema types.ProtocolActorSchema, height int64) (actors []*types.Actor, err error) {
+func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema, height int64) (actors []*types.Actor, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return

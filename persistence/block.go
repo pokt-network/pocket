@@ -7,13 +7,6 @@ import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/crypto"
-)
-
-const (
-	// The order (ascending) is important here since it is used to comprise the hash in the block.
-	// If this changes, the txsHash in the block will differ rendering it invalid.
-	txsOrderInBlockHashDescending = false
 )
 
 // OPTIMIZE(team): get from blockstore or keep in memory
@@ -94,8 +87,8 @@ func (p *PostgresContext) prepareBlock(quorumCert []byte) (*types.Block, error) 
 
 	block := &types.Block{
 		Height:            uint64(p.Height),
-		Hash:              p.blockHash,
-		PrevHash:          hex.EncodeToString(prevHash),
+		StateHash:         p.blockHash,
+		PrevStateHash:     hex.EncodeToString(prevHash),
 		ProposerAddress:   p.proposerAddr,
 		QuorumCertificate: quorumCert,
 		TransactionsHash:  txsHash,
@@ -111,7 +104,7 @@ func (p *PostgresContext) insertBlock(block *types.Block) error {
 		return err
 	}
 
-	_, err = tx.Exec(ctx, types.InsertBlockQuery(block.Height, block.Hash, block.ProposerAddress, block.QuorumCertificate))
+	_, err = tx.Exec(ctx, types.InsertBlockQuery(block.Height, block.StateHash, block.ProposerAddress, block.QuorumCertificate))
 	return err
 }
 
@@ -122,25 +115,6 @@ func (p PostgresContext) storeBlock(block *types.Block) error {
 		return err
 	}
 	return p.blockStore.Set(heightToBytes(p.Height), blockBz)
-}
-
-// Returns a digest (a single hash) of all the transactions included in the block.
-// This allows separating the integrity of the transactions from their storage.
-func (p PostgresContext) getTxsHash() (txs []byte, err error) {
-	txResults, err := p.txIndexer.GetByHeight(p.Height, txsOrderInBlockHashDescending)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, txResult := range txResults {
-		txHash, err := txResult.Hash()
-		if err != nil {
-			return nil, err
-		}
-		txs = append(txs, txHash...)
-	}
-
-	return crypto.SHA3Hash(txs), nil
 }
 
 func heightToBytes(height int64) []byte {

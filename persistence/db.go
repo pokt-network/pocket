@@ -47,14 +47,12 @@ type PostgresContext struct {
 	txIndexer  indexer.TxIndexer
 	stateTrees *stateTrees
 
-	// DISCUSS_IN_THIS_COMMIT:
-	// 1. Could/should we rename these to proposalXX?
-	// 2. Could/should we move these to the utilityContext?
+	// IMPROVE: Could/should we rename these to proposalXX?
+	// DISCUSS: Could/should we move these to the utilityContext?
 	proposerAddr []byte
 	quorumCert   []byte
 	blockHash    string // CONSOLIDATE: blockHash / appHash / stateHash
 	blockTxs     [][]byte
-	// txResults    []modules.TxResult // TODO_IN_THIS_COMMIT: FIX THIS. Not indexed by `txIndexer` until commit.
 }
 
 func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx, error) {
@@ -98,14 +96,6 @@ func (p PostgresContext) GetProposerAddr() []byte {
 func (p PostgresContext) GetBlockTxs() [][]byte {
 	return p.blockTxs
 }
-
-// func (p PostgresContext) GetTxResults() []modules.TxResult {
-// 	return p.txResults
-// }
-
-// func (p *PostgresContext) SetTxResults(txResults []modules.TxResult) {
-// 	p.txResults = txResults
-// }
 
 // TECHDEBT: Implement proper connection pooling
 func connectToDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {

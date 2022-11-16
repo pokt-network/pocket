@@ -14,8 +14,7 @@ func (p PostgresContext) NewSavePoint(bytes []byte) error {
 	return nil
 }
 
-// TODO(#327): When implementing save points and rollbacks, make sure that `prepareBlock`,
-// `insertBlock`, and `storeBlock` are all atomic.
+// TECHDEBT(#327): Guarantee atomicity betweens `prepareBlock`, `insertBlock` and `storeBlock` for save points & rollbacks.
 func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	log.Println("TODO: RollbackToSavePoint not fully implemented")
 	return p.GetTx().Rollback(context.TODO())
@@ -42,9 +41,9 @@ func (p *PostgresContext) ComputeAppHash() ([]byte, error) {
 	return p.updateMerkleTrees()
 }
 
-// TECHDEBT: Make sure these operations are atomic
+// TECHDEBT(#327): Make sure these operations are atomic
 func (p PostgresContext) Commit(quorumCert []byte) error {
-	log.Printf("About to commit context at height %d.\n", p.Height)
+	log.Printf("About to commit block & context at height %d.\n", p.Height)
 
 	// Create a persistence block proto
 	block, err := p.prepareBlock(quorumCert)

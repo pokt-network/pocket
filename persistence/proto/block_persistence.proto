@@ -5,9 +5,11 @@ option go_package = "github.com/pokt-network/pocket/persistence/types";
 
 message Block {
     uint64 height = 1;
-    string hash = 2;
-    string prevHash = 3; // The hash of the block at height-1
+    string stateHash = 2;
+    string prevStateHash = 3; // The stateHash of the block at height-1
     bytes proposerAddress = 4; // The proposer of this block
     bytes quorumCertificate = 5; // The quorum certificate containing signature from 2/3+ validators at height
+    // DISCUSS_IN_THIS_COMMIT: I don't think `transactionsHash` is even needed since it is captured
+    // within the `hash` via the `transactionTree`.
     bytes transactionsHash = 6; // The hash of all the translactions in the block
 }

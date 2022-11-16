@@ -152,8 +152,7 @@ func (p PostgresContext) GetPoolsUpdated(height int64) ([]*types.Account, error)
 
 // Joint Pool & Account Helpers
 
-// Helper for shared logic between `getPoolsUpdated` and `getAccountsUpdated` while keeping an explicit
-// external interface.
+// Shared logic between `getPoolsUpdated` & `getAccountsUpdated` to keep explicit external interfaces
 func (p *PostgresContext) getPoolOrAccUpdatedInternal(query string) (accounts []*types.Account, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {

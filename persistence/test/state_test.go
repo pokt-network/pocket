@@ -112,9 +112,9 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		var block types.Block
 		err = codec.GetCodec().Unmarshal(blockBz, &block)
 		require.NoError(t, err)
-		require.Equal(t, expectedAppHash, block.Hash) // verify block hash
+		require.Equal(t, expectedAppHash, block.StateHash) // verify block hash
 		if i > 0 {
-			require.Equal(t, encodedAppHash[i-1], block.PrevHash) // verify chain chain
+			require.Equal(t, encodedAppHash[i-1], block.PrevStateHash) // verify chain chain
 		}
 	}
 }

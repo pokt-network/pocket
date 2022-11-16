@@ -28,7 +28,7 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 		if err := m.clearAllState(debugMessage); err != nil {
 			return err
 		}
-	// Clears all the state (SQL DB, KV Stores, Trees, etc) to the tate specified in the genesis file provided
+	// Resets all the state (SQL DB, KV Stores, Trees, etc) to the tate specified in the genesis file provided
 	case debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS:
 		if err := m.clearAllState(debugMessage); err != nil {
 			return err
