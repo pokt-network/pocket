@@ -1,9 +1,12 @@
+load('ext://helm_resource', 'helm_resource', 'helm_repo')
+load('ext://namespace', 'namespace_create')
+
 # TODO: add resource dependencies https://docs.tilt.dev/resource_dependencies.html#adding-resource_deps-for-startup-order
 
 # List of directories Tilt watches to trigger a hot-reload on changes
 deps = [
     'app',
-    'build',
+    # 'build',
     'consensus',
     'p2p',
     'persistance',
@@ -30,6 +33,16 @@ is_psql_operator_installed = str(local('kubectl api-resources | grep postgres | 
 if is_psql_operator_installed == '0':
   print('Installing postgres operator')
   local('kubectl apply -k github.com/zalando/postgres-operator/manifests')
+
+# Deploy observability stack (grafana, prometheus, loki) and wire it up with localnet
+# TODO(@okdas): check if helm cli is available.
+helm_repo('grafana', 'https://grafana.github.io/helm-charts')
+helm_repo('prometheus-community', 'https://prometheus-community.github.io/helm-charts')
+
+if not os.path.exists('build/localnet/observability-stack/charts'):
+    local('helm dependency build build/localnet/observability-stack')
+namespace_create('observability')
+k8s_yaml(helm("build/localnet/observability-stack", name='observability-stack', namespace="observability"))
 
 # Builds the pocket binary. Note target OS is linux, because it later will be run in a container.
 local_resource('pocket: Watch & Compile', 'GOOS=linux go build -o bin/pocket-linux app/pocket/main.go', deps=deps)
@@ -75,7 +88,7 @@ k8s_yaml([
     'build/localnet/postgres-database.yaml',
     'build/localnet/private-keys.yaml',
     'build/localnet/validators.yaml',
-    'build/localnet/cli-client.yaml',
+    'build/localnet/cli-client.yaml', # TODO(@okdas): switch to https://github.com/tilt-dev/tilt-extensions/tree/master/deployment
     'build/localnet/network.yaml'])
 
 # Exposes postgres port to 5432 on the host machine.
