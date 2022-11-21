@@ -140,9 +140,11 @@ func CreateTestConsensusPocketNode(
 	p2pMock := baseP2PMock(t, testChannel)
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
-	rpcMock := baseRpcMock(t, testChannel)
+	loggerMock := baseLoggerMock(t, testChannel)
+  rpcMock := baseRpcMock(t, testChannel)
+  
+	bus, err := shared.CreateBus(runtimeMgr, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock, loggerMock, rpcMock)
 
-	bus, err := shared.CreateBus(runtimeMgr, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock, rpcMock)
 	require.NoError(t, err)
 
 	pk, err := cryptoPocket.NewPrivateKey(runtimeMgr.GetConfig().GetBaseConfig().GetPrivateKey())
@@ -417,6 +419,15 @@ func baseTelemetryEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetr
 	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	return eventMetricsAgentMock
+}
+
+func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockLoggerModule {
+	ctrl := gomock.NewController(t)
+	loggerMock := modulesMock.NewMockLoggerModule(ctrl)
+
+	loggerMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+
+	return loggerMock
 }
 
 func logTime(clock *clock.Mock) {

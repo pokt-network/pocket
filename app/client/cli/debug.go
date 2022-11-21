@@ -10,6 +10,7 @@ import (
 
 	"github.com/manifoldco/promptui"
 	"github.com/pokt-network/pocket/consensus"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/rpc"
 	"github.com/pokt-network/pocket/runtime"
@@ -181,7 +182,7 @@ func initDebug(remoteCLIURL string) {
 
 		consM, err := consensus.Create(runtimeMgr)
 		if err != nil {
-			log.Fatalf("[ERROR] Failed to create consensus module: %v", err.Error())
+			logger.Global.Fatal().Err(err).Msg("Failed to create consensus module")
 		}
 		consensusMod = consM.(modules.ConsensusModule)
 
@@ -190,9 +191,6 @@ func initDebug(remoteCLIURL string) {
 			log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 		}
 		p2pMod = p2pM.(modules.P2PModule)
-		if err != nil {
-			log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
-		}
 
 		// This telemetry module instance is a NOOP because the 'enable_telemetry' flag in the `cfg` above is set to false.
 		// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
@@ -200,17 +198,23 @@ func initDebug(remoteCLIURL string) {
 		// module that NOOPs (per the configs above) is injected.
 		telemetryM, err := telemetry.Create(runtimeMgr)
 		if err != nil {
-			log.Fatalf("[ERROR] Failed to create NOOP telemetry module: " + err.Error())
+			logger.Global.Fatal().Err(err).Msg("Failed to create telemetry module")
 		}
 		telemetryMod := telemetryM.(modules.TelemetryModule)
 
-		rpcM, err := rpc.Create(runtimeMgr)
+		loggerM, err := logger.Create(runtimeMgr)
 		if err != nil {
-			log.Fatalf("[ERROR] Failed to create rpc module: %v", err.Error())
+			logger.Global.Fatal().Err(err).Msg("Failed to create logger module")
+		}
+		loggerMod := loggerM.(modules.LoggerModule)
+    
+ 		rpcM, err := rpc.Create(runtimeMgr)
+		if err != nil {
+      logger.Global.Fatal().Err(err).Msg("Failed to create rpc module")
 		}
 		rpcMod := rpcM.(modules.RPCModule)
 
-		_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod, rpcMod) // TODO: refactor using the `WithXXXModule()` pattern accepting a slice of IntegratableModule
+		_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod, loggerMod, rpcMod) // REFACTOR: use the `WithXXXModule()` pattern accepting a slice of IntegratableModule
 
 		p2pMod.Start()
 	})

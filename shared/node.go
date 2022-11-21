@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/pokt-network/pocket/consensus"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/rpc"
@@ -57,6 +58,11 @@ func (m *Node) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 		return nil, err
 	}
 
+	loggerMod, err := logger.Create(runtimeMgr)
+	if err != nil {
+		return nil, err
+	}
+  
 	rpcMod, err := rpc.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
@@ -69,6 +75,7 @@ func (m *Node) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 		utilityMod.(modules.UtilityModule),
 		consensusMod.(modules.ConsensusModule),
 		telemetryMod.(modules.TelemetryModule),
+		loggerMod.(modules.LoggerModule),
 		rpcMod.(modules.RPCModule),
 	)
 	if err != nil {

@@ -28,6 +28,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/quasilyte/go-ruleguard/dsl v0.3.21
+	github.com/rs/zerolog v1.15.0
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/viper v1.13.0
 )
