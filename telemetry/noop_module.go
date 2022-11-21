@@ -18,7 +18,7 @@ type NoopTelemetryModule struct {
 }
 
 const (
-	NoOpModuleName = "noOP"
+	noOpModuleName = "noOP"
 )
 
 func NOOP() {
@@ -45,7 +45,7 @@ func (m *NoopTelemetryModule) Stop() error {
 }
 
 func (m *NoopTelemetryModule) GetModuleName() string {
-	return NoOpModuleName
+	return noOpModuleName
 }
 
 func (m *NoopTelemetryModule) SetBus(bus modules.Bus) {

@@ -11,7 +11,6 @@ import (
 )
 
 // init initializes a map that contains the metadata extracted from `gov.proto`.
-//
 // Since protobuf files do not change at runtime, it seems efficient to do it here.
 func init() {
 	govParamMetadataMap = parseGovProto()
@@ -59,9 +58,7 @@ var (
 )
 
 // InsertParams generates the SQL INSERT statement given a *genesis.Params
-//
 // It leverages metadata in the form of struct tags (see `parseGovProto` for more information).
-//
 // WARNING: reflections in prod
 func InsertParams(params modules.Params, height int64) string {
 	val := reflect.ValueOf(params)

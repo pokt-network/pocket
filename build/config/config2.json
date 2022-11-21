@@ -35,5 +35,11 @@
   "logger": {
     "level": "debug",
     "format": "pretty"
+  },
+  "rpc": {
+    "enabled": true,
+    "port": "50832",
+    "timeout": 30000,
+    "use_cors": false
   }
 }

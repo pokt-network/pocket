@@ -5,6 +5,7 @@ import (
 	typesLogger "github.com/pokt-network/pocket/logger"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	typesPers "github.com/pokt-network/pocket/persistence/types"
+	typesRPC "github.com/pokt-network/pocket/rpc/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesTelemetry "github.com/pokt-network/pocket/telemetry"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -20,6 +21,7 @@ type runtimeConfig struct {
 	P2P         *typesP2P.P2PConfig             `json:"p2p"`
 	Telemetry   *typesTelemetry.TelemetryConfig `json:"telemetry"`
 	Logger      *typesLogger.LoggerConfig       `json:"logger"`
+	RPC         *typesRPC.RPCConfig             `json:"rpc"`
 }
 
 func NewConfig(base *BaseConfig, otherConfigs ...func(modules.Config)) *runtimeConfig {
@@ -88,4 +90,8 @@ func (c *runtimeConfig) GetTelemetryConfig() modules.TelemetryConfig {
 
 func (c *runtimeConfig) GetLoggerConfig() modules.LoggerConfig {
 	return c.Logger
+}
+
+func (c *runtimeConfig) GetRPCConfig() modules.RPCConfig {
+	return c.RPC
 }

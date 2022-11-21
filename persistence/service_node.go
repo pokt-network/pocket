@@ -12,7 +12,7 @@ func (p PostgresContext) GetServiceNodeExists(address []byte, height int64) (exi
 }
 
 func (p PostgresContext) GetServiceNode(address []byte, height int64) (operator, publicKey, stakedTokens, serviceURL, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, err error) {
-	actor, err := p.GetActor(types.ServiceNodeActor, address, height)
+	actor, err := p.getActor(types.ServiceNodeActor, address, height)
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedAmount
@@ -49,11 +49,11 @@ func (p PostgresContext) UpdateServiceNode(address []byte, serviceURL string, st
 }
 
 func (p PostgresContext) GetServiceNodeStakeAmount(height int64, address []byte) (string, error) {
-	return p.GetActorStakeAmount(types.ServiceNodeActor, address, height)
+	return p.getActorStakeAmount(types.ServiceNodeActor, address, height)
 }
 
 func (p PostgresContext) SetServiceNodeStakeAmount(address []byte, stakeAmount string) error {
-	return p.SetActorStakeAmount(types.ServiceNodeActor, address, stakeAmount)
+	return p.setActorStakeAmount(types.ServiceNodeActor, address, stakeAmount)
 }
 
 func (p PostgresContext) GetServiceNodeCount(chain string, height int64) (int, error) {

@@ -4,7 +4,7 @@ package modules
 
 import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 )
 
 type PersistenceModule interface {
@@ -18,7 +18,7 @@ type PersistenceModule interface {
 	NewWriteContext() PersistenceRWContext
 
 	// Debugging / development only
-	HandleDebugMessage(*debug.DebugMessage) error
+	HandleDebugMessage(*messaging.DebugMessage) error
 }
 
 // Interface defining the context within which the node can operate with the persistence layer.
@@ -55,15 +55,12 @@ type PersistenceWriteContext interface {
 	// Block Operations
 
 	// Indexer Operations
-	// TODO(#315): Change `txResult TxResult` to `txBytes []byte`
-	StoreTransaction(txResult TxResult) error
+	IndexTransactions() error
 
 	// Block Operations
-	// TEMPORARY: Including two functions for the SQL and KV Store as an interim solution
-	//                 until we include the schema as part of the SQL Store because persistence
-	//                 currently has no access to the protobuf schema which is the source of truth.
-	StoreBlock(blockProtoBytes []byte) error                                              // Store the block in the KV Store
-	InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error // Writes the block in the SQL database
+	SetLatestTxResults(txResults []TxResult)
+	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr, qc []byte, transactions [][]byte) error
+	StoreBlock() error // Store the block into persistence
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error
@@ -127,9 +124,14 @@ type PersistenceReadContext interface {
 	Close() error
 
 	// Block Queries
+	GetPrevAppHash() (string, error) // app hash from the previous block
 	GetLatestBlockHeight() (uint64, error)
 	GetBlockHash(height int64) ([]byte, error)
 	GetBlocksPerSession(height int64) (int, error)
+	GetLatestProposerAddr() []byte
+	GetLatestBlockProtoBytes() []byte
+	GetLatestBlockHash() string
+	GetLatestBlockTxs() [][]byte
 
 	// Indexer Queries
 	TransactionExists(transactionHash string) (bool, error)

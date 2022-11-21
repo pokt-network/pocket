@@ -3,7 +3,7 @@ package modules
 //go:generate mockgen -source=$GOFILE -destination=./mocks/consensus_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
 
 import (
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -21,10 +21,11 @@ type ConsensusModule interface {
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
-	HandleDebugMessage(*debug.DebugMessage) error
+	HandleDebugMessage(*messaging.DebugMessage) error
 
 	// Consensus State Accessors
 	CurrentHeight() uint64
-	AppHash() string // DISCUSS: Why not call this a BlockHash or StateHash? Should it be a []byte or string?
+	CurrentRound() uint64
+	CurrentStep() uint64
 	ValidatorMap() ValidatorMap
 }

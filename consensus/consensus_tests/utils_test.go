@@ -12,8 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pokt-network/pocket/shared/codec"
-
 	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
@@ -21,8 +19,9 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared"
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
@@ -142,8 +141,10 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 	loggerMock := baseLoggerMock(t, testChannel)
+  rpcMock := baseRpcMock(t, testChannel)
+  
+	bus, err := shared.CreateBus(runtimeMgr, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock, loggerMock, rpcMock)
 
-	bus, err := shared.CreateBus(runtimeMgr, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock, loggerMock)
 	require.NoError(t, err)
 
 	pk, err := cryptoPocket.NewPrivateKey(runtimeMgr.GetConfig().GetBaseConfig().GetPrivateKey())
@@ -160,7 +161,7 @@ func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
 	for _, pocketNode := range pocketNodes {
 		go pocketNode.Start()
 		startEvent := pocketNode.GetBus().GetBusEvent()
-		require.Equal(t, startEvent.Topic, debug.PocketTopic_POCKET_NODE_TOPIC)
+		require.Equal(t, startEvent.GetContentType(), messaging.NodeStartedEventType)
 	}
 }
 
@@ -184,32 +185,32 @@ func GetConsensusModImpl(node *shared.Node) reflect.Value {
 /*** Debug/Development Message Helpers ***/
 
 func TriggerNextView(t *testing.T, node *shared.Node) {
-	triggerDebugMessage(t, node, debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW)
+	triggerDebugMessage(t, node, messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW)
 }
 
-func triggerDebugMessage(t *testing.T, node *shared.Node, action debug.DebugMessageAction) {
-	debugMessage := &debug.DebugMessage{
-		Action:  debug.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
+func triggerDebugMessage(t *testing.T, node *shared.Node, action messaging.DebugMessageAction) {
+	debugMessage := &messaging.DebugMessage{
+		Action:  messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW,
 		Message: nil,
 	}
 	anyProto, err := anypb.New(debugMessage)
 	require.NoError(t, err)
 
-	e := &debug.PocketEvent{Topic: debug.PocketTopic_DEBUG_TOPIC, Data: anyProto}
+	e := &messaging.PocketEnvelope{Content: anyProto}
 	node.GetBus().PublishEventToBus(e)
 }
 
 /*** P2P Helpers ***/
 
 func P2PBroadcast(_ *testing.T, nodes IdToNodeMapping, any *anypb.Any) {
-	e := &debug.PocketEvent{Topic: debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC, Data: any}
+	e := &messaging.PocketEnvelope{Content: any}
 	for _, node := range nodes {
 		node.GetBus().PublishEventToBus(e)
 	}
 }
 
 func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
-	e := &debug.PocketEvent{Topic: debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC, Data: any}
+	e := &messaging.PocketEnvelope{Content: any}
 	node.GetBus().PublishEventToBus(e)
 }
 
@@ -234,7 +235,7 @@ func WaitForNetworkConsensusMessages(
 	}
 
 	errorMessage := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(hotstuffMsgType)])
-	return waitForNetworkConsensusMessagesInternal(t, clock, testChannel, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC, numMessages, millis, includeFilter, errorMessage)
+	return waitForNetworkConsensusMessagesInternal(t, clock, testChannel, consensus.HotstuffMessageContentType, numMessages, millis, includeFilter, errorMessage)
 }
 
 // IMPROVE(olshansky): Translate this to use generics.
@@ -242,7 +243,7 @@ func waitForNetworkConsensusMessagesInternal(
 	_ *testing.T,
 	clock clock.Clock,
 	testChannel modules.EventsChannel,
-	topic debug.PocketTopic,
+	messageContentType string,
 	numMessages int,
 	millis time.Duration,
 	includeFilter func(m *anypb.Any) bool,
@@ -250,17 +251,18 @@ func waitForNetworkConsensusMessagesInternal(
 ) (messages []*anypb.Any, err error) {
 	messages = make([]*anypb.Any, 0)
 	ctx, cancel := clock.WithTimeout(context.Background(), time.Millisecond*millis)
-	unused := make([]*debug.PocketEvent, 0) // TODO: Move this into a pool rather than resending back to the eventbus.
+	unused := make([]*messaging.PocketEnvelope, 0) // TODO: Move this into a pool rather than resending back to the eventbus.
+
 loop:
 	for {
 		select {
 		case testEvent := <-testChannel:
-			if testEvent.Topic != topic {
+			if testEvent.GetContentType() != messageContentType {
 				unused = append(unused, &testEvent)
 				continue
 			}
 
-			message := testEvent.Data
+			message := testEvent.Content
 			if message == nil || !includeFilter(message) {
 				unused = append(unused, &testEvent)
 				continue
@@ -280,10 +282,10 @@ loop:
 				break loop
 			} else if numMessages > 0 {
 				cancel()
-				return nil, fmt.Errorf("Missing %s messages; missing: %d, received: %d; (%s)", topic, numMessages, len(messages), errorMessage)
+				return nil, fmt.Errorf("Missing %s messages; missing: %d, received: %d; (%s)", messageContentType, numMessages, len(messages), errorMessage)
 			} else {
 				cancel()
-				return nil, fmt.Errorf("Too many %s messages received; expected: %d, received: %d; (%s)", topic, numMessages+len(messages), len(messages), errorMessage)
+				return nil, fmt.Errorf("Too many %s messages received; expected: %d, received: %d; (%s)", messageContentType, numMessages+len(messages), len(messages), errorMessage)
 			}
 		}
 	}
@@ -323,16 +325,16 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.M
 	p2pMock.EXPECT().Start().Return(nil).AnyTimes()
 	p2pMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	p2pMock.EXPECT().
-		Broadcast(gomock.Any(), gomock.Any()).
-		Do(func(msg *anypb.Any, topic debug.PocketTopic) {
-			e := &debug.PocketEvent{Topic: topic, Data: msg}
+		Broadcast(gomock.Any()).
+		Do(func(msg *anypb.Any) {
+			e := &messaging.PocketEnvelope{Content: msg}
 			testChannel <- *e
 		}).
 		AnyTimes()
 	p2pMock.EXPECT().
-		Send(gomock.Any(), gomock.Any(), gomock.Any()).
-		Do(func(addr cryptoPocket.Address, msg *anypb.Any, topic debug.PocketTopic) {
-			e := &debug.PocketEvent{Topic: topic, Data: msg}
+		Send(gomock.Any(), gomock.Any()).
+		Do(func(addr cryptoPocket.Address, msg *anypb.Any) {
+			e := &messaging.PocketEnvelope{Content: msg}
 			testChannel <- *e
 		}).
 		AnyTimes()
@@ -360,22 +362,23 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 	ctrl := gomock.NewController(t)
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
+	persistenceContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	persistenceContextMock.EXPECT().GetPrevAppHash().Return("", nil).AnyTimes()
 
 	utilityContextMock.EXPECT().
-		GetProposalTransactions(gomock.Any(), maxTxBytes, gomock.AssignableToTypeOf(emptyByzValidators)).
-		Return(make([][]byte, 0), nil, nil).
+		CreateAndApplyProposalBlock(gomock.Any(), maxTxBytes).
+		Return(appHash, make([][]byte, 0), nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().
-		ApplyBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-		Return(appHash, nil, nil).
+		ApplyBlock().
+		Return(appHash, nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().CommitPersistenceContext().Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().ReleaseContext().Return().AnyTimes()
 	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
 
-	persistenceContextMock.EXPECT().StoreTransaction(gomock.Any()).Return(nil).AnyTimes()
-	persistenceContextMock.EXPECT().StoreBlock(gomock.Any()).Return(nil).AnyTimes()
-	persistenceContextMock.EXPECT().InsertBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
+	persistenceContextMock.EXPECT().IndexTransactions().Return(nil).AnyTimes()
+	persistenceContextMock.EXPECT().StoreBlock().Return(nil).AnyTimes()
 
 	return utilityContextMock
 }
@@ -392,6 +395,15 @@ func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockT
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
 
 	return telemetryMock
+}
+
+func baseRpcMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockRPCModule {
+	ctrl := gomock.NewController(t)
+	rpcMock := modulesMock.NewMockRPCModule(ctrl)
+	rpcMock.EXPECT().Start().Return(nil).AnyTimes()
+	rpcMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+
+	return rpcMock
 }
 
 func baseTelemetryTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
@@ -437,7 +449,7 @@ func sleep(clock *clock.Mock, duration time.Duration) {
 	clock.Sleep(duration)
 }
 
-// timeReminder simply prints, at a given interval and in a separate goroutine, the current mocked time to help with debug.
+// timeReminder simply prints, at a given interval and in a separate goroutine, the current mocked time to help with events.
 func timeReminder(clock *clock.Mock, frequency time.Duration) {
 	go func() {
 		tick := time.NewTicker(frequency)

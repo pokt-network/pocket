@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/shared/debug"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -248,5 +247,5 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	// Send the first message (by the originator) to trigger a RainTree broadcast
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
-	require.NoError(t, p2pMod.Broadcast(p, debug.PocketTopic_DEBUG_TOPIC))
+	require.NoError(t, p2pMod.Broadcast(p))
 }

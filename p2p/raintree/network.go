@@ -7,8 +7,9 @@ import (
 	"time"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	telemetry "github.com/pokt-network/pocket/telemetry"
 	"google.golang.org/protobuf/proto"
@@ -57,7 +58,7 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 		Data:  data,
 		Nonce: nonce,
 	}
-	msgBz, err := proto.Marshal(msg)
+	msgBz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
 		return err
 	}
@@ -93,7 +94,7 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 		Nonce: getNonce(),
 	}
 
-	bz, err := proto.Marshal(msg)
+	bz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
 		return err
 	}
@@ -147,7 +148,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	networkMessage := debug.PocketEvent{}
+	networkMessage := messaging.PocketEnvelope{}
 	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
 		log.Println("Error decoding network message: ", err)
 		return nil, err
@@ -179,7 +180,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	n.mempool[rainTreeMsg.Nonce] = struct{}{}
 
-	// Return the data back to the caller so it can be handeled by the app specific bus
+	// Return the data back to the caller so it can be handled by the app specific bus
 	return rainTreeMsg.Data, nil
 }
 
