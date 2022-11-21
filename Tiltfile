@@ -2,6 +2,7 @@ load('ext://helm_resource', 'helm_resource', 'helm_repo')
 load('ext://namespace', 'namespace_create')
 
 # TODO: add resource dependencies https://docs.tilt.dev/resource_dependencies.html#adding-resource_deps-for-startup-order
+# - validators depend on postgres
 
 # List of directories Tilt watches to trigger a hot-reload on changes
 deps = [
