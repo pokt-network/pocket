@@ -52,6 +52,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// TECHDEBT: How do we properly validate `highPrepareQC` here?
 	highPrepareQC := m.findHighQC(m.messagePool[NewRound])
 
+	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
 	// TODO: Add more unit tests for these checks...
 	if m.shouldPrepareNewBlock(highPrepareQC) {
 		// Leader prepares a new block if `highPrepareQC` is not applicable
@@ -63,10 +64,8 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		}
 		m.Block = block
 	} else {
-		// DISCUSS: Do we need to call `validateProposal` here?
 		// Leader acts like a replica if `highPrepareQC` is not `nil`
-		// TODO(olshansky): Add test to make sure same block is not applied twice if round is interrrupted.
-		// been 'Applied'
+		// TODO: Do we need to call `validateProposal` here similar to how replicas does it
 		if err := m.applyBlock(highPrepareQC.Block); err != nil {
 			m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
 			m.paceMaker.InterruptRound()

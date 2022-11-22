@@ -233,7 +233,7 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 		p.consensusMod.utilityContext = nil
 	}
 
-	// TODO(olshansky): This if structure for debug purposes only; think of a way to externalize it...
+	// TECHDEBT: This if structure for debug purposes only; think of a way to externalize it from the main consensus flow...
 	if p.manualMode && !forceNextView {
 		p.quorumCertificate = qc
 		return
