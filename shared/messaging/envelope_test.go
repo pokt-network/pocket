@@ -12,10 +12,10 @@ func Test_UnpackMessage_Roundtrip(t *testing.T) {
 	packedMsg, err := PackMessage(someMsg)
 	require.NoError(t, err)
 
-	unpackedMsg, err := UnpackMessage(packedMsg)
+	unpackedMsg, err := UnpackMessage[*DebugMessage](packedMsg)
 	require.NoError(t, err)
 
-	if !proto.Equal(someMsg, unpackedMsg.(proto.Message)) {
+	if !proto.Equal(someMsg, unpackedMsg) {
 		t.Fail()
 	}
 }

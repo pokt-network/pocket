@@ -16,11 +16,11 @@ func PackMessage(message proto.Message) (*PocketEnvelope, error) {
 }
 
 // UnpackMessage extracts the message inside the PocketEnvelope decorating it with typing information
-func UnpackMessage(envelope *PocketEnvelope) (protoreflect.ProtoMessage, error) {
+func UnpackMessage[T protoreflect.ProtoMessage](envelope *PocketEnvelope) (T, error) {
 	anyMsg := envelope.Content
 	msg, err := anypb.UnmarshalNew(anyMsg, proto.UnmarshalOptions{})
 	if err != nil {
-		return nil, err
+		return any(nil).(T), err
 	}
-	return msg, nil
+	return any(msg).(T), nil
 }
