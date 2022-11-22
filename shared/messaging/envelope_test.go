@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_UnpackMessage_roundtrip(t *testing.T) {
+func Test_UnpackMessage_Roundtrip(t *testing.T) {
 	someMsg := &DebugMessage{Action: DebugMessageAction_DEBUG_CLEAR_STATE}
 	packedMsg, err := PackMessage(someMsg)
 	require.NoError(t, err)
