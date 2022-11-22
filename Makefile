@@ -128,7 +128,7 @@ develop_test: docker_check
 .PHONY: client_start
 ## Run a client daemon which is only used for debugging purposes
 client_start: docker_check
-	docker-compose -f build/deployments/docker-compose.yaml up -d client
+	docker-compose -f build/deployments/docker-compose.yaml up -d client --build
 
 .PHONY: client_connect
 ## Connect to the running client debugging daemon
@@ -254,7 +254,7 @@ protogen_clean:
 ## Generate go structures for all of the protobufs
 protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = ".")
-	protoc --go_opt=paths=source_relative  -I=./shared/debug/proto        --go_out=./shared/debug       	./shared/debug/proto/*.proto        --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/messaging/proto    --go_out=./shared/messaging      	./shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./persistence/indexer/proto --go_out=./persistence/indexer/   ./persistence/indexer/proto/*.proto --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  	./persistence/proto/*.proto         --experimental_allow_proto3_optional
@@ -264,6 +264,7 @@ protogen_local: go_protoc-go-inject-tag
 	protoc --go_opt=paths=source_relative  -I=./p2p/raintree/types/proto  --go_out=./p2p/types          	./p2p/raintree/types/proto/*.proto  --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./p2p/types/proto           --go_out=./p2p/types          	./p2p/types/proto/*.proto           --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./telemetry/proto           --go_out=./telemetry          	./telemetry/proto/*.proto           --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./logger/proto              --go_out=./logger             	./logger/proto/*.proto              --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./rpc/types/proto 		  --go_out=./rpc/types          	./rpc/types/proto/*.proto           --experimental_allow_proto3_optional
 	echo "View generated proto files by running: make protogen_show"
 

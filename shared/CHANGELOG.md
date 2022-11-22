@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.3] - 2022-11-14
+
+### [#353](https://github.com/pokt-network/pocket/pull/353) Remove topic from messaging
+
+- Removed topic from messaging
+- Added `PocketEnvelope` as a general purpose wrapper for messages/events
+- Added utility methods to `Pack` and `Unpack` messages
+- Replaced the switch cases, interfaces accordingly
+
 ## [0.0.0.2] - 2022-10-12
 
 ### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling

@@ -7,7 +7,7 @@ import (
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 )
 
 // A list of functions to clear data from the DB not associated with protocol actors
@@ -19,17 +19,17 @@ var nonActorClearFunctions = []func() string{
 	types.ClearAllBlocksQuery,
 }
 
-func (m *persistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage) error {
+func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMessage) error {
 	switch debugMessage.Action {
-	case debug.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
+	case messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		m.showLatestBlockInStore(debugMessage)
 	// Clears all the state (SQL DB, KV Stores, Trees, etc) to nothing
-	case debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE:
+	case messaging.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE:
 		if err := m.clearAllState(debugMessage); err != nil {
 			return err
 		}
 	// Resets all the state (SQL DB, KV Stores, Trees, etc) to the tate specified in the genesis file provided
-	case debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS:
+	case messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS:
 		if err := m.clearAllState(debugMessage); err != nil {
 			return err
 		}
@@ -42,7 +42,7 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *debug.DebugMessage)
 }
 
 // IMPROVE: Add an iterator to the `kvstore` and use that instead
-func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
+func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) {
 	height := m.GetBus().GetConsensusModule().CurrentHeight() - 1
 	blockBytes, err := m.GetBlockStore().Get(heightToBytes(int64(height)))
 	if err != nil {
@@ -60,7 +60,7 @@ func (m *persistenceModule) showLatestBlockInStore(_ *debug.DebugMessage) {
 }
 
 // TECHDEBT: Make sure this is atomic
-func (m *persistenceModule) clearAllState(_ *debug.DebugMessage) error {
+func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
 	ctx, err := m.NewRWContext(-1)
 	if err != nil {
 		return err

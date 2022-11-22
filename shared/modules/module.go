@@ -41,3 +41,8 @@ type KeyholderModule interface {
 type P2PAddressableModule interface {
 	GetP2PAddress() cryptoPocket.Address
 }
+
+type ObservableModule interface {
+	InitLogger()
+	GetLogger() Logger
+}

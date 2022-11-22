@@ -3,7 +3,7 @@ package shared
 import (
 	"log"
 
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -21,6 +21,7 @@ type bus struct {
 	utility     modules.UtilityModule
 	consensus   modules.ConsensusModule
 	telemetry   modules.TelemetryModule
+	logger      modules.LoggerModule
 	rpc         modules.RPCModule
 
 	runtimeMgr modules.RuntimeMgr
@@ -37,6 +38,7 @@ func CreateBus(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
+	logger modules.LoggerModule,
 	rpc modules.RPCModule,
 ) (modules.Bus, error) {
 	bus := &bus{
@@ -49,6 +51,7 @@ func CreateBus(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
+		logger:      logger,
 		rpc:         rpc,
 	}
 
@@ -58,6 +61,7 @@ func CreateBus(
 		"p2p":         p2p,
 		"utility":     utility,
 		"telemetry":   telemetry,
+		"logger":      logger,
 		"rpc":         rpc,
 	}
 
@@ -90,6 +94,7 @@ func CreateBusWithOptionalModules(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
+	logger modules.LoggerModule,
 	rpc modules.RPCModule,
 ) modules.Bus {
 	bus := &bus{
@@ -102,6 +107,7 @@ func CreateBusWithOptionalModules(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
+		logger:      logger,
 		rpc:         rpc,
 	}
 
@@ -116,16 +122,17 @@ func CreateBusWithOptionalModules(
 	maybeSetModuleBus(utility)
 	maybeSetModuleBus(consensus)
 	maybeSetModuleBus(telemetry)
+	maybeSetModuleBus(logger)
 	maybeSetModuleBus(rpc)
 
 	return bus
 }
 
-func (m bus) PublishEventToBus(e *debug.PocketEvent) {
+func (m bus) PublishEventToBus(e *messaging.PocketEnvelope) {
 	m.channel <- *e
 }
 
-func (m bus) GetBusEvent() *debug.PocketEvent {
+func (m bus) GetBusEvent() *messaging.PocketEnvelope {
 	e := <-m.channel
 	return &e
 }
@@ -152,6 +159,10 @@ func (m bus) GetConsensusModule() modules.ConsensusModule {
 
 func (m bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
+}
+
+func (m bus) GetLoggerModule() modules.LoggerModule {
+	return m.logger
 }
 
 func (m bus) GetRPCModule() modules.RPCModule {

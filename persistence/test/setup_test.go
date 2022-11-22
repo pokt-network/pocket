@@ -16,7 +16,7 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/converters"
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -319,8 +319,8 @@ func resetStateToGenesis() {
 	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
 		log.Fatalf("Error releasing write context: %v\n", err)
 	}
-	if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-		Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
+	if err := testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
+		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 		Message: nil,
 	}); err != nil {
 		log.Fatalf("Error clearing state: %v\n", err)
@@ -332,8 +332,8 @@ func clearAllState() {
 	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
 		log.Fatalf("Error releasing write context: %v\n", err)
 	}
-	if err := testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-		Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+	if err := testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
+		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
 		Message: nil,
 	}); err != nil {
 		log.Fatalf("Error clearing state: %v\n", err)

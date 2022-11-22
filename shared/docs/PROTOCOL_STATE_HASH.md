@@ -105,13 +105,19 @@ graph TD
     C[Am I the leader?] --> |Yes| D
     C[Am I the leader?] --> |No| Z
 
-    D[Did I get any prepareQCs?] --> |Find highest valid PrepareQC| E
+    D[Did I get any prepareQCs?] --> |Find highest valid prepareQC| E
     D[Did I get any prepareQCs?] --> |No| Z
 
     E[Am I ahead of highPrepareQC?] --> |Yes| G
     E[Am I ahead of highPrepareQC?] --> |No| Z
 
-    G[CreateAndApplyProposalBlock]
+    G[Do I have a lockedQC] --> |No| H
+    G[Do I have a lockedQC] --> |Yes| I
+
+    I[Is highPrepareQC.view > lockedQC.view] --> |"No<br>(lockedQC.block)"| Z
+    I[Is highPrepareQC.view > lockedQC.view] --> |"Yes<br>(highPrepareQC.block)"| Z
+
+    H[CreateAndApplyProposalBlock]
     Z[ApplyBlock]
 ```
 

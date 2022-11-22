@@ -10,7 +10,7 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/utility"
@@ -67,8 +67,8 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	// than once in a single test, we create unnecessary calls to clean.
 	t.Cleanup(func() {
 		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
-		require.NoError(t, testPersistenceMod.HandleDebugMessage(&debug.DebugMessage{
-			Action:  debug.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+		require.NoError(t, testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
+			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
 			Message: nil,
 		}))
 	})

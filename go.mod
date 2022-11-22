@@ -29,6 +29,7 @@ require (
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/quasilyte/go-ruleguard/dsl v0.3.21
+	github.com/rs/zerolog v1.15.0
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/viper v1.13.0
 )
@@ -47,7 +48,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/protobuf v1.5.2
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v22.9.29+incompatible // indirect
 	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect

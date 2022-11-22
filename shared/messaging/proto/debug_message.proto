@@ -1,9 +1,10 @@
 syntax = "proto3";
-package shared;
 
-option go_package = "github.com/pokt-network/pocket/shared/debug";
+package pocket;
 
 import "google/protobuf/any.proto";
+
+option go_package = "github.com/pokt-network/pocket/shared/messaging";
 
 enum DebugMessageAction {
 	DEBUG_ACTION_UNKNOWN = 0;
@@ -19,7 +20,6 @@ enum DebugMessageAction {
 	DEBUG_PERSISTENCE_RESET_TO_GENESIS = 7;
 }
 
-// IMPROVE(#344): Add a message type for each action
 message DebugMessage {
   DebugMessageAction action = 1;
   google.protobuf.Any message = 2;
