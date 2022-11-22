@@ -2,7 +2,12 @@ load('ext://helm_resource', 'helm_resource', 'helm_repo')
 load('ext://namespace', 'namespace_create')
 
 # TODO: add resource dependencies https://docs.tilt.dev/resource_dependencies.html#adding-resource_deps-for-startup-order
-# - validators depend on postgres
+# - validators depend on postgres db, postgres db depends on postgres operator
+# - validators depend on operator
+
+# TODO: cleanup resources on tilt down:
+# - pocket-database svc cleanup
+# - pocket validators are not getting removed
 
 # List of directories Tilt watches to trigger a hot-reload on changes
 deps = [
@@ -37,19 +42,25 @@ if is_psql_operator_installed == '0':
 
 # Deploy observability stack (grafana, prometheus, loki) and wire it up with localnet
 # TODO(@okdas): check if helm cli is available.
-helm_repo('grafana', 'https://grafana.github.io/helm-charts')
-helm_repo('prometheus-community', 'https://prometheus-community.github.io/helm-charts')
+helm_repo('grafana', 'https://grafana.github.io/helm-charts', resource_name='helm-repo-grafana')
+helm_repo('prometheus-community', 'https://prometheus-community.github.io/helm-charts', resource_name='helm-repo-prometheus')
 
 if not os.path.exists('build/localnet/observability-stack/charts'):
     local('helm dependency build build/localnet/observability-stack')
+
 namespace_create('observability')
 k8s_yaml(helm("build/localnet/observability-stack", name='observability-stack', namespace="observability"))
+# helm_resource('helm-observability-stack',
+#                 'build/localnet/observability-stack',
+#                 release_name='observability-stack',
+#                 namespace='observability', resource_deps=['helm-repo-grafana', 'helm-repo-prometheus'],
+#                 deps=[
+#                         'build/localnet/observability-stack/values.yaml',
+#                         'build/localnet/observability-stack/templates'],)
 
 # Builds the pocket binary. Note target OS is linux, because it later will be run in a container.
 local_resource('pocket: Watch & Compile', 'GOOS=linux go build -o bin/pocket-linux app/pocket/main.go', deps=deps)
 local_resource('debug client: Watch & Compile', 'GOOS=linux go build -tags=debug -o bin/client-linux app/client/*.go', deps=deps)
-# go run -tags=debug app/client/*.go debug
-# local_resource('client: Watch & Compile', 'GOOS=linux go build -o bin/client-linux app/client/main.go', deps=deps)
 
 # Builds and maintains the validator container image after the binary is built on local machine
 docker_build('validator-image', '.',
@@ -98,3 +109,8 @@ k8s_resource(new_name='postgres',
              extra_pod_selectors=[{'cluster-name': 'pocket-database'}],
              port_forwards=5432)
 
+# Exposes grafana
+k8s_resource(new_name='grafana',
+             workload='observability-stack-grafana',
+             extra_pod_selectors=[{'app.kubernetes.io/name': 'grafana'}],
+             port_forwards=['42000:3000'])

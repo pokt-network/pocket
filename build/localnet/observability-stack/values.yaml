@@ -12,16 +12,18 @@ grafana:
     auth:
       disable_login_form: true
       disable_signout_menu: true
-      anonymous:
-        enabled: true
-        org_role: Admin
-        org_name: Pocket v1 LocalNet
+    auth.anonymous:
+      enabled: true
+      org_role: Admin
     users:
       allow_sign_up: false
       allow_org_create: false
       auto_assign_org: true
       auto_assign_org_role: Admin
       auto_assign_org_id: 1
+      viewers_can_edit: true
+    security:
+      allow_embedding: true
 
 loki:
   enabled: true
@@ -47,10 +49,10 @@ promtail:
     logLevel: info
     serverPort: 3101
     clients:
-      - url: http://{{ .Release.Name }}:3100/loki/api/v1/push
+      - url: http://{{ .Release.Name }}-loki:3100/loki/api/v1/push
 
 prometheus:
-  enabled: false
+  enabled: true
   isDefault: false
   url: http://{{ include "prometheus.fullname" .}}:{{ .Values.prometheus.server.service.servicePort }}{{ .Values.prometheus.server.prefixURL }}
   datasource:
