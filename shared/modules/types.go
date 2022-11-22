@@ -21,6 +21,7 @@ type Config interface {
 	GetPersistenceConfig() PersistenceConfig
 	GetP2PConfig() P2PConfig
 	GetTelemetryConfig() TelemetryConfig
+	GetLoggerConfig() LoggerConfig
 	GetRPCConfig() RPCConfig
 }
 
@@ -59,6 +60,13 @@ type TelemetryConfig interface {
 	GetEnabled() bool
 	GetAddress() string
 	GetEndpoint() string
+}
+
+type LoggerConfig interface {
+	// We have protobuf enums for the following values in `logger/proto` dir, but they are represented as
+	// `string` to avoid circular dependencies between this (`modules`) and `logger` packages.
+	GetLevel() string
+	GetFormat() string
 }
 
 type UtilityConfig interface {
