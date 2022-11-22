@@ -184,6 +184,10 @@ func (p *PostgresContext) updateMerkleTrees() ([]byte, error) {
 		}
 	}
 
+	return p.getStateHash(), nil
+}
+
+func (p *PostgresContext) getStateHash() []byte {
 	// Get the root of each Merkle Tree
 	roots := make([][]byte, 0)
 	for tree := merkleTree(0); tree < numMerkleTrees; tree++ {
@@ -194,7 +198,8 @@ func (p *PostgresContext) updateMerkleTrees() ([]byte, error) {
 	rootsConcat := bytes.Join(roots, []byte{})
 	stateHash := sha256.Sum256(rootsConcat)
 
-	return stateHash[:], nil
+	// Convert the array to a slice and return it
+	return stateHash[:]
 }
 
 // Transactions Hash Helpers
