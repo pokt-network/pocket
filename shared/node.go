@@ -62,7 +62,7 @@ func (m *Node) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 	if err != nil {
 		return nil, err
 	}
-  
+
 	rpcMod, err := rpc.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
@@ -170,11 +170,11 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 }
 
 func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
-	debugMessage, err := messaging.UnpackMessage(message)
+	debugMessage, err := messaging.UnpackMessage[*messaging.DebugMessage](message)
 	if err != nil {
 		return err
 	}
-	switch debugMessage.(*messaging.DebugMessage).Action {
+	switch debugMessage.Action {
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
 		fallthrough
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:
@@ -182,11 +182,11 @@ func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW:
 		fallthrough
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
-		return node.GetBus().GetConsensusModule().HandleDebugMessage(debugMessage.(*messaging.DebugMessage))
+		return node.GetBus().GetConsensusModule().HandleDebugMessage(debugMessage)
 	case messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
-		return node.GetBus().GetPersistenceModule().HandleDebugMessage(debugMessage.(*messaging.DebugMessage))
+		return node.GetBus().GetPersistenceModule().HandleDebugMessage(debugMessage)
 	default:
-		log.Printf("Debug message: %s \n", debugMessage.(*messaging.DebugMessage).Message)
+		log.Printf("Debug message: %s \n", debugMessage.Message)
 	}
 
 	return nil
