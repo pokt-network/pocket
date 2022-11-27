@@ -6,6 +6,6 @@ const (
 	DebugMessageEventType = "pocket.DebugMessage"
 )
 
-func (x *PocketEnvelope) GetContentType() string {
-	return strings.Split(x.Content.GetTypeUrl(), "/")[1]
+func (envelope *PocketEnvelope) GetContentType() string {
+	return strings.Split(envelope.Content.GetTypeUrl(), "/")[1]
 }
