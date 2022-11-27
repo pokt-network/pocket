@@ -56,7 +56,7 @@ _The **Proposer** drives the **Validators** to agreement via the **Consensus Lif
 ---
 
 5. The `Consensus` module handles the `DECIDE` message
-6. The final `quorumCertificate` is propagated to the `UtilityContext` & `PersistenceContext` on `Commit`
+6. The `commitQC` is propagated to the `UtilityContext` & `PersistenceContext` on `Commit`
 7. The persistence module's internal implementation for ['Store Block'](../../persistence/docs/PROTOCOL_STORE_BLOCK.md) must execute.
 8. Both the `UtilityContext` and `PersistenceContext` are released
 
