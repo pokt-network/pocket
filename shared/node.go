@@ -170,14 +170,12 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 }
 
 func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
-	protoMessage, err := messaging.UnpackMessage(message)
+	// Consensus Debug
+	debugMessage, err := messaging.UnpackMessage[*messaging.DebugMessage](message)
 	if err != nil {
 		return err
 	}
-	debugMessage := protoMessage.(*messaging.DebugMessage)
-
 	switch debugMessage.Action {
-	// Consensus Debug
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_RESET_TO_GENESIS:
 		fallthrough
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_PRINT_NODE_STATE:

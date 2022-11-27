@@ -7,15 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_UnpackMessage_roundtrip(t *testing.T) {
+func Test_UnpackMessage_Roundtrip(t *testing.T) {
 	someMsg := &DebugMessage{Action: DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE}
 	packedMsg, err := PackMessage(someMsg)
 	require.NoError(t, err)
 
-	unpackedMsg, err := UnpackMessage(packedMsg)
+	unpackedMsg, err := UnpackMessage[*DebugMessage](packedMsg)
 	require.NoError(t, err)
 
-	if !proto.Equal(someMsg, unpackedMsg.(proto.Message)) {
-		t.Fail()
-	}
+	require.True(t, proto.Equal(someMsg, unpackedMsg))
 }
