@@ -9,7 +9,6 @@ message Block {
     string prevStateHash = 3; // The stateHash of the block at height-1
     bytes proposerAddress = 4; // The proposer of this block
     bytes quorumCertificate = 5; // The quorum certificate containing signature from 2/3+ validators at height
-    // DISCUSS_IN_THIS_COMMIT: I don't think `transactionsHash` is even needed since it is captured
-    // within the `hash` via the `transactionTree`.
+    // INVESTIGATE(#361): Decide if we neeed `transactionsHash` given that it is capture in the `transactionsTree`.
     bytes transactionsHash = 6; // The hash of all the translactions in the block
 }

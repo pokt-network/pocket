@@ -25,6 +25,7 @@ var isModifierRe = regexp.MustCompile(`^(Insert|Set|Add|Subtract)`) // Add Updat
 
 // INVESTIGATE: This benchmark can be used to experiment with different Merkle Tree implementations
 // and key-value stores.
+// IMPROVE(#361): Improve the output of this benchmark to be more informative and human readable.
 func BenchmarkStateHash(b *testing.B) {
 	log.SetOutput(ioutil.Discard)
 	defer log.SetOutput(os.Stderr)
@@ -70,7 +71,7 @@ func BenchmarkStateHash(b *testing.B) {
 					db.IndexTransaction(modules.TxResult(getRandomTxResult(height)))
 				}
 				db.ComputeAppHash()
-				db.Commit([]byte("TODOquorumCert"))
+				db.Commit([]byte("placeholder"))
 				db.Release()
 			}
 		})

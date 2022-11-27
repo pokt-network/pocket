@@ -27,6 +27,7 @@ import (
 //       refactored. Alternatively, the seed would need to be passed via the runtime manager.
 //       To avoid these large scale changes, this is a temporary approach to enable deterministic
 //       key generation.
+// IMPROVE(#361): Design a better way to generate deterministic keys for testing.
 const PrivateKeySeedEnv = "DEFAULT_PRIVATE_KEY_SEED"
 
 var privateKeySeed int

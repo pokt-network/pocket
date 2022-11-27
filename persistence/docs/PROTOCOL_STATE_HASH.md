@@ -5,10 +5,10 @@ This document describes the `Persistence` module's internal implementation of ho
 Alternative implementation of the persistence module are free to choose their own **State Storage** engines (SQL, KV stores, etc) or their own **State Commitment** paradigms (Merkle Trees, Vector Commitments, etc), but the output hash **must** remain identical.
 
 - [Introduction](#introduction)
-- [Components & Data Types](#components--data-types)
+- [Components \& Data Types](#components--data-types)
   - [Block Proto](#block-proto)
   - [Trees](#trees)
-  - [Transactions Hash (?? TODO_IN_THIS_COMMIT ??)](#transactions-hash--todo_in_this_commit-)
+  - [Transactions Hash (?? TODO\_IN\_THIS\_COMMIT ??)](#transactions-hash--todo_in_this_commit-)
 - [Transactions hash](#transactions-hash)
 - [Compute State Hash](#compute-state-hash)
 - [Store Block (i.e. Commit)](#store-block-ie-commit)
@@ -24,7 +24,7 @@ This document defines how Pocket V1 takes a snapshot of its world state. An intr
 | Component | Data Type | Implementation Option Examples | Implementation Selected | Examples | Use Case |
 
 | Block message | Serialization Code | Amino, Protobuf, Thrift | Protobuf | Block protobuf | Serialized and inserted into the Block Store |
-| Block Store | Key Value Store | LevelDB, BadgerDB,  | |
+| Block Store | Key Value Store | LevelDB, BadgerDB, | |
 | SQL Tables | SQL Database / Engine | MySQL, SQLite, PostgreSQL | Account SQL Table, Tra |
 | Merkle Trees | Sparse Merkle Trie backed by Key-Value Store | Celestia's SMT variation of Libra's JMT | Account SMT, Transactions SMT, etc... |
 | Tx Indexer | Key Value Store |

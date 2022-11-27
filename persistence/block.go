@@ -9,7 +9,7 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 )
 
-// OPTIMIZE(team): get from blockstore or keep in memory
+// OPTIMIZE: evaluate if it's faster to get this from the blockstore (or cache) than the SQL engine
 func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
@@ -20,7 +20,7 @@ func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error)
 	return
 }
 
-// OPTIMIZE: get from blockstore or keep in cache/memory
+// OPTIMIZE: evaluate if it's  faster to get this from the blockstore (or cache) than the SQL engine
 func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {

@@ -61,7 +61,7 @@ type PersistenceWriteContext interface {
 	SetProposalBlock(blockHash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) error
 	GetBlockTxs() [][]byte                    // Returns the transactions set by `SetProposalBlock`
 	ComputeAppHash() ([]byte, error)          // Update the merkle trees, computes the new state hash, and returns in
-	IndexTransaction(txResult TxResult) error // DISCUSS_IN_THIS_COMMIT: How can we remove `TxResult` from the public interface?
+	IndexTransaction(txResult TxResult) error // TODO(#361): Look into an approach to remove `TxResult` from shared interfaces
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error

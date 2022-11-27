@@ -353,11 +353,11 @@ func (p *PostgresContext) updateTransactionsTree() error {
 }
 
 func (p *PostgresContext) updateParamsTree() error {
-	// TODO(core starter task): Implement `updateParamsTree`
+	// TODO(#361): Create a core starter task to implement this
 	return nil
 }
 
 func (p *PostgresContext) updateFlagsTree() error {
-	// TODO(core starter task): Implement `updateParamsTree`
+	// TODO(#361): Create a core starter task to implement this
 	return nil
 }

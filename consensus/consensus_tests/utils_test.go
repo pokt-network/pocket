@@ -141,8 +141,8 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 	loggerMock := baseLoggerMock(t, testChannel)
-  rpcMock := baseRpcMock(t, testChannel)
-  
+	rpcMock := baseRpcMock(t, testChannel)
+
 	bus, err := shared.CreateBus(runtimeMgr, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock, loggerMock, rpcMock)
 
 	require.NoError(t, err)
@@ -157,7 +157,7 @@ func CreateTestConsensusPocketNode(
 	return pocketNode
 }
 
-// TODO: Reduce package scope visibility in the consensus test module
+// CLEANUP: Reduce package scope visibility in the consensus test module
 func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
 	for _, pocketNode := range pocketNodes {
 		go pocketNode.Start()
@@ -305,7 +305,6 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 
-	// TODO_IN_THIS_COMMIT(olshansky): figure out why bugs in the non main go channel block rather than fails
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(int64(-1)).Return(persistenceContextMock, nil).AnyTimes()

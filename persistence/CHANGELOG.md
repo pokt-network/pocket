@@ -9,25 +9,24 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 
 ## [Unreleased]
 
-## [0.0.0.9] - 2022-11-16
+## [0.0.0.9] - 2022-11-27
 
 Core StateHash changes
 
 - Introduced & defined for `block_persistence.proto`
+  - A persistence specific protobuf for the Block stored in the BlockStore
 - On `Commit`, prepare and store a persistence block in the KV Store, SQL Store
 - Replace `IndexTransactions` (plural) to `IndexTransaction` (singular)
-- Implement `ComputeStateHash`
--
 - Maintaining a list of StateTrees using Celestia’s SMT and badger as the KV store to compute the state hash
-- Implemented ComputeStateHash to update the global state based on:
+- Implemented `ComputeStateHash` to update the global state based on:
   - Validators
   - Applications
   - Servicers
-  - Fisherpeople
+  - Fisherman
   - Accounts
-  - Polols
+  - Pools
   - Transactions
-  - Placeholder for flags & params created
+  - Added a placeholder for `params` and `flags`
 - Added a benchmarking and a determinism test suite to validate this
 
 Supporting StateHash changes

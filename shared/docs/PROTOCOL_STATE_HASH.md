@@ -1,7 +1,5 @@
 # State Hash <!-- omit in toc -->
 
-TODO_IN_THIS_COMMIT: Make the appropriate updates necessary to the flow based on discussion items
-
 This document describes the cross-module communication using the interfaces in [../shared/modules](../shared/modules) to compute a new state hash. See module specific documentation & implementation details inside each module respectively.
 
 - [Context Management](#context-management)

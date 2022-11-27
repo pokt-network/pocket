@@ -41,14 +41,14 @@ type PostgresContext struct {
 	conn   *pgx.Conn
 	tx     pgx.Tx
 
-	// TECHDEBT: These three values are pointers to objects maintained by the PersistenceModule,
+	// TECHDEBT(#361): These three values are pointers to objects maintained by the PersistenceModule,
 	// so there should be a better way to access them (via the bus?) rather than embedding here.
 	blockStore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
 	stateTrees *stateTrees
 
+	// DISCUSS(#361): Could/should we move these to the utilityContext?
 	// IMPROVE: Could/should we rename these to proposalXX?
-	// DISCUSS: Could/should we move these to the utilityContext?
 	proposerAddr []byte
 	quorumCert   []byte
 	blockHash    string // CONSOLIDATE: blockHash / appHash / stateHash

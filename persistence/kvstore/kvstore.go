@@ -87,7 +87,6 @@ func (store *badgerKVStore) Get(key []byte) ([]byte, error) {
 	return value, nil
 }
 
-// TODO_IN_THIS_COMMIT: Add tests for this new function
 func (store *badgerKVStore) Delete(key []byte) error {
 	tx := store.db.NewTransaction(true)
 	defer tx.Discard()

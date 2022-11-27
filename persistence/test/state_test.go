@@ -119,10 +119,10 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	}
 }
 
+// This unit test generates random transactions and creates random state changes, but checks
+// that replaying them will result in the same state hash, guaranteeing the integrity of the
+// state hash.
 func TestStateHash_ReplayingRandomTransactionsIsDeterministic(t *testing.T) {
-	t.Cleanup(clearAllState)
-	clearAllState()
-
 	testCases := []struct {
 		numHeights      int64
 		numTxsPerHeight int
@@ -130,7 +130,7 @@ func TestStateHash_ReplayingRandomTransactionsIsDeterministic(t *testing.T) {
 		numReplays      int
 	}{
 		{1, 2, 1, 3},
-		// {10, 2, 5, 5},
+		{10, 2, 5, 5},
 	}
 
 	for _, testCase := range testCases {
@@ -140,6 +140,9 @@ func TestStateHash_ReplayingRandomTransactionsIsDeterministic(t *testing.T) {
 		numReplays := testCase.numReplays
 
 		t.Run(fmt.Sprintf("ReplayingRandomTransactionsIsDeterministic(%d;%d,%d,%d", numHeights, numTxsPerHeight, numOpsPerTx, numReplays), func(t *testing.T) {
+			t.Cleanup(clearAllState)
+			clearAllState()
+
 			replayableBlocks := make([]*TestReplayableBlock, numHeights)
 
 			for height := int64(0); height < int64(numHeights); height++ {
@@ -197,12 +200,11 @@ func TestStateHash_ReplayingRandomTransactionsIsDeterministic(t *testing.T) {
 }
 
 func TestStateHash_TreeUpdatesAreIdempotent(t *testing.T) {
-	// TODO_IN_THIS_COMMIT: Running the same oepration at the same height should not result in a
-	// a different hash because the final state is still the same.
+	// ADDTEST(#361): Create an issue dedicated to increasing the test coverage for state hashes
 }
 
 func TestStateHash_TreeUpdatesNegativeTestCase(t *testing.T) {
-	// TODO_IN_NEXT_COMMIT: Implement me
+	// ADDTEST(#361): Create an issue dedicated to increasing the test coverage for state hashes
 }
 
 func verifyReplayableBlocks(t *testing.T, replayableBlocks []*TestReplayableBlock) {

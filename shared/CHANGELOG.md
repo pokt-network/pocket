@@ -7,7 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.3] - 2022-11-14
+## [0.0.0.4] - 2022-11-27
+
+Debug:
+
+- `ResetToGenesis` - Added the ability to reset the state to genesis
+- `ClearState` - Added the ability to clear the state completely (height 0 without genesis data)
+
+Configs:
+
+- Updated the test generator to produce deterministic keys
+- Added `trees_store_dir` to persistence configs
+- Updated `LocalNet` configs to have an empty `tx_indexer_path` and `trees_store_dir`
+
+## [0.0.0.3] - 2022-11-14
 
 ### [#353](https://github.com/pokt-network/pocket/pull/353) Remove topic from messaging
 
