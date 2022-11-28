@@ -68,7 +68,7 @@ If the Node is `Syncing` or `localSyncState.Height < GlobalSyncMeta.Height` then
 
 In `SyncMode`, the Node is catching up to the latest block by making `BlockRequests` to its fellow eligible peers. A peer is eligible for a `BlockRequest` if `PeerMeta.MinHeight` <= `self.MaxBlockHeight` <= `PeerMeta.MaxHeight`.
 
-Though it is `unspecified` whether or not a Node may make `BlockRequests` in order or in parallel, the cryptographic restraints of block processing require the Node to call `ApplyingBlock` sequentially until it is `Synced`.
+Though it is `unspecified` whether or not a Node may make `BlockRequests` in order or in parallel, the cryptographic restraints of block processing require the Node to call `ApplyBlock` sequentially until it is `Synced`.
 
 It is important to note, if any blocks processed result in an invalid `AppHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found.
 
@@ -114,6 +114,6 @@ How the Churn Management operations of RainTree might provide opportunities and 
 
 `Churn Management Protocol`: The protocol in Pocket's P2P Module that ensures the most updated and valid Network Peer list possible.
 
-`Network Peer`: A node that is directly connected and sharing resources without going through a third party server. Peers may start the connection through an `inbound` or `outbound` initialization.
+`Network Peer`: Another node on the network that this node can directly communicate with, without going through a third-party server. Peers may start the connection through an `inbound` or `outbound` initialization to share and transmit data.
 
 `SyncState`: The local block state of the node vs the global network block state.
