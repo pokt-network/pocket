@@ -45,7 +45,7 @@ func (m *persistenceModule) clearState(_ *messaging.DebugMessage) {
 		log.Printf("Error creating new context: %s \n", err)
 		return
 	}
-	defer context.Commit()
+	defer context.Commit(nil)
 
 	if err := context.(*PostgresContext).DebugClearAll(); err != nil {
 		log.Printf("Error clearing state: %s \n", err)

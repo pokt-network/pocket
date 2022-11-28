@@ -1,9 +1,10 @@
 package utility
 
 import (
+	"math/big"
+
 	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
-	"math/big"
 )
 
 /*
@@ -18,6 +19,7 @@ import (
 	operation that executes at the end of every block.
 */
 
+// TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
 func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) ([]byte, [][]byte, error) {
 	lastBlockByzantineVals, err := u.GetLastBlockByzantineValidators()
 	if err != nil {
@@ -66,12 +68,13 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	if err := u.EndBlock(proposer); err != nil {
 		return nil, nil, err
 	}
-	u.GetPersistenceContext().SetLatestTxResults(txResults)
+	u.GetPersistenceContext().SetTxResults(txResults)
 	// return the app hash (consensus module will get the validator set directly)
 	appHash, err := u.GetAppHash()
 	return appHash, transactions, err
 }
 
+// TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
 func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 	var txResults []modules.TxResult
@@ -84,7 +87,7 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 		return nil, err
 	}
 	// deliver txs lifecycle phase
-	for index, transactionProtoBytes := range u.GetPersistenceContext().GetLatestBlockTxs() {
+	for index, transactionProtoBytes := range u.GetPersistenceContext().GetBlockTxs() {
 		tx, err := typesUtil.TransactionFromBytes(transactionProtoBytes)
 		if err != nil {
 			return nil, err
@@ -110,10 +113,10 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 		// }
 	}
 	// end block lifecycle phase
-	if err := u.EndBlock(u.GetPersistenceContext().GetLatestProposerAddr()); err != nil {
+	if err := u.EndBlock(u.GetPersistenceContext().GetProposerAddr()); err != nil {
 		return nil, err
 	}
-	u.GetPersistenceContext().SetLatestTxResults(txResults)
+	u.GetPersistenceContext().SetTxResults(txResults)
 	// return the app hash (consensus module will get the validator set directly)
 	appHash, err = u.GetAppHash()
 	return
@@ -144,7 +147,7 @@ func (u *UtilityContext) EndBlock(proposer []byte) typesUtil.Error {
 
 func (u *UtilityContext) GetAppHash() ([]byte, typesUtil.Error) {
 	// Get the root hash of the merkle state tree for state consensus integrity
-	appHash, er := u.Context.AppHash()
+	appHash, er := u.Context.UpdateAppHash()
 	if er != nil {
 		return nil, typesUtil.ErrAppHash(er)
 	}

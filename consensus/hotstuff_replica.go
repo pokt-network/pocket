@@ -3,6 +3,7 @@ package consensus
 import (
 	"encoding/hex"
 	"fmt"
+
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -232,7 +233,7 @@ func (m *consensusModule) applyBlock(block *typesCons.Block) error {
 	}
 	persistenceContext := m.utilityContext.GetPersistenceContext()
 	// Set the proposal block in the persistence context
-	if err = persistenceContext.SetProposalBlock(block.BlockHeader.Hash, blockProtoBz, block.BlockHeader.ProposerAddress, block.BlockHeader.QuorumCertificate, block.Transactions); err != nil {
+	if err = persistenceContext.SetProposalBlock(block.BlockHeader.Hash, blockProtoBz, block.BlockHeader.ProposerAddress, block.Transactions); err != nil {
 		return err
 	}
 

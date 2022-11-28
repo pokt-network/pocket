@@ -8,7 +8,7 @@ import (
 
 func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	t.Cleanup(func() {
-		require.NoError(t, testPersistenceMod.NewWriteContext().ResetContext())
+		require.NoError(t, testPersistenceMod.NewWriteContext().Release())
 	})
 	// variables for testing
 	poolName := "fake"
@@ -20,7 +20,7 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 	context, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
 	require.NoError(t, context.InsertPool(poolName, poolAddress, originalAmount))
-	require.NoError(t, context.Commit())
+	require.NoError(t, context.Commit(nil))
 
 	// verify the insert in the previously committed context worked
 	contextA, err := testPersistenceMod.NewRWContext(0)
@@ -50,7 +50,7 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 
 func TestPersistenceContextTwoWritesErrors(t *testing.T) {
 	t.Cleanup(func() {
-		require.NoError(t, testPersistenceMod.NewWriteContext().ResetContext())
+		require.NoError(t, testPersistenceMod.NewWriteContext().Release())
 	})
 	// Opening up first write context succeeds
 	_, err := testPersistenceMod.NewRWContext(0)

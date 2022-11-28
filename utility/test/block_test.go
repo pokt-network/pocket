@@ -25,7 +25,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	require.NoError(t, er)
 	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
-	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, nil, [][]byte{txBz})
+	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
@@ -73,7 +73,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	require.NoError(t, err)
 	addrBz, er := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, er)
-	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, nil, [][]byte{txBz})
+	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
@@ -136,7 +136,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	require.NoError(t, er)
 	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
-	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, nil, [][]byte{txBz})
+	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, [][]byte{txBz})
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
@@ -161,6 +161,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 
 	test_artifacts.CleanupTest(ctx)
 }
+
 func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 	for _, actorType := range actorTypes {
 		t.Run(fmt.Sprintf("%s.UnstakeValidatorsActorsThatAreReady", actorType.String()), func(t *testing.T) {

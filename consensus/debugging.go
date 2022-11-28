@@ -96,6 +96,7 @@ type paceMakerDebug struct {
 	manualMode                bool
 	debugTimeBetweenStepsMsec uint64
 
+	// IMPROVE: Consider renaming to `previousRoundQC`
 	quorumCertificate *typesCons.QuorumCertificate
 }
 

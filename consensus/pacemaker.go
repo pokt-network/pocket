@@ -227,11 +227,13 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 	p.consensusMod.clearMessagesPool()
 	// TECHDEBT: This should be avoidable altogether
 	if p.consensusMod.utilityContext != nil {
-		p.consensusMod.utilityContext.ReleaseContext()
+		if err := p.consensusMod.utilityContext.Release(); err != nil {
+			log.Println("[WARN] Failed to release utility context: ", err)
+		}
 		p.consensusMod.utilityContext = nil
 	}
 
-	// TODO(olshansky): This if structure for debug purposes only; think of a way to externalize it...
+	// TECHDEBT: This if structure for debug purposes only; think of a way to externalize it from the main consensus flow...
 	if p.manualMode && !forceNextView {
 		p.quorumCertificate = qc
 		return

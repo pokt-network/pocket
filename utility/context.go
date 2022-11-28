@@ -11,7 +11,7 @@ import (
 type UtilityContext struct {
 	LatestHeight int64
 	Mempool      typesUtil.Mempool
-	Context      *Context // IMPROVE: Consider renmaming to PersistenceContext
+	Context      *Context // IMPROVE: Consider renaming to PersistenceContext
 }
 
 type Context struct {
@@ -44,13 +44,23 @@ func (u *UtilityContext) GetPersistenceContext() modules.PersistenceRWContext {
 	return u.Context.PersistenceRWContext
 }
 
-func (u *UtilityContext) CommitPersistenceContext() error {
-	return u.Context.PersistenceRWContext.Commit()
+func (u *UtilityContext) Commit(quorumCert []byte) error {
+	if err := u.Context.PersistenceRWContext.Commit(quorumCert); err != nil {
+		return err
+	}
+	u.Context = nil
+	return nil
 }
 
-func (u *UtilityContext) ReleaseContext() {
-	u.Context.Release()
+func (u *UtilityContext) Release() error {
+	if u.Context == nil {
+		return nil
+	}
+	if err := u.Context.Release(); err != nil {
+		return err
+	}
 	u.Context = nil
+	return nil
 }
 
 func (u *UtilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {
@@ -102,7 +112,7 @@ func (u *UtilityContext) NewSavePoint(transactionHash []byte) typesUtil.Error {
 }
 
 func (c *Context) Reset() typesUtil.Error {
-	if err := c.PersistenceRWContext.Reset(); err != nil {
+	if err := c.PersistenceRWContext.Release(); err != nil {
 		return typesUtil.ErrResetContext(err)
 	}
 	return nil

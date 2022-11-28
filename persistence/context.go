@@ -5,6 +5,10 @@ import (
 	"log"
 )
 
+func (p PostgresContext) UpdateAppHash() ([]byte, error) {
+	return []byte("TODO(#284): Implement this function."), nil
+}
+
 func (p PostgresContext) NewSavePoint(bytes []byte) error {
 	log.Println("TODO: NewSavePoint not implemented")
 	return nil
@@ -23,21 +27,20 @@ func (p PostgresContext) AppHash() ([]byte, error) {
 func (p *PostgresContext) Reset() error {
 	p.txResults = nil
 	p.blockHash = ""
-	p.quorumCertificate = nil
 	p.proposerAddr = nil
 	p.blockProtoBytes = nil
 	p.blockTxs = nil
 	return nil
 }
 
-func (p PostgresContext) Commit() error {
+func (p PostgresContext) Commit(quorumCert []byte) error {
 	log.Printf("About to commit context at height %d.\n", p.Height)
 
 	ctx := context.TODO()
 	if err := p.GetTx().Commit(context.TODO()); err != nil {
 		return err
 	}
-	if err := p.StoreBlock(); err != nil {
+	if err := p.storeBlock(quorumCert); err != nil {
 		return err
 	}
 	if err := p.conn.Close(ctx); err != nil {

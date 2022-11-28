@@ -192,6 +192,10 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	}, nil
 }
 
+func (m *persistenceModule) ReleaseWriteContext() error {
+	panic("TODO(#284): Implement proper write context release.")
+}
+
 func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
 	return m.blockStore
 }

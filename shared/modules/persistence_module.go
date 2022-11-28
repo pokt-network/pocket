@@ -12,8 +12,12 @@ type PersistenceModule interface {
 	ConfigurableModule
 	GenesisDependentModule
 
+	// Context operations
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
+	ReleaseWriteContext() error // The module can maintain many read contexts, but only one write context can exist at a time
+
+	// BlockStore operations
 	GetBlockStore() kvstore.KVStore
 	NewWriteContext() PersistenceRWContext
 
@@ -35,39 +39,37 @@ type PersistenceRWContext interface {
 	PersistenceWriteContext
 }
 
-// NOTE: There's not really a use case for a write only interface,
-// but it abstracts and contrasts nicely against the read only context
+// REFACTOR: Simplify the interface
+// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
+// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
+// - Reference: https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces
+
+// TECHDEBT: convert address and public key to string from bytes
+// NOTE: There's not really a use case for a write only interface, but it abstracts and contrasts nicely against the read only context
 type PersistenceWriteContext interface {
-	// DISCUSS: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
-	// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
-	// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
 	// Context Operations
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
-
-	ResetContext() error // TODO consolidate with Reset and Release
-	Reset() error
-	Commit() error
 	Release() error
 
-	AppHash() ([]byte, error)
-
-	// Block Operations
+	// Commits the current context (height, hash, transactions, etc...) to finality.
+	Commit(quorumCert []byte) error
 
 	// Indexer Operations
-	IndexTransactions() error
 
 	// Block Operations
-	SetLatestTxResults(txResults []TxResult)
-	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr, qc []byte, transactions [][]byte) error
-	StoreBlock() error // Store the block into persistence
+	// DISCUSS_IN_THIS_COMMIT: Can this function be removed ? If so, could we remove `TxResult` from the public facing interface given that we set transactions in `SetProposalBlock`?
+	SetTxResults(txResults []TxResult)
+	// TODO(#284): Remove `blockProtoBytes`
+	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr []byte, transactions [][]byte) error
+	// Store the block into persistence
+	UpdateAppHash() ([]byte, error)
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error
-
-	InsertPool(name string, address []byte, amount string) error
+	InsertPool(name string, address []byte, amount string) error // TODO(#149): remove address from pool
 
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error
@@ -123,15 +125,16 @@ type PersistenceReadContext interface {
 	// Closes the read context
 	Close() error
 
+	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries
-	GetPrevAppHash() (string, error) // app hash from the previous block
+	GetPrevAppHash() (string, error) // hash from the previous block relative to the context height
 	GetLatestBlockHeight() (uint64, error)
-	GetBlockHash(height int64) ([]byte, error)
+	GetBlockHashAtHeight(height int64) ([]byte, error)
 	GetBlocksPerSession(height int64) (int, error)
-	GetLatestProposerAddr() []byte
-	GetLatestBlockProtoBytes() []byte
-	GetLatestBlockHash() string
-	GetLatestBlockTxs() [][]byte
+	GetProposerAddr() []byte
+	GetBlockProtoBytes() []byte
+	GetBlockHash() string
+	GetBlockTxs() [][]byte
 
 	// Indexer Queries
 	TransactionExists(transactionHash string) (bool, error)

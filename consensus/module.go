@@ -50,6 +50,7 @@ type consensusModule struct {
 	//    TODO(#315):  Move the statefulness of `TxResult` to the persistence module
 	TxResults []modules.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
 
+	// IMPROVE: Consider renaming `highPrepareQC` to simply `prepareQC`
 	highPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	lockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
@@ -71,7 +72,8 @@ type consensusModule struct {
 	// DEPRECATE: Remove later when we build a shared/proper/injected logger
 	logPrefix string
 
-	// TECHDEBT: Move this over to use the txIndexer
+	// TECHDEBT: Rename this to `consensusMessagePool` or something similar
+	//           and reconsider if an in-memory map is the best approach
 	messagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
 }
 
