@@ -9,6 +9,10 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
+func (p PostgresContext) UpdateAppHash() ([]byte, error) {
+	return []byte("TODO(#284): Implement this function."), nil
+}
+
 func (p PostgresContext) NewSavePoint(bytes []byte) error {
 	log.Println("TODO: NewSavePoint not implemented")
 	return nil

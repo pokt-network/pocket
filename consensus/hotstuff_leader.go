@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"unsafe"
 
+	"github.com/pokt-network/pocket/shared/codec"
+
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
