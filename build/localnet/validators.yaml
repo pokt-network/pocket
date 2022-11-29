@@ -3,6 +3,7 @@ kind: PocketValidator
 metadata:
   name: v1-validator1
 spec:
+  prometheusScrape: true
   collection:
     name: "default"
   pocketImage: validator-image
@@ -29,6 +30,7 @@ kind: PocketValidator
 metadata:
   name: v1-validator2
 spec:
+  prometheusScrape: true
   collection:
     name: "default"
   pocketImage: validator-image
@@ -55,6 +57,7 @@ kind: PocketValidator
 metadata:
   name: v1-validator3
 spec:
+  prometheusScrape: true
   collection:
     name: "default"
   pocketImage: validator-image
@@ -81,6 +84,7 @@ kind: PocketValidator
 metadata:
   name: v1-validator4
 spec:
+  prometheusScrape: true
   collection:
     name: "default"
   pocketImage: validator-image
