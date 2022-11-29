@@ -306,13 +306,13 @@ test_all: # generate_mocks
 .PHONY: test_all_with_json
 ## Run all go unit tests, output results in json file
 test_all_with_json: generate_rpc_openapi # generate_mocks
-	go test -p=1 -count=1 -json ./utility/... > test_results.json
+	go test -v -p=1 -json -count=1 ./... -run TestUtilityContext_SubtractAccountAmount > test_results.json
 # go test -p 1 -json ./... > test_results.json
 
 .PHONY: test_all_with_coverage
 ## Run all go unit tests, output results & coverage into files
 test_all_with_coverage: generate_rpc_openapi # generate_mocks
-	go test -p=1 -v -count=1 ./utility/... > test_results.json
+	go test -v -p=1 -json -count=1 ./... -run TestUtilityContext_SubtractAccountAmount > test_results.json
 # go test -p 1 -v ./... -covermode=count -coverprofile=coverage.out
 # go tool cover -func=coverage.out -o=coverage.out
 
