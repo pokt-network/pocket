@@ -95,5 +95,7 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 	}
 }
 
-// CLEANUP: Remove this since it's no longer used or necessary.
-func CleanupTest(u utility.UtilityContext) {}
+// CLEANUP: Remove this since it's no longer used or necessary but make sure remote tests are still passing
+func CleanupTest(u utility.UtilityContext) {
+	u.Release()
+}
