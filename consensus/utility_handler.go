@@ -1,6 +1,8 @@
 package consensus
 
 import (
+	"fmt"
+
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 )
 
@@ -17,7 +19,7 @@ func (m *consensusModule) handleUtilityMessage(msg *typesCons.UtilityMessage) er
 			m.nodeLog("Successfully checked transaction")
 		}
 	default:
-		panic("unknown utility message type")
+		return fmt.Errorf("unknown utility message type: %v", msg.GetType())
 	}
 	return nil
 }

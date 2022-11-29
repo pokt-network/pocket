@@ -134,8 +134,6 @@ func (node *Node) Start() error {
 		event := node.GetBus().GetBusEvent()
 		if err := node.handleEvent(event); err != nil {
 			log.Println("Error handling event: ", err)
-		} else {
-			log.Println("Successfully handled event")
 		}
 	}
 }

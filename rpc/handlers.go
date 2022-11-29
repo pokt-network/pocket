@@ -8,8 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/debug"
-	"google.golang.org/protobuf/types/known/anypb"
+	"github.com/pokt-network/pocket/shared/codec"
 )
 
 func (s *rpcServer) GetV1Health(ctx echo.Context) error {
@@ -68,13 +67,18 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 		Data: msgBz,
 	}
 
-	anyProto, err := anypb.New(utilMsg)
+	// anyProto, err := anypb.New(utilMsg)
+	// if err != nil {
+	// 	log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
+	// }
+	anyUtilityMessage, err := codec.GetCodec().ToAny(utilMsg)
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
+		log.Printf("[ERROR] Failed to create Any proto: %v", err)
+		return err
 	}
 
-	if err := s.GetBus().GetP2PModule().Broadcast(anyProto, debug.PocketTopic_CONSENSUS_MESSAGE_TOPIC); err != nil {
-		log.Println("[ERROR] Failed to broadcast debug message: ", err)
+	if err := s.GetBus().GetP2PModule().Broadcast(anyUtilityMessage); err != nil {
+		log.Printf("[ERROR] Failed to broadcast debug message: %v", err)
 		return err
 	}
 	return nil

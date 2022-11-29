@@ -3,6 +3,8 @@ package utility
 import (
 	"bytes"
 	"encoding/hex"
+
+	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -23,17 +25,14 @@ func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
 		return typesUtil.ErrDuplicateTransaction()
 	}
 	store := u.Store()
-	txExists, err := store.TransactionExists(txHash)
-	if err != nil {
+	if txExists, err := store.TransactionExists(txHash); err != nil {
 		return err
-	}
-	// TODO non-ordered nonce requires non-pruned tx indexer
-	if txExists {
+	} else if txExists {
+		// TODO non-ordered nonce requires non-pruned tx indexer
 		return typesUtil.ErrTransactionAlreadyCommitted()
 	}
-	cdc := u.Codec()
 	transaction := &typesUtil.Transaction{}
-	if err := cdc.Unmarshal(transactionProtoBytes, transaction); err != nil {
+	if err := codec.GetCodec().Unmarshal(transactionProtoBytes, transaction); err != nil {
 		return typesUtil.ErrProtoUnmarshal(err)
 	}
 	if err := transaction.ValidateBasic(); err != nil {

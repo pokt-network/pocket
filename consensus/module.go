@@ -235,6 +235,7 @@ func (m *consensusModule) GetPrivateKey() (cryptoPocket.PrivateKey, error) {
 func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
+
 	switch message.MessageName() {
 	case HotstuffMessageContentType:
 		msg, err := codec.GetCodec().FromAny(message)
