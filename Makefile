@@ -307,14 +307,12 @@ test_all: # generate_mocks
 ## Run all go unit tests, output results in json file
 test_all_with_json: generate_rpc_openapi # generate_mocks
 	go test -v -p=1 -json -count=1 ./... -run TestUtilityContext > test_results.json
-# go test -p 1 -json ./... > test_results.json
 
 .PHONY: test_all_with_coverage
 ## Run all go unit tests, output results & coverage into files
 test_all_with_coverage: generate_rpc_openapi # generate_mocks
-	go test -v -p=1 -json -count=1 ./... -run TestUtilityContext > test_results.json
-# go test -p 1 -v ./... -covermode=count -coverprofile=coverage.out
-# go tool cover -func=coverage.out -o=coverage.out
+	go test -p 1 -v -count=1 ./... -run TestUtilityContext -covermode=count -coverprofile=coverage.out
+	go tool cover -func=coverage.out -o=coverage.out
 
 .PHONY: test_race
 ## Identify all unit tests that may result in race conditions
