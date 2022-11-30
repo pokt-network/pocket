@@ -5,7 +5,19 @@ All notable changes to this module will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
+
 ## [Unreleased]
+
+## [0.0.0.8] - 2022-11-15
+
+- Rename `GetBlockHash` to `GetBlockHashAtHeight`
+- Reduce visibility scope of `IndexTransactions` to `indexTransactions`
+- Remove `quorumCertificate` from the local context state
+- Remove `LatestQC` and `SetLatestQC`
+- Remove `Latest` prefix from several functions including related to setting context of the proposal block
+- Added `ReleaseWriteContext` placeholder
+- Replaced `ResetContext` with `Release`
 
 ## [0.0.0.7] - 2022-11-01
 

@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pokt-network/pocket/persistence/indexer"
 	"log"
+
+	"github.com/pokt-network/pocket/persistence/indexer"
 
 	"github.com/pokt-network/pocket/persistence/types"
 
@@ -44,24 +45,15 @@ type PostgresContext struct {
 	blockstore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
 	// DISCUSS(#284): this might be retrieved from the block store - temporarily we will access it directly from the module
-	//       following the pattern of the Consensus Module prior to pocket/issue-#315
-	quorumCertificate []byte
-	proposerAddr      []byte
-	blockProtoBytes   []byte
-	blockHash         string
-	blockTxs          [][]byte
-	txResults         []modules.TxResult
+	//                following the pattern of the Consensus Module prior to pocket/issue-#315
+	proposerAddr    []byte
+	blockProtoBytes []byte
+	blockHash       string
+	blockTxs        [][]byte
+	txResults       []modules.TxResult // Not indexed by `txIndexer` until commit.
 }
 
-func (p PostgresContext) LatestQC() []byte {
-	return p.quorumCertificate
-}
-
-func (p PostgresContext) SetLatestQC(latestQC []byte) {
-	p.quorumCertificate = latestQC
-}
-
-func (pg *PostgresContext) GetCtxAndTx() (context.Context, pgx.Tx, error) {
+func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx, error) {
 	return context.TODO(), pg.GetTx(), nil
 }
 
@@ -69,7 +61,7 @@ func (pg *PostgresContext) GetTx() pgx.Tx {
 	return pg.tx
 }
 
-func (pg *PostgresContext) GetCtx() (context.Context, error) {
+func (pg *PostgresContext) getCtx() (context.Context, error) {
 	return context.TODO(), nil
 }
 
@@ -94,27 +86,28 @@ func (pg *PostgresContext) ResetContext() error {
 	return nil
 }
 
-func (p PostgresContext) GetLatestProposerAddr() []byte {
+// DISCUSS: Given that these are context specific setters/getters, is `context.go` a more appropriate location for these than `db.go`?
+func (p PostgresContext) GetProposerAddr() []byte {
 	return p.proposerAddr
 }
 
-func (p PostgresContext) GetLatestBlockProtoBytes() []byte {
+func (p PostgresContext) GetBlockProtoBytes() []byte {
 	return p.blockProtoBytes
 }
 
-func (p PostgresContext) GetLatestBlockHash() string {
+func (p PostgresContext) GetBlockHash() string {
 	return p.blockHash
 }
 
-func (p PostgresContext) GetLatestBlockTxs() [][]byte {
+func (p PostgresContext) GetBlockTxs() [][]byte {
 	return p.blockTxs
 }
 
-func (p PostgresContext) GetLatestTxResults() []modules.TxResult {
+func (p PostgresContext) GetTxResults() []modules.TxResult {
 	return p.txResults
 }
 
-func (p *PostgresContext) SetLatestTxResults(txResults []modules.TxResult) {
+func (p *PostgresContext) SetTxResults(txResults []modules.TxResult) {
 	p.txResults = txResults
 }
 
@@ -227,7 +220,7 @@ func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
 
 // Exposed for testing purposes only
 func (p PostgresContext) DebugClearAll() error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}

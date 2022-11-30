@@ -4,14 +4,14 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // OPTIMIZE(team): get from blockstore or keep in memory
 func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return 0, err
 	}
@@ -21,8 +21,8 @@ func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error)
 }
 
 // OPTIMIZE(team): get from blockstore or keep in cache/memory
-func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
-	ctx, tx, err := p.GetCtxAndTx()
+func (p PostgresContext) GetBlockHashAtHeight(height int64) ([]byte, error) {
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
 	}
@@ -52,12 +52,7 @@ func (p PostgresContext) GetPrevAppHash() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error getting block hash for height %d even though it's in the database: %s", height, err)
 	}
-	// IMPROVE/CLEANUP(#284): returning the whole protoblock - should just return hash
-	return hex.EncodeToString(block), nil
-}
-
-func (p PostgresContext) GetTxResults() []modules.TxResult {
-	return p.txResults
+	return hex.EncodeToString(block), nil // TODO(#284): Return `block.Hash` instead of the hex encoded representation of the blockBz
 }
 
 func (p PostgresContext) TransactionExists(transactionHash string) (bool, error) {
@@ -76,9 +71,9 @@ func (p PostgresContext) TransactionExists(transactionHash string) (bool, error)
 	return true, err
 }
 
-func (p PostgresContext) IndexTransactions() error {
+func (p PostgresContext) indexTransactions() error {
 	// TODO: store in batch
-	for _, txResult := range p.GetLatestTxResults() {
+	for _, txResult := range p.GetTxResults() {
 		if err := p.txIndexer.Index(txResult); err != nil {
 			return err
 		}
@@ -89,11 +84,10 @@ func (p PostgresContext) IndexTransactions() error {
 // DISCUSS: this might be retrieved from the block store - temporarily we will access it directly from the module
 //       following the pattern of the Consensus Module prior to pocket/issue-#315
 // TODO(#284): Remove blockProtoBytes from the interface
-func (p *PostgresContext) SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr, qc []byte, transactions [][]byte) error {
+func (p *PostgresContext) SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr []byte, transactions [][]byte) error {
 	p.blockHash = blockHash
 	p.blockProtoBytes = blockProtoBytes
 	p.proposerAddr = proposerAddr
-	p.quorumCertificate = qc
 	p.blockTxs = transactions
 	return nil
 }
@@ -102,7 +96,7 @@ func (p *PostgresContext) SetProposalBlock(blockHash string, blockProtoBytes, pr
 //                 until we include the schema as part of the SQL Store because persistence
 //                 currently has no access to the protobuf schema which is the source of truth.
 // TODO: atomic operations needed here - inherited pattern from consensus module
-func (p PostgresContext) StoreBlock() error {
+func (p PostgresContext) storeBlock(quorumCert []byte) error {
 	if p.blockProtoBytes == nil {
 		// IMPROVE/CLEANUP: HACK - currently tests call Commit() on the same height and it throws a
 		// ERROR: duplicate key value violates unique constraint "block_pkey", because it attempts to
@@ -117,15 +111,15 @@ func (p PostgresContext) StoreBlock() error {
 		return err
 	}
 	// Store in SQL Store
-	if err := p.InsertBlock(uint64(p.Height), p.blockHash, p.proposerAddr, p.quorumCertificate); err != nil {
+	if err := p.InsertBlock(uint64(p.Height), p.blockHash, p.proposerAddr, quorumCert); err != nil {
 		return err
 	}
 	// Store transactions in indexer
-	return p.IndexTransactions()
+	return p.indexTransactions()
 }
 
 func (p PostgresContext) InsertBlock(height uint64, hash string, proposerAddr []byte, quorumCert []byte) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}

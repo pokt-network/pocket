@@ -6,7 +6,6 @@ var _ ProtocolActorSchema = &BaseProtocolActorSchema{}
 
 // Implements the ProtocolActorSchema with behaviour that can be embedded (i.e. inherited) by other protocol
 // actors for a share implementation.
-//
 // Note that this implementation assumes the protocol actor is chain dependant, so that behaviour needs
 // to be overridden if the actor (e.g. Validator) is chain independent.
 type BaseProtocolActorSchema struct {
@@ -35,11 +34,11 @@ func (actor *BaseProtocolActorSchema) GetActorSpecificColName() string {
 }
 
 func (actor *BaseProtocolActorSchema) GetTableSchema() string {
-	return ProtocolActorTableSchema(actor.actorSpecificColName, actor.heightConstraintName)
+	return protocolActorTableSchema(actor.actorSpecificColName, actor.heightConstraintName)
 }
 
 func (actor *BaseProtocolActorSchema) GetChainsTableSchema() string {
-	return ProtocolActorChainsTableSchema(actor.chainsHeightConstraintName)
+	return protocolActorChainsTableSchema(actor.chainsHeightConstraintName)
 }
 
 func (actor *BaseProtocolActorSchema) GetQuery(address string, height int64) string {
@@ -55,7 +54,7 @@ func (actor *BaseProtocolActorSchema) GetExistsQuery(address string, height int6
 }
 
 func (actor *BaseProtocolActorSchema) GetReadyToUnstakeQuery(unstakingHeight int64) string {
-	return ReadyToUnstake(unstakingHeight, actor.tableName)
+	return readyToUnstake(unstakingHeight, actor.tableName)
 }
 
 func (actor *BaseProtocolActorSchema) GetOutputAddressQuery(operatorAddress string, height int64) string {
@@ -75,7 +74,7 @@ func (actor *BaseProtocolActorSchema) GetUnstakingHeightQuery(address string, he
 }
 
 func (actor *BaseProtocolActorSchema) GetChainsQuery(address string, height int64) string {
-	return SelectChains(AllColsSelector, address, height, actor.tableName, actor.chainsTableName)
+	return selectChains(AllColsSelector, address, height, actor.tableName, actor.chainsTableName)
 }
 
 func (actor *BaseProtocolActorSchema) InsertQuery(address, publicKey, stakedTokens, generic, outputAddress string, pausedHeight, unstakingHeight int64, chains []string, height int64) string {
@@ -99,23 +98,23 @@ func (actor *BaseProtocolActorSchema) UpdateQuery(address, stakedTokens, generic
 }
 
 func (actor *BaseProtocolActorSchema) UpdateChainsQuery(address string, chains []string, height int64) string {
-	return InsertChains(address, chains, height, actor.chainsTableName, actor.chainsHeightConstraintName)
+	return insertChains(address, chains, height, actor.chainsTableName, actor.chainsHeightConstraintName)
 }
 
 func (actor *BaseProtocolActorSchema) UpdateUnstakingHeightQuery(address string, unstakingHeight, height int64) string {
-	return UpdateUnstakingHeight(address, actor.actorSpecificColName, unstakingHeight, height, actor.tableName, actor.heightConstraintName)
+	return updateUnstakingHeight(address, actor.actorSpecificColName, unstakingHeight, height, actor.tableName, actor.heightConstraintName)
 }
 
 func (actor *BaseProtocolActorSchema) UpdatePausedHeightQuery(address string, pausedHeight, height int64) string {
-	return UpdatePausedHeight(address, actor.actorSpecificColName, pausedHeight, height, actor.tableName, actor.heightConstraintName)
+	return updatePausedHeight(address, actor.actorSpecificColName, pausedHeight, height, actor.tableName, actor.heightConstraintName)
 }
 
 func (actor *BaseProtocolActorSchema) UpdateUnstakedHeightIfPausedBeforeQuery(pauseBeforeHeight, unstakingHeight, height int64) string {
-	return UpdateUnstakedHeightIfPausedBefore(actor.actorSpecificColName, unstakingHeight, pauseBeforeHeight, height, actor.tableName, actor.heightConstraintName)
+	return updateUnstakedHeightIfPausedBefore(actor.actorSpecificColName, unstakingHeight, pauseBeforeHeight, height, actor.tableName, actor.heightConstraintName)
 }
 
 func (actor *BaseProtocolActorSchema) SetStakeAmountQuery(address string, stakedTokens string, height int64) string {
-	return UpdateStakeAmount(address, actor.actorSpecificColName, stakedTokens, height, actor.tableName, actor.heightConstraintName)
+	return updateStakeAmount(address, actor.actorSpecificColName, stakedTokens, height, actor.tableName, actor.heightConstraintName)
 }
 
 func (actor *BaseProtocolActorSchema) ClearAllQuery() string {

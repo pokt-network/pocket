@@ -8,14 +8,16 @@ import (
 )
 
 func (m *consensusModule) commitBlock(block *typesCons.Block) error {
-	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
-
-	// Commit and release the context
-	if err := m.utilityContext.CommitPersistenceContext(); err != nil {
+	// Commit the context
+	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
 	}
+	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
 
-	m.utilityContext.ReleaseContext()
+	// Release the context
+	if err := m.utilityContext.Release(); err != nil {
+		log.Println("[WARN] Error releasing utility context: ", err)
+	}
 	m.utilityContext = nil
 
 	return nil
@@ -55,7 +57,9 @@ func (m *consensusModule) refreshUtilityContext() error {
 	// Ideally, this should not be called.
 	if m.utilityContext != nil {
 		m.nodeLog(typesCons.NilUtilityContextWarning)
-		m.utilityContext.ReleaseContext()
+		if err := m.utilityContext.Release(); err != nil {
+			log.Printf("[WARN] Error releasing utility context: %v\n", err)
+		}
 		m.utilityContext = nil
 	}
 

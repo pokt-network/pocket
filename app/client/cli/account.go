@@ -54,7 +54,7 @@ func accountCommands() []*cobra.Command {
 					Amount:      amount,
 				}
 
-				tx, err := prepareTxJson(msg, pk)
+				tx, err := prepareTxBytes(msg, pk)
 				if err != nil {
 					return err
 				}

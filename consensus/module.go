@@ -3,6 +3,7 @@ package consensus
 import (
 	"fmt"
 	"log"
+	"sort"
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
@@ -17,7 +18,7 @@ import (
 
 const (
 	DefaultLogPrefix    = "NODE" // TODO(#164): Make implicit when logging is standardized
-	ConsensusModuleName = "consensus"
+	consensusModuleName = "consensus"
 )
 
 var (
@@ -49,6 +50,7 @@ type consensusModule struct {
 	//    TODO(#315):  Move the statefulness of `TxResult` to the persistence module
 	TxResults []modules.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
 
+	// IMPROVE: Consider renaming `highPrepareQC` to simply `prepareQC`
 	highPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	lockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
@@ -70,7 +72,8 @@ type consensusModule struct {
 	// DEPRECATE: Remove later when we build a shared/proper/injected logger
 	logPrefix string
 
-	// TECHDEBT: Move this over to use the txIndexer
+	// TECHDEBT: Rename this to `consensusMessagePool` or something similar
+	//           and reconsider if an in-memory map is the best approach
 	messagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
 }
 
@@ -180,7 +183,7 @@ func (m *consensusModule) Stop() error {
 }
 
 func (m *consensusModule) GetModuleName() string {
-	return ConsensusModuleName
+	return consensusModuleName
 }
 
 func (m *consensusModule) GetBus() modules.Bus {
@@ -197,10 +200,32 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 }
 
 func (*consensusModule) ValidateConfig(cfg modules.Config) error {
+	// TODO (#334): implement this
 	return nil
 }
 
 func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
+	// Sort the validators by their generic param (i.e. service URL)
+	vals := genesis.GetConsensusGenesisState().GetVals()
+	sort.Slice(vals, func(i, j int) bool {
+		return vals[i].GetGenericParam() < vals[j].GetGenericParam()
+	})
+
+	// Sort the validators by their address
+	vals2 := vals[:]
+	sort.Slice(vals, func(i, j int) bool {
+		return vals[i].GetAddress() < vals[j].GetAddress()
+	})
+
+	for i := 0; i < len(vals); i++ {
+		if vals[i].GetAddress() != vals2[i].GetAddress() {
+			// There is an implicit dependency because of how RainTree works and how the validator map
+			// is currently managed to make sure that the ordering of the address and the service URL
+			// are the same. This will be addressed once the # of validators will scale.
+			panic("HACK(olshansky): service url and address must be sorted the same way")
+		}
+	}
+
 	return nil
 }
 
@@ -212,7 +237,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 	switch message.MessageName() {
-	case HotstuffMessage:
+	case HotstuffMessageContentType:
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
 			return err
@@ -224,7 +249,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
 			return err
 		}
-	case UtilityMessage:
+	case UtilityMessageContentType:
 		panic("[WARN] UtilityMessage handling is not implemented by consensus yet...")
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
@@ -235,6 +260,14 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 
 func (m *consensusModule) CurrentHeight() uint64 {
 	return m.Height
+}
+
+func (m *consensusModule) CurrentRound() uint64 {
+	return m.Round
+}
+
+func (m *consensusModule) CurrentStep() uint64 {
+	return uint64(m.Step)
 }
 
 func (m *consensusModule) ValidatorMap() modules.ValidatorMap { // TODO: This needs to be dynamically updated during various operations and network changes.

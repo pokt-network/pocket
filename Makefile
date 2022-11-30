@@ -128,7 +128,7 @@ develop_test: docker_check
 .PHONY: client_start
 ## Run a client daemon which is only used for debugging purposes
 client_start: docker_check
-	docker-compose -f build/deployments/docker-compose.yaml up -d client
+	docker-compose -f build/deployments/docker-compose.yaml up -d client --build
 
 .PHONY: client_connect
 ## Connect to the running client debugging daemon
@@ -195,6 +195,12 @@ docker_wipe: docker_check prompt_user
 	docker images -q | xargs -r -I {} docker rmi {}
 	docker volume ls -q | xargs -r -I {} docker volume rm {}
 
+.PHONY: docker_wipe_nodes
+## [WARNING] Remove all the node containers
+docker_wipe_nodes: docker_check prompt_user db_drop
+	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker stop {}
+	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker rm {}
+
 .PHONY: monitoring_start
 ## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
 monitoring_start: docker_check
@@ -209,7 +215,7 @@ docker_loki_install: docker_check
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen:
 	$(eval modules_dir = "shared/modules")
-	rm -rf ${modules_dir}/mocks
+	find ${modules_dir}/mocks -maxdepth 1 -type f ! -name "mocks.go" -exec rm {} \;
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
@@ -235,7 +241,7 @@ protogen_clean:
 ## Generate go structures for all of the protobufs
 protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = ".")
-	protoc --go_opt=paths=source_relative  -I=./shared/debug/proto        --go_out=./shared/debug       	./shared/debug/proto/*.proto        --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/messaging/proto    --go_out=./shared/messaging      	./shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./persistence/indexer/proto --go_out=./persistence/indexer/   ./persistence/indexer/proto/*.proto --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  	./persistence/proto/*.proto         --experimental_allow_proto3_optional
@@ -245,6 +251,8 @@ protogen_local: go_protoc-go-inject-tag
 	protoc --go_opt=paths=source_relative  -I=./p2p/raintree/types/proto  --go_out=./p2p/types          	./p2p/raintree/types/proto/*.proto  --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./p2p/types/proto           --go_out=./p2p/types          	./p2p/types/proto/*.proto           --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./telemetry/proto           --go_out=./telemetry          	./telemetry/proto/*.proto           --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./logger/proto              --go_out=./logger             	./logger/proto/*.proto              --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./rpc/types/proto 		      --go_out=./rpc/types          	./rpc/types/proto/*.proto           --experimental_allow_proto3_optional
 	echo "View generated proto files by running: make protogen_show"
 
 .PHONY: protogen_docker_m1
@@ -264,7 +272,12 @@ generate_rpc_openapi: go_oapi-codegen
 	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
 	echo "OpenAPI client and server generated"
 
+## Starts a local Swagger UI instance for the RPC API
+swagger-ui:
+	echo "Attempting to start Swagger UI at http://localhost:8080\n\n"
+	docker run -p 8080:8080 -e SWAGGER_JSON=/v1/openapi.yaml -v $(shell pwd)/rpc/v1:/v1 swaggerapi/swagger-ui
 .PHONY: generate_cli_commands_docs
+
 ### (Re)generates the CLI commands docs (this is meant to be called by CI)
 generate_cli_commands_docs:
 	$(eval cli_docs_dir = "app/client/cli/doc/commands")
@@ -279,12 +292,12 @@ test_all: # generate_mocks
 
 .PHONY: test_all_with_json
 ## Run all go unit tests, output results in json file
-test_all_with_json: # generate_mocks
+test_all_with_json: generate_rpc_openapi # generate_mocks
 	go test -p 1 -json ./... > test_results.json
 
 .PHONY: test_all_with_coverage
 ## Run all go unit tests, output results & coverage into files
-test_all_with_coverage: # generate_mocks
+test_all_with_coverage: generate_rpc_openapi # generate_mocks
 	go test -p 1 -v ./... -covermode=count -coverprofile=coverage.out
 	go tool cover -func=coverage.out -o=coverage.out
 
