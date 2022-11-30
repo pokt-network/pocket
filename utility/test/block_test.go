@@ -25,7 +25,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	require.NoError(t, er)
 	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
-	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, [][]byte{txBz})
+	er = ctx.GetPersistenceContext().SetProposalBlock("", addrBz, nil, [][]byte{txBz})
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
@@ -73,7 +73,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	require.NoError(t, err)
 	addrBz, er := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, er)
-	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, [][]byte{txBz})
+	er = ctx.GetPersistenceContext().SetProposalBlock("", addrBz, nil, [][]byte{txBz})
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
@@ -108,8 +108,10 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
 			require.NoError(t, err)
+
 			addrBz, er := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, er)
+
 			err = ctx.SetActorPauseHeight(actorType, addrBz, 0)
 			require.NoError(t, err)
 
@@ -136,7 +138,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	require.NoError(t, er)
 	proposerBeforeBalance, err := ctx.GetAccountAmount(addrBz)
 	require.NoError(t, err)
-	er = ctx.GetPersistenceContext().SetProposalBlock("", nil, addrBz, [][]byte{txBz})
+	er = ctx.GetPersistenceContext().SetProposalBlock("", addrBz, nil, [][]byte{txBz})
 	require.NoError(t, er)
 	// apply block
 	_, er = ctx.ApplyBlock()
@@ -166,6 +168,7 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 	for _, actorType := range actorTypes {
 		t.Run(fmt.Sprintf("%s.UnstakeValidatorsActorsThatAreReady", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 1)
+
 			var poolName string
 			switch actorType {
 			case typesUtil.ActorType_App:
@@ -179,8 +182,8 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}
-
 			ctx.SetPoolAmount(poolName, big.NewInt(math.MaxInt64))
+
 			err := ctx.Context.SetParam(typesUtil.AppUnstakingBlocksParamName, 0)
 			require.NoError(t, err)
 
@@ -207,7 +210,6 @@ func TestUtilityContext_UnstakeValidatorsActorsThatAreReady(t *testing.T) {
 
 			// TODO: We need to better define what 'deleted' really is in the postgres world.
 			// We might not need to 'unstakeActorsThatAreReady' if we are already filtering by unstakingHeight
-
 			test_artifacts.CleanupTest(ctx)
 		})
 	}

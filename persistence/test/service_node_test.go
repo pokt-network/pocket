@@ -24,6 +24,13 @@ func TestGetSetServiceNodeStakeAmount(t *testing.T) {
 	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestServiceNode, db.GetServiceNodeStakeAmount, db.SetServiceNodeStakeAmount, 1)
 }
 
+func TestGetServiceNodeUpdatedAtHeight(t *testing.T) {
+	getServiceNodeUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*types.Actor, error) {
+		return db.GetActorsUpdated(types.ServiceNodeActor, height)
+	}
+	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestServiceNode, getServiceNodeUpdatedFunc, 1)
+}
+
 func TestInsertServiceNodeAndExists(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 

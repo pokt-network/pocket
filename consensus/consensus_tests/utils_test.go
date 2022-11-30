@@ -141,8 +141,8 @@ func CreateTestConsensusPocketNode(
 	utilityMock := baseUtilityMock(t, testChannel)
 	telemetryMock := baseTelemetryMock(t, testChannel)
 	loggerMock := baseLoggerMock(t, testChannel)
-  rpcMock := baseRpcMock(t, testChannel)
-  
+	rpcMock := baseRpcMock(t, testChannel)
+
 	bus, err := shared.CreateBus(runtimeMgr, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock, loggerMock, rpcMock)
 
 	require.NoError(t, err)
@@ -157,6 +157,7 @@ func CreateTestConsensusPocketNode(
 	return pocketNode
 }
 
+// CLEANUP: Reduce package scope visibility in the consensus test module
 func StartAllTestPocketNodes(t *testing.T, pocketNodes IdToNodeMapping) {
 	for _, pocketNode := range pocketNodes {
 		go pocketNode.Start()
@@ -307,6 +308,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(int64(-1)).Return(persistenceContextMock, nil).AnyTimes()
+	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
 	// of the consensus module. This one is only used when loading the initial consensus module
@@ -363,7 +365,7 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 	persistenceContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	persistenceContextMock.EXPECT().GetPrevAppHash().Return("", nil).AnyTimes()
+	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return([]byte(""), nil).AnyTimes()
 
 	utilityContextMock.EXPECT().
 		CreateAndApplyProposalBlock(gomock.Any(), maxTxBytes).
@@ -376,6 +378,8 @@ func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
 	utilityContextMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().Release().Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()
+
+	persistenceContextMock.EXPECT().Release().Return(nil).AnyTimes()
 
 	return utilityContextMock
 }

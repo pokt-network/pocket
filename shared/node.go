@@ -170,6 +170,7 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 }
 
 func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
+	// Consensus Debug
 	debugMessage, err := messaging.UnpackMessage[*messaging.DebugMessage](message)
 	if err != nil {
 		return err
@@ -183,8 +184,10 @@ func (node *Node) handleDebugMessage(message *messaging.PocketEnvelope) error {
 		fallthrough
 	case messaging.DebugMessageAction_DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE:
 		return node.GetBus().GetConsensusModule().HandleDebugMessage(debugMessage)
+	// Persistence Debug
 	case messaging.DebugMessageAction_DEBUG_SHOW_LATEST_BLOCK_IN_STORE:
 		return node.GetBus().GetPersistenceModule().HandleDebugMessage(debugMessage)
+	// Default Debug
 	default:
 		log.Printf("Debug message: %s \n", debugMessage.Message)
 	}

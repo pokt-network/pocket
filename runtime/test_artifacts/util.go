@@ -65,7 +65,7 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 		}
 	}()
 
-	resource.Expire(120) // Tell docker to hard kill the container in 120 seconds
+	resource.Expire(1200) // Tell docker to hard kill the container in 20 minutes
 
 	poolRetryChan := make(chan struct{}, 1)
 	retryConnectFn := func() error {
@@ -95,7 +95,5 @@ func CleanupPostgresDocker(_ *testing.M, pool *dockertest.Pool, resource *docker
 	}
 }
 
-// TODO(drewsky): Remove this in favor of a golang specific solution
-func CleanupTest(u utility.UtilityContext) {
-	u.Context.Release()
-}
+// CLEANUP: Remove this since it's no longer used or necessary but make sure remote tests are still passing
+func CleanupTest(u utility.UtilityContext) {}

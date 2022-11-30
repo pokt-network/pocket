@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"encoding/hex"
+
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -12,6 +13,9 @@ func (p PostgresContext) GetAppExists(address []byte, height int64) (exists bool
 
 func (p PostgresContext) GetApp(address []byte, height int64) (operator, publicKey, stakedTokens, maxRelays, outputAddress string, pauseHeight, unstakingHeight int64, chains []string, err error) {
 	actor, err := p.getActor(types.ApplicationActor, address, height)
+	if err != nil {
+		return
+	}
 	operator = actor.Address
 	publicKey = actor.PublicKey
 	stakedTokens = actor.StakedAmount

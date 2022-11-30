@@ -11,11 +11,14 @@ import (
 type UtilityContext struct {
 	LatestHeight int64
 	Mempool      typesUtil.Mempool
-	Context      *Context // IMPROVE: Consider renaming to PersistenceContext
+	Context      *Context // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
 }
 
+// IMPROVE: Consider renaming to `persistenceContext` or `storeContext`?
 type Context struct {
+	// CLEANUP: Since `Context` embeds `PersistenceRWContext`, we don't need to do `u.Context.PersistenceRWContext`, but can call `u.Context` directly
 	modules.PersistenceRWContext
+	// TODO(#327): `SavePoints`` have not been implemented yet
 	SavePointsM map[string]struct{}
 	SavePoints  [][]byte
 }

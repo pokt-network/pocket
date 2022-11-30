@@ -48,7 +48,7 @@ func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) {
 	m.clearLeader()
 	m.clearMessagesPool()
 	m.GetBus().GetPersistenceModule().HandleDebugMessage(&messaging.DebugMessage{
-		Action:  messaging.DebugMessageAction_DEBUG_CLEAR_STATE,
+		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 		Message: nil,
 	})
 	m.GetBus().GetPersistenceModule().Start() // reload genesis state

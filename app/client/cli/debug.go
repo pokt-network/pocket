@@ -23,6 +23,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+// TECHDEBT: Lowercase variables / constants that do not need to be exported.
 const (
 	PromptResetToGenesis         string = "ResetToGenesis"
 	PromptPrintNodeState         string = "PrintNodeState"
@@ -207,10 +208,10 @@ func initDebug(remoteCLIURL string) {
 			logger.Global.Fatal().Err(err).Msg("Failed to create logger module")
 		}
 		loggerMod := loggerM.(modules.LoggerModule)
-    
- 		rpcM, err := rpc.Create(runtimeMgr)
+
+		rpcM, err := rpc.Create(runtimeMgr)
 		if err != nil {
-      logger.Global.Fatal().Err(err).Msg("Failed to create rpc module")
+			logger.Global.Fatal().Err(err).Msg("Failed to create rpc module")
 		}
 		rpcMod := rpcM.(modules.RPCModule)
 

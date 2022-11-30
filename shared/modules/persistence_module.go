@@ -58,12 +58,10 @@ type PersistenceWriteContext interface {
 	// Indexer Operations
 
 	// Block Operations
-	// DISCUSS_IN_THIS_COMMIT: Can this function be removed ? If so, could we remove `TxResult` from the public facing interface given that we set transactions in `SetProposalBlock`?
-	SetTxResults(txResults []TxResult)
-	// TODO(#284): Remove `blockProtoBytes`
-	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr []byte, transactions [][]byte) error
-	// Store the block into persistence
-	UpdateAppHash() ([]byte, error)
+	SetProposalBlock(blockHash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) error
+	GetBlockTxs() [][]byte                    // Returns the transactions set by `SetProposalBlock`
+	ComputeAppHash() ([]byte, error)          // Update the merkle trees, computes the new state hash, and returns in
+	IndexTransaction(txResult TxResult) error // TODO(#361): Look into an approach to remove `TxResult` from shared interfaces
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error
@@ -120,22 +118,16 @@ type PersistenceWriteContext interface {
 }
 
 type PersistenceReadContext interface {
-	GetHeight() (int64, error)
-
-	// Closes the read context
-	Close() error
+	// Context Operations
+	GetHeight() (int64, error) // Returns the height of the context
+	Close() error              // Closes the read context
 
 	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries
-	GetPrevAppHash() (string, error) // hash from the previous block relative to the context height
-	GetLatestBlockHeight() (uint64, error)
-	GetBlockHashAtHeight(height int64) ([]byte, error)
-	GetBlocksPerSession(height int64) (int, error)
-	GetProposerAddr() []byte
-	GetBlockProtoBytes() []byte
-	GetBlockHash() string
-	GetBlockTxs() [][]byte
-
+	GetLatestBlockHeight() (uint64, error)         // Returns the height of the latest block in the persistence layer
+	GetBlockHash(height int64) ([]byte, error)     // Returns the app hash corresponding to the height provided
+	GetProposerAddr() []byte                       // Returns the proposer set via `SetProposalBlock`
+	GetBlocksPerSession(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
 	// Indexer Queries
 	TransactionExists(transactionHash string) (bool, error)
 
@@ -169,7 +161,7 @@ type PersistenceReadContext interface {
 	GetServiceNodePauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetServiceNodeOutputAddress(operator []byte, height int64) (output []byte, err error)
 	GetServiceNodeCount(chain string, height int64) (int, error)
-	GetServiceNodesPerSessionAt(height int64) (int, error)
+	GetServiceNodesPerSessionAt(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
 
 	// Fisherman Queries
 	GetAllFishermen(height int64) ([]Actor, error)

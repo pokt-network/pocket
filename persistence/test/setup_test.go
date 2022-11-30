@@ -16,6 +16,7 @@ import (
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/converters"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -58,22 +59,8 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func NewTestPostgresContext(t *testing.T, height int64) *persistence.PostgresContext {
-	ctx, err := testPersistenceMod.NewRWContext(height)
-	require.NoError(t, err)
-
-	db, ok := ctx.(*persistence.PostgresContext)
-	require.True(t, ok)
-
-	t.Cleanup(func() {
-		require.NoError(t, db.Release())
-		require.NoError(t, db.ResetContext())
-	})
-
-	return db
-}
-
-func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.PostgresContext {
+// IMPROVE: Look into returning `testPersistenceMod` to avoid exposing underlying abstraction.
+func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresContext {
 	ctx, err := testPersistenceMod.NewRWContext(height)
 	if err != nil {
 		log.Fatalf("Error creating new context: %v\n", err)
@@ -84,24 +71,25 @@ func NewFuzzTestPostgresContext(f *testing.F, height int64) *persistence.Postgre
 		log.Fatalf("Error casting RW context to Postgres context")
 	}
 
-	f.Cleanup(func() {
-		if err := db.Release(); err != nil {
-			f.FailNow()
-		}
-		if err := db.ResetContext(); err != nil {
-			f.FailNow()
-		}
-	})
+	// TECHDEBT: This should not be part of `NewTestPostgresContext`. It causes unnecessary resets
+	// if we call `NewTestPostgresContext` more than once in a single test.
+	t.Cleanup(resetStateToGenesis)
 
 	return db
 }
 
-// TODO(andrew): Take in `t testing.T` as a parameter and error if there's an issue
+// TODO(olshansky): Take in `t testing.T` as a parameter and error if there's an issue
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
+	// HACK: See `runtime/test_artifacts/generator.go` for why we're doing this to get deterministic key generation.
+	os.Setenv(test_artifacts.PrivateKeySeedEnv, "42")
+	defer os.Unsetenv(test_artifacts.PrivateKeySeedEnv)
+
 	cfg := runtime.NewConfig(&runtime.BaseConfig{}, runtime.WithPersistenceConfig(&types.PersistenceConfig{
 		PostgresUrl:    databaseUrl,
 		NodeSchema:     testSchema,
 		BlockStorePath: "",
+		TxIndexerPath:  "",
+		TreesStoreDir:  "",
 	}))
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
@@ -118,12 +106,11 @@ func fuzzSingleProtocolActor(
 	f *testing.F,
 	newTestActor func() (*types.Actor, error),
 	getTestActor func(db *persistence.PostgresContext, address string) (*types.Actor, error),
-	protocolActorSchema types.ProtocolActorSchema) {
-
-	db := NewFuzzTestPostgresContext(f, 0)
-
-	err := db.DebugClearAll()
-	require.NoError(f, err)
+	protocolActorSchema types.ProtocolActorSchema,
+) {
+	// Clear the genesis state.
+	clearAllState()
+	db := NewTestPostgresContext(f, 0)
 
 	actor, err := newTestActor()
 	require.NoError(f, err)
@@ -325,4 +312,30 @@ func getRandomBigIntString() string {
 
 func setRandomSeed() {
 	rand.Seed(time.Now().UnixNano())
+}
+
+// This is necessary for unit tests that are dependant on a baseline genesis state
+func resetStateToGenesis() {
+	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
+		log.Fatalf("Error releasing write context: %v\n", err)
+	}
+	if err := testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
+		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
+		Message: nil,
+	}); err != nil {
+		log.Fatalf("Error clearing state: %v\n", err)
+	}
+}
+
+// This is necessary for unit tests that are dependant on a completely clear state when starting
+func clearAllState() {
+	if err := testPersistenceMod.ReleaseWriteContext(); err != nil {
+		log.Fatalf("Error releasing write context: %v\n", err)
+	}
+	if err := testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
+		Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+		Message: nil,
+	}); err != nil {
+		log.Fatalf("Error clearing state: %v\n", err)
+	}
 }

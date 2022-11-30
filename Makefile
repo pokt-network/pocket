@@ -8,6 +8,8 @@ CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 #		                        seconds, and fail if any additional messages are received.
 EXTRA_MSG_FAIL ?= false
 
+# IMPROVE: Add `-shuffle=on` to the `go test` command to randomize the order in which tests are run.
+
 # An easy way to turn off verbose test output for some of the test targets. For example
 #  `$ make test_persistence` by default enables verbose testing
 #  `VERBOSE_TEST="" make test_persistence` is an easy way to run the same tests without verbose output
@@ -162,6 +164,14 @@ db_cli:
 	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
 	docker exec -it pocket-db bash -c "psql -U postgres"
 
+psqlSchema ?= node1
+
+.PHONY: db_cli_node
+## Open a CLI to the local containerized postgres instance for a specific node
+db_cli_node:
+	echo "View all avialable tables by running \dt"
+	docker exec -it pocket-db bash -c "PGOPTIONS=--search_path=${psqlSchema} psql -U postgres"
+
 .PHONY: db_drop
 ## Drop all schemas used for LocalNet development matching `node%`
 db_drop: docker_check
@@ -176,6 +186,11 @@ db_bench_init: docker_check
 ## Run a local benchmark against the local postgres instance - TODO(olshansky): visualize results
 db_bench: docker_check
 	docker exec -it pocket-db bash -c "pgbench -U postgres -d postgres"
+
+.PHONY: db_show_schemas
+## Show all the node schemas in the local SQL DB
+db_show_schemas: docker_check
+	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/show_all_schemas.sql"
 
 .PHONY: db_admin
 ## Helper to access to postgres admin GUI interface
@@ -252,7 +267,7 @@ protogen_local: go_protoc-go-inject-tag
 	protoc --go_opt=paths=source_relative  -I=./p2p/types/proto           --go_out=./p2p/types          	./p2p/types/proto/*.proto           --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./telemetry/proto           --go_out=./telemetry          	./telemetry/proto/*.proto           --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./logger/proto              --go_out=./logger             	./logger/proto/*.proto              --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./rpc/types/proto 		      --go_out=./rpc/types          	./rpc/types/proto/*.proto           --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./rpc/types/proto 		  --go_out=./rpc/types          	./rpc/types/proto/*.proto           --experimental_allow_proto3_optional
 	echo "View generated proto files by running: make protogen_show"
 
 .PHONY: protogen_docker_m1
@@ -290,16 +305,10 @@ generate_cli_commands_docs:
 test_all: # generate_mocks
 	go test -p 1 -count=1 ./...
 
-.PHONY: test_all_with_json
-## Run all go unit tests, output results in json file
-test_all_with_json: generate_rpc_openapi # generate_mocks
-	go test -p 1 -json ./... > test_results.json
-
-.PHONY: test_all_with_coverage
-## Run all go unit tests, output results & coverage into files
-test_all_with_coverage: generate_rpc_openapi # generate_mocks
-	go test -p 1 -v ./... -covermode=count -coverprofile=coverage.out
-	go tool cover -func=coverage.out -o=coverage.out
+.PHONY: test_all_with_json_coverage
+## Run all go unit tests, output results & coverage into json & coverage files
+test_all_with_json_coverage: generate_rpc_openapi # generate_mocks
+	go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out | tee test_results.json | jq
 
 .PHONY: test_race
 ## Identify all unit tests that may result in race conditions
@@ -317,9 +326,9 @@ test_shared: # generate_mocks
 	go test ${VERBOSE_TEST} -p 1 ./shared/...
 
 .PHONY: test_consensus
-## Run all go unit tests in the Consensus module
+## Run all go unit tests in the consensus module
 test_consensus: # mockgen
-	go test ${VERBOSE_TEST} ./consensus/...
+	go test ${VERBOSE_TEST} -count=1 ./consensus/...
 
 .PHONY: test_consensus_concurrent_tests
 ## Run unit tests in the consensus module that could be prone to race conditions (#192)
@@ -354,6 +363,11 @@ test_sortition:
 test_persistence:
 	go test ${VERBOSE_TEST} -p 1 -count=1 ./persistence/...
 
+.PHONY: test_persistence_state_hash
+## Run all go unit tests in the Persistence module related to the state hash
+test_persistence_state_hash:
+	go test ${VERBOSE_TEST} -run TestStateHash -count=1 ./persistence/...
+
 .PHONY: test_p2p
 ## Run all p2p
 test_p2p:
@@ -362,22 +376,29 @@ test_p2p:
 .PHONY: test_p2p_raintree
 ## Run all p2p raintree related tests
 test_p2p_raintree:
-	go test -run RainTreeNetwork -v -count=1 ./p2p/...
+	go test ${VERBOSE_TEST} -run RainTreeNetwork -count=1 ./p2p/...
 
 .PHONY: test_p2p_raintree_addrbook
 ## Run all p2p raintree addr book related tests
 test_p2p_raintree_addrbook:
-	go test -run RainTreeAddrBook -v -count=1 ./p2p/...
+	go test ${VERBOSE_TEST} -run RainTreeAddrBook -count=1 ./p2p/...
+
+# TIP: For benchmarks, consider appending `-run=^#` to avoid running unit tests in the same package
+
+.PHONY: benchmark_persistence_state_hash
+## Benchmark the state hash computation
+benchmark_persistence_state_hash:
+	go test ${VERBOSE_TEST} -cpu 1,2 -benchtime=1s -benchmem -bench=. -run BenchmarkStateHash -count=1 ./persistence/...
 
 .PHONY: benchmark_sortition
 ## Benchmark the Sortition library
 benchmark_sortition:
-	go test ${VERBOSE_TEST} ./consensus/leader_election/sortition -bench=.
+	go test ${VERBOSE_TEST} -bench=. -run ^# ./consensus/leader_election/sortition
 
 .PHONY: benchmark_p2p_addrbook
 ## Benchmark all P2P addr book related tests
 benchmark_p2p_addrbook:
-	go test -bench=. -run BenchmarkAddrBook -v -count=1 ./p2p/...
+	go test ${VERBOSE_TEST} -bench=. -run BenchmarkAddrBook -count=1 ./p2p/...
 
 ### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
 # TODO          - General Purpose catch-all.
@@ -391,10 +412,11 @@ benchmark_p2p_addrbook:
 # REFACTOR      - Similar to TECHDEBT, but will require a substantial rewrite and change across the codebase
 # CONSIDERATION - A comment that involves extra work but was thoughts / considered as part of some implementation
 # CONSOLIDATE   - We likely have similar implementations/types of the same thing, and we should consolidate them.
+# ADDTEST       - Add more tests for a specific code section
 # DEPRECATE     - Code that should be removed in the future
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE"
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST"
 
 # How do I use TODOs?
 # 1. <KEYWORD>: <Description of follow up work>;

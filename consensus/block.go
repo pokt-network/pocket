@@ -63,6 +63,12 @@ func (m *consensusModule) refreshUtilityContext() error {
 		m.utilityContext = nil
 	}
 
+	// Only one write context can exist at a time, and the utility context needs to instantiate
+	// a new one to modify the state.
+	if err := m.GetBus().GetPersistenceModule().ReleaseWriteContext(); err != nil {
+		log.Printf("[WARN] Error releasing persistence write context: %v\n", err)
+	}
+
 	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
 	if err != nil {
 		return err

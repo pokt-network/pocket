@@ -7,13 +7,12 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
+	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"google.golang.org/protobuf/types/known/anypb"
-
-	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	"github.com/pokt-network/pocket/shared/modules"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (

@@ -24,6 +24,7 @@ type UtilityContext interface {
 	ApplyBlock() (appHash []byte, err error)
 
 	// Context operations
+
 	Release() error                 // Releases the utility context and any underlying contexts it references
 	Commit(quorumCert []byte) error // State commitment of the current context
 	GetPersistenceContext() PersistenceRWContext

@@ -9,6 +9,45 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 
 ## [Unreleased]
 
+## [0.0.0.9] - 2022-11-30
+
+Core StateHash changes
+
+- Introduced & defined for `block_persistence.proto`
+  - A persistence specific protobuf for the Block stored in the BlockStore
+- On `Commit`, prepare and store a persistence block in the KV Store, SQL Store
+- Replace `IndexTransactions` (plural) to `IndexTransaction` (singular)
+- Maintaining a list of StateTrees using Celestia’s SMT and badger as the KV store to compute the state hash
+- Implemented `ComputeStateHash` to update the global state based on:
+  - Validators
+  - Applications
+  - Servicers
+  - Fisherman
+  - Accounts
+  - Pools
+  - Transactions
+  - Added a placeholder for `params` and `flags`
+- Added a benchmarking and a determinism test suite to validate this
+
+Supporting StateHash changes
+
+- Implemented `GetAccountsUpdated`, `GetPoolsUpdated` and `GetActorsUpdated` functions
+- Removed `GetPrevAppHash` and `indexTransactions` functions
+- Removed `blockProtoBytes` and `txResults` from the local state and added `quorumCert`
+- Consolidate all `resetContext` related operations into a single function
+- Implemented `ReleaseWriteContext`
+- Implemented ability to `ClearAllState` and `ResetToGenesis` for debugging & testing purposes
+- Added unit tests for all of the supporting SQL functions implemented
+- Some improvements in unit test preparation & cleanup (limited to this PR's functionality)
+
+KVStore changes
+
+- Renamed `Put` to `Set`
+- Embedded `smt.MapStore` in the interface containing `Get`, `Set` and `Delete`
+- Implemented `Delete`
+- Modified `GetAll` to return both `keys` and `values`
+- Turned off badger logging options since it’s noisy
+
 ## [0.0.0.8] - 2022-11-15
 
 - Rename `GetBlockHash` to `GetBlockHashAtHeight`

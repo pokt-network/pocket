@@ -7,20 +7,20 @@ import (
 )
 
 func TestPersistenceContextParallelReadWrite(t *testing.T) {
-	t.Cleanup(func() {
-		require.NoError(t, testPersistenceMod.NewWriteContext().Release())
-	})
+	prepareAndCleanContext(t)
+
 	// variables for testing
 	poolName := "fake"
 	poolAddress := []byte("address")
 	originalAmount := "15"
 	modifiedAmount := "10"
+	quorumCert := []byte("quorumCert")
 
 	// setup a write context, insert a pool and commit it
 	context, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
 	require.NoError(t, context.InsertPool(poolName, poolAddress, originalAmount))
-	require.NoError(t, context.Commit(nil))
+	require.NoError(t, context.Commit(quorumCert))
 
 	// verify the insert in the previously committed context worked
 	contextA, err := testPersistenceMod.NewRWContext(0)
@@ -49,9 +49,8 @@ func TestPersistenceContextParallelReadWrite(t *testing.T) {
 }
 
 func TestPersistenceContextTwoWritesErrors(t *testing.T) {
-	t.Cleanup(func() {
-		require.NoError(t, testPersistenceMod.NewWriteContext().Release())
-	})
+	prepareAndCleanContext(t)
+
 	// Opening up first write context succeeds
 	_, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
@@ -66,6 +65,8 @@ func TestPersistenceContextTwoWritesErrors(t *testing.T) {
 }
 
 func TestPersistenceContextSequentialWrites(t *testing.T) {
+	prepareAndCleanContext(t)
+
 	// Opening up first write context succeeds
 	writeContext1, err := testPersistenceMod.NewRWContext(0)
 	require.NoError(t, err)
@@ -89,6 +90,8 @@ func TestPersistenceContextSequentialWrites(t *testing.T) {
 }
 
 func TestPersistenceContextMultipleParallelReads(t *testing.T) {
+	prepareAndCleanContext(t)
+
 	// Opening up first read context succeeds
 	readContext1, err := testPersistenceMod.NewReadContext(0)
 	require.NoError(t, err)
@@ -104,4 +107,11 @@ func TestPersistenceContextMultipleParallelReads(t *testing.T) {
 	require.NoError(t, readContext1.Close())
 	require.NoError(t, readContext2.Close())
 	require.NoError(t, readContext3.Close())
+}
+
+func prepareAndCleanContext(t *testing.T) {
+	// Cleanup context after the test
+	t.Cleanup(clearAllState)
+
+	clearAllState()
 }

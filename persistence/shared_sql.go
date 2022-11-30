@@ -44,6 +44,44 @@ func (p *PostgresContext) GetExists(actorSchema types.ProtocolActorSchema, addre
 	return
 }
 
+func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema, height int64) (actors []*types.Actor, err error) {
+	ctx, tx, err := p.getCtxAndTx()
+	if err != nil {
+		return
+	}
+
+	rows, err := tx.Query(ctx, actorSchema.GetUpdatedAtHeightQuery(height))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	addrs := make([][]byte, 0)
+	for rows.Next() {
+		var addr string
+		if err = rows.Scan(&addr); err != nil {
+			return nil, err
+		}
+		addrBz, err := hex.DecodeString(addr)
+		if err != nil {
+			return nil, err
+		}
+		addrs = append(addrs, addrBz)
+	}
+	rows.Close()
+
+	actors = make([]*types.Actor, len(addrs))
+	for i, addr := range addrs {
+		actor, err := p.getActor(actorSchema, addr, height)
+		if err != nil {
+			return nil, err
+		}
+		actors[i] = actor
+	}
+
+	return
+}
+
 func (p *PostgresContext) getActor(actorSchema types.ProtocolActorSchema, address []byte, height int64) (actor *types.Actor, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
@@ -60,8 +98,13 @@ func (p *PostgresContext) getActor(actorSchema types.ProtocolActorSchema, addres
 func (p *PostgresContext) getActorFromRow(row pgx.Row) (actor *types.Actor, height int64, err error) {
 	actor = new(types.Actor)
 	err = row.Scan(
-		&actor.Address, &actor.PublicKey, &actor.StakedAmount, &actor.GenericParam,
-		&actor.Output, &actor.PausedHeight, &actor.UnstakingHeight,
+		&actor.Address,
+		&actor.PublicKey,
+		&actor.StakedAmount,
+		&actor.GenericParam,
+		&actor.Output,
+		&actor.PausedHeight,
+		&actor.UnstakingHeight,
 		&height)
 	return
 }
@@ -71,7 +114,8 @@ func (p *PostgresContext) getChainsForActor(
 	tx pgx.Tx,
 	actorSchema types.ProtocolActorSchema,
 	actor *types.Actor,
-	height int64) (a *types.Actor, err error) {
+	height int64,
+) (a *types.Actor, err error) {
 	if actorSchema.GetChainsTableName() == "" {
 		return actor, nil
 	}
