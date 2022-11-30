@@ -2,7 +2,6 @@ package test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/big"
 	"os"
 	"testing"
@@ -58,7 +57,6 @@ func TestMain(m *testing.M) {
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
 	// IMPROVE: Avoid creating a new persistence module with every test
-	fmt.Println("OLSH 1")
 	testPersistenceMod := newTestPersistenceModule(t, persistenceDbUrl)
 
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
@@ -68,7 +66,6 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	// beginning of every test. This (the current implementation) is an issue because if we call
 	// `NewTestingUtilityContext` more than once in a single test, we create unnecessary calls to clean.
 	t.Cleanup(func() {
-		fmt.Println("OLSH 2")
 		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
 		require.NoError(t, testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
 			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
