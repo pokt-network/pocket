@@ -54,7 +54,7 @@ jobs:
         # Not utilizing makefile target here to make use of pipefail bash feature.
         run: |
           set -euo pipefail
-          go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out -run TestUtilityContext 2>&1 | tee test_results.json
+          go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out 2>&1 | tee test_results.json
       - name: Output test failures
         # Makes it easier to find failed tests so no need to scroll through the whole log.
         if: ${{ failure() && env.TARGET_GOLANG_VERSION == matrix.go }}
