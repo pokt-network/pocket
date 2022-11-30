@@ -39,7 +39,7 @@ var persistenceDbUrl string
 var actorTypes = []utilTypes.ActorType{
 	utilTypes.ActorType_App,
 	utilTypes.ActorType_ServiceNode,
-	// utilTypes.ActorType_Fisherman,
+	utilTypes.ActorType_Fisherman,
 	utilTypes.ActorType_Validator,
 }
 
@@ -68,7 +68,8 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	t.Cleanup(func() {
 		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
 		require.NoError(t, testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
-			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+			// Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
 		}))
 	})
