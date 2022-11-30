@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.4] - 2022-11-27
+## [0.0.0.4] - 2022-11-30
 
 - Removed `GetPrevHash` and just using `GetBlockHash` instead
 - Removed `blockProtoBz` from `SetProposalBlock` interface

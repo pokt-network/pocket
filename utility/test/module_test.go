@@ -2,17 +2,18 @@ package test
 
 import (
 	"encoding/hex"
+	"log"
 	"math/big"
 	"os"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
-	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/utility"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
@@ -35,7 +36,7 @@ var (
 	testMessageSendType        = "MessageSend"
 )
 
-var persistenceDbUrl string
+var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 var actorTypes = []utilTypes.ActorType{
 	utilTypes.ActorType_App,
 	utilTypes.ActorType_ServiceNode,
@@ -49,16 +50,13 @@ func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
 
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
-	persistenceDbUrl = dbUrl
+	testPersistenceMod = newTestPersistenceModule(dbUrl)
 	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
 	os.Exit(exitCode)
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
-	// IMPROVE: Avoid creating a new persistence module with every test
-	testPersistenceMod := newTestPersistenceModule(t, persistenceDbUrl)
-
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
@@ -68,7 +66,7 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	t.Cleanup(func() {
 		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
 		require.NoError(t, testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
-			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_CLEAR_STATE,
+			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
 		}))
 	})
@@ -84,31 +82,22 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	}
 }
 
-func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.PersistenceModule {
-	ctrl := gomock.NewController(t)
-
-	mockPersistenceConfig := mock_modules.NewMockPersistenceConfig(ctrl)
-	mockPersistenceConfig.EXPECT().GetPostgresUrl().Return(databaseUrl).AnyTimes()
-	mockPersistenceConfig.EXPECT().GetNodeSchema().Return(testSchema).AnyTimes()
-	mockPersistenceConfig.EXPECT().GetBlockStorePath().Return("").AnyTimes()
-	mockPersistenceConfig.EXPECT().GetTxIndexerPath().Return("").AnyTimes()
-	mockPersistenceConfig.EXPECT().GetTreesStoreDir().Return("").AnyTimes()
-
-	mockRuntimeConfig := mock_modules.NewMockConfig(ctrl)
-	mockRuntimeConfig.EXPECT().GetPersistenceConfig().Return(mockPersistenceConfig).AnyTimes()
-
-	mockRuntimeMgr := mock_modules.NewMockRuntimeMgr(ctrl)
-	mockRuntimeMgr.EXPECT().GetConfig().Return(mockRuntimeConfig).AnyTimes()
-
+// TODO(olshansky): Take in `t testing.T` as a parameter and error if there's an issue
+func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
+	cfg := runtime.NewConfig(&runtime.BaseConfig{}, runtime.WithPersistenceConfig(&types.PersistenceConfig{
+		PostgresUrl:    databaseUrl,
+		NodeSchema:     testSchema,
+		BlockStorePath: "",
+		TxIndexerPath:  "",
+		TreesStoreDir:  "",
+	}))
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
-	mockRuntimeMgr.EXPECT().GetGenesis().Return(genesisState).AnyTimes()
+	runtimeCfg := runtime.NewManager(cfg, genesisState)
 
-	persistenceMod, err := persistence.Create(mockRuntimeMgr)
-	require.NoError(t, err)
-
-	err = persistenceMod.Start()
-	require.NoError(t, err)
-
+	persistenceMod, err := persistence.Create(runtimeCfg)
+	if err != nil {
+		log.Fatalf("Error creating persistence module: %s", err)
+	}
 	return persistenceMod.(modules.PersistenceModule)
 }
 

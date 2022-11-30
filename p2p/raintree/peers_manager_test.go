@@ -100,7 +100,7 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 	// the test will add this arbitrary number of addresses after the initial initialization (done via NewRainTreeNetwork)
 	// this is to add extra subsequent work that -should- grow linearly and it's actually going to test AddressBook updates
 	// not simply initializations.
-	numAddressessToBeAdded := 1000
+	numAddressesToBeAdded := 1000
 
 	for _, testCase := range testCases {
 		n := testCase.numNodes
@@ -115,7 +115,7 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 			require.Equal(b, n, len(peersManagerStateView.addrBookMap))
 			require.Equal(b, testCase.numExpectedLevels, int(peersManagerStateView.maxNumLevels))
 
-			for i := 0; i < numAddressessToBeAdded; i++ {
+			for i := 0; i < numAddressesToBeAdded; i++ {
 				newAddr, err := crypto.GenerateAddress()
 				require.NoError(b, err)
 				network.AddPeerToAddrBook(&types.NetworkPeer{Address: newAddr})
@@ -123,8 +123,8 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 
 			peersManagerStateView = network.peersManager.getNetworkView()
 
-			require.Equal(b, n+numAddressessToBeAdded, len(peersManagerStateView.addrList))
-			require.Equal(b, n+numAddressessToBeAdded, len(peersManagerStateView.addrBookMap))
+			require.Equal(b, n+numAddressesToBeAdded, len(peersManagerStateView.addrList))
+			require.Equal(b, n+numAddressesToBeAdded, len(peersManagerStateView.addrBookMap))
 		})
 	}
 }

@@ -8,6 +8,8 @@ CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 #		                        seconds, and fail if any additional messages are received.
 EXTRA_MSG_FAIL ?= false
 
+# IMPROVE: Add `-shuffle=on` to the `go test` command to randomize the order in which tests are run.
+
 # An easy way to turn off verbose test output for some of the test targets. For example
 #  `$ make test_persistence` by default enables verbose testing
 #  `VERBOSE_TEST="" make test_persistence` is an easy way to run the same tests without verbose output
@@ -303,16 +305,10 @@ generate_cli_commands_docs:
 test_all: # generate_mocks
 	go test -p 1 -count=1 ./...
 
-.PHONY: test_all_with_json
-## Run all go unit tests, output results in json file
-test_all_with_json: generate_rpc_openapi # generate_mocks
-	go test -p 1 -json ./... > test_results.json
-
-.PHONY: test_all_with_coverage
-## Run all go unit tests, output results & coverage into files
-test_all_with_coverage: generate_rpc_openapi # generate_mocks
-	go test -p 1 -v ./... -covermode=count -coverprofile=coverage.out
-	go tool cover -func=coverage.out -o=coverage.out
+.PHONY: test_all_with_json_coverage
+## Run all go unit tests, output results & coverage into json & coverage files
+test_all_with_json_coverage: generate_rpc_openapi # generate_mocks
+	go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out | tee test_results.json | jq
 
 .PHONY: test_race
 ## Identify all unit tests that may result in race conditions

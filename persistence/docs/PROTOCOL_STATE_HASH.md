@@ -4,13 +4,9 @@ This document describes the `Persistence` module's internal implementation of ho
 
 Alternative implementation of the persistence module are free to choose their own **State Storage** engines (SQL, KV stores, etc) or their own **State Commitment** paradigms (Merkle Trees, Vector Commitments, etc), but the output hash **must** remain identical.
 
-- [Introduction](#introduction)
-- [Data Types](#data-types)
-  - [Infrastructural Components](#infrastructural-components)
-  - [Block Proto](#block-proto)
-  - [Trees](#trees)
-- [Compute State Hash](#compute-state-hash)
-- [Store Block (Commit)](#store-block-commit)
+- [This flow shows the interaction between the `PostgresDB` and `MerkleTrees` listed above to compute the state hash. Assuming the process of applying a proposal block to the current context (i.e. the uncommited SQL state) is done, the following steps compute the hash of the new world state.](#this-flow-shows-the-interaction-between-the-postgresdb-and-merkletrees-listed-above-to-compute-the-state-hash-assuming-the-process-of-applying-a-proposal-block-to-the-current-context-ie-the-uncommited-sql-state-is-done-the-following-steps-compute-the-hash-of-the-new-world-state)
+  - [Store Block (Commit)](#store-block-commit)
+  - [Failed Commitments](#failed-commitments)
 
 ## Introduction
 
@@ -39,6 +35,8 @@ The block protobuf that is serialized and store in the block store can be found 
 
 An individual Merkle Tree is created for each type of actor, record or data type. Each of these is backed by its own key-value store.
 
+Note that the order in which the trees are defined (found in `persistence/state.go`) is important since it determines how the state hash is computed. _TODO(#361): Consider specifying the oder in a `.proto` `enum` rather than a `.go` `iota`._
+
 **Actor Merkle Trees**:
 
 - Applications
@@ -61,7 +59,7 @@ An individual Merkle Tree is created for each type of actor, record or data type
 
 _Note: `GetRecordsUpdatedAtHeight` is an abstraction for retrieving all the records from the corresponding SQL tables depending on the type of record (Actors, Transactions, Params, etc...)_
 
-This flow shows the interaction between the `PostgresDB` and `MerkleTrees` listed above to compute the state hash. Assuming the process of applying a proposal block to the current context (i.e. the uncommited SQL state) is done, the following steps compute the hash of the new world state.
+This flow shows the interaction between the `PostgresDB` and `MerkleTrees` listed above to compute the state hash. Assuming the process of applying a proposal block to the current context (i.e. the uncommitted SQL state) is done, the following steps compute the hash of the new world state.
 
 1. Loop over all of the merkle tree types
 2. Use `GetRecordsUpdatedAtHeight` to retrieve all the records updated at the context's height
@@ -129,3 +127,7 @@ sequenceDiagram
 ```
 
 _TODO: If an error occurs at any step, all of the operations must be reverted in an atomic manner._
+
+## Failed Commitments
+
+TODO: Failed commitments and the implementation of rollbacks is tracked in #327 and #329.
