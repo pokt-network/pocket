@@ -2,7 +2,11 @@ package test_artifacts
 
 // Cross module imports are okay because this is only used for testing and not business logic
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
+	"math/rand"
+	"os"
 	"strconv"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -18,13 +22,31 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// INVESTIGATE: It seems improperly scoped that the modules have to have shared 'testing' code
-//  It might be an inevitability to have shared testing code, but would like more eyes on it.
-//  Look for opportunities to make testing completely modular
+// HACK: This is a hack used to enable deterministic key generation via an environment variable.
+//       In order to avoid this, `NewGenesisState` and all downstream functions would need to be
+//       refactored. Alternatively, the seed would need to be passed via the runtime manager.
+//       To avoid these large scale changes, this is a temporary approach to enable deterministic
+//       key generation.
+// IMPROVE(#361): Design a better way to generate deterministic keys for testing.
+const PrivateKeySeedEnv = "DEFAULT_PRIVATE_KEY_SEED"
 
-// TODO (Team) this is meant to be a **temporary** replacement for the recently deprecated
-// 'genesis config' option. We need to implement a real suite soon!
+var privateKeySeed int
+
+// Intentionally not using `init` in case the caller sets this before `NewGenesisState` is called.s
+func loadPrivateKeySeed() {
+	privateKeySeedEnvValue := os.Getenv(PrivateKeySeedEnv)
+	if seedInt, err := strconv.Atoi(privateKeySeedEnvValue); err == nil {
+		privateKeySeed = seedInt
+	} else {
+		rand.Seed(timestamppb.Now().Seconds)
+		privateKeySeed = rand.Int()
+	}
+}
+
+// IMPROVE: Generate a proper genesis suite in the future.
 func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (modules.GenesisState, []string) {
+	loadPrivateKeySeed()
+
 	apps, appsPrivateKeys := NewActors(types.ActorType_App, numApplications)
 	vals, validatorPrivateKeys := NewActors(types.ActorType_Validator, numValidators)
 	serviceNodes, snPrivateKeys := NewActors(types.ActorType_ServiceNode, numServiceNodes)
@@ -48,6 +70,7 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 		},
 	)
 
+	// TODO: Generalize this to all actors and not just validators
 	return genesisState, validatorPrivateKeys
 }
 
@@ -116,7 +139,7 @@ func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing s
 
 func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
 	for i := 0; i < n; i++ {
-		_, _, addr := GenerateNewKeysStrings()
+		_, _, addr := generateNewKeysStrings()
 		if privateKeys != nil {
 			pk, _ := crypto.NewPrivateKey(privateKeys[i])
 			addr = pk.Address().String()
@@ -150,7 +173,7 @@ func getServiceUrl(n int) string {
 }
 
 func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor, privateKey string) {
-	privKey, pubKey, addr := GenerateNewKeysStrings()
+	privKey, pubKey, addr := generateNewKeysStrings()
 	chains := defaults.DefaultChains
 	if actorType == int32(typesPers.ActorType_Val) {
 		chains = nil
@@ -170,17 +193,22 @@ func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor,
 	}, privKey
 }
 
-func GenerateNewKeys() (privateKey crypto.PrivateKey, publicKey crypto.PublicKey, address crypto.Address) {
-	privateKey, _ = crypto.GeneratePrivateKey()
-	publicKey = privateKey.PublicKey()
-	address = publicKey.Address()
-	return
-}
+// TECHDEBT: This function has the side effect of incrementing the global variable `privateKeySeed`
+// in order to guarantee unique keys, but that are still deterministic for testing purposes.
+func generateNewKeysStrings() (privateKey, publicKey, address string) {
+	privateKeySeed += 1 // Different on every call but deterministic
+	cryptoSeed := make([]byte, crypto.SeedSize)
+	binary.LittleEndian.PutUint32(cryptoSeed, uint32(privateKeySeed))
 
-func GenerateNewKeysStrings() (privateKey, publicKey, address string) {
-	privKey, pubKey, addr := GenerateNewKeys()
-	privateKey = privKey.String()
-	publicKey = pubKey.String()
-	address = addr.String()
+	reader := bytes.NewReader(cryptoSeed)
+	privateKeyBz, err := crypto.GeneratePrivateKeyWithReader(reader)
+	if err != nil {
+		panic(err)
+	}
+
+	privateKey = privateKeyBz.String()
+	publicKey = privateKeyBz.PublicKey().String()
+	address = privateKeyBz.PublicKey().Address().String()
+
 	return
 }

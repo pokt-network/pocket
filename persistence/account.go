@@ -68,6 +68,10 @@ func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	return nil
 }
 
+func (p PostgresContext) GetAccountsUpdated(height int64) (accounts []*types.Account, err error) {
+	return p.getPoolOrAccUpdatedInternal(types.GetAccountsUpdatedAtHeightQuery(height))
+}
+
 func (p *PostgresContext) operationAccountAmount(address []byte, deltaAmount string, op func(*big.Int, *big.Int) error) error {
 	return p.operationPoolOrAccAmount(hex.EncodeToString(address), deltaAmount, op, p.getAccountAmountStr, types.InsertAccountAmountQuery)
 }
@@ -142,7 +146,38 @@ func (p *PostgresContext) operationPoolAmount(name string, amount string, op fun
 	return p.operationPoolOrAccAmount(name, amount, op, p.GetPoolAmount, types.InsertPoolAmountQuery)
 }
 
-func (p *PostgresContext) operationPoolOrAccAmount(name, amount string,
+func (p PostgresContext) GetPoolsUpdated(height int64) ([]*types.Account, error) {
+	return p.getPoolOrAccUpdatedInternal(types.GetPoolsUpdatedAtHeightQuery(height))
+}
+
+// Joint Pool & Account Helpers
+
+// Shared logic between `getPoolsUpdated` & `getAccountsUpdated` to keep explicit external interfaces
+func (p *PostgresContext) getPoolOrAccUpdatedInternal(query string) (accounts []*types.Account, err error) {
+	ctx, tx, err := p.getCtxAndTx()
+	if err != nil {
+		return
+	}
+
+	rows, err := tx.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		account := new(types.Account)
+		if err = rows.Scan(&account.Address, &account.Amount); err != nil {
+			return nil, err
+		}
+		accounts = append(accounts, account)
+	}
+
+	return
+}
+
+func (p *PostgresContext) operationPoolOrAccAmount(
+	name, amount string,
 	op func(*big.Int, *big.Int) error,
 	getAmount func(string, int64) (string, error),
 	insert func(name, amount string, height int64) string) error {

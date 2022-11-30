@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.2] - 2022-10-12
+## [0.0.0.4] - 2022-11-30
+
+Debug:
+
+- `ResetToGenesis` - Added the ability to reset the state to genesis
+- `ClearState` - Added the ability to clear the state completely (height 0 without genesis data)
+
+Configs:
+
+- Updated the test generator to produce deterministic keys
+- Added `trees_store_dir` to persistence configs
+- Updated `LocalNet` configs to have an empty `tx_indexer_path` and `trees_store_dir`
+
+## [0.0.0.3] - 2022-11-14
+
+### [#353](https://github.com/pokt-network/pocket/pull/353) Remove topic from messaging
+
+- Removed topic from messaging
+- Added `PocketEnvelope` as a general purpose wrapper for messages/events
+- Added utility methods to `Pack` and `Unpack` messages
+- Replaced the switch cases, interfaces accordingly
+
+## [0.0.0.2] - 2022-10-12
 
 ### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
 
@@ -15,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Segregate interfaces (eg: `GenesisDependentModule`, `P2PAddressableModule`, etc)
 - Updated tests and mocks
 
-## [0.0.1] - 2022-09-30
+## [0.0.0.1] - 2022-09-30
 
 - Used proper `TODO/INVESTIGATE/DISCUSS` convention across package
 - Moved TxIndexer Package to Utility to properly encapsulate
@@ -29,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Time mocking abilities via https://github.com/benbjohnson/clock and simple utility wrappers
 - Race conditions and concurrency fixes via sync.Mutex
 
-## [0.0.0] - 2022-08-25
+## [0.0.0.0] - 2022-08-25
 
 ### [#163](https://github.com/pokt-network/pocket/issues/163) Minimization
 

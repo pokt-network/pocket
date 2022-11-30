@@ -3,10 +3,10 @@ package consensus
 import (
 	"encoding/hex"
 	"fmt"
+
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/codec"
 )
 
 type HotstuffReplicaMessageHandler struct{}
@@ -226,13 +226,10 @@ func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 
 // This helper applies the block metadata to the utility & persistence layers
 func (m *consensusModule) applyBlock(block *typesCons.Block) error {
-	blockProtoBz, err := codec.GetCodec().Marshal(block)
-	if err != nil {
-		return err
-	}
 	persistenceContext := m.utilityContext.GetPersistenceContext()
+	blockHeader := block.BlockHeader
 	// Set the proposal block in the persistence context
-	if err = persistenceContext.SetProposalBlock(block.BlockHeader.Hash, blockProtoBz, block.BlockHeader.ProposerAddress, block.BlockHeader.QuorumCertificate, block.Transactions); err != nil {
+	if err := persistenceContext.SetProposalBlock(blockHeader.Hash, blockHeader.ProposerAddress, blockHeader.QuorumCertificate, block.Transactions); err != nil {
 		return err
 	}
 
@@ -243,8 +240,8 @@ func (m *consensusModule) applyBlock(block *typesCons.Block) error {
 	}
 
 	// CONSOLIDATE: Terminology of `appHash` and `stateHash`
-	if block.BlockHeader.Hash != hex.EncodeToString(appHash) {
-		return typesCons.ErrInvalidAppHash(block.BlockHeader.Hash, hex.EncodeToString(appHash))
+	if appHashString := hex.EncodeToString(appHash); blockHeader.Hash != appHashString {
+		return typesCons.ErrInvalidAppHash(blockHeader.Hash, appHashString)
 	}
 
 	return nil

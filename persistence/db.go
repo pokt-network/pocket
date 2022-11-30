@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/pokt-network/pocket/persistence/indexer"
 	"log"
-
-	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
+	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
+	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -38,27 +37,22 @@ var protocolActorSchemas = []types.ProtocolActorSchema{
 var _ modules.PersistenceRWContext = &PostgresContext{}
 
 type PostgresContext struct {
-	Height     int64 // TODO(olshansky): `Height` is only externalized for testing purposes. Replace with helpers...
-	conn       *pgx.Conn
-	tx         pgx.Tx
-	blockstore kvstore.KVStore
+	Height int64 // TODO: `Height` is only externalized for testing purposes. Replace with helpers...
+	conn   *pgx.Conn
+	tx     pgx.Tx
+
+	// TECHDEBT(#361): These three values are pointers to objects maintained by the PersistenceModule,
+	// so there should be a better way to access them (via the bus?) rather than embedding here.
+	blockStore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
-	// DISCUSS(#284): this might be retrieved from the block store - temporarily we will access it directly from the module
-	//       following the pattern of the Consensus Module prior to pocket/issue-#315
-	quorumCertificate []byte
-	proposerAddr      []byte
-	blockProtoBytes   []byte
-	blockHash         string
-	blockTxs          [][]byte
-	txResults         []modules.TxResult
-}
+	stateTrees *stateTrees
 
-func (p PostgresContext) LatestQC() []byte {
-	return p.quorumCertificate
-}
-
-func (p PostgresContext) SetLatestQC(latestQC []byte) {
-	p.quorumCertificate = latestQC
+	// DISCUSS(#361): Could/should we move these to the utilityContext?
+	// IMPROVE: Could/should we rename these to proposalXX?
+	proposerAddr []byte
+	quorumCert   []byte
+	blockHash    string // CONSOLIDATE: blockHash / appHash / stateHash
+	blockTxs     [][]byte
 }
 
 func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx, error) {
@@ -94,28 +88,13 @@ func (pg *PostgresContext) ResetContext() error {
 	return nil
 }
 
-func (p PostgresContext) GetLatestProposerAddr() []byte {
+// DISCUSS: Given that these are context specific setters/getters, is `context.go` a more appropriate location for these than `db.go`?
+func (p PostgresContext) GetProposerAddr() []byte {
 	return p.proposerAddr
 }
 
-func (p PostgresContext) GetLatestBlockProtoBytes() []byte {
-	return p.blockProtoBytes
-}
-
-func (p PostgresContext) GetLatestBlockHash() string {
-	return p.blockHash
-}
-
-func (p PostgresContext) GetLatestBlockTxs() [][]byte {
+func (p PostgresContext) GetBlockTxs() [][]byte {
 	return p.blockTxs
-}
-
-func (p PostgresContext) GetLatestTxResults() []modules.TxResult {
-	return p.txResults
-}
-
-func (p *PostgresContext) SetLatestTxResults(txResults []modules.TxResult) {
-	p.txResults = txResults
 }
 
 // TECHDEBT: Implement proper connection pooling
@@ -222,47 +201,5 @@ func initializeBlockTables(ctx context.Context, db *pgx.Conn) error {
 	if _, err := db.Exec(ctx, fmt.Sprintf(`%s %s %s %s`, CreateTable, IfNotExists, types.BlockTableName, types.BlockTableSchema)); err != nil {
 		return err
 	}
-	return nil
-}
-
-// Exposed for testing purposes only
-func (p PostgresContext) DebugClearAll() error {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return err
-	}
-
-	clearTx, err := tx.Begin(ctx) // creates a pseudo-nested transaction
-	if err != nil {
-		return err
-	}
-
-	for _, actor := range protocolActorSchemas {
-		if _, err = clearTx.Exec(ctx, actor.ClearAllQuery()); err != nil {
-			return err
-		}
-		if actor.GetChainsTableName() != "" {
-			if _, err = clearTx.Exec(ctx, actor.ClearAllChainsQuery()); err != nil {
-				return err
-			}
-		}
-	}
-
-	if _, err = tx.Exec(ctx, types.ClearAllGovParamsQuery()); err != nil {
-		return err
-	}
-
-	if _, err = tx.Exec(ctx, types.ClearAllGovFlagsQuery()); err != nil {
-		return err
-	}
-
-	if _, err = tx.Exec(ctx, types.ClearAllBlocksQuery()); err != nil {
-		return err
-	}
-
-	if err = clearTx.Commit(ctx); err != nil {
-		return err
-	}
-
 	return nil
 }

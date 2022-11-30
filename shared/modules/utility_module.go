@@ -15,13 +15,19 @@ type UtilityModule interface {
 // operations.
 type UtilityContext interface {
 	// Block operations
+
+	// Reaps the mempool for transactions to be proposed in a new block, and applies them to this
+	// context; intended to be used by the block proposer.
 	CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (appHash []byte, transactions [][]byte, err error)
-	ApplyBlock() (appHash []byte, err error) // Apply Block may be used for proposal blocks or (in the future) state sync
+	// Applies the transactions in the local state to the current context; intended to be used by
+	// the block verifiers (i.e. non proposers)..
+	ApplyBlock() (appHash []byte, err error)
 
 	// Context operations
-	ReleaseContext()
+
+	Release() error                 // Releases the utility context and any underlying contexts it references
+	Commit(quorumCert []byte) error // State commitment of the current context
 	GetPersistenceContext() PersistenceRWContext
-	CommitPersistenceContext() error
 
 	// Validation operations
 	CheckTransaction(tx []byte) error

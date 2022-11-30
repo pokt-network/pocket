@@ -7,12 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2022-11-30
+
+- Removed `GetPrevHash` and just using `GetBlockHash` instead
+- Removed `blockProtoBz` from `SetProposalBlock` interface
+- Removed `GetLatestBlockTxs` and `SetLatestTxResults` in exchange for `IndexTransaction`
+- Removed `SetTxResults`
+- Renamed `UpdateAppHash` to `ComputeStateHash`
+- Removed some getters related to the proposal block (`GetBlockTxs`, `GetBlockHash`, etc…)
+
+## [0.0.0.3] - 2022-11-15
+
+PersistenceModule
+
+- Added `ReleaseWriteContext`
+- Consolidated `ResetContext`, `Reset` with `Release`
+- Modified `Commit` to accept a `quorumCert`
+- Removed `Latest` prefix from getters related to the proposal block parameters
+
+UtilityModule
+
+- Changed `CommitPersistenceContext()` to `Commit(quorumCert)`
+- Changed `ReleaseContext` to `Release`
+
 ## [0.0.0.2] - 2022-10-12
+
 - Modified interface for Utility Module `ApplyBlock` and `GetProposalTransactions` to return `TxResults`
 - Modified interface for Persistence Module `StoreTransaction` to store the `TxResult`
 - Added shared interface `TxResult` under types.go
 
 ## [0.0.0.1] - 2022-08-21
+
 - Minimized shared module with [#163](https://github.com/pokt-network/pocket/issues/163)
 - Deprecated shared/types, moved remaining interfaces to shared/modules
 - Most GenesisTypes moved to persistence
@@ -41,5 +66,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Opened followup issue #163
 - Added config and genesis generator to build package
 - Deprecated old build files
-- Use new config and genesis files for make compose_and_watch 
+- Use new config and genesis files for make compose_and_watch
 - Use new config and genesis files for make client_start && make client_connect

@@ -1,5 +1,6 @@
 package types
 
+// REFACTOR: Move schema related functions to a separate sub-package
 import "github.com/pokt-network/pocket/shared/modules"
 
 var _ ProtocolActorSchema = &BaseProtocolActorSchema{}
@@ -39,6 +40,10 @@ func (actor *BaseProtocolActorSchema) GetTableSchema() string {
 
 func (actor *BaseProtocolActorSchema) GetChainsTableSchema() string {
 	return protocolActorChainsTableSchema(actor.chainsHeightConstraintName)
+}
+
+func (actor *BaseProtocolActorSchema) GetUpdatedAtHeightQuery(height int64) string {
+	return SelectAtHeight(AddressCol, height, actor.tableName)
 }
 
 func (actor *BaseProtocolActorSchema) GetQuery(address string, height int64) string {

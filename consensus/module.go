@@ -7,13 +7,12 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
+	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"google.golang.org/protobuf/types/known/anypb"
-
-	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	"github.com/pokt-network/pocket/shared/modules"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -50,6 +49,7 @@ type consensusModule struct {
 	//    TODO(#315):  Move the statefulness of `TxResult` to the persistence module
 	TxResults []modules.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
 
+	// IMPROVE: Consider renaming `highPrepareQC` to simply `prepareQC`
 	highPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	lockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
@@ -71,7 +71,8 @@ type consensusModule struct {
 	// DEPRECATE: Remove later when we build a shared/proper/injected logger
 	logPrefix string
 
-	// TECHDEBT: Move this over to use the txIndexer
+	// TECHDEBT: Rename this to `consensusMessagePool` or something similar
+	//           and reconsider if an in-memory map is the best approach
 	messagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
 }
 
@@ -235,7 +236,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 	switch message.MessageName() {
-	case HotstuffMessage:
+	case HotstuffMessageContentType:
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
 			return err
@@ -247,7 +248,7 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
 			return err
 		}
-	case UtilityMessage:
+	case UtilityMessageContentType:
 		panic("[WARN] UtilityMessage handling is not implemented by consensus yet...")
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())

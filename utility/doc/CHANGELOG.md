@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.11] - 2022-11-30
+
+- Minor lifecycle changes needed to supported the implementation of `ComputeAppHash` as a replacement for `GetAppHash` in #285
+
+## [0.0.0.10] - 2022-11-15
+
+- Propagating the `quorumCertificate` appropriately on block commit
+- Removed `Latest` from getters related to retrieving the context of the proposed block
+
 ## [0.0.0.9] - 2022-11-01
 
 - Remove `TxResult` from the utility module interface (added in TxIndexer integration of transaction indexer (issue-#168) #302)

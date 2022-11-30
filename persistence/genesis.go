@@ -10,9 +10,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// TODO(andrew): generalize with the `actors interface`
-
-// WARNING: This function crashes the process if there is an error populating the genesis state.
+// CONSIDERATION: Should this return an error and let the caller decide if it should log a fatal error?
 func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesisState) {
 	log.Println("Populating genesis state...")
 
@@ -31,15 +29,11 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		return nil
 	}
 
-	log.Println("Populating genesis state...")
 	rwContext, err := m.NewRWContext(0)
 	if err != nil {
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
 	}
 
-	if err != nil {
-		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
-	}
 	for _, acc := range state.GetAccs() {
 		addrBz, err := hex.DecodeString(acc.GetAddress())
 		if err != nil {
@@ -150,8 +144,19 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		log.Fatalf("an error occurred initializing flags: %s", err.Error())
 	}
 
-	if err = rwContext.Commit(); err != nil {
-		log.Fatalf("an error occurred during commit() on genesis state %s ", err.Error())
+	// Updates all the merkle trees
+	appHash, err := rwContext.ComputeAppHash()
+	if err != nil {
+		log.Fatalf("an error occurred updating the app hash during genesis: %s", err.Error())
+	}
+
+	if err := rwContext.SetProposalBlock(hex.EncodeToString(appHash), nil, nil, nil); err != nil {
+		log.Fatalf("an error occurred setting the proposal block during genesis: %s", err.Error())
+	}
+
+	// This update the DB, blockstore, and commits the state
+	if err = rwContext.Commit(nil); err != nil {
+		log.Fatalf("error committing genesis state to DB %s ", err.Error())
 	}
 }
 
@@ -221,11 +226,11 @@ func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err err
 	}
 	rows.Close()
 	for _, actor := range actors {
-		actor, err = p.getChainsForActor(ctx, tx, types.ApplicationActor, actor, height)
+		actorWithChains, err := p.getChainsForActor(ctx, tx, types.ApplicationActor, actor, height)
 		if err != nil {
-			return
+			return nil, err
 		}
-		apps = append(apps, actor)
+		apps = append(apps, actorWithChains)
 	}
 	return
 }

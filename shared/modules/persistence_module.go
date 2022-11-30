@@ -4,7 +4,7 @@ package modules
 
 import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 )
 
 type PersistenceModule interface {
@@ -12,13 +12,17 @@ type PersistenceModule interface {
 	ConfigurableModule
 	GenesisDependentModule
 
+	// Context operations
 	NewRWContext(height int64) (PersistenceRWContext, error)
 	NewReadContext(height int64) (PersistenceReadContext, error)
+	ReleaseWriteContext() error // The module can maintain many read contexts, but only one write context can exist at a time
+
+	// BlockStore operations
 	GetBlockStore() kvstore.KVStore
 	NewWriteContext() PersistenceRWContext
 
 	// Debugging / development only
-	HandleDebugMessage(*debug.DebugMessage) error
+	HandleDebugMessage(*messaging.DebugMessage) error
 }
 
 // Interface defining the context within which the node can operate with the persistence layer.
@@ -35,39 +39,35 @@ type PersistenceRWContext interface {
 	PersistenceWriteContext
 }
 
-// NOTE: There's not really a use case for a write only interface,
-// but it abstracts and contrasts nicely against the read only context
+// REFACTOR: Simplify the interface
+// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
+// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
+// - Reference: https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces
+
+// TECHDEBT: convert address and public key to string from bytes
+// NOTE: There's not really a use case for a write only interface, but it abstracts and contrasts nicely against the read only context
 type PersistenceWriteContext interface {
-	// DISCUSS: Simplify the interface (reference - https://dave.cheney.net/practical-go/presentations/gophercon-israel.html#_prefer_single_method_interfaces)
-	// - Add general purpose methods such as `ActorOperation(enum_actor_type, ...)` which can be use like so: `Insert(FISHERMAN, ...)`
-	// - Use general purpose parameter methods such as `Set(enum_gov_type, ...)` such as `Set(STAKING_ADJUSTMENT, ...)`
 	// Context Operations
 	NewSavePoint([]byte) error
 	RollbackToSavePoint([]byte) error
-
-	ResetContext() error // TODO consolidate with Reset and Release
-	Reset() error
-	Commit() error
 	Release() error
 
-	AppHash() ([]byte, error)
-
-	// Block Operations
+	// Commits the current context (height, hash, transactions, etc...) to finality.
+	Commit(quorumCert []byte) error
 
 	// Indexer Operations
-	IndexTransactions() error
 
 	// Block Operations
-	SetLatestTxResults(txResults []TxResult)
-	SetProposalBlock(blockHash string, blockProtoBytes, proposerAddr, qc []byte, transactions [][]byte) error
-	StoreBlock() error // Store the block into persistence
+	SetProposalBlock(blockHash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) error
+	GetBlockTxs() [][]byte                    // Returns the transactions set by `SetProposalBlock`
+	ComputeAppHash() ([]byte, error)          // Update the merkle trees, computes the new state hash, and returns in
+	IndexTransaction(txResult TxResult) error // TODO(#361): Look into an approach to remove `TxResult` from shared interfaces
 
 	// Pool Operations
 	AddPoolAmount(name string, amount string) error
 	SubtractPoolAmount(name string, amount string) error
 	SetPoolAmount(name string, amount string) error
-
-	InsertPool(name string, address []byte, amount string) error
+	InsertPool(name string, address []byte, amount string) error // TODO(#149): remove address from pool
 
 	// Account Operations
 	AddAccountAmount(address []byte, amount string) error
@@ -118,21 +118,16 @@ type PersistenceWriteContext interface {
 }
 
 type PersistenceReadContext interface {
-	GetHeight() (int64, error)
+	// Context Operations
+	GetHeight() (int64, error) // Returns the height of the context
+	Close() error              // Closes the read context
 
-	// Closes the read context
-	Close() error
-
+	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries
-	GetPrevAppHash() (string, error) // app hash from the previous block
-	GetLatestBlockHeight() (uint64, error)
-	GetBlockHash(height int64) ([]byte, error)
-	GetBlocksPerSession(height int64) (int, error)
-	GetLatestProposerAddr() []byte
-	GetLatestBlockProtoBytes() []byte
-	GetLatestBlockHash() string
-	GetLatestBlockTxs() [][]byte
-
+	GetLatestBlockHeight() (uint64, error)         // Returns the height of the latest block in the persistence layer
+	GetBlockHash(height int64) ([]byte, error)     // Returns the app hash corresponding to the height provided
+	GetProposerAddr() []byte                       // Returns the proposer set via `SetProposalBlock`
+	GetBlocksPerSession(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
 	// Indexer Queries
 	TransactionExists(transactionHash string) (bool, error)
 
@@ -166,7 +161,7 @@ type PersistenceReadContext interface {
 	GetServiceNodePauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetServiceNodeOutputAddress(operator []byte, height int64) (output []byte, err error)
 	GetServiceNodeCount(chain string, height int64) (int, error)
-	GetServiceNodesPerSessionAt(height int64) (int, error)
+	GetServiceNodesPerSessionAt(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
 
 	// Fisherman Queries
 	GetAllFishermen(height int64) ([]Actor, error)
