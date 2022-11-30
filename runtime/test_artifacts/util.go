@@ -65,7 +65,7 @@ func SetupPostgresDocker() (*dockertest.Pool, *dockertest.Resource, string) {
 		}
 	}()
 
-	resource.Expire(1200) // Tell docker to hard kill the container in 120 seconds
+	resource.Expire(1200) // Tell docker to hard kill the container in 20 minutes
 
 	poolRetryChan := make(chan struct{}, 1)
 	retryConnectFn := func() error {
