@@ -116,6 +116,7 @@ install_cli_deps:
 .PHONY: develop_start
 ## Run all of the make commands necessary to develop on the project
 develop_start:
+		make clean_mocks && \
 		make protogen_clean && make protogen_local && \
 		make go_clean_deps && \
 		make mockgen && \
@@ -226,11 +227,15 @@ monitoring_start: docker_check
 docker_loki_install: docker_check
 	docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
 
-.PHONY: mockgen
-## Use `mockgen` to generate mocks used for testing purposes of all the modules.
-mockgen:
+clean_mocks:
+### Use `clean_mocks` delete mocks before recreating them. Also useful to cleanup code that was generated from a differen branch
 	$(eval modules_dir = "shared/modules")
 	find ${modules_dir}/mocks -maxdepth 1 -type f ! -name "mocks.go" -exec rm {} \;
+
+.PHONY: mockgen
+## Use `mockgen` to generate mocks used for testing purposes of all the modules.
+mockgen: clean_mocks
+	$(eval modules_dir = "shared/modules")
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
