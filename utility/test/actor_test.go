@@ -67,8 +67,10 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 		t.Run(fmt.Sprintf("%s.HandleMessageEditStake", actorType.String()), func(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
+
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
+
 			msg := &typesUtil.MessageEditStake{
 				Address:   addrBz,
 				Chains:    defaults.DefaultChains,
@@ -76,7 +78,6 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 				Signer:    addrBz,
 				ActorType: actorType,
 			}
-
 			msgChainsEdited := proto.Clone(msg).(*typesUtil.MessageEditStake)
 			msgChainsEdited.Chains = defaultTestingChainsEdited
 
@@ -107,8 +108,8 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 	for _, actorType := range actorTypes {
 		t.Run(fmt.Sprintf("%s.HandleMessageUnpause", actorType.String()), func(t *testing.T) {
-
 			ctx := NewTestingUtilityContext(t, 1)
+
 			var err error
 			switch actorType {
 			case typesUtil.ActorType_Validator:

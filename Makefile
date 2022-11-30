@@ -308,7 +308,7 @@ test_all: # generate_mocks
 .PHONY: test_all_with_json
 ## Run all go unit tests, output results in json file
 test_all_with_json: generate_rpc_openapi # generate_mocks
-	go test -v -p=1 -json -count=1 ./... -run TestUtilityContext_HandleMessage > test_results.json
+	go test -v -p=1 -count=1 -json ./... -run TestUtilityContext_HandleMessage > test_results.json
 
 .PHONY: test_all_with_coverage
 ## Run all go unit tests, output results & coverage into files
