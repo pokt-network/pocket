@@ -305,16 +305,10 @@ generate_cli_commands_docs:
 test_all: # generate_mocks
 	go test -p 1 -count=1 ./...
 
-.PHONY: test_all_with_json
-## Run all go unit tests, output results in json file
-test_all_with_json: generate_rpc_openapi # generate_mocks
-	go test -v -p=1 -count=1 -json ./... -run TestUtilityContext_HandleMessage > test_results.json
-
-.PHONY: test_all_with_coverage
-## Run all go unit tests, output results & coverage into files
-test_all_with_coverage: generate_rpc_openapi # generate_mocks
-	go test -p 1 -v -count=1 ./... -run TestUtilityContext_HandleMessage -covermode=count -coverprofile=coverage.out
-	go tool cover -func=coverage.out -o=coverage.out
+.PHONY: test_all_with_json_coverage
+## Run all go unit tests, output results & coverage into json & coverage files
+test_all_with_json_coverage: generate_rpc_openapi # generate_mocks
+	go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out -run TestUtilityContext_HandleMessage | tee test_results.json | jq
 
 .PHONY: test_race
 ## Identify all unit tests that may result in race conditions
