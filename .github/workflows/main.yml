@@ -91,6 +91,9 @@ jobs:
   # - figure out how to handle musl/alpine case if we want to support it
   build-images:
     runs-on: ubuntu-latest
+    needs: test-multiple-go-versions
+    # Until we have developer environments, we don't need the images built on other that main branches.
+    if: github.ref == 'refs/heads/main'
     strategy:
       matrix:
         # Build dev & prod images
