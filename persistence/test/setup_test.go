@@ -78,7 +78,7 @@ func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresCon
 	return db
 }
 
-// TODO(andrew): Take in `t testing.T` as a parameter and error if there's an issue
+// TODO(olshansky): Take in `t testing.T` as a parameter and error if there's an issue
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	// HACK: See `runtime/test_artifacts/generator.go` for why we're doing this to get deterministic key generation.
 	os.Setenv(test_artifacts.PrivateKeySeedEnv, "42")
