@@ -106,7 +106,9 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 	} else if shouldHydrateGenesis {
 		m.populateGenesisState(persistenceGenesis) // fatal if there's an error
 	} else {
-		log.Println("Loading state from previous state...")
+		// This configurations will connect to the SQL database and key-value stores specified
+		// in the configurations and connected to those.
+		log.Println("Loading state from disk...")
 	}
 
 	return m, nil
@@ -239,8 +241,15 @@ func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	}
 	defer checkContext.Close()
 
-	if _, err = checkContext.GetLatestBlockHeight(); err != nil {
+	blockHeight, err := checkContext.GetLatestBlockHeight()
+	if err != nil {
 		return true, nil
 	}
+
+	if blockHeight == 0 {
+		m.clearAllState(nil)
+		return true, nil
+	}
+
 	return false, nil
 }
