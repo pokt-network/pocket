@@ -9,7 +9,7 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 
 ## [Unreleased]
 
-## [0.0.0.9] - 2022-11-27
+## [0.0.0.9] - 2022-11-30
 
 Core StateHash changes
 
