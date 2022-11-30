@@ -37,10 +37,10 @@ var (
 
 var persistenceDbUrl string
 var actorTypes = []utilTypes.ActorType{
-	utilTypes.ActorType_App,
-	utilTypes.ActorType_ServiceNode,
+	// utilTypes.ActorType_App,
+	// utilTypes.ActorType_ServiceNode,
 	utilTypes.ActorType_Fisherman,
-	utilTypes.ActorType_Validator,
+	// utilTypes.ActorType_Validator,
 }
 
 func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
