@@ -6,6 +6,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
+TODO(#362): Update the interface so it can be easily integrated with the app specific bus
 type StateSyncModule interface {
 	modules.Module
 
