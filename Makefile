@@ -222,7 +222,7 @@ docker_wipe_nodes: docker_check prompt_user db_drop
 monitoring_start: docker_check
 	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d grafana loki vm
 
-.PHONY: make docker_loki_install
+.PHONY: docker_loki_install
 ## Installs the loki docker driver
 docker_loki_install: docker_check
 	docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
