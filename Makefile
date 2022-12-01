@@ -227,8 +227,8 @@ monitoring_start: docker_check
 docker_loki_install: docker_check
 	docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
 
+### Use `clean_mocks` to delete mocks before recreating them. Also useful to cleanup code that was generated from a different branch
 clean_mocks:
-### Use `clean_mocks` delete mocks before recreating them. Also useful to cleanup code that was generated from a differen branch
 	$(eval modules_dir = "shared/modules")
 	find ${modules_dir}/mocks -maxdepth 1 -type f ! -name "mocks.go" -exec rm {} \;
 
