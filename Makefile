@@ -230,7 +230,7 @@ docker_loki_install: docker_check
 ### Use `clean_mocks` to delete mocks before recreating them. Also useful to cleanup code that was generated from a different branch
 clean_mocks:
 	$(eval modules_dir = "shared/modules")
-	find ${modules_dir}/mocks -maxdepth 1 -type f ! -name "mocks.go" -exec rm {} \;
+	find ${modules_dir}/mocks -type f ! -name "mocks.go" -exec rm {} \;
 
 .PHONY: mockgen
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
