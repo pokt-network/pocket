@@ -227,6 +227,7 @@ monitoring_start: docker_check
 docker_loki_install: docker_check
 	docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
 
+.PHONY: clean_mocks
 ### Use `clean_mocks` to delete mocks before recreating them. Also useful to cleanup code that was generated from a different branch
 clean_mocks:
 	$(eval modules_dir = "shared/modules")
@@ -292,12 +293,13 @@ generate_rpc_openapi: go_oapi-codegen
 	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
 	echo "OpenAPI client and server generated"
 
+.PHONY: swagger-ui
 ## Starts a local Swagger UI instance for the RPC API
 swagger-ui:
 	echo "Attempting to start Swagger UI at http://localhost:8080\n\n"
 	docker run -p 8080:8080 -e SWAGGER_JSON=/v1/openapi.yaml -v $(shell pwd)/rpc/v1:/v1 swaggerapi/swagger-ui
-.PHONY: generate_cli_commands_docs
 
+.PHONY: generate_cli_commands_docs
 ### (Re)generates the CLI commands docs (this is meant to be called by CI)
 generate_cli_commands_docs:
 	$(eval cli_docs_dir = "app/client/cli/doc/commands")
