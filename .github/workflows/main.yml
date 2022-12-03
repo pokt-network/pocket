@@ -55,7 +55,6 @@ jobs:
         run: |
           set -euo pipefail
           go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out 2>&1 | tee test_results.json
-
       - name: Sanitize test results
         # We're utilizing `tee` above which can capture non-json stdout output, we also need to remove non-json lines.
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
