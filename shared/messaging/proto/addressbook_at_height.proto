@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package pocket;
+
+option go_package = "github.com/pokt-network/pocket/shared/messaging";
+
+message AddressBookAtHeight {
+  repeated NetworkPeer network_peers = 1;
+  uint64 height = 2;
+}
+
+message NetworkPeer {
+  bytes public_key = 1;
+  bytes address = 2;
+  string service_url = 3;
+}
