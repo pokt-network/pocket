@@ -1,5 +1,7 @@
 package messaging
 
 const (
-	NodeStartedEventType = "pocket.NodeStartedEvent"
+	NodeStartedEventType         = "pocket.NodeStartedEvent"
+	BeforeHeightChangedEventType = "pocket.BeforeHeightChangedEvent"
+	HeightChangedEventType       = "pocket.HeightChangedEvent"
 )
