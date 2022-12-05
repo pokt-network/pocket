@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Raintree mempool cannot grow unbounded anymore. It's now bounded by a constant limit and when new nonces are inserted the oldest ones are removed.
 - Reacting to the `BeforeHeightChanged` event to broadcast the addressBook to the other modules via the bus.
+- Raintree is now capable of fetching the address book for a previous height and to instantiate an ephemeral `peersManager` with it.
 
 ## [0.0.0.8] - 2022-11-14
 
