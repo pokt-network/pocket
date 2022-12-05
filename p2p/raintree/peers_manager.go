@@ -30,7 +30,16 @@ type peersManager struct {
 	maxNumLevels uint32
 }
 
-func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) (*peersManager, error) {
+func NewPeersManagerWithAddrBookProvider(selfAddr cryptoPocket.Address, addrBookProvider typesP2P.AddrBookProvider, height uint64) (*peersManager, error) {
+	addrBook, err := addrBookProvider(height)
+	if err != nil {
+		return nil, err
+	}
+
+	return newPeersManager(selfAddr, addrBook, false)
+}
+
+func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook, handleEvents bool) (*peersManager, error) {
 	pm := &peersManager{
 		selfAddr:     selfAddr,
 		addrBook:     addrBook,
@@ -65,6 +74,10 @@ func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook) 
 	}
 
 	pm.maxNumLevels = pm.getMaxAddrBookLevels()
+
+	if !handleEvents {
+		return pm, nil
+	}
 
 	// listening and reacting to peer changes (addition/deletion) events
 	go func() {

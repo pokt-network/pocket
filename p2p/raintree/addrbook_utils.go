@@ -15,12 +15,18 @@ const (
 	floatPrecision            = float64(0.0000001)
 )
 
-// TODO(team): Need to integrate with persistence layer so we are storing this on a per height basis.
-// We can easily hit an issue where we are propagating a message from an older height (e.g. before
-// the addr book was updated), but we're using `maxNumLevels` associated with the number of
-// validators at the current height.
-func (n *rainTreeNetwork) getAddrBookLength(level uint32, _height uint64) int {
+func (n *rainTreeNetwork) getAddrBookLength(level uint32, height uint64) int {
 	peersManagerStateView := n.peersManager.getNetworkView()
+
+	// if we are propagating a message from a previous height, we need to instantiate an ephemeral peersManager (without add/remove)
+	if height < n.GetBus().GetConsensusModule().CurrentHeight() {
+		peersManagerWithAddrBookProvider, err := NewPeersManagerWithAddrBookProvider(n.selfAddr, n.addrBookProvider, height)
+		if err != nil {
+			log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManagerWithAddrBookProvider: %v", err)
+		}
+		peersManagerStateView = peersManagerWithAddrBookProvider.getNetworkView()
+	}
+
 	shrinkageCoefficient := math.Pow(shrinkagePercentage, float64(peersManagerStateView.maxNumLevels-level))
 	return int(float64(len(peersManagerStateView.addrList)) * (shrinkageCoefficient))
 }

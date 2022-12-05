@@ -23,7 +23,8 @@ const mempoolMaxNonces = 1e6 // 1 million rolling nonces. The oldest will be pru
 type rainTreeNetwork struct {
 	bus modules.Bus
 
-	selfAddr cryptoPocket.Address
+	selfAddr         cryptoPocket.Address
+	addrBookProvider typesP2P.AddrBookProvider
 
 	peersManager *peersManager
 
@@ -33,9 +34,9 @@ type rainTreeNetwork struct {
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) typesP2P.Network {
-	pm, err := newPeersManager(addr, addrBook)
+	pm, err := newPeersManager(addr, addrBook, true)
 	if err != nil {
-		log.Println("[ERROR] Error initializing rainTreeNetwork peersManager: ", err)
+		log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManager: %v", err)
 	}
 
 	n := &rainTreeNetwork{
@@ -43,6 +44,28 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) t
 		peersManager: pm,
 		mempool:      make(map[uint64]struct{}),
 		mempool_keys: make([]uint64, 0, mempoolMaxNonces),
+	}
+
+	return typesP2P.Network(n)
+}
+
+func NewRainTreeNetworkWithAddrBookProvider(addr cryptoPocket.Address, addrBookProvider typesP2P.AddrBookProvider, height uint64) typesP2P.Network {
+	addrBook, err := addrBookProvider(height)
+	if err != nil {
+		log.Fatalf("[ERROR] Error getting addrBook from addrBookProvider: %v", err)
+	}
+
+	pm, err := newPeersManager(addr, addrBook, true)
+	if err != nil {
+		log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManager: %v", err)
+	}
+
+	n := &rainTreeNetwork{
+		selfAddr:         addr,
+		addrBookProvider: addrBookProvider,
+		peersManager:     pm,
+		mempool:          make(map[uint64]struct{}),
+		mempool_keys:     make([]uint64, 0, mempoolMaxNonces),
 	}
 
 	return typesP2P.Network(n)
