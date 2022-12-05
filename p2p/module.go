@@ -140,13 +140,31 @@ func (m *p2pModule) Start() error {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	addrBook, err := ValidatorMapToAddrBook(m.p2pCfg, m.bus.GetConsensusModule().ValidatorMap())
+	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
+	var (
+		addrBook typesP2P.AddrBook
+		err      error
+	)
+
+	if m.GetBus().GetPersistenceModule() == nil {
+		// we are getting called by the client and we use the "legacy behaviour"
+		// TODO (team): improve this.
+		addrBook, err = ValidatorMapToAddrBook(m.p2pCfg, m.bus.GetConsensusModule().ValidatorMap())
+	} else {
+		addrBook, err = m.getAddrBookPerHeight(currentHeight)
+	}
 	if err != nil {
 		return err
 	}
 
 	if m.p2pCfg.GetUseRainTree() {
-		m.network = raintree.NewRainTreeNetwork(m.address, addrBook)
+		if m.GetBus().GetPersistenceModule() == nil {
+			// we are getting called by the client and we use the "legacy behaviour"
+			// TODO (team): improve this.
+			m.network = raintree.NewRainTreeNetwork(m.address, addrBook)
+		} else {
+			m.network = raintree.NewRainTreeNetworkWithAddrBookProvider(m.address, m.getAddrBookPerHeight, currentHeight)
+		}
 	} else {
 		m.network = stdnetwork.NewNetwork(addrBook)
 	}
@@ -169,6 +187,26 @@ func (m *p2pModule) Start() error {
 		CounterIncrement(telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME)
 
 	return nil
+}
+
+func (m *p2pModule) getAddrBookPerHeight(height uint64) (typesP2P.AddrBook, error) {
+	persistenceReadContext, err := m.bus.GetPersistenceModule().NewReadContext(int64(height))
+	if err != nil {
+		return nil, err
+	}
+	vals, err := persistenceReadContext.GetAllValidators(int64(height))
+	if err != nil {
+		return nil, err
+	}
+	validatorMap := make(modules.ValidatorMap, len(vals))
+	for _, v := range vals {
+		validatorMap[v.GetAddress()] = v
+	}
+	addrBook, err := ValidatorMapToAddrBook(m.p2pCfg, validatorMap)
+	if err != nil {
+		return nil, err
+	}
+	return addrBook, nil
 }
 
 func (m *p2pModule) Stop() error {
