@@ -10,6 +10,7 @@ _This is a live document on how to get ramped up on all the knowledge you need t
   - [Pocket Specific](#pocket-specific)
   - [Consensus](#consensus)
   - [Merkle Trees](#merkle-trees)
+  - [Persistence](#persistence)
   - [Ethereum](#ethereum)
   - [Cryptography](#cryptography)
   - [P2P](#p2p)
@@ -19,6 +20,8 @@ _This is a live document on how to get ramped up on all the knowledge you need t
 - [❌ Non-suggested reads](#-non-suggested-reads)
 
 ## 🏁 Where to Start?
+
+_IMPORTANT: If you are reading this, understand that if something is looks incomplete, confusing or wrong, it most likely is. Don't be afraid to openly ask questions & submit a PR to change it!_
 
 This is a general set of steps we have found to help new core team members onboard to Protocol development.
 
@@ -83,12 +86,12 @@ A great starting point to learn both the basics, idioms and some advanced parts 
 
 Afterwards, two great references you can constantly refer to are:
 
-* [Effective Go](https://go.dev/doc/effective_go) by the official Gopher community
-* [Practical Go](https://dave.cheney.net/practical-go) by Dave Cheney
+- [Effective Go](https://go.dev/doc/effective_go) by the official Gopher community
+- [Practical Go](https://dave.cheney.net/practical-go) by Dave Cheney
 
 ## 📚 Technical References
 
-_We're trying not to make this a link dump, so please only add more references if it was actually helpful in clarifying your understanding._
+_NOTE: We're trying not to make this a link dump, so please only add more references if it was actually helpful in clarifying your understanding. Don't treat these as must reads but as a signal for good sources to learn. If there was something that really helped clarify your understanding, please do include it!_
 
 This is a general set of technical links and recommended reading our team has found useful to review and study for core technical concepts.
 
@@ -134,6 +137,12 @@ This is a general set of technical links and recommended reading our team has fo
 - [Plasma Core Merkle Sum Tree](https://plasma-core.readthedocs.io/en/latest/specs/sum-tree.html)
   - A good reference to understand some of the underlying cryptography in V0's proof/claim lifecycle 9934927 (Add a couple more helpful links)
 
+### Persistence
+
+- Tendermint Discussion around a rollback tool for state
+  - [Should we implement the rewind feature in tendermint?](https://github.com/tendermint/tendermint/issues/3845)
+  - [Add command to roll-back a single block](https://github.com/tendermint/tendermint/issues/3196)
+
 ### Ethereum
 
 - [Paths toward single-slot finality](https://notes.ethereum.org/@vbuterin/single_slot_finality)
@@ -141,6 +150,8 @@ This is a general set of technical links and recommended reading our team has fo
 
 ### Cryptography
 
+- [Anoma Whitepaper](https://github.com/anoma/whitepaper/blob/main/whitepaper.pdf)
+  - This whitepaper is a bit dense but introduces a a great way of thinking about the building blocks of decentralized applications and blockchains focused on security and intent. It always provides a great historical background on both Bitcoin and Ethereum.
 - [Threshold signatures presentation](https://docs.google.com/presentation/d/1G4XGqrBLwqMyDQce_xpPQUEMOK4lFrneuvGYU3MVDsI/edit#slide=id.g1246936523c_0_26)
   - A great presentation by Alin Tomescu (founding engineer) that builds intuition around threshold signatures, signature aggregation, etc
 - [ECDSA is not that bad: two-party signing without Schnorr or BLS](https://medium.com/cryptoadvance/ecdsa-is-not-that-bad-two-party-signing-without-schnorr-or-bls-1941806ec36f)
@@ -157,6 +168,8 @@ This is a general set of technical links and recommended reading our team has fo
 
 #### Specific Article Recommendations
 
+- [Three Quarks](https://davidphelps.substack.com/)
+  - [The Case for Modular Maxis](https://davidphelps.substack.com/p/the-case-for-modular-maxis)
 - [Aptos engineering blog](https://aptoslabs.medium.com/)
   - [The Evolution of State Sync](https://medium.com/aptoslabs/the-evolution-of-state-sync-the-path-to-100k-transactions-per-second-with-sub-second-latency-at-52e25a2c6f10)
 - [Olshansky's blog](https://olshansky.substack.com/)
