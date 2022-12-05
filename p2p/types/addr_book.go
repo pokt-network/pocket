@@ -7,3 +7,6 @@ type AddrBook []*NetworkPeer
 //
 // Since maps cannot be sorted arbitrarily in Go, to achieve sorting, we need to rely on `addrList` which is a slice of addresses/strings and therefore we can sort it the way we want.
 type AddrBookMap map[string]*NetworkPeer
+
+// AddrBookProvider is a way of accessing the AddrBook per height
+type AddrBookProvider func(height uint64) (AddrBook, error)
