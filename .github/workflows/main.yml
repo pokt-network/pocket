@@ -55,6 +55,10 @@ jobs:
         run: |
           set -euo pipefail
           go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out 2>&1 | tee test_results.json
+      - name: Sanitize test results
+        # We're utilizing `tee` above which can capture non-json stdout output so we need to remove non-json lines before additional parsing and submitting it to the external github action.
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        run: cat test_results.json | jq -c -R 'fromjson? | select(type == "object")' > tmp.json && mv tmp.json test_results.json
       - name: Output test failures
         # Makes it easier to find failed tests so no need to scroll through the whole log.
         if: ${{ failure() && env.TARGET_GOLANG_VERSION == matrix.go }}
