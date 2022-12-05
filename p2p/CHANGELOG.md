@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.10] - 2022-12-05
+
+- `ValidatorMapToAddrBook` renamed to `ActorToAddrBook`
+- `ValidatorToNetworkPeer` renamed to `ActorToNetworkPeer`
+
 ## [0.0.0.9] - 2022-12-04
 
 - Raintree mempool cannot grow unbounded anymore. It's now bounded by a constant limit and when new nonces are inserted the oldest ones are removed.
