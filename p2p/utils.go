@@ -11,10 +11,10 @@ import (
 
 // CLEANUP(drewsky): These functions will turn into more of a "ActorToAddrBook" when we have a closer
 // integration with utility.
-func ValidatorMapToAddrBook(cfg modules.P2PConfig, validators map[string]modules.Actor) (typesP2P.AddrBook, error) {
+func ActorToAddrBook(cfg modules.P2PConfig, validators map[string]modules.Actor) (typesP2P.AddrBook, error) {
 	book := make(typesP2P.AddrBook, 0)
 	for _, v := range validators {
-		networkPeer, err := ValidatorToNetworkPeer(cfg, v)
+		networkPeer, err := ActorToNetworkPeer(cfg, v)
 		if err != nil {
 			log.Println("[WARN] Error connecting to validator: ", err)
 			continue
@@ -26,7 +26,7 @@ func ValidatorMapToAddrBook(cfg modules.P2PConfig, validators map[string]modules
 
 // CLEANUP(drewsky): These functions will turn into more of a "ActorToAddrBook" when we have a closer
 // integration with utility.
-func ValidatorToNetworkPeer(cfg modules.P2PConfig, v modules.Actor) (*typesP2P.NetworkPeer, error) {
+func ActorToNetworkPeer(cfg modules.P2PConfig, v modules.Actor) (*typesP2P.NetworkPeer, error) {
 	conn, err := CreateDialer(cfg, v.GetGenericParam()) // service url
 	if err != nil {
 		return nil, fmt.Errorf("error resolving addr: %v", err)
