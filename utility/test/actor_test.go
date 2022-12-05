@@ -15,6 +15,7 @@ import (
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -47,7 +48,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 			er := ctx.HandleStakeMessage(msg)
 			require.NoError(t, er, "handle stake message")
 
-			actor := getActorByAddr(t, ctx, pubKey.Address().Bytes(), actorType)
+			actor := getActorByAddr(t, ctx, actorType, pubKey.Address().String())
 
 			require.Equal(t, actor.GetAddress(), pubKey.Address().String(), "incorrect actor address")
 			if actorType != typesUtil.ActorType_Validator {
@@ -69,7 +70,8 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			ctx := NewTestingUtilityContext(t, 0)
 			actor := getFirstActor(t, ctx, actorType)
 
-			addrBz, err := hex.DecodeString(actor.GetAddress())
+			addr := actor.GetAddress()
+			addrBz, err := hex.DecodeString(addr)
 			require.NoError(t, err)
 
 			msg := &typesUtil.MessageEditStake{
@@ -85,7 +87,7 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			err = ctx.HandleEditStakeMessage(msgChainsEdited)
 			require.NoError(t, err, "handle edit stake message")
 
-			actor = getActorByAddr(t, ctx, addrBz, actorType)
+			actor = getActorByAddr(t, ctx, actorType, addr)
 			if actorType != typesUtil.ActorType_Validator {
 				require.Equal(t, msgChainsEdited.Chains, actor.GetChains(), "incorrect edited chains")
 			}
@@ -126,13 +128,14 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			require.NoError(t, err, "error setting minimum pause blocks")
 
 			actor := getFirstActor(t, ctx, actorType)
-			addrBz, err := hex.DecodeString(actor.GetAddress())
+			addr := actor.GetAddress()
+			addrBz, err := hex.DecodeString(addr)
 			require.NoError(t, err)
 
 			err = ctx.SetActorPauseHeight(actorType, addrBz, 1)
 			require.NoError(t, err, "error setting pause height")
 
-			actor = getActorByAddr(t, ctx, addrBz, actorType)
+			actor = getActorByAddr(t, ctx, actorType, addr)
 			require.Equal(t, int64(1), actor.GetPausedHeight())
 
 			msgUnpauseActor := &typesUtil.MessageUnpause{
@@ -144,7 +147,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			err = ctx.HandleUnpauseMessage(msgUnpauseActor)
 			require.NoError(t, err, "handle unpause message")
 
-			actor = getActorByAddr(t, ctx, addrBz, actorType)
+			actor = getActorByAddr(t, ctx, actorType, addr)
 			require.Equal(t, int64(-1), actor.GetPausedHeight())
 
 			test_artifacts.CleanupTest(ctx)
@@ -173,6 +176,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			require.NoError(t, err, "error setting minimum pause blocks")
 
 			actor := getFirstActor(t, ctx, actorType)
+			addr := actor.GetAddress()
 			addrBz, err := hex.DecodeString(actor.GetAddress())
 			require.NoError(t, err)
 
@@ -185,7 +189,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 			err = ctx.HandleUnstakeMessage(msg)
 			require.NoError(t, err, "handle unstake message")
 
-			actor = getActorByAddr(t, ctx, addrBz, actorType)
+			actor = getActorByAddr(t, ctx, actorType, addr)
 			require.Equal(t, defaultUnstaking, actor.GetUnstakingHeight(), "actor should be unstaking")
 
 			test_artifacts.CleanupTest(ctx)
@@ -425,7 +429,8 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			actor := getFirstActor(t, ctx, actorType)
 			require.Equal(t, actor.GetUnstakingHeight(), int64(-1), "wrong starting status")
 
-			addrBz, err := hex.DecodeString(actor.GetAddress())
+			addr := actor.GetAddress()
+			addrBz, err := hex.DecodeString(addr)
 			require.NoError(t, err)
 
 			err = ctx.SetActorPauseHeight(actorType, addrBz, 0)
@@ -452,7 +457,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			err = ctx.UnstakeActorPausedBefore(1, actorType)
 			require.NoError(t, err, "error unstaking actor pause before height 1")
 
-			actor = getActorByAddr(t, ctx, addrBz, actorType)
+			actor = getActorByAddr(t, ctx, actorType, addr)
 			require.Equal(t, actor.GetUnstakingHeight(), defaultUnstaking, "status does not equal unstaking")
 
 			var unstakingBlocks int64
@@ -602,14 +607,10 @@ func getFirstActor(t *testing.T, ctx utility.UtilityContext, actorType typesUtil
 	return getAllTestingActors(t, ctx, actorType)[0]
 }
 
-func getActorByAddr(t *testing.T, ctx utility.UtilityContext, addr []byte, actorType typesUtil.ActorType) (actor modules.Actor) {
+func getActorByAddr(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.ActorType, addr string) (actor modules.Actor) {
 	actors := getAllTestingActors(t, ctx, actorType)
-	for _, a := range actors {
-		if a.GetAddress() == hex.EncodeToString(addr) {
-			return a
-		}
-	}
-	return
+	idx := slices.IndexFunc(actors, func(a modules.Actor) bool { return a.GetAddress() == addr })
+	return actors[idx]
 }
 
 func getAllTestingApps(t *testing.T, ctx utility.UtilityContext) []modules.Actor {
