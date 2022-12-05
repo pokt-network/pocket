@@ -304,17 +304,22 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 	ctrl := gomock.NewController(t)
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
+	persistenceReadContextMock := modulesMock.NewMockPersistenceReadContext(ctrl)
 
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
-	persistenceMock.EXPECT().NewReadContext(int64(-1)).Return(persistenceContextMock, nil).AnyTimes()
+	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
 	// of the consensus module. This one is only used when loading the initial consensus module
 	// state; hence the `-1` expectation in the call above.
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
-	persistenceContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
+	persistenceReadContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
+
+	// here we are mocking 4 actors since we are considering the 4 nodes in the LocalNet genesis
+	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return([]modules.Actor{&modulesMock.MockActor{}, &modulesMock.MockActor{}, &modulesMock.MockActor{}, &modulesMock.MockActor{}}, nil).AnyTimes()
+	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
 	return persistenceMock
 }
