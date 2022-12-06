@@ -236,7 +236,7 @@ const (
 	NewSavePointError                 = "an error occurred creating the save point"
 	RollbackSavePointError            = "an error occurred rolling back to save point"
 	NewPersistenceContextError        = "an error occurred creating the persistence context"
-	GetAppHashError                   = "an error occurred getting the apphash"
+	GetAppHashError                   = "an error occurred getting the appHash"
 	ResetContextError                 = "an error occurred resetting the context"
 	CommitContextError                = "an error occurred committing the context"
 	ReleaseContextError               = "an error occurred releasing the context"

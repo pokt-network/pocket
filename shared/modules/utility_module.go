@@ -6,7 +6,11 @@ type UtilityModule interface {
 	Module
 	ConfigurableModule
 
+	// Creates a utilityContext with an underlying read-write persistenceContext; only 1 can exist at a time
 	NewContext(height int64) (UtilityContext, error)
+
+	// Basic Transaction validation. SIDE EFFECT: Adds the transaction to the mempool if valid.
+	CheckTransaction(tx []byte) error
 }
 
 // Interface defining the context within which the node can operate with the utility layer.
@@ -28,9 +32,6 @@ type UtilityContext interface {
 	Release() error                 // Releases the utility context and any underlying contexts it references
 	Commit(quorumCert []byte) error // State commitment of the current context
 	GetPersistenceContext() PersistenceRWContext
-
-	// Basic Transaction validation. SIDE EFFECT: Adds the transaction to the mempool if valid.
-	CheckTransaction(tx []byte) error
 }
 
 type UnstakingActor interface {

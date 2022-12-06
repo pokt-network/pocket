@@ -10,15 +10,7 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-func (u *UtilityContext) ApplyTransaction(index int, tx *typesUtil.Transaction) (modules.TxResult, typesUtil.Error) {
-	msg, signer, err := u.AnteHandleMessage(tx)
-	if err != nil {
-		return nil, err
-	}
-	return tx.ToTxResult(u.LatestHeight, index, signer, msg.GetMessageRecipient(), msg.GetMessageName(), u.HandleMessage(msg))
-}
-
-func (u *UtilityContext) CheckTransaction(txProtoBytes []byte) error {
+func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 	// Is the tx already in the mempool (in memory)?
 	txHash := typesUtil.TransactionHash(txProtoBytes)
 	if u.Mempool.Contains(txHash) {
@@ -26,8 +18,8 @@ func (u *UtilityContext) CheckTransaction(txProtoBytes []byte) error {
 	}
 
 	// Is the tx already indexed (on disk)?
-	store := u.Store()
-	if txExists, err := store.TransactionExists(txHash); err != nil {
+	persistenceModule := u.GetBus().GetPersistenceModule()
+	if txExists, err := persistenceModule.TransactionExists(txHash); err != nil {
 		return err
 	} else if txExists {
 		// TODO: non-ordered nonce requires non-pruned tx indexer
@@ -40,13 +32,21 @@ func (u *UtilityContext) CheckTransaction(txProtoBytes []byte) error {
 		return typesUtil.ErrProtoUnmarshal(err)
 	}
 
-	// Is the transaction valid?
+	// Does the tx pass basic validation?
 	if err := transaction.ValidateBasic(); err != nil {
 		return err
 	}
 
 	// Store the tx in the mempool
 	return u.Mempool.AddTransaction(txProtoBytes)
+}
+
+func (u *UtilityContext) ApplyTransaction(index int, tx *typesUtil.Transaction) (modules.TxResult, typesUtil.Error) {
+	msg, signer, err := u.AnteHandleMessage(tx)
+	if err != nil {
+		return nil, err
+	}
+	return tx.ToTxResult(u.Height, index, signer, msg.GetMessageRecipient(), msg.GetMessageName(), u.HandleMessage(msg))
 }
 
 // CLEANUP: Exposed for testing purposes only

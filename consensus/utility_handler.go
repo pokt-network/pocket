@@ -9,11 +9,7 @@ import (
 func (m *consensusModule) handleUtilityMessage(msg *typesCons.UtilityMessage) error {
 	switch msg.GetType() {
 	case typesCons.UtilityMessageType_UTILITY_MESSAGE_TRANSACTION:
-		if m.utilityContext == nil {
-			m.refreshUtilityContext()
-
-		}
-		if err := m.utilityContext.CheckTransaction(msg.GetData()); err != nil {
+		if err := m.GetBus().GetUtilityModule().CheckTransaction(msg.GetData()); err != nil {
 			return err
 		} else {
 			m.nodeLog("Successfully checked transaction")

@@ -37,6 +37,8 @@ var (
 )
 
 var testPersistenceMod modules.PersistenceModule // initialized in TestMain
+var testUtilityMod modules.UtilityModule         // initialized in TestMain
+
 var actorTypes = []utilTypes.ActorType{
 	utilTypes.ActorType_App,
 	utilTypes.ActorType_ServiceNode,
@@ -50,7 +52,11 @@ func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
 
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
-	testPersistenceMod = newTestPersistenceModule(dbUrl)
+	runtimeCfg := newTestRuntimeConfig(dbUrl)
+
+	testUtilityMod = newTestUtilityModule(runtimeCfg)
+	testPersistenceMod = newTestPersistenceModule(runtimeCfg)
+
 	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
 	os.Exit(exitCode)
@@ -72,8 +78,8 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	})
 
 	return utility.UtilityContext{
-		LatestHeight: height,
-		Mempool:      NewTestingMempool(t),
+		Height:  height,
+		Mempool: NewTestingMempool(t),
 		Context: &utility.Context{
 			PersistenceRWContext: persistenceContext,
 			SavePointsM:          make(map[string]struct{}),
@@ -82,8 +88,7 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	}
 }
 
-// TODO(olshansky): Take in `t testing.T` as a parameter and error if there's an issue
-func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
+func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
 	cfg := runtime.NewConfig(&runtime.BaseConfig{}, runtime.WithPersistenceConfig(&types.PersistenceConfig{
 		PostgresUrl:    databaseUrl,
 		NodeSchema:     testSchema,
@@ -93,7 +98,19 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	}))
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
+	return runtimeCfg
+}
 
+func newTestUtilityModule(runtimeCfg *runtime.Manager) modules.UtilityModule {
+	utilityMod, err := utility.Create(runtimeCfg)
+	if err != nil {
+		log.Fatalf("Error creating persistence module: %s", err)
+	}
+	return utilityMod.(modules.UtilityModule)
+}
+
+// TODO: Eventually, we want to fully mock the persistence module within the context of utility tests
+func newTestPersistenceModule(runtimeCfg *runtime.Manager) modules.PersistenceModule {
 	persistenceMod, err := persistence.Create(runtimeCfg)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)

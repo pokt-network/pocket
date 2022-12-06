@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/pokt-network/pocket/utility/types"
-
 	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/utility/types"
 )
 
 var _ modules.UtilityModule = &utilityModule{}
