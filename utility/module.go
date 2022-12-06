@@ -24,7 +24,7 @@ type utilityModule struct {
 const (
 	utilityModuleName = "utility"
 
-	TransactionGossipContentType = "utility.TransactionGossip"
+	TransactionGossipMessageContentType = "utility.TransactionGossipMessage"
 )
 
 func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
@@ -76,12 +76,12 @@ func (*utilityModule) ValidateConfig(cfg modules.Config) error {
 
 func (u *utilityModule) HandleMessage(message *anypb.Any) error {
 	switch message.MessageName() {
-	case TransactionGossipContentType:
+	case TransactionGossipMessageContentType:
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
 			return err
 		}
-		transactionGossipMsg, ok := msg.(*types.TransactionGossip)
+		transactionGossipMsg, ok := msg.(*types.TransactionGossipMessage)
 		if !ok {
 			return fmt.Errorf("failed to cast message to UtilityMessage")
 		}

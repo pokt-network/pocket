@@ -52,7 +52,7 @@ func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 
 // Broadcast to the entire validator set
 func (s *rpcServer) broadcastMessage(msgBz []byte) error {
-	utilMsg := &typesUtil.TransactionGossip{
+	utilMsg := &typesUtil.TransactionGossipMessage{
 		Tx: msgBz,
 	}
 

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.12] - 2022-12-06
+
+- Introduce a general purpose `HandleMessage` method at the utility level
+- Move the scope of `CheckTransaction` from the context to the module level
+- Add an `IsEmpty` function to the `Mempool`
+- Rename `DeleteTransaction` to `RemoveTransaction` in the mempool
+- Rename `LatestHeight` to `Height` in the `utilityContext`
+- Add comments inside `CheckTransaction` so its functionality is clearer
+- Add comments and cleanup the code in `mempool.go`
+- 
+
 ## [0.0.0.11] - 2022-11-30
 
 - Minor lifecycle changes needed to supported the implementation of `ComputeAppHash` as a replacement for `GetAppHash` in #285

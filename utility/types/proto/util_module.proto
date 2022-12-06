@@ -3,6 +3,6 @@ package utility;
 
 option go_package = "github.com/pokt-network/pocket/utility/types";
 
-message TransactionGossip {
+message TransactionGossipMessage {
   bytes tx = 1;
 }
