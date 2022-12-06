@@ -23,8 +23,6 @@ var (
 	DefaultMaxRelaysString     = converters.BigIntToString(DefaultMaxRelays)
 	DefaultAccountAmount       = big.NewInt(100000000000000)
 	DefaultAccountAmountString = converters.BigIntToString(DefaultAccountAmount)
-	DefaultSendAmount          = big.NewInt(10000)
-	DefaultSendAmountString    = converters.BigIntToString(DefaultSendAmount)
 	DefaultPauseHeight         = int64(-1)
 	DefaultUnstakingHeight     = int64(-1)
 	DefaultChainID             = "testnet"

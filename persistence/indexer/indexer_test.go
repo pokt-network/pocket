@@ -6,9 +6,8 @@ import (
 	"testing"
 	"time"
 
-	shared "github.com/pokt-network/pocket/shared/modules"
-
 	"github.com/pokt-network/pocket/shared/crypto"
+	shared "github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
 )
 

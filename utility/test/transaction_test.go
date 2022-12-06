@@ -15,6 +15,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	defaultSendAmount = big.NewInt(10000)
+)
+
 func TestUtilityContext_AnteHandleMessage(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 
@@ -135,7 +139,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 }
 
 func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
-	amountSent = new(big.Int).Set(defaults.DefaultSendAmount)
+	amountSent = new(big.Int).Set(defaultSendAmount)
 	startingBalance = new(big.Int).Set(defaults.DefaultAccountAmount)
 
 	recipientAddr, err := crypto.GenerateAddress()

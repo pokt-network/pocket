@@ -112,7 +112,6 @@ install_cli_deps:
 	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
 	go install "github.com/favadi/protoc-go-inject-tag@latest"
 	go install "github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0"
-	go install github.com/go-delve/delve/cmd/dlv@latest
 
 .PHONY: develop_start
 ## Run all of the make commands necessary to develop on the project
