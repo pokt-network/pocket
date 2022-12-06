@@ -96,7 +96,7 @@ func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	require.NoError(t, ctx.CheckTransaction(txBz))
 	appHash, txs, er := ctx.CreateAndApplyProposalBlock([]byte(proposer.GetAddress()), 10000)
 	require.NoError(t, er)
-	require.Equal(t, len(txs), 1)
+	require.Equal(t, 1, len(txs))
 	require.Equal(t, txs[0], txBz)
 	require.NotEmpty(t, appHash)
 

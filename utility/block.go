@@ -33,7 +33,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	transactions := make([][]byte, 0)
 	totalTxsSizeInBytes := 0
 	txIndex := 0
-	for u.Mempool.Size() != typesUtil.ZeroInt {
+	for !u.Mempool.IsEmpty() {
 		txBytes, err := u.Mempool.PopTransaction()
 		if err != nil {
 			return nil, nil, err
