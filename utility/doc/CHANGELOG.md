@@ -16,7 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `LatestHeight` to `Height` in the `utilityContext`
 - Add comments inside `CheckTransaction` so its functionality is clearer
 - Add comments and cleanup the code in `mempool.go`
-- 
 
 ## [0.0.0.11] - 2022-11-30
 

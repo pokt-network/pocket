@@ -2,6 +2,7 @@
 
 **Table of Contents**
 
+- [Goals](#goals)
 - [Shell #1: Setup LocalNet](#shell-1-setup-localnet)
 - [Shell #2: Setup Consensus debugger](#shell-2-setup-consensus-debugger)
 - [Shell #3: Inspect the data in the database for node1](#shell-3-inspect-the-data-in-the-database-for-node1)
@@ -12,7 +13,20 @@
   - [Second Transaction](#second-transaction)
 - [\[Optional\] Shell #6: See Swagger UI](#optional-shell-6-see-swagger-ui)
 
+## Goals
+
 The first video of this demo can be accessed [here](https://drive.google.com/file/d/1IOrzq-XJP04BJjyqPPpPu873aSfwrnur/view?usp=sharing).
+
+The goal of iteration 3 was to have a success end-to-end transaction that:
+
+- Uses docker-compose on LocalNet
+- Is composed of 4 hard-coded validator nodes
+- Starts the LocalNet from genesis
+- Uses the CLI to send a transaction
+- Uses a basic version of HotPOKT for consensus
+- Uses a basic version of RainTree for brodcast
+
+<img width="842" alt="Screenshot 2022-12-05 at 9 02 28 PM" src="https://user-images.githubusercontent.com/1892194/205820691-26e801e4-ff79-4132-a7a1-358860ca2335.png">
 
 ## Shell #1: Setup LocalNet
 
