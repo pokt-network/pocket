@@ -1,11 +1,12 @@
 package indexer
 
 import (
-	shared "github.com/pokt-network/pocket/shared/modules"
 	"log"
 	"math/rand"
 	"testing"
 	"time"
+
+	shared "github.com/pokt-network/pocket/shared/modules"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
