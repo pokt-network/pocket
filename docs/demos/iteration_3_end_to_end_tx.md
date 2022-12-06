@@ -98,15 +98,15 @@ go run app/client/*.go --path_to_private_key_file=/Users/olshansky/workspace/poc
 ```
 
 1. Use shell #2 to `TriggerNextView` and confirm height increased via `PrintNodeState`
-   1. You may need to do this more than once in case there's a bug.
+   - You may need to do this more than once in case there's a bug.
 2. Use shell #3 to inspect how the balances changes
-   1. You should see new records with the height `1`
-   2. You should see that the `DAO` got some money
-   3. You should see that funds were moved from one account to another
+   - You should see new records with the height `1`
+   - You should see that the `DAO` got some money
+   - You should see that funds were moved from one account to another
 3. Use shell #4 to inspect how the balances changes
-   1. You should see the same data as above
+   - You should see the same data as above
 4. Use shell #2 to `ShowLatestBlockInStore`
-   1. You should see the data for the block at height `1`
+   - You should see the data for the block at height `1`
 
 ### Second Transaction
 
@@ -117,15 +117,15 @@ go run app/client/*.go --path_to_private_key_file=/Users/olshansky/workspace/poc
 ```
 
 1. Use shell #2 to `TriggerNextView` (one or more times) and confirm height increased via `PrintNodeState`
-   1. You may need to do this more than once in case there's a bug.
+   - You may need to do this more than once in case there's a bug.
 2. Use shell #3 to inspect how the balances changes
-   1. You should see new records with the height `2`
-   2. You should see that the `DAO` got some money
-   3. You should see that funds were moved from one account to another
+   - You should see new records with the height `2`
+   - You should see that the `DAO` got some money
+   - You should see that funds were moved from one account to another
 3. Use shell #4 to inspect how the balances changes
-   1. You should see the same data as above
-4. 3. Use shell #2 to `ShowLatestBlockInStore`
-   1. You should see the data for the block at height `2`
+   - You should see the same data as above
+4. Use shell #2 to `ShowLatestBlockInStore`
+   - You should see the data for the block at height `2`
 
 ## [Optional] Shell #6: See Swagger UI
 
