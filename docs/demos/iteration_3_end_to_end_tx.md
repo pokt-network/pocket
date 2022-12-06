@@ -3,6 +3,7 @@
 **Table of Contents**
 
 - [Goals](#goals)
+  - [Features](#features)
 - [Shell #1: Setup LocalNet](#shell-1-setup-localnet)
 - [Shell #2: Setup Consensus debugger](#shell-2-setup-consensus-debugger)
 - [Shell #3: Inspect the data in the database for node1](#shell-3-inspect-the-data-in-the-database-for-node1)
@@ -17,16 +18,19 @@
 
 The first video of this demo can be accessed [here](https://drive.google.com/file/d/1IOrzq-XJP04BJjyqPPpPu873aSfwrnur/view?usp=sharing).
 
-The goal of iteration 3 was to have a success end-to-end transaction that:
-
-- Uses docker-compose on LocalNet
-- Is composed of 4 hard-coded validator nodes
-- Starts the LocalNet from genesis
-- Uses the CLI to send a transaction
-- Uses a basic version of HotPOKT for consensus
-- Uses a basic version of RainTree for brodcast
-
 <img width="842" alt="Screenshot 2022-12-05 at 9 02 28 PM" src="https://user-images.githubusercontent.com/1892194/205820691-26e801e4-ff79-4132-a7a1-358860ca2335.png">
+
+### Features
+
+The demo showcases a successful end-to-end transaction that includes the following:
+
+- A LocalNet composed of 4 hard-coded Validators
+- A LocalNet that is started from genesis
+- Orchestration that is driven by Docker & docker-compose
+- A CLI that can be use to submit send transactions that are gossiped throughout the network
+- A basic & functional version of HotPOKT for Consensus
+- A basic & functional version of RainTree for P2P
+- A persistence layer than leverages PostgreSQL, BadgerDB and Celestia's SMT for state commitment and state storage
 
 ## Shell #1: Setup LocalNet
 
