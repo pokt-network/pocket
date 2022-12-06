@@ -19,8 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added state sync interfaces and diagrams
 
-> > > > > > > main:consensus/doc/CHANGELOG.md
-
 ## [0.0.0.8] - 2022-11-15
 
 - Propagate the `quorumCertificate` on `Block` commit to the `Utility` module

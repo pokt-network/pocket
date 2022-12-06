@@ -11,7 +11,7 @@ import (
 type Mempool interface {
 	Contains(hash string) bool
 	AddTransaction(tx []byte) Error
-	DeleteTransaction(tx []byte) Error
+	RemoveTransaction(tx []byte) Error // TODO: Consider renaming to "RemoveTransaction"
 
 	Clear()
 	Size() int // TODO: Add IsEmpty() function
@@ -72,7 +72,7 @@ func (f *FIFOMempool) Contains(hash string) bool {
 	return false
 }
 
-func (f *FIFOMempool) DeleteTransaction(tx []byte) Error {
+func (f *FIFOMempool) RemoveTransaction(tx []byte) Error {
 	f.l.Lock()
 	defer f.l.Unlock()
 	var toRemove *list.Element

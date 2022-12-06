@@ -20,31 +20,34 @@ func (s *rpcServer) GetV1Version(ctx echo.Context) error {
 }
 
 func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
-	params := new(RawTXRequest)
-	if err := ctx.Bind(params); err != nil {
+	txParams := new(RawTXRequest)
+	if err := ctx.Bind(txParams); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
-	bz, err := hex.DecodeString(params.RawHexBytes)
+
+	txBz, err := hex.DecodeString(txParams.RawHexBytes)
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, "cannot decode tx bytes")
 	}
+
 	height := s.GetBus().GetConsensusModule().CurrentHeight()
-	uCtx, err := s.GetBus().GetUtilityModule().NewContext(int64(height))
+	utilityCtx, err := s.GetBus().GetUtilityModule().NewContext(int64(height))
 	if err != nil {
 		defer func() { log.Fatalf("[ERROR] Failed to create UtilityContext: %v", err) }()
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	err = uCtx.CheckTransaction(bz)
+
+	err = utilityCtx.CheckTransaction(txBz)
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	if err := uCtx.Release(); err != nil {
+	if err := utilityCtx.Release(); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 	if err := s.GetBus().GetPersistenceModule().ReleaseWriteContext(); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	if err := s.broadcastMessage(bz); err != nil {
+	if err := s.broadcastMessage(txBz); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 

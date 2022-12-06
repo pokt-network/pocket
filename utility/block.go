@@ -120,7 +120,7 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 
 		// TODO: if found, remove transaction from mempool.
 		// DISCUSS: What if the context is rolled back or cancelled. Do we add it back to the mempool?
-		// if err := u.Mempool.DeleteTransaction(transaction); err != nil {
+		// if err := u.Mempool.RemoveTransaction(transaction); err != nil {
 		// 	return nil, err
 		// }
 	}
