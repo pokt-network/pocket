@@ -4,9 +4,14 @@ This document describes the `Persistence` module's internal implementation of ho
 
 Alternative implementation of the persistence module are free to choose their own **State Storage** engines (SQL, KV stores, etc) or their own **State Commitment** paradigms (Merkle Trees, Vector Commitments, etc), but the output hash **must** remain identical.
 
-- [This flow shows the interaction between the `PostgresDB` and `MerkleTrees` listed above to compute the state hash. Assuming the process of applying a proposal block to the current context (i.e. the uncommited SQL state) is done, the following steps compute the hash of the new world state.](#this-flow-shows-the-interaction-between-the-postgresdb-and-merkletrees-listed-above-to-compute-the-state-hash-assuming-the-process-of-applying-a-proposal-block-to-the-current-context-ie-the-uncommited-sql-state-is-done-the-following-steps-compute-the-hash-of-the-new-world-state)
-  - [Store Block (Commit)](#store-block-commit)
-  - [Failed Commitments](#failed-commitments)
+- [Introduction](#introduction)
+- [Data Types](#data-types)
+  - [Infrastructural Components](#infrastructural-components)
+  - [Block Proto](#block-proto)
+  - [Trees](#trees)
+- [Compute State Hash](#compute-state-hash)
+- [Store Block (Commit)](#store-block-commit)
+- [Failed Commitments](#failed-commitments)
 
 ## Introduction
 

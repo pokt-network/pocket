@@ -58,12 +58,12 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 
 	anyUtilityMessage, err := codec.GetCodec().ToAny(utilMsg)
 	if err != nil {
-		log.Printf("[ERROR] Failed to create Any proto: %v", err)
+		log.Printf("[ERROR] Failed to create Any proto from transaction gossip: %v", err)
 		return err
 	}
 
 	if err := s.GetBus().GetP2PModule().Broadcast(anyUtilityMessage); err != nil {
-		log.Printf("[ERROR] Failed to broadcast debug message: %v", err)
+		log.Printf("[ERROR] Failed to broadcast utility message: %v", err)
 		return err
 	}
 	return nil

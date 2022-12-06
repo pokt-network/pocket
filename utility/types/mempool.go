@@ -60,6 +60,7 @@ func (f *FIFOMempool) AddTransaction(tx []byte) Error {
 	f.size++
 	f.txBytes += uint64(len(tx))
 
+	// TODO: Rather than inserting the tx and than popping - we should just insert the tx only after validation
 	// Remove the tx if it exceeds the configs
 	for f.size >= f.maxTxs || f.txBytes >= f.maxTxBytes {
 		_, err := f.popTransaction()
