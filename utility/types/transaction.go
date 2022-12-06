@@ -2,10 +2,15 @@ package types
 
 import (
 	"bytes"
+
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"google.golang.org/protobuf/proto"
+)
+
+const (
+	UtilityMessageContentType = "utility.UtilityMessage"
 )
 
 func TransactionFromBytes(transaction []byte) (*Transaction, Error) {

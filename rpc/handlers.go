@@ -57,10 +57,6 @@ func (s *rpcServer) broadcastMessage(msgBz []byte) error {
 		Data: msgBz,
 	}
 
-	// anyProto, err := anypb.New(utilMsg)
-	// if err != nil {
-	// 	log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
-	// }
 	anyUtilityMessage, err := codec.GetCodec().ToAny(utilMsg)
 	if err != nil {
 		log.Printf("[ERROR] Failed to create Any proto: %v", err)
