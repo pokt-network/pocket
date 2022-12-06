@@ -1,8 +1,9 @@
 load('ext://helm_resource', 'helm_resource', 'helm_repo')
 load('ext://namespace', 'namespace_create')
 
+# TODO: add check k8s is 1.23, 1.24+ is supported once https://github.com/zalando/postgres-operator/issues/2098 is resolved.
+
 # TODO: add resource dependencies https://docs.tilt.dev/resource_dependencies.html#adding-resource_deps-for-startup-order
-# - validators depend on postgres db, postgres db depends on postgres operator
 # - validators depend on operator
 
 # TODO: cleanup resources on tilt down:
@@ -39,6 +40,9 @@ is_psql_operator_installed = str(local('kubectl api-resources | grep postgres | 
 if is_psql_operator_installed == '0':
   print('Installing postgres operator')
   local('kubectl apply -k github.com/zalando/postgres-operator/manifests')
+# Wait for postgres operator to be available before deploying the database.
+local_resource('wait-for-postgres-operator', 'kubectl wait --for=condition=available --timeout=600s --namespace=default deployment postgres-operator')
+k8s_yaml('build/localnet/postgres-database.yaml')
 
 # Deploy observability stack (grafana, prometheus, loki) and wire it up with localnet
 # TODO(@okdas): check if helm cli is available.
@@ -50,13 +54,6 @@ if not os.path.exists('build/localnet/observability-stack/charts'):
 
 namespace_create('observability')
 k8s_yaml(helm("build/localnet/observability-stack", name='observability-stack', namespace="observability"))
-# helm_resource('helm-observability-stack',
-#                 'build/localnet/observability-stack',
-#                 release_name='observability-stack',
-#                 namespace='observability', resource_deps=['helm-repo-grafana', 'helm-repo-prometheus'],
-#                 deps=[
-#                         'build/localnet/observability-stack/values.yaml',
-#                         'build/localnet/observability-stack/templates'],)
 
 # Builds the pocket binary. Note target OS is linux, because it later will be run in a container.
 local_resource('pocket: Watch & Compile', 'GOOS=linux go build -o bin/pocket-linux app/pocket/main.go', deps=deps)
@@ -75,7 +72,7 @@ ENTRYPOINT ["/start.sh", "/usr/local/bin/pocket", "-config=/configs/config.json"
     only=['./bin/pocket-linux', './build/'],
     live_update=[
         sync('./bin/pocket-linux', '/usr/local/bin/pocket'),
-        run('/restart.sh'),
+        run('/restart.sh'), # TODO(@okdas): add healthchecks as this is possibly catching some of the issues with running the validators, e.g. when postgres db is not provisioned yet?
     ]
 )
 
@@ -95,12 +92,17 @@ CMD ["/usr/local/bin/client"]
 # Makes Tilt aware of our own Custom Resource Definition from pocket-operator, so it can work with our operator.
 k8s_kind('PocketValidator', image_json_path='{.spec.pocketImage}')
 
+# Wait for postgres database to be available before deploying the validators.
+local_resource('wait-for-postgres-database', 'sleep 5 && kubectl wait postgresqls --for=jsonpath={.status.PostgresClusterStatus}=Running pocket-database')
+
+# Wait for pocket operator
+local_resource('wait-for-pocket-operator', 'kubectl wait --for=condition=available --timeout=600s --namespace=pocket-operator-system deployment pocket-operator-controller-manager')
+
 # Pushes localnet manifests to the cluster.
 k8s_yaml([
-    'build/localnet/postgres-database.yaml',
     'build/localnet/private-keys.yaml',
     'build/localnet/validators.yaml',
-    'build/localnet/cli-client.yaml', # TODO(@okdas): switch to https://github.com/tilt-dev/tilt-extensions/tree/master/deployment
+    'build/localnet/cli-client.yaml',
     'build/localnet/network.yaml'])
 
 # Exposes postgres port to 5432 on the host machine.

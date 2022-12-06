@@ -431,6 +431,18 @@ gen_genesis_and_config:
 clear_genesis_and_config:
 	rm build/config/gen.*.json
 
+.PHONY: localnet_up
+## Starts localnet with all dependencies (basically, `tilt up`)
+localnet_up:
+	tilt up
+
+.PHONY: localnet_down
+## Stops localnet and cleans up dependencies (basically, `tilt down` + resources might not be cleaned up by tilt)
+localnet_down:
+	tilt down --delete-namespaces
+	# kubectl delete --all --namespace=default pocketvalidators
+	kubectl get sts -n default --no-headers=true | awk '/v1-validator/{print $1}' | xargs kubectl delete -n default  sts
+
 .PHONY: check_cross_module_imports
 ## Lists cross-module imports
 check_cross_module_imports:
