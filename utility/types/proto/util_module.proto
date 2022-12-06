@@ -3,14 +3,6 @@ package utility;
 
 option go_package = "github.com/pokt-network/pocket/utility/types";
 
-import "google/protobuf/any.proto";
-
-enum UtilityMessageType {
-  UTILITY_MESSAGE_TYPE_UNSPECIFIED = 0;
-  UTILITY_MESSAGE_TYPE_TRANSACTION = 1;
-}
-
-message UtilityMessage {
-    string type = 1;
-    google.protobuf.Any data = 2;
+message TransactionGossip {
+  bytes tx = 1;
 }

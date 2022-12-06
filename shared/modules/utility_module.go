@@ -1,10 +1,14 @@
 package modules
 
+import "google.golang.org/protobuf/types/known/anypb"
+
 //go:generate mockgen -source=$GOFILE -destination=./mocks/utility_module_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
 
 type UtilityModule interface {
 	Module
 	ConfigurableModule
+
+	HandleMessage(*anypb.Any) error
 
 	// Creates a utilityContext with an underlying read-write persistenceContext; only 1 can exist at a time
 	NewContext(height int64) (UtilityContext, error)

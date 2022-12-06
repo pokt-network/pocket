@@ -10,10 +10,6 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
-var (
-	UtilityMessageContentType = "consensus.UtilityMessage"
-)
-
 func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
 	// Is the tx already in the mempool (in memory)?
 	txHash := typesUtil.TransactionHash(txProtoBytes)

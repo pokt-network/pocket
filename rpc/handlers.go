@@ -7,8 +7,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
-	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 func (s *rpcServer) GetV1Health(ctx echo.Context) error {
@@ -52,9 +52,8 @@ func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 
 // Broadcast to the entire validator set
 func (s *rpcServer) broadcastMessage(msgBz []byte) error {
-	utilMsg := &typesCons.UtilityMessage{
-		Type: typesCons.UtilityMessageType_UTILITY_MESSAGE_TRANSACTION,
-		Data: msgBz,
+	utilMsg := &typesUtil.TransactionGossip{
+		Tx: msgBz,
 	}
 
 	anyUtilityMessage, err := codec.GetCodec().ToAny(utilMsg)

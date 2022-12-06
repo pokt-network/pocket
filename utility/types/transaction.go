@@ -9,10 +9,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const (
-	UtilityMessageContentType = "utility.UtilityMessage"
-)
-
 func TransactionFromBytes(transaction []byte) (*Transaction, Error) {
 	tx := &Transaction{}
 	if err := codec.GetCodec().Unmarshal(transaction, tx); err != nil {

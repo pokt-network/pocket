@@ -161,8 +161,8 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 		log.Println("[NOOP] Received NodeStartedEvent")
 	case consensus.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
-	case consensus.UtilityMessageContentType:
-		return node.GetBus().GetUtilityModule().CheckTransaction().HandleMessage(message.Content)
+	case utility.TransactionGossipContentType:
+		return node.GetBus().GetUtilityModule().HandleMessage(message.Content)
 	case messaging.DebugMessageEventType:
 		return node.handleDebugMessage(message)
 	default:

@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	DefaultDenomination = 10
+	DefaultDenomination = 1
 )
 
 var max *big.Int

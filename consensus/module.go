@@ -249,18 +249,6 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
 			return err
 		}
-	case UtilityMessageContentType:
-		msg, err := codec.GetCodec().FromAny(message)
-		if err != nil {
-			return err
-		}
-		utilityMessage, ok := msg.(*typesCons.UtilityMessage)
-		if !ok {
-			return fmt.Errorf("failed to cast message to UtilityMessage")
-		}
-		if err := m.handleUtilityMessage(utilityMessage); err != nil {
-			return err
-		}
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
 	}

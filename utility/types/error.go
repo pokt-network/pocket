@@ -104,7 +104,7 @@ const (
 	CodeNotExistsError                    Code = 71
 	CodeGetMissedBlocksError              Code = 72
 	CodeEmptyHashError                    Code = 73
-	CodeInvalidBlockheightError           Code = 74
+	CodeInvalidBlockHeightError           Code = 74
 	CodeUnequalPublicKeysError            Code = 75
 	CodeUnequalVoteTypesError             Code = 76
 	CodeEqualVotesError                   Code = 77
@@ -161,6 +161,7 @@ const (
 	CodeStakeLessError                    Code = 128
 	CodeGetHeightError                    Code = 129
 	CodeUnknownActorType                  Code = 130
+	CodeUnknownMessageType                Code = 131
 
 	GetStakedTokensError              = "an error occurred getting the validator staked tokens"
 	SetValidatorStakedTokensError     = "an error occurred setting the validator staked tokens"
@@ -287,6 +288,7 @@ const (
 	InsufficientAmountError           = "the account has insufficient funds to complete the operation"
 	NegativeAmountError               = "the amount is negative"
 	UnknownActorTypeError             = "the actor type is not recognized"
+	UnknownMessageTypeError           = "the message being by the utility message is not recognized"
 )
 
 func ErrUnknownParam(paramName string) Error {
@@ -513,7 +515,7 @@ func ErrGetBlockHash(err error) Error {
 	return NewError(CodeGetBlockHashError, fmt.Sprintf("%s: %s", GetBlockHashError, err.Error()))
 }
 
-func ErrInvalidPublicKeylen(err error) Error {
+func ErrInvalidPublicKeyLen(err error) Error {
 	return NewError(CodeInvalidPublicKeyLenError, fmt.Sprintf("%s: %s", InvalidPublicKeyLenError, err.Error()))
 }
 
@@ -534,7 +536,7 @@ func ErrMaxEvidenceAge() Error {
 }
 
 func ErrInvalidBlockHeight() Error {
-	return NewError(CodeInvalidBlockheightError, InvalidBlockHeightError)
+	return NewError(CodeInvalidBlockHeightError, InvalidBlockHeightError)
 }
 
 func ErrInvalidEvidenceType() Error {
@@ -788,4 +790,8 @@ func ErrInitParams(err error) Error {
 
 func ErrUnknownActorType(actorType string) Error {
 	return NewError(CodeUnknownActorType, fmt.Sprintf("%s: %s", UnknownActorTypeError, actorType))
+}
+
+func ErrUnknownMessageType(messageType interface{}) Error {
+	return NewError(CodeUnknownMessageType, fmt.Sprintf("%s: %v", UnknownMessageTypeError, messageType))
 }
