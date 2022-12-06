@@ -18,28 +18,35 @@ func (u *UtilityContext) ApplyTransaction(index int, tx *typesUtil.Transaction) 
 	return tx.ToTxResult(u.LatestHeight, index, signer, msg.GetMessageRecipient(), msg.GetMessageName(), u.HandleMessage(msg))
 }
 
-func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
-	// validate transaction
-	txHash := typesUtil.TransactionHash(transactionProtoBytes)
+func (u *UtilityContext) CheckTransaction(txProtoBytes []byte) error {
+	// Is the tx already in the mempool (in memory)?
+	txHash := typesUtil.TransactionHash(txProtoBytes)
 	if u.Mempool.Contains(txHash) {
 		return typesUtil.ErrDuplicateTransaction()
 	}
+
+	// Is the tx already indexed (on disk)?
 	store := u.Store()
 	if txExists, err := store.TransactionExists(txHash); err != nil {
 		return err
 	} else if txExists {
-		// TODO non-ordered nonce requires non-pruned tx indexer
+		// TODO: non-ordered nonce requires non-pruned tx indexer
 		return typesUtil.ErrTransactionAlreadyCommitted()
 	}
+
+	// Can the tx bytes be decoded as a protobuf?
 	transaction := &typesUtil.Transaction{}
-	if err := codec.GetCodec().Unmarshal(transactionProtoBytes, transaction); err != nil {
+	if err := codec.GetCodec().Unmarshal(txProtoBytes, transaction); err != nil {
 		return typesUtil.ErrProtoUnmarshal(err)
 	}
+
+	// Is the transaction valid?
 	if err := transaction.ValidateBasic(); err != nil {
 		return err
 	}
-	// store in mempool
-	return u.Mempool.AddTransaction(transactionProtoBytes)
+
+	// Store the tx in the mempool
+	return u.Mempool.AddTransaction(txProtoBytes)
 }
 
 // CLEANUP: Exposed for testing purposes only

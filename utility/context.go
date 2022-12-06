@@ -10,8 +10,8 @@ import (
 
 type UtilityContext struct {
 	LatestHeight int64
-	Mempool      typesUtil.Mempool
-	Context      *Context // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
+	Mempool      typesUtil.Mempool // TODO: Look into accessing this directly from the module without needing to pass and save another pointer (e.g. access via bus)
+	Context      *Context          // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
 }
 
 // IMPROVE: Consider renaming to `persistenceContext` or `storeContext`?

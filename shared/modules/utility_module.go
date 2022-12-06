@@ -29,8 +29,8 @@ type UtilityContext interface {
 	Commit(quorumCert []byte) error // State commitment of the current context
 	GetPersistenceContext() PersistenceRWContext
 
-	// Validation operations
-	CheckTransaction(tx []byte) error // Validates the transaction and adds it to the mempool
+	// Basic Transaction validation. SIDE EFFECT: Adds the transaction to the mempool if valid.
+	CheckTransaction(tx []byte) error
 }
 
 type UnstakingActor interface {
