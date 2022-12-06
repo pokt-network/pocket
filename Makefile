@@ -19,7 +19,7 @@ VERBOSE_TEST ?= -v
 
 help:
 	printf "Available targets\n\n"
-	awk '/^[a-zA-Z\-\_0-9]+:/ { \
+	awk '/^[a-zA-Z\-\\_0-9]+:/ { \
 		helpMessage = match(lastLine, /^## (.*)/); \
 		if (helpMessage) { \
 			helpCommand = substr($$1, 0, index($$1, ":")-1); \
@@ -116,6 +116,7 @@ install_cli_deps:
 .PHONY: develop_start
 ## Run all of the make commands necessary to develop on the project
 develop_start:
+		make clean_mocks && \
 		make protogen_clean && make protogen_local && \
 		make go_clean_deps && \
 		make mockgen && \
@@ -221,16 +222,21 @@ docker_wipe_nodes: docker_check prompt_user db_drop
 monitoring_start: docker_check
 	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d grafana loki vm
 
-.PHONY: make docker_loki_install
+.PHONY: docker_loki_install
 ## Installs the loki docker driver
 docker_loki_install: docker_check
 	docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
 
+.PHONY: clean_mocks
+### Use `clean_mocks` to delete mocks before recreating them. Also useful to cleanup code that was generated from a different branch
+clean_mocks:
+	$(eval modules_dir = "shared/modules")
+	find ${modules_dir}/mocks -type f ! -name "mocks.go" -exec rm {} \;
+
 .PHONY: mockgen
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
-mockgen:
+mockgen: clean_mocks
 	$(eval modules_dir = "shared/modules")
-	find ${modules_dir}/mocks -maxdepth 1 -type f ! -name "mocks.go" -exec rm {} \;
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
@@ -287,12 +293,13 @@ generate_rpc_openapi: go_oapi-codegen
 	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
 	echo "OpenAPI client and server generated"
 
+.PHONY: swagger-ui
 ## Starts a local Swagger UI instance for the RPC API
 swagger-ui:
 	echo "Attempting to start Swagger UI at http://localhost:8080\n\n"
 	docker run -p 8080:8080 -e SWAGGER_JSON=/v1/openapi.yaml -v $(shell pwd)/rpc/v1:/v1 swaggerapi/swagger-ui
-.PHONY: generate_cli_commands_docs
 
+.PHONY: generate_cli_commands_docs
 ### (Re)generates the CLI commands docs (this is meant to be called by CI)
 generate_cli_commands_docs:
 	$(eval cli_docs_dir = "app/client/cli/doc/commands")
