@@ -269,11 +269,17 @@ func (p *paceMaker) getStepTimeout(round uint64) timePkg.Duration {
 }
 
 func (p *paceMaker) onBeforeNewHeight() {
-	event, _ := messaging.PackMessage(&messaging.BeforeHeightChangedEvent{CurrentHeight: p.consensusMod.CurrentHeight()})
+	event, err := messaging.PackMessage(&messaging.BeforeHeightChangedEvent{CurrentHeight: p.consensusMod.CurrentHeight()})
+	if err != nil {
+		log.Printf("[WARN] error packing message: %v\n", err)
+	}
 	p.GetBus().PublishEventToBus(event)
 }
 
 func (p *paceMaker) onAfterNewHeight() {
-	event, _ := messaging.PackMessage(&messaging.HeightChangedEvent{NewHeight: p.consensusMod.CurrentHeight()})
+	event, err := messaging.PackMessage(&messaging.HeightChangedEvent{NewHeight: p.consensusMod.CurrentHeight()})
+	if err != nil {
+		log.Printf("[WARN] error packing message: %v\n", err)
+	}
 	p.GetBus().PublishEventToBus(event)
 }
