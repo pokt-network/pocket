@@ -439,7 +439,7 @@ localnet_up:
 .PHONY: localnet_down
 ## Stops localnet and cleans up dependencies (basically, `tilt down` + resources might not be cleaned up by tilt)
 localnet_down:
-	tilt down --delete-namespaces
+	tilt down
 	# kubectl delete --all --namespace=default pocketvalidators
 	kubectl get sts -n default --no-headers=true | awk '/v1-validator/{print $1}' | xargs kubectl delete -n default  sts
 
