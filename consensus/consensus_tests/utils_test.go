@@ -45,6 +45,8 @@ var maxTxBytes = 90000
 var emptyByzValidators = make([][]byte, 0)
 var emptyTxs = make([][]byte, 0)
 
+const numValidators = 4
+
 // Initialize certain unit test configurations on startup.
 func init() {
 	flag.BoolVar(&failOnExtraMessages, "failOnExtraMessages", false, "Fail if unexpected additional messages are received")
@@ -317,8 +319,11 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
 
-	// here we are mocking 4 actors since we are considering the 4 nodes in the LocalNet genesis
-	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return([]modules.Actor{&modulesMock.MockActor{}, &modulesMock.MockActor{}, &modulesMock.MockActor{}, &modulesMock.MockActor{}}, nil).AnyTimes()
+	mockValidators := make([]modules.Actor, numValidators)
+	for i := 0; i < numValidators; i++ {
+		mockValidators[i] = &modulesMock.MockActor{}
+	}
+	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(mockValidators, nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
 	return persistenceMock
