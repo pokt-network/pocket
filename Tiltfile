@@ -3,13 +3,6 @@ load('ext://namespace', 'namespace_create')
 
 # TODO: add check k8s is 1.23, 1.24+ is supported once https://github.com/zalando/postgres-operator/issues/2098 is resolved.
 
-# TODO: add resource dependencies https://docs.tilt.dev/resource_dependencies.html#adding-resource_deps-for-startup-order
-# - validators depend on operator
-
-# TODO: cleanup resources on tilt down:
-# - pocket-database svc cleanup
-# - pocket validators are not getting removed
-
 # List of directories Tilt watches to trigger a hot-reload on changes
 deps = [
     'app',
@@ -28,7 +21,7 @@ deps = [
 
 # Verify pocket operator is available in the parent directory. We use pocket operator to maintain the workloads.
 if not os.path.exists('../pocket-operator'):
-  fail('Please "git clone" the git@github.com:pokt-network/pocket-operator.git repo in ../pocket-operator!')
+  fail('Please "git clone" the git@github.com:pokt-network/pocket-operator.git repo in ../pocket-operator! `git clone git@github.com:pokt-network/pocket-operator.git ../pocket-operator`')
 
 # TODO(@okdas): add check if the pocket-operator directory has no changes vs the remote and is behind the remote
 # to pull the latest changes. This will allow to iterate on operator at the same time as having working localnet,
@@ -93,7 +86,7 @@ CMD ["/usr/local/bin/client"]
 k8s_kind('PocketValidator', image_json_path='{.spec.pocketImage}')
 
 # Wait for postgres database to be available before deploying the validators.
-local_resource('wait-for-postgres-database', 'sleep 5 && kubectl wait postgresqls --for=jsonpath={.status.PostgresClusterStatus}=Running pocket-database')
+local_resource('wait-for-postgres-database', 'sleep 30 && kubectl wait postgresqls --for=jsonpath={.status.PostgresClusterStatus}=Running pocket-database')
 
 # Wait for pocket operator
 local_resource('wait-for-pocket-operator', 'kubectl wait --for=condition=available --timeout=600s --namespace=pocket-operator-system deployment pocket-operator-controller-manager')

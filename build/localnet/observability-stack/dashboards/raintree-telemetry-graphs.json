@@ -30,7 +30,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P4169E866C3094E38"
+        "uid": "PBFA97CFB590B2093"
       },
       "fieldConfig": {
         "defaults": {
@@ -73,14 +73,13 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "8.5.5",
+      "pluginVersion": "8.3.5",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P4169E866C3094E38"
+            "uid": "PBFA97CFB590B2093"
           },
-          "expr": "sum(p2p_nodes_started_counter)",
           "refId": "A"
         }
       ],
@@ -90,7 +89,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "P4169E866C3094E38"
+        "uid": "PBFA97CFB590B2093"
       },
       "fieldConfig": {
         "defaults": {
@@ -135,18 +134,13 @@
         },
         "showUnfilled": true
       },
-      "pluginVersion": "8.5.5",
+      "pluginVersion": "8.3.5",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "P4169E866C3094E38"
+            "uid": "PBFA97CFB590B2093"
           },
-          "editorMode": "code",
-          "expr": "consensus_blockchain_height_counter",
-          "interval": "1s",
-          "legendFormat": "{{instance}}",
-          "range": true,
           "refId": "A"
         }
       ],
@@ -158,10 +152,6 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -188,7 +178,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.5.5",
+      "pluginVersion": "8.3.5",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -202,7 +192,7 @@
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "expr": "avg by (blockheight, instance) (sum by (blockheight) (count_over_time({host=\"docker-desktop\"}\n    |= \"[EVENT] event_metrics_namespace_p2p raintree_message_event_metric \"\n    | pattern `<datetime> <_> <time> <type> <namespace> <metric> <_> <blockheight>`[6s])))",
+          "expr": "avg by (blockheight, instance) (sum by (blockheight) (count_over_time({container=\"pocket-validator\"} |= \"[EVENT] event_metrics_namespace_p2p raintree_message_event_metric\" | json | line_format \"{{ .log }}\" | pattern `<date> <time> <type> <_> <metric_name> <_> <blockheight> <step> <validator_role>`[6s])))",
           "queryType": "range",
           "refId": "A"
         }
@@ -255,10 +245,6 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -285,7 +271,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.5.5",
+      "pluginVersion": "8.3.5",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -299,7 +285,7 @@
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "expr": "avg by (blockheight, instance) (sum by (blockheight) (count_over_time({host=\"docker-desktop\"}\n    |= \"[EVENT] event_metrics_namespace_p2p broadcast_message_redundancy_per_block_event_metric\"\n    | pattern `<datetime> <_> <time> <type> <_> <redundancy> <_> <hashstring> <_> <blockheight>`[6s])))",
+          "expr": "avg by (blockheight, instance) (sum by (blockheight) (count_over_time({container=\"pocket-validator\"} |= \"[EVENT] event_metrics_namespace_p2p broadcast_message_redundancy_per_block_event_metric\" | json | line_format \"{{ .log }}\" | pattern `<date> <time> <type> <_> <redundancy> <_> <hashstring> <_> <blockheight>`[6s])))\n    \n",
           "queryType": "range",
           "refId": "A"
         }
@@ -352,10 +338,6 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
-      },
       "description": "",
       "fill": 1,
       "fillGradient": 0,
@@ -383,7 +365,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "8.5.5",
+      "pluginVersion": "8.3.5",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -397,7 +379,7 @@
             "type": "loki",
             "uid": "P8E80F9AEF21F6940"
           },
-          "expr": "sum by (blockheight) ( count_over_time({host=\"docker-desktop\"} |= \"[EVENT] event_metrics_namespace_consensus\" | pattern `<datetime> <_> <time> <type> <_> <metric_name> <_> <blockheight> <step> <validator_role>`[6s] ) )",
+          "expr": "sum by (blockheight) ( count_over_time({container=\"pocket-validator\"} |= \"[EVENT] event_metrics_namespace_consensus\" | json | line_format \"{{ .log }}\" | pattern `<date> <time> <type> <_> <metric_name> <_> <blockheight> <step> <validator_role>`[6s] ) )",
           "queryType": "range",
           "refId": "A"
         }
@@ -447,7 +429,7 @@
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 36,
+  "schemaVersion": 34,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -461,6 +443,6 @@
   "timezone": "",
   "title": "Pocket Performance and Correctness Graphs",
   "uid": "QwQkEmj7k",
-  "version": 4,
+  "version": 1,
   "weekStart": ""
 }
