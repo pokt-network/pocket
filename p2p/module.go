@@ -46,7 +46,6 @@ func (m *p2pModule) HandleEvent(message *anypb.Any) error {
 		}
 
 		m.broadcastAddressBookAtHeight(event.CurrentHeight)
-
 	default:
 		return typesP2P.ErrUnknownEventType(message.MessageName())
 	}
