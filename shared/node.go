@@ -162,13 +162,6 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	case messaging.BeforeHeightChangedEventType:
 		log.Println("Received BeforeNewHeightEvent")
 		node.GetBus().GetP2PModule().HandleEvent(message.Content)
-	case messaging.AddressBookAtHeightEventType:
-		log.Printf("Received AddressBookAtHeightEvent: %v\n", message.Content)
-		// DISCUSS (deblasis): here we'd delegate a module to handle the event.
-		// We need an open PersistenceRWContext where we can update the validator list (sounds like churn management).
-		// The recent changes (StateHash) made me question/revisit my initial implementation.
-		// Should the addressbook be considered separately from the "ValidatorMap" (currently)?
-
 	case messaging.HeightChangedEventType:
 		log.Println("[NOOP] Received HeightChangedEventType")
 	case consensus.HotstuffMessageContentType:

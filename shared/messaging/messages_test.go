@@ -36,10 +36,6 @@ func TestPocketEnvelope_GetContentType(t *testing.T) {
 			msg:             &messaging.HeightChangedEvent{},
 			wantContentType: messaging.HeightChangedEventType,
 		},
-		{
-			msg:             &messaging.AddressBookAtHeight{},
-			wantContentType: messaging.AddressBookAtHeightEventType,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(fmt.Sprintf("GetContentType %T", tt.msg), func(t *testing.T) {
