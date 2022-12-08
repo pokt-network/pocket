@@ -9,9 +9,9 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-func ActorToAddrBook(cfg modules.P2PConfig, validators map[string]modules.Actor) (typesP2P.AddrBook, error) {
+func ActorToAddrBook(cfg modules.P2PConfig, actors map[string]modules.Actor) (typesP2P.AddrBook, error) {
 	book := make(typesP2P.AddrBook, 0)
-	for _, v := range validators {
+	for _, v := range actors {
 		networkPeer, err := ActorToNetworkPeer(cfg, v)
 		if err != nil {
 			log.Println("[WARN] Error connecting to validator: ", err)
