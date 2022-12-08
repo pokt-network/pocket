@@ -46,6 +46,7 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: install cli dependencies
         run: make install_cli_deps
       - name: generate protobufs, RPC server, RPC client and mocks
