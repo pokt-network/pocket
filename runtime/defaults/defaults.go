@@ -30,4 +30,5 @@ var (
 	DefaultRpcPort             = defaultRPCPort
 	DefaultRpcTimeout          = uint64(defaultRPCTimeout)
 	DefaultRemoteCLIURL        = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaultRPCPort)
+	DefaultP2PMempoolMaxNonces = uint64(1e6)
 )

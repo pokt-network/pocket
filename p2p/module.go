@@ -141,9 +141,9 @@ func (m *p2pModule) Start() error {
 		if m.GetBus().GetPersistenceModule() == nil {
 			// we are getting called by the client and we use the "legacy behaviour"
 			// TODO (team): improve this.
-			m.network = raintree.NewRainTreeNetwork(m.address, addrBook)
+			m.network = raintree.NewRainTreeNetwork(m.address, addrBook, m.p2pCfg)
 		} else {
-			m.network = raintree.NewRainTreeNetworkWithAddrBookProvider(m.address, m.getAddrBookPerHeight, currentHeight)
+			m.network = raintree.NewRainTreeNetworkWithAddrBookProvider(m.address, m.getAddrBookPerHeight, currentHeight, m.p2pCfg)
 		}
 	} else {
 		m.network = stdnetwork.NewNetwork(addrBook)

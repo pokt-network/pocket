@@ -1,4 +1,5 @@
 syntax = "proto3";
+
 package p2p;
 
 option go_package = "github.com/pokt-network/pocket/p2p/types";
@@ -8,6 +9,7 @@ message P2PConfig {
   uint32 consensus_port = 2;
   bool use_rain_tree = 3;
   bool is_empty_connection_type = 4; // TODO (Drewsky) switch back to enum
+  uint64 mempool_max_nonces = 5; // this is used to limit the number of nonces that can be stored in the mempool, after which a FIFO mechanism is used to remove the oldest nonces and make space for the new ones
 }
 
 enum ConnectionType {
