@@ -55,6 +55,7 @@ type P2PConfig interface {
 	GetConsensusPort() uint32
 	GetUseRainTree() bool
 	GetIsEmptyConnectionType() bool // TODO : make enum
+	GetMempoolMaxNonces() uint64
 }
 
 type TelemetryConfig interface {

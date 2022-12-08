@@ -18,8 +18,6 @@ import (
 var _ typesP2P.Network = &rainTreeNetwork{}
 var _ modules.IntegratableModule = &rainTreeNetwork{}
 
-const mempoolMaxNonces = 1e6 // 1 million rolling nonces. The oldest will be pruned in favor of the newest when this threshold is reached
-
 type rainTreeNetwork struct {
 	bus modules.Bus
 
@@ -29,27 +27,31 @@ type rainTreeNetwork struct {
 	peersManager *peersManager
 
 	// TODO (#278): What should we use for de-duping messages within P2P?
-	mempool      map[uint64]struct{}
-	mempool_keys []uint64
+	// TODO (team): we should generalize and use the FIFOMempool (in utility/types/mempool.go at the time of writing) in here as well for this. Same concept
+	nonceSet         map[uint64]struct{}
+	nonceList        []uint64
+	mampoolMaxNonces uint64
 }
 
-func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) typesP2P.Network {
+func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook, p2pCfg modules.P2PConfig) typesP2P.Network {
 	pm, err := newPeersManager(addr, addrBook, true)
 	if err != nil {
 		log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManager: %v", err)
 	}
 
+	mempoolMaxNonces := p2pCfg.GetMempoolMaxNonces()
 	n := &rainTreeNetwork{
-		selfAddr:     addr,
-		peersManager: pm,
-		mempool:      make(map[uint64]struct{}),
-		mempool_keys: make([]uint64, 0, mempoolMaxNonces),
+		selfAddr:         addr,
+		peersManager:     pm,
+		nonceSet:         make(map[uint64]struct{}),
+		nonceList:        make([]uint64, 0, mempoolMaxNonces),
+		mampoolMaxNonces: mempoolMaxNonces,
 	}
 
 	return typesP2P.Network(n)
 }
 
-func NewRainTreeNetworkWithAddrBookProvider(addr cryptoPocket.Address, addrBookProvider typesP2P.AddrBookProvider, height uint64) typesP2P.Network {
+func NewRainTreeNetworkWithAddrBookProvider(addr cryptoPocket.Address, addrBookProvider typesP2P.AddrBookProvider, height uint64, p2pCfg modules.P2PConfig) typesP2P.Network {
 	addrBook, err := addrBookProvider(height)
 	if err != nil {
 		log.Fatalf("[ERROR] Error getting addrBook from addrBookProvider: %v", err)
@@ -64,8 +66,8 @@ func NewRainTreeNetworkWithAddrBookProvider(addr cryptoPocket.Address, addrBookP
 		selfAddr:         addr,
 		addrBookProvider: addrBookProvider,
 		peersManager:     pm,
-		mempool:          make(map[uint64]struct{}),
-		mempool_keys:     make([]uint64, 0, mempoolMaxNonces),
+		nonceSet:         make(map[uint64]struct{}),
+		nonceList:        make([]uint64, 0, p2pCfg.GetMempoolMaxNonces()),
 	}
 
 	return typesP2P.Network(n)
@@ -191,7 +193,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
 	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
-	if _, contains := n.mempool[rainTreeMsg.Nonce]; contains {
+	if _, contains := n.nonceSet[rainTreeMsg.Nonce]; contains {
 		n.GetBus().
 			GetTelemetryModule().
 			GetEventMetricsAgent().
@@ -205,12 +207,12 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		return nil, nil
 	}
 
-	n.mempool[rainTreeMsg.Nonce] = struct{}{}
-	n.mempool_keys = append(n.mempool_keys, rainTreeMsg.Nonce)
-	if len(n.mempool_keys) > mempoolMaxNonces {
+	n.nonceSet[rainTreeMsg.Nonce] = struct{}{}
+	n.nonceList = append(n.nonceList, rainTreeMsg.Nonce)
+	if uint64(len(n.nonceList)) > n.mampoolMaxNonces {
 		// removing the oldest nonce and the oldest key from the slice
-		delete(n.mempool, n.mempool_keys[0])
-		n.mempool_keys = n.mempool_keys[1:]
+		delete(n.nonceSet, n.nonceList[0])
+		n.nonceList = n.nonceList[1:]
 	}
 
 	// Return the data back to the caller so it can be handled by the app specific bus

@@ -45,6 +45,8 @@ var maxTxBytes = 90000
 var emptyByzValidators = make([][]byte, 0)
 var emptyTxs = make([][]byte, 0)
 
+const numValidators = 4
+
 // Initialize certain unit test configurations on startup.
 func init() {
 	flag.BoolVar(&failOnExtraMessages, "failOnExtraMessages", false, "Fail if unexpected additional messages are received")

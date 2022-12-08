@@ -40,38 +40,18 @@ func (m *p2pModule) HandleEvent(message *anypb.Any) error {
 		if err != nil {
 			return err
 		}
-		event, ok := msg.(*messaging.BeforeHeightChangedEvent)
+		_, ok := msg.(*messaging.BeforeHeightChangedEvent)
 		if !ok {
 			return fmt.Errorf("failed to cast message to BeforeHeightChangedEvent")
 		}
 
-		m.broadcastAddressBookAtHeight(event.CurrentHeight)
+		// DISCUSS (https://github.com/pokt-network/pocket/pull/374#issuecomment-1341350786): decide if we want a pull or push model for integrating with persistence
+		// I am leaving this code while we are in code-review as a placeholder but it will be either removed or implemented fully
+		// with P2P handling the message and adjusting the addrBook accordingly
 
 	default:
 		return typesP2P.ErrUnknownEventType(message.MessageName())
 	}
-	return nil
-}
-
-// broadcastAddressBookAtHeight broadcasts on the event bus the address book at the given height
-func (m *p2pModule) broadcastAddressBookAtHeight(height uint64) error {
-	addrBook := m.network.GetAddrBook()
-	networkPeers := make([]*messaging.NetworkPeer, len(addrBook))
-	for i, peer := range addrBook {
-		networkPeers[i] = &messaging.NetworkPeer{
-			Address:    peer.Address,
-			PublicKey:  peer.PublicKey.Bytes(),
-			ServiceUrl: peer.ServiceUrl,
-		}
-	}
-	message, err := messaging.PackMessage(&messaging.AddressBookAtHeight{
-		NetworkPeers: networkPeers,
-		Height:       height,
-	})
-	if err != nil {
-		return err
-	}
-	m.GetBus().PublishEventToBus(message)
 	return nil
 }
 
@@ -161,9 +141,9 @@ func (m *p2pModule) Start() error {
 		if m.GetBus().GetPersistenceModule() == nil {
 			// we are getting called by the client and we use the "legacy behaviour"
 			// TODO (team): improve this.
-			m.network = raintree.NewRainTreeNetwork(m.address, addrBook)
+			m.network = raintree.NewRainTreeNetwork(m.address, addrBook, m.p2pCfg)
 		} else {
-			m.network = raintree.NewRainTreeNetworkWithAddrBookProvider(m.address, m.getAddrBookPerHeight, currentHeight)
+			m.network = raintree.NewRainTreeNetworkWithAddrBookProvider(m.address, m.getAddrBookPerHeight, currentHeight, m.p2pCfg)
 		}
 	} else {
 		m.network = stdnetwork.NewNetwork(addrBook)

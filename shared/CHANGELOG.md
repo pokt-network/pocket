@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.5] - 2022-12-04
 
-- Added `AddressBookAtHeight` message used cross-module broadcast of the address book right before we reach a new Height.
 - Added `BeforeHeightChangedEvent` and `HeightChangedEvent` events that respectively signal the other modules that we are about to change the Height and that we have changed the Height.
 
 ## [0.0.0.4] - 2022-11-30
