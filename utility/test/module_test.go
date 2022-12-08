@@ -3,7 +3,6 @@ package test
 import (
 	"encoding/hex"
 	"log"
-	"math/big"
 	"os"
 	"testing"
 
@@ -28,12 +27,13 @@ const (
 
 var (
 	defaultTestingChainsEdited = []string{"0002"}
-	defaultUnstaking           = int64(2017)
-	defaultSendAmount          = big.NewInt(10000)
-	defaultNonceString         = utilTypes.BigIntToString(defaults.DefaultAccountAmount)
-	defaultSendAmountString    = utilTypes.BigIntToString(defaultSendAmount)
-	testSchema                 = "test_schema"
-	testMessageSendType        = "MessageSend"
+
+	defaultUnstaking   = int64(2017)
+	defaultNonceString = utilTypes.BigIntToString(defaults.DefaultAccountAmount)
+
+	testNonce           = "defaultNonceString"
+	testSchema          = "test_schema"
+	testMessageSendType = "MessageSend"
 )
 
 var testPersistenceMod modules.PersistenceModule // initialized in TestMain

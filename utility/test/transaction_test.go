@@ -11,7 +11,12 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
+	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
+)
+
+var (
+	defaultSendAmount = big.NewInt(10000)
 )
 
 func TestUtilityContext_AnteHandleMessage(t *testing.T) {
@@ -134,25 +139,26 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingAmount, amountSent *big.Int, signer crypto.PrivateKey) {
-	cdc := codec.GetCodec()
-	recipient := GetAllTestingAccounts(t, ctx)[2] // Using index 2 to prevent a collision with the first Validator who is the proposer in tests
+func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
+	amountSent = new(big.Int).Set(defaultSendAmount)
+	startingBalance = new(big.Int).Set(defaults.DefaultAccountAmount)
 
-	signer, err := crypto.GeneratePrivateKey()
+	recipientAddr, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
-	startingAmount = defaults.DefaultAccountAmount
+	signer, err = crypto.GeneratePrivateKey()
+	require.NoError(t, err)
+
 	signerAddr := signer.Address()
-	require.NoError(t, ctx.SetAccountAmount(signerAddr, startingAmount))
-	amountSent = defaultSendAmount
-	addrBz, err := hex.DecodeString(recipient.GetAddress())
+	require.NoError(t, ctx.SetAccountAmount(signerAddr, startingBalance))
+
+	msg := NewTestingSendMessage(t, signerAddr, recipientAddr.Bytes(), utilTypes.BigIntToString(amountSent))
+	any, err := codec.GetCodec().ToAny(&msg)
 	require.NoError(t, err)
-	msg := NewTestingSendMessage(t, signerAddr, addrBz, defaultSendAmountString)
-	any, err := cdc.ToAny(&msg)
-	require.NoError(t, err)
+
 	transaction = &typesUtil.Transaction{
 		Msg:   any,
-		Nonce: defaultNonceString,
+		Nonce: testNonce,
 	}
 	require.NoError(t, transaction.Sign(signer))
 
