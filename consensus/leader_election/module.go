@@ -55,19 +55,23 @@ func (m *leaderElectionModule) GetBus() modules.Bus {
 }
 
 func (m *leaderElectionModule) ElectNextLeader(message *typesCons.HotstuffMessage) (typesCons.NodeId, error) {
-	return m.electNextLeaderDeterministicRoundRobin(message), nil
+	nodeId, err := m.electNextLeaderDeterministicRoundRobin(message)
+	if err != nil {
+		return typesCons.NodeId(0), err
+	}
+	return nodeId, nil
 }
 
-func (m *leaderElectionModule) electNextLeaderDeterministicRoundRobin(message *typesCons.HotstuffMessage) typesCons.NodeId {
+func (m *leaderElectionModule) electNextLeaderDeterministicRoundRobin(message *typesCons.HotstuffMessage) (typesCons.NodeId, error) {
 	value := int64(message.Height) + int64(message.Round) + int64(message.Step) - 1
 
 	ctx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(message.Height))
 	if err != nil {
-		log.Fatal(err)
+		return typesCons.NodeId(0), err
 	}
 	vals, err := ctx.GetAllValidators(int64(message.Height))
 	if err != nil {
-		log.Fatal(err)
+		return typesCons.NodeId(0), err
 	}
-	return typesCons.NodeId(value%int64(len(vals)) + 1)
+	return typesCons.NodeId(value%int64(len(vals)) + 1), nil
 }
