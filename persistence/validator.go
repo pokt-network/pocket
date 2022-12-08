@@ -104,17 +104,17 @@ func (p PostgresContext) GetValidatorOutputAddress(operator []byte, height int64
 	return p.GetActorOutputAddress(types.ValidatorActor, operator, height)
 }
 
-// TODO(team): implement missed blocks
+// TODO: implement missed blocks
 func (p PostgresContext) SetValidatorPauseHeightAndMissedBlocks(address []byte, pausedHeight int64, missedBlocks int) error {
 	return nil
 }
 
-// TODO(team): implement missed blocks
+// TODO: implement missed blocks
 func (p PostgresContext) SetValidatorMissedBlocks(address []byte, missedBlocks int) error {
 	return nil
 }
 
-// TODO(team): implement missed blocks
+// TODO: implement missed blocks
 func (p PostgresContext) GetValidatorMissedBlocks(address []byte, height int64) (int, error) {
 	return 0, nil
 }
