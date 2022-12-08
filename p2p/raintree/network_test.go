@@ -16,6 +16,7 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockP2PCfg := mock_modules.NewMockP2PConfig(ctrl)
 	mockP2PCfg.EXPECT().GetMempoolMaxNonces().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
+
 	// starting with an empty address book and only self
 	selfAddr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
