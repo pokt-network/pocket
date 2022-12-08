@@ -242,7 +242,7 @@ mockgen: clean_mocks
 
 	$(eval p2p_types_dir = "p2p/types")
 	$(eval p2p_type_mocks_dir = "p2p/types/mocks")
-	rm -rf ${p2p_type_mocks_dir}
+	find ${p2p_type_mocks_dir} -type f ! -name "mocks.go" -exec rm {} \;
 	go generate ./${p2p_types_dir}
 	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
 
