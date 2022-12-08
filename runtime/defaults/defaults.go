@@ -13,6 +13,7 @@ const (
 	defaultRPCTimeout = 30000
 )
 
+// TODO: some of these defaults are used for production while others are used for testing. Need to separate them.
 var (
 	DefaultChains              = []string{"0001"}
 	DefaultServiceURL          = ""
