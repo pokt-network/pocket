@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"

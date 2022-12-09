@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.12] - 2022-12-06
+
+- Removed unused `consensus.UtilityMessage`
+
 ## [0.0.0.11] - 2022-12-04
 
 - The `Pacemaker` now emits `BeforeHeightChangedEvent` events when the height is about to change.

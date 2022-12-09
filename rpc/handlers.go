@@ -7,6 +7,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/pokt-network/pocket/app"
+	"github.com/pokt-network/pocket/shared/codec"
+	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
 func (s *rpcServer) GetV1Health(ctx echo.Context) error {
@@ -18,24 +20,24 @@ func (s *rpcServer) GetV1Version(ctx echo.Context) error {
 }
 
 func (s *rpcServer) PostV1ClientBroadcastTxSync(ctx echo.Context) error {
-	params := new(RawTXRequest)
-	if err := ctx.Bind(params); err != nil {
+	txParams := new(RawTXRequest)
+	if err := ctx.Bind(txParams); err != nil {
 		return ctx.String(http.StatusBadRequest, "bad request")
 	}
-	bz, err := hex.DecodeString(params.RawHexBytes)
+
+	txBz, err := hex.DecodeString(txParams.RawHexBytes)
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, "cannot decode tx bytes")
 	}
-	height := s.GetBus().GetConsensusModule().CurrentHeight()
-	uCtx, err := s.GetBus().GetUtilityModule().NewContext(int64(height))
-	if err != nil {
-		defer func() { log.Fatalf("[ERROR] Failed to create UtilityContext: %v", err) }()
+
+	if err = s.GetBus().GetUtilityModule().CheckTransaction(txBz); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
-	err = uCtx.CheckTransaction(bz)
-	if err != nil {
+
+	if err := s.broadcastMessage(txBz); err != nil {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
+
 	return nil
 }
 
@@ -46,4 +48,23 @@ func (s *rpcServer) GetV1ConsensusState(ctx echo.Context) error {
 		Round:  int64(consensus.CurrentRound()),
 		Step:   int64(consensus.CurrentStep()),
 	})
+}
+
+// Broadcast to the entire validator set
+func (s *rpcServer) broadcastMessage(msgBz []byte) error {
+	utilMsg := &typesUtil.TransactionGossipMessage{
+		Tx: msgBz,
+	}
+
+	anyUtilityMessage, err := codec.GetCodec().ToAny(utilMsg)
+	if err != nil {
+		log.Printf("[ERROR] Failed to create Any proto from transaction gossip: %v", err)
+		return err
+	}
+
+	if err := s.GetBus().GetP2PModule().Broadcast(anyUtilityMessage); err != nil {
+		log.Printf("[ERROR] Failed to broadcast utility message: %v", err)
+		return err
+	}
+	return nil
 }

@@ -9,6 +9,10 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 
 ## [Unreleased]
 
+## [0.0.0.10] - 2022-12-06
+
+- Changed the scope of `TransactionExists` from the `PostgresContext` to the `PersistenceModule`
+
 ## [0.0.0.9] - 2022-11-30
 
 Core StateHash changes
