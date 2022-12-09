@@ -4,8 +4,10 @@ import (
 	"encoding/hex"
 	"log"
 	"os"
+	"reflect"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime"
@@ -13,6 +15,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
+	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/utility"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
@@ -66,6 +69,9 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
+	// TODO(#388): Expose a `GetMempool` function in `utility_module` so we can remove this reflection.
+	mempool := reflect.ValueOf(testUtilityMod).Elem().FieldByName("Mempool").Interface().(utilTypes.Mempool)
+
 	// TECHDEBT: Move the internal of cleanup into a separate function and call this in the
 	// beginning of every test. This (the current implementation) is an issue because if we call
 	// `NewTestingUtilityContext` more than once in a single test, we create unnecessary calls to clean.
@@ -75,11 +81,12 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
 			Message: nil,
 		}))
+		mempool.Clear()
 	})
 
 	return utility.UtilityContext{
 		Height:  height,
-		Mempool: NewTestingMempool(t),
+		Mempool: mempool,
 		Context: &utility.Context{
 			PersistenceRWContext: persistenceContext,
 			SavePointsM:          make(map[string]struct{}),
@@ -89,13 +96,19 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 }
 
 func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
-	cfg := runtime.NewConfig(&runtime.BaseConfig{}, runtime.WithPersistenceConfig(&types.PersistenceConfig{
-		PostgresUrl:    databaseUrl,
-		NodeSchema:     testSchema,
-		BlockStorePath: "",
-		TxIndexerPath:  "",
-		TreesStoreDir:  "",
-	}))
+	cfg := runtime.NewConfig(
+		&runtime.BaseConfig{},
+		runtime.WithPersistenceConfig(&types.PersistenceConfig{
+			PostgresUrl:    databaseUrl,
+			NodeSchema:     testSchema,
+			BlockStorePath: "",
+			TxIndexerPath:  "",
+			TreesStoreDir:  "",
+		}),
+		runtime.WithUtilityConfig(&utilTypes.UtilityConfig{
+			MaxMempoolTransactionBytes: 1000000,
+			MaxMempoolTransactions:     1000,
+		}))
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
 	return runtimeCfg
@@ -109,7 +122,27 @@ func newTestUtilityModule(runtimeCfg *runtime.Manager) modules.UtilityModule {
 	return utilityMod.(modules.UtilityModule)
 }
 
-// TODO: Eventually, we want to fully mock the persistence module within the context of utility tests
+// IMPROVE: Not part of `TestMain` because a mock requires `testing.T` to be initialized.
+// We are trying to only initialize one `testPersistenceModule` in all the tests, so when the
+// utility module tests are no longer dependant on the persistence module explicitly, this
+// can be improved.
+func mockBusInTestModules(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	busMock := modulesMock.NewMockBus(ctrl)
+	busMock.EXPECT().GetPersistenceModule().Return(testPersistenceMod).AnyTimes()
+	busMock.EXPECT().GetUtilityModule().Return(testUtilityMod).AnyTimes()
+
+	testPersistenceMod.SetBus(busMock)
+	testUtilityMod.SetBus(busMock)
+
+	t.Cleanup(func() {
+		testPersistenceMod.SetBus(nil)
+		testUtilityMod.SetBus(nil)
+	})
+}
+
+// TODO(#290): Mock the persistence module so the utility module is not dependant on it.
 func newTestPersistenceModule(runtimeCfg *runtime.Manager) modules.PersistenceModule {
 	persistenceMod, err := persistence.Create(runtimeCfg)
 	if err != nil {

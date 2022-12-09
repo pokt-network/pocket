@@ -8,6 +8,7 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
+// TODO: The implementation of `UtilityContext` should not be exposed.
 type UtilityContext struct {
 	Height  int64
 	Mempool typesUtil.Mempool // IMPROVE: Look into accessing this directly from the module without needing to pass and save another pointer (e.g. access via bus)
