@@ -65,11 +65,11 @@ func (m *leaderElectionModule) ElectNextLeader(message *typesCons.HotstuffMessag
 func (m *leaderElectionModule) electNextLeaderDeterministicRoundRobin(message *typesCons.HotstuffMessage) (typesCons.NodeId, error) {
 	value := int64(message.Height) + int64(message.Round) + int64(message.Step) - 1
 
-	ctx, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(message.Height))
+	uCtx, err := m.GetBus().GetUtilityModule().NewContext(int64(message.Height))
 	if err != nil {
 		return typesCons.NodeId(0), err
 	}
-	vals, err := ctx.GetAllValidators(int64(message.Height))
+	vals, err := uCtx.GetPersistenceContext().GetAllValidators(int64(message.Height))
 	if err != nil {
 		return typesCons.NodeId(0), err
 	}
