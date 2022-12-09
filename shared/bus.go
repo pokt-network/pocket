@@ -128,44 +128,44 @@ func CreateBusWithOptionalModules(
 	return bus
 }
 
-func (m bus) PublishEventToBus(e *messaging.PocketEnvelope) {
+func (m *bus) PublishEventToBus(e *messaging.PocketEnvelope) {
 	m.channel <- *e
 }
 
-func (m bus) GetBusEvent() *messaging.PocketEnvelope {
+func (m *bus) GetBusEvent() *messaging.PocketEnvelope {
 	e := <-m.channel
 	return &e
 }
 
-func (m bus) GetEventBus() modules.EventsChannel {
+func (m *bus) GetEventBus() modules.EventsChannel {
 	return m.channel
 }
 
-func (m bus) GetPersistenceModule() modules.PersistenceModule {
+func (m *bus) GetPersistenceModule() modules.PersistenceModule {
 	return m.persistence
 }
 
-func (m bus) GetP2PModule() modules.P2PModule {
+func (m *bus) GetP2PModule() modules.P2PModule {
 	return m.p2p
 }
 
-func (m bus) GetUtilityModule() modules.UtilityModule {
+func (m *bus) GetUtilityModule() modules.UtilityModule {
 	return m.utility
 }
 
-func (m bus) GetConsensusModule() modules.ConsensusModule {
+func (m *bus) GetConsensusModule() modules.ConsensusModule {
 	return m.consensus
 }
 
-func (m bus) GetTelemetryModule() modules.TelemetryModule {
+func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
 }
 
-func (m bus) GetLoggerModule() modules.LoggerModule {
+func (m *bus) GetLoggerModule() modules.LoggerModule {
 	return m.logger
 }
 
-func (m bus) GetRPCModule() modules.RPCModule {
+func (m *bus) GetRPCModule() modules.RPCModule {
 	return m.rpc
 }
 

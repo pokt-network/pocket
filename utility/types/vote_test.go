@@ -1,9 +1,10 @@
 package types
 
 import (
+	"testing"
+
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestVoteValidateBasic(t *testing.T) {
@@ -22,7 +23,7 @@ func TestVoteValidateBasic(t *testing.T) {
 	v2 := v
 	v2.PublicKey = []byte("not_a_public_key")
 	badPkLen := len(v2.PublicKey)
-	require.Equal(t, v2.ValidateBasic(), ErrInvalidPublicKeylen(crypto.ErrInvalidPublicKeyLen(badPkLen)))
+	require.Equal(t, v2.ValidateBasic(), ErrInvalidPublicKeyLen(crypto.ErrInvalidPublicKeyLen(badPkLen)))
 	// no public key
 	v2.PublicKey = nil
 	require.Equal(t, v2.ValidateBasic(), ErrEmptyPublicKey())

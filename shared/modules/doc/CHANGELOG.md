@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.5] - 2022-12-07
+
+- Changed the scope of `TransactionExists` from the `PostgresContext` to the `PersistenceModule`
+
 ## [0.0.0.4] - 2022-11-30
 
 - Removed `GetPrevHash` and just using `GetBlockHash` instead
