@@ -37,6 +37,9 @@ The demo showcases a successful end-to-end transaction that includes the followi
 ```bash
 m̶a̶k̶e̶ ̶d̶o̶c̶k̶e̶r̶_̶w̶i̶p̶e̶ # [Optional] Clear everything (takes a long time)
 make # show all the commands
+make install_cli_deps # install the CLI dependencies
+make protogen_local # generate the protobuf files
+make generate_rpc_openapi # generate the OpenAPI spec
 make docker_wipe_nodes # clear all the 4 validator nodes
 make db_drop # clear the existing database
 make compose_and_watch # Start 4 validator node LocalNet
