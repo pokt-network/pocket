@@ -21,6 +21,9 @@ type PersistenceModule interface {
 	GetBlockStore() kvstore.KVStore
 	NewWriteContext() PersistenceRWContext
 
+	// Indexer Queries
+	TransactionExists(transactionHash string) (bool, error)
+
 	// Debugging / development only
 	HandleDebugMessage(*messaging.DebugMessage) error
 }
@@ -128,8 +131,6 @@ type PersistenceReadContext interface {
 	GetBlockHash(height int64) ([]byte, error)     // Returns the app hash corresponding to the height provided
 	GetProposerAddr() []byte                       // Returns the proposer set via `SetProposalBlock`
 	GetBlocksPerSession(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
-	// Indexer Queries
-	TransactionExists(transactionHash string) (bool, error)
 
 	// Pool Queries
 

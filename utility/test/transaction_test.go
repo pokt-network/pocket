@@ -58,16 +58,19 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 }
 
 func TestUtilityContext_CheckTransaction(t *testing.T) {
+	mockBusInTestModules(t)
+
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
+
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
-	require.NoError(t, ctx.CheckTransaction(txBz))
+	require.NoError(t, testUtilityMod.CheckTransaction(txBz))
+
 	hash, err := tx.Hash()
 	require.NoError(t, err)
-	require.True(t, ctx.Mempool.Contains(hash))
-	er := ctx.CheckTransaction(txBz)
-	require.Equal(t, er.Error(), typesUtil.ErrDuplicateTransaction().Error())
+	require.True(t, ctx.Mempool.Contains(hash)) // IMPROVE: Access the mempool from the `testUtilityMod` directly
+	require.Equal(t, testUtilityMod.CheckTransaction(txBz).Error(), typesUtil.ErrDuplicateTransaction().Error())
 
 	test_artifacts.CleanupTest(ctx)
 }
@@ -93,17 +96,21 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
+	mockBusInTestModules(t)
+
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
-	proposer := getAllTestingValidators(t, ctx)[0]
+
+	proposer := getFirstActor(t, ctx, typesUtil.ActorType_Validator)
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
-	require.NoError(t, ctx.CheckTransaction(txBz))
+	require.NoError(t, testUtilityMod.CheckTransaction(txBz))
+
 	appHash, txs, er := ctx.CreateAndApplyProposalBlock([]byte(proposer.GetAddress()), 10000)
 	require.NoError(t, er)
-	require.Equal(t, len(txs), 1)
-	require.Equal(t, txs[0], txBz)
 	require.NotEmpty(t, appHash)
+	require.Equal(t, 1, len(txs))
+	require.Equal(t, txs[0], txBz)
 
 	test_artifacts.CleanupTest(ctx)
 }

@@ -613,13 +613,13 @@ func getActorByAddr(t *testing.T, ctx utility.UtilityContext, actorType typesUti
 }
 
 func getAllTestingApps(t *testing.T, ctx utility.UtilityContext) []modules.Actor {
-	actors, err := (ctx.Context.PersistenceRWContext).GetAllApps(ctx.LatestHeight)
+	actors, err := (ctx.Context.PersistenceRWContext).GetAllApps(ctx.Height)
 	require.NoError(t, err)
 	return actors
 }
 
 func getAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []modules.Actor {
-	actors, err := (ctx.Context.PersistenceRWContext).GetAllValidators(ctx.LatestHeight)
+	actors, err := (ctx.Context.PersistenceRWContext).GetAllValidators(ctx.Height)
 	require.NoError(t, err)
 	sort.Slice(actors, func(i, j int) bool {
 		return actors[i].GetAddress() < actors[j].GetAddress()
@@ -628,13 +628,13 @@ func getAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []modules
 }
 
 func getAllTestingFish(t *testing.T, ctx utility.UtilityContext) []modules.Actor {
-	actors, err := (ctx.Context.PersistenceRWContext).GetAllFishermen(ctx.LatestHeight)
+	actors, err := (ctx.Context.PersistenceRWContext).GetAllFishermen(ctx.Height)
 	require.NoError(t, err)
 	return actors
 }
 
 func getAllTestingNodes(t *testing.T, ctx utility.UtilityContext) []modules.Actor {
-	actors, err := (ctx.Context.PersistenceRWContext).GetAllServiceNodes(ctx.LatestHeight)
+	actors, err := (ctx.Context.PersistenceRWContext).GetAllServiceNodes(ctx.Height)
 	require.NoError(t, err)
 	return actors
 }

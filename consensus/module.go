@@ -235,6 +235,7 @@ func (m *consensusModule) GetPrivateKey() (cryptoPocket.PrivateKey, error) {
 func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
+
 	switch message.MessageName() {
 	case HotstuffMessageContentType:
 		msg, err := codec.GetCodec().FromAny(message)
@@ -248,8 +249,6 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
 			return err
 		}
-	case UtilityMessageContentType:
-		panic("[WARN] UtilityMessage handling is not implemented by consensus yet...")
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
 	}

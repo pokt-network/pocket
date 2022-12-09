@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.11] - 2022-12-06
+
+- Removed unused `consensus.UtilityMessage`
+
 ## [0.0.0.10] - 2022-11-30
 
 - Propagate `highPrepareQC` if available to the block being created
