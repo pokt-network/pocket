@@ -58,3 +58,7 @@ rpc/client.gen.go
 
 # Ignored generated files by build/config/main.go
 build/config/gen*.json
+
+# Binary downloads and manipulations by helm
+**/charts
+**/tmpcharts

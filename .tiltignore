@@ -1,2 +1,64 @@
+# Binaries for programs and plugins
+
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Vim swap files
+*.swp**
+
+# Vscode
+.vscode
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+vendor/
+prototype/vendor/
+
+# MacOS metadata
+.DS_Store
+
+# Intellij / Goland dot files
+.idea/
+
+# Generated Mocks (for testing)
+shared/modules/mocks/
+p2p/types/mocks/
+
+# TODO(team): Does the `types` directory contain generated or raw type files?
+# types/
+
+# ignore protobuf generated files
+*.pb.go
+
+# Output binaries
+bin/
+build/dist/*
+
+# Local debugging
+temp_test.go
+
+# Output of the go test results and coverage report (used by CI)
+test_results.json
+coverage.out
+
+# Output of `make build_and_watch`
+main
+
+# generated RPC server and client from openapi.yaml
+rpc/server.gen.go
+rpc/client.gen.go
+
+# Ignored generated files by build/config/main.go
+build/config/gen*.json
+
+# Binary downloads and manipulations by helm
 **/charts
 **/tmpcharts
