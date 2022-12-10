@@ -436,7 +436,7 @@ clear_genesis_and_config:
 localnet_up:
 	tilt up
 
-.PHONY: localnet_client
+.PHONY: localnet_client_debug
 ## Starts debug client (allows to control LocalNet)
 localnet_client_debug:
 	kubectl exec -it deploy/pocket-v1-cli-client -- client debug

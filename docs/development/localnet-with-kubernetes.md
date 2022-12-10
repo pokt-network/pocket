@@ -6,8 +6,10 @@ We are developing our own Kubernetes operator to manage v1 workloads both intern
     - [Dependencies](#dependencies)
     - [Running the localnet](#running-the-localnet)
     - [Stopping / cleaning up the resources](#stopping--cleaning-up-the-resources)
+    - [Interaction with the localnet](#interaction-with-the-localnet)
     - [How does it work?](#how-does-it-work)
     - [Troubleshooting](#troubleshooting)
+    - [How to change configuration files](#how-to-change-configuration-files)
 
 ### Dependencies
 
@@ -27,6 +29,14 @@ Start the LocalNet with `make localnet_up` command - this will start tilt. Tilt 
 ### Stopping / cleaning up the resources
 
 `make localnet_down` will stop the localnet and clean up all the resources, except the postgres operator (in case you have other databases provisioned with it, the database itself will be destroyed).
+
+### Interaction with the localnet
+
+As the workloads run in Kubernetes, you can see and modify any resources on your local kubernetes by a tool of your choice (k9s, Lens, VSCode extension, etc.) - just be mindful that tilt and pocket-operator will change the resources back eventually, so you might want to disable tilt or turn off pocket-operator to make changes that you want to test.
+
+We provide following make targets:
+`make localnet_shell` - opens a shell in the pod that has `client` cli available. It gets updated automatically whenever the code changes.
+`make localnet_client_debug` - opens a `client debug` cli. It allows to interact with blockchain, e.g. change pace maker mode, reset to genesis, etc. It gets updated automatically whenever the code changes.
 
 ### How does it work?
 
@@ -53,3 +63,7 @@ Sometimes you might experience issues running localnet on Kubernetes. They might
 - If triggering an update didn't help, please try to run `make localnet_down` and then `make localnet_up` again. This will clean up most of the resources and start the localnet from scratch.
 - If `make localnet_down` didn't help, we suggest to rebuild local kubernetes cluster using the tool you're managing your cluster with - it could be Docker Desktop, Rancher Desktop, k3s, k3d, minikube, etc.
 - Open an issue in this repo if you're still experiencing issues with running localnet using this guide.
+
+### How to change configuration files
+
+LocalNet resources are managed by pocket-operator, so if you'd like to change a config file (e.g. genesis file), you can do it by modifying the corresponding CRD in `pocket-operator` repo.
