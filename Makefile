@@ -1,3 +1,5 @@
+include build.mk
+
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
 # This flag is useful when running the consensus unit tests. It causes the test to wait up to the
@@ -116,7 +118,6 @@ install_cli_deps:
 .PHONY: develop_start
 ## Run all of the make commands necessary to develop on the project
 develop_start:
-		make docker_loki_check && \
 		make clean_mocks && \
 		make protogen_clean && make protogen_local && \
 		make go_clean_deps && \
@@ -226,13 +227,7 @@ monitoring_start: docker_check
 .PHONY: docker_loki_install
 ## Installs the loki docker driver
 docker_loki_install: docker_check
-	echo "Installing the loki docker driver...\n"
 	docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
-
-.PHONY: docker_loki_check
-## check if the loki docker driver is installed
-docker_loki_check:
-	if [ `docker plugin ls | grep loki: | wc -l` -eq 0 ]; then make docker_loki_install; fi
 
 .PHONY: clean_mocks
 ### Use `clean_mocks` to delete mocks before recreating them. Also useful to cleanup code that was generated from a different branch
@@ -249,7 +244,7 @@ mockgen: clean_mocks
 
 	$(eval p2p_types_dir = "p2p/types")
 	$(eval p2p_type_mocks_dir = "p2p/types/mocks")
-	find ${p2p_type_mocks_dir} -type f ! -name "mocks.go" -exec rm {} \;
+	rm -rf ${p2p_type_mocks_dir}
 	go generate ./${p2p_types_dir}
 	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
 

@@ -9,6 +9,13 @@ import (
 	"github.com/pokt-network/pocket/shared"
 )
 
+// Provisioned by ldflags
+var (
+	version    string
+	commitHash string
+	buildDate  string
+)
+
 func main() {
 	configFilename := flag.String("config", "", "Relative or absolute path to the config file.")
 	genesisFilename := flag.String("genesis", "", "Relative or absolute path to the genesis file.")
