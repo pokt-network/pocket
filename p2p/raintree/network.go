@@ -67,7 +67,7 @@ func NewRainTreeNetworkWithAddrBookProvider(addr cryptoPocket.Address, addrBookP
 		addrBookProvider: addrBookProvider,
 		peersManager:     pm,
 		nonceSet:         make(map[uint64]struct{}),
-		nonceList:        make([]uint64, 0, p2pCfg.GetMempoolMaxNonces()),
+		nonceList:        make([]uint64, 0, p2pCfg.GetMaxMempoolCount()),
 	}
 
 	return typesP2P.Network(n)
