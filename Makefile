@@ -438,8 +438,13 @@ localnet_up:
 
 .PHONY: localnet_client
 ## Starts debug client (allows to control LocalNet)
-localnet_client:
+localnet_client_debug:
 	kubectl exec -it deploy/pocket-v1-cli-client -- client debug
+
+.PHONY: localnet_shell
+## Starts debug client (allows to control LocalNet)
+localnet_shell:
+	kubectl exec -it deploy/pocket-v1-cli-client -- /bin/bash
 
 .PHONY: localnet_down
 ## Stops localnet and cleans up dependencies (basically, `tilt down` + resources might not be cleaned up by tilt)
