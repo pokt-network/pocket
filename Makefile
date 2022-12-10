@@ -19,17 +19,16 @@ VERBOSE_TEST ?= -v
 
 .SILENT:
 
+## List all make targets
+.PHONY: list
+list:
+	@${MAKE} -pRrn : -f $(MAKEFILE_LIST) 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | sort
+
+## Prints all the targets in all the Makefiles
+.PHONY: help
+.DEFAULT_GOAL := help
 help:
-	printf "Available targets\n\n"
-	awk '/^[a-zA-Z\-\\_0-9]+:/ { \
-		helpMessage = match(lastLine, /^## (.*)/); \
-		if (helpMessage) { \
-			helpCommand = substr($$1, 0, index($$1, ":")-1); \
-			helpMessage = substr(lastLine, RSTART + 3, RLENGTH); \
-			printf "%-30s %s\n", helpCommand, helpMessage; \
-		} \
-	} \
-	{ lastLine = $$0 }' $(MAKEFILE_LIST)
+	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: docker_check
 # Internal helper target - check if docker is installed
@@ -47,13 +46,11 @@ prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 
 .PHONY: go_vet
-## Run `go vet` on all files in the current project
-go_vet:
+go_vet: ## Run `go vet` on all files in the current project
 	go vet ./...
 
 .PHONY: go_staticcheck
-## Run `go staticcheck` on all files in the current project
-go_staticcheck:
+go_staticcheck: ## Run `go staticcheck` on all files in the current project
 	{ \
 	if command -v staticcheck >/dev/null; then \
 		staticcheck ./...; \
@@ -108,16 +105,14 @@ gofmt:
 	gofmt -w -s .
 
 .PHONY: install_cli_deps
-## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag' and other tooling
-install_cli_deps:
+install_cli_deps: ## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag' and other tooling
 	go install "google.golang.org/protobuf/cmd/protoc-gen-go@v1.28" && protoc-gen-go --version
 	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
 	go install "github.com/favadi/protoc-go-inject-tag@latest"
 	go install "github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0"
 
 .PHONY: develop_start
-## Run all of the make commands necessary to develop on the project
-develop_start:
+develop_start: ## Run all of the make commands necessary to develop on the project
 		make docker_loki_check && \
 		make clean_mocks && \
 		make protogen_clean && make protogen_local && \
@@ -126,108 +121,89 @@ develop_start:
 		make generate_rpc_openapi
 
 .PHONY: develop_test
-## Run all of the make commands necessary to develop on the project and verify the tests pass
-develop_test: docker_check
+develop_test: docker_check ## Run all of the make commands necessary to develop on the project and verify the tests pass
 		make develop_start && \
 		make test_all
 
 .PHONY: client_start
-## Run a client daemon which is only used for debugging purposes
-client_start: docker_check
+client_start: docker_check ## Run a client daemon which is only used for debugging purposes
 	docker-compose -f build/deployments/docker-compose.yaml up -d client --build
 
 .PHONY: client_connect
-## Connect to the running client debugging daemon
-client_connect: docker_check
+client_connect: docker_check ## Connect to the running client debugging daemon
 	docker exec -it client /bin/bash -c "go run -tags=debug app/client/*.go debug"
 
 .PHONY: build_and_watch
-## Continous build Pocket's main entrypoint as files change
-build_and_watch:
+build_and_watch: ## Continous build Pocket's main entrypoint as files change
 	/bin/sh ${PWD}/build/scripts/watch_build.sh
 
 # TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
 .PHONY: compose_and_watch
-## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-compose_and_watch: docker_check db_start monitoring_start
+compose_and_watch: docker_check db_start monitoring_start ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
 	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: rebuild_and_compose_and_watch
-## Rebuilds the container from scratch and launches compose_and_watch
-rebuild_and_compose_and_watch: docker_check db_start monitoring_start
+rebuild_and_compose_and_watch: docker_check db_start monitoring_start ## Rebuilds the container from scratch and launches compose_and_watch
 	docker-compose -f build/deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: db_start
-## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
-db_start: docker_check
+db_start: docker_check ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
 	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d db pgadmin
 
 .PHONY: db_cli
-## Open a CLI to the local containerized postgres instance
-db_cli:
+db_cli: ## Open a CLI to the local containerized postgres instance
 	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
 	docker exec -it pocket-db bash -c "psql -U postgres"
 
 psqlSchema ?= node1
 
 .PHONY: db_cli_node
-## Open a CLI to the local containerized postgres instance for a specific node
-db_cli_node:
+db_cli_node: ## Open a CLI to the local containerized postgres instance for a specific node
 	echo "View all avialable tables by running \dt"
 	docker exec -it pocket-db bash -c "PGOPTIONS=--search_path=${psqlSchema} psql -U postgres"
 
 .PHONY: db_drop
-## Drop all schemas used for LocalNet development matching `node%`
-db_drop: docker_check
+db_drop: docker_check ## Drop all schemas used for LocalNet development matching `node%`
 	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/drop_all_schemas.sql"
 
 .PHONY: db_bench_init
-## Initialize pgbench on local postgres - needs to be called once after container is created.
-db_bench_init: docker_check
+db_bench_init: docker_check ## Initialize pgbench on local postgres - needs to be called once after container is created.
 	docker exec -it pocket-db bash -c "pgbench -i -U postgres -d postgres"
 
 .PHONY: db_bench
-## Run a local benchmark against the local postgres instance - TODO(olshansky): visualize results
-db_bench: docker_check
+db_bench: docker_check ## Run a local benchmark against the local postgres instance - TODO(olshansky): visualize results
 	docker exec -it pocket-db bash -c "pgbench -U postgres -d postgres"
 
 .PHONY: db_show_schemas
-## Show all the node schemas in the local SQL DB
-db_show_schemas: docker_check
+db_show_schemas: docker_check ## Show all the node schemas in the local SQL DB
 	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/show_all_schemas.sql"
 
 .PHONY: db_admin
-## Helper to access to postgres admin GUI interface
-db_admin:
+db_admin: ## Helper to access to postgres admin GUI interface
 	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
 
 .PHONY: docker_kill_all
-## Kill all containers started by the docker-compose file
-docker_kill_all: docker_check
+docker_kill_all: docker_check ## Kill all containers started by the docker-compose file
 	docker-compose -f build/deployments/docker-compose.yaml down
 
 .PHONY: docker_wipe
-## [WARNING] Remove all the docker containers, images and volumes.
-docker_wipe: docker_check prompt_user
+docker_wipe: docker_check prompt_user ## [WARNING] Remove all the docker containers, images and volumes.
 	docker ps -a -q | xargs -r -I {} docker stop {}
 	docker ps -a -q | xargs -r -I {} docker rm {}
 	docker images -q | xargs -r -I {} docker rmi {}
 	docker volume ls -q | xargs -r -I {} docker volume rm {}
 
 .PHONY: docker_wipe_nodes
-## [WARNING] Remove all the node containers
-docker_wipe_nodes: docker_check prompt_user db_drop
+docker_wipe_nodes: docker_check prompt_user db_drop ## [WARNING] Remove all the node containers
 	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker stop {}
 	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker rm {}
 
 .PHONY: monitoring_start
-## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
-monitoring_start: docker_check
+monitoring_start: docker_check ## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
 	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d grafana loki vm
 
 .PHONY: docker_loki_install
-## Installs the loki docker driver
-docker_loki_install: docker_check
+docker_loki_install: docker_check ## Installs the loki docker driver
 	echo "Installing the loki docker driver...\n"
 	docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
 
@@ -243,8 +219,7 @@ clean_mocks:
 	find ${modules_dir}/mocks -type f ! -name "mocks.go" -exec rm {} \;
 
 .PHONY: mockgen
-## Use `mockgen` to generate mocks used for testing purposes of all the modules.
-mockgen: clean_mocks
+mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 	$(eval modules_dir = "shared/modules")
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
@@ -258,18 +233,15 @@ mockgen: clean_mocks
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
 .PHONY: protogen_show
-## A simple `find` command that shows you the generated protobufs.
-protogen_show:
+protogen_show: ## A simple `find` command that shows you the generated protobufs.
 	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor"
 
 .PHONY: protogen_clean
-## Remove all the generated protobufs.
-protogen_clean:
+protogen_clean: ## Remove all the generated protobufs.
 	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs -r rm
 
 .PHONY: protogen_local
-## Generate go structures for all of the protobufs
-protogen_local: go_protoc-go-inject-tag
+protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the protobufs
 	$(eval proto_dir = ".")
 	protoc --go_opt=paths=source_relative  -I=./shared/messaging/proto    --go_out=./shared/messaging      	./shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
@@ -296,8 +268,7 @@ protogen_docker: docker_check
 	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it -v $(CWD)/:/usr/src/app/ pocket/proto-generator
 
 .PHONY: generate_rpc_openapi
-## (Re)generates the RPC server and client infra code from the openapi spec file (./rpc/v1/openapi.yaml)
-generate_rpc_openapi: go_oapi-codegen
+generate_rpc_openapi: go_oapi-codegen ## (Re)generates the RPC server and client infra code from the openapi spec file (./rpc/v1/openapi.yaml)
 	oapi-codegen  --config ./rpc/server.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/server.gen.go
 	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
 	echo "OpenAPI client and server generated"
