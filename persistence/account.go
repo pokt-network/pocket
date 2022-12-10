@@ -23,7 +23,7 @@ func (p PostgresContext) GetAccountAmount(address []byte, height int64) (amount 
 }
 
 func (p PostgresContext) getAccountAmountStr(address string, height int64) (amount string, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return
 	}
@@ -51,9 +51,9 @@ func (p PostgresContext) SubtractAccountAmount(address []byte, amount string) er
 }
 
 // DISCUSS(team): If we are okay with `GetAccountAmount` return 0 as a default, this function can leverage
-//                `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
+// `operationAccountAmount` with `*orig = *delta` and make everything much simpler.
 func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -68,6 +68,10 @@ func (p PostgresContext) SetAccountAmount(address []byte, amount string) error {
 	return nil
 }
 
+func (p PostgresContext) GetAccountsUpdated(height int64) (accounts []*types.Account, err error) {
+	return p.getPoolOrAccUpdatedInternal(types.GetAccountsUpdatedAtHeightQuery(height))
+}
+
 func (p *PostgresContext) operationAccountAmount(address []byte, deltaAmount string, op func(*big.Int, *big.Int) error) error {
 	return p.operationPoolOrAccAmount(hex.EncodeToString(address), deltaAmount, op, p.getAccountAmountStr, types.InsertAccountAmountQuery)
 }
@@ -76,7 +80,7 @@ func (p *PostgresContext) operationAccountAmount(address []byte, deltaAmount str
 
 // TODO(andrew): remove address param
 func (p PostgresContext) InsertPool(name string, address []byte, amount string) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -91,7 +95,7 @@ func (p PostgresContext) InsertPool(name string, address []byte, amount string) 
 }
 
 func (p PostgresContext) GetPoolAmount(name string, height int64) (amount string, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return
 	}
@@ -124,7 +128,7 @@ func (p PostgresContext) SubtractPoolAmount(name string, amount string) error {
 //
 // DISCUSS(team): Do we have a use-case for this function?
 func (p PostgresContext) SetPoolAmount(name string, amount string) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
@@ -142,11 +146,42 @@ func (p *PostgresContext) operationPoolAmount(name string, amount string, op fun
 	return p.operationPoolOrAccAmount(name, amount, op, p.GetPoolAmount, types.InsertPoolAmountQuery)
 }
 
-func (p *PostgresContext) operationPoolOrAccAmount(name, amount string,
+func (p PostgresContext) GetPoolsUpdated(height int64) ([]*types.Account, error) {
+	return p.getPoolOrAccUpdatedInternal(types.GetPoolsUpdatedAtHeightQuery(height))
+}
+
+// Joint Pool & Account Helpers
+
+// Shared logic between `getPoolsUpdated` & `getAccountsUpdated` to keep explicit external interfaces
+func (p *PostgresContext) getPoolOrAccUpdatedInternal(query string) (accounts []*types.Account, err error) {
+	ctx, tx, err := p.getCtxAndTx()
+	if err != nil {
+		return
+	}
+
+	rows, err := tx.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		account := new(types.Account)
+		if err = rows.Scan(&account.Address, &account.Amount); err != nil {
+			return nil, err
+		}
+		accounts = append(accounts, account)
+	}
+
+	return
+}
+
+func (p *PostgresContext) operationPoolOrAccAmount(
+	name, amount string,
 	op func(*big.Int, *big.Int) error,
 	getAmount func(string, int64) (string, error),
 	insert func(name, amount string, height int64) string) error {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}

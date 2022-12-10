@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/pokt-network/pocket/persistence/indexer"
-
-	"github.com/pokt-network/pocket/persistence/types"
-
 	"github.com/jackc/pgx/v4"
+	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
+	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -30,15 +28,16 @@ type persistenceModule struct {
 	config       modules.PersistenceConfig
 	genesisState modules.PersistenceGenesisState
 
-	blockStore kvstore.KVStore // INVESTIGATE: We may need to create a custom `BlockStore` package in the future
+	blockStore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
+	stateTrees *stateTrees
 
 	// TECHDEBT: Need to implement context pooling (for writes), timeouts (for read & writes), etc...
 	writeContext *PostgresContext // only one write context is allowed at a time
 }
 
 const (
-	PersistenceModuleName = "persistence"
+	persistenceModuleName = "persistence"
 )
 
 func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
@@ -70,6 +69,7 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 	}
 	conn.Close(context.TODO())
 
+	// TODO: Follow the same pattern as txIndexer below for initializing the blockStore
 	blockStore, err := initializeBlockStore(persistenceCfg.GetBlockStorePath())
 	if err != nil {
 		return nil, err
@@ -80,26 +80,35 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 		return nil, err
 	}
 
+	stateTrees, err := newStateTrees(persistenceCfg.GetTreesStoreDir())
+	if err != nil {
+		return nil, err
+	}
+
 	m = &persistenceModule{
 		bus:          nil,
 		config:       persistenceCfg,
 		genesisState: persistenceGenesis,
-		blockStore:   blockStore,
-		txIndexer:    txIndexer,
+
+		blockStore: blockStore,
+		txIndexer:  txIndexer,
+		stateTrees: stateTrees,
+
 		writeContext: nil,
 	}
 
+	// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
+	// 		     this forces the genesis state to be reloaded on every node startup until state
+	//           sync is implemented.
 	// Determine if we should hydrate the genesis db or use the current state of the DB attached
 	if shouldHydrateGenesis, err := m.shouldHydrateGenesisDb(); err != nil {
 		return nil, err
 	} else if shouldHydrateGenesis {
-		// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
-		// 		     this forces the genesis state to be reloaded on every node startup until state sync is
-		//           implemented.
-		// NOTE: `populateGenesisState` does not return an error but logs a fatal error if there's a problem
-		m.populateGenesisState(persistenceGenesis)
+		m.populateGenesisState(persistenceGenesis) // fatal if there's an error
 	} else {
-		log.Println("Loading state from previous state...")
+		// This configurations will connect to the SQL database and key-value stores specified
+		// in the configurations and connected to those.
+		log.Println("Loading state from disk...")
 	}
 
 	return m, nil
@@ -116,7 +125,7 @@ func (m *persistenceModule) Stop() error {
 }
 
 func (m *persistenceModule) GetModuleName() string {
-	return PersistenceModuleName
+	return persistenceModuleName
 }
 
 func (m *persistenceModule) SetBus(bus modules.Bus) {
@@ -131,10 +140,12 @@ func (m *persistenceModule) GetBus() modules.Bus {
 }
 
 func (*persistenceModule) ValidateConfig(cfg modules.Config) error {
+	// TODO (#334): implement this
 	return nil
 }
 
 func (*persistenceModule) ValidateGenesis(genesis modules.GenesisState) error {
+	// TODO (#334): implement this
 	return nil
 }
 
@@ -156,11 +167,17 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 	}
 
 	m.writeContext = &PostgresContext{
-		Height:     height,
-		conn:       conn,
-		tx:         tx,
-		blockstore: m.blockStore,
+		Height: height,
+		conn:   conn,
+		tx:     tx,
+
+		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
+		stateTrees: m.stateTrees,
+
+		proposerAddr: nil,
+		quorumCert:   nil,
+		blockHash:    "",
 	}
 
 	return m.writeContext, nil
@@ -185,9 +202,19 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 		Height:     height,
 		conn:       conn,
 		tx:         tx,
-		blockstore: m.blockStore,
+		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
 	}, nil
+}
+
+func (m *persistenceModule) ReleaseWriteContext() error {
+	if m.writeContext != nil {
+		if err := m.writeContext.resetContext(); err != nil {
+			log.Println("[TODO][ERROR] Error releasing write context...", err)
+		}
+		m.writeContext = nil
+	}
+	return nil
 }
 
 func (m *persistenceModule) GetBlockStore() kvstore.KVStore {
@@ -214,8 +241,15 @@ func (m *persistenceModule) shouldHydrateGenesisDb() (bool, error) {
 	}
 	defer checkContext.Close()
 
-	if _, err = checkContext.GetLatestBlockHeight(); err != nil {
+	blockHeight, err := checkContext.GetLatestBlockHeight()
+	if err != nil {
 		return true, nil
 	}
+
+	if blockHeight == 0 {
+		m.clearAllState(nil)
+		return true, nil
+	}
+
 	return false, nil
 }

@@ -6,8 +6,10 @@ labels: ""
 assignees: ""
 ---
 
-\__DELETE_ME_: Please make sure to update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the issue\_
-\__DELETE_ME_: Please make sure to add labels for the purpose (e.g. `persistence`) and priority (e.g. `low`) of this PR\_
+<!--
+ 1. Make sure to update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the issue\_
+ 2. Make sure to add labels for the purpose (e.g. `persistence`) and priority (e.g. `low`) of this PR\_
+-->
 
 ## Objective
 
@@ -19,33 +21,56 @@ assignees: ""
 
 ## Goals
 
-- _\_*REPLACE_ME*: List of things that are high level ideas or goals driving the task_
-- [ ] ...
+<!--
+  Make a list of high level tasks, ideas or goals driving the task. These should not be actionable deliverables.
+-->
+
+- Goal #1
+- Goal #2
+- ...
 
 ## Deliverable
 
-- _\_*REPLACE_ME*: List of things that are concrete deliverables_
-- [ ] ...
+
+<!--
+  Make a list of deliverables that are expected outputs of this task. These should be concrete and tangible.
+-->
+
+- [ ] Deliverable #1
+- [ ] Deliverable #2
+- ...
 
 ## Non-goals / Non-deliverables
 
-- _\_*REPLACE_ME*: List of things that are out of scope_
+<!--
+  Make a list goals and deliverables the assignee of the issue should not attempt to do so the scope does not become too large.
+-->
+
+- Nongoal #1
+- Nongoal #2
 - ...
 
 ## General issue deliverables
 
-- [ ] Update the appropriate CHANGELOG
-- [ ] Update any relevant READMEs (local and/or global)
-- [ ] Update any relevant global documentation & references
-- [ ] If applicable, update the source code tree explanation
-- [ ] If applicable, add or update a state, sequence or flowchart diagram using [mermaid](https://mermaid-js.github.io/mermaid/)
+<!--
+  Remove any items that are not applicable and add additional ones, if applicable, that are not listed below.
+-->
 
-## [Optional] Testing Methodology
+- [ ] Update the appropriate CHANGELOG(s)
+- [ ] Update any relevant local/global README(s)
+- [ ] Update relevant source code tree explanations
+- [ ] Add or update any relevant or supporting [mermaid](https://mermaid-js.github.io/mermaid/) diagrams
 
-- \__REPLACE_ME_: Make sure to update the testing methodology appropriately\_
-- **Task specific tests**: `make ...`
-- **All tests**: `make test_all`
-- **LocalNet**: verify a `LocalNet` is still functioning correctly by following the instructions at [docs/development/README.md](https://github.com/pokt-network/pocket/tree/main/docs/development)
+## Testing Methodology
+
+<!--
+  Remove this section if not applicable. Otherwise, update (add/remove) the list below as deemed necessary.
+-->
+
+- [ ] **Task specific tests or benchmarks**: `make ...`
+- [ ] **New tests or benchmarks**: `make ...`
+- [ ] **All tests**: `make test_all`
+- [ ] **LocalNet**: verify a `LocalNet` is still functioning correctly by following the instructions at [docs/development/README.md](https://github.com/pokt-network/pocket/tree/main/docs/development)
 
 ---
 

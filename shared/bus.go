@@ -3,7 +3,7 @@ package shared
 import (
 	"log"
 
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -21,6 +21,8 @@ type bus struct {
 	utility     modules.UtilityModule
 	consensus   modules.ConsensusModule
 	telemetry   modules.TelemetryModule
+	logger      modules.LoggerModule
+	rpc         modules.RPCModule
 
 	runtimeMgr modules.RuntimeMgr
 }
@@ -36,6 +38,8 @@ func CreateBus(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
+	logger modules.LoggerModule,
+	rpc modules.RPCModule,
 ) (modules.Bus, error) {
 	bus := &bus{
 		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -47,6 +51,8 @@ func CreateBus(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
+		logger:      logger,
+		rpc:         rpc,
 	}
 
 	modules := map[string]modules.Module{
@@ -55,6 +61,8 @@ func CreateBus(
 		"p2p":         p2p,
 		"utility":     utility,
 		"telemetry":   telemetry,
+		"logger":      logger,
+		"rpc":         rpc,
 	}
 
 	// checks if modules are not nil and sets their bus to this bus instance.
@@ -86,6 +94,8 @@ func CreateBusWithOptionalModules(
 	utility modules.UtilityModule,
 	consensus modules.ConsensusModule,
 	telemetry modules.TelemetryModule,
+	logger modules.LoggerModule,
+	rpc modules.RPCModule,
 ) modules.Bus {
 	bus := &bus{
 		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
@@ -97,6 +107,8 @@ func CreateBusWithOptionalModules(
 		utility:     utility,
 		consensus:   consensus,
 		telemetry:   telemetry,
+		logger:      logger,
+		rpc:         rpc,
 	}
 
 	maybeSetModuleBus := func(mod modules.Module) {
@@ -110,41 +122,51 @@ func CreateBusWithOptionalModules(
 	maybeSetModuleBus(utility)
 	maybeSetModuleBus(consensus)
 	maybeSetModuleBus(telemetry)
+	maybeSetModuleBus(logger)
+	maybeSetModuleBus(rpc)
 
 	return bus
 }
 
-func (m bus) PublishEventToBus(e *debug.PocketEvent) {
+func (m *bus) PublishEventToBus(e *messaging.PocketEnvelope) {
 	m.channel <- *e
 }
 
-func (m bus) GetBusEvent() *debug.PocketEvent {
+func (m *bus) GetBusEvent() *messaging.PocketEnvelope {
 	e := <-m.channel
 	return &e
 }
 
-func (m bus) GetEventBus() modules.EventsChannel {
+func (m *bus) GetEventBus() modules.EventsChannel {
 	return m.channel
 }
 
-func (m bus) GetPersistenceModule() modules.PersistenceModule {
+func (m *bus) GetPersistenceModule() modules.PersistenceModule {
 	return m.persistence
 }
 
-func (m bus) GetP2PModule() modules.P2PModule {
+func (m *bus) GetP2PModule() modules.P2PModule {
 	return m.p2p
 }
 
-func (m bus) GetUtilityModule() modules.UtilityModule {
+func (m *bus) GetUtilityModule() modules.UtilityModule {
 	return m.utility
 }
 
-func (m bus) GetConsensusModule() modules.ConsensusModule {
+func (m *bus) GetConsensusModule() modules.ConsensusModule {
 	return m.consensus
 }
 
-func (m bus) GetTelemetryModule() modules.TelemetryModule {
+func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 	return m.telemetry
+}
+
+func (m *bus) GetLoggerModule() modules.LoggerModule {
+	return m.logger
+}
+
+func (m *bus) GetRPCModule() modules.RPCModule {
+	return m.rpc
 }
 
 func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {

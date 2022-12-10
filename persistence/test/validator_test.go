@@ -14,14 +14,21 @@ import (
 
 func FuzzValidator(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		NewTestGenericActor(types.ValidatorActor, newTestValidator),
-		GetGenericActor(types.ValidatorActor, getTestValidator),
+		newTestGenericActor(types.ValidatorActor, newTestValidator),
+		getGenericActor(types.ValidatorActor, getTestValidator),
 		types.ValidatorActor)
 }
 
 func TestGetSetValidatorStakeAmount(t *testing.T) {
 	db := NewTestPostgresContext(t, 1)
 	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestValidator, db.GetValidatorStakeAmount, db.SetValidatorStakeAmount, 1)
+}
+
+func TestGetValidatorUpdatedAtHeight(t *testing.T) {
+	getValidatorsUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*types.Actor, error) {
+		return db.GetActorsUpdated(types.ValidatorActor, height)
+	}
+	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestValidator, getValidatorsUpdatedFunc, 5)
 }
 
 func TestInsertValidatorAndExists(t *testing.T) {
@@ -50,7 +57,7 @@ func TestInsertValidatorAndExists(t *testing.T) {
 
 	exists, err = db.GetValidatorExists(addrBz2, 0)
 	require.NoError(t, err)
-	require.False(t, exists, "actor that should not exist at previous height validatorears to")
+	require.False(t, exists, "actor that should not exist at previous height does")
 	exists, err = db.GetValidatorExists(addrBz2, 1)
 	require.NoError(t, err)
 	require.True(t, exists, "actor that should exist at current height does not")

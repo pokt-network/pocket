@@ -2,8 +2,10 @@ package runtime
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	typesLogger "github.com/pokt-network/pocket/logger"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	typesPers "github.com/pokt-network/pocket/persistence/types"
+	typesRPC "github.com/pokt-network/pocket/rpc/types"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesTelemetry "github.com/pokt-network/pocket/telemetry"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -18,6 +20,8 @@ type runtimeConfig struct {
 	Persistence *typesPers.PersistenceConfig    `json:"persistence"`
 	P2P         *typesP2P.P2PConfig             `json:"p2p"`
 	Telemetry   *typesTelemetry.TelemetryConfig `json:"telemetry"`
+	Logger      *typesLogger.LoggerConfig       `json:"logger"`
+	RPC         *typesRPC.RPCConfig             `json:"rpc"`
 }
 
 func NewConfig(base *BaseConfig, otherConfigs ...func(modules.Config)) *runtimeConfig {
@@ -53,6 +57,7 @@ func WithP2PConfig(p2pConfig modules.P2PConfig) func(modules.Config) {
 		rc.(*runtimeConfig).P2P = p2pConfig.(*typesP2P.P2PConfig)
 	}
 }
+
 func WithTelemetryConfig(telemetryConfig modules.TelemetryConfig) func(modules.Config) {
 	return func(rc modules.Config) {
 		rc.(*runtimeConfig).Telemetry = telemetryConfig.(*typesTelemetry.TelemetryConfig)
@@ -62,18 +67,31 @@ func WithTelemetryConfig(telemetryConfig modules.TelemetryConfig) func(modules.C
 func (c *runtimeConfig) GetBaseConfig() modules.BaseConfig {
 	return c.Base
 }
+
 func (c *runtimeConfig) GetConsensusConfig() modules.ConsensusConfig {
 	return c.Consensus
 }
+
 func (c *runtimeConfig) GetUtilityConfig() modules.UtilityConfig {
 	return c.Utility
 }
+
 func (c *runtimeConfig) GetPersistenceConfig() modules.PersistenceConfig {
 	return c.Persistence
 }
+
 func (c *runtimeConfig) GetP2PConfig() modules.P2PConfig {
 	return c.P2P
 }
+
 func (c *runtimeConfig) GetTelemetryConfig() modules.TelemetryConfig {
 	return c.Telemetry
+}
+
+func (c *runtimeConfig) GetLoggerConfig() modules.LoggerConfig {
+	return c.Logger
+}
+
+func (c *runtimeConfig) GetRPCConfig() modules.RPCConfig {
+	return c.RPC
 }

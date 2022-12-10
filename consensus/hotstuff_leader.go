@@ -2,11 +2,11 @@ package consensus
 
 import (
 	"encoding/hex"
-	"github.com/pokt-network/pocket/shared/codec"
 	"unsafe"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/shared/codec"
 )
 
 type HotstuffLeaderMessageHandler struct{}
@@ -51,10 +51,10 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// TECHDEBT: How do we properly validate `highPrepareQC` here?
 	highPrepareQC := m.findHighQC(m.messagePool[NewRound])
 
+	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
 	// TODO: Add more unit tests for these checks...
 	if m.shouldPrepareNewBlock(highPrepareQC) {
-		// Leader prepares a new block if `highPrepareQC` is not applicable
-		block, err := m.prepareAndApplyBlock()
+		block, err := m.prepareAndApplyBlock(highPrepareQC)
 		if err != nil {
 			m.nodeLogError(typesCons.ErrPrepareBlock.Error(), err)
 			m.paceMaker.InterruptRound()
@@ -62,10 +62,8 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		}
 		m.Block = block
 	} else {
-		// DISCUSS: Do we need to call `validateProposal` here?
 		// Leader acts like a replica if `highPrepareQC` is not `nil`
-		// TODO(olshansky): Add test to make sure same block is not applied twice if round is interrrupted.
-		// been 'Applied'
+		// TODO: Do we need to call `validateProposal` here similar to how replicas does it
 		if err := m.applyBlock(highPrepareQC.Block); err != nil {
 			m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
 			m.paceMaker.InterruptRound()
@@ -334,7 +332,7 @@ func (m *consensusModule) tempIndexHotstuffMessage(msg *typesCons.HotstuffMessag
 
 // This is a helper function intended to be called by a leader/validator during a view change
 // to prepare a new block that is applied to the new underlying context.
-func (m *consensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
+func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) (*typesCons.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock
 	}
@@ -350,7 +348,13 @@ func (m *consensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
 
 	persistenceContext := m.utilityContext.GetPersistenceContext()
 
-	prevAppHash, err := persistenceContext.GetPrevAppHash()
+	// CONSOLIDATE: Last/Prev & AppHash/StateHash/BlockHash
+	prevAppHash, err := persistenceContext.GetBlockHash(int64(m.Height) - 1)
+	if err != nil {
+		return nil, err
+	}
+
+	qcBytes, err := codec.GetCodec().Marshal(qc)
 	if err != nil {
 		return nil, err
 	}
@@ -360,30 +364,25 @@ func (m *consensusModule) prepareAndApplyBlock() (*typesCons.Block, error) {
 		Height:            int64(m.Height),
 		Hash:              hex.EncodeToString(appHash),
 		NumTxs:            uint32(len(txs)),
-		LastBlockHash:     prevAppHash, // IMRPROVE: this should be a block hash not the appHash
+		LastBlockHash:     hex.EncodeToString(prevAppHash),
 		ProposerAddress:   m.privateKey.Address().Bytes(),
-		QuorumCertificate: []byte("HACK: Temporary placeholder"),
+		QuorumCertificate: qcBytes,
 	}
 	block := &typesCons.Block{
 		BlockHeader:  blockHeader,
 		Transactions: txs,
 	}
 
-	cdc := codec.GetCodec()
-	blockProtoBz, err := cdc.Marshal(block)
-	if err != nil {
-		return nil, err
-	}
-
 	// Set the proposal block in the persistence context
-	if err = persistenceContext.SetProposalBlock(blockHeader.Hash, blockProtoBz, blockHeader.ProposerAddress, blockHeader.QuorumCertificate, block.Transactions); err != nil {
+	if err = persistenceContext.SetProposalBlock(blockHeader.Hash, blockHeader.ProposerAddress, blockHeader.QuorumCertificate, block.Transactions); err != nil {
 		return nil, err
 	}
 
 	return block, nil
 }
 
-// Return true if this node, the leader, should prepare a new block
+// Return true if this node, the leader, should prepare a new block.
+// ADDTEST: Add more tests for all the different scenarios here
 func (m *consensusModule) shouldPrepareNewBlock(highPrepareQC *typesCons.QuorumCertificate) bool {
 	if highPrepareQC == nil {
 		m.nodeLog("Preparing a new block - no highPrepareQC found")

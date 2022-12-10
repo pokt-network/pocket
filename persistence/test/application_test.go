@@ -14,9 +14,16 @@ import (
 
 func FuzzApplication(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		NewTestGenericActor(types.ApplicationActor, newTestApp),
-		GetGenericActor(types.ApplicationActor, getTestApp),
+		newTestGenericActor(types.ApplicationActor, newTestApp),
+		getGenericActor(types.ApplicationActor, getTestApp),
 		types.ApplicationActor)
+}
+
+func TestGetApplicationsUpdatedAtHeight(t *testing.T) {
+	getApplicationsUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*types.Actor, error) {
+		return db.GetActorsUpdated(types.ApplicationActor, height)
+	}
+	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestApp, getApplicationsUpdatedFunc, 1)
 }
 
 func TestInsertAppAndExists(t *testing.T) {

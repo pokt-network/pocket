@@ -2,9 +2,10 @@ package test
 
 import (
 	"encoding/hex"
-	"github.com/pokt-network/pocket/persistence/types"
 	"reflect"
 	"testing"
+
+	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/stretchr/testify/require"
@@ -12,7 +13,7 @@ import (
 
 // TODO(andrew): Be consistent with `GenericParam` and `ActorSpecificParam` throughout the codebase; preferably the latter.
 
-func GetGenericActor[T any](
+func getGenericActor[T any](
 	protocolActorSchema types.ProtocolActorSchema,
 	getActor func(*persistence.PostgresContext, []byte) (T, error),
 ) func(*persistence.PostgresContext, string) (*types.Actor, error) {
@@ -30,7 +31,7 @@ func GetGenericActor[T any](
 	}
 }
 
-func NewTestGenericActor[T any](protocolActorSchema types.ProtocolActorSchema, newActor func() (T, error)) func() (*types.Actor, error) {
+func newTestGenericActor[T any](protocolActorSchema types.ProtocolActorSchema, newActor func() (T, error)) func() (*types.Actor, error) {
 	return func() (*types.Actor, error) {
 		actor, err := newActor()
 		if err != nil {
@@ -148,6 +149,58 @@ func getTestGetSetStakeAmountTest[T any](
 	stakeAmountAfter, err := getActorStake(height, addr)
 	require.NoError(t, err)
 	require.Equal(t, newStakeAmount, stakeAmountAfter, "unexpected status")
+}
+
+func getAllActorsUpdatedAtHeightTest[T any](
+	t *testing.T,
+	createAndInsertTestActor func(*persistence.PostgresContext) (*T, error),
+	getActorsUpdated func(*persistence.PostgresContext, int64) ([]*T, error),
+	numActorsInTestGenesis int,
+) {
+	db := NewTestPostgresContext(t, 0)
+
+	// Check num actors in genesis
+	accs, err := getActorsUpdated(db, 0)
+	require.NoError(t, err)
+	require.Equal(t, numActorsInTestGenesis, len(accs))
+
+	// Insert a new actor at height 0
+	_, err = createAndInsertTestActor(db)
+	require.NoError(t, err)
+
+	// Verify that num actors incremented by 1
+	accs, err = getActorsUpdated(db, 0)
+	require.NoError(t, err)
+	require.Equal(t, numActorsInTestGenesis+1, len(accs))
+
+	// Close context at height 0 without committing new Pool
+	require.NoError(t, db.Close())
+	// start a new context at height 1
+	db = NewTestPostgresContext(t, 1)
+
+	// Verify that num actors at height 0 is genesis because the new one was not committed
+	accs, err = getActorsUpdated(db, 0)
+	require.NoError(t, err)
+	require.Equal(t, numActorsInTestGenesis, len(accs))
+
+	// Insert a new actor at height 1
+	_, err = createAndInsertTestActor(db)
+	require.NoError(t, err)
+
+	// Verify that num actors updated height 1 is 1
+	accs, err = getActorsUpdated(db, 1)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(accs))
+
+	// Commit & close the context at height 1
+	require.NoError(t, db.Commit(nil))
+	// start a new context at height 2
+	db = NewTestPostgresContext(t, 2)
+
+	// Verify only 1 actor was updated at height 1
+	accs, err = getActorsUpdated(db, 1)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(accs))
 }
 
 func getActorValues(_ types.ProtocolActorSchema, actorValue reflect.Value) *types.Actor {

@@ -7,8 +7,9 @@ import (
 	"time"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/debug"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	telemetry "github.com/pokt-network/pocket/telemetry"
 	"google.golang.org/protobuf/proto"
@@ -24,8 +25,8 @@ type rainTreeNetwork struct {
 
 	peersManager *peersManager
 
-	// TECHDEBT(drewsky): What should we use for de-duping messages within P2P?
-	mempool map[uint64]struct{} // TODO (drewsky) replace map implementation (can grow unbounded)
+	// TODO (#278): What should we use for de-duping messages within P2P?
+	mempool map[uint64]struct{} // TODO (#278) replace map implementation (can grow unbounded)
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook) typesP2P.Network {
@@ -57,7 +58,7 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 		Data:  data,
 		Nonce: nonce,
 	}
-	msgBz, err := proto.Marshal(msg)
+	msgBz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
 		return err
 	}
@@ -93,7 +94,7 @@ func (n *rainTreeNetwork) NetworkSend(data []byte, address cryptoPocket.Address)
 		Nonce: getNonce(),
 	}
 
-	bz, err := proto.Marshal(msg)
+	bz, err := codec.GetCodec().Marshal(msg)
 	if err != nil {
 		return err
 	}
@@ -147,7 +148,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	networkMessage := debug.PocketEvent{}
+	networkMessage := messaging.PocketEnvelope{}
 	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
 		log.Println("Error decoding network message: ", err)
 		return nil, err
@@ -162,7 +163,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
-	// TODO(team): Add more tests to verify this is sufficient for deduping purposes.
+	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
 	if _, contains := n.mempool[rainTreeMsg.Nonce]; contains {
 		n.GetBus().
 			GetTelemetryModule().

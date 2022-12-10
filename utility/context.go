@@ -8,14 +8,18 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
+// TODO: The implementation of `UtilityContext` should not be exposed.
 type UtilityContext struct {
-	LatestHeight int64
-	Mempool      typesUtil.Mempool
-	Context      *Context // IMPROVE: Consider renmaming to PersistenceContext
+	Height  int64
+	Mempool typesUtil.Mempool // IMPROVE: Look into accessing this directly from the module without needing to pass and save another pointer (e.g. access via bus)
+	Context *Context          // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
 }
 
+// IMPROVE: Consider renaming to `persistenceContext` or `storeContext`?
 type Context struct {
+	// CLEANUP: Since `Context` embeds `PersistenceRWContext`, we don't need to do `u.Context.PersistenceRWContext`, but can call `u.Context` directly
 	modules.PersistenceRWContext
+	// TODO(#327): `SavePoints`` have not been implemented yet
 	SavePointsM map[string]struct{}
 	SavePoints  [][]byte
 }
@@ -26,8 +30,8 @@ func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error)
 		return nil, typesUtil.ErrNewPersistenceContext(err)
 	}
 	return &UtilityContext{
-		LatestHeight: height,
-		Mempool:      u.Mempool,
+		Height:  height,
+		Mempool: u.Mempool,
 		Context: &Context{
 			PersistenceRWContext: ctx,
 			SavePoints:           make([][]byte, 0),
@@ -44,13 +48,23 @@ func (u *UtilityContext) GetPersistenceContext() modules.PersistenceRWContext {
 	return u.Context.PersistenceRWContext
 }
 
-func (u *UtilityContext) CommitPersistenceContext() error {
-	return u.Context.PersistenceRWContext.Commit()
+func (u *UtilityContext) Commit(quorumCert []byte) error {
+	if err := u.Context.PersistenceRWContext.Commit(quorumCert); err != nil {
+		return err
+	}
+	u.Context = nil
+	return nil
 }
 
-func (u *UtilityContext) ReleaseContext() {
-	u.Context.Release()
+func (u *UtilityContext) Release() error {
+	if u.Context == nil {
+		return nil
+	}
+	if err := u.Context.Release(); err != nil {
+		return err
+	}
 	u.Context = nil
+	return nil
 }
 
 func (u *UtilityContext) GetLatestBlockHeight() (int64, typesUtil.Error) {
@@ -102,7 +116,7 @@ func (u *UtilityContext) NewSavePoint(transactionHash []byte) typesUtil.Error {
 }
 
 func (c *Context) Reset() typesUtil.Error {
-	if err := c.PersistenceRWContext.Reset(); err != nil {
+	if err := c.PersistenceRWContext.Release(); err != nil {
 		return typesUtil.ErrResetContext(err)
 	}
 	return nil

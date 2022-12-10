@@ -16,14 +16,21 @@ import (
 
 func FuzzFisherman(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		NewTestGenericActor(types.FishermanActor, newTestFisherman),
-		GetGenericActor(types.FishermanActor, getTestFisherman),
+		newTestGenericActor(types.FishermanActor, newTestFisherman),
+		getGenericActor(types.FishermanActor, getTestFisherman),
 		types.FishermanActor)
 }
 
 func TestGetSetFishermanStakeAmount(t *testing.T) {
 	db := NewTestPostgresContext(t, 1)
 	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestFisherman, db.GetFishermanStakeAmount, db.SetFishermanStakeAmount, 1)
+}
+
+func TestGetFishermanUpdatedAtHeight(t *testing.T) {
+	getFishermanUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*types.Actor, error) {
+		return db.GetActorsUpdated(types.FishermanActor, height)
+	}
+	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestFisherman, getFishermanUpdatedFunc, 1)
 }
 
 func TestInsertFishermanAndExists(t *testing.T) {

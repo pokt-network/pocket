@@ -29,8 +29,11 @@ prototype/vendor/
 .idea/
 
 # Generated Mocks (for testing)
-shared/modules/mocks/
-p2p/types/mocks/
+shared/modules/mocks/*
+!shared/modules/mocks/mocks.go
+p2p/types/mocks/*
+!p2p/types/mocks/mocks.go
+
 
 # TODO(team): Does the `types` directory contain generated or raw type files?
 # types/
@@ -62,3 +65,4 @@ build/config/gen*.json
 # Binary downloads and manipulations by helm
 **/charts
 **/tmpcharts
+

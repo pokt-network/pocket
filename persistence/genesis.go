@@ -10,9 +10,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// TODO(andrew): generalize with the `actors interface`
-
-// WARNING: This function crashes the process if there is an error populating the genesis state.
+// CONSIDERATION: Should this return an error and let the caller decide if it should log a fatal error?
 func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesisState) {
 	log.Println("Populating genesis state...")
 
@@ -31,15 +29,11 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		return nil
 	}
 
-	log.Println("Populating genesis state...")
 	rwContext, err := m.NewRWContext(0)
 	if err != nil {
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
 	}
 
-	if err != nil {
-		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
-	}
 	for _, acc := range state.GetAccs() {
 		addrBz, err := hex.DecodeString(acc.GetAddress())
 		if err != nil {
@@ -150,18 +144,27 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		log.Fatalf("an error occurred initializing flags: %s", err.Error())
 	}
 
-	if err = rwContext.Commit(); err != nil {
-		log.Fatalf("an error occurred during commit() on genesis state %s ", err.Error())
+	// Updates all the merkle trees
+	appHash, err := rwContext.ComputeAppHash()
+	if err != nil {
+		log.Fatalf("an error occurred updating the app hash during genesis: %s", err.Error())
+	}
+
+	if err := rwContext.SetProposalBlock(hex.EncodeToString(appHash), nil, nil, nil); err != nil {
+		log.Fatalf("an error occurred setting the proposal block during genesis: %s", err.Error())
+	}
+
+	// This update the DB, blockstore, and commits the state
+	if err = rwContext.Commit(nil); err != nil {
+		log.Fatalf("error committing genesis state to DB %s ", err.Error())
 	}
 }
 
 // TODO(pocket/issues/149): All of the functions below following a structure similar to `GetAll<Actor>`
-//
 //	can easily be refactored and condensed into a single function using a generic type or a common
-//
-// interface.
+//  interface.
 func (p PostgresContext) GetAllAccounts(height int64) (accs []modules.Account, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +188,7 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []modules.Account, e
 
 // CLEANUP: Consolidate with GetAllAccounts.
 func (p PostgresContext) GetAllPools(height int64) (accs []modules.Account, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +207,7 @@ func (p PostgresContext) GetAllPools(height int64) (accs []modules.Account, err 
 }
 
 func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +218,7 @@ func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err err
 	var actors []*types.Actor
 	for rows.Next() {
 		var actor *types.Actor
-		actor, height, err = p.GetActorFromRow(rows)
+		actor, height, err = p.getActorFromRow(rows)
 		if err != nil {
 			return
 		}
@@ -223,17 +226,17 @@ func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err err
 	}
 	rows.Close()
 	for _, actor := range actors {
-		actor, err = p.GetChainsForActor(ctx, tx, types.ApplicationActor, actor, height)
+		actorWithChains, err := p.getChainsForActor(ctx, tx, types.ApplicationActor, actor, height)
 		if err != nil {
-			return
+			return nil, err
 		}
-		apps = append(apps, actor)
+		apps = append(apps, actorWithChains)
 	}
 	return
 }
 
 func (p PostgresContext) GetAllValidators(height int64) (vals []modules.Actor, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +247,7 @@ func (p PostgresContext) GetAllValidators(height int64) (vals []modules.Actor, e
 	var actors []*types.Actor
 	for rows.Next() {
 		var actor *types.Actor
-		actor, height, err = p.GetActorFromRow(rows)
+		actor, height, err = p.getActorFromRow(rows)
 		if err != nil {
 			return
 		}
@@ -252,7 +255,7 @@ func (p PostgresContext) GetAllValidators(height int64) (vals []modules.Actor, e
 	}
 	rows.Close()
 	for _, actor := range actors {
-		actor, err = p.GetChainsForActor(ctx, tx, types.ApplicationActor, actor, height)
+		actor, err = p.getChainsForActor(ctx, tx, types.ApplicationActor, actor, height)
 		if err != nil {
 			return
 		}
@@ -262,7 +265,7 @@ func (p PostgresContext) GetAllValidators(height int64) (vals []modules.Actor, e
 }
 
 func (p PostgresContext) GetAllServiceNodes(height int64) (sn []modules.Actor, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +276,7 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []modules.Actor, e
 	var actors []*types.Actor
 	for rows.Next() {
 		var actor *types.Actor
-		actor, height, err = p.GetActorFromRow(rows)
+		actor, height, err = p.getActorFromRow(rows)
 		if err != nil {
 			return
 		}
@@ -281,7 +284,7 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []modules.Actor, e
 	}
 	rows.Close()
 	for _, actor := range actors {
-		actor, err = p.GetChainsForActor(ctx, tx, types.ServiceNodeActor, actor, height)
+		actor, err = p.getChainsForActor(ctx, tx, types.ServiceNodeActor, actor, height)
 		if err != nil {
 			return
 		}
@@ -291,7 +294,7 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []modules.Actor, e
 }
 
 func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err error) {
-	ctx, tx, err := p.GetCtxAndTx()
+	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +305,7 @@ func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err e
 	var actors []*types.Actor
 	for rows.Next() {
 		var actor *types.Actor
-		actor, height, err = p.GetActorFromRow(rows)
+		actor, height, err = p.getActorFromRow(rows)
 		if err != nil {
 			return
 		}
@@ -310,7 +313,7 @@ func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err e
 	}
 	rows.Close()
 	for _, actor := range actors {
-		actor, err = p.GetChainsForActor(ctx, tx, types.FishermanActor, actor, height)
+		actor, err = p.getChainsForActor(ctx, tx, types.FishermanActor, actor, height)
 		if err != nil {
 			return
 		}

@@ -21,6 +21,8 @@ type Config interface {
 	GetPersistenceConfig() PersistenceConfig
 	GetP2PConfig() P2PConfig
 	GetTelemetryConfig() TelemetryConfig
+	GetLoggerConfig() LoggerConfig
+	GetRPCConfig() RPCConfig
 }
 
 type BaseConfig interface {
@@ -45,6 +47,7 @@ type PersistenceConfig interface {
 	GetNodeSchema() string
 	GetBlockStorePath() string
 	GetTxIndexerPath() string
+	GetTreesStoreDir() string
 }
 
 type P2PConfig interface {
@@ -60,6 +63,13 @@ type TelemetryConfig interface {
 	GetEndpoint() string
 }
 
+type LoggerConfig interface {
+	// We have protobuf enums for the following values in `logger/proto` dir, but they are represented as
+	// `string` to avoid circular dependencies between this (`modules`) and `logger` packages.
+	GetLevel() string
+	GetFormat() string
+}
+
 type UtilityConfig interface {
 	GetMaxMempoolTransactionBytes() uint64
 	GetMaxMempoolTransactions() uint32
@@ -69,6 +79,7 @@ type RPCConfig interface {
 	GetEnabled() bool
 	GetPort() string
 	GetTimeout() uint64
+	GetUseCors() bool
 }
 
 type PersistenceGenesisState interface {

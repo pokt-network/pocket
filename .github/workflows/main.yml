@@ -46,36 +46,59 @@ jobs:
         uses: arduino/setup-protoc@v1
         with:
           version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: install cli dependencies
         run: make install_cli_deps
       - name: generate protobufs, RPC server, RPC client and mocks
         run: make protogen_local && make mockgen && make generate_rpc_openapi
-      - name: run all tests
-        run: make test_all_with_json
+      - name: Create coverage report and run tests
+        # Not utilizing makefile target here to make use of pipefail bash feature.
+        run: |
+          set -euo pipefail
+          go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out 2>&1 | tee test_results.json
+      - name: Sanitize test results
+        # We're utilizing `tee` above which can capture non-json stdout output so we need to remove non-json lines before additional parsing and submitting it to the external github action.
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        run: cat test_results.json | jq -c -R 'fromjson? | select(type == "object")' > tmp.json && mv tmp.json test_results.json
+      - name: Output test failures
+        # Makes it easier to find failed tests so no need to scroll through the whole log.
+        if: ${{ failure() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        run: cat test_results.json | jq 'select(.Action == "fail")'
+      - name: Upload test results
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            test_results.json
       - name: Annotate tests on GitHub
         # Only annotate if the test failed on target version to avoid duplicated annotations on GitHub.
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: guyarb/golang-test-annotations@v0.5.1
         with:
           test-results: test_results.json
+      - name: Prepare code coverage report
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        run: go tool cover -func=coverage.out -o=coverage.out
+      - name: Upload coverage to Codecov
+        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
+        uses: codecov/codecov-action@v3
       - name: Run golangci-lint
         # Only run if the test failed on target version to avoid duplicated annotations on GitHub.
         if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
         uses: golangci/golangci-lint-action@v3
         with:
+          # only-new-issues: true
           args: --issues-exit-code=0 # TODO: Remove this once we fix all the issues.
-      - name: create coverage report
-        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
-        run: make test_all_with_coverage
-      - name: Upload coverage to Codecov
-        if: ${{ always() && env.TARGET_GOLANG_VERSION == matrix.go }}
-        uses: codecov/codecov-action@v3
 
   # TODO(@okdas): reuse artifacts built by the previous job instead
   # of going through the build process in container build job again
   # - figure out how to handle musl/alpine case if we want to support it
   build-images:
     runs-on: ubuntu-latest
+    needs: test-multiple-go-versions
+    # Until we have developer environments, we don't need the images built on other that main branches.
+    if: github.ref == 'refs/heads/main'
     strategy:
       matrix:
         # Build dev & prod images

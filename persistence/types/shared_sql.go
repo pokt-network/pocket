@@ -30,7 +30,7 @@ const (
 	HeightCol          = "height"
 )
 
-func ProtocolActorTableSchema(actorSpecificColName, constraintName string) string {
+func protocolActorTableSchema(actorSpecificColName, constraintName string) string {
 	return fmt.Sprintf(`(
 			%s TEXT NOT NULL,
 			%s TEXT NOT NULL,
@@ -59,7 +59,7 @@ func ProtocolActorTableSchema(actorSpecificColName, constraintName string) strin
 		HeightCol)
 }
 
-func ProtocolActorChainsTableSchema(constraintName string) string {
+func protocolActorChainsTableSchema(constraintName string) string {
 	return fmt.Sprintf(`(
 			%s TEXT NOT NULL,
 			%s CHAR(4) NOT NULL,
@@ -67,6 +67,11 @@ func ProtocolActorChainsTableSchema(constraintName string) string {
 
 			CONSTRAINT %s UNIQUE (%s, %s, %s)
 		)`, AddressCol, ChainIDCol, HeightCol, DefaultBigInt, constraintName, AddressCol, ChainIDCol, HeightCol)
+}
+
+func SelectAtHeight(selector string, height int64, tableName string) string {
+	return fmt.Sprintf(`SELECT %s FROM %s WHERE height=%d`,
+		selector, tableName, height)
 }
 
 func Select(selector, address string, height int64, tableName string) string {
@@ -83,7 +88,7 @@ func SelectActors(actorSpecificParam string, height int64, tableName string) str
        `, actorSpecificParam, tableName, height)
 }
 
-func SelectChains(selector, address string, height int64, actorTableName, chainsTableName string) string {
+func selectChains(selector, address string, height int64, actorTableName, chainsTableName string) string {
 	return fmt.Sprintf(`SELECT %s FROM %s WHERE address='%s' AND height=(%s);`,
 		selector, chainsTableName, address, Select(HeightCol, address, height, actorTableName))
 }
@@ -97,7 +102,7 @@ func Exists(address string, height int64, tableName string) string {
 //       returns latest/max height for each address
 //   (height, address) IN (SELECT MAX(height), address FROM %s GROUP BY address) ->
 //       ensures the query is acting on max height for the addresses
-func ReadyToUnstake(unstakingHeight int64, tableName string) string {
+func readyToUnstake(unstakingHeight int64, tableName string) string {
 	return fmt.Sprintf(`
 		SELECT address, staked_tokens, output_address
 		FROM %s WHERE unstaking_height=%d
@@ -129,10 +134,10 @@ func Insert(
 	}
 
 	return fmt.Sprintf("WITH baseTableInsert AS (%s)\n%s",
-		insertStatement, InsertChains(actor.Address, actor.Chains, height, chainsTableName, chainsConstraintName))
+		insertStatement, insertChains(actor.Address, actor.Chains, height, chainsTableName, chainsConstraintName))
 }
 
-func InsertChains(address string, chains []string, height int64, tableName, constraintName string) string {
+func insertChains(address string, chains []string, height int64, tableName, constraintName string) string {
 	var buffer bytes.Buffer
 
 	buffer.WriteString(fmt.Sprintf("INSERT INTO %s (address, chain_id, height) VALUES", tableName))
@@ -166,7 +171,7 @@ func Update(address, stakedTokens, actorSpecificParam, actorSpecificParamValue s
 		actorSpecificParam, actorSpecificParam)
 }
 
-func UpdateUnstakingHeight(address, actorSpecificParam string, unstakingHeight, height int64, tableName, constraintName string) string {
+func updateUnstakingHeight(address, actorSpecificParam string, unstakingHeight, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
 		(
@@ -181,7 +186,7 @@ func UpdateUnstakingHeight(address, actorSpecificParam string, unstakingHeight, 
 		constraintName)
 }
 
-func UpdateStakeAmount(address, actorSpecificParam, stakeAmount string, height int64, tableName, constraintName string) string {
+func updateStakeAmount(address, actorSpecificParam, stakeAmount string, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
 		(
@@ -196,7 +201,7 @@ func UpdateStakeAmount(address, actorSpecificParam, stakeAmount string, height i
 		constraintName)
 }
 
-func UpdatePausedHeight(address, actorSpecificParam string, pausedHeight, height int64, tableName, constraintName string) string {
+func updatePausedHeight(address, actorSpecificParam string, pausedHeight, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s(address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
 		(
@@ -210,7 +215,7 @@ func UpdatePausedHeight(address, actorSpecificParam string, pausedHeight, height
 		tableName, address, height, constraintName)
 }
 
-func UpdateUnstakedHeightIfPausedBefore(actorSpecificParam string, unstakingHeight, pausedBeforeHeight, height int64, tableName, constraintName string) string {
+func updateUnstakedHeightIfPausedBefore(actorSpecificParam string, unstakingHeight, pausedBeforeHeight, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s (address, public_key, staked_tokens, %s, output_address, paused_height, unstaking_height, height)
 		(

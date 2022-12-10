@@ -18,27 +18,27 @@ const (
 )
 
 var (
-	AccountTableSchema = AccountOrPoolSchema(AddressCol, AccountHeightConstraint)
-	PoolTableSchema    = AccountOrPoolSchema(NameCol, PoolHeightConstraint)
+	AccountTableSchema = accountOrPoolSchema(AddressCol, AccountHeightConstraint)
+	PoolTableSchema    = accountOrPoolSchema(NameCol, PoolHeightConstraint)
 )
 
 func GetAccountAmountQuery(address string, height int64) string {
-	return SelectBalance(AddressCol, address, height, AccountTableName)
+	return selectBalance(AddressCol, address, height, AccountTableName)
 }
 
 func InsertAccountAmountQuery(address, amount string, height int64) string {
-	return InsertAcc(AddressCol, address, amount, height, AccountTableName, AccountHeightConstraint)
+	return insertAcc(AddressCol, address, amount, height, AccountTableName, AccountHeightConstraint)
 }
 
 func GetPoolAmountQuery(name string, height int64) string {
-	return SelectBalance(NameCol, name, height, PoolTableName)
+	return selectBalance(NameCol, name, height, PoolTableName)
 }
 
 func InsertPoolAmountQuery(name, amount string, height int64) string {
-	return InsertAcc(NameCol, name, amount, height, PoolTableName, PoolHeightConstraint)
+	return insertAcc(NameCol, name, amount, height, PoolTableName, PoolHeightConstraint)
 }
 
-func AccountOrPoolSchema(mainColName, constraintName string) string {
+func accountOrPoolSchema(mainColName, constraintName string) string {
 	return fmt.Sprintf(`(
 			%s TEXT NOT NULL,
 			%s TEXT NOT NULL,
@@ -48,7 +48,7 @@ func AccountOrPoolSchema(mainColName, constraintName string) string {
 		)`, mainColName, BalanceCol, HeightCol, constraintName, mainColName, HeightCol)
 }
 
-func InsertAcc(actorSpecificParam, actorSpecificParamValue, amount string, height int64, tableName, constraintName string) string {
+func insertAcc(actorSpecificParam, actorSpecificParamValue, amount string, height int64, tableName, constraintName string) string {
 	return fmt.Sprintf(`
 		INSERT INTO %s (%s, balance, height)
 			VALUES ('%s','%s',%d)
@@ -57,7 +57,7 @@ func InsertAcc(actorSpecificParam, actorSpecificParamValue, amount string, heigh
 		`, tableName, actorSpecificParam, actorSpecificParamValue, amount, height, constraintName)
 }
 
-func SelectBalance(actorSpecificParam, actorSpecificParamValue string, height int64, tableName string) string {
+func selectBalance(actorSpecificParam, actorSpecificParamValue string, height int64, tableName string) string {
 	return fmt.Sprintf(`SELECT balance FROM %s WHERE %s='%s' AND height<=%d ORDER BY height DESC LIMIT 1`,
 		tableName, actorSpecificParam, actorSpecificParamValue, height)
 }
@@ -78,4 +78,20 @@ func SelectPools(height int64, tableName string) string {
 			WHERE height<=%d
 			ORDER BY name, height DESC
        `, tableName, height)
+}
+
+func GetAccountsUpdatedAtHeightQuery(height int64) string {
+	return SelectAtHeight(fmt.Sprintf("%s,%s", AddressCol, BalanceCol), height, AccountTableName)
+}
+
+func GetPoolsUpdatedAtHeightQuery(height int64) string {
+	return SelectAtHeight(fmt.Sprintf("%s,%s", NameCol, BalanceCol), height, PoolTableName)
+}
+
+func ClearAllAccounts() string {
+	return fmt.Sprintf(`DELETE FROM %s`, AccountTableName)
+}
+
+func ClearAllPools() string {
+	return fmt.Sprintf(`DELETE FROM %s`, PoolTableName)
 }

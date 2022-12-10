@@ -14,14 +14,21 @@ import (
 
 func FuzzServiceNode(f *testing.F) {
 	fuzzSingleProtocolActor(f,
-		NewTestGenericActor(types.ServiceNodeActor, newTestServiceNode),
-		GetGenericActor(types.ServiceNodeActor, getTestServiceNode),
+		newTestGenericActor(types.ServiceNodeActor, newTestServiceNode),
+		getGenericActor(types.ServiceNodeActor, getTestServiceNode),
 		types.ServiceNodeActor)
 }
 
 func TestGetSetServiceNodeStakeAmount(t *testing.T) {
 	db := NewTestPostgresContext(t, 1)
 	getTestGetSetStakeAmountTest(t, db, createAndInsertDefaultTestServiceNode, db.GetServiceNodeStakeAmount, db.SetServiceNodeStakeAmount, 1)
+}
+
+func TestGetServiceNodeUpdatedAtHeight(t *testing.T) {
+	getServiceNodeUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*types.Actor, error) {
+		return db.GetActorsUpdated(types.ServiceNodeActor, height)
+	}
+	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestServiceNode, getServiceNodeUpdatedFunc, 1)
 }
 
 func TestInsertServiceNodeAndExists(t *testing.T) {

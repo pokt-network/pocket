@@ -7,18 +7,17 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
+	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"google.golang.org/protobuf/types/known/anypb"
-
-	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	"github.com/pokt-network/pocket/shared/modules"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
 	DefaultLogPrefix    = "NODE" // TODO(#164): Make implicit when logging is standardized
-	ConsensusModuleName = "consensus"
+	consensusModuleName = "consensus"
 )
 
 var (
@@ -50,6 +49,7 @@ type consensusModule struct {
 	//    TODO(#315):  Move the statefulness of `TxResult` to the persistence module
 	TxResults []modules.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
 
+	// IMPROVE: Consider renaming `highPrepareQC` to simply `prepareQC`
 	highPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
 	lockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
@@ -71,7 +71,8 @@ type consensusModule struct {
 	// DEPRECATE: Remove later when we build a shared/proper/injected logger
 	logPrefix string
 
-	// TECHDEBT: Move this over to use the txIndexer
+	// TECHDEBT: Rename this to `consensusMessagePool` or something similar
+	//           and reconsider if an in-memory map is the best approach
 	messagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
 }
 
@@ -181,7 +182,7 @@ func (m *consensusModule) Stop() error {
 }
 
 func (m *consensusModule) GetModuleName() string {
-	return ConsensusModuleName
+	return consensusModuleName
 }
 
 func (m *consensusModule) GetBus() modules.Bus {
@@ -198,6 +199,7 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 }
 
 func (*consensusModule) ValidateConfig(cfg modules.Config) error {
+	// TODO (#334): implement this
 	return nil
 }
 
@@ -233,8 +235,9 @@ func (m *consensusModule) GetPrivateKey() (cryptoPocket.PrivateKey, error) {
 func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 	m.m.Lock()
 	defer m.m.Unlock()
+
 	switch message.MessageName() {
-	case HotstuffMessage:
+	case HotstuffMessageContentType:
 		msg, err := codec.GetCodec().FromAny(message)
 		if err != nil {
 			return err
@@ -246,8 +249,6 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 		if err := m.handleHotstuffMessage(hotstuffMessage); err != nil {
 			return err
 		}
-	case UtilityMessage:
-		panic("[WARN] UtilityMessage handling is not implemented by consensus yet...")
 	default:
 		return typesCons.ErrUnknownConsensusMessageType(message.MessageName())
 	}
@@ -257,6 +258,14 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 
 func (m *consensusModule) CurrentHeight() uint64 {
 	return m.Height
+}
+
+func (m *consensusModule) CurrentRound() uint64 {
+	return m.Round
+}
+
+func (m *consensusModule) CurrentStep() uint64 {
+	return uint64(m.Step)
 }
 
 func (m *consensusModule) ValidatorMap() modules.ValidatorMap { // TODO: This needs to be dynamically updated during various operations and network changes.

@@ -2,16 +2,20 @@ package test
 
 import (
 	"encoding/hex"
-	"math/big"
+	"log"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
-	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
+	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/utility"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
@@ -26,15 +30,18 @@ const (
 
 var (
 	defaultTestingChainsEdited = []string{"0002"}
-	defaultUnstaking           = int64(2017)
-	defaultSendAmount          = big.NewInt(10000)
-	defaultNonceString         = utilTypes.BigIntToString(defaults.DefaultAccountAmount)
-	defaultSendAmountString    = utilTypes.BigIntToString(defaultSendAmount)
-	testSchema                 = "test_schema"
-	testMessageSendType        = "MessageSend"
+
+	defaultUnstaking   = int64(2017)
+	defaultNonceString = utilTypes.BigIntToString(defaults.DefaultAccountAmount)
+
+	testNonce           = "defaultNonceString"
+	testSchema          = "test_schema"
+	testMessageSendType = "MessageSend"
 )
 
-var persistenceDbUrl string
+var testPersistenceMod modules.PersistenceModule // initialized in TestMain
+var testUtilityMod modules.UtilityModule         // initialized in TestMain
+
 var actorTypes = []utilTypes.ActorType{
 	utilTypes.ActorType_App,
 	utilTypes.ActorType_ServiceNode,
@@ -48,25 +55,38 @@ func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
 
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
-	persistenceDbUrl = dbUrl
+	runtimeCfg := newTestRuntimeConfig(dbUrl)
+
+	testUtilityMod = newTestUtilityModule(runtimeCfg)
+	testPersistenceMod = newTestPersistenceModule(runtimeCfg)
+
 	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
 	os.Exit(exitCode)
 }
 
 func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext {
-	testPersistenceMod := newTestPersistenceModule(t, persistenceDbUrl)
-
 	persistenceContext, err := testPersistenceMod.NewRWContext(height)
 	require.NoError(t, err)
 
+	// TODO(#388): Expose a `GetMempool` function in `utility_module` so we can remove this reflection.
+	mempool := reflect.ValueOf(testUtilityMod).Elem().FieldByName("Mempool").Interface().(utilTypes.Mempool)
+
+	// TECHDEBT: Move the internal of cleanup into a separate function and call this in the
+	// beginning of every test. This (the current implementation) is an issue because if we call
+	// `NewTestingUtilityContext` more than once in a single test, we create unnecessary calls to clean.
 	t.Cleanup(func() {
-		persistenceContext.ResetContext()
+		require.NoError(t, testPersistenceMod.ReleaseWriteContext())
+		require.NoError(t, testPersistenceMod.HandleDebugMessage(&messaging.DebugMessage{
+			Action:  messaging.DebugMessageAction_DEBUG_PERSISTENCE_RESET_TO_GENESIS,
+			Message: nil,
+		}))
+		mempool.Clear()
 	})
 
 	return utility.UtilityContext{
-		LatestHeight: height,
-		Mempool:      NewTestingMempool(t),
+		Height:  height,
+		Mempool: mempool,
 		Context: &utility.Context{
 			PersistenceRWContext: persistenceContext,
 			SavePointsM:          make(map[string]struct{}),
@@ -75,30 +95,59 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 	}
 }
 
-func newTestPersistenceModule(t *testing.T, databaseUrl string) modules.PersistenceModule {
+func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
+	cfg := runtime.NewConfig(
+		&runtime.BaseConfig{},
+		runtime.WithPersistenceConfig(&types.PersistenceConfig{
+			PostgresUrl:    databaseUrl,
+			NodeSchema:     testSchema,
+			BlockStorePath: "",
+			TxIndexerPath:  "",
+			TreesStoreDir:  "",
+		}),
+		runtime.WithUtilityConfig(&utilTypes.UtilityConfig{
+			MaxMempoolTransactionBytes: 1000000,
+			MaxMempoolTransactions:     1000,
+		}))
+	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
+	runtimeCfg := runtime.NewManager(cfg, genesisState)
+	return runtimeCfg
+}
+
+func newTestUtilityModule(runtimeCfg *runtime.Manager) modules.UtilityModule {
+	utilityMod, err := utility.Create(runtimeCfg)
+	if err != nil {
+		log.Fatalf("Error creating persistence module: %s", err)
+	}
+	return utilityMod.(modules.UtilityModule)
+}
+
+// IMPROVE: Not part of `TestMain` because a mock requires `testing.T` to be initialized.
+// We are trying to only initialize one `testPersistenceModule` in all the tests, so when the
+// utility module tests are no longer dependant on the persistence module explicitly, this
+// can be improved.
+func mockBusInTestModules(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	mockPersistenceConfig := mock_modules.NewMockPersistenceConfig(ctrl)
-	mockPersistenceConfig.EXPECT().GetPostgresUrl().Return(databaseUrl).AnyTimes()
-	mockPersistenceConfig.EXPECT().GetNodeSchema().Return(testSchema).AnyTimes()
-	mockPersistenceConfig.EXPECT().GetBlockStorePath().Return("").AnyTimes()
-	mockPersistenceConfig.EXPECT().GetTxIndexerPath().Return("").AnyTimes()
+	busMock := modulesMock.NewMockBus(ctrl)
+	busMock.EXPECT().GetPersistenceModule().Return(testPersistenceMod).AnyTimes()
+	busMock.EXPECT().GetUtilityModule().Return(testUtilityMod).AnyTimes()
 
-	mockRuntimeConfig := mock_modules.NewMockConfig(ctrl)
-	mockRuntimeConfig.EXPECT().GetPersistenceConfig().Return(mockPersistenceConfig).AnyTimes()
+	testPersistenceMod.SetBus(busMock)
+	testUtilityMod.SetBus(busMock)
 
-	mockRuntimeMgr := mock_modules.NewMockRuntimeMgr(ctrl)
-	mockRuntimeMgr.EXPECT().GetConfig().Return(mockRuntimeConfig).AnyTimes()
+	t.Cleanup(func() {
+		testPersistenceMod.SetBus(nil)
+		testUtilityMod.SetBus(nil)
+	})
+}
 
-	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
-	mockRuntimeMgr.EXPECT().GetGenesis().Return(genesisState).AnyTimes()
-
-	persistenceMod, err := persistence.Create(mockRuntimeMgr)
-	require.NoError(t, err)
-
-	err = persistenceMod.Start()
-	require.NoError(t, err)
-
+// TODO(#290): Mock the persistence module so the utility module is not dependant on it.
+func newTestPersistenceModule(runtimeCfg *runtime.Manager) modules.PersistenceModule {
+	persistenceMod, err := persistence.Create(runtimeCfg)
+	if err != nil {
+		log.Fatalf("Error creating persistence module: %s", err)
+	}
 	return persistenceMod.(modules.PersistenceModule)
 }
 

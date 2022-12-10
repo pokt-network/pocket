@@ -3,44 +3,50 @@ package utility
 import (
 	"bytes"
 	"encoding/hex"
+
+	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
+
+func (u *utilityModule) CheckTransaction(txProtoBytes []byte) error {
+	// Is the tx already in the mempool (in memory)?
+	txHash := typesUtil.TransactionHash(txProtoBytes)
+	if u.Mempool.Contains(txHash) {
+		return typesUtil.ErrDuplicateTransaction()
+	}
+
+	// Is the tx already indexed (on disk)?
+	persistenceModule := u.GetBus().GetPersistenceModule()
+	if txExists, err := persistenceModule.TransactionExists(txHash); err != nil {
+		return err
+	} else if txExists {
+		// TODO: non-ordered nonce requires non-pruned tx indexer
+		return typesUtil.ErrTransactionAlreadyCommitted()
+	}
+
+	// Can the tx bytes be decoded as a protobuf?
+	transaction := &typesUtil.Transaction{}
+	if err := codec.GetCodec().Unmarshal(txProtoBytes, transaction); err != nil {
+		return typesUtil.ErrProtoUnmarshal(err)
+	}
+
+	// Does the tx pass basic validation?
+	if err := transaction.ValidateBasic(); err != nil {
+		return err
+	}
+
+	// Store the tx in the mempool
+	return u.Mempool.AddTransaction(txProtoBytes)
+}
 
 func (u *UtilityContext) ApplyTransaction(index int, tx *typesUtil.Transaction) (modules.TxResult, typesUtil.Error) {
 	msg, signer, err := u.AnteHandleMessage(tx)
 	if err != nil {
 		return nil, err
 	}
-	return tx.ToTxResult(u.LatestHeight, index, signer, msg.GetMessageRecipient(), msg.GetMessageName(), u.HandleMessage(msg))
-}
-
-func (u *UtilityContext) CheckTransaction(transactionProtoBytes []byte) error {
-	// validate transaction
-	txHash := typesUtil.TransactionHash(transactionProtoBytes)
-	if u.Mempool.Contains(txHash) {
-		return typesUtil.ErrDuplicateTransaction()
-	}
-	store := u.Store()
-	txExists, err := store.TransactionExists(txHash)
-	if err != nil {
-		return err
-	}
-	// TODO non-ordered nonce requires non-pruned tx indexer
-	if txExists {
-		return typesUtil.ErrTransactionAlreadyCommitted()
-	}
-	cdc := u.Codec()
-	transaction := &typesUtil.Transaction{}
-	if err := cdc.Unmarshal(transactionProtoBytes, transaction); err != nil {
-		return typesUtil.ErrProtoUnmarshal(err)
-	}
-	if err := transaction.ValidateBasic(); err != nil {
-		return err
-	}
-	// store in mempool
-	return u.Mempool.AddTransaction(transactionProtoBytes)
+	return tx.ToTxResult(u.Height, index, signer, msg.GetMessageRecipient(), msg.GetMessageName(), u.HandleMessage(msg))
 }
 
 // CLEANUP: Exposed for testing purposes only
