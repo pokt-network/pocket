@@ -19,13 +19,11 @@ VERBOSE_TEST ?= -v
 
 .SILENT:
 
-## List all make targets
-.PHONY: list
+.PHONY: list ## List all make targets
 list:
 	@${MAKE} -pRrn : -f $(MAKEFILE_LIST) 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | sort
 
-## Prints all the targets in all the Makefiles
-.PHONY: help
+.PHONY: help ## Prints all the targets in all the Makefiles
 .DEFAULT_GOAL := help
 help:
 	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -90,18 +88,15 @@ go_oapi-codegen:
 	}
 
 .PHONY: go_clean_deps
-## Runs `go mod tidy` && `go mod vendor`
-go_clean_deps:
+go_clean_deps: ## Runs `go mod tidy` && `go mod vendor`
 	go mod tidy && go mod vendor
 
 .PHONY: go_lint
-## Run all linters that are triggered by the CI pipeline
-go_lint:
+go_lint: ## Run all linters that are triggered by the CI pipeline
 	golangci-lint run ./...
 
 .PHONY: gofmt
-## Format all the .go files in the project in place.
-gofmt:
+gofmt: ## Format all the .go files in the project in place.
 	gofmt -w -s .
 
 .PHONY: install_cli_deps
@@ -213,8 +208,7 @@ docker_loki_check:
 	if [ `docker plugin ls | grep loki: | wc -l` -eq 0 ]; then make docker_loki_install; fi
 
 .PHONY: clean_mocks
-### Use `clean_mocks` to delete mocks before recreating them. Also useful to cleanup code that was generated from a different branch
-clean_mocks:
+clean_mocks: ## Use `clean_mocks` to delete mocks before recreating them. Also useful to cleanup code that was generated from a different branch
 	$(eval modules_dir = "shared/modules")
 	find ${modules_dir}/mocks -type f ! -name "mocks.go" -exec rm {} \;
 
@@ -274,117 +268,96 @@ generate_rpc_openapi: go_oapi-codegen ## (Re)generates the RPC server and client
 	echo "OpenAPI client and server generated"
 
 .PHONY: swagger-ui
-## Starts a local Swagger UI instance for the RPC API
-swagger-ui:
+swagger-ui: ## Starts a local Swagger UI instance for the RPC API
 	echo "Attempting to start Swagger UI at http://localhost:8080\n\n"
 	docker run -p 8080:8080 -e SWAGGER_JSON=/v1/openapi.yaml -v $(shell pwd)/rpc/v1:/v1 swaggerapi/swagger-ui
 
 .PHONY: generate_cli_commands_docs
-### (Re)generates the CLI commands docs (this is meant to be called by CI)
-generate_cli_commands_docs:
+generate_cli_commands_docs: ## (Re)generates the CLI commands docs (this is meant to be called by CI)
 	$(eval cli_docs_dir = "app/client/cli/doc/commands")
 	rm ${cli_docs_dir}/*.md >/dev/null 2>&1 || true
 	cd app/client/cli/docgen && go run .
 	echo "CLI commands docs generated in ${cli_docs_dir}"
 
 .PHONY: test_all
-## Run all go unit tests
-test_all: # generate_mocks
+test_all: ## Run all go unit tests
 	go test -p 1 -count=1 ./...
 
 .PHONY: test_all_with_json_coverage
-## Run all go unit tests, output results & coverage into json & coverage files
-test_all_with_json_coverage: generate_rpc_openapi # generate_mocks
+test_all_with_json_coverage: generate_rpc_openapi ## Run all go unit tests, output results & coverage into json & coverage files
 	go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out | tee test_results.json | jq
 
 .PHONY: test_race
-## Identify all unit tests that may result in race conditions
-test_race: # generate_mocks
+test_race: ## Identify all unit tests that may result in race conditions
 	go test ${VERBOSE_TEST} -race ./...
 
 .PHONY: test_utility
-## Run all go utility module unit tests
-test_utility: # generate_mocks
+test_utility: ## Run all go utility module unit tests
 	go test ${VERBOSE_TEST} -p=1 -count=1  ./utility/...
 
 .PHONY: test_shared
-## Run all go unit tests in the shared module
-test_shared: # generate_mocks
+test_shared: ## Run all go unit tests in the shared module
 	go test ${VERBOSE_TEST} -p 1 ./shared/...
 
 .PHONY: test_consensus
-## Run all go unit tests in the consensus module
-test_consensus: # mockgen
+test_consensus: ## Run all go unit tests in the consensus module
 	go test ${VERBOSE_TEST} -count=1 ./consensus/...
 
 .PHONY: test_consensus_concurrent_tests
-## Run unit tests in the consensus module that could be prone to race conditions (#192)
-test_consensus_concurrent_tests:
+test_consensus_concurrent_tests: ## Run unit tests in the consensus module that could be prone to race conditions (#192)
 	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
 	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
 	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
 	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
 
 .PHONY: test_hotstuff
-## Run all go unit tests related to hotstuff consensus
-test_hotstuff: # mockgen
+test_hotstuff: ## Run all go unit tests related to hotstuff consensus
 	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
 .PHONY: test_pacemaker
-## Run all go unit tests related to the hotstuff pacemaker
-test_pacemaker: # mockgen
+test_pacemaker: ## Run all go unit tests related to the hotstuff pacemaker
 	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
 .PHONY: test_vrf
-## Run all go unit tests in the VRF library
-test_vrf:
+test_vrf: ## Run all go unit tests in the VRF library
 	go test ${VERBOSE_TEST} ./consensus/leader_election/vrf
 
 .PHONY: test_sortition
-## Run all go unit tests in the Sortition library
-test_sortition:
+test_sortition: ## Run all go unit tests in the Sortition library
 	go test ${VERBOSE_TEST} ./consensus/leader_election/sortition
 
 .PHONY: test_persistence
-## Run all go unit tests in the Persistence module
-test_persistence:
+test_persistence: ## Run all go unit tests in the Persistence module
 	go test ${VERBOSE_TEST} -p 1 -count=1 ./persistence/...
 
 .PHONY: test_persistence_state_hash
-## Run all go unit tests in the Persistence module related to the state hash
-test_persistence_state_hash:
+test_persistence_state_hash: ## Run all go unit tests in the Persistence module related to the state hash
 	go test ${VERBOSE_TEST} -run TestStateHash -count=1 ./persistence/...
 
 .PHONY: test_p2p
-## Run all p2p
-test_p2p:
+test_p2p: ## Run all p2p related tests
 	go test ${VERBOSE_TEST} -count=1 ./p2p/...
 
 .PHONY: test_p2p_raintree
-## Run all p2p raintree related tests
-test_p2p_raintree:
+test_p2p_raintree: ## Run all p2p raintree related tests
 	go test ${VERBOSE_TEST} -run RainTreeNetwork -count=1 ./p2p/...
 
 .PHONY: test_p2p_raintree_addrbook
-## Run all p2p raintree addr book related tests
-test_p2p_raintree_addrbook:
+test_p2p_raintree_addrbook: ## Run all p2p raintree addr book related tests
 	go test ${VERBOSE_TEST} -run RainTreeAddrBook -count=1 ./p2p/...
 
 # TIP: For benchmarks, consider appending `-run=^#` to avoid running unit tests in the same package
 
 .PHONY: benchmark_persistence_state_hash
-## Benchmark the state hash computation
-benchmark_persistence_state_hash:
+benchmark_persistence_state_hash: ## Benchmark the state hash computation
 	go test ${VERBOSE_TEST} -cpu 1,2 -benchtime=1s -benchmem -bench=. -run BenchmarkStateHash -count=1 ./persistence/...
 
 .PHONY: benchmark_sortition
-## Benchmark the Sortition library
-benchmark_sortition:
+benchmark_sortition: ## Benchmark the Sortition library
 	go test ${VERBOSE_TEST} -bench=. -run ^# ./consensus/leader_election/sortition
 
 .PHONY: benchmark_p2p_addrbook
-## Benchmark all P2P addr book related tests
-benchmark_p2p_addrbook:
+benchmark_p2p_addrbook: ## Benchmark all P2P addr book related tests
 	go test ${VERBOSE_TEST} -bench=. -run BenchmarkAddrBook -count=1 ./p2p/...
 
 ### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
@@ -417,18 +390,15 @@ TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE
 # 3. Feel free to add additional keywords to the list above
 
 .PHONY: todo_list
-## List all the TODOs in the project (excludes vendor and prototype directories)
-todo_list:
+todo_list: ## List all the TODOs in the project (excludes vendor and prototype directories)
 	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS}  .
 
 .PHONY: todo_count
-## Print a count of all the TODOs in the project
-todo_count:
+todo_count: ## Print a count of all the TODOs in the project
 	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS} . | wc -l
 
 .PHONY: todo_this_commit
-## List all the TODOs needed to be done in this commit
-todo_this_commit:
+todo_this_commit: ## List all the TODOs needed to be done in this commit
 	grep --exclude-dir={.git,vendor,prototype,.vscode} --exclude=Makefile -r -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT"
 
 # Default values for gen_genesis_and_config
@@ -438,18 +408,15 @@ numApplications ?= 1
 numFishermen ?= 1
 
 .PHONY: gen_genesis_and_config
-## Generate the genesis and config files for LocalNet
-gen_genesis_and_config:
+gen_genesis_and_config: ## Generate the genesis and config files for LocalNet
 	go run ./build/config/main.go --genPrefix="gen." --numValidators=${numValidators} --numServiceNodes=${numServiceNodes} --numApplications=${numApplications} --numFishermen=${numFishermen}
 
 .PHONY: gen_genesis_and_config
-## Clear the genesis and config files for LocalNet
-clear_genesis_and_config:
+clear_genesis_and_config: ## Clear the genesis and config files for LocalNet
 	rm build/config/gen.*.json
 
 .PHONY: check_cross_module_imports
-## Lists cross-module imports
-check_cross_module_imports:
+check_cross_module_imports: ## Lists cross-module imports
 	$(eval exclude_common=--exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime)
 	echo "persistence:\n"
 	grep ${exclude_common} --exclude-dir=persistence -r "github.com/pokt-network/pocket/persistence" || echo "✅ OK!"

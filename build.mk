@@ -23,22 +23,19 @@ ifeq ($(filter -v,${GOARGS}),)
 endif
 endif
 
-## Clean the build directory
 .PHONY: clean
-clean: ${CLEAN_TARGETS}
+clean: ${CLEAN_TARGETS} ## Clean the build directory
 	rm -rf ${BUILD_DIR}/
 
-## Check if the installed Go version is the required one
 .PHONY: goversion
-goversion:
+goversion: ## Check if the installed Go version is the required one
 ifneq (${IGNORE_GOLANG_VERSION}, 1)
 	@printf "${GOLANG_VERSION}\n$$(go version | awk '{sub(/^go/, "", $$3);print $$3}')" | sort -t '.' -k 1,1 -k 2,2 -k 3,3 -g | head -1 | grep -q -E "^${GOLANG_VERSION}$$" || (printf "Required Go version is ${GOLANG_VERSION}\nInstalled: `go version`" && exit 1)
 endif
 
-## Build a single application in the app directory
 .PHONY: build-%
 build-%: pre-build
-build-%: goversion
+build-%: goversion ## Build a single application in the app directory
 ifeq (${VERBOSE}, 1)
 	go env
 endif
@@ -48,10 +45,9 @@ endif
 
 	@${MAKE} post-build
 
-## Build all applications in the app directory
 .PHONY: build
 build: pre-build
-build: goversion
+build: goversion ## Build all applications in the app directory
 ifeq (${VERBOSE}, 1)
 	go env
 endif
@@ -71,22 +67,18 @@ pre-build: ${PRE_BUILD_TARGETS}
 post-build: ${POST_BUILD_TARGETS}
 	@:
 
-## Run a single application in after building it
 .PHONY: run-%
-run-%: build-%
+run-%: build-% ## Run a single application in after building it
 	${BUILD_DIR}/$*
 
-## Run all applications in the app directory after building them
-.PHONY: run
+.PHONY: run ## Run all applications in the app directory after building them
 run: $(patsubst app/%,run-%,$(wildcard app/*)) ## Build and execute all applications
 
-## Rename a binary to the name specified in BINARY_NAME_$* if it exists.
 .PHONY: rename-%
-rename-%:
+rename-%: ## Rename a binary to the name specified in BINARY_NAME_$* if it exists.
 
 ## Redirecting stderr to /dev/null to avoid returning an error if the file already exists
 	@mv -f ${BUILD_DIR}/$* ${BUILD_DIR}/${BINARY_NAME_$*} 2>/dev/null; true
 
-## Rename all binaries in the bin directory to the name specified in BINARY_NAME_$* if it exists
 .PHONY: rename-binaries
-rename-binaries: $(patsubst bin/%,rename-%,$(wildcard bin/*)) ## Rename all binaries in the bin directory
+rename-binaries: $(patsubst bin/%,rename-%,$(wildcard bin/*)) ## Rename all binaries in the bin directory to the name specified in BINARY_NAME_$* if it exists
