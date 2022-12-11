@@ -9,6 +9,12 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 
 ## [Unreleased]
 
+## [0.0.0.11] - 2022-12-10
+
+- Remove `SetProposalBlock` and local vars to keep proposal state
+- Add `proposerAddr` to the `Commit` function
+- Move the `PostgresContext` struct to `context.db`
+
 ## [0.0.0.10] - 2022-12-06
 
 - Changed the scope of `TransactionExists` from the `PostgresContext` to the `PersistenceModule`

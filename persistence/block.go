@@ -71,7 +71,7 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*types.
 
 	block := &types.Block{
 		Height:            uint64(p.Height),
-		StateHash:         string(p.stateHash),
+		StateHash:         p.stateHash,
 		PrevStateHash:     prevHash,
 		ProposerAddress:   proposerAddr,
 		QuorumCertificate: quorumCert,

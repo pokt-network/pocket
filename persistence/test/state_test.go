@@ -47,18 +47,18 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	// These hashes were determined manually by running the test, but hardcoded to guarantee
 	// that the business logic doesn't change and that they remain deterministic. Anytime the business
 	// logic changes, these hashes will need to be updated based on the test output.
-	encodedStateHash := []string{
+	stateHashes := []string{
 		"b076081d48f6652d2302c974f20e5371b4728c7950735f6617aac7b6be62f581",
 		"171af2b820d2a65861c4e63f0cdd9c8bdde4798e6ace28c47d0e83467848ab02",
 		"b168dff3a83215f12093e548aa22cdf907fbfdb1e12d217ffbb4a07beca065f1",
 	}
 
 	stakeAmount := initialStakeAmount
-	for i := 0; i < len(encodedStateHash); i++ {
+	for i := 0; i < len(stateHashes); i++ {
 		// Get the context at the new height and retrieve one of the apps
 		height := int64(i + 1)
 		heightBz := heightToBytes(height)
-		expectedStateHash := encodedStateHash[i]
+		expectedStateHash := stateHashes[i]
 
 		db := NewTestPostgresContext(t, height)
 
@@ -112,7 +112,7 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, expectedStateHash, block.StateHash) // verify block hash
 		if i > 0 {
-			require.Equal(t, encodedStateHash[i-1], block.PrevStateHash) // verify chain chain
+			require.Equal(t, stateHashes[i-1], block.PrevStateHash) // verify chain chain
 		}
 	}
 }
