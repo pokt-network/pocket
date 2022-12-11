@@ -170,7 +170,7 @@ sequenceDiagram
         end
     end
     %% TODO: Consolidate AppHash and StateHash
-    U->>+P: ComputeAppHash()
+    U->>+P: ComputeStateHash()
     P->>P: Internal Implementation
     Note over P: Compute State Hash
     P->>-U: stateHash

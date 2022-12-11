@@ -21,14 +21,14 @@ import (
 */
 
 // TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
-func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) ([]byte, [][]byte, error) {
+func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransactionBytes int) (string, [][]byte, error) {
 	lastBlockByzantineVals, err := u.GetLastBlockByzantineValidators()
 	if err != nil {
-		return nil, nil, err
+		return "", nil, err
 	}
 	// begin block lifecycle phase
 	if err := u.BeginBlock(lastBlockByzantineVals); err != nil {
-		return nil, nil, err
+		return "", nil, err
 	}
 	transactions := make([][]byte, 0)
 	totalTxsSizeInBytes := 0
@@ -36,11 +36,11 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	for !u.Mempool.IsEmpty() {
 		txBytes, err := u.Mempool.PopTransaction()
 		if err != nil {
-			return nil, nil, err
+			return "", nil, err
 		}
 		transaction, err := typesUtil.TransactionFromBytes(txBytes)
 		if err != nil {
-			return nil, nil, err
+			return "", nil, err
 		}
 		txTxsSizeInBytes := len(txBytes)
 		totalTxsSizeInBytes += txTxsSizeInBytes
@@ -48,7 +48,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 			// Add back popped transaction to be applied in a future block
 			err := u.Mempool.AddTransaction(txBytes)
 			if err != nil {
-				return nil, nil, err
+				return "", nil, err
 			}
 			totalTxsSizeInBytes -= txTxsSizeInBytes
 			break // we've reached our max
@@ -57,7 +57,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 		if err != nil {
 			// TODO(#327): Properly implement 'unhappy path' for save points
 			if err := u.RevertLastSavePoint(); err != nil {
-				return nil, nil, err
+				return "", nil, err
 			}
 			totalTxsSizeInBytes -= txTxsSizeInBytes
 			continue
@@ -71,38 +71,38 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	}
 
 	if err := u.EndBlock(proposer); err != nil {
-		return nil, nil, err
+		return "", nil, err
 	}
 	// return the app hash (consensus module will get the validator set directly)
-	appHash, err := u.Context.ComputeAppHash()
+	stateHash, err := u.Context.ComputeStateHash()
 	if err != nil {
 		log.Fatalf("Updating the app hash failed: %v. TODO: Look into roll-backing the entire commit...\n", err)
 	}
 
-	return appHash, transactions, err
+	return stateHash, transactions, err
 }
 
 // TODO: Make sure to call `utility.CheckTransaction`, which calls `persistence.TransactionExists`
 // CLEANUP: code re-use ApplyBlock() for CreateAndApplyBlock()
-func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
+func (u *UtilityContext) ApplyBlock() (string, error) {
 	lastByzantineValidators, err := u.GetLastBlockByzantineValidators()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// begin block lifecycle phase
 	if err := u.BeginBlock(lastByzantineValidators); err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// deliver txs lifecycle phase
-	for index, transactionProtoBytes := range u.GetPersistenceContext().GetBlockTxs() {
+	for index, transactionProtoBytes := range u.proposalBlockTxs {
 		tx, err := typesUtil.TransactionFromBytes(transactionProtoBytes)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 		if err := tx.ValidateBasic(); err != nil {
-			return nil, err
+			return "", err
 		}
 		// TODO(#346): Currently, the pattern is allowing nil err with an error transaction...
 		//             Should we terminate applyBlock immediately if there's an invalid transaction?
@@ -111,7 +111,7 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 		// Validate and apply the transaction to the Postgres database
 		txResult, err := u.ApplyTransaction(index, tx)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 
 		if err := u.Context.IndexTransaction(txResult); err != nil {
@@ -126,18 +126,18 @@ func (u *UtilityContext) ApplyBlock() (appHash []byte, err error) {
 	}
 
 	// end block lifecycle phase
-	if err := u.EndBlock(u.GetPersistenceContext().GetProposerAddr()); err != nil {
-		return nil, err
+	if err := u.EndBlock(u.proposalProposerAddr); err != nil {
+		return "", err
 	}
 	// return the app hash (consensus module will get the validator set directly)
-	appHash, err = u.Context.ComputeAppHash()
+	stateHash, err := u.Context.ComputeStateHash()
 	if err != nil {
 		log.Fatalf("Updating the app hash failed: %v. TODO: Look into roll-backing the entire commit...\n", err)
-		return nil, typesUtil.ErrAppHash(err)
+		return "", typesUtil.ErrAppHash(err)
 	}
 
 	// return the app hash; consensus module will get the validator set directly
-	return appHash, nil
+	return stateHash, nil
 }
 
 func (u *UtilityContext) BeginBlock(previousBlockByzantineValidators [][]byte) typesUtil.Error {
