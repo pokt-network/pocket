@@ -7,14 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.13] - 2022-12-12
+## [0.0.0.13] - 2022-12-13
+
+- `LeaderElectionModule`'s `electNextLeaderDeterministicRoundRobin` now uses `Persistence` to access the list of validators instead of the static `ValidatorMap`.
+
+## [0.0.0.12] - 2022-12-12
 
 - The `Pacemaker` now emits `BeforeHeightChangedEvent` events when the height is about to change.
 - The `Pacemaker` now emits `HeightChangedEvent` events when the height changes.
-
-## [0.0.0.12] - 2022-12-08
-
-- `LeaderElectionModule`'s `electNextLeaderDeterministicRoundRobin` now uses `Persistence` to access the list of validators instead of the static `ValidatorMap`.
 
 ## [0.0.0.11] - 2022-12-06
 
