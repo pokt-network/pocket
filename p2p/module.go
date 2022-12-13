@@ -130,7 +130,7 @@ func (m *p2pModule) Start() error {
 		// TODO (#203): refactor this.
 		addrBook, err = ValidatorMapToAddrBook(m.p2pCfg, m.GetBus().GetConsensusModule().ValidatorMap())
 	} else {
-		addrBook, err = m.getAddrBookPerHeight(currentHeight)
+		addrBook, err = m.getStakedAddrBookAtHeight(currentHeight)
 	}
 	if err != nil {
 		return err
@@ -141,7 +141,7 @@ func (m *p2pModule) Start() error {
 			// TODO (#203): refactor this.
 			m.network = raintree.NewRainTreeNetwork(m.address, addrBook, m.p2pCfg)
 		} else {
-			m.network = raintree.NewRainTreeNetworkWithAddrBookProvider(m.address, m.getAddrBookPerHeight, currentHeight, m.p2pCfg)
+			m.network = raintree.NewRainTreeNetworkWithAddrBookProvider(m.address, m.getStakedAddrBookAtHeight, currentHeight, m.p2pCfg)
 		}
 	} else {
 		m.network = stdnetwork.NewNetwork(addrBook)
@@ -167,7 +167,7 @@ func (m *p2pModule) Start() error {
 	return nil
 }
 
-func (m *p2pModule) getAddrBookPerHeight(height uint64) (typesP2P.AddrBook, error) {
+func (m *p2pModule) getStakedAddrBookAtHeight(height uint64) (typesP2P.AddrBook, error) {
 	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
 		return nil, err
