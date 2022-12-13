@@ -9,7 +9,6 @@ import (
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -32,29 +31,6 @@ type p2pModule struct {
 	address  cryptoPocket.Address
 
 	network typesP2P.Network
-}
-
-// HandleEvent implements modules.P2PModule
-func (m *p2pModule) HandleEvent(message *anypb.Any) error {
-	switch message.MessageName() {
-	case messaging.BeforeHeightChangedEventType:
-		msg, err := codec.GetCodec().FromAny(message)
-		if err != nil {
-			return err
-		}
-		_, ok := msg.(*messaging.BeforeHeightChangedEvent)
-		if !ok {
-			return fmt.Errorf("failed to cast message to BeforeHeightChangedEvent")
-		}
-
-		// DISCUSS (https://github.com/pokt-network/pocket/pull/374#issuecomment-1341350786): decide if we want a pull or push model for integrating with persistence
-		// I am leaving this code while we are in code-review as a placeholder but it will be either removed or implemented fully
-		// with P2P handling the message and adjusting the addrBook accordingly
-
-	default:
-		return typesP2P.ErrUnknownEventType(message.MessageName())
-	}
-	return nil
 }
 
 // TECHDEBT(drewsky): Discuss how to best expose/access `Address` throughout the codebase.
