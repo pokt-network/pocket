@@ -6,21 +6,23 @@ import (
 	"fmt"
 	"log"
 
-	types "github.com/pokt-network/pocket/p2p/types"
-
+	"github.com/pokt-network/pocket/p2p/addrbook_provider"
+	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var _ types.Network = &network{}
+var _ typesP2P.Network = &network{}
 var _ modules.IntegratableModule = &network{}
 
 type network struct {
-	addrBookMap types.AddrBookMap
+	addrBookMap typesP2P.AddrBookMap
 }
 
-func NewNetwork(addrBook types.AddrBook) (n types.Network) {
-	addrBookMap := make(types.AddrBookMap)
+func NewNetwork(bus modules.Bus, p2pCfg modules.P2PConfig, addrBookProvider typesP2P.AddrBookProvider) (n typesP2P.Network) {
+	addrBook := addrbook_provider.GetAddrBook(bus, addrBookProvider)
+
+	addrBookMap := make(typesP2P.AddrBookMap)
 	for _, peer := range addrBook {
 		addrBookMap[peer.Address.String()] = peer
 	}
@@ -58,20 +60,20 @@ func (n *network) HandleNetworkData(data []byte) ([]byte, error) {
 	return data, nil // intentional passthrough
 }
 
-func (n *network) GetAddrBook() types.AddrBook {
-	addrBook := make(types.AddrBook, 0)
+func (n *network) GetAddrBook() typesP2P.AddrBook {
+	addrBook := make(typesP2P.AddrBook, 0)
 	for _, p := range n.addrBookMap {
 		addrBook = append(addrBook, p)
 	}
 	return addrBook
 }
 
-func (n *network) AddPeerToAddrBook(peer *types.NetworkPeer) error {
+func (n *network) AddPeerToAddrBook(peer *typesP2P.NetworkPeer) error {
 	n.addrBookMap[peer.Address.String()] = peer
 	return nil
 }
 
-func (n *network) RemovePeerToAddrBook(peer *types.NetworkPeer) error {
+func (n *network) RemovePeerToAddrBook(peer *typesP2P.NetworkPeer) error {
 	delete(n.addrBookMap, peer.Address.String())
 	return nil
 }
