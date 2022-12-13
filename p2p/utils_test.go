@@ -177,7 +177,6 @@ func prepareBusMock(t *testing.T,
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
 	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
-	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 
 	return busMock
 }
@@ -206,7 +205,7 @@ func preparePersistenceMock(t *testing.T, genesisState modules.GenesisState) *mo
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
 	readContextMock := modulesMock.NewMockPersistenceReadContext(ctrl)
 
-	readContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetPersistenceGenesisState().GetVals(), nil).AnyTimes()
+	readContextMock.EXPECT().GetAllStakedActors(gomock.Any()).Return(genesisState.GetPersistenceGenesisState().GetVals(), nil).AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(readContextMock, nil).AnyTimes()
 
 	return persistenceMock

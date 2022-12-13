@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pokt-network/pocket/p2p/addrbook_provider"
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
+	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -32,29 +33,6 @@ type p2pModule struct {
 	network typesP2P.Network
 }
 
-// HandleEvent implements modules.P2PModule
-func (m *p2pModule) HandleEvent(message *anypb.Any) error {
-	switch message.MessageName() {
-	case messaging.BeforeHeightChangedEventType:
-		msg, err := codec.GetCodec().FromAny(message)
-		if err != nil {
-			return err
-		}
-		_, ok := msg.(*messaging.BeforeHeightChangedEvent)
-		if !ok {
-			return fmt.Errorf("failed to cast message to BeforeHeightChangedEvent")
-		}
-
-		// DISCUSS (https://github.com/pokt-network/pocket/pull/374#issuecomment-1341350786): decide if we want a pull or push model for integrating with persistence
-		// I am leaving this code while we are in code-review as a placeholder but it will be either removed or implemented fully
-		// with P2P handling the message and adjusting the addrBook accordingly
-
-	default:
-		return typesP2P.ErrUnknownEventType(message.MessageName())
-	}
-	return nil
-}
-
 // TECHDEBT(drewsky): Discuss how to best expose/access `Address` throughout the codebase.
 func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
 	return m.address, nil
@@ -74,7 +52,7 @@ func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) 
 	}
 	p2pCfg := cfg.GetP2PConfig()
 
-	l, err := CreateListener(p2pCfg)
+	l, err := transport.CreateListener(p2pCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -120,35 +98,13 @@ func (m *p2pModule) Start() error {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	var (
-		addrBook typesP2P.AddrBook
-		err      error
-	)
-
-	if m.GetBus().GetPersistenceModule() == nil {
-		// we are getting called by the client and we use the "legacy behaviour"
-		// TODO (team): improve this.
-		addrBook, err = ActorToAddrBook(m.p2pCfg, m.GetBus().GetConsensusModule().ValidatorMap())
-	} else {
-		addrBook, err = m.getAddrBookPerHeight(currentHeight)
-	}
-	if err != nil {
-		return err
-	}
+	addrbookProvider := addrbook_provider.NewPersistenceAddrBookProvider(m.GetBus(), m.p2pCfg)
 
 	if m.p2pCfg.GetUseRainTree() {
-		if m.GetBus().GetPersistenceModule() == nil {
-			// we are getting called by the client and we use the "legacy behaviour"
-			// TODO (team): improve this.
-			m.network = raintree.NewRainTreeNetwork(m.address, addrBook, m.p2pCfg)
-		} else {
-			m.network = raintree.NewRainTreeNetworkWithAddrBookProvider(m.address, m.getAddrBookPerHeight, currentHeight, m.p2pCfg)
-		}
+		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), m.p2pCfg, addrbookProvider)
 	} else {
-		m.network = stdnetwork.NewNetwork(addrBook)
+		m.network = stdnetwork.NewNetwork(m.GetBus(), m.p2pCfg, addrbookProvider)
 	}
-	m.network.SetBus(m.GetBus())
 
 	go func() {
 		for {
@@ -167,26 +123,6 @@ func (m *p2pModule) Start() error {
 		CounterIncrement(telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME)
 
 	return nil
-}
-
-func (m *p2pModule) getAddrBookPerHeight(height uint64) (typesP2P.AddrBook, error) {
-	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
-	if err != nil {
-		return nil, err
-	}
-	vals, err := persistenceReadContext.GetAllValidators(int64(height))
-	if err != nil {
-		return nil, err
-	}
-	validatorMap := make(modules.ValidatorMap, len(vals))
-	for _, v := range vals {
-		validatorMap[v.GetAddress()] = v
-	}
-	addrBook, err := ActorToAddrBook(m.p2pCfg, validatorMap)
-	if err != nil {
-		return nil, err
-	}
-	return addrBook, nil
 }
 
 func (m *p2pModule) Stop() error {

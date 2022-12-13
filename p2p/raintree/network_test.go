@@ -4,17 +4,16 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pokt-network/pocket/p2p/types"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
+	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mockP2PCfg := mock_modules.NewMockP2PConfig(ctrl)
+	mockP2PCfg := mockModules.NewMockP2PConfig(ctrl)
 	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
 
 	// starting with an empty address book and only self
@@ -23,8 +22,12 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 	selfPeer := &typesP2P.NetworkPeer{Address: selfAddr}
 
 	addrBook := getAddrBook(nil, 0)
-	addrBook = append(addrBook, &types.NetworkPeer{Address: selfAddr})
-	network := NewRainTreeNetwork(selfAddr, addrBook, mockP2PCfg).(*rainTreeNetwork)
+	addrBook = append(addrBook, &typesP2P.NetworkPeer{Address: selfAddr})
+
+	busMock := mockDummyBus(ctrl)
+	addrBookProviderMock := mockAddrBookProvider(ctrl, addrBook)
+
+	network := NewRainTreeNetwork(selfAddr, busMock, mockP2PCfg, addrBookProviderMock).(*rainTreeNetwork)
 
 	peerAddr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
@@ -38,7 +41,7 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 	stateView := network.peersManager.getNetworkView()
 	require.Equal(t, 2, len(stateView.addrList))
 	require.ElementsMatch(t, []string{selfAddr.String(), peerAddr.String()}, stateView.addrList, "addrList does not match")
-	require.ElementsMatch(t, []*types.NetworkPeer{selfPeer, peer}, stateView.addrBook, "addrBook does not match")
+	require.ElementsMatch(t, []*typesP2P.NetworkPeer{selfPeer, peer}, stateView.addrBook, "addrBook does not match")
 
 	require.Contains(t, stateView.addrBookMap, selfAddr.String(), "addrBookMap does not contain self key")
 	require.Equal(t, selfPeer, stateView.addrBookMap[selfAddr.String()], "addrBookMap does not contain self")
@@ -48,7 +51,8 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 
 func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mockP2PCfg := mock_modules.NewMockP2PConfig(ctrl)
+
+	mockP2PCfg := mockModules.NewMockP2PConfig(ctrl)
 	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
 
 	// starting with an address book having only self and an arbitrary number of peers `numAddressesInAddressBook``
@@ -57,8 +61,12 @@ func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 	selfAddr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
 	selfPeer := &typesP2P.NetworkPeer{Address: selfAddr}
-	addrBook = append(addrBook, &types.NetworkPeer{Address: selfAddr})
-	network := NewRainTreeNetwork(selfAddr, addrBook, mockP2PCfg).(*rainTreeNetwork)
+	addrBook = append(addrBook, &typesP2P.NetworkPeer{Address: selfAddr})
+
+	busMock := mockDummyBus(ctrl)
+	addrBookProviderMock := mockAddrBookProvider(ctrl, addrBook)
+
+	network := NewRainTreeNetwork(selfAddr, busMock, mockP2PCfg, addrBookProviderMock).(*rainTreeNetwork)
 	stateView := network.peersManager.getNetworkView()
 	require.Equal(t, numAddressesInAddressBook+1, len(stateView.addrList)) // +1 to account for self in the addrBook as well
 

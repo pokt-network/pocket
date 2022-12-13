@@ -239,6 +239,8 @@ docker_loki_check:
 clean_mocks:
 	$(eval modules_dir = "shared/modules")
 	find ${modules_dir}/mocks -type f ! -name "mocks.go" -exec rm {} \;
+	$(eval p2p_type_mocks_dir = "p2p/types/mocks")
+	find ${p2p_type_mocks_dir} -type f ! -name "mocks.go" -exec rm {} \;
 
 .PHONY: mockgen
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
@@ -347,7 +349,7 @@ test_consensus: # mockgen
 .PHONY: test_consensus_concurrent_tests
 ## Run unit tests in the consensus module that could be prone to race conditions (#192)
 test_consensus_concurrent_tests:
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
 	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
 	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
 	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
