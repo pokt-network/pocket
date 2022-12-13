@@ -39,7 +39,11 @@ func NewPeersManagerWithAddrBookProvider(selfAddr cryptoPocket.Address, addrBook
 	return newPeersManager(selfAddr, addrBook, false)
 }
 
-func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook, handleEvents bool) (*peersManager, error) {
+// newPeersManager creates a new peersManager instance, it is in charge of handling operations on peers (like adding/removing them) within an AddrBook
+// it also takes care of keeping the AddrBook sorted and indexed for fast access
+//
+// If `isDynamic` is true, the peersManager will not handle addressBook changes, it will only be used for querying the AddrBook
+func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook, isDynamic bool) (*peersManager, error) {
 	pm := &peersManager{
 		selfAddr:     selfAddr,
 		addrBook:     addrBook,
@@ -75,7 +79,7 @@ func newPeersManager(selfAddr cryptoPocket.Address, addrBook typesP2P.AddrBook, 
 
 	pm.maxNumLevels = pm.getMaxAddrBookLevels()
 
-	if !handleEvents {
+	if !isDynamic {
 		return pm, nil
 	}
 
