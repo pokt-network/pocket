@@ -120,7 +120,7 @@ func (m *p2pModule) Start() error {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	currentHeight := m.bus.GetConsensusModule().CurrentHeight()
+	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
 	var (
 		addrBook typesP2P.AddrBook
 		err      error
@@ -129,7 +129,7 @@ func (m *p2pModule) Start() error {
 	if m.GetBus().GetPersistenceModule() == nil {
 		// we are getting called by the client and we use the "legacy behaviour"
 		// TODO (team): improve this.
-		addrBook, err = ValidatorMapToAddrBook(m.p2pCfg, m.bus.GetConsensusModule().ValidatorMap())
+		addrBook, err = ValidatorMapToAddrBook(m.p2pCfg, m.GetBus().GetConsensusModule().ValidatorMap())
 	} else {
 		addrBook, err = m.getAddrBookPerHeight(currentHeight)
 	}
@@ -170,7 +170,7 @@ func (m *p2pModule) Start() error {
 }
 
 func (m *p2pModule) getAddrBookPerHeight(height uint64) (typesP2P.AddrBook, error) {
-	persistenceReadContext, err := m.bus.GetPersistenceModule().NewReadContext(int64(height))
+	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
 		return nil, err
 	}
