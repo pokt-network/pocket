@@ -1,8 +1,10 @@
 OS = $(shell uname | tr A-Z a-z)
 GOARCH = $(shell go env GOARCH)
+
+## The expected golang version; crashes if the local env is different
 GOLANG_VERSION ?= 1.18
 
-# Build variables
+## Build variables
 BUILD_DIR ?= bin
 BINARY_NAME_client ?= p1
 BINARY_NAME_pocket ?= pocket
