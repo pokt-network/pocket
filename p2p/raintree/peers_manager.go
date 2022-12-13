@@ -30,8 +30,8 @@ type peersManager struct {
 	maxNumLevels uint32
 }
 
-func NewPeersManagerWithAddrBookProvider(selfAddr cryptoPocket.Address, addrBookProvider typesP2P.AddrBookProvider, height uint64) (*peersManager, error) {
-	addrBook, err := addrBookProvider(height)
+func newPeersManagerWithAddrBookProvider(selfAddr cryptoPocket.Address, addrBookProvider typesP2P.AddrBookProvider, height uint64) (*peersManager, error) {
+	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(height)
 	if err != nil {
 		return nil, err
 	}
