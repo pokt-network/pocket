@@ -23,7 +23,11 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 
 	addrBook := getAddrBook(nil, 0)
 	addrBook = append(addrBook, &typesP2P.NetworkPeer{Address: selfAddr})
-	network := NewRainTreeNetwork(selfAddr, addrBook, mockP2PCfg).(*rainTreeNetwork)
+
+	busMock := mockDummyBus(ctrl)
+	addrBookProviderMock := mockAddrBookProvider(ctrl, addrBook)
+
+	network := NewRainTreeNetwork(selfAddr, busMock, mockP2PCfg, addrBookProviderMock).(*rainTreeNetwork)
 
 	peerAddr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
@@ -47,6 +51,7 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 
 func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 	ctrl := gomock.NewController(t)
+
 	mockP2PCfg := mockModules.NewMockP2PConfig(ctrl)
 	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
 
@@ -57,7 +62,11 @@ func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 	require.NoError(t, err)
 	selfPeer := &typesP2P.NetworkPeer{Address: selfAddr}
 	addrBook = append(addrBook, &typesP2P.NetworkPeer{Address: selfAddr})
-	network := NewRainTreeNetwork(selfAddr, addrBook, mockP2PCfg).(*rainTreeNetwork)
+
+	busMock := mockDummyBus(ctrl)
+	addrBookProviderMock := mockAddrBookProvider(ctrl, addrBook)
+
+	network := NewRainTreeNetwork(selfAddr, busMock, mockP2PCfg, addrBookProviderMock).(*rainTreeNetwork)
 	stateView := network.peersManager.getNetworkView()
 	require.Equal(t, numAddressesInAddressBook+1, len(stateView.addrList)) // +1 to account for self in the addrBook as well
 

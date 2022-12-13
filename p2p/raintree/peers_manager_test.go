@@ -77,7 +77,11 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 		t.Run(fmt.Sprintf("n=%d", n), func(t *testing.T) {
 			addrBook := getAddrBook(t, n-1)
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
-			network := NewRainTreeNetwork(addr, addrBook, mockP2PCfg).(*rainTreeNetwork)
+
+			mockBus := mockDummyBus(ctrl)
+			mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
+
+			network := NewRainTreeNetwork(addr, mockBus, mockP2PCfg, mockAddrBookProvider).(*rainTreeNetwork)
 
 			peersManagerStateView := network.peersManager.getNetworkView()
 
@@ -115,7 +119,11 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 		b.Run(fmt.Sprintf("n=%d", n), func(b *testing.B) {
 			addrBook := getAddrBook(nil, n-1)
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
-			network := NewRainTreeNetwork(addr, addrBook, mockP2PCfg).(*rainTreeNetwork)
+
+			mockBus := mockDummyBus(ctrl)
+			mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
+
+			network := NewRainTreeNetwork(addr, mockBus, mockP2PCfg, mockAddrBookProvider).(*rainTreeNetwork)
 
 			peersManagerStateView := network.peersManager.getNetworkView()
 
@@ -198,11 +206,16 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
+	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 	mockP2PCfg := modulesMock.NewMockP2PConfig(ctrl)
 	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
 
 	addrBook := getAlphabetAddrBook(expectedMsgProp.numNodes)
-	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, addrBook, mockP2PCfg).(*rainTreeNetwork)
+	mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
+
+	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, busMock, mockP2PCfg, mockAddrBookProvider).(*rainTreeNetwork)
+
 	network.SetBus(busMock)
 
 	peersManagerStateView := network.peersManager.getNetworkView()
