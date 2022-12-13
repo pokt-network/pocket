@@ -127,8 +127,7 @@ func (m *p2pModule) Start() error {
 	)
 
 	if m.GetBus().GetPersistenceModule() == nil {
-		// we are getting called by the client and we use the "legacy behaviour"
-		// TODO (team): improve this.
+		// TODO (#203): refactor this.
 		addrBook, err = ValidatorMapToAddrBook(m.p2pCfg, m.GetBus().GetConsensusModule().ValidatorMap())
 	} else {
 		addrBook, err = m.getAddrBookPerHeight(currentHeight)
@@ -139,8 +138,7 @@ func (m *p2pModule) Start() error {
 
 	if m.p2pCfg.GetUseRainTree() {
 		if m.GetBus().GetPersistenceModule() == nil {
-			// we are getting called by the client and we use the "legacy behaviour"
-			// TODO (team): improve this.
+			// TODO (#203): refactor this.
 			m.network = raintree.NewRainTreeNetwork(m.address, addrBook, m.p2pCfg)
 		} else {
 			m.network = raintree.NewRainTreeNetworkWithAddrBookProvider(m.address, m.getAddrBookPerHeight, currentHeight, m.p2pCfg)
