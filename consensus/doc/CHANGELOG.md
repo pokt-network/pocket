@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.12] - 2022-12-12
+- Unexport `ConsensusModule` fields
+- Create `ConsensusDebugModule` interface with setter functions to be used only for debugging puroposes
+- Update test in `TestPacemakerCatchupSameStepDifferentRounds` in pacemaker_test.go to use setter functions
+
 ## [0.0.0.11] - 2022-12-06
 
 - Removed unused `consensus.UtilityMessage`
