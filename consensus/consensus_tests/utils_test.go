@@ -319,7 +319,6 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
 
-	// here we are mocking 4 actors since we are considering the 4 nodes in the LocalNet genesis
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(makeMockActors(numValidators), nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
