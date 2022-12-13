@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/pokt-network/pocket/p2p/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -33,7 +34,7 @@ type rainTreeNetwork struct {
 	mampoolMaxNonces uint64
 }
 
-func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook, p2pCfg modules.P2PConfig) typesP2P.Network {
+func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P.AddrBook, p2pCfg modules.P2PConfig) typesP2P.Network {
 	pm, err := newPeersManager(addr, addrBook, true)
 	if err != nil {
 		log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManager: %v", err)
@@ -51,11 +52,8 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook, p
 	return typesP2P.Network(n)
 }
 
-func NewRainTreeNetworkWithAddrBookProvider(addr cryptoPocket.Address, addrBookProvider typesP2P.AddrBookProvider, height uint64, p2pCfg modules.P2PConfig) typesP2P.Network {
-	addrBook, err := addrBookProvider(height)
-	if err != nil {
-		log.Fatalf("[ERROR] Error getting addrBook from addrBookProvider: %v", err)
-	}
+func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg modules.P2PConfig, addrBookProvider typesP2P.AddrBookProvider) typesP2P.Network {
+	addrBook := addrbook_provider.GetAddrBook(bus, addrBookProvider)
 
 	pm, err := newPeersManager(addr, addrBook, true)
 	if err != nil {
@@ -64,12 +62,12 @@ func NewRainTreeNetworkWithAddrBookProvider(addr cryptoPocket.Address, addrBookP
 
 	n := &rainTreeNetwork{
 		selfAddr:         addr,
-		addrBookProvider: addrBookProvider,
 		peersManager:     pm,
 		nonceSet:         make(map[uint64]struct{}),
 		nonceList:        make([]uint64, 0, p2pCfg.GetMaxMempoolCount()),
+		addrBookProvider: addrBookProvider,
 	}
-
+	n.SetBus(bus)
 	return typesP2P.Network(n)
 }
 
