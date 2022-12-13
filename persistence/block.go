@@ -9,6 +9,22 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 )
 
+func (p *persistenceModule) TransactionExists(transactionHash string) (bool, error) {
+	hash, err := hex.DecodeString(transactionHash)
+	if err != nil {
+		return false, err
+	}
+	res, err := p.txIndexer.GetByHash(hash)
+	if res == nil {
+		// check for not found
+		if err != nil && err.Error() == kvstore.BadgerKeyNotFoundError {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, err
+}
+
 // OPTIMIZE: evaluate if it's faster to get this from the blockstore (or cache) than the SQL engine
 func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
 	ctx, tx, err := p.getCtxAndTx()
@@ -38,22 +54,6 @@ func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
 
 func (p PostgresContext) GetHeight() (int64, error) {
 	return p.Height, nil
-}
-
-func (p PostgresContext) TransactionExists(transactionHash string) (bool, error) {
-	hash, err := hex.DecodeString(transactionHash)
-	if err != nil {
-		return false, err
-	}
-	res, err := p.txIndexer.GetByHash(hash)
-	if res == nil {
-		// check for not found
-		if err != nil && err.Error() == kvstore.BadgerKeyNotFoundError {
-			return false, nil
-		}
-		return false, err
-	}
-	return true, err
 }
 
 // DISCUSS: this might be retrieved from the block store - temporarily we will access it directly from the module

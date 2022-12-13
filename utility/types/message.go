@@ -196,7 +196,7 @@ func ValidatePublicKey(publicKey []byte) Error {
 	}
 	pubKeyLen := len(publicKey)
 	if pubKeyLen != cryptoPocket.PublicKeyLen {
-		return ErrInvalidPublicKeylen(cryptoPocket.ErrInvalidPublicKeyLen(pubKeyLen))
+		return ErrInvalidPublicKeyLen(cryptoPocket.ErrInvalidPublicKeyLen(pubKeyLen))
 	}
 	return nil
 }

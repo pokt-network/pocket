@@ -8,10 +8,11 @@ import (
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 )
 
+// TODO: The implementation of `UtilityContext` should not be exposed.
 type UtilityContext struct {
-	LatestHeight int64
-	Mempool      typesUtil.Mempool
-	Context      *Context // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
+	Height  int64
+	Mempool typesUtil.Mempool // IMPROVE: Look into accessing this directly from the module without needing to pass and save another pointer (e.g. access via bus)
+	Context *Context          // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
 }
 
 // IMPROVE: Consider renaming to `persistenceContext` or `storeContext`?
@@ -29,8 +30,8 @@ func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error)
 		return nil, typesUtil.ErrNewPersistenceContext(err)
 	}
 	return &UtilityContext{
-		LatestHeight: height,
-		Mempool:      u.Mempool,
+		Height:  height,
+		Mempool: u.Mempool,
 		Context: &Context{
 			PersistenceRWContext: ctx,
 			SavePoints:           make([][]byte, 0),

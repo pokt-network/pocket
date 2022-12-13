@@ -11,7 +11,12 @@ import (
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
+	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
+)
+
+var (
+	defaultSendAmount = big.NewInt(10000)
 )
 
 func TestUtilityContext_AnteHandleMessage(t *testing.T) {
@@ -53,16 +58,19 @@ func TestUtilityContext_ApplyTransaction(t *testing.T) {
 }
 
 func TestUtilityContext_CheckTransaction(t *testing.T) {
+	mockBusInTestModules(t)
+
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
+
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
-	require.NoError(t, ctx.CheckTransaction(txBz))
+	require.NoError(t, testUtilityMod.CheckTransaction(txBz))
+
 	hash, err := tx.Hash()
 	require.NoError(t, err)
-	require.True(t, ctx.Mempool.Contains(hash))
-	er := ctx.CheckTransaction(txBz)
-	require.Equal(t, er.Error(), typesUtil.ErrDuplicateTransaction().Error())
+	require.True(t, ctx.Mempool.Contains(hash)) // IMPROVE: Access the mempool from the `testUtilityMod` directly
+	require.Equal(t, testUtilityMod.CheckTransaction(txBz).Error(), typesUtil.ErrDuplicateTransaction().Error())
 
 	test_artifacts.CleanupTest(ctx)
 }
@@ -88,17 +96,21 @@ func TestUtilityContext_GetSignerCandidates(t *testing.T) {
 }
 
 func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
+	mockBusInTestModules(t)
+
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
-	proposer := getAllTestingValidators(t, ctx)[0]
+
+	proposer := getFirstActor(t, ctx, typesUtil.ActorType_Validator)
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
-	require.NoError(t, ctx.CheckTransaction(txBz))
+	require.NoError(t, testUtilityMod.CheckTransaction(txBz))
+
 	appHash, txs, er := ctx.CreateAndApplyProposalBlock([]byte(proposer.GetAddress()), 10000)
 	require.NoError(t, er)
-	require.Equal(t, len(txs), 1)
-	require.Equal(t, txs[0], txBz)
 	require.NotEmpty(t, appHash)
+	require.Equal(t, 1, len(txs))
+	require.Equal(t, txs[0], txBz)
 
 	test_artifacts.CleanupTest(ctx)
 }
@@ -133,25 +145,26 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingAmount, amountSent *big.Int, signer crypto.PrivateKey) {
-	cdc := codec.GetCodec()
-	recipient := GetAllTestingAccounts(t, ctx)[2] // Using index 2 to prevent a collision with the first Validator who is the proposer in tests
+func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
+	amountSent = new(big.Int).Set(defaultSendAmount)
+	startingBalance = new(big.Int).Set(defaults.DefaultAccountAmount)
 
-	signer, err := crypto.GeneratePrivateKey()
+	recipientAddr, err := crypto.GenerateAddress()
 	require.NoError(t, err)
 
-	startingAmount = defaults.DefaultAccountAmount
+	signer, err = crypto.GeneratePrivateKey()
+	require.NoError(t, err)
+
 	signerAddr := signer.Address()
-	require.NoError(t, ctx.SetAccountAmount(signerAddr, startingAmount))
-	amountSent = defaultSendAmount
-	addrBz, err := hex.DecodeString(recipient.GetAddress())
+	require.NoError(t, ctx.SetAccountAmount(signerAddr, startingBalance))
+
+	msg := NewTestingSendMessage(t, signerAddr, recipientAddr.Bytes(), utilTypes.BigIntToString(amountSent))
+	any, err := codec.GetCodec().ToAny(&msg)
 	require.NoError(t, err)
-	msg := NewTestingSendMessage(t, signerAddr, addrBz, defaultSendAmountString)
-	any, err := cdc.ToAny(&msg)
-	require.NoError(t, err)
+
 	transaction = &typesUtil.Transaction{
 		Msg:   any,
-		Nonce: defaultNonceString,
+		Nonce: testNonce,
 	}
 	require.NoError(t, transaction.Sign(signer))
 

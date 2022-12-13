@@ -39,7 +39,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, addrBook typesP2P.AddrBook, p
 		log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManager: %v", err)
 	}
 
-	mempoolMaxNonces := p2pCfg.GetMempoolMaxNonces()
+	mempoolMaxNonces := p2pCfg.GetMaxMempoolCount()
 	n := &rainTreeNetwork{
 		selfAddr:         addr,
 		peersManager:     pm,
@@ -67,7 +67,7 @@ func NewRainTreeNetworkWithAddrBookProvider(addr cryptoPocket.Address, addrBookP
 		addrBookProvider: addrBookProvider,
 		peersManager:     pm,
 		nonceSet:         make(map[uint64]struct{}),
-		nonceList:        make([]uint64, 0, p2pCfg.GetMempoolMaxNonces()),
+		nonceList:        make([]uint64, 0, p2pCfg.GetMaxMempoolCount()),
 	}
 
 	return typesP2P.Network(n)

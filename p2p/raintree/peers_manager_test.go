@@ -40,7 +40,7 @@ type ExpectedRainTreeMessageProp struct {
 func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockP2PCfg := mock_modules.NewMockP2PConfig(ctrl)
-	mockP2PCfg.EXPECT().GetMempoolMaxNonces().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
+	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
 
 	addr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
@@ -93,7 +93,7 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 func BenchmarkAddrBookUpdates(b *testing.B) {
 	ctrl := gomock.NewController(gomock.TestReporter(b))
 	mockP2PCfg := mock_modules.NewMockP2PConfig(ctrl)
-	mockP2PCfg.EXPECT().GetMempoolMaxNonces().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
+	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
 
 	addr, err := cryptoPocket.GenerateAddress()
 	require.NoError(b, err)
@@ -201,7 +201,7 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
 	mockP2PCfg := mock_modules.NewMockP2PConfig(ctrl)
-	mockP2PCfg.EXPECT().GetMempoolMaxNonces().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
+	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
 
 	addrBook := getAlphabetAddrBook(expectedMsgProp.numNodes)
 	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, addrBook, mockP2PCfg).(*rainTreeNetwork)
