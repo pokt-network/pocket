@@ -11,8 +11,6 @@ type P2PModule interface {
 	Module
 	ConfigurableModule
 
-	HandleEvent(*anypb.Any) error
-
 	Broadcast(msg *anypb.Any) error
 	Send(addr cryptoPocket.Address, msg *anypb.Any) error
 	GetAddress() (cryptoPocket.Address, error)
