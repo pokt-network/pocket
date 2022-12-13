@@ -321,3 +321,30 @@ func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err e
 	}
 	return
 }
+
+// IMPROVE: This is a proof of concept. Ideally we should have a single query that returns all actors.
+func (p PostgresContext) GetAllStakedActors(height int64) (actors []modules.Actor, err error) {
+	actors = make([]modules.Actor, 0)
+	var allActors []modules.Actor
+	allActors, err = p.GetAllValidators(height)
+	if err != nil {
+		return
+	}
+	actors = append(actors, allActors...)
+	allActors, err = p.GetAllServiceNodes(height)
+	if err != nil {
+		return
+	}
+	actors = append(actors, allActors...)
+	allActors, err = p.GetAllFishermen(height)
+	if err != nil {
+		return
+	}
+	actors = append(actors, allActors...)
+	allActors, err = p.GetAllApps(height)
+	if err != nil {
+		return
+	}
+	actors = append(actors, allActors...)
+	return
+}
