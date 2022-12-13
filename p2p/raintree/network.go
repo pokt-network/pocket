@@ -27,7 +27,7 @@ type rainTreeNetwork struct {
 	peersManager *peersManager
 
 	// TODO (#278): What should we use for de-duping messages within P2P?
-	// TODO (team): we should generalize and use the FIFOMempool (in utility/types/mempool.go at the time of writing) in here as well for this. Same concept
+	// TODO(#388): generalize to use the shared `FIFOMempool` type (in `utility/types/mempool.go` at the time of writing) in here as well for this.
 	nonceSet         map[uint64]struct{}
 	nonceList        []uint64
 	mampoolMaxNonces uint64
