@@ -177,7 +177,6 @@ func prepareBusMock(t *testing.T,
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
 	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
-	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 
 	return busMock
 }
