@@ -9,9 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/defaults"
-	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
 )
@@ -39,7 +37,7 @@ type ExpectedRainTreeMessageProp struct {
 
 func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mockP2PCfg := mock_modules.NewMockP2PConfig(ctrl)
+	mockP2PCfg := modulesMock.NewMockP2PConfig(ctrl)
 	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
 
 	addr, err := cryptoPocket.GenerateAddress()
@@ -92,7 +90,7 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 
 func BenchmarkAddrBookUpdates(b *testing.B) {
 	ctrl := gomock.NewController(gomock.TestReporter(b))
-	mockP2PCfg := mock_modules.NewMockP2PConfig(ctrl)
+	mockP2PCfg := modulesMock.NewMockP2PConfig(ctrl)
 	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
 
 	addr, err := cryptoPocket.GenerateAddress()
@@ -126,7 +124,7 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 			require.Equal(b, testCase.numExpectedLevels, int(peersManagerStateView.maxNumLevels))
 
 			for i := 0; i < numAddressesToBeAdded; i++ {
-				newAddr, err := crypto.GenerateAddress()
+				newAddr, err := cryptoPocket.GenerateAddress()
 				require.NoError(b, err)
 				network.AddPeerToAddrBook(&types.NetworkPeer{Address: newAddr})
 			}
@@ -200,7 +198,7 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
-	mockP2PCfg := mock_modules.NewMockP2PConfig(ctrl)
+	mockP2PCfg := modulesMock.NewMockP2PConfig(ctrl)
 	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMempoolMaxNonces).AnyTimes()
 
 	addrBook := getAlphabetAddrBook(expectedMsgProp.numNodes)
