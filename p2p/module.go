@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pokt-network/pocket/p2p/addrbook_provider"
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
+	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -74,7 +76,7 @@ func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) 
 	}
 	p2pCfg := cfg.GetP2PConfig()
 
-	l, err := CreateListener(p2pCfg)
+	l, err := transport.CreateListener(p2pCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -120,33 +122,13 @@ func (m *p2pModule) Start() error {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
-	var (
-		addrBook typesP2P.AddrBook
-		err      error
-	)
-
-	if m.GetBus().GetPersistenceModule() == nil {
-		// TODO (#203): refactor this.
-		addrBook, err = ValidatorMapToAddrBook(m.p2pCfg, m.GetBus().GetConsensusModule().ValidatorMap())
-	} else {
-		addrBook, err = m.getStakedAddrBookAtHeight(currentHeight)
-	}
-	if err != nil {
-		return err
-	}
+	addrbookProvider := addrbook_provider.NewPersistenceAddrBookProvider(m.GetBus(), m.p2pCfg)
 
 	if m.p2pCfg.GetUseRainTree() {
-		if m.GetBus().GetPersistenceModule() == nil {
-			// TODO (#203): refactor this.
-			m.network = raintree.NewRainTreeNetwork(m.address, addrBook, m.p2pCfg)
-		} else {
-			m.network = raintree.NewRainTreeNetworkWithAddrBookProvider(m.address, m.getStakedAddrBookAtHeight, currentHeight, m.p2pCfg)
-		}
+		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), m.p2pCfg, addrbookProvider)
 	} else {
-		m.network = stdnetwork.NewNetwork(addrBook)
+		m.network = stdnetwork.NewNetwork(m.GetBus(), m.p2pCfg, addrbookProvider)
 	}
-	m.network.SetBus(m.GetBus())
 
 	go func() {
 		for {
@@ -165,27 +147,6 @@ func (m *p2pModule) Start() error {
 		CounterIncrement(telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME)
 
 	return nil
-}
-
-func (m *p2pModule) getStakedAddrBookAtHeight(height uint64) (typesP2P.AddrBook, error) {
-	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
-	if err != nil {
-		return nil, err
-	}
-	stakedActors, err := persistenceReadContext.GetAllStakedActors(int64(height))
-	if err != nil {
-		return nil, err
-	}
-	// TODO(#203): refactor `ValidatorMap``
-	validatorMap := make(modules.ValidatorMap, len(stakedActors))
-	for _, v := range stakedActors {
-		validatorMap[v.GetAddress()] = v
-	}
-	addrBook, err := ValidatorMapToAddrBook(m.p2pCfg, validatorMap)
-	if err != nil {
-		return nil, err
-	}
-	return addrBook, nil
 }
 
 func (m *p2pModule) Stop() error {
