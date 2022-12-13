@@ -172,12 +172,13 @@ func (m *p2pModule) getAddrBookPerHeight(height uint64) (typesP2P.AddrBook, erro
 	if err != nil {
 		return nil, err
 	}
-	vals, err := persistenceReadContext.GetAllValidators(int64(height))
+	stakedActors, err := persistenceReadContext.GetAllStakedActors(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	validatorMap := make(modules.ValidatorMap, len(vals))
-	for _, v := range vals {
+	// TODO(#203): refactor `ValidatorMap``
+	validatorMap := make(modules.ValidatorMap, len(stakedActors))
+	for _, v := range stakedActors {
 		validatorMap[v.GetAddress()] = v
 	}
 	addrBook, err := ValidatorMapToAddrBook(m.p2pCfg, validatorMap)

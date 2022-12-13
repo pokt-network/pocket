@@ -183,6 +183,9 @@ type PersistenceReadContext interface {
 	GetValidatorOutputAddress(operator []byte, height int64) (output []byte, err error)
 	GetValidatorMissedBlocks(address []byte, height int64) (int, error)
 
+	// Actors Queries
+	GetAllStakedActors(height int64) ([]Actor, error)
+
 	// Params
 	GetIntParam(paramName string, height int64) (int, error)
 	GetStringParam(paramName string, height int64) (string, error)
