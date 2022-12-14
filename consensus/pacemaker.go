@@ -8,7 +8,6 @@ import (
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -205,14 +204,10 @@ func (p *paceMaker) InterruptRound() {
 func (p *paceMaker) NewHeight() {
 	p.consensusMod.nodeLog(typesCons.PacemakerNewHeight(p.consensusMod.CurrentHeight() + 1))
 
-	p.onBeforeNewHeight()
-
 	p.consensusMod.height++
 	p.consensusMod.resetForNewHeight()
 
 	p.startNextView(nil, false) // TODO(design): We are omitting CommitQC and TimeoutQC here.
-
-	p.onAfterNewHeight()
 
 	p.consensusMod.
 		GetBus().
@@ -266,20 +261,4 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 func (p *paceMaker) getStepTimeout(round uint64) timePkg.Duration {
 	baseTimeout := timePkg.Duration(int64(timePkg.Millisecond) * int64(p.pacemakerCfg.GetTimeoutMsec()))
 	return baseTimeout
-}
-
-func (p *paceMaker) onBeforeNewHeight() {
-	event, err := messaging.PackMessage(&messaging.BeforeHeightChangedEvent{CurrentHeight: p.consensusMod.CurrentHeight()})
-	if err != nil {
-		log.Printf("[WARN] error packing message: %v\n", err)
-	}
-	p.GetBus().PublishEventToBus(event)
-}
-
-func (p *paceMaker) onAfterNewHeight() {
-	event, err := messaging.PackMessage(&messaging.HeightChangedEvent{NewHeight: p.consensusMod.CurrentHeight()})
-	if err != nil {
-		log.Printf("[WARN] error packing message: %v\n", err)
-	}
-	p.GetBus().PublishEventToBus(event)
 }

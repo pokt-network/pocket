@@ -159,10 +159,6 @@ func (node *Node) handleEvent(message *messaging.PocketEnvelope) error {
 	switch contentType {
 	case messaging.NodeStartedEventType:
 		log.Println("[NOOP] Received NodeStartedEvent")
-	case messaging.BeforeHeightChangedEventType:
-		log.Println("[NOOP] Received BeforeNewHeightEvent")
-	case messaging.HeightChangedEventType:
-		log.Println("[NOOP] Received HeightChangedEvent")
 	case consensus.HotstuffMessageContentType:
 		return node.GetBus().GetConsensusModule().HandleMessage(message.Content)
 	case utility.TransactionGossipMessageContentType:
