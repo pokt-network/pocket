@@ -1,15 +1,14 @@
-# LocalNet on Kubernetes
+# LocalNet on Kubernetes <!-- omit in toc -->
 
 We are developing our own Kubernetes operator to manage v1 workloads both internally and for the community to make it easier to deploy pocket v1. While the operator is still in development, we can already utilize it to run our local networks locally on Kubernetes. This guide will show you how to do that.
 
-- [LocalNet on Kubernetes](#localnet-on-kubernetes)
-    - [Dependencies](#dependencies)
-    - [Running the localnet](#running-the-localnet)
-    - [Stopping / cleaning up the resources](#stopping--cleaning-up-the-resources)
-    - [Interaction with the localnet](#interaction-with-the-localnet)
-    - [How does it work?](#how-does-it-work)
-    - [Troubleshooting](#troubleshooting)
-    - [How to change configuration files](#how-to-change-configuration-files)
+- [Dependencies](#dependencies)
+- [Running the localnet](#running-the-localnet)
+- [Stopping / cleaning up the resources](#stopping--cleaning-up-the-resources)
+- [Interaction with the localnet](#interaction-with-the-localnet)
+- [How does it work?](#how-does-it-work)
+- [Troubleshooting](#troubleshooting)
+- [How to change configuration files](#how-to-change-configuration-files)
 
 ### Dependencies
 

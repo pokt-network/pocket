@@ -493,7 +493,6 @@ localnet_shell:
 ## Stops localnet and cleans up dependencies (tl;dr `tilt down` + resources that might not have been cleaned up by tilt)
 localnet_down:
 	tilt down
-	# kubectl delete --all --namespace=default pocketvalidators
 	kubectl get sts -n default --no-headers=true | awk '/v1-validator/{print $1}' | xargs kubectl delete -n default sts
 
 .PHONY: check_cross_module_imports

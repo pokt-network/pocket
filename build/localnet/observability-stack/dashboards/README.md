@@ -1,3 +1,3 @@
-# Grafana dashboards for localnet
+# Grafana dashboards for LocalNet
 
-Include json files in this directory to have them automatically imported into Grafana.
+Include JSON files in this directory to have them automatically imported into Grafana.
