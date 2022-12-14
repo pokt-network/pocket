@@ -16,7 +16,7 @@ func GetAddrBook(bus modules.Bus, addrBookProvider typesP2P.AddrBookProvider) ty
 		err      error
 	)
 	if bus.GetPersistenceModule() == nil {
-		// TODO (#203): refactor this.
+		// TODO(#203): refactor or remove this once `ValidatorMap` logic is encapsulated.
 		addrBook, err = addrBookProvider.ValidatorMapToAddrBook(bus.GetConsensusModule().ValidatorMap())
 	} else {
 		addrBook, err = addrBookProvider.GetStakedAddrBookAtHeight(bus.GetConsensusModule().CurrentHeight())
