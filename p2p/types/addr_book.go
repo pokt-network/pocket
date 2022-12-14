@@ -15,6 +15,6 @@ type AddrBookMap map[string]*NetworkPeer
 // AddrBookProvider is an interface that provides AddrBook accessors
 type AddrBookProvider interface {
 	GetStakedAddrBookAtHeight(height uint64) (AddrBook, error)
-	ActorToAddrBook(validators map[string]modules.Actor) (AddrBook, error)
-	ActorToNetworkPeer(v modules.Actor) (*NetworkPeer, error)
+	ActorsToAddrBook(actors map[string]modules.Actor) (AddrBook, error)
+	ActorToNetworkPeer(actor modules.Actor) (*NetworkPeer, error)
 }
