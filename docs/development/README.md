@@ -1,21 +1,20 @@
-# Development Overview
+# Development Overview <!-- omit in toc -->
 
 Please note that this repository is under very active development and breaking changes are likely to occur. If the documentation falls out of date please see our [guide](./../contributing/README.md) on how to contribute!
 
-- [Development Overview](#development-overview)
-  - [LFG - Development](#lfg---development)
-    - [Install Dependencies](#install-dependencies)
-    - [Prepare Local Environment](#prepare-local-environment)
-    - [View Available Commands](#view-available-commands)
-    - [Running Unit Tests](#running-unit-tests)
-    - [Running LocalNet](#running-localnet)
-  - [Code Organization](#code-organization)
-    - [Linters](#linters)
-      - [Installation of golangci-lint](#installation-of-golangci-lint)
-      - [Running linters locally](#running-linters-locally)
-      - [VSCode Integration](#vscode-integration)
-      - [Configuration](#configuration)
-      - [Custom linters](#custom-linters)
+- [LFG - Development](#lfg---development)
+  - [Install Dependencies](#install-dependencies)
+  - [Prepare Local Environment](#prepare-local-environment)
+  - [View Available Commands](#view-available-commands)
+  - [Running Unit Tests](#running-unit-tests)
+  - [Running LocalNet](#running-localnet)
+- [Code Organization](#code-organization)
+  - [Linters](#linters)
+    - [Installation of golangci-lint](#installation-of-golangci-lint)
+    - [Running linters locally](#running-linters-locally)
+    - [VSCode Integration](#vscode-integration)
+    - [Configuration](#configuration)
+    - [Custom linters](#custom-linters)
 
 ## LFG - Development
 
@@ -201,3 +200,12 @@ The official documentation includes a list of different linters and their config
 We can write custom linters using [`go-ruleguard`](https://go-ruleguard.github.io/). The rules are located in the [`build/linters`](../../build/linters) directory. The rules are written in the [Ruleguard DSL](https://github.com/quasilyte/go-ruleguard/blob/master/_docs/dsl.md), if you've never worked with ruleguard in the past, it makes sense to go through [introduction article](https://quasilyte.dev/blog/post/ruleguard/) and [Ruleguard by example tour](https://go-ruleguard.github.io/by-example/).
 
 Ruleguard is run via `gocritic` linter which is a part of `golangci-lint`, so if you wish to change configuration or debug a particular rule, you can modify the `.golangci.yml` file.
+
+---
+
+Things to add:
+
+- Look at those comments (research, document, implement, etc fom Jess
+- Link to claim & proof lifecycle documentation
+- Link to Otto's V0 GUide
+- How we use mermaid: https://github.com/pokt-network/pocket/issues/335#issuecomment-1352064588
