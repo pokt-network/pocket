@@ -494,7 +494,7 @@ localnet_shell:
 localnet_down:
 	tilt down
 	# kubectl delete --all --namespace=default pocketvalidators
-	kubectl get sts -n default --no-headers=true | awk '/v1-validator/{print $1}' | xargs kubectl delete -n default  sts
+	kubectl get sts -n default --no-headers=true | awk '/v1-validator/{print $1}' | xargs kubectl delete -n default sts
 
 .PHONY: check_cross_module_imports
 ## Lists cross-module imports
