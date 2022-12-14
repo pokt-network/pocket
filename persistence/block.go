@@ -41,12 +41,12 @@ func (p PostgresContext) GetBlockHash(height int64) (string, error) {
 		return "", err
 	}
 
-	var stateHash string
-	if err = tx.QueryRow(ctx, types.GetBlockHashQuery(height)).Scan(&stateHash); err != nil {
+	var blockHash string
+	if err = tx.QueryRow(ctx, types.GetBlockHashQuery(height)).Scan(&blockHash); err != nil {
 		return "", err
 	}
 
-	return stateHash, nil
+	return blockHash, nil
 }
 
 func (p PostgresContext) GetHeight() (int64, error) {
@@ -55,10 +55,10 @@ func (p PostgresContext) GetHeight() (int64, error) {
 
 // Creates a block protobuf object using the schema defined in the persistence module
 func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*types.Block, error) {
-	var prevHash string
+	var prevBlockHash string
 	if p.Height != 0 {
 		var err error
-		prevHash, err = p.GetBlockHash(p.Height - 1)
+		prevBlockHash, err = p.GetBlockHash(p.Height - 1)
 		if err != nil {
 			return nil, err
 		}
@@ -72,7 +72,7 @@ func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*types.
 	block := &types.Block{
 		Height:            uint64(p.Height),
 		StateHash:         p.stateHash,
-		PrevStateHash:     prevHash,
+		PrevStateHash:     prevBlockHash,
 		ProposerAddress:   proposerAddr,
 		QuorumCertificate: quorumCert,
 		TransactionsHash:  txsHash,
