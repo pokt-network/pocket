@@ -39,7 +39,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 		return
 	}
 
-	m.Step = Prepare
+	m.step = Prepare
 }
 
 /*** Prepare Step ***/
@@ -65,10 +65,10 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 		m.paceMaker.InterruptRound()
 		return
 	}
-	m.Block = block
-	m.Step = PreCommit
+	m.block = block
+	m.step = PreCommit
 
-	prepareVoteMessage, err := CreateVoteMessage(m.Height, m.Round, Prepare, m.Block, m.privateKey)
+	prepareVoteMessage, err := CreateVoteMessage(m.height, m.round, Prepare, m.block, m.privateKey)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Prepare).Error(), err)
 		return // Not interrupting the round because liveness could continue with one failed vote
@@ -94,10 +94,10 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 		return
 	}
 
-	m.Step = Commit
+	m.step = Commit
 	m.highPrepareQC = quorumCert // INVESTIGATE: Why are we never using this for validation?
 
-	preCommitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, PreCommit, m.Block, m.privateKey)
+	preCommitVoteMessage, err := CreateVoteMessage(m.height, m.round, PreCommit, m.block, m.privateKey)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(PreCommit).Error(), err)
 		return // Not interrupting the round because liveness could continue with one failed vote
@@ -123,10 +123,10 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 		return
 	}
 
-	m.Step = Decide
+	m.step = Decide
 	m.lockedQC = quorumCert // DISCUSS: How does the replica recover if it's locked? Replica `formally` agrees on the QC while the rest of the network `verbally` agrees on the QC.
 
-	commitVoteMessage, err := CreateVoteMessage(m.Height, m.Round, Commit, m.Block, m.privateKey)
+	commitVoteMessage, err := CreateVoteMessage(m.height, m.round, Commit, m.block, m.privateKey)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Commit).Error(), err)
 		return // Not interrupting the round because liveness could continue with one failed vote
@@ -152,7 +152,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 		return
 	}
 
-	if err := m.commitBlock(m.Block); err != nil {
+	if err := m.commitBlock(m.block); err != nil {
 		m.nodeLogError("Could not commit block", err)
 		m.paceMaker.InterruptRound()
 		return
