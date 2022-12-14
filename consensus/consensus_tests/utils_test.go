@@ -318,7 +318,6 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 	// state; hence the `-1` expectation in the call above.
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
-
 	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(makeMockActors(numValidators), nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
