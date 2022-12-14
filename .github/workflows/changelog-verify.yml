@@ -1,0 +1,40 @@
+# This runs the pre-commit hook logic to check whether the relevent
+# CHANGELOG.md files have been updated for both the root directory
+# and/or modules edited if they have been changed.
+
+name: Validate Changelogs
+
+on:
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
+    paths-ignore:
+      - ".github/**"
+      - ".githooks/**"
+
+jobs:
+  changedfiles:
+    runs-on: ubuntu-latest
+    # Map a step output to a job output
+    outputs:
+      all: ${{ steps.changes.outputs.all}}
+    steps:
+        # Make sure we have some code to diff.
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Get changed files
+        id: changes
+        # Set outputs using the command.
+        run: echo "all=$(git diff --name-only --diff-filter=ACMRT ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | xargs)" >> $GITHUB_OUTPUT
+
+  validate:
+    runs-on: ubuntu-latest
+      # require the first job to have ran
+    needs: changedfiles
+      # only run there are changed files
+    if: ${{needs.changedfiles.outputs.all}}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Verify changelogs
+        run: bash ./.githooks/pre-commit ${{needs.changedfiles.outputs.all}}
