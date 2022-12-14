@@ -78,6 +78,7 @@ func (u *UtilityContext) CreateAndApplyProposalBlock(proposer []byte, maxTransac
 	if err != nil {
 		log.Fatalf("Updating the app hash failed: %v. TODO: Look into roll-backing the entire commit...\n", err)
 	}
+	log.Println("CreateAndApplyProposalBlock - computed state hash:", stateHash)
 
 	return stateHash, transactions, err
 }
@@ -135,6 +136,7 @@ func (u *UtilityContext) ApplyBlock() (string, error) {
 		log.Fatalf("Updating the app hash failed: %v. TODO: Look into roll-backing the entire commit...\n", err)
 		return "", typesUtil.ErrAppHash(err)
 	}
+	log.Println("ApplyBlock - computed state hash:", stateHash)
 
 	// return the app hash; consensus module will get the validator set directly
 	return stateHash, nil

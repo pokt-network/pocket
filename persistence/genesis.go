@@ -145,10 +145,11 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 	}
 
 	// Updates all the merkle trees
-	_, err = rwContext.ComputeStateHash()
+	stateHash, err := rwContext.ComputeStateHash()
 	if err != nil {
 		log.Fatalf("an error occurred updating the app hash during genesis: %s", err.Error())
 	}
+	log.Println("PopulateGenesisState - computed state hash:", stateHash)
 
 	// This updates the DB, blockstore, and commits the genesis state.
 	// Note that the `quorumCert for genesis` is nil.
