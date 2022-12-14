@@ -65,6 +65,12 @@ $ git clone git@github.com:pokt-network/pocket.git && cd pocket
 $ make develop_start
 ```
 
+Activate changelog pre-commit hook
+```bash
+cp .githooks/pre-commit .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
 ### View Available Commands
 
 ```bash
