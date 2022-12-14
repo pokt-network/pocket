@@ -9,7 +9,7 @@ import (
 
 // GetAddrBook is a helper function that returns the addrBook depending on the availability of the persistence module
 //
-// this is a temporary solution simply used to centralize the logic that is going to be refactored in #331 and #203
+// HACK: This is a temporary solution simply used to centralize the logic that is going to be refactored in #331 and #203
 func GetAddrBook(bus modules.Bus, addrBookProvider typesP2P.AddrBookProvider) typesP2P.AddrBook {
 	var (
 		addrBook typesP2P.AddrBook
