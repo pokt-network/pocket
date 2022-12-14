@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook to check if CHANGELOG.md has been included
+# when the project root or relevent module has been edited.
+# If it has been included the latest version is compared
+# against the previous version by stripping all leading zeros
+# and comparing them. If it is greater it goes on to check
+# that the latest change's date is the current date today.
+# If any of these tests fail the script exits and cancels the
+# commit.
+# To bypass this validation add the `--no-verify` flag:
+# 		`git commit --no-verify ...`
+
+# Get names of staged files being committed. If being run as
+# a git hook take the result of git diff. If not recieve
+# the edited files from the CLI arguments provided
+if [[ "${#}" -eq 0 ]]
+then
+    STAGED_FILES=($(git diff --cached --name-only))
+else
+    STAGED_FILES=("${@}")
+fi
+
+if [[ "${#STAGED_FILES[@]}" == 0 ]]
+then
+	echo "No files added"
+	exit 0
+fi
+
+OS_NAME=''
+case $(uname | tr '[:upper:]' '[:lower:]') in
+	linux*)
+		OS_NAME='linux'
+		;;
+	darwin*)
+		OS_NAME='osx'
+		;;
+	freebsd*)
+		OS_NAME='bsd'
+		;;
+	*) ;;
+esac
+
+ROOT_EDITED=0
+ROOT_CHANGELOG_INCLUDED=0
+MODULES_EDITED=()
+CHANGELOG_ERRORS_FOUND=0
+IGNORE_DIRS=(".github" ".githooks") # Don't check for a changelog in these dirs
+
+# Loop through staged files
+for file in "${STAGED_FILES[@]}"
+do
+	# Check if files are in root directory
+	if [[ "${file}" =~ /+ ]]
+	then
+		root=0
+	else
+		ROOT_EDITED=1
+		root=1
+	fi
+	# Check for CHANGELOG.md in root directory
+	if [[ "${root}" == 1 && "${file}" =~ CHANGELOG.md ]]
+	then
+		ROOT_CHANGELOG_INCLUDED=1
+	fi
+	if [[ "${root}" == 0 ]]
+	then
+		module="$(echo $file | sed 's/\/.*//')"
+		# Only add to modules list if not already present
+		if [[ ! "${MODULES_EDITED[*]}" =~ "${module}" ]]
+		then
+			[[ ! "${IGNORE_DIRS[*]}" =~ "${module}" ]] && MODULES_EDITED+=("${module}")
+		fi
+	fi
+done
+
+# Check if the root directory has been changed and if the
+# root CHANGELOG.md file was included in the commit
+if [[ "${ROOT_EDITED}" == 1 && "${ROOT_CHANGELOG_INCLUDED}" == 0 ]]
+then
+	printf 'Root changelog not included\n\n' >&2
+    CHANGELOG_ERRORS_FOUND=1
+fi
+
+# Check that for each module edited the CHANGELOG.md file
+# was included in the commit
+MODULES_MISSING_CHANGELOG=()
+if [[ "${#MODULES_EDITED[@]}" != 0 ]]
+then
+	# Loop through edited modules checking for CHANGELOG.md
+	for module in "${MODULES_EDITED[@]}"
+	do
+		MODULE_CHANGELOG_INCLUDED=0
+		for file in "${STAGED_FILES[@]}"
+		do
+			if [[ "${file}" =~ "${module}"/* ]]
+			then
+				if [[ "${file}" =~ CHANGELOG.md ]]
+				then
+					MODULE_CHANGELOG_INCLUDED=1
+				fi
+			fi
+		done
+		# Add modules missing CHANGELOG.md to array
+		if [[ "${MODULE_CHANGELOG_INCLUDED}" == 0 ]]
+		then
+			MODULES_MISSING_CHANGELOG+=("${module}")
+		fi
+		MODULE_CHANGELOG_INCLUDED=0
+	done
+fi
+
+# Print error messages and prepare exit for modules missing changelogs
+if [[ "${#MODULES_MISSING_CHANGELOG[@]}" != 0 ]]
+then
+	for module in "${MODULES_MISSING_CHANGELOG[@]}"
+	do
+		printf 'Missing changelog in module: %s/\n\n' "${module}" >&2
+        CHANGELOG_ERRORS_FOUND=1
+	done
+fi
+
+# Check version numbers and dates in changelogs provided
+for module in "${MODULES_EDITED[@]}"
+do
+    if [[ "${MODULES_MISSING_CHANGELOG[*]}" =~ "${module}" ]]
+    then
+        continue
+    fi
+	# sed using BRE expression for portability
+	head2versions=($(cat "${module}/CHANGELOG.md" | sed -n 's/^.*\(\[[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\]\) - \([0-9][0-9]*-[0-9][0-9]*-[0-9][0-9]*\).*$/\1 \2/p' | head -n2))
+	# Get latest and previous versions and strip any leading 0s
+	# and check the latest version is greater than the previous
+	latestversion=$(($(echo ${head2versions[0]:1:-1} | sed 's/\.//g' | sed 's/^0*//')+0))
+	previousversion=$(($(echo ${head2versions[2]:1:-1} | sed 's/\.//g' | sed 's/^0*//')+0))
+	if [[ "${latestversion}" -le "${previousversion}" ]]
+	then
+		printf 'Latest version in %s/CHANGELOG.md is incorrect.\nLatest: %s, Previous: %s\n\n' "${module}" "${head2versions[0]}" "${head2versions[2]}" >&2
+		CHANGELOG_ERRORS_FOUND=1
+	fi
+	# Handle OSX/FreeBSD using different date flags to GNU/Linux
+	# https://www.freebsd.org/cgi/man.cgi?date
+	if [[ "${OS_NAME}" =~ linux ]]
+	then
+		latestdate=$(date -d "${head2versions[1]}" +%s)
+		previousdate=$(date -d "${head2versions[3]}" +%s)
+	elif [[ "${OS_NAME}" =~ osx || "${OS_NAME}" =~ bsd ]]
+	then
+		latestdate=$(date -j -f "%F" "${head2versions[1]}" +%s)
+		previousdate=$(date -j -f "%F" "${head2versions[3]}" +%s)
+	fi
+	currentdate=$(date +'%Y-%m-%d')
+	# Check latest date in changelog is current date
+	if [[ "${latestdate}" != "${currentdate}" ]]
+	then
+		printf 'Latest date in %s/CHANGELOG.md is incorrect.\nLatest: %s, Current: %s\n\n' "${module}" "${head2versions[1]}" "${currentdate}" >&2
+		CHANGELOG_ERRORS_FOUND=1
+	fi
+done
+
+if [[ "${CHANGELOG_ERRORS_FOUND}" == 1 ]]
+then
+    printf 'Changelog verification failed. See error messages for more detail.\n' >&2
+	exit 1
+fi
