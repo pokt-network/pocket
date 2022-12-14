@@ -69,7 +69,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		Height:             height,
 		Step:               step,
 		Round:              round,
-		Block:              m.Block,
+		Block:              m.block,
 		ThresholdSignature: thresholdSig,
 	}, nil
 }
@@ -121,8 +121,8 @@ func (m *consensusModule) isOptimisticThresholdMet(n int) error {
 }
 
 func (m *consensusModule) resetForNewHeight() {
-	m.Round = 0
-	m.Block = nil
+	m.round = 0
+	m.block = nil
 	m.highPrepareQC = nil
 	m.lockedQC = nil
 }
@@ -139,18 +139,18 @@ func protoHash(m proto.Message) string {
 
 func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 	// TODO(olshansky): This can happen due to a race condition with the pacemaker.
-	if m.LeaderId == nil {
+	if m.leaderId == nil {
 		m.nodeLogError(typesCons.ErrNilLeaderId.Error(), nil)
 		return
 	}
 
-	m.nodeLog(typesCons.SendingMessage(msg, *m.LeaderId))
+	m.nodeLog(typesCons.SendingMessage(msg, *m.leaderId))
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
 		return
 	}
-	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.idToValAddrMap[*m.LeaderId]), anyConsensusMessage); err != nil {
+	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.idToValAddrMap[*m.leaderId]), anyConsensusMessage); err != nil {
 		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return
 	}
@@ -181,11 +181,11 @@ func (m *consensusModule) clearMessagesPool() {
 /*** Leader Election Helpers ***/
 
 func (m *consensusModule) isLeaderUnknown() bool {
-	return m.LeaderId == nil
+	return m.leaderId == nil
 }
 
 func (m *consensusModule) isLeader() bool {
-	return m.LeaderId != nil && *m.LeaderId == m.nodeId
+	return m.leaderId != nil && *m.leaderId == m.nodeId
 }
 
 func (m *consensusModule) isReplica() bool {
@@ -194,7 +194,7 @@ func (m *consensusModule) isReplica() bool {
 
 func (m *consensusModule) clearLeader() {
 	m.logPrefix = DefaultLogPrefix
-	m.LeaderId = nil
+	m.leaderId = nil
 }
 
 func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) error {
@@ -205,14 +205,14 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 		return err
 	}
 
-	m.LeaderId = &leaderId
+	m.leaderId = &leaderId
 
 	if m.isLeader() {
 		m.setLogPrefix("LEADER")
-		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.idToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
+		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
 	} else {
 		m.setLogPrefix("REPLICA")
-		m.nodeLog(typesCons.ElectedNewLeader(m.idToValAddrMap[*m.LeaderId], *m.LeaderId, m.Height, m.Round))
+		m.nodeLog(typesCons.ElectedNewLeader(m.idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
 	}
 
 	return nil
