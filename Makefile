@@ -490,7 +490,7 @@ localnet_shell:
 	kubectl exec -it deploy/pocket-v1-cli-client -- /bin/bash
 
 .PHONY: localnet_down
-## Stops localnet and cleans up dependencies (basically, `tilt down` + resources might not be cleaned up by tilt)
+## Stops localnet and cleans up dependencies (tl;dr `tilt down` + resources that might not have been cleaned up by tilt)
 localnet_down:
 	tilt down
 	# kubectl delete --all --namespace=default pocketvalidators
