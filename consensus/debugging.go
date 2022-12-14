@@ -27,14 +27,14 @@ func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 	m.m.RLock()
 	defer m.m.RUnlock()
 	leaderId := typesCons.NodeId(0)
-	if m.LeaderId != nil {
-		leaderId = *m.LeaderId
+	if m.leaderId != nil {
+		leaderId = *m.leaderId
 	}
 	return typesCons.ConsensusNodeState{
 		NodeId:   m.nodeId,
-		Height:   m.Height,
-		Round:    uint8(m.Round),
-		Step:     uint8(m.Step),
+		Height:   m.height,
+		Round:    uint8(m.round),
+		Step:     uint8(m.step),
 		IsLeader: m.isLeader(),
 		LeaderId: leaderId,
 	}
@@ -43,7 +43,7 @@ func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) {
 	m.nodeLog(typesCons.DebugResetToGenesis)
 
-	m.Height = 0
+	m.height = 0
 	m.resetForNewHeight()
 	m.clearLeader()
 	m.clearMessagesPool()
@@ -62,8 +62,8 @@ func (m *consensusModule) printNodeState(_ *messaging.DebugMessage) {
 func (m *consensusModule) triggerNextView(_ *messaging.DebugMessage) {
 	m.nodeLog(typesCons.DebugTriggerNextView)
 
-	currentHeight := m.Height
-	currentStep := m.Step
+	currentHeight := m.height
+	currentStep := m.step
 	if currentHeight == 0 || (currentStep == Decide && m.paceMaker.IsManualMode()) {
 		m.paceMaker.NewHeight()
 	} else {

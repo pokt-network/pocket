@@ -21,6 +21,7 @@ type ConsensusModule interface {
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
+	// TODO(gokhan): move it into a debug module
 	HandleDebugMessage(*messaging.DebugMessage) error
 
 	// Consensus State Accessors
