@@ -53,7 +53,10 @@ func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P
 }
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg modules.P2PConfig, addrBookProvider typesP2P.AddrBookProvider) typesP2P.Network {
-	addrBook := addrbook_provider.GetAddrBook(bus, addrBookProvider)
+	addrBook, err := addrbook_provider.GetAddrBook(bus, addrBookProvider)
+	if err != nil {
+		log.Fatalf("[ERROR] Error getting addrBook: %v", err)
+	}
 
 	pm, err := newPeersManager(addr, addrBook, true)
 	if err != nil {

@@ -20,7 +20,10 @@ type network struct {
 }
 
 func NewNetwork(bus modules.Bus, p2pCfg modules.P2PConfig, addrBookProvider typesP2P.AddrBookProvider) (n typesP2P.Network) {
-	addrBook := addrbook_provider.GetAddrBook(bus, addrBookProvider)
+	addrBook, err := addrbook_provider.GetAddrBook(bus, addrBookProvider)
+	if err != nil {
+		log.Fatalf("[ERROR] Error getting addrBook: %v", err)
+	}
 
 	addrBookMap := make(typesP2P.AddrBookMap)
 	for _, peer := range addrBook {

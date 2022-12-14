@@ -8,7 +8,6 @@ import (
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -119,8 +118,8 @@ func (m *paceMaker) SetConsensusModule(c *consensusModule) {
 }
 
 func (p *paceMaker) ValidateMessage(m *typesCons.HotstuffMessage) error {
-	currentHeight := p.consensusMod.Height
-	currentRound := p.consensusMod.Round
+	currentHeight := p.consensusMod.height
+	currentRound := p.consensusMod.round
 	// Consensus message is from the past
 	if m.Height < currentHeight {
 		return typesCons.ErrPacemakerUnexpectedMessageHeight(typesCons.ErrOlderMessage, currentHeight, m.Height)
@@ -141,24 +140,24 @@ func (p *paceMaker) ValidateMessage(m *typesCons.HotstuffMessage) error {
 	}
 
 	// Message is from the past
-	if m.Round < currentRound || (m.Round == currentRound && m.Step < p.consensusMod.Step) {
-		return typesCons.ErrPacemakerUnexpectedMessageStepRound(typesCons.ErrOlderStepRound, p.consensusMod.Step, currentRound, m)
+	if m.Round < currentRound || (m.Round == currentRound && m.Step < p.consensusMod.step) {
+		return typesCons.ErrPacemakerUnexpectedMessageStepRound(typesCons.ErrOlderStepRound, p.consensusMod.step, currentRound, m)
 	}
 
 	// Everything checks out!
-	if m.Height == currentHeight && m.Step == p.consensusMod.Step && m.Round == currentRound {
+	if m.Height == currentHeight && m.Step == p.consensusMod.step && m.Round == currentRound {
 		return nil
 	}
 
 	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
-	if m.Round > currentRound || (m.Round == currentRound && m.Step > p.consensusMod.Step) {
-		p.consensusMod.nodeLog(typesCons.PacemakerCatchup(currentHeight, uint64(p.consensusMod.Step), currentRound, m.Height, uint64(m.Step), m.Round))
-		p.consensusMod.Step = m.Step
-		p.consensusMod.Round = m.Round
+	if m.Round > currentRound || (m.Round == currentRound && m.Step > p.consensusMod.step) {
+		p.consensusMod.nodeLog(typesCons.PacemakerCatchup(currentHeight, uint64(p.consensusMod.step), currentRound, m.Height, uint64(m.Step), m.Round))
+		p.consensusMod.step = m.Step
+		p.consensusMod.round = m.Round
 
 		// TODO(olshansky): Add tests for this. When we catch up to a later step, the leader is still the same.
 		// However, when we catch up to a later round, the leader at the same height will be different.
-		if currentRound != m.Round || p.consensusMod.LeaderId == nil {
+		if currentRound != m.Round || p.consensusMod.leaderId == nil {
 			p.consensusMod.electNextLeader(m)
 		}
 
@@ -175,7 +174,7 @@ func (p *paceMaker) RestartTimer() {
 
 	// NOTE: Not defering a cancel call because this function is asynchronous.
 
-	stepTimeout := p.getStepTimeout(p.consensusMod.Round)
+	stepTimeout := p.getStepTimeout(p.consensusMod.round)
 
 	clock := p.GetBus().GetRuntimeMgr().GetClock()
 
@@ -186,7 +185,7 @@ func (p *paceMaker) RestartTimer() {
 		select {
 		case <-ctx.Done():
 			if ctx.Err() == context.DeadlineExceeded {
-				p.consensusMod.nodeLog(typesCons.PacemakerTimeout(p.consensusMod.CurrentHeight(), p.consensusMod.Step, p.consensusMod.Round))
+				p.consensusMod.nodeLog(typesCons.PacemakerTimeout(p.consensusMod.CurrentHeight(), p.consensusMod.step, p.consensusMod.round))
 				p.InterruptRound()
 			}
 		case <-clock.After(stepTimeout + 30*timePkg.Millisecond): // Adding 30ms to the context timeout to avoid race condition.
@@ -196,23 +195,19 @@ func (p *paceMaker) RestartTimer() {
 }
 
 func (p *paceMaker) InterruptRound() {
-	p.consensusMod.nodeLog(typesCons.PacemakerInterrupt(p.consensusMod.CurrentHeight(), p.consensusMod.Step, p.consensusMod.Round))
+	p.consensusMod.nodeLog(typesCons.PacemakerInterrupt(p.consensusMod.CurrentHeight(), p.consensusMod.step, p.consensusMod.round))
 
-	p.consensusMod.Round++
+	p.consensusMod.round++
 	p.startNextView(p.consensusMod.highPrepareQC, false)
 }
 
 func (p *paceMaker) NewHeight() {
 	p.consensusMod.nodeLog(typesCons.PacemakerNewHeight(p.consensusMod.CurrentHeight() + 1))
 
-	p.onBeforeNewHeight()
-
-	p.consensusMod.Height++
+	p.consensusMod.height++
 	p.consensusMod.resetForNewHeight()
 
 	p.startNextView(nil, false) // TODO(design): We are omitting CommitQC and TimeoutQC here.
-
-	p.onAfterNewHeight()
 
 	p.consensusMod.
 		GetBus().
@@ -226,7 +221,7 @@ func (p *paceMaker) NewHeight() {
 func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
 	// DISCUSS: Should we lock the consensus module here?
 
-	p.consensusMod.Step = NewRound
+	p.consensusMod.step = NewRound
 	p.consensusMod.clearLeader()
 	p.consensusMod.clearMessagesPool()
 	// TECHDEBT: This should be avoidable altogether
@@ -245,9 +240,9 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 
 	hotstuffMessage := &typesCons.HotstuffMessage{
 		Type:          Propose,
-		Height:        p.consensusMod.Height,
+		Height:        p.consensusMod.height,
 		Step:          NewRound,
-		Round:         p.consensusMod.Round,
+		Round:         p.consensusMod.round,
 		Block:         nil,
 		Justification: nil, // Set below if qc is not nil
 	}
@@ -266,20 +261,4 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 func (p *paceMaker) getStepTimeout(round uint64) timePkg.Duration {
 	baseTimeout := timePkg.Duration(int64(timePkg.Millisecond) * int64(p.pacemakerCfg.GetTimeoutMsec()))
 	return baseTimeout
-}
-
-func (p *paceMaker) onBeforeNewHeight() {
-	event, err := messaging.PackMessage(&messaging.BeforeHeightChangedEvent{CurrentHeight: p.consensusMod.CurrentHeight()})
-	if err != nil {
-		log.Printf("[WARN] error packing message: %v\n", err)
-	}
-	p.GetBus().PublishEventToBus(event)
-}
-
-func (p *paceMaker) onAfterNewHeight() {
-	event, err := messaging.PackMessage(&messaging.HeightChangedEvent{NewHeight: p.consensusMod.CurrentHeight()})
-	if err != nil {
-		log.Printf("[WARN] error packing message: %v\n", err)
-	}
-	p.GetBus().PublishEventToBus(event)
 }
