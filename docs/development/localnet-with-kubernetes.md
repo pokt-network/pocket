@@ -12,8 +12,8 @@ We are developing our own Kubernetes operator to manage v1 workloads both intern
 
 ### Dependencies
 
-* [tilt](https://docs.tilt.dev/install.html)
-* Kubernetes cluster ([different options available](https://docs.tilt.dev/choosing_clusters.html)), please make sure to run 1.23 version or older, until [this issue is resolved](https://github.com/zalando/postgres-operator/issues/2098) - otherwise Postgres DB is not going to be provisioned.
+* [tilt](https://docs.tilt.dev/install.html) - installed automatically on `make install_cli_deps` command.
+* Kubernetes cluster ([different options available](https://docs.tilt.dev/choosing_clusters.html)), currently 1.23 or older versions supported.
   * `kubectl` is also required to be installed and configured to access the cluster, but that should happen automatically when you install kubernetes cluster locally.
   * `helm` is required to template the yaml manifests for the observability stack. Here are the instructions on how to install it: https://helm.sh/docs/intro/install/.
 * pocket kubernetes operator codebase in `../pocket-operator` directory, relative to the pocket v1 codebase. If you don't have it, tilt will try to pull it from the `main` branch on first launch.

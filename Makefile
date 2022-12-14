@@ -112,6 +112,7 @@ install_cli_deps:
 	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
 	go install "github.com/favadi/protoc-go-inject-tag@latest"
 	go install "github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0"
+	curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash
 
 .PHONY: develop_start
 ## Run all of the make commands necessary to develop on the project
