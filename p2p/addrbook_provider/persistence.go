@@ -62,14 +62,14 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 	for _, v := range stakedActors {
 		validatorMap[v.GetAddress()] = v
 	}
-	addrBook, err := pabp.ActorToAddrBook(validatorMap)
+	addrBook, err := pabp.ActorsToAddrBook(validatorMap)
 	if err != nil {
 		return nil, err
 	}
 	return addrBook, nil
 }
 
-func (pabp *persistenceAddrBookProvider) ActorToAddrBook(actors map[string]modules.Actor) (typesP2P.AddrBook, error) {
+func (pabp *persistenceAddrBookProvider) ActorsToAddrBook(actors map[string]modules.Actor) (typesP2P.AddrBook, error) {
 	book := make(typesP2P.AddrBook, 0)
 	for _, v := range actors {
 		networkPeer, err := pabp.ActorToNetworkPeer(v)
