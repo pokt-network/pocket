@@ -475,7 +475,7 @@ clear_genesis_and_config:
 	rm build/config/gen.*.json
 
 .PHONY: localnet_up
-## Starts localnet with all dependencies (basically, `tilt up`)
+## Starts up a LocalNet with all necessary dependencies (tl;dr `tilt up`)
 localnet_up:
 	tilt up
 
