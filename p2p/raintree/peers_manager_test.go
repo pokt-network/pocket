@@ -78,7 +78,7 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 			addrBook := getAddrBook(t, n-1)
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
 
-			mockBus := mockDummyBus(ctrl)
+			mockBus := mockBus(ctrl)
 			mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
 
 			network := NewRainTreeNetwork(addr, mockBus, mockP2PCfg, mockAddrBookProvider).(*rainTreeNetwork)
@@ -120,7 +120,7 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 			addrBook := getAddrBook(nil, n-1)
 			addrBook = append(addrBook, &types.NetworkPeer{Address: addr})
 
-			mockBus := mockDummyBus(ctrl)
+			mockBus := mockBus(ctrl)
 			mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
 
 			network := NewRainTreeNetwork(addr, mockBus, mockP2PCfg, mockAddrBookProvider).(*rainTreeNetwork)
