@@ -26,13 +26,13 @@ type InitializableModule interface {
 	Create(runtime RuntimeMgr) (Module, error)
 }
 
-type ConfigurableModule interface {
-	ValidateConfig(Config) error
-}
+// type ConfigurableModule interface {
+// 	ValidateConfig(Config) error
+// }
 
-type GenesisDependentModule interface {
-	ValidateGenesis(GenesisState) error
-}
+// type GenesisDependentModule interface {
+// 	ValidateGenesis(GenesisState) error
+// }
 
 type KeyholderModule interface {
 	GetPrivateKey() (crypto.PrivateKey, error)
