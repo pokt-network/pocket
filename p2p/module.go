@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pokt-network/pocket/p2p/addrbook_provider"
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
+	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -50,7 +52,7 @@ func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) 
 	}
 	p2pCfg := cfg.GetP2PConfig()
 
-	l, err := CreateListener(p2pCfg)
+	l, err := transport.CreateListener(p2pCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -96,17 +98,13 @@ func (m *p2pModule) Start() error {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	addrBook, err := ValidatorMapToAddrBook(m.p2pCfg, m.bus.GetConsensusModule().ValidatorMap())
-	if err != nil {
-		return err
-	}
+	addrbookProvider := addrbook_provider.NewPersistenceAddrBookProvider(m.GetBus(), m.p2pCfg)
 
 	if m.p2pCfg.GetUseRainTree() {
-		m.network = raintree.NewRainTreeNetwork(m.address, addrBook)
+		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), m.p2pCfg, addrbookProvider)
 	} else {
-		m.network = stdnetwork.NewNetwork(addrBook)
+		m.network = stdnetwork.NewNetwork(m.GetBus(), m.p2pCfg, addrbookProvider)
 	}
-	m.network.SetBus(m.GetBus())
 
 	go func() {
 		for {

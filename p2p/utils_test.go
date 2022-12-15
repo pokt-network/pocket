@@ -165,12 +165,17 @@ func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) mod
 }
 
 // Bus Mock - needed to return the appropriate modules when accessed
-func prepareBusMock(t *testing.T, consensusMock *modulesMock.MockConsensusModule, telemetryMock *modulesMock.MockTelemetryModule) *modulesMock.MockBus {
+func prepareBusMock(t *testing.T,
+	consensusMock *modulesMock.MockConsensusModule,
+	persistenceMock *modulesMock.MockPersistenceModule,
+	telemetryMock *modulesMock.MockTelemetryModule,
+) *modulesMock.MockBus {
 	ctrl := gomock.NewController(t)
 	busMock := modulesMock.NewMockBus(ctrl)
 
 	busMock.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
 	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
 
 	return busMock
@@ -191,6 +196,19 @@ func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modu
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
 
 	return consensusMock
+}
+
+// Persistence mock - only needed for validatorMap access
+func preparePersistenceMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockPersistenceModule {
+	ctrl := gomock.NewController(t)
+
+	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
+	readContextMock := modulesMock.NewMockPersistenceReadContext(ctrl)
+
+	readContextMock.EXPECT().GetAllStakedActors(gomock.Any()).Return(genesisState.GetPersistenceGenesisState().GetVals(), nil).AnyTimes()
+	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(readContextMock, nil).AnyTimes()
+
+	return persistenceMock
 }
 
 // Telemetry mock - Needed to help with proper counts for number of expected network writes
