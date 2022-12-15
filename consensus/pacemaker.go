@@ -176,7 +176,7 @@ func (p *paceMaker) RestartTimer() {
 
 	stepTimeout := p.getStepTimeout(p.consensusMod.round)
 
-	clock := p.bus.GetRuntimeMgr().GetClock()
+	clock := p.GetBus().GetRuntimeMgr().GetClock()
 
 	ctx, cancel := clock.WithTimeout(context.TODO(), stepTimeout)
 	p.stepCancelFunc = cancel
