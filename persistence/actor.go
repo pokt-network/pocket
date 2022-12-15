@@ -129,10 +129,12 @@ func (p PostgresContext) GetAllStakedActors(height int64) (allActors []modules.A
 	type actorGetter func(height int64) ([]modules.Actor, error)
 	actorGetters := []actorGetter{p.GetAllValidators, p.GetAllServiceNodes, p.GetAllFishermen, p.GetAllApps}
 	for _, actorGetter := range actorGetters {
-		actors, err := actorGetter(height)
+		var actors []modules.Actor
+		actors, err = actorGetter(height)
 		if err != nil {
-			allActors = append(allActors, actors...)
+			return
 		}
+		allActors = append(allActors, actors...)
 	}
 	return
 }
