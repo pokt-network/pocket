@@ -2,51 +2,24 @@ package test_artifacts
 
 // Cross module imports are okay because this is only used for testing and not business logic
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
-	"math/rand"
-	"os"
 	"strconv"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	typesPers "github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
+	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
-	typesTelemetry "github.com/pokt-network/pocket/telemetry"
 	"github.com/pokt-network/pocket/utility/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// HACK: This is a hack used to enable deterministic key generation via an environment variable.
-//       In order to avoid this, `NewGenesisState` and all downstream functions would need to be
-//       refactored. Alternatively, the seed would need to be passed via the runtime manager.
-//       To avoid these large scale changes, this is a temporary approach to enable deterministic
-//       key generation.
-// IMPROVE(#361): Design a better way to generate deterministic keys for testing.
-const PrivateKeySeedEnv = "DEFAULT_PRIVATE_KEY_SEED"
-
-var privateKeySeed int
-
-// Intentionally not using `init` in case the caller sets this before `NewGenesisState` is called.s
-func loadPrivateKeySeed() {
-	privateKeySeedEnvValue := os.Getenv(PrivateKeySeedEnv)
-	if seedInt, err := strconv.Atoi(privateKeySeedEnvValue); err == nil {
-		privateKeySeed = seedInt
-	} else {
-		rand.Seed(timestamppb.Now().Seconds)
-		privateKeySeed = rand.Int()
-	}
-}
-
 // IMPROVE: Generate a proper genesis suite in the future.
 func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (modules.GenesisState, []string) {
-	loadPrivateKeySeed()
-
 	apps, appsPrivateKeys := NewActors(types.ActorType_App, numApplications)
 	vals, validatorPrivateKeys := NewActors(types.ActorType_Validator, numValidators)
 	serviceNodes, snPrivateKeys := NewActors(types.ActorType_ServiceNode, numServiceNodes)
@@ -74,50 +47,47 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 	return genesisState, validatorPrivateKeys
 }
 
-func NewDefaultConfigs(privateKeys []string) (configs []modules.Config) {
+func NewDefaultConfigs(privateKeys []string) (configs []*configs.Config) {
 	for i, pk := range privateKeys {
 		configs = append(configs, NewDefaultConfig(i, pk))
 	}
 	return
 }
 
-func NewDefaultConfig(i int, pk string) modules.Config {
-	return runtime.NewConfig(
-		&runtime.BaseConfig{
-			RootDirectory: "/go/src/github.com/pocket-network",
-			PrivateKey:    pk,
+func NewDefaultConfig(i int, pk string) *configs.Config {
+	return &configs.Config{
+		RootDirectory: "/go/src/github.com/pocket-network",
+		PrivateKey:    pk,
+		Consensus: &configs.ConsensusConfig{
+			MaxMempoolBytes: 500000000,
+			PacemakerConfig: &configs.PacemakerConfig{
+				TimeoutMsec:               5000,
+				Manual:                    true,
+				DebugTimeBetweenStepsMsec: 1000,
+			},
+			PrivateKey: pk,
 		},
-		runtime.WithConsensusConfig(
-			&typesCons.ConsensusConfig{
-				MaxMempoolBytes: 500000000,
-				PacemakerConfig: &typesCons.PacemakerConfig{
-					TimeoutMsec:               5000,
-					Manual:                    true,
-					DebugTimeBetweenStepsMsec: 1000,
-				},
-				PrivateKey: pk,
-			}),
-		runtime.WithUtilityConfig(&typesUtil.UtilityConfig{
+		Utility: &configs.UtilityConfig{
 			MaxMempoolTransactionBytes: 1024 * 1024 * 1024, // 1GB V0 defaults
 			MaxMempoolTransactions:     9000,
-		}),
-		runtime.WithPersistenceConfig(&typesPers.PersistenceConfig{
+		},
+		Persistence: &configs.PersistenceConfig{
 			PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
 			NodeSchema:     "node" + strconv.Itoa(i+1),
 			BlockStorePath: "/var/blockstore",
-		}),
-		runtime.WithP2PConfig(&typesP2P.P2PConfig{
+		},
+		P2P: &configs.P2PConfig{
 			ConsensusPort:         8080,
 			UseRainTree:           true,
 			IsEmptyConnectionType: false,
 			PrivateKey:            pk,
-		}),
-		runtime.WithTelemetryConfig(&typesTelemetry.TelemetryConfig{
+		},
+		Telemetry: &configs.TelemetryConfig{
 			Enabled:  true,
 			Address:  "0.0.0.0:9000",
 			Endpoint: "/metrics",
-		}),
-	)
+		},
+	}
 }
 
 func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
@@ -139,7 +109,7 @@ func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing s
 
 func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
 	for i := 0; i < n; i++ {
-		_, _, addr := generateNewKeysStrings()
+		_, _, addr := keygenerator.GetInstance().Next()
 		if privateKeys != nil {
 			pk, _ := crypto.NewPrivateKey(privateKeys[i])
 			addr = pk.Address().String()
@@ -153,7 +123,8 @@ func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
 }
 
 // TODO: The current implementation of NewActors  will have overlapping `ServiceUrl` for different
-//       types of actors which needs to be fixed.
+//
+//	types of actors which needs to be fixed.
 func NewActors(actorType typesUtil.ActorType, n int) (actors []modules.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
 		genericParam := getServiceUrl(i + 1)
@@ -173,7 +144,7 @@ func getServiceUrl(n int) string {
 }
 
 func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor, privateKey string) {
-	privKey, pubKey, addr := generateNewKeysStrings()
+	privKey, pubKey, addr := keygenerator.GetInstance().Next()
 	chains := defaults.DefaultChains
 	if actorType == int32(typesPers.ActorType_Val) {
 		chains = nil
@@ -191,24 +162,4 @@ func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor,
 		Output:          addr,
 		ActorType:       typesPers.ActorType(actorType),
 	}, privKey
-}
-
-// TECHDEBT: This function has the side effect of incrementing the global variable `privateKeySeed`
-// in order to guarantee unique keys, but that are still deterministic for testing purposes.
-func generateNewKeysStrings() (privateKey, publicKey, address string) {
-	privateKeySeed += 1 // Different on every call but deterministic
-	cryptoSeed := make([]byte, crypto.SeedSize)
-	binary.LittleEndian.PutUint32(cryptoSeed, uint32(privateKeySeed))
-
-	reader := bytes.NewReader(cryptoSeed)
-	privateKeyBz, err := crypto.GeneratePrivateKeyWithReader(reader)
-	if err != nil {
-		panic(err)
-	}
-
-	privateKey = privateKeyBz.String()
-	publicKey = privateKeyBz.PublicKey().String()
-	address = privateKeyBz.PublicKey().Address().String()
-
-	return
 }
