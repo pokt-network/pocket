@@ -7,7 +7,7 @@ import (
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 )
 
-func mockDummyBus(ctrl *gomock.Controller) *mockModules.MockBus {
+func mockBus(ctrl *gomock.Controller) *mockModules.MockBus {
 	busMock := mockModules.NewMockBus(ctrl)
 	busMock.EXPECT().GetPersistenceModule().Return(nil).AnyTimes()
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
