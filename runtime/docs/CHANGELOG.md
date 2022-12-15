@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.1] - 2022-12-14
+
+- Added `DefaultP2PMempoolMaxNonceCount`
+
 ## [0.0.0] - 2022-09-30
 
 ### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
