@@ -185,14 +185,6 @@ func prepareBusMock(t *testing.T,
 func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockConsensusModule {
 	ctrl := gomock.NewController(t)
 	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
-
-	validators := genesisState.GetPersistenceGenesisState().GetVals()
-	m := make(modules.ValidatorMap, len(validators))
-	for _, v := range validators {
-		m[v.GetAddress()] = v
-	}
-
-	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
 
 	return consensusMock
