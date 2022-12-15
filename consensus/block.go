@@ -12,12 +12,13 @@ func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
 	}
-	m.nodeLog(typesCons.CommittingBlock(m.Height, len(block.Transactions)))
+	m.nodeLog(typesCons.CommittingBlock(m.height, len(block.Transactions)))
 
 	// Release the context
 	if err := m.utilityContext.Release(); err != nil {
 		log.Println("[WARN] Error releasing utility context: ", err)
 	}
+
 	m.utilityContext = nil
 
 	return nil
@@ -26,11 +27,11 @@ func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 // TODO: Add unit tests specific to block validation
 // IMPROVE: (olshansky) rename to provide clarity of operation. ValidateBasic() is typically a stateless check not stateful
 func (m *consensusModule) validateBlockBasic(block *typesCons.Block) error {
-	if block == nil && m.Step != NewRound {
+	if block == nil && m.step != NewRound {
 		return typesCons.ErrNilBlock
 	}
 
-	if block != nil && m.Step == NewRound {
+	if block != nil && m.step == NewRound {
 		return typesCons.ErrBlockExists
 	}
 
@@ -40,10 +41,10 @@ func (m *consensusModule) validateBlockBasic(block *typesCons.Block) error {
 
 	// If the current block being processed (i.e. voted on) by consensus is non nil, we need to make
 	// sure that the data (height, round, step, txs, etc) is the same before we start validating the signatures
-	if m.Block != nil {
+	if m.block != nil {
 		// DISCUSS: The only difference between blocks from one step to another is the QC, so we need
 		//          to determine where/how to validate this
-		if protoHash(m.Block) != protoHash(block) {
+		if protoHash(m.block) != protoHash(block) {
 			log.Println("[TECHDEBT][ERROR] The block being processed is not the same as that received by the consensus module ")
 		}
 	}
@@ -69,7 +70,7 @@ func (m *consensusModule) refreshUtilityContext() error {
 		log.Printf("[WARN] Error releasing persistence write context: %v\n", err)
 	}
 
-	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.Height))
+	utilityContext, err := m.GetBus().GetUtilityModule().NewContext(int64(m.height))
 	if err != nil {
 		return err
 	}

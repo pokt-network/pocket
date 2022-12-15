@@ -9,6 +9,11 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 
 ## [Unreleased]
 
+## [0.0.0.11] - 2022-15-14
+
+- Moved Actor related getters from `genesis.go` to `actor.go`
+- Added `GetAllStakedActors()` that returns all Actors
+
 ## [0.0.0.10] - 2022-12-06
 
 - Changed the scope of `TransactionExists` from the `PostgresContext` to the `PersistenceModule`

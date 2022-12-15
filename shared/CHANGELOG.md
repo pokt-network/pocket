@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.6] - 2022-12-14
+
+- Added `GetMaxMempoolCount`
+
 ## [0.0.0.5] - 2022-12-06
 
 - Change the `bus` to be a pointer receiver rather than a value receiver in all the functions it implements
