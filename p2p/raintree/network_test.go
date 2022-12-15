@@ -14,7 +14,7 @@ import (
 func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockP2PCfg := mockModules.NewMockP2PConfig(ctrl)
-	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMempoolMaxNonceCount).AnyTimes()
+	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMaxMempoolCount).AnyTimes()
 
 	// starting with an empty address book and only self
 	selfAddr, err := cryptoPocket.GenerateAddress()
@@ -53,7 +53,7 @@ func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	mockP2PCfg := mockModules.NewMockP2PConfig(ctrl)
-	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMempoolMaxNonceCount).AnyTimes()
+	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMaxMempoolCount).AnyTimes()
 
 	// starting with an address book having only self and an arbitrary number of peers `numAddressesInAddressBook``
 	numAddressesInAddressBook := 3
