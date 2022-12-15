@@ -9,8 +9,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -96,19 +96,19 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 }
 
 func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
-	cfg := runtime.NewConfig(
-		&runtime.BaseConfig{},
-		runtime.WithPersistenceConfig(&types.PersistenceConfig{
+	cfg := &configs.Config{
+		Persistence: &configs.PersistenceConfig{
 			PostgresUrl:    databaseUrl,
 			NodeSchema:     testSchema,
 			BlockStorePath: "",
 			TxIndexerPath:  "",
 			TreesStoreDir:  "",
-		}),
-		runtime.WithUtilityConfig(&utilTypes.UtilityConfig{
+		},
+		Utility: &configs.UtilityConfig{
 			MaxMempoolTransactionBytes: 1000000,
 			MaxMempoolTransactions:     1000,
-		}))
+		},
+	}
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
 	return runtimeCfg
