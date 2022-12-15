@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.10] 2022-12-14
+## [0.0.0.10] - 2022-12-14
 
 - mempool cap is now configurable via P2PConfig. Tests implement the mock accordingly.
 - Introduced the concept of a `addrbookProvider` that abstracts the fetching and the mapping from `Actor` to `NetworkPeer`
