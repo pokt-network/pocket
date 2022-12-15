@@ -57,19 +57,14 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 	if err != nil {
 		return nil, err
 	}
-	// TODO(#203): refactor `ValidatorMap``
-	validatorMap := make(modules.ValidatorMap, len(stakedActors))
-	for _, v := range stakedActors {
-		validatorMap[v.GetAddress()] = v
-	}
-	addrBook, err := pabp.ActorsToAddrBook(validatorMap)
+	addrBook, err := pabp.ActorsToAddrBook(stakedActors)
 	if err != nil {
 		return nil, err
 	}
 	return addrBook, nil
 }
 
-func (pabp *persistenceAddrBookProvider) ActorsToAddrBook(actors map[string]modules.Actor) (typesP2P.AddrBook, error) {
+func (pabp *persistenceAddrBookProvider) ActorsToAddrBook(actors []modules.Actor) (typesP2P.AddrBook, error) {
 	book := make(typesP2P.AddrBook, 0)
 	for _, v := range actors {
 		networkPeer, err := pabp.ActorToNetworkPeer(v)
@@ -82,13 +77,13 @@ func (pabp *persistenceAddrBookProvider) ActorsToAddrBook(actors map[string]modu
 	return book, nil
 }
 
-func (pabp *persistenceAddrBookProvider) ActorToNetworkPeer(v modules.Actor) (*typesP2P.NetworkPeer, error) {
-	conn, err := pabp.connFactory(pabp.p2pCfg, v.GetGenericParam()) // service url
+func (pabp *persistenceAddrBookProvider) ActorToNetworkPeer(actor modules.Actor) (*typesP2P.NetworkPeer, error) {
+	conn, err := pabp.connFactory(pabp.p2pCfg, actor.GetGenericParam()) // service url
 	if err != nil {
 		return nil, fmt.Errorf("error resolving addr: %v", err)
 	}
 
-	pubKey, err := cryptoPocket.NewPublicKey(v.GetPublicKey())
+	pubKey, err := cryptoPocket.NewPublicKey(actor.GetPublicKey())
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +92,7 @@ func (pabp *persistenceAddrBookProvider) ActorToNetworkPeer(v modules.Actor) (*t
 		Dialer:     conn,
 		PublicKey:  pubKey,
 		Address:    pubKey.Address(),
-		ServiceUrl: v.GetGenericParam(), // service url
+		ServiceUrl: actor.GetGenericParam(), // service url
 	}
 
 	return peer, nil
