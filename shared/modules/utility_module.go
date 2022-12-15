@@ -26,6 +26,9 @@ type UtilityModule interface {
 type UtilityContext interface {
 	// Block operations
 
+	// This function is intended to be called by any type of node during state transitions. For example,
+	// both block proposers and verifiers will use it to create a context (before finalizing it) during consensus,
+	// and all verifiers will call it during state sync.
 	SetProposalBlock(blockHash string, proposerAddr []byte, transactions [][]byte) error
 	// Reaps the mempool for transactions to be proposed in a new block, and applies them to this
 	// context; intended to be used by the block proposer.
