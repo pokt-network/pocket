@@ -12,7 +12,7 @@ import (
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
-	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/configs"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -114,20 +114,19 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 	copy(valKeys[:], keys[:numValidators])
 	mockGenesisState := createMockGenesisState(t, valKeys)
 	for i := range mockRuntimeMgrs {
-		mockConfig := modulesMock.NewMockConfig(ctrl)
-		mockConfig.EXPECT().GetBaseConfig().Return(&runtime.BaseConfig{
+		cfg := &configs.Config{
 			RootDirectory: "",
 			PrivateKey:    valKeys[i].String(),
-		}).AnyTimes()
-		mockConfig.EXPECT().GetP2PConfig().Return(&typesP2P.P2PConfig{
-			PrivateKey:            valKeys[i].String(),
-			ConsensusPort:         8080,
-			UseRainTree:           true,
-			IsEmptyConnectionType: true,
-		}).AnyTimes()
+			P2P: &configs.P2PConfig{
+				PrivateKey:            valKeys[i].String(),
+				ConsensusPort:         8080,
+				UseRainTree:           true,
+				IsEmptyConnectionType: true,
+			},
+		}
 
 		mockRuntimeMgr := modulesMock.NewMockRuntimeMgr(ctrl)
-		mockRuntimeMgr.EXPECT().GetConfig().Return(mockConfig).AnyTimes()
+		mockRuntimeMgr.EXPECT().GetConfig().Return(cfg).AnyTimes()
 		mockRuntimeMgr.EXPECT().GetGenesis().Return(mockGenesisState).AnyTimes()
 		mockRuntimeMgrs[i] = mockRuntimeMgr
 	}
