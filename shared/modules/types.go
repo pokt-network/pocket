@@ -1,10 +1,8 @@
 package modules
 
-//go:generate mockgen -source=$GOFILE -destination=./mocks/types_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
+import "google.golang.org/protobuf/types/known/timestamppb"
 
-import (
-	"google.golang.org/protobuf/types/known/timestamppb"
-)
+//go:generate mockgen -source=$GOFILE -destination=./mocks/types_mock.go -aux_files=github.com/pokt-network/pocket/shared/modules=module.go
 
 // This file contains the minimum shared structures (GenesisState) and the many shared interfaces the modules implement
 // the main purpose of this structure is to ensure the ownership of the
@@ -14,79 +12,79 @@ type GenesisState interface {
 	GetConsensusGenesisState() ConsensusGenesisState
 }
 
-type Config interface {
-	GetBaseConfig() BaseConfig
-	GetConsensusConfig() ConsensusConfig
-	GetUtilityConfig() UtilityConfig
-	GetPersistenceConfig() PersistenceConfig
-	GetP2PConfig() P2PConfig
-	GetTelemetryConfig() TelemetryConfig
-	GetLoggerConfig() LoggerConfig
-	GetRPCConfig() RPCConfig
-}
+// type Config interface {
+// 	GetBaseConfig() BaseConfig
+// 	GetConsensusConfig() ConsensusConfig
+// 	GetUtilityConfig() UtilityConfig
+// 	GetPersistenceConfig() PersistenceConfig
+// 	GetP2PConfig() P2PConfig
+// 	GetTelemetryConfig() TelemetryConfig
+// 	GetLoggerConfig() LoggerConfig
+// 	GetRPCConfig() RPCConfig
+// }
 
-type BaseConfig interface {
-	GetRootDirectory() string
-	GetPrivateKey() string // TODO (#150) better architecture for key management (keybase, keyfiles, etc.)
-}
+// type BaseConfig interface {
+// 	GetRootDirectory() string
+// 	GetPrivateKey() string // TODO (#150) better architecture for key management (keybase, keyfiles, etc.)
+// }
 
-type ConsensusConfig interface {
-	GetMaxMempoolBytes() uint64
-	GetPrivateKey() string // TODO (#150) better architecture for key management (keybase, keyfiles, etc.)
-}
+// type ConsensusConfig interface {
+// 	GetMaxMempoolBytes() uint64
+// 	GetPrivateKey() string // TODO (#150) better architecture for key management (keybase, keyfiles, etc.)
+// }
 
-type PacemakerConfig interface {
-	SetTimeoutMsec(uint64)
-	GetTimeoutMsec() uint64
-	GetManual() bool
-	GetDebugTimeBetweenStepsMsec() uint64
-}
+// type PacemakerConfig interface {
+// 	SetTimeoutMsec(uint64)
+// 	GetTimeoutMsec() uint64
+// 	GetManual() bool
+// 	GetDebugTimeBetweenStepsMsec() uint64
+// }
 
-type PersistenceConfig interface {
-	GetPostgresUrl() string
-	GetNodeSchema() string
-	GetBlockStorePath() string
-	GetTxIndexerPath() string
-	GetTreesStoreDir() string
-	GetMaxConnsCount() int32
-	GetMinConnsCount() int32
-	GetMaxConnLifetime() string
-	GetMaxConnIdleTime() string
-	GetHealthCheckPeriod() string
-}
+// type PersistenceConfig interface {
+// 	GetPostgresUrl() string
+// 	GetNodeSchema() string
+// 	GetBlockStorePath() string
+// 	GetTxIndexerPath() string
+// 	GetTreesStoreDir() string
+// GetMaxConnsCount() int32
+// GetMinConnsCount() int32
+// GetMaxConnLifetime() string
+// GetMaxConnIdleTime() string
+// GetHealthCheckPeriod() string
+// }
 
-type P2PConfig interface {
-	GetPrivateKey() string
-	GetConsensusPort() uint32
-	GetUseRainTree() bool
-	GetIsEmptyConnectionType() bool // TODO : make enum
-	GetMaxMempoolCount() uint64
-}
+// type P2PConfig interface {
+// 	GetPrivateKey() string
+// 	GetConsensusPort() uint32
+// 	GetUseRainTree() bool
+// 	GetIsEmptyConnectionType() bool // TODO : make enum
+// 	GetMaxMempoolCount() uint64
+// }
 
-type TelemetryConfig interface {
-	GetEnabled() bool
-	GetAddress() string
-	GetEndpoint() string
-}
+// type TelemetryConfig interface {
+// 	GetEnabled() bool
+// 	GetAddress() string
+// 	GetEndpoint() string
+// }
 
-type LoggerConfig interface {
-	// We have protobuf enums for the following values in `logger/proto` dir, but they are represented as
-	// `string` to avoid circular dependencies between this (`modules`) and `logger` packages.
-	GetLevel() string
-	GetFormat() string
-}
+// type LoggerConfig interface {
+// 	// We have protobuf enums for the following values in `logger/proto` dir, but they are represented as
+// 	// `string` to avoid circular dependencies between this (`modules`) and `logger` packages.
+// 	GetLevel() string
+// 	GetFormat() string
+// }
 
-type UtilityConfig interface {
-	GetMaxMempoolTransactionBytes() uint64
-	GetMaxMempoolTransactions() uint32
-}
+// type UtilityConfig interface {
+// 	GetMaxMempoolTransactionBytes() uint64
+// 	GetMaxMempoolTransactions() uint32
+// }
 
-type RPCConfig interface {
-	GetEnabled() bool
-	GetPort() string
-	GetTimeout() uint64
-	GetUseCors() bool
-}
+// type RPCConfig interface {
+// 	GetEnabled() bool
+// 	GetPort() string
+// 	GetTimeout() uint64
+// 	GetUseCors() bool
+// }
 
 type PersistenceGenesisState interface {
 	GetAccs() []Account
