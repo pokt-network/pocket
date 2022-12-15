@@ -17,6 +17,7 @@ import (
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -66,17 +67,17 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 	runtimeMgrs := make([]runtime.Manager, validatorCount)
 	var validatorKeys []string
 	genesisState, validatorKeys := test_artifacts.NewGenesisState(validatorCount, 1, 1, 1)
-	configs := test_artifacts.NewDefaultConfigs(validatorKeys)
-	for i, config := range configs {
-		runtime.WithConsensusConfig(&typesCons.ConsensusConfig{
-			PrivateKey:      config.GetBaseConfig().GetPrivateKey(),
+	cfgs := test_artifacts.NewDefaultConfigs(validatorKeys)
+	for i, config := range cfgs {
+		config.Consensus = &configs.ConsensusConfig{
+			PrivateKey:      config.PrivateKey,
 			MaxMempoolBytes: 500000000,
-			PacemakerConfig: &typesCons.PacemakerConfig{
+			PacemakerConfig: &configs.PacemakerConfig{
 				TimeoutMsec:               5000,
 				Manual:                    false,
 				DebugTimeBetweenStepsMsec: 0,
 			},
-		})(config)
+		}
 		runtimeMgrs[i] = *runtime.NewManager(config, genesisState, runtime.WithClock(clockMgr))
 	}
 	return runtimeMgrs
@@ -91,9 +92,9 @@ func CreateTestConsensusPocketNodes(
 	// TODO(design): The order here is important in order for NodeId to be set correctly below.
 	// This logic will need to change once proper leader election is implemented.
 	sort.Slice(runtimeMgrs, func(i, j int) bool {
-		pk, err := cryptoPocket.NewPrivateKey(runtimeMgrs[i].GetConfig().GetBaseConfig().GetPrivateKey())
+		pk, err := cryptoPocket.NewPrivateKey(runtimeMgrs[i].GetConfig().PrivateKey)
 		require.NoError(t, err)
-		pk2, err := cryptoPocket.NewPrivateKey(runtimeMgrs[j].GetConfig().GetBaseConfig().GetPrivateKey())
+		pk2, err := cryptoPocket.NewPrivateKey(runtimeMgrs[j].GetConfig().PrivateKey)
 		require.NoError(t, err)
 		return pk.Address().String() < pk2.Address().String()
 	})
@@ -114,9 +115,9 @@ func CreateTestConsensusPocketNodesNew(
 	// TODO(design): The order here is important in order for NodeId to be set correctly below.
 	// This logic will need to change once proper leader election is implemented.
 	sort.Slice(runtimeMgrs, func(i, j int) bool {
-		pk, err := cryptoPocket.NewPrivateKey(runtimeMgrs[i].GetConfig().GetBaseConfig().GetPrivateKey())
+		pk, err := cryptoPocket.NewPrivateKey(runtimeMgrs[i].GetConfig().PrivateKey)
 		require.NoError(t, err)
-		pk2, err := cryptoPocket.NewPrivateKey(runtimeMgrs[j].GetConfig().GetBaseConfig().GetPrivateKey())
+		pk2, err := cryptoPocket.NewPrivateKey(runtimeMgrs[j].GetConfig().PrivateKey)
 		require.NoError(t, err)
 		return pk.Address().String() < pk2.Address().String()
 	})
@@ -149,7 +150,7 @@ func CreateTestConsensusPocketNode(
 
 	require.NoError(t, err)
 
-	pk, err := cryptoPocket.NewPrivateKey(runtimeMgr.GetConfig().GetBaseConfig().GetPrivateKey())
+	pk, err := cryptoPocket.NewPrivateKey(runtimeMgr.GetConfig().PrivateKey)
 	require.NoError(t, err)
 
 	pocketNode := shared.NewNodeWithP2PAddress(pk.Address())
