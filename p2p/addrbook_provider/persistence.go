@@ -57,7 +57,7 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 	if err != nil {
 		return nil, err
 	}
-	// TODO(#203): refactor `ValidatorMap``
+	// TODO(#203): refactor `ValidatorMap`
 	validatorMap := make(modules.ValidatorMap, len(stakedActors))
 	for _, v := range stakedActors {
 		validatorMap[v.GetAddress()] = v
