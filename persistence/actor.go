@@ -5,7 +5,7 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// TODO(pocket/issues/149): All of the functions below following a structure similar to `GetAll<Actor>`
+// TODO (#399): All of the functions below following a structure similar to `GetAll<Actor>`
 //	can easily be refactored and condensed into a single function using a generic type or a common
 //  interface.
 func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err error) {
