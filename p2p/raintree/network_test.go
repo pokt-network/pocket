@@ -24,7 +24,7 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 	addrBook := getAddrBook(nil, 0)
 	addrBook = append(addrBook, &typesP2P.NetworkPeer{Address: selfAddr})
 
-	busMock := mockDummyBus(ctrl)
+	busMock := mockBus(ctrl)
 	addrBookProviderMock := mockAddrBookProvider(ctrl, addrBook)
 
 	network := NewRainTreeNetwork(selfAddr, busMock, mockP2PCfg, addrBookProviderMock).(*rainTreeNetwork)
@@ -63,7 +63,7 @@ func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 	selfPeer := &typesP2P.NetworkPeer{Address: selfAddr}
 	addrBook = append(addrBook, &typesP2P.NetworkPeer{Address: selfAddr})
 
-	busMock := mockDummyBus(ctrl)
+	busMock := mockBus(ctrl)
 	addrBookProviderMock := mockAddrBookProvider(ctrl, addrBook)
 
 	network := NewRainTreeNetwork(selfAddr, busMock, mockP2PCfg, addrBookProviderMock).(*rainTreeNetwork)
