@@ -10,8 +10,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/mitchellh/mapstructure"
-	typesCons "github.com/pokt-network/pocket/consensus/types"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/runtime/configs"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/spf13/viper"
@@ -20,7 +19,7 @@ import (
 var _ modules.RuntimeMgr = &Manager{}
 
 type Manager struct {
-	config  *runtimeConfig
+	config  *configs.Config
 	genesis *runtimeGenesis
 
 	clock clock.Clock
@@ -51,7 +50,7 @@ func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manage
 //
 // Note: currently unused, here as a reference
 func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...func(*Manager)) *Manager {
-	var cfg *runtimeConfig
+	var cfg *configs.Config
 	parse(configReader, cfg)
 
 	var genesis *runtimeGenesis
@@ -70,9 +69,9 @@ func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...fun
 	return mgr
 }
 
-func NewManager(config modules.Config, genesis modules.GenesisState, options ...func(*Manager)) *Manager {
+func NewManager(config *configs.Config, genesis modules.GenesisState, options ...func(*Manager)) *Manager {
 	mgr := &Manager{
-		config:  config.(*runtimeConfig),
+		config:  config,
 		genesis: genesis.(*runtimeGenesis),
 		clock:   clock.New(),
 	}
@@ -84,7 +83,7 @@ func NewManager(config modules.Config, genesis modules.GenesisState, options ...
 	return mgr
 }
 
-func (rc *Manager) init(configPath, genesisPath string) (config *runtimeConfig, genesis *runtimeGenesis, err error) {
+func (rc *Manager) init(configPath, genesisPath string) (config *configs.Config, genesis *runtimeGenesis, err error) {
 	dir, file := path.Split(configPath)
 	filename := strings.TrimSuffix(file, filepath.Ext(file))
 
@@ -112,15 +111,11 @@ func (rc *Manager) init(configPath, genesisPath string) (config *runtimeConfig, 
 		return
 	}
 
-	if config.Base == nil {
-		config.Base = &BaseConfig{}
-	}
-
 	genesis, err = parseGenesisJSON(genesisPath)
 	return
 }
 
-func (b *Manager) GetConfig() modules.Config {
+func (b *Manager) GetConfig() *configs.Config {
 	return b.config
 }
 
@@ -133,7 +128,7 @@ func (b *Manager) GetClock() clock.Clock {
 }
 
 type supportedStructs interface {
-	*runtimeConfig | *runtimeGenesis
+	*configs.Config | *runtimeGenesis
 }
 
 func parse[T supportedStructs](reader io.Reader, target T) {
@@ -161,12 +156,12 @@ func WithRandomPK() func(*Manager) {
 func WithPK(pk string) func(*Manager) {
 	return func(b *Manager) {
 		if b.config.Consensus == nil {
-			b.config.Consensus = &typesCons.ConsensusConfig{}
+			b.config.Consensus = &configs.ConsensusConfig{}
 		}
 		b.config.Consensus.PrivateKey = pk
 
 		if b.config.P2P == nil {
-			b.config.P2P = &typesP2P.P2PConfig{}
+			b.config.P2P = &configs.P2PConfig{}
 		}
 		b.config.P2P.PrivateKey = pk
 	}
