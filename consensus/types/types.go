@@ -41,10 +41,6 @@ func GetValAddrToIdMap(validatorMap ValidatorMap) (ValAddrToIdMap, IdToValAddrMa
 	return valToIdMap, idToValMap
 }
 
-func (x *PacemakerConfig) SetTimeoutMsec(u uint64) {
-	x.TimeoutMsec = u
-}
-
 func ValidatorMapToModulesValidatorMap(validatorMap ValidatorMap) (vm modules.ValidatorMap) {
 	vm = make(modules.ValidatorMap)
 	for _, v := range validatorMap {
