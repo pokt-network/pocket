@@ -45,14 +45,6 @@ func (x *PacemakerConfig) SetTimeoutMsec(u uint64) {
 	x.TimeoutMsec = u
 }
 
-func ValidatorMapToModulesValidatorMap(validatorMap ValidatorMap) (vm modules.ValidatorMap) {
-	vm = make(modules.ValidatorMap)
-	for _, v := range validatorMap {
-		vm[v.GetAddress()] = v
-	}
-	return
-}
-
 func ActorListToValidatorMap(actors []modules.Actor) (m ValidatorMap) {
 	m = make(ValidatorMap, len(actors))
 	for _, a := range actors {
