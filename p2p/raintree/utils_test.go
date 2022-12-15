@@ -12,7 +12,6 @@ func mockDummyBus(ctrl *gomock.Controller) *mockModules.MockBus {
 	busMock.EXPECT().GetPersistenceModule().Return(nil).AnyTimes()
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(0)).AnyTimes()
-	consensusMock.EXPECT().ValidatorMap().Return(nil).AnyTimes()
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
 	return busMock
 }
