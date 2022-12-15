@@ -9,8 +9,6 @@ import (
 
 type PersistenceModule interface {
 	Module
-	ConfigurableModule
-	GenesisDependentModule
 
 	// Context operations
 	NewRWContext(height int64) (PersistenceRWContext, error)

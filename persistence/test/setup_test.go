@@ -14,7 +14,9 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
 	"github.com/pokt-network/pocket/shared/converters"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -80,22 +82,24 @@ func NewTestPostgresContext(t testing.TB, height int64) *persistence.PostgresCon
 
 // TODO(olshansky): Take in `t testing.T` as a parameter and error if there's an issue
 func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
-	// HACK: See `runtime/test_artifacts/generator.go` for why we're doing this to get deterministic key generation.
-	os.Setenv(test_artifacts.PrivateKeySeedEnv, "42")
-	defer os.Unsetenv(test_artifacts.PrivateKeySeedEnv)
+	teardownDeterministicKeygen := keygenerator.GetInstance().SetSeed(42)
+	defer teardownDeterministicKeygen()
 
-	cfg := runtime.NewConfig(&runtime.BaseConfig{}, runtime.WithPersistenceConfig(&types.PersistenceConfig{
-		PostgresUrl:       databaseUrl,
-		NodeSchema:        testSchema,
-		BlockStorePath:    "",
-		TxIndexerPath:     "",
-		TreesStoreDir:     "",
-		MaxConnsCount:     4,
-		MinConnsCount:     0,
-		MaxConnLifetime:   "1h",
-		MaxConnIdleTime:   "30m",
-		HealthCheckPeriod: "5m",
-	}))
+	cfg := &configs.Config{
+		Persistence: &configs.PersistenceConfig{
+			PostgresUrl:       databaseUrl,
+			NodeSchema:        testSchema,
+			BlockStorePath:    "",
+			TxIndexerPath:     "",
+			TreesStoreDir:     "",
+			MaxConnsCount:     4,
+			MinConnsCount:     0,
+			MaxConnLifetime:   "1h",
+			MaxConnIdleTime:   "30m",
+			HealthCheckPeriod: "5m",
+		},
+	}
+
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
 
