@@ -46,7 +46,7 @@ type consensusModule struct {
 	round  uint64
 	step   typesCons.HotstuffStep
 	block  *typesCons.Block // The current block being proposed / voted on; it has not been committed to finality
-	//    TODO(#315):  Move the statefulness of `TxResult` to the persistence module
+	// TODO(#315): Move the statefulness of `TxResult` to the persistence module
 	TxResults []modules.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
 
 	// IMPROVE: Consider renaming `highPrepareQC` to simply `prepareQC`
@@ -63,7 +63,9 @@ type consensusModule struct {
 	validatorMap typesCons.ValidatorMap // TODO: This needs to be updated on every height
 
 	// Module Dependencies
-	// TODO(#283): Improve how `utilityContext` is managed
+	// IMPROVE(#283): Investigate whether the current approach to how the `utilityContext` should be
+	//                managed or changed. Also consider exposing a function that exposes the context
+	//                to streamline how its accessed in the module (see the ticket).
 	utilityContext    modules.UtilityContext
 	paceMaker         Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
