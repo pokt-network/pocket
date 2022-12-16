@@ -140,7 +140,7 @@ func CreateTestConsensusPocketNode(
 	// but note that they will need to be customized on a per test basis.
 	persistenceMock := basePersistenceMock(t, testChannel)
 	p2pMock := baseP2PMock(t, testChannel)
-	utilityMock := baseUtilityMock(t, testChannel)
+	utilityMock := baseUtilityMock(t, testChannel, runtimeMgr.GetGenesis())
 	telemetryMock := baseTelemetryMock(t, testChannel)
 	loggerMock := baseLoggerMock(t, testChannel)
 	rpcMock := baseRpcMock(t, testChannel)
@@ -306,17 +306,20 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 	ctrl := gomock.NewController(t)
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
+	persistenceReadContextMock := modulesMock.NewMockPersistenceReadContext(ctrl)
 
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
-	persistenceMock.EXPECT().NewReadContext(int64(-1)).Return(persistenceContextMock, nil).AnyTimes()
+	persistenceMock.EXPECT().NewReadContext(int64(-1)).Return(persistenceReadContextMock, nil).AnyTimes()
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
 	// of the consensus module. This one is only used when loading the initial consensus module
 	// state; hence the `-1` expectation in the call above.
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
-	persistenceContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
+	persistenceReadContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
+	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(makeMockActors(numValidators), nil).AnyTimes()
+	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
 	return persistenceMock
 }
@@ -347,10 +350,10 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.M
 }
 
 // Creates a utility module mock with mock implementations of some basic functionality
-func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUtilityModule {
+func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState modules.GenesisState) *modulesMock.MockUtilityModule {
 	ctrl := gomock.NewController(t)
 	utilityMock := modulesMock.NewMockUtilityModule(ctrl)
-	utilityContextMock := baseUtilityContextMock(t)
+	utilityContextMock := baseUtilityContextMock(t, genesisState)
 
 	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
 	utilityMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
@@ -362,10 +365,11 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockUti
 	return utilityMock
 }
 
-func baseUtilityContextMock(t *testing.T) *modulesMock.MockUtilityContext {
+func baseUtilityContextMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockUtilityContext {
 	ctrl := gomock.NewController(t)
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
+	persistenceContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetPersistenceGenesisState().GetVals(), nil).AnyTimes()
 	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
 
 	utilityContextMock.EXPECT().
@@ -479,4 +483,13 @@ func assertStep(t *testing.T, nodeId typesCons.NodeId, expected, actual typesCon
 
 func assertRound(t *testing.T, nodeId typesCons.NodeId, expected, actual uint8) {
 	require.Equal(t, expected, actual, "[NODE][%v] failed assertRound", nodeId)
+}
+
+// makeMockActors creates a slice of modules.Actor with n &modulesMock.MockActor{} in it.
+func makeMockActors(n int) []modules.Actor {
+	actors := make([]modules.Actor, n)
+	for i := 0; i < n; i++ {
+		actors[i] = &modulesMock.MockActor{}
+	}
+	return actors
 }
