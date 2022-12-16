@@ -11,13 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Rename `sendToNode` to `sendToLeader`
 - Rename `broadcastToNodes` to `broadcastToValidators`
-- Change HotPOKT broadcast from `RainTree` to `star pattern`
+- Change HotPOKT broadcast from `RainTree` to star-pattern
 
 ## [0.0.0.13] - 2022-12-14
 
 - Consolidated number of validators in tests in a single constant: `numValidators`
 - Fixed typo in `make test_consensus_concurrent_tests` so that we can run the correct test matrix
 - Using `GetBus()` instead of `bus` wherever possible
+- `LeaderElectionModule`'s `electNextLeaderDeterministicRoundRobin` now uses `Persistence` to access the list of validators instead of the static `ValidatorMap`.
 
 ## [0.0.0.12] - 2022-12-12
 
