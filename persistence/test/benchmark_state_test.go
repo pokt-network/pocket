@@ -70,8 +70,8 @@ func BenchmarkStateHash(b *testing.B) {
 					}
 					db.IndexTransaction(modules.TxResult(getRandomTxResult(height)))
 				}
-				db.ComputeAppHash()
-				db.Commit([]byte("placeholder"))
+				db.ComputeStateHash()
+				db.Commit([]byte("placeholderProposerAddr"), []byte("placeholderQuorumCert"))
 				db.Release()
 			}
 		})

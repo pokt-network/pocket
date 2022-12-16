@@ -38,7 +38,7 @@ type TestReplayableTransaction struct {
 type TestReplayableBlock struct {
 	height     int64
 	txs        []*TestReplayableTransaction
-	hash       []byte
+	hash       string
 	proposer   []byte
 	quorumCert []byte
 }
@@ -47,18 +47,18 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	// These hashes were determined manually by running the test, but hardcoded to guarantee
 	// that the business logic doesn't change and that they remain deterministic. Anytime the business
 	// logic changes, these hashes will need to be updated based on the test output.
-	encodedAppHash := []string{
+	stateHashes := []string{
 		"b076081d48f6652d2302c974f20e5371b4728c7950735f6617aac7b6be62f581",
 		"171af2b820d2a65861c4e63f0cdd9c8bdde4798e6ace28c47d0e83467848ab02",
 		"b168dff3a83215f12093e548aa22cdf907fbfdb1e12d217ffbb4a07beca065f1",
 	}
 
 	stakeAmount := initialStakeAmount
-	for i := 0; i < len(encodedAppHash); i++ {
+	for i := 0; i < len(stateHashes); i++ {
 		// Get the context at the new height and retrieve one of the apps
 		height := int64(i + 1)
 		heightBz := heightToBytes(height)
-		expectedAppHash := encodedAppHash[i]
+		expectedStateHash := stateHashes[i]
 
 		db := NewTestPostgresContext(t, height)
 
@@ -91,17 +91,15 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		require.NoError(t, err)
 
 		// Update the state hash
-		appHash, err := db.ComputeAppHash()
+		stateHash, err := db.ComputeStateHash()
 		require.NoError(t, err)
-		require.Equal(t, expectedAppHash, hex.EncodeToString(appHash))
+		require.Equal(t, expectedStateHash, stateHash)
 
 		// Commit the transactions above
 		proposer := []byte("placeholderProposer")
 		quorumCert := []byte("placeholderQuorumCert")
 
-		db.SetProposalBlock(hex.EncodeToString(appHash), proposer, quorumCert, [][]byte{txBz})
-
-		err = db.Commit(quorumCert)
+		err = db.Commit(proposer, quorumCert)
 		require.NoError(t, err)
 
 		// Retrieve the block
@@ -112,9 +110,9 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 		var block types.Block
 		err = codec.GetCodec().Unmarshal(blockBz, &block)
 		require.NoError(t, err)
-		require.Equal(t, expectedAppHash, block.StateHash) // verify block hash
+		require.Equal(t, expectedStateHash, block.StateHash) // verify block hash
 		if i > 0 {
-			require.Equal(t, encodedAppHash[i-1], block.PrevStateHash) // verify chain chain
+			require.Equal(t, stateHashes[i-1], block.PrevStateHash) // verify chain chain
 		}
 	}
 }
@@ -172,19 +170,19 @@ func TestStateHash_ReplayingRandomTransactionsIsDeterministic(t *testing.T) {
 					}
 				}
 
-				appHash, err := db.ComputeAppHash()
+				stateHash, err := db.ComputeStateHash()
 				require.NoError(t, err)
 
 				proposer := getRandomBytes(proposerBytesSize)
 				quorumCert := getRandomBytes(quorumCertBytesSize)
 
-				err = db.Commit(quorumCert)
+				err = db.Commit(proposer, quorumCert)
 				require.NoError(t, err)
 
 				replayableBlocks[height] = &TestReplayableBlock{
 					height:     height,
 					txs:        replayableTxs,
-					hash:       appHash,
+					hash:       stateHash,
 					proposer:   proposer,
 					quorumCert: quorumCert,
 				}
@@ -221,11 +219,11 @@ func verifyReplayableBlocks(t *testing.T, replayableBlocks []*TestReplayableBloc
 			require.NoError(t, db.IndexTransaction(tx.txResult))
 		}
 
-		appHash, err := db.ComputeAppHash()
+		stateHash, err := db.ComputeStateHash()
 		require.NoError(t, err)
-		require.Equal(t, block.hash, appHash)
+		require.Equal(t, block.hash, stateHash)
 
-		err = db.Commit(block.quorumCert)
+		err = db.Commit(block.proposer, block.quorumCert)
 		require.NoError(t, err)
 	}
 }
