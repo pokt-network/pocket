@@ -158,7 +158,7 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 	}
 }
 
-// A start-pattern broadcast (i.e. leader to all other validators) broadcast
+// A star-pattern broadcast (i.e. leader to all other validators) broadcast
 func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) {
 	m.nodeLog(typesCons.BroadcastingMessage(msg))
 
