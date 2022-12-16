@@ -14,13 +14,13 @@
 # 		`git commit --no-verify ...`
 
 # Get names of staged files being committed. If being run as
-# a git hook, take the result of git diff. If not, recieve
+# a git hook, take the result of git diff. If not, receive
 # the edited files from the CLI arguments provided.
 if [[ "${#}" -eq 0 ]]
 then
     STAGED_FILES=($(git diff --cached --name-only)) # Local git hook
 else
-    STAGED_FILES=("${@}") # Github workflow passes arguements
+    STAGED_FILES=("${@}") # Github workflow passes arguments
 fi
 
 if [[ "${#STAGED_FILES[@]}" == 0 ]]
@@ -68,11 +68,11 @@ do
     fi
     if [[ "${root}" == 0 ]]
     then
-        module="$(echo $file | sed 's/\/.*//')"
+        module="$(echo "${file}" | sed 's/\/.*//')"
         # Only add to modules list if not already present
-        if [[ ! "${MODULES_EDITED[*]}" =~ "${module}" ]]
+        if [[ ! "${MODULES_EDITED[*]}" =~ ${module} ]]
         then
-            [[ ! "${IGNORE_DIRS[*]}" =~ "${module}" ]] && MODULES_EDITED+=("${module}")
+            [[ ! "${IGNORE_DIRS[*]}" =~ ${module} ]] && MODULES_EDITED+=("${module}")
         fi
     fi
 done
@@ -126,16 +126,16 @@ fi
 # Check version numbers and dates in changelogs provided
 for module in "${MODULES_EDITED[@]}"
 do
-    if [[ "${MODULES_MISSING_CHANGELOG[*]}" =~ "${module}" ]]
+    if [[ "${MODULES_MISSING_CHANGELOG[*]}" =~ ${module} ]]
     then
         continue
     fi
     # sed using BRE expression for portability
-    head_versions=($(cat "${module}/CHANGELOG.md" | sed -n 's/^.*\(\[[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\]\) - \([0-9][0-9]*-[0-9][0-9]*-[0-9][0-9]*\).*$/\1 \2/p' | head -n2))
+    head_versions=($(sed -n 's/^.*\(\[[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\]\) - \([0-9][0-9]*-[0-9][0-9]*-[0-9][0-9]*\).*$/\1 \2/p' "${module}/CHANGELOG.md" | head -n2))
     # Get latest and previous versions and strip any leading 0s
     # and check the latest version is greater than the previous
-    latest_version=$(($(echo ${head_versions[0]:1:-1} | sed 's/\.//g' | sed 's/^0*//')+0))
-    previous_version=$(($(echo ${head_versions[2]:1:-1} | sed 's/\.//g' | sed 's/^0*//')+0))
+    latest_version=$(($(echo "${head_versions[0]:1:-1}" | sed 's/\.//g' | sed 's/^0*//')+0))
+    previous_version=$(($(echo "${head_versions[2]:1:-1}" | sed 's/\.//g' | sed 's/^0*//')+0))
     if [[ "${latest_version}" -le "${previous_version}" ]]
     then
         printf 'Latest version in %s/CHANGELOG.md is incorrect.\nLatest: %s, Previous: %s\n\n' "${module}" "${head_versions[0]}" "${head_versions[2]}" >&2
@@ -146,11 +146,9 @@ do
     if [[ "${OS_NAME}" =~ linux ]]
     then
         latest_date=$(date -d "${head_versions[1]}" +%s)
-        previous_date=$(date -d "${head_versions[3]}" +%s)
     elif [[ "${OS_NAME}" =~ osx || "${OS_NAME}" =~ bsd ]]
     then
         latest_date=$(date -j -f "%F" "${head_versions[1]}" +%s)
-        previous_date=$(date -j -f "%F" "${head_versions[3]}" +%s)
     fi
     current_date=$(date +'%Y-%m-%d')
     # Check latest date in changelog is current date
