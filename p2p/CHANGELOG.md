@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.11] - 2022-12-15
+## [0.0.0.12] - 2022-12-16
 
 - `ValidatorMapToAddrBook` renamed to `ActorToAddrBook`
 - `ValidatorToNetworkPeer` renamed to `ActorToNetworkPeer`
+
+## [0.0.0.11] - 2022-12-15
+
+- Bugfix for [[#401](https://github.com/pokt-network/pocket/issues/401)]
+- Fixed typo in 'peers_manager.go'
 
 ## [0.0.0.10] - 2022-12-14
 

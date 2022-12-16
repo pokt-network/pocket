@@ -8,10 +8,7 @@ import (
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
-	"github.com/pokt-network/pocket/persistence/indexer"
-	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/modules"
 )
 
 const (
@@ -27,6 +24,7 @@ const (
 	DuplicateObjectErrorCode = "42710"
 )
 
+// TODO: Move schema related functionality into its own package
 var protocolActorSchemas = []types.ProtocolActorSchema{
 	types.ApplicationActor,
 	types.FishermanActor,
@@ -34,32 +32,11 @@ var protocolActorSchemas = []types.ProtocolActorSchema{
 	types.ValidatorActor,
 }
 
-var _ modules.PersistenceRWContext = &PostgresContext{}
-
-type PostgresContext struct {
-	Height int64 // TODO: `Height` is only externalized for testing purposes. Replace with helpers...
-	conn   *pgx.Conn
-	tx     pgx.Tx
-
-	// TECHDEBT(#361): These three values are pointers to objects maintained by the PersistenceModule,
-	// so there should be a better way to access them (via the bus?) rather than embedding here.
-	blockStore kvstore.KVStore
-	txIndexer  indexer.TxIndexer
-	stateTrees *stateTrees
-
-	// DISCUSS(#361): Could/should we move these to the utilityContext?
-	// IMPROVE: Could/should we rename these to proposalXX?
-	proposerAddr []byte
-	quorumCert   []byte
-	blockHash    string // CONSOLIDATE: blockHash / appHash / stateHash
-	blockTxs     [][]byte
-}
-
 func (pg *PostgresContext) getCtxAndTx() (context.Context, pgx.Tx, error) {
-	return context.TODO(), pg.GetTx(), nil
+	return context.TODO(), pg.getTx(), nil
 }
 
-func (pg *PostgresContext) GetTx() pgx.Tx {
+func (pg *PostgresContext) getTx() pgx.Tx {
 	return pg.tx
 }
 
@@ -71,7 +48,7 @@ func (pg *PostgresContext) ResetContext() error {
 	if pg == nil {
 		return nil
 	}
-	tx := pg.GetTx()
+	tx := pg.getTx()
 	if tx == nil {
 		return nil
 	}
@@ -86,15 +63,6 @@ func (pg *PostgresContext) ResetContext() error {
 	}
 	pg.tx = nil
 	return nil
-}
-
-// DISCUSS: Given that these are context specific setters/getters, is `context.go` a more appropriate location for these than `db.go`?
-func (p PostgresContext) GetProposerAddr() []byte {
-	return p.proposerAddr
-}
-
-func (p PostgresContext) GetBlockTxs() [][]byte {
-	return p.blockTxs
 }
 
 // TECHDEBT: Implement proper connection pooling

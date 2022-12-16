@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.6] - 2022-12-10
+
+Persistence Module:
+
+- Add `proposerAddr` input to the `Commit` function
+- Remove `SetProposalBlock`, `GetBlockTxs` and `GetProposerAddr`
+- Rename `ComputeAppHash` to `ComputeStateHash`
+
+Utility Module:
+
+- Introduce the `SetProposalBlock` function
+
 ## [0.0.0.5] - 2022-12-07
 
 - Changed the scope of `TransactionExists` from the `PostgresContext` to the `PersistenceModule`
