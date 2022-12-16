@@ -6,8 +6,9 @@ import (
 )
 
 // TODO (#399): All of the functions below following a structure similar to `GetAll<Actor>`
-//	can easily be refactored and condensed into a single function using a generic type or a common
-//  interface.
+//
+//		can easily be refactored and condensed into a single function using a generic type or a common
+//	 interface.
 func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
@@ -129,10 +130,12 @@ func (p PostgresContext) GetAllStakedActors(height int64) (allActors []modules.A
 	type actorGetter func(height int64) ([]modules.Actor, error)
 	actorGetters := []actorGetter{p.GetAllValidators, p.GetAllServiceNodes, p.GetAllFishermen, p.GetAllApps}
 	for _, actorGetter := range actorGetters {
-		actors, err := actorGetter(height)
+		var actors []modules.Actor
+		actors, err = actorGetter(height)
 		if err != nil {
-			allActors = append(allActors, actors...)
+			return
 		}
+		allActors = append(allActors, actors...)
 	}
 	return
 }

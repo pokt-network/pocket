@@ -2,7 +2,6 @@ package consensus_tests
 
 import (
 	"context"
-	"encoding/hex"
 	"flag"
 	"fmt"
 	"log"
@@ -40,10 +39,14 @@ var failOnExtraMessages bool
 
 // TODO(integration): These are temporary variables used in the prototype integration phase that
 // will need to be parameterized later once the test framework design matures.
-var appHash []byte
-var maxTxBytes = 90000
-var emptyByzValidators = make([][]byte, 0)
-var emptyTxs = make([][]byte, 0)
+var (
+	stateHash          = "42"
+	maxTxBytes         = 90000
+	emptyByzValidators = make([][]byte, 0)
+	emptyTxs           = make([][]byte, 0)
+)
+
+const numValidators = 4
 
 const numValidators = 4
 
@@ -52,7 +55,6 @@ func init() {
 	flag.BoolVar(&failOnExtraMessages, "failOnExtraMessages", false, "Fail if unexpected additional messages are received")
 
 	var err error
-	appHash, err = hex.DecodeString("31")
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -369,18 +371,18 @@ func baseUtilityContextMock(t *testing.T, genesisState modules.GenesisState) *mo
 	ctrl := gomock.NewController(t)
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
-	persistenceContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return([]byte(""), nil).AnyTimes()
 	persistenceContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetPersistenceGenesisState().GetVals(), nil).AnyTimes()
+	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
 
 	utilityContextMock.EXPECT().
 		CreateAndApplyProposalBlock(gomock.Any(), maxTxBytes).
-		Return(appHash, make([][]byte, 0), nil).
+		Return(stateHash, make([][]byte, 0), nil).
 		AnyTimes()
 	utilityContextMock.EXPECT().
 		ApplyBlock().
-		Return(appHash, nil).
+		Return(stateHash, nil).
 		AnyTimes()
+	utilityContextMock.EXPECT().SetProposalBlock(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().Commit(gomock.Any()).Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().Release().Return(nil).AnyTimes()
 	utilityContextMock.EXPECT().GetPersistenceContext().Return(persistenceContextMock).AnyTimes()

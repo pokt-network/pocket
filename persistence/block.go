@@ -25,7 +25,6 @@ func (p *persistenceModule) TransactionExists(transactionHash string) (bool, err
 	return true, err
 }
 
-// OPTIMIZE: evaluate if it's faster to get this from the blockstore (or cache) than the SQL engine
 func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
@@ -36,45 +35,30 @@ func (p PostgresContext) GetLatestBlockHeight() (latestHeight uint64, err error)
 	return
 }
 
-// OPTIMIZE: evaluate if it's  faster to get this from the blockstore (or cache) than the SQL engine
-func (p PostgresContext) GetBlockHash(height int64) ([]byte, error) {
+func (p PostgresContext) GetBlockHash(height int64) (string, error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	var hexHash string
-	err = tx.QueryRow(ctx, types.GetBlockHashQuery(height)).Scan(&hexHash)
-	if err != nil {
-		return nil, err
+	var blockHash string
+	if err = tx.QueryRow(ctx, types.GetBlockHashQuery(height)).Scan(&blockHash); err != nil {
+		return "", err
 	}
 
-	return hex.DecodeString(hexHash)
+	return blockHash, nil
 }
 
 func (p PostgresContext) GetHeight() (int64, error) {
 	return p.Height, nil
 }
 
-// DISCUSS: this might be retrieved from the block store - temporarily we will access it directly from the module
-//       following the pattern of the Consensus Module prior to pocket/issue-#315
-// TODO(#284): Remove blockProtoBytes from the interface
-func (p *PostgresContext) SetProposalBlock(blockHash string, proposerAddr, quorumCert []byte, transactions [][]byte) error {
-	p.blockHash = blockHash
-	p.quorumCert = quorumCert
-	p.proposerAddr = proposerAddr
-	p.blockTxs = transactions
-	return nil
-}
-
 // Creates a block protobuf object using the schema defined in the persistence module
-func (p *PostgresContext) prepareBlock(quorumCert []byte) (*types.Block, error) {
-	var prevHash []byte
-	if p.Height == 0 {
-		prevHash = []byte("")
-	} else {
+func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*types.Block, error) {
+	var prevBlockHash string
+	if p.Height != 0 {
 		var err error
-		prevHash, err = p.GetBlockHash(p.Height - 1)
+		prevBlockHash, err = p.GetBlockHash(p.Height - 1)
 		if err != nil {
 			return nil, err
 		}
@@ -87,9 +71,9 @@ func (p *PostgresContext) prepareBlock(quorumCert []byte) (*types.Block, error) 
 
 	block := &types.Block{
 		Height:            uint64(p.Height),
-		StateHash:         p.blockHash,
-		PrevStateHash:     hex.EncodeToString(prevHash),
-		ProposerAddress:   p.proposerAddr,
+		StateHash:         p.stateHash,
+		PrevStateHash:     prevBlockHash,
+		ProposerAddress:   proposerAddr,
 		QuorumCertificate: quorumCert,
 		TransactionsHash:  txsHash,
 	}

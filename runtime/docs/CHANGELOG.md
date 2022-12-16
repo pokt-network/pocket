@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.1] - 2022-12-14
 
-- Added `DefaultP2PMempoolMaxNonceCount`
+- Added `DefaultP2PMaxMempoolCount`
 
 ## [0.0.0] - 2022-09-30
 
