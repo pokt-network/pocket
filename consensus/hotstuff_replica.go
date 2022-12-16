@@ -73,7 +73,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Prepare).Error(), err)
 		return // Not interrupting the round because liveness could continue with one failed vote
 	}
-	m.sendToNode(prepareVoteMessage)
+	m.sendToLeader(prepareVoteMessage)
 }
 
 /*** PreCommit Step ***/
@@ -102,7 +102,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(PreCommit).Error(), err)
 		return // Not interrupting the round because liveness could continue with one failed vote
 	}
-	m.sendToNode(preCommitVoteMessage)
+	m.sendToLeader(preCommitVoteMessage)
 }
 
 /*** Commit Step ***/
@@ -131,7 +131,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Commit).Error(), err)
 		return // Not interrupting the round because liveness could continue with one failed vote
 	}
-	m.sendToNode(commitVoteMessage)
+	m.sendToLeader(commitVoteMessage)
 }
 
 /*** Decide Step ***/

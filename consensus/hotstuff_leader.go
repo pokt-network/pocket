@@ -81,7 +81,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		m.paceMaker.InterruptRound()
 		return
 	}
-	m.broadcastToNodes(prepareProposeMessage)
+	m.broadcastToValidators(prepareProposeMessage)
 
 	// Leader also acts like a replica
 	prepareVoteMessage, err := CreateVoteMessage(m.height, m.round, Prepare, m.block, m.privateKey)
@@ -89,7 +89,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Prepare).Error(), err)
 		return
 	}
-	m.sendToNode(prepareVoteMessage)
+	m.sendToLeader(prepareVoteMessage)
 }
 
 /*** PreCommit Step ***/
@@ -125,7 +125,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		m.paceMaker.InterruptRound()
 		return
 	}
-	m.broadcastToNodes(preCommitProposeMessage)
+	m.broadcastToValidators(preCommitProposeMessage)
 
 	// Leader also acts like a replica
 	precommitVoteMessage, err := CreateVoteMessage(m.height, m.round, PreCommit, m.block, m.privateKey)
@@ -133,7 +133,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(PreCommit).Error(), err)
 		return
 	}
-	m.sendToNode(precommitVoteMessage)
+	m.sendToLeader(precommitVoteMessage)
 }
 
 /*** Commit Step ***/
@@ -169,7 +169,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		m.paceMaker.InterruptRound()
 		return
 	}
-	m.broadcastToNodes(commitProposeMessage)
+	m.broadcastToValidators(commitProposeMessage)
 
 	// Leader also acts like a replica
 	commitVoteMessage, err := CreateVoteMessage(m.height, m.round, Commit, m.block, m.privateKey)
@@ -177,7 +177,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Commit).Error(), err)
 		return
 	}
-	m.sendToNode(commitVoteMessage)
+	m.sendToLeader(commitVoteMessage)
 }
 
 /*** Decide Step ***/
@@ -212,7 +212,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		m.paceMaker.InterruptRound()
 		return
 	}
-	m.broadcastToNodes(decideProposeMessage)
+	m.broadcastToValidators(decideProposeMessage)
 
 	if err := m.commitBlock(m.block); err != nil {
 		m.nodeLogError(typesCons.ErrCommitBlock.Error(), err)

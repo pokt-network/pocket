@@ -13,6 +13,7 @@ func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 		return err
 	}
 	m.nodeLog(typesCons.CommittingBlock(m.height, len(block.Transactions)))
+	// TODO: Broadcast block to the entire network (RainTree + random gossip)
 
 	// Release the context
 	if err := m.utilityContext.Release(); err != nil {

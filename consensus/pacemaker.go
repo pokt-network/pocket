@@ -254,7 +254,7 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 	}
 
 	p.RestartTimer()
-	p.consensusMod.broadcastToNodes(hotstuffMessage)
+	p.consensusMod.broadcastToValidators(hotstuffMessage)
 }
 
 // TODO(olshansky): Increase timeout using exponential backoff.

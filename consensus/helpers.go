@@ -137,35 +137,41 @@ func protoHash(m proto.Message) string {
 
 /*** P2P Helpers ***/
 
-func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
+func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
+	m.nodeLog(typesCons.SendingMessage(msg, *m.leaderId))
+
 	// TODO(olshansky): This can happen due to a race condition with the pacemaker.
 	if m.leaderId == nil {
 		m.nodeLogError(typesCons.ErrNilLeaderId.Error(), nil)
 		return
 	}
 
-	m.nodeLog(typesCons.SendingMessage(msg, *m.leaderId))
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
 		return
 	}
+
 	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.idToValAddrMap[*m.leaderId]), anyConsensusMessage); err != nil {
 		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return
 	}
 }
 
-func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
+// A start-pattern broadcast (i.e. leader to all other validators) broadcast
+func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) {
 	m.nodeLog(typesCons.BroadcastingMessage(msg))
+
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
 		return
 	}
-	if err := m.GetBus().GetP2PModule().Broadcast(anyConsensusMessage); err != nil {
-		m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
-		return
+
+	for _, val := range m.validatorMap {
+		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
+			m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
+		}
 	}
 }
 
