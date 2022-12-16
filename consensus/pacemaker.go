@@ -24,10 +24,10 @@ type Pacemaker interface {
 	// for the height/round/step/etc, and interface with the module that way.
 	SetConsensusModule(module *consensusModule)
 
-	ValidateMessage(message *typesCons.HotstuffMessage) error
+	ShouldHandleMessage(message *typesCons.HotstuffMessage) (bool, error)
 	RestartTimer()
 	NewHeight()
-	InterruptRound()
+	InterruptRound(reason string)
 }
 
 var (
@@ -108,7 +108,7 @@ func (m *paceMaker) GetBus() modules.Bus {
 
 func (*paceMaker) ValidateConfig(cfg modules.Config) error {
 	if _, ok := cfg.GetConsensusConfig().(HasPacemakerConfig); !ok {
-		return fmt.Errorf("cannot cast to PacemakeredConsensus")
+		return fmt.Errorf("cannot cast to PacemakerConfig")
 	}
 	return nil
 }
@@ -117,36 +117,45 @@ func (m *paceMaker) SetConsensusModule(c *consensusModule) {
 	m.consensusMod = c
 }
 
-func (p *paceMaker) ValidateMessage(m *typesCons.HotstuffMessage) error {
+func (p *paceMaker) ShouldHandleMessage(m *typesCons.HotstuffMessage) (bool, error) {
 	currentHeight := p.consensusMod.height
 	currentRound := p.consensusMod.round
+
 	// Consensus message is from the past
 	if m.Height < currentHeight {
-		return typesCons.ErrPacemakerUnexpectedMessageHeight(typesCons.ErrOlderMessage, currentHeight, m.Height)
+		// TODO: Noisy log - make it a DEBUG
+		// p.consensusMod.nodeLog(typesCons.ErrPacemakerUnexpectedMessageHeight(typesCons.ErrOlderMessage, currentHeight, m.Height).Error())
+		return false, nil
 	}
 
 	// Current node is out of sync
+	// TODO: Need to restart state sync or be in state sync mode right now
 	if m.Height > currentHeight {
-		// TODO(design): Need to restart state sync
-		return typesCons.ErrPacemakerUnexpectedMessageHeight(typesCons.ErrFutureMessage, currentHeight, m.Height)
+		// TODO: Noisy log - make it a DEBUG
+		// p.consensusMod.nodeLog(typesCons.ErrPacemakerUnexpectedMessageHeight(typesCons.ErrFutureMessage, currentHeight, m.Height).Error())
+		return false, nil
 	}
 
 	// Do not handle messages if it is a self proposal
+	// TODO(olshansky): This code branch is a result of the optimization in the leader
+	//                  handlers. Since the leader also acts as a replica but doesn't use the replica's
+	//                  handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
 	if p.consensusMod.isLeader() && m.Type == Propose && m.Step != NewRound {
-		// TODO(olshansky): This code branch is a result of the optimization in the leader
-		// handlers. Since the leader also acts as a replica but doesn't use the replica's
-		// handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
-		return typesCons.ErrSelfProposal
+		// TODO: Noisy log - make it a DEBUG
+		// p.consensusMod.nodeLog(typesCons.ErrSelfProposal.Error())
+		return false, nil
 	}
 
 	// Message is from the past
 	if m.Round < currentRound || (m.Round == currentRound && m.Step < p.consensusMod.step) {
-		return typesCons.ErrPacemakerUnexpectedMessageStepRound(typesCons.ErrOlderStepRound, p.consensusMod.step, currentRound, m)
+		// TODO: Noisy log - make it a DEBUG
+		// p.consensusMod.nodeLog(typesCons.ErrPacemakerUnexpectedMessageStepRound(typesCons.ErrOlderStepRound, p.consensusMod.step, currentRound, m).Error())
+		return false, nil
 	}
 
 	// Everything checks out!
 	if m.Height == currentHeight && m.Step == p.consensusMod.step && m.Round == currentRound {
-		return nil
+		return true, nil
 	}
 
 	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
@@ -161,18 +170,17 @@ func (p *paceMaker) ValidateMessage(m *typesCons.HotstuffMessage) error {
 			p.consensusMod.electNextLeader(m)
 		}
 
-		return nil
+		return true, nil
 	}
 
-	return typesCons.ErrUnexpectedPacemakerCase
+	return false, typesCons.ErrUnexpectedPacemakerCase
 }
 
 func (p *paceMaker) RestartTimer() {
+	// NOTE: Not deferring a cancel call because this function is asynchronous.
 	if p.stepCancelFunc != nil {
 		p.stepCancelFunc()
 	}
-
-	// NOTE: Not defering a cancel call because this function is asynchronous.
 
 	stepTimeout := p.getStepTimeout(p.consensusMod.round)
 
@@ -185,8 +193,7 @@ func (p *paceMaker) RestartTimer() {
 		select {
 		case <-ctx.Done():
 			if ctx.Err() == context.DeadlineExceeded {
-				p.consensusMod.nodeLog(typesCons.PacemakerTimeout(p.consensusMod.CurrentHeight(), p.consensusMod.step, p.consensusMod.round))
-				p.InterruptRound()
+				p.InterruptRound("timeout")
 			}
 		case <-clock.After(stepTimeout + 30*timePkg.Millisecond): // Adding 30ms to the context timeout to avoid race condition.
 			return
@@ -194,8 +201,8 @@ func (p *paceMaker) RestartTimer() {
 	}()
 }
 
-func (p *paceMaker) InterruptRound() {
-	p.consensusMod.nodeLog(typesCons.PacemakerInterrupt(p.consensusMod.CurrentHeight(), p.consensusMod.step, p.consensusMod.round))
+func (p *paceMaker) InterruptRound(reason string) {
+	p.consensusMod.nodeLog(typesCons.PacemakerInterrupt(reason, p.consensusMod.CurrentHeight(), p.consensusMod.step, p.consensusMod.round))
 
 	p.consensusMod.round++
 	p.startNextView(p.consensusMod.highPrepareQC, false)
@@ -254,7 +261,7 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 	}
 
 	p.RestartTimer()
-	p.consensusMod.broadcastToNodes(hotstuffMessage)
+	p.consensusMod.broadcastToValidators(hotstuffMessage)
 }
 
 // TODO(olshansky): Increase timeout using exponential backoff.

@@ -55,14 +55,14 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 
 	if err := m.validateProposal(msg); err != nil {
 		m.nodeLogError(fmt.Sprintf("Invalid proposal in %s message", Prepare), err)
-		m.paceMaker.InterruptRound()
+		m.paceMaker.InterruptRound("invalid proposal")
 		return
 	}
 
 	block := msg.GetBlock()
 	if err := m.applyBlock(block); err != nil {
 		m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
-		m.paceMaker.InterruptRound()
+		m.paceMaker.InterruptRound("failed to apply block")
 		return
 	}
 	m.block = block
@@ -73,7 +73,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Prepare).Error(), err)
 		return // Not interrupting the round because liveness could continue with one failed vote
 	}
-	m.sendToNode(prepareVoteMessage)
+	m.sendToLeader(prepareVoteMessage)
 }
 
 /*** PreCommit Step ***/
@@ -90,7 +90,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 	quorumCert := msg.GetQuorumCertificate()
 	if err := m.validateQuorumCertificate(quorumCert); err != nil {
 		m.nodeLogError(typesCons.ErrQCInvalid(PreCommit).Error(), err)
-		m.paceMaker.InterruptRound()
+		m.paceMaker.InterruptRound("invalid quorum certificate")
 		return
 	}
 
@@ -102,7 +102,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(PreCommit).Error(), err)
 		return // Not interrupting the round because liveness could continue with one failed vote
 	}
-	m.sendToNode(preCommitVoteMessage)
+	m.sendToLeader(preCommitVoteMessage)
 }
 
 /*** Commit Step ***/
@@ -119,7 +119,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 	quorumCert := msg.GetQuorumCertificate()
 	if err := m.validateQuorumCertificate(quorumCert); err != nil {
 		m.nodeLogError(typesCons.ErrQCInvalid(Commit).Error(), err)
-		m.paceMaker.InterruptRound()
+		m.paceMaker.InterruptRound("invalid quorum certificate")
 		return
 	}
 
@@ -131,7 +131,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 		m.nodeLogError(typesCons.ErrCreateVoteMessage(Commit).Error(), err)
 		return // Not interrupting the round because liveness could continue with one failed vote
 	}
-	m.sendToNode(commitVoteMessage)
+	m.sendToLeader(commitVoteMessage)
 }
 
 /*** Decide Step ***/
@@ -148,13 +148,13 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 	quorumCert := msg.GetQuorumCertificate()
 	if err := m.validateQuorumCertificate(quorumCert); err != nil {
 		m.nodeLogError(typesCons.ErrQCInvalid(Decide).Error(), err)
-		m.paceMaker.InterruptRound()
+		m.paceMaker.InterruptRound("invalid quorum certificate")
 		return
 	}
 
 	if err := m.commitBlock(m.block); err != nil {
 		m.nodeLogError("Could not commit block", err)
-		m.paceMaker.InterruptRound()
+		m.paceMaker.InterruptRound("failed to commit block")
 		return
 	}
 
@@ -164,7 +164,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 // anteHandle is the handler called on every replica message before specific handler
 func (handler *HotstuffReplicaMessageHandler) anteHandle(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	// Basic block metadata validation
-	if err := m.validateBlockBasic(msg.GetBlock()); err != nil {
+	if err := m.validateMessageBlock(msg); err != nil {
 		return err
 	}
 

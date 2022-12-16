@@ -1,6 +1,7 @@
 package consensus
 
 import (
+	"fmt"
 	"log"
 	"unsafe"
 
@@ -26,13 +27,19 @@ func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 
 // TODO: Add unit tests specific to block validation
 // IMPROVE: (olshansky) rename to provide clarity of operation. ValidateBasic() is typically a stateless check not stateful
-func (m *consensusModule) validateBlockBasic(block *typesCons.Block) error {
-	if block == nil && m.step != NewRound {
-		return typesCons.ErrNilBlock
+func (m *consensusModule) validateMessageBlock(msg *typesCons.HotstuffMessage) error {
+	block := msg.GetBlock()
+	step := msg.GetStep()
+
+	if block == nil {
+		if step != NewRound {
+			return fmt.Errorf("validateBlockBasic failed - block is nil during step %s", typesCons.StepToString[m.step])
+		}
+		return nil
 	}
 
-	if block != nil && m.step == NewRound {
-		return typesCons.ErrBlockExists
+	if block != nil && step == NewRound {
+		return fmt.Errorf("validateBlockBasic failed - block is not nil during step %s", typesCons.StepToString[m.step])
 	}
 
 	if block != nil && unsafe.Sizeof(*block) > uintptr(m.consGenesis.GetMaxBlockBytes()) {
@@ -42,10 +49,14 @@ func (m *consensusModule) validateBlockBasic(block *typesCons.Block) error {
 	// If the current block being processed (i.e. voted on) by consensus is non nil, we need to make
 	// sure that the data (height, round, step, txs, etc) is the same before we start validating the signatures
 	if m.block != nil {
+		if m.block.BlockHeader.Hash != block.BlockHeader.Hash {
+			return fmt.Errorf("validateBlockBasic failed - block hash is not the same as the current block being processed by consensus")
+		}
+
 		// DISCUSS: The only difference between blocks from one step to another is the QC, so we need
 		//          to determine where/how to validate this
 		if protoHash(m.block) != protoHash(block) {
-			log.Println("[TECHDEBT][ERROR] The block being processed is not the same as that received by the consensus module ")
+			log.Println("[TECHDEBT] validateBlockBasic warning - block hash is the same but serialization is not")
 		}
 	}
 

@@ -76,7 +76,7 @@ func (pabp *persistenceAddrBookProvider) ValidatorMapToAddrBook(validators map[s
 	for _, v := range validators {
 		networkPeer, err := pabp.ValidatorToNetworkPeer(v)
 		if err != nil {
-			log.Println("[WARN] Error connecting to validator: ", err)
+			log.Println("[WARN] Error connecting to validator:", err)
 			continue
 		}
 		book = append(book, networkPeer)

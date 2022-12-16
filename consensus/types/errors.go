@@ -1,5 +1,7 @@
 package types
 
+// TECHDEBT: Avoid having a centralized file for all errors (harder to maintain and identify).
+
 import (
 	"encoding/base64"
 	"errors"
@@ -35,8 +37,8 @@ func init() {
 	}
 }
 
-func PacemakerInterrupt(height uint64, step HotstuffStep, round uint64) string {
-	return fmt.Sprintf("INTERRUPT at (height, step, round): (%d, %s, %d)!", height, StepToString[step], round)
+func PacemakerInterrupt(reason string, height uint64, step HotstuffStep, round uint64) string {
+	return fmt.Sprintf("INTERRUPT due to %s at (height, step, round): (%d, %s, %d)!", reason, height, StepToString[step], round)
 }
 
 func PacemakerTimeout(height uint64, step HotstuffStep, round uint64) string {
