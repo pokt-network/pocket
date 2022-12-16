@@ -10,13 +10,6 @@ import (
 	"github.com/pokt-network/pocket/app/client/cli"
 )
 
-// Provisioned by ldflags
-var (
-	version    string
-	commitHash string
-	buildDate  string
-)
-
 func main() {
 	ctx := newCLIContext()
 	err := cli.ExecuteContext(ctx)

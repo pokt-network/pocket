@@ -39,6 +39,7 @@ endif
 build-%: pre-build
 build-%: goversion ## Build a single application in the app directory
 ifeq (${VERBOSE}, 1)
+## Informs developer of go environment
 	go env
 endif
 
@@ -51,6 +52,7 @@ endif
 build: pre-build
 build: goversion ## Build all applications in the app directory
 ifeq (${VERBOSE}, 1)
+## Informs developer of go environment
 	go env
 endif
 
@@ -78,7 +80,6 @@ run: $(patsubst app/%,run-%,$(wildcard app/*)) ## Build and execute all applicat
 
 .PHONY: rename-%
 rename-%: ## Rename a binary to the name specified in BINARY_NAME_$* if it exists.
-
 ## Redirecting stderr to /dev/null to avoid returning an error if the file already exists
 	@mv -f ${BUILD_DIR}/$* ${BUILD_DIR}/${BINARY_NAME_$*} 2>/dev/null; true
 
