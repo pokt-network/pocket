@@ -48,8 +48,6 @@ var (
 
 const numValidators = 4
 
-const numValidators = 4
-
 // Initialize certain unit test configurations on startup.
 func init() {
 	flag.BoolVar(&failOnExtraMessages, "failOnExtraMessages", false, "Fail if unexpected additional messages are received")
