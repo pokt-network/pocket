@@ -39,6 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Verify changelogs
+        continue-one-error: true
         run: bash ./.githooks/pre-commit ${{needs.changedfiles.outputs.all}}
 
   add_label:
