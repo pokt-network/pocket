@@ -99,11 +99,16 @@ func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
 	cfg := runtime.NewConfig(
 		&runtime.BaseConfig{},
 		runtime.WithPersistenceConfig(&types.PersistenceConfig{
-			PostgresUrl:    databaseUrl,
-			NodeSchema:     testSchema,
-			BlockStorePath: "",
-			TxIndexerPath:  "",
-			TreesStoreDir:  "",
+			PostgresUrl:       databaseUrl,
+			NodeSchema:        testSchema,
+			BlockStorePath:    "",
+			TxIndexerPath:     "",
+			TreesStoreDir:     "",
+			MaxConns:          4,
+			MinConns:          0,
+			MaxConnLifetime:   1,
+			MaxConnIdleTime:   30,
+			HealthCheckPeriod: 5,
 		}),
 		runtime.WithUtilityConfig(&utilTypes.UtilityConfig{
 			MaxMempoolTransactionBytes: 1000000,

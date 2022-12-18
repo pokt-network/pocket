@@ -85,11 +85,16 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 	defer os.Unsetenv(test_artifacts.PrivateKeySeedEnv)
 
 	cfg := runtime.NewConfig(&runtime.BaseConfig{}, runtime.WithPersistenceConfig(&types.PersistenceConfig{
-		PostgresUrl:    databaseUrl,
-		NodeSchema:     testSchema,
-		BlockStorePath: "",
-		TxIndexerPath:  "",
-		TreesStoreDir:  "",
+		PostgresUrl:       databaseUrl,
+		NodeSchema:        testSchema,
+		BlockStorePath:    "",
+		TxIndexerPath:     "",
+		TreesStoreDir:     "",
+		MaxConns:          4,
+		MinConns:          0,
+		MaxConnLifetime:   1,
+		MaxConnIdleTime:   30,
+		HealthCheckPeriod: 5,
 	}))
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
