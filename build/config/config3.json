@@ -19,7 +19,12 @@
     "node_schema": "node3",
     "block_store_path": "/var/blockstore",
     "tx_indexer_path": "",
-    "trees_store_dir": "/var/trees"
+    "trees_store_dir": "/var/trees",
+    "max_conns": "8",
+    "min_conns": "0",
+    "max_conn_lifetime": "1",
+    "max_conn_idle_time": "30",
+    "health_check_period": "5"
   },
   "p2p": {
     "consensus_port": 8080,

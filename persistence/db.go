@@ -5,10 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/jackc/pgconn"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/shared/modules"
 )
 
 const (
@@ -66,13 +69,25 @@ func (pg *PostgresContext) ResetContext() error {
 }
 
 // TECHDEBT: Implement proper connection pooling
-func connectToDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
+func connectToDatabase(cfg modules.PersistenceConfig, schema string) (*pgx.Conn, error) {
 	ctx := context.TODO()
 
-	conn, err := pgx.Connect(context.Background(), postgresUrl)
+	config, err := pgxpool.ParseConfig(cfg.GetPostgresUrl())
+	if err != nil {
+		return nil, fmt.Errorf("unable to create database config: %v", err)
+	}
+	config.MaxConnLifetime = time.Hour * time.Duration(cfg.GetMaxConnLifetime())
+	config.MaxConnIdleTime = time.Minute * time.Duration(cfg.GetMaxConnIdleTime())
+	config.MaxConns = cfg.GetMaxConns()
+	config.MinConns = cfg.GetMinConns()
+	config.HealthCheckPeriod = time.Minute * time.Duration(cfg.GetHealthCheckPeriod())
+
+	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to database: %v", err)
 	}
+
+	conn, _ := pool.Acquire(ctx)
 
 	// Creating and setting a new schema so we can running multiple nodes on one postgres instance. See
 	// more details at https://github.com/go-pg/pg/issues/351.
@@ -89,7 +104,7 @@ func connectToDatabase(postgresUrl string, schema string) (*pgx.Conn, error) {
 		return nil, err
 	}
 
-	return conn, nil
+	return conn.Conn(), nil
 }
 
 // TODO(pokt-network/pocket/issues/77): Enable proper up and down migrations
