@@ -9,7 +9,13 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 
 ## [Unreleased]
 
-## [0.0.0.11] - 2022-15-14
+## [0.0.0.12] - 2022-12-15
+
+- Remove `SetProposalBlock` and local vars to keep proposal state
+- Add `proposerAddr` to the `Commit` function
+- Move the `PostgresContext` struct to `context.db`
+
+## [0.0.0.11] - 2022-12-14
 
 - Moved Actor related getters from `genesis.go` to `actor.go`
 - Added `GetAllStakedActors()` that returns all Actors

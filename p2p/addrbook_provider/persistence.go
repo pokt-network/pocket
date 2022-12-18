@@ -62,19 +62,17 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 	for _, v := range stakedActors {
 		validatorMap[v.GetAddress()] = v
 	}
-	addrBook, err := pabp.ValidatorMapToAddrBook(validatorMap)
+	addrBook, err := pabp.ActorsToAddrBook(validatorMap)
 	if err != nil {
 		return nil, err
 	}
 	return addrBook, nil
 }
 
-// TODO(#270): These functions will turn into more of a "ActorToAddrBook" when we have a closer
-// integration with utility.
-func (pabp *persistenceAddrBookProvider) ValidatorMapToAddrBook(validators map[string]modules.Actor) (typesP2P.AddrBook, error) {
+func (pabp *persistenceAddrBookProvider) ActorsToAddrBook(actors map[string]modules.Actor) (typesP2P.AddrBook, error) {
 	book := make(typesP2P.AddrBook, 0)
-	for _, v := range validators {
-		networkPeer, err := pabp.ValidatorToNetworkPeer(v)
+	for _, v := range actors {
+		networkPeer, err := pabp.ActorToNetworkPeer(v)
 		if err != nil {
 			log.Println("[WARN] Error connecting to validator:", err)
 			continue
@@ -84,9 +82,7 @@ func (pabp *persistenceAddrBookProvider) ValidatorMapToAddrBook(validators map[s
 	return book, nil
 }
 
-// TODO(#270): These functions will turn into more of a "ActorToAddrBook" when we have a closer
-// integration with utility.
-func (pabp *persistenceAddrBookProvider) ValidatorToNetworkPeer(v modules.Actor) (*typesP2P.NetworkPeer, error) {
+func (pabp *persistenceAddrBookProvider) ActorToNetworkPeer(v modules.Actor) (*typesP2P.NetworkPeer, error) {
 	conn, err := pabp.connFactory(pabp.p2pCfg, v.GetGenericParam()) // service url
 	if err != nil {
 		return nil, fmt.Errorf("error resolving addr: %v", err)
