@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/pokt-network/pocket/persistence/indexer"
 	"github.com/pokt-network/pocket/persistence/kvstore"
-	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -17,8 +17,8 @@ var (
 	_ modules.PersistenceModule = &persistenceModule{}
 	_ modules.PersistenceModule = &persistenceModule{}
 
-	_ modules.PersistenceRWContext    = &PostgresContext{}
-	_ modules.PersistenceGenesisState = &types.PersistenceGenesisState{}
+	_ modules.PersistenceRWContext = &PostgresContext{}
+	// _ modules.PersistenceGenesisState = &types.PersistenceGenesisState{}
 )
 
 // TODO: convert address and public key to string not bytes in all account and actor functions
@@ -26,7 +26,7 @@ var (
 type persistenceModule struct {
 	bus          modules.Bus
 	config       *configs.PersistenceConfig
-	genesisState modules.PersistenceGenesisState
+	genesisState *genesis.GenesisState
 
 	blockStore kvstore.KVStore
 	txIndexer  indexer.TxIndexer
@@ -48,9 +48,7 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 	var m *persistenceModule
 
 	persistenceCfg := runtimeMgr.GetConfig().Persistence
-	genesis := runtimeMgr.GetGenesis()
-
-	persistenceGenesis := genesis.GetPersistenceGenesisState()
+	genesisState := runtimeMgr.GetGenesis()
 
 	conn, err := connectToDatabase(persistenceCfg)
 	if err != nil {
@@ -80,7 +78,7 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 	m = &persistenceModule{
 		bus:          nil,
 		config:       persistenceCfg,
-		genesisState: persistenceGenesis,
+		genesisState: genesisState,
 
 		blockStore: blockStore,
 		txIndexer:  txIndexer,
@@ -96,7 +94,7 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 	if shouldHydrateGenesis, err := m.shouldHydrateGenesisDb(); err != nil {
 		return nil, err
 	} else if shouldHydrateGenesis {
-		m.populateGenesisState(persistenceGenesis) // fatal if there's an error
+		m.populateGenesisState(genesisState) // fatal if there's an error
 	} else {
 		// This configurations will connect to the SQL database and key-value stores specified
 		// in the configurations and connected to those.

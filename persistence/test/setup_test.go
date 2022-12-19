@@ -18,6 +18,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
 	"github.com/pokt-network/pocket/shared/converters"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/stretchr/testify/require"
@@ -113,8 +114,8 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 // IMPROVE(team): Extend this to more complex and variable test cases challenging & randomizing the state of persistence.
 func fuzzSingleProtocolActor(
 	f *testing.F,
-	newTestActor func() (*types.Actor, error),
-	getTestActor func(db *persistence.PostgresContext, address string) (*types.Actor, error),
+	newTestActor func() (*coreTypes.Actor, error),
+	getTestActor func(db *persistence.PostgresContext, address string) (*coreTypes.Actor, error),
 	protocolActorSchema types.ProtocolActorSchema,
 ) {
 	// Clear the genesis state.
@@ -182,7 +183,7 @@ func fuzzSingleProtocolActor(
 					}
 				}
 			}
-			updatedActor := &types.Actor{
+			updatedActor := &coreTypes.Actor{
 				Address:         originalActor.Address,
 				PublicKey:       originalActor.PublicKey,
 				StakedAmount:    newStakedTokens,

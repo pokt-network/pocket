@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 
 	"github.com/pokt-network/pocket/persistence/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -25,8 +26,8 @@ func (p PostgresContext) GetServiceNode(address []byte, height int64) (operator,
 }
 
 func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, _ bool, _ int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
-	return p.InsertActor(types.ServiceNodeActor, &types.Actor{
-		ActorType:       types.ActorType_Node,
+	return p.InsertActor(types.ServiceNodeActor, &coreTypes.Actor{
+		ActorType:       coreTypes.ActorType_ACTOR_TYPE_NODE,
 		Address:         hex.EncodeToString(address),
 		PublicKey:       hex.EncodeToString(publicKey),
 		StakedAmount:    stakedTokens,
@@ -39,8 +40,8 @@ func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, out
 }
 
 func (p PostgresContext) UpdateServiceNode(address []byte, serviceURL string, stakedAmount string, chains []string) error {
-	return p.UpdateActor(types.ServiceNodeActor, &types.Actor{
-		ActorType:    types.ActorType_Node,
+	return p.UpdateActor(types.ServiceNodeActor, &coreTypes.Actor{
+		ActorType:    coreTypes.ActorType_ACTOR_TYPE_NODE,
 		Address:      hex.EncodeToString(address),
 		StakedAmount: stakedAmount,
 		GenericParam: serviceURL,

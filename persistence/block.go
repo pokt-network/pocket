@@ -53,6 +53,19 @@ func (p PostgresContext) GetHeight() (int64, error) {
 	return p.Height, nil
 }
 
+// DISCUSS: this might be retrieved from the block store - temporarily we will access it directly from the module
+//
+//	following the pattern of the Consensus Module prior to pocket/issue-#315
+//
+// TODO(#284): Remove blockProtoBytes from the interface
+func (p *PostgresContext) SetProposalBlock(blockHash string, proposerAddr, quorumCert []byte, transactions [][]byte) error {
+	p.blockHash = blockHash
+	p.quorumCert = quorumCert
+	p.proposerAddr = proposerAddr
+	p.blockTxs = transactions
+	return nil
+}
+
 // Creates a block protobuf object using the schema defined in the persistence module
 func (p *PostgresContext) prepareBlock(proposerAddr, quorumCert []byte) (*types.Block, error) {
 	var prevBlockHash string

@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/runtime/defaults"
 )
 
 // TODO : Deprecate these two constants when we change the persistenceRWContext interface to pass the `paramName`
@@ -31,7 +32,7 @@ func (p PostgresContext) InitParams() error {
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, types.InsertParams(types.DefaultParams(), p.Height))
+	_, err = tx.Exec(ctx, types.InsertParams(defaults.DefaultParams(), p.Height))
 	return err
 }
 
