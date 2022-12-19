@@ -5,43 +5,36 @@ import (
 	"fmt"
 	"strconv"
 
-	typesCons "github.com/pokt-network/pocket/consensus/types"
-	typesPers "github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
+	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // IMPROVE: Generate a proper genesis suite in the future.
-func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (modules.GenesisState, []string) {
+func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (*genesis.GenesisState, []string) {
 	apps, appsPrivateKeys := NewActors(types.ActorType_App, numApplications)
 	vals, validatorPrivateKeys := NewActors(types.ActorType_Validator, numValidators)
 	serviceNodes, snPrivateKeys := NewActors(types.ActorType_ServiceNode, numServiceNodes)
 	fish, fishPrivateKeys := NewActors(types.ActorType_Fisherman, numFisherman)
 
-	genesisState := runtime.NewGenesis(
-		&typesCons.ConsensusGenesisState{
-			GenesisTime:   timestamppb.Now(),
-			ChainId:       defaults.DefaultChainID,
-			MaxBlockBytes: defaults.DefaultMaxBlockBytes,
-			Validators:    typesCons.ToConsensusValidators(vals),
-		},
-		&typesPers.PersistenceGenesisState{
-			Pools:        typesPers.ToPersistenceAccounts(NewPools()),
-			Accounts:     typesPers.ToPersistenceAccounts(NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...)), // TODO(olshansky): clean this up
-			Applications: typesPers.ToPersistenceActors(apps),
-			Validators:   typesPers.ToPersistenceActors(vals),
-			ServiceNodes: typesPers.ToPersistenceActors(serviceNodes),
-			Fishermen:    typesPers.ToPersistenceActors(fish),
-			Params:       typesPers.ToPersistenceParams(DefaultParams()),
-		},
-	)
+	genesisState := &genesis.GenesisState{
+		GenesisTime:   timestamppb.Now(),
+		ChainId:       defaults.DefaultChainID,
+		MaxBlockBytes: defaults.DefaultMaxBlockBytes,
+		Pools:         NewPools(),
+		Accounts:      NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...), // TODO(olshansky): clean this up
+		Applications:  apps,
+		Validators:    vals,
+		ServiceNodes:  serviceNodes,
+		Fishermen:     fish,
+		Params:        DefaultParams(),
+	}
 
 	// TODO: Generalize this to all actors and not just validators
 	return genesisState, validatorPrivateKeys
@@ -95,16 +88,16 @@ func NewDefaultConfig(i int, pk string) *configs.Config {
 	}
 }
 
-func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
-	for _, name := range typesPers.PoolNames_name {
-		if name == typesPers.PoolNames_FeeCollector.String() {
-			pools = append(pools, &typesPers.Account{
+func NewPools() (pools []*coreTypes.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
+	for _, name := range coreTypes.PoolNames_name {
+		if name == coreTypes.PoolNames_POOL_NAMES_FEE_COLLECTOR.String() {
+			pools = append(pools, &coreTypes.Account{
 				Address: name,
 				Amount:  "0",
 			})
 			continue
 		}
-		pools = append(pools, &typesPers.Account{
+		pools = append(pools, &coreTypes.Account{
 			Address: name,
 			Amount:  defaults.DefaultAccountAmountString,
 		})
@@ -112,14 +105,14 @@ func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing s
 	return
 }
 
-func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
+func NewAccounts(n int, privateKeys ...string) (accounts []*coreTypes.Account) {
 	for i := 0; i < n; i++ {
 		_, _, addr := keygenerator.GetInstance().Next()
 		if privateKeys != nil {
 			pk, _ := crypto.NewPrivateKey(privateKeys[i])
 			addr = pk.Address().String()
 		}
-		accounts = append(accounts, &typesPers.Account{
+		accounts = append(accounts, &coreTypes.Account{
 			Address: addr,
 			Amount:  defaults.DefaultAccountAmountString,
 		})
@@ -130,7 +123,7 @@ func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
 // TODO: The current implementation of NewActors  will have overlapping `ServiceUrl` for different
 //
 //	types of actors which needs to be fixed.
-func NewActors(actorType typesUtil.ActorType, n int) (actors []modules.Actor, privateKeys []string) {
+func NewActors(actorType typesUtil.ActorType, n int) (actors []*coreTypes.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
 		genericParam := getServiceUrl(i + 1)
 		if int32(actorType) == int32(types.ActorType_App) {
@@ -148,15 +141,15 @@ func getServiceUrl(n int) string {
 	return fmt.Sprintf(defaults.ServiceUrlFormat, n)
 }
 
-func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor, privateKey string) {
+func NewDefaultActor(actorType int32, genericParam string) (actor *coreTypes.Actor, privateKey string) {
 	privKey, pubKey, addr := keygenerator.GetInstance().Next()
 	chains := defaults.DefaultChains
-	if actorType == int32(typesPers.ActorType_Val) {
+	if actorType == int32(coreTypes.ActorType_ACTOR_TYPE_VAL) {
 		chains = nil
 	} else if actorType == int32(types.ActorType_App) {
 		genericParam = defaults.DefaultMaxRelaysString
 	}
-	return &typesPers.Actor{
+	return &coreTypes.Actor{
 		Address:         addr,
 		PublicKey:       pubKey,
 		Chains:          chains,
@@ -165,6 +158,6 @@ func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor,
 		PausedHeight:    defaults.DefaultPauseHeight,
 		UnstakingHeight: defaults.DefaultUnstakingHeight,
 		Output:          addr,
-		ActorType:       typesPers.ActorType(actorType),
+		ActorType:       coreTypes.ActorType(actorType),
 	}, privKey
 }

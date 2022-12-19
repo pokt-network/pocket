@@ -11,6 +11,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/genesis"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/spf13/viper"
@@ -19,8 +20,8 @@ import (
 var _ modules.RuntimeMgr = &Manager{}
 
 type Manager struct {
-	config  *configs.Config
-	genesis *runtimeGenesis
+	config       *configs.Config
+	genesisState *genesis.GenesisState
 
 	clock clock.Clock
 }
@@ -30,12 +31,12 @@ func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manage
 		clock: clock.New(),
 	}
 
-	cfg, genesis, err := mgr.init(configPath, genesisPath)
+	cfg, genesisState, err := mgr.init(configPath, genesisPath)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to initialize runtime builder: %v", err)
 	}
 	mgr.config = cfg
-	mgr.genesis = genesis
+	mgr.genesisState = genesisState
 
 	for _, o := range options {
 		o(mgr)
@@ -46,20 +47,18 @@ func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manage
 
 // NewManagerFromReaders returns a *Manager given io.Readers for the config and the genesis.
 //
-// Ideally useful when the user doesn't want to rely on the filesystem and instead intends plugging in different configuration management system.
-//
-// Note: currently unused, here as a reference
+// Useful for testing and when the user doesn't want to rely on the filesystem and instead intends plugging in different configuration management system.
 func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...func(*Manager)) *Manager {
-	var cfg *configs.Config
+	var cfg = new(configs.Config)
 	parse(configReader, cfg)
 
-	var genesis *runtimeGenesis
-	parse(genesisReader, genesis)
+	var genesisState = new(genesis.GenesisState)
+	parse(genesisReader, genesisState)
 
 	mgr := &Manager{
-		config:  cfg,
-		genesis: genesis,
-		clock:   clock.New(),
+		config:       cfg,
+		genesisState: genesisState,
+		clock:        clock.New(),
 	}
 
 	for _, o := range options {
@@ -69,10 +68,10 @@ func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...fun
 	return mgr
 }
 
-func NewManager(config *configs.Config, genesis modules.GenesisState, options ...func(*Manager)) *Manager {
+func NewManager(config *configs.Config, genesisState *genesis.GenesisState, options ...func(*Manager)) *Manager {
 	mgr := &Manager{
 		config:  config,
-		genesis: genesis.(*runtimeGenesis),
+		genesisState: genesisState,
 		clock:   clock.New(),
 	}
 
@@ -83,7 +82,7 @@ func NewManager(config *configs.Config, genesis modules.GenesisState, options ..
 	return mgr
 }
 
-func (rc *Manager) init(configPath, genesisPath string) (config *configs.Config, genesis *runtimeGenesis, err error) {
+func (rc *Manager) init(configPath, genesisPath string) (config *configs.Config, genesisState *genesis.GenesisState, err error) {
 	dir, file := path.Split(configPath)
 	filename := strings.TrimSuffix(file, filepath.Ext(file))
 
@@ -111,7 +110,7 @@ func (rc *Manager) init(configPath, genesisPath string) (config *configs.Config,
 		return
 	}
 
-	genesis, err = parseGenesisJSON(genesisPath)
+	genesisState, err = parseGenesisJSON(genesisPath)
 	return
 }
 
@@ -119,25 +118,21 @@ func (b *Manager) GetConfig() *configs.Config {
 	return b.config
 }
 
-func (b *Manager) GetGenesis() modules.GenesisState {
-	return b.genesis
+func (b *Manager) GetGenesis() *genesis.GenesisState {
+	return b.genesisState
 }
 
 func (b *Manager) GetClock() clock.Clock {
 	return b.clock
 }
 
-type supportedStructs interface {
-	*configs.Config | *runtimeGenesis
-}
-
-func parse[T supportedStructs](reader io.Reader, target T) {
+func parse[T *configs.Config | *genesis.GenesisState](reader io.Reader, target T) {
 	bz, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to read from reader: %v", err)
 
 	}
-	if err := json.Unmarshal(bz, &target); err != nil {
+	if err := json.Unmarshal(bz, target); err != nil {
 		log.Fatalf("[ERROR] Failed to unmarshal: %v", err)
 	}
 }
