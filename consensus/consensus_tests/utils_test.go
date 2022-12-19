@@ -17,9 +17,11 @@ import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -351,7 +353,7 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.M
 }
 
 // Creates a utility module mock with mock implementations of some basic functionality
-func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState modules.GenesisState) *modulesMock.MockUtilityModule {
+func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesis.GenesisState) *modulesMock.MockUtilityModule {
 	ctrl := gomock.NewController(t)
 	utilityMock := modulesMock.NewMockUtilityModule(ctrl)
 	utilityContextMock := baseUtilityContextMock(t, genesisState)
@@ -366,11 +368,11 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState modules
 	return utilityMock
 }
 
-func baseUtilityContextMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockUtilityContext {
+func baseUtilityContextMock(t *testing.T, genesisState *genesis.GenesisState) *modulesMock.MockUtilityContext {
 	ctrl := gomock.NewController(t)
 	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
-	persistenceContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetPersistenceGenesisState().GetVals(), nil).AnyTimes()
+	persistenceContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
 	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
 
 	utilityContextMock.EXPECT().
@@ -486,11 +488,11 @@ func assertRound(t *testing.T, nodeId typesCons.NodeId, expected, actual uint8) 
 	require.Equal(t, expected, actual, "[NODE][%v] failed assertRound", nodeId)
 }
 
-// makeMockActors creates a slice of modules.Actor with n &modulesMock.MockActor{} in it.
-func makeMockActors(n int) []modules.Actor {
-	actors := make([]modules.Actor, n)
+// makeMockActors creates a slice of *coreTypes.Actor with n &coreTypes.MockActor{} in it.
+func makeMockActors(n int) []*coreTypes.Actor {
+	actors := make([]*coreTypes.Actor, n)
 	for i := 0; i < n; i++ {
-		actors[i] = &modulesMock.MockActor{}
+		actors[i] = &coreTypes.Actor{}
 	}
 	return actors
 }
