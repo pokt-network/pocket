@@ -1,8 +1,8 @@
 package types
 
-//go:generate mockgen -source=$GOFILE -destination=./mocks/addrbook_provider_mock.go github.com/pokt-network/pocket/p2p/types AddrBookProvider
+import coreTypes "github.com/pokt-network/pocket/shared/core/types"
 
-import "github.com/pokt-network/pocket/shared/modules"
+//go:generate mockgen -source=$GOFILE -destination=./mocks/addrbook_provider_mock.go github.com/pokt-network/pocket/p2p/types AddrBookProvider
 
 // AddrBook is a way of representing NetworkPeer sets
 type AddrBook []*NetworkPeer
@@ -15,6 +15,6 @@ type AddrBookMap map[string]*NetworkPeer
 // AddrBookProvider is an interface that provides AddrBook accessors
 type AddrBookProvider interface {
 	GetStakedAddrBookAtHeight(height uint64) (AddrBook, error)
-	ValidatorMapToAddrBook(validators map[string]modules.Actor) (AddrBook, error)
-	ValidatorToNetworkPeer(v modules.Actor) (*NetworkPeer, error)
+	ValidatorMapToAddrBook(validators map[string]coreTypes.Actor) (AddrBook, error)
+	ValidatorToNetworkPeer(v coreTypes.Actor) (*NetworkPeer, error)
 }
