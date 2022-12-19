@@ -10,6 +10,7 @@ import (
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/persistence/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
 )
@@ -70,25 +71,25 @@ var merkleTreeToString = map[merkleTree]string{
 	flagsMerkleTree:        "flags",
 }
 
-var actorTypeToMerkleTreeName = map[types.ActorType]merkleTree{
-	types.ActorType_App:  appMerkleTree,
-	types.ActorType_Val:  valMerkleTree,
-	types.ActorType_Fish: fishMerkleTree,
-	types.ActorType_Node: serviceNodeMerkleTree,
+var actorTypeToMerkleTreeName = map[coreTypes.ActorType]merkleTree{
+	coreTypes.ActorType_ACTOR_TYPE_APP:  appMerkleTree,
+	coreTypes.ActorType_ACTOR_TYPE_VAL:  valMerkleTree,
+	coreTypes.ActorType_ACTOR_TYPE_FISH: fishMerkleTree,
+	coreTypes.ActorType_ACTOR_TYPE_NODE: serviceNodeMerkleTree,
 }
 
-var actorTypeToSchemaName = map[types.ActorType]types.ProtocolActorSchema{
-	types.ActorType_App:  types.ApplicationActor,
-	types.ActorType_Val:  types.ValidatorActor,
-	types.ActorType_Fish: types.FishermanActor,
-	types.ActorType_Node: types.ServiceNodeActor,
+var actorTypeToSchemaName = map[coreTypes.ActorType]types.ProtocolActorSchema{
+	coreTypes.ActorType_ACTOR_TYPE_APP:  types.ApplicationActor,
+	coreTypes.ActorType_ACTOR_TYPE_VAL:  types.ValidatorActor,
+	coreTypes.ActorType_ACTOR_TYPE_FISH: types.FishermanActor,
+	coreTypes.ActorType_ACTOR_TYPE_NODE: types.ServiceNodeActor,
 }
 
-var merkleTreeToActorTypeName = map[merkleTree]types.ActorType{
-	appMerkleTree:         types.ActorType_App,
-	valMerkleTree:         types.ActorType_Val,
-	fishMerkleTree:        types.ActorType_Fish,
-	serviceNodeMerkleTree: types.ActorType_Node,
+var merkleTreeToActorTypeName = map[merkleTree]coreTypes.ActorType{
+	appMerkleTree:         coreTypes.ActorType_ACTOR_TYPE_APP,
+	valMerkleTree:         coreTypes.ActorType_ACTOR_TYPE_VAL,
+	fishMerkleTree:        coreTypes.ActorType_ACTOR_TYPE_FISH,
+	serviceNodeMerkleTree: coreTypes.ActorType_ACTOR_TYPE_NODE,
 }
 
 func newStateTrees(treesStoreDir string) (*stateTrees, error) {
@@ -225,7 +226,7 @@ func (p PostgresContext) getTxsHash() (txs []byte, err error) {
 
 // Actor Tree Helpers
 
-func (p *PostgresContext) updateActorsTree(actorType types.ActorType) error {
+func (p *PostgresContext) updateActorsTree(actorType coreTypes.ActorType) error {
 	actors, err := p.getActorsUpdatedAtHeight(actorType, p.Height)
 	if err != nil {
 		return err
@@ -254,7 +255,7 @@ func (p *PostgresContext) updateActorsTree(actorType types.ActorType) error {
 	return nil
 }
 
-func (p *PostgresContext) getActorsUpdatedAtHeight(actorType types.ActorType, height int64) (actors []*types.Actor, err error) {
+func (p *PostgresContext) getActorsUpdatedAtHeight(actorType coreTypes.ActorType, height int64) (actors []*coreTypes.Actor, err error) {
 	actorSchema, ok := actorTypeToSchemaName[actorType]
 	if !ok {
 		return nil, fmt.Errorf("no schema found for actor type: %s", actorType)
@@ -265,9 +266,9 @@ func (p *PostgresContext) getActorsUpdatedAtHeight(actorType types.ActorType, he
 		return nil, err
 	}
 
-	actors = make([]*types.Actor, len(schemaActors))
+	actors = make([]*coreTypes.Actor, len(schemaActors))
 	for i, schemaActor := range schemaActors {
-		actor := &types.Actor{
+		actor := &coreTypes.Actor{
 			ActorType:       actorType,
 			Address:         schemaActor.Address,
 			PublicKey:       schemaActor.PublicKey,

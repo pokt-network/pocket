@@ -2,13 +2,14 @@ package persistence
 
 import (
 	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 // TODO (#399): All of the functions below following a structure similar to `GetAll<Actor>`
-//	can easily be refactored and condensed into a single function using a generic type or a common
-//  interface.
-func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err error) {
+//
+//		can easily be refactored and condensed into a single function using a generic type or a common
+//	 interface.
+func (p PostgresContext) GetAllApps(height int64) (apps []*coreTypes.Actor, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
@@ -17,9 +18,9 @@ func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err err
 	if err != nil {
 		return nil, err
 	}
-	var actors []*types.Actor
+	var actors []*coreTypes.Actor
 	for rows.Next() {
-		var actor *types.Actor
+		var actor *coreTypes.Actor
 		actor, height, err = p.getActorFromRow(rows)
 		if err != nil {
 			return
@@ -37,7 +38,7 @@ func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err err
 	return
 }
 
-func (p PostgresContext) GetAllValidators(height int64) (vals []modules.Actor, err error) {
+func (p PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Actor, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
@@ -46,9 +47,9 @@ func (p PostgresContext) GetAllValidators(height int64) (vals []modules.Actor, e
 	if err != nil {
 		return nil, err
 	}
-	var actors []*types.Actor
+	var actors []*coreTypes.Actor
 	for rows.Next() {
-		var actor *types.Actor
+		var actor *coreTypes.Actor
 		actor, height, err = p.getActorFromRow(rows)
 		if err != nil {
 			return
@@ -66,7 +67,7 @@ func (p PostgresContext) GetAllValidators(height int64) (vals []modules.Actor, e
 	return
 }
 
-func (p PostgresContext) GetAllServiceNodes(height int64) (sn []modules.Actor, err error) {
+func (p PostgresContext) GetAllServiceNodes(height int64) (sn []*coreTypes.Actor, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
@@ -75,9 +76,9 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []modules.Actor, e
 	if err != nil {
 		return nil, err
 	}
-	var actors []*types.Actor
+	var actors []*coreTypes.Actor
 	for rows.Next() {
-		var actor *types.Actor
+		var actor *coreTypes.Actor
 		actor, height, err = p.getActorFromRow(rows)
 		if err != nil {
 			return
@@ -95,7 +96,7 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []modules.Actor, e
 	return
 }
 
-func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err error) {
+func (p PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
@@ -104,9 +105,9 @@ func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err e
 	if err != nil {
 		return nil, err
 	}
-	var actors []*types.Actor
+	var actors []*coreTypes.Actor
 	for rows.Next() {
-		var actor *types.Actor
+		var actor *coreTypes.Actor
 		actor, height, err = p.getActorFromRow(rows)
 		if err != nil {
 			return
@@ -125,11 +126,11 @@ func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err e
 }
 
 // IMPROVE: This is a proof of concept. Ideally we should have a single query that returns all actors.
-func (p PostgresContext) GetAllStakedActors(height int64) (allActors []modules.Actor, err error) {
-	type actorGetter func(height int64) ([]modules.Actor, error)
+func (p PostgresContext) GetAllStakedActors(height int64) (allActors []*coreTypes.Actor, err error) {
+	type actorGetter func(height int64) ([]*coreTypes.Actor, error)
 	actorGetters := []actorGetter{p.GetAllValidators, p.GetAllServiceNodes, p.GetAllFishermen, p.GetAllApps}
 	for _, actorGetter := range actorGetters {
-		var actors []modules.Actor
+		var actors []*coreTypes.Actor
 		actors, err = actorGetter(height)
 		if err != nil {
 			return

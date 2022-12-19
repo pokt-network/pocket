@@ -6,12 +6,13 @@ import (
 	"math/big"
 
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/converters"
-	"github.com/pokt-network/pocket/shared/modules"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 // CONSIDERATION: Should this return an error and let the caller decide if it should log a fatal error?
-func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesisState) {
+func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	log.Println("Populating genesis state...")
 
 	// REFACTOR: This business logic should probably live in `types/genesis.go`
@@ -34,7 +35,7 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
 	}
 
-	for _, acc := range state.GetAccs() {
+	for _, acc := range state.GetAccounts() {
 		addrBz, err := hex.DecodeString(acc.GetAddress())
 		if err != nil {
 			log.Fatalf("an error occurred converting address to bytes %s", acc.GetAddress())
@@ -44,14 +45,14 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 			log.Fatalf("an error occurred inserting an acc in the genesis state: %s", err.Error())
 		}
 	}
-	for _, pool := range state.GetAccPools() {
+	for _, pool := range state.GetPools() {
 		poolNameBytes := []byte(pool.GetAddress())
 		err = rwContext.InsertPool(pool.GetAddress(), poolNameBytes, pool.GetAmount())
 		if err != nil {
 			log.Fatalf("an error occurred inserting an pool in the genesis state: %s", err.Error())
 		}
 	}
-	for _, act := range state.GetApps() { // TODO (Andrew) genericize the genesis population logic for actors #149
+	for _, act := range state.GetApplications() { // TODO (Andrew) genericize the genesis population logic for actors #149
 		addrBz, err := hex.DecodeString(act.GetAddress())
 		if err != nil {
 			log.Fatalf("an error occurred converting address to bytes %s", act.GetAddress())
@@ -68,11 +69,11 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		if err != nil {
 			log.Fatalf("an error occurred inserting an app in the genesis state: %s", err.Error())
 		}
-		if err = addValueToPool(types.PoolNames_AppStakePool.String(), act.GetStakedAmount()); err != nil {
-			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.PoolNames_AppStakePool, err.Error())
+		if err = addValueToPool(coreTypes.PoolNames_POOL_NAMES_APP_STAKE_POOL.String(), act.GetStakedAmount()); err != nil {
+			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", coreTypes.PoolNames_POOL_NAMES_APP_STAKE_POOL, err.Error())
 		}
 	}
-	for _, act := range state.GetNodes() {
+	for _, act := range state.GetServiceNodes() {
 		addrBz, err := hex.DecodeString(act.GetAddress())
 		if err != nil {
 			log.Fatalf("an error occurred converting address to bytes %s", act.GetAddress())
@@ -89,11 +90,11 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		if err != nil {
 			log.Fatalf("an error occurred inserting a service node in the genesis state: %s", err.Error())
 		}
-		if err = addValueToPool(types.PoolNames_ServiceNodeStakePool.String(), act.GetStakedAmount()); err != nil {
-			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.PoolNames_ServiceNodeStakePool.String(), err.Error())
+		if err = addValueToPool(coreTypes.PoolNames_POOL_NAMES_SERVICE_NODE_STAKE_POOL.String(), act.GetStakedAmount()); err != nil {
+			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", coreTypes.PoolNames_POOL_NAMES_SERVICE_NODE_STAKE_POOL.String(), err.Error())
 		}
 	}
-	for _, act := range state.GetFish() {
+	for _, act := range state.GetFishermen() {
 		addrBz, err := hex.DecodeString(act.GetAddress())
 		if err != nil {
 			log.Fatalf("an error occurred converting address to bytes %s", act.GetAddress())
@@ -110,11 +111,11 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		if err != nil {
 			log.Fatalf("an error occurred inserting a fisherman in the genesis state: %s", err.Error())
 		}
-		if err = addValueToPool(types.PoolNames_FishermanStakePool.String(), act.GetStakedAmount()); err != nil {
-			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.PoolNames_FishermanStakePool.String(), err.Error())
+		if err = addValueToPool(coreTypes.PoolNames_POOL_NAMES_FISHERMAN_STAKE_POOL.String(), act.GetStakedAmount()); err != nil {
+			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", coreTypes.PoolNames_POOL_NAMES_FISHERMAN_STAKE_POOL.String(), err.Error())
 		}
 	}
-	for _, act := range state.GetVals() {
+	for _, act := range state.GetValidators() {
 		addrBz, err := hex.DecodeString(act.GetAddress())
 		if err != nil {
 			log.Fatalf("an error occurred converting address to bytes %s", act.GetAddress())
@@ -131,8 +132,8 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 		if err != nil {
 			log.Fatalf("an error occurred inserting a validator in the genesis state: %s", err.Error())
 		}
-		if err = addValueToPool(types.PoolNames_ValidatorStakePool.String(), act.GetStakedAmount()); err != nil {
-			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.PoolNames_ValidatorStakePool.String(), err.Error())
+		if err = addValueToPool(coreTypes.PoolNames_POOL_NAMES_VALIDATOR_STAKE_POOL.String(), act.GetStakedAmount()); err != nil {
+			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", coreTypes.PoolNames_POOL_NAMES_VALIDATOR_STAKE_POOL.String(), err.Error())
 		}
 	}
 	// TODO(team): use params from genesis file - not the hardcoded
@@ -161,9 +162,10 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 }
 
 // TODO (#399): All of the functions below following a structure similar to `GetAll<Actor>`
-//	can easily be refactored and condensed into a single function using a generic type or a common
-//  interface.
-func (p PostgresContext) GetAllAccounts(height int64) (accs []modules.Account, err error) {
+//
+//		can easily be refactored and condensed into a single function using a generic type or a common
+//	 interface.
+func (p PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
@@ -173,7 +175,7 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []modules.Account, e
 		return nil, err
 	}
 	for rows.Next() {
-		acc := new(types.Account)
+		acc := new(coreTypes.Account)
 		if err = rows.Scan(&acc.Address, &acc.Amount, &height); err != nil {
 			return nil, err
 		}
@@ -187,7 +189,7 @@ func (p PostgresContext) GetAllAccounts(height int64) (accs []modules.Account, e
 }
 
 // CLEANUP: Consolidate with GetAllAccounts.
-func (p PostgresContext) GetAllPools(height int64) (accs []modules.Account, err error) {
+func (p PostgresContext) GetAllPools(height int64) (accs []*coreTypes.Account, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return nil, err
@@ -197,7 +199,7 @@ func (p PostgresContext) GetAllPools(height int64) (accs []modules.Account, err 
 		return nil, err
 	}
 	for rows.Next() {
-		pool := new(types.Account)
+		pool := new(coreTypes.Account)
 		if err = rows.Scan(&pool.Address, &pool.Amount, &height); err != nil {
 			return nil, err
 		}

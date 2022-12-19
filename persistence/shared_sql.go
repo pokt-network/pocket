@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/pokt-network/pocket/persistence/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -44,7 +45,7 @@ func (p *PostgresContext) GetExists(actorSchema types.ProtocolActorSchema, addre
 	return
 }
 
-func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema, height int64) (actors []*types.Actor, err error) {
+func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema, height int64) (actors []*coreTypes.Actor, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return
@@ -70,7 +71,7 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema
 	}
 	rows.Close()
 
-	actors = make([]*types.Actor, len(addrs))
+	actors = make([]*coreTypes.Actor, len(addrs))
 	for i, addr := range addrs {
 		actor, err := p.getActor(actorSchema, addr, height)
 		if err != nil {
@@ -82,7 +83,7 @@ func (p *PostgresContext) GetActorsUpdated(actorSchema types.ProtocolActorSchema
 	return
 }
 
-func (p *PostgresContext) getActor(actorSchema types.ProtocolActorSchema, address []byte, height int64) (actor *types.Actor, err error) {
+func (p *PostgresContext) getActor(actorSchema types.ProtocolActorSchema, address []byte, height int64) (actor *coreTypes.Actor, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return
@@ -95,8 +96,8 @@ func (p *PostgresContext) getActor(actorSchema types.ProtocolActorSchema, addres
 	return p.getChainsForActor(ctx, tx, actorSchema, actor, height)
 }
 
-func (p *PostgresContext) getActorFromRow(row pgx.Row) (actor *types.Actor, height int64, err error) {
-	actor = new(types.Actor)
+func (p *PostgresContext) getActorFromRow(row pgx.Row) (actor *coreTypes.Actor, height int64, err error) {
+	actor = new(coreTypes.Actor)
 	err = row.Scan(
 		&actor.Address,
 		&actor.PublicKey,
@@ -113,9 +114,9 @@ func (p *PostgresContext) getChainsForActor(
 	ctx context.Context,
 	tx pgx.Tx,
 	actorSchema types.ProtocolActorSchema,
-	actor *types.Actor,
+	actor *coreTypes.Actor,
 	height int64,
-) (a *types.Actor, err error) {
+) (a *coreTypes.Actor, err error) {
 	if actorSchema.GetChainsTableName() == "" {
 		return actor, nil
 	}
@@ -141,7 +142,7 @@ func (p *PostgresContext) getChainsForActor(
 	return actor, nil
 }
 
-func (p *PostgresContext) InsertActor(actorSchema types.ProtocolActorSchema, actor *types.Actor) error {
+func (p *PostgresContext) InsertActor(actorSchema types.ProtocolActorSchema, actor *coreTypes.Actor) error {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
@@ -159,7 +160,7 @@ func (p *PostgresContext) InsertActor(actorSchema types.ProtocolActorSchema, act
 	return err
 }
 
-func (p *PostgresContext) UpdateActor(actorSchema types.ProtocolActorSchema, actor *types.Actor) error {
+func (p *PostgresContext) UpdateActor(actorSchema types.ProtocolActorSchema, actor *coreTypes.Actor) error {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
