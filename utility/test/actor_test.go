@@ -10,8 +10,8 @@ import (
 
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
@@ -572,8 +572,8 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 
 // Helpers
 
-func getAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.ActorType) (actors []modules.Actor) {
-	actors = make([]modules.Actor, 0)
+func getAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.ActorType) (actors []*coreTypes.Actor) {
+	actors = make([]*coreTypes.Actor, 0)
 	switch actorType {
 	case typesUtil.ActorType_App:
 		apps := getAllTestingApps(t, ctx)
@@ -602,23 +602,23 @@ func getAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType typ
 	return
 }
 
-func getFirstActor(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.ActorType) modules.Actor {
+func getFirstActor(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.ActorType) *coreTypes.Actor {
 	return getAllTestingActors(t, ctx, actorType)[0]
 }
 
-func getActorByAddr(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.ActorType, addr string) (actor modules.Actor) {
+func getActorByAddr(t *testing.T, ctx utility.UtilityContext, actorType typesUtil.ActorType, addr string) (actor *coreTypes.Actor) {
 	actors := getAllTestingActors(t, ctx, actorType)
-	idx := slices.IndexFunc(actors, func(a modules.Actor) bool { return a.GetAddress() == addr })
+	idx := slices.IndexFunc(actors, func(a *coreTypes.Actor) bool { return a.GetAddress() == addr })
 	return actors[idx]
 }
 
-func getAllTestingApps(t *testing.T, ctx utility.UtilityContext) []modules.Actor {
+func getAllTestingApps(t *testing.T, ctx utility.UtilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.Context.PersistenceRWContext).GetAllApps(ctx.Height)
 	require.NoError(t, err)
 	return actors
 }
 
-func getAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []modules.Actor {
+func getAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.Context.PersistenceRWContext).GetAllValidators(ctx.Height)
 	require.NoError(t, err)
 	sort.Slice(actors, func(i, j int) bool {
@@ -627,13 +627,13 @@ func getAllTestingValidators(t *testing.T, ctx utility.UtilityContext) []modules
 	return actors
 }
 
-func getAllTestingFish(t *testing.T, ctx utility.UtilityContext) []modules.Actor {
+func getAllTestingFish(t *testing.T, ctx utility.UtilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.Context.PersistenceRWContext).GetAllFishermen(ctx.Height)
 	require.NoError(t, err)
 	return actors
 }
 
-func getAllTestingNodes(t *testing.T, ctx utility.UtilityContext) []modules.Actor {
+func getAllTestingNodes(t *testing.T, ctx utility.UtilityContext) []*coreTypes.Actor {
 	actors, err := (ctx.Context.PersistenceRWContext).GetAllServiceNodes(ctx.Height)
 	require.NoError(t, err)
 	return actors
