@@ -4,6 +4,7 @@ package types
 import (
 	"sort"
 
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -11,7 +12,7 @@ type NodeId uint64
 
 type ValAddrToIdMap map[string]NodeId // Mapping from hex encoded address to an integer node id.
 type IdToValAddrMap map[NodeId]string // Mapping from node id to a hex encoded string address.
-type ValidatorMap map[string]modules.Actor
+type ValidatorMap map[string]coreTypes.Actor
 
 type ConsensusNodeState struct {
 	NodeId NodeId
@@ -49,18 +50,21 @@ func ValidatorMapToModulesValidatorMap(validatorMap ValidatorMap) (vm modules.Va
 	return
 }
 
-func ActorListToValidatorMap(actors []modules.Actor) (m ValidatorMap) {
+func ActorListToValidatorMap(actors []*coreTypes.Actor) (m ValidatorMap) {
 	m = make(ValidatorMap, len(actors))
-	for _, a := range actors {
-		m[a.GetAddress()] = a
+	for _, v := range actors {
+		m[v.GetAddress()] = *v
 	}
 	return
 }
 
-var _ modules.Actor = &Validator{}
+// var _ modules.Actor = &Validator{}
 
-func (x *Validator) GetPausedHeight() int64         { panic("not implemented on consensus validator") }
-func (x *Validator) GetUnstakingHeight() int64      { panic("not implemented on consensus validator") }
-func (x *Validator) GetOutput() string              { panic("not implemented on consensus validator") }
-func (x *Validator) GetActorTyp() modules.ActorType { panic("not implemented on consensus validator") }
-func (x *Validator) GetChains() []string            { panic("not implemented on consensus validator") }
+// func (x *Validator) GetPausedHeight() int64         { panic("not implemented on consensus validator") }
+// func (x *Validator) GetUnstakingHeight() int64      { panic("not implemented on consensus validator") }
+// func (x *Validator) GetOutput() string              { panic("not implemented on consensus validator") }
+// func (x *Validator) GetActorTyp() modules.ActorType { panic("not implemented on consensus validator") }
+// func (x *Validator) GetChains() []string            { panic("not implemented on consensus validator") }
+// func (x *Validator) GetActorType() coreTypes.ActorType {
+// 	panic("not implemented on consensus validator")
+// }
