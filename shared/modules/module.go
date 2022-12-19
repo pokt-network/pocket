@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"github.com/pokt-network/pocket/shared/crypto"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
 
@@ -26,16 +25,8 @@ type InitializableModule interface {
 	Create(runtime RuntimeMgr) (Module, error)
 }
 
-// type ConfigurableModule interface {
-// 	ValidateConfig(Config) error
-// }
-
-// type GenesisDependentModule interface {
-// 	ValidateGenesis(GenesisState) error
-// }
-
 type KeyholderModule interface {
-	GetPrivateKey() (crypto.PrivateKey, error)
+	GetPrivateKey() (cryptoPocket.PrivateKey, error)
 }
 
 type P2PAddressableModule interface {
