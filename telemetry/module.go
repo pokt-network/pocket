@@ -28,9 +28,8 @@ func (*telemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, erro
 
 type telemetryModule struct{}
 
-func (t *telemetryModule) GetModuleName() string                                          { return telemetryModuleName }
-func (t *telemetryModule) InitGenesis(_ string) (genesis modules.GenesisState, err error) { return }
-func (t *telemetryModule) SetBus(bus modules.Bus)                                         {}
-func (t *telemetryModule) GetBus() modules.Bus                                            { return nil }
-func (t *telemetryModule) Start() error                                                   { return nil }
-func (t *telemetryModule) Stop() error                                                    { return nil }
+func (t *telemetryModule) GetModuleName() string  { return telemetryModuleName }
+func (t *telemetryModule) SetBus(bus modules.Bus) {}
+func (t *telemetryModule) GetBus() modules.Bus    { return nil }
+func (t *telemetryModule) Start() error           { return nil }
+func (t *telemetryModule) Stop() error            { return nil }
