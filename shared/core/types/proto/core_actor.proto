@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/pokt-network/pocket/shared/core/types";
+
+enum ActorType {
+  ACTOR_TYPE_UNSPECIFIED = 0;
+  ACTOR_TYPE_APP = 1;
+  ACTOR_TYPE_NODE = 2;
+  ACTOR_TYPE_FISH = 3;
+  ACTOR_TYPE_VAL = 4;
+}
+
+message Actor {
+  ActorType actor_type = 1;
+  string address = 2;
+  string public_key = 3;
+  repeated string chains = 4;
+  string generic_param = 5;
+  string staked_amount = 6;
+  int64 paused_height = 7;
+  int64 unstaking_height = 8;
+  string output = 9;
+}
