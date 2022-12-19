@@ -57,14 +57,3 @@ func ActorListToValidatorMap(actors []*coreTypes.Actor) (m ValidatorMap) {
 	}
 	return
 }
-
-// var _ modules.Actor = &Validator{}
-
-// func (x *Validator) GetPausedHeight() int64         { panic("not implemented on consensus validator") }
-// func (x *Validator) GetUnstakingHeight() int64      { panic("not implemented on consensus validator") }
-// func (x *Validator) GetOutput() string              { panic("not implemented on consensus validator") }
-// func (x *Validator) GetActorTyp() modules.ActorType { panic("not implemented on consensus validator") }
-// func (x *Validator) GetChains() []string            { panic("not implemented on consensus validator") }
-// func (x *Validator) GetActorType() coreTypes.ActorType {
-// 	panic("not implemented on consensus validator")
-// }
