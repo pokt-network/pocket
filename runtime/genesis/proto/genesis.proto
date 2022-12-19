@@ -1,52 +1,24 @@
 syntax = "proto3";
-package persistence;
 
-option go_package = "github.com/pokt-network/pocket/persistence/types";
+package genesis;
 
-message PersistenceGenesisState {
-  repeated Account pools = 1;
-  repeated Account accounts = 2;
-  repeated Actor applications = 3;
-  repeated Actor validators = 4;
-  repeated Actor service_nodes = 5;
-  repeated Actor fishermen = 6;
-  Params params = 7;
-}
+import "core/types/proto/core_account.proto";
+import "core/types/proto/core_actor.proto";
+import "google/protobuf/timestamp.proto";
 
-message Account {
-  string address = 1;
-  string amount = 2;
-}
+option go_package = "github.com/pokt-network/pocket/runtime/genesis";
 
-// TODO(#258): Follow protobuf best practices
-enum PoolNames {
-  PoolNameUnspecified = 0;
-  DAO = 1;
-  FeeCollector = 2;
-  AppStakePool = 3;
-  ValidatorStakePool = 4;
-  ServiceNodeStakePool = 5;
-  FishermanStakePool = 7;
-}
-
-enum ActorType {
-  Undefined = 0;
-  App = 1;
-  Node = 2;
-  Fish = 3;
-  Val = 4;
-}
-
-message Actor {
-  ActorType actor_type = 1;
-  string address = 2;
-  string public_key = 3;
-  repeated string chains = 4;
-  string generic_param = 5;
-  string staked_amount = 6;
-  int64 paused_height = 7;
-  int64 unstaking_height = 8;
-  string output = 9;
+message GenesisState {
+  google.protobuf.Timestamp genesis_time = 1;
+  string chain_id = 2; // TODO/DISCUSS re-evaluate naming covention
+  uint64 max_block_bytes = 3;
+  repeated core.Account pools = 4;
+  repeated core.Account accounts = 5;
+  repeated core.Actor applications = 6;
+  repeated core.Actor validators = 7;
+  repeated core.Actor service_nodes = 8;
+  repeated core.Actor fishermen = 9;
+  Params params = 10;
 }
 
 // DISCUSS(drewskey): Explore a more general purpose "feature flag" like approach for this.
