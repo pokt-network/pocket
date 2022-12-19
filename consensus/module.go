@@ -10,6 +10,7 @@ import (
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -23,17 +24,15 @@ const (
 
 var (
 	_ modules.ConsensusModule = &consensusModule{}
-	// _ modules.ConsensusConfig       = &typesCons.ConsensusConfig{}
-	_ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
-	_ ConsensusDebugModule          = &consensusModule{}
+	_ ConsensusDebugModule    = &consensusModule{}
 )
 
 type consensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
 
-	consCfg     *configs.ConsensusConfig
-	consGenesis modules.ConsensusGenesisState
+	consCfg      *configs.ConsensusConfig
+	genesisState *genesis.GenesisState
 
 	// m is a mutex used to control synchronization when multiple goroutines are accessing the struct and its fields / properties.
 	//
@@ -120,11 +119,10 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 
 	consensusCfg := runtimeMgr.GetConfig().Consensus
 
-	genesis := runtimeMgr.GetGenesis()
-	if err := m.ValidateGenesis(genesis); err != nil {
+	genesisState := runtimeMgr.GetGenesis()
+	if err := m.ValidateGenesis(genesisState); err != nil {
 		return nil, fmt.Errorf("genesis validation failed: %w", err)
 	}
-	consensusGenesis := genesis.GetConsensusGenesisState()
 
 	leaderElectionMod, err := leader_election.Create(runtimeMgr)
 	if err != nil {
@@ -137,7 +135,7 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 		return nil, err
 	}
 
-	valMap := typesCons.ActorListToValidatorMap(consensusGenesis.GetVals())
+	valMap := typesCons.ActorListToValidatorMap(genesisState.GetValidators())
 
 	privateKey, err := cryptoPocket.NewPrivateKey(consensusCfg.PrivateKey)
 	if err != nil {
@@ -151,9 +149,9 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 	m = &consensusModule{
 		bus: nil,
 
-		privateKey:  privateKey.(cryptoPocket.Ed25519PrivateKey),
-		consCfg:     consensusCfg,
-		consGenesis: genesis.GetConsensusGenesisState(),
+		privateKey:   privateKey.(cryptoPocket.Ed25519PrivateKey),
+		consCfg:      consensusCfg,
+		genesisState: genesisState,
 
 		height: 0,
 		round:  0,
@@ -230,9 +228,9 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	m.leaderElectionMod.SetBus(pocketBus)
 }
 
-func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
+func (*consensusModule) ValidateGenesis(genesis *genesis.GenesisState) error {
 	// Sort the validators by their generic param (i.e. service URL)
-	vals := genesis.GetConsensusGenesisState().GetVals()
+	vals := genesis.GetValidators()
 	sort.Slice(vals, func(i, j int) bool {
 		return vals[i].GetGenericParam() < vals[j].GetGenericParam()
 	})
