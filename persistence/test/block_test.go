@@ -6,20 +6,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetBlockStateHash(t *testing.T) {
+func TestGetBlockBlockHash(t *testing.T) {
 	db := NewTestPostgresContext(t, 0)
 
 	// Cannot get prev hash at height 0
-	appHash, err := db.GetBlockHash(0)
+	blockHash, err := db.GetBlockHash(0)
 	require.NoError(t, err)
-	require.NotEmpty(t, appHash)
+	require.NotEmpty(t, blockHash)
 
 	// Cannot get a hash at height 1 since it doesn't exist
-	appHash, err = db.GetBlockHash(1)
+	blockHash, err = db.GetBlockHash(1)
 	require.Error(t, err)
 
 	// Cannot get a hash at height 10 since it doesn't exist
-	appHash, err = db.GetBlockHash(10)
+	blockHash, err = db.GetBlockHash(10)
 	require.Error(t, err)
 
 }

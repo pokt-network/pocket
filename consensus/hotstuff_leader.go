@@ -1,13 +1,14 @@
 package consensus
 
 import (
-	"encoding/hex"
 	"unsafe"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
 )
+
+// CONSOLIDATE: Last/Prev & AppHash/StateHash/BlockHash
 
 type HotstuffLeaderMessageHandler struct{}
 
@@ -342,15 +343,13 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 	maxTxBytes := 90000
 
 	// Reap the mempool for transactions to be applied in this block
-	appHash, txs, err := m.utilityContext.CreateAndApplyProposalBlock(m.privateKey.Address(), maxTxBytes)
+	stateHash, txs, err := m.utilityContext.CreateAndApplyProposalBlock(m.privateKey.Address(), maxTxBytes)
 	if err != nil {
 		return nil, err
 	}
 
-	persistenceContext := m.utilityContext.GetPersistenceContext()
-
-	// CONSOLIDATE: Last/Prev & AppHash/StateHash/BlockHash
-	prevAppHash, err := persistenceContext.GetBlockHash(int64(m.height) - 1)
+	// IMPROVE: This data can be read via an ephemeral read context - no need to use the utility's persistence context
+	prevBlockHash, err := m.utilityContext.GetPersistenceContext().GetBlockHash(int64(m.height) - 1)
 	if err != nil {
 		return nil, err
 	}
@@ -363,9 +362,9 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 	// Construct the block
 	blockHeader := &typesCons.BlockHeader{
 		Height:            int64(m.height),
-		Hash:              hex.EncodeToString(appHash),
+		Hash:              stateHash,
 		NumTxs:            uint32(len(txs)),
-		LastBlockHash:     hex.EncodeToString(prevAppHash),
+		LastBlockHash:     prevBlockHash,
 		ProposerAddress:   m.privateKey.Address().Bytes(),
 		QuorumCertificate: qcBytes,
 	}
@@ -375,7 +374,7 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 	}
 
 	// Set the proposal block in the persistence context
-	if err = persistenceContext.SetProposalBlock(blockHeader.Hash, blockHeader.ProposerAddress, blockHeader.QuorumCertificate, block.Transactions); err != nil {
+	if err = m.utilityContext.SetProposalBlock(blockHeader.Hash, blockHeader.ProposerAddress, block.Transactions); err != nil {
 		return nil, err
 	}
 

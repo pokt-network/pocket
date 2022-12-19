@@ -1,7 +1,6 @@
 package consensus_tests
 
 import (
-	"encoding/hex"
 	"reflect"
 	"runtime"
 	"testing"
@@ -148,7 +147,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	// Placeholder block
 	blockHeader := &typesCons.BlockHeader{
 		Height:            int64(testHeight),
-		Hash:              hex.EncodeToString(appHash),
+		Hash:              stateHash,
 		NumTxs:            0,
 		LastBlockHash:     "",
 		ProposerAddress:   consensusPK.Address(),

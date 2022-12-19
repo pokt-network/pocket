@@ -6,11 +6,27 @@ import (
 	"context"
 	"log"
 
+	"github.com/jackc/pgx/v4"
+	"github.com/pokt-network/pocket/persistence/indexer"
+	"github.com/pokt-network/pocket/persistence/kvstore"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-func (p PostgresContext) UpdateAppHash() ([]byte, error) {
-	return []byte("TODO(#284): Implement this function."), nil
+var _ modules.PersistenceRWContext = &PostgresContext{}
+
+// TECHDEBT: All the functions of `PostgresContext` should be organized in appropriate packages and use pointer receivers
+type PostgresContext struct {
+	Height int64 // TECHDEBT: `Height` is only externalized for testing purposes. Replace with a `Debug` interface containing helpers
+	conn   *pgx.Conn
+	tx     pgx.Tx
+
+	stateHash string
+
+	// TECHDEBT(#361): These three values are pointers to objects maintained by the PersistenceModule.
+	//                 Need to simply access them via the bus.
+	blockStore kvstore.KVStore
+	txIndexer  indexer.TxIndexer
+	stateTrees *stateTrees
 }
 
 func (p PostgresContext) NewSavePoint(bytes []byte) error {
@@ -21,21 +37,26 @@ func (p PostgresContext) NewSavePoint(bytes []byte) error {
 // TECHDEBT(#327): Guarantee atomicity betweens `prepareBlock`, `insertBlock` and `storeBlock` for save points & rollbacks.
 func (p PostgresContext) RollbackToSavePoint(bytes []byte) error {
 	log.Println("TODO: RollbackToSavePoint not fully implemented")
-	return p.GetTx().Rollback(context.TODO())
+	return p.getTx().Rollback(context.TODO())
 }
 
-func (p *PostgresContext) ComputeAppHash() ([]byte, error) {
-	// IMPROVE(#361): Guarantee the integrity of the state
-	//                Full details in the thread from the PR review: https://github.com/pokt-network/pocket/pull/285#discussion_r1018471719
-	return p.updateMerkleTrees()
+// IMPROVE(#361): Guarantee the integrity of the state
+//                Full details in the thread from the PR review: https://github.com/pokt-network/pocket/pull/285#discussion_r1018471719
+func (p *PostgresContext) ComputeStateHash() (string, error) {
+	stateHash, err := p.updateMerkleTrees()
+	if err != nil {
+		return "", err
+	}
+	p.stateHash = stateHash
+	return p.stateHash, nil
 }
 
 // TECHDEBT(#327): Make sure these operations are atomic
-func (p PostgresContext) Commit(quorumCert []byte) error {
+func (p PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 	log.Printf("About to commit block & context at height %d.\n", p.Height)
 
 	// Create a persistence block proto
-	block, err := p.prepareBlock(quorumCert)
+	block, err := p.prepareBlock(proposerAddr, quorumCert)
 	if err != nil {
 		return err
 	}
@@ -52,7 +73,7 @@ func (p PostgresContext) Commit(quorumCert []byte) error {
 
 	// Commit the SQL transaction
 	ctx := context.TODO()
-	if err := p.GetTx().Commit(ctx); err != nil {
+	if err := p.getTx().Commit(ctx); err != nil {
 		return err
 	}
 	if err := p.conn.Close(ctx); err != nil {
@@ -65,7 +86,7 @@ func (p PostgresContext) Commit(quorumCert []byte) error {
 func (p PostgresContext) Release() error {
 	log.Printf("About to release context at height %d.\n", p.Height)
 	ctx := context.TODO()
-	if err := p.GetTx().Rollback(ctx); err != nil {
+	if err := p.getTx().Rollback(ctx); err != nil {
 		return err
 	}
 	if err := p.resetContext(); err != nil {
@@ -89,12 +110,7 @@ func (p *PostgresContext) resetContext() (err error) {
 		return nil
 	}
 
-	p.blockHash = ""
-	p.quorumCert = nil
-	p.proposerAddr = nil
-	p.blockTxs = nil
-
-	tx := p.GetTx()
+	tx := p.getTx()
 	if p.tx == nil {
 		return nil
 	}
