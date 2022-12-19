@@ -7,6 +7,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -61,7 +62,7 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 	// TODO(#203): refactor `ValidatorMap`
 	validatorMap := make(modules.ValidatorMap, len(stakedActors))
 	for _, v := range stakedActors {
-		validatorMap[v.GetAddress()] = v
+		validatorMap[v.GetAddress()] = *v
 	}
 	addrBook, err := pabp.ActorsToAddrBook(validatorMap)
 	if err != nil {
@@ -70,7 +71,9 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 	return addrBook, nil
 }
 
-func (pabp *persistenceAddrBookProvider) ActorsToAddrBook(actors map[string]modules.Actor) (typesP2P.AddrBook, error) {
+// TODO(#270): These functions will turn into more of a "ActorToAddrBook" when we have a closer
+// integration with utility.
+func (pabp *persistenceAddrBookProvider) ValidatorMapToAddrBook(validators map[string]coreTypes.Actor) (typesP2P.AddrBook, error) {
 	book := make(typesP2P.AddrBook, 0)
 	for _, v := range actors {
 		networkPeer, err := pabp.ActorToNetworkPeer(v)
@@ -83,7 +86,9 @@ func (pabp *persistenceAddrBookProvider) ActorsToAddrBook(actors map[string]modu
 	return book, nil
 }
 
-func (pabp *persistenceAddrBookProvider) ActorToNetworkPeer(v modules.Actor) (*typesP2P.NetworkPeer, error) {
+// TODO(#270): These functions will turn into more of a "ActorToAddrBook" when we have a closer
+// integration with utility.
+func (pabp *persistenceAddrBookProvider) ValidatorToNetworkPeer(v coreTypes.Actor) (*typesP2P.NetworkPeer, error) {
 	conn, err := pabp.connFactory(pabp.p2pCfg, v.GetGenericParam()) // service url
 	if err != nil {
 		return nil, fmt.Errorf("error resolving addr: %v", err)
