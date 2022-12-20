@@ -29,13 +29,13 @@ gantt
     section Milestone 2
         Pocket DoS       :a1, 2022-07-01, 303d
     section Milestone 3
-        Pocket RoS       :a1, 2022-12-01, 150d
+        Pocket RoS       :a1, 2022-12-01, 180d
     section Milestone 4
-        Pocket CoS       :a1, 2022-12-01, 150d
+        Pocket CoS       :a1, 2023-05-01, 150d
     section Milestone 5
-        Pocket IoS       :a1, 2023-05-01, 45d
+        Pocket IoS       :a1, 2023-09-30, 45d
     section Milestone 6
-        Pocket FoS       :a1, 2023-05-01, 90d
+        Pocket FoS       :a1, 2023-09-30, 90d
 ```
 
 ## Milestones
