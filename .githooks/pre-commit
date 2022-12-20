@@ -87,7 +87,7 @@ then
                 if [[ "${file}" =~ CHANGELOG.md ]]
                 then
                     # Add full file path to account for CHANGELOG location
-                    # inconsistencies
+                    # inconsistencies module root or doc/docs subdir
                     CHANGELOG_FILES+=("${file}")
                     MODULE_CHANGELOG_INCLUDED=1
                 fi
@@ -137,7 +137,8 @@ do
     fi
 done
 
-# Exit with error code 1 after all error messages have been printed to stdout
+# Exit with error code 1 after all error messages have been
+# printed to stderr. If no errors detected exit with code 0
 if [[ "${CHANGELOG_ERRORS_FOUND}" == 1 ]]
 then
     printf 'Changelog verification failed. See error messages for more detail.\n' >&2
