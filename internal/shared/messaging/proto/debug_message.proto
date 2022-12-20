@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package pocket;
+
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/pokt-network/pocket/internal/shared/messaging";
+
+enum DebugMessageAction {
+	DEBUG_ACTION_UNKNOWN = 0;
+
+	DEBUG_CONSENSUS_RESET_TO_GENESIS = 1;
+	DEBUG_CONSENSUS_PRINT_NODE_STATE = 2;
+	DEBUG_CONSENSUS_TRIGGER_NEXT_VIEW = 3;
+	DEBUG_CONSENSUS_TOGGLE_PACE_MAKER_MODE = 4; // toggle between manual and automatic
+
+	DEBUG_SHOW_LATEST_BLOCK_IN_STORE = 5;
+
+	DEBUG_PERSISTENCE_CLEAR_STATE = 6;
+	DEBUG_PERSISTENCE_RESET_TO_GENESIS = 7;
+}
+
+message DebugMessage {
+  DebugMessageAction action = 1;
+  google.protobuf.Any message = 2;
+}

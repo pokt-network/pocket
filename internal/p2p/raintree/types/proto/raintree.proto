@@ -1,0 +1,12 @@
+syntax = "proto3";
+package raintree;
+
+option go_package = "github.com/pokt-network/pocket/internal/p2p/types";
+
+message RainTreeMessage {
+  uint32 level = 1;
+  bytes data = 2;
+
+  uint64 nonce = 3;
+  // DISCUSS(drewsky): discuss if we should have entropy at the RainTree level.
+}

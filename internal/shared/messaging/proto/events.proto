@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package pocket;
+
+option go_package = "github.com/pokt-network/pocket/internal/shared/messaging";
+
+message NodeStartedEvent {}

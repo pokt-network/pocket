@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	"github.com/pokt-network/pocket/internal/runtime/test_artifacts"
 )
 
 // Utility to generate config and genesis files
@@ -14,7 +14,7 @@ import (
 const (
 	defaultGenesisFilePathFormat = "build/config/%sgenesis.json"
 	defaultConfigFilePathFormat  = "build/config/%sconfig%d.json"
-	rwoPerm                      = 0777
+	rwoPerm                      = 0o777
 )
 
 var (

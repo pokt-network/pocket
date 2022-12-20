@@ -1,0 +1,58 @@
+// TODO(olshansky): This encapsulates hotstuff types, hotstuff messages and hotstuff specific crypto primitives. Consider if it's worth splitting into smaller files.
+
+syntax = "proto3";
+package consensus;
+
+option go_package = "github.com/pokt-network/pocket/internal/consensus/types";
+
+import "block.proto";
+
+enum HotstuffStep {
+    HOTSTUFF_STEP_UNKNOWN = 0;
+    HOTSTUFF_STEP_NEWROUND = 1;
+    HOTSTUFF_STEP_PREPARE = 2;
+    HOTSTUFF_STEP_PRECOMMIT = 3;
+    HOTSTUFF_STEP_COMMIT = 4;
+    HOTSTUFF_STEP_DECIDE = 5;
+}
+
+enum HotstuffMessageType {
+    HOTSTUFF_MESSAGE_UNKNOWN = 0;
+    HOTSTUFF_MESSAGE_PROPOSE = 1;
+    HOTSTUFF_MESSAGE_VOTE = 2;
+}
+
+// TODO(research): Until we figure out which library to use for threshold
+// signatures, mimick the behaviour by looping over individual signatures.
+message PartialSignature {
+    bytes signature = 1;
+    string address = 2;
+}
+
+message ThresholdSignature {
+    repeated PartialSignature signatures = 1;
+}
+
+// This is essentially a version of the hostuff message where the
+// threshold signature MUST be defined.
+message QuorumCertificate {
+    uint64 height = 1;
+    uint64 round = 2;
+    HotstuffStep step = 3;
+    consensus.Block block = 4;
+    ThresholdSignature threshold_signature = 5;
+}
+
+message HotstuffMessage  {
+    HotstuffMessageType type = 1;
+    uint64 height = 2;
+    HotstuffStep step = 3;
+    uint64 round = 4;
+    consensus.Block block = 5;
+
+    oneof justification {
+        QuorumCertificate quorum_certificate = 6;  // From NODE -> NODE when new rounds start; one of {HighQC, TimeoutQC, CommitQC}
+        ThresholdSignature threshold_signature = 7;  // From LEADER -> REPLICA for PROPOSE messages;
+        PartialSignature partial_signature = 8; // From REPLICA -> LEADER for VOTE messages; signature over <height, round, block>
+    }
+}

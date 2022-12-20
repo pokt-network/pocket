@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package pocket;
+
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/pokt-network/pocket/internal/shared/messaging";
+
+message PocketEnvelope {
+  google.protobuf.Any content = 1;
+}

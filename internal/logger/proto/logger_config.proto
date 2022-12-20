@@ -1,0 +1,25 @@
+syntax = "proto3";
+package logger;
+
+option go_package = "github.com/pokt-network/pocket/internal/logger";
+
+message LoggerConfig {
+  string level = 1;
+  string format = 2;
+}
+
+enum LogLevel {
+  LOG_LEVEL_UNSPECIFIED = 0;
+  LOG_LEVEL_DEBUG = 1;
+  LOG_LEVEL_INFO = 2;
+  LOG_LEVEL_WARN = 3;
+  LOG_LEVEL_ERROR = 4;
+  LOG_LEVEL_FATAL = 5;
+  LOG_LEVEL_PANIC = 6;
+}
+
+enum LogFormat {
+  LOG_FORMAT_UNSPECIFIED = 0;
+  LOG_FORMAT_JSON = 1;
+  LOG_FORMAT_PRETTY = 2;
+}

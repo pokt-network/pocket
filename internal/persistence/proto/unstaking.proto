@@ -1,0 +1,10 @@
+syntax = "proto3";
+package persistence;
+
+option go_package = "github.com/pokt-network/pocket/internal/persistence/types";
+
+message UnstakingActor {
+  bytes address = 1;
+  string stake_amount = 2;
+  bytes output_address = 3;
+}

@@ -1,3 +1,5 @@
+include scripts/build.mk
+
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
 # This flag is useful when running the consensus unit tests. It causes the test to wait up to the
