@@ -29,51 +29,31 @@ then
     exit 0
 fi
 
-ROOT_EDITED=0
-ROOT_CHANGELOG_INCLUDED=0
-MODULES_EDITED=()
-CHANGELOG_ERRORS_FOUND=0
+# Initialise arrays and script wide variables
 IGNORE_DIRS=(".github" ".githooks" "docs" "bin")
+MODULES_EDITED=() # Modules are considered top-level directories directly under root
+MODULES_MISSING_CHANGELOG=()
+CHANGELOG_FILES=() # Full paths to CHANGELOG.md files
+CHANGELOG_ERRORS_FOUND=0
 
 # Loop through staged files
 for file in "${STAGED_FILES[@]}"
 do
-    # Check if files are in root directory
+    # Check the files contained in modules/top-level subdirs only
     if [[ "${file}" =~ /+ ]]
-    then
-        root=0
-    else
-        ROOT_EDITED=1
-        root=1
-    fi
-    # Check for CHANGELOG.md in root directory
-    if [[ "${root}" == 1 && "${file}" =~ CHANGELOG.md ]]
-    then
-        ROOT_CHANGELOG_INCLUDED=1
-    fi
-    if [[ "${root}" == 0 ]]
     then
         module="$(echo "${file}" | sed 's/\/.*//')"
         # Only add to modules list if not already present
         if [[ ! "${MODULES_EDITED[*]}" =~ ${module} ]]
         then
+            # Skip ignored modules if present
             [[ ! "${IGNORE_DIRS[*]}" =~ ${module} ]] && MODULES_EDITED+=("${module}")
         fi
     fi
 done
 
-# Check if the root directory has been changed and if the
-# root CHANGELOG.md file was included in the commit
-if [[ "${ROOT_EDITED}" == 1 && "${ROOT_CHANGELOG_INCLUDED}" == 0 ]]
-then
-    printf 'Root changelog not included\n\n' >&2
-    CHANGELOG_ERRORS_FOUND=1
-fi
-
 # Check that for each module edited the CHANGELOG.md file
 # was included in the commit
-MODULES_MISSING_CHANGELOG=()
-CHANGELOG_FILES=() # Store included changelog locations
 if [[ "${#MODULES_EDITED[@]}" != 0 ]]
 then
     # Loop through edited modules checking for CHANGELOG.md
@@ -82,12 +62,17 @@ then
         MODULE_CHANGELOG_INCLUDED=0
         for file in "${STAGED_FILES[@]}"
         do
+            # If any files under /root/{module}/* were edited, make
+            # sure that a CHANGELOG.md file was found and save the
+            # path to verify it has been updated
             if [[ "${file}" =~ "${module}"/* ]]
             then
+                # If the file's path string contains CHANGELOG.md add the
+                # path to the CHANGELOG_FILES array to be verified.
+                # This RegEx check accounts for CHANGELOG location
+                # inconsistencies: module root or doc/docs subdir
                 if [[ "${file}" =~ CHANGELOG.md ]]
                 then
-                    # Add full file path to account for CHANGELOG location
-                    # inconsistencies module root or doc/docs subdir
                     CHANGELOG_FILES+=("${file}")
                     MODULE_CHANGELOG_INCLUDED=1
                 fi
@@ -128,7 +113,7 @@ do
     fi
     # compare date in string format YY-mm-dd
     latest_date="${head_versions[1]}"
-    current_date=$(date +'%Y-%m-%d')
+    current_date=$(date +'%Y-%m-%d') # Portable date syntax accross Linux/OSX/BSD
     # Check latest date in changelog is current date
     if [[ "${latest_date}" != "${current_date}" ]]
     then
