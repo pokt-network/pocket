@@ -29,21 +29,6 @@ then
     exit 0
 fi
 
-# Get operating system for `date' command differences
-OS_NAME=''
-case $(uname | tr '[:upper:]' '[:lower:]') in
-    linux*)
-        OS_NAME='linux'
-        ;;
-    darwin*)
-        OS_NAME='osx'
-        ;;
-    freebsd*)
-        OS_NAME='bsd'
-        ;;
-    *) ;;
-esac
-
 ROOT_EDITED=0
 ROOT_CHANGELOG_INCLUDED=0
 MODULES_EDITED=()
@@ -141,15 +126,8 @@ do
         printf 'Latest version in %s is incorrect.\nLatest: %s, Previous: %s\n\n' "${log}" "${head_versions[0]}" "${head_versions[2]}" >&2
         CHANGELOG_ERRORS_FOUND=1
     fi
-    # Handle OSX/FreeBSD using different date flags to GNU/Linux
-    # https://www.freebsd.org/cgi/man.cgi?date
-    if [[ "${OS_NAME}" =~ linux ]]
-    then
-        latest_date=$(date -d "${head_versions[1]}" +%s)
-    elif [[ "${OS_NAME}" =~ osx || "${OS_NAME}" =~ bsd ]]
-    then
-        latest_date=$(date -j -f "%F" "${head_versions[1]}" +%s)
-    fi
+    # compare date in string format YY-mm-dd
+    latest_date="${head_versions[1]}"
     current_date=$(date +'%Y-%m-%d')
     # Check latest date in changelog is current date
     if [[ "${latest_date}" != "${current_date}" ]]
