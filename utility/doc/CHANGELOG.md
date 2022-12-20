@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.14] - 2022-12-20
+
+- Add `pre-commit` git hook to verify changelogs have been included and updated locally
+- Add GitHub workflow to run this `pre-commit` logic validating `CHANGELOG.md` files on all pull requests
+
 ## [0.0.0.13] - 2022-12-10
 
 - Introduce `SetProposalBlock` and local vars to keep proposal state
