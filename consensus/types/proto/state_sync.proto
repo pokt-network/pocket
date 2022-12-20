@@ -1,0 +1,40 @@
+syntax = "proto3";
+package consensus;
+
+option go_package = "github.com/pokt-network/pocket/consensus/types";
+
+import "block.proto";
+
+// CONSIDERATION(#347): Once we integrate with libp2p, the definition of `peer_id` may change.
+//                      At the moment it is the address of the peer, but is named `id` to be
+//                      more general purpose. Reconsider this naming terminology if it's not
+//                      explicit enough.
+
+message StateSyncMetadataRequest {
+    string peer_id = 1; // The peer id of the node that is requesting the metadata
+}
+
+message StateSyncMetadataResponse {
+    string peer_id = 1; // The `peer_id` need to be populated by the P2P module of the receiving node so the sender cannot falsify its identity
+    uint64 min_height = 2; // The minimum height that a peer has in its BlockStore
+    uint64 max_height = 3; // The maximum height that aa peer has in its BlockStore
+}
+
+message GetBlockRequest {
+    string peer_id = 1; // The peer id of the node that is requesting the metadata
+    uint64 height = 2; // The height of the block being requested by the peer
+}
+
+message GetBlockResponse {
+    string peer_id = 1; // The `peer_id` need to be populated by the P2P module of the receiving node so the sender cannot falsify its identity
+    consensus.Block block = 2; // The height of the block being provide by the peer
+}
+
+// NOT USED: This gRPC interface is **not being used at the moment**. It is in place simply as a
+// guideline of what how the types in this file could be used if a direct synchronous communication
+// between nodes were implemented. Furthermore, since the message types are used for asynchronous
+// state synching between nodes, it will enable most of the underlying business logic to be reused.
+service StateSyncService {
+    rpc GetStateSyncMetadata (StateSyncMetadataRequest) returns (StateSyncMetadataResponse);
+    rpc GetBlock (GetBlockRequest) returns (GetBlockResponse);
+}

@@ -24,7 +24,7 @@
     "trees_store_dir": "/var/trees"
   },
   "p2p": {
-    "consensus_port": 8080,
+    "consensus_port": 8080, // p2p module
     "use_rain_tree": true,
     "is_empty_connection_type": false,
     "private_key": "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4"
@@ -40,7 +40,7 @@
   },
   "rpc": {
     "enabled": true,
-    "port": "50832",
+    "port": "50832", // CLI
     "timeout": 30000,
     "use_cors": false
   }

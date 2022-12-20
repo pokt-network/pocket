@@ -116,18 +116,18 @@ install_cli_deps:
 .PHONY: develop_start
 ## Run all of the make commands necessary to develop on the project
 develop_start:
-		make docker_loki_check && \
-		make clean_mocks && \
-		make protogen_clean && make protogen_local && \
-		make go_clean_deps && \
-		make mockgen && \
-		make generate_rpc_openapi
+	make docker_loki_check && \
+	make clean_mocks && \
+	make protogen_clean && make protogen_local && \
+	make go_clean_deps && \
+	make mockgen && \
+	make generate_rpc_openapi
 
 .PHONY: develop_test
 ## Run all of the make commands necessary to develop on the project and verify the tests pass
 develop_test: docker_check
-		make develop_start && \
-		make test_all
+	make develop_start && \
+	make test_all
 
 .PHONY: client_start
 ## Run a client daemon which is only used for debugging purposes
@@ -270,6 +270,7 @@ protogen_clean:
 .PHONY: protogen_local
 ## Generate go structures for all of the protobufs
 protogen_local: go_protoc-go-inject-tag
+# TODO: Organize this code with a basic forloop
 	$(eval proto_dir = ".")
 	protoc --go_opt=paths=source_relative  -I=./shared/messaging/proto    --go_out=./shared/messaging      	./shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
@@ -277,7 +278,7 @@ protogen_local: go_protoc-go-inject-tag
 	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  	./persistence/proto/*.proto         --experimental_allow_proto3_optional
 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
 	protoc --go_opt=paths=source_relative  -I=./utility/types/proto       --go_out=./utility/types      	./utility/types/proto/*.proto       --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./consensus/types/proto     --go_out=./consensus/types    	./consensus/types/proto/*.proto     --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./consensus/types/proto     --go_out=./consensus/types    	--go-grpc_opt=paths=source_relative --go-grpc_out=./consensus/types ./consensus/types/proto/*.proto     --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./p2p/raintree/types/proto  --go_out=./p2p/types          	./p2p/raintree/types/proto/*.proto  --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./p2p/types/proto           --go_out=./p2p/types          	./p2p/types/proto/*.proto           --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./telemetry/proto           --go_out=./telemetry          	./telemetry/proto/*.proto           --experimental_allow_proto3_optional
@@ -430,9 +431,10 @@ benchmark_p2p_addrbook:
 # CONSOLIDATE   - We likely have similar implementations/types of the same thing, and we should consolidate them.
 # ADDTEST       - Add more tests for a specific code section
 # DEPRECATE     - Code that should be removed in the future
+# RESEARCH      - A non-trivial action item that requires deep research and investigation being next steps can be taken
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST"
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH"
 
 # How do I use TODOs?
 # 1. <KEYWORD>: <Description of follow up work>;
