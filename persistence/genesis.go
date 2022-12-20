@@ -145,22 +145,20 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 	}
 
 	// Updates all the merkle trees
-	appHash, err := rwContext.ComputeAppHash()
+	stateHash, err := rwContext.ComputeStateHash()
 	if err != nil {
 		log.Fatalf("an error occurred updating the app hash during genesis: %s", err.Error())
 	}
+	log.Println("PopulateGenesisState - computed state hash:", stateHash)
 
-	if err := rwContext.SetProposalBlock(hex.EncodeToString(appHash), nil, nil, nil); err != nil {
-		log.Fatalf("an error occurred setting the proposal block during genesis: %s", err.Error())
-	}
-
-	// This update the DB, blockstore, and commits the state
-	if err = rwContext.Commit(nil); err != nil {
+	// This updates the DB, blockstore, and commits the genesis state.
+	// Note that the `quorumCert for genesis` is nil.
+	if err = rwContext.Commit(nil, nil); err != nil {
 		log.Fatalf("error committing genesis state to DB %s ", err.Error())
 	}
 }
 
-// TODO(pocket/issues/149): All of the functions below following a structure similar to `GetAll<Actor>`
+// TODO (#399): All of the functions below following a structure similar to `GetAll<Actor>`
 //	can easily be refactored and condensed into a single function using a generic type or a common
 //  interface.
 func (p PostgresContext) GetAllAccounts(height int64) (accs []modules.Account, err error) {
@@ -202,122 +200,6 @@ func (p PostgresContext) GetAllPools(height int64) (accs []modules.Account, err 
 			return nil, err
 		}
 		accs = append(accs, pool)
-	}
-	return
-}
-
-func (p PostgresContext) GetAllApps(height int64) (apps []modules.Actor, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
-	rows, err := tx.Query(ctx, types.ApplicationActor.GetAllQuery(height))
-	if err != nil {
-		return nil, err
-	}
-	var actors []*types.Actor
-	for rows.Next() {
-		var actor *types.Actor
-		actor, height, err = p.getActorFromRow(rows)
-		if err != nil {
-			return
-		}
-		actors = append(actors, actor)
-	}
-	rows.Close()
-	for _, actor := range actors {
-		actorWithChains, err := p.getChainsForActor(ctx, tx, types.ApplicationActor, actor, height)
-		if err != nil {
-			return nil, err
-		}
-		apps = append(apps, actorWithChains)
-	}
-	return
-}
-
-func (p PostgresContext) GetAllValidators(height int64) (vals []modules.Actor, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
-	rows, err := tx.Query(ctx, types.ValidatorActor.GetAllQuery(height))
-	if err != nil {
-		return nil, err
-	}
-	var actors []*types.Actor
-	for rows.Next() {
-		var actor *types.Actor
-		actor, height, err = p.getActorFromRow(rows)
-		if err != nil {
-			return
-		}
-		actors = append(actors, actor)
-	}
-	rows.Close()
-	for _, actor := range actors {
-		actor, err = p.getChainsForActor(ctx, tx, types.ApplicationActor, actor, height)
-		if err != nil {
-			return
-		}
-		vals = append(vals, actor)
-	}
-	return
-}
-
-func (p PostgresContext) GetAllServiceNodes(height int64) (sn []modules.Actor, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
-	rows, err := tx.Query(ctx, types.ServiceNodeActor.GetAllQuery(height))
-	if err != nil {
-		return nil, err
-	}
-	var actors []*types.Actor
-	for rows.Next() {
-		var actor *types.Actor
-		actor, height, err = p.getActorFromRow(rows)
-		if err != nil {
-			return
-		}
-		actors = append(actors, actor)
-	}
-	rows.Close()
-	for _, actor := range actors {
-		actor, err = p.getChainsForActor(ctx, tx, types.ServiceNodeActor, actor, height)
-		if err != nil {
-			return
-		}
-		sn = append(sn, actor)
-	}
-	return
-}
-
-func (p PostgresContext) GetAllFishermen(height int64) (f []modules.Actor, err error) {
-	ctx, tx, err := p.getCtxAndTx()
-	if err != nil {
-		return nil, err
-	}
-	rows, err := tx.Query(ctx, types.FishermanActor.GetAllQuery(height))
-	if err != nil {
-		return nil, err
-	}
-	var actors []*types.Actor
-	for rows.Next() {
-		var actor *types.Actor
-		actor, height, err = p.getActorFromRow(rows)
-		if err != nil {
-			return
-		}
-		actors = append(actors, actor)
-	}
-	rows.Close()
-	for _, actor := range actors {
-		actor, err = p.getChainsForActor(ctx, tx, types.FishermanActor, actor, height)
-		if err != nil {
-			return
-		}
-		f = append(f, actor)
 	}
 	return
 }

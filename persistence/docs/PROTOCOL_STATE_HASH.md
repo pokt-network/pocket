@@ -100,7 +100,7 @@ _IMPORTANT: The order in which the `rootHashes` are concatenated is based on the
 
 ## Store Block (Commit)
 
-When the `Commit(quorumCert)` function is invoked, the current context is committed to disk. The `PersistenceContext` does the following:
+When the `Commit(proposer, quorumCert)` function is invoked, the current context is committed to disk. The `PersistenceContext` does the following:
 
 1. Read data from the persistence context's in-memory state
 2. Prepare a instance of the `Block` proto & serialize it

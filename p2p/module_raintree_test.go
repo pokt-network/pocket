@@ -225,8 +225,9 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 
 		wg.Add(expectedCall.numNetworkWrites)
 		consensusMock := prepareConsensusMock(t, runtimeConfigs[0].GetGenesis())
+		persistenceMock := preparePersistenceMock(t, runtimeConfigs[0].GetGenesis())
 		telemetryMock := prepareTelemetryMock(t, &wg, expectedCall.numNetworkWrites)
-		busMocks[valId] = prepareBusMock(t, consensusMock, telemetryMock)
+		busMocks[valId] = prepareBusMock(t, consensusMock, persistenceMock, telemetryMock)
 	}
 
 	// Inject the connection and bus mocks into the P2P modules
