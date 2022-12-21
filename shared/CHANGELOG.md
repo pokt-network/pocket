@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.7] - 2022-12-21
+
+- Updated to use the new centralized config and genesis handling
+- Created `Actor` struct under `coreTypes`
+- Created `Account` struct under `coreTypes`
+- Created `PoolNames` enum under `coreTypes`
+- Updated module to use the new `coreTypes`
+- Simplified `*Module` interfaces
+- Updated tests and mocks
+
 ## [0.0.0.6] - 2022-12-14
 
 - Added `GetMaxMempoolCount`
