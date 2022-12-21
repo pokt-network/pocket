@@ -48,11 +48,11 @@ type PersistenceConfig interface {
 	GetBlockStorePath() string
 	GetTxIndexerPath() string
 	GetTreesStoreDir() string
-	GetMaxConns() int32
-	GetMinConns() int32
-	GetMaxConnLifetime() uint64
-	GetMaxConnIdleTime() uint64
-	GetHealthCheckPeriod() uint64
+	GetMaxConnsCount() int32
+	GetMinConnsCount() int32
+	GetMaxConnLifetimeHour() uint64
+	GetMaxConnIdleTimeMinute() uint64
+	GetHealthCheckPeriodMinute() uint64
 }
 
 type P2PConfig interface {

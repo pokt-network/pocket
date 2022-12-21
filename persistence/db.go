@@ -68,19 +68,18 @@ func (pg *PostgresContext) ResetContext() error {
 	return nil
 }
 
-// TECHDEBT: Implement proper connection pooling
-func connectToDatabase(cfg modules.PersistenceConfig, schema string) (*pgx.Conn, error) {
+func connectToDatabase(cfg modules.PersistenceConfig) (*pgx.Conn, error) {
 	ctx := context.TODO()
 
 	config, err := pgxpool.ParseConfig(cfg.GetPostgresUrl())
 	if err != nil {
 		return nil, fmt.Errorf("unable to create database config: %v", err)
 	}
-	config.MaxConnLifetime = time.Hour * time.Duration(cfg.GetMaxConnLifetime())
-	config.MaxConnIdleTime = time.Minute * time.Duration(cfg.GetMaxConnIdleTime())
-	config.MaxConns = cfg.GetMaxConns()
-	config.MinConns = cfg.GetMinConns()
-	config.HealthCheckPeriod = time.Minute * time.Duration(cfg.GetHealthCheckPeriod())
+	config.MaxConnLifetime = time.Hour * time.Duration(cfg.GetMaxConnLifetimeHour())
+	config.MaxConnIdleTime = time.Minute * time.Duration(cfg.GetMaxConnIdleTimeMinute())
+	config.MaxConns = cfg.GetMaxConnsCount()
+	config.MinConns = cfg.GetMinConnsCount()
+	config.HealthCheckPeriod = time.Minute * time.Duration(cfg.GetHealthCheckPeriodMinute())
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
@@ -91,16 +90,16 @@ func connectToDatabase(cfg modules.PersistenceConfig, schema string) (*pgx.Conn,
 
 	// Creating and setting a new schema so we can running multiple nodes on one postgres instance. See
 	// more details at https://github.com/go-pg/pg/issues/351.
-	if _, err = conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, schema)); err != nil {
+	if _, err = conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, cfg.GetNodeSchema())); err != nil {
 		return nil, err
 	}
 
 	// Creating and setting a new schema so we can run multiple nodes on one postgres instance.
 	// See more details at https://github.com/go-pg/pg/issues/351.
-	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, schema)); err != nil {
+	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, cfg.GetNodeSchema())); err != nil {
 		return nil, err
 	}
-	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, schema)); err != nil {
+	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, cfg.GetNodeSchema())); err != nil {
 		return nil, err
 	}
 
