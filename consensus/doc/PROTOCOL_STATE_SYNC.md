@@ -28,6 +28,7 @@ _NOTE: This document makes some assumption of P2P implementation details, so ple
     - [Example](#example-1)
     - [Links](#links-2)
   - [Aptos](#aptos)
+    - [Example](#example-2)
     - [Links](#links-3)
   - [Chia](#chia)
     - [Links](#links-4)
@@ -331,10 +332,68 @@ func (s *Syncer) findHeaders(ctx context.Context, from, to uint64) ([]*header.Ex
 
 ### Aptos
 
+#### Example
+
+Aptos follow an **async "fire-and-forget"** pattern as can be seen [here](https://github.com/diem/diem/blob/906353ebd9515e44276c7595c6bce699a7cb9ebe/state-sync/src/request_manager.rs#L258)
+
+```rust
+    pub fn send_chunk_request(&mut self, req: GetChunkRequest) -> Result<(), Error> {
+        let log = LogSchema::new(LogEntry::SendChunkRequest).chunk_request(req.clone());
+
+        let peers = self.pick_peers();
+        if peers.is_empty() {
+            warn!(log.event(LogEvent::MissingPeers));
+            return Err(Error::NoAvailablePeers(
+                "No peers to send chunk request to".into(),
+            ));
+        }
+
+        let req_info = self.add_request(req.known_version, peers.clone());
+        debug!(log
+            .clone()
+            .event(LogEvent::ChunkRequestInfo)
+            .chunk_req_info(&req_info));
+
+        let msg = StateSyncMessage::GetChunkRequest(Box::new(req));
+        let mut failed_peer_sends = vec![];
+
+        for peer in peers {
+            let mut sender = self.get_network_sender(&peer);
+            let peer_id = peer.peer_id();
+            let send_result = sender.send_to(peer_id, msg.clone());
+            let curr_log = log.clone().peer(&peer);
+            let result_label = if let Err(e) = send_result {
+                failed_peer_sends.push(peer.clone());
+                error!(curr_log.event(LogEvent::NetworkSendError).error(&e));
+                counters::SEND_FAIL_LABEL
+            } else {
+                debug!(curr_log.event(LogEvent::Success));
+                counters::SEND_SUCCESS_LABEL
+            };
+            counters::REQUESTS_SENT
+                .with_label_values(&[
+                    &peer.raw_network_id().to_string(),
+                    &peer_id.to_string(),
+                    result_label,
+                ])
+                .inc();
+        }
+
+        if failed_peer_sends.is_empty() {
+            Ok(())
+        } else {
+            Err(Error::UnexpectedError(format!(
+                "Failed to send chunk request to: {:?}",
+                failed_peer_sends
+            )))
+        }
+    }
+```
+
 #### Links
 
 - [https://github.com/diem/diem/tree/main/specifications/state_sync](https://github.com/diem/diem/tree/main/specifications/state_sync)
-  - A fantastic resource from Aptos on state sync. Long and detailed, but well-written and easy to read.
+  - A fantastic resource from Aptos on state sync. Medium-length, easy to read, and just detailed enough.
 - [https://medium.com/aptoslabs/the-evolution-of-state-sync-the-path-to-100k-transactions-per-second-with-sub-second-latency-at-52e25a2c6f10](https://medium.com/aptoslabs/the-evolution-of-state-sync-the-path-to-100k-transactions-per-second-with-sub-second-latency-at-52e25a2c6f10)
   - A great and easy-to-read blog post about the challenges and solutions Aptos came up with for state sync
 - [https://aptos.dev/guides/state-sync/](https://aptos.dev/guides/state-sync/)
