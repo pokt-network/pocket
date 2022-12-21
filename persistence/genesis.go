@@ -135,9 +135,8 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 }
 
 // TODO (#399): All of the functions below following a structure similar to `GetAll<Actor>`
-//
-//		can easily be refactored and condensed into a single function using a generic type or a common
-//	 interface.
+//	can easily be refactored and condensed into a single function using a generic type or a common
+//  interface.
 func (p PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
