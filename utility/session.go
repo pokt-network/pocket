@@ -74,10 +74,9 @@ func (s *session) sessionKey() ([]byte, types.Error) {
 
 // uses the current 'world state' to determine the service nodes in the session
 // 1) get an ordered list of the public keys of service nodes who are:
-//   - actively staked
-//   - staked within geo-zone
-//   - staked for relay-chain
-//
+//    - actively staked
+//    - staked within geo-zone
+//    - staked for relay-chain
 // 2) calls `pseudoRandomSelection(serviceNodes, numberOfNodesPerSession)`
 func (s *session) findClosestXServiceNodes() []*coreTypes.Actor {
 	// IMPORTANT:
@@ -88,10 +87,9 @@ func (s *session) findClosestXServiceNodes() []*coreTypes.Actor {
 
 // uses the current 'world state' to determine the fishermen in the session
 // 1) get an ordered list of the public keys of fishermen who are:
-//   - actively staked
-//   - staked within geo-zone
-//   - staked for relay-chain
-//
+//    - actively staked
+//    - staked within geo-zone
+//    - staked for relay-chain
 // 2) calls `pseudoRandomSelection(fishermen, numberOfFishPerSession)`
 func (s *session) findClosestYFishermen() []*coreTypes.Actor {
 	// IMPORTANT:
@@ -107,8 +105,7 @@ func (s *session) findClosestYFishermen() []*coreTypes.Actor {
 // FAQ:
 // Q) why do we hash to find a newKey between every actor selection?
 // A) pseudo-random selection only works if each iteration is re-randomized
-//
-//	or it would be subject to lexicographical proximity bias attacks
+//    or it would be subject to lexicographical proximity bias attacks
 func (s *session) pseudoRandomSelection(orderedListOfPublicKeys []string, numberOfActorsInSession int) []*coreTypes.Actor {
 	// IMPORTANT:
 	// THIS IS A DEMONSTRABLE FUNCTION THAT WILL NOT BE IMPLEMENTED AS SUCH
