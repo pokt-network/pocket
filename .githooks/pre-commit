@@ -49,6 +49,10 @@ do
             # Skip ignored modules if present
             [[ ! "${IGNORE_DIRS[*]}" =~ ${module} ]] && MODULES_EDITED+=("${module}")
         fi
+    # If not a subdir but root level CHANGELOG.md
+    elif [[ "${file}" == 'CHANGELOG.md' ]]
+    then
+        CHANGELOG_FILES+=("${file}") # Validate root changelog
     fi
 done
 
