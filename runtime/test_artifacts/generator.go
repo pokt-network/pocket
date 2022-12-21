@@ -121,8 +121,7 @@ func NewAccounts(n int, privateKeys ...string) (accounts []*coreTypes.Account) {
 }
 
 // TODO: The current implementation of NewActors  will have overlapping `ServiceUrl` for different
-//
-//	types of actors which needs to be fixed.
+//       types of actors which needs to be fixed.
 func NewActors(actorType typesUtil.ActorType, n int) (actors []*coreTypes.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
 		genericParam := getServiceUrl(i + 1)
