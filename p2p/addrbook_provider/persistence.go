@@ -66,8 +66,8 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 
 func (pabp *persistenceAddrBookProvider) ActorsToAddrBook(actors []modules.Actor) (typesP2P.AddrBook, error) {
 	book := make(typesP2P.AddrBook, 0)
-	for _, v := range actors {
-		networkPeer, err := pabp.ActorToNetworkPeer(v)
+	for _, a := range actors {
+		networkPeer, err := pabp.ActorToNetworkPeer(a)
 		if err != nil {
 			log.Println("[WARN] Error connecting to validator: ", err)
 			continue
