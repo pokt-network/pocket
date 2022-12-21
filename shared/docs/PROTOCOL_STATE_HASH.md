@@ -73,8 +73,8 @@ sequenceDiagram
 
     activate C
     %% Commit Context
-    C->>+U: Context.Commit(quorumCert)
-    U->>+P: Context.Commit(quorumCert)
+    C->>+U: Context.Commit(proposer, quorumCert)
+    U->>+P: Context.Commit(proposer, quorumCert)
     P->>P: Internal Implementation
     Note over P: Store Block
     P->>-U: err_code
@@ -121,39 +121,33 @@ graph TD
 
 As either the _leader_ or _replica_, the following steps are followed to apply the proposal transactions in the block.
 
-1.  Retrieve the `PersistenceContext` from the `UtilityContext`
-2.  Update the `PersistenceContext` with the proposed block
-3.  Call either `ApplyBlock` or `CreateAndApplyProposalBlock` based on the flow above
+1. Update the `UtilityContext` with the proposed block
+2. Call either `ApplyBlock` or `CreateAndApplyProposalBlock` based on the flow above
 
 ```mermaid
 sequenceDiagram
-    title Steps 1-3
+    title Steps 1-2
     participant C as Consensus
     participant U as Utility
-    participant P as Persistence
 
-        %% Retrieve the persistence context
-        C->>+U: GetPersistenceContext()
-        U->>-C: PersistenceContext
-
-        %% Update the proposal in the persistence context
-        C->>+P: SetProposalBlock
-        P->>-C: err_code
+        %% Update the proposal in the utility context
+        C->>+U: SetProposalBlock(hash, proposer, txs)
+        U->>-C: err_code
 
         %% Apply the block to the local proposal state
         C->>+U: ApplyBlock / CreateAndApplyProposalBlock
         U->>-C: err_code
 ```
 
-4. Loop over all transactions proposed
-5. Check if the transaction has already been applied to the local state
-6. Perform the CRUD operation(s) corresponding to each transaction
-7. The persistence module's internal implementation for ['Compute State Hash'](../../persistence/docs/PROTOCOL_STATE_HASH.md) must be triggered
-8. Validate that the local state hash computed is the same as that proposed
+3. Loop over all transactions proposed
+4. Check if the transaction has already been applied to the local state
+5. Perform the CRUD operation(s) corresponding to each transaction
+6. The persistence module's internal implementation for ['Compute State Hash'](../../persistence/docs/PROTOCOL_STATE_HASH.md) must be triggered
+7. Validate that the local state hash computed is the same as that proposed
 
 ```mermaid
 sequenceDiagram
-    title Steps 4-8
+    title Steps 3-7
     participant C as Consensus
     participant U as Utility
     participant P as Persistence
@@ -170,7 +164,7 @@ sequenceDiagram
         end
     end
     %% TODO: Consolidate AppHash and StateHash
-    U->>+P: ComputeAppHash()
+    U->>+P: ComputeStateHash()
     P->>P: Internal Implementation
     Note over P: Compute State Hash
     P->>-U: stateHash

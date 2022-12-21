@@ -14,7 +14,7 @@ message BlockHeader {
   uint32 numTxs = 5;
   int64 totalTxs = 6; // Total = total in the entire chain Num = total in block (Tendermint legacy)
   string lastBlockHash = 7;
-  bytes proposerAddress = 8;
+  bytes proposerAddress = 8; // TODO: Change this to a string
   bytes QuorumCertificate = 9;
 }
 

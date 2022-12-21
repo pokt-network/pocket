@@ -1,7 +1,6 @@
 package consensus_tests
 
 import (
-	"encoding/hex"
 	"reflect"
 	"runtime"
 	"testing"
@@ -22,10 +21,9 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	timeReminder(clockMock, 100*time.Millisecond)
 
 	// Test configs
-	numNodes := 4
 	paceMakerTimeoutMsec := uint64(50) // Set a very small pacemaker timeout
 	paceMakerTimeout := 50 * time.Millisecond
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numNodes, clockMock)
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
 	for _, runtimeConfig := range runtimeMgrs {
 		if consCfg, ok := runtimeConfig.GetConfig().GetConsensusConfig().(consensus.HasPacemakerConfig); ok {
 			consCfg.GetPacemakerConfig().SetTimeoutMsec(paceMakerTimeoutMsec)
@@ -46,7 +44,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	advanceTime(clockMock, 10*time.Millisecond)
 
 	// paceMakerTimeout
-	_, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	_, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		assertNodeConsensusView(t, pocketId,
@@ -61,7 +59,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	forcePacemakerTimeout(clockMock, paceMakerTimeout)
 
 	// Check that a new round starts at the same height.
-	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		assertNodeConsensusView(t, pocketId,
@@ -75,7 +73,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 
 	forcePacemakerTimeout(clockMock, paceMakerTimeout)
 	// // Check that a new round starts at the same height
-	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		assertNodeConsensusView(t, pocketId,
@@ -90,7 +88,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	forcePacemakerTimeout(clockMock, paceMakerTimeout)
 
 	// Check that a new round starts at the same height.
-	newRoundMessages, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numNodes, 500)
+	newRoundMessages, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		assertNodeConsensusView(t, pocketId,
@@ -126,8 +124,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 
 func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	clockMock := clock.NewMock()
-	numNodes := 4
-	runtimeConfigs := GenerateNodeRuntimeMgrs(t, numNodes, clockMock)
+	runtimeConfigs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
 
 	timeReminder(clockMock, 100*time.Millisecond)
 
@@ -138,7 +135,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 
 	// Starting point
 	testHeight := uint64(3)
-	testStep := int64(consensus.NewRound)
+	testStep := consensus.NewRound
 
 	// Leader info
 	leaderId := typesCons.NodeId(3) // TODO(olshansky): Same as height % numValidators until we add back leader election
@@ -151,7 +148,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	// Placeholder block
 	blockHeader := &typesCons.BlockHeader{
 		Height:            int64(testHeight),
-		Hash:              hex.EncodeToString(appHash),
+		Hash:              stateHash,
 		NumTxs:            0,
 		LastBlockHash:     "",
 		ProposerAddress:   consensusPK.Address(),
@@ -162,29 +159,28 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 		Transactions: emptyTxs,
 	}
 
-	leaderConsensusMod := GetConsensusModElem(leader)
-	leaderConsensusMod.FieldByName("Block").Set(reflect.ValueOf(block))
+	leaderConsensusModImpl := GetConsensusModImpl(leader)
+	leaderConsensusModImpl.MethodByName("SetBlock").Call([]reflect.Value{reflect.ValueOf(block)})
 
 	// Set all nodes to the same STEP and HEIGHT BUT different ROUNDS
 	for _, pocketNode := range pocketNodes {
+		//update height, step, leaderid, and utility context via setters exposed with the debug interface
+		consensusModImpl := GetConsensusModImpl(pocketNode)
+		consensusModImpl.MethodByName("SetHeight").Call([]reflect.Value{reflect.ValueOf(testHeight)})
+		consensusModImpl.MethodByName("SetStep").Call([]reflect.Value{reflect.ValueOf(testStep)})
+		consensusModImpl.MethodByName("SetLeaderId").Call([]reflect.Value{reflect.Zero(reflect.TypeOf(&leaderId))})
+
 		// utilityContext is only set on new rounds, which is skipped in this test
 		utilityContext, err := pocketNode.GetBus().GetUtilityModule().NewContext(int64(testHeight))
 		require.NoError(t, err)
-
-		consensusModElem := GetConsensusModElem(pocketNode)
-		consensusModElem.FieldByName("Height").SetUint(testHeight)
-		consensusModElem.FieldByName("Step").SetInt(testStep)
-		consensusModElem.FieldByName("LeaderId").Set(reflect.Zero(reflect.TypeOf(&leaderId))) // This is re-elected during paceMaker catchup
-
-		consensusModImpl := GetConsensusModImpl(pocketNode)
 		consensusModImpl.MethodByName("SetUtilityContext").Call([]reflect.Value{reflect.ValueOf(utilityContext)})
 	}
 
 	// Set the leader to be in the highest round.
-	GetConsensusModElem(pocketNodes[1]).FieldByName("Round").SetUint(uint64(leaderRound - 2))
-	GetConsensusModElem(pocketNodes[2]).FieldByName("Round").SetUint(uint64(leaderRound - 3))
-	GetConsensusModElem(pocketNodes[leaderId]).FieldByName("Round").SetUint(uint64(leaderRound))
-	GetConsensusModElem(pocketNodes[4]).FieldByName("Round").SetUint(uint64(leaderRound - 4))
+	GetConsensusModImpl(pocketNodes[1]).MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(leaderRound - 2)})
+	GetConsensusModImpl(pocketNodes[2]).MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(leaderRound - 3)})
+	GetConsensusModImpl(pocketNodes[leaderId]).MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(leaderRound)})
+	GetConsensusModImpl(pocketNodes[4]).MethodByName("SetRound").Call([]reflect.Value{reflect.ValueOf(leaderRound - 4)})
 
 	prepareProposal := &typesCons.HotstuffMessage{
 		Type:          consensus.Propose,
@@ -200,7 +196,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	P2PBroadcast(t, pocketNodes, anyMsg)
 
 	// numNodes-1 because one of the messages is a self-proposal that is not passed through the network
-	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Prepare, consensus.Vote, numNodes-1, 2000)
+	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Prepare, consensus.Vote, numValidators-1, 2000)
 	require.NoError(t, err)
 
 	forcePacemakerTimeout(clockMock, 600*time.Millisecond)

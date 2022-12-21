@@ -171,13 +171,11 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 		conn:   conn,
 		tx:     tx,
 
+		stateHash: "",
+
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
 		stateTrees: m.stateTrees,
-
-		proposerAddr: nil,
-		quorumCert:   nil,
-		blockHash:    "",
 	}
 
 	return m.writeContext, nil
@@ -199,11 +197,15 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 	}
 
 	return PostgresContext{
-		Height:     height,
-		conn:       conn,
-		tx:         tx,
+		Height: height,
+		conn:   conn,
+		tx:     tx,
+
+		stateHash: "",
+
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
+		stateTrees: m.stateTrees,
 	}, nil
 }
 

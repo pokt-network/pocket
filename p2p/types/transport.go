@@ -1,5 +1,7 @@
 package types
 
+import "github.com/pokt-network/pocket/shared/modules"
+
 //go:generate mockgen -source=$GOFILE -destination=./mocks/transport_mock.go github.com/pokt-network/pocket/p2p/types Transport
 
 type Transport interface {
@@ -8,3 +10,5 @@ type Transport interface {
 	Write([]byte) error
 	Close() error
 }
+
+type ConnectionFactory func(cfg modules.P2PConfig, url string) (Transport, error)
