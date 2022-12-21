@@ -9,6 +9,14 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 
 ## [Unreleased]
 
+## [0.0.0.10] - 2022-12-21
+
+- Updated to use centralized config and genesis
+- Updated to use `Account` struct now under `coreTypes`
+- Tended for the TODO "// TODO (Andrew) genericize the genesis population logic for actors #149" in `persistence/genesis.go`
+- Updated tests to use the new config and genesis handling
+- Updated statetest hashes to reflect updated genesis state
+
 ## [0.0.0.9] - 2022-11-08
 
 - Changed the following exported functions to lowercase non-exported functions
