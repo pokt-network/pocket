@@ -36,7 +36,7 @@ func (s *rpcServer) StartRPC(port string, timeout uint64) {
 			Timeout:      time.Duration(defaults.DefaultRpcTimeout) * time.Millisecond,
 		}),
 	}
-	if s.bus.GetRuntimeMgr().GetConfig().GetRPCConfig().GetUseCors() {
+	if s.GetBus().GetRuntimeMgr().GetConfig().GetRPCConfig().GetUseCors() {
 		log.Println("Enabling CORS middleware")
 		middlewares = append(middlewares, middleware.CORS())
 	}

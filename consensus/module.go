@@ -24,9 +24,9 @@ var (
 	_ modules.ConsensusModule       = &consensusModule{}
 	_ modules.ConsensusConfig       = &typesCons.ConsensusConfig{}
 	_ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
+	_ ConsensusDebugModule          = &consensusModule{}
 )
 
-// TODO(#256): Do not export the `ConsensusModule` struct or the fields inside of it.
 type consensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
@@ -42,11 +42,11 @@ type consensusModule struct {
 	m sync.RWMutex
 
 	// Hotstuff
-	Height uint64
-	Round  uint64
-	Step   typesCons.HotstuffStep
-	Block  *typesCons.Block // The current block being proposed / voted on; it has not been committed to finality
-	//    TODO(#315):  Move the statefulness of `TxResult` to the persistence module
+	height uint64
+	round  uint64
+	step   typesCons.HotstuffStep
+	block  *typesCons.Block // The current block being proposed / voted on; it has not been committed to finality
+	// TODO(#315): Move the statefulness of `TxResult` to the persistence module
 	TxResults []modules.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
 
 	// IMPROVE: Consider renaming `highPrepareQC` to simply `prepareQC`
@@ -54,7 +54,7 @@ type consensusModule struct {
 	lockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
 	// Leader Election
-	LeaderId       *typesCons.NodeId
+	leaderId       *typesCons.NodeId
 	nodeId         typesCons.NodeId
 	valAddrToIdMap typesCons.ValAddrToIdMap // TODO: This needs to be updated every time the ValMap is modified
 	idToValAddrMap typesCons.IdToValAddrMap // TODO: This needs to be updated every time the ValMap is modified
@@ -63,7 +63,9 @@ type consensusModule struct {
 	validatorMap typesCons.ValidatorMap
 
 	// Module Dependencies
-	// TODO(#283): Improve how `utilityContext` is managed
+	// IMPROVE(#283): Investigate whether the current approach to how the `utilityContext` should be
+	//                managed or changed. Also consider exposing a function that exposes the context
+	//                to streamline how its accessed in the module (see the ticket).
 	utilityContext    modules.UtilityContext
 	paceMaker         Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
@@ -74,6 +76,40 @@ type consensusModule struct {
 	// TECHDEBT: Rename this to `consensusMessagePool` or something similar
 	//           and reconsider if an in-memory map is the best approach
 	messagePool map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage
+}
+
+// Functions exposed by the debug interface should only be used for testing puposes.
+type ConsensusDebugModule interface {
+	SetHeight(uint64)
+	SetRound(uint64)
+	SetStep(typesCons.HotstuffStep)
+	SetBlock(*typesCons.Block)
+	SetLeaderId(*typesCons.NodeId)
+	SetUtilityContext(modules.UtilityContext)
+}
+
+func (c *consensusModule) SetHeight(height uint64) {
+	c.height = height
+}
+
+func (c *consensusModule) SetRound(round uint64) {
+	c.round = round
+}
+
+func (c *consensusModule) SetStep(step typesCons.HotstuffStep) {
+	c.step = step
+}
+
+func (c *consensusModule) SetBlock(block *typesCons.Block) {
+	c.block = block
+}
+
+func (c *consensusModule) SetLeaderId(leaderId *typesCons.NodeId) {
+	c.leaderId = leaderId
+}
+
+func (c *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
+	c.utilityContext = utilityContext
 }
 
 func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
@@ -124,16 +160,16 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 		consCfg:     cfg.GetConsensusConfig(),
 		consGenesis: genesis.GetConsensusGenesisState(),
 
-		Height: 0,
-		Round:  0,
-		Step:   NewRound,
-		Block:  nil,
+		height: 0,
+		round:  0,
+		step:   NewRound,
+		block:  nil,
 
 		highPrepareQC: nil,
 		lockedQC:      nil,
 
 		nodeId:         valIdMap[address],
-		LeaderId:       nil,
+		leaderId:       nil,
 		valAddrToIdMap: valIdMap,
 		idToValAddrMap: idValMap,
 
@@ -148,6 +184,7 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 	}
 
 	// TODO(olshansky): Look for a way to avoid doing this.
+	// TODO(goku): remove tight connection of pacemaker and consensus.
 	paceMaker.SetConsensusModule(m)
 
 	return m, nil
@@ -257,24 +294,19 @@ func (m *consensusModule) HandleMessage(message *anypb.Any) error {
 }
 
 func (m *consensusModule) CurrentHeight() uint64 {
-	return m.Height
+	return m.height
 }
 
 func (m *consensusModule) CurrentRound() uint64 {
-	return m.Round
+	return m.round
 }
 
 func (m *consensusModule) CurrentStep() uint64 {
-	return uint64(m.Step)
+	return uint64(m.step)
 }
 
 func (m *consensusModule) ValidatorMap() modules.ValidatorMap { // TODO: This needs to be dynamically updated during various operations and network changes.
 	return typesCons.ValidatorMapToModulesValidatorMap(m.validatorMap)
-}
-
-// TODO(#256): Currently only used for testing purposes
-func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
-	m.utilityContext = utilityContext
 }
 
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...
@@ -291,9 +323,10 @@ func (m *consensusModule) loadPersistedState() error {
 		return nil
 	}
 
-	m.Height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
+	m.height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
 
 	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
+
 	return nil
 }
 

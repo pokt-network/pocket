@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.12] - 2022-12-16
+
+- `ValidatorMapToAddrBook` renamed to `ActorToAddrBook`
+- `ValidatorToNetworkPeer` renamed to `ActorToNetworkPeer`
+
+## [0.0.0.11] - 2022-12-15
+
+- Bugfix for [[#401](https://github.com/pokt-network/pocket/issues/401)]
+- Fixed typo in 'peers_manager.go'
+
+## [0.0.0.10] - 2022-12-14
+
+- mempool cap is now configurable via P2PConfig. Tests implement the mock accordingly.
+- Introduced the concept of a `addrbookProvider` that abstracts the fetching and the mapping from `Actor` to `NetworkPeer`
+- Temporary hack to allow access to the `addrBook` to the debug client (will be removed in an upcoming PR already in the works for issues [#203](https://github.com/pokt-network/pocket/issues/203) and [#331](https://github.com/pokt-network/pocket/issues/331))
+- Transport related functions are now in the `transport` package
+- Updated tests to source the `addrBook` from the `addrbookProvider` and therefore `Persistence`
+- Updated Raintree network constructur with dependency injection
+- Updated stdNetwork constructur with dependency injection
+- Improved documentation for the `peersManager`
+
+## [0.0.0.9] - 2022-12-04
+
+- Raintree mempool cannot grow unbounded anymore. It's now bounded by a constant limit and when new nonces are inserted the oldest ones are removed.
+- Raintree is now capable of fetching the address book for a previous height and to instantiate an ephemeral `peersManager` with it.
+
 ## [0.0.0.8] - 2022-11-14
 
 - Removed topic from messaging
