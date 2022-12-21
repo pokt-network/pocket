@@ -12,13 +12,17 @@ POST_BUILD_TARGETS = rename-binaries
 VERSION ?= $(shell git describe --tags --exact-match 2>/dev/null || git symbolic-ref -q --short HEAD)
 COMMIT_HASH ?= $(shell git rev-parse --short HEAD 2>/dev/null)
 DATE_FMT = +%FT%T%z
-## Check if the distribution has configured a SOURCE_DATE_EPOCH env var in order to generate a reproducible output. (https://reproducible-builds.org/docs/source-date-epoch/)
+
+## Check if the distribution has configured a SOURCE_DATE_EPOCH env var in order to generate a reproducible output.
+## This is not currently used but a best practice according to https://reproducible-builds.org/docs/source-date-epoch/
 ifdef SOURCE_DATE_EPOCH
     BUILD_DATE ?= $(shell date -u -d "@$(SOURCE_DATE_EPOCH)" "$(DATE_FMT)" 2>/dev/null || date -u -r "$(SOURCE_DATE_EPOCH)" "$(DATE_FMT)" 2>/dev/null || date -u "$(DATE_FMT)")
 else
     BUILD_DATE ?= $(shell date "$(DATE_FMT)")
 endif
-LDFLAGS += -X app.AppVersion=${VERSION} -X app.CommitHash=${COMMIT_HASH} -X app.BuildDate=${BUILD_DATE}
+## LDFLAGS are going to be used by the linker to set the version, commit hash and build date.
+## debug.ReadBuildInfo() is not going to be used because currently a customised version string is needed.
+LDFLAGS += -X github.com/pokt-network/pocket/app.AppVersion=${VERSION} -X github.com/pokt-network/pocket/app.CommitHash=${COMMIT_HASH} -X github.com/pokt-network/pocket/app.BuildDate=${BUILD_DATE}
 export CGO_ENABLED ?= 0
 ifeq (${VERBOSE}, 1)
 ifeq ($(filter -v,${GOARGS}),)
