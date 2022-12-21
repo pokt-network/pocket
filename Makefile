@@ -1,4 +1,5 @@
 include scripts/build.mk
+include scripts/test.mk
 
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
@@ -139,7 +140,7 @@ client_start: docker_check
 .PHONY: client_connect
 ## Connect to the running client debugging daemon
 client_connect: docker_check
-	docker exec -it client /bin/bash -c "go run -tags=debug app/client/*.go debug"
+	docker exec -it client /bin/bash -c "go run -tags=debug cmd/p1/*.go debug"
 
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
@@ -239,20 +240,20 @@ docker_loki_check:
 .PHONY: clean_mocks
 ### Use `clean_mocks` to delete mocks before recreating them. Also useful to cleanup code that was generated from a different branch
 clean_mocks:
-	$(eval modules_dir = "shared/modules")
+	$(eval modules_dir = "internal/shared/modules")
 	find ${modules_dir}/mocks -type f ! -name "mocks.go" -exec rm {} \;
-	$(eval p2p_type_mocks_dir = "p2p/types/mocks")
+	$(eval p2p_type_mocks_dir = "internal/p2p/types/mocks")
 	find ${p2p_type_mocks_dir} -type f ! -name "mocks.go" -exec rm {} \;
 
 .PHONY: mockgen
 ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 mockgen: clean_mocks
-	$(eval modules_dir = "shared/modules")
+	$(eval modules_dir = "internal/shared/modules")
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
-	$(eval p2p_types_dir = "p2p/types")
-	$(eval p2p_type_mocks_dir = "p2p/types/mocks")
+	$(eval p2p_types_dir = "internal/p2p/types")
+	$(eval p2p_type_mocks_dir = "internal/p2p/types/mocks")
 	find ${p2p_type_mocks_dir} -type f ! -name "mocks.go" -exec rm {} \;
 	go generate ./${p2p_types_dir}
 	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
@@ -273,18 +274,18 @@ protogen_clean:
 ## Generate go structures for all of the protobufs
 protogen_local: go_protoc-go-inject-tag
 	$(eval proto_dir = ".")
-	protoc --go_opt=paths=source_relative  -I=./shared/messaging/proto    --go_out=./shared/messaging      	./shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./persistence/indexer/proto --go_out=./persistence/indexer/   ./persistence/indexer/proto/*.proto --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  	./persistence/proto/*.proto         --experimental_allow_proto3_optional
-	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
-	protoc --go_opt=paths=source_relative  -I=./utility/types/proto       --go_out=./utility/types      	./utility/types/proto/*.proto       --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./consensus/types/proto     --go_out=./consensus/types    	./consensus/types/proto/*.proto     --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./p2p/raintree/types/proto  --go_out=./p2p/types          	./p2p/raintree/types/proto/*.proto  --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./p2p/types/proto           --go_out=./p2p/types          	./p2p/types/proto/*.proto           --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./telemetry/proto           --go_out=./telemetry          	./telemetry/proto/*.proto           --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./logger/proto              --go_out=./logger             	./logger/proto/*.proto              --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./rpc/types/proto 		  --go_out=./rpc/types          	./rpc/types/proto/*.proto           --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./internal/shared/messaging/proto    --go_out=./internal/shared/messaging    	./internal/shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./internal/shared/codec/proto        --go_out=./internal/shared/codec       	./internal/shared/codec/proto/*.proto        --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./internal/persistence/indexer/proto --go_out=./internal/persistence/indexer/ ./internal/persistence/indexer/proto/*.proto --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./internal/persistence/proto         --go_out=./internal/persistence/types  	./internal/persistence/proto/*.proto         --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./internal/utility/types/proto       --go_out=./internal/utility/types      	./internal/utility/types/proto/*.proto       --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./internal/consensus/types/proto     --go_out=./internal/consensus/types    	./internal/consensus/types/proto/*.proto     --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./internal/p2p/raintree/types/proto  --go_out=./internal/p2p/types          	./internal/p2p/raintree/types/proto/*.proto  --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./internal/p2p/types/proto           --go_out=./internal/p2p/types          	./internal/p2p/types/proto/*.proto           --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./internal/telemetry/proto           --go_out=./internal/telemetry          	./internal/telemetry/proto/*.proto           --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./internal/logger/proto              --go_out=./internal/logger             	./internal/logger/proto/*.proto              --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./internal/rpc/types/proto 		   --go_out=./internal/rpc/types          	./internal/rpc/types/proto/*.proto           --experimental_allow_proto3_optional
+	protoc-go-inject-tag -input="./internal/persistence/types/*.pb.go"
 	echo "View generated proto files by running: make protogen_show"
 
 .PHONY: protogen_docker_m1
@@ -300,8 +301,8 @@ protogen_docker: docker_check
 .PHONY: generate_rpc_openapi
 ## (Re)generates the RPC server and client infra code from the openapi spec file (./rpc/v1/openapi.yaml)
 generate_rpc_openapi: go_oapi-codegen
-	oapi-codegen  --config ./rpc/server.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/server.gen.go
-	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
+	oapi-codegen  --config ./internal/rpc/server.gen.config.yml ./internal/rpc/v1/openapi.yaml > ./internal/rpc/server.gen.go
+	oapi-codegen  --config ./internal/rpc/client.gen.config.yml ./internal/rpc/v1/openapi.yaml > ./internal/rpc/client.gen.go
 	echo "OpenAPI client and server generated"
 
 .PHONY: swagger-ui
@@ -313,93 +314,10 @@ swagger-ui:
 .PHONY: generate_cli_commands_docs
 ### (Re)generates the CLI commands docs (this is meant to be called by CI)
 generate_cli_commands_docs:
-	$(eval cli_docs_dir = "app/client/cli/doc/commands")
+	$(eval cli_docs_dir = "cmd/p1/cli/doc/commands")
 	rm ${cli_docs_dir}/*.md >/dev/null 2>&1 || true
-	cd app/client/cli/docgen && go run .
+	cd cmd/p1/cli/docgen && go run .
 	echo "CLI commands docs generated in ${cli_docs_dir}"
-
-.PHONY: test_all
-## Run all go unit tests
-test_all: # generate_mocks
-	go test -p 1 -count=1 ./...
-
-.PHONY: test_all_with_json_coverage
-## Run all go unit tests, output results & coverage into json & coverage files
-test_all_with_json_coverage: generate_rpc_openapi # generate_mocks
-	go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out | tee test_results.json | jq
-
-.PHONY: test_race
-## Identify all unit tests that may result in race conditions
-test_race: # generate_mocks
-	go test ${VERBOSE_TEST} -race ./...
-
-.PHONY: test_utility
-## Run all go utility module unit tests
-test_utility: # generate_mocks
-	go test ${VERBOSE_TEST} -p=1 -count=1  ./utility/...
-
-.PHONY: test_shared
-## Run all go unit tests in the shared module
-test_shared: # generate_mocks
-	go test ${VERBOSE_TEST} -p 1 ./shared/...
-
-.PHONY: test_consensus
-## Run all go unit tests in the consensus module
-test_consensus: # mockgen
-	go test ${VERBOSE_TEST} -count=1 ./consensus/...
-
-.PHONY: test_consensus_concurrent_tests
-## Run unit tests in the consensus module that could be prone to race conditions (#192)
-test_consensus_concurrent_tests:
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
-
-.PHONY: test_hotstuff
-## Run all go unit tests related to hotstuff consensus
-test_hotstuff: # mockgen
-	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
-
-.PHONY: test_pacemaker
-## Run all go unit tests related to the hotstuff pacemaker
-test_pacemaker: # mockgen
-	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
-
-.PHONY: test_vrf
-## Run all go unit tests in the VRF library
-test_vrf:
-	go test ${VERBOSE_TEST} ./consensus/leader_election/vrf
-
-.PHONY: test_sortition
-## Run all go unit tests in the Sortition library
-test_sortition:
-	go test ${VERBOSE_TEST} ./consensus/leader_election/sortition
-
-.PHONY: test_persistence
-## Run all go unit tests in the Persistence module
-test_persistence:
-	go test ${VERBOSE_TEST} -p 1 -count=1 ./persistence/...
-
-.PHONY: test_persistence_state_hash
-## Run all go unit tests in the Persistence module related to the state hash
-test_persistence_state_hash:
-	go test ${VERBOSE_TEST} -run TestStateHash -count=1 ./persistence/...
-
-.PHONY: test_p2p
-## Run all p2p
-test_p2p:
-	go test ${VERBOSE_TEST} -count=1 ./p2p/...
-
-.PHONY: test_p2p_raintree
-## Run all p2p raintree related tests
-test_p2p_raintree:
-	go test ${VERBOSE_TEST} -run RainTreeNetwork -count=1 ./p2p/...
-
-.PHONY: test_p2p_raintree_addrbook
-## Run all p2p raintree addr book related tests
-test_p2p_raintree_addrbook:
-	go test ${VERBOSE_TEST} -run RainTreeAddrBook -count=1 ./p2p/...
 
 # TIP: For benchmarks, consider appending `-run=^#` to avoid running unit tests in the same package
 
@@ -481,7 +399,7 @@ clear_genesis_and_config:
 .PHONY: check_cross_module_imports
 ## Lists cross-module imports
 check_cross_module_imports:
-	$(eval exclude_common=--exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime)
+	$(eval exclude_common=--exclude=Makefile --exclude-dir=shared --exclude-dir=cmd --exclude-dir=runtime)
 	echo "persistence:\n"
 	grep ${exclude_common} --exclude-dir=persistence -r "github.com/pokt-network/pocket/persistence" || echo "✅ OK!"
 	echo "-----------------------"
