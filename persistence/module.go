@@ -18,7 +18,6 @@ var (
 	_ modules.PersistenceModule = &persistenceModule{}
 
 	_ modules.PersistenceRWContext = &PostgresContext{}
-	// _ modules.PersistenceGenesisState = &types.PersistenceGenesisState{}
 )
 
 // TODO: convert address and public key to string not bytes in all account and actor functions
