@@ -22,16 +22,15 @@ type StateSyncModule interface {
 	modules.Module
 
 	// Handle a metadata response from a peer so this node can update its local view of the state
-	// sync metadata available from its peers.
+	// sync metadata available from its peers
 	HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error
 
 	// Handle a block response from a peer so this node can update apply it to its local state
-	// and catch up to the global world state.
+	// and catch up to the global world state
 	HandleStateSyncBlockResponse(*typesCons.StateSyncMetadataResponse) error
 }
 
-// TODO(#362): The interface below is only meant to be used as a guideline and not implemented explicitly.
-//             It will updated & removed over time.
+// ~~~~~ TODO(#362): The interface below is only meant to be used as a guideline and not implemented explicitly. It will updated & removed over time. ~~~~~
 type StateSyncModuleLEGACY interface {
 	// -- Constructor Setter Functions --
 

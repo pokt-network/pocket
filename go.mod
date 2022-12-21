@@ -32,7 +32,6 @@ require (
 	github.com/rs/zerolog v1.15.0
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/viper v1.13.0
-	google.golang.org/grpc v1.46.2
 )
 
 require (
@@ -116,7 +115,6 @@ require (
 	golang.org/x/text v0.3.8 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
 	golang.org/x/tools v0.1.12 // indirect
-	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

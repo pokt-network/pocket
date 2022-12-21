@@ -14,9 +14,23 @@ _NOTE: This document makes some assumption of P2P implementation details, so ple
   - [Block by Block](#block-by-block)
     - [Synchronous](#synchronous)
     - [Asynchronous](#asynchronous)
-  - [Future Work - Designs](#future-work---designs)
+  - [Future Design Work](#future-design-work)
 - [Research Items](#research-items)
 - [Glossary](#glossary)
+- [References](#references)
+- [State Sync References](#state-sync-references)
+  - [Tendermint](#tendermint)
+    - [Example](#example)
+    - [Links](#links)
+  - [Cosmos](#cosmos)
+    - [Links](#links-1)
+  - [Celestia](#celestia)
+    - [Example](#example-1)
+    - [Links](#links-2)
+  - [Aptos](#aptos)
+    - [Links](#links-3)
+  - [Chia](#chia)
+    - [Links](#links-4)
 
 ## Background
 
@@ -26,7 +40,7 @@ State Sync is a protocol within a `Pocket` node that enables the download and ma
 
 A node participating in the `State Sync` protocol can act as both a _server_ and/or a _client_ to its `Network Peers`. A pre-requisite of the State Sync protocol is for the `P2P` module to maintain an active set of network peers, along with metadata corresponding to the persistence data they have available.
 
-Illustrative example of Peer Metadata related to State Sync:
+Illustrative example of Peer Metadata related to State Sync (not a production interface):
 
 ```golang
 type PeerSyncMetadata interface {
@@ -40,6 +54,8 @@ type PeerSyncMetadata interface {
 
 This data can be collected through the `P2P` module during the `Churn Management Protocol`. It can also be abstracted to an `ask-response` cycle where the node continuously asks this meta-information of its active peers.
 
+The following is an illustrative example for a high-level understanding:
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -50,12 +66,13 @@ sequenceDiagram
     loop Churn Management
         N->>+NP: Are you alive? If so, what's your Peer Metadata?
         NP->>N: Yup, here's my Peer Metadata. What's yours?
-        N->>NP: ACK, I'll ask again in a bit to make sure I'm up to date.
+        N->>NP: ACK, here's mine. I'll ask again in a bit to make sure I'm up to date.
     end
 ```
 
-The aggregation and consumption of this peer-meta information enables the State Sync protocol by enabling the node to understand the globalized network state by sampling Peer Metadata through its local peer list.
-This gives a view into the data availability layer, with details of what data can be consumed from which peer.
+The aggregation and consumption of this peer-meta information enables the State Sync protocol by enabling the node to understand the globalized network state through sampling Peer Metadata in its local peer list.
+
+This gives a view into the data availability layer, with details of what data can be consumed from which pee (not a production interface):
 
 ```golang
 type PeerSyncAggregateMetadata interface {
@@ -72,12 +89,12 @@ Using the `PeerSyncAggregateMetadata`, a Node is able to compare its local `Sync
 
 State sync can be viewed as a state machine that transverses various modes the node can be in, including:
 
-- Sync Mode
-- Synced Mode
-- Pacemaker Mode
-- Server Mode
+1. Sync Mode
+2. Synced Mode
+3. Pacemaker Mode
+4. Server Mode
 
-The functionality of the node depends on the mode it is operating it. Note that the modes are not necessarily mutually exclusive. For example, the node can be in `Server Mode` and `Synced Mode` at the same time.
+The functionality of the node depends on the mode it is operating it. Note that `Server Mode` is not mutually exclusive to the others.
 
 For illustrative purposes below assume:
 
@@ -134,16 +151,15 @@ flowchart TD
 
     %% Loop back
     Z[Peers] --> |Blocks| A[StateSync]
-
 ```
 
-_IMPORTANT: If any blocks processed result in an invalid `AppHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found._
+_IMPORTANT: `ApplyBlock` is implicit in the diagram above. If any blocks processed result in an invalid `AppHash` during `ApplyBlock`, a new `BlockRequest` must be issued until a valid block is found._
 
 ## State Sync Designs
 
 ### Block by Block
 
-The block-by-block has a node request one block from its peers at a time and apply them as they are received.
+The block-by-block involves a node requesting a single block from its peers, one at a time, and apply them as they are received. Internal implementation details related to local caching and ordering are omitted from the diagram below.
 
 #### Synchronous
 
@@ -152,7 +168,7 @@ sequenceDiagram
   actor N as Node
   actor P as Peer(s)
 
-  loop continous
+  loop continuous
     N ->> P: Request Metadata
     P ->> N: Metadata
     N ->> N: Update local directory
@@ -185,7 +201,7 @@ sequenceDiagram
   end
 ```
 
-### Future Work - Designs
+### Future Design Work
 
 - `Fast Sync Design` - Sync only the last `N` blocks from a _snapshot_ containing a network state
 
@@ -205,10 +221,130 @@ _TODO(M5): Create issues to track and discuss these work items in the future_
 
 ## Glossary
 
-- `ApplyingBlock`: The process of playing block parts and its subsequent transactions against the Node's world state using the Utility Module and Validating the `AppHash` contained in the block against the produced `AppHash` from the local state.
-- `BlockRequests`: A message from an active peer, requesting a block to sync the chain to the Global Network State.
-- `Churn Management Protocol`: The protocol in Pocket's P2P Module that ensures the most updated and valid Network Peer list possible.
-- `Network Peer`: Another node on the network that this node can directly communicate with, without going through a third-party server. Peers may start the connection through an `inbound` or `outbound` initialization to share and transmit data.
-- `SyncState`: The local block state of the node vs the global network block state.
+- `ApplyingBlock`: The process of transitioning the Node's state by applying the transactions within a block using the Utility module.
+- `GetBlock`: A network message one peer can send to another requesting a specific Block from its local store.
+- `Churn Management`: A protocol in Pocket's P2P Module that ensures the most updated view of the network peer list is available.
+- `Network Peer`: Another node on the network that this node can directly communicate with, without going through a third-party server. Peers may start the connection through an `inbound` or `outbound` initialization to share & transmit data.
+- `SyncState`: The state of a network w.r.t to where it is relative to the world state (height, blocks available, etc).
 
-<!-- If you are a core team member, you can also read or contribute to additional rough notes [here](https://www.notion.so/pocketnetwork/Would-you-like-a-proof-with-that-8dd05f8ea6274505a3072c9fb4e44898) -->
+## References
+
+## State Sync References
+
+State Sync, also known as Block Sync, is a well researched problem and we referenced various sources in our thinking process.
+
+### Tendermint
+
+#### Example
+
+Tendermint follow an **async "fire-and-forget"** pattern as can be seen [here](https://github.com/tendermint/tendermint/blob/main/blocksync/reactor.go#L176):
+
+```go
+// respondToPeer loads a block and sends it to the requesting peer,
+// if we have it. Otherwise, we'll respond saying we don't have it.
+func (bcR *Reactor) respondToPeer(msg *bcproto.BlockRequest,
+ src p2p.Peer) (queued bool) {
+
+ block := bcR.store.LoadBlock(msg.Height)
+ if block != nil {
+  bl, err := block.ToProto()
+  if err != nil {
+   bcR.Logger.Error("could not convert msg to protobuf", "err", err)
+   return false
+  }
+
+  return src.TrySend(p2p.Envelope{
+   ChannelID: BlocksyncChannel,
+   Message:   &bcproto.BlockResponse{Block: bl},
+  })
+ }
+
+ bcR.Logger.Info("Peer asking for a block we don't have", "src", src, "height", msg.Height)
+ return src.TrySend(p2p.Envelope{
+  ChannelID: BlocksyncChannel,
+  Message:   &bcproto.NoBlockResponse{Height: msg.Height},
+ })
+}
+```
+
+#### Links
+
+- [https://docs.tendermint.com/v0.34/tendermint-core/state-sync.html](https://docs.tendermint.com/v0.34/tendermint-core/state-sync.html)
+  - A short high-level page containing state sync configurations
+- [https://github.com/tendermint/tendermint/blob/main/spec/README.md](https://github.com/tendermint/tendermint/blob/main/spec/README.md)
+  - A very long README in the Tendermint Source code
+
+### Cosmos
+
+#### Links
+
+- [https://blog.cosmos.network/cosmos-sdk-state-sync-guide-99e4cf43be2f](https://blog.cosmos.network/cosmos-sdk-state-sync-guide-99e4cf43be2f)
+  - A short and easy to understand blog post on how the Cosmos SDK configures and manages State Sync
+
+### Celestia
+
+#### Example
+
+Celestia uses a synchronous request-response pattern as seen [here](https://github.com/celestiaorg/celestia-node/blob/main/header/sync/sync.go#L268).
+
+```go
+// PubSub - [from:to]
+func (s *Syncer) findHeaders(ctx context.Context, from, to uint64) ([]*header.ExtendedHeader, error) {
+ amount := to - from + 1 // + 1 to include 'to' height as well
+ if amount > requestSize {
+  to, amount = from+requestSize, requestSize
+ }
+
+ out := make([]*header.ExtendedHeader, 0, amount)
+ for from < to {
+  // if we have some range cached - use it
+  r, ok := s.pending.FirstRangeWithin(from, to)
+  if !ok {
+   hs, err := s.exchange.GetRangeByHeight(ctx, from, amount)
+   return append(out, hs...), err
+  }
+
+  // first, request everything between from and start of the found range
+  hs, err := s.exchange.GetRangeByHeight(ctx, from, r.start-from)
+  if err != nil {
+   return nil, err
+  }
+  out = append(out, hs...)
+  from += uint64(len(hs))
+
+  // then, apply cached range if any
+  cached, ln := r.Before(to)
+  out = append(out, cached...)
+  from += ln
+ }
+
+ return out, nil
+}
+```
+
+#### Links
+
+- [https://docs.celestia.org/nodes/config-toml#p2p](https://docs.celestia.org/nodes/config-toml#p2p)
+  - A short high-level page containing the most important Celestia State Sync configs
+- [https://github.com/celestiaorg/celestia-node/blob/main/docs/adr/adr-011-blocksync-overhaul-part-1.md](https://github.com/celestiaorg/celestia-node/blob/main/docs/adr/adr-011-blocksync-overhaul-part-1.md)
+  - A very long and difficult to read ADR on an overhaul in Celestia's State Sync
+
+### Aptos
+
+#### Links
+
+- [https://github.com/diem/diem/tree/main/specifications/state_sync](https://github.com/diem/diem/tree/main/specifications/state_sync)
+  - A fantastic resource from Aptos on state sync. Long and detailed, but well-written and easy to read.
+- [https://medium.com/aptoslabs/the-evolution-of-state-sync-the-path-to-100k-transactions-per-second-with-sub-second-latency-at-52e25a2c6f10](https://medium.com/aptoslabs/the-evolution-of-state-sync-the-path-to-100k-transactions-per-second-with-sub-second-latency-at-52e25a2c6f10)
+  - A great and easy-to-read blog post about the challenges and solutions Aptos came up with for state sync
+- [https://aptos.dev/guides/state-sync/](https://aptos.dev/guides/state-sync/)
+  - A short high-level set of configurations in Aptos w.r.t state sync
+
+### Chia
+
+#### Links
+
+- [https://docs.chia.net/peer-protocol](https://docs.chia.net/peer-protocol)
+  - A detailed list of the type of requests Chia uses for communication between peers
+- [https://docs.chia.net/node-syncing](https://docs.chia.net/node-syncing)
+  - An explanation of the configurations Chia exposes for node synching

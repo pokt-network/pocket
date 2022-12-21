@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.14] - 2022-12-21
+
+- Added protobuf message definitions for requests related to sharing state sync metadata and blocks
+- Defined the interface for `StateSyncServerModule`, `StateSyncModule` (moving the old interface to `StateSyncModuleLEGACY` as a reference only)
+- Overhaul (updates, improvements, clarifications & additions) of the State Sync README
+
 ## [0.0.0.13] - 2022-12-14
 
 - Consolidated number of validators in tests in a single constant: `numValidators`

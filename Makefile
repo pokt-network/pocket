@@ -278,13 +278,15 @@ protogen_local: go_protoc-go-inject-tag
 	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  	./persistence/proto/*.proto         --experimental_allow_proto3_optional
 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
 	protoc --go_opt=paths=source_relative  -I=./utility/types/proto       --go_out=./utility/types      	./utility/types/proto/*.proto       --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./consensus/types/proto     --go_out=./consensus/types    	--go-grpc_opt=paths=source_relative --go-grpc_out=./consensus/types ./consensus/types/proto/*.proto     --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./consensus/types/proto     --go_out=./consensus/types    	./consensus/types/proto/*.proto     --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./p2p/raintree/types/proto  --go_out=./p2p/types          	./p2p/raintree/types/proto/*.proto  --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./p2p/types/proto           --go_out=./p2p/types          	./p2p/types/proto/*.proto           --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./telemetry/proto           --go_out=./telemetry          	./telemetry/proto/*.proto           --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./logger/proto              --go_out=./logger             	./logger/proto/*.proto              --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./rpc/types/proto 		  --go_out=./rpc/types          	./rpc/types/proto/*.proto           --experimental_allow_proto3_optional
 	echo "View generated proto files by running: make protogen_show"
+# CONSIDERATION: Some proto files contain unused gRPC services so we may need to add the following
+#                if/when we decide to include it: `grpc--go-grpc_opt=paths=source_relative --go-grpc_out=./output/path`
 
 .PHONY: protogen_docker_m1
 ## TECHDEBT: Test, validate & update.
