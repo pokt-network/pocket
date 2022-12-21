@@ -9,6 +9,7 @@ BUILD_DIR ?= bin
 BINARY_NAME_client ?= p1
 BINARY_NAME_pocket ?= pocket
 POST_BUILD_TARGETS = rename-binaries
+## When issuing make build against a branch/state that doesn't have a tag referencing the supplied commit hash, the version will be set to the branch name.
 VERSION ?= $(shell git describe --tags --exact-match 2>/dev/null || git symbolic-ref -q --short HEAD)
 COMMIT_HASH ?= $(shell git rev-parse --short HEAD 2>/dev/null)
 DATE_FMT = +%FT%T%z
