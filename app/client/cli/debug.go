@@ -50,6 +50,17 @@ var (
 		PromptTogglePacemakerMode,
 		PromptShowLatestBlockInStore,
 	}
+
+	// HACK: this is a temporary solution that guarantees backward compatibility while we implement peer discovery (#416).
+	// these addresses are simply copied over from the genesis file.
+	// We could read them from there as well but it would be just a uselessly more sophisticated HACK :)
+	// the goal is to keep it so ugly to look at that we are forced to fix it as soon as possible (already in progress)
+	validatorAddresses = []string{
+		"6f66574e1f50f0ef72dff748c3f11b9e0e89d32a",
+		"67eb3f0a50ae459fecf666be0e93176e92441317",
+		"3f52e08c4b3b65ab7cf098d77df5bf8cedcf5f99",
+		"113fdb095d42d6e09327ab5b8df13fd8197a1eaf",
+	}
 )
 
 func init() {
@@ -148,8 +159,8 @@ func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
 	// p2pMod.Broadcast(anyProto, messaging.PocketTopic_DEBUG_TOPIC)
 
-	for _, val := range consensusMod.ValidatorMap() {
-		addr, err := pocketCrypto.NewAddress(val.GetAddress())
+	for _, valAddr := range validatorAddresses {
+		addr, err := pocketCrypto.NewAddress(valAddr)
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
 		}
@@ -165,12 +176,13 @@ func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 	}
 
 	var validatorAddress []byte
-	for _, val := range consensusMod.ValidatorMap() {
-		validatorAddress, err = pocketCrypto.NewAddress(val.GetAddress())
-		if err != nil {
-			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
-		}
-		break
+	if len(validatorAddresses) == 0 {
+		log.Fatalf("[ERROR] No validator addresses found")
+	}
+
+	validatorAddress, err = pocketCrypto.NewAddress(validatorAddresses[0])
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
 	}
 
 	p2pMod.Send(validatorAddress, anyProto)
