@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/pokt-network/pocket/p2p/providers"
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
@@ -22,7 +24,7 @@ type rainTreeNetwork struct {
 	bus modules.Bus
 
 	selfAddr         cryptoPocket.Address
-	addrBookProvider typesP2P.AddrBookProvider
+	addrBookProvider addrbook_provider.AddrBookProvider
 
 	peersManager *peersManager
 
@@ -51,8 +53,8 @@ func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P
 	return typesP2P.Network(n)
 }
 
-func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg modules.P2PConfig, addrBookProvider typesP2P.AddrBookProvider) typesP2P.Network {
-	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(bus.GetConsensusModule().CurrentHeight())
+func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg modules.P2PConfig, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
 		log.Fatalf("[ERROR] Error getting addrBook: %v", err)
 	}
@@ -147,7 +149,13 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return err
 	}
 
-	n.GetBus().
+	// this is because in client mode there's no bus
+	bus := n.GetBus()
+	if bus == nil {
+		return nil
+	}
+
+	bus.
 		GetTelemetryModule().
 		GetEventMetricsAgent().
 		EmitEvent(

@@ -80,8 +80,9 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 
 			mockBus := mockBus(ctrl)
 			mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
+			currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-			network := NewRainTreeNetwork(addr, mockBus, mockP2PCfg, mockAddrBookProvider).(*rainTreeNetwork)
+			network := NewRainTreeNetwork(addr, mockBus, mockP2PCfg, mockAddrBookProvider, currentHeightProviderMock).(*rainTreeNetwork)
 
 			peersManagerStateView := network.peersManager.getNetworkView()
 
@@ -122,8 +123,9 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 
 			mockBus := mockBus(ctrl)
 			mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
+			currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-			network := NewRainTreeNetwork(addr, mockBus, mockP2PCfg, mockAddrBookProvider).(*rainTreeNetwork)
+			network := NewRainTreeNetwork(addr, mockBus, mockP2PCfg, mockAddrBookProvider, currentHeightProviderMock).(*rainTreeNetwork)
 
 			peersManagerStateView := network.peersManager.getNetworkView()
 
@@ -213,8 +215,9 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 
 	addrBook := getAlphabetAddrBook(expectedMsgProp.numNodes)
 	mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
+	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 1)
 
-	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, busMock, mockP2PCfg, mockAddrBookProvider).(*rainTreeNetwork)
+	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, busMock, mockP2PCfg, mockAddrBookProvider, currentHeightProviderMock).(*rainTreeNetwork)
 
 	network.SetBus(busMock)
 
