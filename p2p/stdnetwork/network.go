@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -18,7 +19,7 @@ type network struct {
 	addrBookMap typesP2P.AddrBookMap
 }
 
-func NewNetwork(bus modules.Bus, p2pCfg modules.P2PConfig, addrBookProvider typesP2P.AddrBookProvider) (n typesP2P.Network) {
+func NewNetwork(bus modules.Bus, p2pCfg modules.P2PConfig, addrBookProvider addrbook_provider.AddrBookProvider) (n typesP2P.Network) {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(bus.GetConsensusModule().CurrentHeight())
 	if err != nil {
 		log.Fatalf("[ERROR] Error getting addrBook: %v", err)
