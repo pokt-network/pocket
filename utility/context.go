@@ -13,6 +13,13 @@ type UtilityContext struct {
 	Height  int64
 	Mempool typesUtil.Mempool // IMPROVE: Look into accessing this directly from the module without needing to pass and save another pointer (e.g. access via bus)
 	Context *Context          // IMPROVE: Rename to `persistenceContext` or `storeContext` or `reversibleContext`?
+
+	// Data related to the Block being proposed
+	// TECHDEBT: When we consolidate everything to have a single `Block` object (a struct backed by a protobuf),
+	//           this can be simplified to just point to that object.
+	proposalProposerAddr []byte
+	proposalStateHash    string
+	proposalBlockTxs     [][]byte
 }
 
 // IMPROVE: Consider renaming to `persistenceContext` or `storeContext`?
@@ -40,6 +47,13 @@ func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error)
 	}, nil
 }
 
+func (p *UtilityContext) SetProposalBlock(blockHash string, proposerAddr []byte, transactions [][]byte) error {
+	p.proposalProposerAddr = proposerAddr
+	p.proposalStateHash = blockHash
+	p.proposalBlockTxs = transactions
+	return nil
+}
+
 func (u *UtilityContext) Store() *Context {
 	return u.Context
 }
@@ -49,7 +63,7 @@ func (u *UtilityContext) GetPersistenceContext() modules.PersistenceRWContext {
 }
 
 func (u *UtilityContext) Commit(quorumCert []byte) error {
-	if err := u.Context.PersistenceRWContext.Commit(quorumCert); err != nil {
+	if err := u.Context.PersistenceRWContext.Commit(u.proposalProposerAddr, quorumCert); err != nil {
 		return err
 	}
 	u.Context = nil
