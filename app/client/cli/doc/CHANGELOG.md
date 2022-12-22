@@ -7,12 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.3] - 2022-12-22
+## [0.0.0.3] - 2022-12-22
 
 - The `client` now doesn't instantiate a `P2P` module and compose a bus with optional modules anymore. It insteads instantiates a `client-only` `P2P` module that is disconnected from consensus and persistence. These interactions happen via RPC.
 - Replaced previous implementation reliant on `ValidatorMap` with a temporary fetch from genesis. This will be replaced with a lightweight peer discovery mechanism (#416)
 
-## [0.0.2] - 2022-11-02
+## [0.0.0.2] - 2022-11-02
 
 ### Added
 
@@ -21,13 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - System commands working end-to-end
 - Added Consensus State commands
 
-## [0.0.1] - 2022-09-09
+## [0.0.0.1] - 2022-09-09
 
 ### Added
 
 - Commands documentation generator
 
-## [0.0.0] - 2022-09-07
+## [0.0.0.0] - 2022-09-07
 
 ### Added
 
