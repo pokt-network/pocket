@@ -56,6 +56,7 @@ type P2PConfig interface {
 	GetUseRainTree() bool
 	GetIsEmptyConnectionType() bool // TODO : make enum
 	GetMaxMempoolCount() uint64
+	GetIsClientOnly() bool
 }
 
 type TelemetryConfig interface {

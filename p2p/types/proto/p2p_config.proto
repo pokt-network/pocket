@@ -10,6 +10,7 @@ message P2PConfig {
   bool use_rain_tree = 3;
   bool is_empty_connection_type = 4; // TODO (Drewsky) switch back to enum
   uint64 max_mempool_count = 5; // this is used to limit the number of nonces that can be stored in the mempool, after which a FIFO mechanism is used to remove the oldest nonces and make space for the new ones
+  bool is_client_only = 6;
 }
 
 enum ConnectionType {
