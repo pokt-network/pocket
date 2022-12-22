@@ -1,6 +1,3 @@
-//go:build debug
-// +build debug
-
 package cli
 
 import (
@@ -9,16 +6,13 @@ import (
 	"sync"
 
 	"github.com/manifoldco/promptui"
-	"github.com/pokt-network/pocket/consensus"
-	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
-	"github.com/pokt-network/pocket/rpc"
+	debugABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/debug"
+	debugCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/debug"
 	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/shared"
 	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/telemetry"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -51,16 +45,7 @@ var (
 		PromptShowLatestBlockInStore,
 	}
 
-	// HACK: this is a temporary solution that guarantees backward compatibility while we implement peer discovery (#416).
-	// these addresses are simply copied over from the genesis file.
-	// We could read them from there as well but it would be just a uselessly more sophisticated HACK :)
-	// the goal is to keep it so ugly to look at that we are forced to fix it as soon as possible (already in progress)
-	validatorAddresses = []string{
-		"6f66574e1f50f0ef72dff748c3f11b9e0e89d32a",
-		"67eb3f0a50ae459fecf666be0e93176e92441317",
-		"3f52e08c4b3b65ab7cf098d77df5bf8cedcf5f99",
-		"113fdb095d42d6e09327ab5b8df13fd8197a1eaf",
-	}
+	validators []modules.Actor
 )
 
 func init() {
@@ -159,8 +144,8 @@ func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
 	// p2pMod.Broadcast(anyProto, messaging.PocketTopic_DEBUG_TOPIC)
 
-	for _, valAddr := range validatorAddresses {
-		addr, err := pocketCrypto.NewAddress(valAddr)
+	for _, valAddr := range validators {
+		addr, err := pocketCrypto.NewAddress(valAddr.GetAddress())
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
 		}
@@ -176,11 +161,11 @@ func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 	}
 
 	var validatorAddress []byte
-	if len(validatorAddresses) == 0 {
-		log.Fatalf("[ERROR] No validator addresses found")
+	if len(validators) == 0 {
+		log.Fatalf("[ERROR] No validators found")
 	}
 
-	validatorAddress, err = pocketCrypto.NewAddress(validatorAddresses[0])
+	validatorAddress, err = pocketCrypto.NewAddress(validators[0].GetAddress())
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
 	}
@@ -193,41 +178,25 @@ func initDebug(remoteCLIURL string) {
 		var err error
 		runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
 
-		consM, err := consensus.Create(runtimeMgr)
-		if err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to create consensus module")
-		}
-		consensusMod = consM.(modules.ConsensusModule)
+		// HACK: this is a temporary solution that guarantees backward compatibility while we implement peer discovery (#416).
+		validators = runtimeMgr.GetGenesis().GetConsensusGenesisState().GetVals()
 
-		p2pM, err := p2p.Create(runtimeMgr)
+		debugAddressBookProvider := debugABP.NewDebugAddrBookProvider(
+			runtimeMgr.GetConfig().GetP2PConfig(),
+			debugABP.WithActorsByHeight(
+				map[int64][]modules.Actor{
+					debugABP.ALL_HEIGHTS: validators,
+				},
+			),
+		)
+
+		debugCurrentHeightProvider := debugCHP.NewDebugCurrentHeightProvider(0)
+
+		p2pM, err := p2p.CreateWithProviders(runtimeMgr, debugAddressBookProvider, debugCurrentHeightProvider)
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 		}
 		p2pMod = p2pM.(modules.P2PModule)
-
-		// This telemetry module instance is a NOOP because the 'enable_telemetry' flag in the `cfg` above is set to false.
-		// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
-		// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
-		// module that NOOPs (per the configs above) is injected.
-		telemetryM, err := telemetry.Create(runtimeMgr)
-		if err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to create telemetry module")
-		}
-		telemetryMod := telemetryM.(modules.TelemetryModule)
-
-		loggerM, err := logger.Create(runtimeMgr)
-		if err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to create logger module")
-		}
-		loggerMod := loggerM.(modules.LoggerModule)
-
-		rpcM, err := rpc.Create(runtimeMgr)
-		if err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to create rpc module")
-		}
-		rpcMod := rpcM.(modules.RPCModule)
-
-		_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod, loggerMod, rpcMod) // REFACTOR: use the `WithXXXModule()` pattern accepting a slice of IntegratableModule
 
 		p2pMod.Start()
 	})
