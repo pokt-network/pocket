@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.13] - 2022-12-22
+
+- Refactored `AddrBookProvider` to support multiple implementations
+- Added `CurrentHeightProvider`
+- Dependency injection of the aforementioned provider into the module creation (used by the debug-client)
+- Updated implementation to use the providers
+- Updated tests and mocks
+
 ## [0.0.0.12] - 2022-12-16
 
 - `ValidatorMapToAddrBook` renamed to `ActorToAddrBook`
