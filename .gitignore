@@ -61,3 +61,6 @@ rpc/client.gen.go
 
 # Ignored generated files by build/config/main.go
 build/config/gen*.json
+
+# Ignored generated files by build
+bin/*
