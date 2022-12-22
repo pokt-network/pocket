@@ -137,7 +137,7 @@ client_start: docker_check
 .PHONY: client_connect
 ## Connect to the running client debugging daemon
 client_connect: docker_check
-	docker exec -it client /bin/bash -c "go run -tags=debug app/client/*.go debug"
+	docker exec -it client /bin/bash -c "POCKET_P2P_IS_CLIENT_ONLY=true go run -tags=debug app/client/*.go debug"
 
 .PHONY: build_and_watch
 ## Continous build Pocket's main entrypoint as files change
@@ -249,11 +249,11 @@ mockgen: clean_mocks
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
 
-	$(eval p2p_types_dir = "p2p/types")
+	$(eval p2p_dir = "p2p")
 	$(eval p2p_type_mocks_dir = "p2p/types/mocks")
 	find ${p2p_type_mocks_dir} -type f ! -name "mocks.go" -exec rm {} \;
-	go generate ./${p2p_types_dir}
-	echo "P2P mocks generated in ${p2p_types_dir}/mocks"
+	go generate ./${p2p_dir}/...
+	echo "P2P mocks generated in ${p2p_type_mocks_dir}"
 
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
