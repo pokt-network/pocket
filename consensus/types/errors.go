@@ -37,8 +37,13 @@ func init() {
 	}
 }
 
+// TODO(#288): Improve all of this logging:
+// 1. Replace `fmt.Sprintf` with `log.Printf` (or similar)
+// 2. Add the appropriate log level (warn, debug, etc...) where appropriate
+// 3. Remove this file and move log related text into place (easier to maintain, debug, understand, etc.)
+
 func PacemakerInterrupt(reason string, height uint64, step HotstuffStep, round uint64) string {
-	return fmt.Sprintf("INTERRUPT due to %s at (height, step, round): (%d, %s, %d)!", reason, height, StepToString[step], round)
+	return fmt.Sprintf("INTERRUPT at (height, step, round): (%d, %s, %d)! Reason: %s", height, StepToString[step], round, reason)
 }
 
 func PacemakerTimeout(height uint64, step HotstuffStep, round uint64) string {
@@ -106,7 +111,7 @@ func DebugTogglePacemakerManualMode(mode string) string {
 }
 
 func DebugNodeState(state ConsensusNodeState) string {
-	return fmt.Sprintf("[DEBUG] NODE STATE: Node %d is at (Height, Step, Round): (%d, %d, %d)\n", state.NodeId, state.Height, state.Step, state.Round)
+	return fmt.Sprintf("[DEBUG] Node %d is at (Height, Step, Round): (%d, %d, %d)\n", state.NodeId, state.Height, state.Step, state.Round)
 }
 
 func DebugHandlingHotstuffMessage(msg *HotstuffMessage) string {

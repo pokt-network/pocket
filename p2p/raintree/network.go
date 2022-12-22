@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"sync"
 	"time"
 
 	"github.com/pokt-network/pocket/p2p/addrbook_provider"
@@ -31,7 +32,8 @@ type rainTreeNetwork struct {
 	// TODO(#388): generalize to use the shared `FIFOMempool` type (in `utility/types/mempool.go` at the time of writing) in here as well for this.
 	nonceSet         map[uint64]struct{}
 	nonceList        []uint64
-	mampoolMaxNonces uint64
+	mempoolMaxNonces uint64
+	mempoolLock      sync.Mutex
 }
 
 func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P.AddrBook, p2pCfg modules.P2PConfig) typesP2P.Network {
@@ -46,7 +48,7 @@ func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P
 		peersManager:     pm,
 		nonceSet:         make(map[uint64]struct{}),
 		nonceList:        make([]uint64, 0, mempoolMaxNonces),
-		mampoolMaxNonces: mempoolMaxNonces,
+		mempoolMaxNonces: mempoolMaxNonces,
 	}
 
 	return typesP2P.Network(n)
@@ -208,9 +210,15 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		return nil, nil
 	}
 
+	// TODO(#388): The lock is necessary because `HandleNetworkData` can be called concurrently
+	// which has led to `fatal error: concurrent map writes` errors. Once a proper, shared, mempool
+	// implementation is available, this should no longer be necessary.
+	n.mempoolLock.Lock()
+	defer n.mempoolLock.Unlock()
+
 	n.nonceSet[rainTreeMsg.Nonce] = struct{}{}
 	n.nonceList = append(n.nonceList, rainTreeMsg.Nonce)
-	if uint64(len(n.nonceList)) > n.mampoolMaxNonces {
+	if uint64(len(n.nonceList)) > n.mempoolMaxNonces {
 		// removing the oldest nonce and the oldest key from the slice
 		delete(n.nonceSet, n.nonceList[0])
 		n.nonceList = n.nonceList[1:]
