@@ -65,6 +65,7 @@ $ make develop_start
 ```
 
 Optionally activate changelog pre-commit hook
+
 ```bash
 cp .githooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
@@ -218,3 +219,10 @@ Things to add:
 - Link to claim & proof lifecycle documentation
 - Link to Otto's V0 GUide
 - How we use mermaid: https://github.com/pokt-network/pocket/issues/335#issuecomment-1352064588
+  tl;dr Short article from 2019 about some kademlia extensions Storj implemented (published in 2007) to prevent Sybil and Eclipse attacks.
+
+  https://medium.com/coinmonks/a-brief-overview-of-kademlia-and-its-use-in-various-decentralized-platforms-da08a7f72b8f
+
+  I'll add it to one of our guides but just sharing here for visibility too.
+
+- Recommend this blogpost: https://decentralizedthoughts.github.io/about-ittai/
