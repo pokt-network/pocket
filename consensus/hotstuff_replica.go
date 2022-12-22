@@ -179,8 +179,10 @@ func (handler *HotstuffReplicaMessageHandler) emitTelemetryEvent(m *consensusMod
 		EmitEvent(
 			consensusTelemetry.CONSENSUS_EVENT_METRICS_NAMESPACE,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_NAME,
-			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.CurrentHeight(),
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT,
+			m.CurrentHeight(),
 			typesCons.StepToString[msg.GetStep()],
+			m.CurrentRound(),
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_REPLICA,
 		)
 }

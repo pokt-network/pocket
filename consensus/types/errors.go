@@ -59,7 +59,7 @@ func PacemakerCatchup(height1, step1, round1, height2, step2, round2 uint64) str
 }
 
 func OptimisticVoteCountWaiting(step HotstuffStep, status string) string {
-	return fmt.Sprintf("Still waiting for more %s messages; %s", StepToString[step], status)
+	return fmt.Sprintf("Waiting for more %s messages; %s", StepToString[step], status)
 }
 
 func OptimisticVoteCountPassed(step HotstuffStep) string {
@@ -71,11 +71,11 @@ func CommittingBlock(height uint64, numTxs int) string {
 }
 
 func ElectedNewLeader(address string, nodeId NodeId, height, round uint64) string {
-	return fmt.Sprintf("👑 Elected new leader for (%d-%d): %d (%s) 👑", height, round, nodeId, address)
+	return fmt.Sprintf("🙇🙇🙇 Elected leader for height/round %d/%d: [%d] (%s) 🙇🙇🙇", height, round, nodeId, address)
 }
 
 func ElectedSelfAsNewLeader(address string, nodeId NodeId, height, round uint64) string {
-	return fmt.Sprintf("👑👑👑👑👑👑 I am the new leader for (%d-%d): %d (%s) 👑👑👑👑👑👑👑👑", height, round, nodeId, address)
+	return fmt.Sprintf("👑👑👑 I am the leader for height/round %d/%d: [%d] (%s) 👑👑👑", height, round, nodeId, address)
 }
 
 func SendingMessage(msg *HotstuffMessage, nodeId NodeId) string {

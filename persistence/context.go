@@ -84,7 +84,7 @@ func (p PostgresContext) Commit(proposerAddr, quorumCert []byte) error {
 }
 
 func (p PostgresContext) Release() error {
-	log.Printf("About to release context at height %d.\n", p.Height)
+	log.Printf("About to release postgres context at height %d.\n", p.Height)
 	ctx := context.TODO()
 	if err := p.getTx().Rollback(ctx); err != nil {
 		return err

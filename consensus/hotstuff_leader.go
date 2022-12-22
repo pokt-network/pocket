@@ -270,8 +270,10 @@ func (handler *HotstuffLeaderMessageHandler) emitTelemetryEvent(m *consensusModu
 		EmitEvent(
 			consensusTelemetry.CONSENSUS_EVENT_METRICS_NAMESPACE,
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_NAME,
-			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT, m.CurrentHeight(),
+			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_HEIGHT,
+			m.CurrentHeight(),
 			typesCons.StepToString[msg.GetStep()],
+			m.CurrentRound(),
 			consensusTelemetry.HOTPOKT_MESSAGE_EVENT_METRIC_LABEL_VALIDATOR_TYPE_LEADER,
 		)
 }
@@ -329,6 +331,7 @@ func (m *consensusModule) indexHotstuffMessage(msg *typesCons.HotstuffMessage) e
 
 // This is a helper function intended to be called by a leader/validator during a view change
 // to prepare a new block that is applied to the new underlying context.
+// TODO: Split this into atomic `prepareBlock` and `applyBlock` functions
 func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) (*typesCons.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock
