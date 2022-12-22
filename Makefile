@@ -1,3 +1,5 @@
+include build.mk
+
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
 # This flag is useful when running the consensus unit tests. It causes the test to wait up to the
@@ -17,17 +19,14 @@ VERBOSE_TEST ?= -v
 
 .SILENT:
 
+.PHONY: list ## List all make targets
+list:
+	@${MAKE} -pRrn : -f $(MAKEFILE_LIST) 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | sort
+
+.PHONY: help ## Prints all the targets in all the Makefiles
+.DEFAULT_GOAL := help
 help:
-	printf "Available targets\n\n"
-	awk '/^[a-zA-Z\-\\_0-9]+:/ { \
-		helpMessage = match(lastLine, /^## (.*)/); \
-		if (helpMessage) { \
-			helpCommand = substr($$1, 0, index($$1, ":")-1); \
-			helpMessage = substr(lastLine, RSTART + 3, RLENGTH); \
-			printf "%-30s %s\n", helpCommand, helpMessage; \
-		} \
-	} \
-	{ lastLine = $$0 }' $(MAKEFILE_LIST)
+	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: docker_check
 # Internal helper target - check if docker is installed
@@ -45,13 +44,11 @@ prompt_user:
 	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 
 .PHONY: go_vet
-## Run `go vet` on all files in the current project
-go_vet:
+go_vet: ## Run `go vet` on all files in the current project
 	go vet ./...
 
 .PHONY: go_staticcheck
-## Run `go staticcheck` on all files in the current project
-go_staticcheck:
+go_staticcheck: ## Run `go staticcheck` on all files in the current project
 	{ \
 	if command -v staticcheck >/dev/null; then \
 		staticcheck ./...; \
@@ -91,29 +88,26 @@ go_oapi-codegen:
 	}
 
 .PHONY: go_clean_deps
-## Runs `go mod tidy` && `go mod vendor`
-go_clean_deps:
+go_clean_deps: ## Runs `go mod tidy` && `go mod vendor`
 	go mod tidy && go mod vendor
 
 .PHONY: go_lint
-## Run all linters that are triggered by the CI pipeline
-go_lint:
+go_lint: ## Run all linters that are triggered by the CI pipeline
 	golangci-lint run ./...
 
 .PHONY: gofmt
-## Format all the .go files in the project in place.
-gofmt:
+gofmt: ## Format all the .go files in the project in place.
 	gofmt -w -s .
 
 .PHONY: install_cli_deps
-## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag' and other tooling
-install_cli_deps:
+install_cli_deps: ## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag' and other tooling
 	go install "google.golang.org/protobuf/cmd/protoc-gen-go@v1.28" && protoc-gen-go --version
 	go install "github.com/golang/mock/mockgen@v1.6.0" && mockgen --version
 	go install "github.com/favadi/protoc-go-inject-tag@latest"
 	go install "github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0"
 
 .PHONY: develop_start
+<<<<<<< HEAD
 ## Run all of the make commands necessary to develop on the project
 develop_start:
 	make docker_loki_check && \
@@ -128,104 +122,100 @@ develop_start:
 develop_test: docker_check
 	make develop_start && \
 	make test_all
+=======
+develop_start: ## Run all of the make commands necessary to develop on the project
+		make docker_loki_check && \
+		make clean_mocks && \
+		make protogen_clean && make protogen_local && \
+		make go_clean_deps && \
+		make mockgen && \
+		make generate_rpc_openapi
+
+.PHONY: develop_test
+develop_test: docker_check ## Run all of the make commands necessary to develop on the project and verify the tests pass
+		make develop_start && \
+		make test_all
+>>>>>>> main
 
 .PHONY: client_start
-## Run a client daemon which is only used for debugging purposes
-client_start: docker_check
+client_start: docker_check ## Run a client daemon which is only used for debugging purposes
 	docker-compose -f build/deployments/docker-compose.yaml up -d client --build
 
 .PHONY: client_connect
-## Connect to the running client debugging daemon
-client_connect: docker_check
+client_connect: docker_check ## Connect to the running client debugging daemon
 	docker exec -it client /bin/bash -c "go run -tags=debug app/client/*.go debug"
 
 .PHONY: build_and_watch
-## Continous build Pocket's main entrypoint as files change
-build_and_watch:
+build_and_watch: ## Continous build Pocket's main entrypoint as files change
 	/bin/sh ${PWD}/build/scripts/watch_build.sh
 
 # TODO(olshansky): Need to think of a Pocket related name for `compose_and_watch`, maybe just `pocket_watch`?
 .PHONY: compose_and_watch
-## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
-compose_and_watch: docker_check db_start monitoring_start
+compose_and_watch: docker_check db_start monitoring_start ## Run a localnet composed of 4 consensus validators w/ hot reload & debugging
 	docker-compose -f build/deployments/docker-compose.yaml up --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: rebuild_and_compose_and_watch
-## Rebuilds the container from scratch and launches compose_and_watch
-rebuild_and_compose_and_watch: docker_check db_start monitoring_start
+rebuild_and_compose_and_watch: docker_check db_start monitoring_start ## Rebuilds the container from scratch and launches compose_and_watch
 	docker-compose -f build/deployments/docker-compose.yaml up --build --force-recreate node1.consensus node2.consensus node3.consensus node4.consensus
 
 .PHONY: db_start
-## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
-db_start: docker_check
+db_start: docker_check ## Start a detached local postgres and admin instance (this is auto-triggered by compose_and_watch)
 	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d db pgadmin
 
 .PHONY: db_cli
-## Open a CLI to the local containerized postgres instance
-db_cli:
+db_cli: ## Open a CLI to the local containerized postgres instance
 	echo "View schema by running 'SELECT schema_name FROM information_schema.schemata;'"
 	docker exec -it pocket-db bash -c "psql -U postgres"
 
 psqlSchema ?= node1
 
 .PHONY: db_cli_node
-## Open a CLI to the local containerized postgres instance for a specific node
-db_cli_node:
+db_cli_node: ## Open a CLI to the local containerized postgres instance for a specific node
 	echo "View all avialable tables by running \dt"
 	docker exec -it pocket-db bash -c "PGOPTIONS=--search_path=${psqlSchema} psql -U postgres"
 
 .PHONY: db_drop
-## Drop all schemas used for LocalNet development matching `node%`
-db_drop: docker_check
+db_drop: docker_check ## Drop all schemas used for LocalNet development matching `node%`
 	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/drop_all_schemas.sql"
 
 .PHONY: db_bench_init
-## Initialize pgbench on local postgres - needs to be called once after container is created.
-db_bench_init: docker_check
+db_bench_init: docker_check ## Initialize pgbench on local postgres - needs to be called once after container is created.
 	docker exec -it pocket-db bash -c "pgbench -i -U postgres -d postgres"
 
 .PHONY: db_bench
-## Run a local benchmark against the local postgres instance - TODO(olshansky): visualize results
-db_bench: docker_check
+db_bench: docker_check ## Run a local benchmark against the local postgres instance - TODO(olshansky): visualize results
 	docker exec -it pocket-db bash -c "pgbench -U postgres -d postgres"
 
 .PHONY: db_show_schemas
-## Show all the node schemas in the local SQL DB
-db_show_schemas: docker_check
+db_show_schemas: docker_check ## Show all the node schemas in the local SQL DB
 	docker exec -it pocket-db bash -c "psql -U postgres -d postgres -a -f /tmp/scripts/show_all_schemas.sql"
 
 .PHONY: db_admin
-## Helper to access to postgres admin GUI interface
-db_admin:
+db_admin: ## Helper to access to postgres admin GUI interface
 	echo "Open http://0.0.0.0:5050 and login with 'pgadmin4@pgadmin.org' and 'pgadmin4'.\n The password is 'postgres'"
 
 .PHONY: docker_kill_all
-## Kill all containers started by the docker-compose file
-docker_kill_all: docker_check
+docker_kill_all: docker_check ## Kill all containers started by the docker-compose file
 	docker-compose -f build/deployments/docker-compose.yaml down
 
 .PHONY: docker_wipe
-## [WARNING] Remove all the docker containers, images and volumes.
-docker_wipe: docker_check prompt_user
+docker_wipe: docker_check prompt_user ## [WARNING] Remove all the docker containers, images and volumes.
 	docker ps -a -q | xargs -r -I {} docker stop {}
 	docker ps -a -q | xargs -r -I {} docker rm {}
 	docker images -q | xargs -r -I {} docker rmi {}
 	docker volume ls -q | xargs -r -I {} docker volume rm {}
 
 .PHONY: docker_wipe_nodes
-## [WARNING] Remove all the node containers
-docker_wipe_nodes: docker_check prompt_user db_drop
+docker_wipe_nodes: docker_check prompt_user db_drop ## [WARNING] Remove all the node containers
 	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker stop {}
 	docker ps -a -q --filter="name=node*" | xargs -r -I {} docker rm {}
 
 .PHONY: monitoring_start
-## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
-monitoring_start: docker_check
+monitoring_start: docker_check ## Start grafana, metrics and logging system (this is auto-triggered by compose_and_watch)
 	docker-compose -f build/deployments/docker-compose.yaml up --no-recreate -d grafana loki vm
 
 .PHONY: docker_loki_install
-## Installs the loki docker driver
-docker_loki_install: docker_check
+docker_loki_install: docker_check ## Installs the loki docker driver
 	echo "Installing the loki docker driver...\n"
 	docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions
 
@@ -235,16 +225,14 @@ docker_loki_check:
 	if [ `docker plugin ls | grep loki: | wc -l` -eq 0 ]; then make docker_loki_install; fi
 
 .PHONY: clean_mocks
-### Use `clean_mocks` to delete mocks before recreating them. Also useful to cleanup code that was generated from a different branch
-clean_mocks:
+clean_mocks: ## Use `clean_mocks` to delete mocks before recreating them. Also useful to cleanup code that was generated from a different branch
 	$(eval modules_dir = "shared/modules")
 	find ${modules_dir}/mocks -type f ! -name "mocks.go" -exec rm {} \;
 	$(eval p2p_type_mocks_dir = "p2p/types/mocks")
 	find ${p2p_type_mocks_dir} -type f ! -name "mocks.go" -exec rm {} \;
 
 .PHONY: mockgen
-## Use `mockgen` to generate mocks used for testing purposes of all the modules.
-mockgen: clean_mocks
+mockgen: clean_mocks ## Use `mockgen` to generate mocks used for testing purposes of all the modules.
 	$(eval modules_dir = "shared/modules")
 	go generate ./${modules_dir}
 	echo "Mocks generated in ${modules_dir}/mocks"
@@ -258,19 +246,16 @@ mockgen: clean_mocks
 # TODO(team): Tested locally with `protoc` version `libprotoc 3.19.4`. In the near future, only the Dockerfiles will be used to compile protos.
 
 .PHONY: protogen_show
-## A simple `find` command that shows you the generated protobufs.
-protogen_show:
+protogen_show: ## A simple `find` command that shows you the generated protobufs.
 	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor"
 
 .PHONY: protogen_clean
-## Remove all the generated protobufs.
-protogen_clean:
+protogen_clean: ## Remove all the generated protobufs.
 	find . -name "*.pb.go" | grep -v -e "prototype" -e "vendor" | xargs -r rm
 
 .PHONY: protogen_local
-## Generate go structures for all of the protobufs
-protogen_local: go_protoc-go-inject-tag
-# TODO: Organize this code with a basic forloop
+protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the protobufs
+# TODO: Organize this code with a basic fo
 	$(eval proto_dir = ".")
 	protoc --go_opt=paths=source_relative  -I=./shared/messaging/proto    --go_out=./shared/messaging      	./shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
@@ -299,124 +284,102 @@ protogen_docker: docker_check
 	docker build -t pocket/proto-generator -f ./build/Dockerfile.proto . && docker run -it -v $(CWD)/:/usr/src/app/ pocket/proto-generator
 
 .PHONY: generate_rpc_openapi
-## (Re)generates the RPC server and client infra code from the openapi spec file (./rpc/v1/openapi.yaml)
-generate_rpc_openapi: go_oapi-codegen
+generate_rpc_openapi: go_oapi-codegen ## (Re)generates the RPC server and client infra code from the openapi spec file (./rpc/v1/openapi.yaml)
 	oapi-codegen  --config ./rpc/server.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/server.gen.go
 	oapi-codegen  --config ./rpc/client.gen.config.yml ./rpc/v1/openapi.yaml > ./rpc/client.gen.go
 	echo "OpenAPI client and server generated"
 
 .PHONY: swagger-ui
-## Starts a local Swagger UI instance for the RPC API
-swagger-ui:
+swagger-ui: ## Starts a local Swagger UI instance for the RPC API
 	echo "Attempting to start Swagger UI at http://localhost:8080\n\n"
 	docker run -p 8080:8080 -e SWAGGER_JSON=/v1/openapi.yaml -v $(shell pwd)/rpc/v1:/v1 swaggerapi/swagger-ui
 
 .PHONY: generate_cli_commands_docs
-### (Re)generates the CLI commands docs (this is meant to be called by CI)
-generate_cli_commands_docs:
+generate_cli_commands_docs: ## (Re)generates the CLI commands docs (this is meant to be called by CI)
 	$(eval cli_docs_dir = "app/client/cli/doc/commands")
 	rm ${cli_docs_dir}/*.md >/dev/null 2>&1 || true
 	cd app/client/cli/docgen && go run .
 	echo "CLI commands docs generated in ${cli_docs_dir}"
 
 .PHONY: test_all
-## Run all go unit tests
-test_all: # generate_mocks
+test_all: ## Run all go unit tests
 	go test -p 1 -count=1 ./...
 
 .PHONY: test_all_with_json_coverage
-## Run all go unit tests, output results & coverage into json & coverage files
-test_all_with_json_coverage: generate_rpc_openapi # generate_mocks
+test_all_with_json_coverage: generate_rpc_openapi ## Run all go unit tests, output results & coverage into json & coverage files
 	go test -p 1 -json ./... -covermode=count -coverprofile=coverage.out | tee test_results.json | jq
 
 .PHONY: test_race
-## Identify all unit tests that may result in race conditions
-test_race: # generate_mocks
+test_race: ## Identify all unit tests that may result in race conditions
 	go test ${VERBOSE_TEST} -race ./...
 
 .PHONY: test_utility
-## Run all go utility module unit tests
-test_utility: # generate_mocks
+test_utility: ## Run all go utility module unit tests
 	go test ${VERBOSE_TEST} -p=1 -count=1  ./utility/...
 
 .PHONY: test_shared
-## Run all go unit tests in the shared module
-test_shared: # generate_mocks
+test_shared: ## Run all go unit tests in the shared module
 	go test ${VERBOSE_TEST} -p 1 ./shared/...
 
 .PHONY: test_consensus
-## Run all go unit tests in the consensus module
-test_consensus: # mockgen
+test_consensus: ## Run all go unit tests in the consensus module
 	go test ${VERBOSE_TEST} -count=1 ./consensus/...
 
 .PHONY: test_consensus_concurrent_tests
-## Run unit tests in the consensus module that could be prone to race conditions (#192)
-test_consensus_concurrent_tests:
+test_consensus_concurrent_tests: ## Run unit tests in the consensus module that could be prone to race conditions (#192)
 	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
 	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
 	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
 	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
 
 .PHONY: test_hotstuff
-## Run all go unit tests related to hotstuff consensus
-test_hotstuff: # mockgen
+test_hotstuff: ## Run all go unit tests related to hotstuff consensus
 	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
 .PHONY: test_pacemaker
-## Run all go unit tests related to the hotstuff pacemaker
-test_pacemaker: # mockgen
+test_pacemaker: ## Run all go unit tests related to the hotstuff pacemaker
 	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
 .PHONY: test_vrf
-## Run all go unit tests in the VRF library
-test_vrf:
+test_vrf: ## Run all go unit tests in the VRF library
 	go test ${VERBOSE_TEST} ./consensus/leader_election/vrf
 
 .PHONY: test_sortition
-## Run all go unit tests in the Sortition library
-test_sortition:
+test_sortition: ## Run all go unit tests in the Sortition library
 	go test ${VERBOSE_TEST} ./consensus/leader_election/sortition
 
 .PHONY: test_persistence
-## Run all go unit tests in the Persistence module
-test_persistence:
+test_persistence: ## Run all go unit tests in the Persistence module
 	go test ${VERBOSE_TEST} -p 1 -count=1 ./persistence/...
 
 .PHONY: test_persistence_state_hash
-## Run all go unit tests in the Persistence module related to the state hash
-test_persistence_state_hash:
+test_persistence_state_hash: ## Run all go unit tests in the Persistence module related to the state hash
 	go test ${VERBOSE_TEST} -run TestStateHash -count=1 ./persistence/...
 
 .PHONY: test_p2p
-## Run all p2p
-test_p2p:
+test_p2p: ## Run all p2p related tests
 	go test ${VERBOSE_TEST} -count=1 ./p2p/...
 
 .PHONY: test_p2p_raintree
-## Run all p2p raintree related tests
-test_p2p_raintree:
+test_p2p_raintree: ## Run all p2p raintree related tests
 	go test ${VERBOSE_TEST} -run RainTreeNetwork -count=1 ./p2p/...
 
 .PHONY: test_p2p_raintree_addrbook
-## Run all p2p raintree addr book related tests
-test_p2p_raintree_addrbook:
+test_p2p_raintree_addrbook: ## Run all p2p raintree addr book related tests
 	go test ${VERBOSE_TEST} -run RainTreeAddrBook -count=1 ./p2p/...
 
 # TIP: For benchmarks, consider appending `-run=^#` to avoid running unit tests in the same package
 
 .PHONY: benchmark_persistence_state_hash
-## Benchmark the state hash computation
-benchmark_persistence_state_hash:
+benchmark_persistence_state_hash: ## Benchmark the state hash computation
 	go test ${VERBOSE_TEST} -cpu 1,2 -benchtime=1s -benchmem -bench=. -run BenchmarkStateHash -count=1 ./persistence/...
 
 .PHONY: benchmark_sortition
-## Benchmark the Sortition library
-benchmark_sortition:
+benchmark_sortition: ## Benchmark the Sortition library
 	go test ${VERBOSE_TEST} -bench=. -run ^# ./consensus/leader_election/sortition
 
 .PHONY: benchmark_p2p_addrbook
-## Benchmark all P2P addr book related tests
-benchmark_p2p_addrbook:
+benchmark_p2p_addrbook: ## Benchmark all P2P addr book related tests
 	go test ${VERBOSE_TEST} -bench=. -run BenchmarkAddrBook -count=1 ./p2p/...
 
 ### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
@@ -450,18 +413,15 @@ TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE
 # 3. Feel free to add additional keywords to the list above
 
 .PHONY: todo_list
-## List all the TODOs in the project (excludes vendor and prototype directories)
-todo_list:
+todo_list: ## List all the TODOs in the project (excludes vendor and prototype directories)
 	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS}  .
 
 .PHONY: todo_count
-## Print a count of all the TODOs in the project
-todo_count:
+todo_count: ## Print a count of all the TODOs in the project
 	grep --exclude-dir={.git,vendor,prototype} -r ${TODO_KEYWORDS} . | wc -l
 
 .PHONY: todo_this_commit
-## List all the TODOs needed to be done in this commit
-todo_this_commit:
+todo_this_commit: ## List all the TODOs needed to be done in this commit
 	grep --exclude-dir={.git,vendor,prototype,.vscode} --exclude=Makefile -r -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT"
 
 # Default values for gen_genesis_and_config
@@ -471,18 +431,15 @@ numApplications ?= 1
 numFishermen ?= 1
 
 .PHONY: gen_genesis_and_config
-## Generate the genesis and config files for LocalNet
-gen_genesis_and_config:
+gen_genesis_and_config: ## Generate the genesis and config files for LocalNet
 	go run ./build/config/main.go --genPrefix="gen." --numValidators=${numValidators} --numServiceNodes=${numServiceNodes} --numApplications=${numApplications} --numFishermen=${numFishermen}
 
 .PHONY: gen_genesis_and_config
-## Clear the genesis and config files for LocalNet
-clear_genesis_and_config:
+clear_genesis_and_config: ## Clear the genesis and config files for LocalNet
 	rm build/config/gen.*.json
 
 .PHONY: check_cross_module_imports
-## Lists cross-module imports
-check_cross_module_imports:
+check_cross_module_imports: ## Lists cross-module imports
 	$(eval exclude_common=--exclude=Makefile --exclude-dir=shared --exclude-dir=app --exclude-dir=runtime)
 	echo "persistence:\n"
 	grep ${exclude_common} --exclude-dir=persistence -r "github.com/pokt-network/pocket/persistence" || echo "✅ OK!"
