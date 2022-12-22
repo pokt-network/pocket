@@ -131,7 +131,7 @@ func (m *p2pModule) Start() error {
 	if m.p2pCfg.GetUseRainTree() {
 		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), m.p2pCfg, addrbookProvider, currentHeightProvider)
 	} else {
-		m.network = stdnetwork.NewNetwork(m.GetBus(), m.p2pCfg, addrbookProvider)
+		m.network = stdnetwork.NewNetwork(m.GetBus(), m.p2pCfg, addrbookProvider, currentHeightProvider)
 	}
 
 	if m.p2pCfg.GetIsClientOnly() {
