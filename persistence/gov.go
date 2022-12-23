@@ -10,21 +10,24 @@ import (
 )
 
 // TODO : Deprecate these two constants when we change the persistenceRWContext interface to pass the `paramName`
-const (
-	BlocksPerSessionParamName       = "blocks_per_session"
-	ServiceNodesPerSessionParamName = "service_nodes_per_session"
-)
+//const (
+//	BlocksPerSessionParamName       = "blocks_per_session"
+//	ServiceNodesPerSessionParamName = "service_nodes_per_session"
+//)
 
 // TODO (Team) BUG setting parameters twice on the same height causes issues. We need to move the schema away from 'end_height' and
 // more towards the height_constraint architecture
 
-func (p PostgresContext) GetBlocksPerSession(height int64) (int, error) {
-	return p.GetIntParam(BlocksPerSessionParamName, height)
-}
+// Deprecate these functions in favour of the getter function:
+//		GetParameter(paramName string, height int64) (interface{}, error)
 
-func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) {
-	return p.GetIntParam(ServiceNodesPerSessionParamName, height)
-}
+// func (p PostgresContext) GetBlocksPerSession(height int64) (int, error) {
+// 	return p.GetIntParam(BlocksPerSessionParamName, height)
+// }
+
+// func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) {
+// 	return p.GetIntParam(ServiceNodesPerSessionParamName, height)
+// }
 
 func (p PostgresContext) InitParams() error {
 	ctx, tx, err := p.getCtxAndTx()
@@ -33,6 +36,20 @@ func (p PostgresContext) InitParams() error {
 	}
 	_, err = tx.Exec(ctx, types.InsertParams(types.DefaultParams(), p.Height))
 	return err
+}
+
+func (p PostgresContext) GetParameter(paramName string, value any, height int64) (v any, err error) {
+	switch any(value).(type) {
+	case int, int32, int64:
+		v, _, err = getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
+	case []byte:
+		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
+	case string:
+		v, _, err = getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
+	default:
+		return nil, fmt.Errorf("unhandled type for paramValue %T", value) // value is not accepted by getParamOrFlag
+	}
+	return v, err
 }
 
 func (p PostgresContext) GetIntParam(paramName string, height int64) (int, error) {
