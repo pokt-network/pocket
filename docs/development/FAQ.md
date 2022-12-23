@@ -10,6 +10,7 @@ A list of common issues & resolutions shared by the V1 contributors
 ## Unable to start LocalNet - permission denied
 
 * **Issue**: when trying to run `make compose_and_watch` on an operating system with SELinux, the command gives the error:
+
 ```
 Recreating node2.consensus ... done
 Recreating node4.consensus ... done
@@ -25,35 +26,40 @@ node2.consensus exited with code 2
 node3.consensus exited with code 2
 node4.consensus exited with code 2
 ```
+
 * **Solution**: A temporary fix would be to run
-```
-$ su -c "setenforce 0"
-```
-Whereas a permenant approach would be to allow the docker container access to the local repository
-```
-$ cd pocket
-$ sudo chcon -Rt svirt_sandbox_file_t ./
+
+```bash
+su -c "setenforce 0"
 ```
 
-See [this stackoverflow post](https://stackoverflow.com/questions/24288616/permission-denied-on-accessing-host-directory-in-docker) for more details
+Whereas a permenant approach would be to allow the docker container access to the local repository
+
+```bash
+sudo chcon -Rt svirt_sandbox_file_t ./pocket
+```
+
+See [this stackoverflow post](https://stackoverflow.com/questions/24288616/permission-denied-on-accessing-host-directory-in-docker) for more details.
 
 ## Unable to create a LocalNet client
 
-* **Issue**: When running `make client_start` you get the error message
+* **Issue**: When running `make client_start` you get the error message:
+
 ```
 ERROR: No such service: --build
 make: *** [Makefile:125: client_start] Error 1
 ```
 
 * **Solution**: open `Makefile` and edit the following block of code
-```
+
+```make
 .PHONY: client_start
 client_start: docker_check ## Run a client daemon which is only used for debugging purposes
     docker-compose -f build/deployments/docker-compose.yaml up -d client --build
 ```
 
 Remove the `--build` so the lines look like:
-```
+```make
 .PHONY: client_start
 client_start: docker_check ## Run a client daemon which is only used for debugging purposes
     docker-compose -f build/deployments/docker-compose.yaml up -d client
