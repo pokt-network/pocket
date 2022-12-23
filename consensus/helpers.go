@@ -169,7 +169,6 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 	}
 
 	for _, val := range m.validatorMap {
-		// fmt.Println("OLSH", addr)
 		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
 			m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
 		}
@@ -178,7 +177,7 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 
 /*** Persistence Helpers ***/
 
-// TECHDEBT: Integrate this with the `persistence` module or a real mempool.
+// TECHDEBT(#388): Integrate this with the `persistence` module or a real mempool.
 func (m *consensusModule) clearMessagesPool() {
 	for _, step := range HotstuffSteps {
 		m.messagePool[step] = make([]*typesCons.HotstuffMessage, 0)
@@ -211,7 +210,6 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 		m.clearLeader()
 		return err
 	}
-
 	m.leaderId = &leaderId
 
 	if m.isLeader() {
@@ -234,7 +232,7 @@ func (m *consensusModule) nodeLog(s string) {
 
 // TODO(#164): Remove this once we have a proper logging system.
 func (m *consensusModule) nodeLogError(s string, err error) {
-	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.nodeId, s, err)
+	log.Printf("🐞[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.nodeId, s, err)
 }
 
 func (m *consensusModule) setLogPrefix(logPrefix string) {

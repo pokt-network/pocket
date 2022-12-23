@@ -1,6 +1,7 @@
 package consensus_tests
 
 import (
+	"fmt"
 	"reflect"
 	"runtime"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestTinyPacemakerTimeouts(t *testing.T) {
+	fmt.Println("ATE")
 	clockMock := clock.NewMock()
 	timeReminder(clockMock, 100*time.Millisecond)
 
@@ -35,7 +37,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
-	// Debug message to start consensus by triggering next view.
+	// // Debug message to start consensus by triggering next view.
 	for _, pocketNode := range pocketNodes {
 		TriggerNextView(t, pocketNode)
 	}
@@ -72,7 +74,8 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	}
 
 	forcePacemakerTimeout(clockMock, paceMakerTimeout)
-	// // Check that a new round starts at the same height
+
+	// Check that a new round starts at the same height
 	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
@@ -86,7 +89,6 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	}
 
 	forcePacemakerTimeout(clockMock, paceMakerTimeout)
-
 	// Check that a new round starts at the same height.
 	newRoundMessages, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
 	require.NoError(t, err)
@@ -111,15 +113,15 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	// Confirm we are at the next step
 	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Prepare, consensus.Propose, 1, 500)
 	require.NoError(t, err)
-	for pocketId, pocketNode := range pocketNodes {
-		assertNodeConsensusView(t, pocketId,
-			typesCons.ConsensusNodeState{
-				Height: 1,
-				Step:   uint8(consensus.Prepare),
-				Round:  3,
-			},
-			GetConsensusNodeState(pocketNode))
-	}
+	// for pocketId, pocketNode := range pocketNodes {
+	// 	assertNodeConsensusView(t, pocketId,
+	// 		typesCons.ConsensusNodeState{
+	// 			Height: 1,
+	// 			Step:   uint8(consensus.Prepare),
+	// 			Round:  3,
+	// 		},
+	// 		GetConsensusNodeState(pocketNode))
+	// }
 }
 
 func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {

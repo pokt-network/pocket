@@ -117,57 +117,55 @@ func (m *paceMaker) SetConsensusModule(c *consensusModule) {
 	m.consensusMod = c
 }
 
-func (p *paceMaker) ShouldHandleMessage(m *typesCons.HotstuffMessage) (bool, error) {
+func (p *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, error) {
 	currentHeight := p.consensusMod.height
 	currentRound := p.consensusMod.round
+	currentStep := p.consensusMod.step
 
 	// Consensus message is from the past
-	if m.Height < currentHeight {
-		// TODO: Noisy log - make it a DEBUG
-		// p.consensusMod.nodeLog(typesCons.ErrPacemakerUnexpectedMessageHeight(typesCons.ErrOlderMessage, currentHeight, m.Height).Error())
+	if msg.Height < currentHeight {
+		p.consensusMod.nodeLog(fmt.Sprintf("[WARN][DISCARDING] Node at height %d received message at a %d", currentHeight, msg.Height))
 		return false, nil
 	}
 
-	// Current node is out of sync
 	// TODO: Need to restart state sync or be in state sync mode right now
-	if m.Height > currentHeight {
-		// TODO: Noisy log - make it a DEBUG
-		// p.consensusMod.nodeLog(typesCons.ErrPacemakerUnexpectedMessageHeight(typesCons.ErrFutureMessage, currentHeight, m.Height).Error())
+	// Current node is out of sync
+	if msg.Height > currentHeight {
+		p.consensusMod.nodeLog(fmt.Sprintf("[WARN][DISCARDING] Node at height %d received message at a %d", currentHeight, msg.Height))
 		return false, nil
 	}
 
-	// Do not handle messages if it is a self proposal
 	// TODO(olshansky): This code branch is a result of the optimization in the leader
 	//                  handlers. Since the leader also acts as a replica but doesn't use the replica's
 	//                  handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
-	if p.consensusMod.isLeader() && m.Type == Propose && m.Step != NewRound {
+	// Do not handle messages if it is a self proposal
+	if p.consensusMod.isLeader() && msg.Type == Propose && msg.Step != NewRound {
 		// TODO: Noisy log - make it a DEBUG
 		// p.consensusMod.nodeLog(typesCons.ErrSelfProposal.Error())
 		return false, nil
 	}
 
 	// Message is from the past
-	if m.Round < currentRound || (m.Round == currentRound && m.Step < p.consensusMod.step) {
-		// TODO: Noisy log - make it a DEBUG
-		// p.consensusMod.nodeLog(typesCons.ErrPacemakerUnexpectedMessageStepRound(typesCons.ErrOlderStepRound, p.consensusMod.step, currentRound, m).Error())
+	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
+		p.consensusMod.nodeLog(fmt.Sprintf("[WARN][DISCARDING] Node at (step, round) (%d, %d, %d) received message at (%d, %d, %d)", currentHeight, currentRound, currentHeight, currentStep, msg.Round, msg.Step))
 		return false, nil
 	}
 
 	// Everything checks out!
-	if m.Height == currentHeight && m.Step == p.consensusMod.step && m.Round == currentRound {
+	if msg.Height == currentHeight && msg.Step == currentStep && msg.Round == currentRound {
 		return true, nil
 	}
 
 	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
-	if m.Round > currentRound || (m.Round == currentRound && m.Step > p.consensusMod.step) {
-		p.consensusMod.nodeLog(typesCons.PacemakerCatchup(currentHeight, uint64(p.consensusMod.step), currentRound, m.Height, uint64(m.Step), m.Round))
-		p.consensusMod.step = m.Step
-		p.consensusMod.round = m.Round
+	if msg.Round > currentRound || (msg.Round == currentRound && msg.Step > currentStep) {
+		p.consensusMod.nodeLog(typesCons.PacemakerCatchup(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))
+		p.consensusMod.step = msg.Step
+		p.consensusMod.round = msg.Round
 
 		// TODO(olshansky): Add tests for this. When we catch up to a later step, the leader is still the same.
 		// However, when we catch up to a later round, the leader at the same height will be different.
-		if currentRound != m.Round || p.consensusMod.leaderId == nil {
-			p.consensusMod.electNextLeader(m)
+		if currentRound != msg.Round || p.consensusMod.leaderId == nil {
+			p.consensusMod.electNextLeader(msg)
 		}
 
 		return true, nil

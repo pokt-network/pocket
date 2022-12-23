@@ -279,20 +279,25 @@ func (handler *HotstuffLeaderMessageHandler) emitTelemetryEvent(m *consensusModu
 }
 
 func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessage) error {
+	partialSig := msg.GetPartialSignature()
+
 	if msg.GetStep() == NewRound {
-		m.nodeLog(typesCons.ErrUnnecessaryPartialSigForNewRound.Error())
+		if partialSig != nil {
+			m.nodeLog(typesCons.ErrUnnecessaryPartialSigForNewRound.Error())
+		}
 		return nil
 	}
 
 	if msg.GetType() == Propose {
-		m.nodeLog(typesCons.ErrUnnecessaryPartialSigForLeaderProposal.Error())
+		if partialSig != nil {
+			m.nodeLog(typesCons.ErrUnnecessaryPartialSigForLeaderProposal.Error())
+		}
 		return nil
 	}
 
-	if msg.GetPartialSignature() == nil {
+	if partialSig == nil {
 		return typesCons.ErrNilPartialSig
 	}
-	partialSig := msg.GetPartialSignature()
 
 	if partialSig.Signature == nil || len(partialSig.GetAddress()) == 0 {
 		return typesCons.ErrNilPartialSigOrSourceNotSpecified
@@ -331,7 +336,7 @@ func (m *consensusModule) indexHotstuffMessage(msg *typesCons.HotstuffMessage) e
 
 // This is a helper function intended to be called by a leader/validator during a view change
 // to prepare a new block that is applied to the new underlying context.
-// TODO: Split this into atomic `prepareBlock` and `applyBlock` functions
+// TODO: Split this into atomic & functional `prepareBlock` and `applyBlock` methods
 func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) (*typesCons.Block, error) {
 	if m.isReplica() {
 		return nil, typesCons.ErrReplicaPrepareBlock

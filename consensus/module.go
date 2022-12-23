@@ -325,7 +325,7 @@ func (m *consensusModule) loadPersistedState() error {
 
 	m.height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
 
-	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
+	m.nodeLog(fmt.Sprintf("Starting consensus module at height %d", latestHeight))
 
 	return nil
 }

@@ -265,14 +265,14 @@ loop:
 				continue
 			}
 
-			message := testEvent.Content
-			if message == nil || !includeFilter(message) {
-				unused = append(unused, &testEvent)
-				continue
-			}
+			// message := testEvent.Content
+			// if message == nil || !includeFilter(message) {
+			// 	unused = append(unused, &testEvent)
+			// 	continue
+			// }
 
-			messages = append(messages, message)
-			numMessages--
+			// messages = append(messages, message)
+			// numMessages--
 
 			// The if structure below "breaks early" when we get enough messages. However, it does not capture
 			// the case where we could be receiving more messages than expected. To make sure the latter doesn't
@@ -292,10 +292,10 @@ loop:
 			}
 		}
 	}
-	cancel()
-	for _, u := range unused {
-		testChannel <- *u
-	}
+	// cancel()
+	// for _, u := range unused {
+	// 	testChannel <- *u
+	// }
 	return
 }
 

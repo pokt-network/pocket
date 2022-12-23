@@ -20,7 +20,7 @@ const (
 	ProposalBlockExtends     = "the ProposalQC block is the same as the LockedQC block"
 
 	// WARN
-	NilUtilityContextWarning     = "[WARN] Utility context not nil when preparing a new block? Releasing for now but should not happen"
+	NilUtilityContextWarning     = "[WARN] utilityContext expected to be nil but is not. TODO: Investigate why this is and fix it"
 	InvalidPartialSigInQCWarning = "[WARN] QC contains an invalid partial signature"
 
 	// DEBUG
@@ -114,9 +114,14 @@ func DebugNodeState(state ConsensusNodeState) string {
 	return fmt.Sprintf("[DEBUG] Node %d is at (Height, Step, Round): (%d, %d, %d)\n", state.NodeId, state.Height, state.Step, state.Round)
 }
 
+// TODO(olshansky): Add source and destination NodeId of message here
+func DebugReceivedHandlingHotstuffMessage(msg *HotstuffMessage) string {
+	return fmt.Sprintf("[DEBUG] Received hotstuff msg at (Height, Step, Round): (%d, %d, %d)\n", msg.Height, msg.GetStep(), msg.Round)
+}
+
+// TODO(olshansky): Add source and destination NodeId of message here
 func DebugHandlingHotstuffMessage(msg *HotstuffMessage) string {
-	// TODO(olshansky): Add source and destination NodeId of message here
-	return fmt.Sprintf("[DEBUG] Handling message w/ Height: %d; Type: %s; Round: %d.", msg.Height, StepToString[msg.GetStep()], msg.Round)
+	return fmt.Sprintf("[DEBUG] Handling hotstuff msg at (Height, Step, Round): (%d, %d, %d)\n", msg.Height, msg.GetStep(), msg.Round)
 }
 
 // Errors
