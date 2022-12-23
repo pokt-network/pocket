@@ -60,9 +60,11 @@ client_start: docker_check ## Run a client daemon which is only used for debuggi
     docker-compose -f build/deployments/docker-compose.yaml up -d client --build
 ```
 
-Remove the `--build` so the lines look like:
+Move the `--build` profile so that it is before the `client` service, making the lines look like:
 ```make
 .PHONY: client_start
 client_start: docker_check ## Run a client daemon which is only used for debugging purposes
-    docker-compose -f build/deployments/docker-compose.yaml up -d client
+    docker-compose -f build/deployments/docker-compose.yaml up -d --build client
 ```
+
+For more information on this refer to the [docker documentation](https://docs.docker.com/compose/profiles/)
