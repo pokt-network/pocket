@@ -34,7 +34,7 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) typesU
 }
 
 // Deprecate this function in favour of the getter function:
-// 		GetParameter(paramName string, value any, height int64) (interface{}, error)
+// 		GetParameter(paramName string, value any, height int64) (any, error)
 // func (u *UtilityContext) GetBlocksPerSession() (int, typesUtil.Error) {
 //	store, height, er := u.GetStoreAndHeight()
 //	if er != nil {
