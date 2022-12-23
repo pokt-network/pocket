@@ -1,4 +1,4 @@
-package consensus_tests
+package e2e_tests
 
 import (
 	"context"
@@ -265,14 +265,14 @@ loop:
 				continue
 			}
 
-			// message := testEvent.Content
-			// if message == nil || !includeFilter(message) {
-			// 	unused = append(unused, &testEvent)
-			// 	continue
-			// }
+			message := testEvent.Content
+			if message == nil || !includeFilter(message) {
+				unused = append(unused, &testEvent)
+				continue
+			}
 
-			// messages = append(messages, message)
-			// numMessages--
+			messages = append(messages, message)
+			numMessages--
 
 			// The if structure below "breaks early" when we get enough messages. However, it does not capture
 			// the case where we could be receiving more messages than expected. To make sure the latter doesn't
@@ -292,10 +292,10 @@ loop:
 			}
 		}
 	}
-	// cancel()
-	// for _, u := range unused {
-	// 	testChannel <- *u
-	// }
+	cancel()
+	for _, u := range unused {
+		testChannel <- *u
+	}
 	return
 }
 
@@ -437,32 +437,32 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockLogg
 	return loggerMock
 }
 
-func logTime(clock *clock.Mock) {
-	log.Printf("[⌚ CLOCK ⌚] the time is: %v ms from UNIX Epoch [%v]", clock.Now().UTC().UnixMilli(), clock.Now().UTC())
+func logTime(t *testing.T, clock *clock.Mock) {
+	t.Logf("[⌚ CLOCK ⌚] the time is: %v ms from UNIX Epoch [%v]", clock.Now().UTC().UnixMilli(), clock.Now().UTC())
 }
 
 // advanceTime moves the time forward on the mock clock and logs what just happened.
-func advanceTime(clock *clock.Mock, duration time.Duration) {
+func advanceTime(t *testing.T, clock *clock.Mock, duration time.Duration) {
 	clock.Add(duration)
-	log.Printf("[⌚ CLOCK ⏩] advanced by %v", duration)
-	logTime(clock)
+	t.Logf("[⌚ CLOCK ⏩] advanced by %v", duration)
+	logTime(t, clock)
 }
 
 // sleep pauses the goroutine for the given duration on the mock clock and logs what just happened.
 //
 // Note: time has to be moved forward in a separate goroutine, see `advanceTime`.
-func sleep(clock *clock.Mock, duration time.Duration) {
-	log.Printf("[⌚ CLOCK 💤] sleeping for %v", duration)
+func sleep(t *testing.T, clock *clock.Mock, duration time.Duration) {
+	t.Logf("[⌚ CLOCK 💤] sleeping for %v", duration)
 	clock.Sleep(duration)
 }
 
 // timeReminder simply prints, at a given interval and in a separate goroutine, the current mocked time to help with events.
-func timeReminder(clock *clock.Mock, frequency time.Duration) {
+func timeReminder(t *testing.T, clock *clock.Mock, frequency time.Duration) {
 	go func() {
 		tick := time.NewTicker(frequency)
 		for {
 			<-tick.C
-			logTime(clock)
+			logTime(t, clock)
 		}
 	}()
 }

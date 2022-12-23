@@ -89,7 +89,7 @@ Consensus cleanup
 
 Consensus testing
 
-- Improved mock module initialization in `consensus/consensus_tests/utils_test.go`
+- Improved mock module initialization in `consensus/e2e_tests/utils_test.go`
 
 General
 

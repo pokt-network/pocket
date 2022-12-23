@@ -1,4 +1,4 @@
-package consensus_tests
+package e2e_tests
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	// Test configs
 	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
 
-	go timeReminder(clockMock, 100*time.Millisecond)
+	go timeReminder(t, clockMock, 100*time.Millisecond)
 
 	// Create & start test pocket nodes
 	testChannel := make(modules.EventsChannel, 100)
@@ -29,7 +29,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		TriggerNextView(t, pocketNode)
 	}
 
-	advanceTime(clockMock, 10*time.Millisecond)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// NewRound
 	newRoundMessages, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 1000)
@@ -54,7 +54,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	leaderId := typesCons.NodeId(2)
 	leader := pocketNodes[leaderId]
 
-	advanceTime(clockMock, 10*time.Millisecond)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Prepare
 	prepareProposal, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Prepare, consensus.Propose, 1, 1000)
@@ -74,7 +74,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		P2PBroadcast(t, pocketNodes, message)
 	}
 
-	advanceTime(clockMock, 10*time.Millisecond)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Precommit
 	prepareVotes, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Prepare, consensus.Vote, numValidators, 1000)
@@ -83,7 +83,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		P2PSend(t, leader, vote)
 	}
 
-	advanceTime(clockMock, 10*time.Millisecond)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	preCommitProposal, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.PreCommit, consensus.Propose, 1, 1000)
 	require.NoError(t, err)
@@ -102,7 +102,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		P2PBroadcast(t, pocketNodes, message)
 	}
 
-	advanceTime(clockMock, 10*time.Millisecond)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Commit
 	preCommitVotes, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.PreCommit, consensus.Vote, numValidators, 1000)
@@ -111,7 +111,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		P2PSend(t, leader, vote)
 	}
 
-	advanceTime(clockMock, 10*time.Millisecond)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	commitProposal, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Commit, consensus.Propose, 1, 1000)
 	require.NoError(t, err)
@@ -130,7 +130,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		P2PBroadcast(t, pocketNodes, message)
 	}
 
-	advanceTime(clockMock, 10*time.Millisecond)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Decide
 	commitVotes, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Commit, consensus.Vote, numValidators, 1000)
@@ -139,7 +139,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		P2PSend(t, leader, vote)
 	}
 
-	advanceTime(clockMock, 10*time.Millisecond)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	decideProposal, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Decide, consensus.Propose, 1, 1000)
 	require.NoError(t, err)
@@ -170,7 +170,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 		P2PBroadcast(t, pocketNodes, message)
 	}
 
-	advanceTime(clockMock, 10*time.Millisecond)
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Block has been committed and new round has begun
 	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 1000)

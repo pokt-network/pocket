@@ -305,20 +305,25 @@ test_shared: ## Run all go unit tests in the shared module
 test_consensus: ## Run all go unit tests in the consensus module
 	go test ${VERBOSE_TEST} -count=1 ./consensus/...
 
+# These tests are isolated to a single package which enables logs to be streamed in realtime. More details here: https://stackoverflow.com/a/74903989/768439
+.PHONY: test_consensus_e2e
+test_consensus_e2e: ## Run all go t2e unit tests in the consensus module w/ log streaming
+	go test ${VERBOSE_TEST} -count=1 ./consensus/e2e_tests/...
+
 .PHONY: test_consensus_concurrent_tests
 test_consensus_concurrent_tests: ## Run unit tests in the consensus module that could be prone to race conditions (#192)
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestTinyPacemakerTimeouts$  ./consensus/consensus_tests; done;
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/consensus_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestTinyPacemakerTimeouts$  ./consensus/e2e_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/e2e_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestTinyPacemakerTimeouts$  ./consensus/e2e_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/e2e_tests; done;
 
 .PHONY: test_hotstuff
 test_hotstuff: ## Run all go unit tests related to hotstuff consensus
-	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
+	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
 .PHONY: test_pacemaker
 test_pacemaker: ## Run all go unit tests related to the hotstuff pacemaker
-	go test ${VERBOSE_TEST} ./consensus/consensus_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
+	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
 
 .PHONY: test_vrf
 test_vrf: ## Run all go unit tests in the VRF library
