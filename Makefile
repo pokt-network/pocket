@@ -107,22 +107,6 @@ install_cli_deps: ## Installs `protoc-gen-go`, `mockgen`, 'protoc-go-inject-tag'
 	go install "github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.11.0"
 
 .PHONY: develop_start
-<<<<<<< HEAD
-## Run all of the make commands necessary to develop on the project
-develop_start:
-	make docker_loki_check && \
-	make clean_mocks && \
-	make protogen_clean && make protogen_local && \
-	make go_clean_deps && \
-	make mockgen && \
-	make generate_rpc_openapi
-
-.PHONY: develop_test
-## Run all of the make commands necessary to develop on the project and verify the tests pass
-develop_test: docker_check
-	make develop_start && \
-	make test_all
-=======
 develop_start: ## Run all of the make commands necessary to develop on the project
 		make docker_loki_check && \
 		make clean_mocks && \
@@ -135,7 +119,6 @@ develop_start: ## Run all of the make commands necessary to develop on the proje
 develop_test: docker_check ## Run all of the make commands necessary to develop on the project and verify the tests pass
 		make develop_start && \
 		make test_all
->>>>>>> main
 
 .PHONY: client_start
 client_start: docker_check ## Run a client daemon which is only used for debugging purposes
