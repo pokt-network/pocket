@@ -219,81 +219,87 @@ func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 
 func WaitForNetworkConsensusMessages(
 	t *testing.T,
-	clock clock.Clock,
+	clock *clock.Mock,
 	testChannel modules.EventsChannel,
 	step typesCons.HotstuffStep,
-	hotstuffMsgType typesCons.HotstuffMessageType,
-	numMessages int,
+	msgType typesCons.HotstuffMessageType,
+	numExpectedMsgs int,
 	millis time.Duration,
 ) (messages []*anypb.Any, err error) {
-
-	includeFilter := func(m *anypb.Any) bool {
-		msg, err := codec.GetCodec().FromAny(m)
+	includeFilter := func(anyMsg *anypb.Any) bool {
+		msg, err := codec.GetCodec().FromAny(anyMsg)
 		require.NoError(t, err)
 
 		hotstuffMessage, ok := msg.(*typesCons.HotstuffMessage)
 		require.True(t, ok)
 
-		return hotstuffMessage.Type == hotstuffMsgType && hotstuffMessage.Step == step
+		return hotstuffMessage.Type == msgType && hotstuffMessage.Step == step
 	}
 
-	errorMessage := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(hotstuffMsgType)])
-	return waitForNetworkConsensusMessagesInternal(t, clock, testChannel, consensus.HotstuffMessageContentType, numMessages, millis, includeFilter, errorMessage)
+	errorMessage := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(msgType)])
+	return waitForNetworkConsensusMessagesInternal(t, clock, testChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errorMessage)
 }
 
 // IMPROVE(olshansky): Translate this to use generics.
 func waitForNetworkConsensusMessagesInternal(
-	_ *testing.T,
-	clock clock.Clock,
+	t *testing.T,
+	clock *clock.Mock,
 	testChannel modules.EventsChannel,
-	messageContentType string,
-	numMessages int,
+	eventContentType string,
+	numExpectedMsgs int,
 	millis time.Duration,
 	includeFilter func(m *anypb.Any) bool,
-	errorMessage string,
-) (messages []*anypb.Any, err error) {
-	messages = make([]*anypb.Any, 0)
-	ctx, cancel := clock.WithTimeout(context.Background(), time.Millisecond*millis)
-	unused := make([]*messaging.PocketEnvelope, 0) // TODO: Move this into a pool rather than resending back to the eventbus.
+	errorMsg string,
+) (expectedMsgs []*anypb.Any, err error) {
+	expectedMsgs = make([]*anypb.Any, 0)                 // Aggregate and return the messages we're waiting for
+	unusedEvents := make([]*messaging.PocketEnvelope, 0) // "Recycle" events back into the events channel if we're not using them
 
+	// Limit the amount of time we're waiting for the messages to be published on the events channel
+	ctx, cancel := clock.WithTimeout(context.TODO(), time.Millisecond*millis)
+	defer cancel()
+
+	// Since the tests use a mock clock, we need to manually advance the clock to trigger the timeout
+	ticker := clock.Ticker(time.Millisecond)
+	go func() {
+		for {
+			<-ticker.C
+			clock.Add(time.Millisecond)
+		}
+	}()
 loop:
 	for {
 		select {
 		case testEvent := <-testChannel:
-			if testEvent.GetContentType() != messageContentType {
-				unused = append(unused, &testEvent)
+			if testEvent.GetContentType() != eventContentType {
+				unusedEvents = append(unusedEvents, &testEvent)
 				continue
 			}
 
 			message := testEvent.Content
 			if message == nil || !includeFilter(message) {
-				unused = append(unused, &testEvent)
+				unusedEvents = append(unusedEvents, &testEvent)
 				continue
 			}
 
-			messages = append(messages, message)
-			numMessages--
-
-			// The if structure below "breaks early" when we get enough messages. However, it does not capture
-			// the case where we could be receiving more messages than expected. To make sure the latter doesn't
-			// happen, the `failOnExtraMessages` flag must be set to true.
-			if !failOnExtraMessages && numMessages == 0 {
+			expectedMsgs = append(expectedMsgs, message)
+			numExpectedMsgs--
+			// Break if:
+			// 1. We are not expecting any more messages
+			// 2. We do not want to fail on extra messages
+			if numExpectedMsgs == 0 && !failOnExtraMessages {
 				break loop
 			}
 		case <-ctx.Done():
-			if numMessages == 0 {
+			if numExpectedMsgs == 0 {
 				break loop
-			} else if numMessages > 0 {
-				cancel()
-				return nil, fmt.Errorf("Missing %s messages; missing: %d, received: %d; (%s)", messageContentType, numMessages, len(messages), errorMessage)
+			} else if numExpectedMsgs > 0 {
+				t.Fatalf("Missing %s messages; missing: %d, received: %d; (%s)", eventContentType, numExpectedMsgs, len(expectedMsgs), errorMsg)
 			} else {
-				cancel()
-				return nil, fmt.Errorf("Too many %s messages received; expected: %d, received: %d; (%s)", messageContentType, numMessages+len(messages), len(messages), errorMessage)
+				t.Fatalf("Too many %s messages received; expected: %d, received: %d; (%s)", eventContentType, numExpectedMsgs+len(expectedMsgs), len(expectedMsgs), errorMsg)
 			}
 		}
 	}
-	cancel()
-	for _, u := range unused {
+	for _, u := range unusedEvents {
 		testChannel <- *u
 	}
 	return
@@ -310,7 +316,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
-	persistenceMock.EXPECT().NewReadContext(int64(-1)).Return(persistenceReadContextMock, nil).AnyTimes()
+	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
@@ -424,7 +430,7 @@ func baseTelemetryTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesA
 func baseTelemetryEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAgent {
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	return eventMetricsAgentMock
 }
 

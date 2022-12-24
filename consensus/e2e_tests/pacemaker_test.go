@@ -16,8 +16,6 @@ import (
 )
 
 func TestTinyPacemakerTimeouts(t *testing.T) {
-	t.Parallel()
-
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, 100*time.Millisecond)
 
@@ -104,25 +102,25 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 
 	// Continue to the next step at the current round
 	for _, message := range newRoundMessages {
+		// msg, _ := codec.GetCodec().FromAny(message)
 		P2PBroadcast(t, pocketNodes, message)
 	}
 
 	// advance time by an amount shorter than the timeout
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	time.Sleep(10 * time.Second)
 	// Confirm we are at the next step
-	// _, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Prepare, consensus.Propose, 1, 500)
-	// require.NoError(t, err)
-	// for pocketId, pocketNode := range pocketNodes {
-	// 	assertNodeConsensusView(t, pocketId,
-	// 		typesCons.ConsensusNodeState{
-	// 			Height: 1,
-	// 			Step:   uint8(consensus.Prepare),
-	// 			Round:  3,
-	// 		},
-	// 		GetConsensusNodeState(pocketNode))
-	// }
+	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Prepare, consensus.Propose, 1, 500)
+	require.NoError(t, err)
+	for pocketId, pocketNode := range pocketNodes {
+		assertNodeConsensusView(t, pocketId,
+			typesCons.ConsensusNodeState{
+				Height: 1,
+				Step:   uint8(consensus.Prepare),
+				Round:  3,
+			},
+			GetConsensusNodeState(pocketNode))
+	}
 }
 
 func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {

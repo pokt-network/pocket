@@ -40,7 +40,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		m.nodeLog(typesCons.OptimisticVoteCountWaiting(NewRound, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(NewRound))
+	m.nodeLog(typesCons.OptimisticVoteCountPassed(m.height, NewRound, m.round))
 
 	// Clear the previous utility context, if it exists, and create a new one
 	if err := m.refreshUtilityContext(); err != nil {
@@ -108,7 +108,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 		m.nodeLog(typesCons.OptimisticVoteCountWaiting(Prepare, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(Prepare))
+	m.nodeLog(typesCons.OptimisticVoteCountPassed(m.height, Prepare, m.round))
 
 	prepareQC, err := m.getQuorumCertificate(m.height, Prepare, m.round)
 	if err != nil {
@@ -152,7 +152,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 		m.nodeLog(typesCons.OptimisticVoteCountWaiting(PreCommit, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(PreCommit))
+	m.nodeLog(typesCons.OptimisticVoteCountPassed(m.height, PreCommit, m.round))
 
 	preCommitQC, err := m.getQuorumCertificate(m.height, PreCommit, m.round)
 	if err != nil {
@@ -196,7 +196,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 		m.nodeLog(typesCons.OptimisticVoteCountWaiting(Commit, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(Commit))
+	m.nodeLog(typesCons.OptimisticVoteCountPassed(m.height, Commit, m.round))
 
 	commitQC, err := m.getQuorumCertificate(m.height, Commit, m.round)
 	if err != nil {

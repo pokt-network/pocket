@@ -147,7 +147,7 @@ func (p *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Message is from the past
 	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
-		p.consensusMod.nodeLog(fmt.Sprintf("[WARN][DISCARDING] Node at (step, round) (%d, %d, %d) received message at (%d, %d, %d)", currentHeight, currentRound, currentHeight, currentStep, msg.Round, msg.Step))
+		p.consensusMod.nodeLog(fmt.Sprintf("[WARN][DISCARDING] Node at (height, step, round) (%d, %d, %d) received message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round))
 		return false, nil
 	}
 
