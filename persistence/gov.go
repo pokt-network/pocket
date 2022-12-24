@@ -56,12 +56,12 @@ func (p PostgresContext) GetParameter(paramName string, height int64) (v any, er
 		}
 	}
 	switch typ.Name() {
-	case "[]uint8": // []byte
-		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
-	case "string":
-		v, _, err = getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
 	case "int", "int32", "int64":
 		v, _, err = getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
+	case "string":
+		v, _, err = getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
+	case "[]uint8": // []byte
+		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
 	default:
 		return nil, fmt.Errorf("unhandled type for param: got %s.", typ.Name())
 	}
