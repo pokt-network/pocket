@@ -75,11 +75,20 @@ func connectToDatabase(cfg modules.PersistenceConfig) (*pgx.Conn, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to create database config: %v", err)
 	}
-	config.MaxConnLifetime = time.Hour * time.Duration(cfg.GetMaxConnLifetimeHour())
-	config.MaxConnIdleTime = time.Minute * time.Duration(cfg.GetMaxConnIdleTimeMinute())
+	MaxConnLifetime, err := time.ParseDuration(cfg.GetMaxConnLifetime())
+	if err == nil {
+		config.MaxConnLifetime = MaxConnLifetime
+	}
+	MaxConnIdleTime, err := time.ParseDuration(cfg.GetMaxConnIdleTime())
+	if err == nil {
+		config.MaxConnIdleTime = MaxConnIdleTime
+	}
 	config.MaxConns = cfg.GetMaxConnsCount()
 	config.MinConns = cfg.GetMinConnsCount()
-	config.HealthCheckPeriod = time.Minute * time.Duration(cfg.GetHealthCheckPeriodMinute())
+	HealthCheckPeriod, err := time.ParseDuration(cfg.GetHealthCheckPeriod())
+	if err == nil {
+		config.HealthCheckPeriod = HealthCheckPeriod
+	}
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
