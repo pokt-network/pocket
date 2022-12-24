@@ -47,9 +47,9 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) typesU
 //	return blocksPerSession, nil
 // }
 
-func (u *UtilityContext) GetParameter(paramName string, value any, height int64) (any, error) {
+func (u *UtilityContext) GetParameter(paramName string, height int64) (any, error) {
 	store := u.Store()
-	return store.GetParameter(paramName, value, height)
+	return store.GetParameter(paramName, height)
 }
 
 func (u *UtilityContext) GetAppMinimumStake() (*big.Int, typesUtil.Error) {

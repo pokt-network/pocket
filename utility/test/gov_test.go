@@ -84,21 +84,22 @@ func TestUtilityContext_GetBaselineAppStakeRate(t *testing.T) {
 }
 
 // Deprecate in favour of GetParameter(paramName string, value any, height int64) (any, error)
-// func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
-//	ctx := NewTestingUtilityContext(t, 0)
-//	defaultParams := DefaultTestingParams(t)
-//	defaultParam := int(defaultParams.GetBlocksPerSession())
-//	gotParam, err := ctx.GetBlocksPerSession()
-//	require.NoError(t, err)
-//	require.Equal(t, defaultParam, gotParam)
 //
-//	test_artifacts.CleanupTest(ctx)
-// }
+//	func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
+//		ctx := NewTestingUtilityContext(t, 0)
+//		defaultParams := DefaultTestingParams(t)
+//		defaultParam := int(defaultParams.GetBlocksPerSession())
+//		gotParam, err := ctx.GetBlocksPerSession()
+//		require.NoError(t, err)
+//		require.Equal(t, defaultParam, gotParam)
+//
+//		test_artifacts.CleanupTest(ctx)
+//	}
 func TestUtilityContext_GetParameter(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetBlocksPerSession())
-	gotParam, err := ctx.GetParameter("blocks_per_session", int(0), 0)
+	gotParam, err := ctx.GetParameter("blocks_per_session", 0)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 
