@@ -102,9 +102,14 @@ func NewDefaultConfig(i int, pk string) modules.Config {
 			MaxMempoolTransactions:     9000,
 		}),
 		runtime.WithPersistenceConfig(&typesPers.PersistenceConfig{
-			PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
-			NodeSchema:     "node" + strconv.Itoa(i+1),
-			BlockStorePath: "/var/blockstore",
+			PostgresUrl:       "postgres://postgres:postgres@pocket-db:5432/postgres",
+			NodeSchema:        "node" + strconv.Itoa(i+1),
+			BlockStorePath:    "/var/blockstore",
+			MaxConnsCount:     5,
+			MinConnsCount:     0,
+			MaxConnLifetime:   "1h",
+			MaxConnIdleTime:   "30m",
+			HealthCheckPeriod: "5m",
 		}),
 		runtime.WithP2PConfig(&typesP2P.P2PConfig{
 			ConsensusPort:         8080,

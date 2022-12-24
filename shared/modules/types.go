@@ -50,9 +50,9 @@ type PersistenceConfig interface {
 	GetTreesStoreDir() string
 	GetMaxConnsCount() int32
 	GetMinConnsCount() int32
-	GetMaxConnLifetimeHour() uint64
-	GetMaxConnIdleTimeMinute() uint64
-	GetHealthCheckPeriodMinute() uint64
+	GetMaxConnLifetime() string
+	GetMaxConnIdleTime() string
+	GetHealthCheckPeriod() string
 }
 
 type P2PConfig interface {

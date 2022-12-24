@@ -11,7 +11,7 @@ message PersistenceConfig {
   string trees_store_dir = 5;
   int32 max_conns_count = 6;
   int32 min_conns_count = 7;
-  uint64 max_conn_lifetime_hour = 8;
-  uint64 max_conn_idle_time_minute = 9;
-  uint64 health_check_period_minute = 10;
+  string max_conn_lifetime = 8;
+  string max_conn_idle_time = 9;
+  string health_check_period = 10;
 }

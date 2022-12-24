@@ -24,9 +24,9 @@
     "trees_store_dir": "/var/trees",
     "max_conns_count": "8",
     "min_conns_count": "0",
-    "max_conn_lifetime_hour": "1",
-    "max_conn_idle_time_minute": "30",
-    "health_check_period_minute": "5"
+    "max_conn_lifetime": "1h",
+    "max_conn_idle_time": "30m",
+    "health_check_period": "5m"
   },
   "p2p": {
     "consensus_port": 8080,

@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 
-## [Unreleased]
+## [0.0.0.13] - 2022-12-24
+
+- Add `max_conns_count`, `min_conns_count`, `max_conn_lifetime`, `max_conn_idle_time` and `health_check_period` to `PersistenceConfig`.
+- Update `connectToDatabase` function in `db.go` to connect via `pgxpool` to postgres database and accept `PersistenceConfig` interface as input.
+- Update `github.com/jackc/pgx/v4` -> `github.com/jackc/pgx/v5`.
 
 ## [0.0.0.12] - 2022-12-15
 
