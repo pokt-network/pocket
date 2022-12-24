@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"reflect"
+	"regexp"
 	"strconv"
 
 	"github.com/pokt-network/pocket/persistence/types"
@@ -38,16 +40,30 @@ func (p PostgresContext) InitParams() error {
 	return err
 }
 
-func (p PostgresContext) GetParameter(paramName string, value any, height int64) (v any, err error) {
-	switch any(value).(type) {
-	case int, int32, int64:
-		v, _, err = getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
-	case []byte:
+func (p PostgresContext) GetParameter(paramName string, height int64) (v any, err error) {
+	st := reflect.TypeOf(types.Params{}) // Extract type of parameter from the Params struct
+	var typ reflect.Type
+	matchString := paramName + ",omitempty"
+	// Loop through struct fields to find matching parameter's type
+	for i := 0; i < st.NumField(); i++ {
+		field := st.Field(i)
+		json := field.Tag.Get("json") // Match the json tag of field: json:"paramName,omitempty"
+		if match, err := regexp.MatchString(matchString, json); match {
+			typ = field.Type
+			break
+		} else if err != nil {
+			return nil, err
+		}
+	}
+	switch typ.Name() {
+	case "[]uint8": // []byte
 		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
-	case string:
+	case "string":
 		v, _, err = getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
+	case "int", "int32", "int64":
+		v, _, err = getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
 	default:
-		return nil, fmt.Errorf("unhandled type for paramValue %T", value) // value is not accepted by getParamOrFlag
+		return nil, fmt.Errorf("unhandled type for param: got %s.", typ.Name())
 	}
 	return v, err
 }
