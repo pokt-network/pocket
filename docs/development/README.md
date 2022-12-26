@@ -152,22 +152,26 @@ $ make client_start && make client_connect
 
 ```bash
 Pocket
-├── app              # Entrypoint to running the Pocket node and clients
-|   ├── client       # Entrypoint to running a local Pocket debug client
+├── cmd              # Entrypoint to running the Pocket node and clients
+|   ├── p1           # Entrypoint to running a local Pocket debug client
 |   ├── pocket       # Entrypoint to running a local Pocket node
-├── bin              # [currently-unused] Destination for compiled pocket binaries
 ├── build            # Build related source files including Docker, scripts, etc
 |   ├── config       # Configuration files for to run nodes in development
 |   ├── deployments  # Docker-compose to run different cluster of services for development
 |   ├── Docker*      # Various Dockerfile(s)
-├── consensus        # Implementation of the Consensus module
-├── core             # [currently-unused]
+├── internal         # Private application and library code.
+    ├── consensus        # Implementation of the Consensus module
+    ├── p2p              # Implementation of the P2P module
+    ├── persistence      # Implementation of the Persistence module
+    ├── shared           # [to-be-refactored] Shared types, modules and utils
+    ├── utility          # Implementation of the Utility module
+    ├── runtime          # Implementation of the Runtime module
+    ├── rpc              # Implementation of the RPC module
+    ├── logger           # Implementation of the Logger module
+    ├── telemetry        # Implementation of the Telemetry module
 ├── docs             # Links to V1 Protocol implementation documentation (excluding the protocol specification)
-├── p2p              # Implementation of the P2P module
-├── persistence      # Implementation of the Persistence module
-├── shared           # [to-be-refactored] Shared types, modules and utils
-├── utility          # Implementation of the Utility module
-├── Makefile         # [to-be-deleted] The source of targets used to develop, build and test
+├── scripts          # Scripts to perform various build, install, analysis, etc operations.These scripts keep the root level Makefile small and simple.
+├── Makefile         # The source of targets used to develop, build and test
 ```
 
 ### Linters

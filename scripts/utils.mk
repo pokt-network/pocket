@@ -1,4 +1,3 @@
-
 ### Inspired by @goldinguy_ in this post: https://goldin.io/blog/stop-using-todo ###
 # TODO          - General Purpose catch-all.
 # TECHDEBT      - Not a great implementation, but we need to fix it later.
@@ -39,3 +38,73 @@ todo_count: ## Print a count of all the TODOs in the project
 .PHONY: todo_this_commit
 todo_this_commit: ## List all the TODOs needed to be done in this commit
 	grep --exclude-dir={.git,vendor,prototype,.vscode} --exclude=Makefile -r -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT"
+
+.PHONY: docker_check
+## Internal helper target - check if docker is installed
+docker_check:
+	{ \
+	if ( ! ( command -v docker >/dev/null && command -v docker-compose >/dev/null )); then \
+		echo "Seems like you don't have Docker or docker-compose installed. Make sure you review docs/development/README.md before continuing"; \
+		exit 1; \
+	fi; \
+	}
+
+.PHONY: prompt_user
+## Internal helper target - prompt the user before continuing
+prompt_user:
+	@echo "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
+
+.PHONY: go_vet
+go_vet: ## Run `go vet` on all files in the current project
+	go vet ./...
+
+.PHONY: go_staticcheck
+go_staticcheck: ## Run `go staticcheck` on all files in the current project
+	{ \
+	if command -v staticcheck >/dev/null; then \
+		staticcheck ./...; \
+	else \
+		echo "Install with 'go install honnef.co/go/tools/cmd/staticcheck@latest'"; \
+	fi; \
+	}
+
+.PHONY: go_protoc-go-inject-tag
+go_protoc-go-inject-tag: ## Checks if protoc-go-inject-tag is installed
+	{ \
+	if ! command -v protoc-go-inject-tag >/dev/null; then \
+		echo "Install with 'go install github.com/favadi/protoc-go-inject-tag@latest'"; \
+	fi; \
+	}
+
+.PHONY: go_clean_deps
+go_clean_deps: ## Runs `go mod tidy` && `go mod vendor`
+	go mod tidy && go mod vendor
+
+.PHONY: go_lint
+go_lint: ## Run all linters that are triggered by the CI pipeline
+	golangci-lint run ./...
+
+.PHONY: gofmt
+gofmt: ## Format all the .go files in the project in place.
+	gofmt -w -s .
+
+.PHONY: check_cross_module_imports
+check_cross_module_imports: ## Lists cross-module imports
+	$(eval exclude_common=--exclude=Makefile --exclude-dir=shared --exclude-dir=cmd --exclude-dir=runtime)
+	echo "persistence:\n"
+	grep ${exclude_common} --exclude-dir=persistence -r "github.com/pokt-network/pocket/internal/persistence" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "utility:\n"
+	grep ${exclude_common} --exclude-dir=utility -r "github.com/pokt-network/pocket/internal/utility" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "consensus:\n"
+	grep ${exclude_common} --exclude-dir=consensus -r "github.com/pokt-network/pocket/internal/consensus" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "telemetry:\n"
+	grep ${exclude_common} --exclude-dir=telemetry -r "github.com/pokt-network/pocket/internal/telemetry" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "p2p:\n"
+	grep ${exclude_common} --exclude-dir=p2p -r "github.com/pokt-network/pocket/internal/p2p" || echo "✅ OK!"
+	echo "-----------------------"
+	echo "runtime:\n"
+	grep ${exclude_common} --exclude-dir=runtime -r "github.com/pokt-network/pocket/internal/runtime" || echo "✅ OK!"

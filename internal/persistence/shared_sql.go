@@ -11,7 +11,7 @@ import (
 )
 
 // IMPROVE(team): Move this into a proto enum. We are not using `iota` for the time being
-// for the purpose of being explicit: https://github.com/pokt-network/pocket/internal/pull/140#discussion_r939731342
+// for the purpose of being explicit: https://github.com/pokt-network/pocket/pull/140#discussion_r939731342
 // TODO Cleanup with #149
 const (
 	UndefinedStakingStatus = int32(0)

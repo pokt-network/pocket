@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-// TODO(https://github.com/pokt-network/pocket/internal/issues/102): Generalize Pool and Account operations.
+// TODO(https://github.com/pokt-network/pocket/issues/102): Generalize Pool and Account operations.
 
 const (
 	defaultAccountAmountStr string = "0"

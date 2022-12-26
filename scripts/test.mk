@@ -1,3 +1,17 @@
+# This flag is useful when running the consensus unit tests. It causes the test to wait up to the
+# maximum delay specified in the source code and errors if additional unexpected messages are received.
+# For example, if the test expects to receive 5 messages within 2 seconds:
+# 	When EXTRA_MSG_FAIL = false: continue if 5 messages are received in 0.5 seconds
+# 	When EXTRA_MSG_FAIL = true: wait for another 1.5 seconds after 5 messages are received in 0.5
+#		                        seconds, and fail if any additional messages are received.
+EXTRA_MSG_FAIL ?= false
+
+# IMPROVE: Add `-shuffle=on` to the `go test` command to randomize the order in which tests are run.
+
+# An easy way to turn off verbose test output for some of the test targets. For example
+#  `$ make test_persistence` by default enables verbose testing
+#  `VERBOSE_TEST="" make test_persistence` is an easy way to run the same tests without verbose output
+VERBOSE_TEST ?= -v
 
 .PHONY: test_all
 test_all: ## Run all go unit tests
