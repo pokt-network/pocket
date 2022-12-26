@@ -2,7 +2,7 @@ package configs
 
 type Config struct {
 	RootDirectory string `json:"root_directory"`
-	PrivateKey    string `json:"private_key"` // TODO (#150) better architecture for key management (keybase, keyfiles, etc.)
+	PrivateKey    string `json:"private_key"` // INVESTIGATE(#150): better architecture for key management (keybase, keyfiles, etc.)
 
 	Consensus   *ConsensusConfig   `json:"consensus"`
 	Utility     *UtilityConfig     `json:"utility"`
