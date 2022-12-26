@@ -6,6 +6,7 @@ Please note that this repository is under very active development and breaking c
   - [LFG - Development](#lfg---development)
     - [Install Dependencies](#install-dependencies)
     - [Prepare Local Environment](#prepare-local-environment)
+    - [Pocket Network CLI](#pocket-network-cli)
     - [View Available Commands](#view-available-commands)
     - [Running Unit Tests](#running-unit-tests)
     - [Running LocalNet](#running-localnet)
@@ -73,6 +74,29 @@ chmod +x .git/hooks/pre-commit
 
 _Please note that the Github workflow will still prevent this from merging
 unless the CHANGELOG is updated._
+
+### Pocket Network CLI
+
+Pocket provides a CLI for interacting with Pocket Core. The CLI is meant to be an user but also a machine friendly way for interacting with Pocket Network.
+
+The commands available are listed [here](../../app/client/cli/doc/commands/client.md).
+
+In order to build the CLI:
+
+1. Generate local files
+
+```bash
+make develop_start
+```
+
+2. Build the CLI
+
+```bash
+make build
+```
+
+The cli binary will be available at `bin/p1`.
+
 
 ### View Available Commands
 
