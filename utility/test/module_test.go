@@ -13,6 +13,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -42,11 +43,11 @@ var (
 var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 var testUtilityMod modules.UtilityModule         // initialized in TestMain
 
-var actorTypes = []utilTypes.ActorType{
-	utilTypes.ActorType_App,
-	utilTypes.ActorType_ServiceNode,
-	utilTypes.ActorType_Fisherman,
-	utilTypes.ActorType_Validator,
+var actorTypes = []coreTypes.ActorType{
+	coreTypes.ActorType_ACTOR_TYPE_APP,
+	coreTypes.ActorType_ACTOR_TYPE_NODE,
+	coreTypes.ActorType_ACTOR_TYPE_FISH,
+	coreTypes.ActorType_ACTOR_TYPE_VAL,
 }
 
 func NewTestingMempool(_ *testing.T) utilTypes.Mempool {

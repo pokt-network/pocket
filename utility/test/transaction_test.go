@@ -8,6 +8,7 @@ import (
 	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -101,7 +102,7 @@ func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 
-	proposer := getFirstActor(t, ctx, typesUtil.ActorType_Validator)
+	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
 	require.NoError(t, testUtilityMod.CheckTransaction(txBz))
