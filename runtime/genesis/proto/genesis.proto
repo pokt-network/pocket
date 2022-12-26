@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package genesis;
 
-import "core/types/proto/core_account.proto";
-import "core/types/proto/core_actor.proto";
+import "core/types/proto/account.proto";
+import "core/types/proto/actor.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/pokt-network/pocket/runtime/genesis";
