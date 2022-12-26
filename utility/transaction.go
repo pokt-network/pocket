@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -90,7 +91,7 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (msg types
 	if err := u.SetAccountAmount(address, accountAmount); err != nil {
 		return nil, signer, err
 	}
-	if err := u.AddPoolAmount(typesUtil.PoolNames_FeeCollector.String(), fee); err != nil {
+	if err := u.AddPoolAmount(coreTypes.PoolNames_POOL_NAMES_FEE_COLLECTOR.String(), fee); err != nil {
 		return nil, "", err
 	}
 	msg.SetSigner(address)
@@ -183,24 +184,24 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 	// move funds from account to pool
-	if err = u.AddPoolAmount(typesUtil.PoolNames_AppStakePool.String(), amount); err != nil {
+	if err = u.AddPoolAmount(coreTypes.PoolNames_POOL_NAMES_APP_STAKE_POOL.String(), amount); err != nil {
 		return err
 	}
 	var er error
 	store := u.Store()
 	// insert actor
 	switch message.ActorType {
-	case typesUtil.ActorType_App:
+	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		maxRelays, err := u.CalculateAppRelays(message.Amount)
 		if err != nil {
 			return err
 		}
 		er = store.InsertApp(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), maxRelays, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case typesUtil.ActorType_Fisherman:
+	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		er = store.InsertFisherman(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case typesUtil.ActorType_ServiceNode:
+	case coreTypes.ActorType_ACTOR_TYPE_NODE:
 		er = store.InsertServiceNode(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, message.Chains, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
-	case typesUtil.ActorType_Validator:
+	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		er = store.InsertValidator(publicKey.Address(), publicKey.Bytes(), message.OutputAddress, false, int32(typesUtil.StakeStatus_Staked), message.ServiceUrl, message.Amount, typesUtil.HeightNotUsed, typesUtil.HeightNotUsed)
 	}
 	if er != nil {
@@ -247,23 +248,23 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(typesUtil.PoolNames_AppStakePool.String(), amount); err != nil {
+	if err := u.AddPoolAmount(coreTypes.PoolNames_POOL_NAMES_APP_STAKE_POOL.String(), amount); err != nil {
 		return err
 	}
 	store := u.Store()
 	var er error
 	switch message.ActorType {
-	case typesUtil.ActorType_App:
+	case coreTypes.ActorType_ACTOR_TYPE_APP:
 		maxRelays, err := u.CalculateAppRelays(message.Amount)
 		if err != nil {
 			return err
 		}
 		er = store.UpdateApp(message.Address, maxRelays, message.Amount, message.Chains)
-	case typesUtil.ActorType_Fisherman:
+	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		er = store.UpdateFisherman(message.Address, message.ServiceUrl, message.Amount, message.Chains)
-	case typesUtil.ActorType_ServiceNode:
+	case coreTypes.ActorType_ACTOR_TYPE_NODE:
 		er = store.UpdateServiceNode(message.Address, message.ServiceUrl, message.Amount, message.Chains)
-	case typesUtil.ActorType_Validator:
+	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		er = store.UpdateValidator(message.Address, message.ServiceUrl, message.Amount)
 	}
 	if er != nil {
@@ -337,7 +338,7 @@ func (u *UtilityContext) HandleMessageDoubleSign(message *typesUtil.MessageDoubl
 	if err != nil {
 		return err
 	}
-	if err := u.BurnActor(typesUtil.ActorType_Validator, burnPercentage, doubleSigner); err != nil {
+	if err := u.BurnActor(coreTypes.ActorType_ACTOR_TYPE_VAL, burnPercentage, doubleSigner); err != nil {
 		return err
 	}
 	return nil
