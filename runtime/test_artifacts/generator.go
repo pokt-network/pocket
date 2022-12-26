@@ -11,17 +11,15 @@ import (
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/utility/types"
-	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // IMPROVE: Generate a proper genesis suite in the future.
 func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (*genesis.GenesisState, []string) {
-	apps, appsPrivateKeys := NewActors(types.ActorType_App, numApplications)
-	vals, validatorPrivateKeys := NewActors(types.ActorType_Validator, numValidators)
-	serviceNodes, snPrivateKeys := NewActors(types.ActorType_ServiceNode, numServiceNodes)
-	fish, fishPrivateKeys := NewActors(types.ActorType_Fisherman, numFisherman)
+	apps, appsPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, numApplications)
+	vals, validatorPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_VAL, numValidators)
+	serviceNodes, snPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_NODE, numServiceNodes)
+	fish, fishPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFisherman)
 
 	genesisState := &genesis.GenesisState{
 		GenesisTime:   timestamppb.Now(),
@@ -116,11 +114,12 @@ func NewAccounts(n int, privateKeys ...string) (accounts []*coreTypes.Account) {
 }
 
 // TODO: The current implementation of NewActors  will have overlapping `ServiceUrl` for different
-//       types of actors which needs to be fixed.
-func NewActors(actorType typesUtil.ActorType, n int) (actors []*coreTypes.Actor, privateKeys []string) {
+//
+//	types of actors which needs to be fixed.
+func NewActors(actorType coreTypes.ActorType, n int) (actors []*coreTypes.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
 		genericParam := getServiceUrl(i + 1)
-		if int32(actorType) == int32(types.ActorType_App) {
+		if int32(actorType) == int32(coreTypes.ActorType_ACTOR_TYPE_APP) {
 			genericParam = defaults.DefaultMaxRelaysString
 		}
 		actor, pk := NewDefaultActor(int32(actorType), genericParam)
@@ -140,7 +139,7 @@ func NewDefaultActor(actorType int32, genericParam string) (actor *coreTypes.Act
 	chains := defaults.DefaultChains
 	if actorType == int32(coreTypes.ActorType_ACTOR_TYPE_VAL) {
 		chains = nil
-	} else if actorType == int32(types.ActorType_App) {
+	} else if actorType == int32(coreTypes.ActorType_ACTOR_TYPE_APP) {
 		genericParam = defaults.DefaultMaxRelaysString
 	}
 	return &coreTypes.Actor{
