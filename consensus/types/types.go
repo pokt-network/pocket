@@ -12,7 +12,7 @@ type NodeId uint64
 
 type ValAddrToIdMap map[string]NodeId // Mapping from hex encoded address to an integer node id.
 type IdToValAddrMap map[NodeId]string // Mapping from node id to a hex encoded string address.
-type ValidatorMap map[string]coreTypes.Actor
+type ValidatorMap map[string]*coreTypes.Actor
 
 type ConsensusNodeState struct {
 	NodeId NodeId
@@ -45,15 +45,15 @@ func GetValAddrToIdMap(validatorMap ValidatorMap) (ValAddrToIdMap, IdToValAddrMa
 func ValidatorMapToModulesValidatorMap(validatorMap ValidatorMap) (vm modules.ValidatorMap) {
 	vm = make(modules.ValidatorMap)
 	for _, v := range validatorMap {
-		vm[v.GetAddress()] = v
+		vm[v.GetAddress()] = *v
 	}
 	return
 }
 
 func ActorListToValidatorMap(actors []*coreTypes.Actor) (m ValidatorMap) {
 	m = make(ValidatorMap, len(actors))
-	for _, v := range actors {
-		m[v.GetAddress()] = *v
+	for _, a := range actors {
+		m[a.GetAddress()] = a
 	}
 	return
 }
