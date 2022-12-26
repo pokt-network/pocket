@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the `BaseConfig` struct
 - Removed overlapping parts in `PersistenceGenesisState` and `ConsensusGenesisState` and consolidated under a single `GenesisState` struct
 - Updated tests to use the new config and genesis handling
-- Introduced a singleton `keyGenerator` capable of generating keys randomly or deterministically (#361)
+- Introduced a singleton `keyGenerator` capable of generating keys randomly or deterministically (#414)
 
 ## [0.0.0.1] - 2022-12-14
 
