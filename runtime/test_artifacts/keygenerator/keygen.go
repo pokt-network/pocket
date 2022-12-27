@@ -21,7 +21,6 @@ func GetInstance() *keyGenerator {
 		keygen = &keyGenerator{
 			privateKeySeed: privateKeySeed,
 		}
-
 	}
 	return keygen
 }
