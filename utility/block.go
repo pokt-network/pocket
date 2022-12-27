@@ -222,7 +222,7 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
 			readyToUnstake, er = store.GetFishermenReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = coreTypes.PoolNames_POOL_NAMES_FISHERMAN_STAKE.String()
-		case coreTypes.ActorType_ACTOR_TYPE_NODE:
+		case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
 			poolName = coreTypes.PoolNames_POOL_NAMES_SERVICE_NODE_STAKE.String()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
@@ -284,7 +284,7 @@ func (u *UtilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, Acto
 		er = store.SetAppStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_FISH:
 		er = store.SetFishermanStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
-	case coreTypes.ActorType_ACTOR_TYPE_NODE:
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 		er = store.SetServiceNodeStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))
 	case coreTypes.ActorType_ACTOR_TYPE_VAL:
 		er = store.SetValidatorsStatusAndUnstakingHeightIfPausedBefore(pausedBeforeHeight, unstakingHeight, int32(typesUtil.StakeStatus_Unstaking))

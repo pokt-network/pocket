@@ -116,7 +116,7 @@ func TestUtilityContext_HandleMessageUnpause(t *testing.T) {
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
 				err = ctx.Context.SetParam(typesUtil.ValidatorMinimumPauseBlocksParamName, 0)
-			case coreTypes.ActorType_ACTOR_TYPE_NODE:
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 				err = ctx.Context.SetParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
 				err = ctx.Context.SetParam(typesUtil.AppMinimumPauseBlocksParamName, 0)
@@ -168,7 +168,7 @@ func TestUtilityContext_HandleMessageUnstake(t *testing.T) {
 				err = ctx.Context.SetParam(typesUtil.ValidatorMinimumPauseBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
 				err = ctx.Context.SetParam(typesUtil.FishermanMinimumPauseBlocksParamName, 0)
-			case coreTypes.ActorType_ACTOR_TYPE_NODE:
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 				err = ctx.Context.SetParam(typesUtil.ServiceNodeMinimumPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
@@ -213,7 +213,7 @@ func TestUtilityContext_BeginUnstakingMaxPaused(t *testing.T) {
 				err = ctx.Context.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
 				err = ctx.Context.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
-			case coreTypes.ActorType_ACTOR_TYPE_NODE:
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 				err = ctx.Context.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
@@ -253,7 +253,7 @@ func TestUtilityContext_CalculateUnstakingHeight(t *testing.T) {
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
 				unstakingBlocks, err = ctx.GetValidatorUnstakingBlocks()
-			case coreTypes.ActorType_ACTOR_TYPE_NODE:
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 				unstakingBlocks, err = ctx.GetServiceNodeUnstakingBlocks()
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
 				unstakingBlocks, err = ctx.GetAppUnstakingBlocks()
@@ -444,7 +444,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 				er = ctx.Context.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
 				er = ctx.Context.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
-			case coreTypes.ActorType_ACTOR_TYPE_NODE:
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 				er = ctx.Context.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
@@ -464,7 +464,7 @@ func TestUtilityContext_UnstakePausedBefore(t *testing.T) {
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
 				unstakingBlocks, err = ctx.GetValidatorUnstakingBlocks()
-			case coreTypes.ActorType_ACTOR_TYPE_NODE:
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 				unstakingBlocks, err = ctx.GetServiceNodeUnstakingBlocks()
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
 				unstakingBlocks, err = ctx.GetAppUnstakingBlocks()
@@ -494,7 +494,7 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 				poolName = coreTypes.PoolNames_POOL_NAMES_VALIDATOR_STAKE.String()
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
 				poolName = coreTypes.PoolNames_POOL_NAMES_FISHERMAN_STAKE.String()
-			case coreTypes.ActorType_ACTOR_TYPE_NODE:
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 				poolName = coreTypes.PoolNames_POOL_NAMES_SERVICE_NODE_STAKE.String()
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
@@ -546,7 +546,7 @@ func TestUtilityContext_BeginUnstakingMaxPausedActors(t *testing.T) {
 				err = ctx.Context.SetParam(typesUtil.ValidatorMaxPausedBlocksParamName, 0)
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
 				err = ctx.Context.SetParam(typesUtil.FishermanMaxPauseBlocksParamName, 0)
-			case coreTypes.ActorType_ACTOR_TYPE_NODE:
+			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 				err = ctx.Context.SetParam(typesUtil.ServiceNodeMaxPauseBlocksParamName, 0)
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
@@ -580,7 +580,7 @@ func getAllTestingActors(t *testing.T, ctx utility.UtilityContext, actorType cor
 		for _, a := range apps {
 			actors = append(actors, a)
 		}
-	case coreTypes.ActorType_ACTOR_TYPE_NODE:
+	case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 		nodes := getAllTestingNodes(t, ctx)
 		for _, a := range nodes {
 			actors = append(actors, a)

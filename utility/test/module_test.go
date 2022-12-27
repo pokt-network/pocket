@@ -45,7 +45,7 @@ var testUtilityMod modules.UtilityModule         // initialized in TestMain
 
 var actorTypes = []coreTypes.ActorType{
 	coreTypes.ActorType_ACTOR_TYPE_APP,
-	coreTypes.ActorType_ACTOR_TYPE_NODE,
+	coreTypes.ActorType_ACTOR_TYPE_SERVICENODE,
 	coreTypes.ActorType_ACTOR_TYPE_FISH,
 	coreTypes.ActorType_ACTOR_TYPE_VAL,
 }

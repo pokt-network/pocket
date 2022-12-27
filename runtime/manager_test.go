@@ -216,7 +216,7 @@ func TestNewManagerFromReaders(t *testing.T) {
 					},
 					ServiceNodes: []*types.Actor{
 						{
-							ActorType:       types.ActorType_ACTOR_TYPE_NODE,
+							ActorType:       types.ActorType_ACTOR_TYPE_SERVICENODE,
 							Address:         "43d9ea9d9ad9c58bb96ec41340f83cb2cabb6496",
 							PublicKey:       "16cd0a304c38d76271f74dd3c90325144425d904ef1b9a6fbab9b201d75a998b",
 							Chains:          []string{"0001"},

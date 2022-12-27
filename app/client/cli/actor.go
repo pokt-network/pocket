@@ -43,7 +43,7 @@ type (
 func NewActorCommands(cmdOptions []cmdOption) []*cobra.Command {
 	actorCmdDefs := []actorCmdDef{
 		{"Application", coreTypes.ActorType_ACTOR_TYPE_APP, cmdOptions},
-		{"Node", coreTypes.ActorType_ACTOR_TYPE_NODE, cmdOptions},
+		{"Node", coreTypes.ActorType_ACTOR_TYPE_SERVICENODE, cmdOptions},
 		{"Fisherman", coreTypes.ActorType_ACTOR_TYPE_FISH, cmdOptions},
 		{"Validator", coreTypes.ActorType_ACTOR_TYPE_VAL, cmdOptions},
 	}
