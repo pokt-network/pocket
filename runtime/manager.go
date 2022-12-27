@@ -70,9 +70,9 @@ func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...fun
 
 func NewManager(config *configs.Config, genesisState *genesis.GenesisState, options ...func(*Manager)) *Manager {
 	mgr := &Manager{
-		config:  config,
+		config:       config,
 		genesisState: genesisState,
-		clock:   clock.New(),
+		clock:        clock.New(),
 	}
 
 	for _, o := range options {
@@ -82,9 +82,9 @@ func NewManager(config *configs.Config, genesisState *genesis.GenesisState, opti
 	return mgr
 }
 
-func (rc *Manager) init(configPath, genesisPath string) (config *configs.Config, genesisState *genesis.GenesisState, err error) {
-	dir, file := path.Split(configPath)
-	filename := strings.TrimSuffix(file, filepath.Ext(file))
+func (rc *Manager) init(configJSONPath, genesisJSONPath string) (config *configs.Config, genesisState *genesis.GenesisState, err error) {
+	dir, configFile := path.Split(configJSONPath)
+	filename := strings.TrimSuffix(configFile, filepath.Ext(configFile))
 
 	viper.AddConfigPath(".")
 	viper.AddConfigPath(dir)
@@ -110,7 +110,7 @@ func (rc *Manager) init(configPath, genesisPath string) (config *configs.Config,
 		return
 	}
 
-	genesisState, err = parseGenesisJSON(genesisPath)
+	genesisState, err = parseGenesis(genesisJSONPath)
 	return
 }
 
