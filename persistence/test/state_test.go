@@ -48,9 +48,9 @@ func TestStateHash_DeterministicStateWhenUpdatingAppStake(t *testing.T) {
 	// that the business logic doesn't change and that they remain deterministic. Anytime the business
 	// logic changes, these hashes will need to be updated based on the test output.
 	stateHashes := []string{
-		"22208a52dcb27fdbf4f7b730eb211bc55fbf6ea6aa62aec5e0d5702e9cee3e88",
-		"8bf9381496bd72612bbb6e495bd288094cb7985968f9c6c753b29cbb001e77c7",
-		"a8cf891d9f3642722e118a6e3002688942337f31f78bcc1883cc34357b3e561e",
+		"67e8bc84db3bd7c9288242b53161ddbc8cd08cd6094814a9c9358d4d8369688c",
+		"dfbc92a3f72ac8fa5e436e37c8bb4e0949e113092d5411ef46244fa2651a238d",
+		"44fc53f0d4511d97296357e20d05d8089d7a3a06d3e07f6cf6197f7642553c91",
 	}
 
 	stakeAmount := initialStakeAmount
