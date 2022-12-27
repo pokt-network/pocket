@@ -7,8 +7,9 @@ import (
 	"github.com/pokt-network/pocket/runtime/genesis"
 )
 
-func parseGenesisJSON(genesisPath string) (g *genesis.GenesisState, err error) {
-	data, err := os.ReadFile(genesisPath)
+// parseGenesis parses the genesis file in JSON format and returns a genesis.GenesisState
+func parseGenesis(genesisJSONPath string) (g *genesis.GenesisState, err error) {
+	data, err := os.ReadFile(genesisJSONPath)
 	if err != nil {
 		return
 	}
