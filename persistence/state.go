@@ -72,24 +72,24 @@ var merkleTreeToString = map[merkleTree]string{
 }
 
 var actorTypeToMerkleTreeName = map[coreTypes.ActorType]merkleTree{
-	coreTypes.ActorType_ACTOR_TYPE_APP:  appMerkleTree,
-	coreTypes.ActorType_ACTOR_TYPE_VAL:  valMerkleTree,
-	coreTypes.ActorType_ACTOR_TYPE_FISH: fishMerkleTree,
-	coreTypes.ActorType_ACTOR_TYPE_NODE: serviceNodeMerkleTree,
+	coreTypes.ActorType_ACTOR_TYPE_APP:         appMerkleTree,
+	coreTypes.ActorType_ACTOR_TYPE_VAL:         valMerkleTree,
+	coreTypes.ActorType_ACTOR_TYPE_FISH:        fishMerkleTree,
+	coreTypes.ActorType_ACTOR_TYPE_SERVICENODE: serviceNodeMerkleTree,
 }
 
 var actorTypeToSchemaName = map[coreTypes.ActorType]types.ProtocolActorSchema{
-	coreTypes.ActorType_ACTOR_TYPE_APP:  types.ApplicationActor,
-	coreTypes.ActorType_ACTOR_TYPE_VAL:  types.ValidatorActor,
-	coreTypes.ActorType_ACTOR_TYPE_FISH: types.FishermanActor,
-	coreTypes.ActorType_ACTOR_TYPE_NODE: types.ServiceNodeActor,
+	coreTypes.ActorType_ACTOR_TYPE_APP:         types.ApplicationActor,
+	coreTypes.ActorType_ACTOR_TYPE_VAL:         types.ValidatorActor,
+	coreTypes.ActorType_ACTOR_TYPE_FISH:        types.FishermanActor,
+	coreTypes.ActorType_ACTOR_TYPE_SERVICENODE: types.ServiceNodeActor,
 }
 
 var merkleTreeToActorTypeName = map[merkleTree]coreTypes.ActorType{
 	appMerkleTree:         coreTypes.ActorType_ACTOR_TYPE_APP,
 	valMerkleTree:         coreTypes.ActorType_ACTOR_TYPE_VAL,
 	fishMerkleTree:        coreTypes.ActorType_ACTOR_TYPE_FISH,
-	serviceNodeMerkleTree: coreTypes.ActorType_ACTOR_TYPE_NODE,
+	serviceNodeMerkleTree: coreTypes.ActorType_ACTOR_TYPE_SERVICENODE,
 }
 
 func newStateTrees(treesStoreDir string) (*stateTrees, error) {

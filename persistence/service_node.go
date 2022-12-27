@@ -27,7 +27,7 @@ func (p PostgresContext) GetServiceNode(address []byte, height int64) (operator,
 
 func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, output []byte, _ bool, _ int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
 	return p.InsertActor(types.ServiceNodeActor, &coreTypes.Actor{
-		ActorType:       coreTypes.ActorType_ACTOR_TYPE_NODE,
+		ActorType:       coreTypes.ActorType_ACTOR_TYPE_SERVICENODE,
 		Address:         hex.EncodeToString(address),
 		PublicKey:       hex.EncodeToString(publicKey),
 		StakedAmount:    stakedTokens,
@@ -41,7 +41,7 @@ func (p PostgresContext) InsertServiceNode(address []byte, publicKey []byte, out
 
 func (p PostgresContext) UpdateServiceNode(address []byte, serviceURL string, stakedAmount string, chains []string) error {
 	return p.UpdateActor(types.ServiceNodeActor, &coreTypes.Actor{
-		ActorType:    coreTypes.ActorType_ACTOR_TYPE_NODE,
+		ActorType:    coreTypes.ActorType_ACTOR_TYPE_SERVICENODE,
 		Address:      hex.EncodeToString(address),
 		StakedAmount: stakedAmount,
 		GenericParam: serviceURL,

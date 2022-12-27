@@ -500,7 +500,7 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType coreTypes.Actor
 			return u.GetMessageStakeAppFee()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
 			return u.GetMessageStakeFishermanFee()
-		case coreTypes.ActorType_ACTOR_TYPE_NODE:
+		case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 			return u.GetMessageStakeServiceNodeFee()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			return u.GetMessageStakeValidatorFee()
@@ -513,7 +513,7 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType coreTypes.Actor
 			return u.GetMessageEditStakeAppFee()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
 			return u.GetMessageEditStakeFishermanFee()
-		case coreTypes.ActorType_ACTOR_TYPE_NODE:
+		case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 			return u.GetMessageEditStakeServiceNodeFee()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			return u.GetMessageEditStakeValidatorFee()
@@ -526,7 +526,7 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType coreTypes.Actor
 			return u.GetMessageUnstakeAppFee()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
 			return u.GetMessageUnstakeFishermanFee()
-		case coreTypes.ActorType_ACTOR_TYPE_NODE:
+		case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 			return u.GetMessageUnstakeServiceNodeFee()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			return u.GetMessageUnstakeValidatorFee()
@@ -539,7 +539,7 @@ func (u *UtilityContext) GetFee(msg typesUtil.Message, actorType coreTypes.Actor
 			return u.GetMessageUnpauseAppFee()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
 			return u.GetMessageUnpauseFishermanFee()
-		case coreTypes.ActorType_ACTOR_TYPE_NODE:
+		case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 			return u.GetMessageUnpauseServiceNodeFee()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			return u.GetMessageUnpauseValidatorFee()
