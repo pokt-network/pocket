@@ -63,19 +63,19 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			Name:     "app",
 			Getter:   state.GetApplications,
 			InsertFn: rwContext.InsertApp,
-			Pool:     coreTypes.PoolNames_POOL_NAMES_APP_STAKE_POOL,
+			Pool:     coreTypes.PoolNames_POOL_NAMES_APP_STAKE,
 		},
 		{
 			Name:     "node",
 			Getter:   state.GetServiceNodes,
 			InsertFn: rwContext.InsertServiceNode,
-			Pool:     coreTypes.PoolNames_POOL_NAMES_SERVICE_NODE_STAKE_POOL,
+			Pool:     coreTypes.PoolNames_POOL_NAMES_SERVICE_NODE_STAKE,
 		},
 		{
 			Name:     "fisherman",
 			Getter:   state.GetFishermen,
 			InsertFn: rwContext.InsertFisherman,
-			Pool:     coreTypes.PoolNames_POOL_NAMES_FISHERMAN_STAKE_POOL,
+			Pool:     coreTypes.PoolNames_POOL_NAMES_FISHERMAN_STAKE,
 		},
 		{
 			Name:   "validator",
@@ -83,7 +83,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			InsertFn: func(address, publicKey, output []byte, paused bool, status int32, serviceURL, stakedTokens string, chains []string, pausedHeight, unstakingHeight int64) error {
 				return rwContext.InsertValidator(address, publicKey, output, paused, status, serviceURL, stakedTokens, pausedHeight, unstakingHeight)
 			},
-			Pool: coreTypes.PoolNames_POOL_NAMES_VALIDATOR_STAKE_POOL,
+			Pool: coreTypes.PoolNames_POOL_NAMES_VALIDATOR_STAKE,
 		},
 	}
 
@@ -105,8 +105,8 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			if err != nil {
 				log.Fatalf("an error occurred inserting an %s in the genesis state: %s", saic.Name, err.Error())
 			}
-			if err = addValueToPool(coreTypes.PoolNames_POOL_NAMES_APP_STAKE_POOL.String(), act.GetStakedAmount()); err != nil {
-				log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", coreTypes.PoolNames_POOL_NAMES_APP_STAKE_POOL, err.Error())
+			if err = addValueToPool(coreTypes.PoolNames_POOL_NAMES_APP_STAKE.String(), act.GetStakedAmount()); err != nil {
+				log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", coreTypes.PoolNames_POOL_NAMES_APP_STAKE, err.Error())
 			}
 		}
 	}
@@ -135,8 +135,9 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 }
 
 // TODO (#399): All of the functions below following a structure similar to `GetAll<Actor>`
-//	can easily be refactored and condensed into a single function using a generic type or a common
-//  interface.
+//
+//		can easily be refactored and condensed into a single function using a generic type or a common
+//	 interface.
 func (p PostgresContext) GetAllAccounts(height int64) (accs []*coreTypes.Account, err error) {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {

@@ -218,16 +218,16 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 		switch actorType {
 		case coreTypes.ActorType_ACTOR_TYPE_APP:
 			readyToUnstake, er = store.GetAppsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
-			poolName = coreTypes.PoolNames_POOL_NAMES_APP_STAKE_POOL.String()
+			poolName = coreTypes.PoolNames_POOL_NAMES_APP_STAKE.String()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
 			readyToUnstake, er = store.GetFishermenReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
-			poolName = coreTypes.PoolNames_POOL_NAMES_FISHERMAN_STAKE_POOL.String()
+			poolName = coreTypes.PoolNames_POOL_NAMES_FISHERMAN_STAKE.String()
 		case coreTypes.ActorType_ACTOR_TYPE_NODE:
 			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
-			poolName = coreTypes.PoolNames_POOL_NAMES_SERVICE_NODE_STAKE_POOL.String()
+			poolName = coreTypes.PoolNames_POOL_NAMES_SERVICE_NODE_STAKE.String()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			readyToUnstake, er = store.GetValidatorsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
-			poolName = coreTypes.PoolNames_POOL_NAMES_VALIDATOR_STAKE_POOL.String()
+			poolName = coreTypes.PoolNames_POOL_NAMES_VALIDATOR_STAKE.String()
 		case coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED:
 			continue
 		}
