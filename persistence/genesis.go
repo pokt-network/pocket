@@ -105,7 +105,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			if err != nil {
 				log.Fatalf("an error occurred inserting an %s in the genesis state: %s", saic.Name, err.Error())
 			}
-			if err = addValueToPool(saic.Pool.String(), act.GetStakedAmount()); err != nil {
+			if err = addValueToPool(saic.Pool.FriendlyName(), act.GetStakedAmount()); err != nil {
 				log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", saic.Pool, err.Error())
 			}
 		}
