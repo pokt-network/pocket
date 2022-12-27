@@ -102,7 +102,7 @@ The commands available are listed [here](../../rpc/doc/README.md) or acessible v
 
 Swagger UI is available to help during the development process.
 
-In order to spin an local instance of it with the API definition for the Pocket Network Node RPC interface automatically pre-loaded you can run:
+In order to spin a local instance of it with the API definition for the Pocket Network Node RPC interface automatically pre-loaded you can run:
 
 ```bash
 make swagger-ui
