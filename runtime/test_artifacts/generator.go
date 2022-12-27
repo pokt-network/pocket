@@ -81,7 +81,8 @@ func NewDefaultConfig(i int, pk string) *configs.Config {
 	}
 }
 
-func NewPools() (pools []*coreTypes.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
+ // REFACTOR: Test artifact generator should reflect the sum of the initial account values to populate the initial pool values
+func NewPools() (pools []*coreTypes.Account) {
 	for _, name := range coreTypes.PoolNames_name {
 		if name == coreTypes.PoolNames_POOL_NAMES_FEE_COLLECTOR.String() {
 			pools = append(pools, &coreTypes.Account{
