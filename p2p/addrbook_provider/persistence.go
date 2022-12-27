@@ -74,6 +74,10 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 func (pabp *persistenceAddrBookProvider) ActorsToAddrBook(actors map[string]coreTypes.Actor) (typesP2P.AddrBook, error) {
 	book := make(typesP2P.AddrBook, 0)
 	for _, v := range actors {
+		// only add validator actors since they are the only ones having a service url in their generic param at the moment
+		if v.ActorType != coreTypes.ActorType_ACTOR_TYPE_VAL {
+			continue
+		}
 		networkPeer, err := pabp.ActorToNetworkPeer(v)
 		if err != nil {
 			log.Println("[WARN] Error connecting to validator: ", err)
