@@ -42,29 +42,3 @@ sudo chcon -Rt svirt_sandbox_file_t ./pocket
 ```
 
 See [this stackoverflow post](https://stackoverflow.com/questions/24288616/permission-denied-on-accessing-host-directory-in-docker) for more details.
-
-## Unable to create a LocalNet client
-
-* **Issue**: When running `make client_start` you get the error message:
-
-```
-ERROR: No such service: --build
-make: *** [Makefile:125: client_start] Error 1
-```
-
-* **Solution**: open `Makefile` and edit the following block of code
-
-```make
-.PHONY: client_start
-client_start: docker_check ## Run a client daemon which is only used for debugging purposes
-    docker-compose -f build/deployments/docker-compose.yaml up -d client --build
-```
-
-Move the `--build` flag so that it is before the `client` service, making the lines look like:
-```make
-.PHONY: client_start
-client_start: docker_check ## Run a client daemon which is only used for debugging purposes
-    docker-compose -f build/deployments/docker-compose.yaml up -d --build client
-```
-
-For more information on this refer to the [docker documentation](https://docs.docker.com/engine/reference/commandline/compose_up/)
