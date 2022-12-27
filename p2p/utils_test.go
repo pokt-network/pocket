@@ -143,6 +143,7 @@ func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *ge
 	for i, valKey := range valKeys {
 		addr := valKey.Address().String()
 		mockActor := &coreTypes.Actor{
+			ActorType: coreTypes.ActorType_ACTOR_TYPE_VAL,
 			Address:         addr,
 			PublicKey:       valKey.PublicKey().String(),
 			GenericParam:    validatorId(i + 1),
