@@ -55,15 +55,13 @@ type PersistenceWriteContext interface {
 	RollbackToSavePoint([]byte) error
 	Release() error
 
-	// Commits the current context (height, hash, transactions, etc...) to finality.
-	Commit(quorumCert []byte) error
+	// Commits the current context (height, hash, transactions, etc...) to disk (i.e. finality).
+	Commit(proposerAddr, quorumCert []byte) error
 
 	// Indexer Operations
 
 	// Block Operations
-	SetProposalBlock(blockHash string, proposerAddr []byte, quorumCert []byte, transactions [][]byte) error
-	GetBlockTxs() [][]byte                    // Returns the transactions set by `SetProposalBlock`
-	ComputeAppHash() ([]byte, error)          // Update the merkle trees, computes the new state hash, and returns in
+	ComputeStateHash() (string, error)        // Update the merkle trees, computes the new state hash, and returns it
 	IndexTransaction(txResult TxResult) error // TODO(#361): Look into an approach to remove `TxResult` from shared interfaces
 
 	// Pool Operations
@@ -128,8 +126,7 @@ type PersistenceReadContext interface {
 	// CONSOLIDATE: BlockHash / AppHash / StateHash
 	// Block Queries
 	GetLatestBlockHeight() (uint64, error)         // Returns the height of the latest block in the persistence layer
-	GetBlockHash(height int64) ([]byte, error)     // Returns the app hash corresponding to the height provided
-	GetProposerAddr() []byte                       // Returns the proposer set via `SetProposalBlock`
+	GetBlockHash(height int64) (string, error)     // Returns the app hash corresponding to the height provided
 	GetBlocksPerSession(height int64) (int, error) // TECHDEBT(#286): Deprecate this method
 
 	// Pool Queries
@@ -182,6 +179,9 @@ type PersistenceReadContext interface {
 	GetValidatorPauseHeightIfExists(address []byte, height int64) (int64, error)
 	GetValidatorOutputAddress(operator []byte, height int64) (output []byte, err error)
 	GetValidatorMissedBlocks(address []byte, height int64) (int, error)
+
+	// Actors Queries
+	GetAllStakedActors(height int64) ([]Actor, error)
 
 	// Params
 	GetIntParam(paramName string, height int64) (int, error)

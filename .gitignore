@@ -66,3 +66,5 @@ build/config/gen*.json
 **/charts
 **/tmpcharts
 
+# Ignored generated files by build
+bin/*
