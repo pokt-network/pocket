@@ -7,6 +7,7 @@ Please note that this repository is under very active development and breaking c
     - [Install Dependencies](#install-dependencies)
     - [Prepare Local Environment](#prepare-local-environment)
     - [Pocket Network CLI](#pocket-network-cli)
+    - [Swagger UI](#swagger-ui)
     - [View Available Commands](#view-available-commands)
     - [Running Unit Tests](#running-unit-tests)
     - [Running LocalNet](#running-localnet)
@@ -77,9 +78,7 @@ unless the CHANGELOG is updated._
 
 ### Pocket Network CLI
 
-Pocket provides a CLI for interacting with Pocket Core. The CLI is meant to be an user but also a machine friendly way for interacting with Pocket Network.
-
-The commands available are listed [here](../../app/client/cli/doc/commands/client.md).
+The Pocket node provides a CLI for interacting with Pocket RPC Server. The CLI can be used for both read & write operations by both users and to aid in automation.
 
 In order to build the CLI:
 
@@ -89,14 +88,25 @@ In order to build the CLI:
 make develop_start
 ```
 
-2. Build the CLI
+2. Build the CLI binary
 
 ```bash
 make build
 ```
 
-The cli binary will be available at `bin/p1`.
+The cli binary will be available at `bin/p1` and can be used instead of `go run app/client/*.go`
 
+The commands available are listed [here](../../rpc/doc/README.md) or acessible via `bin/p1 --help`
+
+### Swagger UI
+
+Swagger UI is available to help during the development process.
+
+In order to spin an local instance of it with the API definition for the Pocket Network Node RPC interface automatically pre-loaded you can run:
+
+```bash
+make swagger-ui
+```
 
 ### View Available Commands
 
