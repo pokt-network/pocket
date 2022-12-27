@@ -17,16 +17,15 @@ type keyGenerator struct {
 
 func GetInstance() *keyGenerator {
 	if keygen == nil {
-		privateKeySeed := getPrivateKeySeed()
-		keygen = &keyGenerator{
-			privateKeySeed: privateKeySeed,
-		}
+		keygen = &keyGenerator{}
+		keygen.reset()
 	}
 	return keygen
 }
 
 func (k *keyGenerator) reset() {
-	k.privateKeySeed = getPrivateKeySeed()
+	rand.Seed(timestamppb.Now().Seconds)
+	k.privateKeySeed = rand.Int()
 }
 
 func (k *keyGenerator) SetSeed(seed int) (teardown func()) {
@@ -51,11 +50,5 @@ func (k *keyGenerator) Next() (privateKey, publicKey, address string) {
 	publicKey = privateKeyBz.PublicKey().String()
 	address = privateKeyBz.PublicKey().Address().String()
 
-	return
-}
-
-func getPrivateKeySeed() (privateKeySeed int) {
-	rand.Seed(timestamppb.Now().Seconds)
-	privateKeySeed = rand.Int()
 	return
 }
