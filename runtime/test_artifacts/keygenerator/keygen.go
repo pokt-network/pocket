@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"math/rand"
-	"sync"
 
 	"github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var keygenInitOnce sync.Once
 var keygen *keyGenerator
 
 type keyGenerator struct {
@@ -19,13 +17,11 @@ type keyGenerator struct {
 
 func GetInstance() *keyGenerator {
 	if keygen == nil {
-		var privateKeySeed int
-		keygenInitOnce.Do(func() {
-			privateKeySeed = getPrivateKeySeed()
-			keygen = &keyGenerator{
-				privateKeySeed: privateKeySeed,
-			}
-		})
+		privateKeySeed := getPrivateKeySeed()
+		keygen = &keyGenerator{
+			privateKeySeed: privateKeySeed,
+		}
+
 	}
 	return keygen
 }
