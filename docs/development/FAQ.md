@@ -35,9 +35,7 @@ node4.consensus exited with code 2
 su -c "setenforce 0"
 ```
 
-
 Whereas a permenant approach would be to allow the docker container access to the local repository
-
 
 ```bash
 sudo chcon -Rt svirt_sandbox_file_t ./pocket
