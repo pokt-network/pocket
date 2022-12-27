@@ -184,7 +184,7 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 	// move funds from account to pool
-	if err = u.AddPoolAmount(coreTypes.PoolNames_POOL_NAMES_APP_STAKE_POOL.String(), amount); err != nil {
+	if err = u.AddPoolAmount(coreTypes.PoolNames_POOL_NAMES_APP_STAKE.String(), amount); err != nil {
 		return err
 	}
 	var er error
@@ -248,7 +248,7 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(coreTypes.PoolNames_POOL_NAMES_APP_STAKE_POOL.String(), amount); err != nil {
+	if err := u.AddPoolAmount(coreTypes.PoolNames_POOL_NAMES_APP_STAKE.String(), amount); err != nil {
 		return err
 	}
 	store := u.Store()
