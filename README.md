@@ -74,4 +74,4 @@ If you'd like to contribute to the Pocket V1 Protocol, start by:
 
 This project is licensed under the MIT License; see the [LICENSE](LICENSE) file for details.
 
-<!-- GITHUB_WIKI: home -->
+<!-- GITHUB_WIKI: home/readme -->
