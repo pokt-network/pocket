@@ -49,7 +49,7 @@ func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manage
 //
 // Useful for testing and when the user doesn't want to rely on the filesystem and instead intends plugging in different configuration management system.
 func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...func(*Manager)) *Manager {
-	var cfg = new(configs.Config)
+	var cfg = configs.NewDefaultConfig()
 	parse(configReader, cfg)
 
 	var genesisState = new(genesis.GenesisState)
@@ -82,7 +82,9 @@ func NewManager(config *configs.Config, genesisState *genesis.GenesisState, opti
 	return mgr
 }
 
-func (rc *Manager) init(configJSONPath, genesisJSONPath string) (config *configs.Config, genesisState *genesis.GenesisState, err error) {
+func (m *Manager) init(configJSONPath, genesisJSONPath string) (config *configs.Config, genesisState *genesis.GenesisState, err error) {
+	config = configs.NewDefaultConfig()
+
 	dir, configFile := path.Split(configJSONPath)
 	filename := strings.TrimSuffix(configFile, filepath.Ext(configFile))
 
@@ -114,16 +116,16 @@ func (rc *Manager) init(configJSONPath, genesisJSONPath string) (config *configs
 	return
 }
 
-func (b *Manager) GetConfig() *configs.Config {
-	return b.config
+func (m *Manager) GetConfig() *configs.Config {
+	return m.config
 }
 
-func (b *Manager) GetGenesis() *genesis.GenesisState {
-	return b.genesisState
+func (m *Manager) GetGenesis() *genesis.GenesisState {
+	return m.genesisState
 }
 
-func (b *Manager) GetClock() clock.Clock {
-	return b.clock
+func (m *Manager) GetClock() clock.Clock {
+	return m.clock
 }
 
 func parse[T *configs.Config | *genesis.GenesisState](reader io.Reader, target T) {

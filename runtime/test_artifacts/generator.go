@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/pokt-network/pocket/runtime/configs"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -23,8 +22,8 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 
 	genesisState := &genesis.GenesisState{
 		GenesisTime:   timestamppb.Now(),
-		ChainId:       defaults.DefaultChainID,
-		MaxBlockBytes: defaults.DefaultMaxBlockBytes,
+		ChainId:       DefaultChainID,
+		MaxBlockBytes: DefaultMaxBlockBytes,
 		Pools:         NewPools(),
 		Accounts:      NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...), // TODO(olshansky): clean this up
 		Applications:  apps,
@@ -72,6 +71,7 @@ func NewDefaultConfig(i int, pk string) *configs.Config {
 			UseRainTree:           true,
 			IsEmptyConnectionType: false,
 			PrivateKey:            pk,
+			MaxMempoolCount:       1e5,
 		},
 		Telemetry: &configs.TelemetryConfig{
 			Enabled:  true,
@@ -93,7 +93,7 @@ func NewPools() (pools []*coreTypes.Account) {
 		}
 		pools = append(pools, &coreTypes.Account{
 			Address: name,
-			Amount:  defaults.DefaultAccountAmountString,
+			Amount:  DefaultAccountAmountString,
 		})
 	}
 	return
@@ -108,7 +108,7 @@ func NewAccounts(n int, privateKeys ...string) (accounts []*coreTypes.Account) {
 		}
 		accounts = append(accounts, &coreTypes.Account{
 			Address: addr,
-			Amount:  defaults.DefaultAccountAmountString,
+			Amount:  DefaultAccountAmountString,
 		})
 	}
 	return
@@ -121,7 +121,7 @@ func NewActors(actorType coreTypes.ActorType, n int) (actors []*coreTypes.Actor,
 	for i := 0; i < n; i++ {
 		genericParam := getServiceUrl(i + 1)
 		if int32(actorType) == int32(coreTypes.ActorType_ACTOR_TYPE_APP) {
-			genericParam = defaults.DefaultMaxRelaysString
+			genericParam = DefaultMaxRelaysString
 		}
 		actor, pk := NewDefaultActor(int32(actorType), genericParam)
 		actors = append(actors, actor)
@@ -132,25 +132,25 @@ func NewActors(actorType coreTypes.ActorType, n int) (actors []*coreTypes.Actor,
 }
 
 func getServiceUrl(n int) string {
-	return fmt.Sprintf(defaults.ServiceUrlFormat, n)
+	return fmt.Sprintf(ServiceUrlFormat, n)
 }
 
 func NewDefaultActor(actorType int32, genericParam string) (actor *coreTypes.Actor, privateKey string) {
 	privKey, pubKey, addr := keygenerator.GetInstance().Next()
-	chains := defaults.DefaultChains
+	chains := DefaultChains
 	if actorType == int32(coreTypes.ActorType_ACTOR_TYPE_VAL) {
 		chains = nil
 	} else if actorType == int32(coreTypes.ActorType_ACTOR_TYPE_APP) {
-		genericParam = defaults.DefaultMaxRelaysString
+		genericParam = DefaultMaxRelaysString
 	}
 	return &coreTypes.Actor{
 		Address:         addr,
 		PublicKey:       pubKey,
 		Chains:          chains,
 		GenericParam:    genericParam,
-		StakedAmount:    defaults.DefaultStakeAmountString,
-		PausedHeight:    defaults.DefaultPauseHeight,
-		UnstakingHeight: defaults.DefaultUnstakingHeight,
+		StakedAmount:    DefaultStakeAmountString,
+		PausedHeight:    DefaultPauseHeight,
+		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          addr,
 		ActorType:       coreTypes.ActorType(actorType),
 	}, privKey
