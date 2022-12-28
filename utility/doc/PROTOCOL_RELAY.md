@@ -16,49 +16,51 @@ The foundational lifecycle of the Relay Protocol is:
 1) Validate the inbound `Relay`
 2) Store / persist the `Relay`
 3) Execute the Relay against the `RelayChain`
+
 ```mermaid
 sequenceDiagram
-	    title Steps 1 to 3
-	    autonumber
-	    actor App
-	    actor Client
-	    actor Service Node
+     title Steps 1 to 3
+     autonumber
+     actor App
+     actor Client
+     actor Service Node
         participant Internal State
         participant Internal Storage
         participant External Relay Chain
-	    App->>Client: Provision(AppAuthToken)
-	    loop Repeats Throughout Session Duration 
+     App->>Client: Provision(AppAuthToken)
+     loop Repeats Throughout Session Duration
             Client->>Client: Sign(Relay)
-	        Client->>Service Node: Send(Relay)
-	        Service Node->>Internal State: Validate(Relay)
+         Client->>Service Node: Send(Relay)
+         Service Node->>Internal State: Validate(Relay)
             Internal State->>Service Node: IsValid(Relay)
-	        Service Node->>Internal Storage: IfValid(Relay) -> Persist(Relay)
-	        Service Node->>External Relay Chain: Execute(Relay, RelayChainURL)
+         Service Node->>Internal Storage: IfValid(Relay) -> Persist(Relay)
+         Service Node->>External Relay Chain: Execute(Relay, RelayChainURL)
             External Relay Chain->>Service Node: RelayResponse = GetResponse(RelayChain)
             Service Node->>Service Node: Sign(RelayResponse)
             Service Node ->> Client: Send(RelayResponse)
 
-	    end
+     end
 ```
+
 4) Wait for `Session` end / secret key to be revealed
 5) Collect Volume Applicable Relays (based on secret key) from storage
 6) Report Volume Applicable Relays to the assigned `Fisherman`
 
 ```mermaid
 sequenceDiagram
-	    title Steps 4-6
-	    autonumber
-	    actor Service Node
+     title Steps 4-6
+     autonumber
+     actor Service Node
         participant Internal State
         participant Internal Storage
         actor Fisherman
-	    loop Repeats Every Session End
-	        Service Node->>Internal State: GetSecretKey(sessionHeader)
+     loop Repeats Every Session End
+         Service Node->>Internal State: GetSecretKey(sessionHeader)
             Internal State->>Service Node: HashCollision = SecretKey(govParams)
-	        Service Node->>Internal Storage: RelaysThatEndWith(HashCollision)
+         Service Node->>Internal Storage: RelaysThatEndWith(HashCollision)
             Internal Storage->>Service Node: VolumeApplicableRelays
             Service Node->>Fisherman: Send(VolumeApplicableRelays)
-	    end
+     end
 ```
 
 ### Validate the inbound `Relay`
@@ -76,6 +78,7 @@ A multi-step validation process to validate a submitted relay by a client before
 9) Ensure not over serviced (if max relays is exceeded, not compensated for further work)
 10) Generate the session from seed data (see [Session Protocol](https://github.com/pokt-network/pocket/blob/main/utility/doc/PROTOCOLS.md))
 11) Validate self against the session (is node within session)
+
 ```mermaid
 graph TD
     A[Relay.Validate] -->B
@@ -124,7 +127,7 @@ Execute a submitted `Relay` against the `RelayChain` by a client after validatio
 ##### Wait for Session to end / secret key to be revealed
 
 It's important to note, the secret key isn't revealed by the network until the session is over
-to prevent volume based bias. The secret key is usually a pseudorandom selection using the block hash as a seed. 
+to prevent volume based bias. The secret key is usually a pseudorandom selection using the block hash as a seed.
 _See the [Session Protocol](https://github.com/pokt-network/pocket/blob/main/utility/doc/PROTOCOLS.md) for more details._
 
 ### Get volume metric applicable `Relays` from store
@@ -158,17 +161,19 @@ build a Merkle sum index tree from all the relays, submits a root and subsequent
 network via a commit+reveal schema.
 
 * **Pros**: Can report volume metrics directly to the chain in a trustless fashion
-* **Cons**: Large chain bloat, non-trivial compute requirement for creation of claim/proof transactions and trees, 
+* **Cons**: Large chain bloat, non-trivial compute requirement for creation of claim/proof transactions and trees,
 non-trivial compute requirement to process claim / proofs during ApplyBlock()
 
 This algorithm is not yet documented anywhere, so the following links can act as a reference in the interim.
 
 **Documentation:**
-- Pocket docs: https://docs.pokt.network/home/v0/protocol/servicing#claim-proof-lifecycle
-- Twitter Thread: https://twitter.com/o_rourke/status/1263847357122326530
-- Plasma core Merkle Sum Tree: https://plasma-core.readthedocs.io/en/latest/specs/sum-tree.html
+* Pocket docs: <https://docs.pokt.network/home/v0/protocol/servicing#claim-proof-lifecycle>
+* Twitter Thread: <https://twitter.com/o_rourke/status/1263847357122326530>
+* Plasma core Merkle Sum Tree: <https://plasma-core.readthedocs.io/en/latest/specs/sum-tree.html>
 
 **Source code references:**
-- Merkle: https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/types/merkle.go
-- Claim: https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/claim.go
-- Proof: https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/proof.go
+* Merkle: <https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/types/merkle.go>
+* Claim: <https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/claim.go>
+* Proof: <https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/proof.go>
+
+<!-- GITHUB_WIKI: utility/protocol_relay -->

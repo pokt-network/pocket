@@ -37,3 +37,5 @@ Congratulations, if you're reading this, you truly are committed to building one
 Well Done! You finished your milestone, make sure to follow this guide to integrate your awesome changes in the next release.
 
 [Integration Branch (Milestone) Merge Guide](contribution/merge.md)
+
+<!-- GITHUB_WIKI: guides/contributing/community_guide -->

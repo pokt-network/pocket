@@ -61,11 +61,12 @@ Software:
 Generate local files
 
 ```bash
-$ git clone git@github.com:pokt-network/pocket.git && cd pocket
-$ make develop_start
+git clone git@github.com:pokt-network/pocket.git && cd pocket
+make develop_start
 ```
 
 Optionally activate changelog pre-commit hook
+
 ```bash
 cp .githooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
@@ -77,13 +78,13 @@ unless the CHANGELOG is updated._
 ### View Available Commands
 
 ```bash
-$ make
+make
 ```
 
 ### Running Unit Tests
 
 ```bash
-$ make test_all
+make test_all
 ```
 
 Note that there are a few tests in the library that are prone to race conditions and we are working on improving them. This can be checked with `make test_race`.
@@ -95,19 +96,19 @@ Note that there are a few tests in the library that are prone to race conditions
 1. Delete any previous docker state
 
 ```bash
-$ make docker_wipe
+make docker_wipe
 ```
 
 2. In one shell, run the 4 nodes setup:
 
 ```bash
-$ make compose_and_watch
+make compose_and_watch
 ```
 
 4. In another shell, run the development client:
 
 ```bash
-$ make client_start && make client_connect
+make client_start && make client_connect
 ```
 
 4. Check the state of each node:
@@ -210,3 +211,5 @@ The official documentation includes a list of different linters and their config
 We can write custom linters using [`go-ruleguard`](https://go-ruleguard.github.io/). The rules are located in the [`build/linters`](../../build/linters) directory. The rules are written in the [Ruleguard DSL](https://github.com/quasilyte/go-ruleguard/blob/master/_docs/dsl.md), if you've never worked with ruleguard in the past, it makes sense to go through [introduction article](https://quasilyte.dev/blog/post/ruleguard/) and [Ruleguard by example tour](https://go-ruleguard.github.io/by-example/).
 
 Ruleguard is run via `gocritic` linter which is a part of `golangci-lint`, so if you wish to change configuration or debug a particular rule, you can modify the `.golangci.yml` file.
+
+<!-- GITHUB_WIKI: guides/development/readme -->

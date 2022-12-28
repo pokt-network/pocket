@@ -42,12 +42,12 @@ gantt
 
 ### [M1. Pocket PoS (Proof of Stake)](https://github.com/pokt-network/pocket/milestone/7)
 
-#### Goals:
+#### Goals
 
 - Basic LocalNet development environment
 - Tendermint Core equivalent for a proof-of-stake blockchain custom-built for Pocket
 
-#### Non-goals:
+#### Non-goals
 
 - Pocket specific utility
 - Devnet infrastructure
@@ -63,7 +63,7 @@ gantt
 
 ### [M3. Pocket RoS (Relay or Slash)](https://github.com/pokt-network/pocket/milestone/15)
 
-#### Goals:
+#### Goals
 
 - Pocket Network utility-specific business logic including:
   - Devnet supporting ETH relays
@@ -71,7 +71,7 @@ gantt
 
 ### M4. [Pocket CoS (Cloud of Services)](https://github.com/pokt-network/pocket/milestone/20)
 
-#### Goals:
+#### Goals
 
 *Note: more details will be added to this milestone in the future*
 
@@ -81,7 +81,7 @@ gantt
 
 ### [M5. Pocket IoS (Innovate or Skip)](https://github.com/pokt-network/pocket/milestone/16)
 
-#### Goals:
+#### Goals
 
 *Note: more details will be added to this milestone in the future*
 
@@ -91,7 +91,7 @@ gantt
 
 ### [M6. Pocket FoS (Finish or Serve)](https://github.com/pokt-network/pocket/milestone/18)
 
-#### Goals:
+#### Goals
 
 *Note: more details will be added to this milestone in the future*
 
@@ -103,3 +103,5 @@ gantt
 ## M7. Pocket NoS (North Star)
 
 Shoot for the ✨ and we will land on the 🌕
+
+<!-- GITHUB_WIKI: guides/roadmap/readme -->

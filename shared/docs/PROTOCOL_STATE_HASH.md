@@ -173,3 +173,5 @@ sequenceDiagram
     %% Validate the computed hash
     C->>C: Compare local hash<br>against proposed hash
 ```
+
+<!-- GITHUB_WIKI: shared/protocol_state_hash -->

@@ -45,25 +45,29 @@ type PeerSyncAggregate interface {
   ...
 }
 ```
+
 Using the `PeerSyncAggregate`, a Node is able to compare its local `SyncState` against that of the Global Network.
 
 ## State Sync Operation Modes
 
 State sync can be viewed as a state machine that transverses various modes the node can be in, including:
+
 * Synced Mode
 * Sync Mode
 * Server Mode
 
-The functionality of the node depends on the mode it is operating it. 
+The functionality of the node depends on the mode it is operating it.
 
 *NOTE: that the modes are not necessarily mutually exclusive (e.g. the node can be in `Server Mode` and `Synced Mode` at the same time).*
 
 ### Synced Mode
+
 If the Node is `Synced` or `localSyncState.Height == GlobalSyncMeta.Height` then the `StateSync` protocol is in `SyncedMode`.
 
 In `SyncedMode`, the Node is caught up to the latest block and relies on new blocks to be propagated via the P2P network after Validators reach consensus.
 
 ### Sync Mode
+
 If the Node is `Syncing` or `localSyncState.Height < GlobalSyncMeta.Height` then the `StateSync` protocol is in `SyncMode`.
 
 In `SyncMode`, the Node is catching up to the latest block by making `BlockRequests` to its fellow eligible peers. A peer is eligible for a `BlockRequest` if `PeerMeta.MinHeight` <= `self.MaxBlockHeight` <= `PeerMeta.MaxHeight`.
@@ -98,6 +102,7 @@ graph TD
 * `Block Stream Design` - Update the Block by Block design to stream blocks via a WebSocket from a single connectable peer.
 
 ## Research Items
+
 TODO(M5): Create issues to track and discuss these work items.
 
 How the persistence layer design of `pruning` the Merkle Tree affects `StateSync`.
@@ -117,3 +122,5 @@ How the Churn Management operations of RainTree might provide opportunities and 
 `Network Peer`: Another node on the network that this node can directly communicate with, without going through a third-party server. Peers may start the connection through an `inbound` or `outbound` initialization to share and transmit data.
 
 `SyncState`: The local block state of the node vs the global network block state.
+
+<!-- GITHUB_WIKI: consensus/protocol_state_sync -->

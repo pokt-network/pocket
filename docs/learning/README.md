@@ -195,3 +195,5 @@ We do not consider them bad, but time is limited so it is important to focus on 
 
 - [Blockchains Meet Distributed Hash Tables: Decoupling Validation from State Storage](https://arxiv.org/abs/1904.01935)
   - An "extended abstract" of how Authenticated Data Structures (i.e. Merkle Trees) could be _"sharded"_ across nodes using Distributed Hash Tables (DHTs) to reduce the state required to be maintained and synched by each node.
+
+<!-- GITHUB_WIKI: guides/learning/readme -->

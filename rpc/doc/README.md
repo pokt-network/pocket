@@ -30,7 +30,7 @@ The source of truth is the the [OpenAPI3.0 yaml file](../v1/openapi.yaml) (also 
 Anytime we make changes to the yaml file, we need to regenerate the boilerplate code by running
 
 ```bash
-$ make generate_rpc_openapi
+make generate_rpc_openapi
 ```
 
 The compilation errors should guide towards the next steps.
@@ -66,7 +66,7 @@ These are pretty self-explanatory.
 
 - Sync signed transaction submission (**POST /v1/client/broadcast_tx_sync**)
 
-#### Payload:
+#### Payload
 
 ```json
 {
@@ -78,7 +78,7 @@ These are pretty self-explanatory.
 - `address`: specifies the address the transaction originates from.
 - `raw_hex_bytes`: hex encoded raw protobuf bytes of a signed transaction.
 
-#### Return:
+#### Return
 
 Currently only **OK** (HTTP Status code 200) or **KO** (HTTP Status code 4xx/5xx)
 
@@ -88,7 +88,7 @@ This API might be extended to return potentially useful information such as the 
 
 Definitely we'll need ways to retrieve transactions as well so we can envisage:
 
-- Get a transaction by hash (**GET /v1/query/tx **)
+- Get a transaction by hash (**GET /v1/query/tx**)
 
 ## Code Organization
 
@@ -109,3 +109,5 @@ Definitely we'll need ways to retrieve transactions as well so we can envisage:
 └── v1
     └── openapi.yaml         # OpenAPI v3.0 spec (source for the generated files above)
 ```
+
+<!-- GITHUB_WIKI: rpc/readme -->

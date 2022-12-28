@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.7] - 2022-10-24
 
 - Updated README to reference the python simulator as a learning references and unit test generation tool
-- Added a RainTree unit test for 12 nodes using the simulator in https://github.com/pokt-network/rain-tree-sim/blob/main/python
+- Added a RainTree unit test for 12 nodes using the simulator in <https://github.com/pokt-network/rain-tree-sim/blob/main/python>
 
 ## [0.0.0.6] - 2022-10-20
 
@@ -86,3 +86,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.0.0] - 2022-06-16
 
 - RainTree first iteration in Pre2P module (no cleanup or redundancy)
+
+<!-- GITHUB_WIKI: changelog/p2p_changelog -->

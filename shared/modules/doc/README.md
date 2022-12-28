@@ -39,13 +39,14 @@ genesis
 ```
 
 TODO(#235): Update once runtime configs are implemented
+
 ### Module Typical Usage Example
 
 #### Create the module
 
 Module creation uses a typical constructor pattern signature `Create(configPath, genesisPath string) (module.Interface, error)`
 
-Currently, module creation is not embedded or enforced in the interface to prevent the initializer from having to use 
+Currently, module creation is not embedded or enforced in the interface to prevent the initializer from having to use
 clunky creation syntax -> `modPackage.new(module).Create(configPath, genesisPath)` rather `modPackage.Create(configPath, genesisPath)`
 
 This is done to optimize for code clarity rather than creation signature enforceability but **may change in the future**.
@@ -54,7 +55,7 @@ This is done to optimize for code clarity rather than creation signature enforce
 newModule, err := newModule.Create(configFilePath, genesisFilePath)
 
 if err != nil {
-	// handle error
+ // handle error
 }
 ```
 
@@ -78,7 +79,7 @@ Starting must come after creation and setting the bus.
 err := newModule.Start()
 
 if err != nil {
-	// handle error
+ // handle error
 }
 ```
 
@@ -105,6 +106,8 @@ This is the proper way to conclude the lifecycle of the module.
 err := newModule.Stop()
 
 if err != nil {
-	// handle error
+ // handle error
 }
 ```
+
+<!-- GITHUB_WIKI: shared/modules/readme -->

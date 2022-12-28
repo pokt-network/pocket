@@ -124,3 +124,5 @@ General
 - Benchmarking via `make benchmark_sortition`
 - VRF Wrapper library in `consensus/leader_election/vrf/` of github.com/ProtonMail/go-ecvrf/ecvrf
 - Implementation of Algorand's Leader Election sortition algorithm in `consensus/leader_election/sortition/`
+
+<!-- GITHUB_WIKI: changelog/consensus_changelog -->

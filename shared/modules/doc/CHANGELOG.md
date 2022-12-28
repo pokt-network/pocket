@@ -84,3 +84,5 @@ UtilityModule
 - Deprecated old build files
 - Use new config and genesis files for make compose_and_watch
 - Use new config and genesis files for make client_start && make client_connect
+
+<!-- GITHUB_WIKI: changelog/shared_modules_changelog -->
