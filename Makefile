@@ -125,7 +125,7 @@ client_start: docker_check ## Run a client daemon which is only used for debuggi
 	docker-compose -f build/deployments/docker-compose.yaml up -d client
 
 .PHONY: rebuild_client_start
-client_start: docker_check ## Rebuild and run a client daemon which is only used for debugging purposes
+rebuild_client_start: docker_check ## Rebuild and run a client daemon which is only used for debugging purposes
 	docker-compose -f build/deployments/docker-compose.yaml up -d --build client
 
 .PHONY: client_connect
