@@ -54,7 +54,10 @@ Please mark the relevant option(s):
 - [ ] I have updated the corresponding CHANGELOG
 
 ### If Applicable Checklist
+
 - [ ] I have updated the corresponding README(s); local and/or global
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] I have added, or updated, [mermaid.js](https://mermaid-js.github.io) diagrams in the corresponding README(s)
 - [ ] I have added, or updated, documentation and [mermaid.js](https://mermaid-js.github.io) diagrams in `shared/docs/*` if I updated `shared/*`README(s)
+
+<!-- GITHUB_WIKI: repository/pull_request_template -->
