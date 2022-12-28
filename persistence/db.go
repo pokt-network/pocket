@@ -75,19 +75,25 @@ func connectToDatabase(cfg modules.PersistenceConfig) (*pgx.Conn, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to create database config: %v", err)
 	}
-	MaxConnLifetime, err := time.ParseDuration(cfg.GetMaxConnLifetime())
+	maxConnLifetime, err := time.ParseDuration(cfg.GetMaxConnLifetime())
 	if err == nil {
-		config.MaxConnLifetime = MaxConnLifetime
+		config.MaxConnLifetime = maxConnLifetime
+	} else {
+		log.Printf("unable to set max connection lifetime: %v", err)
 	}
-	MaxConnIdleTime, err := time.ParseDuration(cfg.GetMaxConnIdleTime())
+	maxConnIdleTime, err := time.ParseDuration(cfg.GetMaxConnIdleTime())
 	if err == nil {
-		config.MaxConnIdleTime = MaxConnIdleTime
+		config.MaxConnIdleTime = maxConnIdleTime
+	} else {
+		log.Printf("unable to set max connection idle time : %v", err)
 	}
 	config.MaxConns = cfg.GetMaxConnsCount()
 	config.MinConns = cfg.GetMinConnsCount()
-	HealthCheckPeriod, err := time.ParseDuration(cfg.GetHealthCheckPeriod())
+	healthCheckPeriod, err := time.ParseDuration(cfg.GetHealthCheckPeriod())
 	if err == nil {
-		config.HealthCheckPeriod = HealthCheckPeriod
+		config.HealthCheckPeriod = healthCheckPeriod
+	} else {
+		log.Printf("unable to set healthcheck period: %v", err)
 	}
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
