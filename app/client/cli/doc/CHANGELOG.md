@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.3] - 2022-12-28
+## [0.0.0.3] - 2022-12-28
 
 - Updated to use `coreTypes` instead of utility types for `Actor` and `ActorType`
 
-## [0.0.2] - 2022-11-02
+## [0.0.0.2] - 2022-11-02
 
 ### Added
 
@@ -20,13 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - System commands working end-to-end
 - Added Consensus State commands
 
-## [0.0.1] - 2022-09-09
+## [0.0.0.1] - 2022-09-09
 
 ### Added
 
 - Commands documentation generator
 
-## [0.0.0] - 2022-09-07
+## [0.0.0.0] - 2022-09-07
 
 ### Added
 
