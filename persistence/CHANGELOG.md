@@ -9,6 +9,15 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 
 ## [Unreleased]
 
+## [0.0.0.13] - 2022-12-28
+
+- Added missing `ActorType` in `GetAllXXXX()` functions
+- Updated to new `PoolNames` enums
+- Using Enum.FriendlyName() instead of Enum.String() for `PoolNames` enums (backward compatibility + flexibility)
+- Updated `InitParams` so that Params can be initialized from a `GenesisState` and not just hardcoded
+- Refactored default values sourcing (test_artifacts for tests)
+- Updated tests
+
 ## [0.0.0.12] - 2022-12-15
 
 - Remove `SetProposalBlock` and local vars to keep proposal state
