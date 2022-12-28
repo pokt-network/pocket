@@ -1,11 +1,11 @@
 # LocalNet on Kubernetes <!-- omit in toc -->
 
-We are developing our own Kubernetes operator to manage v1 workloads both internally and for the community to make it easier to deploy pocket v1. While the operator is still in development, we can already utilize it to run our local networks locally on Kubernetes. This guide will show you how to do that.
+This guide shows how to deploy a LocalNet using [pocket-operator](https://github.com/pokt-network/pocket-operator).
 
 - [Dependencies](#dependencies)
-- [Running the localnet](#running-the-localnet)
-- [Stopping / cleaning up the resources](#stopping--cleaning-up-the-resources)
-- [Interaction with the localnet](#interaction-with-the-localnet)
+- [Running the LocalNet](#running-the-localnet)
+- [Stopping and cleaning up the resources](#stopping-and-cleaning-up-the-resources)
+- [Interaction with the LocalNet](#interaction-with-the-localnet)
 - [How does it work?](#how-does-it-work)
 - [Troubleshooting](#troubleshooting)
 - [How to change configuration files](#how-to-change-configuration-files)
@@ -13,23 +13,33 @@ We are developing our own Kubernetes operator to manage v1 workloads both intern
 ### Dependencies
 
 * [tilt](https://docs.tilt.dev/install.html) - installed automatically on `make install_cli_deps` command.
-* Kubernetes cluster ([different options available](https://docs.tilt.dev/choosing_clusters.html)), currently 1.23 or older versions supported.
-  * `kubectl` is also required to be installed and configured to access the cluster, but that should happen automatically when you install kubernetes cluster locally.
-  * `helm` is required to template the yaml manifests for the observability stack. Here are the instructions on how to install it: https://helm.sh/docs/intro/install/.
-* pocket kubernetes operator codebase in `../pocket-operator` directory, relative to the pocket v1 codebase. If you don't have it, tilt will try to pull it from the `main` branch on first launch.
+* Kubernetes cluster ([different options available](https://docs.tilt.dev/choosing_clusters.html)).
+  * `kubectl` CLI is required and should be configured to access the cluster. That should happen automatically if you're using Docker Desktop, Rancher Desktop, k3s, k3d, minikube, etc.
+  * `helm` - required to template the yaml manifests for the observability stack. Installation instructions: https://helm.sh/docs/intro/install/.
+* pocket kubernetes operator codebase in `../pocket-operator` directory, relative to the pocket v1 codebase. If you don't have this repo, tilt will try to pull it from the `main` branch on first launch.
   * Having this codebase available on your computer allows you to iterate/change the operator code while running the localnet.
 
-### Running the localnet
+### Running the LocalNet
 
-Start the LocalNet with `make localnet_up` command - this will start tilt. Tilt will prompt to press `space` to open a browser window with the UI where you can see the logs of all services running (including the operator, observability stack, etc.). You can also open the UI by going to `http://localhost:10350/` in your browser.
+```
+make localnet_up
+```
+
+The developer can then view the logs of all the services running (including the operator, observability stack, etc.) by either:
+- Pressing `space` in the terminal where you started tilt
+- Going to [localhost:10350](http://localhost:10350/)
 
 ![tilt UI](tilt-ui.png)
 
-### Stopping / cleaning up the resources
+### Stopping and cleaning up the resources
 
-`make localnet_down` will stop the localnet and clean up all the resources, except the postgres operator (in case you have other databases provisioned with it, the database itself will be destroyed).
+```
+make localnet_down
+```
 
-### Interaction with the localnet
+The command stops LocalNet and cleans up all the resources, except the postgres operator (in case you have other databases provisioned with it, the validators database itself will be destroyed).
+
+### Interaction with the LocalNet
 
 As the workloads run in Kubernetes, you can see and modify any resources on your local kubernetes by a tool of your choice (k9s, Lens, VSCode extension, etc.) - just be mindful that tilt and pocket-operator will change the resources back eventually, so you might want to disable tilt or turn off pocket-operator to make changes that you want to test.
 

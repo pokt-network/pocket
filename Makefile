@@ -424,17 +424,17 @@ localnet_up:
 	tilt up
 
 .PHONY: localnet_client_debug
-## Starts debug client (allows to control LocalNet)
+## Opens a `client debug` cli. It allows to interact with blockchain, e.g. change pace maker mode, reset to genesis, etc. Though the binary updated automatiacally on every code change, if client is already open you need to re-run this command to execute freshly compiled binary.
 localnet_client_debug:
 	kubectl exec -it deploy/pocket-v1-cli-client -- client debug
 
 .PHONY: localnet_shell
-## Starts debug client (allows to control LocalNet)
+## Opens a shell in the pod that has `client` cli available. The binary updated automatically whenever the code changes.
 localnet_shell:
 	kubectl exec -it deploy/pocket-v1-cli-client -- /bin/bash
 
 .PHONY: localnet_down
-## Stops localnet and cleans up dependencies (tl;dr `tilt down` + resources that might not have been cleaned up by tilt)
+## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + resources that might not have been cleaned up by tilt)
 localnet_down:
 	tilt down
 	kubectl get sts -n default --no-headers=true | awk '/v1-validator/{print $1}' | xargs kubectl delete -n default sts
