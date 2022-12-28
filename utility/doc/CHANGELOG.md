@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.14] - 2022-12-28
+
+- Deprecate `GetBlocksPerSession` in favour of the more general `GetParameter(paramName string, height int64) (any, error)` getter function
+
 ## [0.0.0.13] - 2022-12-10
 
 - Introduce `SetProposalBlock` and local vars to keep proposal state

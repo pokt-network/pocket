@@ -9,6 +9,10 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 
 ## [Unreleased]
 
+## [0.0.0.13] - 2022-12-28
+
+- Deprecate `GetBlocksPerSession` and `GetServiceNodesPerSessionAt` in favour of the more general `GetParameter(paramName string, height int64) (any, error)` getter function
+
 ## [0.0.0.12] - 2022-12-15
 
 - Remove `SetProposalBlock` and local vars to keep proposal state
