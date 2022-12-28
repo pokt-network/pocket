@@ -16,7 +16,6 @@ class DocumentationFile:
 
 
 def get_all_raw_markdown_file_paths() -> List[str]:
-    # find . -name "*.md" | grep -v -e "vendor" -e "app"
     return os.popen('find . -name "*.md" | grep -v -e "vendor" -e "app"').readlines()
 
 
