@@ -3,8 +3,8 @@ package types
 import (
 	"testing"
 
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/genesis"
+	"github.com/pokt-network/pocket/runtime/test_artifacts"
 )
 
 func TestInsertParams(t *testing.T) {
@@ -20,7 +20,7 @@ func TestInsertParams(t *testing.T) {
 		{
 			name: "should insert genesis.DefaultParams() as expected",
 			args: args{
-				params: defaults.DefaultParams(),
+				params: test_artifacts.DefaultParams(),
 				height: DefaultBigInt,
 			},
 			want: "INSERT INTO params VALUES ('blocks_per_session', -1, 'BIGINT', 4)," +

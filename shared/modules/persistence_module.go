@@ -4,6 +4,7 @@ package modules
 
 import (
 	"github.com/pokt-network/pocket/persistence/kvstore"
+	"github.com/pokt-network/pocket/runtime/genesis"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 )
@@ -109,7 +110,7 @@ type PersistenceWriteContext interface {
 	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
 
 	// Param Operations
-	InitParams() error
+	InitParams(params *genesis.Params) error
 	SetParam(paramName string, value interface{}) error
 
 	// Flag Operations

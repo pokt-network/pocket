@@ -111,8 +111,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 		}
 	}
 
-	// TODO(team): use params from genesis file - not the hardcoded
-	if err = rwContext.InitParams(); err != nil {
+	if err = rwContext.InitParams(state.Params); err != nil {
 		log.Fatalf("an error occurred initializing params: %s", err.Error())
 	}
 
