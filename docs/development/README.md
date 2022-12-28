@@ -78,7 +78,7 @@ unless the CHANGELOG is updated._
 
 ### Pocket Network CLI
 
-The Pocket node provides a CLI for interacting with Pocket RPC Server. The CLI can be used for both read & write operations by both users and to aid in automation.
+The Pocket node provides a CLI for interacting with Pocket RPC Server. The CLI can be used for both read & write operations by users and to aid in automation.
 
 In order to build the CLI:
 
