@@ -171,6 +171,10 @@ Pocket
 ├── Makefile         # [to-be-deleted] The source of targets used to develop, build and test
 ```
 
+## Maintaining Documentation
+
+Markdown files based on the following command `find . -name "*.md" | grep -v -e "vendor" -e "app"` are added to the [repository wiki](https://github.com/pokt-network/pocket/wiki). To organize the wiki a comment is added to the end of the files e.g. you can find one at the end of this file `<!-- GITHUB_WIKI: guides/development/readme -->`. The structure of the comment is to indicate the category (guides), subcategories (development) and file name (readme). Looking at the current wiki choose the right placement for the new markdown or simply create a new category.
+
 ### Linters
 
 We utilize `golangci-lint` to run the linters. It is a wrapper around a number of linters and is configured to run many at once. The linters are configured to run on every commit and pull request via CI, and all code issues are populated as GitHub annotations to let developers and reviewers easily locate an issue.
