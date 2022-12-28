@@ -3,6 +3,7 @@ package persistence;
 
 option go_package = "github.com/pokt-network/pocket/persistence/types";
 
+//See https://pkg.go.dev/time#ParseDuration for expected string time parameters
 message PersistenceConfig {
   string postgres_url = 1;
   string node_schema = 2;
