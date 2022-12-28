@@ -1,0 +1,24 @@
+name: Publish docs to Wiki
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**/*.md'
+
+env:
+  USER_TOKEN: ${{ secrets.WIKI_SYNC_SECRET }}
+  USER_NAME: profishional
+  USER_EMAIL: profishcrytpo@gmail.com
+  OWNER: ${{ github.event.repository.owner.name }}
+  REPOSITORY_NAME: ${{ github.event.repository.name }}
+
+jobs:
+  publish_docs_to_wiki:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Generate wiki
+      run: |
+        python ./tools/wiki_sync.py
