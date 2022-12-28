@@ -2,13 +2,13 @@ package consensus
 
 import (
 	"fmt"
-	"log"
 	"sort"
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -69,6 +69,8 @@ type consensusModule struct {
 	utilityContext    modules.UtilityContext
 	paceMaker         Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
+
+	logger modules.Logger
 
 	// DEPRECATE: Remove later when we build a shared/proper/injected logger
 	logPrefix string
@@ -199,6 +201,14 @@ func (m *consensusModule) Start() error {
 			consensusTelemetry.CONSENSUS_BLOCKCHAIN_HEIGHT_COUNTER_DESCRIPTION,
 		)
 
+	m.logger = m.GetBus().
+		GetLoggerModule().
+		CreateLoggerForModule(m.GetModuleName()).
+		With().
+		Str("kind", m.logPrefix).
+		Str("node_id", m.nodeId.String()).
+		Logger()
+
 	if err := m.loadPersistedState(); err != nil {
 		return err
 	}
@@ -224,7 +234,7 @@ func (m *consensusModule) GetModuleName() string {
 
 func (m *consensusModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		logger.Global.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
 }
@@ -258,7 +268,7 @@ func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
 			// There is an implicit dependency because of how RainTree works and how the validator map
 			// is currently managed to make sure that the ordering of the address and the service URL
 			// are the same. This will be addressed once the # of validators will scale.
-			panic("HACK(olshansky): service url and address must be sorted the same way")
+			logger.Global.Panic().Msg("HACK(olshansky): service url and address must be sorted the same way")
 		}
 	}
 
@@ -319,13 +329,13 @@ func (m *consensusModule) loadPersistedState() error {
 
 	latestHeight, err := persistenceContext.GetLatestBlockHeight()
 	if err != nil || latestHeight == 0 {
-		m.nodeLog("TODO: State sync not implemented yet")
+		m.logger.Info().Msg("TODO: State sync not implemented yet")
 		return nil
 	}
 
 	m.height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
 
-	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
+	m.logger.Info().Msgf("Starting node at height %d", latestHeight)
 
 	return nil
 }

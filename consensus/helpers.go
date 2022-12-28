@@ -3,9 +3,9 @@ package consensus
 // TODO: Split this file into multiple helpers (e.g. signatures.go, hotstuff_helpers.go, etc...)
 import (
 	"encoding/base64"
-	"log"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
@@ -28,9 +28,7 @@ const (
 	HotstuffMessageContentType = "consensus.HotstuffMessage"
 )
 
-var (
-	HotstuffSteps = [...]typesCons.HotstuffStep{NewRound, Prepare, PreCommit, Commit, Decide}
-)
+var HotstuffSteps = [...]typesCons.HotstuffStep{NewRound, Prepare, PreCommit, Commit, Decide}
 
 // ** Hotstuff Helpers ** //
 
@@ -40,17 +38,17 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 	var pss []*typesCons.PartialSignature
 	for _, msg := range m.messagePool[step] {
 		if msg.GetPartialSignature() == nil {
-			m.nodeLog(typesCons.WarnMissingPartialSig(msg))
+			m.logger.Warn().Msg(typesCons.WarnMissingPartialSig(msg))
 			continue
 		}
 		if msg.GetHeight() != height || msg.GetStep() != step || msg.GetRound() != round {
-			m.nodeLog(typesCons.WarnUnexpectedMessageInPool(msg, height, step, round))
+			m.logger.Warn().Msg(typesCons.WarnUnexpectedMessageInPool(msg, height, step, round))
 			continue
 		}
 
 		ps := msg.GetPartialSignature()
 		if ps.Signature == nil || len(ps.Address) == 0 {
-			m.nodeLog(typesCons.WarnIncompletePartialSig(ps, msg))
+			m.logger.Warn().Msg(typesCons.WarnIncompletePartialSig(ps, msg))
 			continue
 		}
 		pss = append(pss, msg.GetPartialSignature())
@@ -97,12 +95,12 @@ func getThresholdSignature(partialSigs []*typesCons.PartialSignature) (*typesCon
 func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signature []byte) bool {
 	pubKey, err := cryptoPocket.NewPublicKey(pubKeyString)
 	if err != nil {
-		log.Println("[WARN] Error getting PublicKey from bytes:", err)
+		logger.Global.Warn().Err(err).Msgf("Error getting PublicKey from bytes")
 		return false
 	}
 	bytesToVerify, err := getSignableBytes(msg)
 	if err != nil {
-		log.Println("[WARN] Error getting bytes to verify:", err)
+		logger.Global.Warn().Err(err).Msgf("Error getting bytes to verify")
 		return false
 	}
 	return pubKey.Verify(bytesToVerify, signature)
@@ -130,7 +128,7 @@ func (m *consensusModule) resetForNewHeight() {
 func protoHash(m proto.Message) string {
 	b, err := codec.GetCodec().Marshal(m)
 	if err != nil {
-		log.Fatalf("Could not marshal proto message: %v", err)
+		logger.Global.Fatal().Err(err).Msg("Could not marshal proto message")
 	}
 	return base64.StdEncoding.EncodeToString(b)
 }
@@ -140,31 +138,31 @@ func protoHash(m proto.Message) string {
 func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 	// TODO(olshansky): This can happen due to a race condition with the pacemaker.
 	if m.leaderId == nil {
-		m.nodeLogError(typesCons.ErrNilLeaderId.Error(), nil)
+		m.logger.Error().Msg(typesCons.ErrNilLeaderId.Error())
 		return
 	}
 
-	m.nodeLog(typesCons.SendingMessage(msg, *m.leaderId))
+	m.logger.Info().Msg(typesCons.SendingMessage(msg, *m.leaderId))
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
 		return
 	}
 	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.idToValAddrMap[*m.leaderId]), anyConsensusMessage); err != nil {
-		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrSendMessage.Error())
 		return
 	}
 }
 
 func (m *consensusModule) broadcastToNodes(msg *typesCons.HotstuffMessage) {
-	m.nodeLog(typesCons.BroadcastingMessage(msg))
+	m.logger.Info().Msg(typesCons.BroadcastingMessage(msg))
 	anyConsensusMessage, err := codec.GetCodec().ToAny(msg)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateConsensusMessage.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateConsensusMessage.Error())
 		return
 	}
 	if err := m.GetBus().GetP2PModule().Broadcast(anyConsensusMessage); err != nil {
-		m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrBroadcastMessage.Error())
 		return
 	}
 }
@@ -200,7 +198,7 @@ func (m *consensusModule) clearLeader() {
 func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) error {
 	leaderId, err := m.leaderElectionMod.ElectNextLeader(message)
 	if err != nil || leaderId == 0 {
-		m.nodeLogError(typesCons.ErrLeaderElection(message).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrLeaderElection(message).Error())
 		m.clearLeader()
 		return err
 	}
@@ -209,27 +207,16 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 	if m.isLeader() {
 		m.setLogPrefix("LEADER")
-		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
+		m.logger.Info().Msg(typesCons.ElectedSelfAsNewLeader(m.idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
 	} else {
 		m.setLogPrefix("REPLICA")
-		m.nodeLog(typesCons.ElectedNewLeader(m.idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
+		m.logger.Info().Msg(typesCons.ElectedNewLeader(m.idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
 	}
 
 	return nil
 }
 
 /*** General Infrastructure Helpers ***/
-
-// TODO(#164): Remove this once we have a proper logging system.
-func (m *consensusModule) nodeLog(s string) {
-	log.Printf("[%s][%d] %s\n", m.logPrefix, m.nodeId, s)
-}
-
-// TODO(#164): Remove this once we have a proper logging system.
-func (m *consensusModule) nodeLogError(s string, err error) {
-	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.nodeId, s, err)
-}
-
 func (m *consensusModule) setLogPrefix(logPrefix string) {
 	m.logPrefix = logPrefix
 }

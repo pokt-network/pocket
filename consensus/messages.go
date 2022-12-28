@@ -1,9 +1,8 @@
 package consensus
 
 import (
-	"log"
-
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/crypto"
 )
@@ -79,13 +78,13 @@ func CreateVoteMessage(
 func getMessageSignature(msg *typesCons.HotstuffMessage, privKey crypto.PrivateKey) []byte {
 	bytesToSign, err := getSignableBytes(msg)
 	if err != nil {
-		log.Printf("[WARN] error getting bytes to sign: %v\n", err)
+		logger.Global.Warn().Err(err).Msgf("error getting bytes to sign")
 		return nil
 	}
 
 	signature, err := privKey.Sign(bytesToSign)
 	if err != nil {
-		log.Printf("[WARN] error signing message: %v\n", err)
+		logger.Global.Warn().Err(err).Msgf("error signing message")
 		return nil
 	}
 

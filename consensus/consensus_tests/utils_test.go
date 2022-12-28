@@ -15,6 +15,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/consensus"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared"
@@ -54,7 +55,7 @@ func init() {
 
 	var err error
 	if err != nil {
-		log.Fatalf(err.Error())
+		logger.Global.Fatal().Err(err)
 	}
 }
 
@@ -226,7 +227,6 @@ func WaitForNetworkConsensusMessages(
 	numMessages int,
 	millis time.Duration,
 ) (messages []*anypb.Any, err error) {
-
 	includeFilter := func(m *anypb.Any) bool {
 		msg, err := codec.GetCodec().FromAny(m)
 		require.NoError(t, err)

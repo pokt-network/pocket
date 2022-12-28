@@ -30,21 +30,21 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
+		m.logger.Error().Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
 	// DISCUSS: Do we need to pause for `MinBlockFreqMSec` here to let more transactions or should we stick with optimistic responsiveness?
 
 	if err := m.didReceiveEnoughMessageForStep(NewRound); err != nil {
-		m.nodeLog(typesCons.OptimisticVoteCountWaiting(NewRound, err.Error()))
+		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(NewRound, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(NewRound))
+	m.logger.Info().Msg(typesCons.OptimisticVoteCountPassed(NewRound))
 
 	// Clear the previous utility context, if it exists, and create a new one
 	if err := m.refreshUtilityContext(); err != nil {
-		m.nodeLogError("Could not refresh utility context", err)
+		m.logger.Error().Err(err).Msg("Could not refresh utility context")
 		return
 	}
 
@@ -57,7 +57,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	if m.shouldPrepareNewBlock(highPrepareQC) {
 		block, err := m.prepareAndApplyBlock(highPrepareQC)
 		if err != nil {
-			m.nodeLogError(typesCons.ErrPrepareBlock.Error(), err)
+			m.logger.Error().Err(err).Msg(typesCons.ErrPrepareBlock.Error())
 			m.paceMaker.InterruptRound()
 			return
 		}
@@ -66,7 +66,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 		// Leader acts like a replica if `highPrepareQC` is not `nil`
 		// TODO: Do we need to call `validateProposal` here similar to how replicas does it
 		if err := m.applyBlock(highPrepareQC.Block); err != nil {
-			m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
+			m.logger.Error().Err(err).Msg(typesCons.ErrApplyBlock.Error())
 			m.paceMaker.InterruptRound()
 			return
 		}
@@ -78,7 +78,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 	prepareProposeMessage, err := CreateProposeMessage(m.height, m.round, Prepare, m.block, highPrepareQC)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateProposeMessage(Prepare).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateProposeMessage(Prepare).Error())
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -87,7 +87,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	// Leader also acts like a replica
 	prepareVoteMessage, err := CreateVoteMessage(m.height, m.round, Prepare, m.block, m.privateKey)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateVoteMessage(Prepare).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateVoteMessage(Prepare).Error())
 		return
 	}
 	m.sendToNode(prepareVoteMessage)
@@ -100,19 +100,19 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
+		m.logger.Error().Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
 	if err := m.didReceiveEnoughMessageForStep(Prepare); err != nil {
-		m.nodeLog(typesCons.OptimisticVoteCountWaiting(Prepare, err.Error()))
+		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(Prepare, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(Prepare))
+	m.logger.Info().Msg(typesCons.OptimisticVoteCountPassed(Prepare))
 
 	prepareQC, err := m.getQuorumCertificate(m.height, Prepare, m.round)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrQCInvalid(Prepare).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(Prepare).Error())
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
@@ -122,7 +122,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 
 	preCommitProposeMessage, err := CreateProposeMessage(m.height, m.round, PreCommit, m.block, prepareQC)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateProposeMessage(PreCommit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateProposeMessage(PreCommit).Error())
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -131,7 +131,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	// Leader also acts like a replica
 	precommitVoteMessage, err := CreateVoteMessage(m.height, m.round, PreCommit, m.block, m.privateKey)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateVoteMessage(PreCommit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateVoteMessage(PreCommit).Error())
 		return
 	}
 	m.sendToNode(precommitVoteMessage)
@@ -144,19 +144,19 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
 	if err := m.didReceiveEnoughMessageForStep(PreCommit); err != nil {
-		m.nodeLog(typesCons.OptimisticVoteCountWaiting(PreCommit, err.Error()))
+		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(PreCommit, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(PreCommit))
+	m.logger.Info().Msg(typesCons.OptimisticVoteCountPassed(PreCommit))
 
 	preCommitQC, err := m.getQuorumCertificate(m.height, PreCommit, m.round)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrQCInvalid(PreCommit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(PreCommit).Error())
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
@@ -166,7 +166,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 
 	commitProposeMessage, err := CreateProposeMessage(m.height, m.round, Commit, m.block, preCommitQC)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateProposeMessage(Commit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateProposeMessage(Commit).Error())
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -175,7 +175,7 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrecommitMessage(m *consensus
 	// Leader also acts like a replica
 	commitVoteMessage, err := CreateVoteMessage(m.height, m.round, Commit, m.block, m.privateKey)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateVoteMessage(Commit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateVoteMessage(Commit).Error())
 		return
 	}
 	m.sendToNode(commitVoteMessage)
@@ -188,19 +188,19 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
 	if err := m.didReceiveEnoughMessageForStep(Commit); err != nil {
-		m.nodeLog(typesCons.OptimisticVoteCountWaiting(Commit, err.Error()))
+		m.logger.Info().Msg(typesCons.OptimisticVoteCountWaiting(Commit, err.Error()))
 		return
 	}
-	m.nodeLog(typesCons.OptimisticVoteCountPassed(Commit))
+	m.logger.Info().Msg(typesCons.OptimisticVoteCountPassed(Commit))
 
 	commitQC, err := m.getQuorumCertificate(m.height, Commit, m.round)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrQCInvalid(Commit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(Commit).Error())
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
@@ -209,14 +209,14 @@ func (handler *HotstuffLeaderMessageHandler) HandleCommitMessage(m *consensusMod
 
 	decideProposeMessage, err := CreateProposeMessage(m.height, m.round, Decide, m.block, commitQC)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateProposeMessage(Decide).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateProposeMessage(Decide).Error())
 		m.paceMaker.InterruptRound()
 		return
 	}
 	m.broadcastToNodes(decideProposeMessage)
 
 	if err := m.commitBlock(m.block); err != nil {
-		m.nodeLogError(typesCons.ErrCommitBlock.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCommitBlock.Error())
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -237,7 +237,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusMod
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 }
@@ -284,12 +284,12 @@ func (handler *HotstuffLeaderMessageHandler) validateBasic(m *consensusModule, m
 
 func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessage) error {
 	if msg.GetStep() == NewRound {
-		m.nodeLog(typesCons.ErrUnnecessaryPartialSigForNewRound.Error())
+		m.logger.Error().Msg(typesCons.ErrUnnecessaryPartialSigForNewRound.Error())
 		return nil
 	}
 
 	if msg.GetType() == Propose {
-		m.nodeLog(typesCons.ErrUnnecessaryPartialSigForLeaderProposal.Error())
+		m.logger.Error().Msg(typesCons.ErrUnnecessaryPartialSigForLeaderProposal.Error())
 		return nil
 	}
 
@@ -323,7 +323,7 @@ func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 //	Add proper tests and implementation once the mempool is implemented.
 func (m *consensusModule) tempIndexHotstuffMessage(msg *typesCons.HotstuffMessage) {
 	if m.consCfg.GetMaxMempoolBytes() < uint64(unsafe.Sizeof(m.messagePool)) {
-		m.nodeLogError(typesCons.DisregardHotstuffMessage, typesCons.ErrConsensusMempoolFull)
+		m.logger.Error().Err(typesCons.ErrConsensusMempoolFull).Msg(typesCons.ErrConsensusMempoolFull.Error())
 		return
 	}
 
@@ -385,13 +385,13 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 // ADDTEST: Add more tests for all the different scenarios here
 func (m *consensusModule) shouldPrepareNewBlock(highPrepareQC *typesCons.QuorumCertificate) bool {
 	if highPrepareQC == nil {
-		m.nodeLog("Preparing a new block - no highPrepareQC found")
+		m.logger.Info().Msg("Preparing a new block - no highPrepareQC found")
 		return true
 	} else if m.isHighPrepareQCFromPast(highPrepareQC) {
-		m.nodeLog("Preparing a new block - highPrepareQC is from the past")
+		m.logger.Info().Msg("Preparing a new block - highPrepareQC is from the past")
 		return true
 	} else if highPrepareQC.Block == nil {
-		m.nodeLog("[WARN] Preparing a new block - highPrepareQC SHOULD be used but block is nil")
+		m.logger.Warn().Msg("Preparing a new block - highPrepareQC SHOULD be used but block is nil")
 		return true
 	}
 	return false

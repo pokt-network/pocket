@@ -2,6 +2,7 @@ package types
 
 // TODO: Split this file into multiple types files.
 import (
+	"fmt"
 	"sort"
 
 	"github.com/pokt-network/pocket/shared/modules"
@@ -9,9 +10,11 @@ import (
 
 type NodeId uint64
 
-type ValAddrToIdMap map[string]NodeId // Mapping from hex encoded address to an integer node id.
-type IdToValAddrMap map[NodeId]string // Mapping from node id to a hex encoded string address.
-type ValidatorMap map[string]modules.Actor
+type (
+	ValAddrToIdMap map[string]NodeId // Mapping from hex encoded address to an integer node id.
+	IdToValAddrMap map[NodeId]string // Mapping from node id to a hex encoded string address.
+	ValidatorMap   map[string]modules.Actor
+)
 
 type ConsensusNodeState struct {
 	NodeId NodeId
@@ -21,6 +24,11 @@ type ConsensusNodeState struct {
 
 	LeaderId NodeId
 	IsLeader bool
+}
+
+// String returns a string representation of the NodeId.
+func (n NodeId) String() string {
+	return fmt.Sprintf("%d", n)
 }
 
 func GetValAddrToIdMap(validatorMap ValidatorMap) (ValAddrToIdMap, IdToValAddrMap) {

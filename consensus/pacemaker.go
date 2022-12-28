@@ -3,7 +3,6 @@ package consensus
 import (
 	"context"
 	"fmt"
-	"log"
 	timePkg "time"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
@@ -62,7 +61,7 @@ func CreatePacemaker(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 func (m *paceMaker) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 	cfg := runtimeMgr.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
-		log.Fatalf("config validation failed: %v", err)
+		m.consensusMod.logger.Fatal().Err(err).Msg("config validation failed")
 	}
 
 	pacemakerCfg := cfg.GetConsensusConfig().(HasPacemakerConfig).GetPacemakerConfig()
@@ -87,6 +86,7 @@ func (p *paceMaker) Start() error {
 	p.RestartTimer()
 	return nil
 }
+
 func (p *paceMaker) Stop() error {
 	return nil
 }
@@ -101,7 +101,7 @@ func (m *paceMaker) SetBus(pocketBus modules.Bus) {
 
 func (m *paceMaker) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		m.consensusMod.logger.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
 }
@@ -151,7 +151,7 @@ func (p *paceMaker) ValidateMessage(m *typesCons.HotstuffMessage) error {
 
 	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
 	if m.Round > currentRound || (m.Round == currentRound && m.Step > p.consensusMod.step) {
-		p.consensusMod.nodeLog(typesCons.PacemakerCatchup(currentHeight, uint64(p.consensusMod.step), currentRound, m.Height, uint64(m.Step), m.Round))
+		p.consensusMod.logger.Info().Msg((typesCons.PacemakerCatchup(currentHeight, uint64(p.consensusMod.step), currentRound, m.Height, uint64(m.Step), m.Round)))
 		p.consensusMod.step = m.Step
 		p.consensusMod.round = m.Round
 
@@ -185,7 +185,7 @@ func (p *paceMaker) RestartTimer() {
 		select {
 		case <-ctx.Done():
 			if ctx.Err() == context.DeadlineExceeded {
-				p.consensusMod.nodeLog(typesCons.PacemakerTimeout(p.consensusMod.CurrentHeight(), p.consensusMod.step, p.consensusMod.round))
+				p.consensusMod.logger.Info().Msg(typesCons.PacemakerTimeout(p.consensusMod.CurrentHeight(), p.consensusMod.step, p.consensusMod.round))
 				p.InterruptRound()
 			}
 		case <-clock.After(stepTimeout + 30*timePkg.Millisecond): // Adding 30ms to the context timeout to avoid race condition.
@@ -195,14 +195,14 @@ func (p *paceMaker) RestartTimer() {
 }
 
 func (p *paceMaker) InterruptRound() {
-	p.consensusMod.nodeLog(typesCons.PacemakerInterrupt(p.consensusMod.CurrentHeight(), p.consensusMod.step, p.consensusMod.round))
+	p.consensusMod.logger.Info().Msg(typesCons.PacemakerInterrupt(p.consensusMod.CurrentHeight(), p.consensusMod.step, p.consensusMod.round))
 
 	p.consensusMod.round++
 	p.startNextView(p.consensusMod.highPrepareQC, false)
 }
 
 func (p *paceMaker) NewHeight() {
-	p.consensusMod.nodeLog(typesCons.PacemakerNewHeight(p.consensusMod.CurrentHeight() + 1))
+	p.consensusMod.logger.Info().Msg(typesCons.PacemakerNewHeight(p.consensusMod.CurrentHeight() + 1))
 
 	p.consensusMod.height++
 	p.consensusMod.resetForNewHeight()
@@ -227,7 +227,7 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 	// TECHDEBT: This should be avoidable altogether
 	if p.consensusMod.utilityContext != nil {
 		if err := p.consensusMod.utilityContext.Release(); err != nil {
-			log.Println("[WARN] Failed to release utility context: ", err)
+			p.consensusMod.logger.Warn().Err(err).Msg("Failed to release utility context")
 		}
 		p.consensusMod.utilityContext = nil
 	}

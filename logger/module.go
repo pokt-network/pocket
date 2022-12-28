@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -15,12 +16,12 @@ type loggerModule struct {
 }
 
 // All loggers branch out of mainLogger, that way configuration changes to mainLogger propagate to others.
-var mainLogger = zerolog.New(os.Stderr).With().Timestamp().Logger()
+var mainLogger = zerolog.New(os.Stdout).With().Timestamp().Logger()
 
 // The idea is to create a logger for each module, so that we can easily filter logs by module.
 // But we also need a global logger, because sometimes we need to log outside of modules, e.g. when the process just
 // started, and modules are not initiated yet.
-var Global = new(loggerModule).CreateLoggerForModule("global")
+var Global zerolog.Logger
 
 var _ modules.LoggerModule = &loggerModule{}
 
@@ -60,16 +61,23 @@ func (*loggerModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, erro
 	m.InitLogger()
 
 	// Mapping config string value to the proto enum
-	if pocketLogLevel, ok := LogLevel_value[`LogLevel_LOG_LEVEL_`+strings.ToUpper(m.config.GetLevel())]; ok {
+	if pocketLogLevel, ok := LogLevel_value[`LOG_LEVEL_`+strings.ToUpper(m.config.GetLevel())]; ok {
 		zerolog.SetGlobalLevel(pocketLogLevelToZeroLog[LogLevel(pocketLogLevel)])
 	} else {
 		zerolog.SetGlobalLevel(zerolog.NoLevel)
 	}
 
 	if pocketLogFormatToEnum[m.config.GetFormat()] == LogFormat_LOG_FORMAT_PRETTY {
-		mainLogger = mainLogger.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		logStructure := zerolog.ConsoleWriter{Out: os.Stdout}
+		logStructure.FormatLevel = func(i interface{}) string {
+			return strings.ToUpper(fmt.Sprintf("[%s]", i))
+		}
+
+		mainLogger = mainLogger.Output(logStructure)
 		mainLogger.Info().Msg("using pretty log format")
 	}
+
+	Global = m.CreateLoggerForModule("global")
 
 	return &m, nil
 }

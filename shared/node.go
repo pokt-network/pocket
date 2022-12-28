@@ -33,6 +33,11 @@ func CreateNode(runtime modules.RuntimeMgr) (modules.Module, error) {
 }
 
 func (m *Node) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	loggerMod, err := logger.Create(runtimeMgr)
+	if err != nil {
+		return nil, err
+	}
+
 	persistenceMod, err := persistence.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
@@ -54,11 +59,6 @@ func (m *Node) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 	}
 
 	telemetryMod, err := telemetry.Create(runtimeMgr)
-	if err != nil {
-		return nil, err
-	}
-
-	loggerMod, err := logger.Create(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}

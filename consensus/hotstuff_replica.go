@@ -1,8 +1,6 @@
 package consensus
 
 import (
-	"fmt"
-
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	"github.com/pokt-network/pocket/consensus/types"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -30,13 +28,13 @@ func (handler *HotstuffReplicaMessageHandler) HandleNewRoundMessage(m *consensus
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
 	// Clear the previous utility context, if it exists, and create a new one
 	if err := m.refreshUtilityContext(); err != nil {
-		m.nodeLogError("Could not refresh utility context", err)
+		m.logger.Error().Err(err).Msg("Could not refresh utility context")
 		return
 	}
 
@@ -50,19 +48,19 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
 	if err := m.validateProposal(msg); err != nil {
-		m.nodeLogError(fmt.Sprintf("Invalid proposal in %s message", Prepare), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		m.paceMaker.InterruptRound()
 		return
 	}
 
 	block := msg.GetBlock()
 	if err := m.applyBlock(block); err != nil {
-		m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrApplyBlock.Error())
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -71,7 +69,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrepareMessage(m *consensusM
 
 	prepareVoteMessage, err := CreateVoteMessage(m.height, m.round, Prepare, m.block, m.privateKey)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateVoteMessage(Prepare).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateVoteMessage(Prepare).Error())
 		return // Not interrupting the round because liveness could continue with one failed vote
 	}
 	m.sendToNode(prepareVoteMessage)
@@ -84,13 +82,13 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
 	quorumCert := msg.GetQuorumCertificate()
 	if err := m.validateQuorumCertificate(quorumCert); err != nil {
-		m.nodeLogError(typesCons.ErrQCInvalid(PreCommit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(PreCommit).Error())
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -100,7 +98,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 
 	preCommitVoteMessage, err := CreateVoteMessage(m.height, m.round, PreCommit, m.block, m.privateKey)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateVoteMessage(PreCommit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateVoteMessage(PreCommit).Error())
 		return // Not interrupting the round because liveness could continue with one failed vote
 	}
 	m.sendToNode(preCommitVoteMessage)
@@ -113,13 +111,13 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
 	quorumCert := msg.GetQuorumCertificate()
 	if err := m.validateQuorumCertificate(quorumCert); err != nil {
-		m.nodeLogError(typesCons.ErrQCInvalid(Commit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(Commit).Error())
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -129,7 +127,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleCommitMessage(m *consensusMo
 
 	commitVoteMessage, err := CreateVoteMessage(m.height, m.round, Commit, m.block, m.privateKey)
 	if err != nil {
-		m.nodeLogError(typesCons.ErrCreateVoteMessage(Commit).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCreateVoteMessage(Commit).Error())
 		return // Not interrupting the round because liveness could continue with one failed vote
 	}
 	m.sendToNode(commitVoteMessage)
@@ -142,19 +140,19 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 	handler.emitTelemetryEvent(m, msg)
 
 	if err := handler.anteHandle(m, msg); err != nil {
-		m.nodeLogError(typesCons.ErrHotstuffValidation.Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrHotstuffValidation.Error())
 		return
 	}
 
 	quorumCert := msg.GetQuorumCertificate()
 	if err := m.validateQuorumCertificate(quorumCert); err != nil {
-		m.nodeLogError(typesCons.ErrQCInvalid(Decide).Error(), err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrQCInvalid(Decide).Error())
 		m.paceMaker.InterruptRound()
 		return
 	}
 
 	if err := m.commitBlock(m.block); err != nil {
-		m.nodeLogError("Could not commit block", err)
+		m.logger.Error().Err(err).Msg(typesCons.ErrCommitBlock.Error())
 		m.paceMaker.InterruptRound()
 		return
 	}
@@ -205,14 +203,14 @@ func (m *consensusModule) validateProposal(msg *typesCons.HotstuffMessage) error
 
 	// Safety: not locked
 	if lockedQC == nil {
-		m.nodeLog(typesCons.NotLockedOnQC)
+		m.logger.Info().Msg(typesCons.NotLockedOnQC)
 		return nil
 	}
 
 	// Safety: check the hash of the locked QC
 	// The equivalent of `lockedQC.Block.ExtendsFrom(justifyQC.Block)` in the hotstuff whitepaper is done in `applyBlock` below.
 	if protoHash(lockedQC.GetBlock()) == protoHash(justifyQC.Block) {
-		m.nodeLog(typesCons.ProposalBlockExtends)
+		m.logger.Info().Msg(typesCons.ProposalBlockExtends)
 		return nil
 	}
 
@@ -266,13 +264,13 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 	for _, partialSig := range qc.ThresholdSignature.Signatures {
 		validator, ok := m.validatorMap[partialSig.Address]
 		if !ok {
-			m.nodeLogError(typesCons.ErrMissingValidator(partialSig.Address, m.valAddrToIdMap[partialSig.Address]).Error(), nil)
+			m.logger.Error().Msg(typesCons.ErrMissingValidator(partialSig.Address, m.valAddrToIdMap[partialSig.Address]).Error())
 			continue
 		}
 		// TODO(olshansky): Every call to `IsSignatureValid` does a serialization and should be optimized. We can
 		// just serialize `Message` once and verify each signature without re-serializing every time.
 		if !isSignatureValid(msgToJustify, validator.GetPublicKey(), partialSig.Signature) {
-			m.nodeLog(typesCons.WarnInvalidPartialSigInQC(partialSig.Address, m.valAddrToIdMap[partialSig.Address]))
+			m.logger.Warn().Msg(typesCons.WarnInvalidPartialSigInQC(partialSig.Address, m.valAddrToIdMap[partialSig.Address]))
 			continue
 		}
 		numValid++
