@@ -37,48 +37,14 @@ func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherm
 	return genesisState, validatorPrivateKeys
 }
 
-func NewDefaultConfigs(privateKeys []string) (configs []*configs.Config) {
+func NewDefaultConfigs(privateKeys []string) (cfgs []*configs.Config) {
 	for i, pk := range privateKeys {
-		configs = append(configs, NewDefaultConfig(i, pk))
+		cfgs = append(cfgs, configs.NewDefaultConfig(
+			configs.WithPK(pk),
+			configs.WithNodeSchema("node"+strconv.Itoa(i+1)),
+		))
 	}
 	return
-}
-
-func NewDefaultConfig(i int, pk string) *configs.Config {
-	return &configs.Config{
-		RootDirectory: "/go/src/github.com/pocket-network",
-		PrivateKey:    pk,
-		Consensus: &configs.ConsensusConfig{
-			MaxMempoolBytes: 500000000,
-			PacemakerConfig: &configs.PacemakerConfig{
-				TimeoutMsec:               5000,
-				Manual:                    true,
-				DebugTimeBetweenStepsMsec: 1000,
-			},
-			PrivateKey: pk,
-		},
-		Utility: &configs.UtilityConfig{
-			MaxMempoolTransactionBytes: 1024 * 1024 * 1024, // 1GB V0 defaults
-			MaxMempoolTransactions:     9000,
-		},
-		Persistence: &configs.PersistenceConfig{
-			PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
-			NodeSchema:     "node" + strconv.Itoa(i+1),
-			BlockStorePath: "/var/blockstore",
-		},
-		P2P: &configs.P2PConfig{
-			ConsensusPort:         8080,
-			UseRainTree:           true,
-			IsEmptyConnectionType: false,
-			PrivateKey:            pk,
-			MaxMempoolCount:       1e5,
-		},
-		Telemetry: &configs.TelemetryConfig{
-			Enabled:  true,
-			Address:  "0.0.0.0:9000",
-			Endpoint: "/metrics",
-		},
-	}
 }
 
 // REFACTOR: Test artifact generator should reflect the sum of the initial account values to populate the initial pool values

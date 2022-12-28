@@ -15,8 +15,8 @@ type Config struct {
 	RPC         *RPCConfig         `json:"rpc"`
 }
 
-func NewDefaultConfig() *Config {
-	return &Config{
+func NewDefaultConfig(options ...func(*Config)) *Config {
+	cfg := &Config{
 		RootDirectory: "/go/src/github.com/pocket-network",
 		Consensus: &ConsensusConfig{
 			MaxMempoolBytes: 500000000,
@@ -53,5 +53,25 @@ func NewDefaultConfig() *Config {
 			Timeout: defaults.DefaultRpcTimeout,
 			Port:    defaults.DefaultRpcPort,
 		},
+	}
+
+	for _, option := range options {
+		option(cfg)
+	}
+
+	return cfg
+}
+
+func WithPK(pk string) func(*Config) {
+	return func(cfg *Config) {
+		cfg.PrivateKey = pk
+		cfg.Consensus.PrivateKey = pk
+		cfg.P2P.PrivateKey = pk
+	}
+}
+
+func WithNodeSchema(schema string) func(*Config) {
+	return func(cfg *Config) {
+		cfg.Persistence.NodeSchema = schema
 	}
 }
