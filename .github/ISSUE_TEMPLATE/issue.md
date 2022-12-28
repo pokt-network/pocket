@@ -76,3 +76,5 @@ assignees: ""
 
 **Creator**: [github username of the creator]
 **Co-Owners**: [optional - github usernames of the co-owner(s)]
+
+<!-- GITHUB_WIKI: repository/issue_template -->
