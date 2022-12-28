@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.7] - 2022-12-28
+
+- Deprecate `GetBlocksPerSession` and `GetServiceNodesPerSessionAt` in favour of the more general `GetParameter(paramName string, height int64) (any, error)` getter function
+
 ## [0.0.0.6] - 2022-12-14
 
 - Added `GetMaxMempoolCount`
