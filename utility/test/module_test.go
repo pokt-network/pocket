@@ -11,7 +11,6 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/pokt-network/pocket/runtime"
 	"github.com/pokt-network/pocket/runtime/configs"
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -33,7 +32,7 @@ var (
 	defaultTestingChainsEdited = []string{"0002"}
 
 	defaultUnstaking   = int64(2017)
-	defaultNonceString = utilTypes.BigIntToString(defaults.DefaultAccountAmount)
+	defaultNonceString = utilTypes.BigIntToString(test_artifacts.DefaultAccountAmount)
 
 	testNonce           = "defaultNonceString"
 	testSchema          = "test_schema"

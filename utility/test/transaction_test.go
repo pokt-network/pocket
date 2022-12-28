@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/codec"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
@@ -148,7 +147,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 
 func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
 	amountSent = new(big.Int).Set(defaultSendAmount)
-	startingBalance = new(big.Int).Set(defaults.DefaultAccountAmount)
+	startingBalance = new(big.Int).Set(test_artifacts.DefaultAccountAmount)
 
 	recipientAddr, err := crypto.GenerateAddress()
 	require.NoError(t, err)

@@ -8,7 +8,6 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -32,13 +31,13 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 			outputAddress, err := crypto.GenerateAddress()
 			require.NoError(t, err)
 
-			err = ctx.SetAccountAmount(outputAddress, defaults.DefaultAccountAmount)
+			err = ctx.SetAccountAmount(outputAddress, test_artifacts.DefaultAccountAmount)
 			require.NoError(t, err, "error setting account amount error")
 
 			msg := &typesUtil.MessageStake{
 				PublicKey:     pubKey.Bytes(),
-				Chains:        defaults.DefaultChains,
-				Amount:        defaults.DefaultStakeAmountString,
+				Chains:        test_artifacts.DefaultChains,
+				Amount:        test_artifacts.DefaultStakeAmountString,
 				ServiceUrl:    "https://localhost.com",
 				OutputAddress: outputAddress,
 				Signer:        outputAddress,
@@ -55,7 +54,7 @@ func TestUtilityContext_HandleMessageStake(t *testing.T) {
 				require.Equal(t, msg.Chains, actor.GetChains(), "incorrect actor chains")
 			}
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetPausedHeight(), "incorrect actor height")
-			require.Equal(t, defaults.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect actor stake amount")
+			require.Equal(t, test_artifacts.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect actor stake amount")
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "incorrect actor unstaking height")
 			require.Equal(t, outputAddress.String(), actor.GetOutput(), "incorrect actor output address")
 
@@ -76,8 +75,8 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 
 			msg := &typesUtil.MessageEditStake{
 				Address:   addrBz,
-				Chains:    defaults.DefaultChains,
-				Amount:    defaults.DefaultStakeAmountString,
+				Chains:    test_artifacts.DefaultChains,
+				Amount:    test_artifacts.DefaultStakeAmountString,
 				Signer:    addrBz,
 				ActorType: actorType,
 			}
@@ -91,10 +90,10 @@ func TestUtilityContext_HandleMessageEditStake(t *testing.T) {
 			if actorType != coreTypes.ActorType_ACTOR_TYPE_VAL {
 				require.Equal(t, msgChainsEdited.Chains, actor.GetChains(), "incorrect edited chains")
 			}
-			require.Equal(t, defaults.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect staked tokens")
+			require.Equal(t, test_artifacts.DefaultStakeAmountString, actor.GetStakedAmount(), "incorrect staked tokens")
 			require.Equal(t, typesUtil.HeightNotUsed, actor.GetUnstakingHeight(), "incorrect unstaking height")
 
-			amountEdited := defaults.DefaultAccountAmount.Add(defaults.DefaultAccountAmount, big.NewInt(1))
+			amountEdited := test_artifacts.DefaultAccountAmount.Add(test_artifacts.DefaultAccountAmount, big.NewInt(1))
 			amountEditedString := typesUtil.BigIntToString(amountEdited)
 			msgAmountEdited := proto.Clone(msg).(*typesUtil.MessageEditStake)
 			msgAmountEdited.Amount = amountEditedString
@@ -355,8 +354,8 @@ func TestUtilityContext_GetMessageEditStakeSignerCandidates(t *testing.T) {
 
 			msgEditStake := &typesUtil.MessageEditStake{
 				Address:   addrBz,
-				Chains:    defaults.DefaultChains,
-				Amount:    defaults.DefaultStakeAmountString,
+				Chains:    test_artifacts.DefaultChains,
+				Amount:    test_artifacts.DefaultStakeAmountString,
 				ActorType: actorType,
 			}
 			candidates, err := ctx.GetMessageEditStakeSignerCandidates(msgEditStake)
