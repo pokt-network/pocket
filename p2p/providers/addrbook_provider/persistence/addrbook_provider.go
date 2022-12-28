@@ -43,6 +43,8 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 	if err != nil {
 		return nil, err
 	}
+	defer persistenceReadContext.Close()
+
 	stakedActors, err := persistenceReadContext.GetAllStakedActors(int64(height))
 	if err != nil {
 		return nil, err
