@@ -73,7 +73,7 @@ sequenceDiagram
 
 The aggregation and consumption of this peer-meta information enables the State Sync protocol by enabling the node to understand the globalized network state through sampling Peer Metadata in its local peer list.
 
-This gives a view into the data availability layer, with details of what data can be consumed from which pee (not a production interface):
+This gives a view into the data availability layer, with details of what data can be consumed from which peer (not a production interface):
 
 ```golang
 type PeerSyncAggregateMetadata interface {
