@@ -199,6 +199,7 @@ func preparePersistenceMock(t *testing.T, genesisState modules.GenesisState) *mo
 
 	readContextMock.EXPECT().GetAllStakedActors(gomock.Any()).Return(genesisState.GetPersistenceGenesisState().GetVals(), nil).AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(readContextMock, nil).AnyTimes()
+	readContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
 	return persistenceMock
 }
