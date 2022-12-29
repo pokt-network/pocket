@@ -12,7 +12,9 @@ import (
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
-	"github.com/pokt-network/pocket/runtime"
+	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/genesis"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -114,20 +116,19 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 	copy(valKeys[:], keys[:numValidators])
 	mockGenesisState := createMockGenesisState(t, valKeys)
 	for i := range mockRuntimeMgrs {
-		mockConfig := modulesMock.NewMockConfig(ctrl)
-		mockConfig.EXPECT().GetBaseConfig().Return(&runtime.BaseConfig{
+		cfg := &configs.Config{
 			RootDirectory: "",
 			PrivateKey:    valKeys[i].String(),
-		}).AnyTimes()
-		mockConfig.EXPECT().GetP2PConfig().Return(&typesP2P.P2PConfig{
-			PrivateKey:            valKeys[i].String(),
-			ConsensusPort:         8080,
-			UseRainTree:           true,
-			IsEmptyConnectionType: true,
-		}).AnyTimes()
+			P2P: &configs.P2PConfig{
+				PrivateKey:            valKeys[i].String(),
+				ConsensusPort:         8080,
+				UseRainTree:           true,
+				IsEmptyConnectionType: true,
+			},
+		}
 
 		mockRuntimeMgr := modulesMock.NewMockRuntimeMgr(ctrl)
-		mockRuntimeMgr.EXPECT().GetConfig().Return(mockConfig).AnyTimes()
+		mockRuntimeMgr.EXPECT().GetConfig().Return(cfg).AnyTimes()
 		mockRuntimeMgr.EXPECT().GetGenesis().Return(mockGenesisState).AnyTimes()
 		mockRuntimeMgrs[i] = mockRuntimeMgr
 	}
@@ -135,33 +136,27 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 }
 
 // createMockGenesisState configures and returns a mocked GenesisState
-func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) modules.GenesisState {
-	ctrl := gomock.NewController(t)
+func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
+	var genesisState = new(genesis.GenesisState)
 
-	validators := make([]modules.Actor, len(valKeys))
+	validators := make([]*coreTypes.Actor, len(valKeys))
 	for i, valKey := range valKeys {
 		addr := valKey.Address().String()
-		mockActor := modulesMock.NewMockActor(ctrl)
-		mockActor.EXPECT().GetAddress().Return(addr).AnyTimes()
-		mockActor.EXPECT().GetPublicKey().Return(valKey.PublicKey().String()).AnyTimes()
-		mockActor.EXPECT().GetGenericParam().Return(validatorId(i + 1)).AnyTimes()
-		mockActor.EXPECT().GetStakedAmount().Return("1000000000000000").AnyTimes()
-		mockActor.EXPECT().GetPausedHeight().Return(int64(0)).AnyTimes()
-		mockActor.EXPECT().GetUnstakingHeight().Return(int64(0)).AnyTimes()
-		mockActor.EXPECT().GetOutput().Return(addr).AnyTimes()
+		mockActor := &coreTypes.Actor{
+			ActorType: coreTypes.ActorType_ACTOR_TYPE_VAL,
+			Address:         addr,
+			PublicKey:       valKey.PublicKey().String(),
+			GenericParam:    validatorId(i + 1),
+			StakedAmount:    "1000000000000000",
+			PausedHeight:    int64(0),
+			UnstakingHeight: int64(0),
+			Output:          addr,
+		}
 		validators[i] = mockActor
 	}
+	genesisState.Validators = validators
 
-	mockPersistenceGenesisState := modulesMock.NewMockPersistenceGenesisState(ctrl)
-	mockPersistenceGenesisState.EXPECT().
-		GetVals().
-		Return(validators).AnyTimes()
-
-	mockGenesisState := modulesMock.NewMockGenesisState(ctrl)
-	mockGenesisState.EXPECT().
-		GetPersistenceGenesisState().
-		Return(mockPersistenceGenesisState).AnyTimes()
-	return mockGenesisState
+	return genesisState
 }
 
 // Bus Mock - needed to return the appropriate modules when accessed
@@ -182,14 +177,14 @@ func prepareBusMock(t *testing.T,
 }
 
 // Consensus mock - only needed for validatorMap access
-func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockConsensusModule {
+func prepareConsensusMock(t *testing.T, genesisState *genesis.GenesisState) *modulesMock.MockConsensusModule {
 	ctrl := gomock.NewController(t)
 	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
 
-	validators := genesisState.GetPersistenceGenesisState().GetVals()
+	validators := genesisState.GetValidators()
 	m := make(modules.ValidatorMap, len(validators))
 	for _, v := range validators {
-		m[v.GetAddress()] = v
+		m[v.GetAddress()] = *v
 	}
 
 	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
@@ -199,13 +194,13 @@ func prepareConsensusMock(t *testing.T, genesisState modules.GenesisState) *modu
 }
 
 // Persistence mock - only needed for validatorMap access
-func preparePersistenceMock(t *testing.T, genesisState modules.GenesisState) *modulesMock.MockPersistenceModule {
+func preparePersistenceMock(t *testing.T, genesisState *genesis.GenesisState) *modulesMock.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
 	readContextMock := modulesMock.NewMockPersistenceReadContext(ctrl)
 
-	readContextMock.EXPECT().GetAllStakedActors(gomock.Any()).Return(genesisState.GetPersistenceGenesisState().GetVals(), nil).AnyTimes()
+	readContextMock.EXPECT().GetAllStakedActors(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(readContextMock, nil).AnyTimes()
 
 	return persistenceMock

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/pokt-network/pocket/shared/core/types";
+
+enum PoolNames {
+  POOL_NAMES_UNSPECIFIED = 0;
+  POOL_NAMES_DAO = 1;
+  POOL_NAMES_FEE_COLLECTOR = 2;
+  POOL_NAMES_APP_STAKE = 3;
+  POOL_NAMES_VALIDATOR_STAKE = 4;
+  POOL_NAMES_SERVICE_NODE_STAKE = 5;
+  POOL_NAMES_FISHERMAN_STAKE = 6;
+}

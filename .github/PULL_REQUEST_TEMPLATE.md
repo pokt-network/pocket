@@ -1,4 +1,4 @@
-<!--
+<!-- REMOVE this comment block after following the instructions
  1. Make the title of the PR is descriptive and follows this format: `[<Module>] <DESCRIPTION>`
  2. Update the _Assigness_, _Labels_, _Projects_, _Milestone_ before submitting the PR for review.
  3. Add label(s) for the purpose (e.g. `persistence`) and, if applicable, priority (e.g. `low`) labels as well.
@@ -6,7 +6,7 @@
 
 ## Description
 
-<!--
+<!-- REMOVE this comment block after following the instructions
 1. Add a summary of the change including: motivation, reasons, context, dependencies, etc...
 2. If applicable, specify the key files that should be looked at.
 -->
@@ -28,7 +28,9 @@ Please mark the relevant option(s):
 
 ## List of changes
 
-<!-- List out all the changes made-->
+<!-- REMOVE this comment block after following the instructions
+ List out all the changes made
+-->
 
 - Change #1
 - Change #2
@@ -38,10 +40,10 @@ Please mark the relevant option(s):
 
 - [ ] `make develop_test`
 - [ ] [LocalNet](https://github.com/pokt-network/pocket/blob/main/docs/development/README.md) w/ all of the steps outlined in the `README`
-<!--
-If you added additional tests or infrastructure, describe it here.
 
-Bonus points for images and videos or gifs.
+<!-- REMOVE this comment block after following the instructions
+ If you added additional tests or infrastructure, describe it here.
+ Bonus points for images and videos or gifs.
 -->
 
 ## Required Checklist

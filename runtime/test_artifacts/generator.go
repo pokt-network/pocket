@@ -2,168 +2,92 @@ package test_artifacts
 
 // Cross module imports are okay because this is only used for testing and not business logic
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
-	"math/rand"
-	"os"
 	"strconv"
 
-	typesCons "github.com/pokt-network/pocket/consensus/types"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	typesPers "github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/runtime/defaults"
+	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/genesis"
+	"github.com/pokt-network/pocket/runtime/test_artifacts/keygenerator"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
-	typesTelemetry "github.com/pokt-network/pocket/telemetry"
-	"github.com/pokt-network/pocket/utility/types"
-	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// HACK: This is a hack used to enable deterministic key generation via an environment variable.
-//       In order to avoid this, `NewGenesisState` and all downstream functions would need to be
-//       refactored. Alternatively, the seed would need to be passed via the runtime manager.
-//       To avoid these large scale changes, this is a temporary approach to enable deterministic
-//       key generation.
-// IMPROVE(#361): Design a better way to generate deterministic keys for testing.
-const PrivateKeySeedEnv = "DEFAULT_PRIVATE_KEY_SEED"
-
-var privateKeySeed int
-
-// Intentionally not using `init` in case the caller sets this before `NewGenesisState` is called.s
-func loadPrivateKeySeed() {
-	privateKeySeedEnvValue := os.Getenv(PrivateKeySeedEnv)
-	if seedInt, err := strconv.Atoi(privateKeySeedEnvValue); err == nil {
-		privateKeySeed = seedInt
-	} else {
-		rand.Seed(timestamppb.Now().Seconds)
-		privateKeySeed = rand.Int()
-	}
-}
-
 // IMPROVE: Generate a proper genesis suite in the future.
-func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (modules.GenesisState, []string) {
-	loadPrivateKeySeed()
+func NewGenesisState(numValidators, numServiceNodes, numApplications, numFisherman int) (*genesis.GenesisState, []string) {
+	apps, appsPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_APP, numApplications)
+	vals, validatorPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_VAL, numValidators)
+	serviceNodes, snPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_SERVICENODE, numServiceNodes)
+	fish, fishPrivateKeys := NewActors(coreTypes.ActorType_ACTOR_TYPE_FISH, numFisherman)
 
-	apps, appsPrivateKeys := NewActors(types.ActorType_App, numApplications)
-	vals, validatorPrivateKeys := NewActors(types.ActorType_Validator, numValidators)
-	serviceNodes, snPrivateKeys := NewActors(types.ActorType_ServiceNode, numServiceNodes)
-	fish, fishPrivateKeys := NewActors(types.ActorType_Fisherman, numFisherman)
-
-	genesisState := runtime.NewGenesis(
-		&typesCons.ConsensusGenesisState{
-			GenesisTime:   timestamppb.Now(),
-			ChainId:       defaults.DefaultChainID,
-			MaxBlockBytes: defaults.DefaultMaxBlockBytes,
-			Validators:    typesCons.ToConsensusValidators(vals),
-		},
-		&typesPers.PersistenceGenesisState{
-			Pools:        typesPers.ToPersistenceAccounts(NewPools()),
-			Accounts:     typesPers.ToPersistenceAccounts(NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...)), // TODO(olshansky): clean this up
-			Applications: typesPers.ToPersistenceActors(apps),
-			Validators:   typesPers.ToPersistenceActors(vals),
-			ServiceNodes: typesPers.ToPersistenceActors(serviceNodes),
-			Fishermen:    typesPers.ToPersistenceActors(fish),
-			Params:       typesPers.ToPersistenceParams(DefaultParams()),
-		},
-	)
+	genesisState := &genesis.GenesisState{
+		GenesisTime:   timestamppb.Now(),
+		ChainId:       DefaultChainID,
+		MaxBlockBytes: DefaultMaxBlockBytes,
+		Pools:         NewPools(),
+		Accounts:      NewAccounts(numValidators+numServiceNodes+numApplications+numFisherman, append(append(append(validatorPrivateKeys, snPrivateKeys...), fishPrivateKeys...), appsPrivateKeys...)...), // TODO(olshansky): clean this up
+		Applications:  apps,
+		Validators:    vals,
+		ServiceNodes:  serviceNodes,
+		Fishermen:     fish,
+		Params:        DefaultParams(),
+	}
 
 	// TODO: Generalize this to all actors and not just validators
 	return genesisState, validatorPrivateKeys
 }
 
-func NewDefaultConfigs(privateKeys []string) (configs []modules.Config) {
+func NewDefaultConfigs(privateKeys []string) (cfgs []*configs.Config) {
 	for i, pk := range privateKeys {
-		configs = append(configs, NewDefaultConfig(i, pk))
+		cfgs = append(cfgs, configs.NewDefaultConfig(
+			configs.WithPK(pk),
+			configs.WithNodeSchema("node"+strconv.Itoa(i+1)),
+		))
 	}
 	return
 }
 
-func NewDefaultConfig(i int, pk string) modules.Config {
-	return runtime.NewConfig(
-		&runtime.BaseConfig{
-			RootDirectory: "/go/src/github.com/pocket-network",
-			PrivateKey:    pk,
-		},
-		runtime.WithConsensusConfig(
-			&typesCons.ConsensusConfig{
-				MaxMempoolBytes: 500000000,
-				PacemakerConfig: &typesCons.PacemakerConfig{
-					TimeoutMsec:               5000,
-					Manual:                    true,
-					DebugTimeBetweenStepsMsec: 1000,
-				},
-				PrivateKey: pk,
-			}),
-		runtime.WithUtilityConfig(&typesUtil.UtilityConfig{
-			MaxMempoolTransactionBytes: 1024 * 1024 * 1024, // 1GB V0 defaults
-			MaxMempoolTransactions:     9000,
-		}),
-		runtime.WithPersistenceConfig(&typesPers.PersistenceConfig{
-			PostgresUrl:       "postgres://postgres:postgres@pocket-db:5432/postgres",
-			NodeSchema:        "node" + strconv.Itoa(i+1),
-			BlockStorePath:    "/var/blockstore",
-			MaxConnsCount:     5,
-			MinConnsCount:     0,
-			MaxConnLifetime:   "1h",
-			MaxConnIdleTime:   "30m",
-			HealthCheckPeriod: "5m",
-		}),
-		runtime.WithP2PConfig(&typesP2P.P2PConfig{
-			ConsensusPort:         8080,
-			UseRainTree:           true,
-			IsEmptyConnectionType: false,
-			PrivateKey:            pk,
-		}),
-		runtime.WithTelemetryConfig(&typesTelemetry.TelemetryConfig{
-			Enabled:  true,
-			Address:  "0.0.0.0:9000",
-			Endpoint: "/metrics",
-		}),
-	)
-}
-
-func NewPools() (pools []modules.Account) { // TODO (Team) in the real testing suite, we need to populate the pool amounts dependent on the actors
-	for _, name := range typesPers.PoolNames_name {
-		if name == typesPers.PoolNames_FeeCollector.String() {
-			pools = append(pools, &typesPers.Account{
+// REFACTOR: Test artifact generator should reflect the sum of the initial account values to populate the initial pool values
+func NewPools() (pools []*coreTypes.Account) {
+	for _, name := range coreTypes.PoolNames_name {
+		if name == coreTypes.PoolNames_POOL_NAMES_FEE_COLLECTOR.FriendlyName() {
+			pools = append(pools, &coreTypes.Account{
 				Address: name,
 				Amount:  "0",
 			})
 			continue
 		}
-		pools = append(pools, &typesPers.Account{
+		pools = append(pools, &coreTypes.Account{
 			Address: name,
-			Amount:  defaults.DefaultAccountAmountString,
+			Amount:  DefaultAccountAmountString,
 		})
 	}
 	return
 }
 
-func NewAccounts(n int, privateKeys ...string) (accounts []modules.Account) {
+func NewAccounts(n int, privateKeys ...string) (accounts []*coreTypes.Account) {
 	for i := 0; i < n; i++ {
-		_, _, addr := generateNewKeysStrings()
+		_, _, addr := keygenerator.GetInstance().Next()
 		if privateKeys != nil {
 			pk, _ := crypto.NewPrivateKey(privateKeys[i])
 			addr = pk.Address().String()
 		}
-		accounts = append(accounts, &typesPers.Account{
+		accounts = append(accounts, &coreTypes.Account{
 			Address: addr,
-			Amount:  defaults.DefaultAccountAmountString,
+			Amount:  DefaultAccountAmountString,
 		})
 	}
 	return
 }
 
 // TODO: The current implementation of NewActors  will have overlapping `ServiceUrl` for different
-//       types of actors which needs to be fixed.
-func NewActors(actorType typesUtil.ActorType, n int) (actors []modules.Actor, privateKeys []string) {
+//
+//	types of actors which needs to be fixed.
+func NewActors(actorType coreTypes.ActorType, n int) (actors []*coreTypes.Actor, privateKeys []string) {
 	for i := 0; i < n; i++ {
 		genericParam := getServiceUrl(i + 1)
-		if int32(actorType) == int32(types.ActorType_App) {
-			genericParam = defaults.DefaultMaxRelaysString
+		if int32(actorType) == int32(coreTypes.ActorType_ACTOR_TYPE_APP) {
+			genericParam = DefaultMaxRelaysString
 		}
 		actor, pk := NewDefaultActor(int32(actorType), genericParam)
 		actors = append(actors, actor)
@@ -174,46 +98,26 @@ func NewActors(actorType typesUtil.ActorType, n int) (actors []modules.Actor, pr
 }
 
 func getServiceUrl(n int) string {
-	return fmt.Sprintf(defaults.ServiceUrlFormat, n)
+	return fmt.Sprintf(ServiceUrlFormat, n)
 }
 
-func NewDefaultActor(actorType int32, genericParam string) (actor modules.Actor, privateKey string) {
-	privKey, pubKey, addr := generateNewKeysStrings()
-	chains := defaults.DefaultChains
-	if actorType == int32(typesPers.ActorType_Val) {
+func NewDefaultActor(actorType int32, genericParam string) (actor *coreTypes.Actor, privateKey string) {
+	privKey, pubKey, addr := keygenerator.GetInstance().Next()
+	chains := DefaultChains
+	if actorType == int32(coreTypes.ActorType_ACTOR_TYPE_VAL) {
 		chains = nil
-	} else if actorType == int32(types.ActorType_App) {
-		genericParam = defaults.DefaultMaxRelaysString
+	} else if actorType == int32(coreTypes.ActorType_ACTOR_TYPE_APP) {
+		genericParam = DefaultMaxRelaysString
 	}
-	return &typesPers.Actor{
+	return &coreTypes.Actor{
 		Address:         addr,
 		PublicKey:       pubKey,
 		Chains:          chains,
 		GenericParam:    genericParam,
-		StakedAmount:    defaults.DefaultStakeAmountString,
-		PausedHeight:    defaults.DefaultPauseHeight,
-		UnstakingHeight: defaults.DefaultUnstakingHeight,
+		StakedAmount:    DefaultStakeAmountString,
+		PausedHeight:    DefaultPauseHeight,
+		UnstakingHeight: DefaultUnstakingHeight,
 		Output:          addr,
-		ActorType:       typesPers.ActorType(actorType),
+		ActorType:       coreTypes.ActorType(actorType),
 	}, privKey
-}
-
-// TECHDEBT: This function has the side effect of incrementing the global variable `privateKeySeed`
-// in order to guarantee unique keys, but that are still deterministic for testing purposes.
-func generateNewKeysStrings() (privateKey, publicKey, address string) {
-	privateKeySeed += 1 // Different on every call but deterministic
-	cryptoSeed := make([]byte, crypto.SeedSize)
-	binary.LittleEndian.PutUint32(cryptoSeed, uint32(privateKeySeed))
-
-	reader := bytes.NewReader(cryptoSeed)
-	privateKeyBz, err := crypto.GeneratePrivateKeyWithReader(reader)
-	if err != nil {
-		panic(err)
-	}
-
-	privateKey = privateKeyBz.String()
-	publicKey = privateKeyBz.PublicKey().String()
-	address = privateKeyBz.PublicKey().Address().String()
-
-	return
 }

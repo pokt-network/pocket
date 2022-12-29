@@ -1,7 +1,8 @@
 syntax = "proto3";
-package persistence;
 
-option go_package = "github.com/pokt-network/pocket/persistence/types";
+package configs;
+
+option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
 //See https://pkg.go.dev/time#ParseDuration for expected string time parameters
 message PersistenceConfig {

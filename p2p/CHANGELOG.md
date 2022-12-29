@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.14] - 2022-12-28
+
+- `ActorsToAddrBook` now skips actors that are not validators since they don't have a serviceUrl generic parameter
+
+## [0.0.0.13] - 2022-12-21
+
+- Updated to use the new centralized config and genesis handling
+- Updated to use the new `Actor` struct under `coreTypes`
+- Updated tests and mocks
+- Added missing `max_mempool_count` in config (it was causing P2P instabilities in LocalNet)
+
 ## [0.0.0.12] - 2022-12-16
 
 - `ValidatorMapToAddrBook` renamed to `ActorToAddrBook`
