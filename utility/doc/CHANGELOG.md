@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.15] - 2022-12-28
+## [0.0.0.15] - 2022-12-30
 
 - Renamed enum names as per code-review
 - Using defaults from `test_artifacts` for tests
