@@ -99,7 +99,7 @@ go run app/client/*.go
 
 #### Accounts setup
 
-Since our Keybase is under development, currently we have to manually inject the private keys of the accounts we want to use in the CLI.
+Since our Keybase is under development, we have to manually inject the private keys of the accounts we want to use in the CLI.
 
 For the following steps you'll need to use the accounts of the first two validators, therefore you have some options:
 
