@@ -7,6 +7,12 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+const (
+	ConsensusModuleName      = "consensus"
+	PacemakerModuleName      = "pacemaker"
+	LeaderElectionModuleName = "leader_election"
+)
+
 // NOTE: Consensus is the core of the replicated state machine and is driven by various asynchronous events.
 // Consider adding a mutex lock to your implementation that is acquired at the beginning of each entrypoint/function implemented in this interface.
 // Make sure that you are not locking again within the same call to avoid deadlocks (for example when the methods below call each other in your implementation).

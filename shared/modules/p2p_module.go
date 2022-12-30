@@ -7,6 +7,8 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+const P2PModuleName = "p2p"
+
 type P2PModule interface {
 	Module
 	ConfigurableModule
