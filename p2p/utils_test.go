@@ -135,6 +135,7 @@ func createMockRuntimeMgrs(t *testing.T, numValidators int) []modules.RuntimeMgr
 	return mockRuntimeMgrs
 }
 
+// TODO: we need to support all protocol actor types, not only validators
 // createMockGenesisState configures and returns a mocked GenesisState
 func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *genesis.GenesisState {
 	var genesisState = new(genesis.GenesisState)
@@ -143,7 +144,7 @@ func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) *ge
 	for i, valKey := range valKeys {
 		addr := valKey.Address().String()
 		mockActor := &coreTypes.Actor{
-			ActorType: coreTypes.ActorType_ACTOR_TYPE_VAL,
+			ActorType:       coreTypes.ActorType_ACTOR_TYPE_VAL,
 			Address:         addr,
 			PublicKey:       valKey.PublicKey().String(),
 			GenericParam:    validatorId(i + 1),
