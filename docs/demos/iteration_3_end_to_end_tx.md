@@ -101,7 +101,7 @@ go run app/client/*.go
 
 Since our Keybase is under development, we have to manually inject the private keys of the accounts we want to use in the CLI.
 
-For the following steps you'll need to use the accounts of the first two validators, therefore you have some options:
+For the following steps, you'll need to use the accounts of the first two validators in the hard-coded development genesis file. Therefore you have some options:
 
 1) You can just:
    ```bash
