@@ -24,7 +24,6 @@ func (p PostgresContext) GetAllApps(height int64) (apps []*coreTypes.Actor, err 
 		if err != nil {
 			return
 		}
-		actor.ActorType = coreTypes.ActorType_ACTOR_TYPE_APP
 		actors = append(actors, actor)
 	}
 	rows.Close()
@@ -54,7 +53,6 @@ func (p PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Actor
 		if err != nil {
 			return
 		}
-		actor.ActorType = coreTypes.ActorType_ACTOR_TYPE_VAL
 		actors = append(actors, actor)
 	}
 	rows.Close()
@@ -84,7 +82,6 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []*coreTypes.Actor
 		if err != nil {
 			return
 		}
-		actor.ActorType = coreTypes.ActorType_ACTOR_TYPE_SERVICENODE
 		actors = append(actors, actor)
 	}
 	rows.Close()
@@ -114,7 +111,6 @@ func (p PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, er
 		if err != nil {
 			return
 		}
-		actor.ActorType = coreTypes.ActorType_ACTOR_TYPE_FISH
 		actors = append(actors, actor)
 	}
 	rows.Close()

@@ -12,6 +12,9 @@ var _ ProtocolActorSchema = &BaseProtocolActorSchema{}
 // Note that this implementation assumes the protocol actor is chain dependant, so that behaviour needs
 // to be overridden if the actor (e.g. Validator) is chain independent.
 type BaseProtocolActorSchema struct {
+	// Actor Type
+	actorType coreTypes.ActorType
+
 	// SQL Tables
 	tableName       string
 	chainsTableName string
@@ -22,6 +25,10 @@ type BaseProtocolActorSchema struct {
 	// SQL Constraints
 	heightConstraintName       string
 	chainsHeightConstraintName string
+}
+
+func (actor *BaseProtocolActorSchema) GetActorType() coreTypes.ActorType {
+	return actor.actorType
 }
 
 func (actor *BaseProtocolActorSchema) GetTableName() string {

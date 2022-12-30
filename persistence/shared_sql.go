@@ -92,7 +92,7 @@ func (p *PostgresContext) getActor(actorSchema types.ProtocolActorSchema, addres
 	if err != nil {
 		return
 	}
-
+	actor.ActorType = actorSchema.GetActorType()
 	return p.getChainsForActor(ctx, tx, actorSchema, actor, height)
 }
 

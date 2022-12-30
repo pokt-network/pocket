@@ -17,6 +17,8 @@ type ValidatorSchema struct {
 
 var ValidatorActor ProtocolActorSchema = &ValidatorSchema{
 	BaseProtocolActorSchema: BaseProtocolActorSchema{
+		actorType: coreTypes.ActorType_ACTOR_TYPE_VAL,
+
 		tableName:       ValidatorTableName,
 		chainsTableName: NullString,
 
