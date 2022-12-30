@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added missing `ActorType` in `GetAllXXXX()` functions
 - Updated to new `PoolNames` enums
-- Using Enum.FriendlyName() instead of Enum.String() for `PoolNames` enums (backward compatibility + flexibility)
+- Using `Enum.FriendlyName()` instead of `Enum.String()` for `PoolNames` enums (backward compatibility + flexibility)
 - Updated `InitParams` so that Params can be initialized from a `GenesisState` and not just hardcoded
 - Refactored default values sourcing (test_artifacts for tests)
 - Updated tests
