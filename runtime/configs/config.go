@@ -62,6 +62,8 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 	return cfg
 }
 
+// WithPK is an option to configure module-specific keys in order to enable different "identities"
+// for different purposes (i.e. validation, P2P, servicing, etc...).
 func WithPK(pk string) func(*Config) {
 	return func(cfg *Config) {
 		cfg.PrivateKey = pk
@@ -70,6 +72,7 @@ func WithPK(pk string) func(*Config) {
 	}
 }
 
+// WithNodeSchema is an option to configure the schema for the node's database.
 func WithNodeSchema(schema string) func(*Config) {
 	return func(cfg *Config) {
 		cfg.Persistence.NodeSchema = schema
