@@ -110,7 +110,7 @@ type PersistenceWriteContext interface {
 	SetValidatorMissedBlocks(address []byte, missedBlocks int) error
 
 	// Param Operations
-	InitParams(params *genesis.Params) error
+	InitGenesisParams(params *genesis.Params) error
 	SetParam(paramName string, value interface{}) error
 
 	// Flag Operations

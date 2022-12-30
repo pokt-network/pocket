@@ -111,7 +111,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 		}
 	}
 
-	if err = rwContext.InitParams(state.Params); err != nil {
+	if err = rwContext.InitGenesisParams(state.Params); err != nil {
 		log.Fatalf("an error occurred initializing params: %s", err.Error())
 	}
 

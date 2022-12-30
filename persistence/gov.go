@@ -27,7 +27,7 @@ func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) 
 	return p.GetIntParam(ServiceNodesPerSessionParamName, height)
 }
 
-func (p PostgresContext) InitParams(params *genesis.Params) error {
+func (p PostgresContext) InitGenesisParams(params *genesis.Params) error {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
