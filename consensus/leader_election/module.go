@@ -7,10 +7,6 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-const (
-	leaderElectionModuleName = "leader_election"
-)
-
 type LeaderElectionModule interface {
 	modules.Module
 	ElectNextLeader(*typesCons.HotstuffMessage) (typesCons.NodeId, error)
@@ -22,12 +18,14 @@ type leaderElectionModule struct {
 	bus modules.Bus
 }
 
-func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	return new(leaderElectionModule).Create(runtime)
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(leaderElectionModule).Create(bus)
 }
 
-func (*leaderElectionModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	return &leaderElectionModule{}, nil
+func (*leaderElectionModule) Create(bus modules.Bus) (modules.Module, error) {
+	m := &leaderElectionModule{}
+	bus.RegisterModule(m)
+	return m, nil
 }
 
 func (m *leaderElectionModule) Start() error {
@@ -40,7 +38,7 @@ func (m *leaderElectionModule) Stop() error {
 }
 
 func (m *leaderElectionModule) GetModuleName() string {
-	return leaderElectionModuleName
+	return modules.LeaderElectionModuleName
 }
 
 func (m *leaderElectionModule) SetBus(pocketBus modules.Bus) {

@@ -303,9 +303,24 @@ func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 	}
 
 	address := partialSig.GetAddress()
-	validator, ok := m.validatorMap[address]
+
+	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(m.CurrentHeight()))
+	if err != nil {
+		return err
+	}
+	defer persistenceReadContext.Close()
+
+	validators, err := persistenceReadContext.GetAllValidators(int64(m.CurrentHeight()))
+	if err != nil {
+		return err
+	}
+
+	validatorMap := typesCons.ActorListToValidatorMap(validators)
+	valAddrToIdMap, _ := typesCons.GetValAddrToIdMap(validators)
+
+	validator, ok := validatorMap[address]
 	if !ok {
-		return typesCons.ErrMissingValidator(address, m.valAddrToIdMap[address])
+		return typesCons.ErrMissingValidator(address, valAddrToIdMap[address])
 	}
 	pubKey := validator.GetPublicKey()
 	if isSignatureValid(msg, pubKey, partialSig.GetSignature()) {
@@ -313,7 +328,7 @@ func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 	}
 
 	return typesCons.ErrValidatingPartialSig(
-		address, m.valAddrToIdMap[address], msg, pubKey)
+		address, valAddrToIdMap[address], msg, pubKey)
 }
 
 // TODO: This is just a placeholder at the moment for indexing hotstuff messages ONLY.

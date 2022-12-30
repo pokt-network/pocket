@@ -23,10 +23,10 @@ type ConsensusNodeState struct {
 	IsLeader bool
 }
 
-func GetValAddrToIdMap(validatorMap ValidatorMap) (ValAddrToIdMap, IdToValAddrMap) {
-	valAddresses := make([]string, 0, len(validatorMap))
-	for addr := range validatorMap {
-		valAddresses = append(valAddresses, addr)
+func GetValAddrToIdMap(validators []modules.Actor) (ValAddrToIdMap, IdToValAddrMap) {
+	valAddresses := make([]string, 0, len(validators))
+	for _, val := range validators {
+		valAddresses = append(valAddresses, val.GetAddress())
 	}
 	sort.Strings(valAddresses)
 

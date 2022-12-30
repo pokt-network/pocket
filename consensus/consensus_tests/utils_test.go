@@ -84,44 +84,22 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 
 func CreateTestConsensusPocketNodes(
 	t *testing.T,
-	runtimeMgrs []runtime.Manager,
+	buses []modules.Bus,
 	testChannel modules.EventsChannel,
 ) (pocketNodes IdToNodeMapping) {
-	pocketNodes = make(IdToNodeMapping, len(runtimeMgrs))
+	pocketNodes = make(IdToNodeMapping, len(buses))
 	// TODO(design): The order here is important in order for NodeId to be set correctly below.
 	// This logic will need to change once proper leader election is implemented.
-	sort.Slice(runtimeMgrs, func(i, j int) bool {
-		pk, err := cryptoPocket.NewPrivateKey(runtimeMgrs[i].GetConfig().GetBaseConfig().GetPrivateKey())
+	sort.Slice(buses, func(i, j int) bool {
+		runtimeMgr := buses[i].GetRuntimeMgr()
+		pk, err := cryptoPocket.NewPrivateKey(runtimeMgr.GetConfig().GetBaseConfig().GetPrivateKey())
 		require.NoError(t, err)
-		pk2, err := cryptoPocket.NewPrivateKey(runtimeMgrs[j].GetConfig().GetBaseConfig().GetPrivateKey())
+		pk2, err := cryptoPocket.NewPrivateKey(runtimeMgr.GetConfig().GetBaseConfig().GetPrivateKey())
 		require.NoError(t, err)
 		return pk.Address().String() < pk2.Address().String()
 	})
-	for i, runtimeMgr := range runtimeMgrs {
-		pocketNode := CreateTestConsensusPocketNode(t, &runtimeMgr, testChannel)
-		// TODO(olshansky): Figure this part out.
-		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
-	}
-	return
-}
-
-func CreateTestConsensusPocketNodesNew(
-	t *testing.T,
-	runtimeMgrs []runtime.Manager,
-	testChannel modules.EventsChannel,
-) (pocketNodes IdToNodeMapping) {
-	pocketNodes = make(IdToNodeMapping, len(runtimeMgrs))
-	// TODO(design): The order here is important in order for NodeId to be set correctly below.
-	// This logic will need to change once proper leader election is implemented.
-	sort.Slice(runtimeMgrs, func(i, j int) bool {
-		pk, err := cryptoPocket.NewPrivateKey(runtimeMgrs[i].GetConfig().GetBaseConfig().GetPrivateKey())
-		require.NoError(t, err)
-		pk2, err := cryptoPocket.NewPrivateKey(runtimeMgrs[j].GetConfig().GetBaseConfig().GetPrivateKey())
-		require.NoError(t, err)
-		return pk.Address().String() < pk2.Address().String()
-	})
-	for i, runtimeMgr := range runtimeMgrs {
-		pocketNode := CreateTestConsensusPocketNode(t, &runtimeMgr, testChannel)
+	for i, bus := range buses {
+		pocketNode := CreateTestConsensusPocketNode(t, &bus, testChannel)
 		// TODO(olshansky): Figure this part out.
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
@@ -131,21 +109,34 @@ func CreateTestConsensusPocketNodesNew(
 // Creates a pocket node where all the primary modules, exception for consensus, are mocked
 func CreateTestConsensusPocketNode(
 	t *testing.T,
-	runtimeMgr *runtime.Manager,
+	bus *modules.Bus,
 	testChannel modules.EventsChannel,
 ) *shared.Node {
-	consensusMod, err := consensus.Create(runtimeMgr)
+	// persistence is a dependency of consensus, so we need to create it first
+	persistenceMock := basePersistenceMock(t, testChannel, *bus)
+	(*bus).RegisterModule(persistenceMock)
+
+	_, err := consensus.Create(*bus)
 	require.NoError(t, err)
+
+	runtimeMgr := (*bus).GetRuntimeMgr()
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
-	persistenceMock := basePersistenceMock(t, testChannel)
 	p2pMock := baseP2PMock(t, testChannel)
 	utilityMock := baseUtilityMock(t, testChannel, runtimeMgr.GetGenesis())
 	telemetryMock := baseTelemetryMock(t, testChannel)
 	loggerMock := baseLoggerMock(t, testChannel)
 	rpcMock := baseRpcMock(t, testChannel)
 
-	bus, err := shared.CreateBus(runtimeMgr, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock, loggerMock, rpcMock)
+	for _, module := range []modules.Module{
+		p2pMock,
+		utilityMock,
+		telemetryMock,
+		loggerMock,
+		rpcMock,
+	} {
+		(*bus).RegisterModule(module)
+	}
 
 	require.NoError(t, err)
 
@@ -154,9 +145,19 @@ func CreateTestConsensusPocketNode(
 
 	pocketNode := shared.NewNodeWithP2PAddress(pk.Address())
 
-	pocketNode.SetBus(bus)
+	pocketNode.SetBus(*bus)
 
 	return pocketNode
+}
+
+func GenerateBuses(t *testing.T, runtimeMgrs []runtime.Manager) (buses []modules.Bus) {
+	buses = make([]modules.Bus, len(runtimeMgrs))
+	for i := range runtimeMgrs {
+		bus, err := runtime.CreateBus(&runtimeMgrs[i])
+		require.NoError(t, err)
+		buses[i] = bus
+	}
+	return
 }
 
 // CLEANUP: Reduce package scope visibility in the consensus test module
@@ -302,15 +303,16 @@ loop:
 /*** Module Mocking Helpers ***/
 
 // Creates a persistence module mock with mock implementations of some basic functionality
-func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockPersistenceModule {
+func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *modulesMock.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 	persistenceReadContextMock := modulesMock.NewMockPersistenceReadContext(ctrl)
 
+	persistenceMock.EXPECT().GetModuleName().Return("persistence").AnyTimes()
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
-	persistenceMock.EXPECT().NewReadContext(int64(-1)).Return(persistenceReadContextMock, nil).AnyTimes()
+	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
 	persistenceMock.EXPECT().ReleaseWriteContext().Return(nil).AnyTimes()
 
 	// The persistence context should usually be accessed via the utility module within the context
@@ -318,7 +320,8 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 	// state; hence the `-1` expectation in the call above.
 	persistenceContextMock.EXPECT().Close().Return(nil).AnyTimes()
 	persistenceReadContextMock.EXPECT().GetLatestBlockHeight().Return(uint64(0), nil).AnyTimes()
-	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(makeMockActors(numValidators), nil).AnyTimes()
+	persistenceReadContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(bus.GetRuntimeMgr().GetGenesis().GetPersistenceGenesisState().GetVals(), nil).AnyTimes()
+
 	persistenceReadContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
 	return persistenceMock
@@ -345,6 +348,7 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.M
 			testChannel <- *e
 		}).
 		AnyTimes()
+	p2pMock.EXPECT().GetModuleName().Return("p2p").AnyTimes()
 
 	return p2pMock
 }
@@ -361,6 +365,7 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState modules
 		NewContext(gomock.Any()).
 		Return(utilityContextMock, nil).
 		MaxTimes(4)
+	utilityMock.EXPECT().GetModuleName().Return("utility").AnyTimes()
 
 	return utilityMock
 }
@@ -400,6 +405,7 @@ func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockT
 	telemetryMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
+	telemetryMock.EXPECT().GetModuleName().Return("telemetry_noop").AnyTimes()
 
 	return telemetryMock
 }
@@ -409,6 +415,7 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockRPCModu
 	rpcMock := modulesMock.NewMockRPCModule(ctrl)
 	rpcMock.EXPECT().Start().Return(nil).AnyTimes()
 	rpcMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+	rpcMock.EXPECT().GetModuleName().Return("rpc").AnyTimes()
 
 	return rpcMock
 }
@@ -433,6 +440,7 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockLogg
 	loggerMock := modulesMock.NewMockLoggerModule(ctrl)
 
 	loggerMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
+	loggerMock.EXPECT().GetModuleName().Return("logger").AnyTimes()
 
 	return loggerMock
 }
@@ -483,13 +491,4 @@ func assertStep(t *testing.T, nodeId typesCons.NodeId, expected, actual typesCon
 
 func assertRound(t *testing.T, nodeId typesCons.NodeId, expected, actual uint8) {
 	require.Equal(t, expected, actual, "[NODE][%v] failed assertRound", nodeId)
-}
-
-// makeMockActors creates a slice of modules.Actor with n &modulesMock.MockActor{} in it.
-func makeMockActors(n int) []modules.Actor {
-	actors := make([]modules.Actor, n)
-	for i := 0; i < n; i++ {
-		actors[i] = &modulesMock.MockActor{}
-	}
-	return actors
 }
