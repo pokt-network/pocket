@@ -62,8 +62,8 @@ type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
 /*** Node Generation Helpers ***/
 
-func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Clock) []runtime.Manager {
-	runtimeMgrs := make([]runtime.Manager, validatorCount)
+func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Clock) []*runtime.Manager {
+	runtimeMgrs := make([]*runtime.Manager, validatorCount)
 	var validatorKeys []string
 	genesisState, validatorKeys := test_artifacts.NewGenesisState(validatorCount, 1, 1, 1)
 	configs := test_artifacts.NewDefaultConfigs(validatorKeys)
@@ -77,7 +77,7 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 				DebugTimeBetweenStepsMsec: 0,
 			},
 		})(config)
-		runtimeMgrs[i] = *runtime.NewManager(config, genesisState, runtime.WithClock(clockMgr))
+		runtimeMgrs[i] = runtime.NewManager(config, genesisState, runtime.WithClock(clockMgr))
 	}
 	return runtimeMgrs
 }
@@ -91,15 +91,15 @@ func CreateTestConsensusPocketNodes(
 	// TODO(design): The order here is important in order for NodeId to be set correctly below.
 	// This logic will need to change once proper leader election is implemented.
 	sort.Slice(buses, func(i, j int) bool {
-		runtimeMgr := buses[i].GetRuntimeMgr()
-		pk, err := cryptoPocket.NewPrivateKey(runtimeMgr.GetConfig().GetBaseConfig().GetPrivateKey())
+		pk, err := cryptoPocket.NewPrivateKey(buses[i].GetRuntimeMgr().GetConfig().GetBaseConfig().GetPrivateKey())
 		require.NoError(t, err)
-		pk2, err := cryptoPocket.NewPrivateKey(runtimeMgr.GetConfig().GetBaseConfig().GetPrivateKey())
+		pk2, err := cryptoPocket.NewPrivateKey(buses[j].GetRuntimeMgr().GetConfig().GetBaseConfig().GetPrivateKey())
 		require.NoError(t, err)
 		return pk.Address().String() < pk2.Address().String()
 	})
-	for i, bus := range buses {
-		pocketNode := CreateTestConsensusPocketNode(t, &bus, testChannel)
+
+	for i := range buses {
+		pocketNode := CreateTestConsensusPocketNode(t, &buses[i], testChannel)
 		// TODO(olshansky): Figure this part out.
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
@@ -150,10 +150,10 @@ func CreateTestConsensusPocketNode(
 	return pocketNode
 }
 
-func GenerateBuses(t *testing.T, runtimeMgrs []runtime.Manager) (buses []modules.Bus) {
+func GenerateBuses(t *testing.T, runtimeMgrs []*runtime.Manager) (buses []modules.Bus) {
 	buses = make([]modules.Bus, len(runtimeMgrs))
 	for i := range runtimeMgrs {
-		bus, err := runtime.CreateBus(&runtimeMgrs[i])
+		bus, err := runtime.CreateBus(runtimeMgrs[i])
 		require.NoError(t, err)
 		buses[i] = bus
 	}
