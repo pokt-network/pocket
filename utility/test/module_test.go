@@ -56,9 +56,10 @@ func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	runtimeCfg := newTestRuntimeConfig(dbUrl)
+	bus, _ := runtime.CreateBus(runtimeCfg)
 
-	testUtilityMod = newTestUtilityModule(runtimeCfg)
-	testPersistenceMod = newTestPersistenceModule(runtimeCfg)
+	testUtilityMod = newTestUtilityModule(bus)
+	testPersistenceMod = newTestPersistenceModule(bus)
 
 	exitCode := m.Run()
 	test_artifacts.CleanupPostgresDocker(m, pool, resource)
@@ -114,8 +115,8 @@ func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
 	return runtimeCfg
 }
 
-func newTestUtilityModule(runtimeCfg *runtime.Manager) modules.UtilityModule {
-	utilityMod, err := utility.Create(runtimeCfg)
+func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
+	utilityMod, err := utility.Create(bus)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}
@@ -143,8 +144,8 @@ func mockBusInTestModules(t *testing.T) {
 }
 
 // TODO(#290): Mock the persistence module so the utility module is not dependant on it.
-func newTestPersistenceModule(runtimeCfg *runtime.Manager) modules.PersistenceModule {
-	persistenceMod, err := persistence.Create(runtimeCfg)
+func newTestPersistenceModule(bus modules.Bus) modules.PersistenceModule {
+	persistenceMod, err := persistence.Create(bus)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}

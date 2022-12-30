@@ -22,8 +22,6 @@ type utilityModule struct {
 }
 
 const (
-	utilityModuleName = "utility"
-
 	TransactionGossipMessageContentType = "utility.TransactionGossipMessage"
 )
 
@@ -58,7 +56,7 @@ func (u *utilityModule) Stop() error {
 }
 
 func (u *utilityModule) GetModuleName() string {
-	return utilityModuleName
+	return modules.UtilityModuleName
 }
 
 func (u *utilityModule) SetBus(bus modules.Bus) {
