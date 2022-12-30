@@ -262,13 +262,7 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 	msgToJustify := qcToHotstuffMessage(qc)
 	numValid := 0
 
-	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(m.CurrentHeight()))
-	if err != nil {
-		return err
-	}
-	defer persistenceReadContext.Close()
-
-	validators, err := persistenceReadContext.GetAllValidators(int64(m.CurrentHeight()))
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}

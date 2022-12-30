@@ -121,21 +121,15 @@ func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signa
 }
 
 func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
-	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(m.CurrentHeight()))
-	if err != nil {
-		return err
-	}
-	defer persistenceReadContext.Close()
-
-	validators, err := persistenceReadContext.GetAllValidators(int64(m.CurrentHeight()))
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
 	return m.isOptimisticThresholdMet(len(m.messagePool[step]), validators)
 }
 
-func (m *consensusModule) isOptimisticThresholdMet(n int, validatorMap []modules.Actor) error {
-	numValidators := len(validatorMap)
+func (m *consensusModule) isOptimisticThresholdMet(n int, validators []modules.Actor) error {
+	numValidators := len(validators)
 	if !(float64(n) > ByzantineThreshold*float64(numValidators)) {
 		return typesCons.ErrByzantineThresholdCheck(n, ByzantineThreshold*float64(numValidators))
 	}
@@ -243,13 +237,7 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 	m.leaderId = &leaderId
 
-	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(m.CurrentHeight()))
-	if err != nil {
-		return err
-	}
-	defer persistenceReadContext.Close()
-
-	validators, err := persistenceReadContext.GetAllValidators(int64(m.CurrentHeight()))
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return err
 	}
@@ -281,4 +269,15 @@ func (m *consensusModule) nodeLogError(s string, err error) {
 
 func (m *consensusModule) setLogPrefix(logPrefix string) {
 	m.logPrefix = logPrefix
+}
+
+func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]modules.Actor, error) {
+	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
+	if err != nil {
+		return nil, err
+	}
+	defer persistenceReadContext.Close()
+
+	validators, err := persistenceReadContext.GetAllValidators(int64(height))
+	return validators, err
 }

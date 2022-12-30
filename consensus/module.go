@@ -55,8 +55,6 @@ type consensusModule struct {
 	// Leader Election
 	leaderId *typesCons.NodeId
 	nodeId   typesCons.NodeId
-	// valAddrToIdMap typesCons.ValAddrToIdMap // TODO: This needs to be updated every time the ValMap is modified
-	// idToValAddrMap typesCons.IdToValAddrMap // TODO: This needs to be updated every time the ValMap is modified
 
 	// Module Dependencies
 	// IMPROVE(#283): Investigate whether the current approach to how the `utilityContext` should be
