@@ -129,6 +129,9 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
 	}
 	bus.RegisterModule(m)
+
+	// TODO(olshansky): Look for a way to avoid doing this.
+	// TODO(goku): remove tight connection of pacemaker and consensus.
 	pacemaker.SetConsensusModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
@@ -178,16 +181,10 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	m.nodeId = valAddrToIdMap[address]
 	m.leaderId = nil
 
-	// utilityContext:    nil,
-	// paceMaker:         paceMaker,
-	// leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
+	m.utilityContext = nil
 
 	m.logPrefix = DefaultLogPrefix
 	m.messagePool = make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage)
-
-	// TODO(olshansky): Look for a way to avoid doing this.
-	// TODO(goku): remove tight connection of pacemaker and consensus.
-	//paceMaker.SetConsensusModule(m)
 
 	return m, nil
 }
