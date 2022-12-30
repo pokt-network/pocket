@@ -27,23 +27,26 @@ const (
 	TransactionGossipMessageContentType = "utility.TransactionGossipMessage"
 )
 
-func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	return new(utilityModule).Create(runtime)
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(utilityModule).Create(bus)
 }
 
-func (*utilityModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	var m *utilityModule
+func (*utilityModule) Create(bus modules.Bus) (modules.Module, error) {
+	m := &utilityModule{}
+	bus.RegisterModule(m)
 
-	cfg := runtime.GetConfig()
+	runtimeMgr := bus.GetRuntimeMgr()
+
+	cfg := runtimeMgr.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
 		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
 	utilityCfg := cfg.GetUtilityConfig()
 
-	return &utilityModule{
-		config:  utilityCfg,
-		Mempool: types.NewMempool(utilityCfg.GetMaxMempoolTransactionBytes(), utilityCfg.GetMaxMempoolTransactions()),
-	}, nil
+	m.config = utilityCfg
+	m.Mempool = types.NewMempool(utilityCfg.GetMaxMempoolTransactionBytes(), utilityCfg.GetMaxMempoolTransactions())
+
+	return m, nil
 }
 
 func (u *utilityModule) Start() error {

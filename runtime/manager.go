@@ -24,12 +24,18 @@ type Manager struct {
 	genesis *runtimeGenesis
 
 	clock clock.Clock
+	bus   modules.Bus
 }
 
 func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manager)) *Manager {
 	mgr := &Manager{
 		clock: clock.New(),
 	}
+	bus, err := CreateBus(mgr)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to initialize bus: %v", err)
+	}
+	mgr.bus = bus
 
 	cfg, genesis, err := mgr.init(configPath, genesisPath)
 	if err != nil {
@@ -57,11 +63,16 @@ func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...fun
 	var genesis *runtimeGenesis
 	parse(genesisReader, genesis)
 
-	mgr := &Manager{
-		config:  cfg,
-		genesis: genesis,
-		clock:   clock.New(),
+	var mgr = new(Manager)
+	bus, err := CreateBus(mgr)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to initialize bus: %v", err)
 	}
+
+	mgr.config = cfg
+	mgr.genesis = genesis
+	mgr.clock = clock.New()
+	mgr.bus = bus
 
 	for _, o := range options {
 		o(mgr)
@@ -71,11 +82,16 @@ func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...fun
 }
 
 func NewManager(config modules.Config, genesis modules.GenesisState, options ...func(*Manager)) *Manager {
-	mgr := &Manager{
-		config:  config.(*runtimeConfig),
-		genesis: genesis.(*runtimeGenesis),
-		clock:   clock.New(),
+	var mgr = new(Manager)
+	bus, err := CreateBus(mgr)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to initialize bus: %v", err)
 	}
+
+	mgr.config = config.(*runtimeConfig)
+	mgr.genesis = genesis.(*runtimeGenesis)
+	mgr.clock = clock.New()
+	mgr.bus = bus
 
 	for _, o := range options {
 		o(mgr)
@@ -130,6 +146,10 @@ func (b *Manager) GetGenesis() modules.GenesisState {
 
 func (b *Manager) GetClock() clock.Clock {
 	return b.clock
+}
+
+func (b *Manager) GetBus() modules.Bus {
+	return b.bus
 }
 
 type supportedStructs interface {

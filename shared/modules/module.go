@@ -23,7 +23,7 @@ type InterruptableModule interface {
 
 type InitializableModule interface {
 	GetModuleName() string
-	Create(runtime RuntimeMgr) (Module, error)
+	Create(bus Bus) (Module, error)
 }
 
 type ConfigurableModule interface {

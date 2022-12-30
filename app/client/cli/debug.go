@@ -192,7 +192,7 @@ func initDebug(remoteCLIURL string) {
 
 		debugCurrentHeightProvider := debugCHP.NewDebugCurrentHeightProvider(0)
 
-		p2pM, err := p2p.CreateWithProviders(runtimeMgr, debugAddressBookProvider, debugCurrentHeightProvider)
+		p2pM, err := p2p.CreateWithProviders(runtimeMgr.GetBus(), debugAddressBookProvider, debugCurrentHeightProvider)
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
 		}

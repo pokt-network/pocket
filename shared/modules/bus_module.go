@@ -17,6 +17,8 @@ type Bus interface {
 	GetBusEvent() *messaging.PocketEnvelope
 	GetEventBus() EventsChannel
 
+	RegisterModule(module Module) error
+
 	// Pocket modules
 	GetPersistenceModule() PersistenceModule
 	GetP2PModule() P2PModule
