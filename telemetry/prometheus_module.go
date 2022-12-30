@@ -30,28 +30,28 @@ type PrometheusTelemetryModule struct {
 	gaugeVectors map[string]prometheus.GaugeVec
 }
 
-const (
-	prometheusModuleName = "prometheus"
-)
-
-func CreatePrometheusTelemetryModule(runtime modules.RuntimeMgr) (modules.Module, error) {
+func CreatePrometheusTelemetryModule(bus modules.Bus) (modules.Module, error) {
 	var m PrometheusTelemetryModule
-	return m.Create(runtime)
+	return m.Create(bus)
 }
 
-func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	cfg := runtime.GetConfig()
+func (*PrometheusTelemetryModule) Create(bus modules.Bus) (modules.Module, error) {
+	m := &PrometheusTelemetryModule{}
+	bus.RegisterModule(m)
+
+	runtimeMgr := bus.GetRuntimeMgr()
+	cfg := runtimeMgr.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
 		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
 	telemetryCfg := cfg.GetTelemetryConfig()
 
-	return &PrometheusTelemetryModule{
-		config:       telemetryCfg,
-		counters:     map[string]prometheus.Counter{},
-		gauges:       map[string]prometheus.Gauge{},
-		gaugeVectors: map[string]prometheus.GaugeVec{},
-	}, nil
+	m.config = telemetryCfg
+	m.counters = map[string]prometheus.Counter{}
+	m.gauges = map[string]prometheus.Gauge{}
+	m.gaugeVectors = map[string]prometheus.GaugeVec{}
+
+	return m, nil
 }
 
 func (m *PrometheusTelemetryModule) Start() error {
@@ -74,7 +74,7 @@ func (m *PrometheusTelemetryModule) SetBus(bus modules.Bus) {
 }
 
 func (m *PrometheusTelemetryModule) GetModuleName() string {
-	return prometheusModuleName
+	return fmt.Sprintf("%s_prometheus", modules.TelemetryModuleName)
 }
 
 func (m *PrometheusTelemetryModule) GetBus() modules.Bus {

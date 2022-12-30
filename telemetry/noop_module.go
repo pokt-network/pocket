@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/shared/modules"
@@ -17,35 +18,33 @@ type NoopTelemetryModule struct {
 	bus modules.Bus
 }
 
-const (
-	noOpModuleName = "noOP"
-)
-
-func NOOP() {
-	log.Printf("\n[telemetry=noop]\n")
+func NOOP(args ...interface{}) {
+	log.Printf("\n[telemetry=noop][%s]\n", args)
 }
 
-func CreateNoopTelemetryModule(runtime modules.RuntimeMgr) (modules.Module, error) {
+func CreateNoopTelemetryModule(bus modules.Bus) (modules.Module, error) {
 	var m NoopTelemetryModule
-	return m.Create(runtime)
+	return m.Create(bus)
 }
 
-func (m *NoopTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	return &NoopTelemetryModule{}, nil
+func (*NoopTelemetryModule) Create(bus modules.Bus) (modules.Module, error) {
+	m := &NoopTelemetryModule{}
+	bus.RegisterModule(m)
+	return m, nil
 }
 
 func (m *NoopTelemetryModule) Start() error {
-	NOOP()
+	NOOP("Start")
 	return nil
 }
 
 func (m *NoopTelemetryModule) Stop() error {
-	NOOP()
+	NOOP("Stop")
 	return nil
 }
 
 func (m *NoopTelemetryModule) GetModuleName() string {
-	return noOpModuleName
+	return fmt.Sprintf("%s_noOP", modules.TelemetryModuleName)
 }
 
 func (m *NoopTelemetryModule) SetBus(bus modules.Bus) {
@@ -68,7 +67,7 @@ func (m *NoopTelemetryModule) GetEventMetricsAgent() modules.EventMetricsAgent {
 }
 
 func (m *NoopTelemetryModule) EmitEvent(namespace, event_name string, labels ...any) {
-	NOOP()
+	NOOP("EmitEvent", "namespace", namespace, "event_name", event_name, "labels", labels)
 }
 
 func (m *NoopTelemetryModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {
@@ -76,47 +75,47 @@ func (m *NoopTelemetryModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {
 }
 
 func (p *NoopTelemetryModule) CounterRegister(name string, description string) {
-	NOOP()
+	NOOP("CounterRegister", "name", name, "description", description)
 }
 
 func (p *NoopTelemetryModule) CounterIncrement(name string) {
-	NOOP()
+	NOOP("CounterIncrement", "name", name)
 }
 
 func (p *NoopTelemetryModule) GaugeRegister(name string, description string) {
-	NOOP()
+	NOOP("GaugeRegister", "name", name, "description", description)
 }
 
 func (p *NoopTelemetryModule) GaugeSet(name string, value float64) (prometheus.Gauge, error) {
-	NOOP()
+	NOOP("GaugeSet", "name", name, "value", value)
 	return nil, nil
 }
 
 func (p *NoopTelemetryModule) GaugeIncrement(name string) (prometheus.Gauge, error) {
-	NOOP()
+	NOOP("GaugeIncrement", "name", name)
 	return nil, nil
 }
 
 func (p *NoopTelemetryModule) GaugeDecrement(name string) (prometheus.Gauge, error) {
-	NOOP()
+	NOOP("GaugeDecrement", "name", name)
 	return nil, nil
 }
 
 func (p *NoopTelemetryModule) GaugeAdd(name string, value float64) (prometheus.Gauge, error) {
-	NOOP()
+	NOOP("GaugeAdd", "name", name, "value", value)
 	return nil, nil
 }
 
 func (p *NoopTelemetryModule) GaugeSub(name string, value float64) (prometheus.Gauge, error) {
-	NOOP()
+	NOOP("GaugeSub", "name", name, "value", value)
 	return nil, nil
 }
 
 func (p *NoopTelemetryModule) GetGaugeVec(name string) (prometheus.GaugeVec, error) {
-	NOOP()
+	NOOP("GetGaugeVec", "name", name)
 	return prometheus.GaugeVec{}, nil
 }
 
 func (p *NoopTelemetryModule) GaugeVecRegister(namespace, module, name, description string, labels []string) {
-	NOOP()
+	NOOP("GaugeVecRegister", "namespace", namespace, "module", module, "name", name, "description", description, "labels", labels)
 }
