@@ -4,6 +4,7 @@ import (
 	"crypto/ed25519"
 	"encoding/binary"
 	"fmt"
+	"log"
 	"sort"
 	"sync"
 	"testing"
@@ -99,6 +100,11 @@ func createP2PModules(t *testing.T, buses []modules.Bus) (p2pModules map[string]
 	p2pModules = make(map[string]*p2pModule, len(buses))
 	for i := range buses {
 		p2pMod, err := Create(buses[i])
+
+		// normally it's not necessary to set the bus explicitly since it's done automatically when the Create calls `bus.RegisterModule`
+		// but since we're mocking the bus, we need to do it manually
+		p2pMod.SetBus(buses[i])
+
 		require.NoError(t, err)
 		p2pModules[validatorId(i+1)] = p2pMod.(*p2pModule)
 	}
@@ -147,6 +153,7 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) modules.Bus {
 	mockBus := modulesMock.NewMockBus(ctrl)
 	mockBus.EXPECT().GetRuntimeMgr().Return(runtimeMgr).AnyTimes()
 	mockBus.EXPECT().RegisterModule(gomock.Any()).AnyTimes()
+	mockBus.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
 	return mockBus
 }
 
@@ -181,17 +188,14 @@ func createMockGenesisState(t *testing.T, valKeys []cryptoPocket.PrivateKey) mod
 }
 
 // Bus Mock - needed to return the appropriate modules when accessed
-func prepareBusMock(t *testing.T,
-	busMock *modulesMock.MockBus,
-	consensusMock *modulesMock.MockConsensusModule,
+func prepareBusMock(busMock *modulesMock.MockBus,
 	persistenceMock *modulesMock.MockPersistenceModule,
+	consensusMock *modulesMock.MockConsensusModule,
 	telemetryMock *modulesMock.MockTelemetryModule,
-) *modulesMock.MockBus {
-	busMock.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
-	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+) {
 	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
+	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
 	busMock.EXPECT().GetTelemetryModule().Return(telemetryMock).AnyTimes()
-	return busMock
 }
 
 // Consensus mock - only needed for validatorMap access
@@ -200,8 +204,10 @@ func prepareConsensusMock(t *testing.T, bus modules.Bus, genesisState modules.Ge
 	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
 
-	bus.RegisterModule(consensusMock)
 	consensusMock.EXPECT().GetBus().Return(bus).AnyTimes()
+	consensusMock.EXPECT().SetBus(bus).AnyTimes()
+	consensusMock.EXPECT().GetModuleName().Return(modules.ConsensusModuleName).AnyTimes()
+	bus.RegisterModule(consensusMock)
 
 	return consensusMock
 }
@@ -217,25 +223,29 @@ func preparePersistenceMock(t *testing.T, bus modules.Bus, genesisState modules.
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(readContextMock, nil).AnyTimes()
 	readContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
-	bus.RegisterModule(persistenceMock)
 	persistenceMock.EXPECT().GetBus().Return(bus).AnyTimes()
+	persistenceMock.EXPECT().SetBus(bus).AnyTimes()
+	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
+	bus.RegisterModule(persistenceMock)
 
 	return persistenceMock
 }
 
 // Telemetry mock - Needed to help with proper counts for number of expected network writes
-func prepareTelemetryMock(t *testing.T, bus modules.Bus, wg *sync.WaitGroup, expectedNumNetworkWrites int) *modulesMock.MockTelemetryModule {
+func prepareTelemetryMock(t *testing.T, bus modules.Bus, valId string, wg *sync.WaitGroup, expectedNumNetworkWrites int) *modulesMock.MockTelemetryModule {
 	ctrl := gomock.NewController(t)
 	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
 
 	timeSeriesAgentMock := prepareNoopTimeSeriesAgentMock(t)
-	eventMetricsAgentMock := prepareEventMetricsAgentMock(t, wg, expectedNumNetworkWrites)
+	eventMetricsAgentMock := prepareEventMetricsAgentMock(t, valId, wg, expectedNumNetworkWrites)
 
 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
 
-	bus.RegisterModule(telemetryMock)
+	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
 	telemetryMock.EXPECT().GetBus().Return(bus).AnyTimes()
+	telemetryMock.EXPECT().SetBus(bus).AnyTimes()
+	bus.RegisterModule(telemetryMock)
 
 	return telemetryMock
 }
@@ -252,12 +262,13 @@ func prepareNoopTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAge
 }
 
 // Events metric mock - Needed to help with proper counts for number of expected network writes
-func prepareEventMetricsAgentMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkWrites int) *modulesMock.MockEventMetricsAgent {
+func prepareEventMetricsAgentMock(t *testing.T, valId string, wg *sync.WaitGroup, expectedNumNetworkWrites int) *modulesMock.MockEventMetricsAgent {
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
 
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Eq(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).Do(func(n, e interface{}, l ...interface{}) {
+		log.Printf("[valId: %s] Write\n", valId)
 		wg.Done()
 	}).Times(expectedNumNetworkWrites)
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Not(telemetry.P2P_RAINTREE_MESSAGE_EVENT_METRIC_SEND_LABEL), gomock.Any()).AnyTimes()
@@ -267,13 +278,14 @@ func prepareEventMetricsAgentMock(t *testing.T, wg *sync.WaitGroup, expectedNumN
 
 // Network transport mock - used to simulate reading to/from the network via the main events channel
 // as well as counting the number of expected reads
-func prepareConnMock(t *testing.T, wg *sync.WaitGroup, expectedNumNetworkReads int) typesP2P.Transport {
+func prepareConnMock(t *testing.T, valId string, wg *sync.WaitGroup, expectedNumNetworkReads int) typesP2P.Transport {
 	testChannel := make(chan []byte, testChannelSize)
 	ctrl := gomock.NewController(t)
 	connMock := mocksP2P.NewMockTransport(ctrl)
 
 	connMock.EXPECT().Read().DoAndReturn(func() ([]byte, error) {
 		wg.Done()
+		log.Printf("[valId: %s] Read\n", valId)
 		data := <-testChannel
 		return data, nil
 	}).Times(expectedNumNetworkReads + 1) // +1 is necessary because there is one extra read of empty data by every channel when it starts

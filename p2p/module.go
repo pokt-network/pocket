@@ -174,7 +174,6 @@ func getAddrBookProvider(m *p2pModule) providers.AddrBookProvider {
 func getCurrentHeightProvider(m *p2pModule) providers.CurrentHeightProvider {
 	var currentHeightProvider providers.CurrentHeightProvider
 	if m.injectedCurrentHeightProvider == nil {
-		fmt.Printf("m.GetBus(): %v\n", m.GetBus())
 		currentHeightProvider = m.GetBus().GetConsensusModule()
 	} else {
 		currentHeightProvider = m.injectedCurrentHeightProvider

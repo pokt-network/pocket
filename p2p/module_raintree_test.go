@@ -4,6 +4,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
 	"sync"
 	"testing"
 
@@ -215,21 +218,40 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	runtimeConfigs := createMockRuntimeMgrs(t, numValidators)
 	busMocks := createMockBuses(t, runtimeConfigs)
 
+	valIds := make([]string, 0, numValidators)
+	for key := range networkSimulationConfig {
+		valIds = append(valIds, key)
+	}
+
+	sort.Slice(valIds, func(i, j int) bool {
+		iId := extractNumericId(valIds[i])
+		jId := extractNumericId(valIds[j])
+		return iId < jId
+	})
+
 	// Create connection and bus mocks along with a shared WaitGroup to track the number of expected
 	// reads and writes throughout the mocked local network
 	var wg sync.WaitGroup
 	connMocks := make(map[string]typesP2P.Transport)
 	count := 0
-	for valId, expectedCall := range networkSimulationConfig {
-		wg.Add(expectedCall.numNetworkReads + 1)
-		connMocks[valId] = prepareConnMock(t, &wg, expectedCall.numNetworkReads)
+	for _, valId := range valIds {
+		expectedCall := networkSimulationConfig[valId]
+		expectedReads := expectedCall.numNetworkReads + 1
+		expectedWrites := expectedCall.numNetworkWrites
+		log.Printf("[valId: %s] expected reads: %d\n", valId, expectedReads)
+		log.Printf("[valId: %s] expected writes: %d\n", valId, expectedWrites)
 
-		wg.Add(expectedCall.numNetworkWrites)
+		wg.Add(expectedReads)
+		connMocks[valId] = prepareConnMock(t, valId, &wg, expectedCall.numNetworkReads)
+
+		wg.Add(expectedWrites)
+
 		persistenceMock := preparePersistenceMock(t, busMocks[count], runtimeConfigs[0].GetGenesis())
 		consensusMock := prepareConsensusMock(t, busMocks[count], runtimeConfigs[0].GetGenesis())
-		telemetryMock := prepareTelemetryMock(t, busMocks[count], &wg, expectedCall.numNetworkWrites)
+		telemetryMock := prepareTelemetryMock(t, busMocks[count], valId, &wg, expectedWrites)
 
-		prepareBusMock(t, busMocks[count].(*mock_modules.MockBus), consensusMock, persistenceMock, telemetryMock)
+		prepareBusMock(busMocks[count].(*mock_modules.MockBus), persistenceMock, consensusMock, telemetryMock)
+
 		count++
 	}
 
@@ -237,7 +259,6 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	p2pModules := createP2PModules(t, busMocks)
 	for validatorId, p2pMod := range p2pModules {
 		p2pMod.listener = connMocks[validatorId]
-		// p2pMod.SetBus(busMocks[validatorId])
 		p2pMod.Start()
 		for _, peer := range p2pMod.network.GetAddrBook() {
 			peer.Dialer = connMocks[peer.ServiceUrl]
@@ -252,4 +273,16 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	p := &anypb.Any{}
 	p2pMod := p2pModules[origNode]
 	require.NoError(t, p2pMod.Broadcast(p))
+}
+
+func extractNumericId(valId string) int64 {
+	re := regexp.MustCompile(`\d+`)
+	numStr := re.FindString(valId)
+
+	num, err := strconv.ParseInt(numStr, 10, 64)
+	if err != nil {
+		return -1
+	}
+
+	return num
 }

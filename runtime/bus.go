@@ -77,13 +77,14 @@ func (m *bus) GetConsensusModule() modules.ConsensusModule {
 }
 
 func (m *bus) GetTelemetryModule() modules.TelemetryModule {
-	telemetryModules := []string{"telemetry_prometheus", "telemetry_noOP"}
+	telemetryModules := []string{"telemetry", "telemetry_prometheus", "telemetry_noOP"}
 	for _, moduleName := range telemetryModules {
 		telemetryMod, ok := m.modulesMap[moduleName]
 		if ok {
 			return telemetryMod.(modules.TelemetryModule)
 		}
 	}
+	log.Printf("[WARNING] telemetry module not found, using noop telemetry module instead")
 	// this should happen only if called from the client
 	noopModule, err := telemetry.CreateNoopTelemetryModule(m)
 	if err != nil {

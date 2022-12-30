@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"sync"
 	"time"
 
 	"github.com/pokt-network/pocket/p2p/providers"
@@ -32,7 +33,8 @@ type rainTreeNetwork struct {
 	// TODO(#388): generalize to use the shared `FIFOMempool` type (in `utility/types/mempool.go` at the time of writing) in here as well for this.
 	nonceSet         map[uint64]struct{}
 	nonceList        []uint64
-	mampoolMaxNonces uint64
+	mempoolMaxNonces uint64
+	nonceSetRWMutex  sync.RWMutex
 }
 
 func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P.AddrBook, p2pCfg modules.P2PConfig) typesP2P.Network {
@@ -47,7 +49,7 @@ func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P
 		peersManager:     pm,
 		nonceSet:         make(map[uint64]struct{}),
 		nonceList:        make([]uint64, 0, mempoolMaxNonces),
-		mampoolMaxNonces: mempoolMaxNonces,
+		mempoolMaxNonces: mempoolMaxNonces,
 	}
 
 	return typesP2P.Network(n)
@@ -198,6 +200,8 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		}
 	}
 
+	n.nonceSetRWMutex.RLock()
+	defer n.nonceSetRWMutex.RUnlock()
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
 	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
@@ -215,9 +219,11 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		return nil, nil
 	}
 
+	n.nonceSetRWMutex.Lock()
+	defer n.nonceSetRWMutex.Unlock()
 	n.nonceSet[rainTreeMsg.Nonce] = struct{}{}
 	n.nonceList = append(n.nonceList, rainTreeMsg.Nonce)
-	if uint64(len(n.nonceList)) > n.mampoolMaxNonces {
+	if uint64(len(n.nonceList)) > n.mempoolMaxNonces {
 		// removing the oldest nonce and the oldest key from the slice
 		delete(n.nonceSet, n.nonceList[0])
 		n.nonceList = n.nonceList[1:]
