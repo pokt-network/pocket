@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
-	"github.com/pokt-network/pocket/p2p/types"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 )
@@ -173,7 +172,7 @@ const (
 
 type addressBookEvent struct {
 	eventType addressBookEventType
-	peer      *types.NetworkPeer
+	peer      *typesP2P.NetworkPeer
 }
 
 type networkView struct {
