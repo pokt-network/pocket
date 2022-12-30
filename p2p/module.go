@@ -20,10 +20,6 @@ import (
 
 var _ modules.P2PModule = &p2pModule{}
 
-const (
-	p2pModuleName = "p2p"
-)
-
 type p2pModule struct {
 	bus    modules.Bus
 	p2pCfg modules.P2PConfig // TODO (olshansky): to remove this since it'll be available via the bus
@@ -37,15 +33,17 @@ type p2pModule struct {
 	injectedCurrentHeightProvider providers.CurrentHeightProvider
 }
 
-func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	return new(p2pModule).Create(runtimeMgr)
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(p2pModule).Create(bus)
 }
 
-// IMPROVE: need to define a better pattern for dependency injection. Currently we are probably limiting ourselves by having a common constructor `Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error)` for all modules.
-func CreateWithProviders(runtimeMgr modules.RuntimeMgr, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
+// IMPROVE: need to define a better pattern for dependency injection. Currently we are probably limiting ourselves by having a common constructor `Create(bus modules.Bus) (modules.Module, error)` for all modules.
+func CreateWithProviders(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
 	log.Println("Creating network module")
-	var m *p2pModule
+	m := &p2pModule{}
+	bus.RegisterModule(m)
 
+	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
 		return nil, fmt.Errorf("config validation failed: %w", err)
@@ -56,12 +54,10 @@ func CreateWithProviders(runtimeMgr modules.RuntimeMgr, addrBookProvider provide
 	if err != nil {
 		return nil, err
 	}
-	m = &p2pModule{
-		p2pCfg:                        p2pCfg,
-		address:                       privateKey.Address(),
-		injectedAddrBookProvider:      addrBookProvider,
-		injectedCurrentHeightProvider: currentHeightProvider,
-	}
+	m.p2pCfg = p2pCfg
+	m.address = privateKey.Address()
+	m.injectedAddrBookProvider = addrBookProvider
+	m.injectedCurrentHeightProvider = currentHeightProvider
 
 	if !p2pCfg.GetIsClientOnly() {
 		l, err := transport.CreateListener(p2pCfg)
@@ -74,10 +70,12 @@ func CreateWithProviders(runtimeMgr modules.RuntimeMgr, addrBookProvider provide
 	return m, nil
 }
 
-func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+func (*p2pModule) Create(bus modules.Bus) (modules.Module, error) {
 	log.Println("Creating network module")
-	var m *p2pModule
+	m := &p2pModule{}
+	bus.RegisterModule(m)
 
+	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
 		return nil, fmt.Errorf("config validation failed: %w", err)
@@ -88,10 +86,8 @@ func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) 
 	if err != nil {
 		return nil, err
 	}
-	m = &p2pModule{
-		p2pCfg:  p2pCfg,
-		address: privateKey.Address(),
-	}
+	m.p2pCfg = p2pCfg
+	m.address = privateKey.Address()
 
 	if !p2pCfg.GetIsClientOnly() {
 		l, err := transport.CreateListener(p2pCfg)
@@ -119,7 +115,7 @@ func (m *p2pModule) GetBus() modules.Bus {
 }
 
 func (m *p2pModule) GetModuleName() string {
-	return p2pModuleName
+	return modules.P2PModuleName
 }
 
 func (m *p2pModule) Start() error {
@@ -178,6 +174,7 @@ func getAddrBookProvider(m *p2pModule) providers.AddrBookProvider {
 func getCurrentHeightProvider(m *p2pModule) providers.CurrentHeightProvider {
 	var currentHeightProvider providers.CurrentHeightProvider
 	if m.injectedCurrentHeightProvider == nil {
+		fmt.Printf("m.GetBus(): %v\n", m.GetBus())
 		currentHeightProvider = m.GetBus().GetConsensusModule()
 	} else {
 		currentHeightProvider = m.injectedCurrentHeightProvider

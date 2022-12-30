@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	mock_modules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -213,28 +213,31 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	// Configure & prepare test module
 	numValidators := len(networkSimulationConfig)
 	runtimeConfigs := createMockRuntimeMgrs(t, numValidators)
+	busMocks := createMockBuses(t, runtimeConfigs)
 
 	// Create connection and bus mocks along with a shared WaitGroup to track the number of expected
 	// reads and writes throughout the mocked local network
 	var wg sync.WaitGroup
 	connMocks := make(map[string]typesP2P.Transport)
-	busMocks := make(map[string]modules.Bus)
+	count := 0
 	for valId, expectedCall := range networkSimulationConfig {
 		wg.Add(expectedCall.numNetworkReads + 1)
 		connMocks[valId] = prepareConnMock(t, &wg, expectedCall.numNetworkReads)
 
 		wg.Add(expectedCall.numNetworkWrites)
-		consensusMock := prepareConsensusMock(t, runtimeConfigs[0].GetGenesis())
-		persistenceMock := preparePersistenceMock(t, runtimeConfigs[0].GetGenesis())
-		telemetryMock := prepareTelemetryMock(t, &wg, expectedCall.numNetworkWrites)
-		busMocks[valId] = prepareBusMock(t, consensusMock, persistenceMock, telemetryMock)
+		persistenceMock := preparePersistenceMock(t, busMocks[count], runtimeConfigs[0].GetGenesis())
+		consensusMock := prepareConsensusMock(t, busMocks[count], runtimeConfigs[0].GetGenesis())
+		telemetryMock := prepareTelemetryMock(t, busMocks[count], &wg, expectedCall.numNetworkWrites)
+
+		prepareBusMock(t, busMocks[count].(*mock_modules.MockBus), consensusMock, persistenceMock, telemetryMock)
+		count++
 	}
 
 	// Inject the connection and bus mocks into the P2P modules
-	p2pModules := createP2PModules(t, runtimeConfigs)
+	p2pModules := createP2PModules(t, busMocks)
 	for validatorId, p2pMod := range p2pModules {
 		p2pMod.listener = connMocks[validatorId]
-		p2pMod.SetBus(busMocks[validatorId])
+		// p2pMod.SetBus(busMocks[validatorId])
 		p2pMod.Start()
 		for _, peer := range p2pMod.network.GetAddrBook() {
 			peer.Dialer = connMocks[peer.ServiceUrl]
