@@ -92,13 +92,13 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 		TreesStoreDir:  "",
 	}))
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
-	_ = runtime.NewManager(cfg, genesisState)
+	runtimeMgr := runtime.NewManager(cfg, genesisState)
+	bus, _ := runtime.CreateBus(runtimeMgr)
 
-	var persistenceMod modules.Module
-	// persistenceMod, err := persistence.Create(interface.(modules.Bus))
-	// if err != nil {
-	// 	log.Fatalf("Error creating persistence module: %s", err)
-	// }
+	persistenceMod, err := persistence.Create(bus)
+	if err != nil {
+		log.Fatalf("Error creating persistence module: %s", err)
+	}
 	return persistenceMod.(modules.PersistenceModule)
 }
 
