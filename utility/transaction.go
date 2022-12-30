@@ -91,7 +91,7 @@ func (u *UtilityContext) AnteHandleMessage(tx *typesUtil.Transaction) (msg types
 	if err := u.SetAccountAmount(address, accountAmount); err != nil {
 		return nil, signer, err
 	}
-	if err := u.AddPoolAmount(coreTypes.PoolNames_POOL_NAMES_FEE_COLLECTOR.FriendlyName(), fee); err != nil {
+	if err := u.AddPoolAmount(coreTypes.Pools_POOLS_FEE_COLLECTOR.FriendlyName(), fee); err != nil {
 		return nil, "", err
 	}
 	msg.SetSigner(address)
@@ -184,7 +184,7 @@ func (u *UtilityContext) HandleStakeMessage(message *typesUtil.MessageStake) typ
 		return err
 	}
 	// move funds from account to pool
-	if err = u.AddPoolAmount(coreTypes.PoolNames_POOL_NAMES_APP_STAKE.FriendlyName(), amount); err != nil {
+	if err = u.AddPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
 		return err
 	}
 	var er error
@@ -248,7 +248,7 @@ func (u *UtilityContext) HandleEditStakeMessage(message *typesUtil.MessageEditSt
 		return err
 	}
 	// move funds from account to pool
-	if err := u.AddPoolAmount(coreTypes.PoolNames_POOL_NAMES_APP_STAKE.FriendlyName(), amount); err != nil {
+	if err := u.AddPoolAmount(coreTypes.Pools_POOLS_APP_STAKE.FriendlyName(), amount); err != nil {
 		return err
 	}
 	store := u.Store()

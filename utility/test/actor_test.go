@@ -488,13 +488,13 @@ func TestUtilityContext_UnstakeActorsThatAreReady(t *testing.T) {
 			var poolName string
 			switch actorType {
 			case coreTypes.ActorType_ACTOR_TYPE_APP:
-				poolName = coreTypes.PoolNames_POOL_NAMES_APP_STAKE.FriendlyName()
+				poolName = coreTypes.Pools_POOLS_APP_STAKE.FriendlyName()
 			case coreTypes.ActorType_ACTOR_TYPE_VAL:
-				poolName = coreTypes.PoolNames_POOL_NAMES_VALIDATOR_STAKE.FriendlyName()
+				poolName = coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName()
 			case coreTypes.ActorType_ACTOR_TYPE_FISH:
-				poolName = coreTypes.PoolNames_POOL_NAMES_FISHERMAN_STAKE.FriendlyName()
+				poolName = coreTypes.Pools_POOLS_FISHERMAN_STAKE.FriendlyName()
 			case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
-				poolName = coreTypes.PoolNames_POOL_NAMES_SERVICE_NODE_STAKE.FriendlyName()
+				poolName = coreTypes.Pools_POOLS_SERVICE_NODE_STAKE.FriendlyName()
 			default:
 				t.Fatalf("unexpected actor type %s", actorType.String())
 			}

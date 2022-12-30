@@ -218,16 +218,16 @@ func (u *UtilityContext) UnstakeActorsThatAreReady() (err typesUtil.Error) {
 		switch actorType {
 		case coreTypes.ActorType_ACTOR_TYPE_APP:
 			readyToUnstake, er = store.GetAppsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
-			poolName = coreTypes.PoolNames_POOL_NAMES_APP_STAKE.FriendlyName()
+			poolName = coreTypes.Pools_POOLS_APP_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_FISH:
 			readyToUnstake, er = store.GetFishermenReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
-			poolName = coreTypes.PoolNames_POOL_NAMES_FISHERMAN_STAKE.FriendlyName()
+			poolName = coreTypes.Pools_POOLS_FISHERMAN_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_SERVICENODE:
 			readyToUnstake, er = store.GetServiceNodesReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
-			poolName = coreTypes.PoolNames_POOL_NAMES_SERVICE_NODE_STAKE.FriendlyName()
+			poolName = coreTypes.Pools_POOLS_SERVICE_NODE_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_VAL:
 			readyToUnstake, er = store.GetValidatorsReadyToUnstake(latestHeight, int32(typesUtil.StakeStatus_Unstaking))
-			poolName = coreTypes.PoolNames_POOL_NAMES_VALIDATOR_STAKE.FriendlyName()
+			poolName = coreTypes.Pools_POOLS_VALIDATOR_STAKE.FriendlyName()
 		case coreTypes.ActorType_ACTOR_TYPE_UNSPECIFIED:
 			continue
 		}
@@ -296,7 +296,7 @@ func (u *UtilityContext) UnstakeActorPausedBefore(pausedBeforeHeight int64, Acto
 }
 
 func (u *UtilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error {
-	feePoolName := coreTypes.PoolNames_POOL_NAMES_FEE_COLLECTOR.FriendlyName()
+	feePoolName := coreTypes.Pools_POOLS_FEE_COLLECTOR.FriendlyName()
 	feesAndRewardsCollected, err := u.GetPoolAmount(feePoolName)
 	if err != nil {
 		return err
@@ -320,7 +320,7 @@ func (u *UtilityContext) HandleProposalRewards(proposer []byte) typesUtil.Error 
 	if err = u.AddAccountAmount(proposer, amountToProposer); err != nil {
 		return err
 	}
-	if err = u.AddPoolAmount(coreTypes.PoolNames_POOL_NAMES_DAO.FriendlyName(), amountToDAO); err != nil {
+	if err = u.AddPoolAmount(coreTypes.Pools_POOLS_DAO.FriendlyName(), amountToDAO); err != nil {
 		return err
 	}
 	return nil

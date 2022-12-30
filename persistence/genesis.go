@@ -57,25 +57,25 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 		Name     string
 		Getter   func() []*coreTypes.Actor
 		InsertFn func(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
-		Pool     coreTypes.PoolNames
+		Pool     coreTypes.Pools
 	}{
 		{
 			Name:     "app",
 			Getter:   state.GetApplications,
 			InsertFn: rwContext.InsertApp,
-			Pool:     coreTypes.PoolNames_POOL_NAMES_APP_STAKE,
+			Pool:     coreTypes.Pools_POOLS_APP_STAKE,
 		},
 		{
 			Name:     "serviceNode",
 			Getter:   state.GetServiceNodes,
 			InsertFn: rwContext.InsertServiceNode,
-			Pool:     coreTypes.PoolNames_POOL_NAMES_SERVICE_NODE_STAKE,
+			Pool:     coreTypes.Pools_POOLS_SERVICE_NODE_STAKE,
 		},
 		{
 			Name:     "fisherman",
 			Getter:   state.GetFishermen,
 			InsertFn: rwContext.InsertFisherman,
-			Pool:     coreTypes.PoolNames_POOL_NAMES_FISHERMAN_STAKE,
+			Pool:     coreTypes.Pools_POOLS_FISHERMAN_STAKE,
 		},
 		{
 			Name:   "validator",
@@ -83,7 +83,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 			InsertFn: func(address, publicKey, output []byte, paused bool, status int32, serviceURL, stakedTokens string, chains []string, pausedHeight, unstakingHeight int64) error {
 				return rwContext.InsertValidator(address, publicKey, output, paused, status, serviceURL, stakedTokens, pausedHeight, unstakingHeight)
 			},
-			Pool: coreTypes.PoolNames_POOL_NAMES_VALIDATOR_STAKE,
+			Pool: coreTypes.Pools_POOLS_VALIDATOR_STAKE,
 		},
 	}
 
