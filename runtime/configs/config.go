@@ -19,35 +19,35 @@ func NewDefaultConfig(options ...func(*Config)) *Config {
 	cfg := &Config{
 		RootDirectory: "/go/src/github.com/pocket-network",
 		Consensus: &ConsensusConfig{
-			MaxMempoolBytes: 500000000,
+			MaxMempoolBytes: defaults.DefaultConsensusMaxMempoolBytes,
 			PacemakerConfig: &PacemakerConfig{
-				TimeoutMsec:               5000,
-				Manual:                    true,
-				DebugTimeBetweenStepsMsec: 1000,
+				TimeoutMsec:               defaults.DefaultPacemakerTimeoutMsec,
+				Manual:                    defaults.DefaultPacemakerManual,
+				DebugTimeBetweenStepsMsec: defaults.DefaultPacemakerDebugTimeBetweenStepsMsec,
 			},
 		},
 		Utility: &UtilityConfig{
-			MaxMempoolTransactionBytes: 1024 ^ 3, // 1GB V0 defaults
-			MaxMempoolTransactions:     9000,
+			MaxMempoolTransactionBytes: defaults.DefaultUtilityMaxMempoolTransactionBytes,
+			MaxMempoolTransactions:     defaults.DefaultUtilityMaxMempoolTransactions,
 		},
 		Persistence: &PersistenceConfig{
-			PostgresUrl:    "postgres://postgres:postgres@pocket-db:5432/postgres",
-			BlockStorePath: "/var/blockstore",
+			PostgresUrl:    defaults.DefaultPersistencePostgresUrl,
+			BlockStorePath: defaults.DefaultPersistenceBlockStorePath,
 		},
 		P2P: &P2PConfig{
-			ConsensusPort:         8080,
-			UseRainTree:           true,
-			IsEmptyConnectionType: false,
+			ConsensusPort:         defaults.DefaultP2PConsensusPort,
+			UseRainTree:           defaults.DefaultP2PUseRainTree,
+			IsEmptyConnectionType: defaults.DefaultP2PIsEmptyConnectionType,
 			MaxMempoolCount:       defaults.DefaultP2PMaxMempoolCount,
 		},
 		Telemetry: &TelemetryConfig{
-			Enabled:  true,
-			Address:  "0.0.0.0:9000",
-			Endpoint: "/metrics",
+			Enabled:  defaults.DefaultTelemetryEnabled,
+			Address:  defaults.DefaultTelemetryAddress,
+			Endpoint: defaults.DefaultTelemetryEndpoint,
 		},
 		Logger: &LoggerConfig{
-			Level:  "debug",
-			Format: "pretty",
+			Level:  defaults.DefaultLoggerLevel,
+			Format: defaults.DefaultLoggerFormat,
 		},
 		RPC: &RPCConfig{
 			Timeout: defaults.DefaultRpcTimeout,
