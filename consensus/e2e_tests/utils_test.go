@@ -85,7 +85,7 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 func CreateTestConsensusPocketNodes(
 	t *testing.T,
 	runtimeMgrs []runtime.Manager,
-	testChannel modules.EventsChannel,
+	eventsChannel modules.EventsChannel,
 ) (pocketNodes IdToNodeMapping) {
 	pocketNodes = make(IdToNodeMapping, len(runtimeMgrs))
 	// TODO(design): The order here is important in order for NodeId to be set correctly below.
@@ -98,7 +98,7 @@ func CreateTestConsensusPocketNodes(
 		return pk.Address().String() < pk2.Address().String()
 	})
 	for i, runtimeMgr := range runtimeMgrs {
-		pocketNode := CreateTestConsensusPocketNode(t, &runtimeMgr, testChannel)
+		pocketNode := CreateTestConsensusPocketNode(t, &runtimeMgr, eventsChannel)
 		// TODO(olshansky): Figure this part out.
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
@@ -108,7 +108,7 @@ func CreateTestConsensusPocketNodes(
 func CreateTestConsensusPocketNodesNew(
 	t *testing.T,
 	runtimeMgrs []runtime.Manager,
-	testChannel modules.EventsChannel,
+	eventsChannel modules.EventsChannel,
 ) (pocketNodes IdToNodeMapping) {
 	pocketNodes = make(IdToNodeMapping, len(runtimeMgrs))
 	// TODO(design): The order here is important in order for NodeId to be set correctly below.
@@ -121,7 +121,7 @@ func CreateTestConsensusPocketNodesNew(
 		return pk.Address().String() < pk2.Address().String()
 	})
 	for i, runtimeMgr := range runtimeMgrs {
-		pocketNode := CreateTestConsensusPocketNode(t, &runtimeMgr, testChannel)
+		pocketNode := CreateTestConsensusPocketNode(t, &runtimeMgr, eventsChannel)
 		// TODO(olshansky): Figure this part out.
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
@@ -132,18 +132,18 @@ func CreateTestConsensusPocketNodesNew(
 func CreateTestConsensusPocketNode(
 	t *testing.T,
 	runtimeMgr *runtime.Manager,
-	testChannel modules.EventsChannel,
+	eventsChannel modules.EventsChannel,
 ) *shared.Node {
 	consensusMod, err := consensus.Create(runtimeMgr)
 	require.NoError(t, err)
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
-	persistenceMock := basePersistenceMock(t, testChannel)
-	p2pMock := baseP2PMock(t, testChannel)
-	utilityMock := baseUtilityMock(t, testChannel, runtimeMgr.GetGenesis())
-	telemetryMock := baseTelemetryMock(t, testChannel)
-	loggerMock := baseLoggerMock(t, testChannel)
-	rpcMock := baseRpcMock(t, testChannel)
+	persistenceMock := basePersistenceMock(t, eventsChannel)
+	p2pMock := baseP2PMock(t, eventsChannel)
+	utilityMock := baseUtilityMock(t, eventsChannel, runtimeMgr.GetGenesis())
+	telemetryMock := baseTelemetryMock(t, eventsChannel)
+	loggerMock := baseLoggerMock(t, eventsChannel)
+	rpcMock := baseRpcMock(t, eventsChannel)
 
 	bus, err := shared.CreateBus(runtimeMgr, persistenceMock, p2pMock, utilityMock, consensusMod.(modules.ConsensusModule), telemetryMock, loggerMock, rpcMock)
 
@@ -220,7 +220,7 @@ func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 func WaitForNetworkConsensusMessages(
 	t *testing.T,
 	clock *clock.Mock,
-	testChannel modules.EventsChannel,
+	eventsChannel modules.EventsChannel,
 	step typesCons.HotstuffStep,
 	msgType typesCons.HotstuffMessageType,
 	numExpectedMsgs int,
@@ -237,14 +237,14 @@ func WaitForNetworkConsensusMessages(
 	}
 
 	errorMessage := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(msgType)])
-	return waitForNetworkConsensusMessagesInternal(t, clock, testChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errorMessage)
+	return waitForNetworkConsensusMessagesInternal(t, clock, eventsChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errorMessage)
 }
 
 // IMPROVE(olshansky): Translate this to use generics.
 func waitForNetworkConsensusMessagesInternal(
 	t *testing.T,
 	clock *clock.Mock,
-	testChannel modules.EventsChannel,
+	eventsChannel modules.EventsChannel,
 	eventContentType string,
 	numExpectedMsgs int,
 	millis time.Duration,
@@ -269,15 +269,15 @@ func waitForNetworkConsensusMessagesInternal(
 loop:
 	for {
 		select {
-		case testEvent := <-testChannel:
-			if testEvent.GetContentType() != eventContentType {
-				unusedEvents = append(unusedEvents, &testEvent)
+		case nodeEvent := <-eventsChannel:
+			if nodeEvent.GetContentType() != eventContentType {
+				unusedEvents = append(unusedEvents, &nodeEvent)
 				continue
 			}
 
-			message := testEvent.Content
+			message := nodeEvent.Content
 			if message == nil || !includeFilter(message) {
-				unusedEvents = append(unusedEvents, &testEvent)
+				unusedEvents = append(unusedEvents, &nodeEvent)
 				continue
 			}
 
@@ -300,7 +300,7 @@ loop:
 		}
 	}
 	for _, u := range unusedEvents {
-		testChannel <- *u
+		eventsChannel <- *u
 	}
 	return
 }
@@ -331,7 +331,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel) *modulesMock.Moc
 }
 
 // Creates a p2p module mock with mock implementations of some basic functionality
-func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.MockP2PModule {
+func baseP2PMock(t *testing.T, eventsChannel modules.EventsChannel) *modulesMock.MockP2PModule {
 	ctrl := gomock.NewController(t)
 	p2pMock := modulesMock.NewMockP2PModule(ctrl)
 
@@ -341,14 +341,14 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.M
 		Broadcast(gomock.Any()).
 		Do(func(msg *anypb.Any) {
 			e := &messaging.PocketEnvelope{Content: msg}
-			testChannel <- *e
+			eventsChannel <- *e
 		}).
 		AnyTimes()
 	p2pMock.EXPECT().
 		Send(gomock.Any(), gomock.Any()).
 		Do(func(addr cryptoPocket.Address, msg *anypb.Any) {
 			e := &messaging.PocketEnvelope{Content: msg}
-			testChannel <- *e
+			eventsChannel <- *e
 		}).
 		AnyTimes()
 

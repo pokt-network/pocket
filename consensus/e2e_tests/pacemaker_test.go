@@ -30,8 +30,8 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	}
 
 	// Create & start test pocket nodes
-	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, testChannel)
+	eventsChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, eventsChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// // Debug message to start consensus by triggering next view.
@@ -43,7 +43,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// paceMakerTimeout
-	_, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
+	_, err := WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		assertNodeConsensusView(t, pocketId,
@@ -58,7 +58,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
 
 	// Check that a new round starts at the same height.
-	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
+	_, err = WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		assertNodeConsensusView(t, pocketId,
@@ -73,7 +73,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
 
 	// Check that a new round starts at the same height
-	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
+	_, err = WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		assertNodeConsensusView(t, pocketId,
@@ -88,7 +88,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	forcePacemakerTimeout(t, clockMock, paceMakerTimeout)
 
 	// Check that a new round starts at the same height.
-	newRoundMessages, err := WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
+	newRoundMessages, err := WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		assertNodeConsensusView(t, pocketId,
@@ -110,7 +110,7 @@ func TestTinyPacemakerTimeouts(t *testing.T) {
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Confirm we are at the next step
-	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Prepare, consensus.Propose, 1, 500)
+	_, err = WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, 1, 500)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		assertNodeConsensusView(t, pocketId,
@@ -130,8 +130,8 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	timeReminder(t, clockMock, 100*time.Millisecond)
 
 	// Create & start test pocket nodes
-	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeConfigs, testChannel)
+	eventsChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeConfigs, eventsChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Starting point
@@ -197,7 +197,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	P2PBroadcast(t, pocketNodes, anyMsg)
 
 	// numNodes-1 because one of the messages is a self-proposal that is not passed through the network
-	_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.Prepare, consensus.Vote, numValidators-1, 2000)
+	_, err = WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.Prepare, consensus.Vote, numValidators-1, 2000)
 	require.NoError(t, err)
 
 	forcePacemakerTimeout(t, clockMock, 600*time.Millisecond)

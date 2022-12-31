@@ -319,7 +319,7 @@ func (m *consensusModule) loadPersistedState() error {
 
 	latestHeight, err := persistenceContext.GetLatestBlockHeight()
 	if err != nil || latestHeight == 0 {
-		m.nodeLog("TODO: State sync not implemented yet")
+		// TODO: Proper state sync not implemented yet
 		return nil
 	}
 
