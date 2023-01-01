@@ -167,13 +167,7 @@ func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 		return
 	}
 
-	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(m.CurrentHeight()))
-	if err != nil {
-		m.nodeLogError(typesCons.ErrNewPersistenceReadContext.Error(), err)
-	}
-	defer persistenceReadContext.Close()
-
-	validators, err := persistenceReadContext.GetAllValidators(int64(m.CurrentHeight()))
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		m.nodeLogError(typesCons.ErrPersistenceGetAllValidators.Error(), err)
 	}

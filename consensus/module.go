@@ -153,13 +153,7 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	}
 	address := privateKey.Address().String()
 
-	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(m.CurrentHeight()))
-	if err != nil {
-		return nil, err
-	}
-	defer persistenceReadContext.Close()
-
-	validators, err := persistenceReadContext.GetAllValidators(int64(m.CurrentHeight()))
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
 	if err != nil {
 		return nil, err
 	}
