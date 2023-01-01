@@ -34,7 +34,7 @@ type rainTreeNetwork struct {
 	nonceSet         map[uint64]struct{}
 	nonceList        []uint64
 	mempoolMaxNonces uint64
-	nonceSetRWMutex  sync.RWMutex
+	nonceSetMutex    sync.Mutex
 }
 
 func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P.AddrBook, p2pCfg modules.P2PConfig) typesP2P.Network {
@@ -200,8 +200,8 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		}
 	}
 
-	n.nonceSetRWMutex.RLock()
-	defer n.nonceSetRWMutex.RUnlock()
+	n.nonceSetMutex.Lock()
+	defer n.nonceSetMutex.Unlock()
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
 	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
@@ -219,8 +219,6 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		return nil, nil
 	}
 
-	n.nonceSetRWMutex.Lock()
-	defer n.nonceSetRWMutex.Unlock()
 	n.nonceSet[rainTreeMsg.Nonce] = struct{}{}
 	n.nonceList = append(n.nonceList, rainTreeMsg.Nonce)
 	if uint64(len(n.nonceList)) > n.mempoolMaxNonces {
