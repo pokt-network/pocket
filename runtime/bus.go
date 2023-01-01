@@ -61,23 +61,23 @@ func (m *bus) GetEventBus() modules.EventsChannel {
 }
 
 func (m *bus) GetPersistenceModule() modules.PersistenceModule {
-	return m.modulesMap["persistence"].(modules.PersistenceModule)
+	return m.modulesMap[modules.PersistenceModuleName].(modules.PersistenceModule)
 }
 
 func (m *bus) GetP2PModule() modules.P2PModule {
-	return m.modulesMap["p2p"].(modules.P2PModule)
+	return m.modulesMap[modules.P2PModuleName].(modules.P2PModule)
 }
 
 func (m *bus) GetUtilityModule() modules.UtilityModule {
-	return m.modulesMap["utility"].(modules.UtilityModule)
+	return m.modulesMap[modules.UtilityModuleName].(modules.UtilityModule)
 }
 
 func (m *bus) GetConsensusModule() modules.ConsensusModule {
-	return m.modulesMap["consensus"].(modules.ConsensusModule)
+	return m.modulesMap[modules.ConsensusModuleName].(modules.ConsensusModule)
 }
 
 func (m *bus) GetTelemetryModule() modules.TelemetryModule {
-	telemetryModules := []string{"telemetry", "telemetry_prometheus", "telemetry_noOP"}
+	telemetryModules := []string{modules.TelemetryModuleName, "telemetry_prometheus", "telemetry_noOP"}
 	for _, moduleName := range telemetryModules {
 		telemetryMod, ok := m.modulesMap[moduleName]
 		if ok {
@@ -95,11 +95,11 @@ func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 }
 
 func (m *bus) GetLoggerModule() modules.LoggerModule {
-	return m.modulesMap["logger"].(modules.LoggerModule)
+	return m.modulesMap[modules.LoggerModuleName].(modules.LoggerModule)
 }
 
 func (m *bus) GetRPCModule() modules.RPCModule {
-	return m.modulesMap["rpc"].(modules.RPCModule)
+	return m.modulesMap[modules.RPCModuleName].(modules.RPCModule)
 }
 
 func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {
