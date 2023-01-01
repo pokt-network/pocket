@@ -309,7 +309,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
 	persistenceReadContextMock := modulesMock.NewMockPersistenceReadContext(ctrl)
 
-	persistenceMock.EXPECT().GetModuleName().Return("persistence").AnyTimes()
+	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
 	persistenceMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(persistenceReadContextMock, nil).AnyTimes()
@@ -348,7 +348,7 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.M
 			testChannel <- *e
 		}).
 		AnyTimes()
-	p2pMock.EXPECT().GetModuleName().Return("p2p").AnyTimes()
+	p2pMock.EXPECT().GetModuleName().Return(modules.P2PModuleName).AnyTimes()
 
 	return p2pMock
 }
@@ -365,7 +365,7 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState modules
 		NewContext(gomock.Any()).
 		Return(utilityContextMock, nil).
 		MaxTimes(4)
-	utilityMock.EXPECT().GetModuleName().Return("utility").AnyTimes()
+	utilityMock.EXPECT().GetModuleName().Return(modules.UtilityModuleName).AnyTimes()
 
 	return utilityMock
 }
@@ -405,7 +405,7 @@ func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockT
 	telemetryMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	telemetryMock.EXPECT().GetTimeSeriesAgent().Return(timeSeriesAgentMock).AnyTimes()
 	telemetryMock.EXPECT().GetEventMetricsAgent().Return(eventMetricsAgentMock).AnyTimes()
-	telemetryMock.EXPECT().GetModuleName().Return("telemetry_noop").AnyTimes()
+	telemetryMock.EXPECT().GetModuleName().Return(modules.TelemetryModuleName).AnyTimes()
 
 	return telemetryMock
 }
@@ -415,7 +415,7 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockRPCModu
 	rpcMock := modulesMock.NewMockRPCModule(ctrl)
 	rpcMock.EXPECT().Start().Return(nil).AnyTimes()
 	rpcMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
-	rpcMock.EXPECT().GetModuleName().Return("rpc").AnyTimes()
+	rpcMock.EXPECT().GetModuleName().Return(modules.RPCModuleName).AnyTimes()
 
 	return rpcMock
 }
@@ -440,7 +440,7 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockLogg
 	loggerMock := modulesMock.NewMockLoggerModule(ctrl)
 
 	loggerMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
-	loggerMock.EXPECT().GetModuleName().Return("logger").AnyTimes()
+	loggerMock.EXPECT().GetModuleName().Return(modules.LoggerModuleName).AnyTimes()
 
 	return loggerMock
 }
