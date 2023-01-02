@@ -124,14 +124,14 @@ func (p *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Consensus message is from the past
 	if msg.Height < currentHeight {
-		p.consensusMod.nodeLog(fmt.Sprintf("[WARN][DISCARDING] Node at height %d received message at a %d", currentHeight, msg.Height))
+		p.consensusMod.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height))
 		return false, nil
 	}
 
 	// TODO: Need to restart state sync or be in state sync mode right now
 	// Current node is out of sync
 	if msg.Height > currentHeight {
-		p.consensusMod.nodeLog(fmt.Sprintf("[WARN][DISCARDING] Node at height %d received message at a %d", currentHeight, msg.Height))
+		p.consensusMod.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d < message at height %d", currentHeight, msg.Height))
 		return false, nil
 	}
 
@@ -147,7 +147,7 @@ func (p *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Message is from the past
 	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
-		p.consensusMod.nodeLog(fmt.Sprintf("[WARN][DISCARDING] Node at (height, step, round) (%d, %d, %d) received message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round))
+		p.consensusMod.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round))
 		return false, nil
 	}
 

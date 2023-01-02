@@ -222,8 +222,6 @@ func WaitForNetworkConsensusEvents(
 		hotstuffMessage, ok := msg.(*typesCons.HotstuffMessage)
 		require.True(t, ok)
 
-		fmt.Println("OLSH", hotstuffMessage.Round, hotstuffMessage.Step, hotstuffMessage.Type)
-
 		return hotstuffMessage.Type == msgType && hotstuffMessage.Step == step
 	}
 
@@ -289,7 +287,6 @@ loop:
 				break loop
 			}
 		case <-ctx.Done():
-			fmt.Println("numRemainingMsgs", numRemainingMsgs)
 			if numRemainingMsgs == 0 {
 				break loop
 			} else if numRemainingMsgs > 0 {
