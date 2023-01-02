@@ -17,11 +17,11 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	// Test configs
 	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
 
-	go timeReminder(t, clockMock, 100*time.Millisecond)
+	go timeReminder(t, clockMock, time.Second)
 
 	// Create & start test pocket nodes
-	eventsChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, eventsChannel)
+	testChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, testChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Debug message to start consensus by triggering first view change
@@ -32,7 +32,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// NewRound
-	newRoundMessages, err := WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators, 1000)
+	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 1000, false)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -57,7 +57,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Prepare
-	prepareProposal, err := WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, 1, 1000)
+	prepareProposal, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.Prepare, consensus.Propose, 1, 1000, false)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -77,7 +77,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Precommit
-	prepareVotes, err := WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.Prepare, consensus.Vote, numValidators, 1000)
+	prepareVotes, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.Prepare, consensus.Vote, numValidators, 1000, false)
 	require.NoError(t, err)
 	for _, vote := range prepareVotes {
 		P2PSend(t, leader, vote)
@@ -85,7 +85,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	preCommitProposal, err := WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.PreCommit, consensus.Propose, 1, 1000)
+	preCommitProposal, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.PreCommit, consensus.Propose, 1, 1000, false)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -105,7 +105,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Commit
-	preCommitVotes, err := WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.PreCommit, consensus.Vote, numValidators, 1000)
+	preCommitVotes, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.PreCommit, consensus.Vote, numValidators, 1000, false)
 	require.NoError(t, err)
 	for _, vote := range preCommitVotes {
 		P2PSend(t, leader, vote)
@@ -113,7 +113,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	commitProposal, err := WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.Commit, consensus.Propose, 1, 1000)
+	commitProposal, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.Commit, consensus.Propose, 1, 1000, false)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -133,7 +133,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Decide
-	commitVotes, err := WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.Commit, consensus.Vote, numValidators, 1000)
+	commitVotes, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.Commit, consensus.Vote, numValidators, 1000, false)
 	require.NoError(t, err)
 	for _, vote := range commitVotes {
 		P2PSend(t, leader, vote)
@@ -141,7 +141,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	decideProposal, err := WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.Decide, consensus.Propose, 1, 1000)
+	decideProposal, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.Decide, consensus.Propose, 1, 1000, false)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -173,7 +173,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
 	// Block has been committed and new round has begun
-	_, err = WaitForNetworkConsensusMessages(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators, 1000)
+	_, err = WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 1000, false)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)

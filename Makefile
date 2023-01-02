@@ -2,14 +2,6 @@ include build.mk
 
 CWD ?= CURRENT_WORKING_DIRECTIONRY_NOT_SUPPLIED
 
-# This flag is useful when running the consensus unit tests. It causes the test to wait up to the
-# maximum delay specified in the source code and errors if additional unexpected messages are received.
-# For example, if the test expects to receive 5 messages within 2 seconds:
-# 	When EXTRA_MSG_FAIL = false: continue if 5 messages are received in 0.5 seconds
-# 	When EXTRA_MSG_FAIL = true: wait for another 1.5 seconds after 5 messages are received in 0.5
-#		                        seconds, and fail if any additional messages are received.
-EXTRA_MSG_FAIL ?= false
-
 # IMPROVE: Add `-shuffle=on` to the `go test` command to randomize the order in which tests are run.
 
 # An easy way to turn off verbose test output for some of the test targets. For example
@@ -323,11 +315,11 @@ test_consensus_concurrent_tests: ## Run unit tests in the consensus module that 
 
 .PHONY: test_hotstuff
 test_hotstuff: ## Run all go unit tests related to hotstuff consensus
-	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Hotstuff -failOnExtraMessages=${EXTRA_MSG_FAIL}
+	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Hotstuff
 
 .PHONY: test_pacemaker
 test_pacemaker: ## Run all go unit tests related to the hotstuff pacemaker
-	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Pacemaker -failOnExtraMessages=${EXTRA_MSG_FAIL}
+	go test ${VERBOSE_TEST} ./consensus/e2e_tests -run Pacemaker
 
 .PHONY: test_vrf
 test_vrf: ## Run all go unit tests in the VRF library

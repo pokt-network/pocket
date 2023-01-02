@@ -129,12 +129,12 @@ func CreateBusWithOptionalModules(
 }
 
 func (m *bus) PublishEventToBus(e *messaging.PocketEnvelope) {
-	m.channel <- *e
+	m.channel <- e
 }
 
 func (m *bus) GetBusEvent() *messaging.PocketEnvelope {
 	e := <-m.channel
-	return &e
+	return e
 }
 
 func (m *bus) GetEventBus() modules.EventsChannel {
