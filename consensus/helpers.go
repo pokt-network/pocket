@@ -158,7 +158,8 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 	}
 }
 
-// Star-like "broadcast" - send to all nodes directly
+// Star-like (O(n)) broadcast - send to all nodes directly
+// INVESTIGATE: Re-evaluate if we should be using our structured broadcast (RainTree O(log3(n))) algorithm instead
 func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) {
 	m.nodeLog(typesCons.BroadcastingMessage(msg))
 

@@ -261,6 +261,10 @@ func waitForEventsInternal(
 			}
 		}
 	}()
+	defer ticker.Stop()
+	defer func() {
+		tickerDone <- true
+	}()
 
 	numRemainingMsgs := numExpectedMsgs
 loop:
@@ -299,8 +303,6 @@ loop:
 			}
 		}
 	}
-	ticker.Stop()
-	tickerDone <- true
 
 	for _, u := range unusedEvents {
 		eventsChannel <- u
