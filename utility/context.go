@@ -17,6 +17,9 @@ type UtilityContext struct {
 	// Data related to the Block being proposed
 	// TECHDEBT: When we consolidate everything to have a single `Block` object (a struct backed by a protobuf),
 	//           this can be simplified to just point to that object.
+
+	logger modules.Logger
+
 	proposalProposerAddr []byte
 	proposalStateHash    string
 	proposalBlockTxs     [][]byte
@@ -39,6 +42,7 @@ func (u *utilityModule) NewContext(height int64) (modules.UtilityContext, error)
 	return &UtilityContext{
 		Height:  height,
 		Mempool: u.Mempool,
+		logger:  u.logger,
 		Context: &Context{
 			PersistenceRWContext: ctx,
 			SavePoints:           make([][]byte, 0),

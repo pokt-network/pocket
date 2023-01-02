@@ -2,10 +2,10 @@ package raintree
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -16,8 +16,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-var _ typesP2P.Network = &rainTreeNetwork{}
-var _ modules.IntegratableModule = &rainTreeNetwork{}
+var (
+	_ typesP2P.Network           = &rainTreeNetwork{}
+	_ modules.IntegratableModule = &rainTreeNetwork{}
+)
 
 type rainTreeNetwork struct {
 	bus modules.Bus
@@ -26,6 +28,8 @@ type rainTreeNetwork struct {
 	addrBookProvider typesP2P.AddrBookProvider
 
 	peersManager *peersManager
+
+	logger modules.Logger
 
 	// TODO (#278): What should we use for de-duping messages within P2P?
 	// TODO(#388): generalize to use the shared `FIFOMempool` type (in `utility/types/mempool.go` at the time of writing) in here as well for this.
@@ -36,14 +40,18 @@ type rainTreeNetwork struct {
 
 func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P.AddrBook, p2pCfg modules.P2PConfig) typesP2P.Network {
 	pm, err := newPeersManager(addr, addrBook, true)
+
+	logger := logger.Global.CreateLoggerForModule("p2p")
+
 	if err != nil {
-		log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManager: %v", err)
+		logger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManager")
 	}
 
 	mempoolMaxNonces := p2pCfg.GetMaxMempoolCount()
 	n := &rainTreeNetwork{
 		selfAddr:         addr,
 		peersManager:     pm,
+		logger:           logger,
 		nonceSet:         make(map[uint64]struct{}),
 		nonceList:        make([]uint64, 0, mempoolMaxNonces),
 		mampoolMaxNonces: mempoolMaxNonces,
@@ -54,19 +62,23 @@ func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P
 
 func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg modules.P2PConfig, addrBookProvider typesP2P.AddrBookProvider) typesP2P.Network {
 	addrBook, err := addrbook_provider.GetAddrBook(bus, addrBookProvider)
+
+	logger := logger.Global.CreateLoggerForModule("p2p")
+
 	if err != nil {
-		log.Fatalf("[ERROR] Error getting addrBook: %v", err)
+		logger.Fatal().Err(err).Msg("Error getting addrBook")
 	}
 
 	pm, err := newPeersManager(addr, addrBook, true)
 	if err != nil {
-		log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManager: %v", err)
+		logger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManager")
 	}
 
 	n := &rainTreeNetwork{
 		selfAddr:         addr,
 		peersManager:     pm,
 		nonceSet:         make(map[uint64]struct{}),
+		logger:           logger,
 		nonceList:        make([]uint64, 0, p2pCfg.GetMaxMempoolCount()),
 		addrBookProvider: addrBookProvider,
 	}
@@ -96,13 +108,13 @@ func (n *rainTreeNetwork) networkBroadcastAtLevel(data []byte, level uint32, non
 	for _, target := range n.getTargetsAtLevel(level) {
 		if shouldSendToTarget(target) {
 			if err = n.networkSendInternal(msgBz, target.address); err != nil {
-				log.Println("Error sending to peer during broadcast: ", err)
+				n.logger.Error().Err(err).Msg("Error sending to peer during broadcast")
 			}
 		}
 	}
 
 	if err = n.demote(msg); err != nil {
-		log.Println("Error demoting self during RainTree message propagation: ", err)
+		n.logger.Error().Err(err).Msg("Error demoting self during RainTree message propagation")
 	}
 
 	return nil
@@ -140,11 +152,11 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 
 	peer, ok := n.peersManager.getNetworkView().addrBookMap[address.String()]
 	if !ok {
-		return fmt.Errorf("address %s not found in addrBookMap", address.String())
+		n.logger.Error().Str("address", address.String()).Msg("address not found in addrBookMap")
 	}
 
 	if err := peer.Dialer.Write(data); err != nil {
-		log.Println("Error writing to peer during send: ", err)
+		n.logger.Error().Err(err).Msg("Error writing to peer during send")
 		return err
 	}
 
@@ -180,7 +192,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 	networkMessage := messaging.PocketEnvelope{}
 	if err := proto.Unmarshal(rainTreeMsg.Data, &networkMessage); err != nil {
-		log.Println("Error decoding network message: ", err)
+		n.logger.Error().Err(err).Msg("Error decoding network message")
 		return nil, err
 	}
 

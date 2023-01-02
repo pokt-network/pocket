@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"crypto/sha256"
-	"log"
 
 	"github.com/celestiaorg/smt"
 	"github.com/pokt-network/pocket/persistence/types"
@@ -36,7 +35,7 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMess
 		g := m.genesisState.(*types.PersistenceGenesisState)
 		m.populateGenesisState(g) // fatal if there's an error
 	default:
-		log.Printf("Debug message not handled by persistence module: %s \n", debugMessage.Message)
+		m.logger.Debug().Str("message", debugMessage.Message.String()).Msg("Debug message not handled by persistence module")
 	}
 	return nil
 }
@@ -46,17 +45,17 @@ func (m *persistenceModule) showLatestBlockInStore(_ *messaging.DebugMessage) {
 	height := m.GetBus().GetConsensusModule().CurrentHeight() - 1
 	blockBytes, err := m.GetBlockStore().Get(heightToBytes(int64(height)))
 	if err != nil {
-		log.Printf("Error getting block %d from block store: %s \n", height, err)
+		m.logger.Error().Err(err).Uint64("height", height).Msg("Error getting block from block store")
 		return
 	}
 
 	block := &types.Block{}
 	if err := codec.GetCodec().Unmarshal(blockBytes, block); err != nil {
-		log.Printf("Error decoding block %d from block store: %s \n", height, err)
+		m.logger.Error().Err(err).Uint64("height", height).Msg("Error decoding block from block store")
 		return
 	}
 
-	log.Printf("Block at height %d: %+v \n", height, block)
+	m.logger.Info().Uint64("height", height).Str("block", block.String()).Msg("Block from block store")
 }
 
 // TECHDEBT: Make sure this is atomic
@@ -87,7 +86,7 @@ func (m *persistenceModule) clearAllState(_ *messaging.DebugMessage) error {
 		return err
 	}
 
-	log.Println("Cleared all the state")
+	m.logger.Info().Msg("Cleared all the state")
 	return nil
 }
 

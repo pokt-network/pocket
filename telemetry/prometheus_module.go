@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -24,6 +25,8 @@ var (
 type PrometheusTelemetryModule struct {
 	bus    modules.Bus
 	config modules.TelemetryConfig
+
+	logger modules.Logger
 
 	counters     map[string]prometheus.Counter
 	gauges       map[string]prometheus.Gauge
@@ -46,8 +49,11 @@ func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.
 	}
 	telemetryCfg := cfg.GetTelemetryConfig()
 
+	logger := logger.Global.CreateLoggerForModule(m.GetModuleName())
+
 	return &PrometheusTelemetryModule{
 		config:       telemetryCfg,
+		logger:       logger,
 		counters:     map[string]prometheus.Counter{},
 		gauges:       map[string]prometheus.Gauge{},
 		gaugeVectors: map[string]prometheus.GaugeVec{},
@@ -55,12 +61,13 @@ func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.
 }
 
 func (m *PrometheusTelemetryModule) Start() error {
-	log.Printf("\nPrometheus metrics exporter: Starting at %s%s...\n", m.config.GetAddress(), m.config.GetEndpoint())
+	uri := m.config.GetAddress() + m.config.GetEndpoint()
+	m.logger.Info().Str("address", uri).Msg("Starting Prometheus metrics exporter...")
 
 	http.Handle(m.config.GetEndpoint(), promhttp.Handler())
 	go http.ListenAndServe(m.config.GetAddress(), nil)
 
-	log.Println("Prometheus metrics exporter started: OK")
+	m.logger.Info().Str("address", uri).Msg("Prometheus metrics exporter started")
 
 	return nil
 }
@@ -79,7 +86,7 @@ func (m *PrometheusTelemetryModule) GetModuleName() string {
 
 func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Fatalf("PocketBus is not initialized")
+		m.logger.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
 }
@@ -100,8 +107,18 @@ func (m *PrometheusTelemetryModule) GetEventMetricsAgent() modules.EventMetricsA
 // will be removed in the future in favor of more thorough event metrics tooling.
 // TECHDEBT(team): Deprecate using logs for event metrics for a more sophisticated and durable solution
 func (m *PrometheusTelemetryModule) EmitEvent(namespace, event string, labels ...any) {
-	logArgs := append([]interface{}{"[EVENT]", namespace, event}, labels...)
-	log.Println(logArgs...)
+	logArgs := map[string]interface{}{
+		"level":     "EVENT",
+		"namespace": namespace,
+		"event":     event,
+	}
+
+	// iterate over the labels and appens them in pairs to the logArgs
+	for i := 0; i < len(labels); i += 2 {
+		logArgs[fmt.Sprintf("%v", labels[i])] = labels[i+1]
+	}
+
+	m.logger.Info().Fields(logArgs).Msg("Event emitted")
 }
 
 func (m *PrometheusTelemetryModule) GetTimeSeriesAgent() modules.TimeSeriesAgent {

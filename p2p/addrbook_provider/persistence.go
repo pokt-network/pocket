@@ -2,16 +2,18 @@ package addrbook_provider
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var _ modules.IntegratableModule = &persistenceAddrBookProvider{}
-var _ typesP2P.AddrBookProvider = &persistenceAddrBookProvider{}
+var (
+	_ modules.IntegratableModule = &persistenceAddrBookProvider{}
+	_ typesP2P.AddrBookProvider  = &persistenceAddrBookProvider{}
+)
 
 type persistenceAddrBookProvider struct {
 	bus         modules.Bus
@@ -74,7 +76,7 @@ func (pabp *persistenceAddrBookProvider) ActorsToAddrBook(actors map[string]modu
 	for _, v := range actors {
 		networkPeer, err := pabp.ActorToNetworkPeer(v)
 		if err != nil {
-			log.Println("[WARN] Error connecting to validator: ", err)
+				logger.Global.Warn().Err(err).Msg("error connecting to validator",)
 			continue
 		}
 		book = append(book, networkPeer)

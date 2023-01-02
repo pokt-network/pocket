@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"encoding/hex"
-	"log"
 	"math/big"
 
 	"github.com/pokt-network/pocket/persistence/types"
@@ -12,7 +11,7 @@ import (
 
 // CONSIDERATION: Should this return an error and let the caller decide if it should log a fatal error?
 func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesisState) {
-	log.Println("Populating genesis state...")
+	m.logger.Info().Msg("Populating genesis state...")
 
 	// REFACTOR: This business logic should probably live in `types/genesis.go`
 	//           and we need to add proper unit tests for it.`
@@ -31,130 +30,130 @@ func (m *persistenceModule) populateGenesisState(state modules.PersistenceGenesi
 
 	rwContext, err := m.NewRWContext(0)
 	if err != nil {
-		log.Fatalf("an error occurred creating the rwContext for the genesis state: %s", err.Error())
+		m.logger.Fatal().Err(err).Msg("an error occurred creating the rwContext for the genesis state")
 	}
 
 	for _, acc := range state.GetAccs() {
 		addrBz, err := hex.DecodeString(acc.GetAddress())
 		if err != nil {
-			log.Fatalf("an error occurred converting address to bytes %s", acc.GetAddress())
+			m.logger.Fatal().Err(err).Str("address", acc.GetAddress()).Msg("an error occurred converting address to bytes")
 		}
 		err = rwContext.SetAccountAmount(addrBz, acc.GetAmount())
 		if err != nil {
-			log.Fatalf("an error occurred inserting an acc in the genesis state: %s", err.Error())
+			m.logger.Fatal().Err(err).Str("address", acc.GetAddress()).Msg("an error occurred inserting an acc in the genesis state")
 		}
 	}
 	for _, pool := range state.GetAccPools() {
 		poolNameBytes := []byte(pool.GetAddress())
 		err = rwContext.InsertPool(pool.GetAddress(), poolNameBytes, pool.GetAmount())
 		if err != nil {
-			log.Fatalf("an error occurred inserting an pool in the genesis state: %s", err.Error())
+			m.logger.Fatal().Err(err).Str("address", pool.GetAddress()).Msg("an error occurred inserting an pool in the genesis state")
 		}
 	}
 	for _, act := range state.GetApps() { // TODO (Andrew) genericize the genesis population logic for actors #149
 		addrBz, err := hex.DecodeString(act.GetAddress())
 		if err != nil {
-			log.Fatalf("an error occurred converting address to bytes %s", act.GetAddress())
+			m.logger.Fatal().Err(err).Str("address", act.GetAddress()).Msg("an error occurred converting address to bytes")
 		}
 		pubKeyBz, err := hex.DecodeString(act.GetPublicKey())
 		if err != nil {
-			log.Fatalf("an error occurred converting pubKey to bytes %s", act.GetPublicKey())
+			m.logger.Fatal().Err(err).Str("publicKey", act.GetPublicKey()).Msg("an error occurred converting pubKey to bytes")
 		}
 		outputBz, err := hex.DecodeString(act.GetOutput())
 		if err != nil {
-			log.Fatalf("an error occurred converting output to bytes %s", act.GetOutput())
+			m.logger.Fatal().Err(err).Str("output", act.GetOutput()).Msg("an error occurred converting output to bytes")
 		}
 		err = rwContext.InsertApp(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GetGenericParam(), act.GetStakedAmount(), act.GetChains(), act.GetPausedHeight(), act.GetUnstakingHeight())
 		if err != nil {
-			log.Fatalf("an error occurred inserting an app in the genesis state: %s", err.Error())
+			m.logger.Fatal().Err(err).Str("address", act.GetAddress()).Msg("an error occurred inserting an app in the genesis state")
 		}
 		if err = addValueToPool(types.PoolNames_AppStakePool.String(), act.GetStakedAmount()); err != nil {
-			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.PoolNames_AppStakePool, err.Error())
+			m.logger.Fatal().Err(err).Str("pool", types.PoolNames_AppStakePool.String()).Msg("an error occurred inserting staked tokens into pool")
 		}
 	}
 	for _, act := range state.GetNodes() {
 		addrBz, err := hex.DecodeString(act.GetAddress())
 		if err != nil {
-			log.Fatalf("an error occurred converting address to bytes %s", act.GetAddress())
+			m.logger.Fatal().Err(err).Str("address", act.GetAddress()).Msg("an error occurred converting address to bytes")
 		}
 		pubKeyBz, err := hex.DecodeString(act.GetPublicKey())
 		if err != nil {
-			log.Fatalf("an error occurred converting pubKey to bytes %s", act.GetPublicKey())
+			m.logger.Fatal().Err(err).Str("publicKey", act.GetPublicKey()).Msg("an error occurred converting pubKey to bytes")
 		}
 		outputBz, err := hex.DecodeString(act.GetOutput())
 		if err != nil {
-			log.Fatalf("an error occurred converting output to bytes %s", act.GetOutput())
+			m.logger.Fatal().Err(err).Str("output", act.GetOutput()).Msg("an error occurred converting output to bytes")
 		}
 		err = rwContext.InsertServiceNode(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GetGenericParam(), act.GetStakedAmount(), act.GetChains(), act.GetPausedHeight(), act.GetUnstakingHeight())
 		if err != nil {
-			log.Fatalf("an error occurred inserting a service node in the genesis state: %s", err.Error())
+			m.logger.Fatal().Err(err).Str("address", act.GetAddress()).Msg("an error occurred inserting a service node in the genesis state")
 		}
 		if err = addValueToPool(types.PoolNames_ServiceNodeStakePool.String(), act.GetStakedAmount()); err != nil {
-			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.PoolNames_ServiceNodeStakePool.String(), err.Error())
+			m.logger.Fatal().Err(err).Str("pool", types.PoolNames_ServiceNodeStakePool.String()).Msg("an error occurred inserting staked tokens into pool")
 		}
 	}
 	for _, act := range state.GetFish() {
 		addrBz, err := hex.DecodeString(act.GetAddress())
 		if err != nil {
-			log.Fatalf("an error occurred converting address to bytes %s", act.GetAddress())
+			m.logger.Fatal().Err(err).Str("address", act.GetAddress()).Msg("an error occurred converting address to bytes")
 		}
 		pubKeyBz, err := hex.DecodeString(act.GetPublicKey())
 		if err != nil {
-			log.Fatalf("an error occurred converting pubKey to bytes %s", act.GetPublicKey())
+			m.logger.Fatal().Err(err).Str("publicKey", act.GetPublicKey()).Msg("an error occurred converting pubKey to bytes")
 		}
 		outputBz, err := hex.DecodeString(act.GetOutput())
 		if err != nil {
-			log.Fatalf("an error occurred converting output to bytes %s", act.GetOutput())
+			m.logger.Fatal().Err(err).Str("output", act.GetOutput()).Msg("an error occurred converting output to bytes")
 		}
 		err = rwContext.InsertFisherman(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GetGenericParam(), act.GetStakedAmount(), act.GetChains(), act.GetPausedHeight(), act.GetUnstakingHeight())
 		if err != nil {
-			log.Fatalf("an error occurred inserting a fisherman in the genesis state: %s", err.Error())
+			m.logger.Fatal().Err(err).Str("address", act.GetAddress()).Msg("an error occurred inserting a fisherman in the genesis state")
 		}
 		if err = addValueToPool(types.PoolNames_FishermanStakePool.String(), act.GetStakedAmount()); err != nil {
-			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.PoolNames_FishermanStakePool.String(), err.Error())
+			m.logger.Fatal().Err(err).Str("pool", types.PoolNames_FishermanStakePool.String()).Msg("an error occurred inserting staked tokens into pool")
 		}
 	}
 	for _, act := range state.GetVals() {
 		addrBz, err := hex.DecodeString(act.GetAddress())
 		if err != nil {
-			log.Fatalf("an error occurred converting address to bytes %s", act.GetAddress())
+			m.logger.Fatal().Err(err).Str("address", act.GetAddress()).Msg("an error occurred converting address to bytes")
 		}
 		pubKeyBz, err := hex.DecodeString(act.GetPublicKey())
 		if err != nil {
-			log.Fatalf("an error occurred converting pubKey to bytes %s", act.GetPublicKey())
+			m.logger.Fatal().Err(err).Str("publicKey", act.GetPublicKey()).Msg("an error occurred converting pubKey to bytes")
 		}
 		outputBz, err := hex.DecodeString(act.GetOutput())
 		if err != nil {
-			log.Fatalf("an error occurred converting output to bytes %s", act.GetOutput())
+			m.logger.Fatal().Err(err).Str("output", act.GetOutput()).Msg("an error occurred converting output to bytes")
 		}
 		err = rwContext.InsertValidator(addrBz, pubKeyBz, outputBz, false, StakedStatus, act.GetGenericParam(), act.GetStakedAmount(), act.GetPausedHeight(), act.GetUnstakingHeight())
 		if err != nil {
-			log.Fatalf("an error occurred inserting a validator in the genesis state: %s", err.Error())
+			m.logger.Fatal().Err(err).Str("address", act.GetAddress()).Msg("an error occurred inserting a validator in the genesis state")
 		}
 		if err = addValueToPool(types.PoolNames_ValidatorStakePool.String(), act.GetStakedAmount()); err != nil {
-			log.Fatalf("an error occurred inserting staked tokens into %s pool: %s", types.PoolNames_ValidatorStakePool.String(), err.Error())
+			m.logger.Fatal().Err(err).Str("pool", types.PoolNames_ValidatorStakePool.String()).Msg("an error occurred inserting staked tokens into pool")
 		}
 	}
 	// TODO(team): use params from genesis file - not the hardcoded
 	if err = rwContext.InitParams(); err != nil {
-		log.Fatalf("an error occurred initializing params: %s", err.Error())
+		m.logger.Fatal().Err(err).Msg("an error occurred initializing params")
 	}
 
 	if err = rwContext.InitFlags(); err != nil { // TODO (Team) use flags from genesis file not hardcoded
-		log.Fatalf("an error occurred initializing flags: %s", err.Error())
+		m.logger.Fatal().Err(err).Msg("an error occurred initializing flags")
 	}
 
 	// Updates all the merkle trees
 	stateHash, err := rwContext.ComputeStateHash()
 	if err != nil {
-		log.Fatalf("an error occurred updating the app hash during genesis: %s", err.Error())
+		m.logger.Fatal().Err(err).Msg("an error occurred updating the app hash during genesis")
 	}
-	log.Println("PopulateGenesisState - computed state hash:", stateHash)
+	m.logger.Info().Str("stateHash", stateHash).Msg("PopulateGenesisState - computed state hash")
 
 	// This updates the DB, blockstore, and commits the genesis state.
 	// Note that the `quorumCert for genesis` is nil.
 	if err = rwContext.Commit(nil, nil); err != nil {
-		log.Fatalf("error committing genesis state to DB %s ", err.Error())
+		m.logger.Fatal().Err(err).Msg("an error occurred committing the genesis state to the DB")
 	}
 }
 

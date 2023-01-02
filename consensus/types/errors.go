@@ -18,12 +18,12 @@ const (
 	ProposalBlockExtends     = "the ProposalQC block is the same as the LockedQC block"
 
 	// WARN
-	NilUtilityContextWarning     = "[WARN] Utility context not nil when preparing a new block? Releasing for now but should not happen"
-	InvalidPartialSigInQCWarning = "[WARN] QC contains an invalid partial signature"
+	NilUtilityContextWarning     = "Utility context not nil when preparing a new block? Releasing for now but should not happen"
+	InvalidPartialSigInQCWarning = "QC contains an invalid partial signature"
 
 	// DEBUG
-	DebugResetToGenesis  = "[DEBUG] Resetting to genesis..."
-	DebugTriggerNextView = "[DEBUG] Triggering next view..."
+	DebugResetToGenesis  = "Resetting to genesis..."
+	DebugTriggerNextView = "Triggering next view..."
 )
 
 var StepToString map[HotstuffStep]string
@@ -84,32 +84,32 @@ func WarnInvalidPartialSigInQC(address string, nodeId NodeId) string {
 }
 
 func WarnMissingPartialSig(msg *HotstuffMessage) string {
-	return fmt.Sprintf("[WARN] No partial signature found for step %s which should not happen...", StepToString[msg.GetStep()])
+	return fmt.Sprintf("No partial signature found for step %s which should not happen...", StepToString[msg.GetStep()])
 }
 
 func WarnDiscardHotstuffMessage(_ *HotstuffMessage, reason string) string {
-	return fmt.Sprintf("[WARN] %s because: %s", DisregardHotstuffMessage, reason)
+	return fmt.Sprintf("%s because: %s", DisregardHotstuffMessage, reason)
 }
 
 func WarnUnexpectedMessageInPool(_ *HotstuffMessage, height uint64, step HotstuffStep, round uint64) string {
-	return fmt.Sprintf("[WARN] Message in pool does not match (height, step, round) of QC being generated; %d, %s, %d", height, StepToString[step], round)
+	return fmt.Sprintf("Message in pool does not match (height, step, round) of QC being generated; %d, %s, %d", height, StepToString[step], round)
 }
 
 func WarnIncompletePartialSig(ps *PartialSignature, msg *HotstuffMessage) string {
-	return fmt.Sprintf("[WARN] Partial signature is incomplete for step %s which should not happen...", StepToString[msg.GetStep()])
+	return fmt.Sprintf("Partial signature is incomplete for step %s which should not happen...", StepToString[msg.GetStep()])
 }
 
 func DebugTogglePacemakerManualMode(mode string) string {
-	return fmt.Sprintf("[DEBUG] Toggling pacemaker manual mode to %s", mode)
+	return fmt.Sprintf("Toggling pacemaker manual mode to %s", mode)
 }
 
 func DebugNodeState(state ConsensusNodeState) string {
-	return fmt.Sprintf("[DEBUG] NODE STATE: Node %d is at (Height, Step, Round): (%d, %d, %d)\n", state.NodeId, state.Height, state.Step, state.Round)
+	return fmt.Sprintf("NODE STATE: Node %d is at (Height, Step, Round): (%d, %d, %d)\n", state.NodeId, state.Height, state.Step, state.Round)
 }
 
 func DebugHandlingHotstuffMessage(msg *HotstuffMessage) string {
 	// TODO(olshansky): Add source and destination NodeId of message here
-	return fmt.Sprintf("[DEBUG] Handling message w/ Height: %d; Type: %s; Round: %d.", msg.Height, StepToString[msg.GetStep()], msg.Round)
+	return fmt.Sprintf("Handling message w/ Height: %d; Type: %s; Round: %d.", msg.Height, StepToString[msg.GetStep()], msg.Round)
 }
 
 // Errors

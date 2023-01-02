@@ -2,8 +2,8 @@ package p2p
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p/addrbook_provider"
 	"github.com/pokt-network/pocket/p2p/raintree"
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
@@ -30,6 +30,8 @@ type p2pModule struct {
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
 
+	logger modules.Logger
+
 	network typesP2P.Network
 }
 
@@ -43,8 +45,8 @@ func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 }
 
 func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	log.Println("Creating network module")
 	var m *p2pModule
+	logger.Global.Info().Msg("Creating network module")
 
 	cfg := runtimeMgr.GetConfig()
 	if err := m.ValidateConfig(cfg); err != nil {
@@ -77,7 +79,7 @@ func (m *p2pModule) SetBus(bus modules.Bus) {
 
 func (m *p2pModule) GetBus() modules.Bus {
 	if m.bus == nil {
-		log.Printf("[WARN]: PocketBus is not initialized")
+		m.logger.Warn().Msg("PocketBus is not initialized")
 		return nil
 	}
 	return m.bus
@@ -88,7 +90,7 @@ func (m *p2pModule) GetModuleName() string {
 }
 
 func (m *p2pModule) Start() error {
-	log.Println("Starting network module")
+	logger.Global.Info().Msg("Starting network module")
 
 	m.GetBus().
 		GetTelemetryModule().
@@ -97,6 +99,10 @@ func (m *p2pModule) Start() error {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_NAME,
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
+
+	m.logger = m.GetBus().
+		GetLoggerModule().
+		CreateLoggerForModule(m.GetModuleName())
 
 	addrbookProvider := addrbook_provider.NewPersistenceAddrBookProvider(m.GetBus(), m.p2pCfg)
 
@@ -110,7 +116,7 @@ func (m *p2pModule) Start() error {
 		for {
 			data, err := m.listener.Read()
 			if err != nil {
-				log.Println("Error reading data from connection: ", err)
+				m.logger.Error().Err(err).Msg("Error reading data from connection")
 				continue
 			}
 			go m.handleNetworkMessage(data)
@@ -126,7 +132,7 @@ func (m *p2pModule) Start() error {
 }
 
 func (m *p2pModule) Stop() error {
-	log.Println("Stopping network module")
+	m.logger.Info().Msg("Stopping network module")
 	if err := m.listener.Close(); err != nil {
 		return err
 	}
@@ -141,7 +147,7 @@ func (m *p2pModule) Broadcast(msg *anypb.Any) error {
 	if err != nil {
 		return err
 	}
-	log.Println("broadcasting message to network")
+	m.logger.Info().Msg("broadcasting message to network")
 
 	return m.network.NetworkBroadcast(data)
 }
@@ -166,7 +172,7 @@ func (*p2pModule) ValidateConfig(cfg modules.Config) error {
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 	appMsgData, err := m.network.HandleNetworkData(networkMsgData)
 	if err != nil {
-		log.Println("Error handling raw data: ", err)
+		m.logger.Error().Err(err).Msg("Error handling raw data")
 		return
 	}
 
@@ -179,7 +185,7 @@ func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
 
 	networkMessage := messaging.PocketEnvelope{}
 	if err := proto.Unmarshal(appMsgData, &networkMessage); err != nil {
-		log.Println("Error decoding network message: ", err)
+		m.logger.Error().Err(err).Msg("Error decoding network message")
 		return
 	}
 

@@ -11,6 +11,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/mitchellh/mapstructure"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/logger"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -139,11 +140,10 @@ type supportedStructs interface {
 func parse[T supportedStructs](reader io.Reader, target T) {
 	bz, err := io.ReadAll(reader)
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to read from reader: %v", err)
-
+		logger.Global.Err(err).Msg("Failed to read from reader")
 	}
 	if err := json.Unmarshal(bz, &target); err != nil {
-		log.Fatalf("[ERROR] Failed to unmarshal: %v", err)
+		logger.Global.Err(err).Msg("Failed to unmarshal")
 	}
 }
 
@@ -152,7 +152,7 @@ func parse[T supportedStructs](reader io.Reader, target T) {
 func WithRandomPK() func(*Manager) {
 	privateKey, err := cryptoPocket.GeneratePrivateKey()
 	if err != nil {
-		log.Fatalf("unable to generate private key")
+		logger.Global.Fatal().Err(err).Msg("unable to generate private key")
 	}
 
 	return WithPK(privateKey.String())

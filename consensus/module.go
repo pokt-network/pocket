@@ -70,9 +70,8 @@ type consensusModule struct {
 	paceMaker         Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
-	logger modules.Logger
-
-	// DEPRECATE: Remove later when we build a shared/proper/injected logger
+	// Internal Logging
+	logger    modules.Logger
 	logPrefix string
 
 	// TECHDEBT: Rename this to `consensusMessagePool` or something similar
@@ -177,6 +176,8 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 
 		validatorMap: valMap,
 
+		logger: logger.Global.CreateLoggerForModule(m.GetModuleName()),
+
 		utilityContext:    nil,
 		paceMaker:         paceMaker,
 		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
@@ -201,9 +202,7 @@ func (m *consensusModule) Start() error {
 			consensusTelemetry.CONSENSUS_BLOCKCHAIN_HEIGHT_COUNTER_DESCRIPTION,
 		)
 
-	m.logger = m.GetBus().
-		GetLoggerModule().
-		CreateLoggerForModule(m.GetModuleName()).
+	m.logger = m.logger.
 		With().
 		Str("kind", m.logPrefix).
 		Str("node_id", m.nodeId.String()).

@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"fmt"
-	"log"
 
 	// importing because used by code-generated files that are git ignored and to allow go mod tidy and go mod vendor to function properly
 	_ "github.com/getkin/kin-openapi/openapi3"
@@ -11,13 +10,13 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-var (
-	_ modules.RPCModule = &rpcModule{}
-)
+var _ modules.RPCModule = &rpcModule{}
 
 type rpcModule struct {
 	bus    modules.Bus
 	config modules.RPCConfig
+
+	logger modules.Logger
 }
 
 const (
@@ -45,7 +44,12 @@ func (m *rpcModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 }
 
 func (u *rpcModule) Start() error {
-	go NewRPCServer(u.GetBus()).StartRPC(u.config.GetPort(), u.config.GetTimeout())
+	u.logger = u.GetBus().
+		GetLoggerModule().
+		CreateLoggerForModule(u.GetModuleName())
+
+	go NewRPCServer(u.GetBus()).StartRPC(u.config.GetPort(), u.config.GetTimeout(), u.logger)
+
 	return nil
 }
 
@@ -63,7 +67,7 @@ func (u *rpcModule) SetBus(bus modules.Bus) {
 
 func (u *rpcModule) GetBus() modules.Bus {
 	if u.bus == nil {
-		log.Fatalf("Bus is not initialized")
+		u.logger.Fatal().Msg("Bus is not initialized")
 	}
 	return u.bus
 }

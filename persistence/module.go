@@ -96,6 +96,8 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 		txIndexer:  txIndexer,
 		stateTrees: stateTrees,
 
+		logger: logger.Global.CreateLoggerForModule(m.GetModuleName()),
+
 		writeContext: nil,
 	}
 
@@ -117,7 +119,7 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 }
 
 func (m *persistenceModule) Start() error {
-	logger.Global.Info().Msg("Starting persistence module...")
+	m.logger.Info().Msg("Starting module...")
 	return nil
 }
 
@@ -139,16 +141,6 @@ func (m *persistenceModule) GetBus() modules.Bus {
 		logger.Global.Fatal().Msg("PocketBus is not initialized")
 	}
 	return m.bus
-}
-
-// NewLogger creates a new logger for the module
-func (m *persistenceModule) NewLogger() modules.Logger {
-	return m.bus.GetLoggerModule().CreateLoggerForModule(m.GetModuleName())
-}
-
-// GetLogger returns the logger for the module
-func (m *persistenceModule) GetLogger() modules.Logger {
-	return m.logger
 }
 
 func (*persistenceModule) ValidateConfig(cfg modules.Config) error {
@@ -185,6 +177,8 @@ func (m *persistenceModule) NewRWContext(height int64) (modules.PersistenceRWCon
 
 		stateHash: "",
 
+		logger: m.logger,
+
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,
 		stateTrees: m.stateTrees,
@@ -213,6 +207,8 @@ func (m *persistenceModule) NewReadContext(height int64) (modules.PersistenceRea
 		tx:     tx,
 
 		stateHash: "",
+
+		logger: m.logger,
 
 		blockStore: m.blockStore,
 		txIndexer:  m.txIndexer,

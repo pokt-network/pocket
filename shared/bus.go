@@ -1,8 +1,7 @@
 package shared
 
 import (
-	"log"
-
+	log "github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 )
@@ -69,7 +68,7 @@ func CreateBus(
 	// will not carry forward if one of the modules is nil
 	for modName, mod := range modules {
 		if mod == nil {
-			log.Fatalf("Bus Error: the provided %s module is nil, Please use CreateBusWithOptionalModules if you intended it to be nil.", modName)
+			log.Global.Fatal().Msgf("Bus Error: the provided %s module is nil, Please use CreateBusWithOptionalModules if you intended it to be nil.", modName)
 		}
 		mod.SetBus(bus)
 	}

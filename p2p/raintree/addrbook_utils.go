@@ -1,9 +1,7 @@
 package raintree
 
 import (
-	"log"
 	"math"
-	"strings"
 )
 
 // Refer to the P2P specification for a formal description and proof of how the constants are selected
@@ -22,7 +20,7 @@ func (n *rainTreeNetwork) getAddrBookLength(level uint32, height uint64) int {
 	if height < n.GetBus().GetConsensusModule().CurrentHeight() {
 		peersManagerWithAddrBookProvider, err := newPeersManagerWithAddrBookProvider(n.selfAddr, n.addrBookProvider, height)
 		if err != nil {
-			log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManagerWithAddrBookProvider: %v", err)
+			n.logger.Fatal().Err(err).Msg("Error initializing rainTreeNetwork peersManagerWithAddrBookProvider")
 		}
 		peersManagerStateView = peersManagerWithAddrBookProvider.getNetworkView()
 	}
@@ -38,7 +36,7 @@ func (n *rainTreeNetwork) getTargetsAtLevel(level uint32) []target {
 	firstTarget := n.getTarget(firstMsgTargetPercentage, addrBookLengthAtHeight, level)
 	secondTarget := n.getTarget(secondMsgTargetPercentage, addrBookLengthAtHeight, level)
 
-	log.Printf("[DEBUG] Targets at height (%d): %s", level, n.debugMsgTargetString(firstTarget, secondTarget))
+	n.logger.Debug().Str("firstTarget", firstTarget.DebugString(n)).Str("secondTarget", secondTarget.DebugString(n)).Msg("Targets at height")
 
 	return []target{firstTarget, secondTarget}
 }
@@ -68,15 +66,8 @@ func (n *rainTreeNetwork) getTarget(targetPercentage float64, addrBookLen int, l
 		target.address = addr.Address
 		return target
 	}
-	log.Printf("[DEBUG] addrStr %s not found in addrBookMap", addrStr)
-	return target
-}
 
-// Only used for debug logging to understand what RainTree is doing under the hood
-func (n *rainTreeNetwork) debugMsgTargetString(target1, target2 target) string {
-	s := strings.Builder{}
-	s.WriteString(target1.DebugString(n))
-	s.WriteString(" --|-- ")
-	s.WriteString(target2.DebugString(n))
-	return s.String()
+	n.logger.Debug().Str("addrStr", addrStr).Msg("addrStr not found in addrBookMap")
+
+	return target
 }

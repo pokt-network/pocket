@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"log"
 	"net/http"
 	"time"
 
@@ -13,23 +12,41 @@ import (
 
 type rpcServer struct {
 	bus modules.Bus
+
+	logger modules.Logger
 }
 
-var _ ServerInterface = &rpcServer{}
-var _ modules.IntegratableModule = &rpcServer{}
+var (
+	_ ServerInterface            = &rpcServer{}
+	_ modules.IntegratableModule = &rpcServer{}
+)
 
 func NewRPCServer(bus modules.Bus) *rpcServer {
 	s := &rpcServer{}
 	s.SetBus(bus)
+
 	return s
 }
 
-func (s *rpcServer) StartRPC(port string, timeout uint64) {
-	log.Printf("Starting RPC on port %s...\n", port)
+func (s *rpcServer) StartRPC(port string, timeout uint64, logger modules.Logger) {
+	s.logger = logger
+
+	s.logger.Info().Msgf("Starting RPC on port " + port)
 
 	e := echo.New()
 	middlewares := []echo.MiddlewareFunc{
-		middleware.Logger(),
+		middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+			LogURI:    true,
+			LogStatus: true,
+			LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+				s.logger.Info().
+					Str("URI", v.URI).
+					Int("status", v.Status).
+					Msg("request")
+
+				return nil
+			},
+		}),
 		middleware.TimeoutWithConfig(middleware.TimeoutConfig{
 			Skipper:      middleware.DefaultSkipper,
 			ErrorMessage: "Request timed out",
@@ -37,7 +54,7 @@ func (s *rpcServer) StartRPC(port string, timeout uint64) {
 		}),
 	}
 	if s.GetBus().GetRuntimeMgr().GetConfig().GetRPCConfig().GetUseCors() {
-		log.Println("Enabling CORS middleware")
+		s.logger.Info().Msg("Enabling CORS middleware")
 		middlewares = append(middlewares, middleware.CORS())
 	}
 	e.Use(
@@ -47,7 +64,7 @@ func (s *rpcServer) StartRPC(port string, timeout uint64) {
 	RegisterHandlers(e, s)
 
 	if err := e.Start(":" + port); err != http.ErrServerClosed {
-		log.Fatal(err)
+		s.logger.Fatal().Err(err).Msg("RPC server failed to start")
 	}
 }
 

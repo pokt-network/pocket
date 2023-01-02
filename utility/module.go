@@ -2,21 +2,25 @@ package utility
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-var _ modules.UtilityModule = &utilityModule{}
-var _ modules.UtilityConfig = &types.UtilityConfig{}
-var _ modules.Module = &utilityModule{}
+var (
+	_ modules.UtilityModule = &utilityModule{}
+	_ modules.UtilityConfig = &types.UtilityConfig{}
+	_ modules.Module        = &utilityModule{}
+)
 
 type utilityModule struct {
 	bus    modules.Bus
 	config modules.UtilityConfig
+
+	logger modules.Logger
 
 	Mempool types.Mempool
 }
@@ -42,6 +46,7 @@ func (*utilityModule) Create(runtime modules.RuntimeMgr) (modules.Module, error)
 
 	return &utilityModule{
 		config:  utilityCfg,
+		logger:  logger.Global.CreateLoggerForModule(m.GetModuleName()),
 		Mempool: types.NewMempool(utilityCfg.GetMaxMempoolTransactionBytes(), utilityCfg.GetMaxMempoolTransactions()),
 	}, nil
 }
@@ -64,7 +69,7 @@ func (u *utilityModule) SetBus(bus modules.Bus) {
 
 func (u *utilityModule) GetBus() modules.Bus {
 	if u.bus == nil {
-		log.Fatalf("Bus is not initialized")
+		u.logger.Fatal().Msg("Bus is not initialized")
 	}
 	return u.bus
 }
@@ -88,7 +93,7 @@ func (u *utilityModule) HandleMessage(message *anypb.Any) error {
 		if err := u.CheckTransaction(transactionGossipMsg.Tx); err != nil {
 			return err
 		}
-		log.Println("MEMPOOOL: Successfully added a new message to the mempool!")
+		u.logger.Info().Str("source", "MEMPOOL").Msg("Successfully added a new message to the mempool!")
 	default:
 		return types.ErrUnknownMessageType(message.MessageName())
 	}
