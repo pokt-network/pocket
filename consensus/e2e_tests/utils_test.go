@@ -286,13 +286,16 @@ loop:
 			if numRemainingMsgs == 0 && !failOnExtraMessages {
 				break loop
 			}
+		// The reason we return we format and return an error message rather than using t.Fail(...)
+		// is to allow the called to run `require.NoError(t, err)` and have the output point to the
+		// specific line where the test failed.
 		case <-ctx.Done():
 			if numRemainingMsgs == 0 {
 				break loop
 			} else if numRemainingMsgs > 0 {
-				t.Fatalf("Missing '%s' messages; %d expected but %d received. (%s)", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
+				return expectedMsgs, fmt.Errorf("Missing '%s' messages; %d expected but %d received. (%s)", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
 			} else {
-				t.Fatalf("Too many '%s' messages; %d expected but %d received. (%s)", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
+				return expectedMsgs, fmt.Errorf("Too many '%s' messages; %d expected but %d received. (%s)", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
 			}
 		}
 	}

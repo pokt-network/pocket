@@ -13,26 +13,24 @@ import (
 )
 
 func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
+	// Test preparation
 	clockMock := clock.NewMock()
-	// Test configs
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-
-	go timeReminder(t, clockMock, time.Second)
+	timeReminder(t, clockMock, time.Second)
 
 	// Create & start test pocket nodes
-	testChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, testChannel)
+	eventsChannel := make(modules.EventsChannel, 100)
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, eventsChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Debug message to start consensus by triggering first view change
 	for _, pocketNode := range pocketNodes {
 		TriggerNextView(t, pocketNode)
 	}
-
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// NewRound
-	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 1000, false)
+	// 1. NewRound
+	newRoundMessages, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 250, true)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -45,19 +43,19 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 			nodeState)
 		require.Equal(t, false, nodeState.IsLeader)
 	}
+
 	for _, message := range newRoundMessages {
 		P2PBroadcast(t, pocketNodes, message)
 	}
+	advanceTime(t, clockMock, 10*time.Millisecond)
 
+	// IMPROVE: Use seeding for deterministic leader election in unit tests.
 	// Leader election is deterministic for now, so we know its NodeId
-	// TODO(olshansky): Use seeding for deterministic leader election in unit tests.
 	leaderId := typesCons.NodeId(2)
 	leader := pocketNodes[leaderId]
 
-	advanceTime(t, clockMock, 10*time.Millisecond)
-
-	// Prepare
-	prepareProposal, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.Prepare, consensus.Propose, 1, 1000, false)
+	// 2. Prepare
+	prepareProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Propose, numValidators, 250, true)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -70,22 +68,22 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
 	}
+
 	for _, message := range prepareProposal {
 		P2PBroadcast(t, pocketNodes, message)
 	}
-
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// Precommit
-	prepareVotes, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.Prepare, consensus.Vote, numValidators, 1000, false)
+	// 3. PreCommit
+	prepareVotes, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Prepare, consensus.Vote, numValidators, 250, true)
 	require.NoError(t, err)
+
 	for _, vote := range prepareVotes {
 		P2PSend(t, leader, vote)
 	}
-
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	preCommitProposal, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.PreCommit, consensus.Propose, 1, 1000, false)
+	preCommitProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.PreCommit, consensus.Propose, numValidators, 250, true)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -98,22 +96,22 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
 	}
+
 	for _, message := range preCommitProposal {
 		P2PBroadcast(t, pocketNodes, message)
 	}
-
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// Commit
-	preCommitVotes, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.PreCommit, consensus.Vote, numValidators, 1000, false)
+	// 4. Commit
+	preCommitVotes, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.PreCommit, consensus.Vote, numValidators, 250, true)
 	require.NoError(t, err)
+
 	for _, vote := range preCommitVotes {
 		P2PSend(t, leader, vote)
 	}
-
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	commitProposal, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.Commit, consensus.Propose, 1, 1000, false)
+	commitProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Commit, consensus.Propose, numValidators, 250, true)
 	require.NoError(t, err)
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -126,22 +124,22 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
 	}
+
 	for _, message := range commitProposal {
 		P2PBroadcast(t, pocketNodes, message)
 	}
-
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// Decide
-	commitVotes, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.Commit, consensus.Vote, numValidators, 1000, false)
+	// 5. Decide
+	commitVotes, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Commit, consensus.Vote, numValidators, 250, true)
 	require.NoError(t, err)
+
 	for _, vote := range commitVotes {
 		P2PSend(t, leader, vote)
 	}
-
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	decideProposal, err := WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.Decide, consensus.Propose, 1, 1000, false)
+	decideProposal, err := WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.Decide, consensus.Propose, numValidators, 250, true)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -166,14 +164,14 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 			nodeState)
 		require.Equal(t, leaderId, nodeState.LeaderId, fmt.Sprintf("%d should be the current leader", leaderId))
 	}
+
 	for _, message := range decideProposal {
 		P2PBroadcast(t, pocketNodes, message)
 	}
-
 	advanceTime(t, clockMock, 10*time.Millisecond)
 
-	// Block has been committed and new round has begun
-	_, err = WaitForNetworkConsensusEvents(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 1000, false)
+	// 1. NewRound - begin again
+	_, err = WaitForNetworkConsensusEvents(t, clockMock, eventsChannel, consensus.NewRound, consensus.Propose, numValidators*numValidators, 250, true)
 	require.NoError(t, err)
 	for pocketId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
@@ -188,55 +186,55 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	}
 }
 
-/*
+// TODO: Implement these tests and use them as a starting point for new ones. Consider using ChatGPT to help you out :)
+
 func TestHotstuff4Nodes1Byzantine1Block(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }
 
 func TestHotstuff4Nodes2Byzantine1Block(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }
 
 func TestHotstuff4Nodes1BlockNetworkPartition(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }
 
 func TestHotstuff4Nodes1Block4Rounds(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }
 func TestHotstuff4Nodes2Blocks(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }
 
 func TestHotstuff4Nodes2NewNodes1Block(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }
 
 func TestHotstuff4Nodes2DroppedNodes1Block(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }
 
 func TestHotstuff4NodesFailOnPrepare(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }
 
 func TestHotstuff4NodesFailOnPrecommit(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }
 
 func TestHotstuff4NodesFailOnCommit(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }
 
 func TestHotstuff4NodesFailOnDecide(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }
 
 func TestHotstuffValidatorWithLockedQC(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }
 
 func TestHotstuffValidatorWithLockedQCMissingNewRoundMsg(t *testing.T) {
-	t.Skip() // TODO: Implement
+	t.Skip()
 }
-*/

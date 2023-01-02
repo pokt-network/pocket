@@ -32,7 +32,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, appHash)
 
-	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
+	// TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
 	// missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)
 	// require.NoError(t, err)
@@ -82,7 +82,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	_, er = ctx.ApplyBlock()
 	require.NoError(t, er)
 
-	// // TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
+	// TODO: Uncomment this once `GetValidatorMissedBlocks` is implemented.
 	// beginBlock logic verify
 	// missed, err := ctx.GetValidatorMissedBlocks(byzantine.Address)
 	// require.NoError(t, err)

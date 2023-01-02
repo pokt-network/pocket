@@ -308,9 +308,9 @@ test_consensus_e2e: ## Run all go t2e unit tests in the consensus module w/ log 
 
 .PHONY: test_consensus_concurrent_tests
 test_consensus_concurrent_tests: ## Run unit tests in the consensus module that could be prone to race conditions (#192)
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestTinyPacemakerTimeouts$  ./consensus/e2e_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestPacemakerTimeoutIncreasesRound$  ./consensus/e2e_tests; done;
 	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/e2e_tests; done;
-	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestTinyPacemakerTimeouts$  ./consensus/e2e_tests; done;
+	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestPacemakerTimeoutIncreasesRound$  ./consensus/e2e_tests; done;
 	for i in $$(seq 1 100); do go test -timeout 2s -count=1 -race -run ^TestHotstuff4Nodes1BlockHappyPath$  ./consensus/e2e_tests; done;
 
 .PHONY: test_hotstuff
