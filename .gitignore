@@ -64,3 +64,7 @@ build/config/gen*.json
 
 # Ignored generated files by build
 bin/*
+
+# Validator keys used for testing/demoes
+val1.json
+val2.json

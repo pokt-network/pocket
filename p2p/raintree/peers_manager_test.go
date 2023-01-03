@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/defaults"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -37,9 +38,9 @@ type ExpectedRainTreeMessageProp struct {
 
 func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mockP2PCfg := modulesMock.NewMockP2PConfig(ctrl)
-	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMaxMempoolCount).AnyTimes()
-
+	p2pCfg := &configs.P2PConfig{
+		MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
+	}
 	addr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
 
@@ -81,7 +82,7 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 			mockBus := mockBus(ctrl)
 			mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
 
-			network := NewRainTreeNetwork(addr, mockBus, mockP2PCfg, mockAddrBookProvider).(*rainTreeNetwork)
+			network := NewRainTreeNetwork(addr, mockBus, p2pCfg, mockAddrBookProvider).(*rainTreeNetwork)
 
 			peersManagerStateView := network.peersManager.getNetworkView()
 
@@ -94,9 +95,9 @@ func TestRainTreeAddrBookUtilsHandleUpdate(t *testing.T) {
 
 func BenchmarkAddrBookUpdates(b *testing.B) {
 	ctrl := gomock.NewController(gomock.TestReporter(b))
-	mockP2PCfg := modulesMock.NewMockP2PConfig(ctrl)
-	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMaxMempoolCount).AnyTimes()
-
+	p2pCfg := &configs.P2PConfig{
+		MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
+	}
 	addr, err := cryptoPocket.GenerateAddress()
 	require.NoError(b, err)
 
@@ -123,7 +124,7 @@ func BenchmarkAddrBookUpdates(b *testing.B) {
 			mockBus := mockBus(ctrl)
 			mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
 
-			network := NewRainTreeNetwork(addr, mockBus, mockP2PCfg, mockAddrBookProvider).(*rainTreeNetwork)
+			network := NewRainTreeNetwork(addr, mockBus, p2pCfg, mockAddrBookProvider).(*rainTreeNetwork)
 
 			peersManagerStateView := network.peersManager.getNetworkView()
 
@@ -208,13 +209,13 @@ func testRainTreeMessageTargets(t *testing.T, expectedMsgProp *ExpectedRainTreeM
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
 	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
 	busMock.EXPECT().GetPersistenceModule().Return(persistenceMock).AnyTimes()
-	mockP2PCfg := modulesMock.NewMockP2PConfig(ctrl)
-	mockP2PCfg.EXPECT().GetMaxMempoolCount().Return(defaults.DefaultP2PMaxMempoolCount).AnyTimes()
-
+	p2pCfg := &configs.P2PConfig{
+		MaxMempoolCount: defaults.DefaultP2PMaxMempoolCount,
+	}
 	addrBook := getAlphabetAddrBook(expectedMsgProp.numNodes)
 	mockAddrBookProvider := mockAddrBookProvider(ctrl, addrBook)
 
-	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, busMock, mockP2PCfg, mockAddrBookProvider).(*rainTreeNetwork)
+	network := NewRainTreeNetwork([]byte{expectedMsgProp.orig}, busMock, p2pCfg, mockAddrBookProvider).(*rainTreeNetwork)
 
 	network.SetBus(busMock)
 

@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/runtime/genesis"
 )
 
 // init initializes a map that contains the metadata extracted from `gov.proto`.
@@ -60,7 +60,7 @@ var (
 // InsertParams generates the SQL INSERT statement given a *genesis.Params
 // It leverages metadata in the form of struct tags (see `parseGovProto` for more information).
 // WARNING: reflections in prod
-func InsertParams(params modules.Params, height int64) string {
+func InsertParams(params *genesis.Params, height int64) string {
 	val := reflect.ValueOf(params)
 	var sb strings.Builder
 
@@ -172,7 +172,7 @@ type govParamMetadata struct {
 // WARNING: reflections in prod
 func parseGovProto() (govParamMetadataMap map[string]govParamMetadata) {
 	govParamMetadataMap = make(map[string]govParamMetadata)
-	fields := reflect.VisibleFields(reflect.TypeOf(Params{}))
+	fields := reflect.VisibleFields(reflect.TypeOf(genesis.Params{}))
 	for _, field := range fields {
 		if !field.IsExported() {
 			continue
@@ -187,7 +187,6 @@ func parseGovProto() (govParamMetadataMap map[string]govParamMetadata) {
 		}
 		govParamMetadataKeys = append(govParamMetadataKeys, protoName)
 	}
-
 	return govParamMetadataMap
 }
 

@@ -9,7 +9,6 @@ import (
 
 type P2PModule interface {
 	Module
-	ConfigurableModule
 
 	// Returns the public P2P address of this node
 	GetAddress() (cryptoPocket.Address, error)

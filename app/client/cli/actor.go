@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/spf13/cobra"
 )
@@ -34,17 +35,17 @@ type (
 	cmdOption   func(*cobra.Command)
 	actorCmdDef struct {
 		Name      string
-		ActorType typesUtil.ActorType
+		ActorType coreTypes.ActorType
 		Options   []cmdOption
 	}
 )
 
 func NewActorCommands(cmdOptions []cmdOption) []*cobra.Command {
 	actorCmdDefs := []actorCmdDef{
-		{"Application", typesUtil.ActorType_App, cmdOptions},
-		{"Node", typesUtil.ActorType_ServiceNode, cmdOptions},
-		{"Fisherman", typesUtil.ActorType_Fisherman, cmdOptions},
-		{"Validator", typesUtil.ActorType_Validator, cmdOptions},
+		{"Application", coreTypes.ActorType_ACTOR_TYPE_APP, cmdOptions},
+		{"Node", coreTypes.ActorType_ACTOR_TYPE_SERVICENODE, cmdOptions},
+		{"Fisherman", coreTypes.ActorType_ACTOR_TYPE_FISH, cmdOptions},
+		{"Validator", coreTypes.ActorType_ACTOR_TYPE_VAL, cmdOptions},
 	}
 
 	cmds := make([]*cobra.Command, len(actorCmdDefs))

@@ -1,9 +1,14 @@
 package types
 
+import coreTypes "github.com/pokt-network/pocket/shared/core/types"
+
 // Interface common to all protocol actors at the persistence schema layer. This exposes SQL specific
 // attributes and queries.
 type ProtocolActorSchema interface {
 	/*** Protocol Actor Attributes ***/
+
+	// Actor Type
+	GetActorType() coreTypes.ActorType
 
 	// SQL Table Names
 	GetTableName() string
