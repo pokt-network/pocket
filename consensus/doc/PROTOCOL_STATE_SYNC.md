@@ -208,7 +208,7 @@ sequenceDiagram
 
 - `Optimistic Sync Design` - Optimize the State Sync protocol by parallelling requests and computation with pre-fetching and local caching
 
-- `Block Chunk Design` - Update the singe block-by-block to be able to receive and provide multiple blocks per request.
+- `Block Chunk Design` - Update the single block-by-block to be able to receive and provide multiple blocks per request.
 
 - `Block Stream Design` - Update the Block by Block design to stream blocks via a WebSocket from a single connectable peer.
 
