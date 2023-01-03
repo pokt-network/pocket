@@ -77,34 +77,62 @@ type consensusModule struct {
 type ConsensusDebugModule interface {
 	SetHeight(uint64)
 	SetRound(uint64)
-	SetStep(typesCons.HotstuffStep)
+	SetStep(uint64)
 	SetBlock(*typesCons.Block)
 	SetLeaderId(*typesCons.NodeId)
 	SetUtilityContext(modules.UtilityContext)
 }
 
-func (c *consensusModule) SetHeight(height uint64) {
-	c.height = height
+func (m *consensusModule) SetHeight(height uint64) {
+	m.height = height
 }
 
-func (c *consensusModule) SetRound(round uint64) {
-	c.round = round
+func (m *consensusModule) SetRound(round uint64) {
+	m.round = round
 }
 
-func (c *consensusModule) SetStep(step typesCons.HotstuffStep) {
-	c.step = step
+func (m *consensusModule) SetStep(step uint64) {
+	m.step = typesCons.HotstuffStep(step)
 }
 
-func (c *consensusModule) SetBlock(block *typesCons.Block) {
-	c.block = block
+func (m *consensusModule) SetBlock(block *typesCons.Block) {
+	m.block = block
 }
 
-func (c *consensusModule) SetLeaderId(leaderId *typesCons.NodeId) {
-	c.leaderId = leaderId
+func (m *consensusModule) SetLeaderId(leaderId *typesCons.NodeId) {
+	m.leaderId = leaderId
 }
 
-func (c *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
-	c.utilityContext = utilityContext
+func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContext) {
+	m.utilityContext = utilityContext
+}
+
+// implementations of the type PaceMakerAccessModule interface
+// SetHeight, SeetRound, SetStep are implemented for ConsensusDebugModule
+
+func (m *consensusModule) ClearLeaderMessagesPool() {
+	m.clearLeader()
+	m.clearMessagesPool()
+}
+
+func (m *consensusModule) ResetForNewHeight() {
+	m.resetForNewHeight()
+}
+
+func (m *consensusModule) ReleaseUtilityContext() error {
+	if m.utilityContext != nil {
+		if err := m.utilityContext.Release(); err != nil {
+			log.Println("[WARN] Failed to release utility context: ", err)
+			return err
+		}
+		m.utilityContext = nil
+	}
+
+	return nil
+}
+
+func (m *consensusModule) BroadcastMessageToNodes(msg *anypb.Any) {
+
 }
 
 func Create(bus modules.Bus) (modules.Module, error) {

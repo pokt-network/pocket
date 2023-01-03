@@ -19,6 +19,7 @@ const (
 type ConsensusModule interface {
 	Module
 	KeyholderModule
+	PaceMakerAccessModule
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
