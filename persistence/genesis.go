@@ -56,7 +56,7 @@ func (m *persistenceModule) populateGenesisState(state *genesis.GenesisState) {
 	stakedActorsInsertConfigs := []struct {
 		Name     string
 		Getter   func() []*coreTypes.Actor
-		InsertFn func(address []byte, publicKey []byte, output []byte, paused bool, status int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error
+		InsertFn func(address, publicKey, output []byte, paused bool, status int32, serviceURL, stakedTokens string, chains []string, pausedHeight, unstakingHeight int64) error
 		Pool     coreTypes.Pools
 	}{
 		{
