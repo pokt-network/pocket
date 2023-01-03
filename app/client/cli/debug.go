@@ -92,7 +92,7 @@ func promptGetInput() (string, error) {
 	}
 
 	if err != nil {
-		log.Printf("Prompt failed %v\n", err)
+		logger.Global.Logger.Error().Err(err).Msg("Prompt failed")
 		return "", err
 	}
 
@@ -132,7 +132,7 @@ func handleSelect(selection string) {
 		}
 		sendDebugMessage(m)
 	default:
-		log.Println("Selection not yet implemented...", selection)
+		logger.Global.Logger.Error().Msg("Selection not yet implemented...")
 	}
 }
 
@@ -140,7 +140,7 @@ func handleSelect(selection string) {
 func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
+		logger.Global.Logger.Error().Err(err).Msg("Failed to create Any proto")
 	}
 
 	// TODO(olshansky): Once we implement the cleanup layer in RainTree, we'll be able to use
@@ -151,7 +151,7 @@ func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 	for _, val := range consensusMod.ValidatorMap() {
 		addr, err := pocketCrypto.NewAddress(val.GetAddress())
 		if err != nil {
-			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
+			logger.Global.Logger.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 		}
 		p2pMod.Send(addr, anyProto)
 	}
@@ -161,14 +161,14 @@ func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 	anyProto, err := anypb.New(debugMsg)
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to create Any proto: %v", err)
+		logger.Global.Logger.Error().Err(err).Msg("Failed to create Any proto")
 	}
 
 	var validatorAddress []byte
 	for _, val := range consensusMod.ValidatorMap() {
 		validatorAddress, err = pocketCrypto.NewAddress(val.GetAddress())
 		if err != nil {
-			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
+			logger.Global.Logger.Fatal().Err(err).Msg("Failed to convert validator address into pocketCrypto.Address")
 		}
 		break
 	}
@@ -189,7 +189,7 @@ func initDebug(remoteCLIURL string) {
 
 		p2pM, err := p2p.Create(runtimeMgr)
 		if err != nil {
-			log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
+			logger.Global.Fatal().Err(err).Msg("Failed to create p2p module")
 		}
 		p2pMod = p2pM.(modules.P2PModule)
 

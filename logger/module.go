@@ -109,3 +109,8 @@ func (m *loggerModule) InitLogger() {
 func (m *loggerModule) GetLogger() modules.Logger {
 	return m.Logger
 }
+
+// SetFields sets the fields for the global logger
+func (m *loggerModule) SetFields(fields map[string]interface{}) {
+	m.Logger = m.Logger.With().Fields(fields).Logger()
+}

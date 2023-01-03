@@ -218,5 +218,6 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 /*** General Infrastructure Helpers ***/
 func (m *consensusModule) setLogPrefix(logPrefix string) {
-	m.logPrefix = logPrefix
+	logger.Global.Logger = logger.Global.With().Str("type", logPrefix).Logger()
+	m.logger = m.logger.With().Str("kind", logPrefix).Logger()
 }

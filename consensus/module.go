@@ -176,8 +176,6 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 
 		validatorMap: valMap,
 
-		logger: logger.Global.CreateLoggerForModule(m.GetModuleName()),
-
 		utilityContext:    nil,
 		paceMaker:         paceMaker,
 		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
@@ -185,6 +183,13 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 		logPrefix:   DefaultLogPrefix,
 		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
 	}
+
+	logger.Global.SetFields(
+		map[string]interface{}{
+			"kind":    m.logPrefix,
+			"node_id": m.nodeId.String(),
+		},
+	)
 
 	// TODO(olshansky): Look for a way to avoid doing this.
 	// TODO(goku): remove tight connection of pacemaker and consensus.
@@ -202,11 +207,7 @@ func (m *consensusModule) Start() error {
 			consensusTelemetry.CONSENSUS_BLOCKCHAIN_HEIGHT_COUNTER_DESCRIPTION,
 		)
 
-	m.logger = m.logger.
-		With().
-		Str("kind", m.logPrefix).
-		Str("node_id", m.nodeId.String()).
-		Logger()
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
 	if err := m.loadPersistedState(); err != nil {
 		return err

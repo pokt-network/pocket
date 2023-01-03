@@ -2,7 +2,6 @@ package telemetry
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/pokt-network/pocket/logger"
@@ -127,7 +126,7 @@ func (m *PrometheusTelemetryModule) GetTimeSeriesAgent() modules.TimeSeriesAgent
 
 func (p *PrometheusTelemetryModule) CounterRegister(name string, description string) {
 	if _, exists := p.counters[name]; exists {
-		log.Printf("[WARNING] Trying to register and already registered counter: %s\n", name)
+		p.logger.Warn().Str("counter", name).Msg("Trying to register and already registered counter")
 		return
 	}
 
@@ -139,7 +138,7 @@ func (p *PrometheusTelemetryModule) CounterRegister(name string, description str
 
 func (p *PrometheusTelemetryModule) CounterIncrement(name string) {
 	if _, exists := p.counters[name]; !exists {
-		log.Printf("[WARNING] Trying to increment a non-existent counter: %s\n", name)
+		p.logger.Warn().Str("counter", name).Msg("Trying to increment a non-existent counter")
 		return
 	}
 
@@ -148,7 +147,7 @@ func (p *PrometheusTelemetryModule) CounterIncrement(name string) {
 
 func (p *PrometheusTelemetryModule) GaugeRegister(name string, description string) {
 	if _, exists := p.gauges[name]; exists {
-		log.Printf("[WARNING] Trying to register and already registered gauge: %s\n", name)
+		p.logger.Warn().Str("gauge", name).Msg("Trying to register and already registered gauge")
 		return
 	}
 
@@ -216,7 +215,7 @@ func (p *PrometheusTelemetryModule) GaugeSub(name string, value float64) (promet
 
 func (p *PrometheusTelemetryModule) GaugeVecRegister(namespace, module, name, description string, labels []string) {
 	if _, exists := p.counters[name]; exists {
-		log.Printf("[WARNING] Trying to register and already registered vector gauge: %s\n", name)
+		p.logger.Warn().Str("gauge vector", name).Msg("Trying to register and already registered gauge vector")
 		return
 	}
 
