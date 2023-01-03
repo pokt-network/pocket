@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.7] - 2022-01-03
+
+- Added comments to the functions exposed by `P2PModule`
+
 ## [0.0.0.6] - 2022-12-10
 
 Persistence Module:
