@@ -88,16 +88,17 @@ func (p *PostgresContext) getActor(actorSchema types.ProtocolActorSchema, addres
 	if err != nil {
 		return
 	}
-	actor, height, err = p.getActorFromRow(tx.QueryRow(ctx, actorSchema.GetQuery(hex.EncodeToString(address), height)))
+	actor, height, err = p.getActorFromRow(actorSchema.GetActorType(), tx.QueryRow(ctx, actorSchema.GetQuery(hex.EncodeToString(address), height)))
 	if err != nil {
 		return
 	}
-	actor.ActorType = actorSchema.GetActorType()
 	return p.getChainsForActor(ctx, tx, actorSchema, actor, height)
 }
 
-func (p *PostgresContext) getActorFromRow(row pgx.Row) (actor *coreTypes.Actor, height int64, err error) {
-	actor = new(coreTypes.Actor)
+func (p *PostgresContext) getActorFromRow(actorType coreTypes.ActorType, row pgx.Row) (actor *coreTypes.Actor, height int64, err error) {
+	actor = &coreTypes.Actor{
+		ActorType: actorType,
+	}
 	err = row.Scan(
 		&actor.Address,
 		&actor.PublicKey,

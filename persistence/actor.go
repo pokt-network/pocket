@@ -20,7 +20,7 @@ func (p PostgresContext) GetAllApps(height int64) (apps []*coreTypes.Actor, err 
 	var actors []*coreTypes.Actor
 	for rows.Next() {
 		var actor *coreTypes.Actor
-		actor, height, err = p.getActorFromRow(rows)
+		actor, height, err = p.getActorFromRow(types.ApplicationActor.GetActorType(), rows)
 		if err != nil {
 			return
 		}
@@ -49,10 +49,11 @@ func (p PostgresContext) GetAllValidators(height int64) (vals []*coreTypes.Actor
 	var actors []*coreTypes.Actor
 	for rows.Next() {
 		var actor *coreTypes.Actor
-		actor, height, err = p.getActorFromRow(rows)
+		actor, height, err = p.getActorFromRow(types.ValidatorActor.GetActorType(), rows)
 		if err != nil {
 			return
 		}
+		actor.ActorType = types.ValidatorActor.GetActorType()
 		actors = append(actors, actor)
 	}
 	rows.Close()
@@ -78,7 +79,7 @@ func (p PostgresContext) GetAllServiceNodes(height int64) (sn []*coreTypes.Actor
 	var actors []*coreTypes.Actor
 	for rows.Next() {
 		var actor *coreTypes.Actor
-		actor, height, err = p.getActorFromRow(rows)
+		actor, height, err = p.getActorFromRow(types.ServiceNodeActor.GetActorType(), rows)
 		if err != nil {
 			return
 		}
@@ -107,7 +108,7 @@ func (p PostgresContext) GetAllFishermen(height int64) (f []*coreTypes.Actor, er
 	var actors []*coreTypes.Actor
 	for rows.Next() {
 		var actor *coreTypes.Actor
-		actor, height, err = p.getActorFromRow(rows)
+		actor, height, err = p.getActorFromRow(types.FishermanActor.GetActorType(), rows)
 		if err != nil {
 			return
 		}
