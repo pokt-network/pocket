@@ -238,7 +238,7 @@ protogen_clean: ## Remove all the generated protobufs.
 
 .PHONY: protogen_local
 protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the protobufs
-# TODO: Organize this code with a basic fo
+# TODO: Organize this code with a basic for loop
 	$(eval proto_dir = ".")
 	protoc --go_opt=paths=source_relative  -I=./shared/messaging/proto    --go_out=./shared/messaging      	./shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
 	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
