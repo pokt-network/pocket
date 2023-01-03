@@ -49,6 +49,11 @@ var (
 	OlshanskyChains = []string{"OLSH"}
 
 	testSchema = "test_schema"
+
+	genesisStateNumValidators   = 5
+	genesisStateNumServiceNodes = 1
+	genesisStateNumApplications = 1
+	genesisStateNumFishermen    = 1
 )
 var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 
@@ -96,7 +101,12 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 		},
 	}
 
-	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
+	genesisState, _ := test_artifacts.NewGenesisState(
+		genesisStateNumValidators,
+		genesisStateNumServiceNodes,
+		genesisStateNumApplications,
+		genesisStateNumServiceNodes,
+	)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
 
 	persistenceMod, err := persistence.Create(runtimeCfg)
