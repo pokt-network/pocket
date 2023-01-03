@@ -18,7 +18,6 @@ _NOTE: This document makes some assumption of P2P implementation details, so ple
 - [Research Items](#research-items)
 - [Glossary](#glossary)
 - [References](#references)
-- [State Sync References](#state-sync-references)
   - [Tendermint](#tendermint)
   - [Cosmos](#cosmos)
   - [Celestia](#celestia)
@@ -221,8 +220,6 @@ _TODO(M5): Create issues to track and discuss these work items in the future_
 - `SyncState`: The state of a network w.r.t to where it is relative to the world state (height, blocks available, etc).
 
 ## References
-
-## State Sync References
 
 State Sync, also known as Block Sync, is a well researched problem and we referenced various sources in our thinking process.
 
