@@ -2,6 +2,7 @@ package test
 
 import (
 	"encoding/hex"
+	"github.com/pokt-network/pocket/persistence"
 	"testing"
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
@@ -99,7 +100,7 @@ func TestUtilityContext_GetParameter(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetBlocksPerSession())
-	gotParam, err := ctx.GetParameter("blocks_per_session", 0)
+	gotParam, err := ctx.GetParameter(persistence.BlocksPerSessionParamName, 0)
 	require.NoError(t, err)
 	require.Equal(t, defaultParam, gotParam)
 

@@ -9,7 +9,7 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 
 ## [Unreleased]
 
-## [0.0.0.13] - 2022-12-28
+## [0.0.0.13] - 2023-01-03
 
 - Deprecate `GetBlocksPerSession` and `GetServiceNodesPerSessionAt` in favour of the more general `GetParameter(paramName string, height int64) (any, error)` getter function
 

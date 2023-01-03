@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/pokt-network/pocket/persistence/types"
 )
 
 // TODO : Deprecate these two constants when we change the persistenceRWContext interface to pass the `paramName`
-//const (
-//	BlocksPerSessionParamName       = "blocks_per_session"
-//	ServiceNodesPerSessionParamName = "service_nodes_per_session"
-//)
+const (
+	BlocksPerSessionParamName       = "blocks_per_session"
+	ServiceNodesPerSessionParamName = "service_nodes_per_session"
+)
 
 // TODO (Team) BUG setting parameters twice on the same height causes issues. We need to move the schema away from 'end_height' and
 // more towards the height_constraint architecture
@@ -31,6 +31,24 @@ import (
 // 	return p.GetIntParam(ServiceNodesPerSessionParamName, height)
 // }
 
+// Mapping of parameter names and their stringified type names
+var ParameterNameTypeMap = make(map[string]string)
+
+// Using the json tag of the fields in the Params struct to extract the name of the
+// parameters and build a mapping in memory of the types associated to each parameter
+// name according to the struct defined in: persistence/types/persistence_genesis.pb.go
+func init() {
+	st := reflect.TypeOf(types.Params{})
+	// Loop through struct fields to build ParameterNameTypeMap
+	for i := 0; i < st.NumField(); i++ {
+		field := st.Field(i)
+		json := field.Tag.Get("json") // Match the json tag of field: json:"paramName,omitempty"
+		paramName := strings.Split(json, ",")[0]
+		typ := field.Type.Name() // Get string version of field's type
+		ParameterNameTypeMap[paramName] = typ
+	}
+}
+
 func (p PostgresContext) InitParams() error {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
@@ -40,22 +58,11 @@ func (p PostgresContext) InitParams() error {
 	return err
 }
 
+// Match paramName against the ParameterNameTypeMap struct and call the proper
+// getter function getParamOrFlag[int | string | byte] and return its values
 func (p PostgresContext) GetParameter(paramName string, height int64) (v any, err error) {
-	st := reflect.TypeOf(types.Params{}) // Extract type of parameter from the Params struct
-	var typ reflect.Type
-	matchString := paramName + ",omitempty"
-	// Loop through struct fields to find matching parameter's type
-	for i := 0; i < st.NumField(); i++ {
-		field := st.Field(i)
-		json := field.Tag.Get("json") // Match the json tag of field: json:"paramName,omitempty"
-		if match, err := regexp.MatchString(matchString, json); match {
-			typ = field.Type
-			break
-		} else if err != nil {
-			return nil, err
-		}
-	}
-	switch typ.Name() {
+	paramType := ParameterNameTypeMap[paramName]
+	switch paramType {
 	case "int", "int32", "int64":
 		v, _, err = getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
 	case "string":
@@ -63,7 +70,7 @@ func (p PostgresContext) GetParameter(paramName string, height int64) (v any, er
 	case "[]uint8": // []byte
 		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
 	default:
-		return nil, fmt.Errorf("unhandled type for param: got %s.", typ.Name())
+		return nil, fmt.Errorf("unhandled type for param: got %s.", paramType)
 	}
 	return v, err
 }
