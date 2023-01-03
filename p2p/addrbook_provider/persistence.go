@@ -71,6 +71,9 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 	return addrBook, nil
 }
 
+// TODO (#426): refactor so that it's possible to connect to peers without using the GenericParam and having to filter out non-validator actors.
+// AddrBook and similar concepts shouldn't leak outside the P2P module. It should be possible to broadcast messages to all peers or only to a specific actor type
+// without having to know the underlying implementation in the P2P module.
 func (pabp *persistenceAddrBookProvider) ActorsToAddrBook(actors map[string]coreTypes.Actor) (typesP2P.AddrBook, error) {
 	book := make(typesP2P.AddrBook, 0)
 	for _, v := range actors {
@@ -88,6 +91,7 @@ func (pabp *persistenceAddrBookProvider) ActorsToAddrBook(actors map[string]core
 	return book, nil
 }
 
+// TODO (#426): refactor so that it doesn't use the GenericParam anymore to connect to the peer
 func (pabp *persistenceAddrBookProvider) ActorToNetworkPeer(v coreTypes.Actor) (*typesP2P.NetworkPeer, error) {
 	conn, err := pabp.connFactory(pabp.p2pCfg, v.GetGenericParam()) // service url
 	if err != nil {
