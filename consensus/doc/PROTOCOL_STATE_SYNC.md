@@ -20,18 +20,10 @@ _NOTE: This document makes some assumption of P2P implementation details, so ple
 - [References](#references)
 - [State Sync References](#state-sync-references)
   - [Tendermint](#tendermint)
-    - [Example](#example)
-    - [Links](#links)
   - [Cosmos](#cosmos)
-    - [Links](#links-1)
   - [Celestia](#celestia)
-    - [Example](#example-1)
-    - [Links](#links-2)
   - [Aptos](#aptos)
-    - [Example](#example-2)
-    - [Links](#links-3)
   - [Chia](#chia)
-    - [Links](#links-4)
 
 ## Background
 
@@ -236,7 +228,7 @@ State Sync, also known as Block Sync, is a well researched problem and we refere
 
 ### Tendermint
 
-#### Example
+**Example:**
 
 Tendermint follow an **async "fire-and-forget"** pattern as can be seen [here](https://github.com/tendermint/tendermint/blob/main/blocksync/reactor.go#L176):
 
@@ -268,7 +260,7 @@ func (bcR *Reactor) respondToPeer(msg *bcproto.BlockRequest,
 }
 ```
 
-#### Links
+**Links:**
 
 - [https://docs.tendermint.com/v0.34/tendermint-core/state-sync.html](https://docs.tendermint.com/v0.34/tendermint-core/state-sync.html)
   - A short high-level page containing state sync configurations
@@ -277,14 +269,14 @@ func (bcR *Reactor) respondToPeer(msg *bcproto.BlockRequest,
 
 ### Cosmos
 
-#### Links
+**Links:**
 
 - [https://blog.cosmos.network/cosmos-sdk-state-sync-guide-99e4cf43be2f](https://blog.cosmos.network/cosmos-sdk-state-sync-guide-99e4cf43be2f)
   - A short and easy to understand blog post on how the Cosmos SDK configures and manages State Sync
 
 ### Celestia
 
-#### Example
+**Example:**
 
 Celestia uses a synchronous request-response pattern as seen [here](https://github.com/celestiaorg/celestia-node/blob/main/header/sync/sync.go#L268).
 
@@ -323,7 +315,7 @@ func (s *Syncer) findHeaders(ctx context.Context, from, to uint64) ([]*header.Ex
 }
 ```
 
-#### Links
+**Links:**
 
 - [https://docs.celestia.org/nodes/config-toml#p2p](https://docs.celestia.org/nodes/config-toml#p2p)
   - A short high-level page containing the most important Celestia State Sync configs
@@ -332,7 +324,7 @@ func (s *Syncer) findHeaders(ctx context.Context, from, to uint64) ([]*header.Ex
 
 ### Aptos
 
-#### Example
+**Example:**
 
 Aptos follow an **async "fire-and-forget"** pattern as can be seen [here](https://github.com/diem/diem/blob/906353ebd9515e44276c7595c6bce699a7cb9ebe/state-sync/src/request_manager.rs#L258)
 
@@ -390,7 +382,7 @@ Aptos follow an **async "fire-and-forget"** pattern as can be seen [here](https:
     }
 ```
 
-#### Links
+**Links:**
 
 - [https://github.com/diem/diem/tree/main/specifications/state_sync](https://github.com/diem/diem/tree/main/specifications/state_sync)
   - A fantastic resource from Aptos on state sync. Medium-length, easy to read, and just detailed enough.
@@ -401,7 +393,7 @@ Aptos follow an **async "fire-and-forget"** pattern as can be seen [here](https:
 
 ### Chia
 
-#### Links
+**Links:**
 
 - [https://docs.chia.net/peer-protocol](https://docs.chia.net/peer-protocol)
   - A detailed list of the type of requests Chia uses for communication between peers
