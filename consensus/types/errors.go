@@ -104,7 +104,7 @@ func DebugTogglePacemakerManualMode(mode string) string {
 }
 
 func DebugNodeState(state ConsensusNodeState) string {
-	return fmt.Sprintf("NODE STATE: Node %d is at (Height, Step, Round): (%d, %d, %d)\n", state.NodeId, state.Height, state.Step, state.Round)
+	return fmt.Sprintf("NODE STATE: Node %d is at (Height, Step, Round): (%d, %d, %d)", state.NodeId, state.Height, state.Step, state.Round)
 }
 
 func DebugHandlingHotstuffMessage(msg *HotstuffMessage) string {

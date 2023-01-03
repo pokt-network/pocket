@@ -46,12 +46,12 @@ func (*utilityModule) Create(runtime modules.RuntimeMgr) (modules.Module, error)
 
 	return &utilityModule{
 		config:  utilityCfg,
-		logger:  logger.Global.CreateLoggerForModule(m.GetModuleName()),
 		Mempool: types.NewMempool(utilityCfg.GetMaxMempoolTransactionBytes(), utilityCfg.GetMaxMempoolTransactions()),
 	}, nil
 }
 
 func (u *utilityModule) Start() error {
+	u.logger = logger.Global.CreateLoggerForModule(u.GetModuleName())
 	return nil
 }
 

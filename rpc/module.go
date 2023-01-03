@@ -7,6 +7,7 @@ import (
 	_ "github.com/getkin/kin-openapi/openapi3"
 	_ "github.com/labstack/echo/v4"
 
+	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -44,9 +45,7 @@ func (m *rpcModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
 }
 
 func (u *rpcModule) Start() error {
-	u.logger = u.GetBus().
-		GetLoggerModule().
-		CreateLoggerForModule(u.GetModuleName())
+	u.logger = logger.Global.CreateLoggerForModule(u.GetModuleName())
 
 	go NewRPCServer(u.GetBus()).StartRPC(u.config.GetPort(), u.config.GetTimeout(), u.logger)
 

@@ -195,14 +195,22 @@ func (p *paceMaker) RestartTimer() {
 }
 
 func (p *paceMaker) InterruptRound() {
-	p.consensusMod.logger.Info().Msg(typesCons.PacemakerInterrupt(p.consensusMod.CurrentHeight(), p.consensusMod.step, p.consensusMod.round))
+	p.consensusMod.logger.Info().Fields(map[string]interface{}{
+		"step":   p.consensusMod.step,
+		"round":  p.consensusMod.round,
+		"height": p.consensusMod.CurrentHeight(),
+	}).Msg("INTERRUPT")
 
 	p.consensusMod.round++
 	p.startNextView(p.consensusMod.highPrepareQC, false)
 }
 
 func (p *paceMaker) NewHeight() {
-	p.consensusMod.logger.Info().Msg(typesCons.PacemakerNewHeight(p.consensusMod.CurrentHeight() + 1))
+	p.consensusMod.logger.Info().Fields(map[string]interface{}{
+		"step":   p.consensusMod.step,
+		"round":  p.consensusMod.round,
+		"height": p.consensusMod.CurrentHeight(),
+	}).Msg("Starting first round for new block")
 
 	p.consensusMod.height++
 	p.consensusMod.resetForNewHeight()

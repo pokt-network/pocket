@@ -11,7 +11,13 @@ func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 	if err := m.utilityContext.Commit(block.BlockHeader.QuorumCertificate); err != nil {
 		return err
 	}
-	m.logger.Info().Msg(typesCons.CommittingBlock(m.height, len(block.Transactions)))
+
+	m.logger.Info().
+		Fields(map[string]interface{}{
+			"height":       block.BlockHeader.Height,
+			"transactions": len(block.Transactions),
+		}).
+		Msg("🧱🧱🧱 Committing block 🧱🧱🧱")
 
 	// Release the context
 	if err := m.utilityContext.Release(); err != nil {

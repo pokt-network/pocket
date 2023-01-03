@@ -96,8 +96,6 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 		txIndexer:  txIndexer,
 		stateTrees: stateTrees,
 
-		logger: logger.Global.CreateLoggerForModule(m.GetModuleName()),
-
 		writeContext: nil,
 	}
 
@@ -120,6 +118,7 @@ func (*persistenceModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module,
 
 func (m *persistenceModule) Start() error {
 	m.logger.Info().Msg("Starting module...")
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 	return nil
 }
 

@@ -38,17 +38,41 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 	var pss []*typesCons.PartialSignature
 	for _, msg := range m.messagePool[step] {
 		if msg.GetPartialSignature() == nil {
-			m.logger.Warn().Msg(typesCons.WarnMissingPartialSig(msg))
+
+			m.logger.Warn().Fields(
+				map[string]interface{}{
+					"height": msg.GetHeight(),
+					"step":   msg.GetStep(),
+					"round":  msg.GetRound(),
+				},
+			).Msg("No partial signature found which should not happen...")
+
 			continue
 		}
 		if msg.GetHeight() != height || msg.GetStep() != step || msg.GetRound() != round {
-			m.logger.Warn().Msg(typesCons.WarnUnexpectedMessageInPool(msg, height, step, round))
+
+			m.logger.Warn().Fields(
+				map[string]interface{}{
+					"height": msg.GetHeight(),
+					"step":   msg.GetStep(),
+					"round":  msg.GetRound(),
+				},
+			).Msg("Message in pool does not match (height, step, round) of QC being generated")
+
 			continue
 		}
 
 		ps := msg.GetPartialSignature()
 		if ps.Signature == nil || len(ps.Address) == 0 {
-			m.logger.Warn().Msg(typesCons.WarnIncompletePartialSig(ps, msg))
+
+			m.logger.Warn().Fields(
+				map[string]interface{}{
+					"height": msg.GetHeight(),
+					"step":   msg.GetStep(),
+					"round":  msg.GetRound(),
+				},
+			).Msg("Partial signature is incomplete which should not happen...")
+
 			continue
 		}
 		pss = append(pss, msg.GetPartialSignature())
@@ -198,7 +222,15 @@ func (m *consensusModule) clearLeader() {
 func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) error {
 	leaderId, err := m.leaderElectionMod.ElectNextLeader(message)
 	if err != nil || leaderId == 0 {
-		m.logger.Error().Err(err).Msg(typesCons.ErrLeaderElection(message).Error())
+
+		m.logger.Error().Err(err).Fields(
+			map[string]interface{}{
+				"leaderId": leaderId,
+				"height":   m.height,
+				"round":    m.round,
+			},
+		).Msg("leader election failed: Validator cannot take part in consensus")
+
 		m.clearLeader()
 		return err
 	}
@@ -207,10 +239,20 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 	if m.isLeader() {
 		m.setLogPrefix("LEADER")
-		m.logger.Info().Msg(typesCons.ElectedSelfAsNewLeader(m.idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
+
+		m.logger.Info().Fields(map[string]interface{}{
+			"height": m.height,
+			"round":  m.round,
+			"addr":   m.idToValAddrMap[*m.leaderId],
+		}).Msg("👑👑👑👑👑👑 I am the new leader")
 	} else {
 		m.setLogPrefix("REPLICA")
-		m.logger.Info().Msg(typesCons.ElectedNewLeader(m.idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
+
+		m.logger.Info().Fields(map[string]interface{}{
+			"height": m.height,
+			"round":  m.round,
+			"addr":   m.idToValAddrMap[*m.leaderId],
+		}).Msg("👑 Elected new leader")
 	}
 
 	return nil
@@ -218,6 +260,8 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 /*** General Infrastructure Helpers ***/
 func (m *consensusModule) setLogPrefix(logPrefix string) {
-	logger.Global.Logger = logger.Global.With().Str("type", logPrefix).Logger()
-	m.logger = m.logger.With().Str("kind", logPrefix).Logger()
+	logger.Global.UpdateFields(map[string]interface{}{
+		"kind": logPrefix,
+	})
+	m.logger = logger.Global.CreateLoggerForModule("consensus")
 }

@@ -48,11 +48,8 @@ func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.
 	}
 	telemetryCfg := cfg.GetTelemetryConfig()
 
-	logger := logger.Global.CreateLoggerForModule(m.GetModuleName())
-
 	return &PrometheusTelemetryModule{
 		config:       telemetryCfg,
-		logger:       logger,
 		counters:     map[string]prometheus.Counter{},
 		gauges:       map[string]prometheus.Gauge{},
 		gaugeVectors: map[string]prometheus.GaugeVec{},
@@ -61,6 +58,9 @@ func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.
 
 func (m *PrometheusTelemetryModule) Start() error {
 	uri := m.config.GetAddress() + m.config.GetEndpoint()
+
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
+
 	m.logger.Info().Str("address", uri).Msg("Starting Prometheus metrics exporter...")
 
 	http.Handle(m.config.GetEndpoint(), promhttp.Handler())

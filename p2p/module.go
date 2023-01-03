@@ -100,9 +100,7 @@ func (m *p2pModule) Start() error {
 			telemetry.P2P_NODE_STARTED_TIMESERIES_METRIC_DESCRIPTION,
 		)
 
-	m.logger = m.GetBus().
-		GetLoggerModule().
-		CreateLoggerForModule(m.GetModuleName())
+	m.logger = logger.Global.CreateLoggerForModule(m.GetModuleName())
 
 	addrbookProvider := addrbook_provider.NewPersistenceAddrBookProvider(m.GetBus(), m.p2pCfg)
 

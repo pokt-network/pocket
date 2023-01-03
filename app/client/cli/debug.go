@@ -4,7 +4,6 @@
 package cli
 
 import (
-	"log"
 	"os"
 	"sync"
 
@@ -181,6 +180,12 @@ func initDebug(remoteCLIURL string) {
 		var err error
 		runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
 
+		loggerM, err := logger.Create(runtimeMgr)
+		if err != nil {
+			logger.Global.Fatal().Err(err).Msg("Failed to create logger module")
+		}
+		loggerMod := loggerM.(modules.LoggerModule)
+
 		consM, err := consensus.Create(runtimeMgr)
 		if err != nil {
 			logger.Global.Fatal().Err(err).Msg("Failed to create consensus module")
@@ -202,12 +207,6 @@ func initDebug(remoteCLIURL string) {
 			logger.Global.Fatal().Err(err).Msg("Failed to create telemetry module")
 		}
 		telemetryMod := telemetryM.(modules.TelemetryModule)
-
-		loggerM, err := logger.Create(runtimeMgr)
-		if err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to create logger module")
-		}
-		loggerMod := loggerM.(modules.LoggerModule)
 
 		rpcM, err := rpc.Create(runtimeMgr)
 		if err != nil {

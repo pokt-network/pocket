@@ -114,3 +114,13 @@ func (m *loggerModule) GetLogger() modules.Logger {
 func (m *loggerModule) SetFields(fields map[string]interface{}) {
 	m.Logger = m.Logger.With().Fields(fields).Logger()
 }
+
+// UpdateFields updates the fields for the global logger
+func (m *loggerModule) UpdateFields(fields map[string]interface{}) {
+	m.Logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
+		for k, v := range fields {
+			c = c.Interface(k, v)
+		}
+		return c
+	})
+}
