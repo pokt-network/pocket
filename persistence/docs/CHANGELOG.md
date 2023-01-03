@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.18] - 2022-12-30
+## [0.0.0.18] - 2023-01-03
 
 - Renamed `InitParams` to `InitGenesisParams`
 
-## [0.0.0.17] - 2022-12-30
+## [0.0.0.17] - 2023-01-03
 
 - Added missing `ActorType` in `GetAllXXXX()` functions
 - Updated to new `PoolNames` enums

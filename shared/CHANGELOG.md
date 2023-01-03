@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.8] - 2022-12-30
+## [0.0.0.8] - 2023-01-03
 
 - Added `PoolNames.FriendlyName` method
 - Renamed enums as per code-review
