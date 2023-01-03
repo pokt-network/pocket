@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
@@ -115,7 +116,7 @@ func TestMessage_EditStake_ValidateBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	msg := MessageEditStake{
-		ActorType: ActorType_App,
+		ActorType: coreTypes.ActorType_ACTOR_TYPE_APP,
 		Address:   addr,
 		Chains:    defaultTestingChains,
 		Amount:    defaultAmount,
@@ -197,7 +198,7 @@ func TestMessageStake_ValidateBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	msg := MessageStake{
-		ActorType:     ActorType_App,
+		ActorType:     coreTypes.ActorType_ACTOR_TYPE_APP,
 		PublicKey:     pk.Bytes(),
 		Chains:        defaultTestingChains,
 		Amount:        defaultAmount,

@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package core;
+
+option go_package = "github.com/pokt-network/pocket/shared/core/types";
+
+message Account {
+  string address = 1;
+  string amount = 2;
+}

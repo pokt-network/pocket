@@ -5,9 +5,9 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/utility"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
@@ -101,7 +101,7 @@ func TestUtilityContext_CreateAndApplyBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 
-	proposer := getFirstActor(t, ctx, typesUtil.ActorType_Validator)
+	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
 	require.NoError(t, testUtilityMod.CheckTransaction(txBz))
@@ -147,7 +147,7 @@ func TestUtilityContext_HandleMessage(t *testing.T) {
 
 func newTestingTransaction(t *testing.T, ctx utility.UtilityContext) (transaction *typesUtil.Transaction, startingBalance, amountSent *big.Int, signer crypto.PrivateKey) {
 	amountSent = new(big.Int).Set(defaultSendAmount)
-	startingBalance = new(big.Int).Set(defaults.DefaultAccountAmount)
+	startingBalance = new(big.Int).Set(test_artifacts.DefaultAccountAmount)
 
 	recipientAddr, err := crypto.GenerateAddress()
 	require.NoError(t, err)

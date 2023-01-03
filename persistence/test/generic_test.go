@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/persistence/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 
 	"github.com/pokt-network/pocket/persistence"
 	"github.com/stretchr/testify/require"
@@ -16,8 +17,8 @@ import (
 func getGenericActor[T any](
 	protocolActorSchema types.ProtocolActorSchema,
 	getActor func(*persistence.PostgresContext, []byte) (T, error),
-) func(*persistence.PostgresContext, string) (*types.Actor, error) {
-	return func(db *persistence.PostgresContext, address string) (*types.Actor, error) {
+) func(*persistence.PostgresContext, string) (*coreTypes.Actor, error) {
+	return func(db *persistence.PostgresContext, address string) (*coreTypes.Actor, error) {
 		addr, err := hex.DecodeString(address)
 		if err != nil {
 			return nil, err
@@ -31,8 +32,8 @@ func getGenericActor[T any](
 	}
 }
 
-func newTestGenericActor[T any](protocolActorSchema types.ProtocolActorSchema, newActor func() (T, error)) func() (*types.Actor, error) {
-	return func() (*types.Actor, error) {
+func newTestGenericActor[T any](protocolActorSchema types.ProtocolActorSchema, newActor func() (T, error)) func() (*coreTypes.Actor, error) {
+	return func() (*coreTypes.Actor, error) {
 		actor, err := newActor()
 		if err != nil {
 			return nil, err
@@ -203,13 +204,13 @@ func getAllActorsUpdatedAtHeightTest[T any](
 	require.Equal(t, 1, len(accs))
 }
 
-func getActorValues(_ types.ProtocolActorSchema, actorValue reflect.Value) *types.Actor {
+func getActorValues(_ types.ProtocolActorSchema, actorValue reflect.Value) *coreTypes.Actor {
 	chains := make([]string, 0)
 	if actorValue.FieldByName("Chains").Kind() != 0 {
 		chains = actorValue.FieldByName("Chains").Interface().([]string)
 	}
 
-	return &types.Actor{
+	return &coreTypes.Actor{
 		Address:         actorValue.FieldByName("Address").String(),
 		PublicKey:       actorValue.FieldByName("PublicKey").String(),
 		StakedAmount:    actorValue.FieldByName("StakedAmount").String(),

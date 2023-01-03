@@ -9,7 +9,6 @@ import (
 
 type P2PModule interface {
 	Module
-	ConfigurableModule
 
 	Broadcast(msg *anypb.Any) error
 	Send(addr cryptoPocket.Address, msg *anypb.Any) error

@@ -4,5 +4,4 @@ package modules
 
 type RPCModule interface {
 	Module
-	ConfigurableModule
 }

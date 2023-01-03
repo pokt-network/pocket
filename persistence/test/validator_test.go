@@ -8,6 +8,7 @@ import (
 	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/pokt-network/pocket/persistence"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
@@ -25,7 +26,7 @@ func TestGetSetValidatorStakeAmount(t *testing.T) {
 }
 
 func TestGetValidatorUpdatedAtHeight(t *testing.T) {
-	getValidatorsUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*types.Actor, error) {
+	getValidatorsUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*coreTypes.Actor, error) {
 		return db.GetActorsUpdated(types.ValidatorActor, height)
 	}
 	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestValidator, getValidatorsUpdatedFunc, 5)
@@ -217,7 +218,7 @@ func TestGetValidatorOutputAddress(t *testing.T) {
 	require.Equal(t, hex.EncodeToString(output), validator.Output, "unexpected output address")
 }
 
-func newTestValidator() (*types.Actor, error) {
+func newTestValidator() (*coreTypes.Actor, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
 		return nil, err
@@ -228,7 +229,7 @@ func newTestValidator() (*types.Actor, error) {
 		return nil, err
 	}
 
-	return &types.Actor{
+	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		GenericParam:    DefaultServiceUrl,
@@ -239,7 +240,7 @@ func newTestValidator() (*types.Actor, error) {
 	}, nil
 }
 
-func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*types.Actor, error) {
+func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*coreTypes.Actor, error) {
 	validator, err := newTestValidator()
 	if err != nil {
 		return nil, err
@@ -268,7 +269,7 @@ func createAndInsertDefaultTestValidator(db *persistence.PostgresContext) (*type
 		DefaultUnstakingHeight)
 }
 
-func getTestValidator(db *persistence.PostgresContext, address []byte) (*types.Actor, error) {
+func getTestValidator(db *persistence.PostgresContext, address []byte) (*coreTypes.Actor, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, err := db.GetValidator(address, db.Height)
 	if err != nil {
 		return nil, err
@@ -289,7 +290,7 @@ func getTestValidator(db *persistence.PostgresContext, address []byte) (*types.A
 		return nil, err
 	}
 
-	return &types.Actor{
+	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorAddr),
 		PublicKey:       hex.EncodeToString(operatorPubKey),
 		GenericParam:    serviceURL,

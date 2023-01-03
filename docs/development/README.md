@@ -195,11 +195,14 @@ Pocket
 |   ├── deployments  # Docker-compose to run different cluster of services for development
 |   ├── Docker*      # Various Dockerfile(s)
 ├── consensus        # Implementation of the Consensus module
-├── core             # [currently-unused]
 ├── docs             # Links to V1 Protocol implementation documentation (excluding the protocol specification)
+├── logger           # Implementation of the Logger module
 ├── p2p              # Implementation of the P2P module
 ├── persistence      # Implementation of the Persistence module
+├── rpc              # Implementation of the RPC module
+├── runtime          # Implementation of the Runtime module
 ├── shared           # [to-be-refactored] Shared types, modules and utils
+├── telemetry        # Implementation of the Telemetry module
 ├── utility          # Implementation of the Utility module
 ├── Makefile         # [to-be-deleted] The source of targets used to develop, build and test
 ```
