@@ -7,8 +7,8 @@ import (
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -128,7 +128,7 @@ func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.Hotstuff
 	return m.isOptimisticThresholdMet(len(m.messagePool[step]), validators)
 }
 
-func (m *consensusModule) isOptimisticThresholdMet(n int, validators []modules.Actor) error {
+func (m *consensusModule) isOptimisticThresholdMet(n int, validators []*coreTypes.Actor) error {
 	numValidators := len(validators)
 	if !(float64(n) > ByzantineThreshold*float64(numValidators)) {
 		return typesCons.ErrByzantineThresholdCheck(n, ByzantineThreshold*float64(numValidators))
@@ -265,7 +265,7 @@ func (m *consensusModule) setLogPrefix(logPrefix string) {
 	m.logPrefix = logPrefix
 }
 
-func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]modules.Actor, error) {
+func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
 	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
 	if err != nil {
 		return nil, err
