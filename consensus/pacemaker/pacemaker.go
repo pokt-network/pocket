@@ -1,4 +1,4 @@
-package consensus
+package pacemaker
 
 import (
 	"context"
@@ -20,6 +20,9 @@ const (
 	//NewRound            = typesCons.HotstuffStep_HOTSTUFF_STEP_NEWROUND
 	//Propose             = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_PROPOSE
 	timeoutBuffer = 30 * time.Millisecond // A buffer around the pacemaker timeout to avoid race condition; 30ms was arbitrarily chosen
+
+	NewRound = typesCons.HotstuffStep_HOTSTUFF_STEP_NEWROUND
+	Propose  = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_PROPOSE
 )
 
 type Pacemaker interface {

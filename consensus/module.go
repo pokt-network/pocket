@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
+	pacemaker "github.com/pokt-network/pocket/consensus/pacemaker"
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -61,7 +62,7 @@ type consensusModule struct {
 	//                to streamline how its accessed in the module (see the ticket).
 
 	utilityContext    modules.UtilityContext
-	paceMaker         Pacemaker
+	paceMaker         pacemaker.Pacemaker
 	leaderElectionMod leader_election.LeaderElectionModule
 
 	// DEPRECATE: Remove later when we build a shared/proper/injected logger
@@ -191,15 +192,29 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	}
 
 	// TODO(olshansky): Can we make this a submodule?
-	paceMakerMod, err := CreatePacemaker(bus)
+
+	paceMakerMod, err := pacemaker.CreatePacemaker(runtimeMgr)
 	if err != nil {
 		return nil, err
 	}
 
-	pacemaker := paceMakerMod.(Pacemaker)
-	m := &consensusModule{
-		paceMaker:         pacemaker,
-		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
+	valMap := typesCons.ActorListToValidatorMap(consensusGenesis.GetVals())
+
+	privateKey, err := cryptoPocket.NewPrivateKey(consensusCfg.GetPrivateKey())
+	if err != nil {
+		return nil, err
+	}
+	address := privateKey.Address().String()
+	valIdMap, idValMap := typesCons.GetValAddrToIdMap(valMap)
+
+	paceMaker := paceMakerMod.(pacemaker.Pacemaker)
+
+	m = &consensusModule{
+		bus: nil,
+
+		privateKey:  privateKey.(cryptoPocket.Ed25519PrivateKey),
+		consCfg:     cfg.GetConsensusConfig(),
+		consGenesis: genesis.GetConsensusGenesisState(),
 
 		height: 0,
 		round:  0,
@@ -388,3 +403,9 @@ func (m *consensusModule) loadPersistedState() error {
 
 	return nil
 }
+
+// // HasPacemakerConfig is used to determine if a ConsensusConfig includes a PacemakerConfig without having to cast to the struct
+// // (which would break mocks and/or pollute the codebase with mock types casts and checks)
+// type HasPacemakerConfig interface {
+// 	GetPacemakerConfig() *typesCons.PacemakerConfig
+// }
