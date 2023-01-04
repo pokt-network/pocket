@@ -5,8 +5,7 @@ import (
 )
 
 var (
-	_ modules.Module          = &telemetryModule{}
-	_ modules.TelemetryConfig = &TelemetryConfig{}
+	_ modules.Module = &telemetryModule{}
 )
 
 const (
@@ -22,9 +21,9 @@ func (*telemetryModule) Create(bus modules.Bus) (modules.Module, error) {
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
 
-	telemetryCfg := cfg.GetTelemetryConfig()
+	telemetryCfg := cfg.Telemetry
 
-	if telemetryCfg.GetEnabled() {
+	if telemetryCfg.Enabled {
 		return CreatePrometheusTelemetryModule(bus)
 	} else {
 		return CreateNoopTelemetryModule(bus)
@@ -33,9 +32,8 @@ func (*telemetryModule) Create(bus modules.Bus) (modules.Module, error) {
 
 type telemetryModule struct{}
 
-func (t *telemetryModule) GetModuleName() string                                          { return TelemetryModuleName }
-func (t *telemetryModule) InitGenesis(_ string) (genesis modules.GenesisState, err error) { return }
-func (t *telemetryModule) SetBus(bus modules.Bus)                                         {}
-func (t *telemetryModule) GetBus() modules.Bus                                            { return nil }
-func (t *telemetryModule) Start() error                                                   { return nil }
-func (t *telemetryModule) Stop() error                                                    { return nil }
+func (t *telemetryModule) GetModuleName() string  { return TelemetryModuleName }
+func (t *telemetryModule) SetBus(bus modules.Bus) {}
+func (t *telemetryModule) GetBus() modules.Bus    { return nil }
+func (t *telemetryModule) Start() error           { return nil }
+func (t *telemetryModule) Stop() error            { return nil }

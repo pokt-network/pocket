@@ -10,6 +10,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/providers"
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -37,13 +38,13 @@ type rainTreeNetwork struct {
 	nonceSetMutex    sync.Mutex
 }
 
-func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P.AddrBook, p2pCfg modules.P2PConfig) typesP2P.Network {
+func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P.AddrBook, p2pCfg configs.P2PConfig) typesP2P.Network {
 	pm, err := newPeersManager(addr, addrBook, true)
 	if err != nil {
 		log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManager: %v", err)
 	}
 
-	mempoolMaxNonces := p2pCfg.GetMaxMempoolCount()
+	mempoolMaxNonces := p2pCfg.MaxMempoolCount
 	n := &rainTreeNetwork{
 		selfAddr:         addr,
 		peersManager:     pm,
@@ -55,7 +56,7 @@ func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P
 	return typesP2P.Network(n)
 }
 
-func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg modules.P2PConfig, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg *configs.P2PConfig, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
 		log.Fatalf("[ERROR] Error getting addrBook: %v", err)
@@ -70,7 +71,7 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg modul
 		selfAddr:         addr,
 		peersManager:     pm,
 		nonceSet:         make(map[uint64]struct{}),
-		nonceList:        make([]uint64, 0, p2pCfg.GetMaxMempoolCount()),
+		nonceList:        make([]uint64, 0, p2pCfg.MaxMempoolCount),
 		addrBookProvider: addrBookProvider,
 	}
 	n.SetBus(bus)

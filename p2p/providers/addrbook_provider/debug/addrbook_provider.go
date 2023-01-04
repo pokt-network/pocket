@@ -4,7 +4,8 @@ import (
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/runtime/configs"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 const (
@@ -15,12 +16,12 @@ const (
 var _ addrbook_provider.AddrBookProvider = &debugAddrBookProvider{}
 
 type debugAddrBookProvider struct {
-	p2pCfg         modules.P2PConfig
-	actorsByHeight map[int64][]modules.Actor
+	p2pCfg         *configs.P2PConfig
+	actorsByHeight map[int64][]*coreTypes.Actor
 	connFactory    typesP2P.ConnectionFactory
 }
 
-func NewDebugAddrBookProvider(p2pCfg modules.P2PConfig, options ...func(*debugAddrBookProvider)) *debugAddrBookProvider {
+func NewDebugAddrBookProvider(p2pCfg *configs.P2PConfig, options ...func(*debugAddrBookProvider)) *debugAddrBookProvider {
 	dabp := &debugAddrBookProvider{
 		p2pCfg:      p2pCfg,
 		connFactory: transport.CreateDialer, // default connection factory, overridable with WithConnectionFactory()
@@ -33,14 +34,14 @@ func NewDebugAddrBookProvider(p2pCfg modules.P2PConfig, options ...func(*debugAd
 	return dabp
 }
 
-func WithActorsByHeight(actorsByHeight map[int64][]modules.Actor) func(*debugAddrBookProvider) {
+func WithActorsByHeight(actorsByHeight map[int64][]*coreTypes.Actor) func(*debugAddrBookProvider) {
 	return func(pabp *debugAddrBookProvider) {
 		pabp.actorsByHeight = actorsByHeight
 	}
 }
 
-func (dabp *debugAddrBookProvider) getActorsByHeight(height uint64) []modules.Actor {
-	var stakedActors []modules.Actor
+func (dabp *debugAddrBookProvider) getActorsByHeight(height uint64) []*coreTypes.Actor {
+	var stakedActors []*coreTypes.Actor
 	stakedActors, ok := dabp.actorsByHeight[ALL_HEIGHTS]
 	if ok {
 		return stakedActors
@@ -62,7 +63,7 @@ func (dabp *debugAddrBookProvider) GetConnFactory() typesP2P.ConnectionFactory {
 	return dabp.connFactory
 }
 
-func (dabp *debugAddrBookProvider) GetP2PConfig() modules.P2PConfig {
+func (dabp *debugAddrBookProvider) GetP2PConfig() *configs.P2PConfig {
 	return dabp.p2pCfg
 }
 

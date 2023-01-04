@@ -34,7 +34,3 @@ func (m *noopRpcModule) Start() error {
 func (m *noopRpcModule) Stop() error {
 	return nil
 }
-
-func (m *noopRpcModule) ValidateConfig(_ modules.Config) error {
-	return nil
-}

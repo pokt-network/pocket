@@ -6,5 +6,4 @@ const RPCModuleName = "rpc"
 
 type RPCModule interface {
 	Module
-	ConfigurableModule
 }

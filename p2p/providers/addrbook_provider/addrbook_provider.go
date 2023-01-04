@@ -7,19 +7,20 @@ import (
 	"log"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/runtime/configs"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
 )
 
 // AddrBookProvider is an interface that provides AddrBook accessors
 type AddrBookProvider interface {
 	GetStakedAddrBookAtHeight(height uint64) (typesP2P.AddrBook, error)
 	GetConnFactory() typesP2P.ConnectionFactory
-	GetP2PConfig() modules.P2PConfig
+	GetP2PConfig() *configs.P2PConfig
 	SetConnectionFactory(typesP2P.ConnectionFactory)
 }
 
-func ActorsToAddrBook(abp AddrBookProvider, actors []modules.Actor) (typesP2P.AddrBook, error) {
+func ActorsToAddrBook(abp AddrBookProvider, actors []*coreTypes.Actor) (typesP2P.AddrBook, error) {
 	book := make(typesP2P.AddrBook, 0)
 	for _, a := range actors {
 		networkPeer, err := ActorToNetworkPeer(abp, a)
@@ -32,7 +33,7 @@ func ActorsToAddrBook(abp AddrBookProvider, actors []modules.Actor) (typesP2P.Ad
 	return book, nil
 }
 
-func ActorToNetworkPeer(abp AddrBookProvider, actor modules.Actor) (*typesP2P.NetworkPeer, error) {
+func ActorToNetworkPeer(abp AddrBookProvider, actor *coreTypes.Actor) (*typesP2P.NetworkPeer, error) {
 	conn, err := abp.GetConnFactory()(abp.GetP2PConfig(), actor.GetGenericParam()) // service url
 	if err != nil {
 		return nil, fmt.Errorf("error resolving addr: %v", err)

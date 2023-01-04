@@ -8,7 +8,6 @@ const TelemetryModuleName = "telemetry"
 
 type TelemetryModule interface {
 	Module
-	ConfigurableModule
 
 	GetTimeSeriesAgent() TimeSeriesAgent
 	GetEventMetricsAgent() EventMetricsAgent

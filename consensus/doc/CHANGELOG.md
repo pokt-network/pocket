@@ -7,9 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.14] - 2022-12-29
+## [0.0.0.16] - 2023-01-04
 
+- Added protobuf message definitions for requests related to sharing state sync metadata and blocks
+- Defined the interface for `StateSyncServerModule`, `StateSyncModule` (moving the old interface to `StateSyncModuleLEGACY` as a reference only)
+- Overhaul (updates, improvements, clarifications & additions) of the State Sync README
 - Removed `ValidatorMap() ValidatorMap`
+
+## [0.0.0.15] - 2023-01-03
+
+- ValidatorMap uses `Actor` references now
+
+## [0.0.0.14] - 2022-12-21
+
+- Updated do use the new centralized config and genesis
+- `Actor` is now a shared `struct` instead of an `interface`
+- Removed converters between the interfaces and the consensus structs for Validators
 
 ## [0.0.0.13] - 2022-12-14
 

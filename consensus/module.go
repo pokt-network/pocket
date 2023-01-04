@@ -9,6 +9,8 @@ import (
 	"github.com/pokt-network/pocket/consensus/leader_election"
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -20,18 +22,16 @@ const (
 )
 
 var (
-	_ modules.ConsensusModule       = &consensusModule{}
-	_ modules.ConsensusConfig       = &typesCons.ConsensusConfig{}
-	_ modules.ConsensusGenesisState = &typesCons.ConsensusGenesisState{}
-	_ ConsensusDebugModule          = &consensusModule{}
+	_ modules.ConsensusModule = &consensusModule{}
+	_ ConsensusDebugModule    = &consensusModule{}
 )
 
 type consensusModule struct {
 	bus        modules.Bus
 	privateKey cryptoPocket.Ed25519PrivateKey
 
-	consCfg     modules.ConsensusConfig
-	consGenesis modules.ConsensusGenesisState
+	consCfg      *configs.ConsensusConfig
+	genesisState *genesis.GenesisState
 
 	// m is a mutex used to control synchronization when multiple goroutines are accessing the struct and its fields / properties.
 	//
@@ -136,14 +136,10 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 
 	runtimeMgr := bus.GetRuntimeMgr()
 
-	cfg := runtimeMgr.GetConfig()
-	if err := m.ValidateConfig(cfg); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
-	}
-	consensusCfg := cfg.GetConsensusConfig()
+	consensusCfg := runtimeMgr.GetConfig().Consensus
 
-	genesis := runtimeMgr.GetGenesis()
-	if err := m.ValidateGenesis(genesis); err != nil {
+	genesisState := runtimeMgr.GetGenesis()
+	if err := m.ValidateGenesis(genesisState); err != nil {
 		return nil, fmt.Errorf("genesis validation failed: %w", err)
 	}
 
@@ -161,8 +157,8 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	valAddrToIdMap, _ := typesCons.GetValAddrToIdMap(validators)
 
 	m.privateKey = privateKey.(cryptoPocket.Ed25519PrivateKey)
-	m.consCfg = cfg.GetConsensusConfig()
-	m.consGenesis = genesis.GetConsensusGenesisState()
+	m.consCfg = consensusCfg
+	m.genesisState = genesisState
 
 	m.height = 0
 	m.round = 0
@@ -232,14 +228,9 @@ func (m *consensusModule) SetBus(pocketBus modules.Bus) {
 	}
 }
 
-func (*consensusModule) ValidateConfig(cfg modules.Config) error {
-	// TODO (#334): implement this
-	return nil
-}
-
-func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
+func (*consensusModule) ValidateGenesis(genesis *genesis.GenesisState) error {
 	// Sort the validators by their generic param (i.e. service URL)
-	vals := genesis.GetConsensusGenesisState().GetVals()
+	vals := genesis.GetValidators()
 	sort.Slice(vals, func(i, j int) bool {
 		return vals[i].GetGenericParam() < vals[j].GetGenericParam()
 	})
@@ -263,7 +254,7 @@ func (*consensusModule) ValidateGenesis(genesis modules.GenesisState) error {
 }
 
 func (m *consensusModule) GetPrivateKey() (cryptoPocket.PrivateKey, error) {
-	return cryptoPocket.NewPrivateKey(m.consCfg.GetPrivateKey())
+	return cryptoPocket.NewPrivateKey(m.consCfg.PrivateKey)
 }
 
 func (m *consensusModule) HandleMessage(message *anypb.Any) error {
@@ -321,10 +312,4 @@ func (m *consensusModule) loadPersistedState() error {
 	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
 
 	return nil
-}
-
-// HasPacemakerConfig is used to determine if a ConsensusConfig includes a PacemakerConfig without having to cast to the struct
-// (which would break mocks and/or pollute the codebase with mock types casts and checks)
-type HasPacemakerConfig interface {
-	GetPacemakerConfig() *typesCons.PacemakerConfig
 }

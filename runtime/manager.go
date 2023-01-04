@@ -10,8 +10,8 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/mitchellh/mapstructure"
-	typesCons "github.com/pokt-network/pocket/consensus/types"
-	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/runtime/configs"
+	"github.com/pokt-network/pocket/runtime/genesis"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/spf13/viper"
@@ -20,8 +20,8 @@ import (
 var _ modules.RuntimeMgr = &Manager{}
 
 type Manager struct {
-	config  *runtimeConfig
-	genesis *runtimeGenesis
+	config       *configs.Config
+	genesisState *genesis.GenesisState
 
 	clock clock.Clock
 	bus   modules.Bus
@@ -37,12 +37,12 @@ func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manage
 	}
 	mgr.bus = bus
 
-	cfg, genesis, err := mgr.init(configPath, genesisPath)
+	cfg, genesisState, err := mgr.init(configPath, genesisPath)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to initialize runtime builder: %v", err)
 	}
 	mgr.config = cfg
-	mgr.genesis = genesis
+	mgr.genesisState = genesisState
 
 	for _, o := range options {
 		o(mgr)
@@ -53,15 +53,13 @@ func NewManagerFromFiles(configPath, genesisPath string, options ...func(*Manage
 
 // NewManagerFromReaders returns a *Manager given io.Readers for the config and the genesis.
 //
-// Ideally useful when the user doesn't want to rely on the filesystem and instead intends plugging in different configuration management system.
-//
-// Note: currently unused, here as a reference
+// Useful for testing and when the user doesn't want to rely on the filesystem and instead intends plugging in different configuration management system.
 func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...func(*Manager)) *Manager {
-	var cfg *runtimeConfig
+	var cfg = configs.NewDefaultConfig()
 	parse(configReader, cfg)
 
-	var genesis *runtimeGenesis
-	parse(genesisReader, genesis)
+	var genesisState = new(genesis.GenesisState)
+	parse(genesisReader, genesisState)
 
 	var mgr = new(Manager)
 	bus, err := CreateBus(mgr)
@@ -70,7 +68,7 @@ func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...fun
 	}
 
 	mgr.config = cfg
-	mgr.genesis = genesis
+	mgr.genesisState = genesisState
 	mgr.clock = clock.New()
 	mgr.bus = bus
 
@@ -81,15 +79,15 @@ func NewManagerFromReaders(configReader, genesisReader io.Reader, options ...fun
 	return mgr
 }
 
-func NewManager(config modules.Config, genesis modules.GenesisState, options ...func(*Manager)) *Manager {
+func NewManager(config *configs.Config, genesis *genesis.GenesisState, options ...func(*Manager)) *Manager {
 	var mgr = new(Manager)
 	bus, err := CreateBus(mgr)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to initialize bus: %v", err)
 	}
 
-	mgr.config = config.(*runtimeConfig)
-	mgr.genesis = genesis.(*runtimeGenesis)
+	mgr.config = config
+	mgr.genesisState = genesis
 	mgr.clock = clock.New()
 	mgr.bus = bus
 
@@ -100,9 +98,11 @@ func NewManager(config modules.Config, genesis modules.GenesisState, options ...
 	return mgr
 }
 
-func (rc *Manager) init(configPath, genesisPath string) (config *runtimeConfig, genesis *runtimeGenesis, err error) {
-	dir, file := path.Split(configPath)
-	filename := strings.TrimSuffix(file, filepath.Ext(file))
+func (m *Manager) init(configJSONPath, genesisJSONPath string) (config *configs.Config, genesisState *genesis.GenesisState, err error) {
+	config = configs.NewDefaultConfig()
+
+	dir, configFile := path.Split(configJSONPath)
+	filename := strings.TrimSuffix(configFile, filepath.Ext(configFile))
 
 	viper.AddConfigPath(".")
 	viper.AddConfigPath(dir)
@@ -128,41 +128,33 @@ func (rc *Manager) init(configPath, genesisPath string) (config *runtimeConfig, 
 		return
 	}
 
-	if config.Base == nil {
-		config.Base = &BaseConfig{}
-	}
-
-	genesis, err = parseGenesisJSON(genesisPath)
+	genesisState, err = parseGenesis(genesisJSONPath)
 	return
 }
 
-func (b *Manager) GetConfig() modules.Config {
-	return b.config
+func (m *Manager) GetConfig() *configs.Config {
+	return m.config
 }
 
-func (b *Manager) GetGenesis() modules.GenesisState {
-	return b.genesis
-}
-
-func (b *Manager) GetClock() clock.Clock {
-	return b.clock
+func (m *Manager) GetGenesis() *genesis.GenesisState {
+	return m.genesisState
 }
 
 func (b *Manager) GetBus() modules.Bus {
 	return b.bus
 }
 
-type supportedStructs interface {
-	*runtimeConfig | *runtimeGenesis
+func (m *Manager) GetClock() clock.Clock {
+	return m.clock
 }
 
-func parse[T supportedStructs](reader io.Reader, target T) {
+func parse[T *configs.Config | *genesis.GenesisState](reader io.Reader, target T) {
 	bz, err := io.ReadAll(reader)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to read from reader: %v", err)
 
 	}
-	if err := json.Unmarshal(bz, &target); err != nil {
+	if err := json.Unmarshal(bz, target); err != nil {
 		log.Fatalf("[ERROR] Failed to unmarshal: %v", err)
 	}
 }
@@ -181,12 +173,12 @@ func WithRandomPK() func(*Manager) {
 func WithPK(pk string) func(*Manager) {
 	return func(b *Manager) {
 		if b.config.Consensus == nil {
-			b.config.Consensus = &typesCons.ConsensusConfig{}
+			b.config.Consensus = &configs.ConsensusConfig{}
 		}
 		b.config.Consensus.PrivateKey = pk
 
 		if b.config.P2P == nil {
-			b.config.P2P = &typesP2P.P2PConfig{}
+			b.config.P2P = &configs.P2PConfig{}
 		}
 		b.config.P2P.PrivateKey = pk
 	}

@@ -10,7 +10,6 @@ const UtilityModuleName = "utility"
 
 type UtilityModule interface {
 	Module
-	ConfigurableModule
 
 	HandleMessage(*anypb.Any) error
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.2] - 2023-01-04
+
+- Removed `BaseConfig` from `configs`
+- Centralized `PersistenceGenesisState` and `ConsensusGenesisState` into `GenesisState`
+
 ## [0.0.0.1] - 2022-12-29
 
 - Updated configs with the missing value `max_mempool_count`

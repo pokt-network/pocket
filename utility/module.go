@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
@@ -11,12 +12,11 @@ import (
 )
 
 var _ modules.UtilityModule = &utilityModule{}
-var _ modules.UtilityConfig = &types.UtilityConfig{}
 var _ modules.Module = &utilityModule{}
 
 type utilityModule struct {
 	bus    modules.Bus
-	config modules.UtilityConfig
+	config *configs.UtilityConfig
 
 	Mempool types.Mempool
 }
@@ -36,13 +36,10 @@ func (*utilityModule) Create(bus modules.Bus) (modules.Module, error) {
 	runtimeMgr := bus.GetRuntimeMgr()
 
 	cfg := runtimeMgr.GetConfig()
-	if err := m.ValidateConfig(cfg); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
-	}
-	utilityCfg := cfg.GetUtilityConfig()
+	utilityCfg := cfg.Utility
 
 	m.config = utilityCfg
-	m.Mempool = types.NewMempool(utilityCfg.GetMaxMempoolTransactionBytes(), utilityCfg.GetMaxMempoolTransactions())
+	m.Mempool = types.NewMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)
 
 	return m, nil
 }
@@ -68,11 +65,6 @@ func (u *utilityModule) GetBus() modules.Bus {
 		log.Fatalf("Bus is not initialized")
 	}
 	return u.bus
-}
-
-func (*utilityModule) ValidateConfig(cfg modules.Config) error {
-	// TODO (#334): implement this
-	return nil
 }
 
 func (u *utilityModule) HandleMessage(message *anypb.Any) error {

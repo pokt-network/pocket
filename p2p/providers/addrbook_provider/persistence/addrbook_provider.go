@@ -4,6 +4,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -12,11 +13,11 @@ var _ addrbook_provider.AddrBookProvider = &persistenceAddrBookProvider{}
 
 type persistenceAddrBookProvider struct {
 	bus         modules.Bus
-	p2pCfg      modules.P2PConfig
+	p2pCfg      *configs.P2PConfig
 	connFactory typesP2P.ConnectionFactory
 }
 
-func NewPersistenceAddrBookProvider(bus modules.Bus, p2pCfg modules.P2PConfig, options ...func(*persistenceAddrBookProvider)) *persistenceAddrBookProvider {
+func NewPersistenceAddrBookProvider(bus modules.Bus, p2pCfg *configs.P2PConfig, options ...func(*persistenceAddrBookProvider)) *persistenceAddrBookProvider {
 	pabp := &persistenceAddrBookProvider{
 		bus:         bus,
 		p2pCfg:      p2pCfg,
@@ -60,7 +61,7 @@ func (pabp *persistenceAddrBookProvider) GetConnFactory() typesP2P.ConnectionFac
 	return pabp.connFactory
 }
 
-func (pabp *persistenceAddrBookProvider) GetP2PConfig() modules.P2PConfig {
+func (pabp *persistenceAddrBookProvider) GetP2PConfig() *configs.P2PConfig {
 	return pabp.p2pCfg
 }
 

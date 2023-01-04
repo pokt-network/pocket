@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package p2p;
+package configs;
 
-option go_package = "github.com/pokt-network/pocket/p2p/types";
+option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
 message P2PConfig {
   string private_key = 1;

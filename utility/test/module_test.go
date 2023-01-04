@@ -9,10 +9,10 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/pokt-network/pocket/persistence"
-	"github.com/pokt-network/pocket/persistence/types"
 	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/runtime/defaults"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
@@ -32,7 +32,7 @@ var (
 	defaultTestingChainsEdited = []string{"0002"}
 
 	defaultUnstaking   = int64(2017)
-	defaultNonceString = utilTypes.BigIntToString(defaults.DefaultAccountAmount)
+	defaultNonceString = utilTypes.BigIntToString(test_artifacts.DefaultAccountAmount)
 
 	testNonce           = "defaultNonceString"
 	testSchema          = "test_schema"
@@ -42,11 +42,11 @@ var (
 var testPersistenceMod modules.PersistenceModule // initialized in TestMain
 var testUtilityMod modules.UtilityModule         // initialized in TestMain
 
-var actorTypes = []utilTypes.ActorType{
-	utilTypes.ActorType_App,
-	utilTypes.ActorType_ServiceNode,
-	utilTypes.ActorType_Fisherman,
-	utilTypes.ActorType_Validator,
+var actorTypes = []coreTypes.ActorType{
+	coreTypes.ActorType_ACTOR_TYPE_APP,
+	coreTypes.ActorType_ACTOR_TYPE_SERVICENODE,
+	coreTypes.ActorType_ACTOR_TYPE_FISH,
+	coreTypes.ActorType_ACTOR_TYPE_VAL,
 }
 
 func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
@@ -97,19 +97,19 @@ func NewTestingUtilityContext(t *testing.T, height int64) utility.UtilityContext
 }
 
 func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
-	cfg := runtime.NewConfig(
-		&runtime.BaseConfig{},
-		runtime.WithPersistenceConfig(&types.PersistenceConfig{
+	cfg := &configs.Config{
+		Persistence: &configs.PersistenceConfig{
 			PostgresUrl:    databaseUrl,
 			NodeSchema:     testSchema,
 			BlockStorePath: "",
 			TxIndexerPath:  "",
 			TreesStoreDir:  "",
-		}),
-		runtime.WithUtilityConfig(&utilTypes.UtilityConfig{
+		},
+		Utility: &configs.UtilityConfig{
 			MaxMempoolTransactionBytes: 1000000,
 			MaxMempoolTransactions:     1000,
-		}))
+		},
+	}
 	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
 	return runtimeCfg

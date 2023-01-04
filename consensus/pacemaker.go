@@ -2,12 +2,12 @@ package consensus
 
 import (
 	"context"
-	"fmt"
 	"log"
 	timePkg "time"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -27,10 +27,8 @@ type Pacemaker interface {
 }
 
 var (
-	_ modules.Module             = &paceMaker{}
-	_ modules.ConfigurableModule = &paceMaker{}
-	_ PacemakerDebug             = &paceMaker{}
-	_ modules.PacemakerConfig    = &typesCons.PacemakerConfig{}
+	_ modules.Module = &paceMaker{}
+	_ PacemakerDebug = &paceMaker{}
 )
 
 type paceMaker struct {
@@ -42,7 +40,7 @@ type paceMaker struct {
 	// a great idea in production code.
 	consensusMod *consensusModule
 
-	pacemakerCfg modules.PacemakerConfig
+	pacemakerCfg *configs.PacemakerConfig
 
 	stepCancelFunc context.CancelFunc
 
@@ -61,11 +59,8 @@ func (*paceMaker) Create(bus modules.Bus) (modules.Module, error) {
 
 	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
-	if err := m.ValidateConfig(cfg); err != nil {
-		log.Fatalf("config validation failed: %v", err)
-	}
 
-	pacemakerCfg := cfg.GetConsensusConfig().(HasPacemakerConfig).GetPacemakerConfig()
+	pacemakerCfg := cfg.Consensus.PacemakerConfig
 
 	m.pacemakerCfg = pacemakerCfg
 	m.paceMakerDebug = paceMakerDebug{
@@ -98,13 +93,6 @@ func (m *paceMaker) GetBus() modules.Bus {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
-}
-
-func (*paceMaker) ValidateConfig(cfg modules.Config) error {
-	if _, ok := cfg.GetConsensusConfig().(HasPacemakerConfig); !ok {
-		return fmt.Errorf("cannot cast to PacemakeredConsensus")
-	}
-	return nil
 }
 
 func (m *paceMaker) SetConsensusModule(c *consensusModule) {
@@ -253,6 +241,6 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 
 // TODO(olshansky): Increase timeout using exponential backoff.
 func (p *paceMaker) getStepTimeout(round uint64) timePkg.Duration {
-	baseTimeout := timePkg.Duration(int64(timePkg.Millisecond) * int64(p.pacemakerCfg.GetTimeoutMsec()))
+	baseTimeout := timePkg.Duration(int64(timePkg.Millisecond) * int64(p.pacemakerCfg.TimeoutMsec))
 	return baseTimeout
 }
