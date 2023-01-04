@@ -1,7 +1,6 @@
 package p2p
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/pokt-network/pocket/p2p/providers"
@@ -77,10 +76,7 @@ func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) 
 	var m *p2pModule
 
 	cfg := runtimeMgr.GetConfig()
-	if err := m.ValidateConfig(cfg); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
-	}
-	p2pCfg := cfg.GetP2PConfig()
+	p2pCfg := cfg.P2P
 
 	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.PrivateKey)
 	if err != nil {
@@ -214,6 +210,11 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 	}
 
 	return m.network.NetworkSend(data, addr)
+}
+
+// TECHDEBT(drewsky): Discuss how to best expose/access `Address` throughout the codebase.
+func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
+	return m.address, nil
 }
 
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {

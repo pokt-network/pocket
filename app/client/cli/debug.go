@@ -10,6 +10,7 @@ import (
 	debugABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/debug"
 	debugCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/debug"
 	"github.com/pokt-network/pocket/runtime"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -45,7 +46,7 @@ var (
 		PromptShowLatestBlockInStore,
 	}
 
-	validators []modules.Actor
+	validators []*coreTypes.Actor
 )
 
 func init() {
@@ -179,12 +180,12 @@ func initDebug(remoteCLIURL string) {
 		runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
 
 		// HACK: this is a temporary solution that guarantees backward compatibility while we implement peer discovery (#416).
-		validators = runtimeMgr.GetGenesis().GetConsensusGenesisState().GetVals()
+		validators = runtimeMgr.GetGenesis().Validators
 
 		debugAddressBookProvider := debugABP.NewDebugAddrBookProvider(
-			runtimeMgr.GetConfig().GetP2PConfig(),
+			runtimeMgr.GetConfig().P2P,
 			debugABP.WithActorsByHeight(
-				map[int64][]modules.Actor{
+				map[int64][]*coreTypes.Actor{
 					debugABP.ALL_HEIGHTS: validators,
 				},
 			),
