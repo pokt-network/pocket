@@ -187,6 +187,7 @@ func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 		log.Fatalf("[ERROR] No validators found")
 	}
 
+        // if the message needs to be broadcast, it'll be handled by the business logic of the message handler
 	validatorAddress, err = pocketCrypto.NewAddress(validators[0].GetAddress())
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
