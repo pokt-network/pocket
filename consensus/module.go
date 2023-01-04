@@ -48,9 +48,8 @@ type consensusModule struct {
 	// TODO(#315): Move the statefulness of `TxResult` to the persistence module
 	TxResults []modules.TxResult // The current block applied transaction results / voted on; it has not been committed to finality
 
-	// IMPROVE: Consider renaming `highPrepareQC` to simply `prepareQC`
-	highPrepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
-	lockedQC      *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
+	prepareQC *typesCons.QuorumCertificate // Highest QC for which replica voted PRECOMMIT
+	lockedQC  *typesCons.QuorumCertificate // Highest QC for which replica voted COMMIT
 
 	// Leader Election
 	leaderId *typesCons.NodeId
@@ -131,7 +130,53 @@ func (m *consensusModule) ReleaseUtilityContext() error {
 	return nil
 }
 
-func (m *consensusModule) BroadcastMessageToNodes(msg *anypb.Any) {
+func (m *consensusModule) BroadcastMessageToNodes(msg *anypb.Any) error {
+	msgCodec, err := codec.GetCodec().FromAny(msg)
+	if err != nil {
+		return err
+	}
+
+	broadcastMessage, ok := msgCodec.(*typesCons.HotstuffMessage)
+	if !ok {
+		return fmt.Errorf("failed to cast message to HotstuffMessage")
+	}
+	m.broadcastToNodes(broadcastMessage)
+
+	return nil
+}
+
+func (m *consensusModule) IsLeader() bool {
+	return m.isLeader()
+}
+
+func (m *consensusModule) IsLeaderSet() bool {
+	// if m.leaderId == nil {
+	// 	return false
+	// }
+	return m.leaderId != nil
+}
+
+func (m *consensusModule) ElectNextLeader(msg *anypb.Any) error {
+	msgCodec, err := codec.GetCodec().FromAny(msg)
+	if err != nil {
+		return err
+	}
+
+	message, ok := msgCodec.(*typesCons.HotstuffMessage)
+	if !ok {
+		return fmt.Errorf("failed to cast message to HotstuffMessage")
+	}
+
+	return m.electNextLeader(message)
+}
+
+func (m *consensusModule) GetPrepareQC() *anypb.Any {
+	anyProto, err := anypb.New(m.prepareQC)
+	if err != nil {
+		log.Println("[WARN] NewHeight: Failed to convert paceMaker message to proto: ", err)
+		return nil
+	}
+	return anyProto
 
 }
 
@@ -161,8 +206,8 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		step:   NewRound,
 		block:  nil,
 
-		highPrepareQC: nil,
-		lockedQC:      nil,
+		prepareQC: nil,
+		lockedQC:  nil,
 
 		leaderId: nil,
 
@@ -173,9 +218,6 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
 	}
 	bus.RegisterModule(m)
-
-	// TODO(#395): Decouple the pacemaker and consensus modules
-	pacemaker.SetConsensusModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 
@@ -204,6 +246,10 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	m.genesisState = genesisState
 
 	m.nodeId = valAddrToIdMap[address]
+
+	// TODO(olshansky): Look for a way to avoid doing this.
+	// TODO(goku): remove tight connection of pacemaker and consensus.
+	//paceMaker.SetConsensusModule(m)
 
 	return m, nil
 }

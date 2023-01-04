@@ -133,7 +133,7 @@ func (m *consensusModule) isOptimisticThresholdMet(numSignatures int, validators
 func (m *consensusModule) resetForNewHeight() {
 	m.round = 0
 	m.block = nil
-	m.highPrepareQC = nil
+	m.prepareQC = nil
 	m.lockedQC = nil
 }
 

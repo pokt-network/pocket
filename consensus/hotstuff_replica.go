@@ -96,7 +96,7 @@ func (handler *HotstuffReplicaMessageHandler) HandlePrecommitMessage(m *consensu
 	}
 
 	m.step = Commit
-	m.highPrepareQC = quorumCert // INVESTIGATE: Why are we never using this for validation?
+	m.prepareQC = quorumCert // INVESTIGATE: Why are we never using this for validation?
 
 	preCommitVoteMessage, err := CreateVoteMessage(m.height, m.round, PreCommit, m.block, m.privateKey)
 	if err != nil {

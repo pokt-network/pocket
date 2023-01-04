@@ -49,5 +49,9 @@ type PaceMakerAccessModule interface {
 	SetStep(uint64)
 	ResetForNewHeight()
 	ReleaseUtilityContext() error
-	BroadcastMessageToNodes(*anypb.Any)
+	BroadcastMessageToNodes(*anypb.Any) error
+	IsLeader() bool
+	IsLeaderSet() bool
+	ElectNextLeader(*anypb.Any) error
+	GetPrepareQC() *anypb.Any
 }
