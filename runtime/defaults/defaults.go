@@ -2,9 +2,6 @@ package defaults
 
 import (
 	"fmt"
-	"math/big"
-
-	"github.com/pokt-network/pocket/shared/converters"
 )
 
 const (
@@ -13,23 +10,34 @@ const (
 	defaultRPCTimeout = 30000
 )
 
-// TODO: some of these defaults are used for production while others are used for testing. Need to separate them.
 var (
-	DefaultChains              = []string{"0001"}
-	DefaultServiceURL          = ""
-	DefaultStakeAmount         = big.NewInt(1000000000000)
-	DefaultStakeAmountString   = converters.BigIntToString(DefaultStakeAmount)
-	DefaultMaxRelays           = big.NewInt(1000000)
-	DefaultMaxRelaysString     = converters.BigIntToString(DefaultMaxRelays)
-	DefaultAccountAmount       = big.NewInt(100000000000000)
-	DefaultAccountAmountString = converters.BigIntToString(DefaultAccountAmount)
-	DefaultPauseHeight         = int64(-1)
-	DefaultUnstakingHeight     = int64(-1)
-	DefaultChainID             = "testnet"
-	DefaultMaxBlockBytes       = uint64(4000000)
-	ServiceUrlFormat           = "node%d.consensus:8080"
-	DefaultRpcPort             = defaultRPCPort
-	DefaultRpcTimeout          = uint64(defaultRPCTimeout)
-	DefaultRemoteCLIURL        = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaultRPCPort)
-	DefaultP2PMaxMempoolCount  = uint64(1e6)
+	DefaultRemoteCLIURL = fmt.Sprintf("http://%s:%s", defaultRPCHost, defaultRPCPort)
+
+	// consensus
+	DefaultConsensusMaxMempoolBytes = uint64(500000000)
+	// pacemaker
+	DefaultPacemakerTimeoutMsec               = uint64(5000)
+	DefaultPacemakerManual                    = true
+	DefaultPacemakerDebugTimeBetweenStepsMsec = uint64(1000)
+	// utility
+	DefaultUtilityMaxMempoolTransactionBytes = uint64(1024 ^ 3) // 1GB V0 defaults
+	DefaultUtilityMaxMempoolTransactions     = uint32(9000)
+	// persistence
+	DefaultPersistencePostgresUrl    = "postgres://postgres:postgres@pocket-db:5432/postgres"
+	DefaultPersistenceBlockStorePath = "/var/blockstore"
+	// p2p
+	DefaultP2PConsensusPort         = uint32(8080)
+	DefaultP2PUseRainTree           = true
+	DefaultP2PIsEmptyConnectionType = false
+	DefaultP2PMaxMempoolCount       = uint64(1e5)
+	// telemetry
+	DefaultTelemetryEnabled  = true
+	DefaultTelemetryAddress  = "0.0.0.0:9000"
+	DefaultTelemetryEndpoint = "/metrics"
+	// logger
+	DefaultLoggerLevel  = "debug"
+	DefaultLoggerFormat = "pretty"
+	// rpc
+	DefaultRpcPort    = defaultRPCPort
+	DefaultRpcTimeout = uint64(defaultRPCTimeout)
 )

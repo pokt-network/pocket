@@ -7,10 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.3] - 2022-12-29
+## [0.0.0.4] - 2023-01-03
 
 - The `client` now doesn't instantiate a `P2P` module and compose a bus with optional modules anymore. It insteads instantiates a `client-only` `P2P` module that is disconnected from consensus and persistence. These interactions happen via RPC.
 - Replaced previous implementation reliant on `ValidatorMap` with a temporary fetch from genesis. This will be replaced with a lightweight peer discovery mechanism (#416)
+
+## [0.0.0.3] - 2023-01-03
+
+- Updated to use `coreTypes` instead of utility types for `Actor` and `ActorType`
+- Updated README.md
 
 ## [0.0.0.2] - 2022-11-02
 

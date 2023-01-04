@@ -10,6 +10,7 @@ import (
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
+	"github.com/pokt-network/pocket/runtime/configs"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -26,7 +27,7 @@ const (
 
 type p2pModule struct {
 	bus    modules.Bus
-	p2pCfg modules.P2PConfig // TODO (olshansky): to remove this since it'll be available via the bus
+	p2pCfg *configs.P2PConfig // TODO (olshansky): to remove this since it'll be available via the bus
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
@@ -47,10 +48,7 @@ func CreateWithProviders(runtimeMgr modules.RuntimeMgr, addrBookProvider provide
 	var m *p2pModule
 
 	cfg := runtimeMgr.GetConfig()
-	if err := m.ValidateConfig(cfg); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
-	}
-	p2pCfg := cfg.GetP2PConfig()
+	p2pCfg := cfg.P2P
 
 	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.GetPrivateKey())
 	if err != nil {
@@ -84,7 +82,7 @@ func (*p2pModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) 
 	}
 	p2pCfg := cfg.GetP2PConfig()
 
-	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.GetPrivateKey())
+	privateKey, err := cryptoPocket.NewPrivateKey(p2pCfg.PrivateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -216,16 +214,6 @@ func (m *p2pModule) Send(addr cryptoPocket.Address, msg *anypb.Any) error {
 	}
 
 	return m.network.NetworkSend(data, addr)
-}
-
-// TECHDEBT(drewsky): Discuss how to best expose/access `Address` throughout the codebase.
-func (m *p2pModule) GetAddress() (cryptoPocket.Address, error) {
-	return m.address, nil
-}
-
-func (*p2pModule) ValidateConfig(cfg modules.Config) error {
-	// TODO (#334): implement this
-	return nil
 }
 
 func (m *p2pModule) handleNetworkMessage(networkMsgData []byte) {
