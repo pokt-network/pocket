@@ -252,6 +252,9 @@ Ruleguard is run via `gocritic` linter which is a part of `golangci-lint`, so if
 
 Things to add:
 
+- The specs should be treated as ideas - not specifications
+- Bias to diagrams over text & bullet points where appropriate
+- Pretend everything is wrong
 - Look at those comments (research, document, implement, etc fom Jess
 - Link to claim & proof lifecycle documentation
 - Link to Otto's V0 GUide
