@@ -3,7 +3,6 @@ package cli
 import (
 	"log"
 	"os"
-	"sync"
 
 	"github.com/manifoldco/promptui"
 	"github.com/pokt-network/pocket/p2p"
@@ -34,10 +33,6 @@ var (
 	// A P2P module is initialized in order to broadcast a message to the local network
 	p2pMod modules.P2PModule
 
-	// A consensus module is initialized in order to get a list of the validator network
-	consensusMod modules.ConsensusModule
-	modInitOnce  sync.Once
-
 	items = []string{
 		PromptResetToGenesis,
 		PromptPrintNodeState,
@@ -59,7 +54,30 @@ func NewDebugCommand() *cobra.Command {
 		Short: "Debug utility for rapid development",
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			initDebug(remoteCLIURL)
+			var err error
+			runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
+
+			// HACK: this is a temporary solution that guarantees backward compatibility while we implement peer discovery (#416).
+			validators = runtimeMgr.GetGenesis().Validators
+
+			debugAddressBookProvider := debugABP.NewDebugAddrBookProvider(
+				runtimeMgr.GetConfig().P2P,
+				debugABP.WithActorsByHeight(
+					map[int64][]*coreTypes.Actor{
+						debugABP.ALL_HEIGHTS: validators,
+					},
+				),
+			)
+
+			debugCurrentHeightProvider := debugCHP.NewDebugCurrentHeightProvider(0)
+
+			p2pM, err := p2p.CreateWithProviders(runtimeMgr, debugAddressBookProvider, debugCurrentHeightProvider)
+			if err != nil {
+				log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
+			}
+			p2pMod = p2pM.(modules.P2PModule)
+
+			p2pMod.Start()
 		},
 		RunE: runDebug,
 	}
@@ -172,33 +190,4 @@ func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 	}
 
 	p2pMod.Send(validatorAddress, anyProto)
-}
-
-func initDebug(remoteCLIURL string) {
-	modInitOnce.Do(func() {
-		var err error
-		runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
-
-		// HACK: this is a temporary solution that guarantees backward compatibility while we implement peer discovery (#416).
-		validators = runtimeMgr.GetGenesis().Validators
-
-		debugAddressBookProvider := debugABP.NewDebugAddrBookProvider(
-			runtimeMgr.GetConfig().P2P,
-			debugABP.WithActorsByHeight(
-				map[int64][]*coreTypes.Actor{
-					debugABP.ALL_HEIGHTS: validators,
-				},
-			),
-		)
-
-		debugCurrentHeightProvider := debugCHP.NewDebugCurrentHeightProvider(0)
-
-		p2pM, err := p2p.CreateWithProviders(runtimeMgr, debugAddressBookProvider, debugCurrentHeightProvider)
-		if err != nil {
-			log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
-		}
-		p2pMod = p2pM.(modules.P2PModule)
-
-		p2pMod.Start()
-	})
 }
