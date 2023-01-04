@@ -122,7 +122,11 @@ develop_test: docker_check ## Run all of the make commands necessary to develop 
 
 .PHONY: client_start
 client_start: docker_check ## Run a client daemon which is only used for debugging purposes
-	docker-compose -f build/deployments/docker-compose.yaml up -d client --build
+	docker-compose -f build/deployments/docker-compose.yaml up -d client
+
+.PHONY: rebuild_client_start
+rebuild_client_start: docker_check ## Rebuild and run a client daemon which is only used for debugging purposes
+	docker-compose -f build/deployments/docker-compose.yaml up -d --build client
 
 .PHONY: client_connect
 client_connect: docker_check ## Connect to the running client debugging daemon
@@ -238,20 +242,24 @@ protogen_clean: ## Remove all the generated protobufs.
 
 .PHONY: protogen_local
 protogen_local: go_protoc-go-inject-tag ## Generate go structures for all of the protobufs
+# TODO: Organize this code with a basic for loop
 	$(eval proto_dir = ".")
-	protoc --go_opt=paths=source_relative  -I=./shared/messaging/proto    --go_out=./shared/messaging      	./shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        --go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./persistence/indexer/proto --go_out=./persistence/indexer/   ./persistence/indexer/proto/*.proto --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./persistence/proto         --go_out=./persistence/types  	./persistence/proto/*.proto         --experimental_allow_proto3_optional
+# TODO: Use a forloop to avoid all the code duplication and improve readability
+	protoc --go_opt=paths=source_relative  -I=./shared/messaging/proto    				--go_out=./shared/messaging     ./shared/messaging/proto/*.proto    --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/codec/proto        				--go_out=./shared/codec       	./shared/codec/proto/*.proto        --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./persistence/indexer/proto 				--go_out=./persistence/indexer  ./persistence/indexer/proto/*.proto --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/ -I=./persistence/proto         	--go_out=./persistence/types  	./persistence/proto/*.proto         --experimental_allow_proto3_optional
 	protoc-go-inject-tag -input="./persistence/types/*.pb.go"
-	protoc --go_opt=paths=source_relative  -I=./utility/types/proto       --go_out=./utility/types      	./utility/types/proto/*.proto       --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./consensus/types/proto     --go_out=./consensus/types    	./consensus/types/proto/*.proto     --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./p2p/raintree/types/proto  --go_out=./p2p/types          	./p2p/raintree/types/proto/*.proto  --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./p2p/types/proto           --go_out=./p2p/types          	./p2p/types/proto/*.proto           --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./telemetry/proto           --go_out=./telemetry          	./telemetry/proto/*.proto           --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./logger/proto              --go_out=./logger             	./logger/proto/*.proto              --experimental_allow_proto3_optional
-	protoc --go_opt=paths=source_relative  -I=./rpc/types/proto 		  --go_out=./rpc/types          	./rpc/types/proto/*.proto           --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/ -I=./utility/types/proto       				--go_out=./utility/types      	./utility/types/proto/*.proto       --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./consensus/types/proto     				--go_out=./consensus/types    	./consensus/types/proto/*.proto     --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./p2p/raintree/types/proto  				--go_out=./p2p/types          	./p2p/raintree/types/proto/*.proto  --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./runtime/configs/proto     				--go_out=./runtime/configs      ./runtime/configs/proto/*.proto     --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/core/types/proto     			--go_out=./shared/core/types    ./shared/core/types/proto/*.proto   --experimental_allow_proto3_optional
+	protoc --go_opt=paths=source_relative  -I=./shared/ -I=./runtime/genesis/proto     	--go_out=./runtime/genesis      ./runtime/genesis/proto/*.proto     --experimental_allow_proto3_optional
+	protoc-go-inject-tag -input="./runtime/genesis/*.pb.go"
 	echo "View generated proto files by running: make protogen_show"
+# CONSIDERATION: Some proto files contain unused gRPC services so we may need to add the following
+#                if/when we decide to include it: `grpc--go-grpc_opt=paths=source_relative --go-grpc_out=./output/path`
 
 .PHONY: protogen_docker_m1
 ## TECHDEBT: Test, validate & update.
@@ -376,9 +384,10 @@ benchmark_p2p_addrbook: ## Benchmark all P2P addr book related tests
 # CONSOLIDATE   - We likely have similar implementations/types of the same thing, and we should consolidate them.
 # ADDTEST       - Add more tests for a specific code section
 # DEPRECATE     - Code that should be removed in the future
+# RESEARCH      - A non-trivial action item that requires deep research and investigation being next steps can be taken
 # DISCUSS_IN_THIS_COMMIT - SHOULD NEVER BE COMMITTED TO MASTER. It is a way for the reviewer of a PR to start / reply to a discussion.
 # TODO_IN_THIS_COMMIT    - SHOULD NEVER BE COMMITTED TO MASTER. It is a way to start the review process while non-critical changes are still in progress
-TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST"
+TODO_KEYWORDS = -e "TODO" -e "TECHDEBT" -e "IMPROVE" -e "DISCUSS" -e "INCOMPLETE" -e "INVESTIGATE" -e "CLEANUP" -e "HACK" -e "REFACTOR" -e "CONSIDERATION" -e "TODO_IN_THIS_COMMIT" -e "DISCUSS_IN_THIS_COMMIT" -e "CONSOLIDATE" -e "DEPRECATE" -e "ADDTEST" -e "RESEARCH"
 
 # How do I use TODOs?
 # 1. <KEYWORD>: <Description of follow up work>;

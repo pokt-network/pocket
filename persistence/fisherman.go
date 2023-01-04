@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 
 	"github.com/pokt-network/pocket/persistence/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -25,8 +26,8 @@ func (p PostgresContext) GetFisherman(address []byte, height int64) (operator, p
 }
 
 func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, output []byte, _ bool, _ int32, serviceURL string, stakedTokens string, chains []string, pausedHeight int64, unstakingHeight int64) error {
-	return p.InsertActor(types.FishermanActor, &types.Actor{
-		ActorType:       types.ActorType_Fish,
+	return p.InsertActor(types.FishermanActor, &coreTypes.Actor{
+		ActorType:       coreTypes.ActorType_ACTOR_TYPE_FISH,
 		Address:         hex.EncodeToString(address),
 		PublicKey:       hex.EncodeToString(publicKey),
 		Chains:          chains,
@@ -39,8 +40,8 @@ func (p PostgresContext) InsertFisherman(address []byte, publicKey []byte, outpu
 }
 
 func (p PostgresContext) UpdateFisherman(address []byte, serviceURL string, stakedAmount string, chains []string) error {
-	return p.UpdateActor(types.FishermanActor, &types.Actor{
-		ActorType:    types.ActorType_Fish,
+	return p.UpdateActor(types.FishermanActor, &coreTypes.Actor{
+		ActorType:    coreTypes.ActorType_ACTOR_TYPE_FISH,
 		Address:      hex.EncodeToString(address),
 		StakedAmount: stakedAmount,
 		GenericParam: serviceURL,
