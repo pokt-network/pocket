@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/rs/zerolog"
 )
@@ -11,7 +12,7 @@ import (
 type loggerModule struct {
 	bus    modules.Bus
 	logger modules.Logger
-	config modules.LoggerConfig
+	config *configs.LoggerConfig
 }
 
 // All loggers branch out of mainLogger, that way configuration changes to mainLogger propagate to others.
@@ -28,19 +29,19 @@ const (
 	ModuleName = "logger"
 )
 
-var pocketLogLevelToZeroLog = map[LogLevel]zerolog.Level{
-	LogLevel_LOG_LEVEL_UNSPECIFIED: zerolog.NoLevel,
-	LogLevel_LOG_LEVEL_DEBUG:       zerolog.DebugLevel,
-	LogLevel_LOG_LEVEL_INFO:        zerolog.InfoLevel,
-	LogLevel_LOG_LEVEL_WARN:        zerolog.WarnLevel,
-	LogLevel_LOG_LEVEL_ERROR:       zerolog.ErrorLevel,
-	LogLevel_LOG_LEVEL_FATAL:       zerolog.FatalLevel,
-	LogLevel_LOG_LEVEL_PANIC:       zerolog.PanicLevel,
+var pocketLogLevelToZeroLog = map[configs.LogLevel]zerolog.Level{
+	configs.LogLevel_LOG_LEVEL_UNSPECIFIED: zerolog.NoLevel,
+	configs.LogLevel_LOG_LEVEL_DEBUG:       zerolog.DebugLevel,
+	configs.LogLevel_LOG_LEVEL_INFO:        zerolog.InfoLevel,
+	configs.LogLevel_LOG_LEVEL_WARN:        zerolog.WarnLevel,
+	configs.LogLevel_LOG_LEVEL_ERROR:       zerolog.ErrorLevel,
+	configs.LogLevel_LOG_LEVEL_FATAL:       zerolog.FatalLevel,
+	configs.LogLevel_LOG_LEVEL_PANIC:       zerolog.PanicLevel,
 }
 
-var pocketLogFormatToEnum = map[string]LogFormat{
-	"json":   LogFormat_LOG_FORMAT_JSON,
-	"pretty": LogFormat_LOG_FORMAT_PRETTY,
+var pocketLogFormatToEnum = map[string]configs.LogFormat{
+	"json":   configs.LogFormat_LOG_FORMAT_JSON,
+	"pretty": configs.LogFormat_LOG_FORMAT_PRETTY,
 }
 
 func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
@@ -54,19 +55,19 @@ func (*loggerModule) CreateLoggerForModule(moduleName string) modules.Logger {
 func (*loggerModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 	cfg := runtimeMgr.GetConfig()
 	m := loggerModule{
-		config: cfg.GetLoggerConfig(),
+		config: cfg.Logger,
 	}
 
 	m.InitLogger()
 
 	// Mapping config string value to the proto enum
-	if pocketLogLevel, ok := LogLevel_value[`LogLevel_LOG_LEVEL_`+strings.ToUpper(m.config.GetLevel())]; ok {
-		zerolog.SetGlobalLevel(pocketLogLevelToZeroLog[LogLevel(pocketLogLevel)])
+	if pocketLogLevel, ok := configs.LogLevel_value[`LogLevel_LOG_LEVEL_`+strings.ToUpper(m.config.Level)]; ok {
+		zerolog.SetGlobalLevel(pocketLogLevelToZeroLog[configs.LogLevel(pocketLogLevel)])
 	} else {
 		zerolog.SetGlobalLevel(zerolog.NoLevel)
 	}
 
-	if pocketLogFormatToEnum[m.config.GetFormat()] == LogFormat_LOG_FORMAT_PRETTY {
+	if pocketLogFormatToEnum[m.config.Format] == configs.LogFormat_LOG_FORMAT_PRETTY {
 		mainLogger = mainLogger.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		mainLogger.Info().Msg("using pretty log format")
 	}

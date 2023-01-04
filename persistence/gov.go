@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pokt-network/pocket/persistence/types"
+	"github.com/pokt-network/pocket/runtime/genesis"
 )
 
 // TODO : Deprecate these two constants when we change the persistenceRWContext interface to pass the `paramName`
@@ -49,12 +50,15 @@ func init() {
 	}
 }
 
-func (p PostgresContext) InitParams() error {
+func (p PostgresContext) InitGenesisParams(params *genesis.Params) error {
 	ctx, tx, err := p.getCtxAndTx()
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(ctx, types.InsertParams(types.DefaultParams(), p.Height))
+	if p.Height != 0 {
+		return fmt.Errorf("cannot initialize params at height %d", p.Height)
+	}
+	_, err = tx.Exec(ctx, types.InsertParams(params, p.Height))
 	return err
 }
 

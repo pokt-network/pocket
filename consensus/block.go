@@ -35,8 +35,8 @@ func (m *consensusModule) validateBlockBasic(block *typesCons.Block) error {
 		return typesCons.ErrBlockExists
 	}
 
-	if block != nil && unsafe.Sizeof(*block) > uintptr(m.consGenesis.GetMaxBlockBytes()) {
-		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.consGenesis.GetMaxBlockBytes())
+	if block != nil && unsafe.Sizeof(*block) > uintptr(m.genesisState.GetMaxBlockBytes()) {
+		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.genesisState.GetMaxBlockBytes())
 	}
 
 	// If the current block being processed (i.e. voted on) by consensus is non nil, we need to make

@@ -5,9 +5,9 @@ import (
 	"github.com/pokt-network/pocket/persistence"
 	"testing"
 
+	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
 	"github.com/pokt-network/pocket/shared/codec"
-	"github.com/pokt-network/pocket/shared/modules"
 	typesUtil "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -16,7 +16,7 @@ import (
 // TODO : After we change the interface to pass param name, simply use reflection to
 //  iterate over all the params and test them. Suggestion: [Google's go-cmp] (https://github.com/google/go-cmp)
 
-func DefaultTestingParams(_ *testing.T) modules.Params {
+func DefaultTestingParams(_ *testing.T) *genesis.Params {
 	return test_artifacts.DefaultParams()
 }
 

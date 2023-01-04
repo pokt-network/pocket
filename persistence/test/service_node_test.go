@@ -8,6 +8,7 @@ import (
 	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/pokt-network/pocket/persistence"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
@@ -25,7 +26,7 @@ func TestGetSetServiceNodeStakeAmount(t *testing.T) {
 }
 
 func TestGetServiceNodeUpdatedAtHeight(t *testing.T) {
-	getServiceNodeUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*types.Actor, error) {
+	getServiceNodeUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*coreTypes.Actor, error) {
 		return db.GetActorsUpdated(types.ServiceNodeActor, height)
 	}
 	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestServiceNode, getServiceNodeUpdatedFunc, 1)
@@ -219,7 +220,7 @@ func TestGetServiceNodeOutputAddress(t *testing.T) {
 	require.Equal(t, hex.EncodeToString(output), serviceNode.Output, "unexpected output address")
 }
 
-func newTestServiceNode() (*types.Actor, error) {
+func newTestServiceNode() (*coreTypes.Actor, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
 		return nil, err
@@ -230,7 +231,7 @@ func newTestServiceNode() (*types.Actor, error) {
 		return nil, err
 	}
 
-	return &types.Actor{
+	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          DefaultChains,
@@ -242,7 +243,7 @@ func newTestServiceNode() (*types.Actor, error) {
 	}, nil
 }
 
-func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*types.Actor, error) {
+func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*coreTypes.Actor, error) {
 	serviceNode, err := newTestServiceNode()
 	if err != nil {
 		return nil, err
@@ -272,7 +273,7 @@ func createAndInsertDefaultTestServiceNode(db *persistence.PostgresContext) (*ty
 		DefaultUnstakingHeight)
 }
 
-func getTestServiceNode(db *persistence.PostgresContext, address []byte) (*types.Actor, error) {
+func getTestServiceNode(db *persistence.PostgresContext, address []byte) (*coreTypes.Actor, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetServiceNode(address, db.Height)
 	if err != nil {
 		return nil, err
@@ -293,7 +294,7 @@ func getTestServiceNode(db *persistence.PostgresContext, address []byte) (*types
 		return nil, err
 	}
 
-	return &types.Actor{
+	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorAddr),
 		PublicKey:       hex.EncodeToString(operatorPubKey),
 		Chains:          chains,
