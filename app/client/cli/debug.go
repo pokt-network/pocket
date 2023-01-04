@@ -43,7 +43,7 @@ var (
 
 	// validators holds the list of the validators at genesis time so that we can use it to create a debug address book provider.
 	// Its purpose is to allow the CLI to "discover" the nodes in the network. Since currently we don't have churn and we run nodes only in LocalNet, we can rely on the genesis state.
-	// This is a temporary solution that guarantees backward compatibility while we implement peer discovery (#416).
+	// HACK(#416): This is a temporary solution that guarantees backward compatibility while we implement peer discovery
 	validators []*coreTypes.Actor
 )
 
@@ -60,7 +60,7 @@ func NewDebugCommand() *cobra.Command {
 			var err error
 			runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
 
-			// HACK: this is a temporary solution that guarantees backward compatibility while we implement peer discovery (#416).
+			// HACK(#416): this is a temporary solution that guarantees backward compatibility while we implement peer discovery.
 			validators = runtimeMgr.GetGenesis().Validators
 
 			debugAddressBookProvider := debugABP.NewDebugAddrBookProvider(
