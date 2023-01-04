@@ -6,10 +6,32 @@ import (
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
-// TODO(#362): Update the interface so it can be easily integrated with the app specific bus
+// This module is responsible for handling requests and business logic that advertises and shares
+// local state metadata with other peers synching to the latest block.
+type StateSyncServerModule interface {
+	modules.Module
+
+	// Advertise (send) the local state sync metadata to the requesting peer
+	HandleStateSyncMetadataRequest(*typesCons.StateSyncMetadataRequest) error
+
+	// Send the block being requested by the peer
+	HandleGetBlockRequest(*typesCons.GetBlockRequest) error
+}
+
 type StateSyncModule interface {
 	modules.Module
 
+	// Handle a metadata response from a peer so this node can update its local view of the state
+	// sync metadata available from its peers
+	HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error
+
+	// Handle a block response from a peer so this node can update apply it to its local state
+	// and catch up to the global world state
+	HandleStateSyncBlockResponse(*typesCons.StateSyncMetadataResponse) error
+}
+
+// ~~~~~ TODO(#362): The interface below is only meant to be used as a guideline and not implemented explicitly. It will updated & removed over time. ~~~~~
+type StateSyncModuleLEGACY interface {
 	// -- Constructor Setter Functions --
 
 	// `HandleStateSync` function:

@@ -5,9 +5,9 @@ import (
 	"log"
 	"testing"
 
-	"github.com/pokt-network/pocket/persistence/types"
-
 	"github.com/pokt-network/pocket/persistence"
+	"github.com/pokt-network/pocket/persistence/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +20,7 @@ func FuzzApplication(f *testing.F) {
 }
 
 func TestGetApplicationsUpdatedAtHeight(t *testing.T) {
-	getApplicationsUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*types.Actor, error) {
+	getApplicationsUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*coreTypes.Actor, error) {
 		return db.GetActorsUpdated(types.ApplicationActor, height)
 	}
 	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestApp, getApplicationsUpdatedFunc, 1)
@@ -207,7 +207,7 @@ func TestGetAppOutputAddress(t *testing.T) {
 	require.Equal(t, hex.EncodeToString(output), app.Output, "unexpected output address")
 }
 
-func newTestApp() (*types.Actor, error) {
+func newTestApp() (*coreTypes.Actor, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
 		return nil, err
@@ -218,7 +218,7 @@ func newTestApp() (*types.Actor, error) {
 		return nil, err
 	}
 
-	return &types.Actor{
+	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          DefaultChains,
@@ -253,7 +253,7 @@ func TestGetSetStakeAmount(t *testing.T) {
 	require.Equal(t, newStakeAmount, stakeAmountAfter, "unexpected status")
 }
 
-func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*types.Actor, error) {
+func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*coreTypes.Actor, error) {
 	app, err := newTestApp()
 	if err != nil {
 		return nil, err
@@ -285,13 +285,13 @@ func createAndInsertDefaultTestApp(db *persistence.PostgresContext) (*types.Acto
 		DefaultUnstakingHeight)
 }
 
-func getTestApp(db *persistence.PostgresContext, address []byte) (*types.Actor, error) {
+func getTestApp(db *persistence.PostgresContext, address []byte) (*coreTypes.Actor, error) {
 	operator, publicKey, stakedTokens, maxRelays, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetApp(address, db.Height)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.Actor{
+	return &coreTypes.Actor{
 		Address:         operator,
 		PublicKey:       publicKey,
 		Chains:          chains,

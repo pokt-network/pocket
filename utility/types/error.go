@@ -126,7 +126,7 @@ const (
 	CodeEmptyParamValueError              Code = 93
 	CodeGetOutputAddressError             Code = 94
 	CodeTransactionAlreadyCommittedError  Code = 95
-	CodeInitParamsError                   Code = 96
+	CodeInitGenesisParamsError            Code = 96
 	CodeGetAllFishermenError              Code = 97
 	CodeGetAllServiceNodesError           Code = 98
 	CodeGetAllAppsError                   Code = 99
@@ -277,7 +277,7 @@ const (
 	ProtoUnmarshalError               = "an error occurred unmarshalling the structure in protobuf"
 	ProtoNewAnyError                  = "an error occurred creating the protobuf any"
 	UpdateParamError                  = "an error occurred updating the parameter"
-	InitParamsError                   = "an error occurred initializing the params in genesis"
+	InitGenesisParamError             = "an error occurred initializing the params in genesis"
 	GetAllFishermenError              = "an error occurred getting all of the fishermen¬"
 	GetAllAppsError                   = "an error occurred getting all of the apps"
 	GetAllServiceNodesError           = "an error occurred getting all of the service nodes"
@@ -784,8 +784,8 @@ func ErrUpdateParam(err error) Error {
 	return NewError(CodeUpdateParamError, fmt.Sprintf("%s: %s", UpdateParamError, err.Error()))
 }
 
-func ErrInitParams(err error) Error {
-	return NewError(CodeInitParamsError, fmt.Sprintf("%s: %s", InitParamsError, err.Error()))
+func ErrInitGenesisParams(err error) Error {
+	return NewError(CodeInitGenesisParamsError, fmt.Sprintf("%s: %s", InitGenesisParamError, err.Error()))
 }
 
 func ErrUnknownActorType(actorType string) Error {
