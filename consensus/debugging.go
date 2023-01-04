@@ -54,7 +54,12 @@ func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) {
 
 func (m *consensusModule) printNodeState(_ *messaging.DebugMessage) {
 	state := m.GetNodeState()
-	m.logger.Debug().Msg(typesCons.DebugNodeState(state))
+	m.logger.Debug().
+		Fields(map[string]interface{}{
+			"step":   state.Step,
+			"height": state.Height,
+			"round":  state.Round,
+		}).Msg("Node state")
 }
 
 func (m *consensusModule) triggerNextView(_ *messaging.DebugMessage) {
@@ -76,9 +81,9 @@ func (m *consensusModule) triggerNextView(_ *messaging.DebugMessage) {
 func (m *consensusModule) togglePacemakerManualMode(_ *messaging.DebugMessage) {
 	newMode := !m.paceMaker.IsManualMode()
 	if newMode {
-		m.logger.Debug().Msg(typesCons.DebugTogglePacemakerManualMode("MANUAL"))
+		m.logger.Debug().Str("pacemaker_mode", "MANUAL").Msg("Toggle pacemaker to MANUAL mode")
 	} else {
-		m.logger.Debug().Msg(typesCons.DebugTogglePacemakerManualMode("AUTOMATIC"))
+		m.logger.Debug().Str("pacemaker_mode", "AUTOMATIC").Msg("Toggle pacemaker to AUTOMATIC mode")
 	}
 	m.paceMaker.SetManualMode(newMode)
 }
