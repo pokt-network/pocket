@@ -39,7 +39,7 @@ var ParameterNameTypeMap = make(map[string]string)
 // parameters and build a mapping in memory of the types associated to each parameter
 // name according to the struct defined in: persistence/types/persistence_genesis.pb.go
 func init() {
-	st := reflect.TypeOf(types.Params{})
+	st := reflect.TypeOf(genesis.Params{})
 	// Loop through struct fields to build ParameterNameTypeMap
 	for i := 0; i < st.NumField(); i++ {
 		field := st.Field(i)
