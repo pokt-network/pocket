@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	// ALL_HEIGHTS is a special height that will be used to indicate that the actors are valid for all heights (including future heights)
-	ALL_HEIGHTS = -1
+	// ANY_HEIGHT is a special height that will be used to indicate that the actors are valid for all heights (including future heights)
+	ANY_HEIGHT = -1
 )
 
 var _ addrbook_provider.AddrBookProvider = &debugAddrBookProvider{}
@@ -42,7 +42,7 @@ func WithActorsByHeight(actorsByHeight map[int64][]*coreTypes.Actor) func(*debug
 
 func (dabp *debugAddrBookProvider) getActorsByHeight(height uint64) []*coreTypes.Actor {
 	var stakedActors []*coreTypes.Actor
-	stakedActors, ok := dabp.actorsByHeight[ALL_HEIGHTS]
+	stakedActors, ok := dabp.actorsByHeight[ANY_HEIGHT]
 	if ok {
 		return stakedActors
 	}
