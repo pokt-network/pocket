@@ -107,9 +107,8 @@ func (m *consensusModule) SetUtilityContext(utilityContext modules.UtilityContex
 	m.utilityContext = utilityContext
 }
 
-// implementations of the type PaceMakerAccessModule interface
+// Implementations of the type PaceMakerAccessModule interface
 // SetHeight, SeetRound, SetStep are implemented for ConsensusDebugModule
-
 func (m *consensusModule) ClearLeaderMessagesPool() {
 	m.clearLeader()
 	m.clearMessagesPool()
@@ -151,9 +150,6 @@ func (m *consensusModule) IsLeader() bool {
 }
 
 func (m *consensusModule) IsLeaderSet() bool {
-	// if m.leaderId == nil {
-	// 	return false
-	// }
 	return m.leaderId != nil
 }
 
@@ -261,10 +257,6 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	m.genesisState = genesisState
 
 	m.nodeId = valAddrToIdMap[address]
-
-	// TODO(olshansky): Look for a way to avoid doing this.
-	// TODO(goku): remove tight connection of pacemaker and consensus.
-	//paceMaker.SetConsensusModule(m)
 
 	return m, nil
 }
@@ -403,9 +395,3 @@ func (m *consensusModule) loadPersistedState() error {
 
 	return nil
 }
-
-// // HasPacemakerConfig is used to determine if a ConsensusConfig includes a PacemakerConfig without having to cast to the struct
-// // (which would break mocks and/or pollute the codebase with mock types casts and checks)
-// type HasPacemakerConfig interface {
-// 	GetPacemakerConfig() *typesCons.PacemakerConfig
-// }

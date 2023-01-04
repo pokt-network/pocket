@@ -30,6 +30,7 @@ type Pacemaker interface {
 	PacemakerDebug
 
 	ShouldHandleMessage(message *typesCons.HotstuffMessage) (bool, error)
+
 	RestartTimer()
 	NewHeight()
 	InterruptRound(reason string)
@@ -129,8 +130,8 @@ func (m *paceMaker) GetBus() modules.Bus {
 func (m *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, error) {
 	consensusMod := m.GetBus().GetConsensusModule()
 
-	currentHeight := consensusMod.CurrentHeight()
-	currentRound := consensusMod.CurrentRound()
+	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
+	currentRound := m.GetBus().GetConsensusModule().CurrentRound()
 	currentStep := typesCons.HotstuffStep(consensusMod.CurrentStep())
 
 	// Consensus message is from the past
@@ -150,9 +151,10 @@ func (m *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	//                  handlers. Since the leader also acts as a replica but doesn't use the replica's
 	//                  handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
 	// Do not handle messages if it is a self proposal
-	if m.IsLeader() && msg.Type == Propose && msg.Step != NewRound {
-		// TODO: Noisy log - make it a DEBUG
-		// p.consensusMod.nodeLog(typesCons.ErrSelfProposal.Error())
+	if m.GetBus().GetConsensusModule().IsLeader() && msg.Type == Propose && msg.Step != NewRound {
+		// TODO(olshansky): This code branch is a result of the optimization in the leader
+		// handlers. Since the leader also acts as a replica but doesn't use the replica's
+		// handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
 		return false, nil
 	}
 
@@ -168,18 +170,17 @@ func (m *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	}
 
 	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
+
 	if msg.Round > currentRound || (msg.Round == currentRound && msg.Step > currentStep) {
-		m.nodeLog(typesCons.PacemakerCatchup(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))
-		consensusMod.SetStep(uint8(msg.Step))
-		consensusMod.SetRound(msg.Round)
+		//TODO: Add log
+		//p.consensusMod.nodeLog(typesCons.PacemakerCatchup(currentHeight, uint64(currentStep), currentRound, m.Height, uint64(m.Step), m.Round))
+
+		m.GetBus().GetConsensusModule().SetStep(uint64(msg.Step))
+		m.GetBus().GetConsensusModule().SetRound(msg.Round)
 
 		// TODO(olshansky): Add tests for this. When we catch up to a later step, the leader is still the same.
 		// However, when we catch up to a later round, the leader at the same height will be different.
-		// if currentRound != msg.Round || m.consensusMod.leaderId == nil {
-		// 	m.electNextLeader(msg)
-		// }
-
-		if currentRound != msg.Round || !consensusMod.IsLeaderSet() {
+		if currentRound != msg.Round || !m.GetBus().GetConsensusModule().IsLeaderSet() {
 			anyProto, err := anypb.New(msg)
 			if err != nil {
 				log.Println("[WARN] NewHeight: Failed to convert paceMaker message to proto: ", err)
@@ -200,7 +201,9 @@ func (p *paceMaker) RestartTimer() {
 		p.stepCancelFunc()
 	}
 
-	stepTimeout := p.getStepTimeout(p.GetBus().GetConsensusModule().CurrentRound()) //p.consensusMod.round// p.Get)
+	// NOTE: Not defering a cancel call because this function is asynchronous.
+
+	stepTimeout := p.getStepTimeout(p.GetBus().GetConsensusModule().CurrentRound())
 
 	clock := p.GetBus().GetRuntimeMgr().GetClock()
 
@@ -265,19 +268,8 @@ func (p *paceMaker) NewHeight() {
 func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
 	// DISCUSS: Should we lock the consensus module here?
 
-	//p.consensusMod.step = NewRound
 	p.GetBus().GetConsensusModule().SetStep(uint64(NewRound))
-
-	// p.consensusMod.clearLeader()
-	// p.consensusMod.clearMessagesPool()
 	p.GetBus().GetConsensusModule().ClearLeaderMessagesPool()
-
-	// if p.consensusMod.utilityContext != nil {
-	// 	if err := p.consensusMod.utilityContext.Release(); err != nil {
-	// 		log.Println("[WARN] Failed to release utility context: ", err)
-	// 	}
-	// 	p.consensusMod.utilityContext = nil
-	// }
 	p.GetBus().GetConsensusModule().ReleaseUtilityContext()
 
 	// TECHDEBT: This if structure for debug purposes only; think of a way to externalize it from the main consensus flow...
@@ -302,7 +294,7 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 	}
 
 	p.RestartTimer()
-	//p.consensusMod.broadcastToNodes(hotstuffMessage)
+
 	anyProto, err := anypb.New(hotstuffMessage)
 	if err != nil {
 		log.Println("[WARN] NewHeight: Failed to convert paceMaker message to proto: ", err)
@@ -312,8 +304,8 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 }
 
 // TODO(olshansky): Increase timeout using exponential backoff.
-func (p *paceMaker) getStepTimeout(round uint64) time.Duration {
-	baseTimeout := time.Duration(int64(time.Millisecond) * int64(p.pacemakerCfg.TimeoutMsec))
+func (m *paceMaker) getStepTimeout(round uint64) time.Duration {
+	baseTimeout := time.Duration(int64(time.Millisecond) * int64(m.pacemakerCfg.TimeoutMsec))
 	return baseTimeout
 }
 
