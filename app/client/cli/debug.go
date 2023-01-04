@@ -41,6 +41,8 @@ var (
 		PromptShowLatestBlockInStore,
 	}
 
+	// validators holds the list of the validators at genesis time so that we can use it to create a debug address book provider.
+	// This is a temporary solution that guarantees backward compatibility while we implement peer discovery (#416).
 	validators []*coreTypes.Actor
 )
 
