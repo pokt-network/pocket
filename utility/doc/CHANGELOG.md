@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.16] - 2023-01-04
+## [0.0.0.16] - 2023-01-05
 
 - Deprecate `GetBlocksPerSession` in favour of `GetParameter(paramName string, height int64) (any, error)`
 - Replace `GetBlocksPerSession` unit test to use the new `GetParameter` function

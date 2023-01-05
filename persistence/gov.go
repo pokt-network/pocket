@@ -4,7 +4,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"math/big"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -18,26 +20,12 @@ const (
 	ServiceNodesPerSessionParamName = "service_nodes_per_session"
 )
 
-// TODO (Team) BUG setting parameters twice on the same height causes issues. We need to move the schema away from 'end_height' and
-// more towards the height_constraint architecture
-
-// Deprecate these functions in favour of the getter function:
-//		GetParameter(paramName string, height int64) (interface{}, error)
-
-// func (p PostgresContext) GetBlocksPerSession(height int64) (int, error) {
-// 	return p.GetIntParam(BlocksPerSessionParamName, height)
-// }
-
-// func (p PostgresContext) GetServiceNodesPerSessionAt(height int64) (int, error) {
-// 	return p.GetIntParam(ServiceNodesPerSessionParamName, height)
-// }
-
 // Mapping of parameter names and their stringified type names
-var ParameterNameTypeMap = make(map[string]string)
+var parameterNameTypeMap = make(map[string]string)
 
 // Using the json tag of the fields in the Params struct to extract the name of the
 // parameters and build a mapping in memory of the types associated to each parameter
-// name according to the struct defined in: persistence/types/persistence_genesis.pb.go
+// name according to the struct generated from: persistence_genesis.proto
 func init() {
 	st := reflect.TypeOf(genesis.Params{})
 	// Loop through struct fields to build ParameterNameTypeMap
@@ -46,7 +34,17 @@ func init() {
 		json := field.Tag.Get("json") // Match the json tag of field: json:"paramName,omitempty"
 		paramName := strings.Split(json, ",")[0]
 		typ := field.Type.Name() // Get string version of field's type
-		ParameterNameTypeMap[paramName] = typ
+		matchOwner, err := regexp.MatchString("_owner$", paramName)
+		if err != nil {
+			log.Fatalf("Error matching for owner pattern in Params struct json tags: %v", err)
+		}
+		// Handle string types
+		if typ == "string" && matchOwner {
+			typ = "[]uint8" // All owners are string types but used as []byte slices
+		} else if typ == "string" {
+			typ = "*big.Int" // Rest of string types are used as *big.Int
+		}
+		parameterNameTypeMap[paramName] = typ
 	}
 }
 
@@ -65,14 +63,22 @@ func (p PostgresContext) InitGenesisParams(params *genesis.Params) error {
 // Match paramName against the ParameterNameTypeMap struct and call the proper
 // getter function getParamOrFlag[int | string | byte] and return its values
 func (p PostgresContext) GetParameter(paramName string, height int64) (v any, err error) {
-	paramType := ParameterNameTypeMap[paramName]
+	paramType := parameterNameTypeMap[paramName]
 	switch paramType {
 	case "int", "int32", "int64":
 		v, _, err = getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
-	case "string":
-		v, _, err = getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
+	case "*big.Int":
+		val, _, err := getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
+		b := big.Int{}
+		v, ok := b.SetString(val, 10)
+		if !ok {
+			return nil, fmt.Errorf("error converting parameter string into base 10 *big.Int.")
+		}
+		return v, err
 	case "[]uint8": // []byte
 		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
+	case "string":
+		v, _, err = getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
 	default:
 		return nil, fmt.Errorf("unhandled type for param: got %s.", paramType)
 	}
