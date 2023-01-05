@@ -81,3 +81,7 @@ func (m *consensusModule) GetPrepareQC() *anypb.Any {
 	return anyProto
 
 }
+
+func (m *consensusModule) GetNodeId() uint64 {
+	return uint64(m.nodeId)
+}

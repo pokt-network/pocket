@@ -32,19 +32,25 @@ type ConsensusModule interface {
 	CurrentStep() uint64
 }
 
-// This interface represents functions built for an intermediate solution towards seperation consensus and pacemaker modules
-// This functions should be only called by the PaceMaker module.
+// This interface represents functions exposed by consensus module to be access by pacemaker module.
+// This functions should be only called by the pacemaker module.
+// TODO This interface will be removed when asynchronous interaction among pacemaer and consensus is built.
+// See issue for details: https://github.com/pokt-network/pocket/issues/428
 type ConsensusPacemaker interface {
 	//Pacemaker Consensus interaction modules
 	ClearLeaderMessagesPool()
 	SetHeight(uint64)
 	SetRound(uint64)
-	SetStep(uint64)
+
+	//IMPROVE: Consider changing input to typesCons.HotstuffStep. This requires to do refactoring since currently importing typesCons from consensus module causes import cycle.
+	SetStep(uint8)
 	ResetForNewHeight()
 	ReleaseUtilityContext() error
 	BroadcastMessageToNodes(*anypb.Any) error
 	IsLeader() bool
 	IsLeaderSet() bool
+	//IMPROVE: Consider changing input to typesCons.HotstuffMessage. This requires to do refactoring.
 	NewLeader(*anypb.Any) error
 	GetPrepareQC() *anypb.Any
+	GetNodeId() uint64
 }

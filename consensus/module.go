@@ -77,7 +77,7 @@ type consensusModule struct {
 type ConsensusDebugModule interface {
 	SetHeight(uint64)
 	SetRound(uint64)
-	SetStep(uint64)
+	SetStep(uint8)
 	SetBlock(*typesCons.Block)
 	SetLeaderId(*typesCons.NodeId)
 	SetUtilityContext(modules.UtilityContext)
@@ -91,7 +91,7 @@ func (m *consensusModule) SetRound(round uint64) {
 	m.round = round
 }
 
-func (m *consensusModule) SetStep(step uint64) {
+func (m *consensusModule) SetStep(step uint8) {
 	m.step = typesCons.HotstuffStep(step)
 }
 

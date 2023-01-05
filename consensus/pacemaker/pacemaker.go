@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	//DefaultLogPrefix    = "NODE"
+	DefaultLogPrefix    = "NODE"
 	pacemakerModuleName = "pacemaker"
 	//NewRound            = typesCons.HotstuffStep_HOTSTUFF_STEP_NEWROUND
 	//Propose             = typesCons.HotstuffMessageType_HOTSTUFF_MESSAGE_PROPOSE
@@ -85,16 +85,16 @@ func (m *paceMaker) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error
 	}, nil
 }
 
-func (p *paceMaker) Start() error {
-	p.RestartTimer()
+func (m *paceMaker) Start() error {
+	m.RestartTimer()
 	return nil
 }
-func (p *paceMaker) Stop() error {
+func (*paceMaker) Stop() error {
 	return nil
 }
 
-func (p *paceMaker) GetModuleName() string {
-	return modules.PacemakerModuleName
+func (*paceMaker) GetModuleName() string {
+	return pacemakerModuleName
 }
 
 func (m *paceMaker) SetBus(pocketBus modules.Bus) {
@@ -109,6 +109,7 @@ func (m *paceMaker) GetBus() modules.Bus {
 }
 
 func (m *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, error) {
+
 	consensusMod := m.GetBus().GetConsensusModule()
 
 	currentHeight := m.GetBus().GetConsensusModule().CurrentHeight()
@@ -117,14 +118,14 @@ func (m *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 
 	// Consensus message is from the past
 	if msg.Height < currentHeight {
-		m.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height))
+		m.consensusMod.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d > message height %d", currentHeight, msg.Height))
 		return false, nil
 	}
 
 	// TODO: Need to restart state sync or be in state sync mode right now
 	// Current node is out of sync
 	if msg.Height > currentHeight {
-		m.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d < message at height %d", currentHeight, msg.Height))
+		m.consensusMod.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at height %d < message at height %d", currentHeight, msg.Height))
 		return false, nil
 	}
 
@@ -132,17 +133,15 @@ func (m *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	//                  handlers. Since the leader also acts as a replica but doesn't use the replica's
 	//                  handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
 	// Do not handle messages if it is a self proposal
-
-	if m.GetBus().GetConsensusModule().IsLeader() && msg.Type == Propose && msg.Step != NewRound 
-		// TODO(olshansky): This code branch is a result of the optimization in the leader
-		// handlers. Since the leader also acts as a replica but doesn't use the replica's
-		// handlers given the current implementation, it is safe to drop proposal that the leader made to itself.
+	if m.consensusMod.isLeader() && msg.Type == Propose && msg.Step != NewRound {
+		// TODO: Noisy log - make it a DEBUG
+		// p.consensusMod.nodeLog(typesCons.ErrSelfProposal.Error())
 		return false, nil
 	}
 
 	// Message is from the past
 	if msg.Round < currentRound || (msg.Round == currentRound && msg.Step < currentStep) {
-		m.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round))
+		consensusMod.nodeLog(fmt.Sprintf("⚠️ [WARN][DISCARDING] ⚠️ Node at (height, step, round) (%d, %d, %d) > message at (%d, %d, %d)", currentHeight, currentStep, currentRound, msg.Height, msg.Step, msg.Round))
 		return false, nil
 	}
 
@@ -152,23 +151,15 @@ func (m *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 	}
 
 	// Pacemaker catch up! Node is synched to the right height, but on a previous step/round so we just jump to the latest state.
-	if m.Round > currentRound || (m.Round == currentRound && m.Step > currentStep) {
-		//TODO: Add node log (typesCons.PacemakerCatchup(currentHeight, uint64(currentStep), currentRound, m.Height, uint64(m.Step), m.Round))
-
-		consensusMod.SetStep(uint64(m.Step))
-		consensusMod.SetRound(m.Round)
+	if msg.Round > currentRound || (msg.Round == currentRound && msg.Step > currentStep) {
+		consensusMod.nodeLog(typesCons.PacemakerCatchup(currentHeight, uint64(currentStep), currentRound, msg.Height, uint64(msg.Step), msg.Round))
+		consensusMod.step = msg.Step
+		consensusMod.round = msg.Round
 
 		// TODO(olshansky): Add tests for this. When we catch up to a later step, the leader is still the same.
 		// However, when we catch up to a later round, the leader at the same height will be different.
-		if currentRound != m.Round || !consensusMod.IsLeaderSet() {
-			anyProto, err := anypb.New(m)
-			if err != nil {
-				log.Println("[WARN] NewHeight: Failed to convert paceMaker message to proto: ", err)
-				return false, err
-			}
-			m.GetBus().GetConsensusModule().NewLeader(anyProto)
-
-
+		if currentRound != msg.Round || p.consensusMod.leaderId == nil {
+			consensusMod.electNextLeader(msg)
 		}
 
 		return true, nil
@@ -184,13 +175,12 @@ func (p *paceMaker) RestartTimer() {
 	}
 
 	// NOTE: Not defering a cancel call because this function is asynchronous.
-
-	stepTimeout := p.getStepTimeout(p.GetBus().GetConsensusModule().CurrentRound())
-
-	clock := p.GetBus().GetRuntimeMgr().GetClock()
+	consensusMod := m.GetBus().GetConsensusModule()
+	stepTimeout := m.getStepTimeout(consensusMod.CurrentRound())
+	clock := m.GetBus().GetRuntimeMgr().GetClock()
 
 	ctx, cancel := clock.WithTimeout(context.TODO(), stepTimeout)
-	p.stepCancelFunc = cancel
+	m.stepCancelFunc = cancel
 
 	go func() {
 		select {
@@ -204,10 +194,10 @@ func (p *paceMaker) RestartTimer() {
 	}()
 }
 
-func (p *paceMaker) InterruptRound() {
-	//TODO: Add node log: (typesCons.PacemakerInterrupt(p.GetBus().GetConsensusModule().CurrentHeight(), typesCons.HotstuffStep(p.GetBus().GetConsensusModule().CurrentStep()), p.GetBus().GetConsensusModule().CurrentRound()))
+func (m *paceMaker) InterruptRound() {
+	consensusMod := m.GetBus().GetConsensusModule()
+	m.nodeLog(typesCons.PacemakerInterrupt(consensusMod.CurrentHeight(), typesCons.HotstuffStep(consensusMod.CurrentStep()), consensusMod.CurrentRound()))
 
-	consensusMod := p.GetBus().GetConsensusModule()
 	currentRound := consensusMod.CurrentRound()
 	currentRound++
 	consensusMod.SetRound(currentRound)
@@ -224,18 +214,18 @@ func (p *paceMaker) InterruptRound() {
 	m.startNextView(quorumCertificate, false)
 }
 
-func (p *paceMaker) NewHeight() {
-	//TODO: Add node log: (typesCons.PacemakerNewHeight(p.consensusMod.CurrentHeight() + 1))
+func (m *paceMaker) NewHeight() {
+	consensusMod := m.GetBus().GetConsensusModule()
 
-	consensusMod := p.GetBus().GetConsensusModule()
+	m.nodeLog(typesCons.PacemakerNewHeight(consensusMod.CurrentHeight() + 1))
 	currentHeight := consensusMod.CurrentHeight()
 	currentHeight++
 	consensusMod.SetHeight(currentHeight)
 	consensusMod.ResetForNewHeight()
 
-	p.startNextView(nil, false) // TODO(design): We are omitting CommitQC and TimeoutQC here.
+	m.startNextView(nil, false) // TODO(design): We are omitting CommitQC and TimeoutQC here.
 
-	p.
+	m.
 		GetBus().
 		GetTelemetryModule().
 		GetTimeSeriesAgent().
@@ -244,17 +234,17 @@ func (p *paceMaker) NewHeight() {
 		)
 }
 
-func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
+func (m *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView bool) {
 	// DISCUSS: Should we lock the consensus module here?
 
-	consensusMod := p.GetBus().GetConsensusModule()
-	consensusMod.SetStep(uint64(NewRound))
+	consensusMod := m.GetBus().GetConsensusModule()
+	consensusMod.SetStep(uint8(NewRound))
 	consensusMod.ClearLeaderMessagesPool()
 	consensusMod.ReleaseUtilityContext()
 
 	// TECHDEBT: This if structure for debug purposes only; think of a way to externalize it from the main consensus flow...
-	if p.manualMode && !forceNextView {
-		p.previousRoundQC = qc
+	if m.manualMode && !forceNextView {
+		m.previousRoundQC = qc
 		return
 	}
 
@@ -273,7 +263,7 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 		}
 	}
 
-	p.RestartTimer()
+	m.RestartTimer()
 
 	anyProto, err := anypb.New(hotstuffMessage)
 	if err != nil {
