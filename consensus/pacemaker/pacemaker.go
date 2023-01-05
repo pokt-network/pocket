@@ -186,7 +186,9 @@ func (m *paceMaker) ShouldHandleMessage(msg *typesCons.HotstuffMessage) (bool, e
 				log.Println("[WARN] NewHeight: Failed to convert paceMaker message to proto: ", err)
 				return false, err
 			}
-			consensusMod.NewLeader(anyProto)
+
+			m.GetBus().GetConsensusModule().NewLeader(anyProto)
+
 		}
 
 		return true, nil

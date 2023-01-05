@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/pokt-network/pocket/consensus/leader_election"
-	pacemaker "github.com/pokt-network/pocket/consensus/pacemaker"
+	"github.com/pokt-network/pocket/consensus/pacemaker"
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/runtime/configs"
@@ -153,7 +153,7 @@ func (m *consensusModule) IsLeaderSet() bool {
 	return m.leaderId != nil
 }
 
-func (m *consensusModule) ElectNextLeader(msg *anypb.Any) error {
+func (m *consensusModule) NewLeader(msg *anypb.Any) error {
 	msgCodec, err := codec.GetCodec().FromAny(msg)
 	if err != nil {
 		return err
@@ -187,38 +187,23 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		return nil, err
 	}
 
-	// TODO(olshansky): Can we make this a submodule?
-
-	paceMakerMod, err := pacemaker.CreatePacemaker(runtimeMgr)
+	paceMakerMod, err := CreatePacemaker(bus)
 	if err != nil {
 		return nil, err
 	}
 
-	valMap := typesCons.ActorListToValidatorMap(consensusGenesis.GetVals())
-
-	privateKey, err := cryptoPocket.NewPrivateKey(consensusCfg.GetPrivateKey())
-	if err != nil {
-		return nil, err
-	}
-	address := privateKey.Address().String()
-	valIdMap, idValMap := typesCons.GetValAddrToIdMap(valMap)
-
-	paceMaker := paceMakerMod.(pacemaker.Pacemaker)
-
-	m = &consensusModule{
-		bus: nil,
-
-		privateKey:  privateKey.(cryptoPocket.Ed25519PrivateKey),
-		consCfg:     cfg.GetConsensusConfig(),
-		consGenesis: genesis.GetConsensusGenesisState(),
+	pacemaker := paceMakerMod.(Pacemaker)
+	m := &consensusModule{
+		paceMaker:         pacemaker,
+		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
 
 		height: 0,
 		round:  0,
 		step:   NewRound,
 		block:  nil,
 
-		prepareQC: nil,
-		lockedQC:  nil,
+		highPrepareQC: nil,
+		lockedQC:      nil,
 
 		leaderId: nil,
 

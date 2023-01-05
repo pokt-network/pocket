@@ -19,7 +19,7 @@ const (
 type ConsensusModule interface {
 	Module
 	KeyholderModule
-	PaceMakerAccessModule
+	ConsensusPacemaker
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
@@ -30,4 +30,21 @@ type ConsensusModule interface {
 	CurrentHeight() uint64
 	CurrentRound() uint64
 	CurrentStep() uint64
+}
+
+// This interface represents functions built for an intermediate solution towards seperation consensus and pacemaker modules
+// This functions should be only called by the PaceMaker module.
+type ConsensusPacemaker interface {
+	//Pacemaker Consensus interaction modules
+	ClearLeaderMessagesPool()
+	SetHeight(uint64)
+	SetRound(uint64)
+	SetStep(uint64)
+	ResetForNewHeight()
+	ReleaseUtilityContext() error
+	BroadcastMessageToNodes(*anypb.Any) error
+	IsLeader() bool
+	IsLeaderSet() bool
+	NewLeader(*anypb.Any) error
+	GetPrepareQC() *anypb.Any
 }

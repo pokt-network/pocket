@@ -6,7 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ## [0.0.0.18] - 2023-01-11
 
 ### Consensus - Core
@@ -50,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated do use the new centralized config and genesis
 - `Actor` is now a shared `struct` instead of an `interface`
 - Removed converters between the interfaces and the consensus structs for Validators
+
 
 ## [0.0.0.13] - 2022-12-14
 

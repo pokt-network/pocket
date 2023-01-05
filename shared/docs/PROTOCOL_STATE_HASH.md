@@ -106,14 +106,14 @@ graph TD
     D[Did I get any prepareQCs?] --> |Find highest valid prepareQC| E
     D[Did I get any prepareQCs?] --> |No| Z
 
-    E[Am I ahead of highPrepareQC?] --> |Yes| G
-    E[Am I ahead of highPrepareQC?] --> |No| Z
+    E[Am I ahead of prepareQC?] --> |Yes| G
+    E[Am I ahead of prepareQC?] --> |No| Z
 
     G[Do I have a lockedQC] --> |No| H
     G[Do I have a lockedQC] --> |Yes| I
 
-    I[Is highPrepareQC.view > lockedQC.view] --> |"No<br>(lockedQC.block)"| Z
-    I[Is highPrepareQC.view > lockedQC.view] --> |"Yes<br>(highPrepareQC.block)"| Z
+    I[Is prepareQC.view > lockedQC.view] --> |"No<br>(lockedQC.block)"| Z
+    I[Is prepareQC.view > lockedQC.view] --> |"Yes<br>(prepareQC.block)"| Z
 
     H[CreateAndApplyProposalBlock]
     Z[ApplyBlock]
