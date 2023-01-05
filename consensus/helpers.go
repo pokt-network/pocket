@@ -130,13 +130,6 @@ func (m *consensusModule) isOptimisticThresholdMet(numSignatures int, validators
 	return nil
 }
 
-func (m *consensusModule) resetForNewHeight() {
-	m.round = 0
-	m.block = nil
-	m.prepareQC = nil
-	m.lockedQC = nil
-}
-
 func protoHash(m proto.Message) string {
 	b, err := codec.GetCodec().Marshal(m)
 	if err != nil {
@@ -209,16 +202,13 @@ func (m *consensusModule) clearMessagesPool() {
 
 /*** Leader Election Helpers ***/
 
+// TODO: this is not used, we should remove it if this will not be useful for next features.
 func (m *consensusModule) isLeaderUnknown() bool {
 	return m.leaderId == nil
 }
 
-func (m *consensusModule) isLeader() bool {
-	return m.leaderId != nil && *m.leaderId == m.nodeId
-}
-
 func (m *consensusModule) isReplica() bool {
-	return !m.isLeader()
+	return !m.IsLeader()
 }
 
 func (m *consensusModule) clearLeader() {
@@ -242,7 +232,7 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 
 	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
 
-	if m.isLeader() {
+	if m.IsLeader() {
 		m.setLogPrefix("LEADER")
 		m.nodeLog(typesCons.ElectedSelfAsNewLeader(idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
 	} else {

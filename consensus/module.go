@@ -177,8 +177,8 @@ func (m *consensusModule) GetPrepareQC() *anypb.Any {
 
 }
 
-func Create(bus modules.Bus) (modules.Module, error) {
-	return new(consensusModule).Create(bus)
+func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	return new(consensusModule).Create(runtimeMgr)
 }
 
 func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
@@ -187,6 +187,7 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		return nil, err
 	}
 
+	// TODO(olshansky): Can we make this a submodule?
 	paceMakerMod, err := CreatePacemaker(bus)
 	if err != nil {
 		return nil, err
@@ -214,6 +215,9 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
 	}
 	bus.RegisterModule(m)
+
+	// TODO(#395): Decouple the pacemaker and consensus modules
+	pacemaker.SetConsensusModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
 

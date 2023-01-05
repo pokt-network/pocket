@@ -37,7 +37,7 @@ func (m *consensusModule) GetNodeState() typesCons.ConsensusNodeState {
 		Height:   m.height,
 		Round:    uint8(m.round),
 		Step:     uint8(m.step),
-		IsLeader: m.isLeader(),
+		IsLeader: m.IsLeader(),
 		LeaderId: leaderId,
 	}
 }
@@ -46,7 +46,7 @@ func (m *consensusModule) resetToGenesis(_ *messaging.DebugMessage) {
 	m.nodeLog(typesCons.DebugResetToGenesis)
 
 	m.height = 0
-	m.resetForNewHeight()
+	m.ResetForNewHeight()
 	m.clearLeader()
 	m.clearMessagesPool()
 	m.GetBus().GetPersistenceModule().HandleDebugMessage(&messaging.DebugMessage{
