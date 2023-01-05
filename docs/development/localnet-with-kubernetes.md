@@ -52,8 +52,18 @@ We provide following make targets:
 `tilt` reads the `Tiltfile` in the root of the project, and based on the configuration in it, it will start the services defined in the `Tiltfile` and will monitor the files for changes. `Tiltfile` is written in Starlark, which is a dialect of Python.
 
 Currently, the services defined in the `Tiltfile` are:
-- [pocket-operator](https://github.com/pokt-network/pocket-operator) - the operator that manages the v1 workloads;
+- [pocket-operator](https://github.com/pokt-network/pocket-operator) - the operator that manages v1 workloads;
   - once operator is available, `tilt` pushes a set of Custom Resource Definitions (CRDs) to the cluster to provision the genesis file (localnet configuration), and [validators](../../build/localnet/validators.yaml);
+```mermaid
+sequenceDiagram
+    Tilt->>PocketOperator: Deploys pocket-operator
+    Tilt->>PocketOperator: Creates PocketOperator CRD
+    PocketOperator->>Validator: Detects CRD and creates Validator StatefulSet
+    loop Tilt monitors directories for changes
+        Note over Tilt: Builds new binary on code change
+        Tilt->>Validator: when new binary is detected, Tilt uploads it to all validators and restarts them
+    end
+```
 - [postgres-operator](https://github.com/zalando/postgres-operator) - the operator to manage postgres lifecycle in kubernetes;
   - once operator is available, `tilt` pushes a [Postgres CRD](../../build/localnet/postgres-database.yaml) to the cluster to provision a postgres database;
 - [obeservability-stack](../../build/localnet/observability-stack/) - a helm chart that installs the observability stack (prometheus, grafana, etc.) that is used to gather metrics and logs from localnet services.
