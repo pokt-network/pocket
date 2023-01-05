@@ -85,4 +85,6 @@ Sometimes you might experience issues running localnet on Kubernetes. They might
 
 ### How to change configuration files
 
-LocalNet resources are managed by pocket-operator, so if you'd like to change a config file (e.g. genesis file), you can do it by modifying the corresponding CRD in `pocket-operator` repo.
+LocalNet resources are managed by pocket-operator, so if you'd like to change a config file (e.g. genesis file), you can do it by modifying the corresponding CRD in `pocket-operator` repo. For example, here are the current configuration files for the localnet:
+- [genesis file](https://github.com/pokt-network/pocket-operator/blob/master/.operator-builder/nodes.pokt.network/pocket-set/config.yaml#L7)
+- [validator config file](https://github.com/pokt-network/pocket-operator/blob/master/.operator-builder/nodes.pokt.network/pocket-validator/validator.yaml#L122)
