@@ -28,16 +28,17 @@ var parameterNameTypeMap = make(map[string]string)
 // name according to the struct generated from: persistence_genesis.proto
 func init() {
 	st := reflect.TypeOf(genesis.Params{})
+	ownerRegEx, err := regexp.Compile("_owner$")
+	if err != nil {
+		log.Fatalf("error compiling regular expression `_owner$` to match paramNames.")
+	}
 	// Loop through struct fields to build ParameterNameTypeMap
 	for i := 0; i < st.NumField(); i++ {
 		field := st.Field(i)
 		json := field.Tag.Get("json") // Match the json tag of field: json:"paramName,omitempty"
 		paramName := strings.Split(json, ",")[0]
 		typ := field.Type.Name() // Get string version of field's type
-		matchOwner, err := regexp.MatchString("_owner$", paramName)
-		if err != nil {
-			log.Fatalf("Error matching for owner pattern in Params struct json tags: %v", err)
-		}
+		matchOwner := ownerRegEx.MatchString(paramName)
 		// Handle string types
 		if typ == "string" && matchOwner {
 			typ = "[]uint8" // All owners are string types but used as []byte slices

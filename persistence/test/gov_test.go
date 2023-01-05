@@ -2,6 +2,7 @@ package test
 
 import (
 	"encoding/hex"
+	"math/big"
 	"testing"
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
@@ -35,7 +36,7 @@ func TestGetSetIntParam(t *testing.T) {
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	maxChains, err := db.GetIntParam(AppMaxChainsParamName, height)
+	maxChains, err := db.GetParameter(AppMaxChainsParamName, height)
 	require.NoError(t, err)
 
 	require.Equal(t, newMaxChains, maxChains)
@@ -55,10 +56,11 @@ func TestGetSetStringParam(t *testing.T) {
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	serviceNodeMinimumStake, err := db.GetStringParam(ServiceNodeMinimumStakeParamName, height)
+	serviceNodeMinimumStake, err := db.GetParameter(ServiceNodeMinimumStakeParamName, height)
 	require.NoError(t, err)
 
-	require.Equal(t, newServiceNodeMinimumStake, serviceNodeMinimumStake)
+	serviceNodeMinimumStakeString := serviceNodeMinimumStake.(*big.Int).String()
+	require.Equal(t, newServiceNodeMinimumStake, serviceNodeMinimumStakeString)
 }
 
 func TestGetSetByteArrayParam(t *testing.T) {
@@ -76,7 +78,7 @@ func TestGetSetByteArrayParam(t *testing.T) {
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	owner, err := db.GetBytesParam(ServiceNodeUnstakingBlocksOwner, height)
+	owner, err := db.GetParameter(ServiceNodeUnstakingBlocksOwner, height)
 	require.NoError(t, err)
 
 	require.Equal(t, newOwner, owner)
