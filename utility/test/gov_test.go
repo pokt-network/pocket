@@ -83,7 +83,7 @@ func TestUtilityContext_GetBaselineAppStakeRate(t *testing.T) {
 	test_artifacts.CleanupTest(ctx)
 }
 
-func TestUtilityContext_GetParameter(t *testing.T) {
+func TestUtilityContext_GetBlocksPerSession(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	defaultParams := DefaultTestingParams(t)
 	defaultParam := int(defaultParams.GetBlocksPerSession())
