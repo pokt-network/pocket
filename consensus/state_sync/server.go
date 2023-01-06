@@ -2,7 +2,6 @@ package state_sync
 
 import (
 	typesCons "github.com/pokt-network/pocket/consensus/types"
-	"github.com/pokt-network/pocket/shared/messaging"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -28,16 +27,20 @@ func (m *stateSyncModule) HandleStateSyncMetadataRequest(metadataReq *typesCons.
 		MaxHeight: 10,
 	}
 
-	anyProto, err := anypb.New(&metadataRes)
+	//m.sendToNode(metadataReq)
+
+	anyStateSyncMessage, err := anypb.New(&metadataRes)
 	if err != nil {
 		return err
 	}
 
-	pocketEnv := &messaging.PocketEnvelope{
-		Content: anyProto,
-	}
+	return m.sendToNode(anyStateSyncMessage)
 
-	m.GetBus().PublishEventToBus(pocketEnv)
+}
+
+// ! TODO implement, similar to sendToNode function of consensus. Maybe it can be used directly.
+func (m *stateSyncModule) sendToNode(msg *anypb.Any) error {
+
 	return nil
 }
 
