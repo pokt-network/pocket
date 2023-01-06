@@ -10,4 +10,9 @@ message PersistenceConfig {
   string block_store_path = 3;
   string tx_indexer_path = 4;
   string trees_store_dir = 5;
+  int32 max_conns_count = 6;
+  int32 min_conns_count = 7;
+  string max_conn_lifetime = 8;
+  string max_conn_idle_time = 9;
+  string health_check_period = 10;
 }

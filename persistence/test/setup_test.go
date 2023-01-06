@@ -98,11 +98,11 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 			BlockStorePath:    "",
 			TxIndexerPath:     "",
 			TreesStoreDir:     "",
-			MaxConns:          4,
-			MinConns:          0,
-			MaxConnLifetime:   1,
-			MaxConnIdleTime:   30,
-			HealthCheckPeriod: 5,
+			MaxConnsCount:     4,
+			MinConnsCount:     0,
+			MaxConnLifetime:   "1h",
+			MaxConnIdleTime:   "30m",
+			HealthCheckPeriod: "5m",
 		},
 	}
 

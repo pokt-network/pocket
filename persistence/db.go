@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/runtime/configs"
 )
 
 const (
@@ -68,7 +68,7 @@ func (pg *PostgresContext) ResetContext() error {
 	return nil
 }
 
-func connectToDatabase(cfg modules.PersistenceConfig) (*pgx.Conn, error) {
+func connectToDatabase(cfg *configs.PersistenceConfig) (*pgx.Conn, error) {
 	ctx := context.TODO()
 
 	config, err := pgxpool.ParseConfig(cfg.GetPostgresUrl())
