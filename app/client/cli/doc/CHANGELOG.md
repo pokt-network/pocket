@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.0.4] - 2023-01-04
 
-- The `client` now doesn't instantiate a `P2P` module and compose a bus with optional modules anymore. It insteads instantiates a `client-only` `P2P` module that is disconnected from consensus and persistence. These interactions happen via RPC.
-- Replaced previous implementation reliant on `ValidatorMap` with a temporary fetch from genesis. This will be replaced with a lightweight peer discovery mechanism (#416)
+- The `client` (i.e. CLI) no longer instantiates a `P2P` module along with a bus of optional modules. Instead, it instantiates a `client-only` `P2P` module that is disconnected from consensus and persistence. Interactions with the persistence & consensus layer happen via RPC.
+- Replaced previous implementation, reliant on `ValidatorMap`, with a temporary fetch from genesis. This will be replaced with a lightweight peer discovery mechanism in #416
+- Simplified debug CLI initialization
 
 ## [0.0.0.3] - 2023-01-03
 
