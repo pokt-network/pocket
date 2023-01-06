@@ -237,12 +237,10 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 		expectedCall := networkSimulationConfig[valId]
 		expectedReads := expectedCall.numNetworkReads + 1
 		expectedWrites := expectedCall.numNetworkWrites
+
 		log.Printf("[valId: %s] expected reads: %d\n", valId, expectedReads)
 		log.Printf("[valId: %s] expected writes: %d\n", valId, expectedWrites)
-
 		wg.Add(expectedReads)
-		connMocks[valId] = prepareConnMock(t, valId, &wg, expectedCall.numNetworkReads)
-
 		wg.Add(expectedWrites)
 
 		connMocks[valId] = prepareConnMock(t, valId, &wg, expectedCall.numNetworkReads)
