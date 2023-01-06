@@ -266,6 +266,5 @@ func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Act
 	}
 	defer persistenceReadContext.Close()
 
-	validators, err := persistenceReadContext.GetAllValidators(int64(height))
-	return validators, err
+	return persistenceReadContext.GetAllValidators(int64(height))
 }
