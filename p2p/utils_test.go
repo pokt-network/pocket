@@ -102,11 +102,6 @@ func createP2PModules(t *testing.T, buses []modules.Bus) (p2pModules map[string]
 	p2pModules = make(map[string]*p2pModule, len(buses))
 	for i := range buses {
 		p2pMod, err := Create(buses[i])
-
-		// normally it's not necessary to set the bus explicitly since it's done automatically when the Create calls `bus.RegisterModule`
-		// but since we're mocking the bus, we need to do it manually
-		p2pMod.SetBus(buses[i])
-
 		require.NoError(t, err)
 		p2pModules[validatorId(i+1)] = p2pMod.(*p2pModule)
 	}
@@ -153,7 +148,10 @@ func createMockBus(t *testing.T, runtimeMgr modules.RuntimeMgr) modules.Bus {
 	ctrl := gomock.NewController(t)
 	mockBus := modulesMock.NewMockBus(ctrl)
 	mockBus.EXPECT().GetRuntimeMgr().Return(runtimeMgr).AnyTimes()
-	mockBus.EXPECT().RegisterModule(gomock.Any()).AnyTimes()
+	mockBus.EXPECT().RegisterModule(gomock.Any()).DoAndReturn(func(m modules.Module) error {
+		m.SetBus(mockBus)
+		return nil
+	}).AnyTimes()
 	mockBus.EXPECT().PublishEventToBus(gomock.Any()).AnyTimes()
 	return mockBus
 }
