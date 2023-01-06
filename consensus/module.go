@@ -159,18 +159,8 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	m.consCfg = consensusCfg
 	m.genesisState = genesisState
 
-	m.height = 0
-	m.round = 0
 	m.step = NewRound
-	m.block = nil
-
-	m.highPrepareQC = nil
-	m.lockedQC = nil
-
 	m.nodeId = valAddrToIdMap[address]
-	m.leaderId = nil
-
-	m.utilityContext = nil
 
 	m.logPrefix = DefaultLogPrefix
 	m.messagePool = make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage)
