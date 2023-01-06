@@ -130,8 +130,7 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	}
 	bus.RegisterModule(m)
 
-	// TODO(olshansky): Look for a way to avoid doing this.
-	// TODO(goku): remove tight connection of pacemaker and consensus.
+	// TODO(#395): Decouple the pacemaker and consensus modules
 	pacemaker.SetConsensusModule(m)
 
 	runtimeMgr := bus.GetRuntimeMgr()
