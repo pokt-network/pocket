@@ -172,7 +172,7 @@ func (m *consensusModule) sendToNode(msg *typesCons.HotstuffMessage) {
 		m.nodeLogError(typesCons.ErrPersistenceGetAllValidators.Error(), err)
 	}
 
-	_, idToValAddrMap := typesCons.GetValAddrToIdMap(validators)
+	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
 
 	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(idToValAddrMap[*m.leaderId]), anyConsensusMessage); err != nil {
 		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
@@ -236,7 +236,7 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 		return err
 	}
 
-	_, idToValAddrMap := typesCons.GetValAddrToIdMap(validators)
+	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
 
 	if m.isLeader() {
 		m.setLogPrefix("LEADER")

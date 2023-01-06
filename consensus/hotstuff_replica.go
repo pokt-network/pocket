@@ -267,8 +267,9 @@ func (m *consensusModule) validateQuorumCertificate(qc *typesCons.QuorumCertific
 		return err
 	}
 
-	validatorMap := typesCons.ActorListToValidatorMap(validators)
-	valAddrToIdMap, _ := typesCons.GetValAddrToIdMap(validators)
+	actorMapper := typesCons.NewActorMapper(validators)
+	validatorMap := actorMapper.GetValidatorMap()
+	valAddrToIdMap := actorMapper.GetValAddrToIdMap()
 
 	// TODO(#109): Aggregate signatures once BLS or DKG is implemented
 	for _, partialSig := range qc.ThresholdSignature.Signatures {

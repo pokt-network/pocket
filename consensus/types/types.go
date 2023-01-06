@@ -2,8 +2,6 @@ package types
 
 // TODO: Split this file into multiple types files.
 import (
-	"sort"
-
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
@@ -21,24 +19,6 @@ type ConsensusNodeState struct {
 
 	LeaderId NodeId
 	IsLeader bool
-}
-
-func GetValAddrToIdMap(validators []*coreTypes.Actor) (ValAddrToIdMap, IdToValAddrMap) {
-	valAddresses := make([]string, 0, len(validators))
-	for _, val := range validators {
-		valAddresses = append(valAddresses, val.GetAddress())
-	}
-	sort.Strings(valAddresses)
-
-	valToIdMap := make(ValAddrToIdMap, len(valAddresses))
-	idToValMap := make(IdToValAddrMap, len(valAddresses))
-	for i, addr := range valAddresses {
-		nodeId := NodeId(i + 1)
-		valToIdMap[addr] = nodeId
-		idToValMap[nodeId] = addr
-	}
-
-	return valToIdMap, idToValMap
 }
 
 func ActorListToValidatorMap(actors []*coreTypes.Actor) (m ValidatorMap) {

@@ -309,8 +309,9 @@ func (m *consensusModule) validatePartialSignature(msg *typesCons.HotstuffMessag
 		return err
 	}
 
-	validatorMap := typesCons.ActorListToValidatorMap(validators)
-	valAddrToIdMap, _ := typesCons.GetValAddrToIdMap(validators)
+	actorMapper := typesCons.NewActorMapper(validators)
+	validatorMap := actorMapper.GetValidatorMap()
+	valAddrToIdMap := actorMapper.GetValAddrToIdMap()
 
 	validator, ok := validatorMap[address]
 	if !ok {

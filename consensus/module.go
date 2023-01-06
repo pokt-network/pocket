@@ -154,7 +154,7 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 		return nil, err
 	}
 
-	valAddrToIdMap, _ := typesCons.GetValAddrToIdMap(validators)
+	valAddrToIdMap := typesCons.NewActorMapper(validators).GetValAddrToIdMap()
 
 	m.privateKey = privateKey.(cryptoPocket.Ed25519PrivateKey)
 	m.consCfg = consensusCfg
