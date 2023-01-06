@@ -33,37 +33,20 @@ func CreateNode(bus modules.Bus) (modules.Module, error) {
 }
 
 func (m *Node) Create(bus modules.Bus) (modules.Module, error) {
-	_, err := persistence.Create(bus)
-	if err != nil {
-		return nil, err
+	for _, mod := range []func(modules.Bus) (modules.Module, error){
+		persistence.Create,
+		utility.Create,
+		consensus.Create,
+		telemetry.Create,
+		logger.Create,
+		rpc.Create,
+	} {
+		if _, err := mod(bus); err != nil {
+			return nil, err
+		}
 	}
 
 	p2pMod, err := p2p.Create(bus)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = utility.Create(bus)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = consensus.Create(bus)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = telemetry.Create(bus)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = logger.Create(bus)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = rpc.Create(bus)
 	if err != nil {
 		return nil, err
 	}
