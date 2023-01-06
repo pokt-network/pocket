@@ -5,11 +5,11 @@ import (
 )
 
 var (
-	_ modules.Module = &telemetryModule{}
-)
-
-const (
-	TelemetryModuleName = "telemetry"
+	_                   modules.Module = &telemetryModule{}
+	ImplementationNames                = []string{
+		new(PrometheusTelemetryModule).GetModuleName(),
+		new(NoopTelemetryModule).GetModuleName(),
+	}
 )
 
 func Create(bus modules.Bus) (modules.Module, error) {
@@ -32,7 +32,7 @@ func (*telemetryModule) Create(bus modules.Bus) (modules.Module, error) {
 
 type telemetryModule struct{}
 
-func (t *telemetryModule) GetModuleName() string  { return TelemetryModuleName }
+func (t *telemetryModule) GetModuleName() string  { return modules.TelemetryModuleName }
 func (t *telemetryModule) SetBus(bus modules.Bus) {}
 func (t *telemetryModule) GetBus() modules.Bus    { return nil }
 func (t *telemetryModule) Start() error           { return nil }

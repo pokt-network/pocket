@@ -74,8 +74,7 @@ func (m *bus) GetConsensusModule() modules.ConsensusModule {
 }
 
 func (m *bus) GetTelemetryModule() modules.TelemetryModule {
-	telemetryModules := []string{modules.TelemetryModuleName, "telemetry_prometheus", "telemetry_noOP"}
-	for _, moduleName := range telemetryModules {
+	for _, moduleName := range telemetry.ImplementationNames {
 		telemetryMod, ok := m.modulesMap[moduleName]
 		if ok {
 			return telemetryMod.(modules.TelemetryModule)
