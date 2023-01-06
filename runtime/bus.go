@@ -17,7 +17,6 @@ type bus struct {
 	// Node events
 	channel modules.EventsChannel
 
-	// Modules
 	modulesMap map[string]modules.Module
 
 	runtimeMgr modules.RuntimeMgr
