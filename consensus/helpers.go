@@ -57,13 +57,7 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		pss = append(pss, msg.GetPartialSignature())
 	}
 
-	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
-	if err != nil {
-		return nil, err
-	}
-	defer persistenceReadContext.Close()
-
-	validators, err := persistenceReadContext.GetAllValidators(int64(height))
+	validators, err := m.getValidatorsAtHeight(height)
 	if err != nil {
 		return nil, err
 	}
