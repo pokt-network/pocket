@@ -25,10 +25,12 @@ var parameterNameTypeMap = make(map[string]string)
 // parameters and build a mapping in memory of the types associated to each parameter
 // name according to the struct generated from: persistence_genesis.proto
 func init() {
-	st := reflect.TypeOf(genesis.Params{})
-	// Loop through struct fields to build ParameterNameTypeMap
-	for i := 0; i < st.NumField(); i++ {
-		field := st.Field(i)
+	fields := reflect.VisibleFields(reflect.TypeOf(genesis.Params{}))
+	// Loop through struct fields to build parameterNameTypeMap
+	for _, field := range fields {
+		if !field.IsExported() {
+			continue
+		}
 		json := field.Tag.Get("json") // Match the json tag of field: json:"paramName,omitempty"
 		paramName := strings.Split(json, ",")[0]
 		typ := field.Type.Name() // Get string version of field's type
