@@ -16,11 +16,12 @@ type StateSyncServerModule interface {
 	HandleGetBlockRequest(*typesCons.GetBlockRequest) error
 }
 
+// ! TODO implement
 func (m *stateSyncModule) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateSyncMetadataRequest) error {
 	return nil
 }
 
+// ! TODO implement
 func (m *stateSyncModule) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) error {
-
 	return nil
 }

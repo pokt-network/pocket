@@ -11,6 +11,15 @@ const (
 	stateSyncModuleName = "stateSyncModule"
 )
 
+type Sync_Mode string
+
+const (
+	Snyc      Sync_Mode = "sync"
+	Synched   Sync_Mode = "synched"
+	Pacemaker Sync_Mode = "pacemaker"
+	Server    Sync_Mode = "server"
+)
+
 type StateSyncModule interface {
 	modules.Module
 	StateSyncServerModule
@@ -21,7 +30,9 @@ type StateSyncModule interface {
 
 	// Handle a block response from a peer so this node can update apply it to its local state
 	// and catch up to the global world state
-	HandleStateSyncBlockResponse(*typesCons.StateSyncMetadataResponse) error
+	HandleGetBlockResponse(*typesCons.GetBlockResponse) error
+
+	//HandleStateSyncMetadataRequest
 
 	IsServerModEnabled() bool
 	EnableServerMode()
@@ -35,19 +46,20 @@ var (
 type stateSyncModule struct {
 	bus modules.Bus
 
-	currentMode string
+	currentMode Sync_Mode
 	serverMode  bool
 }
 
 func CreateStateSync(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	var m StateSyncModule
+	var m stateSyncModule
 	return m.Create(runtimeMgr)
 }
 
 func (*stateSyncModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+	//! TODO: think about what must be the default state?
 	return &stateSyncModule{
 		bus:         nil,
-		currentMode: "asd",
+		currentMode: Synched,
 		serverMode:  false,
 	}, nil
 }
@@ -80,5 +92,16 @@ func (m *stateSyncModule) IsServerModEnabled() bool {
 }
 
 func (m *stateSyncModule) EnableServerMode() {
+	m.currentMode = Server
 	m.serverMode = true
+}
+
+func (m *stateSyncModule) HandleGetBlockResponse(*typesCons.GetBlockResponse) error {
+	//! TODO implement
+	return nil
+}
+
+func (m *stateSyncModule) HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error {
+	//! TODO implement
+	return nil
 }

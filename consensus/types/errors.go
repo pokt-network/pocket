@@ -221,6 +221,10 @@ func ErrUnknownConsensusMessageType(msg interface{}) error {
 	return fmt.Errorf("unknown consensus message type: %v", msg)
 }
 
+func ErrUnknownStateSyncMessageType(msg interface{}) error {
+	return fmt.Errorf("unknown state sync message type: %v", msg)
+}
+
 func ErrCreateProposeMessage(step HotstuffStep) error {
 	return fmt.Errorf("could not create a %s Propose message", StepToString[step])
 }

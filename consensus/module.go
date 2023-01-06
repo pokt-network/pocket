@@ -15,7 +15,6 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
 
-	// "github.com/pokt-network/pocket/consensus/StateSyncModule"
 	"github.com/pokt-network/pocket/consensus/state_sync"
 	"google.golang.org/protobuf/types/known/anypb"
 )

@@ -30,6 +30,25 @@ message GetBlockResponse {
     consensus.Block block = 2; // The block being provided to the peer
 }
 
+enum StateSyncMessageType {
+    STATE_SYNC_METADATA_REQUEST = 0;
+    STATE_SYNC_METADATA_RESPONSE = 1;
+    STATE_SYNC_GET_BLOCK_REQUEST = 2;
+    STATE_SYNC_GET_BLOCK_RESPONSE = 3;
+
+}
+message StateSyncMessage {
+    StateSyncMessageType msgType = 1;
+
+    oneof message {
+        StateSyncMetadataRequest metadata_req = 2;
+        StateSyncMetadataResponse metadata_res = 3;
+        GetBlockRequest get_block_req = 4;
+        GetBlockResponse get_block_res = 5;
+    }
+
+}
+
 // NOT USED: This gRPC interface is **not being used at the moment**. It is in place simply as a
 // guideline of what how the types in this file could be used if a direct synchronous communication
 // between nodes were implemented. Furthermore, since the message types are used for asynchronous
