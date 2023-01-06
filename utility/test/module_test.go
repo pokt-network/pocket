@@ -56,7 +56,10 @@ func NewTestingMempool(_ *testing.T) utilTypes.Mempool {
 func TestMain(m *testing.M) {
 	pool, resource, dbUrl := test_artifacts.SetupPostgresDocker()
 	runtimeCfg := newTestRuntimeConfig(dbUrl)
-	bus, _ := runtime.CreateBus(runtimeCfg)
+	bus, err := runtime.CreateBus(runtimeCfg)
+	if err != nil {
+		log.Fatalf("Error creating bus: %s", err)
+	}
 
 	testUtilityMod = newTestUtilityModule(bus)
 	testPersistenceMod = newTestPersistenceModule(bus)
@@ -110,7 +113,12 @@ func newTestRuntimeConfig(databaseUrl string) *runtime.Manager {
 			MaxMempoolTransactions:     1000,
 		},
 	}
-	genesisState, _ := test_artifacts.NewGenesisState(5, 1, 1, 1)
+	genesisState, _ := test_artifacts.NewGenesisState(
+		testingValidatorCount,
+		testingServiceNodeCount,
+		testingApplicationCount,
+		testingFishermenCount,
+	)
 	runtimeCfg := runtime.NewManager(cfg, genesisState)
 	return runtimeCfg
 }
