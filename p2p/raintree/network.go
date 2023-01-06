@@ -207,6 +207,7 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 	// application layer. The logic above makes sure it is only propagated and returns.
 	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
 	if _, contains := n.nonceSet[rainTreeMsg.Nonce]; contains {
+		log.Printf("RainTree message with nonce %d already processed, skipping\n", rainTreeMsg.Nonce)
 		n.GetBus().
 			GetTelemetryModule().
 			GetEventMetricsAgent().
