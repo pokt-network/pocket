@@ -3,6 +3,7 @@ package runtime
 import (
 	"log"
 
+	"github.com/pokt-network/pocket/runtime/defaults"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/telemetry"
@@ -22,17 +23,13 @@ type bus struct {
 	runtimeMgr modules.RuntimeMgr
 }
 
-const (
-	DefaultPocketBusBufferSize = 100
-)
-
 func CreateBus(runtimeMgr modules.RuntimeMgr) (modules.Bus, error) {
 	return new(bus).Create(runtimeMgr)
 }
 
 func (b *bus) Create(runtimeMgr modules.RuntimeMgr) (modules.Bus, error) {
 	bus := &bus{
-		channel: make(modules.EventsChannel, DefaultPocketBusBufferSize),
+		channel: make(modules.EventsChannel, defaults.DefaultBusBufferSize),
 
 		runtimeMgr: runtimeMgr,
 		modulesMap: make(map[string]modules.Module),
