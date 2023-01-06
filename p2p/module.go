@@ -37,7 +37,7 @@ func Create(bus modules.Bus) (modules.Module, error) {
 	return new(p2pModule).Create(bus)
 }
 
-// IMPROVE: need to define a better pattern for dependency injection. Currently we are probably limiting ourselves by having a common constructor `Create(bus modules.Bus) (modules.Module, error)` for all modules.
+// TODO(#429): need to define a better pattern for dependency injection. Currently we are probably limiting ourselves by having a common constructor `Create(bus modules.Bus) (modules.Module, error)` for all modules.
 func CreateWithProviders(bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
 	log.Println("Creating network module")
 	m := &p2pModule{}

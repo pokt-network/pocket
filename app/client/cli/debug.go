@@ -74,6 +74,7 @@ func NewDebugCommand() *cobra.Command {
 
 			debugCurrentHeightProvider := debugCHP.NewDebugCurrentHeightProvider(0)
 
+			// TODO(#429): refactor injecting the dependencies into the bus so that they can be consumed in an updated `P2PModule.Create()` implementation
 			p2pM, err := p2p.CreateWithProviders(runtimeMgr.GetBus(), debugAddressBookProvider, debugCurrentHeightProvider)
 			if err != nil {
 				log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
