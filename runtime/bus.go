@@ -39,8 +39,8 @@ func (b *bus) Create(runtimeMgr modules.RuntimeMgr) (modules.Bus, error) {
 }
 
 func (m *bus) RegisterModule(module modules.Module) error {
+	module.SetBus(m)
 	m.modulesMap[module.GetModuleName()] = module
-	m.modulesMap[module.GetModuleName()].SetBus(m)
 	return nil
 }
 
@@ -58,19 +58,36 @@ func (m *bus) GetEventBus() modules.EventsChannel {
 }
 
 func (m *bus) GetPersistenceModule() modules.PersistenceModule {
-	return m.modulesMap[modules.PersistenceModuleName].(modules.PersistenceModule)
+	if mod, ok := m.modulesMap[modules.PersistenceModuleName]; ok {
+		return mod.(modules.PersistenceModule)
+	}
+	log.Fatalf("%s", ErrModuleNotRegistered("persistence"))
+	return nil
 }
 
 func (m *bus) GetP2PModule() modules.P2PModule {
-	return m.modulesMap[modules.P2PModuleName].(modules.P2PModule)
+	if mod, ok := m.modulesMap[modules.P2PModuleName]; ok {
+		return mod.(modules.P2PModule)
+	}
+	log.Fatalf("%s", ErrModuleNotRegistered("P2P"))
+
+	return nil
 }
 
 func (m *bus) GetUtilityModule() modules.UtilityModule {
-	return m.modulesMap[modules.UtilityModuleName].(modules.UtilityModule)
+	if mod, ok := m.modulesMap[modules.UtilityModuleName]; ok {
+		return mod.(modules.UtilityModule)
+	}
+	log.Fatalf("%s", ErrModuleNotRegistered(modules.UtilityModuleName))
+	return nil
 }
 
 func (m *bus) GetConsensusModule() modules.ConsensusModule {
-	return m.modulesMap[modules.ConsensusModuleName].(modules.ConsensusModule)
+	if mod, ok := m.modulesMap[modules.ConsensusModuleName]; ok {
+		return mod.(modules.ConsensusModule)
+	}
+	log.Fatalf("%s", ErrModuleNotRegistered(modules.ConsensusModuleName))
+	return nil
 }
 
 func (m *bus) GetTelemetryModule() modules.TelemetryModule {
@@ -80,7 +97,7 @@ func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 			return telemetryMod.(modules.TelemetryModule)
 		}
 	}
-	log.Printf("[WARNING] telemetry module not found, using noop telemetry module instead")
+	log.Printf("[WARNING] telemetry module not found, make sure you call RegisterModule(), using noop telemetry module instead")
 	// this should happen only if called from the client
 	noopModule, err := telemetry.CreateNoopTelemetryModule(m)
 	if err != nil {
@@ -91,11 +108,19 @@ func (m *bus) GetTelemetryModule() modules.TelemetryModule {
 }
 
 func (m *bus) GetLoggerModule() modules.LoggerModule {
-	return m.modulesMap[modules.LoggerModuleName].(modules.LoggerModule)
+	if mod, ok := m.modulesMap[modules.LoggerModuleName]; ok {
+		return mod.(modules.LoggerModule)
+	}
+	log.Fatalf("%s", ErrModuleNotRegistered(modules.LoggerModuleName))
+	return nil
 }
 
 func (m *bus) GetRPCModule() modules.RPCModule {
-	return m.modulesMap[modules.RPCModuleName].(modules.RPCModule)
+	if mod, ok := m.modulesMap[modules.RPCModuleName]; ok {
+		return mod.(modules.RPCModule)
+	}
+	log.Fatalf("%s", ErrModuleNotRegistered(modules.RPCModuleName))
+	return nil
 }
 
 func (m *bus) GetRuntimeMgr() modules.RuntimeMgr {
