@@ -14,7 +14,7 @@ var _ modules.Bus = &bus{}
 type bus struct {
 	modules.Bus
 
-	// Bus events
+	// Node events
 	channel modules.EventsChannel
 
 	// Modules
