@@ -40,18 +40,14 @@ func (m *Node) Create(bus modules.Bus) (modules.Module, error) {
 		telemetry.Create,
 		logger.Create,
 		rpc.Create,
+		p2p.Create,
 	} {
 		if _, err := mod(bus); err != nil {
 			return nil, err
 		}
 	}
 
-	p2pMod, err := p2p.Create(bus)
-	if err != nil {
-		return nil, err
-	}
-
-	addr, err := p2pMod.(modules.P2PModule).GetAddress()
+	addr, err := bus.GetP2PModule().GetAddress()
 	if err != nil {
 		return nil, err
 	}
