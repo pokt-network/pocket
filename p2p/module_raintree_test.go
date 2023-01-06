@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -246,11 +245,12 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 
 		wg.Add(expectedWrites)
 
+		connMocks[valId] = prepareConnMock(t, valId, &wg, expectedCall.numNetworkReads)
 		persistenceMock := preparePersistenceMock(t, busMocks[count], runtimeConfigs[0].GetGenesis())
 		consensusMock := prepareConsensusMock(t, busMocks[count], runtimeConfigs[0].GetGenesis())
 		telemetryMock := prepareTelemetryMock(t, busMocks[count], valId, &wg, expectedWrites)
 
-		prepareBusMock(busMocks[count].(*mockModules.MockBus), persistenceMock, consensusMock, telemetryMock)
+		prepareBusMock(busMocks[count], persistenceMock, consensusMock, telemetryMock)
 
 		count++
 	}
