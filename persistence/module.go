@@ -80,8 +80,6 @@ func (*persistenceModule) Create(bus modules.Bus) (modules.Module, error) {
 	m.txIndexer = txIndexer
 	m.stateTrees = stateTrees
 
-	m.writeContext = nil
-
 	// TECHDEBT: reconsider if this is the best place to call `populateGenesisState`. Note that
 	// 		     this forces the genesis state to be reloaded on every node startup until state
 	//           sync is implemented.
