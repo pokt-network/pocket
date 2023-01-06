@@ -127,6 +127,22 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	m := &consensusModule{
 		paceMaker:         pacemaker,
 		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
+
+		height: 0,
+		round:  0,
+		step:   NewRound,
+		block:  nil,
+
+		highPrepareQC: nil,
+		lockedQC:      nil,
+
+		leaderId: nil,
+
+		utilityContext: nil,
+
+		logPrefix: DefaultLogPrefix,
+
+		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
 	}
 	bus.RegisterModule(m)
 
@@ -159,11 +175,7 @@ func (*consensusModule) Create(bus modules.Bus) (modules.Module, error) {
 	m.consCfg = consensusCfg
 	m.genesisState = genesisState
 
-	m.step = NewRound
 	m.nodeId = valAddrToIdMap[address]
-
-	m.logPrefix = DefaultLogPrefix
-	m.messagePool = make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage)
 
 	return m, nil
 }
