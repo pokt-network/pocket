@@ -4,9 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
-	"math/big"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -28,23 +26,12 @@ var parameterNameTypeMap = make(map[string]string)
 // name according to the struct generated from: persistence_genesis.proto
 func init() {
 	st := reflect.TypeOf(genesis.Params{})
-	ownerRegEx, err := regexp.Compile("_owner$")
-	if err != nil {
-		log.Fatalf("error compiling regular expression `_owner$` to match paramNames.")
-	}
 	// Loop through struct fields to build ParameterNameTypeMap
 	for i := 0; i < st.NumField(); i++ {
 		field := st.Field(i)
 		json := field.Tag.Get("json") // Match the json tag of field: json:"paramName,omitempty"
 		paramName := strings.Split(json, ",")[0]
 		typ := field.Type.Name() // Get string version of field's type
-		matchOwner := ownerRegEx.MatchString(paramName)
-		// Handle string types
-		if typ == "string" && matchOwner {
-			typ = "[]uint8" // All owners are string types but used as []byte slices
-		} else if typ == "string" {
-			typ = "*big.Int" // Rest of string types are used as *big.Int
-		}
 		parameterNameTypeMap[paramName] = typ
 	}
 }
@@ -68,18 +55,10 @@ func (p PostgresContext) GetParameter(paramName string, height int64) (v any, er
 	switch paramType {
 	case "int", "int32", "int64":
 		v, _, err = getParamOrFlag[int](p, types.ParamsTableName, paramName, height)
-	case "*big.Int":
-		val, _, err := getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
-		b := big.Int{}
-		v, ok := b.SetString(val, 10)
-		if !ok {
-			return nil, fmt.Errorf("error converting parameter string into base 10 *big.Int.")
-		}
-		return v, err
-	case "[]uint8": // []byte
-		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
 	case "string":
 		v, _, err = getParamOrFlag[string](p, types.ParamsTableName, paramName, height)
+	case "[]uint8": // []byte
+		v, _, err = getParamOrFlag[[]byte](p, types.ParamsTableName, paramName, height)
 	default:
 		return nil, fmt.Errorf("unhandled type for param: got %s.", paramType)
 	}

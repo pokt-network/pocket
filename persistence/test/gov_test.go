@@ -2,7 +2,6 @@ package test
 
 import (
 	"encoding/hex"
-	"math/big"
 	"testing"
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
@@ -59,8 +58,7 @@ func TestGetSetStringParam(t *testing.T) {
 	serviceNodeMinimumStake, err := db.GetParameter(ServiceNodeMinimumStakeParamName, height)
 	require.NoError(t, err)
 
-	serviceNodeMinimumStakeString := serviceNodeMinimumStake.(*big.Int).String()
-	require.Equal(t, newServiceNodeMinimumStake, serviceNodeMinimumStakeString)
+	require.Equal(t, newServiceNodeMinimumStake, serviceNodeMinimumStake)
 }
 
 func TestGetSetByteArrayParam(t *testing.T) {
@@ -78,7 +76,7 @@ func TestGetSetByteArrayParam(t *testing.T) {
 	height, err := db.GetHeight()
 	require.NoError(t, err)
 
-	owner, err := db.GetParameter(ServiceNodeUnstakingBlocksOwner, height)
+	owner, err := db.GetBytesParam(ServiceNodeUnstakingBlocksOwner, height)
 	require.NoError(t, err)
 
 	require.Equal(t, newOwner, owner)
