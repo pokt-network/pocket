@@ -5,11 +5,101 @@ All notable changes to this module will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
-
 ## [Unreleased]
 
-## [0.0.0.9] - 2022-11-08
+## [0.0.0.19] - 2023-01-03
+
+- Renamed `InitParams` to `InitGenesisParams`
+
+## [0.0.0.18] - 2023-01-03
+
+- Added missing `ActorType` in `GetAllXXXX()` functions
+- Updated to new `PoolNames` enums
+- Using `Enum.FriendlyName()` instead of `Enum.String()` for `PoolNames` enums (backward compatibility + flexibility)
+- Updated `InitParams` so that Params can be initialized from a `GenesisState` and not just hardcoded
+- Refactored default values sourcing (test_artifacts for tests)
+- Updated tests
+- Consolidated `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md` into `persistence/docs/CHANGELOG`
+
+## [0.0.0.17] - 2022-12-24
+
+- Add `max_conns_count`, `min_conns_count`, `max_conn_lifetime`, `max_conn_idle_time` and `health_check_period` to `PersistenceConfig`.
+- Update `connectToDatabase` function in `db.go` to connect via `pgxpool` to postgres database and accept `PersistenceConfig` interface as input.
+- Update `github.com/jackc/pgx/v4` -> `github.com/jackc/pgx/v5`.
+
+## [0.0.0.16] - 2022-12-21
+
+- Updated to use centralized config and genesis
+- Updated to use `Account` struct now under `coreTypes`
+- Tended for the TODO "// TODO (Andrew) genericize the genesis population logic for actors #149" in `persistence/genesis.go`
+- Updated tests to use the new config and genesis handling
+- Updated statetest hashes to reflect updated genesis state
+
+## [0.0.0.15] - 2022-12-15
+
+- Remove `SetProposalBlock` and local vars to keep proposal state
+- Add `proposerAddr` to the `Commit` function
+- Move the `PostgresContext` struct to `context.db`
+
+## [0.0.0.14] - 2022-12-14
+
+- Moved Actor related getters from `genesis.go` to `actor.go`
+- Added `GetAllStakedActors()` that returns all Actors
+
+## [0.0.0.13] - 2022-12-06
+
+- Changed the scope of `TransactionExists` from the `PostgresContext` to the `PersistenceModule`
+
+## [0.0.0.13] - 2022-11-30
+
+Core StateHash changes
+
+- Introduced & defined for `block_persistence.proto`
+  - A persistence specific protobuf for the Block stored in the BlockStore
+- On `Commit`, prepare and store a persistence block in the KV Store, SQL Store
+- Replace `IndexTransactions` (plural) to `IndexTransaction` (singular)
+- Maintaining a list of StateTrees using Celestia’s SMT and badger as the KV store to compute the state hash
+- Implemented `ComputeStateHash` to update the global state based on:
+  - Validators
+  - Applications
+  - Servicers
+  - Fisherman
+  - Accounts
+  - Pools
+  - Transactions
+  - Added a placeholder for `params` and `flags`
+- Added a benchmarking and a determinism test suite to validate this
+
+Supporting StateHash changes
+
+- Implemented `GetAccountsUpdated`, `GetPoolsUpdated` and `GetActorsUpdated` functions
+- Removed `GetPrevAppHash` and `indexTransactions` functions
+- Removed `blockProtoBytes` and `txResults` from the local state and added `quorumCert`
+- Consolidate all `resetContext` related operations into a single function
+- Implemented `ReleaseWriteContext`
+- Implemented ability to `ClearAllState` and `ResetToGenesis` for debugging & testing purposes
+- Added unit tests for all of the supporting SQL functions implemented
+- Some improvements in unit test preparation & cleanup (limited to this PR's functionality)
+
+KVStore changes
+
+- Renamed `Put` to `Set`
+- Embedded `smt.MapStore` in the interface containing `Get`, `Set` and `Delete`
+- Implemented `Delete`
+- Modified `GetAll` to return both `keys` and `values`
+- Turned off badger logging options since it’s noisy
+
+## [0.0.0.12] - 2022-11-15
+
+- Rename `GetBlockHash` to `GetBlockHashAtHeight`
+- Reduce visibility scope of `IndexTransactions` to `indexTransactions`
+- Remove `quorumCertificate` from the local context state
+- Remove `LatestQC` and `SetLatestQC`
+- Remove `Latest` prefix from several functions including related to setting context of the proposal block
+- Added `ReleaseWriteContext` placeholder
+- Replaced `ResetContext` with `Release`
+
+## [0.0.0.11] - 2022-11-08
 
 - Changed the following exported functions to lowercase non-exported functions
 - [./pocket/persistence/]
@@ -41,13 +131,20 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
   - GetGenericActor
   - NewTestGenericActor
 
-## [0.0.0.8] - 2022-10-19
+## [0.0.0.10] - 2022-11-01
+
+- Ported over storing blocks and block components to the Persistence module from Consensus and Utility modules
+- Encapsulated `TxIndexer` logic to the persistence context only
+
+
+## [0.0.0.9] - 2022-10-19
 
 - Fixed `ToPersistenceActors()` by filling all structure fields
 - Deprecated `BaseActor` -> `Actor`
 - Changed default actor type to `ActorType_Undefined`
 
-## [0.0.0.7] - 2022-10-12
+
+## [0.0.0.8] - 2022-10-12
 
 ### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
 
@@ -59,6 +156,13 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 - Added `TxIndexer` to both `PersistenceModule` and `PersistenceContext`
 - Implemented `TransactionExists` and `StoreTransaction`
 
+## [0.0.0.7] - 2022-10-06
+
+- Don't ignore the exit code of `m.Run()` in the unit tests
+- Fixed several broken unit tests related to type casting
+
+
+
 ## [0.0.0.6] - 2022-09-30
 
 - Removed no-op `DeleteActor` code
@@ -68,7 +172,12 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 - Added ticks to CHANGELOG.md
 - Removed reference to Utility Mod's `BigIntToString()` and used internal `BigIntToString()`
 
-## [0.0.0.5] - 2022-08-25
+
+## [0.0.0.5] - 2022-09-14
+
+- Consolidated `PostgresContext` and `PostgresDb` into a single structure
+
+## [0.0.0.4] - 2022-08-25
 
 **Encapsulate structures previously in shared [#163](github.com/pokt-network/pocket/issues/163)**
 
@@ -79,20 +188,19 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 - ^ Same applies for `PersistenceConfig`
 - Bumped cleanup TODOs to #149 due to scope size of #163
 
-## [0.0.0.4] - 2022-08-16
+## [0.0.0.3] - 2022-08-16
 
 **Main persistence module changes:**
 
 - Split `ConnectAndInitializeDatabase` into `connectToDatabase` and `initializeDatabase`
-    - This enables creating multiple contexts in parallel without re-initializing the DB connection
+  - This enables creating multiple contexts in parallel without re-initializing the DB connection
 - Fix the SQL query used in `SelectActors`, `SelectAccounts` & `SelectPools`
-    - Add a generalized unit test for all actors
+  - Add a generalized unit test for all actors
 - Remove `NewPersistenceModule` and an injected `Config` + `Create`
-    - This improves isolation a a “injection-like” paradigm for unit testing
+  - This improves isolation a a “injection-like” paradigm for unit testing
 - Change `SetupPostgresDocker` to `SetupPostgresDockerPersistenceMod`
-    - This enables more “functional” like testing by returning a persistence module and avoiding global testing
-      variables
-    - Only return once a connection to the DB has been initialized reducing the likelihood of test race conditions
+  - This enables more “functional” like testing by returning a persistence module and avoiding global testing variables
+  - Only return once a connection to the DB has been initialized reducing the likelihood of test race conditions
 - Implemented `NewReadContext` with a proper read-only context
 - Add `ResetContext` to the persistence module and `Close` to the read context
 
@@ -104,33 +212,6 @@ TODO: consolidate `persistence/docs/CHANGELOG` and `persistence/CHANGELOG.md`
 - Make some exported variables / functions unexported for readability & access purposes
 - Add a few helpers for persistence related unit testing
 - Added unit tests and TODOs for handling multiple read/write contexts
-
-## [0.0.0.3] - 2022-08-08
-
-- Deprecated old placeholder `genesis_state` and `genesis_config`
-- Added `utility_genesis_state` to `genesis_state`
-- Added `consensus_genesis_state` to `genesis_state`
-- Added `genesis_time` to `consensus_genesis_state`
-- Added `chainID` to `consensus_genesis_state`
-- Added `max_block_bytes` to `consensus_genesis_state`
-- Added `accounts` and` pools to utility_genesis_state`
-- Added `validators` to `utility_genesis_state`
-- Added `applications` to `utility_genesis_state`
-- Added `service_nodes` to `utility_genesis_state`
-- Added `fishermen` to `utility_genesis_state`
-- Deprecated `shared/config/`
-- Added new `shared config proto3 structure`
-- Added `base_config` to `config`
-- Added `utility_config` to `config`
-- Added `consensus_config` to `config`
-- Added `persistence_config` to `config`
-- Added `p2p_config` to `config`
-- Added `telemetry_config` to `config`
-- Opened followup issue #163
-- Added config and genesis generator to build package
-- Deprecated old build files
-- Use new config and genesis files for make `compose_and_watch`
-- Use new config and genesis files for make `client_start && `make client_connect`
 
 ## [0.0.0.2] - 2022-08-03
 
@@ -151,15 +232,15 @@ Deprecate PrePersistence
 
 Pocket Persistence 1st Iteration (https://github.com/pokt-network/pocket/pull/73)
 
-- Base persistence module implementation for the following actors: `Account`, `Pool`, `Validator`, `Fisherman`
-  , `ServiceNode`, `Application`
-- Generalization of common protocol actor behvaiours via the `ProtocolActor` and `BaseActor` interface and
-  implementation
+# Added
+
+- Base persistence module implementation for the following actors: `Account`, `Pool`, `Validator`, `Fisherman`, `ServiceNode`, `Application`
+- Generalization of common protocol actor behvaiours via the `ProtocolActor` and `BaseActor` interface and implementation
 - A PostgreSQL based implementation of the persistence middleware including:
-    - SQL query implementation for each actor
-    - SQL schema definition for each actor
-    - SQL execution for common actor behaviours
-    - Golang interface implementation of the Persistence module
+  - SQL query implementation for each actor
+  - SQL schema definition for each actor
+  - SQL execution for common actor behaviours
+  - Golang interface implementation of the Persistence module
 - Update to the Persistence module interface to enable historical height queries
 - Library / infrastructure for persistence unit fuzz testing
 - Tests triggered via `make test_persistence`

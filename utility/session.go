@@ -3,19 +3,20 @@ package utility
 import (
 	"encoding/binary"
 	"encoding/hex"
+
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
-	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/pokt-network/pocket/utility/types"
 )
 
 type Session interface {
-	NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application modules.Actor) (Session, types.Error)
-	GetServiceNodes() []modules.Actor // the ServiceNodes providing Web3 to the application
-	GetFishermen() []modules.Actor    // the Fishermen monitoring the serviceNodes
-	GetApplication() modules.Actor    // the Application consuming the web3 access
-	GetRelayChain() RelayChain        // the chain identifier of the web3
-	GetGeoZone() GeoZone              // the geolocation zone where all are registered
-	GetSessionHeight() int64          // the block height when the session started
+	NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application *coreTypes.Actor) (Session, types.Error)
+	GetServiceNodes() []*coreTypes.Actor // the ServiceNodes providing Web3 to the application
+	GetFishermen() []*coreTypes.Actor    // the Fishermen monitoring the serviceNodes
+	GetApplication() *coreTypes.Actor    // the Application consuming the web3 access
+	GetRelayChain() RelayChain           // the chain identifier of the web3
+	GetGeoZone() GeoZone                 // the geolocation zone where all are registered
+	GetSessionHeight() int64             // the block height when the session started
 }
 
 type RelayChain Identifier
@@ -30,9 +31,9 @@ type Identifier interface {
 var _ Session = &session{}
 
 type session struct {
-	serviceNodes  []modules.Actor
-	fishermen     []modules.Actor
-	application   modules.Actor
+	serviceNodes  []*coreTypes.Actor
+	fishermen     []*coreTypes.Actor
+	application   *coreTypes.Actor
 	relayChain    RelayChain
 	geoZone       GeoZone
 	blockHash     string
@@ -40,7 +41,7 @@ type session struct {
 	sessionHeight int64
 }
 
-func (s *session) NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application modules.Actor) (session Session, err types.Error) {
+func (s *session) NewSession(sessionHeight int64, blockHash string, geoZone GeoZone, relayChain RelayChain, application *coreTypes.Actor) (session Session, err types.Error) {
 	s.sessionHeight = sessionHeight
 	s.blockHash = blockHash
 	s.geoZone = geoZone
@@ -77,7 +78,7 @@ func (s *session) sessionKey() ([]byte, types.Error) {
 //    - staked within geo-zone
 //    - staked for relay-chain
 // 2) calls `pseudoRandomSelection(serviceNodes, numberOfNodesPerSession)`
-func (s *session) findClosestXServiceNodes() []modules.Actor {
+func (s *session) findClosestXServiceNodes() []*coreTypes.Actor {
 	// IMPORTANT:
 	// THIS IS A DEMONSTRABLE FUNCTION THAT WILL NOT BE IMPLEMENTED AS SUCH
 	// IT EXISTS IN THIS COMMIT PURELY TO COMMUNICATE THE EXPECTED BEHAVIOR
@@ -90,7 +91,7 @@ func (s *session) findClosestXServiceNodes() []modules.Actor {
 //    - staked within geo-zone
 //    - staked for relay-chain
 // 2) calls `pseudoRandomSelection(fishermen, numberOfFishPerSession)`
-func (s *session) findClosestYFishermen() []modules.Actor {
+func (s *session) findClosestYFishermen() []*coreTypes.Actor {
 	// IMPORTANT:
 	// THIS IS A DEMONSTRABLE FUNCTION THAT WILL NOT BE IMPLEMENTED AS SUCH
 	// IT EXISTS IN THIS COMMIT PURELY TO COMMUNICATE THE EXPECTED BEHAVIOR
@@ -105,22 +106,22 @@ func (s *session) findClosestYFishermen() []modules.Actor {
 // Q) why do we hash to find a newKey between every actor selection?
 // A) pseudo-random selection only works if each iteration is re-randomized
 //    or it would be subject to lexicographical proximity bias attacks
-func (s *session) pseudoRandomSelection(orderedListOfPublicKeys []string, numberOfActorsInSession int) []modules.Actor {
+func (s *session) pseudoRandomSelection(orderedListOfPublicKeys []string, numberOfActorsInSession int) []*coreTypes.Actor {
 	// IMPORTANT:
 	// THIS IS A DEMONSTRABLE FUNCTION THAT WILL NOT BE IMPLEMENTED AS SUCH
 	// IT EXISTS IN THIS COMMIT PURELY TO COMMUNICATE THE EXPECTED BEHAVIOR
 	return nil
 }
 
-func (s *session) GetServiceNodes() []modules.Actor {
+func (s *session) GetServiceNodes() []*coreTypes.Actor {
 	return s.serviceNodes
 }
 
-func (s *session) GetFishermen() []modules.Actor {
+func (s *session) GetFishermen() []*coreTypes.Actor {
 	return s.fishermen
 }
 
-func (s *session) GetApplication() modules.Actor {
+func (s *session) GetApplication() *coreTypes.Actor {
 	return s.application
 }
 

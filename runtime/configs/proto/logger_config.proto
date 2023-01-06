@@ -1,7 +1,8 @@
 syntax = "proto3";
-package logger;
 
-option go_package = "github.com/pokt-network/pocket/logger";
+package configs;
+
+option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
 message LoggerConfig {
   string level = 1;

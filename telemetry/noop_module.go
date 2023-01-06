@@ -59,10 +59,6 @@ func (m *NoopTelemetryModule) GetBus() modules.Bus {
 	return m.bus
 }
 
-func (*NoopTelemetryModule) ValidateConfig(cfg modules.Config) error {
-	return nil
-}
-
 func (m *NoopTelemetryModule) GetEventMetricsAgent() modules.EventMetricsAgent {
 	return modules.EventMetricsAgent(m)
 }

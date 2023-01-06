@@ -4,8 +4,10 @@ This document outlines the purpose of this module, its components and how they a
 
 ## Contents
 
-- [Overview](#overview)
-- [Components](#components)
+- [RuntimeMgr](#runtimemgr)
+  - [Contents](#contents)
+    - [Overview](#overview)
+    - [Components](#components)
 
 ### Overview
 
@@ -38,8 +40,7 @@ This module includes the following components:
   The genesis represents the initial state of the blockchain.
 
   This allows the binary to start with a specific initial state.
-
-  Similarly to `Config`, these are scoped by module as well and currently we have `Persistence` and `Consensus` specific `GenesisState`s
+  
 
 - **Clock**
 

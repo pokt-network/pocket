@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 
 	"github.com/pokt-network/pocket/persistence/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/modules"
 )
 
@@ -24,8 +25,8 @@ func (p PostgresContext) GetValidator(address []byte, height int64) (operator, p
 }
 
 func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, output []byte, _ bool, _ int32, serviceURL string, stakedTokens string, pausedHeight int64, unstakingHeight int64) error {
-	return p.InsertActor(types.ValidatorActor, &types.Actor{
-		ActorType:       types.ActorType_Val,
+	return p.InsertActor(types.ValidatorActor, &coreTypes.Actor{
+		ActorType:       coreTypes.ActorType_ACTOR_TYPE_VAL,
 		Address:         hex.EncodeToString(address),
 		PublicKey:       hex.EncodeToString(publicKey),
 		StakedAmount:    stakedTokens,
@@ -37,8 +38,8 @@ func (p PostgresContext) InsertValidator(address []byte, publicKey []byte, outpu
 }
 
 func (p PostgresContext) UpdateValidator(address []byte, serviceURL string, stakedAmount string) error {
-	return p.UpdateActor(types.ValidatorActor, &types.Actor{
-		ActorType:    types.ActorType_Val,
+	return p.UpdateActor(types.ValidatorActor, &coreTypes.Actor{
+		ActorType:    coreTypes.ActorType_ACTOR_TYPE_VAL,
 		Address:      hex.EncodeToString(address),
 		StakedAmount: stakedAmount,
 		GenericParam: serviceURL,

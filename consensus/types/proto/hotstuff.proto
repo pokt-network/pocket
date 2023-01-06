@@ -1,11 +1,12 @@
-// TODO(olshansky): This encapsulates hotstuff types, hotstuff messages and hotstuff specific crypto primitives. Consider if it's worth splitting into smaller files.
-
 syntax = "proto3";
 package consensus;
 
 option go_package = "github.com/pokt-network/pocket/consensus/types";
 
 import "block.proto";
+
+// CLEANUP: This encapsulates hotstuff types, hotstuff messages and hotstuff specific crypto primitives.
+//          Consider if it's worth splitting into smaller files.
 
 enum HotstuffStep {
     HOTSTUFF_STEP_UNKNOWN = 0;
@@ -22,7 +23,7 @@ enum HotstuffMessageType {
     HOTSTUFF_MESSAGE_VOTE = 2;
 }
 
-// TODO(research): Until we figure out which library to use for threshold
+// RESEARCH: Until we figure out which library to use for threshold
 // signatures, mimick the behaviour by looping over individual signatures.
 message PartialSignature {
     bytes signature = 1;

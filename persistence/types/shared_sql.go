@@ -3,6 +3,8 @@ package types
 import (
 	"bytes"
 	"fmt"
+
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 )
 
 const (
@@ -111,7 +113,7 @@ func readyToUnstake(unstakingHeight int64, tableName string) string {
 }
 
 func Insert(
-	actor *Actor,
+	actor *coreTypes.Actor,
 	actorSpecificParam, actorSpecificParamValue,
 	constraintName, chainsConstraintName,
 	tableName, chainsTableName string,
