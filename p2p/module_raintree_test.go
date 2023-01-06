@@ -219,8 +219,8 @@ func testRainTreeCalls(t *testing.T, origNode string, networkSimulationConfig Te
 	busMocks := createMockBuses(t, runtimeConfigs)
 
 	valIds := make([]string, 0, numValidators)
-	for key := range networkSimulationConfig {
-		valIds = append(valIds, key)
+	for valId := range networkSimulationConfig {
+		valIds = append(valIds, valId)
 	}
 
 	sort.Slice(valIds, func(i, j int) bool {
