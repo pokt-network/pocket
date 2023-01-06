@@ -128,10 +128,10 @@ func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.Hotstuff
 	return m.isOptimisticThresholdMet(len(m.messagePool[step]), validators)
 }
 
-func (m *consensusModule) isOptimisticThresholdMet(n int, validators []*coreTypes.Actor) error {
+func (m *consensusModule) isOptimisticThresholdMet(numSignatures int, validators []*coreTypes.Actor) error {
 	numValidators := len(validators)
-	if !(float64(n) > ByzantineThreshold*float64(numValidators)) {
-		return typesCons.ErrByzantineThresholdCheck(n, ByzantineThreshold*float64(numValidators))
+	if !(float64(numSignatures) > ByzantineThreshold*float64(numValidators)) {
+		return typesCons.ErrByzantineThresholdCheck(numSignatures, ByzantineThreshold*float64(numValidators))
 	}
 	return nil
 }
