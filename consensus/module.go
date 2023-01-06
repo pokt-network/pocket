@@ -14,6 +14,9 @@ import (
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/modules"
+
+	// "github.com/pokt-network/pocket/consensus/StateSyncModule"
+	"github.com/pokt-network/pocket/consensus/state_sync"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -72,6 +75,10 @@ type consensusModule struct {
 
 	// DEPRECATE: Remove later when we build a shared/proper/injected logger
 	logPrefix string
+
+	// State sync
+	stateSync state_sync.StateSyncModule
+	//serverMode bool
 
 	// TECHDEBT: Rename this to `consensusMessagePool` or something similar
 	//           and reconsider if an in-memory map is the best approach
@@ -146,6 +153,13 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 	address := privateKey.Address().String()
 	valIdMap, idValMap := typesCons.GetValAddrToIdMap(valMap)
 
+	stateSyncMod, err := state_sync.CreateStateSync(runtimeMgr)
+	if err != nil {
+		return nil, err
+	}
+
+	stateSync := stateSyncMod.(state_sync.StateSyncModule)
+
 	paceMaker := paceMakerMod.(Pacemaker)
 
 	m = &consensusModule{
@@ -174,6 +188,9 @@ func (*consensusModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, e
 		paceMaker:         paceMaker,
 		leaderElectionMod: leaderElectionMod.(leader_election.LeaderElectionModule),
 
+		stateSync: stateSync,
+		//serverMode: false,
+
 		logPrefix:   DefaultLogPrefix,
 		messagePool: make(map[typesCons.HotstuffStep][]*typesCons.HotstuffMessage),
 	}
@@ -199,6 +216,10 @@ func (m *consensusModule) Start() error {
 	}
 
 	if err := m.paceMaker.Start(); err != nil {
+		return err
+	}
+
+	if err := m.stateSync.Start(); err != nil {
 		return err
 	}
 
@@ -318,4 +339,12 @@ func (m *consensusModule) loadPersistedState() error {
 	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
 
 	return nil
+}
+
+func (m *consensusModule) IsServerModEnabled() bool {
+	return m.stateSync.IsServerModEnabled()
+}
+
+func (m *consensusModule) EnableServerMode() {
+	m.stateSync.EnableServerMode()
 }

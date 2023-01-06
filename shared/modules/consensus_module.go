@@ -28,4 +28,7 @@ type ConsensusModule interface {
 	CurrentRound() uint64
 	CurrentStep() uint64
 	ValidatorMap() ValidatorMap
+
+	IsServerModEnabled() bool
+	EnableServerMode()
 }
