@@ -32,10 +32,9 @@ type ConsensusModule interface {
 	CurrentStep() uint64
 }
 
-// This interface represents functions exposed by consensus module to be access by pacemaker module.
-// This functions should be only called by the pacemaker module.
-// TODO This interface will be removed when asynchronous interaction among pacemaer and consensus is built.
-// See issue for details: https://github.com/pokt-network/pocket/issues/428
+// This interface represents functions exposed by the Consensus module for Pacemaker specific business logic.
+// These functions are intended to only be called by the Pacemaker module.
+// TODO(#428): This interface will be removed when the communication between the pacemaker and consensus module become asynchronous.
 type ConsensusPacemaker interface {
 	//Pacemaker Consensus interaction modules
 	ResetRound()
