@@ -11,7 +11,7 @@ import (
 
 // Implementations of the type ConsensusPacemaker interface
 // SetHeight, SeetRound, SetStep are implemented for ConsensusDebugModule
-func (m *consensusModule) ClearLeaderMessagesPool() {
+func (m *consensusModule) ResetRound() {
 	m.clearLeader()
 	m.clearMessagesPool()
 }
@@ -35,7 +35,7 @@ func (m *consensusModule) ReleaseUtilityContext() error {
 	return nil
 }
 
-func (m *consensusModule) BroadcastMessageToNodes(msg *anypb.Any) error {
+func (m *consensusModule) BroadcastMessageToValidators(msg *anypb.Any) error {
 	msgCodec, err := codec.GetCodec().FromAny(msg)
 	if err != nil {
 		return err

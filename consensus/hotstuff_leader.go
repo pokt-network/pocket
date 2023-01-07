@@ -50,12 +50,13 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 
 	// Likely to be `nil` if blockchain is progressing well.
 	// TECHDEBT: How do we properly validate `prepareQC` here?
-	prepareQC := m.findHighQC(m.messagePool[NewRound])
+	// prepareQC named as highPrepareQC since when leader is executing it is the highest QC.s
+	highPrepareQC := m.findHighQC(m.messagePool[NewRound])
 
 	// TODO: Add test to make sure same block is not applied twice if round is interrupted after being 'Applied'.
 	// TODO: Add more unit tests for these checks...
-	if m.shouldPrepareNewBlock(prepareQC) {
-		block, err := m.prepareAndApplyBlock(prepareQC)
+	if m.shouldPrepareNewBlock(highPrepareQC) {
+		block, err := m.prepareAndApplyBlock(highPrepareQC)
 		if err != nil {
 			m.nodeLogError(typesCons.ErrPrepareBlock.Error(), err)
 			m.paceMaker.InterruptRound("failed to prepare & apply block")
@@ -65,18 +66,18 @@ func (handler *HotstuffLeaderMessageHandler) HandleNewRoundMessage(m *consensusM
 	} else {
 		// Leader acts like a replica if `prepareQC` is not `nil`
 		// TODO: Do we need to call `validateProposal` here similar to how replicas does it
-		if err := m.applyBlock(prepareQC.Block); err != nil {
+		if err := m.applyBlock(highPrepareQC.Block); err != nil {
 			m.nodeLogError(typesCons.ErrApplyBlock.Error(), err)
 			m.paceMaker.InterruptRound("failed to apply block")
 			return
 		}
-		m.block = prepareQC.Block
+		m.block = highPrepareQC.Block
 	}
 
 	m.step = Prepare
 	m.messagePool[NewRound] = nil
 
-	prepareProposeMessage, err := CreateProposeMessage(m.height, m.round, Prepare, m.block, prepareQC)
+	prepareProposeMessage, err := CreateProposeMessage(m.height, m.round, Prepare, m.block, highPrepareQC)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateProposeMessage(Prepare).Error(), err)
 		m.paceMaker.InterruptRound("failed to create propose message")
@@ -110,17 +111,17 @@ func (handler *HotstuffLeaderMessageHandler) HandlePrepareMessage(m *consensusMo
 	}
 	m.nodeLog(typesCons.OptimisticVoteCountPassed(m.height, Prepare, m.round))
 
-	prepareQC, err := m.getQuorumCertificate(m.height, Prepare, m.round)
+	highPrepareQC, err := m.getQuorumCertificate(m.height, Prepare, m.round)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrQCInvalid(Prepare).Error(), err)
 		return // TODO(olshansky): Should we interrupt the round here?
 	}
 
 	m.step = PreCommit
-	m.prepareQC = prepareQC
+	m.prepareQC = highPrepareQC
 	m.messagePool[Prepare] = nil
 
-	preCommitProposeMessage, err := CreateProposeMessage(m.height, m.round, PreCommit, m.block, prepareQC)
+	preCommitProposeMessage, err := CreateProposeMessage(m.height, m.round, PreCommit, m.block, highPrepareQC)
 	if err != nil {
 		m.nodeLogError(typesCons.ErrCreateProposeMessage(PreCommit).Error(), err)
 		m.paceMaker.InterruptRound("failed to create propose message")
@@ -397,14 +398,14 @@ func (m *consensusModule) prepareAndApplyBlock(qc *typesCons.QuorumCertificate) 
 
 // Return true if this node, the leader, should prepare a new block.
 // ADDTEST: Add more tests for all the different scenarios here
-func (m *consensusModule) shouldPrepareNewBlock(prepareQC *typesCons.QuorumCertificate) bool {
-	if prepareQC == nil {
+func (m *consensusModule) shouldPrepareNewBlock(highPrepareQC *typesCons.QuorumCertificate) bool {
+	if highPrepareQC == nil {
 		m.nodeLog("Preparing a new block - no prepareQC found")
 		return true
-	} else if m.isPrepareQCFromPast(prepareQC) {
+	} else if m.isPrepareQCFromPast(highPrepareQC) {
 		m.nodeLog("Preparing a new block - prepareQC is from the past")
 		return true
-	} else if prepareQC.Block == nil {
+	} else if highPrepareQC.Block == nil {
 		m.nodeLog("[WARN] Preparing a new block - prepareQC SHOULD be used but block is nil")
 		return true
 	}
@@ -412,6 +413,6 @@ func (m *consensusModule) shouldPrepareNewBlock(prepareQC *typesCons.QuorumCerti
 }
 
 // The `prepareQC` is from the past so we can safely ignore it
-func (m *consensusModule) isPrepareQCFromPast(prepareQC *typesCons.QuorumCertificate) bool {
-	return prepareQC.Height < m.height || prepareQC.Round < m.round
+func (m *consensusModule) isPrepareQCFromPast(highPrepareQC *typesCons.QuorumCertificate) bool {
+	return highPrepareQC.Height < m.height || highPrepareQC.Round < m.round
 }

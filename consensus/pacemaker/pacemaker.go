@@ -198,9 +198,7 @@ func (m *paceMaker) InterruptRound() {
 	consensusMod := m.GetBus().GetConsensusModule()
 	m.nodeLog(typesCons.PacemakerInterrupt(consensusMod.CurrentHeight(), typesCons.HotstuffStep(consensusMod.CurrentStep()), consensusMod.CurrentRound()))
 
-	currentRound := consensusMod.CurrentRound()
-	currentRound++
-	consensusMod.SetRound(currentRound)
+	consensusMod.SetRound(consensusMod.CurrentRound() + 1)
 
 	msg, err := codec.GetCodec().FromAny(consensusMod.GetPrepareQC())
 
@@ -218,9 +216,7 @@ func (m *paceMaker) NewHeight() {
 	consensusMod := m.GetBus().GetConsensusModule()
 
 	m.nodeLog(typesCons.PacemakerNewHeight(consensusMod.CurrentHeight() + 1))
-	currentHeight := consensusMod.CurrentHeight()
-	currentHeight++
-	consensusMod.SetHeight(currentHeight)
+	consensusMod.SetHeight(consensusMod.CurrentHeight() + 1)
 	consensusMod.ResetForNewHeight()
 
 	m.startNextView(nil, false) // TODO(design): We are omitting CommitQC and TimeoutQC here.
@@ -239,7 +235,7 @@ func (m *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 
 	consensusMod := m.GetBus().GetConsensusModule()
 	consensusMod.SetStep(uint8(NewRound))
-	consensusMod.ClearLeaderMessagesPool()
+	consensusMod.ResetRound()
 	consensusMod.ReleaseUtilityContext()
 
 	// TECHDEBT: This if structure for debug purposes only; think of a way to externalize it from the main consensus flow...
@@ -270,7 +266,7 @@ func (m *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 		log.Println("[WARN] NewHeight: Failed to convert paceMaker message to proto: ", err)
 		return
 	}
-	consensusMod.BroadcastMessageToNodes(anyProto)
+	consensusMod.BroadcastMessageToValidators(anyProto)
 }
 
 // TODO(olshansky): Increase timeout using exponential backoff.

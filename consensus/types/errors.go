@@ -86,6 +86,10 @@ func BroadcastingMessage(msg *HotstuffMessage) string {
 	return fmt.Sprintf("📣 Broadcasting message 📣 (height, step, round): (%d, %d, %d)", msg.GetHeight(), msg.GetStep(), msg.GetRound())
 }
 
+func RestartTimer() string {
+	return fmt.Sprintln("Restarting timer")
+}
+
 func WarnInvalidPartialSigInQC(address string, nodeId NodeId) string {
 	return fmt.Sprintf("%s: from %s (%d)", InvalidPartialSigInQCWarning, address, nodeId)
 }

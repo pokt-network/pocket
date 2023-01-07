@@ -77,6 +77,7 @@ type consensusModule struct {
 type ConsensusDebugModule interface {
 	SetHeight(uint64)
 	SetRound(uint64)
+	//REFACTOR: This should accept typesCons.HotstuffStep.
 	SetStep(uint8)
 	SetBlock(*typesCons.Block)
 	SetLeaderId(*typesCons.NodeId)

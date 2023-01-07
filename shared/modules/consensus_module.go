@@ -38,7 +38,7 @@ type ConsensusModule interface {
 // See issue for details: https://github.com/pokt-network/pocket/issues/428
 type ConsensusPacemaker interface {
 	//Pacemaker Consensus interaction modules
-	ClearLeaderMessagesPool()
+	ResetRound()
 	SetHeight(uint64)
 	SetRound(uint64)
 
@@ -46,7 +46,7 @@ type ConsensusPacemaker interface {
 	SetStep(uint8)
 	ResetForNewHeight()
 	ReleaseUtilityContext() error
-	BroadcastMessageToNodes(*anypb.Any) error
+	BroadcastMessageToValidators(*anypb.Any) error
 	IsLeader() bool
 	IsLeaderSet() bool
 	//IMPROVE: Consider changing input to typesCons.HotstuffMessage. This requires to do refactoring.
