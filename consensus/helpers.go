@@ -201,12 +201,6 @@ func (m *consensusModule) clearMessagesPool() {
 }
 
 /*** Leader Election Helpers ***/
-
-// TODO: this is not used, we should remove it if this will not be useful for next features.
-func (m *consensusModule) isLeaderUnknown() bool {
-	return m.leaderId == nil
-}
-
 func (m *consensusModule) isReplica() bool {
 	return !m.IsLeader()
 }
