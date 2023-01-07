@@ -79,7 +79,6 @@ func (m *consensusModule) GetPrepareQC() *anypb.Any {
 		return nil
 	}
 	return anyProto
-
 }
 
 func (m *consensusModule) GetNodeId() uint64 {
