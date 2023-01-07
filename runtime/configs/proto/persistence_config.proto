@@ -12,7 +12,7 @@ message PersistenceConfig {
   string trees_store_dir = 5;
   int32 max_conns_count = 6;
   int32 min_conns_count = 7;
-  string max_conn_lifetime = 8;
-  string max_conn_idle_time = 9;
-  string health_check_period = 10;
+  string max_conn_lifetime = 8; // See pkg.go.dev/time#ParseDuration for reference
+  string max_conn_idle_time = 9; // See pkg.go.dev/time#ParseDuration for reference
+  string health_check_period = 10; // See pkg.go.dev/time#ParseDuration for reference
 }
