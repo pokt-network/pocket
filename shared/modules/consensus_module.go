@@ -43,7 +43,7 @@ type ConsensusPacemaker interface {
 	SetHeight(uint64)
 	SetRound(uint64)
 
-	//IMPROVE: Consider changing input to typesCons.HotstuffStep. This requires to do refactoring since currently importing typesCons from consensus module causes import cycle.
+	// IMPROVE: Consider changing the input to type to `typesCons.HotstuffStep`. This currently causes an import cycle and requires significant refactoring.
 	SetStep(uint8)
 	ResetForNewHeight()
 	ReleaseUtilityContext() error
