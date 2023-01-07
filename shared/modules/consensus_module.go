@@ -52,6 +52,6 @@ type ConsensusPacemaker interface {
 	IsLeaderSet() bool
 	//IMPROVE: Consider changing input to typesCons.HotstuffMessage. This requires to do refactoring.
 	NewLeader(*anypb.Any) error
-	GetPrepareQC() *anypb.Any
+	GetPrepareQC() (*anypb.Any, error) //*anypb.Any
 	GetNodeId() uint64
 }
