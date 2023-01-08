@@ -11,13 +11,13 @@ const (
 	stateSyncModuleName = "stateSyncModule"
 )
 
-type Sync_Mode string
+type SyncMode string
 
 const (
-	Snyc      Sync_Mode = "sync"
-	Synched   Sync_Mode = "synched"
-	Pacemaker Sync_Mode = "pacemaker"
-	Server    Sync_Mode = "server"
+	Snyc      SyncMode = "sync"
+	Synched   SyncMode = "synched"
+	Pacemaker SyncMode = "pacemaker"
+	Server    SyncMode = "server"
 )
 
 type StateSyncModule interface {
@@ -46,7 +46,7 @@ var (
 type stateSyncModule struct {
 	bus modules.Bus
 
-	currentMode Sync_Mode
+	currentMode SyncMode
 	serverMode  bool
 }
 
