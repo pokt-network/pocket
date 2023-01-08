@@ -30,6 +30,5 @@ type ConsensusModule interface {
 	CurrentStep() uint64
 	ValidatorMap() ValidatorMap
 
-	IsServerModEnabled() bool
 	EnableServerMode()
 }

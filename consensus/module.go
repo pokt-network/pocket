@@ -340,10 +340,6 @@ func (m *consensusModule) loadPersistedState() error {
 	return nil
 }
 
-func (m *consensusModule) IsServerModEnabled() bool {
-	return m.stateSync.IsServerModEnabled()
-}
-
 func (m *consensusModule) EnableServerMode() {
 	m.stateSync.EnableServerMode()
 }
