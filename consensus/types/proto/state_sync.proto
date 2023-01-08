@@ -31,12 +31,13 @@ message GetBlockResponse {
 }
 
 enum StateSyncMessageType {
-    STATE_SYNC_METADATA_REQUEST = 0;
-    STATE_SYNC_METADATA_RESPONSE = 1;
-    STATE_SYNC_GET_BLOCK_REQUEST = 2;
-    STATE_SYNC_GET_BLOCK_RESPONSE = 3;
-
+    STATE_SYNC_UNSPECIFIED = 0;
+    STATE_SYNC_METADATA_REQUEST = 1;
+    STATE_SYNC_METADATA_RESPONSE = 2;
+    STATE_SYNC_GET_BLOCK_REQUEST = 3;
+    STATE_SYNC_GET_BLOCK_RESPONSE = 4;
 }
+
 message StateSyncMessage {
     StateSyncMessageType msgType = 1;
 
