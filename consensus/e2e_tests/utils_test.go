@@ -82,7 +82,7 @@ func CreateTestConsensusPocketNodes(
 	})
 	for i, runtimeMgr := range runtimeMgrs {
 		pocketNode := CreateTestConsensusPocketNode(t, &runtimeMgr, eventsChannel)
-		// TODO(olshansky): Figure this part out.
+		// TODO(#434): Improve the use of NodeIDs
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
 	return
@@ -105,7 +105,7 @@ func CreateTestConsensusPocketNodesNew(
 	})
 	for i, runtimeMgr := range runtimeMgrs {
 		pocketNode := CreateTestConsensusPocketNode(t, &runtimeMgr, eventsChannel)
-		// TODO(olshansky): Figure this part out.
+		// TODO(#434): Improve the use of NodeIDs
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
 	return

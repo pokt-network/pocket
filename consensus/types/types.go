@@ -34,7 +34,7 @@ func GetValAddrToIdMap(validatorMap ValidatorMap) (ValAddrToIdMap, IdToValAddrMa
 	valToIdMap := make(ValAddrToIdMap, len(valAddresses))
 	idToValMap := make(IdToValAddrMap, len(valAddresses))
 	for i, addr := range valAddresses {
-		nodeId := NodeId(i + 1)
+		nodeId := NodeId(i + 1) // TODO(#434): Improve the use of NodeIDs
 		valToIdMap[addr] = nodeId
 		idToValMap[nodeId] = addr
 	}
