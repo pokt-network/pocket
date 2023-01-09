@@ -41,22 +41,15 @@ func WithActorsByHeight(actorsByHeight map[int64][]*coreTypes.Actor) func(*debug
 }
 
 func (dabp *debugAddrBookProvider) getActorsByHeight(height uint64) []*coreTypes.Actor {
-	var stakedActors []*coreTypes.Actor
-	stakedActors, ok := dabp.actorsByHeight[ANY_HEIGHT]
-	if ok {
+	if stakedActors, ok := dabp.actorsByHeight[ANY_HEIGHT]; ok {
 		return stakedActors
 	}
-	stakedActors = dabp.actorsByHeight[int64(height)]
-	return stakedActors
+	return nil
 }
 
 func (dabp *debugAddrBookProvider) GetStakedAddrBookAtHeight(height uint64) (typesP2P.AddrBook, error) {
 	stakedActors := dabp.getActorsByHeight(height)
-	addrBook, err := addrbook_provider.ActorsToAddrBook(dabp, stakedActors)
-	if err != nil {
-		return nil, err
-	}
-	return addrBook, nil
+	return addrbook_provider.ActorsToAddrBook(dabp, stakedActors)
 }
 
 func (dabp *debugAddrBookProvider) GetConnFactory() typesP2P.ConnectionFactory {

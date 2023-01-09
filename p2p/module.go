@@ -153,6 +153,7 @@ func (m *p2pModule) Start() error {
 	return nil
 }
 
+// CLEANUP(#429): marked for removal since we'll implement a better pattern for dependency injection
 func getAddrBookProvider(m *p2pModule) providers.AddrBookProvider {
 	var addrbookProvider providers.AddrBookProvider
 	if m.injectedAddrBookProvider == nil {
@@ -163,6 +164,7 @@ func getAddrBookProvider(m *p2pModule) providers.AddrBookProvider {
 	return addrbookProvider
 }
 
+// CLEANUP(#429): marked for removal since we'll implement a better pattern for dependency injection
 func getCurrentHeightProvider(m *p2pModule) providers.CurrentHeightProvider {
 	var currentHeightProvider providers.CurrentHeightProvider
 	if m.injectedCurrentHeightProvider == nil {
