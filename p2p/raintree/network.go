@@ -154,7 +154,13 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return err
 	}
 
-	n.GetBus().
+	// A bus is not available In client debug mode
+	bus := n.GetBus()
+	if bus == nil {
+		return nil
+	}
+
+	bus.
 		GetTelemetryModule().
 		GetEventMetricsAgent().
 		EmitEvent(
