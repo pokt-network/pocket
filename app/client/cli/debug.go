@@ -1,24 +1,18 @@
-//go:build debug
-// +build debug
-
 package cli
 
 import (
 	"log"
 	"os"
-	"sync"
 
 	"github.com/manifoldco/promptui"
-	"github.com/pokt-network/pocket/consensus"
-	"github.com/pokt-network/pocket/logger"
 	"github.com/pokt-network/pocket/p2p"
-	"github.com/pokt-network/pocket/rpc"
+	debugABP "github.com/pokt-network/pocket/p2p/providers/addrbook_provider/debug"
+	debugCHP "github.com/pokt-network/pocket/p2p/providers/current_height_provider/debug"
 	"github.com/pokt-network/pocket/runtime"
-	"github.com/pokt-network/pocket/shared"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	pocketCrypto "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
-	"github.com/pokt-network/pocket/telemetry"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -39,10 +33,6 @@ var (
 	// A P2P module is initialized in order to broadcast a message to the local network
 	p2pMod modules.P2PModule
 
-	// A consensus module is initialized in order to get a list of the validator network
-	consensusMod modules.ConsensusModule
-	modInitOnce  sync.Once
-
 	items = []string{
 		PromptResetToGenesis,
 		PromptPrintNodeState,
@@ -50,6 +40,11 @@ var (
 		PromptTogglePacemakerMode,
 		PromptShowLatestBlockInStore,
 	}
+
+	// validators holds the list of the validators at genesis time so that we can use it to create a debug address book provider.
+	// Its purpose is to allow the CLI to "discover" the nodes in the network. Since currently we don't have churn and we run nodes only in LocalNet, we can rely on the genesis state.
+	// HACK(#416): This is a temporary solution that guarantees backward compatibility while we implement peer discovery
+	validators []*coreTypes.Actor
 )
 
 func init() {
@@ -62,7 +57,30 @@ func NewDebugCommand() *cobra.Command {
 		Short: "Debug utility for rapid development",
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			initDebug(remoteCLIURL)
+			var err error
+			runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
+
+			// HACK(#416): this is a temporary solution that guarantees backward compatibility while we implement peer discovery.
+			validators = runtimeMgr.GetGenesis().Validators
+
+			debugAddressBookProvider := debugABP.NewDebugAddrBookProvider(
+				runtimeMgr.GetConfig().P2P,
+				debugABP.WithActorsByHeight(
+					map[int64][]*coreTypes.Actor{
+						debugABP.ANY_HEIGHT: validators,
+					},
+				),
+			)
+
+			debugCurrentHeightProvider := debugCHP.NewDebugCurrentHeightProvider(0)
+
+			p2pM, err := p2p.CreateWithProviders(runtimeMgr, debugAddressBookProvider, debugCurrentHeightProvider)
+			if err != nil {
+				log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
+			}
+			p2pMod = p2pM.(modules.P2PModule)
+
+			p2pMod.Start()
 		},
 		RunE: runDebug,
 	}
@@ -148,8 +166,8 @@ func broadcastDebugMessage(debugMsg *messaging.DebugMessage) {
 	// address book of the actual validator nodes, so `node1.consensus` never receives the message.
 	// p2pMod.Broadcast(anyProto, messaging.PocketTopic_DEBUG_TOPIC)
 
-	for _, val := range consensusMod.ValidatorMap() {
-		addr, err := pocketCrypto.NewAddress(val.GetAddress())
+	for _, valAddr := range validators {
+		addr, err := pocketCrypto.NewAddress(valAddr.GetAddress())
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
 		}
@@ -165,58 +183,15 @@ func sendDebugMessage(debugMsg *messaging.DebugMessage) {
 	}
 
 	var validatorAddress []byte
-	for _, val := range consensusMod.ValidatorMap() {
-		validatorAddress, err = pocketCrypto.NewAddress(val.GetAddress())
-		if err != nil {
-			log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
-		}
-		break
+	if len(validators) == 0 {
+		log.Fatalf("[ERROR] No validators found")
+	}
+
+	// if the message needs to be broadcast, it'll be handled by the business logic of the message handler
+	validatorAddress, err = pocketCrypto.NewAddress(validators[0].GetAddress())
+	if err != nil {
+		log.Fatalf("[ERROR] Failed to convert validator address into pocketCrypto.Address: %v", err)
 	}
 
 	p2pMod.Send(validatorAddress, anyProto)
-}
-
-func initDebug(remoteCLIURL string) {
-	modInitOnce.Do(func() {
-		var err error
-		runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
-
-		consM, err := consensus.Create(runtimeMgr)
-		if err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to create consensus module")
-		}
-		consensusMod = consM.(modules.ConsensusModule)
-
-		p2pM, err := p2p.Create(runtimeMgr)
-		if err != nil {
-			log.Fatalf("[ERROR] Failed to create p2p module: %v", err.Error())
-		}
-		p2pMod = p2pM.(modules.P2PModule)
-
-		// This telemetry module instance is a NOOP because the 'enable_telemetry' flag in the `cfg` above is set to false.
-		// Since this client mimics partial - networking only - functionality of a full node, some of the telemetry-related
-		// code paths are executed. To avoid those messages interfering with the telemetry data collected, a non-nil telemetry
-		// module that NOOPs (per the configs above) is injected.
-		telemetryM, err := telemetry.Create(runtimeMgr)
-		if err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to create telemetry module")
-		}
-		telemetryMod := telemetryM.(modules.TelemetryModule)
-
-		loggerM, err := logger.Create(runtimeMgr)
-		if err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to create logger module")
-		}
-		loggerMod := loggerM.(modules.LoggerModule)
-
-		rpcM, err := rpc.Create(runtimeMgr)
-		if err != nil {
-			logger.Global.Fatal().Err(err).Msg("Failed to create rpc module")
-		}
-		rpcMod := rpcM.(modules.RPCModule)
-
-		_ = shared.CreateBusWithOptionalModules(runtimeMgr, nil, p2pMod, nil, consensusMod, telemetryMod, loggerMod, rpcMod) // REFACTOR: use the `WithXXXModule()` pattern accepting a slice of IntegratableModule
-
-		p2pMod.Start()
-	})
 }

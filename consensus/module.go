@@ -295,10 +295,6 @@ func (m *consensusModule) CurrentStep() uint64 {
 	return uint64(m.step)
 }
 
-func (m *consensusModule) ValidatorMap() modules.ValidatorMap { // TODO: This needs to be dynamically updated during various operations and network changes.
-	return typesCons.ValidatorMapToModulesValidatorMap(m.validatorMap)
-}
-
 // TODO: Populate the entire state from the persistence module: validator set, quorum cert, last block hash, etc...
 func (m *consensusModule) loadPersistedState() error {
 	persistenceContext, err := m.GetBus().GetPersistenceModule().NewReadContext(-1) // Unknown height

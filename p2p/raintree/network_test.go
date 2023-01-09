@@ -27,8 +27,9 @@ func TestRainTreeNetwork_AddPeerToAddrBook(t *testing.T) {
 
 	busMock := mockBus(ctrl)
 	addrBookProviderMock := mockAddrBookProvider(ctrl, addrBook)
+	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-	network := NewRainTreeNetwork(selfAddr, busMock, p2pCfg, addrBookProviderMock).(*rainTreeNetwork)
+	network := NewRainTreeNetwork(selfAddr, busMock, p2pCfg, addrBookProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
 
 	peerAddr, err := cryptoPocket.GenerateAddress()
 	require.NoError(t, err)
@@ -67,8 +68,9 @@ func TestRainTreeNetwork_RemovePeerToAddrBook(t *testing.T) {
 
 	busMock := mockBus(ctrl)
 	addrBookProviderMock := mockAddrBookProvider(ctrl, addrBook)
+	currentHeightProviderMock := mockCurrentHeightProvider(ctrl, 0)
 
-	network := NewRainTreeNetwork(selfAddr, busMock, p2pCfg, addrBookProviderMock).(*rainTreeNetwork)
+	network := NewRainTreeNetwork(selfAddr, busMock, p2pCfg, addrBookProviderMock, currentHeightProviderMock).(*rainTreeNetwork)
 	stateView := network.peersManager.getNetworkView()
 	require.Equal(t, numAddressesInAddressBook+1, len(stateView.addrList)) // +1 to account for self in the addrBook as well
 

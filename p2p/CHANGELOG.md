@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.16] - 2023-01-09
+
+- Added missing `Close()` call to `persistenceReadContext`
+
+## [0.0.0.15] - 2023-01-03
+
+- Refactored `AddrBookProvider` to support multiple implementations
+- Added `CurrentHeightProvider`
+- Dependency injection of the aforementioned provider into the module creation (used by the debug-client)
+- Updated implementation to use the providers
+- Updated tests and mocks
+
 ## [0.0.0.14] - 2023-01-03
 
 - `ActorsToAddrBook` now skips actors that are not validators since they don't have a serviceUrl generic parameter

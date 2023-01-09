@@ -6,7 +6,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/pokt-network/pocket/p2p/addrbook_provider"
+	"github.com/pokt-network/pocket/p2p/providers"
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
@@ -24,7 +25,7 @@ type rainTreeNetwork struct {
 	bus modules.Bus
 
 	selfAddr         cryptoPocket.Address
-	addrBookProvider typesP2P.AddrBookProvider
+	addrBookProvider addrbook_provider.AddrBookProvider
 
 	peersManager *peersManager
 
@@ -53,8 +54,8 @@ func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P
 	return typesP2P.Network(n)
 }
 
-func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg *configs.P2PConfig, addrBookProvider typesP2P.AddrBookProvider) typesP2P.Network {
-	addrBook, err := addrbook_provider.GetAddrBook(bus, addrBookProvider)
+func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg *configs.P2PConfig, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
 		log.Fatalf("[ERROR] Error getting addrBook: %v", err)
 	}
@@ -149,7 +150,13 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return err
 	}
 
-	n.GetBus().
+	// A bus is not available In client debug mode
+	bus := n.GetBus()
+	if bus == nil {
+		return nil
+	}
+
+	bus.
 		GetTelemetryModule().
 		GetEventMetricsAgent().
 		EmitEvent(
