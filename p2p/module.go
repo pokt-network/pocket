@@ -41,7 +41,7 @@ func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 	return new(p2pModule).Create(runtimeMgr)
 }
 
-// IMPROVE: need to define a better pattern for dependency injection. Currently we are probably limiting ourselves by having a common constructor `Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error)` for all modules.
+// TODO(#429): need to define a better pattern for dependency injection. Currently we are probably limiting ourselves by having a common constructor `Create(bus modules.Bus) (modules.Module, error)` for all modules.
 func CreateWithProviders(runtimeMgr modules.RuntimeMgr, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) (modules.Module, error) {
 	log.Println("Creating network module")
 	var m *p2pModule
