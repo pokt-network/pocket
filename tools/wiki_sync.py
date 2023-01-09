@@ -1,13 +1,14 @@
-import os, subprocess
+import os
+import subprocess
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
 
-
 WIKI_DIR = "tools/wiki"
 TEMP_WIKI = "tools/temp_wiki"
 WIKI_TAG = "GITHUB_WIKI"  # text included in the Github Wiki formatting comment
+
 
 @dataclass
 class DocumentationFile:
@@ -73,7 +74,9 @@ def write_sidebar_file(sidebar: Dict[str, List[DocumentationFile]]) -> None:
             DEPTH += 1
 
         for doc in doc_files:
-            sidebar_format += ("*" * DEPTH) + f"[[ {doc.file_name} | {doc.display_name} ]]\n"
+            sidebar_format += (
+                "*" * DEPTH
+            ) + f"[[ {doc.file_name} | {doc.display_name} ]]\n"
 
         # reset depth for the next category
         DEPTH = 1
@@ -97,29 +100,59 @@ def write_wiki_pages(sidebar: Dict[str, List[DocumentationFile]]) -> None:
 def run_wiki_migration():
     os.makedirs(TEMP_WIKI, exist_ok=True)
 
-    secret = os.environ['USER_TOKEN']
-    user_name = os.environ['USER_NAME']
-    user_email = os.environ['USER_EMAIL']
-    owner = os.environ['OWNER']
-    repo_name = os.environ['REPOSITORY_NAME']
+    secret = os.environ["USER_TOKEN"]
+    user_name = os.environ["USER_NAME"]
+    user_email = os.environ["USER_EMAIL"]
+    owner = os.environ["OWNER"]
+    repo_name = os.environ["REPOSITORY_NAME"]
 
     # init, pull, delete
     subprocess.call(["git", "init"], cwd=TEMP_WIKI)
-    subprocess.call(["git", "config", "user.name",  f"{user_name}"], cwd=TEMP_WIKI)
+    subprocess.call(["git", "config", "user.name", f"{user_name}"], cwd=TEMP_WIKI)
     subprocess.call(["git", "config", "user.email", f"{user_email}"], cwd=TEMP_WIKI)
-    subprocess.call(["git", "pull", f"https://{secret}@github.com/{owner}/{repo_name}.wiki.git"], cwd=TEMP_WIKI)
+    subprocess.call(
+        ["git", "pull", f"https://{secret}@github.com/{owner}/{repo_name}.wiki.git"],
+        cwd=TEMP_WIKI,
+    )
 
     # sync the new and old wiki files
-    subprocess.call(["rsync", "-av",  "--delete", "tools/wiki/", "tools/temp_wiki", "--exclude", ".git"])
+    subprocess.call(
+        [
+            "rsync",
+            "-av",
+            "--delete",
+            "tools/wiki/",
+            "tools/temp_wiki",
+            "--exclude",
+            ".git",
+        ]
+    )
 
     # add, config, commit and push
     subprocess.call(["git", "add", "."], cwd=TEMP_WIKI)
-    sha_hash = subprocess.check_output(["git", "rev-list", "--max-count=1", "HEAD"], cwd=TEMP_WIKI).decode().strip()
-    subprocess.call(["git", "commit", "-m", f"update wiki content - sha: {sha_hash}"], cwd=TEMP_WIKI)
-    subprocess.call(["git", "remote", "add", "master", \
-        f"https://{secret}@github.com/{owner}/{repo_name}.wiki.git"], cwd=TEMP_WIKI)
-    subprocess.call(["git", "push", "--set-upstream", "master", "master"], cwd=TEMP_WIKI)
-
+    sha_hash = (
+        subprocess.check_output(
+            ["git", "rev-list", "--max-count=1", "HEAD"], cwd=TEMP_WIKI
+        )
+        .decode()
+        .strip()
+    )
+    subprocess.call(
+        ["git", "commit", "-m", f"update wiki content - sha: {sha_hash}"], cwd=TEMP_WIKI
+    )
+    subprocess.call(
+        [
+            "git",
+            "remote",
+            "add",
+            "master",
+            f"https://{secret}@github.com/{owner}/{repo_name}.wiki.git",
+        ],
+        cwd=TEMP_WIKI,
+    )
+    subprocess.call(
+        ["git", "push", "--set-upstream", "master", "master"], cwd=TEMP_WIKI
+    )
 
 
 if __name__ == "__main__":
