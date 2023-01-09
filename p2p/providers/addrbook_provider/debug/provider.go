@@ -1,6 +1,8 @@
 package debug
 
 import (
+	"log"
+
 	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
@@ -42,8 +44,15 @@ func WithActorsByHeight(actorsByHeight map[int64][]*coreTypes.Actor) func(*debug
 
 func (dabp *debugAddrBookProvider) getActorsByHeight(height uint64) []*coreTypes.Actor {
 	if stakedActors, ok := dabp.actorsByHeight[ANY_HEIGHT]; ok {
+		log.Println("[DEBUG] Ignoring height param in debugAddrBookProvider")
 		return stakedActors
 	}
+
+	if stakedActors, ok := dabp.actorsByHeight[int64(height)]; ok {
+		return stakedActors
+	}
+
+	log.Fatalf("No actors found for height %d. Please make sure you configured the provider via WithActorsByHeight", height)
 	return nil
 }
 
