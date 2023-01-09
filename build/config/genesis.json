@@ -65,7 +65,7 @@
       "paused_height": -1,
       "unstaking_height": -1,
       "output": "113fdb095d42d6e09327ab5b8df13fd8197a1eaf",
-      "actor_type": 3
+      "actor_type": 4
     },
     {
       "address": "3f52e08c4b3b65ab7cf098d77df5bf8cedcf5f99",
@@ -76,7 +76,7 @@
       "paused_height": -1,
       "unstaking_height": -1,
       "output": "3f52e08c4b3b65ab7cf098d77df5bf8cedcf5f99",
-      "actor_type": 3
+      "actor_type": 4
     },
     {
       "address": "67eb3f0a50ae459fecf666be0e93176e92441317",
@@ -87,7 +87,7 @@
       "paused_height": -1,
       "unstaking_height": -1,
       "output": "67eb3f0a50ae459fecf666be0e93176e92441317",
-      "actor_type": 3
+      "actor_type": 4
     },
     {
       "address": "6f66574e1f50f0ef72dff748c3f11b9e0e89d32a",
@@ -98,7 +98,7 @@
       "paused_height": -1,
       "unstaking_height": -1,
       "output": "6f66574e1f50f0ef72dff748c3f11b9e0e89d32a",
-      "actor_type": 3
+      "actor_type": 4
     }
   ],
   "applications": [
