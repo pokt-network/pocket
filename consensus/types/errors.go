@@ -8,6 +8,7 @@ import (
 
 	"github.com/pokt-network/pocket/shared/codec"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 // Logs and warnings
@@ -73,6 +74,11 @@ func ElectedSelfAsNewLeader(address string, nodeId NodeId, height, round uint64)
 
 func SendingMessage(msg *HotstuffMessage, nodeId NodeId) string {
 	return fmt.Sprintf("Sending %s message to %d", StepToString[msg.GetStep()], nodeId)
+}
+
+// TODO consider putting a better value for logs
+func SendingStateSyncMessage(msg *anypb.Any, nodeId NodeId) string {
+	return fmt.Sprintf("Sending State sync message %s to node %d", msg, nodeId)
 }
 
 func BroadcastingMessage(msg *HotstuffMessage) string {
@@ -149,6 +155,7 @@ const (
 	sendMessageError                            = "error sending message"
 	broadcastMessageError                       = "error broadcasting message"
 	createConsensusMessageError                 = "error creating consensus message"
+	createStateSyncMessageError                 = "error creating state sync message"
 	anteValidationError                         = "discarding hotstuff message because ante validation failed"
 	nilLeaderIdError                            = "attempting to send a message to leader when LeaderId is nil"
 )
@@ -184,6 +191,7 @@ var (
 	ErrSendMessage                            = errors.New(sendMessageError)
 	ErrBroadcastMessage                       = errors.New(broadcastMessageError)
 	ErrCreateConsensusMessage                 = errors.New(createConsensusMessageError)
+	ErrCreateStateSyncMessage                 = errors.New(createStateSyncMessageError)
 	ErrHotstuffValidation                     = errors.New(anteValidationError)
 	ErrNilLeaderId                            = errors.New(nilLeaderIdError)
 )

@@ -20,31 +20,39 @@ type StateSyncServerModule interface {
 // ! TODO implement
 func (m *stateSyncModule) HandleStateSyncMetadataRequest(metadataReq *typesCons.StateSyncMetadataRequest) error {
 
-	//! Placeholder implementation to show data types that can be used and flow, it will be replaced
-	metadataRes := typesCons.StateSyncMetadataResponse{
-		PeerId:    "1", // The `peer_id` needs to be populated by the P2P module of the receiving node so the sender cannot falsify its identity
-		MinHeight: 0,
-		MaxHeight: 10,
-	}
+	peerId := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
+	minHeight, maxHeight := m.aggregatedMetaResults()
 
-	//m.sendToNode(metadataReq)
+	metadataRes := typesCons.StateSyncMetadataResponse{
+		PeerId:    peerId,
+		MinHeight: minHeight,
+		MaxHeight: maxHeight,
+	}
 
 	anyStateSyncMessage, err := anypb.New(&metadataRes)
 	if err != nil {
 		return err
 	}
 
-	return m.sendToNode(anyStateSyncMessage)
-
-}
-
-// ! TODO implement, similar to sendToNode function of consensus. Maybe it can be used directly.
-func (m *stateSyncModule) sendToNode(msg *anypb.Any) error {
-
-	return nil
+	return m.sendToPeer(anyStateSyncMessage, metadataReq.PeerId)
 }
 
 // ! TODO implement
 func (m *stateSyncModule) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequest) error {
+
+	// peerId := m.GetBus().GetConsensusModule().GetCurrentNodeAddressFromNodeId()
+
+	// metadataRes := typesCons.GetBlockResponse{
+	// 	PeerId: peerId,
+	// }
+
 	return nil
+
+}
+
+// TODO! Placehalder functions for metadata aggregation of data received from different peers
+func (m *stateSyncModule) aggregatedMetaResults() (uint64, uint64) {
+	minHeight := m.GetBus().GetConsensusModule().CurrentHeight()
+	maxHeight := m.GetBus().GetConsensusModule().CurrentHeight()
+	return minHeight, maxHeight
 }

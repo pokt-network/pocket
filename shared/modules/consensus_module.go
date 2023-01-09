@@ -17,6 +17,7 @@ type ValidatorMap map[string]coreTypes.Actor
 type ConsensusModule interface {
 	Module
 	KeyholderModule
+	ConsensusStateSync
 
 	// Consensus Engine Handlers
 	HandleMessage(*anypb.Any) error
@@ -31,4 +32,13 @@ type ConsensusModule interface {
 	ValidatorMap() ValidatorMap
 
 	EnableServerMode()
+}
+
+// This interface represents functions exposed by the Consensus module for StateSync specific business logic.
+// These functions are intended to only be called by the StateSync module.
+type ConsensusStateSync interface {
+	GetNodeId() uint64
+	GetNodeIdFromNodeAddress(string) uint64
+	GetCurrentNodeAddressFromNodeId() string
+	IsLeaderSet() bool
 }

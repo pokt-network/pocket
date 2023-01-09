@@ -5,7 +5,6 @@ import (
 	"runtime"
 	"testing"
 	"time"
-	timePkg "time"
 
 	"github.com/benbjohnson/clock"
 
@@ -248,7 +247,7 @@ func TestPacemakerExponentialTimeouts(t *testing.T) {
 }
 */
 
-func forcePacemakerTimeout(clockMock *clock.Mock, paceMakerTimeout timePkg.Duration) {
+func forcePacemakerTimeout(clockMock *clock.Mock, paceMakerTimeout time.Duration) {
 	go func() {
 		// Cause the pacemaker to timeout
 		sleep(clockMock, paceMakerTimeout)

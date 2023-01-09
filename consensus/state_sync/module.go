@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	DefaultLogPrefix    = "NODE"
 	stateSyncModuleName = "stateSyncModule"
 )
 
@@ -48,6 +49,9 @@ type stateSyncModule struct {
 
 	currentMode SyncMode
 	serverMode  bool
+
+	//REFACTOR: this should be removed, when we build a shared and proper logger
+	logPrefix string
 }
 
 func CreateStateSync(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
@@ -104,4 +108,14 @@ func (m *stateSyncModule) HandleGetBlockResponse(*typesCons.GetBlockResponse) er
 func (m *stateSyncModule) HandleStateSyncMetadataResponse(*typesCons.StateSyncMetadataResponse) error {
 	//! TODO implement
 	return nil
+}
+
+// IMPROVE: Remove this once we have a proper logging system.
+func (m *stateSyncModule) nodeLog(s string) {
+	log.Printf("[%s][%d] %s\n", m.logPrefix, m.GetBus().GetConsensusModule().GetNodeId(), s)
+}
+
+// IMPROVE: Remove this once we have a proper logging system.
+func (m *stateSyncModule) nodeLogError(s string, err error) {
+	log.Printf("[ERROR][%s][%d] %s: %v\n", m.logPrefix, m.GetBus().GetConsensusModule().GetNodeId(), s, err)
 }

@@ -118,6 +118,23 @@ func (c *consensusModule) SetUtilityContext(utilityContext modules.UtilityContex
 	c.utilityContext = utilityContext
 }
 
+// Implementations of the ConsensusStateSync interface
+func (m *consensusModule) GetNodeId() uint64 {
+	return uint64(m.nodeId)
+}
+
+func (m *consensusModule) IsLeaderSet() bool {
+	return m.leaderId != nil
+}
+
+func (m *consensusModule) GetNodeIdFromNodeAddress(peerId string) uint64 {
+	return uint64(m.valAddrToIdMap[peerId])
+}
+
+func (m *consensusModule) GetCurrentNodeAddressFromNodeId() string {
+	return m.idToValAddrMap[typesCons.NodeId(m.nodeId)]
+}
+
 func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 	return new(consensusModule).Create(runtimeMgr)
 }
