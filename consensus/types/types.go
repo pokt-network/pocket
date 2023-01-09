@@ -5,7 +5,6 @@ import (
 	"sort"
 
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
-	"github.com/pokt-network/pocket/shared/modules"
 )
 
 type NodeId uint64
@@ -40,14 +39,6 @@ func GetValAddrToIdMap(validatorMap ValidatorMap) (ValAddrToIdMap, IdToValAddrMa
 	}
 
 	return valToIdMap, idToValMap
-}
-
-func ValidatorMapToModulesValidatorMap(validatorMap ValidatorMap) (vm modules.ValidatorMap) {
-	vm = make(modules.ValidatorMap)
-	for _, v := range validatorMap {
-		vm[v.GetAddress()] = *v
-	}
-	return
 }
 
 func ActorListToValidatorMap(actors []*coreTypes.Actor) (m ValidatorMap) {
