@@ -323,7 +323,8 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 //	and does not recursively determine the size of all the underlying elements
 //	Add proper tests and implementation once the mempool is implemented.
 func (m *consensusModule) indexHotstuffMessage(msg *typesCons.HotstuffMessage) error {
-	if m.consCfg.GetMaxMempoolBytes() < uint64(unsafe.Sizeof(m.messagePool)) {
+	if m.consCfg.MaxMempoolBytes < uint64(unsafe.Sizeof(m.messagePool)) {
+		m.nodeLogError(typesCons.DisregardHotstuffMessage, typesCons.ErrConsensusMempoolFull)
 		return typesCons.ErrConsensusMempoolFull
 	}
 

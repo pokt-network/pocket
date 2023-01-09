@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/pokt-network/pocket/runtime/test_artifacts"
-	typesUtil "github.com/pokt-network/pocket/utility/types"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,7 +17,7 @@ func TestUtilityContext_ApplyBlock(t *testing.T) {
 	txBz, er := tx.Bytes()
 	require.NoError(t, er)
 
-	proposer := getFirstActor(t, ctx, typesUtil.ActorType_Validator)
+	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
 
 	addrBz, err := hex.DecodeString(proposer.GetAddress())
 	require.NoError(t, err)
@@ -68,7 +68,7 @@ func TestUtilityContext_BeginBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 
-	proposer := getFirstActor(t, ctx, typesUtil.ActorType_Validator)
+	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)
@@ -95,7 +95,7 @@ func TestUtilityContext_EndBlock(t *testing.T) {
 	ctx := NewTestingUtilityContext(t, 0)
 	tx, _, _, _ := newTestingTransaction(t, ctx)
 
-	proposer := getFirstActor(t, ctx, typesUtil.ActorType_Validator)
+	proposer := getFirstActor(t, ctx, coreTypes.ActorType_ACTOR_TYPE_VAL)
 
 	txBz, err := tx.Bytes()
 	require.NoError(t, err)

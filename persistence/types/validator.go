@@ -1,5 +1,7 @@
 package types
 
+import coreTypes "github.com/pokt-network/pocket/shared/core/types"
+
 var _ ProtocolActorSchema = &ValidatorSchema{}
 
 const (
@@ -15,6 +17,8 @@ type ValidatorSchema struct {
 
 var ValidatorActor ProtocolActorSchema = &ValidatorSchema{
 	BaseProtocolActorSchema: BaseProtocolActorSchema{
+		actorType: coreTypes.ActorType_ACTOR_TYPE_VAL,
+
 		tableName:       ValidatorTableName,
 		chainsTableName: NullString,
 
@@ -26,7 +30,7 @@ var ValidatorActor ProtocolActorSchema = &ValidatorSchema{
 }
 
 func (actor *ValidatorSchema) InsertQuery(address, publicKey, stakedTokens, maxRelays, outputAddress string, pausedHeight, unstakingHeight int64, _ []string, height int64) string {
-	return Insert(&Actor{
+	return Insert(&coreTypes.Actor{
 		Address:         address,
 		PublicKey:       publicKey,
 		StakedAmount:    stakedTokens,

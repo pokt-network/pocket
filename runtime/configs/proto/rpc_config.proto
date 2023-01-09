@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package rpc;
+package configs;
 
-option go_package = "github.com/pokt-network/pocket/rpc/types";
+option go_package = "github.com/pokt-network/pocket/runtime/configs";
 
 message RPCConfig {
   bool enabled = 1;

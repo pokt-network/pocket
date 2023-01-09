@@ -7,9 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.13] - 2023-01-03
+## [0.0.0.15] - 2023-01-09
 
 - Add a lock to the mempool to avoid parallel messages which has caused the node to crash in the past
+
+## [0.0.0.14] - 2023-01-03
+
+- `ActorsToAddrBook` now skips actors that are not validators since they don't have a serviceUrl generic parameter
+
+## [0.0.0.13] - 2022-12-21
+
+- Updated to use the new centralized config and genesis handling
+- Updated to use the new `Actor` struct under `coreTypes`
+- Updated tests and mocks
+- Added missing `max_mempool_count` in config (it was causing P2P instabilities in LocalNet)
 
 ## [0.0.0.12] - 2022-12-16
 

@@ -6,32 +6,32 @@ import (
 	"net"
 
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/runtime/configs"
 )
 
 const (
 	TCPNetworkLayerProtocol = "tcp4"
 )
 
-func CreateListener(cfg modules.P2PConfig) (typesP2P.Transport, error) {
-	switch cfg.GetIsEmptyConnectionType() { // TECHDEBT kept in switch format because this should be an enum not a bool
+func CreateListener(cfg *configs.P2PConfig) (typesP2P.Transport, error) {
+	switch cfg.IsEmptyConnectionType { // TECHDEBT kept in switch format because this should be an enum not a bool
 	case true:
 		return createEmptyListener(cfg)
 	case false:
 		return createTCPListener(cfg)
 	default:
-		return nil, fmt.Errorf("unsupported connection type for listener: %v", cfg.GetIsEmptyConnectionType())
+		return nil, fmt.Errorf("unsupported connection type for listener: %v", cfg.IsEmptyConnectionType)
 	}
 }
 
-func CreateDialer(cfg modules.P2PConfig, url string) (typesP2P.Transport, error) {
-	switch cfg.GetIsEmptyConnectionType() {
+func CreateDialer(cfg *configs.P2PConfig, url string) (typesP2P.Transport, error) {
+	switch cfg.IsEmptyConnectionType {
 	case true:
 		return createEmptyDialer(cfg, url)
 	case false:
 		return createTCPDialer(cfg, url)
 	default:
-		return nil, fmt.Errorf("unsupported connection type for dialer: %v", cfg.GetIsEmptyConnectionType())
+		return nil, fmt.Errorf("unsupported connection type for dialer: %v", cfg.IsEmptyConnectionType)
 	}
 }
 
@@ -42,8 +42,8 @@ type tcpConn struct {
 	listener *net.TCPListener
 }
 
-func createTCPListener(cfg modules.P2PConfig) (*tcpConn, error) {
-	addr, err := net.ResolveTCPAddr(TCPNetworkLayerProtocol, fmt.Sprintf(":%d", cfg.GetConsensusPort()))
+func createTCPListener(cfg *configs.P2PConfig) (*tcpConn, error) {
+	addr, err := net.ResolveTCPAddr(TCPNetworkLayerProtocol, fmt.Sprintf(":%d", cfg.ConsensusPort))
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func createTCPListener(cfg modules.P2PConfig) (*tcpConn, error) {
 	}, nil
 }
 
-func createTCPDialer(_ modules.P2PConfig, url string) (*tcpConn, error) {
+func createTCPDialer(_ *configs.P2PConfig, url string) (*tcpConn, error) {
 	addr, err := net.ResolveTCPAddr(TCPNetworkLayerProtocol, url)
 	if err != nil {
 		return nil, err
@@ -119,11 +119,11 @@ var _ typesP2P.Transport = &emptyConn{}
 type emptyConn struct {
 }
 
-func createEmptyListener(_ modules.P2PConfig) (typesP2P.Transport, error) {
+func createEmptyListener(_ *configs.P2PConfig) (typesP2P.Transport, error) {
 	return &emptyConn{}, nil
 }
 
-func createEmptyDialer(_ modules.P2PConfig, _ string) (typesP2P.Transport, error) {
+func createEmptyDialer(_ *configs.P2PConfig, _ string) (typesP2P.Transport, error) {
 	return &emptyConn{}, nil
 }
 

@@ -33,7 +33,7 @@ func (m *persistenceModule) HandleDebugMessage(debugMessage *messaging.DebugMess
 		if err := m.clearAllState(debugMessage); err != nil {
 			return err
 		}
-		g := m.genesisState.(*types.PersistenceGenesisState)
+		g := m.genesisState
 		m.populateGenesisState(g) // fatal if there's an error
 	default:
 		log.Printf("Debug message not handled by persistence module: %s \n", debugMessage.Message)

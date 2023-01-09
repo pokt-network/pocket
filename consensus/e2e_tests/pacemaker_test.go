@@ -26,9 +26,8 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	consensusMessageTimeoutMsec := time.Duration(paceMakerTimeoutMsec / 5) // Must be smaller than pacemaker timeout because we expect a deterministic number of consensus messages.
 	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
 	for _, runtimeConfig := range runtimeMgrs {
-		if consCfg, ok := runtimeConfig.GetConfig().GetConsensusConfig().(consensus.HasPacemakerConfig); ok {
-			consCfg.GetPacemakerConfig().SetTimeoutMsec(paceMakerTimeoutMsec)
-		}
+		consCfg := runtimeConfig.GetConfig().Consensus.PacemakerConfig
+		consCfg.TimeoutMsec = paceMakerTimeoutMsec
 	}
 
 	// Create & start test pocket nodes
@@ -140,9 +139,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	// paceMakerTimeout := time.Duration(paceMakerTimeoutMsec) * time.Millisecond
 	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
 	for _, runtimeConfig := range runtimeMgrs {
-		if consCfg, ok := runtimeConfig.GetConfig().GetConsensusConfig().(consensus.HasPacemakerConfig); ok {
-			consCfg.GetPacemakerConfig().SetTimeoutMsec(paceMakerTimeoutMsec)
-		}
+		runtimeConfig.GetConfig().Consensus.PacemakerConfig.TimeoutMsec = paceMakerTimeoutMsec
 	}
 
 	// Create & start test pocket nodes
