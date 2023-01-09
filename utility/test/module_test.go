@@ -15,7 +15,7 @@ import (
 	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
-	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
+	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/pokt-network/pocket/utility"
 	utilTypes "github.com/pokt-network/pocket/utility/types"
 	"github.com/stretchr/testify/require"
@@ -138,7 +138,7 @@ func newTestUtilityModule(bus modules.Bus) modules.UtilityModule {
 func mockBusInTestModules(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	busMock := modulesMock.NewMockBus(ctrl)
+	busMock := mockModules.NewMockBus(ctrl)
 	busMock.EXPECT().GetPersistenceModule().Return(testPersistenceMod).AnyTimes()
 	busMock.EXPECT().GetUtilityModule().Return(testUtilityMod).AnyTimes()
 

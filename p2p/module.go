@@ -9,7 +9,6 @@ import (
 	"github.com/pokt-network/pocket/p2p/stdnetwork"
 	"github.com/pokt-network/pocket/p2p/transport"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/runtime/configs"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
@@ -21,8 +20,7 @@ import (
 var _ modules.P2PModule = &p2pModule{}
 
 type p2pModule struct {
-	bus    modules.Bus
-	p2pCfg *configs.P2PConfig // TODO (olshansky): to remove this since it'll be available via the bus
+	bus modules.Bus
 
 	listener typesP2P.Transport
 	address  cryptoPocket.Address
@@ -51,12 +49,11 @@ func CreateWithProviders(bus modules.Bus, addrBookProvider providers.AddrBookPro
 	if err != nil {
 		return nil, err
 	}
-	m.p2pCfg = p2pCfg
 	m.address = privateKey.Address()
 	m.injectedAddrBookProvider = addrBookProvider
 	m.injectedCurrentHeightProvider = currentHeightProvider
 
-	if !p2pCfg.GetIsClientOnly() {
+	if !cfg.ClientDebugMode {
 		l, err := transport.CreateListener(p2pCfg)
 		if err != nil {
 			return nil, err
@@ -80,10 +77,9 @@ func (*p2pModule) Create(bus modules.Bus) (modules.Module, error) {
 	if err != nil {
 		return nil, err
 	}
-	m.p2pCfg = p2pCfg
 	m.address = privateKey.Address()
 
-	if !p2pCfg.GetIsClientOnly() {
+	if !cfg.ClientDebugMode {
 		l, err := transport.CreateListener(p2pCfg)
 		if err != nil {
 			return nil, err
@@ -118,13 +114,15 @@ func (m *p2pModule) Start() error {
 	addrbookProvider := getAddrBookProvider(m)
 	currentHeightProvider := getCurrentHeightProvider(m)
 
-	if m.p2pCfg.GetUseRainTree() {
-		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), m.p2pCfg, addrbookProvider, currentHeightProvider)
+	cfg := m.GetBus().GetRuntimeMgr().GetConfig()
+
+	if cfg.P2P.UseRainTree {
+		m.network = raintree.NewRainTreeNetwork(m.address, m.GetBus(), addrbookProvider, currentHeightProvider)
 	} else {
-		m.network = stdnetwork.NewNetwork(m.GetBus(), m.p2pCfg, addrbookProvider, currentHeightProvider)
+		m.network = stdnetwork.NewNetwork(m.GetBus(), addrbookProvider, currentHeightProvider)
 	}
 
-	if m.p2pCfg.GetIsClientOnly() {
+	if cfg.ClientDebugMode {
 		return nil
 	}
 
@@ -158,7 +156,7 @@ func (m *p2pModule) Start() error {
 func getAddrBookProvider(m *p2pModule) providers.AddrBookProvider {
 	var addrbookProvider providers.AddrBookProvider
 	if m.injectedAddrBookProvider == nil {
-		addrbookProvider = persABP.NewPersistenceAddrBookProvider(m.GetBus(), m.p2pCfg)
+		addrbookProvider = persABP.NewPersistenceAddrBookProvider(m.GetBus())
 	} else {
 		addrbookProvider = m.injectedAddrBookProvider
 	}

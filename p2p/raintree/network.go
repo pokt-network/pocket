@@ -56,7 +56,7 @@ func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P
 	return typesP2P.Network(n)
 }
 
-func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg *configs.P2PConfig, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
 	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
 		log.Fatalf("[ERROR] Error getting addrBook: %v", err)
@@ -66,6 +66,8 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg *conf
 	if err != nil {
 		log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManager: %v", err)
 	}
+
+	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
 
 	n := &rainTreeNetwork{
 		selfAddr:         addr,

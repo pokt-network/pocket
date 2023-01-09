@@ -1,6 +1,7 @@
 {
   "root_directory": "/go/src/github.com/pocket-network",
   "private_key": "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
+  "client_debug_mode": false,
   "consensus": {
     "max_mempool_bytes": 500000000,
     "pacemaker_config": {
@@ -26,8 +27,7 @@
     "use_rain_tree": true,
     "is_empty_connection_type": false,
     "private_key": "6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4",
-    "max_mempool_count": 100000,
-    "is_client_only": false
+    "max_mempool_count": 100000
   },
   "telemetry": {
     "enabled": true,

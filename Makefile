@@ -130,7 +130,7 @@ rebuild_client_start: docker_check ## Rebuild and run a client daemon which is o
 
 .PHONY: client_connect
 client_connect: docker_check ## Connect to the running client debugging daemon
-	docker exec -it client /bin/bash -c "POCKET_P2P_IS_CLIENT_ONLY=true go run -tags=debug app/client/*.go debug"
+	docker exec -it client /bin/bash -c "POCKET_CLIENT_DEBUG_MODE=true go run -tags=debug app/client/*.go debug"
 
 .PHONY: build_and_watch
 build_and_watch: ## Continous build Pocket's main entrypoint as files change

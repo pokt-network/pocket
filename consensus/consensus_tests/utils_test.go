@@ -24,7 +24,7 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
 	"github.com/pokt-network/pocket/shared/modules"
-	modulesMock "github.com/pokt-network/pocket/shared/modules/mocks"
+	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -305,11 +305,11 @@ loop:
 /*** Module Mocking Helpers ***/
 
 // Creates a persistence module mock with mock implementations of some basic functionality
-func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *modulesMock.MockPersistenceModule {
+func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus) *mockModules.MockPersistenceModule {
 	ctrl := gomock.NewController(t)
-	persistenceMock := modulesMock.NewMockPersistenceModule(ctrl)
-	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
-	persistenceReadContextMock := modulesMock.NewMockPersistenceReadContext(ctrl)
+	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
+	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
+	persistenceReadContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
 
 	persistenceMock.EXPECT().GetModuleName().Return(modules.PersistenceModuleName).AnyTimes()
 	persistenceMock.EXPECT().Start().Return(nil).AnyTimes()
@@ -330,9 +330,9 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 }
 
 // Creates a p2p module mock with mock implementations of some basic functionality
-func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.MockP2PModule {
+func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *mockModules.MockP2PModule {
 	ctrl := gomock.NewController(t)
-	p2pMock := modulesMock.NewMockP2PModule(ctrl)
+	p2pMock := mockModules.NewMockP2PModule(ctrl)
 
 	p2pMock.EXPECT().Start().Return(nil).AnyTimes()
 	p2pMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
@@ -356,9 +356,9 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *modulesMock.M
 }
 
 // Creates a utility module mock with mock implementations of some basic functionality
-func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesis.GenesisState) *modulesMock.MockUtilityModule {
+func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesis.GenesisState) *mockModules.MockUtilityModule {
 	ctrl := gomock.NewController(t)
-	utilityMock := modulesMock.NewMockUtilityModule(ctrl)
+	utilityMock := mockModules.NewMockUtilityModule(ctrl)
 	utilityContextMock := baseUtilityContextMock(t, genesisState)
 
 	utilityMock.EXPECT().Start().Return(nil).AnyTimes()
@@ -372,10 +372,10 @@ func baseUtilityMock(t *testing.T, _ modules.EventsChannel, genesisState *genesi
 	return utilityMock
 }
 
-func baseUtilityContextMock(t *testing.T, genesisState *genesis.GenesisState) *modulesMock.MockUtilityContext {
+func baseUtilityContextMock(t *testing.T, genesisState *genesis.GenesisState) *mockModules.MockUtilityContext {
 	ctrl := gomock.NewController(t)
-	utilityContextMock := modulesMock.NewMockUtilityContext(ctrl)
-	persistenceContextMock := modulesMock.NewMockPersistenceRWContext(ctrl)
+	utilityContextMock := mockModules.NewMockUtilityContext(ctrl)
+	persistenceContextMock := mockModules.NewMockPersistenceRWContext(ctrl)
 	persistenceContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
 	persistenceContextMock.EXPECT().GetBlockHash(gomock.Any()).Return("", nil).AnyTimes()
 
@@ -397,9 +397,9 @@ func baseUtilityContextMock(t *testing.T, genesisState *genesis.GenesisState) *m
 	return utilityContextMock
 }
 
-func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockTelemetryModule {
+func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockTelemetryModule {
 	ctrl := gomock.NewController(t)
-	telemetryMock := modulesMock.NewMockTelemetryModule(ctrl)
+	telemetryMock := mockModules.NewMockTelemetryModule(ctrl)
 	timeSeriesAgentMock := baseTelemetryTimeSeriesAgentMock(t)
 	eventMetricsAgentMock := baseTelemetryEventMetricsAgentMock(t)
 
@@ -412,9 +412,9 @@ func baseTelemetryMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockT
 	return telemetryMock
 }
 
-func baseRpcMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockRPCModule {
+func baseRpcMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockRPCModule {
 	ctrl := gomock.NewController(t)
-	rpcMock := modulesMock.NewMockRPCModule(ctrl)
+	rpcMock := mockModules.NewMockRPCModule(ctrl)
 	rpcMock.EXPECT().Start().Return(nil).AnyTimes()
 	rpcMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	rpcMock.EXPECT().GetModuleName().Return(modules.RPCModuleName).AnyTimes()
@@ -422,24 +422,24 @@ func baseRpcMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockRPCModu
 	return rpcMock
 }
 
-func baseTelemetryTimeSeriesAgentMock(t *testing.T) *modulesMock.MockTimeSeriesAgent {
+func baseTelemetryTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesAgent {
 	ctrl := gomock.NewController(t)
-	timeSeriesAgentMock := modulesMock.NewMockTimeSeriesAgent(ctrl)
+	timeSeriesAgentMock := mockModules.NewMockTimeSeriesAgent(ctrl)
 	timeSeriesAgentMock.EXPECT().CounterRegister(gomock.Any(), gomock.Any()).MaxTimes(1)
 	timeSeriesAgentMock.EXPECT().CounterIncrement(gomock.Any()).AnyTimes()
 	return timeSeriesAgentMock
 }
 
-func baseTelemetryEventMetricsAgentMock(t *testing.T) *modulesMock.MockEventMetricsAgent {
+func baseTelemetryEventMetricsAgentMock(t *testing.T) *mockModules.MockEventMetricsAgent {
 	ctrl := gomock.NewController(t)
-	eventMetricsAgentMock := modulesMock.NewMockEventMetricsAgent(ctrl)
+	eventMetricsAgentMock := mockModules.NewMockEventMetricsAgent(ctrl)
 	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	return eventMetricsAgentMock
 }
 
-func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *modulesMock.MockLoggerModule {
+func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLoggerModule {
 	ctrl := gomock.NewController(t)
-	loggerMock := modulesMock.NewMockLoggerModule(ctrl)
+	loggerMock := mockModules.NewMockLoggerModule(ctrl)
 
 	loggerMock.EXPECT().SetBus(gomock.Any()).Return().AnyTimes()
 	loggerMock.EXPECT().GetModuleName().Return(modules.LoggerModuleName).AnyTimes()
