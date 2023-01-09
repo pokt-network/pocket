@@ -45,11 +45,11 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 	}
 	defer persistenceReadContext.Close()
 
-	stakedActors, err := persistenceReadContext.GetAllStakedActors(int64(height))
+	validators, err := persistenceReadContext.GetAllValidators(int64(height))
 	if err != nil {
 		return nil, err
 	}
-	return addrbook_provider.ActorsToAddrBook(pabp, stakedActors)
+	return addrbook_provider.ActorsToAddrBook(pabp, validators)
 }
 
 func (pabp *persistenceAddrBookProvider) GetConnFactory() typesP2P.ConnectionFactory {
