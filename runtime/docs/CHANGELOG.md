@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.4] - 2023-01-09
+
+- Updated tests to reflect the updated genesis file
+
 ## [0.0.0.3] - 2023-01-03
 
 - Split testing/development configs into separate files
