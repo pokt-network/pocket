@@ -158,3 +158,9 @@ func WithClock(clockMgr clock.Clock) func(*Manager) {
 		b.clock = clockMgr
 	}
 }
+
+func WithClientDebugMode() func(*Manager) {
+	return func(b *Manager) {
+		b.config.ClientDebugMode = true
+	}
+}

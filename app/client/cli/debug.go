@@ -58,7 +58,7 @@ func NewDebugCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(0),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			var err error
-			runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithRandomPK())
+			runtimeMgr := runtime.NewManagerFromFiles(defaultConfigPath, defaultGenesisPath, runtime.WithClientDebugMode(), runtime.WithRandomPK())
 
 			// HACK(#416): this is a temporary solution that guarantees backward compatibility while we implement peer discovery.
 			validators = runtimeMgr.GetGenesis().Validators
