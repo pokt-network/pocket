@@ -212,7 +212,7 @@ func preparePersistenceMock(t *testing.T, busMock *mockModules.MockBus, genesisS
 	persistenceMock := mockModules.NewMockPersistenceModule(ctrl)
 	readContextMock := mockModules.NewMockPersistenceReadContext(ctrl)
 
-	readContextMock.EXPECT().GetAllStakedActors(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
+	readContextMock.EXPECT().GetAllValidators(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(readContextMock, nil).AnyTimes()
 	readContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
