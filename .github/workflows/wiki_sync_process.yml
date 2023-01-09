@@ -1,5 +1,4 @@
 name: Publish docs to Wiki
-description: Based on a simple rule for detecting file changes, the Acton creates variables for a python script to update the Pokt Wiki Repository
 
 on:
   push:
