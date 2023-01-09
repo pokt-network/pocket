@@ -173,7 +173,11 @@ Pocket
 
 ## Maintaining Documentation
 
-Markdown files based on the following command `find . -name "*.md" | grep -v -e "vendor" -e "app"` are added to the [repository wiki](https://github.com/pokt-network/pocket/wiki). To organize the wiki a comment is added to the end of the files e.g. you can find one at the end of this file `<!-- GITHUB_WIKI: guides/development/readme -->`. The structure of the comment is to indicate the category (guides), subcategories (development) and file name (readme). Looking at the current wiki choose the right placement for the new markdown or simply create a new category.
+Markdown files found by the following command `find . -name "*.md" | grep -v -e "vendor" -e "app"` are added to the [repository wiki](https://github.com/pokt-network/pocket/wiki).
+
+In order to organize the wiki, a comment is added to the end of each `.md` file we want included. For example,  you can find the following at the end of this file `<!-- GITHUB_WIKI: guides/development/readme -->`. The structure of the comment is to indicate the category (guides), subcategories (development) and file name (readme): `<!-- GITHUB_WIKI: <category>/<subcategory>/<filename>`.
+
+If you are adding a new `.md` file that you want to be included in the wiki, you must add a similar comment at the bottom of the file. Use your best judgment as to the category/subcategory where you believe it fits best.
 
 ### Linters
 
