@@ -43,30 +43,26 @@ TODO(#235): Update once runtime configs are implemented
 
 #### Create the module
 
-Module creation uses a typical constructor pattern signature `Create(configPath, genesisPath string) (module.Interface, error)`
+Module creation uses a typical constructor pattern signature `Create(bus modules.Bus) (modules.Module, error)`
 
-Currently, module creation is not embedded or enforced in the interface to prevent the initializer from having to use 
-clunky creation syntax -> `modPackage.new(module).Create(configPath, genesisPath)` rather `modPackage.Create(configPath, genesisPath)`
+Currently, module creation is not embedded or enforced in the interface to prevent the initializer from having to use
+clunky creation syntax -> `modPackage.new(module).Create(bus modules.Bus)` rather `modPackage.Create(bus modules.Bus)`
 
 This is done to optimize for code clarity rather than creation signature enforceability but **may change in the future**.
 
 ```golang
-newModule, err := newModule.Create(configFilePath, genesisFilePath)
+newModule, err := newModule.Create(bus modules.Bus)
 
 if err != nil {
 	// handle error
 }
 ```
 
-#### Set the module `bus`
+#### Interacting with the `bus`
 
 The `bus` is the specific integration mechanism that enables the greater application.
 
-Setting the `bus` allows the module to interact with its sibling modules
-
-```golang
-newModule.SetBus(bus)
-```
+When a module is constructed via the `Create(bus modules.Bus)` call, internally it calls a `bus.RegisterModule(module)` that essentially registers the module with the `bus` so that it can be accessed by its sibling modules.
 
 ##### Start the module
 
