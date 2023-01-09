@@ -34,7 +34,7 @@ func ActorsToAddrBook(abp AddrBookProvider, actors []*coreTypes.Actor) (typesP2P
 }
 
 func ActorToNetworkPeer(abp AddrBookProvider, actor *coreTypes.Actor) (*typesP2P.NetworkPeer, error) {
-	conn, err := abp.GetConnFactory()(abp.GetP2PConfig(), actor.GetGenericParam()) // service url
+	conn, err := abp.GetConnFactory()(abp.GetP2PConfig(), actor.GetGenericParam()) // generic param is service url
 	if err != nil {
 		return nil, fmt.Errorf("error resolving addr: %v", err)
 	}
