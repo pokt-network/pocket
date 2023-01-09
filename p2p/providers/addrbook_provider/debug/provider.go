@@ -44,6 +44,7 @@ func WithActorsByHeight(actorsByHeight map[int64][]*coreTypes.Actor) func(*debug
 
 func (dabp *debugAddrBookProvider) getActorsByHeight(height uint64) []*coreTypes.Actor {
 	if stakedActors, ok := dabp.actorsByHeight[ANY_HEIGHT]; ok {
+		log.Println("[DEBUG] Ignoring height param in debugAddrBookProvider")
 		return stakedActors
 	}
 
