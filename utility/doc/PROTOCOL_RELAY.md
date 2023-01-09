@@ -176,4 +176,4 @@ This algorithm is not yet documented anywhere, so the following links can act as
 * Claim: <https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/claim.go>
 * Proof: <https://github.com/pokt-network/pocket-core/blob/staging/x/pocketcore/keeper/proof.go>
 
-<!-- GITHUB_WIKI: utility/protocol_relay -->
+<!-- GITHUB_WIKI: utility/relay_protocol -->
