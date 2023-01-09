@@ -5,7 +5,6 @@ import (
 	"runtime"
 	"testing"
 	"time"
-	timePkg "time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/pokt-network/pocket/consensus"
@@ -21,6 +20,7 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 	timeReminder(t, clockMock, time.Second)
 
 	// UnitTestNet configs
+	// IMPROVE(#295): Remove time specific suffixes as outlined by go-staticcheck (ST1011)
 	paceMakerTimeoutMsec := uint64(500) // Set a small pacemaker timeout
 	paceMakerTimeout := time.Duration(paceMakerTimeoutMsec) * time.Millisecond
 	consensusMessageTimeoutMsec := time.Duration(paceMakerTimeoutMsec / 5) // Must be smaller than pacemaker timeout because we expect a deterministic number of consensus messages.
@@ -224,7 +224,7 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	}
 }
 
-func forcePacemakerTimeout(t *testing.T, clockMock *clock.Mock, paceMakerTimeout timePkg.Duration) {
+func forcePacemakerTimeout(t *testing.T, clockMock *clock.Mock, paceMakerTimeout time.Duration) {
 	go func() {
 		// Cause the pacemaker to timeout
 		sleep(t, clockMock, paceMakerTimeout)

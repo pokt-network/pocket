@@ -25,32 +25,33 @@ func (m *consensusModule) commitBlock(block *typesCons.Block) error {
 	return nil
 }
 
-// TODO: Add unit tests specific to block validation
-// IMPROVE: (olshansky) rename to provide clarity of operation. ValidateBasic() is typically a stateless check not stateful
-func (m *consensusModule) validateMessageBlock(msg *typesCons.HotstuffMessage) error {
+// ADDTEST: Add unit tests specific to block validation
+// IMPROVE: Rename to provide clarity of operation. ValidateBasic() is typically a stateless check not stateful
+func (m *consensusModule) isValidMessageBlock(msg *typesCons.HotstuffMessage) (bool, error) {
 	block := msg.GetBlock()
 	step := msg.GetStep()
 
 	if block == nil {
 		if step != NewRound {
-			return fmt.Errorf("validateBlockBasic failed - block is nil during step %s", typesCons.StepToString[m.step])
+			return false, fmt.Errorf("validateBlockBasic failed - block is nil during step %s", typesCons.StepToString[m.step])
 		}
-		return nil
+		m.nodeLog("[DEBUG] Nil (expected) block is present during NewRound step.")
+		return true, nil
 	}
 
 	if block != nil && step == NewRound {
-		return fmt.Errorf("validateBlockBasic failed - block is not nil during step %s", typesCons.StepToString[m.step])
+		return false, fmt.Errorf("validateBlockBasic failed - block is not nil during step %s", typesCons.StepToString[m.step])
 	}
 
 	if block != nil && unsafe.Sizeof(*block) > uintptr(m.genesisState.GetMaxBlockBytes()) {
-		return typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.genesisState.GetMaxBlockBytes())
+		return false, typesCons.ErrInvalidBlockSize(uint64(unsafe.Sizeof(*block)), m.genesisState.GetMaxBlockBytes())
 	}
 
 	// If the current block being processed (i.e. voted on) by consensus is non nil, we need to make
 	// sure that the data (height, round, step, txs, etc) is the same before we start validating the signatures
 	if m.block != nil {
 		if m.block.BlockHeader.Hash != block.BlockHeader.Hash {
-			return fmt.Errorf("validateBlockBasic failed - block hash is not the same as the current block being processed by consensus")
+			return false, fmt.Errorf("validateBlockBasic failed - block hash is not the same as the current block being processed by consensus")
 		}
 
 		// DISCUSS: The only difference between blocks from one step to another is the QC, so we need
@@ -60,7 +61,7 @@ func (m *consensusModule) validateMessageBlock(msg *typesCons.HotstuffMessage) e
 		}
 	}
 
-	return nil
+	return true, nil
 }
 
 // Creates a new Utility context and clears/nullifies any previous contexts if they exist

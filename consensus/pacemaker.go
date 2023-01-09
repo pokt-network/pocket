@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	timePkg "time"
+	"time"
 
 	consensusTelemetry "github.com/pokt-network/pocket/consensus/telemetry"
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -14,6 +14,7 @@ import (
 
 const (
 	pacemakerModuleName = "pacemaker"
+	timeoutBuffer       = 30 * time.Millisecond // A buffer around the pacemaker timeout to avoid race condition; 30ms was arbitrarily chosen
 )
 
 type Pacemaker interface {
@@ -182,7 +183,7 @@ func (p *paceMaker) RestartTimer() {
 			if ctx.Err() == context.DeadlineExceeded {
 				p.InterruptRound("timeout")
 			}
-		case <-clock.After(stepTimeout + 30*timePkg.Millisecond): // Adding 30ms to the context timeout to avoid race condition.
+		case <-clock.After(stepTimeout + timeoutBuffer):
 			return
 		}
 	}()
@@ -252,7 +253,7 @@ func (p *paceMaker) startNextView(qc *typesCons.QuorumCertificate, forceNextView
 }
 
 // TODO(olshansky): Increase timeout using exponential backoff.
-func (p *paceMaker) getStepTimeout(round uint64) timePkg.Duration {
-	baseTimeout := timePkg.Duration(int64(timePkg.Millisecond) * int64(p.pacemakerCfg.TimeoutMsec))
+func (p *paceMaker) getStepTimeout(round uint64) time.Duration {
+	baseTimeout := time.Duration(int64(time.Millisecond) * int64(p.pacemakerCfg.TimeoutMsec))
 	return baseTimeout
 }

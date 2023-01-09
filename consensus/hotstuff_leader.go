@@ -246,7 +246,7 @@ func (handler *HotstuffLeaderMessageHandler) HandleDecideMessage(m *consensusMod
 func (handler *HotstuffLeaderMessageHandler) anteHandle(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	// Basic block metadata validation
 
-	if err := m.validateMessageBlock(msg); err != nil {
+	if valid, err := m.isValidMessageBlock(msg); !valid {
 		return err
 	}
 

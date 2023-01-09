@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Consensus - Pacemaker
 
 - Rename `ValidateMessage` to `ShouldHandleMessage` and return a boolean
-- Pass a `reason` to `InterruptRoudn`
+- Pass a `reason` to `InterruptRound`
 - Improve readability of some parts of the code
 
 ## [0.0.0.16] - 2023-01-03

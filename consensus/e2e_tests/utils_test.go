@@ -207,7 +207,7 @@ func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 // 		maximum delay specified in the source code and errors if additional unexpected messages are received.
 // 		For example, if the test expects to receive 5 messages within 2 seconds:
 // 			false: continue if 5 messages are received in 0.5 seconds
-// 			true: true: wait for another 1.5 seconds after 5 messages are received in 0.5 seconds, and fail if any additional messages are received.
+// 			true: wait for another 1.5 seconds after 5 messages are received in 0.5 seconds, and fail if any additional messages are received.
 func WaitForNetworkConsensusEvents(
 	t *testing.T,
 	clock *clock.Mock,
@@ -239,7 +239,7 @@ func waitForEventsInternal(
 	eventsChannel modules.EventsChannel,
 	eventContentType string,
 	numExpectedMsgs int,
-	maxWaitTimeMillis time.Duration,
+	maxWaitTimeMillis time.Duration, // IMPROVE(#295): Remove time specific suffixes as outlined by go-staticcheck (ST1011)
 	msgIncludeFilter func(m *anypb.Any) bool,
 	errMsg string,
 	failOnExtraMessages bool,

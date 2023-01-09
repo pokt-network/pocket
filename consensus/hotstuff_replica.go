@@ -165,7 +165,7 @@ func (handler *HotstuffReplicaMessageHandler) HandleDecideMessage(m *consensusMo
 // anteHandle is the handler called on every replica message before specific handler
 func (handler *HotstuffReplicaMessageHandler) anteHandle(m *consensusModule, msg *typesCons.HotstuffMessage) error {
 	// Basic block metadata validation
-	if err := m.validateMessageBlock(msg); err != nil {
+	if valid, err := m.isValidMessageBlock(msg); !valid {
 		return err
 	}
 
