@@ -1,24 +1,26 @@
 name: Publish docs to Wiki
+description: Based on a simple rule for detecting file changes, the Acton creates variables for a python script to update the Pokt Wiki Repository
 
 on:
   push:
     branches:
-      - main
+      - main # 1. When changes are merged to the main branch
     paths:
-      - '**/*.md'
+      - '**/*.md' # 2. It detects changes to Markdowns files in the repository
 
-env:
-  USER_TOKEN: ${{ secrets.WIKI_SYNC_SECRET }}
-  USER_NAME: profishional
-  USER_EMAIL: profishcrytpo@gmail.com
+env: # 3. Set variables which the Python script uses for git commands
+  USER_TOKEN: ${{ secrets.WIKI_SYNC_SECRET }} # TODO_IN_THIS_COMMIT: provision repo secret through Pocket account
+  USER_NAME: <user_name>
+  USER_EMAIL: <user_email>
   OWNER: ${{ github.event.repository.owner.name }}
   REPOSITORY_NAME: ${{ github.event.repository.name }}
 
 jobs:
   publish_docs_to_wiki:
     runs-on: ubuntu-latest
+    description: Updates the Pocket Wiki Repository files based on the Pocket Repository Markdowns
     steps:
     - uses: actions/checkout@v2
-    - name: Generate wiki
-      run: |
+    - name: Generate and push Wiki
+      run: | # 4. Runs a python script that
         python tools/wiki_sync.py
