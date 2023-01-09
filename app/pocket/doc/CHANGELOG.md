@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.1] - 2023-01-09
+
+- Updated module constructor to accept a `bus` and not a `runtimeMgr` anymore
+
 ## [0.0.0.0] - 2022-11-02
 
 ### Added
