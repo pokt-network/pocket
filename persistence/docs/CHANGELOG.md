@@ -7,11 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.19] - 2023-01-06
-
-- Add `init()` function to build `ParameterNameTypeMap` with paramNames and their return types
-- Deprecate `GetBlocksPerSession` and `GetServiceNodesPerSessionAt` in favour of `GetParameter(paramName string, height int64) (any, error)`
-
 ## [0.0.0.18] - 2023-01-03
 
 - Renamed `InitParams` to `InitGenesisParams`
