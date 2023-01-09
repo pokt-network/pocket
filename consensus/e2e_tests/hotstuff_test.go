@@ -42,6 +42,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 			},
 			nodeState)
 		require.Equal(t, false, nodeState.IsLeader)
+	     require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
 	for _, message := range newRoundMessages {
