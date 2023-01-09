@@ -123,4 +123,4 @@ How the Churn Management operations of RainTree might provide opportunities and 
 
 `SyncState`: The local block state of the node vs the global network block state.
 
-<!-- GITHUB_WIKI: consensus/protocol_state_sync -->
+<!-- GITHUB_WIKI: consensus/state_sync_protocol -->
