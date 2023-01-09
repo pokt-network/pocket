@@ -14,7 +14,8 @@ The official implementation of the [V1 Pocket Network Protocol Specification](ht
 
 ---
 
-Some relevant links are listed below, however for a the full ongoing documentation **please refer to the [wiki repository](https://github.com/pokt-network/pocket/wiki)**.
+Some relevant links are listed below. Refer to the complete ongoing documentation at the **[Pocket GitHub Wiki](https://github.com/pokt-network/pocket/wiki)**.
+
 If you'd like to contribute to the Pocket V1 Protocol, start by:
 
 1. Get up and running by reading the [Development Guide](docs/development/README.md)
