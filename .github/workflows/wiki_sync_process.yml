@@ -17,7 +17,6 @@ env: # 3. Set variables which the Python script uses for git commands
 jobs:
   publish_docs_to_wiki:
     runs-on: ubuntu-latest
-    description: Updates the Pocket Wiki Repository files based on the Pocket Repository Markdowns
     steps:
     - uses: actions/checkout@v2
     - name: Generate and push Wiki
