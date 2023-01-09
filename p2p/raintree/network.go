@@ -150,7 +150,7 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return err
 	}
 
-	// this is because in client mode there's no bus
+	// A bus is not available In client debug mode
 	bus := n.GetBus()
 	if bus == nil {
 		return nil
