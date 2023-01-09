@@ -60,7 +60,7 @@ func CreateStateSync(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
 }
 
 func (*stateSyncModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	//! TODO: think about what must be the default state?
+	//! TODO: think about what must be the default mode
 	return &stateSyncModule{
 		bus:         nil,
 		currentMode: Synched,

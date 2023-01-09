@@ -1,6 +1,7 @@
 package state_sync
 
 import (
+	"encoding/binary"
 	"errors"
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
@@ -8,18 +9,6 @@ import (
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
-
-/*
-type NodeId uint64
-
-type ValAddrToIdMap map[string]NodeId // Mapping from hex encoded address to an integer node id.
-type IdToValAddrMap map[NodeId]string // Mapping from node id to a hex encoded string address.
-
-I need to have this: idToValAddrMap
-
- I believe that PeerId is equivalent to a node's cryptographic address. In #413 code review I should have probably signaled the fact that the naming can be confusing.
-
-*/
 
 func (m *stateSyncModule) sendToPeer(msg *anypb.Any, peerId string) error {
 	//Seoeration between nodeId and peerId must be clear
@@ -44,4 +33,12 @@ func (m *stateSyncModule) sendToPeer(msg *anypb.Any, peerId string) error {
 	}
 
 	return nil
+}
+
+// This is copy paste from Peristantace/state_test.go
+// TODO Check if can be done without copy paste
+func heightToBytes(height int64) []byte {
+	heightBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(heightBytes, uint64(height))
+	return heightBytes
 }
