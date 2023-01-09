@@ -87,4 +87,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - RainTree first iteration in Pre2P module (no cleanup or redundancy)
 
-<!-- GITHUB_WIKI: changelog/p2p_changelog -->
+<!-- GITHUB_WIKI: changelog/p2p -->

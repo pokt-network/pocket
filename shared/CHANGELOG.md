@@ -69,4 +69,4 @@ Configs:
 - Moved make client code to 'debug' to clarify that the event distribution is for the temporary local net
 - Left multiple `TODO` for remaining code in test_artifacts to think on removal of shared testing code
 
-<!-- GITHUB_WIKI: changelog/shared_changelog -->
+<!-- GITHUB_WIKI: changelog/shared -->

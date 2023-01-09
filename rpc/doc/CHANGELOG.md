@@ -36,4 +36,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Codegen: code generation for the Server + DTOs
   - Codegen: code generation for the Client
 
-<!-- GITHUB_WIKI: changelog/rpc_changelog -->
+<!-- GITHUB_WIKI: changelog/rpc -->
