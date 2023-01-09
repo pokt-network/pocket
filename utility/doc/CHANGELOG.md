@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.16] - 2023-01-09
+
+- Deprecated `GetBlocksPerSession()` in favour of the more general parameter getter function `GetParameter()`
+- Update unit test for `GetBlocksPerSession()` to use the `GetParameter()` function
+
 ## [0.0.0.15] - 2023-01-03
 
 - Renamed enum names as per code-review

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.10] - 2023-01-09
+
+- Deprecated `GetBlocksPerSession()` and `GetServiceNodesPerSessionAt()` in favour of the more general parameter getter function `GetParameter()`
+
 ## [0.0.0.9] - 2023-01-09
 
 - Removed `ValidatorMap() ValidatorMap` from `ConsensusModule` interface
