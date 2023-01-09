@@ -50,11 +50,7 @@ func (pabp *persistenceAddrBookProvider) GetStakedAddrBookAtHeight(height uint64
 	if err != nil {
 		return nil, err
 	}
-	addrBook, err := addrbook_provider.ActorsToAddrBook(pabp, stakedActors)
-	if err != nil {
-		return nil, err
-	}
-	return addrBook, nil
+	return addrbook_provider.ActorsToAddrBook(pabp, stakedActors)
 }
 
 func (pabp *persistenceAddrBookProvider) GetConnFactory() typesP2P.ConnectionFactory {
