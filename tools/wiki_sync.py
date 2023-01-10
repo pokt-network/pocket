@@ -31,11 +31,10 @@ def get_all_markdown_file_paths() -> List[Path]:
 def get_file_to_wiki_comment(file_path: Path) -> Path:
     # gets the last line of of the file and parses it for the format
     with open(file_path) as file:
-        wiki_comment = file.readlines()[-1]
-        if WIKI_TAG not in wiki_comment:
+        last_line = file.readlines()[-1]
+        if WIKI_TAG not in last_line:
             return None
-        mapping_format = wiki_comment.split(" ")[2].strip()
-        return Path(mapping_format)
+        return Path(last_line.split(" ")[2].strip())
 
 
 def categorize_paths() -> Dict[str, List[DocumentationFile]]:
@@ -47,14 +46,16 @@ def categorize_paths() -> Dict[str, List[DocumentationFile]]:
     for path in get_all_markdown_file_paths():
         wiki_path_format = get_file_to_wiki_comment(path)
 
-        if wiki_path_format:
-            dirname = os.path.dirname(wiki_path_format)
-            file = os.path.basename(wiki_path_format)
-            categories = dirname.split("/")
-            display_name = " ".join([s.title() for s in file.split("_")])
-            filename = f"{categories[-1].title()} {display_name.title()}"
+        if not wiki_path_format:
+            continue
 
-            sidebar[dirname].append(DocumentationFile(filename, display_name, path))
+        dirname = os.path.dirname(wiki_path_format)
+        file = os.path.basename(wiki_path_format)
+        categories = dirname.split("/")
+        display_name = " ".join([s.title() for s in file.split("_")])
+        filename = f"{categories[-1].title()} {display_name.title()}"
+
+        sidebar[dirname].append(DocumentationFile(filename, display_name, path))
 
     return sidebar
 
@@ -63,23 +64,23 @@ def write_sidebar_file(sidebar: Dict[str, List[DocumentationFile]]) -> None:
     sidebar_format = "'''Contents'''\n"
     sidebar_format += "*'''[[ Home | Home ]]'''\n"
 
-    DEPTH = 1  # helps track the level of nesting in the wiki sidebar
+    depth = 1  # helps track the level of nesting in the wiki sidebar
     for category, doc_files in sidebar.items():
         if category == "home":
             continue
 
         subcategories = category.split("/")
         for subcategory in subcategories:
-            sidebar_format += ("*" * DEPTH) + f"'''{subcategory.title()}'''\n"
-            DEPTH += 1
+            sidebar_format += ("*" * depth) + f"'''{subcategory.title()}'''\n"
+            depth += 1
 
         for doc in doc_files:
             sidebar_format += (
-                "*" * DEPTH
+                "*" * depth
             ) + f"[[ {doc.file_name} | {doc.display_name} ]]\n"
 
         # reset depth for the next category
-        DEPTH = 1
+        depth = 1
 
     with open(f"{WIKI_DIR}/_Sidebar.mediawiki", "w") as f:
         f.write(sidebar_format)
