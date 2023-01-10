@@ -32,14 +32,18 @@ func Test_actorMapper_GetValidatorMap(t *testing.T) {
 	}{
 		{
 			name: "empty validator slice should return empty map",
-			args: args{validators: []*coreTypes.Actor{}},
+			args: args{
+				validators: []*coreTypes.Actor{},
+			},
 			want: map[string]*coreTypes.Actor{},
 		},
 		{
 			name: "one validator should return map with one entry",
-			args: args{validators: []*coreTypes.Actor{
-				makeTestValidatorWithAddress("0x1"),
-			}},
+			args: args{
+				validators: []*coreTypes.Actor{
+					makeTestValidatorWithAddress("0x1"),
+				},
+			},
 			want: map[string]*coreTypes.Actor{
 				"0x1": makeTestValidatorWithAddress("0x1"),
 			},
@@ -47,13 +51,15 @@ func Test_actorMapper_GetValidatorMap(t *testing.T) {
 		{
 			// Note: the order of the validators is irrelevant since we are dealing with maps in this particular test, maps are not sorted in Go anyway
 			name: "multiple validators should return map with all of them",
-			args: args{validators: []*coreTypes.Actor{
-				makeTestValidatorWithAddress("0x3"),
-				makeTestValidatorWithAddress("0x2"),
-				makeTestValidatorWithAddress("0x1"),
-				makeTestValidatorWithAddress("0x4"),
-				makeTestValidatorWithAddress("0x5"),
-			}},
+			args: args{
+				validators: []*coreTypes.Actor{
+					makeTestValidatorWithAddress("0x3"),
+					makeTestValidatorWithAddress("0x2"),
+					makeTestValidatorWithAddress("0x1"),
+					makeTestValidatorWithAddress("0x4"),
+					makeTestValidatorWithAddress("0x5"),
+				},
+			},
 			want: map[string]*coreTypes.Actor{
 				"0x1": makeTestValidatorWithAddress("0x1"),
 				"0x2": makeTestValidatorWithAddress("0x2"),
@@ -90,9 +96,11 @@ func Test_actorMapper_GetValAddrToIdMap(t *testing.T) {
 		},
 		{
 			name: "one validator should return map with one entry",
-			args: args{validators: []*coreTypes.Actor{
-				makeTestValidatorWithAddress("0x1"),
-			}},
+			args: args{
+				validators: []*coreTypes.Actor{
+					makeTestValidatorWithAddress("0x1"),
+				},
+			},
 			want: map[string]NodeId{
 				"0x1": 1,
 			},
@@ -100,13 +108,15 @@ func Test_actorMapper_GetValAddrToIdMap(t *testing.T) {
 		{
 			// Note: this test is important because it tests the sorting of the validators by address that's used for generating tds
 			name: "multiple validators should return map with all of them and with the correct NodeIds",
-			args: args{validators: []*coreTypes.Actor{
-				makeTestValidatorWithAddress("0x5"),
-				makeTestValidatorWithAddress("0x1"),
-				makeTestValidatorWithAddress("0x3"),
-				makeTestValidatorWithAddress("0x2"),
-				makeTestValidatorWithAddress("0x4"),
-			}},
+			args: args{
+				validators: []*coreTypes.Actor{
+					makeTestValidatorWithAddress("0x5"),
+					makeTestValidatorWithAddress("0x1"),
+					makeTestValidatorWithAddress("0x3"),
+					makeTestValidatorWithAddress("0x2"),
+					makeTestValidatorWithAddress("0x4"),
+				},
+			},
 			want: map[string]NodeId{
 				"0x1": 1,
 				"0x2": 2,
@@ -148,7 +158,8 @@ func Test_actorMapper_GetIdToValAddrMap(t *testing.T) {
 			args: args{
 				validators: []*coreTypes.Actor{
 					makeTestValidatorWithAddress("0x1"),
-				}},
+				},
+			},
 			want: map[NodeId]string{
 				1: "0x1",
 			},
@@ -156,13 +167,15 @@ func Test_actorMapper_GetIdToValAddrMap(t *testing.T) {
 		{
 			// Note: this test is important because it tests the sorting of the validators by address that's used for generating NodeIds
 			name: "multiple validators should return map with all of them and with the correct NodeIds",
-			args: args{validators: []*coreTypes.Actor{
-				makeTestValidatorWithAddress("0x5"),
-				makeTestValidatorWithAddress("0x1"),
-				makeTestValidatorWithAddress("0x3"),
-				makeTestValidatorWithAddress("0x2"),
-				makeTestValidatorWithAddress("0x4"),
-			}},
+			args: args{
+				validators: []*coreTypes.Actor{
+					makeTestValidatorWithAddress("0x5"),
+					makeTestValidatorWithAddress("0x1"),
+					makeTestValidatorWithAddress("0x3"),
+					makeTestValidatorWithAddress("0x2"),
+					makeTestValidatorWithAddress("0x4"),
+				},
+			},
 			want: IdToValAddrMap{
 				1: "0x1",
 				2: "0x2",
