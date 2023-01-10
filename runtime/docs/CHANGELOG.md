@@ -7,9 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.0.4] - 2023-01-09
+## [0.0.0.6] - 2023-01-10
 
 - Updated tests to reflect the updated genesis file
+
+## [0.0.0.5] - 2023-01-10
+
+- Updated modules constructor to accept a `bus` and not a `runtimeMgr` anymore
+- Registering modules with the `bus` via `RegisterModule` method
+- Providing Dependency Injection functionality via `bus`
+- Updated tests and mocks accordingly
+
+## [0.0.0.4] - 2023-01-09
+
+- Added 'is_client_only' to `P2PConfig`
 
 ## [0.0.0.3] - 2023-01-03
 

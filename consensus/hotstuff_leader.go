@@ -304,9 +304,19 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 	}
 
 	address := partialSig.GetAddress()
-	validator, ok := m.validatorMap[address]
+
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return err
+	}
+
+	actorMapper := typesCons.NewActorMapper(validators)
+	validatorMap := actorMapper.GetValidatorMap()
+	valAddrToIdMap := actorMapper.GetValAddrToIdMap()
+
+	validator, ok := validatorMap[address]
 	if !ok {
-		return typesCons.ErrMissingValidator(address, m.valAddrToIdMap[address])
+		return typesCons.ErrMissingValidator(address, valAddrToIdMap[address])
 	}
 	pubKey := validator.GetPublicKey()
 	if isSignatureValid(msg, pubKey, partialSig.GetSignature()) {
@@ -314,7 +324,7 @@ func (m *consensusModule) validateMessageSignature(msg *typesCons.HotstuffMessag
 	}
 
 	return typesCons.ErrValidatingPartialSig(
-		address, m.valAddrToIdMap[address], msg, pubKey)
+		address, valAddrToIdMap[address], msg, pubKey)
 }
 
 // TODO(#388): Utilize the shared mempool implementation for consensus messages.

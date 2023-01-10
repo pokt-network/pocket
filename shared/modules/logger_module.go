@@ -5,6 +5,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const LoggerModuleName = "logger"
+
 type Logger = zerolog.Logger
 
 type LoggerModule interface {

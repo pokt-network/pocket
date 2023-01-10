@@ -7,6 +7,7 @@ import (
 
 	typesCons "github.com/pokt-network/pocket/consensus/types"
 	"github.com/pokt-network/pocket/shared/codec"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"google.golang.org/protobuf/proto"
 )
@@ -56,7 +57,12 @@ func (m *consensusModule) getQuorumCertificate(height uint64, step typesCons.Hot
 		pss = append(pss, msg.GetPartialSignature())
 	}
 
-	if err := m.isOptimisticThresholdMet(len(pss)); err != nil {
+	validators, err := m.getValidatorsAtHeight(height)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := m.isOptimisticThresholdMet(len(pss), validators); err != nil {
 		return nil, err
 	}
 
@@ -109,13 +115,17 @@ func isSignatureValid(msg *typesCons.HotstuffMessage, pubKeyString string, signa
 }
 
 func (m *consensusModule) didReceiveEnoughMessageForStep(step typesCons.HotstuffStep) error {
-	return m.isOptimisticThresholdMet(len(m.messagePool[step]))
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return err
+	}
+	return m.isOptimisticThresholdMet(len(m.messagePool[step]), validators)
 }
 
-func (m *consensusModule) isOptimisticThresholdMet(n int) error {
-	numValidators := len(m.validatorMap)
-	if !(float64(n) > ByzantineThreshold*float64(numValidators)) {
-		return typesCons.ErrByzantineThresholdCheck(n, ByzantineThreshold*float64(numValidators))
+func (m *consensusModule) isOptimisticThresholdMet(numSignatures int, validators []*coreTypes.Actor) error {
+	numValidators := len(validators)
+	if !(float64(numSignatures) > ByzantineThreshold*float64(numValidators)) {
+		return typesCons.ErrByzantineThresholdCheck(numSignatures, ByzantineThreshold*float64(numValidators))
 	}
 	return nil
 }
@@ -152,7 +162,14 @@ func (m *consensusModule) sendToLeader(msg *typesCons.HotstuffMessage) {
 		return
 	}
 
-	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(m.idToValAddrMap[*m.leaderId]), anyConsensusMessage); err != nil {
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		m.nodeLogError(typesCons.ErrPersistenceGetAllValidators.Error(), err)
+	}
+
+	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
+
+	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(idToValAddrMap[*m.leaderId]), anyConsensusMessage); err != nil {
 		m.nodeLogError(typesCons.ErrSendMessage.Error(), err)
 		return
 	}
@@ -169,11 +186,16 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 		return
 	}
 
-	for _, val := range m.validatorMap {
-		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
-			m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
-		}
+	if err := m.GetBus().GetP2PModule().Broadcast(anyConsensusMessage); err != nil {
+		m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
+		return
 	}
+
+	// for _, val := range m.validatorMap {
+	// 	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
+	// 		m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
+	// 	}
+	// }
 }
 
 /*** Persistence Helpers ***/
@@ -213,12 +235,19 @@ func (m *consensusModule) electNextLeader(message *typesCons.HotstuffMessage) er
 	}
 	m.leaderId = &leaderId
 
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		return err
+	}
+
+	idToValAddrMap := typesCons.NewActorMapper(validators).GetIdToValAddrMap()
+
 	if m.isLeader() {
 		m.setLogPrefix("LEADER")
-		m.nodeLog(typesCons.ElectedSelfAsNewLeader(m.idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
+		m.nodeLog(typesCons.ElectedSelfAsNewLeader(idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
 	} else {
 		m.setLogPrefix("REPLICA")
-		m.nodeLog(typesCons.ElectedNewLeader(m.idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
+		m.nodeLog(typesCons.ElectedNewLeader(idToValAddrMap[*m.leaderId], *m.leaderId, m.height, m.round))
 	}
 
 	return nil
@@ -238,4 +267,14 @@ func (m *consensusModule) nodeLogError(s string, err error) {
 
 func (m *consensusModule) setLogPrefix(logPrefix string) {
 	m.logPrefix = logPrefix
+}
+
+func (m *consensusModule) getValidatorsAtHeight(height uint64) ([]*coreTypes.Actor, error) {
+	persistenceReadContext, err := m.GetBus().GetPersistenceModule().NewReadContext(int64(height))
+	if err != nil {
+		return nil, err
+	}
+	defer persistenceReadContext.Close()
+
+	return persistenceReadContext.GetAllValidators(int64(height))
 }

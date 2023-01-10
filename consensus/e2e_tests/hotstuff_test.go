@@ -17,10 +17,13 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
 
+	// Test configs
+	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	buses := GenerateBuses(t, runtimeMgrs)
+
 	// Create & start test pocket nodes
 	eventsChannel := make(modules.EventsChannel, 100)
-	runtimeMgrs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
-	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, eventsChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Debug message to start consensus by triggering first view change
@@ -42,7 +45,7 @@ func TestHotstuff4Nodes1BlockHappyPath(t *testing.T) {
 			},
 			nodeState)
 		require.Equal(t, false, nodeState.IsLeader)
-	     require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
+		require.Equal(t, typesCons.NodeId(0), nodeState.LeaderId)
 	}
 
 	for _, message := range newRoundMessages {

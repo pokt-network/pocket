@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pokt-network/pocket/p2p/addrbook_provider"
+	"github.com/pokt-network/pocket/p2p/providers"
+	"github.com/pokt-network/pocket/p2p/providers/addrbook_provider"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
-	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/codec"
 	cryptoPocket "github.com/pokt-network/pocket/shared/crypto"
 	"github.com/pokt-network/pocket/shared/messaging"
@@ -25,7 +25,7 @@ type rainTreeNetwork struct {
 	bus modules.Bus
 
 	selfAddr         cryptoPocket.Address
-	addrBookProvider typesP2P.AddrBookProvider
+	addrBookProvider addrbook_provider.AddrBookProvider
 
 	peersManager *peersManager
 
@@ -34,29 +34,11 @@ type rainTreeNetwork struct {
 	nonceSet         map[uint64]struct{}
 	nonceList        []uint64
 	mempoolMaxNonces uint64
-	mempoolLock      sync.Mutex
+	nonceSetMutex    sync.Mutex
 }
 
-func NewRainTreeNetworkWithAddrBook(addr cryptoPocket.Address, addrBook typesP2P.AddrBook, p2pCfg configs.P2PConfig) typesP2P.Network {
-	pm, err := newPeersManager(addr, addrBook, true)
-	if err != nil {
-		log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManager: %v", err)
-	}
-
-	mempoolMaxNonces := p2pCfg.MaxMempoolCount
-	n := &rainTreeNetwork{
-		selfAddr:         addr,
-		peersManager:     pm,
-		nonceSet:         make(map[uint64]struct{}),
-		nonceList:        make([]uint64, 0, mempoolMaxNonces),
-		mempoolMaxNonces: mempoolMaxNonces,
-	}
-
-	return typesP2P.Network(n)
-}
-
-func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg *configs.P2PConfig, addrBookProvider typesP2P.AddrBookProvider) typesP2P.Network {
-	addrBook, err := addrbook_provider.GetAddrBook(bus, addrBookProvider)
+func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, addrBookProvider providers.AddrBookProvider, currentHeightProvider providers.CurrentHeightProvider) typesP2P.Network {
+	addrBook, err := addrBookProvider.GetStakedAddrBookAtHeight(currentHeightProvider.CurrentHeight())
 	if err != nil {
 		log.Fatalf("[ERROR] Error getting addrBook: %v", err)
 	}
@@ -65,6 +47,8 @@ func NewRainTreeNetwork(addr cryptoPocket.Address, bus modules.Bus, p2pCfg *conf
 	if err != nil {
 		log.Fatalf("[ERROR] Error initializing rainTreeNetwork peersManager: %v", err)
 	}
+
+	p2pCfg := bus.GetRuntimeMgr().GetConfig().P2P
 
 	n := &rainTreeNetwork{
 		selfAddr:         addr,
@@ -151,7 +135,13 @@ func (n *rainTreeNetwork) networkSendInternal(data []byte, address cryptoPocket.
 		return err
 	}
 
-	n.GetBus().
+	// A bus is not available In client debug mode
+	bus := n.GetBus()
+	if bus == nil {
+		return nil
+	}
+
+	bus.
 		GetTelemetryModule().
 		GetEventMetricsAgent().
 		EmitEvent(
@@ -194,10 +184,17 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 		}
 	}
 
+	// TODO(#388): The lock is necessary because `HandleNetworkData` can be called concurrently
+	// which has led to `fatal error: concurrent map writes` errors. Once a proper, shared, mempool
+	// implementation is available, this should no longer be necessary.
+	n.nonceSetMutex.Lock()
+	defer n.nonceSetMutex.Unlock()
+
 	// Avoids this node from processing a messages / transactions is has already processed at the
 	// application layer. The logic above makes sure it is only propagated and returns.
 	// DISCUSS(#278): Add more tests to verify this is sufficient for deduping purposes.
 	if _, contains := n.nonceSet[rainTreeMsg.Nonce]; contains {
+		log.Printf("RainTree message with nonce %d already processed, skipping\n", rainTreeMsg.Nonce)
 		n.GetBus().
 			GetTelemetryModule().
 			GetEventMetricsAgent().
@@ -210,12 +207,6 @@ func (n *rainTreeNetwork) HandleNetworkData(data []byte) ([]byte, error) {
 
 		return nil, nil
 	}
-
-	// TODO(#388): The lock is necessary because `HandleNetworkData` can be called concurrently
-	// which has led to `fatal error: concurrent map writes` errors. Once a proper, shared, mempool
-	// implementation is available, this should no longer be necessary.
-	n.mempoolLock.Lock()
-	defer n.mempoolLock.Unlock()
 
 	n.nonceSet[rainTreeMsg.Nonce] = struct{}{}
 	n.nonceList = append(n.nonceList, rainTreeMsg.Nonce)
@@ -252,11 +243,6 @@ func (n *rainTreeNetwork) SetBus(bus modules.Bus) {
 }
 
 func (n *rainTreeNetwork) GetBus() modules.Bus {
-	// TODO: Do we need this if?
-	// if n.bus == nil {
-	// 	log.Printf("[WARN] PocketBus is not initialized in rainTreeNetwork")
-	// 	return nil
-	// }
 	return n.bus
 }
 

@@ -54,30 +54,28 @@ type paceMaker struct {
 	paceMakerDebug
 }
 
-func CreatePacemaker(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+func CreatePacemaker(bus modules.Bus) (modules.Module, error) {
 	var m paceMaker
-	return m.Create(runtimeMgr)
+	return m.Create(bus)
 }
 
-func (m *paceMaker) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+func (*paceMaker) Create(bus modules.Bus) (modules.Module, error) {
+	m := &paceMaker{}
+	bus.RegisterModule(m)
+
+	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
 
 	pacemakerCfg := cfg.Consensus.PacemakerConfig
 
-	return &paceMaker{
-		bus:          nil,
-		consensusMod: nil,
+	m.pacemakerCfg = pacemakerCfg
+	m.paceMakerDebug = paceMakerDebug{
+		manualMode:                pacemakerCfg.GetManual(),
+		debugTimeBetweenStepsMsec: pacemakerCfg.GetDebugTimeBetweenStepsMsec(),
+		quorumCertificate:         nil,
+	}
 
-		pacemakerCfg: pacemakerCfg,
-
-		stepCancelFunc: nil, // Only set on restarts
-
-		paceMakerDebug: paceMakerDebug{
-			manualMode:                pacemakerCfg.Manual,
-			debugTimeBetweenStepsMsec: pacemakerCfg.DebugTimeBetweenStepsMsec,
-			quorumCertificate:         nil,
-		},
-	}, nil
+	return m, nil
 }
 
 func (p *paceMaker) Start() error {
@@ -89,7 +87,7 @@ func (p *paceMaker) Stop() error {
 }
 
 func (p *paceMaker) GetModuleName() string {
-	return pacemakerModuleName
+	return modules.PacemakerModuleName
 }
 
 func (m *paceMaker) SetBus(pocketBus modules.Bus) {

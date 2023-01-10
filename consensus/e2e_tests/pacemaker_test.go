@@ -29,10 +29,11 @@ func TestPacemakerTimeoutIncreasesRound(t *testing.T) {
 		consCfg := runtimeConfig.GetConfig().Consensus.PacemakerConfig
 		consCfg.TimeoutMsec = paceMakerTimeoutMsec
 	}
+	buses := GenerateBuses(t, runtimeMgrs)
 
 	// Create & start test pocket nodes
 	eventsChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, eventsChannel)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Debug message to start consensus by triggering next view
@@ -130,6 +131,14 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	clockMock := clock.NewMock()
 	timeReminder(t, clockMock, time.Second)
 
+	runtimeConfigs := GenerateNodeRuntimeMgrs(t, numValidators, clockMock)
+	buses := GenerateBuses(t, runtimeConfigs)
+
+	// Create & start test pocket nodes
+	eventsChannel := make(modules.EventsChannel, 100)
+	pocketNodes := CreateTestConsensusPocketNodes(t, buses, eventsChannel)
+	StartAllTestPocketNodes(t, pocketNodes)
+
 	// Starting point
 	testHeight := uint64(3)
 	testStep := consensus.NewRound
@@ -143,8 +152,6 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	}
 
 	// Create & start test pocket nodes
-	eventsChannel := make(modules.EventsChannel, 100)
-	pocketNodes := CreateTestConsensusPocketNodes(t, runtimeMgrs, eventsChannel)
 	StartAllTestPocketNodes(t, pocketNodes)
 
 	// Prepare leader info
@@ -214,9 +221,9 @@ func TestPacemakerCatchupSameStepDifferentRounds(t *testing.T) {
 	for nodeId, pocketNode := range pocketNodes {
 		nodeState := GetConsensusNodeState(pocketNode)
 		if nodeId == leaderId {
-			require.Equal(t, uint8(consensus.Prepare), nodeState.Step)
+			require.Equal(t, consensus.Prepare.String(), typesCons.HotstuffStep(nodeState.Step).String())
 		} else {
-			require.Equal(t, uint8(consensus.PreCommit), nodeState.Step)
+			require.Equal(t, consensus.PreCommit.String(), typesCons.HotstuffStep(nodeState.Step).String())
 		}
 		require.Equal(t, uint64(3), nodeState.Height)
 		require.Equal(t, uint8(6), nodeState.Round)
