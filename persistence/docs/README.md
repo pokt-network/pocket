@@ -119,7 +119,7 @@ _Note: There are many TODO's in the testing environment including thread safety.
 Unit tests can be executed with:
 
 ```bash
-make test_persistence
+$ make test_persistence
 ```
 
 ### Dependencies
@@ -179,13 +179,13 @@ Short-term (i.e. simpler starter) tasks:
 - [ ] CLEANUP(<https://github.com/pokt-network/pocket/issues/76>): Review all the `gov_*.go` related files and simplify the code
 - [ ] REFACTOR/DISCUSS: Should we prefix the functions in the `PersistenceModule` with the Param / Actor it's impacting to make autocomplete in implementation better?
 - [ ] DISCUSS: Consider removing all `Set` methods (e.g. `SetAccountAmount`) and replace with `Add` (e.g. `AddAccountAmount`) by having it leverage a "default zero".
-- [ ] REFACTOR(<https://github.com/pokt-network/pocket/issues/102>): Split `account` and `pool` into a shared actor (e.g. like fisherman/validator/serviceNode/application) and simplify the code in half
+- [ ] REFACTOR(https://github.com/pokt-network/pocket/issues/102): Split `account` and `pool` into a shared actor (e.g. like fisherman/validator/serviceNode/application) and simplify the code in half
 - [ ] CLEANUP: Remove `tokens` or `stakedTokens` in favor of using `amount` everywhere since the denomination is not clear. As a follow up. Consider a massive rename to make the denomination explicit.
 
 Mid-term (i.e. new feature or major refactor) tasks:
 
 - [ ] IMPROVE: Consider using prepare statements and/or a proper query builder
-- [ ] TODO(<https://github.com/pokt-network/pocket/issues/77>): Implement proper DB SQL migrations
+- [ ] TODO(https://github.com/pokt-network/pocket/issues/77): Implement proper DB SQL migrations
 - [ ] INVESTIGATE: Benchmark the queries (especially the ones that need to do sorting)
 - [ ] DISCUSS: Look into `address` is being computed (string <-> hex) and determine if we could/should avoid it
 -

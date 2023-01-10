@@ -224,7 +224,7 @@ Deprecate PrePersistence
 
 ## [0.0.0.1] - 2022-07-05
 
-Pocket Persistence 1st Iteration (<https://github.com/pokt-network/pocket/pull/73>)
+Pocket Persistence 1st Iteration (https://github.com/pokt-network/pocket/pull/73)
 
 # Added
 

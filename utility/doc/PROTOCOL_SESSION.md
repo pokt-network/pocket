@@ -1,7 +1,6 @@
 ## Protocols
 
 ### Session Protocol
-
 `Pocket` implements the V1 Utility Specification's Session Protocol by satisfying the following interface:
 
 ```golang
@@ -26,7 +25,7 @@ type Session interface {
     - staked within geo-zone
     - staked for relay-chain
 4) Pseudo-insert the session `key` string into the list and find the first actor directly below on the list
-5) Determine a new seedKey with the following formula: `key = Hash( key + actor1PublicKey )` where `actor1PublicKey` is the key determined in step 4
+5) Determine a new seedKey with the following formula: ` key = Hash( key + actor1PublicKey )` where `actor1PublicKey` is the key determined in step 4
 6) Repeat steps 4 and 5 until all N serviceNodes are found
 7) Do steps 3 - 6 for Fishermen as well
 

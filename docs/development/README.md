@@ -63,12 +63,11 @@ Software:
 Generate local files
 
 ```bash
-git clone git@github.com:pokt-network/pocket.git && cd pocket
-make develop_start
+$ git clone git@github.com:pokt-network/pocket.git && cd pocket
+$ make develop_start
 ```
 
 Optionally activate changelog pre-commit hook
-
 ```bash
 cp .githooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
@@ -86,7 +85,7 @@ In order to build the CLI:
 1. Generate local files
 
 ```bash
-make develop_start
+$ make develop_start
 ```
 
 2. Build the CLI binary
@@ -130,25 +129,25 @@ Note that there are a few tests in the library that are prone to race conditions
 1. Delete any previous docker state
 
 ```bash
-make docker_wipe
+$ make docker_wipe
 ```
 
 2. In one shell, run the 4 nodes setup:
 
 ```bash
-make compose_and_watch
+$ make compose_and_watch
 ```
 
 4. In another shell, run the development client:
 
 ```bash
-make client_start && make client_connect
+$ make client_start && make client_connect
 ```
 
 4. Check the state of each node:
 
 ```bash
-✔ PrintNodeState
+$ ✔ PrintNodeState
 ```
 
 5. Trigger the next view to ensure everything is working:

@@ -63,7 +63,7 @@ gantt
 
 ### [M3. Pocket RoS (Relay or Slash)](https://github.com/pokt-network/pocket/milestone/15)
 
-#### Goals
+#### Goals:
 
 - Pocket Network utility-specific business logic including:
   - Devnet supporting ETH relays
@@ -71,7 +71,7 @@ gantt
 
 ### M4. [Pocket CoS (Cloud of Services)](https://github.com/pokt-network/pocket/milestone/20)
 
-#### Goals
+#### Goals:
 
 *Note: more details will be added to this milestone in the future*
 
@@ -81,7 +81,7 @@ gantt
 
 ### [M5. Pocket IoS (Innovate or Skip)](https://github.com/pokt-network/pocket/milestone/16)
 
-#### Goals
+#### Goals:
 
 *Note: more details will be added to this milestone in the future*
 
@@ -91,7 +91,7 @@ gantt
 
 ### [M6. Pocket FoS (Finish or Serve)](https://github.com/pokt-network/pocket/milestone/18)
 
-#### Goals
+#### Goals:
 
 *Note: more details will be added to this milestone in the future*
 

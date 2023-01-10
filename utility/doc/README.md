@@ -155,7 +155,6 @@ CheckTransaction(tx []byte) error
 GetProposalTransactions(proposer []byte, maxTransactionBytes int, lastBlockByzantineValidators [][]byte) (transactions [][]byte, err error)
 ApplyBlock(Height int64, proposer []byte, transactions [][]byte, lastBlockByzantineValidators [][]byte) (appHash []byte, err error)
 ```
-
 ## How to build
 
 Utility Module does not come with its own cmd executables.
@@ -178,7 +177,7 @@ and use `utilityMod` as desired.
 ## How to test
 
 ```
-make test_utility_types && make test_utility_module
+$ make test_utility_types && make test_utility_module
 ```
 
 ## Code Organization

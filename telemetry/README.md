@@ -152,13 +152,13 @@ If you haven't already, make sure you install all necessary pre-requisites in th
 Make sure you've installed the docker Loki dependencies:
 
 ```bash
-make docker_loki_install
+$ make docker_loki_install
 ```
 
 1. Spin up the stack
 
 ```bash
-make compose_and_watch
+$ make compose_and_watch
 ```
 
 2. Wait a few seconds and **Voila!**
