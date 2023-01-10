@@ -10,6 +10,7 @@
 - [Shell #4: Inspect the data in the database for node3](#shell-4-inspect-the-data-in-the-database-for-node3)
 - [Shell #5: Trigger a send transaction from the CLI](#shell-5-trigger-a-send-transaction-from-the-cli)
   - [Available Commands](#available-commands)
+    - [Accounts setup](#accounts-setup)
   - [First Transaction](#first-transaction)
   - [Second Transaction](#second-transaction)
 - [\[Optional\] Shell #6: See Swagger UI](#optional-shell-6-see-swagger-ui)
@@ -96,12 +97,32 @@ Show all the commands available in the CLI:
 go run app/client/*.go
 ```
 
+#### Accounts setup
+
+Since our Keybase is under development, we have to manually inject the private keys of the accounts we want to use in the CLI.
+
+For the following steps, you'll need to use the accounts of the first two validators in the hard-coded development genesis file. Therefore you have some options:
+
+1) You can just:
+   ```bash
+   echo '"6fd0bc54cc2dd205eaf226eebdb0451629b321f11d279013ce6fdd5a33059256b2eda2232ffb2750bf761141f70f75a03a025f65b2b2b417c7f8b3c9ca91e8e4"' > /tmp/val1.json
+   echo '"5db3e9d97d04d6d70359de924bb02039c602080d6bf01a692bad31ad5ef93524c16043323c83ffd901a8bf7d73543814b8655aa4695f7bfb49d01926fc161cdb"' > /tmp/val2.json
+   ```
+
+2) You can use `jq` and run these commands:
+    ```bash
+    cat ./build/config/config1.json | jq '.private_key' > /tmp/val1.json
+    cat ./build/config/config2.json | jq '.private_key' > /tmp/val2.json
+    ```
+
+3) You can manually copy-paste the private keys from the config files into the `/tmp/val1.json` and `/tmp/val2.json` files. Remember to keep the double quotes around the private keys ("private_key" field in the JSON).
+
 ### First Transaction
 
 Trigger a send transaction from validator 1 to validator 2.
 
 ```bash
-go run app/client/*.go --path_to_private_key_file=/Users/olshansky/workspace/pocket/pocket/build/pkeys/val1.json Account Send 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 67eb3f0a50ae459fecf666be0e93176e92441317 1000
+go run app/client/*.go --path_to_private_key_file=/tmp/val1.json Account Send 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 67eb3f0a50ae459fecf666be0e93176e92441317 1000
 ```
 
 1. Use shell #2 to `TriggerNextView` and confirm height increased via `PrintNodeState`
@@ -120,7 +141,7 @@ go run app/client/*.go --path_to_private_key_file=/Users/olshansky/workspace/poc
 Trigger a send transaction from validator 2 to validator 1.
 
 ```bash
-go run app/client/*.go --path_to_private_key_file=/Users/olshansky/workspace/pocket/pocket/build/pkeys/val2.json Account Send 67eb3f0a50ae459fecf666be0e93176e92441317 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 1000
+go run app/client/*.go --path_to_private_key_file=/tmp/val2.json Account Send 67eb3f0a50ae459fecf666be0e93176e92441317 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a 1000
 ```
 
 1. Use shell #2 to `TriggerNextView` (one or more times) and confirm height increased via `PrintNodeState`

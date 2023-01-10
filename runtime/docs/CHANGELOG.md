@@ -7,11 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.1] - 2022-12-14
+## [0.0.0.4] - 2023-01-09
+
+- Added 'is_client_only' to `P2PConfig`
+
+## [0.0.0.3] - 2023-01-03
+
+- Split testing/development configs into separate files
+- Centralized `NewDefaultConfig` logic with options used by the config generator
+- Refactored Params handling, not hardcoded anymore but sourced from genesis
+
+## [0.0.0.2] - 2022-12-21
+
+- Centralized config handling into a `config` package
+- Config protos from the various modules are now in the `config` package
+- Removed the `BaseConfig` struct
+- Removed overlapping parts in `PersistenceGenesisState` and `ConsensusGenesisState` and consolidated under a single `GenesisState` struct
+- Updated tests to use the new config and genesis handling
+- Introduced a singleton `keyGenerator` capable of generating keys randomly or deterministically (#414)
+
+## [0.0.0.1] - 2022-12-14
 
 - Added `DefaultP2PMaxMempoolCount`
 
-## [0.0.0] - 2022-09-30
+## [0.0.0.0] - 2022-09-30
 
 ### [#235](https://github.com/pokt-network/pocket/pull/235) Config and genesis handling
 

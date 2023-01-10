@@ -8,6 +8,7 @@ import (
 	"github.com/pokt-network/pocket/persistence/types"
 
 	"github.com/pokt-network/pocket/persistence"
+	coreTypes "github.com/pokt-network/pocket/shared/core/types"
 	"github.com/pokt-network/pocket/shared/crypto"
 	"github.com/stretchr/testify/require"
 )
@@ -27,7 +28,7 @@ func TestGetSetFishermanStakeAmount(t *testing.T) {
 }
 
 func TestGetFishermanUpdatedAtHeight(t *testing.T) {
-	getFishermanUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*types.Actor, error) {
+	getFishermanUpdatedFunc := func(db *persistence.PostgresContext, height int64) ([]*coreTypes.Actor, error) {
 		return db.GetActorsUpdated(types.FishermanActor, height)
 	}
 	getAllActorsUpdatedAtHeightTest(t, createAndInsertDefaultTestFisherman, getFishermanUpdatedFunc, 1)
@@ -219,7 +220,7 @@ func TestGetFishermanOutputAddress(t *testing.T) {
 	require.Equal(t, hex.EncodeToString(output), fisherman.Output, "unexpected output address")
 }
 
-func newTestFisherman() (*types.Actor, error) {
+func newTestFisherman() (*coreTypes.Actor, error) {
 	operatorKey, err := crypto.GeneratePublicKey()
 	if err != nil {
 		return nil, err
@@ -230,7 +231,7 @@ func newTestFisherman() (*types.Actor, error) {
 		return nil, err
 	}
 
-	return &types.Actor{
+	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorKey.Address()),
 		PublicKey:       hex.EncodeToString(operatorKey.Bytes()),
 		Chains:          DefaultChains,
@@ -242,7 +243,7 @@ func newTestFisherman() (*types.Actor, error) {
 	}, nil
 }
 
-func createAndInsertDefaultTestFisherman(db *persistence.PostgresContext) (*types.Actor, error) {
+func createAndInsertDefaultTestFisherman(db *persistence.PostgresContext) (*coreTypes.Actor, error) {
 	fisherman, err := newTestFisherman()
 	if err != nil {
 		return nil, err
@@ -272,7 +273,7 @@ func createAndInsertDefaultTestFisherman(db *persistence.PostgresContext) (*type
 		DefaultUnstakingHeight)
 }
 
-func getTestFisherman(db *persistence.PostgresContext, address []byte) (*types.Actor, error) {
+func getTestFisherman(db *persistence.PostgresContext, address []byte) (*coreTypes.Actor, error) {
 	operator, publicKey, stakedTokens, serviceURL, outputAddress, pauseHeight, unstakingHeight, chains, err := db.GetFisherman(address, db.Height)
 	if err != nil {
 		return nil, err
@@ -293,7 +294,7 @@ func getTestFisherman(db *persistence.PostgresContext, address []byte) (*types.A
 		return nil, err
 	}
 
-	return &types.Actor{
+	return &coreTypes.Actor{
 		Address:         hex.EncodeToString(operatorAddr),
 		PublicKey:       hex.EncodeToString(operatorPubKey),
 		Chains:          chains,

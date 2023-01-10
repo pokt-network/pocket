@@ -3,8 +3,7 @@ package test_artifacts
 import (
 	"math/big"
 
-	typesPers "github.com/pokt-network/pocket/persistence/types"
-	"github.com/pokt-network/pocket/shared/modules"
+	"github.com/pokt-network/pocket/runtime/genesis"
 	"github.com/pokt-network/pocket/utility/types"
 
 	"github.com/pokt-network/pocket/shared/crypto"
@@ -16,8 +15,8 @@ var (
 	DefaultParamsOwner, _ = crypto.NewPrivateKey("ff538589deb7f28bbce1ba68b37d2efc0eaa03204b36513cf88422a875559e38d6cbe0430ddd85a5e48e0c99ef3dea47bf0d1a83c6e6ad1640f72201dc8a0120")
 )
 
-func DefaultParams() modules.Params {
-	return &typesPers.Params{
+func DefaultParams() *genesis.Params {
+	return &genesis.Params{
 		BlocksPerSession:                         4,
 		AppMinimumStake:                          types.BigIntToString(big.NewInt(15000000000)),
 		AppMaxChains:                             15,

@@ -1,10 +1,10 @@
 package telemetry
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/pokt-network/pocket/runtime/configs"
 	"github.com/pokt-network/pocket/shared/modules"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -12,18 +12,17 @@ import (
 )
 
 var (
-	_ modules.Module             = &PrometheusTelemetryModule{}
-	_ modules.ConfigurableModule = &PrometheusTelemetryModule{}
-	_ modules.TelemetryModule    = &PrometheusTelemetryModule{}
-	_ modules.EventMetricsAgent  = &PrometheusTelemetryModule{}
-	_ modules.TimeSeriesAgent    = &PrometheusTelemetryModule{}
+	_ modules.Module            = &PrometheusTelemetryModule{}
+	_ modules.TelemetryModule   = &PrometheusTelemetryModule{}
+	_ modules.EventMetricsAgent = &PrometheusTelemetryModule{}
+	_ modules.TimeSeriesAgent   = &PrometheusTelemetryModule{}
 )
 
 // DISCUSS(team): Should the warning logs in this module be handled differently?
 
 type PrometheusTelemetryModule struct {
 	bus    modules.Bus
-	config modules.TelemetryConfig
+	config *configs.TelemetryConfig
 
 	counters     map[string]prometheus.Counter
 	gauges       map[string]prometheus.Gauge
@@ -40,11 +39,7 @@ func CreatePrometheusTelemetryModule(runtime modules.RuntimeMgr) (modules.Module
 }
 
 func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	cfg := runtime.GetConfig()
-	if err := m.ValidateConfig(cfg); err != nil {
-		return nil, fmt.Errorf("config validation failed: %w", err)
-	}
-	telemetryCfg := cfg.GetTelemetryConfig()
+	telemetryCfg := runtime.GetConfig().Telemetry
 
 	return &PrometheusTelemetryModule{
 		config:       telemetryCfg,
@@ -55,10 +50,10 @@ func (m *PrometheusTelemetryModule) Create(runtime modules.RuntimeMgr) (modules.
 }
 
 func (m *PrometheusTelemetryModule) Start() error {
-	log.Printf("\nPrometheus metrics exporter: Starting at %s%s...\n", m.config.GetAddress(), m.config.GetEndpoint())
+	log.Printf("\nPrometheus metrics exporter: Starting at %s%s...\n", m.config.Address, m.config.Endpoint)
 
-	http.Handle(m.config.GetEndpoint(), promhttp.Handler())
-	go http.ListenAndServe(m.config.GetAddress(), nil)
+	http.Handle(m.config.Endpoint, promhttp.Handler())
+	go http.ListenAndServe(m.config.Address, nil)
 
 	log.Println("Prometheus metrics exporter started: OK")
 
@@ -82,11 +77,6 @@ func (m *PrometheusTelemetryModule) GetBus() modules.Bus {
 		log.Fatalf("PocketBus is not initialized")
 	}
 	return m.bus
-}
-
-func (*PrometheusTelemetryModule) ValidateConfig(cfg modules.Config) error {
-	// TODO (#334): implement this
-	return nil
 }
 
 // EventMetricsAgent interface implementation

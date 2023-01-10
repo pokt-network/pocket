@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package configs;
+
+option go_package = "github.com/pokt-network/pocket/runtime/configs";
+
+message UtilityConfig {
+  uint64 max_mempool_transaction_bytes = 1;
+  uint32 max_mempool_transactions = 2;
+}

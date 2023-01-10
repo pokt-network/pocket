@@ -154,5 +154,3 @@ Pocket Persistence 1st Iteration (<https://github.com/pokt-network/pocket/pull/7
 - Update to the Persistence module interface to enable historical height queries
 - Library / infrastructure for persistence unit fuzz testing
 - Tests triggered via `make test_persistence`
-
-<!-- GITHUB_WIKI: changelog/persistence_1 -->

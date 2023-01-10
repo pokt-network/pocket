@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package utility;
+
+option go_package = "github.com/pokt-network/pocket/utility/types";
+
+// DISCUSS: *Design Decision* deprecating StakeStatus
+// REFACTOR(#258): Rename the protobuf types to follow best practices
+enum StakeStatus {
+  UnknownStatus = 0;
+  Unstaking = 1;
+  Staked = 2;
+}
