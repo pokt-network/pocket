@@ -222,7 +222,7 @@ Pocket
 │   └── modules                       # Shared modules definitions (interfaces)
 ├── telemetry                         # Implementation of the Telemetry module
 ├── utility                           # Implementation of the Utility module
-└── Makefile                          # [to-be-deleted] The source of targets used to develop, build and test
+└── Makefile                          # The source of targets used to develop, build and test
 ```
 
 ### Linters
