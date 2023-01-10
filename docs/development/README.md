@@ -223,7 +223,13 @@ The Action is triggered when there is a change to any Markdown file on the main 
 
 ### [Python Script](/tools/wiki_sync.py)
 
-The script finds the relevant Markdown files in the repository and organizes them for the Wiki Repository. Currently, the find command is filtered to exclude the `./app` and `./vendor` directories. Based on the list of `.md` file paths, it maps the formatting spec from [above](##Maintaining-Documentation) to some information about the file. Using the map, it creates a Sidebar file which Github uses as a Table of Contents for the wiki, and also copies over the files with titles linking to the Sidebar from the Pocket repo.
+The script finds the relevant Markdown files in the repository and organizes them for the Wiki Repository. Currently, the find command is filtered to exclude the `./app` and `./vendor` directories. Based on the list of `.md` file paths, it maps the formatting spec from [above](##Maintaining-Documentation) to some information about the file. Using the map, it creates a Sidebar file format which Github uses as a Table of Contents for the wiki. Also we copy over the files with titles linking to the Sidebar format from the Pocket repo.
+
+Below, you can see some of the patterns between the Sidebar format, folder of markdowns used for the Wiki Repository, and final sidebar/table of contents display.
+
+|Format|Folder|Wiki|
+|---|---|---|
+|![format](/tools/images/sidebar_format.png)|![Folder](/tools/images/folder.png)|![wiki](/tools/images/sidebar.png)|
 
 ### Linters
 
