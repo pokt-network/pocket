@@ -25,7 +25,8 @@
     "consensus_port": 8080,
     "use_rain_tree": true,
     "is_empty_connection_type": false,
-    "private_key": "b37d3ba2f232060c41ba1177fea6008d885fcccad6826d64ee7d49f94d1dbc49a8b6be75d7551da093f788f7286c3a9cb885cfc8e52710eac5f1d5e5b4bf19b2"
+    "private_key": "b37d3ba2f232060c41ba1177fea6008d885fcccad6826d64ee7d49f94d1dbc49a8b6be75d7551da093f788f7286c3a9cb885cfc8e52710eac5f1d5e5b4bf19b2",
+    "max_mempool_count": 100000
   },
   "telemetry": {
     "enabled": true,

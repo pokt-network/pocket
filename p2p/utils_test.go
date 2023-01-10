@@ -181,14 +181,6 @@ func prepareBusMock(t *testing.T,
 func prepareConsensusMock(t *testing.T, genesisState *genesis.GenesisState) *modulesMock.MockConsensusModule {
 	ctrl := gomock.NewController(t)
 	consensusMock := modulesMock.NewMockConsensusModule(ctrl)
-
-	validators := genesisState.GetValidators()
-	m := make(modules.ValidatorMap, len(validators))
-	for _, v := range validators {
-		m[v.GetAddress()] = *v
-	}
-
-	consensusMock.EXPECT().ValidatorMap().Return(m).AnyTimes()
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(1)).AnyTimes()
 
 	return consensusMock
@@ -203,6 +195,7 @@ func preparePersistenceMock(t *testing.T, genesisState *genesis.GenesisState) *m
 
 	readContextMock.EXPECT().GetAllStakedActors(gomock.Any()).Return(genesisState.GetValidators(), nil).AnyTimes()
 	persistenceMock.EXPECT().NewReadContext(gomock.Any()).Return(readContextMock, nil).AnyTimes()
+	readContextMock.EXPECT().Close().Return(nil).AnyTimes()
 
 	return persistenceMock
 }
