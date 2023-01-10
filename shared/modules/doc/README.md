@@ -62,7 +62,7 @@ if err != nil {
 
 The `bus` is the specific integration mechanism that enables the greater application.
 
-When a module is constructed via the `Create(bus modules.Bus)` call, internally it calls a `bus.RegisterModule(module)` that essentially registers the module with the `bus` so that it can be accessed by its sibling modules.
+When a module is constructed via the `Create(bus modules.Bus)` function, it is expected to internally call `bus.RegisterModule(module)`, which registers the module with the `bus` so its sibling modules can access it synchronously via a DI-like pattern.
 
 ##### Start the module
 
