@@ -5,9 +5,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
 
+# directories used for copying over md files
 WIKI_DIR = "tools/wiki"
 TEMP_WIKI = "tools/temp_wiki"
-WIKI_TAG = "GITHUB_WIKI"  # text included in the Github Wiki formatting comment
+# text included in the Github Wiki formatting comment
+WIKI_TAG = "GITHUB_WIKI"  
 
 
 @dataclass
@@ -29,7 +31,7 @@ def get_all_markdown_file_paths() -> List[Path]:
 
 
 def get_file_to_wiki_comment(file_path: Path) -> Path:
-    # gets the last line of of the file and parses it for the format
+    # gets the last line of the file and parses it for the formatting spec
     with open(file_path) as file:
         last_line = file.readlines()[-1]
         if WIKI_TAG not in last_line:
@@ -87,6 +89,9 @@ def write_sidebar_file(sidebar: Dict[str, List[DocumentationFile]]) -> None:
 
 
 def write_wiki_pages(sidebar: Dict[str, List[DocumentationFile]]) -> None:
+    # open md files in the repo an prepare for migration process
+
+    os.makedirs(WIKI_DIR, exist_ok=True)
     for category, doc_files in sidebar.items():
         for doc_file in doc_files:
             with open(doc_file.path) as source:
@@ -101,6 +106,7 @@ def write_wiki_pages(sidebar: Dict[str, List[DocumentationFile]]) -> None:
 def run_wiki_migration():
     os.makedirs(TEMP_WIKI, exist_ok=True)
 
+    # repo env variables
     secret = os.environ["USER_TOKEN"]
     user_name = os.environ["USER_NAME"]
     user_email = os.environ["USER_EMAIL"]
@@ -157,8 +163,7 @@ def run_wiki_migration():
 
 
 if __name__ == "__main__":
-    os.makedirs(WIKI_DIR, exist_ok=True)
-
+    # categorize and generate sidebar and updates wiki folder
     sidebar_format_dict = categorize_paths()
     write_sidebar_file(sidebar_format_dict)
     write_wiki_pages(sidebar_format_dict)

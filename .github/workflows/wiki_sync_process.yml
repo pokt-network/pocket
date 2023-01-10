@@ -20,5 +20,5 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Generate and push Wiki
-      run: | # 4. Runs a python script that
+      run: | # 4. Runs a python script that uploads md files to Pocket Github Wiki
         python tools/wiki_sync.py

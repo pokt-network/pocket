@@ -211,21 +211,21 @@ Pocket
 
 Documentation files currently found by the following command `find . -name "*.md" | grep -v -e "vendor" -e "app"` are added to the [Github Wiki Repository](https://github.com/pokt-network/pocket/wiki). The Wiki will be improved overtime but in its current form, provides an organized overview of the Repository.
 
-To keep the Wiki organized, a comment is added to the end of each `.md`. For example,  you can find the following one at the end of this file `<!-- GITHUB_WIKI: guides/development/readme -->`. The structure of the comment indicates the category (guides), subcategory(ies) (development) and file name (readme): `<!-- GITHUB_WIKI: <category>/<subcategory 1>/.../<filename>`. You can see the example output in the [Wiki Page](https://github.com/pokt-network/pocket/wiki/Development-Readme).
+To keep the Wiki organized, a comment is added at the end of each `.md` file. For example, you can find the following one at the end of this file `<!-- GITHUB_WIKI: guides/development/readme -->`. The structure of the comment indicates the category (guides), subcategory(ies) (development) and filename (readme): `<!-- GITHUB_WIKI: <category>/<subcategory 1>/.../<filename>`. You can see the example output in the [Wiki Page](https://github.com/pokt-network/pocket/wiki/Development-Readme).
 
-If you are adding a new `.md` file for documentation please included a similar comment at the bottom of the file. Use your best judgment for the category and subcategory if its in a new directory. Otherwise, copy the comment from a similar `.md` file in the directory and choose a relevant filename.
+If you are adding a new `.md` file for documentation please included a similar comment. Use your best judgment for the category and subcategory if its a new directory. Otherwise, copy the comment from a similar file in the directory and choose a relevant filename.
 
 ## Documentation Resources and Implementation
 
 ### [Github Actions File](/.github/workflows/wiki_sync_process.yml)
 
-The Action is triggered when there is a change to any Markdown file on the main branch (i.e. after merge) of the Repository. When triggered, environment variables are set for a Python script that updates the Github Wiki Repository based on Pocket Repository source code.
+The Action is triggered when there is a change to any Markdown file on the main branch of the Repository. When triggered, environment variables are set for a Python script that updates the Github Wiki Repository based on Pocket Repository files.
 
 ### [Python Script](/tools/wiki_sync.py)
 
-The script finds the relevant Markdown files in the repository and organizes them for the Wiki Repository. Currently, the find command is filtered to exclude the `./app` and `./vendor` directories. Based on the list of `.md` file paths, it maps the formatting spec from [above](##Maintaining-Documentation) to some information about the file. Using the map, it creates a Sidebar file format which Github uses as a Table of Contents for the wiki. Also we copy over the files with titles linking to the Sidebar format from the Pocket repo.
+The script finds the relevant Markdown files in the repository and organizes them for the Wiki Repository. Currently, the find command is filtered to exclude the `./app` and `./vendor` directories. Based on the list of `.md` file paths, it maps the formatting spec from [above](##Maintaining-Documentation) to some information about the file. Using the map, it creates a Sidebar file format which Github uses as a Table of Contents for the wiki. Also, from the Pocket repo we copy over the files with titles linking to the Sidebar format.
 
-Below, you can see some of the patterns between the Sidebar format, folder of markdowns used for the Wiki Repository, and final sidebar/table of contents display.
+Below, you can see some of the patterns between the Sidebar format, folder of markdowns in the Wiki Repository, and final sidebar/table of contents display.
 
 |Format|Folder|Wiki|
 |---|---|---|
