@@ -189,7 +189,7 @@ Pocket
 ├── app                               # Entrypoint to running the Pocket node and clients
 │   ├── client                        # Entrypoint to running a local Pocket debug client
 │   └── pocket                        # Entrypoint to running a local Pocket node
-├── bin                               # [currently-unused] Destination for compiled pocket binaries
+├── bin                               # Destination for compiled pocket binaries
 ├── build                             # Build related source files including Docker, scripts, etc
 │   ├── config                        # Configuration files for to run nodes in development
 │   ├── deployments                   # Docker-compose to run different cluster of services for development
@@ -207,7 +207,7 @@ Pocket
 │   ├── genesis
 │   │   └── proto                     # Protobuf representing the genesis state of the Pocket blockchain
 │   └── test_artifacts                # Componentry used for generating test artifacts such as particular genesis states used in testing
-├── shared                            # [to-be-refactored] Shared types, modules and utils
+├── shared                            # Shared types, modules and utils
 │   ├── codec
 │   │   └── proto
 │   ├── converters
