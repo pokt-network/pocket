@@ -98,7 +98,7 @@ func Test_actorMapper_GetValAddrToIdMap(t *testing.T) {
 			},
 		},
 		{
-			// Node: this test is important because it tests the sorting of the validators by address that's used for generating NodeIds
+			// Note: this test is important because it tests the sorting of the validators by address that's used for generating tds
 			name: "multiple validators should return map with all of them and with the correct NodeIds",
 			args: args{validators: []*coreTypes.Actor{
 				makeTestValidatorWithAddress("0x5"),
@@ -154,7 +154,7 @@ func Test_actorMapper_GetIdToValAddrMap(t *testing.T) {
 			},
 		},
 		{
-			// Node: this test is important because it tests the sorting of the validators by address that's used for generating NodeIds
+			// Note: this test is important because it tests the sorting of the validators by address that's used for generating NodeIds
 			name: "multiple validators should return map with all of them and with the correct NodeIds",
 			args: args{validators: []*coreTypes.Actor{
 				makeTestValidatorWithAddress("0x5"),
