@@ -207,7 +207,7 @@ Pocket
 │   ├── genesis
 │   │   └── proto                     # Protobuf representing the genesis state of the Pocket blockchain
 │   └── test_artifacts                # Componentry used for generating test artifacts such as particular genesis states used in testing
-├── shared                            # [to-be-refactored] Shared types, modules and utils
+├── shared                            # Shared types, modules and utils
 │   ├── codec
 │   │   └── proto
 │   ├── converters
