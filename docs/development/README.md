@@ -64,7 +64,7 @@ Generate local files
 
 ```bash
 $ git clone git@github.com:pokt-network/pocket.git && cd pocket
-$ make develop_start
+make develop_start
 ```
 
 Optionally activate changelog pre-commit hook
@@ -111,13 +111,13 @@ make swagger-ui
 ### View Available Commands
 
 ```bash
-make
+$ make
 ```
 
 ### Running Unit Tests
 
 ```bash
-make test_all
+$ make test_all
 ```
 
 Note that there are a few tests in the library that are prone to race conditions and we are working on improving them. This can be checked with `make test_race`.
@@ -147,7 +147,7 @@ $ make client_start && make client_connect
 4. Check the state of each node:
 
 ```bash
-$ ✔ PrintNodeState
+✔ PrintNodeState
 ```
 
 5. Trigger the next view to ensure everything is working:

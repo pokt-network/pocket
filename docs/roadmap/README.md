@@ -42,12 +42,12 @@ gantt
 
 ### [M1. Pocket PoS (Proof of Stake)](https://github.com/pokt-network/pocket/milestone/7)
 
-#### Goals
+#### Goals:
 
 - Basic LocalNet development environment
 - Tendermint Core equivalent for a proof-of-stake blockchain custom-built for Pocket
 
-#### Non-goals
+#### Non-goals:
 
 - Pocket specific utility
 - Devnet infrastructure

@@ -18,7 +18,7 @@ The foundational lifecycle of the Relay Protocol is:
 3) Execute the Relay against the `RelayChain`
 ```mermaid
 sequenceDiagram
-	   title Steps 1 to 3
+	    title Steps 1 to 3
 	    autonumber
 	    actor App
 	    actor Client
@@ -40,7 +40,6 @@ sequenceDiagram
 
 	    end
 ```
-
 4) Wait for `Session` end / secret key to be revealed
 5) Collect Volume Applicable Relays (based on secret key) from storage
 6) Report Volume Applicable Relays to the assigned `Fisherman`
