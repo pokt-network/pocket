@@ -69,7 +69,6 @@ func (m *bus) GetP2PModule() modules.P2PModule {
 		return mod.(modules.P2PModule)
 	}
 	log.Fatalf("%s", ErrModuleNotRegistered("P2P"))
-
 	return nil
 }
 
