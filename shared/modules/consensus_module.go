@@ -41,4 +41,5 @@ type ConsensusStateSync interface {
 	GetNodeIdFromNodeAddress(string) uint64
 	GetCurrentNodeAddressFromNodeId() string
 	IsLeaderSet() bool
+	//GetStaSyncModule() state_sync.StateSyncModule
 }

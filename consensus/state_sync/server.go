@@ -61,7 +61,7 @@ func (m *stateSyncModule) HandleGetBlockRequest(blockReq *typesCons.GetBlockRequ
 
 }
 
-// TODO! Placehalder functions for metadata aggregation of data received from different peers
+// TODO! Placeholder function for metadata aggregation of data received from different peers
 func (m *stateSyncModule) aggregateMetaResults() (uint64, uint64) {
 	minHeight := m.GetBus().GetConsensusModule().CurrentHeight()
 	maxHeight := m.GetBus().GetConsensusModule().CurrentHeight()

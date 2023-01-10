@@ -11,7 +11,7 @@ import (
 )
 
 func (m *stateSyncModule) sendToPeer(msg *anypb.Any, peerId string) error {
-	//Seoeration between nodeId and peerId must be clear
+	//Seperation between nodeId and peerId must be clear
 
 	// TODO: Check if this is needed (added since it was added in consensus module sendToNode function)
 	if !m.GetBus().GetConsensusModule().IsLeaderSet() {
