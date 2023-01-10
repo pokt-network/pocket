@@ -186,16 +186,16 @@ func (m *consensusModule) broadcastToValidators(msg *typesCons.HotstuffMessage) 
 		return
 	}
 
-	if err := m.GetBus().GetP2PModule().Broadcast(anyConsensusMessage); err != nil {
-		m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
-		return
+	validators, err := m.getValidatorsAtHeight(m.CurrentHeight())
+	if err != nil {
+		m.nodeLogError(typesCons.ErrPersistenceGetAllValidators.Error(), err)
 	}
 
-	// for _, val := range m.validatorMap {
-	// 	if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
-	// 		m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
-	// 	}
-	// }
+	for _, val := range validators {
+		if err := m.GetBus().GetP2PModule().Send(cryptoPocket.AddressFromString(val.GetAddress()), anyConsensusMessage); err != nil {
+			m.nodeLogError(typesCons.ErrBroadcastMessage.Error(), err)
+		}
+	}
 }
 
 /*** Persistence Helpers ***/
