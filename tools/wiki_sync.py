@@ -90,8 +90,7 @@ def write_sidebar_file(sidebar: Dict[str, List[DocumentationFile]]) -> None:
 
 def write_wiki_pages(sidebar: Dict[str, List[DocumentationFile]]) -> None:
     # open md files in the repo an prepare for migration process
-
-    os.makedirs(WIKI_DIR, exist_ok=True)
+    
     for category, doc_files in sidebar.items():
         for doc_file in doc_files:
             with open(doc_file.path) as source:
@@ -164,6 +163,8 @@ def run_wiki_migration():
 
 if __name__ == "__main__":
     # categorize and generate sidebar and updates wiki folder
+    os.makedirs(WIKI_DIR, exist_ok=True)
+
     sidebar_format_dict = categorize_paths()
     write_sidebar_file(sidebar_format_dict)
     write_wiki_pages(sidebar_format_dict)
