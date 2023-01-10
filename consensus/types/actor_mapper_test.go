@@ -39,8 +39,7 @@ func Test_actorMapper_GetValidatorMap(t *testing.T) {
 			name: "one validator should return map with one entry",
 			args: args{validators: []*coreTypes.Actor{
 				makeTestValidatorWithAddress("0x1"),
-			},
-			},
+			}},
 			want: map[string]*coreTypes.Actor{
 				"0x1": makeTestValidatorWithAddress("0x1"),
 			},
@@ -54,8 +53,7 @@ func Test_actorMapper_GetValidatorMap(t *testing.T) {
 				makeTestValidatorWithAddress("0x1"),
 				makeTestValidatorWithAddress("0x4"),
 				makeTestValidatorWithAddress("0x5"),
-			},
-			},
+			}},
 			want: map[string]*coreTypes.Actor{
 				"0x1": makeTestValidatorWithAddress("0x1"),
 				"0x2": makeTestValidatorWithAddress("0x2"),
@@ -94,8 +92,7 @@ func Test_actorMapper_GetValAddrToIdMap(t *testing.T) {
 			name: "one validator should return map with one entry",
 			args: args{validators: []*coreTypes.Actor{
 				makeTestValidatorWithAddress("0x1"),
-			},
-			},
+			}},
 			want: map[string]NodeId{
 				"0x1": 1,
 			},
@@ -109,8 +106,7 @@ func Test_actorMapper_GetValAddrToIdMap(t *testing.T) {
 				makeTestValidatorWithAddress("0x3"),
 				makeTestValidatorWithAddress("0x2"),
 				makeTestValidatorWithAddress("0x4"),
-			},
-			},
+			}},
 			want: map[string]NodeId{
 				"0x1": 1,
 				"0x2": 2,
@@ -152,8 +148,7 @@ func Test_actorMapper_GetIdToValAddrMap(t *testing.T) {
 			args: args{
 				validators: []*coreTypes.Actor{
 					makeTestValidatorWithAddress("0x1"),
-				},
-			},
+				}},
 			want: map[NodeId]string{
 				1: "0x1",
 			},
@@ -167,8 +162,7 @@ func Test_actorMapper_GetIdToValAddrMap(t *testing.T) {
 				makeTestValidatorWithAddress("0x3"),
 				makeTestValidatorWithAddress("0x2"),
 				makeTestValidatorWithAddress("0x4"),
-			},
-			},
+			}},
 			want: IdToValAddrMap{
 				1: "0x1",
 				2: "0x2",
