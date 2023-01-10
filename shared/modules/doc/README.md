@@ -45,7 +45,7 @@ TODO(#235): Update once runtime configs are implemented
 
 Module creation uses a typical constructor pattern signature `Create(configPath, genesisPath string) (module.Interface, error)`
 
-Currently, module creation is not embedded or enforced in the interface to prevent the initializer from having to use
+Currently, module creation is not embedded or enforced in the interface to prevent the initializer from having to use 
 clunky creation syntax -> `modPackage.new(module).Create(configPath, genesisPath)` rather `modPackage.Create(configPath, genesisPath)`
 
 This is done to optimize for code clarity rather than creation signature enforceability but **may change in the future**.

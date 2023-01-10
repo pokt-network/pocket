@@ -64,7 +64,7 @@ Generate local files
 
 ```bash
 $ git clone git@github.com:pokt-network/pocket.git && cd pocket
-make develop_start
+$ make develop_start
 ```
 
 Optionally activate changelog pre-commit hook
@@ -85,7 +85,7 @@ In order to build the CLI:
 1. Generate local files
 
 ```bash
-$ make develop_start
+make develop_start
 ```
 
 2. Build the CLI binary

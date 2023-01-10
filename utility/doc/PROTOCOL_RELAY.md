@@ -27,7 +27,7 @@ sequenceDiagram
         participant Internal Storage
         participant External Relay Chain
 	    App->>Client: Provision(AppAuthToken)
-	    loop Repeats Throughout Session Duration
+	    loop Repeats Throughout Session Duration 
             Client->>Client: Sign(Relay)
 	        Client->>Service Node: Send(Relay)
 	        Service Node->>Internal State: Validate(Relay)
@@ -124,7 +124,7 @@ Execute a submitted `Relay` against the `RelayChain` by a client after validatio
 ##### Wait for Session to end / secret key to be revealed
 
 It's important to note, the secret key isn't revealed by the network until the session is over
-to prevent volume based bias. The secret key is usually a pseudorandom selection using the block hash as a seed.
+to prevent volume based bias. The secret key is usually a pseudorandom selection using the block hash as a seed. 
 _See the [Session Protocol](https://github.com/pokt-network/pocket/blob/main/utility/doc/PROTOCOLS.md) for more details._
 
 ### Get volume metric applicable `Relays` from store
@@ -158,7 +158,7 @@ build a Merkle sum index tree from all the relays, submits a root and subsequent
 network via a commit+reveal schema.
 
 * **Pros**: Can report volume metrics directly to the chain in a trustless fashion
-* **Cons**: Large chain bloat, non-trivial compute requirement for creation of claim/proof transactions and trees,
+* **Cons**: Large chain bloat, non-trivial compute requirement for creation of claim/proof transactions and trees, 
 non-trivial compute requirement to process claim / proofs during ApplyBlock()
 
 This algorithm is not yet documented anywhere, so the following links can act as a reference in the interim.
