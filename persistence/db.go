@@ -103,18 +103,19 @@ func connectToDatabase(cfg *configs.PersistenceConfig) (*pgx.Conn, error) {
 
 	conn, _ := pool.Acquire(ctx)
 
+	nodeSchema := cfg.GetNodeSchema()
 	// Creating and setting a new schema so we can running multiple nodes on one postgres instance. See
 	// more details at https://github.com/go-pg/pg/issues/351.
-	if _, err = conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, cfg.GetNodeSchema())); err != nil {
+	if _, err = conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, nodeSchema)); err != nil {
 		return nil, err
 	}
 
 	// Creating and setting a new schema so we can run multiple nodes on one postgres instance.
 	// See more details at https://github.com/go-pg/pg/issues/351.
-	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, cfg.GetNodeSchema())); err != nil {
+	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s %s", CreateSchema, IfNotExists, nodeSchema)); err != nil {
 		return nil, err
 	}
-	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, cfg.GetNodeSchema())); err != nil {
+	if _, err := conn.Exec(ctx, fmt.Sprintf("%s %s", SetSearchPathTo, nodeSchema)); err != nil {
 		return nil, err
 	}
 
