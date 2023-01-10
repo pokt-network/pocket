@@ -107,9 +107,13 @@ func newTestPersistenceModule(databaseUrl string) modules.PersistenceModule {
 		genesisStateNumApplications,
 		genesisStateNumServiceNodes,
 	)
-	runtimeCfg := runtime.NewManager(cfg, genesisState)
+	runtimeMgr := runtime.NewManager(cfg, genesisState)
+	bus, err := runtime.CreateBus(runtimeMgr)
+	if err != nil {
+		log.Fatalf("Error creating bus: %s", err)
+	}
 
-	persistenceMod, err := persistence.Create(runtimeCfg)
+	persistenceMod, err := persistence.Create(bus)
 	if err != nil {
 		log.Fatalf("Error creating persistence module: %s", err)
 	}

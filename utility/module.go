@@ -22,22 +22,26 @@ type utilityModule struct {
 }
 
 const (
-	utilityModuleName = "utility"
-
 	TransactionGossipMessageContentType = "utility.TransactionGossipMessage"
 )
 
-func Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	return new(utilityModule).Create(runtime)
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(utilityModule).Create(bus)
 }
 
-func (*utilityModule) Create(runtime modules.RuntimeMgr) (modules.Module, error) {
-	utilityCfg := runtime.GetConfig().Utility
+func (*utilityModule) Create(bus modules.Bus) (modules.Module, error) {
+	m := &utilityModule{}
+	bus.RegisterModule(m)
 
-	return &utilityModule{
-		config:  utilityCfg,
-		Mempool: types.NewMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions),
-	}, nil
+	runtimeMgr := bus.GetRuntimeMgr()
+
+	cfg := runtimeMgr.GetConfig()
+	utilityCfg := cfg.Utility
+
+	m.config = utilityCfg
+	m.Mempool = types.NewMempool(utilityCfg.MaxMempoolTransactionBytes, utilityCfg.MaxMempoolTransactions)
+
+	return m, nil
 }
 
 func (u *utilityModule) Start() error {
@@ -49,7 +53,7 @@ func (u *utilityModule) Stop() error {
 }
 
 func (u *utilityModule) GetModuleName() string {
-	return utilityModuleName
+	return modules.UtilityModuleName
 }
 
 func (u *utilityModule) SetBus(bus modules.Bus) {

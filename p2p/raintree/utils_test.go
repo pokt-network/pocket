@@ -4,6 +4,7 @@ import (
 	"github.com/golang/mock/gomock"
 	typesP2P "github.com/pokt-network/pocket/p2p/types"
 	mocksP2P "github.com/pokt-network/pocket/p2p/types/mocks"
+	"github.com/pokt-network/pocket/runtime/configs"
 	mockModules "github.com/pokt-network/pocket/shared/modules/mocks"
 )
 
@@ -13,6 +14,9 @@ func mockBus(ctrl *gomock.Controller) *mockModules.MockBus {
 	consensusMock := mockModules.NewMockConsensusModule(ctrl)
 	consensusMock.EXPECT().CurrentHeight().Return(uint64(0)).AnyTimes()
 	busMock.EXPECT().GetConsensusModule().Return(consensusMock).AnyTimes()
+	runtimeMgrMock := mockModules.NewMockRuntimeMgr(ctrl)
+	busMock.EXPECT().GetRuntimeMgr().Return(runtimeMgrMock).AnyTimes()
+	runtimeMgrMock.EXPECT().GetConfig().Return(configs.NewDefaultConfig()).AnyTimes()
 	return busMock
 }
 
