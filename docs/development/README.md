@@ -219,11 +219,11 @@ If you are adding a new `.md` file for documentation please included a similar c
 
 ### [Github Actions File](/.github/workflows/wiki_sync_process.yml)
 
-The Action is triggered when there is a change to any Markdown file on the main branch of the Repository. When triggered, some environment variables are set for a Python script that updates the Github Wiki Repository from the Pocket Repository.
+The Action is triggered when there is a change to any Markdown file on the main branch (i.e. after merge) of the Repository. When triggered, environment variables are set for a Python script that updates the Github Wiki Repository based on Pocket Repository source code.
 
 ### [Python Script](/tools/wiki_sync.py)
 
-The script finds the relevant Markdown files in the repository and organizes them for the Wiki Repository. Currently, the find command is filtered to exclude the App and Vendor directories. Based on the list of `.md` file paths, it maps the formatting spec from [above](##Maintaining-Documentation) to some information about the file. Using the map, it creates a Sidebar file which Github uses as a Table of Contents for the wiki, and also copies over the files with titles linking to the Sidebar from the Pocket repo.
+The script finds the relevant Markdown files in the repository and organizes them for the Wiki Repository. Currently, the find command is filtered to exclude the `./app` and `./vendor` directories. Based on the list of `.md` file paths, it maps the formatting spec from [above](##Maintaining-Documentation) to some information about the file. Using the map, it creates a Sidebar file which Github uses as a Table of Contents for the wiki, and also copies over the files with titles linking to the Sidebar from the Pocket repo.
 
 ### Linters
 

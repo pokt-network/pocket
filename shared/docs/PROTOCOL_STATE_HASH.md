@@ -174,4 +174,4 @@ sequenceDiagram
     C->>C: Compare local hash<br>against proposed hash
 ```
 
-<!-- GITHUB_WIKI: shared/protocol_state_hash -->
+<!-- GITHUB_WIKI: shared/state_hash_protocol -->

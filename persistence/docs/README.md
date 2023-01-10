@@ -20,7 +20,7 @@ This document is meant to be a supplement to the living protocol specification a
 
 ## Database Migrations
 
-**TODO**: <https://github.com/pokt-network/pocket/issues/77>
+<!-- TODO(#77): Implement proper SQL migrations -->
 
 ## Node Configuration
 
@@ -176,7 +176,7 @@ Short-term (i.e. simpler starter) tasks:
 - [ ] DOCUMENT: Need to do a better job at documenting the process of paused apps being turned into unstaking apps.
 - [ ] CLEANUP: Remove unused parameters from `the PostgresContext` interface (i.e. see where \_ is used in the implementation such as in `InsertFisherman`)
 - [ ] IMPROVE: Consider converting all address params from bytes to string to avoid unnecessary encoding
-- [ ] CLEANUP(<https://github.com/pokt-network/pocket/issues/76>): Review all the `gov_*.go` related files and simplify the code
+- [ ] CLEANUP(#76): Review all the `gov_*.go` related files and simplify the code
 - [ ] REFACTOR/DISCUSS: Should we prefix the functions in the `PersistenceModule` with the Param / Actor it's impacting to make autocomplete in implementation better?
 - [ ] DISCUSS: Consider removing all `Set` methods (e.g. `SetAccountAmount`) and replace with `Add` (e.g. `AddAccountAmount`) by having it leverage a "default zero".
 - [ ] REFACTOR(https://github.com/pokt-network/pocket/issues/102): Split `account` and `pool` into a shared actor (e.g. like fisherman/validator/serviceNode/application) and simplify the code in half

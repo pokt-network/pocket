@@ -137,4 +137,4 @@ _TODO: If an error occurs at any step, all of the operations must be reverted in
 
 TODO: Failed commitments and the implementation of rollbacks is tracked in #327 and #329.
 
-<!-- GITHUB_WIKI: persistence/protocol_state_hash -->
+<!-- GITHUB_WIKI: persistence/state_hash_protocol -->
