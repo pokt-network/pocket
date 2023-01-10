@@ -58,7 +58,7 @@ if err != nil {
 }
 ```
 
-#### Interacting with the `bus`
+#### Interacting & Registering with the `bus`
 
 The `bus` is the specific integration mechanism that enables the greater application.
 
