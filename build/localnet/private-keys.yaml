@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: private-keys
+  name: v1-localnet-private-keys
   namespace: default
 type: Opaque
 stringData:

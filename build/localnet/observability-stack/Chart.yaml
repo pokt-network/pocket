@@ -1,5 +1,0 @@
-apiVersion: "v1"
-name: observability-stack
-version: 0.0.1
-appVersion: v0.0.1
-description: "Helm chart for deploying the observability stack. This chart is mostly used for managing observability dependencies and wiring them up together."

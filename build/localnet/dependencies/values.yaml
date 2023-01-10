@@ -1,3 +1,8 @@
+global:
+  postgresql:
+    auth:
+      postgresPassword: LocalNetPassword
+
 grafana:
   enabled: true
   sidecar:
@@ -72,3 +77,9 @@ prometheus:
   url: http://{{ include "prometheus.fullname" .}}:{{ .Values.prometheus.server.service.servicePort }}{{ .Values.prometheus.server.prefixURL }}
   datasource:
     jsonData: {}
+
+# https://github.com/bitnami/charts/blob/main/bitnami/postgresql/values.yaml
+postgres:
+  enabled: true
+  image:
+    tag: "14"

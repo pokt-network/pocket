@@ -33,9 +33,10 @@ spec:
       volumes:
         - name: config-volume
           configMap:
-            name: v1-validator1-config
+            # should client have it's own config?
+            name: v1-validator1
             defaultMode: 420
         - name: genesis-volume
           configMap:
-            name: default-genesis
+            name: v1-localnet-genesis
             defaultMode: 420

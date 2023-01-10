@@ -446,7 +446,6 @@ localnet_shell:
 ## Stops LocalNet and cleans up dependencies (tl;dr `tilt down` + resources that might not have been cleaned up by tilt)
 localnet_down:
 	tilt down
-	kubectl get sts -n default --no-headers=true | awk '/v1-validator/{print $1}' | xargs kubectl delete -n default sts
 
 .PHONY: check_cross_module_imports
 check_cross_module_imports: ## Lists cross-module imports

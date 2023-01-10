@@ -1,0 +1,110 @@
+# TODO(@okdas): remove if managing resources direcly pans out
+# ---
+
+# apiVersion: nodes.pokt.network/v1alpha1
+# kind: PocketValidator
+# metadata:
+#   name: v1-validator1
+# spec:
+#   prometheusScrape: true
+#   collection:
+#     name: "default"
+#   pocketImage: validator-image
+#   privateKey:
+#     secretKeyRef:
+#       name: private-keys
+#       key: 6f66574e1f50f0ef72dff748c3f11b9e0e89d32a
+#   postgres:
+#     user:
+#       secretKeyRef:
+#         name: validator.pocket-database.credentials.postgresql.acid.zalan.do
+#         key: username
+#     password:
+#       secretKeyRef:
+#         name: validator.pocket-database.credentials.postgresql.acid.zalan.do
+#         key: password
+#     host: pocket-database
+#     port: "5432"
+#     database: validatordb
+#     schema: validator1
+# ---
+# apiVersion: nodes.pokt.network/v1alpha1
+# kind: PocketValidator
+# metadata:
+#   name: v1-validator2
+# spec:
+#   prometheusScrape: true
+#   collection:
+#     name: "default"
+#   pocketImage: validator-image
+#   privateKey:
+#     secretKeyRef:
+#       name: private-keys
+#       key: 67eb3f0a50ae459fecf666be0e93176e92441317
+#   postgres:
+#     user:
+#       secretKeyRef:
+#         name: validator.pocket-database.credentials.postgresql.acid.zalan.do
+#         key: username
+#     password:
+#       secretKeyRef:
+#         name: validator.pocket-database.credentials.postgresql.acid.zalan.do
+#         key: password
+#     host: pocket-database
+#     port: "5432"
+#     database: validatordb
+#     schema: validator2
+# ---
+# apiVersion: nodes.pokt.network/v1alpha1
+# kind: PocketValidator
+# metadata:
+#   name: v1-validator3
+# spec:
+#   prometheusScrape: true
+#   collection:
+#     name: "default"
+#   pocketImage: validator-image
+#   privateKey:
+#     secretKeyRef:
+#       name: private-keys
+#       key: 3f52e08c4b3b65ab7cf098d77df5bf8cedcf5f99
+#   postgres:
+#     user:
+#       secretKeyRef:
+#         name: validator.pocket-database.credentials.postgresql.acid.zalan.do
+#         key: username
+#     password:
+#       secretKeyRef:
+#         name: validator.pocket-database.credentials.postgresql.acid.zalan.do
+#         key: password
+#     host: pocket-database
+#     port: "5432"
+#     database: validatordb
+#     schema: validator3
+# ---
+# apiVersion: nodes.pokt.network/v1alpha1
+# kind: PocketValidator
+# metadata:
+#   name: v1-validator4
+# spec:
+#   prometheusScrape: true
+#   collection:
+#     name: "default"
+#   pocketImage: validator-image
+#   privateKey:
+#     secretKeyRef:
+#       name: private-keys
+#       key: 113fdb095d42d6e09327ab5b8df13fd8197a1eaf
+#   postgres:
+#     user:
+#       secretKeyRef:
+#         name: validator.pocket-database.credentials.postgresql.acid.zalan.do
+#         key: username
+#     password:
+#       secretKeyRef:
+#         name: validator.pocket-database.credentials.postgresql.acid.zalan.do
+#         key: password
+#     host: pocket-database
+#     port: "5432"
+#     database: validatordb
+#     schema: validator4

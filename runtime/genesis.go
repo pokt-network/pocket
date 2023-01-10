@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/pokt-network/pocket/runtime/genesis"
@@ -11,6 +12,7 @@ import (
 func parseGenesis(genesisJSONPath string) (g *genesis.GenesisState, err error) {
 	data, err := os.ReadFile(genesisJSONPath)
 	if err != nil {
+		err = fmt.Errorf("%w while reading %s", err, genesisJSONPath)
 		return
 	}
 
