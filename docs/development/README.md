@@ -189,7 +189,7 @@ Pocket
 ├── app                               # Entrypoint to running the Pocket node and clients
 │   ├── client                        # Entrypoint to running a local Pocket debug client
 │   └── pocket                        # Entrypoint to running a local Pocket node
-├── bin                               # [currently-unused] Destination for compiled pocket binaries
+├── bin                               # Destination for compiled pocket binaries
 ├── build                             # Build related source files including Docker, scripts, etc
 │   ├── config                        # Configuration files for to run nodes in development
 │   ├── deployments                   # Docker-compose to run different cluster of services for development
