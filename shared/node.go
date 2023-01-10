@@ -28,63 +28,30 @@ func NewNodeWithP2PAddress(address cryptoPocket.Address) *Node {
 	return &Node{p2pAddress: address}
 }
 
-func CreateNode(runtime modules.RuntimeMgr) (modules.Module, error) {
-	return new(Node).Create(runtime)
+func CreateNode(bus modules.Bus) (modules.Module, error) {
+	return new(Node).Create(bus)
 }
 
-func (m *Node) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	persistenceMod, err := persistence.Create(runtimeMgr)
+func (m *Node) Create(bus modules.Bus) (modules.Module, error) {
+	for _, mod := range []func(modules.Bus) (modules.Module, error){
+		persistence.Create,
+		utility.Create,
+		consensus.Create,
+		telemetry.Create,
+		logger.Create,
+		rpc.Create,
+		p2p.Create,
+	} {
+		if _, err := mod(bus); err != nil {
+			return nil, err
+		}
+	}
+
+	addr, err := bus.GetP2PModule().GetAddress()
 	if err != nil {
 		return nil, err
 	}
 
-	p2pMod, err := p2p.Create(runtimeMgr)
-	if err != nil {
-		return nil, err
-	}
-
-	utilityMod, err := utility.Create(runtimeMgr)
-	if err != nil {
-		return nil, err
-	}
-
-	consensusMod, err := consensus.Create(runtimeMgr)
-	if err != nil {
-		return nil, err
-	}
-
-	telemetryMod, err := telemetry.Create(runtimeMgr)
-	if err != nil {
-		return nil, err
-	}
-
-	loggerMod, err := logger.Create(runtimeMgr)
-	if err != nil {
-		return nil, err
-	}
-
-	rpcMod, err := rpc.Create(runtimeMgr)
-	if err != nil {
-		return nil, err
-	}
-
-	bus, err := CreateBus(
-		runtimeMgr,
-		persistenceMod.(modules.PersistenceModule),
-		p2pMod.(modules.P2PModule),
-		utilityMod.(modules.UtilityModule),
-		consensusMod.(modules.ConsensusModule),
-		telemetryMod.(modules.TelemetryModule),
-		loggerMod.(modules.LoggerModule),
-		rpcMod.(modules.RPCModule),
-	)
-	if err != nil {
-		return nil, err
-	}
-	addr, err := p2pMod.(modules.P2PModule).GetAddress()
-	if err != nil {
-		return nil, err
-	}
 	return &Node{
 		bus:        bus,
 		p2pAddress: addr,

@@ -151,6 +151,8 @@ const (
 	createConsensusMessageError                 = "error creating consensus message"
 	anteValidationError                         = "discarding hotstuff message because ante validation failed"
 	nilLeaderIdError                            = "attempting to send a message to leader when LeaderId is nil"
+	newPersistenceReadContextError              = "error creating new persistence read context"
+	persistenceGetAllValidatorsError            = "error getting all validators from persistence"
 )
 
 var (
@@ -186,6 +188,8 @@ var (
 	ErrCreateConsensusMessage                 = errors.New(createConsensusMessageError)
 	ErrHotstuffValidation                     = errors.New(anteValidationError)
 	ErrNilLeaderId                            = errors.New(nilLeaderIdError)
+	ErrNewPersistenceReadContext              = errors.New(newPersistenceReadContextError)
+	ErrPersistenceGetAllValidators            = errors.New(persistenceGetAllValidatorsError)
 )
 
 func ErrInvalidBlockSize(blockSize, maxSize uint64) error {

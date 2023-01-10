@@ -25,10 +25,6 @@ var Global = new(loggerModule).CreateLoggerForModule("global")
 
 var _ modules.LoggerModule = &loggerModule{}
 
-const (
-	ModuleName = "logger"
-)
-
 var pocketLogLevelToZeroLog = map[configs.LogLevel]zerolog.Level{
 	configs.LogLevel_LOG_LEVEL_UNSPECIFIED: zerolog.NoLevel,
 	configs.LogLevel_LOG_LEVEL_DEBUG:       zerolog.DebugLevel,
@@ -44,19 +40,21 @@ var pocketLogFormatToEnum = map[string]configs.LogFormat{
 	"pretty": configs.LogFormat_LOG_FORMAT_PRETTY,
 }
 
-func Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
-	return new(loggerModule).Create(runtimeMgr)
+func Create(bus modules.Bus) (modules.Module, error) {
+	return new(loggerModule).Create(bus)
 }
 
 func (*loggerModule) CreateLoggerForModule(moduleName string) modules.Logger {
 	return mainLogger.With().Str("module", moduleName).Logger()
 }
 
-func (*loggerModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, error) {
+func (*loggerModule) Create(bus modules.Bus) (modules.Module, error) {
+	runtimeMgr := bus.GetRuntimeMgr()
 	cfg := runtimeMgr.GetConfig()
-	m := loggerModule{
+	m := &loggerModule{
 		config: cfg.Logger,
 	}
+	bus.RegisterModule(m)
 
 	m.InitLogger()
 
@@ -72,7 +70,7 @@ func (*loggerModule) Create(runtimeMgr modules.RuntimeMgr) (modules.Module, erro
 		mainLogger.Info().Msg("using pretty log format")
 	}
 
-	return &m, nil
+	return m, nil
 }
 
 func (m *loggerModule) Start() error {
@@ -84,7 +82,7 @@ func (m *loggerModule) Stop() error {
 }
 
 func (m *loggerModule) GetModuleName() string {
-	return ModuleName
+	return modules.LoggerModuleName
 }
 
 func (m *loggerModule) SetBus(bus modules.Bus) {

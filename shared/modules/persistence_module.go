@@ -9,6 +9,8 @@ import (
 	"github.com/pokt-network/pocket/shared/messaging"
 )
 
+const PersistenceModuleName = "persistence"
+
 type PersistenceModule interface {
 	Module
 
