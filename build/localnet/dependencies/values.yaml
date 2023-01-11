@@ -5,6 +5,7 @@ global:
 
 grafana:
   enabled: true
+  adminPassword: none
   sidecar:
     datasources:
       label: ""

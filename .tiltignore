@@ -34,10 +34,6 @@ p2p/types/mocks/
 # ignore protobuf generated files
 *.pb.go
 
-# Output binaries
-bin/
-build/dist/*
-
 # Local debugging
 temp_test.go
 
