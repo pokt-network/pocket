@@ -46,7 +46,7 @@ func TestStateSyncServer(t *testing.T) {
 	P2PSend(t, serverNode, anyProto)
 	advanceTime(clockMock, 10*time.Millisecond)
 
-	_, err = WaitForNetworkStateSyncMessages(t, clockMock, testChannel, serverNode.GetP2PAddress(), typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE, numValidators, 1000)
+	_, err = WaitForNetworkStateSyncMessages(t, clockMock, testChannel, serverNode.GetP2PAddress(), typesCons.StateSyncMessageType_STATE_SYNC_METADATA_RESPONSE, numValidators, 1)
 	//_, err = WaitForNetworkConsensusMessages(t, clockMock, testChannel, consensus.NewRound, consensus.Propose, numValidators, 1000)
 	require.NoError(t, err)
 	/*

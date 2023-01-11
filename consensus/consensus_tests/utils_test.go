@@ -244,30 +244,6 @@ func WaitForNetworkConsensusMessages(
 	return waitForNetworkConsensusMessagesInternal(t, clock, testChannel, consensus.HotstuffMessageContentType, numMessages, millis, includeFilter, errorMessage)
 }
 
-func WaitForNetworkStateSyncMessages(
-	t *testing.T,
-	clock clock.Clock,
-	testChannel modules.EventsChannel,
-	targetNodesAddress cryptoPocket.Address,
-	msgType typesCons.StateSyncMessageType,
-	numMessages int,
-	millis time.Duration,
-) (messages []*anypb.Any, err error) {
-
-	includeFilter := func(m *anypb.Any) bool {
-		msg, err := codec.GetCodec().FromAny(m)
-		require.NoError(t, err)
-
-		stateSyncMessage, ok := msg.(*typesCons.StateSyncMessage)
-		require.True(t, ok)
-
-		return stateSyncMessage.MsgType == msgType
-	}
-
-	errorMessage := fmt.Sprintf("StateSync message type: %s", typesCons.StateSyncMessageType_name[int32(msgType)]) //typesCons.HotstuffMessageType_name[int32(hotstuffMsgType)
-	return waitForStateSyncMessagesInternal(t, clock, testChannel, targetNodesAddress, msgType, numMessages, millis, includeFilter, errorMessage)
-}
-
 // IMPROVE(olshansky): Translate this to use generics.
 func waitForNetworkConsensusMessagesInternal(
 	_ *testing.T,
@@ -326,7 +302,7 @@ loop:
 	return
 }
 
-// TODO ! Implement
+// TODO ! IMPLEMENT
 func waitForStateSyncMessagesInternal(
 	_ *testing.T,
 	clock clock.Clock,
@@ -340,6 +316,31 @@ func waitForStateSyncMessagesInternal(
 ) (messages []*anypb.Any, err error) {
 
 	return
+}
+
+// Util function to get state sync messages on given state sync message type and peer id
+func WaitForNetworkStateSyncMessages(
+	t *testing.T,
+	clock clock.Clock,
+	testChannel modules.EventsChannel,
+	targetNodesAddress cryptoPocket.Address,
+	msgType typesCons.StateSyncMessageType,
+	numMessages int,
+	millis time.Duration,
+) (messages []*anypb.Any, err error) {
+
+	includeFilter := func(m *anypb.Any) bool {
+		msg, err := codec.GetCodec().FromAny(m)
+		require.NoError(t, err)
+
+		stateSyncMessage, ok := msg.(*typesCons.StateSyncMessage)
+		require.True(t, ok)
+
+		return stateSyncMessage.MsgType == msgType
+	}
+
+	errorMessage := fmt.Sprintf("StateSync message type: %s", typesCons.StateSyncMessageType_name[int32(msgType)]) //typesCons.HotstuffMessageType_name[int32(hotstuffMsgType)
+	return waitForStateSyncMessagesInternal(t, clock, testChannel, targetNodesAddress, msgType, numMessages, millis, includeFilter, errorMessage)
 }
 
 /*** Module Mocking Helpers ***/
