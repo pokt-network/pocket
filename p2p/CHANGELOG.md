@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.0.18] - 2023-01-11
+
+- Add a lock to the mempool to avoid parallel messages which has caused the node to crash in the past
+
 ## [0.0.0.17] - 2023-01-10
 
 - Updated module constructor to accept a `bus` and not a `runtimeMgr` anymore

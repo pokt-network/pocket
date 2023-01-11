@@ -34,16 +34,8 @@ func (u *UtilityContext) UpdateParam(paramName string, value interface{}) typesU
 	return typesUtil.ErrUnknownParam(paramName)
 }
 
-func (u *UtilityContext) GetBlocksPerSession() (int, typesUtil.Error) {
-	store, height, er := u.GetStoreAndHeight()
-	if er != nil {
-		return 0, er
-	}
-	blocksPerSession, err := store.GetBlocksPerSession(height)
-	if err != nil {
-		return typesUtil.ZeroInt, typesUtil.ErrGetParam(typesUtil.BlocksPerSessionParamName, err)
-	}
-	return blocksPerSession, nil
+func (u *UtilityContext) GetParameter(paramName string, height int64) (any, error) {
+	return u.Store().GetParameter(paramName, height)
 }
 
 func (u *UtilityContext) GetAppMinimumStake() (*big.Int, typesUtil.Error) {

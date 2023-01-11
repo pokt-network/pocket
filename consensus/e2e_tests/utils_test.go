@@ -1,10 +1,8 @@
-package consensus_tests
+package e2e_tests
 
 import (
 	"context"
-	"flag"
 	"fmt"
-	"log"
 	"os"
 	"reflect"
 	"sort"
@@ -34,31 +32,13 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-// If this is set to true, consensus unit tests will fail if additional unexpected messages are received.
-// This slows down the tests because we always fail until the timeout specified by the test before continuing
-// but guarantees more correctness.
-var failOnExtraMessages bool
-
 // TODO(integration): These are temporary variables used in the prototype integration phase that
 // will need to be parameterized later once the test framework design matures.
-var (
-	stateHash          = "42"
-	maxTxBytes         = 90000
-	emptyByzValidators = make([][]byte, 0)
-	emptyTxs           = make([][]byte, 0)
+const (
+	numValidators = 4
+	stateHash     = "42"
+	maxTxBytes    = 90000
 )
-
-const numValidators = 4
-
-// Initialize certain unit test configurations on startup.
-func init() {
-	flag.BoolVar(&failOnExtraMessages, "failOnExtraMessages", false, "Fail if unexpected additional messages are received")
-
-	var err error
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-}
 
 type IdToNodeMapping map[typesCons.NodeId]*shared.Node
 
@@ -87,7 +67,7 @@ func GenerateNodeRuntimeMgrs(_ *testing.T, validatorCount int, clockMgr clock.Cl
 func CreateTestConsensusPocketNodes(
 	t *testing.T,
 	buses []modules.Bus,
-	testChannel modules.EventsChannel,
+	eventsChannel modules.EventsChannel,
 ) (pocketNodes IdToNodeMapping) {
 	pocketNodes = make(IdToNodeMapping, len(buses))
 	// TODO(design): The order here is important in order for NodeId to be set correctly below.
@@ -101,7 +81,7 @@ func CreateTestConsensusPocketNodes(
 	})
 
 	for i := range buses {
-		pocketNode := CreateTestConsensusPocketNode(t, &buses[i], testChannel)
+		pocketNode := CreateTestConsensusPocketNode(t, &buses[i], eventsChannel)
 		// TODO(olshansky): Figure this part out.
 		pocketNodes[typesCons.NodeId(i+1)] = pocketNode
 	}
@@ -112,10 +92,10 @@ func CreateTestConsensusPocketNodes(
 func CreateTestConsensusPocketNode(
 	t *testing.T,
 	bus *modules.Bus,
-	testChannel modules.EventsChannel,
+	eventsChannel modules.EventsChannel,
 ) *shared.Node {
 	// persistence is a dependency of consensus, so we need to create it first
-	persistenceMock := basePersistenceMock(t, testChannel, *bus)
+	persistenceMock := basePersistenceMock(t, eventsChannel, *bus)
 	(*bus).RegisterModule(persistenceMock)
 
 	_, err := consensus.Create(*bus)
@@ -124,11 +104,11 @@ func CreateTestConsensusPocketNode(
 	runtimeMgr := (*bus).GetRuntimeMgr()
 	// TODO(olshansky): At the moment we are using the same base mocks for all the tests,
 	// but note that they will need to be customized on a per test basis.
-	p2pMock := baseP2PMock(t, testChannel)
-	utilityMock := baseUtilityMock(t, testChannel, runtimeMgr.GetGenesis())
-	telemetryMock := baseTelemetryMock(t, testChannel)
-	loggerMock := baseLoggerMock(t, testChannel)
-	rpcMock := baseRpcMock(t, testChannel)
+	p2pMock := baseP2PMock(t, eventsChannel)
+	utilityMock := baseUtilityMock(t, eventsChannel, runtimeMgr.GetGenesis())
+	telemetryMock := baseTelemetryMock(t, eventsChannel)
+	loggerMock := baseLoggerMock(t, eventsChannel)
+	rpcMock := baseRpcMock(t, eventsChannel)
 
 	for _, module := range []modules.Module{
 		p2pMock,
@@ -220,84 +200,115 @@ func P2PSend(_ *testing.T, node *shared.Node, any *anypb.Any) {
 	node.GetBus().PublishEventToBus(e)
 }
 
-func WaitForNetworkConsensusMessages(
+// This is a helper for `waitForEventsInternal` that creates the `includeFilter` function based on
+// consensus specific parameters.
+// failOnExtraMessages:
+// 		This flag is useful when running the consensus unit tests. It causes the test to wait up to the
+// 		maximum delay specified in the source code and errors if additional unexpected messages are received.
+// 		For example, if the test expects to receive 5 messages within 2 seconds:
+// 			false: continue if 5 messages are received in 0.5 seconds
+// 			true: wait for another 1.5 seconds after 5 messages are received in 0.5 seconds, and fail if any additional messages are received.
+func WaitForNetworkConsensusEvents(
 	t *testing.T,
-	clock clock.Clock,
-	testChannel modules.EventsChannel,
+	clock *clock.Mock,
+	eventsChannel modules.EventsChannel,
 	step typesCons.HotstuffStep,
-	hotstuffMsgType typesCons.HotstuffMessageType,
-	numMessages int,
+	msgType typesCons.HotstuffMessageType,
+	numExpectedMsgs int,
 	millis time.Duration,
+	failOnExtraMessages bool,
 ) (messages []*anypb.Any, err error) {
-
-	includeFilter := func(m *anypb.Any) bool {
-		msg, err := codec.GetCodec().FromAny(m)
+	includeFilter := func(anyMsg *anypb.Any) bool {
+		msg, err := codec.GetCodec().FromAny(anyMsg)
 		require.NoError(t, err)
 
 		hotstuffMessage, ok := msg.(*typesCons.HotstuffMessage)
 		require.True(t, ok)
 
-		return hotstuffMessage.Type == hotstuffMsgType && hotstuffMessage.Step == step
+		return hotstuffMessage.Type == msgType && hotstuffMessage.Step == step
 	}
 
-	errorMessage := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(hotstuffMsgType)])
-	return waitForNetworkConsensusMessagesInternal(t, clock, testChannel, consensus.HotstuffMessageContentType, numMessages, millis, includeFilter, errorMessage)
+	errMsg := fmt.Sprintf("HotStuff step: %s, type: %s", typesCons.HotstuffStep_name[int32(step)], typesCons.HotstuffMessageType_name[int32(msgType)])
+	return waitForEventsInternal(t, clock, eventsChannel, consensus.HotstuffMessageContentType, numExpectedMsgs, millis, includeFilter, errMsg, failOnExtraMessages)
 }
 
-// IMPROVE(olshansky): Translate this to use generics.
-func waitForNetworkConsensusMessagesInternal(
-	_ *testing.T,
-	clock clock.Clock,
-	testChannel modules.EventsChannel,
-	messageContentType string,
-	numMessages int,
-	millis time.Duration,
-	includeFilter func(m *anypb.Any) bool,
-	errorMessage string,
-) (messages []*anypb.Any, err error) {
-	messages = make([]*anypb.Any, 0)
-	ctx, cancel := clock.WithTimeout(context.Background(), time.Millisecond*millis)
-	unused := make([]*messaging.PocketEnvelope, 0) // TODO: Move this into a pool rather than resending back to the eventbus.
+// IMPROVE: This function can be extended to testing events outside of just the consensus module.
+func waitForEventsInternal(
+	t *testing.T,
+	clock *clock.Mock,
+	eventsChannel modules.EventsChannel,
+	eventContentType string,
+	numExpectedMsgs int,
+	maxWaitTimeMillis time.Duration, // IMPROVE(#295): Remove time specific suffixes as outlined by go-staticcheck (ST1011)
+	msgIncludeFilter func(m *anypb.Any) bool,
+	errMsg string,
+	failOnExtraMessages bool,
+) (expectedMsgs []*anypb.Any, err error) {
+	expectedMsgs = make([]*anypb.Any, 0)                 // Aggregate and return the messages we're waiting for
+	unusedEvents := make([]*messaging.PocketEnvelope, 0) // "Recycle" events back into the events channel if we're not using them
 
+	// Limit the amount of time we're waiting for the messages to be published on the events channel
+	ctx, cancel := clock.WithTimeout(context.TODO(), time.Millisecond*maxWaitTimeMillis)
+	defer cancel()
+
+	// Since the tests use a mock clock, we need to manually advance the clock to trigger the timeout
+	ticker := time.NewTicker(time.Millisecond)
+	tickerDone := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-tickerDone:
+				return
+			case <-ticker.C:
+				clock.Add(time.Millisecond)
+			}
+		}
+	}()
+	defer ticker.Stop()
+	defer func() {
+		tickerDone <- true
+	}()
+
+	numRemainingMsgs := numExpectedMsgs
 loop:
 	for {
 		select {
-		case testEvent := <-testChannel:
-			if testEvent.GetContentType() != messageContentType {
-				unused = append(unused, &testEvent)
+		case nodeEvent := <-eventsChannel:
+			if nodeEvent.GetContentType() != eventContentType {
+				unusedEvents = append(unusedEvents, nodeEvent)
 				continue
 			}
 
-			message := testEvent.Content
-			if message == nil || !includeFilter(message) {
-				unused = append(unused, &testEvent)
+			message := nodeEvent.Content
+			if message == nil || !msgIncludeFilter(message) {
+				unusedEvents = append(unusedEvents, nodeEvent)
 				continue
 			}
 
-			messages = append(messages, message)
-			numMessages--
-
-			// The if structure below "breaks early" when we get enough messages. However, it does not capture
-			// the case where we could be receiving more messages than expected. To make sure the latter doesn't
-			// happen, the `failOnExtraMessages` flag must be set to true.
-			if !failOnExtraMessages && numMessages == 0 {
+			expectedMsgs = append(expectedMsgs, message)
+			numRemainingMsgs--
+			// Break if both of the following are true:
+			// 1. We are not expecting any more messages
+			// 2. We do not want to fail in the case of extra unexpected messages that pass the filter
+			if numRemainingMsgs == 0 && !failOnExtraMessages {
 				break loop
 			}
+		// The reason we return we format and return an error message rather than using t.Fail(...)
+		// is to allow the called to run `require.NoError(t, err)` and have the output point to the
+		// specific line where the test failed.
 		case <-ctx.Done():
-			if numMessages == 0 {
+			if numRemainingMsgs == 0 {
 				break loop
-			} else if numMessages > 0 {
-				cancel()
-				return nil, fmt.Errorf("Missing %s messages; missing: %d, received: %d; (%s)", messageContentType, numMessages, len(messages), errorMessage)
+			} else if numRemainingMsgs > 0 {
+				return expectedMsgs, fmt.Errorf("Missing '%s' messages; %d expected but %d received. (%s)", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
 			} else {
-				cancel()
-				return nil, fmt.Errorf("Too many %s messages received; expected: %d, received: %d; (%s)", messageContentType, numMessages+len(messages), len(messages), errorMessage)
+				return expectedMsgs, fmt.Errorf("Too many '%s' messages; %d expected but %d received. (%s)", eventContentType, numExpectedMsgs, len(expectedMsgs), errMsg)
 			}
 		}
 	}
-	cancel()
-	for _, u := range unused {
-		testChannel <- *u
+
+	for _, u := range unusedEvents {
+		eventsChannel <- u
 	}
 	return
 }
@@ -330,7 +341,7 @@ func basePersistenceMock(t *testing.T, _ modules.EventsChannel, bus modules.Bus)
 }
 
 // Creates a p2p module mock with mock implementations of some basic functionality
-func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *mockModules.MockP2PModule {
+func baseP2PMock(t *testing.T, eventsChannel modules.EventsChannel) *mockModules.MockP2PModule {
 	ctrl := gomock.NewController(t)
 	p2pMock := mockModules.NewMockP2PModule(ctrl)
 
@@ -340,14 +351,14 @@ func baseP2PMock(t *testing.T, testChannel modules.EventsChannel) *mockModules.M
 		Broadcast(gomock.Any()).
 		Do(func(msg *anypb.Any) {
 			e := &messaging.PocketEnvelope{Content: msg}
-			testChannel <- *e
+			eventsChannel <- e
 		}).
 		AnyTimes()
 	p2pMock.EXPECT().
 		Send(gomock.Any(), gomock.Any()).
 		Do(func(addr cryptoPocket.Address, msg *anypb.Any) {
 			e := &messaging.PocketEnvelope{Content: msg}
-			testChannel <- *e
+			eventsChannel <- e
 		}).
 		AnyTimes()
 	p2pMock.EXPECT().GetModuleName().Return(modules.P2PModuleName).AnyTimes()
@@ -433,7 +444,7 @@ func baseTelemetryTimeSeriesAgentMock(t *testing.T) *mockModules.MockTimeSeriesA
 func baseTelemetryEventMetricsAgentMock(t *testing.T) *mockModules.MockEventMetricsAgent {
 	ctrl := gomock.NewController(t)
 	eventMetricsAgentMock := mockModules.NewMockEventMetricsAgent(ctrl)
-	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	eventMetricsAgentMock.EXPECT().EmitEvent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 	return eventMetricsAgentMock
 }
 
@@ -447,32 +458,32 @@ func baseLoggerMock(t *testing.T, _ modules.EventsChannel) *mockModules.MockLogg
 	return loggerMock
 }
 
-func logTime(clock *clock.Mock) {
-	log.Printf("[⌚ CLOCK ⌚] the time is: %v ms from UNIX Epoch [%v]", clock.Now().UTC().UnixMilli(), clock.Now().UTC())
+func logTime(t *testing.T, clock *clock.Mock) {
+	t.Logf("[⌚ CLOCK ⌚] the time is: %v ms from UNIX Epoch [%v]", clock.Now().UTC().UnixMilli(), clock.Now().UTC())
 }
 
 // advanceTime moves the time forward on the mock clock and logs what just happened.
-func advanceTime(clock *clock.Mock, duration time.Duration) {
+func advanceTime(t *testing.T, clock *clock.Mock, duration time.Duration) {
 	clock.Add(duration)
-	log.Printf("[⌚ CLOCK ⏩] advanced by %v", duration)
-	logTime(clock)
+	t.Logf("[⌚ CLOCK ⏩] advanced by %v", duration)
+	logTime(t, clock)
 }
 
 // sleep pauses the goroutine for the given duration on the mock clock and logs what just happened.
 //
 // Note: time has to be moved forward in a separate goroutine, see `advanceTime`.
-func sleep(clock *clock.Mock, duration time.Duration) {
-	log.Printf("[⌚ CLOCK 💤] sleeping for %v", duration)
+func sleep(t *testing.T, clock *clock.Mock, duration time.Duration) {
+	t.Logf("[⌚ CLOCK 💤] sleeping for %v", duration)
 	clock.Sleep(duration)
 }
 
 // timeReminder simply prints, at a given interval and in a separate goroutine, the current mocked time to help with events.
-func timeReminder(clock *clock.Mock, frequency time.Duration) {
+func timeReminder(t *testing.T, clock *clock.Mock, frequency time.Duration) {
 	go func() {
 		tick := time.NewTicker(frequency)
 		for {
 			<-tick.C
-			logTime(clock)
+			logTime(t, clock)
 		}
 	}()
 }

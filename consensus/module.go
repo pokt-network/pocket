@@ -304,13 +304,13 @@ func (m *consensusModule) loadPersistedState() error {
 
 	latestHeight, err := persistenceContext.GetLatestBlockHeight()
 	if err != nil || latestHeight == 0 {
-		m.nodeLog("TODO: State sync not implemented yet")
+		// TODO: Proper state sync not implemented yet
 		return nil
 	}
 
 	m.height = uint64(latestHeight) + 1 // +1 because the height of the consensus module is where it is actively participating in consensus
 
-	m.nodeLog(fmt.Sprintf("Starting node at height %d", latestHeight))
+	m.nodeLog(fmt.Sprintf("Starting consensus module at height %d", latestHeight))
 
 	return nil
 }
